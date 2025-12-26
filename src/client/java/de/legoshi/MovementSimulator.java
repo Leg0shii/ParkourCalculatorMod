@@ -1,7 +1,7 @@
 package de.legoshi;
 
-import com.mojang.authlib.GameProfile;
-import de.legoshi.ui.InputTick;
+import de.legoshi.ui.InputData;
+import de.legoshi.ui.InputRow;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.player.PlayerEntity;
@@ -10,51 +10,71 @@ import net.minecraft.util.math.Vec3d;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Simulates player movement based on input data.
+ */
 public class MovementSimulator {
 
-    private SimulatorEntity simPlayer;
+    private SimulatorEntity simulatorEntity;
 
-    public MovementSimulator() {
-    }
-
-    private SimulatorEntity setUpSimulationPlayer() {
-        MinecraftClient mc = MinecraftClient.getInstance();
-        ClientWorld world = mc.world;
-
-        PlayerEntity player = mc.player;
-        if (player == null) {
-            throw new IllegalStateException("player is null!");
-        }
-
-        GameProfile profile = player.getGameProfile();
-        if (profile == null) {
-            throw new IllegalStateException("player is null!");
-        }
-
-        Vec3d startPosition = new Vec3d(player.getX(), player.getY(), player.getZ());
-        return new SimulatorEntity(world, profile, startPosition, Vec3d.ZERO);
-    }
-
-    public List<Vec3d> simulatePlayerMovement(List<InputTick> ticks) {
-        SimulatorEntity player = getSimulatorEntity();
-        player.resetPlayer();
+    /**
+     * Simulates movement and returns the path as a list of positions.
+     */
+    public List<Vec3d> simulateMovement(InputData inputData) {
+        SimulatorEntity entity = getSimulatorEntity();
+        entity.resetPlayer();
 
         List<Vec3d> path = new ArrayList<>();
-        for (InputTick tick : ticks) {
-            player.input.setTick(tick);
-            player.setYaw(player.getYaw() + tick.f());
-            // this.player.setPitch(0);
-            player.tick();
-            path.add(player.getPos());
+        path.add(entity.startPosition);
+
+        for (InputRow row : inputData.getRows()) {
+            entity.input.setData(row);
+
+            if (row.getYaw() != null) {
+                entity.setYaw(entity.getYaw() + row.getYaw());
+            }
+
+            entity.tick();
+            path.add(entity.getEntityPos());
         }
 
         return path;
     }
 
+    /**
+     * Gets or creates the simulator entity.
+     */
     public SimulatorEntity getSimulatorEntity() {
-        if (simPlayer == null) {
-            simPlayer = setUpSimulationPlayer();
+        if (simulatorEntity == null) {
+            simulatorEntity = createSimulatorEntity();
         }
-        return simPlayer;
+        return simulatorEntity;
+    }
+
+    /**
+     * Sets the start position to the current player's position.
+     */
+    public void setStartPositionFromPlayer() {
+        PlayerEntity player = MinecraftClient.getInstance().player;
+        if (player != null) {
+            getSimulatorEntity().startPosition = player.getEntityPos();
+        }
+    }
+
+    private SimulatorEntity createSimulatorEntity() {
+        MinecraftClient client = MinecraftClient.getInstance();
+        ClientWorld world = client.world;
+        PlayerEntity player = client.player;
+
+        if (player == null || world == null) {
+            throw new IllegalStateException("Cannot create simulator: player or world is null");
+        }
+
+        return new SimulatorEntity(
+                world,
+                player.getGameProfile(),
+                player.getEntityPos(),
+                Vec3d.ZERO
+        );
     }
 }

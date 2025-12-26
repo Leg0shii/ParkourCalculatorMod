@@ -1,9 +1,13 @@
 {
   "required": true,
-  "package": "de.legoshi.mixin.client",
+  "package": "de.legoshi.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
-    "ExampleClientMixin"
+    "InGameHudMixin",
+    "KeyboardMixin",
+    "MinecraftClientMixin",
+    "MouseMixin",
+    "WorldRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

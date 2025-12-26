@@ -1,8 +1,7 @@
 package de.legoshi;
 
 import com.mojang.authlib.GameProfile;
-import de.legoshi.ui.InputTick;
-import net.minecraft.entity.Entity;
+import de.legoshi.ui.InputRow;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.effect.StatusEffects;
@@ -14,37 +13,40 @@ import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * A simulated player entity for movement prediction.
+ * Stripped down version that only includes necessary movement logic.
+ */
 public class SimulatorEntity extends PlayerEntity {
 
-    public SimulatorInput input = new SimulatorInput(new InputTick());
-
+    public final SimulatorInput input = new SimulatorInput();
     public Vec3d startPosition;
     public Vec3d startVelocity;
 
-    private int ticksLeftToDoubleTapSprint;
     private boolean inSneakingPose;
 
     public SimulatorEntity(World world, GameProfile profile, Vec3d startPosition, Vec3d startVelocity) {
         super(world, profile);
         this.startPosition = startPosition;
         this.startVelocity = startVelocity;
-
         resetPlayer();
     }
 
     public void resetPlayer() {
+        this.noClip = true;
         this.clearStatusEffects();
         this.setPosition(startPosition);
         this.setVelocity(startVelocity);
         this.setRotation(0, 0);
 
-        this.input.setTick(new InputTick());
+        this.input.setData(new InputRow());
         this.tick();
         this.tick();
 
         this.setPosition(startPosition);
     }
 
+    @Override
     public boolean isMainPlayer() {
         return true;
     }
@@ -56,51 +58,36 @@ public class SimulatorEntity extends PlayerEntity {
 
     @Override
     protected void spawnSprintingParticles() {
+        // No-op for simulation
     }
 
-    private void collideWithEntity(Entity entity) {
-        // entity.onPlayerCollision(this);
+    @Override
+    protected void tickCramming() {
+        // No-op for simulation
     }
 
+    @Override
     public void tickMovement() {
-        if (this.ticksLeftToDoubleTapSprint > 0) {
-            --this.ticksLeftToDoubleTapSprint;
-        }
+        boolean wasSneak = this.input.playerInput.sneak();
+        boolean hasForward = this.input.hasForwardMovement();
 
-        boolean bl = this.input.playerInput.jump();
-        boolean bl2 = this.input.playerInput.sneak();
-        boolean bl3 = this.input.hasForwardMovement();
-        this.inSneakingPose = !this.isSwimming() && this.canChangeIntoPose(EntityPose.CROUCHING) && this.isSneaking();
+        this.inSneakingPose = !this.isSwimming()
+                && this.canChangeIntoPose(EntityPose.CROUCHING)
+                && this.isSneaking();
+
         this.input.tick();
 
-        if (bl2 || this.isUsingItem() && !this.hasVehicle() || this.input.playerInput.backward()) {
-            this.ticksLeftToDoubleTapSprint = 0;
+        // Handle sprint activation
+        if (canStartSprinting() && this.input.playerInput.sprint()) {
+            this.setSprinting(true);
         }
 
-        if (this.canStartSprinting()) {
-            if (!bl3) {
-                if (this.ticksLeftToDoubleTapSprint > 0) {
-                    // this.setSprinting(true);
-                } else {
-                    this.ticksLeftToDoubleTapSprint = 7;
-                }
-            }
-
-            if (this.input.playerInput.sprint()) {
-                this.setSprinting(true);
-            }
+        // Handle sprint deactivation
+        if (this.isSprinting() && shouldStopSprinting()) {
+            this.setSprinting(false);
         }
 
-        if (this.isSprinting()) {
-            if (this.isSwimming()) {
-                if (this.shouldStopSwimSprinting()) {
-                    this.setSprinting(false);
-                }
-            } else if (this.shouldStopSprinting()) {
-                this.setSprinting(false);
-            }
-        }
-
+        // Handle water sinking
         if (this.isTouchingWater() && this.input.playerInput.sneak() && this.shouldSwimInFluids()) {
             this.knockDownwards();
         }
@@ -108,79 +95,102 @@ public class SimulatorEntity extends PlayerEntity {
         super.tickMovement();
     }
 
-    private boolean shouldStopSprinting() {
-        return this.isBlind() || this.hasVehicle() || !this.input.hasForwardMovement() || !this.canSprint() || this.horizontalCollision && !this.collidedSoftly || this.isTouchingWater() && !this.isSubmergedInWater();
-    }
-
-    private boolean shouldStopSwimSprinting() {
-        return this.isBlind() || this.hasVehicle() || !this.isTouchingWater() || !this.input.hasForwardMovement() && !this.isOnGround() && !this.input.playerInput.sneak() || !this.canSprint();
-    }
-
-    public void tickMovementInput() {
-        Vec2f vec2f = this.applyMovementSpeedFactors(this.input.getMovementInput());
-        this.sidewaysSpeed = vec2f.x;
-        this.forwardSpeed = vec2f.y;
-        this.jumping = this.input.playerInput.jump();
-    }
-
-    public boolean isSneaking() {
-        return this.input.playerInput.sneak();
-    }
-
     private boolean canStartSprinting() {
-        return !this.isSprinting() && this.input.hasForwardMovement() && this.canSprint() && !this.isUsingItem() && !this.isBlind() && (!this.isGliding() || this.isSubmergedInWater()) && (!this.shouldSlowDown() || this.isSubmergedInWater()) && (!this.isTouchingWater() || this.isSubmergedInWater());
+        return !this.isSprinting()
+                && this.input.hasForwardMovement()
+                && canSprint()
+                && !this.isUsingItem()
+                && !hasStatusEffect(StatusEffects.BLINDNESS)
+                && (!this.isGliding() || this.isSubmergedInWater())
+                && (!this.shouldSlowDown() || this.isSubmergedInWater())
+                && (!this.isTouchingWater() || this.isSubmergedInWater());
     }
 
     private boolean canSprint() {
-        return this.hasVehicle() || (float)this.getHungerManager().getFoodLevel() > 6.0F || this.getAbilities().allowFlying;
+        return this.hasVehicle()
+                || (float) this.getHungerManager().getFoodLevel() > 6.0F
+                || this.getAbilities().allowFlying;
     }
 
-    private boolean isBlind() {
-        return this.hasStatusEffect(StatusEffects.BLINDNESS);
-    }
-
-    private Vec2f applyMovementSpeedFactors(Vec2f input) {
-        if (input.lengthSquared() == 0.0F) {
-            return input;
-        } else {
-            Vec2f vec2f = input.multiply(0.98F);
-            if (this.isUsingItem() && !this.hasVehicle()) {
-                vec2f = vec2f.multiply(0.2F);
-            }
-
-            if (this.shouldSlowDown()) {
-                float f = (float)this.getAttributeValue(EntityAttributes.SNEAKING_SPEED);
-                vec2f = vec2f.multiply(f);
-            }
-
-            return applyDirectionalMovementSpeedFactors(vec2f);
+    private boolean shouldStopSprinting() {
+        if (this.isSwimming()) {
+            return shouldStopSwimSprinting();
         }
+
+        return hasStatusEffect(StatusEffects.BLINDNESS)
+                || this.hasVehicle()
+                || !this.input.hasForwardMovement()
+                || !canSprint()
+                || (this.horizontalCollision && !this.collidedSoftly)
+                || (this.isTouchingWater() && !this.isSubmergedInWater());
+    }
+
+    private boolean shouldStopSwimSprinting() {
+        return hasStatusEffect(StatusEffects.BLINDNESS)
+                || this.hasVehicle()
+                || !this.isTouchingWater()
+                || (!this.input.hasForwardMovement() && !this.isOnGround() && !this.input.playerInput.sneak())
+                || !canSprint();
+    }
+
+    @Override
+    public void tickMovementInput() {
+        Vec2f movement = applyMovementSpeedFactors(this.input.getMovementInput());
+        this.sidewaysSpeed = movement.x;
+        this.forwardSpeed = movement.y;
+        this.jumping = this.input.playerInput.jump();
+    }
+
+    @Override
+    public boolean isSneaking() {
+        return this.input.playerInput.sneak();
     }
 
     public boolean shouldSlowDown() {
         return this.isInSneakingPose() || this.isCrawling();
     }
 
+    @Override
     public boolean isInSneakingPose() {
         return this.inSneakingPose;
     }
 
-    private static Vec2f applyDirectionalMovementSpeedFactors(Vec2f vec) {
-        float f = vec.length();
-        if (f <= 0.0F) {
-            return vec;
-        } else {
-            Vec2f vec2f = vec.multiply(1.0F / f);
-            float g = getDirectionalMovementSpeedMultiplier(vec2f);
-            float h = Math.min(f * g, 1.0F);
-            return vec2f.multiply(h);
+    private Vec2f applyMovementSpeedFactors(Vec2f input) {
+        if (input.lengthSquared() == 0.0F) {
+            return input;
         }
+
+        Vec2f result = input.multiply(0.98F);
+
+        if (this.isUsingItem() && !this.hasVehicle()) {
+            result = result.multiply(0.2F);
+        }
+
+        if (this.shouldSlowDown()) {
+            float sneakSpeed = (float) this.getAttributeValue(EntityAttributes.SNEAKING_SPEED);
+            result = result.multiply(sneakSpeed);
+        }
+
+        return normalizeDirectionalMovement(result);
     }
 
-    private static float getDirectionalMovementSpeedMultiplier(Vec2f vec) {
-        float f = Math.abs(vec.x);
-        float g = Math.abs(vec.y);
-        float h = g > f ? f / g : g / f;
-        return MathHelper.sqrt(1.0F + MathHelper.square(h));
+    private static Vec2f normalizeDirectionalMovement(Vec2f vec) {
+        float length = vec.length();
+        if (length <= 0.0F) {
+            return vec;
+        }
+
+        Vec2f normalized = vec.multiply(1.0F / length);
+        float multiplier = getDirectionalMultiplier(normalized);
+        float clampedLength = Math.min(length * multiplier, 1.0F);
+
+        return normalized.multiply(clampedLength);
+    }
+
+    private static float getDirectionalMultiplier(Vec2f normalized) {
+        float absX = Math.abs(normalized.x);
+        float absY = Math.abs(normalized.y);
+        float ratio = absY > absX ? absX / absY : absY / absX;
+        return MathHelper.sqrt(1.0F + MathHelper.square(ratio));
     }
 }

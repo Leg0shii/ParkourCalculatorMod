@@ -1,43 +1,43 @@
 package de.legoshi;
 
-import de.legoshi.ui.InputTick;
+import de.legoshi.ui.InputRow;
 import net.minecraft.client.input.Input;
 import net.minecraft.util.PlayerInput;
 import net.minecraft.util.math.Vec2f;
 
+/**
+ * Input handler for the movement simulator.
+ * Converts InputRow data into Minecraft's input format.
+ */
 public class SimulatorInput extends Input {
 
-    private InputTick tick;
+    private InputRow data = new InputRow();
 
-    public SimulatorInput(InputTick tick) {
-        this.tick = tick;
+    public void setData(InputRow data) {
+        this.data = data;
     }
 
-    public void setTick(InputTick tick) {
-        this.tick = tick;
-    }
-
-    private static float getMovementMultiplier(boolean positive, boolean negative) {
-        if (positive == negative) {
-            return 0.0F;
-        } else {
-            return positive ? 1.0F : -1.0F;
-        }
-    }
-
+    @Override
     public void tick() {
         this.playerInput = new PlayerInput(
-                this.tick.w(),
-                this.tick.s(),
-                this.tick.a(),
-                this.tick.d(),
-                this.tick.j(),
-                this.tick.n(),
-                this.tick.p()
+                data.isKeyActive(InputRow.Key.W),
+                data.isKeyActive(InputRow.Key.S),
+                data.isKeyActive(InputRow.Key.A),
+                data.isKeyActive(InputRow.Key.D),
+                data.isKeyActive(InputRow.Key.JUMP),
+                data.isKeyActive(InputRow.Key.SNEAK),
+                data.isKeyActive(InputRow.Key.SPRINT)
         );
-        float f = getMovementMultiplier(this.playerInput.forward(), this.playerInput.backward());
-        float g = getMovementMultiplier(this.playerInput.left(), this.playerInput.right());
-        this.movementVector = (new Vec2f(g, f)).normalize();
+
+        float forward = axisValue(playerInput.forward(), playerInput.backward());
+        float strafe = axisValue(playerInput.left(), playerInput.right());
+        this.movementVector = new Vec2f(strafe, forward).normalize();
     }
 
+    private static float axisValue(boolean positive, boolean negative) {
+        if (positive == negative) {
+            return 0.0F;
+        }
+        return positive ? 1.0F : -1.0F;
+    }
 }

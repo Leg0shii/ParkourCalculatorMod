@@ -12,18 +12,13 @@
 		"sources": "https://github.com/FabricMC/fabric-example-mod"
 	},
 	"license": "CC0-1.0",
-	"icon": "assets/parkourcalculator/icon.png",
 	"environment": "*",
 	"entrypoints": {
-		"main": [
-			"de.legoshi.ParkourCalculator"
-		],
 		"client": [
 			"de.legoshi.ParkourCalculatorClient"
 		]
 	},
 	"mixins": [
-		"parkourcalculator.mixins.json",
 		{
 			"config": "parkourcalculator.client.mixins.json",
 			"environment": "client"
