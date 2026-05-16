@@ -123,6 +123,12 @@ public class FabricParkourCalculator implements ClientModInitializer {
         return overlayManager.isControlPanelOpen();
     }
 
+    public static boolean shouldSuppressLeftClick() {
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client == null) return false;
+        return dragController.shouldSuppressLeftClick(client);
+    }
+
     private static void runSimulation() {
         List<Vec3dCore> path = runner.simulate(inputData);
         boxController.clearAll();

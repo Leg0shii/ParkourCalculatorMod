@@ -7,16 +7,20 @@ import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputOverlay;
 import de.legoshi.parkourcalc.core.ui.OverlayManager;
+import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.forge.common.Lwjgl2ImGuiHost;
 import de.legoshi.parkourcalc.forge12.render.Forge12WorldOverlayRenderer;
 import de.legoshi.parkourcalc.forge12.sim.Forge12Simulator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.apache.logging.log4j.LogManager;
@@ -40,6 +44,11 @@ public class Forge12ParkourCalculator {
     private final SimulationRunner runner = new SimulationRunner(simulator);
     private final BoxController boxController = new BoxController();
     private final Forge12WorldOverlayRenderer worldRenderer = new Forge12WorldOverlayRenderer(boxController);
+    private final Forge12BoxDragController dragController = new Forge12BoxDragController(
+            boxController,
+            () -> overlayManager.isControlPanelOpen(),
+            this::handleStartPositionChange
+    );
 
     private KeyBinding toggleKeyBinding;
 
@@ -84,7 +93,28 @@ public class Forge12ParkourCalculator {
 
     @SubscribeEvent
     public void onWorldRender(RenderWorldLastEvent event) {
+        dragController.tick();
         worldRenderer.render(event.getPartialTicks());
+    }
+
+    // Mirror in Forge8ParkourCalculator; differs only in MouseEvent.getButton() vs button.
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public void onMouseEvent(MouseEvent event) {
+        if (event.getButton() == 0 && dragController.shouldSuppressLeftClick()) {
+            event.setCanceled(true);
+        }
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        if (dragController.shouldSuppressLeftClick()) {
+            event.setCanceled(true);
+        }
+    }
+
+    private void handleStartPositionChange(Vec3dCore pos) {
+        runner.setStartPosition(pos);
+        runSimulation();
     }
 
     private void runSimulation() {
@@ -93,11 +123,6 @@ public class Forge12ParkourCalculator {
             boxController.clearAll();
             for (Vec3dCore p : path) {
                 boxController.add(p);
-            }
-            if (!path.isEmpty()) {
-                Vec3dCore last = path.get(path.size() - 1);
-                LOG.info("Simulated {} ticks; final position ({}, {}, {})",
-                        path.size() - 1, last.x, last.y, last.z);
             }
         } catch (IllegalStateException ignored) {
             // Player/world not loaded yet; nothing to simulate.

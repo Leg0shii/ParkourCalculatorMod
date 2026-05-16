@@ -10,8 +10,7 @@ import java.util.List;
 /**
  * Loader-agnostic owner of the simulated-path boxes. Loaders populate via add()
  * after each runSimulation, then drive draws by calling render(BoxRenderer) from
- * their world-render hook. Picking and drag state stay loader-side for now;
- * see plan in conversation; they'll move here when 1.8.9 / 1.12.2 grow drag UX.
+ * their world-render hook. Drag pick logic lives in BoxDragController.
  */
 public final class BoxController {
 
