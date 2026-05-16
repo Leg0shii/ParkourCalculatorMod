@@ -68,7 +68,13 @@ public class FabricParkourCalculator implements ClientModInitializer {
     private static void handleInput(MinecraftClient client) {
         if (client.getWindow() == null) return;
 
-        if (toggleKeyBinding.wasPressed()) {
+        // Drain queued presses; only act when no MC screen owns input. Prevents
+        // typing the bound key in chat from toggling the UI.
+        boolean toggled = false;
+        while (toggleKeyBinding.wasPressed()) {
+            toggled = true;
+        }
+        if (toggled && client.currentScreen == null) {
             setOverlayOpen(!overlayManager.isControlPanelOpen());
         }
 

@@ -24,6 +24,12 @@ public final class Lwjgl2ImGuiHost {
         this.overlayManager = overlayManager;
     }
 
+    /** GuiScreen relays typed chars here; MC drains LWJGL2's queue before the shim sees them. */
+    public void forwardChar(char codepoint) {
+        if (codepoint == 0) return;
+        imguiLwjgl2.charCallback(codepoint);
+    }
+
     public void renderFrame(int displayWidth, int displayHeight) {
         ensureInitialized();
 

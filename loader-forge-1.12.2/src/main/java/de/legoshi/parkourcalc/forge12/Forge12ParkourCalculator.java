@@ -23,6 +23,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.input.Keyboard;
 
+import java.util.List;
+
 @Mod(modid = Forge12ParkourCalculator.MODID, version = Forge12ParkourCalculator.VERSION, clientSideOnly = true, acceptableRemoteVersions = "*")
 public class Forge12ParkourCalculator {
 
@@ -60,10 +62,24 @@ public class Forge12ParkourCalculator {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null) return;
 
+        // Drain queued presses; only open when no MC screen owns input. Close path lives in the GuiScreen.
+        boolean toggled = false;
         while (toggleKeyBinding.isPressed()) {
-            overlayManager.setControlPanelOpen(!overlayManager.isControlPanelOpen());
+            toggled = true;
+        }
+        if (toggled && mc.currentScreen == null) {
+            openOverlay(mc);
         }
         imguiHost.renderFrame(mc.displayWidth, mc.displayHeight);
+    }
+
+    private void openOverlay(Minecraft mc) {
+        overlayManager.setControlPanelOpen(true);
+        mc.displayGuiScreen(new ParkourCalcGuiScreen(
+                toggleKeyBinding.getKeyCode(),
+                imguiHost,
+                () -> overlayManager.setControlPanelOpen(false)
+        ));
     }
 
     @SubscribeEvent
@@ -73,7 +89,7 @@ public class Forge12ParkourCalculator {
 
     private void runSimulation() {
         try {
-            java.util.List<Vec3dCore> path = runner.simulate(inputData);
+            List<Vec3dCore> path = runner.simulate(inputData);
             boxController.clearAll();
             for (Vec3dCore p : path) {
                 boxController.add(p);

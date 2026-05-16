@@ -62,10 +62,24 @@ public class Forge8ParkourCalculator {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null) return;
 
+        // Drain queued presses; only open when no MC screen owns input. Close path lives in the GuiScreen.
+        boolean toggled = false;
         while (toggleKeyBinding.isPressed()) {
-            overlayManager.setControlPanelOpen(!overlayManager.isControlPanelOpen());
+            toggled = true;
+        }
+        if (toggled && mc.currentScreen == null) {
+            openOverlay(mc);
         }
         imguiHost.renderFrame(mc.displayWidth, mc.displayHeight);
+    }
+
+    private void openOverlay(Minecraft mc) {
+        overlayManager.setControlPanelOpen(true);
+        mc.displayGuiScreen(new ParkourCalcGuiScreen(
+                toggleKeyBinding.getKeyCode(),
+                imguiHost,
+                () -> overlayManager.setControlPanelOpen(false)
+        ));
     }
 
     @SubscribeEvent
