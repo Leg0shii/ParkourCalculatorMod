@@ -50,7 +50,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         toggleKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.parkourcalculator.toggle_ui",
                 InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_L,
+                GLFW.GLFW_KEY_K,
                 category
         ));
 
