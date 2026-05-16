@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.1](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.0.0...v1.0.1) (2026-05-16)
+
+
+### Bug Fixes
+
+* add release please token ([78e4e59](https://github.com/Leg0shii/ParkourCalculatorMod/commit/78e4e5932193fa383dd748710a33f06ef62815fe))
+* bundle dependencies in Forge jars ([91dfdbb](https://github.com/Leg0shii/ParkourCalculatorMod/commit/91dfdbb20d566f4101db8f36e09b04f358db358e))
+
 ## [1.0.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v0.1.0...v1.0.0) (2026-05-16)
 
 
