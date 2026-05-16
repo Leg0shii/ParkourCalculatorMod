@@ -2,17 +2,18 @@
 	"schemaVersion": 1,
 	"id": "parkourcalculator",
 	"version": "${version}",
-	"name": "ParkourCalculator",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"name": "Parkour Calculator",
+	"description": "TAS input planner for Minecraft parkour: edit inputs tick-by-tick and visualize the predicted player path in-world.",
 	"authors": [
-		"Me!"
+		"Legoshi"
 	],
 	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"homepage": "https://github.com/Leg0shii/ParkourCalculatorMod",
+		"sources": "https://github.com/Leg0shii/ParkourCalculatorMod",
+		"issues": "https://github.com/Leg0shii/ParkourCalculatorMod/issues"
 	},
 	"license": "CC0-1.0",
-	"environment": "*",
+	"environment": "client",
 	"entrypoints": {
 		"client": [
 			"de.legoshi.parkourcalc.fabric.FabricParkourCalculator"
@@ -27,11 +28,8 @@
 	"accessWidener": "parkourcalculator.accesswidener",
 	"depends": {
 		"fabricloader": ">=0.16.14",
-		"minecraft": "~1.21.6",
+		"minecraft": "~1.21.10",
 		"java": ">=21",
 		"fabric-api": "*"
-	},
-	"suggests": {
-		"another-mod": "*"
 	}
 }

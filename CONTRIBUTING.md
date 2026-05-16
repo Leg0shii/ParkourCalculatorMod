@@ -59,6 +59,7 @@ Capture the answers below in a GitHub Issue (preferred; gives the feature a trac
 
 **Affected modules**
 - [ ] core
+- [ ] forge-core
 - [ ] loader-fabric-1.21.10
 - [ ] loader-forge-1.8.9
 - [ ] loader-forge-1.12.2
@@ -103,7 +104,7 @@ If a section cannot be filled, the feature is not defined yet. Go answer the mis
 
 ### Project-specific judgment calls
 
-- **Save/load format change** → `feat!:`. Old `.pkc` saves will not roundtrip. Counts as breaking even mid pre-1.0.
+- **Save/load format change** → `feat!:`. The planned format is mothball-string notation (for Stratfinder / Mothball interop, see `docs/ROADMAP.md` v1.3.0); any change that breaks roundtrip on existing saved sequences counts as breaking even mid pre-1.0.
 - **Removing or renaming an `InputData` field** → `feat!:`. Same reason.
 - **Dropping a Minecraft version (loader removed)** → `feat!:`. Users on that version lose support.
 - **Adding a Minecraft version (new loader module)** → `feat:`. New capability, nothing breaks.

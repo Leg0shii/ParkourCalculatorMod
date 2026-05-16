@@ -11,15 +11,32 @@ A TAS input planning mod for Minecraft. Simulate and visualize parkour movements
 
 ## Installation
 
-1. Install [Fabric Loader](https://fabricmc.net/)
-2. Install [Fabric API](https://modrinth.com/mod/fabric-api)
-3. Download the latest release
-4. Place the `.jar` in your `mods` folder
-5. Launch Minecraft
+Releases ship one jar per loader. Grab the matching file from the [latest release](https://github.com/Leg0shii/ParkourCalculatorMod/releases/latest) and follow the section for your loader. `<version>` below is the release tag without the `v` prefix (e.g. `1.0.0`).
+
+### Fabric 1.21.10
+
+1. Install the [Fabric Loader](https://fabricmc.net/use/installer/) for Minecraft 1.21.10.
+2. Install [Fabric API](https://modrinth.com/mod/fabric-api) into your `mods` folder.
+3. Download `pkc-fabric-1.21.10-<version>.jar` and drop it into the same `mods` folder.
+4. Launch the 1.21.10 Fabric profile.
+
+### Forge 1.8.9
+
+1. Install [MinecraftForge for 1.8.9](https://files.minecraftforge.net/net/minecraftforge/forge/index_1.8.9.html) (no additional APIs required).
+2. Download `pkc-forge-1.8.9-<version>.jar` and drop it into your `mods` folder.
+3. Launch the 1.8.9 Forge profile.
+
+### Forge 1.12.2
+
+1. Install [MinecraftForge for 1.12.2](https://files.minecraftforge.net/net/minecraftforge/forge/index_1.12.2.html) (no additional APIs required).
+2. Download `pkc-forge-1.12.2-<version>.jar` and drop it into your `mods` folder.
+3. Launch the 1.12.2 Forge profile.
+
+After launch, open the in-game **Mods** menu to confirm Parkour Calculator is listed.
 
 ## Usage
 
-Press `L` to open the calculator.
+Press `K` to open the calculator. The toggle key is rebindable in Minecraft's **Controls** menu (Fabric and Forge both register it under the `Parkour Calculator` category).
 
 ### Adding Inputs
 
@@ -43,7 +60,7 @@ Click and drag the first box in the world to reposition.
 
 | Key | Action |
 |-----|--------|
-| `L` | Toggle UI |
+| `K` | Toggle UI (rebindable) |
 | `ESC` | Close UI |
 | `Ctrl+Click` | Toggle selection |
 | `Shift+Click` | Range select |
