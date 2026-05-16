@@ -51,7 +51,7 @@ body:
       description: Tick every module this feature touches.
       options:
         - label: core
-        - label: forge-lwjgl2-common
+        - label: forge-core
         - label: loader-fabric-1.21.10
         - label: loader-forge-1.8.9
         - label: loader-forge-1.12.2

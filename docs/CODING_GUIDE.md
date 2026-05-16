@@ -10,8 +10,10 @@ multi-module split. When in doubt, prefer the simpler rule.
 ```
 core/                       Java 8 source. No Minecraft, no LWJGL, no loader APIs.
                             ImGui-only UI, data, selection, ports, util.
-forge-lwjgl2-common/        Java 8. LWJGL 2 + ImGui + shim. Shared bootstrap for
-                            both Forge loaders. NO Forge, NO Minecraft imports.
+forge-core/                 Java 8. Shared code for both Forge loaders.
+                            lwjgl2/ holds the LWJGL 2 + ImGui bootstrap; sim/ holds
+                            EntityPlayerSP-shaped algorithm code (sprint machine).
+                            NO Forge, NO Minecraft imports.
 loader-fabric-1.21.10/      Java 21. Fabric + LWJGL 3. MC-touching code lives here.
 loader-forge-1.8.9/         Java 8.  Forge + LWJGL 2. MC-touching code lives here.
 loader-forge-1.12.2/        Java 8.  Forge + LWJGL 2. MC-touching code lives here.
@@ -46,7 +48,7 @@ Is it a data model, JSON schema, or storage type (e.g. InputRow, InputData)?
 └─ NO ↓
 
 Is it a port interface (something core/ defines and the loader implements,
-e.g. WorldView, PlayerStateProvider)?
+e.g. Simulator, MinecraftAccess)?
 ├─ YES → core/.../ports/. The implementation goes in loader/. See § Ports.
 └─ NO ↓
 
@@ -107,12 +109,18 @@ You're probably wrong about needing the file. Re-check.
   `ClientRegistry.registerKeyBinding(...)` + `kb.isPressed()` in a `while`
   drain loop per frame.
 
-### `forge-lwjgl2-common/`
+### `forge-core/`
 
-Shared ImGui lifecycle for both Forge loaders. Contains
-`Lwjgl2ImGuiHost`: wraps `ImGuiLwjgl2` + `ImGuiGL3`, exposes
-`renderFrame(int displayWidth, int displayHeight)` for the call site to
-invoke per frame, and applies `UiSettings.SCALE` at init time.
+Shared code for both Forge loaders, organised into two subpackages:
+
+- `lwjgl2/`: `Lwjgl2ImGuiHost` wraps `ImGuiLwjgl2` + `ImGuiGL3`, exposes
+  `renderFrame(int displayWidth, int displayHeight)` for the call site to
+  invoke per frame, and applies `UiSettings.SCALE` at init time.
+- `sim/`: `PlayerSprintMachine`, the pure-Java sprint state machine the
+  Forge 1.8.9 and 1.12.2 SimulatorEntities share. Lives here, not in
+  `core/`, because its `Inputs` field set is shaped after EntityPlayerSP's
+  1.8/1.12 read-set and that scope is honest to advertise at the module
+  level rather than smuggle into the universal core.
 
 - **No Forge or Minecraft imports.** Forge `@SubscribeEvent` wiring and
   the `Minecraft.getMinecraft()` call to fetch `displayWidth/Height` stay

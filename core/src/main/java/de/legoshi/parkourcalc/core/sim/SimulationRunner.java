@@ -42,8 +42,4 @@ public final class SimulationRunner {
     public void setStartPosition(Vec3dCore pos) {
         simulator.setStartPosition(pos);
     }
-
-    public void setStartFromPlayer() {
-        simulator.setStartFromPlayer();
-    }
 }

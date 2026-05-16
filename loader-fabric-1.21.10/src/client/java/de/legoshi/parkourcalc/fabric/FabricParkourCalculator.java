@@ -1,12 +1,6 @@
 package de.legoshi.parkourcalc.fabric;
 
-import de.legoshi.parkourcalc.core.ports.Simulator;
-import de.legoshi.parkourcalc.core.sim.SimulationRunner;
-import de.legoshi.parkourcalc.core.sim.Vec3dCore;
-import de.legoshi.parkourcalc.core.ui.BoxController;
-import de.legoshi.parkourcalc.core.ui.InputData;
-import de.legoshi.parkourcalc.core.ui.InputOverlay;
-import de.legoshi.parkourcalc.core.ui.OverlayManager;
+import de.legoshi.parkourcalc.core.Application;
 import de.legoshi.parkourcalc.fabric.imgui.ImGuiImpl;
 import de.legoshi.parkourcalc.fabric.render.FabricWorldOverlayRenderer;
 import de.legoshi.parkourcalc.fabric.sim.FabricSimulator;
@@ -21,26 +15,18 @@ import net.minecraft.util.Identifier;
 import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.List;
-
 public class FabricParkourCalculator implements ClientModInitializer {
 
     public static final String MOD_ID = "parkourcalculator";
 
     public static KeyBinding toggleKeyBinding;
 
-    private static final InputData inputData = new InputData();
-    private static final Simulator simulator = new FabricSimulator();
-    private static final SimulationRunner runner = new SimulationRunner(simulator);
-    private static final BoxController boxController = new BoxController();
-    private static final OverlayManager overlayManager = new OverlayManager();
-
-    private static final FabricWorldOverlayRenderer worldRenderer = new FabricWorldOverlayRenderer(boxController);
-    private static final FabricBoxDragController dragController = new FabricBoxDragController(
-            boxController,
-            FabricParkourCalculator::isUiFocused,
-            FabricParkourCalculator::handleStartPositionChange
+    private static final Application application = new Application(
+            new FabricSimulator(),
+            new FabricMinecraftAccess()
     );
+    private static final FabricWorldOverlayRenderer worldRenderer =
+            new FabricWorldOverlayRenderer(application.getBoxController());
 
     private static final KeyState escapeKey = new KeyState();
 
@@ -54,13 +40,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
                 category
         ));
 
-        InputOverlay inputOverlay = new InputOverlay(
-                inputData,
-                FabricParkourCalculator::runSimulation,
-                FabricParkourCalculator::setStartToPlayerPosition
-        );
-
-        overlayManager.register("TAS Inputs", inputOverlay);
+        application.registerInputOverlay();
 
         ClientTickEvents.END_CLIENT_TICK.register(FabricParkourCalculator::handleInput);
     }
@@ -75,18 +55,18 @@ public class FabricParkourCalculator implements ClientModInitializer {
             toggled = true;
         }
         if (toggled && client.currentScreen == null) {
-            setOverlayOpen(!overlayManager.isControlPanelOpen());
+            setOverlayOpen(!application.isControlPanelOpen());
         }
 
         long window = client.getWindow().getHandle();
-        if (escapeKey.justPressed(window, GLFW.GLFW_KEY_ESCAPE) && overlayManager.isControlPanelOpen()) {
+        if (escapeKey.justPressed(window, GLFW.GLFW_KEY_ESCAPE) && application.isControlPanelOpen()) {
             setOverlayOpen(false);
         }
     }
 
     private static void setOverlayOpen(boolean open) {
         MinecraftClient client = MinecraftClient.getInstance();
-        overlayManager.setControlPanelOpen(open);
+        application.setControlPanelOpen(open);
 
         if (open) {
             client.mouse.unlockCursor();
@@ -105,45 +85,23 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     /** Called from WorldRendererMixin to render world overlays. */
     public static void onWorldRender(Matrix4f positionMatrix) {
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client.player == null) return;
-
-        dragController.tick(client);
+        application.tickDrag();
         worldRenderer.render(positionMatrix);
     }
 
     /** Called from InGameHudMixin to render ImGui overlays. */
     public static void onHudRender() {
         ImGuiImpl.beginImGuiRendering();
-        overlayManager.render(ImGui.getIO());
+        application.getOverlayManager().render(ImGui.getIO());
         ImGuiImpl.endImGuiRendering();
     }
 
     public static boolean isUiFocused() {
-        return overlayManager.isControlPanelOpen();
+        return application.isControlPanelOpen();
     }
 
     public static boolean shouldSuppressLeftClick() {
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client == null) return false;
-        return dragController.shouldSuppressLeftClick(client);
-    }
-
-    private static void runSimulation() {
-        List<Vec3dCore> path = runner.simulate(inputData);
-        boxController.clearAll();
-        for (Vec3dCore p : path) {
-            boxController.add(p);
-        }
-    }
-
-    private static void setStartToPlayerPosition() {
-        runner.setStartFromPlayer();
-    }
-
-    private static void handleStartPositionChange(Vec3dCore pos) {
-        runner.setStartPosition(pos);
-        runSimulation();
+        return application.shouldSuppressLeftClick();
     }
 
     private static class KeyState {

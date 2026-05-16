@@ -23,7 +23,7 @@ plugins {
 
 rootProject.name = 'parkourcalculator'
 include 'core'
-include 'forge-lwjgl2-common'
+include 'forge-core'
 include 'loader-fabric-1.21.10'
 include 'loader-forge-1.8.9'
 include 'loader-forge-1.12.2'

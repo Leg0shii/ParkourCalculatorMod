@@ -1,4 +1,4 @@
-package de.legoshi.parkourcalc.forge.common;
+package de.legoshi.parkourcalc.forge.core.lwjgl2;
 
 import com.github.koxx12dev.fuckyou.ImGuiGL3;
 import com.github.koxx12dev.fuckyou.ImGuiLwjgl2;

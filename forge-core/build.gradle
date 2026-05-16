@@ -6,7 +6,7 @@ group = 'de.legoshi.parkourcalc.forge'
 version = '1.0.0'
 
 base {
-    archivesName = 'parkourcalculator-forge-lwjgl2-common'
+    archivesName = 'parkourcalculator-forge-core'
 }
 
 java {

@@ -1,14 +1,7 @@
 package de.legoshi.parkourcalc.forge8;
 
-import de.legoshi.parkourcalc.core.ports.Simulator;
-import de.legoshi.parkourcalc.core.sim.SimulationRunner;
-import de.legoshi.parkourcalc.core.sim.Vec3dCore;
-import de.legoshi.parkourcalc.core.ui.BoxController;
-import de.legoshi.parkourcalc.core.ui.InputData;
-import de.legoshi.parkourcalc.core.ui.InputOverlay;
-import de.legoshi.parkourcalc.core.ui.OverlayManager;
-import de.legoshi.parkourcalc.core.sim.Vec3dCore;
-import de.legoshi.parkourcalc.forge.common.Lwjgl2ImGuiHost;
+import de.legoshi.parkourcalc.core.Application;
+import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2ImGuiHost;
 import de.legoshi.parkourcalc.forge8.render.Forge8WorldOverlayRenderer;
 import de.legoshi.parkourcalc.forge8.sim.Forge8Simulator;
 import net.minecraft.client.Minecraft;
@@ -27,8 +20,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.input.Keyboard;
 
-import java.util.List;
-
 @Mod(modid = Forge8ParkourCalculator.MODID, version = Forge8ParkourCalculator.VERSION, clientSideOnly = true, acceptableRemoteVersions = "*")
 public class Forge8ParkourCalculator {
 
@@ -37,25 +28,18 @@ public class Forge8ParkourCalculator {
 
     private static final Logger LOG = LogManager.getLogger("ParkourCalculator");
 
-    private final InputData inputData = new InputData();
-    private final OverlayManager overlayManager = new OverlayManager();
-    private final Lwjgl2ImGuiHost imguiHost = new Lwjgl2ImGuiHost(overlayManager);
-    private final Simulator simulator = new Forge8Simulator();
-    private final SimulationRunner runner = new SimulationRunner(simulator);
-    private final BoxController boxController = new BoxController();
-    private final Forge8WorldOverlayRenderer worldRenderer = new Forge8WorldOverlayRenderer(boxController);
-    private final Forge8BoxDragController dragController = new Forge8BoxDragController(
-            boxController,
-            () -> overlayManager.isControlPanelOpen(),
-            this::handleStartPositionChange
+    private final Application application = new Application(
+            new Forge8Simulator(),
+            new Forge8MinecraftAccess()
     );
+    private final Lwjgl2ImGuiHost imguiHost = new Lwjgl2ImGuiHost(application.getOverlayManager());
+    private final Forge8WorldOverlayRenderer worldRenderer = new Forge8WorldOverlayRenderer(application.getBoxController());
 
     private KeyBinding toggleKeyBinding;
 
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
-        InputOverlay inputOverlay = new InputOverlay(inputData, this::runSimulation, this::setStartToPlayer);
-        overlayManager.register("TAS Inputs", inputOverlay);
+        application.registerInputOverlay();
 
         toggleKeyBinding = new KeyBinding("key.parkourcalculator.toggle_ui", Keyboard.KEY_K, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(toggleKeyBinding);
@@ -83,54 +67,32 @@ public class Forge8ParkourCalculator {
     }
 
     private void openOverlay(Minecraft mc) {
-        overlayManager.setControlPanelOpen(true);
+        application.setControlPanelOpen(true);
         mc.displayGuiScreen(new ParkourCalcGuiScreen(
                 toggleKeyBinding.getKeyCode(),
                 imguiHost,
-                () -> overlayManager.setControlPanelOpen(false)
+                () -> application.setControlPanelOpen(false)
         ));
     }
 
     @SubscribeEvent
     public void onWorldRender(RenderWorldLastEvent event) {
-        dragController.tick();
+        application.tickDrag();
         worldRenderer.render(event.partialTicks);
     }
 
     // Mirror in Forge12ParkourCalculator; differs only in MouseEvent.button vs getButton().
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onMouseEvent(MouseEvent event) {
-        if (event.button == 0 && dragController.shouldSuppressLeftClick()) {
+        if (event.button == 0 && application.shouldSuppressLeftClick()) {
             event.setCanceled(true);
         }
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onPlayerInteract(PlayerInteractEvent event) {
-        if (dragController.shouldSuppressLeftClick()) {
+        if (application.shouldSuppressLeftClick()) {
             event.setCanceled(true);
         }
-    }
-
-    private void handleStartPositionChange(Vec3dCore pos) {
-        runner.setStartPosition(pos);
-        runSimulation();
-    }
-
-    private void runSimulation() {
-        try {
-            List<Vec3dCore> path = runner.simulate(inputData);
-            boxController.clearAll();
-            for (Vec3dCore p : path) {
-                boxController.add(p);
-            }
-        } catch (IllegalStateException ignored) {
-            // Player/world not loaded yet; nothing to simulate.
-        }
-    }
-
-    private void setStartToPlayer() {
-        runner.setStartFromPlayer();
-        runSimulation();
     }
 }

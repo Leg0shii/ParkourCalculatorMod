@@ -1,6 +1,6 @@
 package de.legoshi.parkourcalc.forge12;
 
-import de.legoshi.parkourcalc.forge.common.Lwjgl2ImGuiHost;
+import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2ImGuiHost;
 import net.minecraft.client.gui.GuiScreen;
 import org.lwjgl.input.Keyboard;
 
