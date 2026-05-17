@@ -31,9 +31,10 @@ public class KeyboardMixin {
 
         int glfwKey = input.key();
 
-        // Allow toggle and escape keys to pass through
+        // Allow toggle key to pass through to MC's KeyBinding system.
+        // ESC stays here: handleInput owns it (clear-selection vs close-overlay).
         int toggleCode = KeyBindingHelper.getBoundKeyOf(FabricParkourCalculator.toggleKeyBinding).getCode();
-        if (glfwKey == toggleCode || glfwKey == GLFW.GLFW_KEY_ESCAPE) {
+        if (glfwKey == toggleCode) {
             return;
         }
 
@@ -84,6 +85,16 @@ public class KeyboardMixin {
         map.put(GLFW.GLFW_KEY_SPACE, ImGuiKey.Space);
         map.put(GLFW.GLFW_KEY_ENTER, ImGuiKey.Enter);
         map.put(GLFW.GLFW_KEY_ESCAPE, ImGuiKey.Escape);
+
+        // Modifiers: imgui-java 1.90 recomputes io.KeyCtrl/KeyShift each frame from
+        map.put(GLFW.GLFW_KEY_LEFT_CONTROL, ImGuiKey.LeftCtrl);
+        map.put(GLFW.GLFW_KEY_RIGHT_CONTROL, ImGuiKey.RightCtrl);
+        map.put(GLFW.GLFW_KEY_LEFT_SHIFT, ImGuiKey.LeftShift);
+        map.put(GLFW.GLFW_KEY_RIGHT_SHIFT, ImGuiKey.RightShift);
+        map.put(GLFW.GLFW_KEY_LEFT_ALT, ImGuiKey.LeftAlt);
+        map.put(GLFW.GLFW_KEY_RIGHT_ALT, ImGuiKey.RightAlt);
+        map.put(GLFW.GLFW_KEY_LEFT_SUPER, ImGuiKey.LeftSuper);
+        map.put(GLFW.GLFW_KEY_RIGHT_SUPER, ImGuiKey.RightSuper);
 
         // Punctuation
         map.put(GLFW.GLFW_KEY_APOSTROPHE, ImGuiKey.Apostrophe);

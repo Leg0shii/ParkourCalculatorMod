@@ -97,6 +97,7 @@ public class Forge12ParkourCalculator {
         mc.displayGuiScreen(new ParkourCalcGuiScreen(
                 toggleKeyBinding.getKeyCode(),
                 imguiHost,
+                application.getSelection(),
                 () -> application.setControlPanelOpen(false)
         ));
     }

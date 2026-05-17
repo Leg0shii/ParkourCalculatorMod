@@ -339,10 +339,8 @@ public final class InputOverlay implements RenderInterface {
         if (ImGui.isKeyPressed(ImGuiKey.Delete) && !selection.isEmpty()) {
             deleteSelectedRows();
         }
-
-        if (ImGui.isKeyPressed(ImGuiKey.Escape)) {
-            selection.clear();
-        }
+        // ESC is owned by the loader's tick handler so it can decide
+        // clear-selection vs close-overlay atomically.
     }
 
     private static class DragDropState {

@@ -56,12 +56,12 @@ public final class Forge8WorldOverlayRenderer {
         buf.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION_COLOR);
         boxController.render(
                 new Forge8BoxRenderer(buf, camX, camY, camZ, BoxRenderer.Mode.FACES),
-                (i, s) -> BoxStyle.tickFaceArgb(settings, s, false));
+                (i, s) -> BoxStyle.tickFaceArgb(settings, s, selection.isSelected(i)));
         tess.draw();
 
         buf.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
         Forge8BoxRenderer linesRenderer = new Forge8BoxRenderer(buf, camX, camY, camZ, BoxRenderer.Mode.LINES);
-        boxController.render(linesRenderer, (i, s) -> BoxStyle.tickLineArgb(settings, s, false));
+        boxController.render(linesRenderer, (i, s) -> BoxStyle.tickLineArgb(settings, s, selection.isSelected(i)));
         if (settings.showSubtick) {
             boxController.renderPath(linesRenderer, BoxStyle.subtickPathArgb(settings));
         }

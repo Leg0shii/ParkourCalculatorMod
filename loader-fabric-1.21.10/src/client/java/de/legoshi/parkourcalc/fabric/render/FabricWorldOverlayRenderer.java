@@ -45,9 +45,9 @@ public final class FabricWorldOverlayRenderer {
 
         VertexConsumerProvider.Immediate consumers = client.getBufferBuilders().getEntityVertexConsumers();
         FabricBoxRenderer facesRenderer = new FabricBoxRenderer(matrixStack, consumers, BoxRenderer.Mode.FACES);
-        boxController.render(facesRenderer, (i, s) -> BoxStyle.tickFaceArgb(settings, s, false));
+        boxController.render(facesRenderer, (i, s) -> BoxStyle.tickFaceArgb(settings, s, selection.isSelected(i)));
         FabricBoxRenderer linesRenderer = new FabricBoxRenderer(matrixStack, consumers, BoxRenderer.Mode.LINES);
-        boxController.render(linesRenderer, (i, s) -> BoxStyle.tickLineArgb(settings, s, false));
+        boxController.render(linesRenderer, (i, s) -> BoxStyle.tickLineArgb(settings, s, selection.isSelected(i)));
         if (settings.showSubtick) {
             boxController.renderPath(linesRenderer, BoxStyle.subtickPathArgb(settings));
         }

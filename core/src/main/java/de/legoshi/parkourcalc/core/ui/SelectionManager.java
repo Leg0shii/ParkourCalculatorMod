@@ -1,17 +1,23 @@
 package de.legoshi.parkourcalc.core.ui;
 
-import imgui.ImGui;
-import imgui.ImGuiIO;
+import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 
 import java.util.*;
 
 /**
  * Manages row selection state with support for single, range, and toggle selection.
+ * Reads modifier state from MinecraftAccess (direct GLFW/LWJGL2 poll); ImGui's
+ * io.KeyCtrl/KeyShift derivation has proven unreliable here.
  */
 public class SelectionManager {
 
     private final Set<Integer> selectedRows = new TreeSet<>();
+    private final MinecraftAccess mc;
     private int lastClickedRow = -1;
+
+    public SelectionManager(MinecraftAccess mc) {
+        this.mc = mc;
+    }
 
     public Set<Integer> getSelected() {
         return Collections.unmodifiableSet(selectedRows);
@@ -96,8 +102,7 @@ public class SelectionManager {
     }
 
     private ModifierState getModifierState() {
-        ImGuiIO io = ImGui.getIO();
-        return new ModifierState(io.getKeyCtrl(), io.getKeyShift());
+        return new ModifierState(mc.isCtrlDown(), mc.isShiftDown());
     }
 
     private static final class ModifierState {

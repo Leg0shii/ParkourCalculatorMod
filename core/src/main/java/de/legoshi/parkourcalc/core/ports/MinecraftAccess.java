@@ -22,6 +22,12 @@ public interface MinecraftAccess {
     /** Current state of the left mouse button (true while held). */
     boolean isMousePressedLeft();
 
+    /** Either control key currently held. Polled directly, not via ImGui IO. */
+    boolean isCtrlDown();
+
+    /** Either shift key currently held. Polled directly, not via ImGui IO. */
+    boolean isShiftDown();
+
     /** True when the player and world are both available to query. */
     boolean isReady();
 }

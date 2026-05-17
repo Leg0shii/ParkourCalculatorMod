@@ -32,7 +32,7 @@ public final class Application {
     private final OverlayManager overlayManager = new OverlayManager(this::onPinStateChanged);
     private final BoxController boxController = new BoxController();
     private final Settings settings = new Settings();
-    private final SelectionManager selection = new SelectionManager();
+    private final SelectionManager selection;
     private final SimulationRunner runner;
     private final BoxDragController dragController;
     private final SaveController saveController;
@@ -42,6 +42,7 @@ public final class Application {
 
     public Application(Simulator simulator, MinecraftAccess mc) {
         this.mc = mc;
+        this.selection = new SelectionManager(mc);
         this.runner = new SimulationRunner(simulator);
         this.dragController = new BoxDragController(boxController, this::handleStartPositionChange);
         this.saveController = new SaveController(inputData, runner, mc, this::runSimulation);

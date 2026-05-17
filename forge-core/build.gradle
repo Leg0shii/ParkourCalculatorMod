@@ -20,6 +20,8 @@ tasks.withType(JavaCompile).configureEach {
 repositories {
     mavenCentral()
     maven { url 'https://jitpack.io' }
+    // LWJGL 2 nightly used by MC 1.8.9 / 1.12.2 ships through Mojang's lib repo, not Central.
+    maven { url 'https://libraries.minecraft.net/' }
 }
 
 // imgui-java pinned here too, since the koxx12-dev shim (consumed transitively by the
@@ -31,4 +33,6 @@ dependencies {
     api project(':core')
     api 'com.github.koxx12-dev:ImGui-Java-Lwjgl2:1.0.0'
     compileOnly "io.github.spair:imgui-java-binding:${imguiVersion}"
+    // LWJGL 2 input polling (Keyboard, Mouse). Loaders bring the runtime via MC's deps.
+    compileOnly 'org.lwjgl.lwjgl:lwjgl:2.9.4-nightly-20150209'
 }

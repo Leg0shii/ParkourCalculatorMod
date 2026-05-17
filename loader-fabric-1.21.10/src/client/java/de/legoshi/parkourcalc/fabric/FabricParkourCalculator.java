@@ -76,7 +76,11 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
         long window = client.getWindow().getHandle();
         if (escapeKey.justPressed(window, GLFW.GLFW_KEY_ESCAPE) && application.isControlPanelOpen() && !imguiWantsKeys) {
-            setOverlayOpen(false);
+            if (!application.getSelection().isEmpty()) {
+                application.getSelection().clear();
+            } else {
+                setOverlayOpen(false);
+            }
         }
     }
 

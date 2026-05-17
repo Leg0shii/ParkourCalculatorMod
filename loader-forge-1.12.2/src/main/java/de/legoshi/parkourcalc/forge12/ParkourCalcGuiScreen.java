@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.forge12;
 
+import de.legoshi.parkourcalc.core.ui.SelectionManager;
 import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2ImGuiHost;
 import imgui.ImGui;
 import net.minecraft.client.gui.GuiScreen;
@@ -12,11 +13,14 @@ public final class ParkourCalcGuiScreen extends GuiScreen {
 
     private final int toggleKeyCode;
     private final Lwjgl2ImGuiHost imguiHost;
+    private final SelectionManager selection;
     private final Runnable onClose;
 
-    public ParkourCalcGuiScreen(int toggleKeyCode, Lwjgl2ImGuiHost imguiHost, Runnable onClose) {
+    public ParkourCalcGuiScreen(int toggleKeyCode, Lwjgl2ImGuiHost imguiHost,
+                                SelectionManager selection, Runnable onClose) {
         this.toggleKeyCode = toggleKeyCode;
         this.imguiHost = imguiHost;
+        this.selection = selection;
         this.onClose = onClose;
         this.allowUserInput = true;
     }
@@ -33,6 +37,10 @@ public final class ParkourCalcGuiScreen extends GuiScreen {
     @Override
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
         boolean wantsText = ImGui.getIO().getWantTextInput();
+        if (keyCode == Keyboard.KEY_ESCAPE && !wantsText && !selection.isEmpty()) {
+            selection.clear();
+            return;
+        }
         if ((keyCode == toggleKeyCode || keyCode == Keyboard.KEY_ESCAPE) && !wantsText) {
             mc.displayGuiScreen(null);
             if (mc.currentScreen == null) {

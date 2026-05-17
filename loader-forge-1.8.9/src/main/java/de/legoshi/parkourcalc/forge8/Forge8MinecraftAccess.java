@@ -2,11 +2,11 @@ package de.legoshi.parkourcalc.forge8;
 
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
+import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2InputState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Vec3;
-import org.lwjgl.input.Mouse;
 
 public final class Forge8MinecraftAccess implements MinecraftAccess {
 
@@ -35,7 +35,17 @@ public final class Forge8MinecraftAccess implements MinecraftAccess {
 
     @Override
     public boolean isMousePressedLeft() {
-        return Mouse.isButtonDown(0);
+        return Lwjgl2InputState.isMousePressedLeft();
+    }
+
+    @Override
+    public boolean isCtrlDown() {
+        return Lwjgl2InputState.isCtrlDown();
+    }
+
+    @Override
+    public boolean isShiftDown() {
+        return Lwjgl2InputState.isShiftDown();
     }
 
     @Override
