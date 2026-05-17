@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.forge8;
 
 import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2ImGuiHost;
+import imgui.ImGui;
 import net.minecraft.client.gui.GuiScreen;
 import org.lwjgl.input.Keyboard;
 
@@ -31,7 +32,8 @@ public final class ParkourCalcGuiScreen extends GuiScreen {
 
     @Override
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
-        if (keyCode == toggleKeyCode || keyCode == Keyboard.KEY_ESCAPE) {
+        boolean wantsText = ImGui.getIO().getWantTextInput();
+        if ((keyCode == toggleKeyCode || keyCode == Keyboard.KEY_ESCAPE) && !wantsText) {
             mc.displayGuiScreen(null);
             if (mc.currentScreen == null) {
                 mc.setIngameFocus();

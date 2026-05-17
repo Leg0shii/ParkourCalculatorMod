@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.fabric;
 
 import de.legoshi.parkourcalc.core.Application;
+import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.fabric.imgui.ImGuiImpl;
 import de.legoshi.parkourcalc.fabric.render.FabricWorldOverlayRenderer;
@@ -10,6 +11,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
@@ -44,9 +46,16 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
         application.registerInputOverlay();
         application.registerSettingsOverlay();
+        application.registerFileBrowserOverlay();
         application.initSettingsStorage(
                 FabricLoader.getInstance().getConfigDir().resolve("parkourcalculator.json")
         );
+        application.setSaveStore(new FileSystemSaveStore(
+                FabricLoader.getInstance().getGameDir().resolve("parkourcalculator"),
+                modVersion(),
+                SharedConstants.getGameVersion().name(),
+                FabricWorldDescriptors::current
+        ));
 
         ClientTickEvents.END_CLIENT_TICK.register(FabricParkourCalculator::handleInput);
     }
@@ -60,12 +69,13 @@ public class FabricParkourCalculator implements ClientModInitializer {
         while (toggleKeyBinding.wasPressed()) {
             toggled = true;
         }
-        if (toggled && client.currentScreen == null) {
+        boolean imguiWantsKeys = application.isControlPanelOpen() && ImGui.getIO().getWantTextInput();
+        if (toggled && client.currentScreen == null && !imguiWantsKeys) {
             setOverlayOpen(!application.isControlPanelOpen());
         }
 
         long window = client.getWindow().getHandle();
-        if (escapeKey.justPressed(window, GLFW.GLFW_KEY_ESCAPE) && application.isControlPanelOpen()) {
+        if (escapeKey.justPressed(window, GLFW.GLFW_KEY_ESCAPE) && application.isControlPanelOpen() && !imguiWantsKeys) {
             setOverlayOpen(false);
         }
     }
@@ -113,6 +123,13 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     public static Settings getSettings() {
         return application.getSettings();
+    }
+
+    private static String modVersion() {
+        return FabricLoader.getInstance()
+                .getModContainer(MOD_ID)
+                .map(c -> c.getMetadata().getVersion().getFriendlyString())
+                .orElse("unknown");
     }
 
     private static class KeyState {

@@ -19,6 +19,13 @@ public class InputData {
         }
     }
 
+    public void resetToDefault() {
+        rows.clear();
+        for (int i = 0; i < DEFAULT_ROW_COUNT; i++) {
+            rows.add(new InputRow());
+        }
+    }
+
     public List<InputRow> getRows() {
         return rows;
     }

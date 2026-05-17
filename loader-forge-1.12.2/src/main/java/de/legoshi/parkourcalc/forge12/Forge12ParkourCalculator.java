@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.forge12;
 
 import de.legoshi.parkourcalc.core.Application;
+import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2ImGuiHost;
 import de.legoshi.parkourcalc.forge12.render.Forge12WorldOverlayRenderer;
 import de.legoshi.parkourcalc.forge12.sim.Forge12Simulator;
@@ -11,7 +12,9 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.ModContainer;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
@@ -41,17 +44,26 @@ public class Forge12ParkourCalculator {
 
     private KeyBinding toggleKeyBinding;
     private Path configPath;
+    private Path saveDir;
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
         configPath = new File(event.getModConfigurationDirectory(), "parkourcalculator.json").toPath();
+        saveDir = new File(Minecraft.getMinecraft().gameDir, "parkourcalculator").toPath();
     }
 
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
         application.registerInputOverlay();
         application.registerSettingsOverlay();
+        application.registerFileBrowserOverlay();
         application.initSettingsStorage(configPath);
+        application.setSaveStore(new FileSystemSaveStore(
+                saveDir,
+                modVersion(),
+                MinecraftForge.MC_VERSION,
+                Forge12WorldDescriptors::current
+        ));
 
         toggleKeyBinding = new KeyBinding("key.parkourcalculator.toggle_ui", Keyboard.KEY_K, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(toggleKeyBinding);
@@ -108,5 +120,10 @@ public class Forge12ParkourCalculator {
         if (application.shouldSuppressLeftClick()) {
             event.setCanceled(true);
         }
+    }
+
+    private static String modVersion() {
+        ModContainer container = Loader.instance().getIndexedModList().get(MODID);
+        return container != null ? container.getVersion() : VERSION;
     }
 }
