@@ -1,13 +1,5 @@
 package de.legoshi.parkourcalc.core.ui;
 
-/**
- * Centralised visual constants for the simulated-path boxes. All loaders read
- * from here so size, stroke, and colors stay in sync across Fabric / Forge
- * 1.8.9 / Forge 1.12.2. Per-state coloring (v1.1.0: grounded / airborne /
- * landing) will grow additional constants here.
- *
- * Colors are packed ARGB ints: high byte = alpha, then R, G, B.
- */
 public final class BoxStyle {
 
     /** Edge length of each tick box, in blocks. */
@@ -23,11 +15,29 @@ public final class BoxStyle {
      */
     public static final float LINE_WIDTH = 3.0F;
 
-    /** Outline color for the wireframe edge pass (opaque grey). */
-    public static final int WIREFRAME_ARGB = 0xFFB2B2B2;
+    /** Packs four normalized [0,1] color components into an ARGB int. */
+    public static int toArgb(float r, float g, float b, float a) {
+        return (clamp255(a) << 24) | (clamp255(r) << 16) | (clamp255(g) << 8) | clamp255(b);
+    }
 
-    /** Fill color for the translucent face pass (~25% alpha grey). */
-    public static final int FACE_ARGB = 0x40B2B2B2;
+    public static int toArgb(float[] rgba) {
+        return toArgb(rgba[0], rgba[1], rgba[2], rgba[3]);
+    }
+
+    /** Fill color for the default tick box: user-controlled alpha for translucency. */
+    public static int tickDefaultFaceArgb(Settings settings) {
+        return toArgb(settings.tickDefault);
+    }
+
+    /** Outline color for the default tick box: full alpha so the wireframe always reads. */
+    public static int tickDefaultLineArgb(Settings settings) {
+        float[] c = settings.tickDefault;
+        return toArgb(c[0], c[1], c[2], 1.0f);
+    }
+
+    private static int clamp255(float v) {
+        return Math.max(0, Math.min(255, Math.round(v * 255)));
+    }
 
     private BoxStyle() {
     }

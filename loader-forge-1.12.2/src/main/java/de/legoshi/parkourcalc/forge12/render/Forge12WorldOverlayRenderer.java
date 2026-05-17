@@ -3,6 +3,7 @@ package de.legoshi.parkourcalc.forge12.render;
 import de.legoshi.parkourcalc.core.ports.BoxRenderer;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.BoxStyle;
+import de.legoshi.parkourcalc.core.ui.Settings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
@@ -19,9 +20,11 @@ import org.lwjgl.opengl.GL11;
 public final class Forge12WorldOverlayRenderer {
 
     private final BoxController boxController;
+    private final Settings settings;
 
-    public Forge12WorldOverlayRenderer(BoxController boxController) {
+    public Forge12WorldOverlayRenderer(BoxController boxController, Settings settings) {
         this.boxController = boxController;
+        this.settings = settings;
     }
 
     public void render(float partialTicks) {
@@ -46,11 +49,11 @@ public final class Forge12WorldOverlayRenderer {
         BufferBuilder buf = tess.getBuffer();
 
         buf.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION_COLOR);
-        boxController.render(new Forge12BoxRenderer(buf, camX, camY, camZ, BoxRenderer.Mode.FACES), BoxStyle.FACE_ARGB);
+        boxController.render(new Forge12BoxRenderer(buf, camX, camY, camZ, BoxRenderer.Mode.FACES), BoxStyle.tickDefaultFaceArgb(settings));
         tess.draw();
 
         buf.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
-        boxController.render(new Forge12BoxRenderer(buf, camX, camY, camZ, BoxRenderer.Mode.LINES), BoxStyle.WIREFRAME_ARGB);
+        boxController.render(new Forge12BoxRenderer(buf, camX, camY, camZ, BoxRenderer.Mode.LINES), BoxStyle.tickDefaultLineArgb(settings));
         tess.draw();
 
         GlStateManager.disableBlend();

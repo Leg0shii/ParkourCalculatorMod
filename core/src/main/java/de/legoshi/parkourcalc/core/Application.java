@@ -28,7 +28,7 @@ public final class Application {
     private final MinecraftAccess mc;
 
     private final InputData inputData = new InputData();
-    private final OverlayManager overlayManager = new OverlayManager();
+    private final OverlayManager overlayManager = new OverlayManager(this::onPinStateChanged);
     private final BoxController boxController = new BoxController();
     private final Settings settings = new Settings();
     private final SimulationRunner runner;
@@ -54,10 +54,16 @@ public final class Application {
     public void initSettingsStorage(Path path) {
         this.settingsPath = path;
         SettingsIO.load(path, settings);
+        overlayManager.setPinnedNames(settings.pinnedOverlays);
     }
 
     public void saveSettings() {
         SettingsIO.save(settingsPath, settings);
+    }
+
+    private void onPinStateChanged() {
+        settings.pinnedOverlays = overlayManager.getPinnedNames();
+        saveSettings();
     }
 
     public void runSimulation() {

@@ -28,16 +28,12 @@ public class FabricParkourCalculator implements ClientModInitializer {
             new FabricMinecraftAccess()
     );
     private static final FabricWorldOverlayRenderer worldRenderer =
-            new FabricWorldOverlayRenderer(application.getBoxController());
+            new FabricWorldOverlayRenderer(application.getBoxController(), application.getSettings());
 
     private static final KeyState escapeKey = new KeyState();
 
     @Override
     public void onInitializeClient() {
-        application.initSettingsStorage(
-                FabricLoader.getInstance().getConfigDir().resolve("parkourcalculator.json")
-        );
-
         KeyBinding.Category category = KeyBinding.Category.create(Identifier.of(MOD_ID, "general"));
         toggleKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.parkourcalculator.toggle_ui",
@@ -48,6 +44,9 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
         application.registerInputOverlay();
         application.registerSettingsOverlay();
+        application.initSettingsStorage(
+                FabricLoader.getInstance().getConfigDir().resolve("parkourcalculator.json")
+        );
 
         ClientTickEvents.END_CLIENT_TICK.register(FabricParkourCalculator::handleInput);
     }

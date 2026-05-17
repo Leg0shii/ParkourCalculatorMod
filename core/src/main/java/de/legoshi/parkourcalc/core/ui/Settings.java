@@ -5,7 +5,7 @@ public final class Settings {
     public static final float[] PRESET_SCALES = {0.75f, 1.0f, 1.25f, 1.5f, 2.0f, 2.5f};
     public static final int DEFAULT_SCALE_INDEX = 3;
 
-    private static final float[] DEFAULT_TICK_DEFAULT = {0.70f, 0.70f, 0.70f, 1.00f};
+    private static final float[] DEFAULT_TICK_DEFAULT = {0.70f, 0.70f, 0.70f, 0.25f};
     private static final float[] DEFAULT_TICK_SELECTED = {0.20f, 0.55f, 1.00f, 1.00f};
     private static final float[] DEFAULT_TICK_AIR = {0.40f, 0.80f, 1.00f, 1.00f};
     private static final float[] DEFAULT_TICK_SNEAK = {1.00f, 0.60f, 0.20f, 1.00f};
@@ -39,6 +39,8 @@ public final class Settings {
 
     public int scaleIndex = DEFAULT_SCALE_INDEX;
 
+    public String[] pinnedOverlays = new String[0];
+
     public void reset() {
         System.arraycopy(DEFAULT_TICK_DEFAULT, 0, tickDefault, 0, 4);
         System.arraycopy(DEFAULT_TICK_SELECTED, 0, tickSelected, 0, 4);
@@ -55,5 +57,6 @@ public final class Settings {
         showFullHitbox = DEFAULT_SHOW_FULL_HITBOX;
         showSubtick = DEFAULT_SHOW_SUBTICK;
         scaleIndex = DEFAULT_SCALE_INDEX;
+        pinnedOverlays = new String[0];
     }
 }

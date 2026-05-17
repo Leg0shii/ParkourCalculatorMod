@@ -22,6 +22,7 @@ import org.apache.logging.log4j.Logger;
 import org.lwjgl.input.Keyboard;
 
 import java.io.File;
+import java.nio.file.Path;
 
 @Mod(modid = Forge12ParkourCalculator.MODID, version = Forge12ParkourCalculator.VERSION, clientSideOnly = true, acceptableRemoteVersions = "*")
 public class Forge12ParkourCalculator {
@@ -36,20 +37,21 @@ public class Forge12ParkourCalculator {
             new Forge12MinecraftAccess()
     );
     private final Lwjgl2ImGuiHost imguiHost = new Lwjgl2ImGuiHost(application.getOverlayManager(), application.getSettings());
-    private final Forge12WorldOverlayRenderer worldRenderer = new Forge12WorldOverlayRenderer(application.getBoxController());
+    private final Forge12WorldOverlayRenderer worldRenderer = new Forge12WorldOverlayRenderer(application.getBoxController(), application.getSettings());
 
     private KeyBinding toggleKeyBinding;
+    private Path configPath;
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
-        File configFile = new File(event.getModConfigurationDirectory(), "parkourcalculator.json");
-        application.initSettingsStorage(configFile.toPath());
+        configPath = new File(event.getModConfigurationDirectory(), "parkourcalculator.json").toPath();
     }
 
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
         application.registerInputOverlay();
         application.registerSettingsOverlay();
+        application.initSettingsStorage(configPath);
 
         toggleKeyBinding = new KeyBinding("key.parkourcalculator.toggle_ui", Keyboard.KEY_K, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(toggleKeyBinding);

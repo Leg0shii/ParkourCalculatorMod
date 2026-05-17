@@ -3,6 +3,7 @@ package de.legoshi.parkourcalc.fabric.render;
 import de.legoshi.parkourcalc.core.ports.BoxRenderer;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.BoxStyle;
+import de.legoshi.parkourcalc.core.ui.Settings;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.util.math.MatrixStack;
@@ -18,9 +19,11 @@ import org.joml.Matrix4f;
 public final class FabricWorldOverlayRenderer {
 
     private final BoxController boxController;
+    private final Settings settings;
 
-    public FabricWorldOverlayRenderer(BoxController boxController) {
+    public FabricWorldOverlayRenderer(BoxController boxController, Settings settings) {
         this.boxController = boxController;
+        this.settings = settings;
     }
 
     public void render(Matrix4f positionMatrix) {
@@ -36,8 +39,8 @@ public final class FabricWorldOverlayRenderer {
         matrixStack.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z);
 
         VertexConsumerProvider.Immediate consumers = client.getBufferBuilders().getEntityVertexConsumers();
-        boxController.render(new FabricBoxRenderer(matrixStack, consumers, BoxRenderer.Mode.FACES), BoxStyle.FACE_ARGB);
-        boxController.render(new FabricBoxRenderer(matrixStack, consumers, BoxRenderer.Mode.LINES), BoxStyle.WIREFRAME_ARGB);
+        boxController.render(new FabricBoxRenderer(matrixStack, consumers, BoxRenderer.Mode.FACES), BoxStyle.tickDefaultFaceArgb(settings));
+        boxController.render(new FabricBoxRenderer(matrixStack, consumers, BoxRenderer.Mode.LINES), BoxStyle.tickDefaultLineArgb(settings));
         consumers.draw();
 
         matrixStack.pop();

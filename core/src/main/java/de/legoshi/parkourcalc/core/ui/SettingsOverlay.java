@@ -71,7 +71,9 @@ public final class SettingsOverlay implements RenderInterface {
 
     private void renderScale() {
         scaleIndexBuf.set(settings.scaleIndex);
-        if (ImGui.combo("UI Scale", scaleIndexBuf, scaleLabels)) {
+        ImGui.text("UI Scale");
+        ImGui.sameLine();
+        if (ImGui.combo("##ui_scale", scaleIndexBuf, scaleLabels)) {
             settings.scaleIndex = scaleIndexBuf.get();
             onChanged.run();
         }
