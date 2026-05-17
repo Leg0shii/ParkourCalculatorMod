@@ -4,6 +4,7 @@ import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.ports.SaveStore;
 import de.legoshi.parkourcalc.core.ports.Simulator;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
+import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.BoxDragController;
@@ -74,10 +75,10 @@ public final class Application {
 
     public void runSimulation() {
         if (!mc.isReady()) return;
-        List<Vec3dCore> path = runner.simulate(inputData);
+        List<TickState> path = runner.simulate(inputData);
         boxController.clearAll();
-        for (Vec3dCore p : path) {
-            boxController.add(p);
+        for (TickState s : path) {
+            boxController.add(s);
         }
     }
 

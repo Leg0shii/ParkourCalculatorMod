@@ -1,5 +1,7 @@
 package de.legoshi.parkourcalc.core.ui;
 
+import de.legoshi.parkourcalc.core.sim.TickState;
+
 public final class BoxStyle {
 
     /** Edge length of each tick box, in blocks. */
@@ -24,15 +26,24 @@ public final class BoxStyle {
         return toArgb(rgba[0], rgba[1], rgba[2], rgba[3]);
     }
 
-    /** Fill color for the default tick box: user-controlled alpha for translucency. */
-    public static int tickDefaultFaceArgb(Settings settings) {
-        return toArgb(settings.tickDefault);
+    /** Fill color for a tick box: user-controlled alpha for translucency. */
+    public static int tickFaceArgb(Settings settings, TickState state, boolean selected) {
+        return toArgb(pickChannel(settings, state, selected));
     }
 
-    /** Outline color for the default tick box: full alpha so the wireframe always reads. */
-    public static int tickDefaultLineArgb(Settings settings) {
-        float[] c = settings.tickDefault;
+    /** Outline color for a tick box: full alpha so the wireframe always reads. */
+    public static int tickLineArgb(Settings settings, TickState state, boolean selected) {
+        float[] c = pickChannel(settings, state, selected);
         return toArgb(c[0], c[1], c[2], 1.0f);
+    }
+
+    /** selected > wall > in-air > sneak > default. */
+    private static float[] pickChannel(Settings settings, TickState state, boolean selected) {
+        if (selected) return settings.tickSelected;
+        if (state.wallCollision) return settings.tickWall;
+        if (!state.onGround) return settings.tickAir;
+        if (state.sneaking) return settings.tickSneak;
+        return settings.tickDefault;
     }
 
     private static int clamp255(float v) {

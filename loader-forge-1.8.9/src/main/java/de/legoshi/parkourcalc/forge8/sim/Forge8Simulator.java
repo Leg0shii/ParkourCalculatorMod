@@ -39,6 +39,21 @@ public final class Forge8Simulator extends LazyEntitySimulator<SimulatorEntity> 
     }
 
     @Override
+    protected boolean isOnGround(SimulatorEntity e) {
+        return e.onGround;
+    }
+
+    @Override
+    protected boolean isSneaking(SimulatorEntity e) {
+        return e.isSneaking();
+    }
+
+    @Override
+    protected boolean isWallCollision(SimulatorEntity e) {
+        return e.isCollidedHorizontally;
+    }
+
+    @Override
     protected Vec3dCore getStart(SimulatorEntity e) {
         Vec3 p = e.startPosition;
         return new Vec3dCore(p.xCoord, p.yCoord, p.zCoord);

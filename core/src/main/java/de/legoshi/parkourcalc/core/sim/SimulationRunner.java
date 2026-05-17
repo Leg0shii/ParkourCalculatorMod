@@ -15,19 +15,28 @@ public final class SimulationRunner {
         this.simulator = simulator;
     }
 
-    public List<Vec3dCore> simulate(InputData inputData) {
+    public List<TickState> simulate(InputData inputData) {
         simulator.resetToStart();
 
-        List<Vec3dCore> path = new ArrayList<Vec3dCore>();
-        path.add(simulator.getStartPosition());
+        List<TickState> path = new ArrayList<TickState>();
+        path.add(snapshot());
 
         for (InputRow row : inputData.getRows()) {
             simulator.applyInput(row);
             simulator.tick();
-            path.add(simulator.getCurrentPosition());
+            path.add(snapshot());
         }
 
         return path;
+    }
+
+    private TickState snapshot() {
+        return new TickState(
+                simulator.getCurrentPosition(),
+                simulator.isCurrentOnGround(),
+                simulator.isCurrentSneaking(),
+                simulator.isCurrentWallCollision()
+        );
     }
 
     public Vec3dCore getStartPosition() {

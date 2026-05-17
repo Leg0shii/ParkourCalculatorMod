@@ -40,6 +40,21 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     }
 
     @Override
+    public final boolean isCurrentOnGround() {
+        return isOnGround(ensureEntity());
+    }
+
+    @Override
+    public final boolean isCurrentSneaking() {
+        return isSneaking(ensureEntity());
+    }
+
+    @Override
+    public final boolean isCurrentWallCollision() {
+        return isWallCollision(ensureEntity());
+    }
+
+    @Override
     public final Vec3dCore getStartPosition() {
         if (entity != null) return getStart(entity);
         return pendingStart != null ? pendingStart : Vec3dCore.ZERO;
@@ -103,6 +118,12 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     protected abstract void tickEntity(E entity);
 
     protected abstract Vec3dCore getPos(E entity);
+
+    protected abstract boolean isOnGround(E entity);
+
+    protected abstract boolean isSneaking(E entity);
+
+    protected abstract boolean isWallCollision(E entity);
 
     protected abstract Vec3dCore getStart(E entity);
 

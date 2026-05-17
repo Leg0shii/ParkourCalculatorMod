@@ -13,6 +13,12 @@ public interface Simulator {
 
     Vec3dCore getCurrentPosition();
 
+    boolean isCurrentOnGround();
+
+    boolean isCurrentSneaking();
+
+    boolean isCurrentWallCollision();
+
     Vec3dCore getStartPosition();
 
     void setStartPosition(Vec3dCore pos);

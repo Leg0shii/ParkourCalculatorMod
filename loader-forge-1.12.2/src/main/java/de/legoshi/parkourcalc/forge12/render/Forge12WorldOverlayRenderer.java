@@ -49,11 +49,15 @@ public final class Forge12WorldOverlayRenderer {
         BufferBuilder buf = tess.getBuffer();
 
         buf.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION_COLOR);
-        boxController.render(new Forge12BoxRenderer(buf, camX, camY, camZ, BoxRenderer.Mode.FACES), BoxStyle.tickDefaultFaceArgb(settings));
+        boxController.render(
+                new Forge12BoxRenderer(buf, camX, camY, camZ, BoxRenderer.Mode.FACES),
+                (i, s) -> BoxStyle.tickFaceArgb(settings, s, false));
         tess.draw();
 
         buf.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
-        boxController.render(new Forge12BoxRenderer(buf, camX, camY, camZ, BoxRenderer.Mode.LINES), BoxStyle.tickDefaultLineArgb(settings));
+        boxController.render(
+                new Forge12BoxRenderer(buf, camX, camY, camZ, BoxRenderer.Mode.LINES),
+                (i, s) -> BoxStyle.tickLineArgb(settings, s, false));
         tess.draw();
 
         GlStateManager.disableBlend();

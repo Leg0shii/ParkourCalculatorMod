@@ -39,8 +39,12 @@ public final class FabricWorldOverlayRenderer {
         matrixStack.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z);
 
         VertexConsumerProvider.Immediate consumers = client.getBufferBuilders().getEntityVertexConsumers();
-        boxController.render(new FabricBoxRenderer(matrixStack, consumers, BoxRenderer.Mode.FACES), BoxStyle.tickDefaultFaceArgb(settings));
-        boxController.render(new FabricBoxRenderer(matrixStack, consumers, BoxRenderer.Mode.LINES), BoxStyle.tickDefaultLineArgb(settings));
+        boxController.render(
+                new FabricBoxRenderer(matrixStack, consumers, BoxRenderer.Mode.FACES),
+                (i, s) -> BoxStyle.tickFaceArgb(settings, s, false));
+        boxController.render(
+                new FabricBoxRenderer(matrixStack, consumers, BoxRenderer.Mode.LINES),
+                (i, s) -> BoxStyle.tickLineArgb(settings, s, false));
         consumers.draw();
 
         matrixStack.pop();

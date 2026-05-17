@@ -40,6 +40,21 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
     }
 
     @Override
+    protected boolean isOnGround(SimulatorEntity e) {
+        return e.isOnGround();
+    }
+
+    @Override
+    protected boolean isSneaking(SimulatorEntity e) {
+        return e.isSneaking();
+    }
+
+    @Override
+    protected boolean isWallCollision(SimulatorEntity e) {
+        return e.horizontalCollision;
+    }
+
+    @Override
     protected Vec3dCore getStart(SimulatorEntity e) {
         Vec3d p = e.startPosition;
         return new Vec3dCore(p.x, p.y, p.z);
