@@ -87,24 +87,6 @@ public final class SaveIO {
         return (s.vel != null && s.vel.length >= 3) ? new Vec3dCore(s.vel[0], s.vel[1], s.vel[2]) : Vec3dCore.ZERO;
     }
 
-    public static String formatWorld(SaveFile.World w) {
-        if (w == null) return "(out of world)";
-        String body;
-        if (w.worldName != null) body = w.worldName;
-        else if (w.serverAddress != null) body = w.serverAddress;
-        else body = "(unknown)";
-        return w.dimension != null ? body + " [" + shortDimension(w.dimension) + "]" : body;
-    }
-
-    private static String shortDimension(String d) {
-        if (d == null) return null;
-        String lower = d.toLowerCase(Locale.US);
-        if (lower.endsWith("overworld")) return "O";
-        if (lower.endsWith("the_nether") || lower.endsWith("nether")) return "N";
-        if (lower.endsWith("the_end") || lower.endsWith("end")) return "E";
-        return d;
-    }
-
     public static SaveFile parseSafe(String contents) {
         try {
             return new Gson().fromJson(contents, SaveFile.class);

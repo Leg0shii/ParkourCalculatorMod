@@ -100,7 +100,7 @@ public final class FileSystemSaveStore implements SaveStore {
         try {
             SaveFile parsed = SaveIO.parseSafe(new String(Files.readAllBytes(p), CHARSET));
             if (parsed != null) {
-                return new SaveInfo(name, mtime, parsed.mcVersion, SaveIO.formatWorld(parsed.world));
+                return new SaveInfo(name, mtime, parsed.mcVersion, WorldDescriptor.displayOf(parsed.world));
             }
         } catch (IOException ignored) {
         }

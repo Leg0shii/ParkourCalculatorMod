@@ -8,13 +8,12 @@ import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.save.SaveInfo;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
-import de.legoshi.parkourcalc.core.ui.FileBrowserOverlay;
 import de.legoshi.parkourcalc.core.ui.InputData;
 
 import java.util.Collections;
 import java.util.List;
 
-public final class SaveController implements FileBrowserOverlay.Backend {
+public final class SaveController {
 
     private final InputData inputData;
     private final SimulationRunner runner;
@@ -32,19 +31,18 @@ public final class SaveController implements FileBrowserOverlay.Backend {
         this.retriggerSimulation = retriggerSimulation;
     }
 
-    public void setSaveStore(SaveStore store) {
+    void setSaveStore(SaveStore store) {
         this.store = store;
     }
 
-    public SaveStore getSaveStore() {
+    SaveStore getSaveStore() {
         return store;
     }
 
-    public void markDirty() {
+    void markDirty() {
         this.dirty = true;
     }
 
-    @Override
     public Result<String> save(String name) {
         if (store == null) return Result.failure("Save store not initialized.");
         Result<String> result = SaveIO.save(store, name, inputData,
@@ -56,7 +54,6 @@ public final class SaveController implements FileBrowserOverlay.Backend {
         return result;
     }
 
-    @Override
     public Result<SaveFile> load(String name) {
         if (store == null) return Result.failure("Save store not initialized.");
         Result<SaveFile> result = SaveIO.load(store, name);
@@ -73,7 +70,6 @@ public final class SaveController implements FileBrowserOverlay.Backend {
         return result;
     }
 
-    @Override
     public boolean delete(String name) {
         if (store == null) return false;
         boolean ok = store.moveToRecycleBin(name);
@@ -81,7 +77,6 @@ public final class SaveController implements FileBrowserOverlay.Backend {
         return ok;
     }
 
-    @Override
     public void newSession() {
         inputData.resetToDefault();
         currentName = null;
@@ -94,23 +89,19 @@ public final class SaveController implements FileBrowserOverlay.Backend {
         dirty = false;
     }
 
-    @Override
     public List<SaveInfo> list() {
         if (store == null) return Collections.emptyList();
         return store.list();
     }
 
-    @Override
     public String currentName() {
         return currentName;
     }
 
-    @Override
     public boolean isDirty() {
         return dirty;
     }
 
-    @Override
     public boolean exists(String name) {
         if (store == null) return false;
         String sanitized = SaveIO.sanitize(name);

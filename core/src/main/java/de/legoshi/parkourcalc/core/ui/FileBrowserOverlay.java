@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.ui;
 
+import de.legoshi.parkourcalc.core.SaveController;
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
 import de.legoshi.parkourcalc.core.save.Result;
 import de.legoshi.parkourcalc.core.save.SaveFile;
@@ -92,18 +93,7 @@ public final class FileBrowserOverlay implements RenderInterface {
 
     private enum ModalChoice { DANGER, CANCEL, NONE }
 
-    public interface Backend {
-        Result<String> save(String name);
-        Result<SaveFile> load(String name);
-        boolean delete(String name);
-        void newSession();
-        List<SaveInfo> list();
-        String currentName();
-        boolean isDirty();
-        boolean exists(String name);
-    }
-
-    private final Backend backend;
+    private final SaveController controller;
     private final ImString filterInput = new ImString(64);
     private final ImString newNameInput = new ImString(64);
     private final SimpleDateFormat dateFmt = new SimpleDateFormat(DATE_PATTERN, Locale.US);
@@ -125,8 +115,8 @@ public final class FileBrowserOverlay implements RenderInterface {
     private String pendingDeleteName;
     private String pendingConfirmLoadName;
 
-    public FileBrowserOverlay(Backend backend) {
-        this.backend = backend;
+    public FileBrowserOverlay(SaveController controller) {
+        this.controller = controller;
     }
 
     @Override
@@ -139,7 +129,7 @@ public final class FileBrowserOverlay implements RenderInterface {
         }
 
         if (needsRefresh) {
-            cached = backend.list();
+            cached = controller.list();
             needsRefresh = false;
         }
 
@@ -245,10 +235,10 @@ public final class FileBrowserOverlay implements RenderInterface {
 
         if (ImGui.beginMenu(MENU_FILE)) {
             boolean hasSelection = selected != null && containsName(cached, selected);
-            String current = backend.currentName();
+            String current = controller.currentName();
 
             if (ImGui.menuItem(MENU_NEW)) {
-                if (backend.isDirty()) {
+                if (controller.isDirty()) {
                     shouldOpenConfirmNew = true;
                 } else {
                     applyNewSession();
@@ -296,9 +286,9 @@ public final class FileBrowserOverlay implements RenderInterface {
     }
 
     private void renderEditingLabel() {
-        String current = backend.currentName();
+        String current = controller.currentName();
         ImGui.textDisabled(LABEL_EDITING_PREFIX + (current != null ? current : LABEL_EDITING_UNSAVED)
-                + (backend.isDirty() ? LABEL_DIRTY_MARK : ""));
+                + (controller.isDirty() ? LABEL_DIRTY_MARK : ""));
     }
 
     private static void tooltip(String text) {
@@ -306,7 +296,7 @@ public final class FileBrowserOverlay implements RenderInterface {
     }
 
     private void applyNewSession() {
-        backend.newSession();
+        controller.newSession();
         setStatus(STATUS_NEW_SESSION, false);
     }
 
@@ -314,7 +304,7 @@ public final class FileBrowserOverlay implements RenderInterface {
         if (!beginConfirmModal(POPUP_CONFIRM_NEW, shouldOpenConfirmNew)) return;
         shouldOpenConfirmNew = false;
 
-        String current = backend.currentName();
+        String current = controller.currentName();
         ImGui.text(current != null ? String.format(CONFIRM_NEW_BODY_NAMED, current) : CONFIRM_NEW_BODY_UNNAMED);
         ImGui.text(CONFIRM_NEW_BODY_DISCARD);
 
@@ -341,7 +331,7 @@ public final class FileBrowserOverlay implements RenderInterface {
         if (!beginConfirmModal(POPUP_CONFIRM_LOAD, shouldOpenConfirmLoad)) return;
         shouldOpenConfirmLoad = false;
 
-        String current = backend.currentName();
+        String current = controller.currentName();
         ImGui.text(current != null ? String.format(CONFIRM_NEW_BODY_NAMED, current) : CONFIRM_NEW_BODY_UNNAMED);
         ImGui.text(String.format(CONFIRM_LOAD_BODY_LOAD, pendingConfirmLoadName));
         ImGui.text(CONFIRM_LOAD_BODY_DISCARD);
@@ -366,7 +356,7 @@ public final class FileBrowserOverlay implements RenderInterface {
     }
 
     private void requestLoad(String name) {
-        if (backend.isDirty()) {
+        if (controller.isDirty()) {
             pendingConfirmLoadName = name;
             shouldOpenConfirmLoad = true;
         } else {
@@ -375,7 +365,7 @@ public final class FileBrowserOverlay implements RenderInterface {
     }
 
     private boolean doSave(String name, String successFormat) {
-        Result<String> r = backend.save(name);
+        Result<String> r = controller.save(name);
         if (r.ok) {
             setStatus(String.format(successFormat, r.value), false);
             selected = r.value;
@@ -387,7 +377,7 @@ public final class FileBrowserOverlay implements RenderInterface {
     }
 
     private void doLoad(String name) {
-        Result<SaveFile> r = backend.load(name);
+        Result<SaveFile> r = controller.load(name);
         if (r.ok) {
             setStatus(String.format(STATUS_LOADED, name), false);
             selected = name;
@@ -397,7 +387,7 @@ public final class FileBrowserOverlay implements RenderInterface {
     }
 
     private void doDelete(String name) {
-        if (backend.delete(name)) {
+        if (controller.delete(name)) {
             setStatus(String.format(STATUS_RECYCLED, name), false);
             if (name.equals(selected)) selected = null;
             needsRefresh = true;
@@ -436,7 +426,7 @@ public final class FileBrowserOverlay implements RenderInterface {
 
         if (ImGui.button(LABEL_SAVE)) {
             String typed = newNameInput.get();
-            if (backend.exists(typed)) {
+            if (controller.exists(typed)) {
                 pendingOverwriteName = typed;
                 shouldOpenConfirmOverwrite = true;
                 ImGui.closeCurrentPopup();
