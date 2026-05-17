@@ -97,6 +97,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     /** Called from InGameHudMixin to render ImGui overlays. */
     public static void onHudRender() {
+        if (!application.isReady()) return;
         ImGuiImpl.beginImGuiRendering();
         application.getOverlayManager().render(ImGui.getIO());
         ImGuiImpl.endImGuiRendering();

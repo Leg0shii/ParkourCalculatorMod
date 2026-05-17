@@ -75,7 +75,9 @@ public class Forge8ParkourCalculator {
         if (toggled && mc.currentScreen == null) {
             openOverlay(mc);
         }
-        imguiHost.renderFrame(mc.displayWidth, mc.displayHeight);
+        if (application.isReady()) {
+            imguiHost.renderFrame(mc.displayWidth, mc.displayHeight);
+        }
     }
 
     private void openOverlay(Minecraft mc) {

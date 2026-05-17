@@ -96,6 +96,10 @@ public final class Application {
         return overlayManager.isControlPanelOpen();
     }
 
+    public boolean isReady() {
+        return mc.isReady();
+    }
+
     public void setControlPanelOpen(boolean open) {
         overlayManager.setControlPanelOpen(open);
     }
