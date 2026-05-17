@@ -1,8 +1,10 @@
 package de.legoshi.parkourcalc.fabric.sim;
 
 import com.mojang.authlib.GameProfile;
+import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import net.minecraft.entity.EntityPose;
+import net.minecraft.entity.MovementType;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.MathHelper;
@@ -11,6 +13,9 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class SimulatorEntity extends PlayerEntity {
 
@@ -24,6 +29,51 @@ public class SimulatorEntity extends PlayerEntity {
     // field works, so MC's `bl2`/`bl3` capture pattern works as-is.
     private int ticksLeftToDoubleTapSprint = 0;
     private boolean inSneakingPose;
+
+    private final ArrayList<Vec3dCore> subtickBuf = new ArrayList<Vec3dCore>(8);
+    private boolean capturing = false;
+
+    public void beginSubtickCapture() {
+        subtickBuf.clear();
+        capturing = true;
+    }
+
+    public List<Vec3dCore> endSubtickCapture() {
+        capturing = false;
+        List<Vec3dCore> result = new ArrayList<Vec3dCore>(subtickBuf);
+        subtickBuf.clear();
+        return result;
+    }
+
+    /** Axis order mirrors Direction.method_73163 (Y first, X/Z by |component|). */
+    @Override
+    public void move(MovementType type, Vec3d motion) {
+        if (!capturing) {
+            super.move(type, motion);
+            return;
+        }
+        Vec3d before = this.getEntityPos();
+        super.move(type, motion);
+        Vec3d after = this.getEntityPos();
+
+        Vec3dCore startCore = new Vec3dCore(before.x, before.y, before.z);
+        double cx = after.x - before.x;
+        double cy = after.y - before.y;
+        double cz = after.z - before.z;
+        boolean xBeforeZ = Math.abs(motion.x) >= Math.abs(motion.z);
+
+        if (subtickBuf.isEmpty()) {
+            subtickBuf.add(startCore);
+        }
+        subtickBuf.add(new Vec3dCore(before.x, before.y + cy, before.z));
+        if (xBeforeZ) {
+            subtickBuf.add(new Vec3dCore(before.x + cx, before.y + cy, before.z));
+            subtickBuf.add(new Vec3dCore(before.x + cx, before.y + cy, before.z + cz));
+        } else {
+            subtickBuf.add(new Vec3dCore(before.x, before.y + cy, before.z + cz));
+            subtickBuf.add(new Vec3dCore(before.x + cx, before.y + cy, before.z + cz));
+        }
+    }
 
     public SimulatorEntity(World world, GameProfile profile, Vec3d startPosition, Vec3d startVelocity, float startYaw) {
         super(world, profile);

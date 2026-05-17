@@ -3,6 +3,8 @@ package de.legoshi.parkourcalc.core.ports;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 
+import java.util.List;
+
 public interface Simulator {
 
     void resetToStart();
@@ -18,6 +20,8 @@ public interface Simulator {
     boolean isCurrentSneaking();
 
     boolean isCurrentWallCollision();
+
+    List<Vec3dCore> getCurrentSubtickPath();
 
     Vec3dCore getStartPosition();
 

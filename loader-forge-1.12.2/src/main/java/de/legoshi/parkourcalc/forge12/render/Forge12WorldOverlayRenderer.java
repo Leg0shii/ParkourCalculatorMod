@@ -3,6 +3,7 @@ package de.legoshi.parkourcalc.forge12.render;
 import de.legoshi.parkourcalc.core.ports.BoxRenderer;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.BoxStyle;
+import de.legoshi.parkourcalc.core.ui.SelectionManager;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -21,14 +22,18 @@ public final class Forge12WorldOverlayRenderer {
 
     private final BoxController boxController;
     private final Settings settings;
+    private final SelectionManager selection;
 
-    public Forge12WorldOverlayRenderer(BoxController boxController, Settings settings) {
+    public Forge12WorldOverlayRenderer(BoxController boxController, Settings settings, SelectionManager selection) {
         this.boxController = boxController;
         this.settings = settings;
+        this.selection = selection;
     }
 
     public void render(float partialTicks) {
         if (boxController.isEmpty()) return;
+
+        boxController.setBoxSize(BoxStyle.tickBoxSize(settings));
 
         Entity view = Minecraft.getMinecraft().getRenderViewEntity();
         if (view == null) return;
@@ -55,9 +60,21 @@ public final class Forge12WorldOverlayRenderer {
         tess.draw();
 
         buf.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
-        boxController.render(
-                new Forge12BoxRenderer(buf, camX, camY, camZ, BoxRenderer.Mode.LINES),
-                (i, s) -> BoxStyle.tickLineArgb(settings, s, false));
+        Forge12BoxRenderer linesRenderer = new Forge12BoxRenderer(buf, camX, camY, camZ, BoxRenderer.Mode.LINES);
+        boxController.render(linesRenderer, (i, s) -> BoxStyle.tickLineArgb(settings, s, false));
+        if (settings.showSubtick) {
+            boxController.renderPath(linesRenderer, BoxStyle.subtickPathArgb(settings));
+        }
+        if (settings.showHitbox) {
+            boxController.renderHitboxFloorOutline(linesRenderer,
+                    (i, s) -> BoxStyle.hitboxLineArgb(settings, selection.isSelected(i)),
+                    settings.showSubtick);
+        }
+        if (settings.showFullHitbox) {
+            boxController.renderHitboxFullWireframe(linesRenderer,
+                    (i, s) -> BoxStyle.hitboxLineArgb(settings, selection.isSelected(i)),
+                    settings.showSubtick);
+        }
         tess.draw();
 
         GlStateManager.disableBlend();

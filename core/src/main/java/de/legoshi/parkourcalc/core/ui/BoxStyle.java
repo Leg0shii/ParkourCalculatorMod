@@ -1,11 +1,25 @@
 package de.legoshi.parkourcalc.core.ui;
 
+import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.TickState;
+import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
 public final class BoxStyle {
 
     /** Edge length of each tick box, in blocks. */
     public static final double BOX_SIZE = 0.1;
+
+    /** Shrunk when the subtick path is visible, so the line dominates. */
+    public static final double BOX_SIZE_SUBTICK = 0.05;
+
+    public static double tickBoxSize(Settings settings) {
+        return settings.showSubtick ? BOX_SIZE_SUBTICK : BOX_SIZE;
+    }
+
+    public static int subtickPathArgb(Settings settings) {
+        float[] c = settings.subtickPath;
+        return toArgb(c[0], c[1], c[2], c[3]);
+    }
 
     /**
      * Wireframe line thickness in pixels. The Forge loaders pass this to
@@ -34,6 +48,24 @@ public final class BoxStyle {
     /** Outline color for a tick box: full alpha so the wireframe always reads. */
     public static int tickLineArgb(Settings settings, TickState state, boolean selected) {
         float[] c = pickChannel(settings, state, selected);
+        return toArgb(c[0], c[1], c[2], 1.0f);
+    }
+
+    public static final double HITBOX_HALF_WIDTH = 0.3;
+    public static final double HITBOX_HEIGHT_STANDING = 1.8;
+    public static final double HITBOX_HEIGHT_SNEAKING = 1.5;
+
+    /** {@code position} is the entity center-bottom (MC convention). */
+    public static AABB hitboxAabbAt(Vec3dCore position, boolean sneaking) {
+        double h = sneaking ? HITBOX_HEIGHT_SNEAKING : HITBOX_HEIGHT_STANDING;
+        return new AABB(
+                new Vec3dCore(position.x - HITBOX_HALF_WIDTH, position.y, position.z - HITBOX_HALF_WIDTH),
+                new Vec3dCore(position.x + HITBOX_HALF_WIDTH, position.y + h, position.z + HITBOX_HALF_WIDTH)
+        );
+    }
+
+    public static int hitboxLineArgb(Settings settings, boolean selected) {
+        float[] c = selected ? settings.hitboxSelected : settings.hitboxDefault;
         return toArgb(c[0], c[1], c[2], 1.0f);
     }
 

@@ -8,6 +8,8 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.Vec3d;
 
+import java.util.List;
+
 public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> {
 
     @Override
@@ -31,7 +33,17 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
     @Override protected void resetEntity(SimulatorEntity e) { e.resetPlayer(); }
     @Override protected void setInput(SimulatorEntity e, InputRow row) { e.input.setData(row); }
     @Override protected void applyYaw(SimulatorEntity e, float yaw) { e.setYaw(e.getYaw() + yaw); }
-    @Override protected void tickEntity(SimulatorEntity e) { e.tick(); }
+
+    @Override
+    protected void tickEntity(SimulatorEntity e) {
+        e.beginSubtickCapture();
+        e.tick();
+    }
+
+    @Override
+    protected List<Vec3dCore> getSubtickPath(SimulatorEntity e) {
+        return e.endSubtickCapture();
+    }
 
     @Override
     protected Vec3dCore getPos(SimulatorEntity e) {

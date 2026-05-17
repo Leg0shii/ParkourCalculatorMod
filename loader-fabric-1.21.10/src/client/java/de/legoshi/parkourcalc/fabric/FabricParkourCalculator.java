@@ -30,7 +30,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
             new FabricMinecraftAccess()
     );
     private static final FabricWorldOverlayRenderer worldRenderer =
-            new FabricWorldOverlayRenderer(application.getBoxController(), application.getSettings());
+            new FabricWorldOverlayRenderer(application.getBoxController(), application.getSettings(), application.getSelection());
 
     private static final KeyState escapeKey = new KeyState();
 

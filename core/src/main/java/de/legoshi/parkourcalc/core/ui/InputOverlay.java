@@ -45,15 +45,17 @@ public final class InputOverlay implements RenderInterface {
     private final Runnable onDataChanged;
     private final Runnable onSetPlayerPosition;
 
-    private final SelectionManager selection = new SelectionManager();
+    private final SelectionManager selection;
     private final KeyDragSelect keyDragSelect = new KeyDragSelect();
     private final ImString yawInput = new ImString(32);
     private final ImInt rowsToAdd = new ImInt(1);
 
     private int draggingRowIndex = -1;
 
-    public InputOverlay(InputData data, Runnable onDataChanged, Runnable onSetPlayerPosition) {
+    public InputOverlay(InputData data, SelectionManager selection,
+                        Runnable onDataChanged, Runnable onSetPlayerPosition) {
         this.data = data;
+        this.selection = selection;
         this.onDataChanged = onDataChanged;
         this.onSetPlayerPosition = onSetPlayerPosition;
     }

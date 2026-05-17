@@ -3,6 +3,7 @@ package de.legoshi.parkourcalc.fabric.render;
 import de.legoshi.parkourcalc.core.ports.BoxRenderer;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.BoxStyle;
+import de.legoshi.parkourcalc.core.ui.SelectionManager;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -20,14 +21,18 @@ public final class FabricWorldOverlayRenderer {
 
     private final BoxController boxController;
     private final Settings settings;
+    private final SelectionManager selection;
 
-    public FabricWorldOverlayRenderer(BoxController boxController, Settings settings) {
+    public FabricWorldOverlayRenderer(BoxController boxController, Settings settings, SelectionManager selection) {
         this.boxController = boxController;
         this.settings = settings;
+        this.selection = selection;
     }
 
     public void render(Matrix4f positionMatrix) {
         if (boxController.isEmpty()) return;
+
+        boxController.setBoxSize(BoxStyle.tickBoxSize(settings));
 
         MinecraftClient client = MinecraftClient.getInstance();
 
@@ -39,12 +44,23 @@ public final class FabricWorldOverlayRenderer {
         matrixStack.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z);
 
         VertexConsumerProvider.Immediate consumers = client.getBufferBuilders().getEntityVertexConsumers();
-        boxController.render(
-                new FabricBoxRenderer(matrixStack, consumers, BoxRenderer.Mode.FACES),
-                (i, s) -> BoxStyle.tickFaceArgb(settings, s, false));
-        boxController.render(
-                new FabricBoxRenderer(matrixStack, consumers, BoxRenderer.Mode.LINES),
-                (i, s) -> BoxStyle.tickLineArgb(settings, s, false));
+        FabricBoxRenderer facesRenderer = new FabricBoxRenderer(matrixStack, consumers, BoxRenderer.Mode.FACES);
+        boxController.render(facesRenderer, (i, s) -> BoxStyle.tickFaceArgb(settings, s, false));
+        FabricBoxRenderer linesRenderer = new FabricBoxRenderer(matrixStack, consumers, BoxRenderer.Mode.LINES);
+        boxController.render(linesRenderer, (i, s) -> BoxStyle.tickLineArgb(settings, s, false));
+        if (settings.showSubtick) {
+            boxController.renderPath(linesRenderer, BoxStyle.subtickPathArgb(settings));
+        }
+        if (settings.showHitbox) {
+            boxController.renderHitboxFloorOutline(linesRenderer,
+                    (i, s) -> BoxStyle.hitboxLineArgb(settings, selection.isSelected(i)),
+                    settings.showSubtick);
+        }
+        if (settings.showFullHitbox) {
+            boxController.renderHitboxFullWireframe(linesRenderer,
+                    (i, s) -> BoxStyle.hitboxLineArgb(settings, selection.isSelected(i)),
+                    settings.showSubtick);
+        }
         consumers.draw();
 
         matrixStack.pop();

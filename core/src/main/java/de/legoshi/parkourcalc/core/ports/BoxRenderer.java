@@ -22,4 +22,7 @@ public interface BoxRenderer {
     enum Mode { LINES, FACES }
 
     void drawBox(AABB box, int argb);
+
+    /** No-op on FACES-mode impls. */
+    void drawLine(double x1, double y1, double z1, double x2, double y2, double z2, int argb);
 }

@@ -8,6 +8,8 @@ import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.util.math.Vec3d;
 
+import java.util.List;
+
 public final class Forge12Simulator extends LazyEntitySimulator<SimulatorEntity> {
 
     @Override
@@ -31,7 +33,17 @@ public final class Forge12Simulator extends LazyEntitySimulator<SimulatorEntity>
     @Override protected void resetEntity(SimulatorEntity e) { e.resetPlayer(); }
     @Override protected void setInput(SimulatorEntity e, InputRow row) { e.setInput(row); }
     @Override protected void applyYaw(SimulatorEntity e, float yaw) { e.rotationYaw += yaw; }
-    @Override protected void tickEntity(SimulatorEntity e) { e.onUpdate(); }
+
+    @Override
+    protected void tickEntity(SimulatorEntity e) {
+        e.beginSubtickCapture();
+        e.onUpdate();
+    }
+
+    @Override
+    protected List<Vec3dCore> getSubtickPath(SimulatorEntity e) {
+        return e.endSubtickCapture();
+    }
 
     @Override
     protected Vec3dCore getPos(SimulatorEntity e) {

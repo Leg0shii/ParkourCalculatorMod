@@ -3,6 +3,9 @@ package de.legoshi.parkourcalc.core.sim;
 import de.legoshi.parkourcalc.core.ports.Simulator;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Shared lazy-create + pending-start orchestration for Simulator impls that wrap
  * a real MC entity. pendingStart/pendingVelocity/pendingYaw hold the values set
@@ -52,6 +55,12 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     @Override
     public final boolean isCurrentWallCollision() {
         return isWallCollision(ensureEntity());
+    }
+
+    @Override
+    public final List<Vec3dCore> getCurrentSubtickPath() {
+        if (entity == null) return Collections.emptyList();
+        return getSubtickPath(entity);
     }
 
     @Override
@@ -124,6 +133,8 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     protected abstract boolean isSneaking(E entity);
 
     protected abstract boolean isWallCollision(E entity);
+
+    protected abstract List<Vec3dCore> getSubtickPath(E entity);
 
     protected abstract Vec3dCore getStart(E entity);
 

@@ -2,11 +2,16 @@ package de.legoshi.parkourcalc.forge12.sim;
 
 import com.mojang.authlib.GameProfile;
 import de.legoshi.parkourcalc.forge.core.sim.PlayerSprintMachine;
+import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
+import net.minecraft.entity.MoverType;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.MobEffects;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /** MCP 39: moveForward is the forward input, moveVertical is the swim/fly axis. */
 public class SimulatorEntity extends EntityPlayer {
@@ -17,6 +22,41 @@ public class SimulatorEntity extends EntityPlayer {
 
     private InputRow currentInput = new InputRow();
     private PlayerSprintMachine.State sprintState = PlayerSprintMachine.State.initial();
+
+    private final ArrayList<Vec3dCore> subtickBuf = new ArrayList<Vec3dCore>(8);
+    private boolean capturing = false;
+
+    public void beginSubtickCapture() {
+        subtickBuf.clear();
+        capturing = true;
+    }
+
+    public List<Vec3dCore> endSubtickCapture() {
+        capturing = false;
+        List<Vec3dCore> result = new ArrayList<Vec3dCore>(subtickBuf);
+        subtickBuf.clear();
+        return result;
+    }
+
+    @Override
+    public void move(MoverType type, double x, double y, double z) {
+        if (!capturing) {
+            super.move(type, x, y, z);
+            return;
+        }
+        double bx = this.posX, by = this.posY, bz = this.posZ;
+        super.move(type, x, y, z);
+        double cx = this.posX - bx;
+        double cy = this.posY - by;
+        double cz = this.posZ - bz;
+
+        if (subtickBuf.isEmpty()) {
+            subtickBuf.add(new Vec3dCore(bx, by, bz));
+        }
+        subtickBuf.add(new Vec3dCore(bx, by + cy, bz));
+        subtickBuf.add(new Vec3dCore(bx + cx, by + cy, bz));
+        subtickBuf.add(new Vec3dCore(bx + cx, by + cy, bz + cz));
+    }
 
     public SimulatorEntity(World world, GameProfile profile, Vec3d startPosition, Vec3d startVelocity, float startYaw) {
         super(world, profile);

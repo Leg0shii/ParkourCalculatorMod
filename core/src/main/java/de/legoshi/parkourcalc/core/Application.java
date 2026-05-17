@@ -12,6 +12,7 @@ import de.legoshi.parkourcalc.core.ui.FileBrowserOverlay;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputOverlay;
 import de.legoshi.parkourcalc.core.ui.OverlayManager;
+import de.legoshi.parkourcalc.core.ui.SelectionManager;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.ui.SettingsIO;
 import de.legoshi.parkourcalc.core.ui.SettingsOverlay;
@@ -31,6 +32,7 @@ public final class Application {
     private final OverlayManager overlayManager = new OverlayManager(this::onPinStateChanged);
     private final BoxController boxController = new BoxController();
     private final Settings settings = new Settings();
+    private final SelectionManager selection = new SelectionManager();
     private final SimulationRunner runner;
     private final BoxDragController dragController;
     private final SaveController saveController;
@@ -46,7 +48,7 @@ public final class Application {
     }
 
     public void registerInputOverlay() {
-        InputOverlay inputOverlay = new InputOverlay(inputData, this::onUserChange, this::setStartToPlayer);
+        InputOverlay inputOverlay = new InputOverlay(inputData, selection, this::onUserChange, this::setStartToPlayer);
         overlayManager.register("TAS Inputs", inputOverlay);
     }
 
@@ -138,6 +140,10 @@ public final class Application {
 
     public Settings getSettings() {
         return settings;
+    }
+
+    public SelectionManager getSelection() {
+        return selection;
     }
 
     public InputData getInputData() {

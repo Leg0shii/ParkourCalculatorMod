@@ -40,7 +40,7 @@ public class Forge12ParkourCalculator {
             new Forge12MinecraftAccess()
     );
     private final Lwjgl2ImGuiHost imguiHost = new Lwjgl2ImGuiHost(application.getOverlayManager(), application.getSettings());
-    private final Forge12WorldOverlayRenderer worldRenderer = new Forge12WorldOverlayRenderer(application.getBoxController(), application.getSettings());
+    private final Forge12WorldOverlayRenderer worldRenderer = new Forge12WorldOverlayRenderer(application.getBoxController(), application.getSettings(), application.getSelection());
 
     private KeyBinding toggleKeyBinding;
     private Path configPath;

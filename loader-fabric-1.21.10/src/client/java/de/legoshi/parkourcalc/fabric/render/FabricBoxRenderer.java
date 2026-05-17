@@ -35,6 +35,15 @@ public final class FabricBoxRenderer implements BoxRenderer {
     }
 
     @Override
+    public void drawLine(double x1, double y1, double z1, double x2, double y2, double z2, int argb) {
+        if (mode != Mode.LINES) return;
+        VertexConsumer consumer = consumers.getBuffer(FabricRenderLayers.THIN_LINES);
+        edge(consumer, matrices.peek().getPositionMatrix(),
+                (float) x1, (float) y1, (float) z1,
+                (float) x2, (float) y2, (float) z2, argb);
+    }
+
+    @Override
     public void drawBox(AABB box, int argb) {
         if (mode == Mode.LINES) {
             VertexConsumer consumer = consumers.getBuffer(FabricRenderLayers.THIN_LINES);

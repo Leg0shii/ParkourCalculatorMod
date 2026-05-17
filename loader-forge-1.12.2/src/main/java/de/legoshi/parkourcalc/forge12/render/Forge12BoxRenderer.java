@@ -36,4 +36,11 @@ public final class Forge12BoxRenderer implements BoxRenderer {
             BoxGeometry.emitFaces(box, camX, camY, camZ, argb, emitter);
         }
     }
+
+    @Override
+    public void drawLine(double x1, double y1, double z1, double x2, double y2, double z2, int argb) {
+        if (mode != Mode.LINES) return;
+        emitter.emit(x1 - camX, y1 - camY, z1 - camZ, argb);
+        emitter.emit(x2 - camX, y2 - camY, z2 - camZ, argb);
+    }
 }
