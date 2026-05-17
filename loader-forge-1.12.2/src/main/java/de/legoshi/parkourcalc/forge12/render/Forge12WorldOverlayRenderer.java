@@ -75,6 +75,9 @@ public final class Forge12WorldOverlayRenderer {
                     (i, s) -> BoxStyle.hitboxLineArgb(settings, selection.isSelected(i)),
                     settings.showSubtick);
         }
+        if (settings.showYawArrows) {
+            boxController.renderYawArrows(linesRenderer, BoxStyle.yawArrowArgb(settings));
+        }
         tess.draw();
 
         GlStateManager.disableBlend();

@@ -61,6 +61,9 @@ public final class FabricWorldOverlayRenderer {
                     (i, s) -> BoxStyle.hitboxLineArgb(settings, selection.isSelected(i)),
                     settings.showSubtick);
         }
+        if (settings.showYawArrows) {
+            boxController.renderYawArrows(linesRenderer, BoxStyle.yawArrowArgb(settings));
+        }
         consumers.draw();
 
         matrixStack.pop();

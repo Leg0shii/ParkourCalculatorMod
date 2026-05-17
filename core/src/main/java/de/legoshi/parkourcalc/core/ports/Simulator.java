@@ -21,6 +21,8 @@ public interface Simulator {
 
     boolean isCurrentWallCollision();
 
+    float getCurrentYaw();
+
     List<Vec3dCore> getCurrentSubtickPath();
 
     Vec3dCore getStartPosition();

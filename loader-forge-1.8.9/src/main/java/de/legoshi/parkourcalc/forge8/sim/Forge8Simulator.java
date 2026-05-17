@@ -66,6 +66,11 @@ public final class Forge8Simulator extends LazyEntitySimulator<SimulatorEntity> 
     }
 
     @Override
+    protected float getYaw(SimulatorEntity e) {
+        return e.rotationYaw;
+    }
+
+    @Override
     protected Vec3dCore getStart(SimulatorEntity e) {
         Vec3 p = e.startPosition;
         return new Vec3dCore(p.xCoord, p.yCoord, p.zCoord);

@@ -67,6 +67,11 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
     }
 
     @Override
+    protected float getYaw(SimulatorEntity e) {
+        return e.getYaw();
+    }
+
+    @Override
     protected Vec3dCore getStart(SimulatorEntity e) {
         Vec3d p = e.startPosition;
         return new Vec3dCore(p.x, p.y, p.z);

@@ -21,6 +21,11 @@ public final class BoxStyle {
         return toArgb(c[0], c[1], c[2], c[3]);
     }
 
+    public static int yawArrowArgb(Settings settings) {
+        float[] c = settings.yawArrow;
+        return toArgb(c[0], c[1], c[2], c[3]);
+    }
+
     /**
      * Wireframe line thickness in pixels. The Forge loaders pass this to
      * GL11.glLineWidth before the LINES pass; Fabric draws lines through a

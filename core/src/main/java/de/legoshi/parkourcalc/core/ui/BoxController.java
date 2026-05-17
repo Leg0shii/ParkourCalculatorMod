@@ -93,6 +93,37 @@ public final class BoxController {
         return Collections.singletonList(positions.get(tickIndex));
     }
 
+    public void renderYawArrows(BoxRenderer renderer, int argb) {
+        if (positions.isEmpty()) return;
+        double half = boxSize * 0.5;
+        for (int i = 0; i < states.size(); i++) {
+            TickState s = states.get(i);
+            Vec3dCore p = positions.get(i);
+            double cx = p.x + half;
+            double cy = p.y + half;
+            double cz = p.z + half;
+
+            double yawRad = Math.toRadians(s.yaw);
+            double fx = -Math.sin(yawRad);
+            double fz = Math.cos(yawRad);
+
+            double tipX = cx + fx * ARROW_SHAFT_LEN;
+            double tipZ = cz + fz * ARROW_SHAFT_LEN;
+            renderer.drawLine(cx, cy, cz, tipX, cy, tipZ, argb);
+
+            double baseX = tipX - fx * ARROW_HEAD_LEN;
+            double baseZ = tipZ - fz * ARROW_HEAD_LEN;
+            double perpX = -fz * ARROW_HEAD_HALF_WIDTH;
+            double perpZ = fx * ARROW_HEAD_HALF_WIDTH;
+            renderer.drawLine(tipX, cy, tipZ, baseX + perpX, cy, baseZ + perpZ, argb);
+            renderer.drawLine(tipX, cy, tipZ, baseX - perpX, cy, baseZ - perpZ, argb);
+        }
+    }
+
+    private static final double ARROW_SHAFT_LEN = 0.45;
+    private static final double ARROW_HEAD_LEN = 0.15;
+    private static final double ARROW_HEAD_HALF_WIDTH = 0.08;
+
     public void renderPath(BoxRenderer renderer, int argb) {
         if (states.size() < 2) return;
         double half = boxSize * 0.5;

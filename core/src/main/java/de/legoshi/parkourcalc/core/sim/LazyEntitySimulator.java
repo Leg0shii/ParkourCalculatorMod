@@ -58,6 +58,11 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     }
 
     @Override
+    public final float getCurrentYaw() {
+        return getYaw(ensureEntity());
+    }
+
+    @Override
     public final List<Vec3dCore> getCurrentSubtickPath() {
         if (entity == null) return Collections.emptyList();
         return getSubtickPath(entity);
@@ -133,6 +138,8 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     protected abstract boolean isSneaking(E entity);
 
     protected abstract boolean isWallCollision(E entity);
+
+    protected abstract float getYaw(E entity);
 
     protected abstract List<Vec3dCore> getSubtickPath(E entity);
 
