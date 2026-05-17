@@ -1,9 +1,5 @@
 package de.legoshi.parkourcalc.core.save;
 
-/**
- * Outcome of a save attempt. ok==true means the file was written; otherwise
- * {@link #error} holds a user-facing message and nothing was persisted.
- */
 public final class SaveResult {
 
     public final boolean ok;

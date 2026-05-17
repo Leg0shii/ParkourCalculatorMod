@@ -5,17 +5,15 @@ import de.legoshi.parkourcalc.core.ui.InputRow;
 
 /**
  * Shared lazy-create + pending-start orchestration for Simulator impls that wrap
- * a real MC entity. The state machine (when to construct, how to dispatch the
- * Simulator interface methods) lives here once; per-MC-version field access and
- * entity construction live in subclass hooks.
- *
- * pendingStart holds the start position set before the entity exists; once
- * createEntity runs, the entity owns its own start and pendingStart is unused.
+ * a real MC entity. pendingStart/pendingVelocity/pendingYaw hold the values set
+ * before the entity exists; once createEntity runs, the entity owns them.
  */
 public abstract class LazyEntitySimulator<E> implements Simulator {
 
     private E entity;
     private Vec3dCore pendingStart;
+    private Vec3dCore pendingVelocity;
+    private Float pendingYaw;
 
     @Override
     public final void resetToStart() {
@@ -56,15 +54,45 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
         }
     }
 
+    @Override
+    public final Vec3dCore getStartVelocity() {
+        if (entity != null) return getStartVel(entity);
+        return pendingVelocity != null ? pendingVelocity : Vec3dCore.ZERO;
+    }
+
+    @Override
+    public final void setStartVelocity(Vec3dCore vel) {
+        if (entity != null) {
+            setStartVel(entity, vel);
+        } else {
+            pendingVelocity = vel;
+        }
+    }
+
+    @Override
+    public final float getStartYaw() {
+        if (entity != null) return getStartYawValue(entity);
+        return pendingYaw != null ? pendingYaw : 0.0F;
+    }
+
+    @Override
+    public final void setStartYaw(float yaw) {
+        if (entity != null) {
+            setStartYawValue(entity, yaw);
+        } else {
+            pendingYaw = yaw;
+        }
+    }
+
     private E ensureEntity() {
         if (entity == null) {
-            entity = createEntity(pendingStart);
+            entity = createEntity(pendingStart, pendingVelocity, pendingYaw);
         }
         return entity;
     }
 
-    /** May be null; subclass falls back to live player position when null. */
-    protected abstract E createEntity(Vec3dCore pendingStart);
+    /** Any of pendingStart/pendingVelocity/pendingYaw may be null; subclass falls back to defaults. */
+    protected abstract E createEntity(Vec3dCore pendingStart, Vec3dCore pendingVelocity, Float pendingYaw);
 
     protected abstract void resetEntity(E entity);
 
@@ -79,4 +107,12 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     protected abstract Vec3dCore getStart(E entity);
 
     protected abstract void setStart(E entity, Vec3dCore pos);
+
+    protected abstract Vec3dCore getStartVel(E entity);
+
+    protected abstract void setStartVel(E entity, Vec3dCore vel);
+
+    protected abstract float getStartYawValue(E entity);
+
+    protected abstract void setStartYawValue(E entity, float yaw);
 }

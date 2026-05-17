@@ -16,25 +16,19 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
-/**
- * Pure save/load logic. Filename sanitization, Gson (de)serialization, and the
- * mapping between SaveFile and the runtime InputData/start-position pair. The
- * SaveStore port handles all file I/O and environment lookups.
- *
- * Gson API stays inside the Gson 2.2.4 subset because MC 1.8.9 ships that
- * version on the classpath; SettingsIO follows the same constraint.
- */
+/** Pure save/load logic; Gson stays within the 2.2.4 subset (MC 1.8.9 ships it). */
 public final class SaveIO {
 
     private SaveIO() {}
 
-    public static SaveResult save(SaveStore store, String rawName, InputData inputData, Vec3dCore startPos) {
+    public static SaveResult save(SaveStore store, String rawName, InputData inputData,
+                                  Vec3dCore startPos, Vec3dCore startVel, float startYaw) {
         String name = sanitize(rawName);
         if (name == null) {
             return SaveResult.failure("Invalid save name. Use letters, numbers, dashes, or underscores.");
         }
 
-        SaveFile file = buildFile(store, inputData, startPos);
+        SaveFile file = buildFile(store, inputData, startPos, startVel, startYaw);
         String json = new GsonBuilder().setPrettyPrinting().create().toJson(file);
 
         try {
@@ -75,8 +69,7 @@ public final class SaveIO {
         return LoadResult.success(file);
     }
 
-    /** Applies a parsed file's rows + start to the runtime state. Caller retriggers the simulation. */
-    public static Vec3dCore applyTo(SaveFile file, InputData inputData) {
+    public static AppliedStart applyTo(SaveFile file, InputData inputData) {
         List<InputRow> rows = inputData.getRows();
         rows.clear();
         if (file.rows != null) {
@@ -84,7 +77,11 @@ public final class SaveIO {
                 rows.add(toInputRow(r));
             }
         }
-        return new Vec3dCore(file.start.pos[0], file.start.pos[1], file.start.pos[2]);
+        Vec3dCore pos = new Vec3dCore(file.start.pos[0], file.start.pos[1], file.start.pos[2]);
+        Vec3dCore vel = (file.start.vel != null && file.start.vel.length >= 3)
+                ? new Vec3dCore(file.start.vel[0], file.start.vel[1], file.start.vel[2])
+                : Vec3dCore.ZERO;
+        return new AppliedStart(pos, vel, file.start.yaw);
     }
 
     public static String formatWorld(SaveFile.World w) {
@@ -105,7 +102,6 @@ public final class SaveIO {
         return d;
     }
 
-    /** Parses a file's JSON header and returns the SaveFile, or null on failure. */
     public static SaveFile parseSafe(String contents) {
         try {
             return new Gson().fromJson(contents, SaveFile.class);
@@ -114,12 +110,6 @@ public final class SaveIO {
         }
     }
 
-    /**
-     * Returns the sanitized name, or null if the raw input is unusable. Rejects
-     * blank input, names containing path separators, and names that traverse
-     * directories ({@code ..}). Any remaining ASCII punctuation outside
-     * [A-Za-z0-9._-] collapses to {@code _}.
-     */
     public static String sanitize(String raw) {
         if (raw == null) return null;
         String trimmed = raw.trim();
@@ -143,7 +133,8 @@ public final class SaveIO {
         return cleaned;
     }
 
-    private static SaveFile buildFile(SaveStore store, InputData inputData, Vec3dCore startPos) {
+    private static SaveFile buildFile(SaveStore store, InputData inputData,
+                                      Vec3dCore startPos, Vec3dCore startVel, float startYaw) {
         SaveFile file = new SaveFile();
         file.version = SaveFile.FORMAT_VERSION;
         file.createdAt = nowIso8601();
@@ -153,8 +144,8 @@ public final class SaveIO {
 
         SaveFile.Start start = new SaveFile.Start();
         start.pos = new double[] { startPos.x, startPos.y, startPos.z };
-        start.vel = new double[] { 0.0, 0.0, 0.0 };
-        start.yaw = 0.0F;
+        start.vel = new double[] { startVel.x, startVel.y, startVel.z };
+        start.yaw = startYaw;
         file.start = start;
 
         List<SaveFile.Row> rows = new ArrayList<SaveFile.Row>(inputData.size());
@@ -204,5 +195,17 @@ public final class SaveIO {
         SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         fmt.setTimeZone(TimeZone.getTimeZone("UTC"));
         return fmt.format(new Date());
+    }
+
+    public static final class AppliedStart {
+        public final Vec3dCore pos;
+        public final Vec3dCore vel;
+        public final float yaw;
+
+        public AppliedStart(Vec3dCore pos, Vec3dCore vel, float yaw) {
+            this.pos = pos;
+            this.vel = vel;
+            this.yaw = yaw;
+        }
     }
 }

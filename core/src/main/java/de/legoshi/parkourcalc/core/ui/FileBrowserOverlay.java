@@ -24,8 +24,73 @@ import java.util.Locale;
 
 public final class FileBrowserOverlay implements RenderInterface {
 
-    private static final String CREATE_POPUP_ID = "Create New Input File";
-    private static final String CONFIRM_NEW_POPUP_ID = "Discard unsaved changes?";
+    private static final String WINDOW_TITLE = "Files";
+
+    private static final String MENU_FILE = "File";
+    private static final String MENU_NEW = "New";
+    private static final String MENU_SAVE = "Save";
+    private static final String MENU_SAVE_AS = "Save As...";
+    private static final String MENU_LOAD = "Load";
+    private static final String MENU_RECYCLE = "Move to Recycle Bin";
+
+    private static final String LABEL_SEARCH = "Search";
+    private static final String LABEL_REFRESH = "Refresh";
+    private static final String LABEL_FILE_NAME = "File name";
+    private static final String LABEL_EDITING_PREFIX = "Editing: ";
+    private static final String LABEL_EDITING_UNSAVED = "(unsaved)";
+    private static final String LABEL_DIRTY_MARK = " *";
+
+    private static final String BTN_SAVE = "Save";
+    private static final String BTN_CANCEL = "Cancel";
+    private static final String BTN_DISCARD = "Discard";
+    private static final String BTN_OVERWRITE = "Overwrite";
+    private static final String BTN_RECYCLE = "Move to Recycle Bin";
+
+    private static final String COL_FILENAME = "Filename";
+    private static final String COL_DATE = "Date Modified";
+    private static final String COL_MC = "MC";
+    private static final String COL_WORLD = "World";
+
+    private static final String POPUP_CREATE = "Create New Input File";
+    private static final String POPUP_CONFIRM_NEW = "Discard unsaved changes?";
+    private static final String POPUP_CONFIRM_OVERWRITE = "Overwrite existing file?";
+    private static final String POPUP_CONFIRM_DELETE = "Move to recycle bin?";
+    private static final String POPUP_CONFIRM_LOAD = "Discard unsaved changes before loading?";
+
+    private static final String ID_FILTER_INPUT = "##file_filter";
+    private static final String ID_TABLE = "##file_table";
+    private static final String ID_NAME_INPUT = "##new_name";
+    private static final String ID_ROW_PREFIX = "##row_";
+
+    private static final String TOOLTIP_NEW = "Clear inputs back to default and snap start to your position. Prompts for confirmation if you have unsaved changes.";
+    private static final String TOOLTIP_SAVE_NAMED = "Overwrite '%s' with the current inputs.";
+    private static final String TOOLTIP_SAVE_UNNAMED = "Nothing loaded yet, opens Save As...";
+    private static final String TOOLTIP_SAVE_AS = "Save the current inputs to a new file with a name you choose.";
+    private static final String TOOLTIP_LOAD = "Load the file selected in the table below. Replaces current inputs and start.";
+    private static final String TOOLTIP_RECYCLE = "Move the selected file to <save dir>/.trash/. This is NOT the OS recycle bin; restore by hand if needed.";
+
+    private static final String CONFIRM_NEW_BODY_NAMED = "You have unsaved changes to '%s'.";
+    private static final String CONFIRM_NEW_BODY_UNNAMED = "You have unsaved changes that have not been saved to a file.";
+    private static final String CONFIRM_NEW_BODY_DISCARD = "Starting a new run will discard them.";
+    private static final String CONFIRM_OVERWRITE_BODY = "A save named '%s' already exists.";
+    private static final String CONFIRM_OVERWRITE_PROMPT = "Overwrite it?";
+    private static final String CONFIRM_DELETE_BODY = "Move '%s' to <save dir>/.trash/?";
+    private static final String CONFIRM_DELETE_NOTE = "This is NOT the OS recycle bin; restore by hand if needed.";
+    private static final String CONFIRM_LOAD_BODY_LOAD = "Loading '%s' will replace the current inputs and start.";
+    private static final String CONFIRM_LOAD_BODY_DISCARD = "Your unsaved changes will be lost.";
+
+    private static final String STATUS_NEW_SESSION = "Cleared inputs; start set to your position";
+    private static final String STATUS_SAVED = "Saved '%s'";
+    private static final String STATUS_SAVED_AS = "Saved as '%s'";
+    private static final String STATUS_LOADED = "Loaded '%s'";
+    private static final String STATUS_RECYCLED = "Moved '%s' to recycle bin";
+    private static final String STATUS_RECYCLE_FAILED = "Failed to recycle '%s'";
+
+    private static final String UNKNOWN = "?";
+    private static final String SORT_ARROW_DESC = " v";
+    private static final String SORT_ARROW_ASC = " ^";
+
+    private static final String DATE_PATTERN = "yyyy-MM-dd HH:mm";
 
     public interface Backend {
         SaveResult save(String name);
@@ -35,12 +100,13 @@ public final class FileBrowserOverlay implements RenderInterface {
         List<SaveInfo> list();
         String currentName();
         boolean isDirty();
+        boolean exists(String name);
     }
 
     private final Backend backend;
     private final ImString filterInput = new ImString(64);
     private final ImString newNameInput = new ImString(64);
-    private final SimpleDateFormat dateFmt = new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US);
+    private final SimpleDateFormat dateFmt = new SimpleDateFormat(DATE_PATTERN, Locale.US);
 
     private List<SaveInfo> cached = new ArrayList<SaveInfo>();
     private boolean needsRefresh = true;
@@ -52,6 +118,12 @@ public final class FileBrowserOverlay implements RenderInterface {
     private boolean statusIsError;
     private boolean shouldOpenCreatePopup;
     private boolean shouldOpenConfirmNew;
+    private boolean shouldOpenConfirmOverwrite;
+    private boolean shouldOpenConfirmDelete;
+    private boolean shouldOpenConfirmLoad;
+    private String pendingOverwriteName;
+    private String pendingDeleteName;
+    private String pendingConfirmLoadName;
 
     public FileBrowserOverlay(Backend backend) {
         this.backend = backend;
@@ -61,7 +133,7 @@ public final class FileBrowserOverlay implements RenderInterface {
     public void render(ImGuiIO io) {
         ImGui.setNextWindowSize(560, 380, ImGuiCond.FirstUseEver);
         ImGui.setNextWindowSizeConstraints(420, 200, Float.MAX_VALUE, Float.MAX_VALUE);
-        if (!ImGui.begin("Files", ImGuiWindowFlags.MenuBar)) {
+        if (!ImGui.begin(WINDOW_TITLE, ImGuiWindowFlags.MenuBar)) {
             ImGui.end();
             return;
         }
@@ -78,6 +150,9 @@ public final class FileBrowserOverlay implements RenderInterface {
         renderStatus();
         renderCreateModal();
         renderConfirmNewModal();
+        renderConfirmOverwriteModal();
+        renderConfirmDeleteModal();
+        renderConfirmLoadModal();
 
         if (pendingLoad != null) {
             doLoad(pendingLoad);
@@ -88,10 +163,12 @@ public final class FileBrowserOverlay implements RenderInterface {
     }
 
     private void renderToolbar() {
-        ImGui.text("Search");
+        ImGui.text(LABEL_SEARCH);
         ImGui.sameLine();
         ImGui.setNextItemWidth(220);
-        ImGui.inputText("##file_filter", filterInput);
+        ImGui.inputText(ID_FILTER_INPUT, filterInput);
+        ImGui.sameLine();
+        if (ImGui.button(LABEL_REFRESH)) needsRefresh = true;
     }
 
     private void renderTable() {
@@ -103,13 +180,13 @@ public final class FileBrowserOverlay implements RenderInterface {
         float lineH = ImGui.getTextLineHeightWithSpacing();
         float reserveBottom = lineH * 2 + 16;
         float tableHeight = Math.max(120, ImGui.getContentRegionAvail().y - reserveBottom);
-        if (!ImGui.beginTable("##file_table", 4, flags, 0, tableHeight)) return;
+        if (!ImGui.beginTable(ID_TABLE, 4, flags, 0, tableHeight)) return;
 
         ImGui.tableSetupScrollFreeze(0, 1);
-        ImGui.tableSetupColumn("Filename");
-        ImGui.tableSetupColumn("Date Modified");
-        ImGui.tableSetupColumn("MC");
-        ImGui.tableSetupColumn("World", ImGuiTableColumnFlags.WidthStretch);
+        ImGui.tableSetupColumn(COL_FILENAME);
+        ImGui.tableSetupColumn(COL_DATE);
+        ImGui.tableSetupColumn(COL_MC);
+        ImGui.tableSetupColumn(COL_WORLD, ImGuiTableColumnFlags.WidthStretch);
 
         renderHeaders();
         for (SaveInfo info : sortedFiltered()) {
@@ -120,15 +197,15 @@ public final class FileBrowserOverlay implements RenderInterface {
 
     private void renderHeaders() {
         ImGui.tableNextRow();
-        renderHeaderCell(0, "Filename");
-        renderHeaderCell(1, "Date Modified");
-        renderHeaderCell(2, "MC");
-        renderHeaderCell(3, "World");
+        renderHeaderCell(0, COL_FILENAME);
+        renderHeaderCell(1, COL_DATE);
+        renderHeaderCell(2, COL_MC);
+        renderHeaderCell(3, COL_WORLD);
     }
 
     private void renderHeaderCell(int col, String label) {
         ImGui.tableNextColumn();
-        String arrow = sortColumn == col ? (sortDescending ? " v" : " ^") : "";
+        String arrow = sortColumn == col ? (sortDescending ? SORT_ARROW_DESC : SORT_ARROW_ASC) : "";
         ImGui.tableHeader(label + arrow);
         if (ImGui.isItemClicked()) {
             if (sortColumn == col) {
@@ -146,10 +223,10 @@ public final class FileBrowserOverlay implements RenderInterface {
 
         boolean isSelected = info.name.equals(selected);
         int selFlags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
-        if (ImGui.selectable(info.name + "##row_" + info.name, isSelected, selFlags)) {
+        if (ImGui.selectable(info.name + ID_ROW_PREFIX + info.name, isSelected, selFlags)) {
             selected = info.name;
             if (ImGui.isMouseDoubleClicked(0)) {
-                pendingLoad = info.name;
+                requestLoad(info.name);
             }
         }
 
@@ -157,29 +234,29 @@ public final class FileBrowserOverlay implements RenderInterface {
         ImGui.text(formatDate(info.lastModifiedMs));
 
         ImGui.tableSetColumnIndex(2);
-        ImGui.text(info.mcVersion != null ? info.mcVersion : "?");
+        ImGui.text(info.mcVersion != null ? info.mcVersion : UNKNOWN);
 
         ImGui.tableSetColumnIndex(3);
-        ImGui.text(info.worldLabel != null ? info.worldLabel : "?");
+        ImGui.text(info.worldLabel != null ? info.worldLabel : UNKNOWN);
     }
 
     private void renderMenuBar() {
         if (!ImGui.beginMenuBar()) return;
 
-        if (ImGui.beginMenu("File")) {
+        if (ImGui.beginMenu(MENU_FILE)) {
             boolean hasSelection = selected != null && containsName(cached, selected);
             String current = backend.currentName();
 
-            if (ImGui.menuItem("New")) {
+            if (ImGui.menuItem(MENU_NEW)) {
                 if (backend.isDirty()) {
                     shouldOpenConfirmNew = true;
                 } else {
                     applyNewSession();
                 }
             }
-            tooltip("Clear inputs back to default and snap start to your position. Prompts for confirmation if you have unsaved changes.");
+            tooltip(TOOLTIP_NEW);
 
-            if (ImGui.menuItem("Save")) {
+            if (ImGui.menuItem(MENU_SAVE)) {
                 if (current != null) {
                     doSave(current);
                 } else {
@@ -187,31 +264,30 @@ public final class FileBrowserOverlay implements RenderInterface {
                     shouldOpenCreatePopup = true;
                 }
             }
-            tooltip(current != null
-                    ? "Overwrite '" + current + "' with the current inputs."
-                    : "Nothing loaded yet, opens Save As...");
+            tooltip(current != null ? String.format(TOOLTIP_SAVE_NAMED, current) : TOOLTIP_SAVE_UNNAMED);
 
-            if (ImGui.menuItem("Save As...")) {
+            if (ImGui.menuItem(MENU_SAVE_AS)) {
                 newNameInput.set("");
                 shouldOpenCreatePopup = true;
             }
-            tooltip("Save the current inputs to a new file with a name you choose.");
+            tooltip(TOOLTIP_SAVE_AS);
 
             ImGui.separator();
 
             if (!hasSelection) ImGui.beginDisabled();
-            if (ImGui.menuItem("Load")) {
-                pendingLoad = selected;
+            if (ImGui.menuItem(MENU_LOAD)) {
+                requestLoad(selected);
             }
             if (!hasSelection) ImGui.endDisabled();
-            tooltip("Load the file selected in the table below. Replaces current inputs and start.");
+            tooltip(TOOLTIP_LOAD);
 
             if (!hasSelection) ImGui.beginDisabled();
-            if (ImGui.menuItem("Move to Recycle Bin")) {
-                doDelete(selected);
+            if (ImGui.menuItem(MENU_RECYCLE)) {
+                pendingDeleteName = selected;
+                shouldOpenConfirmDelete = true;
             }
             if (!hasSelection) ImGui.endDisabled();
-            tooltip("Move the selected file to <save dir>/.trash/. This is NOT the OS recycle bin; restore by hand if needed.");
+            tooltip(TOOLTIP_RECYCLE);
 
             ImGui.endMenu();
         }
@@ -221,7 +297,8 @@ public final class FileBrowserOverlay implements RenderInterface {
 
     private void renderEditingLabel() {
         String current = backend.currentName();
-        ImGui.textDisabled("Editing: " + (current != null ? current : "(unsaved)") + (backend.isDirty() ? " *" : ""));
+        ImGui.textDisabled(LABEL_EDITING_PREFIX + (current != null ? current : LABEL_EDITING_UNSAVED)
+                + (backend.isDirty() ? LABEL_DIRTY_MARK : ""));
     }
 
     private static void tooltip(String text) {
@@ -230,31 +307,115 @@ public final class FileBrowserOverlay implements RenderInterface {
 
     private void applyNewSession() {
         backend.newSession();
-        statusMessage = "Cleared inputs; start set to your position";
+        statusMessage = STATUS_NEW_SESSION;
         statusIsError = false;
     }
 
     private void renderConfirmNewModal() {
         if (shouldOpenConfirmNew) {
-            ImGui.openPopup(CONFIRM_NEW_POPUP_ID);
+            ImGui.openPopup(POPUP_CONFIRM_NEW);
             shouldOpenConfirmNew = false;
         }
-        if (!ImGui.beginPopupModal(CONFIRM_NEW_POPUP_ID, ImGuiWindowFlags.AlwaysAutoResize)) return;
+        if (!ImGui.beginPopupModal(POPUP_CONFIRM_NEW, ImGuiWindowFlags.AlwaysAutoResize)) return;
 
         String current = backend.currentName();
-        ImGui.text(current != null
-                ? "You have unsaved changes to '" + current + "'."
-                : "You have unsaved changes that have not been saved to a file.");
-        ImGui.text("Starting a new run will discard them.");
+        ImGui.text(current != null ? String.format(CONFIRM_NEW_BODY_NAMED, current) : CONFIRM_NEW_BODY_UNNAMED);
+        ImGui.text(CONFIRM_NEW_BODY_DISCARD);
 
         pushButtonColor(0.65f, 0.20f, 0.20f);
-        if (ImGui.button("Discard")) {
+        if (ImGui.button(BTN_DISCARD)) {
             applyNewSession();
             ImGui.closeCurrentPopup();
         }
         popButtonColor();
         ImGui.sameLine();
-        if (ImGui.button("Cancel")) {
+        if (ImGui.button(BTN_CANCEL)) {
+            ImGui.closeCurrentPopup();
+        }
+        ImGui.endPopup();
+    }
+
+    private void renderConfirmOverwriteModal() {
+        if (shouldOpenConfirmOverwrite) {
+            ImGui.openPopup(POPUP_CONFIRM_OVERWRITE);
+            shouldOpenConfirmOverwrite = false;
+        }
+        if (!ImGui.beginPopupModal(POPUP_CONFIRM_OVERWRITE, ImGuiWindowFlags.AlwaysAutoResize)) return;
+
+        ImGui.text(String.format(CONFIRM_OVERWRITE_BODY, pendingOverwriteName));
+        ImGui.text(CONFIRM_OVERWRITE_PROMPT);
+
+        pushButtonColor(0.65f, 0.20f, 0.20f);
+        if (ImGui.button(BTN_OVERWRITE)) {
+            doSave(pendingOverwriteName);
+            pendingOverwriteName = null;
+            ImGui.closeCurrentPopup();
+        }
+        popButtonColor();
+        ImGui.sameLine();
+        if (ImGui.button(BTN_CANCEL)) {
+            pendingOverwriteName = null;
+            ImGui.closeCurrentPopup();
+        }
+        ImGui.endPopup();
+    }
+
+    private void requestLoad(String name) {
+        if (backend.isDirty()) {
+            pendingConfirmLoadName = name;
+            shouldOpenConfirmLoad = true;
+        } else {
+            pendingLoad = name;
+        }
+    }
+
+    private void renderConfirmLoadModal() {
+        if (shouldOpenConfirmLoad) {
+            ImGui.openPopup(POPUP_CONFIRM_LOAD);
+            shouldOpenConfirmLoad = false;
+        }
+        if (!ImGui.beginPopupModal(POPUP_CONFIRM_LOAD, ImGuiWindowFlags.AlwaysAutoResize)) return;
+
+        String current = backend.currentName();
+        ImGui.text(current != null ? String.format(CONFIRM_NEW_BODY_NAMED, current) : CONFIRM_NEW_BODY_UNNAMED);
+        ImGui.text(String.format(CONFIRM_LOAD_BODY_LOAD, pendingConfirmLoadName));
+        ImGui.text(CONFIRM_LOAD_BODY_DISCARD);
+
+        pushButtonColor(0.65f, 0.20f, 0.20f);
+        if (ImGui.button(BTN_DISCARD)) {
+            pendingLoad = pendingConfirmLoadName;
+            pendingConfirmLoadName = null;
+            ImGui.closeCurrentPopup();
+        }
+        popButtonColor();
+        ImGui.sameLine();
+        if (ImGui.button(BTN_CANCEL)) {
+            pendingConfirmLoadName = null;
+            ImGui.closeCurrentPopup();
+        }
+        ImGui.endPopup();
+    }
+
+    private void renderConfirmDeleteModal() {
+        if (shouldOpenConfirmDelete) {
+            ImGui.openPopup(POPUP_CONFIRM_DELETE);
+            shouldOpenConfirmDelete = false;
+        }
+        if (!ImGui.beginPopupModal(POPUP_CONFIRM_DELETE, ImGuiWindowFlags.AlwaysAutoResize)) return;
+
+        ImGui.text(String.format(CONFIRM_DELETE_BODY, pendingDeleteName));
+        ImGui.text(CONFIRM_DELETE_NOTE);
+
+        pushButtonColor(0.65f, 0.20f, 0.20f);
+        if (ImGui.button(BTN_RECYCLE)) {
+            doDelete(pendingDeleteName);
+            pendingDeleteName = null;
+            ImGui.closeCurrentPopup();
+        }
+        popButtonColor();
+        ImGui.sameLine();
+        if (ImGui.button(BTN_CANCEL)) {
+            pendingDeleteName = null;
             ImGui.closeCurrentPopup();
         }
         ImGui.endPopup();
@@ -263,7 +424,7 @@ public final class FileBrowserOverlay implements RenderInterface {
     private void doSave(String name) {
         SaveResult r = backend.save(name);
         if (r.ok) {
-            statusMessage = "Saved '" + r.name + "'";
+            statusMessage = String.format(STATUS_SAVED, r.name);
             statusIsError = false;
             selected = r.name;
             needsRefresh = true;
@@ -287,31 +448,38 @@ public final class FileBrowserOverlay implements RenderInterface {
 
     private void renderCreateModal() {
         if (shouldOpenCreatePopup) {
-            ImGui.openPopup(CREATE_POPUP_ID);
+            ImGui.openPopup(POPUP_CREATE);
             shouldOpenCreatePopup = false;
         }
 
-        if (!ImGui.beginPopupModal(CREATE_POPUP_ID, ImGuiWindowFlags.AlwaysAutoResize)) return;
+        if (!ImGui.beginPopupModal(POPUP_CREATE, ImGuiWindowFlags.AlwaysAutoResize)) return;
 
-        ImGui.text("File name");
+        ImGui.text(LABEL_FILE_NAME);
         ImGui.setNextItemWidth(240);
-        ImGui.inputText("##new_name", newNameInput);
+        ImGui.inputText(ID_NAME_INPUT, newNameInput);
 
-        if (ImGui.button("Save")) {
-            SaveResult r = backend.save(newNameInput.get());
-            if (r.ok) {
-                statusMessage = "Saved as '" + r.name + "'";
-                statusIsError = false;
-                selected = r.name;
-                needsRefresh = true;
+        if (ImGui.button(BTN_SAVE)) {
+            String typed = newNameInput.get();
+            if (backend.exists(typed)) {
+                pendingOverwriteName = typed;
+                shouldOpenConfirmOverwrite = true;
                 ImGui.closeCurrentPopup();
             } else {
-                statusMessage = r.error;
-                statusIsError = true;
+                SaveResult r = backend.save(typed);
+                if (r.ok) {
+                    statusMessage = String.format(STATUS_SAVED_AS, r.name);
+                    statusIsError = false;
+                    selected = r.name;
+                    needsRefresh = true;
+                    ImGui.closeCurrentPopup();
+                } else {
+                    statusMessage = r.error;
+                    statusIsError = true;
+                }
             }
         }
         ImGui.sameLine();
-        if (ImGui.button("Cancel")) {
+        if (ImGui.button(BTN_CANCEL)) {
             ImGui.closeCurrentPopup();
         }
 
@@ -321,7 +489,7 @@ public final class FileBrowserOverlay implements RenderInterface {
     private void doLoad(String name) {
         LoadResult r = backend.load(name);
         if (r.ok) {
-            statusMessage = "Loaded '" + name + "'";
+            statusMessage = String.format(STATUS_LOADED, name);
             statusIsError = false;
             selected = name;
         } else {
@@ -332,12 +500,12 @@ public final class FileBrowserOverlay implements RenderInterface {
 
     private void doDelete(String name) {
         if (backend.delete(name)) {
-            statusMessage = "Moved '" + name + "' to recycle bin";
+            statusMessage = String.format(STATUS_RECYCLED, name);
             statusIsError = false;
             if (name.equals(selected)) selected = null;
             needsRefresh = true;
         } else {
-            statusMessage = "Failed to recycle '" + name + "'";
+            statusMessage = String.format(STATUS_RECYCLE_FAILED, name);
             statusIsError = true;
         }
     }

@@ -1,11 +1,5 @@
 package de.legoshi.parkourcalc.core.save;
 
-/**
- * Snapshot of where the player was when a save was written. Either {@link #worldName}
- * (singleplayer) or {@link #serverAddress} (multiplayer) is non-null; the other is null.
- * {@link #dimension} is the dimension id (e.g. "minecraft:overworld"); loaders use their
- * version-appropriate identifier string.
- */
 public final class WorldDescriptor {
 
     public final String dimension;

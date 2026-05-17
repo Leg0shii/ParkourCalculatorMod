@@ -17,6 +17,7 @@ public class SimulatorEntity extends PlayerEntity {
     public final SimulatorInput input = new SimulatorInput();
     public Vec3d startPosition;
     public Vec3d startVelocity;
+    public float startYaw;
 
     // No shadow prev* fields: SimulatorInput.playerInput holds the previous tick's
     // state until we call this.input.tick(), matching how MC's persistent Input
@@ -24,10 +25,11 @@ public class SimulatorEntity extends PlayerEntity {
     private int ticksLeftToDoubleTapSprint = 0;
     private boolean inSneakingPose;
 
-    public SimulatorEntity(World world, GameProfile profile, Vec3d startPosition, Vec3d startVelocity) {
+    public SimulatorEntity(World world, GameProfile profile, Vec3d startPosition, Vec3d startVelocity, float startYaw) {
         super(world, profile);
         this.startPosition = startPosition;
         this.startVelocity = startVelocity;
+        this.startYaw = startYaw;
         resetPlayer();
     }
 
@@ -36,7 +38,7 @@ public class SimulatorEntity extends PlayerEntity {
         this.clearStatusEffects();
         this.setPosition(startPosition);
         this.setVelocity(startVelocity);
-        this.setRotation(0, 0);
+        this.setRotation(startYaw, 0);
 
         this.input.setData(new InputRow());
         this.ticksLeftToDoubleTapSprint = 0;

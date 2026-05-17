@@ -12,24 +12,30 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 
 /**
- * Filesystem-backed SaveStore. Files live as {@code <saveDir>/<name>.json};
- * deletes route to {@code <saveDir>/.trash/<name>_<epochMs>.json} (Java 8 has
- * no portable OS-trash hook, and an in-tree trash still gives recoverability).
+ * Filesystem-backed SaveStore. Files live as {@code <saveDir>/<name>.json}; deletes route
+ * to {@code <saveDir>/.trash/<name>_<epochMs>.json} (Java 8 has no portable OS-trash hook).
  */
 public final class FileSystemSaveStore implements SaveStore {
 
     private static final String EXTENSION = ".json";
     private static final String TRASH_DIR = ".trash";
+    private static final String TMP_SUFFIX = ".tmp";
     private static final Charset CHARSET = Charset.forName("UTF-8");
 
     private final Path saveDir;
     private final String modVersion;
     private final String mcVersion;
     private final Supplier<WorldDescriptor> worldSupplier;
+
+    private final Map<String, CachedEntry> headerCache = new HashMap<String, CachedEntry>();
 
     public FileSystemSaveStore(Path saveDir, String modVersion, String mcVersion, Supplier<WorldDescriptor> worldSupplier) {
         this.saveDir = saveDir;
@@ -62,6 +68,7 @@ public final class FileSystemSaveStore implements SaveStore {
     public List<SaveInfo> list() {
         if (!Files.isDirectory(saveDir)) return Collections.emptyList();
         List<SaveInfo> infos = new ArrayList<SaveInfo>();
+        Set<String> present = new HashSet<String>();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(saveDir, "*" + EXTENSION)) {
             for (Path p : stream) {
                 if (!Files.isRegularFile(p)) continue;
@@ -74,22 +81,35 @@ public final class FileSystemSaveStore implements SaveStore {
                 } catch (IOException e) {
                     mtime = 0L;
                 }
-                String mcVer = null;
-                String worldLabel = null;
-                try {
-                    SaveFile parsed = SaveIO.parseSafe(new String(Files.readAllBytes(p), CHARSET));
-                    if (parsed != null) {
-                        mcVer = parsed.mcVersion;
-                        worldLabel = SaveIO.formatWorld(parsed.world);
-                    }
-                } catch (IOException ignored) {
+                present.add(name);
+                CachedEntry entry = headerCache.get(name);
+                if (entry == null || entry.mtime != mtime) {
+                    entry = parseHeader(p, mtime);
+                    headerCache.put(name, entry);
                 }
-                infos.add(new SaveInfo(name, mtime, mcVer, worldLabel));
+                infos.add(new SaveInfo(name, mtime, entry.mcVersion, entry.worldLabel));
             }
         } catch (IOException ignored) {
             return Collections.emptyList();
         }
+        headerCache.keySet().retainAll(present);
         return infos;
+    }
+
+    private static CachedEntry parseHeader(Path p, long mtime) {
+        try {
+            SaveFile parsed = SaveIO.parseSafe(new String(Files.readAllBytes(p), CHARSET));
+            if (parsed != null) {
+                return new CachedEntry(mtime, parsed.mcVersion, SaveIO.formatWorld(parsed.world));
+            }
+        } catch (IOException ignored) {
+        }
+        return new CachedEntry(mtime, null, null);
+    }
+
+    @Override
+    public boolean exists(String name) {
+        return Files.isRegularFile(saveDir.resolve(name + EXTENSION));
     }
 
     @Override
@@ -102,8 +122,14 @@ public final class FileSystemSaveStore implements SaveStore {
     @Override
     public void write(String name, String contents) throws IOException {
         Files.createDirectories(saveDir);
-        Path file = saveDir.resolve(name + EXTENSION);
-        Files.write(file, contents.getBytes(CHARSET));
+        Path target = saveDir.resolve(name + EXTENSION);
+        Path tmp = saveDir.resolve(name + EXTENSION + TMP_SUFFIX);
+        Files.write(tmp, contents.getBytes(CHARSET));
+        try {
+            Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException atomicFailed) {
+            Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING);
+        }
     }
 
     @Override
@@ -122,6 +148,18 @@ public final class FileSystemSaveStore implements SaveStore {
             return true;
         } catch (IOException e) {
             return false;
+        }
+    }
+
+    private static final class CachedEntry {
+        final long mtime;
+        final String mcVersion;
+        final String worldLabel;
+
+        CachedEntry(long mtime, String mcVersion, String worldLabel) {
+            this.mtime = mtime;
+            this.mcVersion = mcVersion;
+            this.worldLabel = worldLabel;
         }
     }
 }

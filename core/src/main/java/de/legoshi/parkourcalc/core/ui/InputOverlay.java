@@ -14,8 +14,31 @@ import java.util.Locale;
 
 public final class InputOverlay implements RenderInterface {
 
-    private static final float TABLE_HEIGHT = 200;
+    private static final String WINDOW_TITLE = "TAS Inputs";
+
+    private static final String ID_TABLE = "tas-table";
+    private static final String ID_CONTEXT_MENU = "context_menu";
+    private static final String ID_ROWS_TO_ADD = "##rows_to_add";
+    private static final String ID_YAW_INPUT = "##yaw";
+    private static final String ID_ROW_SUFFIX = ".##row";
+    private static final String ID_KEY_SUFFIX = "##";
+
+    private static final String COL_INDEX = "#";
+    private static final String COL_YAW = "YAW";
+
+    private static final String MENU_SET_TO_PLAYER = "Set to user position";
+    private static final String LABEL_ROWS = "Rows:";
+    private static final String MENU_ADD_AT_END = "Add %d row(s) at end";
+    private static final String MENU_ADD_ABOVE = "Add %d row(s) above";
+    private static final String MENU_ADD_BELOW = "Add %d row(s) below";
+    private static final String MENU_DELETE = "Delete %d row(s)";
+    private static final String MENU_DELETE_SHORTCUT = "Del";
+
+    private static final String YAW_FORMAT = "%.5f";
+
     private static final String DRAG_DROP_TYPE = "INPUT_ROW";
+
+    private static final float TABLE_HEIGHT = 200;
     private static final int COLUMN_COUNT = 9;
 
     private final InputData data;
@@ -37,14 +60,14 @@ public final class InputOverlay implements RenderInterface {
 
     @Override
     public void render(ImGuiIO io) {
-        if (!ImGui.begin("TAS Inputs", ImGuiWindowFlags.AlwaysAutoResize)) {
+        if (!ImGui.begin(WINDOW_TITLE, ImGuiWindowFlags.AlwaysAutoResize)) {
             ImGui.end();
             return;
         }
 
         pushTableStyles();
 
-        if (ImGui.beginTable("tas-table", COLUMN_COUNT, tableFlags(), 0, TABLE_HEIGHT)) {
+        if (ImGui.beginTable(ID_TABLE, COLUMN_COUNT, tableFlags(), 0, TABLE_HEIGHT)) {
             setupColumns();
             renderAllRows();
             ImGui.endTable();
@@ -77,11 +100,11 @@ public final class InputOverlay implements RenderInterface {
     }
 
     private void setupColumns() {
-        ImGui.tableSetupColumn("#");
+        ImGui.tableSetupColumn(COL_INDEX);
         for (InputRow.Key key : InputRow.Key.values()) {
             ImGui.tableSetupColumn(key.name());
         }
-        ImGui.tableSetupColumn("YAW", ImGuiTableColumnFlags.WidthFixed, 160);
+        ImGui.tableSetupColumn(COL_YAW, ImGuiTableColumnFlags.WidthFixed, 160);
         ImGui.tableHeadersRow();
     }
 
@@ -137,7 +160,7 @@ public final class InputOverlay implements RenderInterface {
         boolean isSelected = selection.isSelected(rowIndex);
         int flags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowItemOverlap;
 
-        if (ImGui.selectable((rowIndex + 1) + ".##row", isSelected, flags)) {
+        if (ImGui.selectable((rowIndex + 1) + ID_ROW_SUFFIX, isSelected, flags)) {
             selection.handleClick(rowIndex);
         }
     }
@@ -202,7 +225,7 @@ public final class InputOverlay implements RenderInterface {
             float alpha = displayValue ? 1.0f : 0f;
             ImGui.pushStyleColor(ImGuiCol.Text, brightness, brightness, brightness, alpha);
 
-            ImGui.selectable(key.name() + "##" + key.name(), displayValue);
+            ImGui.selectable(key.name() + ID_KEY_SUFFIX + key.name(), displayValue);
 
             if (ImGui.isItemClicked(0)) {
                 keyDragSelect.startDrag(key, rowIndex, actualValue);
@@ -216,12 +239,12 @@ public final class InputOverlay implements RenderInterface {
         ImGui.tableNextColumn();
 
         Float yaw = row.getYaw();
-        yawInput.set(yaw == null ? "" : String.format(Locale.US, "%.5f", yaw));
+        yawInput.set(yaw == null ? "" : String.format(Locale.US, YAW_FORMAT, yaw));
 
         ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 4, 0);
         ImGui.setNextItemWidth(150);
 
-        if (ImGui.inputText("##yaw", yawInput)) {
+        if (ImGui.inputText(ID_YAW_INPUT, yawInput)) {
             parseAndSetYaw(row);
             onDataChanged.run();
         }
@@ -242,11 +265,11 @@ public final class InputOverlay implements RenderInterface {
     }
 
     private void renderContextMenu() {
-        if (!ImGui.beginPopupContextWindow("context_menu", ImGuiPopupFlags.MouseButtonRight)) {
+        if (!ImGui.beginPopupContextWindow(ID_CONTEXT_MENU, ImGuiPopupFlags.MouseButtonRight)) {
             return;
         }
 
-        if (ImGui.menuItem("Set to user position")) {
+        if (ImGui.menuItem(MENU_SET_TO_PLAYER)) {
             onSetPlayerPosition.run();
             onDataChanged.run();
         }
@@ -261,17 +284,17 @@ public final class InputOverlay implements RenderInterface {
     }
 
     private void renderRowCountInput() {
-        ImGui.text("Rows:");
+        ImGui.text(LABEL_ROWS);
         ImGui.sameLine();
         ImGui.setNextItemWidth(80);
-        ImGui.inputInt("##rows_to_add", rowsToAdd);
+        ImGui.inputInt(ID_ROWS_TO_ADD, rowsToAdd);
         rowsToAdd.set(Math.max(1, Math.min(100, rowsToAdd.get())));
     }
 
     private void renderAddRowOptions() {
         int count = rowsToAdd.get();
 
-        if (ImGui.menuItem("Add " + count + " row(s) at end")) {
+        if (ImGui.menuItem(String.format(MENU_ADD_AT_END, count))) {
             data.addRows(data.size(), count);
             onDataChanged.run();
         }
@@ -279,13 +302,13 @@ public final class InputOverlay implements RenderInterface {
         if (selection.size() == 1) {
             int selected = selection.getSelected().iterator().next();
 
-            if (ImGui.menuItem("Add " + count + " row(s) above")) {
+            if (ImGui.menuItem(String.format(MENU_ADD_ABOVE, count))) {
                 data.addRows(selected, count);
                 selection.adjustForInsert(selected, count);
                 onDataChanged.run();
             }
 
-            if (ImGui.menuItem("Add " + count + " row(s) below")) {
+            if (ImGui.menuItem(String.format(MENU_ADD_BELOW, count))) {
                 data.addRows(selected + 1, count);
                 selection.adjustForInsert(selected + 1, count);
                 onDataChanged.run();
@@ -299,7 +322,7 @@ public final class InputOverlay implements RenderInterface {
         }
 
         ImGui.separator();
-        if (ImGui.menuItem("Delete " + selection.size() + " row(s)", "Del")) {
+        if (ImGui.menuItem(String.format(MENU_DELETE, selection.size()), MENU_DELETE_SHORTCUT)) {
             deleteSelectedRows();
         }
     }

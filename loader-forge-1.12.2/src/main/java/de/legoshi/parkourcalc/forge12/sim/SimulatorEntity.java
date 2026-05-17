@@ -12,13 +12,17 @@ import net.minecraft.world.World;
 public class SimulatorEntity extends EntityPlayer {
 
     public Vec3d startPosition;
+    public Vec3d startVelocity = Vec3d.ZERO;
+    public float startYaw;
 
     private InputRow currentInput = new InputRow();
     private PlayerSprintMachine.State sprintState = PlayerSprintMachine.State.initial();
 
-    public SimulatorEntity(World world, GameProfile profile, Vec3d startPosition) {
+    public SimulatorEntity(World world, GameProfile profile, Vec3d startPosition, Vec3d startVelocity, float startYaw) {
         super(world, profile);
         this.startPosition = startPosition;
+        this.startVelocity = startVelocity;
+        this.startYaw = startYaw;
         resetPlayer();
     }
 
@@ -28,11 +32,11 @@ public class SimulatorEntity extends EntityPlayer {
 
     public void resetPlayer() {
         this.noClip = true;
-        this.motionX = 0.0;
-        this.motionY = 0.0;
-        this.motionZ = 0.0;
+        this.motionX = startVelocity.x;
+        this.motionY = startVelocity.y;
+        this.motionZ = startVelocity.z;
         this.setPosition(startPosition.x, startPosition.y, startPosition.z);
-        this.rotationYaw = 0.0F;
+        this.rotationYaw = startYaw;
         this.rotationPitch = 0.0F;
 
         this.currentInput = new InputRow();

@@ -1,10 +1,5 @@
 package de.legoshi.parkourcalc.core.save;
 
-/**
- * Outcome of a load attempt. On success {@link #file} holds the parsed data
- * and the Application applies it; on failure {@link #error} carries a
- * user-facing message and no state is touched.
- */
 public final class LoadResult {
 
     public final boolean ok;

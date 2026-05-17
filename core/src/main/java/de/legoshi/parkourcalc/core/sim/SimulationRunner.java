@@ -7,11 +7,6 @@ import de.legoshi.parkourcalc.core.ui.InputRow;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Drives a Simulator through the rows of an InputData and collects the tick-by-tick
- * positions. The iteration logic is identical across all loaders; only the per-tick
- * mechanics differ, which the Simulator port abstracts.
- */
 public final class SimulationRunner {
 
     private final Simulator simulator;
@@ -41,5 +36,21 @@ public final class SimulationRunner {
 
     public void setStartPosition(Vec3dCore pos) {
         simulator.setStartPosition(pos);
+    }
+
+    public Vec3dCore getStartVelocity() {
+        return simulator.getStartVelocity();
+    }
+
+    public void setStartVelocity(Vec3dCore vel) {
+        simulator.setStartVelocity(vel);
+    }
+
+    public float getStartYaw() {
+        return simulator.getStartYaw();
+    }
+
+    public void setStartYaw(float yaw) {
+        simulator.setStartYaw(yaw);
     }
 }

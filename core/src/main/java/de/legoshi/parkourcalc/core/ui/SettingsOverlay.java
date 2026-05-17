@@ -9,6 +9,30 @@ import imgui.type.ImInt;
 
 public final class SettingsOverlay implements RenderInterface {
 
+    private static final String WINDOW_TITLE = "Settings";
+
+    private static final String LABEL_SHOW_YAW_ARROWS = "Show yaw arrows";
+    private static final String LABEL_SHOW_HITBOX = "Show Hitbox";
+    private static final String LABEL_SHOW_FULL_HITBOX = "Show Full Hitbox";
+    private static final String LABEL_SHOW_SUBTICK = "Subtick Visualization";
+    private static final String LABEL_UI_SCALE = "UI Scale";
+    private static final String LABEL_RENDER_COLORS = "Render Colors";
+    private static final String BTN_RESET = "Reset all";
+
+    private static final String COLOR_TICK_DEFAULT = "tick box default";
+    private static final String COLOR_TICK_SELECTED = "tick box selected";
+    private static final String COLOR_TICK_AIR = "tick box in-air";
+    private static final String COLOR_TICK_SNEAK = "tick box sneak";
+    private static final String COLOR_SUBTICK_PATH = "subtick path";
+    private static final String COLOR_YAW_ARROW = "yaw arrows";
+    private static final String COLOR_YAW_GIZMO_CIRCLE = "yaw gizmo circle";
+    private static final String COLOR_YAW_GIZMO_DIRECTION = "yaw gizmo direction";
+    private static final String COLOR_HITBOX_DEFAULT = "hitbox default";
+    private static final String COLOR_HITBOX_SELECTED = "hitbox selected";
+
+    private static final String ID_UI_SCALE = "##ui_scale";
+    private static final String SCALE_SUFFIX = "x";
+
     private final Settings settings;
     private final Runnable onChanged;
     private final ImInt scaleIndexBuf = new ImInt();
@@ -23,14 +47,14 @@ public final class SettingsOverlay implements RenderInterface {
     private static String[] buildScaleLabels() {
         String[] labels = new String[Settings.PRESET_SCALES.length];
         for (int i = 0; i < labels.length; i++) {
-            labels[i] = Settings.PRESET_SCALES[i] + "x";
+            labels[i] = Settings.PRESET_SCALES[i] + SCALE_SUFFIX;
         }
         return labels;
     }
 
     @Override
     public void render(ImGuiIO io) {
-        if (!ImGui.begin("Settings", ImGuiWindowFlags.AlwaysAutoResize)) {
+        if (!ImGui.begin(WINDOW_TITLE, ImGuiWindowFlags.AlwaysAutoResize)) {
             ImGui.end();
             return;
         }
@@ -42,7 +66,7 @@ public final class SettingsOverlay implements RenderInterface {
         renderColors();
         ImGui.separator();
 
-        if (ImGui.button("Reset all")) {
+        if (ImGui.button(BTN_RESET)) {
             settings.reset();
             onChanged.run();
         }
@@ -51,19 +75,19 @@ public final class SettingsOverlay implements RenderInterface {
     }
 
     private void renderToggles() {
-        if (ImGui.checkbox("Show yaw arrows", settings.showYawArrows)) {
+        if (ImGui.checkbox(LABEL_SHOW_YAW_ARROWS, settings.showYawArrows)) {
             settings.showYawArrows = !settings.showYawArrows;
             onChanged.run();
         }
-        if (ImGui.checkbox("Show Hitbox", settings.showHitbox)) {
+        if (ImGui.checkbox(LABEL_SHOW_HITBOX, settings.showHitbox)) {
             settings.showHitbox = !settings.showHitbox;
             onChanged.run();
         }
-        if (ImGui.checkbox("Show Full Hitbox", settings.showFullHitbox)) {
+        if (ImGui.checkbox(LABEL_SHOW_FULL_HITBOX, settings.showFullHitbox)) {
             settings.showFullHitbox = !settings.showFullHitbox;
             onChanged.run();
         }
-        if (ImGui.checkbox("Subtick Visualization", settings.showSubtick)) {
+        if (ImGui.checkbox(LABEL_SHOW_SUBTICK, settings.showSubtick)) {
             settings.showSubtick = !settings.showSubtick;
             onChanged.run();
         }
@@ -71,27 +95,27 @@ public final class SettingsOverlay implements RenderInterface {
 
     private void renderScale() {
         scaleIndexBuf.set(settings.scaleIndex);
-        ImGui.text("UI Scale");
+        ImGui.text(LABEL_UI_SCALE);
         ImGui.sameLine();
-        if (ImGui.combo("##ui_scale", scaleIndexBuf, scaleLabels)) {
+        if (ImGui.combo(ID_UI_SCALE, scaleIndexBuf, scaleLabels)) {
             settings.scaleIndex = scaleIndexBuf.get();
             onChanged.run();
         }
     }
 
     private void renderColors() {
-        ImGui.text("Render Colors");
+        ImGui.text(LABEL_RENDER_COLORS);
         int flags = ImGuiColorEditFlags.NoInputs;
-        renderColor("tick box default", settings.tickDefault, flags);
-        renderColor("tick box selected", settings.tickSelected, flags);
-        renderColor("tick box in-air", settings.tickAir, flags);
-        renderColor("tick box sneak", settings.tickSneak, flags);
-        renderColor("subtick path", settings.subtickPath, flags);
-        renderColor("yaw arrows", settings.yawArrow, flags);
-        renderColor("yaw gizmo circle", settings.yawGizmoCircle, flags);
-        renderColor("yaw gizmo direction", settings.yawGizmoDirection, flags);
-        renderColor("hitbox default", settings.hitboxDefault, flags);
-        renderColor("hitbox selected", settings.hitboxSelected, flags);
+        renderColor(COLOR_TICK_DEFAULT, settings.tickDefault, flags);
+        renderColor(COLOR_TICK_SELECTED, settings.tickSelected, flags);
+        renderColor(COLOR_TICK_AIR, settings.tickAir, flags);
+        renderColor(COLOR_TICK_SNEAK, settings.tickSneak, flags);
+        renderColor(COLOR_SUBTICK_PATH, settings.subtickPath, flags);
+        renderColor(COLOR_YAW_ARROW, settings.yawArrow, flags);
+        renderColor(COLOR_YAW_GIZMO_CIRCLE, settings.yawGizmoCircle, flags);
+        renderColor(COLOR_YAW_GIZMO_DIRECTION, settings.yawGizmoDirection, flags);
+        renderColor(COLOR_HITBOX_DEFAULT, settings.hitboxDefault, flags);
+        renderColor(COLOR_HITBOX_SELECTED, settings.hitboxSelected, flags);
     }
 
     private void renderColor(String label, float[] color, int flags) {

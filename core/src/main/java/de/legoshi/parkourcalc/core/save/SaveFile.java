@@ -3,13 +3,6 @@ package de.legoshi.parkourcalc.core.save;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * On-disk shape for a save. Mirrors the issue's required fields: version
- * (bumped on incompatible format changes), createdAt (ISO-8601), modVersion,
- * world (nullable), start (pos/vel/yaw), and rows.
- *
- * Field names here are the JSON keys: Gson writes them directly.
- */
 public final class SaveFile {
 
     public static final int FORMAT_VERSION = 1;
