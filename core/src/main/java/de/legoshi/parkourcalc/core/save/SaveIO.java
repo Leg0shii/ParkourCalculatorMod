@@ -21,11 +21,11 @@ public final class SaveIO {
 
     private SaveIO() {}
 
-    public static SaveResult save(SaveStore store, String rawName, InputData inputData,
-                                  Vec3dCore startPos, Vec3dCore startVel, float startYaw) {
+    public static Result<String> save(SaveStore store, String rawName, InputData inputData,
+                                      Vec3dCore startPos, Vec3dCore startVel, float startYaw) {
         String name = sanitize(rawName);
         if (name == null) {
-            return SaveResult.failure("Invalid save name. Use letters, numbers, dashes, or underscores.");
+            return Result.failure("Invalid save name. Use letters, numbers, dashes, or underscores.");
         }
 
         SaveFile file = buildFile(store, inputData, startPos, startVel, startYaw);
@@ -34,42 +34,42 @@ public final class SaveIO {
         try {
             store.write(name, json);
         } catch (IOException e) {
-            return SaveResult.failure("Failed to write save: " + e.getMessage());
+            return Result.failure("Failed to write save: " + e.getMessage());
         }
-        return SaveResult.success(name);
+        return Result.success(name);
     }
 
-    public static LoadResult load(SaveStore store, String rawName) {
+    public static Result<SaveFile> load(SaveStore store, String rawName) {
         String name = sanitize(rawName);
         if (name == null) {
-            return LoadResult.failure("Invalid save name.");
+            return Result.failure("Invalid save name.");
         }
 
         String contents;
         try {
             contents = store.read(name);
         } catch (IOException e) {
-            return LoadResult.failure("Failed to read save: " + e.getMessage());
+            return Result.failure("Failed to read save: " + e.getMessage());
         }
 
         SaveFile file;
         try {
             file = new Gson().fromJson(contents, SaveFile.class);
         } catch (JsonSyntaxException e) {
-            return LoadResult.failure("Save file is not valid JSON.");
+            return Result.failure("Save file is not valid JSON.");
         }
 
         if (file == null || file.start == null || file.start.pos == null || file.start.pos.length < 3) {
-            return LoadResult.failure("Save file is missing required fields.");
+            return Result.failure("Save file is missing required fields.");
         }
         if (file.version != SaveFile.FORMAT_VERSION) {
-            return LoadResult.failure("Unsupported save format version: " + file.version);
+            return Result.failure("Unsupported save format version: " + file.version);
         }
 
-        return LoadResult.success(file);
+        return Result.success(file);
     }
 
-    public static AppliedStart applyTo(SaveFile file, InputData inputData) {
+    public static void applyRowsTo(SaveFile file, InputData inputData) {
         List<InputRow> rows = inputData.getRows();
         rows.clear();
         if (file.rows != null) {
@@ -77,18 +77,21 @@ public final class SaveIO {
                 rows.add(toInputRow(r));
             }
         }
-        Vec3dCore pos = new Vec3dCore(file.start.pos[0], file.start.pos[1], file.start.pos[2]);
-        Vec3dCore vel = (file.start.vel != null && file.start.vel.length >= 3)
-                ? new Vec3dCore(file.start.vel[0], file.start.vel[1], file.start.vel[2])
-                : Vec3dCore.ZERO;
-        return new AppliedStart(pos, vel, file.start.yaw);
+    }
+
+    public static Vec3dCore posOf(SaveFile.Start s) {
+        return new Vec3dCore(s.pos[0], s.pos[1], s.pos[2]);
+    }
+
+    public static Vec3dCore velOf(SaveFile.Start s) {
+        return (s.vel != null && s.vel.length >= 3) ? new Vec3dCore(s.vel[0], s.vel[1], s.vel[2]) : Vec3dCore.ZERO;
     }
 
     public static String formatWorld(SaveFile.World w) {
         if (w == null) return "(out of world)";
         String body;
-        if (w.name != null) body = w.name;
-        else if (w.server != null) body = w.server;
+        if (w.worldName != null) body = w.worldName;
+        else if (w.serverAddress != null) body = w.serverAddress;
         else body = "(unknown)";
         return w.dimension != null ? body + " [" + shortDimension(w.dimension) + "]" : body;
     }
@@ -161,8 +164,8 @@ public final class SaveIO {
         if (desc == null) return null;
         SaveFile.World w = new SaveFile.World();
         w.dimension = desc.dimension;
-        w.name = desc.worldName;
-        w.server = desc.serverAddress;
+        w.worldName = desc.worldName;
+        w.serverAddress = desc.serverAddress;
         return w;
     }
 
@@ -195,17 +198,5 @@ public final class SaveIO {
         SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         fmt.setTimeZone(TimeZone.getTimeZone("UTC"));
         return fmt.format(new Date());
-    }
-
-    public static final class AppliedStart {
-        public final Vec3dCore pos;
-        public final Vec3dCore vel;
-        public final float yaw;
-
-        public AppliedStart(Vec3dCore pos, Vec3dCore vel, float yaw) {
-            this.pos = pos;
-            this.vel = vel;
-            this.yaw = yaw;
-        }
     }
 }

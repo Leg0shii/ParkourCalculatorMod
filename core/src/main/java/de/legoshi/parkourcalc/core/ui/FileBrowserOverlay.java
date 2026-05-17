@@ -1,9 +1,9 @@
 package de.legoshi.parkourcalc.core.ui;
 
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
-import de.legoshi.parkourcalc.core.save.LoadResult;
+import de.legoshi.parkourcalc.core.save.Result;
+import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveInfo;
-import de.legoshi.parkourcalc.core.save.SaveResult;
 import imgui.ImGui;
 import imgui.ImGuiIO;
 import imgui.flag.ImGuiCol;
@@ -28,10 +28,8 @@ public final class FileBrowserOverlay implements RenderInterface {
 
     private static final String MENU_FILE = "File";
     private static final String MENU_NEW = "New";
-    private static final String MENU_SAVE = "Save";
     private static final String MENU_SAVE_AS = "Save As...";
     private static final String MENU_LOAD = "Load";
-    private static final String MENU_RECYCLE = "Move to Recycle Bin";
 
     private static final String LABEL_SEARCH = "Search";
     private static final String LABEL_REFRESH = "Refresh";
@@ -39,12 +37,12 @@ public final class FileBrowserOverlay implements RenderInterface {
     private static final String LABEL_EDITING_PREFIX = "Editing: ";
     private static final String LABEL_EDITING_UNSAVED = "(unsaved)";
     private static final String LABEL_DIRTY_MARK = " *";
+    private static final String LABEL_SAVE = "Save";
+    private static final String LABEL_RECYCLE = "Move to Recycle Bin";
 
-    private static final String BTN_SAVE = "Save";
     private static final String BTN_CANCEL = "Cancel";
     private static final String BTN_DISCARD = "Discard";
     private static final String BTN_OVERWRITE = "Overwrite";
-    private static final String BTN_RECYCLE = "Move to Recycle Bin";
 
     private static final String COL_FILENAME = "Filename";
     private static final String COL_DATE = "Date Modified";
@@ -92,9 +90,11 @@ public final class FileBrowserOverlay implements RenderInterface {
 
     private static final String DATE_PATTERN = "yyyy-MM-dd HH:mm";
 
+    private enum ModalChoice { DANGER, CANCEL, NONE }
+
     public interface Backend {
-        SaveResult save(String name);
-        LoadResult load(String name);
+        Result<String> save(String name);
+        Result<SaveFile> load(String name);
         boolean delete(String name);
         void newSession();
         List<SaveInfo> list();
@@ -256,9 +256,9 @@ public final class FileBrowserOverlay implements RenderInterface {
             }
             tooltip(TOOLTIP_NEW);
 
-            if (ImGui.menuItem(MENU_SAVE)) {
+            if (ImGui.menuItem(LABEL_SAVE)) {
                 if (current != null) {
-                    doSave(current);
+                    doSave(current, STATUS_SAVED);
                 } else {
                     newNameInput.set("");
                     shouldOpenCreatePopup = true;
@@ -282,7 +282,7 @@ public final class FileBrowserOverlay implements RenderInterface {
             tooltip(TOOLTIP_LOAD);
 
             if (!hasSelection) ImGui.beginDisabled();
-            if (ImGui.menuItem(MENU_RECYCLE)) {
+            if (ImGui.menuItem(LABEL_RECYCLE)) {
                 pendingDeleteName = selected;
                 shouldOpenConfirmDelete = true;
             }
@@ -307,56 +307,61 @@ public final class FileBrowserOverlay implements RenderInterface {
 
     private void applyNewSession() {
         backend.newSession();
-        statusMessage = STATUS_NEW_SESSION;
-        statusIsError = false;
+        setStatus(STATUS_NEW_SESSION, false);
     }
 
     private void renderConfirmNewModal() {
-        if (shouldOpenConfirmNew) {
-            ImGui.openPopup(POPUP_CONFIRM_NEW);
-            shouldOpenConfirmNew = false;
-        }
-        if (!ImGui.beginPopupModal(POPUP_CONFIRM_NEW, ImGuiWindowFlags.AlwaysAutoResize)) return;
+        if (!beginConfirmModal(POPUP_CONFIRM_NEW, shouldOpenConfirmNew)) return;
+        shouldOpenConfirmNew = false;
 
         String current = backend.currentName();
         ImGui.text(current != null ? String.format(CONFIRM_NEW_BODY_NAMED, current) : CONFIRM_NEW_BODY_UNNAMED);
         ImGui.text(CONFIRM_NEW_BODY_DISCARD);
 
-        pushButtonColor(0.65f, 0.20f, 0.20f);
-        if (ImGui.button(BTN_DISCARD)) {
+        if (dangerCancelButtons(BTN_DISCARD) == ModalChoice.DANGER) {
             applyNewSession();
-            ImGui.closeCurrentPopup();
-        }
-        popButtonColor();
-        ImGui.sameLine();
-        if (ImGui.button(BTN_CANCEL)) {
-            ImGui.closeCurrentPopup();
         }
         ImGui.endPopup();
     }
 
     private void renderConfirmOverwriteModal() {
-        if (shouldOpenConfirmOverwrite) {
-            ImGui.openPopup(POPUP_CONFIRM_OVERWRITE);
-            shouldOpenConfirmOverwrite = false;
-        }
-        if (!ImGui.beginPopupModal(POPUP_CONFIRM_OVERWRITE, ImGuiWindowFlags.AlwaysAutoResize)) return;
+        if (!beginConfirmModal(POPUP_CONFIRM_OVERWRITE, shouldOpenConfirmOverwrite)) return;
+        shouldOpenConfirmOverwrite = false;
 
         ImGui.text(String.format(CONFIRM_OVERWRITE_BODY, pendingOverwriteName));
         ImGui.text(CONFIRM_OVERWRITE_PROMPT);
 
-        pushButtonColor(0.65f, 0.20f, 0.20f);
-        if (ImGui.button(BTN_OVERWRITE)) {
-            doSave(pendingOverwriteName);
-            pendingOverwriteName = null;
-            ImGui.closeCurrentPopup();
-        }
-        popButtonColor();
-        ImGui.sameLine();
-        if (ImGui.button(BTN_CANCEL)) {
-            pendingOverwriteName = null;
-            ImGui.closeCurrentPopup();
-        }
+        ModalChoice c = dangerCancelButtons(BTN_OVERWRITE);
+        if (c == ModalChoice.DANGER) doSave(pendingOverwriteName, STATUS_SAVED);
+        if (c != ModalChoice.NONE) pendingOverwriteName = null;
+        ImGui.endPopup();
+    }
+
+    private void renderConfirmLoadModal() {
+        if (!beginConfirmModal(POPUP_CONFIRM_LOAD, shouldOpenConfirmLoad)) return;
+        shouldOpenConfirmLoad = false;
+
+        String current = backend.currentName();
+        ImGui.text(current != null ? String.format(CONFIRM_NEW_BODY_NAMED, current) : CONFIRM_NEW_BODY_UNNAMED);
+        ImGui.text(String.format(CONFIRM_LOAD_BODY_LOAD, pendingConfirmLoadName));
+        ImGui.text(CONFIRM_LOAD_BODY_DISCARD);
+
+        ModalChoice c = dangerCancelButtons(BTN_DISCARD);
+        if (c == ModalChoice.DANGER) pendingLoad = pendingConfirmLoadName;
+        if (c != ModalChoice.NONE) pendingConfirmLoadName = null;
+        ImGui.endPopup();
+    }
+
+    private void renderConfirmDeleteModal() {
+        if (!beginConfirmModal(POPUP_CONFIRM_DELETE, shouldOpenConfirmDelete)) return;
+        shouldOpenConfirmDelete = false;
+
+        ImGui.text(String.format(CONFIRM_DELETE_BODY, pendingDeleteName));
+        ImGui.text(CONFIRM_DELETE_NOTE);
+
+        ModalChoice c = dangerCancelButtons(LABEL_RECYCLE);
+        if (c == ModalChoice.DANGER) doDelete(pendingDeleteName);
+        if (c != ModalChoice.NONE) pendingDeleteName = null;
         ImGui.endPopup();
     }
 
@@ -369,69 +374,41 @@ public final class FileBrowserOverlay implements RenderInterface {
         }
     }
 
-    private void renderConfirmLoadModal() {
-        if (shouldOpenConfirmLoad) {
-            ImGui.openPopup(POPUP_CONFIRM_LOAD);
-            shouldOpenConfirmLoad = false;
-        }
-        if (!ImGui.beginPopupModal(POPUP_CONFIRM_LOAD, ImGuiWindowFlags.AlwaysAutoResize)) return;
-
-        String current = backend.currentName();
-        ImGui.text(current != null ? String.format(CONFIRM_NEW_BODY_NAMED, current) : CONFIRM_NEW_BODY_UNNAMED);
-        ImGui.text(String.format(CONFIRM_LOAD_BODY_LOAD, pendingConfirmLoadName));
-        ImGui.text(CONFIRM_LOAD_BODY_DISCARD);
-
-        pushButtonColor(0.65f, 0.20f, 0.20f);
-        if (ImGui.button(BTN_DISCARD)) {
-            pendingLoad = pendingConfirmLoadName;
-            pendingConfirmLoadName = null;
-            ImGui.closeCurrentPopup();
-        }
-        popButtonColor();
-        ImGui.sameLine();
-        if (ImGui.button(BTN_CANCEL)) {
-            pendingConfirmLoadName = null;
-            ImGui.closeCurrentPopup();
-        }
-        ImGui.endPopup();
-    }
-
-    private void renderConfirmDeleteModal() {
-        if (shouldOpenConfirmDelete) {
-            ImGui.openPopup(POPUP_CONFIRM_DELETE);
-            shouldOpenConfirmDelete = false;
-        }
-        if (!ImGui.beginPopupModal(POPUP_CONFIRM_DELETE, ImGuiWindowFlags.AlwaysAutoResize)) return;
-
-        ImGui.text(String.format(CONFIRM_DELETE_BODY, pendingDeleteName));
-        ImGui.text(CONFIRM_DELETE_NOTE);
-
-        pushButtonColor(0.65f, 0.20f, 0.20f);
-        if (ImGui.button(BTN_RECYCLE)) {
-            doDelete(pendingDeleteName);
-            pendingDeleteName = null;
-            ImGui.closeCurrentPopup();
-        }
-        popButtonColor();
-        ImGui.sameLine();
-        if (ImGui.button(BTN_CANCEL)) {
-            pendingDeleteName = null;
-            ImGui.closeCurrentPopup();
-        }
-        ImGui.endPopup();
-    }
-
-    private void doSave(String name) {
-        SaveResult r = backend.save(name);
+    private boolean doSave(String name, String successFormat) {
+        Result<String> r = backend.save(name);
         if (r.ok) {
-            statusMessage = String.format(STATUS_SAVED, r.name);
-            statusIsError = false;
-            selected = r.name;
+            setStatus(String.format(successFormat, r.value), false);
+            selected = r.value;
+            needsRefresh = true;
+            return true;
+        }
+        setStatus(r.error, true);
+        return false;
+    }
+
+    private void doLoad(String name) {
+        Result<SaveFile> r = backend.load(name);
+        if (r.ok) {
+            setStatus(String.format(STATUS_LOADED, name), false);
+            selected = name;
+        } else {
+            setStatus(r.error, true);
+        }
+    }
+
+    private void doDelete(String name) {
+        if (backend.delete(name)) {
+            setStatus(String.format(STATUS_RECYCLED, name), false);
+            if (name.equals(selected)) selected = null;
             needsRefresh = true;
         } else {
-            statusMessage = r.error;
-            statusIsError = true;
+            setStatus(String.format(STATUS_RECYCLE_FAILED, name), true);
         }
+    }
+
+    private void setStatus(String message, boolean error) {
+        this.statusMessage = message;
+        this.statusIsError = error;
     }
 
     private void renderStatus() {
@@ -451,31 +428,20 @@ public final class FileBrowserOverlay implements RenderInterface {
             ImGui.openPopup(POPUP_CREATE);
             shouldOpenCreatePopup = false;
         }
-
         if (!ImGui.beginPopupModal(POPUP_CREATE, ImGuiWindowFlags.AlwaysAutoResize)) return;
 
         ImGui.text(LABEL_FILE_NAME);
         ImGui.setNextItemWidth(240);
         ImGui.inputText(ID_NAME_INPUT, newNameInput);
 
-        if (ImGui.button(BTN_SAVE)) {
+        if (ImGui.button(LABEL_SAVE)) {
             String typed = newNameInput.get();
             if (backend.exists(typed)) {
                 pendingOverwriteName = typed;
                 shouldOpenConfirmOverwrite = true;
                 ImGui.closeCurrentPopup();
-            } else {
-                SaveResult r = backend.save(typed);
-                if (r.ok) {
-                    statusMessage = String.format(STATUS_SAVED_AS, r.name);
-                    statusIsError = false;
-                    selected = r.name;
-                    needsRefresh = true;
-                    ImGui.closeCurrentPopup();
-                } else {
-                    statusMessage = r.error;
-                    statusIsError = true;
-                }
+            } else if (doSave(typed, STATUS_SAVED_AS)) {
+                ImGui.closeCurrentPopup();
             }
         }
         ImGui.sameLine();
@@ -486,28 +452,20 @@ public final class FileBrowserOverlay implements RenderInterface {
         ImGui.endPopup();
     }
 
-    private void doLoad(String name) {
-        LoadResult r = backend.load(name);
-        if (r.ok) {
-            statusMessage = String.format(STATUS_LOADED, name);
-            statusIsError = false;
-            selected = name;
-        } else {
-            statusMessage = r.error;
-            statusIsError = true;
-        }
+    private static boolean beginConfirmModal(String popupId, boolean openRequested) {
+        if (openRequested) ImGui.openPopup(popupId);
+        return ImGui.beginPopupModal(popupId, ImGuiWindowFlags.AlwaysAutoResize);
     }
 
-    private void doDelete(String name) {
-        if (backend.delete(name)) {
-            statusMessage = String.format(STATUS_RECYCLED, name);
-            statusIsError = false;
-            if (name.equals(selected)) selected = null;
-            needsRefresh = true;
-        } else {
-            statusMessage = String.format(STATUS_RECYCLE_FAILED, name);
-            statusIsError = true;
-        }
+    private static ModalChoice dangerCancelButtons(String dangerLabel) {
+        ModalChoice choice = ModalChoice.NONE;
+        pushButtonColor(0.65f, 0.20f, 0.20f);
+        if (ImGui.button(dangerLabel)) choice = ModalChoice.DANGER;
+        popButtonColor();
+        ImGui.sameLine();
+        if (ImGui.button(BTN_CANCEL)) choice = ModalChoice.CANCEL;
+        if (choice != ModalChoice.NONE) ImGui.closeCurrentPopup();
+        return choice;
     }
 
     private List<SaveInfo> sortedFiltered() {

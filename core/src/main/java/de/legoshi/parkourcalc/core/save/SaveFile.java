@@ -17,8 +17,8 @@ public final class SaveFile {
 
     public static final class World {
         public String dimension;
-        public String name;
-        public String server;
+        public String worldName;
+        public String serverAddress;
     }
 
     public static final class Start {

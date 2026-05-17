@@ -2,10 +2,10 @@ package de.legoshi.parkourcalc.core;
 
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.ports.SaveStore;
-import de.legoshi.parkourcalc.core.save.LoadResult;
+import de.legoshi.parkourcalc.core.save.Result;
+import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.save.SaveInfo;
-import de.legoshi.parkourcalc.core.save.SaveResult;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.FileBrowserOverlay;
@@ -45,27 +45,28 @@ public final class SaveController implements FileBrowserOverlay.Backend {
     }
 
     @Override
-    public SaveResult save(String name) {
-        if (store == null) return SaveResult.failure("Save store not initialized.");
-        SaveResult result = SaveIO.save(store, name, inputData,
+    public Result<String> save(String name) {
+        if (store == null) return Result.failure("Save store not initialized.");
+        Result<String> result = SaveIO.save(store, name, inputData,
                 runner.getStartPosition(), runner.getStartVelocity(), runner.getStartYaw());
         if (result.ok) {
-            currentName = result.name;
+            currentName = result.value;
             dirty = false;
         }
         return result;
     }
 
     @Override
-    public LoadResult load(String name) {
-        if (store == null) return LoadResult.failure("Save store not initialized.");
-        LoadResult result = SaveIO.load(store, name);
+    public Result<SaveFile> load(String name) {
+        if (store == null) return Result.failure("Save store not initialized.");
+        Result<SaveFile> result = SaveIO.load(store, name);
         if (!result.ok) return result;
 
-        SaveIO.AppliedStart start = SaveIO.applyTo(result.file, inputData);
-        runner.setStartPosition(start.pos);
-        runner.setStartVelocity(start.vel);
-        runner.setStartYaw(start.yaw);
+        SaveFile.Start s = result.value.start;
+        SaveIO.applyRowsTo(result.value, inputData);
+        runner.setStartPosition(SaveIO.posOf(s));
+        runner.setStartVelocity(SaveIO.velOf(s));
+        runner.setStartYaw(s.yaw);
         retriggerSimulation.run();
         currentName = name;
         dirty = false;

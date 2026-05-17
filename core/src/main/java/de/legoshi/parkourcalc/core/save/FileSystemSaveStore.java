@@ -35,7 +35,7 @@ public final class FileSystemSaveStore implements SaveStore {
     private final String mcVersion;
     private final Supplier<WorldDescriptor> worldSupplier;
 
-    private final Map<String, CachedEntry> headerCache = new HashMap<String, CachedEntry>();
+    private final Map<String, SaveInfo> infoCache = new HashMap<String, SaveInfo>();
 
     public FileSystemSaveStore(Path saveDir, String modVersion, String mcVersion, Supplier<WorldDescriptor> worldSupplier) {
         this.saveDir = saveDir;
@@ -82,29 +82,29 @@ public final class FileSystemSaveStore implements SaveStore {
                     mtime = 0L;
                 }
                 present.add(name);
-                CachedEntry entry = headerCache.get(name);
-                if (entry == null || entry.mtime != mtime) {
-                    entry = parseHeader(p, mtime);
-                    headerCache.put(name, entry);
+                SaveInfo cached = infoCache.get(name);
+                if (cached == null || cached.lastModifiedMs != mtime) {
+                    cached = parseInfo(p, name, mtime);
+                    infoCache.put(name, cached);
                 }
-                infos.add(new SaveInfo(name, mtime, entry.mcVersion, entry.worldLabel));
+                infos.add(cached);
             }
         } catch (IOException ignored) {
             return Collections.emptyList();
         }
-        headerCache.keySet().retainAll(present);
+        infoCache.keySet().retainAll(present);
         return infos;
     }
 
-    private static CachedEntry parseHeader(Path p, long mtime) {
+    private static SaveInfo parseInfo(Path p, String name, long mtime) {
         try {
             SaveFile parsed = SaveIO.parseSafe(new String(Files.readAllBytes(p), CHARSET));
             if (parsed != null) {
-                return new CachedEntry(mtime, parsed.mcVersion, SaveIO.formatWorld(parsed.world));
+                return new SaveInfo(name, mtime, parsed.mcVersion, SaveIO.formatWorld(parsed.world));
             }
         } catch (IOException ignored) {
         }
-        return new CachedEntry(mtime, null, null);
+        return new SaveInfo(name, mtime, null, null);
     }
 
     @Override
@@ -151,15 +151,4 @@ public final class FileSystemSaveStore implements SaveStore {
         }
     }
 
-    private static final class CachedEntry {
-        final long mtime;
-        final String mcVersion;
-        final String worldLabel;
-
-        CachedEntry(long mtime, String mcVersion, String worldLabel) {
-            this.mtime = mtime;
-            this.mcVersion = mcVersion;
-            this.worldLabel = worldLabel;
-        }
-    }
 }
