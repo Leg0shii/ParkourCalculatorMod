@@ -9,7 +9,11 @@ import de.legoshi.parkourcalc.core.ui.BoxDragController;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputOverlay;
 import de.legoshi.parkourcalc.core.ui.OverlayManager;
+import de.legoshi.parkourcalc.core.ui.Settings;
+import de.legoshi.parkourcalc.core.ui.SettingsIO;
+import de.legoshi.parkourcalc.core.ui.SettingsOverlay;
 
+import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -26,8 +30,11 @@ public final class Application {
     private final InputData inputData = new InputData();
     private final OverlayManager overlayManager = new OverlayManager();
     private final BoxController boxController = new BoxController();
+    private final Settings settings = new Settings();
     private final SimulationRunner runner;
     private final BoxDragController dragController;
+
+    private Path settingsPath;
 
     public Application(Simulator simulator, MinecraftAccess mc) {
         this.mc = mc;
@@ -38,6 +45,19 @@ public final class Application {
     public void registerInputOverlay() {
         InputOverlay inputOverlay = new InputOverlay(inputData, this::runSimulation, this::setStartToPlayer);
         overlayManager.register("TAS Inputs", inputOverlay);
+    }
+
+    public void registerSettingsOverlay() {
+        overlayManager.register("Settings", new SettingsOverlay(settings, this::saveSettings));
+    }
+
+    public void initSettingsStorage(Path path) {
+        this.settingsPath = path;
+        SettingsIO.load(path, settings);
+    }
+
+    public void saveSettings() {
+        SettingsIO.save(settingsPath, settings);
     }
 
     public void runSimulation() {
@@ -87,6 +107,10 @@ public final class Application {
 
     public BoxController getBoxController() {
         return boxController;
+    }
+
+    public Settings getSettings() {
+        return settings;
     }
 
     public InputData getInputData() {

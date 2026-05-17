@@ -2,7 +2,7 @@ package de.legoshi.parkourcalc.fabric.imgui;
 
 import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
-import de.legoshi.parkourcalc.core.ui.UiSettings;
+import de.legoshi.parkourcalc.core.ui.Settings;
 import imgui.ImFont;
 import imgui.ImFontConfig;
 import imgui.ImFontGlyphRangesBuilder;
@@ -39,9 +39,15 @@ public final class ImGuiImpl {
     private static final ImGuiImplGlfw imGuiGlfw = new ImGuiImplGlfw();
     private static final ImGuiImplGl3 imGuiGl3 = new ImGuiImplGl3();
 
+    private static Settings settings;
+    private static ImFont[] presetFonts;
+    private static int appliedScaleIndex = -1;
+
     private ImGuiImpl() {}
 
-    public static void create(long windowHandle) {
+    public static void create(long windowHandle, Settings settingsRef) {
+        settings = settingsRef;
+
         ImGui.createContext();
         ImPlot.createContext();
 
@@ -49,19 +55,37 @@ public final class ImGuiImpl {
         io.setIniFilename(INI_FILENAME);
         io.setConfigFlags(ImGuiConfigFlags.DockingEnable);
 
-        configureFont(UiSettings.SCALE);
-        ImGui.getStyle().scaleAllSizes(UiSettings.SCALE);
+        configurePresetFonts();
+        applyScale(settings.scaleIndex);
 
         imGuiGlfw.init(windowHandle, false);
         imGuiGl3.init();
     }
 
     public static void beginImGuiRendering() {
+        applyPendingScale();
         bindMinecraftFramebuffer();
 
         imGuiGl3.newFrame();
         imGuiGlfw.newFrame();
         ImGui.newFrame();
+    }
+
+    private static void applyPendingScale() {
+        if (settings.scaleIndex == appliedScaleIndex) return;
+        applyScale(settings.scaleIndex);
+    }
+
+    private static void applyScale(int newIdx) {
+        float newScale = Settings.PRESET_SCALES[newIdx];
+        if (appliedScaleIndex < 0) {
+            ImGui.getStyle().scaleAllSizes(newScale);
+        } else {
+            float oldScale = Settings.PRESET_SCALES[appliedScaleIndex];
+            ImGui.getStyle().scaleAllSizes(newScale / oldScale);
+        }
+        ImGui.getIO().setFontDefault(presetFonts[newIdx]);
+        appliedScaleIndex = newIdx;
     }
 
     public static void endImGuiRendering() {
@@ -101,28 +125,33 @@ public final class ImGuiImpl {
         GLFW.glfwMakeContextCurrent(currentContext);
     }
 
-    private static void configureFont(float scale) {
+    private static void configurePresetFonts() {
         ImGuiIO io = ImGui.getIO();
         io.getFonts().clear();
 
         short[] glyphRanges = buildGlyphRanges();
-        int scaledFontSize = Math.round(BASE_FONT_SIZE * scale);
+        byte[] fontData = readFontBytes();
 
         ImFontConfig config = new ImFontConfig();
         config.setGlyphRanges(glyphRanges);
 
-        try (InputStream fontStream = ImGuiImpl.class.getResourceAsStream(FONT_PATH)) {
-            Objects.requireNonNull(fontStream, "Font not found: " + FONT_PATH);
-            byte[] fontData = IOUtils.toByteArray(fontStream);
-            io.getFonts().addFontFromMemoryTTF(fontData, scaledFontSize, config);
-        } catch (IOException e) {
-            throw new UncheckedIOException("Failed to load font: " + FONT_PATH, e);
-        } finally {
-            config.destroy();
+        presetFonts = new ImFont[Settings.PRESET_SCALES.length];
+        for (int i = 0; i < Settings.PRESET_SCALES.length; i++) {
+            int px = Math.round(BASE_FONT_SIZE * Settings.PRESET_SCALES[i]);
+            presetFonts[i] = io.getFonts().addFontFromMemoryTTF(fontData, px, config);
         }
 
         io.getFonts().build();
-        io.setFontGlobalScale(1.0f);
+        config.destroy();
+    }
+
+    private static byte[] readFontBytes() {
+        try (InputStream fontStream = ImGuiImpl.class.getResourceAsStream(FONT_PATH)) {
+            Objects.requireNonNull(fontStream, "Font not found: " + FONT_PATH);
+            return IOUtils.toByteArray(fontStream);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Failed to load font: " + FONT_PATH, e);
+        }
     }
 
     private static short[] buildGlyphRanges() {

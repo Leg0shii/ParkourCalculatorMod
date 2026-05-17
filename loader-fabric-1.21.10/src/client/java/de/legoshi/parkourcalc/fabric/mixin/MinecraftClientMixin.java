@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.fabric.mixin;
 
+import de.legoshi.parkourcalc.fabric.FabricParkourCalculator;
 import de.legoshi.parkourcalc.fabric.imgui.ImGuiImpl;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.RunArgs;
@@ -20,7 +21,7 @@ public class MinecraftClientMixin {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void initImGui(RunArgs args, CallbackInfo ci) {
-        ImGuiImpl.create(window.getHandle());
+        ImGuiImpl.create(window.getHandle(), FabricParkourCalculator.getSettings());
     }
 
     @Inject(method = "close", at = @At("HEAD"))

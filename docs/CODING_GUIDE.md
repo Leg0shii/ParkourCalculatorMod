@@ -115,7 +115,7 @@ Shared code for both Forge loaders, organised into two subpackages:
 
 - `lwjgl2/`: `Lwjgl2ImGuiHost` wraps `ImGuiLwjgl2` + `ImGuiGL3`, exposes
   `renderFrame(int displayWidth, int displayHeight)` for the call site to
-  invoke per frame, and applies `UiSettings.SCALE` at init time.
+  invoke per frame, and applies `Settings.SCALE` at init time.
 - `sim/`: `PlayerSprintMachine`, the pure-Java sprint state machine the
   Forge 1.8.9 and 1.12.2 SimulatorEntities share. Lives here, not in
   `core/`, because its `Inputs` field set is shaped after EntityPlayerSP's
@@ -125,7 +125,7 @@ Shared code for both Forge loaders, organised into two subpackages:
 - **No Forge or Minecraft imports.** Forge `@SubscribeEvent` wiring and
   the `Minecraft.getMinecraft()` call to fetch `displayWidth/Height` stay
   per-loader. The shared module only knows about ImGui, the shim, and
-  core/'s `OverlayManager` / `UiSettings`.
+  core/'s `OverlayManager` / `Settings`.
 - **No natives, no binding runtime.** The loaders bundle the imgui-java
   binding + natives; this module only `compileOnly`'s the binding API
   and `api`'s the shim so consumers transitively pick it up.

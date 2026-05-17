@@ -23,4 +23,10 @@ dependencies {
 	// built against 1.86.11, so calls like ImGuiIO.setKeyMap(int[]) are absent in 1.90.0.
 	// The Fabric loader bundles 1.90.0 at runtime; core stays within the 1.86.11 API subset.
 	compileOnly 'io.github.spair:imgui-java-binding:1.86.11'
+
+	// Gson is shipped by every Minecraft client we target (Forge 1.8.9 ships 2.2.4,
+	// Forge 1.12.2 ships ~2.8.0, Fabric 1.21.10 ships 2.10+). Declared compileOnly so
+	// core does not bundle its own copy; usage is restricted to the API subset present
+	// in 2.2.4 (no JsonParser.parseReader, no JsonArray.add(Number) sugar).
+	compileOnly 'com.google.code.gson:gson:2.8.0'
 }

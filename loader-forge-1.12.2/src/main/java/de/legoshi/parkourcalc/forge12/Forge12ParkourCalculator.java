@@ -13,12 +13,15 @@ import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.input.Keyboard;
+
+import java.io.File;
 
 @Mod(modid = Forge12ParkourCalculator.MODID, version = Forge12ParkourCalculator.VERSION, clientSideOnly = true, acceptableRemoteVersions = "*")
 public class Forge12ParkourCalculator {
@@ -32,14 +35,21 @@ public class Forge12ParkourCalculator {
             new Forge12Simulator(),
             new Forge12MinecraftAccess()
     );
-    private final Lwjgl2ImGuiHost imguiHost = new Lwjgl2ImGuiHost(application.getOverlayManager());
+    private final Lwjgl2ImGuiHost imguiHost = new Lwjgl2ImGuiHost(application.getOverlayManager(), application.getSettings());
     private final Forge12WorldOverlayRenderer worldRenderer = new Forge12WorldOverlayRenderer(application.getBoxController());
 
     private KeyBinding toggleKeyBinding;
 
     @Mod.EventHandler
+    public void preInit(FMLPreInitializationEvent event) {
+        File configFile = new File(event.getModConfigurationDirectory(), "parkourcalculator.json");
+        application.initSettingsStorage(configFile.toPath());
+    }
+
+    @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
         application.registerInputOverlay();
+        application.registerSettingsOverlay();
 
         toggleKeyBinding = new KeyBinding("key.parkourcalculator.toggle_ui", Keyboard.KEY_K, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(toggleKeyBinding);
