@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.ui;
 
+import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
 import imgui.ImDrawList;
 import imgui.ImGui;
@@ -33,6 +34,8 @@ public final class InputOverlay implements RenderInterface {
     private static final String MENU_ADD_BELOW = "Add %d row(s) below";
     private static final String MENU_DELETE = "Delete %d row(s)";
     private static final String MENU_DELETE_SHORTCUT = "Del";
+    private static final String MENU_START_PLAYBACK = "Start playback";
+    private static final String MENU_STOP_PLAYBACK = "Stop playback";
 
     private static final String YAW_FORMAT = "%.5f";
 
@@ -44,6 +47,7 @@ public final class InputOverlay implements RenderInterface {
     private final InputData data;
     private final Runnable onDataChanged;
     private final Runnable onSetPlayerPosition;
+    private final PlaybackController playback;
 
     private final SelectionManager selection;
     private final KeyDragSelect keyDragSelect = new KeyDragSelect();
@@ -53,11 +57,13 @@ public final class InputOverlay implements RenderInterface {
     private int draggingRowIndex = -1;
 
     public InputOverlay(InputData data, SelectionManager selection,
-                        Runnable onDataChanged, Runnable onSetPlayerPosition) {
+                        Runnable onDataChanged, Runnable onSetPlayerPosition,
+                        PlaybackController playback) {
         this.data = data;
         this.selection = selection;
         this.onDataChanged = onDataChanged;
         this.onSetPlayerPosition = onSetPlayerPosition;
+        this.playback = playback;
     }
 
     @Override
@@ -276,6 +282,8 @@ public final class InputOverlay implements RenderInterface {
             onDataChanged.run();
         }
 
+        renderPlaybackOption();
+
         ImGui.separator();
         renderRowCountInput();
         ImGui.separator();
@@ -283,6 +291,23 @@ public final class InputOverlay implements RenderInterface {
         renderDeleteOption();
 
         ImGui.endPopup();
+    }
+
+    private void renderPlaybackOption() {
+        if (playback == null) return;
+        if (playback.isRunning()) {
+            if (ImGui.menuItem(MENU_STOP_PLAYBACK)) {
+                playback.stop();
+            }
+            return;
+        }
+        boolean enabled = playback.canStart();
+        if (ImGui.menuItem(MENU_START_PLAYBACK, "", false, enabled)) {
+            playback.start();
+        }
+        if (!enabled && ImGui.isItemHovered(ImGuiHoveredFlags.AllowWhenDisabled)) {
+            ImGui.setTooltip(playback.disabledReason());
+        }
     }
 
     private void renderRowCountInput() {

@@ -4,6 +4,7 @@ import de.legoshi.parkourcalc.core.Application;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.fabric.imgui.ImGuiImpl;
+import de.legoshi.parkourcalc.fabric.render.FabricHudOverlayRenderer;
 import de.legoshi.parkourcalc.fabric.render.FabricWorldOverlayRenderer;
 import de.legoshi.parkourcalc.fabric.sim.FabricSimulator;
 import imgui.ImGui;
@@ -13,6 +14,7 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.util.Identifier;
@@ -29,8 +31,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
             new FabricSimulator(),
             new FabricMinecraftAccess()
     );
+    private static final FabricPlaybackBridge playbackBridge = new FabricPlaybackBridge();
     private static final FabricWorldOverlayRenderer worldRenderer =
             new FabricWorldOverlayRenderer(application.getBoxController(), application.getSettings(), application.getSelection());
+    private static final FabricHudOverlayRenderer hudRenderer = new FabricHudOverlayRenderer();
 
     private static final KeyState escapeKey = new KeyState();
 
@@ -56,8 +60,14 @@ public class FabricParkourCalculator implements ClientModInitializer {
                 SharedConstants.getGameVersion().name(),
                 FabricWorldDescriptors::current
         ));
+        application.setPlaybackBridge(playbackBridge);
 
         ClientTickEvents.END_CLIENT_TICK.register(FabricParkourCalculator::handleInput);
+        ClientTickEvents.START_CLIENT_TICK.register(FabricParkourCalculator::onStartTick);
+    }
+
+    private static void onStartTick(MinecraftClient client) {
+        application.tickPlayback();
     }
 
     private static void handleInput(MinecraftClient client) {
@@ -84,6 +94,12 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
     }
 
+    public static void closeOverlay() {
+        if (application.isControlPanelOpen()) {
+            setOverlayOpen(false);
+        }
+    }
+
     private static void setOverlayOpen(boolean open) {
         MinecraftClient client = MinecraftClient.getInstance();
         application.setControlPanelOpen(open);
@@ -106,12 +122,16 @@ public class FabricParkourCalculator implements ClientModInitializer {
     /** Called from WorldRendererMixin to render world overlays. */
     public static void onWorldRender(Matrix4f positionMatrix) {
         application.tickDrag();
+        if (application.isPlaybackRunning()) return;
         worldRenderer.render(positionMatrix);
     }
 
     /** Called from InGameHudMixin to render ImGui overlays. */
-    public static void onHudRender() {
+    public static void onHudRender(DrawContext context) {
         if (!application.isReady()) return;
+        if (application.isPlaybackRunning()) {
+            hudRenderer.render(context);
+        }
         ImGuiImpl.beginImGuiRendering();
         application.getOverlayManager().render(ImGui.getIO());
         ImGuiImpl.endImGuiRendering();

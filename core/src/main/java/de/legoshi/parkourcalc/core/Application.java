@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.core;
 
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
+import de.legoshi.parkourcalc.core.ports.PlaybackBridge;
 import de.legoshi.parkourcalc.core.ports.SaveStore;
 import de.legoshi.parkourcalc.core.ports.Simulator;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
@@ -36,6 +37,7 @@ public final class Application {
     private final SimulationRunner runner;
     private final BoxDragController dragController;
     private final SaveController saveController;
+    private final PlaybackController playback;
 
     private Path settingsPath;
     private boolean startInitialized;
@@ -46,10 +48,11 @@ public final class Application {
         this.runner = new SimulationRunner(simulator);
         this.dragController = new BoxDragController(boxController, this::handleStartPositionChange);
         this.saveController = new SaveController(inputData, runner, mc, this::runSimulation);
+        this.playback = new PlaybackController(inputData, runner);
     }
 
     public void registerInputOverlay() {
-        InputOverlay inputOverlay = new InputOverlay(inputData, selection, this::onUserChange, this::setStartToPlayer);
+        InputOverlay inputOverlay = new InputOverlay(inputData, selection, this::onUserChange, this::setStartToPlayer, playback);
         overlayManager.register("TAS Inputs", inputOverlay);
     }
 
@@ -157,5 +160,21 @@ public final class Application {
 
     public SaveStore getSaveStore() {
         return saveController.getSaveStore();
+    }
+
+    public void setPlaybackBridge(PlaybackBridge bridge) {
+        playback.setBridge(bridge);
+    }
+
+    public PlaybackController getPlayback() {
+        return playback;
+    }
+
+    public boolean isPlaybackRunning() {
+        return playback.isRunning();
+    }
+
+    public void tickPlayback() {
+        playback.tick();
     }
 }

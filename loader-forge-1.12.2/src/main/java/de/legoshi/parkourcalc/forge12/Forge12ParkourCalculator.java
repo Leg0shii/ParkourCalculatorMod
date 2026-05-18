@@ -3,11 +3,13 @@ package de.legoshi.parkourcalc.forge12;
 import de.legoshi.parkourcalc.core.Application;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2ImGuiHost;
+import de.legoshi.parkourcalc.forge12.render.Forge12HudOverlayRenderer;
 import de.legoshi.parkourcalc.forge12.render.Forge12WorldOverlayRenderer;
 import de.legoshi.parkourcalc.forge12.sim.Forge12Simulator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.client.event.MouseEvent;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
@@ -41,6 +43,8 @@ public class Forge12ParkourCalculator {
     );
     private final Lwjgl2ImGuiHost imguiHost = new Lwjgl2ImGuiHost(application.getOverlayManager(), application.getSettings());
     private final Forge12WorldOverlayRenderer worldRenderer = new Forge12WorldOverlayRenderer(application.getBoxController(), application.getSettings(), application.getSelection());
+    private final Forge12HudOverlayRenderer hudRenderer = new Forge12HudOverlayRenderer();
+    private final Forge12PlaybackBridge playbackBridge = new Forge12PlaybackBridge();
 
     private KeyBinding toggleKeyBinding;
     private Path configPath;
@@ -64,12 +68,26 @@ public class Forge12ParkourCalculator {
                 MinecraftForge.MC_VERSION,
                 Forge12WorldDescriptors::current
         ));
+        application.setPlaybackBridge(playbackBridge);
 
         toggleKeyBinding = new KeyBinding("key.parkourcalculator.toggle_ui", Keyboard.KEY_K, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(toggleKeyBinding);
 
         MinecraftForge.EVENT_BUS.register(this);
         LOG.info("ParkourCalculator init complete; K registered as toggle.");
+    }
+
+    @SubscribeEvent
+    public void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.START) return;
+        application.tickPlayback();
+    }
+
+    @SubscribeEvent
+    public void onHudRender(RenderGameOverlayEvent.Post event) {
+        if (event.getType() != RenderGameOverlayEvent.ElementType.TEXT) return;
+        if (!application.isPlaybackRunning()) return;
+        hudRenderer.render();
     }
 
     @SubscribeEvent
@@ -105,6 +123,7 @@ public class Forge12ParkourCalculator {
     @SubscribeEvent
     public void onWorldRender(RenderWorldLastEvent event) {
         application.tickDrag();
+        if (application.isPlaybackRunning()) return;
         worldRenderer.render(event.getPartialTicks());
     }
 
