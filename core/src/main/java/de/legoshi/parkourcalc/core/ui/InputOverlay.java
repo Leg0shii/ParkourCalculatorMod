@@ -43,6 +43,9 @@ public final class InputOverlay implements RenderInterface {
 
     private static final float TABLE_HEIGHT = 200;
     private static final int COLUMN_COUNT = 9;
+    // inputInt reserves this width for the text field + the two +/- step buttons combined,
+    // so it must comfortably exceed 2 * frame_height (~40 px) to leave room to type.
+    private static final float ROW_COUNT_INPUT_WIDTH = 140;
 
     private final InputData data;
     private final Runnable onDataChanged;
@@ -313,7 +316,7 @@ public final class InputOverlay implements RenderInterface {
     private void renderRowCountInput() {
         ImGui.text(LABEL_ROWS);
         ImGui.sameLine();
-        ImGui.setNextItemWidth(80);
+        ImGui.setNextItemWidth(ROW_COUNT_INPUT_WIDTH);
         ImGui.inputInt(ID_ROWS_TO_ADD, rowsToAdd);
         rowsToAdd.set(Math.max(1, Math.min(100, rowsToAdd.get())));
     }
