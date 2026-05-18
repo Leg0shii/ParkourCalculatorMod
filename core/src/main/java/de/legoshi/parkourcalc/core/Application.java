@@ -73,7 +73,7 @@ public final class Application {
     }
 
     public void registerTickInfoOverlay() {
-        overlayManager.register("Tick Info", new TickInfoPanel(boxController, selection, settings));
+        overlayManager.register("Tick Info", new TickInfoPanel(boxController, selection));
     }
 
     public void initSettingsStorage(Path path) {
