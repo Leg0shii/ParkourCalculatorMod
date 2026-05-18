@@ -90,7 +90,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
 
         long window = client.getWindow().getHandle();
-        if (escapeKey.justPressed(window, GLFW.GLFW_KEY_ESCAPE) && application.isControlPanelOpen() && !imguiWantsKeys) {
+        if (escapeKey.justPressed(window, GLFW.GLFW_KEY_ESCAPE) && application.isControlPanelOpen() && !imguiWantsKeys && client.currentScreen == null) {
             if (!application.getSelection().isEmpty()) {
                 application.getSelection().clear();
             } else {
@@ -143,7 +143,8 @@ public class FabricParkourCalculator implements ClientModInitializer {
     }
 
     public static boolean isUiFocused() {
-        return application.isControlPanelOpen();
+        // A vanilla screen (e.g. pause on tab-out) must take input precedence over ImGui.
+        return application.isControlPanelOpen() && MinecraftClient.getInstance().currentScreen == null;
     }
 
     public static boolean shouldSuppressLeftClick() {
