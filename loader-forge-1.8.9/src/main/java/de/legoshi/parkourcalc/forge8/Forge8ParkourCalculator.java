@@ -144,6 +144,7 @@ public class Forge8ParkourCalculator {
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onPlayerInteract(PlayerInteractEvent event) {
+        if (!event.isCancelable()) return;
         if (application.shouldSuppressLeftClick() || application.shouldSuppressRightClick()) {
             event.setCanceled(true);
         }
