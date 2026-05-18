@@ -45,7 +45,7 @@ public final class InputOverlay implements RenderInterface {
     private static final int COLUMN_COUNT = 9;
     // inputInt reserves this width for the text field + the two +/- step buttons combined,
     // so it must comfortably exceed 2 * frame_height (~40 px) to leave room to type.
-    private static final float ROW_COUNT_INPUT_WIDTH = 140;
+    private static final float ROW_COUNT_INPUT_WIDTH = 240;
 
     private final InputData data;
     private final Runnable onDataChanged;
