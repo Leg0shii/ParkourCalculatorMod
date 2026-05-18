@@ -17,6 +17,7 @@ import de.legoshi.parkourcalc.core.ui.SelectionManager;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.ui.SettingsIO;
 import de.legoshi.parkourcalc.core.ui.SettingsOverlay;
+import de.legoshi.parkourcalc.core.ui.TickInfoPanel;
 import de.legoshi.parkourcalc.core.ui.YawGizmoController;
 
 import java.nio.file.Path;
@@ -69,6 +70,10 @@ public final class Application {
 
     public void registerFileBrowserOverlay() {
         overlayManager.register("Files", new FileBrowserOverlay(saveController));
+    }
+
+    public void registerTickInfoOverlay() {
+        overlayManager.register("Tick Info", new TickInfoPanel(boxController, selection, settings));
     }
 
     public void initSettingsStorage(Path path) {

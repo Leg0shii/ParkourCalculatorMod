@@ -65,6 +65,7 @@ public class Forge12ParkourCalculator {
         application.registerInputOverlay();
         application.registerSettingsOverlay();
         application.registerFileBrowserOverlay();
+        application.registerTickInfoOverlay();
         application.initSettingsStorage(configPath);
         application.setSaveStore(new FileSystemSaveStore(
                 saveDir,

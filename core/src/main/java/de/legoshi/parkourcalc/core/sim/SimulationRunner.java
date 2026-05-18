@@ -37,7 +37,9 @@ public final class SimulationRunner {
                 simulator.isCurrentSneaking(),
                 simulator.isCurrentWallCollision(),
                 simulator.getCurrentYaw(),
-                simulator.getCurrentSubtickPath()
+                simulator.getCurrentSubtickPath(),
+                simulator.getCurrentVelocity(),
+                simulator.isCurrentSoftCollision()
         );
     }
 

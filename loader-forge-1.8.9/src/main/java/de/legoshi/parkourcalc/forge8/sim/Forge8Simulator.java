@@ -66,6 +66,16 @@ public final class Forge8Simulator extends LazyEntitySimulator<SimulatorEntity> 
     }
 
     @Override
+    protected Vec3dCore getVelocity(SimulatorEntity e) {
+        return new Vec3dCore(e.motionX, e.motionY, e.motionZ);
+    }
+
+    @Override
+    protected boolean isSoftCollision(SimulatorEntity e) {
+        return false;
+    }
+
+    @Override
     protected float getYaw(SimulatorEntity e) {
         return e.rotationYaw;
     }

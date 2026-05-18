@@ -21,6 +21,10 @@ public interface Simulator {
 
     boolean isCurrentWallCollision();
 
+    Vec3dCore getCurrentVelocity();
+
+    boolean isCurrentSoftCollision();
+
     float getCurrentYaw();
 
     List<Vec3dCore> getCurrentSubtickPath();

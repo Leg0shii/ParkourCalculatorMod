@@ -65,6 +65,11 @@ public final class BoxController {
         return states.get(index).yaw;
     }
 
+    /** Unmodifiable view of recorded per-tick states; index aligned with positions. */
+    public List<TickState> getStates() {
+        return Collections.unmodifiableList(states);
+    }
+
     /** Returns the index of the closest box hit by the ray, or -1 if none. */
     public int pickBoxIndex(Vec3dCore rayOrigin, Vec3dCore rayDirection) {
         int best = -1;

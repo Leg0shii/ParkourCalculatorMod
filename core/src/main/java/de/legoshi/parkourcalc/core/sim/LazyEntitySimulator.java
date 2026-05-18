@@ -58,6 +58,16 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     }
 
     @Override
+    public final Vec3dCore getCurrentVelocity() {
+        return getVelocity(ensureEntity());
+    }
+
+    @Override
+    public final boolean isCurrentSoftCollision() {
+        return isSoftCollision(ensureEntity());
+    }
+
+    @Override
     public final float getCurrentYaw() {
         return getYaw(ensureEntity());
     }
@@ -138,6 +148,10 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     protected abstract boolean isSneaking(E entity);
 
     protected abstract boolean isWallCollision(E entity);
+
+    protected abstract Vec3dCore getVelocity(E entity);
+
+    protected abstract boolean isSoftCollision(E entity);
 
     protected abstract float getYaw(E entity);
 

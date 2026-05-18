@@ -67,6 +67,17 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
     }
 
     @Override
+    protected Vec3dCore getVelocity(SimulatorEntity e) {
+        Vec3d v = e.getVelocity();
+        return new Vec3dCore(v.x, v.y, v.z);
+    }
+
+    @Override
+    protected boolean isSoftCollision(SimulatorEntity e) {
+        return e.collidedSoftly;
+    }
+
+    @Override
     protected float getYaw(SimulatorEntity e) {
         return e.getYaw();
     }
