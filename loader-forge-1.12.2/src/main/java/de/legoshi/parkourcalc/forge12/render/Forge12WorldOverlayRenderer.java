@@ -1,10 +1,12 @@
 package de.legoshi.parkourcalc.forge12.render;
 
 import de.legoshi.parkourcalc.core.ports.BoxRenderer;
+import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.BoxStyle;
 import de.legoshi.parkourcalc.core.ui.SelectionManager;
 import de.legoshi.parkourcalc.core.ui.Settings;
+import de.legoshi.parkourcalc.core.ui.YawGizmoController;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
@@ -23,11 +25,14 @@ public final class Forge12WorldOverlayRenderer {
     private final BoxController boxController;
     private final Settings settings;
     private final SelectionManager selection;
+    private final YawGizmoController yawGizmo;
 
-    public Forge12WorldOverlayRenderer(BoxController boxController, Settings settings, SelectionManager selection) {
+    public Forge12WorldOverlayRenderer(BoxController boxController, Settings settings,
+                                       SelectionManager selection, YawGizmoController yawGizmo) {
         this.boxController = boxController;
         this.settings = settings;
         this.selection = selection;
+        this.yawGizmo = yawGizmo;
     }
 
     public void render(float partialTicks) {
@@ -77,6 +82,18 @@ public final class Forge12WorldOverlayRenderer {
         }
         if (settings.showYawArrows) {
             boxController.renderYawArrows(linesRenderer, BoxStyle.yawArrowArgb(settings));
+        }
+        int gizmoIdx = yawGizmo.getSelectedIndex();
+        if (gizmoIdx >= 0) {
+            Vec3dCore center = boxController.getCenter(gizmoIdx);
+            Float liveYaw = yawGizmo.getCurrentYawDegrees();
+            double yawDeg = liveYaw != null ? liveYaw : boxController.getYaw(gizmoIdx);
+            if (center != null) {
+                double radius = BoxStyle.yawGizmoRadius(camX - center.x, camY - center.y, camZ - center.z);
+                boxController.renderYawGizmo(linesRenderer, center, yawDeg, radius,
+                        BoxStyle.yawGizmoCircleArgb(settings),
+                        BoxStyle.yawGizmoDirectionArgb(settings));
+            }
         }
         tess.draw();
 

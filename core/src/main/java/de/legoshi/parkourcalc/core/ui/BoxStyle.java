@@ -26,6 +26,25 @@ public final class BoxStyle {
         return toArgb(c[0], c[1], c[2], c[3]);
     }
 
+    public static int yawGizmoCircleArgb(Settings settings) {
+        float[] c = settings.yawGizmoCircle;
+        return toArgb(c[0], c[1], c[2], c[3]);
+    }
+
+    public static int yawGizmoDirectionArgb(Settings settings) {
+        float[] c = settings.yawGizmoDirection;
+        return toArgb(c[0], c[1], c[2], c[3]);
+    }
+
+    /** Distance-scaled radius so the gizmo stays roughly screen-constant. */
+    public static double yawGizmoRadius(double dx, double dy, double dz) {
+        double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        double r = dist * 0.10;
+        if (r < 0.6) return 0.6;
+        if (r > 3.5) return 3.5;
+        return r;
+    }
+
     /**
      * Wireframe line thickness in pixels. The Forge loaders pass this to
      * GL11.glLineWidth before the LINES pass; Fabric draws lines through a

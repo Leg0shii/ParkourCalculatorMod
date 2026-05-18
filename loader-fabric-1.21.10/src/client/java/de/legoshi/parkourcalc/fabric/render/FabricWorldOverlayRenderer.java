@@ -1,10 +1,12 @@
 package de.legoshi.parkourcalc.fabric.render;
 
 import de.legoshi.parkourcalc.core.ports.BoxRenderer;
+import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.BoxStyle;
 import de.legoshi.parkourcalc.core.ui.SelectionManager;
 import de.legoshi.parkourcalc.core.ui.Settings;
+import de.legoshi.parkourcalc.core.ui.YawGizmoController;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.util.math.MatrixStack;
@@ -22,11 +24,14 @@ public final class FabricWorldOverlayRenderer {
     private final BoxController boxController;
     private final Settings settings;
     private final SelectionManager selection;
+    private final YawGizmoController yawGizmo;
 
-    public FabricWorldOverlayRenderer(BoxController boxController, Settings settings, SelectionManager selection) {
+    public FabricWorldOverlayRenderer(BoxController boxController, Settings settings,
+                                      SelectionManager selection, YawGizmoController yawGizmo) {
         this.boxController = boxController;
         this.settings = settings;
         this.selection = selection;
+        this.yawGizmo = yawGizmo;
     }
 
     public void render(Matrix4f positionMatrix) {
@@ -63,6 +68,19 @@ public final class FabricWorldOverlayRenderer {
         }
         if (settings.showYawArrows) {
             boxController.renderYawArrows(linesRenderer, BoxStyle.yawArrowArgb(settings));
+        }
+        int gizmoIdx = yawGizmo.getSelectedIndex();
+        if (gizmoIdx >= 0) {
+            Vec3dCore center = boxController.getCenter(gizmoIdx);
+            Float liveYaw = yawGizmo.getCurrentYawDegrees();
+            double yawDeg = liveYaw != null ? liveYaw : boxController.getYaw(gizmoIdx);
+            if (center != null) {
+                double radius = BoxStyle.yawGizmoRadius(
+                        cameraPos.x - center.x, cameraPos.y - center.y, cameraPos.z - center.z);
+                boxController.renderYawGizmo(linesRenderer, center, yawDeg, radius,
+                        BoxStyle.yawGizmoCircleArgb(settings),
+                        BoxStyle.yawGizmoDirectionArgb(settings));
+            }
         }
         consumers.draw();
 

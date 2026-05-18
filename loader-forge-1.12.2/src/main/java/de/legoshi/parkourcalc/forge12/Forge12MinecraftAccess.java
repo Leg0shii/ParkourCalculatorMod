@@ -39,6 +39,21 @@ public final class Forge12MinecraftAccess implements MinecraftAccess {
     }
 
     @Override
+    public boolean isMousePressedRight() {
+        return Lwjgl2InputState.isMousePressedRight();
+    }
+
+    @Override
+    public double getCursorScreenX() {
+        return Lwjgl2InputState.getCursorScreenX();
+    }
+
+    @Override
+    public double getCursorScreenY() {
+        return Lwjgl2InputState.getCursorScreenY();
+    }
+
+    @Override
     public boolean isCtrlDown() {
         return Lwjgl2InputState.isCtrlDown();
     }

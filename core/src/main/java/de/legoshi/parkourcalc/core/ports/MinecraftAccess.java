@@ -22,6 +22,15 @@ public interface MinecraftAccess {
     /** Current state of the left mouse button (true while held). */
     boolean isMousePressedLeft();
 
+    /** Current state of the right mouse button (true while held). */
+    boolean isMousePressedRight();
+
+    /** Cursor X in window-pixel coords (origin top-left, GLFW-style). Used by the 2 px gizmo engage threshold. */
+    double getCursorScreenX();
+
+    /** Cursor Y in window-pixel coords (origin top-left, GLFW-style). */
+    double getCursorScreenY();
+
     /** Either control key currently held. Polled directly, not via ImGui IO. */
     boolean isCtrlDown();
 

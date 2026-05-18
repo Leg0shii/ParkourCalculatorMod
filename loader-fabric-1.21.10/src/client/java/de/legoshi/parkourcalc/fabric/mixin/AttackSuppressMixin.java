@@ -20,7 +20,8 @@ public class AttackSuppressMixin {
 
     @Inject(method = "doItemUse", at = @At("HEAD"), cancellable = true)
     private void onDoItemUse(CallbackInfo ci) {
-        if (FabricParkourCalculator.shouldSuppressLeftClick()) {
+        if (FabricParkourCalculator.shouldSuppressLeftClick()
+                || FabricParkourCalculator.shouldSuppressRightClick()) {
             ci.cancel();
         }
     }

@@ -33,7 +33,11 @@ public class FabricParkourCalculator implements ClientModInitializer {
     );
     private static final FabricPlaybackBridge playbackBridge = new FabricPlaybackBridge();
     private static final FabricWorldOverlayRenderer worldRenderer =
-            new FabricWorldOverlayRenderer(application.getBoxController(), application.getSettings(), application.getSelection());
+            new FabricWorldOverlayRenderer(
+                    application.getBoxController(),
+                    application.getSettings(),
+                    application.getSelection(),
+                    application.getYawGizmo());
     private static final FabricHudOverlayRenderer hudRenderer = new FabricHudOverlayRenderer();
 
     private static final KeyState escapeKey = new KeyState();
@@ -143,6 +147,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     public static boolean shouldSuppressLeftClick() {
         return application.shouldSuppressLeftClick();
+    }
+
+    public static boolean shouldSuppressRightClick() {
+        return application.shouldSuppressRightClick();
     }
 
     public static Settings getSettings() {

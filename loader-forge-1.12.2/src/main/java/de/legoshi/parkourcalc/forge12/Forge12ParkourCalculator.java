@@ -42,7 +42,11 @@ public class Forge12ParkourCalculator {
             new Forge12MinecraftAccess()
     );
     private final Lwjgl2ImGuiHost imguiHost = new Lwjgl2ImGuiHost(application.getOverlayManager(), application.getSettings());
-    private final Forge12WorldOverlayRenderer worldRenderer = new Forge12WorldOverlayRenderer(application.getBoxController(), application.getSettings(), application.getSelection());
+    private final Forge12WorldOverlayRenderer worldRenderer = new Forge12WorldOverlayRenderer(
+            application.getBoxController(),
+            application.getSettings(),
+            application.getSelection(),
+            application.getYawGizmo());
     private final Forge12HudOverlayRenderer hudRenderer = new Forge12HudOverlayRenderer();
     private final Forge12PlaybackBridge playbackBridge = new Forge12PlaybackBridge();
 
@@ -133,11 +137,14 @@ public class Forge12ParkourCalculator {
         if (event.getButton() == 0 && application.shouldSuppressLeftClick()) {
             event.setCanceled(true);
         }
+        if (event.getButton() == 1 && application.shouldSuppressRightClick()) {
+            event.setCanceled(true);
+        }
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onPlayerInteract(PlayerInteractEvent event) {
-        if (application.shouldSuppressLeftClick()) {
+        if (application.shouldSuppressLeftClick() || application.shouldSuppressRightClick()) {
             event.setCanceled(true);
         }
     }

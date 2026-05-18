@@ -7,6 +7,9 @@ import net.minecraft.client.render.Camera;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.Vec3d;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.system.MemoryStack;
+
+import java.nio.DoubleBuffer;
 
 public final class FabricMinecraftAccess implements MinecraftAccess {
 
@@ -36,6 +39,32 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
     public boolean isMousePressedLeft() {
         long window = MinecraftClient.getInstance().getWindow().getHandle();
         return GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_PRESS;
+    }
+
+    @Override
+    public boolean isMousePressedRight() {
+        long window = MinecraftClient.getInstance().getWindow().getHandle();
+        return GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_RIGHT) == GLFW.GLFW_PRESS;
+    }
+
+    @Override
+    public double getCursorScreenX() {
+        return cursorPos(true);
+    }
+
+    @Override
+    public double getCursorScreenY() {
+        return cursorPos(false);
+    }
+
+    private static double cursorPos(boolean wantX) {
+        long window = MinecraftClient.getInstance().getWindow().getHandle();
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            DoubleBuffer x = stack.mallocDouble(1);
+            DoubleBuffer y = stack.mallocDouble(1);
+            GLFW.glfwGetCursorPos(window, x, y);
+            return wantX ? x.get(0) : y.get(0);
+        }
     }
 
     @Override

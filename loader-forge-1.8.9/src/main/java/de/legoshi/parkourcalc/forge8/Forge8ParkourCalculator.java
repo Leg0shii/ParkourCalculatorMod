@@ -42,7 +42,11 @@ public class Forge8ParkourCalculator {
             new Forge8MinecraftAccess()
     );
     private final Lwjgl2ImGuiHost imguiHost = new Lwjgl2ImGuiHost(application.getOverlayManager(), application.getSettings());
-    private final Forge8WorldOverlayRenderer worldRenderer = new Forge8WorldOverlayRenderer(application.getBoxController(), application.getSettings(), application.getSelection());
+    private final Forge8WorldOverlayRenderer worldRenderer = new Forge8WorldOverlayRenderer(
+            application.getBoxController(),
+            application.getSettings(),
+            application.getSelection(),
+            application.getYawGizmo());
     private final Forge8HudOverlayRenderer hudRenderer = new Forge8HudOverlayRenderer();
     private final Forge8PlaybackBridge playbackBridge = new Forge8PlaybackBridge();
 
@@ -133,11 +137,14 @@ public class Forge8ParkourCalculator {
         if (event.button == 0 && application.shouldSuppressLeftClick()) {
             event.setCanceled(true);
         }
+        if (event.button == 1 && application.shouldSuppressRightClick()) {
+            event.setCanceled(true);
+        }
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onPlayerInteract(PlayerInteractEvent event) {
-        if (application.shouldSuppressLeftClick()) {
+        if (application.shouldSuppressLeftClick() || application.shouldSuppressRightClick()) {
             event.setCanceled(true);
         }
     }

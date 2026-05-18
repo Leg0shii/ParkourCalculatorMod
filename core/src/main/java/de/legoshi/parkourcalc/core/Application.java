@@ -17,6 +17,7 @@ import de.legoshi.parkourcalc.core.ui.SelectionManager;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.ui.SettingsIO;
 import de.legoshi.parkourcalc.core.ui.SettingsOverlay;
+import de.legoshi.parkourcalc.core.ui.YawGizmoController;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -36,6 +37,7 @@ public final class Application {
     private final SelectionManager selection;
     private final SimulationRunner runner;
     private final BoxDragController dragController;
+    private final YawGizmoController yawGizmo;
     private final SaveController saveController;
     private final PlaybackController playback;
 
@@ -47,6 +49,11 @@ public final class Application {
         this.selection = new SelectionManager(mc);
         this.runner = new SimulationRunner(simulator);
         this.dragController = new BoxDragController(boxController, this::handleStartPositionChange);
+        this.yawGizmo = new YawGizmoController(
+                boxController,
+                this::handleStartYawChange,
+                this::handleTickYawChange
+        );
         this.saveController = new SaveController(inputData, runner, mc, this::runSimulation);
         this.playback = new PlaybackController(inputData, runner);
     }
@@ -99,6 +106,23 @@ public final class Application {
         onUserChange();
     }
 
+    private void handleStartYawChange(float yaw) {
+        runner.setStartYaw(yaw);
+        onUserChange();
+    }
+
+    private void handleTickYawChange(int rowIndex, float absoluteYaw) {
+        if (rowIndex < 0 || rowIndex >= inputData.getRows().size()) return;
+        // InputRow.yaw is a delta added to the prior tick's entity yaw by Simulator.applyYaw.
+        // Box index for that row is rowIndex (states[rowIndex] = entity yaw BEFORE row[rowIndex] applies).
+        float prevTickYaw = boxController.getYaw(rowIndex);
+        float delta = absoluteYaw - prevTickYaw;
+        while (delta > 180.0f) delta -= 360.0f;
+        while (delta < -180.0f) delta += 360.0f;
+        inputData.getRows().get(rowIndex).setYaw(delta);
+        onUserChange();
+    }
+
     private void onUserChange() {
         saveController.markDirty();
         runSimulation();
@@ -113,6 +137,14 @@ public final class Application {
             startInitialized = true;
         }
         dragController.tick(mc.getEyePosition(), mc.getLookDirection(), mc.isMousePressedLeft(), isControlPanelOpen());
+        yawGizmo.tick(
+                mc.getEyePosition(),
+                mc.getLookDirection(),
+                mc.isMousePressedRight(),
+                mc.getCursorScreenX(),
+                mc.getCursorScreenY(),
+                isControlPanelOpen()
+        );
     }
 
     public boolean isControlPanelOpen() {
@@ -132,6 +164,17 @@ public final class Application {
         if (dragController.isDragging()) return true;
         if (!mc.isReady()) return false;
         return dragController.isCursorOverStartBox(mc.getEyePosition(), mc.getLookDirection());
+    }
+
+    public boolean shouldSuppressRightClick() {
+        if (isControlPanelOpen()) return false;
+        if (yawGizmo.isEngaged()) return true;
+        if (!mc.isReady()) return false;
+        return yawGizmo.isCursorOverAnyBox(mc.getEyePosition(), mc.getLookDirection());
+    }
+
+    public YawGizmoController getYawGizmo() {
+        return yawGizmo;
     }
 
     public OverlayManager getOverlayManager() {
