@@ -22,6 +22,10 @@ public final class Settings {
     private static final boolean DEFAULT_SHOW_FULL_HITBOX = false;
     private static final boolean DEFAULT_SHOW_SUBTICK = true;
 
+    private static final float DEFAULT_YAW_FLICK_SPEED = 720.0f;
+    public static final float MIN_YAW_FLICK_SPEED = 30.0f;
+    public static final float MAX_YAW_FLICK_SPEED = 7200.0f;
+
     public final float[] tickDefault = DEFAULT_TICK_DEFAULT.clone();
     public final float[] tickSelected = DEFAULT_TICK_SELECTED.clone();
     public final float[] tickAir = DEFAULT_TICK_AIR.clone();
@@ -38,6 +42,8 @@ public final class Settings {
     public boolean showHitbox = DEFAULT_SHOW_HITBOX;
     public boolean showFullHitbox = DEFAULT_SHOW_FULL_HITBOX;
     public boolean showSubtick = DEFAULT_SHOW_SUBTICK;
+
+    public float yawFlickSpeed = DEFAULT_YAW_FLICK_SPEED;
 
     public int scaleIndex = DEFAULT_SCALE_INDEX;
 
@@ -59,6 +65,7 @@ public final class Settings {
         showHitbox = DEFAULT_SHOW_HITBOX;
         showFullHitbox = DEFAULT_SHOW_FULL_HITBOX;
         showSubtick = DEFAULT_SHOW_SUBTICK;
+        yawFlickSpeed = DEFAULT_YAW_FLICK_SPEED;
         scaleIndex = DEFAULT_SCALE_INDEX;
         pinnedOverlays = new String[0];
     }

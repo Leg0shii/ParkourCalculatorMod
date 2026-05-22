@@ -69,10 +69,17 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
         ClientTickEvents.END_CLIENT_TICK.register(FabricParkourCalculator::handleInput);
         ClientTickEvents.START_CLIENT_TICK.register(FabricParkourCalculator::onStartTick);
+        ClientTickEvents.END_CLIENT_TICK.register(FabricParkourCalculator::onEndTick);
     }
 
     private static void onStartTick(MinecraftClient client) {
         application.tickPlayback();
+    }
+
+    private static void onEndTick(MinecraftClient client) {
+        // Restore visual yaw after MC physics so render frames don't briefly show
+        // the snap value the physics tick used.
+        application.postTickPlayback();
     }
 
     private static void handleInput(MinecraftClient client) {
@@ -127,7 +134,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
     /** Called from WorldRendererMixin to render world overlays. */
     public static void onWorldRender(Matrix4f positionMatrix) {
         application.tickDrag();
-        if (application.isPlaybackRunning()) return;
+        if (application.isPlaybackRunning()) {
+            application.renderPlayback();
+            return;
+        }
         worldRenderer.render(positionMatrix);
     }
 

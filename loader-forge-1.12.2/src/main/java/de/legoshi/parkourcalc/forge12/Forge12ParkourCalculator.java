@@ -84,8 +84,11 @@ public class Forge12ParkourCalculator {
 
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.START) return;
-        application.tickPlayback();
+        if (event.phase == TickEvent.Phase.START) {
+            application.tickPlayback();
+        } else {
+            application.postTickPlayback();
+        }
     }
 
     @SubscribeEvent
@@ -101,6 +104,8 @@ public class Forge12ParkourCalculator {
 
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null) return;
+
+        application.renderPlayback();
 
         // Drain queued presses; only open when no MC screen owns input. Close path lives in the GuiScreen.
         boolean toggled = false;

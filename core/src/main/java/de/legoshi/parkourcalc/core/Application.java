@@ -56,7 +56,7 @@ public final class Application {
                 this::handleTickYawChange
         );
         this.saveController = new SaveController(inputData, runner, mc, this::runSimulation);
-        this.playback = new PlaybackController(inputData, runner);
+        this.playback = new PlaybackController(inputData, runner, settings);
     }
 
     public void registerInputOverlay() {
@@ -224,5 +224,13 @@ public final class Application {
 
     public void tickPlayback() {
         playback.tick();
+    }
+
+    public void postTickPlayback() {
+        playback.postTick();
+    }
+
+    public void renderPlayback() {
+        playback.renderFrame();
     }
 }

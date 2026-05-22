@@ -17,7 +17,13 @@ public interface PlaybackBridge {
 
     void setKey(InputRow.Key key, boolean pressed);
 
-    void addYaw(float deltaYaw);
+    void setYaw(float absoluteYaw);
+
+    /** Live player position (feet). Used for playback diagnostics. */
+    Vec3dCore getPosition();
+
+    /** Live player yaw. Used for playback diagnostics. */
+    float getYaw();
 
     void releaseAllKeys();
 
