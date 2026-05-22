@@ -58,30 +58,38 @@ public final class Forge8WorldOverlayRenderer {
         Tessellator tess = Tessellator.getInstance();
         WorldRenderer buf = tess.getWorldRenderer();
 
+        double maxSq = BoxStyle.pathMaxDistanceSq(settings);
+
         buf.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION_COLOR);
         boxController.render(
                 new Forge8BoxRenderer(buf, camX, camY, camZ, BoxRenderer.Mode.FACES),
-                (i, s) -> BoxStyle.tickFaceArgb(settings, s, selection.isSelected(i)));
+                (i, s) -> BoxStyle.tickFaceArgb(settings, s, selection.isSelected(i)),
+                camX, camY, camZ, maxSq);
         tess.draw();
 
         buf.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
         Forge8BoxRenderer linesRenderer = new Forge8BoxRenderer(buf, camX, camY, camZ, BoxRenderer.Mode.LINES);
-        boxController.render(linesRenderer, (i, s) -> BoxStyle.tickLineArgb(settings, s, selection.isSelected(i)));
+        boxController.render(linesRenderer, (i, s) -> BoxStyle.tickLineArgb(settings, s, selection.isSelected(i)),
+                camX, camY, camZ, maxSq);
         if (settings.showSubtick) {
-            boxController.renderPath(linesRenderer, BoxStyle.subtickPathArgb(settings));
+            boxController.renderPath(linesRenderer, BoxStyle.subtickPathArgb(settings),
+                    camX, camY, camZ, maxSq);
         }
         if (settings.showHitbox) {
             boxController.renderHitboxFloorOutline(linesRenderer,
                     (i, s) -> BoxStyle.hitboxLineArgb(settings, selection.isSelected(i)),
-                    settings.showSubtick);
+                    settings.showSubtick,
+                    camX, camY, camZ, maxSq);
         }
         if (settings.showFullHitbox) {
             boxController.renderHitboxFullWireframe(linesRenderer,
                     (i, s) -> BoxStyle.hitboxLineArgb(settings, selection.isSelected(i)),
-                    settings.showSubtick);
+                    settings.showSubtick,
+                    camX, camY, camZ, maxSq);
         }
         if (settings.showYawArrows) {
-            boxController.renderYawArrows(linesRenderer, BoxStyle.yawArrowArgb(settings));
+            boxController.renderYawArrows(linesRenderer, BoxStyle.yawArrowArgb(settings),
+                    camX, camY, camZ, maxSq);
         }
         int gizmoIdx = yawGizmo.getSelectedIndex();
         if (gizmoIdx >= 0) {
