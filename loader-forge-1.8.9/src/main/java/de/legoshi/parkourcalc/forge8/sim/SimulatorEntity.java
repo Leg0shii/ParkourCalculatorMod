@@ -87,6 +87,10 @@ public class SimulatorEntity extends EntityPlayer {
     }
 
     @Override
+    public void addExhaustion(float amount) {
+    }
+
+    @Override
     public void onLivingUpdate() {
         applyMovementInput();
         super.onLivingUpdate();

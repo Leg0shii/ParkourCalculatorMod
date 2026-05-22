@@ -99,6 +99,10 @@ public class SimulatorEntity extends PlayerEntity {
         this.setPosition(startPosition);
     }
 
+    @Override
+    public void addExhaustion(float amount) {
+    }
+
     /** Required so canMoveVoluntarily/isLogicalSideForUpdatingMovement return true
      *  on the client world; without it the entity's physics never advance. */
     @Override
