@@ -49,25 +49,32 @@ public final class FabricWorldOverlayRenderer {
         matrixStack.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z);
 
         VertexConsumerProvider.Immediate consumers = client.getBufferBuilders().getEntityVertexConsumers();
+        double maxSq = BoxStyle.pathMaxDistanceSq(settings);
         FabricBoxRenderer facesRenderer = new FabricBoxRenderer(matrixStack, consumers, BoxRenderer.Mode.FACES);
-        boxController.render(facesRenderer, (i, s) -> BoxStyle.tickFaceArgb(settings, s, selection.isSelected(i)));
+        boxController.render(facesRenderer, (i, s) -> BoxStyle.tickFaceArgb(settings, s, selection.isSelected(i)),
+                cameraPos.x, cameraPos.y, cameraPos.z, maxSq);
         FabricBoxRenderer linesRenderer = new FabricBoxRenderer(matrixStack, consumers, BoxRenderer.Mode.LINES);
-        boxController.render(linesRenderer, (i, s) -> BoxStyle.tickLineArgb(settings, s, selection.isSelected(i)));
+        boxController.render(linesRenderer, (i, s) -> BoxStyle.tickLineArgb(settings, s, selection.isSelected(i)),
+                cameraPos.x, cameraPos.y, cameraPos.z, maxSq);
         if (settings.showSubtick) {
-            boxController.renderPath(linesRenderer, BoxStyle.subtickPathArgb(settings));
+            boxController.renderPath(linesRenderer, BoxStyle.subtickPathArgb(settings),
+                    cameraPos.x, cameraPos.y, cameraPos.z, maxSq);
         }
         if (settings.showHitbox) {
             boxController.renderHitboxFloorOutline(linesRenderer,
                     (i, s) -> BoxStyle.hitboxLineArgb(settings, selection.isSelected(i)),
-                    settings.showSubtick);
+                    settings.showSubtick,
+                    cameraPos.x, cameraPos.y, cameraPos.z, maxSq);
         }
         if (settings.showFullHitbox) {
             boxController.renderHitboxFullWireframe(linesRenderer,
                     (i, s) -> BoxStyle.hitboxLineArgb(settings, selection.isSelected(i)),
-                    settings.showSubtick);
+                    settings.showSubtick,
+                    cameraPos.x, cameraPos.y, cameraPos.z, maxSq);
         }
         if (settings.showYawArrows) {
-            boxController.renderYawArrows(linesRenderer, BoxStyle.yawArrowArgb(settings));
+            boxController.renderYawArrows(linesRenderer, BoxStyle.yawArrowArgb(settings),
+                    cameraPos.x, cameraPos.y, cameraPos.z, maxSq);
         }
         int gizmoIdx = yawGizmo.getSelectedIndex();
         if (gizmoIdx >= 0) {

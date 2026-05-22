@@ -21,6 +21,10 @@ public final class SettingsOverlay implements RenderInterface {
     private static final String LABEL_YAW_TURN_CAP = "Max yaw turn rate";
     private static final String ID_YAW_TURN_CAP = "##yaw_turn_cap";
     private static final String YAW_TURN_CAP_FORMAT = "%.0f deg/s";
+    private static final String LABEL_PATH_RENDER_DISTANCE = "Path render distance";
+    private static final String ID_PATH_RENDER_DISTANCE = "##path_render_distance";
+    private static final String PATH_RENDER_DISTANCE_FORMAT = "%d blocks";
+    private static final String LABEL_UNLIMITED_PATH_RENDER = "Unlimited path render distance";
     private static final String BTN_RESET = "Reset all";
 
     private static final String COLOR_TICK_DEFAULT = "tick box default";
@@ -42,6 +46,7 @@ public final class SettingsOverlay implements RenderInterface {
     private final Runnable onChanged;
     private final ImInt scaleIndexBuf = new ImInt();
     private final float[] yawTurnCapBuf = new float[1];
+    private final int[] pathRenderDistanceBuf = new int[1];
     private final String[] scaleLabels;
 
     public SettingsOverlay(Settings settings, Runnable onChanged) {
@@ -124,6 +129,24 @@ public final class SettingsOverlay implements RenderInterface {
             settings.yawFlickSpeed = yawTurnCapBuf[0];
         }
         if (ImGui.isItemDeactivatedAfterEdit()) {
+            onChanged.run();
+        }
+
+        ImGui.text(LABEL_PATH_RENDER_DISTANCE);
+        ImGui.sameLine();
+        pathRenderDistanceBuf[0] = settings.pathRenderDistance;
+        if (ImGui.sliderInt(ID_PATH_RENDER_DISTANCE,
+                pathRenderDistanceBuf,
+                Settings.MIN_PATH_RENDER_DISTANCE,
+                Settings.MAX_PATH_RENDER_DISTANCE,
+                PATH_RENDER_DISTANCE_FORMAT)) {
+            settings.pathRenderDistance = pathRenderDistanceBuf[0];
+        }
+        if (ImGui.isItemDeactivatedAfterEdit()) {
+            onChanged.run();
+        }
+        if (ImGui.checkbox(LABEL_UNLIMITED_PATH_RENDER, settings.unlimitedPathRender)) {
+            settings.unlimitedPathRender = !settings.unlimitedPathRender;
             onChanged.run();
         }
     }

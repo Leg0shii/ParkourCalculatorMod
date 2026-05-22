@@ -36,6 +36,12 @@ public final class BoxStyle {
         return toArgb(c[0], c[1], c[2], c[3]);
     }
 
+    public static double pathMaxDistanceSq(Settings settings) {
+        if (settings.unlimitedPathRender) return Double.POSITIVE_INFINITY;
+        double d = settings.pathRenderDistance;
+        return d * d;
+    }
+
     /** Distance-scaled radius so the gizmo stays roughly screen-constant. */
     public static double yawGizmoRadius(double dx, double dy, double dz) {
         double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);

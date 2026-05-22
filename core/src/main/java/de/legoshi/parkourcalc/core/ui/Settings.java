@@ -26,6 +26,11 @@ public final class Settings {
     public static final float MIN_YAW_FLICK_SPEED = 30.0f;
     public static final float MAX_YAW_FLICK_SPEED = 7200.0f;
 
+    private static final int DEFAULT_PATH_RENDER_DISTANCE = 128;
+    public static final int MIN_PATH_RENDER_DISTANCE = 16;
+    public static final int MAX_PATH_RENDER_DISTANCE = 512;
+    private static final boolean DEFAULT_UNLIMITED_PATH_RENDER = false;
+
     public final float[] tickDefault = DEFAULT_TICK_DEFAULT.clone();
     public final float[] tickSelected = DEFAULT_TICK_SELECTED.clone();
     public final float[] tickAir = DEFAULT_TICK_AIR.clone();
@@ -44,6 +49,9 @@ public final class Settings {
     public boolean showSubtick = DEFAULT_SHOW_SUBTICK;
 
     public float yawFlickSpeed = DEFAULT_YAW_FLICK_SPEED;
+
+    public int pathRenderDistance = DEFAULT_PATH_RENDER_DISTANCE;
+    public boolean unlimitedPathRender = DEFAULT_UNLIMITED_PATH_RENDER;
 
     public int scaleIndex = DEFAULT_SCALE_INDEX;
 
@@ -66,6 +74,8 @@ public final class Settings {
         showFullHitbox = DEFAULT_SHOW_FULL_HITBOX;
         showSubtick = DEFAULT_SHOW_SUBTICK;
         yawFlickSpeed = DEFAULT_YAW_FLICK_SPEED;
+        pathRenderDistance = DEFAULT_PATH_RENDER_DISTANCE;
+        unlimitedPathRender = DEFAULT_UNLIMITED_PATH_RENDER;
         scaleIndex = DEFAULT_SCALE_INDEX;
         pinnedOverlays = new String[0];
     }

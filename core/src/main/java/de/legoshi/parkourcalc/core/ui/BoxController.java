@@ -127,15 +127,19 @@ public final class BoxController {
         return t1 < t2 ? new double[]{t1, t2} : new double[]{t2, t1};
     }
 
-    public void render(BoxRenderer renderer, BoxColorPicker picker) {
+    public void render(BoxRenderer renderer, BoxColorPicker picker,
+                       double camX, double camY, double camZ, double maxDistanceSq) {
         for (int i = 0; i < positions.size(); i++) {
+            if (!inRange(i, camX, camY, camZ, maxDistanceSq)) continue;
             AABB box = AABB.ofCube(positions.get(i), boxSize);
             renderer.drawBox(box, picker.argbFor(i, states.get(i)));
         }
     }
 
-    public void renderHitboxFloorOutline(BoxRenderer renderer, BoxColorPicker picker, boolean useSubtickPositions) {
+    public void renderHitboxFloorOutline(BoxRenderer renderer, BoxColorPicker picker, boolean useSubtickPositions,
+                                         double camX, double camY, double camZ, double maxDistanceSq) {
         for (int i = 0; i < states.size(); i++) {
+            if (!inRange(i, camX, camY, camZ, maxDistanceSq)) continue;
             TickState s = states.get(i);
             int argb = picker.argbFor(i, s);
             List<Vec3dCore> walk = walkFor(i, s, useSubtickPositions);
@@ -154,8 +158,10 @@ public final class BoxController {
         }
     }
 
-    public void renderHitboxFullWireframe(BoxRenderer renderer, BoxColorPicker picker, boolean useSubtickPositions) {
+    public void renderHitboxFullWireframe(BoxRenderer renderer, BoxColorPicker picker, boolean useSubtickPositions,
+                                          double camX, double camY, double camZ, double maxDistanceSq) {
         for (int i = 0; i < states.size(); i++) {
+            if (!inRange(i, camX, camY, camZ, maxDistanceSq)) continue;
             TickState s = states.get(i);
             int argb = picker.argbFor(i, s);
             List<Vec3dCore> walk = walkFor(i, s, useSubtickPositions);
@@ -165,6 +171,15 @@ public final class BoxController {
         }
     }
 
+    private boolean inRange(int i, double camX, double camY, double camZ, double maxSq) {
+        if (maxSq == Double.POSITIVE_INFINITY) return true;
+        Vec3dCore p = positions.get(i);
+        double dx = p.x - camX;
+        double dy = p.y - camY;
+        double dz = p.z - camZ;
+        return dx * dx + dy * dy + dz * dz <= maxSq;
+    }
+
     private List<Vec3dCore> walkFor(int tickIndex, TickState s, boolean useSubtickPositions) {
         if (useSubtickPositions && s.subtickPath != null && !s.subtickPath.isEmpty()) {
             return s.subtickPath;
@@ -172,10 +187,12 @@ public final class BoxController {
         return Collections.singletonList(positions.get(tickIndex));
     }
 
-    public void renderYawArrows(BoxRenderer renderer, int argb) {
+    public void renderYawArrows(BoxRenderer renderer, int argb,
+                                double camX, double camY, double camZ, double maxDistanceSq) {
         if (positions.isEmpty()) return;
         double half = boxSize * 0.5;
         for (int i = 0; i < states.size(); i++) {
+            if (!inRange(i, camX, camY, camZ, maxDistanceSq)) continue;
             TickState s = states.get(i);
             Vec3dCore p = positions.get(i);
             double cx = p.x + half;
@@ -236,11 +253,16 @@ public final class BoxController {
 
     private static final int GIZMO_SEGMENTS = 48;
 
-    public void renderPath(BoxRenderer renderer, int argb) {
+    public void renderPath(BoxRenderer renderer, int argb,
+                           double camX, double camY, double camZ, double maxDistanceSq) {
         if (states.size() < 2) return;
         double half = boxSize * 0.5;
         Vec3dCore prev = null;
         for (int i = 0; i < states.size(); i++) {
+            if (!inRange(i, camX, camY, camZ, maxDistanceSq)) {
+                prev = null;
+                continue;
+            }
             List<Vec3dCore> path = states.get(i).subtickPath;
             List<Vec3dCore> walk = (path == null || path.isEmpty())
                     ? Collections.singletonList(positions.get(i))
