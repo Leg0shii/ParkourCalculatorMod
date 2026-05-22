@@ -52,20 +52,6 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
     }
 
     @Override
-    public Vec3dCore getPosition() {
-        EntityPlayerSP p = Minecraft.getMinecraft().player;
-        if (p == null) return Vec3dCore.ZERO;
-        return new Vec3dCore(p.posX, p.posY, p.posZ);
-    }
-
-    @Override
-    public float getYaw() {
-        EntityPlayerSP p = Minecraft.getMinecraft().player;
-        if (p == null) return 0f;
-        return p.rotationYaw;
-    }
-
-    @Override
     public void releaseAllKeys() {
         for (InputRow.Key k : InputRow.Key.values()) {
             setKey(k, false);

@@ -8,7 +8,6 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.server.integrated.IntegratedServer;
-import net.minecraft.util.math.Vec3d;
 
 public final class FabricPlaybackBridge implements PlaybackBridge {
 
@@ -48,21 +47,6 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         p.lastYaw = absoluteYaw;
         p.lastHeadYaw = absoluteYaw;
         p.lastBodyYaw = absoluteYaw;
-    }
-
-    @Override
-    public Vec3dCore getPosition() {
-        ClientPlayerEntity p = MinecraftClient.getInstance().player;
-        if (p == null) return Vec3dCore.ZERO;
-        Vec3d pos = p.getEntityPos();
-        return new Vec3dCore(pos.x, pos.y, pos.z);
-    }
-
-    @Override
-    public float getYaw() {
-        ClientPlayerEntity p = MinecraftClient.getInstance().player;
-        if (p == null) return 0f;
-        return p.getYaw();
     }
 
     @Override

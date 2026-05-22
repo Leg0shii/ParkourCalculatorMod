@@ -2,21 +2,16 @@ package de.legoshi.parkourcalc.core;
 
 import de.legoshi.parkourcalc.core.ports.PlaybackBridge;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
-import de.legoshi.parkourcalc.core.sim.TickState;
-import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.core.ui.Settings;
-
-import java.util.List;
 
 public final class PlaybackController {
 
     // SimulatorEntity.resetPlayer() does tick(); tick(); before applying inputs.
     private static final int WARMUP_TICKS = 2;
 
-    // Cap a single render frame's dt to keep a long pause (window unfocus, GC) from
-    // teleporting the eased yaw across its target in one step.
+    private static final long TICK_NANOS = 50_000_000L;
     private static final float MAX_FRAME_DT_SECONDS = 0.1f;
 
     private final InputData inputData;
@@ -28,11 +23,16 @@ public final class PlaybackController {
     private int nextTick;
     private int warmupRemaining;
 
-    private float currentYaw;
-    private float targetYaw;
-    private long lastFrameNanos;
+    // currentTickYaw is both the physics yaw and the lerp endpoint that displayedYaw
+    // chases. prevTickYaw is the lerp's start endpoint for the active tick window.
+    private float prevTickYaw;
+    private float currentTickYaw;
+    private long tickEndNanos;
 
-    private List<TickState> expectedPath;
+    // displayedYaw is the camera yaw; it equals the ideal lerp value when the
+    // recording's angular speed is under the cap, otherwise lags at the cap rate.
+    private float displayedYaw;
+    private long lastFrameNanos;
 
     public PlaybackController(InputData inputData, SimulationRunner runner, Settings settings) {
         this.inputData = inputData;
@@ -64,26 +64,23 @@ public final class PlaybackController {
         if (!canStart()) return;
         bridge.closeUI();
         bridge.teleport(runner.getStartPosition(), runner.getStartVelocity(), runner.getStartYaw());
-        // Make sure no user-held key bleeds into the warmup ticks; the simulator's
-        // warmup runs with an empty InputRow.
+        // Drop any user-held key so the warmup runs with an empty InputRow like the simulator does.
         bridge.releaseAllKeys();
         nextTick = 0;
         warmupRemaining = WARMUP_TICKS;
-        currentYaw = runner.getStartYaw();
-        targetYaw = runner.getStartYaw();
+        prevTickYaw = runner.getStartYaw();
+        currentTickYaw = runner.getStartYaw();
+        displayedYaw = runner.getStartYaw();
+        tickEndNanos = 0L;
         lastFrameNanos = 0L;
-        expectedPath = runner.simulate(inputData);
         running = true;
-        Vec3dCore startPos = runner.getStartPosition();
-        System.out.println(String.format(
-                "[pkc.playback] start rows=%d startPos=(%.4f,%.4f,%.4f) startYaw=%.3f flickSpeed=%.1f deg/s",
-                inputData.size(), startPos.x, startPos.y, startPos.z, runner.getStartYaw(), settings.yawFlickSpeed));
     }
 
     public void stop() {
         if (!running) return;
         running = false;
         warmupRemaining = 0;
+        tickEndNanos = 0L;
         lastFrameNanos = 0L;
         if (bridge != null) {
             bridge.releaseAllKeys();
@@ -94,10 +91,11 @@ public final class PlaybackController {
     public void tick() {
         if (!running || bridge == null) return;
         if (nextTick >= inputData.size()) {
-            // Inputs exhausted; keep ticking so renderFrame() finishes easing to the
-            // final target. Keys released so the player coasts rather than drifting.
-            if (currentYaw == targetYaw) {
-                logFinalComparison();
+            // Stop only once the visual has caught up to the final yaw and a tick
+            // window has elapsed; a low cap can keep the ease running past the final input.
+            boolean caughtUp = displayedYaw == currentTickYaw;
+            boolean windowElapsed = tickEndNanos != 0L && System.nanoTime() - tickEndNanos >= TICK_NANOS;
+            if (caughtUp && windowElapsed) {
                 stop();
             } else {
                 bridge.releaseAllKeys();
@@ -113,85 +111,54 @@ public final class PlaybackController {
             return;
         }
 
-        logTickComparison();
-
         InputRow row = inputData.get(nextTick);
         for (InputRow.Key key : InputRow.Key.values()) {
             bridge.setKey(key, row.isKeyActive(key));
         }
         Float yaw = row.getYaw();
+        prevTickYaw = currentTickYaw;
         if (yaw != null && yaw != 0f) {
-            targetYaw += yaw;
+            currentTickYaw += yaw;
         }
-        // Physics needs the simulator's prescribed yaw before MC's player.tick() runs
-        // so position matches the sim. renderFrame() overwrites with the eased yaw
-        // before any camera sampling, so the snap stays invisible.
-        bridge.setYaw(targetYaw);
+        bridge.setYaw(currentTickYaw);
+        tickEndNanos = System.nanoTime();
         nextTick++;
     }
 
-    private void logFinalComparison() {
-        if (expectedPath == null || expectedPath.isEmpty()) return;
-        TickState expected = expectedPath.get(expectedPath.size() - 1);
-        Vec3dCore actualPos = bridge.getPosition();
-        float actualYaw = bridge.getYaw();
-        double dx = actualPos.x - expected.position.x;
-        double dy = actualPos.y - expected.position.y;
-        double dz = actualPos.z - expected.position.z;
-        double drift = Math.sqrt(dx * dx + dy * dy + dz * dz);
-        float yawDelta = actualYaw - expected.yaw;
-        System.out.println(String.format(
-                "[pkc.playback] final expectPos=(%.4f,%.4f,%.4f) expectYaw=%.3f actualPos=(%.4f,%.4f,%.4f) actualYaw=%.3f drift=%.4f yawDelta=%.3f",
-                expected.position.x, expected.position.y, expected.position.z, expected.yaw,
-                actualPos.x, actualPos.y, actualPos.z, actualYaw,
-                drift, yawDelta));
-    }
-
-    private void logTickComparison() {
-        if (expectedPath == null || nextTick >= expectedPath.size()) return;
-        TickState expected = expectedPath.get(nextTick);
-        Vec3dCore actualPos = bridge.getPosition();
-        float actualYaw = bridge.getYaw();
-        double dx = actualPos.x - expected.position.x;
-        double dy = actualPos.y - expected.position.y;
-        double dz = actualPos.z - expected.position.z;
-        double drift = Math.sqrt(dx * dx + dy * dy + dz * dz);
-        float yawDelta = actualYaw - expected.yaw;
-        System.out.println(String.format(
-                "[pkc.playback] tick=%d expectPos=(%.4f,%.4f,%.4f) expectYaw=%.3f actualPos=(%.4f,%.4f,%.4f) actualYaw=%.3f drift=%.4f yawDelta=%.3f current=%.3f target=%.3f",
-                nextTick,
-                expected.position.x, expected.position.y, expected.position.z, expected.yaw,
-                actualPos.x, actualPos.y, actualPos.z, actualYaw,
-                drift, yawDelta, currentYaw, targetYaw));
-    }
-
-    /** Loader calls after MC's physics tick. Re-applies the visual eased yaw so
-     *  the next render frame doesn't briefly show the snapped physics yaw. */
+    /** Loader calls after MC's physics tick so the snap value never reaches a render. */
     public void postTick() {
         if (!running || bridge == null) return;
-        bridge.setYaw(currentYaw);
+        bridge.setYaw(displayedYaw);
     }
 
-    /** Loader calls each render frame; advances the constant-angular-velocity yaw ease. */
+    /** Loader calls each render frame. */
     public void renderFrame() {
         if (!running || bridge == null) return;
-        long now = System.nanoTime();
-        if (lastFrameNanos == 0L) {
-            lastFrameNanos = now;
-            return;
-        }
-        float dt = (now - lastFrameNanos) / 1_000_000_000f;
-        lastFrameNanos = now;
-        if (dt > MAX_FRAME_DT_SECONDS) dt = MAX_FRAME_DT_SECONDS;
+        if (tickEndNanos == 0L) return;
 
-        float delta = targetYaw - currentYaw;
-        if (delta == 0f) return;
-        float step = settings.yawFlickSpeed * dt;
-        if (step >= Math.abs(delta)) {
-            currentYaw = targetYaw;
+        long now = System.nanoTime();
+        float dt;
+        if (lastFrameNanos == 0L) {
+            dt = 0f;
         } else {
-            currentYaw += Math.signum(delta) * step;
+            dt = (now - lastFrameNanos) / 1_000_000_000f;
+            if (dt > MAX_FRAME_DT_SECONDS) dt = MAX_FRAME_DT_SECONDS;
         }
-        bridge.setYaw(currentYaw);
+        lastFrameNanos = now;
+
+        long elapsed = now - tickEndNanos;
+        float partial = elapsed / (float) TICK_NANOS;
+        if (partial < 0f) partial = 0f;
+        if (partial > 1f) partial = 1f;
+        float idealYaw = prevTickYaw + (currentTickYaw - prevTickYaw) * partial;
+
+        float delta = idealYaw - displayedYaw;
+        float maxStep = settings.yawFlickSpeed * dt;
+        if (Math.abs(delta) <= maxStep) {
+            displayedYaw = idealYaw;
+        } else {
+            displayedYaw += Math.signum(delta) * maxStep;
+        }
+        bridge.setYaw(displayedYaw);
     }
 }

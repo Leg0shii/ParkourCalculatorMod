@@ -19,12 +19,6 @@ public interface PlaybackBridge {
 
     void setYaw(float absoluteYaw);
 
-    /** Live player position (feet). Used for playback diagnostics. */
-    Vec3dCore getPosition();
-
-    /** Live player yaw. Used for playback diagnostics. */
-    float getYaw();
-
     void releaseAllKeys();
 
     /** Close any open mod UI (control panel / GuiScreen) the same way the toggle key would. */
