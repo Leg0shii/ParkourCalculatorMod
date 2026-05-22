@@ -81,27 +81,9 @@ public final class YawGizmoController {
         Vec3dCore center = boxController.getCenter(idx);
         if (center == null) return;
 
-        Vec3dCore cursorOnPlane = projectCursorToPlane(origin, direction, center.y);
-        if (cursorOnPlane == null) return;
+        if (idx > 0 && idx + 1 >= boxController.size()) return;
 
-        double dx0 = cursorOnPlane.x - center.x;
-        double dz0 = cursorOnPlane.z - center.z;
-        if (dx0 * dx0 + dz0 * dz0 < 1.0e-10) return;
-
-        double initialCursorAngleRad = Math.atan2(-dx0, dz0);
-
-        // Anchor: for box 0, the start yaw is what changes. For box i > 0, the gizmo writes
-        // row[i].yaw_delta which controls the yaw at tick i+1, so we anchor to that outgoing
-        // yaw. Without a next tick there's nothing to rotate; skip the session.
-        float initialYaw;
-        if (idx == 0) {
-            initialYaw = boxController.getYaw(0);
-        } else {
-            if (idx + 1 >= boxController.size()) return;
-            initialYaw = boxController.getYaw(idx + 1);
-        }
-
-        state = new State(idx, center.x, center.y, center.z, sx, sy, initialCursorAngleRad, initialYaw);
+        state = new State(idx, center.x, center.y, center.z, sx, sy);
     }
 
     private void update(Vec3dCore origin, Vec3dCore direction, double sx, double sy) {
@@ -119,12 +101,7 @@ public final class YawGizmoController {
         double dz = cursorOnPlane.z - state.centerZ;
         if (dx * dx + dz * dz < 1.0e-10) return;
 
-        double currentAngleRad = Math.atan2(-dx, dz);
-        double deltaRad = currentAngleRad - state.initialCursorAngleRad;
-        while (deltaRad > Math.PI) deltaRad -= 2.0 * Math.PI;
-        while (deltaRad < -Math.PI) deltaRad += 2.0 * Math.PI;
-
-        float yawDeg = state.initialYaw + (float) Math.toDegrees(deltaRad);
+        float yawDeg = (float) Math.toDegrees(Math.atan2(-dx, dz));
         yawDeg = ((yawDeg % 360.0f) + 540.0f) % 360.0f - 180.0f;
 
         if (state.lastEmittedYaw != null && Float.compare(state.lastEmittedYaw, yawDeg) == 0) return;
@@ -133,8 +110,6 @@ public final class YawGizmoController {
         if (state.boxIndex == 0) {
             onStartYawChange.accept(yawDeg);
         } else {
-            // Write to row[boxIndex] so the delta affects box (boxIndex + 1).
-            // The clicked box's yaw is unchanged by row[boxIndex]; only the trailing path shifts.
             onTickYawChange.accept(state.boxIndex, yawDeg);
         }
     }
@@ -153,21 +128,16 @@ public final class YawGizmoController {
         final double centerZ;
         final double pressScreenX;
         final double pressScreenY;
-        final double initialCursorAngleRad;
-        final float initialYaw;
         boolean engaged;
         Float lastEmittedYaw;
 
-        State(int boxIndex, double cx, double cy, double cz, double sx, double sy,
-              double initialCursorAngleRad, float initialYaw) {
+        State(int boxIndex, double cx, double cy, double cz, double sx, double sy) {
             this.boxIndex = boxIndex;
             this.centerX = cx;
             this.centerY = cy;
             this.centerZ = cz;
             this.pressScreenX = sx;
             this.pressScreenY = sy;
-            this.initialCursorAngleRad = initialCursorAngleRad;
-            this.initialYaw = initialYaw;
         }
     }
 }
