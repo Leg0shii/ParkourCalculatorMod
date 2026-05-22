@@ -133,6 +133,14 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
         restoreCheckpoint(ensureEntity(), checkpoint);
     }
 
+    @Override
+    public final void invalidate() {
+        entity = null;
+        pendingStart = null;
+        pendingVelocity = null;
+        pendingYaw = null;
+    }
+
     private E ensureEntity() {
         if (entity == null) {
             entity = createEntity(pendingStart, pendingVelocity, pendingYaw);

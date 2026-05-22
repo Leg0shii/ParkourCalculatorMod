@@ -71,6 +71,13 @@ public final class SimulationRunner {
         );
     }
 
+    /** Drop the cached entity and any state captured against the old world. */
+    public void invalidate() {
+        path.clear();
+        checkpoints.clear();
+        simulator.invalidate();
+    }
+
     public Vec3dCore getStartPosition() {
         return simulator.getStartPosition();
     }

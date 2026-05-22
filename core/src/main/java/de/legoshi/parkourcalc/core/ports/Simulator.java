@@ -42,10 +42,9 @@ public interface Simulator {
 
     void setStartYaw(float yaw);
 
-    /** Snapshot all mutable simulator state needed to resume ticking from the current point.
-     *  Returned token is opaque to callers; only restoreCheckpoint understands it. */
     Checkpoint saveCheckpoint();
 
-    /** Restore a snapshot taken by saveCheckpoint. Token must come from this same simulator. */
     void restoreCheckpoint(Checkpoint checkpoint);
+
+    void invalidate();
 }

@@ -106,6 +106,15 @@ public final class Application {
         }
     }
 
+    /** Loader calls this on disconnect / world unload so the next simulation builds against
+     *  the new world. Cached entity, recorded path, and per-tick checkpoints all reset;
+     *  InputData is kept so the user's tick list persists across world swaps. */
+    public void onWorldChange() {
+        runner.invalidate();
+        boxController.clearAll();
+        startInitialized = false;
+    }
+
     public void setStartToPlayer() {
         if (!mc.isReady()) return;
         runner.setStartPosition(mc.getPlayerPosition());

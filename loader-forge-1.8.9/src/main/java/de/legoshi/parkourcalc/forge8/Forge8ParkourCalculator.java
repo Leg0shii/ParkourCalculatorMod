@@ -14,6 +14,7 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.ModContainer;
@@ -146,6 +147,11 @@ public class Forge8ParkourCalculator {
         if (event.button == 1 && application.shouldSuppressRightClick()) {
             event.setCanceled(true);
         }
+    }
+
+    @SubscribeEvent
+    public void onClientDisconnect(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
+        application.onWorldChange();
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)

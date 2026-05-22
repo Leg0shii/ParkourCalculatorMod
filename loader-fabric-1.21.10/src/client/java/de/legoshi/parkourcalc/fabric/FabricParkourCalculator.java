@@ -11,6 +11,7 @@ import imgui.ImGui;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
@@ -70,6 +71,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(FabricParkourCalculator::handleInput);
         ClientTickEvents.START_CLIENT_TICK.register(FabricParkourCalculator::onStartTick);
         ClientTickEvents.END_CLIENT_TICK.register(FabricParkourCalculator::onEndTick);
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> application.onWorldChange());
     }
 
     private static void onStartTick(MinecraftClient client) {
