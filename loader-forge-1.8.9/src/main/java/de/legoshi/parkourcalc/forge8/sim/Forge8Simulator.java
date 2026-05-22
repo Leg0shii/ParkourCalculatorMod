@@ -24,11 +24,13 @@ public final class Forge8Simulator extends LazyEntitySimulator<SimulatorEntity> 
         if (player == null || clientWorld == null) {
             throw new IllegalStateException("Cannot create simulator: player or world is null");
         }
-        // On the server thread (SP): bind to WorldServer so chunks can page in from disk.
-        // Off-thread (MP, or pre-sim setup): stay on WorldClient. Mirrors FabricSimulator.
+        // SP (integrated server running): bind to WorldServer so chunks can page in from disk.
+        // We tick from the client thread against it; ChunkProviderServer is plain map access
+        // without thread routing on 1.8.9, so reads stay cheap and races are unlikely in practice.
+        // MP: no integrated server, stay on WorldClient.
         World simWorld = clientWorld;
         IntegratedServer server = mc.getIntegratedServer();
-        if (server != null && server.isCallingFromMinecraftThread()) {
+        if (server != null) {
             WorldServer serverWorld = server.worldServerForDimension(clientWorld.provider.getDimensionId());
             if (serverWorld != null) {
                 simWorld = serverWorld;

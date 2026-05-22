@@ -97,7 +97,8 @@ public final class Application {
 
     private void runSimulation(int dirtyTick) {
         if (!mc.isReady()) return;
-        // SP path runs on the server thread so SimulatorEntity.tick() reads ServerWorld natively.
+        // SP path runs on the server thread (Fabric) or client thread against WorldServer (Forge);
+        // either way, simulator ticks against the server world so chunks page from disk on demand.
         List<TickState> path = mc.runOnServerThread(() -> dirtyTick < 0
                 ? runner.simulate(inputData)
                 : runner.simulateFrom(dirtyTick, inputData));
