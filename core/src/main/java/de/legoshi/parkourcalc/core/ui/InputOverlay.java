@@ -318,7 +318,7 @@ public final class InputOverlay implements RenderInterface {
         ImGui.sameLine();
         ImGui.setNextItemWidth(ROW_COUNT_INPUT_WIDTH);
         ImGui.inputInt(ID_ROWS_TO_ADD, rowsToAdd);
-        rowsToAdd.set(Math.max(1, Math.min(100, rowsToAdd.get())));
+        rowsToAdd.set(Math.max(1, Math.min(1000, rowsToAdd.get())));
     }
 
     private void renderAddRowOptions() {
