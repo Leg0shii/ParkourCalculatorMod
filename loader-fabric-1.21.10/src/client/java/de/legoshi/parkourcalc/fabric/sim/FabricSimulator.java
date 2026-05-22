@@ -7,7 +7,11 @@ import de.legoshi.parkourcalc.core.ui.InputRow;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
+import net.minecraft.world.chunk.ChunkStatus;
 
 import java.util.List;
 
@@ -16,10 +20,20 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
     @Override
     protected SimulatorEntity createEntity(Vec3dCore pendingStart, Vec3dCore pendingVelocity, Float pendingYaw) {
         MinecraftClient client = MinecraftClient.getInstance();
-        ClientWorld world = client.world;
+        ClientWorld clientWorld = client.world;
         PlayerEntity player = client.player;
-        if (player == null || world == null) {
+        if (player == null || clientWorld == null) {
             throw new IllegalStateException("Cannot create simulator: player or world is null");
+        }
+        // On the server thread (SP): bind to ServerWorld so block reads hit it natively and
+        // chunks can page in from disk. Off-thread (MP, or pre-sim setup): stay on ClientWorld.
+        World simWorld = clientWorld;
+        MinecraftServer server = client.getServer();
+        if (server != null && server.isOnThread()) {
+            ServerWorld serverWorld = server.getWorld(clientWorld.getRegistryKey());
+            if (serverWorld != null) {
+                simWorld = serverWorld;
+            }
         }
         Vec3d start = pendingStart != null
                 ? new Vec3d(pendingStart.x, pendingStart.y, pendingStart.z)
@@ -28,7 +42,7 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
                 ? new Vec3d(pendingVelocity.x, pendingVelocity.y, pendingVelocity.z)
                 : Vec3d.ZERO;
         float yaw = pendingYaw != null ? pendingYaw : 0.0F;
-        return new SimulatorEntity(world, player.getGameProfile(), start, vel, yaw);
+        return new SimulatorEntity(simWorld, player.getGameProfile(), start, vel, yaw);
     }
 
     @Override protected void resetEntity(SimulatorEntity e) { e.resetPlayer(); }
@@ -37,8 +51,28 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
 
     @Override
     protected void tickEntity(SimulatorEntity e) {
+        preloadChunksAround(e);
         e.beginSubtickCapture();
         e.tick();
+    }
+
+    /** isChunkLoaded short-circuits the common case; getChunk(FULL, true) only fires on miss. */
+    private static void preloadChunksAround(SimulatorEntity e) {
+        World world = e.getEntityWorld();
+        if (!(world instanceof ServerWorld)) return;
+        ServerWorld serverWorld = (ServerWorld) world;
+        Vec3d pos = e.getEntityPos();
+        int cx1 = ((int) Math.floor(pos.x - 1.0)) >> 4;
+        int cz1 = ((int) Math.floor(pos.z - 1.0)) >> 4;
+        int cx2 = ((int) Math.floor(pos.x + 1.0)) >> 4;
+        int cz2 = ((int) Math.floor(pos.z + 1.0)) >> 4;
+        for (int cx = cx1; cx <= cx2; cx++) {
+            for (int cz = cz1; cz <= cz2; cz++) {
+                if (!serverWorld.isChunkLoaded(cx, cz)) {
+                    serverWorld.getChunkManager().getChunk(cx, cz, ChunkStatus.FULL, true);
+                }
+            }
+        }
     }
 
     @Override

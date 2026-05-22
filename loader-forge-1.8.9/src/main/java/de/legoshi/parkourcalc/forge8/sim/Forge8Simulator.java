@@ -7,7 +7,10 @@ import de.legoshi.parkourcalc.core.ui.InputRow;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.Vec3;
+import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 
 import java.util.List;
 
@@ -16,10 +19,20 @@ public final class Forge8Simulator extends LazyEntitySimulator<SimulatorEntity> 
     @Override
     protected SimulatorEntity createEntity(Vec3dCore pendingStart, Vec3dCore pendingVelocity, Float pendingYaw) {
         Minecraft mc = Minecraft.getMinecraft();
-        WorldClient world = mc.theWorld;
+        WorldClient clientWorld = mc.theWorld;
         EntityPlayerSP player = mc.thePlayer;
-        if (player == null || world == null) {
+        if (player == null || clientWorld == null) {
             throw new IllegalStateException("Cannot create simulator: player or world is null");
+        }
+        // On the server thread (SP): bind to WorldServer so chunks can page in from disk.
+        // Off-thread (MP, or pre-sim setup): stay on WorldClient. Mirrors FabricSimulator.
+        World simWorld = clientWorld;
+        IntegratedServer server = mc.getIntegratedServer();
+        if (server != null && server.isCallingFromMinecraftThread()) {
+            WorldServer serverWorld = server.worldServerForDimension(clientWorld.provider.getDimensionId());
+            if (serverWorld != null) {
+                simWorld = serverWorld;
+            }
         }
         Vec3 start = pendingStart != null
                 ? new Vec3(pendingStart.x, pendingStart.y, pendingStart.z)
@@ -28,7 +41,7 @@ public final class Forge8Simulator extends LazyEntitySimulator<SimulatorEntity> 
                 ? new Vec3(pendingVelocity.x, pendingVelocity.y, pendingVelocity.z)
                 : new Vec3(0.0, 0.0, 0.0);
         float yaw = pendingYaw != null ? pendingYaw : 0.0F;
-        return new SimulatorEntity(world, player.getGameProfile(), start, vel, yaw);
+        return new SimulatorEntity(simWorld, player.getGameProfile(), start, vel, yaw);
     }
 
     @Override protected void resetEntity(SimulatorEntity e) { e.resetPlayer(); }
@@ -37,8 +50,26 @@ public final class Forge8Simulator extends LazyEntitySimulator<SimulatorEntity> 
 
     @Override
     protected void tickEntity(SimulatorEntity e) {
+        preloadChunksAround(e);
         e.beginSubtickCapture();
         e.onUpdate();
+    }
+
+    /** chunkExists short-circuits the common case; provideChunk only fires on miss. */
+    private static void preloadChunksAround(SimulatorEntity e) {
+        if (!(e.worldObj instanceof WorldServer)) return;
+        WorldServer serverWorld = (WorldServer) e.worldObj;
+        int cx1 = ((int) Math.floor(e.posX - 1.0)) >> 4;
+        int cz1 = ((int) Math.floor(e.posZ - 1.0)) >> 4;
+        int cx2 = ((int) Math.floor(e.posX + 1.0)) >> 4;
+        int cz2 = ((int) Math.floor(e.posZ + 1.0)) >> 4;
+        for (int cx = cx1; cx <= cx2; cx++) {
+            for (int cz = cz1; cz <= cz2; cz++) {
+                if (!serverWorld.theChunkProviderServer.chunkExists(cx, cz)) {
+                    serverWorld.theChunkProviderServer.provideChunk(cx, cz);
+                }
+            }
+        }
     }
 
     @Override

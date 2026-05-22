@@ -60,7 +60,7 @@ public final class Application {
     }
 
     public void registerInputOverlay() {
-        InputOverlay inputOverlay = new InputOverlay(inputData, selection, this::onUserChange, this::setStartToPlayer, playback);
+        InputOverlay inputOverlay = new InputOverlay(inputData, selection, this::onUserChange, this::setStartToPlayer, playback, mc);
         overlayManager.register("TAS Inputs", inputOverlay);
     }
 
@@ -97,9 +97,10 @@ public final class Application {
 
     private void runSimulation(int dirtyTick) {
         if (!mc.isReady()) return;
-        List<TickState> path = dirtyTick < 0
+        // SP path runs on the server thread so SimulatorEntity.tick() reads ServerWorld natively.
+        List<TickState> path = mc.runOnServerThread(() -> dirtyTick < 0
                 ? runner.simulate(inputData)
-                : runner.simulateFrom(dirtyTick, inputData);
+                : runner.simulateFrom(dirtyTick, inputData));
         boxController.clearAll();
         for (TickState s : path) {
             boxController.add(s);

@@ -61,6 +61,8 @@ public final class SaveController {
 
         SaveFile.Start s = result.value.start;
         SaveIO.applyRowsTo(result.value, inputData);
+        // Must precede the setStart* calls: invalidate clears pending*, which they then refill.
+        runner.invalidate();
         runner.setStartPosition(SaveIO.posOf(s));
         runner.setStartVelocity(SaveIO.velOf(s));
         runner.setStartYaw(s.yaw);

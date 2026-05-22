@@ -2,6 +2,8 @@ package de.legoshi.parkourcalc.core.ports;
 
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
+import java.util.function.Supplier;
+
 /**
  * Live MC client-state queries the loader exposes to core. Core uses these for
  * "snap start to where the player stands" and "cast a ray from the camera" without
@@ -39,4 +41,11 @@ public interface MinecraftAccess {
 
     /** True when the player and world are both available to query. */
     boolean isReady();
+
+    /** True when the client owns the integrated server (singleplayer or LAN host). */
+    boolean isSinglePlayer();
+
+    /** SP: runs the task on the server's main thread and blocks for the result.
+     *  MP: runs inline. Lets the simulator tick against ServerWorld natively. */
+    <T> T runOnServerThread(Supplier<T> task);
 }

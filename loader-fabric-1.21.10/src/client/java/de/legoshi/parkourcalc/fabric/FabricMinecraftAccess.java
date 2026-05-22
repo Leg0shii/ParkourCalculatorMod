@@ -5,11 +5,14 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.Vec3d;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.DoubleBuffer;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
 public final class FabricMinecraftAccess implements MinecraftAccess {
 
@@ -85,5 +88,27 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
     public boolean isReady() {
         MinecraftClient client = MinecraftClient.getInstance();
         return client.player != null && client.world != null;
+    }
+
+    @Override
+    public boolean isSinglePlayer() {
+        return MinecraftClient.getInstance().getServer() != null;
+    }
+
+    @Override
+    public <T> T runOnServerThread(Supplier<T> task) {
+        MinecraftServer server = MinecraftClient.getInstance().getServer();
+        if (server == null) return task.get();
+        // Inline on the server thread too: avoids self-deadlock if anything re-enters.
+        if (server.isOnThread()) return task.get();
+        CompletableFuture<T> future = new CompletableFuture<T>();
+        server.execute(() -> {
+            try {
+                future.complete(task.get());
+            } catch (Throwable t) {
+                future.completeExceptionally(t);
+            }
+        });
+        return future.join();
     }
 }

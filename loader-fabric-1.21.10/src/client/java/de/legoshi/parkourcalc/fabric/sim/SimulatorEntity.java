@@ -106,6 +106,13 @@ public class SimulatorEntity extends PlayerEntity {
         return true;
     }
 
+    /** Lets the entity tick on ServerWorld: Entity.isLogicalSideForUpdatingMovement is final
+     *  and returns !isControlledByPlayer() there, and PlayerEntity defaults that to true. */
+    @Override
+    public boolean isControlledByPlayer() {
+        return false;
+    }
+
     @Override
     public @Nullable GameMode getGameMode() {
         return GameMode.DEFAULT;

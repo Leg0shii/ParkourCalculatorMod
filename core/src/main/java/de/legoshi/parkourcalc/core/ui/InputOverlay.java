@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.core.ui;
 
 import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
+import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import imgui.ImDrawList;
 import imgui.ImGui;
 import imgui.ImGuiIO;
@@ -49,10 +50,14 @@ public final class InputOverlay implements RenderInterface {
     // so it must comfortably exceed 2 * frame_height (~40 px) to leave room to type.
     private static final float ROW_COUNT_INPUT_WIDTH = 240;
 
+    private static final String WARN_MULTIPLAYER =
+            "Multiplayer: simulator only sees blocks inside your render distance.";
+
     private final InputData data;
     private final IntConsumer onDataChangedAt;
     private final Runnable onSetPlayerPosition;
     private final PlaybackController playback;
+    private final MinecraftAccess mc;
 
     private final SelectionManager selection;
     private final KeyDragSelect keyDragSelect = new KeyDragSelect();
@@ -63,12 +68,13 @@ public final class InputOverlay implements RenderInterface {
 
     public InputOverlay(InputData data, SelectionManager selection,
                         IntConsumer onDataChangedAt, Runnable onSetPlayerPosition,
-                        PlaybackController playback) {
+                        PlaybackController playback, MinecraftAccess mc) {
         this.data = data;
         this.selection = selection;
         this.onDataChangedAt = onDataChangedAt;
         this.onSetPlayerPosition = onSetPlayerPosition;
         this.playback = playback;
+        this.mc = mc;
     }
 
     private void notifyChange(int dirtyTick) {
@@ -85,6 +91,8 @@ public final class InputOverlay implements RenderInterface {
             ImGui.end();
             return;
         }
+
+        renderMultiplayerWarning();
 
         pushTableStyles();
 
@@ -105,6 +113,13 @@ public final class InputOverlay implements RenderInterface {
 
         popTableStyles();
         ImGui.end();
+    }
+
+    private void renderMultiplayerWarning() {
+        if (mc == null || !mc.isReady() || mc.isSinglePlayer()) return;
+        ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.8f, 0.2f, 1.0f);
+        ImGui.textWrapped(WARN_MULTIPLAYER);
+        ImGui.popStyleColor();
     }
 
     private int tableFlags() {
