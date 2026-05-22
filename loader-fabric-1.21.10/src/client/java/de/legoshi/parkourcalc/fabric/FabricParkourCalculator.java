@@ -72,6 +72,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         ClientTickEvents.START_CLIENT_TICK.register(FabricParkourCalculator::onStartTick);
         ClientTickEvents.END_CLIENT_TICK.register(FabricParkourCalculator::onEndTick);
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> application.onWorldChange());
+        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> application.onWorldChange());
     }
 
     private static void onStartTick(MinecraftClient client) {

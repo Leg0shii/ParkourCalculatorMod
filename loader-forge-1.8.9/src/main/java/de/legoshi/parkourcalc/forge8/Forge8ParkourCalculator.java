@@ -154,6 +154,11 @@ public class Forge8ParkourCalculator {
         application.onWorldChange();
     }
 
+    @SubscribeEvent
+    public void onClientConnect(FMLNetworkEvent.ClientConnectedToServerEvent event) {
+        application.onWorldChange();
+    }
+
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (!event.isCancelable()) return;

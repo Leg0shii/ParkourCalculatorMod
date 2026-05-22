@@ -82,6 +82,7 @@ public final class SaveController {
     public void newSession() {
         inputData.resetToDefault();
         currentName = null;
+        runner.invalidate();
         if (mc.isReady()) {
             runner.setStartPosition(mc.getPlayerPosition());
         }

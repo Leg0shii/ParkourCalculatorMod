@@ -128,6 +128,12 @@ public class SimulatorEntity extends EntityPlayer {
     protected void collideWithNearbyEntities() {
     }
 
+    /** No-op: vanilla calls setDead() when Y drops below -64, which freezes all subsequent
+     *  ticks. Simulator paths legitimately fall into the void; resetPlayer snaps Y back. */
+    @Override
+    protected void outOfWorld() {
+    }
+
     @Override
     public boolean isSpectator() {
         return false;
