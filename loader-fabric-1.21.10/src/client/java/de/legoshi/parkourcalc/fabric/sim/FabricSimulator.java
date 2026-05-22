@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.fabric.sim;
 
+import de.legoshi.parkourcalc.core.sim.Checkpoint;
 import de.legoshi.parkourcalc.core.sim.LazyEntitySimulator;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
@@ -112,5 +113,15 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
     @Override
     protected void setStartYawValue(SimulatorEntity e, float yaw) {
         e.startYaw = yaw;
+    }
+
+    @Override
+    protected Checkpoint saveCheckpoint(SimulatorEntity e) {
+        return e.saveCheckpoint();
+    }
+
+    @Override
+    protected void restoreCheckpoint(SimulatorEntity e, Checkpoint checkpoint) {
+        e.restoreCheckpoint((SimulatorEntity.Checkpoint) checkpoint);
     }
 }

@@ -143,4 +143,44 @@ public class SimulatorEntity extends EntityPlayer {
     public boolean isServerWorld() {
         return true;
     }
+
+    public Checkpoint saveCheckpoint() {
+        Checkpoint c = new Checkpoint();
+        c.posX = this.posX;
+        c.posY = this.posY;
+        c.posZ = this.posZ;
+        c.motionX = this.motionX;
+        c.motionY = this.motionY;
+        c.motionZ = this.motionZ;
+        c.rotationYaw = this.rotationYaw;
+        c.onGround = this.onGround;
+        c.collidedHorizontally = this.collidedHorizontally;
+        c.sprinting = this.isSprinting();
+        c.sneaking = this.isSneaking();
+        c.sprintState = this.sprintState;
+        return c;
+    }
+
+    public void restoreCheckpoint(Checkpoint c) {
+        this.motionX = c.motionX;
+        this.motionY = c.motionY;
+        this.motionZ = c.motionZ;
+        this.rotationYaw = c.rotationYaw;
+        this.onGround = c.onGround;
+        this.collidedHorizontally = c.collidedHorizontally;
+        this.setSprinting(c.sprinting);
+        this.setSneaking(c.sneaking);
+        this.sprintState = c.sprintState;
+        this.setPosition(c.posX, c.posY, c.posZ);
+    }
+
+    public static final class Checkpoint implements de.legoshi.parkourcalc.core.sim.Checkpoint {
+        double posX, posY, posZ;
+        double motionX, motionY, motionZ;
+        float rotationYaw;
+        boolean onGround;
+        boolean collidedHorizontally;
+        boolean sprinting, sneaking;
+        PlayerSprintMachine.State sprintState;
+    }
 }

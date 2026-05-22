@@ -93,11 +93,11 @@ public class KeyDragSelect {
 
     /**
      * Applies the drag selection to the data if mouse was released.
-     * Returns true if changes were applied.
+     * Returns the lowest modified row index, or -1 if nothing was applied.
      */
-    public boolean applyIfReleased(List<InputRow> rows) {
+    public int applyIfReleased(List<InputRow> rows) {
         if (activeColumn == null || ImGui.isMouseDown(0)) {
-            return false;
+            return -1;
         }
 
         int minRow = Math.min(startRow, currentRow);
@@ -110,7 +110,7 @@ public class KeyDragSelect {
         }
 
         reset();
-        return true;
+        return Math.max(0, minRow);
     }
 
     private void reset() {

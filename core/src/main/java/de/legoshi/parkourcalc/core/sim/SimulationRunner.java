@@ -11,23 +11,51 @@ public final class SimulationRunner {
 
     private final Simulator simulator;
 
+    // path[i] and checkpoints[i] are the snapshot+state captured at the same moment:
+    // path[0] is post-reset (before any row applies); path[i>=1] is after row[i-1] ticked.
+    // checkpoints[i] is the simulator state needed to resume just before row[i] is applied.
+    private final List<TickState> path = new ArrayList<TickState>();
+    private final List<Checkpoint> checkpoints = new ArrayList<Checkpoint>();
+
     public SimulationRunner(Simulator simulator) {
         this.simulator = simulator;
     }
 
     public List<TickState> simulate(InputData inputData) {
+        path.clear();
+        checkpoints.clear();
         simulator.resetToStart();
-
-        List<TickState> path = new ArrayList<TickState>();
         path.add(snapshot());
+        checkpoints.add(simulator.saveCheckpoint());
 
-        for (InputRow row : inputData.getRows()) {
-            simulator.applyInput(row);
-            simulator.tick();
-            path.add(snapshot());
+        replayFrom(0, inputData.getRows());
+        return path;
+    }
+
+    /** Restore cached state at dirtyTick, then replay rows[dirtyTick..end]. Falls back to a full
+     *  simulate if the cache is empty or dirtyTick is out of range. */
+    public List<TickState> simulateFrom(int dirtyTick, InputData inputData) {
+        if (dirtyTick <= 0 || checkpoints.isEmpty() || dirtyTick >= checkpoints.size()) {
+            return simulate(inputData);
         }
 
+        simulator.restoreCheckpoint(checkpoints.get(dirtyTick));
+        while (path.size() > dirtyTick + 1) {
+            path.remove(path.size() - 1);
+            checkpoints.remove(checkpoints.size() - 1);
+        }
+
+        replayFrom(dirtyTick, inputData.getRows());
         return path;
+    }
+
+    private void replayFrom(int startRow, List<InputRow> rows) {
+        for (int i = startRow; i < rows.size(); i++) {
+            simulator.applyInput(rows.get(i));
+            simulator.tick();
+            path.add(snapshot());
+            checkpoints.add(simulator.saveCheckpoint());
+        }
     }
 
     private TickState snapshot() {

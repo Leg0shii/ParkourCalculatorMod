@@ -7,6 +7,7 @@ import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.PlayerInput;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
@@ -280,5 +281,43 @@ public class SimulatorEntity extends PlayerEntity {
         float absY = Math.abs(normalized.y);
         float ratio = absY > absX ? absX / absY : absY / absX;
         return MathHelper.sqrt(1.0F + MathHelper.square(ratio));
+    }
+
+    public Checkpoint saveCheckpoint() {
+        Checkpoint c = new Checkpoint();
+        c.pos = this.getEntityPos();
+        c.velocity = this.getVelocity();
+        c.yaw = this.getYaw();
+        c.onGround = this.isOnGround();
+        c.horizontalCollision = this.horizontalCollision;
+        c.collidedSoftly = this.collidedSoftly;
+        c.sprinting = this.isSprinting();
+        c.ticksLeftToDoubleTapSprint = this.ticksLeftToDoubleTapSprint;
+        c.playerInput = this.input.playerInput;
+        return c;
+    }
+
+    public void restoreCheckpoint(Checkpoint c) {
+        this.setPosition(c.pos);
+        this.setVelocity(c.velocity);
+        this.setYaw(c.yaw);
+        this.setOnGround(c.onGround);
+        this.horizontalCollision = c.horizontalCollision;
+        this.collidedSoftly = c.collidedSoftly;
+        this.setSprinting(c.sprinting);
+        this.ticksLeftToDoubleTapSprint = c.ticksLeftToDoubleTapSprint;
+        this.input.playerInput = c.playerInput;
+    }
+
+    public static final class Checkpoint implements de.legoshi.parkourcalc.core.sim.Checkpoint {
+        Vec3d pos;
+        Vec3d velocity;
+        float yaw;
+        boolean onGround;
+        boolean horizontalCollision;
+        boolean collidedSoftly;
+        boolean sprinting;
+        int ticksLeftToDoubleTapSprint;
+        PlayerInput playerInput;
     }
 }

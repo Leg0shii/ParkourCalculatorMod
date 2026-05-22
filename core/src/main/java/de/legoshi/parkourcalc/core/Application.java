@@ -92,8 +92,14 @@ public final class Application {
     }
 
     public void runSimulation() {
+        runSimulation(-1);
+    }
+
+    private void runSimulation(int dirtyTick) {
         if (!mc.isReady()) return;
-        List<TickState> path = runner.simulate(inputData);
+        List<TickState> path = dirtyTick < 0
+                ? runner.simulate(inputData)
+                : runner.simulateFrom(dirtyTick, inputData);
         boxController.clearAll();
         for (TickState s : path) {
             boxController.add(s);
@@ -103,17 +109,17 @@ public final class Application {
     public void setStartToPlayer() {
         if (!mc.isReady()) return;
         runner.setStartPosition(mc.getPlayerPosition());
-        onUserChange();
+        onUserChange(-1);
     }
 
     private void handleStartPositionChange(Vec3dCore pos) {
         runner.setStartPosition(pos);
-        onUserChange();
+        onUserChange(-1);
     }
 
     private void handleStartYawChange(float yaw) {
         runner.setStartYaw(yaw);
-        onUserChange();
+        onUserChange(-1);
     }
 
     private void handleTickYawChange(int rowIndex, float absoluteYaw) {
@@ -125,12 +131,12 @@ public final class Application {
         while (delta > 180.0f) delta -= 360.0f;
         while (delta < -180.0f) delta += 360.0f;
         inputData.getRows().get(rowIndex).setYaw(delta);
-        onUserChange();
+        onUserChange(rowIndex);
     }
 
-    private void onUserChange() {
+    private void onUserChange(int dirtyTick) {
         saveController.markDirty();
-        runSimulation();
+        runSimulation(dirtyTick);
     }
 
     /** Loader calls this from its world-render hook to advance drag picking. */

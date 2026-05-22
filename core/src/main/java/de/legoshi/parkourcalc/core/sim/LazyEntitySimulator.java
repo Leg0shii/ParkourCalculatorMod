@@ -123,6 +123,16 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
         }
     }
 
+    @Override
+    public final Checkpoint saveCheckpoint() {
+        return saveCheckpoint(ensureEntity());
+    }
+
+    @Override
+    public final void restoreCheckpoint(Checkpoint checkpoint) {
+        restoreCheckpoint(ensureEntity(), checkpoint);
+    }
+
     private E ensureEntity() {
         if (entity == null) {
             entity = createEntity(pendingStart, pendingVelocity, pendingYaw);
@@ -168,4 +178,10 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     protected abstract float getStartYawValue(E entity);
 
     protected abstract void setStartYawValue(E entity, float yaw);
+
+    /** Capture all loader-specific entity state needed to resume ticking. */
+    protected abstract Checkpoint saveCheckpoint(E entity);
+
+    /** Restore a checkpoint previously taken by saveCheckpoint(E). */
+    protected abstract void restoreCheckpoint(E entity, Checkpoint checkpoint);
 }

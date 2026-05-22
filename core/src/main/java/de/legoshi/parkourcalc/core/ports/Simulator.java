@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.ports;
 
+import de.legoshi.parkourcalc.core.sim.Checkpoint;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 
@@ -40,4 +41,11 @@ public interface Simulator {
     float getStartYaw();
 
     void setStartYaw(float yaw);
+
+    /** Snapshot all mutable simulator state needed to resume ticking from the current point.
+     *  Returned token is opaque to callers; only restoreCheckpoint understands it. */
+    Checkpoint saveCheckpoint();
+
+    /** Restore a snapshot taken by saveCheckpoint. Token must come from this same simulator. */
+    void restoreCheckpoint(Checkpoint checkpoint);
 }

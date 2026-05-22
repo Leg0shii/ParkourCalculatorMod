@@ -12,6 +12,8 @@ import imgui.type.ImString;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+import java.util.function.IntConsumer;
 
 public final class InputOverlay implements RenderInterface {
 
@@ -48,7 +50,7 @@ public final class InputOverlay implements RenderInterface {
     private static final float ROW_COUNT_INPUT_WIDTH = 240;
 
     private final InputData data;
-    private final Runnable onDataChanged;
+    private final IntConsumer onDataChangedAt;
     private final Runnable onSetPlayerPosition;
     private final PlaybackController playback;
 
@@ -60,13 +62,21 @@ public final class InputOverlay implements RenderInterface {
     private int draggingRowIndex = -1;
 
     public InputOverlay(InputData data, SelectionManager selection,
-                        Runnable onDataChanged, Runnable onSetPlayerPosition,
+                        IntConsumer onDataChangedAt, Runnable onSetPlayerPosition,
                         PlaybackController playback) {
         this.data = data;
         this.selection = selection;
-        this.onDataChanged = onDataChanged;
+        this.onDataChangedAt = onDataChangedAt;
         this.onSetPlayerPosition = onSetPlayerPosition;
         this.playback = playback;
+    }
+
+    private void notifyChange(int dirtyTick) {
+        onDataChangedAt.accept(dirtyTick);
+    }
+
+    private void notifyFullResim() {
+        onDataChangedAt.accept(-1);
     }
 
     @Override
@@ -88,8 +98,9 @@ public final class InputOverlay implements RenderInterface {
         handleKeyboardShortcuts();
 
         keyDragSelect.update();
-        if (keyDragSelect.applyIfReleased(data.getRows())) {
-            onDataChanged.run();
+        int dragChangeStart = keyDragSelect.applyIfReleased(data.getRows());
+        if (dragChangeStart >= 0) {
+            notifyChange(dragChangeStart);
         }
 
         popTableStyles();
@@ -149,7 +160,7 @@ public final class InputOverlay implements RenderInterface {
 
         handleRowDragDrop(index, rowMin, rowMax, dragDrop);
         renderKeyColumns(row, index);
-        renderYawColumn(row);
+        renderYawColumn(row, index);
 
         ImGui.popID();
     }
@@ -218,10 +229,11 @@ public final class InputOverlay implements RenderInterface {
         }
 
         if (state.moveFrom != -1 && state.moveTo != -1 && state.moveFrom != state.moveTo) {
+            int dirtyTick = Math.min(state.moveFrom, state.moveTo);
             data.moveRow(state.moveFrom, state.moveTo);
             draggingRowIndex = -1;
             selection.clear();
-            onDataChanged.run();
+            notifyChange(dirtyTick);
         }
     }
 
@@ -246,7 +258,7 @@ public final class InputOverlay implements RenderInterface {
         }
     }
 
-    private void renderYawColumn(InputRow row) {
+    private void renderYawColumn(InputRow row, int rowIndex) {
         ImGui.tableNextColumn();
 
         Float yaw = row.getYaw();
@@ -257,7 +269,7 @@ public final class InputOverlay implements RenderInterface {
 
         if (ImGui.inputText(ID_YAW_INPUT, yawInput)) {
             parseAndSetYaw(row);
-            onDataChanged.run();
+            notifyChange(rowIndex);
         }
 
         ImGui.popStyleVar();
@@ -282,7 +294,7 @@ public final class InputOverlay implements RenderInterface {
 
         if (ImGui.menuItem(MENU_SET_TO_PLAYER)) {
             onSetPlayerPosition.run();
-            onDataChanged.run();
+            notifyFullResim();
         }
 
         renderPlaybackOption();
@@ -325,8 +337,9 @@ public final class InputOverlay implements RenderInterface {
         int count = rowsToAdd.get();
 
         if (ImGui.menuItem(String.format(MENU_ADD_AT_END, count))) {
+            int dirtyTick = data.size();
             data.addRows(data.size(), count);
-            onDataChanged.run();
+            notifyChange(dirtyTick);
         }
 
         if (selection.size() == 1) {
@@ -335,13 +348,13 @@ public final class InputOverlay implements RenderInterface {
             if (ImGui.menuItem(String.format(MENU_ADD_ABOVE, count))) {
                 data.addRows(selected, count);
                 selection.adjustForInsert(selected, count);
-                onDataChanged.run();
+                notifyChange(selected);
             }
 
             if (ImGui.menuItem(String.format(MENU_ADD_BELOW, count))) {
                 data.addRows(selected + 1, count);
                 selection.adjustForInsert(selected + 1, count);
-                onDataChanged.run();
+                notifyChange(selected + 1);
             }
         }
     }
@@ -358,9 +371,11 @@ public final class InputOverlay implements RenderInterface {
     }
 
     private void deleteSelectedRows() {
+        Set<Integer> selected = selection.getSelected();
+        int dirtyTick = selected.isEmpty() ? -1 : java.util.Collections.min(selected);
         data.removeRows(selection.getSelectedDescending());
         selection.clear();
-        onDataChanged.run();
+        notifyChange(Math.max(0, dirtyTick));
     }
 
     private void handleKeyboardShortcuts() {
