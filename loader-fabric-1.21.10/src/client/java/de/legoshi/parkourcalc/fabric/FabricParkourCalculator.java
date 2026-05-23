@@ -100,11 +100,15 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
 
         long window = client.getWindow().getHandle();
-        if (escapeKey.justPressed(window, GLFW.GLFW_KEY_ESCAPE) && application.isControlPanelOpen() && !imguiWantsKeys && client.currentScreen == null) {
-            if (!application.getSelection().isEmpty()) {
+        if (escapeKey.justPressed(window, GLFW.GLFW_KEY_ESCAPE) && !imguiWantsKeys && client.currentScreen == null) {
+            if (application.isControlPanelOpen()) {
+                if (!application.getSelection().isEmpty()) {
+                    application.getSelection().clear();
+                } else {
+                    setOverlayOpen(false);
+                }
+            } else if (!application.getSelection().isEmpty()) {
                 application.getSelection().clear();
-            } else {
-                setOverlayOpen(false);
             }
         }
     }

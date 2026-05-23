@@ -19,8 +19,6 @@ public final class YawGizmoController {
         void accept(int rowIndex, float yawDegrees);
     }
 
-    private static final double ENGAGE_THRESHOLD_PX = 2.0;
-
     private final BoxController boxController;
     private final Consumer<Float> onStartYawChange;
     private final TickYawSink onTickYawChange;
@@ -88,9 +86,7 @@ public final class YawGizmoController {
 
     private void update(Vec3dCore origin, Vec3dCore direction, double sx, double sy) {
         if (!state.engaged) {
-            double dxPx = sx - state.pressScreenX;
-            double dyPx = sy - state.pressScreenY;
-            if (Math.hypot(dxPx, dyPx) < ENGAGE_THRESHOLD_PX) return;
+            if (!TapThreshold.exceeded(state.pressScreenX, state.pressScreenY, sx, sy)) return;
             state.engaged = true;
         }
 

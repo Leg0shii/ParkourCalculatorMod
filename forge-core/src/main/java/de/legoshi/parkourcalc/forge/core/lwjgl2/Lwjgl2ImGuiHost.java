@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.util.Objects;
+import java.util.function.BooleanSupplier;
 
 /**
  * Shared ImGui lifecycle for the Forge 1.8.9 / 1.12.2 loaders, both of which run on
@@ -28,6 +29,7 @@ public final class Lwjgl2ImGuiHost {
 
     private final OverlayManager overlayManager;
     private final Settings settings;
+    private final BooleanSupplier isUiFocused;
     private final ImGuiLwjgl2 imguiLwjgl2 = new ImGuiLwjgl2();
     private final ImGuiGL3 imguiGl3 = new ImGuiGL3();
 
@@ -37,8 +39,13 @@ public final class Lwjgl2ImGuiHost {
     private int appliedScaleIndex = -1;
 
     public Lwjgl2ImGuiHost(OverlayManager overlayManager, Settings settings) {
+        this(overlayManager, settings, overlayManager::isControlPanelOpen);
+    }
+
+    public Lwjgl2ImGuiHost(OverlayManager overlayManager, Settings settings, BooleanSupplier isUiFocused) {
         this.overlayManager = overlayManager;
         this.settings = settings;
+        this.isUiFocused = isUiFocused;
     }
 
     /** GuiScreen relays typed chars here; MC drains LWJGL2's queue before the shim sees them. */
@@ -62,6 +69,14 @@ public final class Lwjgl2ImGuiHost {
         // framebuffer is still bound (Forge 1.8.9 / 1.12.2: RenderTickEvent.END), so
         // our draws end up in framebufferMc and get composited by its later blit.
         imguiLwjgl2.newFrame(displayWidth, displayHeight, deltaSeconds);
+        // imguiLwjgl2 polls LWJGL2 directly; pinned overlays would still see play-mode clicks.
+        if (!isUiFocused.getAsBoolean()) {
+            ImGuiIO io = ImGui.getIO();
+            io.setMousePos(-Float.MAX_VALUE, -Float.MAX_VALUE);
+            for (int i = 0; i < 5; i++) {
+                io.setMouseDown(i, false);
+            }
+        }
         ImGui.newFrame();
         overlayManager.render(ImGui.getIO());
         ImGui.render();

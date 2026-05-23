@@ -14,6 +14,7 @@ public class SelectionManager {
     private final Set<Integer> selectedRows = new TreeSet<>();
     private final MinecraftAccess mc;
     private int lastClickedRow = -1;
+    private boolean scrollIntoViewRequested = false;
 
     public SelectionManager(MinecraftAccess mc) {
         this.mc = mc;
@@ -38,6 +39,23 @@ public class SelectionManager {
     public void clear() {
         selectedRows.clear();
         lastClickedRow = -1;
+    }
+
+    public void requestScrollIntoView() {
+        scrollIntoViewRequested = true;
+    }
+
+    public boolean consumeScrollRequest() {
+        boolean v = scrollIntoViewRequested;
+        scrollIntoViewRequested = false;
+        return v;
+    }
+
+    public void retainBelow(int exclusiveMax) {
+        selectedRows.removeIf(idx -> idx >= exclusiveMax);
+        if (lastClickedRow >= exclusiveMax) {
+            lastClickedRow = -1;
+        }
     }
 
     public void handleClick(int rowIndex) {

@@ -185,15 +185,21 @@ public final class InputOverlay implements RenderInterface {
 
         DragDropState dragDrop = new DragDropState();
 
+        int scrollTargetRow = -1;
+        if (selection.consumeScrollRequest() && !selection.isEmpty()) {
+            scrollTargetRow = selection.getSelected().iterator().next();
+        }
+
         for (int i = 0; i < rows.size(); i++) {
-            renderRow(i, rows.get(i), dragDrop, potionColumns);
+            renderRow(i, rows.get(i), dragDrop, potionColumns, scrollTargetRow);
         }
 
         renderDropIndicator(drawList, dragDrop);
         applyDragDrop(dragDrop);
     }
 
-    private void renderRow(int index, InputRow row, DragDropState dragDrop, boolean potionColumns) {
+    private void renderRow(int index, InputRow row, DragDropState dragDrop, boolean potionColumns,
+                           int scrollTargetRow) {
         ImGui.pushID(row.getId());
         ImGui.tableNextRow();
 
@@ -201,6 +207,10 @@ public final class InputOverlay implements RenderInterface {
 
         ImGui.tableNextColumn();
         renderRowNumber(index);
+
+        if (index == scrollTargetRow) {
+            ImGui.setScrollHereY(0.5f);
+        }
 
         ImVec2 rowMin = ImGui.getItemRectMin();
         ImVec2 rowMax = ImGui.getItemRectMax();

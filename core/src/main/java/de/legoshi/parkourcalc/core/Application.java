@@ -9,6 +9,7 @@ import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.BoxDragController;
+import de.legoshi.parkourcalc.core.ui.BoxSelectController;
 import de.legoshi.parkourcalc.core.ui.FileBrowserOverlay;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputOverlay;
@@ -38,6 +39,7 @@ public final class Application {
     private final SelectionManager selection;
     private final SimulationRunner runner;
     private final BoxDragController dragController;
+    private final BoxSelectController selectController;
     private final YawGizmoController yawGizmo;
     private final SaveController saveController;
     private final PlaybackController playback;
@@ -49,7 +51,8 @@ public final class Application {
         this.mc = mc;
         this.selection = new SelectionManager(mc);
         this.runner = new SimulationRunner(simulator);
-        this.dragController = new BoxDragController(boxController, this::handleStartPositionChange);
+        this.dragController = new BoxDragController(boxController, this::handleStartPositionChange, this::onStartBoxTap);
+        this.selectController = new BoxSelectController(boxController, this::commitWorldTap);
         this.yawGizmo = new YawGizmoController(
                 boxController,
                 this::handleStartYawChange,
@@ -106,6 +109,7 @@ public final class Application {
         for (TickState s : path) {
             boxController.add(s);
         }
+        selection.retainBelow(boxController.size());
     }
 
     /** Loader fires this on disconnect / world join: cached entity, recorded path, checkpoints,
@@ -121,6 +125,19 @@ public final class Application {
         if (!mc.isReady()) return;
         runner.setStartPosition(mc.getPlayerPosition());
         onUserChange(-1);
+    }
+
+    private void commitWorldTap(int boxIndex) {
+        if (boxIndex <= 0) return;
+        if (boxIndex >= boxController.size()) return;
+        selection.handleClick(boxIndex);
+        selection.requestScrollIntoView();
+    }
+
+    private void onStartBoxTap() {
+        if (boxController.size() == 0) return;
+        selection.handleClick(0);
+        selection.requestScrollIntoView();
     }
 
     private void handleStartPositionChange(Vec3dCore pos) {
@@ -158,7 +175,22 @@ public final class Application {
             runSimulation();
             startInitialized = true;
         }
-        dragController.tick(mc.getEyePosition(), mc.getLookDirection(), mc.isMousePressedLeft(), isControlPanelOpen());
+        dragController.tick(
+                mc.getEyePosition(),
+                mc.getLookDirection(),
+                mc.isMousePressedLeft(),
+                mc.getCursorScreenX(),
+                mc.getCursorScreenY(),
+                isControlPanelOpen()
+        );
+        selectController.tick(
+                mc.getEyePosition(),
+                mc.getLookDirection(),
+                mc.isMousePressedLeft(),
+                mc.getCursorScreenX(),
+                mc.getCursorScreenY(),
+                isControlPanelOpen()
+        );
         yawGizmo.tick(
                 mc.getEyePosition(),
                 mc.getLookDirection(),
@@ -185,7 +217,7 @@ public final class Application {
         if (isControlPanelOpen()) return false;
         if (dragController.isDragging()) return true;
         if (!mc.isReady()) return false;
-        return dragController.isCursorOverStartBox(mc.getEyePosition(), mc.getLookDirection());
+        return yawGizmo.isCursorOverAnyBox(mc.getEyePosition(), mc.getLookDirection());
     }
 
     public boolean shouldSuppressRightClick() {

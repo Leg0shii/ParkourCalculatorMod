@@ -3,6 +3,7 @@ package de.legoshi.parkourcalc.fabric.imgui;
 import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.legoshi.parkourcalc.core.ui.Settings;
+import de.legoshi.parkourcalc.fabric.FabricParkourCalculator;
 import imgui.ImFont;
 import imgui.ImFontConfig;
 import imgui.ImFontGlyphRangesBuilder;
@@ -68,6 +69,14 @@ public final class ImGuiImpl {
 
         imGuiGl3.newFrame();
         imGuiGlfw.newFrame();
+        // imGuiGlfw polls GLFW directly; pinned overlays would still see play-mode clicks.
+        if (!FabricParkourCalculator.isUiFocused()) {
+            ImGuiIO io = ImGui.getIO();
+            io.setMousePos(-Float.MAX_VALUE, -Float.MAX_VALUE);
+            for (int i = 0; i < 5; i++) {
+                io.setMouseDown(i, false);
+            }
+        }
         ImGui.newFrame();
     }
 

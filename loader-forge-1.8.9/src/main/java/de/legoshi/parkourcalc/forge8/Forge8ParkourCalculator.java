@@ -42,7 +42,10 @@ public class Forge8ParkourCalculator {
             new Forge8Simulator(),
             new Forge8MinecraftAccess()
     );
-    private final Lwjgl2ImGuiHost imguiHost = new Lwjgl2ImGuiHost(application.getOverlayManager(), application.getSettings());
+    private final Lwjgl2ImGuiHost imguiHost = new Lwjgl2ImGuiHost(
+            application.getOverlayManager(),
+            application.getSettings(),
+            () -> Minecraft.getMinecraft().currentScreen instanceof ParkourCalcGuiScreen);
     private final Forge8WorldOverlayRenderer worldRenderer = new Forge8WorldOverlayRenderer(
             application.getBoxController(),
             application.getSettings(),
@@ -54,6 +57,7 @@ public class Forge8ParkourCalculator {
     private KeyBinding toggleKeyBinding;
     private Path configPath;
     private Path saveDir;
+    private boolean escWasDown = false;
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
@@ -89,7 +93,16 @@ public class Forge8ParkourCalculator {
             application.tickPlayback();
         } else {
             application.postTickPlayback();
+            pollEscapeForSelectionClear();
         }
+    }
+
+    private void pollEscapeForSelectionClear() {
+        boolean isDown = Keyboard.isKeyDown(Keyboard.KEY_ESCAPE);
+        if (isDown && !escWasDown && !application.isControlPanelOpen() && !application.getSelection().isEmpty()) {
+            application.getSelection().clear();
+        }
+        escWasDown = isDown;
     }
 
     @SubscribeEvent
@@ -141,6 +154,7 @@ public class Forge8ParkourCalculator {
     // Mirror in Forge12ParkourCalculator; differs only in MouseEvent.button vs getButton().
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onMouseEvent(MouseEvent event) {
+        if (!event.buttonstate) return;
         if (event.button == 0 && application.shouldSuppressLeftClick()) {
             event.setCanceled(true);
         }

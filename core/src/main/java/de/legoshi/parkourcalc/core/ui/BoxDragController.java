@@ -19,35 +19,67 @@ public final class BoxDragController {
 
     private final BoxController boxController;
     private final Consumer<Vec3dCore> onPositionChange;
+    private final Runnable onStartBoxTap;
 
     private boolean wasMousePressed = false;
+    private boolean pressedOverStartBox = false;
+    private double pressScreenX = 0.0;
+    private double pressScreenY = 0.0;
+    private boolean engaged = false;
     private DragState dragState = null;
 
-    public BoxDragController(BoxController boxController, Consumer<Vec3dCore> onPositionChange) {
+    public BoxDragController(BoxController boxController,
+                             Consumer<Vec3dCore> onPositionChange,
+                             Runnable onStartBoxTap) {
         this.boxController = boxController;
         this.onPositionChange = onPositionChange;
+        this.onStartBoxTap = onStartBoxTap;
     }
 
-    public void tick(Vec3dCore rayOrigin, Vec3dCore rayDirection, boolean mousePressed, boolean uiFocused) {
+    public void tick(Vec3dCore rayOrigin, Vec3dCore rayDirection, boolean mousePressed,
+                     double cursorScreenX, double cursorScreenY, boolean uiFocused) {
         if (uiFocused) {
+            resetState();
             wasMousePressed = false;
-            dragState = null;
             return;
         }
+
         if (mousePressed && !wasMousePressed) {
-            tryStartDrag(rayOrigin, rayDirection);
-        }
-        if (mousePressed && dragState != null) {
-            updateDrag(rayOrigin, rayDirection);
-        }
-        if (!mousePressed) {
+            pressedOverStartBox = isCursorOverStartBox(rayOrigin, rayDirection);
+            pressScreenX = cursorScreenX;
+            pressScreenY = cursorScreenY;
+            engaged = false;
             dragState = null;
         }
+
+        if (mousePressed && pressedOverStartBox) {
+            if (!engaged && TapThreshold.exceeded(pressScreenX, pressScreenY, cursorScreenX, cursorScreenY)) {
+                engaged = true;
+                tryStartDrag(rayOrigin, rayDirection);
+            }
+            if (engaged && dragState != null) {
+                updateDrag(rayOrigin, rayDirection);
+            }
+        }
+
+        if (!mousePressed && wasMousePressed) {
+            if (pressedOverStartBox && !engaged && onStartBoxTap != null) {
+                onStartBoxTap.run();
+            }
+            resetState();
+        }
+
         wasMousePressed = mousePressed;
     }
 
+    private void resetState() {
+        pressedOverStartBox = false;
+        engaged = false;
+        dragState = null;
+    }
+
     public boolean isDragging() {
-        return dragState != null;
+        return engaged && dragState != null;
     }
 
     /** True if rayOrigin+rayDirection currently intersects the start box. Used to swallow left-click presses before MC sees them. */

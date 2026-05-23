@@ -28,7 +28,8 @@ public class AttackSuppressMixin {
 
     @Inject(method = "handleBlockBreaking", at = @At("HEAD"), cancellable = true)
     private void onHandleBlockBreaking(boolean breaking, CallbackInfo ci) {
-        if (FabricParkourCalculator.shouldSuppressLeftClick()) {
+        // Letting the release branch through keeps interactionManager state from sticking.
+        if (breaking && FabricParkourCalculator.shouldSuppressLeftClick()) {
             ci.cancel();
         }
     }
