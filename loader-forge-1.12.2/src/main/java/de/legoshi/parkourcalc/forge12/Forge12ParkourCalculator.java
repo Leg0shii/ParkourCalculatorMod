@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.forge12;
 
 import de.legoshi.parkourcalc.core.Application;
+import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2ImGuiHost;
 import de.legoshi.parkourcalc.forge12.render.Forge12HudOverlayRenderer;
@@ -55,9 +56,10 @@ public class Forge12ParkourCalculator {
     private final Forge12PlaybackBridge playbackBridge = new Forge12PlaybackBridge();
 
     private KeyBinding toggleKeyBinding;
+    private KeyBinding deselectKeyBinding;
+    private KeyBinding playbackKeyBinding;
     private Path configPath;
     private Path saveDir;
-    private boolean escWasDown = false;
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
@@ -82,9 +84,13 @@ public class Forge12ParkourCalculator {
 
         toggleKeyBinding = new KeyBinding("key.parkourcalculator.toggle_ui", Keyboard.KEY_K, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(toggleKeyBinding);
+        deselectKeyBinding = new KeyBinding("key.parkourcalculator.deselect_all", Keyboard.KEY_P, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(deselectKeyBinding);
+        playbackKeyBinding = new KeyBinding("key.parkourcalculator.toggle_playback", Keyboard.KEY_L, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(playbackKeyBinding);
 
         MinecraftForge.EVENT_BUS.register(this);
-        LOG.info("ParkourCalculator init complete; K registered as toggle.");
+        LOG.info("ParkourCalculator init complete; K toggle, P deselect, L playback.");
     }
 
     @SubscribeEvent
@@ -93,16 +99,16 @@ public class Forge12ParkourCalculator {
             application.tickPlayback();
         } else {
             application.postTickPlayback();
-            pollEscapeForSelectionClear();
         }
     }
 
-    private void pollEscapeForSelectionClear() {
-        boolean isDown = Keyboard.isKeyDown(Keyboard.KEY_ESCAPE);
-        if (isDown && !escWasDown && !application.isControlPanelOpen() && !application.getSelection().isEmpty()) {
-            application.getSelection().clear();
+    private void togglePlayback() {
+        PlaybackController pc = application.getPlayback();
+        if (pc.isRunning()) {
+            pc.stop();
+        } else if (pc.canStart()) {
+            pc.start();
         }
-        escWasDown = isDown;
     }
 
     @SubscribeEvent
@@ -121,13 +127,30 @@ public class Forge12ParkourCalculator {
 
         application.renderPlayback();
 
-        // Drain queued presses; only open when no MC screen owns input. Close path lives in the GuiScreen.
+        // Drain queued presses; only act when no MC screen owns input. Close path and
+        // in-UI handling live in the GuiScreen.
         boolean toggled = false;
         while (toggleKeyBinding.isPressed()) {
             toggled = true;
         }
-        if (toggled && mc.currentScreen == null) {
-            openOverlay(mc);
+        boolean deselectPressed = false;
+        while (deselectKeyBinding.isPressed()) {
+            deselectPressed = true;
+        }
+        boolean playbackPressed = false;
+        while (playbackKeyBinding.isPressed()) {
+            playbackPressed = true;
+        }
+        if (mc.currentScreen == null) {
+            if (toggled) {
+                openOverlay(mc);
+            }
+            if (deselectPressed) {
+                application.getSelection().clear();
+            }
+            if (playbackPressed) {
+                togglePlayback();
+            }
         }
         if (application.isReady()) {
             imguiHost.renderFrame(mc.displayWidth, mc.displayHeight);
@@ -138,8 +161,11 @@ public class Forge12ParkourCalculator {
         application.setControlPanelOpen(true);
         mc.displayGuiScreen(new ParkourCalcGuiScreen(
                 toggleKeyBinding.getKeyCode(),
+                deselectKeyBinding.getKeyCode(),
+                playbackKeyBinding.getKeyCode(),
                 imguiHost,
                 application.getSelection(),
+                this::togglePlayback,
                 () -> application.setControlPanelOpen(false)
         ));
     }

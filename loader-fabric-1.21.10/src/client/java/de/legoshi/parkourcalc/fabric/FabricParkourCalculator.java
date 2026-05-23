@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.fabric;
 
 import de.legoshi.parkourcalc.core.Application;
+import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.fabric.imgui.ImGuiImpl;
@@ -27,6 +28,8 @@ public class FabricParkourCalculator implements ClientModInitializer {
     public static final String MOD_ID = "parkourcalculator";
 
     public static KeyBinding toggleKeyBinding;
+    public static KeyBinding deselectKeyBinding;
+    public static KeyBinding playbackKeyBinding;
 
     private static final Application application = new Application(
             new FabricSimulator(),
@@ -41,8 +44,6 @@ public class FabricParkourCalculator implements ClientModInitializer {
                     application.getYawGizmo());
     private static final FabricHudOverlayRenderer hudRenderer = new FabricHudOverlayRenderer();
 
-    private static final KeyState escapeKey = new KeyState();
-
     @Override
     public void onInitializeClient() {
         KeyBinding.Category category = KeyBinding.Category.create(Identifier.of(MOD_ID, "general"));
@@ -50,6 +51,18 @@ public class FabricParkourCalculator implements ClientModInitializer {
                 "key.parkourcalculator.toggle_ui",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_K,
+                category
+        ));
+        deselectKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.parkourcalculator.deselect_all",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_P,
+                category
+        ));
+        playbackKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.parkourcalculator.toggle_playback",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_L,
                 category
         ));
 
@@ -94,22 +107,35 @@ public class FabricParkourCalculator implements ClientModInitializer {
         while (toggleKeyBinding.wasPressed()) {
             toggled = true;
         }
-        boolean imguiWantsKeys = application.isControlPanelOpen() && ImGui.getIO().getWantTextInput();
-        if (toggled && client.currentScreen == null && !imguiWantsKeys) {
-            setOverlayOpen(!application.isControlPanelOpen());
+        boolean deselectPressed = false;
+        while (deselectKeyBinding.wasPressed()) {
+            deselectPressed = true;
+        }
+        boolean playbackPressed = false;
+        while (playbackKeyBinding.wasPressed()) {
+            playbackPressed = true;
         }
 
-        long window = client.getWindow().getHandle();
-        if (escapeKey.justPressed(window, GLFW.GLFW_KEY_ESCAPE) && !imguiWantsKeys && client.currentScreen == null) {
-            if (application.isControlPanelOpen()) {
-                if (!application.getSelection().isEmpty()) {
-                    application.getSelection().clear();
-                } else {
-                    setOverlayOpen(false);
-                }
-            } else if (!application.getSelection().isEmpty()) {
-                application.getSelection().clear();
-            }
+        boolean imguiWantsKeys = application.isControlPanelOpen() && ImGui.getIO().getWantTextInput();
+        boolean canDispatch = client.currentScreen == null && !imguiWantsKeys;
+
+        if (toggled && canDispatch) {
+            setOverlayOpen(!application.isControlPanelOpen());
+        }
+        if (deselectPressed && canDispatch) {
+            application.getSelection().clear();
+        }
+        if (playbackPressed && canDispatch) {
+            togglePlayback();
+        }
+    }
+
+    private static void togglePlayback() {
+        PlaybackController pc = application.getPlayback();
+        if (pc.isRunning()) {
+            pc.stop();
+        } else if (pc.canStart()) {
+            pc.start();
         }
     }
 
@@ -181,16 +207,5 @@ public class FabricParkourCalculator implements ClientModInitializer {
                 .getModContainer(MOD_ID)
                 .map(c -> c.getMetadata().getVersion().getFriendlyString())
                 .orElse("unknown");
-    }
-
-    private static class KeyState {
-        private boolean wasPressed = false;
-
-        boolean justPressed(long window, int key) {
-            boolean isPressed = GLFW.glfwGetKey(window, key) == GLFW.GLFW_PRESS;
-            boolean justPressed = isPressed && !wasPressed;
-            wasPressed = isPressed;
-            return justPressed;
-        }
     }
 }
