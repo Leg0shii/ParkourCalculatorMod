@@ -1,5 +1,36 @@
 # Changelog
 
+## [1.2.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.1.0...v1.2.0) (2026-05-23)
+
+
+### Features
+
+* add collision angle info ([#71](https://github.com/Leg0shii/ParkourCalculatorMod/issues/71)) ([e3bfbb3](https://github.com/Leg0shii/ParkourCalculatorMod/commit/e3bfbb3ed771d4d1e08469b5f071c8d94e921e8c)), closes [#58](https://github.com/Leg0shii/ParkourCalculatorMod/issues/58)
+* add keybinds for playback ([#70](https://github.com/Leg0shii/ParkourCalculatorMod/issues/70)) ([e9a3c06](https://github.com/Leg0shii/ParkourCalculatorMod/commit/e9a3c0693fb7217b7072c63d7cd21f99ee3ce7bb)), closes [#59](https://github.com/Leg0shii/ParkourCalculatorMod/issues/59)
+* add potion effects ([#68](https://github.com/Leg0shii/ParkourCalculatorMod/issues/68)) ([72a0b4c](https://github.com/Leg0shii/ParkourCalculatorMod/commit/72a0b4cdddb1ecfaa2754d8b43895fb8a8994d38))
+* add smooth turn ([#46](https://github.com/Leg0shii/ParkourCalculatorMod/issues/46)) ([69fe304](https://github.com/Leg0shii/ParkourCalculatorMod/commit/69fe30402fa4137c0e4916b5c5ea59fdc59c3713))
+* add tick info ([#40](https://github.com/Leg0shii/ParkourCalculatorMod/issues/40)) ([96aab74](https://github.com/Leg0shii/ParkourCalculatorMod/commit/96aab742613619324909593b2dd06b6fdfa49a9e))
+* add tick path selection ([#69](https://github.com/Leg0shii/ParkourCalculatorMod/issues/69)) ([3c62a1c](https://github.com/Leg0shii/ParkourCalculatorMod/commit/3c62a1ca82d74dc959bdff704f4572d28aa98412)), closes [#37](https://github.com/Leg0shii/ParkourCalculatorMod/issues/37)
+* add version into header ([#73](https://github.com/Leg0shii/ParkourCalculatorMod/issues/73)) ([d4ea2d2](https://github.com/Leg0shii/ParkourCalculatorMod/commit/d4ea2d2448a4bf712771076f5716dc5a616284ec))
+
+
+### Bug Fixes
+
+* add 1.21.10 jump cool down ([9a2ccf3](https://github.com/Leg0shii/ParkourCalculatorMod/commit/9a2ccf399ccd253c46f31f77c33609e3868f3760))
+* allow right click on tas inputs ([28643ee](https://github.com/Leg0shii/ParkourCalculatorMod/commit/28643eedc5493c74fe602f2e4a2fbc0c0fdea028))
+* allow sp teleports and proper chunk loading ([ff3a68a](https://github.com/Leg0shii/ParkourCalculatorMod/commit/ff3a68a24d008177b086c929a32f600fe4082c53))
+* correct forge version ([ffd85d1](https://github.com/Leg0shii/ParkourCalculatorMod/commit/ffd85d1279922554586bd34b8f552ce440c8879e))
+* desync replay on teleport ([c722c5f](https://github.com/Leg0shii/ParkourCalculatorMod/commit/c722c5fb3c0ac6404b67a4156a443e6f881270fa))
+* desync when jumping ([f553ed8](https://github.com/Leg0shii/ParkourCalculatorMod/commit/f553ed867f912326ce0d57e854da135ca38ff0e7))
+* increase rows add ([#61](https://github.com/Leg0shii/ParkourCalculatorMod/issues/61)) ([d95671e](https://github.com/Leg0shii/ParkourCalculatorMod/commit/d95671e4fed04bee70526726ae5a7d6e51ebf555)), closes [#54](https://github.com/Leg0shii/ParkourCalculatorMod/issues/54)
+* invalidate entity on world change ([#66](https://github.com/Leg0shii/ParkourCalculatorMod/issues/66)) ([241f1b4](https://github.com/Leg0shii/ParkourCalculatorMod/commit/241f1b42edc3c884cedda8bc5a4a7c34be5527dd)), closes [#64](https://github.com/Leg0shii/ParkourCalculatorMod/issues/64)
+* make inputs scrollable and resizeable ([e87a9a1](https://github.com/Leg0shii/ParkourCalculatorMod/commit/e87a9a18c737e632d4f8cb5a75cde5b12ac14af0))
+* optimize tick generation ([#63](https://github.com/Leg0shii/ParkourCalculatorMod/issues/63)) ([87396aa](https://github.com/Leg0shii/ParkourCalculatorMod/commit/87396aaf4eef9f8b113675447ea79878a50066ba)), closes [#53](https://github.com/Leg0shii/ParkourCalculatorMod/issues/53)
+* pausing ([#43](https://github.com/Leg0shii/ParkourCalculatorMod/issues/43)) ([85c14f2](https://github.com/Leg0shii/ParkourCalculatorMod/commit/85c14f2d8b77a7a4482909fd7da142e4d97cd467))
+* remove damage impact ([7ea010f](https://github.com/Leg0shii/ParkourCalculatorMod/commit/7ea010fb2ac856b5980ec270fcf962f8fc76f3f6))
+* soft collision ([#52](https://github.com/Leg0shii/ParkourCalculatorMod/issues/52)) ([ccf5b43](https://github.com/Leg0shii/ParkourCalculatorMod/commit/ccf5b43a0cdfae86e0d2ffd51992af0894e76c44)), closes [#51](https://github.com/Leg0shii/ParkourCalculatorMod/issues/51)
+* yaw gizmo ([#62](https://github.com/Leg0shii/ParkourCalculatorMod/issues/62)) ([bc4e920](https://github.com/Leg0shii/ParkourCalculatorMod/commit/bc4e920e4220d146dae47a0eb5e46b1c8cd2259b)), closes [#48](https://github.com/Leg0shii/ParkourCalculatorMod/issues/48)
+
 ## [1.1.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.0.1...v1.1.0) (2026-05-18)
 
 
