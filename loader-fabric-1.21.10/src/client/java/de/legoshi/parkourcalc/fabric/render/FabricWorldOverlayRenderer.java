@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.fabric.render;
 
+import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.ports.BoxRenderer;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
@@ -37,6 +38,7 @@ public final class FabricWorldOverlayRenderer {
     public void render(Matrix4f positionMatrix) {
         if (boxController.isEmpty()) return;
 
+        long renderStart = Perf.now();
         boxController.setBoxSize(BoxStyle.tickBoxSize(settings));
 
         MinecraftClient client = MinecraftClient.getInstance();
@@ -60,7 +62,7 @@ public final class FabricWorldOverlayRenderer {
             boxController.renderPath(linesRenderer, BoxStyle.subtickPathArgb(settings),
                     cameraPos.x, cameraPos.y, cameraPos.z, maxSq);
         }
-        if (settings.showHitbox) {
+        if (settings.showHitbox && !settings.showFullHitbox) {
             boxController.renderHitboxFloorOutline(linesRenderer,
                     (i, s) -> BoxStyle.hitboxLineArgb(settings, selection.isSelected(i)),
                     settings.showSubtick,
@@ -92,5 +94,7 @@ public final class FabricWorldOverlayRenderer {
         consumers.draw();
 
         matrixStack.pop();
+        Perf.stop("worldOverlay", renderStart);
+        Perf.addBoxes(boxController.size());
     }
 }

@@ -2,11 +2,14 @@ package de.legoshi.parkourcalc.core.ui;
 
 import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
+import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import imgui.ImDrawList;
 import imgui.ImGui;
 import imgui.ImGuiIO;
+import imgui.ImGuiListClipper;
 import imgui.ImVec2;
+import imgui.callback.ImListClipperCallback;
 import imgui.flag.*;
 import imgui.type.ImInt;
 import imgui.type.ImString;
@@ -118,6 +121,15 @@ public final class InputOverlay implements RenderInterface {
 
     @Override
     public void render(ImGuiIO io) {
+        long t0 = Perf.now();
+        try {
+            renderInternal(io);
+        } finally {
+            Perf.stop("InputOverlay.render", t0);
+        }
+    }
+
+    private void renderInternal(ImGuiIO io) {
         float minTitleBarWidth = ImGui.calcTextSize(TITLE_TEXT).x
                 + ImGui.calcTextSize(versionLabel).x
                 + TITLE_VERSION_GAP;
@@ -246,28 +258,32 @@ public final class InputOverlay implements RenderInterface {
         ImGui.tableHeadersRow();
     }
 
-    private void renderAllRows(boolean potionColumns) {
-        List<InputRow> rows = data.getRows();
-        ImDrawList drawList = ImGui.getWindowDrawList();
+    private void renderAllRows(final boolean potionColumns) {
+        final List<InputRow> rows = data.getRows();
+        final ImDrawList drawList = ImGui.getWindowDrawList();
         keyDragSelect.clearRowBounds();
 
-        DragDropState dragDrop = new DragDropState();
+        final DragDropState dragDrop = new DragDropState();
 
-        int scrollTargetRow = -1;
         if (selection.consumeScrollRequest() && !selection.isEmpty()) {
-            scrollTargetRow = selection.getSelected().iterator().next();
+            int target = selection.getSelected().iterator().next();
+            float rowH = ImGui.getFrameHeightWithSpacing();
+            float viewportH = ImGui.getWindowHeight();
+            ImGui.setScrollY(Math.max(0f, target * rowH - viewportH * 0.5f));
         }
 
-        for (int i = 0; i < rows.size(); i++) {
-            renderRow(i, rows.get(i), dragDrop, potionColumns, scrollTargetRow);
-        }
+        ImGuiListClipper.forEach(rows.size(), new ImListClipperCallback() {
+            @Override
+            public void accept(int i) {
+                renderRow(i, rows.get(i), dragDrop, potionColumns);
+            }
+        });
 
         renderDropIndicator(drawList, dragDrop);
         applyDragDrop(dragDrop);
     }
 
-    private void renderRow(int index, InputRow row, DragDropState dragDrop, boolean potionColumns,
-                           int scrollTargetRow) {
+    private void renderRow(int index, InputRow row, DragDropState dragDrop, boolean potionColumns) {
         ImGui.pushID(row.getId());
         ImGui.tableNextRow();
 
@@ -275,10 +291,6 @@ public final class InputOverlay implements RenderInterface {
 
         ImGui.tableNextColumn();
         renderRowNumber(index);
-
-        if (index == scrollTargetRow) {
-            ImGui.setScrollHereY(0.5f);
-        }
 
         ImVec2 rowMin = ImGui.getItemRectMin();
         ImVec2 rowMax = ImGui.getItemRectMax();

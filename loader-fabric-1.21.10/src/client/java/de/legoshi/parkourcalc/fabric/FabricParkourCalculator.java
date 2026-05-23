@@ -71,6 +71,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         application.registerSettingsOverlay();
         application.registerFileBrowserOverlay();
         application.registerTickInfoOverlay();
+        application.registerPerfOverlay();
         application.initSettingsStorage(
                 FabricLoader.getInstance().getConfigDir().resolve("parkourcalculator.json")
         );

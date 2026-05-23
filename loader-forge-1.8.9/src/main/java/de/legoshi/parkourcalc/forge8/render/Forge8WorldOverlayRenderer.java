@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.forge8.render;
 
+import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.ports.BoxRenderer;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
@@ -38,6 +39,7 @@ public final class Forge8WorldOverlayRenderer {
     public void render(float partialTicks) {
         if (boxController.isEmpty()) return;
 
+        long renderStart = Perf.now();
         boxController.setBoxSize(BoxStyle.tickBoxSize(settings));
 
         Entity view = Minecraft.getMinecraft().getRenderViewEntity();
@@ -75,7 +77,7 @@ public final class Forge8WorldOverlayRenderer {
             boxController.renderPath(linesRenderer, BoxStyle.subtickPathArgb(settings),
                     camX, camY, camZ, maxSq);
         }
-        if (settings.showHitbox) {
+        if (settings.showHitbox && !settings.showFullHitbox) {
             boxController.renderHitboxFloorOutline(linesRenderer,
                     (i, s) -> BoxStyle.hitboxLineArgb(settings, selection.isSelected(i)),
                     settings.showSubtick,
@@ -110,5 +112,7 @@ public final class Forge8WorldOverlayRenderer {
         GlStateManager.enableLighting();
         GlStateManager.enableTexture2D();
         GlStateManager.popMatrix();
+        Perf.stop("worldOverlay", renderStart);
+        Perf.addBoxes(boxController.size());
     }
 }

@@ -4,6 +4,7 @@ import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.ports.PlaybackBridge;
 import de.legoshi.parkourcalc.core.ports.SaveStore;
 import de.legoshi.parkourcalc.core.ports.Simulator;
+import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
@@ -14,6 +15,7 @@ import de.legoshi.parkourcalc.core.ui.FileBrowserOverlay;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputOverlay;
 import de.legoshi.parkourcalc.core.ui.OverlayManager;
+import de.legoshi.parkourcalc.core.ui.PerfOverlay;
 import de.legoshi.parkourcalc.core.ui.SelectionManager;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.ui.SettingsIO;
@@ -84,6 +86,10 @@ public final class Application {
         overlayManager.register("Tick Info", new TickInfoPanel(boxController, selection));
     }
 
+    public void registerPerfOverlay() {
+        overlayManager.register("Perf", new PerfOverlay());
+    }
+
     public void initSettingsStorage(Path path) {
         this.settingsPath = path;
         SettingsIO.load(path, settings);
@@ -105,6 +111,7 @@ public final class Application {
 
     private void runSimulation(int dirtyTick) {
         if (!mc.isReady()) return;
+        long t0 = Perf.now();
         // SP path runs on the server thread (Fabric) or client thread against WorldServer (Forge);
         // either way, simulator ticks against the server world so chunks page from disk on demand.
         List<TickState> path = mc.runOnServerThread(() -> dirtyTick < 0
@@ -129,6 +136,7 @@ public final class Application {
             boxController.add(s);
         }
         selection.retainBelow(boxController.size());
+        Perf.stop("runSimulation", t0);
     }
 
     /** Loader fires this on disconnect / world join: cached entity, recorded path, checkpoints,

@@ -4,7 +4,6 @@ import de.legoshi.parkourcalc.core.ports.BoxRenderer;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.VertexRendering;
 import net.minecraft.client.util.math.MatrixStack;
 import org.joml.Matrix4f;
 
@@ -50,17 +49,45 @@ public final class FabricBoxRenderer implements BoxRenderer {
             emitEdges(consumer, matrices.peek().getPositionMatrix(), box, argb);
         } else {
             VertexConsumer consumer = consumers.getBuffer(FabricRenderLayers.TRANSLUCENT_BOX);
-            float a = ((argb >>> 24) & 0xFF) / 255.0f;
-            float r = ((argb >>> 16) & 0xFF) / 255.0f;
-            float g = ((argb >>> 8) & 0xFF) / 255.0f;
-            float b = (argb & 0xFF) / 255.0f;
-            VertexRendering.drawFilledBox(
-                    matrices, consumer,
-                    box.min.x, box.min.y, box.min.z,
-                    box.max.x, box.max.y, box.max.z,
-                    r, g, b, a
-            );
+            emitFaces(consumer, matrices.peek().getPositionMatrix(), box, argb);
         }
+    }
+
+    private static void emitFaces(VertexConsumer c, Matrix4f m, AABB b, int argb) {
+        float x0 = (float) b.min.x, y0 = (float) b.min.y, z0 = (float) b.min.z;
+        float x1 = (float) b.max.x, y1 = (float) b.max.y, z1 = (float) b.max.z;
+
+        // -Y
+        tri(c, m, x0, y0, z0, x1, y0, z0, x1, y0, z1, argb);
+        tri(c, m, x0, y0, z0, x1, y0, z1, x0, y0, z1, argb);
+        // +Y
+        tri(c, m, x0, y1, z0, x0, y1, z1, x1, y1, z1, argb);
+        tri(c, m, x0, y1, z0, x1, y1, z1, x1, y1, z0, argb);
+        // -Z
+        tri(c, m, x0, y0, z0, x0, y1, z0, x1, y1, z0, argb);
+        tri(c, m, x0, y0, z0, x1, y1, z0, x1, y0, z0, argb);
+        // +Z
+        tri(c, m, x0, y0, z1, x1, y0, z1, x1, y1, z1, argb);
+        tri(c, m, x0, y0, z1, x1, y1, z1, x0, y1, z1, argb);
+        // -X
+        tri(c, m, x0, y0, z0, x0, y0, z1, x0, y1, z1, argb);
+        tri(c, m, x0, y0, z0, x0, y1, z1, x0, y1, z0, argb);
+        // +X
+        tri(c, m, x1, y0, z0, x1, y1, z0, x1, y1, z1, argb);
+        tri(c, m, x1, y0, z0, x1, y1, z1, x1, y0, z1, argb);
+    }
+
+    private static void tri(VertexConsumer c, Matrix4f m,
+                            float ax, float ay, float az,
+                            float bx, float by, float bz,
+                            float cx, float cy, float cz, int argb) {
+        float a = ((argb >>> 24) & 0xFF) / 255.0f;
+        float r = ((argb >>> 16) & 0xFF) / 255.0f;
+        float g = ((argb >>> 8) & 0xFF) / 255.0f;
+        float bb = (argb & 0xFF) / 255.0f;
+        c.vertex(m, ax, ay, az).color(r, g, bb, a);
+        c.vertex(m, bx, by, bz).color(r, g, bb, a);
+        c.vertex(m, cx, cy, cz).color(r, g, bb, a);
     }
 
     private static void emitEdges(VertexConsumer c, Matrix4f m, AABB b, int argb) {

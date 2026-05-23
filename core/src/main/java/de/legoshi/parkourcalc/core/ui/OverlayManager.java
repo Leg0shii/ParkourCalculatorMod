@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.core.ui;
 
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
+import de.legoshi.parkourcalc.core.perf.Perf;
 import imgui.ImGui;
 import imgui.ImGuiIO;
 import imgui.flag.ImGuiCond;
@@ -59,6 +60,7 @@ public class OverlayManager implements RenderInterface {
 
     @Override
     public void render(ImGuiIO io) {
+        Perf.frame();
         for (OverlayEntry entry : overlays.values()) {
             if (entry.pinned) {
                 entry.overlay.render(io);

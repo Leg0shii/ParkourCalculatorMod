@@ -22,10 +22,12 @@ import net.minecraft.client.render.VertexFormats;
  */
 public final class FabricRenderLayers {
 
+    // TRIANGLES, not TRIANGLE_STRIP: VertexConsumerProvider.Immediate#getBuffer flushes on every
+    // call for any draw mode where shareVertices=true, so a STRIP submits one draw call per box.
     private static final RenderPipeline TRANSLUCENT_BOX_PIPELINE =
             RenderPipeline.builder(RenderPipelines.POSITION_COLOR_SNIPPET)
                     .withLocation("pipeline/parkourcalc_translucent_box")
-                    .withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.TRIANGLE_STRIP)
+                    .withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.TRIANGLES)
                     .withBlend(BlendFunction.TRANSLUCENT)
                     .withCull(false)
                     .withDepthWrite(false)

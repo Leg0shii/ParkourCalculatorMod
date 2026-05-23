@@ -18,17 +18,24 @@ public final class BoxController {
 
     private final List<Vec3dCore> positions = new ArrayList<Vec3dCore>();
     private final List<TickState> states = new ArrayList<TickState>();
+    private final List<AABB> tickAabbs = new ArrayList<AABB>();
 
     private double boxSize = BoxStyle.BOX_SIZE;
+    private long geometryRev = 1;
+    private long colorRev = 1;
 
     public void add(TickState state) {
         positions.add(state.position);
         states.add(state);
+        tickAabbs.add(AABB.ofCube(state.position, boxSize));
+        geometryRev++;
     }
 
     public void clearAll() {
         positions.clear();
         states.clear();
+        tickAabbs.clear();
+        geometryRev++;
     }
 
     public boolean isEmpty() {
@@ -40,7 +47,26 @@ public final class BoxController {
     }
 
     public void setBoxSize(double size) {
+        if (size == this.boxSize) return;
         this.boxSize = size;
+        tickAabbs.clear();
+        for (int i = 0; i < positions.size(); i++) {
+            tickAabbs.add(AABB.ofCube(positions.get(i), size));
+        }
+        geometryRev++;
+    }
+
+    /** Monotonic counter; loaders snapshot it and rebuild cached buffers when it changes. */
+    public long getGeometryRev() {
+        return geometryRev;
+    }
+
+    public long getColorRev() {
+        return colorRev;
+    }
+
+    public void markColorsDirty() {
+        colorRev++;
     }
 
     /** First box's AABB, or null if empty. Used loader-side for start-position drag. */
@@ -131,9 +157,28 @@ public final class BoxController {
                        double camX, double camY, double camZ, double maxDistanceSq) {
         for (int i = 0; i < positions.size(); i++) {
             if (!inRange(i, camX, camY, camZ, maxDistanceSq)) continue;
-            AABB box = AABB.ofCube(positions.get(i), boxSize);
-            renderer.drawBox(box, picker.argbFor(i, states.get(i)));
+            renderer.drawBox(tickAabbs.get(i), picker.argbFor(i, states.get(i)));
         }
+    }
+
+    /** Cached AABB at index i, in the simulator's world coords. Null if out of range. */
+    public AABB getTickAabb(int index) {
+        if (index < 0 || index >= tickAabbs.size()) return null;
+        return tickAabbs.get(index);
+    }
+
+    public Vec3dCore getPosition(int index) {
+        if (index < 0 || index >= positions.size()) return null;
+        return positions.get(index);
+    }
+
+    public TickState getState(int index) {
+        if (index < 0 || index >= states.size()) return null;
+        return states.get(index);
+    }
+
+    public double getBoxSize() {
+        return boxSize;
     }
 
     public void renderHitboxFloorOutline(BoxRenderer renderer, BoxColorPicker picker, boolean useSubtickPositions,
@@ -264,11 +309,8 @@ public final class BoxController {
                 continue;
             }
             List<Vec3dCore> path = states.get(i).subtickPath;
-            List<Vec3dCore> walk = (path == null || path.isEmpty())
-                    ? Collections.singletonList(positions.get(i))
-                    : path;
-            for (int k = 0; k < walk.size(); k++) {
-                Vec3dCore cur = walk.get(k);
+            if (path == null || path.isEmpty()) {
+                Vec3dCore cur = positions.get(i);
                 if (prev != null && !prev.equals(cur)) {
                     renderer.drawLine(
                             prev.x + half, prev.y + half, prev.z + half,
@@ -276,6 +318,17 @@ public final class BoxController {
                             argb);
                 }
                 prev = cur;
+            } else {
+                for (int k = 0; k < path.size(); k++) {
+                    Vec3dCore cur = path.get(k);
+                    if (prev != null && !prev.equals(cur)) {
+                        renderer.drawLine(
+                                prev.x + half, prev.y + half, prev.z + half,
+                                cur.x + half, cur.y + half, cur.z + half,
+                                argb);
+                    }
+                    prev = cur;
+                }
             }
         }
     }
