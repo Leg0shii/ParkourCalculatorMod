@@ -130,6 +130,11 @@ public final class TickInfoPanel implements RenderInterface {
                 "Horizontal collision occurred this tick (MC horizontalCollision).");
         row("Soft collision", Boolean.toString(cur.softCollision),
                 "1.21.10 only: grazing wall hit that does NOT break sprint (Entity.collidedSoftly). Always false on 1.8.9/1.12.2.");
+        String angleStr = Double.isNaN(cur.collisionAngleDegrees)
+                ? NA
+                : String.format(Locale.US, FMT_ANGLE, cur.collisionAngleDegrees);
+        row("Collision angle (deg)", angleStr,
+                "1.21.10 only: angle between intended motion (forwardSpeed/sidewaysSpeed rotated by yaw) and post-collision motion. MC keeps sprint when this is below ~8 deg (0.13962634 rad). Off-collision ticks read ~0; n/a on 1.8.9/1.12.2 (any horizontal collision breaks sprint there).");
 
         if (prev != null) {
             double dx = cur.position.x - prev.position.x;

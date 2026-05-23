@@ -15,12 +15,16 @@ public final class TickState {
     // velocity is post-tick motionX/Y/Z (after MC's per-axis collision clamp), so on a wall-clamp
     // tick velocity.x may read 0 while the entity still moved on x. softCollision is the 1.21.10
     // Entity.collidedSoftly state (grazing wall hit that does not break sprint); always false on
-    // legacy versions that don't model it.
+    // legacy versions that don't model it. collisionAngleDegrees is the angle MC's hasCollidedSoftly
+    // computes between intended motion (forwardSpeed/sidewaysSpeed rotated by yaw) and post-collision
+    // adjusted motion; NaN on legacy loaders and when MC's 1e-5 speed gate skips it.
     public final Vec3dCore velocity;
     public final boolean softCollision;
+    public final double collisionAngleDegrees;
 
     public TickState(Vec3dCore position, boolean onGround, boolean sneaking, boolean wallCollision,
-                     float yaw, List<Vec3dCore> subtickPath, Vec3dCore velocity, boolean softCollision) {
+                     float yaw, List<Vec3dCore> subtickPath, Vec3dCore velocity, boolean softCollision,
+                     double collisionAngleDegrees) {
         this.position = position;
         this.onGround = onGround;
         this.sneaking = sneaking;
@@ -29,5 +33,6 @@ public final class TickState {
         this.subtickPath = subtickPath != null ? subtickPath : Collections.<Vec3dCore>emptyList();
         this.velocity = velocity != null ? velocity : Vec3dCore.ZERO;
         this.softCollision = softCollision;
+        this.collisionAngleDegrees = collisionAngleDegrees;
     }
 }

@@ -84,6 +84,11 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     }
 
     @Override
+    public final double getCurrentCollisionAngleDegrees() {
+        return getCollisionAngleDegrees(ensureEntity());
+    }
+
+    @Override
     public final float getCurrentYaw() {
         return getYaw(ensureEntity());
     }
@@ -189,6 +194,8 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     protected abstract Vec3dCore getVelocity(E entity);
 
     protected abstract boolean isSoftCollision(E entity);
+
+    protected abstract double getCollisionAngleDegrees(E entity);
 
     protected abstract float getYaw(E entity);
 

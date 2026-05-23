@@ -143,6 +143,11 @@ public final class Forge8Simulator extends LazyEntitySimulator<SimulatorEntity> 
     }
 
     @Override
+    protected double getCollisionAngleDegrees(SimulatorEntity e) {
+        return Double.NaN;
+    }
+
+    @Override
     protected float getYaw(SimulatorEntity e) {
         return e.rotationYaw;
     }

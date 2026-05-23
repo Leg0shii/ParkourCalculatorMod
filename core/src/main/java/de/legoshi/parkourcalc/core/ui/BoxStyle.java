@@ -99,9 +99,11 @@ public final class BoxStyle {
         return toArgb(c[0], c[1], c[2], 1.0f);
     }
 
-    /** selected > wall > in-air > sneak > default. */
+    /** selected > soft-collision > wall > in-air > sneak > default. Soft collision is a wall hit
+     *  that doesn't break sprint (1.21+), so it must win over the regular wall color. */
     private static float[] pickChannel(Settings settings, TickState state, boolean selected) {
         if (selected) return settings.tickSelected;
+        if (state.softCollision) return settings.tickSoftCollision;
         if (state.wallCollision) return settings.tickWall;
         if (!state.onGround) return settings.tickAir;
         if (state.sneaking) return settings.tickSneak;

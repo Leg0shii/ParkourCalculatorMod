@@ -168,7 +168,9 @@ public final class InputOverlay implements RenderInterface {
     }
 
     private void renderResizeHandle() {
-        float width = ImGui.getContentRegionAvail().x;
+        // invisibleButton asserts both dims > 0; contentRegionAvail.x can be 0 when the window
+        // is collapsed past the table's content width.
+        float width = Math.max(1.0f, ImGui.getContentRegionAvail().x);
         ImGui.invisibleButton("##table_resize", width, RESIZE_HANDLE_HEIGHT);
 
         boolean hovered = ImGui.isItemHovered();

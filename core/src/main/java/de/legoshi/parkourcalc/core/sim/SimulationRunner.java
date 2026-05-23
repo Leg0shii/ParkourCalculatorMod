@@ -67,7 +67,8 @@ public final class SimulationRunner {
                 simulator.getCurrentYaw(),
                 simulator.getCurrentSubtickPath(),
                 simulator.getCurrentVelocity(),
-                simulator.isCurrentSoftCollision()
+                simulator.isCurrentSoftCollision(),
+                simulator.getCurrentCollisionAngleDegrees()
         );
     }
 

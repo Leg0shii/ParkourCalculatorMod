@@ -26,6 +26,8 @@ public interface Simulator {
 
     boolean isCurrentSoftCollision();
 
+    double getCurrentCollisionAngleDegrees();
+
     float getCurrentYaw();
 
     List<Vec3dCore> getCurrentSubtickPath();

@@ -126,6 +126,11 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
     }
 
     @Override
+    protected double getCollisionAngleDegrees(SimulatorEntity e) {
+        return e.getLastCollisionAngleDegrees();
+    }
+
+    @Override
     protected float getYaw(SimulatorEntity e) {
         return e.getYaw();
     }

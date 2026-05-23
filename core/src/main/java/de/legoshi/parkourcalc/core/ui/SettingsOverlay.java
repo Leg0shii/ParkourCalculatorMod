@@ -33,6 +33,7 @@ public final class SettingsOverlay implements RenderInterface {
     private static final String COLOR_TICK_AIR = "tick box in-air";
     private static final String COLOR_TICK_SNEAK = "tick box sneak";
     private static final String COLOR_TICK_WALL = "tick box wall";
+    private static final String COLOR_TICK_SOFT_COLLISION = "tick box soft collision";
     private static final String COLOR_SUBTICK_PATH = "subtick path";
     private static final String COLOR_YAW_ARROW = "yaw arrows";
     private static final String COLOR_YAW_GIZMO_CIRCLE = "yaw gizmo circle";
@@ -164,6 +165,7 @@ public final class SettingsOverlay implements RenderInterface {
         renderColor(COLOR_TICK_AIR, settings.tickAir, flags);
         renderColor(COLOR_TICK_SNEAK, settings.tickSneak, flags);
         renderColor(COLOR_TICK_WALL, settings.tickWall, flags);
+        renderColor(COLOR_TICK_SOFT_COLLISION, settings.tickSoftCollision, flags);
         renderColor(COLOR_SUBTICK_PATH, settings.subtickPath, flags);
         renderColor(COLOR_YAW_ARROW, settings.yawArrow, flags);
         renderColor(COLOR_YAW_GIZMO_CIRCLE, settings.yawGizmoCircle, flags);

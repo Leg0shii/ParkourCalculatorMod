@@ -40,6 +40,13 @@ public class SimulatorEntity extends PlayerEntity {
     private final ArrayList<Vec3dCore> subtickBuf = new ArrayList<Vec3dCore>(8);
     private boolean capturing = false;
 
+    private double lastCollisionAngleDegrees = Double.NaN;
+    private boolean collisionAngleComputedThisTick = false;
+
+    public double getLastCollisionAngleDegrees() {
+        return lastCollisionAngleDegrees;
+    }
+
     public void beginSubtickCapture() {
         subtickBuf.clear();
         capturing = true;
@@ -186,7 +193,21 @@ public class SimulatorEntity extends PlayerEntity {
      * client.options.getSprintWindow(), which the simulator has no access to).
      */
     @Override
+    public void tick() {
+        Vec3d before = this.getEntityPos();
+        super.tick();
+        if (!this.collisionAngleComputedThisTick) {
+            Vec3d after = this.getEntityPos();
+            this.lastCollisionAngleDegrees = computeCollisionAngleDegrees(
+                    after.x - before.x, after.z - before.z);
+        }
+    }
+
+    @Override
     public void tickMovement() {
+        this.lastCollisionAngleDegrees = Double.NaN;
+        this.collisionAngleComputedThisTick = false;
+
         if (this.ticksLeftToDoubleTapSprint > 0) {
             this.ticksLeftToDoubleTapSprint--;
         }
@@ -289,19 +310,28 @@ public class SimulatorEntity extends PlayerEntity {
 
     @Override
     protected boolean hasCollidedSoftly(Vec3d adjustedMovement) {
+        double angleDeg = computeCollisionAngleDegrees(adjustedMovement.x, adjustedMovement.z);
+        if (Double.isNaN(angleDeg)) {
+            return false;
+        }
+        this.lastCollisionAngleDegrees = angleDeg;
+        this.collisionAngleComputedThisTick = true;
+        return Math.toRadians(angleDeg) < 0.13962634F;
+    }
+
+    private double computeCollisionAngleDegrees(double adjustedX, double adjustedZ) {
         float f = this.getYaw() * (float) (Math.PI / 180.0);
         double d = MathHelper.sin(f);
         double e = MathHelper.cos(f);
         double g = this.sidewaysSpeed * e - this.forwardSpeed * d;
         double h = this.forwardSpeed * e + this.sidewaysSpeed * d;
         double i = MathHelper.square(g) + MathHelper.square(h);
-        double j = MathHelper.square(adjustedMovement.x) + MathHelper.square(adjustedMovement.z);
+        double j = MathHelper.square(adjustedX) + MathHelper.square(adjustedZ);
         if (i < 1.0E-5F || j < 1.0E-5F) {
-            return false;
+            return Double.NaN;
         }
-        double k = g * adjustedMovement.x + h * adjustedMovement.z;
-        double l = Math.acos(k / Math.sqrt(i * j));
-        return l < 0.13962634F;
+        double k = g * adjustedX + h * adjustedZ;
+        return Math.toDegrees(Math.acos(k / Math.sqrt(i * j)));
     }
 
     @Override

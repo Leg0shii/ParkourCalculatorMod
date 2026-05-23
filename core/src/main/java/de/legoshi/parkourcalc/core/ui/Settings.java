@@ -10,6 +10,7 @@ public final class Settings {
     private static final float[] DEFAULT_TICK_AIR = {0.40f, 0.80f, 1.00f, 0.25f};
     private static final float[] DEFAULT_TICK_SNEAK = {1.00f, 0.60f, 0.20f, 0.25f};
     private static final float[] DEFAULT_TICK_WALL = {1.00f, 0.25f, 0.25f, 0.25f};
+    private static final float[] DEFAULT_TICK_SOFT_COLLISION = {1.00f, 0.55f, 0.10f, 0.25f};
     private static final float[] DEFAULT_SUBTICK_PATH = {1.00f, 1.00f, 0.40f, 0.25f};
     private static final float[] DEFAULT_YAW_ARROW = {1.00f, 0.30f, 0.30f, 1.00f};
     private static final float[] DEFAULT_YAW_GIZMO_CIRCLE = {1.00f, 1.00f, 1.00f, 0.70f};
@@ -37,6 +38,7 @@ public final class Settings {
     public final float[] tickAir = DEFAULT_TICK_AIR.clone();
     public final float[] tickSneak = DEFAULT_TICK_SNEAK.clone();
     public final float[] tickWall = DEFAULT_TICK_WALL.clone();
+    public final float[] tickSoftCollision = DEFAULT_TICK_SOFT_COLLISION.clone();
     public final float[] subtickPath = DEFAULT_SUBTICK_PATH.clone();
     public final float[] yawArrow = DEFAULT_YAW_ARROW.clone();
     public final float[] yawGizmoCircle = DEFAULT_YAW_GIZMO_CIRCLE.clone();
@@ -65,6 +67,7 @@ public final class Settings {
         System.arraycopy(DEFAULT_TICK_AIR, 0, tickAir, 0, 4);
         System.arraycopy(DEFAULT_TICK_SNEAK, 0, tickSneak, 0, 4);
         System.arraycopy(DEFAULT_TICK_WALL, 0, tickWall, 0, 4);
+        System.arraycopy(DEFAULT_TICK_SOFT_COLLISION, 0, tickSoftCollision, 0, 4);
         System.arraycopy(DEFAULT_SUBTICK_PATH, 0, subtickPath, 0, 4);
         System.arraycopy(DEFAULT_YAW_ARROW, 0, yawArrow, 0, 4);
         System.arraycopy(DEFAULT_YAW_GIZMO_CIRCLE, 0, yawGizmoCircle, 0, 4);
