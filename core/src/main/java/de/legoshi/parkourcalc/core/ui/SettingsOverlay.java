@@ -15,6 +15,7 @@ public final class SettingsOverlay implements RenderInterface {
     private static final String LABEL_SHOW_HITBOX = "Show Hitbox";
     private static final String LABEL_SHOW_FULL_HITBOX = "Show Full Hitbox";
     private static final String LABEL_SHOW_SUBTICK = "Subtick Visualization";
+    private static final String LABEL_SHOW_POTION_COLUMNS = "Show potion effect columns";
     private static final String LABEL_UI_SCALE = "UI Scale";
     private static final String LABEL_RENDER_COLORS = "Render Colors";
     private static final String LABEL_PLAYBACK = "Playback";
@@ -102,6 +103,10 @@ public final class SettingsOverlay implements RenderInterface {
         }
         if (ImGui.checkbox(LABEL_SHOW_SUBTICK, settings.showSubtick)) {
             settings.showSubtick = !settings.showSubtick;
+            onChanged.run();
+        }
+        if (ImGui.checkbox(LABEL_SHOW_POTION_COLUMNS, settings.showPotionColumns)) {
+            settings.showPotionColumns = !settings.showPotionColumns;
             onChanged.run();
         }
     }

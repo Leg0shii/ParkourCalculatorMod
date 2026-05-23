@@ -7,6 +7,8 @@ import de.legoshi.parkourcalc.core.ui.InputRow;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.potion.Potion;
+import net.minecraft.potion.PotionEffect;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
@@ -51,6 +53,17 @@ public final class Forge8Simulator extends LazyEntitySimulator<SimulatorEntity> 
     @Override protected void applyYaw(SimulatorEntity e, float yaw) { e.rotationYaw += yaw; }
 
     @Override
+    protected void applyTickEffects(SimulatorEntity e, int speedAmplifier, int jumpBoostAmplifier) {
+        e.clearActivePotions();
+        if (speedAmplifier > 0) {
+            e.addPotionEffect(new PotionEffect(Potion.moveSpeed.id, 2, speedAmplifier - 1));
+        }
+        if (jumpBoostAmplifier > 0) {
+            e.addPotionEffect(new PotionEffect(Potion.jump.id, 2, jumpBoostAmplifier - 1));
+        }
+    }
+
+    @Override
     protected void tickEntity(SimulatorEntity e) {
         preloadChunksAround(e);
         e.beginSubtickCapture();
@@ -72,6 +85,26 @@ public final class Forge8Simulator extends LazyEntitySimulator<SimulatorEntity> 
                 }
             }
         }
+    }
+
+    @Override
+    protected String formatDebugState(SimulatorEntity e, int tickIndex) {
+        PotionEffect spd = e.getActivePotionEffect(Potion.moveSpeed);
+        PotionEffect jmp = e.getActivePotionEffect(Potion.jump);
+        double mvSp = e.getEntityAttribute(net.minecraft.entity.SharedMonsterAttributes.movementSpeed).getAttributeValue();
+        return "[PC-STATE sim ] t=" + tickIndex
+                + " pos=" + e.posX + "," + e.posY + "," + e.posZ
+                + " mot=" + e.motionX + "," + e.motionY + "," + e.motionZ
+                + " yaw=" + e.rotationYaw
+                + " onG=" + e.onGround
+                + " spr=" + e.isSprinting()
+                + " sne=" + e.isSneaking()
+                + " colH=" + e.isCollidedHorizontally
+                + " mvF=" + e.moveForward
+                + " mvS=" + e.moveStrafing
+                + " spdAmp=" + (spd == null ? -1 : spd.getAmplifier())
+                + " jmpAmp=" + (jmp == null ? -1 : jmp.getAmplifier())
+                + " mvSpeed=" + mvSp;
     }
 
     @Override

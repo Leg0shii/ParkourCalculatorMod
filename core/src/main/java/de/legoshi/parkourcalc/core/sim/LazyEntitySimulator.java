@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.sim;
 
+import de.legoshi.parkourcalc.core.DebugFlags;
 import de.legoshi.parkourcalc.core.ports.Simulator;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 
@@ -17,16 +18,19 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     private Vec3dCore pendingStart;
     private Vec3dCore pendingVelocity;
     private Float pendingYaw;
+    private int debugTickIndex;
 
     @Override
     public final void resetToStart() {
         resetEntity(ensureEntity());
+        debugTickIndex = 0;
     }
 
     @Override
     public final void applyInput(InputRow row) {
         E e = ensureEntity();
         setInput(e, row);
+        applyTickEffects(e, row.getSpeedAmplifier(), row.getJumpBoostAmplifier());
         if (row.getYaw() != null) {
             applyYaw(e, row.getYaw());
         }
@@ -34,7 +38,19 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
 
     @Override
     public final void tick() {
-        tickEntity(ensureEntity());
+        E e = ensureEntity();
+        tickEntity(e);
+        if (DebugFlags.DUMP_TICK_STATE && DebugFlags.simTickSink != null) {
+            String dump = formatDebugState(e, debugTickIndex);
+            if (dump != null) {
+                DebugFlags.simTickSink.add(dump);
+            }
+        }
+        debugTickIndex++;
+    }
+
+    protected String formatDebugState(E entity, int tickIndex) {
+        return null;
     }
 
     @Override
@@ -156,6 +172,9 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     protected abstract void setInput(E entity, InputRow row);
 
     protected abstract void applyYaw(E entity, float yaw);
+
+    /** UI amplifiers are 1-based (1 = level I); 0 means the effect is not active this tick. */
+    protected abstract void applyTickEffects(E entity, int speedAmplifier, int jumpBoostAmplifier);
 
     protected abstract void tickEntity(E entity);
 

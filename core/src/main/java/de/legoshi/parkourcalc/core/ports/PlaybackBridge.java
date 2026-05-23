@@ -15,6 +15,8 @@ public interface PlaybackBridge {
 
     void teleport(Vec3dCore pos, Vec3dCore vel, float yaw);
 
+    void teleportPositionOnly(Vec3dCore pos);
+
     void setKey(InputRow.Key key, boolean pressed);
 
     void setYaw(float absoluteYaw);
@@ -23,4 +25,8 @@ public interface PlaybackBridge {
 
     /** Close any open mod UI (control panel / GuiScreen) the same way the toggle key would. */
     void closeUI();
+
+    void applyEffects(int speedAmplifier, int jumpBoostAmplifier);
+
+    default void dumpPlayerState(int tickIndex) {}
 }

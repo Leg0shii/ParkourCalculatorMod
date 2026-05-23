@@ -7,7 +7,12 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.server.integrated.IntegratedServer;
+import net.minecraft.server.network.ServerPlayerEntity;
+
+import java.util.UUID;
 
 public final class FabricPlaybackBridge implements PlaybackBridge {
 
@@ -29,6 +34,13 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         p.setYaw(yaw);
         p.setHeadYaw(yaw);
         p.setBodyYaw(yaw);
+    }
+
+    @Override
+    public void teleportPositionOnly(Vec3dCore pos) {
+        ClientPlayerEntity p = MinecraftClient.getInstance().player;
+        if (p == null) return;
+        p.setPosition(pos.x, pos.y, pos.z);
     }
 
     @Override
@@ -59,6 +71,30 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
     @Override
     public void closeUI() {
         FabricParkourCalculator.closeOverlay();
+    }
+
+    private static final int EFFECT_DURATION_TICKS = 20000;
+
+    @Override
+    public void applyEffects(int speedAmplifier, int jumpBoostAmplifier) {
+        MinecraftClient mc = MinecraftClient.getInstance();
+        ClientPlayerEntity client = mc.player;
+        if (client == null) return;
+        IntegratedServer server = mc.getServer();
+        if (server == null) return;
+        UUID uuid = client.getUuid();
+        server.execute(() -> {
+            ServerPlayerEntity sp = server.getPlayerManager().getPlayer(uuid);
+            if (sp == null) return;
+            sp.removeStatusEffect(StatusEffects.SPEED);
+            sp.removeStatusEffect(StatusEffects.JUMP_BOOST);
+            if (speedAmplifier > 0) {
+                sp.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, EFFECT_DURATION_TICKS, speedAmplifier - 1, false, false, true));
+            }
+            if (jumpBoostAmplifier > 0) {
+                sp.addStatusEffect(new StatusEffectInstance(StatusEffects.JUMP_BOOST, EFFECT_DURATION_TICKS, jumpBoostAmplifier - 1, false, false, true));
+            }
+        });
     }
 
     private static KeyBinding bindFor(InputRow.Key key) {

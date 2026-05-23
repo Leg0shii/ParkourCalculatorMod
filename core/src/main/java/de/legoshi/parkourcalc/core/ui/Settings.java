@@ -21,6 +21,7 @@ public final class Settings {
     private static final boolean DEFAULT_SHOW_HITBOX = false;
     private static final boolean DEFAULT_SHOW_FULL_HITBOX = false;
     private static final boolean DEFAULT_SHOW_SUBTICK = true;
+    private static final boolean DEFAULT_SHOW_POTION_COLUMNS = false;
 
     private static final float DEFAULT_YAW_FLICK_SPEED = 720.0f;
     public static final float MIN_YAW_FLICK_SPEED = 30.0f;
@@ -47,6 +48,7 @@ public final class Settings {
     public boolean showHitbox = DEFAULT_SHOW_HITBOX;
     public boolean showFullHitbox = DEFAULT_SHOW_FULL_HITBOX;
     public boolean showSubtick = DEFAULT_SHOW_SUBTICK;
+    public boolean showPotionColumns = DEFAULT_SHOW_POTION_COLUMNS;
 
     public float yawFlickSpeed = DEFAULT_YAW_FLICK_SPEED;
 
@@ -73,6 +75,7 @@ public final class Settings {
         showHitbox = DEFAULT_SHOW_HITBOX;
         showFullHitbox = DEFAULT_SHOW_FULL_HITBOX;
         showSubtick = DEFAULT_SHOW_SUBTICK;
+        showPotionColumns = DEFAULT_SHOW_POTION_COLUMNS;
         yawFlickSpeed = DEFAULT_YAW_FLICK_SPEED;
         pathRenderDistance = DEFAULT_PATH_RENDER_DISTANCE;
         unlimitedPathRender = DEFAULT_UNLIMITED_PATH_RENDER;

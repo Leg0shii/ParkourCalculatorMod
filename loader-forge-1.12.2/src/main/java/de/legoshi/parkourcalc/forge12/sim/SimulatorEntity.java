@@ -7,11 +7,14 @@ import de.legoshi.parkourcalc.core.ui.InputRow;
 import net.minecraft.entity.MoverType;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.MobEffects;
+import net.minecraft.potion.Potion;
+import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /** MCP 39: moveForward is the forward input, moveVertical is the swim/fly axis. */
 public class SimulatorEntity extends EntityPlayer {
@@ -136,6 +139,40 @@ public class SimulatorEntity extends EntityPlayer {
      *  ticks. Simulator paths legitimately fall into the void; resetPlayer snaps Y back. */
     @Override
     protected void outOfWorld() {
+    }
+
+    // EntityLivingBase gates clearActivePotions / onNew/Changed/FinishedPotionEffect
+    // on !world.isRemote, which would make every effect call a no-op in the client
+    // world. Reimplement without the gate so attribute modifiers actually attach
+    // and detach.
+
+    @Override
+    public void clearActivePotions() {
+        Map<Potion, PotionEffect> map = this.getActivePotionMap();
+        if (map.isEmpty()) return;
+        List<PotionEffect> all = new ArrayList<PotionEffect>(map.values());
+        map.clear();
+        for (PotionEffect e : all) {
+            e.getPotion().removeAttributesModifiersFromEntity(this, this.getAttributeMap(), e.getAmplifier());
+        }
+    }
+
+    @Override
+    protected void onNewPotionEffect(PotionEffect effect) {
+        effect.getPotion().applyAttributesModifiersToEntity(this, this.getAttributeMap(), effect.getAmplifier());
+    }
+
+    @Override
+    protected void onChangedPotionEffect(PotionEffect effect, boolean reapply) {
+        if (reapply) {
+            effect.getPotion().removeAttributesModifiersFromEntity(this, this.getAttributeMap(), effect.getAmplifier());
+            effect.getPotion().applyAttributesModifiersToEntity(this, this.getAttributeMap(), effect.getAmplifier());
+        }
+    }
+
+    @Override
+    protected void onFinishedPotionEffect(PotionEffect effect) {
+        effect.getPotion().removeAttributesModifiersFromEntity(this, this.getAttributeMap(), effect.getAmplifier());
     }
 
     @Override

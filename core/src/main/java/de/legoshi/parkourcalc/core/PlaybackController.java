@@ -2,9 +2,13 @@ package de.legoshi.parkourcalc.core;
 
 import de.legoshi.parkourcalc.core.ports.PlaybackBridge;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
+import de.legoshi.parkourcalc.core.DebugFlags;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.core.ui.Settings;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public final class PlaybackController {
 
@@ -22,6 +26,8 @@ public final class PlaybackController {
     private boolean running;
     private int nextTick;
     private int warmupRemaining;
+    private int lastSpeedAmplifier;
+    private int lastJumpBoostAmplifier;
 
     // currentTickYaw is both the physics yaw and the lerp endpoint that displayedYaw
     // chases. prevTickYaw is the lerp's start endpoint for the active tick window.
@@ -33,6 +39,8 @@ public final class PlaybackController {
     // recording's angular speed is under the cap, otherwise lags at the cap rate.
     private float displayedYaw;
     private long lastFrameNanos;
+
+    private final List<String> simTickDumps = new ArrayList<String>();
 
     public PlaybackController(InputData inputData, SimulationRunner runner, Settings settings) {
         this.inputData = inputData;
@@ -63,6 +71,16 @@ public final class PlaybackController {
         if (running) return;
         if (!canStart()) return;
         bridge.closeUI();
+
+        simTickDumps.clear();
+        if (DebugFlags.DUMP_TICK_STATE) {
+            DebugFlags.simTickSink = simTickDumps;
+            try {
+                runner.simulate(inputData);
+            } finally {
+                DebugFlags.simTickSink = null;
+            }
+        }
         bridge.teleport(runner.getStartPosition(), runner.getStartVelocity(), runner.getStartYaw());
         // Drop any user-held key so the warmup runs with an empty InputRow like the simulator does.
         bridge.releaseAllKeys();
@@ -73,6 +91,12 @@ public final class PlaybackController {
         displayedYaw = runner.getStartYaw();
         tickEndNanos = 0L;
         lastFrameNanos = 0L;
+        InputRow firstRow = inputData.get(0);
+        int firstSpeedAmp = firstRow.getSpeedAmplifier();
+        int firstJumpAmp = firstRow.getJumpBoostAmplifier();
+        bridge.applyEffects(firstSpeedAmp, firstJumpAmp);
+        lastSpeedAmplifier = firstSpeedAmp;
+        lastJumpBoostAmplifier = firstJumpAmp;
         running = true;
     }
 
@@ -84,7 +108,10 @@ public final class PlaybackController {
         lastFrameNanos = 0L;
         if (bridge != null) {
             bridge.releaseAllKeys();
+            bridge.applyEffects(0, 0);
         }
+        lastSpeedAmplifier = 0;
+        lastJumpBoostAmplifier = 0;
     }
 
     /** Loader calls each START_CLIENT_TICK. */
@@ -103,17 +130,26 @@ public final class PlaybackController {
             return;
         }
 
-        // Mirror SimulatorEntity.resetPlayer's two empty tick() calls so the real
-        // player's onGround / prev* / velocity match the simulator's start state.
+
         if (warmupRemaining > 0) {
             bridge.releaseAllKeys();
             warmupRemaining--;
+            if (warmupRemaining == 0) {
+                bridge.teleportPositionOnly(runner.getStartPosition());
+            }
             return;
         }
 
         InputRow row = inputData.get(nextTick);
         for (InputRow.Key key : InputRow.Key.values()) {
             bridge.setKey(key, row.isKeyActive(key));
+        }
+        int speedAmp = row.getSpeedAmplifier();
+        int jumpAmp = row.getJumpBoostAmplifier();
+        if (speedAmp != lastSpeedAmplifier || jumpAmp != lastJumpBoostAmplifier) {
+            bridge.applyEffects(speedAmp, jumpAmp);
+            lastSpeedAmplifier = speedAmp;
+            lastJumpBoostAmplifier = jumpAmp;
         }
         Float yaw = row.getYaw();
         prevTickYaw = currentTickYaw;
@@ -129,6 +165,14 @@ public final class PlaybackController {
     public void postTick() {
         if (!running || bridge == null) return;
         bridge.setYaw(displayedYaw);
+        if (DebugFlags.DUMP_TICK_STATE) {
+            // Negative index = warmup tick, so state going into tick 0 is visible.
+            int t = nextTick - 1 - warmupRemaining;
+            if (t >= 0 && t < simTickDumps.size()) {
+                System.out.println(simTickDumps.get(t));
+            }
+            bridge.dumpPlayerState(t);
+        }
     }
 
     /** Loader calls each render frame. */

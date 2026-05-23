@@ -29,6 +29,23 @@ public final class InputOverlay implements RenderInterface {
 
     private static final String COL_INDEX = "#";
     private static final String COL_YAW = "YAW";
+    private static final String COL_SPEED = "Speed";
+    private static final String COL_JUMP_BOOST = "Jump";
+
+    private static final String ID_SPEED_SUFFIX = "##speed";
+    private static final String ID_JUMP_SUFFIX = "##jump";
+    private static final String ID_BULK_SPEED = "##bulk_speed";
+    private static final String ID_BULK_JUMP = "##bulk_jump";
+
+    private static final String LABEL_SET_ALL_SPEED = "Set all Speed:";
+    private static final String LABEL_SET_ALL_JUMP = "Set all Jump:";
+
+    private static final String[] AMP_LABELS = {
+            "none", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"
+    };
+    private static final float AMP_CELL_WIDTH = 110;
+    private static final float AMP_TOOLBAR_WIDTH = 110;
+    private static final float AMP_COLUMN_WIDTH = 120;
 
     private static final String MENU_SET_TO_PLAYER = "Set to user position";
     private static final String LABEL_ROWS = "Rows:";
@@ -45,7 +62,8 @@ public final class InputOverlay implements RenderInterface {
     private static final String DRAG_DROP_TYPE = "INPUT_ROW";
 
     private static final float TABLE_HEIGHT = 200;
-    private static final int COLUMN_COUNT = 9;
+    private static final int BASE_COLUMN_COUNT = 9;
+    private static final int POTION_COLUMN_COUNT = 2;
     // inputInt reserves this width for the text field + the two +/- step buttons combined,
     // so it must comfortably exceed 2 * frame_height (~40 px) to leave room to type.
     private static final float ROW_COUNT_INPUT_WIDTH = 240;
@@ -54,6 +72,7 @@ public final class InputOverlay implements RenderInterface {
             "Multiplayer: simulator only sees blocks inside your render distance.";
 
     private final InputData data;
+    private final Settings settings;
     private final IntConsumer onDataChangedAt;
     private final Runnable onSetPlayerPosition;
     private final PlaybackController playback;
@@ -63,13 +82,17 @@ public final class InputOverlay implements RenderInterface {
     private final KeyDragSelect keyDragSelect = new KeyDragSelect();
     private final ImString yawInput = new ImString(32);
     private final ImInt rowsToAdd = new ImInt(1);
+    private final ImInt ampBuf = new ImInt();
+    private final ImInt bulkSpeedBuf = new ImInt();
+    private final ImInt bulkJumpBuf = new ImInt();
 
     private int draggingRowIndex = -1;
 
-    public InputOverlay(InputData data, SelectionManager selection,
+    public InputOverlay(InputData data, Settings settings, SelectionManager selection,
                         IntConsumer onDataChangedAt, Runnable onSetPlayerPosition,
                         PlaybackController playback, MinecraftAccess mc) {
         this.data = data;
+        this.settings = settings;
         this.selection = selection;
         this.onDataChangedAt = onDataChangedAt;
         this.onSetPlayerPosition = onSetPlayerPosition;
@@ -96,9 +119,15 @@ public final class InputOverlay implements RenderInterface {
 
         pushTableStyles();
 
-        if (ImGui.beginTable(ID_TABLE, COLUMN_COUNT, tableFlags(), 0, TABLE_HEIGHT)) {
-            setupColumns();
-            renderAllRows();
+        boolean potionColumns = settings.showPotionColumns;
+        if (potionColumns) {
+            renderPotionToolbar();
+        }
+        int columnCount = BASE_COLUMN_COUNT + (potionColumns ? POTION_COLUMN_COUNT : 0);
+
+        if (ImGui.beginTable(ID_TABLE, columnCount, tableFlags(), 0, TABLE_HEIGHT)) {
+            setupColumns(potionColumns);
+            renderAllRows(potionColumns);
             ImGui.endTable();
         }
 
@@ -136,16 +165,20 @@ public final class InputOverlay implements RenderInterface {
         ImGui.popStyleColor(3);
     }
 
-    private void setupColumns() {
+    private void setupColumns(boolean potionColumns) {
         ImGui.tableSetupColumn(COL_INDEX);
         for (InputRow.Key key : InputRow.Key.values()) {
             ImGui.tableSetupColumn(key.name());
         }
         ImGui.tableSetupColumn(COL_YAW, ImGuiTableColumnFlags.WidthFixed, 160);
+        if (potionColumns) {
+            ImGui.tableSetupColumn(COL_SPEED, ImGuiTableColumnFlags.WidthFixed, AMP_COLUMN_WIDTH);
+            ImGui.tableSetupColumn(COL_JUMP_BOOST, ImGuiTableColumnFlags.WidthFixed, AMP_COLUMN_WIDTH);
+        }
         ImGui.tableHeadersRow();
     }
 
-    private void renderAllRows() {
+    private void renderAllRows(boolean potionColumns) {
         List<InputRow> rows = data.getRows();
         ImDrawList drawList = ImGui.getWindowDrawList();
         keyDragSelect.clearRowBounds();
@@ -153,14 +186,14 @@ public final class InputOverlay implements RenderInterface {
         DragDropState dragDrop = new DragDropState();
 
         for (int i = 0; i < rows.size(); i++) {
-            renderRow(i, rows.get(i), dragDrop);
+            renderRow(i, rows.get(i), dragDrop, potionColumns);
         }
 
         renderDropIndicator(drawList, dragDrop);
         applyDragDrop(dragDrop);
     }
 
-    private void renderRow(int index, InputRow row, DragDropState dragDrop) {
+    private void renderRow(int index, InputRow row, DragDropState dragDrop, boolean potionColumns) {
         ImGui.pushID(row.getId());
         ImGui.tableNextRow();
 
@@ -176,6 +209,9 @@ public final class InputOverlay implements RenderInterface {
         handleRowDragDrop(index, rowMin, rowMax, dragDrop);
         renderKeyColumns(row, index);
         renderYawColumn(row, index);
+        if (potionColumns) {
+            renderPotionColumns(row, index);
+        }
 
         ImGui.popID();
     }
@@ -288,6 +324,54 @@ public final class InputOverlay implements RenderInterface {
         }
 
         ImGui.popStyleVar();
+    }
+
+    private void renderPotionColumns(InputRow row, int rowIndex) {
+        ImGui.tableNextColumn();
+        ampBuf.set(row.getSpeedAmplifier());
+        ImGui.setNextItemWidth(AMP_CELL_WIDTH);
+        if (ImGui.combo(ID_SPEED_SUFFIX, ampBuf, AMP_LABELS)) {
+            int picked = ampBuf.get();
+            row.setSpeedAmplifier(picked);
+            notifyChange(rowIndex);
+        }
+
+        ImGui.tableNextColumn();
+        ampBuf.set(row.getJumpBoostAmplifier());
+        ImGui.setNextItemWidth(AMP_CELL_WIDTH);
+        if (ImGui.combo(ID_JUMP_SUFFIX, ampBuf, AMP_LABELS)) {
+            int picked = ampBuf.get();
+            row.setJumpBoostAmplifier(picked);
+            notifyChange(rowIndex);
+        }
+    }
+
+    private void renderPotionToolbar() {
+        ImGui.text(LABEL_SET_ALL_SPEED);
+        ImGui.sameLine();
+        ImGui.setNextItemWidth(AMP_TOOLBAR_WIDTH);
+        if (ImGui.combo(ID_BULK_SPEED, bulkSpeedBuf, AMP_LABELS)) {
+            applyAmplifierToAll(true, bulkSpeedBuf.get());
+            notifyFullResim();
+        }
+        ImGui.sameLine();
+        ImGui.text(LABEL_SET_ALL_JUMP);
+        ImGui.sameLine();
+        ImGui.setNextItemWidth(AMP_TOOLBAR_WIDTH);
+        if (ImGui.combo(ID_BULK_JUMP, bulkJumpBuf, AMP_LABELS)) {
+            applyAmplifierToAll(false, bulkJumpBuf.get());
+            notifyFullResim();
+        }
+    }
+
+    private void applyAmplifierToAll(boolean speed, int amplifier) {
+        for (InputRow row : data.getRows()) {
+            if (speed) {
+                row.setSpeedAmplifier(amplifier);
+            } else {
+                row.setJumpBoostAmplifier(amplifier);
+            }
+        }
     }
 
     private void parseAndSetYaw(InputRow row) {

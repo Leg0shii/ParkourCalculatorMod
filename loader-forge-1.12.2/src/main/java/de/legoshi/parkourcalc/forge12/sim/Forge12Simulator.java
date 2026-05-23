@@ -7,6 +7,8 @@ import de.legoshi.parkourcalc.core.ui.InputRow;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.init.MobEffects;
+import net.minecraft.potion.PotionEffect;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -49,6 +51,17 @@ public final class Forge12Simulator extends LazyEntitySimulator<SimulatorEntity>
     @Override protected void resetEntity(SimulatorEntity e) { e.resetPlayer(); }
     @Override protected void setInput(SimulatorEntity e, InputRow row) { e.setInput(row); }
     @Override protected void applyYaw(SimulatorEntity e, float yaw) { e.rotationYaw += yaw; }
+
+    @Override
+    protected void applyTickEffects(SimulatorEntity e, int speedAmplifier, int jumpBoostAmplifier) {
+        e.clearActivePotions();
+        if (speedAmplifier > 0) {
+            e.addPotionEffect(new PotionEffect(MobEffects.SPEED, 2, speedAmplifier - 1));
+        }
+        if (jumpBoostAmplifier > 0) {
+            e.addPotionEffect(new PotionEffect(MobEffects.JUMP_BOOST, 2, jumpBoostAmplifier - 1));
+        }
+    }
 
     @Override
     protected void tickEntity(SimulatorEntity e) {

@@ -3,9 +3,12 @@ package de.legoshi.parkourcalc.fabric.sim;
 import com.mojang.authlib.GameProfile;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.PlayerInput;
 import net.minecraft.util.math.MathHelper;
@@ -16,7 +19,10 @@ import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SimulatorEntity extends PlayerEntity {
 
@@ -132,6 +138,41 @@ public class SimulatorEntity extends PlayerEntity {
      *  bottom (TAS into the void) and must keep ticking; resetPlayer() snaps position back. */
     @Override
     protected void tickInVoid() {
+    }
+
+    // LivingEntity gates clearStatusEffects / onStatusEffect* on !world.isClient(),
+    // which would make every effect call a no-op in the client world. Reimplement
+    // without the gate so attribute modifiers actually attach and detach.
+
+    @Override
+    public boolean clearStatusEffects() {
+        Map<net.minecraft.registry.entry.RegistryEntry<StatusEffect>, StatusEffectInstance> active = this.getActiveStatusEffects();
+        if (active.isEmpty()) return false;
+        Map<net.minecraft.registry.entry.RegistryEntry<StatusEffect>, StatusEffectInstance> copy = new HashMap<>(active);
+        active.clear();
+        this.onStatusEffectsRemoved(copy.values());
+        return true;
+    }
+
+    @Override
+    protected void onStatusEffectApplied(StatusEffectInstance effect, @Nullable Entity source) {
+        effect.getEffectType().value().onApplied(this.getAttributes(), effect.getAmplifier());
+    }
+
+    @Override
+    protected void onStatusEffectUpgraded(StatusEffectInstance effect, boolean reapplyEffect, @Nullable Entity source) {
+        if (reapplyEffect) {
+            StatusEffect type = effect.getEffectType().value();
+            type.onRemoved(this.getAttributes());
+            type.onApplied(this.getAttributes(), effect.getAmplifier());
+        }
+    }
+
+    @Override
+    protected void onStatusEffectsRemoved(Collection<StatusEffectInstance> effects) {
+        for (StatusEffectInstance e : effects) {
+            e.getEffectType().value().onRemoved(this.getAttributes());
+        }
     }
 
     /** No-op so the simulator can't shove the real player or other world entities. */

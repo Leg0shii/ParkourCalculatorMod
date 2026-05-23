@@ -30,5 +30,7 @@ public final class SaveFile {
     public static final class Row {
         public List<String> keys = new ArrayList<String>();
         public Float yaw;
+        public int speedAmplifier;
+        public int jumpBoostAmplifier;
     }
 }

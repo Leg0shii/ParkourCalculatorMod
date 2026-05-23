@@ -60,7 +60,7 @@ public final class Application {
     }
 
     public void registerInputOverlay() {
-        InputOverlay inputOverlay = new InputOverlay(inputData, selection, this::onUserChange, this::setStartToPlayer, playback, mc);
+        InputOverlay inputOverlay = new InputOverlay(inputData, settings, selection, this::onUserChange, this::setStartToPlayer, playback, mc);
         overlayManager.register("TAS Inputs", inputOverlay);
     }
 

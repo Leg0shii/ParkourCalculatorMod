@@ -7,7 +7,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.potion.Potion;
+import net.minecraft.potion.PotionEffect;
 import net.minecraft.server.integrated.IntegratedServer;
+
+import java.util.UUID;
 
 public final class Forge8PlaybackBridge implements PlaybackBridge {
 
@@ -31,6 +36,13 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
         p.rotationYaw = yaw;
         p.rotationYawHead = yaw;
         p.renderYawOffset = yaw;
+    }
+
+    @Override
+    public void teleportPositionOnly(Vec3dCore pos) {
+        EntityPlayerSP p = Minecraft.getMinecraft().thePlayer;
+        if (p == null) return;
+        p.setPositionAndUpdate(pos.x, pos.y, pos.z);
     }
 
     @Override
@@ -67,6 +79,52 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
                 mc.setIngameFocus();
             }
         }
+    }
+
+    private static final int EFFECT_DURATION_TICKS = 20000;
+
+    @Override
+    public void applyEffects(int speedAmplifier, int jumpBoostAmplifier) {
+        Minecraft mc = Minecraft.getMinecraft();
+        EntityPlayerSP client = mc.thePlayer;
+        if (client == null) return;
+        IntegratedServer server = mc.getIntegratedServer();
+        if (server == null) return;
+        UUID uuid = client.getUniqueID();
+        server.addScheduledTask(() -> {
+            EntityPlayerMP sp = server.getConfigurationManager().getPlayerByUUID(uuid);
+            if (sp == null) return;
+            sp.removePotionEffect(Potion.moveSpeed.id);
+            sp.removePotionEffect(Potion.jump.id);
+            if (speedAmplifier > 0) {
+                sp.addPotionEffect(new PotionEffect(Potion.moveSpeed.id, EFFECT_DURATION_TICKS, speedAmplifier - 1, false, false));
+            }
+            if (jumpBoostAmplifier > 0) {
+                sp.addPotionEffect(new PotionEffect(Potion.jump.id, EFFECT_DURATION_TICKS, jumpBoostAmplifier - 1, false, false));
+            }
+        });
+    }
+
+    @Override
+    public void dumpPlayerState(int tickIndex) {
+        EntityPlayerSP p = Minecraft.getMinecraft().thePlayer;
+        if (p == null) return;
+        PotionEffect spd = p.getActivePotionEffect(Potion.moveSpeed);
+        PotionEffect jmp = p.getActivePotionEffect(Potion.jump);
+        double mvSp = p.getEntityAttribute(net.minecraft.entity.SharedMonsterAttributes.movementSpeed).getAttributeValue();
+        System.out.println("[PC-STATE play] t=" + tickIndex
+                + " pos=" + p.posX + "," + p.posY + "," + p.posZ
+                + " mot=" + p.motionX + "," + p.motionY + "," + p.motionZ
+                + " yaw=" + p.rotationYaw
+                + " onG=" + p.onGround
+                + " spr=" + p.isSprinting()
+                + " sne=" + p.isSneaking()
+                + " colH=" + p.isCollidedHorizontally
+                + " mvF=" + p.moveForward
+                + " mvS=" + p.moveStrafing
+                + " spdAmp=" + (spd == null ? -1 : spd.getAmplifier())
+                + " jmpAmp=" + (jmp == null ? -1 : jmp.getAmplifier())
+                + " mvSpeed=" + mvSp);
     }
 
     private static KeyBinding bindFor(InputRow.Key key) {

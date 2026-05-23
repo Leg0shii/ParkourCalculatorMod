@@ -6,6 +6,8 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
@@ -48,6 +50,17 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
     @Override protected void resetEntity(SimulatorEntity e) { e.resetPlayer(); }
     @Override protected void setInput(SimulatorEntity e, InputRow row) { e.input.setData(row); }
     @Override protected void applyYaw(SimulatorEntity e, float yaw) { e.setYaw(e.getYaw() + yaw); }
+
+    @Override
+    protected void applyTickEffects(SimulatorEntity e, int speedAmplifier, int jumpBoostAmplifier) {
+        e.clearStatusEffects();
+        if (speedAmplifier > 0) {
+            e.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, 2, speedAmplifier - 1));
+        }
+        if (jumpBoostAmplifier > 0) {
+            e.addStatusEffect(new StatusEffectInstance(StatusEffects.JUMP_BOOST, 2, jumpBoostAmplifier - 1));
+        }
+    }
 
     @Override
     protected void tickEntity(SimulatorEntity e) {

@@ -7,7 +7,12 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.MobEffects;
+import net.minecraft.potion.PotionEffect;
 import net.minecraft.server.integrated.IntegratedServer;
+
+import java.util.UUID;
 
 public final class Forge12PlaybackBridge implements PlaybackBridge {
 
@@ -31,6 +36,13 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
         p.rotationYaw = yaw;
         p.rotationYawHead = yaw;
         p.renderYawOffset = yaw;
+    }
+
+    @Override
+    public void teleportPositionOnly(Vec3dCore pos) {
+        EntityPlayerSP p = Minecraft.getMinecraft().player;
+        if (p == null) return;
+        p.setPositionAndUpdate(pos.x, pos.y, pos.z);
     }
 
     @Override
@@ -67,6 +79,30 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
                 mc.setIngameFocus();
             }
         }
+    }
+
+    private static final int EFFECT_DURATION_TICKS = 20000;
+
+    @Override
+    public void applyEffects(int speedAmplifier, int jumpBoostAmplifier) {
+        Minecraft mc = Minecraft.getMinecraft();
+        EntityPlayerSP client = mc.player;
+        if (client == null) return;
+        IntegratedServer server = mc.getIntegratedServer();
+        if (server == null) return;
+        UUID uuid = client.getUniqueID();
+        server.addScheduledTask(() -> {
+            EntityPlayerMP sp = server.getPlayerList().getPlayerByUUID(uuid);
+            if (sp == null) return;
+            sp.removePotionEffect(MobEffects.SPEED);
+            sp.removePotionEffect(MobEffects.JUMP_BOOST);
+            if (speedAmplifier > 0) {
+                sp.addPotionEffect(new PotionEffect(MobEffects.SPEED, EFFECT_DURATION_TICKS, speedAmplifier - 1, false, false));
+            }
+            if (jumpBoostAmplifier > 0) {
+                sp.addPotionEffect(new PotionEffect(MobEffects.JUMP_BOOST, EFFECT_DURATION_TICKS, jumpBoostAmplifier - 1, false, false));
+            }
+        });
     }
 
     private static KeyBinding bindFor(InputRow.Key key) {
