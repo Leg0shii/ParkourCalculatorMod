@@ -66,6 +66,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
                 category
         ));
 
+        application.setModVersion(modVersion());
         application.registerInputOverlay();
         application.registerSettingsOverlay();
         application.registerFileBrowserOverlay();

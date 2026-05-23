@@ -18,7 +18,13 @@ import java.util.function.IntConsumer;
 
 public final class InputOverlay implements RenderInterface {
 
-    private static final String WINDOW_TITLE = "TAS Inputs";
+    private static final String WINDOW_TITLE = "Parkour TAS##parkour-tas";
+    private static final String TITLE_TEXT = "Parkour TAS";
+    private static final float VERSION_PADDING_RIGHT = 8f;
+    // Gap between title text and version label, plus slack for window frame padding on both sides.
+    private static final float TITLE_VERSION_GAP = 48f;
+
+    private final String versionLabel;
 
     private static final String ID_TABLE = "tas-table";
     private static final String ID_CONTEXT_MENU = "context_menu";
@@ -91,7 +97,7 @@ public final class InputOverlay implements RenderInterface {
 
     public InputOverlay(InputData data, Settings settings, SelectionManager selection,
                         IntConsumer onDataChangedAt, Runnable onSetPlayerPosition,
-                        PlaybackController playback, MinecraftAccess mc) {
+                        PlaybackController playback, MinecraftAccess mc, String modVersion) {
         this.data = data;
         this.settings = settings;
         this.selection = selection;
@@ -99,6 +105,7 @@ public final class InputOverlay implements RenderInterface {
         this.onSetPlayerPosition = onSetPlayerPosition;
         this.playback = playback;
         this.mc = mc;
+        this.versionLabel = "v" + modVersion;
     }
 
     private void notifyChange(int dirtyTick) {
@@ -111,7 +118,13 @@ public final class InputOverlay implements RenderInterface {
 
     @Override
     public void render(ImGuiIO io) {
-        if (!ImGui.begin(WINDOW_TITLE, ImGuiWindowFlags.AlwaysAutoResize)) {
+        float minTitleBarWidth = ImGui.calcTextSize(TITLE_TEXT).x
+                + ImGui.calcTextSize(versionLabel).x
+                + TITLE_VERSION_GAP;
+        ImGui.setNextWindowSizeConstraints(minTitleBarWidth, 0, Float.MAX_VALUE, Float.MAX_VALUE);
+        boolean visible = ImGui.begin(WINDOW_TITLE, ImGuiWindowFlags.AlwaysAutoResize);
+        renderVersionInTitleBar();
+        if (!visible) {
             ImGui.end();
             return;
         }
@@ -152,6 +165,17 @@ public final class InputOverlay implements RenderInterface {
         ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.8f, 0.2f, 1.0f);
         ImGui.textWrapped(WARN_MULTIPLAYER);
         ImGui.popStyleColor();
+    }
+
+    private void renderVersionInTitleBar() {
+        ImVec2 textSize = ImGui.calcTextSize(versionLabel);
+        float titleBarH = ImGui.getFrameHeight();
+        ImVec2 winPos = ImGui.getWindowPos();
+        float winW = ImGui.getWindowWidth();
+        float x = winPos.x + winW - textSize.x - VERSION_PADDING_RIGHT;
+        float y = winPos.y + (titleBarH - textSize.y) * 0.5f;
+        int color = ImGui.getColorU32(ImGuiCol.Text);
+        ImGui.getForegroundDrawList().addText(x, y, color, versionLabel);
     }
 
     private int tableFlags() {

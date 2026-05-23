@@ -69,6 +69,7 @@ public class Forge8ParkourCalculator {
 
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
+        application.setModVersion(modVersion());
         application.registerInputOverlay();
         application.registerSettingsOverlay();
         application.registerFileBrowserOverlay();

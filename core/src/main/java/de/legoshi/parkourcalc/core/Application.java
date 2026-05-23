@@ -46,6 +46,7 @@ public final class Application {
 
     private Path settingsPath;
     private boolean startInitialized;
+    private String modVersion = "?";
 
     public Application(Simulator simulator, MinecraftAccess mc) {
         this.mc = mc;
@@ -62,9 +63,13 @@ public final class Application {
         this.playback = new PlaybackController(inputData, runner, settings);
     }
 
+    public void setModVersion(String modVersion) {
+        this.modVersion = modVersion;
+    }
+
     public void registerInputOverlay() {
-        InputOverlay inputOverlay = new InputOverlay(inputData, settings, selection, this::onUserChange, this::setStartToPlayer, playback, mc);
-        overlayManager.register("TAS Inputs", inputOverlay);
+        InputOverlay inputOverlay = new InputOverlay(inputData, settings, selection, this::onUserChange, this::setStartToPlayer, playback, mc, modVersion);
+        overlayManager.register("Parkour TAS", inputOverlay);
     }
 
     public void registerSettingsOverlay() {

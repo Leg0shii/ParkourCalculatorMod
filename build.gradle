@@ -1,15 +1,16 @@
 allprojects {
 	group = project.maven_group
 	version = {
+		def modVersion = project.mod_version.toString().replaceFirst(/\s*#.*$/, '').trim()
 		if (project.hasProperty('releaseVersion')) return project.releaseVersion
 		try {
 			def count = 'git rev-list --count HEAD'.execute(null, rootProject.projectDir).text.trim()
 			def sha   = 'git rev-parse --short=7 HEAD'.execute(null, rootProject.projectDir).text.trim()
 			def dirty = !'git status --porcelain'.execute(null, rootProject.projectDir).text.trim().isEmpty()
-			if (count.isEmpty() || sha.isEmpty()) return project.mod_version
-			return "${project.mod_version}+build.${count}.${sha}${dirty ? '.dirty' : ''}"
+			if (count.isEmpty() || sha.isEmpty()) return modVersion
+			return "${modVersion}+build.${count}.${sha}${dirty ? '.dirty' : ''}"
 		} catch (ignored) {
-			return project.mod_version
+			return modVersion
 		}
 	}()
 }
