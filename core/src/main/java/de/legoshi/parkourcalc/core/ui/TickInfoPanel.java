@@ -7,7 +7,6 @@ import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImGui;
 import imgui.ImGuiIO;
 import imgui.flag.ImGuiTableColumnFlags;
-import imgui.flag.ImGuiTableFlags;
 import imgui.flag.ImGuiWindowFlags;
 
 import java.util.List;
@@ -27,11 +26,15 @@ public final class TickInfoPanel implements RenderInterface {
     private static final String NA = "n/a";
 
     // %12.5f: leading-space padded so JetBrainsMono dot-aligns every numeric cell at the
-    // same column index (1 sign + 5 integer + 1 dot + 5 decimal = 12 chars). Single-value
-    // rows (yaw, speed, angles) share this format so their dot lands on the same X column
-    // as Position.X, Velocity.X, etc.
+    // same column index (1 sign + 5 integer + 1 dot + 5 decimal = 12 chars). Used by
+    // X/Y/Z triplet rows where the dot alignment across rows matters.
     private static final String FMT_NUM = "%12.5f";
     private static final String NUM_SAMPLE = "-99999.99999";
+    // Unpadded format for single-value rows that center across the X+Y+Z span.
+    // Leading-space padding would offset the visible glyph block from the
+    // centering math's geometric center, so single-value rows use the bare
+    // numeric form instead.
+    private static final String FMT_NUM_SINGLE = "%.5f";
 
     private static final String COL_FIELD = "Field";
     private static final String COL_X = "X";
@@ -77,21 +80,36 @@ public final class TickInfoPanel implements RenderInterface {
     }
 
     private void renderTable(int idx, TickState cur, TickState prev, TickState prev2) {
-        // Drop standardTableFlags()' BordersInnerV: the 4-column split is internal scaffolding
-        // for dot alignment, not user-visible structure, so the vertical separators would
-        // imply a grouping that isn't really there.
-        int flags = ImGuiTableFlags.RowBg | ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.ScrollY;
-        if (!ImGui.beginTable(TABLE_ID, 4, flags)) {
+        // beginStandardKeyValueTable drops BordersInnerV: the 4-column split is internal
+        // scaffolding for dot alignment, not user-visible structure, so vertical
+        // separators would imply a grouping that is not there.
+        //
+        // Alignment policy (TickInfoPanel only): label column LEFT for a clean
+        // vertical scan line. Triplet rows (rowTriple, rowXZ) render each value
+        // in its own X / Y / Z column via numCell + textCenter, dot-aligned
+        // across rows via FMT_NUM. Single-value rows (rowNum, rowInt, rowBool,
+        // rowNa) render in the Y (middle) value column only, X and Z empty;
+        // Y's geometric center approximates the X+Y+Z geometric center, so the
+        // value reads as visually associated with the row instead of anchored
+        // to the leftmost column. See the canonical alignment-policy block in
+        // ThemeManager (above textLeft / textCenter / textRight) for the
+        // full per-table convention.
+        if (!ThemeManager.beginStandardKeyValueTable(TABLE_ID, 4, 0, 0f, 0f)) {
             return;
         }
         int fixed = ImGuiTableColumnFlags.WidthFixed;
-        float labelDataW = ImGui.calcTextSize("Acceleration (XZ)").x;
+        // Measure the actual longest label ("Collision angle (deg)") instead of
+        // a shorter sample. The +2*cellPadX brings the dataW into the same
+        // formula tableNumericColumnWidth uses; the leftmost helper then adds
+        // its leading-dummy inset on top.
+        float cellPad = ImGui.getStyle().getCellPadding().x;
+        float labelDataW = ImGui.calcTextSize("Collision angle (deg)").x + 2f * cellPad;
         float numW = ImGui.calcTextSize(NUM_SAMPLE).x;
         ImGui.tableSetupColumn(COL_FIELD, fixed,
                 ThemeManager.tableLeftmostColumnWidth(COL_FIELD, labelDataW));
         ImGui.tableSetupColumn(COL_X, fixed, ThemeManager.tableColumnWidth(COL_X, numW));
         ImGui.tableSetupColumn(COL_Y, fixed, ThemeManager.tableColumnWidth(COL_Y, numW));
-        ImGui.tableSetupColumn(COL_Z, fixed, ThemeManager.tableRightmostColumnWidth(COL_Z, numW));
+        ImGui.tableSetupColumn(COL_Z, fixed, ThemeManager.tableRightmostColumnWidth(COL_Z, numW, ThemeManager.tableScrollbarSlack()));
 
         rowCounter = 0;
 
@@ -178,17 +196,16 @@ public final class TickInfoPanel implements RenderInterface {
                     "1.21.10 only: angle between intended motion and post-collision motion. MC keeps sprint when this is below ~8 deg (0.13962634 rad).");
         }
 
-        ImGui.endTable();
+        ThemeManager.endStandardTable();
     }
 
     private void labelCell(String label, String tooltip) {
         ImGui.tableNextRow();
         ThemeManager.paintTableRowBg(rowCounter++);
         ImGui.tableNextColumn();
-        ThemeManager.emitTableLeftmostCellPad();
-        ImGui.alignTextToFramePadding();
+        ThemeManager.tableLeftmostCellPad();
         ThemeManager.pushTextColor(ThemeManager.textMutedColor());
-        ImGui.text(label);
+        ThemeManager.textLeft(label);
         ThemeManager.popTextColor();
         if (ImGui.isItemHovered()) {
             TooltipUtil.wrappedTooltip(tooltip);
@@ -200,7 +217,7 @@ public final class TickInfoPanel implements RenderInterface {
         numCell(x);
         numCell(y);
         numCell(z);
-        ThemeManager.emitTableRightmostCellTrailingPad();
+        ThemeManager.tableRightmostCellTrailingPad();
     }
 
     private void rowXZ(String label, double x, double z, String tooltip) {
@@ -208,59 +225,61 @@ public final class TickInfoPanel implements RenderInterface {
         numCell(x);
         emptyCell();
         numCell(z);
-        ThemeManager.emitTableRightmostCellTrailingPad();
+        ThemeManager.tableRightmostCellTrailingPad();
     }
 
     private void rowNum(String label, double v, String tooltip) {
         labelCell(label, tooltip);
-        numCell(v);
-        emptyCell();
-        emptyCell();
-        ThemeManager.emitTableRightmostCellTrailingPad();
+        centerSingleValueInMiddleColumn(String.format(Locale.US, FMT_NUM_SINGLE, v));
     }
 
     private void rowInt(String label, int v, String tooltip) {
         labelCell(label, tooltip);
-        ImGui.tableNextColumn();
-        ImGui.alignTextToFramePadding();
-        ImGui.text(Integer.toString(v));
-        emptyCell();
-        emptyCell();
-        ThemeManager.emitTableRightmostCellTrailingPad();
+        centerSingleValueInMiddleColumn(Integer.toString(v));
     }
 
     private void rowBool(String label, boolean v, String tooltip) {
         labelCell(label, tooltip);
-        ImGui.tableNextColumn();
-        ImGui.alignTextToFramePadding();
         int color = v ? ThemeManager.okColor() : ThemeManager.dangerColor();
         ThemeManager.pushTextColor(color);
-        ImGui.text(Boolean.toString(v));
+        centerSingleValueInMiddleColumn(Boolean.toString(v));
         ThemeManager.popTextColor();
-        emptyCell();
-        emptyCell();
-        ThemeManager.emitTableRightmostCellTrailingPad();
     }
 
     private void rowNa(String label, String tooltip) {
         labelCell(label, tooltip);
-        ImGui.tableNextColumn();
-        ImGui.alignTextToFramePadding();
         ThemeManager.pushTextColor(ThemeManager.textDimColor());
-        ImGui.text(NA);
+        centerSingleValueInMiddleColumn(NA);
         ThemeManager.popTextColor();
-        emptyCell();
-        emptyCell();
-        ThemeManager.emitTableRightmostCellTrailingPad();
     }
 
     private static void numCell(double v) {
         ImGui.tableNextColumn();
-        ImGui.alignTextToFramePadding();
-        ImGui.text(String.format(Locale.US, FMT_NUM, v));
+        ThemeManager.textCenter(String.format(Locale.US, FMT_NUM, v));
     }
 
     private static void emptyCell() {
         ImGui.tableNextColumn();
+    }
+
+    // Single-value rows (rowNum / rowInt / rowBool / rowNa) render their value
+    // in the Y column. Y is the middle of three equally-sized value columns, so
+    // centering within Y's own cell puts the value at approximately the X+Y+Z
+    // geometric center, visually associating it with the row instead of
+    // anchoring it to the leftmost column. X and Z are advanced empty so the
+    // row's column iteration completes and the trailing pad lands in Z.
+    //
+    // Earlier iterations tried to span the value across X+Y+Z via drawList or
+    // via setCursorPosX into the Y cell's territory. ImGui's per-cell clip
+    // rect (pushed on every tableNextColumn, independent of BordersInnerV)
+    // strictly clips anything past the current cell's right edge, so those
+    // approaches rendered nothing visible. Rendering inside Y's own clip rect
+    // sidesteps the problem.
+    private void centerSingleValueInMiddleColumn(String text) {
+        ImGui.tableNextColumn();              // -> X, empty
+        ImGui.tableNextColumn();              // -> Y, where the value renders
+        ThemeManager.textCenter(text);
+        ImGui.tableNextColumn();              // -> Z, empty
+        ThemeManager.tableRightmostCellTrailingPad();
     }
 }

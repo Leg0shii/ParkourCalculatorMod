@@ -3,8 +3,10 @@ package de.legoshi.parkourcalc.core.ui;
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
 import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
+import de.legoshi.parkourcalc.core.ui.theme.ThemeManager.HAlign;
 import imgui.ImGui;
 import imgui.ImGuiIO;
+import imgui.flag.ImGuiTableColumnFlags;
 import imgui.flag.ImGuiTableRowFlags;
 import imgui.flag.ImGuiWindowFlags;
 
@@ -33,68 +35,83 @@ public final class PerfOverlay implements RenderInterface {
         }
         ImGui.separator();
 
-        if (ImGui.beginTable("perf-table", 5, ThemeManager.standardTableFlags())) {
-            int fixed = imgui.flag.ImGuiTableColumnFlags.WidthFixed;
-            // Data-width estimates picked to cover typical Perf samples; the
-            // helper takes max(boldHeader, data) so headers never clip even
-            // when data is tiny ("0" / "1" in n/frame).
-            ImGui.tableSetupColumn("Section", fixed,
-                    ThemeManager.tableLeftmostColumnWidth("Section", 200));
-            ImGui.tableSetupColumn("last us", fixed,
-                    ThemeManager.tableColumnWidth("last us", 80));
-            ImGui.tableSetupColumn("ema us", fixed,
-                    ThemeManager.tableColumnWidth("ema us", 80));
-            ImGui.tableSetupColumn("max us", fixed,
-                    ThemeManager.tableColumnWidth("max us", 80));
-            ImGui.tableSetupColumn("n/frame", fixed,
-                    ThemeManager.tableRightmostColumnWidth("n/frame", 50));
-            renderHeader("Section", "last us", "ema us", "max us", "n/frame");
+        // Measure max observed widths per frame so the columns grow with the data
+        // and never clip. Hardcoded data widths under-allocated as soon as any
+        // section's microsecond value reached 5 digits.
+        List<Perf.Sample> rows = Perf.snapshot();
+        float maxSectionW = 0f, maxLastW = 0f, maxEmaW = 0f, maxMaxW = 0f, maxNW = 0f;
+        for (Perf.Sample s : rows) {
+            maxSectionW = Math.max(maxSectionW, ImGui.calcTextSize(s.name).x);
+            maxLastW = Math.max(maxLastW, ImGui.calcTextSize(usFmt(s.lastNs)).x);
+            maxEmaW = Math.max(maxEmaW, ImGui.calcTextSize(usFmt(s.emaNs)).x);
+            maxMaxW = Math.max(maxMaxW, ImGui.calcTextSize(usFmt(s.maxNs)).x);
+            maxNW = Math.max(maxNW, ImGui.calcTextSize(Integer.toString(s.callsLastFrame)).x);
+        }
 
-            List<Perf.Sample> rows = Perf.snapshot();
+        if (ThemeManager.beginStandardTable("perf-table", 5)) {
+            int fixed = ImGuiTableColumnFlags.WidthFixed;
+            // Section: same 2*cellPadX padding as the numeric helper, plus the
+            // leftmost column's leading-dummy reservation (scrollbarSlack - cellPad)
+            // so the column allocation matches what tableLeftmostCellPad consumes.
+            float cellPad = ImGui.getStyle().getCellPadding().x;
+            float leadingInset = Math.max(0f, ThemeManager.tableScrollbarSlack() - cellPad);
+            ImGui.tableSetupColumn("Section", fixed,
+                    ThemeManager.tableNumericColumnWidth("Section", maxSectionW) + leadingInset);
+            ImGui.tableSetupColumn("last us", fixed,
+                    ThemeManager.tableNumericColumnWidth("last us", maxLastW));
+            ImGui.tableSetupColumn("ema us", fixed,
+                    ThemeManager.tableNumericColumnWidth("ema us", maxEmaW));
+            ImGui.tableSetupColumn("max us", fixed,
+                    ThemeManager.tableNumericColumnWidth("max us", maxMaxW));
+            ImGui.tableSetupColumn("n/frame", fixed,
+                    ThemeManager.tableRightmostColumnWidth("n/frame", maxNW, ThemeManager.tableScrollbarSlack()));
+            renderHeader();
+
             int rowIndex = 0;
             for (Perf.Sample s : rows) {
                 ImGui.tableNextRow();
                 ThemeManager.paintTableRowBg(rowIndex++);
-                firstCell(s.name);
-                cell(usFmt(s.lastNs));
-                cell(usFmt(s.emaNs));
-                cell(usFmt(s.maxNs));
-                lastCell(Integer.toString(s.callsLastFrame));
+
+                ImGui.tableNextColumn();
+                ThemeManager.tableLeftmostCellPad();
+                ThemeManager.textLeft(s.name);
+
+                ImGui.tableNextColumn();
+                ThemeManager.textRight(usFmt(s.lastNs));
+
+                ImGui.tableNextColumn();
+                ThemeManager.textRight(usFmt(s.emaNs));
+
+                ImGui.tableNextColumn();
+                ThemeManager.textRight(usFmt(s.maxNs));
+
+                ImGui.tableNextColumn();
+                ThemeManager.textRight(Integer.toString(s.callsLastFrame));
+                ThemeManager.tableRightmostCellTrailingPad();
             }
-            ImGui.endTable();
+            ThemeManager.endStandardTable();
         }
 
         ImGui.end();
     }
 
-    private static void renderHeader(String... labels) {
+    private static void renderHeader() {
         ImGui.tableNextRow(ImGuiTableRowFlags.Headers);
         ThemeManager.paintTableHeader();
-        int last = labels.length - 1;
-        for (int i = 0; i < labels.length; i++) {
-            ImGui.tableSetColumnIndex(i);
-            if (i == 0) ThemeManager.emitTableLeftmostCellPad();
-            ThemeManager.tableHeader(labels[i]);
-            if (i == last) ThemeManager.emitTableRightmostCellTrailingPad();
-        }
-    }
 
-    private static void firstCell(String text) {
-        ImGui.tableNextColumn();
-        ThemeManager.emitTableLeftmostCellPad();
-        ImGui.alignTextToFramePadding();
-        ImGui.text(text);
-    }
+        ImGui.tableSetColumnIndex(0);
+        ThemeManager.tableLeftmostCellPad();
+        ThemeManager.tableHeader("Section", HAlign.LEFT);
 
-    private static void cell(String text) {
-        ImGui.tableNextColumn();
-        ImGui.alignTextToFramePadding();
-        ImGui.text(text);
-    }
-
-    private static void lastCell(String text) {
-        cell(text);
-        ThemeManager.emitTableRightmostCellTrailingPad();
+        ImGui.tableSetColumnIndex(1);
+        ThemeManager.tableHeaderRight("last us");
+        ImGui.tableSetColumnIndex(2);
+        ThemeManager.tableHeaderRight("ema us");
+        ImGui.tableSetColumnIndex(3);
+        ThemeManager.tableHeaderRight("max us");
+        ImGui.tableSetColumnIndex(4);
+        ThemeManager.tableHeaderRight("n/frame");
+        ThemeManager.tableRightmostCellTrailingPad();
     }
 
     private static String usFmt(long ns) {

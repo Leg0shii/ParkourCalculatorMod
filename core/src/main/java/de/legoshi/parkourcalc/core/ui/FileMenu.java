@@ -10,7 +10,6 @@ import de.legoshi.parkourcalc.core.ui.theme.Fonts;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import imgui.ImGui;
 import imgui.ImVec2;
-import imgui.flag.ImGuiCol;
 import imgui.flag.ImGuiKey;
 import imgui.flag.ImGuiSelectableFlags;
 import imgui.flag.ImGuiStyleVar;
@@ -491,11 +490,11 @@ public final class FileMenu {
             maxWorldW = Math.max(maxWorldW, ImGui.calcTextSize(info.worldLabel != null ? info.worldLabel : "?").x);
         }
 
-        // Mirror the Tick Input table: suppress the default selectable Header
-        // tint (= PANEL, indistinguishable from the column-header bg) so the
-        // SELECTED magenta painted as a row tint is the only visual signal.
-        ThemeManager.pushTransparentHeader();
-        if (ImGui.beginTable("##open_table", 4, ThemeManager.standardTableFlags(), 0, tableH)) {
+        // beginStandardClickableRowsTable handles the selection-chrome push
+        // internally (Header transparent, HeaderHovered = TABLE_ROW_HOVER) so
+        // each row lifts on mouse-over while the SELECTED mauve painted as a
+        // row tint stays the dominant visual.
+        if (ThemeManager.beginStandardClickableRowsTable("##open_table", 4, 0, 0f, tableH)) {
             ImGui.tableSetupScrollFreeze(0, 1);
             ImGui.tableSetupColumn(COL_FILENAME, ImGuiTableColumnFlags.WidthFixed,
                     ThemeManager.tableLeftmostColumnWidth(COL_FILENAME, maxFilenameW));
@@ -504,7 +503,7 @@ public final class FileMenu {
             ImGui.tableSetupColumn(COL_MC, ImGuiTableColumnFlags.WidthFixed,
                     ThemeManager.tableColumnWidth(COL_MC, maxMcW));
             ImGui.tableSetupColumn(COL_WORLD, ImGuiTableColumnFlags.WidthFixed,
-                    ThemeManager.tableRightmostColumnWidth(COL_WORLD, maxWorldW));
+                    ThemeManager.tableRightmostColumnWidth(COL_WORLD, maxWorldW, ThemeManager.tableScrollbarSlack()));
             renderOpenTableHeader();
 
             float rowH = ImGui.getFrameHeight() + ImGui.getStyle().getCellPadding().y * 2f;
@@ -514,10 +513,10 @@ public final class FileMenu {
                 ThemeManager.paintTableRowBg(rowIndex++);
                 boolean selected = info.name.equals(openSelected);
                 if (selected) {
-                    ThemeManager.paintTableRowTint(ThemeManager.selectedTintColor(0.45f));
+                    ThemeManager.paintTableRowTint(ThemeManager.selectedTintColor(0.75f));
                 }
                 ImGui.tableSetColumnIndex(0);
-                ThemeManager.emitTableLeftmostCellPad();
+                ThemeManager.tableLeftmostCellPad();
                 ImVec2 cellOrigin = ImGui.getCursorScreenPos();
                 ImGui.alignTextToFramePadding();
                 int selFlags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
@@ -529,7 +528,7 @@ public final class FileMenu {
                 // sits on the same baseline as date/MC/world text in this row.
                 float labelY = cellOrigin.y + ImGui.getStyle().getFramePadding().y;
                 ImGui.getWindowDrawList().addText(cellOrigin.x, labelY,
-                        ImGui.getColorU32(ImGuiCol.Text), info.name);
+                        ThemeManager.tableCellText(selected), info.name);
 
                 ImGui.tableSetColumnIndex(1);
                 ImGui.alignTextToFramePadding();
@@ -540,11 +539,10 @@ public final class FileMenu {
                 ImGui.tableSetColumnIndex(3);
                 ImGui.alignTextToFramePadding();
                 ImGui.text(info.worldLabel != null ? info.worldLabel : "?");
-                ThemeManager.emitTableRightmostCellTrailingPad();
+                ThemeManager.tableRightmostCellTrailingPad();
             }
-            ImGui.endTable();
+            ThemeManager.endStandardTable();
         }
-        ThemeManager.popTransparentHeader();
 
         if (doubleClickedToOpen != null) {
             String name = doubleClickedToOpen;
@@ -644,7 +642,7 @@ public final class FileMenu {
         ImGui.tableNextRow(ImGuiTableRowFlags.Headers);
         ThemeManager.paintTableHeader();
         ImGui.tableSetColumnIndex(0);
-        ThemeManager.emitTableLeftmostCellPad();
+        ThemeManager.tableLeftmostCellPad();
         ThemeManager.tableHeader(COL_FILENAME);
         ImGui.tableSetColumnIndex(1);
         ThemeManager.tableHeader(COL_DATE);
@@ -652,7 +650,7 @@ public final class FileMenu {
         ThemeManager.tableHeader(COL_MC);
         ImGui.tableSetColumnIndex(3);
         ThemeManager.tableHeader(COL_WORLD);
-        ThemeManager.emitTableRightmostCellTrailingPad();
+        ThemeManager.tableRightmostCellTrailingPad();
     }
 
     private List<SaveInfo> sortedFiltered() {

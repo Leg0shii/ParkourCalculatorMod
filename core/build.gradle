@@ -30,3 +30,68 @@ dependencies {
 	// in 2.2.4 (no JsonParser.parseReader, no JsonArray.add(Number) sugar).
 	compileOnly 'com.google.code.gson:gson:2.8.0'
 }
+
+// Enforce the table-styling consolidation rules established in the Phase 1-5
+// refactor. Three checks, each a simple regex over the ImGui rendering tree.
+// See CONTRIBUTING.md "Table styling" for the contract; this task is the gate.
+tasks.register('tableStyleCheck') {
+	group = 'verification'
+	description = 'Reject direct ImGui table styling outside ThemeManager.'
+
+	def renderingRoot = file('src/main/java/de/legoshi/parkourcalc/core/ui')
+	def themeManager = new File(renderingRoot, 'theme/ThemeManager.java').canonicalPath
+	def settingsModal = new File(renderingRoot, 'SettingsModal.java').canonicalPath
+	def themeDir = new File(renderingRoot, 'theme').canonicalPath
+
+	// Configuration-cache friendly: declare inputs explicitly.
+	inputs.dir(renderingRoot).withPropertyName('renderingTree').withPathSensitivity(PathSensitivity.RELATIVE)
+
+	doLast {
+		def violations = []
+
+		// Patterns. The pushStyleColor regex tolerates whitespace and matches
+		// either single-arg packed-int form or the multi-arg float form, since
+		// both can be used to push the slot. The beginTable regex matches the
+		// ImGui.beginTable call regardless of arity. The hex regex catches the
+		// 8-digit RGBA / ARGB shape that color constants tend to take.
+		def pushPattern = ~/pushStyleColor\s*\(\s*ImGuiCol\.(TableHeaderBg|TableBorderStrong|TableBorderLight|TableRowBg|TableRowBgAlt)\b/
+		def beginTablePattern = ~/ImGui\.beginTable\s*\(/
+		def hexPattern = ~/\b0x[0-9a-fA-F]{8}\b/
+		def imVec4Pattern = ~/new\s+ImVec4\s*\(\s*-?\d+(\.\d+)?[fF]?\s*,\s*-?\d+(\.\d+)?[fF]?\s*,\s*-?\d+(\.\d+)?[fF]?\s*,\s*-?\d+(\.\d+)?[fF]?\s*\)/
+
+		renderingRoot.eachFileRecurse { f ->
+			if (!f.name.endsWith('.java')) return
+			def canonical = f.canonicalPath
+			def isThemeManager = canonical == themeManager
+			def isSettingsModal = canonical == settingsModal
+			def isInThemeDir = canonical.startsWith(themeDir + File.separator) || canonical == themeManager
+			def relative = renderingRoot.toPath().relativize(f.toPath()).toString().replace('\\', '/')
+
+			f.eachLine('UTF-8') { line, lineNum ->
+				if (!isThemeManager && (line =~ pushPattern)) {
+					violations << "[CHECK 1] ui/${relative}:${lineNum}  table-related pushStyleColor outside ThemeManager"
+				}
+				if (!isThemeManager && !isSettingsModal && (line =~ beginTablePattern)) {
+					violations << "[CHECK 2] ui/${relative}:${lineNum}  direct ImGui.beginTable; use ThemeManager.beginStandard*Table"
+				}
+				if (!isInThemeDir) {
+					if (line =~ hexPattern) {
+						violations << "[CHECK 3] ui/${relative}:${lineNum}  8-digit hex color literal in rendering code; define the color in ThemeManager"
+					}
+					if (line =~ imVec4Pattern) {
+						violations << "[CHECK 3] ui/${relative}:${lineNum}  numeric ImVec4 constructor in rendering code; define the color in ThemeManager"
+					}
+				}
+			}
+		}
+
+		if (!violations.isEmpty()) {
+			def msg = new StringBuilder('Table-styling rule violations:\n')
+			violations.each { msg.append('  ').append(it).append('\n') }
+			msg.append('\nSee CONTRIBUTING.md "Table styling" for the full contract.')
+			throw new GradleException(msg.toString())
+		}
+	}
+}
+
+tasks.named('check') { dependsOn 'tableStyleCheck' }
