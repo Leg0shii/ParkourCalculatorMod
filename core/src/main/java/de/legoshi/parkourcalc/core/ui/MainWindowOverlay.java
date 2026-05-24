@@ -21,7 +21,15 @@ public final class MainWindowOverlay implements RenderInterface {
 
     private static final String WINDOW_ID = "##main_window";
     private static final String APP_NAME = "Parkour Calculator";
-    private static final int WINDOW_FLAGS = ImGuiWindowFlags.MenuBar;
+    // NoScrollbar/NoScrollWithMouse: the input table has its own ScrollY for row
+    // overflow, and the rest of the body (status strip, menubar, empty state) is
+    // always shorter than any usable window height. The parent window never has a
+    // legitimate reason to scroll. Without these flags, sub-pixel rounding around
+    // the status-strip fade-out pushes CursorMaxPos a px or two past the inner
+    // rect for a few frames and ImGui flashes a 1-2 px scrollbar at the transition.
+    private static final int WINDOW_FLAGS = ImGuiWindowFlags.MenuBar
+            | ImGuiWindowFlags.NoScrollbar
+            | ImGuiWindowFlags.NoScrollWithMouse;
 
     private static final String GITHUB_REPO = "https://github.com/Leg0shii/ParkourCalculatorMod";
     private static final String GITHUB_ISSUES = "https://github.com/Leg0shii/ParkourCalculatorMod/issues/new";
@@ -67,6 +75,7 @@ public final class MainWindowOverlay implements RenderInterface {
         this.systemBridge = systemBridge;
         this.saveStoreSupplier = saveStoreSupplier;
         this.modVersion = modVersion;
+        inputOverlay.setFooterHeightProvider(() -> fileMenu.statusStripHeight());
     }
 
     @Override
@@ -84,7 +93,6 @@ public final class MainWindowOverlay implements RenderInterface {
         }
 
         renderMenuBar();
-        ImGui.separator();
         renderBody();
         fileMenu.renderStatusLine();
         fileMenu.renderPopups();

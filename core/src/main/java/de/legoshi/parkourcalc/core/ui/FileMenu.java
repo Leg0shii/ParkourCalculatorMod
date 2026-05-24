@@ -6,6 +6,7 @@ import de.legoshi.parkourcalc.core.save.Result;
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveInfo;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
+import de.legoshi.parkourcalc.core.ui.theme.Fonts;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import imgui.ImGui;
 import imgui.flag.ImGuiKey;
@@ -34,7 +35,8 @@ import java.util.function.Consumer;
 public final class FileMenu {
 
     private static final int MAX_RECENT = 5;
-    private static final long STATUS_LIFETIME_MS = 4000L;
+    private static final long STATUS_VISIBLE_MS = 4000L;
+    private static final long STATUS_FADE_MS = 300L;
 
     private static final String POPUP_NAME_NEW = "New TAS##name_modal_new";
     private static final String POPUP_NAME_SAVEAS = "Save TAS As##name_modal_saveas";
@@ -86,7 +88,8 @@ public final class FileMenu {
 
     private String statusMessage;
     private boolean statusIsError;
-    private long statusUntilMs;
+    private long statusActiveUntilMs;
+    private long statusFadeUntilMs;
 
     public FileMenu(SaveController controller, FilePickerPort filePicker,
                     Settings settings, Runnable onSettingsChanged) {
@@ -142,65 +145,75 @@ public final class FileMenu {
     }
 
     public void renderStatusLine() {
-        // Child height = FrameHeight (NOT WithSpacing) because ImGui auto-inserts
-        // ItemSpacing.y between the table above and this child; the parent's
-        // footer reservation of FrameHeightWithSpacing covers spacing + frame
-        // once. WithSpacing here would double-count and overflow the parent.
-        // Darker bg marks the output zone without a frame border (which read as
-        // "input you can type into"). Zero vertical WindowPadding so the text
-        // fits inside one frame height.
+        if (statusMessage == null) return;
+        long now = System.currentTimeMillis();
+        if (now >= statusFadeUntilMs) {
+            statusMessage = null;
+            return;
+        }
+        float opacity = (now <= statusActiveUntilMs) ? 1f
+                : 1f - (float)(now - statusActiveUntilMs) / (float) STATUS_FADE_MS;
+        if (opacity <= 0f) {
+            statusMessage = null;
+            return;
+        }
+        float reservedH = ImGui.getFrameHeightWithSpacing() * opacity;
+        float childH = reservedH - ImGui.getStyle().getItemSpacing().y;
+        // Below ~1px the strip would draw a sub-pixel sliver while
+        // statusStripHeight already returned 0, leaving the table's reservation
+        // and the strip's draw out of sync. Bail in lockstep.
+        if (childH < 1f) return;
+
+        ImGui.pushStyleVar(ImGuiStyleVar.Alpha, opacity);
         ThemeManager.pushStatusAreaChildBg();
         ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, 8f, 0f);
-        ImGui.beginChild("##status", 0f, ImGui.getFrameHeight(), false, ImGuiWindowFlags.NoScrollbar);
-        if (statusMessage != null && System.currentTimeMillis() <= statusUntilMs) {
-            int color = statusIsError ? ThemeManager.dangerColor() : ThemeManager.okColor();
-            ThemeManager.pushTextColor(color);
-            ImGui.alignTextToFramePadding();
-            ImGui.text(statusMessage);
-            ThemeManager.popTextColor();
-        } else {
-            statusMessage = null;
-        }
+        ImGui.beginChild("##status", 0f, childH, false, ImGuiWindowFlags.NoScrollbar);
+        int color = statusIsError ? ThemeManager.dangerColor() : ThemeManager.okColor();
+        ThemeManager.pushTextColor(color);
+        ImGui.alignTextToFramePadding();
+        ImGui.text(statusMessage);
+        ThemeManager.popTextColor();
         ImGui.endChild();
         ImGui.popStyleVar();
         ThemeManager.popStatusAreaChildBg();
+        ImGui.popStyleVar();
     }
 
     public void renderEmptyStateCta() {
-        float avail = ImGui.getContentRegionAvail().y;
-        if (avail > 80) ImGui.dummy(0, Math.min(40, avail * 0.15f));
-
-        centerText("Parkour Calculator", 1.4f);
-        ImGui.dummy(0, 16);
-
-        float btnW = 280f;
-        if (centerButton("+ New TAS (Ctrl+N)", btnW)) onNewTas();
-        ImGui.dummy(0, 6);
-        if (centerButton("Open... (Ctrl+O)", btnW)) onOpen();
-
-        ImGui.dummy(0, 20);
-
         String[] recent = settings.recentFiles;
-        if (recent != null && recent.length > 0) {
-            indent(btnW);
-            ImGui.text("Open Recent:");
-            for (String name : recent) {
-                indent(btnW);
-                if (ImGui.selectable("  " + name + "##cta_" + name)) onLoad(name);
-            }
-            ImGui.dummy(0, 16);
-        }
+        boolean hasRecent = recent != null && recent.length > 0;
+        final int muted = ThemeManager.textMutedColor();
 
-        renderWrappedTip(btnW, "Create a new TAS or open an existing one to start editing rows.");
-        renderWrappedTip(btnW, "TAS files are loaded manually; they don't reload when you rejoin a world.");
-    }
+        ImGui.dummy(0f, 16f);
 
-    private static void renderWrappedTip(float width, String text) {
-        indent(width);
-        float startX = ImGui.getCursorPosX();
-        ImGui.pushTextWrapPos(startX + width);
-        ImGui.textDisabled(text);
+        Fonts.pushBold();
+        ImGui.text("No TAS file loaded");
+        Fonts.popBold();
+        ImGui.dummy(0f, 4f);
+
+        ThemeManager.pushTextColor(muted);
+        ImGui.pushTextWrapPos(ImGui.getCursorPosX() + ImGui.getContentRegionAvail().x);
+        ImGui.textWrapped("Create a new TAS or open an existing one to start editing tick data.");
         ImGui.popTextWrapPos();
+        ThemeManager.popTextColor();
+
+        ImGui.dummy(0f, 20f);
+
+        if (Controls.primaryButton("+ New TAS")) onNewTas();
+        ImGui.sameLine();
+        if (Controls.secondaryButton("Open...")) onOpen();
+
+        ImGui.dummy(0f, 32f);
+
+        if (hasRecent) {
+            ImGui.text("Recent");
+            ImGui.dummy(0f, 8f);
+            ThemeManager.pushTextColor(ThemeManager.accentColor());
+            for (String name : recent) {
+                if (ImGui.selectable(name + "##cta_rec_" + name, false)) onLoad(name);
+            }
+            ThemeManager.popTextColor();
+        }
     }
 
     private void onNewTas() {
@@ -360,7 +373,25 @@ public final class FileMenu {
     private void setStatus(String message, boolean error) {
         this.statusMessage = message;
         this.statusIsError = error;
-        this.statusUntilMs = System.currentTimeMillis() + STATUS_LIFETIME_MS;
+        long now = System.currentTimeMillis();
+        this.statusActiveUntilMs = now + STATUS_VISIBLE_MS;
+        this.statusFadeUntilMs = this.statusActiveUntilMs + STATUS_FADE_MS;
+    }
+
+    /** Height the status strip will occupy this frame. 0 when no message, full
+     *  when shown, partial during fade-out. InputOverlay reserves this so the
+     *  tick table reclaims the vertical space smoothly as the message fades. */
+    public float statusStripHeight() {
+        if (statusMessage == null) return 0f;
+        long now = System.currentTimeMillis();
+        if (now >= statusFadeUntilMs) return 0f;
+        float opacity = (now <= statusActiveUntilMs) ? 1f
+                : 1f - (float)(now - statusActiveUntilMs) / (float) STATUS_FADE_MS;
+        float reservedH = ImGui.getFrameHeightWithSpacing() * Math.max(0f, opacity);
+        // Mirror renderStatusLine's bail so the reservation never undersizes the
+        // actual child + spacing the strip will draw.
+        if (reservedH - ImGui.getStyle().getItemSpacing().y < 1f) return 0f;
+        return reservedH;
     }
 
     private void renderNameModal() {
@@ -609,21 +640,4 @@ public final class FileMenu {
         return out;
     }
 
-    private static void centerText(String text, float scale) {
-        float w = ImGui.calcTextSize(text).x * scale;
-        float avail = ImGui.getContentRegionAvail().x;
-        if (avail > w) ImGui.setCursorPosX(ImGui.getCursorPosX() + (avail - w) * 0.5f);
-        ImGui.text(text);
-    }
-
-    private static boolean centerButton(String label, float width) {
-        float avail = ImGui.getContentRegionAvail().x;
-        if (avail > width) ImGui.setCursorPosX(ImGui.getCursorPosX() + (avail - width) * 0.5f);
-        return ImGui.button(label, width, 0);
-    }
-
-    private static void indent(float width) {
-        float avail = ImGui.getContentRegionAvail().x;
-        if (avail > width) ImGui.setCursorPosX(ImGui.getCursorPosX() + (avail - width) * 0.5f);
-    }
 }

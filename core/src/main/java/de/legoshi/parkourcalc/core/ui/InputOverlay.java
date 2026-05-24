@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.function.IntConsumer;
+import java.util.function.Supplier;
 
 public final class InputOverlay {
 
@@ -110,6 +111,12 @@ public final class InputOverlay {
 
     private int draggingRowIndex = -1;
 
+    private Supplier<Float> footerHeightProvider = () -> 0f;
+
+    public void setFooterHeightProvider(Supplier<Float> provider) {
+        this.footerHeightProvider = provider;
+    }
+
     public InputOverlay(InputData data, Settings settings, SelectionManager selection,
                         IntConsumer onDataChangedAt, Runnable onSetPlayerPosition,
                         PlaybackController playback, MinecraftAccess mc) {
@@ -190,9 +197,9 @@ public final class InputOverlay {
         }
         int columnCount = BASE_COLUMN_COUNT + (potionColumns ? POTION_COLUMN_COUNT : 0);
 
-        // Reserve one frame row at the bottom for FileMenu.renderStatusLine so the
-        // table doesn't reflow when a status message appears or expires.
-        float footerH = ImGui.getFrameHeightWithSpacing();
+        // Reserve only the status strip's *current* height so the table reclaims
+        // space when no message is active and animates back as a message fades out.
+        float footerH = footerHeightProvider.get();
         float tableH = Math.max(TABLE_MIN_HEIGHT, ImGui.getContentRegionAvail().y - footerH);
         if (ImGui.beginTable(ID_TABLE, columnCount, ThemeManager.standardTableFlags(), 0, tableH)) {
             setupColumns(potionColumns);
