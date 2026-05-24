@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.2.0...v1.3.0) (2026-05-24)
+
+
+### Features
+
+* add row tint ([#80](https://github.com/Leg0shii/ParkourCalculatorMod/issues/80)) ([633dcd5](https://github.com/Leg0shii/ParkourCalculatorMod/commit/633dcd57a9cf867833865ef0e369a3e2953ed795)), closes [#55](https://github.com/Leg0shii/ParkourCalculatorMod/issues/55)
+* Features/UI overhaul ([#79](https://github.com/Leg0shii/ParkourCalculatorMod/issues/79)) ([0a6a369](https://github.com/Leg0shii/ParkourCalculatorMod/commit/0a6a369a4f486ebc5c027b4de29575647bfdc562))
+
+
+### Bug Fixes
+
+* mouse button clickable when ui open ([#81](https://github.com/Leg0shii/ParkourCalculatorMod/issues/81)) ([c750ce2](https://github.com/Leg0shii/ParkourCalculatorMod/commit/c750ce22b78b43430a577ac21762425cd4d049d4)), closes [#74](https://github.com/Leg0shii/ParkourCalculatorMod/issues/74)
+* overlay and box-render lag at high tick counts ([#76](https://github.com/Leg0shii/ParkourCalculatorMod/issues/76)) ([98a2405](https://github.com/Leg0shii/ParkourCalculatorMod/commit/98a24051fa886cb49756f4478f705f6eae6d17b2)), closes [#75](https://github.com/Leg0shii/ParkourCalculatorMod/issues/75)
+
 ## [1.2.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.1.0...v1.2.0) (2026-05-23)
 
 
