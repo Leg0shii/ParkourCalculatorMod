@@ -385,7 +385,7 @@ public final class InputOverlay {
         if (selection.isSelected(rowIndex)) {
             tint = ThemeManager.selectedTintColor(0.45f);
         } else if (draggingRowIndex == rowIndex) {
-            tint = ThemeManager.accentDimColor();
+            tint = ThemeManager.selectedTintColor(0.45f);
         } else if (playback != null && playback.currentTick() == rowIndex) {
             tint = ThemeManager.warningTintColor(0.25f);
         }
@@ -417,11 +417,15 @@ public final class InputOverlay {
             float rowMidY = (rowMin.y + rowMax.y) / 2;
             boolean insertAbove = mouseY < rowMidY;
 
-            state.dropLineY = insertAbove ? rowMin.y : rowMax.y;
+            // rowMin/rowMax track the Selectable rect, inset from the actual row
+            // boundary by cellPadding.y; shift outward so the line lands in the
+            // middle of the gap between cells, not on the tile edge.
+            float gapInset = ImGui.getStyle().getCellPadding().y;
+            state.dropLineY = insertAbove ? rowMin.y - gapInset : rowMax.y + gapInset;
             state.rowMinX = rowMin.x;
             state.rowMaxX = rowMax.x;
 
-            byte[] payload = ImGui.acceptDragDropPayload(DRAG_DROP_TYPE);
+            byte[] payload = ImGui.acceptDragDropPayload(DRAG_DROP_TYPE, ImGuiDragDropFlags.AcceptNoDrawDefaultRect);
             if (payload != null && payload.length > 0) {
                 state.moveFrom = payload[0] & 0xFF;
                 state.moveTo = insertAbove ? index : index + 1;
