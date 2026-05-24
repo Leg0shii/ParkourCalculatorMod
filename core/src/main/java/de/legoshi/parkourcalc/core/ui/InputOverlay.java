@@ -550,6 +550,7 @@ public final class InputOverlay {
     private void renderClearConfirmPopup() {
         if (!ImGui.beginPopupModal(POPUP_CLEAR_CONFIRM, ImGuiWindowFlags.AlwaysAutoResize)) return;
         ImGui.text(String.format(CLEAR_CONFIRM_FMT, data.size()));
+        ThemeManager.sectionSpacing();
         ImGui.separator();
         if (Controls.dangerButton(BTN_CLEAR_ALL)) {
             clearAllRows();

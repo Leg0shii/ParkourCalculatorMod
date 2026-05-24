@@ -243,6 +243,13 @@ public final class ThemeManager {
         ImGui.text(label);
     }
 
+    /** One vertical gap between logical sections inside a pane or modal. Use this
+     *  between groups of related widgets (e.g. input row -> info text -> button row)
+     *  so every popup gets consistent breathing room. Retune in one place. */
+    public static void sectionSpacing() {
+        ImGui.spacing();
+    }
+
     /** Render a selectable whose visible label is drawn centered within the cell.
      *  Pass {@code idSuffix} for the ImGui ID (no leading "##"); pass {@code label}
      *  separately as the text to display. SelectableTextAlign would have done this

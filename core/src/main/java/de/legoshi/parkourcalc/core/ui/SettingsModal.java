@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.core.ui;
 
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
+import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImGui;
 import imgui.flag.ImGuiColorEditFlags;
@@ -130,7 +131,7 @@ public final class SettingsModal {
             ImGui.endTable();
         }
 
-        ImGui.spacing();
+        ThemeManager.sectionSpacing();
         sectionHeader("Editor table");
         if (beginLayoutTable()) {
             checkboxRow("Show potion effect columns", "##show_potion", settings.showPotionColumns, TT_POTION_COLS,
@@ -178,14 +179,14 @@ public final class SettingsModal {
         renderColor("tick box wall", settings.tickWall, flags);
         renderColor("tick box soft collision", settings.tickSoftCollision, flags);
 
-        ImGui.spacing();
+        ThemeManager.sectionSpacing();
         sectionHeader("Path and gizmos");
         renderColor("subtick path", settings.subtickPath, flags);
         renderColor("yaw arrows", settings.yawArrow, flags);
         renderColor("yaw gizmo circle", settings.yawGizmoCircle, flags);
         renderColor("yaw gizmo direction", settings.yawGizmoDirection, flags);
 
-        ImGui.spacing();
+        ThemeManager.sectionSpacing();
         sectionHeader("Hitbox");
         renderColor("hitbox default", settings.hitboxDefault, flags);
         renderColor("hitbox selected", settings.hitboxSelected, flags);

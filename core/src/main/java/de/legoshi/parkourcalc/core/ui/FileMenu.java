@@ -8,7 +8,6 @@ import de.legoshi.parkourcalc.core.save.SaveInfo;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import imgui.ImGui;
-import imgui.flag.ImGuiInputTextFlags;
 import imgui.flag.ImGuiKey;
 import imgui.flag.ImGuiSelectableFlags;
 import imgui.flag.ImGuiStyleVar;
@@ -72,6 +71,7 @@ public final class FileMenu {
 
     private String pendingNamePopupId;
     private String activeNamePopupId;
+    private boolean nameModalJustOpened;
     private Consumer<String> nameModalConfirm;
     private String nameModalError;
     private String lastNameInputSeen = "";
@@ -368,6 +368,7 @@ public final class FileMenu {
             ImGui.openPopup(pendingNamePopupId);
             activeNamePopupId = pendingNamePopupId;
             pendingNamePopupId = null;
+            nameModalJustOpened = true;
         }
         if (activeNamePopupId == null) return;
         if (!ImGui.beginPopupModal(activeNamePopupId, ImGuiWindowFlags.AlwaysAutoResize)) {
@@ -375,8 +376,15 @@ public final class FileMenu {
             return;
         }
 
-        int textFlags = ImGuiInputTextFlags.EnterReturnsTrue;
-        boolean enterPressed = Controls.inputTextHint("Name", "e.g. speed2-tower", nameInput, 320, textFlags);
+        // Claim focus on the first frame so a stray Enter from the menu activation
+        // can't slip into the input and trigger commit on a single keystroke.
+        if (nameModalJustOpened) {
+            ImGui.setKeyboardFocusHere();
+        }
+        Controls.inputTextHint("Name", "e.g. any-name", nameInput, 320);
+        boolean enterPressed = !nameModalJustOpened
+                && ImGui.isItemFocused()
+                && ImGui.isKeyPressed(ImGuiKey.Enter, false);
 
         String currentTrim = nameInput.get().trim();
         if (!currentTrim.equals(lastNameInputSeen)) {
@@ -389,17 +397,13 @@ public final class FileMenu {
             nameModalError = null;
         }
 
-        Path dir = controller.getSaveDir();
-        if (dir != null) {
-            ImGui.textDisabled("Saves to: " + dir.toString());
-        }
-
         if (nameModalError != null) {
             ThemeManager.pushTextColor(ThemeManager.dangerColor());
             ImGui.text(nameModalError);
             ThemeManager.popTextColor();
         }
 
+        ThemeManager.sectionSpacing();
         ImGui.separator();
 
         boolean canSave = !currentTrim.isEmpty();
@@ -420,6 +424,7 @@ public final class FileMenu {
             activeNamePopupId = null;
             nameModalError = null;
         }
+        nameModalJustOpened = false;
         ImGui.endPopup();
     }
 
@@ -437,6 +442,8 @@ public final class FileMenu {
         }
 
         Controls.inputTextHint("Search", "Filter by name...", filterInput, 320);
+
+        ThemeManager.sectionSpacing();
 
         java.util.List<SaveInfo> rows = sortedFiltered();
         float tableH = OPEN_MODAL_VISIBLE_ROWS * ImGui.getFrameHeightWithSpacing();
@@ -487,6 +494,7 @@ public final class FileMenu {
             }
         }
 
+        ThemeManager.sectionSpacing();
         ImGui.separator();
         boolean canOpen = openSelected != null;
         boolean enterPressed = canOpen && ImGui.isKeyPressed(ImGuiKey.Enter, false);
@@ -517,6 +525,7 @@ public final class FileMenu {
                 ? "You have unsaved changes to '" + current + "'."
                 : "You have unsaved changes that have not been saved.");
         ImGui.text("Discard them and continue?");
+        ThemeManager.sectionSpacing();
         ImGui.separator();
         if (Controls.dangerButton(BTN_DISCARD)) {
             Runnable action = discardModalConfirm;
@@ -539,6 +548,7 @@ public final class FileMenu {
         if (!ImGui.beginPopupModal(POPUP_OVERWRITE, ImGuiWindowFlags.AlwaysAutoResize)) return;
         ImGui.text("A save named '" + overwriteCandidateName + "' already exists.");
         ImGui.text("Overwrite it?");
+        ThemeManager.sectionSpacing();
         ImGui.separator();
         if (Controls.dangerButton(BTN_OVERWRITE)) {
             Runnable action = overwriteModalConfirm;
@@ -559,6 +569,7 @@ public final class FileMenu {
         String current = controller.currentName();
         ImGui.text("Move '" + (current != null ? current : "?") + "' to <save dir>/.trash/?");
         ImGui.textDisabled("Not the OS recycle bin. Restore by hand if needed.");
+        ThemeManager.sectionSpacing();
         ImGui.separator();
         if (Controls.dangerButton(BTN_RECYCLE)) {
             ImGui.closeCurrentPopup();
