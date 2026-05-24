@@ -1,9 +1,9 @@
 package de.legoshi.parkourcalc.core.ui;
 
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
+import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImGui;
 import imgui.flag.ImGuiColorEditFlags;
-import imgui.flag.ImGuiCond;
 import imgui.flag.ImGuiTableColumnFlags;
 import imgui.flag.ImGuiTableFlags;
 import imgui.flag.ImGuiWindowFlags;
@@ -20,8 +20,19 @@ public final class SettingsModal {
     private static final String CLOSE_BTN = "Close";
     private static final String RESET_BTN = "Reset All";
     private static final String LAYOUT_TABLE_ID = "##settings_layout";
-    private static final float LABEL_COL_FRACTION = 0.42f;
-    private static final float CONTROL_WIDTH = 240f;
+    private static final float LABEL_COL_FRACTION = 0.55f;
+
+    // Tooltip copy. One line per control; review with product before final merge.
+    private static final String TT_UI_SCALE = "Multiplier applied to all ImGui widgets and fonts. 1.5x is the default for 1080p.";
+    private static final String TT_YAW_ARROWS = "Draws an arrow at each tick's position showing the facing angle that frame.";
+    private static final String TT_HITBOX = "Draws the player's hitbox at the currently selected tick.";
+    private static final String TT_FULL_HITBOX = "Draws hitboxes for every tick in the TAS, not just the active one. Heavy on long TASes.";
+    private static final String TT_SUBTICK = "Renders the interpolated path between adjacent ticks, exposing collision moments inside a tick.";
+    private static final String TT_POTION_COLS = "Adds Speed and Jump Boost amplifier columns to the input table.";
+    private static final String TT_YAW_TURN_RATE = "Caps how fast the macro rotates the camera during playback (deg per second).";
+    private static final String TT_PATH_DIST = "Maximum world distance for the simulated path overlay.";
+    private static final String TT_PATH_UNLIMITED = "Disables the distance cap. Heavy on long TASes.";
+    private static final String TT_COLOR_GENERIC = "Color used for this overlay. Alpha applies in-world.";
 
     private final Settings settings;
     private final Runnable onChanged;
@@ -54,14 +65,27 @@ public final class SettingsModal {
             ImGui.openPopup(POPUP_ID);
             openRequested = false;
         }
-        ImGui.setNextWindowSize(540, 480, ImGuiCond.FirstUseEver);
-        if (!ImGui.beginPopupModal(POPUP_ID, ImGuiWindowFlags.NoCollapse)) return;
+        if (!ImGui.beginPopupModal(POPUP_ID, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.AlwaysAutoResize)) {
+            return;
+        }
 
         if (ImGui.beginTabBar("##settings_tabs")) {
-            if (ImGui.beginTabItem("General"))       { renderGeneral();       ImGui.endTabItem(); }
-            if (ImGui.beginTabItem("Visualization")) { renderVisualization(); ImGui.endTabItem(); }
-            if (ImGui.beginTabItem("Playback"))      { renderPlayback();      ImGui.endTabItem(); }
-            if (ImGui.beginTabItem("Render Colors")) { renderColors();        ImGui.endTabItem(); }
+            if (ImGui.beginTabItem("General")) {
+                renderGeneral();
+                ImGui.endTabItem();
+            }
+            if (ImGui.beginTabItem("Visualization")) {
+                renderVisualization();
+                ImGui.endTabItem();
+            }
+            if (ImGui.beginTabItem("Playback")) {
+                renderPlayback();
+                ImGui.endTabItem();
+            }
+            if (ImGui.beginTabItem("Render Colors")) {
+                renderColors();
+                ImGui.endTabItem();
+            }
             ImGui.endTabBar();
         }
 
@@ -81,11 +105,12 @@ public final class SettingsModal {
         if (beginLayoutTable()) {
             scaleIndexBuf.set(settings.scaleIndex);
             row("UI Scale", () -> {
-                ImGui.setNextItemWidth(CONTROL_WIDTH);
+                ImGui.setNextItemWidth(-1);
                 if (Controls.combo("##ui_scale", scaleIndexBuf, scaleLabels)) {
                     settings.scaleIndex = scaleIndexBuf.get();
                     onChanged.run();
                 }
+                tooltipForLastItem(TT_UI_SCALE);
             });
             ImGui.endTable();
         }
@@ -93,28 +118,24 @@ public final class SettingsModal {
 
     private void renderVisualization() {
         sectionHeader("In-world overlays");
-        if (Controls.checkbox("Show yaw arrows", settings.showYawArrows)) {
-            settings.showYawArrows = !settings.showYawArrows;
-            onChanged.run();
-        }
-        if (Controls.checkbox("Show hitbox", settings.showHitbox)) {
-            settings.showHitbox = !settings.showHitbox;
-            onChanged.run();
-        }
-        if (Controls.checkbox("Show full hitbox", settings.showFullHitbox)) {
-            settings.showFullHitbox = !settings.showFullHitbox;
-            onChanged.run();
-        }
-        if (Controls.checkbox("Subtick visualization", settings.showSubtick)) {
-            settings.showSubtick = !settings.showSubtick;
-            onChanged.run();
+        if (beginLayoutTable()) {
+            checkboxRow("Show yaw arrows", "##show_yaw_arrows", settings.showYawArrows, TT_YAW_ARROWS,
+                    v -> settings.showYawArrows = v);
+            checkboxRow("Show hitbox", "##show_hitbox", settings.showHitbox, TT_HITBOX,
+                    v -> settings.showHitbox = v);
+            checkboxRow("Show full hitbox", "##show_full_hitbox", settings.showFullHitbox, TT_FULL_HITBOX,
+                    v -> settings.showFullHitbox = v);
+            checkboxRow("Subtick visualization", "##show_subtick", settings.showSubtick, TT_SUBTICK,
+                    v -> settings.showSubtick = v);
+            ImGui.endTable();
         }
 
         ImGui.spacing();
         sectionHeader("Editor table");
-        if (Controls.checkbox("Show potion effect columns", settings.showPotionColumns)) {
-            settings.showPotionColumns = !settings.showPotionColumns;
-            onChanged.run();
+        if (beginLayoutTable()) {
+            checkboxRow("Show potion effect columns", "##show_potion", settings.showPotionColumns, TT_POTION_COLS,
+                    v -> settings.showPotionColumns = v);
+            ImGui.endTable();
         }
     }
 
@@ -123,27 +144,27 @@ public final class SettingsModal {
         if (beginLayoutTable()) {
             row("Max yaw turn rate", () -> {
                 yawTurnCapBuf[0] = settings.yawFlickSpeed;
-                ImGui.setNextItemWidth(CONTROL_WIDTH);
+                ImGui.setNextItemWidth(-1);
                 if (Controls.sliderFloat("##yaw_turn_cap", yawTurnCapBuf,
                         Settings.MIN_YAW_FLICK_SPEED, Settings.MAX_YAW_FLICK_SPEED, "%.0f deg/s")) {
                     settings.yawFlickSpeed = yawTurnCapBuf[0];
                 }
                 if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
+                tooltipForLastItem(TT_YAW_TURN_RATE);
             });
             row("Path render distance", () -> {
                 pathRenderDistanceBuf[0] = settings.pathRenderDistance;
-                ImGui.setNextItemWidth(CONTROL_WIDTH);
+                ImGui.setNextItemWidth(-1);
                 if (Controls.sliderInt("##path_render_distance", pathRenderDistanceBuf,
                         Settings.MIN_PATH_RENDER_DISTANCE, Settings.MAX_PATH_RENDER_DISTANCE, "%d blocks")) {
                     settings.pathRenderDistance = pathRenderDistanceBuf[0];
                 }
                 if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
+                tooltipForLastItem(TT_PATH_DIST);
             });
+            checkboxRow("Unlimited path render distance", "##unlimited_path", settings.unlimitedPathRender,
+                    TT_PATH_UNLIMITED, v -> settings.unlimitedPathRender = v);
             ImGui.endTable();
-        }
-        if (Controls.checkbox("Unlimited path render distance", settings.unlimitedPathRender)) {
-            settings.unlimitedPathRender = !settings.unlimitedPathRender;
-            onChanged.run();
         }
     }
 
@@ -172,6 +193,7 @@ public final class SettingsModal {
 
     private void renderColor(String label, float[] color, int flags) {
         ImGui.colorEdit4(label, color, flags);
+        tooltipForLastItem(TT_COLOR_GENERIC);
         if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
     }
 
@@ -193,5 +215,24 @@ public final class SettingsModal {
         Controls.labelCell(label);
         ImGui.tableNextColumn();
         controlBody.run();
+    }
+
+    /**
+     * Renders a label-left, checkbox-right row. The checkbox renders alone (id only,
+     * no visible label) so the user's right-side-checkbox preference is honored.
+     */
+    private void checkboxRow(String label, String id, boolean current, String tooltip,
+                             java.util.function.Consumer<Boolean> setter) {
+        row(label, () -> {
+            if (Controls.checkbox(id, current)) {
+                setter.accept(!current);
+                onChanged.run();
+            }
+            tooltipForLastItem(tooltip);
+        });
+    }
+
+    private static void tooltipForLastItem(String text) {
+        if (ImGui.isItemHovered()) TooltipUtil.wrappedTooltip(text);
     }
 }

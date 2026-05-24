@@ -8,12 +8,11 @@ import de.legoshi.parkourcalc.core.save.SaveInfo;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import imgui.ImGui;
-import imgui.flag.ImGuiCond;
 import imgui.flag.ImGuiInputTextFlags;
 import imgui.flag.ImGuiKey;
 import imgui.flag.ImGuiSelectableFlags;
 import imgui.flag.ImGuiTableColumnFlags;
-import imgui.flag.ImGuiTableFlags;
+import imgui.flag.ImGuiTableRowFlags;
 import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImString;
 
@@ -37,12 +36,12 @@ public final class FileMenu {
     private static final int MAX_RECENT = 5;
     private static final long STATUS_LIFETIME_MS = 4000L;
 
-    private static final String POPUP_NAME_NEW    = "New TAS##name_modal_new";
+    private static final String POPUP_NAME_NEW = "New TAS##name_modal_new";
     private static final String POPUP_NAME_SAVEAS = "Save TAS As##name_modal_saveas";
-    private static final String POPUP_OPEN        = "Open TAS##open_modal";
-    private static final String POPUP_DISCARD     = "Discard unsaved changes?##discard";
-    private static final String POPUP_OVERWRITE   = "Overwrite existing file?##overwrite";
-    private static final String POPUP_DELETE      = "Move current TAS to recycle bin?##delete";
+    private static final String POPUP_OPEN = "Open TAS##open_modal";
+    private static final String POPUP_DISCARD = "Discard unsaved changes?##discard";
+    private static final String POPUP_OVERWRITE = "Overwrite existing file?##overwrite";
+    private static final String POPUP_DELETE = "Move current TAS to recycle bin?##delete";
 
     private static final String BTN_SAVE = "Save";
     private static final String BTN_OPEN = "Open";
@@ -82,6 +81,7 @@ public final class FileMenu {
     private List<SaveInfo> cached = Collections.emptyList();
     private boolean cacheStale = true;
     private String openSelected;
+    private static final int OPEN_MODAL_VISIBLE_ROWS = 12;
 
     private String statusMessage;
     private boolean statusIsError;
@@ -141,9 +141,11 @@ public final class FileMenu {
     }
 
     public void renderStatusLine() {
-        if (statusMessage == null) return;
-        if (System.currentTimeMillis() > statusUntilMs) {
+        // Always occupy one row; the input pane reserves the slot whether or not
+        // a message is showing, so the table never reflows on show/expire.
+        if (statusMessage == null || System.currentTimeMillis() > statusUntilMs) {
             statusMessage = null;
+            ImGui.dummy(0f, ImGui.getFrameHeight());
             return;
         }
         int color = statusIsError ? ThemeManager.dangerColor() : ThemeManager.okColor();
@@ -364,10 +366,15 @@ public final class FileMenu {
         int textFlags = ImGuiInputTextFlags.EnterReturnsTrue;
         boolean enterPressed = Controls.inputTextHint("Name", "e.g. speed2-tower", nameInput, 320, textFlags);
 
-        String current = nameInput.get();
-        if (!current.equals(lastNameInputSeen)) {
+        String currentTrim = nameInput.get().trim();
+        if (!currentTrim.equals(lastNameInputSeen)) {
             nameModalError = null;
-            lastNameInputSeen = current;
+            lastNameInputSeen = currentTrim;
+        }
+        // Any non-empty value clears a stale "name cannot be empty" error even if the
+        // trimmed buffer matches what we last saw (user typed then deleted then retyped).
+        if (!currentTrim.isEmpty() && "Name cannot be empty.".equals(nameModalError)) {
+            nameModalError = null;
         }
 
         Path dir = controller.getSaveDir();
@@ -383,11 +390,13 @@ public final class FileMenu {
 
         ImGui.separator();
 
-        boolean save = enterPressed || Controls.primaryButton(BTN_SAVE);
+        boolean canSave = !currentTrim.isEmpty();
+        ImGui.beginDisabled(!canSave);
+        boolean save = (enterPressed && canSave) || Controls.primaryButton(BTN_SAVE);
+        ImGui.endDisabled();
         if (save) {
-            String n = nameInput.get().trim();
             Consumer<String> action = nameModalConfirm;
-            if (action != null) action.accept(n);
+            if (action != null) action.accept(currentTrim);
             if (nameModalError == null) {
                 ImGui.closeCurrentPopup();
                 activeNamePopupId = null;
@@ -407,9 +416,8 @@ public final class FileMenu {
             ImGui.openPopup(POPUP_OPEN);
             openOpenModal = false;
         }
-        ImGui.setNextWindowSize(720, 460, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSizeConstraints(640, 360, Float.MAX_VALUE, Float.MAX_VALUE);
-        if (!ImGui.beginPopupModal(POPUP_OPEN, ImGuiWindowFlags.NoSavedSettings)) return;
+        int modalFlags = ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.AlwaysAutoResize;
+        if (!ImGui.beginPopupModal(POPUP_OPEN, modalFlags)) return;
 
         if (cacheStale) {
             cached = controller.list();
@@ -418,23 +426,25 @@ public final class FileMenu {
 
         Controls.inputTextHint("Search", "Filter by name...", filterInput, 320);
 
-        int flags = ImGuiTableFlags.RowBg
-                | ImGuiTableFlags.Resizable
-                | ImGuiTableFlags.Borders
-                | ImGuiTableFlags.ScrollY
-                | ImGuiTableFlags.SizingFixedFit;
-        if (ImGui.beginTable("##open_table", 4, flags, 0, 320)) {
+        java.util.List<SaveInfo> rows = sortedFiltered();
+        float tableH = OPEN_MODAL_VISIBLE_ROWS * ImGui.getFrameHeightWithSpacing();
+        if (ImGui.beginTable("##open_table", 4, ThemeManager.standardTableFlags(), 0, tableH)) {
             ImGui.tableSetupScrollFreeze(0, 1);
-            ImGui.tableSetupColumn(COL_FILENAME, ImGuiTableColumnFlags.WidthStretch);
+            ImGui.tableSetupColumn(COL_FILENAME, ImGuiTableColumnFlags.WidthFixed,
+                    ThemeManager.tableLeftmostColumnWidth(COL_FILENAME, 240));
             ImGui.tableSetupColumn(COL_DATE, ImGuiTableColumnFlags.WidthFixed, 140);
             ImGui.tableSetupColumn(COL_MC, ImGuiTableColumnFlags.WidthFixed, 60);
-            ImGui.tableSetupColumn(COL_WORLD, ImGuiTableColumnFlags.WidthStretch);
-            ImGui.tableHeadersRow();
+            ImGui.tableSetupColumn(COL_WORLD, ImGuiTableColumnFlags.WidthFixed,
+                    ThemeManager.tableRightmostColumnWidth(COL_WORLD, 160));
+            renderOpenTableHeader();
 
             String doubleClickedToOpen = null;
-            for (SaveInfo info : sortedFiltered()) {
+            int rowIndex = 0;
+            for (SaveInfo info : rows) {
                 ImGui.tableNextRow();
+                ThemeManager.paintTableRowBg(rowIndex++);
                 ImGui.tableSetColumnIndex(0);
+                ThemeManager.emitTableLeftmostCellPad();
                 boolean selected = info.name.equals(openSelected);
                 int selFlags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
                 if (ImGui.selectable(info.name + "##open_row_" + info.name, selected, selFlags)) {
@@ -442,11 +452,15 @@ public final class FileMenu {
                     if (ImGui.isMouseDoubleClicked(0)) doubleClickedToOpen = info.name;
                 }
                 ImGui.tableSetColumnIndex(1);
+                ImGui.alignTextToFramePadding();
                 ImGui.text(info.lastModifiedMs > 0 ? dateFmt.format(new Date(info.lastModifiedMs)) : "");
                 ImGui.tableSetColumnIndex(2);
+                ImGui.alignTextToFramePadding();
                 ImGui.text(info.mcVersion != null ? info.mcVersion : "?");
                 ImGui.tableSetColumnIndex(3);
+                ImGui.alignTextToFramePadding();
                 ImGui.text(info.worldLabel != null ? info.worldLabel : "?");
+                ThemeManager.emitTableRightmostCellTrailingPad();
             }
             ImGui.endTable();
 
@@ -539,6 +553,21 @@ public final class FileMenu {
         ImGui.sameLine();
         if (Controls.secondaryButton(BTN_CANCEL)) ImGui.closeCurrentPopup();
         ImGui.endPopup();
+    }
+
+    private void renderOpenTableHeader() {
+        ImGui.tableNextRow(ImGuiTableRowFlags.Headers);
+        ThemeManager.paintTableHeader();
+        ImGui.tableSetColumnIndex(0);
+        ThemeManager.emitTableLeftmostCellPad();
+        ThemeManager.tableHeader(COL_FILENAME);
+        ImGui.tableSetColumnIndex(1);
+        ThemeManager.tableHeader(COL_DATE);
+        ImGui.tableSetColumnIndex(2);
+        ThemeManager.tableHeader(COL_MC);
+        ImGui.tableSetColumnIndex(3);
+        ThemeManager.tableHeader(COL_WORLD);
+        ThemeManager.emitTableRightmostCellTrailingPad();
     }
 
     private List<SaveInfo> sortedFiltered() {

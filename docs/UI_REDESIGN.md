@@ -181,21 +181,30 @@ No modal pops on world join. The CTA is the prompt.
 Centralized in `ThemeManager`. Every overlay reads from these. No
 literal RGBA arrays anywhere else in `core/ui/`.
 
-### Palette
+### Palette — Catppuccin Mocha
 
-| Token              | RGBA                       | Use                                        |
-|--------------------|----------------------------|--------------------------------------------|
-| `bg`               | `0.10, 0.10, 0.11, 0.95`   | Main window background                     |
-| `panel`            | `0.13, 0.13, 0.15, 1.00`   | Sub-panels, table headers, modal body      |
-| `panel_alt`        | `0.16, 0.16, 0.18, 1.00`   | Alt row banding, hover backgrounds         |
-| `border`           | `0.25, 0.25, 0.28, 1.00`   | Panel borders, separators                  |
-| `text`             | `0.92, 0.92, 0.94, 1.00`   | Default text                               |
-| `text_muted`       | `0.60, 0.60, 0.65, 1.00`   | Disabled labels, tooltips, hints           |
-| `accent`           | `0.30, 0.65, 1.00, 1.00`   | Primary buttons, selected row tint, focus  |
-| `accent_dim`       | `0.20, 0.45, 0.80, 0.45`   | Selected row fill, drag-drop preview line  |
-| `danger`           | `0.80, 0.25, 0.25, 1.00`   | Delete buttons, error text                 |
-| `warning`          | `0.95, 0.65, 0.20, 1.00`   | Dirty marker dot, validation hints         |
-| `ok`               | `0.35, 0.80, 0.40, 1.00`   | Import success toast, validator OK         |
+Source: https://catppuccin.com/palette/. Picked for subtle alt-row banding
+(~6% lift between base and surface0), legible muted text, and pastel accents
+that don't fight the data.
+
+| Token           | Hex     | Use                                                     |
+|-----------------|---------|---------------------------------------------------------|
+| `bg`            | `#1e1e2e` | Window background, default table row                  |
+| `bg_dark`       | `#181825` | Title bar, popup background, table header             |
+| `panel`         | `#313244` | Frame fill (inputs/buttons), alt-row banding          |
+| `panel_hover`   | `#45475a` | Row/widget hover background                           |
+| `panel_active`  | `#585b70` | Pressed/active fills (replaces blue tints on click)   |
+| `border`        | `#45475a` | Borders, separators, frame outline at rest            |
+| `text`          | `#cdd6f4` | Primary body text                                     |
+| `text_muted`    | `#a6adc8` | Secondary, disabled labels                            |
+| `text_dim`      | `#6c7086` | Very-low-emphasis text                                |
+| `accent`        | `#89b4fa` | Primary buttons, slider grab, focus ring              |
+| `accent_dim`    | `#89b4fa @ 0.30` | Drag-source row tint                           |
+| `selected`      | `#cba6f7` | Selected row tint (mauve, distinct from warning)      |
+| `warning`       | `#f9e2af` | Dirty marker, drop indicator, playback tick           |
+| `danger`        | `#f38ba8` | Destructive actions, error text                       |
+| `ok`            | `#a6e3a1` | Success toast / status text                           |
+| `focus`         | `#89b4fa @ 0.30` | 2px outline on focused inputs                  |
 
 Render-color tokens (in-world boxes, gizmos) remain user-customizable in the
 Settings modal and keep their current defaults from `Settings.java`. They are
@@ -214,11 +223,11 @@ xl  24px
 
 `ImGuiStyle` mapping:
 - `WindowPadding`        = `lg, lg`
-- `FramePadding`         = `sm, xs`
-- `ItemSpacing`          = `sm, xs`
+- `FramePadding`         = `md, sm`  (bumped from `sm, xs` — buttons/inputs need vertical breathing room)
+- `ItemSpacing`          = `sm, sm`  (vertical was `xs` — rows were squashed against each other)
 - `ItemInnerSpacing`     = `xs, xs`
-- `CellPadding`          = `xs, xxs`
-- `ScrollbarSize`        = `md`
+- `CellPadding`          = `sm, xs`  (was `xs, xxs` — input table cells were cramped)
+- `ScrollbarSize`        = `18px` (raised above `md`; see Component sanity rules)
 - `GrabMinSize`          = `md`
 
 ### Borders and radii
@@ -270,6 +279,18 @@ Standard layout:
 - Open with `ImGui.openPopup(id)`, render with `ImGui.beginPopupModal(id, ImGuiWindowFlags.AlwaysAutoResize)`.
 - Esc closes (Cancel semantics) unless the modal owns destructive state.
 - Helper: `ModalUtil.buttonStrip(primaryLabel, primaryStyle, onPrimary, onCancel)`.
+
+### Window sizing
+
+Canonical patterns. Pick one per surface, do not mix.
+
+- **Top-level windows** (MainWindow, future Open TAS list): seed a default with `setNextWindowSize(W, H, FirstUseEver)` and pin a floor with `setNextWindowSizeConstraints(minW, minH, MAX, MAX)`. Never combine these with `AlwaysAutoResize`. The user resizes; ImGui remembers via the .ini.
+- **Modals and transient popups** (Preferences, confirm dialogs, name-input, About): use `AlwaysAutoResize` and let content drive the size. No default size, no constraints. Switching tabs inside a modal grows/shrinks the window to fit the active tab.
+- **Inner widget widths** inside layout tables: prefer `setNextItemWidth(-1)` (fill the cell) over hardcoded pixel widths. Use `getContentRegionAvail().x` when the available width needs to drive layout math.
+
+Current sizes (update here when changed):
+- MainWindow: default 960x640, min 720x420.
+- Preferences modal: content-driven via `AlwaysAutoResize`.
 
 ### Tooltips
 
@@ -462,12 +483,27 @@ broken. Fix the design, not the screenshot.
 
 ### Component sanity rules
 
-- "Off" state for a key cell in the row table is a centered middle-dot `·`
-  in `text_muted`, NOT an ASCII period. Periods sit at the baseline and read
-  as punctuation.
+- "Off" state for a key cell in the row table renders as an empty cell. No
+  placeholder glyph (previous v1.3.0 used a middle dot which read as noise).
+  The key cell remains clickable when empty.
 - Numeric steppers always render their current value. No placeholder
   characters standing in for the number.
-- `ScrollbarSize = 14px` (raised from `md`/12px).
+- `ScrollbarSize = 18px` (raised from `md`/12px so the grab is easier to hit).
+
+### Input table row tint state matrix
+
+The row background uses three distinct tints so the user can tell the states
+apart at a glance:
+
+- **Selected row** = `selected` at 0.45 alpha (Mocha mauve).
+- **Drag source row** (mid-drag, before drop) = `accent_dim` (blue 0.45).
+- **Active-playback tick** = `warning` at 0.25 alpha (faint orange).
+- **Drag-drop indicator line** (insertion target) = `warning` solid, 2px.
+
+`selected` and `warning` are separate tokens with different hues (amber vs
+warmer orange) so the selected row and the playback tick read as distinct
+states even though both are warm-colored. The drag source uses accent
+specifically so it reads as a different *kind* of state from selection.
 
 ### Verification
 

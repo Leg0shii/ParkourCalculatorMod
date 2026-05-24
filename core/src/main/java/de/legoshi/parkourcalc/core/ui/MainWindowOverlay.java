@@ -12,9 +12,9 @@ import imgui.flag.ImGuiWindowFlags;
 import java.nio.file.Path;
 
 /**
- * Root window for v1.3.0. Menu bar (File / Edit / View / Settings / Help) plus the
- * body, which switches between an empty-state CTA and the input editor. Tick Info
- * and Performance are floating side panels controlled by View menu booleans.
+ * Root window for v1.3.0. Menu bar (File / View / Settings / Help) plus the body,
+ * which switches between an empty-state CTA and the input editor. Per-row tick
+ * operations live in the right-click context menu on the input table.
  */
 public final class MainWindowOverlay implements RenderInterface {
 
@@ -70,9 +70,12 @@ public final class MainWindowOverlay implements RenderInterface {
 
     @Override
     public void render(ImGuiIO io) {
-        ImGui.setNextWindowSize(800, 600, ImGuiCond.FirstUseEver);
+        // Width is derived from the input table so the pane fits its content exactly;
+        // minW == maxW pins the horizontal axis while leaving vertical resize free.
+        float fixedW = inputOverlay.desiredPaneWidth();
+        ImGui.setNextWindowSize(fixedW, 640, ImGuiCond.FirstUseEver);
         ImGui.setNextWindowPos(16, 16, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSizeConstraints(560, 360, Float.MAX_VALUE, Float.MAX_VALUE);
+        ImGui.setNextWindowSizeConstraints(fixedW, 420, fixedW, Float.MAX_VALUE);
 
         if (!ImGui.begin(buildWindowTitle(), WINDOW_FLAGS)) {
             ImGui.end();
@@ -80,8 +83,9 @@ public final class MainWindowOverlay implements RenderInterface {
         }
 
         renderMenuBar();
-        fileMenu.renderStatusLine();
+        ImGui.separator();
         renderBody();
+        fileMenu.renderStatusLine();
         fileMenu.renderPopups();
         settingsModal.render();
         renderAboutModal();
@@ -94,15 +98,17 @@ public final class MainWindowOverlay implements RenderInterface {
     private String buildWindowTitle() {
         String name = fileMenu.currentName();
         if (name == null) return APP_NAME + WINDOW_ID;
-        String dirty = fileMenu.isDirty() ? " *" : "";
-        return name + dirty + "  -  " + APP_NAME + WINDOW_ID;
+        String dirty = fileMenu.isDirty() ? "[*] " : "";
+        return dirty + name + "  -  " + APP_NAME + WINDOW_ID;
     }
 
     private void renderBody() {
-        if (inputData.size() == 0 && !fileMenu.hasOpenTas()) {
+        // No TAS open means no editing surface. Prevents the prior "Edit menu adds a
+        // tick which silently creates a TAS" trap; the user must explicitly New/Open first.
+        if (!fileMenu.hasOpenTas()) {
             fileMenu.renderEmptyStateCta();
         } else {
-            inputOverlay.renderBody(0);
+            inputOverlay.renderBody();
         }
     }
 
@@ -112,24 +118,10 @@ public final class MainWindowOverlay implements RenderInterface {
             fileMenu.renderMenuItems();
             ImGui.endMenu();
         }
-        renderEditMenu();
         renderViewMenu();
         renderSettingsMenu();
         renderHelpMenu();
         ImGui.endMenuBar();
-    }
-
-    private void renderEditMenu() {
-        if (!ImGui.beginMenu("Edit")) return;
-        ImGui.menuItem("Undo", "Ctrl+Z", false, false);
-        ImGui.menuItem("Redo", "Ctrl+Y", false, false);
-        ImGui.separator();
-        if (ImGui.menuItem("Add row", "Insert")) inputOverlay.addRowsAtEnd(1);
-        if (ImGui.menuItem("Delete selected", "Delete")) inputOverlay.deleteSelectedRows();
-        if (ImGui.menuItem("Duplicate selected", "Ctrl+D")) inputOverlay.duplicateSelectedRows();
-        ImGui.separator();
-        if (ImGui.menuItem("Clear all rows")) inputOverlay.requestClearAll();
-        ImGui.endMenu();
     }
 
     private void renderViewMenu() {
@@ -140,27 +132,6 @@ public final class MainWindowOverlay implements RenderInterface {
         }
         if (ImGui.menuItem("Performance", null, settings.viewPerf)) {
             settings.viewPerf = !settings.viewPerf;
-            onSettingsChanged.run();
-        }
-        ImGui.separator();
-        if (ImGui.menuItem("Show potion columns", null, settings.showPotionColumns)) {
-            settings.showPotionColumns = !settings.showPotionColumns;
-            onSettingsChanged.run();
-        }
-        if (ImGui.menuItem("Show yaw arrows", null, settings.showYawArrows)) {
-            settings.showYawArrows = !settings.showYawArrows;
-            onSettingsChanged.run();
-        }
-        if (ImGui.menuItem("Show hitbox", null, settings.showHitbox)) {
-            settings.showHitbox = !settings.showHitbox;
-            onSettingsChanged.run();
-        }
-        if (ImGui.menuItem("Show full hitbox", null, settings.showFullHitbox)) {
-            settings.showFullHitbox = !settings.showFullHitbox;
-            onSettingsChanged.run();
-        }
-        if (ImGui.menuItem("Subtick visualization", null, settings.showSubtick)) {
-            settings.showSubtick = !settings.showSubtick;
             onSettingsChanged.run();
         }
         ImGui.endMenu();

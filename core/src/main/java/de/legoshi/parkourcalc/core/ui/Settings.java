@@ -5,18 +5,23 @@ public final class Settings {
     public static final float[] PRESET_SCALES = {0.75f, 1.0f, 1.25f, 1.5f, 2.0f, 2.5f};
     public static final int DEFAULT_SCALE_INDEX = 3;
 
-    private static final float[] DEFAULT_TICK_DEFAULT = {0.70f, 0.70f, 0.70f, 0.25f};
-    private static final float[] DEFAULT_TICK_SELECTED = {0.20f, 0.55f, 1.00f, 0.25f};
-    private static final float[] DEFAULT_TICK_AIR = {0.40f, 0.80f, 1.00f, 0.25f};
-    private static final float[] DEFAULT_TICK_SNEAK = {1.00f, 0.60f, 0.20f, 0.25f};
-    private static final float[] DEFAULT_TICK_WALL = {1.00f, 0.25f, 0.25f, 0.25f};
-    private static final float[] DEFAULT_TICK_SOFT_COLLISION = {1.00f, 0.55f, 0.10f, 0.25f};
-    private static final float[] DEFAULT_SUBTICK_PATH = {1.00f, 1.00f, 0.40f, 0.25f};
-    private static final float[] DEFAULT_YAW_ARROW = {1.00f, 0.30f, 0.30f, 1.00f};
-    private static final float[] DEFAULT_YAW_GIZMO_CIRCLE = {1.00f, 1.00f, 1.00f, 0.70f};
-    private static final float[] DEFAULT_YAW_GIZMO_DIRECTION = {1.00f, 1.00f, 0.00f, 1.00f};
-    private static final float[] DEFAULT_HITBOX_DEFAULT = {1.00f, 1.00f, 1.00f, 0.80f};
-    private static final float[] DEFAULT_HITBOX_SELECTED = {0.30f, 1.00f, 0.30f, 0.80f};
+    // Render-color defaults sourced from Catppuccin Mocha so they harmonize with
+    // the ImGui chrome in ThemeManager. Users can still customize each one in
+    // Preferences > Render Colors; these only define what they see on first
+    // launch / after Reset All. Alphas preserved from prior defaults for
+    // visibility tuning.
+    private static final float[] DEFAULT_TICK_DEFAULT = {0.729f, 0.761f, 0.871f, 0.25f};        // subtext1   #bac2de
+    private static final float[] DEFAULT_TICK_SELECTED = {0.796f, 0.651f, 0.969f, 0.25f};       // mauve      #cba6f7  (matches chrome SELECTED)
+    private static final float[] DEFAULT_TICK_AIR = {0.537f, 0.863f, 0.922f, 0.25f};            // sky        #89dceb
+    private static final float[] DEFAULT_TICK_SNEAK = {0.980f, 0.702f, 0.529f, 0.25f};          // peach      #fab387
+    private static final float[] DEFAULT_TICK_WALL = {0.953f, 0.545f, 0.659f, 0.25f};           // red        #f38ba8
+    private static final float[] DEFAULT_TICK_SOFT_COLLISION = {0.922f, 0.627f, 0.675f, 0.25f}; // maroon     #eba0ac
+    private static final float[] DEFAULT_SUBTICK_PATH = {0.976f, 0.886f, 0.686f, 0.25f};        // yellow     #f9e2af
+    private static final float[] DEFAULT_YAW_ARROW = {0.953f, 0.545f, 0.659f, 1.00f};           // red        #f38ba8
+    private static final float[] DEFAULT_YAW_GIZMO_CIRCLE = {0.804f, 0.839f, 0.957f, 0.70f};    // text       #cdd6f4
+    private static final float[] DEFAULT_YAW_GIZMO_DIRECTION = {0.976f, 0.886f, 0.686f, 1.00f}; // yellow     #f9e2af
+    private static final float[] DEFAULT_HITBOX_DEFAULT = {0.804f, 0.839f, 0.957f, 0.80f};      // text       #cdd6f4
+    private static final float[] DEFAULT_HITBOX_SELECTED = {0.651f, 0.890f, 0.631f, 0.80f};     // green      #a6e3a1
 
     private static final boolean DEFAULT_SHOW_YAW_ARROWS = true;
     private static final boolean DEFAULT_SHOW_HITBOX = false;

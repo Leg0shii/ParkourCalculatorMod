@@ -3,6 +3,7 @@ package de.legoshi.parkourcalc.fabric.imgui;
 import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.legoshi.parkourcalc.core.ui.Settings;
+import de.legoshi.parkourcalc.core.ui.theme.Fonts;
 import de.legoshi.parkourcalc.fabric.FabricParkourCalculator;
 import imgui.ImFont;
 import imgui.ImFontConfig;
@@ -34,6 +35,7 @@ import java.util.Objects;
 public final class ImGuiImpl {
 
     private static final String FONT_PATH = "/assets/parkourcalculatormod/fonts/JetBrainsMono-Regular.ttf";
+    private static final String BOLD_FONT_PATH = "/assets/parkourcalculatormod/fonts/JetBrainsMono-Bold.ttf";
     private static final int BASE_FONT_SIZE = 18;
     private static final String INI_FILENAME = "parkourcalculator.ini";
 
@@ -42,6 +44,7 @@ public final class ImGuiImpl {
 
     private static Settings settings;
     private static ImFont[] presetFonts;
+    private static ImFont[] boldPresetFonts;
     private static int appliedScaleIndex = -1;
 
     private ImGuiImpl() {}
@@ -94,6 +97,7 @@ public final class ImGuiImpl {
             ImGui.getStyle().scaleAllSizes(newScale / oldScale);
         }
         ImGui.getIO().setFontDefault(presetFonts[newIdx]);
+        Fonts.setBoldFont(boldPresetFonts[newIdx]);
         appliedScaleIndex = newIdx;
     }
 
@@ -139,27 +143,30 @@ public final class ImGuiImpl {
         io.getFonts().clear();
 
         short[] glyphRanges = buildGlyphRanges();
-        byte[] fontData = readFontBytes();
+        byte[] fontData = readFontBytes(FONT_PATH);
+        byte[] boldFontData = readFontBytes(BOLD_FONT_PATH);
 
         ImFontConfig config = new ImFontConfig();
         config.setGlyphRanges(glyphRanges);
 
         presetFonts = new ImFont[Settings.PRESET_SCALES.length];
+        boldPresetFonts = new ImFont[Settings.PRESET_SCALES.length];
         for (int i = 0; i < Settings.PRESET_SCALES.length; i++) {
             int px = Math.round(BASE_FONT_SIZE * Settings.PRESET_SCALES[i]);
             presetFonts[i] = io.getFonts().addFontFromMemoryTTF(fontData, px, config);
+            boldPresetFonts[i] = io.getFonts().addFontFromMemoryTTF(boldFontData, px, config);
         }
 
         io.getFonts().build();
         config.destroy();
     }
 
-    private static byte[] readFontBytes() {
-        try (InputStream fontStream = ImGuiImpl.class.getResourceAsStream(FONT_PATH)) {
-            Objects.requireNonNull(fontStream, "Font not found: " + FONT_PATH);
+    private static byte[] readFontBytes(String path) {
+        try (InputStream fontStream = ImGuiImpl.class.getResourceAsStream(path)) {
+            Objects.requireNonNull(fontStream, "Font not found: " + path);
             return IOUtils.toByteArray(fontStream);
         } catch (IOException e) {
-            throw new UncheckedIOException("Failed to load font: " + FONT_PATH, e);
+            throw new UncheckedIOException("Failed to load font: " + path, e);
         }
     }
 

@@ -4,6 +4,7 @@ import com.github.koxx12dev.fuckyou.ImGuiGL3;
 import com.github.koxx12dev.fuckyou.ImGuiLwjgl2;
 import de.legoshi.parkourcalc.core.ui.OverlayManager;
 import de.legoshi.parkourcalc.core.ui.Settings;
+import de.legoshi.parkourcalc.core.ui.theme.Fonts;
 import imgui.ImFont;
 import imgui.ImFontConfig;
 import imgui.ImFontGlyphRangesBuilder;
@@ -26,6 +27,7 @@ import java.util.function.BooleanSupplier;
 public final class Lwjgl2ImGuiHost {
 
     private static final String FONT_PATH = "/assets/parkourcalculatormod/fonts/JetBrainsMono-Regular.ttf";
+    private static final String BOLD_FONT_PATH = "/assets/parkourcalculatormod/fonts/JetBrainsMono-Bold.ttf";
     private static final int BASE_FONT_SIZE = 18;
 
     private final OverlayManager overlayManager;
@@ -35,6 +37,7 @@ public final class Lwjgl2ImGuiHost {
     private final ImGuiGL3 imguiGl3 = new ImGuiGL3();
 
     private ImFont[] presetFonts;
+    private ImFont[] boldPresetFonts;
     private boolean initialized;
     private long lastFrameNanos;
     private int appliedScaleIndex = -1;
@@ -115,6 +118,7 @@ public final class Lwjgl2ImGuiHost {
             ImGui.getStyle().scaleAllSizes(newScale / oldScale);
         }
         ImGui.getIO().setFontDefault(presetFonts[newIdx]);
+        Fonts.setBoldFont(boldPresetFonts[newIdx]);
         appliedScaleIndex = newIdx;
     }
 
@@ -123,15 +127,18 @@ public final class Lwjgl2ImGuiHost {
         io.getFonts().clear();
 
         short[] glyphRanges = buildGlyphRanges();
-        byte[] fontData = readFontBytes();
+        byte[] fontData = readFontBytes(FONT_PATH);
+        byte[] boldFontData = readFontBytes(BOLD_FONT_PATH);
 
         ImFontConfig config = new ImFontConfig();
         config.setGlyphRanges(glyphRanges);
 
         presetFonts = new ImFont[Settings.PRESET_SCALES.length];
+        boldPresetFonts = new ImFont[Settings.PRESET_SCALES.length];
         for (int i = 0; i < Settings.PRESET_SCALES.length; i++) {
             int px = Math.round(BASE_FONT_SIZE * Settings.PRESET_SCALES[i]);
             presetFonts[i] = io.getFonts().addFontFromMemoryTTF(fontData, px, config);
+            boldPresetFonts[i] = io.getFonts().addFontFromMemoryTTF(boldFontData, px, config);
         }
 
         io.getFonts().build();
@@ -144,9 +151,9 @@ public final class Lwjgl2ImGuiHost {
         return builder.buildRanges();
     }
 
-    private static byte[] readFontBytes() {
-        try (InputStream fontStream = Lwjgl2ImGuiHost.class.getResourceAsStream(FONT_PATH)) {
-            Objects.requireNonNull(fontStream, "Font not found: " + FONT_PATH);
+    private static byte[] readFontBytes(String path) {
+        try (InputStream fontStream = Lwjgl2ImGuiHost.class.getResourceAsStream(path)) {
+            Objects.requireNonNull(fontStream, "Font not found: " + path);
             ByteArrayOutputStream buf = new ByteArrayOutputStream(fontStream.available());
             byte[] chunk = new byte[8192];
             int n;
@@ -155,7 +162,7 @@ public final class Lwjgl2ImGuiHost {
             }
             return buf.toByteArray();
         } catch (IOException e) {
-            throw new UncheckedIOException("Failed to load font: " + FONT_PATH, e);
+            throw new UncheckedIOException("Failed to load font: " + path, e);
         }
     }
 }

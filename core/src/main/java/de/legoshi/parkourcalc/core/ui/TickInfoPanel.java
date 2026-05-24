@@ -6,7 +6,6 @@ import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImGui;
 import imgui.ImGuiIO;
-import imgui.flag.ImGuiTableFlags;
 import imgui.flag.ImGuiWindowFlags;
 
 import java.util.List;
@@ -34,6 +33,7 @@ public final class TickInfoPanel implements RenderInterface {
 
     private final BoxController boxController;
     private final SelectionManager selection;
+    private int rowCounter;
 
     public TickInfoPanel(BoxController boxController, SelectionManager selection) {
         this.boxController = boxController;
@@ -65,19 +65,15 @@ public final class TickInfoPanel implements RenderInterface {
         TickState prev = idx > 0 ? states.get(idx - 1) : null;
         TickState prev2 = idx > 1 ? states.get(idx - 2) : null;
 
-        ThemeManager.pushCompactTable();
-        try {
-            renderTable(idx, cur, prev, prev2);
-        } finally {
-            ThemeManager.popCompactTable();
-        }
+        renderTable(idx, cur, prev, prev2);
         ImGui.end();
     }
 
     private void renderTable(int idx, TickState cur, TickState prev, TickState prev2) {
-        if (!ImGui.beginTable(TABLE_ID, 2, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg)) {
+        if (!ImGui.beginTable(TABLE_ID, 2, ThemeManager.standardTableFlags())) {
             return;
         }
+        rowCounter = 0;
 
         row("Tick", Integer.toString(idx),
                 "Index of this tick in the simulated path (0 = start).");
@@ -167,7 +163,10 @@ public final class TickInfoPanel implements RenderInterface {
 
     private void row(String label, String value, String tooltip) {
         ImGui.tableNextRow();
+        ThemeManager.paintTableRowBg(rowCounter++);
         ImGui.tableNextColumn();
+        ThemeManager.emitTableLeftmostCellPad();
+        ImGui.alignTextToFramePadding();
         ThemeManager.pushTextColor(ThemeManager.textMutedColor());
         ImGui.text(label);
         ThemeManager.popTextColor();
@@ -175,6 +174,8 @@ public final class TickInfoPanel implements RenderInterface {
             TooltipUtil.wrappedTooltip(tooltip);
         }
         ImGui.tableNextColumn();
+        ImGui.alignTextToFramePadding();
         ImGui.text(value);
+        ThemeManager.emitTableRightmostCellTrailingPad();
     }
 }

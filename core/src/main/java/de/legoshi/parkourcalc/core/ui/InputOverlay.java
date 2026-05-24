@@ -1,7 +1,6 @@
 package de.legoshi.parkourcalc.core.ui;
 
 import de.legoshi.parkourcalc.core.PlaybackController;
-import de.legoshi.parkourcalc.core.imgui.RenderInterface;
 import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
@@ -9,8 +8,8 @@ import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImDrawList;
 import imgui.ImGui;
-import imgui.ImGuiIO;
 import imgui.ImGuiListClipper;
+import imgui.ImGuiStyle;
 import imgui.ImVec2;
 import imgui.callback.ImListClipperCallback;
 import imgui.flag.*;
@@ -22,33 +21,33 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.function.IntConsumer;
 
-public final class InputOverlay implements RenderInterface {
-
-    private static final String WINDOW_TITLE = "Parkour TAS##parkour-tas";
-    private static final String TITLE_TEXT = "Parkour TAS";
-    private static final float VERSION_PADDING_RIGHT = 8f;
-    // Gap between title text and version label, plus slack for window frame padding on both sides.
-    private static final float TITLE_VERSION_GAP = 48f;
-
-    private final String versionLabel;
+public final class InputOverlay {
 
     private static final String ID_TABLE = "tas-table";
     private static final String ID_CONTEXT_MENU = "context_menu";
     private static final String ID_YAW_INPUT = "##yaw";
-    private static final String ID_ROW_SUFFIX = ".##row";
+    private static final String ID_ROW_SUFFIX = "##row";
     private static final String ID_KEY_SUFFIX = "##";
 
     private static final String COL_INDEX = "#";
     private static final String COL_YAW = "Yaw";
     private static final String COL_SPEED = "Speed";
     private static final String COL_JUMP_BOOST = "Jump";
-    // U+00B7 middle dot. Centered visually, doesn't read as punctuation like an ASCII period.
-    private static final String CELL_OFF = "·";
     // Spacer columns visually separate logical key groups (WASD | modifiers | Yaw).
     // 6px content width + 4px cell padding each side = ~14px visual gap, per Visual quality contract.
     private static final String COL_GAP_KEYS = "##gap_keys";
     private static final String COL_GAP_YAW = "##gap_yaw";
     private static final float COL_GAP_WIDTH = 6.0f;
+    // Space reserved for the row-number digits themselves. Total index column
+    // width comes from ThemeManager.tableLeftmostColumnWidth(INDEX_DIGIT_WIDTH).
+    // Issue 4 will auto-size this based on max row count.
+    private static final float INDEX_DIGIT_WIDTH = 32f;
+    private static final float KEY_COL_MIN_WIDTH = 36f;
+    private static final float MOD_COL_MIN_WIDTH = 48f;
+    // Padded out by scrollbar size on the right so the table's ScrollY scrollbar
+    // overlays the yaw cell's right slack instead of clipping the input.
+    private static final float YAW_COL_WIDTH = 178f;
+    private static final float TABLE_MIN_HEIGHT = 80f;
     private static final InputRow.Key[] MOVEMENT_KEYS = {
             InputRow.Key.W, InputRow.Key.A, InputRow.Key.S, InputRow.Key.D
     };
@@ -79,14 +78,10 @@ public final class InputOverlay implements RenderInterface {
     private static final String MENU_DELETE = "Delete %d row(s)";
     private static final String MENU_DELETE_SHORTCUT = "Del";
 
-    private static final String LABEL_ADD_N = "Add N";
-    private static final float TOOLBAR_STEPPER_WIDTH = 140f;
-    private static final String TOOLTIP_ADD_N = "Rows added each time you click Add. Persists across the session.";
-    private static final String BTN_ADD = "Add";
-    private static final String BTN_DUPLICATE = "Duplicate";
-    private static final String BTN_DELETE = "Delete";
     private static final String BTN_CLEAR_ALL = "Clear All";
     private static final String BTN_CANCEL = "Cancel";
+    private static final String MENU_DUPLICATE = "Duplicate selected";
+    private static final String MENU_CLEAR_ALL = "Clear all rows";
     private static final String POPUP_CLEAR_CONFIRM = "Clear all rows?##clear_confirm";
     private static final String CLEAR_CONFIRM_FMT = "Delete all %d rows? This cannot be undone.";
 
@@ -94,9 +89,6 @@ public final class InputOverlay implements RenderInterface {
 
     private static final String DRAG_DROP_TYPE = "INPUT_ROW";
 
-    private static final float TABLE_MAX_HEIGHT = 900;
-    private static final float TABLE_MIN_HEIGHT = 60;
-    private static final float RESIZE_HANDLE_HEIGHT = 6;
     private static final int BASE_COLUMN_COUNT = 11;
     private static final int POTION_COLUMN_COUNT = 2;
     // inputInt reserves this width for the text field + the two +/- step buttons combined,
@@ -122,11 +114,10 @@ public final class InputOverlay implements RenderInterface {
     private final ImInt bulkJumpBuf = new ImInt();
 
     private int draggingRowIndex = -1;
-    private float userTableHeight = -1f;
 
     public InputOverlay(InputData data, Settings settings, SelectionManager selection,
                         IntConsumer onDataChangedAt, Runnable onSetPlayerPosition,
-                        PlaybackController playback, MinecraftAccess mc, String modVersion) {
+                        PlaybackController playback, MinecraftAccess mc) {
         this.data = data;
         this.settings = settings;
         this.selection = selection;
@@ -134,7 +125,6 @@ public final class InputOverlay implements RenderInterface {
         this.onSetPlayerPosition = onSetPlayerPosition;
         this.playback = playback;
         this.mc = mc;
-        this.versionLabel = "v" + modVersion;
     }
 
     private void notifyChange(int dirtyTick) {
@@ -145,40 +135,44 @@ public final class InputOverlay implements RenderInterface {
         onDataChangedAt.accept(-1);
     }
 
-    @Override
-    public void render(ImGuiIO io) {
+    /** Pixel width the host window must pin itself to so the fixed-width columns
+     *  fit exactly with no horizontal slack. Re-derived each frame, so toggling
+     *  potion columns snaps the window. */
+    public float desiredPaneWidth() {
+        boolean potion = settings.showPotionColumns;
+        int columnCount = BASE_COLUMN_COUNT + (potion ? POTION_COLUMN_COUNT : 0);
+
+        ImGuiStyle style = ImGui.getStyle();
+        float cellPadX = style.getCellPadding().x;
+        float winPadX = style.getWindowPadding().x;
+        float borderSlop = 2f;
+
+        float columnSum = ThemeManager.tableLeftmostColumnWidth(COL_INDEX, INDEX_DIGIT_WIDTH)
+                + MOVEMENT_KEYS.length * KEY_COL_MIN_WIDTH
+                + COL_GAP_WIDTH
+                + MODIFIER_KEYS.length * MOD_COL_MIN_WIDTH
+                + COL_GAP_WIDTH
+                + YAW_COL_WIDTH
+                + (potion ? POTION_COLUMN_COUNT * AMP_COLUMN_WIDTH : 0f);
+
+        // Scrollbar slack is folded into YAW_COL_WIDTH so the scrollbar overlays
+        // the yaw cell's right padding instead of consuming extra window width.
+        float contentW = columnSum + 2f * cellPadX * columnCount + borderSlop;
+        return contentW + 2f * winPadX;
+    }
+
+    public void renderBody() {
         long t0 = Perf.now();
         try {
-            renderInternal(io);
+            renderBodyInternal();
         } finally {
-            Perf.stop("InputOverlay.render", t0);
+            Perf.stop("InputOverlay.renderBody", t0);
         }
     }
 
-    private void renderInternal(ImGuiIO io) {
-        float minTitleBarWidth = ImGui.calcTextSize(TITLE_TEXT).x
-                + ImGui.calcTextSize(versionLabel).x
-                + TITLE_VERSION_GAP;
-        ImGui.setNextWindowSizeConstraints(minTitleBarWidth, 0, Float.MAX_VALUE, Float.MAX_VALUE);
-        boolean visible = ImGui.begin(WINDOW_TITLE, ImGuiWindowFlags.AlwaysAutoResize);
-        renderVersionInTitleBar();
-        if (!visible) {
-            ImGui.end();
-            return;
-        }
-
-        renderBody(computeTableHeight());
-        renderResizeHandle();
-
-        ImGui.end();
-    }
-
-    /** Public so MainWindowOverlay can host the editor in its body. tableHeight=0 means
-     *  auto-fill available vertical space. */
-    public void renderBody(float tableHeight) {
+    private void renderBodyInternal() {
         renderMultiplayerWarning();
         ThemeManager.pushTransparentHeader();
-        renderToolbar();
 
         boolean potionColumns = settings.showPotionColumns;
         if (potionColumns) {
@@ -186,7 +180,11 @@ public final class InputOverlay implements RenderInterface {
         }
         int columnCount = BASE_COLUMN_COUNT + (potionColumns ? POTION_COLUMN_COUNT : 0);
 
-        if (ImGui.beginTable(ID_TABLE, columnCount, tableFlags(), 0, tableHeight)) {
+        // Reserve one frame row at the bottom for FileMenu.renderStatusLine so the
+        // table doesn't reflow when a status message appears or expires.
+        float footerH = ImGui.getFrameHeightWithSpacing();
+        float tableH = Math.max(TABLE_MIN_HEIGHT, ImGui.getContentRegionAvail().y - footerH);
+        if (ImGui.beginTable(ID_TABLE, columnCount, ThemeManager.standardTableFlags(), 0, tableH)) {
             setupColumns(potionColumns);
             renderAllRows(potionColumns);
             ImGui.endTable();
@@ -212,105 +210,66 @@ public final class InputOverlay implements RenderInterface {
         ThemeManager.popTextColor();
     }
 
-    private void renderVersionInTitleBar() {
-        ImVec2 textSize = ImGui.calcTextSize(versionLabel);
-        float titleBarH = ImGui.getFrameHeight();
-        ImVec2 winPos = ImGui.getWindowPos();
-        float winW = ImGui.getWindowWidth();
-        float x = winPos.x + winW - textSize.x - VERSION_PADDING_RIGHT;
-        float y = winPos.y + (titleBarH - textSize.y) * 0.5f;
-        int color = ImGui.getColorU32(ImGuiCol.Text);
-        ImGui.getForegroundDrawList().addText(x, y, color, versionLabel);
-    }
-
-    private int tableFlags() {
-        return ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg | ImGuiTableFlags.ScrollY;
-    }
-
-    private float computeTableHeight() {
-        if (userTableHeight > 0) {
-            return Math.max(TABLE_MIN_HEIGHT, userTableHeight);
-        }
-        float rowHeight = ImGui.getFrameHeightWithSpacing();
-        float desired = (data.size() + 1) * rowHeight + 8;
-        return Math.min(desired, TABLE_MAX_HEIGHT);
-    }
-
-    private void renderResizeHandle() {
-        // invisibleButton asserts both dims > 0; contentRegionAvail.x can be 0 when the window
-        // is collapsed past the table's content width.
-        float width = Math.max(1.0f, ImGui.getContentRegionAvail().x);
-        ImGui.invisibleButton("##table_resize", width, RESIZE_HANDLE_HEIGHT);
-
-        boolean hovered = ImGui.isItemHovered();
-        boolean active = ImGui.isItemActive();
-
-        if (hovered || active) {
-            ImGui.setMouseCursor(ImGuiMouseCursor.ResizeNS);
-        }
-        if (active) {
-            // Lock in the current computed value the first frame of a drag so subsequent
-            // deltas accumulate from the visible size rather than snapping to the cap.
-            if (userTableHeight <= 0) {
-                userTableHeight = computeTableHeight();
-            }
-            userTableHeight = Math.max(TABLE_MIN_HEIGHT, userTableHeight + ImGui.getIO().getMouseDeltaY());
-        }
-        if (hovered && ImGui.isMouseDoubleClicked(0)) {
-            userTableHeight = -1f;
-        }
-
-        ImVec2 min = ImGui.getItemRectMin();
-        ImVec2 max = ImGui.getItemRectMax();
-        float midY = (min.y + max.y) / 2f;
-        float intensity = active ? 0.9f : hovered ? 0.7f : 0.4f;
-        int color = ImGui.colorConvertFloat4ToU32(intensity, intensity, intensity, 1.0f);
-        ImGui.getWindowDrawList().addLine(min.x + 4, midY, max.x - 4, midY, color, 2.0f);
-    }
-
     private void setupColumns(boolean potionColumns) {
-        int spacerFlags = ImGuiTableColumnFlags.NoHeaderLabel | ImGuiTableColumnFlags.WidthFixed;
-        ImGui.tableSetupColumn(COL_INDEX);
+        int spacerFlags = ImGuiTableColumnFlags.NoHeaderLabel
+                | ImGuiTableColumnFlags.WidthFixed
+                | ImGuiTableColumnFlags.NoResize;
+        ImGui.tableSetupColumn(COL_INDEX,
+                ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoResize,
+                ThemeManager.tableLeftmostColumnWidth(COL_INDEX, INDEX_DIGIT_WIDTH));
         for (InputRow.Key key : MOVEMENT_KEYS) {
-            ImGui.tableSetupColumn(headerLabel(key));
+            ImGui.tableSetupColumn(headerLabel(key), ImGuiTableColumnFlags.WidthFixed, KEY_COL_MIN_WIDTH);
         }
         ImGui.tableSetupColumn(COL_GAP_KEYS, spacerFlags, COL_GAP_WIDTH);
         for (InputRow.Key key : MODIFIER_KEYS) {
-            ImGui.tableSetupColumn(headerLabel(key));
+            ImGui.tableSetupColumn(headerLabel(key), ImGuiTableColumnFlags.WidthFixed, MOD_COL_MIN_WIDTH);
         }
         ImGui.tableSetupColumn(COL_GAP_YAW, spacerFlags, COL_GAP_WIDTH);
-        ImGui.tableSetupColumn(COL_YAW, ImGuiTableColumnFlags.WidthFixed, 160);
+        // YAW already bakes scrollbar slack into its width so the scrollbar
+        // overlays the right side of the cell; no rightmost-helper widening
+        // when yaw is the last column. When potion columns are on, jump_boost
+        // becomes rightmost and uses the helper to gain the right gutter.
+        ImGui.tableSetupColumn(COL_YAW, ImGuiTableColumnFlags.WidthFixed, YAW_COL_WIDTH);
         if (potionColumns) {
             ImGui.tableSetupColumn(COL_SPEED, ImGuiTableColumnFlags.WidthFixed, AMP_COLUMN_WIDTH);
-            ImGui.tableSetupColumn(COL_JUMP_BOOST, ImGuiTableColumnFlags.WidthFixed, AMP_COLUMN_WIDTH);
+            ImGui.tableSetupColumn(COL_JUMP_BOOST, ImGuiTableColumnFlags.WidthFixed,
+                    ThemeManager.tableRightmostColumnWidth(COL_JUMP_BOOST, AMP_COLUMN_WIDTH));
         }
+        ImGui.tableSetupScrollFreeze(0, 1);
         renderColumnHeadersWithTooltips(potionColumns);
     }
 
     private void renderColumnHeadersWithTooltips(boolean potionColumns) {
         ImGui.tableNextRow(ImGuiTableRowFlags.Headers);
+        ThemeManager.paintTableHeader();
         int col = 0;
         ImGui.tableSetColumnIndex(col++);
-        ImGui.tableHeader(COL_INDEX);
+        ThemeManager.emitTableLeftmostCellPad();
+        ThemeManager.tableHeader(COL_INDEX);
         for (InputRow.Key key : MOVEMENT_KEYS) {
             ImGui.tableSetColumnIndex(col++);
-            ImGui.tableHeader(headerLabel(key));
+            ThemeManager.tableHeader(headerLabel(key));
             if (ImGui.isItemHovered()) TooltipUtil.wrappedTooltip(headerTooltip(key));
         }
         col++; // gap_keys spacer
         for (InputRow.Key key : MODIFIER_KEYS) {
             ImGui.tableSetColumnIndex(col++);
-            ImGui.tableHeader(headerLabel(key));
+            ThemeManager.tableHeader(headerLabel(key));
             if (ImGui.isItemHovered()) TooltipUtil.wrappedTooltip(headerTooltip(key));
         }
         col++; // gap_yaw spacer
         ImGui.tableSetColumnIndex(col++);
-        ImGui.tableHeader(COL_YAW);
-        if (potionColumns) {
+        ThemeManager.tableHeader(COL_YAW);
+        if (!potionColumns) {
+            // yaw is the rightmost column: trailing pad lives inside its existing
+            // scrollbar slack so the contract is satisfied without changing width.
+            ThemeManager.emitTableRightmostCellTrailingPad();
+        } else {
             ImGui.tableSetColumnIndex(col++);
-            ImGui.tableHeader(COL_SPEED);
+            ThemeManager.tableHeader(COL_SPEED);
             ImGui.tableSetColumnIndex(col);
-            ImGui.tableHeader(COL_JUMP_BOOST);
+            ThemeManager.tableHeader(COL_JUMP_BOOST);
+            ThemeManager.emitTableRightmostCellTrailingPad();
         }
     }
 
@@ -363,7 +322,11 @@ public final class InputOverlay implements RenderInterface {
 
     private void renderRow(int index, InputRow row, DragDropState dragDrop, boolean potionColumns) {
         ImGui.pushID(row.getId());
-        ImGui.tableNextRow();
+        // Pin row height to one frame so the yaw input frame and the selectable
+        // labels share the same vertical bounds; without this, the row stretches
+        // to the tallest cell and shorter content (the input) renders top-aligned.
+        float rowH = ImGui.getFrameHeight() + ImGui.getStyle().getCellPadding().y * 2f;
+        ImGui.tableNextRow(0, rowH);
 
         setRowBackground(index);
 
@@ -379,27 +342,29 @@ public final class InputOverlay implements RenderInterface {
         renderYawColumn(row, index);
         if (potionColumns) {
             renderPotionColumns(row, index);
+        } else {
+            ThemeManager.emitTableRightmostCellTrailingPad();
         }
 
         ImGui.popID();
     }
 
     private void setRowBackground(int rowIndex) {
-        int color = 0;
+        ThemeManager.paintTableRowBg(rowIndex);
+        int tint = 0;
         if (selection.isSelected(rowIndex)) {
-            color = ThemeManager.accentDimColor();
+            tint = ThemeManager.selectedTintColor(0.45f);
         } else if (draggingRowIndex == rowIndex) {
-            color = ThemeManager.accentDimColor();
+            tint = ThemeManager.accentDimColor();
         } else if (playback != null && playback.currentTick() == rowIndex) {
-            color = ThemeManager.warningTintColor(0.25f);
+            tint = ThemeManager.warningTintColor(0.25f);
         }
-
-        if (color != 0) {
-            ImGui.tableSetBgColor(ImGuiTableBgTarget.RowBg0, color);
-        }
+        ThemeManager.paintTableRowTint(tint);
     }
 
     private void renderRowNumber(int rowIndex) {
+        ThemeManager.emitTableLeftmostCellPad();
+        ImGui.alignTextToFramePadding();
         boolean isSelected = selection.isSelected(rowIndex);
         int flags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowItemOverlap;
 
@@ -471,11 +436,12 @@ public final class InputOverlay implements RenderInterface {
 
     private void renderKeyCell(InputRow row, int rowIndex, InputRow.Key key) {
         ImGui.tableNextColumn();
+        ImGui.alignTextToFramePadding();
 
         boolean actualValue = row.isKeyActive(key);
         boolean displayValue = keyDragSelect.getDisplayValue(key, rowIndex, actualValue);
 
-        String cellLabel = displayValue ? headerLabel(key) : CELL_OFF;
+        String cellLabel = displayValue ? headerLabel(key) : "";
         int color = displayValue ? ThemeManager.textColor() : ThemeManager.textMutedColor();
         ThemeManager.pushTextColor(color);
 
@@ -494,7 +460,12 @@ public final class InputOverlay implements RenderInterface {
         Float yaw = row.getYaw();
         yawInput.set(yaw == null ? "" : String.format(Locale.US, YAW_FORMAT, yaw));
 
-        if (Controls.inputText(ID_YAW_INPUT, yawInput, 150)) {
+        boolean selectedRow = selection.isSelected(rowIndex);
+        if (selectedRow) ThemeManager.pushSelectedFrameBg();
+        boolean changed = Controls.inputText(ID_YAW_INPUT, yawInput, 150);
+        if (selectedRow) ThemeManager.popSelectedFrameBg();
+
+        if (changed) {
             parseAndSetYaw(row);
             notifyChange(rowIndex);
         }
@@ -510,7 +481,9 @@ public final class InputOverlay implements RenderInterface {
 
         ImGui.tableNextColumn();
         ampBuf.set(row.getJumpBoostAmplifier());
-        if (Controls.combo(ID_JUMP_SUFFIX, ampBuf, AMP_LABELS, AMP_CELL_WIDTH)) {
+        boolean jumpChanged = Controls.combo(ID_JUMP_SUFFIX, ampBuf, AMP_LABELS, AMP_CELL_WIDTH);
+        ThemeManager.emitTableRightmostCellTrailingPad();
+        if (jumpChanged) {
             row.setJumpBoostAmplifier(ampBuf.get());
             notifyChange(rowIndex);
         }
@@ -548,37 +521,6 @@ public final class InputOverlay implements RenderInterface {
             } catch (NumberFormatException ignored) {
             }
         }
-    }
-
-    private void renderToolbar() {
-        Controls.inputInt(LABEL_ADD_N, rowsToAdd, TOOLBAR_STEPPER_WIDTH);
-        if (ImGui.isItemHovered()) TooltipUtil.wrappedTooltip(TOOLTIP_ADD_N);
-        rowsToAdd.set(Math.max(1, Math.min(1000, rowsToAdd.get())));
-
-        ImGui.sameLine();
-        if (Controls.secondaryButton(BTN_ADD)) {
-            addRowsAtEnd(rowsToAdd.get());
-        }
-
-        boolean hasSelection = !selection.isEmpty();
-        ImGui.sameLine();
-        ImGui.beginDisabled(!hasSelection);
-        if (Controls.secondaryButton(BTN_DUPLICATE)) {
-            duplicateSelectedRows();
-        }
-        ImGui.sameLine();
-        if (Controls.secondaryButton(BTN_DELETE)) {
-            deleteSelectedRows();
-        }
-        ImGui.endDisabled();
-
-        boolean hasRows = !data.getRows().isEmpty();
-        ImGui.sameLine();
-        ImGui.beginDisabled(!hasRows);
-        if (Controls.secondaryButton(BTN_CLEAR_ALL)) {
-            requestClearAll();
-        }
-        ImGui.endDisabled();
     }
 
     private void renderClearConfirmPopup() {
@@ -648,8 +590,28 @@ public final class InputOverlay implements RenderInterface {
         ImGui.separator();
         renderAddRowOptions();
         renderDeleteOption();
+        renderDuplicateAndClearOptions();
 
         ImGui.endPopup();
+    }
+
+    private void renderDuplicateAndClearOptions() {
+        boolean hasSelection = !selection.isEmpty();
+        boolean hasRows = !data.getRows().isEmpty();
+        if (!hasSelection && !hasRows) return;
+
+        ImGui.separator();
+        ImGui.beginDisabled(!hasSelection);
+        if (ImGui.menuItem(MENU_DUPLICATE)) {
+            duplicateSelectedRows();
+        }
+        ImGui.endDisabled();
+
+        ImGui.beginDisabled(!hasRows);
+        if (ImGui.menuItem(MENU_CLEAR_ALL)) {
+            requestClearAll();
+        }
+        ImGui.endDisabled();
     }
 
     private void renderRowCountInput() {
@@ -706,8 +668,23 @@ public final class InputOverlay implements RenderInterface {
         if (ImGui.isKeyPressed(ImGuiKey.Delete) && !selection.isEmpty()) {
             deleteSelectedRows();
         }
+        if (ImGui.isKeyPressed(ImGuiKey.Insert)) {
+            insertRowsAtSelectionOrEnd(rowsToAdd.get());
+        }
         // ESC is owned by the loader's tick handler so it can decide
         // clear-selection vs close-overlay atomically.
+    }
+
+    private void insertRowsAtSelectionOrEnd(int count) {
+        if (count <= 0) return;
+        if (selection.size() == 1) {
+            int selected = selection.getSelected().iterator().next();
+            data.addRows(selected, count);
+            selection.adjustForInsert(selected, count);
+            notifyChange(selected);
+        } else {
+            addRowsAtEnd(count);
+        }
     }
 
     private static class DragDropState {
