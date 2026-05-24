@@ -8,13 +8,7 @@ import imgui.type.ImFloat;
 import imgui.type.ImInt;
 import imgui.type.ImString;
 
-/**
- * Form-control helpers. Every input, slider, checkbox, combo, and button in
- * core/ui/ routes through here so styling, label layout, and the 2px focus
- * outline live in one place. Direct ImGui calls to these widgets outside of
- * this file are a contract violation. See docs/UI_REDESIGN.md "Visual quality
- * contract".
- */
+/** Form-control helpers. See docs/UI_REDESIGN.md "Visual quality contract". */
 public final class Controls {
 
     private static final float DEFAULT_NUM_WIDTH = 90.0f;
@@ -94,8 +88,6 @@ public final class Controls {
     // ---- checkbox / combo ------------------------------------------------------
 
     public static boolean checkbox(String label, ImBoolean ref) {
-        // Box + label render together; ImGui handles the 16x16 box. Global
-        // FrameBorderSize=1 + FrameBg=PANEL makes the unchecked box visible.
         boolean changed = ImGui.checkbox(label, ref);
         drawFocusRingIfActive();
         return changed;
@@ -140,11 +132,6 @@ public final class Controls {
 
     // ---- layout helper for label-control pairs --------------------------------
 
-    /**
-     * Renders {@code label: } on the left then advances the cursor for the next
-     * widget. Useful inside 2-col layout tables in modals where the helper's
-     * built-in label rendering is suppressed and the caller controls placement.
-     */
     public static void labelCell(String label) {
         ImGui.alignTextToFramePadding();
         ImGui.text(label);

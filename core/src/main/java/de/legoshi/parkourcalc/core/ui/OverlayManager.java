@@ -8,12 +8,7 @@ import imgui.ImGuiIO;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * v1.3.0: thin gate around the registered render entries. The pin / control-panel
- * model from earlier versions is gone: MainWindowOverlay is the only registered
- * overlay, and isControlPanelOpen() now means "main UI visible". The setter is the
- * keybind handler's hook for showing / hiding.
- */
+/** Visibility gate for registered overlays. isControlPanelOpen() = main UI visible. */
 public class OverlayManager implements RenderInterface {
 
     private final List<RenderInterface> overlays = new ArrayList<>();

@@ -181,7 +181,7 @@ No modal pops on world join. The CTA is the prompt.
 Centralized in `ThemeManager`. Every overlay reads from these. No
 literal RGBA arrays anywhere else in `core/ui/`.
 
-### Palette — Catppuccin Mocha
+### Palette: Catppuccin Mocha
 
 Source: https://catppuccin.com/palette/. Picked for subtle alt-row banding
 (~6% lift between base and surface0), legible muted text, and pastel accents
@@ -223,10 +223,10 @@ xl  24px
 
 `ImGuiStyle` mapping:
 - `WindowPadding`        = `lg, lg`
-- `FramePadding`         = `md, sm`  (bumped from `sm, xs` — buttons/inputs need vertical breathing room)
-- `ItemSpacing`          = `sm, sm`  (vertical was `xs` — rows were squashed against each other)
+- `FramePadding`         = `md, sm`  (bumped from `sm, xs`; buttons/inputs need vertical breathing room)
+- `ItemSpacing`          = `sm, sm`  (vertical was `xs`; rows were squashed against each other)
 - `ItemInnerSpacing`     = `xs, xs`
-- `CellPadding`          = `sm, xs`  (was `xs, xxs` — input table cells were cramped)
+- `CellPadding`          = `sm, xs`  (was `xs, xxs`; input table cells were cramped)
 - `ScrollbarSize`        = `18px` (raised above `md`; see Component sanity rules)
 - `GrabMinSize`          = `md`
 
@@ -425,7 +425,7 @@ This section is non-negotiable. Every screen must satisfy these before merging.
 - No token serves two semantic states. `panel_alt` is alt-row banding ONLY. Add
   separate tokens for the hover and focus states it currently double-books:
 
-      hover     0.20, 0.20, 0.23, 1.00   — row/button hover background
+      hover     0.20, 0.20, 0.23, 1.00   : row/button hover background
       focus     accent (existing) at 0.30 alpha as outline, never fill
 
 - Text on background must hit ≥ 4.5:1 contrast for body text, ≥ 3:1 for

@@ -28,11 +28,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
 
-/**
- * Owns all File-menu state: popup flags, name input, file list cache, recent files
- * tracking, and modal rendering. MainWindowOverlay delegates menu rendering and popup
- * rendering here.
- */
+/** File-menu state, popups, and recent-files list. Owned by MainWindowOverlay. */
 public final class FileMenu {
 
     private static final int MAX_RECENT = 5;
@@ -160,9 +156,6 @@ public final class FileMenu {
         }
         float reservedH = ImGui.getFrameHeightWithSpacing() * opacity;
         float childH = reservedH - ImGui.getStyle().getItemSpacing().y;
-        // Below ~1px the strip would draw a sub-pixel sliver while
-        // statusStripHeight already returned 0, leaving the table's reservation
-        // and the strip's draw out of sync. Bail in lockstep.
         if (childH < 1f) return;
 
         ImGui.pushStyleVar(ImGuiStyleVar.Alpha, opacity);
@@ -379,9 +372,6 @@ public final class FileMenu {
         this.statusFadeUntilMs = this.statusActiveUntilMs + STATUS_FADE_MS;
     }
 
-    /** Height the status strip will occupy this frame. 0 when no message, full
-     *  when shown, partial during fade-out. InputOverlay reserves this so the
-     *  tick table reclaims the vertical space smoothly as the message fades. */
     public float statusStripHeight() {
         if (statusMessage == null) return 0f;
         long now = System.currentTimeMillis();
@@ -389,8 +379,6 @@ public final class FileMenu {
         float opacity = (now <= statusActiveUntilMs) ? 1f
                 : 1f - (float)(now - statusActiveUntilMs) / (float) STATUS_FADE_MS;
         float reservedH = ImGui.getFrameHeightWithSpacing() * Math.max(0f, opacity);
-        // Mirror renderStatusLine's bail so the reservation never undersizes the
-        // actual child + spacing the strip will draw.
         if (reservedH - ImGui.getStyle().getItemSpacing().y < 1f) return 0f;
         return reservedH;
     }
@@ -408,8 +396,6 @@ public final class FileMenu {
             return;
         }
 
-        // Claim focus on the first frame so a stray Enter from the menu activation
-        // can't slip into the input and trigger commit on a single keystroke.
         if (nameModalJustOpened) {
             ImGui.setKeyboardFocusHere();
         }
@@ -423,8 +409,6 @@ public final class FileMenu {
             nameModalError = null;
             lastNameInputSeen = currentTrim;
         }
-        // Any non-empty value clears a stale "name cannot be empty" error even if the
-        // trimmed buffer matches what we last saw (user typed then deleted then retyped).
         if (!currentTrim.isEmpty() && "Name cannot be empty.".equals(nameModalError)) {
             nameModalError = null;
         }
@@ -490,10 +474,6 @@ public final class FileMenu {
             maxWorldW = Math.max(maxWorldW, ImGui.calcTextSize(info.worldLabel != null ? info.worldLabel : "?").x);
         }
 
-        // beginStandardClickableRowsTable pushes Header = SELECTED mauve and
-        // HeaderHovered = TABLE_ROW_HOVER, so the Selectable paints both the
-        // selected and hovered states in the same rect; hover on a selected
-        // row fully overdraws the magenta with no leftover padding bands.
         if (ThemeManager.beginStandardClickableRowsTable("##open_table", 4, 0, 0f, tableH)) {
             ImGui.tableSetupScrollFreeze(0, 1);
             ImGui.tableSetupColumn(COL_FILENAME, ImGuiTableColumnFlags.WidthFixed,
@@ -521,8 +501,6 @@ public final class FileMenu {
                     openSelected = info.name;
                     if (ImGui.isMouseDoubleClicked(0)) doubleClickedToOpen = info.name;
                 }
-                // Match the Y position centeredSelectable uses so the filename
-                // sits on the same baseline as date/MC/world text in this row.
                 float labelY = cellOrigin.y + ImGui.getStyle().getFramePadding().y;
                 ImGui.getWindowDrawList().addText(cellOrigin.x, labelY,
                         ThemeManager.tableCellText(selected), info.name);

@@ -34,17 +34,11 @@ public final class InputOverlay {
     private static final String COL_YAW = "Yaw";
     private static final String COL_SPEED = "Speed";
     private static final String COL_JUMP_BOOST = "Jump";
-    // Minimum data width for the row-number cell. indexColumnDataWidth() grows
-    // beyond this once the highest row number's digits no longer fit.
     private static final float INDEX_DIGIT_WIDTH = 32f;
     private static final float INDEX_DIGIT_SLACK = 6f;
     private static final float KEY_COL_MIN_WIDTH = 36f;
     private static final float MOD_COL_MIN_WIDTH = 48f;
     private static final float TABLE_MIN_HEIGHT = 80f;
-    // Representative 12-char yaw string used to size the input field and column.
-    // 12 chars matches YAW_FORMAT_DISPLAY's maximum width (sign + 4 int + dot +
-    // 6 frac). Sized at runtime against the actual font so font-metric changes
-    // do not silently re-introduce right-edge clipping.
     private static final String YAW_WIDTH_SAMPLE = " -1234.000000";
     private static final InputRow.Key[] MOVEMENT_KEYS = {
             InputRow.Key.W, InputRow.Key.A, InputRow.Key.S, InputRow.Key.D
@@ -83,26 +77,13 @@ public final class InputOverlay {
     private static final String POPUP_CLEAR_CONFIRM = "Clear all rows?##clear_confirm";
     private static final String CLEAR_CONFIRM_FMT = "Delete all %d rows? This cannot be undone.";
 
-    // Display format pads positive values with a leading space (the " " flag) so
-    // they reserve the sign column and align with negatives at the decimal point.
-    // Width 12 = sign(1) + max-integer-digits(4) + dot(1) + fractional-digits(6).
-    // Covers the typical -360 to +360 yaw range plus 4-digit outliers; values
-    // with 5+ integer digits overflow the alignment slot and lose dot-alignment
-    // on those rows only (no format break), but that represents a data-model
-    // issue (yaw is not supposed to exceed 360 in normal use) not a format one.
     private static final String YAW_FORMAT_DISPLAY = "% 12.6f";
-    // Editing format omits the leading-space padding so the buffer the user
-    // types into looks like a normal float, not "  13.139954" with awkward
-    // leading whitespace. Switches back to YAW_FORMAT_DISPLAY when the cell
-    // loses focus.
     private static final String YAW_FORMAT_EDIT = "%.6f";
 
     private static final String DRAG_DROP_TYPE = "INPUT_ROW";
 
     private static final int BASE_COLUMN_COUNT = 9;
     private static final int POTION_COLUMN_COUNT = 2;
-    // inputInt reserves this width for the text field + the two +/- step buttons combined,
-    // so it must comfortably exceed 2 * frame_height (~40 px) to leave room to type.
     private static final float ROW_COUNT_INPUT_WIDTH = 240;
 
     private static final String WARN_MULTIPLAYER =
@@ -126,10 +107,6 @@ public final class InputOverlay {
     private final ImInt bulkJumpBuf = new ImInt();
 
     private int draggingRowIndex = -1;
-    // Row index whose yaw cell is currently the active edit target. -1 when no
-    // yaw cell has focus. Used by renderYawColumn to format the buffer with the
-    // unpadded edit string while the user is typing, then snap back to the
-    // padded display string on focus loss.
     private int editingYawRow = -1;
 
     private Supplier<Float> footerHeightProvider = () -> 0f;
@@ -158,9 +135,6 @@ public final class InputOverlay {
         onDataChangedAt.accept(-1);
     }
 
-    // Tick cell text grows by one glyph at each power of ten. Floor at
-    // INDEX_DIGIT_WIDTH so the column stays sized for the bold header on
-    // empty/tiny tables.
     private float indexColumnDataWidth() {
         int maxRowNum = Math.max(1, data.size());
         float textW = ImGui.calcTextSize(String.valueOf(maxRowNum)).x;
@@ -168,26 +142,16 @@ public final class InputOverlay {
         return Math.max(INDEX_DIGIT_WIDTH, textW + 2f * cellPadX + INDEX_DIGIT_SLACK);
     }
 
-    // Width sufficient to display a full YAW_FORMAT_DISPLAY value inside an
-    // InputText frame without right-edge clipping. Text width + the input's
-    // internal framePadding on each side.
     private static float yawInputWidth() {
         float textW = ImGui.calcTextSize(YAW_WIDTH_SAMPLE).x;
         float framePadX = ImGui.getStyle().getFramePadding().x;
         return textW + 2f * framePadX;
     }
 
-    // Yaw column width = input width + scrollbar slack + one framePadding so the
-    // ScrollY scrollbar overlays the yaw cell's right slack instead of clipping
-    // the input. Keeps Yaw self-sufficient on the rightmost position (no potion
-    // columns) without needing tableRightmostColumnWidth.
     private static float yawColumnWidth() {
         return yawInputWidth() + ThemeManager.tableScrollbarSlack() + ImGui.getStyle().getFramePadding().x;
     }
 
-    /** Pixel width the host window must pin itself to so the fixed-width columns
-     *  fit exactly with no horizontal slack. Re-derived each frame, so toggling
-     *  potion columns snaps the window. */
     public float desiredPaneWidth() {
         boolean potion = settings.showPotionColumns;
         int columnCount = BASE_COLUMN_COUNT + (potion ? POTION_COLUMN_COUNT : 0);
@@ -210,8 +174,6 @@ public final class InputOverlay {
                     + ThemeManager.tableRightmostColumnWidth(COL_JUMP_BOOST, AMP_COLUMN_WIDTH, ThemeManager.tableScrollbarSlack());
         }
 
-        // Scrollbar slack is folded into YAW_COL_WIDTH so the scrollbar overlays
-        // the yaw cell's right padding instead of consuming extra window width.
         float contentW = columnSum + 2f * cellPadX * columnCount + borderSlop;
         return contentW + 2f * winPadX;
     }
@@ -234,15 +196,8 @@ public final class InputOverlay {
         }
         int columnCount = BASE_COLUMN_COUNT + (potionColumns ? POTION_COLUMN_COUNT : 0);
 
-        // Reserve only the status strip's *current* height so the table reclaims
-        // space when no message is active and animates back as a message fades out.
         float footerH = footerHeightProvider.get();
         float tableH = Math.max(TABLE_MIN_HEIGHT, ImGui.getContentRegionAvail().y - footerH);
-        // beginStandardTable handles the selection-chrome push internally
-        // (Header / HeaderHovered / HeaderActive / DragDropTarget all transparent)
-        // so the row tint we paint per row is the only selection signal.
-        // Side benefit of scoping the push to the table only: the right-click
-        // context menu below regains its default hover highlight on items.
         if (ThemeManager.beginStandardTable(ID_TABLE, columnCount, 0, 0f, tableH)) {
             setupColumns(potionColumns);
             renderAllRows(potionColumns);
@@ -294,10 +249,6 @@ public final class InputOverlay {
             ImGui.tableSetupColumn(label, ImGuiTableColumnFlags.WidthFixed,
                     ThemeManager.tableColumnWidth(label, MOD_COL_MIN_WIDTH));
         }
-        // YAW already bakes scrollbar slack into its width so the scrollbar
-        // overlays the right side of the cell; no rightmost-helper widening
-        // when yaw is the last column. When potion columns are on, jump_boost
-        // becomes rightmost and uses the helper to gain the right gutter.
         ImGui.tableSetupColumn(COL_YAW, ImGuiTableColumnFlags.WidthFixed,
                 ThemeManager.tableColumnWidth(COL_YAW, yawColumnWidth()));
         if (potionColumns) {
@@ -332,8 +283,6 @@ public final class InputOverlay {
         ThemeManager.tableHeaderCentered(COL_YAW);
         if (ImGui.isItemHovered()) TooltipUtil.wrappedTooltip(headerColTooltip(COL_YAW));
         if (!potionColumns) {
-            // yaw is the rightmost column: trailing pad lives inside its existing
-            // scrollbar slack so the contract is satisfied without changing width.
             ThemeManager.tableRightmostCellTrailingPad();
         } else {
             ImGui.tableSetColumnIndex(col++);
@@ -405,9 +354,6 @@ public final class InputOverlay {
 
     private void renderRow(int index, InputRow row, DragDropState dragDrop, boolean potionColumns) {
         ImGui.pushID(row.getId());
-        // Pin row height to one frame so the yaw input frame and the selectable
-        // labels share the same vertical bounds; without this, the row stretches
-        // to the tallest cell and shorter content (the input) renders top-aligned.
         float rowH = ImGui.getFrameHeight() + ImGui.getStyle().getCellPadding().y * 2f;
         ImGui.tableNextRow(0, rowH);
 
@@ -449,10 +395,6 @@ public final class InputOverlay {
         ThemeManager.tableLeftmostCellPad();
         boolean isSelected = selection.isSelected(rowIndex);
         int flags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowItemOverlap;
-        // Right-aligned numeric column: the ones-place sits at a fixed x so 1,
-        // 10, 100, 1000 read as vertically aligned. Click region stays
-        // SpanAllColumns: visible label position and hit region are
-        // independent in rightAlignedSelectable.
         if (ThemeManager.rightAlignedSelectable("row" + rowIndex, String.valueOf(rowIndex + 1), isSelected, flags)) {
             selection.handleClick(rowIndex);
         }
@@ -474,9 +416,6 @@ public final class InputOverlay {
             float rowMidY = (rowMin.y + rowMax.y) / 2;
             boolean insertAbove = mouseY < rowMidY;
 
-            // rowMin/rowMax track the Selectable rect, inset from the actual row
-            // boundary by cellPadding.y; shift outward so the line lands in the
-            // middle of the gap between cells, not on the tile edge.
             float gapInset = ImGui.getStyle().getCellPadding().y;
             state.dropLineY = insertAbove ? rowMin.y - gapInset : rowMax.y + gapInset;
             state.rowMinX = rowMin.x;
@@ -560,10 +499,6 @@ public final class InputOverlay {
         float inputW = yawInputWidth();
         ThemeManager.centerNextItem(inputW);
         boolean changed = Controls.inputText(ID_YAW_INPUT, yawInput, inputW);
-        // Toggle edit-format state based on this frame's activation/deactivation
-        // of the input. isItemActivated fires only on the frame the input gains
-        // focus; isItemDeactivated only on the frame it loses focus. Next
-        // frame's render then picks the matching format string.
         if (ImGui.isItemActivated()) {
             editingYawRow = rowIndex;
         }
@@ -782,8 +717,6 @@ public final class InputOverlay {
         if (ImGui.isKeyPressed(ImGuiKey.Insert)) {
             insertRowsAtSelectionOrEnd(rowsToAdd.get());
         }
-        // ESC is owned by the loader's tick handler so it can decide
-        // clear-selection vs close-overlay atomically.
     }
 
     private void insertRowsAtSelectionOrEnd(int count) {

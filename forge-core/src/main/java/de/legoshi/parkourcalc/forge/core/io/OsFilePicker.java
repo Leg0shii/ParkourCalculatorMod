@@ -13,17 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * Spawns the OS-native file picker via ProcessBuilder. Used by both Forge loaders since
- * LWJGL2 has no TinyFileDialogs binding.
- *
- *   Windows: PowerShell + System.Windows.Forms.OpenFileDialog (wraps Win32 GetOpenFileName).
- *   macOS:   osascript with `choose file`.
- *   Linux:   zenity --file-selection (kdialog/yad not handled here).
- *
- * Blocks the calling thread until the picker closes; on Forge the MC client freezes during
- * that window. v1.3.0 accepts the freeze, async polling is a future refactor.
- */
+/** OS-native file picker via ProcessBuilder; Forge has no TinyFileDialogs on LWJGL2. */
 public final class OsFilePicker implements FilePickerPort {
 
     @Override
@@ -49,9 +39,6 @@ public final class OsFilePicker implements FilePickerPort {
             int exit = p.waitFor();
             String trimmed = out.trim();
             if (trimmed.isEmpty()) return null;
-            // zenity / osascript return 0 on selection, non-zero on cancel; PowerShell
-            // always returns 0 and emits an empty stdout on cancel. Either way an empty
-            // stdout means no selection.
             if (exit != 0 && !windows) return null;
             return Paths.get(trimmed);
         } catch (IOException | InterruptedException e) {

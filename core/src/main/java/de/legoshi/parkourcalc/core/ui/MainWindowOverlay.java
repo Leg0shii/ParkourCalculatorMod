@@ -12,25 +12,12 @@ import imgui.flag.ImGuiWindowFlags;
 
 import java.nio.file.Path;
 
-/**
- * Root window for v1.3.0. Menu bar (File / View / Settings / Help) plus the body,
- * which switches between an empty-state CTA and the input editor. Per-row tick
- * operations live in the right-click context menu on the input table.
- */
+/** Root v1.3.0 window: menu bar + empty-state or input editor body. */
 public final class MainWindowOverlay implements RenderInterface {
 
-    // ### (not ##) so ImGui uses only the suffix for the window ID. The visible
-    // title changes with the file name and the dirty marker; under ## that flips
-    // the hashed ID, ImGui treats every title change as a new window, and the
-    // FirstUseEver pos/size below re-applies, snapping the window back to (16,16).
+    // ### so the ID stays stable while the visible title (file name, dirty marker) changes.
     private static final String WINDOW_ID = "###main_window";
     private static final String APP_NAME = "Parkour Calculator";
-    // NoScrollbar/NoScrollWithMouse: the input table has its own ScrollY for row
-    // overflow, and the rest of the body (status strip, menubar, empty state) is
-    // always shorter than any usable window height. The parent window never has a
-    // legitimate reason to scroll. Without these flags, sub-pixel rounding around
-    // the status-strip fade-out pushes CursorMaxPos a px or two past the inner
-    // rect for a few frames and ImGui flashes a 1-2 px scrollbar at the transition.
     private static final int WINDOW_FLAGS = ImGuiWindowFlags.MenuBar
             | ImGuiWindowFlags.NoScrollbar
             | ImGuiWindowFlags.NoScrollWithMouse;
@@ -84,8 +71,6 @@ public final class MainWindowOverlay implements RenderInterface {
 
     @Override
     public void render(ImGuiIO io) {
-        // Width is derived from the input table so the pane fits its content exactly;
-        // minW == maxW pins the horizontal axis while leaving vertical resize free.
         float fixedW = inputOverlay.desiredPaneWidth();
         ImGui.setNextWindowSize(fixedW, 640, ImGuiCond.FirstUseEver);
         ImGui.setNextWindowPos(16, 16, ImGuiCond.FirstUseEver);
@@ -116,8 +101,6 @@ public final class MainWindowOverlay implements RenderInterface {
     }
 
     private void renderBody() {
-        // No TAS open means no editing surface. Prevents the prior "Edit menu adds a
-        // tick which silently creates a TAS" trap; the user must explicitly New/Open first.
         if (!fileMenu.hasOpenTas()) {
             fileMenu.renderEmptyStateCta();
         } else {

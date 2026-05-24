@@ -29,10 +29,7 @@ import de.legoshi.parkourcalc.core.ui.YawGizmoController;
 import java.nio.file.Path;
 import java.util.List;
 
-/**
- * Single-instance orchestrator: wiring of InputData/OverlayManager/runner/box state and the
- * lifecycle hooks loaders call from mixins / event handlers. Save/load state lives on SaveController.
- */
+/** Single-instance orchestrator wired by loaders via mixins / event handlers. */
 public final class Application {
 
     private final MinecraftAccess mc;
@@ -113,8 +110,6 @@ public final class Application {
     private void runSimulation(int dirtyTick) {
         if (!mc.isReady()) return;
         long t0 = Perf.now();
-        // SP path runs on the server thread (Fabric) or client thread against WorldServer (Forge);
-        // either way, simulator ticks against the server world so chunks page from disk on demand.
         List<TickState> path = mc.runOnServerThread(() -> dirtyTick < 0
                 ? runner.simulate(inputData)
                 : runner.simulateFrom(dirtyTick, inputData));
@@ -140,8 +135,7 @@ public final class Application {
         Perf.stop("runSimulation", t0);
     }
 
-    /** Loader fires this on disconnect / world join. v1.3.0: no auto-seeded rows; the user
-     *  creates or opens a TAS explicitly. */
+    /** Fired by the loader on disconnect / world join. */
     public void onWorldChange() {
         runner.invalidate();
         boxController.clearAll();
@@ -181,8 +175,7 @@ public final class Application {
 
     private void handleTickYawChange(int rowIndex, float absoluteYaw) {
         if (rowIndex < 0 || rowIndex >= inputData.getRows().size()) return;
-        // InputRow.yaw is a delta added to the prior tick's entity yaw by Simulator.applyYaw.
-        // Box index for that row is rowIndex (states[rowIndex] = entity yaw BEFORE row[rowIndex] applies).
+        // InputRow.yaw is a delta added to states[rowIndex] (pre-row entity yaw) by Simulator.applyYaw.
         float prevTickYaw = boxController.getYaw(rowIndex);
         float delta = absoluteYaw - prevTickYaw;
         while (delta > 180.0f) delta -= 360.0f;

@@ -10,11 +10,7 @@ import imgui.flag.ImGuiTableFlags;
 import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImInt;
 
-/**
- * Tabbed Preferences modal. Replaces the v1.2 SettingsOverlay window. Render-color
- * pickers stay user-editable on the Render Colors tab; the rest groups under
- * General / Visualization / Playback per docs/UI_REDESIGN.md.
- */
+/** Tabbed Preferences modal. See docs/UI_REDESIGN.md for tab layout. */
 public final class SettingsModal {
 
     private static final String POPUP_ID = "Preferences##settings_modal";
@@ -23,7 +19,6 @@ public final class SettingsModal {
     private static final String LAYOUT_TABLE_ID = "##settings_layout";
     private static final float LABEL_COL_FRACTION = 0.55f;
 
-    // Tooltip copy. One line per control; review with product before final merge.
     private static final String TT_UI_SCALE = "Multiplier applied to all ImGui widgets and fonts. 1.5x is the default for 1080p.";
     private static final String TT_YAW_ARROWS = "Draws an arrow at each tick's position showing the facing angle that frame.";
     private static final String TT_HITBOX = "Draws the player's hitbox at the currently selected tick.";
@@ -224,10 +219,6 @@ public final class SettingsModal {
         controlBody.run();
     }
 
-    /**
-     * Renders a label-left, checkbox-right row. The checkbox renders alone (id only,
-     * no visible label) so the user's right-side-checkbox preference is honored.
-     */
     private void checkboxRow(String label, String id, boolean current, String tooltip,
                              java.util.function.Consumer<Boolean> setter) {
         row(label, () -> {

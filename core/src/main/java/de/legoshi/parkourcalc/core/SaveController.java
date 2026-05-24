@@ -124,8 +124,7 @@ public final class SaveController {
         return sanitized != null && store.exists(sanitized);
     }
 
-    /** Parse and validate a .tas file at an arbitrary disk path, copy it into the save dir,
-     *  then load it into the editor. Picks a non-colliding name derived from the source filename. */
+    /** Parse, copy into save dir under a non-colliding name, then load. */
     public Result<String> importFromPath(Path source) {
         if (store == null) return Result.failure("Save store not initialized.");
         if (source == null) return Result.failure("No file selected.");

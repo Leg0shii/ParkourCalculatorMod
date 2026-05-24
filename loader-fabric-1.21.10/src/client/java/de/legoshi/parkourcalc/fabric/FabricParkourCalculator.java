@@ -182,11 +182,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
     }
 
-    /** Called from GameRendererMixin AFTER guiRenderer.render() has rasterized
-     *  the HUD (incl. crosshair). InGameHud.render only extracts elements into
-     *  guiState in 1.21.10; if we drew ImGui in onHudRender (the old approach),
-     *  guiRenderer.render would later rasterize the crosshair on top of the
-     *  already-drawn panes. Rendering here puts ImGui above the rasterized HUD. */
+    /** Called by GameRendererMixin after guiRenderer.render(); ImGui draws above the rasterized HUD. */
     public static void onGuiRendered() {
         if (!application.isReady()) return;
         ImGuiImpl.beginImGuiRendering();

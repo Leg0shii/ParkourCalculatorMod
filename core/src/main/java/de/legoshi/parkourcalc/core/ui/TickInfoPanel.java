@@ -12,11 +12,7 @@ import imgui.flag.ImGuiWindowFlags;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * Read-only inspector for the single currently-selected tick. Hidden as a placeholder when
- * 0 or >1 ticks are selected. Reads the same TickState list BoxController owns, so values
- * refresh in place after every runSimulation() without explicit listener wiring.
- */
+/** Read-only inspector for the single currently-selected tick. */
 public final class TickInfoPanel implements RenderInterface {
 
     private static final String WINDOW_TITLE = "Tick Info";
@@ -25,15 +21,8 @@ public final class TickInfoPanel implements RenderInterface {
     private static final String PLACEHOLDER_OUT_OF_RANGE = "No tick data (resimulating).";
     private static final String NA = "n/a";
 
-    // %12.5f: leading-space padded so JetBrainsMono dot-aligns every numeric cell at the
-    // same column index (1 sign + 5 integer + 1 dot + 5 decimal = 12 chars). Used by
-    // X/Y/Z triplet rows where the dot alignment across rows matters.
     private static final String FMT_NUM = "%12.5f";
     private static final String NUM_SAMPLE = "-99999.99999";
-    // Unpadded format for single-value rows that center across the X+Y+Z span.
-    // Leading-space padding would offset the visible glyph block from the
-    // centering math's geometric center, so single-value rows use the bare
-    // numeric form instead.
     private static final String FMT_NUM_SINGLE = "%.5f";
 
     private static final String COL_FIELD = "Field";
@@ -80,28 +69,10 @@ public final class TickInfoPanel implements RenderInterface {
     }
 
     private void renderTable(int idx, TickState cur, TickState prev, TickState prev2) {
-        // beginStandardKeyValueTable drops BordersInnerV: the 4-column split is internal
-        // scaffolding for dot alignment, not user-visible structure, so vertical
-        // separators would imply a grouping that is not there.
-        //
-        // Alignment policy (TickInfoPanel only): label column LEFT for a clean
-        // vertical scan line. Triplet rows (rowTriple, rowXZ) render each value
-        // in its own X / Y / Z column via numCell + textCenter, dot-aligned
-        // across rows via FMT_NUM. Single-value rows (rowNum, rowInt, rowBool,
-        // rowNa) render in the Y (middle) value column only, X and Z empty;
-        // Y's geometric center approximates the X+Y+Z geometric center, so the
-        // value reads as visually associated with the row instead of anchored
-        // to the leftmost column. See the canonical alignment-policy block in
-        // ThemeManager (above textLeft / textCenter / textRight) for the
-        // full per-table convention.
         if (!ThemeManager.beginStandardKeyValueTable(TABLE_ID, 4, 0, 0f, 0f)) {
             return;
         }
         int fixed = ImGuiTableColumnFlags.WidthFixed;
-        // Measure the actual longest label ("Collision angle (deg)") instead of
-        // a shorter sample. The +2*cellPadX brings the dataW into the same
-        // formula tableNumericColumnWidth uses; the leftmost helper then adds
-        // its leading-dummy inset on top.
         float cellPad = ImGui.getStyle().getCellPadding().x;
         float labelDataW = ImGui.calcTextSize("Collision angle (deg)").x + 2f * cellPad;
         float numW = ImGui.calcTextSize(NUM_SAMPLE).x;
@@ -262,24 +233,11 @@ public final class TickInfoPanel implements RenderInterface {
         ImGui.tableNextColumn();
     }
 
-    // Single-value rows (rowNum / rowInt / rowBool / rowNa) render their value
-    // in the Y column. Y is the middle of three equally-sized value columns, so
-    // centering within Y's own cell puts the value at approximately the X+Y+Z
-    // geometric center, visually associating it with the row instead of
-    // anchoring it to the leftmost column. X and Z are advanced empty so the
-    // row's column iteration completes and the trailing pad lands in Z.
-    //
-    // Earlier iterations tried to span the value across X+Y+Z via drawList or
-    // via setCursorPosX into the Y cell's territory. ImGui's per-cell clip
-    // rect (pushed on every tableNextColumn, independent of BordersInnerV)
-    // strictly clips anything past the current cell's right edge, so those
-    // approaches rendered nothing visible. Rendering inside Y's own clip rect
-    // sidesteps the problem.
     private void centerSingleValueInMiddleColumn(String text) {
-        ImGui.tableNextColumn();              // -> X, empty
-        ImGui.tableNextColumn();              // -> Y, where the value renders
+        ImGui.tableNextColumn();
+        ImGui.tableNextColumn();
         ThemeManager.textCenter(text);
-        ImGui.tableNextColumn();              // -> Z, empty
+        ImGui.tableNextColumn();
         ThemeManager.tableRightmostCellTrailingPad();
     }
 }
