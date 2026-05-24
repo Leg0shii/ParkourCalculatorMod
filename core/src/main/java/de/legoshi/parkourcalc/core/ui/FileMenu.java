@@ -9,6 +9,8 @@ import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.Fonts;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import imgui.ImGui;
+import imgui.ImVec2;
+import imgui.flag.ImGuiCol;
 import imgui.flag.ImGuiKey;
 import imgui.flag.ImGuiSelectableFlags;
 import imgui.flag.ImGuiStyleVar;
@@ -478,31 +480,57 @@ public final class FileMenu {
 
         java.util.List<SaveInfo> rows = sortedFiltered();
         float tableH = OPEN_MODAL_VISIBLE_ROWS * ImGui.getFrameHeightWithSpacing();
+        String doubleClickedToOpen = null;
+
+        float maxFilenameW = 0f, maxDateW = 0f, maxMcW = 0f, maxWorldW = 0f;
+        for (SaveInfo info : rows) {
+            maxFilenameW = Math.max(maxFilenameW, ImGui.calcTextSize(info.name).x);
+            String d = info.lastModifiedMs > 0 ? dateFmt.format(new Date(info.lastModifiedMs)) : "";
+            maxDateW = Math.max(maxDateW, ImGui.calcTextSize(d).x);
+            maxMcW = Math.max(maxMcW, ImGui.calcTextSize(info.mcVersion != null ? info.mcVersion : "?").x);
+            maxWorldW = Math.max(maxWorldW, ImGui.calcTextSize(info.worldLabel != null ? info.worldLabel : "?").x);
+        }
+
+        // Mirror the Tick Input table: suppress the default selectable Header
+        // tint (= PANEL, indistinguishable from the column-header bg) so the
+        // SELECTED magenta painted as a row tint is the only visual signal.
+        ThemeManager.pushTransparentHeader();
         if (ImGui.beginTable("##open_table", 4, ThemeManager.standardTableFlags(), 0, tableH)) {
             ImGui.tableSetupScrollFreeze(0, 1);
             ImGui.tableSetupColumn(COL_FILENAME, ImGuiTableColumnFlags.WidthFixed,
-                    ThemeManager.tableLeftmostColumnWidth(COL_FILENAME, 240));
+                    ThemeManager.tableLeftmostColumnWidth(COL_FILENAME, maxFilenameW));
             ImGui.tableSetupColumn(COL_DATE, ImGuiTableColumnFlags.WidthFixed,
-                    ThemeManager.tableColumnWidth(COL_DATE, 140));
+                    ThemeManager.tableColumnWidth(COL_DATE, maxDateW));
             ImGui.tableSetupColumn(COL_MC, ImGuiTableColumnFlags.WidthFixed,
-                    ThemeManager.tableColumnWidth(COL_MC, 60));
+                    ThemeManager.tableColumnWidth(COL_MC, maxMcW));
             ImGui.tableSetupColumn(COL_WORLD, ImGuiTableColumnFlags.WidthFixed,
-                    ThemeManager.tableRightmostColumnWidth(COL_WORLD, 160));
+                    ThemeManager.tableRightmostColumnWidth(COL_WORLD, maxWorldW));
             renderOpenTableHeader();
 
-            String doubleClickedToOpen = null;
+            float rowH = ImGui.getFrameHeight() + ImGui.getStyle().getCellPadding().y * 2f;
             int rowIndex = 0;
             for (SaveInfo info : rows) {
-                ImGui.tableNextRow();
+                ImGui.tableNextRow(0, rowH);
                 ThemeManager.paintTableRowBg(rowIndex++);
+                boolean selected = info.name.equals(openSelected);
+                if (selected) {
+                    ThemeManager.paintTableRowTint(ThemeManager.selectedTintColor(0.45f));
+                }
                 ImGui.tableSetColumnIndex(0);
                 ThemeManager.emitTableLeftmostCellPad();
-                boolean selected = info.name.equals(openSelected);
+                ImVec2 cellOrigin = ImGui.getCursorScreenPos();
+                ImGui.alignTextToFramePadding();
                 int selFlags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
-                if (ImGui.selectable(info.name + "##open_row_" + info.name, selected, selFlags)) {
+                if (ImGui.selectable("##open_row_" + info.name, selected, selFlags)) {
                     openSelected = info.name;
                     if (ImGui.isMouseDoubleClicked(0)) doubleClickedToOpen = info.name;
                 }
+                // Match the Y position centeredSelectable uses so the filename
+                // sits on the same baseline as date/MC/world text in this row.
+                float labelY = cellOrigin.y + ImGui.getStyle().getFramePadding().y;
+                ImGui.getWindowDrawList().addText(cellOrigin.x, labelY,
+                        ImGui.getColorU32(ImGuiCol.Text), info.name);
+
                 ImGui.tableSetColumnIndex(1);
                 ImGui.alignTextToFramePadding();
                 ImGui.text(info.lastModifiedMs > 0 ? dateFmt.format(new Date(info.lastModifiedMs)) : "");
@@ -515,14 +543,15 @@ public final class FileMenu {
                 ThemeManager.emitTableRightmostCellTrailingPad();
             }
             ImGui.endTable();
+        }
+        ThemeManager.popTransparentHeader();
 
-            if (doubleClickedToOpen != null) {
-                String name = doubleClickedToOpen;
-                ImGui.closeCurrentPopup();
-                onLoad(name);
-                ImGui.endPopup();
-                return;
-            }
+        if (doubleClickedToOpen != null) {
+            String name = doubleClickedToOpen;
+            ImGui.closeCurrentPopup();
+            onLoad(name);
+            ImGui.endPopup();
+            return;
         }
 
         ThemeManager.sectionSpacing();
