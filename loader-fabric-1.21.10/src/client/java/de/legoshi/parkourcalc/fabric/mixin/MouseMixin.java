@@ -3,8 +3,10 @@ package de.legoshi.parkourcalc.fabric.mixin;
 import de.legoshi.parkourcalc.fabric.FabricParkourCalculator;
 import imgui.ImGui;
 import imgui.ImGuiIO;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.input.MouseInput;
+import net.minecraft.client.util.InputUtil;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -38,6 +40,12 @@ public class MouseMixin {
         }
 
         int button = input.button();
+
+        InputUtil.Key toggleKey = KeyBindingHelper.getBoundKeyOf(FabricParkourCalculator.toggleKeyBinding);
+        if (toggleKey.getCategory() == InputUtil.Type.MOUSE && toggleKey.getCode() == button) {
+            return;
+        }
+
         if (button >= 0 && button < MAX_MOUSE_BUTTONS) {
             ImGui.getIO().setMouseDown(button, action == 1);
         }
