@@ -3,6 +3,7 @@ package de.legoshi.parkourcalc.core.ui;
 import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
+import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
@@ -97,6 +98,7 @@ public final class InputOverlay {
     private final Runnable onSetPlayerPosition;
     private final PlaybackController playback;
     private final MinecraftAccess mc;
+    private final BoxController boxController;
 
     private final SelectionManager selection;
     private final KeyDragSelect keyDragSelect = new KeyDragSelect();
@@ -117,7 +119,8 @@ public final class InputOverlay {
 
     public InputOverlay(InputData data, Settings settings, SelectionManager selection,
                         IntConsumer onDataChangedAt, Runnable onSetPlayerPosition,
-                        PlaybackController playback, MinecraftAccess mc) {
+                        PlaybackController playback, MinecraftAccess mc,
+                        BoxController boxController) {
         this.data = data;
         this.settings = settings;
         this.selection = selection;
@@ -125,6 +128,7 @@ public final class InputOverlay {
         this.onSetPlayerPosition = onSetPlayerPosition;
         this.playback = playback;
         this.mc = mc;
+        this.boxController = boxController;
     }
 
     private void notifyChange(int dirtyTick) {
@@ -387,8 +391,16 @@ public final class InputOverlay {
             tint = ThemeManager.selectedTintColor(0.75f);
         } else if (playback != null && playback.currentTick() == rowIndex) {
             tint = ThemeManager.warningTintColor(0.25f);
+        } else if (settings.highlightOnGroundRows && isPostTickOnGround(rowIndex)) {
+            tint = ThemeManager.rgbaTintColor(settings.tickGroundHighlight);
         }
         ThemeManager.paintTableRowTint(tint);
+    }
+
+    private boolean isPostTickOnGround(int rowIndex) {
+        if (boxController == null) return false;
+        TickState s = boxController.getState(rowIndex + 1);
+        return s != null && s.onGround;
     }
 
     private void renderRowNumber(int rowIndex) {

@@ -22,12 +22,14 @@ public final class Settings {
     private static final float[] DEFAULT_YAW_GIZMO_DIRECTION = {0.976f, 0.886f, 0.686f, 1.00f}; // yellow     #f9e2af
     private static final float[] DEFAULT_HITBOX_DEFAULT = {0.804f, 0.839f, 0.957f, 0.80f};      // text       #cdd6f4
     private static final float[] DEFAULT_HITBOX_SELECTED = {0.651f, 0.890f, 0.631f, 0.80f};     // green      #a6e3a1
+    private static final float[] DEFAULT_TICK_GROUND_HIGHLIGHT = {0.729f, 0.761f, 0.871f, 0.30f}; // subtext1 #bac2de (matches tick box default)
 
     private static final boolean DEFAULT_SHOW_YAW_ARROWS = true;
     private static final boolean DEFAULT_SHOW_HITBOX = false;
     private static final boolean DEFAULT_SHOW_FULL_HITBOX = false;
     private static final boolean DEFAULT_SHOW_SUBTICK = true;
     private static final boolean DEFAULT_SHOW_POTION_COLUMNS = false;
+    private static final boolean DEFAULT_HIGHLIGHT_ON_GROUND_ROWS = true;
 
     private static final float DEFAULT_YAW_FLICK_SPEED = 720.0f;
     public static final float MIN_YAW_FLICK_SPEED = 30.0f;
@@ -50,12 +52,14 @@ public final class Settings {
     public final float[] yawGizmoDirection = DEFAULT_YAW_GIZMO_DIRECTION.clone();
     public final float[] hitboxDefault = DEFAULT_HITBOX_DEFAULT.clone();
     public final float[] hitboxSelected = DEFAULT_HITBOX_SELECTED.clone();
+    public final float[] tickGroundHighlight = DEFAULT_TICK_GROUND_HIGHLIGHT.clone();
 
     public boolean showYawArrows = DEFAULT_SHOW_YAW_ARROWS;
     public boolean showHitbox = DEFAULT_SHOW_HITBOX;
     public boolean showFullHitbox = DEFAULT_SHOW_FULL_HITBOX;
     public boolean showSubtick = DEFAULT_SHOW_SUBTICK;
     public boolean showPotionColumns = DEFAULT_SHOW_POTION_COLUMNS;
+    public boolean highlightOnGroundRows = DEFAULT_HIGHLIGHT_ON_GROUND_ROWS;
 
     public float yawFlickSpeed = DEFAULT_YAW_FLICK_SPEED;
 
@@ -81,11 +85,13 @@ public final class Settings {
         System.arraycopy(DEFAULT_YAW_GIZMO_DIRECTION, 0, yawGizmoDirection, 0, 4);
         System.arraycopy(DEFAULT_HITBOX_DEFAULT, 0, hitboxDefault, 0, 4);
         System.arraycopy(DEFAULT_HITBOX_SELECTED, 0, hitboxSelected, 0, 4);
+        System.arraycopy(DEFAULT_TICK_GROUND_HIGHLIGHT, 0, tickGroundHighlight, 0, 4);
         showYawArrows = DEFAULT_SHOW_YAW_ARROWS;
         showHitbox = DEFAULT_SHOW_HITBOX;
         showFullHitbox = DEFAULT_SHOW_FULL_HITBOX;
         showSubtick = DEFAULT_SHOW_SUBTICK;
         showPotionColumns = DEFAULT_SHOW_POTION_COLUMNS;
+        highlightOnGroundRows = DEFAULT_HIGHLIGHT_ON_GROUND_ROWS;
         yawFlickSpeed = DEFAULT_YAW_FLICK_SPEED;
         pathRenderDistance = DEFAULT_PATH_RENDER_DISTANCE;
         unlimitedPathRender = DEFAULT_UNLIMITED_PATH_RENDER;

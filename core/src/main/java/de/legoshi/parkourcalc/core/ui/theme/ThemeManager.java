@@ -455,6 +455,10 @@ public final class ThemeManager {
         return ImGui.colorConvertFloat4ToU32(SELECTED[0], SELECTED[1], SELECTED[2], alpha);
     }
 
+    public static int rgbaTintColor(float[] rgba) {
+        return ImGui.colorConvertFloat4ToU32(rgba[0], rgba[1], rgba[2], rgba[3]);
+    }
+
     public static void pushTextColor(int color) {
         ImGui.pushStyleColor(ImGuiCol.Text, color);
     }

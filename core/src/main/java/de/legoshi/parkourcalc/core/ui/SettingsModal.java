@@ -25,6 +25,7 @@ public final class SettingsModal {
     private static final String TT_FULL_HITBOX = "Draws hitboxes for every tick in the TAS, not just the active one. Heavy on long TASes.";
     private static final String TT_SUBTICK = "Renders the interpolated path between adjacent ticks, exposing collision moments inside a tick.";
     private static final String TT_POTION_COLS = "Adds Speed and Jump Boost amplifier columns to the input table.";
+    private static final String TT_GROUND_HIGHLIGHT = "Tints input rows whose simulated tick ended on the ground. Color is editable in Render Colors.";
     private static final String TT_YAW_TURN_RATE = "Caps how fast the macro rotates the camera during playback (deg per second).";
     private static final String TT_PATH_DIST = "Maximum world distance for the simulated path overlay.";
     private static final String TT_PATH_UNLIMITED = "Disables the distance cap. Heavy on long TASes.";
@@ -149,6 +150,8 @@ public final class SettingsModal {
         if (beginLayoutTable()) {
             checkboxRow("Show potion effect columns", "##show_potion", settings.showPotionColumns, TT_POTION_COLS,
                     v -> settings.showPotionColumns = v);
+            checkboxRow("Highlight on-ground ticks", "##highlight_on_ground", settings.highlightOnGroundRows, TT_GROUND_HIGHLIGHT,
+                    v -> settings.highlightOnGroundRows = v);
             ImGui.endTable();
         }
     }
@@ -179,6 +182,7 @@ public final class SettingsModal {
         renderColor("tick box sneak", settings.tickSneak, flags);
         renderColor("tick box wall", settings.tickWall, flags);
         renderColor("tick box soft collision", settings.tickSoftCollision, flags);
+        renderColor("on-ground row tint", settings.tickGroundHighlight, flags);
 
         ThemeManager.sectionSpacing();
         sectionHeader("Path and gizmos");

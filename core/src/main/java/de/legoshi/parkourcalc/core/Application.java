@@ -74,7 +74,7 @@ public final class Application {
 
     public void setupUi() {
         inputOverlay = new InputOverlay(inputData, settings, selection, this::onUserChange,
-                this::setStartToPlayer, playback, mc);
+                this::setStartToPlayer, playback, mc, boxController);
         TickInfoPanel tickInfoPanel = new TickInfoPanel(boxController, selection);
         PerfOverlay perfOverlay = new PerfOverlay();
         FileMenu fileMenu = new FileMenu(saveController, filePicker, settings, this::saveSettings);
