@@ -72,7 +72,9 @@ public final class ImGuiImpl {
 
         imGuiGl3.newFrame();
         imGuiGlfw.newFrame();
-        // imGuiGlfw polls GLFW directly; pinned overlays would still see play-mode clicks.
+        ImGui.newFrame();
+        // imGuiGlfw queues pos/button events via addMousePosEvent in 1.90; ImGui.newFrame
+        // consumes the queue, so the off-screen override has to run AFTER it to win.
         if (!FabricParkourCalculator.isUiFocused()) {
             ImGuiIO io = ImGui.getIO();
             io.setMousePos(-Float.MAX_VALUE, -Float.MAX_VALUE);
@@ -80,7 +82,6 @@ public final class ImGuiImpl {
                 io.setMouseDown(i, false);
             }
         }
-        ImGui.newFrame();
     }
 
     private static void applyPendingScale() {
