@@ -1,4 +1,4 @@
-package de.legoshi.parkourcalc.fabric;
+package de.legoshi.parkourcalc.forge.core.io;
 
 import de.legoshi.parkourcalc.core.ports.SystemBridgePort;
 
@@ -6,26 +6,32 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Locale;
 
-/** OS-shell-backed bridge. Spawns the platform's file manager / browser via ProcessBuilder.
- *  No AWT, so it survives a headless JVM (the LWJGL3 client toggles -Djava.awt.headless=true). */
-public final class FabricSystemBridge implements SystemBridgePort {
+/** OS-shell-backed bridge for both Forge loaders. Spawns the platform's file manager /
+ *  browser via ProcessBuilder. No AWT/Swing. */
+public final class OsSystemBridge implements SystemBridgePort {
 
     @Override
     public void openFolder(Path folder) {
         if (folder == null) return;
-        runAsync(() -> {
-            if (!openFolderNow(folder)) {
-                System.err.println("[ParkourCalculator] Failed to open folder: " + folder);
+        runAsync(new Runnable() {
+            @Override
+            public void run() {
+                if (!openFolderNow(folder)) {
+                    System.err.println("[ParkourCalculator] Failed to open folder: " + folder);
+                }
             }
         });
     }
 
     @Override
-    public void openUrl(String url) {
+    public void openUrl(final String url) {
         if (url == null || url.isEmpty()) return;
-        runAsync(() -> {
-            if (!openUrlNow(url)) {
-                System.err.println("[ParkourCalculator] Failed to open URL: " + url);
+        runAsync(new Runnable() {
+            @Override
+            public void run() {
+                if (!openUrlNow(url)) {
+                    System.err.println("[ParkourCalculator] Failed to open URL: " + url);
+                }
             }
         });
     }

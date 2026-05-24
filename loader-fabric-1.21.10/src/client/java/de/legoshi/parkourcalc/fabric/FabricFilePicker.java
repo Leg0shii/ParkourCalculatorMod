@@ -1,37 +1,34 @@
 package de.legoshi.parkourcalc.fabric;
 
 import de.legoshi.parkourcalc.core.ports.FilePickerPort;
+import org.lwjgl.PointerBuffer;
+import org.lwjgl.system.MemoryStack;
+import org.lwjgl.util.tinyfd.TinyFileDialogs;
 
-import javax.swing.JFileChooser;
-import javax.swing.SwingUtilities;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import java.io.File;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
-import java.util.concurrent.atomic.AtomicReference;
+import java.nio.file.Paths;
 
-/** Swing JFileChooser-based picker for Fabric. Same shape as the Forge picker. */
+/** LWJGL3 TinyFileDialogs picker. Invokes the OS-native file dialog (GetOpenFileName on
+ *  Windows, NSOpenPanel on macOS, zenity/kdialog on Linux). No AWT/Swing. */
 public final class FabricFilePicker implements FilePickerPort {
 
     @Override
     public Path pickTasFile() {
-        AtomicReference<Path> result = new AtomicReference<>();
-        try {
-            SwingUtilities.invokeAndWait(() -> {
-                JFileChooser chooser = new JFileChooser();
-                chooser.setDialogTitle("Import .tas");
-                chooser.setFileFilter(new FileNameExtensionFilter("TAS files (*.tas)", "tas"));
-                chooser.setMultiSelectionEnabled(false);
-                int choice = chooser.showOpenDialog(null);
-                if (choice == JFileChooser.APPROVE_OPTION) {
-                    File f = chooser.getSelectedFile();
-                    if (f != null) result.set(f.toPath());
-                }
-            });
-        } catch (InterruptedException ignored) {
-            Thread.currentThread().interrupt();
-        } catch (InvocationTargetException ignored) {
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            PointerBuffer filters = stack.mallocPointer(1);
+            filters.put(stack.UTF8("*.tas"));
+            filters.flip();
+            String result = TinyFileDialogs.tinyfd_openFileDialog(
+                    "Import .tas",
+                    null,
+                    filters,
+                    "TAS files (*.tas)",
+                    false
+            );
+            return (result == null || result.isEmpty()) ? null : Paths.get(result);
+        } catch (Throwable t) {
+            System.err.println("[ParkourCalculator] File picker failed: " + t);
+            return null;
         }
-        return result.get();
     }
 }
