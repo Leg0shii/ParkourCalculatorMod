@@ -19,7 +19,11 @@ import java.nio.file.Path;
  */
 public final class MainWindowOverlay implements RenderInterface {
 
-    private static final String WINDOW_ID = "##main_window";
+    // ### (not ##) so ImGui uses only the suffix for the window ID. The visible
+    // title changes with the file name and the dirty marker; under ## that flips
+    // the hashed ID, ImGui treats every title change as a new window, and the
+    // FirstUseEver pos/size below re-applies, snapping the window back to (16,16).
+    private static final String WINDOW_ID = "###main_window";
     private static final String APP_NAME = "Parkour Calculator";
     // NoScrollbar/NoScrollWithMouse: the input table has its own ScrollY for row
     // overflow, and the rest of the body (status strip, menubar, empty state) is
