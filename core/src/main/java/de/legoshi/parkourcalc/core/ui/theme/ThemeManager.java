@@ -157,12 +157,18 @@ public final class ThemeManager {
         setColor(ImGuiCol.TabActive, PANEL);
         setColor(ImGuiCol.TabUnfocused, BG_DARK);
         setColor(ImGuiCol.TabUnfocusedActive, PANEL);
-        // Note: NOT setting ImGuiCol.TableHeaderBg / TableRowBg / TableRowBgAlt.
-        // imgui-java's ImGuiCol constants are compile-time inlined ints from core's
-        // 1.86.11 dependency, but Fabric runs against 1.90.0 where the enum slot
-        // numbers shifted (Tab variants and Multi-Select were inserted). Setting
-        // them by enum lands on wrong slots at runtime. All tables paint their
-        // own row backgrounds via tableSetBgColor + the accessors below.
+        // Note: NOT setting ImGuiCol.TableRowBg / TableRowBgAlt. imgui-java's
+        // ImGuiCol constants are compile-time inlined ints from core's 1.86.11
+        // dependency, but Fabric runs against 1.90.0 where the enum slot numbers
+        // shifted (Tab/Docking entries inserted). Setting RowBg / RowBgAlt by
+        // enum lands on TableBorderStrong / TableBorderLight at runtime on 1.90
+        // and corrupts borders. All tables paint their own row backgrounds via
+        // tableSetBgColor + the accessors below.
+        // TableHeaderBg is safe: slot 44 in 1.86 (TableHeaderBg) but slot 44 in
+        // 1.90 is PlotHistogram, which we never render. On Fabric the header bg
+        // is set indirectly via the TableBorderLight write below, which lands on
+        // 1.90's TableHeaderBg slot. Explicit set here makes Forge match.
+        setColor(ImGuiCol.TableHeaderBg, BORDER);
         setColor(ImGuiCol.TableBorderStrong, BORDER);
         setColor(ImGuiCol.TableBorderLight, BORDER);
         setColor(ImGuiCol.TextSelectedBg, ACCENT_DIM);

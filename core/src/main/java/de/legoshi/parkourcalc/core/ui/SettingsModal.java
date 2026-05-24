@@ -132,6 +132,24 @@ public final class SettingsModal {
         }
 
         ThemeManager.sectionSpacing();
+        sectionHeader("Path");
+        if (beginLayoutTable()) {
+            row("Path render distance", () -> {
+                pathRenderDistanceBuf[0] = settings.pathRenderDistance;
+                ImGui.setNextItemWidth(-1);
+                if (Controls.sliderInt("##path_render_distance", pathRenderDistanceBuf,
+                        Settings.MIN_PATH_RENDER_DISTANCE, Settings.MAX_PATH_RENDER_DISTANCE, "%d blocks")) {
+                    settings.pathRenderDistance = pathRenderDistanceBuf[0];
+                }
+                if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
+                tooltipForLastItem(TT_PATH_DIST);
+            });
+            checkboxRow("Unlimited path render distance", "##unlimited_path", settings.unlimitedPathRender,
+                    TT_PATH_UNLIMITED, v -> settings.unlimitedPathRender = v);
+            ImGui.endTable();
+        }
+
+        ThemeManager.sectionSpacing();
         sectionHeader("Editor table");
         if (beginLayoutTable()) {
             checkboxRow("Show potion effect columns", "##show_potion", settings.showPotionColumns, TT_POTION_COLS,
@@ -153,18 +171,6 @@ public final class SettingsModal {
                 if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
                 tooltipForLastItem(TT_YAW_TURN_RATE);
             });
-            row("Path render distance", () -> {
-                pathRenderDistanceBuf[0] = settings.pathRenderDistance;
-                ImGui.setNextItemWidth(-1);
-                if (Controls.sliderInt("##path_render_distance", pathRenderDistanceBuf,
-                        Settings.MIN_PATH_RENDER_DISTANCE, Settings.MAX_PATH_RENDER_DISTANCE, "%d blocks")) {
-                    settings.pathRenderDistance = pathRenderDistanceBuf[0];
-                }
-                if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
-                tooltipForLastItem(TT_PATH_DIST);
-            });
-            checkboxRow("Unlimited path render distance", "##unlimited_path", settings.unlimitedPathRender,
-                    TT_PATH_UNLIMITED, v -> settings.unlimitedPathRender = v);
             ImGui.endTable();
         }
     }

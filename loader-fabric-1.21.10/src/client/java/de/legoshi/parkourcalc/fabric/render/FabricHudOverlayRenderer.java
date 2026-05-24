@@ -12,15 +12,7 @@ public final class FabricHudOverlayRenderer {
         MinecraftClient client = MinecraftClient.getInstance();
         TextRenderer tr = client.textRenderer;
         String label = MacroBadgeStyle.LABEL;
-        int color = MacroBadgeStyle.COLOR_ARGB;
-        int w = tr.getWidth(label) + 6;
-        int h = tr.fontHeight + 4;
-        int x = context.getScaledWindowWidth() - w - 4;
-        int y = 4;
-        context.fill(x, y, x + w, y + 1, color);
-        context.fill(x, y + h - 1, x + w, y + h, color);
-        context.fill(x, y, x + 1, y + h, color);
-        context.fill(x + w - 1, y, x + w, y + h, color);
-        context.drawText(tr, label, x + 3, y + 2, color, false);
+        int x = context.getScaledWindowWidth() - tr.getWidth(label) - 4;
+        context.drawText(tr, label, x, 4, MacroBadgeStyle.COLOR_ARGB, true);
     }
 }
