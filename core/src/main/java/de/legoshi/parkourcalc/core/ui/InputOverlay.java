@@ -4,6 +4,9 @@ import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
 import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
+import de.legoshi.parkourcalc.core.ui.theme.Controls;
+import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
+import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImDrawList;
 import imgui.ImGui;
 import imgui.ImGuiIO;
@@ -31,15 +34,27 @@ public final class InputOverlay implements RenderInterface {
 
     private static final String ID_TABLE = "tas-table";
     private static final String ID_CONTEXT_MENU = "context_menu";
-    private static final String ID_ROWS_TO_ADD = "##rows_to_add";
     private static final String ID_YAW_INPUT = "##yaw";
     private static final String ID_ROW_SUFFIX = ".##row";
     private static final String ID_KEY_SUFFIX = "##";
 
     private static final String COL_INDEX = "#";
-    private static final String COL_YAW = "YAW";
+    private static final String COL_YAW = "Yaw";
     private static final String COL_SPEED = "Speed";
     private static final String COL_JUMP_BOOST = "Jump";
+    // U+00B7 middle dot. Centered visually, doesn't read as punctuation like an ASCII period.
+    private static final String CELL_OFF = "·";
+    // Spacer columns visually separate logical key groups (WASD | modifiers | Yaw).
+    // 6px content width + 4px cell padding each side = ~14px visual gap, per Visual quality contract.
+    private static final String COL_GAP_KEYS = "##gap_keys";
+    private static final String COL_GAP_YAW = "##gap_yaw";
+    private static final float COL_GAP_WIDTH = 6.0f;
+    private static final InputRow.Key[] MOVEMENT_KEYS = {
+            InputRow.Key.W, InputRow.Key.A, InputRow.Key.S, InputRow.Key.D
+    };
+    private static final InputRow.Key[] MODIFIER_KEYS = {
+            InputRow.Key.SPRINT, InputRow.Key.SNEAK, InputRow.Key.JUMP
+    };
 
     private static final String ID_SPEED_SUFFIX = "##speed";
     private static final String ID_JUMP_SUFFIX = "##jump";
@@ -64,6 +79,17 @@ public final class InputOverlay implements RenderInterface {
     private static final String MENU_DELETE = "Delete %d row(s)";
     private static final String MENU_DELETE_SHORTCUT = "Del";
 
+    private static final String LABEL_ADD_N = "Add N";
+    private static final float TOOLBAR_STEPPER_WIDTH = 140f;
+    private static final String TOOLTIP_ADD_N = "Rows added each time you click Add. Persists across the session.";
+    private static final String BTN_ADD = "Add";
+    private static final String BTN_DUPLICATE = "Duplicate";
+    private static final String BTN_DELETE = "Delete";
+    private static final String BTN_CLEAR_ALL = "Clear All";
+    private static final String BTN_CANCEL = "Cancel";
+    private static final String POPUP_CLEAR_CONFIRM = "Clear all rows?##clear_confirm";
+    private static final String CLEAR_CONFIRM_FMT = "Delete all %d rows? This cannot be undone.";
+
     private static final String YAW_FORMAT = "%.5f";
 
     private static final String DRAG_DROP_TYPE = "INPUT_ROW";
@@ -71,7 +97,7 @@ public final class InputOverlay implements RenderInterface {
     private static final float TABLE_MAX_HEIGHT = 900;
     private static final float TABLE_MIN_HEIGHT = 60;
     private static final float RESIZE_HANDLE_HEIGHT = 6;
-    private static final int BASE_COLUMN_COUNT = 9;
+    private static final int BASE_COLUMN_COUNT = 11;
     private static final int POTION_COLUMN_COUNT = 2;
     // inputInt reserves this width for the text field + the two +/- step buttons combined,
     // so it must comfortably exceed 2 * frame_height (~40 px) to leave room to type.
@@ -141,9 +167,18 @@ public final class InputOverlay implements RenderInterface {
             return;
         }
 
-        renderMultiplayerWarning();
+        renderBody(computeTableHeight());
+        renderResizeHandle();
 
-        pushTableStyles();
+        ImGui.end();
+    }
+
+    /** Public so MainWindowOverlay can host the editor in its body. tableHeight=0 means
+     *  auto-fill available vertical space. */
+    public void renderBody(float tableHeight) {
+        renderMultiplayerWarning();
+        ThemeManager.pushTransparentHeader();
+        renderToolbar();
 
         boolean potionColumns = settings.showPotionColumns;
         if (potionColumns) {
@@ -151,13 +186,11 @@ public final class InputOverlay implements RenderInterface {
         }
         int columnCount = BASE_COLUMN_COUNT + (potionColumns ? POTION_COLUMN_COUNT : 0);
 
-        if (ImGui.beginTable(ID_TABLE, columnCount, tableFlags(), 0, computeTableHeight())) {
+        if (ImGui.beginTable(ID_TABLE, columnCount, tableFlags(), 0, tableHeight)) {
             setupColumns(potionColumns);
             renderAllRows(potionColumns);
             ImGui.endTable();
         }
-
-        renderResizeHandle();
 
         renderContextMenu();
         handleKeyboardShortcuts();
@@ -168,15 +201,15 @@ public final class InputOverlay implements RenderInterface {
             notifyChange(dragChangeStart);
         }
 
-        popTableStyles();
-        ImGui.end();
+        renderClearConfirmPopup();
+        ThemeManager.popTransparentHeader();
     }
 
     private void renderMultiplayerWarning() {
         if (mc == null || !mc.isReady() || mc.isSinglePlayer()) return;
-        ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.8f, 0.2f, 1.0f);
+        ThemeManager.pushTextColor(ThemeManager.warningColor());
         ImGui.textWrapped(WARN_MULTIPLAYER);
-        ImGui.popStyleColor();
+        ThemeManager.popTextColor();
     }
 
     private void renderVersionInTitleBar() {
@@ -235,27 +268,72 @@ public final class InputOverlay implements RenderInterface {
         ImGui.getWindowDrawList().addLine(min.x + 4, midY, max.x - 4, midY, color, 2.0f);
     }
 
-    private void pushTableStyles() {
-        ImGui.pushStyleColor(ImGuiCol.HeaderHovered, 0, 0, 0, 0);
-        ImGui.pushStyleColor(ImGuiCol.DragDropTarget, 0, 0, 0, 0);
-        ImGui.pushStyleColor(ImGuiCol.Header, 0, 0, 0, 0);
-    }
-
-    private void popTableStyles() {
-        ImGui.popStyleColor(3);
-    }
-
     private void setupColumns(boolean potionColumns) {
+        int spacerFlags = ImGuiTableColumnFlags.NoHeaderLabel | ImGuiTableColumnFlags.WidthFixed;
         ImGui.tableSetupColumn(COL_INDEX);
-        for (InputRow.Key key : InputRow.Key.values()) {
-            ImGui.tableSetupColumn(key.name());
+        for (InputRow.Key key : MOVEMENT_KEYS) {
+            ImGui.tableSetupColumn(headerLabel(key));
         }
+        ImGui.tableSetupColumn(COL_GAP_KEYS, spacerFlags, COL_GAP_WIDTH);
+        for (InputRow.Key key : MODIFIER_KEYS) {
+            ImGui.tableSetupColumn(headerLabel(key));
+        }
+        ImGui.tableSetupColumn(COL_GAP_YAW, spacerFlags, COL_GAP_WIDTH);
         ImGui.tableSetupColumn(COL_YAW, ImGuiTableColumnFlags.WidthFixed, 160);
         if (potionColumns) {
             ImGui.tableSetupColumn(COL_SPEED, ImGuiTableColumnFlags.WidthFixed, AMP_COLUMN_WIDTH);
             ImGui.tableSetupColumn(COL_JUMP_BOOST, ImGuiTableColumnFlags.WidthFixed, AMP_COLUMN_WIDTH);
         }
-        ImGui.tableHeadersRow();
+        renderColumnHeadersWithTooltips(potionColumns);
+    }
+
+    private void renderColumnHeadersWithTooltips(boolean potionColumns) {
+        ImGui.tableNextRow(ImGuiTableRowFlags.Headers);
+        int col = 0;
+        ImGui.tableSetColumnIndex(col++);
+        ImGui.tableHeader(COL_INDEX);
+        for (InputRow.Key key : MOVEMENT_KEYS) {
+            ImGui.tableSetColumnIndex(col++);
+            ImGui.tableHeader(headerLabel(key));
+            if (ImGui.isItemHovered()) TooltipUtil.wrappedTooltip(headerTooltip(key));
+        }
+        col++; // gap_keys spacer
+        for (InputRow.Key key : MODIFIER_KEYS) {
+            ImGui.tableSetColumnIndex(col++);
+            ImGui.tableHeader(headerLabel(key));
+            if (ImGui.isItemHovered()) TooltipUtil.wrappedTooltip(headerTooltip(key));
+        }
+        col++; // gap_yaw spacer
+        ImGui.tableSetColumnIndex(col++);
+        ImGui.tableHeader(COL_YAW);
+        if (potionColumns) {
+            ImGui.tableSetColumnIndex(col++);
+            ImGui.tableHeader(COL_SPEED);
+            ImGui.tableSetColumnIndex(col);
+            ImGui.tableHeader(COL_JUMP_BOOST);
+        }
+    }
+
+    private static String headerLabel(InputRow.Key key) {
+        switch (key) {
+            case SPRINT: return "Sprt";
+            case SNEAK:  return "Snk";
+            case JUMP:   return "Spc";
+            default:     return key.name();
+        }
+    }
+
+    private static String headerTooltip(InputRow.Key key) {
+        switch (key) {
+            case W:      return "Forward (W)";
+            case A:      return "Strafe left (A)";
+            case S:      return "Backward (S)";
+            case D:      return "Strafe right (D)";
+            case SPRINT: return "Sprint hold (Ctrl)";
+            case SNEAK:  return "Sneak hold (Shift)";
+            case JUMP:   return "Jump (Space) — column abbreviated Spc";
+            default:     return key.name();
+        }
     }
 
     private void renderAllRows(final boolean potionColumns) {
@@ -309,9 +387,11 @@ public final class InputOverlay implements RenderInterface {
     private void setRowBackground(int rowIndex) {
         int color = 0;
         if (selection.isSelected(rowIndex)) {
-            color = ImGui.colorConvertFloat4ToU32(0.2f, 0.4f, 0.7f, 0.5f);
+            color = ThemeManager.accentDimColor();
         } else if (draggingRowIndex == rowIndex) {
-            color = ImGui.colorConvertFloat4ToU32(0.3f, 0.5f, 0.8f, 0.4f);
+            color = ThemeManager.accentDimColor();
+        } else if (playback != null && playback.currentTick() == rowIndex) {
+            color = ThemeManager.warningTintColor(0.25f);
         }
 
         if (color != 0) {
@@ -359,8 +439,8 @@ public final class InputOverlay implements RenderInterface {
 
     private void renderDropIndicator(ImDrawList drawList, DragDropState state) {
         if (draggingRowIndex != -1 && state.dropLineY > 0) {
-            int color = ImGui.colorConvertFloat4ToU32(1.0f, 0.8f, 0.0f, 1.0f);
-            drawList.addLine(state.rowMinX, state.dropLineY, state.rowMaxX, state.dropLineY, color, 2.0f);
+            drawList.addLine(state.rowMinX, state.dropLineY, state.rowMaxX, state.dropLineY,
+                    ThemeManager.warningColor(), 2.0f);
         }
     }
 
@@ -379,24 +459,33 @@ public final class InputOverlay implements RenderInterface {
     }
 
     private void renderKeyColumns(InputRow row, int rowIndex) {
-        for (InputRow.Key key : InputRow.Key.values()) {
-            ImGui.tableNextColumn();
-
-            boolean actualValue = row.isKeyActive(key);
-            boolean displayValue = keyDragSelect.getDisplayValue(key, rowIndex, actualValue);
-
-            float brightness = displayValue ? 0.75f : 0f;
-            float alpha = displayValue ? 1.0f : 0f;
-            ImGui.pushStyleColor(ImGuiCol.Text, brightness, brightness, brightness, alpha);
-
-            ImGui.selectable(key.name() + ID_KEY_SUFFIX + key.name(), displayValue);
-
-            if (ImGui.isItemClicked(0)) {
-                keyDragSelect.startDrag(key, rowIndex, actualValue);
-            }
-
-            ImGui.popStyleColor();
+        for (InputRow.Key key : MOVEMENT_KEYS) {
+            renderKeyCell(row, rowIndex, key);
         }
+        ImGui.tableNextColumn(); // gap_keys spacer
+        for (InputRow.Key key : MODIFIER_KEYS) {
+            renderKeyCell(row, rowIndex, key);
+        }
+        ImGui.tableNextColumn(); // gap_yaw spacer
+    }
+
+    private void renderKeyCell(InputRow row, int rowIndex, InputRow.Key key) {
+        ImGui.tableNextColumn();
+
+        boolean actualValue = row.isKeyActive(key);
+        boolean displayValue = keyDragSelect.getDisplayValue(key, rowIndex, actualValue);
+
+        String cellLabel = displayValue ? headerLabel(key) : CELL_OFF;
+        int color = displayValue ? ThemeManager.textColor() : ThemeManager.textMutedColor();
+        ThemeManager.pushTextColor(color);
+
+        ImGui.selectable(cellLabel + ID_KEY_SUFFIX + key.name(), displayValue);
+
+        if (ImGui.isItemClicked(0)) {
+            keyDragSelect.startDrag(key, rowIndex, actualValue);
+        }
+
+        ThemeManager.popTextColor();
     }
 
     private void renderYawColumn(InputRow row, int rowIndex) {
@@ -405,50 +494,35 @@ public final class InputOverlay implements RenderInterface {
         Float yaw = row.getYaw();
         yawInput.set(yaw == null ? "" : String.format(Locale.US, YAW_FORMAT, yaw));
 
-        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 4, 0);
-        ImGui.setNextItemWidth(150);
-
-        if (ImGui.inputText(ID_YAW_INPUT, yawInput)) {
+        if (Controls.inputText(ID_YAW_INPUT, yawInput, 150)) {
             parseAndSetYaw(row);
             notifyChange(rowIndex);
         }
-
-        ImGui.popStyleVar();
     }
 
     private void renderPotionColumns(InputRow row, int rowIndex) {
         ImGui.tableNextColumn();
         ampBuf.set(row.getSpeedAmplifier());
-        ImGui.setNextItemWidth(AMP_CELL_WIDTH);
-        if (ImGui.combo(ID_SPEED_SUFFIX, ampBuf, AMP_LABELS)) {
-            int picked = ampBuf.get();
-            row.setSpeedAmplifier(picked);
+        if (Controls.combo(ID_SPEED_SUFFIX, ampBuf, AMP_LABELS, AMP_CELL_WIDTH)) {
+            row.setSpeedAmplifier(ampBuf.get());
             notifyChange(rowIndex);
         }
 
         ImGui.tableNextColumn();
         ampBuf.set(row.getJumpBoostAmplifier());
-        ImGui.setNextItemWidth(AMP_CELL_WIDTH);
-        if (ImGui.combo(ID_JUMP_SUFFIX, ampBuf, AMP_LABELS)) {
-            int picked = ampBuf.get();
-            row.setJumpBoostAmplifier(picked);
+        if (Controls.combo(ID_JUMP_SUFFIX, ampBuf, AMP_LABELS, AMP_CELL_WIDTH)) {
+            row.setJumpBoostAmplifier(ampBuf.get());
             notifyChange(rowIndex);
         }
     }
 
     private void renderPotionToolbar() {
-        ImGui.text(LABEL_SET_ALL_SPEED);
-        ImGui.sameLine();
-        ImGui.setNextItemWidth(AMP_TOOLBAR_WIDTH);
-        if (ImGui.combo(ID_BULK_SPEED, bulkSpeedBuf, AMP_LABELS)) {
+        if (Controls.combo(LABEL_SET_ALL_SPEED, bulkSpeedBuf, AMP_LABELS, AMP_TOOLBAR_WIDTH)) {
             applyAmplifierToAll(true, bulkSpeedBuf.get());
             notifyFullResim();
         }
         ImGui.sameLine();
-        ImGui.text(LABEL_SET_ALL_JUMP);
-        ImGui.sameLine();
-        ImGui.setNextItemWidth(AMP_TOOLBAR_WIDTH);
-        if (ImGui.combo(ID_BULK_JUMP, bulkJumpBuf, AMP_LABELS)) {
+        if (Controls.combo(LABEL_SET_ALL_JUMP, bulkJumpBuf, AMP_LABELS, AMP_TOOLBAR_WIDTH)) {
             applyAmplifierToAll(false, bulkJumpBuf.get());
             notifyFullResim();
         }
@@ -476,6 +550,84 @@ public final class InputOverlay implements RenderInterface {
         }
     }
 
+    private void renderToolbar() {
+        Controls.inputInt(LABEL_ADD_N, rowsToAdd, TOOLBAR_STEPPER_WIDTH);
+        if (ImGui.isItemHovered()) TooltipUtil.wrappedTooltip(TOOLTIP_ADD_N);
+        rowsToAdd.set(Math.max(1, Math.min(1000, rowsToAdd.get())));
+
+        ImGui.sameLine();
+        if (Controls.secondaryButton(BTN_ADD)) {
+            addRowsAtEnd(rowsToAdd.get());
+        }
+
+        boolean hasSelection = !selection.isEmpty();
+        ImGui.sameLine();
+        ImGui.beginDisabled(!hasSelection);
+        if (Controls.secondaryButton(BTN_DUPLICATE)) {
+            duplicateSelectedRows();
+        }
+        ImGui.sameLine();
+        if (Controls.secondaryButton(BTN_DELETE)) {
+            deleteSelectedRows();
+        }
+        ImGui.endDisabled();
+
+        boolean hasRows = !data.getRows().isEmpty();
+        ImGui.sameLine();
+        ImGui.beginDisabled(!hasRows);
+        if (Controls.secondaryButton(BTN_CLEAR_ALL)) {
+            requestClearAll();
+        }
+        ImGui.endDisabled();
+    }
+
+    private void renderClearConfirmPopup() {
+        if (!ImGui.beginPopupModal(POPUP_CLEAR_CONFIRM, ImGuiWindowFlags.AlwaysAutoResize)) return;
+        ImGui.text(String.format(CLEAR_CONFIRM_FMT, data.size()));
+        ImGui.separator();
+        if (Controls.dangerButton(BTN_CLEAR_ALL)) {
+            clearAllRows();
+            ImGui.closeCurrentPopup();
+        }
+        ImGui.sameLine();
+        if (Controls.secondaryButton(BTN_CANCEL)) {
+            ImGui.closeCurrentPopup();
+        }
+        ImGui.endPopup();
+    }
+
+    public void addRowsAtEnd(int count) {
+        if (count <= 0) return;
+        int dirtyTick = data.size();
+        data.addRows(data.size(), count);
+        notifyChange(dirtyTick);
+    }
+
+    public void duplicateSelectedRows() {
+        List<Integer> descending = selection.getSelectedDescending();
+        if (descending.isEmpty()) return;
+        int dirtyTick = Integer.MAX_VALUE;
+        for (int idx : descending) {
+            if (idx < 0 || idx >= data.size()) continue;
+            data.insertRow(idx + 1, data.get(idx).copy());
+            if (idx < dirtyTick) dirtyTick = idx;
+        }
+        selection.clear();
+        notifyChange(dirtyTick == Integer.MAX_VALUE ? -1 : dirtyTick);
+    }
+
+    public void requestClearAll() {
+        if (data.getRows().isEmpty()) return;
+        ImGui.openPopup(POPUP_CLEAR_CONFIRM);
+    }
+
+    private void clearAllRows() {
+        if (data.getRows().isEmpty()) return;
+        data.clear();
+        selection.clear();
+        notifyChange(-1);
+    }
+
     private void renderContextMenu() {
 
         if (ImGui.isMouseReleased(1)
@@ -501,10 +653,7 @@ public final class InputOverlay implements RenderInterface {
     }
 
     private void renderRowCountInput() {
-        ImGui.text(LABEL_ROWS);
-        ImGui.sameLine();
-        ImGui.setNextItemWidth(ROW_COUNT_INPUT_WIDTH);
-        ImGui.inputInt(ID_ROWS_TO_ADD, rowsToAdd);
+        Controls.inputInt(LABEL_ROWS, rowsToAdd, ROW_COUNT_INPUT_WIDTH);
         rowsToAdd.set(Math.max(1, Math.min(1000, rowsToAdd.get())));
     }
 
@@ -545,7 +694,7 @@ public final class InputOverlay implements RenderInterface {
         }
     }
 
-    private void deleteSelectedRows() {
+    public void deleteSelectedRows() {
         Set<Integer> selected = selection.getSelected();
         int dirtyTick = selected.isEmpty() ? -1 : java.util.Collections.min(selected);
         data.removeRows(selection.getSelectedDescending());

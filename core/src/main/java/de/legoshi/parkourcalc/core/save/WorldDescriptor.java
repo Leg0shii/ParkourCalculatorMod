@@ -41,9 +41,9 @@ public final class WorldDescriptor {
 
     private static String shortDimension(String d) {
         String lower = d.toLowerCase(Locale.US);
-        if (lower.endsWith("overworld")) return "O";
-        if (lower.endsWith("the_nether") || lower.endsWith("nether")) return "N";
-        if (lower.endsWith("the_end") || lower.endsWith("end")) return "E";
+        if (lower.endsWith("overworld") || lower.equals("0")) return "O";
+        if (lower.endsWith("the_nether") || lower.endsWith("nether") || lower.equals("-1")) return "N";
+        if (lower.endsWith("the_end") || lower.endsWith("end") || lower.equals("1")) return "E";
         return d;
     }
 }

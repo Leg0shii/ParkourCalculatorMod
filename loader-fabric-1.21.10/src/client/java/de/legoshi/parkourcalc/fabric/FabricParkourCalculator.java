@@ -67,14 +67,8 @@ public class FabricParkourCalculator implements ClientModInitializer {
         ));
 
         application.setModVersion(modVersion());
-        application.registerInputOverlay();
-        application.registerSettingsOverlay();
-        application.registerFileBrowserOverlay();
-        application.registerTickInfoOverlay();
-        application.registerPerfOverlay();
-        application.initSettingsStorage(
-                FabricLoader.getInstance().getConfigDir().resolve("parkourcalculator.json")
-        );
+        application.setFilePicker(new FabricFilePicker());
+        application.setSystemBridge(new FabricSystemBridge());
         application.setSaveStore(new FileSystemSaveStore(
                 FabricLoader.getInstance().getGameDir().resolve("parkourcalculator"),
                 modVersion(),
@@ -82,6 +76,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
                 FabricWorldDescriptors::current
         ));
         application.setPlaybackBridge(playbackBridge);
+        application.initSettingsStorage(
+                FabricLoader.getInstance().getConfigDir().resolve("parkourcalculator.json")
+        );
+        application.setupUi();
 
         ClientTickEvents.END_CLIENT_TICK.register(FabricParkourCalculator::handleInput);
         ClientTickEvents.START_CLIENT_TICK.register(FabricParkourCalculator::onStartTick);

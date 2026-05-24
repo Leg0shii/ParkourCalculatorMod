@@ -59,7 +59,9 @@ public final class Settings {
 
     public int scaleIndex = DEFAULT_SCALE_INDEX;
 
-    public String[] pinnedOverlays = new String[0];
+    public String[] recentFiles = new String[0];
+    public boolean viewTickInfo = false;
+    public boolean viewPerf = false;
 
     public void reset() {
         System.arraycopy(DEFAULT_TICK_DEFAULT, 0, tickDefault, 0, 4);
@@ -83,6 +85,8 @@ public final class Settings {
         pathRenderDistance = DEFAULT_PATH_RENDER_DISTANCE;
         unlimitedPathRender = DEFAULT_UNLIMITED_PATH_RENDER;
         scaleIndex = DEFAULT_SCALE_INDEX;
-        pinnedOverlays = new String[0];
+        recentFiles = new String[0];
+        viewTickInfo = false;
+        viewPerf = false;
     }
 }

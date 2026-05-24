@@ -1,9 +1,11 @@
 package de.legoshi.parkourcalc.core;
 
+import de.legoshi.parkourcalc.core.ports.FilePickerPort;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.ports.PlaybackBridge;
 import de.legoshi.parkourcalc.core.ports.SaveStore;
 import de.legoshi.parkourcalc.core.ports.Simulator;
+import de.legoshi.parkourcalc.core.ports.SystemBridgePort;
 import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
 import de.legoshi.parkourcalc.core.sim.TickState;
@@ -11,15 +13,16 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.BoxDragController;
 import de.legoshi.parkourcalc.core.ui.BoxSelectController;
-import de.legoshi.parkourcalc.core.ui.FileBrowserOverlay;
+import de.legoshi.parkourcalc.core.ui.FileMenu;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputOverlay;
+import de.legoshi.parkourcalc.core.ui.MainWindowOverlay;
 import de.legoshi.parkourcalc.core.ui.OverlayManager;
 import de.legoshi.parkourcalc.core.ui.PerfOverlay;
 import de.legoshi.parkourcalc.core.ui.SelectionManager;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.ui.SettingsIO;
-import de.legoshi.parkourcalc.core.ui.SettingsOverlay;
+import de.legoshi.parkourcalc.core.ui.SettingsModal;
 import de.legoshi.parkourcalc.core.ui.TickInfoPanel;
 import de.legoshi.parkourcalc.core.ui.YawGizmoController;
 
@@ -35,7 +38,7 @@ public final class Application {
     private final MinecraftAccess mc;
 
     private final InputData inputData = new InputData();
-    private final OverlayManager overlayManager = new OverlayManager(this::onPinStateChanged);
+    private final OverlayManager overlayManager = new OverlayManager();
     private final BoxController boxController = new BoxController();
     private final Settings settings = new Settings();
     private final SelectionManager selection;
@@ -49,6 +52,9 @@ public final class Application {
     private Path settingsPath;
     private boolean startInitialized;
     private String modVersion = "?";
+    private InputOverlay inputOverlay;
+    private FilePickerPort filePicker;
+    private SystemBridgePort systemBridge;
 
     public Application(Simulator simulator, MinecraftAccess mc) {
         this.mc = mc;
@@ -69,40 +75,35 @@ public final class Application {
         this.modVersion = modVersion;
     }
 
-    public void registerInputOverlay() {
-        InputOverlay inputOverlay = new InputOverlay(inputData, settings, selection, this::onUserChange, this::setStartToPlayer, playback, mc, modVersion);
-        overlayManager.register("Parkour TAS", inputOverlay);
+    public void setupUi() {
+        inputOverlay = new InputOverlay(inputData, settings, selection, this::onUserChange,
+                this::setStartToPlayer, playback, mc, modVersion);
+        TickInfoPanel tickInfoPanel = new TickInfoPanel(boxController, selection);
+        PerfOverlay perfOverlay = new PerfOverlay();
+        FileMenu fileMenu = new FileMenu(saveController, filePicker, settings, this::saveSettings);
+        SettingsModal settingsModal = new SettingsModal(settings, this::saveSettings);
+        MainWindowOverlay mainWindow = new MainWindowOverlay(
+                inputOverlay, inputData, fileMenu, settings, this::saveSettings,
+                tickInfoPanel, perfOverlay, settingsModal, systemBridge,
+                () -> saveController.getSaveStore(), modVersion);
+        overlayManager.register(mainWindow);
     }
 
-    public void registerSettingsOverlay() {
-        overlayManager.register("Settings", new SettingsOverlay(settings, this::saveSettings));
+    public void setFilePicker(FilePickerPort filePicker) {
+        this.filePicker = filePicker;
     }
 
-    public void registerFileBrowserOverlay() {
-        overlayManager.register("Files", new FileBrowserOverlay(saveController));
-    }
-
-    public void registerTickInfoOverlay() {
-        overlayManager.register("Tick Info", new TickInfoPanel(boxController, selection));
-    }
-
-    public void registerPerfOverlay() {
-        overlayManager.register("Perf", new PerfOverlay());
+    public void setSystemBridge(SystemBridgePort systemBridge) {
+        this.systemBridge = systemBridge;
     }
 
     public void initSettingsStorage(Path path) {
         this.settingsPath = path;
         SettingsIO.load(path, settings);
-        overlayManager.setPinnedNames(settings.pinnedOverlays);
     }
 
     public void saveSettings() {
         SettingsIO.save(settingsPath, settings);
-    }
-
-    private void onPinStateChanged() {
-        settings.pinnedOverlays = overlayManager.getPinnedNames();
-        saveSettings();
     }
 
     public void runSimulation() {
@@ -139,12 +140,13 @@ public final class Application {
         Perf.stop("runSimulation", t0);
     }
 
-    /** Loader fires this on disconnect / world join: cached entity, recorded path, checkpoints,
-     *  and InputData all reset so the next simulation starts fresh in the new world. */
+    /** Loader fires this on disconnect / world join. v1.3.0: no auto-seeded rows; the user
+     *  creates or opens a TAS explicitly. */
     public void onWorldChange() {
         runner.invalidate();
         boxController.clearAll();
-        inputData.resetToDefault();
+        inputData.clear();
+        saveController.discardCurrent();
         startInitialized = false;
     }
 

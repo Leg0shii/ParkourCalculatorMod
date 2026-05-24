@@ -3,6 +3,8 @@ package de.legoshi.parkourcalc.forge8;
 import de.legoshi.parkourcalc.core.Application;
 import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
+import de.legoshi.parkourcalc.forge.core.io.AwtSystemBridge;
+import de.legoshi.parkourcalc.forge.core.io.JFileChooserPicker;
 import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2ImGuiHost;
 import de.legoshi.parkourcalc.forge8.render.Forge8HudOverlayRenderer;
 import de.legoshi.parkourcalc.forge8.render.Forge8WorldOverlayRenderer;
@@ -69,12 +71,8 @@ public class Forge8ParkourCalculator {
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
         application.setModVersion(modVersion());
-        application.registerInputOverlay();
-        application.registerSettingsOverlay();
-        application.registerFileBrowserOverlay();
-        application.registerTickInfoOverlay();
-        application.registerPerfOverlay();
-        application.initSettingsStorage(configPath);
+        application.setFilePicker(new JFileChooserPicker());
+        application.setSystemBridge(new AwtSystemBridge());
         application.setSaveStore(new FileSystemSaveStore(
                 saveDir,
                 modVersion(),
@@ -82,6 +80,8 @@ public class Forge8ParkourCalculator {
                 Forge8WorldDescriptors::current
         ));
         application.setPlaybackBridge(playbackBridge);
+        application.initSettingsStorage(configPath);
+        application.setupUi();
 
         toggleKeyBinding = new KeyBinding("key.parkourcalculator.toggle_ui", Keyboard.KEY_K, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(toggleKeyBinding);

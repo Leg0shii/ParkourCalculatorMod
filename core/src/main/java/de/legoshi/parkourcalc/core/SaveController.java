@@ -10,8 +10,13 @@ import de.legoshi.parkourcalc.core.sim.SimulationRunner;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputData;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 public final class SaveController {
 
@@ -37,6 +42,10 @@ public final class SaveController {
 
     SaveStore getSaveStore() {
         return store;
+    }
+
+    public Path getSaveDir() {
+        return store == null ? null : store.getSaveDir();
     }
 
     void markDirty() {
@@ -80,8 +89,8 @@ public final class SaveController {
     }
 
     public void newSession() {
-        inputData.resetToDefault();
-        currentName = null;
+        inputData.clear();
+        discardCurrent();
         runner.invalidate();
         if (mc.isReady()) {
             runner.setStartPosition(mc.getPlayerPosition());
@@ -89,6 +98,10 @@ public final class SaveController {
         runner.setStartVelocity(Vec3dCore.ZERO);
         runner.setStartYaw(0.0F);
         retriggerSimulation.run();
+    }
+
+    public void discardCurrent() {
+        currentName = null;
         dirty = false;
     }
 
@@ -109,5 +122,50 @@ public final class SaveController {
         if (store == null) return false;
         String sanitized = SaveIO.sanitize(name);
         return sanitized != null && store.exists(sanitized);
+    }
+
+    /** Parse and validate a .tas file at an arbitrary disk path, copy it into the save dir,
+     *  then load it into the editor. Picks a non-colliding name derived from the source filename. */
+    public Result<String> importFromPath(Path source) {
+        if (store == null) return Result.failure("Save store not initialized.");
+        if (source == null) return Result.failure("No file selected.");
+
+        String json;
+        try {
+            json = new String(Files.readAllBytes(source), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            return Result.failure("Failed to read file: " + e.getMessage());
+        }
+
+        SaveFile parsed = SaveIO.parseSafe(json);
+        if (parsed == null) return Result.failure("Not a valid JSON file.");
+        if (parsed.start == null || parsed.start.pos == null || parsed.start.pos.length < 3) {
+            return Result.failure("Save file is missing required fields.");
+        }
+        if (parsed.version != SaveFile.FORMAT_VERSION) {
+            return Result.failure("Unsupported save format version: " + parsed.version);
+        }
+
+        String stem = source.getFileName().toString();
+        String lower = stem.toLowerCase(Locale.US);
+        if (lower.endsWith(".tas")) stem = stem.substring(0, stem.length() - 4);
+        String base = SaveIO.sanitize(stem);
+        if (base == null) return Result.failure("Cannot derive save name from filename.");
+
+        String unique = base;
+        int suffix = 1;
+        while (store.exists(unique)) {
+            unique = base + "_" + suffix++;
+        }
+
+        try {
+            store.write(unique, json);
+        } catch (IOException e) {
+            return Result.failure("Failed to write save: " + e.getMessage());
+        }
+
+        Result<SaveFile> loaded = load(unique);
+        if (!loaded.ok) return Result.failure(loaded.error);
+        return Result.success(unique);
     }
 }

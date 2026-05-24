@@ -2,10 +2,10 @@ package de.legoshi.parkourcalc.core.ui;
 
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
 import de.legoshi.parkourcalc.core.sim.TickState;
+import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
+import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImGui;
 import imgui.ImGuiIO;
-import imgui.flag.ImGuiCol;
-import imgui.flag.ImGuiStyleVar;
 import imgui.flag.ImGuiTableFlags;
 import imgui.flag.ImGuiWindowFlags;
 
@@ -31,17 +31,6 @@ public final class TickInfoPanel implements RenderInterface {
     private static final String FMT_PAIR = "%10.5f  %10.5f";
     private static final String FMT_SPEED = "H %.4f  T %.4f";
     private static final String FMT_ANGLE = "%.3f";
-
-    // Tighter than ImGui defaults so the panel doesn't push other overlays around.
-    private static final float CELL_PAD_X = 4.0f;
-    private static final float CELL_PAD_Y = 1.0f;
-    private static final float ITEM_SPACING_X = 4.0f;
-    private static final float ITEM_SPACING_Y = 1.0f;
-
-    private static final float LABEL_R = 0.65f;
-    private static final float LABEL_G = 0.65f;
-    private static final float LABEL_B = 0.65f;
-    private static final float LABEL_A = 1.0f;
 
     private final BoxController boxController;
     private final SelectionManager selection;
@@ -76,12 +65,11 @@ public final class TickInfoPanel implements RenderInterface {
         TickState prev = idx > 0 ? states.get(idx - 1) : null;
         TickState prev2 = idx > 1 ? states.get(idx - 2) : null;
 
-        ImGui.pushStyleVar(ImGuiStyleVar.CellPadding, CELL_PAD_X, CELL_PAD_Y);
-        ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, ITEM_SPACING_X, ITEM_SPACING_Y);
+        ThemeManager.pushCompactTable();
         try {
             renderTable(idx, cur, prev, prev2);
         } finally {
-            ImGui.popStyleVar(2);
+            ThemeManager.popCompactTable();
         }
         ImGui.end();
     }
@@ -180,11 +168,11 @@ public final class TickInfoPanel implements RenderInterface {
     private void row(String label, String value, String tooltip) {
         ImGui.tableNextRow();
         ImGui.tableNextColumn();
-        ImGui.pushStyleColor(ImGuiCol.Text, LABEL_R, LABEL_G, LABEL_B, LABEL_A);
+        ThemeManager.pushTextColor(ThemeManager.textMutedColor());
         ImGui.text(label);
-        ImGui.popStyleColor();
+        ThemeManager.popTextColor();
         if (ImGui.isItemHovered()) {
-            ImGui.setTooltip(tooltip);
+            TooltipUtil.wrappedTooltip(tooltip);
         }
         ImGui.tableNextColumn();
         ImGui.text(value);

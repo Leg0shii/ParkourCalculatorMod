@@ -6,24 +6,12 @@ import java.util.List;
 
 public class InputData {
 
-    private static final int DEFAULT_ROW_COUNT = 10;
     private final List<InputRow> rows = new ArrayList<>();
 
-    public InputData() {
-        this(DEFAULT_ROW_COUNT);
-    }
+    public InputData() {}
 
-    public InputData(int initialRows) {
-        for (int i = 0; i < initialRows; i++) {
-            rows.add(new InputRow());
-        }
-    }
-
-    public void resetToDefault() {
+    public void clear() {
         rows.clear();
-        for (int i = 0; i < DEFAULT_ROW_COUNT; i++) {
-            rows.add(new InputRow());
-        }
     }
 
     public List<InputRow> getRows() {
@@ -54,6 +42,11 @@ public class InputData {
     public void addRowAt(int index) {
         int clampedIndex = Math.max(0, Math.min(index, rows.size()));
         rows.add(clampedIndex, new InputRow());
+    }
+
+    public void insertRow(int index, InputRow row) {
+        int clampedIndex = Math.max(0, Math.min(index, rows.size()));
+        rows.add(clampedIndex, row);
     }
 
     public void addRows(int index, int count) {

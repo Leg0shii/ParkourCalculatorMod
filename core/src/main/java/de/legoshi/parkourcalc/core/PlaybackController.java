@@ -56,6 +56,12 @@ public final class PlaybackController {
         return running;
     }
 
+    public int currentTick() {
+        if (!running) return -1;
+        if (warmupRemaining > 0) return -1;
+        return nextTick - 1;
+    }
+
     public boolean canStart() {
         return bridge != null && bridge.isSingleplayer() && inputData.size() > 0;
     }
