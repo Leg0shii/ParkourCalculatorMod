@@ -2,14 +2,10 @@ package de.legoshi.parkourcalc.core.ui.util;
 
 import imgui.ImGui;
 
-/**
- * Tooltip helpers that wrap text to a fixed pixel width. Wrap width chosen so
- * two sentences fit on a 1080p screen at 1.5x UI scale. ImGui native
- * setTooltip() does not wrap; this is the single replacement.
- */
+// ImGui native setTooltip() doesn't wrap; this is the replacement.
 public final class TooltipUtil {
 
-    private static final float WRAP_WIDTH = 350.0f;
+    private static final float WRAP_WIDTH = 1050.0f;
 
     private TooltipUtil() {}
 
