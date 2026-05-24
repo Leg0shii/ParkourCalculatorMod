@@ -6,6 +6,8 @@ import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImGui;
 import imgui.ImGuiIO;
+import imgui.flag.ImGuiTableColumnFlags;
+import imgui.flag.ImGuiTableFlags;
 import imgui.flag.ImGuiWindowFlags;
 
 import java.util.List;
@@ -24,12 +26,17 @@ public final class TickInfoPanel implements RenderInterface {
     private static final String PLACEHOLDER_OUT_OF_RANGE = "No tick data (resimulating).";
     private static final String NA = "n/a";
 
-    // Triples and pairs use %10.5f so values right-align in the panel's monospace font
-    // (JetBrainsMono is the project font). Speed inlines both H and T on one row.
-    private static final String FMT_TRIPLE = "%10.5f  %10.5f  %10.5f";
-    private static final String FMT_PAIR = "%10.5f  %10.5f";
-    private static final String FMT_SPEED = "H %.4f  T %.4f";
-    private static final String FMT_ANGLE = "%.3f";
+    // %12.5f: leading-space padded so JetBrainsMono dot-aligns every numeric cell at the
+    // same column index (1 sign + 5 integer + 1 dot + 5 decimal = 12 chars). Single-value
+    // rows (yaw, speed, angles) share this format so their dot lands on the same X column
+    // as Position.X, Velocity.X, etc.
+    private static final String FMT_NUM = "%12.5f";
+    private static final String NUM_SAMPLE = "-99999.99999";
+
+    private static final String COL_FIELD = "Field";
+    private static final String COL_X = "X";
+    private static final String COL_Y = "Y";
+    private static final String COL_Z = "Z";
 
     private final BoxController boxController;
     private final SelectionManager selection;
@@ -70,63 +77,54 @@ public final class TickInfoPanel implements RenderInterface {
     }
 
     private void renderTable(int idx, TickState cur, TickState prev, TickState prev2) {
-        if (!ImGui.beginTable(TABLE_ID, 2, ThemeManager.standardTableFlags())) {
+        // Drop standardTableFlags()' BordersInnerV: the 4-column split is internal scaffolding
+        // for dot alignment, not user-visible structure, so the vertical separators would
+        // imply a grouping that isn't really there.
+        int flags = ImGuiTableFlags.RowBg | ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.ScrollY;
+        if (!ImGui.beginTable(TABLE_ID, 4, flags)) {
             return;
         }
+        int fixed = ImGuiTableColumnFlags.WidthFixed;
+        float labelDataW = ImGui.calcTextSize("Acceleration (XZ)").x;
+        float numW = ImGui.calcTextSize(NUM_SAMPLE).x;
+        ImGui.tableSetupColumn(COL_FIELD, fixed,
+                ThemeManager.tableLeftmostColumnWidth(COL_FIELD, labelDataW));
+        ImGui.tableSetupColumn(COL_X, fixed, ThemeManager.tableColumnWidth(COL_X, numW));
+        ImGui.tableSetupColumn(COL_Y, fixed, ThemeManager.tableColumnWidth(COL_Y, numW));
+        ImGui.tableSetupColumn(COL_Z, fixed, ThemeManager.tableRightmostColumnWidth(COL_Z, numW));
+
         rowCounter = 0;
 
-        row("Tick", Integer.toString(idx),
-                "Index of this tick in the simulated path (0 = start).");
-        row("Facing", String.format(Locale.US, FMT_ANGLE, cur.yaw),
+        rowInt("Tick", idx, "Index of this tick in the simulated path (0 = start).");
+        rowNum("Facing (deg)", cur.yaw,
                 "Entity yaw in degrees, MC convention: 0 = +Z, increases CW looking down.");
 
         double speedH = Math.sqrt(cur.velocity.x * cur.velocity.x + cur.velocity.z * cur.velocity.z);
         double speedT = Math.sqrt(cur.velocity.x * cur.velocity.x
                 + cur.velocity.y * cur.velocity.y
                 + cur.velocity.z * cur.velocity.z);
-        row("Speed", String.format(Locale.US, FMT_SPEED, speedH, speedT),
-                "H = sqrt(vx^2 + vz^2); T = sqrt(vx^2 + vy^2 + vz^2). Both from post-tick velocity (blocks/tick).");
+        rowNum("Speed (H)", speedH,
+                "Horizontal speed: sqrt(vx^2 + vz^2). From post-tick velocity (blocks/tick).");
+        rowNum("Speed (T)", speedT,
+                "Total speed: sqrt(vx^2 + vy^2 + vz^2). From post-tick velocity (blocks/tick).");
 
-        row("Position",
-                String.format(Locale.US, FMT_TRIPLE, cur.position.x, cur.position.y, cur.position.z),
-                "Entity position at end of tick, world coordinates (blocks).");
-        row("Velocity",
-                String.format(Locale.US, FMT_TRIPLE, cur.velocity.x, cur.velocity.y, cur.velocity.z),
+        rowTriple("Position", cur.position.x, cur.position.y, cur.position.z,
+                "Entity position at end of tick (world coords). Anchor corner of the rendered tick box.");
+        rowTriple("Velocity", cur.velocity.x, cur.velocity.y, cur.velocity.z,
                 "Post-tick motionX/Y/Z (after MC's per-axis collision clamp). May read 0 on an axis where a wall was hit.");
 
         if (prev != null) {
             double dx = cur.position.x - prev.position.x;
             double dy = cur.position.y - prev.position.y;
             double dz = cur.position.z - prev.position.z;
-            row("Delta Pos", String.format(Locale.US, FMT_TRIPLE, dx, dy, dz),
+            rowTriple("Delta pos", dx, dy, dz,
                     "Position change from previous tick: position(i) - position(i-1). Actually-applied displacement.");
-        } else {
-            row("Delta Pos", NA,
-                    "Position change from previous tick: position(i) - position(i-1). Actually-applied displacement.");
-        }
-
-        row("On ground", Boolean.toString(cur.onGround),
-                "Entity onGround flag at end of tick.");
-        row("Sneaking", Boolean.toString(cur.sneaking),
-                "Sneak input active during this tick.");
-
-        row("Collision", Boolean.toString(cur.wallCollision),
-                "Horizontal collision occurred this tick (MC horizontalCollision).");
-        row("Soft collision", Boolean.toString(cur.softCollision),
-                "1.21.10 only: grazing wall hit that does NOT break sprint (Entity.collidedSoftly). Always false on 1.8.9/1.12.2.");
-        String angleStr = Double.isNaN(cur.collisionAngleDegrees)
-                ? NA
-                : String.format(Locale.US, FMT_ANGLE, cur.collisionAngleDegrees);
-        row("Collision angle (deg)", angleStr,
-                "1.21.10 only: angle between intended motion (forwardSpeed/sidewaysSpeed rotated by yaw) and post-collision motion. MC keeps sprint when this is below ~8 deg (0.13962634 rad). Off-collision ticks read ~0; n/a on 1.8.9/1.12.2 (any horizontal collision breaks sprint there).");
-
-        if (prev != null) {
-            double dx = cur.position.x - prev.position.x;
-            double dz = cur.position.z - prev.position.z;
-            row("Post motion (XZ)", String.format(Locale.US, FMT_PAIR, dx, dz),
+            rowXZ("Post motion (XZ)", dx, dz,
                     "Per-axis horizontal displacement this tick: (deltaX, deltaZ). Differs from Velocity on collision-clamp ticks.");
         } else {
-            row("Post motion (XZ)", NA,
+            rowNa("Delta pos",
+                    "Position change from previous tick: position(i) - position(i-1). Actually-applied displacement.");
+            rowNa("Post motion (XZ)",
                     "Per-axis horizontal displacement this tick: (deltaX, deltaZ). Differs from Velocity on collision-clamp ticks.");
         }
 
@@ -135,10 +133,10 @@ public final class TickInfoPanel implements RenderInterface {
             double dz = cur.position.z - prev.position.z;
             double pdx = prev.position.x - prev2.position.x;
             double pdz = prev.position.z - prev2.position.z;
-            row("Acceleration (XZ)", String.format(Locale.US, FMT_PAIR, dx - pdx, dz - pdz),
+            rowXZ("Acceleration (XZ)", dx - pdx, dz - pdz,
                     "Per-axis change in post motion: (deltaX(i) - deltaX(i-1), deltaZ(i) - deltaZ(i-1)).");
         } else {
-            row("Acceleration (XZ)", NA,
+            rowNa("Acceleration (XZ)",
                     "Per-axis change in post motion: (deltaX(i) - deltaX(i-1), deltaZ(i) - deltaZ(i-1)).");
         }
 
@@ -146,22 +144,44 @@ public final class TickInfoPanel implements RenderInterface {
             double dx = cur.position.x - prev.position.x;
             double dz = cur.position.z - prev.position.z;
             if (dx * dx + dz * dz < 1.0e-18) {
-                row("Angle (deg)", NA,
+                rowNa("Move angle (deg)",
                         "Movement direction in XZ. MC yaw convention: 0 = +Z, increases CW looking down (atan2(-dx, dz)).");
             } else {
-                double angle = Math.toDegrees(Math.atan2(-dx, dz));
-                row("Angle (deg)", String.format(Locale.US, FMT_ANGLE, angle),
+                rowNum("Move angle (deg)", Math.toDegrees(Math.atan2(-dx, dz)),
                         "Movement direction in XZ. MC yaw convention: 0 = +Z, increases CW looking down (atan2(-dx, dz)).");
             }
         } else {
-            row("Angle (deg)", NA,
+            rowNa("Move angle (deg)",
                     "Movement direction in XZ. MC yaw convention: 0 = +Z, increases CW looking down (atan2(-dx, dz)).");
+        }
+
+        rowBool("On ground", cur.onGround,
+                "Entity onGround flag at end of tick.");
+        rowBool("Sneaking", cur.sneaking,
+                "Sneak input active during this tick.");
+        rowBool("Collision", cur.wallCollision,
+                "Horizontal collision occurred this tick (MC horizontalCollision).");
+
+        if (cur.wallCollision) {
+            rowBool("Soft collision", cur.softCollision,
+                    "1.21.10 only: grazing wall hit that does NOT break sprint (Entity.collidedSoftly). Always false on 1.8.9/1.12.2.");
+        } else {
+            rowNa("Soft collision",
+                    "1.21.10 only: grazing wall hit that does NOT break sprint. n/a when no horizontal collision is happening.");
+        }
+
+        if (Double.isNaN(cur.collisionAngleDegrees)) {
+            rowNa("Collision angle (deg)",
+                    "1.21.10 only: angle between intended motion (forwardSpeed/sidewaysSpeed rotated by yaw) and post-collision motion. n/a on 1.8.9/1.12.2 or off-collision ticks.");
+        } else {
+            rowNum("Collision angle (deg)", cur.collisionAngleDegrees,
+                    "1.21.10 only: angle between intended motion and post-collision motion. MC keeps sprint when this is below ~8 deg (0.13962634 rad).");
         }
 
         ImGui.endTable();
     }
 
-    private void row(String label, String value, String tooltip) {
+    private void labelCell(String label, String tooltip) {
         ImGui.tableNextRow();
         ThemeManager.paintTableRowBg(rowCounter++);
         ImGui.tableNextColumn();
@@ -173,9 +193,74 @@ public final class TickInfoPanel implements RenderInterface {
         if (ImGui.isItemHovered()) {
             TooltipUtil.wrappedTooltip(tooltip);
         }
+    }
+
+    private void rowTriple(String label, double x, double y, double z, String tooltip) {
+        labelCell(label, tooltip);
+        numCell(x);
+        numCell(y);
+        numCell(z);
+        ThemeManager.emitTableRightmostCellTrailingPad();
+    }
+
+    private void rowXZ(String label, double x, double z, String tooltip) {
+        labelCell(label, tooltip);
+        numCell(x);
+        emptyCell();
+        numCell(z);
+        ThemeManager.emitTableRightmostCellTrailingPad();
+    }
+
+    private void rowNum(String label, double v, String tooltip) {
+        labelCell(label, tooltip);
+        numCell(v);
+        emptyCell();
+        emptyCell();
+        ThemeManager.emitTableRightmostCellTrailingPad();
+    }
+
+    private void rowInt(String label, int v, String tooltip) {
+        labelCell(label, tooltip);
         ImGui.tableNextColumn();
         ImGui.alignTextToFramePadding();
-        ImGui.text(value);
+        ImGui.text(Integer.toString(v));
+        emptyCell();
+        emptyCell();
         ThemeManager.emitTableRightmostCellTrailingPad();
+    }
+
+    private void rowBool(String label, boolean v, String tooltip) {
+        labelCell(label, tooltip);
+        ImGui.tableNextColumn();
+        ImGui.alignTextToFramePadding();
+        int color = v ? ThemeManager.okColor() : ThemeManager.dangerColor();
+        ThemeManager.pushTextColor(color);
+        ImGui.text(Boolean.toString(v));
+        ThemeManager.popTextColor();
+        emptyCell();
+        emptyCell();
+        ThemeManager.emitTableRightmostCellTrailingPad();
+    }
+
+    private void rowNa(String label, String tooltip) {
+        labelCell(label, tooltip);
+        ImGui.tableNextColumn();
+        ImGui.alignTextToFramePadding();
+        ThemeManager.pushTextColor(ThemeManager.textDimColor());
+        ImGui.text(NA);
+        ThemeManager.popTextColor();
+        emptyCell();
+        emptyCell();
+        ThemeManager.emitTableRightmostCellTrailingPad();
+    }
+
+    private static void numCell(double v) {
+        ImGui.tableNextColumn();
+        ImGui.alignTextToFramePadding();
+        ImGui.text(String.format(Locale.US, FMT_NUM, v));
+    }
+
+    private static void emptyCell() {
+        ImGui.tableNextColumn();
     }
 }
