@@ -63,10 +63,26 @@ public final class Forge12WorldOverlayRenderer {
         double maxSq = BoxStyle.pathMaxDistanceSq(settings);
 
         buf.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION_COLOR);
-        boxController.render(
-                new Forge12BoxRenderer(buf, camX, camY, camZ, BoxRenderer.Mode.FACES),
+        Forge12BoxRenderer facesRenderer = new Forge12BoxRenderer(buf, camX, camY, camZ, BoxRenderer.Mode.FACES);
+        boxController.render(facesRenderer,
                 (i, s) -> BoxStyle.tickFaceArgb(settings, s, selection.isSelected(i)),
                 camX, camY, camZ, maxSq);
+        if (settings.showHitbox && !settings.showFullHitbox) {
+            boxController.renderHitboxFloorOutline(facesRenderer,
+                    (i, s) -> BoxStyle.hitboxLineArgb(settings, selection.isSelected(i)),
+                    settings.showSubtick,
+                    camX, camY, camZ, maxSq);
+        }
+        if (settings.showFullHitbox) {
+            boxController.renderHitboxFullWireframe(facesRenderer,
+                    (i, s) -> BoxStyle.hitboxLineArgb(settings, selection.isSelected(i)),
+                    settings.showSubtick,
+                    camX, camY, camZ, maxSq);
+        }
+        if (settings.showYawArrows) {
+            boxController.renderYawArrows(facesRenderer, BoxStyle.yawArrowArgb(settings),
+                    camX, camY, camZ, maxSq);
+        }
         tess.draw();
 
         buf.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
@@ -75,22 +91,6 @@ public final class Forge12WorldOverlayRenderer {
                 camX, camY, camZ, maxSq);
         if (settings.showSubtick) {
             boxController.renderPath(linesRenderer, BoxStyle.subtickPathArgb(settings),
-                    camX, camY, camZ, maxSq);
-        }
-        if (settings.showHitbox && !settings.showFullHitbox) {
-            boxController.renderHitboxFloorOutline(linesRenderer,
-                    (i, s) -> BoxStyle.hitboxLineArgb(settings, selection.isSelected(i)),
-                    settings.showSubtick,
-                    camX, camY, camZ, maxSq);
-        }
-        if (settings.showFullHitbox) {
-            boxController.renderHitboxFullWireframe(linesRenderer,
-                    (i, s) -> BoxStyle.hitboxLineArgb(settings, selection.isSelected(i)),
-                    settings.showSubtick,
-                    camX, camY, camZ, maxSq);
-        }
-        if (settings.showYawArrows) {
-            boxController.renderYawArrows(linesRenderer, BoxStyle.yawArrowArgb(settings),
                     camX, camY, camZ, maxSq);
         }
         int gizmoIdx = yawGizmo.getSelectedIndex();

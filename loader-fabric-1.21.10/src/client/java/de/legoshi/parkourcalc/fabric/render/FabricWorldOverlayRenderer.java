@@ -55,27 +55,27 @@ public final class FabricWorldOverlayRenderer {
         FabricBoxRenderer facesRenderer = new FabricBoxRenderer(matrixStack, consumers, BoxRenderer.Mode.FACES);
         boxController.render(facesRenderer, (i, s) -> BoxStyle.tickFaceArgb(settings, s, selection.isSelected(i)),
                 cameraPos.x, cameraPos.y, cameraPos.z, maxSq);
-        FabricBoxRenderer linesRenderer = new FabricBoxRenderer(matrixStack, consumers, BoxRenderer.Mode.LINES);
-        boxController.render(linesRenderer, (i, s) -> BoxStyle.tickLineArgb(settings, s, selection.isSelected(i)),
-                cameraPos.x, cameraPos.y, cameraPos.z, maxSq);
-        if (settings.showSubtick) {
-            boxController.renderPath(linesRenderer, BoxStyle.subtickPathArgb(settings),
-                    cameraPos.x, cameraPos.y, cameraPos.z, maxSq);
-        }
         if (settings.showHitbox && !settings.showFullHitbox) {
-            boxController.renderHitboxFloorOutline(linesRenderer,
+            boxController.renderHitboxFloorOutline(facesRenderer,
                     (i, s) -> BoxStyle.hitboxLineArgb(settings, selection.isSelected(i)),
                     settings.showSubtick,
                     cameraPos.x, cameraPos.y, cameraPos.z, maxSq);
         }
         if (settings.showFullHitbox) {
-            boxController.renderHitboxFullWireframe(linesRenderer,
+            boxController.renderHitboxFullWireframe(facesRenderer,
                     (i, s) -> BoxStyle.hitboxLineArgb(settings, selection.isSelected(i)),
                     settings.showSubtick,
                     cameraPos.x, cameraPos.y, cameraPos.z, maxSq);
         }
         if (settings.showYawArrows) {
-            boxController.renderYawArrows(linesRenderer, BoxStyle.yawArrowArgb(settings),
+            boxController.renderYawArrows(facesRenderer, BoxStyle.yawArrowArgb(settings),
+                    cameraPos.x, cameraPos.y, cameraPos.z, maxSq);
+        }
+        FabricBoxRenderer linesRenderer = new FabricBoxRenderer(matrixStack, consumers, BoxRenderer.Mode.LINES);
+        boxController.render(linesRenderer, (i, s) -> BoxStyle.tickLineArgb(settings, s, selection.isSelected(i)),
+                cameraPos.x, cameraPos.y, cameraPos.z, maxSq);
+        if (settings.showSubtick) {
+            boxController.renderPath(linesRenderer, BoxStyle.subtickPathArgb(settings),
                     cameraPos.x, cameraPos.y, cameraPos.z, maxSq);
         }
         int gizmoIdx = yawGizmo.getSelectedIndex();

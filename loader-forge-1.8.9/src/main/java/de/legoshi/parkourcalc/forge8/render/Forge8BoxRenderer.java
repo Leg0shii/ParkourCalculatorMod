@@ -43,4 +43,14 @@ public final class Forge8BoxRenderer implements BoxRenderer {
         emitter.emit(x1 - camX, y1 - camY, z1 - camZ, argb);
         emitter.emit(x2 - camX, y2 - camY, z2 - camZ, argb);
     }
+
+    @Override
+    public void drawTriangle(double x1, double y1, double z1,
+                             double x2, double y2, double z2,
+                             double x3, double y3, double z3, int argb) {
+        if (mode != Mode.FACES) return;
+        emitter.emit(x1 - camX, y1 - camY, z1 - camZ, argb);
+        emitter.emit(x2 - camX, y2 - camY, z2 - camZ, argb);
+        emitter.emit(x3 - camX, y3 - camY, z3 - camZ, argb);
+    }
 }

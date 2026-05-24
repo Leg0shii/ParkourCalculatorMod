@@ -85,6 +85,9 @@ public final class BoxStyle {
     public static final double HITBOX_HEIGHT_STANDING = 1.8;
     public static final double HITBOX_HEIGHT_SNEAKING = 1.5;
 
+    /** Hitbox edges render as thin world-space boxes (glLineWidth > 1 is ignored by most GPUs and by Fabric's pipeline). */
+    public static final double HITBOX_EDGE_THICKNESS = 0.025;
+
     /** {@code position} is the entity center-bottom (MC convention). */
     public static AABB hitboxAabbAt(Vec3dCore position, boolean sneaking) {
         double h = sneaking ? HITBOX_HEIGHT_SNEAKING : HITBOX_HEIGHT_STANDING;

@@ -53,6 +53,18 @@ public final class FabricBoxRenderer implements BoxRenderer {
         }
     }
 
+    @Override
+    public void drawTriangle(double x1, double y1, double z1,
+                             double x2, double y2, double z2,
+                             double x3, double y3, double z3, int argb) {
+        if (mode != Mode.FACES) return;
+        VertexConsumer consumer = consumers.getBuffer(FabricRenderLayers.TRANSLUCENT_BOX);
+        tri(consumer, matrices.peek().getPositionMatrix(),
+                (float) x1, (float) y1, (float) z1,
+                (float) x2, (float) y2, (float) z2,
+                (float) x3, (float) y3, (float) z3, argb);
+    }
+
     private static void emitFaces(VertexConsumer c, Matrix4f m, AABB b, int argb) {
         float x0 = (float) b.min.x, y0 = (float) b.min.y, z0 = (float) b.min.z;
         float x1 = (float) b.max.x, y1 = (float) b.max.y, z1 = (float) b.max.z;

@@ -25,4 +25,9 @@ public interface BoxRenderer {
 
     /** No-op on FACES-mode impls. */
     void drawLine(double x1, double y1, double z1, double x2, double y2, double z2, int argb);
+
+    /** No-op on LINES-mode impls. Used for oriented geometry that can't be expressed as an AABB. */
+    void drawTriangle(double x1, double y1, double z1,
+                      double x2, double y2, double z2,
+                      double x3, double y3, double z3, int argb);
 }

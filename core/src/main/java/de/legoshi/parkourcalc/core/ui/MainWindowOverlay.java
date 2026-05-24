@@ -163,6 +163,7 @@ public final class MainWindowOverlay implements RenderInterface {
         if (!ImGui.beginPopupModal(POPUP_ABOUT, ImGuiWindowFlags.AlwaysAutoResize)) return;
         ImGui.text("Parkour Calculator");
         ImGui.text("Version: " + modVersion);
+        ImGui.text("By Leg0shi_");
         ThemeManager.sectionSpacing();
         ImGui.separator();
         ImGui.text(GITHUB_REPO);

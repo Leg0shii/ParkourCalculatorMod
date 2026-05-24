@@ -183,6 +183,7 @@ public final class BoxController {
 
     public void renderHitboxFloorOutline(BoxRenderer renderer, BoxColorPicker picker, boolean useSubtickPositions,
                                          double camX, double camY, double camZ, double maxDistanceSq) {
+        double t = BoxStyle.HITBOX_EDGE_THICKNESS;
         for (int i = 0; i < states.size(); i++) {
             if (!inRange(i, camX, camY, camZ, maxDistanceSq)) continue;
             TickState s = states.get(i);
@@ -195,25 +196,51 @@ public final class BoxController {
                 double x1 = p.x + BoxStyle.HITBOX_HALF_WIDTH;
                 double z1 = p.z + BoxStyle.HITBOX_HALF_WIDTH;
                 double y = p.y;
-                renderer.drawLine(x0, y, z0, x1, y, z0, argb);
-                renderer.drawLine(x1, y, z0, x1, y, z1, argb);
-                renderer.drawLine(x1, y, z1, x0, y, z1, argb);
-                renderer.drawLine(x0, y, z1, x0, y, z0, argb);
+                emitThickEdge(renderer, x0, y, z0, x1, y, z0, t, argb);
+                emitThickEdge(renderer, x0, y, z1, x1, y, z1, t, argb);
+                emitThickEdge(renderer, x0, y, z0, x0, y, z1, t, argb);
+                emitThickEdge(renderer, x1, y, z0, x1, y, z1, t, argb);
             }
         }
     }
 
     public void renderHitboxFullWireframe(BoxRenderer renderer, BoxColorPicker picker, boolean useSubtickPositions,
                                           double camX, double camY, double camZ, double maxDistanceSq) {
+        double t = BoxStyle.HITBOX_EDGE_THICKNESS;
         for (int i = 0; i < states.size(); i++) {
             if (!inRange(i, camX, camY, camZ, maxDistanceSq)) continue;
             TickState s = states.get(i);
             int argb = picker.argbFor(i, s);
             List<Vec3dCore> walk = walkFor(i, s, useSubtickPositions);
             for (int k = 0; k < walk.size(); k++) {
-                renderer.drawBox(BoxStyle.hitboxAabbAt(walk.get(k), s.sneaking), argb);
+                AABB hb = BoxStyle.hitboxAabbAt(walk.get(k), s.sneaking);
+                double x0 = hb.min.x, y0 = hb.min.y, z0 = hb.min.z;
+                double x1 = hb.max.x, y1 = hb.max.y, z1 = hb.max.z;
+                emitThickEdge(renderer, x0, y0, z0, x1, y0, z0, t, argb);
+                emitThickEdge(renderer, x0, y0, z1, x1, y0, z1, t, argb);
+                emitThickEdge(renderer, x0, y0, z0, x0, y0, z1, t, argb);
+                emitThickEdge(renderer, x1, y0, z0, x1, y0, z1, t, argb);
+                emitThickEdge(renderer, x0, y1, z0, x1, y1, z0, t, argb);
+                emitThickEdge(renderer, x0, y1, z1, x1, y1, z1, t, argb);
+                emitThickEdge(renderer, x0, y1, z0, x0, y1, z1, t, argb);
+                emitThickEdge(renderer, x1, y1, z0, x1, y1, z1, t, argb);
+                emitThickEdge(renderer, x0, y0, z0, x0, y1, z0, t, argb);
+                emitThickEdge(renderer, x1, y0, z0, x1, y1, z0, t, argb);
+                emitThickEdge(renderer, x0, y0, z1, x0, y1, z1, t, argb);
+                emitThickEdge(renderer, x1, y0, z1, x1, y1, z1, t, argb);
             }
         }
+    }
+
+    private static void emitThickEdge(BoxRenderer renderer,
+                                      double x0, double y0, double z0,
+                                      double x1, double y1, double z1,
+                                      double thickness, int argb) {
+        double h = thickness * 0.5;
+        double minX = Math.min(x0, x1) - h, maxX = Math.max(x0, x1) + h;
+        double minY = Math.min(y0, y1) - h, maxY = Math.max(y0, y1) + h;
+        double minZ = Math.min(z0, z1) - h, maxZ = Math.max(z0, z1) + h;
+        renderer.drawBox(new AABB(new Vec3dCore(minX, minY, minZ), new Vec3dCore(maxX, maxY, maxZ)), argb);
     }
 
     private boolean inRange(int i, double camX, double camY, double camZ, double maxSq) {
@@ -250,20 +277,63 @@ public final class BoxController {
 
             double tipX = cx + fx * ARROW_SHAFT_LEN;
             double tipZ = cz + fz * ARROW_SHAFT_LEN;
-            renderer.drawLine(cx, cy, cz, tipX, cy, tipZ, argb);
-
             double baseX = tipX - fx * ARROW_HEAD_LEN;
             double baseZ = tipZ - fz * ARROW_HEAD_LEN;
-            double perpX = -fz * ARROW_HEAD_HALF_WIDTH;
-            double perpZ = fx * ARROW_HEAD_HALF_WIDTH;
-            renderer.drawLine(tipX, cy, tipZ, baseX + perpX, cy, baseZ + perpZ, argb);
-            renderer.drawLine(tipX, cy, tipZ, baseX - perpX, cy, baseZ - perpZ, argb);
+
+            // Shaft: oriented thin box from box center to the base of the head.
+            double perpShaftX = -fz * (ARROW_THICKNESS * 0.5);
+            double perpShaftZ = fx * (ARROW_THICKNESS * 0.5);
+            emitOrientedShaft(renderer, cx, cy, cz, baseX, baseZ,
+                    perpShaftX, perpShaftZ, ARROW_THICKNESS, argb);
+
+            // Head: filled triangle, drawn as two coincident triangles for a slight Y extent so it reads from above/below.
+            double perpHeadX = -fz * ARROW_HEAD_HALF_WIDTH;
+            double perpHeadZ = fx * ARROW_HEAD_HALF_WIDTH;
+            double c1x = baseX + perpHeadX, c1z = baseZ + perpHeadZ;
+            double c2x = baseX - perpHeadX, c2z = baseZ - perpHeadZ;
+            double headLow = cy - ARROW_THICKNESS * 0.5;
+            double headHigh = cy + ARROW_THICKNESS * 0.5;
+            renderer.drawTriangle(tipX, headLow, tipZ, c1x, headLow, c1z, c2x, headLow, c2z, argb);
+            renderer.drawTriangle(tipX, headHigh, tipZ, c2x, headHigh, c2z, c1x, headHigh, c1z, argb);
+            // Side walls so the head has thickness when viewed edge-on.
+            renderer.drawTriangle(tipX, headLow, tipZ, c1x, headHigh, c1z, tipX, headHigh, tipZ, argb);
+            renderer.drawTriangle(tipX, headLow, tipZ, c1x, headLow, c1z, c1x, headHigh, c1z, argb);
+            renderer.drawTriangle(tipX, headLow, tipZ, tipX, headHigh, tipZ, c2x, headHigh, c2z, argb);
+            renderer.drawTriangle(tipX, headLow, tipZ, c2x, headHigh, c2z, c2x, headLow, c2z, argb);
+            renderer.drawTriangle(c1x, headLow, c1z, c2x, headHigh, c2z, c1x, headHigh, c1z, argb);
+            renderer.drawTriangle(c1x, headLow, c1z, c2x, headLow, c2z, c2x, headHigh, c2z, argb);
         }
     }
 
-    private static final double ARROW_SHAFT_LEN = 0.45;
-    private static final double ARROW_HEAD_LEN = 0.15;
-    private static final double ARROW_HEAD_HALF_WIDTH = 0.08;
+    private static void emitOrientedShaft(BoxRenderer renderer,
+                                          double sx, double sy, double sz,
+                                          double ex, double ez,
+                                          double perpX, double perpZ,
+                                          double thickness, int argb) {
+        double h = thickness * 0.5;
+        double yLow = sy - h, yHigh = sy + h;
+        double p0x = sx - perpX, p0z = sz - perpZ;
+        double p1x = sx + perpX, p1z = sz + perpZ;
+        double p2x = ex + perpX, p2z = ez + perpZ;
+        double p3x = ex - perpX, p3z = ez - perpZ;
+        renderer.drawTriangle(p0x, yLow, p0z, p1x, yLow, p1z, p2x, yLow, p2z, argb);
+        renderer.drawTriangle(p0x, yLow, p0z, p2x, yLow, p2z, p3x, yLow, p3z, argb);
+        renderer.drawTriangle(p0x, yHigh, p0z, p2x, yHigh, p2z, p1x, yHigh, p1z, argb);
+        renderer.drawTriangle(p0x, yHigh, p0z, p3x, yHigh, p3z, p2x, yHigh, p2z, argb);
+        renderer.drawTriangle(p0x, yLow, p0z, p1x, yHigh, p1z, p0x, yHigh, p0z, argb);
+        renderer.drawTriangle(p0x, yLow, p0z, p1x, yLow, p1z, p1x, yHigh, p1z, argb);
+        renderer.drawTriangle(p1x, yLow, p1z, p2x, yHigh, p2z, p1x, yHigh, p1z, argb);
+        renderer.drawTriangle(p1x, yLow, p1z, p2x, yLow, p2z, p2x, yHigh, p2z, argb);
+        renderer.drawTriangle(p2x, yLow, p2z, p3x, yHigh, p3z, p2x, yHigh, p2z, argb);
+        renderer.drawTriangle(p2x, yLow, p2z, p3x, yLow, p3z, p3x, yHigh, p3z, argb);
+        renderer.drawTriangle(p3x, yLow, p3z, p0x, yHigh, p0z, p3x, yHigh, p3z, argb);
+        renderer.drawTriangle(p3x, yLow, p3z, p0x, yLow, p0z, p0x, yHigh, p0z, argb);
+    }
+
+    private static final double ARROW_SHAFT_LEN = 0.29;
+    private static final double ARROW_HEAD_LEN = 0.12;
+    private static final double ARROW_HEAD_HALF_WIDTH = 0.065;
+    private static final double ARROW_THICKNESS = 0.016;
 
     public void renderYawGizmo(BoxRenderer renderer, Vec3dCore center, double yawDegrees, double radius,
                                 int circleArgb, int directionArgb) {

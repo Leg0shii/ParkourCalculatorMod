@@ -141,18 +141,24 @@ public final class ThemeManager {
 
     public static boolean beginStandardTable(String id, int columnCount, int extraFlags, float outerWidth, float outerHeight) {
         pushTableSelectionChrome(false);
-        return ImGui.beginTable(id, columnCount, standardTableFlags() | extraFlags, outerWidth, outerHeight);
+        boolean ok = ImGui.beginTable(id, columnCount, standardTableFlags() | extraFlags, outerWidth, outerHeight);
+        if (!ok) popTableSelectionChrome();
+        return ok;
     }
 
     public static boolean beginStandardClickableRowsTable(String id, int columnCount, int extraFlags, float outerWidth, float outerHeight) {
         pushTableSelectionChrome(true);
-        return ImGui.beginTable(id, columnCount, standardTableFlags() | extraFlags, outerWidth, outerHeight);
+        boolean ok = ImGui.beginTable(id, columnCount, standardTableFlags() | extraFlags, outerWidth, outerHeight);
+        if (!ok) popTableSelectionChrome();
+        return ok;
     }
 
     public static boolean beginStandardKeyValueTable(String id, int columnCount, int extraFlags, float outerWidth, float outerHeight) {
         pushTableSelectionChrome(false);
         int flags = (standardTableFlags() & ~ImGuiTableFlags.BordersInnerV) | extraFlags;
-        return ImGui.beginTable(id, columnCount, flags, outerWidth, outerHeight);
+        boolean ok = ImGui.beginTable(id, columnCount, flags, outerWidth, outerHeight);
+        if (!ok) popTableSelectionChrome();
+        return ok;
     }
 
     public static void endStandardTable() {
