@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.core.ui.theme;
 
 import imgui.ImGui;
 import imgui.ImGuiStyle;
+import imgui.ImVec2;
 import imgui.flag.ImGuiCol;
 import imgui.flag.ImGuiTableBgTarget;
 import imgui.flag.ImGuiTableFlags;
@@ -27,19 +28,22 @@ public final class ThemeManager {
     //   BG_DARK      title bar, popup background (Mocha crust)
     //   PANEL        alt-row banding ONLY (Mocha surface0). Do not reuse for input fills.
     //   PANEL_HOVER  input/slider/checkbox/button fill at rest (Mocha surface1)
+    //   PANEL_FOCUS  focused (typing) input fill, between PANEL_HOVER and PANEL_ACTIVE
     //   PANEL_ACTIVE input hover fill, scrollbar grab at rest (Mocha surface2)
     //   OVERLAY0     scrollbar grab hover/active (Mocha overlay0)
     //   BORDER       panel borders, separators, 1px frame outline at rest (Mocha surface1)
     //   TEXT         primary body (Mocha text)
     //   TEXT_MUTED   secondary, disabled labels (Mocha subtext0)
     //   TEXT_DIM     very-low-emphasis text (Mocha overlay0). Same RGB as OVERLAY0 but text-semantic.
-    //   ACCENT       primary buttons, slider grab, focus ring (Mocha blue)
+    //   ACCENT       primary buttons, slider grab, separators, drag-drop, nav (Mocha blue)
     //   ACCENT_DIM   slider grab inactive, drag-source row tint (Mocha blue @ 0.30)
     //   SELECTED     selected-row tint (Mocha mauve, distinct from WARNING)
     //   WARNING      dirty marker, drop indicator, playback tick (Mocha yellow)
     //   DANGER       destructive actions, error text (Mocha red)
     //   OK           success toast/status text (Mocha green)
-    //   FOCUS        accent at 0.30 alpha; 2px outline on focused inputs (never fill)
+    //   FOCUS        2px outline on focused inputs, drawn inset of the 1px frame border (Mocha lavender)
+    //   STATUS_BG    background for the status-message panel at the bottom of MainWindowOverlay
+    //                (~midpoint of BG and BG_DARK so the zone is discoverable when empty)
     // BG must be fully opaque or the in-game terrain/sky bleeds through small
     // auto-resize windows (Perf, TickInfo) and tints them light. The input table
     // in the large MainWindow rarely shows it because its surface covers most of
@@ -51,6 +55,7 @@ public final class ThemeManager {
     private static final float[] BG_MENU      = rgb(0x18, 0x18, 0x25, 1.00f);
     private static final float[] PANEL        = rgb(0x31, 0x32, 0x44, 1.00f);
     private static final float[] PANEL_HOVER  = rgb(0x45, 0x47, 0x5a, 1.00f);
+    private static final float[] PANEL_FOCUS  = rgb(0x4e, 0x51, 0x66, 1.00f);
     private static final float[] PANEL_ACTIVE = rgb(0x58, 0x5b, 0x70, 1.00f);
     private static final float[] OVERLAY0     = rgb(0x6c, 0x70, 0x86, 1.00f);
     private static final float[] BORDER       = rgb(0x45, 0x47, 0x5a, 1.00f);
@@ -63,7 +68,8 @@ public final class ThemeManager {
     private static final float[] WARNING      = rgb(0xf9, 0xe2, 0xaf, 1.00f);
     private static final float[] DANGER       = rgb(0xf3, 0x8b, 0xa8, 1.00f);
     private static final float[] OK           = rgb(0xa6, 0xe3, 0xa1, 1.00f);
-    private static final float[] FOCUS        = rgb(0x89, 0xb4, 0xfa, 1.00f);
+    private static final float[] FOCUS        = rgb(0xb4, 0xbe, 0xfe, 1.00f);
+    private static final float[] STATUS_BG    = rgb(0x18, 0x18, 0x25, 1.00f);
 
     private static final float XXS = 2.0f;
     private static final float XS = 4.0f;
@@ -115,11 +121,11 @@ public final class ThemeManager {
         setColor(ImGuiCol.Border, BORDER);
         // Inputs sit one tier above alt-row banding so their silhouette is
         // preserved regardless of which zebra band they land on. Active (focused)
-        // matches rest fill: focus is communicated by the 2px accent ring drawn
-        // post-frame, not by a fill swap that would compete with the ring.
+        // lifts to PANEL_FOCUS and is doubly marked by the 2px lavender ring drawn
+        // inset of the 1px frame border (see Controls.drawFocusRingIfActive).
         setColor(ImGuiCol.FrameBg, PANEL_HOVER);
         setColor(ImGuiCol.FrameBgHovered, PANEL_ACTIVE);
-        setColor(ImGuiCol.FrameBgActive, PANEL_HOVER);
+        setColor(ImGuiCol.FrameBgActive, PANEL_FOCUS);
         setColor(ImGuiCol.TitleBg, BG_DARK);
         setColor(ImGuiCol.TitleBgActive, BG_DARK);
         setColor(ImGuiCol.TitleBgCollapsed, BG_DARK);
@@ -175,6 +181,8 @@ public final class ThemeManager {
      *
      *  CONTRACT: every table using these flags MUST also:
      *  <ul>
+     *    <li>size every fixed-width middle column via {@link #tableColumnWidth} so
+     *        bold headers never clip;</li>
      *    <li>size the leftmost column via {@link #tableLeftmostColumnWidth} and call
      *        {@link #emitTableLeftmostCellPad} at the start of every leftmost cell
      *        (header + each data row) so the left gutter equals SCROLLBAR_SIZE;</li>
@@ -185,15 +193,82 @@ public final class ThemeManager {
      *  </ul>
      */
     public static int standardTableFlags() {
-        return ImGuiTableFlags.RowBg | ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.ScrollY;
+        return ImGuiTableFlags.RowBg
+                | ImGuiTableFlags.SizingFixedFit
+                | ImGuiTableFlags.ScrollY
+                | ImGuiTableFlags.BordersInnerV;
     }
 
-    /** Bold table header. Use in place of {@link ImGui#tableHeader(String)} so every
-     *  standard table has the same heavy header weight. */
+    /** Bold table header. Use in place of {@link ImGui#tableHeader(String)} so
+     *  every standard table has the same heavy header weight. */
     public static void tableHeader(String label) {
         Fonts.pushBold();
         ImGui.tableHeader(label);
         Fonts.popBold();
+    }
+
+    /** Bold table header, horizontally centered. {@link ImGui#tableHeader(String)}
+     *  writes the label at its column's origin X regardless of cursor, so we hide
+     *  the native label (empty visible part) and overlay the bold text manually,
+     *  matching the native Y. Last item remains the tableHeader so isItemHovered()
+     *  in the caller still drives tooltips. Use only on tables that opt in to
+     *  centered cell content (currently the TAS input table). */
+    public static void tableHeaderCentered(String label) {
+        ImVec2 cellOrigin = ImGui.getCursorScreenPos();
+        float cellW = ImGui.getContentRegionAvail().x;
+        ImGui.tableHeader("##" + label);
+        Fonts.pushBold();
+        ImVec2 textSize = ImGui.calcTextSize(label);
+        float tx = cellOrigin.x + (cellW - textSize.x) * 0.5f;
+        float ty = cellOrigin.y;
+        ImGui.getWindowDrawList().addText(tx, ty, ImGui.getColorU32(ImGuiCol.Text), label);
+        Fonts.popBold();
+    }
+
+    /** Position cursor X so an item of the given width centers within the
+     *  remaining cell space. Call before submitting a non-selectable widget
+     *  (inputText, combo, text) you want centered. */
+    public static void centerNextItem(float itemWidth) {
+        float avail = ImGui.getContentRegionAvail().x;
+        if (itemWidth > 0f && itemWidth < avail) {
+            ImGui.setCursorPosX(ImGui.getCursorPosX() + (avail - itemWidth) * 0.5f);
+        }
+    }
+
+    /** Render plain text centered in the current cell. Vertically aligned with
+     *  frame padding so the line lines up with neighbor widgets in the row. */
+    public static void textCentered(String label) {
+        centerNextItem(ImGui.calcTextSize(label).x);
+        ImGui.alignTextToFramePadding();
+        ImGui.text(label);
+    }
+
+    /** Render a selectable whose visible label is drawn centered within the cell.
+     *  Pass {@code idSuffix} for the ImGui ID (no leading "##"); pass {@code label}
+     *  separately as the text to display. SelectableTextAlign would have done this
+     *  via a style var, but its enum index drifts between imgui-java 1.86.11 (core
+     *  compile) and 1.90.0 (Fabric runtime) and lands on a float-typed slot at
+     *  runtime, so we overlay the label manually with drawList.addText using only
+     *  enum-stable APIs. alignTextToFramePadding before the selectable keeps the
+     *  click rect (and therefore V positioning) identical to a plain selectable. */
+    public static boolean centeredSelectable(String idSuffix, String label, boolean selected, int flags) {
+        ImVec2 cellOrigin = ImGui.getCursorScreenPos();
+        float cellW = ImGui.getContentRegionAvail().x;
+        ImGui.alignTextToFramePadding();
+        boolean clicked = ImGui.selectable("##" + idSuffix, selected, flags);
+        if (label != null && !label.isEmpty()) {
+            ImVec2 textSize = ImGui.calcTextSize(label);
+            float tx = cellOrigin.x + (cellW - textSize.x) * 0.5f;
+            // Match the Y position ImGui's selectable would use for its own label
+            // after alignTextToFramePadding: cellOrigin.y + framePadding.y.
+            float ty = cellOrigin.y + ImGui.getStyle().getFramePadding().y;
+            ImGui.getWindowDrawList().addText(tx, ty, ImGui.getColorU32(ImGuiCol.Text), label);
+        }
+        return clicked;
+    }
+
+    public static boolean centeredSelectable(String idSuffix, String label, boolean selected) {
+        return centeredSelectable(idSuffix, label, selected, 0);
     }
 
     /** Width to pass to tableSetupColumn for a MIDDLE column. Uses the max of
@@ -294,16 +369,40 @@ public final class ThemeManager {
     }
 
     // Tints the input frame to the selection hue so the purple row band reads
-    // continuous through input cells. Translucent so the underlying RowBg1 tint
-    // and alt-row banding compound naturally.
+    // continuous through input cells. Alpha high enough that the mauve dominates
+    // over the opaque PANEL_HOVER/PANEL_FOCUS frame fills; lower alpha left a
+    // visible seam where the input composited darker than the row band. Text
+    // flips to BG (Mocha base) so digits stay readable on the light mauve fill.
     public static void pushSelectedFrameBg() {
-        ImGui.pushStyleColor(ImGuiCol.FrameBg, SELECTED[0], SELECTED[1], SELECTED[2], 0.45f);
-        ImGui.pushStyleColor(ImGuiCol.FrameBgHovered, SELECTED[0], SELECTED[1], SELECTED[2], 0.55f);
-        ImGui.pushStyleColor(ImGuiCol.FrameBgActive, SELECTED[0], SELECTED[1], SELECTED[2], 0.55f);
+        ImGui.pushStyleColor(ImGuiCol.FrameBg, SELECTED[0], SELECTED[1], SELECTED[2], 0.70f);
+        ImGui.pushStyleColor(ImGuiCol.FrameBgHovered, SELECTED[0], SELECTED[1], SELECTED[2], 0.80f);
+        ImGui.pushStyleColor(ImGuiCol.FrameBgActive, SELECTED[0], SELECTED[1], SELECTED[2], 0.80f);
+        ImGui.pushStyleColor(ImGuiCol.Text, BG[0], BG[1], BG[2], BG[3]);
     }
 
     public static void popSelectedFrameBg() {
-        ImGui.popStyleColor(3);
+        ImGui.popStyleColor(4);
+    }
+
+    // Lifts the 1px frame border one tier (BORDER -> PANEL_ACTIVE) so populated
+    // yaw cells read with more weight than empty ones. PANEL_HOVER shares RGB
+    // with BORDER in this palette, so PANEL_ACTIVE is the next visible step.
+    // Combine with the selected-row push: selected outermost, populated inner,
+    // pop in reverse.
+    public static void pushPopulatedFrameBorder() {
+        ImGui.pushStyleColor(ImGuiCol.Border, PANEL_ACTIVE[0], PANEL_ACTIVE[1], PANEL_ACTIVE[2], PANEL_ACTIVE[3]);
+    }
+
+    public static void popPopulatedFrameBorder() {
+        ImGui.popStyleColor(1);
+    }
+
+    public static void pushStatusAreaChildBg() {
+        ImGui.pushStyleColor(ImGuiCol.ChildBg, STATUS_BG[0], STATUS_BG[1], STATUS_BG[2], STATUS_BG[3]);
+    }
+
+    public static void popStatusAreaChildBg() {
+        ImGui.popStyleColor(1);
     }
 
     public static int textColor() {

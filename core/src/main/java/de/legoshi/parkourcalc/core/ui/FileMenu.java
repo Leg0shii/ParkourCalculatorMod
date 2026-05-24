@@ -11,6 +11,7 @@ import imgui.ImGui;
 import imgui.flag.ImGuiInputTextFlags;
 import imgui.flag.ImGuiKey;
 import imgui.flag.ImGuiSelectableFlags;
+import imgui.flag.ImGuiStyleVar;
 import imgui.flag.ImGuiTableColumnFlags;
 import imgui.flag.ImGuiTableRowFlags;
 import imgui.flag.ImGuiWindowFlags;
@@ -141,17 +142,28 @@ public final class FileMenu {
     }
 
     public void renderStatusLine() {
-        // Always occupy one row; the input pane reserves the slot whether or not
-        // a message is showing, so the table never reflows on show/expire.
-        if (statusMessage == null || System.currentTimeMillis() > statusUntilMs) {
+        // Child height = FrameHeight (NOT WithSpacing) because ImGui auto-inserts
+        // ItemSpacing.y between the table above and this child; the parent's
+        // footer reservation of FrameHeightWithSpacing covers spacing + frame
+        // once. WithSpacing here would double-count and overflow the parent.
+        // Darker bg marks the output zone without a frame border (which read as
+        // "input you can type into"). Zero vertical WindowPadding so the text
+        // fits inside one frame height.
+        ThemeManager.pushStatusAreaChildBg();
+        ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, 8f, 0f);
+        ImGui.beginChild("##status", 0f, ImGui.getFrameHeight(), false, ImGuiWindowFlags.NoScrollbar);
+        if (statusMessage != null && System.currentTimeMillis() <= statusUntilMs) {
+            int color = statusIsError ? ThemeManager.dangerColor() : ThemeManager.okColor();
+            ThemeManager.pushTextColor(color);
+            ImGui.alignTextToFramePadding();
+            ImGui.text(statusMessage);
+            ThemeManager.popTextColor();
+        } else {
             statusMessage = null;
-            ImGui.dummy(0f, ImGui.getFrameHeight());
-            return;
         }
-        int color = statusIsError ? ThemeManager.dangerColor() : ThemeManager.okColor();
-        ThemeManager.pushTextColor(color);
-        ImGui.text(statusMessage);
-        ThemeManager.popTextColor();
+        ImGui.endChild();
+        ImGui.popStyleVar();
+        ThemeManager.popStatusAreaChildBg();
     }
 
     public void renderEmptyStateCta() {
@@ -432,8 +444,10 @@ public final class FileMenu {
             ImGui.tableSetupScrollFreeze(0, 1);
             ImGui.tableSetupColumn(COL_FILENAME, ImGuiTableColumnFlags.WidthFixed,
                     ThemeManager.tableLeftmostColumnWidth(COL_FILENAME, 240));
-            ImGui.tableSetupColumn(COL_DATE, ImGuiTableColumnFlags.WidthFixed, 140);
-            ImGui.tableSetupColumn(COL_MC, ImGuiTableColumnFlags.WidthFixed, 60);
+            ImGui.tableSetupColumn(COL_DATE, ImGuiTableColumnFlags.WidthFixed,
+                    ThemeManager.tableColumnWidth(COL_DATE, 140));
+            ImGui.tableSetupColumn(COL_MC, ImGuiTableColumnFlags.WidthFixed,
+                    ThemeManager.tableColumnWidth(COL_MC, 60));
             ImGui.tableSetupColumn(COL_WORLD, ImGuiTableColumnFlags.WidthFixed,
                     ThemeManager.tableRightmostColumnWidth(COL_WORLD, 160));
             renderOpenTableHeader();

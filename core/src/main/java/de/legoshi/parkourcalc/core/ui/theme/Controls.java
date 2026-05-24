@@ -176,7 +176,7 @@ public final class Controls {
         ImVec2 min = ImGui.getItemRectMin();
         ImVec2 max = ImGui.getItemRectMax();
         ImGui.getWindowDrawList().addRect(
-                min.x, min.y, max.x, max.y,
+                min.x + 1.0f, min.y + 1.0f, max.x - 1.0f, max.y - 1.0f,
                 ThemeManager.focusColor(),
                 FOCUS_RING_ROUNDING,
                 0,
