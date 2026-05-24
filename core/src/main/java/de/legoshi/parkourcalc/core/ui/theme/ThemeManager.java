@@ -426,6 +426,10 @@ public final class ThemeManager {
         return u32(TEXT_MUTED);
     }
 
+    public static int textDimColor() {
+        return u32(TEXT_DIM);
+    }
+
     public static int dangerColor() {
         return u32(DANGER);
     }

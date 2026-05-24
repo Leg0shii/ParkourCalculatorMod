@@ -94,6 +94,8 @@ public final class InputOverlay {
     private static final String WARN_MULTIPLAYER =
             "Multiplayer: simulator only sees blocks inside your render distance.";
 
+    private static final String EMPTY_HINT = "Right-click to add ticks";
+
     private final InputData data;
     private final Settings settings;
     private final IntConsumer onDataChangedAt;
@@ -205,6 +207,9 @@ public final class InputOverlay {
             setupColumns(potionColumns);
             renderAllRows(potionColumns);
             ImGui.endTable();
+            if (data.getRows().isEmpty()) {
+                renderEmptyTableHint();
+            }
         }
 
         renderContextMenu();
@@ -218,6 +223,15 @@ public final class InputOverlay {
 
         renderClearConfirmPopup();
         ThemeManager.popTransparentHeader();
+    }
+
+    private void renderEmptyTableHint() {
+        ImVec2 rectMin = ImGui.getItemRectMin();
+        ImVec2 rectMax = ImGui.getItemRectMax();
+        ImVec2 textSize = ImGui.calcTextSize(EMPTY_HINT);
+        float x = (rectMin.x + rectMax.x - textSize.x) * 0.5f;
+        float y = (rectMin.y + rectMax.y - textSize.y) * 0.5f;
+        ImGui.getWindowDrawList().addText(x, y, ThemeManager.textDimColor(), EMPTY_HINT);
     }
 
     private void renderMultiplayerWarning() {
