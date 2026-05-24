@@ -356,9 +356,11 @@ public final class ThemeManager {
 
     /** Begin a table whose rows themselves are the click target (file picker,
      *  list-select). Lifts each row to {@link #TABLE_ROW_HOVER} on mouse-over
-     *  so users see which row they are about to click. Selection chrome on
-     *  the {@code Header} slot stays suppressed: tables paint selected rows
-     *  via their own row tint (see {@link #selectedTintColor(float)}). */
+     *  so users see which row they are about to click. The {@code Header} slot
+     *  carries the SELECTED mauve so the Selectable paints selection in the
+     *  same rect it paints hover, keeping the two states coextensive (don't
+     *  paint a separate row-spanning selection tint, it leaks into the cell
+     *  padding bands and hover can't fully overdraw it). */
     public static boolean beginStandardClickableRowsTable(String id, int columnCount, int extraFlags, float outerWidth, float outerHeight) {
         pushTableSelectionChrome(true);
         return ImGui.beginTable(id, columnCount, standardTableFlags() | extraFlags, outerWidth, outerHeight);
@@ -384,12 +386,14 @@ public final class ThemeManager {
     }
 
     private static void pushTableSelectionChrome(boolean rowsClickable) {
-        ImGui.pushStyleColor(ImGuiCol.Header, 0f, 0f, 0f, 0f);
         if (rowsClickable) {
+            float[] s = TABLE_ROW_SELECTED;
+            ImGui.pushStyleColor(ImGuiCol.Header, s[0], s[1], s[2], s[3]);
             float[] h = TABLE_ROW_HOVER;
             ImGui.pushStyleColor(ImGuiCol.HeaderHovered, h[0], h[1], h[2], h[3]);
             ImGui.pushStyleColor(ImGuiCol.HeaderActive, h[0], h[1], h[2], h[3]);
         } else {
+            ImGui.pushStyleColor(ImGuiCol.Header, 0f, 0f, 0f, 0f);
             ImGui.pushStyleColor(ImGuiCol.HeaderHovered, 0f, 0f, 0f, 0f);
             ImGui.pushStyleColor(ImGuiCol.HeaderActive, 0f, 0f, 0f, 0f);
         }

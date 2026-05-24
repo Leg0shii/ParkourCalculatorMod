@@ -113,13 +113,13 @@ public final class FileMenu {
     }
 
     public void renderMenuItems() {
-        if (ImGui.menuItem("New TAS", "Ctrl+N")) onNewTas();
-        if (ImGui.menuItem("Open...", "Ctrl+O")) onOpen();
+        if (ImGui.menuItem("New TAS")) onNewTas();
+        if (ImGui.menuItem("Open...")) onOpen();
         renderRecentSubmenu();
         ImGui.separator();
         boolean hasName = controller.currentName() != null;
-        if (ImGui.menuItem("Save", "Ctrl+S", false, hasName || controller.isDirty())) onSave();
-        if (ImGui.menuItem("Save As...", "Ctrl+Shift+S")) onSaveAs();
+        if (ImGui.menuItem("Save", null, false, hasName || controller.isDirty())) onSave();
+        if (ImGui.menuItem("Save As...")) onSaveAs();
         ImGui.separator();
         boolean hasPicker = filePicker != null;
         if (ImGui.menuItem("Import .tas...", null, false, hasPicker)) onImport();
@@ -490,10 +490,10 @@ public final class FileMenu {
             maxWorldW = Math.max(maxWorldW, ImGui.calcTextSize(info.worldLabel != null ? info.worldLabel : "?").x);
         }
 
-        // beginStandardClickableRowsTable handles the selection-chrome push
-        // internally (Header transparent, HeaderHovered = TABLE_ROW_HOVER) so
-        // each row lifts on mouse-over while the SELECTED mauve painted as a
-        // row tint stays the dominant visual.
+        // beginStandardClickableRowsTable pushes Header = SELECTED mauve and
+        // HeaderHovered = TABLE_ROW_HOVER, so the Selectable paints both the
+        // selected and hovered states in the same rect; hover on a selected
+        // row fully overdraws the magenta with no leftover padding bands.
         if (ThemeManager.beginStandardClickableRowsTable("##open_table", 4, 0, 0f, tableH)) {
             ImGui.tableSetupScrollFreeze(0, 1);
             ImGui.tableSetupColumn(COL_FILENAME, ImGuiTableColumnFlags.WidthFixed,
@@ -512,9 +512,6 @@ public final class FileMenu {
                 ImGui.tableNextRow(0, rowH);
                 ThemeManager.paintTableRowBg(rowIndex++);
                 boolean selected = info.name.equals(openSelected);
-                if (selected) {
-                    ThemeManager.paintTableRowTint(ThemeManager.selectedTintColor(0.75f));
-                }
                 ImGui.tableSetColumnIndex(0);
                 ThemeManager.tableLeftmostCellPad();
                 ImVec2 cellOrigin = ImGui.getCursorScreenPos();
