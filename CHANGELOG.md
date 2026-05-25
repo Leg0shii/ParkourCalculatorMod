@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.1](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.3.0...v1.3.1) (2026-05-25)
+
+
+### Bug Fixes
+
+* anticheat flagging speed 2 replay ([313b2bd](https://github.com/Leg0shii/ParkourCalculatorMod/commit/313b2bdd4c403dce1f0d4bc53acda8bdf6ce424d))
+* inconsistent replay state on server/client desync ([d655981](https://github.com/Leg0shii/ParkourCalculatorMod/commit/d6559811fb2936b1507cc7917e38b69c03a287bd))
+
 ## [1.3.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.2.0...v1.3.0) (2026-05-24)
 
 
