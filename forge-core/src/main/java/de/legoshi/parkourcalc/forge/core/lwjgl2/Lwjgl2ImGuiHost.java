@@ -5,6 +5,7 @@ import com.github.koxx12dev.fuckyou.ImGuiLwjgl2;
 import de.legoshi.parkourcalc.core.ui.OverlayManager;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.ui.theme.Fonts;
+import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import imgui.ImFont;
 import imgui.ImFontConfig;
 import imgui.ImFontGlyphRangesBuilder;
@@ -18,6 +19,7 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.util.Objects;
 import java.util.function.BooleanSupplier;
+import java.util.function.IntConsumer;
 
 /**
  * Shared ImGui lifecycle for the Forge 1.8.9 / 1.12.2 loaders, both of which run on
@@ -32,6 +34,7 @@ public final class Lwjgl2ImGuiHost {
 
     private final OverlayManager overlayManager;
     private final Settings settings;
+    private final IntConsumer autoScaleResolver;
     private final BooleanSupplier isUiFocused;
     private final ImGuiLwjgl2 imguiLwjgl2 = new ImGuiLwjgl2();
     private final ImGuiGL3 imguiGl3 = new ImGuiGL3();
@@ -42,13 +45,14 @@ public final class Lwjgl2ImGuiHost {
     private long lastFrameNanos;
     private int appliedScaleIndex = -1;
 
-    public Lwjgl2ImGuiHost(OverlayManager overlayManager, Settings settings) {
-        this(overlayManager, settings, overlayManager::isControlPanelOpen);
+    public Lwjgl2ImGuiHost(OverlayManager overlayManager, Settings settings, IntConsumer autoScaleResolver) {
+        this(overlayManager, settings, autoScaleResolver, overlayManager::isControlPanelOpen);
     }
 
-    public Lwjgl2ImGuiHost(OverlayManager overlayManager, Settings settings, BooleanSupplier isUiFocused) {
+    public Lwjgl2ImGuiHost(OverlayManager overlayManager, Settings settings, IntConsumer autoScaleResolver, BooleanSupplier isUiFocused) {
         this.overlayManager = overlayManager;
         this.settings = settings;
+        this.autoScaleResolver = autoScaleResolver;
         this.isUiFocused = isUiFocused;
     }
 
@@ -59,6 +63,7 @@ public final class Lwjgl2ImGuiHost {
     }
 
     public void renderFrame(int displayWidth, int displayHeight) {
+        autoScaleResolver.accept(displayHeight);
         ensureInitialized();
         applyPendingScale();
 
@@ -110,13 +115,8 @@ public final class Lwjgl2ImGuiHost {
     }
 
     private void applyScale(int newIdx) {
-        float newScale = Settings.PRESET_SCALES[newIdx];
-        if (appliedScaleIndex < 0) {
-            ImGui.getStyle().scaleAllSizes(newScale);
-        } else {
-            float oldScale = Settings.PRESET_SCALES[appliedScaleIndex];
-            ImGui.getStyle().scaleAllSizes(newScale / oldScale);
-        }
+        if (newIdx < 0) newIdx = Settings.DEFAULT_SCALE_INDEX;
+        ThemeManager.apply(Settings.PRESET_SCALES[newIdx]);
         ImGui.getIO().setFontDefault(presetFonts[newIdx]);
         Fonts.setBoldFont(boldPresetFonts[newIdx]);
         appliedScaleIndex = newIdx;

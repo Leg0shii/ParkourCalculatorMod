@@ -103,6 +103,14 @@ public final class Application {
         SettingsIO.save(settingsPath, settings);
     }
 
+    /** Loader calls this each frame with the display height; resolves the auto-scale sentinel once, then persists. */
+    public void resolveAutoScaleIfNeeded(int displayHeightPx) {
+        if (settings.scaleIndex != Settings.AUTO_SCALE_INDEX) return;
+        if (displayHeightPx <= 0) return;
+        settings.scaleIndex = Settings.resolveAutoScaleIndex(displayHeightPx);
+        saveSettings();
+    }
+
     public void runSimulation() {
         runSimulation(-1);
     }

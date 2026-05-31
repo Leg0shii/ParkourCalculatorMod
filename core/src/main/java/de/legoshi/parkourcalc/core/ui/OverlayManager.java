@@ -30,7 +30,7 @@ public class OverlayManager implements RenderInterface {
 
     @Override
     public void render(ImGuiIO io) {
-        if (!ThemeManager.isApplied()) ThemeManager.apply();
+        if (!ThemeManager.isApplied()) ThemeManager.apply(1.0f);
         Perf.frame();
         if (!uiOpen) return;
         for (RenderInterface overlay : overlays) {

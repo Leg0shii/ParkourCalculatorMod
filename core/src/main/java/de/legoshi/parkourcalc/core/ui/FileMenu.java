@@ -7,12 +7,12 @@ import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveInfo;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.Fonts;
+import de.legoshi.parkourcalc.core.ui.theme.Modal;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import imgui.ImGui;
 import imgui.ImVec2;
 import imgui.flag.ImGuiKey;
 import imgui.flag.ImGuiSelectableFlags;
-import imgui.flag.ImGuiStyleVar;
 import imgui.flag.ImGuiTableColumnFlags;
 import imgui.flag.ImGuiTableRowFlags;
 import imgui.flag.ImGuiWindowFlags;
@@ -35,12 +35,18 @@ public final class FileMenu {
     private static final long STATUS_VISIBLE_MS = 4000L;
     private static final long STATUS_FADE_MS = 300L;
 
-    private static final String POPUP_NAME_NEW = "New TAS##name_modal_new";
-    private static final String POPUP_NAME_SAVEAS = "Save TAS As##name_modal_saveas";
-    private static final String POPUP_OPEN = "Open TAS##open_modal";
-    private static final String POPUP_DISCARD = "Discard unsaved changes?##discard";
-    private static final String POPUP_OVERWRITE = "Overwrite existing file?##overwrite";
-    private static final String POPUP_DELETE = "Move current TAS to recycle bin?##delete";
+    private static final String POPUP_NAME_NEW = "###name_modal_new";
+    private static final String POPUP_NAME_SAVEAS = "###name_modal_saveas";
+    private static final String POPUP_OPEN = "###open_modal";
+    private static final String TITLE_NAME_NEW = "New TAS";
+    private static final String TITLE_NAME_SAVEAS = "Save TAS As";
+    private static final String TITLE_OPEN = "Open TAS";
+    private static final String POPUP_DISCARD = "###discard";
+    private static final String POPUP_OVERWRITE = "###overwrite";
+    private static final String POPUP_DELETE = "###delete";
+    private static final String TITLE_DISCARD = "Discard unsaved changes?";
+    private static final String TITLE_OVERWRITE = "Overwrite existing file?";
+    private static final String TITLE_DELETE = "Move current TAS to recycle bin?";
 
     private static final String BTN_SAVE = "Save";
     private static final String BTN_OPEN = "Open";
@@ -69,7 +75,9 @@ public final class FileMenu {
     private boolean openDeleteModal;
 
     private String pendingNamePopupId;
+    private String pendingNameTitle;
     private String activeNamePopupId;
+    private String activeNameTitle;
     private boolean nameModalJustOpened;
     private Consumer<String> nameModalConfirm;
     private String nameModalError;
@@ -112,14 +120,14 @@ public final class FileMenu {
         if (ImGui.menuItem("New TAS")) onNewTas();
         if (ImGui.menuItem("Open...")) onOpen();
         renderRecentSubmenu();
-        ImGui.separator();
+        ThemeManager.paddedSeparator();
         boolean hasName = controller.currentName() != null;
         if (ImGui.menuItem("Save", null, false, hasName || controller.isDirty())) onSave();
         if (ImGui.menuItem("Save As...")) onSaveAs();
-        ImGui.separator();
+        ThemeManager.paddedSeparator();
         boolean hasPicker = filePicker != null;
         if (ImGui.menuItem("Import .tas...", null, false, hasPicker)) onImport();
-        ImGui.separator();
+        ThemeManager.paddedSeparator();
         if (ImGui.menuItem("Delete current TAS", null, false, hasName)) onDelete();
     }
 
@@ -158,9 +166,8 @@ public final class FileMenu {
         float childH = reservedH - ImGui.getStyle().getItemSpacing().y;
         if (childH < 1f) return;
 
-        ImGui.pushStyleVar(ImGuiStyleVar.Alpha, opacity);
+        ThemeManager.pushStatusStripChrome(opacity);
         ThemeManager.pushStatusAreaChildBg();
-        ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, 8f, 0f);
         ImGui.beginChild("##status", 0f, childH, false, ImGuiWindowFlags.NoScrollbar);
         int color = statusIsError ? ThemeManager.dangerColor() : ThemeManager.okColor();
         ThemeManager.pushTextColor(color);
@@ -168,9 +175,8 @@ public final class FileMenu {
         ImGui.text(statusMessage);
         ThemeManager.popTextColor();
         ImGui.endChild();
-        ImGui.popStyleVar();
         ThemeManager.popStatusAreaChildBg();
-        ImGui.popStyleVar();
+        ThemeManager.popStatusStripChrome();
     }
 
     public void renderEmptyStateCta() {
@@ -178,12 +184,12 @@ public final class FileMenu {
         boolean hasRecent = recent != null && recent.length > 0;
         final int muted = ThemeManager.textMutedColor();
 
-        ImGui.dummy(0f, 16f);
+        ThemeManager.verticalSpace(ThemeManager.LG);
 
         Fonts.pushBold();
         ImGui.text("No TAS file loaded");
         Fonts.popBold();
-        ImGui.dummy(0f, 4f);
+        ThemeManager.verticalSpace(ThemeManager.XS);
 
         ThemeManager.pushTextColor(muted);
         ImGui.pushTextWrapPos(ImGui.getCursorPosX() + ImGui.getContentRegionAvail().x);
@@ -191,17 +197,17 @@ public final class FileMenu {
         ImGui.popTextWrapPos();
         ThemeManager.popTextColor();
 
-        ImGui.dummy(0f, 20f);
+        ThemeManager.verticalSpace(ThemeManager.LG + ThemeManager.XS);
 
         if (Controls.primaryButton("+ New TAS")) onNewTas();
         ImGui.sameLine();
         if (Controls.secondaryButton("Open...")) onOpen();
 
-        ImGui.dummy(0f, 32f);
+        ThemeManager.verticalSpace(ThemeManager.LG + ThemeManager.LG);
 
         if (hasRecent) {
             ImGui.text("Recent");
-            ImGui.dummy(0f, 8f);
+            ThemeManager.verticalSpace(ThemeManager.SM);
             ThemeManager.pushTextColor(ThemeManager.accentColor());
             for (String name : recent) {
                 if (ImGui.selectable(name + "##cta_rec_" + name, false)) onLoad(name);
@@ -217,6 +223,7 @@ public final class FileMenu {
             lastNameInputSeen = "";
             nameModalConfirm = this::doNewTas;
             pendingNamePopupId = POPUP_NAME_NEW;
+            pendingNameTitle = TITLE_NAME_NEW;
         };
         if (controller.isDirty()) requestDiscardConfirm(proceed);
         else proceed.run();
@@ -228,6 +235,7 @@ public final class FileMenu {
         lastNameInputSeen = nameInput.get();
         nameModalConfirm = this::doSaveAs;
         pendingNamePopupId = POPUP_NAME_SAVEAS;
+        pendingNameTitle = TITLE_NAME_SAVEAS;
     }
 
     private void onSave() {
@@ -387,11 +395,12 @@ public final class FileMenu {
         if (pendingNamePopupId != null) {
             ImGui.openPopup(pendingNamePopupId);
             activeNamePopupId = pendingNamePopupId;
+            activeNameTitle = pendingNameTitle;
             pendingNamePopupId = null;
             nameModalJustOpened = true;
         }
         if (activeNamePopupId == null) return;
-        if (!ImGui.beginPopupModal(activeNamePopupId, ImGuiWindowFlags.AlwaysAutoResize)) {
+        if (!Modal.begin(activeNameTitle, activeNamePopupId)) {
             activeNamePopupId = null;
             return;
         }
@@ -419,13 +428,16 @@ public final class FileMenu {
             ThemeManager.popTextColor();
         }
 
-        ThemeManager.sectionSpacing();
-        ImGui.separator();
+        Modal.footerSeparator();
 
         boolean canSave = !currentTrim.isEmpty();
-        ImGui.beginDisabled(!canSave);
-        boolean save = (enterPressed && canSave) || Controls.primaryButton(BTN_SAVE);
-        ImGui.endDisabled();
+        boolean save;
+        if (canSave) {
+            save = enterPressed || Controls.primaryButton(BTN_SAVE);
+        } else {
+            Controls.disabledButton(BTN_SAVE);
+            save = false;
+        }
         if (save) {
             Consumer<String> action = nameModalConfirm;
             if (action != null) action.accept(currentTrim);
@@ -435,13 +447,13 @@ public final class FileMenu {
             }
         }
         ImGui.sameLine();
-        if (Controls.secondaryButton(BTN_CANCEL)) {
+        if (Modal.footerButton(BTN_CANCEL)) {
             ImGui.closeCurrentPopup();
             activeNamePopupId = null;
             nameModalError = null;
         }
         nameModalJustOpened = false;
-        ImGui.endPopup();
+        Modal.end();
     }
 
     private void renderOpenModal() {
@@ -449,8 +461,7 @@ public final class FileMenu {
             ImGui.openPopup(POPUP_OPEN);
             openOpenModal = false;
         }
-        int modalFlags = ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.AlwaysAutoResize;
-        if (!ImGui.beginPopupModal(POPUP_OPEN, modalFlags)) return;
+        if (!Modal.begin(TITLE_OPEN, POPUP_OPEN, ImGuiWindowFlags.NoSavedSettings)) return;
 
         if (cacheStale) {
             cached = controller.list();
@@ -523,28 +534,31 @@ public final class FileMenu {
             String name = doubleClickedToOpen;
             ImGui.closeCurrentPopup();
             onLoad(name);
-            ImGui.endPopup();
+            Modal.end();
             return;
         }
 
-        ThemeManager.sectionSpacing();
-        ImGui.separator();
+        Modal.footerSeparator();
         boolean canOpen = openSelected != null;
         boolean enterPressed = canOpen && ImGui.isKeyPressed(ImGuiKey.Enter, false);
-        ImGui.beginDisabled(!canOpen);
-        if (Controls.primaryButton(BTN_OPEN) || enterPressed) {
+        boolean openClicked;
+        if (canOpen) {
+            openClicked = Controls.primaryButton(BTN_OPEN) || enterPressed;
+        } else {
+            Controls.disabledButton(BTN_OPEN);
+            openClicked = false;
+        }
+        if (openClicked) {
             String name = openSelected;
             ImGui.closeCurrentPopup();
             onLoad(name);
-            ImGui.endDisabled();
-            ImGui.endPopup();
+            Modal.end();
             return;
         }
-        ImGui.endDisabled();
         ImGui.sameLine();
-        if (Controls.secondaryButton(BTN_CANCEL)) ImGui.closeCurrentPopup();
+        if (Modal.footerButton(BTN_CANCEL)) ImGui.closeCurrentPopup();
 
-        ImGui.endPopup();
+        Modal.end();
     }
 
     private void renderDiscardModal() {
@@ -552,14 +566,13 @@ public final class FileMenu {
             ImGui.openPopup(POPUP_DISCARD);
             openDiscardModal = false;
         }
-        if (!ImGui.beginPopupModal(POPUP_DISCARD, ImGuiWindowFlags.AlwaysAutoResize)) return;
+        if (!Modal.begin(TITLE_DISCARD, POPUP_DISCARD)) return;
         String current = controller.currentName();
         ImGui.text(current != null
                 ? "You have unsaved changes to '" + current + "'."
                 : "You have unsaved changes that have not been saved.");
         ImGui.text("Discard them and continue?");
-        ThemeManager.sectionSpacing();
-        ImGui.separator();
+        Modal.footerSeparator();
         if (Controls.dangerButton(BTN_DISCARD)) {
             Runnable action = discardModalConfirm;
             ImGui.closeCurrentPopup();
@@ -569,8 +582,8 @@ public final class FileMenu {
             }
         }
         ImGui.sameLine();
-        if (Controls.secondaryButton(BTN_CANCEL)) ImGui.closeCurrentPopup();
-        ImGui.endPopup();
+        if (Modal.footerButton(BTN_CANCEL)) ImGui.closeCurrentPopup();
+        Modal.end();
     }
 
     private void renderOverwriteModal() {
@@ -578,19 +591,18 @@ public final class FileMenu {
             ImGui.openPopup(POPUP_OVERWRITE);
             openOverwriteModal = false;
         }
-        if (!ImGui.beginPopupModal(POPUP_OVERWRITE, ImGuiWindowFlags.AlwaysAutoResize)) return;
+        if (!Modal.begin(TITLE_OVERWRITE, POPUP_OVERWRITE)) return;
         ImGui.text("A save named '" + overwriteCandidateName + "' already exists.");
         ImGui.text("Overwrite it?");
-        ThemeManager.sectionSpacing();
-        ImGui.separator();
+        Modal.footerSeparator();
         if (Controls.dangerButton(BTN_OVERWRITE)) {
             Runnable action = overwriteModalConfirm;
             ImGui.closeCurrentPopup();
             if (action != null) action.run();
         }
         ImGui.sameLine();
-        if (Controls.secondaryButton(BTN_CANCEL)) ImGui.closeCurrentPopup();
-        ImGui.endPopup();
+        if (Modal.footerButton(BTN_CANCEL)) ImGui.closeCurrentPopup();
+        Modal.end();
     }
 
     private void renderDeleteModal() {
@@ -598,23 +610,22 @@ public final class FileMenu {
             ImGui.openPopup(POPUP_DELETE);
             openDeleteModal = false;
         }
-        if (!ImGui.beginPopupModal(POPUP_DELETE, ImGuiWindowFlags.AlwaysAutoResize)) return;
+        if (!Modal.begin(TITLE_DELETE, POPUP_DELETE)) return;
         String current = controller.currentName();
         ImGui.text("Move '" + (current != null ? current : "?") + "' to <save dir>/.trash/?");
         ImGui.textDisabled("Not the OS recycle bin. Restore by hand if needed.");
-        ThemeManager.sectionSpacing();
-        ImGui.separator();
+        Modal.footerSeparator();
         if (Controls.dangerButton(BTN_RECYCLE)) {
             ImGui.closeCurrentPopup();
             doDelete();
         }
         ImGui.sameLine();
-        if (Controls.secondaryButton(BTN_CANCEL)) ImGui.closeCurrentPopup();
-        ImGui.endPopup();
+        if (Modal.footerButton(BTN_CANCEL)) ImGui.closeCurrentPopup();
+        Modal.end();
     }
 
     private void renderOpenTableHeader() {
-        ImGui.tableNextRow(ImGuiTableRowFlags.Headers);
+        ThemeManager.tableHeaderRow();
         ThemeManager.paintTableHeader();
         ImGui.tableSetColumnIndex(0);
         ThemeManager.tableLeftmostCellPad();

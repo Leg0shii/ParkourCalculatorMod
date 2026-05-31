@@ -47,6 +47,7 @@ public class Forge8ParkourCalculator {
     private final Lwjgl2ImGuiHost imguiHost = new Lwjgl2ImGuiHost(
             application.getOverlayManager(),
             application.getSettings(),
+            application::resolveAutoScaleIfNeeded,
             () -> Minecraft.getMinecraft().currentScreen instanceof ParkourCalcGuiScreen);
     private final Forge8WorldOverlayRenderer worldRenderer = new Forge8WorldOverlayRenderer(
             application.getBoxController(),

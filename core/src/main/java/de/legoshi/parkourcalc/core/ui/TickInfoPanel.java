@@ -15,6 +15,7 @@ import java.util.Locale;
 /** Read-only inspector for the single currently-selected tick. */
 public final class TickInfoPanel implements RenderInterface {
 
+    private static final String WINDOW_ID = "###tick-info";
     private static final String WINDOW_TITLE = "Tick Info";
     private static final String TABLE_ID = "tick-info-table";
     private static final String PLACEHOLDER_SELECT_ONE = "Select a single tick.";
@@ -41,10 +42,14 @@ public final class TickInfoPanel implements RenderInterface {
 
     @Override
     public void render(ImGuiIO io) {
-        if (!ImGui.begin(WINDOW_TITLE, ImGuiWindowFlags.AlwaysAutoResize)) {
+        ThemeManager.pushHeaderChrome();
+        if (!ImGui.begin(WINDOW_ID, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.AlwaysAutoResize)) {
             ImGui.end();
+            ThemeManager.popHeaderChrome();
             return;
         }
+        ThemeManager.drawModalTitle(WINDOW_TITLE);
+        ThemeManager.popHeaderChrome();
 
         if (selection.size() != 1) {
             ImGui.text(PLACEHOLDER_SELECT_ONE);
@@ -84,7 +89,7 @@ public final class TickInfoPanel implements RenderInterface {
 
         rowCounter = 0;
 
-        rowInt("Tick", idx, "Index of this tick in the simulated path (0 = start).");
+        rowInt("Tick", idx + 1, "Tick number (1-based), matching the input table's Tick column.");
         rowNum("Facing (deg)", cur.yaw,
                 "Entity yaw in degrees, MC convention: 0 = +Z, increases CW looking down.");
 

@@ -1,13 +1,17 @@
 package de.legoshi.parkourcalc.core.ui.theme;
 
+import imgui.ImDrawList;
+import imgui.ImFont;
 import imgui.ImGui;
 import imgui.ImGuiStyle;
 import imgui.ImVec2;
 import imgui.flag.ImGuiCol;
+import imgui.flag.ImGuiStyleVar;
 import imgui.flag.ImGuiTableBgTarget;
 import imgui.flag.ImGuiTableFlags;
+import imgui.flag.ImGuiTableRowFlags;
 
-/** Catppuccin Mocha palette + standard table helpers. See docs/UI_REDESIGN.md. */
+/** Catppuccin Mocha palette + standard table helpers. */
 public final class ThemeManager {
 
     private static final float[] BG           = rgb(0x1e, 0x1e, 0x2e, 1.00f);
@@ -24,29 +28,50 @@ public final class ThemeManager {
     private static final float[] TEXT_DIM     = rgb(0x6c, 0x70, 0x86, 1.00f);
     private static final float[] ACCENT       = rgb(0x89, 0xb4, 0xfa, 1.00f);
     private static final float[] ACCENT_DIM   = rgb(0x89, 0xb4, 0xfa, 0.30f);
-    private static final float[] SELECTED     = rgb(0xcb, 0xa6, 0xf7, 1.00f);
+    private static final float[] SELECTED     = rgb(0x89, 0xb4, 0xfa, 1.00f);
     private static final float[] WARNING      = rgb(0xf9, 0xe2, 0xaf, 1.00f);
     private static final float[] DANGER       = rgb(0xf3, 0x8b, 0xa8, 1.00f);
     private static final float[] OK           = rgb(0xa6, 0xe3, 0xa1, 1.00f);
     private static final float[] FOCUS        = rgb(0xb4, 0xbe, 0xfe, 1.00f);
     private static final float[] STATUS_BG    = rgb(0x18, 0x18, 0x25, 1.00f);
 
-    private static final float[] TABLE_ROW_BASE         = rgb(0x31, 0x32, 0x44, 1.00f);
-    private static final float[] TABLE_ROW_ALT          = rgb(0x2f, 0x31, 0x42, 1.00f);
-    private static final float[] TABLE_ROW_HOVER        = rgb(0x39, 0x3b, 0x4d, 1.00f);
-    private static final float[] TABLE_ROW_SELECTED     = rgb(0xcb, 0xa6, 0xf7, 0.75f);
-    private static final float[] TABLE_HEADER_BG        = rgb(0x45, 0x47, 0x5a, 1.00f);
-    private static final float[] TABLE_HEADER_TEXT      = rgb(0xcd, 0xd6, 0xf4, 1.00f);
-    private static final float[] TABLE_CELL_BORDER      = rgb(0x45, 0x47, 0x5a, 1.00f);
-    private static final float[] TABLE_FOCUS_RING       = rgb(0xb4, 0xbe, 0xfe, 1.00f);
-    private static final float[] TABLE_POPULATED_BORDER = rgb(0x58, 0x5b, 0x70, 1.00f);
+    // Button state fills, lifted byte-exact from kit.css .btn--primary / .btn--danger swatches.
+    private static final float[] ACCENT_HOVER  = rgb(0x9d, 0xc4, 0xff, 1.00f);
+    private static final float[] ACCENT_ACTIVE = rgb(0x74, 0x99, 0xd5, 1.00f);
+    private static final float[] ACCENT_BORDER = rgb(0x6a, 0x9b, 0xf0, 1.00f);
+    private static final float[] DANGER_HOVER  = rgb(0xff, 0xa3, 0xbd, 1.00f);
+    private static final float[] DANGER_ACTIVE = rgb(0xd0, 0x76, 0x8f, 1.00f);
+    private static final float[] DANGER_BORDER = rgb(0xe0, 0x6a, 0x8c, 1.00f);
 
+    // Table tokens that restate a chrome value are aliases, not second literals (design system 4.2 / 6 C2).
+    private static final float[] TABLE_ROW_BASE         = PANEL;
+    private static final float[] TABLE_ROW_ALT          = rgb(0x2a, 0x2a, 0x3c, 1.00f);
+    private static final float[] TABLE_ROW_HOVER        = rgb(0x39, 0x3b, 0x4d, 1.00f);
+    private static final float[] TABLE_ROW_SELECTED     = rgb(0x89, 0xb4, 0xfa, 0.45f);
+    private static final float[] TABLE_HEADER_BG        = BG_DARK;
+    private static final float[] TABLE_HEADER_TEXT      = TEXT_MUTED;
+    private static final float[] TABLE_CELL_BORDER      = BORDER;
+    private static final float[] TABLE_FOCUS_RING       = FOCUS;
+    private static final float[] TABLE_POPULATED_BORDER = PANEL_ACTIVE;
+
+    private static final float HAIR = 1.0f;
     private static final float XXS = 2.0f;
-    private static final float XS = 4.0f;
-    private static final float SM = 8.0f;
+    public static final float XS = 4.0f;
+    public static final float SM = 8.0f;
     private static final float MD = 12.0f;
-    private static final float LG = 16.0f;
-    private static final float SCROLLBAR_SIZE = 18.0f;
+    public static final float LG = 16.0f;
+    private static final float SCROLLBAR_SIZE = 9f;
+
+    // Per-component padding tokens (px @ 1x, scaled by appliedScale). One knob per element type.
+    private static final float HEADER_CELL_PAD_Y = 4f;            // extra vertical padding per side in table header cells
+    private static final float SECTION_SPACING   = 8f;            // sectionSpacing() gap
+    private static final float MENU_PAD_X = 12f, MENU_PAD_Y = 6f; // padding inside each menu bar / dropdown element
+    private static final float MENU_POPUP_PAD_Y = 8f;            // taller dropdown rows (menu bar stays at MENU_PAD_Y); ItemSpacing.y untouched so separators keep their padding
+    private static final float MENU_POPUP_HILITE_SPACING_X = 2f * LG; // ItemSpacing.x inside the popup; ImGui draws the row highlight as the content rect grown by half of this each side, so 2*WindowPadding makes it reach the popup edge without moving the text
+    private static final float HEADER_EXTRA_HEIGHT = 8f;          // px @1x added to a window/modal title bar over a default frame (split across both sides)
+    private static final float HEADER_TEXT_PAD_X = 8f;           // px @1x inset of title-bar text from the window edges (matches design .modal__title)
+
+    private static float appliedScale = 1f;
 
     public enum HAlign { LEFT, CENTER, RIGHT }
 
@@ -54,27 +79,29 @@ public final class ThemeManager {
 
     private ThemeManager() {}
 
-    public static void apply() {
+    public static void apply(float uiScale) {
+        appliedScale = uiScale;
         ImGui.styleColorsDark();
 
         ImGuiStyle s = ImGui.getStyle();
 
-        s.setWindowPadding(LG, LG);
-        s.setFramePadding(MD, SM);
-        s.setItemSpacing(SM, SM);
-        s.setItemInnerSpacing(XS, XS);
-        s.setCellPadding(SM, XS);
-        s.setScrollbarSize(SCROLLBAR_SIZE);
-        s.setGrabMinSize(MD);
+        s.setWindowPadding(LG * uiScale, LG * uiScale);
+        s.setFramePadding(XS * uiScale, XXS * uiScale);
+        s.setItemSpacing(SM * uiScale, XS * uiScale);
+        s.setItemInnerSpacing(XS * uiScale, XS * uiScale);
+        s.setCellPadding(XS * uiScale, HAIR * uiScale);
+        s.setScrollbarSize(SCROLLBAR_SIZE * uiScale);
+        s.setGrabMinSize(MD * uiScale);
 
+        // Hairline borders stay 1px at every scale; scaling would fatten them (design system 5.5).
         s.setWindowBorderSize(1.0f);
         s.setFrameBorderSize(1.0f);
-        s.setWindowRounding(4.0f);
-        s.setFrameRounding(3.0f);
-        s.setTabRounding(3.0f);
-        s.setScrollbarRounding(3.0f);
-        s.setGrabRounding(3.0f);
-        s.setPopupRounding(4.0f);
+        s.setWindowRounding(4.0f * uiScale);
+        s.setFrameRounding(3.0f * uiScale);
+        s.setTabRounding(3.0f * uiScale);
+        s.setScrollbarRounding(3.0f * uiScale);
+        s.setGrabRounding(3.0f * uiScale);
+        s.setPopupRounding(4.0f * uiScale);
 
         setColor(ImGuiCol.Text, TEXT);
         setColor(ImGuiCol.TextDisabled, TEXT_DIM);
@@ -114,12 +141,12 @@ public final class ThemeManager {
         setColor(ImGuiCol.TabUnfocused, BG_DARK);
         setColor(ImGuiCol.TabUnfocusedActive, PANEL);
         // RowBg/RowBgAlt enum slot drifts between imgui-java 1.86 (Forge) and 1.90 (Fabric); paint rows per-row via tableSetBgColor instead.
-        setColor(ImGuiCol.TableHeaderBg, BORDER);
+        setColor(ImGuiCol.TableHeaderBg, BG_DARK);
         setColor(ImGuiCol.TableBorderStrong, BORDER);
         setColor(ImGuiCol.TableBorderLight, BORDER);
         setColor(ImGuiCol.TextSelectedBg, ACCENT_DIM);
         setColor(ImGuiCol.DragDropTarget, ACCENT);
-        setColor(ImGuiCol.NavHighlight, ACCENT);
+        setColor(ImGuiCol.NavHighlight, FOCUS);
 
         applied = true;
     }
@@ -128,11 +155,26 @@ public final class ThemeManager {
         return applied;
     }
 
+    /** UI Scale captured at the last apply(); lets component helpers scale their own padding tokens. */
+    public static float uiScale() {
+        return appliedScale;
+    }
+
     public static int standardTableFlags() {
         return ImGuiTableFlags.RowBg
                 | ImGuiTableFlags.SizingFixedFit
                 | ImGuiTableFlags.ScrollY
+                | ImGuiTableFlags.BordersOuter
                 | ImGuiTableFlags.BordersInnerV;
+    }
+
+    /** Header row whose height every table inherits; HEADER_CELL_PAD_Y is the single knob for header-cell vertical padding. */
+    public static void tableHeaderRow() {
+        ImGui.tableNextRow(ImGuiTableRowFlags.Headers, tableHeaderRowHeight());
+    }
+
+    public static float tableHeaderRowHeight() {
+        return ImGui.getTextLineHeight() + 2f * HEADER_CELL_PAD_Y * appliedScale;
     }
 
     public static boolean beginStandardTable(String id, int columnCount) {
@@ -166,6 +208,15 @@ public final class ThemeManager {
         popTableSelectionChrome();
     }
 
+    /** Plain fixed-fit table for label/control forms: no striping or scroll, so an auto-resize modal hugs content. */
+    public static boolean beginStandardFormTable(String id, int columnCount) {
+        return ImGui.beginTable(id, columnCount, ImGuiTableFlags.SizingFixedFit);
+    }
+
+    public static void endStandardFormTable() {
+        ImGui.endTable();
+    }
+
     private static void pushTableSelectionChrome(boolean rowsClickable) {
         if (rowsClickable) {
             float[] s = TABLE_ROW_SELECTED;
@@ -191,11 +242,7 @@ public final class ThemeManager {
 
     public static void tableHeader(String label, HAlign alignment) {
         Fonts.pushBold();
-        if (alignment == HAlign.LEFT) {
-            ImGui.tableHeader(label);
-        } else {
-            renderAlignedHeaderOverlay(label, alignment);
-        }
+        renderAlignedHeaderOverlay(label, alignment);
         Fonts.popBold();
     }
 
@@ -207,22 +254,38 @@ public final class ThemeManager {
         tableHeader(label, HAlign.RIGHT);
     }
 
+    /** Right-aligns a bold header so its right edge sits above the right edge of a centerNextItem'd cell control of width itemWidth (e.g. the Yaw input). */
+    public static void tableHeaderRightOverCenteredItem(String label, float itemWidth) {
+        Fonts.pushBold();
+        ImVec2 cellOrigin = ImGui.getCursorScreenPos();
+        float avail = ImGui.getContentRegionAvail().x;
+        ImGui.tableHeader("##" + label);
+        float textW = ImGui.calcTextSize(label).x;
+        float itemRight = (avail + itemWidth) * 0.5f; // right edge of a centered control, relative to the cell's left
+        float dx = Math.min(Math.max(0f, itemRight - textW), Math.max(0f, avail - textW));
+        drawHeaderText(cellOrigin.x + dx, label);
+        Fonts.popBold();
+    }
+
     private static void renderAlignedHeaderOverlay(String label, HAlign alignment) {
         ImVec2 cellOrigin = ImGui.getCursorScreenPos();
-        float colW = ImGui.getColumnWidth();
-        float cellPad = ImGui.getStyle().getCellPadding().x;
+        float avail = ImGui.getContentRegionAvail().x; // reliable cell width inside a table (getColumnWidth is the legacy columns API)
         ImGui.tableHeader("##" + label);
-        ImVec2 textSize = ImGui.calcTextSize(label);
+        float textW = ImGui.calcTextSize(label).x;
         float dx;
-        if (alignment == HAlign.CENTER) {
-            dx = (colW - textSize.x) * 0.5f - cellPad;
-        } else {
-            dx = colW - textSize.x - 2f * cellPad;
-        }
+        if (alignment == HAlign.LEFT) dx = 0f;
+        else if (alignment == HAlign.CENTER) dx = (avail - textW) * 0.5f;
+        else dx = avail - textW;
         if (dx < 0f) dx = 0f;
-        float tx = cellOrigin.x + dx;
-        float ty = cellOrigin.y;
-        ImGui.getWindowDrawList().addText(tx, ty, u32(TABLE_HEADER_TEXT), label);
+        drawHeaderText(cellOrigin.x + dx, label);
+    }
+
+    /** Draws bold header text vertically centered in the header cell, so taller header rows keep the label centered. */
+    private static void drawHeaderText(float x, String label) {
+        ImVec2 rmin = ImGui.getItemRectMin();
+        ImVec2 rmax = ImGui.getItemRectMax();
+        float ty = rmin.y + (rmax.y - rmin.y - ImGui.getTextLineHeight()) * 0.5f;
+        ImGui.getWindowDrawList().addText(x, ty, u32(TABLE_HEADER_TEXT), label);
     }
 
     public static void centerNextItem(float itemWidth) {
@@ -264,7 +327,84 @@ public final class ThemeManager {
     }
 
     public static void sectionSpacing() {
-        ImGui.spacing();
+        ImGui.dummy(0f, SECTION_SPACING * appliedScale);
+    }
+
+    public static void verticalSpace(float height) {
+        ImGui.dummy(0f, height);
+    }
+
+    public static void paddedSeparator() {
+        sectionSpacing();
+        ImGui.separator();
+        sectionSpacing();
+    }
+
+    public static void bottomPaddedSeparator() {
+        ImGui.separator();
+        sectionSpacing();
+    }
+
+    /**
+     * Taller title bar without fattening body widgets: push before begin()/beginPopupModal() (where ImGui sizes the bar)
+     * and keep it through the custom title draw, then pop before the body. getFrameHeight() reflects the taller bar in between.
+     */
+    public static void pushHeaderChrome() {
+        ImVec2 fp = ImGui.getStyle().getFramePadding();
+        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, fp.x, fp.y + HEADER_EXTRA_HEIGHT * 0.5f * appliedScale);
+    }
+
+    public static void popHeaderChrome() {
+        ImGui.popStyleVar(1);
+    }
+
+    /** Pads every menu bar entry and dropdown row from one token pair (FramePadding is shared, so it's pushed only around the menus). */
+    public static void pushMenuChrome() {
+        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, MENU_PAD_X * appliedScale, MENU_PAD_Y * appliedScale);
+    }
+
+    public static void popMenuChrome() {
+        ImGui.popStyleVar(1);
+    }
+
+    /** Extra vertical breathing room inside each expanded-dropdown row, plus a wide ItemSpacing.x so row highlights reach the popup edge while text keeps its WindowPadding inset (scoped to the popup, not the menu bar; ItemSpacing.y stays put so separators are unaffected). */
+    public static void pushMenuPopupChrome() {
+        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, MENU_PAD_X * appliedScale, MENU_POPUP_PAD_Y * appliedScale);
+        ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, MENU_POPUP_HILITE_SPACING_X * appliedScale, XS * appliedScale);
+    }
+
+    public static void popMenuPopupChrome() {
+        ImGui.popStyleVar(2);
+    }
+
+    /** Makes a menu-bar entry's built-in (text-height) highlight invisible so a full-band one can be drawn in its place. */
+    public static void pushTransparentMenuHeader() {
+        ImGui.pushStyleColor(ImGuiCol.Header, 0f, 0f, 0f, 0f);
+        ImGui.pushStyleColor(ImGuiCol.HeaderHovered, 0f, 0f, 0f, 0f);
+        ImGui.pushStyleColor(ImGuiCol.HeaderActive, 0f, 0f, 0f, 0f);
+    }
+
+    public static void popTransparentMenuHeader() {
+        ImGui.popStyleColor(3);
+    }
+
+    /** Horizontal inset of title-bar text from the window edge (scaled). */
+    public static float headerTextPadX() {
+        return HEADER_TEXT_PAD_X * appliedScale;
+    }
+
+    /** Draws a bold modal/window title over the (empty) native title-bar strip. */
+    public static void drawModalTitle(String title) {
+        ImDrawList dl = ImGui.getWindowDrawList();
+        ImVec2 winPos = ImGui.getWindowPos();
+        float winW = ImGui.getWindowWidth();
+        float titleH = ImGui.getFrameHeight();
+        float fontSize = ImGui.getFontSize();
+        float y = winPos.y + (titleH - fontSize) * 0.5f;
+        ImFont bold = Fonts.boldOrDefault();
+        dl.pushClipRect(winPos.x, winPos.y, winPos.x + winW, winPos.y + titleH, false);
+        dl.addText(bold, fontSize, winPos.x + headerTextPadX(), y, u32(TEXT), title);
+        dl.popClipRect();
     }
 
     public static boolean centeredSelectable(String idSuffix, String label, boolean selected, int flags) {
@@ -296,7 +436,8 @@ public final class ThemeManager {
         boolean clicked = ImGui.selectable("##" + idSuffix, selected, flags, sizeX, sizeY);
         if (label != null && !label.isEmpty()) {
             ImVec2 textSize = ImGui.calcTextSize(label);
-            float tx = cellOrigin.x + (cellW - textSize.x);
+            // Inset from the inner edge by the leftmost-column edge inset so left/right padding stays symmetric.
+            float tx = cellOrigin.x + (cellW - textSize.x) - tableEdgeCellInset();
             float ty = cellOrigin.y + ImGui.getStyle().getFramePadding().y;
             ImGui.getWindowDrawList().addText(tx, ty, ImGui.getColorU32(ImGuiCol.Text), label);
         }
@@ -324,7 +465,7 @@ public final class ThemeManager {
     }
 
     public static float tableScrollbarSlack() {
-        return SCROLLBAR_SIZE;
+        return ImGui.getStyle().getScrollbarSize();
     }
 
     private static float boldTextWidth(String text) {
@@ -356,7 +497,7 @@ public final class ThemeManager {
     }
 
     private static float tableEdgeCellInset() {
-        return Math.max(0f, SCROLLBAR_SIZE - ImGui.getStyle().getCellPadding().x);
+        return Math.max(0f, ImGui.getStyle().getScrollbarSize() - ImGui.getStyle().getCellPadding().x);
     }
 
     public static void paintTableHeader() {
@@ -397,6 +538,15 @@ public final class ThemeManager {
 
     public static void popStatusAreaChildBg() {
         ImGui.popStyleColor(1);
+    }
+
+    public static void pushStatusStripChrome(float opacity) {
+        ImGui.pushStyleVar(ImGuiStyleVar.Alpha, opacity);
+        ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, SM, 0f);
+    }
+
+    public static void popStatusStripChrome() {
+        ImGui.popStyleVar(2);
     }
 
     public static int textColor() {
@@ -468,24 +618,40 @@ public final class ThemeManager {
     }
 
     public static void pushDangerButton() {
-        ImGui.pushStyleColor(ImGuiCol.Button, DANGER[0], DANGER[1], DANGER[2], DANGER[3]);
-        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, DANGER[0] * 1.2f, DANGER[1] * 1.2f, DANGER[2] * 1.2f, DANGER[3]);
-        ImGui.pushStyleColor(ImGuiCol.ButtonActive, DANGER[0] * 0.8f, DANGER[1] * 0.8f, DANGER[2] * 0.8f, DANGER[3]);
+        pushButtonColors(DANGER, DANGER_HOVER, DANGER_ACTIVE, DANGER_BORDER);
     }
 
     public static void popDangerButton() {
-        ImGui.popStyleColor(3);
+        ImGui.popStyleColor(5);
     }
 
     public static void pushPrimaryButton() {
-        ImGui.pushStyleColor(ImGuiCol.Button, ACCENT[0], ACCENT[1], ACCENT[2], ACCENT[3]);
-        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ACCENT[0] * 1.15f, ACCENT[1] * 1.15f, ACCENT[2] * 1.15f, ACCENT[3]);
-        ImGui.pushStyleColor(ImGuiCol.ButtonActive, ACCENT[0] * 0.85f, ACCENT[1] * 0.85f, ACCENT[2] * 0.85f, ACCENT[3]);
-        ImGui.pushStyleColor(ImGuiCol.Text, BG_DARK[0], BG_DARK[1], BG_DARK[2], 1.0f);
+        pushButtonColors(ACCENT, ACCENT_HOVER, ACCENT_ACTIVE, ACCENT_BORDER);
     }
 
     public static void popPrimaryButton() {
-        ImGui.popStyleColor(4);
+        ImGui.popStyleColor(5);
+    }
+
+    /** Disabled = muted frame (PANEL fill + BORDER + TEXT_MUTED), not a blanket opacity drop. */
+    public static void pushDisabledButton() {
+        ImGui.pushStyleColor(ImGuiCol.Button, PANEL[0], PANEL[1], PANEL[2], PANEL[3]);
+        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, PANEL[0], PANEL[1], PANEL[2], PANEL[3]);
+        ImGui.pushStyleColor(ImGuiCol.ButtonActive, PANEL[0], PANEL[1], PANEL[2], PANEL[3]);
+        ImGui.pushStyleColor(ImGuiCol.Border, BORDER[0], BORDER[1], BORDER[2], BORDER[3]);
+        ImGui.pushStyleColor(ImGuiCol.Text, TEXT_MUTED[0], TEXT_MUTED[1], TEXT_MUTED[2], TEXT_MUTED[3]);
+    }
+
+    public static void popDisabledButton() {
+        ImGui.popStyleColor(5);
+    }
+
+    private static void pushButtonColors(float[] base, float[] hover, float[] active, float[] border) {
+        ImGui.pushStyleColor(ImGuiCol.Button, base[0], base[1], base[2], base[3]);
+        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, hover[0], hover[1], hover[2], hover[3]);
+        ImGui.pushStyleColor(ImGuiCol.ButtonActive, active[0], active[1], active[2], active[3]);
+        ImGui.pushStyleColor(ImGuiCol.Border, border[0], border[1], border[2], border[3]);
+        ImGui.pushStyleColor(ImGuiCol.Text, BG_DARK[0], BG_DARK[1], BG_DARK[2], 1.0f);
     }
 
     private static float[] rgb(int r, int g, int b, float a) {

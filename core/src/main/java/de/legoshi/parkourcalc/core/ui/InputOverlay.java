@@ -5,6 +5,7 @@ import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
+import de.legoshi.parkourcalc.core.ui.theme.Modal;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImDrawList;
@@ -37,8 +38,6 @@ public final class InputOverlay {
     private static final String COL_JUMP_BOOST = "Jump";
     private static final float INDEX_DIGIT_WIDTH = 32f;
     private static final float INDEX_DIGIT_SLACK = 6f;
-    private static final float KEY_COL_MIN_WIDTH = 36f;
-    private static final float MOD_COL_MIN_WIDTH = 48f;
     private static final float TABLE_MIN_HEIGHT = 80f;
     private static final String YAW_WIDTH_SAMPLE = " -1234.000000";
     private static final InputRow.Key[] MOVEMENT_KEYS = {
@@ -50,17 +49,14 @@ public final class InputOverlay {
 
     private static final String ID_SPEED_SUFFIX = "##speed";
     private static final String ID_JUMP_SUFFIX = "##jump";
-    private static final String ID_BULK_SPEED = "##bulk_speed";
-    private static final String ID_BULK_JUMP = "##bulk_jump";
 
-    private static final String LABEL_SET_ALL_SPEED = "Set all Speed:";
-    private static final String LABEL_SET_ALL_JUMP = "Set all Jump:";
+    private static final String MENU_APPLY_SPEED_TO_ALL = "Apply tick 1 Speed to all rows";
+    private static final String MENU_APPLY_JUMP_TO_ALL = "Apply tick 1 Jump to all rows";
 
     private static final String[] AMP_LABELS = {
             "none", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"
     };
     private static final float AMP_CELL_WIDTH = 110;
-    private static final float AMP_TOOLBAR_WIDTH = 110;
     private static final float AMP_COLUMN_WIDTH = 120;
 
     private static final String MENU_SET_TO_PLAYER = "Set to user position";
@@ -75,7 +71,8 @@ public final class InputOverlay {
     private static final String BTN_CANCEL = "Cancel";
     private static final String MENU_DUPLICATE = "Duplicate selected";
     private static final String MENU_CLEAR_ALL = "Clear all rows";
-    private static final String POPUP_CLEAR_CONFIRM = "Clear all rows?##clear_confirm";
+    private static final String POPUP_CLEAR_CONFIRM = "###clear_confirm";
+    private static final String TITLE_CLEAR_CONFIRM = "Clear all rows?";
     private static final String CLEAR_CONFIRM_FMT = "Delete all %d rows? This cannot be undone.";
 
     private static final String YAW_FORMAT_DISPLAY = "% 12.6f";
@@ -105,8 +102,6 @@ public final class InputOverlay {
     private final ImString yawInput = new ImString(32);
     private final ImInt rowsToAdd = new ImInt(1);
     private final ImInt ampBuf = new ImInt();
-    private final ImInt bulkSpeedBuf = new ImInt();
-    private final ImInt bulkJumpBuf = new ImInt();
 
     private int draggingRowIndex = -1;
     private int editingYawRow = -1;
@@ -139,11 +134,18 @@ public final class InputOverlay {
         onDataChangedAt.accept(-1);
     }
 
+    private float uiScale() {
+        int idx = settings.scaleIndex;
+        if (idx < 0 || idx >= Settings.PRESET_SCALES.length) idx = Settings.DEFAULT_SCALE_INDEX;
+        return Settings.PRESET_SCALES[idx];
+    }
+
     private float indexColumnDataWidth() {
         int maxRowNum = Math.max(1, data.size());
+        float scale = uiScale();
         float textW = ImGui.calcTextSize(String.valueOf(maxRowNum)).x;
         float cellPadX = ImGui.getStyle().getCellPadding().x;
-        return Math.max(INDEX_DIGIT_WIDTH, textW + 2f * cellPadX + INDEX_DIGIT_SLACK);
+        return Math.max(INDEX_DIGIT_WIDTH * scale, textW + 2f * cellPadX + INDEX_DIGIT_SLACK * scale);
     }
 
     private static float yawInputWidth() {
@@ -164,18 +166,38 @@ public final class InputOverlay {
         float cellPadX = style.getCellPadding().x;
         float winPadX = style.getWindowPadding().x;
         float borderSlop = 2f;
+        float scale = uiScale();
 
         float columnSum = ThemeManager.tableLeftmostColumnWidth(COL_INDEX, indexColumnDataWidth())
                 + ThemeManager.tableColumnWidth(COL_YAW, yawColumnWidth());
         for (InputRow.Key key : MOVEMENT_KEYS) {
-            columnSum += ThemeManager.tableColumnWidth(headerLabel(key), KEY_COL_MIN_WIDTH);
+            columnSum += ThemeManager.tableColumnWidth(headerLabel(key), 0f);
         }
         for (InputRow.Key key : MODIFIER_KEYS) {
-            columnSum += ThemeManager.tableColumnWidth(headerLabel(key), MOD_COL_MIN_WIDTH);
+            columnSum += ThemeManager.tableColumnWidth(headerLabel(key), 0f);
         }
         if (potion) {
-            columnSum += ThemeManager.tableColumnWidth(COL_SPEED, AMP_COLUMN_WIDTH)
-                    + ThemeManager.tableRightmostColumnWidth(COL_JUMP_BOOST, AMP_COLUMN_WIDTH, ThemeManager.tableScrollbarSlack());
+            columnSum += ThemeManager.tableColumnWidth(COL_SPEED, AMP_COLUMN_WIDTH * scale)
+                    + ThemeManager.tableRightmostColumnWidth(COL_JUMP_BOOST, AMP_COLUMN_WIDTH * scale, ThemeManager.tableScrollbarSlack());
+        }
+
+        float contentW = columnSum + 2f * cellPadX * columnCount + borderSlop;
+        return contentW + 2f * winPadX;
+    }
+
+    // Smallest width that still shows the frozen Tick column plus W/A/S/D; everything
+    // past it (modifiers, yaw, potions) is reached by the table's horizontal scroll.
+    public float minUsablePaneWidth() {
+        int columnCount = 1 + MOVEMENT_KEYS.length;
+
+        ImGuiStyle style = ImGui.getStyle();
+        float cellPadX = style.getCellPadding().x;
+        float winPadX = style.getWindowPadding().x;
+        float borderSlop = 2f;
+
+        float columnSum = ThemeManager.tableLeftmostColumnWidth(COL_INDEX, indexColumnDataWidth());
+        for (InputRow.Key key : MOVEMENT_KEYS) {
+            columnSum += ThemeManager.tableColumnWidth(headerLabel(key), 0f);
         }
 
         float contentW = columnSum + 2f * cellPadX * columnCount + borderSlop;
@@ -195,14 +217,17 @@ public final class InputOverlay {
         renderMultiplayerWarning();
 
         boolean potionColumns = settings.showPotionColumns;
-        if (potionColumns) {
-            renderPotionToolbar();
-        }
         int columnCount = BASE_COLUMN_COUNT + (potionColumns ? POTION_COLUMN_COUNT : 0);
 
         float footerH = footerHeightProvider.get();
-        float tableH = Math.max(TABLE_MIN_HEIGHT, ImGui.getContentRegionAvail().y - footerH);
-        if (ThemeManager.beginStandardTable(ID_TABLE, columnCount, 0, 0f, tableH)) {
+        float avail = Math.max(TABLE_MIN_HEIGHT, ImGui.getContentRegionAvail().y - footerH);
+        // Fit the table to its rows so the inner column borders stop at the last row
+        // instead of extending through empty space below it; fall back to filling the
+        // pane (and scrolling) once the rows outgrow the available height.
+        float tableH = data.getRows().isEmpty()
+                ? avail
+                : Math.min(avail, tableContentHeight(data.size()));
+        if (ThemeManager.beginStandardTable(ID_TABLE, columnCount, ImGuiTableFlags.ScrollX, 0f, tableH)) {
             setupColumns(potionColumns);
             renderAllRows(potionColumns);
             ThemeManager.endStandardTable();
@@ -223,6 +248,12 @@ public final class InputOverlay {
         renderClearConfirmPopup();
     }
 
+    private float tableContentHeight(int rowCount) {
+        float rowH = ImGui.getFrameHeight() + ImGui.getStyle().getCellPadding().y * 2f;
+        float borderSlop = 4f; // outer borders + guard so an exact fit doesn't trip the scrollbar
+        return ThemeManager.tableHeaderRowHeight() + rowCount * rowH + borderSlop;
+    }
+
     private void renderEmptyTableHint() {
         ImVec2 rectMin = ImGui.getItemRectMin();
         ImVec2 rectMax = ImGui.getItemRectMax();
@@ -240,33 +271,34 @@ public final class InputOverlay {
     }
 
     private void setupColumns(boolean potionColumns) {
+        float scale = uiScale();
         ImGui.tableSetupColumn(COL_INDEX,
                 ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoResize,
                 ThemeManager.tableLeftmostColumnWidth(COL_INDEX, indexColumnDataWidth()));
         for (InputRow.Key key : MOVEMENT_KEYS) {
             String label = headerLabel(key);
             ImGui.tableSetupColumn(label, ImGuiTableColumnFlags.WidthFixed,
-                    ThemeManager.tableColumnWidth(label, KEY_COL_MIN_WIDTH));
+                    ThemeManager.tableNumericColumnWidth(label, 0f));
         }
         for (InputRow.Key key : MODIFIER_KEYS) {
             String label = headerLabel(key);
             ImGui.tableSetupColumn(label, ImGuiTableColumnFlags.WidthFixed,
-                    ThemeManager.tableColumnWidth(label, MOD_COL_MIN_WIDTH));
+                    ThemeManager.tableNumericColumnWidth(label, 0f));
         }
         ImGui.tableSetupColumn(COL_YAW, ImGuiTableColumnFlags.WidthFixed,
                 ThemeManager.tableColumnWidth(COL_YAW, yawColumnWidth()));
         if (potionColumns) {
             ImGui.tableSetupColumn(COL_SPEED, ImGuiTableColumnFlags.WidthFixed,
-                    ThemeManager.tableColumnWidth(COL_SPEED, AMP_COLUMN_WIDTH));
+                    ThemeManager.tableColumnWidth(COL_SPEED, AMP_COLUMN_WIDTH * scale));
             ImGui.tableSetupColumn(COL_JUMP_BOOST, ImGuiTableColumnFlags.WidthFixed,
-                    ThemeManager.tableRightmostColumnWidth(COL_JUMP_BOOST, AMP_COLUMN_WIDTH, ThemeManager.tableScrollbarSlack()));
+                    ThemeManager.tableRightmostColumnWidth(COL_JUMP_BOOST, AMP_COLUMN_WIDTH * scale, ThemeManager.tableScrollbarSlack()));
         }
-        ImGui.tableSetupScrollFreeze(0, 1);
+        ImGui.tableSetupScrollFreeze(1, 1);
         renderColumnHeadersWithTooltips(potionColumns);
     }
 
     private void renderColumnHeadersWithTooltips(boolean potionColumns) {
-        ImGui.tableNextRow(ImGuiTableRowFlags.Headers);
+        ThemeManager.tableHeaderRow();
         ThemeManager.paintTableHeader();
         int col = 0;
         ImGui.tableSetColumnIndex(col++);
@@ -510,7 +542,7 @@ public final class InputOverlay {
         if (populated) ThemeManager.pushPopulatedFrameBorder();
         float inputW = yawInputWidth();
         ThemeManager.centerNextItem(inputW);
-        boolean changed = Controls.inputText(ID_YAW_INPUT, yawInput, inputW);
+        boolean changed = Controls.tableInputText(ID_YAW_INPUT, yawInput, inputW);
         if (ImGui.isItemActivated()) {
             editingYawRow = rowIndex;
         }
@@ -527,18 +559,19 @@ public final class InputOverlay {
     }
 
     private void renderPotionColumns(InputRow row, int rowIndex) {
+        float ampW = AMP_CELL_WIDTH * uiScale();
         ImGui.tableNextColumn();
         ampBuf.set(row.getSpeedAmplifier());
-        ThemeManager.centerNextItem(AMP_CELL_WIDTH);
-        if (Controls.combo(ID_SPEED_SUFFIX, ampBuf, AMP_LABELS, AMP_CELL_WIDTH)) {
+        ThemeManager.centerNextItem(ampW);
+        if (Controls.tableCombo(ID_SPEED_SUFFIX, ampBuf, AMP_LABELS, ampW)) {
             row.setSpeedAmplifier(ampBuf.get());
             notifyChange(rowIndex);
         }
 
         ImGui.tableNextColumn();
         ampBuf.set(row.getJumpBoostAmplifier());
-        ThemeManager.centerNextItem(AMP_CELL_WIDTH);
-        boolean jumpChanged = Controls.combo(ID_JUMP_SUFFIX, ampBuf, AMP_LABELS, AMP_CELL_WIDTH);
+        ThemeManager.centerNextItem(ampW);
+        boolean jumpChanged = Controls.tableCombo(ID_JUMP_SUFFIX, ampBuf, AMP_LABELS, ampW);
         ThemeManager.tableRightmostCellTrailingPad();
         if (jumpChanged) {
             row.setJumpBoostAmplifier(ampBuf.get());
@@ -546,14 +579,17 @@ public final class InputOverlay {
         }
     }
 
-    private void renderPotionToolbar() {
-        if (Controls.combo(LABEL_SET_ALL_SPEED, bulkSpeedBuf, AMP_LABELS, AMP_TOOLBAR_WIDTH)) {
-            applyAmplifierToAll(true, bulkSpeedBuf.get());
+    private void renderApplyPotionOptions() {
+        if (!settings.showPotionColumns || data.getRows().isEmpty()) return;
+
+        InputRow first = data.get(0);
+        ThemeManager.paddedSeparator();
+        if (ImGui.menuItem(MENU_APPLY_SPEED_TO_ALL)) {
+            applyAmplifierToAll(true, first.getSpeedAmplifier());
             notifyFullResim();
         }
-        ImGui.sameLine();
-        if (Controls.combo(LABEL_SET_ALL_JUMP, bulkJumpBuf, AMP_LABELS, AMP_TOOLBAR_WIDTH)) {
-            applyAmplifierToAll(false, bulkJumpBuf.get());
+        if (ImGui.menuItem(MENU_APPLY_JUMP_TO_ALL)) {
+            applyAmplifierToAll(false, first.getJumpBoostAmplifier());
             notifyFullResim();
         }
     }
@@ -581,19 +617,18 @@ public final class InputOverlay {
     }
 
     private void renderClearConfirmPopup() {
-        if (!ImGui.beginPopupModal(POPUP_CLEAR_CONFIRM, ImGuiWindowFlags.AlwaysAutoResize)) return;
+        if (!Modal.begin(TITLE_CLEAR_CONFIRM, POPUP_CLEAR_CONFIRM)) return;
         ImGui.text(String.format(CLEAR_CONFIRM_FMT, data.size()));
-        ThemeManager.sectionSpacing();
-        ImGui.separator();
+        Modal.footerSeparator();
         if (Controls.dangerButton(BTN_CLEAR_ALL)) {
             clearAllRows();
             ImGui.closeCurrentPopup();
         }
         ImGui.sameLine();
-        if (Controls.secondaryButton(BTN_CANCEL)) {
+        if (Modal.footerButton(BTN_CANCEL)) {
             ImGui.closeCurrentPopup();
         }
-        ImGui.endPopup();
+        Modal.end();
     }
 
     public void addRowsAtEnd(int count) {
@@ -643,9 +678,11 @@ public final class InputOverlay {
             notifyFullResim();
         }
 
-        ImGui.separator();
+        renderApplyPotionOptions();
+
+        ThemeManager.paddedSeparator();
         renderRowCountInput();
-        ImGui.separator();
+        ThemeManager.paddedSeparator();
         renderAddRowOptions();
         renderDeleteOption();
         renderDuplicateAndClearOptions();
@@ -658,7 +695,7 @@ public final class InputOverlay {
         boolean hasRows = !data.getRows().isEmpty();
         if (!hasSelection && !hasRows) return;
 
-        ImGui.separator();
+        ThemeManager.paddedSeparator();
         ImGui.beginDisabled(!hasSelection);
         if (ImGui.menuItem(MENU_DUPLICATE)) {
             duplicateSelectedRows();
@@ -673,7 +710,7 @@ public final class InputOverlay {
     }
 
     private void renderRowCountInput() {
-        Controls.inputInt(LABEL_ROWS, rowsToAdd, ROW_COUNT_INPUT_WIDTH);
+        Controls.inputInt(LABEL_ROWS, rowsToAdd, ROW_COUNT_INPUT_WIDTH * uiScale());
         rowsToAdd.set(Math.max(1, Math.min(1000, rowsToAdd.get())));
     }
 
@@ -708,7 +745,7 @@ public final class InputOverlay {
             return;
         }
 
-        ImGui.separator();
+        ThemeManager.paddedSeparator();
         if (ImGui.menuItem(String.format(MENU_DELETE, selection.size()), MENU_DELETE_SHORTCUT)) {
             deleteSelectedRows();
         }

@@ -4,19 +4,28 @@ public final class Settings {
 
     public static final float[] PRESET_SCALES = {0.75f, 1.0f, 1.25f, 1.5f, 2.0f, 2.5f};
     public static final int DEFAULT_SCALE_INDEX = 3;
+    public static final int AUTO_SCALE_INDEX = -1;
+
+    // First-run default: bigger displays start at a larger preset so 4K isn't a sliver.
+    public static int resolveAutoScaleIndex(int displayHeightPx) {
+        if (displayHeightPx < 1000) return 1; // 1.0x
+        if (displayHeightPx < 1600) return 3; // 1.5x
+        if (displayHeightPx < 2300) return 4; // 2.0x
+        return 5;                             // 2.5x
+    }
 
     // Render-color defaults sourced from Catppuccin Mocha so they harmonize with
     // the ImGui chrome in ThemeManager. Users can still customize each one in
     // Preferences > Render Colors; these only define what they see on first
     // launch / after Reset All. Alphas preserved from prior defaults for
     // visibility tuning.
-    private static final float[] DEFAULT_TICK_DEFAULT = {0.729f, 0.761f, 0.871f, 0.25f};        // subtext1   #bac2de
-    private static final float[] DEFAULT_TICK_SELECTED = {0.796f, 0.651f, 0.969f, 0.25f};       // mauve      #cba6f7  (matches chrome SELECTED)
-    private static final float[] DEFAULT_TICK_AIR = {0.537f, 0.863f, 0.922f, 0.25f};            // sky        #89dceb
-    private static final float[] DEFAULT_TICK_SNEAK = {0.980f, 0.702f, 0.529f, 0.25f};          // peach      #fab387
-    private static final float[] DEFAULT_TICK_WALL = {0.953f, 0.545f, 0.659f, 0.25f};           // red        #f38ba8
-    private static final float[] DEFAULT_TICK_SOFT_COLLISION = {0.922f, 0.627f, 0.675f, 0.25f}; // maroon     #eba0ac
-    private static final float[] DEFAULT_SUBTICK_PATH = {0.976f, 0.886f, 0.686f, 0.25f};        // yellow     #f9e2af
+    private static final float[] DEFAULT_TICK_DEFAULT = {0.729f, 0.761f, 0.871f, 0.50f};        // subtext1   #bac2de
+    private static final float[] DEFAULT_TICK_SELECTED = {0.537f, 0.706f, 0.980f, 0.50f};       // blue       #89b4fa  (matches chrome SELECTED)
+    private static final float[] DEFAULT_TICK_AIR = {0.537f, 0.863f, 0.922f, 0.50f};            // sky        #89dceb
+    private static final float[] DEFAULT_TICK_SNEAK = {0.980f, 0.702f, 0.529f, 0.50f};          // peach      #fab387
+    private static final float[] DEFAULT_TICK_WALL = {0.953f, 0.545f, 0.659f, 0.50f};           // red        #f38ba8
+    private static final float[] DEFAULT_TICK_SOFT_COLLISION = {0.922f, 0.627f, 0.675f, 0.50f}; // maroon     #eba0ac
+    private static final float[] DEFAULT_SUBTICK_PATH = {0.976f, 0.886f, 0.686f, 0.50f};        // yellow     #f9e2af
     private static final float[] DEFAULT_YAW_ARROW = {0.953f, 0.545f, 0.659f, 1.00f};           // red        #f38ba8
     private static final float[] DEFAULT_YAW_GIZMO_CIRCLE = {0.804f, 0.839f, 0.957f, 0.70f};    // text       #cdd6f4
     private static final float[] DEFAULT_YAW_GIZMO_DIRECTION = {0.976f, 0.886f, 0.686f, 1.00f}; // yellow     #f9e2af
@@ -24,10 +33,10 @@ public final class Settings {
     private static final float[] DEFAULT_HITBOX_SELECTED = {0.651f, 0.890f, 0.631f, 0.80f};     // green      #a6e3a1
     private static final float[] DEFAULT_TICK_GROUND_HIGHLIGHT = {0.729f, 0.761f, 0.871f, 0.30f}; // subtext1 #bac2de (matches tick box default)
 
-    private static final boolean DEFAULT_SHOW_YAW_ARROWS = true;
+    private static final boolean DEFAULT_SHOW_YAW_ARROWS = false;
     private static final boolean DEFAULT_SHOW_HITBOX = false;
     private static final boolean DEFAULT_SHOW_FULL_HITBOX = false;
-    private static final boolean DEFAULT_SHOW_SUBTICK = true;
+    private static final boolean DEFAULT_SHOW_SUBTICK = false;
     private static final boolean DEFAULT_SHOW_POTION_COLUMNS = false;
     private static final boolean DEFAULT_HIGHLIGHT_ON_GROUND_ROWS = true;
 
@@ -66,7 +75,7 @@ public final class Settings {
     public int pathRenderDistance = DEFAULT_PATH_RENDER_DISTANCE;
     public boolean unlimitedPathRender = DEFAULT_UNLIMITED_PATH_RENDER;
 
-    public int scaleIndex = DEFAULT_SCALE_INDEX;
+    public int scaleIndex = AUTO_SCALE_INDEX; // resolved from display on first run; concrete once chosen
 
     public String[] recentFiles = new String[0];
     public boolean viewTickInfo = false;

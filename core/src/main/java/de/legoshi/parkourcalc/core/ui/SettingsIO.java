@@ -89,6 +89,7 @@ public final class SettingsIO {
     }
 
     private static void clampScaleIndex(Settings settings) {
+        if (settings.scaleIndex == Settings.AUTO_SCALE_INDEX) return;
         if (settings.scaleIndex < 0 || settings.scaleIndex >= Settings.PRESET_SCALES.length) {
             settings.scaleIndex = Settings.DEFAULT_SCALE_INDEX;
         }

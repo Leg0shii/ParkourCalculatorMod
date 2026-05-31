@@ -232,6 +232,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         return application.getSettings();
     }
 
+    public static void resolveAutoScale(int displayHeightPx) {
+        application.resolveAutoScaleIfNeeded(displayHeightPx);
+    }
+
     private static String modVersion() {
         return FabricLoader.getInstance()
                 .getModContainer(MOD_ID)

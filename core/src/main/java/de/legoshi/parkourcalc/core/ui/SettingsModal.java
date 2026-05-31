@@ -1,23 +1,23 @@
 package de.legoshi.parkourcalc.core.ui;
 
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
+import de.legoshi.parkourcalc.core.ui.theme.Modal;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImGui;
 import imgui.flag.ImGuiColorEditFlags;
 import imgui.flag.ImGuiTableColumnFlags;
-import imgui.flag.ImGuiTableFlags;
-import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImInt;
 
-/** Tabbed Preferences modal. See docs/UI_REDESIGN.md for tab layout. */
+/** Tabbed Preferences modal. */
 public final class SettingsModal {
 
-    private static final String POPUP_ID = "Preferences##settings_modal";
+    private static final String POPUP_ID = "###settings_modal";
     private static final String CLOSE_BTN = "Close";
     private static final String RESET_BTN = "Reset All";
-    private static final String LAYOUT_TABLE_ID = "##settings_layout";
-    private static final float LABEL_COL_FRACTION = 0.55f;
+    private static final float CONTROL_COL_EMS = 12f;
+    private static final float LABEL_COL_EMS = 18f; // fixed so the control column lines up across every subsection table
+    private static final float MODAL_MAX_WIDTH_EMS = 36f;
 
     private static final String TT_UI_SCALE = "Multiplier applied to all ImGui widgets and fonts. 1.5x is the default for 1080p.";
     private static final String TT_YAW_ARROWS = "Draws an arrow at each tick's position showing the facing angle that frame.";
@@ -62,44 +62,48 @@ public final class SettingsModal {
             ImGui.openPopup(POPUP_ID);
             openRequested = false;
         }
-        if (!ImGui.beginPopupModal(POPUP_ID, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.AlwaysAutoResize)) {
+        // Cap width so the auto-resize popup can't balloon; it still hugs content below the cap.
+        if (ImGui.isPopupOpen(POPUP_ID)) {
+            ImGui.setNextWindowSizeConstraints(0f, 0f, ImGui.getFontSize() * MODAL_MAX_WIDTH_EMS, Float.MAX_VALUE);
+        }
+        if (!Modal.begin("Preferences", POPUP_ID)) {
             return;
         }
 
-        if (ImGui.beginTabBar("##settings_tabs")) {
-            if (ImGui.beginTabItem("General")) {
+        if (Controls.beginTabBar("##settings_tabs")) {
+            if (Controls.beginTab("General")) {
                 renderGeneral();
-                ImGui.endTabItem();
+                Controls.endTab();
             }
-            if (ImGui.beginTabItem("Visualization")) {
+            if (Controls.beginTab("Visualization")) {
                 renderVisualization();
-                ImGui.endTabItem();
+                Controls.endTab();
             }
-            if (ImGui.beginTabItem("Playback")) {
+            if (Controls.beginTab("Playback")) {
                 renderPlayback();
-                ImGui.endTabItem();
+                Controls.endTab();
             }
-            if (ImGui.beginTabItem("Render Colors")) {
+            if (Controls.beginTab("Render Colors")) {
                 renderColors();
-                ImGui.endTabItem();
+                Controls.endTab();
             }
-            ImGui.endTabBar();
+            Controls.endTabBar();
         }
 
-        ImGui.separator();
-        float rightWidth = ImGui.calcTextSize(CLOSE_BTN).x + 32;
+        Modal.footerSeparator();
         if (Controls.secondaryButton(RESET_BTN)) {
             settings.reset();
             onChanged.run();
         }
-        ImGui.sameLine(ImGui.getWindowWidth() - rightWidth - 16);
-        if (Controls.secondaryButton(CLOSE_BTN)) ImGui.closeCurrentPopup();
-        ImGui.endPopup();
+        ImGui.sameLine();
+        if (Modal.footerButton(CLOSE_BTN)) ImGui.closeCurrentPopup();
+        Modal.end();
     }
 
     private void renderGeneral() {
+        ThemeManager.sectionSpacing();
         sectionHeader("Interface");
-        if (beginLayoutTable()) {
+        if (beginLayoutTable("##settings_general")) {
             scaleIndexBuf.set(settings.scaleIndex);
             row("UI Scale", () -> {
                 ImGui.setNextItemWidth(-1);
@@ -109,13 +113,14 @@ public final class SettingsModal {
                 }
                 tooltipForLastItem(TT_UI_SCALE);
             });
-            ImGui.endTable();
+            ThemeManager.endStandardFormTable();
         }
     }
 
     private void renderVisualization() {
+        ThemeManager.sectionSpacing();
         sectionHeader("In-world overlays");
-        if (beginLayoutTable()) {
+        if (beginLayoutTable("##settings_overlays")) {
             checkboxRow("Show yaw arrows", "##show_yaw_arrows", settings.showYawArrows, TT_YAW_ARROWS,
                     v -> settings.showYawArrows = v);
             checkboxRow("Show hitbox", "##show_hitbox", settings.showHitbox, TT_HITBOX,
@@ -124,12 +129,12 @@ public final class SettingsModal {
                     v -> settings.showFullHitbox = v);
             checkboxRow("Subtick visualization", "##show_subtick", settings.showSubtick, TT_SUBTICK,
                     v -> settings.showSubtick = v);
-            ImGui.endTable();
+            ThemeManager.endStandardFormTable();
         }
 
         ThemeManager.sectionSpacing();
         sectionHeader("Path");
-        if (beginLayoutTable()) {
+        if (beginLayoutTable("##settings_path")) {
             row("Path render distance", () -> {
                 pathRenderDistanceBuf[0] = settings.pathRenderDistance;
                 ImGui.setNextItemWidth(-1);
@@ -142,23 +147,24 @@ public final class SettingsModal {
             });
             checkboxRow("Unlimited path render distance", "##unlimited_path", settings.unlimitedPathRender,
                     TT_PATH_UNLIMITED, v -> settings.unlimitedPathRender = v);
-            ImGui.endTable();
+            ThemeManager.endStandardFormTable();
         }
 
         ThemeManager.sectionSpacing();
         sectionHeader("Editor table");
-        if (beginLayoutTable()) {
+        if (beginLayoutTable("##settings_editor")) {
             checkboxRow("Show potion effect columns", "##show_potion", settings.showPotionColumns, TT_POTION_COLS,
                     v -> settings.showPotionColumns = v);
             checkboxRow("Highlight on-ground ticks", "##highlight_on_ground", settings.highlightOnGroundRows, TT_GROUND_HIGHLIGHT,
                     v -> settings.highlightOnGroundRows = v);
-            ImGui.endTable();
+            ThemeManager.endStandardFormTable();
         }
     }
 
     private void renderPlayback() {
+        ThemeManager.sectionSpacing();
         sectionHeader("Camera and turning");
-        if (beginLayoutTable()) {
+        if (beginLayoutTable("##settings_playback")) {
             row("Max yaw turn rate", () -> {
                 yawTurnCapBuf[0] = settings.yawFlickSpeed;
                 ImGui.setNextItemWidth(-1);
@@ -169,11 +175,12 @@ public final class SettingsModal {
                 if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
                 tooltipForLastItem(TT_YAW_TURN_RATE);
             });
-            ImGui.endTable();
+            ThemeManager.endStandardFormTable();
         }
     }
 
     private void renderColors() {
+        ThemeManager.sectionSpacing();
         sectionHeader("Tick boxes");
         int flags = ImGuiColorEditFlags.NoInputs;
         renderColor("tick box default", settings.tickDefault, flags);
@@ -205,13 +212,14 @@ public final class SettingsModal {
 
     private void sectionHeader(String title) {
         ImGui.textDisabled(title);
-        ImGui.separator();
+        ThemeManager.bottomPaddedSeparator();
     }
 
-    private boolean beginLayoutTable() {
-        if (!ImGui.beginTable(LAYOUT_TABLE_ID, 2, ImGuiTableFlags.SizingStretchProp)) return false;
-        ImGui.tableSetupColumn("##label", ImGuiTableColumnFlags.WidthStretch, LABEL_COL_FRACTION);
-        ImGui.tableSetupColumn("##control", ImGuiTableColumnFlags.WidthStretch, 1.0f - LABEL_COL_FRACTION);
+    private boolean beginLayoutTable(String id) {
+        // Fixed-fit columns hug content so the modal can't balloon; stretch columns have no finite width in an auto-resize popup.
+        if (!ThemeManager.beginStandardFormTable(id, 2)) return false;
+        ImGui.tableSetupColumn("##label", ImGuiTableColumnFlags.WidthFixed, ImGui.getFontSize() * LABEL_COL_EMS);
+        ImGui.tableSetupColumn("##control", ImGuiTableColumnFlags.WidthFixed, ImGui.getFontSize() * CONTROL_COL_EMS);
         return true;
     }
 

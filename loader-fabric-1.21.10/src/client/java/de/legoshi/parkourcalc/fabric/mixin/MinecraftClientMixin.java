@@ -21,7 +21,7 @@ public class MinecraftClientMixin {
 
     @Inject(method = "<init>", at = @At("RETURN"))
     public void initImGui(RunArgs args, CallbackInfo ci) {
-        ImGuiImpl.create(window.getHandle(), FabricParkourCalculator.getSettings());
+        ImGuiImpl.create(window.getHandle(), FabricParkourCalculator.getSettings(), FabricParkourCalculator::resolveAutoScale);
     }
 
     @Inject(method = "close", at = @At("HEAD"))

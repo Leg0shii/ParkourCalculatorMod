@@ -4,6 +4,7 @@ import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.ui.theme.Fonts;
+import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import de.legoshi.parkourcalc.fabric.FabricParkourCalculator;
 import imgui.ImFont;
 import imgui.ImFontConfig;
@@ -28,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.util.Objects;
+import java.util.function.IntConsumer;
 
 /**
  * Manages ImGui initialization, rendering lifecycle, and cleanup.
@@ -43,14 +45,16 @@ public final class ImGuiImpl {
     private static final ImGuiImplGl3 imGuiGl3 = new ImGuiImplGl3();
 
     private static Settings settings;
+    private static IntConsumer autoScaleResolver;
     private static ImFont[] presetFonts;
     private static ImFont[] boldPresetFonts;
     private static int appliedScaleIndex = -1;
 
     private ImGuiImpl() {}
 
-    public static void create(long windowHandle, Settings settingsRef) {
+    public static void create(long windowHandle, Settings settingsRef, IntConsumer autoScaleResolverRef) {
         settings = settingsRef;
+        autoScaleResolver = autoScaleResolverRef;
 
         ImGui.createContext();
         ImPlot.createContext();
@@ -67,6 +71,7 @@ public final class ImGuiImpl {
     }
 
     public static void beginImGuiRendering() {
+        autoScaleResolver.accept(currentFramebufferHeight());
         applyPendingScale();
         bindMinecraftFramebuffer();
 
@@ -90,13 +95,8 @@ public final class ImGuiImpl {
     }
 
     private static void applyScale(int newIdx) {
-        float newScale = Settings.PRESET_SCALES[newIdx];
-        if (appliedScaleIndex < 0) {
-            ImGui.getStyle().scaleAllSizes(newScale);
-        } else {
-            float oldScale = Settings.PRESET_SCALES[appliedScaleIndex];
-            ImGui.getStyle().scaleAllSizes(newScale / oldScale);
-        }
+        if (newIdx < 0) newIdx = Settings.DEFAULT_SCALE_INDEX;
+        ThemeManager.apply(Settings.PRESET_SCALES[newIdx]);
         ImGui.getIO().setFontDefault(presetFonts[newIdx]);
         Fonts.setBoldFont(boldPresetFonts[newIdx]);
         appliedScaleIndex = newIdx;
@@ -117,6 +117,13 @@ public final class ImGuiImpl {
 
         ImPlot.destroyContext();
         ImGui.destroyContext();
+    }
+
+    private static int currentFramebufferHeight() {
+        MinecraftClient mc = MinecraftClient.getInstance();
+        if (mc == null) return 0;
+        Framebuffer fb = mc.getFramebuffer();
+        return fb == null ? 0 : fb.textureHeight;
     }
 
     private static void bindMinecraftFramebuffer() {

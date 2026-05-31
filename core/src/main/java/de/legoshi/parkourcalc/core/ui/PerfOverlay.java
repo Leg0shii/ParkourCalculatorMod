@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.core.ui;
 
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
 import de.legoshi.parkourcalc.core.perf.Perf;
+import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager.HAlign;
 import imgui.ImGui;
@@ -15,14 +16,19 @@ import java.util.Locale;
 
 public final class PerfOverlay implements RenderInterface {
 
-    private static final String WINDOW_TITLE = "Perf##perf-overlay";
+    private static final String WINDOW_ID = "###perf-overlay";
+    private static final String WINDOW_TITLE = "Perf";
 
     @Override
     public void render(ImGuiIO io) {
-        if (!ImGui.begin(WINDOW_TITLE, ImGuiWindowFlags.AlwaysAutoResize)) {
+        ThemeManager.pushHeaderChrome();
+        if (!ImGui.begin(WINDOW_ID, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.AlwaysAutoResize)) {
             ImGui.end();
+            ThemeManager.popHeaderChrome();
             return;
         }
+        ThemeManager.drawModalTitle(WINDOW_TITLE);
+        ThemeManager.popHeaderChrome();
 
         long frameNs = Perf.getFrameDurationNs();
         if (frameNs > 0) {
@@ -30,10 +36,10 @@ public final class PerfOverlay implements RenderInterface {
                     frameNs / 1_000_000.0, 1e9 / frameNs));
         }
         ImGui.text("Boxes drawn/frame: " + Perf.getBoxesLastFrame());
-        if (ImGui.button("Reset max")) {
+        if (Controls.secondaryButton("Reset max")) {
             Perf.resetMax();
         }
-        ImGui.separator();
+        ThemeManager.paddedSeparator();
 
         // Measure max observed widths per frame so the columns grow with the data
         // and never clip. Hardcoded data widths under-allocated as soon as any
@@ -96,7 +102,7 @@ public final class PerfOverlay implements RenderInterface {
     }
 
     private static void renderHeader() {
-        ImGui.tableNextRow(ImGuiTableRowFlags.Headers);
+        ThemeManager.tableHeaderRow();
         ThemeManager.paintTableHeader();
 
         ImGui.tableSetColumnIndex(0);
