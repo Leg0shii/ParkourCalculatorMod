@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.core.ui;
 
 import de.legoshi.parkourcalc.core.ports.BoxRenderer;
+import de.legoshi.parkourcalc.core.render.PathVertexLayout;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
@@ -181,54 +182,89 @@ public final class BoxController {
         return boxSize;
     }
 
+    /** Thick edges per hitbox floor outline: 4 edges per walk position. */
+    public static final int HITBOX_FLOOR_EDGES = 4;
+    /** Thick edges per full hitbox wireframe: 12 edges per walk position. */
+    public static final int HITBOX_FULL_EDGES = 12;
+
     public void renderHitboxFloorOutline(BoxRenderer renderer, BoxColorPicker picker, boolean useSubtickPositions,
                                          double camX, double camY, double camZ, double maxDistanceSq) {
-        double t = BoxStyle.HITBOX_EDGE_THICKNESS;
         for (int i = 0; i < states.size(); i++) {
             if (!inRange(i, camX, camY, camZ, maxDistanceSq)) continue;
-            TickState s = states.get(i);
-            int argb = picker.argbFor(i, s);
-            List<Vec3dCore> walk = walkFor(i, s, useSubtickPositions);
-            for (int k = 0; k < walk.size(); k++) {
-                Vec3dCore p = walk.get(k);
-                double x0 = p.x - BoxStyle.HITBOX_HALF_WIDTH;
-                double z0 = p.z - BoxStyle.HITBOX_HALF_WIDTH;
-                double x1 = p.x + BoxStyle.HITBOX_HALF_WIDTH;
-                double z1 = p.z + BoxStyle.HITBOX_HALF_WIDTH;
-                double y = p.y;
-                emitThickEdge(renderer, x0, y, z0, x1, y, z0, t, argb);
-                emitThickEdge(renderer, x0, y, z1, x1, y, z1, t, argb);
-                emitThickEdge(renderer, x0, y, z0, x0, y, z1, t, argb);
-                emitThickEdge(renderer, x1, y, z0, x1, y, z1, t, argb);
-            }
+            emitHitboxFloorOutlineAt(renderer, picker.argbFor(i, states.get(i)), useSubtickPositions, i);
         }
+    }
+
+    /** Emits one tick's hitbox floor outline; used both by the full-pass loop and by selection patching. */
+    public void emitHitboxFloorOutlineAt(BoxRenderer renderer, int argb, boolean useSubtickPositions, int i) {
+        double t = BoxStyle.HITBOX_EDGE_THICKNESS;
+        List<Vec3dCore> walk = walkFor(i, states.get(i), useSubtickPositions);
+        for (int k = 0; k < walk.size(); k++) {
+            Vec3dCore p = walk.get(k);
+            double x0 = p.x - BoxStyle.HITBOX_HALF_WIDTH;
+            double z0 = p.z - BoxStyle.HITBOX_HALF_WIDTH;
+            double x1 = p.x + BoxStyle.HITBOX_HALF_WIDTH;
+            double z1 = p.z + BoxStyle.HITBOX_HALF_WIDTH;
+            double y = p.y;
+            emitThickEdge(renderer, x0, y, z0, x1, y, z0, t, argb);
+            emitThickEdge(renderer, x0, y, z1, x1, y, z1, t, argb);
+            emitThickEdge(renderer, x0, y, z0, x0, y, z1, t, argb);
+            emitThickEdge(renderer, x1, y, z0, x1, y, z1, t, argb);
+        }
+    }
+
+    /** Number of walk positions (sub-tick samples) for this tick; hitbox geometry scales by this. */
+    public int hitboxWalkCount(int index, boolean useSubtickPositions) {
+        return walkFor(index, states.get(index), useSubtickPositions).size();
+    }
+
+    private long totalHitboxWalk(boolean useSubtickPositions) {
+        long sum = 0;
+        for (int i = 0; i < states.size(); i++) {
+            sum += hitboxWalkCount(i, useSubtickPositions);
+        }
+        return sum;
+    }
+
+    /** Whether the faces pass fits one buffer; loaders drop the hitbox (not the path) when it doesn't. */
+    public boolean facePassFitsBudget(int hitboxEdges, boolean useSubtickPositions, boolean showArrows) {
+        if (hitboxEdges == 0) return true;
+        long n = positions.size();
+        long faceVerts = n * PathVertexLayout.FACE_VERTS_PER_BOX
+                + (long) hitboxEdges * PathVertexLayout.THICK_EDGE_VERTS * totalHitboxWalk(useSubtickPositions)
+                + (showArrows && n > 0 ? (n - 1) * PathVertexLayout.ARROW_VERTS_PER_BOX : 0);
+        return faceVerts <= PathVertexLayout.MAX_PASS_VERTICES;
     }
 
     public void renderHitboxFullWireframe(BoxRenderer renderer, BoxColorPicker picker, boolean useSubtickPositions,
                                           double camX, double camY, double camZ, double maxDistanceSq) {
-        double t = BoxStyle.HITBOX_EDGE_THICKNESS;
         for (int i = 0; i < states.size(); i++) {
             if (!inRange(i, camX, camY, camZ, maxDistanceSq)) continue;
-            TickState s = states.get(i);
-            int argb = picker.argbFor(i, s);
-            List<Vec3dCore> walk = walkFor(i, s, useSubtickPositions);
-            for (int k = 0; k < walk.size(); k++) {
-                AABB hb = BoxStyle.hitboxAabbAt(walk.get(k), s.sneaking);
-                double x0 = hb.min.x, y0 = hb.min.y, z0 = hb.min.z;
-                double x1 = hb.max.x, y1 = hb.max.y, z1 = hb.max.z;
-                emitThickEdge(renderer, x0, y0, z0, x1, y0, z0, t, argb);
-                emitThickEdge(renderer, x0, y0, z1, x1, y0, z1, t, argb);
-                emitThickEdge(renderer, x0, y0, z0, x0, y0, z1, t, argb);
-                emitThickEdge(renderer, x1, y0, z0, x1, y0, z1, t, argb);
-                emitThickEdge(renderer, x0, y1, z0, x1, y1, z0, t, argb);
-                emitThickEdge(renderer, x0, y1, z1, x1, y1, z1, t, argb);
-                emitThickEdge(renderer, x0, y1, z0, x0, y1, z1, t, argb);
-                emitThickEdge(renderer, x1, y1, z0, x1, y1, z1, t, argb);
-                emitThickEdge(renderer, x0, y0, z0, x0, y1, z0, t, argb);
-                emitThickEdge(renderer, x1, y0, z0, x1, y1, z0, t, argb);
-                emitThickEdge(renderer, x0, y0, z1, x0, y1, z1, t, argb);
-                emitThickEdge(renderer, x1, y0, z1, x1, y1, z1, t, argb);
-            }
+            emitHitboxFullWireframeAt(renderer, picker.argbFor(i, states.get(i)), useSubtickPositions, i);
+        }
+    }
+
+    /** Emits one tick's full hitbox wireframe; used both by the full-pass loop and by selection patching. */
+    public void emitHitboxFullWireframeAt(BoxRenderer renderer, int argb, boolean useSubtickPositions, int i) {
+        double t = BoxStyle.HITBOX_EDGE_THICKNESS;
+        TickState s = states.get(i);
+        List<Vec3dCore> walk = walkFor(i, s, useSubtickPositions);
+        for (int k = 0; k < walk.size(); k++) {
+            AABB hb = BoxStyle.hitboxAabbAt(walk.get(k), s.sneaking);
+            double x0 = hb.min.x, y0 = hb.min.y, z0 = hb.min.z;
+            double x1 = hb.max.x, y1 = hb.max.y, z1 = hb.max.z;
+            emitThickEdge(renderer, x0, y0, z0, x1, y0, z0, t, argb);
+            emitThickEdge(renderer, x0, y0, z1, x1, y0, z1, t, argb);
+            emitThickEdge(renderer, x0, y0, z0, x0, y0, z1, t, argb);
+            emitThickEdge(renderer, x1, y0, z0, x1, y0, z1, t, argb);
+            emitThickEdge(renderer, x0, y1, z0, x1, y1, z0, t, argb);
+            emitThickEdge(renderer, x0, y1, z1, x1, y1, z1, t, argb);
+            emitThickEdge(renderer, x0, y1, z0, x0, y1, z1, t, argb);
+            emitThickEdge(renderer, x1, y1, z0, x1, y1, z1, t, argb);
+            emitThickEdge(renderer, x0, y0, z0, x0, y1, z0, t, argb);
+            emitThickEdge(renderer, x1, y0, z0, x1, y1, z0, t, argb);
+            emitThickEdge(renderer, x0, y0, z1, x0, y1, z1, t, argb);
+            emitThickEdge(renderer, x1, y0, z1, x1, y1, z1, t, argb);
         }
     }
 
@@ -241,6 +277,32 @@ public final class BoxController {
         double minY = Math.min(y0, y1) - h, maxY = Math.max(y0, y1) + h;
         double minZ = Math.min(z0, z1) - h, maxZ = Math.max(z0, z1) + h;
         renderer.drawBox(new AABB(new Vec3dCore(minX, minY, minZ), new Vec3dCore(maxX, maxY, maxZ)), argb);
+    }
+
+    /** Contiguous in-range tick runs as flattened [start0,end0,start1,end1,...]; {0,size} when maxSq is infinite. */
+    public int[] inRangeRuns(double camX, double camY, double camZ, double maxSq) {
+        int n = positions.size();
+        if (maxSq == Double.POSITIVE_INFINITY) {
+            return new int[]{0, n};
+        }
+        List<Integer> bounds = new ArrayList<Integer>();
+        boolean inRun = false;
+        for (int i = 0; i < n; i++) {
+            boolean in = inRange(i, camX, camY, camZ, maxSq);
+            if (in && !inRun) {
+                bounds.add(i);
+                inRun = true;
+            } else if (!in && inRun) {
+                bounds.add(i);
+                inRun = false;
+            }
+        }
+        if (inRun) bounds.add(n);
+        int[] runs = new int[bounds.size()];
+        for (int i = 0; i < runs.length; i++) {
+            runs[i] = bounds.get(i);
+        }
+        return runs;
     }
 
     private boolean inRange(int i, double camX, double camY, double camZ, double maxSq) {
@@ -368,6 +430,32 @@ public final class BoxController {
     }
 
     private static final int GIZMO_SEGMENTS = 48;
+
+    /** Per-box subtick vertex offsets, mirroring renderPath's emission exactly; starts[n] is the total. */
+    public int[] subtickVertexStarts() {
+        int n = states.size();
+        int[] starts = new int[n + 1];
+        if (n < 2) return starts;
+        int acc = 0;
+        Vec3dCore prev = null;
+        for (int i = 0; i < n; i++) {
+            starts[i] = acc;
+            List<Vec3dCore> path = states.get(i).subtickPath;
+            if (path == null || path.isEmpty()) {
+                Vec3dCore cur = positions.get(i);
+                if (prev != null && !prev.equals(cur)) acc += 2;
+                prev = cur;
+            } else {
+                for (int k = 0; k < path.size(); k++) {
+                    Vec3dCore cur = path.get(k);
+                    if (prev != null && !prev.equals(cur)) acc += 2;
+                    prev = cur;
+                }
+            }
+        }
+        starts[n] = acc;
+        return starts;
+    }
 
     public void renderPath(BoxRenderer renderer, int argb,
                            double camX, double camY, double camZ, double maxDistanceSq) {

@@ -65,6 +65,15 @@ public final class FabricRenderLayers {
             RenderLayer.MultiPhaseParameters.builder().build(false)
     );
 
+    /** Exposed for CachedBoxGeometry's hand-rolled render passes (persistent GpuBuffer draws). */
+    public static RenderPipeline translucentBoxPipeline() {
+        return TRANSLUCENT_BOX_PIPELINE;
+    }
+
+    public static RenderPipeline thinLinesPipeline() {
+        return THIN_LINES_PIPELINE;
+    }
+
     private FabricRenderLayers() {
     }
 }

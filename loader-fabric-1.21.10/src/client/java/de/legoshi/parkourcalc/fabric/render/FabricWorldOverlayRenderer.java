@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.fabric.render;
 
 import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.ports.BoxRenderer;
+import de.legoshi.parkourcalc.core.render.PathRenderPlan;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.BoxStyle;
@@ -14,18 +15,14 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Matrix4f;
 
-/**
- * Renders BoxController's path boxes into the world, invoked from WorldRendererMixin.
- * Two passes (faces then lines) into an Immediate VertexConsumerProvider; the
- * Immediate orders them correctly because TRANSLUCENT_BOX sits on the translucent
- * draw pass and THIN_LINES doesn't.
- */
+/** Renders the cached path geometry into the world from WorldRendererMixin; the yaw gizmo stays immediate. */
 public final class FabricWorldOverlayRenderer {
 
     private final BoxController boxController;
     private final Settings settings;
     private final SelectionManager selection;
     private final YawGizmoController yawGizmo;
+    private final CachedBoxGeometry cached = new CachedBoxGeometry();
 
     public FabricWorldOverlayRenderer(BoxController boxController, Settings settings,
                                       SelectionManager selection, YawGizmoController yawGizmo) {
@@ -36,7 +33,10 @@ public final class FabricWorldOverlayRenderer {
     }
 
     public void render(Matrix4f positionMatrix) {
-        if (boxController.isEmpty()) return;
+        if (boxController.isEmpty()) {
+            cached.close();
+            return;
+        }
 
         long renderStart = Perf.now();
         boxController.setBoxSize(BoxStyle.tickBoxSize(settings));
@@ -51,35 +51,22 @@ public final class FabricWorldOverlayRenderer {
         matrixStack.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z);
 
         VertexConsumerProvider.Immediate consumers = client.getBufferBuilders().getEntityVertexConsumers();
-        double maxSq = BoxStyle.pathMaxDistanceSq(settings);
-        FabricBoxRenderer facesRenderer = new FabricBoxRenderer(matrixStack, consumers, BoxRenderer.Mode.FACES);
-        boxController.render(facesRenderer, (i, s) -> BoxStyle.tickFaceArgb(settings, s, selection.isSelected(i)),
-                cameraPos.x, cameraPos.y, cameraPos.z, maxSq);
-        if (settings.showHitbox && !settings.showFullHitbox) {
-            boxController.renderHitboxFloorOutline(facesRenderer,
-                    (i, s) -> BoxStyle.hitboxLineArgb(settings, selection.isSelected(i)),
-                    settings.showSubtick,
-                    cameraPos.x, cameraPos.y, cameraPos.z, maxSq);
-        }
-        if (settings.showFullHitbox) {
-            boxController.renderHitboxFullWireframe(facesRenderer,
-                    (i, s) -> BoxStyle.hitboxLineArgb(settings, selection.isSelected(i)),
-                    settings.showSubtick,
-                    cameraPos.x, cameraPos.y, cameraPos.z, maxSq);
-        }
-        if (settings.showYawArrows) {
-            boxController.renderYawArrows(facesRenderer, BoxStyle.yawArrowArgb(settings),
-                    cameraPos.x, cameraPos.y, cameraPos.z, maxSq);
-        }
-        FabricBoxRenderer linesRenderer = new FabricBoxRenderer(matrixStack, consumers, BoxRenderer.Mode.LINES);
-        boxController.render(linesRenderer, (i, s) -> BoxStyle.tickLineArgb(settings, s, selection.isSelected(i)),
-                cameraPos.x, cameraPos.y, cameraPos.z, maxSq);
-        if (settings.showSubtick) {
-            boxController.renderPath(linesRenderer, BoxStyle.subtickPathArgb(settings),
-                    cameraPos.x, cameraPos.y, cameraPos.z, maxSq);
-        }
+
+        PathRenderPlan plan = PathRenderPlan.build(boxController, settings, selection);
+        cached.ensureBuilt(boxController, plan.structuralHash, plan.selection, plan.source, plan.patch);
+
+        Matrix4f modelView = new Matrix4f(positionMatrix).translate(
+                (float) (cached.anchorX() - cameraPos.x),
+                (float) (cached.anchorY() - cameraPos.y),
+                (float) (cached.anchorZ() - cameraPos.z));
+        int[] runs = boxController.inRangeRuns(cameraPos.x, cameraPos.y, cameraPos.z,
+                BoxStyle.pathMaxDistanceSq(settings));
+        cached.drawLines(modelView, runs);
+        cached.drawFaces(modelView, runs);
+
         int gizmoIdx = yawGizmo.getSelectedIndex();
         if (gizmoIdx >= 0) {
+            FabricBoxRenderer linesRenderer = new FabricBoxRenderer(matrixStack, consumers, BoxRenderer.Mode.LINES);
             Vec3dCore center = boxController.getCenter(gizmoIdx);
             Float liveYaw = yawGizmo.getCurrentYawDegrees();
             double yawDeg = liveYaw != null ? liveYaw : boxController.getYaw(gizmoIdx);
