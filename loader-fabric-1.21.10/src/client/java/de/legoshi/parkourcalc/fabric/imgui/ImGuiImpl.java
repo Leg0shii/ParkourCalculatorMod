@@ -61,7 +61,6 @@ public final class ImGuiImpl {
 
         ImGuiIO io = ImGui.getIO();
         io.setIniFilename(INI_FILENAME);
-        io.setConfigFlags(ImGuiConfigFlags.DockingEnable);
 
         configurePresetFonts();
         applyScale(settings.scaleIndex);

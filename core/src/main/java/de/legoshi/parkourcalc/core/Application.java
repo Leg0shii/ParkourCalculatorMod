@@ -260,6 +260,14 @@ public final class Application {
         return overlayManager;
     }
 
+    public boolean isEditingYaw() {
+        return inputOverlay != null && inputOverlay.isEditingYaw();
+    }
+
+    public void navigateYaw(boolean forward) {
+        if (inputOverlay != null) inputOverlay.navigateYaw(forward);
+    }
+
     public BoxController getBoxController() {
         return boxController;
     }

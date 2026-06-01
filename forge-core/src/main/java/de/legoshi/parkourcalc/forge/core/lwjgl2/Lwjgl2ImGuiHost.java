@@ -11,6 +11,7 @@ import imgui.ImFontConfig;
 import imgui.ImFontGlyphRangesBuilder;
 import imgui.ImGui;
 import imgui.ImGuiIO;
+import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 import java.io.ByteArrayOutputStream;
@@ -36,6 +37,7 @@ public final class Lwjgl2ImGuiHost {
     private final Settings settings;
     private final IntConsumer autoScaleResolver;
     private final BooleanSupplier isUiFocused;
+    private BooleanSupplier isEditingYaw = () -> false;
     private final ImGuiLwjgl2 imguiLwjgl2 = new ImGuiLwjgl2();
     private final ImGuiGL3 imguiGl3 = new ImGuiGL3();
 
@@ -54,6 +56,11 @@ public final class Lwjgl2ImGuiHost {
         this.settings = settings;
         this.autoScaleResolver = autoScaleResolver;
         this.isUiFocused = isUiFocused;
+    }
+
+    /** Yaw-cell row nav is driven loader-side via the GuiScreen; suppress the shim's native Tab-out while editing. */
+    public void setEditingYawSupplier(BooleanSupplier isEditingYaw) {
+        this.isEditingYaw = isEditingYaw;
     }
 
     /** GuiScreen relays typed chars here; MC drains LWJGL2's queue before the shim sees them. */
@@ -78,6 +85,12 @@ public final class Lwjgl2ImGuiHost {
         // framebuffer is still bound (Forge 1.8.9 / 1.12.2: RenderTickEvent.END), so
         // our draws end up in framebufferMc and get composited by its later blit.
         imguiLwjgl2.newFrame(displayWidth, displayHeight, deltaSeconds);
+
+        ImGuiIO modifierIo = ImGui.getIO();
+        modifierIo.setKeyCtrl(Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL));
+        modifierIo.setKeyShift(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT));
+        modifierIo.setKeyAlt(Keyboard.isKeyDown(Keyboard.KEY_LMENU) || Keyboard.isKeyDown(Keyboard.KEY_RMENU));
+
         // imguiLwjgl2 polls LWJGL2 directly; pinned overlays would still see play-mode clicks.
         if (!isUiFocused.getAsBoolean()) {
             ImGuiIO io = ImGui.getIO();
@@ -91,6 +104,10 @@ public final class Lwjgl2ImGuiHost {
         if (isUiFocused.getAsBoolean() && dwheel != 0) {
             ImGuiIO io = ImGui.getIO();
             io.setMouseWheel(io.getMouseWheel() + dwheel / 120f);
+        }
+
+        if (isEditingYaw.getAsBoolean()) {
+            ImGui.getIO().setKeysDown(Keyboard.KEY_TAB, false);
         }
         ImGui.newFrame();
         overlayManager.render(ImGui.getIO());

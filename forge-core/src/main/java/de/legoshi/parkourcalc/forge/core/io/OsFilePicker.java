@@ -92,7 +92,7 @@ public final class OsFilePicker implements FilePickerPort {
         List<String> out = new ArrayList<String>();
         out.add("osascript");
         out.add("-e");
-        out.add("POSIX path of (choose file with prompt \"Import .tas\" of type {\"tas\"})");
+        out.add("POSIX path of (choose file with prompt \"Import .json\" of type {\"json\"})");
         return out;
     }
 
@@ -100,8 +100,8 @@ public final class OsFilePicker implements FilePickerPort {
         List<String> out = new ArrayList<String>();
         out.add("zenity");
         out.add("--file-selection");
-        out.add("--title=Import .tas");
-        out.add("--file-filter=TAS files | *.tas");
+        out.add("--title=Import .json");
+        out.add("--file-filter=TAS files | *.json");
         return out;
     }
 }

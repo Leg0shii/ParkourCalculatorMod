@@ -1,7 +1,6 @@
 package de.legoshi.parkourcalc.core.ui.theme;
 
 import imgui.ImDrawList;
-import imgui.ImFont;
 import imgui.ImGui;
 import imgui.ImGuiStyle;
 import imgui.ImVec2;
@@ -401,9 +400,10 @@ public final class ThemeManager {
         float titleH = ImGui.getFrameHeight();
         float fontSize = ImGui.getFontSize();
         float y = winPos.y + (titleH - fontSize) * 0.5f;
-        ImFont bold = Fonts.boldOrDefault();
         dl.pushClipRect(winPos.x, winPos.y, winPos.x + winW, winPos.y + titleH, false);
-        dl.addText(bold, fontSize, winPos.x + headerTextPadX(), y, u32(TEXT), title);
+        Fonts.pushBold();
+        dl.addText(winPos.x + headerTextPadX(), y, u32(TEXT), title);
+        Fonts.popBold();
         dl.popClipRect();
     }
 

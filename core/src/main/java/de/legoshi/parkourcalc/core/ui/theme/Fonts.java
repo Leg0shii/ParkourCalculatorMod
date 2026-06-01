@@ -21,9 +21,4 @@ public final class Fonts {
     public static void popBold() {
         if (boldFont != null) ImGui.popFont();
     }
-
-    /** Bold face for manual draw-list text; falls back to the active font before the loader registers. */
-    public static ImFont boldOrDefault() {
-        return boldFont != null ? boldFont : ImGui.getFont();
-    }
 }

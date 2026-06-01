@@ -215,6 +215,14 @@ public class FabricParkourCalculator implements ClientModInitializer {
         ImGuiImpl.endImGuiRendering();
     }
 
+    public static boolean isEditingYaw() {
+        return application.isEditingYaw();
+    }
+
+    public static void navigateYaw(boolean forward) {
+        application.navigateYaw(forward);
+    }
+
     public static boolean isUiFocused() {
         // A vanilla screen (e.g. pause on tab-out) must take input precedence over ImGui.
         return application.isControlPanelOpen() && MinecraftClient.getInstance().currentScreen == null;

@@ -10,9 +10,11 @@ import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImDrawList;
 import imgui.ImGui;
+import imgui.ImGuiInputTextCallbackData;
 import imgui.ImGuiListClipper;
 import imgui.ImGuiStyle;
 import imgui.ImVec2;
+import imgui.callback.ImGuiInputTextCallback;
 import imgui.callback.ImListClipperCallback;
 import imgui.flag.*;
 import imgui.type.ImInt;
@@ -77,7 +79,6 @@ public final class InputOverlay {
     private static final String CLEAR_CONFIRM_FMT = "Delete all %d rows? This cannot be undone.";
 
     private static final String YAW_FORMAT_DISPLAY = "% 12.6f";
-    private static final String YAW_FORMAT_EDIT = "%.6f";
 
     private static final String DRAG_DROP_TYPE = "INPUT_ROW";
 
@@ -106,6 +107,39 @@ public final class InputOverlay {
 
     private int draggingRowIndex = -1;
     private int editingYawRow = -1;
+    private int pendingYawFocusRow = -1;
+    private int collapseYawSelectionRow = -1;
+    private int collapseYawFramesLeft;
+    private int yawCallbackRow = -1;
+    private int carryYawCursorPos;
+
+    private static final int CALLBACK_ALWAYS = resolveInputTextFlag("CallbackAlways", ImGuiInputTextFlags.CallbackAlways);
+    private static final int COLLAPSE_FRAMES = 4;
+
+    private static int resolveInputTextFlag(String name, int fallback) {
+        try {
+            return ImGuiInputTextFlags.class.getField(name).getInt(null);
+        } catch (ReflectiveOperationException e) {
+            return fallback;
+        }
+    }
+
+    private final ImGuiInputTextCallback yawSelectionCallback = new ImGuiInputTextCallback() {
+        @Override
+        public void accept(ImGuiInputTextCallbackData data) {
+            if (yawCallbackRow >= 0 && yawCallbackRow == collapseYawSelectionRow) {
+                int pos = Math.min(carryYawCursorPos, data.getBuf().length());
+                data.setCursorPos(pos);
+                data.setSelectionStart(pos);
+                data.setSelectionEnd(pos);
+                if (--collapseYawFramesLeft <= 0) {
+                    collapseYawSelectionRow = -1;
+                }
+            } else {
+                carryYawCursorPos = data.getCursorPos();
+            }
+        }
+    };
 
     private Supplier<Float> footerHeightProvider = () -> 0f;
 
@@ -381,6 +415,7 @@ public final class InputOverlay {
             float viewportH = ImGui.getWindowHeight();
             ImGui.setScrollY(Math.max(0f, (target + startOffset) * rowH - viewportH * 0.5f));
         }
+        scrollPendingYawFocusIntoView(startOffset);
 
         renderStartRow(potionColumns);
 
@@ -453,15 +488,16 @@ public final class InputOverlay {
             tint = ThemeManager.selectedTintColor(0.75f);
         } else if (playback != null && playback.currentTick() == rowIndex) {
             tint = ThemeManager.warningTintColor(0.25f);
-        } else if (settings.highlightOnGroundRows && isPostTickOnGround(rowIndex)) {
+        } else if (settings.highlightOnGroundRows && isOnGroundAtTick(rowIndex)) {
             tint = ThemeManager.rgbaTintColor(settings.tickGroundHighlight);
         }
         ThemeManager.paintTableRowTint(tint);
     }
 
-    private boolean isPostTickOnGround(int rowIndex) {
+
+    private boolean isOnGroundAtTick(int rowIndex) {
         if (boxController == null) return false;
-        TickState s = boxController.getState(rowIndex + 1);
+        TickState s = boxController.getState(rowIndex);
         return s != null && s.onGround;
     }
 
@@ -557,11 +593,9 @@ public final class InputOverlay {
         ImGui.tableNextColumn();
 
         Float yaw = row.getYaw();
-        boolean isEditing = editingYawRow == rowIndex;
+
         if (yaw == null) {
             yawInput.set("");
-        } else if (isEditing) {
-            yawInput.set(String.format(Locale.ROOT, YAW_FORMAT_EDIT, yaw));
         } else {
             yawInput.set(String.format(Locale.ROOT, YAW_FORMAT_DISPLAY, yaw));
         }
@@ -572,7 +606,15 @@ public final class InputOverlay {
         if (populated) ThemeManager.pushPopulatedFrameBorder();
         float inputW = yawInputWidth();
         ThemeManager.centerNextItem(inputW);
-        boolean changed = Controls.tableInputText(ID_YAW_INPUT, yawInput, inputW);
+        if (pendingYawFocusRow == rowIndex) {
+            ImGui.setKeyboardFocusHere();
+            collapseYawSelectionRow = rowIndex; // keyboard focus auto-selects all; collapse it to a cursor instead
+            collapseYawFramesLeft = COLLAPSE_FRAMES;
+            pendingYawFocusRow = -1;
+        }
+        yawCallbackRow = rowIndex;
+        boolean changed = Controls.tableInputText(ID_YAW_INPUT, yawInput, inputW,
+                CALLBACK_ALWAYS, yawSelectionCallback);
         if (ImGui.isItemActivated()) {
             editingYawRow = rowIndex;
         }
@@ -585,6 +627,38 @@ public final class InputOverlay {
         if (changed) {
             parseAndSetYaw(row);
             notifyChange(rowIndex);
+        }
+    }
+
+    public boolean isEditingYaw() {
+        return editingYawRow >= 0;
+    }
+
+    public void navigateYaw(boolean forward) {
+        int from = editingYawRow;
+        if (from < 0) return;
+        int to = -1;
+        if (forward && from < data.size() - 1) {
+            to = from + 1;
+        } else if (!forward && from > 0) {
+            to = from - 1;
+        }
+        if (to >= 0) {
+            pendingYawFocusRow = to;
+        }
+    }
+
+    private void scrollPendingYawFocusIntoView(int startOffset) {
+        if (pendingYawFocusRow < 0) return;
+        float rowH = ImGui.getFrameHeightWithSpacing();
+        float top = (pendingYawFocusRow + startOffset) * rowH;
+        float bottom = top + rowH;
+        float scroll = ImGui.getScrollY();
+        float viewportH = ImGui.getWindowHeight();
+        if (top < scroll) {
+            ImGui.setScrollY(top);
+        } else if (bottom > scroll + viewportH) {
+            ImGui.setScrollY(bottom - viewportH);
         }
     }
 

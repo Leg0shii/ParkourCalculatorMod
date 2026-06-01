@@ -2,7 +2,9 @@ package de.legoshi.parkourcalc.fabric.mixin;
 
 import de.legoshi.parkourcalc.fabric.FabricParkourCalculator;
 import imgui.ImGui;
+import imgui.ImGuiIO;
 import imgui.flag.ImGuiKey;
+import imgui.flag.ImGuiPopupFlags;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.Keyboard;
 import net.minecraft.client.input.CharInput;
@@ -31,26 +33,45 @@ public class KeyboardMixin {
 
         int glfwKey = input.key();
 
-        // Allow toggle key to pass through to MC's KeyBinding system.
-        // ESC stays here: handleInput owns it (clear-selection vs close-overlay).
         int toggleCode = KeyBindingHelper.getBoundKeyOf(FabricParkourCalculator.toggleKeyBinding).getCode();
         if (glfwKey == toggleCode) {
             return;
         }
 
-        // Forward key event to ImGui
-        Integer imguiKey = KEY_MAP.get(glfwKey);
-        if (imguiKey != null) {
-            boolean pressed = action == GLFW.GLFW_PRESS || action == GLFW.GLFW_REPEAT;
-            ImGui.getIO().addKeyEvent(imguiKey, pressed);
+        if (glfwKey == GLFW.GLFW_KEY_ESCAPE && action == GLFW.GLFW_PRESS && !imguiConsumesEscape()) {
+            FabricParkourCalculator.closeOverlay();
+            ci.cancel();
+            return;
         }
 
-        // Update modifier states
+        boolean pressed = action == GLFW.GLFW_PRESS || action == GLFW.GLFW_REPEAT;
+
+        if (pressed && FabricParkourCalculator.isEditingYaw()) {
+            boolean shift = (input.modifiers() & GLFW.GLFW_MOD_SHIFT) != 0;
+            if (glfwKey == GLFW.GLFW_KEY_DOWN || (glfwKey == GLFW.GLFW_KEY_TAB && !shift)) {
+                FabricParkourCalculator.navigateYaw(true);
+                ci.cancel();
+                return;
+            }
+            if (glfwKey == GLFW.GLFW_KEY_UP || (glfwKey == GLFW.GLFW_KEY_TAB && shift)) {
+                FabricParkourCalculator.navigateYaw(false);
+                ci.cancel();
+                return;
+            }
+        }
+
+        ImGuiIO io = ImGui.getIO();
+
         int modifiers = input.modifiers();
-        ImGui.getIO().setKeyCtrl((modifiers & GLFW.GLFW_MOD_CONTROL) != 0);
-        ImGui.getIO().setKeyShift((modifiers & GLFW.GLFW_MOD_SHIFT) != 0);
-        ImGui.getIO().setKeyAlt((modifiers & GLFW.GLFW_MOD_ALT) != 0);
-        ImGui.getIO().setKeySuper((modifiers & GLFW.GLFW_MOD_SUPER) != 0);
+        io.addKeyEvent(ImGuiKey.ModCtrl, (modifiers & GLFW.GLFW_MOD_CONTROL) != 0);
+        io.addKeyEvent(ImGuiKey.ModShift, (modifiers & GLFW.GLFW_MOD_SHIFT) != 0);
+        io.addKeyEvent(ImGuiKey.ModAlt, (modifiers & GLFW.GLFW_MOD_ALT) != 0);
+        io.addKeyEvent(ImGuiKey.ModSuper, (modifiers & GLFW.GLFW_MOD_SUPER) != 0);
+
+        Integer imguiKey = KEY_MAP.get(glfwKey);
+        if (imguiKey != null) {
+            io.addKeyEvent(imguiKey, pressed);
+        }
 
         ci.cancel();
     }
@@ -61,6 +82,14 @@ public class KeyboardMixin {
             ImGui.getIO().addInputCharacter(input.codepoint());
             ci.cancel();
         }
+    }
+
+    @Unique
+    private static boolean imguiConsumesEscape() {
+        if (ImGui.getIO().getWantTextInput()) {
+            return true;
+        }
+        return ImGui.isPopupOpen("", ImGuiPopupFlags.AnyPopupId | ImGuiPopupFlags.AnyPopupLevel);
     }
 
     @Unique

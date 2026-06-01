@@ -8,7 +8,6 @@ import de.legoshi.parkourcalc.core.ui.theme.Fonts;
 import de.legoshi.parkourcalc.core.ui.theme.Modal;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import imgui.ImDrawList;
-import imgui.ImFont;
 import imgui.ImGui;
 import imgui.ImGuiIO;
 import imgui.ImVec2;
@@ -131,29 +130,33 @@ public final class MainWindowOverlay implements RenderInterface {
         float padX = ThemeManager.headerTextPadX();
         float gap = ImGui.getStyle().getItemSpacing().x;
         float y = winPos.y + (titleH - fontSize) * 0.5f;
-        ImFont bold = Fonts.boldOrDefault();
-        ImFont base = ImGui.getFont();
 
         dl.pushClipRect(winPos.x, winPos.y, winPos.x + winW, winPos.y + titleH, false);
         float x = winPos.x + padX;
         if (fileMenu.isDirty()) {
-            dl.addText(bold, fontSize, x, y, ThemeManager.warningColor(), DIRTY_MARK);
+            addBoldSpan(dl, x, y, ThemeManager.warningColor(), DIRTY_MARK);
             x += measureBold(DIRTY_MARK) + gap;
         }
         String name = fileMenu.currentName();
         if (name != null) {
-            dl.addText(bold, fontSize, x, y, ThemeManager.textColor(), name);
+            addBoldSpan(dl, x, y, ThemeManager.textColor(), name);
             x += measureBold(name) + gap;
-            dl.addText(base, fontSize, x, y, ThemeManager.textDimColor(), TITLE_SEP);
+            dl.addText(x, y, ThemeManager.textDimColor(), TITLE_SEP);
             x += ImGui.calcTextSize(TITLE_SEP).x + gap;
         }
-        dl.addText(base, fontSize, x, y, ThemeManager.textMutedColor(), APP_NAME);
+        dl.addText(x, y, ThemeManager.textMutedColor(), APP_NAME);
         if (fileMenu.hasOpenTas()) {
             String rows = inputData.size() + " rows";
             float rw = ImGui.calcTextSize(rows).x;
-            dl.addText(base, fontSize, winPos.x + winW - padX - rw, y, ThemeManager.textMutedColor(), rows);
+            dl.addText(winPos.x + winW - padX - rw, y, ThemeManager.textMutedColor(), rows);
         }
         dl.popClipRect();
+    }
+
+    private static void addBoldSpan(ImDrawList dl, float x, float y, int col, String text) {
+        Fonts.pushBold();
+        dl.addText(x, y, col, text);
+        Fonts.popBold();
     }
 
     private static float measureBold(String text) {

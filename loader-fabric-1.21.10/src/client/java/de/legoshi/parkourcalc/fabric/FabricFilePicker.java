@@ -16,13 +16,13 @@ public final class FabricFilePicker implements FilePickerPort {
     public Path pickTasFile() {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             PointerBuffer filters = stack.mallocPointer(1);
-            filters.put(stack.UTF8("*.tas"));
+            filters.put(stack.UTF8("*.json"));
             filters.flip();
             String result = TinyFileDialogs.tinyfd_openFileDialog(
-                    "Import .tas",
+                    "Import .json",
                     null,
                     filters,
-                    "TAS files (*.tas)",
+                    "TAS files (*.json)",
                     false
             );
             return (result == null || result.isEmpty()) ? null : Paths.get(result);

@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.core.ui.theme;
 
 import imgui.ImGui;
 import imgui.ImVec2;
+import imgui.callback.ImGuiInputTextCallback;
 import imgui.flag.ImGuiInputTextFlags;
 import imgui.flag.ImGuiMouseCursor;
 import imgui.flag.ImGuiStyleVar;
@@ -40,6 +41,13 @@ public final class Controls {
     public static boolean tableInputText(String label, ImString holder, float width) {
         beginLabeled(label, width);
         boolean changed = ImGui.inputText(idFor(label), holder, 0);
+        drawFocusRingIfActive();
+        return changed;
+    }
+
+    public static boolean tableInputText(String label, ImString holder, float width, int flags, ImGuiInputTextCallback callback) {
+        beginLabeled(label, width);
+        boolean changed = ImGui.inputText(idFor(label), holder, flags, callback);
         drawFocusRingIfActive();
         return changed;
     }

@@ -83,6 +83,7 @@ public class Forge8ParkourCalculator {
         application.setPlaybackBridge(playbackBridge);
         application.initSettingsStorage(configPath);
         application.setupUi();
+        imguiHost.setEditingYawSupplier(application::isEditingYaw);
 
         toggleKeyBinding = new KeyBinding("key.parkourcalculator.toggle_ui", Keyboard.KEY_G, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(toggleKeyBinding);
@@ -92,7 +93,7 @@ public class Forge8ParkourCalculator {
         ClientRegistry.registerKeyBinding(playbackKeyBinding);
 
         MinecraftForge.EVENT_BUS.register(this);
-        LOG.info("ParkourCalculator init complete; K toggle, P deselect, L playback.");
+        LOG.info("ParkourCalculator init complete. G toggle, L deselect, P playback.");
     }
 
     private boolean wasPlaybackRunning = false;
@@ -215,6 +216,7 @@ public class Forge8ParkourCalculator {
                 playbackKeyBinding.getKeyCode(),
                 imguiHost,
                 application.getSelection(),
+                application,
                 this::togglePlayback,
                 () -> application.setControlPanelOpen(false)
         ));
