@@ -84,11 +84,11 @@ public class Forge12ParkourCalculator {
         application.initSettingsStorage(configPath);
         application.setupUi();
 
-        toggleKeyBinding = new KeyBinding("key.parkourcalculator.toggle_ui", Keyboard.KEY_K, "key.categories.parkourcalculator");
+        toggleKeyBinding = new KeyBinding("key.parkourcalculator.toggle_ui", Keyboard.KEY_G, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(toggleKeyBinding);
-        deselectKeyBinding = new KeyBinding("key.parkourcalculator.deselect_all", Keyboard.KEY_P, "key.categories.parkourcalculator");
+        deselectKeyBinding = new KeyBinding("key.parkourcalculator.deselect_all", Keyboard.KEY_L, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(deselectKeyBinding);
-        playbackKeyBinding = new KeyBinding("key.parkourcalculator.toggle_playback", Keyboard.KEY_L, "key.categories.parkourcalculator");
+        playbackKeyBinding = new KeyBinding("key.parkourcalculator.toggle_playback", Keyboard.KEY_P, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(playbackKeyBinding);
 
         MinecraftForge.EVENT_BUS.register(this);

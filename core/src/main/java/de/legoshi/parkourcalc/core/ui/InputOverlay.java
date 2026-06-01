@@ -33,6 +33,7 @@ public final class InputOverlay {
     private static final String ID_KEY_SUFFIX = "##";
 
     private static final String COL_INDEX = "Tick";
+    private static final String START_LABEL = "Start";
     private static final String COL_YAW = "Yaw";
     private static final String COL_SPEED = "Speed";
     private static final String COL_JUMP_BOOST = "Jump";
@@ -143,7 +144,8 @@ public final class InputOverlay {
     private float indexColumnDataWidth() {
         int maxRowNum = Math.max(1, data.size());
         float scale = uiScale();
-        float textW = ImGui.calcTextSize(String.valueOf(maxRowNum)).x;
+        float textW = Math.max(ImGui.calcTextSize(String.valueOf(maxRowNum)).x,
+                ImGui.calcTextSize(START_LABEL).x);
         float cellPadX = ImGui.getStyle().getCellPadding().x;
         return Math.max(INDEX_DIGIT_WIDTH * scale, textW + 2f * cellPadX + INDEX_DIGIT_SLACK * scale);
     }
@@ -224,14 +226,16 @@ public final class InputOverlay {
         // Fit the table to its rows so the inner column borders stop at the last row
         // instead of extending through empty space below it; fall back to filling the
         // pane (and scrolling) once the rows outgrow the available height.
-        float tableH = data.getRows().isEmpty()
+        boolean hasStart = hasStartRow();
+        int displayRowCount = data.size() + (hasStart ? 1 : 0);
+        float tableH = (data.getRows().isEmpty() && !hasStart)
                 ? avail
-                : Math.min(avail, tableContentHeight(data.size()));
+                : Math.min(avail, tableContentHeight(displayRowCount));
         if (ThemeManager.beginStandardTable(ID_TABLE, columnCount, ImGuiTableFlags.ScrollX, 0f, tableH)) {
             setupColumns(potionColumns);
             renderAllRows(potionColumns);
             ThemeManager.endStandardTable();
-            if (data.getRows().isEmpty()) {
+            if (data.getRows().isEmpty() && !hasStart) {
                 renderEmptyTableHint();
             }
         }
@@ -370,12 +374,15 @@ public final class InputOverlay {
 
         final DragDropState dragDrop = new DragDropState();
 
+        int startOffset = hasStartRow() ? 1 : 0;
         if (selection.consumeScrollRequest() && !selection.isEmpty()) {
             int target = selection.getSelected().iterator().next();
             float rowH = ImGui.getFrameHeightWithSpacing();
             float viewportH = ImGui.getWindowHeight();
-            ImGui.setScrollY(Math.max(0f, target * rowH - viewportH * 0.5f));
+            ImGui.setScrollY(Math.max(0f, (target + startOffset) * rowH - viewportH * 0.5f));
         }
+
+        renderStartRow(potionColumns);
 
         ImGuiListClipper.forEach(rows.size(), new ImListClipperCallback() {
             @Override
@@ -386,6 +393,29 @@ public final class InputOverlay {
 
         renderDropIndicator(drawList, dragDrop);
         applyDragDrop(dragDrop);
+    }
+
+    private boolean hasStartRow() {
+        return boxController != null && boxController.getState(0) != null;
+    }
+
+    /** Start state (states[0]), shown as a disabled, non-selectable anchor row above the editable Tick rows. */
+    private void renderStartRow(boolean potionColumns) {
+        if (!hasStartRow()) return;
+        int columnCount = BASE_COLUMN_COUNT + (potionColumns ? POTION_COLUMN_COUNT : 0);
+        float rowH = ImGui.getFrameHeight() + ImGui.getStyle().getCellPadding().y * 2f;
+        ImGui.tableNextRow(0, rowH);
+        ThemeManager.paintTableRowBg(0);
+
+        ImGui.beginDisabled(true);
+        ImGui.tableNextColumn();
+        ThemeManager.tableLeftmostCellPad();
+        ThemeManager.rightAlignedSelectable("startrow", START_LABEL, false, 0);
+        for (int c = 1; c < columnCount; c++) {
+            ImGui.tableNextColumn();
+        }
+        ThemeManager.tableRightmostCellTrailingPad();
+        ImGui.endDisabled();
     }
 
     private void renderRow(int index, InputRow row, DragDropState dragDrop, boolean potionColumns) {

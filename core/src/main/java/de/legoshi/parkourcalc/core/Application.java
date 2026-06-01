@@ -57,7 +57,8 @@ public final class Application {
         this.mc = mc;
         this.selection = new SelectionManager(mc);
         this.runner = new SimulationRunner(simulator);
-        this.dragController = new BoxDragController(boxController, this::handleStartPositionChange, this::onStartBoxTap);
+        // Start box is the disabled "Start" anchor: draggable to reposition, but not tap-selectable.
+        this.dragController = new BoxDragController(boxController, this::handleStartPositionChange, null);
         this.selectController = new BoxSelectController(boxController, this::commitWorldTap);
         this.yawGizmo = new YawGizmoController(
                 boxController,
@@ -162,12 +163,6 @@ public final class Application {
         if (boxIndex <= 0) return;
         if (boxIndex >= boxController.size()) return;
         selection.handleClick(boxIndex);
-        selection.requestScrollIntoView();
-    }
-
-    private void onStartBoxTap() {
-        if (boxController.size() == 0) return;
-        selection.handleClick(0);
         selection.requestScrollIntoView();
     }
 

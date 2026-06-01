@@ -263,15 +263,16 @@ public final class BoxController {
                                 double camX, double camY, double camZ, double maxDistanceSq) {
         if (positions.isEmpty()) return;
         double half = boxSize * 0.5;
-        for (int i = 0; i < states.size(); i++) {
+        // Arrow at box i is the outgoing facing: states[i+1].yaw is the look direction used
+        // during the tick that leaves box i. The final box has no outgoing tick, so it gets no arrow.
+        for (int i = 0; i + 1 < states.size(); i++) {
             if (!inRange(i, camX, camY, camZ, maxDistanceSq)) continue;
-            TickState s = states.get(i);
             Vec3dCore p = positions.get(i);
             double cx = p.x + half;
             double cy = p.y + half;
             double cz = p.z + half;
 
-            double yawRad = Math.toRadians(s.yaw);
+            double yawRad = Math.toRadians(states.get(i + 1).yaw);
             double fx = -Math.sin(yawRad);
             double fz = Math.cos(yawRad);
 

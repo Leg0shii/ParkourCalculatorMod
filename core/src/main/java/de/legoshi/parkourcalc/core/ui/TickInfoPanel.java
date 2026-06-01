@@ -68,12 +68,15 @@ public final class TickInfoPanel implements RenderInterface {
         TickState cur = states.get(idx);
         TickState prev = idx > 0 ? states.get(idx - 1) : null;
         TickState prev2 = idx > 1 ? states.get(idx - 2) : null;
+        // Facing is an input applied DURING this tick: it lands in states[idx+1].yaw, not the
+        // pre-tick facing carried in (states[idx].yaw). Matches the box's outgoing yaw arrow.
+        float appliedYaw = idx + 1 < states.size() ? states.get(idx + 1).yaw : cur.yaw;
 
-        renderTable(idx, cur, prev, prev2);
+        renderTable(idx, cur, prev, prev2, appliedYaw);
         ImGui.end();
     }
 
-    private void renderTable(int idx, TickState cur, TickState prev, TickState prev2) {
+    private void renderTable(int idx, TickState cur, TickState prev, TickState prev2, float appliedYaw) {
         if (!ThemeManager.beginStandardKeyValueTable(TABLE_ID, 4, 0, 0f, 0f)) {
             return;
         }
@@ -90,8 +93,8 @@ public final class TickInfoPanel implements RenderInterface {
         rowCounter = 0;
 
         rowInt("Tick", idx + 1, "Tick number (1-based), matching the input table's Tick column.");
-        rowNum("Facing (deg)", cur.yaw,
-                "Entity yaw in degrees, MC convention: 0 = +Z, increases CW looking down.");
+        rowNum("Facing (deg)", appliedYaw,
+                "Yaw applied during this tick (drives this tick's movement). MC convention: 0 = +Z, increases CW looking down.");
 
         double speedH = Math.sqrt(cur.velocity.x * cur.velocity.x + cur.velocity.z * cur.velocity.z);
         double speedT = Math.sqrt(cur.velocity.x * cur.velocity.x

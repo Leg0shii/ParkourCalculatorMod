@@ -14,18 +14,13 @@ public final class Settings {
         return 5;                             // 2.5x
     }
 
-    // Render-color defaults sourced from Catppuccin Mocha so they harmonize with
-    // the ImGui chrome in ThemeManager. Users can still customize each one in
-    // Preferences > Render Colors; these only define what they see on first
-    // launch / after Reset All. Alphas preserved from prior defaults for
-    // visibility tuning.
-    private static final float[] DEFAULT_TICK_DEFAULT = {0.729f, 0.761f, 0.871f, 0.50f};        // subtext1   #bac2de
-    private static final float[] DEFAULT_TICK_SELECTED = {0.537f, 0.706f, 0.980f, 0.50f};       // blue       #89b4fa  (matches chrome SELECTED)
-    private static final float[] DEFAULT_TICK_AIR = {0.537f, 0.863f, 0.922f, 0.50f};            // sky        #89dceb
-    private static final float[] DEFAULT_TICK_SNEAK = {0.980f, 0.702f, 0.529f, 0.50f};          // peach      #fab387
-    private static final float[] DEFAULT_TICK_WALL = {0.953f, 0.545f, 0.659f, 0.50f};           // red        #f38ba8
-    private static final float[] DEFAULT_TICK_SOFT_COLLISION = {0.922f, 0.627f, 0.675f, 0.50f}; // maroon     #eba0ac
-    private static final float[] DEFAULT_SUBTICK_PATH = {0.976f, 0.886f, 0.686f, 0.50f};        // yellow     #f9e2af
+    private static final float[] DEFAULT_TICK_DEFAULT = {0.729f, 0.761f, 0.871f, 0.80f};        // subtext1   #bac2de
+    private static final float[] DEFAULT_TICK_SELECTED = {0.537f, 0.706f, 0.980f, 0.80f};       // blue       #89b4fa  (matches chrome SELECTED)
+    private static final float[] DEFAULT_TICK_AIR = {0.537f, 0.863f, 0.922f, 0.80f};            // sky        #89dceb
+    private static final float[] DEFAULT_TICK_SNEAK = {0.980f, 0.702f, 0.529f, 0.80f};          // peach      #fab387
+    private static final float[] DEFAULT_TICK_WALL = {0.953f, 0.545f, 0.659f, 0.80f};           // red        #f38ba8
+    private static final float[] DEFAULT_TICK_SOFT_COLLISION = {0.922f, 0.627f, 0.675f, 0.80f}; // maroon     #eba0ac
+    private static final float[] DEFAULT_SUBTICK_PATH = {0.976f, 0.886f, 0.686f, 0.80f};        // yellow     #f9e2af
     private static final float[] DEFAULT_YAW_ARROW = {0.953f, 0.545f, 0.659f, 1.00f};           // red        #f38ba8
     private static final float[] DEFAULT_YAW_GIZMO_CIRCLE = {0.804f, 0.839f, 0.957f, 0.70f};    // text       #cdd6f4
     private static final float[] DEFAULT_YAW_GIZMO_DIRECTION = {0.976f, 0.886f, 0.686f, 1.00f}; // yellow     #f9e2af
@@ -33,12 +28,15 @@ public final class Settings {
     private static final float[] DEFAULT_HITBOX_SELECTED = {0.651f, 0.890f, 0.631f, 0.80f};     // green      #a6e3a1
     private static final float[] DEFAULT_TICK_GROUND_HIGHLIGHT = {0.729f, 0.761f, 0.871f, 0.30f}; // subtext1 #bac2de (matches tick box default)
 
-    private static final boolean DEFAULT_SHOW_YAW_ARROWS = false;
+    private static final boolean DEFAULT_SHOW_YAW_ARROWS = true;
     private static final boolean DEFAULT_SHOW_HITBOX = false;
     private static final boolean DEFAULT_SHOW_FULL_HITBOX = false;
     private static final boolean DEFAULT_SHOW_SUBTICK = false;
     private static final boolean DEFAULT_SHOW_POTION_COLUMNS = false;
-    private static final boolean DEFAULT_HIGHLIGHT_ON_GROUND_ROWS = true;
+    private static final boolean DEFAULT_HIGHLIGHT_ON_GROUND_ROWS = false;
+
+    private static final boolean DEFAULT_VIEW_TICK_INFO = true;
+    private static final boolean DEFAULT_VIEW_PERF_INFO = false;
 
     private static final float DEFAULT_YAW_FLICK_SPEED = 720.0f;
     public static final float MIN_YAW_FLICK_SPEED = 30.0f;
@@ -78,8 +76,8 @@ public final class Settings {
     public int scaleIndex = AUTO_SCALE_INDEX; // resolved from display on first run; concrete once chosen
 
     public String[] recentFiles = new String[0];
-    public boolean viewTickInfo = false;
-    public boolean viewPerf = false;
+    public boolean viewTickInfo = DEFAULT_VIEW_TICK_INFO;
+    public boolean viewPerf = DEFAULT_VIEW_PERF_INFO;
 
     public void reset() {
         System.arraycopy(DEFAULT_TICK_DEFAULT, 0, tickDefault, 0, 4);
@@ -106,7 +104,7 @@ public final class Settings {
         unlimitedPathRender = DEFAULT_UNLIMITED_PATH_RENDER;
         scaleIndex = DEFAULT_SCALE_INDEX;
         recentFiles = new String[0];
-        viewTickInfo = false;
-        viewPerf = false;
+        viewTickInfo = DEFAULT_VIEW_TICK_INFO;
+        viewPerf = DEFAULT_VIEW_PERF_INFO;
     }
 }
