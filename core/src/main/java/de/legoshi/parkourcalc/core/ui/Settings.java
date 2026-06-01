@@ -14,19 +14,19 @@ public final class Settings {
         return 5;                             // 2.5x
     }
 
-    private static final float[] DEFAULT_TICK_DEFAULT = {0.729f, 0.761f, 0.871f, 0.80f};        // subtext1   #bac2de
-    private static final float[] DEFAULT_TICK_SELECTED = {0.537f, 0.706f, 0.980f, 0.80f};       // blue       #89b4fa  (matches chrome SELECTED)
-    private static final float[] DEFAULT_TICK_AIR = {0.537f, 0.863f, 0.922f, 0.80f};            // sky        #89dceb
-    private static final float[] DEFAULT_TICK_SNEAK = {0.980f, 0.702f, 0.529f, 0.80f};          // peach      #fab387
-    private static final float[] DEFAULT_TICK_WALL = {0.953f, 0.545f, 0.659f, 0.80f};           // red        #f38ba8
-    private static final float[] DEFAULT_TICK_SOFT_COLLISION = {0.922f, 0.627f, 0.675f, 0.80f}; // maroon     #eba0ac
+    private static final float[] DEFAULT_TICK_DEFAULT = {0.949f, 0.957f, 1.000f, 0.50f};        // near-white #f2f4ff
+    private static final float[] DEFAULT_TICK_SELECTED = {0.145f, 0.388f, 0.922f, 0.50f};       // dark blue  #2563eb
+    private static final float[] DEFAULT_TICK_AIR = {0.184f, 0.831f, 0.941f, 0.50f};            // sky        #2fd4f0
+    private static final float[] DEFAULT_TICK_SNEAK = {1.000f, 0.604f, 0.239f, 0.50f};          // orange     #ff9a3d
+    private static final float[] DEFAULT_TICK_WALL = {1.000f, 0.231f, 0.361f, 0.50f};           // red        #ff3b5c
+    private static final float[] DEFAULT_TICK_SOFT_COLLISION = {1.000f, 0.435f, 0.529f, 0.50f}; // rose       #ff6f87
     private static final float[] DEFAULT_SUBTICK_PATH = {0.976f, 0.886f, 0.686f, 0.80f};        // yellow     #f9e2af
-    private static final float[] DEFAULT_YAW_ARROW = {0.953f, 0.545f, 0.659f, 1.00f};           // red        #f38ba8
+    private static final float[] DEFAULT_YAW_ARROW = {0.812f, 0.478f, 0.239f, 1.00f};           // burnt orange #cf7a3d
     private static final float[] DEFAULT_YAW_GIZMO_CIRCLE = {0.804f, 0.839f, 0.957f, 0.70f};    // text       #cdd6f4
     private static final float[] DEFAULT_YAW_GIZMO_DIRECTION = {0.976f, 0.886f, 0.686f, 1.00f}; // yellow     #f9e2af
     private static final float[] DEFAULT_HITBOX_DEFAULT = {0.804f, 0.839f, 0.957f, 0.80f};      // text       #cdd6f4
     private static final float[] DEFAULT_HITBOX_SELECTED = {0.651f, 0.890f, 0.631f, 0.80f};     // green      #a6e3a1
-    private static final float[] DEFAULT_TICK_GROUND_HIGHLIGHT = {0.729f, 0.761f, 0.871f, 0.30f}; // subtext1 #bac2de (matches tick box default)
+    private static final float[] DEFAULT_TICK_GROUND_HIGHLIGHT = {0.541f, 0.576f, 0.941f, 0.22f}; // periwinkle #8a93f0
 
     private static final boolean DEFAULT_SHOW_YAW_ARROWS = true;
     private static final boolean DEFAULT_SHOW_HITBOX = false;
