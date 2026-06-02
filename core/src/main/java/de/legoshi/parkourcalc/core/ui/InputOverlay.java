@@ -10,11 +10,9 @@ import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImDrawList;
 import imgui.ImGui;
-import imgui.ImGuiInputTextCallbackData;
 import imgui.ImGuiListClipper;
 import imgui.ImGuiStyle;
 import imgui.ImVec2;
-import imgui.callback.ImGuiInputTextCallback;
 import imgui.callback.ImListClipperCallback;
 import imgui.flag.*;
 import imgui.type.ImInt;
@@ -78,7 +76,7 @@ public final class InputOverlay {
     private static final String TITLE_CLEAR_CONFIRM = "Clear all rows?";
     private static final String CLEAR_CONFIRM_FMT = "Delete all %d rows? This cannot be undone.";
 
-    private static final String YAW_FORMAT_DISPLAY = "% 12.6f";
+    private static final String YAW_INT_SAMPLE = " -1234";
 
     private static final String DRAG_DROP_TYPE = "INPUT_ROW";
 
@@ -101,20 +99,17 @@ public final class InputOverlay {
 
     private final SelectionManager selection;
     private final KeyDragSelect keyDragSelect = new KeyDragSelect();
-    private final ImString yawInput = new ImString(32);
+    private final java.util.Map<Integer, ImString> yawBuffers = new java.util.HashMap<>();
     private final ImInt rowsToAdd = new ImInt(1);
     private final ImInt ampBuf = new ImInt();
 
     private int draggingRowIndex = -1;
     private int editingYawRow = -1;
     private int pendingYawFocusRow = -1;
-    private int collapseYawSelectionRow = -1;
-    private int collapseYawFramesLeft;
-    private int yawCallbackRow = -1;
-    private int carryYawCursorPos;
 
-    private static final int CALLBACK_ALWAYS = resolveInputTextFlag("CallbackAlways", ImGuiInputTextFlags.CallbackAlways);
-    private static final int COLLAPSE_FRAMES = 4;
+    // ImGuiInputTextFlags values drift between imgui-java 1.86 (Forge) and 1.90 (Fabric) and Java inlines
+    // the 1.86 value at compile time; resolve the running jar's value by name. AutoSelectAll: 16 vs 4096.
+    private static final int AUTO_SELECT_ALL = resolveInputTextFlag("AutoSelectAll", ImGuiInputTextFlags.AutoSelectAll);
 
     private static int resolveInputTextFlag(String name, int fallback) {
         try {
@@ -123,23 +118,6 @@ public final class InputOverlay {
             return fallback;
         }
     }
-
-    private final ImGuiInputTextCallback yawSelectionCallback = new ImGuiInputTextCallback() {
-        @Override
-        public void accept(ImGuiInputTextCallbackData data) {
-            if (yawCallbackRow >= 0 && yawCallbackRow == collapseYawSelectionRow) {
-                int pos = Math.min(carryYawCursorPos, data.getBuf().length());
-                data.setCursorPos(pos);
-                data.setSelectionStart(pos);
-                data.setSelectionEnd(pos);
-                if (--collapseYawFramesLeft <= 0) {
-                    collapseYawSelectionRow = -1;
-                }
-            } else {
-                carryYawCursorPos = data.getCursorPos();
-            }
-        }
-    };
 
     private Supplier<Float> footerHeightProvider = () -> 0f;
 
@@ -593,28 +571,37 @@ public final class InputOverlay {
         ImGui.tableNextColumn();
 
         Float yaw = row.getYaw();
-
-        if (yaw == null) {
-            yawInput.set("");
-        } else {
-            yawInput.set(String.format(Locale.ROOT, YAW_FORMAT_DISPLAY, yaw));
-        }
+        boolean populated = yaw != null;
+        String text = populated ? formatYaw(yaw) : "";
 
         boolean selectedRow = selection.isSelected(rowIndex);
-        boolean populated = yaw != null;
+        boolean editing = editingYawRow == rowIndex;
+        // Per-row buffer so a row can never display a neighbor's value; while editing, let ImGui own it
+        // (overwriting every frame would wipe the cursor).
+        ImString buf = yawBufferFor(rowIndex);
+        if (!editing) buf.set(text);
         if (selectedRow) ThemeManager.pushSelectedFrameBg();
         if (populated) ThemeManager.pushPopulatedFrameBorder();
+
         float inputW = yawInputWidth();
         ThemeManager.centerNextItem(inputW);
         if (pendingYawFocusRow == rowIndex) {
-            ImGui.setKeyboardFocusHere();
-            collapseYawSelectionRow = rowIndex; // keyboard focus auto-selects all; collapse it to a cursor instead
-            collapseYawFramesLeft = COLLAPSE_FRAMES;
+            ImGui.setKeyboardFocusHere(); // auto-selects all on focus: the highlight we want on navigation
             pendingYawFocusRow = -1;
         }
-        yawCallbackRow = rowIndex;
-        boolean changed = Controls.tableInputText(ID_YAW_INPUT, yawInput, inputW,
-                CALLBACK_ALWAYS, yawSelectionCallback);
+        // Uniform box for every row. While resting, hide the (left-aligned) edit text and paint a
+        // dot-aligned copy on top; the edit buffer itself stays clean so Left-arrow hits the first digit.
+        boolean drawAligned = populated && !editing;
+        boolean editFrame = editing && !selectedRow; // dark-gray bg behind the focused number; selected rows keep their accent
+        if (editFrame) ThemeManager.pushEditingFrameBg();
+        if (drawAligned) ImGui.pushStyleColor(ImGuiCol.Text, 0);
+        boolean changed = Controls.tableInputText(ID_YAW_INPUT, buf, inputW, AUTO_SELECT_ALL);
+        if (drawAligned) {
+            ImGui.popStyleColor();
+            int textCol = selectedRow ? ThemeManager.selectedItemTextColor() : ThemeManager.textColor();
+            drawDotAlignedYaw(text, textCol);
+        }
+        if (editFrame) ThemeManager.popEditingFrameBg();
         if (ImGui.isItemActivated()) {
             editingYawRow = rowIndex;
         }
@@ -625,9 +612,41 @@ public final class InputOverlay {
         if (selectedRow) ThemeManager.popSelectedFrameBg();
 
         if (changed) {
-            parseAndSetYaw(row);
+            parseAndSetYaw(row, buf);
             notifyChange(rowIndex);
         }
+    }
+
+    private ImString yawBufferFor(int rowIndex) {
+        ImString s = yawBuffers.get(rowIndex);
+        if (s == null) {
+            s = new ImString(32);
+            yawBuffers.put(rowIndex, s);
+        }
+        return s;
+    }
+
+    // Draws the resting value so its decimal point sits at a fixed column (integer part right-aligned).
+    private void drawDotAlignedYaw(String text, int color) {
+        ImVec2 min = ImGui.getItemRectMin();
+        float framePadX = ImGui.getStyle().getFramePadding().x;
+        float framePadY = ImGui.getStyle().getFramePadding().y;
+        int dot = text.indexOf('.');
+        String intPart = dot >= 0 ? text.substring(0, dot) : text;
+        float refIntW = ImGui.calcTextSize(YAW_INT_SAMPLE).x;
+        float intW = ImGui.calcTextSize(intPart).x;
+        float x = min.x + framePadX + Math.max(0f, refIntW - intW);
+        float y = min.y + framePadY;
+        ImGui.getWindowDrawList().addText(x, y, color, text);
+    }
+
+    private static String formatYaw(float yaw) {
+        String s = String.format(Locale.ROOT, "%.6f", yaw);
+        int dot = s.indexOf('.');
+        if (dot < 0) return s + ".0"; // %.6f always has a dot; defensive
+        int end = s.length();
+        while (end > dot + 2 && s.charAt(end - 1) == '0') end--; // keep one decimal: 90.000000 -> 90.0
+        return s.substring(0, end);
     }
 
     public boolean isEditingYaw() {
@@ -708,8 +727,8 @@ public final class InputOverlay {
         }
     }
 
-    private void parseAndSetYaw(InputRow row) {
-        String text = yawInput.get().trim();
+    private void parseAndSetYaw(InputRow row, ImString buf) {
+        String text = buf.get().trim();
         if (text.isEmpty()) {
             row.setYaw(null);
         } else {

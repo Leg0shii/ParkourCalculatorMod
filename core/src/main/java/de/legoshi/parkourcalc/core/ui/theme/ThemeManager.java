@@ -28,6 +28,7 @@ public final class ThemeManager {
     private static final float[] ACCENT       = rgb(0x89, 0xb4, 0xfa, 1.00f);
     private static final float[] ACCENT_DIM   = rgb(0x89, 0xb4, 0xfa, 0.30f);
     private static final float[] SELECTED     = rgb(0x89, 0xb4, 0xfa, 1.00f);
+    private static final float[] EDITING_FRAME = rgb(0x46, 0x48, 0x54, 1.00f); // field bg while editing, just shy of the default active frame (0x4e5166)
     private static final float[] WARNING      = rgb(0xf9, 0xe2, 0xaf, 1.00f);
     private static final float[] DANGER       = rgb(0xf3, 0x8b, 0xa8, 1.00f);
     private static final float[] OK           = rgb(0xa6, 0xe3, 0xa1, 1.00f);
@@ -143,7 +144,7 @@ public final class ThemeManager {
         setColor(ImGuiCol.TableHeaderBg, BG_DARK);
         setColor(ImGuiCol.TableBorderStrong, BORDER);
         setColor(ImGuiCol.TableBorderLight, BORDER);
-        setColor(ImGuiCol.TextSelectedBg, ACCENT_DIM);
+        setColorByName("TextSelectedBg", ImGuiCol.TextSelectedBg, ACCENT_DIM); // slot 49 (1.86) vs 51 (1.90)
         setColor(ImGuiCol.DragDropTarget, ACCENT);
         setColor(ImGuiCol.NavHighlight, FOCUS);
 
@@ -524,6 +525,17 @@ public final class ThemeManager {
         ImGui.popStyleColor(4);
     }
 
+    /** Dark gray field background while editing, so the light number reads on a neutral (non-blue) field. */
+    public static void pushEditingFrameBg() {
+        ImGui.pushStyleColor(ImGuiCol.FrameBg, EDITING_FRAME[0], EDITING_FRAME[1], EDITING_FRAME[2], EDITING_FRAME[3]);
+        ImGui.pushStyleColor(ImGuiCol.FrameBgHovered, EDITING_FRAME[0], EDITING_FRAME[1], EDITING_FRAME[2], EDITING_FRAME[3]);
+        ImGui.pushStyleColor(ImGuiCol.FrameBgActive, EDITING_FRAME[0], EDITING_FRAME[1], EDITING_FRAME[2], EDITING_FRAME[3]);
+    }
+
+    public static void popEditingFrameBg() {
+        ImGui.popStyleColor(3);
+    }
+
     public static void pushPopulatedFrameBorder() {
         ImGui.pushStyleColor(ImGuiCol.Border, PANEL_ACTIVE[0], PANEL_ACTIVE[1], PANEL_ACTIVE[2], PANEL_ACTIVE[3]);
     }
@@ -551,6 +563,11 @@ public final class ThemeManager {
 
     public static int textColor() {
         return u32(TEXT);
+    }
+
+    /** Text color for an item drawn over a selected (bright accent) row; matches pushSelectedFrameBg. */
+    public static int selectedItemTextColor() {
+        return u32(BG);
     }
 
     public static int tableCellText(boolean rowIsSelected) {
@@ -664,5 +681,16 @@ public final class ThemeManager {
 
     private static void setColor(int idx, float[] rgba) {
         ImGui.getStyle().setColor(idx, rgba[0], rgba[1], rgba[2], rgba[3]);
+    }
+
+    // ImGuiCol slots drift between imgui-java 1.86 (Forge) and 1.90 (Fabric); core inlines 1.86's value at
+    // compile time, so for a drifted slot we resolve the real index from the loaded jar by name at runtime.
+    private static void setColorByName(String name, int fallbackIdx, float[] rgba) {
+        int idx = fallbackIdx;
+        try {
+            idx = ImGuiCol.class.getField(name).getInt(null);
+        } catch (ReflectiveOperationException ignored) {
+        }
+        setColor(idx, rgba);
     }
 }
