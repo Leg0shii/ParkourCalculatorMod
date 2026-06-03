@@ -47,8 +47,7 @@ public final class Forge8CachedBoxGeometry {
     private int lastBakeVertices;
     private Set<Integer> bakedSelection = new HashSet<Integer>();
 
-    public void ensureBuilt(BoxController boxController, int structuralHash, Set<Integer> selection,
-                            PathGeometrySource source, SelectionPatchSpec patch) {
+    public void ensureBuilt(BoxController boxController, int structuralHash, Set<Integer> selection, PathGeometrySource source, SelectionPatchSpec patch) {
         long rev = boxController.getGeometryRev();
         if (built && rev == lastGeometryRev && structuralHash == lastStructuralHash) {
             if (!selection.equals(bakedSelection)) {
@@ -127,9 +126,8 @@ public final class Forge8CachedBoxGeometry {
         final int faceArgb = patch.facePicker.argbFor(i, state);
         writeVerts(faceVbo, PathVertexLayout.faceMainOffset(i), GL11.GL_TRIANGLES, BoxRenderer.Mode.FACES,
                 PathVertexLayout.FACE_VERTS_PER_BOX,
-                new Consumer<BoxRenderer>() {
-                    public void accept(BoxRenderer r) { r.drawBox(boxController.getTickAabb(i), faceArgb); }
-                });
+                r -> r.drawBox(boxController.getTickAabb(i), faceArgb)
+        );
 
         if (hitboxEdges != 0) {
             int offset = PathVertexLayout.hitboxRegionBase(boxCount) + hitboxStarts[i];
@@ -137,27 +135,24 @@ public final class Forge8CachedBoxGeometry {
             final int hitboxArgb = patch.hitboxPicker.argbFor(i, state);
             final boolean full = patch.showFullHitbox;
             writeVerts(faceVbo, offset, GL11.GL_TRIANGLES, BoxRenderer.Mode.FACES, count,
-                    new Consumer<BoxRenderer>() {
-                        public void accept(BoxRenderer r) {
-                            if (full) {
-                                boxController.emitHitboxFullWireframeAt(r, hitboxArgb, useSubtick, i);
-                            } else {
-                                boxController.emitHitboxFloorOutlineAt(r, hitboxArgb, useSubtick, i);
-                            }
+                    r -> {
+                        if (full) {
+                            boxController.emitHitboxFullWireframeAt(r, hitboxArgb, useSubtick, i);
+                        } else {
+                            boxController.emitHitboxFloorOutlineAt(r, hitboxArgb, useSubtick, i);
                         }
-                    });
+                    }
+            );
         }
 
         final int lineArgb = patch.linePicker.argbFor(i, state);
         writeVerts(lineVbo, PathVertexLayout.lineMainOffset(i), GL11.GL_LINES, BoxRenderer.Mode.LINES,
                 PathVertexLayout.LINE_VERTS_PER_BOX,
-                new Consumer<BoxRenderer>() {
-                    public void accept(BoxRenderer r) { r.drawBox(boxController.getTickAabb(i), lineArgb); }
-                });
+                r -> r.drawBox(boxController.getTickAabb(i), lineArgb)
+        );
     }
 
-    private void writeVerts(VertexBuffer vbo, int globalVertexOffset, int glMode, BoxRenderer.Mode mode,
-                            int vertexCount, Consumer<BoxRenderer> emit) {
+    private void writeVerts(VertexBuffer vbo, int globalVertexOffset, int glMode, BoxRenderer.Mode mode,  int vertexCount, Consumer<BoxRenderer> emit) {
         if (vbo == null || vertexCount == 0) return;
         WorldRenderer builder = new WorldRenderer(vertexCount * INTS_PER_VERTEX + INTS_PER_VERTEX);
         builder.begin(glMode, DefaultVertexFormats.POSITION_COLOR);
@@ -176,11 +171,9 @@ public final class Forge8CachedBoxGeometry {
         for (int k = 0; k + 1 < runs.length; k += 2) {
             int a = runs[k];
             int b = runs[k + 1];
-            GL11.glDrawArrays(GL11.GL_TRIANGLES, PathVertexLayout.faceMainOffset(a),
-                    (b - a) * PathVertexLayout.FACE_VERTS_PER_BOX);
+            GL11.glDrawArrays(GL11.GL_TRIANGLES, PathVertexLayout.faceMainOffset(a), (b - a) * PathVertexLayout.FACE_VERTS_PER_BOX);
             if (hitboxEdges != 0) {
-                GL11.glDrawArrays(GL11.GL_TRIANGLES, hitboxBase + hitboxStarts[a],
-                        hitboxStarts[b] - hitboxStarts[a]);
+                GL11.glDrawArrays(GL11.GL_TRIANGLES, hitboxBase + hitboxStarts[a], hitboxStarts[b] - hitboxStarts[a]);
             }
             if (arrowBase < faceTotal) {
                 int arrowEnd = Math.min(b, boxCount - 1);
@@ -200,11 +193,9 @@ public final class Forge8CachedBoxGeometry {
         for (int k = 0; k + 1 < runs.length; k += 2) {
             int a = runs[k];
             int b = runs[k + 1];
-            GL11.glDrawArrays(GL11.GL_LINES, PathVertexLayout.lineMainOffset(a),
-                    (b - a) * PathVertexLayout.LINE_VERTS_PER_BOX);
+            GL11.glDrawArrays(GL11.GL_LINES, PathVertexLayout.lineMainOffset(a), (b - a) * PathVertexLayout.LINE_VERTS_PER_BOX);
             if (hasSubtick) {
-                GL11.glDrawArrays(GL11.GL_LINES, lineMainTotal + subtickStarts[a],
-                        subtickStarts[b] - subtickStarts[a]);
+                GL11.glDrawArrays(GL11.GL_LINES, lineMainTotal + subtickStarts[a], subtickStarts[b] - subtickStarts[a]);
             }
         }
         endArrays(lineVbo);

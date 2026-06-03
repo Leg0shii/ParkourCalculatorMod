@@ -58,16 +58,11 @@ public final class PerfOverlay implements RenderInterface {
             int fixed = ImGuiTableColumnFlags.WidthFixed;
             // Section: numeric padding plus the leftmost column's leading-dummy
             // reservation, so the column allocation matches what tableLeftmostCellPad consumes.
-            ImGui.tableSetupColumn("Section", fixed,
-                    ThemeManager.tableNumericColumnWidth("Section", maxSectionW) + ThemeManager.tableEdgeCellInset());
-            ImGui.tableSetupColumn("last us", fixed,
-                    ThemeManager.tableNumericColumnWidth("last us", maxLastW));
-            ImGui.tableSetupColumn("ema us", fixed,
-                    ThemeManager.tableNumericColumnWidth("ema us", maxEmaW));
-            ImGui.tableSetupColumn("max us", fixed,
-                    ThemeManager.tableNumericColumnWidth("max us", maxMaxW));
-            ImGui.tableSetupColumn("n/frame", fixed,
-                    ThemeManager.tableRightmostColumnWidth("n/frame", maxNW, ThemeManager.tableFixedScrollbarSlack()));
+            ImGui.tableSetupColumn("Section", fixed, ThemeManager.tableNumericColumnWidth("Section", maxSectionW) + ThemeManager.tableEdgeCellInset());
+            ImGui.tableSetupColumn("last us", fixed, ThemeManager.tableNumericColumnWidth("last us", maxLastW));
+            ImGui.tableSetupColumn("ema us", fixed, ThemeManager.tableNumericColumnWidth("ema us", maxEmaW));
+            ImGui.tableSetupColumn("max us", fixed, ThemeManager.tableNumericColumnWidth("max us", maxMaxW));
+            ImGui.tableSetupColumn("n/frame", fixed, ThemeManager.tableRightmostColumnWidth("n/frame", maxNW, ThemeManager.tableFixedScrollbarSlack()));
             renderHeader();
 
             int rowIndex = 0;

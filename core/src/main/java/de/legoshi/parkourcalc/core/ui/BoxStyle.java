@@ -12,6 +12,23 @@ public final class BoxStyle {
     /** Shrunk when the subtick path is visible, so the line dominates. */
     public static final double BOX_SIZE_SUBTICK = 0.05;
 
+    /**
+     * Wireframe line thickness in pixels. The Forge loaders pass this to
+     * GL11.glLineWidth before the LINES pass; Fabric draws lines through a
+     * DrawMode.DEBUG_LINES pipeline that's always 1px regardless of this
+     * value. So this is effectively the Forge knob; drivers that ignore
+     * glLineWidth > 1.0F (most desktop GPUs) will render Fabric and Forge
+     * at the same 1px width.
+     */
+    public static final float LINE_WIDTH = 3.0F;
+
+    public static final double HITBOX_HALF_WIDTH = 0.3;
+    public static final double HITBOX_HEIGHT_STANDING = 1.8;
+    public static final double HITBOX_HEIGHT_SNEAKING = 1.5;
+
+    /** Hitbox edges render as thin world-space boxes (glLineWidth > 1 is ignored by most GPUs and by Fabric's pipeline). */
+    public static final double HITBOX_EDGE_THICKNESS = 0.025;
+
     public static double tickBoxSize(Settings settings) {
         return settings.showSubtick ? BOX_SIZE_SUBTICK : BOX_SIZE;
     }
@@ -47,19 +64,8 @@ public final class BoxStyle {
         double dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
         double r = dist * 0.10;
         if (r < 0.6) return 0.6;
-        if (r > 3.5) return 3.5;
-        return r;
+        return Math.min(r, 3.5);
     }
-
-    /**
-     * Wireframe line thickness in pixels. The Forge loaders pass this to
-     * GL11.glLineWidth before the LINES pass; Fabric draws lines through a
-     * DrawMode.DEBUG_LINES pipeline that's always 1px regardless of this
-     * value. So this is effectively the Forge knob; drivers that ignore
-     * glLineWidth > 1.0F (most desktop GPUs) will render Fabric and Forge
-     * at the same 1px width.
-     */
-    public static final float LINE_WIDTH = 3.0F;
 
     /** Packs four normalized [0,1] color components into an ARGB int. */
     public static int toArgb(float r, float g, float b, float a) {
@@ -80,13 +86,6 @@ public final class BoxStyle {
         float[] c = pickChannel(settings, state, selected);
         return toArgb(c[0], c[1], c[2], 1.0f);
     }
-
-    public static final double HITBOX_HALF_WIDTH = 0.3;
-    public static final double HITBOX_HEIGHT_STANDING = 1.8;
-    public static final double HITBOX_HEIGHT_SNEAKING = 1.5;
-
-    /** Hitbox edges render as thin world-space boxes (glLineWidth > 1 is ignored by most GPUs and by Fabric's pipeline). */
-    public static final double HITBOX_EDGE_THICKNESS = 0.025;
 
     /** {@code position} is the entity center-bottom (MC convention). */
     public static AABB hitboxAabbAt(Vec3dCore position, boolean sneaking) {
@@ -117,6 +116,4 @@ public final class BoxStyle {
         return Math.max(0, Math.min(255, Math.round(v * 255)));
     }
 
-    private BoxStyle() {
-    }
 }

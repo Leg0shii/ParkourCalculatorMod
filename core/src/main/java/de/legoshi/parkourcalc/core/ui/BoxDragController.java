@@ -28,16 +28,13 @@ public final class BoxDragController {
     private boolean engaged = false;
     private DragState dragState = null;
 
-    public BoxDragController(BoxController boxController,
-                             Consumer<Vec3dCore> onPositionChange,
-                             Runnable onStartBoxTap) {
+    public BoxDragController(BoxController boxController, Consumer<Vec3dCore> onPositionChange, Runnable onStartBoxTap) {
         this.boxController = boxController;
         this.onPositionChange = onPositionChange;
         this.onStartBoxTap = onStartBoxTap;
     }
 
-    public void tick(Vec3dCore rayOrigin, Vec3dCore rayDirection, boolean mousePressed,
-                     double cursorScreenX, double cursorScreenY, boolean uiFocused) {
+    public void tick(Vec3dCore rayOrigin, Vec3dCore rayDirection, boolean mousePressed, double cursorScreenX, double cursorScreenY, boolean uiFocused) {
         if (uiFocused) {
             resetState();
             wasMousePressed = false;
@@ -86,13 +83,13 @@ public final class BoxDragController {
     public boolean isCursorOverStartBox(Vec3dCore rayOrigin, Vec3dCore rayDirection) {
         AABB first = boxController.getFirst();
         if (first == null) return false;
-        return rayHitsAabb(rayOrigin, rayDirection, expand(first, EPS), PICK_REACH);
+        return rayHitsAabb(rayOrigin, rayDirection, expand(first));
     }
 
     private void tryStartDrag(Vec3dCore origin, Vec3dCore direction) {
         AABB first = boxController.getFirst();
         if (first == null) return;
-        if (!rayHitsAabb(origin, direction, expand(first, EPS), PICK_REACH)) return;
+        if (!rayHitsAabb(origin, direction, expand(first))) return;
 
         Vec3dCore cursorOnPlane = projectCursorToPlane(origin, direction, first.min.y);
         if (cursorOnPlane == null) return;
@@ -122,10 +119,10 @@ public final class BoxDragController {
         dragState.lastEmittedPos = newPos;
     }
 
-    private static AABB expand(AABB box, double e) {
+    private static AABB expand(AABB box) {
         return new AABB(
-                new Vec3dCore(box.min.x - e, box.min.y - e, box.min.z - e),
-                new Vec3dCore(box.max.x + e, box.max.y + e, box.max.z + e)
+                new Vec3dCore(box.min.x - BoxDragController.EPS, box.min.y - BoxDragController.EPS, box.min.z - BoxDragController.EPS),
+                new Vec3dCore(box.max.x + BoxDragController.EPS, box.max.y + BoxDragController.EPS, box.max.z + BoxDragController.EPS)
         );
     }
 
@@ -136,9 +133,9 @@ public final class BoxDragController {
         return new Vec3dCore(origin.x + direction.x * t, origin.y + direction.y * t, origin.z + direction.z * t);
     }
 
-    private static boolean rayHitsAabb(Vec3dCore o, Vec3dCore d, AABB box, double maxT) {
+    private static boolean rayHitsAabb(Vec3dCore o, Vec3dCore d, AABB box) {
         double tmin = 0.0;
-        double tmax = maxT;
+        double tmax = BoxDragController.PICK_REACH;
 
         double[] xRange = slab(o.x, d.x, box.min.x, box.max.x);
         if (xRange == null) return false;
@@ -177,8 +174,7 @@ public final class BoxDragController {
         final double startCursorZ;
         Vec3dCore lastEmittedPos;
 
-        DragState(double planeY, double startBoxX, double startBoxZ, double startCursorX, double startCursorZ,
-                  Vec3dCore initialBoxPos) {
+        DragState(double planeY, double startBoxX, double startBoxZ, double startCursorX, double startCursorZ, Vec3dCore initialBoxPos) {
             this.planeY = planeY;
             this.startBoxX = startBoxX;
             this.startBoxZ = startBoxZ;

@@ -45,9 +45,7 @@ public final class BakingBoxRenderer implements BoxRenderer {
     }
 
     @Override
-    public void drawTriangle(double x1, double y1, double z1,
-                             double x2, double y2, double z2,
-                             double x3, double y3, double z3, int argb) {
+    public void drawTriangle(double x1, double y1, double z1, double x2, double y2, double z2, double x3, double y3, double z3, int argb) {
         if (mode != Mode.FACES) return;
         sink.beginPrimitive(3);
         vertexAbs(x1, y1, z1, argb);
@@ -99,9 +97,7 @@ public final class BakingBoxRenderer implements BoxRenderer {
         edge(x0, y0, z1, x0, y1, z1, argb);
     }
 
-    private void tri(float ax, float ay, float az,
-                     float bx, float by, float bz,
-                     float cx, float cy, float cz, int argb) {
+    private void tri(float ax, float ay, float az, float bx, float by, float bz, float cx, float cy, float cz, int argb) {
         sink.beginPrimitive(3);
         sink.vertex(ax, ay, az, argb);
         sink.vertex(bx, by, bz, argb);

@@ -49,16 +49,12 @@ public final class BoxGeometry {
         quad(x1, y0, z0, x1, y1, z0, x1, y1, z1, x1, y0, z1, argb, out);
     }
 
-    private static void edge(double ax, double ay, double az,
-                             double bx, double by, double bz, int argb, VertexEmitter out) {
+    private static void edge(double ax, double ay, double az, double bx, double by, double bz, int argb, VertexEmitter out) {
         out.emit(ax, ay, az, argb);
         out.emit(bx, by, bz, argb);
     }
 
-    private static void quad(double ax, double ay, double az,
-                             double bx, double by, double bz,
-                             double cx, double cy, double cz,
-                             double dx, double dy, double dz, int argb, VertexEmitter out) {
+    private static void quad(double ax, double ay, double az, double bx, double by, double bz, double cx, double cy, double cz, double dx, double dy, double dz, int argb, VertexEmitter out) {
         out.emit(ax, ay, az, argb);
         out.emit(bx, by, bz, argb);
         out.emit(cx, cy, cz, argb);

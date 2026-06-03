@@ -13,12 +13,9 @@ public final class OsSystemBridge implements SystemBridgePort {
     @Override
     public void openFolder(Path folder) {
         if (folder == null) return;
-        runAsync(new Runnable() {
-            @Override
-            public void run() {
-                if (!openFolderNow(folder)) {
-                    System.err.println("[ParkourCalculator] Failed to open folder: " + folder);
-                }
+        runAsync(() -> {
+            if (!openFolderNow(folder)) {
+                System.err.println("[ParkourCalculator] Failed to open folder: " + folder);
             }
         });
     }
@@ -26,12 +23,9 @@ public final class OsSystemBridge implements SystemBridgePort {
     @Override
     public void openUrl(final String url) {
         if (url == null || url.isEmpty()) return;
-        runAsync(new Runnable() {
-            @Override
-            public void run() {
-                if (!openUrlNow(url)) {
-                    System.err.println("[ParkourCalculator] Failed to open URL: " + url);
-                }
+        runAsync(() -> {
+            if (!openUrlNow(url)) {
+                System.err.println("[ParkourCalculator] Failed to open URL: " + url);
             }
         });
     }

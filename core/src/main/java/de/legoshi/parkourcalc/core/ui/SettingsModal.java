@@ -9,6 +9,8 @@ import imgui.flag.ImGuiColorEditFlags;
 import imgui.flag.ImGuiTableColumnFlags;
 import imgui.type.ImInt;
 
+import java.util.function.Consumer;
+
 /** Tabbed Preferences modal. */
 public final class SettingsModal {
 
@@ -130,8 +132,7 @@ public final class SettingsModal {
             row("Scrollbar thickness", () -> {
                 scrollbarSizeBuf[0] = settings.scrollbarSize;
                 ImGui.setNextItemWidth(-1);
-                if (Controls.sliderFloat("##scrollbar_size", scrollbarSizeBuf,
-                        Settings.MIN_SCROLLBAR_SIZE, Settings.MAX_SCROLLBAR_SIZE, "%.0f px")) {
+                if (Controls.sliderFloat("##scrollbar_size", scrollbarSizeBuf, Settings.MIN_SCROLLBAR_SIZE, Settings.MAX_SCROLLBAR_SIZE, "%.0f px")) {
                     settings.scrollbarSize = scrollbarSizeBuf[0];
                     ThemeManager.setScrollbarMetrics(settings.scrollbarSize, settings.scrollbarGrabMinSize);
                 }
@@ -141,8 +142,7 @@ public final class SettingsModal {
             row("Scrollbar grab length", () -> {
                 scrollbarGrabBuf[0] = settings.scrollbarGrabMinSize;
                 ImGui.setNextItemWidth(-1);
-                if (Controls.sliderFloat("##scrollbar_grab", scrollbarGrabBuf,
-                        Settings.MIN_SCROLLBAR_GRAB_MIN_SIZE, Settings.MAX_SCROLLBAR_GRAB_MIN_SIZE, "%.0f px")) {
+                if (Controls.sliderFloat("##scrollbar_grab", scrollbarGrabBuf, Settings.MIN_SCROLLBAR_GRAB_MIN_SIZE, Settings.MAX_SCROLLBAR_GRAB_MIN_SIZE, "%.0f px")) {
                     settings.scrollbarGrabMinSize = scrollbarGrabBuf[0];
                     ThemeManager.setScrollbarMetrics(settings.scrollbarSize, settings.scrollbarGrabMinSize);
                 }
@@ -155,10 +155,8 @@ public final class SettingsModal {
         ThemeManager.sectionSpacing();
         sectionHeader("Keep open when UI is closed");
         if (beginLayoutTable("##settings_panels")) {
-            checkboxRow("Input table", "##keep_input_table", settings.keepInputTableOpen,
-                    TT_KEEP_INPUT_TABLE, v -> settings.keepInputTableOpen = v);
-            checkboxRow("Tick Info", "##keep_tick_info", settings.keepTickInfoOpen,
-                    TT_KEEP_TICK_INFO, v -> settings.keepTickInfoOpen = v);
+            checkboxRow("Input table", "##keep_input_table", settings.keepInputTableOpen, TT_KEEP_INPUT_TABLE, v -> settings.keepInputTableOpen = v);
+            checkboxRow("Tick Info", "##keep_tick_info", settings.keepTickInfoOpen, TT_KEEP_TICK_INFO, v -> settings.keepTickInfoOpen = v);
             ThemeManager.endStandardFormTable();
         }
     }
@@ -167,14 +165,10 @@ public final class SettingsModal {
         ThemeManager.sectionSpacing();
         sectionHeader("In-world overlays");
         if (beginLayoutTable("##settings_overlays")) {
-            checkboxRow("Show yaw arrows", "##show_yaw_arrows", settings.showYawArrows, TT_YAW_ARROWS,
-                    v -> settings.showYawArrows = v);
-            checkboxRow("Show hitbox", "##show_hitbox", settings.showHitbox, TT_HITBOX,
-                    v -> settings.showHitbox = v);
-            checkboxRow("Show full hitbox", "##show_full_hitbox", settings.showFullHitbox, TT_FULL_HITBOX,
-                    v -> settings.showFullHitbox = v);
-            checkboxRow("Subtick visualization", "##show_subtick", settings.showSubtick, TT_SUBTICK,
-                    v -> settings.showSubtick = v);
+            checkboxRow("Show yaw arrows", "##show_yaw_arrows", settings.showYawArrows, TT_YAW_ARROWS, v -> settings.showYawArrows = v);
+            checkboxRow("Show hitbox", "##show_hitbox", settings.showHitbox, TT_HITBOX, v -> settings.showHitbox = v);
+            checkboxRow("Show full hitbox", "##show_full_hitbox", settings.showFullHitbox, TT_FULL_HITBOX, v -> settings.showFullHitbox = v);
+            checkboxRow("Subtick visualization", "##show_subtick", settings.showSubtick, TT_SUBTICK, v -> settings.showSubtick = v);
             ThemeManager.endStandardFormTable();
         }
 
@@ -184,25 +178,21 @@ public final class SettingsModal {
             row("Path render distance", () -> {
                 pathRenderDistanceBuf[0] = settings.pathRenderDistance;
                 ImGui.setNextItemWidth(-1);
-                if (Controls.sliderInt("##path_render_distance", pathRenderDistanceBuf,
-                        Settings.MIN_PATH_RENDER_DISTANCE, Settings.MAX_PATH_RENDER_DISTANCE, "%d blocks")) {
+                if (Controls.sliderInt("##path_render_distance", pathRenderDistanceBuf, Settings.MIN_PATH_RENDER_DISTANCE, Settings.MAX_PATH_RENDER_DISTANCE, "%d blocks")) {
                     settings.pathRenderDistance = pathRenderDistanceBuf[0];
                 }
                 if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
                 tooltipForLastItem(TT_PATH_DIST);
             });
-            checkboxRow("Unlimited path render distance", "##unlimited_path", settings.unlimitedPathRender,
-                    TT_PATH_UNLIMITED, v -> settings.unlimitedPathRender = v);
+            checkboxRow("Unlimited path render distance", "##unlimited_path", settings.unlimitedPathRender, TT_PATH_UNLIMITED, v -> settings.unlimitedPathRender = v);
             ThemeManager.endStandardFormTable();
         }
 
         ThemeManager.sectionSpacing();
         sectionHeader("Editor table");
         if (beginLayoutTable("##settings_editor")) {
-            checkboxRow("Show potion effect columns", "##show_potion", settings.showPotionColumns, TT_POTION_COLS,
-                    v -> settings.showPotionColumns = v);
-            checkboxRow("Highlight on-ground ticks", "##highlight_on_ground", settings.highlightOnGroundRows, TT_GROUND_HIGHLIGHT,
-                    v -> settings.highlightOnGroundRows = v);
+            checkboxRow("Show potion effect columns", "##show_potion", settings.showPotionColumns, TT_POTION_COLS, v -> settings.showPotionColumns = v);
+            checkboxRow("Highlight on-ground ticks", "##highlight_on_ground", settings.highlightOnGroundRows, TT_GROUND_HIGHLIGHT, v -> settings.highlightOnGroundRows = v);
             ThemeManager.endStandardFormTable();
         }
     }
@@ -214,8 +204,7 @@ public final class SettingsModal {
             row("Max yaw turn rate", () -> {
                 yawTurnCapBuf[0] = settings.yawFlickSpeed;
                 ImGui.setNextItemWidth(-1);
-                if (Controls.sliderFloat("##yaw_turn_cap", yawTurnCapBuf,
-                        Settings.MIN_YAW_FLICK_SPEED, Settings.MAX_YAW_FLICK_SPEED, "%.0f deg/s")) {
+                if (Controls.sliderFloat("##yaw_turn_cap", yawTurnCapBuf, Settings.MIN_YAW_FLICK_SPEED, Settings.MAX_YAW_FLICK_SPEED, "%.0f deg/s")) {
                     settings.yawFlickSpeed = yawTurnCapBuf[0];
                 }
                 if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
@@ -227,8 +216,7 @@ public final class SettingsModal {
         ThemeManager.sectionSpacing();
         sectionHeader("Overlays");
         if (beginLayoutTable("##settings_playback_overlays")) {
-            checkboxRow("Keep tick boxes shown", "##keep_boxes_playback", settings.keepBoxesDuringPlayback,
-                    TT_KEEP_BOXES_PLAYBACK, v -> settings.keepBoxesDuringPlayback = v);
+            checkboxRow("Keep tick boxes shown", "##keep_boxes_playback", settings.keepBoxesDuringPlayback, TT_KEEP_BOXES_PLAYBACK, v -> settings.keepBoxesDuringPlayback = v);
             ThemeManager.endStandardFormTable();
         }
     }
@@ -285,8 +273,7 @@ public final class SettingsModal {
         controlBody.run();
     }
 
-    private void checkboxRow(String label, String id, boolean current, String tooltip,
-                             java.util.function.Consumer<Boolean> setter) {
+    private void checkboxRow(String label, String id, boolean current, String tooltip, Consumer<Boolean> setter) {
         row(label, () -> {
             if (Controls.checkbox(id, current)) {
                 setter.accept(!current);

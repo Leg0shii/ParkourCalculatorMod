@@ -38,20 +38,27 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
                 simWorld = serverWorld;
             }
         }
-        Vec3d start = pendingStart != null
-                ? new Vec3d(pendingStart.x, pendingStart.y, pendingStart.z)
-                : player.getEntityPos();
-        Vec3d vel = pendingVelocity != null
-                ? new Vec3d(pendingVelocity.x, pendingVelocity.y, pendingVelocity.z)
-                : Vec3d.ZERO;
+        Vec3d start = pendingStart != null ? new Vec3d(pendingStart.x, pendingStart.y, pendingStart.z) : player.getEntityPos();
+        Vec3d vel = pendingVelocity != null ? new Vec3d(pendingVelocity.x, pendingVelocity.y, pendingVelocity.z) : Vec3d.ZERO;
         float yaw = pendingYaw != null ? pendingYaw : 0.0F;
         return new SimulatorEntity(simWorld, player.getGameProfile(), start, vel, yaw);
     }
 
-    @Override protected void resetEntity(SimulatorEntity e) { e.resetPlayer(); }
-    @Override protected void setInput(SimulatorEntity e, InputRow row) { e.input.setData(row); }
-    @Override protected void applyYaw(SimulatorEntity e, float yaw) { e.setYaw(e.getYaw() + yaw); }
-    @Override protected void setYawAbsolute(SimulatorEntity e, float yaw) { e.setYaw(yaw); }
+    @Override protected void resetEntity(SimulatorEntity e) {
+        e.resetPlayer();
+    }
+
+    @Override protected void setInput(SimulatorEntity e, InputRow row) {
+        e.input.setData(row);
+    }
+
+    @Override protected void applyYaw(SimulatorEntity e, float yaw) {
+        e.setYaw(e.getYaw() + yaw);
+    }
+
+    @Override protected void setYawAbsolute(SimulatorEntity e, float yaw) {
+        e.setYaw(yaw);
+    }
 
     @Override
     protected void applyTickEffects(SimulatorEntity e, int speedAmplifier, int jumpBoostAmplifier) {
@@ -74,8 +81,7 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
     /** isChunkLoaded short-circuits the common case; getChunk(FULL, true) only fires on miss. */
     private static void preloadChunksAround(SimulatorEntity e) {
         World world = e.getEntityWorld();
-        if (!(world instanceof ServerWorld)) return;
-        ServerWorld serverWorld = (ServerWorld) world;
+        if (!(world instanceof ServerWorld serverWorld)) return;
         Vec3d pos = e.getEntityPos();
         int cx1 = ((int) Math.floor(pos.x - 1.0)) >> 4;
         int cz1 = ((int) Math.floor(pos.z - 1.0)) >> 4;

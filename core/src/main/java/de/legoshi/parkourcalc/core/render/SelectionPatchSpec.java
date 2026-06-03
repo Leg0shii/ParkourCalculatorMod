@@ -8,12 +8,12 @@ public final class SelectionPatchSpec {
     public final BoxColorPicker facePicker;
     public final BoxColorPicker linePicker;
     public final BoxColorPicker hitboxPicker;
+
     public final boolean showHitbox;
     public final boolean showFullHitbox;
     public final boolean showSubtick;
 
-    public SelectionPatchSpec(BoxColorPicker facePicker, BoxColorPicker linePicker, BoxColorPicker hitboxPicker,
-                              boolean showHitbox, boolean showFullHitbox, boolean showSubtick) {
+    public SelectionPatchSpec(BoxColorPicker facePicker, BoxColorPicker linePicker, BoxColorPicker hitboxPicker, boolean showHitbox, boolean showFullHitbox, boolean showSubtick) {
         this.facePicker = facePicker;
         this.linePicker = linePicker;
         this.hitboxPicker = hitboxPicker;

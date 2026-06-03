@@ -47,7 +47,7 @@ public final class Vec3dCore {
         bits = 31 * bits + Double.doubleToLongBits(x);
         bits = 31 * bits + Double.doubleToLongBits(y);
         bits = 31 * bits + Double.doubleToLongBits(z);
-        return (int) (bits ^ (bits >>> 32));
+        return Long.hashCode(bits);
     }
 
     @Override

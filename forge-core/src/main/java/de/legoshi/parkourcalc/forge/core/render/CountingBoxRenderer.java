@@ -28,9 +28,7 @@ public final class CountingBoxRenderer implements BoxRenderer {
     }
 
     @Override
-    public void drawTriangle(double x1, double y1, double z1,
-                             double x2, double y2, double z2,
-                             double x3, double y3, double z3, int argb) {
+    public void drawTriangle(double x1, double y1, double z1, double x2, double y2, double z2, double x3, double y3, double z3, int argb) {
         if (mode == Mode.FACES) vertexCount += 3;
     }
 }

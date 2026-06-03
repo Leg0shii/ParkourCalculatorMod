@@ -13,10 +13,10 @@ public final class Result<T> {
     }
 
     public static <T> Result<T> success(T value) {
-        return new Result<T>(true, value, null);
+        return new Result<>(true, value, null);
     }
 
     public static <T> Result<T> failure(String error) {
-        return new Result<T>(false, null, error);
+        return new Result<>(false, null, error);
     }
 }

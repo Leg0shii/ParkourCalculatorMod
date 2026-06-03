@@ -22,6 +22,8 @@ import java.util.UUID;
 
 public final class FabricPlaybackBridge implements PlaybackBridge {
 
+    private static final int EFFECT_DURATION_TICKS = 20000;
+
     private final InputRow currentRow = new InputRow();
     private Input originalInput;
 
@@ -69,7 +71,8 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
             // player mid-playback.
             sp.networkHandler.requestTeleport(
                     new EntityPosition(new Vec3d(pos.x, pos.y, pos.z), new Vec3d(vel.x, vel.y, vel.z), yaw, sp.getPitch()),
-                    Collections.emptySet());
+                    Collections.emptySet()
+            );
         });
         client.updatePositionAndAngles(pos.x, pos.y, pos.z, yaw, client.getPitch());
         client.setVelocity(vel.x, vel.y, vel.z);
@@ -117,8 +120,6 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         FabricParkourCalculator.closeOverlay();
     }
 
-    private static final int EFFECT_DURATION_TICKS = 20000;
-
     @Override
     public void applyEffects(int speedAmplifier, int jumpBoostAmplifier) {
         MinecraftClient mc = MinecraftClient.getInstance();
@@ -165,15 +166,14 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
 
     private static KeyBinding bindFor(InputRow.Key key) {
         GameOptions o = MinecraftClient.getInstance().options;
-        switch (key) {
-            case W: return o.forwardKey;
-            case S: return o.backKey;
-            case A: return o.leftKey;
-            case D: return o.rightKey;
-            case JUMP: return o.jumpKey;
-            case SNEAK: return o.sneakKey;
-            case SPRINT: return o.sprintKey;
-        }
-        return null;
+        return switch (key) {
+            case W -> o.forwardKey;
+            case S -> o.backKey;
+            case A -> o.leftKey;
+            case D -> o.rightKey;
+            case JUMP -> o.jumpKey;
+            case SNEAK -> o.sneakKey;
+            case SPRINT -> o.sprintKey;
+        };
     }
 }

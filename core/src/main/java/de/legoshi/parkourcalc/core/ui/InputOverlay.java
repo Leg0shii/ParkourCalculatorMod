@@ -20,7 +20,6 @@ import imgui.flag.*;
 import imgui.type.ImInt;
 import imgui.type.ImString;
 
-import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -113,39 +112,13 @@ public final class InputOverlay {
     private int hoveredRow = -1;
     private int pendingLockToggleRow = -1;
 
-    private static final int CALLBACK_ALWAYS = resolveInputTextFlag("CallbackAlways", ImGuiInputTextFlags.CallbackAlways);
-    private static final int CALLBACK_CHAR_FILTER = resolveInputTextFlag("CallbackCharFilter", ImGuiInputTextFlags.CallbackCharFilter);
+    private static final int CALLBACK_ALWAYS = ImGuiInputTextFlags.CallbackAlways;
+    private static final int CALLBACK_CHAR_FILTER = ImGuiInputTextFlags.CallbackCharFilter;
     private static final int COLLAPSE_FRAMES = 4;
 
-    // imgui-java 1.86 (Forge) exposes setEventChar(char); 1.90 (Fabric) takes int. Bind reflectively so core works on both runtimes.
-    private static final Method SET_EVENT_CHAR = resolveSetEventChar();
-    private static final boolean SET_EVENT_CHAR_TAKES_INT =
-            SET_EVENT_CHAR != null && SET_EVENT_CHAR.getParameterTypes()[0] == int.class;
-
-    private static int resolveInputTextFlag(String name, int fallback) {
-        try {
-            return ImGuiInputTextFlags.class.getField(name).getInt(null);
-        } catch (ReflectiveOperationException e) {
-            return fallback;
-        }
-    }
-
-    private static Method resolveSetEventChar() {
-        for (Method m : ImGuiInputTextCallbackData.class.getMethods()) {
-            if (m.getParameterCount() != 1 || !m.getName().equals("setEventChar")) continue;
-            Class<?> p = m.getParameterTypes()[0];
-            if (p == int.class || p == char.class) return m;
-        }
-        return null;
-    }
-
-    /** Swallow the current input char (setEventChar(0)); its signature drifts across imgui-java versions, so invoke reflectively. */
+    /** Swallow the current input char so it is not typed (e.g. F toggles the row lock instead). */
     private static void discardEventChar(ImGuiInputTextCallbackData data) {
-        if (SET_EVENT_CHAR == null) return;
-        try {
-            SET_EVENT_CHAR.invoke(data, SET_EVENT_CHAR_TAKES_INT ? (Object) Integer.valueOf(0) : (Object) Character.valueOf((char) 0));
-        } catch (ReflectiveOperationException ignored) {
-        }
+        data.setEventChar((char) 0);
     }
 
     private final ImGuiInputTextCallback yawSelectionCallback = new ImGuiInputTextCallback() {

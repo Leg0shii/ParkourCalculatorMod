@@ -8,8 +8,6 @@ import net.minecraft.world.World;
 
 final class Forge8WorldDescriptors {
 
-    private Forge8WorldDescriptors() {}
-
     static WorldDescriptor current() {
         Minecraft mc = Minecraft.getMinecraft();
         World world = mc.theWorld;

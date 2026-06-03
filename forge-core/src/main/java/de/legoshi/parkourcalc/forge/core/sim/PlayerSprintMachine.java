@@ -30,7 +30,8 @@ public final class PlayerSprintMachine {
                       boolean jump, boolean sneak, boolean sprintKey,
                       boolean onGround, boolean usingItem, boolean riding,
                       boolean horizontalCollision, boolean hasBlindness,
-                      boolean canFly, float foodLevel) {
+                      boolean canFly, float foodLevel
+        ) {
             this.fwd = fwd;
             this.back = back;
             this.left = left;
@@ -124,7 +125,8 @@ public final class PlayerSprintMachine {
                 && !isSprinting
                 && flag3
                 && !in.usingItem
-                && !in.hasBlindness) {
+                && !in.hasBlindness
+        ) {
             if (sprintToggleTimer <= 0 && !in.sprintKey) {
                 sprintToggleTimer = 7;
             } else {
@@ -138,7 +140,8 @@ public final class PlayerSprintMachine {
                 && flag3
                 && !in.usingItem
                 && !in.hasBlindness
-                && in.sprintKey) {
+                && in.sprintKey
+        ) {
             isSprinting = true;
             sprintingTicksLeft = 600;
         }

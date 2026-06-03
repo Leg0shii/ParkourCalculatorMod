@@ -107,7 +107,7 @@ public class SelectionManager {
      * Adjusts selection indices after rows are inserted.
      */
     public void adjustForInsert(int insertIndex, int count) {
-        Set<Integer> adjusted = new TreeSet<Integer>();
+        Set<Integer> adjusted = new TreeSet<>();
         for (int selected : selectedRows) {
             adjusted.add(selected >= insertIndex ? selected + count : selected);
         }
@@ -119,7 +119,7 @@ public class SelectionManager {
      * Gets selected indices as a list, sorted in descending order for safe deletion.
      */
     public List<Integer> getSelectedDescending() {
-        List<Integer> list = new ArrayList<Integer>(selectedRows);
+        List<Integer> list = new ArrayList<>(selectedRows);
         list.sort(Collections.reverseOrder());
         return list;
     }

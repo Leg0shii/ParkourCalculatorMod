@@ -12,6 +12,7 @@ import imgui.ImFontGlyphRangesBuilder;
 import imgui.ImGui;
 import imgui.ImGuiIO;
 import imgui.extension.implot.ImPlot;
+import imgui.extension.implot.ImPlotContext;
 import imgui.flag.ImGuiConfigFlags;
 import imgui.gl3.ImGuiImplGl3;
 import imgui.glfw.ImGuiImplGlfw;
@@ -43,6 +44,7 @@ public final class ImGuiImpl {
 
     private static final ImGuiImplGlfw imGuiGlfw = new ImGuiImplGlfw();
     private static final ImGuiImplGl3 imGuiGl3 = new ImGuiImplGl3();
+    private static ImPlotContext implotContext;
 
     private static Settings settings;
     private static IntConsumer autoScaleResolver;
@@ -57,7 +59,7 @@ public final class ImGuiImpl {
         autoScaleResolver = autoScaleResolverRef;
 
         ImGui.createContext();
-        ImPlot.createContext();
+        implotContext = ImPlot.createContext();
 
         ImGuiIO io = ImGui.getIO();
         io.setIniFilename(INI_FILENAME);
@@ -66,6 +68,13 @@ public final class ImGuiImpl {
         applyScale(settings.scaleIndex);
 
         imGuiGlfw.init(windowHandle, false);
+        // 1.86's ImGuiImplGl3 omits the GL_UNPACK_* reset that 1.90 does internally, so MC's
+        // leftover pixel-store state scrambles the font atlas on upload (glyphs render as garbage).
+        // Normalize to GL defaults before init() uploads the atlas.
+        GL11C.glPixelStorei(GL11C.GL_UNPACK_ALIGNMENT, 4);
+        GL11C.glPixelStorei(GL11C.GL_UNPACK_ROW_LENGTH, 0);
+        GL11C.glPixelStorei(GL11C.GL_UNPACK_SKIP_ROWS, 0);
+        GL11C.glPixelStorei(GL11C.GL_UNPACK_SKIP_PIXELS, 0);
         imGuiGl3.init();
     }
 
@@ -74,11 +83,10 @@ public final class ImGuiImpl {
         applyPendingScale();
         bindMinecraftFramebuffer();
 
-        imGuiGl3.newFrame();
         imGuiGlfw.newFrame();
         ImGui.newFrame();
-        // imGuiGlfw queues pos/button events via addMousePosEvent in 1.90; ImGui.newFrame
-        // consumes the queue, so the off-screen override has to run AFTER it to win.
+        // imGuiGlfw feeds the polled cursor pos into ImGui during newFrame, so the
+        // off-screen override below has to run AFTER it to win.
         if (!FabricParkourCalculator.isUiFocused()) {
             ImGuiIO io = ImGui.getIO();
             io.setMousePos(-Float.MAX_VALUE, -Float.MAX_VALUE);
@@ -112,11 +120,27 @@ public final class ImGuiImpl {
     }
 
     public static void dispose() {
-        imGuiGl3.shutdown();
-        imGuiGlfw.shutdown();
+        imGuiGl3.dispose();
+        imGuiGlfw.dispose();
 
-        ImPlot.destroyContext();
+        ImPlot.destroyContext(implotContext);
         ImGui.destroyContext();
+    }
+
+    public static void keyCallback(long window, int key, int scancode, int action, int mods) {
+        imGuiGlfw.keyCallback(window, key, scancode, action, mods);
+    }
+
+    public static void charCallback(long window, int codepoint) {
+        imGuiGlfw.charCallback(window, codepoint);
+    }
+
+    public static void mouseButtonCallback(long window, int button, int action, int mods) {
+        imGuiGlfw.mouseButtonCallback(window, button, action, mods);
+    }
+
+    public static void scrollCallback(long window, double xOffset, double yOffset) {
+        imGuiGlfw.scrollCallback(window, xOffset, yOffset);
     }
 
     private static int currentFramebufferHeight() {

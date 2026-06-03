@@ -50,15 +50,12 @@ public final class OsFilePicker implements FilePickerPort {
 
     private static String readAll(Process p, Charset enc) throws IOException {
         StringBuilder sb = new StringBuilder();
-        BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream(), enc));
-        try {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream(), enc))) {
             String line;
             while ((line = br.readLine()) != null) {
                 if (sb.length() > 0) sb.append('\n');
                 sb.append(line);
             }
-        } finally {
-            br.close();
         }
         return sb.toString();
     }
@@ -79,7 +76,7 @@ public final class OsFilePicker implements FilePickerPort {
                 + "$d.Title='Import .json';$d.Multiselect=$false;"
                 + "$r=$d.ShowDialog($f);$f.Close();"
                 + "if ($r -eq 'OK') { Write-Output $d.FileName }";
-        List<String> out = new ArrayList<String>();
+        List<String> out = new ArrayList<>();
         out.add("powershell");
         out.add("-NoProfile");
         out.add("-STA");
@@ -89,7 +86,7 @@ public final class OsFilePicker implements FilePickerPort {
     }
 
     private static List<String> buildMacCmd() {
-        List<String> out = new ArrayList<String>();
+        List<String> out = new ArrayList<>();
         out.add("osascript");
         out.add("-e");
         out.add("POSIX path of (choose file with prompt \"Import .json\" of type {\"json\"})");
@@ -97,7 +94,7 @@ public final class OsFilePicker implements FilePickerPort {
     }
 
     private static List<String> buildLinuxCmd() {
-        List<String> out = new ArrayList<String>();
+        List<String> out = new ArrayList<>();
         out.add("zenity");
         out.add("--file-selection");
         out.add("--title=Import .json");

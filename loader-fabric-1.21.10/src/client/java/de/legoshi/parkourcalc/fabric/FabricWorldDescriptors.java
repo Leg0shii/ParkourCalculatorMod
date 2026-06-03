@@ -15,8 +15,6 @@ import net.minecraft.world.World;
  */
 final class FabricWorldDescriptors {
 
-    private FabricWorldDescriptors() {}
-
     static WorldDescriptor current() {
         MinecraftClient client = MinecraftClient.getInstance();
         ClientWorld world = client.world;

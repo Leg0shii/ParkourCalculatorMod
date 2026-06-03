@@ -26,18 +26,13 @@ public final class YawGizmoController {
     private boolean wasMousePressed = false;
     private State state = null;
 
-    public YawGizmoController(BoxController boxController,
-                              Consumer<Float> onStartYawChange,
-                              TickYawSink onTickYawChange) {
+    public YawGizmoController(BoxController boxController, Consumer<Float> onStartYawChange, TickYawSink onTickYawChange) {
         this.boxController = boxController;
         this.onStartYawChange = onStartYawChange;
         this.onTickYawChange = onTickYawChange;
     }
 
-    public void tick(Vec3dCore rayOrigin, Vec3dCore rayDirection,
-                     boolean mousePressed,
-                     double cursorScreenX, double cursorScreenY,
-                     boolean uiFocused) {
+    public void tick(Vec3dCore rayOrigin, Vec3dCore rayDirection, boolean mousePressed, double cursorScreenX, double cursorScreenY, boolean uiFocused) {
         if (uiFocused) {
             wasMousePressed = false;
             state = null;

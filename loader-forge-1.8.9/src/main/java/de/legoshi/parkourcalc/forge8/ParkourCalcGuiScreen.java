@@ -22,9 +22,7 @@ public final class ParkourCalcGuiScreen extends GuiScreen {
     private final Runnable togglePlayback;
     private final Runnable onClose;
 
-    public ParkourCalcGuiScreen(int toggleKeyCode, int deselectKeyCode, int playbackKeyCode,
-                                Lwjgl2ImGuiHost imguiHost, SelectionManager selection, Application application,
-                                Runnable togglePlayback, Runnable onClose) {
+    public ParkourCalcGuiScreen(int toggleKeyCode, int deselectKeyCode, int playbackKeyCode, Lwjgl2ImGuiHost imguiHost, SelectionManager selection, Application application, Runnable togglePlayback, Runnable onClose) {
         this.toggleKeyCode = toggleKeyCode;
         this.deselectKeyCode = deselectKeyCode;
         this.playbackKeyCode = playbackKeyCode;
@@ -46,14 +44,14 @@ public final class ParkourCalcGuiScreen extends GuiScreen {
     }
 
     @Override
-    protected void keyTyped(char typedChar, int keyCode) throws IOException {
+    protected void keyTyped(char typedChar, int keyCode) {
         if (application.isEditingYaw()) {
             boolean shift = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
             if (keyCode == Keyboard.KEY_DOWN || (keyCode == Keyboard.KEY_TAB && !shift)) {
                 application.navigateYaw(true);
                 return;
             }
-            if (keyCode == Keyboard.KEY_UP || (keyCode == Keyboard.KEY_TAB && shift)) {
+            if (keyCode == Keyboard.KEY_UP || keyCode == Keyboard.KEY_TAB) {
                 application.navigateYaw(false);
                 return;
             }
@@ -62,8 +60,7 @@ public final class ParkourCalcGuiScreen extends GuiScreen {
         boolean wantsText = ImGui.getIO().getWantTextInput();
 
         if (keyCode == Keyboard.KEY_ESCAPE) {
-            boolean imguiConsumesEscape = wantsText
-                    || ImGui.isPopupOpen("", ImGuiPopupFlags.AnyPopupId | ImGuiPopupFlags.AnyPopupLevel);
+            boolean imguiConsumesEscape = wantsText || ImGui.isPopupOpen("", ImGuiPopupFlags.AnyPopupId | ImGuiPopupFlags.AnyPopupLevel);
             if (!imguiConsumesEscape) {
                 closeOverlay();
             }

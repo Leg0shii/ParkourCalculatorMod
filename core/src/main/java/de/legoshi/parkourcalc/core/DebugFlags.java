@@ -20,8 +20,7 @@ public final class DebugFlags {
 
     public static void compareAndLog(List<TickState> partial, List<TickState> full, int dirtyTick) {
         if (partial.size() != full.size()) {
-            System.out.println("[PC-DIFF] dirtyTick=" + dirtyTick
-                    + " size mismatch: partial=" + partial.size() + " full=" + full.size());
+            System.out.println("[PC-DIFF] dirtyTick=" + dirtyTick + " size mismatch: partial=" + partial.size() + " full=" + full.size());
             return;
         }
         for (int i = 0; i < partial.size(); i++) {

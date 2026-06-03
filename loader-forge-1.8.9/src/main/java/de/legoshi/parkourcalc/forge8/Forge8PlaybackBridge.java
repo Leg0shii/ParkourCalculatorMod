@@ -25,6 +25,8 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
     private static final String[] LAST_REPORTED_PITCH = { "lastReportedPitch", "field_175165_bM" };
     private static final String[] POSITION_UPDATE_TICKS = { "positionUpdateTicks", "field_175168_bP" };
 
+    private static final int EFFECT_DURATION_TICKS = 20000;
+
     private final InputRow currentRow = new InputRow();
     private MovementInput originalInput;
 
@@ -124,8 +126,6 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
             }
         }
     }
-
-    private static final int EFFECT_DURATION_TICKS = 20000;
 
     @Override
     public void applyEffects(int speedAmplifier, int jumpBoostAmplifier) {

@@ -22,10 +22,6 @@ public final class WorldDescriptor {
         return new WorldDescriptor(dimension, null, serverAddress);
     }
 
-    public String display() {
-        return format(dimension, worldName, serverAddress);
-    }
-
     public static String displayOf(SaveFile.World w) {
         if (w == null) return "(out of world)";
         return format(w.dimension, w.worldName, w.serverAddress);

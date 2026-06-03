@@ -18,10 +18,9 @@ repositories {
 
 dependencies {
 	// imgui-java compileOnly so core can call ImGui APIs without bundling natives.
-	// Pinned to the oldest loader's bundled version per CLAUDE.md's "oldest loader" rule:
-	// the Forge 1.8.9 / 1.12.2 loaders pair with the koxx12-dev LWJGL2 shim which was
-	// built against 1.86.11, so calls like ImGuiIO.setKeyMap(int[]) are absent in 1.90.0.
-	// The Fabric loader bundles 1.90.0 at runtime; core stays within the 1.86.11 API subset.
+	// Every loader bundles 1.86.11 at runtime (the koxx12-dev LWJGL2 shim the Forge loaders
+	// use was built against it), so core compiles and runs against one version everywhere.
+	// Keep core within the 1.86.11 API subset; do not bump this above what the loaders bundle.
 	compileOnly 'io.github.spair:imgui-java-binding:1.86.11'
 
 	// Gson is shipped by every Minecraft client we target (Forge 1.8.9 ships 2.2.4,

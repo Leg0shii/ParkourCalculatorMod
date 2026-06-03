@@ -4,6 +4,7 @@ import de.legoshi.parkourcalc.core.ports.SaveStore;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
@@ -28,7 +29,7 @@ public final class FileSystemSaveStore implements SaveStore {
     private static final String EXTENSION = ".json";
     private static final String TRASH_DIR = ".trash";
     private static final String TMP_SUFFIX = ".tmp";
-    private static final Charset CHARSET = Charset.forName("UTF-8");
+    private static final Charset CHARSET = StandardCharsets.UTF_8;
 
     private final Path saveDir;
     private final String modVersion;
@@ -67,8 +68,8 @@ public final class FileSystemSaveStore implements SaveStore {
     @Override
     public List<SaveInfo> list() {
         if (!Files.isDirectory(saveDir)) return Collections.emptyList();
-        List<SaveInfo> infos = new ArrayList<SaveInfo>();
-        Set<String> present = new HashSet<String>();
+        List<SaveInfo> infos = new ArrayList<>();
+        Set<String> present = new HashSet<>();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(saveDir, "*" + EXTENSION)) {
             for (Path p : stream) {
                 if (!Files.isRegularFile(p)) continue;

@@ -14,8 +14,8 @@ public final class SimulationRunner {
     // path[i] and checkpoints[i] are the snapshot+state captured at the same moment:
     // path[0] is post-reset (before any row applies); path[i>=1] is after row[i-1] ticked.
     // checkpoints[i] is the simulator state needed to resume just before row[i] is applied.
-    private final List<TickState> path = new ArrayList<TickState>();
-    private final List<Checkpoint> checkpoints = new ArrayList<Checkpoint>();
+    private final List<TickState> path = new ArrayList<>();
+    private final List<Checkpoint> checkpoints = new ArrayList<>();
 
     public SimulationRunner(Simulator simulator) {
         this.simulator = simulator;

@@ -48,10 +48,6 @@ public final class Lwjgl2ImGuiHost {
     private long lastFrameNanos;
     private int appliedScaleIndex = -1;
 
-    public Lwjgl2ImGuiHost(OverlayManager overlayManager, Settings settings, IntConsumer autoScaleResolver) {
-        this(overlayManager, settings, autoScaleResolver, overlayManager::isControlPanelOpen);
-    }
-
     public Lwjgl2ImGuiHost(OverlayManager overlayManager, Settings settings, IntConsumer autoScaleResolver, BooleanSupplier isUiFocused) {
         this.overlayManager = overlayManager;
         this.settings = settings;

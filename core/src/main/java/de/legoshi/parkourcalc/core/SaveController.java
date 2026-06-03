@@ -54,8 +54,7 @@ public final class SaveController {
 
     public Result<String> save(String name) {
         if (store == null) return Result.failure("Save store not initialized.");
-        Result<String> result = SaveIO.save(store, name, inputData,
-                runner.getStartPosition(), runner.getStartVelocity(), runner.getStartYaw());
+        Result<String> result = SaveIO.save(store, name, inputData, runner.getStartPosition(), runner.getStartVelocity(), runner.getStartYaw());
         if (result.ok) {
             currentName = result.value;
             dirty = false;

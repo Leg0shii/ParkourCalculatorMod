@@ -21,8 +21,7 @@ public final class SaveIO {
 
     private SaveIO() {}
 
-    public static Result<String> save(SaveStore store, String rawName, InputData inputData,
-                                      Vec3dCore startPos, Vec3dCore startVel, float startYaw) {
+    public static Result<String> save(SaveStore store, String rawName, InputData inputData, Vec3dCore startPos, Vec3dCore startVel, float startYaw) {
         String name = sanitize(rawName);
         if (name == null) {
             return Result.failure("Invalid save name. Use letters, numbers, dashes, or underscores.");
@@ -118,8 +117,7 @@ public final class SaveIO {
         return cleaned;
     }
 
-    private static SaveFile buildFile(SaveStore store, InputData inputData,
-                                      Vec3dCore startPos, Vec3dCore startVel, float startYaw) {
+    private static SaveFile buildFile(SaveStore store, InputData inputData, Vec3dCore startPos, Vec3dCore startVel, float startYaw) {
         SaveFile file = new SaveFile();
         file.version = SaveFile.FORMAT_VERSION;
         file.createdAt = nowIso8601();

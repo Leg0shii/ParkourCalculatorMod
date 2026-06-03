@@ -26,8 +26,7 @@ public final class Forge8WorldOverlayRenderer {
     private final YawGizmoController yawGizmo;
     private final Forge8CachedBoxGeometry cached = new Forge8CachedBoxGeometry();
 
-    public Forge8WorldOverlayRenderer(BoxController boxController, Settings settings,
-                                      SelectionManager selection, YawGizmoController yawGizmo) {
+    public Forge8WorldOverlayRenderer(BoxController boxController, Settings settings, SelectionManager selection, YawGizmoController yawGizmo) {
         this.boxController = boxController;
         this.settings = settings;
         this.selection = selection;
@@ -79,9 +78,11 @@ public final class Forge8WorldOverlayRenderer {
                 buf.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
                 Forge8BoxRenderer linesRenderer = new Forge8BoxRenderer(buf, camX, camY, camZ, BoxRenderer.Mode.LINES);
                 double radius = BoxStyle.yawGizmoRadius(camX - center.x, camY - center.y, camZ - center.z);
-                boxController.renderYawGizmo(linesRenderer, center, yawDeg, radius,
+                boxController.renderYawGizmo(
+                        linesRenderer, center, yawDeg, radius,
                         BoxStyle.yawGizmoCircleArgb(settings),
-                        BoxStyle.yawGizmoDirectionArgb(settings));
+                        BoxStyle.yawGizmoDirectionArgb(settings)
+                );
                 tess.draw();
             }
         }

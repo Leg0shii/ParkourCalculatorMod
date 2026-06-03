@@ -18,7 +18,9 @@ public abstract class LandingParticleSuppressMixin {
             method = "fall",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/server/world/ServerWorld;spawnParticles(Lnet/minecraft/particle/ParticleEffect;DDDIDDDD)I"))
+                    target = "Lnet/minecraft/server/world/ServerWorld;spawnParticles(Lnet/minecraft/particle/ParticleEffect;DDDIDDDD)I"
+            )
+    )
     private int pkc$skipLandingParticles(ServerWorld world, ParticleEffect particle,
                                          double x, double y, double z, int count,
                                          double offsetX, double offsetY, double offsetZ, double speed) {

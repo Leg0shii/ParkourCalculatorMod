@@ -7,7 +7,7 @@ final class PlaybackMovementInput extends MovementInput {
 
     private final Forge8PlaybackBridge bridge;
 
-    PlaybackMovementInput(Forge8PlaybackBridge bridge) {
+    public PlaybackMovementInput(Forge8PlaybackBridge bridge) {
         this.bridge = bridge;
     }
 

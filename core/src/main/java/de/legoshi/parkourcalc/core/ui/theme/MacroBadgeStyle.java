@@ -6,5 +6,4 @@ public final class MacroBadgeStyle {
     public static final String LABEL = "MACRO";
     public static final int COLOR_ARGB = 0x4DFF6060;
 
-    private MacroBadgeStyle() {}
 }

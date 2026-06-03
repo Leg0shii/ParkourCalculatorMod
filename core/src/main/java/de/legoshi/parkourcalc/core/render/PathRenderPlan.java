@@ -35,8 +35,7 @@ public final class PathRenderPlan {
 
         // Drop the hitbox (not the path) when it would overflow a buffer, e.g. full hitbox + subtick at huge counts.
         int edges = PathVertexLayout.hitboxEdges(settings.showHitbox, settings.showFullHitbox);
-        boolean drawHitbox = edges != 0
-                && boxController.facePassFitsBudget(edges, settings.showSubtick, settings.showYawArrows);
+        boolean drawHitbox = edges != 0 && boxController.facePassFitsBudget(edges, settings.showSubtick, settings.showYawArrows);
         boolean full = drawHitbox && settings.showFullHitbox;
         boolean floor = drawHitbox && !settings.showFullHitbox;
 

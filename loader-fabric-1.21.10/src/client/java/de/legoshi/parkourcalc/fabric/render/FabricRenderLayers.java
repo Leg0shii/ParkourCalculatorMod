@@ -74,6 +74,4 @@ public final class FabricRenderLayers {
         return THIN_LINES_PIPELINE;
     }
 
-    private FabricRenderLayers() {
-    }
 }

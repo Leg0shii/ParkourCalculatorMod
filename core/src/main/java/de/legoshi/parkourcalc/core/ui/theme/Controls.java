@@ -20,30 +20,7 @@ public final class Controls {
     private static final float BUTTON_PAD_X = 10.0f; // one knob: every button's horizontal padding
     private static final float BUTTON_PAD_Y = 6.0f;  // one knob: every button's vertical padding
 
-    private Controls() {}
-
     // ---- text / numeric inputs -------------------------------------------------
-
-    public static boolean inputText(String label, ImString holder, float width) {
-        return inputText(label, holder, width, 0);
-    }
-
-    public static boolean inputText(String label, ImString holder, float width, int flags) {
-        pushInputFrameHeight();
-        beginLabeled(label, width);
-        boolean changed = ImGui.inputText(idFor(label), holder, flags);
-        popInputFrameHeight();
-        drawFocusRingIfActive();
-        return changed;
-    }
-
-    /** Compact text input sized to a tick-table row; skips the button-height padding the standalone inputs use. */
-    public static boolean tableInputText(String label, ImString holder, float width) {
-        beginLabeled(label, width);
-        boolean changed = ImGui.inputText(idFor(label), holder, 0);
-        drawFocusRingIfActive();
-        return changed;
-    }
 
     public static boolean tableInputText(String label, ImString holder, float width, int flags, ImGuiInputTextCallback callback) {
         beginLabeled(label, width);
@@ -74,23 +51,7 @@ public final class Controls {
         return changed;
     }
 
-    public static boolean inputFloat(String label, ImFloat holder, float width, String fmt) {
-        pushInputFrameHeight();
-        beginLabeled(label, width <= 0 ? DEFAULT_NUM_WIDTH : width);
-        boolean changed = ImGui.inputFloat(idFor(label), holder, 0f, 0f, fmt);
-        popInputFrameHeight();
-        drawFocusRingIfActive();
-        return changed;
-    }
-
     // ---- sliders ---------------------------------------------------------------
-
-    public static boolean sliderFloat(String label, ImFloat ref, float lo, float hi, String fmt) {
-        float[] tmp = {ref.get()};
-        boolean changed = sliderFloat(label, tmp, lo, hi, fmt);
-        if (changed) ref.set(tmp[0]);
-        return changed;
-    }
 
     public static boolean sliderFloat(String label, float[] ref, float lo, float hi, String fmt) {
         pushInputFrameHeight();
@@ -100,13 +61,6 @@ public final class Controls {
         ImGui.popStyleVar();
         popInputFrameHeight();
         drawFocusRingIfActive();
-        return changed;
-    }
-
-    public static boolean sliderInt(String label, ImInt ref, int lo, int hi, String fmt) {
-        int[] tmp = {ref.get()};
-        boolean changed = sliderInt(label, tmp, lo, hi, fmt);
-        if (changed) ref.set(tmp[0]);
         return changed;
     }
 
@@ -122,14 +76,6 @@ public final class Controls {
     }
 
     // ---- checkbox / combo ------------------------------------------------------
-
-    public static boolean checkbox(String label, ImBoolean ref) {
-        pushInputFrameHeight();
-        boolean changed = ImGui.checkbox(label, ref);
-        popInputFrameHeight();
-        drawFocusRingIfActive();
-        return changed;
-    }
 
     public static boolean checkbox(String label, boolean currentValue) {
         pushInputFrameHeight();

@@ -1,7 +1,6 @@
 package de.legoshi.parkourcalc.core.perf;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +20,7 @@ public final class Perf {
         }
     }
 
-    private static final Map<String, Sample> samples = new HashMap<String, Sample>();
+    private static final Map<String, Sample> samples = new HashMap<>();
     private static long frameStartNs;
     private static long frameDurationLastNs;
     private static int boxesDrawnThisFrame;
@@ -35,11 +34,7 @@ public final class Perf {
 
     public static void stop(String name, long startNs) {
         long elapsed = System.nanoTime() - startNs;
-        Sample s = samples.get(name);
-        if (s == null) {
-            s = new Sample(name);
-            samples.put(name, s);
-        }
+        Sample s = samples.computeIfAbsent(name, Sample::new);
         s.lastNs = elapsed;
         s.emaNs = s.emaNs == 0 ? elapsed : (s.emaNs * 9 + elapsed) / 10;
         if (elapsed > s.maxNs) s.maxNs = elapsed;
@@ -79,13 +74,8 @@ public final class Perf {
     }
 
     public static List<Sample> snapshot() {
-        List<Sample> out = new ArrayList<Sample>(samples.values());
-        out.sort(new Comparator<Sample>() {
-            @Override
-            public int compare(Sample a, Sample b) {
-                return Long.compare(b.emaNs, a.emaNs);
-            }
-        });
+        List<Sample> out = new ArrayList<>(samples.values());
+        out.sort((a, b) -> Long.compare(b.emaNs, a.emaNs));
         return out;
     }
 }

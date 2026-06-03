@@ -17,13 +17,22 @@ import java.util.List;
  */
 public final class BoxController {
 
-    private final List<Vec3dCore> positions = new ArrayList<Vec3dCore>();
-    private final List<TickState> states = new ArrayList<TickState>();
-    private final List<AABB> tickAabbs = new ArrayList<AABB>();
+    private static final double PICK_REACH = 128.0;
+    private static final double PICK_EPS = 1.0e-3;
+
+    private static final double ARROW_SHAFT_LEN = 0.29;
+    private static final double ARROW_HEAD_LEN = 0.12;
+    private static final double ARROW_HEAD_HALF_WIDTH = 0.065;
+    private static final double ARROW_THICKNESS = 0.016;
+
+    private static final int GIZMO_SEGMENTS = 48;
+
+    private final List<Vec3dCore> positions = new ArrayList<>();
+    private final List<TickState> states = new ArrayList<>();
+    private final List<AABB> tickAabbs = new ArrayList<>();
 
     private double boxSize = BoxStyle.BOX_SIZE;
     private long geometryRev = 1;
-    private long colorRev = 1;
 
     public void add(TickState state) {
         positions.add(state.position);
@@ -51,8 +60,8 @@ public final class BoxController {
         if (size == this.boxSize) return;
         this.boxSize = size;
         tickAabbs.clear();
-        for (int i = 0; i < positions.size(); i++) {
-            tickAabbs.add(AABB.ofCube(positions.get(i), size));
+        for (Vec3dCore position : positions) {
+            tickAabbs.add(AABB.ofCube(position, size));
         }
         geometryRev++;
     }
@@ -60,14 +69,6 @@ public final class BoxController {
     /** Monotonic counter; loaders snapshot it and rebuild cached buffers when it changes. */
     public long getGeometryRev() {
         return geometryRev;
-    }
-
-    public long getColorRev() {
-        return colorRev;
-    }
-
-    public void markColorsDirty() {
-        colorRev++;
     }
 
     /** First box's AABB, or null if empty. Used loader-side for start-position drag. */
@@ -115,9 +116,6 @@ public final class BoxController {
         }
         return best;
     }
-
-    private static final double PICK_REACH = 128.0;
-    private static final double PICK_EPS = 1.0e-3;
 
     private static double rayHitT(Vec3dCore o, Vec3dCore d, AABB box, double maxT) {
         double tmin = 0.0;
@@ -177,15 +175,6 @@ public final class BoxController {
         if (index < 0 || index >= states.size()) return null;
         return states.get(index);
     }
-
-    public double getBoxSize() {
-        return boxSize;
-    }
-
-    /** Thick edges per hitbox floor outline: 4 edges per walk position. */
-    public static final int HITBOX_FLOOR_EDGES = 4;
-    /** Thick edges per full hitbox wireframe: 12 edges per walk position. */
-    public static final int HITBOX_FULL_EDGES = 12;
 
     public void renderHitboxFloorOutline(BoxRenderer renderer, BoxColorPicker picker, boolean useSubtickPositions,
                                          double camX, double camY, double camZ, double maxDistanceSq) {
@@ -268,10 +257,7 @@ public final class BoxController {
         }
     }
 
-    private static void emitThickEdge(BoxRenderer renderer,
-                                      double x0, double y0, double z0,
-                                      double x1, double y1, double z1,
-                                      double thickness, int argb) {
+    private static void emitThickEdge(BoxRenderer renderer, double x0, double y0, double z0, double x1, double y1, double z1, double thickness, int argb) {
         double h = thickness * 0.5;
         double minX = Math.min(x0, x1) - h, maxX = Math.max(x0, x1) + h;
         double minY = Math.min(y0, y1) - h, maxY = Math.max(y0, y1) + h;
@@ -315,14 +301,13 @@ public final class BoxController {
     }
 
     private List<Vec3dCore> walkFor(int tickIndex, TickState s, boolean useSubtickPositions) {
-        if (useSubtickPositions && s.subtickPath != null && !s.subtickPath.isEmpty()) {
+        if (useSubtickPositions && !s.subtickPath.isEmpty()) {
             return s.subtickPath;
         }
         return Collections.singletonList(positions.get(tickIndex));
     }
 
-    public void renderYawArrows(BoxRenderer renderer, int argb,
-                                double camX, double camY, double camZ, double maxDistanceSq) {
+    public void renderYawArrows(BoxRenderer renderer, int argb, double camX, double camY, double camZ, double maxDistanceSq) {
         if (positions.isEmpty()) return;
         double half = boxSize * 0.5;
         // Arrow at box i is the outgoing facing: states[i+1].yaw is the look direction used
@@ -346,8 +331,7 @@ public final class BoxController {
             // Shaft: oriented thin box from box center to the base of the head.
             double perpShaftX = -fz * (ARROW_THICKNESS * 0.5);
             double perpShaftZ = fx * (ARROW_THICKNESS * 0.5);
-            emitOrientedShaft(renderer, cx, cy, cz, baseX, baseZ,
-                    perpShaftX, perpShaftZ, ARROW_THICKNESS, argb);
+            emitOrientedShaft(renderer, cx, cy, cz, baseX, baseZ, perpShaftX, perpShaftZ, ARROW_THICKNESS, argb);
 
             // Head: filled triangle, drawn as two coincident triangles for a slight Y extent so it reads from above/below.
             double perpHeadX = -fz * ARROW_HEAD_HALF_WIDTH;
@@ -368,11 +352,7 @@ public final class BoxController {
         }
     }
 
-    private static void emitOrientedShaft(BoxRenderer renderer,
-                                          double sx, double sy, double sz,
-                                          double ex, double ez,
-                                          double perpX, double perpZ,
-                                          double thickness, int argb) {
+    private static void emitOrientedShaft(BoxRenderer renderer, double sx, double sy, double sz, double ex, double ez, double perpX, double perpZ, double thickness, int argb) {
         double h = thickness * 0.5;
         double yLow = sy - h, yHigh = sy + h;
         double p0x = sx - perpX, p0z = sz - perpZ;
@@ -393,13 +373,7 @@ public final class BoxController {
         renderer.drawTriangle(p3x, yLow, p3z, p0x, yLow, p0z, p0x, yHigh, p0z, argb);
     }
 
-    private static final double ARROW_SHAFT_LEN = 0.29;
-    private static final double ARROW_HEAD_LEN = 0.12;
-    private static final double ARROW_HEAD_HALF_WIDTH = 0.065;
-    private static final double ARROW_THICKNESS = 0.016;
-
-    public void renderYawGizmo(BoxRenderer renderer, Vec3dCore center, double yawDegrees, double radius,
-                                int circleArgb, int directionArgb) {
+    public void renderYawGizmo(BoxRenderer renderer, Vec3dCore center, double yawDegrees, double radius, int circleArgb, int directionArgb) {
         double yawRad = Math.toRadians(yawDegrees);
         double fx = -Math.sin(yawRad);
         double fz = Math.cos(yawRad);
@@ -429,8 +403,6 @@ public final class BoxController {
         renderer.drawLine(tipX, center.y, tipZ, baseX - perpX, center.y, baseZ - perpZ, directionArgb);
     }
 
-    private static final int GIZMO_SEGMENTS = 48;
-
     /** Per-box subtick vertex offsets, mirroring renderPath's emission exactly; starts[n] is the total. */
     public int[] subtickVertexStarts() {
         int n = states.size();
@@ -446,8 +418,7 @@ public final class BoxController {
                 if (prev != null && !prev.equals(cur)) acc += 2;
                 prev = cur;
             } else {
-                for (int k = 0; k < path.size(); k++) {
-                    Vec3dCore cur = path.get(k);
+                for (Vec3dCore cur : path) {
                     if (prev != null && !prev.equals(cur)) acc += 2;
                     prev = cur;
                 }
@@ -457,8 +428,7 @@ public final class BoxController {
         return starts;
     }
 
-    public void renderPath(BoxRenderer renderer, int argb,
-                           double camX, double camY, double camZ, double maxDistanceSq) {
+    public void renderPath(BoxRenderer renderer, int argb, double camX, double camY, double camZ, double maxDistanceSq) {
         if (states.size() < 2) return;
         double half = boxSize * 0.5;
         Vec3dCore prev = null;
@@ -478,8 +448,7 @@ public final class BoxController {
                 }
                 prev = cur;
             } else {
-                for (int k = 0; k < path.size(); k++) {
-                    Vec3dCore cur = path.get(k);
+                for (Vec3dCore cur : path) {
                     if (prev != null && !prev.equals(cur)) {
                         renderer.drawLine(
                                 prev.x + half, prev.y + half, prev.z + half,

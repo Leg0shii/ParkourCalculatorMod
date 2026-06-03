@@ -56,7 +56,7 @@ public class SimulatorEntity extends PlayerEntity {
 
     public List<Vec3dCore> endSubtickCapture() {
         capturing = false;
-        List<Vec3dCore> result = new ArrayList<Vec3dCore>(subtickBuf);
+        List<Vec3dCore> result = new ArrayList<>(subtickBuf);
         subtickBuf.clear();
         return result;
     }

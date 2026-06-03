@@ -75,8 +75,7 @@ public final class Application {
     }
 
     public void setupUi() {
-        inputOverlay = new InputOverlay(inputData, settings, selection, this::onUserChange,
-                this::setStartToPlayer, playback, mc, boxController);
+        inputOverlay = new InputOverlay(inputData, settings, selection, this::onUserChange, this::setStartToPlayer, playback, mc, boxController);
         TickInfoPanel tickInfoPanel = new TickInfoPanel(boxController, selection);
         PerfOverlay perfOverlay = new PerfOverlay();
         FileMenu fileMenu = new FileMenu(saveController, filePicker, settings, this::saveSettings);
@@ -84,7 +83,8 @@ public final class Application {
         MainWindowOverlay mainWindow = new MainWindowOverlay(
                 inputOverlay, inputData, fileMenu, settings, this::saveSettings,
                 tickInfoPanel, perfOverlay, settingsModal, systemBridge,
-                () -> saveController.getSaveStore(), modVersion);
+                saveController::getSaveStore, modVersion
+        );
         overlayManager.register(mainWindow);
     }
 
@@ -120,9 +120,7 @@ public final class Application {
     private void runSimulation(int dirtyTick) {
         if (!mc.isReady()) return;
         long t0 = Perf.now();
-        List<TickState> path = mc.runOnServerThread(() -> dirtyTick < 0
-                ? runner.simulate(inputData)
-                : runner.simulateFrom(dirtyTick, inputData));
+        List<TickState> path = mc.runOnServerThread(() -> dirtyTick < 0 ? runner.simulate(inputData) : runner.simulateFrom(dirtyTick, inputData));
         if (DebugFlags.COMPARE_PARTIAL_SIM && dirtyTick >= 0) {
             Vec3dCore startPos = runner.getStartPosition();
             Vec3dCore startVel = runner.getStartVelocity();
@@ -288,16 +286,8 @@ public final class Application {
         return selection;
     }
 
-    public InputData getInputData() {
-        return inputData;
-    }
-
     public void setSaveStore(SaveStore saveStore) {
         saveController.setSaveStore(saveStore);
-    }
-
-    public SaveStore getSaveStore() {
-        return saveController.getSaveStore();
     }
 
     public void setPlaybackBridge(PlaybackBridge bridge) {

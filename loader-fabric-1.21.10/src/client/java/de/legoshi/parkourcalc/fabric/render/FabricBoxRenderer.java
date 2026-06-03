@@ -39,7 +39,8 @@ public final class FabricBoxRenderer implements BoxRenderer {
         VertexConsumer consumer = consumers.getBuffer(FabricRenderLayers.THIN_LINES);
         edge(consumer, matrices.peek().getPositionMatrix(),
                 (float) x1, (float) y1, (float) z1,
-                (float) x2, (float) y2, (float) z2, argb);
+                (float) x2, (float) y2, (float) z2, argb
+        );
     }
 
     @Override
@@ -54,15 +55,14 @@ public final class FabricBoxRenderer implements BoxRenderer {
     }
 
     @Override
-    public void drawTriangle(double x1, double y1, double z1,
-                             double x2, double y2, double z2,
-                             double x3, double y3, double z3, int argb) {
+    public void drawTriangle(double x1, double y1, double z1, double x2, double y2, double z2, double x3, double y3, double z3, int argb) {
         if (mode != Mode.FACES) return;
         VertexConsumer consumer = consumers.getBuffer(FabricRenderLayers.TRANSLUCENT_BOX);
         tri(consumer, matrices.peek().getPositionMatrix(),
                 (float) x1, (float) y1, (float) z1,
                 (float) x2, (float) y2, (float) z2,
-                (float) x3, (float) y3, (float) z3, argb);
+                (float) x3, (float) y3, (float) z3, argb
+        );
     }
 
     private static void emitFaces(VertexConsumer c, Matrix4f m, AABB b, int argb) {
@@ -89,10 +89,7 @@ public final class FabricBoxRenderer implements BoxRenderer {
         tri(c, m, x1, y0, z0, x1, y1, z1, x1, y0, z1, argb);
     }
 
-    private static void tri(VertexConsumer c, Matrix4f m,
-                            float ax, float ay, float az,
-                            float bx, float by, float bz,
-                            float cx, float cy, float cz, int argb) {
+    private static void tri(VertexConsumer c, Matrix4f m, float ax, float ay, float az, float bx, float by, float bz, float cx, float cy, float cz, int argb) {
         float a = ((argb >>> 24) & 0xFF) / 255.0f;
         float r = ((argb >>> 16) & 0xFF) / 255.0f;
         float g = ((argb >>> 8) & 0xFF) / 255.0f;
@@ -122,9 +119,7 @@ public final class FabricBoxRenderer implements BoxRenderer {
         edge(c, m, x0, y0, z1, x0, y1, z1, argb);
     }
 
-    private static void edge(VertexConsumer c, Matrix4f m,
-                             float ax, float ay, float az,
-                             float bx, float by, float bz, int argb) {
+    private static void edge(VertexConsumer c, Matrix4f m, float ax, float ay, float az, float bx, float by, float bz, int argb) {
         float a = ((argb >>> 24) & 0xFF) / 255.0f;
         float r = ((argb >>> 16) & 0xFF) / 255.0f;
         float g = ((argb >>> 8) & 0xFF) / 255.0f;

@@ -8,8 +8,6 @@ public class InputData {
 
     private final List<InputRow> rows = new ArrayList<>();
 
-    public InputData() {}
-
     public void clear() {
         rows.clear();
     }

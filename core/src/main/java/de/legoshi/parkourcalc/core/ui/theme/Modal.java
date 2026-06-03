@@ -13,8 +13,6 @@ public final class Modal {
 
     private static final float CLOSE_ARM_HALF = 0.20f; // half-length of each close-glyph arm, in font-size units (smaller than the native close cross)
 
-    private Modal() {}
-
     public static boolean begin(String title, String popupId) {
         return begin(title, popupId, 0);
     }

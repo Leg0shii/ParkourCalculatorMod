@@ -24,13 +24,13 @@ public class SimulatorEntity extends EntityPlayer {
     private static final String[] JUMP_TICKS_NAMES = { "jumpTicks", "field_70773_bE" };
 
     public Vec3 startPosition;
-    public Vec3 startVelocity = new Vec3(0.0, 0.0, 0.0);
+    public Vec3 startVelocity;
     public float startYaw;
 
     private InputRow currentInput = new InputRow();
     private PlayerSprintMachine.State sprintState = PlayerSprintMachine.State.initial();
 
-    private final ArrayList<Vec3dCore> subtickBuf = new ArrayList<Vec3dCore>(8);
+    private final ArrayList<Vec3dCore> subtickBuf = new ArrayList<>(8);
     private boolean capturing = false;
 
     public void beginSubtickCapture() {
@@ -40,7 +40,7 @@ public class SimulatorEntity extends EntityPlayer {
 
     public List<Vec3dCore> endSubtickCapture() {
         capturing = false;
-        List<Vec3dCore> result = new ArrayList<Vec3dCore>(subtickBuf);
+        List<Vec3dCore> result = new ArrayList<>(subtickBuf);
         subtickBuf.clear();
         return result;
     }

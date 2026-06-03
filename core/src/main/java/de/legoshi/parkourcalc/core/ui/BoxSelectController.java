@@ -22,8 +22,7 @@ public final class BoxSelectController {
         this.onTapCommit = onTapCommit;
     }
 
-    public void tick(Vec3dCore rayOrigin, Vec3dCore rayDirection, boolean mousePressed,
-                     double cursorScreenX, double cursorScreenY, boolean uiFocused) {
+    public void tick(Vec3dCore rayOrigin, Vec3dCore rayDirection, boolean mousePressed, double cursorScreenX, double cursorScreenY, boolean uiFocused) {
         if (uiFocused) {
             resetState();
             wasMousePressed = false;

@@ -8,8 +8,6 @@ public final class Fonts {
 
     private static ImFont boldFont;
 
-    private Fonts() {}
-
     public static void setBoldFont(ImFont font) {
         boldFont = font;
     }

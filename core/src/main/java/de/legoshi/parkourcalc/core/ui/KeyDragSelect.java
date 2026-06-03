@@ -50,10 +50,6 @@ public class KeyDragSelect {
         return rowIndex >= minRow && rowIndex <= maxRow;
     }
 
-    public boolean getTargetValue() {
-        return targetValue;
-    }
-
     /**
      * Returns the display value for a key cell, accounting for drag preview.
      */

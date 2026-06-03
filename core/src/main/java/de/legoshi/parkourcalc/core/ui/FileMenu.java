@@ -408,8 +408,7 @@ public final class FileMenu {
         if (statusMessage == null) return 0f;
         long now = System.currentTimeMillis();
         if (now >= statusFadeUntilMs) return 0f;
-        float opacity = (now <= statusActiveUntilMs) ? 1f
-                : 1f - (float)(now - statusActiveUntilMs) / (float) STATUS_FADE_MS;
+        float opacity = (now <= statusActiveUntilMs) ? 1f : 1f - (float)(now - statusActiveUntilMs) / (float) STATUS_FADE_MS;
         float reservedH = ImGui.getFrameHeightWithSpacing() * Math.max(0f, opacity);
         if (reservedH - ImGui.getStyle().getItemSpacing().y < 1f) return 0f;
         return reservedH;
@@ -511,14 +510,10 @@ public final class FileMenu {
 
         if (ThemeManager.beginStandardClickableRowsTable("##open_table", 4, 0, 0f, tableH)) {
             ImGui.tableSetupScrollFreeze(0, 1);
-            ImGui.tableSetupColumn(COL_FILENAME, ImGuiTableColumnFlags.WidthFixed,
-                    ThemeManager.tableLeftmostColumnWidth(COL_FILENAME, maxFilenameW));
-            ImGui.tableSetupColumn(COL_DATE, ImGuiTableColumnFlags.WidthFixed,
-                    ThemeManager.tableColumnWidth(COL_DATE, maxDateW));
-            ImGui.tableSetupColumn(COL_MC, ImGuiTableColumnFlags.WidthFixed,
-                    ThemeManager.tableColumnWidth(COL_MC, maxMcW));
-            ImGui.tableSetupColumn(COL_WORLD, ImGuiTableColumnFlags.WidthFixed,
-                    ThemeManager.tableRightmostColumnWidth(COL_WORLD, maxWorldW, ThemeManager.tableScrollbarSlack()));
+            ImGui.tableSetupColumn(COL_FILENAME, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableLeftmostColumnWidth(COL_FILENAME, maxFilenameW));
+            ImGui.tableSetupColumn(COL_DATE, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableColumnWidth(COL_DATE, maxDateW));
+            ImGui.tableSetupColumn(COL_MC, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableColumnWidth(COL_MC, maxMcW));
+            ImGui.tableSetupColumn(COL_WORLD, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableRightmostColumnWidth(COL_WORLD, maxWorldW, ThemeManager.tableScrollbarSlack()));
             renderOpenTableHeader();
 
             float rowH = ImGui.getFrameHeight() + ImGui.getStyle().getCellPadding().y * 2f;
@@ -537,8 +532,7 @@ public final class FileMenu {
                     if (ImGui.isMouseDoubleClicked(0)) doubleClickedToOpen = info.name;
                 }
                 float labelY = cellOrigin.y + ImGui.getStyle().getFramePadding().y;
-                ImGui.getWindowDrawList().addText(cellOrigin.x, labelY,
-                        ThemeManager.tableCellText(selected), info.name);
+                ImGui.getWindowDrawList().addText(cellOrigin.x, labelY, ThemeManager.tableCellText(selected), info.name);
 
                 ImGui.tableSetColumnIndex(1);
                 ImGui.alignTextToFramePadding();
@@ -555,9 +549,8 @@ public final class FileMenu {
         }
 
         if (doubleClickedToOpen != null) {
-            String name = doubleClickedToOpen;
             ImGui.closeCurrentPopup();
-            onLoad(name);
+            onLoad(doubleClickedToOpen);
             Modal.end();
             return;
         }
@@ -669,11 +662,7 @@ public final class FileMenu {
         for (SaveInfo info : cached) {
             if (needle.isEmpty() || info.name.toLowerCase(Locale.US).contains(needle)) out.add(info);
         }
-        out.sort(new Comparator<SaveInfo>() {
-            @Override public int compare(SaveInfo a, SaveInfo b) {
-                return Long.compare(b.lastModifiedMs, a.lastModifiedMs);
-            }
-        });
+        out.sort((a, b) -> Long.compare(b.lastModifiedMs, a.lastModifiedMs));
         return out;
     }
 

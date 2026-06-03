@@ -38,20 +38,27 @@ public final class Forge8Simulator extends LazyEntitySimulator<SimulatorEntity> 
                 simWorld = serverWorld;
             }
         }
-        Vec3 start = pendingStart != null
-                ? new Vec3(pendingStart.x, pendingStart.y, pendingStart.z)
-                : new Vec3(player.posX, player.posY, player.posZ);
-        Vec3 vel = pendingVelocity != null
-                ? new Vec3(pendingVelocity.x, pendingVelocity.y, pendingVelocity.z)
-                : new Vec3(0.0, 0.0, 0.0);
+        Vec3 start = pendingStart != null ? new Vec3(pendingStart.x, pendingStart.y, pendingStart.z) : new Vec3(player.posX, player.posY, player.posZ);
+        Vec3 vel = pendingVelocity != null ? new Vec3(pendingVelocity.x, pendingVelocity.y, pendingVelocity.z) : new Vec3(0.0, 0.0, 0.0);
         float yaw = pendingYaw != null ? pendingYaw : 0.0F;
         return new SimulatorEntity(simWorld, player.getGameProfile(), start, vel, yaw);
     }
 
-    @Override protected void resetEntity(SimulatorEntity e) { e.resetPlayer(); }
-    @Override protected void setInput(SimulatorEntity e, InputRow row) { e.setInput(row); }
-    @Override protected void applyYaw(SimulatorEntity e, float yaw) { e.rotationYaw += yaw; }
-    @Override protected void setYawAbsolute(SimulatorEntity e, float yaw) { e.rotationYaw = yaw; }
+    @Override protected void resetEntity(SimulatorEntity e) {
+        e.resetPlayer();
+    }
+
+    @Override protected void setInput(SimulatorEntity e, InputRow row) {
+        e.setInput(row);
+    }
+
+    @Override protected void applyYaw(SimulatorEntity e, float yaw) {
+        e.rotationYaw += yaw;
+    }
+
+    @Override protected void setYawAbsolute(SimulatorEntity e, float yaw) {
+        e.rotationYaw = yaw;
+    }
 
     @Override
     protected void applyTickEffects(SimulatorEntity e, int speedAmplifier, int jumpBoostAmplifier) {

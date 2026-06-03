@@ -9,6 +9,7 @@ import de.legoshi.parkourcalc.fabric.render.FabricHudOverlayRenderer;
 import de.legoshi.parkourcalc.fabric.render.FabricWorldOverlayRenderer;
 import de.legoshi.parkourcalc.fabric.sim.FabricSimulator;
 import imgui.ImGui;
+import imgui.ImGuiIO;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
@@ -36,12 +37,12 @@ public class FabricParkourCalculator implements ClientModInitializer {
             new FabricMinecraftAccess()
     );
     private static final FabricPlaybackBridge playbackBridge = new FabricPlaybackBridge();
-    private static final FabricWorldOverlayRenderer worldRenderer =
-            new FabricWorldOverlayRenderer(
+    private static final FabricWorldOverlayRenderer worldRenderer = new FabricWorldOverlayRenderer(
                     application.getBoxController(),
                     application.getSettings(),
                     application.getSelection(),
-                    application.getYawGizmo());
+                    application.getYawGizmo()
+            );
     private static final FabricHudOverlayRenderer hudRenderer = new FabricHudOverlayRenderer();
 
     @Override
@@ -184,9 +185,16 @@ public class FabricParkourCalculator implements ClientModInitializer {
     }
 
     private static void clearImGuiInputState() {
-        ImGui.getIO().clearInputKeys();
+        // Mixins stop forwarding events once the overlay loses focus, so a key/modifier still held
+        // at close never gets its release. Flush everything so nothing sticks across reopen.
+        ImGuiIO io = ImGui.getIO();
+        io.clearInputKeys();
+        io.setKeyCtrl(false);
+        io.setKeyShift(false);
+        io.setKeyAlt(false);
+        io.setKeySuper(false);
         for (int i = 0; i < 5; i++) {
-            ImGui.getIO().setMouseDown(i, false);
+            io.setMouseDown(i, false);
         }
     }
 

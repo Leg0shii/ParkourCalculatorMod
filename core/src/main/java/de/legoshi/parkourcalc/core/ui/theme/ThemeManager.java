@@ -265,19 +265,6 @@ public final class ThemeManager {
         tableHeader(label, HAlign.RIGHT);
     }
 
-    /** Right-aligns a bold header so its right edge sits above the right edge of a centerNextItem'd cell control of width itemWidth (e.g. the Yaw input). */
-    public static void tableHeaderRightOverCenteredItem(String label, float itemWidth) {
-        Fonts.pushBold();
-        ImVec2 cellOrigin = ImGui.getCursorScreenPos();
-        float avail = ImGui.getContentRegionAvail().x;
-        ImGui.tableHeader("##" + label);
-        float textW = ImGui.calcTextSize(label).x;
-        float itemRight = (avail + itemWidth) * 0.5f; // right edge of a centered control, relative to the cell's left
-        float dx = Math.min(Math.max(0f, itemRight - textW), Math.max(0f, avail - textW));
-        drawHeaderText(cellOrigin.x + dx, label);
-        Fonts.popBold();
-    }
-
     private static void renderAlignedHeaderOverlay(String label, HAlign alignment) {
         ImVec2 cellOrigin = ImGui.getCursorScreenPos();
         float avail = ImGui.getContentRegionAvail().x; // reliable cell width inside a table (getColumnWidth is the legacy columns API)
@@ -433,8 +420,8 @@ public final class ThemeManager {
         return clicked;
     }
 
-    public static boolean centeredSelectable(String idSuffix, String label, boolean selected) {
-        return centeredSelectable(idSuffix, label, selected, 0);
+    public static void centeredSelectable(String idSuffix, String label, boolean selected) {
+        centeredSelectable(idSuffix, label, selected, 0);
     }
 
     public static boolean rightAlignedSelectable(String idSuffix, String label, boolean selected, int flags) {
@@ -606,10 +593,6 @@ public final class ThemeManager {
 
     public static int lockedColor() {
         return u32(LOCKED);
-    }
-
-    public static int accentDimColor() {
-        return u32(ACCENT_DIM);
     }
 
     public static int focusColor() {

@@ -18,7 +18,6 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
-/** Root v1.3.0 window: menu bar + empty-state or input editor body. */
 public final class MainWindowOverlay implements RenderInterface, DetachedOverlay {
 
     // ### so the ID stays stable while the visible title (file name, dirty marker) changes.
@@ -62,17 +61,10 @@ public final class MainWindowOverlay implements RenderInterface, DetachedOverlay
         SaveStore get();
     }
 
-    public MainWindowOverlay(InputOverlay inputOverlay,
-                             InputData inputData,
-                             FileMenu fileMenu,
-                             Settings settings,
-                             Runnable onSettingsChanged,
-                             TickInfoPanel tickInfoPanel,
-                             PerfOverlay perfOverlay,
-                             SettingsModal settingsModal,
-                             SystemBridgePort systemBridge,
-                             SaveStoreSupplier saveStoreSupplier,
-                             String modVersion) {
+    public MainWindowOverlay(InputOverlay inputOverlay, InputData inputData, FileMenu fileMenu, Settings settings,
+                             Runnable onSettingsChanged, TickInfoPanel tickInfoPanel, PerfOverlay perfOverlay,
+                             SettingsModal settingsModal, SystemBridgePort systemBridge, SaveStoreSupplier saveStoreSupplier, String modVersion)
+    {
         this.inputOverlay = inputOverlay;
         this.inputData = inputData;
         this.fileMenu = fileMenu;
@@ -84,7 +76,7 @@ public final class MainWindowOverlay implements RenderInterface, DetachedOverlay
         this.systemBridge = systemBridge;
         this.saveStoreSupplier = saveStoreSupplier;
         this.modVersion = modVersion;
-        inputOverlay.setFooterHeightProvider(() -> fileMenu.statusStripHeight());
+        inputOverlay.setFooterHeightProvider(fileMenu::statusStripHeight);
     }
 
     @Override

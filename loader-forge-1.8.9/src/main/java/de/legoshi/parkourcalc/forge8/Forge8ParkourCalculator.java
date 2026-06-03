@@ -48,12 +48,14 @@ public class Forge8ParkourCalculator {
             application.getOverlayManager(),
             application.getSettings(),
             application::resolveAutoScaleIfNeeded,
-            () -> Minecraft.getMinecraft().currentScreen instanceof ParkourCalcGuiScreen);
+            () -> Minecraft.getMinecraft().currentScreen instanceof ParkourCalcGuiScreen
+    );
     private final Forge8WorldOverlayRenderer worldRenderer = new Forge8WorldOverlayRenderer(
             application.getBoxController(),
             application.getSettings(),
             application.getSelection(),
-            application.getYawGizmo());
+            application.getYawGizmo()
+    );
     private final Forge8HudOverlayRenderer hudRenderer = new Forge8HudOverlayRenderer();
     private final Forge8PlaybackBridge playbackBridge = new Forge8PlaybackBridge();
 
