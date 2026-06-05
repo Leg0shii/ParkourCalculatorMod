@@ -150,12 +150,12 @@ public final class Controls {
         if (avail > w) ImGui.setCursorPosX(ImGui.getCursorPosX() + avail - w);
     }
 
-    /** Gives standalone inputs the button's vertical FramePadding so they match button height; horizontal padding is left at the style default. */
-    private static void pushInputFrameHeight() {
+    /** Gives standalone inputs the button's vertical FramePadding so they match button height; horizontal padding is left at the style default. Public so custom widgets can wrap themselves to the same height. */
+    public static void pushInputFrameHeight() {
         ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, ImGui.getStyle().getFramePadding().x, BUTTON_PAD_Y * ThemeManager.uiScale());
     }
 
-    private static void popInputFrameHeight() {
+    public static void popInputFrameHeight() {
         ImGui.popStyleVar();
     }
 

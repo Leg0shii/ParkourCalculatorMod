@@ -26,6 +26,9 @@ import de.legoshi.parkourcalc.core.ui.SettingsIO;
 import de.legoshi.parkourcalc.core.ui.SettingsModal;
 import de.legoshi.parkourcalc.core.ui.TickInfoPanel;
 import de.legoshi.parkourcalc.core.ui.YawGizmoController;
+import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverState;
+import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverTable;
+import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverWindow;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -77,6 +80,15 @@ public final class Application {
     public void setupUi() {
         inputOverlay = new InputOverlay(inputData, settings, selection, this::onUserChange,
                 this::setStartToPlayer, playback, mc, boxController);
+
+        AngleSolverState angleSolverState = new AngleSolverState();
+        angleSolverState.seedSample();
+        AngleSolverTable angleSolverTable = new AngleSolverTable(
+                angleSolverState, settings, selection, () -> inputData.size());
+        inputOverlay.setAngleSolver(angleSolverTable);
+        AngleSolverWindow angleSolverWindow = new AngleSolverWindow(
+                angleSolverState, settings, this::saveSettings, () -> inputData.size());
+
         TickInfoPanel tickInfoPanel = new TickInfoPanel(boxController, selection);
         PerfOverlay perfOverlay = new PerfOverlay();
         FileMenu fileMenu = new FileMenu(saveController, filePicker, settings, this::saveSettings);
@@ -86,6 +98,7 @@ public final class Application {
                 tickInfoPanel, perfOverlay, settingsModal, systemBridge,
                 () -> saveController.getSaveStore(), modVersion);
         overlayManager.register(mainWindow);
+        overlayManager.register(angleSolverWindow);
     }
 
     public void setFilePicker(FilePickerPort filePicker) {
