@@ -83,6 +83,7 @@ public final class Application {
 
         AngleSolverState angleSolverState = new AngleSolverState();
         angleSolverState.seedSample();
+        saveController.setAngleSolver(angleSolverState);
         AngleSolverTable angleSolverTable = new AngleSolverTable(
                 angleSolverState, settings, selection, () -> inputData.size());
         inputOverlay.setAngleSolver(angleSolverTable);

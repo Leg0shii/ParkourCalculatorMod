@@ -141,6 +141,11 @@ public final class AngleSolverState {
         return ticks.get(tick);
     }
 
+    /** Tick indices that currently hold constraints or an override, in insertion order. */
+    public List<Integer> populatedTicks() {
+        return new ArrayList<>(ticks.keySet());
+    }
+
     public int constraintCount() {
         int n = 0;
         for (TickConstraints tc : ticks.values()) n += tc.getConstraints().size();
@@ -203,6 +208,20 @@ public final class AngleSolverState {
 
     public SolveResult getResult() { return result; }
     public void clearResult() { result = null; }
+    public void setResult(SolveResult result) { this.result = result; }
+
+    /** Wipes all state back to construction defaults; used before loading a saved problem. */
+    public void reset() {
+        startTick = 0;
+        landingTick = 0;
+        axis = Axis.X;
+        goal = Goal.MAX;
+        defaultInputs = InputMode.FORCE_45;
+        defaultSlipperiness = Slipperiness.AIR;
+        defaultPotions.clear();
+        ticks.clear();
+        result = null;
+    }
 
     /** Seeds the prototype's sample data (mock route, 0-based ticks). Production wires this to real state. */
     public void seedSample() {
