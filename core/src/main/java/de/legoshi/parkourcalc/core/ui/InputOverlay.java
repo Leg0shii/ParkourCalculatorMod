@@ -83,6 +83,7 @@ public final class InputOverlay {
     private static final int BASE_COLUMN_COUNT = 9;
     private static final int POTION_COLUMN_COUNT = 2;
     private static final int SOLVER_COLUMN_COUNT = 2; // Constraints + State
+    private static final float SOLVER_CULL_OVERSCAN = 4f; // extra rows rendered above/below the viewport
     private static final float ROW_COUNT_INPUT_WIDTH = 240;
 
     private static final String WARN_MULTIPLAYER =
@@ -294,9 +295,7 @@ public final class InputOverlay {
         float footerH = footerHeightProvider.get();
         float avail = Math.max(TABLE_MIN_HEIGHT, ImGui.getContentRegionAvail().y - footerH);
 
-        if (solverActive && drawerRow >= 0) {
-            // The expanded editor lives inline between the row segments; one scrolling child
-            // hosts both content-sized table halves so the lower ticks shift down below it.
+        if (solverActive) {
             renderInlineSolverBody(drawerRow, potionColumns, columnCount, avail);
         } else {
             // Fit the table to its rows so the inner column borders stop at the last row
@@ -307,12 +306,9 @@ public final class InputOverlay {
             float tableH = (data.getRows().isEmpty() && !hasStart)
                     ? avail
                     : Math.min(avail, tableContentHeight(displayRowCount));
-            // The solver augmentation shows every row (no horizontal scroll) so the stretchy
-            // constraints column can lay out; the default table keeps ScrollX.
-            int tableFlags = solverActive ? 0 : ImGuiTableFlags.ScrollX;
-            if (ThemeManager.beginStandardTable(ID_TABLE, columnCount, tableFlags, 0f, tableH)) {
-                setupColumns(potionColumns, solverActive, true, true);
-                renderAllRows(potionColumns, solverActive);
+            if (ThemeManager.beginStandardTable(ID_TABLE, columnCount, ImGuiTableFlags.ScrollX, 0f, tableH)) {
+                setupColumns(potionColumns, false, true, true);
+                renderAllRows(potionColumns, false);
                 ThemeManager.endStandardTable();
                 if (data.getRows().isEmpty() && !hasStart) {
                     renderEmptyTableHint();
@@ -351,9 +347,10 @@ public final class InputOverlay {
     }
 
     /**
-     * Solver mode with a row expanded: render the rows above and including the expanded tick,
-     * then the editor drawer, then the remaining rows, all inside one scrolling child so the
-     * expanded tick reads as the drawer's header and the ticks below it shift downward.
+     * Solver mode body, always inside one scrolling child so expand/collapse keeps its scroll. With a
+     * tick expanded, the rows split into two segments around the inline editor drawer (the expanded tick
+     * reads as the drawer's header and the ticks below it shift downward); with none expanded, the rows
+     * render as a single culled segment.
      */
     private void renderInlineSolverBody(int drawerRow, boolean potionColumns, int columnCount, float avail) {
         ImGui.beginChild("##solver_inline", 0f, avail, false, 0);
@@ -366,8 +363,23 @@ public final class InputOverlay {
 
         handleAutoScroll(hasStartRow() ? 1 : 0);
 
+        float overscan = SOLVER_CULL_OVERSCAN * ThemeManager.tableRowHeight();
+        float viewTop = clipMin.y - overscan;
+        float viewBot = clipMin.y + clipSize.y + overscan;
+        int total = data.getRows().size();
+
+        if (drawerRow < 0) {
+            renderInlineSegment("##tas-seg-a", columnCount, potionColumns, true, 0, total, viewTop, viewBot);
+            if (data.getRows().isEmpty() && !hasStartRow()) {
+                renderEmptyTableHint();
+            }
+            angleSolver.endRows();
+            ImGui.endChild();
+            return;
+        }
+
         float spacingY = ImGui.getStyle().getItemSpacing().y;
-        renderInlineSegment("##tas-seg-a", columnCount, potionColumns, true, 0, drawerRow + 1);
+        renderInlineSegment("##tas-seg-a", columnCount, potionColumns, true, 0, drawerRow + 1, viewTop, viewBot);
 
         // The expanded tick is the last row in segment A, so the gutter rect it carried out still bounds it.
         float unionTop = angleSolver.gutterMinY();
@@ -379,10 +391,9 @@ public final class InputOverlay {
         angleSolver.renderDrawer(drawerRow, ImGui.getContentRegionAvail().x);
         float unionBottom = ImGui.getCursorScreenPos().y - spacingY;
 
-        int total = data.getRows().size();
         if (drawerRow + 1 < total) {
             ImGui.setCursorPosY(ImGui.getCursorPosY() - spacingY); // and the next segment flush under the drawer
-            renderInlineSegment("##tas-seg-b", columnCount, potionColumns, false, drawerRow + 1, total);
+            renderInlineSegment("##tas-seg-b", columnCount, potionColumns, false, drawerRow + 1, total, viewTop, viewBot);
         }
 
         // Drop shadow under the expanded tick so it reads as the drawer's header, plus a thin accent
@@ -414,16 +425,15 @@ public final class InputOverlay {
         ImGui.endChild();
     }
 
-    private void renderInlineSegment(String id, int columnCount, boolean potionColumns, boolean head, int from, int to) {
+    private void renderInlineSegment(String id, int columnCount, boolean potionColumns, boolean head,
+                                     int from, int to, float viewTop, float viewBot) {
         int flags = ThemeManager.standardTableFlagsNoScroll();
         if (!ThemeManager.beginStandardTableWithFlags(id, columnCount, flags, 0f, 0f)) return;
         setupColumns(potionColumns, true, head, false);
         if (head) renderStartRow(potionColumns, true);
         DragDropState dragDrop = new DragDropState();
-        List<InputRow> rows = data.getRows();
-        for (int i = from; i < to && i < rows.size(); i++) {
-            renderRow(i, rows.get(i), dragDrop, potionColumns, true);
-        }
+        int clampedTo = Math.min(to, data.getRows().size());
+        renderSolverRowsCulled(from, clampedTo, viewTop, viewBot, dragDrop, potionColumns);
         ThemeManager.endStandardTable();
     }
 
@@ -536,6 +546,7 @@ public final class InputOverlay {
         }
     }
 
+    // Non-solver TAS table: solver mode renders through renderInlineSolverBody instead.
     private void renderAllRows(final boolean potionColumns, final boolean solverActive) {
         final List<InputRow> rows = data.getRows();
         final ImDrawList drawList = ImGui.getWindowDrawList();
@@ -548,23 +559,39 @@ public final class InputOverlay {
 
         renderStartRow(potionColumns, solverActive);
 
-        if (solverActive) {
-            // No clipper: every row is shown, so a variable-height drawer row stays valid.
-            angleSolver.beginRows();
-            for (int i = 0; i < rows.size(); i++) {
-                renderRow(i, rows.get(i), dragDrop, potionColumns, true);
+        ImGuiListClipper.forEach(rows.size(), new ImListClipperCallback() {
+            @Override
+            public void accept(int i) {
+                renderRow(i, rows.get(i), dragDrop, potionColumns, false);
             }
-            angleSolver.endRows();
-        } else {
-            ImGuiListClipper.forEach(rows.size(), new ImListClipperCallback() {
-                @Override
-                public void accept(int i) {
-                    renderRow(i, rows.get(i), dragDrop, potionColumns, false);
-                }
-            });
-            renderDropIndicator(drawList, dragDrop);
-            applyDragDrop(dragDrop);
+        });
+        renderDropIndicator(drawList, dragDrop);
+        applyDragDrop(dragDrop);
+    }
+
+    private void renderSolverRowsCulled(int from, int to, float viewTop, float viewBot,
+                                        DragDropState dragDrop, boolean potionColumns) {
+        final List<InputRow> rows = data.getRows();
+        final float baseRowH = ThemeManager.tableRowHeight();
+
+        float y = ImGui.getCursorScreenPos().y;
+        int i = from;
+        float lead = 0f;
+        while (i < to) {
+            float h = angleSolver.rowHeight(i, baseRowH);
+            if (y + h <= viewTop) { lead += h; y += h; i++; } else break;
         }
+        if (lead > 0f) ImGui.tableNextRow(0, lead);
+
+        while (i < to && y <= viewBot) {
+            renderRow(i, rows.get(i), dragDrop, potionColumns, true);
+            y += angleSolver.rowHeight(i, baseRowH);
+            i++;
+        }
+
+        float trail = 0f;
+        while (i < to) { trail += angleSolver.rowHeight(i, baseRowH); i++; }
+        if (trail > 0f) ImGui.tableNextRow(0, trail);
     }
 
     private void handleAutoScroll(int startOffset) {

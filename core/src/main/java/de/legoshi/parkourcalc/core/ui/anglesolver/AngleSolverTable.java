@@ -254,11 +254,14 @@ public final class AngleSolverTable {
         float x = m.x + 12f * s;
         float y = m.y + 4f * s;
         float w = pad + labelW + tailW + pad;
+        // A state-facet drag carries the peach chip color; a constraint drag keeps the accent color.
+        boolean stateDrag = dragKind != DragKind.CONSTRAINT;
+        int family = stateDrag ? ThemeManager.peachColor() : ThemeManager.accentColor();
         dl.addRectFilled(x, y, x + w, y + h, ThemeManager.panelColor(), 3f * s);
-        dl.addRect(x, y, x + w, y + h, ThemeManager.accentColor(), 3f * s, 0, 1f);
+        dl.addRect(x, y, x + w, y + h, family, 3f * s, 0, 1f);
         float ty = y + (h - ImGui.getFontSize()) * 0.5f;
         dl.addText(x + pad, ty, ThemeManager.textColor(), dragLabel);
-        dl.addText(x + pad + labelW, ty, dragAlt ? ThemeManager.okColor() : ThemeManager.accentColor(), tail);
+        dl.addText(x + pad + labelW, ty, dragAlt ? ThemeManager.okColor() : family, tail);
     }
 
     // ---- gutter (chevron + flag + number + selection) --------------------------
@@ -331,7 +334,7 @@ public final class AngleSolverTable {
         TickConstraints tc = state.tickConstraintsOrNull(rowIndex);
         final List<Constraint> list = tc == null ? null : tc.getConstraints();
         if (list == null || list.isEmpty()) {
-            constraintCellRects.put(rowIndex, new float[]{origin.x, origin.y, origin.x + cellW, origin.y + grownRowH});
+            constraintCellRects.put(rowIndex, cellRect(origin, cellW, grownRowH));
             rowContentH.put(rowIndex, baseRowH); // constraint cell renders first, so it seeds this frame's row height
             drawDropHighlight(rowIndex, origin, cellW, grownRowH, true);
             return;
@@ -342,10 +345,10 @@ public final class AngleSolverTable {
         for (int i = 0; i < n; i++) chipW[i] = constraintChipWidth(list.get(i));
         ChipLayout layout = computeChipLayout(cellW, baseRowH, chipW);
 
-        constraintCellRects.put(rowIndex, new float[]{origin.x, origin.y, origin.x + cellW, origin.y + grownRowH});
+        constraintCellRects.put(rowIndex, cellRect(origin, cellW, grownRowH));
         rowContentH.put(rowIndex, layout.cellH);
         drawDropHighlight(rowIndex, origin, cellW, grownRowH, true);
-        placeChips(origin, cellW, layout, i -> renderConstraintChip(rowIndex, i, list.get(i)));
+        placeChips(origin, cellW, grownRowH, layout, i -> renderConstraintChip(rowIndex, i, list.get(i)));
     }
 
     public void renderStateCell(int rowIndex, float grownRowH) {
@@ -356,7 +359,7 @@ public final class AngleSolverTable {
         TickConstraints tc = state.tickConstraintsOrNull(rowIndex);
         StateOverride ov = tc == null ? null : tc.getOverride();
         if (ov == null || ov.isEmpty()) {
-            stateCellRects.put(rowIndex, new float[]{origin.x, origin.y, origin.x + cellW, origin.y + grownRowH});
+            stateCellRects.put(rowIndex, cellRect(origin, cellW, grownRowH));
             mergeRowContentHeight(rowIndex, baseRowH);
             drawDropHighlight(rowIndex, origin, cellW, grownRowH, false);
             return;
@@ -368,10 +371,10 @@ public final class AngleSolverTable {
         for (int i = 0; i < n; i++) chipW[i] = stateChipWidth(specs.get(i).key, specs.get(i).value);
         ChipLayout layout = computeChipLayout(cellW, baseRowH, chipW);
 
-        stateCellRects.put(rowIndex, new float[]{origin.x, origin.y, origin.x + cellW, origin.y + grownRowH});
+        stateCellRects.put(rowIndex, cellRect(origin, cellW, grownRowH));
         mergeRowContentHeight(rowIndex, layout.cellH);
         drawDropHighlight(rowIndex, origin, cellW, grownRowH, false);
-        placeChips(origin, cellW, layout, i -> {
+        placeChips(origin, cellW, grownRowH, layout, i -> {
             StateChipSpec sp = specs.get(i);
             stateChip(rowIndex, sp.kind, sp.potion, sp.key, sp.value, sp.struck);
         });
@@ -383,12 +386,25 @@ public final class AngleSolverTable {
         rowContentH.put(rowIndex, cur == null ? cellH : Math.max(cur, cellH));
     }
 
-    private void drawDropHighlight(int rowIndex, ImVec2 origin, float cellW, float rowH, boolean constraintColumn) {
+    // Full cell rect (origin is the cell's content top-left, inset by cell padding): grow back out by the
+    // padding so the drop hitbox and its highlight span the whole cell edge-to-edge and top-to-bottom.
+    private float[] cellRect(ImVec2 origin, float cellW, float grownRowH) {
+        float padX = ImGui.getStyle().getCellPadding().x;
+        float padY = ImGui.getStyle().getCellPadding().y;
+        float x0 = origin.x - padX;
+        float y0 = origin.y - padY;
+        return new float[]{x0, y0, origin.x + cellW + padX, y0 + grownRowH};
+    }
+
+    private void drawDropHighlight(int rowIndex, ImVec2 origin, float cellW, float grownRowH, boolean constraintColumn) {
         if (!dragging || dropTick != rowIndex) return;
         if (constraintColumn != (dragKind == DragKind.CONSTRAINT)) return;
+        float[] r = cellRect(origin, cellW, grownRowH);
+        int fill = constraintColumn ? ThemeManager.accentTintColor(0.16f) : ThemeManager.peachTintColor(0.16f);
+        int border = constraintColumn ? ThemeManager.accentColor() : ThemeManager.peachColor();
         ImDrawList dl = ImGui.getWindowDrawList();
-        dl.addRectFilled(origin.x, origin.y, origin.x + cellW, origin.y + rowH, ThemeManager.accentTintColor(0.16f), 0f);
-        dl.addRect(origin.x, origin.y, origin.x + cellW, origin.y + rowH, ThemeManager.accentColor(), 0f, 0, 1f);
+        dl.addRectFilled(r[0], r[1], r[2], r[3], fill, 0f);
+        dl.addRect(r[0], r[1], r[2], r[3], border, 0f, 0, 1f);
     }
 
     // ---- chip layout: wrap onto new lines and center each line in the cell -------
@@ -401,6 +417,7 @@ public final class AngleSolverTable {
         int[] lineOf;
         float[] lineW;
         float cellH;
+        int lines;
     }
 
     private ChipLayout computeChipLayout(float cellW, float rowH, float[] chipW) {
@@ -422,22 +439,27 @@ public final class AngleSolverTable {
             layout.lineOf[i] = lines - 1;
             layout.lineW[lines - 1] = usedX;
         }
+        layout.lines = lines;
         layout.cellH = Math.max(rowH, lines * lineH + (lines - 1) * spacingY);
         return layout;
     }
 
-    private void placeChips(ImVec2 origin, float cellW, ChipLayout layout, ChipRenderer renderer) {
+    private void placeChips(ImVec2 origin, float cellW, float grownRowH, ChipLayout layout, ChipRenderer renderer) {
         float s = ThemeManager.uiScale();
         float gap = 5f * s;
         float lineH = ImGui.getFrameHeight();
         float spacingY = ImGui.getStyle().getItemSpacing().y;
+        // Center this cell's chip block within the (possibly taller) row, so a short column doesn't cling to the top.
+        float blockH = layout.lines * lineH + (layout.lines - 1) * spacingY;
+        float cellPadY = ImGui.getStyle().getCellPadding().y;
+        float yOff = Math.max(0f, (grownRowH - 2f * cellPadY - blockH) * 0.5f);
         int curLine = -1;
         for (int i = 0; i < layout.lineOf.length; i++) {
             int line = layout.lineOf[i];
             if (line != curLine) {
                 curLine = line;
                 float lx = origin.x + Math.max(0f, (cellW - layout.lineW[line]) * 0.5f);
-                float ly = origin.y + line * (lineH + spacingY);
+                float ly = origin.y + yOff + line * (lineH + spacingY);
                 ImGui.setCursorScreenPos(lx, ly);
             } else {
                 ImGui.sameLine(0, gap);
