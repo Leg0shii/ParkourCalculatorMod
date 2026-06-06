@@ -3,7 +3,6 @@ package de.legoshi.parkourcalc.core.ui.anglesolver;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -204,7 +203,8 @@ public final class AngleSolverState {
         return list.remove(index);
     }
 
-    // ---- solve (stubbed) -------------------------------------------------------
+    // ---- solve result ----------------------------------------------------------
+    // Solving lives in AngleSolverEngine; the window's Solve button drives it and calls setResult.
 
     public SolveResult getResult() { return result; }
     public void clearResult() { result = null; }
@@ -252,54 +252,4 @@ public final class AngleSolverState {
         t10.getConstraints().add(Constraint.range(Constraint.Field.DZ, -0.10, 0.10, false, false));
     }
 
-    /** Stubbed solve: fabricates a plausible result panel from the current constraints. */
-    public void solve() {
-        int total = constraintCount();
-        SolveResult r = new SolveResult(true, total, total, startTick + 1, landingTick + 1);
-        int idx = 0;
-        for (Map.Entry<Integer, TickConstraints> e : ticks.entrySet()) {
-            int tick = e.getKey();
-            for (Constraint c : e.getValue().getConstraints()) {
-                r.getOutcomes().add(outcome(tick, c, idx++));
-            }
-        }
-        int span = Math.max(startTick, landingTick);
-        int from = Math.min(startTick, landingTick);
-        for (int t = from; t <= span; t++) {
-            double yaw = -134.217728 + (t - from) * 7.314159;
-            r.getYaws().add(new SolveResult.YawEntry(t + 1, yaw));
-        }
-        this.result = r;
-    }
-
-    private static SolveResult.Outcome outcome(int tick, Constraint c, int idx) {
-        double slack = 0.105 + 0.043 * (idx % 5);
-        String field = c.getField().label;
-        String tickLabel = "T" + (tick + 1);
-        if (c.isRange()) {
-            double mid = (c.getLo() + c.getHi()) * 0.5;
-            return new SolveResult.Outcome(field, tickLabel, ConstraintText.chip(c), fmt(mid), "");
-        }
-        double v = c.getValue();
-        double found;
-        switch (c.getOp()) {
-            case LT:
-            case LE:
-                found = v - slack;
-                break;
-            case EQ:
-                found = v;
-                slack = 0;
-                break;
-            default: // GT, GE
-                found = v + slack;
-                break;
-        }
-        String relation = c.getOp().glyph + " " + ConstraintText.num(v);
-        return new SolveResult.Outcome(field, tickLabel, relation, fmt(found), "+" + fmt(slack));
-    }
-
-    private static String fmt(double v) {
-        return String.format(Locale.ROOT, "%.3f", v);
-    }
 }

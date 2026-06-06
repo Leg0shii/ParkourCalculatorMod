@@ -26,6 +26,7 @@ import de.legoshi.parkourcalc.core.ui.SettingsIO;
 import de.legoshi.parkourcalc.core.ui.SettingsModal;
 import de.legoshi.parkourcalc.core.ui.TickInfoPanel;
 import de.legoshi.parkourcalc.core.ui.YawGizmoController;
+import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverTable;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverWindow;
@@ -84,11 +85,14 @@ public final class Application {
         AngleSolverState angleSolverState = new AngleSolverState();
         angleSolverState.seedSample();
         saveController.setAngleSolver(angleSolverState);
+        saveController.setDebugSource(boxController, settings);
         AngleSolverTable angleSolverTable = new AngleSolverTable(
                 angleSolverState, settings, selection, () -> inputData.size());
         inputOverlay.setAngleSolver(angleSolverTable);
+        AngleSolverEngine angleSolverEngine = new AngleSolverEngine(
+                angleSolverState, boxController, inputData, this::onUserChange);
         AngleSolverWindow angleSolverWindow = new AngleSolverWindow(
-                angleSolverState, settings, this::saveSettings, () -> inputData.size());
+                angleSolverState, settings, this::saveSettings, () -> inputData.size(), angleSolverEngine);
 
         TickInfoPanel tickInfoPanel = new TickInfoPanel(boxController, selection);
         PerfOverlay perfOverlay = new PerfOverlay();

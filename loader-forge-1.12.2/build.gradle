@@ -1,3 +1,12 @@
+buildscript {
+    repositories { mavenCentral() }
+    dependencies {
+        // jar->jar package relocator (ASM-based). Used to lift commons-math3 out of the
+        // FML-excluded `org.apache.commons.*` namespace; see the relocateMath3 task below.
+        classpath 'me.lucko:jar-relocator:1.7'
+    }
+}
+
 plugins {
     id 'xyz.wagyourtail.unimined' version '1.4.1'
     id 'java'
@@ -77,6 +86,32 @@ jar {
     from {
         configurations.shade.collect { it.isDirectory() ? it : zipTree(it) }
     }
+}
+
+// FML's LaunchClassLoader delegates the `org.apache.commons.` prefix to the parent app
+// classloader (FMLLaunchHandler line 70), which at runtime does not carry our bundled
+// commons-math3, so the classes ClassNotFound under launchwrapper even though they are
+// in the jar. Relocate them out of `org.apache.*` before remap. remapJar then consumes
+// the relocated fat jar instead of `jar` directly.
+def relocatedJar = layout.buildDirectory.file('relocated/relocated.jar')
+
+tasks.register('relocateMath3') {
+    dependsOn 'jar'
+    def input = tasks.named('jar').flatMap { it.archiveFile }
+    inputs.file(input)
+    outputs.file(relocatedJar)
+    doLast {
+        new me.lucko.jarrelocator.JarRelocator(
+            input.get().asFile,
+            relocatedJar.get().asFile,
+            [new me.lucko.jarrelocator.Relocation('org.apache.commons.math3', 'de.legoshi.parkourcalc.shaded.commons.math3')]
+        ).run()
+    }
+}
+
+tasks.named('remapJar') {
+    dependsOn 'relocateMath3'
+    inputFile.set(relocatedJar)
 }
 
 processResources {

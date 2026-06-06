@@ -15,6 +15,7 @@ public final class SaveFile {
     public Start start;
     public List<Row> rows = new ArrayList<Row>();
     public AngleSolver angleSolver;
+    public List<DebugTick> debug;                    // null unless "save debug values" was on at save time
 
     public static final class World {
         public String dimension;
@@ -84,6 +85,10 @@ public final class SaveFile {
         public int total;
         public int startTick;                            // 1-based for display
         public int landingTick;                          // 1-based for display
+        public long durationMs;
+        public String finishedAt;                        // formatted clock time, null if unset
+        public double objectiveValue;
+        public boolean hasObjective;
         public List<Outcome> outcomes = new ArrayList<Outcome>();
         public List<Yaw> yaws = new ArrayList<Yaw>();
     }
@@ -99,5 +104,19 @@ public final class SaveFile {
     public static final class Yaw {
         public int tick;                                 // 1-based for display
         public double yaw;
+    }
+
+    /** Full per-tick SimulatorEntity state, captured for debugging. One per simulated tick; index 0 is
+     *  the start state, index i is the state after row i-1. collisionAngle is null when MC didn't model
+     *  it (e.g. 1.8.9, or the speed gate skipped it) so the value never serializes as NaN. */
+    public static final class DebugTick {
+        public double[] pos;                             // [x,y,z]
+        public double[] vel;                             // post-tick motion (per-axis collision-clamped)
+        public float yaw;
+        public boolean onGround;
+        public boolean sneaking;
+        public boolean wallCollision;
+        public boolean softCollision;
+        public Double collisionAngle;                    // degrees; null = not modelled / NaN
     }
 }

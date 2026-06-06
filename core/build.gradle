@@ -28,6 +28,12 @@ dependencies {
 	// core does not bundle its own copy; usage is restricted to the API subset present
 	// in 2.2.4 (no JsonParser.parseReader, no JsonArray.add(Number) sugar).
 	compileOnly 'com.google.code.gson:gson:2.8.0'
+
+	// commons-math3: CMA-ES global optimizer for the Angle Solver (CmaesJumpHarness). Pure Java and
+	// MC-free, so allowed in core. Minecraft does NOT ship it, so it is bundled into every loader jar
+	// at runtime: Fabric via Loom `include`, the Forge loaders via their `shade` config (which resolves
+	// core's transitive runtime deps through forge-core's `api project(':core')`).
+	implementation 'org.apache.commons:commons-math3:3.6.1'
 }
 
 // Enforce the table-styling consolidation rules established in the Phase 1-5

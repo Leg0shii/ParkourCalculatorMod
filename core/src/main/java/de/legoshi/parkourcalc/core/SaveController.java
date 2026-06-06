@@ -7,8 +7,11 @@ import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.save.SaveInfo;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
+import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
+import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.InputData;
+import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverState;
 
 import java.io.IOException;
@@ -28,6 +31,8 @@ public final class SaveController {
 
     private FileSystemSaveStore store;
     private AngleSolverState angleSolver;
+    private BoxController boxController;
+    private Settings settings;
     private String currentName;
     private boolean dirty;
 
@@ -46,6 +51,12 @@ public final class SaveController {
         this.angleSolver = angleSolver;
     }
 
+    /** Source for the optional per-tick debug dump (Settings.saveDebugValues gates it). */
+    void setDebugSource(BoxController boxController, Settings settings) {
+        this.boxController = boxController;
+        this.settings = settings;
+    }
+
     FileSystemSaveStore getSaveStore() {
         return store;
     }
@@ -60,7 +71,9 @@ public final class SaveController {
 
     public Result<String> save(String name) {
         if (store == null) return Result.failure("Save store not initialized.");
-        Result<String> result = SaveIO.save(store, name, inputData, runner.getStartPosition(), runner.getStartVelocity(), runner.getStartYaw(), angleSolver);
+        List<TickState> debug = (settings != null && settings.saveDebugValues && boxController != null)
+                ? boxController.getStates() : null;
+        Result<String> result = SaveIO.save(store, name, inputData, runner.getStartPosition(), runner.getStartVelocity(), runner.getStartYaw(), angleSolver, debug);
         if (result.ok) {
             currentName = result.value;
             dirty = false;

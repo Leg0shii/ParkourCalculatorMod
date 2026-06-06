@@ -30,6 +30,8 @@ public final class Settings {
     private static final boolean DEFAULT_VIEW_TICK_INFO = true;
     private static final boolean DEFAULT_VIEW_PERF_INFO = false;
     private static final boolean DEFAULT_VIEW_ANGLE_SOLVER = false;
+    private static final boolean DEFAULT_SAVE_DEBUG_VALUES = false;
+    private static final boolean DEFAULT_AUTO_APPLY_SOLVE = false;
 
     private static final boolean DEFAULT_KEEP_INPUT_TABLE_OPEN = false;
     private static final boolean DEFAULT_KEEP_TICK_INFO_OPEN = false;
@@ -89,6 +91,12 @@ public final class Settings {
     public boolean viewPerf = DEFAULT_VIEW_PERF_INFO;
     public boolean viewAngleSolver = DEFAULT_VIEW_ANGLE_SOLVER;
 
+    // When on, each Save also writes the full per-tick SimulatorEntity state to the file (debug only).
+    public boolean saveDebugValues = DEFAULT_SAVE_DEBUG_VALUES;
+
+    // When on, a feasible Angle Solver solve is applied automatically the moment it finishes.
+    public boolean autoApplySolve = DEFAULT_AUTO_APPLY_SOLVE;
+
     // Keep these windows drawn (display-only) while the main UI is closed.
     public boolean keepInputTableOpen = DEFAULT_KEEP_INPUT_TABLE_OPEN;
     public boolean keepTickInfoOpen = DEFAULT_KEEP_TICK_INFO_OPEN;
@@ -134,6 +142,8 @@ public final class Settings {
         viewTickInfo = DEFAULT_VIEW_TICK_INFO;
         viewPerf = DEFAULT_VIEW_PERF_INFO;
         viewAngleSolver = DEFAULT_VIEW_ANGLE_SOLVER;
+        saveDebugValues = DEFAULT_SAVE_DEBUG_VALUES;
+        autoApplySolve = DEFAULT_AUTO_APPLY_SOLVE;
         keepInputTableOpen = DEFAULT_KEEP_INPUT_TABLE_OPEN;
         keepTickInfoOpen = DEFAULT_KEEP_TICK_INFO_OPEN;
         keepBoxesDuringPlayback = DEFAULT_KEEP_BOXES_DURING_PLAYBACK;

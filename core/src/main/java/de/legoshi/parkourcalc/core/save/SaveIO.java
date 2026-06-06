@@ -3,6 +3,7 @@ package de.legoshi.parkourcalc.core.save;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
+import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
@@ -26,13 +27,13 @@ import java.util.TimeZone;
 /** Pure save/load logic; Gson stays within the 2.2.4 subset (MC 1.8.9 ships it). */
 public final class SaveIO {
 
-    public static Result<String> save(FileSystemSaveStore store, String rawName, InputData inputData, Vec3dCore startPos, Vec3dCore startVel, float startYaw, AngleSolverState angleSolver) {
+    public static Result<String> save(FileSystemSaveStore store, String rawName, InputData inputData, Vec3dCore startPos, Vec3dCore startVel, float startYaw, AngleSolverState angleSolver, List<TickState> debugStates) {
         String name = sanitize(rawName);
         if (name == null) {
             return Result.failure("Invalid save name. Use letters, numbers, dashes, or underscores.");
         }
 
-        SaveFile file = buildFile(store, inputData, startPos, startVel, startYaw, angleSolver);
+        SaveFile file = buildFile(store, inputData, startPos, startVel, startYaw, angleSolver, debugStates);
         String json = new GsonBuilder().setPrettyPrinting().create().toJson(file);
 
         try {
@@ -162,7 +163,7 @@ public final class SaveIO {
 
     private static SaveFile buildFile(FileSystemSaveStore store, InputData inputData,
                                       Vec3dCore startPos, Vec3dCore startVel, float startYaw,
-                                      AngleSolverState angleSolver) {
+                                      AngleSolverState angleSolver, List<TickState> debugStates) {
         SaveFile file = new SaveFile();
         file.version = SaveFile.FORMAT_VERSION;
         file.createdAt = nowIso8601();
@@ -184,7 +185,27 @@ public final class SaveIO {
 
         file.angleSolver = toSaveAngleSolver(angleSolver);
 
+        if (debugStates != null) {
+            List<SaveFile.DebugTick> dbg = new ArrayList<SaveFile.DebugTick>(debugStates.size());
+            for (TickState s : debugStates) dbg.add(toDebugTick(s));
+            file.debug = dbg;
+        }
+
         return file;
+    }
+
+    private static SaveFile.DebugTick toDebugTick(TickState s) {
+        SaveFile.DebugTick d = new SaveFile.DebugTick();
+        d.pos = new double[] { s.position.x, s.position.y, s.position.z };
+        d.vel = new double[] { s.velocity.x, s.velocity.y, s.velocity.z };
+        d.yaw = s.yaw;
+        d.onGround = s.onGround;
+        d.sneaking = s.sneaking;
+        d.wallCollision = s.wallCollision;
+        d.softCollision = s.softCollision;
+        double angle = s.collisionAngleDegrees;
+        d.collisionAngle = (Double.isNaN(angle) || Double.isInfinite(angle)) ? null : angle;
+        return d;
     }
 
     private static SaveFile.World toWorld(WorldDescriptor desc) {
@@ -337,6 +358,10 @@ public final class SaveIO {
         out.total = r.getTotal();
         out.startTick = r.getStartTick();
         out.landingTick = r.getLandingTick();
+        out.durationMs = r.getDurationMs();
+        out.finishedAt = r.getFinishedAt();
+        out.objectiveValue = r.getObjectiveValue();
+        out.hasObjective = r.hasObjective();
         for (SolveResult.Outcome o : r.getOutcomes()) {
             SaveFile.Outcome so = new SaveFile.Outcome();
             so.field = o.field;
@@ -358,6 +383,9 @@ public final class SaveIO {
     private static SolveResult toResult(SaveFile.Result rd) {
         if (rd == null) return null;
         SolveResult r = new SolveResult(rd.success, rd.met, rd.total, rd.startTick, rd.landingTick);
+        r.setDurationMs(rd.durationMs);
+        r.setFinishedAt(rd.finishedAt);
+        if (rd.hasObjective) r.setObjective(rd.objectiveValue);
         if (rd.outcomes != null) {
             for (SaveFile.Outcome o : rd.outcomes) {
                 r.getOutcomes().add(new SolveResult.Outcome(o.field, o.tick, o.relation, o.found, o.margin));

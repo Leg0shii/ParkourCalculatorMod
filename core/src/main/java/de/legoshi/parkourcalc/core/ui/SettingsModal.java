@@ -37,6 +37,7 @@ public final class SettingsModal {
     private static final String TT_KEEP_INPUT_TABLE = "Keeps the input table window drawn as a display-only overlay even when the main UI is closed. It cannot be edited while closed.";
     private static final String TT_KEEP_TICK_INFO = "Keeps the Tick Info window drawn even when the main UI is closed.";
     private static final String TT_KEEP_BOXES_PLAYBACK = "Keeps the tick-box path overlay drawn in-world while playback is running, instead of hiding it.";
+    private static final String TT_AUTO_APPLY = "Applies a feasible Angle Solver solution to the input rows the moment the solve finishes, skipping the Apply confirmation.";
 
     private final Settings settings;
     private final Runnable onChanged;
@@ -157,6 +158,13 @@ public final class SettingsModal {
         if (beginLayoutTable("##settings_panels")) {
             checkboxRow("Input table", "##keep_input_table", settings.keepInputTableOpen, TT_KEEP_INPUT_TABLE, v -> settings.keepInputTableOpen = v);
             checkboxRow("Tick Info", "##keep_tick_info", settings.keepTickInfoOpen, TT_KEEP_TICK_INFO, v -> settings.keepTickInfoOpen = v);
+            ThemeManager.endStandardFormTable();
+        }
+
+        ThemeManager.sectionSpacing();
+        sectionHeader("Angle Solver");
+        if (beginLayoutTable("##settings_angle_solver")) {
+            checkboxRow("Auto-apply solutions", "##auto_apply_solve", settings.autoApplySolve, TT_AUTO_APPLY, v -> settings.autoApplySolve = v);
             ThemeManager.endStandardFormTable();
         }
     }

@@ -42,6 +42,12 @@ public final class SolveResult {
     private final List<Outcome> outcomes = new ArrayList<>();
     private final List<YawEntry> yaws = new ArrayList<>();
 
+    // Solve stats (filled by the engine; defaults are harmless for the stubbed/failed paths).
+    private long durationMs;
+    private String finishedAt;     // formatted clock time when the solve finished, null if unset
+    private double objectiveValue;
+    private boolean hasObjective;
+
     public SolveResult(boolean success, int met, int total, int startTick, int landingTick) {
         this.success = success;
         this.met = met;
@@ -57,4 +63,12 @@ public final class SolveResult {
     public int getLandingTick() { return landingTick; }
     public List<Outcome> getOutcomes() { return outcomes; }
     public List<YawEntry> getYaws() { return yaws; }
+
+    public long getDurationMs() { return durationMs; }
+    public void setDurationMs(long durationMs) { this.durationMs = durationMs; }
+    public String getFinishedAt() { return finishedAt; }
+    public void setFinishedAt(String finishedAt) { this.finishedAt = finishedAt; }
+    public double getObjectiveValue() { return objectiveValue; }
+    public boolean hasObjective() { return hasObjective; }
+    public void setObjective(double value) { this.objectiveValue = value; this.hasObjective = true; }
 }

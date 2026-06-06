@@ -44,6 +44,10 @@ dependencies {
 	// Shared core module (Java 8, no MC). Bundle into the final mod JAR.
 	include implementation(project(':core'))
 
+	// commons-math3 backs the Angle Solver's CMA-ES; core needs it at runtime. Loom's `include`
+	// does not pull a project's transitive maven deps into jar-in-jar, so list it explicitly.
+	include implementation("org.apache.commons:commons-math3:3.6.1")
+
 	include implementation("io.github.spair:imgui-java-binding:${project.imgui_version}")
 	include implementation("io.github.spair:imgui-java-lwjgl3:${project.imgui_version}")
 	include implementation("io.github.spair:imgui-java-natives-windows:${project.imgui_version}")

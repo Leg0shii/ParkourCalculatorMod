@@ -42,6 +42,7 @@ public final class AngleSolverWindow implements RenderInterface {
     private final Settings settings;
     private final Runnable onSettingsChanged;
     private final IntSupplier rowCountSupplier;
+    private final AngleSolverEngine engine;
     private final ImInt startTickBuf = new ImInt();
     private final ImInt goalTickBuf = new ImInt();
     private final ImInt slipBuf = new ImInt();
@@ -53,11 +54,12 @@ public final class AngleSolverWindow implements RenderInterface {
     private int doseToRemove;
 
     public AngleSolverWindow(AngleSolverState state, Settings settings, Runnable onSettingsChanged,
-                             IntSupplier rowCountSupplier) {
+                             IntSupplier rowCountSupplier, AngleSolverEngine engine) {
         this.state = state;
         this.settings = settings;
         this.onSettingsChanged = onSettingsChanged;
         this.rowCountSupplier = rowCountSupplier;
+        this.engine = engine;
         this.slipItems = buildSlipItems();
     }
 
@@ -71,6 +73,12 @@ public final class AngleSolverWindow implements RenderInterface {
     @Override
     public void render(ImGuiIO io) {
         if (!settings.viewAngleSolver) return;
+        boolean wasSolving = engine.isSolving();
+        engine.poll(); // publish a finished background solve on the main thread
+        if (wasSolving && !engine.isSolving() && settings.autoApplySolve) {
+            SolveResult done = state.getResult();
+            if (done != null && done.isSuccess() && !done.getYaws().isEmpty()) engine.apply();
+        }
         int rowCount = Math.max(1, rowCountSupplier.getAsInt());
         state.clampTicks(rowCount);
 
@@ -266,17 +274,37 @@ public final class AngleSolverWindow implements RenderInterface {
     }
 
     private void renderActions() {
+        if (engine.isSolving()) {
+            renderSolvingIndicator();
+            return;
+        }
         if (Controls.secondaryButton("Solve")) {
             yawsExpanded = false;
-            state.solve();
+            engine.solve();
         }
         ImGui.sameLine();
-        boolean hasSolution = state.getResult() != null && state.getResult().isSuccess();
+        SolveResult r = state.getResult();
+        // Only a feasible solve can be applied: an unmet constraint is a wall, so applying it always collides.
+        boolean hasSolution = r != null && r.isSuccess() && !r.getYaws().isEmpty();
         if (hasSolution) {
             if (Controls.secondaryButton("Apply")) ImGui.openPopup(APPLY_POPUP_ID);
         } else {
             Controls.disabledButton("Apply");
         }
+    }
+
+    private void renderSolvingIndicator() {
+        float scale = ThemeManager.uiScale();
+        float h = ImGui.getFrameHeight();
+        ImVec2 p = ImGui.getCursorScreenPos();
+        SolverWidgets.spinner(ImGui.getWindowDrawList(), p.x + h * 0.5f, p.y + h * 0.5f, h * 0.30f,
+                1.8f * scale, ThemeManager.accentColor(), engine.elapsedSeconds());
+        ImGui.dummy(h, h);
+        ImGui.sameLine();
+        ImGui.alignTextToFramePadding();
+        ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+        ImGui.text(String.format(Locale.ROOT, "Solving... %.1fs", engine.elapsedSeconds()));
+        ThemeManager.popTextColor();
     }
 
     private void renderResultPanel(ImGuiIO io, SolveResult r, float scale) {
@@ -285,7 +313,8 @@ public final class AngleSolverWindow implements RenderInterface {
         int border = r.isSuccess() ? ThemeManager.okTintColor(0.45f) : ThemeManager.dangerTintColor(0.45f);
 
         float lineH = ImGui.getTextLineHeightWithSpacing();
-        int rows = 2 + r.getOutcomes().size() + 1 + (yawsExpanded ? r.getYaws().size() : 0);
+        int statsLines = (r.getFinishedAt() != null ? 1 : 0) + (r.hasObjective() ? 1 : 0);
+        int rows = 2 + statsLines + r.getOutcomes().size() + 1 + (yawsExpanded ? r.getYaws().size() : 0);
         float pad = ThemeManager.SM * scale;
         float fullH = rows * lineH + 2f * pad;
         float h = Math.min(fullH, io.getDisplaySizeY() * 0.4f); // cap so the pane scrolls instead of growing off-screen
@@ -302,12 +331,35 @@ public final class AngleSolverWindow implements RenderInterface {
         ThemeManager.popTextColor();
         ThemeManager.bottomPaddedSeparator();
 
+        renderStats(r);
         renderOutcomes(r);
         renderYawList(r, scale);
 
         ImGui.endChild();
         ImGui.popStyleVar();
         ImGui.popStyleColor(2);
+    }
+
+    private void renderStats(SolveResult r) {
+        if (r.getFinishedAt() == null && !r.hasObjective()) return;
+        ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+        if (r.getFinishedAt() != null) {
+            ImGui.text("Took " + fmtDuration(r.getDurationMs()) + " · finished " + r.getFinishedAt());
+        }
+        if (r.hasObjective()) {
+            String goal = state.getGoal() == AngleSolverState.Goal.MAX ? "max" : "min";
+            ImGui.text(goal + " " + state.getAxis().name() + " = " + fmt3(r.getObjectiveValue()));
+        }
+        ThemeManager.popTextColor();
+    }
+
+    private static String fmtDuration(long ms) {
+        if (ms >= 1000L) return String.format(Locale.ROOT, "%.1fs", ms / 1000.0);
+        return ms + "ms";
+    }
+
+    private static String fmt3(double v) {
+        return String.format(Locale.ROOT, "%.3f", v);
     }
 
     private void renderOutcomes(SolveResult r) {
@@ -384,7 +436,10 @@ public final class AngleSolverWindow implements RenderInterface {
         if (Controls.secondaryButton("Save as Copy")) ImGui.closeCurrentPopup();
         ImGui.sameLine();
         Controls.cursorToRightAlignedButton("Apply");
-        if (Controls.secondaryButton("Apply")) ImGui.closeCurrentPopup();
+        if (Controls.secondaryButton("Apply")) {
+            engine.apply();
+            ImGui.closeCurrentPopup();
+        }
         Modal.end();
     }
 

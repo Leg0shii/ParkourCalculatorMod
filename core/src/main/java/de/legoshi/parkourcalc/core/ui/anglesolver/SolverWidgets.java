@@ -74,6 +74,24 @@ public final class SolverWidgets {
         return clicked;
     }
 
+    /** Rotating ring of dots (a busy indicator); glyph-free so it renders on any loader font. {@code t}
+     *  is elapsed seconds, used only to advance the head. The trailing dots fade behind the head. */
+    public static void spinner(ImDrawList dl, float cx, float cy, float radius, float dotR, int color, double t) {
+        int n = 8;
+        int head = (int) (t * 10.0) % n;
+        if (head < 0) head += n;
+        int rgb = color & 0x00FFFFFF;
+        for (int i = 0; i < n; i++) {
+            double ang = -Math.PI / 2.0 + (2.0 * Math.PI * i) / n;
+            float x = cx + (float) (Math.cos(ang) * radius);
+            float y = cy + (float) (Math.sin(ang) * radius);
+            int dist = (head - i + n) % n;
+            float alpha = 0.15f + 0.85f * (1.0f - dist / (float) n);
+            int col = rgb | (((int) (alpha * 255f) & 0xFF) << 24);
+            dl.addCircleFilled(x, y, dotR, col, 8);
+        }
+    }
+
     /** Two-segment tick mark, drawn because the font lacks the check glyph. */
     public static void checkMark(ImDrawList dl, float x, float cy, float size, int col) {
         float t = Math.max(1.2f, 1.4f * s());
