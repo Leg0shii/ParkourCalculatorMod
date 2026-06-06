@@ -103,7 +103,7 @@ public final class TickInfoPanel implements RenderInterface {
         rowNum("Motion (XZ)", motionXZ, "Horizontal magnitude of post-tick velocity, sqrt(vx^2 + vz^2), blocks/tick. Differs from Speed on collision ticks.");
         rowNum("Motion (XYZ)", motionXYZ, "Total magnitude of post-tick velocity, sqrt(vx^2 + vy^2 + vz^2), blocks/tick.");
 
-        rowTriple("Position", cur.position.x, cur.position.y, cur.position.z, "Entity position at end of tick (world coords). Anchor corner of the rendered tick box.");
+        rowTriple("Position", cur.position.x, cur.position.y, cur.position.z, "Entity position entering this tick, before this tick's input is applied (the previous tick's end position). This is the point a constraint placed on this tick is tested against; this tick's input shows on the next tick. World coords; anchor corner of the rendered tick box.");
         rowTriple("Motion", cur.velocity.x, cur.velocity.y, cur.velocity.z, "Post-tick motionX/Y/Z (after MC's per-axis collision clamp). May read 0 on an axis where a wall was hit.");
 
         if (prev != null) {

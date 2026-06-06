@@ -26,10 +26,27 @@ public final class AngleSolverState {
         }
     }
 
+    /** Solve effort: trades wall-clock for the last micrometers of objective. FAST is ~100ms but uses a
+     *  smaller global search, so a hard jump can occasionally miss a feasible solution; bump up if so. */
+    public enum Effort {
+        FAST("Fast", "~100ms"),
+        BALANCED("Balanced", "~250ms"),
+        THOROUGH("Thorough", "~2-3s");
+
+        public final String label;
+        public final String hint;
+
+        Effort(String label, String hint) {
+            this.label = label;
+            this.hint = hint;
+        }
+    }
+
     private int startTick;
     private int landingTick;
     private Axis axis = Axis.X;
     private Goal goal = Goal.MAX;
+    private Effort effort = Effort.BALANCED;
 
     private InputMode defaultInputs = InputMode.FORCE_45;
     private Slipperiness defaultSlipperiness = Slipperiness.AIR;
@@ -50,6 +67,8 @@ public final class AngleSolverState {
     public void setAxis(Axis axis) { this.axis = axis; }
     public Goal getGoal() { return goal; }
     public void setGoal(Goal goal) { this.goal = goal; }
+    public Effort getEffort() { return effort; }
+    public void setEffort(Effort effort) { this.effort = effort; }
 
     public boolean isStart(int tick) { return tick == startTick; }
     public boolean isLanding(int tick) { return tick == landingTick; }
@@ -216,6 +235,7 @@ public final class AngleSolverState {
         landingTick = 0;
         axis = Axis.X;
         goal = Goal.MAX;
+        effort = Effort.BALANCED;
         defaultInputs = InputMode.FORCE_45;
         defaultSlipperiness = Slipperiness.AIR;
         defaultPotions.clear();

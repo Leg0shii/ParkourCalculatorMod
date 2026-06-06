@@ -11,7 +11,7 @@ final class ConstraintText {
         if (v == Math.rint(v) && !Double.isInfinite(v)) {
             return Long.toString((long) v);
         }
-        String s = String.format(Locale.ROOT, "%.3f", v);
+        String s = String.format(Locale.ROOT, "%.7f", v);
         s = s.replaceAll("0+$", "");
         if (s.endsWith(".")) s = s + "0";
         return s;

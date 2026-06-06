@@ -13,7 +13,7 @@ import imgui.flag.ImGuiSelectableFlags;
 import imgui.flag.ImGuiStyleVar;
 import imgui.flag.ImGuiTableColumnFlags;
 import imgui.flag.ImGuiWindowFlags;
-import imgui.type.ImFloat;
+import imgui.type.ImDouble;
 import imgui.type.ImInt;
 
 import java.util.ArrayList;
@@ -74,8 +74,8 @@ public final class AngleSolverTable {
     // Full-row gutter rect carried out to InputOverlay (the chevron is the last item drawn there).
     private float gMinX, gMinY, gMaxX, gMaxY;
 
-    private final ImFloat numA = new ImFloat();
-    private final ImFloat numB = new ImFloat();
+    private final ImDouble numA = new ImDouble();
+    private final ImDouble numB = new ImDouble();
     private final ImInt slipBuf = new ImInt();
     private final ImInt doseCombo = new ImInt();
     private final ImInt levelBuf = new ImInt();
@@ -847,24 +847,24 @@ public final class AngleSolverTable {
 
     private void renderConstraintValues(Constraint c) {
         float s = ThemeManager.uiScale();
-        float numW = 72f * s;
+        float numW = 108f * s;
         if (c.isRange()) {
-            numA.set((float) c.getLo());
+            numA.set(c.getLo());
             ImGui.setNextItemWidth(numW);
-            if (ImGui.inputFloat("##lo", numA, 0f, 0f, "%.3f")) c.setLo(numA.get());
+            if (ImGui.inputDouble("##lo", numA, 0.0, 0.0, "%.4f")) c.setLo(numA.get());
             ImGui.sameLine();
             ThemeManager.pushTextColor(ThemeManager.textMutedColor());
             ImGui.alignTextToFramePadding();
             ImGui.text("to");
             ThemeManager.popTextColor();
             ImGui.sameLine();
-            numB.set((float) c.getHi());
+            numB.set(c.getHi());
             ImGui.setNextItemWidth(numW);
-            if (ImGui.inputFloat("##hi", numB, 0f, 0f, "%.3f")) c.setHi(numB.get());
+            if (ImGui.inputDouble("##hi", numB, 0.0, 0.0, "%.4f")) c.setHi(numB.get());
         } else {
-            numA.set((float) c.getValue());
+            numA.set(c.getValue());
             ImGui.setNextItemWidth(numW);
-            if (ImGui.inputFloat("##v", numA, 0f, 0f, "%.3f")) c.setValue(numA.get());
+            if (ImGui.inputDouble("##v", numA, 0.0, 0.0, "%.4f")) c.setValue(numA.get());
         }
     }
 

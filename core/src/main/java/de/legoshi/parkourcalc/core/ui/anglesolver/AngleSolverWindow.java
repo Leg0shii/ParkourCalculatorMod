@@ -34,6 +34,7 @@ public final class AngleSolverWindow implements RenderInterface {
     private static final String[] AXES = {"X", "Z"};
     private static final String[] GOALS = {"MAX", "MIN"};
     private static final String[] INPUTS = {"Keep", "Force 45"};
+    private static final String[] EFFORTS = {"Fast", "Balanced", "Thorough"};
 
     private static final String[] FORM_LABELS =
             {"Start tick", "Goal tick", "Axis", "Goal", "Inputs", "Slipperiness", "Potion"};
@@ -51,6 +52,7 @@ public final class AngleSolverWindow implements RenderInterface {
     private final String[] slipItems;
 
     private boolean yawsExpanded;
+    private boolean advancedExpanded;
     private int doseToRemove;
 
     public AngleSolverWindow(AngleSolverState state, Settings settings, Runnable onSettingsChanged,
@@ -135,6 +137,9 @@ public final class AngleSolverWindow implements RenderInterface {
         slipperinessRow(labelW);
         potionRow(labelW);
         state.pruneRedundantOverrides();
+
+        ThemeManager.sectionSpacing();
+        renderAdvanced(labelW, scale);
 
         ThemeManager.paddedSeparator();
 
@@ -273,6 +278,39 @@ public final class AngleSolverWindow implements RenderInterface {
         if (SolverWidgets.deleteX("rm" + index)) doseToRemove = index;
     }
 
+    /** Collapsible Advanced section: the solve-effort selector (speed vs the last micrometers of objective). */
+    private void renderAdvanced(float labelW, float scale) {
+        ImDrawList dl = ImGui.getWindowDrawList();
+        float rowH = ImGui.getTextLineHeight();
+        ImVec2 origin = ImGui.getCursorScreenPos();
+        if (ImGui.invisibleButton("##advtoggle", ImGui.getContentRegionAvail().x, rowH)) {
+            advancedExpanded = !advancedExpanded;
+        }
+        boolean hover = ImGui.isItemHovered();
+        int col = hover ? ThemeManager.textColor() : ThemeManager.textDimColor();
+        float cy = origin.y + rowH * 0.5f;
+        if (advancedExpanded) SolverWidgets.triangleDown(dl, origin.x + 4f * scale, cy, 3.3f * scale, col);
+        else SolverWidgets.triangleRight(dl, origin.x + 4f * scale, cy, 3.3f * scale, col);
+        dl.addText(origin.x + 13f * scale, origin.y, col, "Advanced");
+        if (!advancedExpanded) return;
+
+        ThemeManager.bottomPaddedSeparator();
+        int e = segmentedRow("Effort", "effort", EFFORTS, state.getEffort().ordinal(), false, labelW);
+        if (e >= 0) state.setEffort(AngleSolverState.Effort.values()[e]);
+
+        ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+        ImGui.text(effortHint(state.getEffort()));
+        ThemeManager.popTextColor();
+    }
+
+    private static String effortHint(AngleSolverState.Effort e) {
+        switch (e) {
+            case FAST: return e.hint + ", smaller search";
+            case THOROUGH: return e.hint + ", widest search";
+            default: return e.hint + ", recommended";
+        }
+    }
+
     private void renderActions() {
         if (engine.isSolving()) {
             renderSolvingIndicator();
@@ -348,7 +386,7 @@ public final class AngleSolverWindow implements RenderInterface {
         }
         if (r.hasObjective()) {
             String goal = state.getGoal() == AngleSolverState.Goal.MAX ? "max" : "min";
-            ImGui.text(goal + " " + state.getAxis().name() + " = " + fmt3(r.getObjectiveValue()));
+            ImGui.text(goal + " " + state.getAxis().name() + " = " + fmt7(r.getObjectiveValue()));
         }
         ThemeManager.popTextColor();
     }
@@ -358,8 +396,8 @@ public final class AngleSolverWindow implements RenderInterface {
         return ms + "ms";
     }
 
-    private static String fmt3(double v) {
-        return String.format(Locale.ROOT, "%.3f", v);
+    private static String fmt7(double v) {
+        return String.format(Locale.ROOT, "%.7f", v);
     }
 
     private void renderOutcomes(SolveResult r) {

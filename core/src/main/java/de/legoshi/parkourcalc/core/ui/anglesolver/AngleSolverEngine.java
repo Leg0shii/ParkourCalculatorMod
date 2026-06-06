@@ -4,12 +4,13 @@ import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
+import de.legoshi.parkourcalc.core.ui.anglesolver.solver.BucketAscentPolish;
 import de.legoshi.parkourcalc.core.ui.anglesolver.solver.CmaesJumpHarness;
 import de.legoshi.parkourcalc.core.ui.anglesolver.solver.ConstraintScene;
+import de.legoshi.parkourcalc.core.ui.anglesolver.solver.DifferentiableModel;
 import de.legoshi.parkourcalc.core.ui.anglesolver.solver.HarnessResult;
 import de.legoshi.parkourcalc.core.ui.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.ui.anglesolver.solver.JumpSpec;
-import de.legoshi.parkourcalc.core.ui.anglesolver.solver.M2PwlSigmoid;
 import de.legoshi.parkourcalc.core.ui.anglesolver.solver.Objective;
 import de.legoshi.parkourcalc.core.ui.anglesolver.solver.PathResult;
 import de.legoshi.parkourcalc.core.ui.anglesolver.solver.Spike0Scenario;
@@ -32,24 +33,52 @@ import java.util.function.IntConsumer;
  * modeled. M2 is approximate; the live SimulatorEntity is the source of truth after Apply. */
 public final class AngleSolverEngine {
 
-    private static final double FEAS_TOL = 1.0e-6;
+    // Byte-exact model: "X <= wall" holds to the bit, so no cushion is needed. Require strictly-feasible
+    // solutions (0 = never accept a clip) and let the player hug each wall as close as the facing lattice
+    // allows on the safe side. The achievable hug is bounded by the ~1e-6-spaced sine buckets, not by this.
+    private static final double FEAS_TOL = 0.0;
     private static final double MET_TOL = 1.0e-3;
 
-    /** CMA-ES is a derivative-free GLOBAL method, so it escapes the facing-clamp local optima the
-     *  gradient solver railed into (and it needs far fewer restarts). The warm start plus this many
-     *  random restarts run in parallel; the best feasible-then-objective result wins. Only one strafe
+    /** CMA-ES initial step (deg). With the wider-than-one-turn search bounds the global basin is a
+     *  single continuous region, so a moderate sigma finds it in a handful of restarts. Only one strafe
      *  sign is solved: A and D are mirror-symmetric (flip the sign and shift air-tick facings by 90deg
      *  for an identical trajectory), so the optimal objective is the same either way. */
-    private static final int RESTARTS = 24;
-
-    /** CMA-ES initial step (deg). With the wider-than-one-turn search bounds the global basin is a
-     *  single continuous region, so a moderate sigma finds it in a handful of restarts. */
     private static final double CMAES_SIGMA_DEG = 90.0;
+
+    /** Per-effort solve budget. CMA-ES (restarts x maxEval) finds the feasible basins; the bucket polish
+     *  exactizes them. {@code polishCount} basins are polished in parallel and the best kept, because the
+     *  best pre-polish objective is not always the basin that polishes best. Fewer restarts/evals is
+     *  faster but can miss a feasible basin on a hard jump, so FAST trades robustness for ~100ms. */
+    private static final class Budget {
+        final int restarts;
+        final int maxEval;
+        final int polishCount;
+        final BucketAscentPolish.Config polishCfg;
+
+        Budget(int restarts, int maxEval, int polishCount, BucketAscentPolish.Config polishCfg) {
+            this.restarts = restarts;
+            this.maxEval = maxEval;
+            this.polishCount = polishCount;
+            this.polishCfg = polishCfg;
+        }
+    }
+
+    private static Budget budgetFor(AngleSolverState.Effort effort) {
+        switch (effort) {
+            case FAST:     return new Budget(16, 4500, 2, BucketAscentPolish.FAST);
+            case THOROUGH: return new Budget(48, 12000, 16, BucketAscentPolish.THOROUGH);
+            default:       return new Budget(28, 7000, 4, BucketAscentPolish.BALANCED);
+        }
+    }
 
     private final AngleSolverState state;
     private final BoxController boxes;
     private final InputData inputs;
     private final IntConsumer onApplied;
+
+    /** Byte-exact forward, configured for the loader's MC inertia rule (see M1Exact.forMcVersion).
+     *  Stateless/immutable, so a single instance is shared read-only across the restart threads. */
+    private final DifferentiableModel model;
 
     private Plan lastPlan;
 
@@ -59,11 +88,13 @@ public final class AngleSolverEngine {
     private volatile long startNanos;
     private volatile Outcome pending;
 
-    public AngleSolverEngine(AngleSolverState state, BoxController boxes, InputData inputs, IntConsumer onApplied) {
+    public AngleSolverEngine(AngleSolverState state, BoxController boxes, InputData inputs,
+                             IntConsumer onApplied, DifferentiableModel model) {
         this.state = state;
         this.boxes = boxes;
         this.inputs = inputs;
         this.onApplied = onApplied;
+        this.model = model;
     }
 
     private static final class Plan {
@@ -103,9 +134,11 @@ public final class AngleSolverEngine {
         final boolean[] strafeMask;
         final List<ConstraintAt> uiConstraints;
         final long startNanos;
+        final AngleSolverState.Effort effort;
 
         Job(ConstraintScene scene, Objective.Sense sense, int startTick, int landingTick,
-            int numTicks, boolean[] strafeMask, List<ConstraintAt> uiConstraints, long startNanos) {
+            int numTicks, boolean[] strafeMask, List<ConstraintAt> uiConstraints, long startNanos,
+            AngleSolverState.Effort effort) {
             this.scene = scene;
             this.sense = sense;
             this.startTick = startTick;
@@ -114,6 +147,7 @@ public final class AngleSolverEngine {
             this.strafeMask = strafeMask;
             this.uiConstraints = uiConstraints;
             this.startNanos = startNanos;
+            this.effort = effort;
         }
     }
 
@@ -147,12 +181,14 @@ public final class AngleSolverEngine {
         int jumpTickRel = firstJumpTick(rows, startTick, numTicks);
 
         boolean[] strafeMask = new boolean[numTicks];
+        boolean[] yawLocked = new boolean[numTicks];
         int[] speedAmp = new int[numTicks];
         double[] slipPerTick = new double[numTicks];
         for (int k = 0; k < numTicks; k++) {
             int t = startTick + k;
             boolean jumpRow = rows.get(t).isKeyActive(InputRow.Key.JUMP);
             strafeMask[k] = (effInputs(t) == AngleSolverState.InputMode.FORCE_45) && !jumpRow;
+            yawLocked[k] = rows.get(t).isYawLocked();
             speedAmp[k] = effSpeedLevel(t);
             double slip = slipValue(effSlipperiness(t));
             slipPerTick[k] = slip < 1.0 ? slip : Double.NaN;
@@ -177,11 +213,13 @@ public final class AngleSolverEngine {
         scene.strafePerTick = strafeMask;
         scene.speedAmplifier = speedAmp;
         scene.slipPerTick = slipPerTick;
+        scene.yawLocked = yawLocked;
         scene.objective = new Objective(axis(state.getAxis()), sense(state.getGoal()), numTicks);
         for (ConstraintAt ca : uiCons) addMapped(scene, ca.c, ca.absTick, ca.segTick, numTicks);
 
         long t0 = System.nanoTime();
-        Job job = new Job(scene, scene.objective.sense, startTick, landingTick, numTicks, strafeMask, uiCons, t0);
+        Job job = new Job(scene, scene.objective.sense, startTick, landingTick, numTicks, strafeMask, uiCons, t0,
+                state.getEffort());
 
         // Show the spinner instead of a stale result, then run off-thread.
         state.clearResult();
@@ -221,49 +259,68 @@ public final class AngleSolverEngine {
         return solving ? (System.nanoTime() - startNanos) / 1.0e9 : 0.0;
     }
 
-    /** One restart: an immutable spec (read-only during solve, so shareable across threads), the
-     *  strafe sign it carries, and the initial facings to start from. */
-    private static final class Restart {
-        final double[] init;
-        volatile HarnessResult result;
-
-        Restart(double[] init) {
-            this.init = init;
-        }
-    }
-
-    /** Runs entirely on the worker thread, reading only the immutable Job. The restarts are mutually
-     *  independent and CPU-bound, so each CMA-ES run goes in parallel; we keep the best
-     *  feasible-then-objective across all of them. Single strafe sign (+1 = A); see RESTARTS. */
+    /** Runs entirely on the worker thread, reading only the immutable Job. CMA-ES restarts are mutually
+     *  independent and CPU-bound, so they run in parallel; then the most promising feasible basins are
+     *  polished in parallel and the best kept. Single strafe sign (+1 = A); A and D are mirror-symmetric
+     *  (flip the sign and shift air facings 90deg for an identical trajectory). Budget scales with effort. */
     private Outcome runJob(Job job) {
         double[] warm = new double[job.numTicks];
         java.util.Arrays.fill(warm, job.scene.startYaw);
         java.util.Random rng = new java.util.Random(0x9E3779B9L ^ job.numTicks);
-        M2PwlSigmoid model = new M2PwlSigmoid();
 
         job.scene.strafeSign = 1;
         JumpSpec spec = job.scene.toJumpSpec(); // immutable snapshot; arrays read-only during solve, so shareable
-        List<Restart> restarts = new ArrayList<>();
-        for (int r = 0; r < RESTARTS; r++) {
-            restarts.add(new Restart(r == 0 ? warm : randomInit(rng, job.numTicks)));
-        }
-        restarts.parallelStream().forEach(rs ->
-                rs.result = new CmaesJumpHarness(1.0e6, 1.0e6, CMAES_SIGMA_DEG, 8000).solve(model, spec, rs.init));
+        Spike0Scenario sc = spec.asScenario();
+        Budget budget = budgetFor(job.effort);
 
-        Restart best = null;
-        for (Restart rs : restarts) {
-            if (isBetter(rs.result, best == null ? null : best.result, job.sense)) best = rs;
+        List<double[]> inits = new ArrayList<>();
+        for (int r = 0; r < budget.restarts; r++) inits.add(r == 0 ? warm : randomInit(rng, job.numTicks));
+
+        // Stiffer constraint penalty (1e7) so CMA-ES drives the path right onto the wall instead of settling
+        // ~5e-7 past it; with FEAS_TOL=0 only restarts that land strictly behind the wall count as feasible.
+        List<HarnessResult> results = inits.parallelStream()
+                .map(in -> new CmaesJumpHarness(1.0e7, 1.0e7, CMAES_SIGMA_DEG, budget.maxEval).solve(model, spec, in))
+                .collect(java.util.stream.Collectors.toList());
+
+        boolean max = job.sense == Objective.Sense.MAX;
+        List<HarnessResult> feasible = new ArrayList<>();
+        for (HarnessResult r : results) if (maxViolation(r) <= FEAS_TOL) feasible.add(r);
+
+        // yaws are absolute wrapped facings (what Apply writes as deltas); the game runs the float-accumulated
+        // facings, so the reported path forwards toGameFacings(yaws), bit-for-bit the in-game trajectory.
+        double[] yaws;
+        if (feasible.isEmpty()) {
+            // No feasible basin: keep the least-violating result so the panel can show which walls are unmet.
+            HarnessResult best = null;
+            for (HarnessResult r : results) if (best == null || maxViolation(r) < maxViolation(best)) best = r;
+            yaws = wrapAll(best.yawAbsDeg);
+        } else {
+            // The best pre-polish objective is not always the basin that polishes best, so polish the top
+            // few feasible basins in parallel and keep the best. CMA-ES (penalty) settles at one island's
+            // corner; the deterministic block-1+block-2 ascent hops between the bucket-quantized feasible
+            // islands with strictly-feasible joint moves, recovering what the penalty leaves on the table.
+            feasible.sort((a, b) -> max ? Double.compare(b.objectiveValue, a.objectiveValue)
+                                        : Double.compare(a.objectiveValue, b.objectiveValue));
+            List<double[]> top = new ArrayList<>();
+            for (int i = 0; i < Math.min(budget.polishCount, feasible.size()); i++) {
+                top.add(wrapAll(feasible.get(i).yawAbsDeg));
+            }
+            List<double[]> polished = top.parallelStream()
+                    .map(y -> BucketAscentPolish.polish(model, spec, y, budget.polishCfg))
+                    .collect(java.util.stream.Collectors.toList());
+            yaws = polished.get(0);
+            double bestObj = objectiveOf(sc, spec.objective, yaws);
+            for (int i = 1; i < polished.size(); i++) {
+                double o = objectiveOf(sc, spec.objective, polished.get(i));
+                if (max ? o > bestObj : o < bestObj) { bestObj = o; yaws = polished.get(i); }
+            }
         }
 
-        // The search ran in a wider-than-one-turn space; wrap each facing back to (-180,180] for
-        // display/apply. sin/cos are periodic, so the trajectory is unchanged.
-        double[] yaws = best.result.yawAbsDeg.clone();
-        for (int i = 0; i < yaws.length; i++) yaws[i] = wrapDeg(yaws[i]);
-        PathResult path = model.forward(spec.asScenario(), yaws);
+        PathResult path = model.forward(sc, sc.toGameFacings(yaws));
         SolveResult result = buildResult(job, yaws, path);
         result.setDurationMs((System.nanoTime() - job.startNanos) / 1_000_000L);
         result.setFinishedAt(formatClock());
-        result.setObjective(best.result.objectiveValue);
+        result.setObjective(path.getPos(spec.objective.tick, spec.objective.axis));
         Plan plan = new Plan(job.startTick, yaws, job.strafeMask, 1);
         return new Outcome(result, plan);
     }
@@ -272,20 +329,14 @@ public final class AngleSolverEngine {
         return new java.text.SimpleDateFormat("HH:mm:ss").format(new java.util.Date());
     }
 
-    private boolean isBetter(HarnessResult cand, HarnessResult cur, Objective.Sense sense) {
-        if (cur == null) return true;
-        double vc = maxViolation(cand);
-        double vu = maxViolation(cur);
-        boolean cf = vc <= FEAS_TOL;
-        boolean uf = vu <= FEAS_TOL;
-        if (cf && uf) {
-            return sense == Objective.Sense.MAX
-                    ? cand.objectiveValue > cur.objectiveValue
-                    : cand.objectiveValue < cur.objectiveValue;
-        }
-        if (cf) return true;
-        if (uf) return false;
-        return vc < vu;
+    private double objectiveOf(Spike0Scenario sc, Objective obj, double[] absWrapped) {
+        return model.forward(sc, sc.toGameFacings(absWrapped)).getPos(obj.tick, obj.axis);
+    }
+
+    private static double[] wrapAll(double[] yawAbsDeg) {
+        double[] y = yawAbsDeg.clone();
+        for (int i = 0; i < y.length; i++) y[i] = wrapDeg(y[i]);
+        return y;
     }
 
     private static double maxViolation(HarnessResult r) {
@@ -437,7 +488,9 @@ public final class AngleSolverEngine {
         int total = 0;
         int met = 0;
         List<SolveResult.Outcome> outs = new ArrayList<>();
-        for (ConstraintAt ca : job.uiConstraints) {
+        List<ConstraintAt> ordered = new ArrayList<>(job.uiConstraints);
+        ordered.sort((a, b) -> Integer.compare(a.absTick, b.absTick)); // panel lists constraints first-tick-first
+        for (ConstraintAt ca : ordered) {
             Double found = findValue(ca.c, ca.segTick, job.numTicks, yaws, path);
             if (found == null) continue; // unmappable (e.g. velocity on tick 0)
             total++;
@@ -472,11 +525,13 @@ public final class AngleSolverEngine {
         double v = c.getValue();
         // Facings are angular: compare the wrapped difference so e.g. -179 satisfies a +179 target.
         double f = c.getField() == Constraint.Field.F ? v + wrapDeg(found - v) : found;
+        // Walls (the inequalities) are gated strictly at FEAS_TOL, so "Solved" never counts a clip as met;
+        // only the exact target (=) keeps MET_TOL, since a single facing/position bucket is never hit to the bit.
         switch (c.getOp()) {
-            case GT: return f > v - MET_TOL;
-            case GE: return f >= v - MET_TOL;
-            case LT: return f < v + MET_TOL;
-            case LE: return f <= v + MET_TOL;
+            case GT: return f > v - FEAS_TOL;
+            case GE: return f >= v - FEAS_TOL;
+            case LT: return f < v + FEAS_TOL;
+            case LE: return f <= v + FEAS_TOL;
             case EQ: return Math.abs(f - v) <= MET_TOL;
             default: return false;
         }
@@ -537,6 +592,6 @@ public final class AngleSolverEngine {
     }
 
     private static String fmt(double v) {
-        return String.format(Locale.ROOT, "%.3f", v);
+        return String.format(Locale.ROOT, "%.7f", v);
     }
 }

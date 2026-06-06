@@ -50,6 +50,10 @@ public final class JumpSpec {
         this.scenario.slipPerTick = slipPerTick;
     }
 
+    public void setYawLocked(boolean[] yawLocked) {
+        this.scenario.yawLockedPerTick = yawLocked;
+    }
+
     public Spike0Scenario asScenario() {
         return scenario;
     }

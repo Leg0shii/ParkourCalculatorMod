@@ -30,6 +30,7 @@ import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverTable;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverWindow;
+import de.legoshi.parkourcalc.core.ui.anglesolver.solver.M1Exact;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -89,8 +90,11 @@ public final class Application {
         AngleSolverTable angleSolverTable = new AngleSolverTable(
                 angleSolverState, settings, selection, () -> inputData.size());
         inputOverlay.setAngleSolver(angleSolverTable);
+        String mcVersion = saveController.getSaveStore() != null
+                ? saveController.getSaveStore().getMcVersion() : null;
         AngleSolverEngine angleSolverEngine = new AngleSolverEngine(
-                angleSolverState, boxController, inputData, this::onUserChange);
+                angleSolverState, boxController, inputData, this::onUserChange,
+                M1Exact.forMcVersion(mcVersion));
         AngleSolverWindow angleSolverWindow = new AngleSolverWindow(
                 angleSolverState, settings, this::saveSettings, () -> inputData.size(), angleSolverEngine);
 

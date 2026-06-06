@@ -23,6 +23,7 @@ public final class ConstraintScene {
 
     public int[] speedAmplifier = null;
     public double[] slipPerTick = null;
+    public boolean[] yawLocked = null;
 
     public final List<JumpConstraint> constraints = new ArrayList<>();
 
@@ -40,6 +41,7 @@ public final class ConstraintScene {
         spec.setStrafePerTick(strafePerTick);
         spec.setSpeedAmplifier(speedAmplifier);
         spec.setSlipPerTick(slipPerTick);
+        spec.setYawLocked(yawLocked);
         return spec;
     }
 }

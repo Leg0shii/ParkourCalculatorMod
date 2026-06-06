@@ -34,6 +34,9 @@ public final class Spike0Scenario {
      *  default ground/air split. null = all default. */
     public double[] slipPerTick = null;
 
+    /** Per-tick yaw lock state (unlocked = float delta the game accumulates; locked = absolute facing). */
+    public boolean[] yawLockedPerTick = null;
+
     public final int numTicks;
 
     public Spike0Scenario(int numTicks) {
@@ -54,5 +57,29 @@ public final class Spike0Scenario {
     public double slipAt(int tick) {
         if (slipPerTick == null || tick < 0 || tick >= slipPerTick.length) return Double.NaN;
         return slipPerTick[tick];
+    }
+
+    /** Exact float32 facings the game runs: mirrors Apply's float deltas + the sim's float accumulation,
+     *  so the solver scores what the game executes (a (float) cast of the absolute facing drifts from this). */
+    public double[] toGameFacings(double[] absWrapped) {
+        int n = absWrapped.length;
+        double[] g = new double[n];
+        double prevAbs = (double) startYaw;
+        float entity = startYaw;
+        for (int k = 0; k < n; k++) {
+            double abs = absWrapped[k];
+            boolean locked = yawLockedPerTick != null && k < yawLockedPerTick.length && yawLockedPerTick[k];
+            if (locked) {
+                entity = (float) abs;
+            } else {
+                double delta = abs - prevAbs;
+                while (delta > 180.0) delta -= 360.0;
+                while (delta < -180.0) delta += 360.0;
+                entity = entity + (float) delta;
+            }
+            g[k] = entity;
+            prevAbs = abs;
+        }
+        return g;
     }
 }

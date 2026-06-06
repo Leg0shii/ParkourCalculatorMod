@@ -43,6 +43,7 @@ public final class SaveFile {
         public int landingTick;
         public String axis;                              // Axis enum name
         public String goal;                              // Goal enum name
+        public String effort;                            // Effort enum name (absent in old files -> BALANCED)
         public String defaultInputs;                     // InputMode enum name
         public String defaultSlipperiness;               // Slipperiness enum name
         public List<Dose> defaultPotions = new ArrayList<Dose>();
