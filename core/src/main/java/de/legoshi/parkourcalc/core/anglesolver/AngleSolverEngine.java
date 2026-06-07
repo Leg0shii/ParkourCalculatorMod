@@ -389,7 +389,10 @@ public final class AngleSolverEngine {
             row.setKeyActive(InputRow.Key.D, strafeThis && p.strafeSign < 0);
             prevAbs = abs;
         }
-        onApplied.accept(p.startTick);
+        // Full resim (-1), not simulateFrom(startTick): the partial path restores an incomplete
+        // checkpoint, so resuming mid-path can pick up stale entity state. Apply is one-shot, so the
+        // cost of a clean run is irrelevant.
+        onApplied.accept(-1);
     }
 
     // ---- effective per-tick state (main thread, during snapshot) --------------
