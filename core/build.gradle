@@ -34,6 +34,16 @@ dependencies {
 	// at runtime: Fabric via Loom `include`, the Forge loaders via their `shade` config (which resolves
 	// core's transitive runtime deps through forge-core's `api project(':core')`).
 	implementation 'org.apache.commons:commons-math3:3.6.1'
+
+	// Test-only. Gson is compileOnly for main (the loaders provide it), so the test source set needs
+	// its own copy; pin to the 2.8.0 API the save layer is written against. JUnit 4 keeps the runner
+	// simple on the Java 8 toolchain. commons-math3 comes in transitively via `implementation`.
+	testImplementation 'com.google.code.gson:gson:2.8.0'
+	testImplementation 'junit:junit:4.13.2'
+}
+
+tasks.named('test') {
+	useJUnit()
 }
 
 // Enforce the table-styling consolidation rules established in the Phase 1-5
