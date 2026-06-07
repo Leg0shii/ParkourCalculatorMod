@@ -53,13 +53,20 @@ public final class AngleSolverState {
     private int landingTick;
     private Axis axis = Axis.X;
     private Goal goal = Goal.MAX;
-    private Effort effort = Effort.BALANCED;
+    private Effort effort = Effort.FAST;
 
     private InputMode defaultInputs = InputMode.FORCE_45;
     private Slipperiness defaultSlipperiness = Slipperiness.AIR;
     private final List<PotionDose> defaultPotions = new ArrayList<>();
 
     private final Map<Integer, TickConstraints> ticks = new LinkedHashMap<>();
+
+    // Block selections drive the constraint generator. start/land are single; collisions are a list.
+    // Picking is keybind-driven loader-side (a keypress captures the looked-at block), so there is no
+    // in-UI arming state here anymore.
+    private BlockSelection startBlock;
+    private BlockSelection landBlock;
+    private final List<BlockSelection> collisionBlocks = new ArrayList<>();
 
     private SolveResult result;
 
@@ -216,6 +223,15 @@ public final class AngleSolverState {
         tickConstraints(tick).getConstraints().add(Constraint.scalar(Constraint.Field.X, Constraint.Op.GT, 0.0));
     }
 
+    /** Drops every constraint on ticks in [fromTick, toTick] (state overrides are left intact). Used by the
+     *  block generator, which authors the segment from scratch on each run. */
+    public void clearConstraintsInRange(int fromTick, int toTick) {
+        for (Map.Entry<Integer, TickConstraints> e : ticks.entrySet()) {
+            int t = e.getKey();
+            if (t >= fromTick && t <= toTick) e.getValue().getConstraints().clear();
+        }
+    }
+
     public void deleteConstraint(int tick, int index) {
         TickConstraints tc = ticks.get(tick);
         if (tc == null) return;
@@ -251,6 +267,59 @@ public final class AngleSolverState {
         return list.remove(index);
     }
 
+    // ---- block selections (drive BlockConstraintGenerator) --------------------
+
+    public BlockSelection getStartBlock() {
+        return startBlock;
+    }
+
+    public void setStartBlock(BlockSelection block) {
+        this.startBlock = block;
+    }
+
+    public BlockSelection getLandBlock() {
+        return landBlock;
+    }
+
+    public void setLandBlock(BlockSelection block) {
+        this.landBlock = block;
+    }
+
+    public List<BlockSelection> getCollisionBlocks() {
+        return collisionBlocks;
+    }
+
+    public void addCollisionBlock(BlockSelection block) {
+        if (block != null) collisionBlocks.add(block);
+    }
+
+    public void removeCollisionBlock(int index) {
+        if (index >= 0 && index < collisionBlocks.size()) collisionBlocks.remove(index);
+    }
+
+    /** Removes any selected block (start, land, or a collision) at these integer coords. Used by the
+     *  loader's "remove looked-at block" keybind. */
+    public void removeBlockAt(int x, int y, int z) {
+        if (startBlock != null && startBlock.x == x && startBlock.y == y && startBlock.z == z) startBlock = null;
+        if (landBlock != null && landBlock.x == x && landBlock.y == y && landBlock.z == z) landBlock = null;
+        collisionBlocks.removeIf(b -> b.x == x && b.y == y && b.z == z);
+    }
+
+    public boolean hasAnyBlocks() {
+        return startBlock != null || landBlock != null || !collisionBlocks.isEmpty();
+    }
+
+    /** All blocks the solver needs are picked: a start to launch from and a land to reach. */
+    public boolean hasRequiredBlocks() {
+        return startBlock != null && landBlock != null;
+    }
+
+    public void clearBlocks() {
+        startBlock = null;
+        landBlock = null;
+        collisionBlocks.clear();
+    }
+
     // Solving lives in AngleSolverEngine; the window's Solve button drives it and calls setResult.
 
     public SolveResult getResult() {
@@ -271,11 +340,14 @@ public final class AngleSolverState {
         landingTick = 0;
         axis = Axis.X;
         goal = Goal.MAX;
-        effort = Effort.BALANCED;
+        effort = Effort.FAST;
         defaultInputs = InputMode.FORCE_45;
         defaultSlipperiness = Slipperiness.AIR;
         defaultPotions.clear();
         ticks.clear();
+        startBlock = null;
+        landBlock = null;
+        collisionBlocks.clear();
         result = null;
     }
 

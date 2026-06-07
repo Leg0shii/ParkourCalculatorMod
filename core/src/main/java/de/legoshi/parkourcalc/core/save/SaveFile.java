@@ -48,7 +48,17 @@ public final class SaveFile {
         public String defaultSlipperiness;               // Slipperiness enum name
         public List<Dose> defaultPotions = new ArrayList<Dose>();
         public List<Tick> ticks = new ArrayList<Tick>();
+        public List<BlockSel> selectedBlocks = new ArrayList<BlockSel>(); // absent in old files -> empty
         public Result result;                            // null = no solve yet
+    }
+
+    /** A picked start / collision / land block: its role, integer coords, and captured world-space hitbox. */
+    public static final class BlockSel {
+        public String kind;                              // BlockSelection.Kind enum name
+        public int x;
+        public int y;
+        public int z;
+        public double[] box;                             // [minX,minY,minZ,maxX,maxY,maxZ]
     }
 
     public static final class Tick {

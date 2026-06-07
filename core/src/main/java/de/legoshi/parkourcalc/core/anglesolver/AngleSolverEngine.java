@@ -1,14 +1,16 @@
 package de.legoshi.parkourcalc.core.anglesolver;
 
+import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.ui.BoxController;
+import de.legoshi.parkourcalc.core.ui.BoxStyle;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
+import de.legoshi.parkourcalc.core.anglesolver.solver.BlockSolver;
 import de.legoshi.parkourcalc.core.anglesolver.solver.BucketAscentPolish;
-import de.legoshi.parkourcalc.core.anglesolver.solver.CmaesJumpHarness;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardModel;
-import de.legoshi.parkourcalc.core.anglesolver.solver.SolverRunResult;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SolveCore;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
@@ -44,29 +46,13 @@ public final class AngleSolverEngine {
      *  for an identical trajectory), so the optimal objective is the same either way. */
     private static final double CMAES_SIGMA_DEG = 90.0;
 
-    /** Per-effort solve budget. CMA-ES (restarts x maxEval) finds the feasible basins; the bucket polish
-     *  exactizes them. {@code polishCount} basins are polished in parallel and the best kept, because the
-     *  best pre-polish objective is not always the basin that polishes best. Fewer restarts/evals is
-     *  faster but can miss a feasible basin on a hard jump, so FAST trades robustness for ~100ms. */
-    private static final class Budget {
-        final int restarts;
-        final int maxEval;
-        final int polishCount;
-        final BucketAscentPolish.Config polishCfg;
-
-        Budget(int restarts, int maxEval, int polishCount, BucketAscentPolish.Config polishCfg) {
-            this.restarts = restarts;
-            this.maxEval = maxEval;
-            this.polishCount = polishCount;
-            this.polishCfg = polishCfg;
-        }
-    }
-
-    private static Budget budgetFor(AngleSolverState.Effort effort) {
+    /** Per-effort solve budget (see {@link SolveCore}). Fewer restarts/evals is faster but can miss a
+     *  feasible basin on a hard jump, so FAST trades robustness for ~100ms. */
+    private static SolveCore.Budget budgetFor(AngleSolverState.Effort effort) {
         switch (effort) {
-            case FAST: return new Budget(16, 4500, 2, BucketAscentPolish.FAST);
-            case THOROUGH: return new Budget(48, 12000, 16, BucketAscentPolish.THOROUGH);
-            default: return new Budget(28, 7000, 4, BucketAscentPolish.BALANCED);
+            case FAST: return new SolveCore.Budget(16, 4500, 2, BucketAscentPolish.FAST);
+            case THOROUGH: return new SolveCore.Budget(48, 12000, 16, BucketAscentPolish.THOROUGH);
+            default: return new SolveCore.Budget(28, 7000, 4, BucketAscentPolish.BALANCED);
         }
     }
 
@@ -154,10 +140,26 @@ public final class AngleSolverEngine {
     private static final class Outcome {
         final SolveResult result;
         final Plan plan;
+        // Block solve only: constraints to write into the table + the axis/goal to publish (null for a normal solve).
+        final List<ConstraintAt> derived;
+        final int derivedFrom;
+        final int derivedTo;
+        final AngleSolverState.Axis axis;
+        final AngleSolverState.Goal goal;
 
         Outcome(SolveResult result, Plan plan) {
+            this(result, plan, null, 0, 0, null, null);
+        }
+
+        Outcome(SolveResult result, Plan plan, List<ConstraintAt> derived, int derivedFrom, int derivedTo,
+                AngleSolverState.Axis axis, AngleSolverState.Goal goal) {
             this.result = result;
             this.plan = plan;
+            this.derived = derived;
+            this.derivedFrom = derivedFrom;
+            this.derivedTo = derivedTo;
+            this.axis = axis;
+            this.goal = goal;
         }
     }
 
@@ -177,51 +179,17 @@ public final class AngleSolverEngine {
             return;
         }
 
-        TickState seed = boxes.getState(startTick);
-        int jumpTickRel = firstJumpTick(rows, startTick, numTicks);
-
-        boolean[] strafeMask = new boolean[numTicks];
-        boolean[] yawLocked = new boolean[numTicks];
-        int[] speedAmp = new int[numTicks];
-        double[] slipPerTick = new double[numTicks];
-        for (int k = 0; k < numTicks; k++) {
-            int t = startTick + k;
-            boolean jumpRow = rows.get(t).isKeyActive(InputRow.Key.JUMP);
-            strafeMask[k] = (effInputs(t) == AngleSolverState.InputMode.FORCE_45) && !jumpRow;
-            yawLocked[k] = rows.get(t).isYawLocked();
-            speedAmp[k] = effSpeedLevel(t);
-            double slip = slipValue(effSlipperiness(t));
-            slipPerTick[k] = slip < 1.0 ? slip : Double.NaN;
-        }
-
-        List<ConstraintAt> uiCons = new ArrayList<>();
-        for (Integer tickKey : state.populatedTicks()) {
-            int absTick = tickKey;
-            int segTick = absTick - startTick;
-            if (segTick < 0 || segTick > numTicks) continue;
-            TickConstraints tc = state.tickConstraintsOrNull(absTick);
-            if (tc == null) continue;
-            for (Constraint c : tc.getConstraints()) uiCons.add(new ConstraintAt(absTick, segTick, c.copy()));
-        }
-
-        JumpPhysicsInputs inputs = new JumpPhysicsInputs(numTicks);
-        inputs.startPos = seed.position;
-        inputs.startYaw = seed.yaw;
-        inputs.initialVelocity = seed.velocity;
-        inputs.jumpTick = jumpTickRel;
-        inputs.strafePerTick = strafeMask;
-        inputs.speedAmplifier = speedAmp;
-        inputs.slipPerTick = slipPerTick;
-        inputs.yawLockedPerTick = yawLocked;
+        Phys ph = buildPhys(startTick, numTicks);
+        List<ConstraintAt> uiCons = collectUiConstraints(startTick, numTicks);
 
         List<JumpConstraint> constraints = new ArrayList<>();
         Objective objective = new Objective(axis(state.getAxis()), sense(state.getGoal()), numTicks);
         for (ConstraintAt ca : uiCons) addMapped(constraints, ca.c, ca.absTick, ca.segTick, numTicks);
 
         // Freeze the problem on the main thread so the worker reads a genuinely read-only snapshot.
-        JumpSpec spec = new JumpSpec(inputs, constraints, objective);
+        JumpSpec spec = new JumpSpec(ph.inputs, constraints, objective);
         long t0 = System.nanoTime();
-        Job job = new Job(spec, objective.sense, startTick, landingTick, numTicks, strafeMask, uiCons, t0,
+        Job job = new Job(spec, objective.sense, startTick, landingTick, numTicks, ph.strafeMask, uiCons, t0,
                 state.getEffort());
 
         // Show the spinner instead of a stale result, then run off-thread.
@@ -248,6 +216,61 @@ public final class AngleSolverEngine {
         worker.start();
     }
 
+    /** Per-tick physics snapshot shared by solve() and the block solver. */
+    private static final class Phys {
+        final JumpPhysicsInputs inputs;
+        final boolean[] strafeMask;
+        final int jumpTickRel;
+
+        Phys(JumpPhysicsInputs inputs, boolean[] strafeMask, int jumpTickRel) {
+            this.inputs = inputs;
+            this.strafeMask = strafeMask;
+            this.jumpTickRel = jumpTickRel;
+        }
+    }
+
+    private Phys buildPhys(int startTick, int numTicks) {
+        List<InputRow> rows = inputs.getRows();
+        TickState seed = boxes.getState(startTick);
+        int jumpTickRel = firstJumpTick(rows, startTick, numTicks);
+        boolean[] strafeMask = new boolean[numTicks];
+        boolean[] yawLocked = new boolean[numTicks];
+        int[] speedAmp = new int[numTicks];
+        double[] slipPerTick = new double[numTicks];
+        for (int k = 0; k < numTicks; k++) {
+            int t = startTick + k;
+            boolean jumpRow = rows.get(t).isKeyActive(InputRow.Key.JUMP);
+            strafeMask[k] = (effInputs(t) == AngleSolverState.InputMode.FORCE_45) && !jumpRow;
+            yawLocked[k] = rows.get(t).isYawLocked();
+            speedAmp[k] = effSpeedLevel(t);
+            double slip = slipValue(effSlipperiness(t));
+            slipPerTick[k] = slip < 1.0 ? slip : Double.NaN;
+        }
+        JumpPhysicsInputs phys = new JumpPhysicsInputs(numTicks);
+        phys.startPos = seed.position;
+        phys.startYaw = seed.yaw;
+        phys.initialVelocity = seed.velocity;
+        phys.jumpTick = jumpTickRel;
+        phys.strafePerTick = strafeMask;
+        phys.speedAmplifier = speedAmp;
+        phys.slipPerTick = slipPerTick;
+        phys.yawLockedPerTick = yawLocked;
+        return new Phys(phys, strafeMask, jumpTickRel);
+    }
+
+    private List<ConstraintAt> collectUiConstraints(int startTick, int numTicks) {
+        List<ConstraintAt> uiCons = new ArrayList<>();
+        for (Integer tickKey : state.populatedTicks()) {
+            int absTick = tickKey;
+            int segTick = absTick - startTick;
+            if (segTick < 0 || segTick > numTicks) continue;
+            TickConstraints tc = state.tickConstraintsOrNull(absTick);
+            if (tc == null) continue;
+            for (Constraint c : tc.getConstraints()) uiCons.add(new ConstraintAt(absTick, segTick, c.copy()));
+        }
+        return uiCons;
+    }
+
     public void cancel() {
         if (!solving) return;
         AtomicBoolean token = cancel;
@@ -261,6 +284,13 @@ public final class AngleSolverEngine {
         Outcome o = pending;
         if (o == null) return;
         pending = null;
+        if (o.derived != null) {
+            // Block solve: author the segment from the constraints the cutting plane found, set the objective.
+            state.clearConstraintsInRange(o.derivedFrom, o.derivedTo);
+            for (ConstraintAt ca : o.derived) state.tickConstraints(ca.absTick).getConstraints().add(ca.c);
+            if (o.axis != null) state.setAxis(o.axis);
+            if (o.goal != null) state.setGoal(o.goal);
+        }
         state.setResult(o.result);
         lastPlan = o.plan;
         solving = false;
@@ -282,55 +312,10 @@ public final class AngleSolverEngine {
         JumpSpec spec = job.spec; // frozen on the main thread; arrays read-only during solve, so shareable
         JumpPhysicsInputs sc = spec.asScenario();
 
-        double[] warm = new double[job.numTicks];
-        java.util.Arrays.fill(warm, sc.startYaw);
-        java.util.Random rng = new java.util.Random(0x9E3779B9L ^ job.numTicks);
-        Budget budget = budgetFor(job.effort);
-
-        List<double[]> inits = new ArrayList<>();
-        for (int r = 0; r < budget.restarts; r++) inits.add(r == 0 ? warm : randomInit(rng, job.numTicks));
-
-        // Stiffer constraint penalty (1e7) so CMA-ES drives the path right onto the wall instead of settling
-        // ~5e-7 past it; with FEAS_TOL=0 only restarts that land strictly behind the wall count as feasible.
-        List<SolverRunResult> results = inits.parallelStream()
-                .map(in -> new CmaesJumpHarness(1.0e7, 1.0e7, CMAES_SIGMA_DEG, budget.maxEval).solve(model, spec, in, cancel))
-                .collect(java.util.stream.Collectors.toList());
-        if (cancel.get()) return null;
-
-        boolean max = job.sense == Objective.Sense.MAX;
-        List<SolverRunResult> feasible = new ArrayList<>();
-        for (SolverRunResult r : results) if (maxViolation(r) <= FEAS_TOL) feasible.add(r);
-
         // yaws are absolute wrapped facings (what Apply writes as deltas); the game runs the float-accumulated
         // facings, so the reported path forwards toGameFacings(yaws), bit-for-bit the in-game trajectory.
-        double[] yaws;
-        if (feasible.isEmpty()) {
-            // No feasible basin: keep the least-violating result so the panel can show which walls are unmet.
-            SolverRunResult best = null;
-            for (SolverRunResult r : results) if (best == null || maxViolation(r) < maxViolation(best)) best = r;
-            yaws = wrapAll(best.yawAbsDeg);
-        } else {
-            // The best pre-polish objective is not always the basin that polishes best, so polish the top
-            // few feasible basins in parallel and keep the best. CMA-ES (penalty) settles at one island's
-            // corner; the deterministic block-1+block-2 ascent hops between the bucket-quantized feasible
-            // islands with strictly-feasible joint moves, recovering what the penalty leaves on the table.
-            feasible.sort((a, b) -> max ? Double.compare(b.objectiveValue, a.objectiveValue)
-                                        : Double.compare(a.objectiveValue, b.objectiveValue));
-            List<double[]> top = new ArrayList<>();
-            for (int i = 0; i < Math.min(budget.polishCount, feasible.size()); i++) {
-                top.add(wrapAll(feasible.get(i).yawAbsDeg));
-            }
-            List<double[]> polished = top.parallelStream()
-                    .map(y -> BucketAscentPolish.polish(model, spec, y, budget.polishCfg, cancel))
-                    .collect(java.util.stream.Collectors.toList());
-            if (cancel.get()) return null;
-            yaws = polished.get(0);
-            double bestObj = objectiveOf(sc, spec.objective, yaws);
-            for (int i = 1; i < polished.size(); i++) {
-                double o = objectiveOf(sc, spec.objective, polished.get(i));
-                if (max ? o > bestObj : o < bestObj) { bestObj = o; yaws = polished.get(i); }
-            }
-        }
+        double[] yaws = SolveCore.optimize(model, spec, budgetFor(job.effort), CMAES_SIGMA_DEG, FEAS_TOL, cancel);
+        if (yaws == null) return null;
 
         ForwardPath path = model.forward(sc, sc.toGameFacings(yaws));
         SolveResult result = buildResult(job, yaws, path);
@@ -345,25 +330,180 @@ public final class AngleSolverEngine {
         return new java.text.SimpleDateFormat("HH:mm:ss").format(new java.util.Date());
     }
 
-    private double objectiveOf(JumpPhysicsInputs sc, Objective obj, double[] absWrapped) {
-        return model.forward(sc, sc.toGameFacings(absWrapped)).getPos(obj.tick, obj.axis);
+    // ---- solve from blocks (cutting plane, off-thread) ------------------------
+
+    private static final double HALF = BoxStyle.HITBOX_HALF_WIDTH;
+    /** Total solves the cutting-plane DFS may spend before giving up (and honestly reporting no solution). */
+    private static final int BLOCK_MAX_ITERS = 40;
+
+    private static final class BlockJob {
+        final Phys ph;
+        final List<JumpConstraint> footprints;
+        final List<ConstraintAt> footprintUi;
+        final double[] landFp;
+        final List<BlockSolver.Obstacle> obstacles;
+        final double[] heights;
+        final List<Objective> objectives;
+        final int startTick;
+        final int landingTick;
+        final int numTicks;
+        final long startNanos;
+        final AngleSolverState.Effort effort;
+
+        BlockJob(Phys ph, List<JumpConstraint> footprints, List<ConstraintAt> footprintUi, double[] landFp,
+                 List<BlockSolver.Obstacle> obstacles, double[] heights, List<Objective> objectives, int startTick,
+                 int landingTick, int numTicks, long startNanos, AngleSolverState.Effort effort) {
+            this.ph = ph;
+            this.footprints = footprints;
+            this.footprintUi = footprintUi;
+            this.landFp = landFp;
+            this.obstacles = obstacles;
+            this.heights = heights;
+            this.objectives = objectives;
+            this.startTick = startTick;
+            this.landingTick = landingTick;
+            this.numTicks = numTicks;
+            this.startNanos = startNanos;
+            this.effort = effort;
+        }
     }
 
-    private static double[] wrapAll(double[] yawAbsDeg) {
-        return Angles.wrapAll(yawAbsDeg);
+    /** Solves the puzzle defined by the picked start / collision / land blocks: footprints pin the launch
+     *  and landing, and a cutting plane adds keep-out walls only where the solved path actually collides,
+     *  warm-started each round. The objective (reach toward an open footprint edge) is auto-chosen. Off-thread. */
+    public void solveFromBlocks() {
+        if (solving) return;
+        int startTick = state.getStartTick();
+        int landingTick = state.getLandingTick();
+        int numTicks = landingTick - startTick;
+        List<InputRow> rows = inputs.getRows();
+        BlockSelection land = state.getLandBlock();
+        if (numTicks <= 0 || startTick < 0 || startTick >= boxes.size()
+                || landingTick > rows.size() || startTick >= rows.size() || land == null) {
+            state.setResult(new SolveResult(false, 0, 0, startTick + 1, landingTick + 1));
+            return;
+        }
+
+        Phys ph = buildPhys(startTick, numTicks);
+        int jumpAbs = ph.jumpTickRel < 0 ? -1 : startTick + ph.jumpTickRel;
+
+        List<JumpConstraint> footprints = new ArrayList<>();
+        List<ConstraintAt> footprintUi = new ArrayList<>();
+        addFootprint(footprints, footprintUi, numTicks, startTick, land.box);
+        double[] landFp = expand(land.box);
+
+        BlockSelection start = state.getStartBlock();
+        if (start != null && jumpAbs > startTick) {
+            addFootprint(footprints, footprintUi, (jumpAbs - 1) - startTick, startTick, start.box);
+        }
+
+        List<BlockSolver.Obstacle> obstacles = new ArrayList<>();
+        for (BlockSelection c : state.getCollisionBlocks()) {
+            obstacles.add(new BlockSolver.Obstacle(c.box));
+        }
+        double[] heights = new double[numTicks + 1];
+        for (int st = 0; st <= numTicks; st++) {
+            TickState s = boxes.getState(startTick + st);
+            heights[st] = (s != null && s.sneaking) ? BoxStyle.HITBOX_HEIGHT_SNEAKING : BoxStyle.HITBOX_HEIGHT_STANDING;
+        }
+
+        List<Objective> objectives = objectiveCandidates(numTicks);
+
+        long t0 = System.nanoTime();
+        BlockJob job = new BlockJob(ph, footprints, footprintUi, landFp, obstacles, heights, objectives,
+                startTick, landingTick, numTicks, t0, state.getEffort());
+        state.clearResult();
+        lastPlan = null;
+        pending = null;
+        startNanos = t0;
+        AtomicBoolean token = new AtomicBoolean(false);
+        cancel = token;
+        solving = true;
+        Thread worker = new Thread(() -> {
+            try {
+                Outcome o = runBlockJob(job, token);
+                if (o != null && !token.get()) pending = o;
+            } catch (Throwable t) {
+                if (!token.get()) {
+                    pending = new Outcome(new SolveResult(false, 0, 0, job.startTick + 1, job.landingTick + 1), null);
+                }
+            }
+        }, "angle-block-solver");
+        worker.setDaemon(true);
+        worker.start();
     }
 
-    private static double maxViolation(SolverRunResult r) {
-        double m = 0.0;
-        for (double s : r.ineqSlack) m = Math.max(m, s);
-        for (double e : r.eqResidual) m = Math.max(m, Math.abs(e));
-        return m;
+    private Outcome runBlockJob(BlockJob job, AtomicBoolean cancel) {
+        BlockSolver.Result r = new BlockSolver().solve(model, job.ph.inputs, job.footprints, job.landFp,
+                job.obstacles, job.heights, job.objectives, blockBudget(job.effort), CMAES_SIGMA_DEG, FEAS_TOL, BLOCK_MAX_ITERS, cancel);
+        if (cancel.get() || r == null || r.yaws == null) return null;
+
+        List<ConstraintAt> derived = new ArrayList<>(job.footprintUi);
+        for (BlockSolver.Face f : r.faces) {
+            int absTick = job.startTick + f.segTick;
+            Constraint c = Constraint.scalar(f.axisX ? Constraint.Field.X : Constraint.Field.Z,
+                    f.upper ? Constraint.Op.GE : Constraint.Op.LE, f.value);
+            derived.add(new ConstraintAt(absTick, f.segTick, c));
+        }
+
+        SolveResult result = buildBlockResult(job, r.yaws, r.path, derived, r.ok());
+        result.setDurationMs((System.nanoTime() - job.startNanos) / 1_000_000L);
+        result.setFinishedAt(formatClock());
+        result.setObjective(r.path.getPos(r.objective.tick, r.objective.axis));
+        Plan plan = new Plan(job.startTick, r.yaws, job.ph.strafeMask, 1);
+        AngleSolverState.Axis ax = r.objective.axis == JumpPhysicsInputs.Axis.X ? AngleSolverState.Axis.X : AngleSolverState.Axis.Z;
+        AngleSolverState.Goal gl = r.objective.sense == Objective.Sense.MAX ? AngleSolverState.Goal.MAX : AngleSolverState.Goal.MIN;
+        return new Outcome(result, plan, derived, job.startTick, job.landingTick, ax, gl);
     }
 
-    private static double[] randomInit(java.util.Random rng, int n) {
-        double[] f = new double[n];
-        for (int i = 0; i < n; i++) f[i] = -180.0 + 360.0 * rng.nextDouble();
-        return f;
+    private SolveResult buildBlockResult(BlockJob job, double[] yaws, ForwardPath path, List<ConstraintAt> derived, boolean ok) {
+        int total = 0;
+        int met = 0;
+        List<SolveResult.Outcome> outs = new ArrayList<>();
+        List<ConstraintAt> ordered = new ArrayList<>(derived);
+        ordered.sort((a, b) -> Integer.compare(a.absTick, b.absTick));
+        for (ConstraintAt ca : ordered) {
+            Double found = findValue(ca.c, ca.segTick, job.numTicks, yaws, path);
+            if (found == null) continue;
+            total++;
+            if (satisfied(ca.c, found)) met++;
+            outs.add(outcome(ca.c, ca.absTick, found));
+        }
+        SolveResult r = new SolveResult(ok, met, total, job.startTick + 1, job.landingTick + 1);
+        r.getOutcomes().addAll(outs);
+        for (int k = 0; k < yaws.length; k++) r.getYaws().add(new SolveResult.YawEntry(job.startTick + k + 1, yaws[k]));
+        return r;
+    }
+
+    private void addFootprint(List<JumpConstraint> fps, List<ConstraintAt> ui, int segTick, int startTick, AABB box) {
+        if (segTick < 0) return;
+        double[] e = expand(box);
+        fps.add(new JumpConstraint(JumpConstraint.Mode.X, segTick, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.GE, e[0], "fpXlo"));
+        fps.add(new JumpConstraint(JumpConstraint.Mode.X, segTick, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.LE, e[1], "fpXhi"));
+        fps.add(new JumpConstraint(JumpConstraint.Mode.Z, segTick, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.GE, e[2], "fpZlo"));
+        fps.add(new JumpConstraint(JumpConstraint.Mode.Z, segTick, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.LE, e[3], "fpZhi"));
+        int absTick = startTick + segTick;
+        ui.add(new ConstraintAt(absTick, segTick, Constraint.range(Constraint.Field.X, e[0], e[1], true, true)));
+        ui.add(new ConstraintAt(absTick, segTick, Constraint.range(Constraint.Field.Z, e[2], e[3], true, true)));
+    }
+
+    /** [xlo, xhi, zlo, zhi] keep-out / footprint region: the block's horizontal AABB plus the half-width. */
+    private static double[] expand(AABB box) {
+        return new double[] {box.min.x - HALF, box.max.x + HALF, box.min.z - HALF, box.max.z + HALF};
+    }
+
+    /** The single objective the user picked (Axis + Goal). The block solver derives the keep-out
+     *  constraints; the user decides which coordinate to optimize, rather than the tool auto-choosing. */
+    private List<Objective> objectiveCandidates(int numTicks) {
+        return java.util.Collections.singletonList(
+                new Objective(axis(state.getAxis()), sense(state.getGoal()), numTicks));
+    }
+
+    /** Block solving uses the SAME per-effort budget as the normal Solve, so "Solve from blocks" never
+     *  searches weaker than the "Solve" that runs on the constraints it just derived (otherwise the block
+     *  solve can report no-solution and a follow-up Solve then finds it on the identical constraints). */
+    private static SolveCore.Budget blockBudget(AngleSolverState.Effort effort) {
+        return budgetFor(effort);
     }
 
     // ---- apply (main thread) --------------------------------------------------

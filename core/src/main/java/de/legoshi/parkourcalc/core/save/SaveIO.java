@@ -3,11 +3,13 @@ package de.legoshi.parkourcalc.core.save;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
+import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
+import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.anglesolver.Constraint;
 import de.legoshi.parkourcalc.core.anglesolver.Potion;
 import de.legoshi.parkourcalc.core.anglesolver.PotionDose;
@@ -95,7 +97,7 @@ public final class SaveIO {
         state.setLandingTick(a.landingTick);
         state.setAxis(parseEnum(AngleSolverState.Axis.class, a.axis, AngleSolverState.Axis.X));
         state.setGoal(parseEnum(AngleSolverState.Goal.class, a.goal, AngleSolverState.Goal.MAX));
-        state.setEffort(parseEnum(AngleSolverState.Effort.class, a.effort, AngleSolverState.Effort.BALANCED));
+        state.setEffort(parseEnum(AngleSolverState.Effort.class, a.effort, AngleSolverState.Effort.FAST));
         state.setDefaultInputs(parseEnum(AngleSolverState.InputMode.class, a.defaultInputs, AngleSolverState.InputMode.FORCE_45));
         state.setDefaultSlipperiness(parseEnum(Slipperiness.class, a.defaultSlipperiness, Slipperiness.AIR));
 
@@ -117,6 +119,18 @@ public final class SaveIO {
                     }
                 }
                 applyOverride(t.override, tc.getOverride());
+            }
+        }
+
+        if (a.selectedBlocks != null) {
+            for (SaveFile.BlockSel b : a.selectedBlocks) {
+                BlockSelection sel = toBlockSelection(b);
+                if (sel == null) continue;
+                switch (sel.kind) {
+                    case START: state.setStartBlock(sel); break;
+                    case LAND: state.setLandBlock(sel); break;
+                    case COLLISION: state.addCollisionBlock(sel); break;
+                }
             }
         }
 
@@ -274,8 +288,37 @@ public final class SaveIO {
             if (!ov.isEmpty()) t.override = toSaveOverride(ov);
             a.ticks.add(t);
         }
+        if (s.getStartBlock() != null) a.selectedBlocks.add(toSaveBlock(s.getStartBlock()));
+        for (BlockSelection c : s.getCollisionBlocks()) a.selectedBlocks.add(toSaveBlock(c));
+        if (s.getLandBlock() != null) a.selectedBlocks.add(toSaveBlock(s.getLandBlock()));
         a.result = toSaveResult(s.getResult());
         return a;
+    }
+
+    private static SaveFile.BlockSel toSaveBlock(BlockSelection b) {
+        SaveFile.BlockSel out = new SaveFile.BlockSel();
+        out.kind = b.kind.name();
+        out.x = b.x;
+        out.y = b.y;
+        out.z = b.z;
+        out.box = new double[] {
+                b.box.min.x, b.box.min.y, b.box.min.z,
+                b.box.max.x, b.box.max.y, b.box.max.z
+        };
+        return out;
+    }
+
+    private static BlockSelection toBlockSelection(SaveFile.BlockSel b) {
+        if (b == null) return null;
+        BlockSelection.Kind kind = parseEnumOrNull(BlockSelection.Kind.class, b.kind);
+        if (kind == null) return null;
+        if (b.box != null && b.box.length >= 6) {
+            AABB box = new AABB(
+                    new Vec3dCore(b.box[0], b.box[1], b.box[2]),
+                    new Vec3dCore(b.box[3], b.box[4], b.box[5]));
+            return new BlockSelection(kind, b.x, b.y, b.z, box);
+        }
+        return BlockSelection.cube(kind, b.x, b.y, b.z);
     }
 
     private static SaveFile.Constraint toSaveConstraint(Constraint c) {

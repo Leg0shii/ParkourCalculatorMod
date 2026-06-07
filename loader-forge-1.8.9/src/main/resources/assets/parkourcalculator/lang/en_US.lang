@@ -1,4 +1,8 @@
 key.parkourcalculator.toggle_ui=Toggle UI
 key.parkourcalculator.deselect_all=Deselect all
 key.parkourcalculator.toggle_playback=Start/Stop Playback
+key.parkourcalculator.add_start_block=Angle Solver: add Start block
+key.parkourcalculator.add_land_block=Angle Solver: add Land block
+key.parkourcalculator.add_collision_block=Angle Solver: add Collision block
+key.parkourcalculator.remove_block=Angle Solver: remove looked-at block
 key.categories.parkourcalculator=Parkour Calculator
