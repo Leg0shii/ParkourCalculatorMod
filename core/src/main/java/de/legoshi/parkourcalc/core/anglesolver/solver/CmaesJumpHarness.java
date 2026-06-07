@@ -13,6 +13,7 @@ import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.CMAESOptimizer;
 import org.apache.commons.math3.random.MersenneTwister;
 
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /** One CMA-ES (commons-math3) run on the byte-exact model with a quadratic-penalty composition of the
  *  compiled constraints. Derivative-free and global, so it escapes the facing-clamp local optima a
@@ -40,7 +41,7 @@ public final class CmaesJumpHarness {
         this.maxEval = maxEval;
     }
 
-    public SolverRunResult solve(ForwardModel model, JumpSpec spec, double[] initialFAbsDeg) {
+    public SolverRunResult solve(ForwardModel model, JumpSpec spec, double[] initialFAbsDeg, AtomicBoolean cancel) {
         JumpConstraintCompiler.Compiled c = JumpConstraintCompiler.compile(spec);
         JumpPhysicsInputs scenario = spec.asScenario();
         int n = initialFAbsDeg.length;
@@ -52,6 +53,7 @@ public final class CmaesJumpHarness {
         // facing snaps to a different sine-table bucket than the one that actually lands, so without this the
         // objective, the penalty, and the applied path are three slightly different trajectories.
         MultivariateFunction penalized = F -> {
+            if (cancel != null && cancel.get()) throw new SolveCancelledException();
             double[] gf = scenario.toGameFacings(Angles.wrapAll(F));
             ForwardPath pr = model.forward(scenario, gf);
             double o = sign * pr.getPos(obj.tick, obj.axis);
@@ -96,7 +98,7 @@ public final class CmaesJumpHarness {
         // Polish: the global penalty pass settles a hair short of the best feasible point (it nails the wall
         // hug but under-shapes the rest of the arc). A strict-feasible compass search climbs the objective
         // from there without ever crossing a wall, recovering that gap; it can only improve, never clip.
-        fStar = polish(model, scenario, c, obj, sign, Angles.wrapAll(fStar));
+        fStar = polish(model, scenario, c, obj, sign, Angles.wrapAll(fStar), cancel);
 
         // Score the game's float-accumulated facings; return the absolute wrapped facings (yawAbsDeg) so
         // Apply can convert them to the deltas the game accumulates back into exactly this trajectory.
@@ -127,7 +129,7 @@ public final class CmaesJumpHarness {
      *  every wall strictly satisfied (no clip), shrinking the step to a fine resolution. The global pass
      *  optimizes a penalty blend and stops a hair short inside the feasible region; this finishes the job.
      *  It never accepts a candidate that crosses a wall, so it can only improve the result, never invalidate it. */
-    private double[] polish(ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign, double[] startAbs) {
+    private double[] polish(ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign, double[] startAbs, AtomicBoolean cancel) {
         double[] cur = startAbs.clone();
         double[] sv = scoreViol(model, scenario, c, obj, sign, cur);
         if (sv[1] > 0.0) return cur; // start not strictly feasible: leave it (another restart may be)
@@ -135,6 +137,7 @@ public final class CmaesJumpHarness {
         int n = cur.length;
         double step = 45.0;
         for (int it = 0; it < 500 && step > 1.0e-7; it++) {
+            if (cancel != null && cancel.get()) throw new SolveCancelledException();
             boolean improved = false;
             for (int i = 0; i < n; i++) {
                 for (int dir = -1; dir <= 1; dir += 2) {

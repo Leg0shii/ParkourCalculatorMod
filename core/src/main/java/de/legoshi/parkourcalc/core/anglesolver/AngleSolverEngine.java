@@ -17,6 +17,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.IntConsumer;
 
 /** Bridges the Angle Solver UI to the byte-exact jump model and back into the live TAS.
@@ -85,6 +86,7 @@ public final class AngleSolverEngine {
     private volatile boolean solving;
     private volatile long startNanos;
     private volatile Outcome pending;
+    private volatile AtomicBoolean cancel;
 
     public AngleSolverEngine(AngleSolverState state, BoxController boxes, InputData inputs, IntConsumer onApplied, ForwardModel model) {
         this.state = state;
@@ -227,19 +229,31 @@ public final class AngleSolverEngine {
         lastPlan = null;
         pending = null;
         startNanos = t0;
+        AtomicBoolean token = new AtomicBoolean(false);
+        cancel = token;
         solving = true;
         Thread worker = new Thread(() -> {
             try {
-                pending = runJob(job);
-            } catch (RuntimeException e) {
-                // Never leave the spinner stuck: publish a failure so poll() clears the solving state.
-                SolveResult fail = new SolveResult(false, 0, job.uiConstraints.size(),
-                        job.startTick + 1, job.landingTick + 1);
-                pending = new Outcome(fail, null);
+                Outcome o = runJob(job, token);
+                if (o != null && !token.get()) pending = o;
+            } catch (Throwable t) {
+                if (!token.get()) {
+                    SolveResult fail = new SolveResult(false, 0, job.uiConstraints.size(),
+                            job.startTick + 1, job.landingTick + 1);
+                    pending = new Outcome(fail, null);
+                }
             }
         }, "angle-solver");
         worker.setDaemon(true);
         worker.start();
+    }
+
+    public void cancel() {
+        if (!solving) return;
+        AtomicBoolean token = cancel;
+        if (token != null) token.set(true);
+        pending = null;
+        solving = false;
     }
 
     /** Publish a finished background solve. Call every frame on the main thread. */
@@ -264,7 +278,7 @@ public final class AngleSolverEngine {
      *  independent and CPU-bound, so they run in parallel; then the most promising feasible basins are
      *  polished in parallel and the best kept. Single strafe sign (+1 = A); A and D are mirror-symmetric
      *  (flip the sign and shift air facings 90deg for an identical trajectory). Budget scales with effort. */
-    private Outcome runJob(Job job) {
+    private Outcome runJob(Job job, AtomicBoolean cancel) {
         JumpSpec spec = job.spec; // frozen on the main thread; arrays read-only during solve, so shareable
         JumpPhysicsInputs sc = spec.asScenario();
 
@@ -279,8 +293,9 @@ public final class AngleSolverEngine {
         // Stiffer constraint penalty (1e7) so CMA-ES drives the path right onto the wall instead of settling
         // ~5e-7 past it; with FEAS_TOL=0 only restarts that land strictly behind the wall count as feasible.
         List<SolverRunResult> results = inits.parallelStream()
-                .map(in -> new CmaesJumpHarness(1.0e7, 1.0e7, CMAES_SIGMA_DEG, budget.maxEval).solve(model, spec, in))
+                .map(in -> new CmaesJumpHarness(1.0e7, 1.0e7, CMAES_SIGMA_DEG, budget.maxEval).solve(model, spec, in, cancel))
                 .collect(java.util.stream.Collectors.toList());
+        if (cancel.get()) return null;
 
         boolean max = job.sense == Objective.Sense.MAX;
         List<SolverRunResult> feasible = new ArrayList<>();
@@ -306,8 +321,9 @@ public final class AngleSolverEngine {
                 top.add(wrapAll(feasible.get(i).yawAbsDeg));
             }
             List<double[]> polished = top.parallelStream()
-                    .map(y -> BucketAscentPolish.polish(model, spec, y, budget.polishCfg))
+                    .map(y -> BucketAscentPolish.polish(model, spec, y, budget.polishCfg, cancel))
                     .collect(java.util.stream.Collectors.toList());
+            if (cancel.get()) return null;
             yaws = polished.get(0);
             double bestObj = objectiveOf(sc, spec.objective, yaws);
             for (int i = 1; i < polished.size(); i++) {

@@ -3,6 +3,7 @@ package de.legoshi.parkourcalc.core.anglesolver.solver;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /** Deterministic exhaustive block-coordinate ascent on the byte-exact model, run on a feasible CMA-ES
  *  result to finish the job. Each yaw selects one of MC's 65536 float32 sine-table buckets, so the
@@ -59,7 +60,7 @@ public final class BucketAscentPolish {
             12, 8, 3
     );
 
-    public static double[] polish(ForwardModel model, JumpSpec spec, double[] startAbsWrapped, Config cfg) {
+    public static double[] polish(ForwardModel model, JumpSpec spec, double[] startAbsWrapped, Config cfg, AtomicBoolean cancel) {
         JumpConstraintCompiler.Compiled c = JumpConstraintCompiler.compile(spec);
         JumpPhysicsInputs scenario = spec.asScenario();
         Objective obj = spec.objective;
@@ -71,16 +72,17 @@ public final class BucketAscentPolish {
         if (score(model, scenario, c, obj, sign, best) == Double.POSITIVE_INFINITY) {
             return best; // start not strictly feasible: leave it (the engine only polishes feasible results)
         }
-        best = ascend(best, model, scenario, c, obj, sign, pairs, cfg);
+        best = ascend(best, model, scenario, c, obj, sign, pairs, cfg, cancel);
         double bestScore = score(model, scenario, c, obj, sign, best);
 
         if (cfg.restarts > 0) {
             Random rng = new Random(0x9E3779B97F4A7C15L ^ n);
             for (int r = 0; r < cfg.restarts; r++) {
+                if (cancel != null && cancel.get()) throw new SolveCancelledException();
                 double[] y = best.clone();
                 double mag = 0.5 + 6.0 * rng.nextDouble();
                 for (int t = 0; t < n; t++) y[t] += (rng.nextDouble() * 2.0 - 1.0) * mag;
-                y = ascend(y, model, scenario, c, obj, sign, pairs, cfg);
+                y = ascend(y, model, scenario, c, obj, sign, pairs, cfg, cancel);
                 double s = score(model, scenario, c, obj, sign, y);
                 if (s < bestScore) { bestScore = s; best = y; }
             }
@@ -88,35 +90,36 @@ public final class BucketAscentPolish {
         return best;
     }
 
-    private static double[] ascend(double[] start, ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign, int[][] pairs, Config cfg) {
+    private static double[] ascend(double[] start, ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign, int[][] pairs, Config cfg, AtomicBoolean cancel) {
         double[] y = start.clone();
         if (score(model, scenario, c, obj, sign, y) == Double.POSITIVE_INFINITY) return y;
-        b1refine(y, model, scenario, c, obj, sign, cfg);
+        b1refine(y, model, scenario, c, obj, sign, cfg, cancel);
         for (int round = 0; round < cfg.maxRounds; round++) {
             boolean moved = false;
             for (double[] r : cfg.b2) {
-                if (block2(y, pairs, r[0], r[1], model, scenario, c, obj, sign)) moved = true;
+                if (block2(y, pairs, r[0], r[1], model, scenario, c, obj, sign, cancel)) moved = true;
             }
-            b1refine(y, model, scenario, c, obj, sign, cfg);
+            b1refine(y, model, scenario, c, obj, sign, cfg, cancel);
             if (!moved) break;
         }
         return y;
     }
 
-    private static void b1refine(double[] y, ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign, Config cfg) {
+    private static void b1refine(double[] y, ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign, Config cfg, AtomicBoolean cancel) {
         for (double[] r : cfg.b1) {
             for (int it = 0; it < 60; it++) {
-                if (!block1(y, r[0], r[1], model, scenario, c, obj, sign)) break;
+                if (!block1(y, r[0], r[1], model, scenario, c, obj, sign, cancel)) break;
             }
         }
     }
 
     /** Scan each tick over [-win, win] at step; keep the best strictly-feasible improvement. */
-    private static boolean block1(double[] y, double win, double step, ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign) {
+    private static boolean block1(double[] y, double win, double step, ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign, AtomicBoolean cancel) {
         boolean improved = false;
         double best = score(model, scenario, c, obj, sign, y);
         int n = y.length;
         for (int t = 0; t < n; t++) {
+            if (cancel != null && cancel.get()) throw new SolveCancelledException();
             double orig = y[t], bestY = orig, bestO = best;
             for (double d = -win; d <= win + 1e-12; d += step) {
                 y[t] = orig + d;
@@ -130,10 +133,11 @@ public final class BucketAscentPolish {
     }
 
     /** Scan pairs jointly over a 2-D window; keep the best strictly-feasible improvement. */
-    private static boolean block2(double[] y, int[][] pairs, double win, double step, ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign) {
+    private static boolean block2(double[] y, int[][] pairs, double win, double step, ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign, AtomicBoolean cancel) {
         boolean improved = false;
         double best = score(model, scenario, c, obj, sign, y);
         for (int[] pr : pairs) {
+            if (cancel != null && cancel.get()) throw new SolveCancelledException();
             int i = pr[0], j = pr[1];
             double oi = y[i], oj = y[j], bi = oi, bj = oj, bo = best;
             for (double di = -win; di <= win + 1e-12; di += step) {

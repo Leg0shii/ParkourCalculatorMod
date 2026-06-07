@@ -341,6 +341,13 @@ public final class AngleSolverWindow implements RenderInterface {
         ThemeManager.pushTextColor(ThemeManager.textMutedColor());
         ImGui.text(String.format(Locale.ROOT, "Solving... %.1fs", engine.elapsedSeconds()));
         ThemeManager.popTextColor();
+
+        ImGui.sameLine();
+        float xW = SolverWidgets.deleteXWidth();
+        float avail = ImGui.getContentRegionAvail().x;
+        if (avail > xW) ImGui.setCursorPosX(ImGui.getCursorPosX() + avail - xW);
+        if (SolverWidgets.deleteX("##cancelSolve")) engine.cancel();
+        if (ImGui.isItemHovered()) ImGui.setTooltip("Cancel search");
     }
 
     private void renderResultPanel(ImGuiIO io, SolveResult r, float scale) {
