@@ -86,25 +86,20 @@ public final class Application {
         AngleSolverState angleSolverState = new AngleSolverState();
         saveController.setAngleSolver(angleSolverState);
         saveController.setDebugSource(boxController, settings);
-        AngleSolverTable angleSolverTable = new AngleSolverTable(
-                angleSolverState, settings, selection, () -> inputData.size());
+        AngleSolverTable angleSolverTable = new AngleSolverTable(angleSolverState, settings, selection, inputData::size);
         inputOverlay.setAngleSolver(angleSolverTable);
-        String mcVersion = saveController.getSaveStore() != null
-                ? saveController.getSaveStore().getMcVersion() : null;
-        AngleSolverEngine angleSolverEngine = new AngleSolverEngine(
-                angleSolverState, boxController, inputData, this::onUserChange,
-                ExactJumpModel.forMcVersion(mcVersion));
-        AngleSolverWindow angleSolverWindow = new AngleSolverWindow(
-                angleSolverState, settings, () -> inputData.size(), angleSolverEngine);
+        String mcVersion = saveController.getSaveStore() != null ? saveController.getSaveStore().getMcVersion() : null;
+        AngleSolverEngine angleSolverEngine = new AngleSolverEngine(angleSolverState, boxController, inputData, this::onUserChange, ExactJumpModel.forMcVersion(mcVersion));
+        AngleSolverWindow angleSolverWindow = new AngleSolverWindow(angleSolverState, settings, inputData::size, angleSolverEngine);
 
         TickInfoPanel tickInfoPanel = new TickInfoPanel(boxController, selection);
         PerfOverlay perfOverlay = new PerfOverlay();
         FileMenu fileMenu = new FileMenu(saveController, filePicker, settings, this::saveSettings);
         SettingsModal settingsModal = new SettingsModal(settings, this::saveSettings);
         MainWindowOverlay mainWindow = new MainWindowOverlay(
-                inputOverlay, inputData, fileMenu, settings, this::saveSettings,
-                tickInfoPanel, perfOverlay, settingsModal, systemBridge,
-                () -> saveController.getSaveStore(), modVersion);
+                inputOverlay, inputData, fileMenu, settings, this::saveSettings,tickInfoPanel, perfOverlay,
+                settingsModal, systemBridge, saveController::getSaveStore, modVersion
+        );
         overlayManager.register(mainWindow);
         overlayManager.register(angleSolverWindow);
     }

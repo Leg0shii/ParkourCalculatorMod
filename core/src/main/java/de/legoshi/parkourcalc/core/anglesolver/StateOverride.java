@@ -17,19 +17,50 @@ public final class StateOverride {
     private final List<PotionDose> added = new ArrayList<>();
     private final Set<Potion> removed = EnumSet.noneOf(Potion.class);
 
-    public AngleSolverState.InputMode getInputs() { return inputs; }
-    public void setInputs(AngleSolverState.InputMode inputs) { this.inputs = inputs; }
-    public boolean overridesInputs() { return inputs != null; }
-    public void clearInputs() { inputs = null; }
+    public AngleSolverState.InputMode getInputs() {
+        return inputs;
+    }
 
-    public Slipperiness getSlipperiness() { return slipperiness; }
-    public void setSlipperiness(Slipperiness slipperiness) { this.slipperiness = slipperiness; }
-    public boolean overridesSlipperiness() { return slipperiness != null; }
-    public void clearSlipperiness() { slipperiness = null; }
+    public void setInputs(AngleSolverState.InputMode inputs) {
+        this.inputs = inputs;
+    }
 
-    public List<PotionDose> getAdded() { return added; }
-    public Set<Potion> getRemoved() { return removed; }
-    public boolean overridesPotion() { return !added.isEmpty() || !removed.isEmpty(); }
+    public boolean overridesInputs() {
+        return inputs != null;
+    }
+
+    public void clearInputs() {
+        inputs = null;
+    }
+
+    public Slipperiness getSlipperiness() {
+        return slipperiness;
+    }
+
+    public void setSlipperiness(Slipperiness slipperiness) {
+        this.slipperiness = slipperiness;
+    }
+
+    public boolean overridesSlipperiness() {
+        return slipperiness != null;
+    }
+
+    public void clearSlipperiness() {
+        slipperiness = null;
+    }
+
+
+    public List<PotionDose> getAdded() {
+        return added;
+    }
+
+    public Set<Potion> getRemoved() {
+        return removed;
+    }
+
+    public boolean overridesPotion() {
+        return !added.isEmpty() || !removed.isEmpty();
+    }
 
     public boolean hasAdded(Potion p) {
         for (PotionDose d : added) if (d.potion == p) return true;

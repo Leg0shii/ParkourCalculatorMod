@@ -92,8 +92,7 @@ public final class JumpConstraintCompiler {
 
     private static void validateTick(int t, int numTicks, String name) {
         if (t < 0 || t > numTicks) {
-            throw new IllegalArgumentException("constraint " + name + ": tick " + t
-                    + " out of range [0, " + numTicks + "]");
+            throw new IllegalArgumentException("constraint " + name + ": tick " + t + " out of range [0, " + numTicks + "]");
         }
     }
 

@@ -63,9 +63,9 @@ public final class AngleSolverEngine {
 
     private static Budget budgetFor(AngleSolverState.Effort effort) {
         switch (effort) {
-            case FAST:     return new Budget(16, 4500, 2, BucketAscentPolish.FAST);
+            case FAST: return new Budget(16, 4500, 2, BucketAscentPolish.FAST);
             case THOROUGH: return new Budget(48, 12000, 16, BucketAscentPolish.THOROUGH);
-            default:       return new Budget(28, 7000, 4, BucketAscentPolish.BALANCED);
+            default: return new Budget(28, 7000, 4, BucketAscentPolish.BALANCED);
         }
     }
 
@@ -86,8 +86,7 @@ public final class AngleSolverEngine {
     private volatile long startNanos;
     private volatile Outcome pending;
 
-    public AngleSolverEngine(AngleSolverState state, BoxController boxes, InputData inputs,
-                             IntConsumer onApplied, ForwardModel model) {
+    public AngleSolverEngine(AngleSolverState state, BoxController boxes, InputData inputs, IntConsumer onApplied, ForwardModel model) {
         this.state = state;
         this.boxes = boxes;
         this.inputs = inputs;
@@ -136,7 +135,8 @@ public final class AngleSolverEngine {
 
         Job(JumpSpec spec, Objective.Sense sense, int startTick, int landingTick,
             int numTicks, boolean[] strafeMask, List<ConstraintAt> uiConstraints, long startNanos,
-            AngleSolverState.Effort effort) {
+            AngleSolverState.Effort effort
+        ) {
             this.spec = spec;
             this.sense = sense;
             this.startTick = startTick;

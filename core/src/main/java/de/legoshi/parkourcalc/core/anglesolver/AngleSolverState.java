@@ -12,12 +12,19 @@ import java.util.Map;
  */
 public final class AngleSolverState {
 
-    public enum Axis { X, Z }
+    public enum Axis {
+        X,
+        Z
+    }
 
-    public enum Goal { MAX, MIN }
+    public enum Goal {
+        MAX,
+        MIN
+    }
 
     public enum InputMode {
-        KEEP("Keep"), FORCE_45("Force 45");
+        KEEP("Keep"),
+        FORCE_45("Force 45");
 
         public final String label;
 

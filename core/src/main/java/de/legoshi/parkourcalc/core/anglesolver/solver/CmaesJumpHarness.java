@@ -74,9 +74,11 @@ public final class CmaesJumpHarness {
         try {
             // stopFitness MUST be -inf, not 0: the objective is sign*pos (~ -2102 at large world coords),
             // so a 0 threshold would stop on the first generation. Deterministic RNG seeded off the start.
-            CMAESOptimizer opt = new CMAESOptimizer(1000, Double.NEGATIVE_INFINITY, true, 0, 0,
+            CMAESOptimizer opt = new CMAESOptimizer(
+                    1000, Double.NEGATIVE_INFINITY, true, 0, 0,
                     new MersenneTwister(0x5DEECE66DL ^ Arrays.hashCode(start)), false,
-                    new SimpleValueChecker(1.0e-12, 1.0e-12));
+                    new SimpleValueChecker(1.0e-12, 1.0e-12)
+            );
             PointValuePair pv = opt.optimize(
                     new MaxEval(maxEval),
                     new ObjectiveFunction(penalized),
@@ -84,7 +86,8 @@ public final class CmaesJumpHarness {
                     new SimpleBounds(lower, upper),
                     new InitialGuess(start),
                     new CMAESOptimizer.PopulationSize(lambda),
-                    new CMAESOptimizer.Sigma(sigma));
+                    new CMAESOptimizer.Sigma(sigma)
+            );
             fStar = pv.getPoint();
         } catch (TooManyEvaluationsException ignored) {
             // Used the eval budget without converging; keep the start. Other restarts cover it.
@@ -124,8 +127,7 @@ public final class CmaesJumpHarness {
      *  every wall strictly satisfied (no clip), shrinking the step to a fine resolution. The global pass
      *  optimizes a penalty blend and stops a hair short inside the feasible region; this finishes the job.
      *  It never accepts a candidate that crosses a wall, so it can only improve the result, never invalidate it. */
-    private double[] polish(ForwardModel model, JumpPhysicsInputs scenario,
-                            JumpConstraintCompiler.Compiled c, Objective obj, double sign, double[] startAbs) {
+    private double[] polish(ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign, double[] startAbs) {
         double[] cur = startAbs.clone();
         double[] sv = scoreViol(model, scenario, c, obj, sign, cur);
         if (sv[1] > 0.0) return cur; // start not strictly feasible: leave it (another restart may be)
@@ -153,8 +155,7 @@ public final class CmaesJumpHarness {
 
     /** {sign*objective + eq-penalty, max inequality slack} for an absolute facing vector, via the same
      *  wrap + game-facing + byte-exact forward the search uses. Second value &lt;= 0 means no wall is crossed. */
-    private double[] scoreViol(ForwardModel model, JumpPhysicsInputs scenario,
-                               JumpConstraintCompiler.Compiled c, Objective obj, double sign, double[] abs) {
+    private double[] scoreViol(ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign, double[] abs) {
         double[] gf = scenario.toGameFacings(Angles.wrapAll(abs));
         ForwardPath pr = model.forward(scenario, gf);
         // score folds ONLY the eq squared-penalty (muIneq=0 zeroes the ineq term); ineq is reported separately.

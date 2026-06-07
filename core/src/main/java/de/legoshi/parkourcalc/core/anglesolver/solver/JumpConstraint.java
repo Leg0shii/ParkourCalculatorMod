@@ -10,9 +10,22 @@ package de.legoshi.parkourcalc.core.anglesolver.solver;
  */
 public final class JumpConstraint {
 
-    public enum Mode { X, Z, F }
-    public enum Op   { PLUS, MINUS }
-    public enum Cmp  { GE, EQ, LE }
+    public enum Mode {
+        X,
+        Z,
+        F
+    }
+
+    public enum Op {
+        PLUS,
+        MINUS
+    }
+
+    public enum Cmp {
+        GE,
+        EQ,
+        LE
+    }
 
     public final Mode mode;
     public final int t1;
@@ -22,8 +35,7 @@ public final class JumpConstraint {
     public final double rhs;
     public final String name;
 
-    public JumpConstraint(Mode mode, int t1, Integer t2, Op op, Cmp cmp,
-                          double rhs, String name) {
+    public JumpConstraint(Mode mode, int t1, Integer t2, Op op, Cmp cmp, double rhs, String name) {
         this.mode = mode;
         this.t1 = t1;
         this.t2 = t2;

@@ -42,19 +42,22 @@ public final class BucketAscentPolish {
     public static final Config FAST = new Config(
             new double[][]{{0.2, 0.004}, {0.04, 0.0006}, {0.01, 0.0001}},
             new double[][]{{0.08, 0.0025}},
-            1, 0, 3);
+            1, 0, 3
+    );
 
     /** Default: a few medium passes. With ~4 basins polished in parallel this matches the heavy solve. */
     public static final Config BALANCED = new Config(
             new double[][]{{0.2, 0.004}, {0.04, 0.0006}, {0.01, 0.0001}},
             new double[][]{{0.15, 0.004}, {0.04, 0.001}},
-            2, 0, 3);
+            2, 0, 3
+    );
 
     /** Exhaustive: wide coarse block-2 island hops, fine settle, plus a few fixed-seed restarts. */
     public static final Config THOROUGH = new Config(
             new double[][]{{1.5, 0.02}, {0.4, 0.005}, {0.1, 0.001}, {0.03, 0.0003}, {0.01, 0.0001}, {0.004, 0.00003}},
             new double[][]{{1.0, 0.02}, {0.3, 0.008}, {0.1, 0.003}, {0.04, 0.001}},
-            12, 8, 3);
+            12, 8, 3
+    );
 
     public static double[] polish(ForwardModel model, JumpSpec spec, double[] startAbsWrapped, Config cfg) {
         JumpConstraintCompiler.Compiled c = JumpConstraintCompiler.compile(spec);
@@ -85,9 +88,7 @@ public final class BucketAscentPolish {
         return best;
     }
 
-    private static double[] ascend(double[] start, ForwardModel model, JumpPhysicsInputs scenario,
-                                   JumpConstraintCompiler.Compiled c, Objective obj, double sign,
-                                   int[][] pairs, Config cfg) {
+    private static double[] ascend(double[] start, ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign, int[][] pairs, Config cfg) {
         double[] y = start.clone();
         if (score(model, scenario, c, obj, sign, y) == Double.POSITIVE_INFINITY) return y;
         b1refine(y, model, scenario, c, obj, sign, cfg);
@@ -102,8 +103,7 @@ public final class BucketAscentPolish {
         return y;
     }
 
-    private static void b1refine(double[] y, ForwardModel model, JumpPhysicsInputs scenario,
-                                 JumpConstraintCompiler.Compiled c, Objective obj, double sign, Config cfg) {
+    private static void b1refine(double[] y, ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign, Config cfg) {
         for (double[] r : cfg.b1) {
             for (int it = 0; it < 60; it++) {
                 if (!block1(y, r[0], r[1], model, scenario, c, obj, sign)) break;
@@ -112,9 +112,7 @@ public final class BucketAscentPolish {
     }
 
     /** Scan each tick over [-win, win] at step; keep the best strictly-feasible improvement. */
-    private static boolean block1(double[] y, double win, double step, ForwardModel model,
-                                  JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c,
-                                  Objective obj, double sign) {
+    private static boolean block1(double[] y, double win, double step, ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign) {
         boolean improved = false;
         double best = score(model, scenario, c, obj, sign, y);
         int n = y.length;
@@ -132,9 +130,7 @@ public final class BucketAscentPolish {
     }
 
     /** Scan pairs jointly over a 2-D window; keep the best strictly-feasible improvement. */
-    private static boolean block2(double[] y, int[][] pairs, double win, double step,
-                                  ForwardModel model, JumpPhysicsInputs scenario,
-                                  JumpConstraintCompiler.Compiled c, Objective obj, double sign) {
+    private static boolean block2(double[] y, int[][] pairs, double win, double step, ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign) {
         boolean improved = false;
         double best = score(model, scenario, c, obj, sign, y);
         for (int[] pr : pairs) {
@@ -163,8 +159,7 @@ public final class BucketAscentPolish {
     }
 
     /** sign*objective via the exact wrap + game-facing + byte-exact forward; +inf if any wall is crossed. */
-    private static double score(ForwardModel model, JumpPhysicsInputs scenario,
-                                JumpConstraintCompiler.Compiled c, Objective obj, double sign, double[] abs) {
+    private static double score(ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign, double[] abs) {
         double[] gf = scenario.toGameFacings(Angles.wrapAll(abs));
         ForwardPath pr = model.forward(scenario, gf);
         double viol = c.maxViolation(gf, pr);

@@ -162,9 +162,7 @@ public final class SaveIO {
         return cleaned;
     }
 
-    private static SaveFile buildFile(FileSystemSaveStore store, InputData inputData,
-                                      Vec3dCore startPos, Vec3dCore startVel, float startYaw,
-                                      AngleSolverState angleSolver, List<TickState> debugStates) {
+    private static SaveFile buildFile(FileSystemSaveStore store, InputData inputData, Vec3dCore startPos, Vec3dCore startVel, float startYaw, AngleSolverState angleSolver, List<TickState> debugStates) {
         SaveFile file = new SaveFile();
         file.version = SaveFile.FORMAT_VERSION;
         file.createdAt = nowIso8601();
@@ -178,7 +176,7 @@ public final class SaveIO {
         start.yaw = startYaw;
         file.start = start;
 
-        List<SaveFile.Row> rows = new ArrayList<SaveFile.Row>(inputData.size());
+        List<SaveFile.Row> rows = new ArrayList<>(inputData.size());
         for (InputRow row : inputData.getRows()) {
             rows.add(toSaveRow(row));
         }
@@ -187,7 +185,7 @@ public final class SaveIO {
         file.angleSolver = toSaveAngleSolver(angleSolver);
 
         if (debugStates != null) {
-            List<SaveFile.DebugTick> dbg = new ArrayList<SaveFile.DebugTick>(debugStates.size());
+            List<SaveFile.DebugTick> dbg = new ArrayList<>(debugStates.size());
             for (TickState s : debugStates) dbg.add(toDebugTick(s));
             file.debug = dbg;
         }
@@ -250,8 +248,6 @@ public final class SaveIO {
         }
         return row;
     }
-
-    // ---- angle solver <-> DTO --------------------------------------------------
 
     private static SaveFile.AngleSolver toSaveAngleSolver(AngleSolverState s) {
         if (s == null) return null;

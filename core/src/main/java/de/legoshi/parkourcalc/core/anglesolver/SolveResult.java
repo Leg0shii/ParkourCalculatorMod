@@ -56,19 +56,60 @@ public final class SolveResult {
         this.landingTick = landingTick;
     }
 
-    public boolean isSuccess() { return success; }
-    public int getMet() { return met; }
-    public int getTotal() { return total; }
-    public int getStartTick() { return startTick; }
-    public int getLandingTick() { return landingTick; }
-    public List<Outcome> getOutcomes() { return outcomes; }
-    public List<YawEntry> getYaws() { return yaws; }
+    public boolean isSuccess() {
+        return success;
+    }
 
-    public long getDurationMs() { return durationMs; }
-    public void setDurationMs(long durationMs) { this.durationMs = durationMs; }
-    public String getFinishedAt() { return finishedAt; }
-    public void setFinishedAt(String finishedAt) { this.finishedAt = finishedAt; }
-    public double getObjectiveValue() { return objectiveValue; }
-    public boolean hasObjective() { return hasObjective; }
-    public void setObjective(double value) { this.objectiveValue = value; this.hasObjective = true; }
+    public int getMet() {
+        return met;
+    }
+
+    public int getTotal() {
+        return total;
+    }
+
+    public int getStartTick() {
+        return startTick;
+    }
+
+    public int getLandingTick() {
+        return landingTick;
+    }
+
+    public List<Outcome> getOutcomes() {
+        return outcomes;
+    }
+
+    public List<YawEntry> getYaws() {
+        return yaws;
+    }
+
+    public long getDurationMs() {
+        return durationMs;
+    }
+
+    public void setDurationMs(long durationMs) {
+        this.durationMs = durationMs;
+    }
+
+    public String getFinishedAt() {
+        return finishedAt;
+    }
+
+    public void setFinishedAt(String finishedAt) {
+        this.finishedAt = finishedAt;
+    }
+
+    public double getObjectiveValue() {
+        return objectiveValue;
+    }
+
+    public boolean hasObjective() {
+        return hasObjective;
+    }
+
+    public void setObjective(double value) {
+        this.objectiveValue = value;
+        this.hasObjective = true;
+    }
 }
