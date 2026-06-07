@@ -921,7 +921,7 @@ public final class AngleSolverTable {
         // Inputs
         ovRowStart("Inputs", isStateSelected(tick, DragKind.STATE_INPUTS, null));
         AngleSolverState.InputMode effInputs = ov.overridesInputs() ? ov.getInputs() : state.getDefaultInputs();
-        int sel = SolverWidgets.segmented("ovinputs", INPUTS, effInputs.ordinal(), false, ImGui.getContentRegionAvail().x);
+        int sel = SolverWidgets.segmented("ovinputs", INPUTS, effInputs.ordinal(), ImGui.getContentRegionAvail().x);
         if (sel >= 0) {
             AngleSolverState.InputMode chosen = AngleSolverState.InputMode.values()[sel];
             if (chosen == state.getDefaultInputs()) ov.clearInputs();

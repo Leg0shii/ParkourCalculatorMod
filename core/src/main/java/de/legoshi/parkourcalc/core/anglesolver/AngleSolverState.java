@@ -56,22 +56,53 @@ public final class AngleSolverState {
 
     private SolveResult result;
 
-    // ---- problem inputs --------------------------------------------------------
+    public int getStartTick() {
+        return startTick;
+    }
 
-    public int getStartTick() { return startTick; }
-    public void setStartTick(int tick) { startTick = tick; }
-    public int getLandingTick() { return landingTick; }
-    public void setLandingTick(int tick) { landingTick = tick; }
+    public void setStartTick(int tick) {
+        startTick = tick;
+    }
 
-    public Axis getAxis() { return axis; }
-    public void setAxis(Axis axis) { this.axis = axis; }
-    public Goal getGoal() { return goal; }
-    public void setGoal(Goal goal) { this.goal = goal; }
-    public Effort getEffort() { return effort; }
-    public void setEffort(Effort effort) { this.effort = effort; }
+    public int getLandingTick() {
+        return landingTick;
+    }
 
-    public boolean isStart(int tick) { return tick == startTick; }
-    public boolean isLanding(int tick) { return tick == landingTick; }
+    public void setLandingTick(int tick) {
+        landingTick = tick;
+    }
+
+    public Axis getAxis() {
+        return axis;
+    }
+
+    public void setAxis(Axis axis) {
+        this.axis = axis;
+    }
+
+    public Goal getGoal() {
+        return goal;
+    }
+
+    public void setGoal(Goal goal) {
+        this.goal = goal;
+    }
+
+    public Effort getEffort() {
+        return effort;
+    }
+
+    public void setEffort(Effort effort) {
+        this.effort = effort;
+    }
+
+    public boolean isStart(int tick) {
+        return tick == startTick;
+    }
+
+    public boolean isLanding(int tick) {
+        return tick == landingTick;
+    }
 
     /** Keep the start/landing indices inside the current route. */
     public void clampTicks(int rowCount) {
@@ -86,13 +117,25 @@ public final class AngleSolverState {
         return tick;
     }
 
-    // ---- default state ---------------------------------------------------------
+    public InputMode getDefaultInputs() {
+        return defaultInputs;
+    }
 
-    public InputMode getDefaultInputs() { return defaultInputs; }
-    public void setDefaultInputs(InputMode mode) { this.defaultInputs = mode; }
-    public Slipperiness getDefaultSlipperiness() { return defaultSlipperiness; }
-    public void setDefaultSlipperiness(Slipperiness slip) { this.defaultSlipperiness = slip; }
-    public List<PotionDose> getDefaultPotions() { return defaultPotions; }
+    public void setDefaultInputs(InputMode mode) {
+        this.defaultInputs = mode;
+    }
+
+    public Slipperiness getDefaultSlipperiness() {
+        return defaultSlipperiness;
+    }
+
+    public void setDefaultSlipperiness(Slipperiness slip) {
+        this.defaultSlipperiness = slip;
+    }
+
+    public List<PotionDose> getDefaultPotions() {
+        return defaultPotions;
+    }
 
     public boolean hasDefaultPotion(Potion p) {
         for (PotionDose d : defaultPotions) if (d.potion == p) return true;
@@ -143,8 +186,6 @@ public final class AngleSolverState {
         }
         return false;
     }
-
-    // ---- per-tick constraints --------------------------------------------------
 
     public TickConstraints tickConstraints(int tick) {
         TickConstraints tc = ticks.get(tick);
@@ -203,12 +244,19 @@ public final class AngleSolverState {
         return list.remove(index);
     }
 
-    // ---- solve result ----------------------------------------------------------
     // Solving lives in AngleSolverEngine; the window's Solve button drives it and calls setResult.
 
-    public SolveResult getResult() { return result; }
-    public void clearResult() { result = null; }
-    public void setResult(SolveResult result) { this.result = result; }
+    public SolveResult getResult() {
+        return result;
+    }
+
+    public void clearResult() {
+        result = null;
+    }
+
+    public void setResult(SolveResult result) {
+        this.result = result;
+    }
 
     /** Wipes all state back to construction defaults; used before loading a saved problem. */
     public void reset() {

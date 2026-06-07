@@ -207,7 +207,6 @@ public final class AngleSolverEngine {
         inputs.startYaw = seed.yaw;
         inputs.initialVelocity = seed.velocity;
         inputs.jumpTick = jumpTickRel;
-        inputs.strafeSign = 1; // A and D are mirror-symmetric; solve the +1 sign only
         inputs.strafePerTick = strafeMask;
         inputs.speedAmplifier = speedAmp;
         inputs.slipPerTick = slipPerTick;
@@ -420,14 +419,14 @@ public final class AngleSolverEngine {
         String tag = c.getField().label + "@" + absTick;
         switch (c.getField()) {
             case X:
-                addScalarOrRange(out, JumpConstraint.Mode.X, segTick, null, JumpConstraint.Op.PLUS, c, tag);
+                addScalarOrRange(out, JumpConstraint.Mode.X, segTick, c, tag);
                 break;
             case Z:
-                addScalarOrRange(out, JumpConstraint.Mode.Z, segTick, null, JumpConstraint.Op.PLUS, c, tag);
+                addScalarOrRange(out, JumpConstraint.Mode.Z, segTick, c, tag);
                 break;
             case F:
                 if (segTick >= numTicks) break; // no facing for the post-final state
-                addScalarOrRange(out, JumpConstraint.Mode.F, segTick, null, JumpConstraint.Op.PLUS, c, tag);
+                addScalarOrRange(out, JumpConstraint.Mode.F, segTick, c, tag);
                 break;
             case DX:
                 if (segTick < 1) break; // velocity needs t-1
@@ -440,21 +439,20 @@ public final class AngleSolverEngine {
         }
     }
 
-    /** Scalar X/Z/F (one constraint) or a position range (a GE/LE pair). */
-    private void addScalarOrRange(List<JumpConstraint> out, JumpConstraint.Mode mode, int t1, Integer t2,
-                                  JumpConstraint.Op op, Constraint c, String tag) {
+    /** Scalar X/Z/F (one constraint) or a position range (a GE/LE pair). Single-tick, same-axis, additive. */
+    private void addScalarOrRange(List<JumpConstraint> out, JumpConstraint.Mode mode, int t1, Constraint c, String tag) {
         if (c.isRange()) {
-            out.add(new JumpConstraint(mode, t1, t2, op, JumpConstraint.Cmp.GE, c.getLo(), tag + "lo", true));
-            out.add(new JumpConstraint(mode, t1, t2, op, JumpConstraint.Cmp.LE, c.getHi(), tag + "hi", true));
+            out.add(new JumpConstraint(mode, t1, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.GE, c.getLo(), tag + "lo"));
+            out.add(new JumpConstraint(mode, t1, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.LE, c.getHi(), tag + "hi"));
         } else {
-            out.add(new JumpConstraint(mode, t1, t2, op, cmp(c.getOp()), c.getValue(), tag, true));
+            out.add(new JumpConstraint(mode, t1, null, JumpConstraint.Op.PLUS, cmp(c.getOp()), c.getValue(), tag));
         }
     }
 
     /** Velocity (dX/dZ) range: pos[t1]-pos[t2] within [lo,hi], as a GE/LE pair. */
     private void addRangePair(List<JumpConstraint> out, JumpConstraint.Mode mode, int t1, int t2, Constraint c, String tag) {
-        out.add(new JumpConstraint(mode, t1, t2, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.GE, c.getLo(), tag + "lo", true));
-        out.add(new JumpConstraint(mode, t1, t2, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.LE, c.getHi(), tag + "hi", true));
+        out.add(new JumpConstraint(mode, t1, t2, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.GE, c.getLo(), tag + "lo"));
+        out.add(new JumpConstraint(mode, t1, t2, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.LE, c.getHi(), tag + "hi"));
     }
 
     private static JumpConstraint.Cmp cmp(Constraint.Op op) {

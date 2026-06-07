@@ -28,7 +28,6 @@ public final class ThemeManager {
     private static final float[] ACCENT       = rgb(0x89, 0xb4, 0xfa, 1.00f);
     private static final float[] ACCENT_DIM   = rgb(0x89, 0xb4, 0xfa, 0.30f);
     private static final float[] SELECTED     = rgb(0x89, 0xb4, 0xfa, 1.00f);
-    private static final float[] MAUVE        = rgb(0xcb, 0xa6, 0xf7, 1.00f);
     private static final float[] PEACH        = rgb(0xfa, 0xb3, 0x87, 1.00f);
     private static final float[] LOCKED       = rgb(0xff, 0xff, 0xff, 1.00f);
     private static final float[] WARNING      = rgb(0xf9, 0xe2, 0xaf, 1.00f);
@@ -645,10 +644,6 @@ public final class ThemeManager {
 
     public static int accentColor() {
         return u32(ACCENT);
-    }
-
-    public static int mauveColor() {
-        return u32(MAUVE);
     }
 
     public static int peachColor() {

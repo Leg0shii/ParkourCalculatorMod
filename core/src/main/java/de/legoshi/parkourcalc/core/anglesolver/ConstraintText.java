@@ -5,14 +5,11 @@ import java.util.Locale;
 /** Number / chip formatting shared by the model (result lines) and the renderers (chips). */
 public final class ConstraintText {
 
-    private ConstraintText() {}
-
-    /** Fixed 7-decimal format (Locale.ROOT). */
     public static String fixed7(double v) {
         return String.format(Locale.ROOT, "%.7f", v);
     }
 
-    /** Fixed 6-decimal format with the leading-space sign flag (Locale.ROOT). */
+    /** Leading-space sign flag so positive yaws are the same width as negatives, keeping the yaw column digit-aligned. */
     public static String fixed6(double v) {
         return String.format(Locale.ROOT, "% .6f", v);
     }

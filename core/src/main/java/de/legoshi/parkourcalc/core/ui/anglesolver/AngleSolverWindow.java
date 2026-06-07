@@ -121,15 +121,15 @@ public final class AngleSolverWindow implements RenderInterface {
         ThemeManager.sectionSpacing();
 
         sectionHeader("Solve for");
-        int ax = segmentedRow("Axis", "axis", AXES, state.getAxis().ordinal(), false, labelW);
+        int ax = segmentedRow("Axis", "axis", AXES, state.getAxis().ordinal(), labelW);
         if (ax >= 0) state.setAxis(AngleSolverState.Axis.values()[ax]);
-        int gl = segmentedRow("Goal", "goal", GOALS, state.getGoal().ordinal(), false, labelW);
+        int gl = segmentedRow("Goal", "goal", GOALS, state.getGoal().ordinal(), labelW);
         if (gl >= 0) state.setGoal(AngleSolverState.Goal.values()[gl]);
 
         ThemeManager.sectionSpacing();
 
         sectionHeader("Default state");
-        int im = segmentedRow("Inputs", "inputs", INPUTS, state.getDefaultInputs().ordinal(), false, labelW);
+        int im = segmentedRow("Inputs", "inputs", INPUTS, state.getDefaultInputs().ordinal(), labelW);
         if (im >= 0) state.setDefaultInputs(AngleSolverState.InputMode.values()[im]);
 
         slipperinessRow(labelW);
@@ -208,10 +208,10 @@ public final class AngleSolverWindow implements RenderInterface {
         Controls.popInputFrameHeight();
     }
 
-    private int segmentedRow(String label, String id, String[] items, int selected, boolean mauve, float labelW) {
+    private int segmentedRow(String label, String id, String[] items, int selected, float labelW) {
         Controls.pushInputFrameHeight();
         SolverWidgets.rowLabel(label, labelW);
-        int clicked = SolverWidgets.segmented(id, items, selected, mauve, ImGui.getContentRegionAvail().x);
+        int clicked = SolverWidgets.segmented(id, items, selected, ImGui.getContentRegionAvail().x);
         Controls.popInputFrameHeight();
         return clicked;
     }
@@ -293,7 +293,7 @@ public final class AngleSolverWindow implements RenderInterface {
         if (!advancedExpanded) return;
 
         ThemeManager.bottomPaddedSeparator();
-        int e = segmentedRow("Effort", "effort", EFFORTS, state.getEffort().ordinal(), false, labelW);
+        int e = segmentedRow("Effort", "effort", EFFORTS, state.getEffort().ordinal(), labelW);
         if (e >= 0) state.setEffort(AngleSolverState.Effort.values()[e]);
 
         ThemeManager.pushTextColor(ThemeManager.textMutedColor());

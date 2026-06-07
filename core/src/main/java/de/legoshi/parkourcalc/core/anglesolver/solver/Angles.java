@@ -5,8 +5,6 @@ package de.legoshi.parkourcalc.core.anglesolver.solver;
  *  multi-turn inputs, and this math is byte-exact-sensitive, so do not fold one into the other. */
 public final class Angles {
 
-    private Angles() {}
-
     /** Reduce to (-180,180] via the modulo idiom (single subtraction, valid for the search box's <=2-turn range). */
     public static double wrap(double d) {
         d = d % 360.0;
@@ -22,7 +20,6 @@ public final class Angles {
         return w;
     }
 
-    /** Reduce a delta to (-180,180] via the while-loop idiom; distinct from {@link #wrap(double)} for multi-turn inputs. */
     public static double wrapDelta(double delta) {
         while (delta > 180.0) delta -= 360.0;
         while (delta < -180.0) delta += 360.0;

@@ -11,8 +11,6 @@ import java.util.List;
  *    eq:   every entry, when satisfied, has evaluate() == 0 (slack = |evaluate|). */
 public final class JumpConstraintCompiler {
 
-    private JumpConstraintCompiler() {}
-
     public static final class Compiled {
         public final List<JumpConstraint> ineq;
         public final List<JumpConstraint> eq;
@@ -48,9 +46,8 @@ public final class JumpConstraintCompiler {
     public static Compiled compile(JumpSpec spec) {
         List<JumpConstraint> ineq = new ArrayList<>();
         List<JumpConstraint> eq = new ArrayList<>();
-        int n = spec.numTicks;
+        int n = spec.asScenario().numTicks;
         for (JumpConstraint c : spec.constraints) {
-            if (!c.active) continue;
             validateTick(c.t1, n, c.name);
             if (c.t2 != null) validateTick(c.t2, n, c.name);
             if (c.cmp == JumpConstraint.Cmp.EQ) {

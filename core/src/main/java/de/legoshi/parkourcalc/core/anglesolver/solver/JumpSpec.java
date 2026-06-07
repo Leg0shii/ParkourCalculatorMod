@@ -7,7 +7,6 @@ import java.util.List;
  *  forward reads, plus the constraint list and objective the solver harness evaluates. */
 public final class JumpSpec {
 
-    public final int numTicks;
     public final List<JumpConstraint> constraints;
     public final Objective objective;
 
@@ -15,7 +14,6 @@ public final class JumpSpec {
 
     public JumpSpec(JumpPhysicsInputs inputs, List<JumpConstraint> constraints, Objective objective) {
         this.scenario = inputs;
-        this.numTicks = inputs.numTicks;
         this.constraints = Collections.unmodifiableList(constraints);
         this.objective = objective;
     }

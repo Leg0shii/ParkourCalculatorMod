@@ -16,8 +16,6 @@ public final class McSineTable {
         }
     }
 
-    private McSineTable() {}
-
     public static float sinStep(float rad) {
         return TABLE[(int) (rad * INDEX_FROM_RAD) & MASK];
     }

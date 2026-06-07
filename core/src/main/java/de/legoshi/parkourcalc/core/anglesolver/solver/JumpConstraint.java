@@ -21,10 +21,9 @@ public final class JumpConstraint {
     public final Cmp cmp;
     public final double rhs;
     public final String name;
-    public final boolean active;
 
     public JumpConstraint(Mode mode, int t1, Integer t2, Op op, Cmp cmp,
-                          double rhs, String name, boolean active) {
+                          double rhs, String name) {
         this.mode = mode;
         this.t1 = t1;
         this.t2 = t2;
@@ -32,6 +31,5 @@ public final class JumpConstraint {
         this.cmp = cmp;
         this.rhs = rhs;
         this.name = name;
-        this.active = active;
     }
 }

@@ -7,7 +7,11 @@ package de.legoshi.parkourcalc.core.anglesolver;
 public final class Constraint {
 
     public enum Field {
-        X("X"), Z("Z"), F("F"), DX("dX"), DZ("dZ");
+        X("X"),
+        Z("Z"),
+        F("F"),
+        DX("dX"),
+        DZ("dZ");
 
         public final String label;
 
@@ -21,7 +25,12 @@ public final class Constraint {
     }
 
     public enum Op {
-        GT(">"), LT("<"), GE(">="), LE("<="), EQ("="), IN("∈");
+        GT(">"),
+        LT("<"),
+        GE(">="),
+        LE("<="),
+        EQ("="),
+        IN("∈");
 
         public final String glyph;
 
@@ -57,23 +66,8 @@ public final class Constraint {
         return c;
     }
 
-    public Field getField() { return field; }
-    public Op getOp() { return op; }
-    public double getValue() { return value; }
-    public double getLo() { return lo; }
-    public double getHi() { return hi; }
-    public boolean isLoInclusive() { return loInclusive; }
-    public boolean isHiInclusive() { return hiInclusive; }
-    public boolean isRange() { return op == Op.IN; }
-
-    public void setValue(double value) { this.value = value; }
-    public void setLo(double lo) { this.lo = lo; }
-    public void setHi(double hi) { this.hi = hi; }
-    public void setOp(Op op) { this.op = op; }
-
-    public void setInclusive(boolean lo, boolean hi) {
-        this.loInclusive = lo;
-        this.hiInclusive = hi;
+    public Field getField() {
+        return field;
     }
 
     public void setField(Field next) {
@@ -89,6 +83,55 @@ public final class Constraint {
             op = Op.GT;
             value = lo;
         }
+    }
+
+    public Op getOp() {
+        return op;
+    }
+
+    public void setOp(Op op) {
+        this.op = op;
+    }
+
+    public double getValue() {
+        return value;
+    }
+
+    public void setValue(double value) {
+        this.value = value;
+    }
+
+    public double getLo() {
+        return lo;
+    }
+
+    public void setLo(double lo) {
+        this.lo = lo;
+    }
+
+    public double getHi() {
+        return hi;
+    }
+
+    public void setHi(double hi) {
+        this.hi = hi;
+    }
+
+    public boolean isLoInclusive() {
+        return loInclusive;
+    }
+
+    public boolean isHiInclusive() {
+        return hiInclusive;
+    }
+
+    public void setInclusive(boolean lo, boolean hi) {
+        this.loInclusive = lo;
+        this.hiInclusive = hi;
+    }
+
+    public boolean isRange() {
+        return op == Op.IN;
     }
 
     public Constraint copy() {

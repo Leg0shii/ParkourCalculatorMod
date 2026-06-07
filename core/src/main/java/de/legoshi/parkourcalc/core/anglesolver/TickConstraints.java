@@ -16,8 +16,4 @@ public final class TickConstraints {
     public StateOverride getOverride() {
         return override;
     }
-
-    public boolean isEmpty() {
-        return constraints.isEmpty() && override.isEmpty();
-    }
 }

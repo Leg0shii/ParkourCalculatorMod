@@ -56,8 +56,6 @@ public final class BucketAscentPolish {
             new double[][]{{1.0, 0.02}, {0.3, 0.008}, {0.1, 0.003}, {0.04, 0.001}},
             12, 8, 3);
 
-    private BucketAscentPolish() {}
-
     public static double[] polish(ForwardModel model, JumpSpec spec, double[] startAbsWrapped, Config cfg) {
         JumpConstraintCompiler.Compiled c = JumpConstraintCompiler.compile(spec);
         JumpPhysicsInputs scenario = spec.asScenario();

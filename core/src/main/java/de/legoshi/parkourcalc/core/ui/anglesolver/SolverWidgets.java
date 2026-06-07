@@ -14,12 +14,8 @@ import imgui.ImVec2;
  */
 public final class SolverWidgets {
 
-    private SolverWidgets() {}
-
     private static final float ROUND = 3f;
     private static final float SEG_PAD_X = 12f;
-    private static final float PAD_X = 7f;
-    private static final float GAP = 6f;
 
     private static float s() {
         return ThemeManager.uiScale();
@@ -107,11 +103,11 @@ public final class SolverWidgets {
     // ---- segmented control ------------------------------------------------------
 
     /** Single-choice segmented control. {@code fillWidth} > 0 splits that total width evenly across the segments so the control aligns to a form column. Returns the clicked index, or -1 if none this frame. */
-    public static int segmented(String id, String[] labels, int selected, boolean mauve, float fillWidth) {
+    public static int segmented(String id, String[] labels, int selected, float fillWidth) {
         float scale = s();
         float h = ImGui.getFrameHeight();
         ImDrawList dl = ImGui.getWindowDrawList();
-        int onBg = mauve ? ThemeManager.mauveColor() : ThemeManager.accentColor();
+        int onBg = ThemeManager.accentColor();
         int offBg = ThemeManager.hoverColor();
         int border = ThemeManager.borderColor();
         int onText = ThemeManager.bgDarkColor();

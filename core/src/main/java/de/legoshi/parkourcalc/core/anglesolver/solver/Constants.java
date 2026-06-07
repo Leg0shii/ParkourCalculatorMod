@@ -25,5 +25,4 @@ public final class Constants {
         return (float) e;
     }
 
-    private Constants() {}
 }
