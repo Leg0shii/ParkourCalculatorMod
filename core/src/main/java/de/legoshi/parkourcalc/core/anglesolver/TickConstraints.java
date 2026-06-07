@@ -1,4 +1,4 @@
-package de.legoshi.parkourcalc.core.ui.anglesolver;
+package de.legoshi.parkourcalc.core.anglesolver;
 
 import java.util.ArrayList;
 import java.util.List;

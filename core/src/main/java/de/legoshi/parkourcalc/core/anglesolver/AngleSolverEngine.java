@@ -1,26 +1,25 @@
-package de.legoshi.parkourcalc.core.ui.anglesolver;
+package de.legoshi.parkourcalc.core.anglesolver;
 
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
-import de.legoshi.parkourcalc.core.ui.anglesolver.solver.BucketAscentPolish;
-import de.legoshi.parkourcalc.core.ui.anglesolver.solver.CmaesJumpHarness;
-import de.legoshi.parkourcalc.core.ui.anglesolver.solver.ConstraintScene;
-import de.legoshi.parkourcalc.core.ui.anglesolver.solver.DifferentiableModel;
-import de.legoshi.parkourcalc.core.ui.anglesolver.solver.HarnessResult;
-import de.legoshi.parkourcalc.core.ui.anglesolver.solver.JumpConstraint;
-import de.legoshi.parkourcalc.core.ui.anglesolver.solver.JumpSpec;
-import de.legoshi.parkourcalc.core.ui.anglesolver.solver.Objective;
-import de.legoshi.parkourcalc.core.ui.anglesolver.solver.PathResult;
-import de.legoshi.parkourcalc.core.ui.anglesolver.solver.Spike0Scenario;
+import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
+import de.legoshi.parkourcalc.core.anglesolver.solver.BucketAscentPolish;
+import de.legoshi.parkourcalc.core.anglesolver.solver.CmaesJumpHarness;
+import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardModel;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SolverRunResult;
+import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
+import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
+import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
+import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
+import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.function.IntConsumer;
 
-/** Bridges the Angle Solver UI to the M2 smooth solver and back into the live TAS.
+/** Bridges the Angle Solver UI to the byte-exact jump model and back into the live TAS.
  *
  * <p>Threading: {@link #solve()} snapshots the whole problem on the caller (main) thread into an
  * immutable {@link Job}, then runs the multistart solve on a daemon thread so the game never stalls.
@@ -28,9 +27,8 @@ import java.util.function.IntConsumer;
  * main thread) publishes a finished result into {@link AngleSolverState}. {@link #apply()} folds the
  * solved facings back into the rows and retriggers the sim.
  *
- * <p>Scope (v1): the model assumes W+Sprint on the segment rows and reproduces only what M2 models
- * (45-strafe, per-tick slipperiness, per-tick Speed). Jump-Boost and Slowness potions are not
- * modeled. M2 is approximate; the live SimulatorEntity is the source of truth after Apply. */
+ * <p>The model (ExactJumpModel) reproduces MC movement to the bit, so the reported path equals what
+ * the sim runs after Apply; the live SimulatorEntity remains the source of truth once applied. */
 public final class AngleSolverEngine {
 
     // Byte-exact model: "X <= wall" holds to the bit, so no cushion is needed. Require strictly-feasible
@@ -76,9 +74,9 @@ public final class AngleSolverEngine {
     private final InputData inputs;
     private final IntConsumer onApplied;
 
-    /** Byte-exact forward, configured for the loader's MC inertia rule (see M1Exact.forMcVersion).
+    /** Byte-exact forward, configured for the loader's MC inertia rule (see ExactJumpModel.forMcVersion).
      *  Stateless/immutable, so a single instance is shared read-only across the restart threads. */
-    private final DifferentiableModel model;
+    private final ForwardModel model;
 
     private Plan lastPlan;
 
@@ -89,7 +87,7 @@ public final class AngleSolverEngine {
     private volatile Outcome pending;
 
     public AngleSolverEngine(AngleSolverState state, BoxController boxes, InputData inputs,
-                             IntConsumer onApplied, DifferentiableModel model) {
+                             IntConsumer onApplied, ForwardModel model) {
         this.state = state;
         this.boxes = boxes;
         this.inputs = inputs;
@@ -126,7 +124,7 @@ public final class AngleSolverEngine {
 
     /** Immutable problem snapshot handed to the worker thread. */
     private static final class Job {
-        final ConstraintScene scene;
+        final JumpSpec spec;
         final Objective.Sense sense;
         final int startTick;
         final int landingTick;
@@ -136,10 +134,10 @@ public final class AngleSolverEngine {
         final long startNanos;
         final AngleSolverState.Effort effort;
 
-        Job(ConstraintScene scene, Objective.Sense sense, int startTick, int landingTick,
+        Job(JumpSpec spec, Objective.Sense sense, int startTick, int landingTick,
             int numTicks, boolean[] strafeMask, List<ConstraintAt> uiConstraints, long startNanos,
             AngleSolverState.Effort effort) {
-            this.scene = scene;
+            this.spec = spec;
             this.sense = sense;
             this.startTick = startTick;
             this.landingTick = landingTick;
@@ -204,21 +202,25 @@ public final class AngleSolverEngine {
             for (Constraint c : tc.getConstraints()) uiCons.add(new ConstraintAt(absTick, segTick, c.copy()));
         }
 
-        ConstraintScene scene = new ConstraintScene();
-        scene.startPos = seed.position;
-        scene.startYaw = seed.yaw;
-        scene.incomingVelocity = seed.velocity;
-        scene.numTicks = numTicks;
-        scene.jumpTick = jumpTickRel;
-        scene.strafePerTick = strafeMask;
-        scene.speedAmplifier = speedAmp;
-        scene.slipPerTick = slipPerTick;
-        scene.yawLocked = yawLocked;
-        scene.objective = new Objective(axis(state.getAxis()), sense(state.getGoal()), numTicks);
-        for (ConstraintAt ca : uiCons) addMapped(scene, ca.c, ca.absTick, ca.segTick, numTicks);
+        JumpPhysicsInputs inputs = new JumpPhysicsInputs(numTicks);
+        inputs.startPos = seed.position;
+        inputs.startYaw = seed.yaw;
+        inputs.initialVelocity = seed.velocity;
+        inputs.jumpTick = jumpTickRel;
+        inputs.strafeSign = 1; // A and D are mirror-symmetric; solve the +1 sign only
+        inputs.strafePerTick = strafeMask;
+        inputs.speedAmplifier = speedAmp;
+        inputs.slipPerTick = slipPerTick;
+        inputs.yawLockedPerTick = yawLocked;
 
+        List<JumpConstraint> constraints = new ArrayList<>();
+        Objective objective = new Objective(axis(state.getAxis()), sense(state.getGoal()), numTicks);
+        for (ConstraintAt ca : uiCons) addMapped(constraints, ca.c, ca.absTick, ca.segTick, numTicks);
+
+        // Freeze the problem on the main thread so the worker reads a genuinely read-only snapshot.
+        JumpSpec spec = new JumpSpec(inputs, constraints, objective);
         long t0 = System.nanoTime();
-        Job job = new Job(scene, scene.objective.sense, startTick, landingTick, numTicks, strafeMask, uiCons, t0,
+        Job job = new Job(spec, objective.sense, startTick, landingTick, numTicks, strafeMask, uiCons, t0,
                 state.getEffort());
 
         // Show the spinner instead of a stale result, then run off-thread.
@@ -264,13 +266,12 @@ public final class AngleSolverEngine {
      *  polished in parallel and the best kept. Single strafe sign (+1 = A); A and D are mirror-symmetric
      *  (flip the sign and shift air facings 90deg for an identical trajectory). Budget scales with effort. */
     private Outcome runJob(Job job) {
-        double[] warm = new double[job.numTicks];
-        java.util.Arrays.fill(warm, job.scene.startYaw);
-        java.util.Random rng = new java.util.Random(0x9E3779B9L ^ job.numTicks);
+        JumpSpec spec = job.spec; // frozen on the main thread; arrays read-only during solve, so shareable
+        JumpPhysicsInputs sc = spec.asScenario();
 
-        job.scene.strafeSign = 1;
-        JumpSpec spec = job.scene.toJumpSpec(); // immutable snapshot; arrays read-only during solve, so shareable
-        Spike0Scenario sc = spec.asScenario();
+        double[] warm = new double[job.numTicks];
+        java.util.Arrays.fill(warm, sc.startYaw);
+        java.util.Random rng = new java.util.Random(0x9E3779B9L ^ job.numTicks);
         Budget budget = budgetFor(job.effort);
 
         List<double[]> inits = new ArrayList<>();
@@ -278,21 +279,21 @@ public final class AngleSolverEngine {
 
         // Stiffer constraint penalty (1e7) so CMA-ES drives the path right onto the wall instead of settling
         // ~5e-7 past it; with FEAS_TOL=0 only restarts that land strictly behind the wall count as feasible.
-        List<HarnessResult> results = inits.parallelStream()
+        List<SolverRunResult> results = inits.parallelStream()
                 .map(in -> new CmaesJumpHarness(1.0e7, 1.0e7, CMAES_SIGMA_DEG, budget.maxEval).solve(model, spec, in))
                 .collect(java.util.stream.Collectors.toList());
 
         boolean max = job.sense == Objective.Sense.MAX;
-        List<HarnessResult> feasible = new ArrayList<>();
-        for (HarnessResult r : results) if (maxViolation(r) <= FEAS_TOL) feasible.add(r);
+        List<SolverRunResult> feasible = new ArrayList<>();
+        for (SolverRunResult r : results) if (maxViolation(r) <= FEAS_TOL) feasible.add(r);
 
         // yaws are absolute wrapped facings (what Apply writes as deltas); the game runs the float-accumulated
         // facings, so the reported path forwards toGameFacings(yaws), bit-for-bit the in-game trajectory.
         double[] yaws;
         if (feasible.isEmpty()) {
             // No feasible basin: keep the least-violating result so the panel can show which walls are unmet.
-            HarnessResult best = null;
-            for (HarnessResult r : results) if (best == null || maxViolation(r) < maxViolation(best)) best = r;
+            SolverRunResult best = null;
+            for (SolverRunResult r : results) if (best == null || maxViolation(r) < maxViolation(best)) best = r;
             yaws = wrapAll(best.yawAbsDeg);
         } else {
             // The best pre-polish objective is not always the basin that polishes best, so polish the top
@@ -316,7 +317,7 @@ public final class AngleSolverEngine {
             }
         }
 
-        PathResult path = model.forward(sc, sc.toGameFacings(yaws));
+        ForwardPath path = model.forward(sc, sc.toGameFacings(yaws));
         SolveResult result = buildResult(job, yaws, path);
         result.setDurationMs((System.nanoTime() - job.startNanos) / 1_000_000L);
         result.setFinishedAt(formatClock());
@@ -329,17 +330,15 @@ public final class AngleSolverEngine {
         return new java.text.SimpleDateFormat("HH:mm:ss").format(new java.util.Date());
     }
 
-    private double objectiveOf(Spike0Scenario sc, Objective obj, double[] absWrapped) {
+    private double objectiveOf(JumpPhysicsInputs sc, Objective obj, double[] absWrapped) {
         return model.forward(sc, sc.toGameFacings(absWrapped)).getPos(obj.tick, obj.axis);
     }
 
     private static double[] wrapAll(double[] yawAbsDeg) {
-        double[] y = yawAbsDeg.clone();
-        for (int i = 0; i < y.length; i++) y[i] = wrapDeg(y[i]);
-        return y;
+        return Angles.wrapAll(yawAbsDeg);
     }
 
-    private static double maxViolation(HarnessResult r) {
+    private static double maxViolation(SolverRunResult r) {
         double m = 0.0;
         for (double s : r.ineqSlack) m = Math.max(m, s);
         for (double e : r.eqResidual) m = Math.max(m, Math.abs(e));
@@ -352,18 +351,7 @@ public final class AngleSolverEngine {
         return f;
     }
 
-    private static double wrapDeg(double d) {
-        d = d % 360.0;
-        if (d > 180.0) d -= 360.0;
-        if (d <= -180.0) d += 360.0;
-        return d;
-    }
-
     // ---- apply (main thread) --------------------------------------------------
-
-    public boolean hasResult() {
-        return lastPlan != null;
-    }
 
     public void apply() {
         if (lastPlan == null) return;
@@ -378,8 +366,7 @@ public final class AngleSolverEngine {
                 row.setYaw((float) abs);
             } else {
                 double delta = abs - prevAbs;
-                while (delta > 180.0) delta -= 360.0;
-                while (delta < -180.0) delta += 360.0;
+                delta = Angles.wrapDelta(delta);
                 row.setYaw((float) delta);
             }
             boolean strafeThis = p.strafeMask[k];
@@ -429,45 +416,45 @@ public final class AngleSolverEngine {
 
     // ---- constraint mapping (UI Constraint -> solver JumpConstraint) -----------
 
-    private void addMapped(ConstraintScene scene, Constraint c, int absTick, int segTick, int numTicks) {
+    private void addMapped(List<JumpConstraint> out, Constraint c, int absTick, int segTick, int numTicks) {
         String tag = c.getField().label + "@" + absTick;
         switch (c.getField()) {
             case X:
-                addScalarOrRange(scene, JumpConstraint.Mode.X, segTick, null, JumpConstraint.Op.PLUS, c, tag);
+                addScalarOrRange(out, JumpConstraint.Mode.X, segTick, null, JumpConstraint.Op.PLUS, c, tag);
                 break;
             case Z:
-                addScalarOrRange(scene, JumpConstraint.Mode.Z, segTick, null, JumpConstraint.Op.PLUS, c, tag);
+                addScalarOrRange(out, JumpConstraint.Mode.Z, segTick, null, JumpConstraint.Op.PLUS, c, tag);
                 break;
             case F:
                 if (segTick >= numTicks) break; // no facing for the post-final state
-                addScalarOrRange(scene, JumpConstraint.Mode.F, segTick, null, JumpConstraint.Op.PLUS, c, tag);
+                addScalarOrRange(out, JumpConstraint.Mode.F, segTick, null, JumpConstraint.Op.PLUS, c, tag);
                 break;
             case DX:
                 if (segTick < 1) break; // velocity needs t-1
-                addRangePair(scene, JumpConstraint.Mode.X, segTick, segTick - 1, c, tag);
+                addRangePair(out, JumpConstraint.Mode.X, segTick, segTick - 1, c, tag);
                 break;
             case DZ:
                 if (segTick < 1) break;
-                addRangePair(scene, JumpConstraint.Mode.Z, segTick, segTick - 1, c, tag);
+                addRangePair(out, JumpConstraint.Mode.Z, segTick, segTick - 1, c, tag);
                 break;
         }
     }
 
     /** Scalar X/Z/F (one constraint) or a position range (a GE/LE pair). */
-    private void addScalarOrRange(ConstraintScene scene, JumpConstraint.Mode mode, int t1, Integer t2,
+    private void addScalarOrRange(List<JumpConstraint> out, JumpConstraint.Mode mode, int t1, Integer t2,
                                   JumpConstraint.Op op, Constraint c, String tag) {
         if (c.isRange()) {
-            scene.constraints.add(new JumpConstraint(mode, t1, t2, op, JumpConstraint.Cmp.GE, c.getLo(), tag + "lo", true));
-            scene.constraints.add(new JumpConstraint(mode, t1, t2, op, JumpConstraint.Cmp.LE, c.getHi(), tag + "hi", true));
+            out.add(new JumpConstraint(mode, t1, t2, op, JumpConstraint.Cmp.GE, c.getLo(), tag + "lo", true));
+            out.add(new JumpConstraint(mode, t1, t2, op, JumpConstraint.Cmp.LE, c.getHi(), tag + "hi", true));
         } else {
-            scene.constraints.add(new JumpConstraint(mode, t1, t2, op, cmp(c.getOp()), c.getValue(), tag, true));
+            out.add(new JumpConstraint(mode, t1, t2, op, cmp(c.getOp()), c.getValue(), tag, true));
         }
     }
 
     /** Velocity (dX/dZ) range: pos[t1]-pos[t2] within [lo,hi], as a GE/LE pair. */
-    private void addRangePair(ConstraintScene scene, JumpConstraint.Mode mode, int t1, int t2, Constraint c, String tag) {
-        scene.constraints.add(new JumpConstraint(mode, t1, t2, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.GE, c.getLo(), tag + "lo", true));
-        scene.constraints.add(new JumpConstraint(mode, t1, t2, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.LE, c.getHi(), tag + "hi", true));
+    private void addRangePair(List<JumpConstraint> out, JumpConstraint.Mode mode, int t1, int t2, Constraint c, String tag) {
+        out.add(new JumpConstraint(mode, t1, t2, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.GE, c.getLo(), tag + "lo", true));
+        out.add(new JumpConstraint(mode, t1, t2, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.LE, c.getHi(), tag + "hi", true));
     }
 
     private static JumpConstraint.Cmp cmp(Constraint.Op op) {
@@ -484,7 +471,7 @@ public final class AngleSolverEngine {
 
     // ---- result panel (worker thread, from the Job snapshot) ------------------
 
-    private SolveResult buildResult(Job job, double[] yaws, PathResult path) {
+    private SolveResult buildResult(Job job, double[] yaws, ForwardPath path) {
         int total = 0;
         int met = 0;
         List<SolveResult.Outcome> outs = new ArrayList<>();
@@ -505,7 +492,7 @@ public final class AngleSolverEngine {
         return r;
     }
 
-    private Double findValue(Constraint c, int segTick, int numTicks, double[] yaws, PathResult path) {
+    private Double findValue(Constraint c, int segTick, int numTicks, double[] yaws, ForwardPath path) {
         switch (c.getField()) {
             case X: return path.posX[segTick];
             case Z: return path.posZ[segTick];
@@ -524,7 +511,7 @@ public final class AngleSolverEngine {
         }
         double v = c.getValue();
         // Facings are angular: compare the wrapped difference so e.g. -179 satisfies a +179 target.
-        double f = c.getField() == Constraint.Field.F ? v + wrapDeg(found - v) : found;
+        double f = c.getField() == Constraint.Field.F ? v + Angles.wrap(found - v) : found;
         // Walls (the inequalities) are gated strictly at FEAS_TOL, so "Solved" never counts a clip as met;
         // only the exact target (=) keeps MET_TOL, since a single facing/position bucket is never hit to the bit.
         switch (c.getOp()) {
@@ -541,11 +528,11 @@ public final class AngleSolverEngine {
         String field = c.getField().label;
         String tickLabel = "T" + (absTick + 1);
         if (c.isRange()) {
-            return new SolveResult.Outcome(field, tickLabel, ConstraintText.chip(c), fmt(found), "");
+            return new SolveResult.Outcome(field, tickLabel, ConstraintText.chip(c), ConstraintText.fixed7(found), "");
         }
         double v = c.getValue();
         String relation = c.getOp().glyph + " " + ConstraintText.num(v);
-        double diff = c.getField() == Constraint.Field.F ? wrapDeg(found - v) : (found - v);
+        double diff = c.getField() == Constraint.Field.F ? Angles.wrap(found - v) : (found - v);
         double margin;
         switch (c.getOp()) {
             case LT:
@@ -559,8 +546,8 @@ public final class AngleSolverEngine {
                 margin = diff;
                 break;
         }
-        String marginStr = c.getOp() == Constraint.Op.EQ ? "" : (margin >= 0 ? "+" : "") + fmt(margin);
-        return new SolveResult.Outcome(field, tickLabel, relation, fmt(found), marginStr);
+        String marginStr = c.getOp() == Constraint.Op.EQ ? "" : (margin >= 0 ? "+" : "") + ConstraintText.fixed7(margin);
+        return new SolveResult.Outcome(field, tickLabel, relation, ConstraintText.fixed7(found), marginStr);
     }
 
     // ---- helpers --------------------------------------------------------------
@@ -583,15 +570,11 @@ public final class AngleSolverEngine {
         return -1;
     }
 
-    private static Spike0Scenario.Axis axis(AngleSolverState.Axis a) {
-        return a == AngleSolverState.Axis.X ? Spike0Scenario.Axis.X : Spike0Scenario.Axis.Z;
+    private static JumpPhysicsInputs.Axis axis(AngleSolverState.Axis a) {
+        return a == AngleSolverState.Axis.X ? JumpPhysicsInputs.Axis.X : JumpPhysicsInputs.Axis.Z;
     }
 
     private static Objective.Sense sense(AngleSolverState.Goal g) {
         return g == AngleSolverState.Goal.MAX ? Objective.Sense.MAX : Objective.Sense.MIN;
-    }
-
-    private static String fmt(double v) {
-        return String.format(Locale.ROOT, "%.7f", v);
     }
 }

@@ -1,6 +1,6 @@
-package de.legoshi.parkourcalc.core.ui.anglesolver;
+package de.legoshi.parkourcalc.core.anglesolver;
 
-/** Slipperiness ladder the default-state combo cycles through (wraps on the last entry). */
+/** Slipperiness options for the default-state combo. */
 public enum Slipperiness {
     DEFAULT("Default", "0.60"),
     SLIME("Slime", "0.80"),
@@ -17,8 +17,11 @@ public enum Slipperiness {
         this.valueLabel = valueLabel;
     }
 
-    public Slipperiness next() {
+    /** Combo labels: "label · valueLabel" per entry (middle-dot U+00B7 separator). */
+    public static String[] comboItems() {
         Slipperiness[] all = values();
-        return all[(ordinal() + 1) % all.length];
+        String[] items = new String[all.length];
+        for (int i = 0; i < all.length; i++) items[i] = all[i].label + " · " + all[i].valueLabel;
+        return items;
     }
 }

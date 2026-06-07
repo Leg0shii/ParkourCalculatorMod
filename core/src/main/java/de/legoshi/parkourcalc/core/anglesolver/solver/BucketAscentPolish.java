@@ -1,4 +1,4 @@
-package de.legoshi.parkourcalc.core.ui.anglesolver.solver;
+package de.legoshi.parkourcalc.core.anglesolver.solver;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,9 +58,9 @@ public final class BucketAscentPolish {
 
     private BucketAscentPolish() {}
 
-    public static double[] polish(DifferentiableModel model, JumpSpec spec, double[] startAbsWrapped, Config cfg) {
+    public static double[] polish(ForwardModel model, JumpSpec spec, double[] startAbsWrapped, Config cfg) {
         JumpConstraintCompiler.Compiled c = JumpConstraintCompiler.compile(spec);
-        Spike0Scenario scenario = spec.asScenario();
+        JumpPhysicsInputs scenario = spec.asScenario();
         Objective obj = spec.objective;
         double sign = obj.sense == Objective.Sense.MAX ? -1.0 : 1.0;
         int n = startAbsWrapped.length;
@@ -87,7 +87,7 @@ public final class BucketAscentPolish {
         return best;
     }
 
-    private static double[] ascend(double[] start, DifferentiableModel model, Spike0Scenario scenario,
+    private static double[] ascend(double[] start, ForwardModel model, JumpPhysicsInputs scenario,
                                    JumpConstraintCompiler.Compiled c, Objective obj, double sign,
                                    int[][] pairs, Config cfg) {
         double[] y = start.clone();
@@ -104,7 +104,7 @@ public final class BucketAscentPolish {
         return y;
     }
 
-    private static void b1refine(double[] y, DifferentiableModel model, Spike0Scenario scenario,
+    private static void b1refine(double[] y, ForwardModel model, JumpPhysicsInputs scenario,
                                  JumpConstraintCompiler.Compiled c, Objective obj, double sign, Config cfg) {
         for (double[] r : cfg.b1) {
             for (int it = 0; it < 60; it++) {
@@ -114,8 +114,8 @@ public final class BucketAscentPolish {
     }
 
     /** Scan each tick over [-win, win] at step; keep the best strictly-feasible improvement. */
-    private static boolean block1(double[] y, double win, double step, DifferentiableModel model,
-                                  Spike0Scenario scenario, JumpConstraintCompiler.Compiled c,
+    private static boolean block1(double[] y, double win, double step, ForwardModel model,
+                                  JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c,
                                   Objective obj, double sign) {
         boolean improved = false;
         double best = score(model, scenario, c, obj, sign, y);
@@ -135,7 +135,7 @@ public final class BucketAscentPolish {
 
     /** Scan pairs jointly over a 2-D window; keep the best strictly-feasible improvement. */
     private static boolean block2(double[] y, int[][] pairs, double win, double step,
-                                  DifferentiableModel model, Spike0Scenario scenario,
+                                  ForwardModel model, JumpPhysicsInputs scenario,
                                   JumpConstraintCompiler.Compiled c, Objective obj, double sign) {
         boolean improved = false;
         double best = score(model, scenario, c, obj, sign, y);
@@ -165,25 +165,12 @@ public final class BucketAscentPolish {
     }
 
     /** sign*objective via the exact wrap + game-facing + byte-exact forward; +inf if any wall is crossed. */
-    private static double score(DifferentiableModel model, Spike0Scenario scenario,
+    private static double score(ForwardModel model, JumpPhysicsInputs scenario,
                                 JumpConstraintCompiler.Compiled c, Objective obj, double sign, double[] abs) {
-        double[] gf = scenario.toGameFacings(wrap(abs));
-        PathResult pr = model.forward(scenario, gf);
-        double viol = 0.0;
-        for (JumpConstraint cc : c.ineq) viol = Math.max(viol, JumpConstraintCompiler.slack(cc, gf, pr));
-        for (JumpConstraint cc : c.eq) viol = Math.max(viol, Math.abs(JumpConstraintCompiler.evaluate(cc, gf, pr)));
+        double[] gf = scenario.toGameFacings(Angles.wrapAll(abs));
+        ForwardPath pr = model.forward(scenario, gf);
+        double viol = c.maxViolation(gf, pr);
         if (viol > FEAS_TOL) return Double.POSITIVE_INFINITY;
         return sign * pr.getPos(obj.tick, obj.axis);
-    }
-
-    private static double[] wrap(double[] f) {
-        double[] w = new double[f.length];
-        for (int i = 0; i < f.length; i++) {
-            double d = f[i] % 360.0;
-            if (d > 180.0) d -= 360.0;
-            if (d <= -180.0) d += 360.0;
-            w[i] = d;
-        }
-        return w;
     }
 }

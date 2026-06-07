@@ -1,7 +1,7 @@
-package de.legoshi.parkourcalc.core.ui.anglesolver.solver;
+package de.legoshi.parkourcalc.core.anglesolver.solver;
 
 /** Byte-exact MC sprint-jump forward: a direct port of the real movement float chain (hard
- *  thresholds + exact MathHelper sine table + per-axis momentum cancellation), not a smooth shadow.
+ *  thresholds + exact MathHelper sine table + per-axis momentum cancellation).
  *  Reproduces the live SimulatorEntity to the ULP for collision-free airborne arcs, so CMA-ES
  *  (derivative-free) can optimize and report against it directly. The model
  *  is horizontal-aware but also tracks Y so the per-axis inertia on motionY matches MC; it never
@@ -12,15 +12,12 @@ package de.legoshi.parkourcalc.core.ui.anglesolver.solver;
  *  moveFlying adds the rotated input, gravity hits motionY, then the friction multiply carries out.
  *  threshold is 0.005 in 1.8.x and 0.003 in 1.9+; players in 1.9+ use a combined-XZ rule instead of
  *  per-axis (select via {@link #perAxisInertia}). */
-public final class M1Exact implements DifferentiableModel {
+public final class ExactJumpModel implements ForwardModel {
 
     private final double inertiaThreshold;
     private final boolean perAxisInertia;
 
-    /** Default: MC 1.8.9 (per-axis, 0.005). */
-    public M1Exact() { this(0.005, true); }
-
-    public M1Exact(double inertiaThreshold, boolean perAxisInertia) {
+    public ExactJumpModel(double inertiaThreshold, boolean perAxisInertia) {
         this.inertiaThreshold = inertiaThreshold;
         this.perAxisInertia = perAxisInertia;
     }
@@ -28,17 +25,14 @@ public final class M1Exact implements DifferentiableModel {
     /** Inertia rule for a loader's MC version. 1.8.x: per-axis 0.005. 1.12.x: per-axis 0.003.
      *  1.9+ players (1.21.10 and the modern default here): combined-XZ |v|^2 &lt; 0.003^2. Covers the
      *  three loader versions; the per-axis-to-combined player switch lands between 1.12 and 1.21. */
-    public static M1Exact forMcVersion(String mcVersion) {
-        if (mcVersion != null && mcVersion.startsWith("1.8")) return new M1Exact(0.005, true);
-        if (mcVersion != null && mcVersion.startsWith("1.12")) return new M1Exact(0.003, true);
-        return new M1Exact(0.003, false);
+    public static ExactJumpModel forMcVersion(String mcVersion) {
+        if (mcVersion != null && mcVersion.startsWith("1.8")) return new ExactJumpModel(0.005, true);
+        if (mcVersion != null && mcVersion.startsWith("1.12")) return new ExactJumpModel(0.003, true);
+        return new ExactJumpModel(0.003, false);
     }
 
-    @Override public String name() { return "M1_exact"; }
-    @Override public boolean gradientIsBiased() { return false; }
-
     @Override
-    public PathResult forward(Spike0Scenario scenario, double[] yawAbsDeg) {
+    public ForwardPath forward(JumpPhysicsInputs scenario, double[] yawAbsDeg) {
         int n = yawAbsDeg.length;
         double[] posX = new double[n + 1];
         double[] posY = new double[n + 1];
@@ -135,11 +129,6 @@ public final class M1Exact implements DifferentiableModel {
             velZ[t + 1] = vz * (double) f4;
             velY[t + 1] = (vy - Constants.GRAVITY) * (double) Constants.Y_DRAG_F;
         }
-        return new PathResult(posX, posY, posZ, velX, velY, velZ);
-    }
-
-    @Override
-    public double[] gradient(Spike0Scenario scenario, double[] yawAbsDeg, int tick, Spike0Scenario.Axis axis) {
-        return FiniteDifference.gradient(this, scenario, yawAbsDeg, tick, axis);
+        return new ForwardPath(posX, posY, posZ);
     }
 }

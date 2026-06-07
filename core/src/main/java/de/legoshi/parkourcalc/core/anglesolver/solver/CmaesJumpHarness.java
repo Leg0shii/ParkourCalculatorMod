@@ -1,4 +1,4 @@
-package de.legoshi.parkourcalc.core.ui.anglesolver.solver;
+package de.legoshi.parkourcalc.core.anglesolver.solver;
 
 import org.apache.commons.math3.analysis.MultivariateFunction;
 import org.apache.commons.math3.exception.TooManyEvaluationsException;
@@ -14,10 +14,10 @@ import org.apache.commons.math3.random.MersenneTwister;
 
 import java.util.Arrays;
 
-/** One CMA-ES (commons-math3) run on the smooth model with a quadratic-penalty composition of the
- *  compiled constraints. Derivative-free and global, so it escapes the facing-clamp local optima the
- *  gradient solver rails into. The engine runs many of these from diverse starts in parallel and keeps
- *  the best feasible. Returns a {@link HarnessResult} (same shape as the gradient harness). */
+/** One CMA-ES (commons-math3) run on the byte-exact model with a quadratic-penalty composition of the
+ *  compiled constraints. Derivative-free and global, so it escapes the facing-clamp local optima a
+ *  gradient method would rail into. The engine runs many of these from diverse starts in parallel and
+ *  keeps the best feasible. Returns a {@link SolverRunResult}. */
 public final class CmaesJumpHarness {
 
     // Search a WIDER range than one turn: the optimal facing sequence can straddle the +/-180 wrap
@@ -33,10 +33,6 @@ public final class CmaesJumpHarness {
     private final double sigmaDeg;
     private final int maxEval;
 
-    public CmaesJumpHarness() {
-        this(1.0e6, 1.0e6, 45.0, 8000);
-    }
-
     public CmaesJumpHarness(double muIneq, double muEq, double sigmaDeg, int maxEval) {
         this.muIneq = muIneq;
         this.muEq = muEq;
@@ -44,9 +40,9 @@ public final class CmaesJumpHarness {
         this.maxEval = maxEval;
     }
 
-    public HarnessResult solve(DifferentiableModel model, JumpSpec spec, double[] initialFAbsDeg) {
+    public SolverRunResult solve(ForwardModel model, JumpSpec spec, double[] initialFAbsDeg) {
         JumpConstraintCompiler.Compiled c = JumpConstraintCompiler.compile(spec);
-        Spike0Scenario scenario = spec.asScenario();
+        JumpPhysicsInputs scenario = spec.asScenario();
         int n = initialFAbsDeg.length;
         double sign = spec.objective.sense == Objective.Sense.MAX ? -1.0 : 1.0;
         Objective obj = spec.objective;
@@ -56,18 +52,10 @@ public final class CmaesJumpHarness {
         // facing snaps to a different sine-table bucket than the one that actually lands, so without this the
         // objective, the penalty, and the applied path are three slightly different trajectories.
         MultivariateFunction penalized = F -> {
-            double[] gf = scenario.toGameFacings(wrap(F));
-            PathResult pr = model.forward(scenario, gf);
+            double[] gf = scenario.toGameFacings(Angles.wrapAll(F));
+            ForwardPath pr = model.forward(scenario, gf);
             double o = sign * pr.getPos(obj.tick, obj.axis);
-            double pen = 0.0;
-            for (JumpConstraint cc : c.ineq) {
-                double s = JumpConstraintCompiler.slack(cc, gf, pr);
-                if (s > 0) pen += muIneq * s * s;
-            }
-            for (JumpConstraint cc : c.eq) {
-                double e = JumpConstraintCompiler.evaluate(cc, gf, pr);
-                pen += muEq * e * e;
-            }
+            double pen = c.penalty(gf, pr, muIneq, muEq);
             return o + pen;
         };
 
@@ -82,9 +70,7 @@ public final class CmaesJumpHarness {
         int lambda = 2 * (4 + (int) Math.floor(3.0 * Math.log(n)));
         double[] start = clamp(initialFAbsDeg.clone());
 
-        long t0 = System.nanoTime();
         double[] fStar = start;
-        int iters = 0;
         try {
             // stopFitness MUST be -inf, not 0: the objective is sign*pos (~ -2102 at large world coords),
             // so a 0 threshold would stop on the first generation. Deterministic RNG seeded off the start.
@@ -100,22 +86,20 @@ public final class CmaesJumpHarness {
                     new CMAESOptimizer.PopulationSize(lambda),
                     new CMAESOptimizer.Sigma(sigma));
             fStar = pv.getPoint();
-            iters = opt.getEvaluations();
         } catch (TooManyEvaluationsException ignored) {
             // Used the eval budget without converging; keep the start. Other restarts cover it.
         }
-        long wallMs = (System.nanoTime() - t0) / 1_000_000L;
 
         // Polish: the global penalty pass settles a hair short of the best feasible point (it nails the wall
         // hug but under-shapes the rest of the arc). A strict-feasible compass search climbs the objective
         // from there without ever crossing a wall, recovering that gap; it can only improve, never clip.
-        fStar = polish(model, scenario, c, obj, sign, wrap(fStar));
+        fStar = polish(model, scenario, c, obj, sign, Angles.wrapAll(fStar));
 
         // Score the game's float-accumulated facings; return the absolute wrapped facings (yawAbsDeg) so
         // Apply can convert them to the deltas the game accumulates back into exactly this trajectory.
-        double[] fStarW = wrap(fStar);
+        double[] fStarW = Angles.wrapAll(fStar);
         double[] gf = scenario.toGameFacings(fStarW);
-        PathResult finalPath = model.forward(scenario, gf);
+        ForwardPath finalPath = model.forward(scenario, gf);
         double objectiveValue = finalPath.getPos(obj.tick, obj.axis);
         double[] ineqSlack = new double[c.ineq.size()];
         for (int i = 0; i < c.ineq.size(); i++) {
@@ -125,7 +109,7 @@ public final class CmaesJumpHarness {
         for (int i = 0; i < c.eq.size(); i++) {
             eqResidual[i] = JumpConstraintCompiler.evaluate(c.eq.get(i), gf, finalPath);
         }
-        return new HarnessResult(fStarW, wallMs, iters, true, objectiveValue, ineqSlack, eqResidual);
+        return new SolverRunResult(fStarW, objectiveValue, ineqSlack, eqResidual);
     }
 
     private static double[] clamp(double[] f) {
@@ -136,25 +120,11 @@ public final class CmaesJumpHarness {
         return f;
     }
 
-    /** Wrap each facing to (-180,180]. sin/cos are periodic, but MC's float sine table loses precision at
-     *  large angles, so the wrapped facing (what Apply runs) and the raw optimizer coordinate can land in
-     *  different table buckets. Wrapping before forward keeps search, scoring, and Apply on one trajectory. */
-    private static double[] wrap(double[] f) {
-        double[] w = new double[f.length];
-        for (int i = 0; i < f.length; i++) {
-            double d = f[i] % 360.0;
-            if (d > 180.0) d -= 360.0;
-            if (d <= -180.0) d += 360.0;
-            w[i] = d;
-        }
-        return w;
-    }
-
     /** Compass search from a strictly-feasible facing vector: greedily climb the objective while keeping
      *  every wall strictly satisfied (no clip), shrinking the step to a fine resolution. The global pass
      *  optimizes a penalty blend and stops a hair short inside the feasible region; this finishes the job.
      *  It never accepts a candidate that crosses a wall, so it can only improve the result, never invalidate it. */
-    private double[] polish(DifferentiableModel model, Spike0Scenario scenario,
+    private double[] polish(ForwardModel model, JumpPhysicsInputs scenario,
                             JumpConstraintCompiler.Compiled c, Objective obj, double sign, double[] startAbs) {
         double[] cur = startAbs.clone();
         double[] sv = scoreViol(model, scenario, c, obj, sign, cur);
@@ -183,15 +153,12 @@ public final class CmaesJumpHarness {
 
     /** {sign*objective + eq-penalty, max inequality slack} for an absolute facing vector, via the same
      *  wrap + game-facing + byte-exact forward the search uses. Second value &lt;= 0 means no wall is crossed. */
-    private double[] scoreViol(DifferentiableModel model, Spike0Scenario scenario,
+    private double[] scoreViol(ForwardModel model, JumpPhysicsInputs scenario,
                                JumpConstraintCompiler.Compiled c, Objective obj, double sign, double[] abs) {
-        double[] gf = scenario.toGameFacings(wrap(abs));
-        PathResult pr = model.forward(scenario, gf);
-        double score = sign * pr.getPos(obj.tick, obj.axis);
-        for (JumpConstraint cc : c.eq) {
-            double e = JumpConstraintCompiler.evaluate(cc, gf, pr);
-            score += muEq * e * e;
-        }
+        double[] gf = scenario.toGameFacings(Angles.wrapAll(abs));
+        ForwardPath pr = model.forward(scenario, gf);
+        // score folds ONLY the eq squared-penalty (muIneq=0 zeroes the ineq term); ineq is reported separately.
+        double score = sign * pr.getPos(obj.tick, obj.axis) + c.penalty(gf, pr, 0.0, muEq);
         double ineqViol = 0.0;
         for (JumpConstraint cc : c.ineq) ineqViol = Math.max(ineqViol, JumpConstraintCompiler.slack(cc, gf, pr));
         return new double[]{score, ineqViol};

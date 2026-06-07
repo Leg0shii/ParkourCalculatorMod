@@ -1,12 +1,12 @@
-package de.legoshi.parkourcalc.core.ui.anglesolver;
+package de.legoshi.parkourcalc.core.anglesolver;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/** Stubbed solve outcome rendered by the result panel (spec 6). No real solving happens yet. */
+/** Solve outcome rendered by the result panel: per-constraint outcomes, found yaws, and solve stats. */
 public final class SolveResult {
 
-    /** One constraint's outcome, split into columns so the panel can align them: field, tick, the relation as written, the value the solve landed on, and the slack vs the bound (empty for ranges, where only the found value is shown). */
+    /** One constraint's outcome, split into the panel's columns; the per-field examples are on the fields. */
     public static final class Outcome {
         public final String field;    // e.g. "dX"
         public final String tick;     // e.g. "T10"
@@ -42,7 +42,7 @@ public final class SolveResult {
     private final List<Outcome> outcomes = new ArrayList<>();
     private final List<YawEntry> yaws = new ArrayList<>();
 
-    // Solve stats (filled by the engine; defaults are harmless for the stubbed/failed paths).
+    // Solve stats (filled by the engine; defaults are harmless when a solve fails before they are set).
     private long durationMs;
     private String finishedAt;     // formatted clock time when the solve finished, null if unset
     private double objectiveValue;

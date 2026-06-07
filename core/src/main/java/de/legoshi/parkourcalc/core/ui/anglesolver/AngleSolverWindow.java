@@ -1,5 +1,12 @@
 package de.legoshi.parkourcalc.core.ui.anglesolver;
 
+import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
+import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
+import de.legoshi.parkourcalc.core.anglesolver.ConstraintText;
+import de.legoshi.parkourcalc.core.anglesolver.Potion;
+import de.legoshi.parkourcalc.core.anglesolver.PotionDose;
+import de.legoshi.parkourcalc.core.anglesolver.Slipperiness;
+import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
@@ -22,7 +29,7 @@ import java.util.function.IntSupplier;
 
 /**
  * The floating Angle Solver window: whole-problem inputs (start / goal tick, axis, goal),
- * the default per-tick state, the Solve / Apply actions, and the stubbed result panel.
+ * the default per-tick state, the Solve / Apply actions, and the result panel.
  * Toggled from View > Angle Solver; the title-bar close acts the same as unchecking it.
  */
 public final class AngleSolverWindow implements RenderInterface {
@@ -41,7 +48,6 @@ public final class AngleSolverWindow implements RenderInterface {
 
     private final AngleSolverState state;
     private final Settings settings;
-    private final Runnable onSettingsChanged;
     private final IntSupplier rowCountSupplier;
     private final AngleSolverEngine engine;
     private final ImInt startTickBuf = new ImInt();
@@ -55,21 +61,13 @@ public final class AngleSolverWindow implements RenderInterface {
     private boolean advancedExpanded;
     private int doseToRemove;
 
-    public AngleSolverWindow(AngleSolverState state, Settings settings, Runnable onSettingsChanged,
+    public AngleSolverWindow(AngleSolverState state, Settings settings,
                              IntSupplier rowCountSupplier, AngleSolverEngine engine) {
         this.state = state;
         this.settings = settings;
-        this.onSettingsChanged = onSettingsChanged;
         this.rowCountSupplier = rowCountSupplier;
         this.engine = engine;
-        this.slipItems = buildSlipItems();
-    }
-
-    private static String[] buildSlipItems() {
-        Slipperiness[] all = Slipperiness.values();
-        String[] items = new String[all.length];
-        for (int i = 0; i < all.length; i++) items[i] = all[i].label + " · " + all[i].valueLabel;
-        return items;
+        this.slipItems = Slipperiness.comboItems();
     }
 
     @Override
@@ -183,7 +181,7 @@ public final class AngleSolverWindow implements RenderInterface {
         float yawA = 0f, yawB = 0f;
         for (SolveResult.YawEntry y : r.getYaws()) {
             yawA = Math.max(yawA, ImGui.calcTextSize("T" + y.tick).x);
-            yawB = Math.max(yawB, ImGui.calcTextSize(fmt6(y.yaw) + "°").x);
+            yawB = Math.max(yawB, ImGui.calcTextSize(ConstraintText.fixed6(y.yaw) + "°").x);
         }
         float yawsW = yawA + yawB + 4f * cellPad;
 
@@ -386,7 +384,7 @@ public final class AngleSolverWindow implements RenderInterface {
         }
         if (r.hasObjective()) {
             String goal = state.getGoal() == AngleSolverState.Goal.MAX ? "max" : "min";
-            ImGui.text(goal + " " + state.getAxis().name() + " = " + fmt7(r.getObjectiveValue()));
+            ImGui.text(goal + " " + state.getAxis().name() + " = " + ConstraintText.fixed7(r.getObjectiveValue()));
         }
         ThemeManager.popTextColor();
     }
@@ -394,10 +392,6 @@ public final class AngleSolverWindow implements RenderInterface {
     private static String fmtDuration(long ms) {
         if (ms >= 1000L) return String.format(Locale.ROOT, "%.1fs", ms / 1000.0);
         return ms + "ms";
-    }
-
-    private static String fmt7(double v) {
-        return String.format(Locale.ROOT, "%.7f", v);
     }
 
     private void renderOutcomes(SolveResult r) {
@@ -445,7 +439,7 @@ public final class AngleSolverWindow implements RenderInterface {
             ImGui.text("T" + y.tick);
             ThemeManager.popTextColor();
             ImGui.tableNextColumn();
-            textRightInCell(fmt6(y.yaw) + "°");
+            textRightInCell(ConstraintText.fixed6(y.yaw) + "°");
         }
         ThemeManager.endStandardFormTable();
     }
@@ -479,9 +473,5 @@ public final class AngleSolverWindow implements RenderInterface {
             ImGui.closeCurrentPopup();
         }
         Modal.end();
-    }
-
-    private static String fmt6(double v) {
-        return String.format(Locale.ROOT, "% .6f", v);
     }
 }

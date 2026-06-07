@@ -6,10 +6,10 @@ import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.InputData;
-import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverEngine;
-import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverState;
-import de.legoshi.parkourcalc.core.ui.anglesolver.SolveResult;
-import de.legoshi.parkourcalc.core.ui.anglesolver.solver.M1Exact;
+import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
+import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
+import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
+import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -27,7 +27,7 @@ import static org.junit.Assert.assertTrue;
  * (load -> seed boxes from the recorded per-tick states -> background CMA-ES + bucket polish),
  * exactly as the Solve button does, and fails if the solver can no longer meet every constraint.
  *
- * <p>These are 1.8.9 captures; the model is the byte-exact {@link M1Exact} for that version. The
+ * <p>These are 1.8.9 captures; the model is the byte-exact {@link ExactJumpModel} for that version. The
  * test uses FAST effort: these jumps must stay solvable even on the smallest search budget.
  */
 public class AngleSolverJumpTest {
@@ -68,7 +68,7 @@ public class AngleSolverJumpTest {
             boxes.add(toTickState(d));
         }
 
-        AngleSolverEngine engine = new AngleSolverEngine(state, boxes, inputs, t -> { }, M1Exact.forMcVersion(file.mcVersion));
+        AngleSolverEngine engine = new AngleSolverEngine(state, boxes, inputs, t -> { }, ExactJumpModel.forMcVersion(file.mcVersion));
 
         engine.solve();
         long deadline = System.currentTimeMillis() + SOLVE_TIMEOUT_MS;

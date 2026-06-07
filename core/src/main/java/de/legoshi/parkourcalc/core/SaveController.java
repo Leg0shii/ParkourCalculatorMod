@@ -12,7 +12,7 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.Settings;
-import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverState;
+import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

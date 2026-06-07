@@ -1,6 +1,6 @@
-package de.legoshi.parkourcalc.core.ui.anglesolver;
+package de.legoshi.parkourcalc.core.anglesolver;
 
-/** Sample potion-effect pool. The amplifier level is held separately on {@link PotionDose}. */
+/** Potion-effect pool. The amplifier level is held separately on {@link PotionDose}. */
 public enum Potion {
     SPEED("Speed"),
     JUMP_BOOST("Jump boost"),

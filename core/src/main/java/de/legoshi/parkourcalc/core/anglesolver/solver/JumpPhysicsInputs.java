@@ -1,11 +1,11 @@
-package de.legoshi.parkourcalc.core.ui.anglesolver.solver;
+package de.legoshi.parkourcalc.core.anglesolver.solver;
 
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
 /** MC-free per-tick physics inputs the model's forward reads. Seeded from a selected TAS tick:
  *  startPos / startYaw / initialVelocity are that tick's resume state. The optimizer searches the
  *  per-tick facing F[] that satisfies the constraints. */
-public final class Spike0Scenario {
+public final class JumpPhysicsInputs {
 
     public enum Axis { X, Y, Z }
 
@@ -17,11 +17,9 @@ public final class Spike0Scenario {
      *  ticks after are airborne. -1 = no jump in the segment (an all-air continuation). */
     public int jumpTick = 0;
 
-    /** Scene-wide 45-strafe default (used where strafePerTick is null). */
-    public boolean strafe = false;
     public int strafeSign = 1;
 
-    /** Per-tick 45-strafe mask; null = use the scene-wide {@link #strafe}. The jump tick must be false
+    /** Per-tick 45-strafe mask; null = no strafe. The jump tick must be false
      *  (it stays W-only so the 0.2 sprintjump boost aligns with travel). */
     public boolean[] strafePerTick = null;
 
@@ -39,7 +37,7 @@ public final class Spike0Scenario {
 
     public final int numTicks;
 
-    public Spike0Scenario(int numTicks) {
+    public JumpPhysicsInputs(int numTicks) {
         this.numTicks = numTicks;
     }
 
@@ -49,8 +47,7 @@ public final class Spike0Scenario {
     }
 
     public boolean strafeAt(int tick) {
-        if (strafePerTick == null) return strafe;
-        return tick >= 0 && tick < strafePerTick.length && strafePerTick[tick];
+        return strafePerTick != null && tick >= 0 && tick < strafePerTick.length && strafePerTick[tick];
     }
 
     /** Effective slip for a tick, or NaN when the tick has no surface override (use the default split). */
@@ -73,8 +70,7 @@ public final class Spike0Scenario {
                 entity = (float) abs;
             } else {
                 double delta = abs - prevAbs;
-                while (delta > 180.0) delta -= 360.0;
-                while (delta < -180.0) delta += 360.0;
+                delta = Angles.wrapDelta(delta);
                 entity = entity + (float) delta;
             }
             g[k] = entity;

@@ -1,4 +1,4 @@
-package de.legoshi.parkourcalc.core.ui.anglesolver;
+package de.legoshi.parkourcalc.core.anglesolver;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -164,25 +164,6 @@ public final class AngleSolverState {
         return new ArrayList<>(ticks.keySet());
     }
 
-    public int constraintCount() {
-        int n = 0;
-        for (TickConstraints tc : ticks.values()) n += tc.getConstraints().size();
-        return n;
-    }
-
-    public int constraintCount(int tick) {
-        TickConstraints tc = ticks.get(tick);
-        return tc == null ? 0 : tc.getConstraints().size();
-    }
-
-    public int ticksWithConstraints() {
-        int n = 0;
-        for (TickConstraints tc : ticks.values()) {
-            if (!tc.getConstraints().isEmpty()) n++;
-        }
-        return n;
-    }
-
     public void addConstraint(int tick) {
         tickConstraints(tick).getConstraints().add(Constraint.scalar(Constraint.Field.X, Constraint.Op.GT, 0.0));
     }
@@ -241,35 +222,6 @@ public final class AngleSolverState {
         defaultPotions.clear();
         ticks.clear();
         result = null;
-    }
-
-    /** Seeds the prototype's sample data (mock route, 0-based ticks). Production wires this to real state. */
-    public void seedSample() {
-        startTick = 3;
-        landingTick = 9;
-        axis = Axis.X;
-        goal = Goal.MAX;
-        defaultInputs = InputMode.FORCE_45;
-        defaultSlipperiness = Slipperiness.AIR;
-        defaultPotions.clear();
-        ticks.clear();
-
-        tickConstraints(3).getOverride().setInputs(InputMode.FORCE_45);
-
-        TickConstraints t6 = tickConstraints(5);
-        t6.getConstraints().add(Constraint.range(Constraint.Field.DX, 0.100, 0.300, false, false));
-        t6.getOverride().setSlipperiness(Slipperiness.ICE);
-
-        TickConstraints t8 = tickConstraints(7);
-        t8.getConstraints().add(Constraint.scalar(Constraint.Field.Z, Constraint.Op.LT, -80.0));
-        t8.getOverride().getAdded().add(new PotionDose(Potion.JUMP_BOOST, 1));
-
-        TickConstraints t10 = tickConstraints(9);
-        t10.getConstraints().add(Constraint.scalar(Constraint.Field.X, Constraint.Op.GT, 124.5));
-        t10.getConstraints().add(Constraint.scalar(Constraint.Field.Z, Constraint.Op.LT, -88.0));
-        t10.getConstraints().add(Constraint.scalar(Constraint.Field.F, Constraint.Op.EQ, 0));
-        t10.getConstraints().add(Constraint.range(Constraint.Field.DX, 0.200, 0.420, true, true));
-        t10.getConstraints().add(Constraint.range(Constraint.Field.DZ, -0.10, 0.10, false, false));
     }
 
 }

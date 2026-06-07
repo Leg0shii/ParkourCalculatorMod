@@ -1,6 +1,6 @@
-package de.legoshi.parkourcalc.core.ui.anglesolver;
+package de.legoshi.parkourcalc.core.anglesolver;
 
-/** A default-state potion effect paired with its amplifier level (1-10 for now). */
+/** A potion effect paired with its amplifier level (1-10). */
 public final class PotionDose {
 
     public Potion potion;

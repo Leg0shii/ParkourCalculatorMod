@@ -1,7 +1,7 @@
-package de.legoshi.parkourcalc.core.ui.anglesolver;
+package de.legoshi.parkourcalc.core.anglesolver;
 
 /**
- * One per-tick constraint. X/Z/F are scalar fields; dX/dZ are range-only. Cycling the
+ * One per-tick constraint. X/Z/F are scalar fields; dX/dZ are range-only. Changing the
  * field across that boundary converts the constraint between scalar and range form.
  */
 public final class Constraint {
@@ -18,11 +18,6 @@ public final class Constraint {
         public boolean isRangeOnly() {
             return this == DX || this == DZ;
         }
-
-        public Field next() {
-            Field[] all = values();
-            return all[(ordinal() + 1) % all.length];
-        }
     }
 
     public enum Op {
@@ -32,17 +27,6 @@ public final class Constraint {
 
         Op(String glyph) {
             this.glyph = glyph;
-        }
-
-        /** Cycle the scalar operators; ranges always use IN, so it is excluded from the cycle. */
-        public Op nextScalar() {
-            switch (this) {
-                case GT: return LT;
-                case LT: return GE;
-                case GE: return LE;
-                case LE: return EQ;
-                default: return GT;
-            }
         }
     }
 
@@ -85,23 +69,11 @@ public final class Constraint {
     public void setValue(double value) { this.value = value; }
     public void setLo(double lo) { this.lo = lo; }
     public void setHi(double hi) { this.hi = hi; }
-    public void cycleOp() { this.op = op.nextScalar(); }
     public void setOp(Op op) { this.op = op; }
 
     public void setInclusive(boolean lo, boolean hi) {
         this.loInclusive = lo;
         this.hiInclusive = hi;
-    }
-
-    /** Toggle both brackets together between exclusive ( ) and inclusive [ ]. */
-    public void toggleBrackets() {
-        boolean bothInclusive = loInclusive && hiInclusive;
-        loInclusive = !bothInclusive;
-        hiInclusive = !bothInclusive;
-    }
-
-    public void cycleField() {
-        setField(field.next());
     }
 
     public void setField(Field next) {

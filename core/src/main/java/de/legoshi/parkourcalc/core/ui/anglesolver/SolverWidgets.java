@@ -7,8 +7,8 @@ import imgui.ImGui;
 import imgui.ImVec2;
 
 /**
- * Immediate-mode widgets the Angle Solver mock needs that aren't in {@code Controls}:
- * segmented control, cycling combo, tick stepper, potion chip, "+ add" button. All chrome
+ * Immediate-mode widgets the Angle Solver needs that aren't in {@code Controls}:
+ * segmented control, spinner, delete-x, grip dots, triangles, row label. All chrome
  * is drawn from {@code ThemeManager} colors; directional glyphs are drawn as triangles
  * because the in-game font only rasterizes Latin / Cyrillic / Japanese ranges.
  */
@@ -92,13 +92,6 @@ public final class SolverWidgets {
         }
     }
 
-    /** Two-segment tick mark, drawn because the font lacks the check glyph. */
-    public static void checkMark(ImDrawList dl, float x, float cy, float size, int col) {
-        float t = Math.max(1.2f, 1.4f * s());
-        dl.addLine(x, cy + size * 0.05f, x + size * 0.38f, cy + size * 0.5f, col, t);
-        dl.addLine(x + size * 0.38f, cy + size * 0.5f, x + size, cy - size * 0.5f, col, t);
-    }
-
     // ---- row label -------------------------------------------------------------
 
     public static void rowLabel(String text, float minWidth) {
@@ -112,10 +105,6 @@ public final class SolverWidgets {
     }
 
     // ---- segmented control ------------------------------------------------------
-
-    public static int segmented(String id, String[] labels, int selected, boolean mauve) {
-        return segmented(id, labels, selected, mauve, 0f);
-    }
 
     /** Single-choice segmented control. {@code fillWidth} > 0 splits that total width evenly across the segments so the control aligns to a form column. Returns the clicked index, or -1 if none this frame. */
     public static int segmented(String id, String[] labels, int selected, boolean mauve, float fillWidth) {
@@ -154,32 +143,6 @@ public final class SolverWidgets {
         }
         dl.addRect(left, top, right, bottom, border, ROUND * scale, 0, 1f);
         ImGui.popID();
-        return clicked;
-    }
-
-    /**
-     * Small clickable box used by the drawer for the field selector, op button, and
-     * bracket toggle. {@code chevron} appends a down triangle (field selector);
-     * {@code center} centers the label (op / bracket). Returns true when clicked.
-     */
-    public static boolean miniBox(String id, String label, int labelColor, boolean chevron, boolean center, float minWidth) {
-        float scale = s();
-        float h = ImGui.getFrameHeight();
-        ImDrawList dl = ImGui.getWindowDrawList();
-        float pad = PAD_X * scale;
-        float chevW = chevron ? 11f * scale : 0f;
-        float w = Math.max(minWidth, ImGui.calcTextSize(label).x + 2f * pad + chevW);
-        boolean clicked = ImGui.invisibleButton(id, w, h);
-        ImVec2 mn = ImGui.getItemRectMin();
-        ImVec2 mx = ImGui.getItemRectMax();
-        boolean hover = ImGui.isItemHovered();
-        dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, hover ? ThemeManager.accentTintColor(0.18f) : ThemeManager.hoverColor(), ROUND * scale);
-        dl.addRect(mn.x, mn.y, mx.x, mx.y, ThemeManager.borderColor(), ROUND * scale, 0, 1f);
-        float ty = textY(mn.y, h);
-        float ts = ImGui.calcTextSize(label).x;
-        float tx = center ? mn.x + (mx.x - mn.x - ts) * 0.5f : mn.x + pad;
-        dl.addText(tx, ty, labelColor, label);
-        if (chevron) triangleDown(dl, mx.x - pad - 2f * scale, mn.y + h * 0.5f, 3.2f * scale, ThemeManager.textMutedColor());
         return clicked;
     }
 }

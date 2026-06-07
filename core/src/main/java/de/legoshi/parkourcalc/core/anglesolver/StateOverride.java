@@ -1,4 +1,4 @@
-package de.legoshi.parkourcalc.core.ui.anglesolver;
+package de.legoshi.parkourcalc.core.anglesolver;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -30,7 +30,6 @@ public final class StateOverride {
     public List<PotionDose> getAdded() { return added; }
     public Set<Potion> getRemoved() { return removed; }
     public boolean overridesPotion() { return !added.isEmpty() || !removed.isEmpty(); }
-    public void clearPotion() { added.clear(); removed.clear(); }
 
     public boolean hasAdded(Potion p) {
         for (PotionDose d : added) if (d.potion == p) return true;

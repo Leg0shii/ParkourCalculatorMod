@@ -1,5 +1,13 @@
 package de.legoshi.parkourcalc.core.ui.anglesolver;
 
+import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
+import de.legoshi.parkourcalc.core.anglesolver.Constraint;
+import de.legoshi.parkourcalc.core.anglesolver.ConstraintText;
+import de.legoshi.parkourcalc.core.anglesolver.Potion;
+import de.legoshi.parkourcalc.core.anglesolver.PotionDose;
+import de.legoshi.parkourcalc.core.anglesolver.Slipperiness;
+import de.legoshi.parkourcalc.core.anglesolver.StateOverride;
+import de.legoshi.parkourcalc.core.anglesolver.TickConstraints;
 import de.legoshi.parkourcalc.core.ui.SelectionManager;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
@@ -82,7 +90,7 @@ public final class AngleSolverTable {
     private final ImInt fieldCombo = new ImInt();
     private final ImInt opCombo = new ImInt();
     private final ImInt brkCombo = new ImInt();
-    private final String[] slipItems = buildSlipItems();
+    private final String[] slipItems = Slipperiness.comboItems();
     private static final String[] FIELD_ITEMS = buildFieldItems();
     private static final Constraint.Op[] SCALAR_OPS =
             {Constraint.Op.GT, Constraint.Op.LT, Constraint.Op.GE, Constraint.Op.LE, Constraint.Op.EQ};
@@ -101,23 +109,12 @@ public final class AngleSolverTable {
         return 0;
     }
 
-    private static String[] buildSlipItems() {
-        Slipperiness[] all = Slipperiness.values();
-        String[] items = new String[all.length];
-        for (int i = 0; i < all.length; i++) items[i] = all[i].label + " · " + all[i].valueLabel;
-        return items;
-    }
-
     public AngleSolverTable(AngleSolverState state, Settings settings, SelectionManager selection,
                             IntSupplier rowCount) {
         this.state = state;
         this.settings = settings;
         this.selection = selection;
         this.rowCount = rowCount;
-    }
-
-    public AngleSolverState getState() {
-        return state;
     }
 
     public boolean isActive() {
