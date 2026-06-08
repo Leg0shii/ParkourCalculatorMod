@@ -9,6 +9,8 @@ import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.BlockSolver;
 import de.legoshi.parkourcalc.core.anglesolver.solver.BucketAscentPolish;
+import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
+import de.legoshi.parkourcalc.core.anglesolver.solver.FastSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolveCore;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
@@ -69,6 +71,13 @@ public final class AngleSolverEngine {
 
     // Background-solve handoff. `pending` is the single volatile publish point: the worker fully
     // builds the Outcome, then assigns it here; poll() reads it on the main thread.
+    /** Test-only: the last JumpSpec handed to the solver, so tests can replay it on alternative models. */
+    private volatile de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec lastSpecDebug;
+
+    public de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec lastSpecDebug() {
+        return lastSpecDebug;
+    }
+
     private volatile boolean solving;
     private volatile long startNanos;
     private volatile Outcome pending;
@@ -310,11 +319,21 @@ public final class AngleSolverEngine {
      *  (flip the sign and shift air facings 90deg for an identical trajectory). Budget scales with effort. */
     private Outcome runJob(Job job, AtomicBoolean cancel) {
         JumpSpec spec = job.spec; // frozen on the main thread; arrays read-only during solve, so shareable
+        lastSpecDebug = spec;
         JumpPhysicsInputs sc = spec.asScenario();
 
         // yaws are absolute wrapped facings (what Apply writes as deltas); the game runs the float-accumulated
         // facings, so the reported path forwards toGameFacings(yaws), bit-for-bit the in-game trajectory.
-        double[] yaws = SolveCore.optimize(model, spec, budgetFor(job.effort), CMAES_SIGMA_DEG, FEAS_TOL, cancel);
+        // Fast path first (smooth-basin + exact lock); it returns null when it cannot certify feasibility,
+        // in which case we fall back to the full cold multistart so reliability is never reduced.
+        double[] yaws = null;
+        if (model instanceof ExactJumpModel) {
+            yaws = FastSolve.optimize((ExactJumpModel) model, spec, FEAS_TOL, cancel);
+        }
+        if (cancel.get()) return null;
+        if (yaws == null) {
+            yaws = SolveCore.optimize(model, spec, budgetFor(job.effort), CMAES_SIGMA_DEG, FEAS_TOL, cancel);
+        }
         if (yaws == null) return null;
 
         ForwardPath path = model.forward(sc, sc.toGameFacings(yaws));

@@ -22,6 +22,14 @@ public final class ExactJumpModel implements ForwardModel {
         this.perAxisInertia = perAxisInertia;
     }
 
+    public double inertiaThreshold() {
+        return inertiaThreshold;
+    }
+
+    public boolean perAxisInertia() {
+        return perAxisInertia;
+    }
+
     /** Inertia rule for a loader's MC version. 1.8.x: per-axis 0.005. 1.12.x: per-axis 0.003.
      *  1.9+ players (1.21.10 and the modern default here): combined-XZ |v|^2 &lt; 0.003^2. Covers the
      *  three loader versions; the per-axis-to-combined player switch lands between 1.12 and 1.21. */
