@@ -309,9 +309,10 @@ public final class AngleSolverState {
         return startBlock != null || landBlock != null || !collisionBlocks.isEmpty();
     }
 
-    /** All blocks the solver needs are picked: a start to launch from and a land to reach. */
+    /** The only block the solver requires is a Land to reach. The Start block is optional: when picked it
+     *  pins the launch footprint (be inside it at the tick before the first jump); otherwise it is ignored. */
     public boolean hasRequiredBlocks() {
-        return startBlock != null && landBlock != null;
+        return landBlock != null;
     }
 
     public void clearBlocks() {

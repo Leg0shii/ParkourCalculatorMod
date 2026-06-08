@@ -13,9 +13,15 @@ public final class JumpPhysicsInputs {
     public float startYaw = 0.0F;
     public Vec3dCore initialVelocity = Vec3dCore.ZERO;
 
-    /** Tick the sprint-jump fires on (and the last ground tick). Ticks before it are ground run-up,
-     *  ticks after are airborne. -1 = no jump in the segment (an all-air continuation). */
+    /** Primary jump tick (first JUMP in the segment); kept for the block-solver's launch-footprint
+     *  placement and as the fallback when {@link #jumpPerTick} is null. Ground/air is no longer derived
+     *  from this (that comes from {@link #slipPerTick} per tick). -1 = no jump in the segment. */
     public int jumpTick = 0;
+
+    /** Per-tick jump mask: true on a tick whose row pressed JUMP. A jump only actually fires while that
+     *  tick is on the ground (see ExactJumpModel), so this supports any number of jumps per window.
+     *  null = fall back to the single {@link #jumpTick}. */
+    public boolean[] jumpPerTick = null;
 
     public int strafeSign = 1;
 
@@ -48,6 +54,13 @@ public final class JumpPhysicsInputs {
 
     public boolean strafeAt(int tick) {
         return strafePerTick != null && tick >= 0 && tick < strafePerTick.length && strafePerTick[tick];
+    }
+
+    /** Whether the row at this tick pressed JUMP. Uses the per-tick mask when present, else the single
+     *  {@link #jumpTick}. The model still only fires the impulse if the tick is also on the ground. */
+    public boolean jumpAt(int tick) {
+        if (jumpPerTick != null) return tick >= 0 && tick < jumpPerTick.length && jumpPerTick[tick];
+        return jumpTick >= 0 && tick == jumpTick;
     }
 
     /** Effective slip for a tick, or NaN when the tick has no surface override (use the default split). */

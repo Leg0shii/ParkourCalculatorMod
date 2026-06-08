@@ -144,39 +144,101 @@ public final class BlockSolver {
         double landA = travelZ ? landCenterZ : landCenterX;
         boolean descending = seedA > landA;
 
-        List<Gate> gates = new ArrayList<>();
-        for (AABB o : blocks) gates.add(gateFor(o, sc, landCenterX, landCenterZ, travelZ, descending));
-
-        Gate tightest = null;
-        for (Gate g : gates) {
-            if (!g.crossing) continue;
-            if (tightest == null || reachedFirst(g.exitEdge, tightest.exitEdge, descending)) tightest = g;
-        }
-
         // Feasibility (a swept-clean, landed path) must not depend on which coordinate we optimize: the
         // same keep-out constraints admit the same paths. So first find a feasible constraint set + path,
         // trying the user's objective then the endpoint objectives (each with its OWN crossing-tick /
-        // timing search, since the timing converges off the actual landed path), then optimize the user's
-        // chosen direction on that fixed set, warm-started from the feasible point.
-        int[] solvesLeft = {Math.max(maxSolves, 120)};
+        // timing search), then optimize the user's chosen direction on that fixed set.
         List<Objective> candidates = new ArrayList<>();
         for (Objective o : objectives) addObjective(candidates, o);
         for (Objective o : endpointObjectives(n)) addObjective(candidates, o);
 
-        Feasible feas = findFeasible(model, sc, footprints, landFootprint, gates, tightest, blocks, heights,
-                feetY, n, candidates, budget, sigmaDeg, feasTol, cancel, solvesLeft);
-        if (!feas.ok) return feas.bestNonOk;
+        // Keep-out side per obstacle. Start-proximity is the default and is right when the run stays on the
+        // start side. When the run CROSSES an obstacle's perpendicular band (start and land on opposite
+        // sides) the side hinges on the not-yet-known path timing, so it is ambiguous: try the default
+        // first, then flip the crossing obstacles' sides until a swept-clean, landed homotopy is found.
+        boolean[] base = new boolean[blocks.size()];
+        List<Integer> ambiguous = new ArrayList<>();
+        for (int i = 0; i < blocks.size(); i++) {
+            base[i] = defaultNearHi(blocks.get(i), sc, travelZ);
+            if (ambiguousSide(blocks.get(i), sc, landCenterX, landCenterZ, travelZ)) ambiguous.add(i);
+        }
 
-        Objective userObj = objectives.isEmpty() ? feas.objective : objectives.get(0);
-        if (!cancel.get() && solvesLeft[0] > 0) {
-            Eval opt = evaluate(model, sc, feas.cons, userObj, budget, sigmaDeg, feasTol, blocks, heights,
-                    landFootprint, cancel, feas.yaws, solvesLeft);
-            if (opt.yaws != null && opt.clean && opt.landed) {
-                return new Result(opt.yaws, opt.path, feas.faces, userObj, true, true);
+        Result bestNonOk = null;
+        for (boolean[] sides : sideCombos(base, ambiguous)) {
+            if (cancel.get()) break;
+            List<Gate> gates = new ArrayList<>();
+            for (int i = 0; i < blocks.size(); i++) {
+                gates.add(gateFor(blocks.get(i), sc, landCenterX, landCenterZ, travelZ, descending, sides[i]));
+            }
+            Gate tightest = null;
+            for (Gate g : gates) {
+                if (!g.crossing) continue;
+                if (tightest == null || reachedFirst(g.exitEdge, tightest.exitEdge, descending)) tightest = g;
+            }
+
+            int[] solvesLeft = {Math.max(maxSolves, 120)};
+            Feasible feas = findFeasible(model, sc, footprints, landFootprint, gates, tightest, blocks, heights,
+                    feetY, n, candidates, budget, sigmaDeg, feasTol, cancel, solvesLeft);
+            if (feas.ok) {
+                Objective userObj = objectives.isEmpty() ? feas.objective : objectives.get(0);
+                if (!cancel.get() && solvesLeft[0] > 0) {
+                    Eval opt = evaluate(model, sc, feas.cons, userObj, budget, sigmaDeg, feasTol, blocks, heights,
+                            landFootprint, cancel, feas.yaws, solvesLeft);
+                    if (opt.yaws != null && opt.clean && opt.landed) {
+                        return new Result(opt.yaws, opt.path, feas.faces, userObj, true, true);
+                    }
+                }
+                // The user's direction is infeasible (e.g. it would leave the pad); hand back the feasible path.
+                return new Result(feas.yaws, feas.path, feas.faces, userObj, true, true);
+            }
+            if (feas.bestNonOk != null && (bestNonOk == null || better(feas.bestNonOk, bestNonOk))) {
+                bestNonOk = feas.bestNonOk;
             }
         }
-        // The user's direction is infeasible (e.g. it would leave the pad); hand back the feasible path.
-        return new Result(feas.yaws, feas.path, feas.faces, userObj, true, true);
+        return bestNonOk;
+    }
+
+    /** Side combinations to try: the default first, then flips of the ambiguous (crossing) obstacles ordered
+     *  by how many are flipped. Capped so a pile of crossing obstacles cannot explode the search. */
+    private static List<boolean[]> sideCombos(boolean[] base, List<Integer> ambiguous) {
+        List<boolean[]> out = new ArrayList<>();
+        int k = Math.min(ambiguous.size(), 3); // 2^3 = 8 homotopy classes is plenty in practice
+        for (int flips = 0; flips <= k; flips++) {
+            for (int mask = 0; mask < (1 << k); mask++) {
+                if (Integer.bitCount(mask) != flips) continue;
+                boolean[] s = base.clone();
+                for (int b = 0; b < k; b++) {
+                    if ((mask & (1 << b)) != 0) {
+                        int idx = ambiguous.get(b);
+                        s[idx] = !s[idx];
+                    }
+                }
+                out.add(s);
+            }
+        }
+        return out;
+    }
+
+    /** Original heuristic: keep the run on whichever perpendicular edge of the obstacle is nearer the start. */
+    private static boolean defaultNearHi(AABB o, JumpPhysicsInputs sc, boolean travelZ) {
+        if (travelZ) {
+            double hi = o.max.x + HALF, lo = o.min.x - HALF;
+            return Math.abs(sc.startPos.x - hi) <= Math.abs(sc.startPos.x - lo);
+        }
+        double hi = o.max.z + HALF, lo = o.min.z - HALF;
+        return Math.abs(sc.startPos.z - hi) <= Math.abs(sc.startPos.z - lo);
+    }
+
+    /** The run crosses this obstacle's perpendicular band (start and land sit on opposite sides), so which
+     *  side it passes on depends on path timing and cannot be read off the geometry: try both. */
+    private static boolean ambiguousSide(AABB o, JumpPhysicsInputs sc, double landCenterX, double landCenterZ, boolean travelZ) {
+        double sp, lp, lo, hi;
+        if (travelZ) {
+            sp = sc.startPos.x; lp = landCenterX; lo = o.min.x - HALF; hi = o.max.x + HALF;
+        } else {
+            sp = sc.startPos.z; lp = landCenterZ; lo = o.min.z - HALF; hi = o.max.z + HALF;
+        }
+        return sideOf(sp, lo, hi) != sideOf(lp, lo, hi);
     }
 
     private static void addObjective(List<Objective> list, Objective o) {
@@ -335,19 +397,17 @@ public final class BlockSolver {
     }
 
     private static Gate gateFor(AABB o, JumpPhysicsInputs sc, double landCenterX, double landCenterZ,
-                                boolean travelZ, boolean descending) {
+                                boolean travelZ, boolean descending, boolean nearHi) {
         double yLo = o.min.y, yHi = o.max.y;
         if (travelZ) {
             double bandLo = o.min.z - HALF, bandHi = o.max.z + HALF;
             double hi = o.max.x + HALF, lo = o.min.x - HALF;
-            boolean nearHi = Math.abs(sc.startPos.x - hi) <= Math.abs(sc.startPos.x - lo);
             double exitEdge = descending ? bandLo : bandHi;
             boolean crossing = sideOf(sc.startPos.z, bandLo, bandHi) != sideOf(landCenterZ, bandLo, bandHi);
             return new Gate(true, nearHi, nearHi ? hi : lo, bandLo, bandHi, yLo, yHi, crossing, exitEdge, descending);
         }
         double bandLo = o.min.x - HALF, bandHi = o.max.x + HALF;
         double hi = o.max.z + HALF, lo = o.min.z - HALF;
-        boolean nearHi = Math.abs(sc.startPos.z - hi) <= Math.abs(sc.startPos.z - lo);
         double exitEdge = descending ? bandLo : bandHi;
         boolean crossing = sideOf(sc.startPos.x, bandLo, bandHi) != sideOf(landCenterX, bandLo, bandHi);
         return new Gate(false, nearHi, nearHi ? hi : lo, bandLo, bandHi, yLo, yHi, crossing, exitEdge, descending);

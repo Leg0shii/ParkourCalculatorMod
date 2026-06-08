@@ -135,8 +135,16 @@ public class BlockSolverTest {
         sc.jumpTick = 0;
         sc.strafeSign = 1;
         boolean[] strafe = new boolean[N];
-        for (int k = 0; k < N; k++) strafe[k] = (k != 0);
+        boolean[] jump = new boolean[N];
+        double[] slip = new double[N];
+        for (int k = 0; k < N; k++) {
+            strafe[k] = (k != 0);
+            jump[k] = (k == 0);                          // sprint-jump fires on the (grounded) first tick
+            slip[k] = (k == 0) ? 0.60 : Double.NaN;      // tick 0 is the takeoff; the arc is airborne
+        }
         sc.strafePerTick = strafe;
+        sc.jumpPerTick = jump;
+        sc.slipPerTick = slip;
         return sc;
     }
 

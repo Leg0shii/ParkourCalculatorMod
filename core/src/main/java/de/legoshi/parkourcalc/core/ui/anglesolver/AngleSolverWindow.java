@@ -321,7 +321,7 @@ public final class AngleSolverWindow implements RenderInterface {
             engine.solve();
         }
         // Block-driven solve sits next to Solve; only on loaders that can pick blocks, and grayed until a
-        // Start and Land block are picked (via keybind).
+        // Land block is picked (via keybind). Start is optional.
         if (blocksAvailable) {
             ImGui.sameLine();
             if (state.hasRequiredBlocks()) {
@@ -344,7 +344,7 @@ public final class AngleSolverWindow implements RenderInterface {
         }
         if (blocksAvailable && !state.hasRequiredBlocks()) {
             ThemeManager.pushTextColor(ThemeManager.textMutedColor());
-            ImGui.textWrapped("Pick a Start and Land block (keybinds) to enable Solve from blocks.");
+            ImGui.textWrapped("Pick a Land block (keybind) to enable Solve from blocks. Start is optional.");
             ThemeManager.popTextColor();
         }
     }

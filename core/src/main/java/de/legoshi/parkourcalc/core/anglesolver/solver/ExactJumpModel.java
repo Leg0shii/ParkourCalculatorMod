@@ -1,11 +1,16 @@
 package de.legoshi.parkourcalc.core.anglesolver.solver;
 
 /** Byte-exact MC sprint-jump forward: a direct port of the real movement float chain (hard
- *  thresholds + exact MathHelper sine table + per-axis momentum cancellation).
- *  Reproduces the live SimulatorEntity to the ULP for collision-free airborne arcs, so CMA-ES
- *  (derivative-free) can optimize and report against it directly. The model
- *  is horizontal-aware but also tracks Y so the per-axis inertia on motionY matches MC; it never
- *  simulates collision, so it is only valid for constraint ticks before any wall graze or landing.
+ *  thresholds + exact MathHelper sine table + per-axis momentum cancellation). Reproduces the live
+ *  SimulatorEntity to the ULP in X/Z for collision-free motion, so CMA-ES (derivative-free) optimizes
+ *  and reports against it directly.
+ *
+ *  <p>Ground/air is authored per tick by {@link JumpPhysicsInputs#slipPerTick} (a ground value = on a
+ *  surface, NaN = airborne) and jumps by {@link JumpPhysicsInputs#jumpPerTick}: a JUMP tick fires only
+ *  while grounded, so a window with any number of jumps and intermediate landings runs the same path as
+ *  a single jump. It still never simulates collision (no wall clamp; SweptCollision checks that
+ *  separately) and does not clamp Y onto a surface, so posY between jumps is not physical; X/Z (all the
+ *  solver constrains) stay byte-exact.
  *
  *  <p>Per the 1.8.9 path: onLivingUpdate zeroes any |motion| &lt; threshold (carry from last tick's
  *  friction), jump() fires the impulse + sprint boost, moveEntityWithHeading picks ground/air accel,
@@ -67,10 +72,15 @@ public final class ExactJumpModel implements ForwardModel {
 
             float yawF = (float) yawAbsDeg[t];
 
-            boolean isJumpTick = (scenario.jumpTick >= 0 && t == scenario.jumpTick);
-            boolean onGround = (scenario.jumpTick >= 0 && t <= scenario.jumpTick);
-
-            // (2) jump impulse + sprint boost. jump() uses (float)(Math.PI/180.0) for its rad cast.
+            // (2) ground/air + jump, authored per tick. Slip annotation is the truth (ground value = on a
+            // surface, NaN = airborne); a JUMP tick fires only while grounded (a held jump in the air does
+            // nothing, like MC), so any number of jumps in the window works the same. jump() uses
+            // (float)(Math.PI/180.0) for its rad cast.
+            int amp = scenario.speedAmplifierAt(t);
+            double slipOv = scenario.slipAt(t);
+            boolean contact = !Double.isNaN(slipOv);
+            float slipF = contact ? (float) slipOv : Constants.SLIP_F;
+            boolean isJumpTick = scenario.jumpAt(t) && contact;
             if (isJumpTick) {
                 vy = (double) Constants.JUMP_VEL_F;
                 float fj = yawF * (float) (Math.PI / 180.0);
@@ -78,13 +88,7 @@ public final class ExactJumpModel implements ForwardModel {
                 vz += McSineTable.cosStep(fj) * 0.2F;
             }
 
-            // (3) accel regime. Per-tick slip override turns a tick into a ground-contact tick.
-            int amp = scenario.speedAmplifierAt(t);
-            double slipOv = scenario.slipAt(t);
-            boolean hasSurface = !Double.isNaN(slipOv);
-            boolean contact = onGround || hasSurface;
-            float slipF = hasSurface ? (float) slipOv : Constants.SLIP_F;
-
+            // (3) accel regime.
             float f4;
             float accelSpeed;
             if (contact) {
