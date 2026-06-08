@@ -27,6 +27,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * objective lands on it while the away one overshoots by ~1e-6. Every candidate is checked against
  * {@link SweptCollision} + the landing footprint, so {@link Result#ok()} is never reported for a path
  * that would clip or miss; on a layout it cannot wrap it honestly reports the best non-ok attempt.
+ *
+ * <p>Inner solves go through a swappable {@link InnerSolve} strategy. The planner runs first with the
+ * microsecond closed-form ({@link ClosedFormSolve}); if that pass cannot produce a clean+landed result it
+ * re-runs with the proven CMA-ES multistart, so the fast path can only ever speed solving up, never
+ * regress it. (The closed form returns null on an infeasible trial constraint set, which the search treats
+ * as "skip this candidate" rather than a hard failure -- exactly the prune signal a routing search wants.)
  */
 public final class BlockSolver {
 
@@ -36,6 +42,11 @@ public final class BlockSolver {
     private static final int MAX_ITERS = 5;
     private static final int K_WINDOW = 3;
     private static final int NON_CROSS_SLACK = 3;
+
+    /** Pluggable inner solver: map a constraint set to facings (or null if it cannot certify feasibility). */
+    private interface InnerSolve {
+        double[] solve(JumpSpec spec, double[] warmStart);
+    }
 
     public static final class Obstacle {
         public final AABB block;
@@ -131,6 +142,26 @@ public final class BlockSolver {
     public Result solve(ForwardModel model, JumpPhysicsInputs sc, List<JumpConstraint> footprints,
                         double[] landFootprint, List<Obstacle> obstacles, double[] heights, List<Objective> objectives,
                         SolveCore.Budget budget, double sigmaDeg, double feasTol, int maxSolves, AtomicBoolean cancel) {
+        // Fast path: microsecond closed form on every inner solve. It only applies to position-wall sets on
+        // the byte-exact model, and returns null on an infeasible trial set (the search skips it).
+        InnerSolve closedForm = (spec, warm) -> (model instanceof ExactJumpModel)
+                ? ClosedFormSolve.optimize((ExactJumpModel) model, spec, feasTol, cancel) : null;
+        Result fast = runPlanner(closedForm, model, sc, footprints, landFootprint, obstacles, heights,
+                objectives, maxSolves, cancel);
+        if ((fast != null && fast.ok()) || cancel.get()) return fast;
+
+        // Fallback: the proven CMA-ES multistart, so a layout the closed form cannot route never regresses.
+        InnerSolve cmaes = (spec, warm) ->
+                SolveCore.optimize(model, spec, budget, sigmaDeg, feasTol, cancel, warm);
+        Result slow = runPlanner(cmaes, model, sc, footprints, landFootprint, obstacles, heights,
+                objectives, maxSolves, cancel);
+        if (slow != null && (fast == null || slow.ok() || better(slow, fast))) return slow;
+        return fast;
+    }
+
+    private Result runPlanner(InnerSolve inner, ForwardModel model, JumpPhysicsInputs sc, List<JumpConstraint> footprints,
+                              double[] landFootprint, List<Obstacle> obstacles, double[] heights, List<Objective> objectives,
+                              int maxSolves, AtomicBoolean cancel) {
         int n = sc.numTicks;
         List<AABB> blocks = new ArrayList<>();
         for (Obstacle o : obstacles) blocks.add(o.block);
@@ -177,12 +208,12 @@ public final class BlockSolver {
             }
 
             int[] solvesLeft = {Math.max(maxSolves, 120)};
-            Feasible feas = findFeasible(model, sc, footprints, landFootprint, gates, tightest, blocks, heights,
-                    feetY, n, candidates, budget, sigmaDeg, feasTol, cancel, solvesLeft);
+            Feasible feas = findFeasible(inner, model, sc, footprints, landFootprint, gates, tightest, blocks, heights,
+                    feetY, n, candidates, cancel, solvesLeft);
             if (feas.ok) {
                 Objective userObj = objectives.isEmpty() ? feas.objective : objectives.get(0);
                 if (!cancel.get() && solvesLeft[0] > 0) {
-                    Eval opt = evaluate(model, sc, feas.cons, userObj, budget, sigmaDeg, feasTol, blocks, heights,
+                    Eval opt = evaluate(inner, model, sc, feas.cons, userObj, blocks, heights,
                             landFootprint, cancel, feas.yaws, solvesLeft);
                     if (opt.yaws != null && opt.clean && opt.landed) {
                         return new Result(opt.yaws, opt.path, feas.faces, userObj, true, true);
@@ -270,15 +301,14 @@ public final class BlockSolver {
 
     /** Try each candidate objective (its own crossing-tick window + timing iteration) until one yields a
      *  swept-clean, landed path; return that constraint set. Else ok=false with the best non-ok attempt. */
-    private Feasible findFeasible(ForwardModel model, JumpPhysicsInputs sc, List<JumpConstraint> footprints,
+    private Feasible findFeasible(InnerSolve inner, ForwardModel model, JumpPhysicsInputs sc, List<JumpConstraint> footprints,
                                   double[] landFp, List<Gate> gates, Gate tightest, List<AABB> blocks, double[] heights,
-                                  double[] feetY, int n, List<Objective> candidates, SolveCore.Budget budget,
-                                  double sigmaDeg, double feasTol, AtomicBoolean cancel, int[] solvesLeft) {
+                                  double[] feetY, int n, List<Objective> candidates, AtomicBoolean cancel, int[] solvesLeft) {
         Result bestNonOk = null;
         for (Objective objective : candidates) {
             if (cancel.get() || solvesLeft[0] <= 0) break;
-            Eval seed = evaluate(model, sc, footprints, objective, budget, sigmaDeg, feasTol, blocks, heights, landFp, cancel, null, solvesLeft);
-            if (seed.yaws == null) break;
+            Eval seed = evaluate(inner, model, sc, footprints, objective, blocks, heights, landFp, cancel, null, solvesLeft);
+            if (seed.yaws == null) continue; // this objective's relaxed seed is infeasible; try the next
             ForwardPath sched0 = seed.path;
 
             List<Integer> kStars = new ArrayList<>();
@@ -302,8 +332,8 @@ public final class BlockSolver {
                 for (int iter = 0; iter < MAX_ITERS; iter++) {
                     if (cancel.get() || solvesLeft[0] <= 0) break;
                     Cand cand = build(footprints, gates, tightest, kStar, sched, sc, feetY, heights, n);
-                    Eval e = evaluate(model, sc, cand.cons, objective, budget, sigmaDeg, feasTol, blocks, heights, landFp, cancel, null, solvesLeft);
-                    if (e.yaws == null) return new Feasible(false, null, null, null, null, objective, bestNonOk);
+                    Eval e = evaluate(inner, model, sc, cand.cons, objective, blocks, heights, landFp, cancel, null, solvesLeft);
+                    if (e.yaws == null) break; // infeasible trial set; abandon this k* and try the next
                     if (DEBUG) System.out.println("  obj=" + objective.axis + "/" + objective.sense + " k*=" + kStar
                             + " iter=" + iter + " faces=" + cand.faces.size() + " clean=" + e.clean + " landed=" + e.landed);
                     if (e.clean && e.landed) return new Feasible(true, cand.cons, cand.faces, e.yaws, e.path, objective, bestNonOk);
@@ -374,11 +404,11 @@ public final class BlockSolver {
                 JumpConstraint.Op.PLUS, ge ? JumpConstraint.Cmp.GE : JumpConstraint.Cmp.LE, v, name);
     }
 
-    private static Eval evaluate(ForwardModel model, JumpPhysicsInputs sc, List<JumpConstraint> cons, Objective objective,
-                                 SolveCore.Budget budget, double sigmaDeg, double feasTol, List<AABB> blocks,
-                                 double[] heights, double[] landFp, AtomicBoolean cancel, double[] warmStart, int[] solvesLeft) {
+    private static Eval evaluate(InnerSolve inner, ForwardModel model, JumpPhysicsInputs sc, List<JumpConstraint> cons,
+                                 Objective objective, List<AABB> blocks, double[] heights, double[] landFp,
+                                 AtomicBoolean cancel, double[] warmStart, int[] solvesLeft) {
         if (solvesLeft != null) solvesLeft[0]--;
-        double[] yaws = SolveCore.optimize(model, new JumpSpec(sc, cons, objective), budget, sigmaDeg, feasTol, cancel, warmStart);
+        double[] yaws = inner.solve(new JumpSpec(sc, cons, objective), warmStart);
         if (yaws == null) return new Eval(null, null, false, false);
         ForwardPath path = model.forward(sc, sc.toGameFacings(yaws));
         int n = sc.numTicks;
