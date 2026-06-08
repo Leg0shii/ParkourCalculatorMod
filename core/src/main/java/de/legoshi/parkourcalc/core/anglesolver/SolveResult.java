@@ -44,6 +44,7 @@ public final class SolveResult {
 
     // Solve stats (filled by the engine; defaults are harmless when a solve fails before they are set).
     private long durationMs;
+    private long durationNanos;     // precise compute time of the solve itself (0 = unset / loaded result)
     private String finishedAt;     // formatted clock time when the solve finished, null if unset
     private double objectiveValue;
     private boolean hasObjective;
@@ -90,6 +91,16 @@ public final class SolveResult {
 
     public void setDurationMs(long durationMs) {
         this.durationMs = durationMs;
+    }
+
+    /** Precise compute time of the solve itself in nanoseconds (excludes the worker-thread/poll overhead);
+     *  0 when unset or for a result loaded from a save (use {@link #getDurationMs()} as the fallback). */
+    public long getDurationNanos() {
+        return durationNanos;
+    }
+
+    public void setDurationNanos(long durationNanos) {
+        this.durationNanos = durationNanos;
     }
 
     public String getFinishedAt() {

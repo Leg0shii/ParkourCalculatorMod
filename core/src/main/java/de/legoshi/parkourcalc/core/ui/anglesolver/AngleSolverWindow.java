@@ -407,7 +407,8 @@ public final class AngleSolverWindow implements RenderInterface {
         if (r.getFinishedAt() == null && !r.hasObjective()) return;
         ThemeManager.pushTextColor(ThemeManager.textMutedColor());
         if (r.getFinishedAt() != null) {
-            ImGui.text("Took " + fmtDuration(r.getDurationMs()) + " · finished " + r.getFinishedAt());
+            long nanos = r.getDurationNanos() > 0 ? r.getDurationNanos() : r.getDurationMs() * 1_000_000L;
+            ImGui.text("Took " + fmtDuration(nanos) + " · finished " + r.getFinishedAt());
         }
         if (r.hasObjective()) {
             String goal = state.getGoal() == AngleSolverState.Goal.MAX ? "max" : "min";
@@ -416,9 +417,11 @@ public final class AngleSolverWindow implements RenderInterface {
         ThemeManager.popTextColor();
     }
 
-    private static String fmtDuration(long ms) {
-        if (ms >= 1000L) return String.format(Locale.ROOT, "%.1fs", ms / 1000.0);
-        return ms + "ms";
+    private static String fmtDuration(long nanos) {
+        if (nanos >= 1_000_000_000L) return String.format(Locale.ROOT, "%.2fs", nanos / 1.0e9);
+        if (nanos >= 1_000_000L) return String.format(Locale.ROOT, "%.1fms", nanos / 1.0e6);
+        if (nanos >= 1_000L) return String.format(Locale.ROOT, "%.1fµs", nanos / 1.0e3);
+        return nanos + "ns";
     }
 
     private void renderOutcomes(SolveResult r) {

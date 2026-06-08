@@ -400,6 +400,7 @@ public final class SaveIO {
         out.startTick = r.getStartTick();
         out.landingTick = r.getLandingTick();
         out.durationMs = r.getDurationMs();
+        out.durationNanos = r.getDurationNanos();
         out.finishedAt = r.getFinishedAt();
         out.objectiveValue = r.getObjectiveValue();
         out.hasObjective = r.hasObjective();
@@ -425,6 +426,7 @@ public final class SaveIO {
         if (rd == null) return null;
         SolveResult r = new SolveResult(rd.success, rd.met, rd.total, rd.startTick, rd.landingTick);
         r.setDurationMs(rd.durationMs);
+        r.setDurationNanos(rd.durationNanos);
         r.setFinishedAt(rd.finishedAt);
         if (rd.hasObjective) r.setObjective(rd.objectiveValue);
         if (rd.outcomes != null) {

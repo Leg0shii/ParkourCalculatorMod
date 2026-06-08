@@ -49,6 +49,14 @@ public class AngleSolverJumpTest {
         assertSolvable("j121.json");
     }
 
+    /** A real 5-jump (land-and-rejump) capture whose recorded path satisfies all 13 constraints, but which
+     *  the pre-per-tick-ground solver scored 7/13 (it hardcoded ground = before the first jump, so the
+     *  later jumps' physics were wrong). Locks in that per-tick ground lets FAST find the feasible path. */
+    @Test
+    public void solvesJcXt43MultiJump() {
+        assertSolvable("jc-xt43.json");
+    }
+
     private static void assertSolvable(String fixture) {
         SaveFile file = SaveIO.parseSafe(readFixture(fixture));
         assertNotNull(fixture + ": failed to parse", file);

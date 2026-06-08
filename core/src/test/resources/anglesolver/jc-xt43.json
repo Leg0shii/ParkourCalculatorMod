@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "createdAt": "2026-06-07T21:19:57Z",
-  "modVersion": "1.4.0+build.133.5f795d0.dirty",
+  "createdAt": "2026-06-08T19:05:21Z",
+  "modVersion": "1.4.0+build.139.5009805",
   "mcVersion": "1.8.9",
   "world": {
     "dimension": "Overworld",
@@ -102,7 +102,7 @@
         "W",
         "JUMP"
       ],
-      "yaw": -1.1694735,
+      "yaw": -5.312347,
       "yawLocked": false,
       "speedAmplifier": 2,
       "jumpBoostAmplifier": 0
@@ -112,7 +112,7 @@
         "W",
         "A"
       ],
-      "yaw": 31.217634,
+      "yaw": 41.594418,
       "yawLocked": false,
       "speedAmplifier": 2,
       "jumpBoostAmplifier": 0
@@ -122,7 +122,7 @@
         "W",
         "JUMP"
       ],
-      "yaw": -43.271683,
+      "yaw": -45.37005,
       "yawLocked": false,
       "speedAmplifier": 2,
       "jumpBoostAmplifier": 0
@@ -132,7 +132,7 @@
         "W",
         "A"
       ],
-      "yaw": 48.95492,
+      "yaw": 36.39345,
       "yawLocked": false,
       "speedAmplifier": 2,
       "jumpBoostAmplifier": 0
@@ -142,7 +142,7 @@
         "W",
         "A"
       ],
-      "yaw": -14.20184,
+      "yaw": 0.9236963,
       "yawLocked": false,
       "speedAmplifier": 2,
       "jumpBoostAmplifier": 0
@@ -152,7 +152,7 @@
         "W",
         "A"
       ],
-      "yaw": -1.5142552,
+      "yaw": -4.1140885,
       "yawLocked": false,
       "speedAmplifier": 2,
       "jumpBoostAmplifier": 0
@@ -162,7 +162,7 @@
         "W",
         "A"
       ],
-      "yaw": 2.960714,
+      "yaw": 1.8889567,
       "yawLocked": false,
       "speedAmplifier": 2,
       "jumpBoostAmplifier": 0
@@ -172,7 +172,7 @@
         "W",
         "A"
       ],
-      "yaw": -5.742717,
+      "yaw": -4.0409255,
       "yawLocked": false,
       "speedAmplifier": 2,
       "jumpBoostAmplifier": 0
@@ -182,7 +182,7 @@
         "W",
         "A"
       ],
-      "yaw": 0.026924927,
+      "yaw": 6.1996346,
       "yawLocked": false,
       "speedAmplifier": 2,
       "jumpBoostAmplifier": 0
@@ -192,7 +192,7 @@
         "W",
         "A"
       ],
-      "yaw": -6.5890756,
+      "yaw": 3.687819,
       "yawLocked": false,
       "speedAmplifier": 2,
       "jumpBoostAmplifier": 0
@@ -202,7 +202,7 @@
         "W",
         "A"
       ],
-      "yaw": 19.542751,
+      "yaw": -17.46584,
       "yawLocked": false,
       "speedAmplifier": 2,
       "jumpBoostAmplifier": 0
@@ -212,7 +212,7 @@
         "W",
         "A"
       ],
-      "yaw": 4.85608,
+      "yaw": 15.248556,
       "yawLocked": false,
       "speedAmplifier": 2,
       "jumpBoostAmplifier": 0
@@ -222,7 +222,7 @@
         "W",
         "A"
       ],
-      "yaw": 13.851651,
+      "yaw": -7.3513165,
       "yawLocked": false,
       "speedAmplifier": 2,
       "jumpBoostAmplifier": 0
@@ -232,7 +232,7 @@
         "W",
         "A"
       ],
-      "yaw": -36.989513,
+      "yaw": 7.109554,
       "yawLocked": false,
       "speedAmplifier": 2,
       "jumpBoostAmplifier": 0
@@ -242,7 +242,7 @@
         "W",
         "A"
       ],
-      "yaw": 5.3409543,
+      "yaw": -0.56448245,
       "yawLocked": false,
       "speedAmplifier": 2,
       "jumpBoostAmplifier": 0
@@ -252,87 +252,7 @@
         "W",
         "A"
       ],
-      "yaw": -2.5897613,
-      "yawLocked": false,
-      "speedAmplifier": 2,
-      "jumpBoostAmplifier": 0
-    },
-    {
-      "keys": [
-        "W",
-        "A"
-      ],
-      "yaw": 6.5545406,
-      "yawLocked": false,
-      "speedAmplifier": 2,
-      "jumpBoostAmplifier": 0
-    },
-    {
-      "keys": [
-        "W",
-        "A"
-      ],
-      "yaw": 11.57444,
-      "yawLocked": false,
-      "speedAmplifier": 2,
-      "jumpBoostAmplifier": 0
-    },
-    {
-      "keys": [
-        "W",
-        "A"
-      ],
-      "yaw": -10.750068,
-      "yawLocked": false,
-      "speedAmplifier": 2,
-      "jumpBoostAmplifier": 0
-    },
-    {
-      "keys": [
-        "W",
-        "A"
-      ],
-      "yaw": -8.025752,
-      "yawLocked": false,
-      "speedAmplifier": 2,
-      "jumpBoostAmplifier": 0
-    },
-    {
-      "keys": [
-        "W",
-        "A"
-      ],
-      "yaw": 18.055378,
-      "yawLocked": false,
-      "speedAmplifier": 2,
-      "jumpBoostAmplifier": 0
-    },
-    {
-      "keys": [
-        "W",
-        "A"
-      ],
-      "yaw": -2.812236,
-      "yawLocked": false,
-      "speedAmplifier": 2,
-      "jumpBoostAmplifier": 0
-    },
-    {
-      "keys": [
-        "W",
-        "A"
-      ],
-      "yaw": 12.374541,
-      "yawLocked": false,
-      "speedAmplifier": 2,
-      "jumpBoostAmplifier": 0
-    },
-    {
-      "keys": [
-        "W",
-        "A"
-      ],
-      "yaw": 3.3838422,
+      "yaw": -9.792848,
       "yawLocked": false,
       "speedAmplifier": 2,
       "jumpBoostAmplifier": 0
@@ -342,7 +262,7 @@
         "W",
         "JUMP"
       ],
-      "yaw": -32.171207,
+      "yaw": -47.581985,
       "yawLocked": false,
       "speedAmplifier": 2,
       "jumpBoostAmplifier": 0
@@ -352,7 +272,7 @@
         "W",
         "A"
       ],
-      "yaw": 53.02364,
+      "yaw": 86.46059,
       "yawLocked": false,
       "speedAmplifier": 2,
       "jumpBoostAmplifier": 0
@@ -362,7 +282,7 @@
         "W",
         "A"
       ],
-      "yaw": -9.875503,
+      "yaw": -48.362206,
       "yawLocked": false,
       "speedAmplifier": 2,
       "jumpBoostAmplifier": 0
@@ -372,23 +292,107 @@
         "W",
         "A"
       ],
-      "yaw": 5.9393744,
+      "yaw": -106.738304,
       "yawLocked": false,
       "speedAmplifier": 2,
       "jumpBoostAmplifier": 0
     },
     {
       "keys": [
-        "W"
+        "W",
+        "A"
       ],
+      "yaw": -76.69466,
       "yawLocked": false,
       "speedAmplifier": 2,
       "jumpBoostAmplifier": 0
     },
     {
       "keys": [
-        "W"
+        "W",
+        "A"
       ],
+      "yaw": 156.82515,
+      "yawLocked": false,
+      "speedAmplifier": 2,
+      "jumpBoostAmplifier": 0
+    },
+    {
+      "keys": [
+        "W",
+        "JUMP"
+      ],
+      "yaw": 33.600204,
+      "yawLocked": false,
+      "speedAmplifier": 2,
+      "jumpBoostAmplifier": 0
+    },
+    {
+      "keys": [
+        "W",
+        "A"
+      ],
+      "yaw": 9.564082,
+      "yawLocked": false,
+      "speedAmplifier": 2,
+      "jumpBoostAmplifier": 0
+    },
+    {
+      "keys": [
+        "W",
+        "A"
+      ],
+      "yaw": 84.49799,
+      "yawLocked": false,
+      "speedAmplifier": 2,
+      "jumpBoostAmplifier": 0
+    },
+    {
+      "keys": [
+        "W",
+        "A"
+      ],
+      "yaw": -62.861454,
+      "yawLocked": false,
+      "speedAmplifier": 2,
+      "jumpBoostAmplifier": 0
+    },
+    {
+      "keys": [
+        "W",
+        "A"
+      ],
+      "yaw": -29.378578,
+      "yawLocked": false,
+      "speedAmplifier": 2,
+      "jumpBoostAmplifier": 0
+    },
+    {
+      "keys": [
+        "W",
+        "A"
+      ],
+      "yaw": -103.46403,
+      "yawLocked": false,
+      "speedAmplifier": 2,
+      "jumpBoostAmplifier": 0
+    },
+    {
+      "keys": [
+        "W",
+        "A"
+      ],
+      "yaw": -0.1436688,
+      "yawLocked": false,
+      "speedAmplifier": 2,
+      "jumpBoostAmplifier": 0
+    },
+    {
+      "keys": [
+        "W",
+        "A"
+      ],
+      "yaw": 13.736806,
       "yawLocked": false,
       "speedAmplifier": 2,
       "jumpBoostAmplifier": 0
@@ -526,7 +530,7 @@
     "startTick": 9,
     "landingTick": 37,
     "axis": "Z",
-    "goal": "MAX",
+    "goal": "MIN",
     "effort": "FAST",
     "defaultInputs": "FORCE_45",
     "defaultSlipperiness": "AIR",
@@ -547,16 +551,43 @@
       },
       {
         "tick": 32,
-        "constraints": [],
-        "override": {
-          "slipperiness": "DEFAULT",
-          "added": [],
-          "removed": []
-        }
+        "constraints": [
+          {
+            "range": false,
+            "field": "Z",
+            "op": "LE",
+            "value": -445.3,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false
+          }
+        ]
       },
       {
         "tick": 26,
-        "constraints": []
+        "constraints": [
+          {
+            "range": false,
+            "field": "X",
+            "op": "GE",
+            "value": -234.3,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false
+          },
+          {
+            "range": false,
+            "field": "Z",
+            "op": "GE",
+            "value": -446.3,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false
+          }
+        ]
       },
       {
         "tick": 27,
@@ -564,24 +595,63 @@
       },
       {
         "tick": 28,
-        "constraints": []
+        "constraints": [
+          {
+            "range": false,
+            "field": "Z",
+            "op": "LE",
+            "value": -445.3,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false
+          }
+        ]
       },
       {
         "tick": 29,
-        "constraints": []
+        "constraints": [
+          {
+            "range": false,
+            "field": "Z",
+            "op": "LE",
+            "value": -445.3,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false
+          }
+        ]
       },
       {
         "tick": 30,
-        "constraints": [],
-        "override": {
-          "slipperiness": "DEFAULT",
-          "added": [],
-          "removed": []
-        }
+        "constraints": [
+          {
+            "range": false,
+            "field": "Z",
+            "op": "LE",
+            "value": -445.3,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false
+          }
+        ]
       },
       {
         "tick": 31,
-        "constraints": [],
+        "constraints": [
+          {
+            "range": false,
+            "field": "Z",
+            "op": "LE",
+            "value": -445.3,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false
+          }
+        ],
         "override": {
           "slipperiness": "DEFAULT",
           "added": [],
@@ -590,12 +660,7 @@
       },
       {
         "tick": 33,
-        "constraints": [],
-        "override": {
-          "slipperiness": "DEFAULT",
-          "added": [],
-          "removed": []
-        }
+        "constraints": []
       },
       {
         "tick": 40,
@@ -607,7 +672,28 @@
       },
       {
         "tick": 35,
-        "constraints": []
+        "constraints": [
+          {
+            "range": false,
+            "field": "X",
+            "op": "LE",
+            "value": -231.7,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false
+          },
+          {
+            "range": false,
+            "field": "Z",
+            "op": "GE",
+            "value": -445.3,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false
+          }
+        ]
       },
       {
         "tick": 39,
@@ -618,21 +704,21 @@
         "constraints": [
           {
             "range": true,
-            "field": "X",
-            "op": "IN",
-            "value": 0.0,
-            "lo": -231.3,
-            "hi": -229.7,
-            "loInclusive": true,
-            "hiInclusive": true
-          },
-          {
-            "range": true,
             "field": "Z",
             "op": "IN",
             "value": 0.0,
             "lo": -444.3,
             "hi": -442.7,
+            "loInclusive": true,
+            "hiInclusive": true
+          },
+          {
+            "range": true,
+            "field": "X",
+            "op": "IN",
+            "value": 0.0,
+            "lo": -231.3,
+            "hi": -229.7,
             "loInclusive": true,
             "hiInclusive": true
           }
@@ -653,7 +739,18 @@
       },
       {
         "tick": 11,
-        "constraints": [],
+        "constraints": [
+          {
+            "range": false,
+            "field": "Z",
+            "op": "GE",
+            "value": -449.7,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false
+          }
+        ],
         "override": {
           "slipperiness": "DEFAULT",
           "added": [],
@@ -662,7 +759,18 @@
       },
       {
         "tick": 14,
-        "constraints": []
+        "constraints": [
+          {
+            "range": false,
+            "field": "Z",
+            "op": "GE",
+            "value": -448.7,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false
+          }
+        ]
       },
       {
         "tick": 9,
@@ -684,306 +792,258 @@
       },
       {
         "tick": 20,
-        "constraints": [
-          {
-            "range": false,
-            "field": "X",
-            "op": "GE",
-            "value": -236.7,
-            "lo": 0.0,
-            "hi": 0.0,
-            "loInclusive": false,
-            "hiInclusive": false
-          },
-          {
-            "range": false,
-            "field": "Z",
-            "op": "LE",
-            "value": -450.3,
-            "lo": 0.0,
-            "hi": 0.0,
-            "loInclusive": false,
-            "hiInclusive": false
-          }
-        ]
+        "constraints": []
       },
       {
         "tick": 15,
-        "constraints": [
-          {
-            "range": false,
-            "field": "Z",
-            "op": "LE",
-            "value": -450.3,
-            "lo": 0.0,
-            "hi": 0.0,
-            "loInclusive": false,
-            "hiInclusive": false
-          }
-        ]
+        "constraints": []
       },
       {
         "tick": 18,
-        "constraints": [
-          {
-            "range": false,
-            "field": "Z",
-            "op": "LE",
-            "value": -450.3,
-            "lo": 0.0,
-            "hi": 0.0,
-            "loInclusive": false,
-            "hiInclusive": false
-          }
-        ]
+        "constraints": []
       },
       {
         "tick": 19,
-        "constraints": [
-          {
-            "range": false,
-            "field": "Z",
-            "op": "LE",
-            "value": -450.3,
-            "lo": 0.0,
-            "hi": 0.0,
-            "loInclusive": false,
-            "hiInclusive": false
-          }
-        ]
+        "constraints": []
+      },
+      {
+        "tick": 12,
+        "constraints": []
+      },
+      {
+        "tick": 16,
+        "constraints": []
+      },
+      {
+        "tick": 17,
+        "constraints": []
+      },
+      {
+        "tick": 10,
+        "constraints": []
+      },
+      {
+        "tick": 13,
+        "constraints": []
       }
     ],
-    "selectedBlocks": [
-      {
-        "kind": "START",
-        "x": -238,
-        "y": 1,
-        "z": -448,
-        "box": [
-          -238.0,
-          1.0,
-          -448.0,
-          -237.0,
-          2.0,
-          -447.0
-        ]
-      },
-      {
-        "kind": "COLLISION",
-        "x": -234,
-        "y": 3,
-        "z": -445,
-        "box": [
-          -234.0,
-          3.0,
-          -445.0,
-          -233.0,
-          4.0,
-          -444.0
-        ]
-      },
-      {
-        "kind": "COLLISION",
-        "x": -238,
-        "y": 4,
-        "z": -450,
-        "box": [
-          -238.0,
-          4.0,
-          -450.0,
-          -237.0,
-          5.0,
-          -449.0
-        ]
-      },
-      {
-        "kind": "LAND",
-        "x": -231,
-        "y": 2,
-        "z": -444,
-        "box": [
-          -231.0,
-          2.0,
-          -444.0,
-          -230.0,
-          3.0,
-          -443.0
-        ]
-      }
-    ],
+    "selectedBlocks": [],
     "result": {
       "success": false,
-      "met": 1,
-      "total": 7,
+      "met": 7,
+      "total": 13,
       "startTick": 10,
       "landingTick": 38,
-      "durationMs": 19032,
-      "finishedAt": "23:19:27",
-      "objectiveValue": -445.3973405838687,
+      "durationMs": 169,
+      "durationNanos": 169595799,
+      "finishedAt": "20:57:17",
+      "objectiveValue": -445.2198179156255,
       "hasObjective": true,
       "outcomes": [
         {
           "field": "Z",
-          "tick": "T16",
-          "relation": "\u003c\u003d -450.3",
-          "found": "-450.0803479",
-          "margin": "-0.2196521"
+          "tick": "T12",
+          "relation": "\u003e\u003d -449.7",
+          "found": "-449.6953048",
+          "margin": "+0.0046952"
         },
         {
           "field": "Z",
-          "tick": "T19",
-          "relation": "\u003c\u003d -450.3",
-          "found": "-449.9035062",
-          "margin": "-0.3964938"
-        },
-        {
-          "field": "Z",
-          "tick": "T20",
-          "relation": "\u003c\u003d -450.3",
-          "found": "-449.8167778",
-          "margin": "-0.4832222"
+          "tick": "T15",
+          "relation": "\u003e\u003d -448.7",
+          "found": "-449.0338484",
+          "margin": "-0.3338484"
         },
         {
           "field": "X",
-          "tick": "T21",
-          "relation": "\u003e\u003d -236.7",
-          "found": "-235.9712148",
-          "margin": "+0.7287852"
+          "tick": "T27",
+          "relation": "\u003e\u003d -234.3",
+          "found": "-235.3790667",
+          "margin": "-1.0790667"
         },
         {
           "field": "Z",
-          "tick": "T21",
-          "relation": "\u003c\u003d -450.3",
-          "found": "-449.7166064",
-          "margin": "-0.5833936"
+          "tick": "T27",
+          "relation": "\u003e\u003d -446.3",
+          "found": "-446.8661944",
+          "margin": "-0.5661944"
+        },
+        {
+          "field": "Z",
+          "tick": "T29",
+          "relation": "\u003c\u003d -445.3",
+          "found": "-446.5877910",
+          "margin": "+1.2877910"
+        },
+        {
+          "field": "Z",
+          "tick": "T30",
+          "relation": "\u003c\u003d -445.3",
+          "found": "-446.4462767",
+          "margin": "+1.1462767"
+        },
+        {
+          "field": "Z",
+          "tick": "T31",
+          "relation": "\u003c\u003d -445.3",
+          "found": "-446.3017259",
+          "margin": "+1.0017259"
+        },
+        {
+          "field": "Z",
+          "tick": "T32",
+          "relation": "\u003c\u003d -445.3",
+          "found": "-446.1557154",
+          "margin": "+0.8557154"
+        },
+        {
+          "field": "Z",
+          "tick": "T33",
+          "relation": "\u003c\u003d -445.3",
+          "found": "-445.9284080",
+          "margin": "+0.6284080"
         },
         {
           "field": "X",
-          "tick": "T38",
-          "relation": "[-231.3, -229.7]",
-          "found": "-231.9936821",
-          "margin": ""
+          "tick": "T36",
+          "relation": "\u003c\u003d -231.7",
+          "found": "-233.2573437",
+          "margin": "+1.5573437"
+        },
+        {
+          "field": "Z",
+          "tick": "T36",
+          "relation": "\u003e\u003d -445.3",
+          "found": "-445.5059864",
+          "margin": "-0.2059864"
         },
         {
           "field": "Z",
           "tick": "T38",
           "relation": "[-444.3, -442.7]",
-          "found": "-445.3973406",
+          "found": "-445.2198179",
+          "margin": ""
+        },
+        {
+          "field": "X",
+          "tick": "T38",
+          "relation": "[-231.3, -229.7]",
+          "found": "-232.8126764",
           "margin": ""
         }
       ],
       "yaws": [
         {
           "tick": 10,
-          "yaw": -106.8450479493425
+          "yaw": -57.76833523451535
         },
         {
           "tick": 11,
-          "yaw": -55.79604465242352
+          "yaw": -9.874022871559355
         },
         {
           "tick": 12,
-          "yaw": -89.68882317745525
+          "yaw": -55.503351751470575
         },
         {
           "tick": 13,
-          "yaw": -36.614178057388486
+          "yaw": -12.68816047907086
         },
         {
           "tick": 14,
-          "yaw": -27.22426093163068
+          "yaw": -10.725205693476369
         },
         {
           "tick": 15,
-          "yaw": -19.68412562656485
+          "yaw": -14.47185587624821
         },
         {
           "tick": 16,
-          "yaw": -13.412742234119383
+          "yaw": -13.661171340909409
         },
         {
           "tick": 17,
-          "yaw": -6.465691813250545
+          "yaw": -14.862080953619536
         },
         {
           "tick": 18,
-          "yaw": 2.4956064497987756
+          "yaw": 0.800286913362811
         },
         {
           "tick": 19,
-          "yaw": 8.847519852208869
+          "yaw": -11.8947506422254
         },
         {
           "tick": 20,
-          "yaw": 9.812530029517431
+          "yaw": -14.45017230401686
         },
         {
           "tick": 21,
-          "yaw": 13.097947822648573
+          "yaw": -14.698376942108185
         },
         {
           "tick": 22,
-          "yaw": 13.39698382007046
+          "yaw": -16.100797056955432
         },
         {
           "tick": 23,
-          "yaw": 12.784514802511097
+          "yaw": -12.861003334475953
         },
         {
           "tick": 24,
-          "yaw": 13.2051180948298
+          "yaw": -11.845837371834499
         },
         {
           "tick": 25,
-          "yaw": 12.849721025640811
+          "yaw": -13.665796369855395
         },
         {
           "tick": 26,
-          "yaw": 12.639097149772487
+          "yaw": -58.04898275937375
         },
         {
           "tick": 27,
-          "yaw": -0.22877371494274712
+          "yaw": -13.54899247502019
         },
         {
           "tick": 28,
-          "yaw": 13.75140028643019
+          "yaw": -8.881451668378368
         },
         {
           "tick": 29,
-          "yaw": 12.951652155306245
+          "yaw": -13.704672321281013
         },
         {
           "tick": 30,
-          "yaw": 12.607982262336169
+          "yaw": -7.654397494435347
         },
         {
           "tick": 31,
-          "yaw": 14.39911584011723
+          "yaw": -11.18518133255183
         },
         {
           "tick": 32,
-          "yaw": 14.333143613038597
+          "yaw": -58.02450452723791
         },
         {
           "tick": 33,
-          "yaw": 14.213876569644471
+          "yaw": -12.697326983530125
         },
         {
           "tick": 34,
-          "yaw": -31.159968062448012
+          "yaw": -9.35283774049499
         },
         {
           "tick": 35,
-          "yaw": 17.137250322738417
+          "yaw": -8.112009688539388
         },
         {
           "tick": 36,
-          "yaw": -1.9377935235938253
+          "yaw": -4.908039043324527
         },
         {
           "tick": 37,
-          "yaw": 19.22048459604628
+          "yaw": -35.13387794200548
         }
       ]
     }
@@ -1161,16 +1221,16 @@
     },
     {
       "pos": [
-        -240.04764086870625,
+        -240.02953479556516,
         3.5,
-        -449.8591669743743
+        -449.8796609734979
       ],
       "vel": [
-        0.2866636117950654,
+        0.29654952887838015,
         -0.0784000015258789,
-        0.2398086501821309
+        0.22861892536094394
       ],
-      "yaw": -46.470924,
+      "yaw": -50.6138,
       "onGround": false,
       "sneaking": false,
       "wallCollision": false,
@@ -1178,16 +1238,16 @@
     },
     {
       "pos": [
-        -239.73840477304378,
+        -239.71194729508588,
         3.5,
-        -449.606456775896
+        -449.6357651532323
       ],
       "vel": [
-        0.2814048551628891,
+        0.28900463376519964,
         -0.0784000015258789,
-        0.22996628724288182
+        0.22194520283813396
       ],
-      "yaw": -15.25329,
+      "yaw": -9.019382,
       "onGround": true,
       "sneaking": false,
       "wallCollision": false,
@@ -1195,16 +1255,16 @@
     },
     {
       "pos": [
-        -239.13431162144363,
+        -239.1153447112198,
         3.919999986886978,
-        -449.1789649874019
+        -449.19353200154734
       ],
       "vel": [
-        0.32983489908487357,
+        0.3257450486270331,
         0.33319999363422365,
-        0.23341054362902794
+        0.24145932886611873
       ],
-      "yaw": -58.52497,
+      "yaw": -54.38943,
       "onGround": false,
       "sneaking": false,
       "wallCollision": false,
@@ -1212,16 +1272,16 @@
     },
     {
       "pos": [
-        -238.7832918215832,
+        -238.76643494511222,
         4.2531999805212015,
-        -448.93048199559377
+        -448.9402676877987
       ],
       "vel": [
-        0.3194280270788477,
+        0.31750789630841453,
         0.24813599859094576,
-        0.2261195290621457
+        0.23047053215334032
       ],
-      "yaw": -9.570049,
+      "yaw": -17.99598,
       "onGround": false,
       "sneaking": false,
       "wallCollision": false,
@@ -1229,16 +1289,16 @@
     },
     {
       "pos": [
-        -238.43962919227653,
+        -238.4259566163882,
         4.501335979112147,
-        -448.6949477918174
+        -448.6976183714091
       ],
       "vel": [
-        0.31273300168196694,
+        0.30983528806825694,
         0.16477328182606651,
-        0.21433613161361187
+        0.2208108842783151
       ],
-      "yaw": -23.771889,
+      "yaw": -17.072283,
       "onGround": false,
       "sneaking": false,
       "wallCollision": false,
@@ -1246,16 +1306,16 @@
     },
     {
       "pos": [
-        -238.10242099980604,
+        -238.09233637980702,
         4.666109260938214,
-        -448.47184154359894
+        -448.4663083245313
       ],
       "vel": [
-        0.3068594639917685,
+        0.3035944240384025,
         0.08307781780646721,
-        0.2030266917300078
+        0.21049214872510855
       ],
-      "yaw": -25.286144,
+      "yaw": -21.18637,
       "onGround": false,
       "sneaking": false,
       "wallCollision": false,
@@ -1263,16 +1323,16 @@
     },
     {
       "pos": [
-        -237.77157197759436,
+        -237.76531611220196,
         4.749187078744681,
-        -448.2587921036072
+        -448.24453834744065
       ],
       "vel": [
-        0.30107261888948805,
+        0.29758845209705115,
         0.0030162615090425808,
-        0.19387499597988905
+        0.20181068496866145
       ],
-      "yaw": -22.32543,
+      "yaw": -19.297415,
       "onGround": false,
       "sneaking": false,
       "wallCollision": false,
@@ -1280,16 +1340,16 @@
     },
     {
       "pos": [
-        -237.44562771507222,
+        -237.44356505097477,
         4.749187078744681,
-        -448.057344301187
+        -448.0331296867113
       ],
       "vel": [
-        0.29660928744337445,
+        0.29279347415500506,
         -0.0784000015258789,
-        0.18331750548554526
+        0.19238188680813015
       ],
-      "yaw": -28.068146,
+      "yaw": -23.33834,
       "onGround": false,
       "sneaking": false,
       "wallCollision": false,
@@ -1297,16 +1357,16 @@
     },
     {
       "pos": [
-        -237.12415041615424,
+        -237.12778598433528,
         4.670787077218802,
-        -447.86644206460693
+        -447.82859765663
       ],
       "vel": [
-        0.29254435044644295,
+        0.2873589589235617,
         -0.1552320045166016,
-        0.17372104029448723
+        0.18612415273805344
       ],
-      "yaw": -28.041222,
+      "yaw": -17.138706,
       "onGround": false,
       "sneaking": false,
       "wallCollision": false,
@@ -1314,16 +1374,16 @@
     },
     {
       "pos": [
-        -236.80603184722602,
+        -236.81827130467116,
         4.5155550727022,
-        -447.68804143105484
+        -447.62886855373216
       ],
       "vel": [
-        0.28948790606767355,
+        0.2816583666116933,
         -0.230527368912964,
-        0.16234458121114767
+        0.18175348887514
       ],
-      "yaw": -34.6303,
+      "yaw": -13.450888,
       "onGround": false,
       "sneaking": false,
       "wallCollision": false,
@@ -1331,16 +1391,16 @@
     },
     {
       "pos": [
-        -236.49400865245192,
+        -236.51139545710197,
         4.285027703789236,
-        -447.5127304237543
+        -447.4407888150564
       ],
       "vel": [
-        0.28394111542756073,
+        0.2792570293361126,
         -0.30431682745754424,
-        0.159533021241218
+        0.1711525671275313
       ],
-      "yaw": -15.087547,
+      "yaw": -30.916727,
       "onGround": false,
       "sneaking": false,
       "wallCollision": false,
@@ -1348,16 +1408,16 @@
     },
     {
       "pos": [
-        -236.18871065263426,
+        -236.20947254714537,
         3.980710876331692,
-        -447.33836970031865
+        -447.2568995288272
       ],
       "vel": [
-        0.27782118784084425,
+        0.27474985597874235,
         -0.37663049823865513,
-        0.1586682628992519
+        0.1673392552912593
       ],
-      "yaw": -10.231467,
+      "yaw": -15.668171,
       "onGround": false,
       "sneaking": false,
       "wallCollision": false,
@@ -1365,16 +1425,16 @@
     },
     {
       "pos": [
-        -235.89370216558655,
+        -235.91061382121168,
         3.6040803780930366,
-        -447.1601925521997
+        -447.07982807370314
       ],
       "vel": [
-        0.2684577309503099,
+        0.2719614484375363,
         -0.44749789698341763,
-        0.1621412094611217
+        0.161135028806775
       ],
-      "yaw": 3.620184,
+      "yaw": -23.019487,
       "onGround": false,
       "sneaking": false,
       "wallCollision": false,
@@ -1382,16 +1442,16 @@
     },
     {
       "pos": [
-        -235.59977960371614,
+        -235.6159329690453,
         3.156582481109619,
-        -446.9928089428672
+        -446.90605206016744
       ],
       "vel": [
-        0.26746953901049914,
+        0.26815958319971783,
         -0.5169479491049732,
-        0.1523190888823585
+        0.15813617687495105
       ],
-      "yaw": -33.36933,
+      "yaw": -15.909933,
       "onGround": false,
       "sneaking": false,
       "wallCollision": false,
@@ -1399,16 +1459,16 @@
     },
     {
       "pos": [
-        -235.3074435079569,
+        -235.32493027453916,
         3.0,
-        -446.8329003554501
+        -446.73549988933377
       ],
       "vel": [
-        0.26602585480773394,
+        0.26481245963244293,
         -0.0784000015258789,
-        0.1455168187433826
+        0.1552024799315417
       ],
-      "yaw": -28.028378,
+      "yaw": -16.474415,
       "onGround": true,
       "sneaking": false,
       "wallCollision": false,
@@ -1416,16 +1476,16 @@
     },
     {
       "pos": [
-        -234.86513125378468,
+        -234.88776892817842,
         3.0,
-        -446.6421695169909
+        -446.5218394499589
       ],
       "vel": [
-        0.24150251882917628,
+        0.23869012283744334,
         -0.0784000015258789,
-        0.10413904989473033
+        0.11665861344888485
       ],
-      "yaw": -30.61814,
+      "yaw": -26.267262,
       "onGround": true,
       "sneaking": false,
       "wallCollision": false,
@@ -1433,16 +1493,33 @@
     },
     {
       "pos": [
-        -234.4536538714263,
+        -234.2856600325243,
+        3.0,
+        -446.29993948940574
+      ],
+      "vel": [
+        0.32875149521248936,
+        -0.0784000015258789,
+        0.12115739253479442
+      ],
+      "yaw": -73.84924,
+      "onGround": false,
+      "sneaking": false,
+      "wallCollision": false,
+      "softCollision": false
+    },
+    {
+      "pos": [
+        -233.94297965267148,
         2.921599998474121,
-        -446.47299068338
+        -446.1568279161982
       ],
       "vel": [
-        0.22466667686330122,
+        0.3118391546532217,
         -0.1552320045166016,
-        0.09237165388077925
+        0.13023153537212923
       ],
-      "yaw": -24.063599,
+      "yaw": 12.611343,
       "onGround": false,
       "sneaking": false,
       "wallCollision": false,
@@ -1450,16 +1527,16 @@
     },
     {
       "pos": [
-        -234.2070628236632,
+        -233.60547965908646,
         2.7663679939575196,
-        -446.3666442492824
+        -446.02241788474845
       ],
       "vel": [
-        0.2243978599315265,
+        0.30712500301365836,
         -0.230527368912964,
-        0.09677525781785526
+        0.1223131321443486
       ],
-      "yaw": -12.489159,
+      "yaw": -35.750862,
       "onGround": false,
       "sneaking": false,
       "wallCollision": false,
@@ -1467,16 +1544,16 @@
     },
     {
       "pos": [
-        -233.95851895263246,
+        -233.301742570112,
         2.5358406250445555,
-        -446.26022932784275
+        -445.925883076016
       ],
       "vel": [
-        0.2261749291563011,
+        0.2764007589325842,
         -0.30431682745754424,
-        0.09683758130091343
+        0.08784667847821655
       ],
-      "yaw": -23.239227,
+      "yaw": -142.48917,
       "onGround": false,
       "sneaking": false,
       "wallCollision": false,
@@ -1484,16 +1561,16 @@
     },
     {
       "pos": [
-        -233.7070887960147,
+        -233.0512079154693,
         2.2315237975870112,
-        -446.15721794027684
+        -445.84067165299376
       ],
       "vel": [
-        0.2288014491161784,
+        0.22798654229538512,
         -0.37663049823865513,
-        0.09374036538655921
+        0.07754239718500217
       ],
-      "yaw": -31.26498,
+      "yaw": -219.18382,
       "onGround": false,
       "sneaking": false,
       "wallCollision": false,
@@ -1501,16 +1578,16 @@
     },
     {
       "pos": [
-        -233.45618920983273,
+        -232.79840705058308,
         2.0,
-        -446.04977927454354
+        -445.77088786110266
       ],
       "vel": [
-        0.22831863000567496,
+        0.23004879367642042,
         -0.0784000015258789,
-        0.09776918863498626
+        0.06350325245102884
       ],
-      "yaw": -13.209602,
+      "yaw": -62.358673,
       "onGround": true,
       "sneaking": false,
       "wallCollision": false,
@@ -1518,67 +1595,16 @@
     },
     {
       "pos": [
-        -233.0686654113414,
-        2.0,
-        -445.8638283518235
-      ],
-      "vel": [
-        0.2115880185527631,
-        -0.0784000015258789,
-        0.101529215598043
-      ],
-      "yaw": -16.02184,
-      "onGround": true,
-      "sneaking": false,
-      "wallCollision": false,
-      "softCollision": false
-    },
-    {
-      "pos": [
-        -232.72046985015464,
-        2.0,
-        -445.642041207258
-      ],
-      "vel": [
-        0.19011479849031168,
-        -0.0784000015258789,
-        0.1210957949983681
-      ],
-      "yaw": -3.6472979,
-      "onGround": true,
-      "sneaking": false,
-      "wallCollision": false,
-      "softCollision": false
-    },
-    {
-      "pos": [
-        -232.4010831122675,
-        2.0,
-        -445.3928332600408
-      ],
-      "vel": [
-        0.17438517914169152,
-        -0.0784000015258789,
-        0.13606755498518802
-      ],
-      "yaw": -0.26345563,
-      "onGround": true,
-      "sneaking": false,
-      "wallCollision": false,
-      "softCollision": false
-    },
-    {
-      "pos": [
-        -232.02378613148957,
+        -232.38633248159329,
         2.419999986886978,
-        -444.93743724793853
+        -445.37570505585813
       ],
       "vel": [
-        0.20600417543266542,
+        0.22499274080192763,
         0.33319999363422365,
-        0.24864625148875416
+        0.21576983672574776
       ],
-      "yaw": -32.43466,
+      "yaw": -28.758469,
       "onGround": false,
       "sneaking": false,
       "wallCollision": false,
@@ -1586,16 +1612,16 @@
     },
     {
       "pos": [
-        -231.8070364390787,
+        -232.13793339539413,
         2.753199980521202,
-        -444.6651154019709
+        -445.14861697881764
       ],
       "vel": [
-        0.1972422257783783,
+        0.22604317495576234,
         0.24813599859094576,
-        0.24781288697244044
+        0.20665015606244938
       ],
-      "yaw": 20.588978,
+      "yaw": -19.194386,
       "onGround": false,
       "sneaking": false,
       "wallCollision": false,
@@ -1603,16 +1629,16 @@
     },
     {
       "pos": [
-        -231.59514691294518,
+        -231.92091170938804,
         3.001335979112148,
-        -444.3958209786697
+        -444.91758214348243
       ],
       "vel": [
-        0.19281947433852234,
+        0.19748973995717656,
         0.16477328182606651,
-        0.24505793226664932
+        0.21024170621418012
       ],
-      "yaw": 10.713475,
+      "yaw": 65.303604,
       "onGround": false,
       "sneaking": false,
       "wallCollision": false,
@@ -1620,16 +1646,16 @@
     },
     {
       "pos": [
-        -231.38998108522478,
+        -231.70583621503633,
         3.166109260938214,
-        -444.1278814491225
+        -444.6881899491897
       ],
       "vel": [
-        0.18670090860624697,
+        0.19571870550063342,
         0.08307781780646721,
-        0.2438249789149018
+        0.20874690282247435
       ],
-      "yaw": 16.65285,
+      "yaw": 2.44215,
       "onGround": false,
       "sneaking": false,
       "wallCollision": false,
@@ -1637,33 +1663,16 @@
     },
     {
       "pos": [
-        -231.2105807281336,
-        3.2491870787446815,
-        -443.8596447471899
+        -231.48540025310888,
+        3.2000000476837163,
+        -444.4713804853246
       ],
       "vel": [
-        0.1632543296579303,
-        0.0030162615090425808,
-        0.24409540579344832
-      ],
-      "yaw": 16.65285,
-      "onGround": false,
-      "sneaking": false,
-      "wallCollision": false,
-      "softCollision": false
-    },
-    {
-      "pos": [
-        -231.05462694999076,
-        3.2491870787446815,
-        -443.59113761837875
-      ],
-      "vel": [
-        0.1419179422000511,
+        0.2005967311351378,
         -0.0784000015258789,
-        0.24434149426001792
+        0.19729661780327834
       ],
-      "yaw": 16.65285,
+      "yaw": -26.936428,
       "onGround": false,
       "sneaking": false,
       "wallCollision": false,
@@ -1671,16 +1680,16 @@
     },
     {
       "pos": [
-        -230.92000955930578,
-        3.1707870772188027,
-        -443.32238440110103
+        -231.28271686953093,
+        3.1216000461578375,
+        -444.2999999987346
       ],
       "vel": [
-        0.12250182905381203,
+        0.18444188437151843,
         -0.1552320045166016,
-        0.2445654347710502
+        0.1559562472915057
       ],
-      "yaw": 16.65285,
+      "yaw": -130.40045,
       "onGround": false,
       "sneaking": false,
       "wallCollision": false,
@@ -1688,16 +1697,84 @@
     },
     {
       "pos": [
-        -230.79750773025197,
-        3.015555072702201,
-        -443.07781896632997
+        -231.09625294135756,
+        3.0,
+        -444.16996500306794
       ],
       "vel": [
-        0.11147666765170727,
+        0.16968217952797104,
+        -0.0784000015258789,
+        0.11833184946698509
+      ],
+      "yaw": -130.54411,
+      "onGround": true,
+      "sneaking": false,
+      "wallCollision": false,
+      "softCollision": false
+    },
+    {
+      "pos": [
+        -230.86974585044382,
+        3.0,
+        -444.22453463499096
+      ],
+      "vel": [
+        0.1236728860038358,
+        -0.0784000015258789,
+        -0.02979502249073596
+      ],
+      "yaw": -116.807304,
+      "onGround": true,
+      "sneaking": false,
+      "wallCollision": false,
+      "softCollision": false
+    },
+    {
+      "pos": [
+        -230.58688070035993,
+        3.0,
+        -444.3347666173444
+      ],
+      "vel": [
+        0.15444438988492204,
+        -0.0784000015258789,
+        -0.06018666935582077
+      ],
+      "yaw": -116.807304,
+      "onGround": true,
+      "sneaking": false,
+      "wallCollision": false,
+      "softCollision": false
+    },
+    {
+      "pos": [
+        -230.432436310475,
+        2.921599998474121,
+        -444.39495328670023
+      ],
+      "vel": [
+        0.08432664667192902,
+        -0.1552320045166016,
+        -0.03286192528527711
+      ],
+      "yaw": -116.807304,
+      "onGround": false,
+      "sneaking": false,
+      "wallCollision": false,
+      "softCollision": false
+    },
+    {
+      "pos": [
+        -230.34810966380306,
+        2.7663679939575196,
+        -444.4278152119855
+      ],
+      "vel": [
+        0.07673725068300973,
         -0.230527368912964,
-        0.22255455205563945
+        -0.029904352871440457
       ],
-      "yaw": 16.65285,
+      "yaw": -116.807304,
       "onGround": false,
       "sneaking": false,
       "wallCollision": false,
@@ -1705,118 +1782,50 @@
     },
     {
       "pos": [
-        -230.68603106260025,
-        3.0,
-        -442.85526441427436
+        -230.30000001192093,
+        2.5358406250445555,
+        -444.4577195648569
       ],
       "vel": [
-        0.10144377048664557,
-        -0.0784000015258789,
-        0.2025246482073573
+        0.0,
+        -0.30431682745754424,
+        -0.027212961897283682
       ],
-      "yaw": 16.65285,
-      "onGround": true,
+      "yaw": -116.807304,
+      "onGround": false,
+      "sneaking": false,
+      "wallCollision": true,
+      "softCollision": false
+    },
+    {
+      "pos": [
+        -230.30000001192093,
+        2.2315237975870112,
+        -444.4849325267542
+      ],
+      "vel": [
+        0.0,
+        -0.37663049823865513,
+        -0.024763796040216477
+      ],
+      "yaw": -116.807304,
+      "onGround": false,
       "sneaking": false,
       "wallCollision": false,
       "softCollision": false
     },
     {
       "pos": [
-        -230.5845872921136,
-        3.0,
-        -442.652739766067
-      ],
-      "vel": [
-        0.055388305119205665,
-        -0.0784000015258789,
-        0.11057847076519703
-      ],
-      "yaw": 16.65285,
-      "onGround": true,
-      "sneaking": false,
-      "wallCollision": false,
-      "softCollision": false
-    },
-    {
-      "pos": [
-        -230.5291989869944,
-        3.0,
-        -442.5421612953018
-      ],
-      "vel": [
-        0.030242018107776162,
-        -0.0784000015258789,
-        0.06037585205061144
-      ],
-      "yaw": 16.65285,
-      "onGround": true,
-      "sneaking": false,
-      "wallCollision": false,
-      "softCollision": false
-    },
-    {
-      "pos": [
-        -230.49895696888663,
-        3.0,
-        -442.4817854432512
-      ],
-      "vel": [
-        0.016512143804774674,
-        -0.0784000015258789,
-        0.03296521904863066
-      ],
-      "yaw": 16.65285,
-      "onGround": true,
-      "sneaking": false,
-      "wallCollision": false,
-      "softCollision": false
-    },
-    {
-      "pos": [
-        -230.48244482508187,
-        3.0,
-        -442.4488202242026
-      ],
-      "vel": [
-        0.009015631564596267,
-        -0.0784000015258789,
-        0.01799901169118484
-      ],
-      "yaw": 16.65285,
-      "onGround": true,
-      "sneaking": false,
-      "wallCollision": false,
-      "softCollision": false
-    },
-    {
-      "pos": [
-        -230.47342919351726,
-        3.0,
-        -442.43082121251143
-      ],
-      "vel": [
-        0.004922535406034984,
-        -0.0784000015258789,
-        0.009827461524872402
-      ],
-      "yaw": 16.65285,
-      "onGround": true,
-      "sneaking": false,
-      "wallCollision": false,
-      "softCollision": false
-    },
-    {
-      "pos": [
-        -230.47342919351726,
-        3.0,
-        -442.42099375098655
+        -230.30000001192093,
+        2.0,
+        -444.5096963227944
       ],
       "vel": [
         0.0,
         -0.0784000015258789,
-        0.005365794615831475
+        -0.022535055046053392
       ],
-      "yaw": 16.65285,
+      "yaw": -116.807304,
       "onGround": true,
       "sneaking": false,
       "wallCollision": false,
@@ -1824,16 +1833,16 @@
     },
     {
       "pos": [
-        -230.47342919351726,
-        3.0,
-        -442.4156279563707
+        -230.30000001192093,
+        2.0,
+        -444.53223137784045
       ],
       "vel": [
         0.0,
         -0.0784000015258789,
-        0.0029297242005391494
+        -0.012304141484303517
       ],
-      "yaw": 16.65285,
+      "yaw": -116.807304,
       "onGround": true,
       "sneaking": false,
       "wallCollision": false,
@@ -1841,16 +1850,50 @@
     },
     {
       "pos": [
-        -230.47342919351726,
-        3.0,
-        -442.4156279563707
+        -230.30000001192093,
+        2.0,
+        -444.54453551932477
+      ],
+      "vel": [
+        0.0,
+        -0.0784000015258789,
+        -0.006718062030750278
+      ],
+      "yaw": -116.807304,
+      "onGround": true,
+      "sneaking": false,
+      "wallCollision": false,
+      "softCollision": false
+    },
+    {
+      "pos": [
+        -230.30000001192093,
+        2.0,
+        -444.5512535813555
+      ],
+      "vel": [
+        0.0,
+        -0.0784000015258789,
+        -0.003668062294844725
+      ],
+      "yaw": -116.807304,
+      "onGround": true,
+      "sneaking": false,
+      "wallCollision": false,
+      "softCollision": false
+    },
+    {
+      "pos": [
+        -230.30000001192093,
+        2.0,
+        -444.5512535813555
       ],
       "vel": [
         0.0,
         -0.0784000015258789,
         0.0
       ],
-      "yaw": 16.65285,
+      "yaw": -116.807304,
       "onGround": true,
       "sneaking": false,
       "wallCollision": false,
@@ -1858,16 +1901,16 @@
     },
     {
       "pos": [
-        -230.47342919351726,
-        3.0,
-        -442.4156279563707
+        -230.30000001192093,
+        2.0,
+        -444.5512535813555
       ],
       "vel": [
         0.0,
         -0.0784000015258789,
         0.0
       ],
-      "yaw": 16.65285,
+      "yaw": -116.807304,
       "onGround": true,
       "sneaking": false,
       "wallCollision": false,
@@ -1875,16 +1918,16 @@
     },
     {
       "pos": [
-        -230.47342919351726,
-        3.0,
-        -442.4156279563707
+        -230.30000001192093,
+        2.0,
+        -444.5512535813555
       ],
       "vel": [
         0.0,
         -0.0784000015258789,
         0.0
       ],
-      "yaw": 16.65285,
+      "yaw": -116.807304,
       "onGround": true,
       "sneaking": false,
       "wallCollision": false,
@@ -1892,16 +1935,16 @@
     },
     {
       "pos": [
-        -230.47342919351726,
-        3.0,
-        -442.4156279563707
+        -230.30000001192093,
+        2.0,
+        -444.5512535813555
       ],
       "vel": [
         0.0,
         -0.0784000015258789,
         0.0
       ],
-      "yaw": 16.65285,
+      "yaw": -116.807304,
       "onGround": true,
       "sneaking": false,
       "wallCollision": false,
@@ -1909,16 +1952,16 @@
     },
     {
       "pos": [
-        -230.47342919351726,
-        3.0,
-        -442.4156279563707
+        -230.30000001192093,
+        2.0,
+        -444.5512535813555
       ],
       "vel": [
         0.0,
         -0.0784000015258789,
         0.0
       ],
-      "yaw": 16.65285,
+      "yaw": -116.807304,
       "onGround": true,
       "sneaking": false,
       "wallCollision": false,
@@ -1926,16 +1969,16 @@
     },
     {
       "pos": [
-        -230.47342919351726,
-        3.0,
-        -442.4156279563707
+        -230.30000001192093,
+        2.0,
+        -444.5512535813555
       ],
       "vel": [
         0.0,
         -0.0784000015258789,
         0.0
       ],
-      "yaw": 16.65285,
+      "yaw": -116.807304,
       "onGround": true,
       "sneaking": false,
       "wallCollision": false,
@@ -1943,16 +1986,16 @@
     },
     {
       "pos": [
-        -230.47342919351726,
-        3.0,
-        -442.4156279563707
+        -230.30000001192093,
+        2.0,
+        -444.5512535813555
       ],
       "vel": [
         0.0,
         -0.0784000015258789,
         0.0
       ],
-      "yaw": 16.65285,
+      "yaw": -116.807304,
       "onGround": true,
       "sneaking": false,
       "wallCollision": false,
@@ -1960,16 +2003,16 @@
     },
     {
       "pos": [
-        -230.47342919351726,
-        3.0,
-        -442.4156279563707
+        -230.30000001192093,
+        2.0,
+        -444.5512535813555
       ],
       "vel": [
         0.0,
         -0.0784000015258789,
         0.0
       ],
-      "yaw": 16.65285,
+      "yaw": -116.807304,
       "onGround": true,
       "sneaking": false,
       "wallCollision": false,
@@ -1977,16 +2020,16 @@
     },
     {
       "pos": [
-        -230.47342919351726,
-        3.0,
-        -442.4156279563707
+        -230.30000001192093,
+        2.0,
+        -444.5512535813555
       ],
       "vel": [
         0.0,
         -0.0784000015258789,
         0.0
       ],
-      "yaw": 16.65285,
+      "yaw": -116.807304,
       "onGround": true,
       "sneaking": false,
       "wallCollision": false,
@@ -1994,16 +2037,16 @@
     },
     {
       "pos": [
-        -230.47342919351726,
-        3.0,
-        -442.4156279563707
+        -230.30000001192093,
+        2.0,
+        -444.5512535813555
       ],
       "vel": [
         0.0,
         -0.0784000015258789,
         0.0
       ],
-      "yaw": 16.65285,
+      "yaw": -116.807304,
       "onGround": true,
       "sneaking": false,
       "wallCollision": false,
@@ -2011,16 +2054,33 @@
     },
     {
       "pos": [
-        -230.47342919351726,
-        3.0,
-        -442.4156279563707
+        -230.30000001192093,
+        2.0,
+        -444.5512535813555
       ],
       "vel": [
         0.0,
         -0.0784000015258789,
         0.0
       ],
-      "yaw": 16.65285,
+      "yaw": -116.807304,
+      "onGround": true,
+      "sneaking": false,
+      "wallCollision": false,
+      "softCollision": false
+    },
+    {
+      "pos": [
+        -230.30000001192093,
+        2.0,
+        -444.5512535813555
+      ],
+      "vel": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "yaw": -116.807304,
       "onGround": true,
       "sneaking": false,
       "wallCollision": false,
