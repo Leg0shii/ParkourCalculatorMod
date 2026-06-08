@@ -3,9 +3,20 @@ package de.legoshi.parkourcalc.core.save;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
+import de.legoshi.parkourcalc.core.sim.AABB;
+import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
+import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
+import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
+import de.legoshi.parkourcalc.core.anglesolver.Constraint;
+import de.legoshi.parkourcalc.core.anglesolver.Potion;
+import de.legoshi.parkourcalc.core.anglesolver.PotionDose;
+import de.legoshi.parkourcalc.core.anglesolver.Slipperiness;
+import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
+import de.legoshi.parkourcalc.core.anglesolver.StateOverride;
+import de.legoshi.parkourcalc.core.anglesolver.TickConstraints;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -18,13 +29,13 @@ import java.util.TimeZone;
 /** Pure save/load logic; Gson stays within the 2.2.4 subset (MC 1.8.9 ships it). */
 public final class SaveIO {
 
-    public static Result<String> save(FileSystemSaveStore store, String rawName, InputData inputData, Vec3dCore startPos, Vec3dCore startVel, float startYaw) {
+    public static Result<String> save(FileSystemSaveStore store, String rawName, InputData inputData, Vec3dCore startPos, Vec3dCore startVel, float startYaw, AngleSolverState angleSolver, List<TickState> debugStates) {
         String name = sanitize(rawName);
         if (name == null) {
             return Result.failure("Invalid save name. Use letters, numbers, dashes, or underscores.");
         }
 
-        SaveFile file = buildFile(store, inputData, startPos, startVel, startYaw);
+        SaveFile file = buildFile(store, inputData, startPos, startVel, startYaw, angleSolver, debugStates);
         String json = new GsonBuilder().setPrettyPrinting().create().toJson(file);
 
         try {
@@ -75,6 +86,57 @@ public final class SaveIO {
         }
     }
 
+    /** Rebuilds the Angle Solver problem from the save. Always resets first, so a pre-feature save yields an empty solver. */
+    public static void applyAngleSolverTo(SaveFile file, AngleSolverState state) {
+        if (state == null) return;
+        state.reset();
+        SaveFile.AngleSolver a = file.angleSolver;
+        if (a == null) return;
+
+        state.setStartTick(a.startTick);
+        state.setLandingTick(a.landingTick);
+        state.setAxis(parseEnum(AngleSolverState.Axis.class, a.axis, AngleSolverState.Axis.X));
+        state.setGoal(parseEnum(AngleSolverState.Goal.class, a.goal, AngleSolverState.Goal.MAX));
+        state.setEffort(parseEnum(AngleSolverState.Effort.class, a.effort, AngleSolverState.Effort.FAST));
+        state.setDefaultInputs(parseEnum(AngleSolverState.InputMode.class, a.defaultInputs, AngleSolverState.InputMode.FORCE_45));
+        state.setDefaultSlipperiness(parseEnum(Slipperiness.class, a.defaultSlipperiness, Slipperiness.AIR));
+
+        if (a.defaultPotions != null) {
+            for (SaveFile.Dose d : a.defaultPotions) {
+                PotionDose dose = toDose(d);
+                if (dose != null) state.getDefaultPotions().add(dose);
+            }
+        }
+
+        if (a.ticks != null) {
+            for (SaveFile.Tick t : a.ticks) {
+                if (t == null) continue;
+                TickConstraints tc = state.tickConstraints(t.tick);
+                if (t.constraints != null) {
+                    for (SaveFile.Constraint c : t.constraints) {
+                        Constraint constraint = toConstraint(c);
+                        if (constraint != null) tc.getConstraints().add(constraint);
+                    }
+                }
+                applyOverride(t.override, tc.getOverride());
+            }
+        }
+
+        if (a.selectedBlocks != null) {
+            for (SaveFile.BlockSel b : a.selectedBlocks) {
+                BlockSelection sel = toBlockSelection(b);
+                if (sel == null) continue;
+                switch (sel.kind) {
+                    case START: state.setStartBlock(sel); break;
+                    case LAND: state.setLandBlock(sel); break;
+                    case COLLISION: state.addCollisionBlock(sel); break;
+                }
+            }
+        }
+
+        state.setResult(toResult(a.result));
+    }
+
     public static Vec3dCore posOf(SaveFile.Start s) {
         return new Vec3dCore(s.pos[0], s.pos[1], s.pos[2]);
     }
@@ -114,8 +176,7 @@ public final class SaveIO {
         return cleaned;
     }
 
-    private static SaveFile buildFile(FileSystemSaveStore store, InputData inputData,
-                                      Vec3dCore startPos, Vec3dCore startVel, float startYaw) {
+    private static SaveFile buildFile(FileSystemSaveStore store, InputData inputData, Vec3dCore startPos, Vec3dCore startVel, float startYaw, AngleSolverState angleSolver, List<TickState> debugStates) {
         SaveFile file = new SaveFile();
         file.version = SaveFile.FORMAT_VERSION;
         file.createdAt = nowIso8601();
@@ -129,13 +190,35 @@ public final class SaveIO {
         start.yaw = startYaw;
         file.start = start;
 
-        List<SaveFile.Row> rows = new ArrayList<SaveFile.Row>(inputData.size());
+        List<SaveFile.Row> rows = new ArrayList<>(inputData.size());
         for (InputRow row : inputData.getRows()) {
             rows.add(toSaveRow(row));
         }
         file.rows = rows;
 
+        file.angleSolver = toSaveAngleSolver(angleSolver);
+
+        if (debugStates != null) {
+            List<SaveFile.DebugTick> dbg = new ArrayList<>(debugStates.size());
+            for (TickState s : debugStates) dbg.add(toDebugTick(s));
+            file.debug = dbg;
+        }
+
         return file;
+    }
+
+    private static SaveFile.DebugTick toDebugTick(TickState s) {
+        SaveFile.DebugTick d = new SaveFile.DebugTick();
+        d.pos = new double[] { s.position.x, s.position.y, s.position.z };
+        d.vel = new double[] { s.velocity.x, s.velocity.y, s.velocity.z };
+        d.yaw = s.yaw;
+        d.onGround = s.onGround;
+        d.sneaking = s.sneaking;
+        d.wallCollision = s.wallCollision;
+        d.softCollision = s.softCollision;
+        double angle = s.collisionAngleDegrees;
+        d.collisionAngle = (Double.isNaN(angle) || Double.isInfinite(angle)) ? null : angle;
+        return d;
     }
 
     private static SaveFile.World toWorld(WorldDescriptor desc) {
@@ -178,6 +261,197 @@ public final class SaveIO {
             row.setJumpBoostAmplifier(r.jumpBoostAmplifier);
         }
         return row;
+    }
+
+    private static SaveFile.AngleSolver toSaveAngleSolver(AngleSolverState s) {
+        if (s == null) return null;
+        SaveFile.AngleSolver a = new SaveFile.AngleSolver();
+        a.startTick = s.getStartTick();
+        a.landingTick = s.getLandingTick();
+        a.axis = s.getAxis().name();
+        a.goal = s.getGoal().name();
+        a.effort = s.getEffort().name();
+        a.defaultInputs = s.getDefaultInputs().name();
+        a.defaultSlipperiness = s.getDefaultSlipperiness().name();
+        for (PotionDose d : s.getDefaultPotions()) {
+            a.defaultPotions.add(toSaveDose(d));
+        }
+        for (Integer tick : s.populatedTicks()) {
+            TickConstraints tc = s.tickConstraintsOrNull(tick);
+            if (tc == null) continue;
+            SaveFile.Tick t = new SaveFile.Tick();
+            t.tick = tick;
+            for (Constraint c : tc.getConstraints()) {
+                t.constraints.add(toSaveConstraint(c));
+            }
+            StateOverride ov = tc.getOverride();
+            if (!ov.isEmpty()) t.override = toSaveOverride(ov);
+            a.ticks.add(t);
+        }
+        if (s.getStartBlock() != null) a.selectedBlocks.add(toSaveBlock(s.getStartBlock()));
+        for (BlockSelection c : s.getCollisionBlocks()) a.selectedBlocks.add(toSaveBlock(c));
+        if (s.getLandBlock() != null) a.selectedBlocks.add(toSaveBlock(s.getLandBlock()));
+        a.result = toSaveResult(s.getResult());
+        return a;
+    }
+
+    private static SaveFile.BlockSel toSaveBlock(BlockSelection b) {
+        SaveFile.BlockSel out = new SaveFile.BlockSel();
+        out.kind = b.kind.name();
+        out.x = b.x;
+        out.y = b.y;
+        out.z = b.z;
+        out.box = new double[] {
+                b.box.min.x, b.box.min.y, b.box.min.z,
+                b.box.max.x, b.box.max.y, b.box.max.z
+        };
+        return out;
+    }
+
+    private static BlockSelection toBlockSelection(SaveFile.BlockSel b) {
+        if (b == null) return null;
+        BlockSelection.Kind kind = parseEnumOrNull(BlockSelection.Kind.class, b.kind);
+        if (kind == null) return null;
+        if (b.box != null && b.box.length >= 6) {
+            AABB box = new AABB(
+                    new Vec3dCore(b.box[0], b.box[1], b.box[2]),
+                    new Vec3dCore(b.box[3], b.box[4], b.box[5]));
+            return new BlockSelection(kind, b.x, b.y, b.z, box);
+        }
+        return BlockSelection.cube(kind, b.x, b.y, b.z);
+    }
+
+    private static SaveFile.Constraint toSaveConstraint(Constraint c) {
+        SaveFile.Constraint out = new SaveFile.Constraint();
+        out.range = c.isRange();
+        out.field = c.getField().name();
+        out.op = c.getOp().name();
+        out.value = c.getValue();
+        out.lo = c.getLo();
+        out.hi = c.getHi();
+        out.loInclusive = c.isLoInclusive();
+        out.hiInclusive = c.isHiInclusive();
+        return out;
+    }
+
+    private static Constraint toConstraint(SaveFile.Constraint c) {
+        if (c == null) return null;
+        Constraint.Field field = parseEnum(Constraint.Field.class, c.field, Constraint.Field.X);
+        if (c.range) {
+            return Constraint.range(field, c.lo, c.hi, c.loInclusive, c.hiInclusive);
+        }
+        Constraint.Op op = parseEnum(Constraint.Op.class, c.op, Constraint.Op.GT);
+        return Constraint.scalar(field, op, c.value);
+    }
+
+    private static SaveFile.Override toSaveOverride(StateOverride ov) {
+        SaveFile.Override out = new SaveFile.Override();
+        out.inputs = ov.overridesInputs() ? ov.getInputs().name() : null;
+        out.slipperiness = ov.overridesSlipperiness() ? ov.getSlipperiness().name() : null;
+        for (PotionDose d : ov.getAdded()) {
+            out.added.add(toSaveDose(d));
+        }
+        for (Potion p : ov.getRemoved()) {
+            out.removed.add(p.name());
+        }
+        return out;
+    }
+
+    private static void applyOverride(SaveFile.Override src, StateOverride dst) {
+        if (src == null) return;
+        AngleSolverState.InputMode inputs = parseEnumOrNull(AngleSolverState.InputMode.class, src.inputs);
+        if (inputs != null) dst.setInputs(inputs);
+        Slipperiness slip = parseEnumOrNull(Slipperiness.class, src.slipperiness);
+        if (slip != null) dst.setSlipperiness(slip);
+        if (src.added != null) {
+            for (SaveFile.Dose d : src.added) {
+                PotionDose dose = toDose(d);
+                if (dose != null) dst.getAdded().add(dose);
+            }
+        }
+        if (src.removed != null) {
+            for (String name : src.removed) {
+                Potion p = parseEnumOrNull(Potion.class, name);
+                if (p != null) dst.getRemoved().add(p);
+            }
+        }
+    }
+
+    private static SaveFile.Dose toSaveDose(PotionDose d) {
+        SaveFile.Dose out = new SaveFile.Dose();
+        out.potion = d.potion.name();
+        out.level = d.level;
+        return out;
+    }
+
+    private static PotionDose toDose(SaveFile.Dose d) {
+        if (d == null) return null;
+        Potion p = parseEnumOrNull(Potion.class, d.potion);
+        if (p == null) return null;
+        return new PotionDose(p, d.level);
+    }
+
+    private static SaveFile.Result toSaveResult(SolveResult r) {
+        if (r == null) return null;
+        SaveFile.Result out = new SaveFile.Result();
+        out.success = r.isSuccess();
+        out.met = r.getMet();
+        out.total = r.getTotal();
+        out.startTick = r.getStartTick();
+        out.landingTick = r.getLandingTick();
+        out.durationMs = r.getDurationMs();
+        out.finishedAt = r.getFinishedAt();
+        out.objectiveValue = r.getObjectiveValue();
+        out.hasObjective = r.hasObjective();
+        for (SolveResult.Outcome o : r.getOutcomes()) {
+            SaveFile.Outcome so = new SaveFile.Outcome();
+            so.field = o.field;
+            so.tick = o.tick;
+            so.relation = o.relation;
+            so.found = o.found;
+            so.margin = o.margin;
+            out.outcomes.add(so);
+        }
+        for (SolveResult.YawEntry y : r.getYaws()) {
+            SaveFile.Yaw sy = new SaveFile.Yaw();
+            sy.tick = y.tick;
+            sy.yaw = y.yaw;
+            out.yaws.add(sy);
+        }
+        return out;
+    }
+
+    private static SolveResult toResult(SaveFile.Result rd) {
+        if (rd == null) return null;
+        SolveResult r = new SolveResult(rd.success, rd.met, rd.total, rd.startTick, rd.landingTick);
+        r.setDurationMs(rd.durationMs);
+        r.setFinishedAt(rd.finishedAt);
+        if (rd.hasObjective) r.setObjective(rd.objectiveValue);
+        if (rd.outcomes != null) {
+            for (SaveFile.Outcome o : rd.outcomes) {
+                r.getOutcomes().add(new SolveResult.Outcome(o.field, o.tick, o.relation, o.found, o.margin));
+            }
+        }
+        if (rd.yaws != null) {
+            for (SaveFile.Yaw y : rd.yaws) {
+                r.getYaws().add(new SolveResult.YawEntry(y.tick, y.yaw));
+            }
+        }
+        return r;
+    }
+
+    private static <E extends Enum<E>> E parseEnum(Class<E> type, String name, E fallback) {
+        E parsed = parseEnumOrNull(type, name);
+        return parsed != null ? parsed : fallback;
+    }
+
+    private static <E extends Enum<E>> E parseEnumOrNull(Class<E> type, String name) {
+        if (name == null) return null;
+        try {
+            return Enum.valueOf(type, name);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     private static String nowIso8601() {

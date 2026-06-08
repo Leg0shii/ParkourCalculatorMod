@@ -124,6 +124,10 @@ public final class FileMenu {
         boolean hasName = controller.currentName() != null;
         if (ImGui.menuItem("Save", null, false, hasName || controller.isDirty())) onSave();
         if (ImGui.menuItem("Save As...")) onSaveAs();
+        if (ImGui.menuItem("Save debug values", null, settings.saveDebugValues)) {
+            settings.saveDebugValues = !settings.saveDebugValues;
+            onSettingsChanged.run();
+        }
         ThemeManager.paddedSeparator();
         boolean hasPicker = filePicker != null;
         if (ImGui.menuItem("Import .json...", null, false, hasPicker)) onImport();

@@ -107,7 +107,11 @@ public final class MainWindowOverlay implements RenderInterface {
 
     private void renderMainWindow(ImGuiIO io, boolean active) {
         float desired = inputOverlay.desiredPaneWidth();
-        float minW = inputOverlay.minUsablePaneWidth();
+        // With the solver on, the stretchy constraints column needs the full desired width,
+        // so raise the minimum (the window grows to fit instead of clipping chips).
+        float minW = settings.viewAngleSolver
+                ? Math.max(inputOverlay.minUsablePaneWidth(), desired)
+                : inputOverlay.minUsablePaneWidth();
         float displayW = io.getDisplaySizeX();
         float cap = displayW > 0f ? MAX_DISPLAY_WIDTH_FRACTION * displayW : Float.MAX_VALUE;
         float target = Math.min(Math.max(desired, minW), Math.max(minW, cap));
@@ -249,6 +253,10 @@ public final class MainWindowOverlay implements RenderInterface {
         }
         if (ImGui.menuItem("Performance", null, settings.viewPerf)) {
             settings.viewPerf = !settings.viewPerf;
+            onSettingsChanged.run();
+        }
+        if (ImGui.menuItem("Angle Solver", null, settings.viewAngleSolver)) {
+            settings.viewAngleSolver = !settings.viewAngleSolver;
             onSettingsChanged.run();
         }
     }

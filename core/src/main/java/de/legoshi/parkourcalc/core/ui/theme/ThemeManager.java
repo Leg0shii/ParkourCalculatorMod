@@ -28,6 +28,7 @@ public final class ThemeManager {
     private static final float[] ACCENT       = rgb(0x89, 0xb4, 0xfa, 1.00f);
     private static final float[] ACCENT_DIM   = rgb(0x89, 0xb4, 0xfa, 0.30f);
     private static final float[] SELECTED     = rgb(0x89, 0xb4, 0xfa, 1.00f);
+    private static final float[] PEACH        = rgb(0xfa, 0xb3, 0x87, 1.00f);
     private static final float[] LOCKED       = rgb(0xff, 0xff, 0xff, 1.00f);
     private static final float[] WARNING      = rgb(0xf9, 0xe2, 0xaf, 1.00f);
     private static final float[] DANGER       = rgb(0xf3, 0x8b, 0xa8, 1.00f);
@@ -212,6 +213,19 @@ public final class ThemeManager {
         boolean ok = ImGui.beginTable(id, columnCount, flags, outerWidth, outerHeight);
         if (!ok) popTableSelectionChrome();
         return ok;
+    }
+
+    /** Standard table chrome with caller-supplied flags (e.g. {@link #standardTableFlagsNoScroll()} for a content-sized inline table). Pair with {@link #endStandardTable()}. */
+    public static boolean beginStandardTableWithFlags(String id, int columnCount, int flags, float outerWidth, float outerHeight) {
+        pushTableSelectionChrome(false);
+        boolean ok = ImGui.beginTable(id, columnCount, flags, outerWidth, outerHeight);
+        if (!ok) popTableSelectionChrome();
+        return ok;
+    }
+
+    /** Standard flags minus ScrollY, for a table that should size to its content and let an outer scroll region handle overflow. */
+    public static int standardTableFlagsNoScroll() {
+        return standardTableFlags() & ~ImGuiTableFlags.ScrollY;
     }
 
     public static void endStandardTable() {
@@ -568,6 +582,29 @@ public final class ThemeManager {
         ImGui.popStyleColor(1);
     }
 
+    /** Inline drawer carries the pane tone so the expanded tick (also painted BG) reads as its header. */
+    public static void pushDrawerChildBg() {
+        ImGui.pushStyleColor(ImGuiCol.ChildBg, BG[0], BG[1], BG[2], BG[3]);
+    }
+
+    public static void popDrawerChildBg() {
+        ImGui.popStyleColor(1);
+    }
+
+    /** Pane fill; used to paint the expanded tick row so it matches its drawer body. */
+    public static void paintExpandedDrawerRowBg() {
+        ImGui.tableSetBgColor(ImGuiTableBgTarget.RowBg0, u32(BG));
+    }
+
+    public static int shadowColor(float alpha) {
+        return ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, alpha);
+    }
+
+    /** Neutral surface0 fill for a selected editor row; sits between the base drawer and its surface1 inputs so both stay legible. */
+    public static int selectedRowBg() {
+        return u32(PANEL);
+    }
+
     public static void pushStatusStripChrome(float opacity) {
         ImGui.pushStyleVar(ImGuiStyleVar.Alpha, opacity);
         ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, SM, 0f);
@@ -609,6 +646,18 @@ public final class ThemeManager {
         return u32(ACCENT);
     }
 
+    public static int peachColor() {
+        return u32(PEACH);
+    }
+
+    public static int panelColor() {
+        return u32(PANEL);
+    }
+
+    public static int bgDarkColor() {
+        return u32(BG_DARK);
+    }
+
     public static int lockedColor() {
         return u32(LOCKED);
     }
@@ -631,6 +680,26 @@ public final class ThemeManager {
 
     public static int selectedTintColor(float alpha) {
         return ImGui.colorConvertFloat4ToU32(SELECTED[0], SELECTED[1], SELECTED[2], alpha);
+    }
+
+    public static int accentTintColor(float alpha) {
+        return ImGui.colorConvertFloat4ToU32(ACCENT[0], ACCENT[1], ACCENT[2], alpha);
+    }
+
+    public static int peachTintColor(float alpha) {
+        return ImGui.colorConvertFloat4ToU32(PEACH[0], PEACH[1], PEACH[2], alpha);
+    }
+
+    public static int bgTintColor(float alpha) {
+        return ImGui.colorConvertFloat4ToU32(BG[0], BG[1], BG[2], alpha);
+    }
+
+    public static int okTintColor(float alpha) {
+        return ImGui.colorConvertFloat4ToU32(OK[0], OK[1], OK[2], alpha);
+    }
+
+    public static int dangerTintColor(float alpha) {
+        return ImGui.colorConvertFloat4ToU32(DANGER[0], DANGER[1], DANGER[2], alpha);
     }
 
     public static int rgbaTintColor(float[] rgba) {

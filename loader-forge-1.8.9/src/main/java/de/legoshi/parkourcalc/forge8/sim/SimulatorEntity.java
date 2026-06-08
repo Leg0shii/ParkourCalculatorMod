@@ -244,6 +244,9 @@ public class SimulatorEntity extends EntityPlayer {
     }
 
     public void restoreCheckpoint(Checkpoint c) {
+        // Start from the clean spawn baseline (same as a full run's resetToStart) so no uncaptured
+        // entity state from the previous run leaks in; the overlay below restores the history it carries.
+        resetPlayer();
         this.motionX = c.motionX;
         this.motionY = c.motionY;
         this.motionZ = c.motionZ;

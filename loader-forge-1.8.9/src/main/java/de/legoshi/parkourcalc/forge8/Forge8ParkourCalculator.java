@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.forge8;
 
 import de.legoshi.parkourcalc.core.Application;
 import de.legoshi.parkourcalc.core.PlaybackController;
+import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.forge.core.io.OsFilePicker;
 import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2ImGuiHost;
@@ -54,7 +55,8 @@ public class Forge8ParkourCalculator {
             application.getBoxController(),
             application.getSettings(),
             application.getSelection(),
-            application.getYawGizmo()
+            application.getYawGizmo(),
+            application::getAngleSolverState
     );
     private final Forge8HudOverlayRenderer hudRenderer = new Forge8HudOverlayRenderer();
     private final Forge8PlaybackBridge playbackBridge = new Forge8PlaybackBridge();
@@ -62,6 +64,10 @@ public class Forge8ParkourCalculator {
     private KeyBinding toggleKeyBinding;
     private KeyBinding deselectKeyBinding;
     private KeyBinding playbackKeyBinding;
+    private KeyBinding addStartBlockKeyBinding;
+    private KeyBinding addLandBlockKeyBinding;
+    private KeyBinding addCollisionBlockKeyBinding;
+    private KeyBinding removeBlockKeyBinding;
     private Path configPath;
     private Path saveDir;
 
@@ -82,6 +88,7 @@ public class Forge8ParkourCalculator {
                 Forge8WorldDescriptors::current
         ));
         application.setPlaybackBridge(playbackBridge);
+        application.setBlockPicker(new Forge8BlockPicker());
         application.initSettingsStorage(configPath);
         application.setupUi();
         imguiHost.setEditingYawSupplier(application::isEditingYaw);
@@ -93,9 +100,17 @@ public class Forge8ParkourCalculator {
         ClientRegistry.registerKeyBinding(deselectKeyBinding);
         playbackKeyBinding = new KeyBinding("key.parkourcalculator.toggle_playback", Keyboard.KEY_P, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(playbackKeyBinding);
+        addStartBlockKeyBinding = new KeyBinding("key.parkourcalculator.add_start_block", Keyboard.KEY_J, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(addStartBlockKeyBinding);
+        addLandBlockKeyBinding = new KeyBinding("key.parkourcalculator.add_land_block", Keyboard.KEY_K, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(addLandBlockKeyBinding);
+        addCollisionBlockKeyBinding = new KeyBinding("key.parkourcalculator.add_collision_block", Keyboard.KEY_N, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(addCollisionBlockKeyBinding);
+        removeBlockKeyBinding = new KeyBinding("key.parkourcalculator.remove_block", Keyboard.KEY_M, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(removeBlockKeyBinding);
 
         MinecraftForge.EVENT_BUS.register(this);
-        LOG.info("ParkourCalculator init complete. G toggle, L deselect, P playback.");
+        LOG.info("ParkourCalculator init complete. G toggle, L deselect, P playback; J/K/N add start/land/collision block, M remove looked-at block.");
     }
 
     private boolean wasPlaybackRunning = false;
@@ -194,6 +209,22 @@ public class Forge8ParkourCalculator {
         while (playbackKeyBinding.isPressed()) {
             playbackPressed = true;
         }
+        boolean addStart = false;
+        while (addStartBlockKeyBinding.isPressed()) {
+            addStart = true;
+        }
+        boolean addLand = false;
+        while (addLandBlockKeyBinding.isPressed()) {
+            addLand = true;
+        }
+        boolean addCollision = false;
+        while (addCollisionBlockKeyBinding.isPressed()) {
+            addCollision = true;
+        }
+        boolean removeBlock = false;
+        while (removeBlockKeyBinding.isPressed()) {
+            removeBlock = true;
+        }
         if (mc.currentScreen == null) {
             if (toggled) {
                 openOverlay(mc);
@@ -203,6 +234,19 @@ public class Forge8ParkourCalculator {
             }
             if (playbackPressed) {
                 togglePlayback();
+            }
+            // Block picking via crosshair: each press captures the looked-at block into its Angle Solver slot.
+            if (addStart) {
+                application.pickAngleSolverBlock(BlockSelection.Kind.START);
+            }
+            if (addLand) {
+                application.pickAngleSolverBlock(BlockSelection.Kind.LAND);
+            }
+            if (addCollision) {
+                application.pickAngleSolverBlock(BlockSelection.Kind.COLLISION);
+            }
+            if (removeBlock) {
+                application.removeAngleSolverLookedAtBlock();
             }
         }
         if (application.isReady()) {
