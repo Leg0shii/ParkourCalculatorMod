@@ -127,11 +127,10 @@ public final class AngleSolverEngine {
         final int numTicks;
         final boolean[] strafeMask;
         final List<ConstraintAt> uiConstraints;
-        final long startNanos;
         final AngleSolverState.Effort effort;
 
         Job(JumpSpec spec, Objective.Sense sense, int startTick, int landingTick,
-            int numTicks, boolean[] strafeMask, List<ConstraintAt> uiConstraints, long startNanos,
+            int numTicks, boolean[] strafeMask, List<ConstraintAt> uiConstraints,
             AngleSolverState.Effort effort
         ) {
             this.spec = spec;
@@ -141,7 +140,6 @@ public final class AngleSolverEngine {
             this.numTicks = numTicks;
             this.strafeMask = strafeMask;
             this.uiConstraints = uiConstraints;
-            this.startNanos = startNanos;
             this.effort = effort;
         }
     }
@@ -198,7 +196,7 @@ public final class AngleSolverEngine {
         // Freeze the problem on the main thread so the worker reads a genuinely read-only snapshot.
         JumpSpec spec = new JumpSpec(ph.inputs, constraints, objective);
         long t0 = System.nanoTime();
-        Job job = new Job(spec, objective.sense, startTick, landingTick, numTicks, ph.strafeMask, uiCons, t0,
+        Job job = new Job(spec, objective.sense, startTick, landingTick, numTicks, ph.strafeMask, uiCons,
                 state.getEffort());
 
         // Show the spinner instead of a stale result, then run off-thread.
@@ -328,6 +326,7 @@ public final class AngleSolverEngine {
         // for position-wall jumps (the common case). It returns null when it does not apply (facing/equality
         // walls) or cannot certify byte-exact feasibility, in which case we fall back to the full cold
         // multistart so reliability is never reduced.
+        long solveStart = System.nanoTime();
         double[] yaws = null;
         if (model instanceof ExactJumpModel) {
             yaws = ClosedFormSolve.optimize((ExactJumpModel) model, spec, FEAS_TOL, cancel);
@@ -336,11 +335,13 @@ public final class AngleSolverEngine {
         if (yaws == null) {
             yaws = SolveCore.optimize(model, spec, budgetFor(job.effort), CMAES_SIGMA_DEG, FEAS_TOL, cancel);
         }
+        long solveNanos = System.nanoTime() - solveStart;
         if (yaws == null) return null;
 
         ForwardPath path = model.forward(sc, sc.toGameFacings(yaws));
         SolveResult result = buildResult(job, yaws, path);
-        result.setDurationMs((System.nanoTime() - job.startNanos) / 1_000_000L);
+        result.setDurationNanos(solveNanos);
+        result.setDurationMs(solveNanos / 1_000_000L);
         result.setFinishedAt(formatClock());
         result.setObjective(path.getPos(spec.objective.tick, spec.objective.axis));
         Plan plan = new Plan(job.startTick, yaws, job.strafeMask, 1);
@@ -368,12 +369,11 @@ public final class AngleSolverEngine {
         final int startTick;
         final int landingTick;
         final int numTicks;
-        final long startNanos;
         final AngleSolverState.Effort effort;
 
         BlockJob(Phys ph, List<JumpConstraint> footprints, List<ConstraintAt> footprintUi, double[] landFp,
                  List<BlockSolver.Obstacle> obstacles, double[] heights, List<Objective> objectives, int startTick,
-                 int landingTick, int numTicks, long startNanos, AngleSolverState.Effort effort) {
+                 int landingTick, int numTicks, AngleSolverState.Effort effort) {
             this.ph = ph;
             this.footprints = footprints;
             this.footprintUi = footprintUi;
@@ -384,7 +384,6 @@ public final class AngleSolverEngine {
             this.startTick = startTick;
             this.landingTick = landingTick;
             this.numTicks = numTicks;
-            this.startNanos = startNanos;
             this.effort = effort;
         }
     }
@@ -432,7 +431,7 @@ public final class AngleSolverEngine {
 
         long t0 = System.nanoTime();
         BlockJob job = new BlockJob(ph, footprints, footprintUi, landFp, obstacles, heights, objectives,
-                startTick, landingTick, numTicks, t0, state.getEffort());
+                startTick, landingTick, numTicks, state.getEffort());
         state.clearResult();
         lastPlan = null;
         pending = null;
@@ -455,8 +454,10 @@ public final class AngleSolverEngine {
     }
 
     private Outcome runBlockJob(BlockJob job, AtomicBoolean cancel) {
+        long solveStart = System.nanoTime();
         BlockSolver.Result r = new BlockSolver().solve(model, job.ph.inputs, job.footprints, job.landFp,
                 job.obstacles, job.heights, job.objectives, blockBudget(job.effort), CMAES_SIGMA_DEG, FEAS_TOL, BLOCK_MAX_ITERS, cancel);
+        long solveNanos = System.nanoTime() - solveStart;
         if (cancel.get() || r == null || r.yaws == null) return null;
 
         List<ConstraintAt> derived = new ArrayList<>(job.footprintUi);
@@ -468,7 +469,8 @@ public final class AngleSolverEngine {
         }
 
         SolveResult result = buildBlockResult(job, r.yaws, r.path, derived, r.ok());
-        result.setDurationMs((System.nanoTime() - job.startNanos) / 1_000_000L);
+        result.setDurationNanos(solveNanos);
+        result.setDurationMs(solveNanos / 1_000_000L);
         result.setFinishedAt(formatClock());
         result.setObjective(r.path.getPos(r.objective.tick, r.objective.axis));
         Plan plan = new Plan(job.startTick, r.yaws, job.ph.strafeMask, 1);

@@ -97,6 +97,7 @@ public final class SaveFile {
         public int startTick;                            // 1-based for display
         public int landingTick;                          // 1-based for display
         public long durationMs;
+        public long durationNanos;                       // precise solve compute time; 0 = legacy save
         public String finishedAt;                        // formatted clock time, null if unset
         public double objectiveValue;
         public boolean hasObjective;
