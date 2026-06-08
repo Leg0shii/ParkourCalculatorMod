@@ -28,7 +28,6 @@ public class SolveBenchmark {
     @org.junit.Ignore("manual benchmark, not an assertion test")
     @Test
     public void benchmark() {
-        de.legoshi.parkourcalc.core.anglesolver.solver.FastSolve.DEBUG = true;
         for (String fx : FIXTURES) {
             for (int i = 0; i < WARMUP; i++) solveOnce(fx);
             long[] times = new long[RUNS];

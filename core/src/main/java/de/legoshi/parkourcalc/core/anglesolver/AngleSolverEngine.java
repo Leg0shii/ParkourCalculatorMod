@@ -9,8 +9,8 @@ import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.BlockSolver;
 import de.legoshi.parkourcalc.core.anglesolver.solver.BucketAscentPolish;
+import de.legoshi.parkourcalc.core.anglesolver.solver.ClosedFormSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
-import de.legoshi.parkourcalc.core.anglesolver.solver.FastSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolveCore;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
@@ -324,11 +324,13 @@ public final class AngleSolverEngine {
 
         // yaws are absolute wrapped facings (what Apply writes as deltas); the game runs the float-accumulated
         // facings, so the reported path forwards toGameFacings(yaws), bit-for-bit the in-game trajectory.
-        // Fast path first (smooth-basin + exact lock); it returns null when it cannot certify feasibility,
-        // in which case we fall back to the full cold multistart so reliability is never reduced.
+        // Closed-form path first: the dual costate solver finds the globally-optimal facings in microseconds
+        // for position-wall jumps (the common case). It returns null when it does not apply (facing/equality
+        // walls) or cannot certify byte-exact feasibility, in which case we fall back to the full cold
+        // multistart so reliability is never reduced.
         double[] yaws = null;
         if (model instanceof ExactJumpModel) {
-            yaws = FastSolve.optimize((ExactJumpModel) model, spec, FEAS_TOL, cancel);
+            yaws = ClosedFormSolve.optimize((ExactJumpModel) model, spec, FEAS_TOL, cancel);
         }
         if (cancel.get()) return null;
         if (yaws == null) {
