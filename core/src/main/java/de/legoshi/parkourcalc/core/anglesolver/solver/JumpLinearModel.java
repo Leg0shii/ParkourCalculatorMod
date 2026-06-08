@@ -74,12 +74,12 @@ public final class JumpLinearModel {
     private void precompute() {
         double[] f4 = new double[n];
         for (int t = 0; t < n; t++) {
-            boolean isJump = (sc.jumpTick >= 0 && t == sc.jumpTick);
-            boolean onGround = (sc.jumpTick >= 0 && t <= sc.jumpTick);
+            // Ground/air + jump authored per tick, matching ExactJumpModel: a tick is grounded iff its slip
+            // is annotated (NaN = airborne), and a JUMP fires only while grounded.
             double slipOv = sc.slipAt(t);
-            boolean hasSurface = !Double.isNaN(slipOv);
-            boolean contact = onGround || hasSurface;
-            double slip = hasSurface ? slipOv : Constants.SLIP_F;
+            boolean contact = !Double.isNaN(slipOv);
+            boolean isJump = sc.jumpAt(t) && contact;
+            double slip = contact ? slipOv : Constants.SLIP_F;
             double accelSpeed;
             if (contact) {
                 f4[t] = slip * 0.91;

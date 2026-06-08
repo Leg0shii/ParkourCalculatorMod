@@ -241,23 +241,42 @@ public final class AngleSolverEngine {
         TickState seed = boxes.getState(startTick);
         int jumpTickRel = firstJumpTick(rows, startTick, numTicks);
         boolean[] strafeMask = new boolean[numTicks];
+        boolean[] jumpMask = new boolean[numTicks];
         boolean[] yawLocked = new boolean[numTicks];
         int[] speedAmp = new int[numTicks];
         double[] slipPerTick = new double[numTicks];
+        double normalGround = slipValue(Slipperiness.DEFAULT); // 0.6: a grounded tick with no picked surface
         for (int k = 0; k < numTicks; k++) {
             int t = startTick + k;
             boolean jumpRow = rows.get(t).isKeyActive(InputRow.Key.JUMP);
-            strafeMask[k] = (effInputs(t) == AngleSolverState.InputMode.FORCE_45) && !jumpRow;
+            // Ground/air per tick: an explicit ground slipperiness forces a surface (at its friction), an
+            // explicit AIR override forces airborne, and an un-annotated tick falls back to the recorded
+            // baseline on-ground. So a window may start airborne, land, and jump again with no special case.
+            double slip = slipValue(effSlipperiness(t));
+            boolean ground;
+            double slipF = normalGround;
+            if (slip < 1.0) {
+                ground = true;
+                slipF = slip;
+            } else if (isSlipOverridden(t)) {
+                ground = false; // explicitly AIR
+            } else {
+                TickState st = boxes.getState(t);
+                ground = st != null && st.onGround;
+            }
+            slipPerTick[k] = ground ? slipF : Double.NaN;
+            jumpMask[k] = jumpRow;
+            // W-only only on a real (grounded) jump, so the 0.2 sprintjump boost stays aligned with travel.
+            strafeMask[k] = (effInputs(t) == AngleSolverState.InputMode.FORCE_45) && !(jumpRow && ground);
             yawLocked[k] = rows.get(t).isYawLocked();
             speedAmp[k] = effSpeedLevel(t);
-            double slip = slipValue(effSlipperiness(t));
-            slipPerTick[k] = slip < 1.0 ? slip : Double.NaN;
         }
         JumpPhysicsInputs phys = new JumpPhysicsInputs(numTicks);
         phys.startPos = seed.position;
         phys.startYaw = seed.yaw;
         phys.initialVelocity = seed.velocity;
         phys.jumpTick = jumpTickRel;
+        phys.jumpPerTick = jumpMask;
         phys.strafePerTick = strafeMask;
         phys.speedAmplifier = speedAmp;
         phys.slipPerTick = slipPerTick;
@@ -589,6 +608,11 @@ public final class AngleSolverEngine {
     private StateOverride overrideAt(int tick) {
         TickConstraints tc = state.tickConstraintsOrNull(tick);
         return tc == null ? null : tc.getOverride();
+    }
+
+    private boolean isSlipOverridden(int tick) {
+        StateOverride ov = overrideAt(tick);
+        return ov != null && ov.overridesSlipperiness();
     }
 
     private static double slipValue(Slipperiness s) {

@@ -134,6 +134,7 @@ public final class DeriveFixtures {
         int sign = 1;
         boolean sawSign = false;
         boolean[] strafe = new boolean[n];
+        boolean[] jumpMask = new boolean[n];
         boolean[] yawLocked = new boolean[n];
         int[] speedAmp = new int[n];
         boolean force45 = file.angleSolver.defaultInputs == null
@@ -143,6 +144,7 @@ public final class DeriveFixtures {
             SaveFile.Row r = (t < rows.size()) ? rows.get(t) : null;
             boolean jumpRow = r != null && r.keys != null && r.keys.contains("JUMP");
             if (jumpRow && jumpTickRel < 0) jumpTickRel = k;
+            jumpMask[k] = jumpRow;
             boolean hasA = r != null && r.keys != null && r.keys.contains("A");
             boolean hasD = r != null && r.keys != null && r.keys.contains("D");
             if (!sawSign && (hasA || hasD)) {
@@ -153,7 +155,13 @@ public final class DeriveFixtures {
             yawLocked[k] = r != null && r.yawLocked;
             speedAmp[k] = r != null ? r.speedAmplifier : 0;
         }
+        // These single-jump fixtures launch from the ground: ground run-up through the jump tick, airborne
+        // after. Annotate it explicitly (matches the old t<=jumpTick rule the model no longer hard-codes).
+        double[] slip = new double[n];
+        for (int k = 0; k < n; k++) slip[k] = (jumpTickRel >= 0 && k <= jumpTickRel) ? 0.60 : Double.NaN;
         sc.jumpTick = jumpTickRel;
+        sc.jumpPerTick = jumpMask;
+        sc.slipPerTick = slip;
         sc.strafeSign = sign;
         sc.strafePerTick = strafe;
         sc.yawLockedPerTick = yawLocked;
