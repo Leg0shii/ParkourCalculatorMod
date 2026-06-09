@@ -382,14 +382,17 @@ public final class AngleSolverEngine {
         long solveStart = System.nanoTime();
         double[] yaws = null;
         if (model instanceof ExactJumpModel) {
-            yaws = ClosedFormSolve.optimize((ExactJumpModel) model, spec, FEAS_TOL, cancel);
+            boolean[] diverged = {false};
+            yaws = ClosedFormSolve.optimize((ExactJumpModel) model, spec, FEAS_TOL, cancel, diverged);
             // Feasibility does NOT depend on the Solve-For direction: whether a solution exists is a property
             // of the constraints, not of what we optimize. The closed form only certifies the objective's
             // optimal vertex, so for some directions that vertex is byte-exact-infeasible and it returns null
             // -- even though a different direction on the SAME constraints certifies cleanly and instantly.
             // Before dropping a long jump into the effectively-hopeless high-dimensional multistart, try the
             // other directions via the same microsecond closed form; any feasible landing beats "no solution".
-            if (yaws == null && !cancel.get()) {
+            // But if the dual DIVERGED (long multi-jump run), the alternates share the same hopeless geometry
+            // -- skip them and go straight to the long-run fallback, saving ~3 wasted full-span dual solves.
+            if (yaws == null && !diverged[0] && !cancel.get()) {
                 for (Objective alt : alternateObjectives(spec.objective)) {
                     if (cancel.get()) return null;
                     JumpSpec altSpec = new JumpSpec(sc, spec.constraints, alt);

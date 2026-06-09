@@ -37,6 +37,16 @@ public final class ClosedFormSolve {
     private static final double DUAL_DIVERGED_VIOL = 0.1;
 
     public static double[] optimize(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel) {
+        return optimize(exact, spec, feasTol, cancel, null);
+    }
+
+    /** As {@link #optimize(ExactJumpModel, JumpSpec, double, AtomicBoolean)}, additionally reporting via
+     *  {@code divergedOut[0]} whether the dual failed to converge (first-margin violation far past what the
+     *  margin ladder can reconcile). Divergence is objective-independent -- it is a property of the wall
+     *  geometry, not the optimized direction -- so a caller can skip the alternate-direction retries when the
+     *  main solve diverged, instead of re-running the same hopeless dual three more times. */
+    public static double[] optimize(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
+                                    boolean[] divergedOut) {
         JumpPhysicsInputs sc = spec.asScenario();
         List<JumpConstraint> constraints = spec.constraints;
 
@@ -86,6 +96,7 @@ public final class ClosedFormSolve {
             // grinding the remaining margins. Costs the long-run path one dual solve, not eight.
             if (mi == 0 && viol > DUAL_DIVERGED_VIOL) {
                 if (DEBUG) System.out.printf("  CLOSED bail (dual diverged, viol=%.2e)%n", viol);
+                if (divergedOut != null) divergedOut[0] = true;
                 return null;
             }
             if (viol <= feasTol) {
