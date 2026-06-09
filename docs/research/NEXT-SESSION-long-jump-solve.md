@@ -108,8 +108,25 @@ debugging oracle, not as something the production solver can assume.
 - **The closed form cannot solve v12 in any direction.** The dual hits its 100-iter cap
   without converging and lands **14–88 blocks** off. Raising the cap does NOT help:
   100→1000→8000 iters gave 14.4→17.7→15.5 blocks (146 s for 8000), never converging.
-  **More runtime is useless here** — it's a scale/convergence wall, not iteration
-  starvation. CMA-ES at 354 dimensions is hopeless.
+  **More runtime is useless here.** CMA-ES at 354 dimensions is hopeless. NOTE: this test
+  (`ClosedFormSolve.optimize` on the v12 spec) solves for facings **from scratch** and
+  takes **no facings as input**, so it is *not* affected by the facing-delta bug (§6.2) —
+  it is a genuinely separate failure from the reproduction drift (§6.3).
+- **⚠️ The ROOT CAUSE of that dual failure was NOT isolated — DIAGNOSE THIS FIRST.** The
+  dual's own optimization did not converge (residual never met, cap hit), but *why* is
+  open, and there are two very different candidates:
+  - **(a) Dual-algorithm scalability** — the local Newton/projected-gradient optimizer
+    struggles with the degenerate landscape of 81 walls. → a better dual (matrix-free
+    Newton-CG, better flat-direction handling) might converge. *Fixable.*
+  - **(b) Affine-model drift** — the dual optimizes `JumpLinearModel`, which omits the
+    momentum-cancellation clamp and is only an affine approximation; over 354 ticks / 30
+    jumps it diverges from byte-exact, so even a perfectly converged dual would recover a
+    byte-exact-bad path. *Same class as the facing drift — model fidelity over a long
+    horizon — fundamental to the fast approach.*
+  **To isolate:** check the recovered path's violation in the AFFINE model vs the
+  byte-exact model. If the dual converges in the affine model but the byte-exact violation
+  is large → cause (b). If the dual never converges even in the affine model → cause (a).
+  This determines whether a scalable dual can ever solve long runs in one go.
 - A single jump is ~8–14 air ticks; v12's 30 jumps each sit squarely in the fast
   closed-form regime. **Per-jump, the solver works.**
 
@@ -170,6 +187,43 @@ on `ForwardPath`). The greedy-chain risk (jump N's exit makes N+1 infeasible) is
 coupling problem — handle it with warm starts and, if needed, **multiple shooting** (solve
 the segments jointly with continuity/defect constraints driven to zero) rather than a
 strict left-to-right greedy pass.
+
+### Two-phase architecture (recommended shape)
+
+- **Phase 1 — "solve at all":** segmentation to produce *any* feasible full path. Use
+  **multiple shooting** (segments solved jointly with continuity/defect constraints driven
+  to zero) rather than strict left-to-right greedy, so an early choice that would doom a
+  later jump is corrected globally.
+- **Phase 2 — "optimize / maintain speed":** **warm-start a global *local* ascent on the
+  BYTE-EXACT model** from that feasible full path. `BucketAscentPolish` already is a
+  strict-feasible compass ascent (climbs the objective, never crosses a constraint). From a
+  feasible full path it only *improves* — it does not have to SEARCH — so it is tractable
+  even at 354 dims (coordinate-ascent, hundreds of cheap forwards per pass) and **does not
+  drift** (it runs on the exact model, never the affine approximation). Do NOT use CMA-ES
+  for this — 354 dims is hopeless regardless of warm start.
+
+### Local-optima caveat (the user's concern — important)
+
+Greedy per-segment solving can get stuck. Two kinds, with different fixes:
+- **Continuous** (a segment lands slightly off, or optimizes its own piece at the next
+  jump's expense): the Phase-2 global polish **fixes these** — it optimizes *across*
+  segment boundaries.
+- **Discrete / homotopy** (a segment commits to the wrong *side* of an obstacle): a local
+  polish **cannot escape these** — different basin. Phase 1 must get the which-side choice
+  right: multiple shooting, trying alternative homotopy options per jump, or the
+  GCS/corridor enumeration in the research docs. **If segmentation locks in a globally-wrong
+  homotopy, neither phase recovers it** — so this is the thing to guard.
+
+### Route #3 worth real research — optimize the BYTE-EXACT model directly
+
+The reason the fast solver drifts is that "fast" currently means "uses the affine
+approximation," and approximations drift over long horizons. The byte-exact float chain is
+deterministic and mostly differentiable (the non-smooth bits are the sine-table steps and
+the momentum clamp). A **gradient / Gauss-Newton solver on the exact model** (or a smooth
+surrogate hugging it) would be *fast-ish AND drift-free by construction* — no affine model
+to diverge. The Phase-2 polish above is a zeroth-order version of this; a real first-order
+method could be the "fast and never-drifts" solver. Whether the non-smoothness makes this
+tractable is an open research question — investigate it.
 
 **Things to research/decide (use `ultracode` + `deep-research`):**
 - One-go path: is a scalable dual (matrix-free Newton-CG / better conditioning) or a
