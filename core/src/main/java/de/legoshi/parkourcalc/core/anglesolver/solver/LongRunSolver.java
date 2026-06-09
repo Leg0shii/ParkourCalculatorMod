@@ -12,18 +12,25 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *  <p><b>Receding-horizon (model-predictive) decomposition.</b> The convex Lagrangian dual
  *  ({@link ClosedFormSolve}) solves a single jump to GLOBAL optimality in microseconds, and -- measured --
  *  keeps converging for windows of up to ~10 jumps, but not for the full run (the degenerate high-dimensional
- *  landscape of dozens of jumps). So solve a sliding WINDOW of {@code WINDOW} jumps to global optimality,
- *  COMMIT its first {@code COMMIT} jumps (chaining their exact byte-exact exit state into the next window's
- *  seed), and slide. The {@code WINDOW − COMMIT} jumps of overlap are pure lookahead: a committed jump's exit
- *  is always part of a feasible multi-jump continuation, so it can never doom the jumps that follow -- the
- *  coupling that defeats a greedy one-jump-at-a-time chain.
+ *  landscape of dozens of jumps). So solve a sliding window of {@value #WINDOW} jumps to global optimality,
+ *  COMMIT its first few jumps (chaining their exact byte-exact exit state into the next window's seed), and
+ *  slide. The committed jumps' exit is, by construction, the entry of a feasible {@code (WINDOW − commit)}-jump
+ *  continuation, so it cannot doom the next {@code WINDOW − commit} jumps -- the coupling that defeats a greedy
+ *  one-jump-at-a-time chain (greedy genuinely fails; measured seam-coupling horizon ~5 jumps).
+ *
+ *  <p>There is NO free global guarantee: a window sees only {@value #WINDOW} jumps, so this is feasible only
+ *  while the lookahead exceeds the run's coupling horizon. Three things make it safe: (1) the lookahead margin
+ *  ({@code WINDOW − commit}, default 7) is set above the measured horizon; (2) if a commit gets the chain
+ *  stuck, it retries with a smaller commit, i.e. MORE lookahead ({@link #COMMIT_LADDER}); (3) the full
+ *  concatenated run is re-verified byte-exact, so a coupling failure returns {@code null} (handing off to the
+ *  caller's last-ditch fallback) rather than ever a false success.
  *
  *  <p>This is robust where a global 354-dimensional local search is not: every window is solved by the convex
  *  dual (no local optima, no minimax plateaus, no sine-bucket stalls, no initial guess), so the result does
  *  not depend on tuning or on incidental problem details. It uses only the resume start state, the
  *  input-specified structure (ground/air, jumps, strafe -- never a recorded trajectory), and the constraints;
- *  the windows chain their own byte-exact state, so the full concatenated path is feasible by construction
- *  (and re-verified). Returns the game facings, or {@code null} if a window cannot be solved even alone.
+ *  the windows chain their own byte-exact state, so the full concatenated path is feasible by construction.
+ *  Returns the game facings, or {@code null}.
  *
  *  <p>This restores feasibility ("solve at all"); the last window already optimises the real objective, and a
  *  follow-up global objective ascent ({@link BucketAscentPolish}) is a separate, strictly-improving step. */
@@ -31,8 +38,11 @@ public final class LongRunSolver {
 
     /** Jumps solved together per window (the dual converges to ~10-13; 10 leaves margin). */
     private static final int WINDOW = 10;
-    /** Jumps committed before sliding; WINDOW − COMMIT jumps of lookahead absorb the seam coupling. */
-    private static final int COMMIT = 5;
+    /** Jumps committed before sliding, tried in order; a SMALLER commit = MORE lookahead (WINDOW − commit),
+     *  used as a retry when a larger commit gets the chain stuck. The measured seam-coupling horizon on the
+     *  desert-hard maps is ~5 jumps, so the first try (commit 3 = lookahead 7) carries margin; the retry
+     *  (commit 1 = lookahead 9) is the most lookahead a 10-jump window can give. */
+    private static final int[] COMMIT_LADDER = {3, 1};
     /** Window sizes tried, largest first; a smaller window is the fallback when a larger one cannot be solved. */
     private static final int[] WINDOW_LADDER = {WINDOW, 7, 5, 3, 2, 1};
 
@@ -43,14 +53,32 @@ public final class LongRunSolver {
 
     public static double[] solve(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel) {
         JumpPhysicsInputs sc = spec.asScenario();
-        int n = sc.numTicks;
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
-
         int[] bounds = jumpBoundaries(sc);
         int jumps = bounds.length - 1;
         if (jumps < 1) return null;
-        if (DEBUG) System.err.printf("LRS receding-horizon: %d jumps, %d ticks%n", jumps, n);
+        if (DEBUG) System.err.printf("LRS receding-horizon: %d jumps, %d ticks%n", jumps, sc.numTicks);
 
+        // Adaptive lookahead: a committed jump's exit is, by construction, the entry of a feasible
+        // (WINDOW − commit)-jump continuation, so it cannot doom the next (WINDOW − commit) jumps. As long as
+        // that lookahead exceeds the run's seam-coupling horizon the chain stays globally feasible -- verified
+        // byte-exact below, never assumed. If a commit gets stuck, retry with a smaller commit (more lookahead).
+        for (int commit : COMMIT_LADDER) {
+            if (cancel != null && cancel.get()) return null;
+            double[] gf = runHorizon(exact, sc, spec, bounds, jumps, commit, cancel);
+            if (gf == null) continue;
+            double viol = compiled.maxViolation(gf, exact.forward(sc, gf));
+            if (DEBUG) System.err.printf("LRS commit=%d -> full viol=%.6f%n", commit, viol);
+            if (viol <= feasTol) return gf;
+        }
+        return null;
+    }
+
+    /** One full receding-horizon sweep committing {@code commitJumps} jumps per window. Returns the chained
+     *  game facings, or {@code null} if it gets stuck (no window solvable from some seam). */
+    private static double[] runHorizon(ExactJumpModel exact, JumpPhysicsInputs sc, JumpSpec spec, int[] bounds,
+                                       int jumps, int commitJumps, AtomicBoolean cancel) {
+        int n = sc.numTicks;
         double[] gf = new double[n];
         Vec3dCore seedPos = sc.startPos, seedVel = sc.initialVelocity;
         float seedYaw = sc.startYaw;
@@ -72,8 +100,8 @@ public final class LongRunSolver {
                 double[] yaws = solveWindow(exact, win, cons, obj, cancel);
                 if (yaws == null) continue;
 
-                // Commit the first COMMIT jumps (all of them for the final window), chaining the exact exit.
-                int ce = last ? we : Math.min(i + Math.max(1, w / 2), jumps);
+                // Commit the first commitJumps jumps (all of them for the final window), chaining the exact exit.
+                int ce = last ? we : Math.min(i + Math.min(commitJumps, w), jumps);
                 int commitTicks = bounds[ce] - a;
                 double[] wgf = win.toGameFacings(yaws);
                 ForwardPath wp = exact.forward(win, wgf);
@@ -81,23 +109,16 @@ public final class LongRunSolver {
                 seedPos = new Vec3dCore(wp.posX[commitTicks], wp.posY[commitTicks], wp.posZ[commitTicks]);
                 seedVel = new Vec3dCore(wp.velX[commitTicks], wp.velY[commitTicks], wp.velZ[commitTicks]);
                 seedYaw = (float) wgf[commitTicks - 1];
-                if (DEBUG) System.err.printf("  window jumps %d..%d (ticks %d..%d) -> commit %d jumps%n", i, we, a, c, ce - i);
                 i = ce;
                 advanced = true;
                 break;
             }
             if (!advanced) {
-                if (DEBUG) System.err.printf("  STUCK at jump %d (tick %d) -- no window solvable%n", i, bounds[i]);
+                if (DEBUG) System.err.printf("  commit=%d stuck at jump %d (tick %d)%n", commitJumps, i, bounds[i]);
                 return null;
             }
         }
-
-        // The committed game facings concatenate into one continuous run; re-verify byte-exact (each window
-        // was forwarded from the previous window's exact exit, so this holds by construction).
-        ForwardPath path = exact.forward(sc, gf);
-        double viol = compiled.maxViolation(gf, path);
-        if (DEBUG) System.err.printf("LRS full viol=%.6f%n", viol);
-        return viol <= feasTol ? gf : null;
+        return gf;
     }
 
     /** Closed form on a window, trying the given objective then the other directions (feasibility is
