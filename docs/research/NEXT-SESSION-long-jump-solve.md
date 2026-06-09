@@ -138,6 +138,51 @@ Skeleton that worked up to the verify step:
 
 ---
 
+## 5.1 ARCHITECTURE QUESTION — one-go vs segmentation (investigate this!)
+
+A natural question: *if we make facing bit-exact, can we solve the whole run in one go and
+skip segmentation?* **Answer from last session's analysis: no — bit-exact facing alone is
+not sufficient.** There are TWO independent blockers and facing-exactness only touches one:
+
+1. **Solver scalability (the real wall).** The closed-form dual does not *converge* at 354
+   ticks (proven — §4). Bit-exact facing does nothing for this. One-go would need a
+   fundamentally more scalable solver.
+2. **Model fidelity over long runs.** The dual optimizes an *affine* approximation
+   (`JumpLinearModel`, no momentum clamp). It is faithful over ~11 ticks (margin-ladder
+   reconciles it) but diverges over 354. And the dual *requires* the affine structure — the
+   real physics (clamp, sine quantization) is not affine. So **byte-exact + one-go + fast
+   are in fundamental tension.**
+
+Therefore **segmentation is very likely still needed** — it keeps each piece in the regime
+where BOTH the dual converges AND the approximate model stays faithful. "Enforce no drift in
+one go" essentially reduces to either (a) running the byte-exact model *inside* the
+optimization (kills the fast affine structure) or (b) **re-anchoring the exact state
+periodically — which IS segmentation.**
+
+**Cleaner segmentation that avoids the §6.3 drift entirely (investigate this first):** do
+NOT reproduce recorded facings. Instead **solve each jump from scratch in `ExactJumpModel`
+and chain the EXACT `ExactJumpModel` output state (position + velocity) into the next
+jump's seed.** Everything then lives in one self-consistent model — no external reference to
+drift against — and it generalizes to *normal* solves (no recorded path needed; the debug
+path is only a fact-checking oracle). Chaining the exact state needs velocity out of the
+forward model (`ExactJumpModel.forward` already computes `velX/velY/velZ`; just expose them
+on `ForwardPath`). The greedy-chain risk (jump N's exit makes N+1 infeasible) is the
+coupling problem — handle it with warm starts and, if needed, **multiple shooting** (solve
+the segments jointly with continuity/defect constraints driven to zero) rather than a
+strict left-to-right greedy pass.
+
+**Things to research/decide (use `ultracode` + `deep-research`):**
+- One-go path: is a scalable dual (matrix-free Newton-CG / better conditioning) or a
+  direct-collocation / multiple-shooting formulation viable at 354 ticks while keeping the
+  `<0.1 ms` single-jump fast path? What's the model-fidelity ceiling of the affine model
+  over long runs?
+- Segmentation path: solve-from-scratch + chain-exact-states (above) vs reproduce-facings;
+  greedy chain vs multiple-shooting for the coupling; how to pick segment boundaries.
+- Is bit-exact facing reproduction even needed if you chain exact `ExactJumpModel` states
+  and never reproduce recorded facings? (Likely it drops to a lower-priority concern — it
+  only governs whether `ExactJumpModel` matches the *live game*, which the single-jump path
+  already assumes.) Confirm this.
+
 ## 6. ⚠️ PITFALLS (every one of these cost hours — do not repeat)
 
 1. **DO NOT force/pin velocity at the seams.** Matching seam velocity to the reference
