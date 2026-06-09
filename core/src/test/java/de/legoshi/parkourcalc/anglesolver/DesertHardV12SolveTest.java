@@ -27,7 +27,19 @@ public class DesertHardV12SolveTest {
 
     @Test
     public void v12SolvesByteExact() {
-        SaveFile file = SaveIO.parseSafe(readFixture("deserthard-v12.json"));
+        solveAndAssert("deserthard-v12.json");
+    }
+
+    /** The honest from-scratch acceptance test: v13 is v12 with one input facing reset, so its recorded
+     *  trajectory is broken (off the map). It is the identical optimization problem, and the solver reads no
+     *  trajectory, so it must solve all the same. Before the from-scratch rewrite this reported no solution. */
+    @Test
+    public void v13SolvesByteExact_noUsableTrajectory() {
+        solveAndAssert("deserthard-v13-fail.json");
+    }
+
+    private void solveAndAssert(String fixture) {
+        SaveFile file = SaveIO.parseSafe(readFixture(fixture));
         InputData inputs = new InputData();
         SaveIO.applyRowsTo(file, inputs);
         AngleSolverState state = new AngleSolverState();
@@ -51,10 +63,10 @@ public class DesertHardV12SolveTest {
 
         SolveResult r = state.getResult();
         assertNotNull("engine returned no result", r);
-        System.out.printf("V12 engine solve: success=%s met=%d/%d  %.0f ms%n",
-                r.isSuccess(), r.getMet(), r.getTotal(), ms);
-        assertTrue("v12 did not solve (" + r.getMet() + "/" + r.getTotal() + " met) -- the run is feasible, "
-                + "the fallback must restore it", r.isSuccess());
+        System.out.printf("%s engine solve: success=%s met=%d/%d  %.0f ms%n",
+                fixture, r.isSuccess(), r.getMet(), r.getTotal(), ms);
+        assertTrue(fixture + " did not solve (" + r.getMet() + "/" + r.getTotal() + " met) -- the run is "
+                + "feasible, the from-scratch solver must find it", r.isSuccess());
     }
 
     private static TickState toTickState(SaveFile.DebugTick d) {

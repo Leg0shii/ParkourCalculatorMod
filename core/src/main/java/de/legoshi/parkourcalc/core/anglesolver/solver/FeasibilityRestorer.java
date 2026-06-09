@@ -4,14 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/** Long-run feasibility restorer: the post-failure fallback for multi-jump spans the closed form cannot
- *  certify (e.g. the 354-tick "desert hard" runs, where the Lagrangian dual does not converge at scale).
+/** Feasibility refiner: drives the maximum constraint violation of a NEAR-feasible facing array to zero on
+ *  the byte-exact model. {@link LongRunSolver} calls it as the endgame of its from-scratch solve, handing it
+ *  the facings its constructive waypoint guess + wide Gauss-Newton has already brought close (a fraction of a
+ *  block from feasible) -- never a recorded trajectory.
  *
  *  <p>It works directly in <em>game-facing space</em> on the byte-exact {@link ExactJumpModel}: each tick's
  *  facing independently drives that tick's move, so the thing optimized is exactly the thing run -- there is
- *  no affine surrogate to drift over a long horizon and no facing round-trip. Given a warm-start facing array
- *  (the editor's current trajectory, always available), it drives the maximum constraint violation to zero
- *  in two stages:
+ *  no affine surrogate to drift over a long horizon and no facing round-trip. From the warm start it drives
+ *  the maximum constraint violation down in two stages:
  *  <ol>
  *    <li><b>Inexact Gauss-Newton.</b> Active set = constraints within a buffer of their wall. Residuals are
  *        the byte-exact margins; the Jacobian is the affine model's analytic position-vs-facing derivative
@@ -23,9 +24,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *        ({@link ExactJumpModel#stepRange}) so a late perturbation costs O(n - t).</li>
  *  </ol>
  *
- *  <p>Returns game facings strictly feasible on the byte-exact model, or {@code null} if it cannot reach
- *  feasibility (the caller keeps whatever it had). This only restores feasibility ("solve at all"); a
- *  follow-up objective polish ({@link BucketAscentPolish}) is a separate, strictly-improving step. */
+ *  <p>Returns the refined game facings (the caller checks feasibility and may run a final pass). This only
+ *  restores feasibility ("solve at all"); a follow-up objective polish ({@link BucketAscentPolish}) is a
+ *  separate, strictly-improving step. */
 public final class FeasibilityRestorer {
 
     private static final double TARGET = 2.0e-4;   // push active margins this far onto the feasible side
@@ -39,7 +40,7 @@ public final class FeasibilityRestorer {
 
     /** Restore feasibility from {@code warmGameFacings}. Returns a strictly-feasible game-facing array (a
      *  fresh copy) or {@code null}. {@code feasTol} is the acceptance threshold on max-violation (0 = strict). */
-    public static double[] restore(ExactJumpModel exact, JumpSpec spec, double[] warmGameFacings,
+    public static double[] refine(ExactJumpModel exact, JumpSpec spec, double[] warmGameFacings,
                                    double feasTol, AtomicBoolean cancel) {
         JumpPhysicsInputs sc = spec.asScenario();
         int n = sc.numTicks;
@@ -64,7 +65,7 @@ public final class FeasibilityRestorer {
             p = exact.forward(sc, gf);
             v = compiled.maxViolation(gf, p);
         }
-        return v <= feasTol ? gf : null;
+        return gf; // caller checks feasibility (may still be a bucket short; a follow-up pump finishes)
     }
 
     /** Inexact Gauss-Newton on the active set: finite-difference byte-exact Jacobian (via the incremental

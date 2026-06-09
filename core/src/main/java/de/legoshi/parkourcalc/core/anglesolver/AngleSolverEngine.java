@@ -11,7 +11,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.BlockSolver;
 import de.legoshi.parkourcalc.core.anglesolver.solver.BucketAscentPolish;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ClosedFormSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
-import de.legoshi.parkourcalc.core.anglesolver.solver.FeasibilityRestorer;
+import de.legoshi.parkourcalc.core.anglesolver.solver.LongRunSolver;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolveCore;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
@@ -129,13 +129,10 @@ public final class AngleSolverEngine {
         final boolean[] strafeMask;
         final List<ConstraintAt> uiConstraints;
         final AngleSolverState.Effort effort;
-        /** The editor's current-trajectory game facings over the span (absolute recorded yaw per tick),
-         *  warm-starting the long-run feasibility fallback. null when unavailable. */
-        final double[] guideFacings;
 
         Job(JumpSpec spec, Objective.Sense sense, int startTick, int landingTick,
             int numTicks, boolean[] strafeMask, List<ConstraintAt> uiConstraints,
-            AngleSolverState.Effort effort, double[] guideFacings
+            AngleSolverState.Effort effort
         ) {
             this.spec = spec;
             this.sense = sense;
@@ -145,7 +142,6 @@ public final class AngleSolverEngine {
             this.strafeMask = strafeMask;
             this.uiConstraints = uiConstraints;
             this.effort = effort;
-            this.guideFacings = guideFacings;
         }
     }
 
@@ -203,22 +199,8 @@ public final class AngleSolverEngine {
 
         // Freeze the problem on the main thread so the worker reads a genuinely read-only snapshot.
         JumpSpec spec = new JumpSpec(ph.inputs, constraints, objective);
-        double[] guide = captureGuideFacings(startTick, numTicks);
         return new Job(spec, objective.sense, startTick, landingTick, numTicks, ph.strafeMask, uiCons,
-                state.getEffort(), guide);
-    }
-
-    /** The current-trajectory absolute facing for each move in the span: {@code boxes.getState(t+1).yaw} (the
-     *  facing the move at tick t uses). Snapshotted on the main thread; warm-starts the long-run fallback.
-     *  null if the recorded states are not all present. */
-    private double[] captureGuideFacings(int startTick, int numTicks) {
-        double[] g = new double[numTicks];
-        for (int k = 0; k < numTicks; k++) {
-            TickState st = boxes.getState(startTick + k + 1);
-            if (st == null) return null;
-            g[k] = st.yaw;
-        }
-        return g;
+                state.getEffort());
     }
 
     /** Test-only: the compiled spec for the current UI state, built synchronously (no worker thread). */
@@ -382,17 +364,16 @@ public final class AngleSolverEngine {
         long solveStart = System.nanoTime();
         double[] yaws = null;
         if (model instanceof ExactJumpModel) {
-            boolean[] diverged = {false};
-            yaws = ClosedFormSolve.optimize((ExactJumpModel) model, spec, FEAS_TOL, cancel, diverged);
+            yaws = ClosedFormSolve.optimize((ExactJumpModel) model, spec, FEAS_TOL, cancel);
             // Feasibility does NOT depend on the Solve-For direction: whether a solution exists is a property
             // of the constraints, not of what we optimize. The closed form only certifies the objective's
             // optimal vertex, so for some directions that vertex is byte-exact-infeasible and it returns null
             // -- even though a different direction on the SAME constraints certifies cleanly and instantly.
             // Before dropping a long jump into the effectively-hopeless high-dimensional multistart, try the
             // other directions via the same microsecond closed form; any feasible landing beats "no solution".
-            // But if the dual DIVERGED (long multi-jump run), the alternates share the same hopeless geometry
-            // -- skip them and go straight to the long-run fallback, saving ~3 wasted full-span dual solves.
-            if (yaws == null && !diverged[0] && !cancel.get()) {
+            // (Each attempt is cheap: a diverging dual now bails early -- see CostateDualSolver -- so trying
+            // all four directions on a hard span costs ~4 short solves, not four full 100-iteration grinds.)
+            if (yaws == null && !cancel.get()) {
                 for (Objective alt : alternateObjectives(spec.objective)) {
                     if (cancel.get()) return null;
                     JumpSpec altSpec = new JumpSpec(sc, spec.constraints, alt);
@@ -402,16 +383,17 @@ public final class AngleSolverEngine {
             }
         }
         // Long-run feasibility fallback: when the closed form (and its alternate directions) cannot certify a
-        // multi-jump span, restore feasibility directly on the byte-exact model in game-facing space,
-        // warm-started from the editor's current trajectory. This is where the dual does not converge at
-        // scale (e.g. the 354-tick desert-hard runs); the cold high-dimensional CMA-ES below is hopeless
-        // there, so try this first. Single jumps never reach here (they return on the closed-form fast path),
-        // and it only runs when the span genuinely contains multiple jumps -- the fast path is untouched.
+        // multi-jump span, solve it FROM SCRATCH on the byte-exact model in game-facing space -- a constructive
+        // waypoint guess from the footprint constraints, then robust Gauss-Newton + a coordinate polish. This
+        // is where the dual does not converge at scale (e.g. the 354-tick desert-hard runs); the cold
+        // high-dimensional CMA-ES below is hopeless there, so try this first. It reads no recorded trajectory,
+        // so it solves a run identically whether or not a prior (possibly broken) path exists. Single jumps
+        // never reach here (they return on the closed-form fast path), and it only runs when the span
+        // genuinely contains multiple jumps -- the fast path is untouched.
         double[] directFacings = null;
-        if (yaws == null && !cancel.get() && model instanceof ExactJumpModel
-                && job.guideFacings != null && countJumps(sc) > 1) {
-            double[] restored = FeasibilityRestorer.restore((ExactJumpModel) model, spec, job.guideFacings, FEAS_TOL, cancel);
-            if (restored != null) { directFacings = restored; yaws = Angles.wrapAll(restored); }
+        if (yaws == null && !cancel.get() && model instanceof ExactJumpModel && countJumps(sc) > 1) {
+            double[] fromScratch = LongRunSolver.solve((ExactJumpModel) model, spec, FEAS_TOL, cancel);
+            if (fromScratch != null) { directFacings = fromScratch; yaws = Angles.wrapAll(fromScratch); }
         }
         if (cancel.get()) return null;
         if (yaws == null) {
