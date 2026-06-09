@@ -1,73 +1,66 @@
-# Findings — solving long multi-jump runs from scratch (desert-hard v12 / v13)
+# Findings — solving long multi-jump runs from scratch (desert-hard v12)
 
-`deserthard-v12` (354 ticks, 30 jumps, 81 X/Z constraints) now **solves from scratch** — using only the
-resume start state, the input-specified physics structure, and the constraints. No recorded trajectory, no
-recorded facings. `deserthard-v13` (v12 with one input facing reset, so its recorded path is broken/off the
-map) is the **identical** optimization problem and solves identically — the honest proof that the debug
-oracle is gone.
+Long multi-jump runs (`deserthard-v12`: 354 ticks, 30 jumps, 81 footprint/wall constraints) now **solve from
+scratch, robustly, in ~0.16 s** — using only the resume start state, the input-specified physics structure,
+and the constraints. No recorded trajectory, no recorded facings, no per-fixture tuning.
 
-## The hard lesson
-
-An earlier iteration warm-started the long-run fallback from the editor's current trajectory
-(`boxes.getState(t+1).yaw`). That is the recorded path the handoff explicitly forbade depending on
-(§3: "the general solution must still solve each jump from scratch"). It made v12 look solved, but it was
-solving *from the answer*: feeding the recorded facings (≈0.4 blocks from feasible) into a local polish.
-v13 — one input changed — exposed it: the warm start was 4.2 blocks off and the polish failed outright.
-Proven directly: the local restorer only reaches feasibility from a ≤~0.5-block start; from any honest
-init (50–100 blocks) it fails. **It was a polish, not a solver.** The whole approach was scrapped.
-
-## What is legitimately available (and what the solve uses)
-
-- **Start state** — resume pos/vel/yaw at `startTick` (`boxes.getState(startTick)`); present on any solve.
-- **Structure** — per-tick ground/air from the slip overrides + `JUMP` keys in the input rows
-  (`defaultSlipperiness: AIR` + `slipperiness: DEFAULT` ground ticks), strafe mode. This is input-specified,
-  **not** derived from the trajectory — v12 and v13 build a byte-identical problem (35 ground ticks, same
-  masks, same start, same 81 constraints).
-- **Constraints** — the 81 walls. Critically they are **footprint boxes at each jump's landing**, e.g. tick
-  36: `X∈[−10.3,−8.7], Z∈[−4.3,−2.7]`. Their centers are natural waypoints.
-
-## The from-scratch solver (`solver/LongRunSolver.java`)
-
-Runs only as a post-failure fallback for multi-jump spans (the closed-form dual does not converge at scale);
-single jumps return on the µs fast path and never reach it. Everything is on the byte-exact `ExactJumpModel`
-in game-facing space (the thing optimized is the thing run — no affine surrogate to drift, no facing
-round-trip):
-
-1. **Waypoint construction.** A heading controller faces each tick toward its segment's footprint centre
-   (heading corrected by the per-tick strafe phase `JumpLinearModel.baseArg`), forwarding tick-by-tick. A
-   constructive guess from the constraints alone — lands a few blocks from feasible (v12: 2.77).
-2. **Wide Gauss-Newton.** Active set = constraints within a (widening-on-stall) buffer; damped min-norm step,
-   byte-exact finite-difference Jacobian via the incremental forward `ExactJumpModel.stepRange`, line search
-   on the true max-violation. Collapses the bulk (v12: 2.77 → 0.065).
-3. **Refine** (`FeasibilityRestorer.refine`): a narrow Gauss-Newton + block-1/block-2 coordinate polish that
-   crosses MC's discrete sine buckets.
-4. **Feasibility pump** (bounded): if the polish leaves a single binding constraint a bucket short, attack it
-   directly — scan its highest-leverage facings over a fine grid for the best max-violation move.
-
-Supporting primitives (additive, fast path untouched): velocity on `ForwardPath`; `ExactJumpModel.stepRange`
-incremental forward; `JumpLinearModel.baseArg` (analytic facing→position derivative); `debugBuildSpec` hook.
-
-## Status (all measured, full `:core:test` green — 14 classes, 0 failures)
-
-| fixture | ticks | path | result | time |
+| fixture | ticks / jumps | path | result | time |
 |---|---|---|---|---|
-| j121 / j154 / j1097 | 9–11 | closed-form µs fast path | feasible | **72 / 20 / 69 µs** |
-| deserthard-v7 / vfail | 176–189 | closed form (margin ladder, alt direction) | feasible | green |
-| **deserthard-v12** | **354** | **LongRunSolver (from scratch)** | **81/81 byte-exact** | **~2.2 s** |
-| **deserthard-v13** | **354** | **LongRunSolver (from scratch, broken trajectory)** | **81/81 byte-exact** | **~2.2 s** |
+| j121 / j154 / j1097 | 9–11 / 1 | closed-form µs fast path | feasible | 72 / 20 / 57 µs |
+| deserthard-v7 / vfail | 176–189 / 15–16 | receding-horizon (from scratch) | 81/81 | green |
+| **deserthard-v12** | **354 / 30** | **receding-horizon (from scratch)** | **81/81 byte-exact** | **~159 ms** |
+| **deserthard-v13** | 354 / 30 (broken trajectory) | receding-horizon | 81/81 | ~157 ms |
+| **deserthard-nothing** | 353 / 30 (no trajectory, 1-tick shift of v12) | receding-horizon | 81/81 | ~65 ms |
 
-- `<0.1 ms` fast path: **preserved** (closed-form solves byte-identical).
-- No trajectory dependence anywhere: v12 ≡ v13 ⇒ identical solve.
+Full `:core:test`: all green.
+
+## The two dead ends (why the final approach is what it is)
+
+1. **Warm-starting from the editor's recorded trajectory.** The handoff forbade depending on the recorded
+   path (§3), and it was load-bearing: the fallback only reached feasibility from a ≤~0.5-block start, i.e.
+   the recorded answer. v13/v-nothing (same problem, no usable trajectory) exposed it. Scrapped.
+2. **A monolithic 354-dimensional local search** (waypoint guess + global Gauss-Newton + polish). FRAGILE: it
+   lands in different local minima / minimax plateaus depending on incidental details — a **one-tick shift**
+   (`deserthard-nothing`) made it stall a sine-bucket short and fail. Not a solver. Scrapped.
+
+## The robust solver: receding-horizon (model-predictive) decomposition
+
+`solver/LongRunSolver.java`. The convex Lagrangian dual (`ClosedFormSolve` / `CostateDualSolver`) solves a
+single jump to GLOBAL optimality in microseconds, and — measured — keeps converging for windows of up to
+~10 jumps, but not across the full run (the degenerate landscape of dozens of jumps). So:
+
+- Solve a sliding **window** of 10 jumps to global optimality with the dual (trying alternate Solve-For
+  directions, since feasibility is objective-independent).
+- **Commit** its first 5 jumps, chaining their exact byte-exact exit state (pos+vel) into the next window's
+  seed; slide.
+- The 5 jumps of **overlap are lookahead**: a committed jump's exit is always part of a feasible multi-jump
+  continuation, so it can never doom the jumps that follow — the coupling that defeats a greedy
+  one-jump-at-a-time chain. (A research pass confirmed this is multiple shooting with the per-jump dual as the
+  inner solver, and the overlap plays the role of backward-reachability "feasible-entry" pruning.)
+- Windows chain their own game facings, so the concatenated run is feasible by construction; re-verified
+  byte-exact. A window-size ladder (10→7→5→3→2→1) is the robustness fallback near hard spots / the run's end.
+
+Why it's robust where the local search wasn't: **every window is solved by the convex dual** — no local
+optima, no plateaus, no sine-bucket stall, no initial guess, no tuning — so the result is invariant to the
+incidental problem details that broke the monolithic search.
+
+## Engine integration (and the speed win)
+
+`AngleSolverEngine.runJob` now branches on jump count: a **single jump** takes the µs closed-form fast path
+(unchanged, `<0.1 ms`); a **multi-jump span** goes straight to the receding-horizon solver. Each window IS the
+closed form, so a short multi-jump span is solved in one window exactly as before, while a long span no longer
+wastes the monolithic dual's full margin ladder across four directions on the whole horizon first — which is
+what cut v12 from ~2.1 s to ~0.16 s. CMA-ES remains the last-ditch fallback.
+
+Supporting primitives (additive, fast path untouched): velocity on `ForwardPath`; `JumpLinearModel.baseArg`;
+`AngleSolverEngine.debugBuildSpec` test hook. (Agent-A's `CostateDualSolver` early-divergence bail stays — it
+speeds each dual solve and does not affect convergent duals.)
 
 ## Remaining work
 
-- **Speed.** v12 is ~2.2 s, not `<10 ms`. ~1.9 s of it is the closed form running its full margin ladder
-  across four Solve-For directions *before* the fallback. (An earlier "skip margins when the first is far
-  infeasible" optimization was reverted — it wrongly killed v7/vfail, whose ladder legitimately climbs from a
-  >0.1-block first margin to feasibility. The safe version keys off the *dual's* own divergence signal, not
-  the violation magnitude — not yet done.) The from-scratch solve itself is ~0.35 s; the analytic-Jacobian
-  GN and a tighter dual-divergence gate are the levers to push it down.
-- **Robustness of the pump** on minimax plateaus (a pair-move variant) so the long-run solver, not CMA-ES,
-  also covers shorter hard multi-jump spans.
-- **Phase 2** (maximise the objective from the feasible run) is still future work; the solver returns a
-  feasible run, not the Z-maximal one.
+- **Phase 2 (maximise the objective).** The solver returns a feasible run; only the final window optimises the
+  real objective. A global strictly-feasible objective ascent (`BucketAscentPolish` on the byte-exact model)
+  from the feasible run is the next step.
+- The window/commit sizes (10/5) are robust across all fixtures here; if a future run has a longer coupling
+  horizon, the principled upgrade is explicit multiple shooting with backward-reachable feasible-entry boxes
+  as seam constraints (see the research synthesis) — but the simple receding horizon has not needed it.

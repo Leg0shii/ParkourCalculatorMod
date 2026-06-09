@@ -363,37 +363,33 @@ public final class AngleSolverEngine {
         // multistart so reliability is never reduced.
         long solveStart = System.nanoTime();
         double[] yaws = null;
-        if (model instanceof ExactJumpModel) {
-            yaws = ClosedFormSolve.optimize((ExactJumpModel) model, spec, FEAS_TOL, cancel);
-            // Feasibility does NOT depend on the Solve-For direction: whether a solution exists is a property
-            // of the constraints, not of what we optimize. The closed form only certifies the objective's
-            // optimal vertex, so for some directions that vertex is byte-exact-infeasible and it returns null
-            // -- even though a different direction on the SAME constraints certifies cleanly and instantly.
-            // Before dropping a long jump into the effectively-hopeless high-dimensional multistart, try the
-            // other directions via the same microsecond closed form; any feasible landing beats "no solution".
-            // (Each attempt is cheap: a diverging dual now bails early -- see CostateDualSolver -- so trying
-            // all four directions on a hard span costs ~4 short solves, not four full 100-iteration grinds.)
-            if (yaws == null && !cancel.get()) {
-                for (Objective alt : alternateObjectives(spec.objective)) {
-                    if (cancel.get()) return null;
-                    JumpSpec altSpec = new JumpSpec(sc, spec.constraints, alt);
-                    double[] altYaws = ClosedFormSolve.optimize((ExactJumpModel) model, altSpec, FEAS_TOL, cancel);
-                    if (altYaws != null) { yaws = altYaws; break; }
-                }
-            }
-        }
-        // Long-run feasibility fallback: when the closed form (and its alternate directions) cannot certify a
-        // multi-jump span, solve it FROM SCRATCH on the byte-exact model in game-facing space -- a constructive
-        // waypoint guess from the footprint constraints, then robust Gauss-Newton + a coordinate polish. This
-        // is where the dual does not converge at scale (e.g. the 354-tick desert-hard runs); the cold
-        // high-dimensional CMA-ES below is hopeless there, so try this first. It reads no recorded trajectory,
-        // so it solves a run identically whether or not a prior (possibly broken) path exists. Single jumps
-        // never reach here (they return on the closed-form fast path), and it only runs when the span
-        // genuinely contains multiple jumps -- the fast path is untouched.
         double[] directFacings = null;
-        if (yaws == null && !cancel.get() && model instanceof ExactJumpModel && countJumps(sc) > 1) {
-            double[] fromScratch = LongRunSolver.solve((ExactJumpModel) model, spec, FEAS_TOL, cancel);
-            if (fromScratch != null) { directFacings = fromScratch; yaws = Angles.wrapAll(fromScratch); }
+        if (model instanceof ExactJumpModel) {
+            ExactJumpModel em = (ExactJumpModel) model;
+            if (countJumps(sc) <= 1) {
+                // SINGLE jump -- the closed-form dual finds the globally-optimal facings in microseconds (the
+                // common case, the <0.1 ms fast path). Feasibility does NOT depend on the Solve-For direction:
+                // the closed form only certifies the objective's optimal vertex, so for some directions that
+                // vertex is byte-exact-infeasible and it returns null even though another direction on the SAME
+                // constraints certifies cleanly -- so try the other directions before giving up.
+                yaws = ClosedFormSolve.optimize(em, spec, FEAS_TOL, cancel);
+                if (yaws == null && !cancel.get()) {
+                    for (Objective alt : alternateObjectives(spec.objective)) {
+                        if (cancel.get()) return null;
+                        double[] altYaws = ClosedFormSolve.optimize(em, new JumpSpec(sc, spec.constraints, alt), FEAS_TOL, cancel);
+                        if (altYaws != null) { yaws = altYaws; break; }
+                    }
+                }
+            } else {
+                // MULTI-jump span -- solve it FROM SCRATCH with the receding-horizon solver (each window IS the
+                // closed-form dual, so a short span is solved in one window exactly as the closed form would,
+                // and a long span slides). The monolithic dual does not converge across dozens of jumps, so
+                // there is no point spending its full margin ladder over four directions on the whole span
+                // first; go straight to the decomposition. It reads no recorded trajectory, so a run solves
+                // identically whether or not a prior (possibly broken) path exists.
+                double[] fromScratch = LongRunSolver.solve(em, spec, FEAS_TOL, cancel);
+                if (fromScratch != null) { directFacings = fromScratch; yaws = Angles.wrapAll(fromScratch); }
+            }
         }
         if (cancel.get()) return null;
         if (yaws == null) {
@@ -402,9 +398,9 @@ public final class AngleSolverEngine {
         long solveNanos = System.nanoTime() - solveStart;
         if (yaws == null) return null;
 
-        // The restorer returns the byte-exact game facings directly (it chains/optimizes in game-facing
-        // space, so re-deriving them via toGameFacings would not be bit-identical); use them as-is. Every
-        // other path produces absolute facings whose game-facing realization is toGameFacings(yaws).
+        // The receding-horizon solver returns the byte-exact game facings directly (it chains each window's
+        // own game facings, so re-deriving them via toGameFacings would not be bit-identical); use them as-is.
+        // Every other path produces absolute facings whose game-facing realization is toGameFacings(yaws).
         ForwardPath path = directFacings != null ? model.forward(sc, directFacings)
                 : model.forward(sc, sc.toGameFacings(yaws));
         SolveResult result = buildResult(job, yaws, path);

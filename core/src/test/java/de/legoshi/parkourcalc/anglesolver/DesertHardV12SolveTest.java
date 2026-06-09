@@ -38,6 +38,13 @@ public class DesertHardV12SolveTest {
         solveAndAssert("deserthard-v13-fail.json");
     }
 
+    /** v12 with no usable trajectory at all (a one-tick-shifted variant). The from-scratch solver must be
+     *  robust to such incidental differences -- it is the same problem. */
+    @Test
+    public void nothingSolvesByteExact() {
+        solveAndAssert("deserthard-nothing.json");
+    }
+
     private void solveAndAssert(String fixture) {
         SaveFile file = SaveIO.parseSafe(readFixture(fixture));
         InputData inputs = new InputData();
