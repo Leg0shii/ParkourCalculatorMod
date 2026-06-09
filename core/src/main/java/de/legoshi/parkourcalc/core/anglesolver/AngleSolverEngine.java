@@ -11,6 +11,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.BlockSolver;
 import de.legoshi.parkourcalc.core.anglesolver.solver.BucketAscentPolish;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ClosedFormSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
+import de.legoshi.parkourcalc.core.anglesolver.solver.FeasibilityRestorer;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolveCore;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
@@ -128,10 +129,13 @@ public final class AngleSolverEngine {
         final boolean[] strafeMask;
         final List<ConstraintAt> uiConstraints;
         final AngleSolverState.Effort effort;
+        /** The editor's current-trajectory game facings over the span (absolute recorded yaw per tick),
+         *  warm-starting the long-run feasibility fallback. null when unavailable. */
+        final double[] guideFacings;
 
         Job(JumpSpec spec, Objective.Sense sense, int startTick, int landingTick,
             int numTicks, boolean[] strafeMask, List<ConstraintAt> uiConstraints,
-            AngleSolverState.Effort effort
+            AngleSolverState.Effort effort, double[] guideFacings
         ) {
             this.spec = spec;
             this.sense = sense;
@@ -141,6 +145,7 @@ public final class AngleSolverEngine {
             this.strafeMask = strafeMask;
             this.uiConstraints = uiConstraints;
             this.effort = effort;
+            this.guideFacings = guideFacings;
         }
     }
 
@@ -172,8 +177,11 @@ public final class AngleSolverEngine {
 
     // ---- solve (kick off on the main thread) ----------------------------------
 
-    public void solve() {
-        if (solving) return;
+    /** Build the immutable problem snapshot from the current UI state, on the caller (main) thread.
+     *  Returns null and publishes a no-solution result when the tick range is invalid. Shared by
+     *  {@link #solve()} and exposed (via {@link #debugBuildSpec()}) so tests can obtain the exact compiled
+     *  spec without spawning the worker / triggering the slow fallback. */
+    private Job buildJob() {
         int startTick = state.getStartTick();
         int landingTick = state.getLandingTick();
         int total = segmentConstraintCount(startTick, landingTick);
@@ -183,7 +191,7 @@ public final class AngleSolverEngine {
         if (numTicks <= 0 || startTick < 0 || startTick >= boxes.size()
                 || landingTick > rows.size() || startTick >= rows.size()) {
             state.setResult(new SolveResult(false, 0, total, startTick + 1, landingTick + 1));
-            return;
+            return null;
         }
 
         Phys ph = buildPhys(startTick, numTicks);
@@ -195,10 +203,36 @@ public final class AngleSolverEngine {
 
         // Freeze the problem on the main thread so the worker reads a genuinely read-only snapshot.
         JumpSpec spec = new JumpSpec(ph.inputs, constraints, objective);
-        long t0 = System.nanoTime();
-        Job job = new Job(spec, objective.sense, startTick, landingTick, numTicks, ph.strafeMask, uiCons,
-                state.getEffort());
+        double[] guide = captureGuideFacings(startTick, numTicks);
+        return new Job(spec, objective.sense, startTick, landingTick, numTicks, ph.strafeMask, uiCons,
+                state.getEffort(), guide);
+    }
 
+    /** The current-trajectory absolute facing for each move in the span: {@code boxes.getState(t+1).yaw} (the
+     *  facing the move at tick t uses). Snapshotted on the main thread; warm-starts the long-run fallback.
+     *  null if the recorded states are not all present. */
+    private double[] captureGuideFacings(int startTick, int numTicks) {
+        double[] g = new double[numTicks];
+        for (int k = 0; k < numTicks; k++) {
+            TickState st = boxes.getState(startTick + k + 1);
+            if (st == null) return null;
+            g[k] = st.yaw;
+        }
+        return g;
+    }
+
+    /** Test-only: the compiled spec for the current UI state, built synchronously (no worker thread). */
+    public JumpSpec debugBuildSpec() {
+        Job job = buildJob();
+        return job == null ? null : job.spec;
+    }
+
+    public void solve() {
+        if (solving) return;
+        Job job = buildJob();
+        if (job == null) return; // invalid range: buildJob already published the failure result
+
+        long t0 = System.nanoTime();
         // Show the spinner instead of a stale result, then run off-thread.
         state.clearResult();
         lastPlan = null;
@@ -364,6 +398,18 @@ public final class AngleSolverEngine {
                 }
             }
         }
+        // Long-run feasibility fallback: when the closed form (and its alternate directions) cannot certify a
+        // multi-jump span, restore feasibility directly on the byte-exact model in game-facing space,
+        // warm-started from the editor's current trajectory. This is where the dual does not converge at
+        // scale (e.g. the 354-tick desert-hard runs); the cold high-dimensional CMA-ES below is hopeless
+        // there, so try this first. Single jumps never reach here (they return on the closed-form fast path),
+        // and it only runs when the span genuinely contains multiple jumps -- the fast path is untouched.
+        double[] directFacings = null;
+        if (yaws == null && !cancel.get() && model instanceof ExactJumpModel
+                && job.guideFacings != null && countJumps(sc) > 1) {
+            double[] restored = FeasibilityRestorer.restore((ExactJumpModel) model, spec, job.guideFacings, FEAS_TOL, cancel);
+            if (restored != null) { directFacings = restored; yaws = Angles.wrapAll(restored); }
+        }
         if (cancel.get()) return null;
         if (yaws == null) {
             yaws = SolveCore.optimize(model, spec, budgetFor(job.effort), CMAES_SIGMA_DEG, FEAS_TOL, cancel);
@@ -371,7 +417,11 @@ public final class AngleSolverEngine {
         long solveNanos = System.nanoTime() - solveStart;
         if (yaws == null) return null;
 
-        ForwardPath path = model.forward(sc, sc.toGameFacings(yaws));
+        // The restorer returns the byte-exact game facings directly (it chains/optimizes in game-facing
+        // space, so re-deriving them via toGameFacings would not be bit-identical); use them as-is. Every
+        // other path produces absolute facings whose game-facing realization is toGameFacings(yaws).
+        ForwardPath path = directFacings != null ? model.forward(sc, directFacings)
+                : model.forward(sc, sc.toGameFacings(yaws));
         SolveResult result = buildResult(job, yaws, path);
         result.setDurationNanos(solveNanos);
         result.setDurationMs(solveNanos / 1_000_000L);
@@ -779,6 +829,20 @@ public final class AngleSolverEngine {
             if (tc != null) n += tc.getConstraints().size();
         }
         return n;
+    }
+
+    /** Number of distinct jumps in the span: rising edges of a grounded JUMP press. Used to gate the
+     *  long-run feasibility fallback to genuine multi-jump spans (single jumps stay on the fast path). */
+    private static int countJumps(JumpPhysicsInputs sc) {
+        int count = 0;
+        boolean prev = false;
+        for (int t = 0; t < sc.numTicks; t++) {
+            boolean grounded = !Double.isNaN(sc.slipAt(t));
+            boolean jump = sc.jumpAt(t) && grounded;
+            if (jump && !prev) count++;
+            prev = jump;
+        }
+        return count;
     }
 
     private static int firstJumpTick(List<InputRow> rows, int startTick, int numTicks) {

@@ -116,6 +116,14 @@ public final class JumpLinearModel {
         return mMag[t];
     }
 
+    /** Phase of the base input vector {@code (q + i p)} at tick t: the input added by a move at absolute yaw
+     *  {@code y} (radians) is {@code mMag·e^{i(baseArg + y)}} = {@code (addX, addZ)}. So
+     *  {@code d(addX)/dy = -addZ} and {@code d(addZ)/dy = addX}, which gives the analytic Jacobian of any
+     *  X/Z position constraint wrt the per-tick facings (no forward needed). */
+    public double baseArg(int t) {
+        return baseArg[t];
+    }
+
     /** The per-tick input magnitudes (constant moduli), shared read-only with the dual solver. */
     public double[] mMagAll() {
         return mMag;

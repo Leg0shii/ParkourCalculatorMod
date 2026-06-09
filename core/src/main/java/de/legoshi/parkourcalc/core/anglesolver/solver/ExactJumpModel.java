@@ -61,9 +61,24 @@ public final class ExactJumpModel implements ForwardModel {
         velY[0] = scenario.initialVelocity.y;
         velZ[0] = scenario.initialVelocity.z;
 
+        ForwardPath path = new ForwardPath(posX, posY, posZ, velX, velY, velZ);
+        stepRange(scenario, yawAbsDeg, 0, path);
+        return path;
+    }
+
+    /** Recompute {@code path} in place for ticks {@code [from, n)}, reusing the existing pos/vel at index
+     *  {@code from} as the seed. The single-tick step depends only on the velocity carried into the tick, so
+     *  a change to {@code yawAbsDeg[from]} (or any later facing) leaves indices {@code <= from} untouched and
+     *  this recomputes exactly the affected tail. Lets a local search re-evaluate a one-facing perturbation
+     *  in {@code O(n - from)} instead of {@code O(n)}; the full {@link #forward} is {@code stepRange(.,.,0,.)}.
+     *  {@code path} must carry velocity arrays (built by {@link #forward}). Byte-identical to a full forward. */
+    public void stepRange(JumpPhysicsInputs scenario, double[] yawAbsDeg, int from, ForwardPath path) {
+        int n = yawAbsDeg.length;
+        double[] posX = path.posX, posY = path.posY, posZ = path.posZ;
+        double[] velX = path.velX, velY = path.velY, velZ = path.velZ;
         double thr = inertiaThreshold;
 
-        for (int t = 0; t < n; t++) {
+        for (int t = from; t < n; t++) {
             double vx = velX[t];
             double vy = velY[t];
             double vz = velZ[t];
@@ -141,6 +156,5 @@ public final class ExactJumpModel implements ForwardModel {
             velZ[t + 1] = vz * (double) f4;
             velY[t + 1] = (vy - Constants.GRAVITY) * (double) Constants.Y_DRAG_F;
         }
-        return new ForwardPath(posX, posY, posZ);
     }
 }

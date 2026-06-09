@@ -32,6 +32,10 @@ public final class ClosedFormSolve {
      *  land safe; the rest cover the ~1e-4 sine-table perturbation with headroom. */
     private static final double[] MARGINS = {0.0, 1.0e-4, 3.0e-4, 6.0e-4, 1.2e-3, 2.5e-3, 5.0e-3, 1.0e-2};
 
+    /** First-margin byte-exact violation (blocks) above which the dual is deemed non-converged: far beyond
+     *  anything the &lt;=1e-2 margin ladder could reconcile, so the remaining margins are skipped. */
+    private static final double DUAL_DIVERGED_VIOL = 0.1;
+
     public static double[] optimize(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel) {
         JumpPhysicsInputs sc = spec.asScenario();
         List<JumpConstraint> constraints = spec.constraints;
@@ -59,7 +63,8 @@ public final class ClosedFormSolve {
         // from the previous margin's multipliers, so the ladder costs barely more than a single solve.
         double bestViol = Double.POSITIVE_INFINITY;
         double[] warm = null;
-        for (double margin : MARGINS) {
+        for (int mi = 0; mi < MARGINS.length; mi++) {
+            double margin = MARGINS[mi];
             if (cancel.get()) return null;
             CostateDualSolver.Result r = solver.solve(margin, warm);
             if (r == null) continue; // dual unbounded -> primal infeasible
@@ -74,6 +79,15 @@ public final class ClosedFormSolve {
                         margin, solver.lastIters, viol, o);
             }
             if (viol < bestViol) bestViol = viol;
+            // Dual-non-convergence early out: the whole margin ladder only spans <=1e-2 blocks, so it can
+            // only reconcile sine-table quantization (~1e-4). A first-margin violation orders of magnitude
+            // larger means the dual itself did not converge (the degenerate high-dimensional landscape of a
+            // long multi-jump run), and no inward margin will fix it -- bail to the fallback now instead of
+            // grinding the remaining margins. Costs the long-run path one dual solve, not eight.
+            if (mi == 0 && viol > DUAL_DIVERGED_VIOL) {
+                if (DEBUG) System.out.printf("  CLOSED bail (dual diverged, viol=%.2e)%n", viol);
+                return null;
+            }
             if (viol <= feasTol) {
                 if (DEBUG) System.out.printf("  CLOSED -> %.2fus (margin=%.1e)%n", (System.nanoTime() - t0) / 1e3, margin);
                 return yaws;
