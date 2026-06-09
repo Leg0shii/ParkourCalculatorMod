@@ -349,6 +349,20 @@ public final class AngleSolverEngine {
         double[] yaws = null;
         if (model instanceof ExactJumpModel) {
             yaws = ClosedFormSolve.optimize((ExactJumpModel) model, spec, FEAS_TOL, cancel);
+            // Feasibility does NOT depend on the Solve-For direction: whether a solution exists is a property
+            // of the constraints, not of what we optimize. The closed form only certifies the objective's
+            // optimal vertex, so for some directions that vertex is byte-exact-infeasible and it returns null
+            // -- even though a different direction on the SAME constraints certifies cleanly and instantly.
+            // Before dropping a long jump into the effectively-hopeless high-dimensional multistart, try the
+            // other directions via the same microsecond closed form; any feasible landing beats "no solution".
+            if (yaws == null && !cancel.get()) {
+                for (Objective alt : alternateObjectives(spec.objective)) {
+                    if (cancel.get()) return null;
+                    JumpSpec altSpec = new JumpSpec(sc, spec.constraints, alt);
+                    double[] altYaws = ClosedFormSolve.optimize((ExactJumpModel) model, altSpec, FEAS_TOL, cancel);
+                    if (altYaws != null) { yaws = altYaws; break; }
+                }
+            }
         }
         if (cancel.get()) return null;
         if (yaws == null) {
@@ -780,5 +794,23 @@ public final class AngleSolverEngine {
 
     private static Objective.Sense sense(AngleSolverState.Goal g) {
         return g == AngleSolverState.Goal.MAX ? Objective.Sense.MAX : Objective.Sense.MIN;
+    }
+
+    /** The other three Solve-For directions at the same tick, ordered to prefer the user's axis (so a
+     *  feasibility fallback returns a solution on the axis they care about when possible). Used only to find
+     *  ANY feasible landing when the user's own direction cannot be certified -- feasibility is
+     *  objective-independent, so if one direction solves, all of them should report a solution. */
+    private static List<Objective> alternateObjectives(Objective o) {
+        List<Objective> out = new ArrayList<>(3);
+        JumpPhysicsInputs.Axis[] axisOrder = (o.axis == JumpPhysicsInputs.Axis.X)
+                ? new JumpPhysicsInputs.Axis[]{JumpPhysicsInputs.Axis.X, JumpPhysicsInputs.Axis.Z}
+                : new JumpPhysicsInputs.Axis[]{JumpPhysicsInputs.Axis.Z, JumpPhysicsInputs.Axis.X};
+        for (JumpPhysicsInputs.Axis ax : axisOrder) {
+            for (Objective.Sense se : new Objective.Sense[]{Objective.Sense.MAX, Objective.Sense.MIN}) {
+                if (ax == o.axis && se == o.sense) continue;
+                out.add(new Objective(ax, se, o.tick));
+            }
+        }
+        return out;
     }
 }
