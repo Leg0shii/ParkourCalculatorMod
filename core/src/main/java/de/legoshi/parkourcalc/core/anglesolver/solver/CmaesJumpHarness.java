@@ -33,19 +33,32 @@ public final class CmaesJumpHarness {
     private final double muEq;
     private final double sigmaDeg;
     private final int maxEval;
+    private final boolean feasibilityOnly;
 
     public CmaesJumpHarness(double muIneq, double muEq, double sigmaDeg, int maxEval) {
+        this(muIneq, muEq, sigmaDeg, maxEval, false);
+    }
+
+    /** {@code feasibilityOnly} zeroes the objective term so the search optimizes pure constraint
+     *  satisfaction, independent of the Solve-For direction. Used as a fallback when the objective-weighted
+     *  pass finds no feasible basin: the penalized fitness blends the objective with the constraint penalty,
+     *  so for some objectives CMA-ES settles a hair infeasible (and the strict-feasible polish then bails)
+     *  while a different objective on the SAME problem lands feasible. Whether a solution EXISTS must not
+     *  depend on what we optimize, so this mode recovers it. */
+    public CmaesJumpHarness(double muIneq, double muEq, double sigmaDeg, int maxEval, boolean feasibilityOnly) {
         this.muIneq = muIneq;
         this.muEq = muEq;
         this.sigmaDeg = sigmaDeg;
         this.maxEval = maxEval;
+        this.feasibilityOnly = feasibilityOnly;
     }
 
     public SolverRunResult solve(ForwardModel model, JumpSpec spec, double[] initialFAbsDeg, AtomicBoolean cancel) {
         JumpConstraintCompiler.Compiled c = JumpConstraintCompiler.compile(spec);
         JumpPhysicsInputs scenario = spec.asScenario();
         int n = initialFAbsDeg.length;
-        double sign = spec.objective.sense == Objective.Sense.MAX ? -1.0 : 1.0;
+        // feasibilityOnly drops the objective from the fitness (sign 0), leaving pure constraint penalty.
+        double sign = feasibilityOnly ? 0.0 : (spec.objective.sense == Objective.Sense.MAX ? -1.0 : 1.0);
         Objective obj = spec.objective;
 
         // Score the facings exactly as the game runs them: wrap to (-180,180] (the search box spans more

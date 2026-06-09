@@ -54,14 +54,28 @@ public final class SolveCore {
         List<double[]> inits = new ArrayList<>();
         for (int r = 0; r < budget.restarts; r++) inits.add(r == 0 ? warm : randomInit(rng, n));
 
-        List<SolverRunResult> results = inits.parallelStream()
-                .map(in -> new CmaesJumpHarness(1.0e7, 1.0e7, sigmaDeg, budget.maxEval).solve(model, spec, in, cancel))
-                .collect(Collectors.toList());
+        List<SolverRunResult> results = runRestarts(model, spec, sigmaDeg, budget.maxEval, inits, false, cancel);
         if (cancel.get()) return null;
 
         boolean max = spec.objective.sense == Objective.Sense.MAX;
-        List<SolverRunResult> feasible = new ArrayList<>();
-        for (SolverRunResult r : results) if (maxViolation(r) <= feasTol) feasible.add(r);
+        List<SolverRunResult> feasible = filterFeasible(results, feasTol);
+
+        // Feasibility must not depend on the Solve-For direction. The penalized fitness blends the objective
+        // with the constraint penalty, so for some objectives CMA-ES settles a hair infeasible (and the
+        // strict-feasible polish then bails) while a different objective on the SAME constraints lands
+        // feasible -- the "X-min solves but X-max reports no solution" bug. If the objective-weighted pass
+        // found nothing feasible, retry ignoring the objective (pure constraint satisfaction). Purely
+        // additive: this only runs when we would otherwise report no solution, so it can never regress a
+        // solve that already succeeds.
+        if (feasible.isEmpty()) {
+            List<SolverRunResult> feasOnly = runRestarts(model, spec, sigmaDeg, budget.maxEval, inits, true, cancel);
+            if (cancel.get()) return null;
+            List<SolverRunResult> rescued = filterFeasible(feasOnly, feasTol);
+            if (!rescued.isEmpty()) {
+                results = feasOnly;
+                feasible = rescued;
+            }
+        }
 
         if (feasible.isEmpty()) {
             SolverRunResult best = null;
@@ -90,6 +104,22 @@ public final class SolveCore {
             }
         }
         return yaws;
+    }
+
+    /** One parallel multistart of CMA-ES restarts over {@code inits}. {@code feasibilityOnly} drops the
+     *  objective so the search optimizes pure constraint satisfaction. */
+    private static List<SolverRunResult> runRestarts(ForwardModel model, JumpSpec spec, double sigmaDeg,
+                                                     int maxEval, List<double[]> inits, boolean feasibilityOnly,
+                                                     AtomicBoolean cancel) {
+        return inits.parallelStream()
+                .map(in -> new CmaesJumpHarness(1.0e7, 1.0e7, sigmaDeg, maxEval, feasibilityOnly).solve(model, spec, in, cancel))
+                .collect(Collectors.toList());
+    }
+
+    private static List<SolverRunResult> filterFeasible(List<SolverRunResult> results, double feasTol) {
+        List<SolverRunResult> feasible = new ArrayList<>();
+        for (SolverRunResult r : results) if (maxViolation(r) <= feasTol) feasible.add(r);
+        return feasible;
     }
 
     public static double objectiveOf(ForwardModel model, JumpPhysicsInputs sc, Objective obj, double[] absWrapped) {
