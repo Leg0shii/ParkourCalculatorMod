@@ -36,6 +36,37 @@ it green and fast.
 
 ---
 
+## 1.5 🔬 WORK AUTONOMOUSLY · BENCHMARK EVERYTHING · REPORT BACK (REQUIRED)
+
+You are expected to run **autonomously**: try → benchmark → diagnose → repeat, headlessly,
+without waiting for the user between attempts. Fact-check every attempt yourself (the
+fixtures are committed; see §3). Only come back to the user at real milestones or with the
+final report — but **always** with numbers.
+
+**Benchmark every attempt across the full jump-type matrix, with solve TIME as the primary
+metric.** Never claim something works (or is fast) without a benchmark table. There is
+already a harness to extend: `core/src/test/java/.../SolveBenchmark.java` (times
+`engine.solve()` median/min/max ms over fixtures) and `ClosedFormSolveTest` (times
+`ClosedFormSolve.optimize` in a tight loop for the **microsecond** fast-path number).
+
+The fixture matrix (all committed in `core/src/test/resources/anglesolver/`):
+| class | fixtures | what it guards |
+|---|---|---|
+| single / short jump | `j121`, `j154`, `j1097`, `jc-xt43`, `long-seq-with-ground` | the **<0.1 ms** fast path — must NOT regress |
+| medium multi-jump | `deserthard-v7` (189t), `deserthard-vfail` (176t) | solvable today; keep solving, watch time |
+| long multi-jump | `deserthard-v12` (354t) | THE target: must solve, **<10 ms** |
+
+For each fixture measure and log, **for every attempt**: (a) **closed-form solve time in µs**
+(tight-loop, the <0.1 ms metric — engine `solve()` wall-clock includes thread-spawn overhead
+so do NOT use it for the µs number), (b) end-to-end solve compute time, (c) success +
+met/total, (d) which path was taken (closed form / segmented / CMA-ES). Keep a running
+before/after table so regressions are obvious.
+
+**Report findings back to the user** as a structured summary: the benchmark table (per
+fixture: ticks, jumps, constraints, solve time, pass/fail, path), what changed, what the
+data shows, any regression vs the `<0.1 ms` and `<10 ms` targets, and the conclusion. Data
+first, prose second.
+
 ## 2. The codebase (where to look)
 
 Repo: `ParkourCalculatorMod`, branch **`features/angle-optimizer`**. Core module only
@@ -271,6 +302,20 @@ tractable is an open research question — investigate it.
 ---
 
 ## 7. RESEARCH FIRST (use `ultracode` + `deep-research`)
+
+**Do not skip the research.** This problem already defeated a session of straight-to-code
+attempts. When you hit something you do not fully understand (the dual non-convergence root
+cause, the facing round-trip, the model drift, the coupling), run a real `deep-research`
+pass before guessing — research properly rather than tune-and-pray.
+
+**Stay open to other routes.** The three routes in this doc (segmentation, scalable dual,
+direct byte-exact optimization) are *starting points, not a closed set.* Actively look for
+approaches not listed here — different problem framings (e.g. graph-of-convex-sets / corridor
+planning from the existing research docs, reachability pruning, learned/amortized warm
+starts, contact-implicit formulations), different solvers, different decompositions. If the
+data points somewhere I did not anticipate, follow it. The only fixed constraints are the
+two hard requirements (§1 `<0.1 ms` fast path, §10 `<10 ms` for v12) and "solve at all before
+maintain speed."
 
 Before coding, run a proper deep-research pass on:
 1. **Bit-exact Minecraft movement/facing reproduction** — how the game accumulates yaw
