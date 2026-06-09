@@ -36,6 +36,16 @@ public final class CostateDualSolver {
     private static final double LAMBDA_CAP = 1.0e9;   // dual var this large => treat primal as infeasible
     private static final double GRAD_TOL = 1.0e-8;    // projected-gradient (constraint-slack) convergence, blocks
     private static final double U_TOL = 1.0e-9;       // convergence in recovered-input space (degenerate optima)
+    // Early divergence bail: a converging dual drives its best projected-gradient residual steadily toward
+    // GRAD_TOL; the degenerate high-dimensional landscape of a long multi-jump run instead plateaus it at a
+    // large floor and grinds all MAX_ITER iterations before the caller's byte-exact check rejects it. Detect
+    // that stall -- best residual still HUGE and not improving for several iterations -- and stop, so the
+    // caller bails on the (unchanged) huge recovered violation immediately instead of after 100 iterations.
+    // The floor is set well above the residual any solvable single jump ever lingers at (~1.5), so the fast
+    // path -- whose residual is always below it -- can never trip this.
+    private static final double DIVERGE_PGRES = 4.0;  // bail only while the best residual is this far from 0
+    private static final double DIVERGE_REL = 0.05;   // an improvement must beat the best by this fraction
+    private static final int DIVERGE_STALL = 12;      // ...for this many iterations running, else: diverged
     private static final double GAMMA = 1.0e-4;       // Armijo sufficient-decrease factor
     private static final double RHO0 = 1.0e-2;        // initial Levenberg damping (fraction of σ_max)
     private static final double RHO_MIN = 1.0e-10;
@@ -140,6 +150,8 @@ public final class CostateDualSolver {
         System.arraycopy(uz, 0, uPrevZ, 0, n);
         rhoRel = RHO0;
 
+        double pgBest = Double.POSITIVE_INFINITY;
+        int stall = 0;
         int it = 0;
         for (; it < MAX_ITER; it++) {
             double pgres = 0.0;
@@ -148,6 +160,14 @@ public final class CostateDualSolver {
                 if (Math.abs(p) > pgres) pgres = Math.abs(p);
             }
             if (pgres <= GRAD_TOL) break;
+
+            // Early divergence bail: track the best (smallest) projected-gradient residual and how long it has
+            // failed to improve. A residual still far from zero AND stalled for several iterations means the
+            // dual is grinding the degenerate landscape of a long multi-jump run, not converging -- stop now
+            // and let the caller reject the (already-huge) recovered violation, instead of burning MAX_ITER.
+            if (pgres < pgBest * (1.0 - DIVERGE_REL)) { pgBest = pgres; stall = 0; }
+            else { if (pgres < pgBest) pgBest = pgres; stall++; }
+            if (pgBest > DIVERGE_PGRES && stall >= DIVERGE_STALL) break;
 
             // Converge in costate space: at a degenerate optimum the multipliers λ keep wandering in the
             // null space of Aᵀ (pg never reaches 0), but the recovered inputs u* -- all that the angles
