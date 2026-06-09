@@ -67,8 +67,9 @@ public final class SaveController {
 
     public Result<String> save(String name) {
         if (store == null) return Result.failure("Save store not initialized.");
-        List<TickState> debug = (settings != null && settings.saveDebugValues && boxController != null) ? boxController.getStates() : null;
-        Result<String> result = SaveIO.save(store, name, inputData, runner.getStartPosition(), runner.getStartVelocity(), runner.getStartYaw(), angleSolver, debug);
+        List<TickState> states = boxController != null ? boxController.getStates() : null;
+        boolean fullDebug = settings != null && settings.saveDebugValues;
+        Result<String> result = SaveIO.save(store, name, inputData, runner.getStartPosition(), runner.getStartVelocity(), runner.getStartYaw(), angleSolver, states, fullDebug);
         if (result.ok) {
             currentName = result.value;
             dirty = false;

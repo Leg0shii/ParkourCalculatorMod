@@ -49,6 +49,7 @@ public final class SaveFile {
         public List<Dose> defaultPotions = new ArrayList<Dose>();
         public List<Tick> ticks = new ArrayList<Tick>();
         public List<BlockSel> selectedBlocks = new ArrayList<BlockSel>(); // absent in old files -> empty
+        public Start seed;                               // launch state (pos/vel/yaw) at startTick; what a solve begins from
         public Result result;                            // null = no solve yet
     }
 
@@ -118,9 +119,8 @@ public final class SaveFile {
         public double yaw;
     }
 
-    /** Full per-tick SimulatorEntity state, captured for debugging. One per simulated tick; index 0 is
-     *  the start state, index i is the state after row i-1. collisionAngle is null when MC didn't model
-     *  it (e.g. 1.8.9, or the speed gate skipped it) so the value never serializes as NaN. */
+    /** Optional full per-tick dump, written ONLY when "save debug values" is on (absent otherwise). Purely for
+     *  inspection; the solver does not use it (it reads {@code rows[].onGround} and {@code angleSolver.seed}). */
     public static final class DebugTick {
         public double[] pos;                             // [x,y,z]
         public double[] vel;                             // post-tick motion (per-axis collision-clamped)

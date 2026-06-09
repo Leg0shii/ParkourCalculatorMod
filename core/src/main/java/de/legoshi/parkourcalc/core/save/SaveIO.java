@@ -29,13 +29,13 @@ import java.util.TimeZone;
 /** Pure save/load logic; Gson stays within the 2.2.4 subset (MC 1.8.9 ships it). */
 public final class SaveIO {
 
-    public static Result<String> save(FileSystemSaveStore store, String rawName, InputData inputData, Vec3dCore startPos, Vec3dCore startVel, float startYaw, AngleSolverState angleSolver, List<TickState> debugStates) {
+    public static Result<String> save(FileSystemSaveStore store, String rawName, InputData inputData, Vec3dCore startPos, Vec3dCore startVel, float startYaw, AngleSolverState angleSolver, List<TickState> states, boolean fullDebug) {
         String name = sanitize(rawName);
         if (name == null) {
             return Result.failure("Invalid save name. Use letters, numbers, dashes, or underscores.");
         }
 
-        SaveFile file = buildFile(store, inputData, startPos, startVel, startYaw, angleSolver, debugStates);
+        SaveFile file = buildFile(store, inputData, startPos, startVel, startYaw, angleSolver, states, fullDebug);
         String json = new GsonBuilder().setPrettyPrinting().create().toJson(file);
 
         try {
@@ -176,7 +176,7 @@ public final class SaveIO {
         return cleaned;
     }
 
-    private static SaveFile buildFile(FileSystemSaveStore store, InputData inputData, Vec3dCore startPos, Vec3dCore startVel, float startYaw, AngleSolverState angleSolver, List<TickState> debugStates) {
+    private static SaveFile buildFile(FileSystemSaveStore store, InputData inputData, Vec3dCore startPos, Vec3dCore startVel, float startYaw, AngleSolverState angleSolver, List<TickState> states, boolean fullDebug) {
         SaveFile file = new SaveFile();
         file.version = SaveFile.FORMAT_VERSION;
         file.createdAt = nowIso8601();
@@ -198,9 +198,24 @@ public final class SaveIO {
 
         file.angleSolver = toSaveAngleSolver(angleSolver);
 
-        if (debugStates != null) {
-            List<SaveFile.DebugTick> dbg = new ArrayList<>(debugStates.size());
-            for (TickState s : debugStates) dbg.add(toDebugTick(s));
+        // The launch state a solve begins from (velocity/position/yaw at startTick), so the run is solvable
+        // without re-simulating or the debug dump.
+        if (file.angleSolver != null && states != null) {
+            int seedIndex = angleSolver != null ? angleSolver.getStartTick() : 0;
+            if (seedIndex >= 0 && seedIndex < states.size()) {
+                TickState s = states.get(seedIndex);
+                SaveFile.Start seed = new SaveFile.Start();
+                seed.pos = new double[] { s.position.x, s.position.y, s.position.z };
+                seed.vel = new double[] { s.velocity.x, s.velocity.y, s.velocity.z };
+                seed.yaw = s.yaw;
+                file.angleSolver.seed = seed;
+            }
+        }
+
+        // Optional full per-tick dump, written only when "save debug values" is on. Inspection only.
+        if (fullDebug && states != null) {
+            List<SaveFile.DebugTick> dbg = new ArrayList<>(states.size());
+            for (TickState s : states) dbg.add(toDebugTick(s));
             file.debug = dbg;
         }
 
