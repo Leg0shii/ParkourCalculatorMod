@@ -39,6 +39,12 @@ public interface MinecraftAccess {
     /** Either control key currently held. Polled directly, not via ImGui IO. */
     boolean isCtrlDown();
 
+    /** Whether the quick-save chord (Ctrl+S) is held right now. Loaders read their own raw keyboard
+     *  (ImGui 1.86 exposes no portable letter-key ids), core edge-detects and saves (gh-107). */
+    default boolean isSaveChordDown() {
+        return false;
+    }
+
     /** Either shift key currently held. Polled directly, not via ImGui IO. */
     boolean isShiftDown();
 

@@ -61,6 +61,10 @@ public final class FileMenu {
     private static final String COL_WORLD = "World";
 
     private final SaveController controller;
+
+    private static final long AUTO_SAVE_INTERVAL_NANOS = 30L * 1_000_000_000L;
+    private long autoSaveIntervalNanos = AUTO_SAVE_INTERVAL_NANOS;
+    private long autoSaveClockNanos;
     private final FilePickerPort filePicker;
     private final Settings settings;
     private final Runnable onSettingsChanged;
@@ -122,7 +126,7 @@ public final class FileMenu {
         renderRecentSubmenu();
         ThemeManager.paddedSeparator();
         boolean hasName = controller.currentName() != null;
-        if (ImGui.menuItem("Save", null, false, hasName || controller.isDirty())) onSave();
+        if (ImGui.menuItem("Save", "Ctrl+S", false, hasName || controller.isDirty())) onSave();
         if (ImGui.menuItem("Save As...")) onSaveAs();
         if (ImGui.menuItem("Save debug values", null, settings.saveDebugValues)) {
             settings.saveDebugValues = !settings.saveDebugValues;
@@ -264,6 +268,31 @@ public final class FileMenu {
         nameModalConfirm = this::doSaveAs;
         pendingNamePopupId = POPUP_NAME_SAVEAS;
         pendingNameTitle = TITLE_NAME_SAVEAS;
+    }
+
+    /** Ctrl+S: save under the current name, or fall into Save As when unnamed (gh-107). */
+    public void quickSave() {
+        onSave();
+    }
+
+    /** Call once per frame. While enabled, a named + dirty TAS is saved at most once per interval;
+     *  the clock arms on the first dirty frame so a fresh edit is never written instantly (gh-107). */
+    public void tickAutoSave() {
+        if (!settings.autoSave) return;
+        if (controller.currentName() == null || !controller.isDirty()) return;
+        long now = System.nanoTime();
+        if (autoSaveClockNanos == 0L) {
+            autoSaveClockNanos = now;
+            return;
+        }
+        if (now - autoSaveClockNanos < autoSaveIntervalNanos) return;
+        applyResult(controller.save(controller.currentName()), "Auto-saved '%s'");
+        autoSaveClockNanos = now;
+    }
+
+    /** Test-only: shrink the auto-save interval so tests need not wait the real 30s. */
+    public void setAutoSaveIntervalNanosForTests(long nanos) {
+        this.autoSaveIntervalNanos = nanos;
     }
 
     private void onSave() {

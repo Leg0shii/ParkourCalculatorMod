@@ -85,6 +85,12 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
     }
 
     @Override
+    public boolean isSaveChordDown() {
+        long window = MinecraftClient.getInstance().getWindow().getHandle();
+        return isCtrlDown() && GLFW.glfwGetKey(window, GLFW.GLFW_KEY_S) == GLFW.GLFW_PRESS;
+    }
+
+    @Override
     public boolean isShiftDown() {
         long window = MinecraftClient.getInstance().getWindow().getHandle();
         return GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS

@@ -38,6 +38,7 @@ public final class SettingsModal {
     private static final String TT_KEEP_TICK_INFO = "Keeps the Tick Info window drawn even when the main UI is closed.";
     private static final String TT_KEEP_BOXES_PLAYBACK = "Keeps the tick-box path overlay drawn in-world while playback is running, instead of hiding it.";
     private static final String TT_AUTO_APPLY = "Applies a feasible Angle Solver solution to the input rows the moment the solve finishes, skipping the Apply confirmation.";
+    private static final String TT_AUTO_SAVE = "Saves the open TAS automatically while it has unsaved changes, at most every 30 seconds. Needs a named save (use Save As once); Ctrl+S still saves instantly.";
 
     private final Settings settings;
     private final Runnable onChanged;
@@ -150,6 +151,13 @@ public final class SettingsModal {
                 if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
                 tooltipForLastItem(TT_SCROLLBAR_GRAB);
             });
+            ThemeManager.endStandardFormTable();
+        }
+
+        ThemeManager.sectionSpacing();
+        sectionHeader("Saving");
+        if (beginLayoutTable("##settings_saving")) {
+            checkboxRow("Auto-save", "##auto_save", settings.autoSave, TT_AUTO_SAVE, v -> settings.autoSave = v);
             ThemeManager.endStandardFormTable();
         }
 

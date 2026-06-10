@@ -24,6 +24,10 @@ public final class Lwjgl2InputState {
         return Display.getHeight() - Mouse.getY();
     }
 
+    public static boolean isSaveChordDown() {
+        return isCtrlDown() && Keyboard.isKeyDown(Keyboard.KEY_S);
+    }
+
     public static boolean isCtrlDown() {
         return Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL);
     }

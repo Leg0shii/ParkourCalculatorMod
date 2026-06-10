@@ -40,6 +40,9 @@ dependencies {
 	// simple on the Java 8 toolchain. commons-math3 comes in transitively via `implementation`.
 	testImplementation 'com.google.code.gson:gson:2.8.0'
 	testImplementation 'junit:junit:4.13.2'
+	// The binding's plain-Java classes (ImString buffers etc.) so tests can construct UI classes
+	// whose logic is render-free (e.g. FileMenu auto-save); nothing native is loaded.
+	testImplementation 'io.github.spair:imgui-java-binding:1.86.11'
 }
 
 tasks.named('test') {

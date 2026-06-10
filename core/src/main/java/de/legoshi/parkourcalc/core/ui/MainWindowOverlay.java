@@ -49,6 +49,9 @@ public final class MainWindowOverlay implements RenderInterface {
     private final OsSystemBridge systemBridge;
     private final SaveStoreSupplier saveStoreSupplier;
     private final String modVersion;
+    private final de.legoshi.parkourcalc.core.ports.MinecraftAccess mc;
+
+    private boolean saveChordWasDown;
 
     private boolean openAboutRequested;
     private float lastHeaderHeight;
@@ -63,8 +66,10 @@ public final class MainWindowOverlay implements RenderInterface {
 
     public MainWindowOverlay(InputOverlay inputOverlay, InputData inputData, FileMenu fileMenu, Settings settings,
                              Runnable onSettingsChanged, TickInfoPanel tickInfoPanel, PerfOverlay perfOverlay,
-                             SettingsModal settingsModal, OsSystemBridge systemBridge, SaveStoreSupplier saveStoreSupplier, String modVersion)
+                             SettingsModal settingsModal, OsSystemBridge systemBridge, SaveStoreSupplier saveStoreSupplier, String modVersion,
+                             de.legoshi.parkourcalc.core.ports.MinecraftAccess mc)
     {
+        this.mc = mc;
         this.inputOverlay = inputOverlay;
         this.inputData = inputData;
         this.fileMenu = fileMenu;
@@ -81,14 +86,24 @@ public final class MainWindowOverlay implements RenderInterface {
 
     @Override
     public void render(ImGuiIO io) {
+        handleQuickSaveChord();
+        fileMenu.tickAutoSave();
         renderMainWindow(io, true);
         if (settings.viewTickInfo) tickInfoPanel.render(io);
         if (settings.viewPerf) perfOverlay.render(io);
     }
 
+    /** Edge-triggered Ctrl+S while the panel is open: the loader reports the raw chord (gh-107). */
+    private void handleQuickSaveChord() {
+        boolean down = mc != null && mc.isReady() && mc.isSaveChordDown();
+        if (down && !saveChordWasDown) fileMenu.quickSave();
+        saveChordWasDown = down;
+    }
+
     /** Display-only panels kept visible while the main UI is closed. ImGui receives no input here, so they don't edit. */
     @Override
     public void renderDetached(ImGuiIO io) {
+        fileMenu.tickAutoSave(); // unsaved edits keep auto-saving while the panel is closed
         if (settings.keepInputTableOpen) {
             renderMainWindow(io, false);
         } else {

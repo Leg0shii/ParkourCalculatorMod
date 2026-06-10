@@ -39,6 +39,7 @@ public final class Settings {
     private static final boolean DEFAULT_KEEP_BOXES_DURING_PLAYBACK = false;
 
     private static final float DEFAULT_YAW_FLICK_SPEED = 720.0f;
+    private static final boolean DEFAULT_AUTO_SAVE = false;
     public static final float MIN_YAW_FLICK_SPEED = 30.0f;
     public static final float MAX_YAW_FLICK_SPEED = 7200.0f;
 
@@ -77,6 +78,9 @@ public final class Settings {
     public boolean highlightOnGroundRows = DEFAULT_HIGHLIGHT_ON_GROUND_ROWS;
 
     public float yawFlickSpeed = DEFAULT_YAW_FLICK_SPEED;
+
+    /** Save the open TAS automatically while it is named and dirty, at most once per interval (gh-107). */
+    public boolean autoSave = DEFAULT_AUTO_SAVE;
 
     public int pathRenderDistance = DEFAULT_PATH_RENDER_DISTANCE;
     public boolean unlimitedPathRender = DEFAULT_UNLIMITED_PATH_RENDER;
@@ -133,6 +137,7 @@ public final class Settings {
         showPotionColumns = DEFAULT_SHOW_POTION_COLUMNS;
         highlightOnGroundRows = DEFAULT_HIGHLIGHT_ON_GROUND_ROWS;
         yawFlickSpeed = DEFAULT_YAW_FLICK_SPEED;
+        autoSave = DEFAULT_AUTO_SAVE;
         pathRenderDistance = DEFAULT_PATH_RENDER_DISTANCE;
         unlimitedPathRender = DEFAULT_UNLIMITED_PATH_RENDER;
         scrollbarSize = DEFAULT_SCROLLBAR_SIZE;

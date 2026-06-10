@@ -102,7 +102,7 @@ public final class Application {
         SettingsModal settingsModal = new SettingsModal(settings, this::saveSettings);
         MainWindowOverlay mainWindow = new MainWindowOverlay(
                 inputOverlay, inputData, fileMenu, settings, this::saveSettings,tickInfoPanel, perfOverlay,
-                settingsModal, systemBridge, saveController::getSaveStore, modVersion
+                settingsModal, systemBridge, saveController::getSaveStore, modVersion, mc
         );
         overlayManager.register(mainWindow);
         overlayManager.register(angleSolverWindow);
