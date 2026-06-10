@@ -13,6 +13,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.ClosedFormSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.LongRunSolver;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardModel;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SmoothingPolish;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolveCore;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
@@ -411,8 +412,11 @@ public final class AngleSolverEngine {
         if (yaws == null) {
             yaws = SolveCore.optimize(model, spec, budgetFor(job.effort), CMAES_SIGMA_DEG, FEAS_TOL, cancel);
         }
-        long solveNanos = System.nanoTime() - solveStart;
         if (yaws == null) return null;
+        // Underdetermined solves: iron the free ticks toward their neighbors. The gates inside keep
+        // byte-exact feasibility and the achieved objective, so only the path's looks can change.
+        yaws = SmoothingPolish.smooth(model, spec, yaws, cancel);
+        long solveNanos = System.nanoTime() - solveStart;
 
         // Every path produces absolute wrapped facings whose game-facing realization is toGameFacings(yaws)
         // -- the chain Apply writes back as float deltas -- so the reported path is bit-for-bit the applied one.
