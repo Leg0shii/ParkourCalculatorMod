@@ -17,17 +17,20 @@ import imgui.ImDrawList;
 import imgui.ImGui;
 import imgui.ImVec2;
 import imgui.flag.ImGuiCol;
+import imgui.flag.ImGuiInputTextFlags;
 import imgui.flag.ImGuiSelectableFlags;
 import imgui.flag.ImGuiStyleVar;
 import imgui.flag.ImGuiTableColumnFlags;
 import imgui.flag.ImGuiWindowFlags;
-import imgui.type.ImDouble;
 import imgui.type.ImInt;
+import imgui.type.ImString;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.function.DoubleConsumer;
 import java.util.function.IntSupplier;
 
 /**
@@ -82,8 +85,7 @@ public final class AngleSolverTable {
     // Full-row gutter rect carried out to InputOverlay (the chevron is the last item drawn there).
     private float gMinX, gMinY, gMaxX, gMaxY;
 
-    private final ImDouble numA = new ImDouble();
-    private final ImDouble numB = new ImDouble();
+    private final ImString numBuf = new ImString(32);
     private final ImInt slipBuf = new ImInt();
     private final ImInt doseCombo = new ImInt();
     private final ImInt levelBuf = new ImInt();
@@ -904,22 +906,30 @@ public final class AngleSolverTable {
         float s = ThemeManager.uiScale();
         float numW = 108f * s;
         if (c.isRange()) {
-            numA.set(c.getLo());
             ImGui.setNextItemWidth(numW);
-            if (ImGui.inputDouble("##lo", numA, 0.0, 0.0, "%.4f")) c.setLo(numA.get());
+            numberField("##lo", c.getLo(), c::setLo);
             ImGui.sameLine();
             ThemeManager.pushTextColor(ThemeManager.textMutedColor());
             ImGui.alignTextToFramePadding();
             ImGui.text("to");
             ThemeManager.popTextColor();
             ImGui.sameLine();
-            numB.set(c.getHi());
             ImGui.setNextItemWidth(numW);
-            if (ImGui.inputDouble("##hi", numB, 0.0, 0.0, "%.4f")) c.setHi(numB.get());
+            numberField("##hi", c.getHi(), c::setHi);
         } else {
-            numA.set(c.getValue());
             ImGui.setNextItemWidth(numW);
-            if (ImGui.inputDouble("##v", numA, 0.0, 0.0, "%.4f")) c.setValue(numA.get());
+            numberField("##v", c.getValue(), c::setValue);
+        }
+    }
+
+    /** Locale-independent replacement for inputDouble, whose native printf renders comma decimals under some C locales (gh-124). */
+    private void numberField(String id, double value, DoubleConsumer apply) {
+        numBuf.set(String.format(Locale.ROOT, "%.4f", value));
+        if (ImGui.inputText(id, numBuf, ImGuiInputTextFlags.CharsDecimal)) {
+            try {
+                apply.accept(Double.parseDouble(numBuf.get().trim()));
+            } catch (NumberFormatException ignored) {
+            }
         }
     }
 
