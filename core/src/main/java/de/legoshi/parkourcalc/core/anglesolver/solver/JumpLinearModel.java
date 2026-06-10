@@ -194,9 +194,12 @@ public final class JumpLinearModel {
         if (trivial) {
             // No decision dependence (tick 0, or t1==t2): the constraint is the constant 0 <= bPrime
             // (or, for EQ, |bPrime| == 0). Compare against the pre-margin bound; flag if the constant
-            // itself violates it (nothing the solver does can fix a constant).
+            // itself violates it (nothing the solver does can fix a constant). The check is EXACT,
+            // matching the byte-exact FEAS_TOL=0 gate downstream (constPos(0) is the seed position to
+            // the bit, and the same subtraction the compiler's evaluate() performs): any grace here only
+            // delays the inevitable "no solution" past a full ladder + fallback burn.
             double rawBound = eq ? bPrime : bPrime + margin;
-            boolean ok = eq ? Math.abs(rawBound) <= 1.0e-6 : rawBound >= -1.0e-6;
+            boolean ok = eq ? rawBound == 0.0 : rawBound >= 0.0;
             if (!ok && trivialInfeasible != null) trivialInfeasible[0] = true;
             return null;
         }
