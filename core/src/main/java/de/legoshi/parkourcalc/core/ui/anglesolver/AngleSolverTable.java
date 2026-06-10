@@ -136,6 +136,11 @@ public final class AngleSolverTable {
         state.onRowMoved(from, to);
     }
 
+    public void onRowDuplicated(int sourceIndex) {
+        state.onRowDuplicated(sourceIndex);
+    }
+
+
     public String constraintsColumnHeaderLabel() {
         return "Constraints";
     }

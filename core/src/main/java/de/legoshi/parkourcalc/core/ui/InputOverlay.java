@@ -975,7 +975,8 @@ public final class InputOverlay {
         for (int idx : descending) {
             if (idx < 0 || idx >= data.size()) continue;
             data.insertRow(idx + 1, data.get(idx).copy());
-            solverRowsInserted(idx + 1, 1);
+            // gh-111: the copy carries the tick's constraints and state override along.
+            if (angleSolver != null) angleSolver.onRowDuplicated(idx);
             if (idx < dirtyTick) dirtyTick = idx;
         }
         selection.clear();

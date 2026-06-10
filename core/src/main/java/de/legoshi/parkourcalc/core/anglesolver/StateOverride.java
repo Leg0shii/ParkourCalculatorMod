@@ -79,4 +79,14 @@ public final class StateOverride {
     public boolean isEmpty() {
         return !overridesInputs() && !overridesSlipperiness() && !overridesPotion();
     }
+
+    /** Make this override an independent copy of {@code other} (doses deep-copied: they are mutable). */
+    public void copyFrom(StateOverride other) {
+        inputs = other.inputs;
+        slipperiness = other.slipperiness;
+        added.clear();
+        for (PotionDose d : other.added) added.add(new PotionDose(d.potion, d.level));
+        removed.clear();
+        removed.addAll(other.removed);
+    }
 }

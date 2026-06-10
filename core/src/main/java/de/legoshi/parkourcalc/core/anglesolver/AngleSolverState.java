@@ -225,6 +225,18 @@ public final class AngleSolverState {
         landingTick -= countBelow(asc, landingTick);
     }
 
+    /** The row at {@code sourceIndex} was duplicated onto {@code sourceIndex + 1}: slide everything
+     *  past the copy, then deep-copy the source tick's constraints and override onto it (gh-111). */
+    public void onRowDuplicated(int sourceIndex) {
+        onRowsInserted(sourceIndex + 1, 1);
+        TickConstraints src = ticks.get(sourceIndex);
+        if (src == null) return;
+        TickConstraints dst = tickConstraints(sourceIndex + 1);
+        for (Constraint c : src.getConstraints()) dst.getConstraints().add(c.copy());
+        dst.getOverride().copyFrom(src.getOverride());
+    }
+
+
     /** A row moved with InputData.moveRow's drop-line semantics: {@code to} is the gap index, a no-op
      *  when it neighbors {@code from}; otherwise list-remove at {@code from} + insert at the effective
      *  destination. Tick data rotates the same way. */
