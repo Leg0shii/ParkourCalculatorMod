@@ -350,7 +350,9 @@ public class SimulatorEntity extends PlayerEntity {
             return raw;
         }
         Vec2f result = raw.multiply(0.98F);
-        if (this.isSneaking()) {
+        // Vanilla gates on shouldSlowDown() (pose from the previous tick's sneak), so the
+        // slowdown lands one tick after the sneak input; isSneaking() would apply it a tick early.
+        if (this.shouldSlowDown()) {
             float sneakSpeed = (float) this.getAttributeValue(EntityAttributes.SNEAKING_SPEED);
             result = result.multiply(sneakSpeed);
         }
