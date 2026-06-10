@@ -387,6 +387,15 @@ public final class InputOverlay {
         // rail down the right edge tying the tick and its drawer into one block. Drawn on the foreground
         // list (the drawer is a nested child whose bg would otherwise occlude inset decorations) and
         // clipped to this scroll region so neither bleeds past the table when it scrolls.
+        // gh-93: the foreground list also paints above popups and modals, so the rail used to strike
+        // across any popup overlapping the drawer (reading as a stray scroll bar on top of it). ImGui
+        // 1.86 has no layer between child windows and popups, so skip the decorations while any popup
+        // is open; they return the moment it closes.
+        if (ImGui.isPopupOpen("", ImGuiPopupFlags.AnyPopupId | ImGuiPopupFlags.AnyPopupLevel)) {
+            angleSolver.endRows();
+            ImGui.endChild();
+            return;
+        }
         float s = ThemeManager.uiScale();
         ImDrawList dl = ImGui.getForegroundDrawList();
         dl.pushClipRect(clipMin.x, clipMin.y, clipMin.x + clipSize.x, clipMin.y + clipSize.y, true);
