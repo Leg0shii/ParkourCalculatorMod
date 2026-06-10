@@ -679,6 +679,15 @@ public final class AngleSolverEngine {
         if (c.isRange()) {
             out.add(new JumpConstraint(mode, t1, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.GE, c.getLo(), tag + "lo"));
             out.add(new JumpConstraint(mode, t1, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.LE, c.getHi(), tag + "hi"));
+        } else if (c.getOp() == Constraint.Op.EQ) {
+            // EQ as a +-MET_TOL corridor. A byte-exact equality to a typed target is unattainable on the
+            // sine-bucket lattice, so a solver-side equality could never certify on the closed form nor
+            // count as feasible for the polish (FEAS_TOL is 0) -- EQ specs silently lost the fast path and
+            // were never polished. The panel already reports EQ as met within MET_TOL, so enforce exactly
+            // that band as two strict walls; the F-mode wrap in evaluate() keeps the corridor correct
+            // across the +-180 seam.
+            out.add(new JumpConstraint(mode, t1, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.GE, c.getValue() - MET_TOL, tag + "eqLo"));
+            out.add(new JumpConstraint(mode, t1, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.LE, c.getValue() + MET_TOL, tag + "eqHi"));
         } else {
             out.add(new JumpConstraint(mode, t1, null, JumpConstraint.Op.PLUS, cmp(c.getOp()), c.getValue(), tag));
         }
