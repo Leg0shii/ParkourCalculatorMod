@@ -121,6 +121,21 @@ public final class AngleSolverTable {
         return settings.viewAngleSolver;
     }
 
+    // ---- row-edit forwarding (gh-89): InputOverlay reports row edits so the per-tick solver data
+    // (constraints, overrides, start/landing) follows its rows. Plain delegates to the model.
+
+    public void onRowsInserted(int index, int count) {
+        state.onRowsInserted(index, count);
+    }
+
+    public void onRowsRemoved(java.util.List<Integer> descendingIndices) {
+        state.onRowsRemoved(descendingIndices);
+    }
+
+    public void onRowMoved(int from, int to) {
+        state.onRowMoved(from, to);
+    }
+
     public String constraintsColumnHeaderLabel() {
         return "Constraints";
     }

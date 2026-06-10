@@ -24,17 +24,20 @@ public class InputData {
         return rows.get(index);
     }
 
-    public void moveRow(int from, int to) {
+    /** Move a row to the drop-line gap {@code to}; returns whether anything actually moved (so
+     *  callers can shift row-anchored data, e.g. the angle solver's per-tick state). */
+    public boolean moveRow(int from, int to) {
         if (from < 0 || from >= rows.size() || to < 0 || to > rows.size()) {
-            return;
+            return false;
         }
         if (from == to || from == to - 1) {
-            return;
+            return false;
         }
 
         InputRow moved = rows.remove(from);
         int insertAt = from < to ? to - 1 : to;
         rows.add(insertAt, moved);
+        return true;
     }
 
     public void addRowAt(int index) {

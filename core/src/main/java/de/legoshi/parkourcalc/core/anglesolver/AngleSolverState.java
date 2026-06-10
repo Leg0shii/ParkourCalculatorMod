@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.core.anglesolver;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -199,6 +200,67 @@ public final class AngleSolverState {
             if (def.potion == d.potion && def.level == d.level) return true;
         }
         return false;
+    }
+
+    // ---- row edits: tick-anchored data follows its rows (gh-89) ----------------
+
+    /** Rows inserted at {@code index}: constraints/overrides and the start/landing flags at or past
+     *  it slide down with their rows. */
+    public void onRowsInserted(int index, int count) {
+        if (count <= 0) return;
+        remapTicks(t -> t >= index ? t + count : t);
+        if (startTick >= index) startTick += count;
+        if (landingTick >= index) landingTick += count;
+    }
+
+    /** Rows removed at {@code descendingIndices} (the shape InputData.removeRows consumes): their
+     *  tick entries die with the rows, everything below slides up. The start/landing flags slide to
+     *  the row that takes the removed index's place (clamped by the per-frame clampTicks). */
+    public void onRowsRemoved(List<Integer> descendingIndices) {
+        if (descendingIndices.isEmpty()) return;
+        final List<Integer> asc = new ArrayList<>(descendingIndices);
+        Collections.sort(asc);
+        remapTicks(t -> Collections.binarySearch(asc, t) >= 0 ? -1 : t - countBelow(asc, t));
+        startTick -= countBelow(asc, startTick);
+        landingTick -= countBelow(asc, landingTick);
+    }
+
+    /** A row moved with InputData.moveRow's drop-line semantics: {@code to} is the gap index, a no-op
+     *  when it neighbors {@code from}; otherwise list-remove at {@code from} + insert at the effective
+     *  destination. Tick data rotates the same way. */
+    public void onRowMoved(int from, int to) {
+        if (from < 0 || to < 0 || from == to || from == to - 1) return;
+        final int dest = from < to ? to - 1 : to;
+        remapTicks(t -> mapMove(t, from, dest));
+        startTick = mapMove(startTick, from, dest);
+        landingTick = mapMove(landingTick, from, dest);
+    }
+
+    private static int mapMove(int t, int from, int dest) {
+        if (t == from) return dest;
+        if (from < dest) return (t > from && t <= dest) ? t - 1 : t;
+        return (t >= dest && t < from) ? t + 1 : t;
+    }
+
+    private static int countBelow(List<Integer> ascending, int t) {
+        int n = 0;
+        for (int r : ascending) {
+            if (r < t) n++;
+            else break;
+        }
+        return n;
+    }
+
+    /** Rebuilds the tick map through {@code mapper} (a negative result drops the entry). Monotone
+     *  shifts and rotations are bijective, so keys cannot collide. */
+    private void remapTicks(java.util.function.IntUnaryOperator mapper) {
+        Map<Integer, TickConstraints> next = new LinkedHashMap<>();
+        for (Map.Entry<Integer, TickConstraints> e : ticks.entrySet()) {
+            int t = mapper.applyAsInt(e.getKey());
+            if (t >= 0) next.put(t, e.getValue());
+        }
+        ticks.clear();
+        ticks.putAll(next);
     }
 
     public TickConstraints tickConstraints(int tick) {

@@ -171,6 +171,11 @@ public final class InputOverlay {
         this.angleSolver = angleSolver;
     }
 
+    /** Tick-anchored solver data (constraints, overrides, start/landing) follows row edits (gh-89). */
+    private void solverRowsInserted(int index, int count) {
+        if (angleSolver != null) angleSolver.onRowsInserted(index, count);
+    }
+
     private boolean isSolverActive() {
         return angleSolver != null && angleSolver.isActive();
     }
@@ -748,7 +753,9 @@ public final class InputOverlay {
 
         if (state.moveFrom != -1 && state.moveTo != -1 && state.moveFrom != state.moveTo) {
             int dirtyTick = Math.min(state.moveFrom, state.moveTo);
-            data.moveRow(state.moveFrom, state.moveTo);
+            if (data.moveRow(state.moveFrom, state.moveTo) && angleSolver != null) {
+                angleSolver.onRowMoved(state.moveFrom, state.moveTo);
+            }
             draggingRowIndex = -1;
             selection.clear();
             notifyChange(dirtyTick);
@@ -957,6 +964,7 @@ public final class InputOverlay {
         if (count <= 0) return;
         int dirtyTick = data.size();
         data.addRows(data.size(), count);
+        solverRowsInserted(dirtyTick, count);
         notifyChange(dirtyTick);
     }
 
@@ -967,6 +975,7 @@ public final class InputOverlay {
         for (int idx : descending) {
             if (idx < 0 || idx >= data.size()) continue;
             data.insertRow(idx + 1, data.get(idx).copy());
+            solverRowsInserted(idx + 1, 1);
             if (idx < dirtyTick) dirtyTick = idx;
         }
         selection.clear();
@@ -1053,6 +1062,7 @@ public final class InputOverlay {
         if (ImGui.menuItem(String.format(MENU_ADD_AT_END, count))) {
             int dirtyTick = data.size();
             data.addRows(data.size(), count);
+            solverRowsInserted(dirtyTick, count);
             notifyChange(dirtyTick);
         }
 
@@ -1061,12 +1071,14 @@ public final class InputOverlay {
 
             if (ImGui.menuItem(String.format(MENU_ADD_ABOVE, count))) {
                 data.addRows(selected, count);
+                solverRowsInserted(selected, count);
                 selection.adjustForInsert(selected, count);
                 notifyChange(selected);
             }
 
             if (ImGui.menuItem(String.format(MENU_ADD_BELOW, count))) {
                 data.addRows(selected + 1, count);
+                solverRowsInserted(selected + 1, count);
                 selection.adjustForInsert(selected + 1, count);
                 notifyChange(selected + 1);
             }
@@ -1087,7 +1099,9 @@ public final class InputOverlay {
     public void deleteSelectedRows() {
         Set<Integer> selected = selection.getSelected();
         int dirtyTick = selected.isEmpty() ? -1 : java.util.Collections.min(selected);
-        data.removeRows(selection.getSelectedDescending());
+        List<Integer> descending = selection.getSelectedDescending();
+        data.removeRows(descending);
+        if (angleSolver != null) angleSolver.onRowsRemoved(descending);
         selection.clear();
         notifyChange(Math.max(0, dirtyTick));
     }
@@ -1106,6 +1120,7 @@ public final class InputOverlay {
         if (selection.size() == 1) {
             int selected = selection.getSelected().iterator().next();
             data.addRows(selected, count);
+            solverRowsInserted(selected, count);
             selection.adjustForInsert(selected, count);
             notifyChange(selected);
         } else {
