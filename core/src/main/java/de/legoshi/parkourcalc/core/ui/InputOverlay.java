@@ -340,7 +340,17 @@ public final class InputOverlay {
     // One scrolling child so expand/collapse keeps its scroll; an expanded tick splits the rows into two
     // segments around the inline drawer (else one culled segment).
     private void renderInlineSolverBody(int drawerRow, boolean potionColumns, int columnCount, float avail) {
-        ImGui.beginChild("##solver_inline", 0f, avail, false, 0);
+        // Sticky header: a header-only twin table above the scroll child. The child always shows
+        // its scrollbar so the twin's width (content minus scrollbar) matches the rows exactly.
+        float headerTop = ImGui.getCursorPosY();
+        float headerW = ImGui.getContentRegionAvail().x - ImGui.getStyle().getScrollbarSize();
+        if (ThemeManager.beginStandardTableWithFlags("##tas-header", columnCount, ThemeManager.standardTableFlagsNoScroll(), headerW, 0f)) {
+            setupColumns(potionColumns, true, true, false);
+            ThemeManager.endStandardTable();
+        }
+        ImGui.setCursorPosY(ImGui.getCursorPosY() - ImGui.getStyle().getItemSpacing().y); // rows sit flush under the header
+        float bodyH = Math.max(TABLE_MIN_HEIGHT, avail - (ImGui.getCursorPosY() - headerTop));
+        ImGui.beginChild("##solver_inline", 0f, bodyH, false, ImGuiWindowFlags.AlwaysVerticalScrollbar);
         ImVec2 clipMin = ImGui.getWindowPos();
         ImVec2 clipSize = ImGui.getWindowSize();
 
@@ -425,7 +435,7 @@ public final class InputOverlay {
     private void renderInlineSegment(String id, int columnCount, boolean potionColumns, boolean head, int from, int to, float viewTop, float viewBot, DragDropState dragDrop) {
         int flags = ThemeManager.standardTableFlagsNoScroll();
         if (!ThemeManager.beginStandardTableWithFlags(id, columnCount, flags, 0f, 0f)) return;
-        setupColumns(potionColumns, true, head, false);
+        setupColumns(potionColumns, true, false, false); // headers live in the sticky twin table above the scroll child
         if (head) renderStartRow(potionColumns, true);
         int clampedTo = Math.min(to, data.getRows().size());
         renderSolverRowsCulled(from, clampedTo, viewTop, viewBot, dragDrop, potionColumns);
@@ -728,30 +738,31 @@ public final class InputOverlay {
 
         if (ImGui.beginDragDropSource(ImGuiDragDropFlags.SourceNoPreviewTooltip)) {
             draggingRowIndex = index;
-            // 4 bytes: a single byte wraps at 256 and moves the wrong row on long TAS lists.
-            ImGui.setDragDropPayload(DRAG_DROP_TYPE, new byte[]{
-                    (byte) (index >> 24), (byte) (index >> 16), (byte) (index >> 8), (byte) index}, 4);
+            // The payload is never read back: imgui-java only weak-references the Java object, so a
+            // GC mid-drag silently drops it. The move is resolved from draggingRowIndex instead.
+            ImGui.setDragDropPayload(DRAG_DROP_TYPE, Integer.valueOf(index));
             ImGui.endDragDropSource();
         }
 
-        if (ImGui.beginDragDropTarget()) {
-            float mouseY = ImGui.getMousePos().y;
-            float rowMidY = (rowMinY + rowMaxY) / 2;
-            boolean insertAbove = mouseY < rowMidY;
+        if (draggingRowIndex == -1) return;
 
-            float gapInset = ImGui.getStyle().getCellPadding().y;
-            state.dropLineY = insertAbove ? rowMinY - gapInset : rowMaxY + gapInset;
-            state.rowMinX = rowMinX;
-            state.rowMaxX = rowMaxX;
+        // Manual drop targeting. ImGui's item-rect target only covered the one-line gutter
+        // selectable, leaving dead bands in the cell padding and on grown solver rows; judge the
+        // mouse against the full row rect widened halfway into the gaps instead, and only within
+        // the visible scroll region (culled overscan rows sit outside it).
+        ImVec2 mouse = ImGui.getMousePos();
+        float clipTop = ImGui.getWindowPos().y;
+        float clipBot = clipTop + ImGui.getWindowHeight();
+        if (mouse.y < clipTop || mouse.y > clipBot) return;
+        if (mouse.x < rowMinX || mouse.x > rowMaxX) return;
+        float gapInset = ImGui.getStyle().getCellPadding().y;
+        if (mouse.y < rowMinY - gapInset - 1f || mouse.y >= rowMaxY + gapInset + 1f) return;
 
-            byte[] payload = ImGui.acceptDragDropPayload(DRAG_DROP_TYPE, ImGuiDragDropFlags.AcceptNoDrawDefaultRect);
-            if (payload != null && payload.length >= 4) {
-                state.moveFrom = ((payload[0] & 0xFF) << 24) | ((payload[1] & 0xFF) << 16)
-                        | ((payload[2] & 0xFF) << 8) | (payload[3] & 0xFF);
-                state.moveTo = insertAbove ? index : index + 1;
-            }
-            ImGui.endDragDropTarget();
-        }
+        boolean insertAbove = mouse.y < (rowMinY + rowMaxY) / 2;
+        state.dropLineY = insertAbove ? rowMinY - gapInset : rowMaxY + gapInset;
+        state.rowMinX = rowMinX;
+        state.rowMaxX = rowMaxX;
+        state.moveTo = insertAbove ? index : index + 1;
     }
 
     private void renderDropIndicator(ImDrawList drawList, DragDropState state) {
@@ -761,18 +772,20 @@ public final class InputOverlay {
     }
 
     private void applyDragDrop(DragDropState state) {
-        if (!ImGui.isMouseDragging(0)) {
+        if (draggingRowIndex == -1) return;
+        if (ImGui.isMouseReleased(0)) {
+            int from = draggingRowIndex;
+            int to = state.moveTo;
             draggingRowIndex = -1;
-        }
-
-        if (state.moveFrom != -1 && state.moveTo != -1 && state.moveFrom != state.moveTo) {
-            int dirtyTick = Math.min(state.moveFrom, state.moveTo);
-            if (data.moveRow(state.moveFrom, state.moveTo) && angleSolver != null) {
-                angleSolver.onRowMoved(state.moveFrom, state.moveTo);
+            if (to != -1 && data.moveRow(from, to)) {
+                if (angleSolver != null) {
+                    angleSolver.onRowMoved(from, to);
+                }
+                selection.clear();
+                notifyChange(Math.min(from, to));
             }
+        } else if (!ImGui.isMouseDown(0)) {
             draggingRowIndex = -1;
-            selection.clear();
-            notifyChange(dirtyTick);
         }
     }
 
@@ -1144,7 +1157,6 @@ public final class InputOverlay {
     }
 
     private static class DragDropState {
-        int moveFrom = -1;
         int moveTo = -1;
         float dropLineY = -1;
         float rowMinX = 0;
