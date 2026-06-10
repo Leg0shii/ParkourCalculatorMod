@@ -1,5 +1,9 @@
 # Code audit — angle optimizer (closed-form dual + receding horizon), 2026-06-10
 
+**Status update (same day):** findings 1a, 1b, 1c, 1e and 1f are FIXED on this branch (one commit
+each, suite green after every one; j001 stays in its 143–161 ms baseline band). 1d remains
+documentation-only by design. Section 2's speed directions and section 4 remain open.
+
 Audited at `65701fc` on `claude/eloquent-newton-7ony9j`. Scope: the solve pipeline
 (`ExactJumpModel`, `JumpLinearModel`, `CostateDualSolver`, `ClosedFormSolve`, `LongRunSolver`,
 `SolveCore`, `CmaesJumpHarness`, `BucketAscentPolish`, `JumpConstraintCompiler`,
