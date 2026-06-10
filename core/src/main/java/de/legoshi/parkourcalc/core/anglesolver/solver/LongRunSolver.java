@@ -30,7 +30,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *  not depend on tuning or on incidental problem details. It uses only the resume start state, the
  *  input-specified structure (ground/air, jumps, strafe -- never a recorded trajectory), and the constraints;
  *  the windows chain their own byte-exact state, so the full concatenated path is feasible by construction.
- *  Returns the game facings, or {@code null}.
+ *  Returns the chained game facings -- certified via the replay {@code toGameFacings(wrapAll(gf))}, the
+ *  chain the engine reports and Apply realizes -- or {@code null}.
  *
  *  <p>This restores feasibility ("solve at all"); the last window already optimises the real objective, and a
  *  follow-up global objective ascent ({@link BucketAscentPolish}) is a separate, strictly-improving step. */
@@ -67,7 +68,14 @@ public final class LongRunSolver {
             if (cancel != null && cancel.get()) return null;
             double[] gf = runHorizon(exact, sc, spec, bounds, jumps, commit, cancel);
             if (gf == null) continue;
-            double viol = compiled.maxViolation(gf, exact.forward(sc, gf));
+            // Certify the chain Apply will actually realize, not the window-chained facings themselves:
+            // the plan stores the wrapped facings and the game re-accumulates float deltas from them,
+            // which is not guaranteed bit-identical to the seam-chained gf (a delta can re-round when
+            // consecutive facings straddle float scales, e.g. crossing 0 deg). Verifying the replay makes
+            // the verified, reported, and applied trajectories one and the same object: the engine and
+            // Apply both recompute exactly toGameFacings(wrapAll(gf)).
+            double[] replay = sc.toGameFacings(Angles.wrapAll(gf));
+            double viol = compiled.maxViolation(replay, exact.forward(sc, replay));
             if (DEBUG) System.err.printf("LRS commit=%d -> full viol=%.6f%n", commit, viol);
             if (viol <= feasTol) return gf;
         }

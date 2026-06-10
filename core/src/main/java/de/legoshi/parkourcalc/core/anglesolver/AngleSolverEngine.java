@@ -351,7 +351,6 @@ public final class AngleSolverEngine {
         // multistart so reliability is never reduced.
         long solveStart = System.nanoTime();
         double[] yaws = null;
-        double[] directFacings = null;
         if (model instanceof ExactJumpModel) {
             ExactJumpModel em = (ExactJumpModel) model;
             if (countJumps(sc) <= 1) {
@@ -374,9 +373,11 @@ public final class AngleSolverEngine {
                 // and a long span slides). The monolithic dual does not converge across dozens of jumps, so
                 // there is no point spending its full margin ladder over four directions on the whole span
                 // first; go straight to the decomposition. It reads no recorded trajectory, so a run solves
-                // identically whether or not a prior (possibly broken) path exists.
+                // identically whether or not a prior (possibly broken) path exists. The solver certified the
+                // replay toGameFacings(wrapAll(gf)) -- exactly what the standard reporting below recomputes
+                // and what Apply realizes -- so the wrapped facings flow through the normal path.
                 double[] fromScratch = LongRunSolver.solve(em, spec, FEAS_TOL, cancel);
-                if (fromScratch != null) { directFacings = fromScratch; yaws = Angles.wrapAll(fromScratch); }
+                if (fromScratch != null) { yaws = Angles.wrapAll(fromScratch); }
             }
         }
         if (cancel.get()) return null;
@@ -386,11 +387,9 @@ public final class AngleSolverEngine {
         long solveNanos = System.nanoTime() - solveStart;
         if (yaws == null) return null;
 
-        // The receding-horizon solver returns the byte-exact game facings directly (it chains each window's
-        // own game facings, so re-deriving them via toGameFacings would not be bit-identical); use them as-is.
-        // Every other path produces absolute facings whose game-facing realization is toGameFacings(yaws).
-        ForwardPath path = directFacings != null ? model.forward(sc, directFacings)
-                : model.forward(sc, sc.toGameFacings(yaws));
+        // Every path produces absolute wrapped facings whose game-facing realization is toGameFacings(yaws)
+        // -- the chain Apply writes back as float deltas -- so the reported path is bit-for-bit the applied one.
+        ForwardPath path = model.forward(sc, sc.toGameFacings(yaws));
         SolveResult result = buildResult(job, yaws, path);
         result.setDurationNanos(solveNanos);
         result.setDurationMs(solveNanos / 1_000_000L);
