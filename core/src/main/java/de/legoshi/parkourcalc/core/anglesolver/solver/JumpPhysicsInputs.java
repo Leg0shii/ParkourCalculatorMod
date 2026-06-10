@@ -41,6 +41,14 @@ public final class JumpPhysicsInputs {
     /** Per-tick yaw lock state (unlocked = float delta the game accumulates; locked = absolute facing). */
     public boolean[] yawLockedPerTick = null;
 
+    /** Per-tick moveFlying inputs read from the user's rows (gh-102), already at the game's 0.98
+     *  scale: forward from W/S, strafe from A/D (positive = A, matching {@link #strafeSign}). Null =
+     *  the legacy sprint-jump assumption (W always held, no user strafe). On force-45 ticks the
+     *  engine authors the assumption here (forward 0.98, strafe 0) and the strafe comes from
+     *  {@link #strafePerTick} instead. */
+    public float[] forwardInputPerTick = null;
+    public float[] strafeInputPerTick = null;
+
     public final int numTicks;
 
     public JumpPhysicsInputs(int numTicks) {
@@ -54,6 +62,19 @@ public final class JumpPhysicsInputs {
 
     public boolean strafeAt(int tick) {
         return strafePerTick != null && tick >= 0 && tick < strafePerTick.length && strafePerTick[tick];
+    }
+
+    /** moveFlying forward input at a tick (W/S at the 0.98 scale); the legacy W-held assumption when unset. */
+    public float forwardAt(int tick) {
+        if (forwardInputPerTick == null || tick < 0 || tick >= forwardInputPerTick.length) return 1.0F * 0.98F;
+        return forwardInputPerTick[tick];
+    }
+
+    /** moveFlying strafe input at a tick (A/D at the 0.98 scale, positive = A); 0 when unset. The
+     *  force-45 assumption ({@link #strafeAt}) takes precedence in the models. */
+    public float strafeInputAt(int tick) {
+        if (strafeInputPerTick == null || tick < 0 || tick >= strafeInputPerTick.length) return 0.0F;
+        return strafeInputPerTick[tick];
     }
 
     /** Whether the row at this tick pressed JUMP. Uses the per-tick mask when present, else the single

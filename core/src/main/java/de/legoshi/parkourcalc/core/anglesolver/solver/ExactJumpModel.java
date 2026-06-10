@@ -125,12 +125,14 @@ public final class ExactJumpModel implements ForwardModel {
 
             // (4) moveFlying(strafe, forward, accelSpeed), in float. moveFlying uses
             // rotationYaw*(float)PI/180F for its rad cast (distinct from jump()'s cast).
+            // Inputs are authored per tick (gh-102): force-45 ticks carry the W+A assumption
+            // (W-only on the grounded jump tick), every other tick runs the user's own keys.
+            float forward = scenario.forwardAt(t);
             float strafe;
-            float forward = 1.0F * 0.98F;
             if (scenario.strafeAt(t) && !isJumpTick) {
                 strafe = scenario.strafeSign * 1.0F * 0.98F;
             } else {
-                strafe = 0.0F;
+                strafe = scenario.strafeInputAt(t);
             }
             float fm = strafe * strafe + forward * forward;
             if (fm >= 1.0E-4F) {

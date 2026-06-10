@@ -261,18 +261,31 @@ public final class AngleSolverEngine {
         boolean[] yawLocked = new boolean[numTicks];
         int[] speedAmp = new int[numTicks];
         double[] slipPerTick = new double[numTicks];
+        float[] forwardIn = new float[numTicks];
+        float[] strafeIn = new float[numTicks];
         for (int k = 0; k < numTicks; k++) {
             int t = startTick + k;
-            boolean jumpRow = rows.get(t).isKeyActive(InputRow.Key.JUMP);
+            InputRow row = rows.get(t);
+            boolean jumpRow = row.isKeyActive(InputRow.Key.JUMP);
             // Ground/air is hand-defined per tick via slipperiness: a ground value (< 1.0) is grounded, AIR
             // (the default) is airborne. No dynamic fallback to a recorded trajectory.
             double slip = slipValue(effSlipperiness(t));
             boolean ground = slip < 1.0;
             slipPerTick[k] = ground ? slip : Double.NaN;
             jumpMask[k] = jumpRow;
+            boolean force45 = effInputs(t) == AngleSolverState.InputMode.FORCE_45;
             // W-only only on a real (grounded) jump, so the 0.2 sprintjump boost stays aligned with travel.
-            strafeMask[k] = (effInputs(t) == AngleSolverState.InputMode.FORCE_45) && !(jumpRow && ground);
-            yawLocked[k] = rows.get(t).isYawLocked();
+            strafeMask[k] = force45 && !(jumpRow && ground);
+            if (force45) {
+                // Force 45 assumes W held (+A via the mask); Apply writes these keys back to the rows.
+                forwardIn[k] = 1.0F * 0.98F;
+                strafeIn[k] = 0.0F;
+            } else {
+                // Keep mode runs the movement multiplier the user actually set on the tick (gh-102).
+                forwardIn[k] = 0.98F * ((row.isKeyActive(InputRow.Key.W) ? 1 : 0) - (row.isKeyActive(InputRow.Key.S) ? 1 : 0));
+                strafeIn[k] = 0.98F * ((row.isKeyActive(InputRow.Key.A) ? 1 : 0) - (row.isKeyActive(InputRow.Key.D) ? 1 : 0));
+            }
+            yawLocked[k] = row.isYawLocked();
             speedAmp[k] = effSpeedLevel(t);
         }
         JumpPhysicsInputs phys = new JumpPhysicsInputs(numTicks);
@@ -285,6 +298,8 @@ public final class AngleSolverEngine {
         phys.speedAmplifier = speedAmp;
         phys.slipPerTick = slipPerTick;
         phys.yawLockedPerTick = yawLocked;
+        phys.forwardInputPerTick = forwardIn;
+        phys.strafeInputPerTick = strafeIn;
         return new Phys(phys, strafeMask, jumpTickRel);
     }
 
