@@ -782,6 +782,14 @@ public final class AngleSolverTable {
                 + fhs; // slack
     }
 
+    // The drawer child's own draw list: renders above the table content but below every other
+    // window, popup and modal, so InputOverlay's rail/shadow decorations stay inside this window.
+    private ImDrawList drawerDrawList;
+
+    public ImDrawList drawerDrawList() {
+        return drawerDrawList;
+    }
+
     public void renderDrawer(int tick, float width) {
         float s = ThemeManager.uiScale();
         float pad = ThemeManager.LG * s;
@@ -812,6 +820,7 @@ public final class AngleSolverTable {
 
         ImGui.endChild();
         ImGui.popStyleColor();
+        drawerDrawList = ImGui.getWindowDrawList();
         ImGui.endChild();
         ImGui.popStyleVar();
         ThemeManager.popDrawerChildBg();
