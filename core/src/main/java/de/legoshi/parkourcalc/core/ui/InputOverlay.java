@@ -728,7 +728,9 @@ public final class InputOverlay {
 
         if (ImGui.beginDragDropSource(ImGuiDragDropFlags.SourceNoPreviewTooltip)) {
             draggingRowIndex = index;
-            ImGui.setDragDropPayload(DRAG_DROP_TYPE, new byte[]{(byte) index}, 1);
+            // 4 bytes: a single byte wraps at 256 and moves the wrong row on long TAS lists.
+            ImGui.setDragDropPayload(DRAG_DROP_TYPE, new byte[]{
+                    (byte) (index >> 24), (byte) (index >> 16), (byte) (index >> 8), (byte) index}, 4);
             ImGui.endDragDropSource();
         }
 
@@ -743,8 +745,9 @@ public final class InputOverlay {
             state.rowMaxX = rowMaxX;
 
             byte[] payload = ImGui.acceptDragDropPayload(DRAG_DROP_TYPE, ImGuiDragDropFlags.AcceptNoDrawDefaultRect);
-            if (payload != null && payload.length > 0) {
-                state.moveFrom = payload[0] & 0xFF;
+            if (payload != null && payload.length >= 4) {
+                state.moveFrom = ((payload[0] & 0xFF) << 24) | ((payload[1] & 0xFF) << 16)
+                        | ((payload[2] & 0xFF) << 8) | (payload[3] & 0xFF);
                 state.moveTo = insertAbove ? index : index + 1;
             }
             ImGui.endDragDropTarget();
