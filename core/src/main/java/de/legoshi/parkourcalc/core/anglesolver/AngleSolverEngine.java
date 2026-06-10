@@ -96,12 +96,16 @@ public final class AngleSolverEngine {
         final int startTick;
         final double[] yaws;
         final boolean[] strafeMask;
+        // Ticks solved under Force 45 (snapshot from the solve, not re-read at Apply time): these get
+        // the assumption written back as keys -- W + sprint, strafe per the mask (gh-104).
+        final boolean[] force45Mask;
         final int strafeSign;
 
-        Plan(int startTick, double[] yaws, boolean[] strafeMask, int strafeSign) {
+        Plan(int startTick, double[] yaws, boolean[] strafeMask, boolean[] force45Mask, int strafeSign) {
             this.startTick = startTick;
             this.yaws = yaws;
             this.strafeMask = strafeMask;
+            this.force45Mask = force45Mask;
             this.strafeSign = strafeSign;
         }
     }
@@ -127,11 +131,12 @@ public final class AngleSolverEngine {
         final int landingTick;
         final int numTicks;
         final boolean[] strafeMask;
+        final boolean[] force45Mask;
         final List<ConstraintAt> uiConstraints;
         final AngleSolverState.Effort effort;
 
         Job(JumpSpec spec, Objective.Sense sense, int startTick, int landingTick,
-            int numTicks, boolean[] strafeMask, List<ConstraintAt> uiConstraints,
+            int numTicks, boolean[] strafeMask, boolean[] force45Mask, List<ConstraintAt> uiConstraints,
             AngleSolverState.Effort effort
         ) {
             this.spec = spec;
@@ -140,6 +145,7 @@ public final class AngleSolverEngine {
             this.landingTick = landingTick;
             this.numTicks = numTicks;
             this.strafeMask = strafeMask;
+            this.force45Mask = force45Mask;
             this.uiConstraints = uiConstraints;
             this.effort = effort;
         }
@@ -199,8 +205,8 @@ public final class AngleSolverEngine {
 
         // Freeze the problem on the main thread so the worker reads a genuinely read-only snapshot.
         JumpSpec spec = new JumpSpec(ph.inputs, constraints, objective);
-        return new Job(spec, objective.sense, startTick, landingTick, numTicks, ph.strafeMask, uiCons,
-                state.getEffort());
+        return new Job(spec, objective.sense, startTick, landingTick, numTicks, ph.strafeMask,
+                ph.force45Mask, uiCons, state.getEffort());
     }
 
     /** Test-only: the compiled spec for the current UI state, built synchronously (no worker thread). */
@@ -243,11 +249,13 @@ public final class AngleSolverEngine {
     private static final class Phys {
         final JumpPhysicsInputs inputs;
         final boolean[] strafeMask;
+        final boolean[] force45Mask;
         final int jumpTickRel;
 
-        Phys(JumpPhysicsInputs inputs, boolean[] strafeMask, int jumpTickRel) {
+        Phys(JumpPhysicsInputs inputs, boolean[] strafeMask, boolean[] force45Mask, int jumpTickRel) {
             this.inputs = inputs;
             this.strafeMask = strafeMask;
+            this.force45Mask = force45Mask;
             this.jumpTickRel = jumpTickRel;
         }
     }
@@ -257,6 +265,7 @@ public final class AngleSolverEngine {
         TickState seed = boxes.getState(startTick);
         int jumpTickRel = firstJumpTick(rows, startTick, numTicks);
         boolean[] strafeMask = new boolean[numTicks];
+        boolean[] force45Mask = new boolean[numTicks];
         boolean[] jumpMask = new boolean[numTicks];
         boolean[] yawLocked = new boolean[numTicks];
         int[] speedAmp = new int[numTicks];
@@ -273,10 +282,10 @@ public final class AngleSolverEngine {
             boolean ground = slip < 1.0;
             slipPerTick[k] = ground ? slip : Double.NaN;
             jumpMask[k] = jumpRow;
-            boolean force45 = effInputs(t) == AngleSolverState.InputMode.FORCE_45;
+            force45Mask[k] = effInputs(t) == AngleSolverState.InputMode.FORCE_45;
             // W-only only on a real (grounded) jump, so the 0.2 sprintjump boost stays aligned with travel.
-            strafeMask[k] = force45 && !(jumpRow && ground);
-            if (force45) {
+            strafeMask[k] = force45Mask[k] && !(jumpRow && ground);
+            if (force45Mask[k]) {
                 // Force 45 assumes W held (+A via the mask); Apply writes these keys back to the rows.
                 forwardIn[k] = 1.0F * 0.98F;
                 strafeIn[k] = 0.0F;
@@ -300,7 +309,7 @@ public final class AngleSolverEngine {
         phys.yawLockedPerTick = yawLocked;
         phys.forwardInputPerTick = forwardIn;
         phys.strafeInputPerTick = strafeIn;
-        return new Phys(phys, strafeMask, jumpTickRel);
+        return new Phys(phys, strafeMask, force45Mask, jumpTickRel);
     }
 
     private List<ConstraintAt> collectUiConstraints(int startTick, int numTicks) {
@@ -411,7 +420,7 @@ public final class AngleSolverEngine {
         result.setDurationMs(solveNanos / 1_000_000L);
         result.setFinishedAt(formatClock());
         result.setObjective(path.getPos(spec.objective.tick, spec.objective.axis));
-        Plan plan = new Plan(job.startTick, yaws, job.strafeMask, 1);
+        Plan plan = new Plan(job.startTick, yaws, job.strafeMask, job.force45Mask, 1);
         return new Outcome(result, plan);
     }
 
@@ -540,7 +549,7 @@ public final class AngleSolverEngine {
         result.setDurationMs(solveNanos / 1_000_000L);
         result.setFinishedAt(formatClock());
         result.setObjective(r.path.getPos(r.objective.tick, r.objective.axis));
-        Plan plan = new Plan(job.startTick, r.yaws, job.ph.strafeMask, 1);
+        Plan plan = new Plan(job.startTick, r.yaws, job.ph.strafeMask, job.ph.force45Mask, 1);
         AngleSolverState.Axis ax = r.objective.axis == JumpPhysicsInputs.Axis.X ? AngleSolverState.Axis.X : AngleSolverState.Axis.Z;
         AngleSolverState.Goal gl = r.objective.sense == Objective.Sense.MAX ? AngleSolverState.Goal.MAX : AngleSolverState.Goal.MIN;
         return new Outcome(result, plan, derived, job.startTick, job.landingTick, ax, gl);
@@ -615,9 +624,16 @@ public final class AngleSolverEngine {
                 delta = Angles.wrapDelta(delta);
                 row.setYaw((float) delta);
             }
-            boolean strafeThis = p.strafeMask[k];
-            row.setKeyActive(InputRow.Key.A, strafeThis && p.strafeSign > 0);
-            row.setKeyActive(InputRow.Key.D, strafeThis && p.strafeSign < 0);
+            if (p.force45Mask[k]) {
+                // A Force-45 tick realizes its solve assumption in the rows (gh-104): W + sprint held
+                // on every tick, strafe per the mask (the grounded jump tick stays W-only). Keep ticks
+                // are left alone -- their keys ARE what the solve ran.
+                boolean strafeThis = p.strafeMask[k];
+                row.setKeyActive(InputRow.Key.W, true);
+                row.setKeyActive(InputRow.Key.SPRINT, true);
+                row.setKeyActive(InputRow.Key.A, strafeThis && p.strafeSign > 0);
+                row.setKeyActive(InputRow.Key.D, strafeThis && p.strafeSign < 0);
+            }
             prevAbs = abs;
         }
         // Full resim (-1), not simulateFrom(startTick): the partial path restores an incomplete
