@@ -389,8 +389,9 @@ public final class AngleSolverEngine {
 
         // Every path produces absolute wrapped facings whose game-facing realization is toGameFacings(yaws)
         // -- the chain Apply writes back as float deltas -- so the reported path is bit-for-bit the applied one.
-        ForwardPath path = model.forward(sc, sc.toGameFacings(yaws));
-        SolveResult result = buildResult(job, yaws, path);
+        double[] gameFacings = sc.toGameFacings(yaws);
+        ForwardPath path = model.forward(sc, gameFacings);
+        SolveResult result = buildResult(job, yaws, gameFacings, path);
         result.setDurationNanos(solveNanos);
         result.setDurationMs(solveNanos / 1_000_000L);
         result.setFinishedAt(formatClock());
@@ -519,7 +520,7 @@ public final class AngleSolverEngine {
             derived.add(new ConstraintAt(absTick, f.segTick, c));
         }
 
-        SolveResult result = buildBlockResult(job, r.yaws, r.path, derived, r.ok());
+        SolveResult result = buildBlockResult(job, r.yaws, job.ph.inputs.toGameFacings(r.yaws), r.path, derived, r.ok());
         result.setDurationNanos(solveNanos);
         result.setDurationMs(solveNanos / 1_000_000L);
         result.setFinishedAt(formatClock());
@@ -530,14 +531,15 @@ public final class AngleSolverEngine {
         return new Outcome(result, plan, derived, job.startTick, job.landingTick, ax, gl);
     }
 
-    private SolveResult buildBlockResult(BlockJob job, double[] yaws, ForwardPath path, List<ConstraintAt> derived, boolean ok) {
+    private SolveResult buildBlockResult(BlockJob job, double[] yaws, double[] gameFacings, ForwardPath path,
+                                         List<ConstraintAt> derived, boolean ok) {
         int total = 0;
         int met = 0;
         List<SolveResult.Outcome> outs = new ArrayList<>();
         List<ConstraintAt> ordered = new ArrayList<>(derived);
         ordered.sort((a, b) -> Integer.compare(a.absTick, b.absTick));
         for (ConstraintAt ca : ordered) {
-            Double found = findValue(ca.c, ca.segTick, job.numTicks, yaws, path);
+            Double found = findValue(ca.c, ca.segTick, job.numTicks, gameFacings, path);
             if (found == null) continue;
             total++;
             if (satisfied(ca.c, found)) met++;
@@ -702,14 +704,14 @@ public final class AngleSolverEngine {
 
     // ---- result panel (worker thread, from the Job snapshot) ------------------
 
-    private SolveResult buildResult(Job job, double[] yaws, ForwardPath path) {
+    private SolveResult buildResult(Job job, double[] yaws, double[] gameFacings, ForwardPath path) {
         int total = 0;
         int met = 0;
         List<SolveResult.Outcome> outs = new ArrayList<>();
         List<ConstraintAt> ordered = new ArrayList<>(job.uiConstraints);
         ordered.sort((a, b) -> Integer.compare(a.absTick, b.absTick)); // panel lists constraints first-tick-first
         for (ConstraintAt ca : ordered) {
-            Double found = findValue(ca.c, ca.segTick, job.numTicks, yaws, path);
+            Double found = findValue(ca.c, ca.segTick, job.numTicks, gameFacings, path);
             if (found == null) continue; // unmappable (e.g. velocity on tick 0)
             total++;
             if (satisfied(ca.c, found)) met++;
@@ -723,11 +725,14 @@ public final class AngleSolverEngine {
         return r;
     }
 
-    private Double findValue(Constraint c, int segTick, int numTicks, double[] yaws, ForwardPath path) {
+    /** The value a constraint is judged against. F reads the GAME facing (what the solver enforced and the
+     *  sim runs), wrapped for display -- the wrapped-abs plan yaw differs from it by float accumulation,
+     *  which the strict wall gate would mis-report on a hugged facing wall. */
+    private Double findValue(Constraint c, int segTick, int numTicks, double[] gameFacings, ForwardPath path) {
         switch (c.getField()) {
             case X: return path.posX[segTick];
             case Z: return path.posZ[segTick];
-            case F: return segTick < numTicks ? yaws[segTick] : null;
+            case F: return segTick < numTicks ? Angles.wrap(gameFacings[segTick]) : null;
             case DX: return segTick >= 1 ? path.posX[segTick] - path.posX[segTick - 1] : null;
             case DZ: return segTick >= 1 ? path.posZ[segTick] - path.posZ[segTick - 1] : null;
             default: return null;
