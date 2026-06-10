@@ -128,8 +128,11 @@ public final class SaveFile {
         public float yaw;
         public boolean onGround;
         public boolean sneaking;
+        public boolean sprinting;
         public boolean wallCollision;
         public boolean softCollision;
         public Double collisionAngle;                    // degrees; null = not modelled / NaN
+        public Float moveForward;                        // moveFlying inputs the tick ran with; null = unsampled
+        public Float moveStrafe;
     }
 }

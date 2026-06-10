@@ -79,14 +79,15 @@ public final class JumpLinearModel {
             double slipOv = sc.slipAt(t);
             boolean contact = !Double.isNaN(slipOv);
             boolean isJump = sc.jumpAt(t) && contact;
+            boolean sprint = sc.sprintAt(t);
             double slip = contact ? slipOv : Constants.SLIP_F;
             double accelSpeed;
             if (contact) {
                 f4[t] = slip * 0.91;
-                accelSpeed = Constants.attrValueF(sc.speedAmplifierAt(t)) * (0.16277136 / (f4[t] * f4[t] * f4[t]));
+                accelSpeed = Constants.attrValueF(sc.speedAmplifierAt(t), sprint) * (0.16277136 / (f4[t] * f4[t] * f4[t]));
             } else {
                 f4[t] = 0.91;
-                accelSpeed = Constants.AIR_SPEED_F;
+                accelSpeed = sprint ? Constants.AIR_SPEED_F : Constants.AIR_SPEED_NO_SPRINT_F;
             }
             // Same per-tick input authoring as ExactJumpModel step (4) (gh-102).
             double forward0 = sc.forwardAt(t);
@@ -100,7 +101,7 @@ public final class JumpLinearModel {
                 fF = forward0 * scale;
                 sF = strafe0 * scale;
             }
-            pConst[t] = fF + (isJump ? 0.2 : 0.0);
+            pConst[t] = fF + (isJump && sprint ? 0.2 : 0.0);
             qConst[t] = sF;
             mMag[t] = Math.hypot(pConst[t], qConst[t]);
             baseArg[t] = Math.atan2(pConst[t], qConst[t]);

@@ -229,10 +229,15 @@ public final class SaveIO {
         d.yaw = s.yaw;
         d.onGround = s.onGround;
         d.sneaking = s.sneaking;
+        d.sprinting = s.sprinting;
         d.wallCollision = s.wallCollision;
         d.softCollision = s.softCollision;
         double angle = s.collisionAngleDegrees;
         d.collisionAngle = (Double.isNaN(angle) || Double.isInfinite(angle)) ? null : angle;
+        if (s.hasMovementSample()) {
+            d.moveForward = s.moveForward;
+            d.moveStrafe = s.moveStrafe;
+        }
         return d;
     }
 

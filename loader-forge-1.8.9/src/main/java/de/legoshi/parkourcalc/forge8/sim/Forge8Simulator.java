@@ -135,6 +135,21 @@ public final class Forge8Simulator extends LazyEntitySimulator<SimulatorEntity> 
     }
 
     @Override
+    protected boolean isSprinting(SimulatorEntity e) {
+        return e.isSprinting();
+    }
+
+    @Override
+    protected float getMoveForward(SimulatorEntity e) {
+        return e.moveForward;
+    }
+
+    @Override
+    protected float getMoveStrafe(SimulatorEntity e) {
+        return e.moveStrafing;
+    }
+
+    @Override
     protected boolean isWallCollision(SimulatorEntity e) {
         return e.isCollidedHorizontally;
     }

@@ -138,6 +138,21 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
     }
 
     @Override
+    protected boolean isSprinting(SimulatorEntity e) {
+        return e.isSprinting();
+    }
+
+    @Override
+    protected float getMoveForward(SimulatorEntity e) {
+        return e.forwardSpeed;
+    }
+
+    @Override
+    protected float getMoveStrafe(SimulatorEntity e) {
+        return e.sidewaysSpeed;
+    }
+
+    @Override
     protected boolean isWallCollision(SimulatorEntity e) {
         return e.horizontalCollision;
     }

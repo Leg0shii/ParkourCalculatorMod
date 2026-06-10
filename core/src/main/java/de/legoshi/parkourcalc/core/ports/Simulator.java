@@ -20,6 +20,13 @@ public interface Simulator {
 
     boolean isCurrentSneaking();
 
+    boolean isCurrentSprinting();
+
+    /** The moveFlying inputs the last tick ran with (post input pipeline, sneak scaling included). */
+    float getCurrentMoveForward();
+
+    float getCurrentMoveStrafe();
+
     boolean isCurrentWallCollision();
 
     Vec3dCore getCurrentVelocity();

@@ -73,6 +73,21 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     }
 
     @Override
+    public final boolean isCurrentSprinting() {
+        return isSprinting(ensureEntity());
+    }
+
+    @Override
+    public final float getCurrentMoveForward() {
+        return getMoveForward(ensureEntity());
+    }
+
+    @Override
+    public final float getCurrentMoveStrafe() {
+        return getMoveStrafe(ensureEntity());
+    }
+
+    @Override
     public final boolean isCurrentWallCollision() {
         return isWallCollision(ensureEntity());
     }
@@ -194,6 +209,12 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     protected abstract boolean isOnGround(E entity);
 
     protected abstract boolean isSneaking(E entity);
+
+    protected abstract boolean isSprinting(E entity);
+
+    protected abstract float getMoveForward(E entity);
+
+    protected abstract float getMoveStrafe(E entity);
 
     protected abstract boolean isWallCollision(E entity);
 

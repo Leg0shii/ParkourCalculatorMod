@@ -184,6 +184,10 @@ public final class LongRunSolver {
         p.yawLockedPerTick = sliceBool(sc.yawLockedPerTick, a, len);
         p.speedAmplifier = sliceInt(sc.speedAmplifier, a, len);
         p.slipPerTick = sliceDouble(sc.slipPerTick, a, len);
+        // null arrays stay null so the slice keeps the source's legacy fallbacks (always-sprint, W held).
+        p.sprintPerTick = sliceBool(sc.sprintPerTick, a, len);
+        p.forwardInputPerTick = sliceFloat(sc.forwardInputPerTick, a, len, 1.0F * 0.98F);
+        p.strafeInputPerTick = sliceFloat(sc.strafeInputPerTick, a, len, 0.0F);
         return p;
     }
 
@@ -219,6 +223,13 @@ public final class LongRunSolver {
         if (x == null) return null;
         double[] o = new double[len];
         for (int i = 0; i < len; i++) o[i] = from + i < x.length ? x[from + i] : Double.NaN;
+        return o;
+    }
+
+    private static float[] sliceFloat(float[] x, int from, int len, float dflt) {
+        if (x == null) return null;
+        float[] o = new float[len];
+        for (int i = 0; i < len; i++) o[i] = from + i < x.length ? x[from + i] : dflt;
         return o;
     }
 }

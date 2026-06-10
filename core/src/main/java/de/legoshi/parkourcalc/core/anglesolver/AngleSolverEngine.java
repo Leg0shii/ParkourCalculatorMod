@@ -273,6 +273,7 @@ public final class AngleSolverEngine {
         double[] slipPerTick = new double[numTicks];
         float[] forwardIn = new float[numTicks];
         float[] strafeIn = new float[numTicks];
+        boolean[] sprintArr = new boolean[numTicks];
         for (int k = 0; k < numTicks; k++) {
             int t = startTick + k;
             InputRow row = rows.get(t);
@@ -287,13 +288,25 @@ public final class AngleSolverEngine {
             // W-only only on a real (grounded) jump, so the 0.2 sprintjump boost stays aligned with travel.
             strafeMask[k] = force45Mask[k] && !(jumpRow && ground);
             if (force45Mask[k]) {
-                // Force 45 assumes W held (+A via the mask); Apply writes these keys back to the rows.
+                // Force 45 assumes W + sprint held (+A via the mask); Apply writes these keys back to the rows.
                 forwardIn[k] = 1.0F * 0.98F;
                 strafeIn[k] = 0.0F;
+                sprintArr[k] = true;
             } else {
-                // Keep mode runs the movement multiplier the user actually set on the tick (gh-102).
-                forwardIn[k] = 0.98F * ((row.isKeyActive(InputRow.Key.W) ? 1 : 0) - (row.isKeyActive(InputRow.Key.S) ? 1 : 0));
-                strafeIn[k] = 0.98F * ((row.isKeyActive(InputRow.Key.A) ? 1 : 0) - (row.isKeyActive(InputRow.Key.D) ? 1 : 0));
+                // Keep ticks run what the sim actually ran: the post-tick movement sample carries the
+                // version-exact moveFlying inputs (sneak scaling included) and the sprint flag (gh-120).
+                // Tick t's run is sampled into state t+1, same indexing as constraints.
+                TickState sampled = boxes.getState(t + 1);
+                if (sampled != null && sampled.hasMovementSample()) {
+                    forwardIn[k] = sampled.moveForward;
+                    strafeIn[k] = sampled.moveStrafe;
+                    sprintArr[k] = sampled.sprinting;
+                } else {
+                    // No recorded run to sample: the rows' keys (gh-102) and the legacy sprint assumption.
+                    forwardIn[k] = 0.98F * ((row.isKeyActive(InputRow.Key.W) ? 1 : 0) - (row.isKeyActive(InputRow.Key.S) ? 1 : 0));
+                    strafeIn[k] = 0.98F * ((row.isKeyActive(InputRow.Key.A) ? 1 : 0) - (row.isKeyActive(InputRow.Key.D) ? 1 : 0));
+                    sprintArr[k] = true;
+                }
             }
             yawLocked[k] = row.isYawLocked();
             speedAmp[k] = effSpeedLevel(t);
@@ -310,6 +323,7 @@ public final class AngleSolverEngine {
         phys.yawLockedPerTick = yawLocked;
         phys.forwardInputPerTick = forwardIn;
         phys.strafeInputPerTick = strafeIn;
+        phys.sprintPerTick = sprintArr;
         return new Phys(phys, strafeMask, force45Mask, jumpTickRel);
     }
 

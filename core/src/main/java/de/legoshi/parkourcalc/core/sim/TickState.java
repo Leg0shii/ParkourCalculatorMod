@@ -22,7 +22,21 @@ public final class TickState {
     public final boolean softCollision;
     public final double collisionAngleDegrees;
 
+    // gh-120: the entity state the tick actually ran with, sampled post-tick so the solver reads the
+    // version-correct sprint flag and moveFlying inputs (sneak scaling included) instead of rederiving
+    // them from the rows. moveForward/moveStrafe are NaN when no sample was taken (legacy callers);
+    // moveStrafe is positive toward A (left), matching MC.
+    public final boolean sprinting;
+    public final float moveForward;
+    public final float moveStrafe;
+
     public TickState(Vec3dCore position, boolean onGround, boolean sneaking, boolean wallCollision, float yaw, List<Vec3dCore> subtickPath, Vec3dCore velocity, boolean softCollision, double collisionAngleDegrees) {
+        this(position, onGround, sneaking, wallCollision, yaw, subtickPath, velocity, softCollision, collisionAngleDegrees,
+                false, Float.NaN, Float.NaN);
+    }
+
+    public TickState(Vec3dCore position, boolean onGround, boolean sneaking, boolean wallCollision, float yaw, List<Vec3dCore> subtickPath, Vec3dCore velocity, boolean softCollision, double collisionAngleDegrees,
+                     boolean sprinting, float moveForward, float moveStrafe) {
         this.position = position;
         this.onGround = onGround;
         this.sneaking = sneaking;
@@ -32,5 +46,13 @@ public final class TickState {
         this.velocity = velocity != null ? velocity : Vec3dCore.ZERO;
         this.softCollision = softCollision;
         this.collisionAngleDegrees = collisionAngleDegrees;
+        this.sprinting = sprinting;
+        this.moveForward = moveForward;
+        this.moveStrafe = moveStrafe;
+    }
+
+    /** Whether this state carries the post-tick movement sample (sprint + moveFlying inputs). */
+    public boolean hasMovementSample() {
+        return !Float.isNaN(moveForward);
     }
 }

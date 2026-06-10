@@ -41,6 +41,11 @@ public final class JumpPhysicsInputs {
     /** Per-tick yaw lock state (unlocked = float delta the game accumulates; locked = absolute facing). */
     public boolean[] yawLockedPerTick = null;
 
+    /** Per-tick sprint state, derived from the rows by the engine's reduced client sprint machine
+     *  (gh-120). Gates the ground 1.3x attribute, the air-accel constant, and the 0.2 jump boost.
+     *  null = the legacy assumption: sprinting on every tick. */
+    public boolean[] sprintPerTick = null;
+
     /** Per-tick moveFlying inputs read from the user's rows (gh-102), already at the game's 0.98
      *  scale: forward from W/S, strafe from A/D (positive = A, matching {@link #strafeSign}). Null =
      *  the legacy sprint-jump assumption (W always held, no user strafe). On force-45 ticks the
@@ -75,6 +80,12 @@ public final class JumpPhysicsInputs {
     public float strafeInputAt(int tick) {
         if (strafeInputPerTick == null || tick < 0 || tick >= strafeInputPerTick.length) return 0.0F;
         return strafeInputPerTick[tick];
+    }
+
+    /** Sprint state at a tick; the legacy always-sprinting assumption when unset. */
+    public boolean sprintAt(int tick) {
+        if (sprintPerTick == null) return true;
+        return tick >= 0 && tick < sprintPerTick.length && sprintPerTick[tick];
     }
 
     /** Whether the row at this tick pressed JUMP. Uses the per-tick mask when present, else the single

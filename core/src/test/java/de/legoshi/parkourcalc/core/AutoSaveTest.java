@@ -39,6 +39,9 @@ public class AutoSaveTest {
         @Override public Vec3dCore getCurrentPosition() { return Vec3dCore.ZERO; }
         @Override public boolean isCurrentOnGround() { return false; }
         @Override public boolean isCurrentSneaking() { return false; }
+        @Override public boolean isCurrentSprinting() { return false; }
+        @Override public float getCurrentMoveForward() { return Float.NaN; }
+        @Override public float getCurrentMoveStrafe() { return Float.NaN; }
         @Override public boolean isCurrentWallCollision() { return false; }
         @Override public Vec3dCore getCurrentVelocity() { return Vec3dCore.ZERO; }
         @Override public boolean isCurrentSoftCollision() { return false; }

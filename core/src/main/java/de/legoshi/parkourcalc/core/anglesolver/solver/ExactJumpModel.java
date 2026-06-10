@@ -104,23 +104,26 @@ public final class ExactJumpModel implements ForwardModel {
             boolean contact = !Double.isNaN(slipOv);
             float slipF = contact ? (float) slipOv : Constants.SLIP_F;
             boolean isJumpTick = scenario.jumpAt(t) && contact;
+            boolean sprint = scenario.sprintAt(t);
             if (isJumpTick) {
                 vy = (double) Constants.JUMP_VEL_F;
-                float fj = yawF * (float) (Math.PI / 180.0);
-                vx -= McSineTable.sinStep(fj) * 0.2F;
-                vz += McSineTable.cosStep(fj) * 0.2F;
+                if (sprint) {
+                    float fj = yawF * (float) (Math.PI / 180.0);
+                    vx -= McSineTable.sinStep(fj) * 0.2F;
+                    vz += McSineTable.cosStep(fj) * 0.2F;
+                }
             }
 
-            // (3) accel regime.
+            // (3) accel regime; sprint is authored per tick (gh-120).
             float f4;
             float accelSpeed;
             if (contact) {
                 f4 = slipF * 0.91F;
                 float ground = 0.16277136F / (f4 * f4 * f4);
-                accelSpeed = Constants.attrValueF(amp) * ground;
+                accelSpeed = Constants.attrValueF(amp, sprint) * ground;
             } else {
                 f4 = 0.91F;
-                accelSpeed = Constants.AIR_SPEED_F;
+                accelSpeed = sprint ? Constants.AIR_SPEED_F : Constants.AIR_SPEED_NO_SPRINT_F;
             }
 
             // (4) moveFlying(strafe, forward, accelSpeed), in float. moveFlying uses
