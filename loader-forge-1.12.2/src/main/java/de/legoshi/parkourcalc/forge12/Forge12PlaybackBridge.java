@@ -20,6 +20,11 @@ import java.util.UUID;
 @SuppressWarnings("DuplicatedCode")
 public final class Forge12PlaybackBridge implements PlaybackBridge {
 
+    @Override
+    public boolean isGamePaused() {
+        return Minecraft.getMinecraft().isGamePaused();
+    }
+
     private static final String[] LAST_REPORTED_POS_X = { "lastReportedPosX", "field_175172_bI" };
     private static final String[] LAST_REPORTED_POS_Y = { "lastReportedPosY", "field_175166_bJ" };
     private static final String[] LAST_REPORTED_POS_Z = { "lastReportedPosZ", "field_175167_bK" };

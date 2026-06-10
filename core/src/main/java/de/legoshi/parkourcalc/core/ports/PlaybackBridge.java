@@ -13,6 +13,12 @@ public interface PlaybackBridge {
 
     boolean isSingleplayer();
 
+    /** Whether the client is paused (e.g. the Esc menu in singleplayer). While paused the world does
+     *  not tick, so playback must freeze in place instead of consuming its schedule (gh-106). */
+    default boolean isGamePaused() {
+        return false;
+    }
+
     void teleport(Vec3dCore pos, Vec3dCore vel, float yaw);
 
     void setKey(InputRow.Key key, boolean pressed);

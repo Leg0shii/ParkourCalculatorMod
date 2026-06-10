@@ -40,6 +40,10 @@ public final class PlaybackController {
     private float displayedYaw;
     private long lastFrameNanos;
 
+    // Non-zero while the game sits paused: client ticks keep firing but the world does not advance,
+    // so the schedule must freeze with it (gh-106). On resume the lerp clocks shift by the pause.
+    private long pausedAtNanos;
+
     private final List<String> simTickDumps = new ArrayList<String>();
 
     public PlaybackController(InputData inputData, SimulationRunner runner, Settings settings) {
@@ -77,6 +81,7 @@ public final class PlaybackController {
         if (running) return;
         if (!canStart()) return;
         bridge.closeUI();
+        pausedAtNanos = 0L;
 
         simTickDumps.clear();
         if (DebugFlags.DUMP_TICK_STATE) {
@@ -112,6 +117,7 @@ public final class PlaybackController {
         warmupRemaining = 0;
         tickEndNanos = 0L;
         lastFrameNanos = 0L;
+        pausedAtNanos = 0L;
         if (bridge != null) {
             bridge.releaseAllKeys();
             bridge.applyEffects(0, 0);
@@ -123,6 +129,22 @@ public final class PlaybackController {
     /** Loader calls each START_CLIENT_TICK. */
     public void tick() {
         if (!running || bridge == null) return;
+        if (bridge.isGamePaused()) {
+            // Freeze, don't consume: the paused world ran no physics for this client tick. Keys are
+            // dropped once so nothing is held into the pause screen; the next live tick re-applies
+            // its row's full key state anyway.
+            if (pausedAtNanos == 0L) {
+                pausedAtNanos = System.nanoTime();
+                bridge.releaseAllKeys();
+            }
+            return;
+        }
+        if (pausedAtNanos != 0L) {
+            long pausedFor = System.nanoTime() - pausedAtNanos;
+            if (tickEndNanos != 0L) tickEndNanos += pausedFor;
+            if (lastFrameNanos != 0L) lastFrameNanos += pausedFor;
+            pausedAtNanos = 0L;
+        }
         if (nextTick >= inputData.size()) {
             // Stop only once the visual has caught up to the final yaw and a tick
             // window has elapsed; a low cap can keep the ease running past the final input.
@@ -195,6 +217,8 @@ public final class PlaybackController {
     public void renderFrame() {
         if (!running || bridge == null) return;
         if (tickEndNanos == 0L) return;
+        // The menu still renders frames while paused; the camera ease must not progress through them.
+        if (pausedAtNanos != 0L || bridge.isGamePaused()) return;
 
         long now = System.nanoTime();
         float dt;

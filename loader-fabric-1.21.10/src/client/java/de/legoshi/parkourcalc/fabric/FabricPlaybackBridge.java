@@ -22,6 +22,11 @@ import java.util.UUID;
 
 public final class FabricPlaybackBridge implements PlaybackBridge {
 
+    @Override
+    public boolean isGamePaused() {
+        return MinecraftClient.getInstance().isPaused();
+    }
+
     private static final int EFFECT_DURATION_TICKS = 20000;
 
     private final InputRow currentRow = new InputRow();
