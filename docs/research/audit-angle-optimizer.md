@@ -4,6 +4,24 @@
 each, suite green after every one; j001 stays in its 143–161 ms baseline band). 1d remains
 documentation-only by design. Section 2's speed directions and section 4 remain open.
 
+**Decision (2026-06-10): the speed headroom is deliberately deferred.** Current performance is
+considered sufficient — ~150 ms for a from-scratch 354-tick / 30-jump solve is interactive for an
+off-thread one-shot action, and single jumps sit at the structural floor (one dual solve +
+certification, 14–130 µs). The remaining 2–4× on long runs (cross-window warm-started duals, §2a)
+does not change how the tool feels and carries real implementation risk (see the three failed
+prototypes in §2). Revisit when any of these become true:
+
+1. **Solving becomes an inner loop** — block-derive / auto-routing / batch re-solving issuing many
+   solves per interaction, where 150 ms × N starts to bind. Then §2a is the item to build.
+2. **Runs grow several-fold** past ~350 ticks, scaling 150 ms toward seconds.
+3. **An F (facing) constraint is used on a multi-jump run.** This is a CAPABILITY gap, not speed:
+   today it disqualifies every window from the fast path and the full-span fallback cannot
+   realistically converge, so such a spec is effectively unsolvable. Fix via facing walls in the
+   closed form (§4.2) the moment this need appears.
+
+`stepRange` in the polish (§2b) is an enabler for the Phase-2 global objective ascent and should be
+wired up as part of that work, not before.
+
 Audited at `65701fc` on `claude/eloquent-newton-7ony9j`. Scope: the solve pipeline
 (`ExactJumpModel`, `JumpLinearModel`, `CostateDualSolver`, `ClosedFormSolve`, `LongRunSolver`,
 `SolveCore`, `CmaesJumpHarness`, `BucketAscentPolish`, `JumpConstraintCompiler`,
