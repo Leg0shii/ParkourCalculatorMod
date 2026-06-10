@@ -62,7 +62,9 @@ public final class ClosedFormSolve {
         for (double margin : MARGINS) {
             if (cancel.get()) return null;
             CostateDualSolver.Result r = solver.solve(margin, warm);
-            if (r == null) continue; // dual unbounded -> primal infeasible
+            // Dual unbounded -> primal infeasible. Margins only tighten the inequality walls (equalities are
+            // unmargined), so infeasibility is monotone along the ladder: every later rung is infeasible too.
+            if (r == null) break;
             warm = r.lambda;
 
             double[] yaws = recover(lin, spec.objective, r);
