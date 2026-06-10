@@ -135,6 +135,11 @@ public final class AngleSolverTable {
 
     public void onRowMoved(int from, int to) {
         state.onRowMoved(from, to);
+        // Row-keyed drawer UI state follows its row through a drag-move (gh-119).
+        expandedRow = AngleSolverState.mapRowMove(expandedRow, from, to);
+        measuredTick = AngleSolverState.mapRowMove(measuredTick, from, to);
+        selectedConstraintTick = AngleSolverState.mapRowMove(selectedConstraintTick, from, to);
+        selectedStateTick = AngleSolverState.mapRowMove(selectedStateTick, from, to);
     }
 
     public void onRowDuplicated(int sourceIndex) {
@@ -284,7 +289,7 @@ public final class AngleSolverTable {
 
     // ---- gutter (chevron + flag + number + selection) --------------------------
 
-    public void renderGutter(int rowIndex, float rowH) {
+    public void renderGutter(int rowIndex, float rowH, Runnable dragDropHook) {
         ThemeManager.tableLeftmostCellPad();
         ImVec2 origin = ImGui.getCursorScreenPos();
         float s = ThemeManager.uiScale();
@@ -299,6 +304,9 @@ public final class AngleSolverTable {
         // The selectable is only one line tall; carry the full grown-row rect so the start/landing
         // inset and hover/selection bounds span the whole multi-line row.
         gMinX = selMin.x; gMinY = selMin.y; gMaxX = selMax.x; gMaxY = selMin.y + rowH;
+        // Row drag-drop must attach to the selectable (ImGui targets the last item), so the hook
+        // runs here, before the chevron becomes the last item (gh-119).
+        if (dragDropHook != null) dragDropHook.run();
 
         ImDrawList dl = ImGui.getWindowDrawList();
         float chevW = 12f * s;

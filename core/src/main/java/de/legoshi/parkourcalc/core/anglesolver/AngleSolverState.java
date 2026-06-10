@@ -248,6 +248,12 @@ public final class AngleSolverState {
         landingTick = mapMove(landingTick, from, dest);
     }
 
+    /** {@link #onRowMoved}'s index mapping for a single row-keyed value (same drop-line no-op semantics). */
+    public static int mapRowMove(int t, int from, int to) {
+        if (from < 0 || to < 0 || from == to || from == to - 1) return t;
+        return mapMove(t, from, from < to ? to - 1 : to);
+    }
+
     private static int mapMove(int t, int from, int dest) {
         if (t == from) return dest;
         if (from < dest) return (t > from && t <= dest) ? t - 1 : t;

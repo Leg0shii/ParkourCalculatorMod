@@ -98,6 +98,17 @@ public class RowEditShiftTest {
     }
 
     @Test
+    public void mapRowMoveMatchesTheTickRemap() {
+        // gh-119: row-keyed drawer UI state (the expanded row) follows a drag-move via this mapping.
+        assertEquals(2, AngleSolverState.mapRowMove(5, 5, 2));   // the moved row itself
+        assertEquals(3, AngleSolverState.mapRowMove(2, 5, 2));   // inside the rotation: slides
+        assertEquals(9, AngleSolverState.mapRowMove(9, 5, 2));   // outside: stays
+        assertEquals(5, AngleSolverState.mapRowMove(2, 2, 6));   // forward move: effective dest 5
+        assertEquals(5, AngleSolverState.mapRowMove(5, 5, 6));   // neighbor gap: no-op
+        assertEquals(-1, AngleSolverState.mapRowMove(-1, 5, 2)); // "none" sentinel passes through
+    }
+
+    @Test
     public void moveForwardUsesTheEffectiveDestination() {
         AngleSolverState s = seeded();
         // Drag row 2 to the gap below row 5 (to == 6 -> effective dest 5).

@@ -355,18 +355,23 @@ public final class InputOverlay {
         float viewBot = clipMin.y + clipSize.y + overscan;
         int total = data.getRows().size();
 
+        // One state across the segments so a drag can start in one and drop in the other (gh-119).
+        DragDropState dragDrop = new DragDropState();
+
         if (drawerRow < 0) {
-            renderInlineSegment("##tas-seg-a", columnCount, potionColumns, true, 0, total, viewTop, viewBot);
+            renderInlineSegment("##tas-seg-a", columnCount, potionColumns, true, 0, total, viewTop, viewBot, dragDrop);
             if (data.getRows().isEmpty() && !hasStartRow()) {
                 renderEmptyTableHint();
             }
+            renderDropIndicator(ImGui.getWindowDrawList(), dragDrop);
+            applyDragDrop(dragDrop);
             angleSolver.endRows();
             ImGui.endChild();
             return;
         }
 
         float spacingY = ImGui.getStyle().getItemSpacing().y;
-        renderInlineSegment("##tas-seg-a", columnCount, potionColumns, true, 0, drawerRow + 1, viewTop, viewBot);
+        renderInlineSegment("##tas-seg-a", columnCount, potionColumns, true, 0, drawerRow + 1, viewTop, viewBot, dragDrop);
 
         // The expanded tick is the last row in segment A, so the gutter rect it carried out still bounds it.
         float unionTop = angleSolver.gutterMinY();
@@ -380,8 +385,10 @@ public final class InputOverlay {
 
         if (drawerRow + 1 < total) {
             ImGui.setCursorPosY(ImGui.getCursorPosY() - spacingY); // and the next segment flush under the drawer
-            renderInlineSegment("##tas-seg-b", columnCount, potionColumns, false, drawerRow + 1, total, viewTop, viewBot);
+            renderInlineSegment("##tas-seg-b", columnCount, potionColumns, false, drawerRow + 1, total, viewTop, viewBot, dragDrop);
         }
+        renderDropIndicator(ImGui.getWindowDrawList(), dragDrop);
+        applyDragDrop(dragDrop);
 
         // Drop shadow under the expanded tick so it reads as the drawer's header, plus a thin accent
         // rail down the left edge tying the tick and its drawer into one block. Drawn on the drawer
@@ -415,12 +422,11 @@ public final class InputOverlay {
         ImGui.endChild();
     }
 
-    private void renderInlineSegment(String id, int columnCount, boolean potionColumns, boolean head, int from, int to, float viewTop, float viewBot) {
+    private void renderInlineSegment(String id, int columnCount, boolean potionColumns, boolean head, int from, int to, float viewTop, float viewBot, DragDropState dragDrop) {
         int flags = ThemeManager.standardTableFlagsNoScroll();
         if (!ThemeManager.beginStandardTableWithFlags(id, columnCount, flags, 0f, 0f)) return;
         setupColumns(potionColumns, true, head, false);
         if (head) renderStartRow(potionColumns, true);
-        DragDropState dragDrop = new DragDropState();
         int clampedTo = Math.min(to, data.getRows().size());
         renderSolverRowsCulled(from, clampedTo, viewTop, viewBot, dragDrop, potionColumns);
         ThemeManager.endStandardTable();
@@ -631,7 +637,7 @@ public final class InputOverlay {
         setRowBackground(index);
 
         ImGui.tableNextColumn();
-        renderRowNumber(index, solverActive, rowH);
+        renderRowNumber(index, solverActive, rowH, dragDrop);
 
         float rMinX, rMinY, rMaxX, rMaxY;
         if (solverActive) {
@@ -642,7 +648,7 @@ public final class InputOverlay {
             ImVec2 rowMin = ImGui.getItemRectMin();
             ImVec2 rowMax = ImGui.getItemRectMax();
             rMinX = rowMin.x; rMinY = rowMin.y; rMaxX = rowMax.x; rMaxY = rowMax.y;
-            handleRowDragDrop(index, rowMin, rowMax, dragDrop);
+            handleRowDragDrop(index, rMinX, rMinY, rMaxX, rMaxY, dragDrop);
         }
 
         keyDragSelect.recordRowBounds(index, rMinY, rMaxY);
@@ -699,9 +705,12 @@ public final class InputOverlay {
         return s != null && s.onGround;
     }
 
-    private void renderRowNumber(int rowIndex, boolean solverActive, float rowH) {
+    private void renderRowNumber(int rowIndex, boolean solverActive, float rowH, DragDropState dragDrop) {
         if (solverActive) {
-            angleSolver.renderGutter(rowIndex, rowH);
+            // The hook attaches the row drag source/target to the gutter's spanning selectable (gh-119).
+            angleSolver.renderGutter(rowIndex, rowH, () -> handleRowDragDrop(rowIndex,
+                    angleSolver.gutterMinX(), angleSolver.gutterMinY(),
+                    angleSolver.gutterMaxX(), angleSolver.gutterMaxY(), dragDrop));
             return;
         }
         ThemeManager.tableLeftmostCellPad();
@@ -712,7 +721,7 @@ public final class InputOverlay {
         }
     }
 
-    private void handleRowDragDrop(int index, ImVec2 rowMin, ImVec2 rowMax, DragDropState state) {
+    private void handleRowDragDrop(int index, float rowMinX, float rowMinY, float rowMaxX, float rowMaxY, DragDropState state) {
         if (selection.size() > 1) {
             return; // Don't allow drag when multiple rows selected
         }
@@ -725,13 +734,13 @@ public final class InputOverlay {
 
         if (ImGui.beginDragDropTarget()) {
             float mouseY = ImGui.getMousePos().y;
-            float rowMidY = (rowMin.y + rowMax.y) / 2;
+            float rowMidY = (rowMinY + rowMaxY) / 2;
             boolean insertAbove = mouseY < rowMidY;
 
             float gapInset = ImGui.getStyle().getCellPadding().y;
-            state.dropLineY = insertAbove ? rowMin.y - gapInset : rowMax.y + gapInset;
-            state.rowMinX = rowMin.x;
-            state.rowMaxX = rowMax.x;
+            state.dropLineY = insertAbove ? rowMinY - gapInset : rowMaxY + gapInset;
+            state.rowMinX = rowMinX;
+            state.rowMaxX = rowMaxX;
 
             byte[] payload = ImGui.acceptDragDropPayload(DRAG_DROP_TYPE, ImGuiDragDropFlags.AcceptNoDrawDefaultRect);
             if (payload != null && payload.length > 0) {
