@@ -346,17 +346,22 @@ public final class SaveIO {
         out.hi = c.getHi();
         out.loInclusive = c.isLoInclusive();
         out.hiInclusive = c.isHiInclusive();
+        out.disabled = !c.isEnabled();
         return out;
     }
 
     private static Constraint toConstraint(SaveFile.Constraint c) {
         if (c == null) return null;
         Constraint.Field field = parseEnum(Constraint.Field.class, c.field, Constraint.Field.X);
+        Constraint out;
         if (c.range) {
-            return Constraint.range(field, c.lo, c.hi, c.loInclusive, c.hiInclusive);
+            out = Constraint.range(field, c.lo, c.hi, c.loInclusive, c.hiInclusive);
+        } else {
+            Constraint.Op op = parseEnum(Constraint.Op.class, c.op, Constraint.Op.GT);
+            out = Constraint.scalar(field, op, c.value);
         }
-        Constraint.Op op = parseEnum(Constraint.Op.class, c.op, Constraint.Op.GT);
-        return Constraint.scalar(field, op, c.value);
+        out.setEnabled(!c.disabled);
+        return out;
     }
 
     private static SaveFile.Override toSaveOverride(StateOverride ov) {

@@ -77,6 +77,7 @@ public final class SaveFile {
         public double hi;
         public boolean loInclusive;
         public boolean hiInclusive;
+        public boolean disabled;                         // gh-118; absent in old saves = enabled
     }
 
     public static final class Override {

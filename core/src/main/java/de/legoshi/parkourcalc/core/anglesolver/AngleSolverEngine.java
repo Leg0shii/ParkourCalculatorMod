@@ -320,7 +320,10 @@ public final class AngleSolverEngine {
             if (segTick < 0 || segTick > numTicks) continue;
             TickConstraints tc = state.tickConstraintsOrNull(absTick);
             if (tc == null) continue;
-            for (Constraint c : tc.getConstraints()) uiCons.add(new ConstraintAt(absTick, segTick, c.copy()));
+            for (Constraint c : tc.getConstraints()) {
+                if (!c.isEnabled()) continue; // disabled constraints are invisible to the solve (gh-118)
+                uiCons.add(new ConstraintAt(absTick, segTick, c.copy()));
+            }
         }
         return uiCons;
     }
@@ -842,7 +845,8 @@ public final class AngleSolverEngine {
             int seg = tickKey - startTick;
             if (seg < 0 || seg > landingTick - startTick) continue;
             TickConstraints tc = state.tickConstraintsOrNull(tickKey);
-            if (tc != null) n += tc.getConstraints().size();
+            if (tc == null) continue;
+            for (Constraint c : tc.getConstraints()) if (c.isEnabled()) n++;
         }
         return n;
     }

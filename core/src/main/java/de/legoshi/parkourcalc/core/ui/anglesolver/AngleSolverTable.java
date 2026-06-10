@@ -534,25 +534,33 @@ public final class AngleSolverTable {
         boolean hover = ImGui.isItemHovered();
         boolean selected = selectedConstraintTick == tick && selectedConstraintIndex == index;
 
+        boolean off = !c.isEnabled();
         chipDropShadow(dl, mn, mx, s);
         dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.panelColor(), 3f * s); // opaque base sits above the row highlight
-        dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.accentTintColor(selected ? 0.22f : 0.12f), 3f * s);
-        dl.addRect(mn.x, mn.y, mx.x, mx.y, (hover || selected) ? ThemeManager.accentColor() : ThemeManager.accentTintColor(0.55f), 3f * s, 0, selected ? 1.5f : 1f);
+        // A disabled chip reads unmistakably dormant (gh-118): no accent fill, dim border + text,
+        // and a strike through the definition.
+        dl.addRectFilled(mn.x, mn.y, mx.x, mx.y,
+                off ? ThemeManager.bgTintColor(0.25f) : ThemeManager.accentTintColor(selected ? 0.22f : 0.12f), 3f * s);
+        int border = off ? ThemeManager.textDimColor()
+                : (hover || selected) ? ThemeManager.accentColor() : ThemeManager.accentTintColor(0.55f);
+        dl.addRect(mn.x, mn.y, mx.x, mx.y, border, 3f * s, 0, selected ? 1.5f : 1f);
 
         float cy = mn.y + h * 0.5f;
         float ty = mn.y + (h - ImGui.getFontSize()) * 0.5f;
         float x = mn.x + pad;
         SolverWidgets.gripDots(dl, x + s, cy, ThemeManager.textDimColor());
         x += grip + gap;
+        float textStart = x;
         Fonts.pushBold();
-        dl.addText(x, ty, ThemeManager.accentColor(), field);
+        dl.addText(x, ty, off ? ThemeManager.textDimColor() : ThemeManager.accentColor(), field);
         Fonts.popBold();
         x += fieldW + gap;
         if (!op.isEmpty()) {
-            dl.addText(x, ty, ThemeManager.textMutedColor(), op);
+            dl.addText(x, ty, off ? ThemeManager.textDimColor() : ThemeManager.textMutedColor(), op);
             x += ImGui.calcTextSize(op).x + gap;
         }
-        dl.addText(x, ty, ThemeManager.textColor(), val);
+        dl.addText(x, ty, off ? ThemeManager.textDimColor() : ThemeManager.textColor(), val);
+        if (off) dl.addLine(textStart, cy, x + valW, cy, ThemeManager.textDimColor(), 1f * s);
 
         boolean isSource = dragging && dragTick == tick && dragIndex == index;
         if (isSource) dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.bgTintColor(0.6f), 3f * s);
@@ -581,6 +589,12 @@ public final class AngleSolverTable {
     }
 
     private void renderChipMenu(int tick, int index) {
+        Constraint c = state.tickConstraints(tick).getConstraints().get(index);
+        if (ImGui.menuItem(c.isEnabled() ? "Disable" : "Enable")) {
+            c.setEnabled(!c.isEnabled());
+            ImGui.closeCurrentPopup();
+        }
+        ThemeManager.paddedSeparator();
         if (ImGui.menuItem("Duplicate here")) {
             state.duplicateConstraint(tick, index);
             ImGui.closeCurrentPopup();
@@ -817,8 +831,9 @@ public final class AngleSolverTable {
         float s = ThemeManager.uiScale();
         List<Constraint> list = state.tickConstraints(tick).getConstraints();
         int delete = -1;
-        if (ThemeManager.beginStandardFormTable("##cons_edit", 5)) {
+        if (ThemeManager.beginStandardFormTable("##cons_edit", 6)) {
             ImGui.tableSetupColumn("g", ImGuiTableColumnFlags.WidthFixed, SolverWidgets.gripWidth() + 4f * s + gripLeftPad());
+            ImGui.tableSetupColumn("e", ImGuiTableColumnFlags.WidthFixed, ImGui.getFrameHeight());
             ImGui.tableSetupColumn("f", ImGuiTableColumnFlags.WidthFixed, 72f * s);
             ImGui.tableSetupColumn("o", ImGuiTableColumnFlags.WidthFixed, 72f * s);
             ImGui.tableSetupColumn("v", ImGuiTableColumnFlags.WidthStretch);
@@ -831,6 +846,11 @@ public final class AngleSolverTable {
                 ImGui.tableNextColumn();
                 if (tick == selectedConstraintTick && i == selectedConstraintIndex) drawSelectedRowHighlight();
                 editorGrip(tick, i, c);
+                ImGui.tableNextColumn();
+                if (ImGui.checkbox("##on", c.isEnabled())) c.setEnabled(!c.isEnabled());
+                if (ImGui.isItemHovered()) ImGui.setTooltip(c.isEnabled() ? "Disable (kept, ignored by Solve)" : "Enable");
+                boolean dim = !c.isEnabled();
+                if (dim) ImGui.pushStyleVar(ImGuiStyleVar.Alpha, ImGui.getStyle().getAlpha() * 0.45f);
                 ImGui.tableNextColumn();
                 fieldCombo.set(c.getField().ordinal());
                 if (Controls.combo("##fld", fieldCombo, FIELD_ITEMS, ImGui.getContentRegionAvail().x)) {
@@ -852,6 +872,7 @@ public final class AngleSolverTable {
                 renderConstraintValues(c);
                 ImGui.tableNextColumn();
                 if (deleteX("del")) delete = i;
+                if (dim) ImGui.popStyleVar();
                 ImGui.popID();
             }
             Controls.popInputFrameHeight();

@@ -43,6 +43,8 @@ public final class Constraint {
     private double hi;
     private boolean loInclusive;
     private boolean hiInclusive;
+    /** A disabled constraint keeps its definition but is invisible to the solver (gh-118). */
+    private boolean enabled = true;
 
     private Constraint(Field field, Op op, double value) {
         this.field = field;
@@ -128,12 +130,21 @@ public final class Constraint {
         return op == Op.IN;
     }
 
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
     public Constraint copy() {
         Constraint c = new Constraint(field, op, value);
         c.lo = lo;
         c.hi = hi;
         c.loInclusive = loInclusive;
         c.hiInclusive = hiInclusive;
+        c.enabled = enabled;
         return c;
     }
 }
