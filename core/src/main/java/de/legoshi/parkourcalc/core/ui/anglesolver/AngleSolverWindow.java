@@ -50,7 +50,6 @@ public final class AngleSolverWindow implements RenderInterface {
     private final Settings settings;
     private final IntSupplier rowCountSupplier;
     private final AngleSolverEngine engine;
-    private final boolean blocksAvailable;
     private final ImInt startTickBuf = new ImInt();
     private final ImInt goalTickBuf = new ImInt();
     private final ImInt slipBuf = new ImInt();
@@ -63,12 +62,11 @@ public final class AngleSolverWindow implements RenderInterface {
     private int doseToRemove;
 
     public AngleSolverWindow(AngleSolverState state, Settings settings,
-                             IntSupplier rowCountSupplier, AngleSolverEngine engine, boolean blocksAvailable) {
+                             IntSupplier rowCountSupplier, AngleSolverEngine engine) {
         this.state = state;
         this.settings = settings;
         this.rowCountSupplier = rowCountSupplier;
         this.engine = engine;
-        this.blocksAvailable = blocksAvailable;
         this.slipItems = Slipperiness.comboItems();
     }
 
@@ -320,19 +318,6 @@ public final class AngleSolverWindow implements RenderInterface {
             yawsExpanded = false;
             engine.solve();
         }
-        // Block-driven solve sits next to Solve; only on loaders that can pick blocks, and grayed until a
-        // Land block is picked (via keybind). Start is optional.
-        if (blocksAvailable) {
-            ImGui.sameLine();
-            if (state.hasRequiredBlocks()) {
-                if (Controls.secondaryButton("Solve from blocks")) {
-                    yawsExpanded = false;
-                    engine.solveFromBlocks();
-                }
-            } else {
-                Controls.disabledButton("Solve from blocks");
-            }
-        }
         ImGui.sameLine();
         SolveResult r = state.getResult();
         // Only a feasible solve can be applied: an unmet constraint is a wall, so applying it always collides.
@@ -341,11 +326,6 @@ public final class AngleSolverWindow implements RenderInterface {
             if (Controls.secondaryButton("Apply")) ImGui.openPopup(APPLY_POPUP_ID);
         } else {
             Controls.disabledButton("Apply");
-        }
-        if (blocksAvailable && !state.hasRequiredBlocks()) {
-            ThemeManager.pushTextColor(ThemeManager.textMutedColor());
-            ImGui.textWrapped("Pick a Land block (keybind) to enable Solve from blocks. Start is optional.");
-            ThemeManager.popTextColor();
         }
     }
 
