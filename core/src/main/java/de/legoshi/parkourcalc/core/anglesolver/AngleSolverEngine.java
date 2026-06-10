@@ -696,11 +696,11 @@ public final class AngleSolverEngine {
                 break;
             case DX:
                 if (segTick < 1) break; // velocity needs t-1
-                addRangePair(out, JumpConstraint.Mode.X, segTick, segTick - 1, c, tag);
+                addVelocity(out, JumpConstraint.Mode.X, segTick, c, tag);
                 break;
             case DZ:
                 if (segTick < 1) break;
-                addRangePair(out, JumpConstraint.Mode.Z, segTick, segTick - 1, c, tag);
+                addVelocity(out, JumpConstraint.Mode.Z, segTick, c, tag);
                 break;
         }
     }
@@ -724,10 +724,18 @@ public final class AngleSolverEngine {
         }
     }
 
-    /** Velocity (dX/dZ) range: pos[t1]-pos[t2] within [lo,hi], as a GE/LE pair. */
-    private void addRangePair(List<JumpConstraint> out, JumpConstraint.Mode mode, int t1, int t2, Constraint c, String tag) {
-        out.add(new JumpConstraint(mode, t1, t2, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.GE, c.getLo(), tag + "lo"));
-        out.add(new JumpConstraint(mode, t1, t2, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.LE, c.getHi(), tag + "hi"));
+    /** Velocity (dX/dZ): pos[t1]-pos[t1-1] against a range (GE/LE pair), an equality (the same
+     *  +-MET_TOL corridor as scalar fields, see addScalarOrRange), or a single comparison wall. */
+    private void addVelocity(List<JumpConstraint> out, JumpConstraint.Mode mode, int t1, Constraint c, String tag) {
+        if (c.isRange()) {
+            out.add(new JumpConstraint(mode, t1, t1 - 1, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.GE, c.getLo(), tag + "lo"));
+            out.add(new JumpConstraint(mode, t1, t1 - 1, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.LE, c.getHi(), tag + "hi"));
+        } else if (c.getOp() == Constraint.Op.EQ) {
+            out.add(new JumpConstraint(mode, t1, t1 - 1, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.GE, c.getValue() - MET_TOL, tag + "eqLo"));
+            out.add(new JumpConstraint(mode, t1, t1 - 1, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.LE, c.getValue() + MET_TOL, tag + "eqHi"));
+        } else {
+            out.add(new JumpConstraint(mode, t1, t1 - 1, JumpConstraint.Op.MINUS, cmp(c.getOp()), c.getValue(), tag));
+        }
     }
 
     private static JumpConstraint.Cmp cmp(Constraint.Op op) {

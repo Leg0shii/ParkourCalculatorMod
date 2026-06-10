@@ -1,8 +1,9 @@
 package de.legoshi.parkourcalc.core.anglesolver;
 
 /**
- * One per-tick constraint. X/Z/F are scalar fields; dX/dZ are range-only. Changing the
- * field across that boundary converts the constraint between scalar and range form.
+ * One per-tick constraint. Every field (X/Z/F/dX/dZ) accepts either a scalar comparison or a
+ * range; the op carries the form (IN = range). Changing the op across that boundary converts
+ * the values: entering a range seeds [value, value], leaving one keeps the lower bound.
  */
 public final class Constraint {
 
@@ -17,10 +18,6 @@ public final class Constraint {
 
         Field(String label) {
             this.label = label;
-        }
-
-        public boolean isRangeOnly() {
-            return this == DX || this == DZ;
         }
     }
 
@@ -71,18 +68,7 @@ public final class Constraint {
     }
 
     public void setField(Field next) {
-        boolean wasRange = isRange();
         this.field = next;
-        if (next.isRangeOnly() && !wasRange) {
-            op = Op.IN;
-            lo = value;
-            hi = value;
-            loInclusive = false;
-            hiInclusive = false;
-        } else if (!next.isRangeOnly() && wasRange) {
-            op = Op.GT;
-            value = lo;
-        }
     }
 
     public Op getOp() {
@@ -90,6 +76,14 @@ public final class Constraint {
     }
 
     public void setOp(Op op) {
+        if (op == Op.IN && this.op != Op.IN) {
+            lo = value;
+            hi = value;
+            loInclusive = true;
+            hiInclusive = true;
+        } else if (op != Op.IN && this.op == Op.IN) {
+            value = lo;
+        }
         this.op = op;
     }
 

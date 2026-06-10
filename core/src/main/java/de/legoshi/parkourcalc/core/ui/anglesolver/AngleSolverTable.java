@@ -89,13 +89,13 @@ public final class AngleSolverTable {
     private final ImInt levelBuf = new ImInt();
     private final ImInt fieldCombo = new ImInt();
     private final ImInt opCombo = new ImInt();
-    private final ImInt brkCombo = new ImInt();
     private final String[] slipItems = Slipperiness.comboItems();
     private static final String[] FIELD_ITEMS = buildFieldItems();
     private static final Constraint.Op[] SCALAR_OPS =
             {Constraint.Op.GT, Constraint.Op.LT, Constraint.Op.GE, Constraint.Op.LE, Constraint.Op.EQ};
-    private static final String[] SCALAR_OP_GLYPHS = {">", "<", ">=", "<=", "="};
-    private static final String[] BRACKET_ITEMS = {"( )", "( ]", "[ )", "[ ]"};
+    // One combo carries the form: the scalar comparisons, then the four range brackets (lo/hi
+    // inclusivity encoded as bit 2 / bit 1 of the offset past SCALAR_OPS, matching opItemIndex).
+    private static final String[] OP_ITEMS = {">", "<", ">=", "<=", "=", "( )", "( ]", "[ )", "[ ]"};
 
     private static String[] buildFieldItems() {
         Constraint.Field[] all = Constraint.Field.values();
@@ -104,8 +104,9 @@ public final class AngleSolverTable {
         return items;
     }
 
-    private static int scalarOpIndex(Constraint.Op op) {
-        for (int i = 0; i < SCALAR_OPS.length; i++) if (SCALAR_OPS[i] == op) return i;
+    private static int opItemIndex(Constraint c) {
+        if (c.isRange()) return SCALAR_OPS.length + (c.isLoInclusive() ? 2 : 0) + (c.isHiInclusive() ? 1 : 0);
+        for (int i = 0; i < SCALAR_OPS.length; i++) if (SCALAR_OPS[i] == c.getOp()) return i;
         return 0;
     }
 
@@ -836,16 +837,15 @@ public final class AngleSolverTable {
                     c.setField(Constraint.Field.values()[fieldCombo.get()]);
                 }
                 ImGui.tableNextColumn();
-                if (c.isRange()) {
-                    brkCombo.set((c.isLoInclusive() ? 2 : 0) + (c.isHiInclusive() ? 1 : 0));
-                    if (Controls.combo("##brk", brkCombo, BRACKET_ITEMS, ImGui.getContentRegionAvail().x)) {
-                        int v = brkCombo.get();
-                        c.setInclusive((v & 2) != 0, (v & 1) != 0);
-                    }
-                } else {
-                    opCombo.set(scalarOpIndex(c.getOp()));
-                    if (Controls.combo("##op", opCombo, SCALAR_OP_GLYPHS, ImGui.getContentRegionAvail().x)) {
-                        c.setOp(SCALAR_OPS[opCombo.get()]);
+                opCombo.set(opItemIndex(c));
+                if (Controls.combo("##op", opCombo, OP_ITEMS, ImGui.getContentRegionAvail().x)) {
+                    int v = opCombo.get();
+                    if (v < SCALAR_OPS.length) {
+                        c.setOp(SCALAR_OPS[v]);
+                    } else {
+                        c.setOp(Constraint.Op.IN);
+                        int b = v - SCALAR_OPS.length;
+                        c.setInclusive((b & 2) != 0, (b & 1) != 0);
                     }
                 }
                 ImGui.tableNextColumn();
