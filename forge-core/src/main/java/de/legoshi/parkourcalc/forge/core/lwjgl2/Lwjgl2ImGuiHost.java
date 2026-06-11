@@ -1,6 +1,5 @@
 package de.legoshi.parkourcalc.forge.core.lwjgl2;
 
-import com.github.koxx12dev.fuckyou.ImGuiGL3;
 import com.github.koxx12dev.fuckyou.ImGuiLwjgl2;
 import de.legoshi.parkourcalc.core.ui.OverlayManager;
 import de.legoshi.parkourcalc.core.ui.Settings;
@@ -40,11 +39,12 @@ public final class Lwjgl2ImGuiHost {
     private BooleanSupplier isEditingYaw = () -> false;
     private BooleanSupplier allowDetached = () -> true;
     private final ImGuiLwjgl2 imguiLwjgl2 = new ImGuiLwjgl2();
-    private final ImGuiGL3 imguiGl3 = new ImGuiGL3();
+    private final ImGuiGl3Compat imguiGl3 = new ImGuiGl3Compat();
 
     private ImFont[] presetFonts;
     private ImFont[] boldPresetFonts;
     private boolean initialized;
+    private boolean initFailed;
     private long lastFrameNanos;
     private int appliedScaleIndex = -1;
 
@@ -72,8 +72,17 @@ public final class Lwjgl2ImGuiHost {
     }
 
     public void renderFrame(int displayWidth, int displayHeight) {
+        if (initFailed) return;
         autoScaleResolver.accept(displayHeight);
-        ensureInitialized();
+        try {
+            ensureInitialized();
+        } catch (Throwable t) {
+            // Disable the overlay instead of crashing the client on every render tick.
+            initFailed = true;
+            System.err.println("[ParkourCalculator] ImGui overlay init failed; overlay disabled");
+            t.printStackTrace();
+            return;
+        }
         applyPendingScale();
 
         long now = System.nanoTime();
@@ -81,7 +90,7 @@ public final class Lwjgl2ImGuiHost {
         lastFrameNanos = now;
 
         // Shim's newFrame signature is (displayWidth, displayHeight, deltaTime). Wrong
-        // order silently breaks rendering: ImGuiGL3.renderDrawData early-returns when
+        // order silently breaks rendering: ImGuiGl3Compat.renderDrawData early-returns when
         // displaySize * framebufferScale rounds to zero, even though ImGui still
         // generates vertices. Call this from a render hook that fires while MC's main
         // framebuffer is still bound (Forge 1.8.9 / 1.12.2: RenderTickEvent.END), so
