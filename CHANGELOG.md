@@ -1,5 +1,36 @@
 # Changelog
 
+## [1.5.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.4.0...v1.5.0) (2026-06-12)
+
+
+### Features
+
+* add decimal format settings for tick info and angle solver ([5a0dfe8](https://github.com/Leg0shii/ParkourCalculatorMod/commit/5a0dfe8c4312f66f19968ef842defadc9d6f49db))
+* allow sprint to be derived + better error messages ([724dc0a](https://github.com/Leg0shii/ParkourCalculatorMod/commit/724dc0ac69a5d895ca21205f0c4c231671b7d339))
+* angle optimizer ([#122](https://github.com/Leg0shii/ParkourCalculatorMod/issues/122)) ([9a22bdb](https://github.com/Leg0shii/ParkourCalculatorMod/commit/9a22bdbe340f4b788aedc6263a71b756e10170a7))
+
+
+### Bug Fixes
+
+* absolute yaw ([1866e9e](https://github.com/Leg0shii/ParkourCalculatorMod/commit/1866e9e037f07abb6e3bee37caf5672baa38f1f9))
+* arrow centering ([d8f3517](https://github.com/Leg0shii/ParkourCalculatorMod/commit/d8f351700827802e0dc946e15ea9a5f5aa859dcf))
+* auto save default true ([fa4f2e2](https://github.com/Leg0shii/ParkourCalculatorMod/commit/fa4f2e257f79b465df6c69cc3ba2040d8916414d))
+* better long solver ([6d5b3b7](https://github.com/Leg0shii/ParkourCalculatorMod/commit/6d5b3b7586177e6f69fa99ae571eb3e1dc47a21b))
+* box centering ([f3d0fb2](https://github.com/Leg0shii/ParkourCalculatorMod/commit/f3d0fb25472f9d77e5d08828abbcd28e6a7e0077))
+* byte exact 1.21.10 ([c64af67](https://github.com/Leg0shii/ParkourCalculatorMod/commit/c64af676c4dddf93cb9b3a49afcd4a82b0cab8eb))
+* cancel in-flight solve when a save is loaded or session reset ([812c245](https://github.com/Leg0shii/ParkourCalculatorMod/commit/812c2454c37ca0201fbeec251d359004c5f9d584))
+* cancel stale solve on load, restore gl state on non-vao imgui path ([812c245](https://github.com/Leg0shii/ParkourCalculatorMod/commit/812c2454c37ca0201fbeec251d359004c5f9d584))
+* client startup on mac ([#130](https://github.com/Leg0shii/ParkourCalculatorMod/issues/130)) ([c4fedad](https://github.com/Leg0shii/ParkourCalculatorMod/commit/c4fedada3f47559b0f27f0f652168e9181c8f3fb))
+* crash on color drag ([9f0652a](https://github.com/Leg0shii/ParkourCalculatorMod/commit/9f0652a09788c3795b371492be77ee5a70704a52))
+* delay sneak slowdown by one tick to match vanilla ([#125](https://github.com/Leg0shii/ParkourCalculatorMod/issues/125)) ([f2dc23e](https://github.com/Leg0shii/ParkourCalculatorMod/commit/f2dc23e4d9e2776a9b33d6e9c097e32905261ea8))
+* locale-independent constraint value fields in angle solver drawer ([#126](https://github.com/Leg0shii/ParkourCalculatorMod/issues/126)) ([0052dba](https://github.com/Leg0shii/ParkourCalculatorMod/commit/0052dba58b635c77a85025c9f4cd92ab330695ad))
+* objective in solved values, collapse-aware pane width, numbered solver section ([9b95ed9](https://github.com/Leg0shii/ParkourCalculatorMod/commit/9b95ed9777dd3d8bbbe82bb8f9e2e5727e6ccd0e))
+* player sneak on vertical collision ([058fbac](https://github.com/Leg0shii/ParkourCalculatorMod/commit/058fbac78c635c57edf21cc8e57520879ac57bca))
+* proper buttons for right click pane ([ab6ef3e](https://github.com/Leg0shii/ParkourCalculatorMod/commit/ab6ef3e229e6fb7f8f655cae4b7e36f06cee056c))
+* qol ([962e229](https://github.com/Leg0shii/ParkourCalculatorMod/commit/962e229f4bd23f7d96d67802d1602a1e5b9267a9))
+* restore element buffer and attrib state after imgui draw on the non-vao gl path ([812c245](https://github.com/Leg0shii/ParkourCalculatorMod/commit/812c2454c37ca0201fbeec251d359004c5f9d584))
+* solve every Solve-For direction on its own objective ([b13bce0](https://github.com/Leg0shii/ParkourCalculatorMod/commit/b13bce07fbdcb59ea1bb81793f1e6c887bc48488))
+
 ## [1.4.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.3.1...v1.4.0) (2026-06-03)
 
 
