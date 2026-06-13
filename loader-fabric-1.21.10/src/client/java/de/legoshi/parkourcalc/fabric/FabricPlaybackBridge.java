@@ -125,6 +125,14 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
     }
 
     @Override
+    public void setPitch(float absolutePitch) {
+        ClientPlayerEntity p = MinecraftClient.getInstance().player;
+        if (p == null) return;
+        p.setPitch(absolutePitch);
+        p.lastPitch = absolutePitch;
+    }
+
+    @Override
     public void releaseAllKeys() {
         for (InputRow.Key k : InputRow.Key.values()) {
             setKey(k, false);
@@ -190,6 +198,8 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
             case JUMP -> o.jumpKey;
             case SNEAK -> o.sneakKey;
             case SPRINT -> o.sprintKey;
+            case LEFT_CLICK -> o.attackKey;
+            case RIGHT_CLICK -> o.useKey;
         };
     }
 }

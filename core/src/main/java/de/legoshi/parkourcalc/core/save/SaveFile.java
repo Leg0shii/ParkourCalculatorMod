@@ -33,6 +33,7 @@ public final class SaveFile {
         public List<String> keys = new ArrayList<String>();
         public Float yaw;
         public boolean yawLocked;
+        public Float pitch;
         public int speedAmplifier;
         public int jumpBoostAmplifier;
     }

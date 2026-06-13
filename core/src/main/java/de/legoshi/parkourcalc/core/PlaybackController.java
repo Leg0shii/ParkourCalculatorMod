@@ -52,6 +52,9 @@ public final class PlaybackController {
     private float displayedYaw;
     private long lastFrameNanos;
 
+    private float currentTickPitch;
+    private boolean pitchEngaged;
+
     // Non-zero while the game sits paused: client ticks keep firing but the world does not advance,
     // so the schedule must freeze with it (gh-106). On resume the lerp clocks shift by the pause.
     private long pausedAtNanos;
@@ -162,6 +165,8 @@ public final class PlaybackController {
         currentTickYaw = yaw;
         displayTargetYaw = yaw;
         displayedYaw = yaw;
+        currentTickPitch = 0f;
+        pitchEngaged = false;
         tickEndNanos = 0L;
         lastFrameNanos = 0L;
         InputRow firstRow = inputData.get(from);
@@ -270,6 +275,14 @@ public final class PlaybackController {
             }
         }
         bridge.setYaw(currentTickYaw);
+        Float pitch = row.getPitch();
+        if (pitch != null) {
+            currentTickPitch = pitch;
+            pitchEngaged = true;
+        }
+        if (pitchEngaged) {
+            bridge.setPitch(currentTickPitch);
+        }
         tickEndNanos = System.nanoTime();
         nextTick++;
     }

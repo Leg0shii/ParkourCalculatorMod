@@ -27,6 +27,17 @@ public final class Settings {
     private static final boolean DEFAULT_SHOW_POTION_COLUMNS = false;
     private static final boolean DEFAULT_HIGHLIGHT_ON_GROUND_ROWS = true;
 
+    private static final boolean DEFAULT_SHOW_COL_A = true;
+    private static final boolean DEFAULT_SHOW_COL_S = true;
+    private static final boolean DEFAULT_SHOW_COL_D = true;
+    private static final boolean DEFAULT_SHOW_COL_SPRINT = true;
+    private static final boolean DEFAULT_SHOW_COL_SNEAK = true;
+    private static final boolean DEFAULT_SHOW_COL_JUMP = true;
+    private static final boolean DEFAULT_SHOW_COL_YAW = true;
+    private static final boolean DEFAULT_SHOW_COL_PITCH = false;
+    private static final boolean DEFAULT_SHOW_COL_LEFT_CLICK = false;
+    private static final boolean DEFAULT_SHOW_COL_RIGHT_CLICK = false;
+
     private static final boolean DEFAULT_VIEW_TICK_INFO = true;
     private static final boolean DEFAULT_VIEW_PERF_INFO = false;
     private static final boolean DEFAULT_VIEW_ANGLE_SOLVER = false;
@@ -81,6 +92,17 @@ public final class Settings {
     public boolean showSubtick = DEFAULT_SHOW_SUBTICK;
     public boolean showPotionColumns = DEFAULT_SHOW_POTION_COLUMNS;
     public boolean highlightOnGroundRows = DEFAULT_HIGHLIGHT_ON_GROUND_ROWS;
+
+    public boolean showColA = DEFAULT_SHOW_COL_A;
+    public boolean showColS = DEFAULT_SHOW_COL_S;
+    public boolean showColD = DEFAULT_SHOW_COL_D;
+    public boolean showColSprint = DEFAULT_SHOW_COL_SPRINT;
+    public boolean showColSneak = DEFAULT_SHOW_COL_SNEAK;
+    public boolean showColJump = DEFAULT_SHOW_COL_JUMP;
+    public boolean showColYaw = DEFAULT_SHOW_COL_YAW;
+    public boolean showColPitch = DEFAULT_SHOW_COL_PITCH;
+    public boolean showColLeftClick = DEFAULT_SHOW_COL_LEFT_CLICK;
+    public boolean showColRightClick = DEFAULT_SHOW_COL_RIGHT_CLICK;
 
     public float yawFlickSpeed = DEFAULT_YAW_FLICK_SPEED;
 
@@ -143,6 +165,16 @@ public final class Settings {
         showSubtick = DEFAULT_SHOW_SUBTICK;
         showPotionColumns = DEFAULT_SHOW_POTION_COLUMNS;
         highlightOnGroundRows = DEFAULT_HIGHLIGHT_ON_GROUND_ROWS;
+        showColA = DEFAULT_SHOW_COL_A;
+        showColS = DEFAULT_SHOW_COL_S;
+        showColD = DEFAULT_SHOW_COL_D;
+        showColSprint = DEFAULT_SHOW_COL_SPRINT;
+        showColSneak = DEFAULT_SHOW_COL_SNEAK;
+        showColJump = DEFAULT_SHOW_COL_JUMP;
+        showColYaw = DEFAULT_SHOW_COL_YAW;
+        showColPitch = DEFAULT_SHOW_COL_PITCH;
+        showColLeftClick = DEFAULT_SHOW_COL_LEFT_CLICK;
+        showColRightClick = DEFAULT_SHOW_COL_RIGHT_CLICK;
         yawFlickSpeed = DEFAULT_YAW_FLICK_SPEED;
         autoSave = DEFAULT_AUTO_SAVE;
         pathRenderDistance = DEFAULT_PATH_RENDER_DISTANCE;

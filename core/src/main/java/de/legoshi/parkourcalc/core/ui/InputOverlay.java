@@ -36,6 +36,7 @@ public final class InputOverlay {
     private static final String COL_INDEX = "Tick";
     private static final String START_LABEL = "Start";
     private static final String COL_YAW = "Yaw";
+    private static final String COL_PITCH = "Pit";
     private static final String COL_SPEED = "Speed";
     private static final String COL_JUMP_BOOST = "Jump";
     private static final float INDEX_DIGIT_WIDTH = 32f;
@@ -48,9 +49,13 @@ public final class InputOverlay {
     private static final InputRow.Key[] MODIFIER_KEYS = {
             InputRow.Key.SPRINT, InputRow.Key.SNEAK, InputRow.Key.JUMP
     };
+    private static final InputRow.Key[] MOUSE_KEYS = {
+            InputRow.Key.LEFT_CLICK, InputRow.Key.RIGHT_CLICK
+    };
 
     private static final String ID_SPEED_SUFFIX = "##speed";
     private static final String ID_JUMP_SUFFIX = "##jump";
+    private static final String ID_PITCH_INPUT = "##pitch";
 
     private static final String MENU_APPLY_SPEED_TO_ALL = "Apply tick 1 Speed to all rows";
     private static final String MENU_APPLY_JUMP_TO_ALL = "Apply tick 1 Jump to all rows";
@@ -78,7 +83,16 @@ public final class InputOverlay {
 
     private static final String DRAG_DROP_TYPE = "INPUT_ROW";
 
-    private static final int BASE_COLUMN_COUNT = 9;
+    private static final String ID_COLUMNS_POPUP = "columns_popup";
+    private static final String BTN_COLUMNS = "Columns";
+    private static final String COLUMNS_GROUP_MOVEMENT = "Movement";
+    private static final String COLUMNS_GROUP_MODIFIERS = "Modifiers";
+    private static final String COLUMNS_GROUP_LOOK = "Look";
+    private static final String COLUMNS_GROUP_MOUSE = "Mouse";
+    private static final String COLUMNS_GROUP_EFFECTS = "Effects";
+    private static final String COL_TOGGLE_W_HINT = "W is always shown";
+    private static final String PITCH_FORMAT_DISPLAY = "% 12.6f";
+
     private static final int POTION_COLUMN_COUNT = 2;
     private static final int SOLVER_COLUMN_COUNT = 2; // Constraints + State
     private static final float SOLVER_CULL_OVERSCAN = 4f; // extra rows rendered above/below the viewport
@@ -93,6 +107,7 @@ public final class InputOverlay {
     private final Settings settings;
     private final IntConsumer onDataChangedAt;
     private final Runnable onSetPlayerPosition;
+    private final Runnable onSettingsChanged;
     private final PlaybackController playback;
     private final MinecraftAccess mc;
     private final BoxController boxController;
@@ -100,11 +115,14 @@ public final class InputOverlay {
     private final SelectionManager selection;
     private final KeyDragSelect keyDragSelect = new KeyDragSelect();
     private final ImString yawInput = new ImString(32);
+    private final ImString pitchInput = new ImString(32);
     private final ImInt rowsToAdd = new ImInt(1);
     private final ImInt ampBuf = new ImInt();
 
     private int draggingRowIndex = -1;
     private int editingYawRow = -1;
+    private int editingPitchRow = -1;
+    private int pendingPitchFocusRow = -1;
     private int pendingYawFocusRow = -1;
     private int collapseYawSelectionRow = -1;
     private int collapseYawFramesLeft;
@@ -153,13 +171,15 @@ public final class InputOverlay {
     }
 
     public InputOverlay(InputData data, Settings settings, SelectionManager selection, IntConsumer onDataChangedAt,
-                        Runnable onSetPlayerPosition, PlaybackController playback, MinecraftAccess mc, BoxController boxController
+                        Runnable onSetPlayerPosition, Runnable onSettingsChanged, PlaybackController playback,
+                        MinecraftAccess mc, BoxController boxController
     ) {
         this.data = data;
         this.settings = settings;
         this.selection = selection;
         this.onDataChangedAt = onDataChangedAt;
         this.onSetPlayerPosition = onSetPlayerPosition;
+        this.onSettingsChanged = onSettingsChanged;
         this.playback = playback;
         this.mc = mc;
         this.boxController = boxController;
@@ -230,10 +250,49 @@ public final class InputOverlay {
         return ImGui.getFrameHeight() * 0.8f;
     }
 
+    private boolean isKeyColumnVisible(InputRow.Key key) {
+        switch (key) {
+            case W: return true;
+            case A: return settings.showColA;
+            case S: return settings.showColS;
+            case D: return settings.showColD;
+            case SPRINT: return settings.showColSprint;
+            case SNEAK: return settings.showColSneak;
+            case JUMP: return settings.showColJump;
+            case LEFT_CLICK: return settings.showColLeftClick;
+            case RIGHT_CLICK: return settings.showColRightClick;
+            default: return true;
+        }
+    }
+
+    private boolean isYawColumnVisible() {
+        return settings.showColYaw;
+    }
+
+    private boolean isPitchColumnVisible() {
+        return settings.showColPitch;
+    }
+
+    private int baseColumnCount() {
+        int count = 1;
+        for (InputRow.Key key : MOVEMENT_KEYS) if (isKeyColumnVisible(key)) count++;
+        for (InputRow.Key key : MODIFIER_KEYS) if (isKeyColumnVisible(key)) count++;
+        for (InputRow.Key key : MOUSE_KEYS) if (isKeyColumnVisible(key)) count++;
+        if (isYawColumnVisible()) count++;
+        if (isPitchColumnVisible()) count++;
+        return count;
+    }
+
+    private int totalColumnCount(boolean potionColumns, boolean solverActive) {
+        return baseColumnCount()
+                + (potionColumns ? POTION_COLUMN_COUNT : 0)
+                + (solverActive ? SOLVER_COLUMN_COUNT : 0);
+    }
+
     public float desiredPaneWidth() {
         boolean potion = settings.showPotionColumns;
         boolean solver = isSolverActive();
-        int columnCount = BASE_COLUMN_COUNT + (potion ? POTION_COLUMN_COUNT : 0) + (solver ? SOLVER_COLUMN_COUNT : 0);
+        int columnCount = totalColumnCount(potion, solver);
 
         ImGuiStyle style = ImGui.getStyle();
         float cellPadX = style.getCellPadding().x;
@@ -241,12 +300,17 @@ public final class InputOverlay {
         float borderSlop = 2f;
         float scale = uiScale();
 
-        float columnSum = ThemeManager.tableLeftmostColumnWidth(COL_INDEX, indexColumnDataWidth()) + ThemeManager.tableColumnWidth(COL_YAW, yawColumnWidth());
+        float columnSum = ThemeManager.tableLeftmostColumnWidth(COL_INDEX, indexColumnDataWidth());
+        if (isYawColumnVisible()) columnSum += ThemeManager.tableColumnWidth(COL_YAW, yawColumnWidth());
+        if (isPitchColumnVisible()) columnSum += ThemeManager.tableColumnWidth(COL_PITCH, yawColumnWidth());
         for (InputRow.Key key : MOVEMENT_KEYS) {
-            columnSum += ThemeManager.tableColumnWidth(headerLabel(key), 0f);
+            if (isKeyColumnVisible(key)) columnSum += ThemeManager.tableColumnWidth(headerLabel(key), 0f);
         }
         for (InputRow.Key key : MODIFIER_KEYS) {
-            columnSum += ThemeManager.tableColumnWidth(headerLabel(key), 0f);
+            if (isKeyColumnVisible(key)) columnSum += ThemeManager.tableColumnWidth(headerLabel(key), 0f);
+        }
+        for (InputRow.Key key : MOUSE_KEYS) {
+            if (isKeyColumnVisible(key)) columnSum += ThemeManager.tableColumnWidth(headerLabel(key), 0f);
         }
         if (potion) {
             columnSum += ThemeManager.tableColumnWidth(COL_SPEED, AMP_COLUMN_WIDTH * scale) + ThemeManager.tableRightmostColumnWidth(COL_JUMP_BOOST, AMP_COLUMN_WIDTH * scale, ThemeManager.tableScrollbarSlack());
@@ -259,10 +323,8 @@ public final class InputOverlay {
         return contentW + 2f * winPadX;
     }
 
-    // Smallest width that still shows the frozen Tick column plus W/A/S/D; everything
-    // past it (modifiers, yaw, potions) is reached by the table's horizontal scroll.
     public float minUsablePaneWidth() {
-        int columnCount = 1 + MOVEMENT_KEYS.length;
+        int columnCount = 1;
 
         ImGuiStyle style = ImGui.getStyle();
         float cellPadX = style.getCellPadding().x;
@@ -271,7 +333,9 @@ public final class InputOverlay {
 
         float columnSum = ThemeManager.tableLeftmostColumnWidth(COL_INDEX, indexColumnDataWidth());
         for (InputRow.Key key : MOVEMENT_KEYS) {
+            if (!isKeyColumnVisible(key)) continue;
             columnSum += ThemeManager.tableColumnWidth(headerLabel(key), 0f);
+            columnCount++;
         }
 
         float contentW = columnSum + 2f * cellPadX * columnCount + borderSlop;
@@ -289,10 +353,11 @@ public final class InputOverlay {
 
     private void renderBodyInternal() {
         renderMultiplayerWarning();
+        renderColumnsControl();
 
         boolean solverActive = isSolverActive();
         boolean potionColumns = settings.showPotionColumns;
-        int columnCount = BASE_COLUMN_COUNT + (potionColumns ? POTION_COLUMN_COUNT : 0) + (solverActive ? SOLVER_COLUMN_COUNT : 0);
+        int columnCount = totalColumnCount(potionColumns, solverActive);
 
         int drawerRow = clampedExpandedRow();
         float footerH = footerHeightProvider.get();
@@ -308,6 +373,70 @@ public final class InputOverlay {
         if (dragChangeStart >= 0) {
             notifyChange(dragChangeStart);
         }
+    }
+
+    private void renderColumnsControl() {
+        if (Controls.secondaryButton(BTN_COLUMNS)) {
+            ImGui.openPopup(ID_COLUMNS_POPUP);
+        }
+        TooltipUtil.onHover("Show or hide input columns. Hidden columns keep their values.");
+        renderColumnsPopup();
+    }
+
+    private void renderColumnsPopup() {
+        if (!ImGui.beginPopup(ID_COLUMNS_POPUP)) return;
+
+        columnsGroupLabel(COLUMNS_GROUP_MOVEMENT);
+        ImGui.beginDisabled(true);
+        Controls.checkbox(headerLabel(InputRow.Key.W) + "##col_w", true);
+        ImGui.endDisabled();
+        TooltipUtil.onHover(COL_TOGGLE_W_HINT);
+        keyColumnToggle(InputRow.Key.A, settings.showColA, v -> settings.showColA = v);
+        keyColumnToggle(InputRow.Key.S, settings.showColS, v -> settings.showColS = v);
+        keyColumnToggle(InputRow.Key.D, settings.showColD, v -> settings.showColD = v);
+
+        columnsGroupLabel(COLUMNS_GROUP_MODIFIERS);
+        keyColumnToggle(InputRow.Key.SPRINT, settings.showColSprint, v -> settings.showColSprint = v);
+        keyColumnToggle(InputRow.Key.SNEAK, settings.showColSneak, v -> settings.showColSneak = v);
+        keyColumnToggle(InputRow.Key.JUMP, settings.showColJump, v -> settings.showColJump = v);
+
+        columnsGroupLabel(COLUMNS_GROUP_LOOK);
+        columnToggle(COL_YAW, "##col_yaw", settings.showColYaw, v -> settings.showColYaw = v);
+        columnToggle(COL_PITCH, "##col_pitch", settings.showColPitch, v -> settings.showColPitch = v);
+
+        columnsGroupLabel(COLUMNS_GROUP_MOUSE);
+        keyColumnToggle(InputRow.Key.LEFT_CLICK, settings.showColLeftClick, v -> settings.showColLeftClick = v);
+        keyColumnToggle(InputRow.Key.RIGHT_CLICK, settings.showColRightClick, v -> settings.showColRightClick = v);
+
+        columnsGroupLabel(COLUMNS_GROUP_EFFECTS);
+        columnToggle("Speed / Jump Boost", "##col_potion", settings.showPotionColumns, v -> settings.showPotionColumns = v);
+
+        ImGui.endPopup();
+    }
+
+    private void columnsGroupLabel(String label) {
+        if (!label.equals(COLUMNS_GROUP_MOVEMENT)) ThemeManager.sectionSpacing();
+        ImGui.textDisabled(label);
+    }
+
+    private void keyColumnToggle(InputRow.Key key, boolean current, java.util.function.Consumer<Boolean> setter) {
+        String label = headerLabel(key) + "##col_" + key.name();
+        if (Controls.checkbox(label, current)) {
+            setter.accept(!current);
+            notifyColumnsChanged();
+        }
+        TooltipUtil.onHover(headerTooltip(key));
+    }
+
+    private void columnToggle(String label, String id, boolean current, java.util.function.Consumer<Boolean> setter) {
+        if (Controls.checkbox(label + id, current)) {
+            setter.accept(!current);
+            notifyColumnsChanged();
+        }
+    }
+
+    private void notifyColumnsChanged() {
+        if (onSettingsChanged != null) onSettingsChanged.run();
     }
 
     private float tableContentHeight(int rowCount) {
@@ -450,15 +579,15 @@ public final class InputOverlay {
                 ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.NoResize,
                 ThemeManager.tableLeftmostColumnWidth(COL_INDEX, indexColumnDataWidth())
         );
-        for (InputRow.Key key : MOVEMENT_KEYS) {
-            String label = headerLabel(key);
-            ImGui.tableSetupColumn(label, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableNumericColumnWidth(label, 0f));
+        setupKeyColumns(MOVEMENT_KEYS);
+        setupKeyColumns(MODIFIER_KEYS);
+        setupKeyColumns(MOUSE_KEYS);
+        if (isYawColumnVisible()) {
+            ImGui.tableSetupColumn(COL_YAW, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableColumnWidth(COL_YAW, yawColumnWidth()));
         }
-        for (InputRow.Key key : MODIFIER_KEYS) {
-            String label = headerLabel(key);
-            ImGui.tableSetupColumn(label, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableNumericColumnWidth(label, 0f));
+        if (isPitchColumnVisible()) {
+            ImGui.tableSetupColumn(COL_PITCH, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableColumnWidth(COL_PITCH, yawColumnWidth()));
         }
-        ImGui.tableSetupColumn(COL_YAW, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableColumnWidth(COL_YAW, yawColumnWidth()));
         if (potionColumns) {
             ImGui.tableSetupColumn(COL_SPEED, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableColumnWidth(COL_SPEED, AMP_COLUMN_WIDTH * scale));
             ImGui.tableSetupColumn(COL_JUMP_BOOST, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableRightmostColumnWidth(COL_JUMP_BOOST, AMP_COLUMN_WIDTH * scale, ThemeManager.tableScrollbarSlack()));
@@ -481,9 +610,17 @@ public final class InputOverlay {
         TooltipUtil.onHover(headerColTooltip(COL_INDEX));
         col = renderKeyColumnHeaders(MOVEMENT_KEYS, col);
         col = renderKeyColumnHeaders(MODIFIER_KEYS, col);
-        ImGui.tableSetColumnIndex(col++);
-        ThemeManager.tableHeaderCentered(COL_YAW);
-        TooltipUtil.onHover(headerColTooltip(COL_YAW));
+        col = renderKeyColumnHeaders(MOUSE_KEYS, col);
+        if (isYawColumnVisible()) {
+            ImGui.tableSetColumnIndex(col++);
+            ThemeManager.tableHeaderCentered(COL_YAW);
+            TooltipUtil.onHover(headerColTooltip(COL_YAW));
+        }
+        if (isPitchColumnVisible()) {
+            ImGui.tableSetColumnIndex(col++);
+            ThemeManager.tableHeaderCentered(COL_PITCH);
+            TooltipUtil.onHover(headerColTooltip(COL_PITCH));
+        }
         if (potionColumns) {
             ImGui.tableSetColumnIndex(col++);
             ThemeManager.tableHeaderCentered(COL_SPEED);
@@ -501,8 +638,17 @@ public final class InputOverlay {
         ThemeManager.tableRightmostCellTrailingPad();
     }
 
+    private void setupKeyColumns(InputRow.Key[] keys) {
+        for (InputRow.Key key : keys) {
+            if (!isKeyColumnVisible(key)) continue;
+            String label = headerLabel(key);
+            ImGui.tableSetupColumn(label, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableNumericColumnWidth(label, 0f));
+        }
+    }
+
     private int renderKeyColumnHeaders(InputRow.Key[] keys, int col) {
         for (InputRow.Key key : keys) {
+            if (!isKeyColumnVisible(key)) continue;
             ImGui.tableSetColumnIndex(col++);
             ThemeManager.tableHeaderCentered(headerLabel(key));
             TooltipUtil.onHover(headerTooltip(key));
@@ -514,6 +660,7 @@ public final class InputOverlay {
         switch (col) {
             case COL_INDEX: return "Tick number (1-based). Each row is one game tick.";
             case COL_YAW: return "Yaw in degrees (-180 to 180). Empty = inherit previous tick's yaw.";
+            case COL_PITCH: return "Pitch in degrees (-90 up to 90 down). Empty = inherit previous tick's pitch.";
             case COL_SPEED: return "Speed potion amplifier (none = no effect).";
             case COL_JUMP_BOOST: return "Jump Boost potion amplifier (none = no effect).";
             default: return col;
@@ -525,6 +672,8 @@ public final class InputOverlay {
             case SPRINT: return "Spr";
             case SNEAK: return "Snk";
             case JUMP: return "Spc";
+            case LEFT_CLICK: return "LMB";
+            case RIGHT_CLICK: return "RMB";
             default: return key.name();
         }
     }
@@ -538,6 +687,8 @@ public final class InputOverlay {
             case SPRINT: return "Sprint hold (Ctrl)";
             case SNEAK: return "Sneak hold (Shift)";
             case JUMP: return "Jump (Space)";
+            case LEFT_CLICK: return "Left click / attack (hold)";
+            case RIGHT_CLICK: return "Right click / use (hold)";
             default: return key.name();
         }
     }
@@ -588,7 +739,7 @@ public final class InputOverlay {
     private float startGMaxX;
 
     private void renderStartRowCells(boolean potionColumns, boolean withChevron) {
-        int columnCount = BASE_COLUMN_COUNT + (potionColumns ? POTION_COLUMN_COUNT : 0) + (isSolverActive() ? SOLVER_COLUMN_COUNT : 0);
+        int columnCount = totalColumnCount(potionColumns, isSolverActive());
         float s = uiScale();
         float rowH = ThemeManager.tableRowHeight();
         ImGui.tableNextRow(0, rowH);
@@ -677,7 +828,8 @@ public final class InputOverlay {
         }
 
         renderKeyColumns(row, index, rowH);
-        renderYawColumn(row, index, centerY);
+        if (isYawColumnVisible()) renderYawColumn(row, index, centerY);
+        if (isPitchColumnVisible()) renderPitchColumn(row, index, centerY);
         if (potionColumns) {
             renderPotionColumns(row, index);
         }
@@ -798,10 +950,14 @@ public final class InputOverlay {
     }
 
     private void renderKeyColumns(InputRow row, int rowIndex, float rowH) {
-        for (InputRow.Key key : MOVEMENT_KEYS) {
-            renderKeyCell(row, rowIndex, key, rowH);
-        }
-        for (InputRow.Key key : MODIFIER_KEYS) {
+        renderKeyCells(row, rowIndex, rowH, MOVEMENT_KEYS);
+        renderKeyCells(row, rowIndex, rowH, MODIFIER_KEYS);
+        renderKeyCells(row, rowIndex, rowH, MOUSE_KEYS);
+    }
+
+    private void renderKeyCells(InputRow row, int rowIndex, float rowH, InputRow.Key[] keys) {
+        for (InputRow.Key key : keys) {
+            if (!isKeyColumnVisible(key)) continue;
             renderKeyCell(row, rowIndex, key, rowH);
         }
     }
@@ -902,6 +1058,43 @@ public final class InputOverlay {
         dl.addCircle(cx, bodyTop, shackleR, color, 12, 1.5f);
     }
 
+    private void renderPitchColumn(InputRow row, int rowIndex, float centerY) {
+        ImGui.tableNextColumn();
+        if (centerY > 0f) ImGui.setCursorPosY(ImGui.getCursorPosY() + centerY);
+
+        Float pitch = row.getPitch();
+        if (pitch == null) {
+            pitchInput.set("");
+        } else {
+            pitchInput.set(String.format(Locale.ROOT, PITCH_FORMAT_DISPLAY, pitch));
+        }
+
+        boolean selectedRow = selection.isSelected(rowIndex);
+        boolean populated = pitch != null;
+        if (selectedRow) ThemeManager.pushSelectedFrameBg();
+        if (populated) ThemeManager.pushPopulatedFrameBorder();
+        float inputW = yawInputWidth();
+        ImGui.setCursorPosX(ImGui.getCursorPosX() + yawLockStripWidth());
+        if (pendingPitchFocusRow == rowIndex) {
+            ImGui.setKeyboardFocusHere();
+            pendingPitchFocusRow = -1;
+        }
+        boolean changed = Controls.tableInputText(ID_PITCH_INPUT, pitchInput, inputW, 0, null);
+        if (ImGui.isItemActivated()) {
+            editingPitchRow = rowIndex;
+        }
+        if (editingPitchRow == rowIndex && ImGui.isItemDeactivated()) {
+            editingPitchRow = -1;
+        }
+        if (populated) ThemeManager.popPopulatedFrameBorder();
+        if (selectedRow) ThemeManager.popSelectedFrameBg();
+
+        if (changed) {
+            parseAndSetPitch(row);
+            notifyChange(rowIndex);
+        }
+    }
+
     public boolean isEditingYaw() {
         return editingYawRow >= 0;
     }
@@ -909,6 +1102,11 @@ public final class InputOverlay {
     public String playbackStatusHint() {
         return playback != null ? playback.statusHint() : "";
     }
+
+    public boolean isEditingPitch() {
+        return editingPitchRow >= 0;
+    }
+
 
     public void navigateYaw(boolean forward) {
         int from = editingYawRow;
@@ -1002,6 +1200,21 @@ public final class InputOverlay {
         } else {
             try {
                 row.setYaw(Float.parseFloat(text));
+            } catch (NumberFormatException ignored) {
+            }
+        }
+    }
+
+    private void parseAndSetPitch(InputRow row) {
+        String text = pitchInput.get().trim();
+        if (text.isEmpty()) {
+            row.setPitch(null);
+        } else {
+            try {
+                float p = Float.parseFloat(text);
+                if (p < -90f) p = -90f;
+                if (p > 90f) p = 90f;
+                row.setPitch(p);
             } catch (NumberFormatException ignored) {
             }
         }

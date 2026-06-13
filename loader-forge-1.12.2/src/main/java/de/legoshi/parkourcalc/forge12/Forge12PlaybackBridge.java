@@ -133,6 +133,14 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
     }
 
     @Override
+    public void setPitch(float absolutePitch) {
+        EntityPlayerSP p = Minecraft.getMinecraft().player;
+        if (p == null) return;
+        p.rotationPitch = absolutePitch;
+        p.prevRotationPitch = absolutePitch;
+    }
+
+    @Override
     public void releaseAllKeys() {
         for (InputRow.Key k : InputRow.Key.values()) {
             setKey(k, false);
@@ -220,6 +228,8 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
             case JUMP: return o.keyBindJump;
             case SNEAK: return o.keyBindSneak;
             case SPRINT: return o.keyBindSprint;
+            case LEFT_CLICK: return o.keyBindAttack;
+            case RIGHT_CLICK: return o.keyBindUseItem;
         }
         return null;
     }

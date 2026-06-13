@@ -117,7 +117,8 @@ public final class Application {
 
     public void setupUi() {
         inputOverlay = new InputOverlay(inputData, settings, selection, this::onUserChange,
-                this::setStartToPlayer, playback, mc, boxController);
+                this::setStartToPlayer, this::saveSettings, playback, mc, boxController
+        );
 
         angleSolverState = new AngleSolverState();
         saveController.setAngleSolver(angleSolverState);
@@ -354,6 +355,10 @@ public final class Application {
 
     public boolean isEditingYaw() {
         return inputOverlay != null && inputOverlay.isEditingYaw();
+    }
+
+    public boolean isEditingPitch() {
+        return inputOverlay != null && inputOverlay.isEditingPitch();
     }
 
     public void navigateYaw(boolean forward) {
