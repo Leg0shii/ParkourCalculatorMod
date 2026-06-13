@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.5.0...v1.5.1) (2026-06-13)
+
+
+### Bug Fixes
+
+* tick hitboxes ([9e0f3cd](https://github.com/Leg0shii/ParkourCalculatorMod/commit/9e0f3cddddfe10921d6433417936f223b6068905))
+
 ## [1.5.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.4.0...v1.5.0) (2026-06-12)
 
 
