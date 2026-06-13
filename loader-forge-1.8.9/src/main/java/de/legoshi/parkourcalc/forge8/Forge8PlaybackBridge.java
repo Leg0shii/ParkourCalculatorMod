@@ -81,6 +81,10 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
             sp.velocityChanged = true;
         });
         client.setPositionAndRotation(pos.x, pos.y, pos.z, yaw, client.rotationPitch);
+        client.renderYawOffset = yaw;
+        client.prevRenderYawOffset = yaw;
+        client.rotationYawHead = yaw;
+        client.prevRotationYawHead = yaw;
         client.motionX = vel.x;
         client.motionY = vel.y;
         client.motionZ = vel.z;
@@ -107,12 +111,11 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
     public void setYaw(float absoluteYaw) {
         EntityPlayerSP p = Minecraft.getMinecraft().thePlayer;
         if (p == null) return;
+        // Body yaw (renderYawOffset) is left for vanilla to ease toward movement (gh-117 body-lag); pinning it made the body track the head exactly.
         p.rotationYaw = absoluteYaw;
         p.rotationYawHead = absoluteYaw;
-        p.renderYawOffset = absoluteYaw;
         p.prevRotationYaw = absoluteYaw;
         p.prevRotationYawHead = absoluteYaw;
-        p.prevRenderYawOffset = absoluteYaw;
     }
 
     @Override
