@@ -116,7 +116,7 @@ public final class Application {
         saveController.setSolverEngine(angleSolverEngine);
         AngleSolverWindow angleSolverWindow = new AngleSolverWindow(angleSolverState, settings, inputData::size, angleSolverEngine);
 
-        TickInfoPanel tickInfoPanel = new TickInfoPanel(boxController, selection, settings);
+        TickInfoPanel tickInfoPanel = new TickInfoPanel(boxController, selection, settings, this::moveTickTo);
         PerfOverlay perfOverlay = new PerfOverlay();
         FileMenu fileMenu = new FileMenu(saveController, filePicker, settings, this::saveSettings);
         SettingsModal settingsModal = new SettingsModal(settings, this::saveSettings);
@@ -208,6 +208,24 @@ public final class Application {
     private void handleStartPositionChange(Vec3dCore pos) {
         runner.setStartPosition(pos);
         onUserChange(-1);
+    }
+
+    private SimulationRunner.MoveTickResult moveTickTo(int tickIndex, Vec3dCore target) {
+        if (!mc.isReady()) {
+            return SimulationRunner.MoveTickResult.invalid();
+        }
+        SimulationRunner.MoveTickResult result = mc.runOnServerThread(
+                () -> runner.tryMoveTick(tickIndex, target, SimulationRunner.DEFAULT_MOVE_TICK_TOLERANCE, inputData)
+        );
+        boxController.clearAll();
+        for (TickState s : runner.getPath()) {
+            boxController.add(s);
+        }
+        selection.retainBelow(boxController.size());
+        if (result.applied()) {
+            saveController.markDirty();
+        }
+        return result;
     }
 
     private void handleStartYawChange(float yaw) {

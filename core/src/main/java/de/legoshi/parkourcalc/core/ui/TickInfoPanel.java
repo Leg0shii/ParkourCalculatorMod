@@ -1,19 +1,28 @@
 package de.legoshi.parkourcalc.core.ui;
 
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
+import de.legoshi.parkourcalc.core.sim.SimulationRunner;
 import de.legoshi.parkourcalc.core.sim.TickState;
+import de.legoshi.parkourcalc.core.sim.Vec3dCore;
+import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImGui;
 import imgui.ImGuiIO;
+import imgui.flag.ImGuiInputTextFlags;
 import imgui.flag.ImGuiTableColumnFlags;
 import imgui.flag.ImGuiWindowFlags;
+import imgui.type.ImString;
 
 import java.util.List;
 import java.util.Locale;
 
 /** Read-only inspector for the single currently-selected tick. */
 public final class TickInfoPanel implements RenderInterface {
+
+    public interface MoveTickHandler {
+        SimulationRunner.MoveTickResult move(int tickIndex, Vec3dCore target);
+    }
 
     private static final String WINDOW_ID = "###tick-info";
     private static final String WINDOW_TITLE = "Tick Info";
@@ -27,9 +36,21 @@ public final class TickInfoPanel implements RenderInterface {
     private static final String COL_Y = "Y";
     private static final String COL_Z = "Z";
 
+    private static final String MOVE_SECTION = "Move tick";
+    private static final String MOVE_BUTTON = "Move tick here";
+    private static final String MOVE_TOOLTIP =
+            "Shifts the start position so this tick lands on the given coordinates. The whole path moves with "
+            + "it, so the move is kept only if collisions don't divert this tick away from the target.";
+    private static final String MSG_APPLIED = "Moved. Start shifted by (%s, %s, %s).";
+    private static final String MSG_COLLISION = "Tick no longer valid: a collision changed the path. Move reverted.";
+    private static final String MSG_TICK_LOST = "Tick no longer valid: it disappears after the move. Move reverted.";
+    private static final String MSG_BAD_INPUT = "Enter valid numbers for X, Y and Z.";
+    private static final String COORD_HINT = "0.0";
+
     private final BoxController boxController;
     private final SelectionManager selection;
     private final Settings settings;
+    private final MoveTickHandler moveTickHandler;
     private int rowCounter;
 
     private int fmtPrecision = -1;
@@ -37,10 +58,20 @@ public final class TickInfoPanel implements RenderInterface {
     private String fmtNumSingle;
     private String numSample;
 
-    public TickInfoPanel(BoxController boxController, SelectionManager selection, Settings settings) {
+    private final ImString moveX = new ImString(32);
+    private final ImString moveY = new ImString(32);
+    private final ImString moveZ = new ImString(32);
+    private int prefilledIndex = -1;
+    private double prefilledTickX, prefilledTickY, prefilledTickZ;
+    private int statusIndex = -1;
+    private String statusMessage;
+    private int statusColor;
+
+    public TickInfoPanel(BoxController boxController, SelectionManager selection, Settings settings, MoveTickHandler moveTickHandler) {
         this.boxController = boxController;
         this.selection = selection;
         this.settings = settings;
+        this.moveTickHandler = moveTickHandler;
     }
 
     private void rebuildFormats() {
@@ -83,7 +114,115 @@ public final class TickInfoPanel implements RenderInterface {
         float appliedYaw = idx + 1 < states.size() ? states.get(idx + 1).yaw : cur.yaw;
 
         renderTable(idx, cur, prev, prev2, appliedYaw);
+        renderMoveSection(idx, cur);
         ImGui.end();
+    }
+
+    private void renderMoveSection(int idx, TickState cur) {
+        if (moveTickHandler == null) return;
+
+        boolean tickChanged = idx != prefilledIndex;
+        boolean tickShifted = !tickChanged
+                && (cur.position.x != prefilledTickX || cur.position.y != prefilledTickY || cur.position.z != prefilledTickZ);
+        if (tickChanged || tickShifted) {
+            seedMoveInputs(idx, cur.position);
+            if (tickChanged) clearStatus();
+        }
+
+        ThemeManager.sectionSpacing();
+        ImGui.textDisabled(MOVE_SECTION);
+        TooltipUtil.onHover(MOVE_TOOLTIP);
+        ThemeManager.bottomPaddedSeparator();
+
+        float fieldW = ImGui.calcTextSize(numSample).x + 2f * ImGui.getStyle().getFramePadding().x;
+        int flags = ImGuiInputTextFlags.CharsDecimal | ImGuiInputTextFlags.AutoSelectAll | ImGuiInputTextFlags.EnterReturnsTrue;
+        boolean submit = false;
+        submit |= Controls.inputTextHint("X", COORD_HINT, moveX, fieldW, flags);
+        ImGui.sameLine();
+        submit |= Controls.inputTextHint("Y", COORD_HINT, moveY, fieldW, flags);
+        ImGui.sameLine();
+        submit |= Controls.inputTextHint("Z", COORD_HINT, moveZ, fieldW, flags);
+
+        ThemeManager.sectionSpacing();
+        if (Controls.primaryButton(MOVE_BUTTON)) submit = true;
+        TooltipUtil.onHover(MOVE_TOOLTIP);
+
+        if (submit) applyMove(idx);
+
+        if (statusMessage != null && statusIndex == idx) {
+            ThemeManager.sectionSpacing();
+            ThemeManager.pushTextColor(statusColor);
+            ImGui.pushTextWrapPos(0f);
+            ImGui.textWrapped(statusMessage);
+            ImGui.popTextWrapPos();
+            ThemeManager.popTextColor();
+        }
+    }
+
+    private void applyMove(int idx) {
+        Double x = parse(moveX);
+        Double y = parse(moveY);
+        Double z = parse(moveZ);
+        if (x == null || y == null || z == null) {
+            setStatus(idx, MSG_BAD_INPUT, ThemeManager.dangerColor());
+            return;
+        }
+        SimulationRunner.MoveTickResult result = moveTickHandler.move(idx, new Vec3dCore(x, y, z));
+        switch (result.status) {
+            case APPLIED:
+                setStatus(
+                        idx,
+                        String.format(
+                                Locale.US,
+                                MSG_APPLIED,
+                                String.format(Locale.US, fmtNumSingle, result.offset.x),
+                                String.format(Locale.US, fmtNumSingle, result.offset.y),
+                                String.format(Locale.US, fmtNumSingle, result.offset.z)
+                        ),
+                        ThemeManager.okColor()
+                );
+                break;
+            case COLLISION_CHANGED_PATH:
+                setStatus(idx, MSG_COLLISION, ThemeManager.dangerColor());
+                break;
+            case TICK_LOST:
+                setStatus(idx, MSG_TICK_LOST, ThemeManager.dangerColor());
+                break;
+            default:
+                setStatus(idx, MSG_TICK_LOST, ThemeManager.dangerColor());
+                break;
+        }
+    }
+
+    private void seedMoveInputs(int idx, Vec3dCore pos) {
+        prefilledIndex = idx;
+        prefilledTickX = pos.x;
+        prefilledTickY = pos.y;
+        prefilledTickZ = pos.z;
+        moveX.set(String.format(Locale.US, fmtNumSingle, pos.x));
+        moveY.set(String.format(Locale.US, fmtNumSingle, pos.y));
+        moveZ.set(String.format(Locale.US, fmtNumSingle, pos.z));
+    }
+
+    private static Double parse(ImString holder) {
+        String text = holder.get().trim();
+        if (text.isEmpty()) return null;
+        try {
+            return Double.parseDouble(text);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private void setStatus(int idx, String message, int color) {
+        statusIndex = idx;
+        statusMessage = message;
+        statusColor = color;
+    }
+
+    private void clearStatus() {
+        statusIndex = -1;
+        statusMessage = null;
     }
 
     private void renderTable(int idx, TickState cur, TickState prev, TickState prev2, float appliedYaw) {
