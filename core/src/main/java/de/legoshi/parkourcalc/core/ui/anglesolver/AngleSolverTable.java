@@ -294,14 +294,16 @@ public final class AngleSolverTable {
 
         boolean sel = selection.isSelected(rowIndex);
         int flags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowItemOverlap;
-        if (ThemeManager.rightAlignedSelectable("row" + rowIndex, "", sel, flags)) {
+        if (ThemeManager.rightAlignedSelectable("row" + rowIndex, "", sel, flags, 0f, rowH)) {
             selection.handleClick(rowIndex);
         }
         ImVec2 selMin = ImGui.getItemRectMin();
         ImVec2 selMax = ImGui.getItemRectMax();
-        // The selectable is only one line tall; carry the full grown-row rect so the start/landing
-        // inset and hover/selection bounds span the whole multi-line row.
-        gMinX = selMin.x; gMinY = selMin.y; gMaxX = selMax.x; gMaxY = selMin.y + rowH;
+        float cellPadY = ImGui.getStyle().getCellPadding().y;
+        gMinX = selMin.x;
+        gMinY = selMin.y - cellPadY;
+        gMaxX = selMax.x;
+        gMaxY = gMinY + rowH;
         // Row drag-drop must attach to the selectable (ImGui targets the last item), so the hook
         // runs here, before the chevron becomes the last item (gh-119).
         if (dragDropHook != null) dragDropHook.run();
