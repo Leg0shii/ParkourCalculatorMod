@@ -67,6 +67,9 @@ public final class AngleSolverState {
     private Goal goal = Goal.MAX;
     private Effort effort = Effort.FAST;
 
+    public static final double DEFAULT_TARGET_SPEED = 0.2873;
+    private double targetSpeed = DEFAULT_TARGET_SPEED;
+
     private InputMode defaultInputs = InputMode.FORCE_45;
     private SprintMode defaultSprint = SprintMode.ALWAYS;
     private Slipperiness defaultSlipperiness = Slipperiness.AIR;
@@ -125,6 +128,14 @@ public final class AngleSolverState {
 
     public void setEffort(Effort effort) {
         this.effort = effort;
+    }
+
+    public double getTargetSpeed() {
+        return targetSpeed;
+    }
+
+    public void setTargetSpeed(double targetSpeed) {
+        this.targetSpeed = Math.max(0.0, targetSpeed);
     }
 
     public boolean isStart(int tick) {
@@ -460,6 +471,7 @@ public final class AngleSolverState {
         axis = Axis.X;
         goal = Goal.MAX;
         effort = Effort.FAST;
+        targetSpeed = DEFAULT_TARGET_SPEED;
         defaultInputs = InputMode.FORCE_45;
         defaultSprint = SprintMode.ALWAYS;
         defaultSlipperiness = Slipperiness.AIR;

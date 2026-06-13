@@ -253,6 +253,149 @@ public final class AngleSolverEngine {
         worker.start();
     }
 
+    private static final class VelocityJob {
+        final JumpSpec spec;
+        final double[] gameFacings;
+        final List<ConstraintAt> uiConstraints;
+        final int startTick;
+        final int landingTick;
+        final int numTicks;
+        final double targetSpeed;
+
+        VelocityJob(JumpSpec spec, double[] gameFacings, List<ConstraintAt> uiConstraints,
+                    int startTick, int landingTick, int numTicks, double targetSpeed) {
+            this.spec = spec;
+            this.gameFacings = gameFacings;
+            this.uiConstraints = uiConstraints;
+            this.startTick = startTick;
+            this.landingTick = landingTick;
+            this.numTicks = numTicks;
+            this.targetSpeed = targetSpeed;
+        }
+    }
+
+    private VelocityJob buildVelocityJob() {
+        int startTick = state.getStartTick();
+        int landingTick = state.getLandingTick();
+        int total = segmentConstraintCount(startTick, landingTick);
+
+        List<InputRow> rows = inputs.getRows();
+        int numTicks = landingTick - startTick;
+        if (numTicks <= 0 || startTick < 0 || startTick >= boxes.size()
+                || landingTick > rows.size() || startTick >= rows.size()) {
+            state.setResult(new SolveResult(false, 0, total, startTick + 1, landingTick + 1));
+            return null;
+        }
+
+        Phys ph = buildPhys(startTick, numTicks);
+        List<ConstraintAt> uiCons = collectUiConstraints(startTick, numTicks);
+
+        List<JumpConstraint> constraints = new ArrayList<>();
+        Objective objective = new Objective(axis(state.getAxis()), sense(state.getGoal()), numTicks);
+        for (ConstraintAt ca : uiCons) addMapped(constraints, ca.c, ca.absTick, ca.segTick, numTicks);
+
+        JumpSpec spec = new JumpSpec(ph.inputs, constraints, objective);
+        double[] gameFacings = fixedGameFacings(startTick, numTicks);
+        return new VelocityJob(spec, gameFacings, uiCons, startTick, landingTick, numTicks, state.getTargetSpeed());
+    }
+
+    private double[] fixedGameFacings(int startTick, int numTicks) {
+        double[] f = new double[numTicks];
+        for (int k = 0; k < numTicks; k++) {
+            TickState s = boxes.getState(startTick + k);
+            f[k] = s != null ? s.yaw : 0.0;
+        }
+        return f;
+    }
+
+    public void solveVelocityAngle() {
+        if (solving) return;
+        VelocityJob job = buildVelocityJob();
+        if (job == null) return;
+
+        long t0 = System.nanoTime();
+        state.clearResult();
+        lastPlan = null;
+        pending = null;
+        startNanos = t0;
+        AtomicBoolean token = new AtomicBoolean(false);
+        cancel = token;
+        solving = true;
+        Thread worker = new Thread(() -> {
+            try {
+                Outcome o = runVelocityJob(job, token);
+                if (o != null && !token.get()) pending = o;
+            } catch (Throwable t) {
+                if (!token.get()) {
+                    SolveResult fail = new SolveResult(
+                            false, 0, job.uiConstraints.size(),
+                            job.startTick + 1, job.landingTick + 1
+                    );
+                    pending = new Outcome(fail, null);
+                }
+            }
+        }, "angle-velocity-solver");
+        worker.setDaemon(true);
+        worker.start();
+    }
+
+    private Outcome runVelocityJob(VelocityJob job, AtomicBoolean cancel) {
+        long solveStart = System.nanoTime();
+        VelocityAngleSolver solver = new VelocityAngleSolver(model, job.spec, job.gameFacings, job.targetSpeed);
+        VelocityAngleSolver.Result vr = solver.solve(FEAS_TOL, cancel);
+        if (cancel.get() || vr == null) return null;
+        long solveNanos = System.nanoTime() - solveStart;
+
+        SolveResult result = buildVelocityResult(job, vr);
+        result.setDurationNanos(solveNanos);
+        result.setDurationMs(solveNanos / 1_000_000L);
+        result.setFinishedAt(formatClock());
+        result.setSolver("velocity-angle sweep + golden-section refine");
+        result.setObjective(vr.path.getPos(job.spec.objective.tick, job.spec.objective.axis));
+        result.getOutcomes().add(0, objectiveOutcome(result, job.spec.objective, job.startTick));
+        double realizedSpeed = Math.hypot(vr.initialVelocity.x, vr.initialVelocity.z);
+        result.getOutcomes().add(0, new SolveResult.Outcome(
+                "velocity angle", "T" + (job.startTick + 1),
+                "= " + ConstraintText.fixedStat(vr.angle360Deg) + "°",
+                ConstraintText.fixedStat(realizedSpeed) + " b/t", ""
+        ));
+        addBaseDetails(result, solveNanos);
+        result.addDetail("Target speed", ConstraintText.fixedStat(job.targetSpeed) + " b/t");
+        result.addDetail(
+                "Velocity angle", ConstraintText.fixedStat(vr.angle360Deg) + "° ("
+                + ConstraintText.fixedStat(vr.angleDeg) + "°)"
+        );
+        result.addDetail("Launch vX", ConstraintText.fixedStat(vr.initialVelocity.x));
+        result.addDetail("Launch vZ", ConstraintText.fixedStat(vr.initialVelocity.z));
+        result.addDetail("Coarse step", ConstraintText.fixedStat(0.2) + "°");
+        return new Outcome(result, null);
+    }
+
+    private SolveResult buildVelocityResult(VelocityJob job, VelocityAngleSolver.Result vr) {
+        int total = 0;
+        int met = 0;
+        List<SolveResult.Outcome> outs = new ArrayList<>();
+        List<ConstraintAt> ordered = new ArrayList<>(job.uiConstraints);
+        ordered.sort((a, b) -> Integer.compare(a.absTick, b.absTick));
+        for (ConstraintAt ca : ordered) {
+            Double found = findValue(ca.c, ca.segTick, job.numTicks, job.gameFacings, vr.path);
+            if (found == null) continue;
+            total++;
+            if (satisfied(ca.c, found)) met++;
+            outs.add(outcome(ca.c, ca.absTick, found));
+        }
+        SolveResult r = new SolveResult(met == total, met, total, job.startTick + 1, job.landingTick + 1);
+        r.getOutcomes().addAll(outs);
+        return r;
+    }
+
+    public VelocityAngleSolver.Result debugSolveVelocityAngle() {
+        VelocityJob job = buildVelocityJob();
+        if (job == null) return null;
+        return new VelocityAngleSolver(model, job.spec, job.gameFacings, job.targetSpeed)
+                .solve(FEAS_TOL, new AtomicBoolean(false));
+    }
+
     /** Per-tick physics snapshot shared by solve() and the block solver. */
     private static final class Phys {
         final JumpPhysicsInputs inputs;

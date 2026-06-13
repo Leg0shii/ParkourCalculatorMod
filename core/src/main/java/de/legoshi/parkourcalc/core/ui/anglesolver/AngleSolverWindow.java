@@ -22,6 +22,7 @@ import imgui.flag.ImGuiCol;
 import imgui.flag.ImGuiCond;
 import imgui.flag.ImGuiStyleVar;
 import imgui.flag.ImGuiWindowFlags;
+import imgui.type.ImFloat;
 import imgui.type.ImInt;
 
 import java.util.ArrayList;
@@ -54,7 +55,16 @@ public final class AngleSolverWindow implements RenderInterface {
     private static final String[] EFFORTS = {"Fast", "Thorough"};
 
     private static final String[] FORM_LABELS =
-            {"Start tick", "Goal tick", "Axis", "Goal", "Inputs", "Sprint", "Slipperiness", "Potion"};
+            {"Start tick", "Goal tick", "Axis", "Goal", "Inputs", "Sprint", "Slipperiness", "Potion", "Speed"};
+
+    private static final String VELOCITY_ANGLE_TIP =
+            "Stratfinding helper (issue #112): instead of solving the per-tick facings for a fixed launch"
+            + " velocity, this fixes the launch SPEED to the value above and searches the DIRECTION of the"
+            + " initial horizontal velocity over a full circle for the angle that best meets the constraints"
+            + " below.\n\nThe angle is a Minecraft yaw: 0 = +Z, 90 = -X. It is the direction your speed"
+            + " vector points at launch.\n\nv1 keeps the current start position and only optimizes the"
+            + " velocity direction; it does not author per-tick yaws, so its result cannot be Applied (it"
+            + " would change the launch velocity, not the rows). Use it to read off the target angle.";
 
     /** Unscaled; lines the details table up under the toggle title and sets it off from the solved values. */
     private static final float DETAIL_INDENT = 13f;
@@ -80,6 +90,7 @@ public final class AngleSolverWindow implements RenderInterface {
     private final ImInt slipBuf = new ImInt();
     private final ImInt doseCombo = new ImInt();
     private final ImInt levelBuf = new ImInt();
+    private final ImFloat speedBuf = new ImFloat();
     private final String[] slipItems;
 
     private boolean yawsExpanded;
@@ -89,6 +100,7 @@ public final class AngleSolverWindow implements RenderInterface {
     private boolean problemExpanded = true;
     private boolean solveForExpanded = true;
     private boolean defaultStateExpanded = true;
+    private boolean velocityAngleExpanded;
     private boolean advancedExpanded;
     private int doseToRemove;
 
@@ -177,6 +189,9 @@ public final class AngleSolverWindow implements RenderInterface {
             potionRow(labelW);
         }
         state.pruneRedundantOverrides();
+
+        ThemeManager.sectionSpacing();
+        renderVelocityAngle(labelW, scale);
 
         ThemeManager.sectionSpacing();
         renderAdvanced(labelW, scale);
@@ -377,6 +392,39 @@ public final class AngleSolverWindow implements RenderInterface {
         }
         ImGui.sameLine();
         if (SolverWidgets.deleteX("rm" + index)) doseToRemove = index;
+    }
+
+    private void renderVelocityAngle(float labelW, float scale) {
+        velocityAngleExpanded = sectionToggle("Velocity angle", "velangle", velocityAngleExpanded, scale);
+        if (!velocityAngleExpanded) return;
+
+        speedRow(labelW);
+
+        ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+        ImGui.text("Searches the launch direction for this speed.");
+        ThemeManager.popTextColor();
+        TooltipUtil.onHover(VELOCITY_ANGLE_TIP);
+
+        if (engine.isSolving()) {
+            Controls.disabledButton("Solve velocity angle");
+        } else if (Controls.secondaryButton("Solve velocity angle")) {
+            yawsExpanded = false;
+            detailsExpanded = false;
+            solverExpanded = false;
+            outcomesExpanded = true;
+            engine.solveVelocityAngle();
+        }
+    }
+
+    private void speedRow(float labelW) {
+        Controls.pushInputFrameHeight();
+        SolverWidgets.rowLabel("Speed", labelW);
+        speedBuf.set((float) state.getTargetSpeed());
+        ImGui.setNextItemWidth(ImGui.getContentRegionAvail().x);
+        if (ImGui.inputFloat("##targetSpeed", speedBuf, 0f, 0f, "%.4f")) {
+            state.setTargetSpeed(speedBuf.get());
+        }
+        Controls.popInputFrameHeight();
     }
 
     private void renderAdvanced(float labelW, float scale) {
