@@ -34,7 +34,9 @@ import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverWindow;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /** Single-instance orchestrator wired by loaders via mixins / event handlers. */
 public final class Application {
@@ -75,6 +77,25 @@ public final class Application {
         );
         this.saveController = new SaveController(inputData, runner, mc, this::runSimulation);
         this.playback = new PlaybackController(inputData, runner, settings);
+        this.playback.setStartRangeResolver(this::resolvePlaybackStartRange);
+    }
+
+    private PlaybackController.StartRange resolvePlaybackStartRange() {
+        if (selection.isEmpty()) return null;
+
+        Set<Integer> selected = selection.getSelected();
+        int rowCount = inputData.size();
+        int first = Collections.min(selected);
+        int last = Collections.max(selected);
+        if (first < 0 || first >= rowCount) return null;
+
+        int stopExclusive = (selected.size() == 1) ? rowCount : Math.min(last + 1, rowCount);
+
+        TickState pre = boxController.getState(first);
+        Vec3dCore pos = pre != null ? pre.position : runner.getStartPosition();
+        Vec3dCore vel = pre != null ? pre.velocity : runner.getStartVelocity();
+        float yaw = pre != null ? pre.yaw : runner.getStartYaw();
+        return new PlaybackController.StartRange(first, stopExclusive, pos, vel, yaw);
     }
 
     public void setModVersion(String modVersion) {

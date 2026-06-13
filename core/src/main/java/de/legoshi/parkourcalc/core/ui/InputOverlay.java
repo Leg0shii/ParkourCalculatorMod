@@ -883,6 +883,10 @@ public final class InputOverlay {
         return editingYawRow >= 0;
     }
 
+    public String playbackStatusHint() {
+        return playback != null ? playback.statusHint() : "";
+    }
+
     public void navigateYaw(boolean forward) {
         int from = editingYawRow;
         if (from < 0) return;

@@ -179,9 +179,12 @@ public final class MainWindowOverlay implements RenderInterface {
         }
         dl.addText(x, y, ThemeManager.textMutedColor(), APP_NAME);
         if (fileMenu.hasOpenTas()) {
-            String rows = inputData.size() + " rows";
-            float rw = ImGui.calcTextSize(rows).x;
-            dl.addText(winPos.x + winW - padX - rw, y, ThemeManager.textMutedColor(), rows);
+            String hint = inputOverlay.playbackStatusHint();
+            boolean replaying = !hint.isEmpty();
+            String rightText = replaying ? hint : inputData.size() + " rows";
+            int rightColor = replaying ? ThemeManager.warningColor() : ThemeManager.textMutedColor();
+            float rw = ImGui.calcTextSize(rightText).x;
+            dl.addText(winPos.x + winW - padX - rw, y, rightColor, rightText);
         }
         dl.popClipRect();
     }
