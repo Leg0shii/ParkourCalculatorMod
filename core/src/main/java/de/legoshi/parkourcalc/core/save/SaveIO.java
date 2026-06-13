@@ -30,7 +30,7 @@ import java.util.TimeZone;
 public final class SaveIO {
 
     public static Result<String> save(FileSystemSaveStore store, String rawName, InputData inputData, Vec3dCore startPos, Vec3dCore startVel, float startYaw, AngleSolverState angleSolver, List<TickState> states, boolean fullDebug) {
-        String name = sanitize(rawName);
+        String name = sanitizeRelative(rawName);
         if (name == null) {
             return Result.failure("Invalid save name. Use letters, numbers, dashes, or underscores.");
         }
@@ -47,7 +47,7 @@ public final class SaveIO {
     }
 
     public static Result<SaveFile> load(FileSystemSaveStore store, String rawName) {
-        String name = sanitize(rawName);
+        String name = sanitizeRelative(rawName);
         if (name == null) {
             return Result.failure("Invalid save name.");
         }
@@ -175,6 +175,22 @@ public final class SaveIO {
         String cleaned = out.toString();
         if (cleaned.isEmpty() || cleaned.equals(".") || cleaned.equals("..")) return null;
         return cleaned;
+    }
+
+    public static String sanitizeRelative(String raw) {
+        if (raw == null) return null;
+        String unified = raw.replace('\\', '/').trim();
+        if (unified.isEmpty()) return null;
+        String[] segments = unified.split("/");
+        StringBuilder out = new StringBuilder(unified.length());
+        for (String segment : segments) {
+            if (segment.isEmpty()) continue;
+            String clean = sanitize(segment);
+            if (clean == null) return null;
+            if (out.length() > 0) out.append('/');
+            out.append(clean);
+        }
+        return out.length() == 0 ? null : out.toString();
     }
 
     private static SaveFile buildFile(FileSystemSaveStore store, InputData inputData, Vec3dCore startPos, Vec3dCore startVel, float startYaw, AngleSolverState angleSolver, List<TickState> states, boolean fullDebug) {
