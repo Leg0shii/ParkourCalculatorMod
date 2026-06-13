@@ -6,6 +6,8 @@ import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2InputState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 
 import java.util.function.Supplier;
@@ -41,6 +43,15 @@ public final class Forge8MinecraftAccess implements MinecraftAccess {
         if (view == null) return Vec3dCore.ZERO;
         Vec3 d = view.getLook(1.0F);
         return new Vec3dCore(d.xCoord, d.yCoord, d.zCoord);
+    }
+
+    @Override
+    public int[] getLookedAtBlock() {
+        MovingObjectPosition hit = Minecraft.getMinecraft().objectMouseOver;
+        if (hit == null || hit.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) return null;
+        BlockPos pos = hit.getBlockPos();
+        if (pos == null) return null;
+        return new int[] {pos.getX(), pos.getY(), pos.getZ()};
     }
 
     @Override

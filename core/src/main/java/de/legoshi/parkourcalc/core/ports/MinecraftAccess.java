@@ -24,6 +24,12 @@ public interface MinecraftAccess {
     /** Unit vector along the camera's look direction. */
     Vec3dCore getLookDirection();
 
+    /** Integer coords {@code [x, y, z]} of the looked-at block, or {@code null} when nothing is targeted.
+     *  Default returns null so a loader without a raycast makes the keybind a no-op instead of failing to build. */
+    default int[] getLookedAtBlock() {
+        return null;
+    }
+
     /** Current state of the left mouse button (true while held). */
     boolean isMousePressedLeft();
 

@@ -62,6 +62,7 @@ public class Forge8ParkourCalculator {
     private KeyBinding toggleKeyBinding;
     private KeyBinding deselectKeyBinding;
     private KeyBinding playbackKeyBinding;
+    private KeyBinding landingConstraintsKeyBinding;
     private Path configPath;
     private Path saveDir;
 
@@ -93,9 +94,11 @@ public class Forge8ParkourCalculator {
         ClientRegistry.registerKeyBinding(deselectKeyBinding);
         playbackKeyBinding = new KeyBinding("key.parkourcalculator.toggle_playback", Keyboard.KEY_P, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(playbackKeyBinding);
+        landingConstraintsKeyBinding = new KeyBinding("key.parkourcalculator.add_landing_constraints", Keyboard.KEY_B, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(landingConstraintsKeyBinding);
 
         MinecraftForge.EVENT_BUS.register(this);
-        LOG.info("ParkourCalculator init complete. G toggle, L deselect, P playback.");
+        LOG.info("ParkourCalculator init complete. G toggle, L deselect, P playback, B landing constraints.");
     }
 
     private boolean wasPlaybackRunning = false;
@@ -192,6 +195,10 @@ public class Forge8ParkourCalculator {
         while (playbackKeyBinding.isPressed()) {
             playbackPressed = true;
         }
+        boolean landingConstraintsPressed = false;
+        while (landingConstraintsKeyBinding.isPressed()) {
+            landingConstraintsPressed = true;
+        }
         if (mc.currentScreen == null) {
             if (toggled) {
                 openOverlay(mc);
@@ -201,6 +208,9 @@ public class Forge8ParkourCalculator {
             }
             if (playbackPressed) {
                 togglePlayback();
+            }
+            if (landingConstraintsPressed) {
+                application.addLandingConstraintsForLookedAtBlock();
             }
         }
         if (application.isReady()) {

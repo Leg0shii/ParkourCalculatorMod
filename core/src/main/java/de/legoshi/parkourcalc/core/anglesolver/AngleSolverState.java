@@ -327,6 +327,27 @@ public final class AngleSolverState {
         tickConstraints(tick).getConstraints().add(Constraint.scalar(Constraint.Field.X, Constraint.Op.GT, 0.0));
     }
 
+    /** Keep in sync with BoxStyle.HITBOX_HALF_WIDTH / AngleSolverEngine#HALF. */
+    public static final double HITBOX_HALF_WIDTH = 0.3;
+
+    public void addLandingConstraintsForBlock(int blockX, int blockY, int blockZ, int selectedTick) {
+        if (selectedTick < 0) return;
+        double xLo = blockX - HITBOX_HALF_WIDTH;
+        double xHi = (blockX + 1.0) + HITBOX_HALF_WIDTH;
+        double zLo = blockZ - HITBOX_HALF_WIDTH;
+        double zHi = (blockZ + 1.0) + HITBOX_HALF_WIDTH;
+
+        List<Constraint> list = tickConstraints(selectedTick).getConstraints();
+        list.removeIf(
+                c -> c.isRange()
+                        && (c.getField() == Constraint.Field.X || c.getField() == Constraint.Field.Z)
+        );
+        list.add(Constraint.range(Constraint.Field.X, xLo, xHi, true, true));
+        list.add(Constraint.range(Constraint.Field.Z, zLo, zHi, true, true));
+
+        setLandingTick(selectedTick);
+    }
+
     /** Drops every constraint on ticks in [fromTick, toTick] (state overrides are left intact). Used by the
      *  block generator, which authors the segment from scratch on each run. */
     public void clearConstraintsInRange(int fromTick, int toTick) {

@@ -271,6 +271,23 @@ public final class Application {
         );
     }
 
+    public void addLandingConstraintsForLookedAtBlock() {
+        if (angleSolverState == null) return;
+        if (!mc.isReady()) return;
+        int[] block = mc.getLookedAtBlock();
+        if (block == null || block.length < 3) return;
+        int tick = selectedSolverTick();
+        if (tick < 0) return;
+        angleSolverState.addLandingConstraintsForBlock(block[0], block[1], block[2], tick);
+    }
+
+    private int selectedSolverTick() {
+        if (!selection.isEmpty()) {
+            return selection.getSelected().iterator().next();
+        }
+        return angleSolverState.getLandingTick();
+    }
+
     public boolean isControlPanelOpen() {
         return overlayManager.isControlPanelOpen();
     }

@@ -31,6 +31,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
     public static KeyBinding toggleKeyBinding;
     public static KeyBinding deselectKeyBinding;
     public static KeyBinding playbackKeyBinding;
+    public static KeyBinding landingConstraintsKeyBinding;
 
     private static final Application application = new Application(
             new FabricSimulator(),
@@ -64,6 +65,12 @@ public class FabricParkourCalculator implements ClientModInitializer {
                 "key.parkourcalculator.toggle_playback",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_P,
+                category
+        ));
+        landingConstraintsKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.parkourcalculator.add_landing_constraints",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_B,
                 category
         ));
 
@@ -144,6 +151,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         while (playbackKeyBinding.wasPressed()) {
             playbackPressed = true;
         }
+        boolean landingConstraintsPressed = false;
+        while (landingConstraintsKeyBinding.wasPressed()) {
+            landingConstraintsPressed = true;
+        }
 
         boolean imguiWantsKeys = application.isControlPanelOpen() && ImGui.getIO().getWantTextInput();
         boolean canDispatch = client.currentScreen == null && !imguiWantsKeys;
@@ -157,6 +168,9 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
         if (playbackPressed && canDispatch) {
             togglePlayback();
+        }
+        if (landingConstraintsPressed && canDispatch) {
+            application.addLandingConstraintsForLookedAtBlock();
         }
     }
 

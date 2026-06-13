@@ -6,6 +6,9 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.system.MemoryStack;
@@ -43,6 +46,15 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
         Camera camera = MinecraftClient.getInstance().gameRenderer.getCamera();
         Vec3d d = Vec3d.fromPolar(camera.getPitch(), camera.getYaw());
         return new Vec3dCore(d.x, d.y, d.z);
+    }
+
+    @Override
+    public int[] getLookedAtBlock() {
+        HitResult hit = MinecraftClient.getInstance().crosshairTarget;
+        if (!(hit instanceof BlockHitResult) || hit.getType() != HitResult.Type.BLOCK) return null;
+        BlockPos pos = ((BlockHitResult) hit).getBlockPos();
+        if (pos == null) return null;
+        return new int[] {pos.getX(), pos.getY(), pos.getZ()};
     }
 
     @Override
