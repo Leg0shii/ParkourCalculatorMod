@@ -89,6 +89,8 @@ public final class Forge8WorldOverlayRenderer {
             }
         }
 
+        // Reset leaked per-vertex glColor4f to white so the F5 (third-person) hotbar stays opaque.
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
         GlStateManager.disableBlend();
         GlStateManager.enableCull();
         GlStateManager.enableLighting();
