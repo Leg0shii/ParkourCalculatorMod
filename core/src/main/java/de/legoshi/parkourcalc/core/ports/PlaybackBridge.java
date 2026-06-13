@@ -19,7 +19,7 @@ public interface PlaybackBridge {
         return false;
     }
 
-    void teleport(Vec3dCore pos, Vec3dCore vel, float yaw);
+    void teleport(Vec3dCore pos, Vec3dCore vel, float yaw, boolean onGround);
 
     void setKey(InputRow.Key key, boolean pressed);
 

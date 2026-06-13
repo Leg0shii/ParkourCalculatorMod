@@ -14,7 +14,7 @@ public abstract class ClientPlayerEntityTickMixin {
     private void pkc$forceGroundOnTick0(CallbackInfo ci) {
         ClientPlayerEntity self = (ClientPlayerEntity) (Object) this;
         if (FabricParkourCalculator.shouldForceGroundOnTick0(self)) {
-            self.setOnGround(true);
+            self.setOnGround(FabricParkourCalculator.firstTickOnGround());
             self.fallDistance = 0.0;
         }
     }

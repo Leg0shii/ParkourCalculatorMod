@@ -63,7 +63,7 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
     }
 
     @Override
-    public void teleport(Vec3dCore pos, Vec3dCore vel, float yaw) {
+    public void teleport(Vec3dCore pos, Vec3dCore vel, float yaw, boolean onGround) {
         Minecraft mc = Minecraft.getMinecraft();
         EntityPlayerSP client = mc.player;
         if (client == null) return;
@@ -83,7 +83,7 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
         client.motionX = vel.x;
         client.motionY = vel.y;
         client.motionZ = vel.z;
-        client.onGround = true;
+        client.onGround = onGround;
         client.fallDistance = 0.0F;
         // Suppress onUpdateWalkingPlayer's position packet until the server's scheduled
         // setPlayerLocation arms targetPos, otherwise the client races and trips moved-wrongly.

@@ -113,6 +113,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
                 && application.getPlayback().currentTick() == 0;
     }
 
+    public static boolean firstTickOnGround() {
+        return application.getPlayback().firstTickOnGround();
+    }
+
     public static boolean shouldSuppressFallDamage(net.minecraft.entity.Entity self) {
         return application.isPlaybackRunning() && self instanceof net.minecraft.entity.player.PlayerEntity;
     }

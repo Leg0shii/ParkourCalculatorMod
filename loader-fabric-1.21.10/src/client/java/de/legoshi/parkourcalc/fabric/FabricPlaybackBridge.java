@@ -60,7 +60,7 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
     }
 
     @Override
-    public void teleport(Vec3dCore pos, Vec3dCore vel, float yaw) {
+    public void teleport(Vec3dCore pos, Vec3dCore vel, float yaw, boolean onGround) {
         MinecraftClient mc = MinecraftClient.getInstance();
         ClientPlayerEntity client = mc.player;
         if (client == null) return;
@@ -81,7 +81,7 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         });
         client.updatePositionAndAngles(pos.x, pos.y, pos.z, yaw, client.getPitch());
         client.setVelocity(vel.x, vel.y, vel.z);
-        client.setOnGround(true);
+        client.setOnGround(onGround);
         client.fallDistance = 0.0;
         // Suppress the player tick's position packet until the server's requestTeleport
         // arms its teleport-pending state, otherwise the client races and trips moved-wrongly.

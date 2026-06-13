@@ -58,6 +58,15 @@ public final class SimulationRunner {
         }
     }
 
+    public boolean firstTickOnGround() {
+        if (path.isEmpty()) {
+            simulator.resetToStart();
+            path.add(snapshot());
+            checkpoints.add(simulator.saveCheckpoint());
+        }
+        return path.get(0).onGround;
+    }
+
     private TickState snapshot() {
         return new TickState(
                 simulator.getCurrentPosition(),

@@ -29,6 +29,8 @@ public final class PlaybackController {
     private int lastSpeedAmplifier;
     private int lastJumpBoostAmplifier;
 
+    private boolean firstTickOnGround;
+
     // currentTickYaw is the physics yaw, kept bit-identical to the simulator's rotationYaw:
     // the sine table quantizes 45 and -315 into different buckets, so a mod-360 offset
     // drifts the replayed path off the simulated one. The short-way turn on locked rows
@@ -70,6 +72,10 @@ public final class PlaybackController {
         return nextTick - 1;
     }
 
+    public boolean firstTickOnGround() {
+        return firstTickOnGround;
+    }
+
     public boolean canStart() {
         return bridge != null && bridge.isSingleplayer() && inputData.size() > 0;
     }
@@ -96,7 +102,8 @@ public final class PlaybackController {
                 DebugFlags.simTickSink = null;
             }
         }
-        bridge.teleport(runner.getStartPosition(), runner.getStartVelocity(), runner.getStartYaw());
+        firstTickOnGround = runner.firstTickOnGround();
+        bridge.teleport(runner.getStartPosition(), runner.getStartVelocity(), runner.getStartYaw(), firstTickOnGround);
         // Drop any user-held key so the warmup runs with an empty InputRow like the simulator does.
         bridge.releaseAllKeys();
         nextTick = 0;
