@@ -211,6 +211,7 @@ public final class PlaybackController {
     public void postTick() {
         if (!running || bridge == null) return;
         bridge.setYaw(displayedYaw);
+        bridge.setHeadYaw(displayedYaw);
         if (DebugFlags.DUMP_TICK_STATE) {
             // Negative index = warmup tick, so state going into tick 0 is visible.
             int t = nextTick - 1 - warmupRemaining;

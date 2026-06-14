@@ -80,6 +80,10 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
             sp.velocityChanged = true;
         });
         client.setPositionAndRotation(pos.x, pos.y, pos.z, yaw, client.rotationPitch);
+        client.renderYawOffset = yaw;
+        client.prevRenderYawOffset = yaw;
+        client.rotationYawHead = yaw;
+        client.prevRotationYawHead = yaw;
         client.motionX = vel.x;
         client.motionY = vel.y;
         client.motionZ = vel.z;
@@ -107,11 +111,14 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
         EntityPlayerSP p = Minecraft.getMinecraft().player;
         if (p == null) return;
         p.rotationYaw = absoluteYaw;
-        p.rotationYawHead = absoluteYaw;
-        p.renderYawOffset = absoluteYaw;
         p.prevRotationYaw = absoluteYaw;
-        p.prevRotationYawHead = absoluteYaw;
-        p.prevRenderYawOffset = absoluteYaw;
+    }
+
+    @Override
+    public void setHeadYaw(float absoluteYaw) {
+        EntityPlayerSP p = Minecraft.getMinecraft().player;
+        if (p == null) return;
+        p.rotationYawHead = absoluteYaw;
     }
 
     @Override
