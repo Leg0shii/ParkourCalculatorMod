@@ -36,9 +36,9 @@ public class SimulatorEntity extends Player {
 
     // No shadow prev* fields: SimulatorInput.playerInput holds the previous tick's
     // state until we call this.input.tick(), matching how MC's persistent Input
-    // field works, so MC's `bl2`/`bl3` capture pattern works as-is.
-    private int ticksLeftToDoubleTapSprint = 0;
-    private boolean inSneakingPose;
+    // field works, so MC's `wasShiftKeyDown`/`hasForwardImpulse` capture pattern works as-is.
+    private int sprintTriggerTime = 0;
+    private boolean crouching;
 
     private final ArrayList<Vec3dCore> subtickBuf = new ArrayList<Vec3dCore>(8);
     private boolean capturing = false;
@@ -97,7 +97,7 @@ public class SimulatorEntity extends Player {
         this.setRot(startYaw, 0);
 
         this.input.setData(new InputRow());
-        this.ticksLeftToDoubleTapSprint = 0;
+        this.sprintTriggerTime = 0;
         this.tick();
         this.tick();
 
@@ -195,11 +195,6 @@ public class SimulatorEntity extends Player {
     protected void pushEntities() {
     }
 
-    /**
-     * Mirrors ClientPlayerEntity.tickMovement sprint block (yarn 1.21.10+build.2-v2).
-     * Sprint-window length is hard-coded to vanilla's 7 (MC reads it from
-     * client.options.getSprintWindow(), which the simulator has no access to).
-     */
     @Override
     public void tick() {
         Vec3 before = this.position();
@@ -211,22 +206,27 @@ public class SimulatorEntity extends Player {
         }
     }
 
+    /**
+     * Mirrors LocalPlayer.aiStep sprint block (mojmaps 1.21.10).
+     * Sprint-window length is hard-coded to vanilla's 7 (MC reads it from
+     * client.options.getSprintWindow(), which the simulator has no access to).
+     */
     @Override
     public void aiStep() {
         this.lastCollisionAngleDegrees = Double.NaN;
         this.collisionAngleComputedThisTick = false;
 
-        if (this.ticksLeftToDoubleTapSprint > 0) {
-            this.ticksLeftToDoubleTapSprint--;
+        if (this.sprintTriggerTime > 0) {
+            this.sprintTriggerTime--;
         }
 
-        // Capture pre-input.tick() so bl2/bl3 hold the previous tick's state.
-        boolean bl2 = this.input.keyPresses.shift();
-        boolean bl3 = this.input.hasForwardImpulse();
+        // Capture pre-input.tick() so wasShiftKeyDown/hasForwardImpulse hold the previous tick's state.
+        boolean wasShiftKeyDown = this.input.keyPresses.shift();
+        boolean hasForwardImpulse = this.input.hasForwardImpulse();
 
-        // Mirrors ClientPlayerEntity 1:1; the !canChangeIntoPose(STANDING) term is vanilla's
+        // Mirrors LocalPlayer 1:1; the !canPlayerFitWithinBlocksAndEntitiesWhen(STANDING) term is vanilla's
         // forced crouch under a low ceiling, which keeps the slowdown after sneak is released.
-        this.inSneakingPose = !this.getAbilities().flying
+        this.crouching = !this.getAbilities().flying
                 && !this.isSwimming()
                 && !this.isPassenger()
                 && this.canPlayerFitWithinBlocksAndEntitiesWhen(Pose.CROUCHING)
@@ -234,16 +234,16 @@ public class SimulatorEntity extends Player {
 
         this.input.tick();
 
-        if (bl2 || this.isUsingItem() && !this.isPassenger() || this.input.keyPresses.backward()) {
-            this.ticksLeftToDoubleTapSprint = 0;
+        if (wasShiftKeyDown || this.isUsingItem() && !this.isPassenger() || this.input.keyPresses.backward()) {
+            this.sprintTriggerTime = 0;
         }
 
         if (this.canStartSprinting()) {
-            if (!bl3) {
-                if (this.ticksLeftToDoubleTapSprint > 0) {
+            if (!hasForwardImpulse) {
+                if (this.sprintTriggerTime > 0) {
                     this.setSprinting(true);
                 } else {
-                    this.ticksLeftToDoubleTapSprint = 7;
+                    this.sprintTriggerTime = 7;
                 }
             }
 
@@ -274,7 +274,7 @@ public class SimulatorEntity extends Player {
 
     @Override
     public boolean isCrouching() {
-        return this.inSneakingPose;
+        return this.crouching;
     }
 
     // Helpers copied 1-to-1 from ClientPlayerEntity (private there).
@@ -395,7 +395,7 @@ public class SimulatorEntity extends Player {
         c.horizontalCollision = this.horizontalCollision;
         c.collidedSoftly = this.minorHorizontalCollision;
         c.sprinting = this.isSprinting();
-        c.ticksLeftToDoubleTapSprint = this.ticksLeftToDoubleTapSprint;
+        c.ticksLeftToDoubleTapSprint = this.sprintTriggerTime;
         c.playerInput = this.input.keyPresses;
         c.jumpingCooldown = this.noJumpDelay;
         return c;
@@ -412,7 +412,7 @@ public class SimulatorEntity extends Player {
         this.horizontalCollision = c.horizontalCollision;
         this.minorHorizontalCollision = c.collidedSoftly;
         this.setSprinting(c.sprinting);
-        this.ticksLeftToDoubleTapSprint = c.ticksLeftToDoubleTapSprint;
+        this.sprintTriggerTime = c.ticksLeftToDoubleTapSprint;
         this.input.keyPresses = c.playerInput;
         this.noJumpDelay = c.jumpingCooldown;
     }
