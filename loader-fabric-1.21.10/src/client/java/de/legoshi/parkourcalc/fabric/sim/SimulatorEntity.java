@@ -139,7 +139,7 @@ public class SimulatorEntity extends PlayerEntity {
     }
 
     /** No-op so dragging a TAS through water doesn't spam splash/bubble particles
-     *  on every re-simulation. */
+     *  (and the splash sound) on every re-simulation. */
     @Override
     protected void onSwimmingStart() {
     }
@@ -257,7 +257,7 @@ public class SimulatorEntity extends PlayerEntity {
                 if (this.shouldStopSwimSprinting()) {
                     this.setSprinting(false);
                 }
-            } else if (this.shouldStopSprinting()) {
+            } else if (this.shouldStopRunSprinting()) {
                 this.setSprinting(false);
             }
         }
@@ -282,41 +282,41 @@ public class SimulatorEntity extends PlayerEntity {
     private boolean canStartSprinting() {
         return !this.isSprinting()
                 && this.input.hasForwardMovement()
-                && this.canSprint(this.getAbilities().flying)
+                && this.isSprintingPossible(this.getAbilities().flying)
                 && !this.isUsingItem()
                 && (!this.isGliding() || this.isSubmergedInWater())
-                && (!this.shouldSlowDown() || this.isSubmergedInWater());
+                && (!this.isMovingSlowly() || this.isSubmergedInWater());
     }
 
-    private boolean shouldStopSprinting() {
-        return !this.canSprint(this.getAbilities().flying)
+    private boolean shouldStopRunSprinting() {
+        return !this.isSprintingPossible(this.getAbilities().flying)
                 || !this.input.hasForwardMovement()
                 || this.horizontalCollision && !this.collidedSoftly;
     }
 
     private boolean shouldStopSwimSprinting() {
-        return !this.canSprint(true)
+        return !this.isSprintingPossible(true)
                 || !this.isTouchingWater()
                 || !this.input.hasForwardMovement() && !this.isOnGround() && !this.input.playerInput.sneak();
     }
 
-    private boolean canSprint(boolean allowTouchingWater) {
+    private boolean isSprintingPossible(boolean allowedInShallowWater) {
         return !this.hasBlindnessEffect()
-                && this.canSprint()
-                && (!this.hasVehicle() || this.canVehicleSprint(this.getVehicle()))
-                && (allowTouchingWater || !this.isPartlyTouchingWater());
+                && this.hasEnoughFoodToSprint()
+                && (!this.hasVehicle() || this.vehicleCanSprint(this.getVehicle()))
+                && (allowedInShallowWater || !this.isPartlyTouchingWater());
     }
 
-    private boolean canVehicleSprint(net.minecraft.entity.Entity vehicle) {
+    private boolean vehicleCanSprint(Entity vehicle) {
         return vehicle.canSprintAsVehicle() && vehicle.isLogicalSideForUpdatingMovement();
     }
 
-    private boolean canSprint() {
+    private boolean hasEnoughFoodToSprint() {
         return this.hasVehicle() || this.getHungerManager().getFoodLevel() > 6.0F || this.getAbilities().allowFlying;
     }
 
-    /** Lives on ClientPlayerEntity in MC, not PlayerEntity, so we redeclare it. */
-    public boolean shouldSlowDown() {
+    /** Lives on LocalPlayer in MC, not Player, so we redeclare it. */
+    public boolean isMovingSlowly() {
         return this.isInSneakingPose() || this.isCrawling();
     }
 
@@ -331,59 +331,59 @@ public class SimulatorEntity extends PlayerEntity {
         return Math.toRadians(angleDeg) < 0.13962634F;
     }
 
-    private double computeCollisionAngleDegrees(double adjustedX, double adjustedZ) {
-        float f = this.getYaw() * (float) (Math.PI / 180.0);
-        double d = MathHelper.sin(f);
-        double e = MathHelper.cos(f);
-        double g = this.sidewaysSpeed * e - this.forwardSpeed * d;
-        double h = this.forwardSpeed * e + this.sidewaysSpeed * d;
-        double i = MathHelper.square(g) + MathHelper.square(h);
-        double j = MathHelper.square(adjustedX) + MathHelper.square(adjustedZ);
-        if (i < 1.0E-5F || j < 1.0E-5F) {
+    private double computeCollisionAngleDegrees(double movementX, double movementZ) {
+        float yRotInRadians = this.getYaw() * (float) (Math.PI / 180.0);
+        double yRotSin = MathHelper.sin(yRotInRadians);
+        double yRotCos = MathHelper.cos(yRotInRadians);
+        double globalXA = this.sidewaysSpeed * yRotCos - this.forwardSpeed * yRotSin;
+        double globalZA = this.forwardSpeed * yRotCos + this.sidewaysSpeed * yRotSin;
+        double aLengthSquared = MathHelper.square(globalXA) + MathHelper.square(globalZA);
+        double movementLengthSquared = MathHelper.square(movementX) + MathHelper.square(movementZ);
+        if (aLengthSquared < 1.0E-5F || movementLengthSquared < 1.0E-5F) {
             return Double.NaN;
         }
-        double k = g * adjustedX + h * adjustedZ;
-        return Math.toDegrees(Math.acos(k / Math.sqrt(i * j)));
+        double dotProduct = globalXA * movementX + globalZA * movementZ;
+        return Math.toDegrees(Math.acos(dotProduct / Math.sqrt(aLengthSquared * movementLengthSquared)));
     }
 
     @Override
     public void tickMovementInput() {
-        Vec2f movement = applyMovementSpeedFactors(this.input.getMovementInput());
+        Vec2f movement = modifyInput(this.input.getMovementInput());
         this.sidewaysSpeed = movement.x;
         this.forwardSpeed = movement.y;
         this.jumping = this.input.playerInput.jump();
     }
 
-    private Vec2f applyMovementSpeedFactors(Vec2f raw) {
-        if (raw.lengthSquared() == 0.0F) {
-            return raw;
+    private Vec2f modifyInput(Vec2f input) {
+        if (input.lengthSquared() == 0.0F) {
+            return input;
         }
-        Vec2f result = raw.multiply(0.98F);
+        Vec2f newInput = input.multiply(0.98F);
         // Vanilla gates on shouldSlowDown() (pose from the previous tick's sneak), so the
         // slowdown lands one tick after the sneak input; isSneaking() would apply it a tick early.
-        if (this.shouldSlowDown()) {
-            float sneakSpeed = (float) this.getAttributeValue(EntityAttributes.SNEAKING_SPEED);
-            result = result.multiply(sneakSpeed);
+        if (this.isMovingSlowly()) {
+            float sneakingMovementFactor = (float) this.getAttributeValue(EntityAttributes.SNEAKING_SPEED);
+            newInput = newInput.multiply(sneakingMovementFactor);
         }
-        return normalizeDirectionalMovement(result);
+        return modifyInputSpeedForSquareMovement(newInput);
     }
 
-    private static Vec2f normalizeDirectionalMovement(Vec2f vec) {
-        float length = vec.length();
+    private static Vec2f modifyInputSpeedForSquareMovement(Vec2f input) {
+        float length = input.length();
         if (length <= 0.0F) {
-            return vec;
+            return input;
         }
-        Vec2f normalized = vec.multiply(1.0F / length);
-        float multiplier = getDirectionalMultiplier(normalized);
-        float clampedLength = Math.min(length * multiplier, 1.0F);
-        return normalized.multiply(clampedLength);
+        Vec2f direction = input.multiply(1.0F / length);
+        float distanceToUnitSquare = distanceToUnitSquare(direction);
+        float modifiedLength = Math.min(length * distanceToUnitSquare, 1.0F);
+        return direction.multiply(modifiedLength);
     }
 
-    private static float getDirectionalMultiplier(Vec2f normalized) {
-        float absX = Math.abs(normalized.x);
-        float absY = Math.abs(normalized.y);
-        float ratio = absY > absX ? absX / absY : absY / absX;
-        return MathHelper.sqrt(1.0F + MathHelper.square(ratio));
+    private static float distanceToUnitSquare(Vec2f direction) {
+        float directionX = Math.abs(direction.x);
+        float directionY = Math.abs(direction.y);
+        float tan = directionY > directionX ? directionX / directionY : directionY / directionX;
+        return MathHelper.sqrt(1.0F + MathHelper.square(tan));
     }
 
     public Checkpoint saveCheckpoint() {
