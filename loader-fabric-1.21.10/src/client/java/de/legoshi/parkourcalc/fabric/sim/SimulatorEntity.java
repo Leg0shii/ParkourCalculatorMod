@@ -62,7 +62,7 @@ public class SimulatorEntity extends Player {
         return result;
     }
 
-    /** Axis order mirrors Direction.method_73163 (Y first, X/Z by |component|). */
+    /** Axis order mirrors Direction.axisStepOrder (Y first, X/Z by |component|). */
     @Override
     public void move(MoverType type, Vec3 motion) {
         if (!capturing) {
@@ -114,14 +114,14 @@ public class SimulatorEntity extends Player {
     public void causeFoodExhaustion(float amount) {
     }
 
-    /** Required so canMoveVoluntarily/isLogicalSideForUpdatingMovement return true
+    /** Required so canSimulateMovement/isLocalInstanceAuthoritative return true
      *  on the client world; without it the entity's physics never advance. */
     @Override
     public boolean isLocalPlayer() {
         return true;
     }
 
-    /** Lets the entity tick on ServerWorld: Entity.isLogicalSideForUpdatingMovement is final
+    /** Lets the entity tick on ServerWorld: Entity.isLocalInstanceAuthoritative is final
      *  and returns !isControlledByPlayer() there, and PlayerEntity defaults that to true. */
     @Override
     public boolean isClientAuthoritative() {
@@ -155,8 +155,8 @@ public class SimulatorEntity extends Player {
     protected void onBelowWorld() {
     }
 
-    // LivingEntity gates clearStatusEffects / onStatusEffect* on !world.isClient(),
-    // which would make every effect call a no-op in the client world. Reimplement
+    // LivingEntity gates removeAllEffects / onEffect* on !level.isClientSide(),
+    // which would make every effect call a no-op in the client level. Reimplement
     // without the gate so attribute modifiers actually attach and detach.
 
     @Override
@@ -277,7 +277,7 @@ public class SimulatorEntity extends Player {
         return this.crouching;
     }
 
-    // Helpers copied 1-to-1 from ClientPlayerEntity (private there).
+    // Helpers copied 1-to-1 from LocalEntity (private there).
 
     private boolean canStartSprinting() {
         return !this.isSprinting()
@@ -359,7 +359,7 @@ public class SimulatorEntity extends Player {
             return input;
         }
         Vec2 newInput = input.scale(0.98F);
-        // Vanilla gates on shouldSlowDown() (pose from the previous tick's sneak), so the
+        // Vanilla gates on isMovingSlowly() (pose from the previous tick's sneak), so the
         // slowdown lands one tick after the sneak input; isSneaking() would apply it a tick early.
         if (this.isMovingSlowly()) {
             float sneakingMovementFactor = (float) this.getAttributeValue(Attributes.SNEAKING_SPEED);
