@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.core;
 
 import de.legoshi.parkourcalc.core.ports.PlaybackBridge;
+import de.legoshi.parkourcalc.core.sim.Checkpoint;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.DebugFlags;
@@ -76,13 +77,15 @@ public final class PlaybackController {
         public final Vec3dCore pos;
         public final Vec3dCore vel;
         public final float yaw;
+        public final Checkpoint carry;
 
-        public StartRange(int startIndex, int stopExclusive, Vec3dCore pos, Vec3dCore vel, float yaw) {
+        public StartRange(int startIndex, int stopExclusive, Vec3dCore pos, Vec3dCore vel, float yaw, Checkpoint carry) {
             this.startIndex = startIndex;
             this.stopExclusive = stopExclusive;
             this.pos = pos;
             this.vel = vel;
             this.yaw = yaw;
+            this.carry = carry;
         }
     }
 
@@ -111,13 +114,17 @@ public final class PlaybackController {
     public void start() {
         StartRange range = startRangeResolver != null ? startRangeResolver.get() : null;
         if (range == null) {
-            start(0, inputData.size(), runner.getStartPosition(), runner.getStartVelocity(), runner.getStartYaw());
+            start(0, inputData.size(), runner.getStartPosition(), runner.getStartVelocity(), runner.getStartYaw(), runner.getCheckpoint(0));
         } else {
-            start(range.startIndex, range.stopExclusive, range.pos, range.vel, range.yaw);
+            start(range.startIndex, range.stopExclusive, range.pos, range.vel, range.yaw, range.carry);
         }
     }
 
     public void start(int startIndex, int stopExclusive, Vec3dCore pos, Vec3dCore vel, float yaw) {
+        start(startIndex, stopExclusive, pos, vel, yaw, null);
+    }
+
+    public void start(int startIndex, int stopExclusive, Vec3dCore pos, Vec3dCore vel, float yaw, Checkpoint carry) {
         if (running) return;
         if (!canStart()) return;
 
@@ -137,7 +144,7 @@ public final class PlaybackController {
                 DebugFlags.simTickSink = null;
             }
         }
-        bridge.teleport(pos, vel, yaw);
+        bridge.teleport(pos, vel, yaw, carry);
         // Drop any user-held key so the warmup runs with an empty InputRow like the simulator does.
         bridge.releaseAllKeys();
         startTick = from;

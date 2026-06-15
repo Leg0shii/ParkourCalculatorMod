@@ -95,7 +95,7 @@ public final class Application {
         Vec3dCore pos = pre != null ? pre.position : runner.getStartPosition();
         Vec3dCore vel = pre != null ? pre.velocity : runner.getStartVelocity();
         float yaw = pre != null ? pre.yaw : runner.getStartYaw();
-        return new PlaybackController.StartRange(first, stopExclusive, pos, vel, yaw);
+        return new PlaybackController.StartRange(first, stopExclusive, pos, vel, yaw, runner.getCheckpoint(first));
     }
 
     public void setModVersion(String modVersion) {

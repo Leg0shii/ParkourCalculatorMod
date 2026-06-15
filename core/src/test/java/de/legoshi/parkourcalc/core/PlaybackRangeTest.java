@@ -29,7 +29,7 @@ public class PlaybackRangeTest {
         @Override public boolean isGamePaused() { return false; }
 
         @Override
-        public void teleport(Vec3dCore pos, Vec3dCore vel, float yaw) {
+        public void teleport(Vec3dCore pos, Vec3dCore vel, float yaw, de.legoshi.parkourcalc.core.sim.Checkpoint carry) {
             teleportPos = pos;
             teleportVel = vel;
             teleportYaw = yaw;
@@ -169,7 +169,7 @@ public class PlaybackRangeTest {
         PlaybackController pc = controller(bridge, new SimulationRunner(new FakeSimulator()), data);
 
         Vec3dCore pos = new Vec3dCore(7, 8, 9);
-        pc.setStartRangeResolver(() -> new PlaybackController.StartRange(4, 6, pos, Vec3dCore.ZERO, 12f));
+        pc.setStartRangeResolver(() -> new PlaybackController.StartRange(4, 6, pos, Vec3dCore.ZERO, 12f, null));
         pc.start();
 
         assertEquals(pos, bridge.teleportPos);

@@ -412,6 +412,16 @@ public class SimulatorEntity extends PlayerEntity {
         this.jumpingCooldown = c.jumpingCooldown;
     }
 
+    public static void applyCheckpoint(net.minecraft.client.network.ClientPlayerEntity p, de.legoshi.parkourcalc.core.sim.Checkpoint state) {
+        if (!(state instanceof Checkpoint)) return;
+        Checkpoint c = (Checkpoint) state;
+        p.setOnGround(c.onGround);
+        p.horizontalCollision = c.horizontalCollision;
+        p.collidedSoftly = c.collidedSoftly;
+        p.setSprinting(c.sprinting);
+        p.jumpingCooldown = c.jumpingCooldown;
+    }
+
     public static final class Checkpoint implements de.legoshi.parkourcalc.core.sim.Checkpoint {
         Vec3d pos;
         Vec3d velocity;

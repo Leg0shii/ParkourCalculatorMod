@@ -75,6 +75,11 @@ public final class SimulationRunner {
         );
     }
 
+    public Checkpoint getCheckpoint(int index) {
+        if (index < 0 || index >= checkpoints.size()) return null;
+        return checkpoints.get(index);
+    }
+
     /** Drop the cached entity and any state captured against the old world. */
     public void invalidate() {
         path.clear();

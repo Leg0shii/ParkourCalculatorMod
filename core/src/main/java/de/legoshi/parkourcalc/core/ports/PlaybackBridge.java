@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.ports;
 
+import de.legoshi.parkourcalc.core.sim.Checkpoint;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 
@@ -19,7 +20,7 @@ public interface PlaybackBridge {
         return false;
     }
 
-    void teleport(Vec3dCore pos, Vec3dCore vel, float yaw);
+    void teleport(Vec3dCore pos, Vec3dCore vel, float yaw, Checkpoint carry);
 
     void setKey(InputRow.Key key, boolean pressed);
 

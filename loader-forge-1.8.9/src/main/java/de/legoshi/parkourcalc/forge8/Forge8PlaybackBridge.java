@@ -8,6 +8,7 @@ import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.server.integrated.IntegratedServer;
@@ -30,6 +31,10 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
     private static final String[] LAST_REPORTED_YAW = { "lastReportedYaw", "field_175164_bL" };
     private static final String[] LAST_REPORTED_PITCH = { "lastReportedPitch", "field_175165_bM" };
     private static final String[] POSITION_UPDATE_TICKS = { "positionUpdateTicks", "field_175168_bP" };
+
+    private static final String[] SERVER_LAST_POS_X = { "lastPosX", "field_147373_o" };
+    private static final String[] SERVER_LAST_POS_Y = { "lastPosY", "field_147382_p" };
+    private static final String[] SERVER_LAST_POS_Z = { "lastPosZ", "field_147381_q" };
 
     private static final int EFFECT_DURATION_TICKS = 20000;
 
@@ -64,7 +69,7 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
     }
 
     @Override
-    public void teleport(Vec3dCore pos, Vec3dCore vel, float yaw) {
+    public void teleport(Vec3dCore pos, Vec3dCore vel, float yaw, de.legoshi.parkourcalc.core.sim.Checkpoint carry) {
         Minecraft mc = Minecraft.getMinecraft();
         EntityPlayerSP client = mc.thePlayer;
         if (client == null) return;
@@ -74,17 +79,32 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
         server.addScheduledTask(() -> {
             EntityPlayerMP sp = server.getConfigurationManager().getPlayerByUUID(uuid);
             if (sp == null) return;
-            sp.playerNetServerHandler.setPlayerLocation(pos.x, pos.y, pos.z, yaw, sp.rotationPitch);
+            sp.setPositionAndRotation(pos.x, pos.y, pos.z, yaw, sp.rotationPitch);
             sp.motionX = vel.x;
             sp.motionY = vel.y;
             sp.motionZ = vel.z;
-            sp.velocityChanged = true;
+            if (carry != null) {
+                de.legoshi.parkourcalc.forge8.sim.SimulatorEntity.applyCheckpoint(sp, carry);
+            } else {
+                sp.setSprinting(false);
+                sp.setSneaking(false);
+                sp.onGround = true;
+            }
+            sp.velocityChanged = false;
+            NetHandlerPlayServer conn = sp.playerNetServerHandler;
+            ObfuscationReflectionHelper.setPrivateValue(NetHandlerPlayServer.class, conn, pos.x, SERVER_LAST_POS_X);
+            ObfuscationReflectionHelper.setPrivateValue(NetHandlerPlayServer.class, conn, pos.y, SERVER_LAST_POS_Y);
+            ObfuscationReflectionHelper.setPrivateValue(NetHandlerPlayServer.class, conn, pos.z, SERVER_LAST_POS_Z);
         });
         client.setPositionAndRotation(pos.x, pos.y, pos.z, yaw, client.rotationPitch);
         client.motionX = vel.x;
         client.motionY = vel.y;
         client.motionZ = vel.z;
-        client.onGround = true;
+        if (carry != null) {
+            de.legoshi.parkourcalc.forge8.sim.SimulatorEntity.applyCheckpoint(client, carry);
+        } else {
+            client.onGround = true;
+        }
         client.fallDistance = 0.0F;
         // Suppress onUpdateWalkingPlayer's position packet until the server's scheduled
         // setPlayerLocation arms targetPos, otherwise the client races and trips moved-wrongly.
@@ -153,6 +173,20 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
                 sp.addPotionEffect(new PotionEffect(Potion.jump.id, EFFECT_DURATION_TICKS, jumpBoostAmplifier - 1, false, false));
             }
         });
+        applyClientEffects(client, speedAmplifier, jumpBoostAmplifier);
+    }
+
+    private static void applyClientEffects(EntityPlayerSP client, int speedAmplifier, int jumpBoostAmplifier) {
+        client.removePotionEffect(Potion.moveSpeed.id);
+        client.removePotionEffect(Potion.jump.id);
+        Potion.moveSpeed.removeAttributesModifiersFromEntity(client, client.getAttributeMap(), 0);
+        if (speedAmplifier > 0) {
+            client.addPotionEffect(new PotionEffect(Potion.moveSpeed.id, EFFECT_DURATION_TICKS, speedAmplifier - 1, false, false));
+            Potion.moveSpeed.applyAttributesModifiersToEntity(client, client.getAttributeMap(), speedAmplifier - 1);
+        }
+        if (jumpBoostAmplifier > 0) {
+            client.addPotionEffect(new PotionEffect(Potion.jump.id, EFFECT_DURATION_TICKS, jumpBoostAmplifier - 1, false, false));
+        }
     }
 
     @Override

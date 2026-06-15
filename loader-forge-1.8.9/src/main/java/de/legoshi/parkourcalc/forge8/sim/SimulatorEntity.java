@@ -239,6 +239,7 @@ public class SimulatorEntity extends EntityPlayer {
         c.sneaking = this.isSneaking();
         c.sprintState = this.sprintState;
         c.jumpMovementFactor = this.jumpMovementFactor;
+        c.landMovementFactor = this.getAIMoveSpeed();
         c.jumpTicks = ObfuscationReflectionHelper.<Integer, EntityLivingBase>getPrivateValue(EntityLivingBase.class, this, JUMP_TICKS_NAMES);
         return c;
     }
@@ -257,8 +258,21 @@ public class SimulatorEntity extends EntityPlayer {
         this.setSneaking(c.sneaking);
         this.sprintState = c.sprintState;
         this.jumpMovementFactor = c.jumpMovementFactor;
+        this.setAIMoveSpeed(c.landMovementFactor);
         ObfuscationReflectionHelper.setPrivateValue(EntityLivingBase.class, this, c.jumpTicks, JUMP_TICKS_NAMES);
         this.setPosition(c.posX, c.posY, c.posZ);
+    }
+
+    public static void applyCheckpoint(EntityLivingBase p, de.legoshi.parkourcalc.core.sim.Checkpoint state) {
+        if (!(state instanceof Checkpoint)) return;
+        Checkpoint c = (Checkpoint) state;
+        p.onGround = c.onGround;
+        p.isCollidedHorizontally = c.isCollidedHorizontally;
+        p.setSprinting(c.sprinting);
+        p.setSneaking(c.sneaking);
+        p.setAIMoveSpeed(c.landMovementFactor);
+        p.jumpMovementFactor = c.jumpMovementFactor;
+        ObfuscationReflectionHelper.setPrivateValue(EntityLivingBase.class, p, c.jumpTicks, JUMP_TICKS_NAMES);
     }
 
     public static final class Checkpoint implements de.legoshi.parkourcalc.core.sim.Checkpoint {
@@ -270,6 +284,7 @@ public class SimulatorEntity extends EntityPlayer {
         boolean sprinting, sneaking;
         PlayerSprintMachine.State sprintState;
         float jumpMovementFactor;
+        float landMovementFactor;
         int jumpTicks;
     }
 }

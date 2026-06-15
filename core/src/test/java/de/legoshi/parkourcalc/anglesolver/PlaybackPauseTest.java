@@ -40,7 +40,7 @@ public class PlaybackPauseTest {
         }
 
         @Override
-        public void teleport(Vec3dCore pos, Vec3dCore vel, float yaw) {
+        public void teleport(Vec3dCore pos, Vec3dCore vel, float yaw, de.legoshi.parkourcalc.core.sim.Checkpoint carry) {
         }
 
         @Override
