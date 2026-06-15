@@ -10,7 +10,6 @@ import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.MobEffects;
-import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.MovementInput;
@@ -32,10 +31,6 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
     private static final String[] LAST_REPORTED_YAW = { "lastReportedYaw", "field_175164_bL" };
     private static final String[] LAST_REPORTED_PITCH = { "lastReportedPitch", "field_175165_bM" };
     private static final String[] POSITION_UPDATE_TICKS = { "positionUpdateTicks", "field_175168_bP" };
-
-    private static final String[] SERVER_LAST_GOOD_X = { "lastGoodX", "field_184352_o" };
-    private static final String[] SERVER_LAST_GOOD_Y = { "lastGoodY", "field_184353_p" };
-    private static final String[] SERVER_LAST_GOOD_Z = { "lastGoodZ", "field_184354_q" };
 
     private final InputRow currentRow = new InputRow();
     private MovementInput originalInput;
@@ -90,10 +85,6 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
                 sp.onGround = true;
             }
             sp.velocityChanged = false;
-            NetHandlerPlayServer conn = sp.connection;
-            ObfuscationReflectionHelper.setPrivateValue(NetHandlerPlayServer.class, conn, pos.x, SERVER_LAST_GOOD_X);
-            ObfuscationReflectionHelper.setPrivateValue(NetHandlerPlayServer.class, conn, pos.y, SERVER_LAST_GOOD_Y);
-            ObfuscationReflectionHelper.setPrivateValue(NetHandlerPlayServer.class, conn, pos.z, SERVER_LAST_GOOD_Z);
         });
         client.setPositionAndRotation(pos.x, pos.y, pos.z, yaw, client.rotationPitch);
         client.renderYawOffset = yaw;
