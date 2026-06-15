@@ -3,6 +3,7 @@ package de.legoshi.parkourcalc.core.ui;
 import de.legoshi.parkourcalc.core.SaveController;
 import de.legoshi.parkourcalc.core.ports.FilePickerPort;
 import de.legoshi.parkourcalc.core.save.Result;
+import de.legoshi.parkourcalc.core.save.SaveBrowseResult;
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveInfo;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
@@ -21,8 +22,6 @@ import imgui.type.ImString;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -90,10 +89,16 @@ public final class FileMenu {
     private Runnable overwriteModalConfirm;
     private String overwriteCandidateName;
 
-    private List<SaveInfo> cached = Collections.emptyList();
+    private SaveBrowseResult cached = SaveBrowseResult.empty();
     private boolean cacheStale = true;
     private String openSelected;
+    private String openCurrentDir = "";
     private static final int OPEN_MODAL_VISIBLE_ROWS = 12;
+    private static final String PARENT_ENTRY = "..";
+
+    private static String folderLabel(String name) {
+        return name + "/";
+    }
 
     private String statusMessage;
     private boolean statusIsError;
@@ -312,6 +317,7 @@ public final class FileMenu {
     private void onOpen() {
         cacheStale = true;
         openSelected = null;
+        openCurrentDir = "";
         filterInput.set("");
         openOpenModal = true;
     }
@@ -524,20 +530,31 @@ public final class FileMenu {
         if (!Modal.begin(TITLE_OPEN, POPUP_OPEN, ImGuiWindowFlags.NoSavedSettings)) return;
 
         if (cacheStale) {
-            cached = controller.list();
+            cached = controller.browse(openCurrentDir);
             cacheStale = false;
         }
+
+        renderOpenBreadcrumb();
 
         Controls.inputTextHint("Search", "Filter by name...", filterInput, 320);
 
         ThemeManager.sectionSpacing();
 
-        java.util.List<SaveInfo> rows = sortedFiltered();
+        List<String> folders = sortedFilteredFolders();
+        List<SaveInfo> files = sortedFilteredFiles();
+        boolean atRoot = openCurrentDir.isEmpty();
         float tableH = OPEN_MODAL_VISIBLE_ROWS * ImGui.getFrameHeightWithSpacing();
+
+        String navigateInto = null;
+        boolean navigateUp = false;
         String doubleClickedToOpen = null;
 
         float maxFilenameW = 0f, maxDateW = 0f, maxMcW = 0f, maxWorldW = 0f;
-        for (SaveInfo info : rows) {
+        if (!atRoot) maxFilenameW = Math.max(maxFilenameW, ImGui.calcTextSize(PARENT_ENTRY).x);
+        for (String folder : folders) {
+            maxFilenameW = Math.max(maxFilenameW, ImGui.calcTextSize(folderLabel(folder)).x);
+        }
+        for (SaveInfo info : files) {
             maxFilenameW = Math.max(maxFilenameW, ImGui.calcTextSize(info.name).x);
             String d = info.lastModifiedMs > 0 ? dateFmt.format(new Date(info.lastModifiedMs)) : "";
             maxDateW = Math.max(maxDateW, ImGui.calcTextSize(d).x);
@@ -555,7 +572,17 @@ public final class FileMenu {
 
             float rowH = ThemeManager.tableRowHeight();
             int rowIndex = 0;
-            for (SaveInfo info : rows) {
+
+            if (!atRoot) {
+                if (renderFolderRow("##open_up", PARENT_ENTRY, rowIndex++, rowH)) navigateUp = true;
+            }
+            for (String folder : folders) {
+                if (renderFolderRow("##open_dir_" + folder, folderLabel(folder), rowIndex++, rowH)) {
+                    navigateInto = folder;
+                }
+            }
+
+            for (SaveInfo info : files) {
                 ImGui.tableNextRow(0, rowH);
                 ThemeManager.paintTableRowBg(rowIndex++);
                 boolean selected = info.name.equals(openSelected);
@@ -585,9 +612,19 @@ public final class FileMenu {
             ThemeManager.endStandardTable();
         }
 
+        if (navigateUp) {
+            goUpFolder();
+            Modal.end();
+            return;
+        }
+        if (navigateInto != null) {
+            enterFolder(navigateInto);
+            Modal.end();
+            return;
+        }
         if (doubleClickedToOpen != null) {
             ImGui.closeCurrentPopup();
-            onLoad(doubleClickedToOpen);
+            onLoad(joinPath(openCurrentDir, doubleClickedToOpen));
             Modal.end();
             return;
         }
@@ -603,9 +640,9 @@ public final class FileMenu {
             openClicked = false;
         }
         if (openClicked) {
-            String name = openSelected;
+            String key = joinPath(openCurrentDir, openSelected);
             ImGui.closeCurrentPopup();
-            onLoad(name);
+            onLoad(key);
             Modal.end();
             return;
         }
@@ -613,6 +650,75 @@ public final class FileMenu {
         if (Modal.footerButton(BTN_CANCEL)) ImGui.closeCurrentPopup();
 
         Modal.end();
+    }
+
+    private boolean renderFolderRow(String idSuffix, String label, int rowIndex, float rowH) {
+        ImGui.tableNextRow(0, rowH);
+        ThemeManager.paintTableRowBg(rowIndex);
+        ImGui.tableSetColumnIndex(0);
+        ThemeManager.tableLeftmostCellPad();
+        ImVec2 cellOrigin = ImGui.getCursorScreenPos();
+        ImGui.alignTextToFramePadding();
+        int selFlags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowDoubleClick;
+        boolean activated = ImGui.selectable(idSuffix, false, selFlags);
+        float labelY = cellOrigin.y + ImGui.getStyle().getFramePadding().y;
+        ImGui.getWindowDrawList().addText(cellOrigin.x, labelY, ThemeManager.accentColor(), label);
+        ImGui.tableSetColumnIndex(3);
+        ThemeManager.tableRightmostCellTrailingPad();
+        return activated;
+    }
+
+    private void renderOpenBreadcrumb() {
+        ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+        ImGui.text("saves");
+        ThemeManager.popTextColor();
+        if (openCurrentDir.isEmpty()) {
+            ThemeManager.sectionSpacing();
+            return;
+        }
+        String[] parts = openCurrentDir.split("/");
+        StringBuilder accum = new StringBuilder();
+        String jumpTo = null;
+        for (int i = 0; i < parts.length; i++) {
+            if (accum.length() > 0) accum.append('/');
+            accum.append(parts[i]);
+            ImGui.sameLine();
+            ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+            ImGui.text("/");
+            ThemeManager.popTextColor();
+            ImGui.sameLine();
+            boolean last = i == parts.length - 1;
+            if (last) {
+                ImGui.text(parts[i]);
+            } else {
+                ThemeManager.pushTextColor(ThemeManager.accentColor());
+                if (ImGui.selectable(parts[i] + "##crumb_" + i, false, 0, ImGui.calcTextSize(parts[i]).x, 0f)) {
+                    jumpTo = accum.toString();
+                }
+                ThemeManager.popTextColor();
+            }
+        }
+        if (jumpTo != null) navigateToFolder(jumpTo);
+        ThemeManager.sectionSpacing();
+    }
+
+    private void enterFolder(String folderName) {
+        navigateToFolder(joinPath(openCurrentDir, folderName));
+    }
+
+    private void goUpFolder() {
+        int slash = openCurrentDir.lastIndexOf('/');
+        navigateToFolder(slash < 0 ? "" : openCurrentDir.substring(0, slash));
+    }
+
+    private void navigateToFolder(String relDir) {
+        openCurrentDir = relDir == null ? "" : relDir;
+        openSelected = null;
+        cacheStale = true;
+    }
+
+    private static String joinPath(String dir, String name) {
+        return (dir == null || dir.isEmpty()) ? name : dir + "/" + name;
     }
 
     private void renderDiscardModal() {
@@ -693,13 +799,23 @@ public final class FileMenu {
         ThemeManager.tableRightmostCellTrailingPad();
     }
 
-    private List<SaveInfo> sortedFiltered() {
+    private List<SaveInfo> sortedFilteredFiles() {
         String needle = filterInput.get().toLowerCase(Locale.US).trim();
-        List<SaveInfo> out = new ArrayList<>(cached.size());
-        for (SaveInfo info : cached) {
+        List<SaveInfo> out = new ArrayList<>(cached.files.size());
+        for (SaveInfo info : cached.files) {
             if (needle.isEmpty() || info.name.toLowerCase(Locale.US).contains(needle)) out.add(info);
         }
         out.sort((a, b) -> Long.compare(b.lastModifiedMs, a.lastModifiedMs));
+        return out;
+    }
+
+    private List<String> sortedFilteredFolders() {
+        String needle = filterInput.get().toLowerCase(Locale.US).trim();
+        List<String> out = new ArrayList<>(cached.folders.size());
+        for (String folder : cached.folders) {
+            if (needle.isEmpty() || folder.toLowerCase(Locale.US).contains(needle)) out.add(folder);
+        }
+        out.sort(String.CASE_INSENSITIVE_ORDER);
         return out;
     }
 

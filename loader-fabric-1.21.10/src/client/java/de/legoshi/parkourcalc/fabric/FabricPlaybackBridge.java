@@ -80,6 +80,10 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
             );
         });
         client.updatePositionAndAngles(pos.x, pos.y, pos.z, yaw, client.getPitch());
+        client.setBodyYaw(yaw);
+        client.lastBodyYaw = yaw;
+        client.setHeadYaw(yaw);
+        client.lastHeadYaw = yaw;
         client.setVelocity(vel.x, vel.y, vel.z);
         if (carry != null) {
             de.legoshi.parkourcalc.fabric.sim.SimulatorEntity.applyCheckpoint(client, carry);
@@ -110,11 +114,14 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         ClientPlayerEntity p = MinecraftClient.getInstance().player;
         if (p == null) return;
         p.setYaw(absoluteYaw);
-        p.setHeadYaw(absoluteYaw);
-        p.setBodyYaw(absoluteYaw);
         p.lastYaw = absoluteYaw;
-        p.lastHeadYaw = absoluteYaw;
-        p.lastBodyYaw = absoluteYaw;
+    }
+
+    @Override
+    public void setHeadYaw(float absoluteYaw) {
+        ClientPlayerEntity p = MinecraftClient.getInstance().player;
+        if (p == null) return;
+        p.setHeadYaw(absoluteYaw);
     }
 
     @Override

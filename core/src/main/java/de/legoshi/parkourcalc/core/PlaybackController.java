@@ -35,6 +35,7 @@ public final class PlaybackController {
     private int lastJumpBoostAmplifier;
 
     private Supplier<StartRange> startRangeResolver;
+    private boolean firstTickOnGround;
 
     // currentTickYaw is the physics yaw, kept bit-identical to the simulator's rotationYaw:
     // the sine table quantizes 45 and -315 into different buckets, so a mod-360 offset
@@ -100,6 +101,10 @@ public final class PlaybackController {
         return nextTick - 1;
     }
 
+    public boolean firstTickOnGround() {
+        return firstTickOnGround;
+    }
+
     public boolean canStart() {
         return bridge != null && bridge.isSingleplayer() && inputData.size() > 0;
     }
@@ -144,6 +149,7 @@ public final class PlaybackController {
                 DebugFlags.simTickSink = null;
             }
         }
+        firstTickOnGround = runner.firstTickOnGround();
         bridge.teleport(pos, vel, yaw, carry);
         // Drop any user-held key so the warmup runs with an empty InputRow like the simulator does.
         bridge.releaseAllKeys();
@@ -280,6 +286,7 @@ public final class PlaybackController {
     public void postTick() {
         if (!running || bridge == null) return;
         bridge.setYaw(displayedYaw);
+        bridge.setHeadYaw(displayedYaw);
         if (DebugFlags.DUMP_TICK_STATE) {
             // Negative index = warmup tick, so state going into tick 0 is visible.
             int t = nextTick - 1 - warmupRemaining;

@@ -660,7 +660,7 @@ public final class InputOverlay {
             hoveredRow = index;
         }
 
-        renderKeyColumns(row, index, centerY);
+        renderKeyColumns(row, index, rowH);
         renderYawColumn(row, index, centerY);
         if (potionColumns) {
             renderPotionColumns(row, index);
@@ -782,33 +782,41 @@ public final class InputOverlay {
         }
     }
 
-    private void renderKeyColumns(InputRow row, int rowIndex, float centerY) {
+    private void renderKeyColumns(InputRow row, int rowIndex, float rowH) {
         for (InputRow.Key key : MOVEMENT_KEYS) {
-            renderKeyCell(row, rowIndex, key, centerY);
+            renderKeyCell(row, rowIndex, key, rowH);
         }
         for (InputRow.Key key : MODIFIER_KEYS) {
-            renderKeyCell(row, rowIndex, key, centerY);
+            renderKeyCell(row, rowIndex, key, rowH);
         }
     }
 
-    private void renderKeyCell(InputRow row, int rowIndex, InputRow.Key key, float centerY) {
+    private void renderKeyCell(InputRow row, int rowIndex, InputRow.Key key, float rowH) {
         ImGui.tableNextColumn();
-        if (centerY > 0f) ImGui.setCursorPosY(ImGui.getCursorPosY() + centerY);
 
         boolean actualValue = row.isKeyActive(key);
         boolean displayValue = keyDragSelect.getDisplayValue(key, rowIndex, actualValue);
 
-        String cellLabel = displayValue ? headerLabel(key) : "";
-        int color = displayValue ? ThemeManager.textColor() : ThemeManager.textMutedColor();
-        ThemeManager.pushTextColor(color);
+        ImVec2 cellOrigin = ImGui.getCursorScreenPos();
+        float cellW = ImGui.getContentRegionAvail().x;
+        float cellPadY = ImGui.getStyle().getCellPadding().y;
 
-        ThemeManager.centeredSelectable("key" + key.name(), cellLabel, displayValue);
-
+        // Hitbox fills the row so a click anywhere in the cell toggles the key, not just the middle line.
+        // Sized rowH - ItemSpacing.y so the fixed-height item doesn't inflate the row.
+        float hitH = rowH - ImGui.getStyle().getItemSpacing().y;
+        ImGui.alignTextToFramePadding();
+        ImGui.selectable("##key" + key.name(), displayValue, 0, 0f, hitH);
         if (ImGui.isItemClicked(0)) {
             keyDragSelect.startDrag(key, rowIndex, actualValue);
         }
 
-        ThemeManager.popTextColor();
+        if (displayValue) {
+            String cellLabel = headerLabel(key);
+            ImVec2 textSize = ImGui.calcTextSize(cellLabel);
+            float tx = cellOrigin.x + (cellW - textSize.x) * 0.5f;
+            float ty = cellOrigin.y + (rowH - 2f * cellPadY - textSize.y) * 0.5f;
+            ImGui.getWindowDrawList().addText(tx, ty, ThemeManager.textColor(), cellLabel);
+        }
     }
 
     private void renderYawColumn(InputRow row, int rowIndex, float centerY) {

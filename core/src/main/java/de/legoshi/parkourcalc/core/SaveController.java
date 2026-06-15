@@ -3,6 +3,7 @@ package de.legoshi.parkourcalc.core;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.core.save.Result;
+import de.legoshi.parkourcalc.core.save.SaveBrowseResult;
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.save.SaveInfo;
@@ -132,6 +133,11 @@ public final class SaveController {
     public List<SaveInfo> list() {
         if (store == null) return Collections.emptyList();
         return store.list();
+    }
+
+    public SaveBrowseResult browse(String relDir) {
+        if (store == null) return SaveBrowseResult.empty();
+        return store.browse(relDir);
     }
 
     public String currentName() {

@@ -26,6 +26,8 @@ public interface PlaybackBridge {
 
     void setYaw(float absoluteYaw);
 
+    default void setHeadYaw(float absoluteYaw) {}
+
     void releaseAllKeys();
 
     /** Close any open mod UI (control panel / GuiScreen) the same way the toggle key would. */

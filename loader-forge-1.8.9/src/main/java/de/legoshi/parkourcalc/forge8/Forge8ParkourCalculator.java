@@ -128,10 +128,8 @@ public class Forge8ParkourCalculator {
         if (!application.isPlaybackRunning()) return;
         net.minecraft.entity.player.EntityPlayer p = event.player;
         if (p != Minecraft.getMinecraft().thePlayer) return;
-        // Sim runs noClip so its tick 0 sees onGround=true; the real player's warmup
-        // moveEntity can flip it false when startPosition isn't directly on a block top.
         if (application.getPlayback().currentTick() == 0) {
-            p.onGround = true;
+            p.onGround = application.getPlayback().firstTickOnGround();
             p.fallDistance = 0.0F;
         }
     }

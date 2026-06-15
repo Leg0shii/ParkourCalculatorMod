@@ -292,25 +292,34 @@ public final class AngleSolverTable {
         ImVec2 origin = ImGui.getCursorScreenPos();
         float s = ThemeManager.uiScale();
 
+        // A fixed-height item advances the table cell by size + ItemSpacing.y, which becomes the row height.
+        // Subtract the spacing so the gutter lands the row on exactly rowH (else it inflates by ItemSpacing.y).
+        float itemSpacingY = ImGui.getStyle().getItemSpacing().y;
+        float gutterItemH = rowH - itemSpacingY;
+
         boolean sel = selection.isSelected(rowIndex);
         int flags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowItemOverlap;
-        if (ThemeManager.rightAlignedSelectable("row" + rowIndex, "", sel, flags)) {
+        if (ThemeManager.rightAlignedSelectable("row" + rowIndex, "", sel, flags, 0f, gutterItemH)) {
             selection.handleClick(rowIndex);
         }
         ImVec2 selMin = ImGui.getItemRectMin();
         ImVec2 selMax = ImGui.getItemRectMax();
-        // The selectable is only one line tall; carry the full grown-row rect so the start/landing
-        // inset and hover/selection bounds span the whole multi-line row.
-        gMinX = selMin.x; gMinY = selMin.y; gMaxX = selMax.x; gMaxY = selMin.y + rowH;
+        float cellPadY = ImGui.getStyle().getCellPadding().y;
+        // Cell content is inset by cellPadY top and bottom, so glyphs center within this, not rowH.
+        float centerH = rowH - 2f * cellPadY;
+        gMinX = selMin.x;
+        gMinY = selMin.y - cellPadY;
+        gMaxX = selMax.x;
+        gMaxY = gMinY + rowH;
         // Row drag-drop must attach to the selectable (ImGui targets the last item), so the hook
         // runs here, before the chevron becomes the last item (gh-119).
         if (dragDropHook != null) dragDropHook.run();
 
         ImDrawList dl = ImGui.getWindowDrawList();
         float chevW = 12f * s;
-        float cy = origin.y + rowH * 0.5f;
+        float cy = origin.y + centerH * 0.5f;
         ImGui.setCursorScreenPos(origin.x, origin.y);
-        boolean chevClicked = ImGui.invisibleButton("chev" + rowIndex, chevW, rowH);
+        boolean chevClicked = ImGui.invisibleButton("chev" + rowIndex, chevW, gutterItemH);
         boolean open = isExpanded(rowIndex);
         int chevCol = open ? ThemeManager.accentColor() : ThemeManager.textDimColor();
         if (open) SolverWidgets.triangleDown(dl, origin.x + chevW * 0.5f, cy, 3.3f * s, chevCol);
@@ -318,10 +327,10 @@ public final class AngleSolverTable {
         if (chevClicked) toggleExpanded(rowIndex);
 
         float x = origin.x + chevW;
-        if (state.isStart(rowIndex)) x = drawFlag(dl, x, origin.y, rowH, "S", ThemeManager.okColor());
-        else if (state.isLanding(rowIndex)) x = drawFlag(dl, x, origin.y, rowH, "G", ThemeManager.dangerColor());
+        if (state.isStart(rowIndex)) x = drawFlag(dl, x, origin.y, centerH, "S", ThemeManager.okColor());
+        else if (state.isLanding(rowIndex)) x = drawFlag(dl, x, origin.y, centerH, "G", ThemeManager.dangerColor());
 
-        float ty = origin.y + (rowH - ImGui.getFontSize()) * 0.5f;
+        float ty = origin.y + (centerH - ImGui.getFontSize()) * 0.5f;
         dl.addText(x + 4f * s, ty, ThemeManager.textMutedColor(), String.valueOf(rowIndex + 1));
     }
 
@@ -343,7 +352,13 @@ public final class AngleSolverTable {
         else if (state.isLanding(rowIndex)) col = ThemeManager.dangerColor();
         else return;
         float s = ThemeManager.uiScale();
-        ImGui.getWindowDrawList().addRectFilled(minX, minY, minX + 3f * s, maxY, col);
+        float barMaxX = minX + 3f * s;
+        // This draws after all columns, when the active clip rect is the last (narrow) column; on a scrollable
+        // table that clip would cull this far-left bar. Scope the draw to its own rect so it always shows.
+        ImDrawList dl = ImGui.getWindowDrawList();
+        dl.pushClipRect(minX, minY, barMaxX, maxY, false);
+        dl.addRectFilled(minX, minY, barMaxX, maxY, col);
+        dl.popClipRect();
     }
 
     // ---- constraints / state cell ----------------------------------------------
@@ -449,6 +464,7 @@ public final class AngleSolverTable {
         float gap = 5f * s;
         float lineH = ImGui.getFrameHeight();
         float spacingY = ImGui.getStyle().getItemSpacing().y;
+        float cellPadY = ImGui.getStyle().getCellPadding().y;
         int n = chipW.length;
 
         ChipLayout layout = new ChipLayout();
@@ -464,7 +480,9 @@ public final class AngleSolverTable {
             layout.lineW[lines - 1] = usedX;
         }
         layout.lines = lines;
-        layout.cellH = Math.max(rowH, lines * lineH + (lines - 1) * spacingY);
+        // Row height = the chip block plus the cell's top+bottom padding, matching baseRowH (frameHeight + 2*cellPadY).
+        // Without the padding term, multi-line rows render 2*cellPadY taller than rowH and the accent falls short.
+        layout.cellH = Math.max(rowH, lines * lineH + (lines - 1) * spacingY + 2f * cellPadY);
         return layout;
     }
 
@@ -712,6 +730,7 @@ public final class AngleSolverTable {
         boolean hover = ImGui.isItemHovered();
         boolean selected = isStateSelected(tick, kind, potion);
 
+        chipDropShadow(dl, mn, mx, s);
         dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.panelColor(), 3f * s);
         dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.peachTintColor(selected ? 0.22f : 0.12f), 3f * s);
         dl.addRect(mn.x, mn.y, mx.x, mx.y, (hover || selected) ? ThemeManager.peachColor() : ThemeManager.peachTintColor(0.55f), 3f * s, 0, selected ? 1.5f : 1f);

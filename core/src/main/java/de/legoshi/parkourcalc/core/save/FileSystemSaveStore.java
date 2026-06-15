@@ -102,19 +102,23 @@ public final class FileSystemSaveStore {
     }
 
     public boolean exists(String name) {
-        return Files.isRegularFile(saveDir.resolve(name + EXTENSION));
+        Path file = resolveSave(name);
+        return file != null && Files.isRegularFile(file);
     }
 
     public String read(String name) throws IOException {
-        Path file = saveDir.resolve(name + EXTENSION);
+        Path file = resolveSave(name);
+        if (file == null) throw new IOException("Invalid save path: " + name);
         byte[] bytes = Files.readAllBytes(file);
         return new String(bytes, CHARSET);
     }
 
     public void write(String name, String contents) throws IOException {
-        Files.createDirectories(saveDir);
-        Path target = saveDir.resolve(name + EXTENSION);
-        Path tmp = saveDir.resolve(name + EXTENSION + TMP_SUFFIX);
+        Path target = resolveSave(name);
+        if (target == null) throw new IOException("Invalid save path: " + name);
+        Path parent = target.getParent();
+        Files.createDirectories(parent);
+        Path tmp = parent.resolve(target.getFileName() + TMP_SUFFIX);
         Files.write(tmp, contents.getBytes(CHARSET));
         try {
             Files.move(tmp, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
@@ -124,12 +128,13 @@ public final class FileSystemSaveStore {
     }
 
     public boolean moveToRecycleBin(String name) {
-        Path file = saveDir.resolve(name + EXTENSION);
-        if (!Files.exists(file)) return false;
+        Path file = resolveSave(name);
+        if (file == null || !Files.exists(file)) return false;
+        String flat = name.replace('/', '_');
         Path trash = saveDir.resolve(TRASH_DIR);
         try {
             Files.createDirectories(trash);
-            Path target = trash.resolve(name + "_" + System.currentTimeMillis() + EXTENSION);
+            Path target = trash.resolve(flat + "_" + System.currentTimeMillis() + EXTENSION);
             try {
                 Files.move(file, target, StandardCopyOption.ATOMIC_MOVE);
             } catch (FileAlreadyExistsException e) {
@@ -139,6 +144,47 @@ public final class FileSystemSaveStore {
         } catch (IOException e) {
             return false;
         }
+    }
+
+    private Path resolveSave(String relPath) {
+        return resolveWithin(relPath + EXTENSION);
+    }
+
+    private Path resolveWithin(String relPath) {
+        if (relPath == null) return null;
+        Path base = saveDir.toAbsolutePath().normalize();
+        Path resolved = base.resolve(relPath).normalize();
+        if (!resolved.startsWith(base)) return null;
+        return resolved;
+    }
+
+    public SaveBrowseResult browse(String relDir) {
+        Path dir = (relDir == null || relDir.isEmpty()) ? saveDir.toAbsolutePath().normalize() : resolveWithin(relDir);
+        if (dir == null || !Files.isDirectory(dir)) return SaveBrowseResult.empty();
+
+        List<String> folders = new ArrayList<>();
+        List<SaveInfo> files = new ArrayList<>();
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
+            for (Path p : stream) {
+                String fileName = p.getFileName().toString();
+                if (Files.isDirectory(p)) {
+                    if (TRASH_DIR.equals(fileName)) continue;
+                    folders.add(fileName);
+                } else if (Files.isRegularFile(p) && fileName.endsWith(EXTENSION)) {
+                    String name = fileName.substring(0, fileName.length() - EXTENSION.length());
+                    long mtime;
+                    try {
+                        mtime = Files.getLastModifiedTime(p).toMillis();
+                    } catch (IOException e) {
+                        mtime = 0L;
+                    }
+                    files.add(parseInfo(p, name, mtime));
+                }
+            }
+        } catch (IOException e) {
+            return SaveBrowseResult.empty();
+        }
+        return new SaveBrowseResult(folders, files);
     }
 
 }
