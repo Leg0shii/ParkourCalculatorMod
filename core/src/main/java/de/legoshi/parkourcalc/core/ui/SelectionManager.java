@@ -5,7 +5,9 @@ import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import java.util.*;
 
 /**
- * Manages row selection state with support for single, range, and toggle selection.
+ * Manages selection over the path/box index space: index 0 is the start state, index k (k>=1)
+ * is Tick k (input row k-1). Input-row consumers use {@link #getSelectedRows()} and friends,
+ * which drop the start and shift back into input-row indices.
  * Reads modifier state from MinecraftAccess (direct GLFW/LWJGL2 poll); ImGui's
  * io.KeyCtrl/KeyShift derivation has proven unreliable here.
  */
@@ -39,6 +41,26 @@ public class SelectionManager {
     public void clear() {
         selectedRows.clear();
         lastClickedRow = -1;
+    }
+
+    public Set<Integer> getSelectedRows() {
+        Set<Integer> rows = new TreeSet<>();
+        for (int p : selectedRows) {
+            if (p >= 1) rows.add(p - 1);
+        }
+        return rows;
+    }
+
+    public List<Integer> getSelectedRowsDescending() {
+        List<Integer> list = new ArrayList<>(getSelectedRows());
+        list.sort(Collections.reverseOrder());
+        return list;
+    }
+
+    public int singleSelectedRow() {
+        if (selectedRows.size() != 1) return -1;
+        int p = selectedRows.iterator().next();
+        return p >= 1 ? p - 1 : -1;
     }
 
     public void requestScrollIntoView() {
@@ -113,15 +135,6 @@ public class SelectionManager {
         }
         selectedRows.clear();
         selectedRows.addAll(adjusted);
-    }
-
-    /**
-     * Gets selected indices as a list, sorted in descending order for safe deletion.
-     */
-    public List<Integer> getSelectedDescending() {
-        List<Integer> list = new ArrayList<>(selectedRows);
-        list.sort(Collections.reverseOrder());
-        return list;
     }
 
     private ModifierState getModifierState() {

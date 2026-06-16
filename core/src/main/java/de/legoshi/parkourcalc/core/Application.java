@@ -24,6 +24,7 @@ import de.legoshi.parkourcalc.core.ui.SelectionManager;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.ui.SettingsIO;
 import de.legoshi.parkourcalc.core.ui.StartDragController;
+import de.legoshi.parkourcalc.core.ui.StartStateTable;
 import de.legoshi.parkourcalc.core.ui.SettingsModal;
 import de.legoshi.parkourcalc.core.ui.TickInfoPanel;
 import de.legoshi.parkourcalc.core.ui.YawGizmoController;
@@ -87,13 +88,21 @@ public final class Application {
     private PlaybackController.StartRange resolvePlaybackStartRange() {
         if (selection.isEmpty()) return null;
 
-        Set<Integer> selected = selection.getSelected();
         int rowCount = inputData.size();
-        int first = Collections.min(selected);
-        int last = Collections.max(selected);
-        if (first < 0 || first >= rowCount) return null;
+        if (rowCount == 0) return null;
 
-        int stopExclusive = (selected.size() == 1) ? rowCount : Math.min(last + 1, rowCount);
+        Set<Integer> rows = selection.getSelectedRows();
+        int first;
+        int stopExclusive;
+        if (rows.isEmpty()) {
+            first = 0;
+            stopExclusive = rowCount;
+        } else {
+            first = Collections.min(rows);
+            int last = Collections.max(rows);
+            if (first < 0 || first >= rowCount) return null;
+            stopExclusive = (rows.size() == 1) ? rowCount : Math.min(last + 1, rowCount);
+        }
 
         TickState pre = boxController.getState(first);
         Vec3dCore pos = pre != null ? pre.position : runner.getStartPosition();
@@ -115,6 +124,8 @@ public final class Application {
         saveController.setDebugSource(boxController, settings);
         AngleSolverTable angleSolverTable = new AngleSolverTable(angleSolverState, settings, selection, inputData::size);
         inputOverlay.setAngleSolver(angleSolverTable);
+        StartStateTable startStateTable = new StartStateTable(runner, () -> onUserChange(-1));
+        inputOverlay.setStartState(startStateTable);
         String mcVersion = saveController.getSaveStore() != null ? saveController.getSaveStore().getMcVersion() : null;
         AngleSolverEngine angleSolverEngine = new AngleSolverEngine(angleSolverState, boxController, inputData, this::onUserChange, ExactJumpModel.forMcVersion(mcVersion));
         saveController.setSolverEngine(angleSolverEngine);
@@ -294,8 +305,9 @@ public final class Application {
     }
 
     private int selectedSolverTick() {
-        if (!selection.isEmpty()) {
-            return selection.getSelected().iterator().next();
+        Set<Integer> rows = selection.getSelectedRows();
+        if (!rows.isEmpty()) {
+            return rows.iterator().next();
         }
         return angleSolverState.getLandingTick();
     }

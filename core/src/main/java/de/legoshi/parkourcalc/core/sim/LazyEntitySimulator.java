@@ -136,7 +136,7 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     @Override
     public final Vec3dCore getStartVelocity() {
         if (entity != null) return getStartVel(entity);
-        return pendingVelocity != null ? pendingVelocity : Vec3dCore.ZERO;
+        return pendingVelocity != null ? pendingVelocity : Vec3dCore.GROUND_REST_VELOCITY;
     }
 
     @Override

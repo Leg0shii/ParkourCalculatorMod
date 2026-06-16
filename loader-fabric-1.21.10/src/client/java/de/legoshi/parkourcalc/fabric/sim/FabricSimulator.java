@@ -40,7 +40,8 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
             }
         }
         Vec3d start = pendingStart != null ? new Vec3d(pendingStart.x, pendingStart.y, pendingStart.z) : player.getEntityPos();
-        Vec3d vel = pendingVelocity != null ? new Vec3d(pendingVelocity.x, pendingVelocity.y, pendingVelocity.z) : Vec3d.ZERO;
+        Vec3dCore vel0 = pendingVelocity != null ? pendingVelocity : Vec3dCore.GROUND_REST_VELOCITY;
+        Vec3d vel = new Vec3d(vel0.x, vel0.y, vel0.z);
         float yaw = pendingYaw != null ? pendingYaw : 0.0F;
         return new SimulatorEntity(simWorld, player.getGameProfile(), start, vel, yaw);
     }

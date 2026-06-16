@@ -77,9 +77,9 @@ public class SimulatorEntity extends EntityPlayer {
     public void resetPlayer() {
         this.noClip = true;
         this.setHealth(this.getMaxHealth());
-        this.motionX = startVelocity.xCoord;
-        this.motionY = startVelocity.yCoord;
-        this.motionZ = startVelocity.zCoord;
+        this.motionX = 0.0;
+        this.motionY = 0.0;
+        this.motionZ = 0.0;
         this.setPosition(startPosition.xCoord, startPosition.yCoord, startPosition.zCoord);
         this.rotationYaw = startYaw;
         this.rotationPitch = 0.0F;
@@ -90,6 +90,9 @@ public class SimulatorEntity extends EntityPlayer {
         this.onUpdate();
 
         this.setPosition(startPosition.xCoord, startPosition.yCoord, startPosition.zCoord);
+        this.motionX = startVelocity.xCoord;
+        this.motionY = startVelocity.yCoord;
+        this.motionZ = startVelocity.zCoord;
     }
 
     @Override

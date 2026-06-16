@@ -78,15 +78,17 @@ public final class TickInfoPanel implements RenderInterface {
         TickState cur = states.get(idx);
         TickState prev = idx > 0 ? states.get(idx - 1) : null;
         TickState prev2 = idx > 1 ? states.get(idx - 2) : null;
-        // Facing is an input applied DURING this tick: it lands in states[idx+1].yaw, not the
-        // pre-tick facing carried in (states[idx].yaw). Matches the box's outgoing yaw arrow.
-        float appliedYaw = idx + 1 < states.size() ? states.get(idx + 1).yaw : cur.yaw;
 
-        renderTable(idx, cur, prev, prev2, appliedYaw);
+        renderTable(idx, cur, prev, prev2, cur.yaw, idx == 0);
         ImGui.end();
     }
 
-    private void renderTable(int idx, TickState cur, TickState prev, TickState prev2, float appliedYaw) {
+    private void rowText(String label, String text, String tooltip) {
+        labelCell(label, tooltip);
+        centerSingleValueInMiddleColumn(text);
+    }
+
+    private void renderTable(int idx, TickState cur, TickState prev, TickState prev2, float appliedYaw, boolean isStart) {
         rebuildFormats();
         if (!ThemeManager.beginStandardKeyValueTable(TABLE_ID, 4, 0, 0f, 0f)) {
             return;
@@ -102,7 +104,11 @@ public final class TickInfoPanel implements RenderInterface {
 
         rowCounter = 0;
 
-        rowInt("Tick", idx + 1, "Tick number (1-based), matching the input table's Tick column.");
+        if (isStart) {
+            rowText("Tick", "Start", "The simulation's start state: the seed the run launches from.");
+        } else {
+            rowInt("Tick", idx, "Tick number (1-based), matching the input table's Tick column.");
+        }
         rowNum("Yaw", appliedYaw, "Facing applied during this tick (drives this tick's movement). MC convention: 0 = +Z, increases CW looking down.");
 
         if (prev != null) {
@@ -118,7 +124,7 @@ public final class TickInfoPanel implements RenderInterface {
         rowNum("Motion (XZ)", motionXZ, "Horizontal magnitude of post-tick velocity, sqrt(vx^2 + vz^2), blocks/tick. Differs from Speed on collision ticks.");
         rowNum("Motion (XYZ)", motionXYZ, "Total magnitude of post-tick velocity, sqrt(vx^2 + vy^2 + vz^2), blocks/tick.");
 
-        rowTriple("Position", cur.position.x, cur.position.y, cur.position.z, "Entity position entering this tick, before this tick's input is applied (the previous tick's end position). This is the point a constraint placed on this tick is tested against; this tick's input shows on the next tick. World coords; anchor corner of the rendered tick box.");
+        rowTriple("Position", cur.position.x, cur.position.y, cur.position.z, "Entity position at this row: the start seed, or the result after this tick's input is applied. World coords; anchor corner of the rendered tick box.");
         rowTriple("Motion", cur.velocity.x, cur.velocity.y, cur.velocity.z, "Post-tick motionX/Y/Z (after MC's per-axis collision clamp). May read 0 on an axis where a wall was hit.");
 
         if (prev != null) {

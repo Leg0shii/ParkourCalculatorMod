@@ -9,6 +9,8 @@ public final class Vec3dCore {
 
     public static final Vec3dCore ZERO = new Vec3dCore(0.0, 0.0, 0.0);
 
+    public static final Vec3dCore GROUND_REST_VELOCITY = new Vec3dCore(0.0, -(0.08 * 0.98F), 0.0);
+
     public final double x;
     public final double y;
     public final double z;

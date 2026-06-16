@@ -120,7 +120,7 @@ public final class SaveController {
         if (mc.isReady()) {
             runner.setStartPosition(mc.getPlayerPosition());
         }
-        runner.setStartVelocity(Vec3dCore.ZERO);
+        runner.setStartVelocity(Vec3dCore.GROUND_REST_VELOCITY);
         runner.setStartYaw(0.0F);
         retriggerSimulation.run();
     }

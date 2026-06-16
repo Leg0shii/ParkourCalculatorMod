@@ -44,9 +44,8 @@ public final class Forge12Simulator extends LazyEntitySimulator<SimulatorEntity>
         Vec3d start = pendingStart != null
                 ? new Vec3d(pendingStart.x, pendingStart.y, pendingStart.z)
                 : new Vec3d(player.posX, player.posY, player.posZ);
-        Vec3d vel = pendingVelocity != null
-                ? new Vec3d(pendingVelocity.x, pendingVelocity.y, pendingVelocity.z)
-                : Vec3d.ZERO;
+        Vec3dCore vel0 = pendingVelocity != null ? pendingVelocity : Vec3dCore.GROUND_REST_VELOCITY;
+        Vec3d vel = new Vec3d(vel0.x, vel0.y, vel0.z);
         float yaw = pendingYaw != null ? pendingYaw : 0.0F;
         return new SimulatorEntity(simWorld, player.getGameProfile(), start, vel, yaw);
     }

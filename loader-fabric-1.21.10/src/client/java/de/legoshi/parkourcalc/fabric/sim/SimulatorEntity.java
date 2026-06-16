@@ -93,7 +93,7 @@ public class SimulatorEntity extends PlayerEntity {
         this.clearStatusEffects();
         this.setHealth(this.getMaxHealth());
         this.setPosition(startPosition);
-        this.setVelocity(startVelocity);
+        this.setVelocity(Vec3d.ZERO);
         this.setRotation(startYaw, 0);
 
         this.input.setData(new InputRow());
@@ -102,6 +102,7 @@ public class SimulatorEntity extends PlayerEntity {
         this.tick();
 
         this.setPosition(startPosition);
+        this.setVelocity(startVelocity);
     }
 
     @Override

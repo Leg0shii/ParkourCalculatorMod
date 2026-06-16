@@ -297,10 +297,10 @@ public final class AngleSolverTable {
         float itemSpacingY = ImGui.getStyle().getItemSpacing().y;
         float gutterItemH = rowH - itemSpacingY;
 
-        boolean sel = selection.isSelected(rowIndex);
+        boolean sel = selection.isSelected(rowIndex + 1);
         int flags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowItemOverlap;
         if (ThemeManager.rightAlignedSelectable("row" + rowIndex, "", sel, flags, 0f, gutterItemH)) {
-            selection.handleClick(rowIndex);
+            selection.handleClick(rowIndex + 1);
         }
         ImVec2 selMin = ImGui.getItemRectMin();
         ImVec2 selMax = ImGui.getItemRectMax();

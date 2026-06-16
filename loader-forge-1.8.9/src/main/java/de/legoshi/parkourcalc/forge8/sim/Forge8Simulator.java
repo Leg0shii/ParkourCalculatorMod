@@ -41,7 +41,8 @@ public final class Forge8Simulator extends LazyEntitySimulator<SimulatorEntity> 
             }
         }
         Vec3 start = pendingStart != null ? new Vec3(pendingStart.x, pendingStart.y, pendingStart.z) : new Vec3(player.posX, player.posY, player.posZ);
-        Vec3 vel = pendingVelocity != null ? new Vec3(pendingVelocity.x, pendingVelocity.y, pendingVelocity.z) : new Vec3(0.0, 0.0, 0.0);
+        Vec3dCore vel0 = pendingVelocity != null ? pendingVelocity : Vec3dCore.GROUND_REST_VELOCITY;
+        Vec3 vel = new Vec3(vel0.x, vel0.y, vel0.z);
         float yaw = pendingYaw != null ? pendingYaw : 0.0F;
         return new SimulatorEntity(simWorld, player.getGameProfile(), start, vel, yaw);
     }
