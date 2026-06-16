@@ -3,12 +3,14 @@ package de.legoshi.parkourcalc.forge12;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2InputState;
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
 
 import java.util.function.Supplier;
 
@@ -52,6 +54,14 @@ public final class Forge12MinecraftAccess implements MinecraftAccess {
         BlockPos pos = hit.getBlockPos();
         if (pos == null) return null;
         return new int[] {pos.getX(), pos.getY(), pos.getZ()};
+    }
+
+    @Override
+    public boolean isBlockSolid(int x, int y, int z) {
+        World world = Minecraft.getMinecraft().world;
+        if (world == null) return false;
+        BlockPos pos = new BlockPos(x, y, z);
+        return world.getBlockState(pos).getCollisionBoundingBox(world, pos) != Block.NULL_AABB;
     }
 
     @Override

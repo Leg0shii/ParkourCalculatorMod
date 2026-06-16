@@ -4,6 +4,7 @@ import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.hit.BlockHitResult;
@@ -55,6 +56,14 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
         BlockPos pos = ((BlockHitResult) hit).getBlockPos();
         if (pos == null) return null;
         return new int[] {pos.getX(), pos.getY(), pos.getZ()};
+    }
+
+    @Override
+    public boolean isBlockSolid(int x, int y, int z) {
+        ClientWorld world = MinecraftClient.getInstance().world;
+        if (world == null) return false;
+        BlockPos pos = new BlockPos(x, y, z);
+        return !world.getBlockState(pos).getCollisionShape(world, pos).isEmpty();
     }
 
     @Override

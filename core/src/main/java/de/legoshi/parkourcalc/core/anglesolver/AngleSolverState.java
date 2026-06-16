@@ -330,12 +330,13 @@ public final class AngleSolverState {
     /** Keep in sync with BoxStyle.HITBOX_HALF_WIDTH / AngleSolverEngine#HALF. */
     public static final double HITBOX_HALF_WIDTH = 0.3;
 
-    public void addLandingConstraintsForBlock(int blockX, int blockY, int blockZ, int selectedTick) {
+    public void addLandingConstraintsForBlock(int blockX, int blockY, int blockZ, int selectedTick,
+                                              boolean wallNegX, boolean wallPosX, boolean wallNegZ, boolean wallPosZ) {
         if (selectedTick < 0) return;
-        double xLo = blockX - HITBOX_HALF_WIDTH;
-        double xHi = (blockX + 1.0) + HITBOX_HALF_WIDTH;
-        double zLo = blockZ - HITBOX_HALF_WIDTH;
-        double zHi = (blockZ + 1.0) + HITBOX_HALF_WIDTH;
+        double xLo = wallNegX ? blockX + HITBOX_HALF_WIDTH : blockX - HITBOX_HALF_WIDTH;
+        double xHi = wallPosX ? (blockX + 1.0) - HITBOX_HALF_WIDTH : (blockX + 1.0) + HITBOX_HALF_WIDTH;
+        double zLo = wallNegZ ? blockZ + HITBOX_HALF_WIDTH : blockZ - HITBOX_HALF_WIDTH;
+        double zHi = wallPosZ ? (blockZ + 1.0) - HITBOX_HALF_WIDTH : (blockZ + 1.0) + HITBOX_HALF_WIDTH;
 
         List<Constraint> list = tickConstraints(selectedTick).getConstraints();
         list.removeIf(
@@ -344,8 +345,6 @@ public final class AngleSolverState {
         );
         list.add(Constraint.range(Constraint.Field.X, xLo, xHi, true, true));
         list.add(Constraint.range(Constraint.Field.Z, zLo, zHi, true, true));
-
-        setLandingTick(selectedTick);
     }
 
     /** Drops every constraint on ticks in [fromTick, toTick] (state overrides are left intact). Used by the

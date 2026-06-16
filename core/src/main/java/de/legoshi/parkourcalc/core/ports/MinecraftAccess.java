@@ -30,6 +30,10 @@ public interface MinecraftAccess {
         return null;
     }
 
+    default boolean isBlockSolid(int x, int y, int z) {
+        return false;
+    }
+
     /** Current state of the left mouse button (true while held). */
     boolean isMousePressedLeft();
 
