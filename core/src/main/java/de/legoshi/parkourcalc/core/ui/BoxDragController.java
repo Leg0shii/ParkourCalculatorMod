@@ -3,8 +3,6 @@ package de.legoshi.parkourcalc.core.ui;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
-import java.util.function.Consumer;
-
 /**
  * Loader-agnostic drag state machine for BoxController.getFirst(). Each loader
  * feeds per-frame (rayOrigin, rayDirection, mousePressed, uiFocused) and hands
@@ -14,11 +12,19 @@ import java.util.function.Consumer;
  */
 public final class BoxDragController {
 
+    public interface StartDragHandler {
+        void onBegin(boolean rigid);
+
+        void onMove(Vec3dCore position, boolean rigid);
+
+        void onEnd(boolean rigid);
+    }
+
     private static final double PICK_REACH = 128.0;
     private static final double EPS = 1.0e-3;
 
     private final BoxController boxController;
-    private final Consumer<Vec3dCore> onPositionChange;
+    private final StartDragHandler handler;
     private final Runnable onStartBoxTap;
 
     private boolean wasMousePressed = false;
@@ -28,14 +34,15 @@ public final class BoxDragController {
     private boolean engaged = false;
     private DragState dragState = null;
 
-    public BoxDragController(BoxController boxController, Consumer<Vec3dCore> onPositionChange, Runnable onStartBoxTap) {
+    public BoxDragController(BoxController boxController, StartDragHandler handler, Runnable onStartBoxTap) {
         this.boxController = boxController;
-        this.onPositionChange = onPositionChange;
+        this.handler = handler;
         this.onStartBoxTap = onStartBoxTap;
     }
 
-    public void tick(Vec3dCore rayOrigin, Vec3dCore rayDirection, boolean mousePressed, double cursorScreenX, double cursorScreenY, boolean uiFocused) {
+    public void tick(Vec3dCore rayOrigin, Vec3dCore rayDirection, boolean mousePressed, double cursorScreenX, double cursorScreenY, boolean uiFocused, boolean shiftHeld) {
         if (uiFocused) {
+            endIfDragging();
             resetState();
             wasMousePressed = false;
             return;
@@ -52,7 +59,7 @@ public final class BoxDragController {
         if (mousePressed && pressedOverStartBox) {
             if (!engaged && TapThreshold.exceeded(pressScreenX, pressScreenY, cursorScreenX, cursorScreenY)) {
                 engaged = true;
-                tryStartDrag(rayOrigin, rayDirection);
+                tryStartDrag(rayOrigin, rayDirection, shiftHeld);
             }
             if (engaged && dragState != null) {
                 updateDrag(rayOrigin, rayDirection);
@@ -63,10 +70,17 @@ public final class BoxDragController {
             if (pressedOverStartBox && !engaged && onStartBoxTap != null) {
                 onStartBoxTap.run();
             }
+            endIfDragging();
             resetState();
         }
 
         wasMousePressed = mousePressed;
+    }
+
+    private void endIfDragging() {
+        if (engaged && dragState != null) {
+            handler.onEnd(dragState.rigid);
+        }
     }
 
     private void resetState() {
@@ -86,7 +100,7 @@ public final class BoxDragController {
         return rayHitsAabb(rayOrigin, rayDirection, expand(first));
     }
 
-    private void tryStartDrag(Vec3dCore origin, Vec3dCore direction) {
+    private void tryStartDrag(Vec3dCore origin, Vec3dCore direction, boolean rigid) {
         AABB first = boxController.getFirst();
         if (first == null) return;
         if (!rayHitsAabb(origin, direction, expand(first))) return;
@@ -94,12 +108,16 @@ public final class BoxDragController {
         Vec3dCore cursorOnPlane = projectCursorToPlane(origin, direction, first.min.y);
         if (cursorOnPlane == null) return;
 
+        double centerX = (first.min.x + first.max.x) * 0.5;
+        double centerZ = (first.min.z + first.max.z) * 0.5;
         dragState = new DragState(
                 first.min.y,
-                first.min.x, first.min.z,
+                centerX, centerZ,
                 cursorOnPlane.x, cursorOnPlane.z,
-                new Vec3dCore(first.min.x, first.min.y, first.min.z)
+                new Vec3dCore(centerX, first.min.y, centerZ),
+                rigid
         );
+        handler.onBegin(rigid);
     }
 
     private void updateDrag(Vec3dCore origin, Vec3dCore direction) {
@@ -115,7 +133,7 @@ public final class BoxDragController {
                 dragState.startBoxZ + dz
         );
         if (newPos.equals(dragState.lastEmittedPos)) return;
-        onPositionChange.accept(newPos);
+        handler.onMove(newPos, dragState.rigid);
         dragState.lastEmittedPos = newPos;
     }
 
@@ -172,14 +190,16 @@ public final class BoxDragController {
         final double startBoxZ;
         final double startCursorX;
         final double startCursorZ;
+        final boolean rigid;
         Vec3dCore lastEmittedPos;
 
-        DragState(double planeY, double startBoxX, double startBoxZ, double startCursorX, double startCursorZ, Vec3dCore initialBoxPos) {
+        DragState(double planeY, double startBoxX, double startBoxZ, double startCursorX, double startCursorZ, Vec3dCore initialBoxPos, boolean rigid) {
             this.planeY = planeY;
             this.startBoxX = startBoxX;
             this.startBoxZ = startBoxZ;
             this.startCursorX = startCursorX;
             this.startCursorZ = startCursorZ;
+            this.rigid = rigid;
             this.lastEmittedPos = initialBoxPos;
         }
     }
