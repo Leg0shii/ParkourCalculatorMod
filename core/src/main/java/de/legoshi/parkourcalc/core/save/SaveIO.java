@@ -143,7 +143,9 @@ public final class SaveIO {
     }
 
     public static Vec3dCore velOf(SaveFile.Start s) {
-        return (s.vel != null && s.vel.length >= 3) ? new Vec3dCore(s.vel[0], s.vel[1], s.vel[2]) : Vec3dCore.GROUND_REST_VELOCITY;
+        if (s.vel == null || s.vel.length < 3) return Vec3dCore.GROUND_REST_VELOCITY;
+        Vec3dCore v = new Vec3dCore(s.vel[0], s.vel[1], s.vel[2]);
+        return v.equals(Vec3dCore.ZERO) ? Vec3dCore.GROUND_REST_VELOCITY : v;
     }
 
     public static SaveFile parseSafe(String contents) {

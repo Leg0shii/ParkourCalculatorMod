@@ -156,8 +156,8 @@ public final class PlaybackController {
         startTick = from;
         nextTick = from;
         stopTick = to;
-        // A mid-path snapshot is already post-settle, so warming up there would double-apply the settle.
-        warmupRemaining = (from == 0) ? WARMUP_TICKS : 0;
+        // A carried checkpoint is already post-settle; warm up only a from-the-top start that has none.
+        warmupRemaining = (from == 0 && carry == null) ? WARMUP_TICKS : 0;
         prevTickYaw = yaw;
         currentTickYaw = yaw;
         displayTargetYaw = yaw;

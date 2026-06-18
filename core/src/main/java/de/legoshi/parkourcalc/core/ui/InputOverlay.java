@@ -599,7 +599,7 @@ public final class InputOverlay {
             ThemeManager.paintTableRowBg(0);
         }
         if (selection.isSelected(0)) {
-            ThemeManager.paintTableRowTint(ThemeManager.selectedTintColor(isSolverActive() ? 0.38f : 0.75f));
+            ThemeManager.paintTableRowTint(ThemeManager.selectedTintColor(0.38f));
         } else if (settings.highlightOnGroundRows && isOnGroundAtTick(0)) {
             ThemeManager.paintTableRowTint(ThemeManager.rgbaTintColor(settings.tickGroundHighlight));
         }
@@ -703,9 +703,8 @@ public final class InputOverlay {
             ThemeManager.paintTableRowBg(rowIndex);
         }
         int tint = 0;
-        // Solver rows carry chips drawn over the row bg; a heavy selection fill clashes with them,
-        // so use a lighter highlight there while the plain TAS table keeps the stronger fill.
-        float selAlpha = isSolverActive() ? 0.38f : 0.75f;
+        // A light selection fill, so it doesn't clash with chips drawn over solver rows.
+        float selAlpha = 0.38f;
         if (selection.isSelected(rowIndex + 1)) {
             tint = ThemeManager.selectedTintColor(selAlpha);
         } else if (draggingRowIndex == rowIndex) {
