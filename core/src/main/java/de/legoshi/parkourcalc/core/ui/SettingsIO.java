@@ -51,6 +51,7 @@ public final class SettingsIO {
         }
 
         clampScaleIndex(settings);
+        normalizeTickInfoStats(settings);
     }
 
     public static void save(Path file, Settings settings) {
@@ -93,5 +94,16 @@ public final class SettingsIO {
         if (settings.scaleIndex < 0 || settings.scaleIndex >= Settings.PRESET_SCALES.length) {
             settings.scaleIndex = Settings.DEFAULT_SCALE_INDEX;
         }
+    }
+
+    private static void normalizeTickInfoStats(Settings settings) {
+        if (settings.tickInfoStats == null) {
+            settings.tickInfoStats = TickInfoConfig.defaultConfig(Settings.defaultTickInfoPrecision());
+            return;
+        }
+        settings.tickInfoStats.normalize(
+                Settings.defaultTickInfoPrecision(),
+                Settings.MIN_STAT_PRECISION,
+                Settings.MAX_STAT_PRECISION);
     }
 }

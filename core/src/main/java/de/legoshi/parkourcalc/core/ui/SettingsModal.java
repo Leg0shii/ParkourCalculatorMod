@@ -52,7 +52,7 @@ public final class SettingsModal {
     private static final String TT_KEEP_BOXES_PLAYBACK = "Keeps the tick-box path overlay drawn in-world while playback is running, instead of hiding it.";
     private static final String TT_AUTO_APPLY = "Applies a feasible Angle Solver solution to the input rows the moment the solve finishes, skipping the Apply confirmation.";
     private static final String TT_AUTO_SAVE = "Saves the open TAS automatically while it has unsaved changes, at most every 30 seconds. Needs a named save (use Save As once); Ctrl+S still saves instantly.";
-    private static final String TT_TICK_INFO_PRECISION = "Decimal places shown for numeric values in the Tick Info panel.";
+    private static final String TT_TICK_INFO_PRECISION = "Default decimal places for Tick Info stats. Each stat's precision can be overridden by right-clicking the Tick Info window; new and reset stats start from this value.";
     private static final String TT_SOLVER_PRECISION = "Decimal places for Angle Solver stats: solved yaws, objective values, constraint chips, and the constraint value editor.";
 
     private final Settings settings;

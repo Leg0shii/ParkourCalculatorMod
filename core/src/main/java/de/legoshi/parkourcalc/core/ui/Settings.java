@@ -119,6 +119,8 @@ public final class Settings {
     public int tickInfoPrecision = DEFAULT_TICK_INFO_PRECISION;
     public int solverStatsPrecision = DEFAULT_SOLVER_STATS_PRECISION;
 
+    public TickInfoConfig tickInfoStats = TickInfoConfig.defaultConfig(DEFAULT_TICK_INFO_PRECISION);
+
     public int scaleIndex = AUTO_SCALE_INDEX; // resolved from display on first run; concrete once chosen
 
     public String[] recentFiles = new String[0];
@@ -138,6 +140,10 @@ public final class Settings {
 
     // Keep the tick-box path overlay drawn in-world during playback.
     public boolean keepBoxesDuringPlayback = DEFAULT_KEEP_BOXES_DURING_PLAYBACK;
+
+    public static int defaultTickInfoPrecision() {
+        return DEFAULT_TICK_INFO_PRECISION;
+    }
 
     // First-run default: bigger displays start at a larger preset so 4K isn't a sliver.
     public static int resolveAutoScaleIndex(int displayHeightPx) {
@@ -186,6 +192,7 @@ public final class Settings {
         scrollbarGrabMinSize = DEFAULT_SCROLLBAR_GRAB_MIN_SIZE;
         tickInfoPrecision = DEFAULT_TICK_INFO_PRECISION;
         solverStatsPrecision = DEFAULT_SOLVER_STATS_PRECISION;
+        tickInfoStats = TickInfoConfig.defaultConfig(DEFAULT_TICK_INFO_PRECISION);
         scaleIndex = DEFAULT_SCALE_INDEX;
         recentFiles = new String[0];
         viewTickInfo = DEFAULT_VIEW_TICK_INFO;
