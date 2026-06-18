@@ -32,6 +32,7 @@ public final class SettingsModal {
     private static final String TT_SUBTICK = "Renders the interpolated path between adjacent ticks, exposing collision moments inside a tick.";
     private static final String TT_COL_SPEED_AMP = "Adds a per-tick Speed potion amplifier column to the input table.";
     private static final String TT_COL_JUMP_BOOST_AMP = "Adds a per-tick Jump Boost potion amplifier column to the input table.";
+    private static final String TT_CONSTRAINTS = "Draws Angle Solver position constraints (X/Z) as translucent plates at the tick they apply to. Open-ended (> / <) constraints show a clamped band that points the open way. Only visible while the Angle Solver is open.";
     private static final String TT_GROUND_HIGHLIGHT = "Tints input rows whose simulated tick ended on the ground. Color is editable in Render Colors.";
     private static final String TT_COL_W = "W (forward) is always shown and can't be hidden.";
     private static final String TT_COL_A = "Strafe-left (A) column.";
@@ -224,6 +225,7 @@ public final class SettingsModal {
             checkboxRow("Show hitbox", "##show_hitbox", settings.showHitbox, TT_HITBOX, v -> settings.showHitbox = v);
             checkboxRow("Show full hitbox", "##show_full_hitbox", settings.showFullHitbox, TT_FULL_HITBOX, v -> settings.showFullHitbox = v);
             checkboxRow("Subtick visualization", "##show_subtick", settings.showSubtick, TT_SUBTICK, v -> settings.showSubtick = v);
+            checkboxRow("Show constraints", "##show_constraints", settings.showConstraints, TT_CONSTRAINTS, v -> settings.showConstraints = v);
             ThemeManager.endStandardFormTable();
         }
 
@@ -322,6 +324,8 @@ public final class SettingsModal {
         renderColor("yaw arrows", settings.yawArrow, flags);
         renderColor("yaw gizmo circle", settings.yawGizmoCircle, flags);
         renderColor("yaw gizmo direction", settings.yawGizmoDirection, flags);
+        renderColor("constraint outline", settings.constraintOutline, flags);
+        renderColor("constraint fill", settings.constraintFill, flags);
 
         ThemeManager.sectionSpacing();
         sectionHeader("Hitbox");

@@ -53,6 +53,18 @@ public final class BoxStyle {
         return toArgb(c[0], c[1], c[2], c[3]);
     }
 
+    /** Outline color for a constraint plate: full alpha so the wireframe always reads (gh-145). */
+    public static int constraintLineArgb(Settings settings) {
+        float[] c = settings.constraintOutline;
+        return toArgb(c[0], c[1], c[2], 1.0f);
+    }
+
+    /** Fill color for a constraint plate: user-controlled (very translucent) alpha so it reads as an open band. */
+    public static int constraintFaceArgb(Settings settings) {
+        float[] c = settings.constraintFill;
+        return toArgb(c[0], c[1], c[2], c[3]);
+    }
+
     public static double pathMaxDistanceSq(Settings settings) {
         if (settings.unlimitedPathRender) return Double.POSITIVE_INFINITY;
         double d = settings.pathRenderDistance;

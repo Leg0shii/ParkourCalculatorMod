@@ -132,6 +132,11 @@ public final class Application {
         saveController.setSolverEngine(angleSolverEngine);
         AngleSolverWindow angleSolverWindow = new AngleSolverWindow(angleSolverState, settings, inputData::size, angleSolverEngine);
 
+        // In-world constraint visualization (gh-145): plates appear while the solver view is open.
+        de.legoshi.parkourcalc.core.render.PathRenderPlan.setConstraintSource(
+                new de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverConstraintSource(
+                        angleSolverState, boxController, () -> settings.viewAngleSolver));
+
         TickInfoPanel tickInfoPanel = new TickInfoPanel(boxController, inputData, selection, settings, runner);
         PerfOverlay perfOverlay = new PerfOverlay();
         FileMenu fileMenu = new FileMenu(saveController, filePicker, settings, this::saveSettings);

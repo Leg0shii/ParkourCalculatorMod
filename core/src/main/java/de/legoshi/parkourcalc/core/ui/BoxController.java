@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.core.ui;
 
 import de.legoshi.parkourcalc.core.ports.BoxRenderer;
+import de.legoshi.parkourcalc.core.render.ConstraintBoxSource;
 import de.legoshi.parkourcalc.core.render.PathVertexLayout;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.TickState;
@@ -157,6 +158,33 @@ public final class BoxController {
             if (!inRange(i, camX, camY, camZ, maxDistanceSq)) continue;
             renderer.drawBox(tickAabbs.get(i), picker.argbFor(i, states.get(i)));
         }
+    }
+
+    /**
+     * Emits one {@code drawBox} per constraint plate, anchored at the tick it applies to (gh-145).
+     * The {@code source} maps each tick index to that tick's drawable constraint AABBs (computed from
+     * {@code ConstraintShapes} against the tick's simulated position). Outline and fill ride the same
+     * call: the renderer's mode (LINES vs FACES) decides whether {@code drawBox} emits edges or faces,
+     * exactly like {@link #render}, so the caller passes {@code outlineArgb} on the LINES pass and
+     * {@code fillArgb} on the FACES pass.
+     */
+    public void renderConstraints(BoxRenderer renderer, ConstraintBoxSource source, int argb,
+                                  double camX, double camY, double camZ, double maxDistanceSq) {
+        for (int i = 0; i < positions.size(); i++) {
+            if (!inRange(i, camX, camY, camZ, maxDistanceSq)) continue;
+            for (AABB box : source.boxesAt(i)) {
+                renderer.drawBox(box, argb);
+            }
+        }
+    }
+
+    /** Total constraint plates across all ticks; one plate is one box ({@code drawBox}) per pass. */
+    public int constraintBoxCount(ConstraintBoxSource source) {
+        int n = 0;
+        for (int i = 0; i < positions.size(); i++) {
+            n += source.boxesAt(i).size();
+        }
+        return n;
     }
 
     /** Cached AABB at index i, in the simulator's world coords. Null if out of range. */

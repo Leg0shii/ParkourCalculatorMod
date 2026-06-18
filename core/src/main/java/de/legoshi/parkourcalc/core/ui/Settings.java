@@ -19,6 +19,8 @@ public final class Settings {
     private static final float[] DEFAULT_HITBOX_DEFAULT = {0.804f, 0.839f, 0.957f, 0.80f};      // text       #cdd6f4
     private static final float[] DEFAULT_HITBOX_SELECTED = {0.651f, 0.890f, 0.631f, 0.80f};     // green      #a6e3a1
     private static final float[] DEFAULT_TICK_GROUND_HIGHLIGHT = {0.541f, 0.576f, 0.941f, 0.22f}; // periwinkle #8a93f0
+    private static final float[] DEFAULT_CONSTRAINT_OUTLINE = {0.200f, 0.839f, 0.651f, 1.00f};    // teal       #33d6a6
+    private static final float[] DEFAULT_CONSTRAINT_FILL = {0.200f, 0.839f, 0.651f, 0.15f};       // teal @15%   #33d6a6
 
     private static final boolean DEFAULT_SHOW_YAW_ARROWS = true;
     private static final boolean DEFAULT_SHOW_HITBOX = false;
@@ -26,6 +28,7 @@ public final class Settings {
     private static final boolean DEFAULT_SHOW_SUBTICK = false;
     private static final boolean DEFAULT_SHOW_COL_SPEED = false;
     private static final boolean DEFAULT_SHOW_COL_JUMP_BOOST = false;
+    private static final boolean DEFAULT_SHOW_CONSTRAINTS = true;
     private static final boolean DEFAULT_HIGHLIGHT_ON_GROUND_ROWS = true;
 
     private static final boolean DEFAULT_SHOW_COL_A = true;
@@ -86,6 +89,8 @@ public final class Settings {
     public final float[] hitboxDefault = DEFAULT_HITBOX_DEFAULT.clone();
     public final float[] hitboxSelected = DEFAULT_HITBOX_SELECTED.clone();
     public final float[] tickGroundHighlight = DEFAULT_TICK_GROUND_HIGHLIGHT.clone();
+    public final float[] constraintOutline = DEFAULT_CONSTRAINT_OUTLINE.clone();
+    public final float[] constraintFill = DEFAULT_CONSTRAINT_FILL.clone();
 
     public boolean showYawArrows = DEFAULT_SHOW_YAW_ARROWS;
     public boolean showHitbox = DEFAULT_SHOW_HITBOX;
@@ -93,6 +98,7 @@ public final class Settings {
     public boolean showSubtick = DEFAULT_SHOW_SUBTICK;
     public boolean showColSpeed = DEFAULT_SHOW_COL_SPEED;
     public boolean showColJumpBoost = DEFAULT_SHOW_COL_JUMP_BOOST;
+    public boolean showConstraints = DEFAULT_SHOW_CONSTRAINTS;
     public boolean highlightOnGroundRows = DEFAULT_HIGHLIGHT_ON_GROUND_ROWS;
 
     public boolean showColA = DEFAULT_SHOW_COL_A;
@@ -167,12 +173,15 @@ public final class Settings {
         System.arraycopy(DEFAULT_HITBOX_DEFAULT, 0, hitboxDefault, 0, 4);
         System.arraycopy(DEFAULT_HITBOX_SELECTED, 0, hitboxSelected, 0, 4);
         System.arraycopy(DEFAULT_TICK_GROUND_HIGHLIGHT, 0, tickGroundHighlight, 0, 4);
+        System.arraycopy(DEFAULT_CONSTRAINT_OUTLINE, 0, constraintOutline, 0, 4);
+        System.arraycopy(DEFAULT_CONSTRAINT_FILL, 0, constraintFill, 0, 4);
         showYawArrows = DEFAULT_SHOW_YAW_ARROWS;
         showHitbox = DEFAULT_SHOW_HITBOX;
         showFullHitbox = DEFAULT_SHOW_FULL_HITBOX;
         showSubtick = DEFAULT_SHOW_SUBTICK;
         showColSpeed = DEFAULT_SHOW_COL_SPEED;
         showColJumpBoost = DEFAULT_SHOW_COL_JUMP_BOOST;
+        showConstraints = DEFAULT_SHOW_CONSTRAINTS;
         highlightOnGroundRows = DEFAULT_HIGHLIGHT_ON_GROUND_ROWS;
         showColA = DEFAULT_SHOW_COL_A;
         showColS = DEFAULT_SHOW_COL_S;
