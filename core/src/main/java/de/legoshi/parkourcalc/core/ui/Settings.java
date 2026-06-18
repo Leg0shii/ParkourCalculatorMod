@@ -24,7 +24,8 @@ public final class Settings {
     private static final boolean DEFAULT_SHOW_HITBOX = false;
     private static final boolean DEFAULT_SHOW_FULL_HITBOX = false;
     private static final boolean DEFAULT_SHOW_SUBTICK = false;
-    private static final boolean DEFAULT_SHOW_POTION_COLUMNS = false;
+    private static final boolean DEFAULT_SHOW_COL_SPEED = false;
+    private static final boolean DEFAULT_SHOW_COL_JUMP_BOOST = false;
     private static final boolean DEFAULT_HIGHLIGHT_ON_GROUND_ROWS = true;
 
     private static final boolean DEFAULT_SHOW_COL_A = true;
@@ -90,7 +91,8 @@ public final class Settings {
     public boolean showHitbox = DEFAULT_SHOW_HITBOX;
     public boolean showFullHitbox = DEFAULT_SHOW_FULL_HITBOX;
     public boolean showSubtick = DEFAULT_SHOW_SUBTICK;
-    public boolean showPotionColumns = DEFAULT_SHOW_POTION_COLUMNS;
+    public boolean showColSpeed = DEFAULT_SHOW_COL_SPEED;
+    public boolean showColJumpBoost = DEFAULT_SHOW_COL_JUMP_BOOST;
     public boolean highlightOnGroundRows = DEFAULT_HIGHLIGHT_ON_GROUND_ROWS;
 
     public boolean showColA = DEFAULT_SHOW_COL_A;
@@ -163,7 +165,8 @@ public final class Settings {
         showHitbox = DEFAULT_SHOW_HITBOX;
         showFullHitbox = DEFAULT_SHOW_FULL_HITBOX;
         showSubtick = DEFAULT_SHOW_SUBTICK;
-        showPotionColumns = DEFAULT_SHOW_POTION_COLUMNS;
+        showColSpeed = DEFAULT_SHOW_COL_SPEED;
+        showColJumpBoost = DEFAULT_SHOW_COL_JUMP_BOOST;
         highlightOnGroundRows = DEFAULT_HIGHLIGHT_ON_GROUND_ROWS;
         showColA = DEFAULT_SHOW_COL_A;
         showColS = DEFAULT_SHOW_COL_S;

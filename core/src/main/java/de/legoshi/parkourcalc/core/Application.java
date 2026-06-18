@@ -117,7 +117,7 @@ public final class Application {
 
     public void setupUi() {
         inputOverlay = new InputOverlay(inputData, settings, selection, this::onUserChange,
-                this::setStartToPlayer, this::saveSettings, playback, mc, boxController
+                this::setStartToPlayer, playback, mc, boxController
         );
 
         angleSolverState = new AngleSolverState();
@@ -132,7 +132,7 @@ public final class Application {
         saveController.setSolverEngine(angleSolverEngine);
         AngleSolverWindow angleSolverWindow = new AngleSolverWindow(angleSolverState, settings, inputData::size, angleSolverEngine);
 
-        TickInfoPanel tickInfoPanel = new TickInfoPanel(boxController, selection, settings);
+        TickInfoPanel tickInfoPanel = new TickInfoPanel(boxController, inputData, selection, settings);
         PerfOverlay perfOverlay = new PerfOverlay();
         FileMenu fileMenu = new FileMenu(saveController, filePicker, settings, this::saveSettings);
         SettingsModal settingsModal = new SettingsModal(settings, this::saveSettings);
@@ -332,6 +332,7 @@ public final class Application {
     }
 
     public boolean shouldSuppressLeftClick() {
+        if (isPlaybackRunning()) return false;
         if (isControlPanelOpen()) return false;
         if (dragController.isDragging()) return true;
         if (!mc.isReady()) return false;
@@ -339,6 +340,7 @@ public final class Application {
     }
 
     public boolean shouldSuppressRightClick() {
+        if (isPlaybackRunning()) return false;
         if (isControlPanelOpen()) return false;
         if (yawGizmo.isEngaged()) return true;
         if (!mc.isReady()) return false;

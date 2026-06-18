@@ -34,6 +34,7 @@ public final class SaveFile {
         public Float yaw;
         public boolean yawLocked;
         public Float pitch;
+        public boolean pitchLocked;
         public int speedAmplifier;
         public int jumpBoostAmplifier;
     }

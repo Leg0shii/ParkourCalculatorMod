@@ -9,6 +9,7 @@
     "FallDamageSuppressMixin",
     "GameRendererMixin",
     "InGameHudMixin",
+    "KeyBindingAccessor",
     "KeyboardMixin",
     "LandingParticleSuppressMixin",
     "MinecraftClientMixin",

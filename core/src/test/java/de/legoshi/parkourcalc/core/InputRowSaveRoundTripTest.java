@@ -44,6 +44,7 @@ public class InputRowSaveRoundTripTest {
         r0.setKeyActive(InputRow.Key.LEFT_CLICK, true);
         r0.setYaw(45.5f);
         r0.setPitch(-12.25f);
+        r0.setPitchLocked(true);
         in.getRows().add(r0);
 
         InputRow r1 = new InputRow();
@@ -61,12 +62,14 @@ public class InputRowSaveRoundTripTest {
         assertFalse(o0.isKeyActive(InputRow.Key.RIGHT_CLICK));
         assertEquals(Float.valueOf(45.5f), o0.getYaw());
         assertEquals(Float.valueOf(-12.25f), o0.getPitch());
+        assertTrue("pitch lock must survive a round-trip", o0.isPitchLocked());
 
         InputRow o1 = out.get(1);
         assertTrue(o1.isKeyActive(InputRow.Key.RIGHT_CLICK));
         assertTrue(o1.isKeyActive(InputRow.Key.SPRINT));
         assertFalse(o1.isKeyActive(InputRow.Key.LEFT_CLICK));
         assertEquals(Float.valueOf(90f), o1.getPitch());
+        assertFalse("an untouched pitch lock stays false", o1.isPitchLocked());
     }
 
     @Test

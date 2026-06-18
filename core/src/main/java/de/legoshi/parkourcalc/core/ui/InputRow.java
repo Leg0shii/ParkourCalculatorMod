@@ -14,6 +14,7 @@ public class InputRow {
     private Float yaw;
     private boolean yawLocked;
     private Float pitch;
+    private boolean pitchLocked;
     private int speedAmplifier;
     private int jumpBoostAmplifier;
 
@@ -66,6 +67,14 @@ public class InputRow {
         this.pitch = pitch;
     }
 
+    public boolean isPitchLocked() {
+        return pitchLocked;
+    }
+
+    public void setPitchLocked(boolean pitchLocked) {
+        this.pitchLocked = pitchLocked;
+    }
+
     public int getSpeedAmplifier() {
         return speedAmplifier;
     }
@@ -94,6 +103,7 @@ public class InputRow {
         copy.yaw = this.yaw;
         copy.yawLocked = this.yawLocked;
         copy.pitch = this.pitch;
+        copy.pitchLocked = this.pitchLocked;
         copy.speedAmplifier = this.speedAmplifier;
         copy.jumpBoostAmplifier = this.jumpBoostAmplifier;
         return copy;

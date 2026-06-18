@@ -21,6 +21,8 @@ public final class PlaybackController {
     private static final long TICK_NANOS = 50_000_000L;
     private static final float MAX_FRAME_DT_SECONDS = 0.1f;
 
+    public static final float DEFAULT_PITCH = 40f;
+
     private final InputData inputData;
     private final SimulationRunner runner;
     private final Settings settings;
@@ -53,6 +55,8 @@ public final class PlaybackController {
     private long lastFrameNanos;
 
     private float currentTickPitch;
+    private float prevTickPitch;
+    private float displayedPitch;
     private boolean pitchEngaged;
 
     // Non-zero while the game sits paused: client ticks keep firing but the world does not advance,
@@ -165,8 +169,10 @@ public final class PlaybackController {
         currentTickYaw = yaw;
         displayTargetYaw = yaw;
         displayedYaw = yaw;
-        currentTickPitch = 0f;
-        pitchEngaged = false;
+        currentTickPitch = DEFAULT_PITCH;
+        prevTickPitch = DEFAULT_PITCH;
+        displayedPitch = DEFAULT_PITCH;
+        pitchEngaged = true;
         tickEndNanos = 0L;
         lastFrameNanos = 0L;
         InputRow firstRow = inputData.get(from);
@@ -275,16 +281,31 @@ public final class PlaybackController {
             }
         }
         bridge.setYaw(currentTickYaw);
-        Float pitch = row.getPitch();
-        if (pitch != null) {
-            currentTickPitch = pitch;
-            pitchEngaged = true;
-        }
-        if (pitchEngaged) {
-            bridge.setPitch(currentTickPitch);
-        }
+        prevTickPitch = currentTickPitch;
+        currentTickPitch = applyPitch(currentTickPitch, row);
+        bridge.setPitch(currentTickPitch);
         tickEndNanos = System.nanoTime();
         nextTick++;
+    }
+
+    private static float clampPitch(float pitch) {
+        if (pitch < -90f) return -90f;
+        if (pitch > 90f) return 90f;
+        return pitch;
+    }
+
+    public static float applyPitch(float current, InputRow row) {
+        Float pitch = row.getPitch();
+        if (pitch == null) return current;
+        float next;
+        if (row.isPitchLocked()) {
+            next = pitch;
+        } else if (pitch != 0f) {
+            next = current + pitch;
+        } else {
+            next = current;
+        }
+        return clampPitch(next);
     }
 
     /** Signed degrees from -> to taken the short way round, in [-180, 180]. */
@@ -300,6 +321,7 @@ public final class PlaybackController {
         if (!running || bridge == null) return;
         bridge.setYaw(displayedYaw);
         bridge.setHeadYaw(displayedYaw);
+        if (pitchEngaged) bridge.setPitch(displayedPitch);
         if (DebugFlags.DUMP_TICK_STATE) {
             // Negative index = warmup tick, so state going into tick 0 is visible.
             int t = nextTick - 1 - warmupRemaining;
@@ -341,5 +363,14 @@ public final class PlaybackController {
             displayedYaw += Math.signum(delta) * maxStep;
         }
         bridge.setYaw(displayedYaw);
+
+        float idealPitch = prevTickPitch + (currentTickPitch - prevTickPitch) * partial;
+        float pitchDelta = idealPitch - displayedPitch;
+        if (Math.abs(pitchDelta) <= maxStep) {
+            displayedPitch = idealPitch;
+        } else {
+            displayedPitch += Math.signum(pitchDelta) * maxStep;
+        }
+        if (pitchEngaged) bridge.setPitch(displayedPitch);
     }
 }

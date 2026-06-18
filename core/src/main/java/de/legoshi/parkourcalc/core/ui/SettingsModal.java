@@ -29,8 +29,20 @@ public final class SettingsModal {
     private static final String TT_HITBOX = "Draws the player's hitbox at the currently selected tick.";
     private static final String TT_FULL_HITBOX = "Draws hitboxes for every tick in the TAS, not just the active one. Heavy on long TASes.";
     private static final String TT_SUBTICK = "Renders the interpolated path between adjacent ticks, exposing collision moments inside a tick.";
-    private static final String TT_POTION_COLS = "Adds Speed and Jump Boost amplifier columns to the input table.";
+    private static final String TT_COL_SPEED_AMP = "Adds a per-tick Speed potion amplifier column to the input table.";
+    private static final String TT_COL_JUMP_BOOST_AMP = "Adds a per-tick Jump Boost potion amplifier column to the input table.";
     private static final String TT_GROUND_HIGHLIGHT = "Tints input rows whose simulated tick ended on the ground. Color is editable in Render Colors.";
+    private static final String TT_COL_W = "W (forward) is always shown and can't be hidden.";
+    private static final String TT_COL_A = "Strafe-left (A) column.";
+    private static final String TT_COL_S = "Backward (S) column.";
+    private static final String TT_COL_D = "Strafe-right (D) column.";
+    private static final String TT_COL_SPRINT = "Sprint (Ctrl) column.";
+    private static final String TT_COL_SNEAK = "Sneak (Shift) column.";
+    private static final String TT_COL_JUMP = "Jump (Space) column.";
+    private static final String TT_COL_YAW = "Yaw angle column.";
+    private static final String TT_COL_PITCH = "Pitch angle column.";
+    private static final String TT_COL_LMB = "Left click / attack column.";
+    private static final String TT_COL_RMB = "Right click / use column.";
     private static final String TT_YAW_TURN_RATE = "Caps how fast the macro rotates the camera during playback (deg per second).";
     private static final String TT_PATH_DIST = "Maximum world distance for the simulated path overlay.";
     private static final String TT_PATH_UNLIMITED = "Disables the distance cap. Heavy on long TASes.";
@@ -99,6 +111,10 @@ public final class SettingsModal {
             }
             if (Controls.beginTab("Visualization")) {
                 renderVisualization();
+                Controls.endTab();
+            }
+            if (Controls.beginTab("Input Table")) {
+                renderInputTable();
                 Controls.endTab();
             }
             if (Controls.beginTab("Playback")) {
@@ -236,11 +252,31 @@ public final class SettingsModal {
             checkboxRow("Unlimited path render distance", "##unlimited_path", settings.unlimitedPathRender, TT_PATH_UNLIMITED, v -> settings.unlimitedPathRender = v);
             ThemeManager.endStandardFormTable();
         }
+    }
+
+    private void renderInputTable() {
+        ThemeManager.sectionSpacing();
+        sectionHeader("Visible columns");
+        if (beginLayoutTable("##settings_columns")) {
+            disabledCheckboxRow("Forward (W)", "##col_w", true, TT_COL_W);
+            checkboxRow("Strafe left (A)", "##col_a", settings.showColA, TT_COL_A, v -> settings.showColA = v);
+            checkboxRow("Backward (S)", "##col_s", settings.showColS, TT_COL_S, v -> settings.showColS = v);
+            checkboxRow("Strafe right (D)", "##col_d", settings.showColD, TT_COL_D, v -> settings.showColD = v);
+            checkboxRow("Sprint", "##col_sprint", settings.showColSprint, TT_COL_SPRINT, v -> settings.showColSprint = v);
+            checkboxRow("Sneak", "##col_sneak", settings.showColSneak, TT_COL_SNEAK, v -> settings.showColSneak = v);
+            checkboxRow("Jump", "##col_jump", settings.showColJump, TT_COL_JUMP, v -> settings.showColJump = v);
+            checkboxRow("Yaw", "##col_yaw", settings.showColYaw, TT_COL_YAW, v -> settings.showColYaw = v);
+            checkboxRow("Pitch", "##col_pitch", settings.showColPitch, TT_COL_PITCH, v -> settings.showColPitch = v);
+            checkboxRow("Left click (LMB)", "##col_lmb", settings.showColLeftClick, TT_COL_LMB, v -> settings.showColLeftClick = v);
+            checkboxRow("Right click (RMB)", "##col_rmb", settings.showColRightClick, TT_COL_RMB, v -> settings.showColRightClick = v);
+            checkboxRow("Speed", "##show_speed", settings.showColSpeed, TT_COL_SPEED_AMP, v -> settings.showColSpeed = v);
+            checkboxRow("Jump Boost", "##show_jump_boost", settings.showColJumpBoost, TT_COL_JUMP_BOOST_AMP, v -> settings.showColJumpBoost = v);
+            ThemeManager.endStandardFormTable();
+        }
 
         ThemeManager.sectionSpacing();
-        sectionHeader("Editor table");
-        if (beginLayoutTable("##settings_editor")) {
-            checkboxRow("Show potion effect columns", "##show_potion", settings.showPotionColumns, TT_POTION_COLS, v -> settings.showPotionColumns = v);
+        sectionHeader("Row highlighting");
+        if (beginLayoutTable("##settings_row_highlight")) {
             checkboxRow("Highlight on-ground ticks", "##highlight_on_ground", settings.highlightOnGroundRows, TT_GROUND_HIGHLIGHT, v -> settings.highlightOnGroundRows = v);
             ThemeManager.endStandardFormTable();
         }
@@ -328,6 +364,15 @@ public final class SettingsModal {
                 setter.accept(!current);
                 onChanged.run();
             }
+            tooltipForLastItem(tooltip);
+        });
+    }
+
+    private void disabledCheckboxRow(String label, String id, boolean current, String tooltip) {
+        row(label, () -> {
+            ImGui.beginDisabled(true);
+            Controls.checkbox(id, current);
+            ImGui.endDisabled();
             tooltipForLastItem(tooltip);
         });
     }

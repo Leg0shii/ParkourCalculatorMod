@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.ui;
 
+import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
@@ -28,6 +29,7 @@ public final class TickInfoPanel implements RenderInterface {
     private static final String COL_Z = "Z";
 
     private final BoxController boxController;
+    private final InputData inputData;
     private final SelectionManager selection;
     private final Settings settings;
     private int rowCounter;
@@ -37,10 +39,20 @@ public final class TickInfoPanel implements RenderInterface {
     private String fmtNumSingle;
     private String numSample;
 
-    public TickInfoPanel(BoxController boxController, SelectionManager selection, Settings settings) {
+    public TickInfoPanel(BoxController boxController, InputData inputData, SelectionManager selection, Settings settings) {
         this.boxController = boxController;
+        this.inputData = inputData;
         this.selection = selection;
         this.settings = settings;
+    }
+
+    private float effectivePitch(int idx) {
+        float p = PlaybackController.DEFAULT_PITCH;
+        int n = Math.min(idx + 1, inputData.size());
+        for (int i = 0; i < n; i++) {
+            p = PlaybackController.applyPitch(p, inputData.get(i));
+        }
+        return p;
     }
 
     private void rebuildFormats() {
@@ -110,6 +122,7 @@ public final class TickInfoPanel implements RenderInterface {
             rowInt("Tick", idx, "Tick number (1-based), matching the input table's Tick column.");
         }
         rowNum("Yaw", appliedYaw, "Facing applied during this tick (drives this tick's movement). MC convention: 0 = +Z, increases CW looking down.");
+        rowNum("Pitch", effectivePitch(idx), "Camera pitch held during this tick (-90 up, 90 down). Defaults to 40; each row adds a relative turn unless locked to an absolute value. Display only; pitch does not affect movement.");
 
         if (prev != null) {
             double dx = cur.position.x - prev.position.x;

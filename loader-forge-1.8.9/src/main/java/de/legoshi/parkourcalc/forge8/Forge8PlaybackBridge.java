@@ -115,7 +115,15 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
     public void setKey(InputRow.Key key, boolean pressed) {
         currentRow.setKeyActive(key, pressed);
         KeyBinding kb = bindFor(key);
-        if (kb != null) KeyBinding.setKeyBindState(kb.getKeyCode(), pressed);
+        if (kb == null) return;
+        KeyBinding.setKeyBindState(kb.getKeyCode(), pressed);
+        if (pressed && isClickKey(key)) {
+            KeyBinding.onTick(kb.getKeyCode());
+        }
+    }
+
+    private static boolean isClickKey(InputRow.Key key) {
+        return key == InputRow.Key.LEFT_CLICK || key == InputRow.Key.RIGHT_CLICK;
     }
 
     @Override

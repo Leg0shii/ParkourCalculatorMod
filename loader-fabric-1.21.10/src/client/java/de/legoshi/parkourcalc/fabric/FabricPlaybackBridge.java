@@ -4,6 +4,7 @@ import de.legoshi.parkourcalc.core.ports.PlaybackBridge;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.fabric.mixin.ClientPlayerEntityAccessor;
+import de.legoshi.parkourcalc.fabric.mixin.KeyBindingAccessor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.input.Input;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -106,7 +107,16 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
     public void setKey(InputRow.Key key, boolean pressed) {
         currentRow.setKeyActive(key, pressed);
         KeyBinding kb = bindFor(key);
-        if (kb != null) kb.setPressed(pressed);
+        if (kb == null) return;
+        kb.setPressed(pressed);
+        if (pressed && isClickKey(key)) {
+            KeyBindingAccessor acc = (KeyBindingAccessor) kb;
+            acc.pkc$setTimesPressed(acc.pkc$getTimesPressed() + 1);
+        }
+    }
+
+    private static boolean isClickKey(InputRow.Key key) {
+        return key == InputRow.Key.LEFT_CLICK || key == InputRow.Key.RIGHT_CLICK;
     }
 
     @Override
