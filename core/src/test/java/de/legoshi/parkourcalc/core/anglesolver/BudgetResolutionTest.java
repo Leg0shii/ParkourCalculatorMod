@@ -6,7 +6,9 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.SolveCore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 public class BudgetResolutionTest {
 
@@ -63,6 +65,21 @@ public class BudgetResolutionTest {
         s.setEffort(AngleSolverState.Effort.THOROUGH);
         s.getSolveBudget().setTimeBudgetSeconds(30);
         assertEquals(0L, AngleSolverEngine.deadlineNanosFor(s));
+    }
+
+    @Test
+    public void windowSolverIsOnByDefaultAndTogglesOnlyForCustom() {
+        AngleSolverState s = new AngleSolverState();
+        s.setEffort(AngleSolverState.Effort.FAST);
+        assertTrue(AngleSolverEngine.useWindowSolverFor(s));
+        s.setEffort(AngleSolverState.Effort.THOROUGH);
+        assertTrue(AngleSolverEngine.useWindowSolverFor(s));
+        s.setEffort(AngleSolverState.Effort.CUSTOM);
+        assertTrue("Custom defaults to the window solver", AngleSolverEngine.useWindowSolverFor(s));
+        s.getSolveBudget().setUseWindowSolver(false);
+        assertFalse(AngleSolverEngine.useWindowSolverFor(s));
+        s.setEffort(AngleSolverState.Effort.FAST);
+        assertTrue("non-Custom ignores the toggle", AngleSolverEngine.useWindowSolverFor(s));
     }
 
     @Test

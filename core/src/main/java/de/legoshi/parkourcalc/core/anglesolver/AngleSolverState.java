@@ -100,6 +100,7 @@ public final class AngleSolverState {
         private int timeBudgetSeconds = DEFAULT_TIME_BUDGET;
         private int window = DEFAULT_WINDOW;
         private int commit = DEFAULT_COMMIT;
+        private boolean useWindowSolver = true;
 
         public int getRestarts() { return restarts; }
         public void setRestarts(int v) { restarts = clampInt(v, MIN_RESTARTS, MAX_RESTARTS); }
@@ -125,6 +126,9 @@ public final class AngleSolverState {
         public int getCommit() { return commit; }
         public void setCommit(int v) { commit = clampInt(v, MIN_COMMIT, Math.max(MIN_COMMIT, window - 1)); }
 
+        public boolean getUseWindowSolver() { return useWindowSolver; }
+        public void setUseWindowSolver(boolean v) { useWindowSolver = v; }
+
         public void resetToDefaults() {
             restarts = DEFAULT_RESTARTS;
             maxEval = DEFAULT_MAX_EVAL;
@@ -133,6 +137,7 @@ public final class AngleSolverState {
             timeBudgetSeconds = DEFAULT_TIME_BUDGET;
             window = DEFAULT_WINDOW;
             commit = DEFAULT_COMMIT;
+            useWindowSolver = true;
         }
     }
 

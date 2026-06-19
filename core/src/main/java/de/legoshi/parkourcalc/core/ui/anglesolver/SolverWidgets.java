@@ -92,6 +92,12 @@ public final class SolverWidgets {
         }
     }
 
+    public static float segmentedMinWidth(String[] labels) {
+        float maxText = 0f;
+        for (String l : labels) maxText = Math.max(maxText, ImGui.calcTextSize(l).x);
+        return labels.length * (maxText + 2f * SEG_PAD_X * s());
+    }
+
     /** Single-choice segmented control. {@code fillWidth} > 0 splits that total width evenly across the segments so the control aligns to a form column. Returns the clicked index, or -1 if none this frame. */
     public static int segmented(String id, String[] labels, int selected, float fillWidth) {
         return segmented(id, labels, null, selected, fillWidth);

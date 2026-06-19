@@ -67,6 +67,7 @@ public final class SaveFile {
         public int timeBudgetSeconds;
         public int window;
         public int commit;
+        public Boolean useWindowSolver;
     }
 
     /** A picked start / collision / land block: its role, integer coords, and captured world-space hitbox. */

@@ -16,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -31,6 +32,7 @@ public class CustomBudgetTest {
         assertEquals(0, b.getTimeBudgetSeconds());
         assertEquals(10, b.getWindow());
         assertEquals(3, b.getCommit());
+        assertTrue(b.getUseWindowSolver());
     }
 
     @Test
@@ -67,10 +69,12 @@ public class CustomBudgetTest {
         b.setRestarts(200);
         b.setPolishDepth(PolishDepth.EXHAUSTIVE);
         b.setTimeBudgetSeconds(120);
+        b.setUseWindowSolver(false);
         b.resetToDefaults();
         assertEquals(16, b.getRestarts());
         assertEquals(PolishDepth.LIGHT, b.getPolishDepth());
         assertEquals(0, b.getTimeBudgetSeconds());
+        assertTrue(b.getUseWindowSolver());
     }
 
     @Test
@@ -95,6 +99,7 @@ public class CustomBudgetTest {
         b.setTimeBudgetSeconds(30);
         b.setWindow(12);
         b.setCommit(4);
+        b.setUseWindowSolver(false);
 
         AngleSolverState loaded = roundTrip(s);
         assertEquals(AngleSolverState.Effort.CUSTOM, loaded.getEffort());
@@ -106,6 +111,7 @@ public class CustomBudgetTest {
         assertEquals(30, lb.getTimeBudgetSeconds());
         assertEquals(12, lb.getWindow());
         assertEquals(4, lb.getCommit());
+        assertFalse(lb.getUseWindowSolver());
     }
 
     @Test
@@ -137,6 +143,27 @@ public class CustomBudgetTest {
         assertEquals(16, s.getSolveBudget().getRestarts());
         assertEquals(10, s.getSolveBudget().getWindow());
         assertEquals(3, s.getSolveBudget().getCommit());
+        assertTrue(s.getSolveBudget().getUseWindowSolver());
+    }
+
+    @Test
+    public void customBudgetWithoutWindowSolverFieldDefaultsToOn() {
+        String json = "{\n" +
+                "  \"version\": 1,\n" +
+                "  \"start\": { \"pos\": [0,0,0], \"vel\": [0,0,0], \"yaw\": 0.0 },\n" +
+                "  \"rows\": [ { \"keys\": [\"W\"], \"yaw\": 0.0 } ],\n" +
+                "  \"angleSolver\": { \"startTick\": 0, \"landingTick\": 1, \"axis\": \"X\", \"goal\": \"MAX\",\n" +
+                "    \"effort\": \"CUSTOM\", \"customBudget\": { \"restarts\": 64, \"maxEval\": 4500,\n" +
+                "      \"polishCount\": 2, \"timeBudgetSeconds\": 0, \"window\": 10, \"commit\": 3 } }\n" +
+                "}";
+        SaveFile file = SaveIO.parseSafe(json);
+        assertNotNull(file);
+        AngleSolverState s = new AngleSolverState();
+        s.getSolveBudget().setUseWindowSolver(false);
+        SaveIO.applyAngleSolverTo(file, s);
+        assertEquals(64, s.getSolveBudget().getRestarts());
+        assertTrue("absent useWindowSolver must not flip an existing custom save off",
+                s.getSolveBudget().getUseWindowSolver());
     }
 
     private static AngleSolverState roundTrip(AngleSolverState s) throws Exception {

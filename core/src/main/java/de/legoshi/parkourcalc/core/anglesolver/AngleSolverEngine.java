@@ -83,6 +83,11 @@ public final class AngleSolverEngine {
         return LongRunSolver.LongRunConfig.of(b.getWindow(), b.getCommit());
     }
 
+    static boolean useWindowSolverFor(AngleSolverState state) {
+        if (state.getEffort() != AngleSolverState.Effort.CUSTOM) return true;
+        return state.getSolveBudget().getUseWindowSolver();
+    }
+
     private final AngleSolverState state;
     private final BoxController boxes;
     private final InputData inputs;
@@ -163,10 +168,11 @@ public final class AngleSolverEngine {
         final SolveCore.Budget budget;
         final long deadlineNanos;
         final LongRunSolver.LongRunConfig longRun;
+        final boolean useWindowSolver;
 
         Job(JumpSpec spec, Objective.Sense sense, int startTick, int landingTick,
             int numTicks, boolean[] strafeMask, boolean[] force45Mask, List<ConstraintAt> uiConstraints,
-            SolveCore.Budget budget, long deadlineNanos, LongRunSolver.LongRunConfig longRun
+            SolveCore.Budget budget, long deadlineNanos, LongRunSolver.LongRunConfig longRun, boolean useWindowSolver
         ) {
             this.spec = spec;
             this.sense = sense;
@@ -179,6 +185,7 @@ public final class AngleSolverEngine {
             this.budget = budget;
             this.deadlineNanos = deadlineNanos;
             this.longRun = longRun;
+            this.useWindowSolver = useWindowSolver;
         }
     }
 
@@ -237,7 +244,7 @@ public final class AngleSolverEngine {
         JumpSpec spec = new JumpSpec(ph.inputs, constraints, objective);
         return new Job(spec, objective.sense, startTick, landingTick, numTicks, ph.strafeMask,
                 ph.force45Mask, uiCons,
-                budgetFor(state), deadlineNanosFor(state), longRunConfigFor(state));
+                budgetFor(state), deadlineNanosFor(state), longRunConfigFor(state), useWindowSolverFor(state));
     }
 
     /** Test-only: the compiled spec for the current UI state, built synchronously (no worker thread). */
@@ -511,7 +518,7 @@ public final class AngleSolverEngine {
                         }
                     }
                 }
-            } else {
+            } else if (job.useWindowSolver) {
                 // Multi-jump span: straight to the receding-horizon solver, because the monolithic dual does not
                 // converge across dozens of jumps, so its full margin ladder over four directions would be
                 // wasted on the whole span. Each window IS the closed-form dual, so a short span still
@@ -578,7 +585,7 @@ public final class AngleSolverEngine {
         addBaseDetails(result, solveNanos);
         if (!Double.isNaN(dualGap)) result.addDetail("Dual bound gap", ConstraintText.fixedStat(dualGap));
         result.addDetail("Jumps", Integer.toString(countJumps(sc)));
-        if (countJumps(sc) > 1) {
+        if (countJumps(sc) > 1 && job.useWindowSolver) {
             result.addDetail("Window", Integer.toString(job.longRun.window()));
             result.addDetail("Commit", Integer.toString(job.longRun.commit()));
         }
