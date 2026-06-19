@@ -47,8 +47,7 @@ public final class AngleSolverState {
     }
 
     /** Solve effort: trades wall-clock for the last micrometers of objective. FAST is ~100ms but uses a
-     *  smaller global search, so a hard jump can occasionally miss a feasible solution; bump up if so.
-     *  CUSTOM exposes the search budget directly (see {@link SolveBudget}); its defaults reproduce FAST. */
+     *  smaller global search, so a hard jump can occasionally miss a feasible solution; bump up if so. */
     public enum Effort {
         FAST("Fast", "Narrow search"),
         THOROUGH("Thorough", "Wide search"),
@@ -63,8 +62,6 @@ public final class AngleSolverState {
         }
     }
 
-    /** Custom polish depth: reuses the two shipped {@code BucketAscentPolish} schedules rather than
-     *  inventing new ones (docs/research/angle-solver.md 3.1). */
     public enum PolishDepth {
         LIGHT("Light"),
         EXHAUSTIVE("Exhaustive");
@@ -76,8 +73,6 @@ public final class AngleSolverState {
         }
     }
 
-    // Custom solve-budget bounds (Effort.CUSTOM). Defaults reproduce today's FAST exactly, so selecting
-    // CUSTOM and changing nothing is a no-op; the ranges are grounded in docs/research/angle-solver.md 3.1.
     public static final int MIN_RESTARTS = 1;
     public static final int MAX_RESTARTS = 256;
     public static final int DEFAULT_RESTARTS = 16;
@@ -88,19 +83,15 @@ public final class AngleSolverState {
     public static final int MAX_POLISH_COUNT = 64;
     public static final int DEFAULT_POLISH_COUNT = 2;
     public static final PolishDepth DEFAULT_POLISH_DEPTH = PolishDepth.LIGHT;
-    public static final int MIN_TIME_BUDGET = 0;            // seconds; 0 = off (fixed restarts, today's behavior)
+    public static final int MIN_TIME_BUDGET = 0;
     public static final int MAX_TIME_BUDGET = 600;
     public static final int DEFAULT_TIME_BUDGET = 0;
     public static final int MIN_WINDOW = 6;
     public static final int MAX_WINDOW = 14;
     public static final int DEFAULT_WINDOW = 10;
-    public static final int MIN_COMMIT = 1;                 // max is window - 1 (dynamic)
+    public static final int MIN_COMMIT = 1;
     public static final int DEFAULT_COMMIT = 3;
 
-    /** Per-save custom solve budget (Effort.CUSTOM): the seven user-tunable knobs of the solve pipeline.
-     *  The safety-critical constants (FEAS_TOL, MET_TOL, the CMA-ES sigma, the dual stall guards, and the
-     *  SLP / window-size ladders) stay locked in the engine and solvers. Setters clamp to the documented
-     *  ranges, so a hand-edited save can never widen the search past what was swept. */
     public static final class SolveBudget {
         private int restarts = DEFAULT_RESTARTS;
         private int maxEval = DEFAULT_MAX_EVAL;
@@ -128,14 +119,12 @@ public final class AngleSolverState {
         public int getWindow() { return window; }
         public void setWindow(int v) {
             window = clampInt(v, MIN_WINDOW, MAX_WINDOW);
-            if (commit > window - 1) commit = window - 1; // keep commit in 1..window-1
+            if (commit > window - 1) commit = window - 1;
         }
 
         public int getCommit() { return commit; }
         public void setCommit(int v) { commit = clampInt(v, MIN_COMMIT, Math.max(MIN_COMMIT, window - 1)); }
 
-        /** Restore today's FAST behavior; used by {@link AngleSolverState#reset()} and when loading a
-         *  pre-feature save (which carries no custom budget). */
         public void resetToDefaults() {
             restarts = DEFAULT_RESTARTS;
             maxEval = DEFAULT_MAX_EVAL;
@@ -218,7 +207,6 @@ public final class AngleSolverState {
         this.effort = effort;
     }
 
-    /** The custom search budget (live for {@link Effort#CUSTOM}); always present, defaults reproduce FAST. */
     public SolveBudget getSolveBudget() {
         return solveBudget;
     }

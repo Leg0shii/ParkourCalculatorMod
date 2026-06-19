@@ -81,7 +81,6 @@ public final class AngleSolverWindow implements RenderInterface {
     private final ImInt slipBuf = new ImInt();
     private final ImInt doseCombo = new ImInt();
     private final ImInt levelBuf = new ImInt();
-    // CUSTOM effort budget sliders (imgui needs a backing array per control).
     private final int[] restartsBuf = new int[1];
     private final int[] maxEvalBuf = new int[1];
     private final int[] polishCountBuf = new int[1];
@@ -401,9 +400,6 @@ public final class AngleSolverWindow implements RenderInterface {
         if (state.getEffort() == AngleSolverState.Effort.CUSTOM) renderCustomBudget(labelW);
     }
 
-    /** The CUSTOM effort's search-budget sliders, revealed only when Effort == CUSTOM. Each control reads and
-     *  writes the per-save {@link AngleSolverState.SolveBudget}; its setters clamp to the swept ranges. The
-     *  safety-critical constants stay locked in the engine and are never surfaced here. */
     private void renderCustomBudget(float labelW) {
         AngleSolverState.SolveBudget b = state.getSolveBudget();
 
@@ -441,7 +437,6 @@ public final class AngleSolverWindow implements RenderInterface {
             b.setWindow(windowBuf[0]);
         }
 
-        // Commit's upper bound is window - 1 (more commit = less lookahead); it tracks the Window slider.
         commitBuf[0] = b.getCommit();
         if (sliderIntRow("Commit", "##commit", commitBuf,
                 AngleSolverState.MIN_COMMIT, Math.max(AngleSolverState.MIN_COMMIT, b.getWindow() - 1), "%d", labelW)) {
@@ -453,7 +448,6 @@ public final class AngleSolverWindow implements RenderInterface {
         ThemeManager.popTextColor();
     }
 
-    /** A labeled int-slider row matching {@link #segmentedRow}'s label/control layout. */
     private boolean sliderIntRow(String label, String id, int[] buf, int lo, int hi, String fmt, float labelW) {
         Controls.pushInputFrameHeight();
         SolverWidgets.rowLabel(label, labelW);

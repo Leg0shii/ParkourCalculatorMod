@@ -47,7 +47,7 @@ public final class SaveFile {
         public String axis;
         public String goal;
         public String effort;                            // absent in old files -> FAST
-        public SolveBudget customBudget;                 // Effort.CUSTOM knobs; null in old files -> FAST defaults
+        public SolveBudget customBudget;
         public String defaultInputs;
         public String defaultSprint;                     // absent in old files -> ALWAYS
         public String defaultSlipperiness;
@@ -58,14 +58,13 @@ public final class SaveFile {
         public Result result;                            // null = no solve yet
     }
 
-    /** Custom solve budget (Effort.CUSTOM). A nested object so "absent" (old file -> defaults) is
-     *  distinguishable from a legitimately-zero field such as timeBudgetSeconds = 0 (anytime off). */
+    /** Nested (not flattened) so an absent block in an old save stays distinct from a real timeBudgetSeconds = 0. */
     public static final class SolveBudget {
         public int restarts;
         public int maxEval;
         public int polishCount;
-        public String polishDepth;                       // LIGHT | EXHAUSTIVE; absent -> LIGHT
-        public int timeBudgetSeconds;                    // 0 = off (fixed restarts)
+        public String polishDepth;
+        public int timeBudgetSeconds;
         public int window;
         public int commit;
     }

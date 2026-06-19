@@ -8,9 +8,6 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
-/** The main-thread resolution seam: Effort + the per-save SolveBudget resolve to the immutable snapshot's
- *  Budget, wall-clock deadline, and long-run config. In the engine package to reach the package-private
- *  resolvers. */
 public class BudgetResolutionTest {
 
     @Test
@@ -61,10 +58,8 @@ public class BudgetResolutionTest {
         s.setEffort(AngleSolverState.Effort.CUSTOM);
         s.getSolveBudget().setTimeBudgetSeconds(30);
         assertEquals(30_000_000_000L, AngleSolverEngine.deadlineNanosFor(s));
-        // 0 = off (fixed restarts).
         s.getSolveBudget().setTimeBudgetSeconds(0);
         assertEquals(0L, AngleSolverEngine.deadlineNanosFor(s));
-        // The time budget only applies under CUSTOM.
         s.setEffort(AngleSolverState.Effort.THOROUGH);
         s.getSolveBudget().setTimeBudgetSeconds(30);
         assertEquals(0L, AngleSolverEngine.deadlineNanosFor(s));
@@ -79,7 +74,6 @@ public class BudgetResolutionTest {
         LongRunSolver.LongRunConfig lr = AngleSolverEngine.longRunConfigFor(s);
         assertEquals(8, lr.window());
         assertEquals(2, lr.commit());
-        // The fixed efforts always use the shipped defaults.
         s.setEffort(AngleSolverState.Effort.FAST);
         assertEquals(10, AngleSolverEngine.longRunConfigFor(s).window());
     }

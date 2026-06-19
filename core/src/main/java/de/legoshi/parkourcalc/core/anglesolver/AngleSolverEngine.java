@@ -57,9 +57,7 @@ public final class AngleSolverEngine {
     private static final double CMAES_SIGMA_DEG = 90.0;
 
     /** Per-effort solve budget (see {@link SolveCore}). Fewer restarts/evals is faster but can miss a
-     *  feasible basin on a hard jump, so FAST trades robustness for speed. CUSTOM reads the per-save
-     *  {@link AngleSolverState.SolveBudget}; its defaults reproduce FAST exactly. Resolved once on the main
-     *  thread into the immutable Job (the worker never reads live state). Package-private for unit tests. */
+     *  feasible basin on a hard jump, so FAST trades robustness for speed. */
     static SolveCore.Budget budgetFor(AngleSolverState state) {
         switch (state.getEffort()) {
             case THOROUGH: return new SolveCore.Budget(48, 12000, 16, BucketAscentPolish.THOROUGH);
@@ -73,17 +71,12 @@ public final class AngleSolverEngine {
         }
     }
 
-    /** CUSTOM wall-clock budget for the CMA-ES race, as a nanosecond duration; 0 = off (fixed restarts, the
-     *  default for every other effort). The single-jump closed-form fast path is unaffected. Package-private
-     *  for unit tests. */
     static long deadlineNanosFor(AngleSolverState state) {
         if (state.getEffort() != AngleSolverState.Effort.CUSTOM) return 0L;
         int secs = state.getSolveBudget().getTimeBudgetSeconds();
         return secs > 0 ? secs * 1_000_000_000L : 0L;
     }
 
-    /** CUSTOM multi-jump window/commit config; {@code defaults()} (window 10, commit ladder {3,1}) for the
-     *  fixed efforts. Package-private for unit tests. */
     static LongRunSolver.LongRunConfig longRunConfigFor(AngleSolverState state) {
         if (state.getEffort() != AngleSolverState.Effort.CUSTOM) return LongRunSolver.LongRunConfig.defaults();
         AngleSolverState.SolveBudget b = state.getSolveBudget();
@@ -167,10 +160,9 @@ public final class AngleSolverEngine {
         final boolean[] strafeMask;
         final boolean[] force45Mask;
         final List<ConstraintAt> uiConstraints;
-        // Search budget resolved on the main thread (handles CUSTOM); the worker reads only this snapshot.
         final SolveCore.Budget budget;
-        final long deadlineNanos;                 // CMA-ES race wall-clock budget, ns duration; 0 = off
-        final LongRunSolver.LongRunConfig longRun; // multi-jump window/commit
+        final long deadlineNanos;
+        final LongRunSolver.LongRunConfig longRun;
 
         Job(JumpSpec spec, Objective.Sense sense, int startTick, int landingTick,
             int numTicks, boolean[] strafeMask, boolean[] force45Mask, List<ConstraintAt> uiConstraints,
@@ -537,7 +529,6 @@ public final class AngleSolverEngine {
         CountingModel cmaes = new CountingModel(model);
         SolveCore.Budget budget = job.budget;
         if (!settled) {
-            // Anytime race when a wall-clock budget is set: absolute deadline = solve start + the duration.
             long deadline = job.deadlineNanos > 0 ? solveStart + job.deadlineNanos : 0L;
             double[] cma = SolveCore.optimize(cmaes, spec, budget, CMAES_SIGMA_DEG, FEAS_TOL, cancel, null, deadline);
             if (yaws == null) {
@@ -729,8 +720,6 @@ public final class AngleSolverEngine {
         List<Objective> objectives = objectiveCandidates(numTicks);
 
         long t0 = System.nanoTime();
-        // Block solving uses the SAME resolved budget as the normal Solve (incl. CUSTOM), so "Solve from
-        // blocks" never searches weaker than the "Solve" that runs on the constraints it just derived.
         BlockJob job = new BlockJob(ph, footprints, footprintUi, landFp, obstacles, heights, objectives,
                 startTick, landingTick, numTicks, budgetFor(state));
         state.clearResult();

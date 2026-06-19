@@ -42,12 +42,9 @@ public final class SolveCore {
         return optimize(model, spec, budget, sigmaDeg, feasTol, cancel, warmStart, 0L);
     }
 
-    /** Anytime variant: {@code deadlineNanos} is an absolute {@link System#nanoTime()} value. When {@code 0}
-     *  the search is exactly the fixed {@code budget.restarts} batch (byte-identical to the non-anytime path).
-     *  When positive, restart batches of {@code budget.restarts} keep launching until the deadline passes,
-     *  every basin is accumulated, and the best feasible is returned — so {@code restarts} becomes the per-batch
-     *  count rather than a hard cap. The deadline is checked between batches, so a return can lag it by one
-     *  in-flight batch; {@code cancel} still interrupts immediately. */
+    /** {@code deadlineNanos}: an absolute {@link System#nanoTime()} deadline, or {@code 0} for the fixed
+     *  {@code budget.restarts} batch (byte-identical to the non-anytime path). When positive, restart batches
+     *  keep launching until it passes (checked between batches) and the best feasible is returned. */
     public static double[] optimize(ForwardModel model, JumpSpec spec, Budget budget,
                                     double sigmaDeg, double feasTol, AtomicBoolean cancel, double[] warmStart,
                                     long deadlineNanos) {

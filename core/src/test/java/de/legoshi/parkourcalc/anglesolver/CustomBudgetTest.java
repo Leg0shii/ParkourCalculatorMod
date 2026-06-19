@@ -19,8 +19,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-/** The per-save custom solve budget (Effort.CUSTOM): defaults reproduce FAST, setters clamp to the swept
- *  ranges, and every field round-trips through save/load while old saves load as FAST defaults. */
 public class CustomBudgetTest {
 
     @Test
@@ -30,7 +28,7 @@ public class CustomBudgetTest {
         assertEquals(4500, b.getMaxEval());
         assertEquals(2, b.getPolishCount());
         assertEquals(PolishDepth.LIGHT, b.getPolishDepth());
-        assertEquals(0, b.getTimeBudgetSeconds());   // anytime off
+        assertEquals(0, b.getTimeBudgetSeconds());
         assertEquals(10, b.getWindow());
         assertEquals(3, b.getCommit());
     }
@@ -58,7 +56,6 @@ public class CustomBudgetTest {
         assertEquals("commit clamps to window - 1", 13, b.getCommit());
         b.setCommit(0);
         assertEquals(AngleSolverState.MIN_COMMIT, b.getCommit());
-        // Lowering the window pulls an out-of-range commit down with it.
         b.setCommit(9);
         b.setWindow(6);
         assertEquals(5, b.getCommit());
@@ -113,7 +110,6 @@ public class CustomBudgetTest {
 
     @Test
     public void zeroTimeBudgetSurvivesRoundTrip() throws Exception {
-        // The nested save object distinguishes "old save" (-> defaults) from a legit timeBudget = 0 (off).
         AngleSolverState s = new AngleSolverState();
         s.setEffort(AngleSolverState.Effort.CUSTOM);
         s.getSolveBudget().setRestarts(32);
@@ -125,7 +121,6 @@ public class CustomBudgetTest {
 
     @Test
     public void oldSaveWithoutCustomBudgetLoadsFastDefaults() {
-        // A pre-1.6.0 angleSolver block carries no customBudget field and no effort -> FAST + default budget.
         String json = "{\n" +
                 "  \"version\": 1,\n" +
                 "  \"start\": { \"pos\": [0,0,0], \"vel\": [0,0,0], \"yaw\": 0.0 },\n" +
@@ -135,7 +130,7 @@ public class CustomBudgetTest {
         SaveFile file = SaveIO.parseSafe(json);
         assertNotNull(file);
         AngleSolverState s = new AngleSolverState();
-        s.setEffort(AngleSolverState.Effort.CUSTOM);   // dirty it first, to prove the load wipes it
+        s.setEffort(AngleSolverState.Effort.CUSTOM);
         s.getSolveBudget().setRestarts(200);
         SaveIO.applyAngleSolverTo(file, s);
         assertEquals(AngleSolverState.Effort.FAST, s.getEffort());

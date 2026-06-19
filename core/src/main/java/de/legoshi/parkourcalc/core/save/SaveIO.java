@@ -339,8 +339,6 @@ public final class SaveIO {
         return a;
     }
 
-    /** Old saves carry no custom budget (src == null) -> FAST defaults; otherwise mirror every field. The
-     *  setters clamp to the documented ranges, and the polish depth parses with a LIGHT fallback. */
     private static void applyCustomBudget(SaveFile.SolveBudget src, AngleSolverState.SolveBudget dst) {
         dst.resetToDefaults();
         if (src == null) return;
@@ -349,7 +347,7 @@ public final class SaveIO {
         dst.setPolishCount(src.polishCount);
         dst.setPolishDepth(parseEnum(AngleSolverState.PolishDepth.class, src.polishDepth, AngleSolverState.PolishDepth.LIGHT));
         dst.setTimeBudgetSeconds(src.timeBudgetSeconds);
-        dst.setWindow(src.window);   // window first: its setter keeps commit within 1..window-1
+        dst.setWindow(src.window);   // before commit: commit's clamp depends on window
         dst.setCommit(src.commit);
     }
 

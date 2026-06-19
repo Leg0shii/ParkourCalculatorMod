@@ -46,15 +46,10 @@ public final class LongRunSolver {
     private static final int[] COMMIT_LADDER = {3, 1};
     /** Window sizes tried, largest first; a smaller window is the fallback when a larger one cannot be solved. */
     private static final int[] WINDOW_LADDER = {WINDOW, 7, 5, 3, 2, 1};
-    /** The fallback rungs below the top window; kept internal (derived, never user-tunable). */
     private static final int[] FALLBACK_RUNGS = {7, 5, 3, 2, 1};
 
     public static boolean DEBUG = false;
 
-    /** Per-call window/commit tuning for the receding horizon. {@link #defaults()} mirrors the shipped
-     *  {@link #WINDOW}/{@link #COMMIT_LADDER}; {@link #of(int, int)} derives the ladders from a custom top
-     *  window size and commit count. The window-size fallback rungs stay internal — only the top window and
-     *  the first-try commit are tunable, and the automatic smaller-commit retry is always kept. */
     public static final class LongRunConfig {
         final int[] windowLadder;
         final int[] commitLadder;
@@ -64,14 +59,10 @@ public final class LongRunSolver {
             this.commitLadder = commitLadder;
         }
 
-        /** Today's shipped configuration: window 10, commit ladder {3, 1}. */
         public static LongRunConfig defaults() {
             return new LongRunConfig(WINDOW_LADDER, COMMIT_LADDER);
         }
 
-        /** A tuned config: {@code window} is the top window size (the fixed fallback rungs below it are kept)
-         *  and the commit ladder is {@code {commit, 1}} (just {@code {1}} when commit is already 1). At
-         *  (10, 3) this reproduces {@link #defaults()} exactly. */
         public static LongRunConfig of(int window, int commit) {
             int w = Math.max(2, window);
             int c = Math.max(1, Math.min(commit, w - 1));
@@ -79,15 +70,11 @@ public final class LongRunSolver {
             return new LongRunConfig(windowLadderFor(w), commits);
         }
 
-        /** The configured top window size (for result telemetry). */
         public int window() { return windowLadder[0]; }
 
-        /** The configured first-try commit count (for result telemetry). */
         public int commit() { return commitLadder[0]; }
     }
 
-    /** Window-size ladder for a top window {@code w}: w first, then the fixed fallback rungs below it. At
-     *  w = {@value #WINDOW} this reproduces {@link #WINDOW_LADDER} exactly. */
     private static int[] windowLadderFor(int w) {
         List<Integer> out = new ArrayList<>();
         out.add(w);

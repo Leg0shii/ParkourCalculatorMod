@@ -6,9 +6,6 @@ import org.junit.Test;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-/** The receding-horizon window/commit config: defaults mirror the shipped constants, {@code of()} derives
- *  the ladders from a top window + commit, and the fallback rungs stay internal. In the solver package so it
- *  can read the package-private ladders. */
 public class LongRunConfigTest {
 
     @Test
@@ -29,9 +26,7 @@ public class LongRunConfigTest {
 
     @Test
     public void windowLadderDropsRungsAtOrAboveTheWindow() {
-        // window 6: the fixed fallback rung 7 is not below 6, so it is dropped.
         assertArrayEquals(new int[]{6, 5, 3, 2, 1}, LongRunConfig.of(6, 3).windowLadder);
-        // a bigger top window keeps the same fallback tail below it.
         assertArrayEquals(new int[]{14, 7, 5, 3, 2, 1}, LongRunConfig.of(14, 4).windowLadder);
     }
 

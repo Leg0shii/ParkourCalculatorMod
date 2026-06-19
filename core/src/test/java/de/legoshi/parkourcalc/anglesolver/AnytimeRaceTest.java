@@ -18,13 +18,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-/** The wall-clock anytime race (SolveCore) and the multi-jump window/commit override (LongRunSolver),
- *  exercised on real captures via the live engine's compiled spec. */
 public class AnytimeRaceTest {
 
     private static final double SIGMA = 90.0;
 
-    /** j005 X/MAX is a single-jump direction the byte-exact CMA race is documented to solve (3.1 / 2.1.3). */
     private static JumpSpec singleJumpSpec() {
         ProblemFixture pf = ProblemFixture.load("solve", "j005");
         return pf.solveDirected(30_000L, AngleSolverState.Axis.X, AngleSolverState.Goal.MAX).engine.lastSpecDebug();
@@ -34,7 +31,6 @@ public class AnytimeRaceTest {
         return ProblemFixture.load("solve", name).model;
     }
 
-    /** Byte-exact feasibility (max wall/landing violation) of an absolute-wrapped facing array. */
     private static double violation(ExactJumpModel model, JumpSpec spec, double[] yawsAbsWrapped) {
         JumpPhysicsInputs sc = spec.asScenario();
         JumpConstraintCompiler.Compiled c = JumpConstraintCompiler.compile(spec);
@@ -55,8 +51,6 @@ public class AnytimeRaceTest {
 
     @Test
     public void tinyBudgetDegradesGracefully() {
-        // One restart, minimal evals: must still RETURN (never hang / crash). Feasibility is not promised at
-        // a tiny budget; the engine's own gate is what reports an honest met/total, never a false success.
         ExactJumpModel model = modelFor("j005");
         JumpSpec spec = singleJumpSpec();
         SolveCore.Budget tiny = new SolveCore.Budget(1, 500, 1, BucketAscentPolish.FAST);
@@ -85,9 +79,9 @@ public class AnytimeRaceTest {
 
     @Test
     public void longRunHonorsAWindowCommitOverride() {
-        ExactJumpModel model = modelFor("j001"); // the 30-jump "desert hard" run
+        ExactJumpModel model = modelFor("j001");
         JumpSpec spec = ProblemFixture.load("solve", "j001").solve(60_000L).engine.lastSpecDebug();
-        // 8x2 is inside the swept-good window x commit grid (3.1), so the override must still solve the run.
+        // 8x2 is inside the swept-good window x commit grid (docs 3.1), so the override must still solve j001.
         double[] yaws = LongRunSolver.solve(model, spec, 0.0, new AtomicBoolean(false),
                 LongRunSolver.LongRunConfig.of(8, 2));
         assertNotNull("the window/commit override must still solve the long run", yaws);
