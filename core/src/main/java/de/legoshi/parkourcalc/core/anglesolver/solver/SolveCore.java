@@ -32,13 +32,25 @@ public final class SolveCore {
 
     public static double[] optimize(ForwardModel model, JumpSpec spec, Budget budget,
                                     double sigmaDeg, double feasTol, AtomicBoolean cancel) {
-        return optimize(model, spec, budget, sigmaDeg, feasTol, cancel, null);
+        return optimize(model, spec, budget, sigmaDeg, feasTol, cancel, null, 0L);
     }
 
     /** {@code warmStart} (absolute facings) seeds the first restart; the incremental block solver passes the
      *  previous iteration's solution so each added constraint is a small step, not a fresh cold search. */
     public static double[] optimize(ForwardModel model, JumpSpec spec, Budget budget,
                                     double sigmaDeg, double feasTol, AtomicBoolean cancel, double[] warmStart) {
+        return optimize(model, spec, budget, sigmaDeg, feasTol, cancel, warmStart, 0L);
+    }
+
+    /** Anytime variant: {@code deadlineNanos} is an absolute {@link System#nanoTime()} value. When {@code 0}
+     *  the search is exactly the fixed {@code budget.restarts} batch (byte-identical to the non-anytime path).
+     *  When positive, restart batches of {@code budget.restarts} keep launching until the deadline passes,
+     *  every basin is accumulated, and the best feasible is returned — so {@code restarts} becomes the per-batch
+     *  count rather than a hard cap. The deadline is checked between batches, so a return can lag it by one
+     *  in-flight batch; {@code cancel} still interrupts immediately. */
+    public static double[] optimize(ForwardModel model, JumpSpec spec, Budget budget,
+                                    double sigmaDeg, double feasTol, AtomicBoolean cancel, double[] warmStart,
+                                    long deadlineNanos) {
         JumpPhysicsInputs sc = spec.asScenario();
         int n = sc.numTicks;
 
@@ -52,10 +64,16 @@ public final class SolveCore {
         Random rng = new Random(0x9E3779B9L ^ n);
 
         List<double[]> inits = new ArrayList<>();
-        for (int r = 0; r < budget.restarts; r++) inits.add(r == 0 ? warm : randomInit(rng, n));
-
-        List<SolverRunResult> results = runRestarts(model, spec, sigmaDeg, budget.maxEval, inits, false, cancel);
-        if (cancel.get()) return null;
+        List<SolverRunResult> results = new ArrayList<>();
+        boolean firstBatch = true;
+        do {
+            List<double[]> batch = new ArrayList<>();
+            for (int r = 0; r < budget.restarts; r++) batch.add(firstBatch && r == 0 ? warm : randomInit(rng, n));
+            firstBatch = false;
+            inits.addAll(batch);
+            results.addAll(runRestarts(model, spec, sigmaDeg, budget.maxEval, batch, false, cancel));
+            if (cancel.get()) return null;
+        } while (deadlineNanos > 0 && System.nanoTime() < deadlineNanos && !cancel.get());
 
         boolean max = spec.objective.sense == Objective.Sense.MAX;
         List<SolverRunResult> feasible = filterFeasible(results, feasTol);

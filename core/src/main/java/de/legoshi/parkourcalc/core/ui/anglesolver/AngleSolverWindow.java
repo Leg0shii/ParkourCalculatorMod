@@ -51,7 +51,8 @@ public final class AngleSolverWindow implements RenderInterface {
                     + "The path is the source of truth here: a recording that hits a wall loses\n"
                     + "sprint from that tick on, and the solve inherits it, so a broken path can\n"
                     + "make a solvable segment report no solution until the route is re-recorded."};
-    private static final String[] EFFORTS = {"Fast", "Thorough"};
+    private static final String[] EFFORTS = {"Fast", "Thorough", "Custom"};
+    private static final String[] POLISH_DEPTHS = {"Light", "Exhaustive"};
 
     private static final String[] FORM_LABELS =
             {"Start tick", "Goal tick", "Axis", "Goal", "Inputs", "Sprint", "Slipperiness", "Potion"};
@@ -80,6 +81,13 @@ public final class AngleSolverWindow implements RenderInterface {
     private final ImInt slipBuf = new ImInt();
     private final ImInt doseCombo = new ImInt();
     private final ImInt levelBuf = new ImInt();
+    // CUSTOM effort budget sliders (imgui needs a backing array per control).
+    private final int[] restartsBuf = new int[1];
+    private final int[] maxEvalBuf = new int[1];
+    private final int[] polishCountBuf = new int[1];
+    private final int[] timeBudgetBuf = new int[1];
+    private final int[] windowBuf = new int[1];
+    private final int[] commitBuf = new int[1];
     private final String[] slipItems;
 
     private boolean yawsExpanded;
@@ -389,6 +397,70 @@ public final class AngleSolverWindow implements RenderInterface {
         ThemeManager.pushTextColor(ThemeManager.textMutedColor());
         ImGui.text(state.getEffort().hint);
         ThemeManager.popTextColor();
+
+        if (state.getEffort() == AngleSolverState.Effort.CUSTOM) renderCustomBudget(labelW);
+    }
+
+    /** The CUSTOM effort's search-budget sliders, revealed only when Effort == CUSTOM. Each control reads and
+     *  writes the per-save {@link AngleSolverState.SolveBudget}; its setters clamp to the swept ranges. The
+     *  safety-critical constants stay locked in the engine and are never surfaced here. */
+    private void renderCustomBudget(float labelW) {
+        AngleSolverState.SolveBudget b = state.getSolveBudget();
+
+        restartsBuf[0] = b.getRestarts();
+        if (sliderIntRow("Restarts", "##restarts", restartsBuf,
+                AngleSolverState.MIN_RESTARTS, AngleSolverState.MAX_RESTARTS, "%d", labelW)) {
+            b.setRestarts(restartsBuf[0]);
+        }
+
+        maxEvalBuf[0] = b.getMaxEval();
+        if (sliderIntRow("Max evals", "##maxEval", maxEvalBuf,
+                AngleSolverState.MIN_MAX_EVAL, AngleSolverState.MAX_MAX_EVAL, "%d", labelW)) {
+            b.setMaxEval(maxEvalBuf[0]);
+        }
+
+        polishCountBuf[0] = b.getPolishCount();
+        if (sliderIntRow("Polish basins", "##polishCount", polishCountBuf,
+                AngleSolverState.MIN_POLISH_COUNT, AngleSolverState.MAX_POLISH_COUNT, "%d", labelW)) {
+            b.setPolishCount(polishCountBuf[0]);
+        }
+
+        int pd = segmentedRow("Polish depth", "polishDepth", POLISH_DEPTHS, b.getPolishDepth().ordinal(), labelW);
+        if (pd >= 0) b.setPolishDepth(AngleSolverState.PolishDepth.values()[pd]);
+
+        timeBudgetBuf[0] = b.getTimeBudgetSeconds();
+        if (sliderIntRow("Time budget", "##timeBudget", timeBudgetBuf,
+                AngleSolverState.MIN_TIME_BUDGET, AngleSolverState.MAX_TIME_BUDGET,
+                timeBudgetBuf[0] == 0 ? "Off" : "%d s", labelW)) {
+            b.setTimeBudgetSeconds(timeBudgetBuf[0]);
+        }
+
+        windowBuf[0] = b.getWindow();
+        if (sliderIntRow("Window", "##window", windowBuf,
+                AngleSolverState.MIN_WINDOW, AngleSolverState.MAX_WINDOW, "%d", labelW)) {
+            b.setWindow(windowBuf[0]);
+        }
+
+        // Commit's upper bound is window - 1 (more commit = less lookahead); it tracks the Window slider.
+        commitBuf[0] = b.getCommit();
+        if (sliderIntRow("Commit", "##commit", commitBuf,
+                AngleSolverState.MIN_COMMIT, Math.max(AngleSolverState.MIN_COMMIT, b.getWindow() - 1), "%d", labelW)) {
+            b.setCommit(commitBuf[0]);
+        }
+
+        ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+        ImGui.text("Defaults reproduce Fast. Time budget 0 = off (fixed restarts).");
+        ThemeManager.popTextColor();
+    }
+
+    /** A labeled int-slider row matching {@link #segmentedRow}'s label/control layout. */
+    private boolean sliderIntRow(String label, String id, int[] buf, int lo, int hi, String fmt, float labelW) {
+        Controls.pushInputFrameHeight();
+        SolverWidgets.rowLabel(label, labelW);
+        ImGui.setNextItemWidth(ImGui.getContentRegionAvail().x);
+        boolean changed = Controls.sliderInt(id, buf, lo, hi, fmt);
+        Controls.popInputFrameHeight();
+        return changed;
     }
 
     private void renderActions() {

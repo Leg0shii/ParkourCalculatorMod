@@ -47,6 +47,7 @@ public final class SaveFile {
         public String axis;
         public String goal;
         public String effort;                            // absent in old files -> FAST
+        public SolveBudget customBudget;                 // Effort.CUSTOM knobs; null in old files -> FAST defaults
         public String defaultInputs;
         public String defaultSprint;                     // absent in old files -> ALWAYS
         public String defaultSlipperiness;
@@ -55,6 +56,18 @@ public final class SaveFile {
         public List<BlockSel> selectedBlocks = new ArrayList<BlockSel>();
         public Start seed;                               // launch state (pos/vel/yaw) at startTick; what a solve begins from
         public Result result;                            // null = no solve yet
+    }
+
+    /** Custom solve budget (Effort.CUSTOM). A nested object so "absent" (old file -> defaults) is
+     *  distinguishable from a legitimately-zero field such as timeBudgetSeconds = 0 (anytime off). */
+    public static final class SolveBudget {
+        public int restarts;
+        public int maxEval;
+        public int polishCount;
+        public String polishDepth;                       // LIGHT | EXHAUSTIVE; absent -> LIGHT
+        public int timeBudgetSeconds;                    // 0 = off (fixed restarts)
+        public int window;
+        public int commit;
     }
 
     /** A picked start / collision / land block: its role, integer coords, and captured world-space hitbox. */

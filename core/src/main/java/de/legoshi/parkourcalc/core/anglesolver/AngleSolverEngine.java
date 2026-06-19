@@ -57,12 +57,37 @@ public final class AngleSolverEngine {
     private static final double CMAES_SIGMA_DEG = 90.0;
 
     /** Per-effort solve budget (see {@link SolveCore}). Fewer restarts/evals is faster but can miss a
-     *  feasible basin on a hard jump, so FAST trades robustness for speed. */
-    private static SolveCore.Budget budgetFor(AngleSolverState.Effort effort) {
-        switch (effort) {
+     *  feasible basin on a hard jump, so FAST trades robustness for speed. CUSTOM reads the per-save
+     *  {@link AngleSolverState.SolveBudget}; its defaults reproduce FAST exactly. Resolved once on the main
+     *  thread into the immutable Job (the worker never reads live state). Package-private for unit tests. */
+    static SolveCore.Budget budgetFor(AngleSolverState state) {
+        switch (state.getEffort()) {
             case THOROUGH: return new SolveCore.Budget(48, 12000, 16, BucketAscentPolish.THOROUGH);
+            case CUSTOM: {
+                AngleSolverState.SolveBudget b = state.getSolveBudget();
+                BucketAscentPolish.Config cfg = b.getPolishDepth() == AngleSolverState.PolishDepth.EXHAUSTIVE
+                        ? BucketAscentPolish.THOROUGH : BucketAscentPolish.FAST;
+                return new SolveCore.Budget(b.getRestarts(), b.getMaxEval(), b.getPolishCount(), cfg);
+            }
             default: return new SolveCore.Budget(16, 4500, 2, BucketAscentPolish.FAST);
         }
+    }
+
+    /** CUSTOM wall-clock budget for the CMA-ES race, as a nanosecond duration; 0 = off (fixed restarts, the
+     *  default for every other effort). The single-jump closed-form fast path is unaffected. Package-private
+     *  for unit tests. */
+    static long deadlineNanosFor(AngleSolverState state) {
+        if (state.getEffort() != AngleSolverState.Effort.CUSTOM) return 0L;
+        int secs = state.getSolveBudget().getTimeBudgetSeconds();
+        return secs > 0 ? secs * 1_000_000_000L : 0L;
+    }
+
+    /** CUSTOM multi-jump window/commit config; {@code defaults()} (window 10, commit ladder {3,1}) for the
+     *  fixed efforts. Package-private for unit tests. */
+    static LongRunSolver.LongRunConfig longRunConfigFor(AngleSolverState state) {
+        if (state.getEffort() != AngleSolverState.Effort.CUSTOM) return LongRunSolver.LongRunConfig.defaults();
+        AngleSolverState.SolveBudget b = state.getSolveBudget();
+        return LongRunSolver.LongRunConfig.of(b.getWindow(), b.getCommit());
     }
 
     private final AngleSolverState state;
@@ -142,11 +167,14 @@ public final class AngleSolverEngine {
         final boolean[] strafeMask;
         final boolean[] force45Mask;
         final List<ConstraintAt> uiConstraints;
-        final AngleSolverState.Effort effort;
+        // Search budget resolved on the main thread (handles CUSTOM); the worker reads only this snapshot.
+        final SolveCore.Budget budget;
+        final long deadlineNanos;                 // CMA-ES race wall-clock budget, ns duration; 0 = off
+        final LongRunSolver.LongRunConfig longRun; // multi-jump window/commit
 
         Job(JumpSpec spec, Objective.Sense sense, int startTick, int landingTick,
             int numTicks, boolean[] strafeMask, boolean[] force45Mask, List<ConstraintAt> uiConstraints,
-            AngleSolverState.Effort effort
+            SolveCore.Budget budget, long deadlineNanos, LongRunSolver.LongRunConfig longRun
         ) {
             this.spec = spec;
             this.sense = sense;
@@ -156,7 +184,9 @@ public final class AngleSolverEngine {
             this.strafeMask = strafeMask;
             this.force45Mask = force45Mask;
             this.uiConstraints = uiConstraints;
-            this.effort = effort;
+            this.budget = budget;
+            this.deadlineNanos = deadlineNanos;
+            this.longRun = longRun;
         }
     }
 
@@ -214,7 +244,8 @@ public final class AngleSolverEngine {
 
         JumpSpec spec = new JumpSpec(ph.inputs, constraints, objective);
         return new Job(spec, objective.sense, startTick, landingTick, numTicks, ph.strafeMask,
-                ph.force45Mask, uiCons, state.getEffort());
+                ph.force45Mask, uiCons,
+                budgetFor(state), deadlineNanosFor(state), longRunConfigFor(state));
     }
 
     /** Test-only: the compiled spec for the current UI state, built synchronously (no worker thread). */
@@ -495,7 +526,7 @@ public final class AngleSolverEngine {
                 // solves in one window. Reads no recorded trajectory: a run solves identically whether or
                 // not a prior (possibly broken) path exists.
                 solverName = "receding horizon";
-                double[] fromScratch = LongRunSolver.solve(em, spec, FEAS_TOL, cancel);
+                double[] fromScratch = LongRunSolver.solve(em, spec, FEAS_TOL, cancel, job.longRun);
                 if (fromScratch != null) {
                     yaws = Angles.wrapAll(fromScratch);
                     settled = true;
@@ -504,9 +535,11 @@ public final class AngleSolverEngine {
         }
         if (cancel.get()) return null;
         CountingModel cmaes = new CountingModel(model);
-        SolveCore.Budget budget = budgetFor(job.effort);
+        SolveCore.Budget budget = job.budget;
         if (!settled) {
-            double[] cma = SolveCore.optimize(cmaes, spec, budget, CMAES_SIGMA_DEG, FEAS_TOL, cancel);
+            // Anytime race when a wall-clock budget is set: absolute deadline = solve start + the duration.
+            long deadline = job.deadlineNanos > 0 ? solveStart + job.deadlineNanos : 0L;
+            double[] cma = SolveCore.optimize(cmaes, spec, budget, CMAES_SIGMA_DEG, FEAS_TOL, cancel, null, deadline);
             if (yaws == null) {
                 yaws = cma;
                 solverName = solverName == null ? "CMA-ES" : solverName + " -> CMA-ES";
@@ -554,6 +587,10 @@ public final class AngleSolverEngine {
         addBaseDetails(result, solveNanos);
         if (!Double.isNaN(dualGap)) result.addDetail("Dual bound gap", ConstraintText.fixedStat(dualGap));
         result.addDetail("Jumps", Integer.toString(countJumps(sc)));
+        if (countJumps(sc) > 1) {
+            result.addDetail("Window", Integer.toString(job.longRun.window()));
+            result.addDetail("Commit", Integer.toString(job.longRun.commit()));
+        }
         int locked = 0;
         if (sc.yawLockedPerTick != null) {
             for (boolean b : sc.yawLockedPerTick) if (b) locked++;
@@ -564,6 +601,7 @@ public final class AngleSolverEngine {
             result.addDetail("CMA-ES max evals", Integer.toString(budget.maxEval));
             result.addDetail("CMA-ES evals", Long.toString(cmaes.evals.get()));
             result.addDetail("Polish basins", Integer.toString(budget.polishCount));
+            if (job.deadlineNanos > 0) result.addDetail("Time budget", (job.deadlineNanos / 1_000_000_000L) + " s");
         }
         if (smoothing.evals.get() > 0) result.addDetail("Smoothing evals", Long.toString(smoothing.evals.get()));
         Plan plan = new Plan(job.startTick, yaws, job.strafeMask, job.force45Mask, 1, path);
@@ -630,11 +668,11 @@ public final class AngleSolverEngine {
         final int startTick;
         final int landingTick;
         final int numTicks;
-        final AngleSolverState.Effort effort;
+        final SolveCore.Budget budget;
 
         BlockJob(Phys ph, List<JumpConstraint> footprints, List<ConstraintAt> footprintUi, double[] landFp,
                  List<BlockSolver.Obstacle> obstacles, double[] heights, List<Objective> objectives, int startTick,
-                 int landingTick, int numTicks, AngleSolverState.Effort effort) {
+                 int landingTick, int numTicks, SolveCore.Budget budget) {
             this.ph = ph;
             this.footprints = footprints;
             this.footprintUi = footprintUi;
@@ -645,7 +683,7 @@ public final class AngleSolverEngine {
             this.startTick = startTick;
             this.landingTick = landingTick;
             this.numTicks = numTicks;
-            this.effort = effort;
+            this.budget = budget;
         }
     }
 
@@ -691,8 +729,10 @@ public final class AngleSolverEngine {
         List<Objective> objectives = objectiveCandidates(numTicks);
 
         long t0 = System.nanoTime();
+        // Block solving uses the SAME resolved budget as the normal Solve (incl. CUSTOM), so "Solve from
+        // blocks" never searches weaker than the "Solve" that runs on the constraints it just derived.
         BlockJob job = new BlockJob(ph, footprints, footprintUi, landFp, obstacles, heights, objectives,
-                startTick, landingTick, numTicks, state.getEffort());
+                startTick, landingTick, numTicks, budgetFor(state));
         state.clearResult();
         lastPlan = null;
         pending = null;
@@ -717,7 +757,7 @@ public final class AngleSolverEngine {
     private Outcome runBlockJob(BlockJob job, AtomicBoolean cancel) {
         long solveStart = System.nanoTime();
         BlockSolver.Result r = new BlockSolver().solve(model, job.ph.inputs, job.footprints, job.landFp,
-                job.obstacles, job.heights, job.objectives, blockBudget(job.effort), CMAES_SIGMA_DEG, FEAS_TOL, BLOCK_MAX_ITERS, cancel);
+                job.obstacles, job.heights, job.objectives, job.budget, CMAES_SIGMA_DEG, FEAS_TOL, BLOCK_MAX_ITERS, cancel);
         long solveNanos = System.nanoTime() - solveStart;
         if (cancel.get() || r == null || r.yaws == null) return null;
 
@@ -786,13 +826,6 @@ public final class AngleSolverEngine {
     private List<Objective> objectiveCandidates(int numTicks) {
         return java.util.Collections.singletonList(
                 new Objective(axis(state.getAxis()), sense(state.getGoal()), numTicks));
-    }
-
-    /** Block solving uses the SAME per-effort budget as the normal Solve, so "Solve from blocks" never
-     *  searches weaker than the "Solve" that runs on the constraints it just derived (otherwise the block
-     *  solve can report no-solution and a follow-up Solve then finds it on the identical constraints). */
-    private static SolveCore.Budget blockBudget(AngleSolverState.Effort effort) {
-        return budgetFor(effort);
     }
 
     // ---- apply (main thread) --------------------------------------------------

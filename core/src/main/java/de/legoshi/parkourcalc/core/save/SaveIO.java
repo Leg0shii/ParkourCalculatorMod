@@ -98,6 +98,7 @@ public final class SaveIO {
         state.setAxis(parseEnum(AngleSolverState.Axis.class, a.axis, AngleSolverState.Axis.X));
         state.setGoal(parseEnum(AngleSolverState.Goal.class, a.goal, AngleSolverState.Goal.MAX));
         state.setEffort(parseEnum(AngleSolverState.Effort.class, a.effort, AngleSolverState.Effort.FAST));
+        applyCustomBudget(a.customBudget, state.getSolveBudget());
         state.setDefaultInputs(parseEnum(AngleSolverState.InputMode.class, a.defaultInputs, AngleSolverState.InputMode.FORCE_45));
         state.setDefaultSprint(parseEnum(AngleSolverState.SprintMode.class, a.defaultSprint, AngleSolverState.SprintMode.ALWAYS));
         state.setDefaultSlipperiness(parseEnum(Slipperiness.class, a.defaultSlipperiness, Slipperiness.AIR));
@@ -312,6 +313,7 @@ public final class SaveIO {
         a.axis = s.getAxis().name();
         a.goal = s.getGoal().name();
         a.effort = s.getEffort().name();
+        a.customBudget = toSaveCustomBudget(s.getSolveBudget());
         a.defaultInputs = s.getDefaultInputs().name();
         a.defaultSprint = s.getDefaultSprint().name();
         a.defaultSlipperiness = s.getDefaultSlipperiness().name();
@@ -335,6 +337,32 @@ public final class SaveIO {
         if (s.getLandBlock() != null) a.selectedBlocks.add(toSaveBlock(s.getLandBlock()));
         a.result = toSaveResult(s.getResult());
         return a;
+    }
+
+    /** Old saves carry no custom budget (src == null) -> FAST defaults; otherwise mirror every field. The
+     *  setters clamp to the documented ranges, and the polish depth parses with a LIGHT fallback. */
+    private static void applyCustomBudget(SaveFile.SolveBudget src, AngleSolverState.SolveBudget dst) {
+        dst.resetToDefaults();
+        if (src == null) return;
+        dst.setRestarts(src.restarts);
+        dst.setMaxEval(src.maxEval);
+        dst.setPolishCount(src.polishCount);
+        dst.setPolishDepth(parseEnum(AngleSolverState.PolishDepth.class, src.polishDepth, AngleSolverState.PolishDepth.LIGHT));
+        dst.setTimeBudgetSeconds(src.timeBudgetSeconds);
+        dst.setWindow(src.window);   // window first: its setter keeps commit within 1..window-1
+        dst.setCommit(src.commit);
+    }
+
+    private static SaveFile.SolveBudget toSaveCustomBudget(AngleSolverState.SolveBudget b) {
+        SaveFile.SolveBudget out = new SaveFile.SolveBudget();
+        out.restarts = b.getRestarts();
+        out.maxEval = b.getMaxEval();
+        out.polishCount = b.getPolishCount();
+        out.polishDepth = b.getPolishDepth().name();
+        out.timeBudgetSeconds = b.getTimeBudgetSeconds();
+        out.window = b.getWindow();
+        out.commit = b.getCommit();
+        return out;
     }
 
     private static SaveFile.BlockSel toSaveBlock(BlockSelection b) {

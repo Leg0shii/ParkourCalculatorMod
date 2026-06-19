@@ -47,10 +47,12 @@ public final class AngleSolverState {
     }
 
     /** Solve effort: trades wall-clock for the last micrometers of objective. FAST is ~100ms but uses a
-     *  smaller global search, so a hard jump can occasionally miss a feasible solution; bump up if so. */
+     *  smaller global search, so a hard jump can occasionally miss a feasible solution; bump up if so.
+     *  CUSTOM exposes the search budget directly (see {@link SolveBudget}); its defaults reproduce FAST. */
     public enum Effort {
         FAST("Fast", "Narrow search"),
-        THOROUGH("Thorough", "Wide search");
+        THOROUGH("Thorough", "Wide search"),
+        CUSTOM("Custom", "Tuned search budget");
 
         public final String label;
         public final String hint;
@@ -61,11 +63,100 @@ public final class AngleSolverState {
         }
     }
 
+    /** Custom polish depth: reuses the two shipped {@code BucketAscentPolish} schedules rather than
+     *  inventing new ones (docs/research/angle-solver.md 3.1). */
+    public enum PolishDepth {
+        LIGHT("Light"),
+        EXHAUSTIVE("Exhaustive");
+
+        public final String label;
+
+        PolishDepth(String label) {
+            this.label = label;
+        }
+    }
+
+    // Custom solve-budget bounds (Effort.CUSTOM). Defaults reproduce today's FAST exactly, so selecting
+    // CUSTOM and changing nothing is a no-op; the ranges are grounded in docs/research/angle-solver.md 3.1.
+    public static final int MIN_RESTARTS = 1;
+    public static final int MAX_RESTARTS = 256;
+    public static final int DEFAULT_RESTARTS = 16;
+    public static final int MIN_MAX_EVAL = 500;
+    public static final int MAX_MAX_EVAL = 100000;
+    public static final int DEFAULT_MAX_EVAL = 4500;
+    public static final int MIN_POLISH_COUNT = 1;
+    public static final int MAX_POLISH_COUNT = 64;
+    public static final int DEFAULT_POLISH_COUNT = 2;
+    public static final PolishDepth DEFAULT_POLISH_DEPTH = PolishDepth.LIGHT;
+    public static final int MIN_TIME_BUDGET = 0;            // seconds; 0 = off (fixed restarts, today's behavior)
+    public static final int MAX_TIME_BUDGET = 600;
+    public static final int DEFAULT_TIME_BUDGET = 0;
+    public static final int MIN_WINDOW = 6;
+    public static final int MAX_WINDOW = 14;
+    public static final int DEFAULT_WINDOW = 10;
+    public static final int MIN_COMMIT = 1;                 // max is window - 1 (dynamic)
+    public static final int DEFAULT_COMMIT = 3;
+
+    /** Per-save custom solve budget (Effort.CUSTOM): the seven user-tunable knobs of the solve pipeline.
+     *  The safety-critical constants (FEAS_TOL, MET_TOL, the CMA-ES sigma, the dual stall guards, and the
+     *  SLP / window-size ladders) stay locked in the engine and solvers. Setters clamp to the documented
+     *  ranges, so a hand-edited save can never widen the search past what was swept. */
+    public static final class SolveBudget {
+        private int restarts = DEFAULT_RESTARTS;
+        private int maxEval = DEFAULT_MAX_EVAL;
+        private int polishCount = DEFAULT_POLISH_COUNT;
+        private PolishDepth polishDepth = DEFAULT_POLISH_DEPTH;
+        private int timeBudgetSeconds = DEFAULT_TIME_BUDGET;
+        private int window = DEFAULT_WINDOW;
+        private int commit = DEFAULT_COMMIT;
+
+        public int getRestarts() { return restarts; }
+        public void setRestarts(int v) { restarts = clampInt(v, MIN_RESTARTS, MAX_RESTARTS); }
+
+        public int getMaxEval() { return maxEval; }
+        public void setMaxEval(int v) { maxEval = clampInt(v, MIN_MAX_EVAL, MAX_MAX_EVAL); }
+
+        public int getPolishCount() { return polishCount; }
+        public void setPolishCount(int v) { polishCount = clampInt(v, MIN_POLISH_COUNT, MAX_POLISH_COUNT); }
+
+        public PolishDepth getPolishDepth() { return polishDepth; }
+        public void setPolishDepth(PolishDepth v) { polishDepth = (v == null ? DEFAULT_POLISH_DEPTH : v); }
+
+        public int getTimeBudgetSeconds() { return timeBudgetSeconds; }
+        public void setTimeBudgetSeconds(int v) { timeBudgetSeconds = clampInt(v, MIN_TIME_BUDGET, MAX_TIME_BUDGET); }
+
+        public int getWindow() { return window; }
+        public void setWindow(int v) {
+            window = clampInt(v, MIN_WINDOW, MAX_WINDOW);
+            if (commit > window - 1) commit = window - 1; // keep commit in 1..window-1
+        }
+
+        public int getCommit() { return commit; }
+        public void setCommit(int v) { commit = clampInt(v, MIN_COMMIT, Math.max(MIN_COMMIT, window - 1)); }
+
+        /** Restore today's FAST behavior; used by {@link AngleSolverState#reset()} and when loading a
+         *  pre-feature save (which carries no custom budget). */
+        public void resetToDefaults() {
+            restarts = DEFAULT_RESTARTS;
+            maxEval = DEFAULT_MAX_EVAL;
+            polishCount = DEFAULT_POLISH_COUNT;
+            polishDepth = DEFAULT_POLISH_DEPTH;
+            timeBudgetSeconds = DEFAULT_TIME_BUDGET;
+            window = DEFAULT_WINDOW;
+            commit = DEFAULT_COMMIT;
+        }
+    }
+
+    private static int clampInt(int v, int lo, int hi) {
+        return v < lo ? lo : (v > hi ? hi : v);
+    }
+
     private int startTick;
     private int landingTick;
     private Axis axis = Axis.X;
     private Goal goal = Goal.MAX;
     private Effort effort = Effort.FAST;
+    private final SolveBudget solveBudget = new SolveBudget();
 
     private InputMode defaultInputs = InputMode.FORCE_45;
     private SprintMode defaultSprint = SprintMode.ALWAYS;
@@ -125,6 +216,11 @@ public final class AngleSolverState {
 
     public void setEffort(Effort effort) {
         this.effort = effort;
+    }
+
+    /** The custom search budget (live for {@link Effort#CUSTOM}); always present, defaults reproduce FAST. */
+    public SolveBudget getSolveBudget() {
+        return solveBudget;
     }
 
     public boolean isStart(int tick) {
@@ -480,6 +576,7 @@ public final class AngleSolverState {
         axis = Axis.X;
         goal = Goal.MAX;
         effort = Effort.FAST;
+        solveBudget.resetToDefaults();
         defaultInputs = InputMode.FORCE_45;
         defaultSprint = SprintMode.ALWAYS;
         defaultSlipperiness = Slipperiness.AIR;

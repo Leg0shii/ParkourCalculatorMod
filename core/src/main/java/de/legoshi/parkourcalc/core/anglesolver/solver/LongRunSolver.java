@@ -46,13 +46,66 @@ public final class LongRunSolver {
     private static final int[] COMMIT_LADDER = {3, 1};
     /** Window sizes tried, largest first; a smaller window is the fallback when a larger one cannot be solved. */
     private static final int[] WINDOW_LADDER = {WINDOW, 7, 5, 3, 2, 1};
+    /** The fallback rungs below the top window; kept internal (derived, never user-tunable). */
+    private static final int[] FALLBACK_RUNGS = {7, 5, 3, 2, 1};
 
     public static boolean DEBUG = false;
+
+    /** Per-call window/commit tuning for the receding horizon. {@link #defaults()} mirrors the shipped
+     *  {@link #WINDOW}/{@link #COMMIT_LADDER}; {@link #of(int, int)} derives the ladders from a custom top
+     *  window size and commit count. The window-size fallback rungs stay internal — only the top window and
+     *  the first-try commit are tunable, and the automatic smaller-commit retry is always kept. */
+    public static final class LongRunConfig {
+        final int[] windowLadder;
+        final int[] commitLadder;
+
+        LongRunConfig(int[] windowLadder, int[] commitLadder) {
+            this.windowLadder = windowLadder;
+            this.commitLadder = commitLadder;
+        }
+
+        /** Today's shipped configuration: window 10, commit ladder {3, 1}. */
+        public static LongRunConfig defaults() {
+            return new LongRunConfig(WINDOW_LADDER, COMMIT_LADDER);
+        }
+
+        /** A tuned config: {@code window} is the top window size (the fixed fallback rungs below it are kept)
+         *  and the commit ladder is {@code {commit, 1}} (just {@code {1}} when commit is already 1). At
+         *  (10, 3) this reproduces {@link #defaults()} exactly. */
+        public static LongRunConfig of(int window, int commit) {
+            int w = Math.max(2, window);
+            int c = Math.max(1, Math.min(commit, w - 1));
+            int[] commits = (c == 1) ? new int[]{1} : new int[]{c, 1};
+            return new LongRunConfig(windowLadderFor(w), commits);
+        }
+
+        /** The configured top window size (for result telemetry). */
+        public int window() { return windowLadder[0]; }
+
+        /** The configured first-try commit count (for result telemetry). */
+        public int commit() { return commitLadder[0]; }
+    }
+
+    /** Window-size ladder for a top window {@code w}: w first, then the fixed fallback rungs below it. At
+     *  w = {@value #WINDOW} this reproduces {@link #WINDOW_LADDER} exactly. */
+    private static int[] windowLadderFor(int w) {
+        List<Integer> out = new ArrayList<>();
+        out.add(w);
+        for (int r : FALLBACK_RUNGS) if (r < w) out.add(r);
+        int[] a = new int[out.size()];
+        for (int i = 0; i < a.length; i++) a[i] = out.get(i);
+        return a;
+    }
 
     private LongRunSolver() {
     }
 
     public static double[] solve(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel) {
+        return solve(exact, spec, feasTol, cancel, LongRunConfig.defaults());
+    }
+
+    public static double[] solve(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
+                                 LongRunConfig cfg) {
         JumpPhysicsInputs sc = spec.asScenario();
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
         int[] bounds = jumpBoundaries(sc);
@@ -60,9 +113,9 @@ public final class LongRunSolver {
         if (jumps < 1) return null;
         if (DEBUG) System.err.printf("LRS receding-horizon: %d jumps, %d ticks%n", jumps, sc.numTicks);
 
-        for (int commit : COMMIT_LADDER) {
+        for (int commit : cfg.commitLadder) {
             if (cancel != null && cancel.get()) return null;
-            double[] gf = runHorizon(exact, sc, spec, bounds, jumps, commit, cancel);
+            double[] gf = runHorizon(exact, sc, spec, bounds, jumps, commit, cfg.windowLadder, cancel);
             if (gf == null) continue;
             // Certify the chain Apply will actually realize, not the window-chained facings themselves:
             // the plan stores the wrapped facings and the game re-accumulates float deltas from them,
@@ -81,7 +134,7 @@ public final class LongRunSolver {
     /** One full receding-horizon sweep committing {@code commitJumps} jumps per window. Returns the chained
      *  game facings, or {@code null} if it gets stuck (no window solvable from some seam). */
     private static double[] runHorizon(ExactJumpModel exact, JumpPhysicsInputs sc, JumpSpec spec, int[] bounds,
-                                       int jumps, int commitJumps, AtomicBoolean cancel) {
+                                       int jumps, int commitJumps, int[] windowLadder, AtomicBoolean cancel) {
         int n = sc.numTicks;
         double[] gf = new double[n];
         Vec3dCore seedPos = sc.startPos, seedVel = sc.initialVelocity;
@@ -93,7 +146,7 @@ public final class LongRunSolver {
             boolean advanced = false;
             // Try the largest window that solves; shrink on failure for robustness near the run's end / hard spots.
             int prevWe = -1;
-            for (int w : WINDOW_LADDER) {
+            for (int w : windowLadder) {
                 int we = Math.min(i + w, jumps);
                 if (we == prevWe) continue; // several ladder sizes clamp to the same window near the end: solve it once
                 prevWe = we;
