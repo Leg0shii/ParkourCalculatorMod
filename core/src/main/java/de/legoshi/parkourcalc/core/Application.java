@@ -13,6 +13,7 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.BoxDragController;
 import de.legoshi.parkourcalc.core.ui.BoxSelectController;
+import de.legoshi.parkourcalc.core.ui.ConstraintSelection;
 import de.legoshi.parkourcalc.core.ui.FileMenu;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputOverlay;
@@ -21,6 +22,7 @@ import de.legoshi.parkourcalc.core.ui.MainWindowOverlay;
 import de.legoshi.parkourcalc.core.ui.OverlayManager;
 import de.legoshi.parkourcalc.core.ui.PerfOverlay;
 import de.legoshi.parkourcalc.core.ui.SelectionManager;
+import de.legoshi.parkourcalc.core.ui.WorldPick;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.ui.SettingsIO;
 import de.legoshi.parkourcalc.core.ui.StartDragController;
@@ -50,6 +52,8 @@ public final class Application {
     private final BoxController boxController = new BoxController();
     private final Settings settings = new Settings();
     private final SelectionManager selection;
+    private final ConstraintSelection constraintSelection = new ConstraintSelection();
+    private de.legoshi.parkourcalc.core.render.ConstraintBoxSource constraintSource = de.legoshi.parkourcalc.core.render.ConstraintBoxSource.NONE;
     private final SimulationRunner runner;
     private final BoxDragController dragController;
     private final StartDragController startDragController;
@@ -75,7 +79,7 @@ public final class Application {
                 saveController::markDirty, this::runSimulation, SimulationRunner.DEFAULT_MOVE_TICK_TOLERANCE);
         // Start box is the "Start" anchor: draggable to reposition, and tap-selectable as path index 0.
         this.dragController = new BoxDragController(boxController, startDragController, this::commitStartTap);
-        this.selectController = new BoxSelectController(boxController, this::commitWorldTap);
+        this.selectController = new BoxSelectController(this::pickWorld, this::commitWorldTap);
         this.yawGizmo = new YawGizmoController(
                 boxController,
                 this::handleStartYawChange,
@@ -123,7 +127,7 @@ public final class Application {
         angleSolverState = new AngleSolverState();
         saveController.setAngleSolver(angleSolverState);
         saveController.setDebugSource(boxController, settings);
-        AngleSolverTable angleSolverTable = new AngleSolverTable(angleSolverState, settings, selection, inputData::size);
+        AngleSolverTable angleSolverTable = new AngleSolverTable(angleSolverState, settings, selection, constraintSelection, inputData::size);
         inputOverlay.setAngleSolver(angleSolverTable);
         StartStateTable startStateTable = new StartStateTable(runner, () -> onUserChange(-1));
         inputOverlay.setStartState(startStateTable);
@@ -133,9 +137,9 @@ public final class Application {
         AngleSolverWindow angleSolverWindow = new AngleSolverWindow(angleSolverState, settings, inputData::size, angleSolverEngine);
 
         // In-world constraint visualization (gh-145): plates appear while the solver view is open.
-        de.legoshi.parkourcalc.core.render.PathRenderPlan.setConstraintSource(
-                new de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverConstraintSource(
-                        angleSolverState, boxController, () -> settings.viewAngleSolver));
+        constraintSource = new de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverConstraintSource(
+                angleSolverState, boxController, () -> settings.viewAngleSolver, settings, selection, constraintSelection);
+        de.legoshi.parkourcalc.core.render.PathRenderPlan.setConstraintSource(constraintSource);
 
         TickInfoPanel tickInfoPanel = new TickInfoPanel(boxController, inputData, selection, settings, runner);
         PerfOverlay perfOverlay = new PerfOverlay();
@@ -221,11 +225,24 @@ public final class Application {
         onUserChange(-1);
     }
 
-    private void commitWorldTap(int boxIndex) {
-        if (boxIndex <= 0) return;
-        if (boxIndex >= boxController.size() - 1) return;
-        selection.handleClick(boxIndex + 1);
+    private WorldPick pickWorld(Vec3dCore rayOrigin, Vec3dCore rayDirection) {
+        return boxController.pickWorld(rayOrigin, rayDirection, constraintSource);
+    }
+
+    private void commitWorldTap(WorldPick pick) {
+        if (pick == null) return;
+        if (pick.kind == WorldPick.Kind.CONSTRAINT) {
+            if (pick.index >= boxController.size() - 1) return;
+            selection.handleClick(pick.index + 1);
+            selection.requestScrollIntoView();
+            constraintSelection.focus(pick.index, pick.constraintIndices);
+            return;
+        }
+        if (pick.index <= 0) return;
+        if (pick.index >= boxController.size() - 1) return;
+        selection.handleClick(pick.index + 1);
         selection.requestScrollIntoView();
+        constraintSelection.clear();
     }
 
     private void commitStartTap() {
@@ -341,7 +358,8 @@ public final class Application {
         if (isControlPanelOpen()) return false;
         if (dragController.isDragging()) return true;
         if (!mc.isReady()) return false;
-        return yawGizmo.isCursorOverAnyBox(mc.getEyePosition(), mc.getLookDirection());
+        return yawGizmo.isCursorOverAnyBox(mc.getEyePosition(), mc.getLookDirection())
+                || boxController.isCursorOverConstraint(mc.getEyePosition(), mc.getLookDirection(), constraintSource);
     }
 
     public boolean shouldSuppressRightClick() {

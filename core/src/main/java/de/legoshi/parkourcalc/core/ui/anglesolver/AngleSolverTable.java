@@ -8,6 +8,7 @@ import de.legoshi.parkourcalc.core.anglesolver.PotionDose;
 import de.legoshi.parkourcalc.core.anglesolver.Slipperiness;
 import de.legoshi.parkourcalc.core.anglesolver.StateOverride;
 import de.legoshi.parkourcalc.core.anglesolver.TickConstraints;
+import de.legoshi.parkourcalc.core.ui.ConstraintSelection;
 import de.legoshi.parkourcalc.core.ui.SelectionManager;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
@@ -46,6 +47,7 @@ public final class AngleSolverTable {
     private final AngleSolverState state;
     private final Settings settings;
     private final SelectionManager selection;
+    private final ConstraintSelection constraintSelection;
     private final IntSupplier rowCount;
 
     private int expandedRow = -1;
@@ -53,10 +55,6 @@ public final class AngleSolverTable {
     // Drawer height: measured from the prior frame's content so bottom padding matches the top.
     private int measuredTick = -1;
     private float measuredContentH = -1f;
-
-    // Constraint picked by clicking its chip: opens that tick's drawer and highlights the editor row.
-    private int selectedConstraintTick = -1;
-    private int selectedConstraintIndex = -1;
 
     private int selectedStateTick = -1;
     private DragKind selectedStateKind;
@@ -112,10 +110,11 @@ public final class AngleSolverTable {
     }
 
     public AngleSolverTable(AngleSolverState state, Settings settings, SelectionManager selection,
-                            IntSupplier rowCount) {
+                            ConstraintSelection constraintSelection, IntSupplier rowCount) {
         this.state = state;
         this.settings = settings;
         this.selection = selection;
+        this.constraintSelection = constraintSelection;
         this.rowCount = rowCount;
     }
 
@@ -138,7 +137,7 @@ public final class AngleSolverTable {
         state.onRowMoved(from, to);
         expandedRow = AngleSolverState.mapRowMove(expandedRow, from, to);
         measuredTick = AngleSolverState.mapRowMove(measuredTick, from, to);
-        selectedConstraintTick = AngleSolverState.mapRowMove(selectedConstraintTick, from, to);
+        constraintSelection.remapTick(t -> AngleSolverState.mapRowMove(t, from, to));
         selectedStateTick = AngleSolverState.mapRowMove(selectedStateTick, from, to);
     }
 
@@ -220,8 +219,12 @@ public final class AngleSolverTable {
 
     private void applyDrop(int hover) {
         if (dragKind == DragKind.CONSTRAINT) {
-            if (dragAlt) state.copyConstraint(dragTick, dragIndex, hover);
-            else if (hover != dragTick) state.moveConstraint(dragTick, dragIndex, hover);
+            if (dragAlt) {
+                state.copyConstraint(dragTick, dragIndex, hover);
+            } else if (hover != dragTick) {
+                state.moveConstraint(dragTick, dragIndex, hover);
+                clearConstraintSelection();
+            }
             return;
         }
         if (hover == dragTick && !dragAlt) return;
@@ -301,6 +304,7 @@ public final class AngleSolverTable {
         int flags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowItemOverlap;
         if (ThemeManager.rightAlignedSelectable("row" + rowIndex, "", sel, flags, 0f, gutterItemH)) {
             selection.handleClick(rowIndex + 1);
+            constraintSelection.clear();
         }
         ImVec2 selMin = ImGui.getItemRectMin();
         ImVec2 selMax = ImGui.getItemRectMax();
@@ -555,7 +559,7 @@ public final class AngleSolverTable {
         ImVec2 mn = ImGui.getItemRectMin();
         ImVec2 mx = ImGui.getItemRectMax();
         boolean hover = ImGui.isItemHovered();
-        boolean selected = selectedConstraintTick == tick && selectedConstraintIndex == index;
+        boolean selected = constraintSelection.highlights(tick, index, selection);
 
         boolean off = !c.isEnabled();
         chipDropShadow(dl, mn, mx, s);
@@ -598,8 +602,8 @@ public final class AngleSolverTable {
         // A plain click (pressed and released on the chip without dragging) opens the tick and selects it.
         if (!dragging && ImGui.isItemDeactivated()) {
             expandedRow = tick;
-            selectedConstraintTick = tick;
-            selectedConstraintIndex = index;
+            constraintSelection.focusOne(tick, index);
+            selection.handleClick(tick + 1);
             clearStateSelection();
         }
 
@@ -635,6 +639,7 @@ public final class AngleSolverTable {
         int movePick = tickGrid("move", tick);
         if (movePick >= 0) {
             state.moveConstraint(tick, index, movePick);
+            clearConstraintSelection();
             ImGui.closeCurrentPopup();
         }
         ThemeManager.paddedSeparator();
@@ -643,6 +648,7 @@ public final class AngleSolverTable {
         ThemeManager.popTextColor();
         if (del) {
             state.deleteConstraint(tick, index);
+            clearConstraintSelection();
             ImGui.closeCurrentPopup();
         }
     }
@@ -779,8 +785,7 @@ public final class AngleSolverTable {
     }
 
     private void clearConstraintSelection() {
-        selectedConstraintTick = -1;
-        selectedConstraintIndex = -1;
+        constraintSelection.clear();
     }
 
     // ---- editor drawer ----------------------------------------------------------
@@ -872,7 +877,7 @@ public final class AngleSolverTable {
                 ImGui.pushID(i);
                 ImGui.tableNextRow();
                 ImGui.tableNextColumn();
-                if (tick == selectedConstraintTick && i == selectedConstraintIndex) drawSelectedRowHighlight();
+                if (constraintSelection.highlights(tick, i, selection)) drawSelectedRowHighlight();
                 editorGrip(tick, i, c);
                 ImGui.tableNextColumn();
                 if (ImGui.checkbox("##on", c.isEnabled())) c.setEnabled(!c.isEnabled());
@@ -906,7 +911,10 @@ public final class AngleSolverTable {
             Controls.popInputFrameHeight();
             ThemeManager.endStandardFormTable();
         }
-        if (delete >= 0) state.deleteConstraint(tick, delete);
+        if (delete >= 0) {
+            state.deleteConstraint(tick, delete);
+            clearConstraintSelection();
+        }
 
         if (Controls.secondaryButton("+ add constraint")) state.addConstraint(tick);
     }

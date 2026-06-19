@@ -2,23 +2,25 @@ package de.legoshi.parkourcalc.core.ui;
 
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
-import java.util.function.IntConsumer;
+import java.util.function.Consumer;
 
 public final class BoxSelectController {
 
-    private static final int NOT_PRESSED = -2;
+    public interface Picker {
+        WorldPick pick(Vec3dCore rayOrigin, Vec3dCore rayDirection);
+    }
 
-    private final BoxController boxController;
-    private final IntConsumer onTapCommit;
+    private final Picker picker;
+    private final Consumer<WorldPick> onTapCommit;
 
     private boolean wasMousePressed = false;
-    private int pressBoxIndex = NOT_PRESSED;
+    private WorldPick pressPick;
     private double pressScreenX = 0.0;
     private double pressScreenY = 0.0;
     private boolean abandoned = false;
 
-    public BoxSelectController(BoxController boxController, IntConsumer onTapCommit) {
-        this.boxController = boxController;
+    public BoxSelectController(Picker picker, Consumer<WorldPick> onTapCommit) {
+        this.picker = picker;
         this.onTapCommit = onTapCommit;
     }
 
@@ -30,20 +32,20 @@ public final class BoxSelectController {
         }
 
         if (mousePressed && !wasMousePressed) {
-            pressBoxIndex = boxController.pickBoxIndex(rayOrigin, rayDirection);
+            pressPick = picker.pick(rayOrigin, rayDirection);
             pressScreenX = cursorScreenX;
             pressScreenY = cursorScreenY;
             abandoned = false;
         }
 
-        if (mousePressed && pressBoxIndex != NOT_PRESSED && !abandoned
+        if (mousePressed && pressPick != null && !abandoned
                 && TapThreshold.exceeded(pressScreenX, pressScreenY, cursorScreenX, cursorScreenY)) {
             abandoned = true;
         }
 
         if (!mousePressed && wasMousePressed) {
-            if (pressBoxIndex != NOT_PRESSED && !abandoned) {
-                onTapCommit.accept(pressBoxIndex);
+            if (pressPick != null && !abandoned) {
+                onTapCommit.accept(pressPick);
             }
             resetState();
         }
@@ -52,7 +54,7 @@ public final class BoxSelectController {
     }
 
     private void resetState() {
-        pressBoxIndex = NOT_PRESSED;
+        pressPick = null;
         abandoned = false;
     }
 }

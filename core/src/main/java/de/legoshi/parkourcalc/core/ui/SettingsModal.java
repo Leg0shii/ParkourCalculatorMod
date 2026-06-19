@@ -32,7 +32,9 @@ public final class SettingsModal {
     private static final String TT_SUBTICK = "Renders the interpolated path between adjacent ticks, exposing collision moments inside a tick.";
     private static final String TT_COL_SPEED_AMP = "Adds a per-tick Speed potion amplifier column to the input table.";
     private static final String TT_COL_JUMP_BOOST_AMP = "Adds a per-tick Jump Boost potion amplifier column to the input table.";
-    private static final String TT_CONSTRAINTS = "Draws Angle Solver position constraints (X/Z) as translucent plates at the tick they apply to. Open-ended (> / <) constraints show a clamped band that points the open way. Only visible while the Angle Solver is open.";
+    private static final String TT_CONSTRAINTS = "Draws Angle Solver position constraints (X/Z) as translucent plates at the tick they apply to. The front plate sits on the constraint; the back fades out toward the open/free direction. Only visible while the Angle Solver is open.";
+    private static final String TT_C_EXPAND = "Grow each plate outward by the player hitbox half-width (0.3) so the plate covers your hitbox: your hitbox fits inside the plate exactly when the tick is valid.";
+    private static final String TT_C_DIM = "Size in blocks. Width is across the constraint, height is vertical, length is along the plate (front depth from the boundary / back reach behind it).";
     private static final String TT_GROUND_HIGHLIGHT = "Tints input rows whose simulated tick ended on the ground. Color is editable in Render Colors.";
     private static final String TT_COL_W = "W (forward) is always shown and can't be hidden.";
     private static final String TT_COL_A = "Strafe-left (A) column.";
@@ -66,6 +68,7 @@ public final class SettingsModal {
     private final float[] scrollbarSizeBuf = new float[1];
     private final float[] scrollbarGrabBuf = new float[1];
     private final int[] solverPrecisionBuf = new int[1];
+    private final float[] constraintDimBuf = new float[1];
     private final String[] scaleLabels;
 
     private boolean openRequested;
@@ -114,6 +117,10 @@ public final class SettingsModal {
             }
             if (Controls.beginTab("Visualization")) {
                 renderVisualization();
+                Controls.endTab();
+            }
+            if (Controls.beginTab("Constraints")) {
+                renderConstraints();
                 Controls.endTab();
             }
             if (Controls.beginTab("Input Table")) {
@@ -225,7 +232,6 @@ public final class SettingsModal {
             checkboxRow("Show hitbox", "##show_hitbox", settings.showHitbox, TT_HITBOX, v -> settings.showHitbox = v);
             checkboxRow("Show full hitbox", "##show_full_hitbox", settings.showFullHitbox, TT_FULL_HITBOX, v -> settings.showFullHitbox = v);
             checkboxRow("Subtick visualization", "##show_subtick", settings.showSubtick, TT_SUBTICK, v -> settings.showSubtick = v);
-            checkboxRow("Show constraints", "##show_constraints", settings.showConstraints, TT_CONSTRAINTS, v -> settings.showConstraints = v);
             ThemeManager.endStandardFormTable();
         }
 
@@ -244,6 +250,52 @@ public final class SettingsModal {
             checkboxRow("Unlimited path render distance", "##unlimited_path", settings.unlimitedPathRender, TT_PATH_UNLIMITED, v -> settings.unlimitedPathRender = v);
             ThemeManager.endStandardFormTable();
         }
+    }
+
+    private void renderConstraints() {
+        int colorFlags = ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoDragDrop;
+
+        ThemeManager.sectionSpacing();
+        sectionHeader("Shape");
+        if (beginLayoutTable("##settings_constraint_shape")) {
+            checkboxRow("Show constraints", "##show_constraints", settings.showConstraints, TT_CONSTRAINTS, v -> settings.showConstraints = v);
+            checkboxRow("Expand by player hitbox", "##c_expand", settings.constraintExpandByHitbox, TT_C_EXPAND, v -> settings.constraintExpandByHitbox = v);
+            ThemeManager.endStandardFormTable();
+        }
+
+        ThemeManager.sectionSpacing();
+        sectionHeader("Front (plate on the constraint)");
+        if (beginLayoutTable("##settings_constraint_front")) {
+            constraintDimRow("Width", "##c_fw", settings.constraintFrontWidth, Settings.CONSTRAINT_MAX_WIDTH, v -> settings.constraintFrontWidth = v);
+            constraintDimRow("Height", "##c_fh", settings.constraintFrontHeight, Settings.CONSTRAINT_MAX_HEIGHT, v -> settings.constraintFrontHeight = v);
+            constraintDimRow("Length", "##c_fl", settings.constraintFrontLength, Settings.CONSTRAINT_MAX_FRONT_LENGTH, v -> settings.constraintFrontLength = v);
+            ThemeManager.endStandardFormTable();
+        }
+        renderColor("front color", settings.constraintFill, colorFlags);
+        renderColor("satisfied outline", settings.constraintOutline, colorFlags);
+        renderColor("selected highlight", settings.constraintHighlight, colorFlags);
+
+        ThemeManager.sectionSpacing();
+        sectionHeader("Back (fade tail)");
+        if (beginLayoutTable("##settings_constraint_back")) {
+            constraintDimRow("Width", "##c_bw", settings.constraintBackWidth, Settings.CONSTRAINT_MAX_WIDTH, v -> settings.constraintBackWidth = v);
+            constraintDimRow("Height", "##c_bh", settings.constraintBackHeight, Settings.CONSTRAINT_MAX_HEIGHT, v -> settings.constraintBackHeight = v);
+            constraintDimRow("Length", "##c_bl", settings.constraintBackLength, Settings.CONSTRAINT_MAX_BACK_LENGTH, v -> settings.constraintBackLength = v);
+            ThemeManager.endStandardFormTable();
+        }
+        renderColor("back color", settings.constraintBack, colorFlags);
+    }
+
+    private void constraintDimRow(String label, String id, float value, float max, Consumer<Float> setter) {
+        row(label, () -> {
+            constraintDimBuf[0] = value;
+            ImGui.setNextItemWidth(-1);
+            if (Controls.sliderFloat(id, constraintDimBuf, Settings.CONSTRAINT_MIN_DIM, max, "%.2f")) {
+                setter.accept(constraintDimBuf[0]);
+            }
+            if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
+            tooltipForLastItem(TT_C_DIM);
+        });
     }
 
     private void renderInputTable() {
@@ -324,8 +376,6 @@ public final class SettingsModal {
         renderColor("yaw arrows", settings.yawArrow, flags);
         renderColor("yaw gizmo circle", settings.yawGizmoCircle, flags);
         renderColor("yaw gizmo direction", settings.yawGizmoDirection, flags);
-        renderColor("constraint outline", settings.constraintOutline, flags);
-        renderColor("constraint fill", settings.constraintFill, flags);
 
         ThemeManager.sectionSpacing();
         sectionHeader("Hitbox");

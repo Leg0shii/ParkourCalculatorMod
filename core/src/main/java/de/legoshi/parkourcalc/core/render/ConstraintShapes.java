@@ -5,49 +5,24 @@ import de.legoshi.parkourcalc.core.anglesolver.Constraint;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
-/**
- * Maps an angle-solver landing constraint to an in-world AABB anchored at the tick it
- * applies to (gh-145). Pure geometry: callers feed a constraint plus that tick's simulated
- * position and get back the box to outline (LINES) and fill (FACES); the renderer wiring lives
- * in {@link de.legoshi.parkourcalc.core.ui.BoxController}.
- *
- * <p>Only the <b>spatial</b> fields have a place in the world: {@link Constraint.Field#X} and
- * {@link Constraint.Field#Z} are world positions, so a bound on one is a plane the player must be
- * on/past. The facing/velocity fields (F, dX, dZ) are not positions and have no spatial extent at
- * the tick, so {@link #spatialAxis(Constraint)} returns null for them and they are not drawn.
- *
- * <p>The box is a thin horizontal plate sitting on the tick's foot position:
- * <ul>
- *   <li>On the constrained axis it spans the constrained interval.</li>
- *   <li>On the other horizontal axis it spans a fixed {@link #CROSS_HALF_WIDTH} either side of the
- *       tick, so the plate is centred on (and visibly tied to) the tick.</li>
- *   <li>In Y it is a fixed-height slab ({@link #SLAB_HEIGHT}) so it reads as a surface, not a line.</li>
- * </ul>
- *
- * <p>A bounded range {@code X ∈ [lo, hi]} maps to a band of exactly that width. An open-ended
- * comparison ({@code >}/{@code >=}/{@code <}/{@code <=}) can't be drawn in full (it is half-infinite),
- * so it renders a limited sub-area: the band starts at the bound and extends {@link #OPEN_EXTENT}
- * blocks in the open direction, which reads as "open this way" without being infinite. Equality
- * ({@code =}) renders a thin slab of width {@code 2 *} {@link #EQ_HALF_WIDTH} centred on the value.
- */
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 public final class ConstraintShapes {
 
-    /** Half-width (blocks) of the plate on the axis the constraint does NOT bound; keeps it tied to the tick. */
-    public static final double CROSS_HALF_WIDTH = 0.35;
+    public enum Sense {
+        INCLUDE,
+        EXCLUDE
+    }
 
-    /** How far (blocks) an open-ended ({@code >}/{@code <}) band extends past its bound before it is clamped. */
-    public static final double OPEN_EXTENT = 1.0;
+    public static final double H = AngleSolverState.HITBOX_HALF_WIDTH;
 
-    /** Half-width (blocks) of the thin slab drawn for an exact {@code =} constraint. */
-    public static final double EQ_HALF_WIDTH = 0.02;
-
-    /** Vertical thickness (blocks) of the plate, anchored at the tick's foot Y. */
-    public static final double SLAB_HEIGHT = 0.06;
+    private static final double EQ_SATISFY_EPS = 1.0e-4;
 
     private ConstraintShapes() {
     }
 
-    /** The world axis a constraint occupies, or null when the field is non-spatial (F/dX/dZ) and not drawable. */
     public static AngleSolverState.Axis spatialAxis(Constraint c) {
         switch (c.getField()) {
             case X:
@@ -59,60 +34,132 @@ public final class ConstraintShapes {
         }
     }
 
-    /** True when this constraint maps to a world box (i.e. it bounds X or Z). */
     public static boolean isDrawable(Constraint c) {
         return spatialAxis(c) != null;
     }
 
-    /**
-     * The AABB for {@code c} anchored at {@code tickFoot} (the tick's simulated center-bottom, MC
-     * convention). Returns null if the constraint is non-spatial. The interval on the constrained
-     * axis is clamped for open-ended ops; the other horizontal axis and Y are fixed plate extents.
-     */
-    public static AABB boxFor(Constraint c, Vec3dCore tickFoot) {
-        AngleSolverState.Axis axis = spatialAxis(c);
-        if (axis == null) return null;
-
-        double[] span = axisSpan(c);
-        double lo = span[0];
-        double hi = span[1];
-
-        double y0 = tickFoot.y;
-        double y1 = tickFoot.y + SLAB_HEIGHT;
-
-        if (axis == AngleSolverState.Axis.X) {
-            double zMin = tickFoot.z - CROSS_HALF_WIDTH;
-            double zMax = tickFoot.z + CROSS_HALF_WIDTH;
-            return new AABB(new Vec3dCore(lo, y0, zMin), new Vec3dCore(hi, y1, zMax));
+    public static Sense sense(Constraint.Op op) {
+        switch (op) {
+            case GT:
+            case GE:
+            case LT:
+            case LE:
+                return Sense.EXCLUDE;
+            default:
+                return Sense.INCLUDE;
         }
-        double xMin = tickFoot.x - CROSS_HALF_WIDTH;
-        double xMax = tickFoot.x + CROSS_HALF_WIDTH;
-        return new AABB(new Vec3dCore(xMin, y0, lo), new Vec3dCore(xMax, y1, hi));
     }
 
-    /**
-     * The [lo, hi] interval on the constrained axis, already clamped to a finite sub-area for
-     * open-ended ops. Package-visible for tests; callers should prefer {@link #boxFor}.
-     */
-    static double[] axisSpan(Constraint c) {
+    public static boolean satisfied(Constraint c, Vec3dCore foot) {
+        AngleSolverState.Axis axis = spatialAxis(c);
+        if (axis == null) return true;
+        double v = (axis == AngleSolverState.Axis.X) ? foot.x : foot.z;
         if (c.isRange()) {
             double lo = Math.min(c.getLo(), c.getHi());
             double hi = Math.max(c.getLo(), c.getHi());
-            return new double[]{lo, hi};
+            boolean lower = c.isLoInclusive() ? v >= lo : v > lo;
+            boolean upper = c.isHiInclusive() ? v <= hi : v < hi;
+            return lower && upper;
         }
-        double v = c.getValue();
+        double val = c.getValue();
         switch (c.getOp()) {
             case GT:
+                return v > val;
             case GE:
-                // open toward +axis: [v, v + OPEN_EXTENT]
-                return new double[]{v, v + OPEN_EXTENT};
+                return v >= val;
             case LT:
+                return v < val;
             case LE:
-                // open toward -axis: [v - OPEN_EXTENT, v]
-                return new double[]{v - OPEN_EXTENT, v};
+                return v <= val;
             case EQ:
+                return Math.abs(v - val) <= EQ_SATISFY_EPS;
             default:
-                return new double[]{v - EQ_HALF_WIDTH, v + EQ_HALF_WIDTH};
+                return true;
         }
+    }
+
+    public static ConstraintPlate pad(Constraint xRange, Constraint zRange, Vec3dCore foot, ConstraintStyle style, int tick, int[] indices) {
+        double expand = style.expandByHitbox ? H : 0.0;
+        double[] xs = sortedBounds(xRange);
+        double[] zs = sortedBounds(zRange);
+        double[] y = yBounds(style.frontHeight, foot);
+        AABB body = new AABB(
+                new Vec3dCore(xs[0] - expand, y[0], zs[0] - expand),
+                new Vec3dCore(xs[1] + expand, y[1], zs[1] + expand));
+        boolean sat = satisfied(xRange, foot) && satisfied(zRange, foot);
+        return new ConstraintPlate(sense(xRange.getOp()), sat, one(body), none(), tick, indices);
+    }
+
+    public static ConstraintPlate strip(Constraint range, Vec3dCore foot, ConstraintStyle style, int tick, int[] indices) {
+        AngleSolverState.Axis axis = spatialAxis(range);
+        double expand = style.expandByHitbox ? H : 0.0;
+        double[] s = sortedBounds(range);
+        return band(axis, s[0] - expand, s[1] + expand, satisfied(range, foot), sense(range.getOp()), foot, style, tick, indices);
+    }
+
+    public static ConstraintPlate plane(Constraint eq, Vec3dCore foot, ConstraintStyle style, int tick, int[] indices) {
+        AngleSolverState.Axis axis = spatialAxis(eq);
+        double v = eq.getValue();
+        double half = style.expandByHitbox ? H : style.frontLength * 0.5;
+        return band(axis, v - half, v + half, satisfied(eq, foot), sense(eq.getOp()), foot, style, tick, indices);
+    }
+
+    public static ConstraintPlate exclude(Constraint open, Vec3dCore foot, ConstraintStyle style, int tick, int[] indices) {
+        AngleSolverState.Axis axis = spatialAxis(open);
+        double v = open.getValue();
+        boolean allowedPositive = open.getOp() == Constraint.Op.GT || open.getOp() == Constraint.Op.GE;
+        double expand = style.expandByHitbox ? H : 0.0;
+        double cross = crossCoord(axis, foot);
+        int dir = allowedPositive ? 1 : -1;
+        double bound = v - dir * expand;
+
+        double frontFar = bound + dir * style.frontLength;
+        double fw = style.frontWidth * 0.5;
+        double[] yF = yBounds(style.frontHeight, foot);
+        AABB front = rect(axis, Math.min(bound, frontFar), Math.max(bound, frontFar), cross - fw, cross + fw, yF);
+
+        double backFar = frontFar + dir * style.backLength;
+        double bw = style.backWidth * 0.5;
+        double[] yB = yBounds(style.backHeight, foot);
+        AABB back = rect(axis, Math.min(frontFar, backFar), Math.max(frontFar, backFar), cross - bw, cross + bw, yB);
+
+        return new ConstraintPlate(sense(open.getOp()), satisfied(open, foot), one(front), one(back), tick, indices);
+    }
+
+    private static ConstraintPlate band(AngleSolverState.Axis axis, double cLo, double cHi, boolean sat, Sense sense, Vec3dCore foot, ConstraintStyle style, int tick, int[] indices) {
+        double cross = crossCoord(axis, foot);
+        double fw = style.frontWidth * 0.5;
+        AABB front = rect(axis, cLo, cHi, cross - fw, cross + fw, yBounds(style.frontHeight, foot));
+        AABB back = rect(axis, cLo, cHi, cross - style.backLength, cross + style.backLength, yBounds(style.backHeight, foot));
+        return new ConstraintPlate(sense, sat, one(front), one(back), tick, indices);
+    }
+
+    private static double[] yBounds(double height, Vec3dCore foot) {
+        return new double[]{foot.y, foot.y + height};
+    }
+
+    private static AABB rect(AngleSolverState.Axis axis, double aLo, double aHi, double crossLo, double crossHi, double[] y) {
+        if (axis == AngleSolverState.Axis.X) {
+            return new AABB(new Vec3dCore(aLo, y[0], crossLo), new Vec3dCore(aHi, y[1], crossHi));
+        }
+        return new AABB(new Vec3dCore(crossLo, y[0], aLo), new Vec3dCore(crossHi, y[1], aHi));
+    }
+
+    private static double crossCoord(AngleSolverState.Axis axis, Vec3dCore foot) {
+        return (axis == AngleSolverState.Axis.X) ? foot.z : foot.x;
+    }
+
+    private static double[] sortedBounds(Constraint range) {
+        return new double[]{Math.min(range.getLo(), range.getHi()), Math.max(range.getLo(), range.getHi())};
+    }
+
+    private static List<AABB> one(AABB box) {
+        List<AABB> list = new ArrayList<>(1);
+        list.add(box);
+        return list;
+    }
+
+    private static List<AABB> none() {
+        return Collections.emptyList();
     }
 }
