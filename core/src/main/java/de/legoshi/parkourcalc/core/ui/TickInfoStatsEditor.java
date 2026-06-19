@@ -10,17 +10,15 @@ import imgui.flag.ImGuiDragDropFlags;
 import imgui.flag.ImGuiMouseCursor;
 import imgui.flag.ImGuiSelectableFlags;
 import imgui.flag.ImGuiTableColumnFlags;
+import imgui.flag.ImGuiTableFlags;
 
 import java.util.List;
 
-public final class TickInfoConfigPopup {
+public final class TickInfoStatsEditor {
 
-    private static final String POPUP_ID = "###tick-info-config";
     private static final String TABLE_ID = "tick-info-config-table";
     private static final String TITLE = "Tick Info stats";
-    private static final String SUBTITLE = "Toggle, set decimals, and drag to reorder.";
     private static final String RESET_BTN = "Reset to defaults";
-    private static final String GRIP = "::";
     private static final String DRAG_DROP_TYPE = "TICK_INFO_STAT";
 
     private static final String COL_STAT = "Stat";
@@ -33,46 +31,28 @@ public final class TickInfoConfigPopup {
     private static final String TT_GRIP = "Drag to reorder.";
 
     private final Settings settings;
+    private final Runnable onChanged;
     private final int[] decimalsBuf = new int[1];
 
     private int draggingIndex = -1;
     private int dropTarget = -1;
     private float dropLineY = -1f;
     private float rowMinX, rowMaxX;
-    private boolean openRequested;
 
-    public TickInfoConfigPopup(Settings settings) {
+    public TickInfoStatsEditor(Settings settings, Runnable onChanged) {
         this.settings = settings;
-    }
-
-    public void handleOpenOnRightClick(int hoveredFlags) {
-        if (ImGui.isMouseReleased(1) && ImGui.isWindowHovered(hoveredFlags)) {
-            openRequested = true;
-        }
+        this.onChanged = onChanged;
     }
 
     public void render() {
-        if (openRequested) {
-            ImGui.openPopup(POPUP_ID);
-            openRequested = false;
-        }
-        if (!ImGui.beginPopup(POPUP_ID)) {
-            draggingIndex = -1;
-            return;
-        }
-
-        ImGui.textDisabled(SUBTITLE);
-        ThemeManager.paddedSeparator();
-
         renderStatTable();
 
-        ThemeManager.paddedSeparator();
+        ThemeManager.sectionSpacing();
         if (Controls.secondaryButton(RESET_BTN)) {
             settings.tickInfoStats = TickInfoConfig.defaultConfig(Settings.defaultTickInfoPrecision());
             draggingIndex = -1;
+            onChanged.run();
         }
-
-        ImGui.endPopup();
     }
 
     private void renderStatTable() {
@@ -82,15 +62,15 @@ public final class TickInfoConfigPopup {
             return;
         }
 
-        if (!ThemeManager.beginStandardKeyValueTable(TABLE_ID, 3, 0, 0f, 0f)) {
+        int flags = ThemeManager.standardTableFlagsNoScroll() & ~ImGuiTableFlags.BordersInnerV;
+        if (!ThemeManager.beginStandardTableWithFlags(TABLE_ID, 3, flags, 0f, 0f)) {
             return;
         }
         int fixed = ImGuiTableColumnFlags.WidthFixed;
         float cellPad = ImGui.getStyle().getCellPadding().x;
-        float labelW = ImGui.calcTextSize(GRIP + "  Collision angle (deg)").x + 2f * cellPad;
         float onW = ImGui.calcTextSize(COL_ON).x + 2f * cellPad + ImGui.getFrameHeight();
         float decW = ImGui.getFontSize() * DECIMALS_SLIDER_EMS;
-        ImGui.tableSetupColumn(COL_STAT, fixed, ThemeManager.tableLeftmostColumnWidth(COL_STAT, labelW));
+        ImGui.tableSetupColumn(COL_STAT, ImGuiTableColumnFlags.WidthStretch);
         ImGui.tableSetupColumn(COL_ON, fixed, ThemeManager.tableColumnWidth(COL_ON, onW));
         ImGui.tableSetupColumn(COL_DECIMALS, fixed,
                 ThemeManager.tableRightmostColumnWidth(COL_DECIMALS, decW, ThemeManager.tableFixedScrollbarSlack()));
@@ -111,44 +91,50 @@ public final class TickInfoConfigPopup {
         String label = stat != null ? stat.label() : setting.id;
         String tooltip = stat != null ? stat.tooltip() : "";
 
-        ImGui.tableNextRow();
+        Controls.pushInputFrameHeight();
+        float rowH = ThemeManager.tableRowHeight();
+        ImGui.tableNextRow(0, rowH);
         ThemeManager.paintTableRowBg(index);
         if (draggingIndex == index) {
             ThemeManager.paintTableRowTint(ThemeManager.selectedTintColor(0.5f));
         }
 
         ImGui.tableNextColumn();
+        float rowTopScreen = ImGui.getCursorScreenPos().y - ImGui.getStyle().getCellPadding().y;
         ThemeManager.tableLeftmostCellPad();
         ThemeManager.pushTextColor(draggingIndex == index ? ThemeManager.textColor() : ThemeManager.textMutedColor());
-        ThemeManager.rightAlignedSelectable(
-                "stat" + index, GRIP + "  " + label, draggingIndex == index,
-                ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowItemOverlap);
+        int selFlags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowItemOverlap
+                | ImGuiSelectableFlags.DontClosePopups;
+        ThemeManager.leftAlignedSelectable("stat" + index, label, draggingIndex == index, selFlags);
         ThemeManager.popTextColor();
         TooltipUtil.onHover(tooltip.isEmpty() ? TT_GRIP : tooltip);
         if (ImGui.isItemHovered()) ImGui.setMouseCursor(ImGuiMouseCursor.Hand);
-        handleRowDragDrop(index);
+
+        handleRowDragDrop(index, rowTopScreen, rowH);
 
         ImGui.tableNextColumn();
         if (Controls.checkbox("##on" + index, setting.enabled)) {
             setting.enabled = !setting.enabled;
+            onChanged.run();
         }
         TooltipUtil.onHover(TT_TOGGLE);
 
         ImGui.tableNextColumn();
-        boolean numeric = usesDecimals(stat);
-        if (!numeric) ImGui.beginDisabled(true);
-        decimalsBuf[0] = setting.decimals;
-        ImGui.setNextItemWidth(-1);
-        if (Controls.sliderInt("##dec" + index, decimalsBuf,
-                Settings.MIN_STAT_PRECISION, Settings.MAX_STAT_PRECISION, "%d") && numeric) {
-            setting.decimals = decimalsBuf[0];
+        if (usesDecimals(stat)) {
+            decimalsBuf[0] = setting.decimals;
+            ImGui.setNextItemWidth(-(2f * ThemeManager.tableEdgeCellInset()));
+            if (Controls.sliderInt("##dec" + index, decimalsBuf,
+                    Settings.MIN_STAT_PRECISION, Settings.MAX_STAT_PRECISION, "%d")) {
+                setting.decimals = decimalsBuf[0];
+            }
+            if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
+            TooltipUtil.onHover(TT_DECIMALS);
         }
-        if (!numeric) ImGui.endDisabled();
-        TooltipUtil.onHover(TT_DECIMALS);
         ThemeManager.tableRightmostCellTrailingPad();
+        Controls.popInputFrameHeight();
     }
 
-    private void handleRowDragDrop(int index) {
+    private void handleRowDragDrop(int index, float rowTopScreen, float rowH) {
         if (ImGui.beginDragDropSource(ImGuiDragDropFlags.SourceNoPreviewTooltip)) {
             draggingIndex = index;
             // Payload is never read back (imgui-java weak-refs it); the move is resolved from draggingIndex.
@@ -157,17 +143,15 @@ public final class TickInfoConfigPopup {
         }
         if (draggingIndex == -1) return;
 
-        ImVec2 rowMin = ImGui.getItemRectMin();
-        ImVec2 rowMax = ImGui.getItemRectMax();
-        rowMinX = rowMin.x;
-        rowMaxX = ImGui.getWindowPos().x + ImGui.getWindowWidth();
+        rowMinX = ImGui.getWindowPos().x + ImGui.getWindowContentRegionMinX();
+        rowMaxX = ImGui.getWindowPos().x + ImGui.getWindowContentRegionMaxX();
 
+        float rowBottomScreen = rowTopScreen + rowH;
         ImVec2 mouse = ImGui.getMousePos();
-        float gap = ImGui.getStyle().getCellPadding().y;
-        if (mouse.y < rowMin.y - gap - 1f || mouse.y >= rowMax.y + gap + 1f) return;
+        if (mouse.y < rowTopScreen || mouse.y >= rowBottomScreen) return;
 
-        boolean insertAbove = mouse.y < (rowMin.y + rowMax.y) / 2f;
-        dropLineY = insertAbove ? rowMin.y - gap : rowMax.y + gap;
+        boolean insertAbove = mouse.y < (rowTopScreen + rowBottomScreen) / 2f;
+        dropLineY = insertAbove ? rowTopScreen : rowBottomScreen;
         dropTarget = insertAbove ? index : index + 1;
     }
 
@@ -184,8 +168,9 @@ public final class TickInfoConfigPopup {
             int to = dropTarget;
             draggingIndex = -1;
             dropTarget = -1;
-            if (to >= 0 && to <= size && settings.tickInfoStats != null) {
+            if (to >= 0 && to <= size && settings.tickInfoStats != null && to != from && to != from + 1) {
                 settings.tickInfoStats.move(from, to);
+                onChanged.run();
             }
         } else if (!ImGui.isMouseDown(0)) {
             draggingIndex = -1;

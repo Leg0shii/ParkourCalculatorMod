@@ -451,6 +451,18 @@ public final class ThemeManager {
         centeredSelectable(idSuffix, label, selected, 0);
     }
 
+    public static boolean leftAlignedSelectable(String idSuffix, String label, boolean selected, int flags) {
+        ImVec2 cellOrigin = ImGui.getCursorScreenPos();
+        ImGui.alignTextToFramePadding();
+        boolean clicked = ImGui.selectable("##" + idSuffix, selected, flags);
+        if (label != null && !label.isEmpty()) {
+            float tx = cellOrigin.x + tableEdgeCellInset();
+            float ty = cellOrigin.y + ImGui.getStyle().getFramePadding().y;
+            ImGui.getWindowDrawList().addText(tx, ty, ImGui.getColorU32(ImGuiCol.Text), label);
+        }
+        return clicked;
+    }
+
     public static boolean rightAlignedSelectable(String idSuffix, String label, boolean selected, int flags) {
         return rightAlignedSelectable(idSuffix, label, selected, flags, 0f, 0f);
     }

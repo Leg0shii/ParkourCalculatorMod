@@ -8,7 +8,7 @@ import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImGui;
 import imgui.ImGuiIO;
-import imgui.flag.ImGuiHoveredFlags;
+import imgui.flag.ImGuiCond;
 import imgui.flag.ImGuiTableColumnFlags;
 import imgui.flag.ImGuiWindowFlags;
 
@@ -35,7 +35,6 @@ public final class TickInfoPanel implements RenderInterface {
     private final SelectionManager selection;
     private final Settings settings;
     private final SimulationRunner runner;
-    private final TickInfoConfigPopup configPopup;
     private int rowCounter;
 
     private int sampleDecimals = -1;
@@ -47,7 +46,6 @@ public final class TickInfoPanel implements RenderInterface {
         this.selection = selection;
         this.settings = settings;
         this.runner = runner;
-        this.configPopup = new TickInfoConfigPopup(settings);
     }
 
     private float effectivePitch(int idx) {
@@ -96,16 +94,15 @@ public final class TickInfoPanel implements RenderInterface {
 
     @Override
     public void render(ImGuiIO io) {
-        if (!ThemeManager.beginPanel(WINDOW_ID, WINDOW_TITLE,
-                ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.AlwaysAutoResize)) {
+        float em = ImGui.getFontSize();
+        ImGui.setNextWindowSize(em * 17f, em * 26f, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSizeConstraints(em * 11f, em * 6f, Float.MAX_VALUE, Float.MAX_VALUE);
+        if (!ThemeManager.beginPanel(WINDOW_ID, WINDOW_TITLE, ImGuiWindowFlags.NoCollapse)) {
             return;
         }
 
-        configPopup.handleOpenOnRightClick(ImGuiHoveredFlags.ChildWindows | ImGuiHoveredFlags.AllowWhenBlockedByPopup);
-
         if (selection.size() != 1) {
             ImGui.text(PLACEHOLDER_SELECT_ONE);
-            configPopup.render();
             ImGui.end();
             return;
         }
@@ -114,7 +111,6 @@ public final class TickInfoPanel implements RenderInterface {
         List<TickState> states = boxController.getStates();
         if (pathIndex < 0 || pathIndex >= states.size()) {
             ImGui.text(PLACEHOLDER_OUT_OF_RANGE);
-            configPopup.render();
             ImGui.end();
             return;
         }
@@ -128,7 +124,6 @@ public final class TickInfoPanel implements RenderInterface {
         float appliedPitch = isStart ? runner.getStartPitch() : effectivePitch(idx);
 
         renderTable(idx, cur, prev, prev2, appliedYaw, appliedPitch, isStart);
-        configPopup.render();
         ImGui.end();
     }
 

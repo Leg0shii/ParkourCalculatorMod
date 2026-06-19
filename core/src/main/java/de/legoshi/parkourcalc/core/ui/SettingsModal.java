@@ -20,7 +20,8 @@ public final class SettingsModal {
     private static final String RESET_BTN = "Reset All";
     private static final float CONTROL_COL_EMS = 12f;
     private static final float LABEL_COL_EMS = 18f; // fixed so the control column lines up across every subsection table
-    private static final float MODAL_MAX_WIDTH_EMS = 36f;
+    private static final float MODAL_MIN_WIDTH_EMS = 38f;
+    private static final float MODAL_MAX_WIDTH_EMS = 44f;
 
     private static final String TT_UI_SCALE = "Multiplier applied to all ImGui widgets and fonts. 1.5x is the default for 1080p.";
     private static final String TT_SCROLLBAR_SIZE = "Thickness of scrollbars: the width of vertical bars and the height of horizontal ones. Scales with UI Scale.";
@@ -52,18 +53,17 @@ public final class SettingsModal {
     private static final String TT_KEEP_BOXES_PLAYBACK = "Keeps the tick-box path overlay drawn in-world while playback is running, instead of hiding it.";
     private static final String TT_AUTO_APPLY = "Applies a feasible Angle Solver solution to the input rows the moment the solve finishes, skipping the Apply confirmation.";
     private static final String TT_AUTO_SAVE = "Saves the open TAS automatically while it has unsaved changes, at most every 30 seconds. Needs a named save (use Save As once); Ctrl+S still saves instantly.";
-    private static final String TT_TICK_INFO_PRECISION = "Default decimal places for Tick Info stats. Each stat's precision can be overridden by right-clicking the Tick Info window; new and reset stats start from this value.";
     private static final String TT_SOLVER_PRECISION = "Decimal places for Angle Solver stats: solved yaws, objective values, constraint chips, and the constraint value editor.";
 
     private final Settings settings;
     private final Runnable onChanged;
+    private final TickInfoStatsEditor tickInfoStatsEditor;
 
     private final ImInt scaleIndexBuf = new ImInt();
     private final float[] yawTurnCapBuf = new float[1];
     private final int[] pathRenderDistanceBuf = new int[1];
     private final float[] scrollbarSizeBuf = new float[1];
     private final float[] scrollbarGrabBuf = new float[1];
-    private final int[] tickInfoPrecisionBuf = new int[1];
     private final int[] solverPrecisionBuf = new int[1];
     private final String[] scaleLabels;
 
@@ -72,6 +72,7 @@ public final class SettingsModal {
     public SettingsModal(Settings settings, Runnable onChanged) {
         this.settings = settings;
         this.onChanged = onChanged;
+        this.tickInfoStatsEditor = new TickInfoStatsEditor(settings, onChanged);
         this.scaleLabels = buildScaleLabels();
     }
 
@@ -93,7 +94,8 @@ public final class SettingsModal {
         }
         // Cap width so the auto-resize popup can't balloon; it still hugs content below the cap.
         if (ImGui.isPopupOpen(POPUP_ID)) {
-            ImGui.setNextWindowSizeConstraints(0f, 0f, ImGui.getFontSize() * MODAL_MAX_WIDTH_EMS, Float.MAX_VALUE);
+            float em = ImGui.getFontSize();
+            ImGui.setNextWindowSizeConstraints(em * MODAL_MIN_WIDTH_EMS, 0f, em * MODAL_MAX_WIDTH_EMS, Float.MAX_VALUE);
         }
         if (!Modal.begin("Preferences", POPUP_ID)) {
             return;
@@ -115,6 +117,10 @@ public final class SettingsModal {
             }
             if (Controls.beginTab("Input Table")) {
                 renderInputTable();
+                Controls.endTab();
+            }
+            if (Controls.beginTab("Tick Info")) {
+                renderTickInfo();
                 Controls.endTab();
             }
             if (Controls.beginTab("Playback")) {
@@ -192,22 +198,6 @@ public final class SettingsModal {
         }
 
         ThemeManager.sectionSpacing();
-        sectionHeader("Tick Info");
-        if (beginLayoutTable("##settings_tick_info")) {
-            row("Decimal places", () -> {
-                tickInfoPrecisionBuf[0] = settings.tickInfoPrecision;
-                ImGui.setNextItemWidth(-1);
-                if (Controls.sliderInt("##tick_info_precision", tickInfoPrecisionBuf,
-                        Settings.MIN_STAT_PRECISION, Settings.MAX_STAT_PRECISION, "%d decimals")) {
-                    settings.tickInfoPrecision = tickInfoPrecisionBuf[0];
-                }
-                if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
-                tooltipForLastItem(TT_TICK_INFO_PRECISION);
-            });
-            ThemeManager.endStandardFormTable();
-        }
-
-        ThemeManager.sectionSpacing();
         sectionHeader("Angle Solver");
         if (beginLayoutTable("##settings_angle_solver")) {
             checkboxRow("Auto-apply solutions", "##auto_apply_solve", settings.autoApplySolve, TT_AUTO_APPLY, v -> settings.autoApplySolve = v);
@@ -280,6 +270,14 @@ public final class SettingsModal {
             checkboxRow("Highlight on-ground ticks", "##highlight_on_ground", settings.highlightOnGroundRows, TT_GROUND_HIGHLIGHT, v -> settings.highlightOnGroundRows = v);
             ThemeManager.endStandardFormTable();
         }
+    }
+
+    private void renderTickInfo() {
+        ThemeManager.sectionSpacing();
+        sectionHeader("Stats");
+        ImGui.textDisabled("Toggle, set decimals, and drag to reorder.");
+        ThemeManager.sectionSpacing();
+        tickInfoStatsEditor.render();
     }
 
     private void renderPlayback() {
