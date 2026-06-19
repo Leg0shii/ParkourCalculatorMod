@@ -1254,7 +1254,7 @@ public final class InputOverlay {
     }
 
     private void renderYawLockOption() {
-        if (selection.isEmpty()) return;
+        if (!isYawColumnVisible() || selection.isEmpty()) return;
         boolean anyUnlocked = false;
         for (int idx : selection.getSelectedRows()) {
             if (idx >= 0 && idx < data.size() && !data.get(idx).isYawLocked()) {
@@ -1288,7 +1288,7 @@ public final class InputOverlay {
                 break;
             }
         }
-        ThemeManager.paddedSeparator();
+
         if (anyUnlocked) {
             if (contextButton(MENU_LOCK_PITCH)) setPitchLockForSelection(true);
         } else {
