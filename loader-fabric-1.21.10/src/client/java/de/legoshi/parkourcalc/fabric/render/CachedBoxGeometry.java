@@ -61,12 +61,16 @@ public final class CachedBoxGeometry implements AutoCloseable {
     private int faceTotal;      // total face vertices (arrows occupy [arrowBase, faceTotal))
     private int lineMainTotal;  // first subtick vertex in the lines buffer
     private int lineTotal;      // total line vertices (subtick occupies [lineMainTotal, lineTotal))
+    private int constraintFaceVerts;
+    private int constraintLineVerts;
     private Set<Integer> bakedSelection = new HashSet<>();
 
     private record Segment(GpuBuffer buffer, int vertexCount) {
     }
 
-    public void ensureBuilt(BoxController boxController, int structuralHash, Set<Integer> selection, Consumer<BoxRenderer> faceEmitter, Consumer<BoxRenderer> lineEmitter, SelectionPatchSpec patch) {
+    public void ensureBuilt(BoxController boxController, int structuralHash, Set<Integer> selection, Consumer<BoxRenderer> faceEmitter, Consumer<BoxRenderer> lineEmitter, SelectionPatchSpec patch, int constraintFaceVerts, int constraintLineVerts) {
+        this.constraintFaceVerts = constraintFaceVerts;
+        this.constraintLineVerts = constraintLineVerts;
         long rev = boxController.getGeometryRev();
         if (built && rev == lastGeometryRev && structuralHash == lastStructuralHash) {
             if (!selection.equals(bakedSelection)) {
@@ -213,6 +217,7 @@ public final class CachedBoxGeometry implements AutoCloseable {
 
     public void drawFaces(Matrix4f modelView, int[] runs) {
         RenderPipeline pipeline = FabricRenderLayers.translucentBoxPipeline();
+        int constraintFaceBase = faceTotal - constraintFaceVerts;
         for (int k = 0; k + 1 < runs.length; k += 2) {
             int a = runs[k];
             int b = runs[k + 1];
@@ -220,7 +225,7 @@ public final class CachedBoxGeometry implements AutoCloseable {
             if (hitboxEdges != 0) {
                 drawRange(faceSegments, pipeline, VertexFormat.DrawMode.TRIANGLES, modelView,hitboxBase + hitboxStarts[a], hitboxStarts[b] - hitboxStarts[a]);
             }
-            if (arrowBase < faceTotal) {
+            if (arrowBase < constraintFaceBase) {
                 int arrowEnd = Math.min(b, boxCount - 1);
                 int arrowStart = Math.min(a, boxCount - 1);
                 if (arrowEnd > arrowStart) {
@@ -228,11 +233,15 @@ public final class CachedBoxGeometry implements AutoCloseable {
                 }
             }
         }
+        if (constraintFaceVerts > 0) {
+            drawRange(faceSegments, pipeline, VertexFormat.DrawMode.TRIANGLES, modelView, constraintFaceBase, constraintFaceVerts);
+        }
     }
 
     public void drawLines(Matrix4f modelView, int[] runs) {
         RenderPipeline pipeline = FabricRenderLayers.thinLinesPipeline();
-        boolean hasSubtick = lineMainTotal < lineTotal;
+        int constraintLineBase = lineTotal - constraintLineVerts;
+        boolean hasSubtick = lineMainTotal < constraintLineBase;
         for (int k = 0; k + 1 < runs.length; k += 2) {
             int a = runs[k];
             int b = runs[k + 1];
@@ -240,6 +249,9 @@ public final class CachedBoxGeometry implements AutoCloseable {
             if (hasSubtick) {
                 drawRange(lineSegments, pipeline, VertexFormat.DrawMode.DEBUG_LINES, modelView,lineMainTotal + subtickStarts[a], subtickStarts[b] - subtickStarts[a]);
             }
+        }
+        if (constraintLineVerts > 0) {
+            drawRange(lineSegments, pipeline, VertexFormat.DrawMode.DEBUG_LINES, modelView, constraintLineBase, constraintLineVerts);
         }
     }
 

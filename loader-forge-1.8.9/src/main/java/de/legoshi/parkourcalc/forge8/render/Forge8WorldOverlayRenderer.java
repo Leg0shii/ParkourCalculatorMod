@@ -60,7 +60,7 @@ public final class Forge8WorldOverlayRenderer {
         GL11.glLineWidth(BoxStyle.LINE_WIDTH);
 
         PathRenderPlan plan = PathRenderPlan.build(boxController, settings, selection);
-        cached.ensureBuilt(boxController, plan.structuralHash, plan.selection, plan.faceEmitter, plan.lineEmitter, plan.patch);
+        cached.ensureBuilt(boxController, plan.structuralHash, plan.selection, plan.faceEmitter, plan.lineEmitter, plan.patch, plan.constraintFaceVerts, plan.constraintLineVerts);
 
         int[] runs = boxController.inRangeRuns(camX, camY, camZ, BoxStyle.pathMaxDistanceSq(settings));
         GlStateManager.pushMatrix();

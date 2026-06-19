@@ -51,7 +51,7 @@ public final class FabricWorldOverlayRenderer {
         VertexConsumerProvider.Immediate consumers = client.getBufferBuilders().getEntityVertexConsumers();
 
         PathRenderPlan plan = PathRenderPlan.build(boxController, settings, selection);
-        cached.ensureBuilt(boxController, plan.structuralHash, plan.selection, plan.faceEmitter, plan.lineEmitter, plan.patch);
+        cached.ensureBuilt(boxController, plan.structuralHash, plan.selection, plan.faceEmitter, plan.lineEmitter, plan.patch, plan.constraintFaceVerts, plan.constraintLineVerts);
 
         Matrix4f modelView = new Matrix4f(positionMatrix).translate(
                 (float) (cached.anchorX() - cameraPos.x),
