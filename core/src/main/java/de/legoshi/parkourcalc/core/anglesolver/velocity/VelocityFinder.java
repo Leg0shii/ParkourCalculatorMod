@@ -120,18 +120,32 @@ public final class VelocityFinder {
                 LongRunSolver.LongRunConfig.of(Math.max(2, jumpCount(sc)), 1));
     }
 
-    private double[] solveFast(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc) {
-        if (jumpCount(sc) <= 1) {
-            return ClosedFormSolve.optimizeRobust(exact, spec, FAST_FEAS_TOL, new AtomicBoolean(false));
+    private static final class FastSolve {
+        final double[] yaws;
+        final ClosedFormSolve.Result closed;
+
+        FastSolve(double[] yaws, ClosedFormSolve.Result closed) {
+            this.yaws = yaws;
+            this.closed = closed;
         }
+    }
+
+    private FastSolve solveFastCapturing(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc) {
         ClosedFormSolve.Result res = ClosedFormSolve.optimizeRobustGraded(exact, spec, FAST_FEAS_TOL, new AtomicBoolean(false));
-        if (res != null && res.feasible) return res.yaws;
-        if (accuracy == Accuracy.FAST) return null;
+        if (jumpCount(sc) <= 1) {
+            return new FastSolve(res != null && res.feasible ? res.yaws : null, res);
+        }
+        if (res != null && res.feasible) return new FastSolve(res.yaws, res);
+        if (accuracy == Accuracy.FAST) return new FastSolve(null, res);
         double viol = res == null ? Double.POSITIVE_INFINITY : res.violation;
         if (viol <= MULTI_FALLBACK_VIOL) {
-            return windowSolve(exact, spec, sc);
+            return new FastSolve(windowSolve(exact, spec, sc), res);
         }
-        return null;
+        return new FastSolve(null, res);
+    }
+
+    private double[] solveFast(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc) {
+        return solveFastCapturing(exact, spec, sc).yaws;
     }
 
     private final ProblemFactory problem;
@@ -204,8 +218,54 @@ public final class VelocityFinder {
     }
 
     double[] fieldNode(double vx, double vz, AtomicBoolean cancel) {
+        CellResult cr = evaluateAndField(vx, vz, cancel);
+        return new double[]{cr.field, cr.cand.landX, cr.cand.landZ};
+    }
+
+    static final class CellResult {
+        final Candidate cand;
+        final double field;
+
+        CellResult(Candidate cand, double field) {
+            this.cand = cand;
+            this.field = field;
+        }
+    }
+
+    CellResult evaluateAndField(double vx, double vz, AtomicBoolean cancel) {
+        if (accuracy != Accuracy.HYPER) {
+            JumpSpec tmpl = template();
+            if (tmpl != null && model instanceof ExactJumpModel) {
+                return evaluateFastWithField((ExactJumpModel) model, tmpl, vx, vz);
+            }
+        }
         Candidate c = evaluate(vx, vz, cancel);
-        return new double[]{cellField(c, vx, vz), c.landX, c.landZ};
+        return new CellResult(c, cellField(c, vx, vz));
+    }
+
+    private CellResult evaluateFastWithField(ExactJumpModel exact, JumpSpec tmpl, double vx, double vz) {
+        JumpPhysicsInputs base = tmpl.asScenario();
+        JumpPhysicsInputs sc = copyWithVelocity(base, new Vec3dCore(vx, base.initialVelocity.y, vz));
+        List<JumpConstraint> cons = withPadWalls(tmpl.constraints);
+        JumpSpec spec = new JumpSpec(sc, cons, tmpl.objective);
+
+        FastSolve fs = solveFastCapturing(exact, spec, sc);
+        if (fs.yaws == null) {
+            Candidate cand = new Candidate(vx, vz, false, false, Double.NaN, Double.NaN, Double.NaN, null, null, null, 0);
+            return new CellResult(cand, missField(sc, spec, fs.closed));
+        }
+        Candidate cand = landingCandidate(vx, vz, sc, fs.yaws, templateForce45Mask, templateStrafeMask, templateStrafeSign,
+                spec.objective.axis, spec.objective.sense == Objective.Sense.MAX);
+        return new CellResult(cand, landingField(cand.landX, cand.landZ));
+    }
+
+    private double missField(JumpPhysicsInputs sc, JumpSpec spec, ClosedFormSolve.Result res) {
+        objectiveAxis = spec.objective.axis;
+        objectiveMax = spec.objective.sense == Objective.Sense.MAX;
+        if (res == null || res.yaws == null) return Double.NaN;
+        ForwardPath missPath = model.forward(sc, sc.toGameFacings(Angles.wrapAll(res.yaws)));
+        double mf = landingField(missPath.posX[landingPosIndex], missPath.posZ[landingPosIndex]);
+        return mf < 0.0 ? 0.0 : mf;
     }
 
     double cellField(Candidate c, double vx, double vz) {
@@ -480,11 +540,10 @@ public final class VelocityFinder {
                 final double vx = grid.vxLo + c * vxStep;
                 futures.add(pool.submit(() -> {
                     if (cancel.get()) return;
-                    Candidate cand = evaluate(vx, vz, cancel);
-                    double field = cellField(cand, vx, vz);
-                    out[row * nc + col] = (float) field;
+                    CellResult cr = evaluateAndField(vx, vz, cancel);
+                    out[row * nc + col] = (float) cr.field;
                     if (listener != null) {
-                        synchronized (out) { listener.onNode(row, col, field, cand); }
+                        synchronized (out) { listener.onNode(row, col, cr.field, cr.cand); }
                     }
                 }));
             }
