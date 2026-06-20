@@ -113,6 +113,7 @@ public final class VelocityMapWidget {
     private float marqStartX, marqStartY, marqCurX, marqCurY;
 
     private double[] hoverCell;
+    private double[] markerV0Applied;
 
     private volatile VelocityFinder.Candidate[] refineCells;
     private volatile int refineCols, refineRows;
@@ -170,15 +171,12 @@ public final class VelocityMapWidget {
         rangeVzHiBuf.set("0.250");
     }
 
-    public void render(float scale) {
-        boolean openBtn = Controls.secondaryButton(windowOpen.get() ? "Velocity map (open)" : "Open velocity map");
-        TooltipUtil.onHover("Open the velocity heatmap in its own window.");
-        if (openBtn) windowOpen.set(true);
-        if (fieldRunning) {
-            ImGui.sameLine();
-            ImGui.alignTextToFramePadding();
-            ImGui.textDisabled(progressText());
-        }
+    public void setWindowOpen(boolean open) {
+        windowOpen.set(open);
+    }
+
+    public boolean isWindowOpen() {
+        return windowOpen.get();
     }
 
     private void renderTempBanner(float scale) {
@@ -363,10 +361,14 @@ public final class VelocityMapWidget {
         }
         if (vxHi - vxLo < 1e-9 || vzHi - vzLo < 1e-9) return;
         final int n = Math.max(2, fieldRes);
+        final double vxSpan = vxHi - vxLo, vzSpan = vzHi - vzLo;
+        final double step = Math.max(vxSpan, vzSpan) / (n - 1);
+        final int cols = Math.max(2, (int) Math.round(vxSpan / step) + 1);
+        final int rows = Math.max(2, (int) Math.round(vzSpan / step) + 1);
         final FieldSnap old = field;
         final FieldSnap snap = seed && old != null
-                ? seededSnap(old, n, vxLo, vxHi, vzLo, vzHi)
-                : blankSnap(n, vxLo, vxHi, vzLo, vzHi);
+                ? seededSnap(old, cols, rows, vxLo, vxHi, vzLo, vzHi)
+                : blankSnap(cols, rows, vxLo, vxHi, vzLo, vzHi);
         final AtomicBoolean myCancel = new AtomicBoolean(false);
         final long startNanos = System.nanoTime();
         synchronized (this) {
@@ -387,13 +389,13 @@ public final class VelocityMapWidget {
         final VelocityFinder.Accuracy acc = accuracy;
         Thread worker = new Thread(() -> {
             try {
-                activeFinder.sweepFieldParallel(vg, n, n, threads, myCancel, (r, c, f, cand) -> fillCell(snap, r, c, f, cand));
+                activeFinder.sweepFieldParallel(vg, cols, rows, threads, myCancel, (r, c, f, cand) -> fillCell(snap, r, c, f, cand));
             } finally {
                 synchronized (VelocityMapWidget.this) {
                     if (currentCancel == myCancel) {
                         fieldRunning = false;
                         if (!myCancel.get()) {
-                            recordSweepCost(acc, (long) n * n, System.nanoTime() - startNanos);
+                            recordSweepCost(acc, (long) cols * rows, System.nanoTime() - startNanos);
                         }
                     }
                 }
@@ -412,34 +414,34 @@ public final class VelocityMapWidget {
         perCellNanos.set(acc.ordinal(), blended);
     }
 
-    private FieldSnap blankSnap(int n, double vxLo, double vxHi, double vzLo, double vzHi) {
-        float[] z = new float[n * n];
-        VelocityFinder.Candidate[] cells = new VelocityFinder.Candidate[n * n];
+    private FieldSnap blankSnap(int cols, int rows, double vxLo, double vxHi, double vzLo, double vzHi) {
+        float[] z = new float[cols * rows];
+        VelocityFinder.Candidate[] cells = new VelocityFinder.Candidate[cols * rows];
         java.util.Arrays.fill(z, Float.NaN);
-        return new FieldSnap(z, cells, n, n, vxLo, vxHi, vzLo, vzHi, FIELD_NEG_FLOOR, Double.NEGATIVE_INFINITY, 0.0);
+        return new FieldSnap(z, cells, cols, rows, vxLo, vxHi, vzLo, vzHi, FIELD_NEG_FLOOR, Double.NEGATIVE_INFINITY, 0.0);
     }
 
-    private FieldSnap seededSnap(FieldSnap old, int n, double vxLo, double vxHi, double vzLo, double vzHi) {
-        float[] z = new float[n * n];
-        VelocityFinder.Candidate[] cells = new VelocityFinder.Candidate[n * n];
-        double dvx = n > 1 ? (vxHi - vxLo) / (n - 1) : 0.0;
-        double dvz = n > 1 ? (vzHi - vzLo) / (n - 1) : 0.0;
+    private FieldSnap seededSnap(FieldSnap old, int cols, int rows, double vxLo, double vxHi, double vzLo, double vzHi) {
+        float[] z = new float[cols * rows];
+        VelocityFinder.Candidate[] cells = new VelocityFinder.Candidate[cols * rows];
+        double dvx = cols > 1 ? (vxHi - vxLo) / (cols - 1) : 0.0;
+        double dvz = rows > 1 ? (vzHi - vzLo) / (rows - 1) : 0.0;
         double neg = FIELD_NEG_FLOOR;
         double negHi = Double.NEGATIVE_INFINITY;
         double pos = 0.0;
-        for (int r = 0; r < n; r++) {
+        for (int r = 0; r < rows; r++) {
             double vz = vzLo + r * dvz;
-            for (int c = 0; c < n; c++) {
+            for (int c = 0; c < cols; c++) {
                 Float f = sampleField(old, vxLo + c * dvx, vz);
                 float v = f == null ? Float.NaN : f;
-                z[r * n + c] = v;
-                cells[r * n + c] = fieldCellAt(old, vxLo + c * dvx, vz);
+                z[r * cols + c] = v;
+                cells[r * cols + c] = fieldCellAt(old, vxLo + c * dvx, vz);
                 if (!Float.isNaN(v) && v < neg) neg = v;
                 if (!Float.isNaN(v) && v < 0f && v > negHi) negHi = v;
                 if (!Float.isNaN(v) && v > pos) pos = v;
             }
         }
-        return new FieldSnap(z, cells, n, n, vxLo, vxHi, vzLo, vzHi, neg, negHi, pos);
+        return new FieldSnap(z, cells, cols, rows, vxLo, vxHi, vzLo, vzHi, neg, negHi, pos);
     }
 
     private String progressText() {
@@ -793,12 +795,17 @@ public final class VelocityMapWidget {
     }
 
     private void drawMarker(ImDrawList dl, float x0, float y0, float cw, float ch) {
-        if (markerV0 == null) return;
-        double[] m = markerV0.get();
+        double[] applied = markerV0Applied;
+        double[] entry = markerV0 != null ? markerV0.get() : null;
+        double[] m = applied != null ? applied : entry;
         if (m == null) return;
-        float cx = vxToScreen(m[0], x0, cw), cy = vzToScreen(m[1], y0, ch);
-        dl.addCircle(cx, cy, 5f, ThemeManager.lockedColor(), 16, 1.5f);
-        dl.addCircleFilled(cx, cy, 1.6f, ThemeManager.lockedColor(), 8);
+        double[] cell = snapCell(m[0], m[1]);
+        if (cell == null) return;
+        float xL = vxToScreen(cell[0] - cell[2], x0, cw);
+        float xR = vxToScreen(cell[0] + cell[2], x0, cw);
+        float yTop = vzToScreen(cell[1] + cell[3], y0, ch);
+        float yBot = vzToScreen(cell[1] - cell[3], y0, ch);
+        dl.addRect(xL, yTop, xR, yBot, ThemeManager.lockedColor(), 0f, 0, 2f);
     }
 
     private void drawAxes2D(ImDrawList dl, float x0, float y0, float cw, float ch) {
@@ -890,7 +897,7 @@ public final class VelocityMapWidget {
                 rotating = false;
                 if (!movedWhilePanning) {
                     VelocityFinder.Candidate cand = candidateAt3D(rotAnchorMx, rotAnchorMy, x0, y0, cw, ch);
-                    if (cand != null && cand.lands) onApply.accept(cand);
+                    applyCandidate(cand);
                 }
             }
         }
@@ -1192,8 +1199,13 @@ public final class VelocityMapWidget {
     }
 
     private void clickApply(float sx, float sy, float x0, float y0, float cw, float ch) {
-        VelocityFinder.Candidate cand = candidateAt(sx, sy, x0, y0, cw, ch);
-        if (cand != null && cand.lands) onApply.accept(cand);
+        applyCandidate(candidateAt(sx, sy, x0, y0, cw, ch));
+    }
+
+    private void applyCandidate(VelocityFinder.Candidate cand) {
+        if (cand == null || !cand.lands) return;
+        markerV0Applied = new double[]{cand.vx, cand.vz};
+        onApply.accept(cand);
     }
 
     private VelocityFinder.Candidate candidateAt(float sx, float sy, float x0, float y0, float cw, float ch) {

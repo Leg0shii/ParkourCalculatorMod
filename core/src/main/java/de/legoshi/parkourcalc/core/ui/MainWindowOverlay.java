@@ -277,6 +277,10 @@ public final class MainWindowOverlay implements RenderInterface {
             settings.viewAngleSolver = !settings.viewAngleSolver;
             onSettingsChanged.run();
         }
+        if (ImGui.menuItem("Velocity Map", null, settings.viewVelocityMap)) {
+            settings.viewVelocityMap = !settings.viewVelocityMap;
+            onSettingsChanged.run();
+        }
     }
 
     private void renderSettingsMenuItems() {

@@ -61,6 +61,7 @@ public final class Settings {
     private static final boolean DEFAULT_VIEW_TICK_INFO = true;
     private static final boolean DEFAULT_VIEW_PERF_INFO = false;
     private static final boolean DEFAULT_VIEW_ANGLE_SOLVER = false;
+    private static final boolean DEFAULT_VIEW_VELOCITY_MAP = false;
     private static final boolean DEFAULT_SAVE_DEBUG_VALUES = false;
     private static final boolean DEFAULT_AUTO_APPLY_SOLVE = false;
 
@@ -159,6 +160,7 @@ public final class Settings {
     public boolean viewTickInfo = DEFAULT_VIEW_TICK_INFO;
     public boolean viewPerf = DEFAULT_VIEW_PERF_INFO;
     public boolean viewAngleSolver = DEFAULT_VIEW_ANGLE_SOLVER;
+    public boolean viewVelocityMap = DEFAULT_VIEW_VELOCITY_MAP;
 
     // When on, each Save also writes the full per-tick SimulatorEntity state to the file (debug only).
     public boolean saveDebugValues = DEFAULT_SAVE_DEBUG_VALUES;
@@ -242,6 +244,7 @@ public final class Settings {
         viewTickInfo = DEFAULT_VIEW_TICK_INFO;
         viewPerf = DEFAULT_VIEW_PERF_INFO;
         viewAngleSolver = DEFAULT_VIEW_ANGLE_SOLVER;
+        viewVelocityMap = DEFAULT_VIEW_VELOCITY_MAP;
         saveDebugValues = DEFAULT_SAVE_DEBUG_VALUES;
         autoApplySolve = DEFAULT_AUTO_APPLY_SOLVE;
         keepInputTableOpen = DEFAULT_KEEP_INPUT_TABLE_OPEN;

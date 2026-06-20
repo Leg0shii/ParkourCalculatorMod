@@ -99,7 +99,6 @@ public final class AngleSolverWindow implements RenderInterface {
     private boolean solveForExpanded = true;
     private boolean defaultStateExpanded = true;
     private boolean advancedExpanded;
-    private boolean velocityExpanded;
     private int doseToRemove;
 
     public AngleSolverWindow(AngleSolverState state, Settings settings,
@@ -115,7 +114,11 @@ public final class AngleSolverWindow implements RenderInterface {
 
     @Override
     public void render(ImGuiIO io) {
-        if (velocityMap != null) velocityMap.renderWindow(ThemeManager.uiScale());
+        if (velocityMap != null) {
+            velocityMap.setWindowOpen(settings.viewVelocityMap);
+            velocityMap.renderWindow(ThemeManager.uiScale());
+            settings.viewVelocityMap = velocityMap.isWindowOpen();
+        }
         if (!settings.viewAngleSolver) return;
         boolean wasSolving = engine.isSolving();
         engine.poll(); // publish a finished background solve on the main thread
@@ -204,12 +207,6 @@ public final class AngleSolverWindow implements RenderInterface {
 
         renderActions();
         renderApplyModal();
-
-        if (velocityMap != null) {
-            ThemeManager.sectionSpacing();
-            velocityExpanded = sectionToggle("Velocity band", "velband", velocityExpanded, scale);
-            if (velocityExpanded) velocityMap.render(scale);
-        }
     }
 
     private void longSpanWarning(int span, float scale) {
