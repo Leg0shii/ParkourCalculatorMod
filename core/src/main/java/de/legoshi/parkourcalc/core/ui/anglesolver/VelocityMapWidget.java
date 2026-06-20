@@ -731,7 +731,12 @@ public final class VelocityMapWidget {
                 float xL = vxToScreen(vx - dvx * 0.5, x0, cw);
                 float xR = vxToScreen(vx + dvx * 0.5, x0, cw);
                 if (xR < x0 || xL > x0 + cw) continue;
-                dl.addRectFilled(xL, yTop, xR, yBot, colorForField(s.z[r * cols + c], s.negMin, s.negMax, s.posMax), 0f);
+                int idx = r * cols + c;
+                float z = s.z[idx];
+                int col = Float.isNaN(z)
+                        ? (s.cells[idx] != null ? ThemeManager.panelColor() : ThemeManager.bgDarkColor())
+                        : colorForField(z, s.negMin, s.negMax, s.posMax);
+                dl.addRectFilled(xL, yTop, xR, yBot, col, 0f);
             }
         }
     }
