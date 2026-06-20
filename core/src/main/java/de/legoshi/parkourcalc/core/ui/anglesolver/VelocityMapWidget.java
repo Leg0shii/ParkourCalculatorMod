@@ -4,6 +4,7 @@ import de.legoshi.parkourcalc.core.anglesolver.ConstraintText;
 import de.legoshi.parkourcalc.core.anglesolver.velocity.VelocityFinder;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
+import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImDrawList;
 import imgui.ImGui;
 import imgui.ImVec2;
@@ -23,15 +24,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLongArray;
 
-/**
- * Renders the relative initial-velocity band as an interactive heatmap. "Find" runs the
- * {@link VelocityFinder} sweep on a worker thread (progressive fill); each cell is colored by how
- * solidly that initial velocity lands; hovering shows the exact velocity and landing spot; clicking a
- * landing cell applies it (the caller sets the start velocity and writes the cell's TAS, then replays).
- *
- * <p>Self-contained: all problem coupling arrives through the suppliers/consumer, so the widget has no
- * dependency on the solver window's internals and can be unit-rendered or relocated freely.
- */
 public final class VelocityMapWidget {
 
     private enum View { TWO_D, THREE_D }
@@ -45,8 +37,6 @@ public final class VelocityMapWidget {
     private static final double ZOOM_BASE = 1.2;
     private static final double HEIGHT_SCALE = 0.85;
     private static final double ROT_SPEED = 0.01;
-    // Starting floor for the dynamic green scale: a tiny support so the ramp is sane before any cell lands;
-    // the real scale grows to the best support found (FieldSnap.negMin).
     private static final double FIELD_NEG_FLOOR = -1.0e-4;
     private static final long RESAMPLE_SETTLE_NANOS = 120_000_000L;
 
@@ -136,8 +126,6 @@ public final class VelocityMapWidget {
         final int cols, rows;
         final AtomicInteger done = new AtomicInteger();
         final double vxLo, vxHi, vzLo, vzHi;
-        // Dynamic color scale: the most-negative field value seen so far (= -bestSupport). Updated as the
-        // sweep fills, so the green ramp spans the actual landing range instead of the theoretical 0.3.
         volatile double negMin;
         volatile double negMax;
         volatile double posMax;
@@ -184,7 +172,7 @@ public final class VelocityMapWidget {
 
     public void render(float scale) {
         boolean openBtn = Controls.secondaryButton(windowOpen.get() ? "Velocity map (open)" : "Open velocity map");
-        tip("Open the velocity heatmap in its own window.");
+        TooltipUtil.onHover("Open the velocity heatmap in its own window.");
         if (openBtn) windowOpen.set(true);
         if (fieldRunning) {
             ImGui.sameLine();
@@ -205,7 +193,7 @@ public final class VelocityMapWidget {
         ThemeManager.popTextColor();
         ImGui.popTextWrapPos();
         boolean reapply = Controls.secondaryButton("Reapply original");
-        tip("Discard the temp trajectory and restore the original.");
+        TooltipUtil.onHover("Discard the temp trajectory and restore the original.");
         if (reapply) {
             if (onRestoreTemp != null) onRestoreTemp.run();
             copyStatus = null;
@@ -213,7 +201,7 @@ public final class VelocityMapWidget {
         }
         ImGui.sameLine();
         boolean keep = Controls.secondaryButton("Keep");
-        tip("Commit the temp trajectory as the new baseline; auto-save resumes.");
+        TooltipUtil.onHover("Commit the temp trajectory as the new baseline; auto-save resumes.");
         if (keep) {
             if (onKeepTemp != null) onKeepTemp.run();
             copyStatus = null;
@@ -222,7 +210,7 @@ public final class VelocityMapWidget {
         Controls.inputTextHint("##velcopyname", "save copy name", copyNameBuf, 150f * scale);
         ImGui.sameLine();
         boolean saveCopy = Controls.secondaryButton("Save copy");
-        tip("Save the temp trajectory to a new file without switching the active save.");
+        TooltipUtil.onHover("Save the temp trajectory to a new file without switching the active save.");
         if (saveCopy && onSaveCopyAs != null) {
             copyStatus = onSaveCopyAs.apply(copyNameBuf.get());
         }
@@ -296,12 +284,12 @@ public final class VelocityMapWidget {
 
     private void renderActionRow() {
         boolean find = Controls.primaryButton(field == null ? "Find velocities" : "Re-find");
-        tip("Sweep the initial-velocity plane; each cell shows whether that start velocity lands on the pad.");
+        TooltipUtil.onHover("Sweep the initial-velocity plane; each cell shows whether that start velocity lands on the pad.");
         if (find) requestFullSweep(true);
         if (fieldRunning) {
             ImGui.sameLine();
             boolean cancel = Controls.secondaryButton("Cancel");
-            tip("Stop the current sweep.");
+            TooltipUtil.onHover("Stop the current sweep.");
             if (cancel) cancelCurrentSweep();
             ImGui.sameLine();
             ImGui.alignTextToFramePadding();
@@ -330,12 +318,11 @@ public final class VelocityMapWidget {
         ImGui.setNextItemWidth(controlW);
         if (ImGui.sliderInt("##velres", resBuf, RES_MIN, RES_MAX)) fieldRes = resBuf[0];
         boolean deactivated = ImGui.isItemDeactivatedAfterEdit();
-        tip(RES_TIP);
+        TooltipUtil.onHover(RES_TIP);
         Controls.popInputFrameHeight();
         if (deactivated) pendingFind = true;
     }
 
-    /** Cancel any in-flight sweep (e.g. on window close). */
     public void stop() {
         cancelCurrentSweep();
         refineCancel.set(true);
@@ -493,7 +480,7 @@ public final class VelocityMapWidget {
         if (idx < 0 || idx >= snap.z.length) return;
         snap.z[idx] = (float) f;
         snap.cells[idx] = cand;
-        if (f < snap.negMin) snap.negMin = f; // track best support so the color scale fits the data
+        if (f < snap.negMin) snap.negMin = f;
         if (f < 0.0 && f > snap.negMax) snap.negMax = f;
         if (f > snap.posMax) snap.posMax = f;
         snap.done.incrementAndGet();
@@ -556,7 +543,7 @@ public final class VelocityMapWidget {
 
     private void renderRangeControls(float scale, float labelW) {
         boolean rangeToggle = Controls.checkbox("Limit to range", rangeEnabled.get());
-        tip("Restrict the sweep to the vx/vz range below.");
+        TooltipUtil.onHover("Restrict the sweep to the vx/vz range below.");
         if (rangeToggle) {
             if (rangeEnabled.get()) onRangeDisable();
             else onRangeApply();
@@ -568,7 +555,7 @@ public final class VelocityMapWidget {
 
         ImGui.setCursorPosX(ImGui.getCursorPosX() + labelW);
         boolean applyRange = Controls.secondaryButton("Apply");
-        tip("Apply the typed range and reframe the view to it.");
+        TooltipUtil.onHover("Apply the typed range and reframe the view to it.");
         if (applyRange) onRangeApply();
         if (rangeEnabled.get()) {
             ImGui.textDisabled("Showing only the range; zoom in to refine its resolution.");
@@ -693,35 +680,45 @@ public final class VelocityMapWidget {
         }
     }
 
-    /** Snaps a velocity to the center of the cell that contains it, preferring the refine grid where it
-     *  covers, else the field grid. Returns {centerVx, centerVz, halfVx, halfVz}, or null when off-grid. */
-    private double[] snapCell(double vx, double vz) {
-        VelocityFinder.Candidate[] cells = refineCells;
-        VelocityFinder.Grid g = refineGrid;
-        if (cells != null && g != null
-                && vx >= g.vxLo - g.vxStep * 0.5 && vx <= g.vxHi + g.vxStep * 0.5
-                && vz >= g.vzLo - g.vzStep * 0.5 && vz <= g.vzHi + g.vzStep * 0.5) {
-            int c = (int) Math.round((vx - g.vxLo) / g.vxStep);
-            int r = (int) Math.round((vz - g.vzLo) / g.vzStep);
-            if (c >= 0 && c < refineCols && r >= 0 && r < refineRows) {
-                return new double[]{g.vxLo + c * g.vxStep, g.vzLo + r * g.vzStep, g.vxStep * 0.5, g.vzStep * 0.5};
-            }
-        }
-        FieldSnap s = field;
+    private static int[] fieldNode(FieldSnap s, double vx, double vz) {
         if (s == null || s.cols < 1 || s.rows < 1) return null;
         if (vx < s.vxLo || vx > s.vxHi || vz < s.vzLo || vz > s.vzHi) return null;
         double dvx = (s.vxHi - s.vxLo) / Math.max(1, s.cols - 1);
         double dvz = (s.vzHi - s.vzLo) / Math.max(1, s.rows - 1);
         int c = Math.max(0, Math.min(s.cols - 1, (int) Math.round((vx - s.vxLo) / dvx)));
         int r = Math.max(0, Math.min(s.rows - 1, (int) Math.round((vz - s.vzLo) / dvz)));
-        return new double[]{s.vxLo + c * dvx, s.vzLo + r * dvz, dvx * 0.5, dvz * 0.5};
+        return new int[]{c, r};
+    }
+
+    private int[] refineNode(double vx, double vz) {
+        VelocityFinder.Candidate[] cells = refineCells;
+        VelocityFinder.Grid g = refineGrid;
+        if (cells == null || g == null) return null;
+        if (vx < g.vxLo - g.vxStep * 0.5 || vx > g.vxHi + g.vxStep * 0.5) return null;
+        if (vz < g.vzLo - g.vzStep * 0.5 || vz > g.vzHi + g.vzStep * 0.5) return null;
+        int c = (int) Math.round((vx - g.vxLo) / g.vxStep);
+        int r = (int) Math.round((vz - g.vzLo) / g.vzStep);
+        if (c < 0 || c >= refineCols || r < 0 || r >= refineRows) return null;
+        return new int[]{c, r};
+    }
+
+    private double[] snapCell(double vx, double vz) {
+        int[] ri = refineNode(vx, vz);
+        VelocityFinder.Grid g = refineGrid;
+        if (ri != null && g != null) {
+            return new double[]{g.vxLo + ri[0] * g.vxStep, g.vzLo + ri[1] * g.vzStep, g.vxStep * 0.5, g.vzStep * 0.5};
+        }
+        FieldSnap s = field;
+        int[] fi = fieldNode(s, vx, vz);
+        if (fi == null) return null;
+        double dvx = (s.vxHi - s.vxLo) / Math.max(1, s.cols - 1);
+        double dvz = (s.vzHi - s.vzLo) / Math.max(1, s.rows - 1);
+        return new double[]{s.vxLo + fi[0] * dvx, s.vzLo + fi[1] * dvz, dvx * 0.5, dvz * 0.5};
     }
 
     private void draw2D(ImDrawList dl, FieldSnap s, float x0, float y0, float cw, float ch) {
         int cols = s.cols, rows = s.rows;
         if (cols < 1 || rows < 1) return;
-        // Discrete cells: the field is one sampled value per node, so each node fills a flat half-step
-        // cell (nearest-node, matching the hover lookup). No corner-gradient blur between samples.
         double dvx = cols > 1 ? (s.vxHi - s.vxLo) / (cols - 1) : (s.vxHi - s.vxLo);
         double dvz = rows > 1 ? (s.vzHi - s.vzLo) / (rows - 1) : (s.vzHi - s.vzLo);
         for (int r = 0; r < rows; r++) {
@@ -833,7 +830,6 @@ public final class VelocityMapWidget {
         dl.addRectFilled(bx, by, bx + bw, by + bh, withAlpha(ThemeManager.bgDarkColor(), 200), 3f);
         dl.addRect(bx, by, bx + bw, by + bh, withAlpha(ThemeManager.borderColor(), 150), 3f, 0, 1f);
 
-        // Discrete support ramp (top = best support, bottom = 0), matching the discrete map.
         float barX = bx + pad, barTop = by + pad, barBot = barTop + barH;
         int steps = 12;
         for (int i = 0; i < steps; i++) {
@@ -856,10 +852,6 @@ public final class VelocityMapWidget {
 
     private String fmt(double v) {
         return String.format("%.3f", v);
-    }
-
-    private static void tip(String text) {
-        if (ImGui.isItemHovered()) ImGui.setTooltip(text);
     }
 
     private void init3DView(float cw, float ch) {
@@ -1099,13 +1091,9 @@ public final class VelocityMapWidget {
     }
 
     private VelocityFinder.Candidate fieldCellAt(FieldSnap s, double vx, double vz) {
-        if (s == null || s.cells == null || s.cols < 1 || s.rows < 1) return null;
-        if (vx < s.vxLo || vx > s.vxHi || vz < s.vzLo || vz > s.vzHi) return null;
-        double dvx = (s.vxHi - s.vxLo) / Math.max(1, s.cols - 1);
-        double dvz = (s.vzHi - s.vzLo) / Math.max(1, s.rows - 1);
-        int c = Math.max(0, Math.min(s.cols - 1, (int) Math.round((vx - s.vxLo) / dvx)));
-        int r = Math.max(0, Math.min(s.rows - 1, (int) Math.round((vz - s.vzLo) / dvz)));
-        return s.cells[r * s.cols + c];
+        int[] idx = fieldNode(s, vx, vz);
+        if (idx == null || s.cells == null) return null;
+        return s.cells[idx[1] * s.cols + idx[0]];
     }
 
     private int shadeColor(int c, double f) {
@@ -1204,27 +1192,16 @@ public final class VelocityMapWidget {
     }
 
     private VelocityFinder.Candidate candidateAt(float sx, float sy, float x0, float y0, float cw, float ch) {
-        double vx = screenToVx(sx, x0, cw), vz = screenToVz(sy, y0, ch);
-        VelocityFinder.Candidate rc = refineCellAt(vx, vz);
-        if (rc != null) return rc;
-        return fieldCellAt(field, vx, vz);
+        return candidateFor(screenToVx(sx, x0, cw), screenToVz(sy, y0, ch));
     }
 
     private VelocityFinder.Candidate refineCellAt(double vx, double vz) {
+        int[] idx = refineNode(vx, vz);
         VelocityFinder.Candidate[] cells = refineCells;
-        VelocityFinder.Grid g = refineGrid;
-        if (cells == null || g == null) return null;
-        if (vx < g.vxLo - g.vxStep * 0.5 || vx > g.vxHi + g.vxStep * 0.5) return null;
-        if (vz < g.vzLo - g.vzStep * 0.5 || vz > g.vzHi + g.vzStep * 0.5) return null;
-        int c = (int) Math.round((vx - g.vxLo) / g.vxStep);
-        int r = (int) Math.round((vz - g.vzLo) / g.vzStep);
-        if (c < 0 || c >= refineCols || r < 0 || r >= refineRows) return null;
-        return cells[r * refineCols + c];
+        if (idx == null || cells == null) return null;
+        return cells[idx[1] * refineCols + idx[0]];
     }
 
-    /** Cursor readout. Reads only already-computed data: the refine cell, else the heatmap field value
-     *  at the cursor. Never re-solves, so hovering a HYPER map (whose per-cell solve is the full engine
-     *  ladder) costs nothing per frame. */
     private void showHoverTooltip(double vx, double vz) {
         VelocityFinder.Candidate rc = refineCellAt(vx, vz);
         if (rc != null) {
@@ -1262,19 +1239,10 @@ public final class VelocityMapWidget {
         sb.append(String.format(Locale.ROOT, fmtStr, landX, landZ, off, objAxisName(), finder.constraintEdge(), tail));
     }
 
-    /** Nearest field node to a velocity, or null when there is no field / the velocity is off-grid. */
     private Float sampleField(FieldSnap s, double vx, double vz) {
-        return sampleArray(s, s == null ? null : s.z, vx, vz);
-    }
-
-    private Float sampleArray(FieldSnap s, float[] arr, double vx, double vz) {
-        if (s == null || arr == null || s.cols < 1 || s.rows < 1) return null;
-        if (vx < s.vxLo || vx > s.vxHi || vz < s.vzLo || vz > s.vzHi) return null;
-        double dvx = (s.vxHi - s.vxLo) / Math.max(1, s.cols - 1);
-        double dvz = (s.vzHi - s.vzLo) / Math.max(1, s.rows - 1);
-        int c = Math.max(0, Math.min(s.cols - 1, (int) Math.round((vx - s.vxLo) / dvx)));
-        int r = Math.max(0, Math.min(s.rows - 1, (int) Math.round((vz - s.vzLo) / dvz)));
-        return arr[r * s.cols + c];
+        int[] idx = fieldNode(s, vx, vz);
+        if (idx == null || s.z == null) return null;
+        return s.z[idx[1] * s.cols + idx[0]];
     }
 
     private void showTooltip(double vx, double vz, VelocityFinder.Candidate c) {
@@ -1327,9 +1295,6 @@ public final class VelocityMapWidget {
         return negMin < 0.0 ? (float) (f / negMin) : 0f;
     }
 
-    /** The landing ramp: t=0 (least support, a near miss) saturated orange, t=0.5 amber, t=1 (best
-     *  support) saturated green, so the spread across the actual support range is visible. Shared by the
-     *  field, the refine overlay and the legend so all three read the same scale. */
     private int landColor(float t) {
         t = t < 0f ? 0f : (t > 1f ? 1f : t);
         int lo = packRGBA(255, 120, 0, 255);
@@ -1338,8 +1303,6 @@ public final class VelocityMapWidget {
         return t < 0.5f ? lerpColor(lo, mid, t * 2f) : lerpColor(mid, hi, (t - 0.5f) * 2f);
     }
 
-    /** Same scale as the heatmap: green ramp by how far past the constraint it lands, orange-red to deep
-     *  red for underjumps, near-black for no aim. */
     private int colorFor(VelocityFinder.Candidate c) {
         if (c == null) return ThemeManager.bgDarkColor();
         if (!c.constraintsMet) return ThemeManager.panelColor();
@@ -1351,12 +1314,10 @@ public final class VelocityMapWidget {
         return colorForField(f, negMin, negMax, posMax);
     }
 
-    /** ImGui draw colors are U32 in ABGR order (IM_COL32). */
     private static int packRGBA(int r, int g, int b, int a) {
         return (a << 24) | (b << 16) | (g << 8) | r;
     }
 
-    /** Interpolate two IM_COL32 colors (works on both packRGBA results and ThemeManager colors). */
     private static int lerpColor(int a, int b, float t) {
         t = t < 0f ? 0f : (t > 1f ? 1f : t);
         int ra = a & 0xFF, ga = (a >> 8) & 0xFF, ba = (a >> 16) & 0xFF, aa = (a >> 24) & 0xFF;

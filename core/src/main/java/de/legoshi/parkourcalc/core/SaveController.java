@@ -78,10 +78,6 @@ public final class SaveController {
         return tempActive;
     }
 
-    public boolean isAutoSaveSuppressed() {
-        return tempActive;
-    }
-
     public void beginTempTrajectory() {
         if (tempActive) return;
         List<TickState> states = boxController != null ? boxController.getStates() : null;

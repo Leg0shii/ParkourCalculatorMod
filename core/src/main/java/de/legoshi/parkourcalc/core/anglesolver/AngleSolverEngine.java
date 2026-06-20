@@ -867,11 +867,7 @@ public final class AngleSolverEngine {
                 // A Force-45 tick realizes its solve assumption in the rows (gh-104): W + sprint held
                 // on every tick, strafe per the mask (the grounded jump tick stays W-only). Keep ticks
                 // are left alone; their keys ARE what the solve ran.
-                boolean strafeThis = p.strafeMask[k];
-                row.setKeyActive(InputRow.Key.W, true);
-                row.setKeyActive(InputRow.Key.SPRINT, true);
-                row.setKeyActive(InputRow.Key.A, strafeThis && p.strafeSign > 0);
-                row.setKeyActive(InputRow.Key.D, strafeThis && p.strafeSign < 0);
+                row.applyForce45(p.strafeMask[k], p.strafeSign);
             }
             prevAbs = abs;
         }

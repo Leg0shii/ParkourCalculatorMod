@@ -129,26 +129,6 @@ public final class ClosedFormSolve {
         return new Result(bestYaws, bestViol, false);
     }
 
-    /** Diagnostic: the linear model's global optimum aims at margin 0, WITHOUT the byte-exact
-     *  re-certification gate. These are the facings the dual recovers; forward-simming them on the
-     *  byte-exact model and measuring the wall violation exposes the linearization error directly (the
-     *  gap between the linear model's prediction and the real game). {@code null} only when the closed
-     *  form does not apply (facing wall / trivially infeasible / dual unbounded). */
-    public static double[] linearOptimum(JumpSpec spec) {
-        if (JumpLinearModel.hasFacingWall(spec.constraints)) return null;
-        JumpPhysicsInputs sc = spec.asScenario();
-        JumpLinearModel lin = new JumpLinearModel(sc);
-        double[] cx = new double[lin.n];
-        double[] cz = new double[lin.n];
-        lin.objectiveVectors(spec.objective, cx, cz);
-        boolean[] trivialInfeasible = {false};
-        List<JumpLinearModel.Wall> walls = lin.compileWalls(spec.constraints, 0.0, trivialInfeasible);
-        if (trivialInfeasible[0]) return null;
-        CostateDualSolver.Result r = new CostateDualSolver(lin.n, cx, cz, lin.mMagAll(), walls).solve(0.0, null);
-        if (r == null) return null;
-        return recover(lin, spec.objective, r);
-    }
-
     /** Weak-duality bound on the spec's objective in world coordinates: no feasible path can land beyond
      *  it. Valid even where the dual's recovery degenerates, so it certifies a primally-found solution
      *  without a search. {@code NaN} when no bound applies (facing walls, violated constant, unbounded). */

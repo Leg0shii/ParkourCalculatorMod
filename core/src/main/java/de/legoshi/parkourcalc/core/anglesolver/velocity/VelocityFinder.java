@@ -27,34 +27,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * Finds the initial velocities (in relative space, at a chosen anchor tick) from which a jump can be
- * landed. For each candidate velocity it re-runs the full angle-solver ladder (the jump aim is
- * re-optimized per velocity), forward-sims the recovered solution, and checks whether the path
- * actually lands on a target pad -- closing the landing into a real box so "feasible" means lands,
- * not merely "satisfied the one-sided placed wall constraints".
- *
- * <p>The anchor is the grounded tick on the takeoff block, one tick before the jump resolves: the
- * position the player can be set to, with the found velocity, so replaying from there solves the jump.
- *
- * <p>MC-free: the finder orchestrates {@link AngleSolverEngine} runs and a {@link ForwardModel}; the
- * caller supplies fresh solver state/input each evaluation via {@link ProblemFactory} (so nothing
- * leaks between candidates) and the byte-exact model for the MC version.
- */
 public final class VelocityFinder {
 
-    /** Half the player's horizontal AABB width; the landing center must keep the AABB over the pad. */
     public static final double PLAYER_HALF_WIDTH = 0.3;
 
-    public static volatile boolean TRACE = false;
-
-    /** Supplies a fresh, ready-to-solve solver state and input set for each candidate evaluation. */
     public interface ProblemFactory {
         AngleSolverState newState();
         InputData newInputs();
     }
 
-    /** The target landing footprint (a block's horizontal extent). */
     public static final class Pad {
         public final double x0, x1, z0, z1;
 
@@ -65,7 +46,6 @@ public final class VelocityFinder {
             this.z1 = Math.max(z0, z1);
         }
 
-        /** AABB-on-pad overlap of a landing center, per axis; the limiting one is the support margin. */
         public double support(double landX, double landZ) {
             return Math.min(overlapX(landX), overlapZ(landZ));
         }
@@ -79,13 +59,12 @@ public final class VelocityFinder {
         }
     }
 
-    /** Where the found velocities are measured from: the grounded tick on the takeoff block. */
     public static final class Anchor {
-        public final int tick;          // segment start tick (index into the input rows)
-        public final Vec3dCore pos;     // player position at that tick (on the takeoff block)
-        public final float yaw;         // facing at that tick
-        public final double keepVy;     // entry vy carried in (overridden by the jump on a grounded tick)
-        public final int rowCount;      // number of input rows (length of the box list)
+        public final int tick;
+        public final Vec3dCore pos;
+        public final float yaw;
+        public final double keepVy;
+        public final int rowCount;
 
         public Anchor(int tick, Vec3dCore pos, float yaw, double keepVy, int rowCount) {
             this.tick = tick;
@@ -96,7 +75,6 @@ public final class VelocityFinder {
         }
     }
 
-    /** A rectangular search region over the horizontal initial velocity (vx, vz). */
     public static final class Grid {
         public final double vxLo, vxHi, vxStep, vzLo, vzHi, vzStep;
 
@@ -106,14 +84,11 @@ public final class VelocityFinder {
         }
     }
 
-    /** One evaluated initial velocity: did the walls solve, did it land, where, how solidly, and the
-     *  solved per-tick aim (the TAS) that produces it -- so applying the cell needs no re-solve. */
     public static final class Candidate {
         public final double vx, vz;
         public final boolean constraintsMet;
         public final boolean lands;
         public final double landX, landZ, support;
-        /** Game-facing yaw per segment tick (the TAS aim), or null if no solution was found. */
         public final double[] yawsGameFacing;
         public final boolean[] force45Mask;
         public final boolean[] strafeMask;
@@ -136,15 +111,9 @@ public final class VelocityFinder {
         }
     }
 
-    /** Re-cert tolerance for the finder's fast feasibility path. Unlike the engine's strict
-     *  FEAS_TOL = 0 (which gates the authoritative "did it land" verdict), the finder only needs to
-     *  map which velocities work and re-checks the real landing box itself, so a lattice-scale
-     *  tolerance is appropriate here. It absorbs the sub-1e-4 sine-bucket quantization grazes that
-     *  make the closed form return null on vertex-pinned jumps (e.g. j022), without admitting
-     *  anything that clips at the game's actual resolution. */
-    public static volatile double FAST_FEAS_TOL = 1.0e-6;
+    private static final double FAST_FEAS_TOL = 1.0e-6;
 
-    public static volatile double MULTI_FALLBACK_VIOL = 2.0;
+    private static final double MULTI_FALLBACK_VIOL = 2.0;
 
     private static double[] windowSolve(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc) {
         return LongRunSolver.solve(exact, spec, FAST_FEAS_TOL, new AtomicBoolean(false),
@@ -168,7 +137,7 @@ public final class VelocityFinder {
     private final ProblemFactory problem;
     private final ForwardModel model;
     private final Anchor anchor;
-    private final int landingPosIndex;   // index into ForwardPath of the landing position (landingTick - anchor.tick)
+    private final int landingPosIndex;
     private final Pad pad;
     private final List<TickState> recordedStates;
     private final long perSolveMs;
@@ -196,8 +165,6 @@ public final class VelocityFinder {
         if (a != null) this.accuracy = a;
     }
 
-    // Built once (one engine solve), then cloned per cell with a swapped initial velocity so the fast
-    // path can run the closed form / SLP directly without a full engine solve per cell.
     private volatile JumpSpec templateSpec;
     private volatile boolean templateTried;
     private volatile boolean[] templateForce45Mask;
@@ -215,9 +182,6 @@ public final class VelocityFinder {
         this.perSolveMs = perSolveMs;
     }
 
-    /** Evaluate a single initial velocity at the anchor. Tries the microsecond closed-form / SLP fast
-     *  path first (re-cert at {@link #FAST_FEAS_TOL}, no CMA race), falling back to the full engine
-     *  ladder only when the linear model cannot certify the walls at all. */
     public Candidate evaluate(double vx, double vz) {
         return evaluate(vx, vz, new AtomicBoolean(false));
     }
@@ -239,9 +203,6 @@ public final class VelocityFinder {
         return fieldNode(vx, vz, cancel)[0];
     }
 
-    /** {@code [fieldValue, landX, landZ]}: the heatmap value (negated objective-axis margin past the
-     *  landing constraint, so lands are negative and misses positive; see {@link #landingField}) and the
-     *  exact landing position at the goal tick (NaN when there is no aim). */
     double[] fieldNode(double vx, double vz, AtomicBoolean cancel) {
         Candidate c = evaluate(vx, vz, cancel);
         return new double[]{cellField(c, vx, vz), c.landX, c.landZ};
@@ -318,22 +279,16 @@ public final class VelocityFinder {
         return Math.max(0.0, Math.max(lo - coord, coord - hi));
     }
 
-    /** Authoritative single-cell evaluation via the full engine ladder (closed form -> SLP -> CMA) at
-     *  the engine's strict feasibility. Slower; use to confirm a cell the fast map left uncertain. */
     public Candidate evaluateThorough(double vx, double vz) {
         return evaluateViaEngine(vx, vz, new AtomicBoolean(false));
     }
 
-    /** The fast path: a pure FEASIBILITY query. The landing pad is added as a two-sided constraint box
-     *  (the AABB-overlap footprint), so "lands" is exactly "the spec is feasible" -- no objective to
-     *  optimize, hence no same-axis degeneracy and no SLP. The robust (clearance-first) closed-form
-     *  solve finds a point landing well inside the pad in microseconds, or null when no aim lands. */
     private Candidate evaluateFast(ExactJumpModel exact, JumpSpec tmpl, double vx, double vz) {
         JumpPhysicsInputs base = tmpl.asScenario();
         JumpPhysicsInputs sc = copyWithVelocity(base, new Vec3dCore(vx, base.initialVelocity.y, vz));
 
         List<JumpConstraint> cons = withPadWalls(tmpl.constraints);
-        JumpSpec spec = new JumpSpec(sc, cons, tmpl.objective); // objective kept but irrelevant to robust
+        JumpSpec spec = new JumpSpec(sc, cons, tmpl.objective);
 
         double[] yaws = solveFast(exact, spec, sc);
         if (yaws == null) {
@@ -343,38 +298,6 @@ public final class VelocityFinder {
                 spec.objective.axis, spec.objective.sense == Objective.Sense.MAX);
     }
 
-    /** Diagnostic: ONLY the closed form, no window/SLP/CMA fallback. {@code constraintsMet} reports whether
-     *  the closed form CERTIFIED feasibility; {@code lands}/{@code support} report where its best recovered
-     *  aim actually lands on the pad (forward-simmed), feasible or not. */
-    public Candidate evaluateClosedFormOnly(double vx, double vz) {
-        JumpSpec tmpl = template();
-        if (tmpl == null || !(model instanceof ExactJumpModel)) {
-            return new Candidate(vx, vz, false, false, Double.NaN, Double.NaN, Double.NaN, null, null, null, 0);
-        }
-        ExactJumpModel exact = (ExactJumpModel) model;
-        JumpPhysicsInputs base = tmpl.asScenario();
-        JumpPhysicsInputs sc = copyWithVelocity(base, new Vec3dCore(vx, base.initialVelocity.y, vz));
-        JumpSpec spec = new JumpSpec(sc, withPadWalls(tmpl.constraints), tmpl.objective);
-        ClosedFormSolve.Result res = ClosedFormSolve.optimizeRobustGraded(exact, spec, FAST_FEAS_TOL, new AtomicBoolean(false));
-        if (res == null || res.yaws == null) {
-            return new Candidate(vx, vz, false, false, Double.NaN, Double.NaN, Double.NaN, null, null, null, 0);
-        }
-        double[] gf = sc.toGameFacings(Angles.wrapAll(res.yaws));
-        ForwardPath path = model.forward(sc, gf);
-        double landX = path.posX[landingPosIndex];
-        double landZ = path.posZ[landingPosIndex];
-        double sx = pad.overlapX(landX);
-        double sz = pad.overlapZ(landZ);
-        boolean lands = sx > 0.0 && sz > 0.0;
-        double support = spec.objective.axis == JumpPhysicsInputs.Axis.Z ? sz : sx;
-        return new Candidate(vx, vz, res.feasible, lands, landX, landZ, support, gf, null, null, sc.strafeSign);
-    }
-
-    /** The single place a solved aim becomes a landing verdict. The solvers return ABSOLUTE wrapped
-     *  facings; the sim runs the float-accumulated GAME facings ({@link JumpPhysicsInputs#toGameFacings}),
-     *  and the MC sine table buckets on the exact float (a mod-360 difference shifts the bucket), so the
-     *  two are NOT interchangeable in a forward-sim. Both the fast (closed-form) and engine (HYPER) paths
-     *  funnel through here so the facing transform and pad check can never diverge between them again. */
     private Candidate landingCandidate(double vx, double vz, JumpPhysicsInputs sc, double[] absYaws,
                                        boolean[] force45Mask, boolean[] strafeMask, int strafeSign,
                                        JumpPhysicsInputs.Axis objAxis, boolean senseMax) {
@@ -392,7 +315,6 @@ public final class VelocityFinder {
                 force45Mask, strafeMask, strafeSign);
     }
 
-
     private static int jumpCount(JumpPhysicsInputs sc) {
         if (sc.jumpPerTick == null) return sc.jumpTick >= 0 ? 1 : 0;
         int n = 0;
@@ -404,8 +326,6 @@ public final class VelocityFinder {
         return new JumpConstraint(mode, landingPosIndex, null, JumpConstraint.Op.PLUS, cmp, rhs, name);
     }
 
-    /** Authoritative fallback: the full engine ladder (closed form -> SLP -> CMA) at the engine's
-     *  strict feasibility, for cells the linear model could not certify. */
     private Candidate evaluateViaEngine(double vx, double vz, AtomicBoolean cancel) {
         AngleSolverState state = problem.newState();
         state.clearResult();
@@ -415,7 +335,6 @@ public final class VelocityFinder {
         driveEngine(engine, cancel);
 
         SolveResult r = state.getResult();
-        if (TRACE) traceEngineResult(vx, vz, engine, r);
         if (r == null || !r.isSuccess()) {
             return new Candidate(vx, vz, false, false, Double.NaN, Double.NaN, Double.NaN, null, null, null, 0);
         }
@@ -431,11 +350,8 @@ public final class VelocityFinder {
                 spec.objective.axis, spec.objective.sense == Objective.Sense.MAX);
     }
 
-    /** Build the template spec once (one engine solve; the spec is published before the solve runs, so
-     *  even an infeasible probe velocity yields it). The constraints and objective are velocity-
-     *  independent, so cells reuse them and only swap the scenario's initial velocity. */
     private JumpSpec template() {
-        if (templateTried) return templateSpec;   // common case: no lock, so cells don't serialize
+        if (templateTried) return templateSpec;
         synchronized (this) {
             if (!templateTried) {
                 AngleSolverState state = problem.newState();
@@ -448,7 +364,7 @@ public final class VelocityFinder {
                 templateStrafeMask = engine.lastStrafeMaskDebug();
                 JumpSpec spec = engine.lastSpecDebug();
                 if (spec != null) templateStrafeSign = spec.asScenario().strafeSign;
-                templateSpec = spec;   // volatile publish before the flag
+                templateSpec = spec;
                 templateTried = true;
             }
         }
@@ -466,36 +382,8 @@ public final class VelocityFinder {
         boolean timedOut = engine.isSolving();
         if (cancel.get() || timedOut) engine.cancel();
         engine.poll();
-        if (TRACE) System.out.printf(java.util.Locale.ROOT, "[drive] elapsedMs=%d timedOut=%s perSolveMs=%d%n",
-                System.currentTimeMillis() - t0, timedOut, perSolveMs);
     }
 
-    private void traceEngineResult(double vx, double vz, AngleSolverEngine engine, SolveResult r) {
-        JumpSpec sp = engine.lastSpecDebug();
-        if (sp == null) {
-            System.out.printf(java.util.Locale.ROOT, "[eng] v=(%.4f,%.4f) spec=NULL result=%s%n",
-                    vx, vz, r == null ? "NULL" : (r.isSuccess() ? "SUCCESS" : "FAIL"));
-            return;
-        }
-        JumpPhysicsInputs s = sp.asScenario();
-        StringBuilder jp = new StringBuilder();
-        if (s.jumpPerTick != null) for (boolean b : s.jumpPerTick) jp.append(b ? '1' : '0');
-        StringBuilder sl = new StringBuilder();
-        if (s.slipPerTick != null) for (double d : s.slipPerTick) sl.append(Double.isNaN(d) ? 'A' : 'g');
-        System.out.printf(java.util.Locale.ROOT,
-                "[eng] v=(%.4f,%.4f) numTicks=%d jumps=%d strafeSign=%d cons=%d result=%s obj=%s/%s@%d%n  jumpPerTick=%s%n  groundAir =%s%n  startPos=(%.3f,%.3f,%.3f) initVel=(%.4f,%.4f,%.4f) startYaw=%.3f%n",
-                vx, vz, s.numTicks, jumpCount(s), s.strafeSign, sp.constraints.size(),
-                r == null ? "NULL(timeout/no-result)" : (r.isSuccess() ? "SUCCESS" : "FAIL(infeasible)"),
-                sp.objective.axis, sp.objective.sense, sp.objective.tick,
-                jp.toString(), sl.toString(),
-                s.startPos.x, s.startPos.y, s.startPos.z, s.initialVelocity.x, s.initialVelocity.y, s.initialVelocity.z, s.startYaw);
-        for (JumpConstraint c : sp.constraints) {
-            System.out.printf(java.util.Locale.ROOT, "    con %-12s mode=%s t=%d %s %.4f%n", c.name, c.mode, c.t1, c.cmp, c.rhs);
-        }
-    }
-
-    /** Shallow copy of a scenario with a new initial velocity. The per-tick arrays are read-only in
-     *  {@link ForwardModel#forward}, so they are shared (safe across threads); only the velocity differs. */
     private static JumpPhysicsInputs copyWithVelocity(JumpPhysicsInputs s, Vec3dCore vel) {
         JumpPhysicsInputs c = new JumpPhysicsInputs(s.numTicks);
         c.startPos = s.startPos;
@@ -514,8 +402,6 @@ public final class VelocityFinder {
         return c;
     }
 
-    /** Evaluate every cell of the grid, row-major (vz outer, vx inner). Uses the same index-based
-     *  coordinates as {@link #sweepParallel} so the two agree cell-for-cell. */
     public List<Candidate> sweep(Grid grid) {
         int nr = rows(grid), nc = cols(grid);
         List<Candidate> out = new ArrayList<>(nr * nc);
@@ -531,17 +417,10 @@ public final class VelocityFinder {
     public static int rows(Grid g) { return (int) Math.round((g.vzHi - g.vzLo) / g.vzStep) + 1; }
     public static int cols(Grid g) { return (int) Math.round((g.vxHi - g.vxLo) / g.vxStep) + 1; }
 
-    /** Notified as each cell completes (off the calling thread), for progressive heatmap fill. */
     public interface CellListener {
         void onCell(int row, int col, Candidate c);
     }
 
-    /**
-     * Evaluate the whole grid across a thread pool. Cells are independent (each builds its own engine,
-     * state and inputs via the factory; the model is immutable), so this scales near-linearly with
-     * cores. The returned list is row-major and index-stable regardless of completion order; the
-     * optional listener fires per cell as results land (thread-safe to call into).
-     */
     public List<Candidate> sweepParallel(Grid grid, int threads, CellListener listener) {
         return sweepParallel(grid, threads, new AtomicBoolean(false), listener);
     }
@@ -620,7 +499,6 @@ public final class VelocityFinder {
         return out;
     }
 
-    /** The landers from a sweep, sorted solidest-first (largest support). */
     public static List<Candidate> rankedLanders(List<Candidate> candidates) {
         List<Candidate> landers = new ArrayList<>();
         for (Candidate c : candidates) if (c != null && c.lands) landers.add(c);
@@ -628,7 +506,6 @@ public final class VelocityFinder {
         return landers;
     }
 
-    /** Build the box list the engine reads its launch state from: all placeholder except the anchor. */
     private BoxController buildBoxes(double vx, double vz) {
         BoxController boxes = new BoxController();
         for (int i = 0; i < anchor.rowCount; i++) {

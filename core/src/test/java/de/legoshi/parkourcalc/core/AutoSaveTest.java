@@ -142,7 +142,7 @@ public class AutoSaveTest {
         long savedStamp = Files.getLastModifiedTime(saveFile).toMillis();
 
         rig.controller.beginTempTrajectory();
-        assertTrue("temp apply suppresses auto-save", rig.controller.isAutoSaveSuppressed());
+        assertTrue("temp apply suppresses auto-save", rig.controller.isTempActive());
 
         rig.runner.setStartVelocity(new Vec3dCore(0.90, 0.0, -0.40));
         rig.data.getRows().clear();
@@ -157,7 +157,7 @@ public class AutoSaveTest {
                 savedStamp, Files.getLastModifiedTime(saveFile).toMillis());
 
         rig.controller.restoreInitialTrajectory();
-        assertFalse("restore resumes auto-save", rig.controller.isAutoSaveSuppressed());
+        assertFalse("restore resumes auto-save", rig.controller.isTempActive());
         assertEquals("restore brings back the original rows", origRows, rig.data.getRows().size());
         assertEquals("restore brings back the original start vel x", origVel.x, rig.runner.getStartVelocity().x, 0.0);
         assertEquals("restore brings back the original start vel z", origVel.z, rig.runner.getStartVelocity().z, 0.0);
