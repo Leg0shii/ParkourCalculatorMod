@@ -1,0 +1,16 @@
+save=j008-bfneo-original.json mc=1.8.9 rows=26 debugTicks=27 landingTick=25 res=32x32 vx/vz[-0.100,0.100] perSolveMs=4000
+
+=== CLOSED-FORM-ONLY SINGLE JUMP === startTick=14 landingTick=25 jumpKeys=1 cells=1024 pad x[-0.300,1.000] z[1.000,2.000]
+  closed form returned a result on:   243 / 1024 cells
+  CERTIFIED feasible (viol<=1e-6):    233 / 1024 cells
+  best-aim ACTUALLY lands on pad:      242 / 1024 cells
+  support of landers: sum=80.9963 mean=0.3347 max=0.3825
+  best-aim pad support over all results (neg = off-pad): min=-0.0269 median=0.3306 max=0.3825
+
+=== CLOSED-FORM-ONLY MULTI JUMP === startTick=0 landingTick=25 jumpKeys=2 cells=1024 pad x[-0.300,1.000] z[1.000,2.000]
+  closed form returned a result on:   1024 / 1024 cells
+  CERTIFIED feasible (viol<=1e-6):    4 / 1024 cells
+  best-aim ACTUALLY lands on pad:      619 / 1024 cells
+  support of landers: sum=112.4077 mean=0.1816 max=0.6000
+  best-aim pad support over all results (neg = off-pad): min=-1.0718 median=0.0778 max=0.6000
+

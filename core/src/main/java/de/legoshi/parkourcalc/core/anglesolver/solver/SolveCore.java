@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
  *  absolute wrapped facings (what Apply writes), or null if cancelled. */
 public final class SolveCore {
 
+    public static volatile boolean TRACE = false;
+
     private SolveCore() {
     }
 
@@ -48,8 +50,15 @@ public final class SolveCore {
     public static double[] optimize(ForwardModel model, JumpSpec spec, Budget budget,
                                     double sigmaDeg, double feasTol, AtomicBoolean cancel, double[] warmStart,
                                     long deadlineNanos) {
+        return optimize(model, spec, budget, sigmaDeg, feasTol, cancel, warmStart, deadlineNanos, false);
+    }
+
+    public static double[] optimize(ForwardModel model, JumpSpec spec, Budget budget,
+                                    double sigmaDeg, double feasTol, AtomicBoolean cancel, double[] warmStart,
+                                    long deadlineNanos, boolean sequential) {
         JumpPhysicsInputs sc = spec.asScenario();
         int n = sc.numTicks;
+        long traceStart = System.nanoTime();
 
         double[] warm;
         if (warmStart != null && warmStart.length == n) {
@@ -68,21 +77,24 @@ public final class SolveCore {
             for (int r = 0; r < budget.restarts; r++) batch.add(firstBatch && r == 0 ? warm : randomInit(rng, n));
             firstBatch = false;
             inits.addAll(batch);
-            results.addAll(runRestarts(model, spec, sigmaDeg, budget.maxEval, batch, false, cancel));
+            results.addAll(runRestarts(model, spec, sigmaDeg, budget.maxEval, batch, false, sequential, cancel));
             if (cancel.get()) return null;
         } while (deadlineNanos > 0 && System.nanoTime() < deadlineNanos && !cancel.get());
 
         boolean max = spec.objective.sense == Objective.Sense.MAX;
         List<SolverRunResult> feasible = filterFeasible(results, feasTol);
+        long traceCmaNanos = System.nanoTime() - traceStart;
+        if (TRACE) traceRestarts("CMA initial", n, budget, feasTol, results, feasible, traceCmaNanos);
 
         // Rescue pass: whether a solution EXISTS must not depend on the Solve-For direction, but the
         // objective-weighted fitness can settle a hair infeasible for some directions (see the
         // feasibilityOnly constructor on CmaesJumpHarness). Purely additive: this only runs when we
         // would otherwise report no solution, so it can never regress a solve that already succeeds.
         if (feasible.isEmpty()) {
-            List<SolverRunResult> feasOnly = runRestarts(model, spec, sigmaDeg, budget.maxEval, inits, true, cancel);
+            List<SolverRunResult> feasOnly = runRestarts(model, spec, sigmaDeg, budget.maxEval, inits, true, sequential, cancel);
             if (cancel.get()) return null;
             List<SolverRunResult> rescued = filterFeasible(feasOnly, feasTol);
+            if (TRACE) traceRestarts("CMA rescue(feasibilityOnly)", n, budget, feasTol, feasOnly, rescued, System.nanoTime() - traceStart);
             if (!rescued.isEmpty()) {
                 results = feasOnly;
                 feasible = rescued;
@@ -101,7 +113,8 @@ public final class SolveCore {
         for (int i = 0; i < Math.min(budget.polishCount, feasible.size()); i++) {
             top.add(Angles.wrapAll(feasible.get(i).yawAbsDeg));
         }
-        List<double[]> polished = top.parallelStream()
+        java.util.stream.Stream<double[]> polishStream = sequential ? top.stream() : top.parallelStream();
+        List<double[]> polished = polishStream
                 .map(y -> BucketAscentPolish.polish(model, spec, y, budget.polishCfg, cancel))
                 .collect(Collectors.toList());
         if (cancel.get()) return null;
@@ -122,10 +135,27 @@ public final class SolveCore {
      *  objective so the search optimizes pure constraint satisfaction. */
     private static List<SolverRunResult> runRestarts(ForwardModel model, JumpSpec spec, double sigmaDeg,
                                                      int maxEval, List<double[]> inits, boolean feasibilityOnly,
-                                                     AtomicBoolean cancel) {
-        return inits.parallelStream()
+                                                     boolean sequential, AtomicBoolean cancel) {
+        java.util.stream.Stream<double[]> stream = sequential ? inits.stream() : inits.parallelStream();
+        return stream
                 .map(in -> new CmaesJumpHarness(1.0e7, 1.0e7, sigmaDeg, maxEval, feasibilityOnly).solve(model, spec, in, cancel))
                 .collect(Collectors.toList());
+    }
+
+    private static void traceRestarts(String label, int n, Budget budget, double feasTol,
+                                      List<SolverRunResult> results, List<SolverRunResult> feasible, long nanos) {
+        double[] vs = new double[results.size()];
+        for (int i = 0; i < results.size(); i++) vs[i] = maxViolation(results.get(i));
+        java.util.Arrays.sort(vs);
+        double minV = vs.length > 0 ? vs[0] : Double.NaN;
+        double medV = vs.length > 0 ? vs[vs.length / 2] : Double.NaN;
+        double maxV = vs.length > 0 ? vs[vs.length - 1] : Double.NaN;
+        StringBuilder lo = new StringBuilder();
+        for (int i = 0; i < Math.min(8, vs.length); i++) lo.append(String.format(java.util.Locale.ROOT, " %.5f", vs[i]));
+        System.out.printf(java.util.Locale.ROOT,
+                "[CMA] %s n=%d restarts=%d maxEval=%d feasTol=%.1e ran=%d feasible=%d viol[min=%.6f med=%.6f max=%.6f] lowest8=[%s] %dms%n",
+                label, n, budget.restarts, budget.maxEval, feasTol, results.size(), feasible.size(),
+                minV, medV, maxV, lo.toString().trim(), nanos / 1_000_000L);
     }
 
     private static List<SolverRunResult> filterFeasible(List<SolverRunResult> results, double feasTol) {

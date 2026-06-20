@@ -46,6 +46,13 @@ public final class SaveIO {
         return Result.success(name);
     }
 
+    public static String snapshotJson(FileSystemSaveStore store, InputData inputData, Vec3dCore startPos,
+                                      Vec3dCore startVel, float startYaw, float startPitch,
+                                      AngleSolverState angleSolver, List<TickState> states) {
+        SaveFile file = buildFile(store, inputData, startPos, startVel, startYaw, startPitch, angleSolver, states, false);
+        return new GsonBuilder().setPrettyPrinting().create().toJson(file);
+    }
+
     public static Result<SaveFile> load(FileSystemSaveStore store, String rawName) {
         String name = sanitizeRelative(rawName);
         if (name == null) {

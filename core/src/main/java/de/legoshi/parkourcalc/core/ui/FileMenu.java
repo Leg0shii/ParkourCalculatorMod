@@ -284,6 +284,7 @@ public final class FileMenu {
      *  the clock arms on the first dirty frame so a fresh edit is never written instantly (gh-107). */
     public void tickAutoSave() {
         if (!settings.autoSave) return;
+        if (controller.isAutoSaveSuppressed()) return;
         if (controller.currentName() == null || !controller.isDirty()) return;
         long now = System.nanoTime();
         if (autoSaveClockNanos == 0L) {

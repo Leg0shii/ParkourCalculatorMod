@@ -39,18 +39,36 @@ public final class ClosedFormSolve {
      *  fragile seam states. */
     private static final double[] MARGINS_ROBUST = {5.0e-2, 2.0e-2, 1.0e-2, 5.0e-3, 1.2e-3, 3.0e-4, 0.0};
 
+    public static final class Result {
+        public final double[] yaws;
+        public final double violation;
+        public final boolean feasible;
+
+        Result(double[] yaws, double violation, boolean feasible) {
+            this.yaws = yaws;
+            this.violation = violation;
+            this.feasible = feasible;
+        }
+    }
+
     public static double[] optimize(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel) {
-        return optimize(exact, spec, feasTol, cancel, MARGINS, true);
+        Result r = optimizeReturning(exact, spec, feasTol, cancel, MARGINS, true);
+        return r != null && r.feasible ? r.yaws : null;
     }
 
     /** Like {@link #optimize}, but prefers clearance over objective: the result keeps the largest
      *  certifiable uniform distance from every wall. */
     public static double[] optimizeRobust(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel) {
-        return optimize(exact, spec, feasTol, cancel, MARGINS_ROBUST, false);
+        Result r = optimizeReturning(exact, spec, feasTol, cancel, MARGINS_ROBUST, false);
+        return r != null && r.feasible ? r.yaws : null;
     }
 
-    private static double[] optimize(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
-                                     double[] margins, boolean ascending) {
+    public static Result optimizeRobustGraded(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel) {
+        return optimizeReturning(exact, spec, feasTol, cancel, MARGINS_ROBUST, false);
+    }
+
+    private static Result optimizeReturning(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
+                                            double[] margins, boolean ascending) {
         JumpPhysicsInputs sc = spec.asScenario();
         List<JumpConstraint> constraints = spec.constraints;
 
@@ -75,6 +93,7 @@ public final class ClosedFormSolve {
         // Each rung warm-starts from the previous margin's multipliers, so the ladder costs barely more
         // than a single solve.
         double bestViol = Double.POSITIVE_INFINITY;
+        double[] bestYaws = null;
         double[] warm = null;
         for (double margin : margins) {
             if (cancel.get()) return null;
@@ -95,15 +114,39 @@ public final class ClosedFormSolve {
                 System.out.printf("  CLOSED margin=%.2e iters=%d pg=%.3e viol=%.2e obj=%.6f%n",
                         margin, solver.lastIters, solver.lastPgres, viol, o);
             }
-            if (viol < bestViol) bestViol = viol;
+            if (viol < bestViol) {
+                bestViol = viol;
+                bestYaws = yaws;
+            }
             if (viol <= feasTol) {
                 if (DEBUG) System.out.printf("  CLOSED -> %.2fus (margin=%.1e)%n", (System.nanoTime() - t0) / 1e3, margin);
-                return yaws;
+                return new Result(yaws, viol, true);
             }
         }
         if (DEBUG) System.out.printf("  CLOSED FALLBACK %.2fus bestViol=%.2e%n",
                 (System.nanoTime() - t0) / 1e3, bestViol);
-        return null;
+        if (bestYaws == null) return null;
+        return new Result(bestYaws, bestViol, false);
+    }
+
+    /** Diagnostic: the linear model's global optimum aims at margin 0, WITHOUT the byte-exact
+     *  re-certification gate. These are the facings the dual recovers; forward-simming them on the
+     *  byte-exact model and measuring the wall violation exposes the linearization error directly (the
+     *  gap between the linear model's prediction and the real game). {@code null} only when the closed
+     *  form does not apply (facing wall / trivially infeasible / dual unbounded). */
+    public static double[] linearOptimum(JumpSpec spec) {
+        if (JumpLinearModel.hasFacingWall(spec.constraints)) return null;
+        JumpPhysicsInputs sc = spec.asScenario();
+        JumpLinearModel lin = new JumpLinearModel(sc);
+        double[] cx = new double[lin.n];
+        double[] cz = new double[lin.n];
+        lin.objectiveVectors(spec.objective, cx, cz);
+        boolean[] trivialInfeasible = {false};
+        List<JumpLinearModel.Wall> walls = lin.compileWalls(spec.constraints, 0.0, trivialInfeasible);
+        if (trivialInfeasible[0]) return null;
+        CostateDualSolver.Result r = new CostateDualSolver(lin.n, cx, cz, lin.mMagAll(), walls).solve(0.0, null);
+        if (r == null) return null;
+        return recover(lin, spec.objective, r);
     }
 
     /** Weak-duality bound on the spec's objective in world coordinates: no feasible path can land beyond

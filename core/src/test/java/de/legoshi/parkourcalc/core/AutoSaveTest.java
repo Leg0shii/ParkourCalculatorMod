@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core;
 
+import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.ports.Simulator;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
@@ -65,9 +66,11 @@ public class AutoSaveTest {
         final SaveController controller;
         final FileMenu menu;
         final FileSystemSaveStore store;
+        final SimulationRunner runner;
 
         Rig(Path dir) {
-            controller = new SaveController(data, new SimulationRunner(new NullSimulator()), (MinecraftAccess) null, () -> { });
+            runner = new SimulationRunner(new NullSimulator());
+            controller = new SaveController(data, runner, (MinecraftAccess) null, () -> { });
             store = new FileSystemSaveStore(dir, "test", "1.8.9", () -> null);
             controller.setSaveStore(store);
             data.getRows().add(new InputRow());
@@ -119,5 +122,68 @@ public class AutoSaveTest {
         assertTrue(unnamed.controller.isDirty());
         assertEquals("nothing written for an unnamed session", 0,
                 unnamed.store.list().size());
+    }
+
+    @Test
+    public void tempApplySuppressesAutoSaveAndRestoresInitialTrajectory() throws Exception {
+        Rig rig = new Rig(Files.createTempDirectory("pkc-temp"));
+        rig.controller.setAngleSolver(new AngleSolverState());
+        rig.settings.autoSave = true;
+
+        rig.runner.setStartVelocity(new Vec3dCore(0.10, 0.0, 0.20));
+        rig.data.getRows().clear();
+        rig.data.getRows().add(new InputRow());
+        rig.data.getRows().add(new InputRow());
+        assertTrue(rig.controller.save("run").ok);
+
+        int origRows = rig.data.getRows().size();
+        Vec3dCore origVel = rig.runner.getStartVelocity();
+        Path saveFile = rig.store.getSaveDir().resolve("run.json");
+        long savedStamp = Files.getLastModifiedTime(saveFile).toMillis();
+
+        rig.controller.beginTempTrajectory();
+        assertTrue("temp apply suppresses auto-save", rig.controller.isAutoSaveSuppressed());
+
+        rig.runner.setStartVelocity(new Vec3dCore(0.90, 0.0, -0.40));
+        rig.data.getRows().clear();
+        rig.data.getRows().add(new InputRow());
+        rig.controller.markDirty();
+
+        rig.menu.tickAutoSave();
+        Thread.sleep(2);
+        rig.menu.tickAutoSave();
+        assertTrue("suppressed auto-save preserves the dirty flag", rig.controller.isDirty());
+        assertEquals("suppressed auto-save writes nothing",
+                savedStamp, Files.getLastModifiedTime(saveFile).toMillis());
+
+        rig.controller.restoreInitialTrajectory();
+        assertFalse("restore resumes auto-save", rig.controller.isAutoSaveSuppressed());
+        assertEquals("restore brings back the original rows", origRows, rig.data.getRows().size());
+        assertEquals("restore brings back the original start vel x", origVel.x, rig.runner.getStartVelocity().x, 0.0);
+        assertEquals("restore brings back the original start vel z", origVel.z, rig.runner.getStartVelocity().z, 0.0);
+
+        rig.menu.tickAutoSave();
+        Thread.sleep(2);
+        rig.menu.tickAutoSave();
+        assertFalse("auto-save resumes and persists after restore", rig.controller.isDirty());
+    }
+
+    @Test
+    public void saveCopyAsWritesNewFileWithoutSwitchingOrClearingTemp() throws Exception {
+        Rig rig = new Rig(Files.createTempDirectory("pkc-copyas"));
+        rig.controller.setAngleSolver(new AngleSolverState());
+        assertTrue(rig.controller.save("run").ok);
+
+        rig.controller.beginTempTrajectory();
+        rig.runner.setStartVelocity(new Vec3dCore(0.50, 0.0, 0.50));
+        rig.controller.markDirty();
+        boolean dirtyBefore = rig.controller.isDirty();
+
+        assertTrue(rig.controller.saveCopyAs("copy").ok);
+
+        assertTrue("save-copy wrote the new file", rig.store.exists("copy"));
+        assertEquals("save-copy did not switch the active save", "run", rig.controller.currentName());
+        assertEquals("save-copy left the dirty flag untouched", dirtyBefore, rig.controller.isDirty());
+        assertTrue("save-copy kept the temp trajectory active", rig.controller.isTempActive());
     }
 }

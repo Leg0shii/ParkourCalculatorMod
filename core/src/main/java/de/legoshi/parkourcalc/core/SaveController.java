@@ -38,6 +38,8 @@ public final class SaveController {
     private Settings settings;
     private String currentName;
     private boolean dirty;
+    private String preTempSnapshotJson;
+    private boolean tempActive;
 
     public SaveController(InputData inputData, SimulationRunner runner, MinecraftAccess mc, Runnable retriggerSimulation) {
         this.inputData = inputData;
@@ -72,6 +74,52 @@ public final class SaveController {
         this.dirty = true;
     }
 
+    public boolean isTempActive() {
+        return tempActive;
+    }
+
+    public boolean isAutoSaveSuppressed() {
+        return tempActive;
+    }
+
+    public void beginTempTrajectory() {
+        if (tempActive) return;
+        List<TickState> states = boxController != null ? boxController.getStates() : null;
+        preTempSnapshotJson = SaveIO.snapshotJson(store, inputData, runner.getStartPosition(),
+                runner.getStartVelocity(), runner.getStartYaw(), runner.getStartPitch(), angleSolver, states);
+        tempActive = true;
+    }
+
+    public void restoreInitialTrajectory() {
+        if (!tempActive || preTempSnapshotJson == null) return;
+        SaveFile f = SaveIO.parseSafe(preTempSnapshotJson);
+        if (f != null && f.start != null) {
+            if (solverEngine != null) solverEngine.onProblemReplaced();
+            SaveIO.applyRowsTo(f, inputData);
+            SaveIO.applyAngleSolverTo(f, angleSolver);
+            runner.invalidate();
+            runner.setStartPosition(SaveIO.posOf(f.start));
+            runner.setStartVelocity(SaveIO.velOf(f.start));
+            runner.setStartYaw(f.start.yaw);
+            runner.setStartPitch(f.start.pitch != null ? f.start.pitch : PlaybackController.DEFAULT_PITCH);
+            retriggerSimulation.run();
+        }
+        clearTempTrajectory();
+    }
+
+    public void clearTempTrajectory() {
+        tempActive = false;
+        preTempSnapshotJson = null;
+    }
+
+    public Result<String> saveCopyAs(String rawName) {
+        if (store == null) return Result.failure("Save store not initialized.");
+        List<TickState> states = boxController != null ? boxController.getStates() : null;
+        boolean fullDebug = settings != null && settings.saveDebugValues;
+        return SaveIO.save(store, rawName, inputData, runner.getStartPosition(), runner.getStartVelocity(),
+                runner.getStartYaw(), runner.getStartPitch(), angleSolver, states, fullDebug);
+    }
+
     public Result<String> save(String name) {
         if (store == null) return Result.failure("Save store not initialized.");
         List<TickState> states = boxController != null ? boxController.getStates() : null;
@@ -102,6 +150,7 @@ public final class SaveController {
         retriggerSimulation.run();
         currentName = name;
         dirty = false;
+        clearTempTrajectory();
         return result;
     }
 
@@ -130,6 +179,7 @@ public final class SaveController {
     public void discardCurrent() {
         currentName = null;
         dirty = false;
+        clearTempTrajectory();
     }
 
     public List<SaveInfo> list() {
