@@ -88,7 +88,6 @@ public final class VelocityMapWidget {
 
     private volatile FieldSnap field;
     private volatile boolean fieldRunning;
-    private volatile boolean currentSweepIsResample;
     private long fieldStartNanos;
     private final AtomicLongArray perCellNanos = new AtomicLongArray(3);
     private Thread fieldWorker;
@@ -351,7 +350,7 @@ public final class VelocityMapWidget {
         pendingFind = true;
     }
 
-    private void startSweep(double vxLo, double vxHi, double vzLo, double vzHi, boolean seed, boolean resample) {
+    private void startSweep(double vxLo, double vxHi, double vzLo, double vzHi, boolean seed) {
         if (finder == null) return;
         if (rangeEnabled.get() && rangeValid) {
             vxLo = Math.max(vxLo, rangeVxLo);
@@ -375,7 +374,6 @@ public final class VelocityMapWidget {
             AtomicBoolean prev = currentCancel;
             if (prev != null) prev.set(true);
             currentCancel = myCancel;
-            currentSweepIsResample = resample;
             field = snap;
             fieldStartNanos = startNanos;
             fieldRunning = true;
@@ -499,7 +497,7 @@ public final class VelocityMapWidget {
         if (pendingFind) {
             pendingFind = false;
             startSweep(screenToVx(x0, x0, cw), screenToVx(x1, x0, cw),
-                    screenToVz(y1, y0, ch), screenToVz(y0, y0, ch), false, false);
+                    screenToVz(y1, y0, ch), screenToVz(y0, y0, ch), false);
         }
 
         ImGui.invisibleButton("##velcanvas", cw, ch);
@@ -1166,7 +1164,7 @@ public final class VelocityMapWidget {
         long now = System.nanoTime();
         if (viewMoving) {
             lastViewMoveNanos = now;
-            if (fieldRunning && currentSweepIsResample) cancelCurrentSweep();
+            if (fieldRunning && viewMovedSinceSweep()) cancelCurrentSweep();
         }
         FieldSnap snap = field;
         if (snap == null || finder == null || fieldRunning) return;
@@ -1185,7 +1183,11 @@ public final class VelocityMapWidget {
         if (cx1 - cx0 < 1e-9 || cz1 - cz0 < 1e-9) return;
         if (!viewportDiffers(snap, cx0, cx1, cz0, cz1)) return;
         double mx = (vx1 - vx0) * 0.12, mz = (vz1 - vz0) * 0.12;
-        startSweep(vx0 - mx, vx1 + mx, vz0 - mz, vz1 + mz, true, true);
+        startSweep(vx0 - mx, vx1 + mx, vz0 - mz, vz1 + mz, true);
+    }
+
+    private boolean viewMovedSinceSweep() {
+        return centerVx != lastResampleVx || centerVz != lastResampleVz || pxPerUnit != lastResamplePx;
     }
 
     private boolean viewportDiffers(FieldSnap s, double vx0, double vx1, double vz0, double vz1) {
