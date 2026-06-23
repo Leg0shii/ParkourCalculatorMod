@@ -1,6 +1,8 @@
 # AGENTS.md
 
 Shared guidance for AI coding agents and contributors. This is the canonical guide; `CLAUDE.md` imports it so Claude Code picks it up automatically, and other tools that read `AGENTS.md` get the same content. Navigation reference: where to find what, and the rules that must not break. For deeper context:
+- `CONTEXT.md`: domain glossary. Decodes the Minecraft parkour and movement vocabulary (facing, direction, velocity, tier, neo, momentum, byte-exact, etc.). Read it first; almost none of these terms are in an LLM's training data.
+- `docs/reference/mcpk/`: in-repo mirror of the Minecraft Parkour Wiki physics (movement formulas, constants, the sine table, collision order, block friction, status effects, tiers). The byte-exact ground truth this tool replicates; if code disagrees with a number there, the code is the bug.
 - `docs/VISION.md`: north-star goal (two blocks in, full TAS out), the capability arc, design principles
 - `docs/CODING_GUIDE.md`: module rules, where new code goes, port pattern, per-module toolchains
 - `docs/research/`: angle-solver design record, ILS global-solve notes
