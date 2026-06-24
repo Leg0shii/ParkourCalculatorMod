@@ -1,5 +1,40 @@
 # Changelog
 
+## [1.6.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.5.1...v1.6.0) (2026-06-24)
+
+
+### Features
+
+* add ILS polish for short multijump sequences ([be18592](https://github.com/Leg0shii/ParkourCalculatorMod/commit/be1859232b96199996d6546ef39904546be2272c))
+* **anglesolver:** in-world visualization of landing constraints ([#145](https://github.com/Leg0shii/ParkourCalculatorMod/issues/145)) ([#169](https://github.com/Leg0shii/ParkourCalculatorMod/issues/169)) ([19a435c](https://github.com/Leg0shii/ParkourCalculatorMod/commit/19a435c805fe462c5ada803dcf149f6d59d7aea3))
+* **anglesolver:** keybind to add a block's landing constraints to the selected tick ([#115](https://github.com/Leg0shii/ParkourCalculatorMod/issues/115)) ([#153](https://github.com/Leg0shii/ParkourCalculatorMod/issues/153)) ([def54d3](https://github.com/Leg0shii/ParkourCalculatorMod/commit/def54d3b05a39813e947a336ef34cc0936618c5d))
+* **anglesolver:** user-tunable solve budget ([#173](https://github.com/Leg0shii/ParkourCalculatorMod/issues/173)) ([fa6d17d](https://github.com/Leg0shii/ParkourCalculatorMod/commit/fa6d17d388101d30849c2fb79e3db267dbe8fa4d))
+* better UX for solver result updates ([3608f0f](https://github.com/Leg0shii/ParkourCalculatorMod/commit/3608f0f32261c467910d670f3d6117ff255b8e30))
+* **input-pane:** configurable columns, per-tick pitch, and mouse buttons ([#100](https://github.com/Leg0shii/ParkourCalculatorMod/issues/100), [#101](https://github.com/Leg0shii/ParkourCalculatorMod/issues/101)) ([#154](https://github.com/Leg0shii/ParkourCalculatorMod/issues/154)) ([1898e0d](https://github.com/Leg0shii/ParkourCalculatorMod/commit/1898e0d37533d283a2350df01f1286c30f725b9a))
+* move a tick to target coordinates by shifting the start ([#132](https://github.com/Leg0shii/ParkourCalculatorMod/issues/132)) ([#149](https://github.com/Leg0shii/ParkourCalculatorMod/issues/149)) ([8f1eac1](https://github.com/Leg0shii/ParkourCalculatorMod/commit/8f1eac15f7c675ffda2fbd1fa9576d3d00c07dfe))
+* **playback:** replay from the selected tick or range ([#129](https://github.com/Leg0shii/ParkourCalculatorMod/issues/129)) ([#148](https://github.com/Leg0shii/ParkourCalculatorMod/issues/148)) ([2a10768](https://github.com/Leg0shii/ParkourCalculatorMod/commit/2a107681bf86c141698a00ca333fb2939549b084))
+* ranges show differences now as well ([78cf061](https://github.com/Leg0shii/ParkourCalculatorMod/commit/78cf0618051d97ee8ecaaaf9a420bea3b53c1ed8))
+* **ui:** browse sub-folders in the Open dialog ([#108](https://github.com/Leg0shii/ParkourCalculatorMod/issues/108)) ([#147](https://github.com/Leg0shii/ParkourCalculatorMod/issues/147)) ([34be334](https://github.com/Leg0shii/ParkourCalculatorMod/commit/34be334c81d35b7cc57c96f91606da833dc081d5))
+* **ui:** configurable Tick Info window ([#143](https://github.com/Leg0shii/ParkourCalculatorMod/issues/143)) ([#168](https://github.com/Leg0shii/ParkourCalculatorMod/issues/168)) ([b006af6](https://github.com/Leg0shii/ParkourCalculatorMod/commit/b006af6c30b28e69af76d5c408b0596e459e681d))
+* **ui:** reorder input tick right-click context menu into segments ([#140](https://github.com/Leg0shii/ParkourCalculatorMod/issues/140)) ([#167](https://github.com/Leg0shii/ParkourCalculatorMod/issues/167)) ([cbefee1](https://github.com/Leg0shii/ParkourCalculatorMod/commit/cbefee1716fbe6dce8556c2c24ac3c3c6378ce54))
+
+
+### Bug Fixes
+
+* align macro launch onGround with the sim for airborne starts ([#105](https://github.com/Leg0shii/ParkourCalculatorMod/issues/105)) ([#150](https://github.com/Leg0shii/ParkourCalculatorMod/issues/150)) ([1ea675d](https://github.com/Leg0shii/ParkourCalculatorMod/commit/1ea675dca2fed7d3f41288e3992c1db726cb9630))
+* **anglesolver:** full-height tick-row hitbox and aligned start/goal accent ([#135](https://github.com/Leg0shii/ParkourCalculatorMod/issues/135), [#136](https://github.com/Leg0shii/ParkourCalculatorMod/issues/136)) ([#146](https://github.com/Leg0shii/ParkourCalculatorMod/issues/146)) ([e93ad4e](https://github.com/Leg0shii/ParkourCalculatorMod/commit/e93ad4ed51b4d5c18529d6f7a99cef75abe14a6c))
+* cancel in-flight velocity sweep when the view changes ([#184](https://github.com/Leg0shii/ParkourCalculatorMod/issues/184)) ([290deea](https://github.com/Leg0shii/ParkourCalculatorMod/commit/290deea89a23eb681567c0533736f13d4d467a1f))
+* disable sound for simulator entity ([85f0e5b](https://github.com/Leg0shii/ParkourCalculatorMod/commit/85f0e5b0a927e58a4f65f493873a012f48ce5d90))
+* **forge-1.8.9:** let vanilla animate body yaw during playback ([#117](https://github.com/Leg0shii/ParkourCalculatorMod/issues/117)) ([#152](https://github.com/Leg0shii/ParkourCalculatorMod/issues/152)) ([eb7fee3](https://github.com/Leg0shii/ParkourCalculatorMod/commit/eb7fee32932c782e203b0f921ed435c059c91d85))
+* **forge-1.8.9:** reset glColor4f after world/HUD overlay so hotbar stays opaque in F5 ([#97](https://github.com/Leg0shii/ParkourCalculatorMod/issues/97)) ([#151](https://github.com/Leg0shii/ParkourCalculatorMod/issues/151)) ([39922bf](https://github.com/Leg0shii/ParkourCalculatorMod/commit/39922bf9f794a7fd549bc3f72242fe3245b117be))
+* input overlay rendering over window ([e812a1b](https://github.com/Leg0shii/ParkourCalculatorMod/commit/e812a1bd4b37fdb20d9739f4a1a373eb901bf9f7))
+* remove enableLighting as it dropped the alpha value of the hotbar ([79e0c58](https://github.com/Leg0shii/ParkourCalculatorMod/commit/79e0c58bc13f6b7fbb0bf25b6615c5acfbf0a3f2))
+* rendering depth fighting ([c749b11](https://github.com/Leg0shii/ParkourCalculatorMod/commit/c749b111996f179395a4942338bb9d6ca1a3ac22))
+* resimulate from current tick after solve ([7ba3c63](https://github.com/Leg0shii/ParkourCalculatorMod/commit/7ba3c63215782f759d96dab3365c937d4a2a587c))
+* tick player hitboxes, add Sprint for ticks, warning on solver ([21763e3](https://github.com/Leg0shii/ParkourCalculatorMod/commit/21763e3f63b5623c9cff31181eaccd705de4ae60))
+* tick table inconsistencies ([4d8581f](https://github.com/Leg0shii/ParkourCalculatorMod/commit/4d8581f3ed3d78ba8b0426b8e48fe33b49d3b73b))
+* yaw gizmo circle rendered in wrong place ([5bff20b](https://github.com/Leg0shii/ParkourCalculatorMod/commit/5bff20bf1e541969aa361a488889b72ecffe2e8d))
+
 ## [1.5.1](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.5.0...v1.5.1) (2026-06-13)
 
 
