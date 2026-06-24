@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.1](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.6.0...v1.6.1) (2026-06-24)
+
+
+### Bug Fixes
+
+* velocity finder constraints ([8ba84bf](https://github.com/Leg0shii/ParkourCalculatorMod/commit/8ba84bf6f4548078befe85341b82eca41dc90b16))
+
 ## [1.6.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.5.1...v1.6.0) (2026-06-24)
 
 
