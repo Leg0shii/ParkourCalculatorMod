@@ -398,6 +398,7 @@ public class SimulatorEntity extends PlayerEntity {
         c.ticksLeftToDoubleTapSprint = this.ticksLeftToDoubleTapSprint;
         c.playerInput = this.input.playerInput;
         c.jumpingCooldown = this.jumpingCooldown;
+        c.movementMultiplier = this.movementMultiplier;
         return c;
     }
 
@@ -415,6 +416,7 @@ public class SimulatorEntity extends PlayerEntity {
         this.ticksLeftToDoubleTapSprint = c.ticksLeftToDoubleTapSprint;
         this.input.playerInput = c.playerInput;
         this.jumpingCooldown = c.jumpingCooldown;
+        this.movementMultiplier = c.movementMultiplier;
     }
 
     public static void applyCheckpoint(net.minecraft.client.network.ClientPlayerEntity p, de.legoshi.parkourcalc.core.sim.Checkpoint state) {
@@ -425,6 +427,7 @@ public class SimulatorEntity extends PlayerEntity {
         p.collidedSoftly = c.collidedSoftly;
         p.setSprinting(c.sprinting);
         p.jumpingCooldown = c.jumpingCooldown;
+        p.movementMultiplier = c.movementMultiplier;
     }
 
     public static final class Checkpoint implements de.legoshi.parkourcalc.core.sim.Checkpoint {
@@ -438,5 +441,6 @@ public class SimulatorEntity extends PlayerEntity {
         int ticksLeftToDoubleTapSprint;
         PlayerInput playerInput;
         int jumpingCooldown;
+        Vec3d movementMultiplier;
     }
 }

@@ -14,3 +14,9 @@ accessible method net/minecraft/client/render/RenderLayer of (Ljava/lang/String;
 # so replay preserves the post-jump cooldown; without it, edits upstream of a
 # jump tick can drop the jump on re-simulation.
 accessible field net/minecraft/entity/LivingEntity jumpingCooldown I
+
+# Entity.movementMultiplier (private): the cobweb slowdown carries across ticks
+# (slowMovement sets it; move() consumes and resets it). Captured in
+# SimulatorEntity.Checkpoint so re-simulation and replay resuming inside a cobweb
+# keep the pending slowdown instead of dropping a tick of it.
+accessible field net/minecraft/entity/Entity movementMultiplier Lnet/minecraft/util/math/Vec3d;
