@@ -2,15 +2,15 @@ accessWidener v2 named
 
 # RenderPipelines.POSITION_COLOR_SNIPPET (private): needed to build our custom
 # translucent face + thin-line pipelines without redoing all the shader wiring.
-accessible field net/minecraft/client/gl/RenderPipelines POSITION_COLOR_SNIPPET Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;
+accessible field net/minecraft/client/renderer/RenderPipelines DEBUG_FILLED_SNIPPET Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;
 
 # RenderLayer.of (private 6-arg): lets us set translucent=true on the face
 # layer so the Immediate's draw order puts it in the translucent pass, after
 # the opaque wireframe lines. Without this the face draws under the wireframe
 # and gets visually overwritten.
-accessible method net/minecraft/client/render/RenderLayer of (Ljava/lang/String;IZZLcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/client/render/RenderLayer$MultiPhaseParameters;)Lnet/minecraft/client/render/RenderLayer$MultiPhase;
+accessible method net/minecraft/client/renderer/RenderType create (Ljava/lang/String;IZZLcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/client/renderer/RenderType$CompositeState;)Lnet/minecraft/client/renderer/RenderType$CompositeRenderType;
 
 # LivingEntity.jumpingCooldown (private): captured in SimulatorEntity.Checkpoint
 # so replay preserves the post-jump cooldown; without it, edits upstream of a
 # jump tick can drop the jump on re-simulation.
-accessible field net/minecraft/entity/LivingEntity jumpingCooldown I
+accessible field net/minecraft/world/entity/LivingEntity noJumpDelay I

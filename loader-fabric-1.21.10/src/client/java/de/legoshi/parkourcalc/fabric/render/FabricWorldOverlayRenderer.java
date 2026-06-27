@@ -9,10 +9,10 @@ import de.legoshi.parkourcalc.core.ui.BoxStyle;
 import de.legoshi.parkourcalc.core.ui.SelectionManager;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.ui.YawGizmoController;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.MultiBufferSource;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 
 /** Renders the cached path geometry into the world from WorldRendererMixin; the yaw gizmo stays immediate. */
@@ -40,15 +40,15 @@ public final class FabricWorldOverlayRenderer {
         long renderStart = Perf.now();
         boxController.setBoxSize(BoxStyle.tickBoxSize(settings));
 
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
 
-        MatrixStack matrixStack = new MatrixStack();
+        PoseStack matrixStack = new PoseStack();
 
-        Vec3d cameraPos = client.gameRenderer.getCamera().getPos();
-        matrixStack.push();
+        Vec3 cameraPos = client.gameRenderer.getMainCamera().getPosition();
+        matrixStack.pushPose();
         matrixStack.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z);
 
-        VertexConsumerProvider.Immediate consumers = client.getBufferBuilders().getEntityVertexConsumers();
+        MultiBufferSource.BufferSource consumers = client.renderBuffers().bufferSource();
 
         PathRenderPlan plan = PathRenderPlan.build(boxController, settings, selection);
         cached.ensureBuilt(boxController, plan.structuralHash, plan.selection, plan.faceEmitter, plan.lineEmitter, plan.patch, plan.constraintFaceVerts, plan.constraintLineVerts);
@@ -73,9 +73,9 @@ public final class FabricWorldOverlayRenderer {
                 boxController.renderYawGizmo(linesRenderer, center, yawDeg, radius, BoxStyle.yawGizmoCircleArgb(settings), BoxStyle.yawGizmoDirectionArgb(settings));
             }
         }
-        consumers.draw();
+        consumers.endBatch();
 
-        matrixStack.pop();
+        matrixStack.popPose();
         Perf.stop("worldOverlay", renderStart);
         Perf.addBoxes(boxController.size());
     }

@@ -4,21 +4,21 @@ import com.mojang.authlib.GameProfile;
 import de.legoshi.parkourcalc.core.sim.SubtickPath;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityPose;
-import net.minecraft.entity.MovementType;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.PlayerInput;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec2f;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.GameMode;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.player.Input;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec2;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -27,11 +27,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SimulatorEntity extends PlayerEntity {
+public class SimulatorEntity extends Player {
 
     public final SimulatorInput input = new SimulatorInput();
-    public Vec3d startPosition;
-    public Vec3d startVelocity;
+    public Vec3 startPosition;
+    public Vec3 startVelocity;
     public float startYaw;
 
     // No shadow prev* fields: SimulatorInput.playerInput holds the previous tick's
@@ -64,14 +64,14 @@ public class SimulatorEntity extends PlayerEntity {
 
     /** Axis order mirrors Direction.method_73163 (Y first, X/Z by |component|). */
     @Override
-    public void move(MovementType type, Vec3d motion) {
+    public void move(MoverType type, Vec3 motion) {
         if (!capturing) {
             super.move(type, motion);
             return;
         }
-        Vec3d before = this.getEntityPos();
+        Vec3 before = this.position();
         super.move(type, motion);
-        Vec3d after = this.getEntityPos();
+        Vec3 after = this.position();
 
         double cx = after.x - before.x;
         double cy = after.y - before.y;
@@ -80,7 +80,7 @@ public class SimulatorEntity extends PlayerEntity {
                 Math.abs(motion.x) >= Math.abs(motion.z));
     }
 
-    public SimulatorEntity(World world, GameProfile profile, Vec3d startPosition, Vec3d startVelocity, float startYaw) {
+    public SimulatorEntity(Level world, GameProfile profile, Vec3 startPosition, Vec3 startVelocity, float startYaw) {
         super(world, profile);
         this.startPosition = startPosition;
         this.startVelocity = startVelocity;
@@ -89,70 +89,70 @@ public class SimulatorEntity extends PlayerEntity {
     }
 
     public void resetPlayer() {
-        this.noClip = true;
-        this.clearStatusEffects();
+        this.noPhysics = true;
+        this.removeAllEffects();
         this.setHealth(this.getMaxHealth());
-        this.setPosition(startPosition);
-        this.setVelocity(Vec3d.ZERO);
-        this.setRotation(startYaw, 0);
+        this.setPos(startPosition);
+        this.setDeltaMovement(Vec3.ZERO);
+        this.setRot(startYaw, 0);
 
         this.input.setData(new InputRow());
         this.ticksLeftToDoubleTapSprint = 0;
         this.tick();
         this.tick();
 
-        this.setPosition(startPosition);
-        this.setVelocity(startVelocity);
+        this.setPos(startPosition);
+        this.setDeltaMovement(startVelocity);
     }
 
     @Override
-    public boolean damage(ServerWorld world, DamageSource source, float amount) {
+    public boolean hurtServer(ServerLevel world, DamageSource source, float amount) {
         return false;
     }
 
     @Override
-    public void addExhaustion(float amount) {
+    public void causeFoodExhaustion(float amount) {
     }
 
     /** Required so canMoveVoluntarily/isLogicalSideForUpdatingMovement return true
      *  on the client world; without it the entity's physics never advance. */
     @Override
-    public boolean isMainPlayer() {
+    public boolean isLocalPlayer() {
         return true;
     }
 
     /** Lets the entity tick on ServerWorld: Entity.isLogicalSideForUpdatingMovement is final
      *  and returns !isControlledByPlayer() there, and PlayerEntity defaults that to true. */
     @Override
-    public boolean isControlledByPlayer() {
+    public boolean isClientAuthoritative() {
         return false;
     }
 
     @Override
-    public @Nullable GameMode getGameMode() {
-        return GameMode.DEFAULT;
+    public @Nullable GameType gameMode() {
+        return GameType.DEFAULT_MODE;
     }
 
     /** No-op so the simulator doesn't spawn particles in the real world. */
     @Override
-    protected void spawnSprintingParticles() {
+    protected void spawnSprintParticle() {
     }
 
     /** No-op so dragging a TAS through water doesn't spam splash/bubble particles
      *  (and the splash sound) on every re-simulation. */
     @Override
-    protected void onSwimmingStart() {
+    protected void doWaterSplashEffect() {
     }
 
     @Override
-    public void playSound(net.minecraft.sound.SoundEvent sound, float volume, float pitch) {
+    public void playSound(net.minecraft.sounds.SoundEvent sound, float volume, float pitch) {
     }
 
     /** No-op: vanilla calls discard() when Y < bottomY - 64, which sets removalReason and
      *  makes every subsequent tick() a no-op. Simulator paths legitimately fall past world
      *  bottom (TAS into the void) and must keep ticking; resetPlayer() snaps position back. */
     @Override
-    protected void tickInVoid() {
+    protected void onBelowWorld() {
     }
 
     // LivingEntity gates clearStatusEffects / onStatusEffect* on !world.isClient(),
@@ -160,39 +160,39 @@ public class SimulatorEntity extends PlayerEntity {
     // without the gate so attribute modifiers actually attach and detach.
 
     @Override
-    public boolean clearStatusEffects() {
-        Map<net.minecraft.registry.entry.RegistryEntry<StatusEffect>, StatusEffectInstance> active = this.getActiveStatusEffects();
+    public boolean removeAllEffects() {
+        Map<net.minecraft.core.Holder<MobEffect>, MobEffectInstance> active = this.getActiveEffectsMap();
         if (active.isEmpty()) return false;
-        Map<net.minecraft.registry.entry.RegistryEntry<StatusEffect>, StatusEffectInstance> copy = new HashMap<>(active);
+        Map<net.minecraft.core.Holder<MobEffect>, MobEffectInstance> copy = new HashMap<>(active);
         active.clear();
-        this.onStatusEffectsRemoved(copy.values());
+        this.onEffectsRemoved(copy.values());
         return true;
     }
 
     @Override
-    protected void onStatusEffectApplied(StatusEffectInstance effect, @Nullable Entity source) {
-        effect.getEffectType().value().onApplied(this.getAttributes(), effect.getAmplifier());
+    protected void onEffectAdded(MobEffectInstance effect, @Nullable Entity source) {
+        effect.getEffect().value().addAttributeModifiers(this.getAttributes(), effect.getAmplifier());
     }
 
     @Override
-    protected void onStatusEffectUpgraded(StatusEffectInstance effect, boolean reapplyEffect, @Nullable Entity source) {
+    protected void onEffectUpdated(MobEffectInstance effect, boolean reapplyEffect, @Nullable Entity source) {
         if (reapplyEffect) {
-            StatusEffect type = effect.getEffectType().value();
-            type.onRemoved(this.getAttributes());
-            type.onApplied(this.getAttributes(), effect.getAmplifier());
+            MobEffect type = effect.getEffect().value();
+            type.removeAttributeModifiers(this.getAttributes());
+            type.addAttributeModifiers(this.getAttributes(), effect.getAmplifier());
         }
     }
 
     @Override
-    protected void onStatusEffectsRemoved(Collection<StatusEffectInstance> effects) {
-        for (StatusEffectInstance e : effects) {
-            e.getEffectType().value().onRemoved(this.getAttributes());
+    protected void onEffectsRemoved(Collection<MobEffectInstance> effects) {
+        for (MobEffectInstance e : effects) {
+            e.getEffect().value().removeAttributeModifiers(this.getAttributes());
         }
     }
 
     /** No-op so the simulator can't shove the real player or other world entities. */
     @Override
-    protected void tickCramming() {
+    protected void pushEntities() {
     }
 
     /**
@@ -202,17 +202,17 @@ public class SimulatorEntity extends PlayerEntity {
      */
     @Override
     public void tick() {
-        Vec3d before = this.getEntityPos();
+        Vec3 before = this.position();
         super.tick();
         if (!this.collisionAngleComputedThisTick) {
-            Vec3d after = this.getEntityPos();
+            Vec3 after = this.position();
             this.lastCollisionAngleDegrees = computeCollisionAngleDegrees(
                     after.x - before.x, after.z - before.z);
         }
     }
 
     @Override
-    public void tickMovement() {
+    public void aiStep() {
         this.lastCollisionAngleDegrees = Double.NaN;
         this.collisionAngleComputedThisTick = false;
 
@@ -221,20 +221,20 @@ public class SimulatorEntity extends PlayerEntity {
         }
 
         // Capture pre-input.tick() so bl2/bl3 hold the previous tick's state.
-        boolean bl2 = this.input.playerInput.sneak();
-        boolean bl3 = this.input.hasForwardMovement();
+        boolean bl2 = this.input.keyPresses.shift();
+        boolean bl3 = this.input.hasForwardImpulse();
 
         // Mirrors ClientPlayerEntity 1:1; the !canChangeIntoPose(STANDING) term is vanilla's
         // forced crouch under a low ceiling, which keeps the slowdown after sneak is released.
         this.inSneakingPose = !this.getAbilities().flying
                 && !this.isSwimming()
-                && !this.hasVehicle()
-                && this.canChangeIntoPose(EntityPose.CROUCHING)
-                && (this.isSneaking() || !this.isSleeping() && !this.canChangeIntoPose(EntityPose.STANDING));
+                && !this.isPassenger()
+                && this.canPlayerFitWithinBlocksAndEntitiesWhen(Pose.CROUCHING)
+                && (this.isShiftKeyDown() || !this.isSleeping() && !this.canPlayerFitWithinBlocksAndEntitiesWhen(Pose.STANDING));
 
         this.input.tick();
 
-        if (bl2 || this.isUsingItem() && !this.hasVehicle() || this.input.playerInput.backward()) {
+        if (bl2 || this.isUsingItem() && !this.isPassenger() || this.input.keyPresses.backward()) {
             this.ticksLeftToDoubleTapSprint = 0;
         }
 
@@ -247,7 +247,7 @@ public class SimulatorEntity extends PlayerEntity {
                 }
             }
 
-            if (this.input.playerInput.sprint()) {
+            if (this.input.keyPresses.sprint()) {
                 this.setSprinting(true);
             }
         }
@@ -262,18 +262,18 @@ public class SimulatorEntity extends PlayerEntity {
             }
         }
 
-        super.tickMovement();
+        super.aiStep();
     }
 
     /** Read sneak directly from the per-tick input so any caller during this tick
      *  sees the current value without waiting on data-tracker sync. */
     @Override
-    public boolean isSneaking() {
-        return this.input.playerInput.sneak();
+    public boolean isShiftKeyDown() {
+        return this.input.keyPresses.shift();
     }
 
     @Override
-    public boolean isInSneakingPose() {
+    public boolean isCrouching() {
         return this.inSneakingPose;
     }
 
@@ -281,47 +281,47 @@ public class SimulatorEntity extends PlayerEntity {
 
     private boolean canStartSprinting() {
         return !this.isSprinting()
-                && this.input.hasForwardMovement()
+                && this.input.hasForwardImpulse()
                 && this.isSprintingPossible(this.getAbilities().flying)
                 && !this.isUsingItem()
-                && (!this.isGliding() || this.isSubmergedInWater())
-                && (!this.isMovingSlowly() || this.isSubmergedInWater());
+                && (!this.isFallFlying() || this.isUnderWater())
+                && (!this.isMovingSlowly() || this.isUnderWater());
     }
 
     private boolean shouldStopRunSprinting() {
         return !this.isSprintingPossible(this.getAbilities().flying)
-                || !this.input.hasForwardMovement()
-                || this.horizontalCollision && !this.collidedSoftly;
+                || !this.input.hasForwardImpulse()
+                || this.horizontalCollision && !this.minorHorizontalCollision;
     }
 
     private boolean shouldStopSwimSprinting() {
         return !this.isSprintingPossible(true)
-                || !this.isTouchingWater()
-                || !this.input.hasForwardMovement() && !this.isOnGround() && !this.input.playerInput.sneak();
+                || !this.isInWater()
+                || !this.input.hasForwardImpulse() && !this.onGround() && !this.input.keyPresses.shift();
     }
 
     private boolean isSprintingPossible(boolean allowedInShallowWater) {
-        return !this.hasBlindnessEffect()
+        return !this.isMobilityRestricted()
                 && this.hasEnoughFoodToSprint()
-                && (!this.hasVehicle() || this.vehicleCanSprint(this.getVehicle()))
-                && (allowedInShallowWater || !this.isPartlyTouchingWater());
+                && (!this.isPassenger() || this.vehicleCanSprint(this.getVehicle()))
+                && (allowedInShallowWater || !this.isInShallowWater());
     }
 
     private boolean vehicleCanSprint(Entity vehicle) {
-        return vehicle.canSprintAsVehicle() && vehicle.isLogicalSideForUpdatingMovement();
+        return vehicle.canSprint() && vehicle.isLocalInstanceAuthoritative();
     }
 
     private boolean hasEnoughFoodToSprint() {
-        return this.hasVehicle() || this.getHungerManager().getFoodLevel() > 6.0F || this.getAbilities().allowFlying;
+        return this.isPassenger() || this.getFoodData().getFoodLevel() > 6.0F || this.getAbilities().mayfly;
     }
 
     /** Lives on LocalPlayer in MC, not Player, so we redeclare it. */
     public boolean isMovingSlowly() {
-        return this.isInSneakingPose() || this.isCrawling();
+        return this.isCrouching() || this.isVisuallyCrawling();
     }
 
     @Override
-    protected boolean hasCollidedSoftly(Vec3d adjustedMovement) {
+    protected boolean isHorizontalCollisionMinor(Vec3 adjustedMovement) {
         double angleDeg = computeCollisionAngleDegrees(adjustedMovement.x, adjustedMovement.z);
         if (Double.isNaN(angleDeg)) {
             return false;
@@ -332,13 +332,13 @@ public class SimulatorEntity extends PlayerEntity {
     }
 
     private double computeCollisionAngleDegrees(double movementX, double movementZ) {
-        float yRotInRadians = this.getYaw() * (float) (Math.PI / 180.0);
-        double yRotSin = MathHelper.sin(yRotInRadians);
-        double yRotCos = MathHelper.cos(yRotInRadians);
-        double globalXA = this.sidewaysSpeed * yRotCos - this.forwardSpeed * yRotSin;
-        double globalZA = this.forwardSpeed * yRotCos + this.sidewaysSpeed * yRotSin;
-        double aLengthSquared = MathHelper.square(globalXA) + MathHelper.square(globalZA);
-        double movementLengthSquared = MathHelper.square(movementX) + MathHelper.square(movementZ);
+        float yRotInRadians = this.getYRot() * (float) (Math.PI / 180.0);
+        double yRotSin = Mth.sin(yRotInRadians);
+        double yRotCos = Mth.cos(yRotInRadians);
+        double globalXA = this.xxa * yRotCos - this.zza * yRotSin;
+        double globalZA = this.zza * yRotCos + this.xxa * yRotSin;
+        double aLengthSquared = Mth.square(globalXA) + Mth.square(globalZA);
+        double movementLengthSquared = Mth.square(movementX) + Mth.square(movementZ);
         if (aLengthSquared < 1.0E-5F || movementLengthSquared < 1.0E-5F) {
             return Double.NaN;
         }
@@ -347,57 +347,57 @@ public class SimulatorEntity extends PlayerEntity {
     }
 
     @Override
-    public void tickMovementInput() {
-        Vec2f movement = modifyInput(this.input.getMovementInput());
-        this.sidewaysSpeed = movement.x;
-        this.forwardSpeed = movement.y;
-        this.jumping = this.input.playerInput.jump();
+    public void applyInput() {
+        Vec2 movement = modifyInput(this.input.getMoveVector());
+        this.xxa = movement.x;
+        this.zza = movement.y;
+        this.jumping = this.input.keyPresses.jump();
     }
 
-    private Vec2f modifyInput(Vec2f input) {
+    private Vec2 modifyInput(Vec2 input) {
         if (input.lengthSquared() == 0.0F) {
             return input;
         }
-        Vec2f newInput = input.multiply(0.98F);
+        Vec2 newInput = input.scale(0.98F);
         // Vanilla gates on shouldSlowDown() (pose from the previous tick's sneak), so the
         // slowdown lands one tick after the sneak input; isSneaking() would apply it a tick early.
         if (this.isMovingSlowly()) {
-            float sneakingMovementFactor = (float) this.getAttributeValue(EntityAttributes.SNEAKING_SPEED);
-            newInput = newInput.multiply(sneakingMovementFactor);
+            float sneakingMovementFactor = (float) this.getAttributeValue(Attributes.SNEAKING_SPEED);
+            newInput = newInput.scale(sneakingMovementFactor);
         }
         return modifyInputSpeedForSquareMovement(newInput);
     }
 
-    private static Vec2f modifyInputSpeedForSquareMovement(Vec2f input) {
+    private static Vec2 modifyInputSpeedForSquareMovement(Vec2 input) {
         float length = input.length();
         if (length <= 0.0F) {
             return input;
         }
-        Vec2f direction = input.multiply(1.0F / length);
+        Vec2 direction = input.scale(1.0F / length);
         float distanceToUnitSquare = distanceToUnitSquare(direction);
         float modifiedLength = Math.min(length * distanceToUnitSquare, 1.0F);
-        return direction.multiply(modifiedLength);
+        return direction.scale(modifiedLength);
     }
 
-    private static float distanceToUnitSquare(Vec2f direction) {
+    private static float distanceToUnitSquare(Vec2 direction) {
         float directionX = Math.abs(direction.x);
         float directionY = Math.abs(direction.y);
         float tan = directionY > directionX ? directionX / directionY : directionY / directionX;
-        return MathHelper.sqrt(1.0F + MathHelper.square(tan));
+        return Mth.sqrt(1.0F + Mth.square(tan));
     }
 
     public Checkpoint saveCheckpoint() {
         Checkpoint c = new Checkpoint();
-        c.pos = this.getEntityPos();
-        c.velocity = this.getVelocity();
-        c.yaw = this.getYaw();
-        c.onGround = this.isOnGround();
+        c.pos = this.position();
+        c.velocity = this.getDeltaMovement();
+        c.yaw = this.getYRot();
+        c.onGround = this.onGround();
         c.horizontalCollision = this.horizontalCollision;
-        c.collidedSoftly = this.collidedSoftly;
+        c.collidedSoftly = this.minorHorizontalCollision;
         c.sprinting = this.isSprinting();
         c.ticksLeftToDoubleTapSprint = this.ticksLeftToDoubleTapSprint;
-        c.playerInput = this.input.playerInput;
-        c.jumpingCooldown = this.jumpingCooldown;
+        c.playerInput = this.input.keyPresses;
+        c.jumpingCooldown = this.noJumpDelay;
         return c;
     }
 
@@ -405,38 +405,38 @@ public class SimulatorEntity extends PlayerEntity {
         // Start from the clean spawn baseline (same as a full run's resetToStart) so no uncaptured
         // entity state from the previous run leaks in; the overlay below restores the history it carries.
         resetPlayer();
-        this.setPosition(c.pos);
-        this.setVelocity(c.velocity);
-        this.setYaw(c.yaw);
+        this.setPos(c.pos);
+        this.setDeltaMovement(c.velocity);
+        this.setYRot(c.yaw);
         this.setOnGround(c.onGround);
         this.horizontalCollision = c.horizontalCollision;
-        this.collidedSoftly = c.collidedSoftly;
+        this.minorHorizontalCollision = c.collidedSoftly;
         this.setSprinting(c.sprinting);
         this.ticksLeftToDoubleTapSprint = c.ticksLeftToDoubleTapSprint;
-        this.input.playerInput = c.playerInput;
-        this.jumpingCooldown = c.jumpingCooldown;
+        this.input.keyPresses = c.playerInput;
+        this.noJumpDelay = c.jumpingCooldown;
     }
 
-    public static void applyCheckpoint(net.minecraft.client.network.ClientPlayerEntity p, de.legoshi.parkourcalc.core.sim.Checkpoint state) {
+    public static void applyCheckpoint(net.minecraft.client.player.LocalPlayer p, de.legoshi.parkourcalc.core.sim.Checkpoint state) {
         if (!(state instanceof Checkpoint)) return;
         Checkpoint c = (Checkpoint) state;
         p.setOnGround(c.onGround);
         p.horizontalCollision = c.horizontalCollision;
-        p.collidedSoftly = c.collidedSoftly;
+        p.minorHorizontalCollision = c.collidedSoftly;
         p.setSprinting(c.sprinting);
-        p.jumpingCooldown = c.jumpingCooldown;
+        p.noJumpDelay = c.jumpingCooldown;
     }
 
     public static final class Checkpoint implements de.legoshi.parkourcalc.core.sim.Checkpoint {
-        Vec3d pos;
-        Vec3d velocity;
+        Vec3 pos;
+        Vec3 velocity;
         float yaw;
         boolean onGround;
         boolean horizontalCollision;
         boolean collidedSoftly;
         boolean sprinting;
         int ticksLeftToDoubleTapSprint;
-        PlayerInput playerInput;
+        Input playerInput;
         int jumpingCooldown;
     }
 }

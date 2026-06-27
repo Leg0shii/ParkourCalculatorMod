@@ -16,10 +16,10 @@ import imgui.extension.implot.ImPlotContext;
 import imgui.flag.ImGuiConfigFlags;
 import imgui.gl3.ImGuiImplGl3;
 import imgui.glfw.ImGuiImplGlfw;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.Framebuffer;
-import net.minecraft.client.gl.GlBackend;
-import net.minecraft.client.texture.GlTexture;
+import net.minecraft.client.Minecraft;
+import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.opengl.GlDevice;
+import com.mojang.blaze3d.opengl.GlTexture;
 import org.apache.commons.io.IOUtils;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11C;
@@ -144,19 +144,19 @@ public final class ImGuiImpl {
     }
 
     private static int currentFramebufferHeight() {
-        MinecraftClient mc = MinecraftClient.getInstance();
+        Minecraft mc = Minecraft.getInstance();
         if (mc == null) return 0;
-        Framebuffer fb = mc.getFramebuffer();
-        return fb == null ? 0 : fb.textureHeight;
+        RenderTarget fb = mc.getMainRenderTarget();
+        return fb == null ? 0 : fb.height;
     }
 
     private static void bindMinecraftFramebuffer() {
-        Framebuffer framebuffer = MinecraftClient.getInstance().getFramebuffer();
-        int framebufferId = ((GlTexture) Objects.requireNonNull(framebuffer.getColorAttachment()))
-                .getOrCreateFramebuffer(((GlBackend) RenderSystem.getDevice()).getBufferManager(), null);
+        RenderTarget framebuffer = Minecraft.getInstance().getMainRenderTarget();
+        int framebufferId = ((GlTexture) Objects.requireNonNull(framebuffer.getColorTexture()))
+                .getFbo(((GlDevice) RenderSystem.getDevice()).directStateAccess(), null);
 
         GlStateManager._glBindFramebuffer(GL30C.GL_FRAMEBUFFER, framebufferId);
-        GL11C.glViewport(0, 0, framebuffer.textureWidth, framebuffer.textureHeight);
+        GL11C.glViewport(0, 0, framebuffer.width, framebuffer.height);
     }
 
     private static void handleViewports() {

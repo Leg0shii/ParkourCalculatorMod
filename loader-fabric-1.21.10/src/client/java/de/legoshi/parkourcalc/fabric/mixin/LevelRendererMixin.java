@@ -2,10 +2,10 @@ package de.legoshi.parkourcalc.fabric.mixin;
 
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import de.legoshi.parkourcalc.fabric.FabricParkourCalculator;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.RenderTickCounter;
-import net.minecraft.client.render.WorldRenderer;
-import net.minecraft.client.util.ObjectAllocator;
+import net.minecraft.client.Camera;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.renderer.LevelRenderer;
+import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
 import org.joml.Matrix4f;
 import org.joml.Vector4f;
 import org.spongepowered.asm.mixin.Mixin;
@@ -13,16 +13,16 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(WorldRenderer.class)
-public class WorldRendererMixin {
+@Mixin(LevelRenderer.class)
+public class LevelRendererMixin {
 
     // Captured here, rendered from SectionRenderStateMixin just before the translucent terrain pass
     // so path boxes stay visible through water, lava, and stained/tinted glass while opaque blocks
     // still occlude them.
-    @Inject(method = "render", at = @At("HEAD"))
+    @Inject(method = "renderLevel", at = @At("HEAD"))
     private void onRenderWorld(
-            ObjectAllocator allocator,
-            RenderTickCounter tickCounter,
+            GraphicsResourceAllocator allocator,
+            DeltaTracker tickCounter,
             boolean renderBlockOutline,
             Camera camera,
             Matrix4f positionMatrix,

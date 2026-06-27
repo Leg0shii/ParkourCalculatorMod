@@ -2,9 +2,9 @@ package de.legoshi.parkourcalc.fabric.mixin;
 
 import de.legoshi.parkourcalc.fabric.FabricParkourCalculator;
 import de.legoshi.parkourcalc.fabric.imgui.ImGuiImpl;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.RunArgs;
-import net.minecraft.client.util.Window;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.main.GameConfig;
+import com.mojang.blaze3d.platform.Window;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -12,16 +12,16 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(MinecraftClient.class)
-public class MinecraftClientMixin {
+@Mixin(Minecraft.class)
+public class MinecraftMixin {
 
     @Shadow
     @Final
     private Window window;
 
     @Inject(method = "<init>", at = @At("RETURN"))
-    public void initImGui(RunArgs args, CallbackInfo ci) {
-        ImGuiImpl.create(window.getHandle(), FabricParkourCalculator.getSettings(), FabricParkourCalculator::resolveAutoScale);
+    public void initImGui(GameConfig args, CallbackInfo ci) {
+        ImGuiImpl.create(window.handle(), FabricParkourCalculator.getSettings(), FabricParkourCalculator::resolveAutoScale);
     }
 
     @Inject(method = "close", at = @At("HEAD"))

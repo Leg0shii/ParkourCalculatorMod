@@ -13,12 +13,12 @@ import de.legoshi.parkourcalc.core.render.SelectionPatchSpec;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.Framebuffer;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.BuiltBuffer;
-import net.minecraft.client.render.VertexFormats;
-import net.minecraft.client.util.BufferAllocator;
+import net.minecraft.client.Minecraft;
+import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.MeshData;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -97,8 +97,8 @@ public final class CachedBoxGeometry implements AutoCloseable {
         hitboxEdges = patch.hitboxEdges();
         hitboxStarts = PathVertexLayout.hitboxVertexStarts(boxController, hitboxEdges, useSubtick);
 
-        faceSegments = bake(BoxRenderer.Mode.FACES, VertexFormat.DrawMode.TRIANGLES, boxCount * FACE_BYTES_PER_BOX, "parkourcalc cached faces", faceEmitter);
-        lineSegments = bake(BoxRenderer.Mode.LINES, VertexFormat.DrawMode.DEBUG_LINES, boxCount * LINE_BYTES_PER_BOX, "parkourcalc cached lines", lineEmitter);
+        faceSegments = bake(BoxRenderer.Mode.FACES, VertexFormat.Mode.TRIANGLES, boxCount * FACE_BYTES_PER_BOX, "parkourcalc cached faces", faceEmitter);
+        lineSegments = bake(BoxRenderer.Mode.LINES, VertexFormat.Mode.DEBUG_LINES, boxCount * LINE_BYTES_PER_BOX, "parkourcalc cached lines", lineEmitter);
 
         hitboxBase = PathVertexLayout.hitboxRegionBase(boxCount);
         arrowBase = hitboxBase + hitboxStarts[boxCount];
@@ -116,7 +116,7 @@ public final class CachedBoxGeometry implements AutoCloseable {
         return total;
     }
 
-    private List<Segment> bake(BoxRenderer.Mode mode, VertexFormat.DrawMode drawMode, int estBytes, String label, Consumer<BoxRenderer> emitter) {
+    private List<Segment> bake(BoxRenderer.Mode mode, VertexFormat.Mode drawMode, int estBytes, String label, Consumer<BoxRenderer> emitter) {
         SegmentedSink sink = new SegmentedSink(drawMode, label, Math.max(estBytes, 256));
         emitter.accept(new BakingBoxRenderer(sink, mode, anchorX, anchorY, anchorZ));
         return sink.finish();
@@ -149,7 +149,7 @@ public final class CachedBoxGeometry implements AutoCloseable {
                 !writeVerts(
                         faceSegments,
                         PathVertexLayout.faceMainOffset(i),
-                        VertexFormat.DrawMode.TRIANGLES,
+                        VertexFormat.Mode.TRIANGLES,
                         BoxRenderer.Mode.FACES,
                         r -> r.drawBox(boxController.getTickAabb(i), faceArgb)
                 )
@@ -163,7 +163,7 @@ public final class CachedBoxGeometry implements AutoCloseable {
             Consumer<BoxRenderer> emit = patch.showFullHitbox
                     ? r -> boxController.emitHitboxFullWireframeAt(r, hitboxArgb, useSubtick, i)
                     : r -> boxController.emitHitboxFloorOutlineAt(r, hitboxArgb, useSubtick, i);
-            if (!writeVerts(faceSegments, offset, VertexFormat.DrawMode.TRIANGLES, BoxRenderer.Mode.FACES, emit)) {
+            if (!writeVerts(faceSegments, offset, VertexFormat.Mode.TRIANGLES, BoxRenderer.Mode.FACES, emit)) {
                 return false;
             }
         }
@@ -172,22 +172,22 @@ public final class CachedBoxGeometry implements AutoCloseable {
         return writeVerts(
                 lineSegments,
                 PathVertexLayout.lineMainOffset(i),
-                VertexFormat.DrawMode.DEBUG_LINES,
+                VertexFormat.Mode.DEBUG_LINES,
                 BoxRenderer.Mode.LINES,
                 r -> r.drawBox(boxController.getTickAabb(i), lineArgb)
         );
     }
 
-    private boolean writeVerts(List<Segment> segments, int globalVertexOffset, VertexFormat.DrawMode drawMode,
+    private boolean writeVerts(List<Segment> segments, int globalVertexOffset, VertexFormat.Mode drawMode,
                                BoxRenderer.Mode mode, Consumer<BoxRenderer> emit) {
-        try (BufferAllocator allocator = new BufferAllocator(8192)) {
-            BufferBuilder builder = new BufferBuilder(allocator, drawMode, VertexFormats.POSITION_COLOR);
+        try (ByteBufferBuilder allocator = new ByteBufferBuilder(8192)) {
+            BufferBuilder builder = new BufferBuilder(allocator, drawMode, DefaultVertexFormat.POSITION_COLOR);
             emit.accept(new BakingBoxRenderer(new DirectSink(builder), mode, anchorX, anchorY, anchorZ));
-            BuiltBuffer builtBuffer = builder.endNullable();
+            MeshData builtBuffer = builder.build();
             try (builtBuffer) {
                 if (builtBuffer == null) return true;
-                int vertexCount = builtBuffer.getDrawParameters().vertexCount();
-                return writeBytesAcrossSegments(segments, globalVertexOffset, vertexCount, builtBuffer.getBuffer());
+                int vertexCount = builtBuffer.drawState().vertexCount();
+                return writeBytesAcrossSegments(segments, globalVertexOffset, vertexCount, builtBuffer.vertexBuffer());
             }
         }
     }
@@ -221,20 +221,20 @@ public final class CachedBoxGeometry implements AutoCloseable {
         for (int k = 0; k + 1 < runs.length; k += 2) {
             int a = runs[k];
             int b = runs[k + 1];
-            drawRange(faceSegments, pipeline, VertexFormat.DrawMode.TRIANGLES, modelView, PathVertexLayout.faceMainOffset(a), (b - a) * PathVertexLayout.FACE_VERTS_PER_BOX);
+            drawRange(faceSegments, pipeline, VertexFormat.Mode.TRIANGLES, modelView, PathVertexLayout.faceMainOffset(a), (b - a) * PathVertexLayout.FACE_VERTS_PER_BOX);
             if (hitboxEdges != 0) {
-                drawRange(faceSegments, pipeline, VertexFormat.DrawMode.TRIANGLES, modelView,hitboxBase + hitboxStarts[a], hitboxStarts[b] - hitboxStarts[a]);
+                drawRange(faceSegments, pipeline, VertexFormat.Mode.TRIANGLES, modelView,hitboxBase + hitboxStarts[a], hitboxStarts[b] - hitboxStarts[a]);
             }
             if (arrowBase < constraintFaceBase) {
                 int arrowEnd = Math.min(b, boxCount - 1);
                 int arrowStart = Math.min(a, boxCount - 1);
                 if (arrowEnd > arrowStart) {
-                    drawRange(faceSegments, pipeline, VertexFormat.DrawMode.TRIANGLES, modelView,arrowBase + arrowStart * 60, (arrowEnd - arrowStart) * 60);
+                    drawRange(faceSegments, pipeline, VertexFormat.Mode.TRIANGLES, modelView,arrowBase + arrowStart * 60, (arrowEnd - arrowStart) * 60);
                 }
             }
         }
         if (constraintFaceVerts > 0) {
-            drawRange(faceSegments, FabricRenderLayers.constraintFillPipeline(), VertexFormat.DrawMode.TRIANGLES, modelView, constraintFaceBase, constraintFaceVerts);
+            drawRange(faceSegments, FabricRenderLayers.constraintFillPipeline(), VertexFormat.Mode.TRIANGLES, modelView, constraintFaceBase, constraintFaceVerts);
         }
     }
 
@@ -245,13 +245,13 @@ public final class CachedBoxGeometry implements AutoCloseable {
         for (int k = 0; k + 1 < runs.length; k += 2) {
             int a = runs[k];
             int b = runs[k + 1];
-            drawRange(lineSegments, pipeline, VertexFormat.DrawMode.DEBUG_LINES, modelView, PathVertexLayout.lineMainOffset(a), (b - a) * PathVertexLayout.LINE_VERTS_PER_BOX);
+            drawRange(lineSegments, pipeline, VertexFormat.Mode.DEBUG_LINES, modelView, PathVertexLayout.lineMainOffset(a), (b - a) * PathVertexLayout.LINE_VERTS_PER_BOX);
             if (hasSubtick) {
-                drawRange(lineSegments, pipeline, VertexFormat.DrawMode.DEBUG_LINES, modelView,lineMainTotal + subtickStarts[a], subtickStarts[b] - subtickStarts[a]);
+                drawRange(lineSegments, pipeline, VertexFormat.Mode.DEBUG_LINES, modelView,lineMainTotal + subtickStarts[a], subtickStarts[b] - subtickStarts[a]);
             }
         }
         if (constraintLineVerts > 0) {
-            drawRange(lineSegments, pipeline, VertexFormat.DrawMode.DEBUG_LINES, modelView, constraintLineBase, constraintLineVerts);
+            drawRange(lineSegments, pipeline, VertexFormat.Mode.DEBUG_LINES, modelView, constraintLineBase, constraintLineVerts);
         }
     }
 
@@ -267,7 +267,7 @@ public final class CachedBoxGeometry implements AutoCloseable {
         return anchorZ;
     }
 
-    private static void drawRange(List<Segment> segments, RenderPipeline pipeline, VertexFormat.DrawMode drawMode, Matrix4f modelView, int globalVertexOffset, int count) {
+    private static void drawRange(List<Segment> segments, RenderPipeline pipeline, VertexFormat.Mode drawMode, Matrix4f modelView, int globalVertexOffset, int count) {
         if (count <= 0) return;
         int cursor = globalVertexOffset;
         int remaining = count;
@@ -286,8 +286,8 @@ public final class CachedBoxGeometry implements AutoCloseable {
         }
     }
 
-    private static void drawSegment(RenderPipeline pipeline, GpuBuffer vbo, VertexFormat.DrawMode drawMode, Matrix4f modelView, int firstVertex, int count) {
-        GpuBufferSlice dynamicTransforms = RenderSystem.getDynamicUniforms().write(
+    private static void drawSegment(RenderPipeline pipeline, GpuBuffer vbo, VertexFormat.Mode drawMode, Matrix4f modelView, int firstVertex, int count) {
+        GpuBufferSlice dynamicTransforms = RenderSystem.getDynamicUniforms().writeTransform(
                 modelView,
                 new Vector4f(1.0f, 1.0f, 1.0f, 1.0f),
                 new Vector3f(),
@@ -295,19 +295,19 @@ public final class CachedBoxGeometry implements AutoCloseable {
                 1.0f
         );
 
-        RenderSystem.ShapeIndexBuffer indexBuffer = RenderSystem.getSequentialBuffer(drawMode);
-        GpuBuffer ibo = indexBuffer.getIndexBuffer(firstVertex + count);
+        RenderSystem.AutoStorageIndexBuffer indexBuffer = RenderSystem.getSequentialBuffer(drawMode);
+        GpuBuffer ibo = indexBuffer.getBuffer(firstVertex + count);
 
-        Framebuffer framebuffer = MinecraftClient.getInstance().getFramebuffer();
-        GpuTextureView color = framebuffer.getColorAttachmentView();
-        GpuTextureView depth = framebuffer.getDepthAttachmentView();
+        RenderTarget framebuffer = Minecraft.getInstance().getMainRenderTarget();
+        GpuTextureView color = framebuffer.getColorTextureView();
+        GpuTextureView depth = framebuffer.getDepthTextureView();
 
         try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "parkourcalc cached", color, OptionalInt.empty(), depth, OptionalDouble.empty())) {
             pass.setPipeline(pipeline);
             RenderSystem.bindDefaultUniforms(pass);
             pass.setUniform("DynamicTransforms", dynamicTransforms);
             pass.setVertexBuffer(0, vbo);
-            pass.setIndexBuffer(ibo, indexBuffer.getIndexType());
+            pass.setIndexBuffer(ibo, indexBuffer.type());
             pass.drawIndexed(0, firstVertex, count, 1);
         }
     }
@@ -345,23 +345,23 @@ public final class CachedBoxGeometry implements AutoCloseable {
                 float r = ((argb >>> 16) & 0xFF) / 255.0f;
                 float g = ((argb >>> 8) & 0xFF) / 255.0f;
                 float b = (argb & 0xFF) / 255.0f;
-                builder.vertex(x, y, z).color(r, g, b, a);
+                builder.addVertex(x, y, z).setColor(r, g, b, a);
             }
         }
 
     /** Accumulates baked vertices, rolling to a new GpuBuffer before a BufferBuilder would overflow. */
     private static final class SegmentedSink implements BakingBoxRenderer.VertexSink {
 
-        private final VertexFormat.DrawMode drawMode;
+        private final VertexFormat.Mode drawMode;
         private final String label;
         private final int estBytes;
         private final List<Segment> segments = new ArrayList<>();
 
-        private BufferAllocator allocator;
+        private ByteBufferBuilder allocator;
         private BufferBuilder builder;
         private int currentVertices;
 
-        SegmentedSink(VertexFormat.DrawMode drawMode, String label, int estBytes) {
+        SegmentedSink(VertexFormat.Mode drawMode, String label, int estBytes) {
             this.drawMode = drawMode;
             this.label = label;
             this.estBytes = estBytes;
@@ -373,8 +373,8 @@ public final class CachedBoxGeometry implements AutoCloseable {
                 flush();
             }
             if (builder == null) {
-                allocator = new BufferAllocator(estBytes);
-                builder = new BufferBuilder(allocator, drawMode, VertexFormats.POSITION_COLOR);
+                allocator = new ByteBufferBuilder(estBytes);
+                builder = new BufferBuilder(allocator, drawMode, DefaultVertexFormat.POSITION_COLOR);
                 currentVertices = 0;
             }
         }
@@ -385,20 +385,20 @@ public final class CachedBoxGeometry implements AutoCloseable {
             float r = ((argb >>> 16) & 0xFF) / 255.0f;
             float g = ((argb >>> 8) & 0xFF) / 255.0f;
             float b = (argb & 0xFF) / 255.0f;
-            builder.vertex(x, y, z).color(r, g, b, a);
+            builder.addVertex(x, y, z).setColor(r, g, b, a);
             currentVertices++;
         }
 
         private void flush() {
             if (builder == null) return;
             try {
-                BuiltBuffer builtBuffer = builder.endNullable();
+                MeshData builtBuffer = builder.build();
                 if (builtBuffer != null) {
                     try {
-                        int vertexCount = builtBuffer.getDrawParameters().vertexCount();
+                        int vertexCount = builtBuffer.drawState().vertexCount();
                         // COPY_DST so selection patching can writeToBuffer into this buffer later.
                         GpuBuffer buffer = RenderSystem.getDevice().createBuffer(() -> label,
-                                GpuBuffer.USAGE_VERTEX | GpuBuffer.USAGE_COPY_DST, builtBuffer.getBuffer());
+                                GpuBuffer.USAGE_VERTEX | GpuBuffer.USAGE_COPY_DST, builtBuffer.vertexBuffer());
                         segments.add(new Segment(buffer, vertexCount));
                     } finally {
                         builtBuffer.close();

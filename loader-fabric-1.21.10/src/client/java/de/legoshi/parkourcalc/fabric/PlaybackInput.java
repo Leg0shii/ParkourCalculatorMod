@@ -1,11 +1,11 @@
 package de.legoshi.parkourcalc.fabric;
 
 import de.legoshi.parkourcalc.core.ui.InputRow;
-import net.minecraft.client.input.Input;
-import net.minecraft.util.PlayerInput;
-import net.minecraft.util.math.Vec2f;
+import net.minecraft.client.player.ClientInput;
+import net.minecraft.world.entity.player.Input;
+import net.minecraft.world.phys.Vec2;
 
-final class PlaybackInput extends Input {
+final class PlaybackInput extends ClientInput {
 
     private final FabricPlaybackBridge bridge;
 
@@ -26,10 +26,10 @@ final class PlaybackInput extends Input {
             sneak = row.isKeyActive(InputRow.Key.SNEAK);
             sprint = row.isKeyActive(InputRow.Key.SPRINT);
         }
-        this.playerInput = new PlayerInput(fwd, back, left, right, jump, sneak, sprint);
+        this.keyPresses = new Input(fwd, back, left, right, jump, sneak, sprint);
         float f = axis(fwd, back);
         float g = axis(left, right);
-        this.movementVector = new Vec2f(g, f).normalize();
+        this.moveVector = new Vec2(g, f).normalized();
     }
 
     private static float axis(boolean positive, boolean negative) {

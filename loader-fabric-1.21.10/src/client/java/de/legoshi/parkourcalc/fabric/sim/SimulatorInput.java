@@ -1,15 +1,15 @@
 package de.legoshi.parkourcalc.fabric.sim;
 
 import de.legoshi.parkourcalc.core.ui.InputRow;
-import net.minecraft.client.input.Input;
-import net.minecraft.util.PlayerInput;
-import net.minecraft.util.math.Vec2f;
+import net.minecraft.client.player.ClientInput;
+import net.minecraft.world.entity.player.Input;
+import net.minecraft.world.phys.Vec2;
 
 /**
  * Input handler for the movement simulator.
  * Converts InputRow data into Minecraft's input format.
  */
-public class SimulatorInput extends Input {
+public class SimulatorInput extends ClientInput {
 
     private InputRow data = new InputRow();
 
@@ -19,7 +19,7 @@ public class SimulatorInput extends Input {
 
     @Override
     public void tick() {
-        this.playerInput = new PlayerInput(
+        this.keyPresses = new Input(
                 data.isKeyActive(InputRow.Key.W),
                 data.isKeyActive(InputRow.Key.S),
                 data.isKeyActive(InputRow.Key.A),
@@ -29,9 +29,9 @@ public class SimulatorInput extends Input {
                 data.isKeyActive(InputRow.Key.SPRINT)
         );
 
-        float forward = axisValue(playerInput.forward(), playerInput.backward());
-        float strafe = axisValue(playerInput.left(), playerInput.right());
-        this.movementVector = new Vec2f(strafe, forward).normalize();
+        float forward = axisValue(keyPresses.forward(), keyPresses.backward());
+        float strafe = axisValue(keyPresses.left(), keyPresses.right());
+        this.moveVector = new Vec2(strafe, forward).normalized();
     }
 
     private static float axisValue(boolean positive, boolean negative) {

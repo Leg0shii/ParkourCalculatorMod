@@ -3,9 +3,9 @@ package de.legoshi.parkourcalc.fabric.render;
 import com.mojang.blaze3d.pipeline.BlendFunction;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.vertex.VertexFormat;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.VertexFormats;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.RenderType;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 
 /**
  * Custom render layers for ParkourCalculator's path-box visualization.
@@ -25,9 +25,9 @@ public final class FabricRenderLayers {
     // TRIANGLES, not TRIANGLE_STRIP: VertexConsumerProvider.Immediate#getBuffer flushes on every
     // call for any draw mode where shareVertices=true, so a STRIP submits one draw call per box.
     private static final RenderPipeline TRANSLUCENT_BOX_PIPELINE =
-            RenderPipeline.builder(RenderPipelines.POSITION_COLOR_SNIPPET)
+            RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
                     .withLocation("pipeline/parkourcalc_translucent_box")
-                    .withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.TRIANGLES)
+                    .withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.TRIANGLES)
                     .withBlend(BlendFunction.TRANSLUCENT)
                     .withCull(false)
                     .withDepthBias(-1.0F, -10.0F)
@@ -38,32 +38,32 @@ public final class FabricRenderLayers {
      * it puts the layer in the Immediate's translucent draw pass so it renders
      * after the (opaque) wireframe lines, not under them.
      */
-    public static final RenderLayer TRANSLUCENT_BOX = RenderLayer.of(
+    public static final RenderType TRANSLUCENT_BOX = RenderType.create(
             "parkourcalc_translucent_box",
             1536,
             false,
             true,
             TRANSLUCENT_BOX_PIPELINE,
-            RenderLayer.MultiPhaseParameters.builder().build(false)
+            RenderType.CompositeState.builder().createCompositeState(false)
     );
 
     private static final RenderPipeline THIN_LINES_PIPELINE =
-            RenderPipeline.builder(RenderPipelines.POSITION_COLOR_SNIPPET)
+            RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
                     .withLocation("pipeline/parkourcalc_thin_lines")
-                    .withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.DEBUG_LINES)
+                    .withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.DEBUG_LINES)
                     .withBlend(BlendFunction.TRANSLUCENT)
                     .withCull(false)
                     .withDepthWrite(false)
                     .build();
 
     /** Thin 1px wireframe lines. Matches the Forge GL_LINES look. */
-    public static final RenderLayer THIN_LINES = RenderLayer.of(
+    public static final RenderType THIN_LINES = RenderType.create(
             "parkourcalc_thin_lines",
             1536,
             false,
             false,
             THIN_LINES_PIPELINE,
-            RenderLayer.MultiPhaseParameters.builder().build(false)
+            RenderType.CompositeState.builder().createCompositeState(false)
     );
 
     /** Exposed for CachedBoxGeometry's hand-rolled render passes (persistent GpuBuffer draws). */
@@ -76,9 +76,9 @@ public final class FabricRenderLayers {
     }
 
     private static final RenderPipeline CONSTRAINT_FILL_PIPELINE =
-            RenderPipeline.builder(RenderPipelines.POSITION_COLOR_SNIPPET)
+            RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
                     .withLocation("pipeline/parkourcalc_constraint_fill")
-                    .withVertexFormat(VertexFormats.POSITION_COLOR, VertexFormat.DrawMode.TRIANGLES)
+                    .withVertexFormat(DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.TRIANGLES)
                     .withBlend(BlendFunction.TRANSLUCENT)
                     .withCull(true)
                     .withDepthWrite(false)

@@ -2,15 +2,15 @@ package de.legoshi.parkourcalc.fabric;
 
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.Camera;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.system.MemoryStack;
 
@@ -22,36 +22,36 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
 
     @Override
     public Vec3dCore getPlayerPosition() {
-        PlayerEntity player = MinecraftClient.getInstance().player;
+        Player player = Minecraft.getInstance().player;
         if (player == null) return Vec3dCore.ZERO;
-        Vec3d p = player.getEntityPos();
+        Vec3 p = player.position();
         return new Vec3dCore(p.x, p.y, p.z);
     }
 
     @Override
     public float getPlayerYaw() {
-        PlayerEntity player = MinecraftClient.getInstance().player;
+        Player player = Minecraft.getInstance().player;
         if (player == null) return 0.0f;
-        return player.getYaw();
+        return player.getYRot();
     }
 
     @Override
     public Vec3dCore getEyePosition() {
-        Camera camera = MinecraftClient.getInstance().gameRenderer.getCamera();
-        Vec3d p = camera.getPos();
+        Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
+        Vec3 p = camera.getPosition();
         return new Vec3dCore(p.x, p.y, p.z);
     }
 
     @Override
     public Vec3dCore getLookDirection() {
-        Camera camera = MinecraftClient.getInstance().gameRenderer.getCamera();
-        Vec3d d = Vec3d.fromPolar(camera.getPitch(), camera.getYaw());
+        Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
+        Vec3 d = Vec3.directionFromRotation(camera.getXRot(), camera.getYRot());
         return new Vec3dCore(d.x, d.y, d.z);
     }
 
     @Override
     public int[] getLookedAtBlock() {
-        HitResult hit = MinecraftClient.getInstance().crosshairTarget;
+        HitResult hit = Minecraft.getInstance().hitResult;
         if (!(hit instanceof BlockHitResult) || hit.getType() != HitResult.Type.BLOCK) return null;
         BlockPos pos = ((BlockHitResult) hit).getBlockPos();
         if (pos == null) return null;
@@ -60,7 +60,7 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
 
     @Override
     public boolean isBlockSolid(int x, int y, int z) {
-        ClientWorld world = MinecraftClient.getInstance().world;
+        ClientLevel world = Minecraft.getInstance().level;
         if (world == null) return false;
         BlockPos pos = new BlockPos(x, y, z);
         return !world.getBlockState(pos).getCollisionShape(world, pos).isEmpty();
@@ -68,13 +68,13 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
 
     @Override
     public boolean isMousePressedLeft() {
-        long window = MinecraftClient.getInstance().getWindow().getHandle();
+        long window = Minecraft.getInstance().getWindow().handle();
         return GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_PRESS;
     }
 
     @Override
     public boolean isMousePressedRight() {
-        long window = MinecraftClient.getInstance().getWindow().getHandle();
+        long window = Minecraft.getInstance().getWindow().handle();
         return GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_RIGHT) == GLFW.GLFW_PRESS;
     }
 
@@ -89,7 +89,7 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
     }
 
     private static double cursorPos(boolean wantX) {
-        long window = MinecraftClient.getInstance().getWindow().getHandle();
+        long window = Minecraft.getInstance().getWindow().handle();
         try (MemoryStack stack = MemoryStack.stackPush()) {
             DoubleBuffer x = stack.mallocDouble(1);
             DoubleBuffer y = stack.mallocDouble(1);
@@ -100,41 +100,41 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
 
     @Override
     public boolean isCtrlDown() {
-        long window = MinecraftClient.getInstance().getWindow().getHandle();
+        long window = Minecraft.getInstance().getWindow().handle();
         return GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS
                 || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_CONTROL) == GLFW.GLFW_PRESS;
     }
 
     @Override
     public boolean isSaveChordDown() {
-        long window = MinecraftClient.getInstance().getWindow().getHandle();
+        long window = Minecraft.getInstance().getWindow().handle();
         return isCtrlDown() && GLFW.glfwGetKey(window, GLFW.GLFW_KEY_S) == GLFW.GLFW_PRESS;
     }
 
     @Override
     public boolean isShiftDown() {
-        long window = MinecraftClient.getInstance().getWindow().getHandle();
+        long window = Minecraft.getInstance().getWindow().handle();
         return GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS
                 || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS;
     }
 
     @Override
     public boolean isReady() {
-        MinecraftClient client = MinecraftClient.getInstance();
-        return client.player != null && client.world != null;
+        Minecraft client = Minecraft.getInstance();
+        return client.player != null && client.level != null;
     }
 
     @Override
     public boolean isSinglePlayer() {
-        return MinecraftClient.getInstance().getServer() != null;
+        return Minecraft.getInstance().getSingleplayerServer() != null;
     }
 
     @Override
     public <T> T runOnServerThread(Supplier<T> task) {
-        MinecraftServer server = MinecraftClient.getInstance().getServer();
+        MinecraftServer server = Minecraft.getInstance().getSingleplayerServer();
         if (server == null) return task.get();
         // Inline on the server thread too: avoids self-deadlock if anything re-enters.
-        if (server.isOnThread()) return task.get();
+        if (server.isSameThread()) return task.get();
         CompletableFuture<T> future = new CompletableFuture<T>();
         server.execute(() -> {
             try {

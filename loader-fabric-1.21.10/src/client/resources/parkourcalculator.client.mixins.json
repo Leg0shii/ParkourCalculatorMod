@@ -4,18 +4,18 @@
   "compatibilityLevel": "JAVA_21",
   "client": [
     "AttackSuppressMixin",
-    "ClientPlayerEntityAccessor",
-    "ClientPlayerEntityTickMixin",
+    "LocalPlayerAccessor",
+    "LocalPlayerTickMixin",
     "FallDamageSuppressMixin",
     "GameRendererMixin",
-    "InGameHudMixin",
-    "KeyBindingAccessor",
-    "KeyboardMixin",
+    "GuiMixin",
+    "KeyMappingAccessor",
+    "KeyboardHandlerMixin",
     "LandingParticleSuppressMixin",
-    "MinecraftClientMixin",
-    "MouseMixin",
-    "SectionRenderStateMixin",
-    "WorldRendererMixin"
+    "MinecraftMixin",
+    "MouseHandlerMixin",
+    "ChunkSectionsToRenderMixin",
+    "LevelRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

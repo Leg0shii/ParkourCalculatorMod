@@ -1,9 +1,9 @@
 package de.legoshi.parkourcalc.fabric.mixin;
 
 import de.legoshi.parkourcalc.fabric.sim.SimulatorEntity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.particle.ParticleEffect;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.server.level.ServerLevel;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -15,18 +15,18 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public abstract class LandingParticleSuppressMixin {
 
     @Redirect(
-            method = "fall",
+            method = "checkFallDamage",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/server/world/ServerWorld;spawnParticles(Lnet/minecraft/particle/ParticleEffect;DDDIDDDD)I"
+                    target = "Lnet/minecraft/server/level/ServerLevel;sendParticles(Lnet/minecraft/core/particles/ParticleOptions;DDDIDDDD)I"
             )
     )
-    private int pkc$skipLandingParticles(ServerWorld world, ParticleEffect particle,
+    private int pkc$skipLandingParticles(ServerLevel world, ParticleOptions particle,
                                          double x, double y, double z, int count,
                                          double offsetX, double offsetY, double offsetZ, double speed) {
         if ((Object) this instanceof SimulatorEntity) {
             return 0;
         }
-        return world.spawnParticles(particle, x, y, z, count, offsetX, offsetY, offsetZ, speed);
+        return world.sendParticles(particle, x, y, z, count, offsetX, offsetY, offsetZ, speed);
     }
 }

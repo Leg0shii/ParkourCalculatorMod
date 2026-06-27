@@ -5,9 +5,9 @@ import de.legoshi.parkourcalc.fabric.imgui.ImGuiImpl;
 import imgui.ImGui;
 import imgui.flag.ImGuiPopupFlags;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.minecraft.client.Keyboard;
-import net.minecraft.client.input.CharInput;
-import net.minecraft.client.input.KeyInput;
+import net.minecraft.client.KeyboardHandler;
+import net.minecraft.client.input.CharacterEvent;
+import net.minecraft.client.input.KeyEvent;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -15,18 +15,18 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(Keyboard.class)
-public class KeyboardMixin {
+@Mixin(KeyboardHandler.class)
+public class KeyboardHandlerMixin {
 
-    @Inject(method = "onKey", at = @At("HEAD"), cancellable = true)
-    private void onKey(long window, int action, KeyInput input, CallbackInfo ci) {
+    @Inject(method = "keyPress", at = @At("HEAD"), cancellable = true)
+    private void onKey(long window, int action, KeyEvent input, CallbackInfo ci) {
         if (!FabricParkourCalculator.isUiFocused()) {
             return;
         }
 
         int glfwKey = input.key();
 
-        int toggleCode = KeyBindingHelper.getBoundKeyOf(FabricParkourCalculator.toggleKeyBinding).getCode();
+        int toggleCode = KeyBindingHelper.getBoundKeyOf(FabricParkourCalculator.toggleKeyBinding).getValue();
         if (glfwKey == toggleCode) {
             return;
         }
@@ -57,8 +57,8 @@ public class KeyboardMixin {
         ci.cancel();
     }
 
-    @Inject(method = "onChar", at = @At("HEAD"), cancellable = true)
-    private void onChar(long window, CharInput input, CallbackInfo ci) {
+    @Inject(method = "charTyped", at = @At("HEAD"), cancellable = true)
+    private void onChar(long window, CharacterEvent input, CallbackInfo ci) {
         if (FabricParkourCalculator.isUiFocused()) {
             ImGuiImpl.charCallback(window, input.codepoint());
             ci.cancel();

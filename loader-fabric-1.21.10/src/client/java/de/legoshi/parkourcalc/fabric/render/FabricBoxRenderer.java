@@ -3,9 +3,9 @@ package de.legoshi.parkourcalc.fabric.render;
 import de.legoshi.parkourcalc.core.ports.BoxRenderer;
 import de.legoshi.parkourcalc.core.render.ArgbColor;
 import de.legoshi.parkourcalc.core.sim.AABB;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.util.math.MatrixStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import com.mojang.blaze3d.vertex.PoseStack;
 import org.joml.Matrix4f;
 
 /**
@@ -24,11 +24,11 @@ import org.joml.Matrix4f;
  */
 public final class FabricBoxRenderer implements BoxRenderer {
 
-    private final MatrixStack matrices;
-    private final VertexConsumerProvider consumers;
+    private final PoseStack matrices;
+    private final MultiBufferSource consumers;
     private final Mode mode;
 
-    public FabricBoxRenderer(MatrixStack matrices, VertexConsumerProvider consumers, Mode mode) {
+    public FabricBoxRenderer(PoseStack matrices, MultiBufferSource consumers, Mode mode) {
         this.matrices = matrices;
         this.consumers = consumers;
         this.mode = mode;
@@ -38,7 +38,7 @@ public final class FabricBoxRenderer implements BoxRenderer {
     public void drawLine(double x1, double y1, double z1, double x2, double y2, double z2, int argb) {
         if (mode != Mode.LINES) return;
         VertexConsumer consumer = consumers.getBuffer(FabricRenderLayers.THIN_LINES);
-        edge(consumer, matrices.peek().getPositionMatrix(),
+        edge(consumer, matrices.last().pose(),
                 (float) x1, (float) y1, (float) z1,
                 (float) x2, (float) y2, (float) z2, argb
         );
@@ -48,10 +48,10 @@ public final class FabricBoxRenderer implements BoxRenderer {
     public void drawBox(AABB box, int argb) {
         if (mode == Mode.LINES) {
             VertexConsumer consumer = consumers.getBuffer(FabricRenderLayers.THIN_LINES);
-            emitEdges(consumer, matrices.peek().getPositionMatrix(), box, argb);
+            emitEdges(consumer, matrices.last().pose(), box, argb);
         } else {
             VertexConsumer consumer = consumers.getBuffer(FabricRenderLayers.TRANSLUCENT_BOX);
-            emitFaces(consumer, matrices.peek().getPositionMatrix(), box, argb);
+            emitFaces(consumer, matrices.last().pose(), box, argb);
         }
     }
 
@@ -59,7 +59,7 @@ public final class FabricBoxRenderer implements BoxRenderer {
     public void drawTriangle(double x1, double y1, double z1, double x2, double y2, double z2, double x3, double y3, double z3, int argb) {
         if (mode != Mode.FACES) return;
         VertexConsumer consumer = consumers.getBuffer(FabricRenderLayers.TRANSLUCENT_BOX);
-        tri(consumer, matrices.peek().getPositionMatrix(),
+        tri(consumer, matrices.last().pose(),
                 (float) x1, (float) y1, (float) z1,
                 (float) x2, (float) y2, (float) z2,
                 (float) x3, (float) y3, (float) z3, argb
@@ -92,9 +92,9 @@ public final class FabricBoxRenderer implements BoxRenderer {
 
     private static void tri(VertexConsumer c, Matrix4f m, float ax, float ay, float az, float bx, float by, float bz, float cx, float cy, float cz, int argb) {
         float r = ArgbColor.red(argb), g = ArgbColor.green(argb), b = ArgbColor.blue(argb), a = ArgbColor.alpha(argb);
-        c.vertex(m, ax, ay, az).color(r, g, b, a);
-        c.vertex(m, bx, by, bz).color(r, g, b, a);
-        c.vertex(m, cx, cy, cz).color(r, g, b, a);
+        c.addVertex(m, ax, ay, az).setColor(r, g, b, a);
+        c.addVertex(m, bx, by, bz).setColor(r, g, b, a);
+        c.addVertex(m, cx, cy, cz).setColor(r, g, b, a);
     }
 
     private static void emitEdges(VertexConsumer c, Matrix4f m, AABB b, int argb) {
@@ -119,7 +119,7 @@ public final class FabricBoxRenderer implements BoxRenderer {
 
     private static void edge(VertexConsumer c, Matrix4f m, float ax, float ay, float az, float bx, float by, float bz, int argb) {
         float r = ArgbColor.red(argb), g = ArgbColor.green(argb), b = ArgbColor.blue(argb), a = ArgbColor.alpha(argb);
-        c.vertex(m, ax, ay, az).color(r, g, b, a);
-        c.vertex(m, bx, by, bz).color(r, g, b, a);
+        c.addVertex(m, ax, ay, az).setColor(r, g, b, a);
+        c.addVertex(m, bx, by, bz).setColor(r, g, b, a);
     }
 }

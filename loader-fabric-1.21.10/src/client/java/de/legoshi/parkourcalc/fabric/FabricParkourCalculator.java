@@ -16,11 +16,11 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.KeyMapping;
+import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.resources.ResourceLocation;
 import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 
@@ -28,10 +28,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     public static final String MOD_ID = "parkourcalculator";
 
-    public static KeyBinding toggleKeyBinding;
-    public static KeyBinding deselectKeyBinding;
-    public static KeyBinding playbackKeyBinding;
-    public static KeyBinding landingConstraintsKeyBinding;
+    public static KeyMapping toggleKeyBinding;
+    public static KeyMapping deselectKeyBinding;
+    public static KeyMapping playbackKeyBinding;
+    public static KeyMapping landingConstraintsKeyBinding;
 
     private static final Application application = new Application(
             new FabricSimulator(),
@@ -48,28 +48,28 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        KeyBinding.Category category = KeyBinding.Category.create(Identifier.of(MOD_ID, "general"));
-        toggleKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        KeyMapping.Category category = KeyMapping.Category.register(ResourceLocation.fromNamespaceAndPath(MOD_ID, "general"));
+        toggleKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyMapping(
                 "key.parkourcalculator.toggle_ui",
-                InputUtil.Type.KEYSYM,
+                InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_G,
                 category
         ));
-        deselectKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        deselectKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyMapping(
                 "key.parkourcalculator.deselect_all",
-                InputUtil.Type.KEYSYM,
+                InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_L,
                 category
         ));
-        playbackKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        playbackKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyMapping(
                 "key.parkourcalculator.toggle_playback",
-                InputUtil.Type.KEYSYM,
+                InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_P,
                 category
         ));
-        landingConstraintsKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        landingConstraintsKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyMapping(
                 "key.parkourcalculator.add_landing_constraints",
-                InputUtil.Type.KEYSYM,
+                InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_B,
                 category
         ));
@@ -79,7 +79,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         application.setSaveStore(new FileSystemSaveStore(
                 FabricLoader.getInstance().getGameDir().resolve("parkourcalculator"),
                 modVersion(),
-                SharedConstants.getGameVersion().name(),
+                SharedConstants.getCurrentVersion().name(),
                 FabricWorldDescriptors::current
         ));
         application.setPlaybackBridge(playbackBridge);
@@ -97,13 +97,13 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     private static boolean wasPlaybackRunning = false;
 
-    private static void onStartTick(MinecraftClient client) {
+    private static void onStartTick(Minecraft client) {
         manageInputLifecycle();
         application.tickPlayback();
     }
 
     private static void manageInputLifecycle() {
-        net.minecraft.client.network.ClientPlayerEntity p = MinecraftClient.getInstance().player;
+        net.minecraft.client.player.LocalPlayer p = Minecraft.getInstance().player;
         if (p == null) return;
         boolean isRunning = application.isPlaybackRunning();
         if (isRunning && !wasPlaybackRunning) {
@@ -114,9 +114,9 @@ public class FabricParkourCalculator implements ClientModInitializer {
         wasPlaybackRunning = isRunning;
     }
 
-    public static boolean shouldForceGroundOnTick0(net.minecraft.client.network.ClientPlayerEntity self) {
+    public static boolean shouldForceGroundOnTick0(net.minecraft.client.player.LocalPlayer self) {
         return application.isPlaybackRunning()
-                && self == MinecraftClient.getInstance().player
+                && self == Minecraft.getInstance().player
                 && application.getPlayback().currentTick() == 0;
     }
 
@@ -124,43 +124,43 @@ public class FabricParkourCalculator implements ClientModInitializer {
         return application.getPlayback().firstTickOnGround();
     }
 
-    public static boolean shouldSuppressFallDamage(net.minecraft.entity.Entity self) {
-        return application.isPlaybackRunning() && self instanceof net.minecraft.entity.player.PlayerEntity;
+    public static boolean shouldSuppressFallDamage(net.minecraft.world.entity.Entity self) {
+        return application.isPlaybackRunning() && self instanceof net.minecraft.world.entity.player.Player;
     }
 
-    private static void onEndTick(MinecraftClient client) {
+    private static void onEndTick(Minecraft client) {
         // Restore visual yaw after MC physics so render frames don't briefly show
         // the snap value the physics tick used.
         application.postTickPlayback();
     }
 
-    private static void handleInput(MinecraftClient client) {
+    private static void handleInput(Minecraft client) {
         if (client.getWindow() == null) return;
 
         // Drain queued presses; only act when no MC screen owns input. Prevents
         // typing the bound key in chat from toggling the UI.
         boolean toggled = false;
-        while (toggleKeyBinding.wasPressed()) {
+        while (toggleKeyBinding.consumeClick()) {
             toggled = true;
         }
         boolean deselectPressed = false;
-        while (deselectKeyBinding.wasPressed()) {
+        while (deselectKeyBinding.consumeClick()) {
             deselectPressed = true;
         }
         boolean playbackPressed = false;
-        while (playbackKeyBinding.wasPressed()) {
+        while (playbackKeyBinding.consumeClick()) {
             playbackPressed = true;
         }
         boolean landingConstraintsPressed = false;
-        while (landingConstraintsKeyBinding.wasPressed()) {
+        while (landingConstraintsKeyBinding.consumeClick()) {
             landingConstraintsPressed = true;
         }
 
         boolean imguiWantsKeys = application.isControlPanelOpen() && ImGui.getIO().getWantTextInput();
-        boolean canDispatch = client.currentScreen == null && !imguiWantsKeys;
+        boolean canDispatch = client.screen == null && !imguiWantsKeys;
 
         // The close/toggle bind must still work while a yaw field is focused; only a real MC screen (chat) blocks it.
-        if (toggled && client.currentScreen == null) {
+        if (toggled && client.screen == null) {
             setOverlayOpen(!application.isControlPanelOpen());
         }
         if (deselectPressed && canDispatch) {
@@ -190,13 +190,13 @@ public class FabricParkourCalculator implements ClientModInitializer {
     }
 
     private static void setOverlayOpen(boolean open) {
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         application.setControlPanelOpen(open);
 
         if (open) {
-            client.mouse.unlockCursor();
+            client.mouseHandler.releaseMouse();
         } else {
-            client.mouse.lockCursor();
+            client.mouseHandler.grabMouse();
             clearImGuiInputState();
         }
     }
@@ -248,7 +248,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
     }
 
     /** Called from InGameHudMixin to queue the MACRO badge into the GUI state. */
-    public static void onHudRender(DrawContext context) {
+    public static void onHudRender(GuiGraphics context) {
         if (!application.isReady()) return;
         if (application.isPlaybackRunning()) {
             hudRenderer.render(context);
@@ -259,7 +259,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
     public static void onGuiRendered() {
         if (!application.isReady()) return;
         // Pinned panels are hidden while any blocking screen (pause, inventory, chat) is open.
-        boolean allowDetached = MinecraftClient.getInstance().currentScreen == null;
+        boolean allowDetached = Minecraft.getInstance().screen == null;
         ImGuiImpl.beginImGuiRendering();
         application.getOverlayManager().render(ImGui.getIO(), allowDetached);
         ImGuiImpl.endImGuiRendering();
@@ -275,7 +275,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     public static boolean isUiFocused() {
         // A vanilla screen (e.g. pause on tab-out) must take input precedence over ImGui.
-        return application.isControlPanelOpen() && MinecraftClient.getInstance().currentScreen == null;
+        return application.isControlPanelOpen() && Minecraft.getInstance().screen == null;
     }
 
     public static boolean shouldSuppressLeftClick() {

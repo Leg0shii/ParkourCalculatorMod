@@ -1,13 +1,13 @@
 package de.legoshi.parkourcalc.fabric;
 
 import de.legoshi.parkourcalc.core.save.WorldDescriptor;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ServerInfo;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.server.integrated.IntegratedServer;
-import net.minecraft.util.Identifier;
-import net.minecraft.world.World;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.client.server.IntegratedServer;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 
 /**
  * Resolves the current world/server identity for save files. Returns null when
@@ -16,25 +16,25 @@ import net.minecraft.world.World;
 final class FabricWorldDescriptors {
 
     static WorldDescriptor current() {
-        MinecraftClient client = MinecraftClient.getInstance();
-        ClientWorld world = client.world;
+        Minecraft client = Minecraft.getInstance();
+        ClientLevel world = client.level;
         if (world == null) return null;
 
         String dimension = dimensionId(world);
-        IntegratedServer integrated = client.getServer();
+        IntegratedServer integrated = client.getSingleplayerServer();
         if (integrated != null) {
-            return WorldDescriptor.singleplayer(dimension, integrated.getSaveProperties().getLevelName());
+            return WorldDescriptor.singleplayer(dimension, integrated.getWorldData().getLevelName());
         }
-        ServerInfo server = client.getCurrentServerEntry();
-        if (server != null && server.address != null) {
-            return WorldDescriptor.server(dimension, server.address);
+        ServerData server = client.getCurrentServer();
+        if (server != null && server.ip != null) {
+            return WorldDescriptor.server(dimension, server.ip);
         }
         return new WorldDescriptor(dimension, null, null);
     }
 
-    private static String dimensionId(ClientWorld world) {
-        RegistryKey<World> key = world.getRegistryKey();
-        Identifier id = key.getValue();
+    private static String dimensionId(ClientLevel world) {
+        ResourceKey<Level> key = world.dimension();
+        ResourceLocation id = key.location();
         return id.toString();
     }
 }

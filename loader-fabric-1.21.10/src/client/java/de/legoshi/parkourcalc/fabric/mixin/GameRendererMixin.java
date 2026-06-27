@@ -1,11 +1,11 @@
 package de.legoshi.parkourcalc.fabric.mixin;
 
 import de.legoshi.parkourcalc.fabric.FabricParkourCalculator;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.render.GuiRenderer;
-import net.minecraft.client.render.fog.FogRenderer;
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.render.RenderTickCounter;
+import net.minecraft.client.renderer.fog.FogRenderer;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.DeltaTracker;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -24,12 +24,12 @@ public class GameRendererMixin {
             method = "render",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/gui/render/GuiRenderer;incrementFrame()V",
+                    target = "Lnet/minecraft/client/gui/render/GuiRenderer;incrementFrameNumber()V",
                     shift = At.Shift.AFTER
             )
     )
-    private void onAfterGuiRendered(RenderTickCounter tickCounter, boolean tick, CallbackInfo ci) {
-        if (MinecraftClient.getInstance().currentScreen != null) return;
+    private void onAfterGuiRendered(DeltaTracker tickCounter, boolean tick, CallbackInfo ci) {
+        if (Minecraft.getInstance().screen != null) return;
         FabricParkourCalculator.onGuiRendered();
     }
 
@@ -39,11 +39,11 @@ public class GameRendererMixin {
             method = "render",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/gui/screen/Screen;renderWithTooltip(Lnet/minecraft/client/gui/DrawContext;IIF)V"
+                    target = "Lnet/minecraft/client/gui/screens/Screen;renderWithTooltipAndSubtitles(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"
             )
     )
-    private void onBeforeScreenRender(RenderTickCounter tickCounter, boolean tick, CallbackInfo ci) {
-        guiRenderer.render(fogRenderer.getFogBuffer(FogRenderer.FogType.NONE));
+    private void onBeforeScreenRender(DeltaTracker tickCounter, boolean tick, CallbackInfo ci) {
+        guiRenderer.render(fogRenderer.getBuffer(FogRenderer.FogMode.NONE));
         FabricParkourCalculator.onGuiRendered();
     }
 }
