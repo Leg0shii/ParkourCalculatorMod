@@ -20,3 +20,10 @@ accessible class com/mojang/blaze3d/opengl/GlDevice
 # GpuDevice wraps the backend privately in 26.2; ImGui needs the GlDevice to
 # resolve the main render target's FBO id for direct GL drawing.
 accessible field com/mojang/blaze3d/systems/GpuDevice backend Lcom/mojang/blaze3d/systems/GpuDeviceBackend;
+
+# Entity.stuckSpeedMultiplier (protected): the cobweb slowdown carries across ticks
+# (makeStuckInBlock sets it; move() consumes and resets it). Captured in
+# SimulatorEntity.Checkpoint so re-simulation and replay resuming inside a cobweb
+# keep the pending slowdown instead of dropping a tick of it; widened because
+# applyCheckpoint writes it on a LocalPlayer reference.
+accessible field net/minecraft/world/entity/Entity stuckSpeedMultiplier Lnet/minecraft/world/phys/Vec3;
