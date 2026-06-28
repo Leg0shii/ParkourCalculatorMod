@@ -20,7 +20,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.KeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 
@@ -48,7 +48,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        KeyMapping.Category category = KeyMapping.Category.register(ResourceLocation.fromNamespaceAndPath(MOD_ID, "general"));
+        KeyMapping.Category category = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(MOD_ID, "general"));
         toggleKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyMapping(
                 "key.parkourcalculator.toggle_ui",
                 InputConstants.Type.KEYSYM,

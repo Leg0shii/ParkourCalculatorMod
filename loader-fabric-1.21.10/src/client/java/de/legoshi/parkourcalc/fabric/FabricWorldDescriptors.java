@@ -6,7 +6,7 @@ import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.client.server.IntegratedServer;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.Level;
 
 /**
@@ -34,7 +34,7 @@ final class FabricWorldDescriptors {
 
     private static String dimensionId(ClientLevel world) {
         ResourceKey<Level> key = world.dimension();
-        ResourceLocation id = key.location();
+        Identifier id = key.location();
         return id.toString();
     }
 }
