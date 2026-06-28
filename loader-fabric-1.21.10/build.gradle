@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version "${loom_version}"
+	id 'net.fabricmc.fabric-loom' version "${loom_version}"
 	id 'maven-publish'
 }
 
@@ -33,13 +33,12 @@ loom {
 
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings loom.officialMojangMappings()
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
 	// This line should be added:
-	modClientImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+	clientImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
 	// Shared core module (Java 8, no MC). Bundle into the final mod JAR.
 	include implementation(project(':core'))
