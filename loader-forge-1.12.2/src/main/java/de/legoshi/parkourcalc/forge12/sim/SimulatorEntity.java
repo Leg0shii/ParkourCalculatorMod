@@ -283,7 +283,9 @@ public class SimulatorEntity extends EntityPlayer {
         p.setAIMoveSpeed(c.landMovementFactor);
         p.jumpMovementFactor = c.jumpMovementFactor;
         p.jumpTicks = c.jumpTicks;
-        p.isInWeb = c.isInWeb;
+        if (c.isInWeb) {
+            p.setInWeb();
+        }
     }
 
     public static final class Checkpoint implements de.legoshi.parkourcalc.core.sim.Checkpoint {
