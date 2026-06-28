@@ -39,11 +39,11 @@ public class GameRendererMixin {
             method = "render",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/gui/screens/Screen;renderWithTooltipAndSubtitles(Lnet/minecraft/client/gui/GuiGraphics;IIF)V"
+                    target = "Lnet/minecraft/client/gui/render/GuiRenderer;render()V"
             )
     )
-    private void onBeforeScreenRender(DeltaTracker tickCounter, boolean tick, CallbackInfo ci) {
-        guiRenderer.render(fogRenderer.getBuffer(FogRenderer.FogMode.NONE));
+    private void onBeforeScreenRender(DeltaTracker deltaTracker, boolean advanceGameTime, CallbackInfo ci) {
+        guiRenderer.render();
         FabricParkourCalculator.onGuiRendered();
     }
 }
