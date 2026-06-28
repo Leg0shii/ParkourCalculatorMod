@@ -679,7 +679,7 @@ public final class AngleSolverEngine {
                 }
             }
         }
-        if (job.ilsExhaustive && countJumps(sc) > 1 && sc.numTicks <= MULTI_JUMP_RACE_MAX_TICKS
+        if (job.ilsExhaustive && !job.stopOnFeasible && countJumps(sc) > 1 && sc.numTicks <= MULTI_JUMP_RACE_MAX_TICKS
                 && !cancel.get() && violationOf(sc, spec, yaws) <= FEAS_TOL) {
             long ilsBudget = job.deadlineNanos > 0 ? job.deadlineNanos : DEFAULT_ILS_BUDGET_NANOS;
             if (progress != null) progress.setStage((solverName == null ? "ILS" : solverName + " -> ILS"));
