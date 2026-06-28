@@ -183,6 +183,12 @@ public final class AngleSolverWindow implements RenderInterface {
             if (ax >= 0) state.setAxis(AngleSolverState.Axis.values()[ax]);
             int gl = segmentedRow("Goal", "goal", GOALS, state.getGoal().ordinal(), labelW);
             if (gl >= 0) state.setGoal(AngleSolverState.Goal.values()[gl]);
+
+            ImGui.spacing();
+            if (Controls.checkbox("Stop on first feasible", state.isStopOnFeasible())) {
+                state.setStopOnFeasible(!state.isStopOnFeasible());
+            }
+            TooltipUtil.onHover(STOP_ON_FEASIBLE_TIP);
         }
 
         ThemeManager.sectionSpacing();
@@ -452,12 +458,6 @@ public final class AngleSolverWindow implements RenderInterface {
         ThemeManager.pushTextColor(ThemeManager.textMutedColor());
         ImGui.text(state.getEffort().hint);
         ThemeManager.popTextColor();
-
-        ImGui.spacing();
-        if (Controls.checkbox("Stop on first feasible", state.isStopOnFeasible())) {
-            state.setStopOnFeasible(!state.isStopOnFeasible());
-        }
-        TooltipUtil.onHover(STOP_ON_FEASIBLE_TIP);
 
         if (state.getEffort() == AngleSolverState.Effort.CUSTOM) renderCustomBudget(labelW);
     }
