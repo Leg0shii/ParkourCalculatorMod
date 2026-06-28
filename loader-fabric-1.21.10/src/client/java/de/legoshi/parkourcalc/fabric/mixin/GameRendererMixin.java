@@ -24,12 +24,12 @@ public class GameRendererMixin {
             method = "render",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/gui/render/GuiRenderer;incrementFrameNumber()V",
+                    target = "Lnet/minecraft/client/gui/render/GuiRenderer;endFrame()V",
                     shift = At.Shift.AFTER
             )
     )
-    private void onAfterGuiRendered(DeltaTracker tickCounter, boolean tick, CallbackInfo ci) {
-        if (Minecraft.getInstance().screen != null) return;
+    private void onAfterGuiRendered(DeltaTracker deltaTracker, boolean advanceGameTime, CallbackInfo ci) {
+        if (Minecraft.getInstance().gui.screen() != null) return;
         FabricParkourCalculator.onGuiRendered();
     }
 
