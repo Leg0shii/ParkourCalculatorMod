@@ -8,9 +8,9 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 public final class BlockSelection {
 
     public enum Kind {
-        START,
         COLLISION,
-        LAND
+        LAND,
+        MOMENTUM
     }
 
     public final Kind kind;

@@ -134,13 +134,7 @@ public final class SaveIO {
 
         if (a.selectedBlocks != null) {
             for (SaveFile.BlockSel b : a.selectedBlocks) {
-                BlockSelection sel = toBlockSelection(b);
-                if (sel == null) continue;
-                switch (sel.kind) {
-                    case START: state.setStartBlock(sel); break;
-                    case LAND: state.setLandBlock(sel); break;
-                    case COLLISION: state.addCollisionBlock(sel); break;
-                }
+                state.addBlock(toBlockSelection(b));
             }
         }
 
@@ -341,9 +335,9 @@ public final class SaveIO {
             if (!ov.isEmpty()) t.override = toSaveOverride(ov);
             a.ticks.add(t);
         }
-        if (s.getStartBlock() != null) a.selectedBlocks.add(toSaveBlock(s.getStartBlock()));
-        for (BlockSelection c : s.getCollisionBlocks()) a.selectedBlocks.add(toSaveBlock(c));
-        if (s.getLandBlock() != null) a.selectedBlocks.add(toSaveBlock(s.getLandBlock()));
+        for (BlockSelection b : s.getMomentumBlocks()) a.selectedBlocks.add(toSaveBlock(b));
+        for (BlockSelection b : s.getCollisionBlocks()) a.selectedBlocks.add(toSaveBlock(b));
+        for (BlockSelection b : s.getLandBlocks()) a.selectedBlocks.add(toSaveBlock(b));
         a.result = toSaveResult(s.getResult());
         return a;
     }
@@ -391,7 +385,8 @@ public final class SaveIO {
 
     private static BlockSelection toBlockSelection(SaveFile.BlockSel b) {
         if (b == null) return null;
-        BlockSelection.Kind kind = parseEnumOrNull(BlockSelection.Kind.class, b.kind);
+        String kindName = "START".equals(b.kind) ? BlockSelection.Kind.MOMENTUM.name() : b.kind;
+        BlockSelection.Kind kind = parseEnumOrNull(BlockSelection.Kind.class, kindName);
         if (kind == null) return null;
         if (b.box != null && b.box.length >= 6) {
             AABB box = new AABB(
