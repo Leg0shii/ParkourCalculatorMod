@@ -46,6 +46,19 @@ public final class JumpPhysicsInputs {
      *  null = the legacy assumption: sprinting on every tick. */
     public boolean[] sprintPerTick = null;
 
+    /** Sprint state in force on the tick before this window's first tick. MC snapshots the movement
+     *  factor (landMovementFactor / jumpMovementFactor) after the move, so the factor lags isSprinting()
+     *  by one tick: tick t's ground/air factor reflects tick t-1's sprint (see {@link #factorSprintAt}).
+     *  This seeds that lag for tick 0. null = no seed: tick 0 falls back to its own sprint, preserving the
+     *  single-tick model callers' behavior. */
+    public Boolean incomingSprint = null;
+
+    /** Speed-effect amplifier in force on the tick before this window's first tick. The ground attribute
+     *  (getAIMoveSpeed = the movementSpeed snapshot) carries both the sprint and the speed-effect modifier,
+     *  so the speed amplifier lags by the same one tick as sprint (see {@link #factorAmpAt}). Air is
+     *  unaffected by speed effects. null = no seed: tick 0 falls back to its own amplifier. */
+    public Integer incomingAmp = null;
+
     /** Per-tick moveFlying inputs read from the user's rows (gh-102), already at the game's 0.98
      *  scale: forward from W/S, strafe from A/D (positive = A, matching {@link #strafeSign}). Null =
      *  the legacy sprint-jump assumption (W always held, no user strafe). On force-45 ticks the
@@ -86,6 +99,22 @@ public final class JumpPhysicsInputs {
     public boolean sprintAt(int tick) {
         if (sprintPerTick == null) return true;
         return tick >= 0 && tick < sprintPerTick.length && sprintPerTick[tick];
+    }
+
+    /** Sprint state that drives this tick's ground/air movement factor. MC recomputes the factor after
+     *  the move, so it lags isSprinting() by one tick: tick t uses tick t-1's sprint. {@link #incomingSprint}
+     *  seeds the pre-window tick; a null seed falls back to this tick's own sprint (single-tick callers). */
+    public boolean factorSprintAt(int tick) {
+        if (tick == 0) return incomingSprint != null ? incomingSprint : sprintAt(0);
+        return sprintAt(tick - 1);
+    }
+
+    /** Speed amplifier that drives this tick's ground movement factor, lagged one tick like the sprint
+     *  factor (same snapshotted attribute). {@link #incomingAmp} seeds the pre-window tick; a null seed
+     *  falls back to this tick's own amplifier. */
+    public int factorAmpAt(int tick) {
+        if (tick == 0) return incomingAmp != null ? incomingAmp : speedAmplifierAt(0);
+        return speedAmplifierAt(tick - 1);
     }
 
     /** Whether the row at this tick pressed JUMP. Uses the per-tick mask when present, else the single

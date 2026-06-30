@@ -104,12 +104,13 @@ public final class ExactJumpModel implements ForwardModel {
 
             // (2) ground/air + jump, authored per tick (see class doc). jump() uses (float)(Math.PI/180.0)
             // for its rad cast (distinct from moveFlying's in step (4)).
-            int amp = scenario.speedAmplifierAt(t);
+            int amp = scenario.factorAmpAt(t);
             double slipOv = scenario.slipAt(t);
             boolean contact = !Double.isNaN(slipOv);
             float slipF = contact ? (float) slipOv : Constants.SLIP_F;
             boolean isJumpTick = scenario.jumpAt(t) && contact;
             boolean sprint = scenario.sprintAt(t);
+            boolean factorSprint = scenario.factorSprintAt(t);
             if (isJumpTick) {
                 if (modern) {
                     // jump(): Math.max'd impulse; the sprint boost stays double (float sin widened, * 0.2).
@@ -136,10 +137,10 @@ public final class ExactJumpModel implements ForwardModel {
             if (contact) {
                 f4 = slipF * 0.91F;
                 float ground = modern ? 0.21600002F / (slipF * slipF * slipF) : 0.16277136F / (f4 * f4 * f4);
-                accelSpeed = Constants.attrValueF(amp, sprint) * ground;
+                accelSpeed = Constants.attrValueF(amp, factorSprint) * ground;
             } else {
                 f4 = 0.91F;
-                accelSpeed = sprint ? Constants.AIR_SPEED_F : Constants.AIR_SPEED_NO_SPRINT_F;
+                accelSpeed = factorSprint ? Constants.AIR_SPEED_F : Constants.AIR_SPEED_NO_SPRINT_F;
             }
 
             // (4) input acceleration. Inputs are authored per tick (gh-102): force-45 ticks carry the W+A
