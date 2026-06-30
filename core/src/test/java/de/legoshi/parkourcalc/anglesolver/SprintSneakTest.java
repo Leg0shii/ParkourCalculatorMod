@@ -199,6 +199,99 @@ public class SprintSneakTest {
         }
     }
 
+    @Test
+    public void airSprintFactorLagsByOneTick() {
+        ExactJumpModel model = ExactJumpModel.forMcVersion("1.8.9");
+        double[] yaws = {25.0, 25.0};
+
+        JumpPhysicsInputs onset = scenario(2, Double.NaN, false);
+        onset.sprintPerTick = new boolean[]{false, true};
+        onset.incomingSprint = Boolean.FALSE;
+
+        JumpPhysicsInputs never = scenario(2, Double.NaN, false);
+        never.sprintPerTick = new boolean[]{false, false};
+        never.incomingSprint = Boolean.FALSE;
+
+        ForwardPath on = model.forward(onset, onset.toGameFacings(yaws));
+        ForwardPath nv = model.forward(never, never.toGameFacings(yaws));
+        for (int t = 0; t <= 2; t++) {
+            assertEquals("tick 1's own sprint flag must not move tick 1 (the factor lags)", on.posX[t], nv.posX[t], 0.0);
+            assertEquals(on.posZ[t], nv.posZ[t], 0.0);
+        }
+
+        JumpPhysicsInputs prior = scenario(2, Double.NaN, false);
+        prior.sprintPerTick = new boolean[]{true, false};
+        prior.incomingSprint = Boolean.FALSE;
+        ForwardPath pr = model.forward(prior, prior.toGameFacings(yaws));
+        assertEquals("tick 0 is unsprinted in both (seeded off)", on.posX[1], pr.posX[1], 0.0);
+        assertEquals(on.posZ[1], pr.posZ[1], 0.0);
+        assertTrue("tick 0's sprint is what drives tick 1's factor",
+                Math.abs(pr.posZ[2] - on.posZ[2]) > 1.0E-9 || Math.abs(pr.posX[2] - on.posX[2]) > 1.0E-9);
+    }
+
+    @Test
+    public void incomingSprintSeedsTheFirstTickFactor() {
+        ExactJumpModel model = ExactJumpModel.forMcVersion("1.8.9");
+        double[] yaws = {25.0};
+
+        JumpPhysicsInputs seededOn = scenario(1, Double.NaN, false);
+        seededOn.sprintPerTick = new boolean[]{false};
+        seededOn.incomingSprint = Boolean.TRUE;
+
+        JumpPhysicsInputs seededOff = scenario(1, Double.NaN, false);
+        seededOff.sprintPerTick = new boolean[]{false};
+        seededOff.incomingSprint = Boolean.FALSE;
+
+        JumpPhysicsInputs unseeded = scenario(1, Double.NaN, false);
+        unseeded.sprintPerTick = new boolean[]{false};
+
+        ForwardPath on = model.forward(seededOn, seededOn.toGameFacings(yaws));
+        ForwardPath off = model.forward(seededOff, seededOff.toGameFacings(yaws));
+        ForwardPath nul = model.forward(unseeded, unseeded.toGameFacings(yaws));
+        assertTrue("a window opened mid-sprint applies the air boost on tick 0",
+                (on.posZ[1] - on.posZ[0]) > (off.posZ[1] - off.posZ[0]));
+        assertEquals("a null seed falls back to this tick's own sprint", off.posZ[1], nul.posZ[1], 0.0);
+    }
+
+    @Test
+    public void groundSpeedAmplifierLagsByOneTick() {
+        ExactJumpModel model = ExactJumpModel.forMcVersion("1.8.9");
+        double[] yaws = {0.0, 0.0};
+
+        JumpPhysicsInputs onset = groundSprinting(2);
+        onset.speedAmplifier = new int[]{0, 2};
+        onset.incomingAmp = 0;
+
+        JumpPhysicsInputs never = groundSprinting(2);
+        never.speedAmplifier = new int[]{0, 0};
+        never.incomingAmp = 0;
+
+        ForwardPath on = model.forward(onset, onset.toGameFacings(yaws));
+        ForwardPath nv = model.forward(never, never.toGameFacings(yaws));
+        for (int t = 0; t <= 2; t++) {
+            assertEquals("tick 1's own amplifier must not move tick 1 (the ground factor lags)", on.posX[t], nv.posX[t], 0.0);
+            assertEquals(on.posZ[t], nv.posZ[t], 0.0);
+        }
+
+        JumpPhysicsInputs prior = groundSprinting(2);
+        prior.speedAmplifier = new int[]{2, 0};
+        prior.incomingAmp = 0;
+        ForwardPath pr = model.forward(prior, prior.toGameFacings(yaws));
+        assertEquals("tick 0 shares the seeded (level 0) amplifier", on.posX[1], pr.posX[1], 0.0);
+        assertEquals(on.posZ[1], pr.posZ[1], 0.0);
+        assertTrue("tick 0's amplifier is what drives tick 1's ground factor",
+                Math.abs(pr.posZ[2] - on.posZ[2]) > 1.0E-9 || Math.abs(pr.posX[2] - on.posX[2]) > 1.0E-9);
+    }
+
+    /** n grounded ticks, sprint held steady (so the sprint factor stays constant and only the amplifier varies). */
+    private static JumpPhysicsInputs groundSprinting(int n) {
+        JumpPhysicsInputs sc = scenario(n, 0.6, false);
+        sc.sprintPerTick = new boolean[n];
+        for (int t = 0; t < n; t++) sc.sprintPerTick[t] = true;
+        sc.incomingSprint = Boolean.TRUE;
+        return sc;
+    }
+
     /** n ticks, all at the given slip (NaN = air), W held, optional jump press on every tick. */
     private static JumpPhysicsInputs scenario(int n, double slip, boolean jump) {
         JumpPhysicsInputs sc = new JumpPhysicsInputs(n);

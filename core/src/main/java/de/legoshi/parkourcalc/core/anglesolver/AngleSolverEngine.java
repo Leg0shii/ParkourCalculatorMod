@@ -415,6 +415,10 @@ public final class AngleSolverEngine {
         phys.forwardInputPerTick = forwardIn;
         phys.strafeInputPerTick = strafeIn;
         phys.sprintPerTick = sprintArr;
+        phys.incomingSprint = effSprint(startTick) == AngleSolverState.SprintMode.DERIVE
+                ? (seed.hasMovementSample() ? seed.sprinting : Boolean.TRUE)
+                : Boolean.TRUE;
+        phys.incomingAmp = startTick > 0 ? effSpeedLevel(startTick - 1) : effSpeedLevel(startTick);
         return new Phys(phys, strafeMask, force45Mask, jumpTickRel);
     }
 
