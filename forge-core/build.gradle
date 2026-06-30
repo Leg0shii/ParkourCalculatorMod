@@ -25,9 +25,10 @@ repositories {
 }
 
 // imgui-java pinned here too, since the koxx12-dev shim (consumed transitively by the
-// Forge 1.8.9 + 1.12.2 loaders) was built against 1.86.11. The loaders are responsible
-// for bundling the natives at runtime; this module only needs the compile API.
-def imguiVersion = '1.86.11'
+// Forge 1.8.9 + 1.12.2 loaders) was built against 1.86.11, whose native surface is a strict
+// subset of 1.86.12 (only the unused ImGuiKnobs extension was added). The loaders are
+// responsible for bundling the natives at runtime; this module only needs the compile API.
+def imguiVersion = '1.86.12'
 
 dependencies {
     api project(':core')

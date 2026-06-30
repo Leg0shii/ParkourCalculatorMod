@@ -18,10 +18,12 @@ repositories {
 
 dependencies {
 	// imgui-java compileOnly so core can call ImGui APIs without bundling natives.
-	// Every loader bundles 1.86.11 at runtime (the koxx12-dev LWJGL2 shim the Forge loaders
-	// use was built against it), so core compiles and runs against one version everywhere.
-	// Keep core within the 1.86.11 API subset; do not bump this above what the loaders bundle.
-	compileOnly 'io.github.spair:imgui-java-binding:1.86.11'
+	// Every loader bundles 1.86.12 at runtime (the koxx12-dev LWJGL2 shim the Forge loaders
+	// use was built against 1.86.11, whose native surface is a strict subset of 1.86.12), so
+	// core compiles and runs against one version everywhere. 1.86.12 is the first release whose
+	// macOS native is a universal binary (x86_64 + arm64); 1.86.11 was x86_64-only and crashed
+	// Apple Silicon. Keep core within the 1.86.11 API subset; do not bump above what loaders bundle.
+	compileOnly 'io.github.spair:imgui-java-binding:1.86.12'
 
 	// Gson is shipped by every Minecraft client we target (Forge 1.8.9 ships 2.2.4,
 	// Forge 1.12.2 ships ~2.8.0, Fabric 1.21.10 ships 2.10+). Declared compileOnly so
@@ -42,7 +44,7 @@ dependencies {
 	testImplementation 'junit:junit:4.13.2'
 	// The binding's plain-Java classes (ImString buffers etc.) so tests can construct UI classes
 	// whose logic is render-free (e.g. FileMenu auto-save); nothing native is loaded.
-	testImplementation 'io.github.spair:imgui-java-binding:1.86.11'
+	testImplementation 'io.github.spair:imgui-java-binding:1.86.12'
 }
 
 tasks.named('test') {
