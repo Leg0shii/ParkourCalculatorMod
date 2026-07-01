@@ -1,6 +1,8 @@
 package de.legoshi.parkourcalc.fabric;
 
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
+import de.legoshi.parkourcalc.core.sim.AABB;
+import de.legoshi.parkourcalc.core.sim.Face;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Camera;
@@ -10,11 +12,15 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.DoubleBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
@@ -64,6 +70,49 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
         if (world == null) return false;
         BlockPos pos = new BlockPos(x, y, z);
         return !world.getBlockState(pos).getCollisionShape(world, pos).isEmpty();
+    }
+
+    @Override
+    public Face getLookedAtFace() {
+        HitResult hit = Minecraft.getInstance().hitResult;
+        if (!(hit instanceof BlockHitResult) || hit.getType() != HitResult.Type.BLOCK) return null;
+        return toFace(((BlockHitResult) hit).getDirection());
+    }
+
+    @Override
+    public Vec3dCore getLookedAtHitVec() {
+        HitResult hit = Minecraft.getInstance().hitResult;
+        if (!(hit instanceof BlockHitResult) || hit.getType() != HitResult.Type.BLOCK) return null;
+        Vec3 p = hit.getLocation();
+        if (p == null) return null;
+        return new Vec3dCore(p.x, p.y, p.z);
+    }
+
+    @Override
+    public List<AABB> getCollisionBoxes(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
+        List<AABB> out = new ArrayList<>();
+        ClientLevel world = Minecraft.getInstance().level;
+        if (world == null) return out;
+        net.minecraft.world.phys.AABB region = new net.minecraft.world.phys.AABB(minX, minY, minZ, maxX + 1.0, maxY + 1.0, maxZ + 1.0);
+        for (VoxelShape shape : world.getBlockCollisions(null, region)) {
+            for (net.minecraft.world.phys.AABB bb : shape.toAabbs()) {
+                out.add(new AABB(new Vec3dCore(bb.minX, bb.minY, bb.minZ), new Vec3dCore(bb.maxX, bb.maxY, bb.maxZ)));
+            }
+        }
+        return out;
+    }
+
+    private static Face toFace(Direction side) {
+        if (side == null) return null;
+        switch (side) {
+            case DOWN: return Face.NEG_Y;
+            case UP: return Face.POS_Y;
+            case NORTH: return Face.NEG_Z;
+            case SOUTH: return Face.POS_Z;
+            case WEST: return Face.NEG_X;
+            case EAST: return Face.POS_X;
+            default: return null;
+        }
     }
 
     @Override

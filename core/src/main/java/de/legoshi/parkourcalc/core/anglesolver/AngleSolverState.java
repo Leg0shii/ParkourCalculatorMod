@@ -431,24 +431,49 @@ public final class AngleSolverState {
         tickConstraints(tick).getConstraints().add(Constraint.scalar(Constraint.Field.X, Constraint.Op.GT, 0.0));
     }
 
-    /** Keep in sync with BoxStyle.HITBOX_HALF_WIDTH / AngleSolverEngine#HALF. */
-    public static final double HITBOX_HALF_WIDTH = 0.3;
+    /** Keep in sync with BoxStyle.HITBOX_HALF_WIDTH / AngleSolverEngine#HALF / ConstraintDeriver.HALF. */
+    public static final double HITBOX_HALF_WIDTH = ConstraintDeriver.HALF;
 
-    public void addLandingConstraintsForBlock(int blockX, int blockY, int blockZ, int selectedTick,
-                                              boolean wallNegX, boolean wallPosX, boolean wallNegZ, boolean wallPosZ) {
-        if (selectedTick < 0) return;
-        double xLo = wallNegX ? blockX + HITBOX_HALF_WIDTH : blockX - HITBOX_HALF_WIDTH;
-        double xHi = wallPosX ? (blockX + 1.0) - HITBOX_HALF_WIDTH : (blockX + 1.0) + HITBOX_HALF_WIDTH;
-        double zLo = wallNegZ ? blockZ + HITBOX_HALF_WIDTH : blockZ - HITBOX_HALF_WIDTH;
-        double zHi = wallPosZ ? (blockZ + 1.0) - HITBOX_HALF_WIDTH : (blockZ + 1.0) + HITBOX_HALF_WIDTH;
-
-        List<Constraint> list = tickConstraints(selectedTick).getConstraints();
-        list.removeIf(
-                c -> c.isRange()
-                        && (c.getField() == Constraint.Field.X || c.getField() == Constraint.Field.Z)
-        );
+    public void setFootprint(int tick, double xLo, double xHi, double zLo, double zHi) {
+        if (tick < 0) return;
+        List<Constraint> list = tickConstraints(tick).getConstraints();
+        list.removeIf(c -> c.isRange()
+                && (c.getField() == Constraint.Field.X || c.getField() == Constraint.Field.Z));
         list.add(Constraint.range(Constraint.Field.X, xLo, xHi, true, true));
         list.add(Constraint.range(Constraint.Field.Z, zLo, zHi, true, true));
+    }
+
+    public void clearFootprint(int tick) {
+        TickConstraints tc = ticks.get(tick);
+        if (tc == null) return;
+        tc.getConstraints().removeIf(c -> c.isRange()
+                && (c.getField() == Constraint.Field.X || c.getField() == Constraint.Field.Z));
+    }
+
+    public void putScalarReplacingDirection(int tick, Constraint wall) {
+        if (tick < 0 || wall == null) return;
+        List<Constraint> list = tickConstraints(tick).getConstraints();
+        Constraint.Field field = wall.getField();
+        boolean lower = isLowerBound(wall.getOp());
+        list.removeIf(c -> !c.isRange() && c.getField() == field
+                && isWallOp(c.getOp()) && isLowerBound(c.getOp()) == lower);
+        list.add(wall);
+    }
+
+    public void clearWall(int tick, Constraint.Field field, boolean lower) {
+        TickConstraints tc = ticks.get(tick);
+        if (tc == null) return;
+        tc.getConstraints().removeIf(c -> !c.isRange() && c.getField() == field
+                && isWallOp(c.getOp()) && isLowerBound(c.getOp()) == lower);
+    }
+
+    private static boolean isWallOp(Constraint.Op op) {
+        return op == Constraint.Op.GE || op == Constraint.Op.GT
+                || op == Constraint.Op.LE || op == Constraint.Op.LT;
+    }
+
+    private static boolean isLowerBound(Constraint.Op op) {
+        return op == Constraint.Op.GE || op == Constraint.Op.GT;
     }
 
     /** Drops every constraint on ticks in [fromTick, toTick] (state overrides are left intact). Used by the

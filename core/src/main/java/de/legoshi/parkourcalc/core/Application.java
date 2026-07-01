@@ -33,6 +33,7 @@ import de.legoshi.parkourcalc.core.ui.YawGizmoController;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.ConstraintText;
+import de.legoshi.parkourcalc.core.ui.ConstraintKeyController;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverTable;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverWindow;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
@@ -68,6 +69,7 @@ public final class Application {
     private InputOverlay inputOverlay;
     private FilePickerPort filePicker;
     private AngleSolverState angleSolverState;
+    private ConstraintKeyController constraintKeyController;
     private final OsSystemBridge systemBridge = new OsSystemBridge();
 
     public Application(Simulator simulator, MinecraftAccess mc) {
@@ -125,6 +127,8 @@ public final class Application {
         );
 
         angleSolverState = new AngleSolverState();
+        constraintKeyController = new ConstraintKeyController(
+                mc, angleSolverState, selection, constraintSelection, saveController::markDirty);
         saveController.setAngleSolver(angleSolverState);
         saveController.setDebugSource(boxController, settings);
         AngleSolverTable angleSolverTable = new AngleSolverTable(angleSolverState, settings, selection, constraintSelection, inputData::size);
@@ -317,32 +321,12 @@ public final class Application {
         );
     }
 
-    public void addLandingConstraintsForLookedAtBlock() {
-        if (angleSolverState == null) return;
-        if (!mc.isReady()) return;
-        int[] block = mc.getLookedAtBlock();
-        if (block == null || block.length < 3) return;
-        int tick = selectedSolverTick();
-        if (tick < 0) return;
-        int bx = block[0], by = block[1], bz = block[2];
-        angleSolverState.addLandingConstraintsForBlock(bx, by, bz, tick,
-                isWalledSide(bx - 1, by, bz),
-                isWalledSide(bx + 1, by, bz),
-                isWalledSide(bx, by, bz - 1),
-                isWalledSide(bx, by, bz + 1));
+    public void onConstraintKey(boolean enter, boolean remove) {
+        if (constraintKeyController != null) constraintKeyController.onKey(enter, remove);
     }
 
-    private boolean isWalledSide(int neighborX, int blockY, int neighborZ) {
-        return mc.isBlockSolid(neighborX, blockY + 1, neighborZ)
-                || mc.isBlockSolid(neighborX, blockY + 2, neighborZ);
-    }
-
-    private int selectedSolverTick() {
-        Set<Integer> rows = selection.getSelectedRows();
-        if (!rows.isEmpty()) {
-            return rows.iterator().next();
-        }
-        return angleSolverState.getLandingTick();
+    public void removeSelectedConstraints() {
+        if (constraintKeyController != null) constraintKeyController.removeSelected();
     }
 
     public boolean isControlPanelOpen() {

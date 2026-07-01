@@ -358,7 +358,7 @@ public class ConstraintVisualizationTest {
         AngleSolverState state = new AngleSolverState();
         BoxController boxes = boxesWith(new Vec3dCore(5.5, 64.0, 8.5));
         state.tickConstraints(0).getConstraints().add(Constraint.scalar(Constraint.Field.DX, Constraint.Op.GT, 0.1)); // index 0, non-spatial
-        state.addLandingConstraintsForBlock(5, 64, 8, 0, false, false, false, false); // X at index 1, Z at index 2
+        state.setFootprint(0, 5 - H, 6 + H, 8 - H, 9 + H); // X at index 1, Z at index 2
 
         List<ConstraintPlate> plates = source(state, boxes).platesAt(0);
         assertEquals(1, plates.size());
@@ -498,7 +498,7 @@ public class ConstraintVisualizationTest {
     public void pickWorldPrefersBoxThenFallsBackToConstraint() {
         AngleSolverState state = new AngleSolverState();
         BoxController boxes = boxesWith(new Vec3dCore(0.5, 64.0, 0.5), new Vec3dCore(1.5, 64.0, 0.5), new Vec3dCore(2.5, 64.0, 0.5));
-        state.addLandingConstraintsForBlock(5, 64, 8, 1, false, false, false, false);
+        state.setFootprint(1, 5 - H, 6 + H, 8 - H, 9 + H);
         AngleSolverConstraintSource src = source(state, boxes);
 
         Vec3dCore down = new Vec3dCore(0.0, -1.0, 0.0);
@@ -539,7 +539,7 @@ public class ConstraintVisualizationTest {
     public void countMethodsEqualIndependentlyCountedEmission() {
         AngleSolverState state = new AngleSolverState();
         BoxController boxes = boxesWith(new Vec3dCore(5.5, 64.0, 8.5), new Vec3dCore(10.0, 64.0, 0.0));
-        state.addLandingConstraintsForBlock(5, 64, 8, 0, false, false, false, false);
+        state.setFootprint(0, 5 - H, 6 + H, 8 - H, 9 + H);
         state.tickConstraints(1).getConstraints().add(Constraint.scalar(Constraint.Field.X, Constraint.Op.GT, 5.0));
 
         AngleSolverConstraintSource src = source(state, boxes);
@@ -563,7 +563,7 @@ public class ConstraintVisualizationTest {
     public void planConstraintCountsEqualWhatTheFullEmitterBakes() {
         BoxController boxes = boxesWith(new Vec3dCore(5.5, 64.0, 8.5), new Vec3dCore(10.0, 64.0, 0.0));
         AngleSolverState state = new AngleSolverState();
-        state.addLandingConstraintsForBlock(5, 64, 8, 0, false, false, false, false);
+        state.setFootprint(0, 5 - H, 6 + H, 8 - H, 9 + H);
         state.tickConstraints(1).getConstraints().add(Constraint.scalar(Constraint.Field.X, Constraint.Op.GT, 5.0));
         Settings settings = new Settings();
         AngleSolverConstraintSource src = new AngleSolverConstraintSource(state, boxes, () -> true, settings, new SelectionManager(null), new ConstraintSelection());
