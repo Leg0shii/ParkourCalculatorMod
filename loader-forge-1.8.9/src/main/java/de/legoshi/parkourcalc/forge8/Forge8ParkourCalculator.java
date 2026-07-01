@@ -63,6 +63,7 @@ public class Forge8ParkourCalculator {
     private KeyBinding deselectKeyBinding;
     private KeyBinding playbackKeyBinding;
     private KeyBinding landingConstraintsKeyBinding;
+    private KeyBinding removeConstraintsKeyBinding;
     private Path configPath;
     private Path saveDir;
 
@@ -96,6 +97,8 @@ public class Forge8ParkourCalculator {
         ClientRegistry.registerKeyBinding(playbackKeyBinding);
         landingConstraintsKeyBinding = new KeyBinding("key.parkourcalculator.add_landing_constraints", Keyboard.KEY_B, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(landingConstraintsKeyBinding);
+        removeConstraintsKeyBinding = new KeyBinding("key.parkourcalculator.remove_selected_constraints", Keyboard.KEY_X, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(removeConstraintsKeyBinding);
 
         MinecraftForge.EVENT_BUS.register(this);
         LOG.info("ParkourCalculator init complete. G toggle, L deselect, P playback, B landing constraints.");
@@ -199,6 +202,10 @@ public class Forge8ParkourCalculator {
         while (landingConstraintsKeyBinding.isPressed()) {
             landingConstraintsPressed = true;
         }
+        boolean removeConstraintsPressed = false;
+        while (removeConstraintsKeyBinding.isPressed()) {
+            removeConstraintsPressed = true;
+        }
         if (mc.currentScreen == null) {
             if (toggled) {
                 openOverlay(mc);
@@ -210,7 +217,12 @@ public class Forge8ParkourCalculator {
                 togglePlayback();
             }
             if (landingConstraintsPressed) {
-                application.addLandingConstraintsForLookedAtBlock();
+                boolean enter = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
+                boolean remove = Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL);
+                application.onConstraintKey(enter, remove);
+            }
+            if (removeConstraintsPressed) {
+                application.removeSelectedConstraints();
             }
         }
         if (application.isReady()) {

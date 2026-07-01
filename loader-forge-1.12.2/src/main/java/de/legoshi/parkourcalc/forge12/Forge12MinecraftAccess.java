@@ -1,17 +1,23 @@
 package de.legoshi.parkourcalc.forge12;
 
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
+import de.legoshi.parkourcalc.core.sim.AABB;
+import de.legoshi.parkourcalc.core.sim.Face;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2InputState;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Supplier;
 
 @SuppressWarnings("DuplicatedCode")
@@ -62,6 +68,45 @@ public final class Forge12MinecraftAccess implements MinecraftAccess {
         if (world == null) return false;
         BlockPos pos = new BlockPos(x, y, z);
         return world.getBlockState(pos).getCollisionBoundingBox(world, pos) != Block.NULL_AABB;
+    }
+
+    @Override
+    public Face getLookedAtFace() {
+        RayTraceResult hit = Minecraft.getMinecraft().objectMouseOver;
+        if (hit == null || hit.typeOfHit != RayTraceResult.Type.BLOCK) return null;
+        return toFace(hit.sideHit);
+    }
+
+    @Override
+    public Vec3dCore getLookedAtHitVec() {
+        RayTraceResult hit = Minecraft.getMinecraft().objectMouseOver;
+        if (hit == null || hit.typeOfHit != RayTraceResult.Type.BLOCK || hit.hitVec == null) return null;
+        return new Vec3dCore(hit.hitVec.x, hit.hitVec.y, hit.hitVec.z);
+    }
+
+    @Override
+    public List<AABB> getCollisionBoxes(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
+        List<AABB> out = new ArrayList<>();
+        World world = Minecraft.getMinecraft().world;
+        if (world == null) return out;
+        AxisAlignedBB region = new AxisAlignedBB(minX, minY, minZ, maxX + 1.0, maxY + 1.0, maxZ + 1.0);
+        for (AxisAlignedBB bb : world.getCollisionBoxes(null, region)) {
+            out.add(new AABB(new Vec3dCore(bb.minX, bb.minY, bb.minZ), new Vec3dCore(bb.maxX, bb.maxY, bb.maxZ)));
+        }
+        return out;
+    }
+
+    private static Face toFace(EnumFacing side) {
+        if (side == null) return null;
+        switch (side) {
+            case DOWN: return Face.NEG_Y;
+            case UP: return Face.POS_Y;
+            case NORTH: return Face.NEG_Z;
+            case SOUTH: return Face.POS_Z;
+            case WEST: return Face.NEG_X;
+            case EAST: return Face.POS_X;
+            default: return null;
+        }
     }
 
     @Override

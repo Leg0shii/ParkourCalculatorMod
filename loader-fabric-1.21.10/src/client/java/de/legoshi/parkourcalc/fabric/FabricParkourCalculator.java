@@ -32,6 +32,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
     public static KeyBinding deselectKeyBinding;
     public static KeyBinding playbackKeyBinding;
     public static KeyBinding landingConstraintsKeyBinding;
+    public static KeyBinding removeConstraintsKeyBinding;
 
     private static final Application application = new Application(
             new FabricSimulator(),
@@ -71,6 +72,12 @@ public class FabricParkourCalculator implements ClientModInitializer {
                 "key.parkourcalculator.add_landing_constraints",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_B,
+                category
+        ));
+        removeConstraintsKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.parkourcalculator.remove_selected_constraints",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_X,
                 category
         ));
 
@@ -155,6 +162,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         while (landingConstraintsKeyBinding.wasPressed()) {
             landingConstraintsPressed = true;
         }
+        boolean removeConstraintsPressed = false;
+        while (removeConstraintsKeyBinding.wasPressed()) {
+            removeConstraintsPressed = true;
+        }
 
         boolean imguiWantsKeys = application.isControlPanelOpen() && ImGui.getIO().getWantTextInput();
         boolean canDispatch = client.currentScreen == null && !imguiWantsKeys;
@@ -170,7 +181,15 @@ public class FabricParkourCalculator implements ClientModInitializer {
             togglePlayback();
         }
         if (landingConstraintsPressed && canDispatch) {
-            application.addLandingConstraintsForLookedAtBlock();
+            long window = client.getWindow().getHandle();
+            boolean enter = GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS
+                    || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS;
+            boolean remove = GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS
+                    || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_CONTROL) == GLFW.GLFW_PRESS;
+            application.onConstraintKey(enter, remove);
+        }
+        if (removeConstraintsPressed && canDispatch) {
+            application.removeSelectedConstraints();
         }
     }
 
