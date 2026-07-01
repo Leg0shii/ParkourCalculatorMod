@@ -75,7 +75,7 @@ public final class ImGuiImpl {
         GL11C.glPixelStorei(GL11C.GL_UNPACK_ROW_LENGTH, 0);
         GL11C.glPixelStorei(GL11C.GL_UNPACK_SKIP_ROWS, 0);
         GL11C.glPixelStorei(GL11C.GL_UNPACK_SKIP_PIXELS, 0);
-        imGuiGl3.init();
+        imGuiGl3.init("#version 150");
     }
 
     public static void beginImGuiRendering() {
