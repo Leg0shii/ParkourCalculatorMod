@@ -283,6 +283,27 @@ public class SprintSneakTest {
                 Math.abs(pr.posZ[2] - on.posZ[2]) > 1.0E-9 || Math.abs(pr.posX[2] - on.posX[2]) > 1.0E-9);
     }
 
+    @Test
+    public void groundSprintFactorDoesNotLag() {
+        ExactJumpModel model = ExactJumpModel.forMcVersion("1.8.9");
+        double[] yaws = {25.0, 25.0};
+
+        JumpPhysicsInputs onset = scenario(2, 0.6, false);
+        onset.sprintPerTick = new boolean[]{false, true};
+        onset.incomingSprint = Boolean.FALSE;
+
+        JumpPhysicsInputs never = scenario(2, 0.6, false);
+        never.sprintPerTick = new boolean[]{false, false};
+        never.incomingSprint = Boolean.FALSE;
+
+        ForwardPath on = model.forward(onset, onset.toGameFacings(yaws));
+        ForwardPath nv = model.forward(never, never.toGameFacings(yaws));
+        assertEquals("tick 0 is unsprinted in both", on.posX[1], nv.posX[1], 0.0);
+        assertEquals(on.posZ[1], nv.posZ[1], 0.0);
+        assertTrue("tick 1's own sprint drives tick 1's ground factor (no lag, unlike air)",
+                Math.abs(on.posX[2] - nv.posX[2]) > 1.0E-9 || Math.abs(on.posZ[2] - nv.posZ[2]) > 1.0E-9);
+    }
+
     /** n grounded ticks, sprint held steady (so the sprint factor stays constant and only the amplifier varies). */
     private static JumpPhysicsInputs groundSprinting(int n) {
         JumpPhysicsInputs sc = scenario(n, 0.6, false);

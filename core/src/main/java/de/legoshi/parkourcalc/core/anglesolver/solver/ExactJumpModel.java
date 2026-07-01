@@ -137,7 +137,7 @@ public final class ExactJumpModel implements ForwardModel {
             if (contact) {
                 f4 = slipF * 0.91F;
                 float ground = modern ? 0.21600002F / (slipF * slipF * slipF) : 0.16277136F / (f4 * f4 * f4);
-                accelSpeed = Constants.attrValueF(amp, factorSprint) * ground;
+                accelSpeed = Constants.attrValueF(amp, sprint) * ground;
             } else {
                 f4 = 0.91F;
                 accelSpeed = factorSprint ? Constants.AIR_SPEED_F : Constants.AIR_SPEED_NO_SPRINT_F;
