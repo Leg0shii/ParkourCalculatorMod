@@ -3,5 +3,6 @@
     "key.parkourcalculator.deselect_all": "Deselect all",
     "key.parkourcalculator.toggle_playback": "Start/Stop Playback",
     "key.parkourcalculator.add_landing_constraints": "Add block as constraint",
+    "key.parkourcalculator.remove_selected_constraints": "Remove selected constraints",
     "key.category.parkourcalculator.general": "Parkour Calculator"
 }
