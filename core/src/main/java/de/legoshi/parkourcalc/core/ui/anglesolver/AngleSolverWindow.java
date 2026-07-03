@@ -51,7 +51,7 @@ public final class AngleSolverWindow implements RenderInterface {
                     + "The path is the source of truth here: a recording that hits a wall loses\n"
                     + "sprint from that tick on, and the solve inherits it, so a broken path can\n"
                     + "make a solvable segment report no solution until the route is re-recorded."};
-    private static final String[] EFFORTS = {"Fast", "Thorough", "Custom"};
+    private static final String[] EFFORTS = {"Fast", "Optimize", "Custom"};
     private static final String[] POLISH_DEPTHS = {"Light", "Exhaustive"};
     private static final String[] MULTI_JUMP = {"Window", "Global"};
 
@@ -83,6 +83,7 @@ public final class AngleSolverWindow implements RenderInterface {
     private final ImInt slipBuf = new ImInt();
     private final ImInt doseCombo = new ImInt();
     private final ImInt levelBuf = new ImInt();
+    private final int[] optimizeSecondsBuf = new int[1];
     private final int[] restartsBuf = new int[1];
     private final int[] maxEvalBuf = new int[1];
     private final int[] polishCountBuf = new int[1];
@@ -185,9 +186,15 @@ public final class AngleSolverWindow implements RenderInterface {
             if (gl >= 0) state.setGoal(AngleSolverState.Goal.values()[gl]);
 
             ImGui.spacing();
-            if (Controls.checkbox("Stop on first feasible", state.isStopOnFeasible())) {
+            boolean fastTier = state.getEffort() == AngleSolverState.Effort.FAST;
+            boolean optimizeTier = state.getEffort() == AngleSolverState.Effort.THOROUGH;
+            boolean forced = fastTier || optimizeTier;
+            boolean shownChecked = fastTier || (!optimizeTier && state.isStopOnFeasible());
+            if (forced) ImGui.beginDisabled(true);
+            if (Controls.checkbox("Stop on first feasible", shownChecked) && !forced) {
                 state.setStopOnFeasible(!state.isStopOnFeasible());
             }
+            if (forced) ImGui.endDisabled();
             TooltipUtil.onHover(STOP_ON_FEASIBLE_TIP);
         }
 
@@ -459,14 +466,29 @@ public final class AngleSolverWindow implements RenderInterface {
         ImGui.text(state.getEffort().hint);
         ThemeManager.popTextColor();
 
+        if (state.getEffort() == AngleSolverState.Effort.THOROUGH) {
+            optimizeSecondsBuf[0] = state.getOptimizeSeconds();
+            if (sliderIntRow("Time budget", "##optimizeSeconds", optimizeSecondsBuf,
+                    AngleSolverState.MIN_OPTIMIZE_SECONDS, AngleSolverState.MAX_OPTIMIZE_SECONDS,
+                    "%d s", labelW, OPTIMIZE_TIME_TIP)) {
+                state.setOptimizeSeconds(optimizeSecondsBuf[0]);
+            }
+        }
         if (state.getEffort() == AngleSolverState.Effort.CUSTOM) renderCustomBudget(labelW);
     }
+
+    private static final String OPTIMIZE_TIME_TIP =
+            "How long Optimize keeps improving the result. It launches fresh search batches, and on"
+            + " multi-jump spans the exhaustive reach stages (seam sweep, pattern branch and bound, ILS),"
+            + " until the time runs out, then returns the best byte-exact result found. Cutting it short"
+            + " with Stop still returns the best found so far.";
 
     private static final String STOP_ON_FEASIBLE_TIP =
             "Returns the first solution that satisfies every constraint, instead of spending the rest of the"
             + " search hunting for the furthest-reaching one. Much faster on a jump you only need to land,"
             + " not to maximize. The reached value will usually be lower than a full solve's. The closed-form"
-            + " path already short-circuits when it lands feasible, so simple jumps finish almost instantly.";
+            + " path already short-circuits when it lands feasible, so simple jumps finish almost instantly."
+            + " Fast effort always works this way and Optimize never does; the toggle applies to Custom.";
 
     private void renderCustomBudget(float labelW) {
         AngleSolverState.SolveBudget b = state.getSolveBudget();
@@ -532,7 +554,7 @@ public final class AngleSolverWindow implements RenderInterface {
         TooltipUtil.onHover(ILS_EXHAUSTIVE_TIP);
 
         ThemeManager.pushTextColor(ThemeManager.textMutedColor());
-        ImGui.text("Defaults reproduce Fast.");
+        ImGui.text("Defaults match Fast's search batch, without its first-feasible stop.");
         ThemeManager.popTextColor();
     }
 
@@ -543,7 +565,7 @@ public final class AngleSolverWindow implements RenderInterface {
             + " restarts means more chances to find a feasible region and to find the best one. Raise this"
             + " first when a jump you expect to be possible reports no solution, or when a solved path is"
             + " feasible but not reaching as far as it should. Time cost grows with the count, though the"
-            + " runs share all cores. Default 16 matches Fast; Thorough uses 48.";
+            + " runs share all cores. Default 16 is the batch size Fast and Optimize use.";
 
     private static final String MAX_EVALS_TIP =
             "The most trajectory evaluations a single restart may spend before it stops. A restart that has"
@@ -551,7 +573,7 @@ public final class AngleSolverWindow implements RenderInterface {
             + " stopping early leaves it a little short of the true optimum. Raise this when the solve finds"
             + " a feasible path but the reached distance stalls just under what you expect, meaning the"
             + " search is in the right place but not finishing it. It rarely rescues a jump that fails"
-            + " outright; add restarts for those instead. Default 4500 matches Fast; Thorough uses 12000.";
+            + " outright; add restarts for those instead. Default 4500 is what Fast and Optimize use.";
 
     private static final String POLISH_BASINS_TIP =
             "After the searches finish, this many of the best feasible results are each refined by the exact"
@@ -560,7 +582,7 @@ public final class AngleSolverWindow implements RenderInterface {
             + " raw score is not always the one that polishes to the furthest reach, so polishing several"
             + " keeps the true best from being thrown away. Raise this when you are chasing the last fraction"
             + " of a block and want maximum reach. It costs more time but never makes the result worse."
-            + " Default 2 matches Fast; Thorough uses 16.";
+            + " Default 2 matches Fast; Optimize uses 4.";
 
     private static final String POLISH_DEPTH_TIP =
             "How hard the final polish works on each kept result. Light runs a couple of narrow refinement"
@@ -569,7 +591,7 @@ public final class AngleSolverWindow implements RenderInterface {
             + " neighboring one, a fine settling pass, and a few seeded retries, so it reaches optimums a"
             + " light pass cannot, at a real time cost per result. Choose Exhaustive for tight wall-hugging"
             + " jumps where the best angles sit in a different discrete step than the search found. This is"
-            + " the polish Thorough uses.";
+            + " the polish Optimize uses.";
 
     private static final String TIME_BUDGET_TIP =
             "An optional wall-clock limit on the search. At 0 (off) the solve runs exactly the fixed number"

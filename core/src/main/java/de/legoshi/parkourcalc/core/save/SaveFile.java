@@ -48,6 +48,7 @@ public final class SaveFile {
         public String goal;
         public String effort;                            // absent in old files -> FAST
         public Boolean stopOnFeasible;                   // absent in old files -> false
+        public Integer optimizeSeconds;                  // absent in old files -> default
         public SolveBudget customBudget;
         public String defaultInputs;
         public String defaultSprint;                     // absent in old files -> ALWAYS

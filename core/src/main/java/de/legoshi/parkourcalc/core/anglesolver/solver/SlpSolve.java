@@ -41,7 +41,7 @@ public final class SlpSolve {
 
     /** Returns absolute wrapped facings with byte-exact {@code maxViolation <= feasTol}, or {@code null}. */
     public static double[] optimize(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel) {
-        return optimize(exact, spec, feasTol, cancel, CLEARANCE, true, null);
+        return optimize(exact, spec, feasTol, cancel, CLEARANCE, true, null, MAX_PHASE1_CALLS, MAX_LP_CALLS, false, false, TR_MIN_DEG);
     }
 
     /** Like {@link #optimize}, but seeded from the given absolute wrapped facings instead of the dual
@@ -49,17 +49,40 @@ public final class SlpSolve {
      *  this spec's objective even where this direction's own dual recovery degenerates. */
     public static double[] optimize(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
                                     double[] seedAbsWrapped) {
-        return optimize(exact, spec, feasTol, cancel, CLEARANCE, true, seedAbsWrapped);
+        return optimize(exact, spec, feasTol, cancel, CLEARANCE, true, seedAbsWrapped, MAX_PHASE1_CALLS, MAX_LP_CALLS, false, false, TR_MIN_DEG);
+    }
+
+    public static double[] optimize(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
+                                    double[] seedAbsWrapped, int phase1Calls, int totalCalls) {
+        return optimize(exact, spec, feasTol, cancel, CLEARANCE, true, seedAbsWrapped, phase1Calls, totalCalls, false, false, TR_MIN_DEG);
+    }
+
+    public static double[] optimizeBestEffort(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
+                                              double[] seedAbsWrapped, int phase1Calls, int totalCalls) {
+        return optimize(exact, spec, feasTol, cancel, CLEARANCE, true, seedAbsWrapped, phase1Calls, totalCalls, true, true, TR_MIN_DEG);
+    }
+
+    public static double[] optimizeBestEffort(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
+                                              double[] seedAbsWrapped, int phase1Calls, int totalCalls, boolean inertiaAware) {
+        return optimize(exact, spec, feasTol, cancel, CLEARANCE, true, seedAbsWrapped, phase1Calls, totalCalls, true, inertiaAware, TR_MIN_DEG);
+    }
+
+    public static double[] optimizeBestEffort(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
+                                              double[] seedAbsWrapped, int phase1Calls, int totalCalls, boolean inertiaAware,
+                                              double trMinDeg) {
+        return optimize(exact, spec, feasTol, cancel, CLEARANCE, true, seedAbsWrapped, phase1Calls, totalCalls, true, inertiaAware, trMinDeg);
     }
 
     /** Feasibility-only centered solve: phase 1 deepens clearance toward {@value #CENTER_CLEARANCE}, the
      *  hugging phase 2 is skipped. For surrogate-objective solves (lead-in windows). */
     public static double[] optimizeCentered(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel) {
-        return optimize(exact, spec, feasTol, cancel, CENTER_CLEARANCE, false, null);
+        return optimize(exact, spec, feasTol, cancel, CENTER_CLEARANCE, false, null, MAX_PHASE1_CALLS, MAX_LP_CALLS, false, false, TR_MIN_DEG);
     }
 
     private static double[] optimize(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
-                                     double targetClearance, boolean hugObjective, double[] seedAbsWrapped) {
+                                     double targetClearance, boolean hugObjective, double[] seedAbsWrapped,
+                                     int phase1Calls, int totalCalls, boolean bestEffort, boolean inertiaAware,
+                                     double trMinDeg) {
         List<JumpConstraint> constraints = spec.constraints;
         if (JumpLinearModel.hasFacingWall(constraints)) return null; // not position-linear
         for (JumpConstraint c : constraints) {
@@ -107,6 +130,10 @@ public final class SlpSolve {
         }
 
         long t0 = System.nanoTime();
+        if (SolverTrace.on()) {
+            SolverTrace.log("SLP", "start n=%d m=%d seed=%s budget=%d/%d bestEffort=%s inertiaAware=%s",
+                    n, m, seedAbsWrapped != null ? "given" : "dual", phase1Calls, totalCalls, bestEffort, inertiaAware);
+        }
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
         double[] viol = new double[m];
         double[] candViol = new double[m];
@@ -116,8 +143,16 @@ public final class SlpSolve {
         int lpCalls = 0;
         double tr = TR_START_DEG;
 
-        for (int phase = 1; phase <= (hugObjective ? 2 : 1) && lpCalls < MAX_LP_CALLS; phase++) {
-            int budget = phase == 1 ? MAX_PHASE1_CALLS : MAX_LP_CALLS;
+        boolean[] zeroX = new boolean[n];
+        boolean[] zeroZ = new boolean[n];
+        boolean[] lastZeroX = null;
+        boolean[] lastZeroZ = null;
+        List<JumpLinearModel.Wall> lpWalls = walls;
+        double[] lpCx = cx;
+        double[] lpCz = cz;
+
+        for (int phase = 1; phase <= (hugObjective ? 2 : 1) && lpCalls < totalCalls; phase++) {
+            int budget = phase == 1 ? phase1Calls : totalCalls;
             while (lpCalls < budget) {
                 if (cancel != null && cancel.get()) return null;
                 double[] gf = sc.toGameFacings(Angles.wrapAll(theta));
@@ -125,6 +160,33 @@ public final class SlpSolve {
                 double maxViol = exactSlacks(ineq, gf, path, viol);
                 double objNorm = normObjective(path, spec.objective, max);
                 if (phase == 1 && maxViol <= -targetClearance) break;
+
+                if (inertiaAware) lin.zeroingPattern(theta, exact.inertiaThreshold(), exact.perAxisInertia(), zeroX, zeroZ);
+                if (inertiaAware && (!patternEquals(lastZeroX, zeroX) || !patternEquals(lastZeroZ, zeroZ))) {
+                    List<JumpLinearModel.Wall> rebuilt = null;
+                    if (anySet(zeroX) || anySet(zeroZ)) {
+                        JumpLinearModel patterned = new JumpLinearModel(sc, zeroX.clone(), zeroZ.clone());
+                        rebuilt = new ArrayList<>(m);
+                        for (JumpConstraint c : ineq) {
+                            JumpLinearModel.Wall w = patterned.compileWall(c, 0.0, null);
+                            if (w == null) { rebuilt = null; break; }
+                            rebuilt.add(w);
+                        }
+                        if (rebuilt != null) {
+                            lpWalls = rebuilt;
+                            lpCx = new double[n];
+                            lpCz = new double[n];
+                            patterned.objectiveVectors(spec.objective, lpCx, lpCz);
+                        }
+                    }
+                    if (rebuilt == null) {
+                        lpWalls = walls;
+                        lpCx = cx;
+                        lpCz = cz;
+                    }
+                    lastZeroX = zeroX.clone();
+                    lastZeroZ = zeroZ.clone();
+                }
 
                 for (int t = 0; t < n; t++) {
                     double phi = lin.baseArg(t) + theta[t] * RAD;
@@ -134,7 +196,7 @@ public final class SlpSolve {
                 int nv = n + 1; // facing deltas (deg) + worst-slack variable s
                 List<LinearConstraint> cons = new ArrayList<>(m + 2 * n + 1);
                 for (int j = 0; j < m; j++) {
-                    JumpLinearModel.Wall wall = walls.get(j);
+                    JumpLinearModel.Wall wall = lpWalls.get(j);
                     double[] row = new double[nv];
                     for (int t = 0; t < n; t++) {
                         double du = wall.axis == 0 ? -uz[t] : ux[t]; // d(u.axis)/dyaw, deg-scaled below
@@ -155,7 +217,7 @@ public final class SlpSolve {
                 if (phase == 1) {
                     objRow[n] = 1.0; // minimize the worst linearized slack
                 } else {
-                    for (int t = 0; t < n; t++) objRow[t] = -(cx[t] * -uz[t] + cz[t] * ux[t]) * RAD; // maximize c.du
+                    for (int t = 0; t < n; t++) objRow[t] = -(lpCx[t] * -uz[t] + lpCz[t] * ux[t]) * RAD; // maximize c.du
                     double[] sCap = new double[nv];
                     sCap[n] = 1.0;
                     // Stay strictly inside, but never demand deeper clearance than the point already has,
@@ -170,6 +232,7 @@ public final class SlpSolve {
                             GoalType.MINIMIZE);
                     d = sol.getPoint();
                 } catch (Exception e) {
+                    if (SolverTrace.on()) SolverTrace.log("SLP", "lp#%d phase=%d LP failed (%s), phase stop", lpCalls, phase, e.getClass().getSimpleName());
                     break; // LP infeasible/degenerate at this linearization: stop the phase
                 }
 
@@ -188,12 +251,17 @@ public final class SlpSolve {
                 boolean accept = phase == 1
                         ? cViol < maxViol
                         : cViol <= feasTol && cObj > objNorm;
+                if (SolverTrace.on()) {
+                    SolverTrace.log("SLP", "lp#%d phase=%d tr=%.3g step=%.3g pred=%.3e viol=%.3e->%.3e obj=%.9f->%.9f %s",
+                            lpCalls, phase, tr, step, d[n], maxViol, cViol, objNorm, cObj,
+                            accept ? "accept" : "reject");
+                }
                 if (accept) {
                     theta = cand;
                     if (step > 0.8 * tr) tr = Math.min(tr * 2.0, TR_MAX_DEG);
                 } else {
                     tr *= 0.5;
-                    if (tr < TR_MIN_DEG) break; // stalled on the float lattice: this phase is done
+                    if (tr < trMinDeg) break; // stalled on the float lattice: this phase is done
                 }
             }
             if (phase == 1) {
@@ -205,8 +273,13 @@ public final class SlpSolve {
                 if (endViol > phase1Gate) {
                     if (DEBUG) System.out.printf("  SLP infeasible: viol=%.3e after %d LPs (%.1f ms)%n",
                             endViol, lpCalls, (System.nanoTime() - t0) / 1e6);
-                    return null;
+                    if (SolverTrace.on()) {
+                        SolverTrace.log("SLP", "phase1 infeasible viol=%.3e lps=%d ms=%.1f%s",
+                                endViol, lpCalls, (System.nanoTime() - t0) / 1e6, bestEffort ? " (best effort kept)" : "");
+                    }
+                    return bestEffort ? Angles.wrapAll(theta) : null;
                 }
+                if (SolverTrace.on()) SolverTrace.log("SLP", "phase1 done viol=%.3e lps=%d", endViol, lpCalls);
                 tr = 10.0; // phase 2 restarts from a workable step size (phase 1 may have collapsed it)
             }
         }
@@ -217,7 +290,24 @@ public final class SlpSolve {
         double finalViol = compiled.maxViolation(gf, path);
         if (DEBUG) System.out.printf("  SLP viol=%.3e obj=%.7f lps=%d (%.1f ms)%n", finalViol,
                 path.getPos(spec.objective.tick, spec.objective.axis), lpCalls, (System.nanoTime() - t0) / 1e6);
-        return finalViol <= feasTol ? yaws : null;
+        if (SolverTrace.on()) {
+            SolverTrace.log("SLP", "end viol=%.3e obj=%.9f lps=%d ms=%.1f %s", finalViol,
+                    path.getPos(spec.objective.tick, spec.objective.axis), lpCalls,
+                    (System.nanoTime() - t0) / 1e6, finalViol <= feasTol ? "feasible" : (bestEffort ? "best effort" : "null"));
+        }
+        if (finalViol <= feasTol) return yaws;
+        return bestEffort ? yaws : null;
+    }
+
+    private static boolean patternEquals(boolean[] a, boolean[] b) {
+        if (a == null) return !anySet(b);
+        for (int t = 0; t < b.length; t++) if (a[t] != b[t]) return false;
+        return true;
+    }
+
+    private static boolean anySet(boolean[] a) {
+        for (boolean v : a) if (v) return true;
+        return false;
     }
 
     /** Signed byte-exact slack per wall into {@code out} (&lt;= 0 = feasible, by that clearance); returns the max. */

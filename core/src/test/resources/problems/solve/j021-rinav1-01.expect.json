@@ -1,1 +1,1 @@
-{ "shouldSolve": true, "effort": "FAST", "maxSolveMs": 30000, "refObjective": 1067.8636, "maxObjectiveGap": 0.4 }
+{ "shouldSolve": true, "effort": "THOROUGH", "maxSolveMs": 30000, "refObjective": 1067.8636, "maxObjectiveGap": 0.4 }

@@ -6,19 +6,29 @@ coverage you drop a capture (or a tiny sidecar) into a folder. No Java change, n
 ```
 anglesolver/
   ProblemsTest.java        every capture under resources/problems/<check>/ is validated for that check
-  SolveBenchmark.java      manual timing (@Ignore); iterates problems/solve/
+  HpkDualRecoveryScreen.java  dev miss-screen over captures/hpk/ (dual bound + full chain per capture);
+                              skipped unless PKC_SCREENS is set; report at build/reports/hpk-screen.txt
+  RelaxDiagScreen.java     dev per-capture recovery diagnostic (stall margins, recorded-path replay);
+                           skipped unless PKC_SCREENS is set; report at build/reports/relax-diag.txt
+  LoopmmReachScreen.java   dev reach diagnostic on loopmm (pattern-branched B&B loose/tight, engine
+                           exhaustive); skipped unless PKC_SCREENS is set
+  HpkMissTriageScreen.java dev triage of the dualrecovery frontier misses (blind B&B per capture,
+                           hand-pattern probes); skipped unless PKC_SCREENS is set
+  HpkEngineBench.java      manual engine bench over captures/hpk/; PKC_BENCH=1 to run, PKC_BENCH_EXH,
+                           PKC_BENCH_FILTER, PKC_BENCH_TAG, PKC_BENCH_TIMEOUT_MS tune it
   harness/                 shared plumbing; no test lives here
 resources/
   problems/<check>/        one folder per check; holds captures or .expect.json sidecars
   captures/                the shared capture library (one copy of each saved jump)
 ```
 
-## The two checks (folder = check)
+## The checks (folder = check)
 
-| Folder        | Validates that the capture... |
-|---------------|-------------------------------|
-| `solve/`      | still solves through the live engine (optionally for every Solve-For direction), within a time budget |
-| `closedform/` | closed-form-solves byte-exact feasible, on objective, and fast |
+| Folder          | Validates that the capture... |
+|-----------------|-------------------------------|
+| `solve/`        | still solves through the live engine (optionally for every Solve-For direction), within a time budget |
+| `closedform/`   | closed-form-solves byte-exact feasible, on objective, and fast |
+| `dualrecovery/` | is byte-exact-solved by the deterministic dual chain (closed form, SLP, reseeded SLP, relaxation recovery), no CMA-ES, no warm start; a sidecar `bnbSeconds` adds a bounded blind pattern-B&B feasibility fallback on chain miss; the hpk capture library (gh-204) is wired here, with `shouldSolve: false` marking the known frontier misses |
 
 ## How to add a capture
 
