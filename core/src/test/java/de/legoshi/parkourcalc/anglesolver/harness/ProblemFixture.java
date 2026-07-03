@@ -34,14 +34,15 @@ public final class ProblemFixture {
 
     public static ProblemFixture load(String category, String name) {
         File dir = ProblemCatalog.categoryDir(category);
+        Expect expect = Expect.load(new File(dir, name + ".expect.json"));
         File local = new File(dir, name + ".json");
-        String json = local.isFile() ? Fixtures.read(local) : Fixtures.rawPool(name);
+        String json = local.isFile() ? Fixtures.read(local)
+                : Fixtures.rawPool(expect.capture != null ? expect.capture : name);
         SaveFile file = SaveIO.parseSafe(json);
         if (file == null) throw new IllegalStateException(name + ": failed to parse");
         if (file.angleSolver == null) throw new IllegalStateException(name + ": no angleSolver block");
         if (file.angleSolver.seed == null) throw new IllegalStateException(name + ": no angleSolver.seed (launch state)");
         if (file.rows == null || file.rows.isEmpty()) throw new IllegalStateException(name + ": no rows");
-        Expect expect = Expect.load(new File(dir, name + ".expect.json"));
         return new ProblemFixture(name, file, expect, ExactJumpModel.forMcVersion(file.mcVersion));
     }
 
@@ -81,6 +82,7 @@ public final class ProblemFixture {
         AngleSolverState state = new AngleSolverState();
         SaveIO.applyAngleSolverTo(file, state);
         state.setEffort(expect.effort());
+        if (expect.optimizeSeconds != null) state.setOptimizeSeconds(expect.optimizeSeconds);
         if (axis != null) state.setAxis(axis);
         if (goal != null) state.setGoal(goal);
         if (stopOnFeasible) state.setStopOnFeasible(true);
@@ -112,25 +114,11 @@ public final class ProblemFixture {
         return engine.debugBuildSpec();
     }
 
-    /** The solver reads only the launch pos/vel/yaw on the start tick from the boxes (ground/air comes from
-     *  the angle-solver slipperiness state, not the boxes). Other ticks are placeholders. */
+    /** The engine's boxes: the recorded debug sim states when present (Sprint: Derive and Inputs: Keep
+     *  sample per-tick state from these), placeholders otherwise; the launch state comes from
+     *  {@code angleSolver.seed}. */
     private BoxController buildBoxes() {
-        int seedTick = file.angleSolver.startTick;
-        SaveFile.Start seed = file.angleSolver.seed;
-        BoxController boxes = new BoxController();
-        for (int i = 0; i < file.rows.size(); i++) {
-            Vec3dCore pos = Vec3dCore.ZERO;
-            Vec3dCore vel = Vec3dCore.ZERO;
-            float yaw = 0f;
-            if (i == seedTick) {
-                if (seed.pos != null && seed.pos.length >= 3) pos = new Vec3dCore(seed.pos[0], seed.pos[1], seed.pos[2]);
-                if (seed.vel != null && seed.vel.length >= 3) vel = new Vec3dCore(seed.vel[0], seed.vel[1], seed.vel[2]);
-                yaw = seed.yaw;
-            }
-            boxes.add(new TickState(pos, false, false, false, yaw,
-                    Collections.<Vec3dCore>emptyList(), vel, false, Double.NaN));
-        }
-        return boxes;
+        return Fixtures.buildBoxes(file);
     }
 
     private static void sleep(long ms) {

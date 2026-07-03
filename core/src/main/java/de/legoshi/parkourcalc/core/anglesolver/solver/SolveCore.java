@@ -94,8 +94,10 @@ public final class SolveCore {
             // objective-weighted fitness can settle a hair infeasible for some directions (see the
             // feasibilityOnly constructor on CmaesJumpHarness). Purely additive: this only runs when we
             // would otherwise report no solution, so it can never regress a solve that already succeeds.
-            if (feasible.isEmpty()) {
-                List<SolverRunResult> feasOnly = runRestarts(model, spec, sigmaDeg, budget.maxEval, inits, true, sequential, cancel, feasTol, progress);
+            if (feasible.isEmpty() && (deadlineNanos == 0L || System.nanoTime() < deadlineNanos)) {
+                List<double[]> rescueInits = deadlineNanos > 0L && inits.size() > budget.restarts
+                        ? inits.subList(0, budget.restarts) : inits;
+                List<SolverRunResult> feasOnly = runRestarts(model, spec, sigmaDeg, budget.maxEval, rescueInits, true, sequential, cancel, feasTol, progress);
                 if (cancel.get()) return bestOrNull(progress);
                 List<SolverRunResult> rescued = filterFeasible(feasOnly, feasTol);
                 if (!rescued.isEmpty()) {

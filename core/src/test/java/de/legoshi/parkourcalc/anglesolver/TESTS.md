@@ -6,19 +6,31 @@ coverage you drop a capture (or a tiny sidecar) into a folder. No Java change, n
 ```
 anglesolver/
   ProblemsTest.java        every capture under resources/problems/<check>/ is validated for that check
-  SolveBenchmark.java      manual timing (@Ignore); iterates problems/solve/
+  HpkDualRecoveryScreen.java  dev miss-screen over captures/hpk/ (dual bound + full chain per capture);
+                              skipped unless PKC_SCREENS is set; report at build/reports/hpk-screen.txt
+  RelaxDiagScreen.java     dev per-capture recovery diagnostic (stall margins, recorded-path replay);
+                           skipped unless PKC_SCREENS is set; report at build/reports/relax-diag.txt
+  LoopmmReachScreen.java   dev reach diagnostic on loopmm (pattern-branched B&B loose/tight, engine
+                           exhaustive); skipped unless PKC_SCREENS is set
+  HpkMissTriageScreen.java dev triage of the dualrecovery frontier misses (blind B&B per capture,
+                           hand-pattern probes); skipped unless PKC_SCREENS is set
+  HpkEngineBench.java      manual engine bench over captures/hpk/; PKC_BENCH=1 to run, PKC_BENCH_EXH,
+                           PKC_BENCH_FILTER, PKC_BENCH_TAG, PKC_BENCH_TIMEOUT_MS tune it
+  EngineFileScreen.java    drive the live engine on any save file headlessly; PKC_SOLVE_FILE=<path>,
+                           optional PKC_SOLVE_EFFORT and PKC_SOLVE_TIMEOUT_MS
   harness/                 shared plumbing; no test lives here
 resources/
   problems/<check>/        one folder per check; holds captures or .expect.json sidecars
   captures/                the shared capture library (one copy of each saved jump)
 ```
 
-## The two checks (folder = check)
+## The checks (folder = check)
 
-| Folder        | Validates that the capture... |
-|---------------|-------------------------------|
-| `solve/`      | still solves through the live engine (optionally for every Solve-For direction), within a time budget |
-| `closedform/` | closed-form-solves byte-exact feasible, on objective, and fast |
+| Folder          | Validates that the capture... |
+|-----------------|-------------------------------|
+| `solve/`        | still solves through the live engine (optionally for every Solve-For direction), within a time budget |
+| `closedform/`   | closed-form-solves byte-exact feasible, on objective, and fast |
+| `dualrecovery/` | is byte-exact-solved by the deterministic dual chain (closed form, SLP, reseeded SLP, relaxation recovery), no CMA-ES, no warm start; a sidecar `bnbSeconds` adds a bounded blind pattern-B&B feasibility fallback on chain miss; the hpk capture library (gh-204) is wired here, with `shouldSolve: false` marking the known frontier misses |
 
 ## How to add a capture
 
@@ -41,8 +53,8 @@ resources/
 Some captures in `resources/captures/` are committed as data for upcoming work and are not yet wired to a
 check (no sidecar, so `ProblemsTest` does not run them):
 
-- `loopmm-3jump-lands.json` / `loopmm-3jump-solver-misses.json`: the optimizer reach-failure witness pair
-  for #186 (a hand route that lands at Z@71 = -279.29973 vs the solver's -279.30585, 0.0058 short).
+- `loopmm-3jump-solver-misses.json`: the failing half of the #186 reach-failure witness pair. Its landing
+  half, `loopmm-3jump-lands.json`, IS wired: a `dualrecovery` sidecar with `refObjective: -279.3` asserts
+  the pattern-B&B lands the pad blind (docs/research/angle-solver.md sections 10.3 and 11).
 
-See `docs/research/anvil-solver-quality-decision.md`. When #186 / #178 land, give these a `solve` sidecar
-with a `refObjective` to turn them into real regression checks.
+See `docs/research/anvil-solver-quality-decision.md`.

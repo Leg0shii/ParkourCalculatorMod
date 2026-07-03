@@ -106,6 +106,7 @@ public final class SaveIO {
         state.setGoal(parseEnum(AngleSolverState.Goal.class, a.goal, AngleSolverState.Goal.MAX));
         state.setEffort(parseEnum(AngleSolverState.Effort.class, a.effort, AngleSolverState.Effort.FAST));
         state.setStopOnFeasible(a.stopOnFeasible != null && a.stopOnFeasible);
+        if (a.optimizeSeconds != null) state.setOptimizeSeconds(a.optimizeSeconds);
         applyCustomBudget(a.customBudget, state.getSolveBudget());
         state.setDefaultInputs(parseEnum(AngleSolverState.InputMode.class, a.defaultInputs, AngleSolverState.InputMode.FORCE_45));
         state.setDefaultSprint(parseEnum(AngleSolverState.SprintMode.class, a.defaultSprint, AngleSolverState.SprintMode.ALWAYS));
@@ -322,6 +323,7 @@ public final class SaveIO {
         a.goal = s.getGoal().name();
         a.effort = s.getEffort().name();
         a.stopOnFeasible = s.isStopOnFeasible();
+        a.optimizeSeconds = s.getOptimizeSeconds();
         a.customBudget = toSaveCustomBudget(s.getSolveBudget());
         a.defaultInputs = s.getDefaultInputs().name();
         a.defaultSprint = s.getDefaultSprint().name();
