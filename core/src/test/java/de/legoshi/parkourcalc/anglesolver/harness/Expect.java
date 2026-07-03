@@ -13,9 +13,11 @@ import java.nio.file.Files;
  *  result), so a problem with no sidecar still runs. */
 public final class Expect {
 
-    public String check;           // "solve" | "closedform"; default: the folder name
-    public Boolean shouldSolve;    // solve: default the capture's angleSolver.result.success
+    public String check;           // "solve" | "closedform" | "dualrecovery"; default: the folder name
+    public String capture;         // path into /captures/ (e.g. "hpk/d10/j343_..."); default: the sidecar stem
+    public Boolean shouldSolve;    // solve/dualrecovery: default the capture's angleSolver.result.success
     public String effort;          // "FAST" | "THOROUGH"; default FAST
+    public Integer optimizeSeconds;
     public Long maxSolveMs;        // solve: wall-clock budget; null = no timing assertion
     public Integer minMet;         // solve: require >= this many constraints met; null = require full success
     public Boolean allDirections;  // solve: every axis x goal must solve (not just the saved direction)
@@ -23,6 +25,7 @@ public final class Expect {
     public Double refObjective;    // closedform/solve: objective the result must not regress past
     public Double maxObjectiveGap; // closedform/solve: max objective shortfall vs refObjective (default 1e-2)
     public Double maxMicros;       // closedform: max us per single solve (default 2000)
+    public Integer bnbSeconds;
 
     private static final Gson GSON = new Gson();
 

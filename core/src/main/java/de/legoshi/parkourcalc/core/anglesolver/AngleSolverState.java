@@ -46,11 +46,12 @@ public final class AngleSolverState {
         }
     }
 
-    /** Solve effort: trades wall-clock for the last micrometers of objective. FAST is ~100ms but uses a
-     *  smaller global search, so a hard jump can occasionally miss a feasible solution; bump up if so. */
+    /** Solve effort. FAST returns the first byte-exact feasible solution (lowest latency). THOROUGH
+     *  ("Optimize" in the UI; the constant keeps its name so old saves load) spends a time budget on the
+     *  best objective it can find. CUSTOM exposes every knob. */
     public enum Effort {
-        FAST("Fast", "Narrow search"),
-        THOROUGH("Thorough", "Wide search"),
+        FAST("Fast", "First feasible solution"),
+        THOROUGH("Optimize", "Best result within the time budget"),
         CUSTOM("Custom", "Tuned search budget");
 
         public final String label;
@@ -86,6 +87,9 @@ public final class AngleSolverState {
     public static final int MIN_TIME_BUDGET = 0;
     public static final int MAX_TIME_BUDGET = 600;
     public static final int DEFAULT_TIME_BUDGET = 0;
+    public static final int MIN_OPTIMIZE_SECONDS = 1;
+    public static final int MAX_OPTIMIZE_SECONDS = 600;
+    public static final int DEFAULT_OPTIMIZE_SECONDS = 10;
     public static final int MIN_WINDOW = 6;
     public static final int MAX_WINDOW = 14;
     public static final int DEFAULT_WINDOW = 10;
@@ -156,6 +160,7 @@ public final class AngleSolverState {
     private Goal goal = Goal.MAX;
     private Effort effort = Effort.FAST;
     private boolean stopOnFeasible;
+    private int optimizeSeconds = DEFAULT_OPTIMIZE_SECONDS;
     private final SolveBudget solveBudget = new SolveBudget();
 
     private InputMode defaultInputs = InputMode.FORCE_45;
@@ -224,6 +229,14 @@ public final class AngleSolverState {
 
     public void setStopOnFeasible(boolean stopOnFeasible) {
         this.stopOnFeasible = stopOnFeasible;
+    }
+
+    public int getOptimizeSeconds() {
+        return optimizeSeconds;
+    }
+
+    public void setOptimizeSeconds(int v) {
+        optimizeSeconds = clampInt(v, MIN_OPTIMIZE_SECONDS, MAX_OPTIMIZE_SECONDS);
     }
 
     public SolveBudget getSolveBudget() {
@@ -610,6 +623,7 @@ public final class AngleSolverState {
         goal = Goal.MAX;
         effort = Effort.FAST;
         stopOnFeasible = false;
+        optimizeSeconds = DEFAULT_OPTIMIZE_SECONDS;
         solveBudget.resetToDefaults();
         defaultInputs = InputMode.FORCE_45;
         defaultSprint = SprintMode.ALWAYS;

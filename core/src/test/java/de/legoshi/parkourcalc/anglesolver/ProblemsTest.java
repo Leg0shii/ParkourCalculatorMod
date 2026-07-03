@@ -36,6 +36,8 @@ import static org.junit.Assert.fail;
  *   <li>{@code solve/} - the live engine reaches the expected verdict (optionally every Solve-For direction),
  *       within an optional time budget</li>
  *   <li>{@code closedform/} - the closed-form solve is byte-exact feasible, on objective, and fast</li>
+ *   <li>{@code dualrecovery/} - the deterministic dual chain (closed form, SLP, reseeded SLP, relaxation
+ *       recovery) byte-exact-solves the capture in its saved direction, no CMA-ES, no warm start</li>
  * </ul>
  */
 @RunWith(Parameterized.class)
@@ -60,9 +62,10 @@ public class ProblemsTest {
     public void check() {
         ProblemFixture pf = ProblemFixture.load(category, name);
         switch (pf.expect.check(category)) {
-            case "solve":      runSolve(pf);      break;
-            case "closedform": runClosedForm(pf); break;
-            default:           fail(name + ": unknown check '" + pf.expect.check(category) + "'");
+            case "solve":        runSolve(pf);        break;
+            case "closedform":   runClosedForm(pf);   break;
+            case "dualrecovery": runDualRecovery(pf); break;
+            default:             fail(name + ": unknown check '" + pf.expect.check(category) + "'");
         }
     }
 
@@ -117,6 +120,62 @@ public class ProblemsTest {
                         + " met); the problem is solvable, so every Solve-For must find one", r.isSuccess());
             }
         }
+    }
+
+    private void runDualRecovery(ProblemFixture pf) {
+        ExactJumpModel exact = pf.model;
+        JumpSpec spec = pf.specFor(null, null);
+        JumpPhysicsInputs sc = spec.asScenario();
+        JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
+
+        AtomicBoolean cancel = new AtomicBoolean(false);
+        boolean max = spec.objective.sense == Objective.Sense.MAX;
+        Double target = pf.expect.refObjective;
+        long t0 = System.nanoTime();
+        String[] chain = new String[1];
+        double[] yaws = de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine.dualChain(exact, spec, sc, cancel, chain);
+        boolean shortOfTarget = false;
+        if (yaws != null && target != null) {
+            double o = objectiveOf(exact, sc, spec, yaws);
+            shortOfTarget = (max ? target - o : o - target) > pf.expect.maxObjectiveGap();
+        }
+        if ((yaws == null || shortOfTarget) && pf.expect.bnbSeconds != null) {
+            double stopAt = target != null ? target : (max ? -1.0e300 : 1.0e300);
+            double[] bnb = de.legoshi.parkourcalc.core.anglesolver.solver.BoundPrunedRecovery.solve(exact, spec, 0.0,
+                    cancel, pf.expect.bnbSeconds * 1_000_000_000L, stopAt);
+            if (bnb != null && (yaws == null || (max ? objectiveOf(exact, sc, spec, bnb) > objectiveOf(exact, sc, spec, yaws)
+                                                     : objectiveOf(exact, sc, spec, bnb) < objectiveOf(exact, sc, spec, yaws)))) {
+                yaws = bnb;
+                chain[0] = target != null ? "pattern B&B (to target)" : "pattern B&B (first feasible)";
+            }
+        }
+        long ms = (System.nanoTime() - t0) / 1_000_000L;
+
+        boolean solved = false;
+        double obj = Double.NaN;
+        if (yaws != null) {
+            double[] gf = sc.toGameFacings(Angles.wrapAll(yaws));
+            ForwardPath path = exact.forward(sc, gf);
+            double viol = compiled.maxViolation(gf, path);
+            assertTrue(name + ": chain result not byte-exact feasible (viol=" + viol + ")", viol <= 0.0);
+            solved = true;
+            obj = path.getPos(spec.objective.tick, spec.objective.axis);
+        }
+        System.out.printf("DUAL %-44s solved=%-5s via=%-32s %4d ms%s%n",
+                name, solved, solved ? chain[0] : "-", ms, solved ? String.format("  obj=%.6f", obj) : "");
+        if (pf.expect.shouldSolve(pf.file)) {
+            assertTrue(name + ": dual chain failed to solve a solvable capture", solved);
+            if (target != null) {
+                double gap = max ? target - obj : obj - target;
+                assertTrue(name + ": objective " + obj + " short of target " + target + " by " + gap,
+                        gap <= pf.expect.maxObjectiveGap());
+            }
+        }
+    }
+
+    private static double objectiveOf(ExactJumpModel exact, JumpPhysicsInputs sc, JumpSpec spec, double[] yawsAbs) {
+        double[] gf = sc.toGameFacings(Angles.wrapAll(yawsAbs));
+        return exact.forward(sc, gf).getPos(spec.objective.tick, spec.objective.axis);
     }
 
     private void runClosedForm(ProblemFixture pf) {

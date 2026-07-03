@@ -39,6 +39,10 @@ public final class ClosedFormSolve {
      *  fragile seam states. */
     private static final double[] MARGINS_ROBUST = {5.0e-2, 2.0e-2, 1.0e-2, 5.0e-3, 1.2e-3, 3.0e-4, 0.0};
 
+    private static final int MAX_INERTIA_PASSES = 4;
+
+    private static final int RUNG_STALL_LIMIT = 2;
+
     public static final class Result {
         public final double[] yaws;
         public final double violation;
@@ -70,13 +74,69 @@ public final class ClosedFormSolve {
     private static Result optimizeReturning(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
                                             double[] margins, boolean ascending) {
         JumpPhysicsInputs sc = spec.asScenario();
-        List<JumpConstraint> constraints = spec.constraints;
 
         // The linear model represents only position (X/Z) walls. Facing walls are not position-linear.
-        if (JumpLinearModel.hasFacingWall(constraints)) return null;
+        if (JumpLinearModel.hasFacingWall(spec.constraints)) return null;
 
         long t0 = System.nanoTime();
-        JumpLinearModel lin = new JumpLinearModel(sc);
+        JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
+
+        int n = sc.numTicks;
+        boolean[] zeroX = null;
+        boolean[] zeroZ = null;
+        Result best = null;
+        for (int pass = 0; pass < MAX_INERTIA_PASSES; pass++) {
+            if (SolverTrace.on()) {
+                SolverTrace.log("CF", "pass=%d pattern=%s n=%d m=%d %s",
+                        pass, SolverTrace.patternLabel(zeroX, zeroZ), n, spec.constraints.size(),
+                        ascending ? "ascending" : "robust");
+            }
+            Result r = runLadder(exact, spec, sc, compiled, feasTol, cancel, margins, ascending, zeroX, zeroZ, t0);
+            if (r == null) {
+                if (SolverTrace.on()) SolverTrace.log("CF", "pass=%d ladder empty (trivial/unbounded/cancel)", pass);
+                break;
+            }
+            if (r.feasible) return r;
+            boolean improved = best == null || r.violation < best.violation;
+            if (best == null || r.violation < best.violation) best = r;
+            if (pass > 0 && !improved) {
+                if (SolverTrace.on()) SolverTrace.log("CF", "pass=%d no improvement (viol=%.3e), stop", pass, r.violation);
+                break;
+            }
+
+            boolean[] nzx = new boolean[n];
+            boolean[] nzz = new boolean[n];
+            new JumpLinearModel(sc).zeroingPattern(r.yaws, exact.inertiaThreshold(), exact.perAxisInertia(), nzx, nzz);
+            if (!patternEffective(sc, nzx, nzz)) {
+                if (SolverTrace.on()) SolverTrace.log("CF", "pass=%d pattern %s ineffective, stop", pass, SolverTrace.patternLabel(nzx, nzz));
+                break;
+            }
+            if (patternEquals(zeroX, nzx) && patternEquals(zeroZ, nzz)) {
+                if (SolverTrace.on()) SolverTrace.log("CF", "pass=%d pattern fixed point, stop", pass);
+                break;
+            }
+            zeroX = nzx;
+            zeroZ = nzz;
+        }
+        if (SolverTrace.on()) {
+            SolverTrace.log("CF", "fallback bestViol=%s us=%.1f",
+                    best == null ? "none" : SolverTrace.fmt("%.3e", best.violation), (System.nanoTime() - t0) / 1e3);
+        }
+        return best;
+    }
+
+    private static boolean patternEffective(JumpPhysicsInputs sc, boolean[] zeroX, boolean[] zeroZ) {
+        for (int t = 0; t < zeroX.length; t++) {
+            if (zeroX[t] && (t > 0 || sc.initialVelocity.x != 0.0)) return true;
+            if (zeroZ[t] && (t > 0 || sc.initialVelocity.z != 0.0)) return true;
+        }
+        return false;
+    }
+
+    private static Result runLadder(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc,
+                                    JumpConstraintCompiler.Compiled compiled, double feasTol, AtomicBoolean cancel,
+                                    double[] margins, boolean ascending, boolean[] zeroX, boolean[] zeroZ, long t0) {
+        JumpLinearModel lin = new JumpLinearModel(sc, zeroX, zeroZ);
         double[] cx = new double[lin.n];
         double[] cz = new double[lin.n];
         lin.objectiveVectors(spec.objective, cx, cz);
@@ -84,10 +144,12 @@ public final class ClosedFormSolve {
         // Compile the wall structure once (margin applied inside the dual solve); a violated constant
         // constraint is unfixable, so bail to the fallback immediately.
         boolean[] trivialInfeasible = {false};
-        List<JumpLinearModel.Wall> walls = lin.compileWalls(constraints, 0.0, trivialInfeasible);
+        List<JumpLinearModel.Wall> walls = lin.compileWalls(spec.constraints, 0.0, trivialInfeasible);
         if (trivialInfeasible[0]) return null;
+        double vBound = exact.perAxisInertia() ? exact.inertiaThreshold()
+                : exact.inertiaThreshold() / Math.sqrt(2.0);
+        walls.addAll(lin.velocityWalls(vBound));
 
-        JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
         CostateDualSolver solver = new CostateDualSolver(lin.n, cx, cz, lin.mMagAll(), walls);
 
         // Each rung warm-starts from the previous margin's multipliers, so the ladder costs barely more
@@ -95,12 +157,14 @@ public final class ClosedFormSolve {
         double bestViol = Double.POSITIVE_INFINITY;
         double[] bestYaws = null;
         double[] warm = null;
+        int rungStall = 0;
         for (double margin : margins) {
             if (cancel.get()) return null;
             CostateDualSolver.Result r = solver.solve(margin, warm);
             // Dual unbounded -> primal infeasible; infeasibility is monotone in the margin, so ascending
             // stops while the descending (robust) ladder keeps trying smaller rungs.
             if (r == null) {
+                if (SolverTrace.on()) SolverTrace.log("CF", "rung margin=%.2e dual unbounded%s", margin, ascending ? ", ladder stop" : "");
                 if (ascending) break;
                 continue;
             }
@@ -108,6 +172,11 @@ public final class ClosedFormSolve {
 
             double[] yaws = recover(lin, spec.objective, r);
             double viol = violOnExact(exact, sc, compiled, yaws);
+            if (SolverTrace.on()) {
+                SolverTrace.log("CF", "rung margin=%.2e iters=%d pg=%.3e dual=%.9f viol=%.3e%s",
+                        margin, solver.lastIters, solver.lastPgres, r.value, viol,
+                        viol <= feasTol ? " certified" : "");
+            }
             if (DEBUG) {
                 double[] gf = sc.toGameFacings(yaws);
                 double o = exact.forward(sc, gf).getPos(spec.objective.tick, spec.objective.axis);
@@ -117,16 +186,32 @@ public final class ClosedFormSolve {
             if (viol < bestViol) {
                 bestViol = viol;
                 bestYaws = yaws;
+                rungStall = 0;
+            } else {
+                rungStall++;
             }
             if (viol <= feasTol) {
                 if (DEBUG) System.out.printf("  CLOSED -> %.2fus (margin=%.1e)%n", (System.nanoTime() - t0) / 1e3, margin);
                 return new Result(yaws, viol, true);
+            }
+            if (ascending && rungStall >= RUNG_STALL_LIMIT) {
+                if (SolverTrace.on()) SolverTrace.log("CF", "ladder stalled after margin=%.2e (bestViol=%.3e)", margin, bestViol);
+                break;
             }
         }
         if (DEBUG) System.out.printf("  CLOSED FALLBACK %.2fus bestViol=%.2e%n",
                 (System.nanoTime() - t0) / 1e3, bestViol);
         if (bestYaws == null) return null;
         return new Result(bestYaws, bestViol, false);
+    }
+
+    private static boolean patternEquals(boolean[] a, boolean[] b) {
+        int n = b.length;
+        for (int t = 0; t < n; t++) {
+            boolean av = a != null && a[t];
+            if (av != b[t]) return false;
+        }
+        return true;
     }
 
     /** Weak-duality bound on the spec's objective in world coordinates: no feasible path can land beyond

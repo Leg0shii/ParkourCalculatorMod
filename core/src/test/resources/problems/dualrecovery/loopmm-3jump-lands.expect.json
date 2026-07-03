@@ -1,0 +1,7 @@
+{
+  "capture": "loopmm-3jump-lands",
+  "shouldSolve": true,
+  "bnbSeconds": 60,
+  "refObjective": -279.3,
+  "maxObjectiveGap": 0.0
+}
