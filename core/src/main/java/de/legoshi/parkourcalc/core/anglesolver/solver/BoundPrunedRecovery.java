@@ -121,7 +121,14 @@ public final class BoundPrunedRecovery {
                 }
             }
             if (!viable.isEmpty() && !searchCancel.get()) {
-                int threads = Math.max(1, Math.min(viable.size(), Runtime.getRuntime().availableProcessors() - 2));
+                int threads = Math.min(viable.size(), Math.max(2, Runtime.getRuntime().availableProcessors() - 2));
+                final long sliceNanos = viable.size() > threads
+                        ? Math.max(1L, (searchDeadline - System.nanoTime()) * threads / viable.size())
+                        : 0L;
+                if (SolverTrace.on() && sliceNanos > 0L) {
+                    SolverTrace.log("BNB", "slicing %d patterns over %d threads, sliceMs=%d",
+                            viable.size(), threads, sliceNanos / 1_000_000L);
+                }
                 java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool(threads, r -> {
                     Thread t = new Thread(r, "bnb-pattern");
                     t.setDaemon(true);
@@ -134,7 +141,10 @@ public final class BoundPrunedRecovery {
                     for (Pattern p : viable) {
                         futures.add(pool.submit(() -> {
                             if (searchCancel.get()) return null;
-                            Search search = Search.build(exact, treeSpec, compiled, feasTol, searchCancel, searchDeadline,
+                            long deadline = sliceNanos > 0L
+                                    ? Math.min(searchDeadline, System.nanoTime() + sliceNanos)
+                                    : searchDeadline;
+                            Search search = Search.build(exact, treeSpec, compiled, feasTol, searchCancel, deadline,
                                     p.lin, p.velWalls, p.patterned, stopNorm, p.label, searchFloor);
                             if (search == null) return null;
                             if (seedYaws != null) search.offer(seedYaws);

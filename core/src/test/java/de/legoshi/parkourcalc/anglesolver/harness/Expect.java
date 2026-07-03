@@ -17,6 +17,7 @@ public final class Expect {
     public String capture;         // path into /captures/ (e.g. "hpk/d10/j343_..."); default: the sidecar stem
     public Boolean shouldSolve;    // solve/dualrecovery: default the capture's angleSolver.result.success
     public String effort;          // "FAST" | "THOROUGH"; default FAST
+    public Integer optimizeSeconds;
     public Long maxSolveMs;        // solve: wall-clock budget; null = no timing assertion
     public Integer minMet;         // solve: require >= this many constraints met; null = require full success
     public Boolean allDirections;  // solve: every axis x goal must solve (not just the saved direction)

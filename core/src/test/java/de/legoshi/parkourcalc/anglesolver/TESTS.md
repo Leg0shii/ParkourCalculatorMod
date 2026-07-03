@@ -16,6 +16,8 @@ anglesolver/
                            hand-pattern probes); skipped unless PKC_SCREENS is set
   HpkEngineBench.java      manual engine bench over captures/hpk/; PKC_BENCH=1 to run, PKC_BENCH_EXH,
                            PKC_BENCH_FILTER, PKC_BENCH_TAG, PKC_BENCH_TIMEOUT_MS tune it
+  EngineFileScreen.java    drive the live engine on any save file headlessly; PKC_SOLVE_FILE=<path>,
+                           optional PKC_SOLVE_EFFORT and PKC_SOLVE_TIMEOUT_MS
   harness/                 shared plumbing; no test lives here
 resources/
   problems/<check>/        one folder per check; holds captures or .expect.json sidecars
@@ -51,8 +53,8 @@ resources/
 Some captures in `resources/captures/` are committed as data for upcoming work and are not yet wired to a
 check (no sidecar, so `ProblemsTest` does not run them):
 
-- `loopmm-3jump-lands.json` / `loopmm-3jump-solver-misses.json`: the optimizer reach-failure witness pair
-  for #186 (a hand route that lands at Z@71 = -279.29973 vs the solver's -279.30585, 0.0058 short).
+- `loopmm-3jump-solver-misses.json`: the failing half of the #186 reach-failure witness pair. Its landing
+  half, `loopmm-3jump-lands.json`, IS wired: a `dualrecovery` sidecar with `refObjective: -279.3` asserts
+  the pattern-B&B lands the pad blind (docs/research/angle-solver.md sections 10.3 and 11).
 
-See `docs/research/anvil-solver-quality-decision.md`. When #186 / #178 land, give these a `solve` sidecar
-with a `refObjective` to turn them into real regression checks.
+See `docs/research/anvil-solver-quality-decision.md`.

@@ -82,6 +82,7 @@ public final class ProblemFixture {
         AngleSolverState state = new AngleSolverState();
         SaveIO.applyAngleSolverTo(file, state);
         state.setEffort(expect.effort());
+        if (expect.optimizeSeconds != null) state.setOptimizeSeconds(expect.optimizeSeconds);
         if (axis != null) state.setAxis(axis);
         if (goal != null) state.setGoal(goal);
         if (stopOnFeasible) state.setStopOnFeasible(true);

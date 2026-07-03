@@ -47,6 +47,9 @@ dependencies {
 
 tasks.named('test') {
 	useJUnit()
+	if (project.hasProperty('testCpus')) {
+		jvmArgs "-XX:ActiveProcessorCount=${project.property('testCpus')}"
+	}
 }
 
 // Enforce the table-styling consolidation rules established in the Phase 1-5

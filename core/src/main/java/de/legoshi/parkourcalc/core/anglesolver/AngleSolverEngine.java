@@ -706,11 +706,20 @@ public final class AngleSolverEngine {
                 yaws = cma;
                 solverName = solverName == null ? "CMA-ES" : solverName + " -> CMA-ES";
             } else if (cma != null) {
-                // Both are byte-exact feasible on the user's own objective; keep the better one.
+                // Since #201 the race returns its best-objective result even when infeasible, so gate on
+                // feasibility first; a feasible incumbent is never traded for an infeasible reach.
                 boolean max = spec.objective.sense == Objective.Sense.MAX;
-                double slpObj = exactObjective(sc, spec, yaws);
-                double cmaObj = exactObjective(sc, spec, cma);
-                if (max ? cmaObj > slpObj : cmaObj < slpObj) {
+                boolean curFeasible = violationOf(sc, spec, yaws) <= FEAS_TOL;
+                boolean cmaFeasible = violationOf(sc, spec, cma) <= FEAS_TOL;
+                boolean take;
+                if (curFeasible != cmaFeasible) {
+                    take = cmaFeasible;
+                } else {
+                    double slpObj = exactObjective(sc, spec, yaws);
+                    double cmaObj = exactObjective(sc, spec, cma);
+                    take = max ? cmaObj > slpObj : cmaObj < slpObj;
+                }
+                if (take) {
                     yaws = cma;
                     solverName += " -> CMA-ES (better objective)";
                 } else {

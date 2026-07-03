@@ -1,0 +1,7 @@
+{
+  "capture": "trp-optimize-feasible-swap",
+  "shouldSolve": true,
+  "effort": "THOROUGH",
+  "optimizeSeconds": 10,
+  "maxSolveMs": 40000
+}

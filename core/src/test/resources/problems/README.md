@@ -27,12 +27,15 @@ defaults come from the capture's own result. A capture may appear in several fol
   // solve/ and dualrecovery/
   "shouldSolve":     true,     // default: the capture's recorded angleSolver.result.success
   "effort":          "FAST",   // FAST | THOROUGH; default FAST
+  "optimizeSeconds": 10,        // THOROUGH only: override the save's Optimize time budget
   "maxSolveMs":      4000,      // wall-clock budget; omit for no timing assertion
   "minMet":          12,        // require >= this many constraints met; omit to require full success
   "allDirections":   false,     // require every Solve-For (axis x goal) to solve, not just the saved one
 
   // dualrecovery/
-  "bnbSeconds":      10,        // on chain miss, run the blind pattern-B&B (stop at first feasible) with this budget
+  "bnbSeconds":      10,        // on chain miss (or target shortfall), run the blind pattern-B&B with this budget;
+                                // with refObjective set the B&B stops at that target and the check asserts it is
+                                // reached (within maxObjectiveGap), else it stops at the first feasible point
 
   // closedform/
   "maxObjectiveGap": 0.01,      // max objective shortfall vs the recorded run (default 0.01)
