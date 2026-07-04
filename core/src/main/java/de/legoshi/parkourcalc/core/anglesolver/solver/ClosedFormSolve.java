@@ -60,6 +60,15 @@ public final class ClosedFormSolve {
         return r != null && r.feasible ? r.yaws : null;
     }
 
+    public static double[] optimizeWithPattern(ExactJumpModel exact, JumpSpec spec, double feasTol,
+                                               AtomicBoolean cancel, boolean[] zeroX, boolean[] zeroZ) {
+        if (JumpLinearModel.hasFacingWall(spec.constraints)) return null;
+        JumpPhysicsInputs sc = spec.asScenario();
+        JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
+        Result r = runLadder(exact, spec, sc, compiled, feasTol, cancel, MARGINS, true, zeroX, zeroZ, System.nanoTime());
+        return r != null && r.feasible ? r.yaws : null;
+    }
+
     /** Like {@link #optimize}, but prefers clearance over objective: the result keeps the largest
      *  certifiable uniform distance from every wall. */
     public static double[] optimizeRobust(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel) {
