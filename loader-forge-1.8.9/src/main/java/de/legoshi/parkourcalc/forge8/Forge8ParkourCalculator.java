@@ -70,6 +70,7 @@ public class Forge8ParkourCalculator {
     private KeyBinding captureCollisionBlockKeyBinding;
     private KeyBinding captureLandBlockKeyBinding;
     private KeyBinding clearBlocksKeyBinding;
+    private boolean blockCaptureEnabled;
     private Path configPath;
     private Path saveDir;
 
@@ -92,6 +93,7 @@ public class Forge8ParkourCalculator {
         application.setPlaybackBridge(playbackBridge);
         application.setBlockPicker(new Forge8BlockPicker());
         application.initSettingsStorage(configPath);
+        blockCaptureEnabled = application.getSettings().experimentalBlockCapture;
         application.setupUi();
         imguiHost.setEditingYawSupplier(application::isEditingYaw);
         imguiHost.setAllowDetachedSupplier(() -> Minecraft.getMinecraft().currentScreen == null);
@@ -106,17 +108,20 @@ public class Forge8ParkourCalculator {
         ClientRegistry.registerKeyBinding(landingConstraintsKeyBinding);
         removeConstraintsKeyBinding = new KeyBinding("key.parkourcalculator.remove_selected_constraints", Keyboard.KEY_X, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(removeConstraintsKeyBinding);
-        captureMomentumBlockKeyBinding = new KeyBinding("key.parkourcalculator.capture_momentum_block", Keyboard.KEY_M, "key.categories.parkourcalculator");
-        ClientRegistry.registerKeyBinding(captureMomentumBlockKeyBinding);
-        captureCollisionBlockKeyBinding = new KeyBinding("key.parkourcalculator.capture_collision_block", Keyboard.KEY_N, "key.categories.parkourcalculator");
-        ClientRegistry.registerKeyBinding(captureCollisionBlockKeyBinding);
-        captureLandBlockKeyBinding = new KeyBinding("key.parkourcalculator.capture_land_block", Keyboard.KEY_K, "key.categories.parkourcalculator");
-        ClientRegistry.registerKeyBinding(captureLandBlockKeyBinding);
-        clearBlocksKeyBinding = new KeyBinding("key.parkourcalculator.clear_blocks", Keyboard.KEY_DELETE, "key.categories.parkourcalculator");
-        ClientRegistry.registerKeyBinding(clearBlocksKeyBinding);
+        if (blockCaptureEnabled) {
+            captureMomentumBlockKeyBinding = new KeyBinding("key.parkourcalculator.capture_momentum_block", Keyboard.KEY_M, "key.categories.parkourcalculator");
+            ClientRegistry.registerKeyBinding(captureMomentumBlockKeyBinding);
+            captureCollisionBlockKeyBinding = new KeyBinding("key.parkourcalculator.capture_collision_block", Keyboard.KEY_N, "key.categories.parkourcalculator");
+            ClientRegistry.registerKeyBinding(captureCollisionBlockKeyBinding);
+            captureLandBlockKeyBinding = new KeyBinding("key.parkourcalculator.capture_land_block", Keyboard.KEY_K, "key.categories.parkourcalculator");
+            ClientRegistry.registerKeyBinding(captureLandBlockKeyBinding);
+            clearBlocksKeyBinding = new KeyBinding("key.parkourcalculator.clear_blocks", Keyboard.KEY_DELETE, "key.categories.parkourcalculator");
+            ClientRegistry.registerKeyBinding(clearBlocksKeyBinding);
+        }
 
         MinecraftForge.EVENT_BUS.register(this);
-        LOG.info("ParkourCalculator init complete. G toggle, L deselect, P playback, B landing constraints; M/N/K capture momentum/collision/land block, Delete clear blocks.");
+        LOG.info("ParkourCalculator init complete. G toggle, L deselect, P playback, B landing constraints, X remove constraints."
+                + (blockCaptureEnabled ? " Block capture ON: M/N/K capture momentum/collision/land block, Delete clear blocks." : ""));
     }
 
     private boolean wasPlaybackRunning = false;
@@ -222,20 +227,22 @@ public class Forge8ParkourCalculator {
             removeConstraintsPressed = true;
         }
         boolean captureMomentum = false;
-        while (captureMomentumBlockKeyBinding.isPressed()) {
-            captureMomentum = true;
-        }
         boolean captureCollision = false;
-        while (captureCollisionBlockKeyBinding.isPressed()) {
-            captureCollision = true;
-        }
         boolean captureLand = false;
-        while (captureLandBlockKeyBinding.isPressed()) {
-            captureLand = true;
-        }
         boolean clearBlocks = false;
-        while (clearBlocksKeyBinding.isPressed()) {
-            clearBlocks = true;
+        if (blockCaptureEnabled) {
+            while (captureMomentumBlockKeyBinding.isPressed()) {
+                captureMomentum = true;
+            }
+            while (captureCollisionBlockKeyBinding.isPressed()) {
+                captureCollision = true;
+            }
+            while (captureLandBlockKeyBinding.isPressed()) {
+                captureLand = true;
+            }
+            while (clearBlocksKeyBinding.isPressed()) {
+                clearBlocks = true;
+            }
         }
         if (mc.currentScreen == null) {
             if (toggled) {

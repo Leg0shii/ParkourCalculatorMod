@@ -64,6 +64,7 @@ public final class Settings {
     private static final boolean DEFAULT_VIEW_VELOCITY_MAP = false;
     private static final boolean DEFAULT_SAVE_DEBUG_VALUES = false;
     private static final boolean DEFAULT_AUTO_APPLY_SOLVE = false;
+    private static final boolean DEFAULT_EXPERIMENTAL_BLOCK_CAPTURE = false;
 
     private static final boolean DEFAULT_KEEP_INPUT_TABLE_OPEN = false;
     private static final boolean DEFAULT_KEEP_TICK_INFO_OPEN = false;
@@ -168,6 +169,8 @@ public final class Settings {
     // When on, a feasible Angle Solver solve is applied automatically the moment it finishes.
     public boolean autoApplySolve = DEFAULT_AUTO_APPLY_SOLVE;
 
+    public boolean experimentalBlockCapture = DEFAULT_EXPERIMENTAL_BLOCK_CAPTURE;
+
     // Keep these windows drawn (display-only) while the main UI is closed.
     public boolean keepInputTableOpen = DEFAULT_KEEP_INPUT_TABLE_OPEN;
     public boolean keepTickInfoOpen = DEFAULT_KEEP_TICK_INFO_OPEN;
@@ -247,6 +250,7 @@ public final class Settings {
         viewVelocityMap = DEFAULT_VIEW_VELOCITY_MAP;
         saveDebugValues = DEFAULT_SAVE_DEBUG_VALUES;
         autoApplySolve = DEFAULT_AUTO_APPLY_SOLVE;
+        experimentalBlockCapture = DEFAULT_EXPERIMENTAL_BLOCK_CAPTURE;
         keepInputTableOpen = DEFAULT_KEEP_INPUT_TABLE_OPEN;
         keepTickInfoOpen = DEFAULT_KEEP_TICK_INFO_OPEN;
         keepBoxesDuringPlayback = DEFAULT_KEEP_BOXES_DURING_PLAYBACK;

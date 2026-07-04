@@ -121,6 +121,7 @@ public final class Forge8WorldOverlayRenderer {
     }
 
     private void renderSelectionBlocks(double camX, double camY, double camZ) {
+        if (!settings.experimentalBlockCapture) return;
         AngleSolverState st = angleSolver != null ? angleSolver.get() : null;
         if (st == null || !st.hasAnyBlocks()) return;
 
@@ -151,9 +152,13 @@ public final class Forge8WorldOverlayRenderer {
     }
 
     private void emitSelections(AngleSolverState st, Forge8BoxRenderer r, boolean fill) {
-        for (BlockSelection b : st.getMomentumBlocks()) r.drawBox(grow(b.box), fill ? MOMENTUM_FILL : MOMENTUM_OUTLINE);
-        for (BlockSelection b : st.getCollisionBlocks()) r.drawBox(grow(b.box), fill ? COLLISION_FILL : COLLISION_OUTLINE);
-        for (BlockSelection b : st.getLandBlocks()) r.drawBox(grow(b.box), fill ? LAND_FILL : LAND_OUTLINE);
+        for (BlockSelection b : st.getMomentumBlocks()) drawBlock(r, b, fill ? MOMENTUM_FILL : MOMENTUM_OUTLINE);
+        for (BlockSelection b : st.getCollisionBlocks()) drawBlock(r, b, fill ? COLLISION_FILL : COLLISION_OUTLINE);
+        for (BlockSelection b : st.getLandBlocks()) drawBlock(r, b, fill ? LAND_FILL : LAND_OUTLINE);
+    }
+
+    private void drawBlock(Forge8BoxRenderer r, BlockSelection b, int argb) {
+        for (AABB box : b.boxes) r.drawBox(grow(box), argb);
     }
 
     private static AABB grow(AABB b) {
