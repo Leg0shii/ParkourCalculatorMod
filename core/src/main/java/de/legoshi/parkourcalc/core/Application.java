@@ -345,7 +345,7 @@ public final class Application {
         if (blockPicker == null || angleSolverState == null || kind == null) return;
         PickedBlock hit = blockPicker.pickLookedAtBlock();
         if (hit == null) return;
-        angleSolverState.toggleBlock(new BlockSelection(kind, hit.x, hit.y, hit.z, hit.box));
+        angleSolverState.toggleBlock(new BlockSelection(kind, hit.x, hit.y, hit.z, hit.box, hit.boxes));
     }
 
     public void clearAngleSolverBlocks() {

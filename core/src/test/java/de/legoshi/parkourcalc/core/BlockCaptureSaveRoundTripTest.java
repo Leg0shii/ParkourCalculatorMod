@@ -148,6 +148,75 @@ public class BlockCaptureSaveRoundTripTest {
     }
 
     @Test
+    public void multiBoxCollisionShapeRoundTrips() throws Exception {
+        FileSystemSaveStore store = store(Files.createTempDirectory("pkc-rt-multibox"));
+
+        AABB hull = new AABB(new Vec3dCore(5, 64, 5), new Vec3dCore(6, 65, 6));
+        List<AABB> boxes = java.util.Arrays.asList(
+                new AABB(new Vec3dCore(5, 64, 5), new Vec3dCore(6, 64.625, 5.25)),
+                new AABB(new Vec3dCore(5.75, 64, 5), new Vec3dCore(6, 65, 6)));
+        AngleSolverState in = new AngleSolverState();
+        in.addBlock(new BlockSelection(BlockSelection.Kind.COLLISION, 5, 64, 5, hull, boxes));
+
+        AngleSolverState out = saveAndReload(store, in);
+
+        assertEquals(1, out.getCollisionBlocks().size());
+        BlockSelection b = out.getCollisionBlocks().get(0);
+        assertSameHull(hull, b.box);
+        assertEquals(2, b.boxes.size());
+        assertSameHull(boxes.get(0), b.boxes.get(0));
+        assertSameHull(boxes.get(1), b.boxes.get(1));
+    }
+
+    @Test
+    public void noCollisionBoxesRoundTripsEmpty() throws Exception {
+        FileSystemSaveStore store = store(Files.createTempDirectory("pkc-rt-nobox"));
+
+        AABB hull = new AABB(new Vec3dCore(3, 64, 3), new Vec3dCore(4, 65, 4));
+        AngleSolverState in = new AngleSolverState();
+        in.addBlock(new BlockSelection(BlockSelection.Kind.COLLISION, 3, 64, 3, hull,
+                java.util.Collections.<AABB>emptyList()));
+
+        AngleSolverState out = saveAndReload(store, in);
+
+        assertEquals(1, out.getCollisionBlocks().size());
+        BlockSelection b = out.getCollisionBlocks().get(0);
+        assertTrue("an open fence gate keeps its display hull but has no collision boxes", b.boxes.isEmpty());
+        assertSameHull(hull, b.box);
+    }
+
+    @Test
+    public void legacySingleBoxLoadsUnchanged() {
+        String json = "{\n" +
+                "  \"version\": 1,\n" +
+                "  \"start\": { \"pos\": [0.0, 0.0, 0.0], \"vel\": [0.0, 0.0, 0.0], \"yaw\": 0.0 },\n" +
+                "  \"angleSolver\": {\n" +
+                "    \"selectedBlocks\": [\n" +
+                "      { \"kind\": \"COLLISION\", \"x\": 1, \"y\": 64, \"z\": 2, \"box\": [1,64,2,2,65,3] }\n" +
+                "    ]\n" +
+                "  }\n" +
+                "}";
+        SaveFile file = SaveIO.parseSafe(json);
+        AngleSolverState state = new AngleSolverState();
+        SaveIO.applyAngleSolverTo(file, state);
+
+        assertEquals(1, state.getCollisionBlocks().size());
+        BlockSelection b = state.getCollisionBlocks().get(0);
+        assertSameHull(new AABB(new Vec3dCore(1, 64, 2), new Vec3dCore(2, 65, 3)), b.box);
+        assertEquals("a legacy save with no boxes field carries the single box", 1, b.boxes.size());
+        assertSameHull(b.box, b.boxes.get(0));
+    }
+
+    private static void assertSameHull(AABB expected, AABB actual) {
+        assertEquals(expected.min.x, actual.min.x, EPS);
+        assertEquals(expected.min.y, actual.min.y, EPS);
+        assertEquals(expected.min.z, actual.min.z, EPS);
+        assertEquals(expected.max.x, actual.max.x, EPS);
+        assertEquals(expected.max.y, actual.max.y, EPS);
+        assertEquals(expected.max.z, actual.max.z, EPS);
+    }
+
+    @Test
     public void legacyStartRoleLoadsAsMomentum() {
         String json = "{\n" +
                 "  \"version\": 1,\n" +

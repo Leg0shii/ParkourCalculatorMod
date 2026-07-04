@@ -3,6 +3,9 @@ package de.legoshi.parkourcalc.core.anglesolver;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
+import java.util.Collections;
+import java.util.List;
+
 /** One block the user picked for the Angle Solver: its role plus the real world-space hitbox captured
  *  at pick time. The block solve turns these into per-tick footprint and keep-out {@link Constraint}s. */
 public final class BlockSelection {
@@ -18,13 +21,19 @@ public final class BlockSelection {
     public final int y;
     public final int z;
     public final AABB box;
+    public final List<AABB> boxes;
 
     public BlockSelection(Kind kind, int x, int y, int z, AABB box) {
+        this(kind, x, y, z, box, Collections.singletonList(box));
+    }
+
+    public BlockSelection(Kind kind, int x, int y, int z, AABB box, List<AABB> boxes) {
         this.kind = kind;
         this.x = x;
         this.y = y;
         this.z = z;
         this.box = box;
+        this.boxes = Collections.unmodifiableList(boxes);
     }
 
     /** Full cube hitbox at integer coords; fallback when a loader can't read a real shape. */

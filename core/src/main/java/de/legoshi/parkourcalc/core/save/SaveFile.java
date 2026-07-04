@@ -79,6 +79,7 @@ public final class SaveFile {
         public int y;
         public int z;
         public double[] box;                             // [minX,minY,minZ,maxX,maxY,maxZ]
+        public double[][] boxes;
     }
 
     public static final class Tick {
