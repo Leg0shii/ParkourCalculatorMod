@@ -1,8 +1,11 @@
 package de.legoshi.parkourcalc.forge8.render;
 
+import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
+import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.ports.BoxRenderer;
 import de.legoshi.parkourcalc.core.render.PathRenderPlan;
+import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.BoxStyle;
@@ -17,22 +20,31 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
 import org.lwjgl.opengl.GL11;
 
+import java.util.function.Supplier;
+
 /** Renders the cached path geometry during RenderWorldLastEvent on MC 1.8.9; the yaw gizmo stays immediate. */
 @SuppressWarnings("DuplicatedCode")
 public final class Forge8WorldOverlayRenderer {
+
+    private static final int MOMENTUM_OUTLINE = 0xFF36C957, MOMENTUM_FILL = 0x4036C957;
+    private static final int LAND_OUTLINE = 0xFFE0463C, LAND_FILL = 0x40E0463C;
+    private static final int COLLISION_OUTLINE = 0xFFB061F0, COLLISION_FILL = 0x40B061F0;
+    private static final double SELECTION_GROW = 0.0025;
 
     private final BoxController boxController;
     private final Settings settings;
     private final SelectionManager selection;
     private final YawGizmoController yawGizmo;
+    private final Supplier<AngleSolverState> angleSolver;
     private final Forge8CachedBoxGeometry cached = new Forge8CachedBoxGeometry();
 
     public Forge8WorldOverlayRenderer(BoxController boxController, Settings settings, SelectionManager selection,
-                                      YawGizmoController yawGizmo) {
+                                      YawGizmoController yawGizmo, Supplier<AngleSolverState> angleSolver) {
         this.boxController = boxController;
         this.settings = settings;
         this.selection = selection;
         this.yawGizmo = yawGizmo;
+        this.angleSolver = angleSolver;
     }
 
     public void render(float partialTicks) {
@@ -42,6 +54,8 @@ public final class Forge8WorldOverlayRenderer {
         double camX = view.lastTickPosX + (view.posX - view.lastTickPosX) * partialTicks;
         double camY = view.lastTickPosY + (view.posY - view.lastTickPosY) * partialTicks;
         double camZ = view.lastTickPosZ + (view.posZ - view.lastTickPosZ) * partialTicks;
+
+        renderSelectionBlocks(camX, camY, camZ);
 
         if (boxController.isEmpty()) {
             cached.close();
@@ -104,5 +118,52 @@ public final class Forge8WorldOverlayRenderer {
         GlStateManager.popMatrix();
         Perf.stop("worldOverlay", renderStart);
         Perf.addBoxes(boxController.size());
+    }
+
+    private void renderSelectionBlocks(double camX, double camY, double camZ) {
+        if (!settings.experimentalBlockCapture) return;
+        AngleSolverState st = angleSolver != null ? angleSolver.get() : null;
+        if (st == null || !st.hasAnyBlocks()) return;
+
+        GlStateManager.pushMatrix();
+        GlStateManager.disableTexture2D();
+        GlStateManager.disableLighting();
+        GlStateManager.disableCull();
+        GlStateManager.enableBlend();
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+
+        Tessellator tess = Tessellator.getInstance();
+        WorldRenderer buf = tess.getWorldRenderer();
+
+        buf.begin(GL11.GL_TRIANGLES, DefaultVertexFormats.POSITION_COLOR);
+        emitSelections(st, new Forge8BoxRenderer(buf, camX, camY, camZ, BoxRenderer.Mode.FACES), true);
+        tess.draw();
+
+        GL11.glLineWidth(BoxStyle.LINE_WIDTH);
+        buf.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
+        emitSelections(st, new Forge8BoxRenderer(buf, camX, camY, camZ, BoxRenderer.Mode.LINES), false);
+        tess.draw();
+
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.disableBlend();
+        GlStateManager.enableCull();
+        GlStateManager.enableTexture2D();
+        GlStateManager.popMatrix();
+    }
+
+    private void emitSelections(AngleSolverState st, Forge8BoxRenderer r, boolean fill) {
+        for (BlockSelection b : st.getMomentumBlocks()) drawBlock(r, b, fill ? MOMENTUM_FILL : MOMENTUM_OUTLINE);
+        for (BlockSelection b : st.getCollisionBlocks()) drawBlock(r, b, fill ? COLLISION_FILL : COLLISION_OUTLINE);
+        for (BlockSelection b : st.getLandBlocks()) drawBlock(r, b, fill ? LAND_FILL : LAND_OUTLINE);
+    }
+
+    private void drawBlock(Forge8BoxRenderer r, BlockSelection b, int argb) {
+        for (AABB box : b.boxes) r.drawBox(grow(box), argb);
+    }
+
+    private static AABB grow(AABB b) {
+        return new AABB(
+                new Vec3dCore(b.min.x - SELECTION_GROW, b.min.y - SELECTION_GROW, b.min.z - SELECTION_GROW),
+                new Vec3dCore(b.max.x + SELECTION_GROW, b.max.y + SELECTION_GROW, b.max.z + SELECTION_GROW));
     }
 }

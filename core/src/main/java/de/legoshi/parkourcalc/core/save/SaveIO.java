@@ -135,13 +135,7 @@ public final class SaveIO {
 
         if (a.selectedBlocks != null) {
             for (SaveFile.BlockSel b : a.selectedBlocks) {
-                BlockSelection sel = toBlockSelection(b);
-                if (sel == null) continue;
-                switch (sel.kind) {
-                    case START: state.setStartBlock(sel); break;
-                    case LAND: state.setLandBlock(sel); break;
-                    case COLLISION: state.addCollisionBlock(sel); break;
-                }
+                state.addBlock(toBlockSelection(b));
             }
         }
 
@@ -343,9 +337,9 @@ public final class SaveIO {
             if (!ov.isEmpty()) t.override = toSaveOverride(ov);
             a.ticks.add(t);
         }
-        if (s.getStartBlock() != null) a.selectedBlocks.add(toSaveBlock(s.getStartBlock()));
-        for (BlockSelection c : s.getCollisionBlocks()) a.selectedBlocks.add(toSaveBlock(c));
-        if (s.getLandBlock() != null) a.selectedBlocks.add(toSaveBlock(s.getLandBlock()));
+        for (BlockSelection b : s.getMomentumBlocks()) a.selectedBlocks.add(toSaveBlock(b));
+        for (BlockSelection b : s.getCollisionBlocks()) a.selectedBlocks.add(toSaveBlock(b));
+        for (BlockSelection b : s.getLandBlocks()) a.selectedBlocks.add(toSaveBlock(b));
         a.result = toSaveResult(s.getResult());
         return a;
     }
@@ -384,24 +378,52 @@ public final class SaveIO {
         out.x = b.x;
         out.y = b.y;
         out.z = b.z;
-        out.box = new double[] {
-                b.box.min.x, b.box.min.y, b.box.min.z,
-                b.box.max.x, b.box.max.y, b.box.max.z
-        };
+        out.box = toBoxArray(b.box);
+        out.boxes = new double[b.boxes.size()][];
+        for (int i = 0; i < b.boxes.size(); i++) out.boxes[i] = toBoxArray(b.boxes.get(i));
         return out;
     }
 
     private static BlockSelection toBlockSelection(SaveFile.BlockSel b) {
         if (b == null) return null;
-        BlockSelection.Kind kind = parseEnumOrNull(BlockSelection.Kind.class, b.kind);
+        String kindName = "START".equals(b.kind) ? BlockSelection.Kind.MOMENTUM.name() : b.kind;
+        BlockSelection.Kind kind = parseEnumOrNull(BlockSelection.Kind.class, kindName);
         if (kind == null) return null;
-        if (b.box != null && b.box.length >= 6) {
-            AABB box = new AABB(
-                    new Vec3dCore(b.box[0], b.box[1], b.box[2]),
-                    new Vec3dCore(b.box[3], b.box[4], b.box[5]));
-            return new BlockSelection(kind, b.x, b.y, b.z, box);
+        AABB hull = b.box != null && b.box.length >= 6 ? toAabb(b.box) : null;
+        if (b.boxes != null) {
+            List<AABB> boxes = new ArrayList<AABB>(b.boxes.length);
+            for (double[] sub : b.boxes) if (sub != null && sub.length >= 6) boxes.add(toAabb(sub));
+            if (hull == null) hull = boxes.isEmpty() ? BlockSelection.cube(kind, b.x, b.y, b.z).box : hullOf(boxes);
+            return new BlockSelection(kind, b.x, b.y, b.z, hull, boxes);
+        }
+        if (hull != null) {
+            return new BlockSelection(kind, b.x, b.y, b.z, hull);
         }
         return BlockSelection.cube(kind, b.x, b.y, b.z);
+    }
+
+    private static double[] toBoxArray(AABB box) {
+        return new double[] {
+                box.min.x, box.min.y, box.min.z,
+                box.max.x, box.max.y, box.max.z
+        };
+    }
+
+    private static AABB toAabb(double[] box) {
+        return new AABB(
+                new Vec3dCore(box[0], box[1], box[2]),
+                new Vec3dCore(box[3], box[4], box[5]));
+    }
+
+    private static AABB hullOf(List<AABB> boxes) {
+        AABB h = boxes.get(0);
+        for (int i = 1; i < boxes.size(); i++) {
+            AABB b = boxes.get(i);
+            h = new AABB(
+                    new Vec3dCore(Math.min(h.min.x, b.min.x), Math.min(h.min.y, b.min.y), Math.min(h.min.z, b.min.z)),
+                    new Vec3dCore(Math.max(h.max.x, b.max.x), Math.max(h.max.y, b.max.y), Math.max(h.max.z, b.max.z)));
+        }
+        return h;
     }
 
     private static SaveFile.Constraint toSaveConstraint(Constraint c) {

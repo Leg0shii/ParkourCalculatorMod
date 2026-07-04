@@ -978,7 +978,8 @@ public final class AngleSolverEngine {
         int landingTick = state.getLandingTick();
         int numTicks = landingTick - startTick;
         List<InputRow> rows = inputs.getRows();
-        BlockSelection land = state.getLandBlock();
+        List<BlockSelection> landBlocks = state.getLandBlocks();
+        BlockSelection land = landBlocks.isEmpty() ? null : landBlocks.get(0);
         if (numTicks <= 0 || startTick < 0 || startTick >= boxes.size()
                 || landingTick > rows.size() || startTick >= rows.size() || land == null) {
             state.setResult(new SolveResult(false, 0, 0, startTick + 1, landingTick + 1));
@@ -993,7 +994,8 @@ public final class AngleSolverEngine {
         addFootprint(footprints, footprintUi, numTicks, startTick, land.box);
         double[] landFp = expand(land.box);
 
-        BlockSelection start = state.getStartBlock();
+        List<BlockSelection> momentumBlocks = state.getMomentumBlocks();
+        BlockSelection start = momentumBlocks.isEmpty() ? null : momentumBlocks.get(0);
         if (start != null && jumpAbs > startTick) {
             addFootprint(footprints, footprintUi, (jumpAbs - 1) - startTick, startTick, start.box);
         }
