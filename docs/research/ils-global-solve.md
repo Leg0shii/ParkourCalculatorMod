@@ -1,5 +1,12 @@
 # Beating Wolfram on j021 with pure-Java ILS
 
+> **Note (2026-07-04).** The j021 findings here still hold (ILS reaches the optimum on j021, and it stays
+> shipped as `IlsPolish`). What did NOT generalize is the implied "every structured exact method
+> underperforms a neighborhood ratchet": on the other hard multi-jump, loopmm, the recovery refactoring
+> (#204/#209/#213) plus a STRUCTURED pattern-branched B&B (`BoundPrunedRecovery`) is what lands it, not ILS
+> (`angle-solver.md` 10.3). So read the "structured methods underperformed" conclusion as instance-specific
+> to j021's landscape, not a general law.
+
 Investigation (2026-06-13) into whether our bundleable, pure-Java angle solver can independently reach
 (and beat) the global optimum that a Wolfram/Cbc spatial branch-and-bound finds on the hard multi-jump
 fixture `j021-rinav1-01`, **without reusing Wolfram's answer**. Answer: **yes.**
