@@ -1,5 +1,17 @@
 # Anvil / multi-jump solver-quality investigation
 
+> **SUPERSEDED for loopmm (UPDATE 2026-07-04).** The "loopmm is an optimizer-reach failure needing #186"
+> framing in this doc is obsolete. loopmm is SOLVED on the current tree: the recovery refactoring (#204
+> inertia folding, #209 dual recovery, #213 margin-laddered seed) plus the pattern-branched B&B
+> (`BoundPrunedRecovery`, see `angle-solver.md` 10.3 and 11.8) land `loopmm-3jump-lands` byte-exact at
+> Z@71 = -279.299912 (past the -279.3 pad), and it is now a passing regression check in
+> `problems/dualrecovery/`. The fix was a stronger RECOVERY, i.e. recover the feasible path the dual bound
+> already promises and fold inertia into it, NOT the ILS-basin-hopping / global-search direction #186
+> proposed. `EarlyCrossSweep` (an early #186 basin-diversity attempt on an experimental branch) is likewise
+> superseded and was never merged. What still stands: the anvil momentum-ceiling analysis below (a yaw
+> optimizer cannot land anvil at its recorded momentum; that is a route/momentum question, #178). Only the
+> loopmm optimizer-gap framing is retracted.
+
 Investigation + decision record (2026-06-23). Question raised: the `claude/brave-planck-lyr5ng` branch got
 within ~1.3e-6 of a known-good byte-exact result on the close-range anvil fixture; can we port that into
 the shipped solver to "replicate the solver quality"? The investigation reframed the goal several times and
@@ -119,3 +131,8 @@ that matter (known-good X = `186.82489222324986`, the ceiling, the gap) are reco
 
 When #186 / #178 work starts, give the loopmm pair a `solve` sidecar with a `refObjective` so they become
 real regression checks (the solver must reach >= -279.29973 on `loopmm-3jump-lands`, i.e. must land).
+
+**DONE (2026-07-04):** `loopmm-3jump-lands` now has a `dualrecovery` sidecar (`refObjective: -279.3`,
+`bnbSeconds: 60`) and is a passing check; the current chain lands it at Z@71 = -279.299912. The mechanism
+was the recovery refactoring + pattern-branched B&B, not the #186 optimizer-strengthening this section
+anticipated. See the superseded note at the top of this file.

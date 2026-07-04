@@ -65,6 +65,8 @@ public final class AngleSolverEngine {
 
     private static final int MULTI_JUMP_RACE_MAX_TICKS = 64;
 
+    private static final double REACH_GAP_EPS = 1.0e-6;
+
     private static final SolveCore.Budget MULTI_JUMP_RACE_BUDGET =
             new SolveCore.Budget(16, 4500, 2, BucketAscentPolish.FAST);
 
@@ -692,7 +694,9 @@ public final class AngleSolverEngine {
         boolean skipRace = settled || (job.stopOnFeasible && preFeasible);
         CountingModel cmaes = new CountingModel(model);
         SolveCore.Budget budget = raceBudget != null ? raceBudget : job.budget;
-        boolean exhaustivePending = job.ilsExhaustive && !job.stopOnFeasible && countJumps(sc) > 1
+        double reachBound = model instanceof ExactJumpModel ? ClosedFormSolve.dualBound(spec) : Double.NaN;
+        boolean exhaustivePending = job.ilsExhaustive && !job.stopOnFeasible
+                && (countJumps(sc) > 1 || reachHeadroom(sc, spec, yaws, reachBound))
                 && sc.numTicks <= MULTI_JUMP_RACE_MAX_TICKS && model instanceof ExactJumpModel;
         if (!skipRace) {
             long deadline = job.deadlineNanos > 0
@@ -758,7 +762,9 @@ public final class AngleSolverEngine {
                 }
             }
         }
-        if (job.ilsExhaustive && !job.stopOnFeasible && countJumps(sc) > 1 && sc.numTicks <= MULTI_JUMP_RACE_MAX_TICKS
+        if (job.ilsExhaustive && !job.stopOnFeasible
+                && (countJumps(sc) > 1 || reachHeadroom(sc, spec, yaws, reachBound))
+                && sc.numTicks <= MULTI_JUMP_RACE_MAX_TICKS
                 && !cancel.get() && violationOf(sc, spec, yaws) <= FEAS_TOL) {
             long ilsBudget = job.deadlineNanos > 0 ? job.deadlineNanos : DEFAULT_ILS_BUDGET_NANOS;
             if (model instanceof ExactJumpModel) {
@@ -833,6 +839,15 @@ public final class AngleSolverEngine {
     private double exactObjective(JumpPhysicsInputs sc, JumpSpec spec, double[] yawsAbsWrapped) {
         ForwardPath p = model.forward(sc, sc.toGameFacings(yawsAbsWrapped));
         return p.getPos(spec.objective.tick, spec.objective.axis);
+    }
+
+    private boolean reachHeadroom(JumpPhysicsInputs sc, JumpSpec spec, double[] yaws, double dualBound) {
+        if (yaws == null || Double.isNaN(dualBound)) return false;
+        if (violationOf(sc, spec, yaws) > FEAS_TOL) return false;
+        boolean max = spec.objective.sense == Objective.Sense.MAX;
+        double achieved = exactObjective(sc, spec, yaws);
+        double gap = max ? dualBound - achieved : achieved - dualBound;
+        return gap > REACH_GAP_EPS;
     }
 
     private double violationOf(JumpPhysicsInputs sc, JumpSpec spec, double[] yawsAbsWrapped) {
