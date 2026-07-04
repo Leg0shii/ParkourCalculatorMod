@@ -8,11 +8,12 @@ Contents:
 3. [Verified properties](#3-verified-properties)
 4. [Negative results and pitfalls](#4-negative-results-and-pitfalls)
 5. [Performance](#5-performance)
-6. [Block-constraint derivation (DERIVE)](#6-block-constraint-derivation-derive)
+6. [Block solving (shelved)](#6-block-solving-shelved)
 7. [Open directions](#7-open-directions)
 8. [Headless validation and build notes](#8-headless-validation-and-build-notes)
 9. [Citations](#9-citations)
 10. [Inertia folding and dual-path recovery (#204, 2026-07-03)](#10-inertia-folding-and-dual-path-recovery-204-2026-07-03)
+11. [Trace facility, B&B tuning, and the miss triage (gh-204 follow-up, 2026-07-03)](#11-trace-facility-bb-tuning-and-the-miss-triage-gh-204-follow-up-2026-07-03)
 
 ---
 
@@ -93,9 +94,9 @@ The closed form's optimality certificate (and the weak-duality bound behind it) 
 
 The engine therefore treats every linearized result as a seed and races the byte-exact search on all single-jump solves, except when a same-axis user cap at the objective tick is achieved to within 1e-6 — a model-free bound nothing can beat, and the only certificate strong enough to skip the race. The cost is the effort budget's CMA-ES pass (about 0.2 to 0.3 s at FAST) on solves that used to return in milliseconds; the multi-jump receding horizon is unchanged (its windows use the closed form internally as surrogates, where the certificate question does not arise — only the final user-facing objective carries the claim). Without a cap, the reported objective is the best the byte-exact search found, labeled by solver chain, never as "optimal".
 
-### 2.2 Status of block solving (DERIVE) on `main`
+### 2.2 Block solving
 
-`BlockSolver` (the forced-crossing-tick homotopy planner of section 6.1), `FreeSpaceDecomposition`, and the engine glue (`AngleSolverEngine.solveFromBlocks`) are present in `main` but currently dormant. No UI on `main` invokes them and no committed test covers them. The block-picker UI (Forge 1.8.9 keybinds, the in-world overlay, and the `BlockPicker` port) exists only on the unmerged `features/angle-optimizer` branch. The derive test harness together with the j154 fixtures was deleted at that branch's `65701fc` and is recoverable only from its git history (`65701fc~1`). When validated there, the planner matched the hand-solved j154 path to about 1e-4 and generalized across every obstacle subset of the j154 arc. The headless validation recipe of section 8.2 is the path to re-validating that work when it lands.
+Block-to-constraint solving (the DERIVE planner and the gh-212 blocks-only phase) was shelved 2026-07-04; its full record and post-mortem is `block-solver.md`. The shipped pipeline documented here does not depend on it.
 
 ---
 
@@ -145,7 +146,7 @@ The following results are negative and are recorded to prevent repetition. The f
 6. Endpoint-only collision checks are wrong (section 1.3) and were the actual cause of three in-game failures.
 7. Safety margins on derived walls are not affordable (section 1.3). Padding an edge by even 1e-3 makes extremely tight jumps infeasible.
 8. Deriving walls from a recorded route fails, because the route does not exist until after solving. A bad attempt yields useless walls, for example a north-of-obstacle wall on the landing tick, which renders the spec infeasible.
-9. Reactive nearest-exit and per-tick side flipping thrash, since the homotopy becomes inconsistent, and reactive cutting planes driven by the swept oracle do not converge on lookahead-coupled corner wraps, even with a depth-first search over pass sides and delayed-crossing options. The convergent variant of the idea is the principled SCP shell of section 6.2, which differs by a trust region, simultaneous multi-tick cuts, homotopy-aware initialization, and an L1 exact penalty.
+9. Reactive nearest-exit and per-tick side flipping thrash, since the homotopy becomes inconsistent, and reactive cutting planes driven by the swept oracle do not converge on lookahead-coupled corner wraps, even with a depth-first search over pass sides and delayed-crossing options. The convergent variant of the idea is the principled SCP shell described in `block-solver.md`, which differs by a trust region, simultaneous multi-tick cuts, homotopy-aware initialization, and an L1 exact penalty.
 
 ---
 
@@ -173,50 +174,9 @@ Smaller known improvements follow, in descending value. `ExactJumpModel.stepRang
 
 ---
 
-## 6. Block-constraint derivation (DERIVE)
+## 6. Block solving (shelved)
 
-The overall problem decomposes into two parts. SOLVE maps constraints and an objective to yaws and is solved, so the pipeline of section 2 can be treated as an oracle. DERIVE maps block hitboxes to a per-tick constraint set that admits a swept-clean landing, and it remains the open problem.
-
-### 6.1 The current planner (`BlockSolver`) and the canonical hard case
-
-The current method is a forced-crossing-tick geometric homotopy planner, headless-validated on the feature branch and dormant on `main` (section 2.2). The travel axis is the larger seed-to-land separation, and the perpendicular axis carries the keep-outs. Each obstacle is wrapped on the perpendicular side nearest the launch corridor. Because the swept X-clamp tests the start-of-tick travel coordinate, a forced crossing tick k\* pins the travel coordinate just past the tightest obstacle's exit edge, which makes the descent rate, and hence the keep-out window, deterministic rather than solver-dependent. The value of k\* is enumerated over a small window, and the keep-outs receive the +1 dilation of section 1.3. The objective is swept as well: the pad edge often sits at the reachability frontier, so the toward-pad objective lands on it while the away objective overshoots by about 1e-6, and all four endpoint objectives are tried. Every candidate is verified with `SweptCollision` and the landing footprint, and `Result.ok()` is never reported for a clipping or missing path.
-
-The canonical hard case is j154, hand-solved in-game. A two-block wall stands between start and land, with a skull just east of it. The player can pass neither over nor through, so the path must wrap the southeast corner: stay north of the head early, drift east by mid-flight, and cross south late. These constraints interlock with lookahead, since east must precede south and an early south crossing is unreachable. This is the case that defeats every reactive approach.
-
-Three limitations motivated further research. The heuristics (side selection, the k\* window, the +1 dilation) are bespoke and do not obviously generalize to dense clusters or three-dimensional wraps. The outer enumeration offers no completeness or optimality structure. Collision lives in two places, an approximate constraint set and an exact verifier, which invites false-pass and false-fail defects at the seams. Four alternatives were tried in a structured search and none beat this planner: homotopy-class enumeration, reachability corridors, reactive forced exits, and fixed descent schedules.
-
-### 6.2 Research synthesis
-
-A literature pass across five areas (lossless convexification, safe corridors and MILP, graphs of convex sets, SCP/SDF/MPCC, and swept CCD with homotopy and kinodynamic planning) converged with no surviving contradictions. One caveat applies: some quantitative figures rest on search summaries rather than full-text reads of the primary PDFs, so exact theorem numbers should be re-verified before any argument is built on them.
-
-The organizing principle is the theorem boundary of section 1.1. Its admissible workaround, holding the per-tick keep-out as a fixed convex cell outside the inner solve, is simultaneously the LCvx-compatible form, the safe-corridor face set, and a GCS node. The resulting architecture is the following.
-
-> GCS (or GCS\*) serves as the outer corridor selector and homotopy enumerator over cheap axis-aligned free-space cells, wrapping the existing closed-form dual as the inner per-cell solver, gated by the exact swept oracle. GCS supplies the discrete structure: completeness, tight corridor selection, and implicit homotopy enumeration. LCvx supplies what GCS cannot, namely the certified fixed-modulus inner solve, since the modulus sphere is a non-convex equality that no GCS node can represent. The oracle supplies what neither can, the exact asymmetric swept truth. GCS optimality is empirical rather than a priori: the relaxation is a lower bound and the rounded path an upper bound, and the gap is observed to be tight rather than theoretically bounded.
-
-The supporting findings are each independently useful.
-
-- IRIS and SFC region inflation should be skipped for AABB worlds. The free space is the complement of axis-aligned boxes, so its convex cells are axis-aligned rectangles obtainable by a coordinate sweep with no SDP involved, and ellipsoid inflation degenerates at gaps near 1e-6 in any case. `FreeSpaceDecomposition` implements this decomposition together with its adjacency graph, and the corridor selection layer on top is the missing half.
-- For homotopy enumeration the state of the art is the h-signature (Bhattacharya, Likhachev, and Kumar), which augments graph search with a partial signature so that a single search enumerates the K distinct classes. With affine dynamics the per-tick forward-reachable sets are disks of radius `sum(gains * m_t)`, so the temporal admissibility of a class or cell is a closed-form radius test.
-- Big-M MILP encodings are dominated by the perspective (convex-hull) formulation, and GCS is that formulation applied to corridor selection.
-- SCP with signed distances is the only collision-in-solver paradigm that preserves the fast convex inner solve, but every published collision model inflates through `d_safe`, epsilon, or alpha margins, which the no-margin requirement of section 1.3 forbids. The actionable recipe is an SCP shell (trust region plus L1 exact penalty) that linearizes our own exact asymmetric swept signed distance with zero margin and is gated by the exact oracle. It differs from the failed reactive cutting plane (section 4, item 9) in exactly the parts that secure convergence.
-- MPCC and contact-implicit methods are the worst fit, since LICQ and MFCQ fail at every feasible point and exactness holds only in a limit that permits interpenetration. Conservative-inclusion CCD libraries are safe but round toward false positives and require a positive standoff, which is incompatible with zero-clearance ground truth. Since segment-versus-AABB tests are already exact and closed-form, no CCD library is needed.
-- SST\* (kinodynamic sampling against the black-box clamp) is the completeness backstop when no convex cell captures the sweep, and it can be tuned offline via the headless harness.
-
-### 6.3 Target architecture
-
-```
-BLOCKS (AABBs)
-  [A] plane-sweep free-space decomposition -> axis-aligned cells      (DONE: FreeSpaceDecomposition)
-  [B] GCS/GCS* over cells, edges pruned by reachability disks,        (NEW: the outer layer)
-      h-signature of the chosen path = homotopy class (replaces k*)
-  [C] selected corridor -> cell faces as constraints for the          (REUSE: ClosedFormSolve,
-      existing closed-form dual (+ oblique half-spaces, section 1.2)   minimal alphabet extension)
-  [D] tight cell-boundary riding: SCP shell, zero margin              (NEW: only if needed)
-  [E] GATE: exact swept oracle + landing footprint                    (REUSE: SweptCollision)
-  [F] fallback: SST* against the black-box clamp                      (NEW: completeness backstop)
-```
-
-This architecture deletes from `BlockSolver` the bespoke side selection, the k\* enumeration window, the +1-dilation heuristic, and the duplication of collision across two places. Collision then lives in exactly one place, the gate.
+Block-to-constraint solving (deriving yaws from picked blocks, with no human constraints) has its own record: `block-solver.md`. It covers the DERIVE planner (`BlockSolver`, the forced-crossing-tick homotopy planner and its GCS/LCvx target architecture), the gh-212 blocks-only phase, the false-positive post-mortem, and what remains viable for a future attempt. The shipped angle solver in this document does not depend on any of it.
 
 ---
 
@@ -227,10 +187,9 @@ The following items are ranked by value per effort, together with their triggers
 1. Phase-2 long-run objective polish, the known remaining work. `LongRunSolver` returns a feasible run, but only the final window optimizes the real objective. The options are to re-solve the final k windows with progressively earlier seams under the committed prefix, where each re-solve is one window dual, or to run a global strictly feasible `BucketAscentPolish` on the byte-exact model starting from the feasible run. The latter is tractable at several hundred dimensions precisely because it only improves and never searches. `stepRange` (section 5.1) should be wired up first.
 2. Facing walls in the closed form, a capability item rather than a speed item. An F constraint is a sector constraint on the input direction. The inner maximization over the set where $\|u\| = m$ and $\hat{u}$ lies in the sector is still closed-form, since the costate direction can be clamped to the nearer sector edge. The dual stays convex and the zero-gap argument survives. Today a single F constraint anywhere disqualifies the entire fast path. This item should be built when the third trigger of section 5 fires.
 3. Cross-window warm starts (section 5.1), when a trigger of section 5 fires.
-4. The GCS corridor layer over `FreeSpaceDecomposition` (section 6.3), when block solving becomes active again.
-5. Folding the single-jump path into `LongRunSolver`. A one-jump run is one final window with the full ladder, so the fold deletes the `countJumps` branch at zero behavioral change. The cost to weigh is one extra call layer on the microsecond path.
-6. `JumpPhysicsInputs.jumpTick` survives only as a fallback and for `BlockSolver`'s launch footprint. Collapsing it to the mask plus a `firstJumpTick()` helper removes a field with two sources of truth.
-7. Direction-parallel window solves, a latency improvement only on windows whose first direction fails. Since j001 never fails a direction, this should be measured on a fixture that does before being built.
+4. Folding the single-jump path into `LongRunSolver`. A one-jump run is one final window with the full ladder, so the fold deletes the `countJumps` branch at zero behavioral change. The cost to weigh is one extra call layer on the microsecond path.
+5. `JumpPhysicsInputs.jumpTick` survives only as a fallback. Collapsing it to the mask plus a `firstJumpTick()` helper removes a field with two sources of truth.
+6. Direction-parallel window solves, a latency improvement only on windows whose first direction fails. Since j001 never fails a direction, this should be measured on a fixture that does before being built.
 
 ---
 
@@ -248,17 +207,9 @@ The committed captures do not carry a `debug[]` array. `ProblemFixture` rebuilds
 
 One measurement caveat applies. The engine `solve()` wall clock includes the worker-thread spawn overhead and must not be used for the microsecond fast-path number. The fast path is timed by running `ClosedFormSolve.optimize` in a tight loop, while `SolveBenchmark` provides the end-to-end number.
 
-### 8.2 Self-validation recipe for DERIVE work
+### 8.2 Validating block-derivation work
 
-```
-SaveIO.parseSafe(file) -> seed scenario from file.angleSolver.seed -> blocks from file.angleSolver.selectedBlocks
-constraints = DERIVE(blocks, scenario, feetY[])              <- the thing under test
-yaws = SolveCore.optimize(model, JumpSpec(scenario, constraints, objective), ...)
-path = model.forward(scenario, scenario.toGameFacings(yaws))
-VALID <=> no SweptCollision.firstHit over all moves AND path[N] in land footprint
-```
-
-`VALID` is ground truth. Both directions should stay covered: a recorded working solution must verify swept-clean (no false positives), and a known-clipping solution must be flagged (no false negatives).
+Shelved with the block solver. The derivation-validation recipe now lives in `block-solver.md`.
 
 ### 8.3 Build notes
 
@@ -409,3 +360,4 @@ The ticket's last open test-plan item is also closed: `loopmm-3jump-lands` is wi
 ### 11.9 Optimize dropped feasible results (user-reported, fixed)
 
 Reported on a 1.12.2 save (trp): under Optimize the live tracker showed success in ~0.1 s, then the final result said no solution after the budget. Root cause: since the #201 stop-on-feasible rework, SolveCore returns its best-OBJECTIVE result even when infeasible, but the engine's race-vs-incumbent comparison still assumed both candidates were feasible and compared objectives only, so an infeasible race result with a longer (unrealizable) reach replaced the feasible chain result. The stale assumption predates this branch; Optimize made it visible because that tier always races feasible chain results to the full budget. Fix: the comparison gates on byte-exact feasibility first (a feasible incumbent is never traded for an infeasible reach), objectives break ties only within the same feasibility class. Regression capture: captures/trp-optimize-feasible-swap.json with a solve sidecar at THOROUGH (the sidecar's new optimizeSeconds field overrides the save's budget for test time). EngineFileScreen (PKC_SOLVE_FILE=path, optional PKC_SOLVE_EFFORT / PKC_SOLVE_TIMEOUT_MS) drives the live engine on any save file headlessly; it is how the report was reproduced and verified.
+
