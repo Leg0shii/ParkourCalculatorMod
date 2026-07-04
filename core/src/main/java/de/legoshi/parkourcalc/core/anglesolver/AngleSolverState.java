@@ -170,11 +170,9 @@ public final class AngleSolverState {
 
     private final Map<Integer, TickConstraints> ticks = new LinkedHashMap<>();
 
-    // Block selections drive the block solver. start/land are single; collisions are a list. Picking is
-    // keybind-driven loader-side (a keypress captures the looked-at block), so there is no arming state here.
-    private BlockSelection startBlock;
-    private BlockSelection landBlock;
+    private final List<BlockSelection> momentumBlocks = new ArrayList<>();
     private final List<BlockSelection> collisionBlocks = new ArrayList<>();
+    private final List<BlockSelection> landBlocks = new ArrayList<>();
 
     /** Why the resimmed path left the solved path; picks the explanation tooltip in the result panel. */
     public enum DeviationKind { WALL, SNEAK, OTHER }
@@ -533,58 +531,63 @@ public final class AngleSolverState {
         return list.remove(index);
     }
 
-    // ---- block selections (drive the block solver) -----------------------------
-
-    public BlockSelection getStartBlock() {
-        return startBlock;
-    }
-
-    public void setStartBlock(BlockSelection block) {
-        this.startBlock = block;
-    }
-
-    public BlockSelection getLandBlock() {
-        return landBlock;
-    }
-
-    public void setLandBlock(BlockSelection block) {
-        this.landBlock = block;
+    public List<BlockSelection> getMomentumBlocks() {
+        return momentumBlocks;
     }
 
     public List<BlockSelection> getCollisionBlocks() {
         return collisionBlocks;
     }
 
-    public void addCollisionBlock(BlockSelection block) {
-        if (block != null) collisionBlocks.add(block);
+    public List<BlockSelection> getLandBlocks() {
+        return landBlocks;
     }
 
-    public void removeCollisionBlock(int index) {
-        if (index >= 0 && index < collisionBlocks.size()) collisionBlocks.remove(index);
+    private List<BlockSelection> blocksFor(BlockSelection.Kind kind) {
+        switch (kind) {
+            case MOMENTUM: return momentumBlocks;
+            case LAND: return landBlocks;
+            case COLLISION:
+            default: return collisionBlocks;
+        }
     }
 
-    /** Removes any selected block (start, land, or a collision) at these integer coords. Used by the
-     *  loader's "remove looked-at block" keybind. */
+    public void addBlock(BlockSelection block) {
+        if (block != null) blocksFor(block.kind).add(block);
+    }
+
+    public void toggleBlock(BlockSelection block) {
+        if (block == null) return;
+        boolean alreadySameRole = containsAt(blocksFor(block.kind), block.x, block.y, block.z);
+        removeBlockAt(block.x, block.y, block.z);
+        if (!alreadySameRole) blocksFor(block.kind).add(block);
+    }
+
+    private static boolean containsAt(List<BlockSelection> list, int x, int y, int z) {
+        for (BlockSelection b : list) {
+            if (b.x == x && b.y == y && b.z == z) return true;
+        }
+        return false;
+    }
+
     public void removeBlockAt(int x, int y, int z) {
-        if (startBlock != null && startBlock.x == x && startBlock.y == y && startBlock.z == z) startBlock = null;
-        if (landBlock != null && landBlock.x == x && landBlock.y == y && landBlock.z == z) landBlock = null;
+        momentumBlocks.removeIf(b -> b.x == x && b.y == y && b.z == z);
         collisionBlocks.removeIf(b -> b.x == x && b.y == y && b.z == z);
+        landBlocks.removeIf(b -> b.x == x && b.y == y && b.z == z);
     }
 
     public boolean hasAnyBlocks() {
-        return startBlock != null || landBlock != null || !collisionBlocks.isEmpty();
+        return !momentumBlocks.isEmpty() || !collisionBlocks.isEmpty() || !landBlocks.isEmpty();
     }
 
-    /** The only block the solver requires is a Land to reach. The Start block is optional: when picked it
-     *  pins the launch footprint (be inside it at the tick before the first jump); otherwise it is ignored. */
     public boolean hasRequiredBlocks() {
-        return landBlock != null;
+        return !landBlocks.isEmpty();
     }
 
     public void clearBlocks() {
-        startBlock = null;
-        landBlock = null;
+        momentumBlocks.clear();
         collisionBlocks.clear();
+        landBlocks.clear();
     }
 
     public SolveResult getResult() {
@@ -630,9 +633,7 @@ public final class AngleSolverState {
         defaultSlipperiness = Slipperiness.AIR;
         defaultPotions.clear();
         ticks.clear();
-        startBlock = null;
-        landBlock = null;
-        collisionBlocks.clear();
+        clearBlocks();
         result = null;
         applyDeviation = null;
         applyDeviationKind = null;

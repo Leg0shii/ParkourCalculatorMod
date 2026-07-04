@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.fabric;
 
 import de.legoshi.parkourcalc.core.Application;
 import de.legoshi.parkourcalc.core.PlaybackController;
+import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.fabric.imgui.ImGuiImpl;
@@ -34,6 +35,11 @@ public class FabricParkourCalculator implements ClientModInitializer {
     public static KeyMapping playbackKeyBinding;
     public static KeyMapping landingConstraintsKeyBinding;
     public static KeyMapping removeConstraintsKeyBinding;
+    private static KeyMapping captureMomentumBlockKeyBinding;
+    private static KeyMapping captureCollisionBlockKeyBinding;
+    private static KeyMapping captureLandBlockKeyBinding;
+    private static KeyMapping clearBlocksKeyBinding;
+    private static boolean blockCaptureEnabled;
 
     private static final Application application = new Application(
             new FabricSimulator(),
@@ -44,7 +50,8 @@ public class FabricParkourCalculator implements ClientModInitializer {
                     application.getBoxController(),
                     application.getSettings(),
                     application.getSelection(),
-                    application.getYawGizmo()
+                    application.getYawGizmo(),
+                    application::getAngleSolverState
             );
     private static final FabricHudOverlayRenderer hudRenderer = new FabricHudOverlayRenderer();
 
@@ -82,6 +89,21 @@ public class FabricParkourCalculator implements ClientModInitializer {
                 category
         ));
 
+        application.initSettingsStorage(
+                FabricLoader.getInstance().getConfigDir().resolve("parkourcalculator.json")
+        );
+        blockCaptureEnabled = application.getSettings().experimentalBlockCapture;
+        if (blockCaptureEnabled) {
+            captureMomentumBlockKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                    "key.parkourcalculator.capture_momentum_block", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_M, category));
+            captureCollisionBlockKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                    "key.parkourcalculator.capture_collision_block", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_N, category));
+            captureLandBlockKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                    "key.parkourcalculator.capture_land_block", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, category));
+            clearBlocksKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                    "key.parkourcalculator.clear_blocks", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_DELETE, category));
+        }
+
         application.setModVersion(modVersion());
         application.setFilePicker(new FabricFilePicker());
         application.setSaveStore(new FileSystemSaveStore(
@@ -91,9 +113,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
                 FabricWorldDescriptors::current
         ));
         application.setPlaybackBridge(playbackBridge);
-        application.initSettingsStorage(
-                FabricLoader.getInstance().getConfigDir().resolve("parkourcalculator.json")
-        );
+        application.setBlockPicker(new FabricBlockPicker());
         application.setupUi();
 
         ClientTickEvents.END_CLIENT_TICK.register(FabricParkourCalculator::handleInput);
@@ -170,6 +190,24 @@ public class FabricParkourCalculator implements ClientModInitializer {
         while (removeConstraintsKeyBinding.consumeClick()) {
             removeConstraintsPressed = true;
         }
+        boolean captureMomentum = false;
+        boolean captureCollision = false;
+        boolean captureLand = false;
+        boolean clearBlocks = false;
+        if (blockCaptureEnabled) {
+            while (captureMomentumBlockKeyBinding.consumeClick()) {
+                captureMomentum = true;
+            }
+            while (captureCollisionBlockKeyBinding.consumeClick()) {
+                captureCollision = true;
+            }
+            while (captureLandBlockKeyBinding.consumeClick()) {
+                captureLand = true;
+            }
+            while (clearBlocksKeyBinding.consumeClick()) {
+                clearBlocks = true;
+            }
+        }
 
         boolean imguiWantsKeys = application.isControlPanelOpen() && ImGui.getIO().getWantTextInput();
         boolean canDispatch = client.gui.screen() == null && !imguiWantsKeys;
@@ -194,6 +232,18 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
         if (removeConstraintsPressed && canDispatch) {
             application.removeSelectedConstraints();
+        }
+        if (captureMomentum && canDispatch) {
+            application.captureAngleSolverBlock(BlockSelection.Kind.MOMENTUM);
+        }
+        if (captureCollision && canDispatch) {
+            application.captureAngleSolverBlock(BlockSelection.Kind.COLLISION);
+        }
+        if (captureLand && canDispatch) {
+            application.captureAngleSolverBlock(BlockSelection.Kind.LAND);
+        }
+        if (clearBlocks && canDispatch) {
+            application.clearAngleSolverBlocks();
         }
     }
 

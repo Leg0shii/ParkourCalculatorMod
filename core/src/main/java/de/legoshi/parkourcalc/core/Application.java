@@ -1,7 +1,9 @@
 package de.legoshi.parkourcalc.core;
 
+import de.legoshi.parkourcalc.core.ports.BlockPicker;
 import de.legoshi.parkourcalc.core.ports.FilePickerPort;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
+import de.legoshi.parkourcalc.core.ports.PickedBlock;
 import de.legoshi.parkourcalc.core.ports.PlaybackBridge;
 import de.legoshi.parkourcalc.core.ports.Simulator;
 import de.legoshi.parkourcalc.core.io.OsSystemBridge;
@@ -32,6 +34,7 @@ import de.legoshi.parkourcalc.core.ui.TickInfoPanel;
 import de.legoshi.parkourcalc.core.ui.YawGizmoController;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
+import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.anglesolver.ConstraintText;
 import de.legoshi.parkourcalc.core.ui.ConstraintKeyController;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverTable;
@@ -68,6 +71,7 @@ public final class Application {
     private String modVersion = "?";
     private InputOverlay inputOverlay;
     private FilePickerPort filePicker;
+    private BlockPicker blockPicker;
     private AngleSolverState angleSolverState;
     private ConstraintKeyController constraintKeyController;
     private final OsSystemBridge systemBridge = new OsSystemBridge();
@@ -163,6 +167,14 @@ public final class Application {
 
     public void setFilePicker(FilePickerPort filePicker) {
         this.filePicker = filePicker;
+    }
+
+    public void setBlockPicker(BlockPicker blockPicker) {
+        this.blockPicker = blockPicker;
+    }
+
+    public AngleSolverState getAngleSolverState() {
+        return angleSolverState;
     }
 
     public void initSettingsStorage(Path path) {
@@ -327,6 +339,30 @@ public final class Application {
 
     public void removeSelectedConstraints() {
         if (constraintKeyController != null) constraintKeyController.removeSelected();
+    }
+
+    public void captureAngleSolverBlock(BlockSelection.Kind kind) {
+        if (blockPicker == null || angleSolverState == null || kind == null) return;
+        PickedBlock hit = blockPicker.pickLookedAtBlock();
+        if (hit == null) return;
+        angleSolverState.toggleBlock(new BlockSelection(kind, hit.x, hit.y, hit.z, hit.box, hit.boxes));
+    }
+
+    public void clearAngleSolverBlocks() {
+        if (angleSolverState != null) angleSolverState.clearBlocks();
+    }
+
+    private boolean isWalledSide(int neighborX, int blockY, int neighborZ) {
+        return mc.isBlockSolid(neighborX, blockY + 1, neighborZ)
+                || mc.isBlockSolid(neighborX, blockY + 2, neighborZ);
+    }
+
+    private int selectedSolverTick() {
+        Set<Integer> rows = selection.getSelectedRows();
+        if (!rows.isEmpty()) {
+            return rows.iterator().next();
+        }
+        return angleSolverState.getLandingTick();
     }
 
     public boolean isControlPanelOpen() {

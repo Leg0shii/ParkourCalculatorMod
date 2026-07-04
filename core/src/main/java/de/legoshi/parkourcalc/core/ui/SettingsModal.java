@@ -57,6 +57,7 @@ public final class SettingsModal {
     private static final String TT_AUTO_APPLY = "Applies a feasible Angle Solver solution to the input rows the moment the solve finishes, skipping the Apply confirmation.";
     private static final String TT_AUTO_SAVE = "Saves the open TAS automatically while it has unsaved changes, at most every 30 seconds. Needs a named save (use Save As once); Ctrl+S still saves instantly.";
     private static final String TT_SOLVER_PRECISION = "Decimal places for Angle Solver stats: solved yaws, objective values, constraint chips, and the constraint value editor.";
+    private static final String TT_EXPERIMENTAL_BLOCK_CAPTURE = "Enables in-world block capture: tag blocks by role with hotkeys (M momentum, N collision, K land, Delete clears). The hotkeys are registered at startup, so turning this on or off only takes effect after a game restart.";
 
     private final Settings settings;
     private final Runnable onChanged;
@@ -220,6 +221,13 @@ public final class SettingsModal {
                 if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
                 tooltipForLastItem(TT_SOLVER_PRECISION);
             });
+            ThemeManager.endStandardFormTable();
+        }
+
+        ThemeManager.sectionSpacing();
+        sectionHeader("Experimental");
+        if (beginLayoutTable("##settings_experimental")) {
+            checkboxRow("Block capture (restart required)", "##experimental_block_capture", settings.experimentalBlockCapture, TT_EXPERIMENTAL_BLOCK_CAPTURE, v -> settings.experimentalBlockCapture = v);
             ThemeManager.endStandardFormTable();
         }
     }
