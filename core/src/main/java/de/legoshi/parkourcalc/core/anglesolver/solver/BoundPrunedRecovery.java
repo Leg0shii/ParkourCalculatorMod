@@ -92,6 +92,17 @@ public final class BoundPrunedRecovery {
                     rankYaws = ClosedFormSolve.optimize(exact, searchSpec, feasTol, searchCancel);
                 }
             }
+            for (Pattern p : patterns) {
+                if (!p.patterned || p.zeroX == null || searchCancel.get()) continue;
+                double[] py = ClosedFormSolve.optimizeWithPattern(exact, spec, feasTol, searchCancel, p.zeroX, p.zeroZ);
+                double pn = normIfFeasible(exact, sc, compiled, spec, max, py);
+                if (!Double.isNaN(pn) && pn > incumbentNorm) {
+                    incumbentNorm = pn;
+                    incumbentYaws = Angles.wrapAll(py);
+                    if (rankYaws == null) rankYaws = incumbentYaws;
+                    if (SolverTrace.on()) SolverTrace.log("BNB", "banded incumbent %s=%.9f", p.label, pn);
+                }
+            }
             if (!Double.isNaN(stopNorm) && incumbentNorm >= stopNorm) return incumbentYaws;
             double floorNorm = Double.isNaN(targetNorm) ? Double.NEGATIVE_INFINITY : targetNorm - PRUNE_TOL;
             final double seedNorm = Math.max(incumbentNorm, floorNorm);
@@ -107,16 +118,24 @@ public final class BoundPrunedRecovery {
                 }
             }
             if (profileYaws != null && viable.size() > 1) {
-                double[][] vel = velocityProfile(new JumpLinearModel(sc), sc, exact, Angles.wrapAll(profileYaws));
+                double[][] carry = carryProfile(new JumpLinearModel(sc), sc, Angles.wrapAll(profileYaws));
                 double thr = exact.inertiaThreshold();
                 boolean perAxis = exact.perAxisInertia();
+                int[] bandMin = new int[2];
+                for (int a = 0; a < 2; a++) {
+                    int last = -1;
+                    for (int t = 0; t < carry[a].length; t++) if (carry[a][t] > thr) last = t;
+                    bandMin[a] = last + 1;
+                }
                 viable.sort((a, b) -> {
-                    int c = Double.compare(patternScore(a, vel, thr, perAxis), patternScore(b, vel, thr, perAxis));
-                    return c != 0 ? c : Double.compare(b.normBound, a.normBound);
+                    boolean ai = inBand(a, bandMin, perAxis);
+                    boolean bi = inBand(b, bandMin, perAxis);
+                    if (ai != bi) return ai ? -1 : 1;
+                    return Double.compare(b.normBound, a.normBound);
                 });
                 if (SolverTrace.on()) {
                     for (Pattern p : viable) {
-                        SolverTrace.log("BNB", "rank %s score=%.6f bound=%.9f", p.label, patternScore(p, vel, thr, perAxis), p.normBound);
+                        SolverTrace.log("BNB", "rank %s band=%s bound=%.9f", p.label, inBand(p, bandMin, perAxis), p.normBound);
                     }
                 }
             }
@@ -248,9 +267,12 @@ public final class BoundPrunedRecovery {
         final double normBound;
         final int zeroFrom;
         final int zeroAxis;
+        final boolean[] zeroX;
+        final boolean[] zeroZ;
 
         Pattern(String label, JumpLinearModel lin, List<JumpLinearModel.Wall> velWalls,
-                boolean patterned, double normBound, int zeroFrom, int zeroAxis) {
+                boolean patterned, double normBound, int zeroFrom, int zeroAxis,
+                boolean[] zeroX, boolean[] zeroZ) {
             this.label = label;
             this.lin = lin;
             this.velWalls = velWalls;
@@ -258,30 +280,19 @@ public final class BoundPrunedRecovery {
             this.normBound = normBound;
             this.zeroFrom = zeroFrom;
             this.zeroAxis = zeroAxis;
+            this.zeroX = zeroX;
+            this.zeroZ = zeroZ;
         }
     }
 
-    private static double[][] velocityProfile(JumpLinearModel free, JumpPhysicsInputs sc, ExactJumpModel exact,
-                                              double[] yawsAbs) {
+    private static double[][] carryProfile(JumpLinearModel free, JumpPhysicsInputs sc, double[] yawsAbs) {
         int n = free.n;
-        double thr = exact.inertiaThreshold();
-        boolean perAxis = exact.perAxisInertia();
-        double thrSq = thr * thr;
         double[][] out = new double[2][n];
         double vx = sc.initialVelocity.x;
         double vz = sc.initialVelocity.z;
         for (int t = 0; t < n; t++) {
             out[0][t] = Math.abs(vx);
             out[1][t] = Math.abs(vz);
-            if (perAxis) {
-                if (Math.abs(vx) < thr) vx = 0.0;
-                if (Math.abs(vz) < thr) vz = 0.0;
-            } else {
-                if (vx * vx + vz * vz < thrSq) {
-                    vx = 0.0;
-                    vz = 0.0;
-                }
-            }
             double phi = free.baseArg(t) + yawsAbs[t] * RAD;
             vx += free.mMag(t) * Math.cos(phi);
             vz += free.mMag(t) * Math.sin(phi);
@@ -291,13 +302,10 @@ public final class BoundPrunedRecovery {
         return out;
     }
 
-    private static double patternScore(Pattern p, double[][] vel, double thr, boolean perAxis) {
-        if (p.zeroFrom < 0) return thr;
-        int k = p.zeroFrom;
-        if (perAxis) {
-            return Math.abs(vel[p.zeroAxis][k] - thr);
-        }
-        return Math.abs(Math.hypot(vel[0][k], vel[1][k]) - thr);
+    private static boolean inBand(Pattern p, int[] bandMin, boolean perAxis) {
+        if (p.zeroFrom < 0) return false;
+        if (perAxis) return p.zeroFrom >= bandMin[p.zeroAxis];
+        return p.zeroFrom >= bandMin[0] && p.zeroFrom >= bandMin[1];
     }
 
     private static List<Pattern> enumeratePatterns(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc) {
@@ -306,7 +314,7 @@ public final class BoundPrunedRecovery {
         JumpLinearModel free = new JumpLinearModel(sc);
         Double freeBound = rootBound(spec, free, null);
         if (freeBound != null) {
-            out.add(new Pattern("free", free, new ArrayList<JumpLinearModel.Wall>(), false, freeBound, -1, -1));
+            out.add(new Pattern("free", free, new ArrayList<JumpLinearModel.Wall>(), false, freeBound, -1, -1, null, null));
         }
         double thr = exact.inertiaThreshold();
         boolean perAxis = exact.perAxisInertia();
@@ -339,7 +347,7 @@ public final class BoundPrunedRecovery {
         if (vel.isEmpty()) return;
         Double bound = rootBound(spec, lin, vel);
         if (bound == null) return;
-        cands.add(new Pattern(label, lin, vel, true, bound, k, zx && zz ? 0 : (zx ? 0 : 1)));
+        cands.add(new Pattern(label, lin, vel, true, bound, k, zx && zz ? 0 : (zx ? 0 : 1), zeroX, zeroZ));
     }
 
     private static Double rootBound(JumpSpec spec, JumpLinearModel lin, List<JumpLinearModel.Wall> vel) {

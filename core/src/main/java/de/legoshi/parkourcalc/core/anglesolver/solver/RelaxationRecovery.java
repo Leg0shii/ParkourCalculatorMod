@@ -12,10 +12,10 @@ public final class RelaxationRecovery {
     private static final double RHO_GROW = 3.0;
     private static final double RHO_MAX = 1.0e6;
     private static final double[] PIN_WIDTHS = {0.4, 0.15};
+    private static final double[] SEED_MARGINS = {0.0, 3.0e-4, 1.2e-3, 5.0e-3, 1.0e-2, 2.0e-2, 5.0e-2};
     private static final int DUAL_RESTARTS = 5;
     private static final int SLP_PHASE1_CALLS = 160;
     private static final int SLP_TOTAL_CALLS = 220;
-    private static final int SLP_RESTARTS = 6;
 
     public static boolean DEBUG = false;
     public static double[] debugLastStalled;
@@ -28,7 +28,6 @@ public final class RelaxationRecovery {
         for (JumpConstraint c : spec.constraints) {
             if (c.cmp == JumpConstraint.Cmp.EQ) return null;
         }
-        long tStart = System.nanoTime();
         JumpPhysicsInputs sc = spec.asScenario();
         JumpLinearModel lin = new JumpLinearModel(sc);
         int n = lin.n;
@@ -40,133 +39,63 @@ public final class RelaxationRecovery {
         if (trivialInfeasible[0]) return null;
 
         CostateDualSolver dual = new CostateDualSolver(n, cx, cz, lin.mMagAll(), walls);
-        CostateDualSolver.Result warm = dual.solve(0.0, null);
-        if (warm == null) return null;
-        for (int i = 0; i < DUAL_RESTARTS; i++) {
-            if (cancel.get()) return null;
-            CostateDualSolver.Result next = dual.solve(0.0, warm.lambda);
-            if (next == null) break;
-            warm = next;
-        }
-        if (SolverTrace.on()) SolverTrace.log("RXT", "dual done value=%.9f ms=%.1f", warm.value, (System.nanoTime() - tStart) / 1e6);
-
-        double[] ux = new double[n];
-        double[] uz = new double[n];
         double[] mMag = lin.mMagAll();
-        for (int t = 0; t < n; t++) {
-            double gx = warm.gx[t], gz = warm.gz[t];
-            double nrm = Math.sqrt(gx * gx + gz * gz);
-            if (nrm > 1.0e-12) {
-                ux[t] = mMag[t] * gx / nrm;
-                uz[t] = mMag[t] * gz / nrm;
-            }
-        }
-        double[] lambda = warm.lambda.clone();
-        long tAl = System.nanoTime();
-        double alViol = relaxedPrimal(cx, cz, mMag, walls, lambda, ux, uz, cancel);
-        if (Double.isNaN(alViol)) return null;
-        double relaxedValue = dot(cx, cz, ux, uz);
-        if (warm.value - relaxedValue > 0.02 * (1.0 + Math.abs(warm.value))) {
-            if (SolverTrace.on()) SolverTrace.log("RXT", "relaxedPrimal short (value=%.9f vs dual=%.9f), rerun", relaxedValue, warm.value);
-            double v2 = relaxedPrimal(cx, cz, mMag, walls, lambda, ux, uz, cancel);
-            if (Double.isNaN(v2)) return null;
-            alViol = v2;
-            relaxedValue = dot(cx, cz, ux, uz);
-        }
-        if (SolverTrace.on()) {
-            SolverTrace.log("RXT", "relaxedPrimal viol=%.3e value=%.9f dual=%.9f ms=%.1f",
-                    alViol, relaxedValue, warm.value, (System.nanoTime() - tAl) / 1e6);
-        }
-        if (DEBUG) {
-            int offSphere = 0;
-            double minRatio = 1.0;
-            double surplus = 0.0;
-            for (int t = 0; t < n; t++) {
-                if (mMag[t] < 1.0e-12) continue;
-                double r = Math.sqrt(ux[t] * ux[t] + uz[t] * uz[t]) / mMag[t];
-                if (r < 0.999) offSphere++;
-                if (r < minRatio) minRatio = r;
-                surplus += (1.0 - r) * mMag[t];
-            }
-            System.out.printf("  RELAX alViol=%.3e relaxedValue=%.6f dualValue=%.6f offSphere=%d/%d minRatio=%.3f surplus=%.4f%n",
-                    alViol, relaxedValue, warm.value, offSphere, n, minRatio, surplus);
-        }
-
-        double[] seedDither = ditherSeedYaws(lin, spec.objective, ux, uz);
-        double[] seedProj = projectionSeedYaws(lin, spec.objective, ux, uz);
-        if (cancel.get()) return null;
         long tSeed = System.nanoTime();
-        double[] best = null;
-        double[] stalled = null;
-        boolean[] awareOptions = {true, false};
-        double[][] seeds = java.util.Arrays.equals(seedDither, seedProj)
-                ? new double[][]{seedDither} : new double[][]{seedDither, seedProj};
-        for (boolean aware : awareOptions) {
-            for (double[] s : seeds) {
-                if (best != null || cancel.get()) break;
-                double[] r = SlpSolve.optimizeBestEffort(exact, spec, feasTol, cancel, s,
-                        SLP_PHASE1_CALLS, SLP_TOTAL_CALLS, aware);
-                best = feasibleOrNull(exact, sc, spec, r, feasTol);
-                if (best == null) stalled = lowerViolation(exact, sc, spec, stalled, r);
-                if (SolverTrace.on()) {
-                    SolverTrace.log("RXT", "seedSlp seed=%s aware=%s -> %s", s == seedDither ? "dither" : "proj", aware,
-                            best != null ? "feasible" : (r == null ? "null" : SolverTrace.fmt("viol=%.3e", violationOf(exact, sc, spec, r))));
-                }
-            }
-        }
-        if (SolverTrace.on()) SolverTrace.log("RXT", "seedSlp done best=%s ms=%.1f", best != null, (System.nanoTime() - tSeed) / 1e6);
-        long tRestart = System.nanoTime();
+
+        Seed base = seedAtMargin(exact, spec, sc, lin, cx, cz, mMag, walls, dual, 0.0, null, feasTol, cancel);
+        double[] best = base.landed;
+        double[] stalled = base.stalled;
+        double[] stalledUx = base.stalled != null ? base.ux : null;
+        double[] stalledUz = base.stalled != null ? base.uz : null;
+        if (DEBUG && stalled != null) debugLastStalled = stalled.clone();
+
         if (best == null && !cancel.get() && stalled != null) {
-            double stalledViol = violationOf(exact, sc, spec, stalled);
-            for (int round = 0; round < SLP_RESTARTS && best == null && !cancel.get(); round++) {
-                boolean aware = (round & 1) == 0;
-                double[] r = SlpSolve.optimizeBestEffort(exact, spec, feasTol, cancel, stalled,
-                        SLP_PHASE1_CALLS, SLP_TOTAL_CALLS, aware);
-                if (r == null) break;
-                double v = violationOf(exact, sc, spec, r);
-                if (SolverTrace.on()) SolverTrace.log("RXT", "restart round=%d aware=%s viol=%.3e (stalled=%.3e)", round, aware, v, stalledViol);
-                if (v <= feasTol) {
-                    best = r;
-                    break;
-                }
-                if (v >= stalledViol) {
-                    if (!aware) break;
-                    continue;
-                }
-                stalled = r;
-                stalledViol = v;
-            }
-            if (DEBUG) {
-                System.out.printf("  RELAX stalledViol=%.3e%n", stalledViol);
-                debugLastStalled = stalled.clone();
-            }
-        }
-        if (SolverTrace.on()) SolverTrace.log("RXT", "restarts done best=%s ms=%.1f", best != null, (System.nanoTime() - tRestart) / 1e6);
-        long tRepair = System.nanoTime();
-        if (best == null && !cancel.get() && stalled != null) {
+            long tRepair = System.nanoTime();
             double[] repaired = LatticeRepair.repair(exact, spec, stalled, feasTol, cancel);
             if (repaired != null && !cancel.get()) {
                 double[] hugged = SlpSolve.optimize(exact, spec, feasTol, cancel, repaired, SLP_PHASE1_CALLS, SLP_TOTAL_CALLS);
                 best = hugged != null ? hugged : repaired;
             }
+            if (SolverTrace.on()) SolverTrace.log("RXT", "repair done best=%s ms=%.1f", best != null, (System.nanoTime() - tRepair) / 1e6);
         }
-        if (SolverTrace.on()) SolverTrace.log("RXT", "repair done best=%s ms=%.1f", best != null, (System.nanoTime() - tRepair) / 1e6);
+
+        double[] warmLambda = base.warm;
+        for (int mi = 1; mi < SEED_MARGINS.length && best == null && !cancel.get(); mi++) {
+            Seed s = seedAtMargin(exact, spec, sc, lin, cx, cz, mMag, walls, dual, SEED_MARGINS[mi], warmLambda, feasTol, cancel);
+            if (s.warm != null) warmLambda = s.warm;
+            if (s.landed != null) {
+                best = s.landed;
+                break;
+            }
+            if (s.stalled != null) {
+                double[] lower = lowerViolation(exact, sc, spec, stalled, s.stalled);
+                if (lower != stalled) {
+                    stalled = lower;
+                    stalledUx = s.ux;
+                    stalledUz = s.uz;
+                }
+            }
+        }
+        if (SolverTrace.on()) SolverTrace.log("RXT", "seedLadder done best=%s ms=%.1f", best != null, (System.nanoTime() - tSeed) / 1e6);
         if (DEBUG) System.out.printf("  RELAX seedSlp=%s%n", best != null ? "OK" : "null");
 
         if (best != null || cancel.get()) return best;
+        if (stalledUx == null) return null;
         long tPin = System.nanoTime();
-        double[] carry = seedDither;
+        double[] pinDither = ditherSeedYaws(lin, spec.objective, stalledUx, stalledUz);
+        double[] pinProj = projectionSeedYaws(lin, spec.objective, stalledUx, stalledUz);
+        double[] carry = pinDither;
         double[] pinResult = null;
         for (double width : PIN_WIDTHS) {
             if (cancel.get()) break;
-            JumpSpec pinned = pinnedSpec(spec, lin, ux, uz, width);
+            JumpSpec pinned = pinnedSpec(spec, lin, stalledUx, stalledUz, width);
             if (pinned == null) break;
             double[] r = ClosedFormSolve.optimize(exact, pinned, feasTol, cancel);
             if (r == null && !cancel.get()) {
                 r = SlpSolve.optimize(exact, pinned, feasTol, cancel, carry, SLP_PHASE1_CALLS, SLP_TOTAL_CALLS);
             }
             if (r == null && !cancel.get()) {
-                r = SlpSolve.optimize(exact, pinned, feasTol, cancel, seedProj, SLP_PHASE1_CALLS, SLP_TOTAL_CALLS);
+                r = SlpSolve.optimize(exact, pinned, feasTol, cancel, pinProj, SLP_PHASE1_CALLS, SLP_TOTAL_CALLS);
             }
             if (r != null) {
                 carry = r;
@@ -183,9 +112,87 @@ public final class RelaxationRecovery {
         return best;
     }
 
+    private static final class Seed {
+        double[] landed;
+        double[] ux;
+        double[] uz;
+        double[] stalled;
+        double[] warm;
+    }
+
+    private static Seed seedAtMargin(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc,
+                                     JumpLinearModel lin, double[] cx, double[] cz, double[] mMag,
+                                     List<JumpLinearModel.Wall> walls, CostateDualSolver dual, double margin,
+                                     double[] warmLambda, double feasTol, AtomicBoolean cancel) {
+        Seed out = new Seed();
+        int n = lin.n;
+        CostateDualSolver.Result warm = dual.solve(margin, warmLambda);
+        if (warm == null) return out;
+        for (int i = 0; i < DUAL_RESTARTS; i++) {
+            if (cancel.get()) return out;
+            CostateDualSolver.Result next = dual.solve(margin, warm.lambda);
+            if (next == null) break;
+            warm = next;
+        }
+        out.warm = warm.lambda;
+        double[] ux = new double[n];
+        double[] uz = new double[n];
+        for (int t = 0; t < n; t++) {
+            double gx = warm.gx[t], gz = warm.gz[t];
+            double nrm = Math.sqrt(gx * gx + gz * gz);
+            if (nrm > 1.0e-12) {
+                ux[t] = mMag[t] * gx / nrm;
+                uz[t] = mMag[t] * gz / nrm;
+            }
+        }
+        out.ux = ux;
+        out.uz = uz;
+        double[] lambda = warm.lambda.clone();
+        long tAl = System.nanoTime();
+        double alViol = relaxedPrimal(cx, cz, mMag, walls, lambda, ux, uz, cancel, margin);
+        if (Double.isNaN(alViol)) return out;
+        double relaxedValue = dot(cx, cz, ux, uz);
+        if (warm.value - relaxedValue > 0.02 * (1.0 + Math.abs(warm.value))) {
+            if (SolverTrace.on()) SolverTrace.log("RXT", "relaxedPrimal short (value=%.9f vs dual=%.9f), rerun", relaxedValue, warm.value);
+            double v2 = relaxedPrimal(cx, cz, mMag, walls, lambda, ux, uz, cancel, margin);
+            if (Double.isNaN(v2)) return out;
+            alViol = v2;
+            relaxedValue = dot(cx, cz, ux, uz);
+        }
+        if (SolverTrace.on()) {
+            SolverTrace.log("RXT", "relax margin=%.2e viol=%.3e value=%.9f dual=%.9f ms=%.1f",
+                    margin, alViol, relaxedValue, warm.value, (System.nanoTime() - tAl) / 1e6);
+        }
+        double[] seedDither = ditherSeedYaws(lin, spec.objective, ux, uz);
+        double[] seedProj = projectionSeedYaws(lin, spec.objective, ux, uz);
+        if (cancel.get()) return out;
+        boolean[] awareOptions = {true, false};
+        double[][] seeds = java.util.Arrays.equals(seedDither, seedProj)
+                ? new double[][]{seedDither} : new double[][]{seedDither, seedProj};
+        for (boolean aware : awareOptions) {
+            for (double[] s : seeds) {
+                if (out.landed != null || cancel.get()) break;
+                double[] r = SlpSolve.optimizeBestEffort(exact, spec, feasTol, cancel, s,
+                        SLP_PHASE1_CALLS, SLP_TOTAL_CALLS, aware);
+                double[] feas = feasibleOrNull(exact, sc, spec, r, feasTol);
+                if (feas != null) {
+                    out.landed = feas;
+                } else if (r != null) {
+                    out.stalled = lowerViolation(exact, sc, spec, out.stalled, r);
+                }
+                if (SolverTrace.on()) {
+                    SolverTrace.log("RXT", "seedSlp margin=%.2e seed=%s aware=%s -> %s", margin,
+                            s == seedDither ? "dither" : "proj", aware,
+                            feas != null ? "feasible" : (r == null ? "null" : SolverTrace.fmt("viol=%.3e", violationOf(exact, sc, spec, r))));
+                }
+            }
+        }
+        return out;
+    }
+
     static double relaxedPrimal(double[] cx, double[] cz, double[] mMag,
                                 List<JumpLinearModel.Wall> walls, double[] lambda,
-                                double[] ux, double[] uz, AtomicBoolean cancel) {
+                                double[] ux, double[] uz, AtomicBoolean cancel, double margin) {
         int n = ux.length;
         int m = walls.size();
         if (m == 0) return 0.0;
@@ -196,7 +203,7 @@ public final class RelaxationRecovery {
             JumpLinearModel.Wall w = walls.get(j);
             axis[j] = w.axis;
             coef[j] = w.coef;
-            b[j] = w.bPrime;
+            b[j] = w.bPrime - (w.eq ? 0.0 : margin);
         }
 
         double rho = RHO_START;
@@ -425,12 +432,16 @@ public final class RelaxationRecovery {
         for (int a = 0; a < 2; a++) {
             for (int t = 1; t < objTick; t++) {
                 int idx = a * objTick + t;
-                if (lo[idx] == Double.NEGATIVE_INFINITY || hi[idx] == Double.POSITIVE_INFINITY) continue;
-                if (hi[idx] - lo[idx] <= 2.5 * halfWidth) continue;
+                double clo = lo[idx];
+                double chi = hi[idx];
+                if (clo != Double.NEGATIVE_INFINITY && chi != Double.POSITIVE_INFINITY
+                        && chi - clo <= 2.5 * halfWidth) continue;
                 double pos = lin.constPos(t, a);
                 double[] u = a == 0 ? ux : uz;
                 for (int s = 0; s < t; s++) pos += lin.coef(s, t) * u[s];
-                double center = Math.min(hi[idx] - halfWidth, Math.max(lo[idx] + halfWidth, pos));
+                double center = pos;
+                if (clo != Double.NEGATIVE_INFINITY) center = Math.max(center, clo + halfWidth);
+                if (chi != Double.POSITIVE_INFINITY) center = Math.min(center, chi - halfWidth);
                 JumpConstraint.Mode mode = a == 0 ? JumpConstraint.Mode.X : JumpConstraint.Mode.Z;
                 cons.add(new JumpConstraint(mode, t, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.GE,
                         center - halfWidth, "relaxPinLo"));

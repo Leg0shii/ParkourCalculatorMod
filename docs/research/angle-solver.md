@@ -361,3 +361,27 @@ The ticket's last open test-plan item is also closed: `loopmm-3jump-lands` is wi
 
 Reported on a 1.12.2 save (trp): under Optimize the live tracker showed success in ~0.1 s, then the final result said no solution after the budget. Root cause: since the #201 stop-on-feasible rework, SolveCore returns its best-OBJECTIVE result even when infeasible, but the engine's race-vs-incumbent comparison still assumed both candidates were feasible and compared objectives only, so an infeasible race result with a longer (unrealizable) reach replaced the feasible chain result. The stale assumption predates this branch; Optimize made it visible because that tier always races feasible chain results to the full budget. Fix: the comparison gates on byte-exact feasibility first (a feasible incumbent is never traded for an infeasible reach), objectives break ties only within the same feasibility class. Regression capture: captures/trp-optimize-feasible-swap.json with a solve sidecar at THOROUGH (the sidecar's new optimizeSeconds field overrides the save's budget for test time). EngineFileScreen (PKC_SOLVE_FILE=path, optional PKC_SOLVE_EFFORT / PKC_SOLVE_TIMEOUT_MS) drives the live engine on any save file headlessly; it is how the report was reproduced and verified.
 
+## 12. Regularized relaxation seed and pattern inference (gh-213, 2026-07-04)
+
+Follow-up from the #209 external review, implementing the five scope items whose pre-implementation diagnostics all ran the same day (recorded in the issue comment thread). Baseline: dualrecovery gate 56/58. After: 57/58. The whole `:core:test` stays green; the deletions and the seed rework carry a zero-regression invariant verified by a per-capture before/after diff.
+
+### 12.1 Margin-laddered relaxation seed
+
+`RelaxationRecovery.solve` was restructured around a wall-margin ladder `{0, 3e-4, 1.2e-3, 5e-3, 1e-2, 2e-2, 5e-2}`. Each rung runs the full seed pipeline (dual recovery, AL-FISTA relaxed primal, seed SLP) at that inward wall margin; `relaxedPrimal` now takes the margin and shifts every inequality `b'_j -= margin`, so the relaxed carry hugs the interior instead of the walls. A larger margin pushes the seed off the walls, which the bake-off showed lands captures the wall-hugging seed misses.
+
+The integration is guarded by an invariant, not a heuristic: margin 0 is the shipped seed-plus-repair path byte-for-byte, and the larger rungs run only when that path fully misses (the seed SLP and lattice repair both fail). So every capture landing today via the margin-0 seed or repair is byte-identical; only chain-misses climb the ladder. Measured effect: six captures that previously needed the `bnbSeconds` pattern-B&B or a reseeded SLP now land through the cheap relaxation chain (j129, j135, j335, j344, j717, j828), and j318 flips to `shouldSolve: true`, landing at -1886.296634 (the bake-off value, reproduced deterministically). j318 is not a facing-wall bail as the stage census read it: it lands from the 2e-2 interior seed, reached because the ladder continues past the first dual-unbounded rung rather than breaking on it.
+
+### 12.2 Pattern inference as axis + band; stage-1 banded incumbent
+
+The gh-204 onset ranking (11.2: `velocityProfile` + `patternScore` by |v_axis(k)| distance to threshold) is removed, falsified for parked axes where every k ties at zero cost. Its replacement in `BoundPrunedRecovery` is `carryProfile` + `inBand`: compute the clamp-free carry of the incumbent, find each axis's zero-cost band (the suffix where |carry_a| stays under the inertia threshold), and rank pattern submission by band membership, tie-broken by the folded dual bound `BoundPrunedRecovery` already computes. Ordering only, so no pattern is ever gated out.
+
+A stage-1 banded ladder was added: each enumerated pattern's closed form is certified via `ClosedFormSolve.optimizeWithPattern` (a fixed-pattern entry that reuses the existing margin `runLadder` with the pattern's zeroX/zeroZ) and the best byte-exact result seeds the B&B incumbent before the parallel search. On loopmm the banded incumbent certifies at -279.300515 (above the -279.3059 target); the search still lands the same -279.299912. Both changes are ordering plus incumbent only, so the whole dualrecovery gate is byte-identical after them.
+
+### 12.3 Pin extension: implemented and falsified on the corpus
+
+`pinnedSpec` was extended to pin a band around the relaxed path position on unconstrained interior ticks, not only the two-sided-bounded ticks it narrowed before (the old form pinned 5.8% of interior slots and landed 0/59). Falsified on this corpus: with the margin ladder landing everything the relaxation can reach, the pin stage is never entered on a solvable capture, so it lands nothing new (j716 still misses). Kept implemented per the ticket; a future stage census can delete it with this record as the evidence.
+
+### 12.4 Dead-stage deletions
+
+The SLP restart loop (`SLP_RESTARTS`) is removed: an ablation showed the stage census unchanged, j346 still landing via lattice repair at a 9.6e-5 objective shift (-740.295720 vs -740.295624), and the full gate green. The old pin ladder (the pre-extension `pinnedSpec`) is superseded by 12.3. j716 stays the sole `shouldSolve: false` miss, still genuinely global-stage (11.3/11.6).
+
