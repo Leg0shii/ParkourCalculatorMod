@@ -142,6 +142,7 @@ public final class Application {
         String mcVersion = saveController.getSaveStore() != null ? saveController.getSaveStore().getMcVersion() : null;
         ExactJumpModel forwardModel = ExactJumpModel.forMcVersion(mcVersion);
         AngleSolverEngine angleSolverEngine = new AngleSolverEngine(angleSolverState, boxController, inputData, this::onUserChange, forwardModel);
+        angleSolverEngine.setOnStartMoved(runner::setStartPosition);
         saveController.setSolverEngine(angleSolverEngine);
         VelocityMapController velocityMapController = new VelocityMapController(
                 angleSolverState, boxController, runner, saveController, inputData, forwardModel,

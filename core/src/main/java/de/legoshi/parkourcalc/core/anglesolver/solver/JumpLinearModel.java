@@ -52,13 +52,15 @@ public final class JumpLinearModel {
         public final double bPrime;
         public final boolean eq;
         public final String name;
+        public final double p0coef;
 
-        Wall(int axis, double[] coef, double bPrime, boolean eq, String name) {
+        Wall(int axis, double[] coef, double bPrime, boolean eq, String name, double p0coef) {
             this.axis = axis;
             this.coef = coef;
             this.bPrime = bPrime;
             this.eq = eq;
             this.name = name;
+            this.p0coef = p0coef;
         }
     }
 
@@ -172,8 +174,9 @@ public final class JumpLinearModel {
 
     /** Constant part of {@code pos_k} on the given axis: start position plus decayed initial velocity. */
     public double constPos(int k, int axis) {
-        double p0 = axis == 0 ? sc.startPos.x : sc.startPos.z;
-        double v0 = axis == 0 ? sc.initialVelocity.x : sc.initialVelocity.z;
+        StartBox box = sc.startBox;
+        double p0 = box != null ? (axis == 0 ? box.px : box.pz) : (axis == 0 ? sc.startPos.x : sc.startPos.z);
+        double v0 = box != null ? (axis == 0 ? box.vx : box.vz) : (axis == 0 ? sc.initialVelocity.x : sc.initialVelocity.z);
         int end = k < zFirst[axis] ? k : zFirst[axis];
         return p0 + v0 * sPre[end];
     }
@@ -224,6 +227,9 @@ public final class JumpLinearModel {
         }
         if (!eq) bPrime -= margin;                // hug the wall this far inside
 
+        int tc = (t2 == null) ? 1 : (opSign > 0.0 ? 2 : 0);
+        double p0coef = (c.cmp == JumpConstraint.Cmp.GE) ? tc : -tc;
+
         boolean trivial = true;
         for (int s = 0; s < n; s++) if (coef[s] != 0.0) { trivial = false; break; }
         if (trivial) {
@@ -238,7 +244,7 @@ public final class JumpLinearModel {
             if (!ok && trivialInfeasible != null) trivialInfeasible[0] = true;
             return null;
         }
-        return new Wall(axis, coef, bPrime, eq, c.name);
+        return new Wall(axis, coef, bPrime, eq, c.name, p0coef);
     }
 
     /** Compile all walls of a spec; sets {@code trivialInfeasible[0]} if a constant constraint is violated. */
@@ -270,8 +276,8 @@ public final class JumpLinearModel {
                 double[] coefLo = new double[n];
                 for (int s = 0; s < t; s++) coefLo[s] = -coefHi[s];
                 String ax = a == 0 ? "X" : "Z";
-                walls.add(new Wall(a, coefHi, bound - constVal, false, "inertia" + ax + "@" + t + "+"));
-                walls.add(new Wall(a, coefLo, bound + constVal, false, "inertia" + ax + "@" + t + "-"));
+                walls.add(new Wall(a, coefHi, bound - constVal, false, "inertia" + ax + "@" + t + "+", 0.0));
+                walls.add(new Wall(a, coefLo, bound + constVal, false, "inertia" + ax + "@" + t + "-", 0.0));
             }
         }
         return walls;

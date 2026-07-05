@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.core.anglesolver;
 
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.TickState;
+import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.BoxStyle;
 import de.legoshi.parkourcalc.core.ui.InputData;
@@ -12,6 +13,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.BoundPrunedRecovery;
 import de.legoshi.parkourcalc.core.anglesolver.solver.BucketAscentPolish;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ClosedFormSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
+import de.legoshi.parkourcalc.core.anglesolver.solver.FreeStartSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.IlsPolish;
 import de.legoshi.parkourcalc.core.anglesolver.solver.LongRunSolver;
 import de.legoshi.parkourcalc.core.anglesolver.solver.RelaxationRecovery;
@@ -28,10 +30,14 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolveProgress;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
+import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 
 /** Bridges the Angle Solver UI to the byte-exact jump model and back into the live TAS.
@@ -138,6 +144,12 @@ public final class AngleSolverEngine {
     private final InputData inputs;
     private final IntConsumer onApplied;
 
+    private Consumer<Vec3dCore> onStartMoved = pos -> { };
+
+    public void setOnStartMoved(Consumer<Vec3dCore> onStartMoved) {
+        this.onStartMoved = onStartMoved != null ? onStartMoved : pos -> { };
+    }
+
     /** Byte-exact forward, configured for the loader's MC inertia rule (see ExactJumpModel.forMcVersion).
      *  Stateless/immutable, so a single instance is shared read-only across the restart threads. */
     private final ForwardModel model;
@@ -196,15 +208,17 @@ public final class AngleSolverEngine {
         final int strafeSign;
         // The model's predicted trajectory; Apply checks the resim against it (see checkApplyDeviation).
         final ForwardPath path;
+        final Vec3dCore start;
 
         Plan(int startTick, double[] yaws, boolean[] strafeMask, boolean[] force45Mask, int strafeSign,
-             ForwardPath path) {
+             ForwardPath path, Vec3dCore start) {
             this.startTick = startTick;
             this.yaws = yaws;
             this.strafeMask = strafeMask;
             this.force45Mask = force45Mask;
             this.strafeSign = strafeSign;
             this.path = path;
+            this.start = start;
         }
     }
 
@@ -310,9 +324,22 @@ public final class AngleSolverEngine {
         lastStrafeMaskDebug = ph.strafeMask;
         List<ConstraintAt> uiCons = collectUiConstraints(startTick, numTicks);
 
+        Set<Constraint> footprintCons = null;
+        if (startTick == 0 && model instanceof ExactJumpModel) {
+            Set<Constraint> consumed = new HashSet<>();
+            StartBox freeBox = deriveFreeStartBox(uiCons, ph.inputs, consumed);
+            if (freeBox != null) {
+                ph.inputs.startBox = freeBox;
+                footprintCons = consumed;
+            }
+        }
+
         List<JumpConstraint> constraints = new ArrayList<>();
         Objective objective = new Objective(axis(state.getAxis()), sense(state.getGoal()), numTicks);
-        for (ConstraintAt ca : uiCons) addMapped(constraints, ca.c, ca.absTick, ca.segTick, numTicks);
+        for (ConstraintAt ca : uiCons) {
+            if (footprintCons != null && footprintCons.contains(ca.c)) continue;
+            addMapped(constraints, ca.c, ca.absTick, ca.segTick, numTicks);
+        }
 
         JumpSpec spec = new JumpSpec(ph.inputs, constraints, objective);
         return new Job(spec, objective.sense, startTick, landingTick, numTicks, ph.strafeMask,
@@ -435,6 +462,7 @@ public final class AngleSolverEngine {
         phys.startPos = seed.position;
         phys.startYaw = seed.yaw;
         phys.initialVelocity = seed.velocity;
+        phys.startBox = StartBox.pinned(seed.position.x, seed.position.z, seed.velocity.x, seed.velocity.z);
         phys.jumpTick = jumpTickRel;
         phys.jumpPerTick = jumpMask;
         phys.strafePerTick = strafeMask;
@@ -484,6 +512,65 @@ public final class AngleSolverEngine {
             }
         }
         return uiCons;
+    }
+
+    private StartBox deriveFreeStartBox(List<ConstraintAt> uiCons, JumpPhysicsInputs phys, Set<Constraint> consumed) {
+        double seedX = phys.startPos.x;
+        double seedZ = phys.startPos.z;
+        double[] xIv = firstTickInterval(uiCons, Constraint.Field.X);
+        double[] zIv = firstTickInterval(uiCons, Constraint.Field.Z);
+        boolean freeX = xIv != null && xIv[1] > xIv[0];
+        boolean freeZ = zIv != null && zIv[1] > zIv[0];
+        if (!freeX && !freeZ) return null;
+
+        for (ConstraintAt ca : uiCons) {
+            if (ca.segTick != 0) continue;
+            if (freeX && ca.c.getField() == Constraint.Field.X) consumed.add(ca.c);
+            if (freeZ && ca.c.getField() == Constraint.Field.Z) consumed.add(ca.c);
+        }
+
+        double pxLo = freeX ? xIv[0] : seedX;
+        double pxHi = freeX ? xIv[1] : seedX;
+        double pzLo = freeZ ? zIv[0] : seedZ;
+        double pzHi = freeZ ? zIv[1] : seedZ;
+        double vx = phys.initialVelocity.x;
+        double vz = phys.initialVelocity.z;
+        return new StartBox(seedX, seedZ, vx, vz, pxLo, pxHi, pzLo, pzHi, vx, vx, vz, vz);
+    }
+
+    private static double[] firstTickInterval(List<ConstraintAt> uiCons, Constraint.Field field) {
+        boolean hasRange = false;
+        double lo = Double.NEGATIVE_INFINITY;
+        double hi = Double.POSITIVE_INFINITY;
+        for (ConstraintAt ca : uiCons) {
+            if (ca.segTick != 0) continue;
+            Constraint c = ca.c;
+            if (c.getField() != field) continue;
+            if (c.isRange()) {
+                hasRange = true;
+                lo = Math.max(lo, c.getLo());
+                hi = Math.min(hi, c.getHi());
+            } else {
+                switch (c.getOp()) {
+                    case GT:
+                    case GE:
+                        lo = Math.max(lo, c.getValue());
+                        break;
+                    case LT:
+                    case LE:
+                        hi = Math.min(hi, c.getValue());
+                        break;
+                    case EQ:
+                        lo = Math.max(lo, c.getValue());
+                        hi = Math.min(hi, c.getValue());
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        if (!hasRange) return null;
+        return new double[] {lo, hi};
     }
 
     public void cancel() {
@@ -590,6 +677,8 @@ public final class AngleSolverEngine {
         JumpSpec spec = job.spec;
         lastSpecDebug = spec;
         JumpPhysicsInputs sc = spec.asScenario();
+
+        boolean freeStart = model instanceof ExactJumpModel && sc.startBox != null && sc.startBox.startFree();
 
         long solveStart = System.nanoTime();
         if (SolverTrace.on()) {
@@ -818,6 +907,15 @@ public final class AngleSolverEngine {
         // Gates inside keep byte-exact feasibility and the achieved objective; only the path's looks change.
         CountingModel smoothing = new CountingModel(model);
         if (!cancel.get()) yaws = SmoothingPolish.smooth(smoothing, spec, yaws, cancel);
+        if (freeStart && !cancel.get()) {
+            FreeStartSolve.Result fr = adoptFreeStart((ExactJumpModel) model, spec, sc, yaws, cancel);
+            if (fr != null) {
+                sc.startPos = new Vec3dCore(fr.startX, sc.startPos.y, fr.startZ);
+                sc.startBox = StartBox.pinned(fr.startX, fr.startZ, sc.initialVelocity.x, sc.initialVelocity.z);
+                yaws = fr.yaws;
+                solverName = solverName == null ? "free start" : solverName + " -> free start";
+            }
+        }
         long solveNanos = System.nanoTime() - solveStart;
         if (SolverTrace.on()) {
             SolverTrace.log("ENGINE", "done solver=\"%s\" obj=%.9f viol=%.3e ms=%d",
@@ -831,8 +929,53 @@ public final class AngleSolverEngine {
         SolveResult result = assembleResult(job, yaws, gameFacings, path, solverName, solveNanos, dualGap);
         if (cmaes.evals.get() > 0) addCmaBudget(result, job, cmaes.evals.get());
         if (smoothing.evals.get() > 0) result.addDetail("Smoothing evals", Long.toString(smoothing.evals.get()));
-        Plan plan = new Plan(job.startTick, yaws, job.strafeMask, job.force45Mask, 1, path);
+        Plan plan = new Plan(job.startTick, yaws, job.strafeMask, job.force45Mask, 1, path, sc.startPos);
         return new Outcome(result, plan);
+    }
+
+    private FreeStartSolve.Result adoptFreeStart(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc,
+                                                 double[] seedYaws, AtomicBoolean cancel) {
+        FreeStartSolve.Result fr = FreeStartSolve.solveJoint(exact, spec, FEAS_TOL, cancel);
+        if (fr == null || !fr.feasible) fr = FreeStartSolve.solve(exact, spec, FEAS_TOL, cancel);
+        if (fr == null || !fr.feasible) return null;
+        JumpPhysicsInputs frSc = pinnedScenario(sc, fr.startX, fr.startZ);
+        if (violationOf(frSc, spec, fr.yaws) > FEAS_TOL) return null;
+        boolean seedFeasible = seedYaws != null && violationOf(sc, spec, seedYaws) <= FEAS_TOL;
+        boolean keep;
+        if (!seedFeasible) {
+            keep = true;
+        } else {
+            boolean max = spec.objective.sense == Objective.Sense.MAX;
+            double seedObj = exactObjective(sc, spec, seedYaws);
+            double frObj = exactObjective(frSc, spec, fr.yaws);
+            keep = max ? frObj > seedObj : frObj < seedObj;
+        }
+        if (SolverTrace.on()) {
+            SolverTrace.log("ENGINE", "free start %s at (%.4f,%.4f) seedFeasible=%s",
+                    keep ? "adopted" : "rejected", fr.startX, fr.startZ, seedFeasible);
+        }
+        return keep ? fr : null;
+    }
+
+    private JumpPhysicsInputs pinnedScenario(JumpPhysicsInputs b, double x, double z) {
+        JumpPhysicsInputs a = new JumpPhysicsInputs(b.numTicks);
+        a.startPos = new Vec3dCore(x, b.startPos.y, z);
+        a.startYaw = b.startYaw;
+        a.initialVelocity = b.initialVelocity;
+        a.startBox = StartBox.pinned(x, z, b.initialVelocity.x, b.initialVelocity.z);
+        a.jumpTick = b.jumpTick;
+        a.jumpPerTick = b.jumpPerTick;
+        a.strafeSign = b.strafeSign;
+        a.strafePerTick = b.strafePerTick;
+        a.speedAmplifier = b.speedAmplifier;
+        a.slipPerTick = b.slipPerTick;
+        a.yawLockedPerTick = b.yawLockedPerTick;
+        a.sprintPerTick = b.sprintPerTick;
+        a.incomingSprint = b.incomingSprint;
+        a.incomingAmp = b.incomingAmp;
+        a.forwardInputPerTick = b.forwardInputPerTick;
+        a.strafeInputPerTick = b.strafeInputPerTick;
+        return a;
     }
 
     /** The byte-exact objective value the given facings realize (for comparing two feasible candidates). */
@@ -869,7 +1012,7 @@ public final class AngleSolverEngine {
         SolveResult result = assembleResult(job, yaws, gameFacings, path, name, System.nanoTime() - startNanos, Double.NaN);
         result.addDetail("Stopped early", "kept best found");
         if (name.contains("CMA-ES")) addCmaBudget(result, job, null);
-        Plan plan = new Plan(job.startTick, yaws, job.strafeMask, job.force45Mask, 1, path);
+        Plan plan = new Plan(job.startTick, yaws, job.strafeMask, job.force45Mask, 1, path, sc.startPos);
         return new Outcome(result, plan);
     }
 
@@ -1079,7 +1222,7 @@ public final class AngleSolverEngine {
         result.getOutcomes().add(0, objectiveOutcome(result, r.objective, job.startTick));
         addBaseDetails(result, solveNanos);
         result.addDetail("Derived walls", Integer.toString(r.faces.size()));
-        Plan plan = new Plan(job.startTick, r.yaws, job.ph.strafeMask, job.ph.force45Mask, 1, r.path);
+        Plan plan = new Plan(job.startTick, r.yaws, job.ph.strafeMask, job.ph.force45Mask, 1, r.path, job.ph.inputs.startPos);
         AngleSolverState.Axis ax = r.objective.axis == JumpPhysicsInputs.Axis.X ? AngleSolverState.Axis.X : AngleSolverState.Axis.Z;
         AngleSolverState.Goal gl = r.objective.sense == Objective.Sense.MAX ? AngleSolverState.Goal.MAX : AngleSolverState.Goal.MIN;
         return new Outcome(result, plan, derived, job.startTick, job.landingTick, ax, gl);
@@ -1137,6 +1280,9 @@ public final class AngleSolverEngine {
         Plan p = lastPlan;
         List<InputRow> rows = inputs.getRows();
         if (p.startTick < 0 || p.startTick >= rows.size()) return;
+        if (p.startTick == 0 && p.start != null && startMoved(p.start)) {
+            onStartMoved.accept(p.start);
+        }
         double prevAbs = boxes.getYaw(p.startTick);
         for (int k = 0; k < p.yaws.length && p.startTick + k < rows.size(); k++) {
             InputRow row = rows.get(p.startTick + k);
@@ -1158,6 +1304,12 @@ public final class AngleSolverEngine {
         }
         onApplied.accept(p.startTick);
         checkApplyDeviation(p);
+    }
+
+    private boolean startMoved(Vec3dCore start) {
+        TickState s0 = boxes.getState(0);
+        if (s0 == null || s0.position == null) return true;
+        return Math.abs(start.x - s0.position.x) > 1.0e-9 || Math.abs(start.z - s0.position.z) > 1.0e-9;
     }
 
     /** Per-tick displacement tolerance. The 1.21.10 model is bit-exact to the sim (a clean tick differs by
