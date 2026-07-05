@@ -37,6 +37,38 @@ public class EngineFileScreen {
                 model.getClass().getSimpleName(), state.getStartTick(), state.getLandingTick(),
                 preBox == null ? "null" : preBox.label(), pre == null ? -1 : pre.constraints.size());
 
+        if (pre != null && preBox != null && preBox.startFree() && file.angleSolver != null
+                && file.angleSolver.result != null && !file.angleSolver.result.yaws.isEmpty()) {
+            int nt = pre.asScenario().numTicks;
+            double[] savedYaws = new double[nt];
+            java.util.Map<Integer, Double> ym = new java.util.HashMap<>();
+            for (de.legoshi.parkourcalc.core.save.SaveFile.Yaw y : file.angleSolver.result.yaws) ym.put(y.tick, y.yaw);
+            for (int k = 0; k < nt; k++) {
+                Double v = ym.get(k + 1);
+                savedYaws[k] = v != null ? v : 0.0;
+            }
+            double seedViol = de.legoshi.parkourcalc.core.anglesolver.solver.FreeStartSolve.violationAt(
+                    model, pre, savedYaws, preBox.px, preBox.pz);
+            double[] rs = de.legoshi.parkourcalc.core.anglesolver.solver.FreeStartSolve.recoverStart(model, pre, savedYaws);
+            if (rs != null) {
+                double recViol = de.legoshi.parkourcalc.core.anglesolver.solver.FreeStartSolve.violationAt(
+                        model, pre, savedYaws, rs[0], rs[1]);
+                System.out.printf("FILE DIAG savedYaws@seed(%.7f,%.7f) viol=%.3e -> recovered(%.7f,%.7f) viol=%.3e%n",
+                        preBox.px, preBox.pz, seedViol, rs[0], rs[1], recViol);
+                double savedRecX = de.legoshi.parkourcalc.core.anglesolver.solver.FreeStartSolve.violationAt(
+                        model, pre, savedYaws, preBox.pxLo, preBox.pz);
+                System.out.printf("FILE DIAG box=[%.4f,%.4f]x[%.4f,%.4f] pxRef=%.4f (inBox=%s)%n",
+                        preBox.pxLo, preBox.pxHi, preBox.pzLo, preBox.pzHi, preBox.px,
+                        preBox.px >= preBox.pxLo && preBox.px <= preBox.pxHi);
+            }
+            de.legoshi.parkourcalc.core.anglesolver.solver.FreeStartSolve.Result sj =
+                    de.legoshi.parkourcalc.core.anglesolver.solver.FreeStartSolve.solveJoint(
+                            model, pre, 0.0, new java.util.concurrent.atomic.AtomicBoolean(false));
+            System.out.printf("FILE DIAG solveJoint=%s (why=%s)%n",
+                    sj == null ? "null" : String.format("feasible=%s start=(%.5f,%.5f)", sj.feasible, sj.startX, sj.startZ),
+                    de.legoshi.parkourcalc.core.anglesolver.solver.FreeStartSolve.lastJointDebug);
+        }
+
         long timeoutMs = Long.parseLong(System.getenv("PKC_SOLVE_TIMEOUT_MS") != null
                 ? System.getenv("PKC_SOLVE_TIMEOUT_MS") : "120000");
         long t0 = System.nanoTime();

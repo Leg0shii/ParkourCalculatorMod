@@ -86,6 +86,10 @@ public final class AngleSolverEngine {
 
     private static final long SWEEP_BUDGET_CAP_NANOS = 60_000_000_000L;
 
+    private static final long FREE_START_BUDGET_NANOS = 20_000_000_000L;
+
+    private static final int FREE_START_ITERS = 3;
+
     /** Per-effort solve budget (see {@link SolveCore}). FAST and Optimize share the small batch: FAST runs
      *  it once (stopping at the first feasible), Optimize keeps launching batches until its time budget. */
     static SolveCore.Budget budgetFor(AngleSolverState state) {
@@ -535,7 +539,9 @@ public final class AngleSolverEngine {
         double pzHi = freeZ ? zIv[1] : seedZ;
         double vx = phys.initialVelocity.x;
         double vz = phys.initialVelocity.z;
-        return new StartBox(seedX, seedZ, vx, vz, pxLo, pxHi, pzLo, pzHi, vx, vx, vz, vz);
+        double refX = Math.max(pxLo, Math.min(pxHi, seedX));
+        double refZ = Math.max(pzLo, Math.min(pzHi, seedZ));
+        return new StartBox(refX, refZ, vx, vz, pxLo, pxHi, pzLo, pzHi, vx, vx, vz, vz);
     }
 
     private static double[] firstTickInterval(List<ConstraintAt> uiCons, Constraint.Field field) {
@@ -679,6 +685,11 @@ public final class AngleSolverEngine {
         JumpPhysicsInputs sc = spec.asScenario();
 
         boolean freeStart = model instanceof ExactJumpModel && sc.startBox != null && sc.startBox.startFree();
+        StartBox freeBox = null;
+        if (freeStart) {
+            freeBox = sc.startBox;
+            sc.startBox = StartBox.pinned(sc.startPos.x, sc.startPos.z, sc.initialVelocity.x, sc.initialVelocity.z);
+        }
 
         long solveStart = System.nanoTime();
         if (SolverTrace.on()) {
@@ -770,15 +781,6 @@ public final class AngleSolverEngine {
                 }
             }
         }
-        if (freeStart && !cancel.get()) {
-            FreeStartSolve.Result fr = adoptFreeStart((ExactJumpModel) model, spec, sc, yaws, cancel);
-            if (fr != null) {
-                sc.startPos = new Vec3dCore(fr.startX, sc.startPos.y, fr.startZ);
-                sc.startBox = StartBox.pinned(fr.startX, fr.startZ, sc.initialVelocity.x, sc.initialVelocity.z);
-                yaws = fr.yaws;
-                solverName = solverName == null ? "free start" : solverName + " -> free start";
-            }
-        }
         boolean preFeasible = false;
         if (yaws != null) {
             double v = violationOf(sc, spec, yaws);
@@ -829,16 +831,14 @@ public final class AngleSolverEngine {
                 }
             }
         }
-        if (freeStart && !cancel.get() && sc.startBox != null && sc.startBox.startFree() && yaws != null) {
-            double[] rs = FreeStartSolve.recoverStart((ExactJumpModel) model, spec, yaws);
-            if (rs != null) {
-                sc.startPos = new Vec3dCore(rs[0], sc.startPos.y, rs[1]);
-                sc.startBox = StartBox.pinned(rs[0], rs[1], sc.initialVelocity.x, sc.initialVelocity.z);
+        if (freeStart && !cancel.get()) {
+            long freeBudget = Math.min(job.deadlineNanos > 0 ? job.deadlineNanos : DEFAULT_ILS_BUDGET_NANOS,
+                    FREE_START_BUDGET_NANOS);
+            double[] improved = freeStartImprove((ExactJumpModel) model, spec, sc, freeBox, yaws, cancel,
+                    job.budget, System.nanoTime() + freeBudget, progress);
+            if (improved != null) {
+                yaws = improved;
                 solverName = solverName == null ? "free start" : solverName + " -> free start";
-                if (model instanceof ExactJumpModel && violationOf(sc, spec, yaws) > FEAS_TOL && !cancel.get()) {
-                    double[] restored = SlpSolve.optimize((ExactJumpModel) model, spec, FEAS_TOL, cancel, Angles.wrapAll(yaws));
-                    if (restored != null) yaws = restored;
-                }
             }
         }
         if (job.stopOnFeasible && model instanceof ExactJumpModel && sc.numTicks <= MULTI_JUMP_RACE_MAX_TICKS
@@ -945,28 +945,106 @@ public final class AngleSolverEngine {
         return new Outcome(result, plan);
     }
 
-    private FreeStartSolve.Result adoptFreeStart(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc,
-                                                 double[] seedYaws, AtomicBoolean cancel) {
-        FreeStartSolve.Result fr = FreeStartSolve.solveJoint(exact, spec, FEAS_TOL, cancel);
-        if (fr == null || !fr.feasible) fr = FreeStartSolve.solve(exact, spec, FEAS_TOL, cancel);
-        if (fr == null || !fr.feasible) return null;
-        JumpPhysicsInputs frSc = pinnedScenario(sc, fr.startX, fr.startZ);
-        if (violationOf(frSc, spec, fr.yaws) > FEAS_TOL) return null;
+    private double[] freeStartImprove(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, StartBox freeBox,
+                                      double[] seedYaws, AtomicBoolean cancel, SolveCore.Budget budget, long deadline,
+                                      SolveProgress progress) {
+        double seedX = sc.startPos.x;
+        double seedZ = sc.startPos.z;
         boolean seedFeasible = seedYaws != null && violationOf(sc, spec, seedYaws) <= FEAS_TOL;
-        boolean keep;
-        if (!seedFeasible) {
-            keep = true;
-        } else {
-            boolean max = spec.objective.sense == Objective.Sense.MAX;
-            double seedObj = exactObjective(sc, spec, seedYaws);
-            double frObj = exactObjective(frSc, spec, fr.yaws);
-            keep = max ? frObj > seedObj : frObj < seedObj;
+        double seedObj = seedFeasible ? exactObjective(sc, spec, seedYaws) : Double.NaN;
+        double seedViol = seedYaws == null ? Double.POSITIVE_INFINITY : violationOf(sc, spec, seedYaws);
+        boolean max = spec.objective.sense == Objective.Sense.MAX;
+
+        double[] foundYaws = null;
+        double foundX = seedX, foundZ = seedZ;
+        double foundViol = seedViol;
+
+        sc.startBox = freeBox;
+        FreeStartSolve.Result conv = FreeStartSolve.solveJoint(exact, spec, FEAS_TOL, cancel);
+        if (conv == null || !conv.feasible) conv = FreeStartSolve.solve(exact, spec, FEAS_TOL, cancel);
+        if (conv != null && conv.feasible
+                && FreeStartSolve.violationAt(exact, spec, conv.yaws, conv.startX, conv.startZ) <= FEAS_TOL) {
+            double[] convYaws = Angles.wrapAll(conv.yaws);
+            double convObj = exactObjective(pinnedScenario(sc, conv.startX, conv.startZ), spec, convYaws);
+            if (!seedFeasible || (max ? convObj > seedObj : convObj < seedObj)) {
+                sc.startPos = new Vec3dCore(conv.startX, sc.startPos.y, conv.startZ);
+                sc.startBox = StartBox.pinned(conv.startX, conv.startZ, sc.initialVelocity.x, sc.initialVelocity.z);
+                return convYaws;
+            }
         }
-        if (SolverTrace.on()) {
-            SolverTrace.log("ENGINE", "free start %s at (%.4f,%.4f) seedFeasible=%s",
-                    keep ? "adopted" : "rejected", fr.startX, fr.startZ, seedFeasible);
+
+        // Stage 1: locate the approximate feasible start with the translation-aware search (free box).
+        double p0x = seedX;
+        double p0z = seedZ;
+        sc.startPos = new Vec3dCore(seedX, sc.startPos.y, seedZ);
+        sc.startBox = freeBox;
+        long half = (deadline - System.nanoTime()) / 2;
+        double[] locYaws = SolveCore.optimize(new CountingModel(model), spec, budget, CMAES_SIGMA_DEG, FEAS_TOL, cancel,
+                seedYaws != null ? Angles.wrapAll(seedYaws) : null, System.nanoTime() + half, sequentialSolve, progress);
+        double[] warm = locYaws != null ? locYaws : seedYaws;
+        if (locYaws != null && !cancel.get()) {
+            double[] rs = FreeStartSolve.recoverStart(exact, spec, locYaws);
+            if (rs != null) {
+                p0x = rs[0];
+                p0z = rs[1];
+                double v = FreeStartSolve.violationAt(exact, spec, locYaws, rs[0], rs[1]);
+                if (v < foundViol) { foundViol = v; foundYaws = locYaws; foundX = rs[0]; foundZ = rs[1]; }
+            }
         }
-        return keep ? fr : null;
+
+        // Stage 2: run the strong fixed-start search at the located start; the exact recovery pins it.
+        for (int iter = 0; iter < FREE_START_ITERS && !cancel.get(); iter++) {
+            long remaining = deadline - System.nanoTime();
+            if (remaining <= 0) break;
+            long iterDeadline = System.nanoTime() + remaining / (FREE_START_ITERS - iter);
+            sc.startPos = new Vec3dCore(p0x, sc.startPos.y, p0z);
+            sc.startBox = StartBox.pinned(p0x, p0z, sc.initialVelocity.x, sc.initialVelocity.z);
+            double[] warmW = warm != null ? Angles.wrapAll(warm) : null;
+            double[] yaws = SolveCore.optimize(new CountingModel(model), spec, budget, CMAES_SIGMA_DEG, FEAS_TOL, cancel,
+                    warmW, iterDeadline, sequentialSolve, progress);
+            if (yaws == null) yaws = warmW;
+            if (yaws == null) break;
+            warm = yaws;
+            sc.startBox = freeBox;
+            double[] rs = FreeStartSolve.recoverStart(exact, spec, yaws);
+            if (rs == null) break;
+            double viol = FreeStartSolve.violationAt(exact, spec, yaws, rs[0], rs[1]);
+            if (SolverTrace.on()) {
+                SolverTrace.log("ENGINE", "free iter=%d start=(%.5f,%.5f) -> recovered=(%.7f,%.7f) viol=%.3e",
+                        iter, p0x, p0z, rs[0], rs[1], viol);
+            }
+            if (viol < foundViol) {
+                foundViol = viol;
+                foundYaws = yaws;
+                foundX = rs[0];
+                foundZ = rs[1];
+            }
+            if (viol <= FEAS_TOL) break;
+            if (Math.abs(rs[0] - p0x) < 1.0e-9 && Math.abs(rs[1] - p0z) < 1.0e-9) break;
+            p0x = rs[0];
+            p0z = rs[1];
+        }
+
+        boolean adopt = false;
+        if (foundYaws != null) {
+            boolean foundFeasible = foundViol <= FEAS_TOL;
+            if (foundFeasible && !seedFeasible) {
+                adopt = true;
+            } else if (foundFeasible) {
+                double freeObj = exactObjective(pinnedScenario(sc, foundX, foundZ), spec, foundYaws);
+                adopt = max ? freeObj > seedObj : freeObj < seedObj;
+            } else if (!seedFeasible) {
+                adopt = foundViol < seedViol;
+            }
+        }
+        if (adopt) {
+            sc.startPos = new Vec3dCore(foundX, sc.startPos.y, foundZ);
+            sc.startBox = StartBox.pinned(foundX, foundZ, sc.initialVelocity.x, sc.initialVelocity.z);
+            return Angles.wrapAll(foundYaws);
+        }
+        sc.startPos = new Vec3dCore(seedX, sc.startPos.y, seedZ);
+        sc.startBox = StartBox.pinned(seedX, seedZ, sc.initialVelocity.x, sc.initialVelocity.z);
+        return null;
     }
 
     private JumpPhysicsInputs pinnedScenario(JumpPhysicsInputs b, double x, double z) {

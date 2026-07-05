@@ -87,45 +87,62 @@ public final class FreeStartSolve {
         if (box == null || !box.startFree()) return null;
         if (JumpLinearModel.hasFacingWall(spec.constraints)) return solve(exact, spec, feasTol, cancel);
 
-        JumpPhysicsInputs refSc = copyWithStart(base, box.px, box.pz);
+        double refX = 0.5 * (box.pxLo + box.pxHi);
+        double refZ = 0.5 * (box.pzLo + box.pzHi);
+        StartBox cbox = new StartBox(refX, refZ, box.vx, box.vz, box.pxLo, box.pxHi, box.pzLo, box.pzHi,
+                box.vxLo, box.vxHi, box.vzLo, box.vzHi);
+        JumpPhysicsInputs refSc = copyWithStart(base, refX, refZ);
         JumpLinearModel lin = new JumpLinearModel(refSc);
         double[] cx = new double[lin.n];
         double[] cz = new double[lin.n];
         lin.objectiveVectors(spec.objective, cx, cz);
         boolean[] trivial = {false};
         List<JumpLinearModel.Wall> walls = lin.compileWalls(spec.constraints, 0.0, trivial);
-        if (trivial[0]) return null;
-        CostateDualSolver solver = new CostateDualSolver(lin.n, cx, cz, lin.mMagAll(), walls, buildFreeP0(box, spec.objective));
+        if (trivial[0]) { lastJointDebug = "trivial-infeasible"; return null; }
+        CostateDualSolver solver = new CostateDualSolver(lin.n, cx, cz, lin.mMagAll(), walls, buildFreeP0(cbox, spec.objective));
 
+        double bestViol = Double.POSITIVE_INFINITY;
+        double[] bestYaws = null;
         double[] warm = null;
         for (double margin : JOINT_MARGINS) {
             if (cancel != null && cancel.get()) return null;
             CostateDualSolver.Result r = solver.solve(margin, warm);
-            if (r == null) return null;
+            if (r == null) { lastJointDebug = "dual-null margin=" + margin; return null; }
             warm = r.lambda;
             double[] yaws = recover(lin, spec.objective, r);
+            if (bestYaws == null) bestYaws = yaws;
             double[] gf = refSc.toGameFacings(Angles.wrapAll(yaws));
             ForwardPath path = exact.forward(refSc, gf);
-            double[] delta = pinTranslate(spec, gf, path, box, box.px, box.pz);
-            double p0x = box.px;
-            double p0z = box.pz;
+            double[] delta = pinTranslate(spec, gf, path, cbox, refX, refZ);
+            double p0x = refX;
+            double p0z = refZ;
             if (delta != null) {
-                p0x = clamp(box.px + delta[0], box.pxLo, box.pxHi);
-                p0z = clamp(box.pz + delta[1], box.pzLo, box.pzHi);
+                p0x = clamp(refX + delta[0], box.pxLo, box.pxHi);
+                p0z = clamp(refZ + delta[1], box.pzLo, box.pzHi);
             }
             JumpSpec atSpec = specAtStart(base, spec, p0x, p0z);
             JumpPhysicsInputs atSc = atSpec.asScenario();
             double[] atGf = atSc.toGameFacings(Angles.wrapAll(yaws));
             ForwardPath atPath = exact.forward(atSc, atGf);
-            if (JumpConstraintCompiler.compile(atSpec).maxViolation(atGf, atPath) <= feasTol) {
+            double viol = JumpConstraintCompiler.compile(atSpec).maxViolation(atGf, atPath);
+            bestViol = Math.min(bestViol, viol);
+            if (viol <= feasTol) {
                 if (SolverTrace.on()) {
                     SolverTrace.log("FREE", "joint solved margin=%.2e start=(%.4f,%.4f)", margin, p0x, p0z);
                 }
                 return new Result(yaws, p0x, p0z, true);
             }
         }
+        double recViol = -1.0;
+        if (bestYaws != null) {
+            double[] rs2 = recoverStart(exact, spec, bestYaws);
+            if (rs2 != null) recViol = violationAt(exact, spec, bestYaws, rs2[0], rs2[1]);
+        }
+        lastJointDebug = String.format("no-certify pinTranslateViol=%.3e recoverStartViol=%.3e", bestViol, recViol);
         return null;
     }
+
+    public static volatile String lastJointDebug = "";
 
     public static double[] bestTranslate(JumpSpec spec, double[] gf, ForwardPath path, StartBox box) {
         return bestTranslate(spec, gf, path, box, 0.0);
@@ -167,6 +184,13 @@ public final class FreeStartSolve {
         if (bHi < lo) return bHi;
         if (bLo > hi) return bLo;
         return clamp(0.0, bLo, bHi);
+    }
+
+    public static double violationAt(ExactJumpModel exact, JumpSpec spec, double[] yaws, double p0x, double p0z) {
+        JumpSpec at = specAtStart(spec.asScenario(), spec, p0x, p0z);
+        JumpPhysicsInputs atSc = at.asScenario();
+        double[] gf = atSc.toGameFacings(Angles.wrapAll(yaws));
+        return JumpConstraintCompiler.compile(at).maxViolation(gf, exact.forward(atSc, gf));
     }
 
     public static double[] recoverStart(ExactJumpModel exact, JumpSpec spec, double[] yaws) {

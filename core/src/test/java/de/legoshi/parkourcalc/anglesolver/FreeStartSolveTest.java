@@ -79,6 +79,55 @@ public class FreeStartSolveTest {
         assertTrue("joint free-start must strictly improve the objective (gain=" + gain + ")", gain > 0.5);
     }
 
+    @Test
+    public void jointSolveSolvesConvexFreeBoxFromFarCornerReference() {
+        ProblemFixture pf = ProblemFixture.load("dualrecovery", "j320_1bm_Gapped_Head_Butterfly_Neo");
+        ExactJumpModel exact = pf.model;
+        JumpSpec base = pf.specFor(null, null);
+        JumpPhysicsInputs sc = base.asScenario();
+        AtomicBoolean cancel = new AtomicBoolean(false);
+        int n = sc.numTicks;
+        double seedX = sc.startPos.x, seedZ = sc.startPos.z;
+        double vx = sc.initialVelocity.x, vz = sc.initialVelocity.z;
+        Objective objX = new Objective(JumpPhysicsInputs.Axis.X, Objective.Sense.MAX, n);
+
+        double[] curveShape = ClosedFormSolve.optimize(exact,
+                new JumpSpec(sc, Collections.<JumpConstraint>emptyList(),
+                        new Objective(JumpPhysicsInputs.Axis.Z, Objective.Sense.MAX, n)), 0.0, cancel);
+        assertNotNull("max-Z reach solve must certify", curveShape);
+
+        double tgtX = seedX - 0.3, tgtZ = seedZ - 0.3, slack = 0.03;
+        JumpPhysicsInputs tgt = withStart(sc, tgtX, tgtZ, StartBox.pinned(tgtX, tgtZ, vx, vz));
+        double[] tgtGf = tgt.toGameFacings(Angles.wrapAll(curveShape));
+        ForwardPath tgtPath = exact.forward(tgt, tgtGf);
+        double landX = tgtPath.getPos(n, JumpPhysicsInputs.Axis.X);
+        double landZ = tgtPath.getPos(n, JumpPhysicsInputs.Axis.Z);
+
+        List<JumpConstraint> cons = new ArrayList<JumpConstraint>();
+        cons.add(pad(JumpConstraint.Mode.X, n, JumpConstraint.Cmp.GE, landX - slack));
+        cons.add(pad(JumpConstraint.Mode.X, n, JumpConstraint.Cmp.LE, landX + slack));
+        cons.add(pad(JumpConstraint.Mode.Z, n, JumpConstraint.Cmp.GE, landZ - slack));
+        cons.add(pad(JumpConstraint.Mode.Z, n, JumpConstraint.Cmp.LE, landZ + slack));
+
+        double pxLo = seedX - 1.0, pxHi = seedX + 0.2, pzLo = seedZ - 0.8, pzHi = seedZ + 0.8;
+        double refX = pxLo, refZ = pzHi;
+        StartBox freeBox = new StartBox(refX, refZ, vx, vz, pxLo, pxHi, pzLo, pzHi, vx, vx, vz, vz);
+        JumpSpec freeSpec = new JumpSpec(withStart(sc, refX, refZ, freeBox), cons, objX);
+
+        FreeStartSolve.Result res = FreeStartSolve.solveJoint(exact, freeSpec, 0.0, cancel);
+        assertNotNull("joint solve found no feasible free start on a convex box that contains one", res);
+        assertTrue("joint result not marked feasible", res.feasible);
+        assertTrue("recovered start X outside footprint", res.startX >= pxLo - 1.0e-9 && res.startX <= pxHi + 1.0e-9);
+        assertTrue("recovered start Z outside footprint", res.startZ >= pzLo - 1.0e-9 && res.startZ <= pzHi + 1.0e-9);
+
+        double viol = FreeStartSolve.violationAt(exact, freeSpec, res.yaws, res.startX, res.startZ);
+        assertTrue("free-start solution not byte-exact feasible (viol=" + viol + ")", viol <= 0.0);
+    }
+
+    private static JumpConstraint pad(JumpConstraint.Mode mode, int tick, JumpConstraint.Cmp cmp, double rhs) {
+        return new JumpConstraint(mode, tick, null, JumpConstraint.Op.PLUS, cmp, rhs, "pad");
+    }
+
     private void runFreeStart(double beyondReach, double footprint, double minMove) {
         ProblemFixture pf = ProblemFixture.load("dualrecovery", "j320_1bm_Gapped_Head_Butterfly_Neo");
         ExactJumpModel exact = pf.model;

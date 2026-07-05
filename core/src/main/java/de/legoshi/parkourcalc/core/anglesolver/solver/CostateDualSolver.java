@@ -47,6 +47,7 @@ public final class CostateDualSolver {
     private static final double DIVERGE_REL = 0.05;   // an improvement must beat the best by this fraction
     private static final int DIVERGE_STALL = 12;      // ...for this many iterations running, else: diverged
     private static final double GAMMA = 1.0e-4;       // Armijo sufficient-decrease factor
+    private static final double P0_SMOOTH = 0.05;
     private static final double RHO0 = 1.0e-2;        // initial Levenberg damping (fraction of σ_max)
     private static final double RHO_MIN = 1.0e-10;
     private static final double RHO_MAX = 1.0e8;
@@ -353,15 +354,22 @@ public final class CostateDualSolver {
     }
 
     private double supportOf(double h, int a) {
-        double lo = a == 0 ? freeP0.dvLoX : freeP0.dvLoZ;
-        double hi = a == 0 ? freeP0.dvHiX : freeP0.dvHiZ;
-        return h >= 0.0 ? h * hi : h * lo;
+        double d = deltaOf(h, a);
+        return h * d - 0.5 * P0_SMOOTH * d * d;
     }
 
     private double deltaOf(double h, int a) {
         double lo = a == 0 ? freeP0.dvLoX : freeP0.dvLoZ;
         double hi = a == 0 ? freeP0.dvHiX : freeP0.dvHiZ;
-        return h >= 0.0 ? hi : lo;
+        double d = h / P0_SMOOTH;
+        return d < lo ? lo : (d > hi ? hi : d);
+    }
+
+    private double supportCurv(double h, int a) {
+        double lo = a == 0 ? freeP0.dvLoX : freeP0.dvLoZ;
+        double hi = a == 0 ? freeP0.dvHiX : freeP0.dvHiZ;
+        double d = h / P0_SMOOTH;
+        return (d > lo && d < hi) ? 1.0 / P0_SMOOTH : 0.0;
     }
 
     /** D(λ) = Σ_t m_t·sqrt(‖g_t‖^2+eps) + Σ_j λ_j b'_j, filling {@code outX,outZ} with the costates g_t. */
@@ -427,6 +435,9 @@ public final class CostateDualSolver {
                     double hi = (ai == 0 ? gxx : gzz) / nrm;
                     double hj = (aj == 0 ? gxx : gzz) / nrm;
                     sum += (mMag[t] / nrm) * cc * ((sameAxis ? 1.0 : 0.0) - hi * hj);
+                }
+                if (freeP0 != null && sameAxis) {
+                    sum += p0coef[i] * p0coef[j] * supportCurv(hAxis(lambda, ai), ai);
                 }
                 H[a][b] = sum;
                 H[b][a] = sum;
