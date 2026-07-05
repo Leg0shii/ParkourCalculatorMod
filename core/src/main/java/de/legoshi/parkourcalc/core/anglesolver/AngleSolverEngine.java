@@ -959,6 +959,19 @@ public final class AngleSolverEngine {
         double foundX = seedX, foundZ = seedZ;
         double foundViol = seedViol;
 
+        if (seedYaws != null && !cancel.get()) {
+            double[] rsSeed = FreeStartSolve.recoverStart(exact, spec, seedYaws);
+            if (rsSeed != null) {
+                double vSeed = FreeStartSolve.violationAt(exact, spec, seedYaws, rsSeed[0], rsSeed[1]);
+                if (vSeed < foundViol) {
+                    foundViol = vSeed;
+                    foundYaws = seedYaws;
+                    foundX = rsSeed[0];
+                    foundZ = rsSeed[1];
+                }
+            }
+        }
+
         sc.startBox = freeBox;
         FreeStartSolve.Result conv = FreeStartSolve.solveJoint(exact, spec, FEAS_TOL, cancel);
         if (conv == null || !conv.feasible) conv = FreeStartSolve.solve(exact, spec, FEAS_TOL, cancel);
