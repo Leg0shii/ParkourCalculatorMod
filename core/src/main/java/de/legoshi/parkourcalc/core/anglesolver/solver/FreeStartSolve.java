@@ -127,6 +127,72 @@ public final class FreeStartSolve {
         return null;
     }
 
+    public static double[] bestTranslate(JumpSpec spec, double[] gf, ForwardPath path, StartBox box) {
+        return bestTranslate(spec, gf, path, box, 0.0);
+    }
+
+    public static double[] bestTranslate(JumpSpec spec, double[] gf, ForwardPath path, StartBox box, double margin) {
+        double loX = Double.NEGATIVE_INFINITY, hiX = Double.POSITIVE_INFINITY;
+        double loZ = Double.NEGATIVE_INFINITY, hiZ = Double.POSITIVE_INFINITY;
+        for (JumpConstraint c : spec.constraints) {
+            int axis = c.mode == JumpConstraint.Mode.X ? 0 : c.mode == JumpConstraint.Mode.Z ? 1 : -1;
+            if (axis < 0) continue;
+            int tc = (c.t2 == null) ? 1 : (c.op == JumpConstraint.Op.PLUS ? 2 : 0);
+            if (tc == 0) continue;
+            double e0 = JumpConstraintCompiler.evaluate(c, gf, path);
+            if (c.cmp == JumpConstraint.Cmp.LE) {
+                double b = (-e0 - margin) / tc;
+                if (axis == 0) hiX = Math.min(hiX, b); else hiZ = Math.min(hiZ, b);
+            } else if (c.cmp == JumpConstraint.Cmp.GE) {
+                double b = (-e0 + margin) / tc;
+                if (axis == 0) loX = Math.max(loX, b); else loZ = Math.max(loZ, b);
+            } else {
+                double b = -e0 / tc;
+                if (axis == 0) { loX = Math.max(loX, b); hiX = Math.min(hiX, b); }
+                else { loZ = Math.max(loZ, b); hiZ = Math.min(hiZ, b); }
+            }
+        }
+        Objective obj = spec.objective;
+        int objAxis = obj.axis == JumpPhysicsInputs.Axis.X ? 0 : 1;
+        boolean max = obj.sense == Objective.Sense.MAX;
+        double dx = pickBest(loX, hiX, box.pxLo - box.px, box.pxHi - box.px, objAxis == 0, max);
+        double dz = pickBest(loZ, hiZ, box.pzLo - box.pz, box.pzHi - box.pz, objAxis == 1, max);
+        return new double[] {dx, dz};
+    }
+
+    private static double pickBest(double lo, double hi, double bLo, double bHi, boolean objectiveAxis, boolean max) {
+        double flo = Math.max(lo, bLo);
+        double fhi = Math.min(hi, bHi);
+        if (flo <= fhi) return 0.5 * (flo + fhi);
+        if (bHi < lo) return bHi;
+        if (bLo > hi) return bLo;
+        return clamp(0.0, bLo, bHi);
+    }
+
+    public static double[] recoverStart(ExactJumpModel exact, JumpSpec spec, double[] yaws) {
+        JumpPhysicsInputs base = spec.asScenario();
+        StartBox box = base.startBox;
+        if (box == null || !box.startFree() || yaws == null) return null;
+        JumpPhysicsInputs refSc = copyWithStart(base, box.px, box.pz);
+        double[] wrapped = Angles.wrapAll(yaws);
+        double[] gf = refSc.toGameFacings(wrapped);
+        ForwardPath path = exact.forward(refSc, gf);
+        double[] best = null;
+        for (double margin : JOINT_MARGINS) {
+            double[] d = bestTranslate(spec, gf, path, box, margin);
+            double p0x = clamp(box.px + d[0], box.pxLo, box.pxHi);
+            double p0z = clamp(box.pz + d[1], box.pzLo, box.pzHi);
+            if (best == null) best = new double[] {p0x, p0z};
+            JumpSpec at = specAtStart(base, spec, p0x, p0z);
+            JumpPhysicsInputs atSc = at.asScenario();
+            double[] agf = atSc.toGameFacings(wrapped);
+            if (JumpConstraintCompiler.compile(at).maxViolation(agf, exact.forward(atSc, agf)) <= 0.0) {
+                return new double[] {p0x, p0z};
+            }
+        }
+        return best;
+    }
+
     private static CostateDualSolver.FreeP0 buildFreeP0(StartBox box, Objective obj) {
         boolean max = obj.sense == Objective.Sense.MAX;
         double objDevX = obj.axis == JumpPhysicsInputs.Axis.X ? (max ? 1.0 : -1.0) : 0.0;

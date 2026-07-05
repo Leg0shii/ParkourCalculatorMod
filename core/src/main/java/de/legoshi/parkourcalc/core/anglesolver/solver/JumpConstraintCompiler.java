@@ -41,6 +41,37 @@ public final class JumpConstraintCompiler {
             }
             return pen;
         }
+
+        public double translatedPenalty(double[] gameFacings, ForwardPath path, double dx, double dz, double muIneq, double muEq) {
+            double pen = 0.0;
+            for (JumpConstraint c : ineq) {
+                double s = translatedSlack(c, gameFacings, path, dx, dz);
+                if (s > 0) pen += muIneq * s * s;
+            }
+            for (JumpConstraint c : eq) {
+                double e = translatedEvaluate(c, gameFacings, path, dx, dz);
+                pen += muEq * e * e;
+            }
+            return pen;
+        }
+    }
+
+    public static double translatedEvaluate(JumpConstraint c, double[] F, ForwardPath path, double dx, double dz) {
+        double e = evaluate(c, F, path);
+        int tc = (c.t2 == null) ? 1 : (c.op == JumpConstraint.Op.PLUS ? 2 : 0);
+        if (c.mode == JumpConstraint.Mode.X) return e + tc * dx;
+        if (c.mode == JumpConstraint.Mode.Z) return e + tc * dz;
+        return e;
+    }
+
+    public static double translatedSlack(JumpConstraint c, double[] F, ForwardPath path, double dx, double dz) {
+        double e = translatedEvaluate(c, F, path, dx, dz);
+        switch (c.cmp) {
+            case GE: return e < 0 ? -e : 0.0;
+            case LE: return e > 0 ? e : 0.0;
+            case EQ: return Math.abs(e);
+        }
+        throw new IllegalStateException("unknown cmp: " + c.cmp);
     }
 
     public static Compiled compile(JumpSpec spec) {

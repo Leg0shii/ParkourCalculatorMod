@@ -60,9 +60,12 @@ public final class CmaesJumpHarness {
     public SolverRunResult solve(ForwardModel model, JumpSpec spec, double[] initialFAbsDeg, AtomicBoolean cancel, AtomicBoolean earlyStop) {
         JumpConstraintCompiler.Compiled c = JumpConstraintCompiler.compile(spec);
         JumpPhysicsInputs scenario = spec.asScenario();
+        StartBox box = scenario.startBox;
+        boolean free = box != null && box.startFree();
         int n = initialFAbsDeg.length;
         double sign = feasibilityOnly ? 0.0 : (spec.objective.sense == Objective.Sense.MAX ? -1.0 : 1.0);
         Objective obj = spec.objective;
+        int objAxis = obj.axis == JumpPhysicsInputs.Axis.X ? 0 : 1;
 
         // Score the facings exactly as the game runs them: wrap to (-180,180] (the search box spans more
         // than one turn), then reconstruct the float32 accumulation Apply+sim produce. A raw or unwrapped
@@ -72,6 +75,11 @@ public final class CmaesJumpHarness {
             if (stopped(cancel, earlyStop)) throw new SolveCancelledException();
             double[] gf = scenario.toGameFacings(Angles.wrapAll(F));
             ForwardPath pr = model.forward(scenario, gf);
+            if (free) {
+                double[] d = FreeStartSolve.bestTranslate(spec, gf, pr, box);
+                double o = sign * (pr.getPos(obj.tick, obj.axis) + (objAxis == 0 ? d[0] : d[1]));
+                return o + c.translatedPenalty(gf, pr, d[0], d[1], muIneq, muEq);
+            }
             double o = sign * pr.getPos(obj.tick, obj.axis);
             double pen = c.penalty(gf, pr, muIneq, muEq);
             return o + pen;
@@ -111,21 +119,30 @@ public final class CmaesJumpHarness {
             // Used the eval budget without converging; keep the start. Other restarts cover it.
         }
 
-        fStar = polish(model, scenario, c, obj, sign, Angles.wrapAll(fStar), cancel, earlyStop);
+        if (!free) fStar = polish(model, scenario, c, obj, sign, Angles.wrapAll(fStar), cancel, earlyStop);
 
         // Score the game's float-accumulated facings; return the absolute wrapped facings (yawAbsDeg) so
         // Apply can convert them to the deltas the game accumulates back into exactly this trajectory.
         double[] fStarW = Angles.wrapAll(fStar);
         double[] gf = scenario.toGameFacings(fStarW);
         ForwardPath finalPath = model.forward(scenario, gf);
-        double objectiveValue = finalPath.getPos(obj.tick, obj.axis);
+        double dxFinal = 0.0;
+        double dzFinal = 0.0;
+        if (free) {
+            double[] d = FreeStartSolve.bestTranslate(spec, gf, finalPath, box);
+            dxFinal = d[0];
+            dzFinal = d[1];
+        }
+        double objectiveValue = finalPath.getPos(obj.tick, obj.axis) + (objAxis == 0 ? dxFinal : dzFinal);
         double[] ineqSlack = new double[c.ineq.size()];
         for (int i = 0; i < c.ineq.size(); i++) {
-            ineqSlack[i] = JumpConstraintCompiler.slack(c.ineq.get(i), gf, finalPath);
+            ineqSlack[i] = free ? JumpConstraintCompiler.translatedSlack(c.ineq.get(i), gf, finalPath, dxFinal, dzFinal)
+                    : JumpConstraintCompiler.slack(c.ineq.get(i), gf, finalPath);
         }
         double[] eqResidual = new double[c.eq.size()];
         for (int i = 0; i < c.eq.size(); i++) {
-            eqResidual[i] = JumpConstraintCompiler.evaluate(c.eq.get(i), gf, finalPath);
+            eqResidual[i] = free ? JumpConstraintCompiler.translatedEvaluate(c.eq.get(i), gf, finalPath, dxFinal, dzFinal)
+                    : JumpConstraintCompiler.evaluate(c.eq.get(i), gf, finalPath);
         }
         return new SolverRunResult(fStarW, objectiveValue, ineqSlack, eqResidual);
     }
@@ -141,6 +158,7 @@ public final class CmaesJumpHarness {
         }
         return f;
     }
+
 
     /** Compass search from a strictly-feasible facing vector: greedily climb the objective while keeping
      *  every wall strictly satisfied (no clip), shrinking the step to a fine resolution. The global pass

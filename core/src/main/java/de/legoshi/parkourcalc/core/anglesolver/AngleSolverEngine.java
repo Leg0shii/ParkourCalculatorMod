@@ -770,6 +770,15 @@ public final class AngleSolverEngine {
                 }
             }
         }
+        if (freeStart && !cancel.get()) {
+            FreeStartSolve.Result fr = adoptFreeStart((ExactJumpModel) model, spec, sc, yaws, cancel);
+            if (fr != null) {
+                sc.startPos = new Vec3dCore(fr.startX, sc.startPos.y, fr.startZ);
+                sc.startBox = StartBox.pinned(fr.startX, fr.startZ, sc.initialVelocity.x, sc.initialVelocity.z);
+                yaws = fr.yaws;
+                solverName = solverName == null ? "free start" : solverName + " -> free start";
+            }
+        }
         boolean preFeasible = false;
         if (yaws != null) {
             double v = violationOf(sc, spec, yaws);
@@ -817,6 +826,18 @@ public final class AngleSolverEngine {
                     solverName += " -> CMA-ES (better objective)";
                 } else {
                     solverName += " (beat CMA-ES)";
+                }
+            }
+        }
+        if (freeStart && !cancel.get() && sc.startBox != null && sc.startBox.startFree() && yaws != null) {
+            double[] rs = FreeStartSolve.recoverStart((ExactJumpModel) model, spec, yaws);
+            if (rs != null) {
+                sc.startPos = new Vec3dCore(rs[0], sc.startPos.y, rs[1]);
+                sc.startBox = StartBox.pinned(rs[0], rs[1], sc.initialVelocity.x, sc.initialVelocity.z);
+                solverName = solverName == null ? "free start" : solverName + " -> free start";
+                if (model instanceof ExactJumpModel && violationOf(sc, spec, yaws) > FEAS_TOL && !cancel.get()) {
+                    double[] restored = SlpSolve.optimize((ExactJumpModel) model, spec, FEAS_TOL, cancel, Angles.wrapAll(yaws));
+                    if (restored != null) yaws = restored;
                 }
             }
         }
@@ -907,15 +928,6 @@ public final class AngleSolverEngine {
         // Gates inside keep byte-exact feasibility and the achieved objective; only the path's looks change.
         CountingModel smoothing = new CountingModel(model);
         if (!cancel.get()) yaws = SmoothingPolish.smooth(smoothing, spec, yaws, cancel);
-        if (freeStart && !cancel.get()) {
-            FreeStartSolve.Result fr = adoptFreeStart((ExactJumpModel) model, spec, sc, yaws, cancel);
-            if (fr != null) {
-                sc.startPos = new Vec3dCore(fr.startX, sc.startPos.y, fr.startZ);
-                sc.startBox = StartBox.pinned(fr.startX, fr.startZ, sc.initialVelocity.x, sc.initialVelocity.z);
-                yaws = fr.yaws;
-                solverName = solverName == null ? "free start" : solverName + " -> free start";
-            }
-        }
         long solveNanos = System.nanoTime() - solveStart;
         if (SolverTrace.on()) {
             SolverTrace.log("ENGINE", "done solver=\"%s\" obj=%.9f viol=%.3e ms=%d",
