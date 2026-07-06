@@ -27,6 +27,8 @@ public class EngineFileScreen {
         SaveIO.applyAngleSolverTo(file, state);
         String effort = System.getenv("PKC_SOLVE_EFFORT");
         if (effort != null && !effort.isEmpty()) state.setEffort(AngleSolverState.Effort.valueOf(effort));
+        String optSec = System.getenv("PKC_OPTIMIZE_SECONDS");
+        if (optSec != null && !optSec.isEmpty()) state.setOptimizeSeconds(Integer.parseInt(optSec));
         state.clearResult();
         AngleSolverEngine engine = new AngleSolverEngine(state,
                 de.legoshi.parkourcalc.anglesolver.harness.Fixtures.buildBoxes(file), inputs, t -> { }, model);
@@ -77,6 +79,9 @@ public class EngineFileScreen {
         boolean sawFeasibleLive = false;
         int liveMet = 0;
         int liveTotal = 0;
+        long lastLog = 0;
+        String lastObj = "";
+        int lastMet = -1;
         while (engine.isSolving() && System.currentTimeMillis() < deadline) {
             engine.poll();
             SolveResult live = engine.liveBestResult();
@@ -87,6 +92,15 @@ public class EngineFileScreen {
                     sawFeasibleLive = true;
                     System.out.printf("FILE live tracker went feasible (7/7) at %d ms met=%d/%d%n",
                             (System.nanoTime() - t0) / 1_000_000L, live.getMet(), live.getTotal());
+                }
+                long nowMs = (System.nanoTime() - t0) / 1_000_000L;
+                String obj = live.hasObjective() ? String.format("%.6f", live.getObjectiveValue()) : "-";
+                if (nowMs - lastLog >= 10000 || (live.getMet() != lastMet)) {
+                    System.out.printf("FILE t=%6dms liveMet=%d/%d obj=%s%s%n",
+                            nowMs, live.getMet(), live.getTotal(), obj, live.getMet() != lastMet ? "  <-improved" : "");
+                    lastLog = nowMs;
+                    lastMet = live.getMet();
+                    lastObj = obj;
                 }
             }
             Thread.sleep(5);
