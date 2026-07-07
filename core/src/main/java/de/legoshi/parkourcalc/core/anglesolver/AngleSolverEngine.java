@@ -84,6 +84,12 @@ public final class AngleSolverEngine {
 
     private static final long BNB_RESCUE_NANOS = 3_000_000_000L;
 
+    private static final long PEEL_STAGE_NANOS = 12_000_000_000L;
+
+    private static final long PEEL_CANDIDATE_NANOS = 600_000_000L;
+
+    private static final double PEEL_STEP_DEG = 15.0;
+
     private static final long SWEEP_BUDGET_CAP_NANOS = 60_000_000_000L;
 
     private static final long FREE_START_BUDGET_NANOS = 20_000_000_000L;
@@ -767,6 +773,14 @@ public final class AngleSolverEngine {
                             yaws = chain;
                             solverName = solverName == null ? chainName[0] : solverName + " -> " + chainName[0];
                         }
+                    }
+                }
+                if (yaws == null && job.useWindowSolver && !cancel.get()) {
+                    double[] peeled = setupPeel(em, spec, sc, cancel, job.longRun,
+                            job.deadlineNanos > 0 ? solveStart + job.deadlineNanos : 0L);
+                    if (peeled != null) {
+                        yaws = peeled;
+                        solverName = solverName == null ? "setup peel" : solverName + " -> setup peel";
                     }
                 }
                 if (yaws != null) {
@@ -1711,6 +1725,105 @@ public final class AngleSolverEngine {
 
     private static Objective.Sense sense(AngleSolverState.Goal g) {
         return g == AngleSolverState.Goal.MAX ? Objective.Sense.MAX : Objective.Sense.MIN;
+    }
+
+    private static final class PeelWatchdog implements Runnable {
+        private final AtomicBoolean outer;
+        volatile AtomicBoolean current;
+        volatile long deadlineNanos;
+        volatile boolean done;
+
+        PeelWatchdog(AtomicBoolean outer) {
+            this.outer = outer;
+        }
+
+        AtomicBoolean arm(long deadline) {
+            current = null;
+            AtomicBoolean token = new AtomicBoolean(false);
+            deadlineNanos = deadline;
+            current = token;
+            return token;
+        }
+
+        @Override
+        public void run() {
+            while (!done) {
+                AtomicBoolean c = current;
+                if (c != null && (outer.get() || System.nanoTime() > deadlineNanos)) c.set(true);
+                try {
+                    Thread.sleep(20L);
+                } catch (InterruptedException e) {
+                    return;
+                }
+            }
+        }
+    }
+
+    static double[] setupPeel(ExactJumpModel em, JumpSpec spec, JumpPhysicsInputs sc, AtomicBoolean cancel,
+                              LongRunSolver.LongRunConfig cfg, long jobDeadlineNanos) {
+        int n = sc.numTicks;
+        int lead = 0;
+        while (lead < n && !Double.isNaN(sc.slipAt(lead)) && !sc.jumpAt(lead)) lead++;
+        if (lead < 1 || lead >= n) return null;
+
+        long stageDeadline = System.nanoTime() + PEEL_STAGE_NANOS;
+        if (jobDeadlineNanos > 0) stageDeadline = Math.min(stageDeadline, jobDeadlineNanos);
+        if (SolverTrace.on()) SolverTrace.log("ENGINE", "setup peel start lead=%d", lead);
+
+        List<JumpConstraint> prefixCons = new ArrayList<>();
+        for (JumpConstraint c : spec.constraints) {
+            if (c.t1 <= lead && (c.t2 == null || c.t2 <= lead)) prefixCons.add(c);
+        }
+        JumpConstraintCompiler.Compiled prefixCompiled = prefixCons.isEmpty()
+                ? null : JumpConstraintCompiler.compile(new JumpSpec(sc, prefixCons, spec.objective));
+        JumpConstraintCompiler.Compiled fullCompiled = JumpConstraintCompiler.compile(spec);
+
+        int steps = (int) Math.round(360.0 / PEEL_STEP_DEG);
+        double[] best = null;
+        double bestViol = Double.POSITIVE_INFINITY;
+        PeelWatchdog watchdog = new PeelWatchdog(cancel);
+        Thread watchdogThread = new Thread(watchdog, "angle-solver-peel-watchdog");
+        watchdogThread.setDaemon(true);
+        watchdogThread.start();
+        try {
+            for (int k = 0; k < steps; k++) {
+                if (cancel.get() || System.nanoTime() > stageDeadline) break;
+                double[] yaws = new double[n];
+                java.util.Arrays.fill(yaws, Angles.wrap(sc.startYaw + k * PEEL_STEP_DEG));
+                double[] gf = sc.toGameFacings(yaws);
+                ForwardPath path = em.forward(sc, gf);
+                if (prefixCompiled != null && prefixCompiled.maxViolation(gf, path) > FEAS_TOL) continue;
+                JumpSpec tail = LongRunSolver.suffixSpec(spec, lead,
+                        new Vec3dCore(path.posX[lead], path.posY[lead], path.posZ[lead]),
+                        new Vec3dCore(path.velX[lead], path.velY[lead], path.velZ[lead]),
+                        (float) gf[lead - 1]);
+                AtomicBoolean candCancel = watchdog.arm(
+                        Math.min(stageDeadline, System.nanoTime() + PEEL_CANDIDATE_NANOS));
+                double[] tailYaws = LongRunSolver.solve(em, tail, FEAS_TOL, candCancel, cfg);
+                watchdog.current = null;
+                if (tailYaws == null) {
+                    if (SolverTrace.on()) SolverTrace.log("ENGINE", "peel cand=%.1f tail miss", yaws[0]);
+                    continue;
+                }
+                for (int t = lead; t < n; t++) yaws[t] = tailYaws[t - lead];
+                double[] full = Angles.wrapAll(yaws);
+                double[] gfFull = sc.toGameFacings(full);
+                double viol = fullCompiled.maxViolation(gfFull, em.forward(sc, gfFull));
+                if (SolverTrace.on()) SolverTrace.log("ENGINE", "peel cand=%.1f tail solved viol=%.3e", full[0], viol);
+                if (viol <= FEAS_TOL) return full;
+                if (viol < bestViol) {
+                    bestViol = viol;
+                    best = full;
+                }
+            }
+        } finally {
+            watchdog.done = true;
+            watchdogThread.interrupt();
+        }
+        if (SolverTrace.on()) {
+            SolverTrace.log("ENGINE", "setup peel %s", best == null ? "miss" : "best viol=" + bestViol);
+        }
+        return best;
     }
 
     public static double[] dualChain(ExactJumpModel em, JumpSpec spec, JumpPhysicsInputs sc,
