@@ -43,3 +43,9 @@ replay_*.log
 
 # Claude Code agent worktrees (ephemeral, auto-cleaned)
 .claude/worktrees/
+
+# local research arm (miqcp solver tools, not shipped)
+/tools/
+
+# deletion candidates awaiting review
+/trash/
