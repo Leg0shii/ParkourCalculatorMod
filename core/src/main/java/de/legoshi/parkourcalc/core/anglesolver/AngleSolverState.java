@@ -160,6 +160,7 @@ public final class AngleSolverState {
     private Goal goal = Goal.MAX;
     private Effort effort = Effort.FAST;
     private boolean stopOnFeasible;
+    private boolean legalMode;
     private int optimizeSeconds = DEFAULT_OPTIMIZE_SECONDS;
     private final SolveBudget solveBudget = new SolveBudget();
 
@@ -227,6 +228,14 @@ public final class AngleSolverState {
 
     public void setStopOnFeasible(boolean stopOnFeasible) {
         this.stopOnFeasible = stopOnFeasible;
+    }
+
+    public boolean isLegalMode() {
+        return legalMode;
+    }
+
+    public void setLegalMode(boolean legalMode) {
+        this.legalMode = legalMode;
     }
 
     public int getOptimizeSeconds() {
@@ -626,6 +635,7 @@ public final class AngleSolverState {
         goal = Goal.MAX;
         effort = Effort.FAST;
         stopOnFeasible = false;
+        legalMode = false;
         optimizeSeconds = DEFAULT_OPTIMIZE_SECONDS;
         solveBudget.resetToDefaults();
         defaultInputs = InputMode.FORCE_45;

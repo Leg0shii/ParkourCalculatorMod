@@ -47,6 +47,7 @@ public final class CostateDualSolver {
     private static final double DIVERGE_REL = 0.05;   // an improvement must beat the best by this fraction
     private static final int DIVERGE_STALL = 12;      // ...for this many iterations running, else: diverged
     private static final double GAMMA = 1.0e-4;       // Armijo sufficient-decrease factor
+    private static final double P0_SMOOTH = 0.05;
     private static final double RHO0 = 1.0e-2;        // initial Levenberg damping (fraction of σ_max)
     private static final double RHO_MIN = 1.0e-10;
     private static final double RHO_MAX = 1.0e8;
@@ -60,6 +61,8 @@ public final class CostateDualSolver {
     private final double[][] coef;  // [m][n] wall coupling
     private final double[] bBase;   // [m] margin-0 right-hand side
     private final boolean[] eq;     // [m]
+    private final double[] p0coef;
+    private final FreeP0 freeP0;
 
     // Preallocated scratch reused across iterations and across solve() calls.
     private final double[] gx, gz;     // costates g_t at current lambda
@@ -78,21 +81,29 @@ public final class CostateDualSolver {
     private double rhoRel;             // adaptive Levenberg damping (fraction of curvature), persisted across iters
 
     public CostateDualSolver(int n, double[] cx, double[] cz, double[] mMag, List<JumpLinearModel.Wall> walls) {
+        this(n, cx, cz, mMag, walls, null);
+    }
+
+    public CostateDualSolver(int n, double[] cx, double[] cz, double[] mMag, List<JumpLinearModel.Wall> walls,
+                             FreeP0 freeP0) {
         this.n = n;
         this.m = walls.size();
         this.cx = cx;
         this.cz = cz;
         this.mMag = mMag;
+        this.freeP0 = freeP0;
         this.axis = new int[m];
         this.coef = new double[m][];
         this.bBase = new double[m];
         this.eq = new boolean[m];
+        this.p0coef = new double[m];
         for (int j = 0; j < m; j++) {
             JumpLinearModel.Wall w = walls.get(j);
             axis[j] = w.axis;
             coef[j] = w.coef;
             bBase[j] = w.bPrime;
             eq[j] = w.eq;
+            p0coef[j] = w.p0coef;
         }
         this.gx = new double[n];
         this.gz = new double[n];
@@ -121,12 +132,34 @@ public final class CostateDualSolver {
         public final double[] gz;
         public final double[] lambda;
         public final double value;
+        public final double dvx;
+        public final double dvz;
 
-        Result(double[] gx, double[] gz, double[] lambda, double value) {
+        Result(double[] gx, double[] gz, double[] lambda, double value, double dvx, double dvz) {
             this.gx = gx;
             this.gz = gz;
             this.lambda = lambda;
             this.value = value;
+            this.dvx = dvx;
+            this.dvz = dvz;
+        }
+    }
+
+    public static final class FreeP0 {
+        public final double dvLoX;
+        public final double dvHiX;
+        public final double dvLoZ;
+        public final double dvHiZ;
+        public final double objDevX;
+        public final double objDevZ;
+
+        public FreeP0(double dvLoX, double dvHiX, double dvLoZ, double dvHiZ, double objDevX, double objDevZ) {
+            this.dvLoX = dvLoX;
+            this.dvHiX = dvHiX;
+            this.dvLoZ = dvLoZ;
+            this.dvHiZ = dvHiZ;
+            this.objDevX = objDevX;
+            this.objDevZ = objDevZ;
         }
     }
 
@@ -140,9 +173,10 @@ public final class CostateDualSolver {
     public Result solve(double margin, double[] warm) {
         if (m == 0) {
             // No walls: the optimum is every input along the objective (costate = c). Closed form.
-            double v = costate(new double[0], gx, gz);
+            double[] empty = new double[0];
+            double v = costate(empty, gx, gz);
             lastIters = 0;
-            return new Result(gx.clone(), gz.clone(), new double[0], v);
+            return new Result(gx.clone(), gz.clone(), empty, v, recoveredDelta(empty, 0), recoveredDelta(empty, 1));
         }
         for (int j = 0; j < m; j++) bPrime[j] = bBase[j] - (eq[j] ? 0.0 : margin);
         if (warm != null) System.arraycopy(warm, 0, lambda, 0, m);
@@ -202,7 +236,11 @@ public final class CostateDualSolver {
             }
         }
         lastIters = it;
-        return new Result(gx.clone(), gz.clone(), lambda.clone(), phi);
+        return new Result(gx.clone(), gz.clone(), lambda.clone(), phi, recoveredDelta(lambda, 0), recoveredDelta(lambda, 1));
+    }
+
+    private double recoveredDelta(double[] lam, int a) {
+        return freeP0 == null ? 0.0 : deltaOf(hAxis(lam, a), a);
     }
 
     // ---- steps (each commits lambda/gx/gz/gradient on success and returns the new dual value) -----------
@@ -309,6 +347,31 @@ public final class CostateDualSolver {
         return isEq ? v : (v < 0.0 ? 0.0 : v);
     }
 
+    private double hAxis(double[] lam, int a) {
+        double h = a == 0 ? freeP0.objDevX : freeP0.objDevZ;
+        for (int j = 0; j < m; j++) if (axis[j] == a) h += lam[j] * p0coef[j];
+        return h;
+    }
+
+    private double supportOf(double h, int a) {
+        double d = deltaOf(h, a);
+        return h * d - 0.5 * P0_SMOOTH * d * d;
+    }
+
+    private double deltaOf(double h, int a) {
+        double lo = a == 0 ? freeP0.dvLoX : freeP0.dvLoZ;
+        double hi = a == 0 ? freeP0.dvHiX : freeP0.dvHiZ;
+        double d = h / P0_SMOOTH;
+        return d < lo ? lo : (d > hi ? hi : d);
+    }
+
+    private double supportCurv(double h, int a) {
+        double lo = a == 0 ? freeP0.dvLoX : freeP0.dvLoZ;
+        double hi = a == 0 ? freeP0.dvHiX : freeP0.dvHiZ;
+        double d = h / P0_SMOOTH;
+        return (d > lo && d < hi) ? 1.0 / P0_SMOOTH : 0.0;
+    }
+
     /** D(λ) = Σ_t m_t·sqrt(‖g_t‖^2+eps) + Σ_j λ_j b'_j, filling {@code outX,outZ} with the costates g_t. */
     private double costate(double[] lam, double[] outX, double[] outZ) {
         System.arraycopy(cx, 0, outX, 0, n);
@@ -326,6 +389,7 @@ public final class CostateDualSolver {
         double d = 0.0;
         for (int t = 0; t < n; t++) d += mMag[t] * Math.sqrt(outX[t] * outX[t] + outZ[t] * outZ[t] + EPS2);
         for (int j = 0; j < m; j++) d += lam[j] * bPrime[j];
+        if (freeP0 != null) d += supportOf(hAxis(lam, 0), 0) + supportOf(hAxis(lam, 1), 1);
         return d;
     }
 
@@ -343,6 +407,11 @@ public final class CostateDualSolver {
             double dot = 0.0;
             for (int t = 0; t < n; t++) dot += cj[t] * u[t];
             out[j] = bPrime[j] - dot;
+        }
+        if (freeP0 != null) {
+            double dsx = deltaOf(hAxis(lambda, 0), 0);
+            double dsz = deltaOf(hAxis(lambda, 1), 1);
+            for (int j = 0; j < m; j++) out[j] += p0coef[j] * (axis[j] == 0 ? dsx : dsz);
         }
     }
 
@@ -366,6 +435,9 @@ public final class CostateDualSolver {
                     double hi = (ai == 0 ? gxx : gzz) / nrm;
                     double hj = (aj == 0 ? gxx : gzz) / nrm;
                     sum += (mMag[t] / nrm) * cc * ((sameAxis ? 1.0 : 0.0) - hi * hj);
+                }
+                if (freeP0 != null && sameAxis) {
+                    sum += p0coef[i] * p0coef[j] * supportCurv(hAxis(lambda, ai), ai);
                 }
                 H[a][b] = sum;
                 H[b][a] = sum;

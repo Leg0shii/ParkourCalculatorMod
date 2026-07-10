@@ -13,6 +13,8 @@ public final class JumpPhysicsInputs {
     public float startYaw = 0.0F;
     public Vec3dCore initialVelocity = Vec3dCore.ZERO;
 
+    public StartBox startBox = null;
+
     /** Primary jump tick (first JUMP in the segment); kept for the block-solver's launch-footprint
      *  placement and as the fallback when {@link #jumpPerTick} is null. Ground/air is no longer derived
      *  from this (that comes from {@link #slipPerTick} per tick). -1 = no jump in the segment. */

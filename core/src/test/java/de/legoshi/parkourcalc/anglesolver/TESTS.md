@@ -18,6 +18,28 @@ anglesolver/
                            PKC_BENCH_FILTER, PKC_BENCH_TAG, PKC_BENCH_TIMEOUT_MS tune it
   EngineFileScreen.java    drive the live engine on any save file headlessly; PKC_SOLVE_FILE=<path>,
                            optional PKC_SOLVE_EFFORT and PKC_SOLVE_TIMEOUT_MS
+  FreeStartTranslationTest.java  translation-aware free-start scoring: zero-width translated score
+                           byte-equals the pinned score (razor-proof, j004, j318); the
+                           free-translate-edge synthetic solves and adopts its known +X box-edge
+                           optimal translation end to end (terminal adoption step)
+  WrapWindowIlsTest.java   wrap-window lattice ILS stage (|gf| <= 360 hard cap): candidate sets are
+                           distinct/capped/deterministic; bounded span-16 descent from the rung snap
+                           point (resources/points/) reaches translated viol <= 3.5e-5 at a fixed
+                           eval cap; wrap-class results survive locked-rows JSON round trip
+                           byte-exact; PKC_WRAPILS_FULL=1 + PKC_WRAPILS_TAG runs the env-gated full
+                           replication with kicks (1.5e-5 bar on rung)
+  LegalModeTest.java       legal/record objective mode: goal-wall selection (X@49lo on the proof
+                           spec; velocity/EQ/cap/off-tick/off-axis never selected; ties refuse);
+                           deterministic legal solve on the synth-legal-shortfall fixture with the
+                           reported shortfall and every hard wall met
+  RazorLegalReplayTest.java  byte-exact replay pins for the three delivered rung legal attempts
+                           (legal / wrap720 / turn360): locked RAW rows realized without wrapping,
+                           hard walls feasible under the rung patch, shortfall within 1e-9 of the
+                           recorded value (model-drift tripwire)
+  RazorColdT1.java         THE HEADLINE GATE: cold 5.4375 from t1 (razor-proof-t1 capture, free
+                           start, no yaw seeds) through the live engine; PKC_RAZORT1=1 +
+                           PKC_RAZORT1_TAG to run; PASS = success + fresh-reparse viol <= 0;
+                           report at build/reports/razort1-<tag>.txt
   harness/                 shared plumbing; no test lives here
 resources/
   problems/<check>/        one folder per check; holds captures or .expect.json sidecars

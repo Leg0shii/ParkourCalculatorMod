@@ -71,6 +71,10 @@ public final class ExactJumpModel implements ForwardModel {
         return perAxisInertia;
     }
 
+    public boolean modern() {
+        return modern;
+    }
+
     /** Inertia rule for a loader's MC version. 1.8.x: per-axis 0.005. 1.12.x: per-axis 0.003.
      *  1.9+ players (1.21.10 and the modern default here): combined-XZ |v|^2 &lt; 9.0E-6. Covers the
      *  three loader versions; the per-axis-to-combined player switch lands between 1.12 and 1.21.

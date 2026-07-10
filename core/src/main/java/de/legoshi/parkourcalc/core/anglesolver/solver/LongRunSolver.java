@@ -226,6 +226,16 @@ public final class LongRunSolver {
         return o;
     }
 
+    public static JumpSpec suffixSpec(JumpSpec full, int from, Vec3dCore pos, Vec3dCore vel, float yaw) {
+        JumpPhysicsInputs sc = full.asScenario();
+        JumpPhysicsInputs win = sliceScenario(sc, from, sc.numTicks, pos, vel, yaw);
+        win.incomingSprint = sc.sprintAt(from - 1);
+        win.incomingAmp = sc.speedAmplifierAt(from - 1);
+        List<JumpConstraint> cons = sliceConstraints(full, from, sc.numTicks);
+        Objective obj = new Objective(full.objective.axis, full.objective.sense, full.objective.tick - from);
+        return new JumpSpec(win, cons, obj);
+    }
+
     /** A window's physics inputs: the masks for ticks [a, c), seeded with the chained exit state. */
     private static JumpPhysicsInputs sliceScenario(JumpPhysicsInputs sc, int a, int c,
                                                    Vec3dCore pos, Vec3dCore vel, float yaw) {

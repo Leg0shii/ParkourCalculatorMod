@@ -33,6 +33,8 @@ public final class JumpLinearModel {
 
     private final double[] pConst;  // per-tick forward+jump input magnitude (the e^{iθ} is along +imag)
     private final double[] qConst;  // per-tick strafe input magnitude (along +real)
+    private final double[] fwd;
+    private final double[] boost;
     private final double[] mMag;    // |input_t| = hypot(pConst, qConst)  (constant modulus)
     private final double[] baseArg; // atan2(pConst, qConst): phase of the base input vector (q + i p)
     private final double[] f4;      // per-tick friction multiplier
@@ -52,13 +54,15 @@ public final class JumpLinearModel {
         public final double bPrime;
         public final boolean eq;
         public final String name;
+        public final double p0coef;
 
-        Wall(int axis, double[] coef, double bPrime, boolean eq, String name) {
+        Wall(int axis, double[] coef, double bPrime, boolean eq, String name, double p0coef) {
             this.axis = axis;
             this.coef = coef;
             this.bPrime = bPrime;
             this.eq = eq;
             this.name = name;
+            this.p0coef = p0coef;
         }
     }
 
@@ -71,6 +75,8 @@ public final class JumpLinearModel {
         this.n = scenario.numTicks;
         this.pConst = new double[n];
         this.qConst = new double[n];
+        this.fwd = new double[n];
+        this.boost = new double[n];
         this.mMag = new double[n];
         this.baseArg = new double[n];
         this.f4 = new double[n];
@@ -106,10 +112,10 @@ public final class JumpLinearModel {
             double accelSpeed;
             if (contact) {
                 f4[t] = slip * 0.91;
-                accelSpeed = Constants.attrValueF(sc.speedAmplifierAt(t), sprint) * (0.16277136 / (f4[t] * f4[t] * f4[t]));
+                accelSpeed = Constants.attrValueF(sc.factorAmpAt(t), sprint) * (0.16277136 / (f4[t] * f4[t] * f4[t]));
             } else {
                 f4[t] = 0.91;
-                accelSpeed = sprint ? Constants.AIR_SPEED_F : Constants.AIR_SPEED_NO_SPRINT_F;
+                accelSpeed = sc.factorSprintAt(t) ? Constants.AIR_SPEED_F : Constants.AIR_SPEED_NO_SPRINT_F;
             }
             // Same per-tick input authoring as ExactJumpModel step (4) (gh-102).
             double forward0 = sc.forwardAt(t);
@@ -123,7 +129,9 @@ public final class JumpLinearModel {
                 fF = forward0 * scale;
                 sF = strafe0 * scale;
             }
-            pConst[t] = fF + (isJump && sprint ? 0.2 : 0.0);
+            fwd[t] = fF;
+            boost[t] = (isJump && sprint) ? 0.2 : 0.0;
+            pConst[t] = fF + boost[t];
             qConst[t] = sF;
             mMag[t] = Math.hypot(pConst[t], qConst[t]);
             baseArg[t] = Math.atan2(pConst[t], qConst[t]);
@@ -138,6 +146,18 @@ public final class JumpLinearModel {
 
     public double mMag(int t) {
         return mMag[t];
+    }
+
+    public double forwardMag(int t) {
+        return fwd[t];
+    }
+
+    public double strafeMag(int t) {
+        return qConst[t];
+    }
+
+    public double boostAt(int t) {
+        return boost[t];
     }
 
     /** Phase of the base input vector {@code (q + i p)} at tick t: the input added by a move at absolute yaw
@@ -172,8 +192,9 @@ public final class JumpLinearModel {
 
     /** Constant part of {@code pos_k} on the given axis: start position plus decayed initial velocity. */
     public double constPos(int k, int axis) {
-        double p0 = axis == 0 ? sc.startPos.x : sc.startPos.z;
-        double v0 = axis == 0 ? sc.initialVelocity.x : sc.initialVelocity.z;
+        StartBox box = sc.startBox;
+        double p0 = box != null ? (axis == 0 ? box.px : box.pz) : (axis == 0 ? sc.startPos.x : sc.startPos.z);
+        double v0 = box != null ? (axis == 0 ? box.vx : box.vz) : (axis == 0 ? sc.initialVelocity.x : sc.initialVelocity.z);
         int end = k < zFirst[axis] ? k : zFirst[axis];
         return p0 + v0 * sPre[end];
     }
@@ -224,6 +245,9 @@ public final class JumpLinearModel {
         }
         if (!eq) bPrime -= margin;                // hug the wall this far inside
 
+        int tc = (t2 == null) ? 1 : (opSign > 0.0 ? 2 : 0);
+        double p0coef = (c.cmp == JumpConstraint.Cmp.GE) ? tc : -tc;
+
         boolean trivial = true;
         for (int s = 0; s < n; s++) if (coef[s] != 0.0) { trivial = false; break; }
         if (trivial) {
@@ -238,7 +262,7 @@ public final class JumpLinearModel {
             if (!ok && trivialInfeasible != null) trivialInfeasible[0] = true;
             return null;
         }
-        return new Wall(axis, coef, bPrime, eq, c.name);
+        return new Wall(axis, coef, bPrime, eq, c.name, p0coef);
     }
 
     /** Compile all walls of a spec; sets {@code trivialInfeasible[0]} if a constant constraint is violated. */
@@ -270,8 +294,8 @@ public final class JumpLinearModel {
                 double[] coefLo = new double[n];
                 for (int s = 0; s < t; s++) coefLo[s] = -coefHi[s];
                 String ax = a == 0 ? "X" : "Z";
-                walls.add(new Wall(a, coefHi, bound - constVal, false, "inertia" + ax + "@" + t + "+"));
-                walls.add(new Wall(a, coefLo, bound + constVal, false, "inertia" + ax + "@" + t + "-"));
+                walls.add(new Wall(a, coefHi, bound - constVal, false, "inertia" + ax + "@" + t + "+", 0.0));
+                walls.add(new Wall(a, coefLo, bound + constVal, false, "inertia" + ax + "@" + t + "-", 0.0));
             }
         }
         return walls;

@@ -1044,8 +1044,8 @@ public final class BoundPrunedRecovery {
             for (int i = 0; i < seamCount; i++) {
                 JumpLinearModel.Wall ge = baseWalls.get(seamGeWall[i]);
                 JumpLinearModel.Wall le = baseWalls.get(seamLeWall[i]);
-                walls.set(seamGeWall[i], new JumpLinearModel.Wall(ge.axis, ge.coef, seamConst[i] - lo[i], false, ge.name));
-                walls.set(seamLeWall[i], new JumpLinearModel.Wall(le.axis, le.coef, hi[i] - seamConst[i], false, le.name));
+                walls.set(seamGeWall[i], new JumpLinearModel.Wall(ge.axis, ge.coef, seamConst[i] - lo[i], false, ge.name, ge.p0coef));
+                walls.set(seamLeWall[i], new JumpLinearModel.Wall(le.axis, le.coef, hi[i] - seamConst[i], false, le.name, le.p0coef));
             }
             return walls;
         }

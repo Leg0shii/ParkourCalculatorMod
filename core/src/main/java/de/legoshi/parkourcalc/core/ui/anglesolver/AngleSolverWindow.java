@@ -196,6 +196,14 @@ public final class AngleSolverWindow implements RenderInterface {
             }
             if (forced) ImGui.endDisabled();
             TooltipUtil.onHover(STOP_ON_FEASIBLE_TIP);
+
+            String legalWall = engine.legalGoalWallLabel();
+            if (legalWall != null || state.isLegalMode()) {
+                if (Controls.checkbox("Legal record mode", state.isLegalMode())) {
+                    state.setLegalMode(!state.isLegalMode());
+                }
+                TooltipUtil.onHover(LEGAL_MODE_TIP + (legalWall != null ? " Goal wall: " + legalWall + "." : ""));
+            }
         }
 
         ThemeManager.sectionSpacing();
@@ -489,6 +497,12 @@ public final class AngleSolverWindow implements RenderInterface {
             + " not to maximize. The reached value will usually be lower than a full solve's. The closed-form"
             + " path already short-circuits when it lands feasible, so simple jumps finish almost instantly."
             + " Fast effort always works this way and Optimize never does; the toggle applies to Custom.";
+
+    private static final String LEGAL_MODE_TIP =
+            "Record hunting: drops the single tightest goal wall on the objective axis at the goal tick and"
+            + " maximizes toward it while every other constraint stays hard. The result reports how far short"
+            + " of the dropped wall the run lands (the legal shortfall). Available only while exactly one"
+            + " qualifying goal wall exists.";
 
     private void renderCustomBudget(float labelW) {
         AngleSolverState.SolveBudget b = state.getSolveBudget();
