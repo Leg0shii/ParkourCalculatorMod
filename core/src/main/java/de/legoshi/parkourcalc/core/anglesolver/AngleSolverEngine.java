@@ -103,6 +103,10 @@ public final class AngleSolverEngine {
 
     private static final long WRAP_STAGE_MIN_NANOS = 1_000_000_000L;
 
+    private static final long NEARMISS_BNB_NANOS = 60_000_000_000L;
+
+    private static final double NEARMISS_BNB_TRIGGER = 5.0e-2;
+
     private static final int FREE_START_ITERS = 3;
 
     /** Per-effort solve budget (see {@link SolveCore}). FAST and Optimize share the small batch: FAST runs
@@ -926,29 +930,32 @@ public final class AngleSolverEngine {
                 }
             }
         }
-        if (model instanceof ExactJumpModel && !cancel.get()
-                && (yaws == null || scoredViol(sc, spec, freeBox, yaws) > FEAS_TOL)) {
-            long remaining = job.deadlineNanos > 0
-                    ? solveStart + job.deadlineNanos - System.nanoTime()
-                    : MOMENTUM_ASSEMBLY_NANOS;
-            long asmBudget = Math.min(MOMENTUM_ASSEMBLY_NANOS, remaining);
-            if (asmBudget > 2_000_000_000L) {
-                if (progress != null) {
-                    progress.setStage(solverName == null ? "momentum assembly" : solverName + " -> momentum assembly");
-                }
-                if (SolverTrace.on()) SolverTrace.log("ENGINE", "momentum assembly start budgetMs=%d", asmBudget / 1_000_000L);
-                MomentumAssembly.Result asm = MomentumAssembly.solve((ExactJumpModel) model, spec, FEAS_TOL,
-                        freeBox, System.nanoTime() + asmBudget, cancel);
-                if (SolverTrace.on()) SolverTrace.log("ENGINE", "momentum assembly %s", asm != null ? "solved" : "miss");
-                if (asm != null) {
-                    yaws = asm.yaws;
-                    if (asm.startX != sc.startPos.x || asm.startZ != sc.startPos.z) {
-                        sc.startPos = new Vec3dCore(asm.startX, sc.startPos.y, asm.startZ);
-                        sc.startBox = StartBox.pinned(asm.startX, asm.startZ, sc.initialVelocity.x, sc.initialVelocity.z);
-                    }
-                    solverName = solverName == null ? "momentum assembly" : solverName + " -> momentum assembly";
+        if (model instanceof ExactJumpModel && !cancel.get()) {
+            double asmViol = yaws == null ? Double.POSITIVE_INFINITY : scoredViol(sc, spec, freeBox, yaws);
+            boolean nearMissDefer = job.ilsExhaustive && yaws != null && asmViol <= NEARMISS_BNB_TRIGGER;
+            if (asmViol > FEAS_TOL && !nearMissDefer) {
+                long remaining = job.deadlineNanos > 0
+                        ? solveStart + job.deadlineNanos - System.nanoTime()
+                        : MOMENTUM_ASSEMBLY_NANOS;
+                long asmBudget = Math.min(MOMENTUM_ASSEMBLY_NANOS, remaining);
+                if (asmBudget > 2_000_000_000L) {
                     if (progress != null) {
-                        progress.report(yaws, exactObjective(sc, spec, yaws), violationOf(sc, spec, yaws), true);
+                        progress.setStage(solverName == null ? "momentum assembly" : solverName + " -> momentum assembly");
+                    }
+                    if (SolverTrace.on()) SolverTrace.log("ENGINE", "momentum assembly start budgetMs=%d", asmBudget / 1_000_000L);
+                    MomentumAssembly.Result asm = MomentumAssembly.solve((ExactJumpModel) model, spec, FEAS_TOL,
+                            freeBox, System.nanoTime() + asmBudget, cancel);
+                    if (SolverTrace.on()) SolverTrace.log("ENGINE", "momentum assembly %s", asm != null ? "solved" : "miss");
+                    if (asm != null) {
+                        yaws = asm.yaws;
+                        if (asm.startX != sc.startPos.x || asm.startZ != sc.startPos.z) {
+                            sc.startPos = new Vec3dCore(asm.startX, sc.startPos.y, asm.startZ);
+                            sc.startBox = StartBox.pinned(asm.startX, asm.startZ, sc.initialVelocity.x, sc.initialVelocity.z);
+                        }
+                        solverName = solverName == null ? "momentum assembly" : solverName + " -> momentum assembly";
+                        if (progress != null) {
+                            progress.report(yaws, exactObjective(sc, spec, yaws), violationOf(sc, spec, yaws), true);
+                        }
                     }
                 }
             }
@@ -1044,6 +1051,34 @@ public final class AngleSolverEngine {
                 if (max ? ilsObj > cur : ilsObj < cur) {
                     yaws = ils;
                     solverName = (solverName == null ? "ILS" : solverName + " -> ILS") + " (better objective)";
+                }
+            }
+        }
+        if (job.ilsExhaustive && !job.stopOnFeasible && model instanceof ExactJumpModel && !cancel.get()) {
+            double incViol = scoredViol(sc, spec, freeBox, yaws);
+            if (incViol > FEAS_TOL && incViol <= NEARMISS_BNB_TRIGGER) {
+                long ilsBudget = job.deadlineNanos > 0 ? job.deadlineNanos : DEFAULT_ILS_BUDGET_NANOS;
+                long remaining = solveStart + ilsBudget - System.nanoTime();
+                long rescueBudget = Math.min(NEARMISS_BNB_NANOS, remaining / 2);
+                if (rescueBudget > WRAP_STAGE_MIN_NANOS) {
+                    boolean max = spec.objective.sense == Objective.Sense.MAX;
+                    if (progress != null) {
+                        progress.setStage(solverName == null ? "pattern B&B" : solverName + " -> pattern B&B");
+                    }
+                    if (SolverTrace.on()) {
+                        SolverTrace.log("ENGINE", "near-miss bnb rescue incViol=%.3e budgetMs=%d",
+                                incViol, rescueBudget / 1_000_000L);
+                    }
+                    double[] rescue = BoundPrunedRecovery.solve((ExactJumpModel) model, spec, FEAS_TOL, cancel,
+                            rescueBudget, max ? -1.0e300 : 1.0e300);
+                    if (SolverTrace.on()) SolverTrace.log("ENGINE", "near-miss bnb rescue %s", rescue != null ? "solved" : "miss");
+                    if (rescue != null) {
+                        yaws = Angles.wrapAll(rescue);
+                        solverName = (solverName == null ? "pattern B&B" : solverName + " -> pattern B&B") + " (near miss)";
+                        if (progress != null) {
+                            progress.report(yaws, exactObjective(sc, spec, yaws), violationOf(sc, spec, yaws), true);
+                        }
+                    }
                 }
             }
         }

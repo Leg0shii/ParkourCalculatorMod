@@ -40,6 +40,9 @@ anglesolver/
                            start, no yaw seeds) through the live engine; PKC_RAZORT1=1 +
                            PKC_RAZORT1_TAG to run; PASS = success + fresh-reparse viol <= 0;
                            report at build/reports/razort1-<tag>.txt
+                           (solve/loopmm-tight-t39: the loopmm misses capture with its shipped-
+                           disabled pad wall ENABLED; pins the near-miss B&B rescue landing the
+                           tight spec at Z@71 >= -279.3 through the live engine, THOROUGH 45 s)
   harness/                 shared plumbing; no test lives here
 resources/
   problems/<check>/        one folder per check; holds captures or .expect.json sidecars
