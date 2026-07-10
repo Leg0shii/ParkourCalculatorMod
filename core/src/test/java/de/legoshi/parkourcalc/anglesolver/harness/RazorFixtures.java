@@ -61,6 +61,10 @@ public final class RazorFixtures {
         return load("razor-weirdpane");
     }
 
+    public static Loaded loadUncorrectedSpec() {
+        return load("razor-uncorrected");
+    }
+
     private static Loaded load(String capture) {
         SaveFile file = SaveIO.parseSafe(Fixtures.rawPool(capture));
         if (file == null) throw new IllegalStateException(capture + ": failed to parse");

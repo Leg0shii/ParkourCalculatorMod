@@ -22,6 +22,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.SeamSweepRecovery;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SlpSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SmoothingPolish;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SnapRepairPolish;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolveCore;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
@@ -32,6 +33,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolveProgress;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
+import de.legoshi.parkourcalc.core.anglesolver.solver.WrapWindowIls;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -96,6 +98,10 @@ public final class AngleSolverEngine {
     private static final long FREE_START_BUDGET_NANOS = 20_000_000_000L;
 
     private static final long MOMENTUM_ASSEMBLY_NANOS = 240_000_000_000L;
+
+    private static final double WRAP_STAGE_TRIGGER = 1.0e-2;
+
+    private static final long WRAP_STAGE_MIN_NANOS = 1_000_000_000L;
 
     private static final int FREE_START_ITERS = 3;
 
@@ -222,9 +228,15 @@ public final class AngleSolverEngine {
         // The model's predicted trajectory; Apply checks the resim against it (see checkApplyDeviation).
         final ForwardPath path;
         final Vec3dCore start;
+        final boolean lockYaws;
 
         Plan(int startTick, double[] yaws, boolean[] strafeMask, boolean[] force45Mask, int strafeSign,
              ForwardPath path, Vec3dCore start) {
+            this(startTick, yaws, strafeMask, force45Mask, strafeSign, path, start, false);
+        }
+
+        Plan(int startTick, double[] yaws, boolean[] strafeMask, boolean[] force45Mask, int strafeSign,
+             ForwardPath path, Vec3dCore start, boolean lockYaws) {
             this.startTick = startTick;
             this.yaws = yaws;
             this.strafeMask = strafeMask;
@@ -232,6 +244,7 @@ public final class AngleSolverEngine {
             this.strafeSign = strafeSign;
             this.path = path;
             this.start = start;
+            this.lockYaws = lockYaws;
         }
     }
 
@@ -264,11 +277,12 @@ public final class AngleSolverEngine {
         final boolean useWindowSolver;
         final boolean stopOnFeasible;
         final boolean ilsExhaustive;
+        final JumpConstraint legalGoal;
 
         Job(JumpSpec spec, Objective.Sense sense, int startTick, int landingTick,
             int numTicks, boolean[] strafeMask, boolean[] force45Mask, List<ConstraintAt> uiConstraints,
             SolveCore.Budget budget, long deadlineNanos, LongRunSolver.LongRunConfig longRun, boolean useWindowSolver,
-            boolean stopOnFeasible, boolean ilsExhaustive
+            boolean stopOnFeasible, boolean ilsExhaustive, JumpConstraint legalGoal
         ) {
             this.spec = spec;
             this.sense = sense;
@@ -284,6 +298,7 @@ public final class AngleSolverEngine {
             this.useWindowSolver = useWindowSolver;
             this.stopOnFeasible = stopOnFeasible;
             this.ilsExhaustive = ilsExhaustive;
+            this.legalGoal = legalGoal;
         }
     }
 
@@ -354,11 +369,74 @@ public final class AngleSolverEngine {
             addMapped(constraints, ca.c, ca.absTick, ca.segTick, numTicks);
         }
 
+        JumpConstraint legalGoal = null;
+        if (state.isLegalMode()) {
+            String[] whyNot = new String[1];
+            legalGoal = selectLegalGoalWall(constraints, objective, whyNot);
+            if (legalGoal == null) {
+                SolveResult r = new SolveResult(false, 0, total, startTick + 1, landingTick + 1);
+                r.setSolver("legal mode");
+                r.addDetail("Legal mode", whyNot[0]);
+                state.setResult(r);
+                return null;
+            }
+            constraints.remove(legalGoal);
+        }
+
         JumpSpec spec = new JumpSpec(ph.inputs, constraints, objective);
         return new Job(spec, objective.sense, startTick, landingTick, numTicks, ph.strafeMask,
                 ph.force45Mask, uiCons,
                 budgetFor(state), deadlineNanosFor(state), longRunConfigFor(state), useWindowSolverFor(state),
-                stopOnFeasibleFor(state), ilsExhaustiveFor(state));
+                stopOnFeasibleFor(state), ilsExhaustiveFor(state), legalGoal);
+    }
+
+    public String legalGoalWallLabel() {
+        int startTick = state.getStartTick();
+        int landingTick = state.getLandingTick();
+        int numTicks = landingTick - startTick;
+        if (numTicks <= 0) return null;
+        List<ConstraintAt> uiCons = collectUiConstraints(startTick, numTicks);
+        List<JumpConstraint> constraints = new ArrayList<>();
+        for (ConstraintAt ca : uiCons) {
+            addMapped(constraints, ca.c, ca.absTick, ca.segTick, numTicks);
+        }
+        Objective objective = new Objective(axis(state.getAxis()), sense(state.getGoal()), numTicks);
+        String[] whyNot = new String[1];
+        JumpConstraint goal = selectLegalGoalWall(constraints, objective, whyNot);
+        return goal != null ? goal.name : null;
+    }
+
+    public static JumpConstraint selectLegalGoalWall(List<JumpConstraint> constraints, Objective objective, String[] whyNot) {
+        boolean max = objective.sense == Objective.Sense.MAX;
+        JumpConstraint.Cmp want = max ? JumpConstraint.Cmp.GE : JumpConstraint.Cmp.LE;
+        JumpConstraint.Mode wantMode = objective.axis == JumpPhysicsInputs.Axis.X
+                ? JumpConstraint.Mode.X : JumpConstraint.Mode.Z;
+        List<JumpConstraint> cands = new ArrayList<>();
+        for (JumpConstraint c : constraints) {
+            if (c.t2 != null) continue;
+            if (c.mode != wantMode) continue;
+            if (c.t1 != objective.tick) continue;
+            if (c.cmp != want) continue;
+            if (c.name != null && (c.name.endsWith("eqLo") || c.name.endsWith("eqHi"))) continue;
+            cands.add(c);
+        }
+        if (cands.isEmpty()) {
+            whyNot[0] = "no qualifying goal wall on the objective axis at the objective tick";
+            return null;
+        }
+        JumpConstraint tight = cands.get(0);
+        for (JumpConstraint c : cands) {
+            if (max ? c.rhs > tight.rhs : c.rhs < tight.rhs) tight = c;
+        }
+        int ties = 0;
+        for (JumpConstraint c : cands) {
+            if (c.rhs == tight.rhs) ties++;
+        }
+        if (ties != 1) {
+            whyNot[0] = "ambiguous goal wall: " + ties + " walls tie at " + tight.rhs;
+            return null;
+        }
+        return tight;
     }
 
     /** Test-only: the compiled spec for the current UI state, built synchronously (no worker thread). */
@@ -830,14 +908,14 @@ public final class AngleSolverEngine {
                 // Since #201 the race returns its best-objective result even when infeasible, so gate on
                 // feasibility first; a feasible incumbent is never traded for an infeasible reach.
                 boolean max = spec.objective.sense == Objective.Sense.MAX;
-                boolean curFeasible = violationOf(sc, spec, yaws) <= FEAS_TOL;
-                boolean cmaFeasible = violationOf(sc, spec, cma) <= FEAS_TOL;
+                boolean curFeasible = scoredViol(sc, spec, freeBox, yaws) <= FEAS_TOL;
+                boolean cmaFeasible = scoredViol(sc, spec, freeBox, cma) <= FEAS_TOL;
                 boolean take;
                 if (curFeasible != cmaFeasible) {
                     take = cmaFeasible;
                 } else {
-                    double slpObj = exactObjective(sc, spec, yaws);
-                    double cmaObj = exactObjective(sc, spec, cma);
+                    double slpObj = scoredObjective(sc, spec, freeBox, yaws);
+                    double cmaObj = scoredObjective(sc, spec, freeBox, cma);
                     take = max ? cmaObj > slpObj : cmaObj < slpObj;
                 }
                 if (take) {
@@ -849,7 +927,7 @@ public final class AngleSolverEngine {
             }
         }
         if (model instanceof ExactJumpModel && !cancel.get()
-                && (yaws == null || violationOf(sc, spec, yaws) > FEAS_TOL)) {
+                && (yaws == null || scoredViol(sc, spec, freeBox, yaws) > FEAS_TOL)) {
             long remaining = job.deadlineNanos > 0
                     ? solveStart + job.deadlineNanos - System.nanoTime()
                     : MOMENTUM_ASSEMBLY_NANOS;
@@ -886,7 +964,7 @@ public final class AngleSolverEngine {
             }
         }
         if (job.stopOnFeasible && model instanceof ExactJumpModel && sc.numTicks <= MULTI_JUMP_RACE_MAX_TICKS
-                && !cancel.get() && (yaws == null || violationOf(sc, spec, yaws) > FEAS_TOL)) {
+                && !cancel.get() && (yaws == null || scoredViol(sc, spec, freeBox, yaws) > FEAS_TOL)) {
             long rescueBudget = job.deadlineNanos > 0
                     ? Math.min(BNB_RESCUE_NANOS, solveStart + job.deadlineNanos - System.nanoTime())
                     : BNB_RESCUE_NANOS;
@@ -931,8 +1009,8 @@ public final class AngleSolverEngine {
                     double[] swept = SeamSweepRecovery.solve((ExactJumpModel) model, spec, FEAS_TOL, cancel,
                             sweepBudget, Angles.wrapAll(yaws.clone()));
                     if (swept != null) {
-                        double cur = exactObjective(sc, spec, yaws);
-                        double sweptObj = exactObjective(sc, spec, swept);
+                        double cur = scoredObjective(sc, spec, freeBox, yaws);
+                        double sweptObj = scoredObjective(sc, spec, freeBox, swept);
                         if (max ? sweptObj > cur : sweptObj < cur) {
                             yaws = swept;
                             solverName = (solverName == null ? "seam sweep" : solverName + " -> seam sweep") + " (better objective)";
@@ -947,8 +1025,8 @@ public final class AngleSolverEngine {
                     if (SolverTrace.on()) SolverTrace.log("ENGINE", "bnb start budgetMs=%d stopAt=%s", bnbBudget / 1_000_000L, Double.isNaN(stopAt) ? "-" : String.valueOf(stopAt));
                     double[] bnb = BoundPrunedRecovery.solve((ExactJumpModel) model, spec, FEAS_TOL, cancel, bnbBudget, stopAt);
                     if (bnb != null) {
-                        double cur = exactObjective(sc, spec, yaws);
-                        double bnbObj = exactObjective(sc, spec, bnb);
+                        double cur = scoredObjective(sc, spec, freeBox, yaws);
+                        double bnbObj = scoredObjective(sc, spec, freeBox, bnb);
                         if (max ? bnbObj > cur : bnbObj < cur) {
                             yaws = Angles.wrapAll(bnb);
                             solverName = (solverName == null ? "branch and bound" : solverName + " -> branch and bound") + " (better objective)";
@@ -969,23 +1047,84 @@ public final class AngleSolverEngine {
                 }
             }
         }
+        boolean stageLocked = false;
+        if (job.ilsExhaustive && model instanceof ExactJumpModel && !cancel.get()) {
+            double incViol = scoredViol(sc, spec, freeBox, yaws);
+            boolean nearMiss = incViol > FEAS_TOL && incViol <= WRAP_STAGE_TRIGGER;
+            boolean legalPush = job.legalGoal != null && incViol <= WRAP_STAGE_TRIGGER;
+            if (nearMiss || legalPush) {
+                long ilsBudget = job.deadlineNanos > 0 ? job.deadlineNanos : DEFAULT_ILS_BUDGET_NANOS;
+                long stageDeadline = solveStart + ilsBudget;
+                if (stageDeadline - System.nanoTime() > WRAP_STAGE_MIN_NANOS) {
+                    if (progress != null) progress.setStage(solverName == null ? "wrap ILS" : solverName + " -> wrap ILS");
+                    if (SolverTrace.on()) SolverTrace.log("ENGINE", "wrap ils start incViol=%.3e", incViol);
+                    double[] gfInc = sc.toGameFacings(Angles.wrapAll(yaws));
+                    double[] dom = freeBox != null ? translationDomain(sc, freeBox)
+                            : new double[] {0.0, 0.0, 0.0, 0.0};
+                    WrapWindowIls.Config wcfg = new WrapWindowIls.Config();
+                    if (job.legalGoal != null) {
+                        wcfg.legalObjective = spec.objective;
+                        wcfg.legalGoalRhs = job.legalGoal.rhs;
+                    }
+                    double incScore = job.legalGoal != null
+                            ? WrapWindowIls.scoreOf((ExactJumpModel) model, spec, gfInc, dom, wcfg)
+                            : incViol;
+                    WrapWindowIls.Result w = WrapWindowIls.polish((ExactJumpModel) model, spec, gfInc, dom,
+                            wcfg, stageDeadline, cancel);
+                    if (SolverTrace.on()) {
+                        SolverTrace.log("ENGINE", "wrap ils end score=%.3e evals=%d rounds=%d",
+                                w != null ? w.viol : Double.NaN, w != null ? w.evals : 0, w != null ? w.rounds : 0);
+                    }
+                    boolean adopt = w != null
+                            && (job.legalGoal != null
+                                    ? w.viol < incScore && w.viol < WrapWindowIls.LEGAL_HARD_INFEASIBLE
+                                    : w.viol <= FEAS_TOL)
+                            && adoptStageResult(sc, spec, freeBox, w.gf);
+                    if (adopt) {
+                        yaws = w.gf.clone();
+                        boolean[] lockAll = new boolean[sc.numTicks];
+                        java.util.Arrays.fill(lockAll, true);
+                        sc.yawLockedPerTick = lockAll;
+                        stageLocked = true;
+                        solverName = solverName == null ? "wrap ILS" : solverName + " -> wrap ILS";
+                    }
+                }
+            }
+        }
+        if (!stageLocked && freeStart && !cancel.get() && adoptWinningTranslation(sc, spec, freeBox, yaws)) {
+            solverName = solverName == null ? "translated start" : solverName + " -> translated start";
+        }
         // Gates inside keep byte-exact feasibility and the achieved objective; only the path's looks change.
         CountingModel smoothing = new CountingModel(model);
-        if (!cancel.get()) yaws = SmoothingPolish.smooth(smoothing, spec, yaws, cancel);
+        if (!stageLocked && !cancel.get()) yaws = SmoothingPolish.smooth(smoothing, spec, yaws, cancel);
         long solveNanos = System.nanoTime() - solveStart;
         if (SolverTrace.on()) {
+            double doneViol = stageLocked
+                    ? JumpConstraintCompiler.compile(spec).maxViolation(sc.toGameFacings(yaws),
+                            model.forward(sc, sc.toGameFacings(yaws)))
+                    : violationOf(sc, spec, yaws);
             SolverTrace.log("ENGINE", "done solver=\"%s\" obj=%.9f viol=%.3e ms=%d",
-                    solverName, exactObjective(sc, spec, yaws), violationOf(sc, spec, yaws), solveNanos / 1_000_000L);
+                    solverName, exactObjective(sc, spec, yaws), doneViol, solveNanos / 1_000_000L);
         }
 
         // Every path produces absolute wrapped facings whose game-facing realization is toGameFacings(yaws)
         // (the chain Apply writes back as float deltas), so the reported path is bit-for-bit the applied one.
+        if (job.legalGoal != null) {
+            solverName = solverName == null ? "legal mode" : solverName + " (legal)";
+        }
         double[] gameFacings = sc.toGameFacings(yaws);
         ForwardPath path = model.forward(sc, gameFacings);
         SolveResult result = assembleResult(job, yaws, gameFacings, path, solverName, solveNanos, dualGap);
+        if (job.legalGoal != null) {
+            double achieved = path.getPos(spec.objective.tick, spec.objective.axis);
+            double shortfall = spec.objective.sense == Objective.Sense.MAX
+                    ? job.legalGoal.rhs - achieved : achieved - job.legalGoal.rhs;
+            result.addDetail("Legal shortfall", String.format(java.util.Locale.ROOT,
+                    "%.9e short of %s", shortfall, job.legalGoal.name));
+        }
         if (cmaes.evals.get() > 0) addCmaBudget(result, job, cmaes.evals.get());
         if (smoothing.evals.get() > 0) result.addDetail("Smoothing evals", Long.toString(smoothing.evals.get()));
-        Plan plan = new Plan(job.startTick, yaws, job.strafeMask, job.force45Mask, 1, path, sc.startPos);
+        Plan plan = new Plan(job.startTick, yaws, job.strafeMask, job.force45Mask, 1, path, sc.startPos, stageLocked);
         return new Outcome(result, plan);
     }
 
@@ -1143,6 +1282,90 @@ public final class AngleSolverEngine {
     private double violationOf(JumpPhysicsInputs sc, JumpSpec spec, double[] yawsAbsWrapped) {
         double[] gf = sc.toGameFacings(Angles.wrapAll(yawsAbsWrapped));
         return JumpConstraintCompiler.compile(spec).maxViolation(gf, model.forward(sc, gf));
+    }
+
+    private static double[] translationDomain(JumpPhysicsInputs sc, StartBox freeBox) {
+        return new double[] {
+                freeBox.pxLo - sc.startPos.x, freeBox.pxHi - sc.startPos.x,
+                freeBox.pzLo - sc.startPos.z, freeBox.pzHi - sc.startPos.z };
+    }
+
+    private double scoredViol(JumpPhysicsInputs sc, JumpSpec spec, StartBox freeBox, double[] yaws) {
+        if (freeBox == null) return violationOf(sc, spec, yaws);
+        double[] gf = sc.toGameFacings(Angles.wrapAll(yaws));
+        ForwardPath p = model.forward(sc, gf);
+        double[] d = translationDomain(sc, freeBox);
+        return SnapRepairPolish.bestTranslation(JumpConstraintCompiler.compile(spec), gf, p,
+                d[0], d[1], d[2], d[3]).viol;
+    }
+
+    private double scoredObjective(JumpPhysicsInputs sc, JumpSpec spec, StartBox freeBox, double[] yaws) {
+        if (freeBox == null) return exactObjective(sc, spec, yaws);
+        double[] gf = sc.toGameFacings(yaws);
+        ForwardPath p = model.forward(sc, gf);
+        double[] d = translationDomain(sc, freeBox);
+        boolean objX = spec.objective.axis == JumpPhysicsInputs.Axis.X;
+        SnapRepairPolish.Trans tr = SnapRepairPolish.bestTranslationObj(JumpConstraintCompiler.compile(spec), gf, p,
+                d[0], d[1], d[2], d[3], objX ? 0 : 1, spec.objective.sense == Objective.Sense.MAX);
+        return p.getPos(spec.objective.tick, spec.objective.axis) + (objX ? tr.tx : tr.tz);
+    }
+
+    private boolean adoptWinningTranslation(JumpPhysicsInputs sc, JumpSpec spec, StartBox freeBox, double[] yaws) {
+        double[] gf = sc.toGameFacings(yaws);
+        ForwardPath p = model.forward(sc, gf);
+        JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
+        double curViol = compiled.maxViolation(gf, p);
+        double curObj = p.getPos(spec.objective.tick, spec.objective.axis);
+        double[] d = translationDomain(sc, freeBox);
+        boolean objX = spec.objective.axis == JumpPhysicsInputs.Axis.X;
+        boolean objMax = spec.objective.sense == Objective.Sense.MAX;
+        SnapRepairPolish.Trans trObj = SnapRepairPolish.bestTranslationObj(compiled, gf, p,
+                d[0], d[1], d[2], d[3], objX ? 0 : 1, objMax);
+        SnapRepairPolish.Trans trMin = SnapRepairPolish.bestTranslation(compiled, gf, p, d[0], d[1], d[2], d[3]);
+        if (tryAdoptTranslation(sc, spec, yaws, trObj, curViol, curObj, objMax)) return true;
+        return tryAdoptTranslation(sc, spec, yaws, trMin, curViol, curObj, objMax);
+    }
+
+    private boolean adoptStageResult(JumpPhysicsInputs sc, JumpSpec spec, StartBox freeBox, double[] gf) {
+        JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
+        ForwardPath p0 = model.forward(sc, gf);
+        double[] d = freeBox != null ? translationDomain(sc, freeBox) : new double[] {0.0, 0.0, 0.0, 0.0};
+        boolean objX = spec.objective.axis == JumpPhysicsInputs.Axis.X;
+        boolean objMax = spec.objective.sense == Objective.Sense.MAX;
+        SnapRepairPolish.Trans trObj = SnapRepairPolish.bestTranslationObj(compiled, gf, p0,
+                d[0], d[1], d[2], d[3], objX ? 0 : 1, objMax);
+        SnapRepairPolish.Trans trMin = SnapRepairPolish.bestTranslation(compiled, gf, p0, d[0], d[1], d[2], d[3]);
+        SnapRepairPolish.Trans[] cands = {trObj, trMin, new SnapRepairPolish.Trans(0.0, 0.0, 0.0)};
+        for (SnapRepairPolish.Trans tr : cands) {
+            double x = sc.startPos.x + tr.tx;
+            double z = sc.startPos.z + tr.tz;
+            JumpPhysicsInputs at = pinnedScenario(sc, x, z);
+            if (compiled.maxViolation(gf, model.forward(at, gf)) > FEAS_TOL) continue;
+            if (tr.tx != 0.0 || tr.tz != 0.0) {
+                sc.startPos = new Vec3dCore(x, sc.startPos.y, z);
+            }
+            sc.startBox = StartBox.pinned(x, z, sc.initialVelocity.x, sc.initialVelocity.z);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean tryAdoptTranslation(JumpPhysicsInputs sc, JumpSpec spec, double[] yaws,
+                                        SnapRepairPolish.Trans tr, double curViol, double curObj, boolean objMax) {
+        if (tr.tx == 0.0 && tr.tz == 0.0) return false;
+        double x = sc.startPos.x + tr.tx;
+        double z = sc.startPos.z + tr.tz;
+        JumpPhysicsInputs cand = pinnedScenario(sc, x, z);
+        double[] gf = cand.toGameFacings(yaws);
+        ForwardPath p = model.forward(cand, gf);
+        if (JumpConstraintCompiler.compile(spec).maxViolation(gf, p) > FEAS_TOL) return false;
+        if (curViol <= FEAS_TOL) {
+            double obj = p.getPos(spec.objective.tick, spec.objective.axis);
+            if (!(objMax ? obj > curObj : obj < curObj)) return false;
+        }
+        sc.startPos = new Vec3dCore(x, sc.startPos.y, z);
+        sc.startBox = StartBox.pinned(x, z, sc.initialVelocity.x, sc.initialVelocity.z);
+        return true;
     }
 
     private SolveResult buildLiveResult(Job job, double[] yaws) {
@@ -1434,6 +1657,7 @@ public final class AngleSolverEngine {
         for (int k = 0; k < p.yaws.length && p.startTick + k < rows.size(); k++) {
             InputRow row = rows.get(p.startTick + k);
             double abs = p.yaws[k];
+            if (p.lockYaws) row.setYawLocked(true);
             if (row.isYawLocked()) {
                 row.setYaw((float) abs);
             } else {
