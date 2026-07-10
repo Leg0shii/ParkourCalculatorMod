@@ -33,6 +33,8 @@ public final class JumpLinearModel {
 
     private final double[] pConst;  // per-tick forward+jump input magnitude (the e^{iθ} is along +imag)
     private final double[] qConst;  // per-tick strafe input magnitude (along +real)
+    private final double[] fwd;
+    private final double[] boost;
     private final double[] mMag;    // |input_t| = hypot(pConst, qConst)  (constant modulus)
     private final double[] baseArg; // atan2(pConst, qConst): phase of the base input vector (q + i p)
     private final double[] f4;      // per-tick friction multiplier
@@ -73,6 +75,8 @@ public final class JumpLinearModel {
         this.n = scenario.numTicks;
         this.pConst = new double[n];
         this.qConst = new double[n];
+        this.fwd = new double[n];
+        this.boost = new double[n];
         this.mMag = new double[n];
         this.baseArg = new double[n];
         this.f4 = new double[n];
@@ -108,10 +112,10 @@ public final class JumpLinearModel {
             double accelSpeed;
             if (contact) {
                 f4[t] = slip * 0.91;
-                accelSpeed = Constants.attrValueF(sc.speedAmplifierAt(t), sprint) * (0.16277136 / (f4[t] * f4[t] * f4[t]));
+                accelSpeed = Constants.attrValueF(sc.factorAmpAt(t), sprint) * (0.16277136 / (f4[t] * f4[t] * f4[t]));
             } else {
                 f4[t] = 0.91;
-                accelSpeed = sprint ? Constants.AIR_SPEED_F : Constants.AIR_SPEED_NO_SPRINT_F;
+                accelSpeed = sc.factorSprintAt(t) ? Constants.AIR_SPEED_F : Constants.AIR_SPEED_NO_SPRINT_F;
             }
             // Same per-tick input authoring as ExactJumpModel step (4) (gh-102).
             double forward0 = sc.forwardAt(t);
@@ -125,7 +129,9 @@ public final class JumpLinearModel {
                 fF = forward0 * scale;
                 sF = strafe0 * scale;
             }
-            pConst[t] = fF + (isJump && sprint ? 0.2 : 0.0);
+            fwd[t] = fF;
+            boost[t] = (isJump && sprint) ? 0.2 : 0.0;
+            pConst[t] = fF + boost[t];
             qConst[t] = sF;
             mMag[t] = Math.hypot(pConst[t], qConst[t]);
             baseArg[t] = Math.atan2(pConst[t], qConst[t]);
@@ -140,6 +146,18 @@ public final class JumpLinearModel {
 
     public double mMag(int t) {
         return mMag[t];
+    }
+
+    public double forwardMag(int t) {
+        return fwd[t];
+    }
+
+    public double strafeMag(int t) {
+        return qConst[t];
+    }
+
+    public double boostAt(int t) {
+        return boost[t];
     }
 
     /** Phase of the base input vector {@code (q + i p)} at tick t: the input added by a move at absolute yaw

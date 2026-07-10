@@ -16,6 +16,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.FreeStartSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.IlsPolish;
 import de.legoshi.parkourcalc.core.anglesolver.solver.LongRunSolver;
+import de.legoshi.parkourcalc.core.anglesolver.solver.MomentumAssembly;
 import de.legoshi.parkourcalc.core.anglesolver.solver.RelaxationRecovery;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SeamSweepRecovery;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardModel;
@@ -87,6 +88,8 @@ public final class AngleSolverEngine {
     private static final long SWEEP_BUDGET_CAP_NANOS = 60_000_000_000L;
 
     private static final long FREE_START_BUDGET_NANOS = 20_000_000_000L;
+
+    private static final long MOMENTUM_ASSEMBLY_NANOS = 240_000_000_000L;
 
     private static final int FREE_START_ITERS = 3;
 
@@ -828,6 +831,33 @@ public final class AngleSolverEngine {
                     solverName += " -> CMA-ES (better objective)";
                 } else {
                     solverName += " (beat CMA-ES)";
+                }
+            }
+        }
+        if (model instanceof ExactJumpModel && !cancel.get()
+                && (yaws == null || violationOf(sc, spec, yaws) > FEAS_TOL)) {
+            long remaining = job.deadlineNanos > 0
+                    ? solveStart + job.deadlineNanos - System.nanoTime()
+                    : MOMENTUM_ASSEMBLY_NANOS;
+            long asmBudget = Math.min(MOMENTUM_ASSEMBLY_NANOS, remaining);
+            if (asmBudget > 2_000_000_000L) {
+                if (progress != null) {
+                    progress.setStage(solverName == null ? "momentum assembly" : solverName + " -> momentum assembly");
+                }
+                if (SolverTrace.on()) SolverTrace.log("ENGINE", "momentum assembly start budgetMs=%d", asmBudget / 1_000_000L);
+                MomentumAssembly.Result asm = MomentumAssembly.solve((ExactJumpModel) model, spec, FEAS_TOL,
+                        freeBox, System.nanoTime() + asmBudget, cancel);
+                if (SolverTrace.on()) SolverTrace.log("ENGINE", "momentum assembly %s", asm != null ? "solved" : "miss");
+                if (asm != null) {
+                    yaws = asm.yaws;
+                    if (asm.startX != sc.startPos.x || asm.startZ != sc.startPos.z) {
+                        sc.startPos = new Vec3dCore(asm.startX, sc.startPos.y, asm.startZ);
+                        sc.startBox = StartBox.pinned(asm.startX, asm.startZ, sc.initialVelocity.x, sc.initialVelocity.z);
+                    }
+                    solverName = solverName == null ? "momentum assembly" : solverName + " -> momentum assembly";
+                    if (progress != null) {
+                        progress.report(yaws, exactObjective(sc, spec, yaws), violationOf(sc, spec, yaws), true);
+                    }
                 }
             }
         }
