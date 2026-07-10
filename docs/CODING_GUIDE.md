@@ -37,7 +37,7 @@ If none fit, you probably do not need the file. Re-check.
 
 - **Java 8 source** (`options.release = 8` on the JDK 21 daemon). No `var`, `record`, `getFirst`, `Math.clamp(int,int,int)`, switch expressions, or other Java 9+ API/syntax. The Forge loaders run on JDK 8 and will reject anything newer at runtime.
 - **No `net.minecraft.*`, `net.fabricmc.*`, `net.minecraftforge.*`, or `org.lwjgl.*` imports.** The build passes either way (ImGui compiles), but the Forge 1.8.9 jar explodes at class-load. Enforce in review.
-- **imgui-java is `compileOnly`, pinned to 1.86.11.** Every loader bundles that exact runtime (the koxx12-dev LWJGL 2 shim is built against it), so core's compile version must match. Do not bump it. See `CLAUDE.md` § Don't.
+- **imgui-java is `compileOnly`, pinned to 1.86.12.** Every loader bundles that exact runtime, so core's compile version must match. 1.86.12 is the floor (its macOS native is universal x86_64 + arm64; 1.86.11 was x86_64-only and crashed Apple Silicon) and the ceiling (the koxx12-dev LWJGL 2 shim was built against 1.86.11's native surface, of which 1.86.12 is a strict superset; higher versions throw `NoSuchMethodError`). Do not change it. See `CLAUDE.md` § Don't.
 - **No logging framework.** Forge 1.8.9 ships no SLF4J. Core surfaces errors via exceptions or return values for the loader to log; verbose debug dumps go through `System.out` gated behind `DebugFlags`.
 - **No MC-filesystem I/O.** The save/config location is a loader concern (run-dir layout differs per version). Core takes a `Path` or stream from the loader.
 
@@ -45,7 +45,7 @@ If none fit, you probably do not need the file. Re-check.
 
 - **Java 25** (auto-provisioned toolchain). Use modern features where they help. Source lives under `src/client/java` (not `src/main`).
 - **All MC-touching code lives here:** `SimulatorEntity`, `FabricSimulator` (implements the `Simulator` port), the world/HUD overlay renderers (implement `BoxRenderer`), `FabricPlaybackBridge`, `ImGuiImpl`, every Mixin, and the `FabricParkourCalculator` entry point. (`BoxController` is core, not here.)
-- **Bundles imgui-java 1.86.11** (binding + LWJGL 3 backend + natives) via Loom `include`. Only loader on LWJGL 3.
+- **Bundles imgui-java 1.86.12** (binding + LWJGL 3 backend + natives) via Loom `include`. Only loader on LWJGL 3.
 - **Mixins** are declared in `parkourcalculator.client.mixins.json`. A new mixin must be added there or it silently will not apply.
 
 ### `loader-forge-1.8.9/` and `loader-forge-1.12.2/`
@@ -54,7 +54,7 @@ The two are intentional duplicates: 1.8.9 and 1.12.2 have incompatible MC APIs. 
 
 - **Java 8**, required by the MC runtime.
 - **Log4j 2 for logging** (`org.apache.logging.log4j`), not SLF4J.
-- **imgui-java pinned to 1.86.11.** The LWJGL 2 shim was built against it; 1.90.0 throws `NoSuchMethodError` on the first frame.
+- **imgui-java pinned to 1.86.12.** The LWJGL 2 shim was built against 1.86.11's native surface, of which 1.86.12 is a strict superset (only the unused `ImGuiKnobs` extension was added); 1.90.0 throws `NoSuchMethodError` on the first frame.
 - **Render via `RenderTickEvent.END`**, which fires while `framebufferMc` is bound. Do not bind FBO 0; drawing into the bound `framebufferMc` is what makes ImGui visible after MC's later blit.
 - **Hotkeys via Forge `KeyBinding`** (`ClientRegistry.registerKeyBinding` + `kb.isPressed()` drained in a per-frame `while`). Polling `Keyboard.isKeyDown` works but never shows in the Controls menu.
 

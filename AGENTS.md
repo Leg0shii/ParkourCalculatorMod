@@ -111,7 +111,7 @@ Unzip the relevant `-sources.jar` and grep for a single file (e.g. `EntityPlayer
 - **Static wiring.** `Application` and the loader entry points use static fields/methods deliberately; the mod is a singleton and statics avoid passing refs across mixin/event boundaries.
 - **Fabric ImGui input routing.** When the overlay is open, `KeyboardMixin` / `MouseMixin` route events to ImGui; an `isUiFocused()` check gates pass-through, and box dragging is disabled while the UI is focused.
 - **Fabric mixin lifecycle.** MC hooks go through mixins, not Fabric events (except `ClientTickEvents` for input polling). A new mixin must be added to `parkourcalculator.client.mixins.json` or it silently won't apply. Forge loaders use the FML event bus + `ClientRegistry` keybinds instead.
-- **imgui-java is pinned to 1.86.11** everywhere (`core/` compileOnly; loaders `include`/`shade`). The LWJGL2 ImGui shim only exists for this version; bumping it throws `NoSuchMethodError`.
+- **imgui-java is pinned to 1.86.12** everywhere (`core/` compileOnly; loaders `include`/`shade`). The LWJGL2 ImGui shim was built against 1.86.11, whose native method surface is a strict subset of 1.86.12 (the only addition is the unused `ImGuiKnobs` extension), so the shim stays satisfied. 1.86.12 is the floor: it is the first release whose macOS native is a universal binary (x86_64 + arm64); 1.86.11 was x86_64-only and crashed Apple Silicon with an `UnsatisfiedLinkError`. Do not bump higher (e.g. 1.90.0 throws `NoSuchMethodError` against the shim).
 
 
 ## Don't
@@ -120,7 +120,7 @@ Unzip the relevant `-sources.jar` and grep for a single file (e.g. `EntityPlayer
 - Bypass `SimulatorEntity` with custom physics math.
 - Import MC / Fabric / Forge / LWJGL types into `core/`.
 - Break the simulation retrigger on input or start-position changes.
-- Bump `core/`'s imgui-java compileOnly above 1.86.11.
+- Bump `core/`'s imgui-java compileOnly above 1.86.12 (or below it: 1.86.11 is x86_64-only on macOS and crashes Apple Silicon).
 - Hand-edit `mod_version` in `gradle.properties`. It is bot-managed by release-please via the inline `# x-release-please-version` annotation, which MUST sit on the same line as the version (`mod_version=X.Y.Z # x-release-please-version`); on a preceding line, release-please's generic updater silently skips the file.
 - Use em dashes in any writing in this repo (docs, code, commits). Use commas, semicolons, colons, or sentence breaks instead.
 - **Add code comments.** Not javadocs, not inline notes, not "why" one-liners, nothing. Write the code only. The sole exceptions are comments already in the file (leave them) and a comment the user explicitly asks for in that request. If a name or structure needs explaining, pick a clearer name instead.
