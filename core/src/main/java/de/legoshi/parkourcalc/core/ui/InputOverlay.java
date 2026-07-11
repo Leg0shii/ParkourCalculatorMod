@@ -124,10 +124,15 @@ public final class InputOverlay {
     private int pendingLockToggleRow = -1;
     private int pitchCallbackRow = -1;
     private int pendingPitchLockToggleRow = -1;
+    private int pendingSelectionScrollPath = -1;
+    private int pendingSelectionScrollFrames;
+    private float lastStartDrawerH;
+    private float lastSolverDrawerH;
 
     private static final int CALLBACK_ALWAYS = ImGuiInputTextFlags.CallbackAlways;
     private static final int CALLBACK_CHAR_FILTER = ImGuiInputTextFlags.CallbackCharFilter;
     private static final int COLLAPSE_FRAMES = 4;
+    private static final int SELECTION_SCROLL_SETTLE_FRAMES = 3;
 
     private static void discardEventChar(ImGuiInputTextCallbackData data) {
         data.setEventChar((char) 0);
@@ -433,7 +438,7 @@ public final class InputOverlay {
         hoveredRow = -1;
         if (solverActive) angleSolver.beginRows();
 
-        handleAutoScroll(hasStartRow() ? 1 : 0);
+        handleAutoScroll();
 
         float viewTop = clipMin.y;
         float viewBot = clipMin.y + clipSize.y;
@@ -451,6 +456,7 @@ public final class InputOverlay {
             float startDrawerTop = ImGui.getCursorScreenPos().y;
             startState.renderDrawer(ImGui.getContentRegionAvail().x);
             float startDrawerBottom = ImGui.getCursorScreenPos().y - spacingY;
+            lastStartDrawerH = startDrawerBottom - startDrawerTop;
             drawDrawerDecorations(startState.drawerDrawList(), clipMin, clipSize,
                     startGMinX, startGMinY, startGMaxX, startDrawerTop, startDrawerBottom);
             ImGui.setCursorPosY(ImGui.getCursorPosY() - spacingY);
@@ -468,6 +474,7 @@ public final class InputOverlay {
             float drawerTop = ImGui.getCursorScreenPos().y;
             angleSolver.renderDrawer(drawerRow, ImGui.getContentRegionAvail().x);
             float unionBottom = ImGui.getCursorScreenPos().y - spacingY;
+            lastSolverDrawerH = unionBottom - drawerTop;
             if (drawerRow + 1 < total) {
                 ImGui.setCursorPosY(ImGui.getCursorPosY() - spacingY);
                 renderInlineSegment("##tas-seg-b", columnCount, solverActive, false, drawerRow + 1, total, viewTop, viewBot, dragDrop);
@@ -685,15 +692,56 @@ public final class InputOverlay {
         if (trail > 0f) ImGui.tableNextRow(0, trail);
     }
 
-    private void handleAutoScroll(int startOffset) {
+    private void handleAutoScroll() {
         if (selection.consumeScrollRequest() && !selection.isEmpty()) {
-            int target = selection.getSelected().iterator().next();
-            float rowH = ThemeManager.tableRowHeight();
-            float viewportH = ImGui.getWindowHeight();
-            ImGui.setScrollY(Math.max(0f, target * rowH - viewportH * 0.5f));
+            pendingSelectionScrollPath = selection.getSelected().iterator().next();
+            pendingSelectionScrollFrames = SELECTION_SCROLL_SETTLE_FRAMES;
         }
-        scrollPendingYawFocusIntoView(startOffset);
-        scrollPlaybackTickIntoView(startOffset);
+        if (pendingSelectionScrollFrames > 0) {
+            if (applyPendingSelectionScroll()) {
+                pendingSelectionScrollFrames--;
+            } else {
+                pendingSelectionScrollFrames = 0;
+                pendingSelectionScrollPath = -1;
+            }
+        }
+        scrollPendingYawFocusIntoView();
+        scrollPlaybackTickIntoView();
+    }
+
+    private boolean applyPendingSelectionScroll() {
+        int path = pendingSelectionScrollPath;
+        if (path < 0) return false;
+        if (path > 0 && path - 1 >= data.size()) return false;
+        float top = path == 0 ? 0f : rowTopY(path - 1);
+        float h = path == 0 ? ThemeManager.tableRowHeight() : rowHeightAt(path - 1);
+        float viewportH = ImGui.getWindowHeight();
+        ImGui.setScrollY(Math.max(0f, top - (viewportH - h) * 0.5f));
+        return true;
+    }
+
+    private float rowTopY(int rowIndex) {
+        float baseRowH = ThemeManager.tableRowHeight();
+        float y = 0f;
+        if (hasStartRow()) {
+            y += baseRowH;
+            if (startState != null && startState.isExpanded()) y += lastStartDrawerH;
+        }
+        if (isSolverActive()) {
+            for (int i = 0; i < rowIndex; i++) {
+                y += angleSolver.rowHeight(i, baseRowH);
+            }
+        } else {
+            y += rowIndex * baseRowH;
+        }
+        int drawerRow = clampedExpandedRow();
+        if (drawerRow >= 0 && drawerRow < rowIndex) y += lastSolverDrawerH;
+        return y;
+    }
+
+    private float rowHeightAt(int rowIndex) {
+        float baseRowH = ThemeManager.tableRowHeight();
+        return isSolverActive() ? angleSolver.rowHeight(rowIndex, baseRowH) : baseRowH;
     }
 
     private boolean hasStartRow() {
@@ -1095,23 +1143,20 @@ public final class InputOverlay {
         }
     }
 
-    private void scrollPlaybackTickIntoView(int startOffset) {
+    private void scrollPlaybackTickIntoView() {
         if (playback == null) return;
         int tick = playback.currentTick();
         if (tick < 0) return;
-        float rowH = ThemeManager.tableRowHeight();
-        float top = (tick + startOffset) * rowH;
+        float top = rowTopY(tick);
         float viewportH = ImGui.getWindowHeight();
         float anchor = viewportH / 3f;
         ImGui.setScrollY(Math.max(0f, top - anchor));
     }
 
-    private void scrollPendingYawFocusIntoView(int startOffset) {
+    private void scrollPendingYawFocusIntoView() {
         if (pendingYawFocusRow < 0) return;
-        // Match the row stride in renderRow; getFrameHeightWithSpacing drifts per row.
-        float rowH = ThemeManager.tableRowHeight();
-        float top = (pendingYawFocusRow + startOffset) * rowH;
-        float bottom = top + rowH;
+        float top = rowTopY(pendingYawFocusRow);
+        float bottom = top + rowHeightAt(pendingYawFocusRow);
         float scroll = ImGui.getScrollY();
         float viewportH = ImGui.getWindowHeight();
         if (top < scroll) {
