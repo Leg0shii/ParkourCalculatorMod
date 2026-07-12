@@ -1,0 +1,74 @@
+# Design record: node-based solver pipelines (issue #221), M1
+
+Written 2026-07-12 after the grill-with-docs pass the issue mandated: three verification sweeps over AngleSolverEngine.runJob, the component APIs under anglesolver/solver/, and the UI/save infrastructure, all on branch v1.7.0. This document records the corrected pipeline model, the port contract, the node inventory, and the M1 execution design. Scope decisions from review: M1 only (graph runtime + built-in graphs, hardcoded runJob chain deleted at the end); the M3 editor will use the imgui.extension.imnodes binding already present in the pinned imgui-java 1.86.12.
+
+## 0. Corrections to the issue (grill findings)
+
+1. The issue's single linear stage chain never executes as written. runJob forks on stopOnFeasible/ilsExhaustive: the first-feasible pattern B&B rescue (Fast tier, 3 s) and the seam sweep -> B&B -> ILS exhaustive block (Optimize tier) are mutually exclusive within one run. Fast and Optimize are therefore two genuinely different graphs, which fits the feature.
+2. Multi-jump also runs dualChain (keep-better against the receding horizon) and the entire shared tail; setup peel fires only when both horizon and dualChain miss. Spans over 64 ticks (MULTI_JUMP_RACE_MAX_TICKS) set settled and skip everything after warm-up smoothing. The 64-tick cap, reachHeadroom gating, nearMissDefer, and the 2/5 race deadline throttle are absent from the issue.
+3. The issue's Candidate is too thin. The real currency is double[] absolute wrapped yaws plus mutations of sc.startPos/startBox/yawLockedPerTick on the mutable JumpPhysicsInputs inside JumpSpec; violation and objective are recomputed on demand, translation-aware via SnapRepairPolish.bestTranslation* when a free start box exists.
+4. The issue has no branch-on-problem-property concept. A Router node (predicates on jump count, tick count, free start, near-miss epsilon, reach headroom, legal push, objective cap) is required to express the built-in tiers as graphs.
+5. WrapWindowIls operates in game-facing space and on adopt locks all yaws (stageLocked), suppressing translated start and smoothing. In graph form this is topology: the ADOPTED edge goes straight to Emit.
+6. Remaining-time arithmetic (remaining/5, remaining*3/4, min(240 s, remaining), relaxation's minimum-3 s gate) cannot exist under per-node budgets; the issue mandates no global timer. Built-in Optimize resolves static fractions of optimizeSeconds at graph build time. Acceptance is verdict-level via the :core:test gate, not timing parity.
+7. Dead-code claims verified: solveFromBlocks() has no caller, FreeSpaceDecomposition is dead, the ALM/snap cluster (AlmSnapStage, AlmBfgsCore, SmoothJumpProblem, SnapRepairPolish.run) is test-only. SnapRepairPolish.bestTranslation*/bestTranslationObj are live (engine scoring + WrapWindowIls) and stay.
+8. Component APIs are uniform enough to wrap: f(model, spec, feasTol, cancel [, budgetNanos/deadline, seed]) -> double[] | null. Only four config objects exist (SolveCore.Budget, BucketAscentPolish.Config, LongRunSolver.LongRunConfig, WrapWindowIls.Config); every other tunable is a private static final. Promotion of those constants to node params is deferred to M5, one class per commit, defaults byte-identical.
+9. Deadline support is partial. SolveCore, IlsPolish, MomentumAssembly, HomotopyCloser, BoundPrunedRecovery, SeamSweepRecovery, WrapWindowIls accept deadlines or budget nanos; ClosedFormSolve, SlpSolve, RelaxationRecovery, LatticeRepair, SmoothingPolish, LongRunSolver accept cancel only and need a watchdog that trips a child token (precedent: the seam-sweep and setup-peel watchdogs).
+10. The parity gate is real: ProblemFixture.solve drives engine.solve()/poll(), so ProblemsTest over problems/solve and problems/closedform fully gates replacing runJob. ModernStepRegressionTest is untouched; no model code changes anywhere in M1.
+
+## 1. Port contract
+
+InputRequirement: NONE (self-seeding), ANY, FEASIBLE.
+Guarantee (out-branch labels): FOUND, NONE, FEASIBLE, INFEASIBLE, NEAR_MISS, IMPROVED, UNCHANGED, ADOPTED, REJECTED, AT_CAP, TRUE, FALSE, DONE.
+
+An edge A.branch -> B is legal iff the branch guarantee satisfies B.requires. FEASIBLE-requiring nodes accept FEASIBLE, IMPROVED, ADOPTED, AT_CAP, and TRUE branches of routers whose predicate is a feasibility predicate (routers refine the guarantee of what flows through them). The validator computes flow guarantees by fixed point, meet = weakest inbound guarantee, since multiple in-edges are legal.
+
+Graph rules: exactly one Entry and one Emit; an unwired branch falls through to Emit (validator WARN, mirrors the engine's stage-missed-keep-going semantics); every cycle must pass a node with a positive time budget or finite round cap (validator ERROR otherwise); at most one edge per (node, branch); no global timer.
+
+## 2. Candidate and context
+
+Candidate (immutable): yaws (absolute wrapped), violation, objective, feasible, locked, chain label. Start moves are not part of Candidate; MomentumAssembly, FreeStartImprove, TranslatedStart, and WrapIls wrappers mutate ctx.scenario (the solve-private JumpPhysicsInputs copy) on adopt only, exactly as the engine does today.
+
+GraphContext (one per run, worker-thread-owned): spec, scenario, model/exactModel, freeBox, legalGoal, feasTol, the run cancel token, the existing SolveProgress (unchanged semantics: versioned, feasibility-first incumbent, feeds liveBestResult and stopAndUseBest), GraphRunState, sequential flag, cached jump count, lazy dual reach bound. beginNode arms a child token plus the per-run BudgetWatchdog; endNode records the taken branch.
+
+Scoring: the engine helpers moved verbatim: violationOf, exactObjective, scoredViol, scoredObjective, reachHeadroom, objectiveCap, translationDomain, adoptStageResult, adoptWinningTranslation.
+
+## 3. Node inventory (M1, wired components only)
+
+Entry/Emit markers; RouterNode (predicate + epsilon/cap params); DualChainNode (moved engine dualChain: ClosedFormSolve -> SlpSolve -> RelaxationRecovery -> alternate-objective SLP reseeds; keepBetter, relaxMinRemainingSec); RecedingHorizonNode (LongRunSolver; window, commit); SetupPeelNode (moved engine setupPeel; stageSec, candidateMs, stepDeg); CmaesRaceNode (SolveCore.optimize keep-better; restarts, maxEval, polishCount, polishDepth, sigmaDeg, warmStart, budgetSec); MomentumAssemblyNode (start adoption; budgetSec); FreeStartImproveNode (moved engine freeStartImprove; budgetSec, iters); BnbNode (BoundPrunedRecovery; mode FIRST_FEASIBLE or OPTIMIZE with stopAtObjective cap; budgetSec); SeamSweepNode (requires FEASIBLE; budgetSec); IlsPolishNode (requires FEASIBLE; budgetSec, roundCap); WrapIlsNode (gf conversion, translation domain, adopt + yaw lock inside the wrapper; ADOPTED/REJECTED); TranslatedStartNode; SmoothingNode.
+
+RouterPredicate: JUMPS_LE_ONE, TICKS_LE_CAP(cap), HAS_CANDIDATE, CANDIDATE_FEASIBLE_RAW, CANDIDATE_FEASIBLE_SCORED, VIOLATION_AT_MOST(eps), HAS_FREE_START, HAS_REACH_HEADROOM, LEGAL_PUSH, AT_OBJECTIVE_CAP.
+
+Extra control nodes the transcription required beyond the issue's inventory: WrapYawsNode (the multi-jump wrapAll normalization at the old engine line 872 must stay an explicit step to preserve comparison order), ReportNode (the pre-race progress report at line 883), MarkSettledNode plus settled-aware CapCertifyNode (the settled flag suppressing the post-race cap relabel), LabelNode (the first-feasible chain suffix). The chain label and the stageLocked/settled flags live on GraphContext, not on Candidate, because the engine accumulates the label on attempts even while no candidate exists. Known cosmetic drift: the first-feasible label is appended at the race-skip decision point rather than after the rescue stage, so stages appended in between order differently in the label; no test or UI logic reads the label structurally.
+
+Adopt policies live inside the wrappers, byte-for-byte the engine's comparisons: the race adopts feasibility-first on scored violation/objective; sweep, optimize-B&B, and ILS adopt on strictly better objective; momentum and the rescues adopt on success.
+
+## 4. Execution semantics
+
+GraphRunner walks the graph sequentially on the existing angle-solver daemon thread; components keep their internal parallelism (BoundPrunedRecovery pool, SolveCore/IlsPolish parallel streams, sequential flag forwarded). One BudgetWatchdog daemon per run trips the current node's child token at budget expiry and mirrors the parent cancel at a 20 ms poll. advanceNode trips only the current child token; the wrapper keeps the pre-node candidate when the component returns null. Emit publishes the pipeline candidate as-is; it does NOT reconcile against the SolveProgress best, because intermediate reports can predate start-position moves and would be scored against stale ground (Cancel keeps its existing stopAndUseBest semantics via SolveProgress, unchanged). A run that emits no candidate publishes an explicit failure result instead of the legacy silent null. Node-token aborts that surface as runtime exceptions from cancel-only components are contained as the node's fallback branch; genuine crashes still propagate. Safety: unwired branch falls through to Emit; a node executing more than 1024 times aborts the run.
+
+GraphRunState is a versioned synchronized snapshot (active node, breadcrumb, per-node phase/elapsed/budget/evals/branch) polled by the UI like liveBestResult; M4 consumes it for the live canvas.
+
+## 5. Built-in graphs
+
+fast(): single/multi fork, dualChain, horizon + keep-better + peel, 64-tick settled gate, warm-start smoothing, at-cap skip, pre-feasible race skip, race(16/4500/2/FAST), momentum gate on scored feasibility, free-start improve, first-feasible B&B rescue (3 s), translated start, final smoothing, Emit.
+
+optimize(T): same seed skeleton without the pre-feasible skip; race throttled to 2T/5 when exhaustive is pending (multi-jump or reach headroom); nearMissDefer router (violation <= 5e-2 skips momentum); exhaustive block seam sweep -> B&B(OPTIMIZE, stop at cap) -> ILS with static fractions of T; near-miss B&B (<= 5e-2, min(60, T/2)); wrap ILS gated on violation <= 1e-2 or legal push, ADOPTED -> Emit (replaces stageLocked); otherwise translated start -> smoothing -> Emit.
+
+fromBudget(SolveBudget, stopOnFeasible, timeBudgetSeconds): the M1 Custom bridge generating the same skeleton from the existing knobs. Zero save-format changes in M1; legacy Custom saves behave identically.
+
+## 6. M2 handoff (presets), concrete design settled during M1
+
+- GraphPresetFile (Gson 2.2.4-subset POJO, public fields): int version with its own FORMAT_VERSION = 1 and a hard reject on mismatch like SaveIO; name, description, createdAt, modVersion; List of Node {id, type, label, x, y, List of Param {key, num, str, flag}}; List of Edge {from, branch, to}. Param serialization by ParamSpec kind: INT and DOUBLE into num, BOOL into flag, ENUM and STRING into str.
+- GraphPresetIO: toJson, parse returning a result with an error message, materialize(file) -> SolverGraph, fromGraph(graph) -> file. Materialize resolves node types via NodeCatalog.byId and branches via Guarantee.valueOf; an unknown type or branch is an error naming the offending node id. Params are applied through ParamValues.set so ParamSpec clamps hold for hand-edited files. NodeCatalog type ids, param keys, and Guarantee names become a stable serialization contract from M2 on; renaming any of them needs a preset version bump.
+- FileSystemSaveStore: write/read/browse/moveToRecycleBin are already generic string-blob operations, but list() and parseInfo() are hardcoded to SaveFile. Add an InfoParser hook (small interface plus a constructor overload; the existing constructor delegates to the current SaveIO.parseSafe behavior) so a second store instance can point at parkourcalculator/graphs/ under the game dir.
+- Application.setupUi builds the graph store next to the save store and hands it to the solver window (and the M3 editor later).
+- AngleSolverState gains graphPresetName (persisted) and a transient SolverGraph customGraph. Effort.CUSTOM keeps its constant name for save compatibility; its UI meaning becomes "user graph".
+- SaveFile.AngleSolver gains a nullable String graphPreset (additive, main FORMAT_VERSION stays 1; absent means default). SaveIO writes it; on load, a preset present in the store is selected, and a missing preset, or an absent field with effort CUSTOM, falls back to BuiltinGraphs.fromBudget over the saved customBudget knobs as an in-memory legacy graph. customBudget keeps being written and read.
+- GraphFactory.forState CUSTOM resolves state.customGraph instead of calling fromBudget directly.
+- AngleSolverWindow.renderCustomBudget is replaced by the preset section: combo over the store's presets, Save As, Reload, Duplicate, and an Open Editor button disabled until M3.
+- GraphNode.x and y already exist; persist them in M2 so M3 canvas layouts survive round trips.
+- Tests: GraphPresetIOTest (round-trip equality, version reject, unknown-type error names the node id, clamping of out-of-range params), LegacyCustomMappingTest (knob combinations produce the same graph shape as fromBudget), one ProblemsTest-style spot check that a saved-then-reloaded Fast duplicate still solves a known capture, and retarget any existing budget-plumbing assertions (CustomBudgetTest, BudgetResolutionTest) at the fromBudget graph structure where they asserted knob wiring.
+
+## 7. Later milestones (recorded)
+
+M2 presets: GraphPresetFile/GraphPresetIO with their own FORMAT_VERSION (Gson 2.2.4 subset), stored under parkourcalculator/graphs/, SaveFile.AngleSolver gains a nullable graphPreset field, Custom UI becomes a preset picker, legacy Custom maps through fromBudget. M3 editor: imnodes (decision from review); requires ImNodes context lifecycle in all three loader bootstraps (Fabric ImGuiImpl create/dispose, Forge Lwjgl2ImGuiHost) and an early spike proving imnodes renders through the LWJGL2 shim; all editor colors via ThemeManager accessors (tableStyleCheck). M4 live viz: active-node highlight, breadcrumb, per-node progress from GraphRunState, objective/violation sparklines, live best-path world overlay fed from liveBestResult version changes. M5 constant promotion: one solver class per commit, Config-with-DEFAULT pattern (WrapWindowIls.Config precedent), physics ground truth (Constants, McSineTable, FEAS_TOL 0.0, reconstruction ULP bounds) never exposed; the sig-angle polish node is deferred to its own issue.
