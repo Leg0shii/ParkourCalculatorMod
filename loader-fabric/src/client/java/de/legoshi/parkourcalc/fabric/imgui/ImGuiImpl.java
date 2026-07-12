@@ -11,6 +11,7 @@ import imgui.ImFontConfig;
 import imgui.ImFontGlyphRangesBuilder;
 import imgui.ImGui;
 import imgui.ImGuiIO;
+import imgui.extension.imnodes.ImNodes;
 import imgui.extension.implot.ImPlot;
 import imgui.extension.implot.ImPlotContext;
 import imgui.flag.ImGuiConfigFlags;
@@ -64,6 +65,7 @@ public final class ImGuiImpl {
 
         ImGui.createContext();
         implotContext = ImPlot.createContext();
+        ImNodes.createContext();
 
         ImGuiIO io = ImGui.getIO();
         io.setIniFilename(INI_FILENAME);
@@ -129,6 +131,7 @@ public final class ImGuiImpl {
         imGuiGl3.dispose();
         imGuiGlfw.dispose();
 
+        ImNodes.destroyContext();
         ImPlot.destroyContext(implotContext);
         ImGui.destroyContext();
     }

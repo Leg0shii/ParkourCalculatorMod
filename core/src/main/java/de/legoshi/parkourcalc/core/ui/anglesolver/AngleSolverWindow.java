@@ -88,6 +88,7 @@ public final class AngleSolverWindow implements RenderInterface {
     private final AngleSolverEngine engine;
     private final VelocityMapWidget velocityMap;
     private final FileSystemSaveStore graphStore;
+    private final GraphEditorWindow graphEditor;
     private final ImInt startTickBuf = new ImInt();
     private final ImInt goalTickBuf = new ImInt();
     private final ImInt slipBuf = new ImInt();
@@ -117,13 +118,16 @@ public final class AngleSolverWindow implements RenderInterface {
 
     public AngleSolverWindow(AngleSolverState state, Settings settings,
                              IntSupplier rowCountSupplier, AngleSolverEngine engine,
-                             VelocityMapWidget velocityMap, FileSystemSaveStore graphStore) {
+                             VelocityMapWidget velocityMap, FileSystemSaveStore graphStore,
+                             GraphEditorWindow graphEditor) {
         this.state = state;
         this.settings = settings;
         this.rowCountSupplier = rowCountSupplier;
         this.engine = engine;
         this.velocityMap = velocityMap;
         this.graphStore = graphStore;
+        this.graphEditor = graphEditor;
+        if (graphEditor != null) graphEditor.setSaveHandler(this::writePreset);
         this.slipItems = Slipperiness.comboItems();
     }
 
@@ -573,8 +577,16 @@ public final class AngleSolverWindow implements RenderInterface {
         if (Controls.secondaryButton("Duplicate")) duplicatePreset();
         TooltipUtil.onHover("Save a copy of the selected graph as a new preset.");
         ImGui.sameLine();
-        Controls.disabledButton("Open editor");
-        TooltipUtil.onHover("The visual node editor arrives in a later update.");
+        if (graphEditor != null) {
+            if (Controls.secondaryButton("Open editor")) {
+                graphEditor.open(currentCustomGraph(),
+                        state.getCustomGraph() != null ? state.getGraphPresetName() : null);
+            }
+            TooltipUtil.onHover("Edit the selected graph on a node canvas. Legacy budget opens as an"
+                    + " unsaved draft; save it under a name to keep changes.");
+        } else {
+            Controls.disabledButton("Open editor");
+        }
 
         if (presetError != null) {
             ThemeManager.pushTextColor(ThemeManager.dangerColor());
@@ -640,7 +652,7 @@ public final class AngleSolverWindow implements RenderInterface {
         writePreset(name, currentCustomGraph());
     }
 
-    private boolean writePreset(String name, SolverGraph graph) {
+    boolean writePreset(String name, SolverGraph graph) {
         GraphPresetFile file = GraphPresetIO.fromGraph(graph);
         file.name = name;
         file.createdAt = SaveIO.nowIso8601();

@@ -10,6 +10,7 @@ import imgui.ImFontConfig;
 import imgui.ImFontGlyphRangesBuilder;
 import imgui.ImGui;
 import imgui.ImGuiIO;
+import imgui.extension.imnodes.ImNodes;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
@@ -129,6 +130,7 @@ public final class Lwjgl2ImGuiHost {
     private void ensureInitialized() {
         if (initialized) return;
         ImGui.createContext();
+        ImNodes.createContext();
         imguiLwjgl2.init();
         configurePresetFonts();
         imguiGl3.init();

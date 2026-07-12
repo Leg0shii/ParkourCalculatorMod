@@ -39,6 +39,7 @@ import de.legoshi.parkourcalc.core.anglesolver.ConstraintText;
 import de.legoshi.parkourcalc.core.ui.ConstraintKeyController;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverTable;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverWindow;
+import de.legoshi.parkourcalc.core.ui.anglesolver.GraphEditorWindow;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphPresetIO;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 
@@ -153,7 +154,8 @@ public final class Application {
         VelocityMapController velocityMapController = new VelocityMapController(
                 angleSolverState, boxController, runner, saveController, inputData, forwardModel,
                 this::onUserChange, Math.max(2, Runtime.getRuntime().availableProcessors() - 2));
-        AngleSolverWindow angleSolverWindow = new AngleSolverWindow(angleSolverState, settings, inputData::size, angleSolverEngine, velocityMapController.widget(), graphStore);
+        GraphEditorWindow graphEditorWindow = new GraphEditorWindow();
+        AngleSolverWindow angleSolverWindow = new AngleSolverWindow(angleSolverState, settings, inputData::size, angleSolverEngine, velocityMapController.widget(), graphStore, graphEditorWindow);
 
         // In-world constraint visualization (gh-145): plates appear while the solver view is open.
         constraintSource = new de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverConstraintSource(
@@ -170,6 +172,7 @@ public final class Application {
         );
         overlayManager.register(mainWindow);
         overlayManager.register(angleSolverWindow);
+        overlayManager.register(graphEditorWindow);
     }
 
     public void setFilePicker(FilePickerPort filePicker) {
