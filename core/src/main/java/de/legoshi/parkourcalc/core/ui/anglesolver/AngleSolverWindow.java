@@ -7,7 +7,15 @@ import de.legoshi.parkourcalc.core.anglesolver.Potion;
 import de.legoshi.parkourcalc.core.anglesolver.PotionDose;
 import de.legoshi.parkourcalc.core.anglesolver.Slipperiness;
 import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
+import de.legoshi.parkourcalc.core.anglesolver.graph.GraphFactory;
+import de.legoshi.parkourcalc.core.anglesolver.graph.GraphPresetFile;
+import de.legoshi.parkourcalc.core.anglesolver.graph.GraphPresetIO;
+import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
+import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
+import de.legoshi.parkourcalc.core.save.Result;
+import de.legoshi.parkourcalc.core.save.SaveIO;
+import de.legoshi.parkourcalc.core.save.SaveInfo;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.Fonts;
@@ -23,7 +31,9 @@ import imgui.flag.ImGuiCond;
 import imgui.flag.ImGuiStyleVar;
 import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImInt;
+import imgui.type.ImString;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -52,8 +62,7 @@ public final class AngleSolverWindow implements RenderInterface {
                     + "sprint from that tick on, and the solve inherits it, so a broken path can\n"
                     + "make a solvable segment report no solution until the route is re-recorded."};
     private static final String[] EFFORTS = {"Fast", "Optimize", "Custom"};
-    private static final String[] POLISH_DEPTHS = {"Light", "Exhaustive"};
-    private static final String[] MULTI_JUMP = {"Window", "Global"};
+    private static final String LEGACY_PRESET_ITEM = "Legacy budget";
 
     private static final String[] FORM_LABELS =
             {"Start tick", "Goal tick", "Axis", "Goal", "Inputs", "Sprint", "Slipperiness", "Potion"};
@@ -78,19 +87,18 @@ public final class AngleSolverWindow implements RenderInterface {
     private final IntSupplier rowCountSupplier;
     private final AngleSolverEngine engine;
     private final VelocityMapWidget velocityMap;
+    private final FileSystemSaveStore graphStore;
     private final ImInt startTickBuf = new ImInt();
     private final ImInt goalTickBuf = new ImInt();
     private final ImInt slipBuf = new ImInt();
     private final ImInt doseCombo = new ImInt();
     private final ImInt levelBuf = new ImInt();
     private final int[] optimizeSecondsBuf = new int[1];
-    private final int[] restartsBuf = new int[1];
-    private final int[] maxEvalBuf = new int[1];
-    private final int[] polishCountBuf = new int[1];
-    private final int[] timeBudgetBuf = new int[1];
-    private final int[] windowBuf = new int[1];
-    private final int[] commitBuf = new int[1];
+    private final ImInt presetBuf = new ImInt();
+    private final ImString presetNameInput = new ImString(64);
     private final String[] slipItems;
+    private String[] presetNames;
+    private String presetError;
 
     private boolean yawsExpanded;
     private boolean detailsExpanded;
@@ -109,12 +117,13 @@ public final class AngleSolverWindow implements RenderInterface {
 
     public AngleSolverWindow(AngleSolverState state, Settings settings,
                              IntSupplier rowCountSupplier, AngleSolverEngine engine,
-                             VelocityMapWidget velocityMap) {
+                             VelocityMapWidget velocityMap, FileSystemSaveStore graphStore) {
         this.state = state;
         this.settings = settings;
         this.rowCountSupplier = rowCountSupplier;
         this.engine = engine;
         this.velocityMap = velocityMap;
+        this.graphStore = graphStore;
         this.slipItems = Slipperiness.comboItems();
     }
 
@@ -317,8 +326,12 @@ public final class AngleSolverWindow implements RenderInterface {
         if (advancedExpanded) {
             w = Math.max(w, segmentedRowWidth("Effort", EFFORTS, labelW));
             if (state.getEffort() == AngleSolverState.Effort.CUSTOM) {
-                w = Math.max(w, segmentedRowWidth("Polish depth", POLISH_DEPTHS, labelW));
-                w = Math.max(w, segmentedRowWidth("Multi-jump", MULTI_JUMP, labelW));
+                float pad = 2f * ImGui.getStyle().getFramePadding().x;
+                float gap = ImGui.getStyle().getItemSpacing().x;
+                float buttons = ImGui.calcTextSize("Reload").x + pad
+                        + ImGui.calcTextSize("Duplicate").x + pad
+                        + ImGui.calcTextSize("Open editor").x + pad + 2f * gap;
+                w = Math.max(w, buttons);
             }
         }
         return w;
@@ -482,7 +495,7 @@ public final class AngleSolverWindow implements RenderInterface {
                 state.setOptimizeSeconds(optimizeSecondsBuf[0]);
             }
         }
-        if (state.getEffort() == AngleSolverState.Effort.CUSTOM) renderCustomBudget(labelW);
+        if (state.getEffort() == AngleSolverState.Effort.CUSTOM) renderPresetSection(labelW);
     }
 
     private static final String OPTIMIZE_TIME_TIP =
@@ -504,158 +517,145 @@ public final class AngleSolverWindow implements RenderInterface {
             + " of the dropped wall the run lands (the legal shortfall). Available only while exactly one"
             + " qualifying goal wall exists.";
 
-    private void renderCustomBudget(float labelW) {
-        AngleSolverState.SolveBudget b = state.getSolveBudget();
-
-        restartsBuf[0] = b.getRestarts();
-        if (sliderIntRow("Restarts", "##restarts", restartsBuf,
-                AngleSolverState.MIN_RESTARTS, AngleSolverState.MAX_RESTARTS, "%d", labelW, RESTARTS_TIP)) {
-            b.setRestarts(restartsBuf[0]);
+    private void renderPresetSection(float labelW) {
+        if (graphStore == null) {
+            ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+            ImGui.text("Graph presets unavailable.");
+            ThemeManager.popTextColor();
+            return;
         }
+        if (presetNames == null) refreshPresets();
 
-        maxEvalBuf[0] = b.getMaxEval();
-        if (sliderIntRow("Max evals", "##maxEval", maxEvalBuf,
-                AngleSolverState.MIN_MAX_EVAL, AngleSolverState.MAX_MAX_EVAL, "%d", labelW, MAX_EVALS_TIP)) {
-            b.setMaxEval(maxEvalBuf[0]);
-        }
+        String current = state.getGraphPresetName();
+        int currentIdx = indexOfPreset(current);
+        boolean missing = current != null && currentIdx < 0;
+        String[] items = new String[presetNames.length + (missing ? 2 : 1)];
+        items[0] = LEGACY_PRESET_ITEM;
+        System.arraycopy(presetNames, 0, items, 1, presetNames.length);
+        if (missing) items[items.length - 1] = current + " (missing)";
+        int selected = current == null ? 0 : (missing ? items.length - 1 : currentIdx + 1);
 
-        polishCountBuf[0] = b.getPolishCount();
-        if (sliderIntRow("Polish basins", "##polishCount", polishCountBuf,
-                AngleSolverState.MIN_POLISH_COUNT, AngleSolverState.MAX_POLISH_COUNT, "%d", labelW, POLISH_BASINS_TIP)) {
-            b.setPolishCount(polishCountBuf[0]);
-        }
-
+        Controls.pushInputFrameHeight();
         ImGui.beginGroup();
-        int pd = segmentedRow("Polish depth", "polishDepth", POLISH_DEPTHS, b.getPolishDepth().ordinal(), labelW);
+        SolverWidgets.rowLabel("Preset", labelW);
+        presetBuf.set(selected);
+        ImGui.setNextItemWidth(ImGui.getContentRegionAvail().x);
+        if (Controls.combo("##graphPreset", presetBuf, items)) {
+            int pick = presetBuf.get();
+            if (pick == 0) {
+                state.setGraphPresetName(null);
+                state.setCustomGraph(null);
+                presetError = null;
+            } else if (pick <= presetNames.length) {
+                selectPreset(presetNames[pick - 1]);
+            }
+        }
         ImGui.endGroup();
-        TooltipUtil.onHover(POLISH_DEPTH_TIP);
-        if (pd >= 0) b.setPolishDepth(AngleSolverState.PolishDepth.values()[pd]);
+        Controls.popInputFrameHeight();
+        TooltipUtil.onHover(PRESET_TIP);
 
-        timeBudgetBuf[0] = b.getTimeBudgetSeconds();
-        if (sliderIntRow("Time budget", "##timeBudget", timeBudgetBuf,
-                AngleSolverState.MIN_TIME_BUDGET, AngleSolverState.MAX_TIME_BUDGET,
-                timeBudgetBuf[0] == 0 ? "Off" : "%d s", labelW, TIME_BUDGET_TIP)) {
-            b.setTimeBudgetSeconds(timeBudgetBuf[0]);
+        Controls.pushInputFrameHeight();
+        SolverWidgets.rowLabel("Save as", labelW);
+        float gap = ImGui.getStyle().getItemSpacing().x;
+        float saveW = ImGui.calcTextSize("Save").x + 2f * ImGui.getStyle().getFramePadding().x;
+        Controls.inputTextHint("##presetName", "preset name", presetNameInput,
+                Math.max(60f, ImGui.getContentRegionAvail().x - saveW - gap));
+        ImGui.sameLine();
+        if (Controls.secondaryButton("Save")) savePresetAs();
+        Controls.popInputFrameHeight();
+
+        if (Controls.secondaryButton("Reload")) {
+            refreshPresets();
+            if (indexOfPreset(state.getGraphPresetName()) >= 0) selectPreset(state.getGraphPresetName());
         }
+        TooltipUtil.onHover("Re-read the preset list and the selected preset from disk.");
+        ImGui.sameLine();
+        if (Controls.secondaryButton("Duplicate")) duplicatePreset();
+        TooltipUtil.onHover("Save a copy of the selected graph as a new preset.");
+        ImGui.sameLine();
+        Controls.disabledButton("Open editor");
+        TooltipUtil.onHover("The visual node editor arrives in a later update.");
 
-        ImGui.beginGroup();
-        int mj = segmentedRow("Multi-jump", "multiJump", MULTI_JUMP, b.getUseWindowSolver() ? 0 : 1, labelW);
-        ImGui.endGroup();
-        TooltipUtil.onHover(MULTI_JUMP_TIP);
-        if (mj >= 0) b.setUseWindowSolver(mj == 0);
-
-        boolean windowDisabled = !b.getUseWindowSolver();
-        if (windowDisabled) ImGui.beginDisabled(true);
-
-        windowBuf[0] = b.getWindow();
-        if (sliderIntRow("Window", "##window", windowBuf,
-                AngleSolverState.MIN_WINDOW, AngleSolverState.MAX_WINDOW, "%d", labelW, WINDOW_TIP)) {
-            b.setWindow(windowBuf[0]);
+        if (presetError != null) {
+            ThemeManager.pushTextColor(ThemeManager.dangerColor());
+            ImGui.textWrapped(presetError);
+            ThemeManager.popTextColor();
         }
-
-        commitBuf[0] = b.getCommit();
-        if (sliderIntRow("Commit", "##commit", commitBuf,
-                AngleSolverState.MIN_COMMIT, Math.max(AngleSolverState.MIN_COMMIT, b.getWindow() - 1), "%d", labelW, COMMIT_TIP)) {
-            b.setCommit(commitBuf[0]);
-        }
-
-        if (windowDisabled) ImGui.endDisabled();
-
-        ImGui.spacing();
-        if (Controls.checkbox("Exhaustive multi-jump", b.isIlsExhaustive())) {
-            b.setIlsExhaustive(!b.isIlsExhaustive());
-        }
-        TooltipUtil.onHover(ILS_EXHAUSTIVE_TIP);
-
-        ThemeManager.pushTextColor(ThemeManager.textMutedColor());
-        ImGui.text("Defaults match Fast's search batch, without its first-feasible stop.");
-        ThemeManager.popTextColor();
     }
 
-    private static final String RESTARTS_TIP =
-            "How many independent searches run per solve, each starting from a different random facing and"
-            + " running in parallel across CPU cores. The feasible angles for a hard jump split into several"
-            + " disconnected regions, and a single search can land in the wrong one or in none, so more"
-            + " restarts means more chances to find a feasible region and to find the best one. Raise this"
-            + " first when a jump you expect to be possible reports no solution, or when a solved path is"
-            + " feasible but not reaching as far as it should. Time cost grows with the count, though the"
-            + " runs share all cores. Default 16 is the batch size Fast and Optimize use.";
+    private static final String PRESET_TIP =
+            "Which solver graph a Custom solve runs. Legacy budget rebuilds the graph from this save's"
+            + " Custom knobs, matching the pre-preset behavior byte for byte. Presets are JSON files under"
+            + " parkourcalculator/graphs/ in the game folder: save the current graph, hand-edit the file,"
+            + " then Reload to pick up the changes. The selected preset name travels with the save file.";
 
-    private static final String MAX_EVALS_TIP =
-            "The most trajectory evaluations a single restart may spend before it stops. A restart that has"
-            + " reached the right region still needs evaluations to converge onto the exact angles, and"
-            + " stopping early leaves it a little short of the true optimum. Raise this when the solve finds"
-            + " a feasible path but the reached distance stalls just under what you expect, meaning the"
-            + " search is in the right place but not finishing it. It rarely rescues a jump that fails"
-            + " outright; add restarts for those instead. Default 4500 is what Fast and Optimize use.";
+    private void refreshPresets() {
+        List<SaveInfo> infos = graphStore.list();
+        String[] names = new String[infos.size()];
+        for (int i = 0; i < infos.size(); i++) names[i] = infos.get(i).name;
+        Arrays.sort(names);
+        presetNames = names;
+    }
 
-    private static final String POLISH_BASINS_TIP =
-            "After the searches finish, this many of the best feasible results are each refined by the exact"
-            + " polish in parallel, and only the single best polished result is kept. Because Minecraft snaps"
-            + " every movement angle to a fixed grid of discrete steps, the search result with the highest"
-            + " raw score is not always the one that polishes to the furthest reach, so polishing several"
-            + " keeps the true best from being thrown away. Raise this when you are chasing the last fraction"
-            + " of a block and want maximum reach. It costs more time but never makes the result worse."
-            + " Default 2 matches Fast; Optimize uses 4.";
+    private int indexOfPreset(String name) {
+        if (presetNames == null || name == null) return -1;
+        for (int i = 0; i < presetNames.length; i++) {
+            if (presetNames[i].equals(name)) return i;
+        }
+        return -1;
+    }
 
-    private static final String POLISH_DEPTH_TIP =
-            "How hard the final polish works on each kept result. Light runs a couple of narrow refinement"
-            + " passes and relies on having several results to compare; it is what Fast uses. Exhaustive adds"
-            + " wide passes that can move a wall-bound tick from one feasible angle step to a better"
-            + " neighboring one, a fine settling pass, and a few seeded retries, so it reaches optimums a"
-            + " light pass cannot, at a real time cost per result. Choose Exhaustive for tight wall-hugging"
-            + " jumps where the best angles sit in a different discrete step than the search found. This is"
-            + " the polish Optimize uses.";
+    private void selectPreset(String name) {
+        Result<SolverGraph> graph = GraphPresetIO.loadGraph(graphStore, name);
+        if (graph.ok) {
+            state.setGraphPresetName(name);
+            state.setCustomGraph(graph.value);
+            presetError = null;
+        } else {
+            presetError = graph.error;
+        }
+    }
 
-    private static final String TIME_BUDGET_TIP =
-            "An optional wall-clock limit on the search. At 0 (off) the solve runs exactly the fixed number"
-            + " of restarts above, once. Above 0 it becomes a race against the clock: it keeps launching"
-            + " fresh restart batches until the time runs out, then returns the best feasible result found,"
-            + " so you trade guessing a restart count for simply giving the solver as long as you are willing"
-            + " to wait. Use it on a stubborn single jump when you would rather set thirty seconds and walk"
-            + " away than tune restarts by hand. It bounds only the search phase; jumps the instant"
-            + " closed-form path already solves are unaffected.";
+    private SolverGraph currentCustomGraph() {
+        SolverGraph graph = state.getCustomGraph();
+        return graph != null ? graph : GraphFactory.legacyCustom(state);
+    }
 
-    private static final String MULTI_JUMP_TIP =
-            "Which strategy solves a span containing more than one jump. Window (the default) slides a"
-            + " short window along the run, solving a few jumps at a time exactly and committing the"
-            + " leading ones; it is the only approach that holds up over long runs of many jumps. Global"
-            + " instead throws the multistart search above (Restarts, Max evals, Polish basins, Time budget)"
-            + " at every jump in the span at once, which are otherwise unused on multi-jump spans because"
-            + " the window solver settles them on its own. Switch to Global on a short multi-jump span (a"
-            + " handful of jumps) when you want to spend a large budget chasing a better result than the"
-            + " window solver found; expect it to report no solution on long spans, where searching all"
-            + " jumps jointly is exactly what the window solver exists to avoid. The Window and Commit"
-            + " sliders below apply only to Window. Single jumps ignore this entirely.";
+    private void savePresetAs() {
+        String name = SaveIO.sanitize(presetNameInput.get());
+        if (name == null) {
+            presetError = "Invalid preset name. Use letters, numbers, dashes, or underscores.";
+            return;
+        }
+        if (writePreset(name, currentCustomGraph())) presetNameInput.set("");
+    }
 
-    private static final String WINDOW_TIP =
-            "Used only for multi-jump spans, which are solved by sliding a window along the run. This sets"
-            + " how many jumps that window solves together, exactly, at once. A larger window sees further"
-            + " ahead, so the angles it fixes are less likely to strand a much later jump with no usable"
-            + " option, but each window is harder to solve exactly and a very large one may not converge at"
-            + " all. Raise it when a long run reports no solution because an early jump boxed in a later one."
-            + " The exact solver reliably handles about 10 to 13 jumps. Default 10. Single jumps and short"
-            + " spans ignore this.";
+    private void duplicatePreset() {
+        String base = state.getGraphPresetName() != null ? state.getGraphPresetName() : "custom";
+        String name = base + "-copy";
+        int n = 2;
+        while (graphStore.exists(name)) {
+            name = base + "-copy-" + n++;
+        }
+        writePreset(name, currentCustomGraph());
+    }
 
-    private static final String COMMIT_TIP =
-            "Used only for multi-jump spans. After a window is solved, this many of its leading jumps are"
-            + " locked in before the window slides forward; the rest are re-solved by the next, overlapping"
-            + " window. A smaller commit keeps more overlap and more lookahead at each step, which is safer"
-            + " on hard runs but solves more windows and takes longer; a larger commit is faster but more"
-            + " likely to lock in a jump that strands a later one. Lower this when a long run gets stuck. It"
-            + " is capped one below the window. Default 3; the solver already retries internally at 1 if a"
-            + " run gets stuck. Single jumps and short spans ignore this.";
+    private boolean writePreset(String name, SolverGraph graph) {
+        GraphPresetFile file = GraphPresetIO.fromGraph(graph);
+        file.name = name;
+        file.createdAt = SaveIO.nowIso8601();
+        file.modVersion = graphStore.getModVersion();
+        try {
+            graphStore.write(name, GraphPresetIO.toJson(file));
+        } catch (IOException e) {
+            presetError = "Failed to write preset: " + e.getMessage();
+            return false;
+        }
+        refreshPresets();
+        selectPreset(name);
+        return true;
+    }
 
-    private static final String ILS_EXHAUSTIVE_TIP =
-            "After the normal solve, runs an iterated local search seeded from its result: it repeatedly nudges"
-            + " a few ticks and re-solves, keeping only strict improvements, to reach the true furthest path the"
-            + " window solver leaves short. Worth turning on only for a hard multi-jump of moderate length (a few"
-            + " jumps, up to ~64 ticks) where the landing sits right at the edge of what is reachable and the last"
-            + " few centimeters decide whether the jump lands; there it can recover close to a full block. It only"
-            + " ever keeps an improvement, so it never makes a result worse, but it is slow and meant for offline"
-            + " use. It does nothing for single jumps (already optimized), long runs (already near the optimum), or"
-            + " a jump already reported optimal at a constraint cap. It honors the Time budget above; with Time"
-            + " budget Off it runs a fixed pass of about two minutes.";
 
     private boolean sliderIntRow(String label, String id, int[] buf, int lo, int hi, String fmt, float labelW, String tip) {
         Controls.pushInputFrameHeight();

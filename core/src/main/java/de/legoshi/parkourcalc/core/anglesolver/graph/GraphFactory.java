@@ -12,14 +12,19 @@ public final class GraphFactory {
             case THOROUGH:
                 return BuiltinGraphs.optimize(state.getOptimizeSeconds());
             case CUSTOM: {
-                AngleSolverState.SolveBudget b = state.getSolveBudget();
-                return BuiltinGraphs.fromBudget(b.getRestarts(), b.getMaxEval(), b.getPolishCount(),
-                        b.getPolishDepth() == AngleSolverState.PolishDepth.EXHAUSTIVE,
-                        state.isStopOnFeasible(), b.isIlsExhaustive(), b.getUseWindowSolver(),
-                        b.getWindow(), b.getCommit(), b.getTimeBudgetSeconds());
+                SolverGraph user = state.getCustomGraph();
+                return user != null ? user : legacyCustom(state);
             }
             default:
                 return BuiltinGraphs.fast();
         }
+    }
+
+    public static SolverGraph legacyCustom(AngleSolverState state) {
+        AngleSolverState.SolveBudget b = state.getSolveBudget();
+        return BuiltinGraphs.fromBudget(b.getRestarts(), b.getMaxEval(), b.getPolishCount(),
+                b.getPolishDepth() == AngleSolverState.PolishDepth.EXHAUSTIVE,
+                state.isStopOnFeasible(), b.isIlsExhaustive(), b.getUseWindowSolver(),
+                b.getWindow(), b.getCommit(), b.getTimeBudgetSeconds());
     }
 }

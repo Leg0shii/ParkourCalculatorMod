@@ -1,5 +1,7 @@
 package de.legoshi.parkourcalc.core.anglesolver;
 
+import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -52,7 +54,7 @@ public final class AngleSolverState {
     public enum Effort {
         FAST("Fast", "First feasible solution"),
         THOROUGH("Optimize", "Best result within the time budget"),
-        CUSTOM("Custom", "Tuned search budget");
+        CUSTOM("Custom", "User graph preset");
 
         public final String label;
         public final String hint;
@@ -163,6 +165,8 @@ public final class AngleSolverState {
     private boolean legalMode;
     private int optimizeSeconds = DEFAULT_OPTIMIZE_SECONDS;
     private final SolveBudget solveBudget = new SolveBudget();
+    private String graphPresetName;
+    private SolverGraph customGraph;
 
     private InputMode defaultInputs = InputMode.FORCE_45;
     private SprintMode defaultSprint = SprintMode.ALWAYS;
@@ -248,6 +252,22 @@ public final class AngleSolverState {
 
     public SolveBudget getSolveBudget() {
         return solveBudget;
+    }
+
+    public String getGraphPresetName() {
+        return graphPresetName;
+    }
+
+    public void setGraphPresetName(String name) {
+        this.graphPresetName = name;
+    }
+
+    public SolverGraph getCustomGraph() {
+        return customGraph;
+    }
+
+    public void setCustomGraph(SolverGraph graph) {
+        this.customGraph = graph;
     }
 
     public boolean isStart(int tick) {
@@ -638,6 +658,8 @@ public final class AngleSolverState {
         legalMode = false;
         optimizeSeconds = DEFAULT_OPTIMIZE_SECONDS;
         solveBudget.resetToDefaults();
+        graphPresetName = null;
+        customGraph = null;
         defaultInputs = InputMode.FORCE_45;
         defaultSprint = SprintMode.ALWAYS;
         defaultSlipperiness = Slipperiness.AIR;

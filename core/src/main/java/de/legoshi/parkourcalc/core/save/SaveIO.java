@@ -109,6 +109,7 @@ public final class SaveIO {
         state.setLegalMode(a.legalMode != null && a.legalMode);
         if (a.optimizeSeconds != null) state.setOptimizeSeconds(a.optimizeSeconds);
         applyCustomBudget(a.customBudget, state.getSolveBudget());
+        state.setGraphPresetName(a.graphPreset);
         state.setDefaultInputs(parseEnum(AngleSolverState.InputMode.class, a.defaultInputs, AngleSolverState.InputMode.FORCE_45));
         state.setDefaultSprint(parseEnum(AngleSolverState.SprintMode.class, a.defaultSprint, AngleSolverState.SprintMode.ALWAYS));
         state.setDefaultSlipperiness(parseEnum(Slipperiness.class, a.defaultSlipperiness, Slipperiness.AIR));
@@ -321,6 +322,7 @@ public final class SaveIO {
         a.legalMode = s.isLegalMode();
         a.optimizeSeconds = s.getOptimizeSeconds();
         a.customBudget = toSaveCustomBudget(s.getSolveBudget());
+        a.graphPreset = s.getGraphPresetName();
         a.defaultInputs = s.getDefaultInputs().name();
         a.defaultSprint = s.getDefaultSprint().name();
         a.defaultSlipperiness = s.getDefaultSlipperiness().name();
@@ -583,7 +585,7 @@ public final class SaveIO {
         }
     }
 
-    private static String nowIso8601() {
+    public static String nowIso8601() {
         SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
         fmt.setTimeZone(TimeZone.getTimeZone("UTC"));
         return fmt.format(new Date());

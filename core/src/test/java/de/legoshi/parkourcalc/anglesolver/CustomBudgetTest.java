@@ -18,6 +18,7 @@ import java.nio.file.Path;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class CustomBudgetTest {
@@ -123,6 +124,37 @@ public class CustomBudgetTest {
         AngleSolverState loaded = roundTrip(s);
         assertEquals(32, loaded.getSolveBudget().getRestarts());
         assertEquals(0, loaded.getSolveBudget().getTimeBudgetSeconds());
+    }
+
+    @Test
+    public void graphPresetNameRoundTripsThroughSaveLoad() throws Exception {
+        AngleSolverState s = new AngleSolverState();
+        s.setEffort(AngleSolverState.Effort.CUSTOM);
+        s.setGraphPresetName("my-preset");
+        AngleSolverState loaded = roundTrip(s);
+        assertEquals("my-preset", loaded.getGraphPresetName());
+        assertNull(loaded.getCustomGraph());
+    }
+
+    @Test
+    public void absentGraphPresetFieldLoadsAsLegacyCustom() {
+        String json = "{\n" +
+                "  \"version\": 1,\n" +
+                "  \"start\": { \"pos\": [0,0,0], \"vel\": [0,0,0], \"yaw\": 0.0 },\n" +
+                "  \"rows\": [ { \"keys\": [\"W\"], \"yaw\": 0.0 } ],\n" +
+                "  \"angleSolver\": { \"startTick\": 0, \"landingTick\": 1, \"axis\": \"X\", \"goal\": \"MAX\",\n" +
+                "    \"effort\": \"CUSTOM\", \"customBudget\": { \"restarts\": 64, \"maxEval\": 4500,\n" +
+                "      \"polishCount\": 2, \"timeBudgetSeconds\": 0, \"window\": 10, \"commit\": 3 } }\n" +
+                "}";
+        SaveFile file = SaveIO.parseSafe(json);
+        assertNotNull(file);
+        AngleSolverState s = new AngleSolverState();
+        s.setGraphPresetName("stale");
+        SaveIO.applyAngleSolverTo(file, s);
+        assertEquals(AngleSolverState.Effort.CUSTOM, s.getEffort());
+        assertNull(s.getGraphPresetName());
+        assertNull(s.getCustomGraph());
+        assertEquals(64, s.getSolveBudget().getRestarts());
     }
 
     @Test
