@@ -5,6 +5,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeOutcome;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeRuntime;
+import de.legoshi.parkourcalc.core.anglesolver.graph.ParamParse;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamValues;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
@@ -18,11 +19,25 @@ public final class BnbNode implements NodeRuntime {
     private final boolean firstFeasible;
     private final int minBudgetMs;
     private final String labelSuffix;
+    private final BoundPrunedRecovery.Config cfg;
 
     public BnbNode(ParamValues params) {
         this.firstFeasible = "FIRST_FEASIBLE".equals(params.getString("mode"));
         this.minBudgetMs = params.getInt("minBudgetMs");
         this.labelSuffix = params.getString("labelSuffix");
+        this.cfg = new BoundPrunedRecovery.Config();
+        cfg.searchShare = params.getDouble("searchShare");
+        cfg.pruneTol = params.getDouble("pruneTol");
+        cfg.slpViolTrigger = params.getDouble("slpViolTrigger");
+        cfg.seedMargins = ParamParse.doubles(params.getString("seedMargins"), cfg.seedMargins);
+        cfg.maxPatterns = params.getInt("maxPatterns");
+        cfg.minSeamWidth = params.getDouble("minSeamWidth");
+        cfg.restoreIters = params.getInt("restoreIters");
+        cfg.treeSlpPhase1Calls = params.getInt("treeSlpPhase1Calls");
+        cfg.treeSlpTotalCalls = params.getInt("treeSlpTotalCalls");
+        cfg.treeSlpTrMinDeg = params.getDouble("treeSlpTrMinDeg");
+        cfg.polishSlpPhase1Calls = params.getInt("polishSlpPhase1Calls");
+        cfg.polishSlpTotalCalls = params.getInt("polishSlpTotalCalls");
     }
 
     @Override
@@ -35,7 +50,7 @@ public final class BnbNode implements NodeRuntime {
             if (ctx.progress != null) ctx.progress.setStage(ctx.chainWith("pattern B&B"));
             if (SolverTrace.on()) SolverTrace.log("ENGINE", "bnb rescue budgetMs=%d", remaining / 1_000_000L);
             double[] rescue = BoundPrunedRecovery.solve(ctx.exactModel, ctx.spec, ctx.feasTol, nodeToken,
-                    remaining, max ? -1.0e300 : 1.0e300);
+                    remaining, max ? -1.0e300 : 1.0e300, cfg);
             if (SolverTrace.on()) SolverTrace.log("ENGINE", "bnb rescue %s", rescue != null ? "solved" : "miss");
             if (rescue == null) return passthrough(in);
             double[] yaws = Angles.wrapAll(rescue);
@@ -53,7 +68,7 @@ public final class BnbNode implements NodeRuntime {
             SolverTrace.log("ENGINE", "bnb start budgetMs=%d stopAt=%s", remaining / 1_000_000L,
                     Double.isNaN(stopAt) ? "-" : String.valueOf(stopAt));
         }
-        double[] bnb = BoundPrunedRecovery.solve(ctx.exactModel, ctx.spec, ctx.feasTol, nodeToken, remaining, stopAt);
+        double[] bnb = BoundPrunedRecovery.solve(ctx.exactModel, ctx.spec, ctx.feasTol, nodeToken, remaining, stopAt, cfg);
         if (bnb != null) {
             double cur = ctx.scoredObjective(in.yaws);
             double bnbObj = ctx.scoredObjective(bnb);

@@ -6,28 +6,31 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class SeamSweepRecovery {
 
-    private static final double SWEEP_PIN_HALF = 0.06;
-    private static final double NARROW_PIN_HALF = 0.03;
-    private static final double FINE_PIN_HALF = 0.015;
-    private static final double BEAM_PIN_HALF = 0.1;
-    private static final double HOLD_PIN_HALF = 0.10;
+    public static final class Config {
+        public double sweepPinHalf = 0.06;
+        public double narrowPinHalf = 0.03;
+        public double finePinHalf = 0.015;
+        public double beamPinHalf = 0.1;
+        public double holdPinHalf = 0.10;
+        public int maxSeams = 5;
+        public int maxCells1d = 20;
+        public int maxCells2d = 10;
+        public int narrowCells1d = 28;
+        public int narrowCells2d = 14;
+        public int slpRescueCap = 6;
+        public int narrowSlpRescueCap = 8;
+        public int beamWidth = 3;
+        public int beamMaxCells = 8;
+        public int wideBeamWidth = 4;
+        public int wideBeamMaxCells = 12;
+        public int beamMaxSeams = 4;
+        public int beamSlpCap = 8;
+        public double polishReserveFraction = 0.2;
+        public double longRunFraction = 0.45;
+    }
+
     private static final double MIN_BAND_WIDTH = 0.04;
     private static final double DETOUR_SPAN = 1.5;
-    private static final int MAX_SEAMS = 5;
-    private static final int MAX_CELLS_1D = 20;
-    private static final int MAX_CELLS_2D = 10;
-    private static final int NARROW_CELLS_1D = 28;
-    private static final int NARROW_CELLS_2D = 14;
-    private static final int SLP_RESCUE_CAP = 6;
-    private static final int NARROW_SLP_RESCUE_CAP = 8;
-    private static final int BEAM_WIDTH = 3;
-    private static final int BEAM_MAX_CELLS = 8;
-    private static final int WIDE_BEAM_WIDTH = 4;
-    private static final int WIDE_BEAM_MAX_CELLS = 12;
-    private static final int BEAM_MAX_SEAMS = 4;
-    private static final int BEAM_SLP_CAP = 8;
-    private static final double POLISH_RESERVE_FRACTION = 0.2;
-    private static final double LONG_RUN_FRACTION = 0.45;
     private static final long CELL_LONG_RUN_SLICE_NANOS = 400_000_000L;
     private static final long MIN_POLISH_RESERVE_NANOS = 300_000_000L;
     private static final long SLP_START_HEADROOM_NANOS = 100_000_000L;
@@ -43,9 +46,10 @@ public final class SeamSweepRecovery {
     private final AtomicBoolean stop;
     private final long sweepEnd;
     private final long longRunSliceNanos;
+    private final Config cfg;
 
     private SeamSweepRecovery(ExactJumpModel exact, JumpSpec spec, double feasTol,
-                              AtomicBoolean stop, long deadline, long budgetNanos) {
+                              AtomicBoolean stop, long deadline, long budgetNanos, Config cfg) {
         this.exact = exact;
         this.spec = spec;
         this.sc = spec.asScenario();
@@ -54,9 +58,10 @@ public final class SeamSweepRecovery {
         this.compiled = JumpConstraintCompiler.compile(spec);
         this.feasTol = feasTol;
         this.stop = stop;
+        this.cfg = cfg;
         this.sweepEnd = deadline
-                - Math.max(MIN_POLISH_RESERVE_NANOS, (long) (budgetNanos * POLISH_RESERVE_FRACTION));
-        this.longRunSliceNanos = (long) (budgetNanos * LONG_RUN_FRACTION);
+                - Math.max(MIN_POLISH_RESERVE_NANOS, (long) (budgetNanos * cfg.polishReserveFraction));
+        this.longRunSliceNanos = (long) (budgetNanos * cfg.longRunFraction);
     }
 
     public static double[] solve(ExactJumpModel exact, JumpSpec spec, double feasTol,
@@ -66,13 +71,18 @@ public final class SeamSweepRecovery {
 
     public static double[] solve(ExactJumpModel exact, JumpSpec spec, double feasTol,
                                  AtomicBoolean cancel, long budgetNanos, double[] seedAbsWrapped) {
+        return solve(exact, spec, feasTol, cancel, budgetNanos, seedAbsWrapped, new Config());
+    }
+
+    public static double[] solve(ExactJumpModel exact, JumpSpec spec, double feasTol,
+                                 AtomicBoolean cancel, long budgetNanos, double[] seedAbsWrapped, Config cfg) {
         if (spec == null) return null;
         long deadline = System.nanoTime() + budgetNanos;
         AtomicBoolean stop = new AtomicBoolean(false);
         AtomicBoolean finished = new AtomicBoolean(false);
         startDeadlineWatch(cancel, deadline, stop, finished);
         try {
-            return new SeamSweepRecovery(exact, spec, feasTol, stop, deadline, budgetNanos).run(seedAbsWrapped);
+            return new SeamSweepRecovery(exact, spec, feasTol, stop, deadline, budgetNanos, cfg).run(seedAbsWrapped);
         } finally {
             finished.set(true);
         }
@@ -104,21 +114,21 @@ public final class SeamSweepRecovery {
 
         if (best != null) {
             best = flatPass(seams, best, sweepEnd, false,
-                    SWEEP_PIN_HALF, MAX_CELLS_1D, MAX_CELLS_2D, SLP_RESCUE_CAP);
+                    cfg.sweepPinHalf, cfg.maxCells1d, cfg.maxCells2d, cfg.slpRescueCap);
         } else {
             long now = System.nanoTime();
             best = flatPass(seams, null, now + (sweepEnd - now) / 2, false,
-                    SWEEP_PIN_HALF, MAX_CELLS_1D, MAX_CELLS_2D, SLP_RESCUE_CAP);
+                    cfg.sweepPinHalf, cfg.maxCells1d, cfg.maxCells2d, cfg.slpRescueCap);
             if (best == null) {
-                best = beamRescue(seams, BEAM_MAX_CELLS, BEAM_WIDTH);
+                best = beamRescue(seams, cfg.beamMaxCells, cfg.beamWidth);
             }
             if (best == null && !stop.get()) {
                 now = System.nanoTime();
                 best = flatPass(seams, null, now + (sweepEnd - now) * 2 / 3, false,
-                        NARROW_PIN_HALF, NARROW_CELLS_1D, NARROW_CELLS_2D, NARROW_SLP_RESCUE_CAP);
+                        cfg.narrowPinHalf, cfg.narrowCells1d, cfg.narrowCells2d, cfg.narrowSlpRescueCap);
             }
             if (best == null && !stop.get()) {
-                best = beamRescue(seams, WIDE_BEAM_MAX_CELLS, WIDE_BEAM_WIDTH);
+                best = beamRescue(seams, cfg.wideBeamMaxCells, cfg.wideBeamWidth);
             }
         }
 
@@ -126,7 +136,7 @@ public final class SeamSweepRecovery {
             for (int pass = 0; pass < 2; pass++) {
                 Best passStart = best;
                 best = flatPass(seams, best, sweepEnd, true,
-                        SWEEP_PIN_HALF, MAX_CELLS_1D, MAX_CELLS_2D, SLP_RESCUE_CAP);
+                        cfg.sweepPinHalf, cfg.maxCells1d, cfg.maxCells2d, cfg.slpRescueCap);
                 if (best == passStart) break;
             }
             if (!stop.get() && System.nanoTime() < sweepEnd) {
@@ -280,14 +290,14 @@ public final class SeamSweepRecovery {
 
     private Best beamRescue(List<Seam> seams, int maxCells, int beamWidth) {
         Best best = null;
-        int levels = Math.min(seams.size(), BEAM_MAX_SEAMS);
+        int levels = Math.min(seams.size(), cfg.beamMaxSeams);
         List<BeamNode> frontier = new ArrayList<BeamNode>();
         frontier.add(new BeamNode(new ArrayList<Pin>(), Double.POSITIVE_INFINITY, 0));
         int order = 0;
         boolean expired = false;
         for (int level = 0; level < levels && !expired; level++) {
             Band band = preferredBand(seams.get(level));
-            int g = gridCells(band.hi - band.lo, BEAM_PIN_HALF, maxCells);
+            int g = gridCells(band.hi - band.lo, cfg.beamPinHalf, maxCells);
             List<BeamNode> next = new ArrayList<BeamNode>();
             for (BeamNode node : frontier) {
                 for (int i = 0; i < g; i++) {
@@ -316,13 +326,13 @@ public final class SeamSweepRecovery {
                 return Integer.compare(p.order, q.order);
             });
             if (next.isEmpty()) break;
-            int keep = level == levels - 1 || expired ? BEAM_SLP_CAP : beamWidth;
+            int keep = level == levels - 1 || expired ? cfg.beamSlpCap : beamWidth;
             frontier = next.size() > keep ? new ArrayList<BeamNode>(next.subList(0, keep)) : next;
         }
 
         int used = 0;
         for (BeamNode node : frontier) {
-            if (node.pins.isEmpty() || used >= BEAM_SLP_CAP) break;
+            if (node.pins.isEmpty() || used >= cfg.beamSlpCap) break;
             long now = System.nanoTime();
             if (stop.get() || now + SLP_START_HEADROOM_NANOS > sweepEnd) break;
             if (best != null && node.normBound <= best.norm + BOUND_EDGE) continue;
@@ -339,19 +349,19 @@ public final class SeamSweepRecovery {
 
     private Best fineSweep(List<Seam> seams, Best best) {
         Seam first = seams.get(0);
-        int maxCells = first.bands.size() > 1 ? MAX_CELLS_2D : MAX_CELLS_1D;
+        int maxCells = first.bands.size() > 1 ? cfg.maxCells2d : cfg.maxCells1d;
         List<Band> dims = new ArrayList<Band>();
         for (Band band : first.bands) {
-            int g = gridCells(band.hi - band.lo, SWEEP_PIN_HALF, maxCells);
+            int g = gridCells(band.hi - band.lo, cfg.sweepPinHalf, maxCells);
             double coarseHalf = (band.hi - band.lo) / (2.0 * g);
             double pos = best.path.getPos(band.tick, axisOf(band.mode));
             double lo = Math.max(band.lo, pos - 2.0 * coarseHalf);
             double hi = Math.min(band.hi, pos + 2.0 * coarseHalf);
-            if (hi - lo > 2.0 * FINE_PIN_HALF) dims.add(new Band(band.mode, band.tick, lo, hi, band.real));
+            if (hi - lo > 2.0 * cfg.finePinHalf) dims.add(new Band(band.mode, band.tick, lo, hi, band.real));
         }
         if (dims.isEmpty()) return best;
         List<Pin> holds = holdPins(seams, 0, best, true);
-        return sweepDims(dims, holds, sweepEnd, FINE_PIN_HALF, MAX_CELLS_2D, SLP_RESCUE_CAP, best);
+        return sweepDims(dims, holds, sweepEnd, cfg.finePinHalf, cfg.maxCells2d, cfg.slpRescueCap, best);
     }
 
     private List<Seam> extractSeams() {
@@ -373,7 +383,7 @@ public final class SeamSweepRecovery {
             bands.sort((p, q) -> p.mode.compareTo(q.mode));
             all.add(new Seam(t, bands));
         }
-        if (all.size() <= MAX_SEAMS) return all;
+        if (all.size() <= cfg.maxSeams) return all;
 
         List<Seam> real = new ArrayList<Seam>();
         List<Seam> synthetic = new ArrayList<Seam>();
@@ -384,10 +394,10 @@ public final class SeamSweepRecovery {
         }
         List<Seam> chosen = new ArrayList<Seam>();
         for (Seam seam : real) {
-            if (chosen.size() >= MAX_SEAMS) break;
+            if (chosen.size() >= cfg.maxSeams) break;
             chosen.add(seam);
         }
-        for (int i = synthetic.size() - 1; i >= 0 && chosen.size() < MAX_SEAMS; i--) {
+        for (int i = synthetic.size() - 1; i >= 0 && chosen.size() < cfg.maxSeams; i--) {
             chosen.add(synthetic.get(i));
         }
         chosen.sort((p, q) -> Integer.compare(p.tick, q.tick));
@@ -459,8 +469,8 @@ public final class SeamSweepRecovery {
             if (!holdAllOthers && j > sweepIndex) continue;
             for (Band band : seams.get(j).bands) {
                 double pos = best.path.getPos(band.tick, axisOf(band.mode));
-                double lo = Math.max(band.lo, pos - HOLD_PIN_HALF);
-                double hi = Math.min(band.hi, pos + HOLD_PIN_HALF);
+                double lo = Math.max(band.lo, pos - cfg.holdPinHalf);
+                double hi = Math.min(band.hi, pos + cfg.holdPinHalf);
                 if (hi > lo) pins.add(new Pin(band.mode, band.tick, lo, hi));
             }
         }

@@ -6,6 +6,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeOutcome;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeRuntime;
+import de.legoshi.parkourcalc.core.anglesolver.graph.ParamParse;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamValues;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
@@ -22,12 +23,21 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class FreeStartImproveNode implements NodeRuntime {
 
-    private static final double CMAES_SIGMA_DEG = 90.0;
-
     private final int iters;
+    private final double sigmaDeg;
+    private final FreeStartSolve.Config cfg;
 
     public FreeStartImproveNode(ParamValues params) {
         this.iters = params.getInt("iters");
+        this.sigmaDeg = params.getDouble("sigmaDeg");
+        this.cfg = new FreeStartSolve.Config();
+        cfg.maxIters = params.getInt("fsMaxIters");
+        cfg.intervalMargin = params.getDouble("fsIntervalMargin");
+        cfg.invariantTol = params.getDouble("fsInvariantTol");
+        cfg.stepTol = params.getDouble("fsStepTol");
+        cfg.slpPhase1Calls = params.getInt("fsSlpPhase1Calls");
+        cfg.slpTotalCalls = params.getInt("fsSlpTotalCalls");
+        cfg.jointMargins = ParamParse.doubles(params.getString("fsJointMargins"), cfg.jointMargins);
     }
 
     @Override
@@ -59,7 +69,7 @@ public final class FreeStartImproveNode implements NodeRuntime {
         double foundViol = seedViol;
 
         if (seedYaws != null && !cancel.get()) {
-            double[] rsSeed = FreeStartSolve.recoverStart(exact, spec, seedYaws);
+            double[] rsSeed = FreeStartSolve.recoverStart(exact, spec, seedYaws, cfg);
             if (rsSeed != null) {
                 double vSeed = FreeStartSolve.violationAt(exact, spec, seedYaws, rsSeed[0], rsSeed[1]);
                 if (vSeed < foundViol) {
@@ -72,8 +82,8 @@ public final class FreeStartImproveNode implements NodeRuntime {
         }
 
         sc.startBox = freeBox;
-        FreeStartSolve.Result conv = FreeStartSolve.solveJoint(exact, spec, feasTol, cancel);
-        if (conv == null || !conv.feasible) conv = FreeStartSolve.solve(exact, spec, feasTol, cancel);
+        FreeStartSolve.Result conv = FreeStartSolve.solveJoint(exact, spec, feasTol, cancel, cfg);
+        if (conv == null || !conv.feasible) conv = FreeStartSolve.solve(exact, spec, feasTol, cancel, cfg);
         if (conv != null && conv.feasible
                 && FreeStartSolve.violationAt(exact, spec, conv.yaws, conv.startX, conv.startZ) <= feasTol) {
             double[] convYaws = Angles.wrapAll(conv.yaws);
@@ -91,12 +101,12 @@ public final class FreeStartImproveNode implements NodeRuntime {
         sc.startPos = new Vec3dCore(seedX, sc.startPos.y, seedZ);
         sc.startBox = freeBox;
         long half = (deadline - System.nanoTime()) / 2;
-        double[] locYaws = SolveCore.optimize(new CountingForwardModel(ctx.model), spec, budget, CMAES_SIGMA_DEG,
+        double[] locYaws = SolveCore.optimize(new CountingForwardModel(ctx.model), spec, budget, sigmaDeg,
                 feasTol, cancel, seedYaws != null ? Angles.wrapAll(seedYaws) : null,
                 System.nanoTime() + half, ctx.sequential, ctx.progress);
         double[] warm = locYaws != null ? locYaws : seedYaws;
         if (locYaws != null && !cancel.get()) {
-            double[] rs = FreeStartSolve.recoverStart(exact, spec, locYaws);
+            double[] rs = FreeStartSolve.recoverStart(exact, spec, locYaws, cfg);
             if (rs != null) {
                 p0x = rs[0];
                 p0z = rs[1];
@@ -117,13 +127,13 @@ public final class FreeStartImproveNode implements NodeRuntime {
             sc.startPos = new Vec3dCore(p0x, sc.startPos.y, p0z);
             sc.startBox = StartBox.pinned(p0x, p0z, sc.initialVelocity.x, sc.initialVelocity.z);
             double[] warmW = warm != null ? Angles.wrapAll(warm) : null;
-            double[] yaws = SolveCore.optimize(new CountingForwardModel(ctx.model), spec, budget, CMAES_SIGMA_DEG,
+            double[] yaws = SolveCore.optimize(new CountingForwardModel(ctx.model), spec, budget, sigmaDeg,
                     feasTol, cancel, warmW, iterDeadline, ctx.sequential, ctx.progress);
             if (yaws == null) yaws = warmW;
             if (yaws == null) break;
             warm = yaws;
             sc.startBox = freeBox;
-            double[] rs = FreeStartSolve.recoverStart(exact, spec, yaws);
+            double[] rs = FreeStartSolve.recoverStart(exact, spec, yaws, cfg);
             if (rs == null) break;
             double viol = FreeStartSolve.violationAt(exact, spec, yaws, rs[0], rs[1]);
             if (SolverTrace.on()) {

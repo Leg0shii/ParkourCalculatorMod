@@ -6,8 +6,10 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeOutcome;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeRuntime;
+import de.legoshi.parkourcalc.core.anglesolver.graph.ParamParse;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamValues;
 import de.legoshi.parkourcalc.core.anglesolver.solver.BucketAscentPolish;
+import de.legoshi.parkourcalc.core.anglesolver.solver.CmaesJumpHarness;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolveCore;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 
@@ -20,10 +22,26 @@ public final class CmaesRaceNode implements NodeRuntime {
     private final boolean warmStart;
 
     public CmaesRaceNode(ParamValues params) {
-        BucketAscentPolish.Config cfg = "EXHAUSTIVE".equals(params.getString("polishDepth"))
+        BucketAscentPolish.Config base = "EXHAUSTIVE".equals(params.getString("polishDepth"))
                 ? BucketAscentPolish.THOROUGH : BucketAscentPolish.FAST;
+        int maxRounds = params.getInt("polishMaxRounds");
+        int restarts = params.getInt("polishRestarts");
+        int pairSpan = params.getInt("polishPairSpan");
+        BucketAscentPolish.Config cfg = new BucketAscentPolish.Config(
+                ParamParse.pairs(params.getString("polishB1"), base.b1),
+                ParamParse.pairs(params.getString("polishB2"), base.b2),
+                maxRounds < 0 ? base.maxRounds : maxRounds,
+                restarts < 0 ? base.restarts : restarts,
+                pairSpan < 0 ? base.pairSpan : pairSpan);
+        CmaesJumpHarness.Config harness = new CmaesJumpHarness.Config();
+        harness.muIneq = params.getDouble("cmaMuIneq");
+        harness.muEq = params.getDouble("cmaMuEq");
+        harness.lambda = params.getInt("cmaLambda");
+        harness.polishStepDeg = params.getDouble("cmaPolishStepDeg");
+        harness.polishIters = params.getInt("cmaPolishIters");
+        harness.polishFloorDeg = params.getDouble("cmaPolishFloorDeg");
         this.budget = new SolveCore.Budget(params.getInt("restarts"), params.getInt("maxEval"),
-                params.getInt("polishCount"), cfg);
+                params.getInt("polishCount"), cfg, harness);
         this.sigmaDeg = params.getDouble("sigmaDeg");
         this.warmStart = params.getBool("warmStart");
     }

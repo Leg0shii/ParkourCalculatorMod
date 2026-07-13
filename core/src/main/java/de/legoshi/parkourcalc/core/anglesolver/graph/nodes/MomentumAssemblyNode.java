@@ -5,6 +5,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeOutcome;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeRuntime;
+import de.legoshi.parkourcalc.core.anglesolver.graph.ParamParse;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamValues;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.MomentumAssembly;
@@ -17,9 +18,29 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class MomentumAssemblyNode implements NodeRuntime {
 
     private final int minBudgetSec;
+    private final MomentumAssembly.Config cfg;
 
     public MomentumAssemblyNode(ParamValues params) {
         this.minBudgetSec = params.getInt("minBudgetSec");
+        this.cfg = new MomentumAssembly.Config();
+        cfg.seamTrims = ParamParse.ints(params.getString("seamTrims"), cfg.seamTrims);
+        cfg.templateTries = params.getInt("templateTries");
+        cfg.frontierTries = params.getInt("frontierTries");
+        cfg.frontierCap = params.getInt("frontierCap");
+        cfg.frontierSlack = params.getDouble("frontierSlack");
+        cfg.vxCap = params.getDouble("vxCap");
+        cfg.closerEps0 = params.getDouble("closerEps0");
+        cfg.perCandidateSec = params.getInt("perCandidateSec");
+        cfg.closer.repairSigmas = ParamParse.doubles(params.getString("closerRepairSigmas"), cfg.closer.repairSigmas);
+        cfg.closer.repairMaxEval = params.getInt("closerRepairMaxEval");
+        cfg.closer.maxRungs = params.getInt("closerMaxRungs");
+        cfg.closer.maxRefines = params.getInt("closerMaxRefines");
+        cfg.closer.epsFloor = params.getDouble("closerEpsFloor");
+        cfg.closer.descentRounds = params.getInt("closerDescentRounds");
+        cfg.closer.descentPairSpan = params.getInt("closerDescentPairSpan");
+        cfg.closer.entryRestarts = params.getInt("closerEntryRestarts");
+        cfg.closer.entryMaxEval = params.getInt("closerEntryMaxEval");
+        cfg.closer.entryPolishCount = params.getInt("closerEntryPolishCount");
     }
 
     @Override
@@ -30,7 +51,7 @@ public final class MomentumAssemblyNode implements NodeRuntime {
         if (ctx.progress != null) ctx.progress.setStage(ctx.chainWith("momentum assembly"));
         if (SolverTrace.on()) SolverTrace.log("ENGINE", "momentum assembly start budgetMs=%d", remaining / 1_000_000L);
         MomentumAssembly.Result asm = MomentumAssembly.solve(ctx.exactModel, ctx.spec, ctx.feasTol,
-                ctx.freeBox, deadlineNanos, nodeToken);
+                ctx.freeBox, deadlineNanos, nodeToken, cfg);
         if (SolverTrace.on()) SolverTrace.log("ENGINE", "momentum assembly %s", asm != null ? "solved" : "miss");
         if (asm == null) return NodeOutcome.of(Guarantee.NONE, in);
         JumpPhysicsInputs sc = ctx.scenario;

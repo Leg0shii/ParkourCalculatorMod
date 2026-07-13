@@ -63,8 +63,8 @@ public class WrapWindowIlsTest {
         int checked = 0;
         for (int t = 0; t < r.gf.length; t += 5) {
             float cur = (float) r.gf[t];
-            float[] a = WrapWindowIls.candSetFor(cur, cur, 16, 512, modern, false);
-            float[] b = WrapWindowIls.candSetFor(cur, cur, 16, 512, modern, false);
+            float[] a = WrapWindowIls.candSetFor(cur, cur, 16, 512, 5, modern, false);
+            float[] b = WrapWindowIls.candSetFor(cur, cur, 16, 512, 5, modern, false);
             assertArrayEquals("candSetFor must be deterministic at t=" + t, a, b, 0.0f);
             checkCells(a, modern, "candSetFor t=" + t);
             float[] f1 = WrapWindowIls.candFull(cur, 16, modern, false);

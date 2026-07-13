@@ -10,15 +10,17 @@ public final class FreeStartSolve {
     private FreeStartSolve() {
     }
 
-    private static final int MAX_ITERS = 12;
-    private static final double INTERVAL_MARGIN = 1.0e-3;
     private static final double EMPTY_TOL = 1.0e-9;
-    private static final double INVARIANT_TOL = 1.0e-6;
-    private static final double STEP_TOL = 1.0e-9;
-    private static final int SLP_PHASE1 = 40;
-    private static final int SLP_TOTAL = 60;
 
-    private static final double[] JOINT_MARGINS = {0.0, 1.0e-4, 3.0e-4, 6.0e-4, 1.2e-3, 2.5e-3, 5.0e-3, 1.0e-2};
+    public static final class Config {
+        public int maxIters = 12;
+        public double intervalMargin = 1.0e-3;
+        public double invariantTol = 1.0e-6;
+        public double stepTol = 1.0e-9;
+        public int slpPhase1Calls = 40;
+        public int slpTotalCalls = 60;
+        public double[] jointMargins = {0.0, 1.0e-4, 3.0e-4, 6.0e-4, 1.2e-3, 2.5e-3, 5.0e-3, 1.0e-2};
+    }
 
     public static final class Result {
         public final double[] yaws;
@@ -35,6 +37,10 @@ public final class FreeStartSolve {
     }
 
     public static Result solve(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel) {
+        return solve(exact, spec, feasTol, cancel, new Config());
+    }
+
+    public static Result solve(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel, Config cfg) {
         JumpPhysicsInputs base = spec.asScenario();
         StartBox box = base.startBox;
         if (box == null || !box.startFree()) return null;
@@ -47,7 +53,7 @@ public final class FreeStartSolve {
                     box.label(), base.startPos.x, base.startPos.z, p0x, p0z);
         }
 
-        for (int iter = 0; iter < MAX_ITERS; iter++) {
+        for (int iter = 0; iter < cfg.maxIters; iter++) {
             if (cancel != null && cancel.get()) return null;
             JumpSpec at = specAtStart(base, spec, p0x, p0z);
 
@@ -58,13 +64,13 @@ public final class FreeStartSolve {
                 return new Result(yaws, p0x, p0z, true);
             }
 
-            double[] shape = bestEffortShape(exact, at, feasTol, cancel);
+            double[] shape = bestEffortShape(exact, at, feasTol, cancel, cfg);
             if (shape == null) break;
             JumpPhysicsInputs atSc = at.asScenario();
             double[] gf = atSc.toGameFacings(Angles.wrapAll(shape));
             ForwardPath path = exact.forward(atSc, gf);
 
-            double[] delta = pinTranslate(spec, gf, path, box, p0x, p0z);
+            double[] delta = pinTranslate(spec, gf, path, box, p0x, p0z, cfg);
             if (delta == null) {
                 if (SolverTrace.on()) SolverTrace.log("FREE", "iter=%d no feasible translation of the current shape", iter);
                 break;
@@ -74,7 +80,7 @@ public final class FreeStartSolve {
             if (SolverTrace.on()) {
                 SolverTrace.log("FREE", "iter=%d translate (%.4f,%.4f) -> (%.4f,%.4f)", iter, p0x, p0z, nx, nz);
             }
-            if (Math.abs(nx - p0x) < STEP_TOL && Math.abs(nz - p0z) < STEP_TOL) break;
+            if (Math.abs(nx - p0x) < cfg.stepTol && Math.abs(nz - p0z) < cfg.stepTol) break;
             p0x = nx;
             p0z = nz;
         }
@@ -82,10 +88,15 @@ public final class FreeStartSolve {
     }
 
     public static Result solveJoint(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel) {
+        return solveJoint(exact, spec, feasTol, cancel, new Config());
+    }
+
+    public static Result solveJoint(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
+                                    Config cfg) {
         JumpPhysicsInputs base = spec.asScenario();
         StartBox box = base.startBox;
         if (box == null || !box.startFree()) return null;
-        if (JumpLinearModel.hasFacingWall(spec.constraints)) return solve(exact, spec, feasTol, cancel);
+        if (JumpLinearModel.hasFacingWall(spec.constraints)) return solve(exact, spec, feasTol, cancel, cfg);
 
         double refX = 0.5 * (box.pxLo + box.pxHi);
         double refZ = 0.5 * (box.pzLo + box.pzHi);
@@ -104,7 +115,7 @@ public final class FreeStartSolve {
         double bestViol = Double.POSITIVE_INFINITY;
         double[] bestYaws = null;
         double[] warm = null;
-        for (double margin : JOINT_MARGINS) {
+        for (double margin : cfg.jointMargins) {
             if (cancel != null && cancel.get()) return null;
             CostateDualSolver.Result r = solver.solve(margin, warm);
             if (r == null) { lastJointDebug = "dual-null margin=" + margin; return null; }
@@ -113,7 +124,7 @@ public final class FreeStartSolve {
             if (bestYaws == null) bestYaws = yaws;
             double[] gf = refSc.toGameFacings(Angles.wrapAll(yaws));
             ForwardPath path = exact.forward(refSc, gf);
-            double[] delta = pinTranslate(spec, gf, path, cbox, refX, refZ);
+            double[] delta = pinTranslate(spec, gf, path, cbox, refX, refZ, cfg);
             double p0x = refX;
             double p0z = refZ;
             if (delta != null) {
@@ -135,7 +146,7 @@ public final class FreeStartSolve {
         }
         double recViol = -1.0;
         if (bestYaws != null) {
-            double[] rs2 = recoverStart(exact, spec, bestYaws);
+            double[] rs2 = recoverStart(exact, spec, bestYaws, cfg);
             if (rs2 != null) recViol = violationAt(exact, spec, bestYaws, rs2[0], rs2[1]);
         }
         lastJointDebug = String.format("no-certify pinTranslateViol=%.3e recoverStartViol=%.3e", bestViol, recViol);
@@ -194,6 +205,10 @@ public final class FreeStartSolve {
     }
 
     public static double[] recoverStart(ExactJumpModel exact, JumpSpec spec, double[] yaws) {
+        return recoverStart(exact, spec, yaws, new Config());
+    }
+
+    public static double[] recoverStart(ExactJumpModel exact, JumpSpec spec, double[] yaws, Config cfg) {
         JumpPhysicsInputs base = spec.asScenario();
         StartBox box = base.startBox;
         if (box == null || !box.startFree() || yaws == null) return null;
@@ -202,7 +217,7 @@ public final class FreeStartSolve {
         double[] gf = refSc.toGameFacings(wrapped);
         ForwardPath path = exact.forward(refSc, gf);
         double[] best = null;
-        for (double margin : JOINT_MARGINS) {
+        for (double margin : cfg.jointMargins) {
             double[] d = bestTranslate(spec, gf, path, box, margin);
             double p0x = clamp(box.px + d[0], box.pxLo, box.pxHi);
             double p0z = clamp(box.pz + d[1], box.pzLo, box.pzHi);
@@ -226,7 +241,7 @@ public final class FreeStartSolve {
     }
 
     private static double[] pinTranslate(JumpSpec spec, double[] gf, ForwardPath path, StartBox box,
-                                         double p0x, double p0z) {
+                                         double p0x, double p0z, Config cfg) {
         double loX = Double.NEGATIVE_INFINITY, hiX = Double.POSITIVE_INFINITY;
         double loZ = Double.NEGATIVE_INFINITY, hiZ = Double.POSITIVE_INFINITY;
         for (JumpConstraint c : spec.constraints) {
@@ -235,21 +250,21 @@ public final class FreeStartSolve {
             if (axis < 0) {
                 double slack = c.cmp == JumpConstraint.Cmp.GE ? Math.max(0.0, -e0)
                         : c.cmp == JumpConstraint.Cmp.LE ? Math.max(0.0, e0) : Math.abs(e0);
-                if (slack > INVARIANT_TOL) return null;
+                if (slack > cfg.invariantTol) return null;
                 continue;
             }
             int tc = (c.t2 == null) ? 1 : (c.op == JumpConstraint.Op.PLUS ? 2 : 0);
             if (tc == 0) {
                 double slack = c.cmp == JumpConstraint.Cmp.GE ? Math.max(0.0, -e0)
                         : c.cmp == JumpConstraint.Cmp.LE ? Math.max(0.0, e0) : Math.abs(e0);
-                if (slack > INVARIANT_TOL) return null;
+                if (slack > cfg.invariantTol) return null;
                 continue;
             }
             if (c.cmp == JumpConstraint.Cmp.LE) {
-                double b = -e0 / tc - INTERVAL_MARGIN;
+                double b = -e0 / tc - cfg.intervalMargin;
                 if (axis == 0) hiX = Math.min(hiX, b); else hiZ = Math.min(hiZ, b);
             } else if (c.cmp == JumpConstraint.Cmp.GE) {
-                double b = -e0 / tc + INTERVAL_MARGIN;
+                double b = -e0 / tc + cfg.intervalMargin;
                 if (axis == 0) loX = Math.max(loX, b); else loZ = Math.max(loZ, b);
             } else {
                 double b = -e0 / tc;
@@ -277,7 +292,8 @@ public final class FreeStartSolve {
         return clamp(0.0, lo, hi);
     }
 
-    private static double[] bestEffortShape(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel) {
+    private static double[] bestEffortShape(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
+                                            Config cfg) {
         JumpPhysicsInputs sc = spec.asScenario();
         if (!JumpLinearModel.hasFacingWall(spec.constraints)) {
             JumpLinearModel lin = new JumpLinearModel(sc);
@@ -292,7 +308,7 @@ public final class FreeStartSolve {
             }
         }
         double[] seed = objectiveSeed(sc, spec.objective);
-        return SlpSolve.optimizeBestEffort(exact, spec, feasTol, cancel, seed, SLP_PHASE1, SLP_TOTAL);
+        return SlpSolve.optimizeBestEffort(exact, spec, feasTol, cancel, seed, cfg.slpPhase1Calls, cfg.slpTotalCalls);
     }
 
     private static double[] objectiveSeed(JumpPhysicsInputs sc, Objective obj) {

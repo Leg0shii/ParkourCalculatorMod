@@ -5,6 +5,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeOutcome;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeRuntime;
+import de.legoshi.parkourcalc.core.anglesolver.graph.ParamParse;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamValues;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
@@ -25,14 +26,14 @@ public final class SetupPeelNode implements NodeRuntime {
 
     private final int candidateMs;
     private final double stepDeg;
-    private final int window;
-    private final int commit;
+    private final LongRunSolver.LongRunConfig longRun;
 
     public SetupPeelNode(ParamValues params) {
         this.candidateMs = params.getInt("candidateMs");
         this.stepDeg = params.getDouble("stepDeg");
-        this.window = params.getInt("window");
-        this.commit = params.getInt("commit");
+        this.longRun = LongRunSolver.LongRunConfig.of(params.getInt("window"), params.getInt("commit"),
+                ParamParse.ints(params.getString("windowLadder"), null),
+                ParamParse.ints(params.getString("commitLadder"), null));
     }
 
     @Override
@@ -64,7 +65,7 @@ public final class SetupPeelNode implements NodeRuntime {
                 ? null : JumpConstraintCompiler.compile(new JumpSpec(sc, prefixCons, spec.objective));
         JumpConstraintCompiler.Compiled fullCompiled = JumpConstraintCompiler.compile(spec);
 
-        LongRunSolver.LongRunConfig cfg = LongRunSolver.LongRunConfig.of(window, commit);
+        LongRunSolver.LongRunConfig cfg = longRun;
         int steps = (int) Math.round(360.0 / stepDeg);
         double[] best = null;
         double bestViol = Double.POSITIVE_INFINITY;

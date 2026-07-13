@@ -20,13 +20,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class SmoothingPolish {
 
     private static final double FEAS_TOL = 0.0;
-    private static final int MAX_ROUNDS = 24;
-    private static final int MAX_EVALS = 24_000;
-    private static final int PAIR_SPAN = 3;
-    /** Step fractions toward the midpoint target; bisection finds the largest gate-passing pull. */
-    private static final double[] FRACTIONS = {1.0, 0.5, 0.25, 0.125};
     /** Pulls below the ~0.0055deg sine-bucket width cannot change the path; skip them. */
     private static final double MIN_MOVE_DEG = 1.0e-4;
+
+    public static final class Config {
+        public int maxRounds = 24;
+        public int maxEvals = 24_000;
+        public int pairSpan = 3;
+        /** Step fractions toward the midpoint target; bisection finds the largest gate-passing pull. */
+        public double[] fractions = {1.0, 0.5, 0.25, 0.125};
+    }
 
     private SmoothingPolish() {
     }
@@ -34,26 +37,31 @@ public final class SmoothingPolish {
     /** Returns the smoothed absolute wrapped facings, or {@code yawsAbsWrapped} itself when the start
      *  is not strictly feasible (an honestly-failed solve stays untouched for the panel to report). */
     public static double[] smooth(ForwardModel model, JumpSpec spec, double[] yawsAbsWrapped, AtomicBoolean cancel) {
+        return smooth(model, spec, yawsAbsWrapped, cancel, new Config());
+    }
+
+    public static double[] smooth(ForwardModel model, JumpSpec spec, double[] yawsAbsWrapped, AtomicBoolean cancel,
+                                  Config cfg) {
         int n = yawsAbsWrapped.length;
         if (n < 2) return yawsAbsWrapped;
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
         JumpPhysicsInputs sc = spec.asScenario();
         double sign = spec.objective.sense == Objective.Sense.MAX ? -1.0 : 1.0;
 
-        Work w = new Work(model, sc, compiled, spec.objective, sign, cancel);
+        Work w = new Work(model, sc, compiled, spec.objective, sign, cancel, cfg);
         double[] y = Angles.wrapAll(yawsAbsWrapped.clone());
         double floor = w.eval(y);
         if (floor == Double.POSITIVE_INFINITY) return yawsAbsWrapped;
         double rough = roughness(sc.startYaw, y);
 
-        for (int round = 0; round < MAX_ROUNDS && w.evals < MAX_EVALS; round++) {
+        for (int round = 0; round < cfg.maxRounds && w.evals < cfg.maxEvals; round++) {
             boolean moved = false;
             for (int t = 0; t < n; t++) {
                 double pulled = pullSingle(w, y, t, floor, rough);
                 if (pulled < rough) { rough = pulled; moved = true; }
             }
             for (int i = 0; i < n; i++) {
-                for (int d = 1; d <= PAIR_SPAN && i + d < n; d++) {
+                for (int d = 1; d <= cfg.pairSpan && i + d < n; d++) {
                     double pulled = pullPair(w, y, i, i + d, floor, rough);
                     if (pulled < rough) { rough = pulled; moved = true; }
                     pulled = pullTransfer(w, y, i, i + d, floor, rough);
@@ -94,8 +102,8 @@ public final class SmoothingPolish {
         double delta = Angles.wrapDelta(midTarget(w.sc.startYaw, y, t) - y[t]);
         if (Math.abs(delta) < MIN_MOVE_DEG) return rough;
         double orig = y[t];
-        for (double f : FRACTIONS) {
-            if (w.evals >= MAX_EVALS) break;
+        for (double f : w.cfg.fractions) {
+            if (w.evals >= w.cfg.maxEvals) break;
             y[t] = Angles.wrap(orig + delta * f);
             double r = roughness(w.sc.startYaw, y);
             if (r < rough && w.eval(y) <= floor) return r;
@@ -111,8 +119,8 @@ public final class SmoothingPolish {
         double dj = Angles.wrapDelta(midTarget(w.sc.startYaw, y, j) - y[j]);
         if (Math.abs(di) < MIN_MOVE_DEG && Math.abs(dj) < MIN_MOVE_DEG) return rough;
         double oi = y[i], oj = y[j];
-        for (double f : FRACTIONS) {
-            if (w.evals >= MAX_EVALS) break;
+        for (double f : w.cfg.fractions) {
+            if (w.evals >= w.cfg.maxEvals) break;
             y[i] = Angles.wrap(oi + di * f);
             y[j] = Angles.wrap(oj + dj * f);
             double r = roughness(w.sc.startYaw, y);
@@ -130,8 +138,8 @@ public final class SmoothingPolish {
         double di = Angles.wrapDelta(midTarget(w.sc.startYaw, y, i) - y[i]);
         if (Math.abs(di) < MIN_MOVE_DEG) return rough;
         double oi = y[i], oj = y[j];
-        for (double f : FRACTIONS) {
-            if (w.evals >= MAX_EVALS) break;
+        for (double f : w.cfg.fractions) {
+            if (w.evals >= w.cfg.maxEvals) break;
             y[i] = Angles.wrap(oi + di * f);
             y[j] = Angles.wrap(oj - di * f);
             double r = roughness(w.sc.startYaw, y);
@@ -150,16 +158,18 @@ public final class SmoothingPolish {
         final Objective obj;
         final double sign;
         final AtomicBoolean cancel;
+        final Config cfg;
         int evals;
 
         Work(ForwardModel model, JumpPhysicsInputs sc, JumpConstraintCompiler.Compiled compiled,
-             Objective obj, double sign, AtomicBoolean cancel) {
+             Objective obj, double sign, AtomicBoolean cancel, Config cfg) {
             this.model = model;
             this.sc = sc;
             this.compiled = compiled;
             this.obj = obj;
             this.sign = sign;
             this.cancel = cancel;
+            this.cfg = cfg;
         }
 
         /** sign*objective via the exact chain; +inf when any wall is crossed (same gate as the polish). */

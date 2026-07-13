@@ -14,7 +14,30 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class SeamSweepNode implements NodeRuntime {
 
+    private final SeamSweepRecovery.Config cfg;
+
     public SeamSweepNode(ParamValues params) {
+        this.cfg = new SeamSweepRecovery.Config();
+        cfg.sweepPinHalf = params.getDouble("sweepPinHalf");
+        cfg.narrowPinHalf = params.getDouble("narrowPinHalf");
+        cfg.finePinHalf = params.getDouble("finePinHalf");
+        cfg.beamPinHalf = params.getDouble("beamPinHalf");
+        cfg.holdPinHalf = params.getDouble("holdPinHalf");
+        cfg.maxSeams = params.getInt("maxSeams");
+        cfg.maxCells1d = params.getInt("maxCells1d");
+        cfg.maxCells2d = params.getInt("maxCells2d");
+        cfg.narrowCells1d = params.getInt("narrowCells1d");
+        cfg.narrowCells2d = params.getInt("narrowCells2d");
+        cfg.slpRescueCap = params.getInt("slpRescueCap");
+        cfg.narrowSlpRescueCap = params.getInt("narrowSlpRescueCap");
+        cfg.beamWidth = params.getInt("beamWidth");
+        cfg.beamMaxCells = params.getInt("beamMaxCells");
+        cfg.wideBeamWidth = params.getInt("wideBeamWidth");
+        cfg.wideBeamMaxCells = params.getInt("wideBeamMaxCells");
+        cfg.beamMaxSeams = params.getInt("beamMaxSeams");
+        cfg.beamSlpCap = params.getInt("beamSlpCap");
+        cfg.polishReserveFraction = params.getDouble("polishReserveFraction");
+        cfg.longRunFraction = params.getDouble("longRunFraction");
     }
 
     @Override
@@ -25,7 +48,7 @@ public final class SeamSweepNode implements NodeRuntime {
         if (ctx.progress != null) ctx.progress.setStage(ctx.chainWith("seam sweep"));
         if (SolverTrace.on()) SolverTrace.log("ENGINE", "seam sweep start budgetMs=%d", remaining / 1_000_000L);
         double[] swept = SeamSweepRecovery.solve(ctx.exactModel, ctx.spec, ctx.feasTol, nodeToken,
-                remaining, Angles.wrapAll(in.yaws.clone()));
+                remaining, Angles.wrapAll(in.yaws.clone()), cfg);
         if (swept != null) {
             boolean max = ctx.maximize();
             double cur = ctx.scoredObjective(in.yaws);

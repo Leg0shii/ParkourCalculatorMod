@@ -18,9 +18,23 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class WrapIlsNode implements NodeRuntime {
 
     private final int minRemainingSec;
+    private final int span;
+    private final int maxSpan;
+    private final int candHighTarget;
+    private final boolean kicks;
+    private final long evalCap;
+    private final int roundCap;
+    private final boolean gateFlipMoves;
 
     public WrapIlsNode(ParamValues params) {
         this.minRemainingSec = params.getInt("minRemainingSec");
+        this.span = params.getInt("span");
+        this.maxSpan = params.getInt("maxSpan");
+        this.candHighTarget = params.getInt("candHighTarget");
+        this.kicks = params.getBool("kicks");
+        this.evalCap = params.getInt("evalCap");
+        this.roundCap = params.getInt("roundCap");
+        this.gateFlipMoves = params.getBool("gateFlipMoves");
     }
 
     @Override
@@ -36,6 +50,13 @@ public final class WrapIlsNode implements NodeRuntime {
         double[] dom = ctx.freeBox != null ? Scoring.translationDomain(sc, ctx.freeBox)
                 : new double[] {0.0, 0.0, 0.0, 0.0};
         WrapWindowIls.Config wcfg = new WrapWindowIls.Config();
+        wcfg.span = span;
+        wcfg.maxSpan = maxSpan;
+        wcfg.candHighTarget = candHighTarget;
+        wcfg.kicks = kicks;
+        wcfg.evalCap = evalCap;
+        wcfg.roundCap = roundCap;
+        wcfg.gateFlipMoves = gateFlipMoves;
         if (ctx.legalGoal != null) {
             wcfg.legalObjective = ctx.spec.objective;
             wcfg.legalGoalRhs = ctx.legalGoal.rhs;

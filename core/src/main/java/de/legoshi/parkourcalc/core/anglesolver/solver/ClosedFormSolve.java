@@ -29,19 +29,21 @@ public final class ClosedFormSolve {
 
     public static boolean DEBUG = false;
 
-    /** Inward wall margins (blocks) tried in order; the first that yields exact feasibility wins. The
-     *  smallest feasible margin gives the best objective. 0 is tried first in case quantization happens to
-     *  land safe; the rest cover the ~1e-4 sine-table perturbation with headroom. */
-    private static final double[] MARGINS = {0.0, 1.0e-4, 3.0e-4, 6.0e-4, 1.2e-3, 2.5e-3, 5.0e-3, 1.0e-2};
+    public static final class Config {
+        /** Inward wall margins (blocks) tried in order; the first that yields exact feasibility wins. The
+         *  smallest feasible margin gives the best objective. 0 is tried first in case quantization happens to
+         *  land safe; the rest cover the ~1e-4 sine-table perturbation with headroom. */
+        public double[] margins = {0.0, 1.0e-4, 3.0e-4, 6.0e-4, 1.2e-3, 2.5e-3, 5.0e-3, 1.0e-2};
 
-    /** Robust (centered) margins, largest first: the first margin that certifies is the realized clearance
-     *  on every active wall. For surrogate-objective solves (lead-in windows), where hugging walls commits
-     *  fragile seam states. */
-    private static final double[] MARGINS_ROBUST = {5.0e-2, 2.0e-2, 1.0e-2, 5.0e-3, 1.2e-3, 3.0e-4, 0.0};
+        /** Robust (centered) margins, largest first: the first margin that certifies is the realized clearance
+         *  on every active wall. For surrogate-objective solves (lead-in windows), where hugging walls commits
+         *  fragile seam states. */
+        public double[] marginsRobust = {5.0e-2, 2.0e-2, 1.0e-2, 5.0e-3, 1.2e-3, 3.0e-4, 0.0};
 
-    private static final int MAX_INERTIA_PASSES = 4;
+        public int maxInertiaPasses = 4;
 
-    private static final int RUNG_STALL_LIMIT = 2;
+        public int rungStallLimit = 2;
+    }
 
     public static final class Result {
         public final double[] yaws;
@@ -56,32 +58,41 @@ public final class ClosedFormSolve {
     }
 
     public static double[] optimize(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel) {
-        Result r = optimizeReturning(exact, spec, feasTol, cancel, MARGINS, true);
+        return optimize(exact, spec, feasTol, cancel, new Config());
+    }
+
+    public static double[] optimize(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
+                                    Config cfg) {
+        Result r = optimizeReturning(exact, spec, feasTol, cancel, cfg.margins, true, cfg);
         return r != null && r.feasible ? r.yaws : null;
     }
 
     public static double[] optimizeWithPattern(ExactJumpModel exact, JumpSpec spec, double feasTol,
                                                AtomicBoolean cancel, boolean[] zeroX, boolean[] zeroZ) {
         if (JumpLinearModel.hasFacingWall(spec.constraints)) return null;
+        Config cfg = new Config();
         JumpPhysicsInputs sc = spec.asScenario();
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
-        Result r = runLadder(exact, spec, sc, compiled, feasTol, cancel, MARGINS, true, zeroX, zeroZ, System.nanoTime());
+        Result r = runLadder(exact, spec, sc, compiled, feasTol, cancel, cfg.margins, true, zeroX, zeroZ,
+                System.nanoTime(), cfg);
         return r != null && r.feasible ? r.yaws : null;
     }
 
     /** Like {@link #optimize}, but prefers clearance over objective: the result keeps the largest
      *  certifiable uniform distance from every wall. */
     public static double[] optimizeRobust(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel) {
-        Result r = optimizeReturning(exact, spec, feasTol, cancel, MARGINS_ROBUST, false);
+        Config cfg = new Config();
+        Result r = optimizeReturning(exact, spec, feasTol, cancel, cfg.marginsRobust, false, cfg);
         return r != null && r.feasible ? r.yaws : null;
     }
 
     public static Result optimizeRobustGraded(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel) {
-        return optimizeReturning(exact, spec, feasTol, cancel, MARGINS_ROBUST, false);
+        Config cfg = new Config();
+        return optimizeReturning(exact, spec, feasTol, cancel, cfg.marginsRobust, false, cfg);
     }
 
     private static Result optimizeReturning(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
-                                            double[] margins, boolean ascending) {
+                                            double[] margins, boolean ascending, Config cfg) {
         JumpPhysicsInputs sc = spec.asScenario();
 
         // The linear model represents only position (X/Z) walls. Facing walls are not position-linear.
@@ -94,13 +105,13 @@ public final class ClosedFormSolve {
         boolean[] zeroX = null;
         boolean[] zeroZ = null;
         Result best = null;
-        for (int pass = 0; pass < MAX_INERTIA_PASSES; pass++) {
+        for (int pass = 0; pass < cfg.maxInertiaPasses; pass++) {
             if (SolverTrace.on()) {
                 SolverTrace.log("CF", "pass=%d pattern=%s n=%d m=%d %s",
                         pass, SolverTrace.patternLabel(zeroX, zeroZ), n, spec.constraints.size(),
                         ascending ? "ascending" : "robust");
             }
-            Result r = runLadder(exact, spec, sc, compiled, feasTol, cancel, margins, ascending, zeroX, zeroZ, t0);
+            Result r = runLadder(exact, spec, sc, compiled, feasTol, cancel, margins, ascending, zeroX, zeroZ, t0, cfg);
             if (r == null) {
                 if (SolverTrace.on()) SolverTrace.log("CF", "pass=%d ladder empty (trivial/unbounded/cancel)", pass);
                 break;
@@ -144,7 +155,8 @@ public final class ClosedFormSolve {
 
     private static Result runLadder(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc,
                                     JumpConstraintCompiler.Compiled compiled, double feasTol, AtomicBoolean cancel,
-                                    double[] margins, boolean ascending, boolean[] zeroX, boolean[] zeroZ, long t0) {
+                                    double[] margins, boolean ascending, boolean[] zeroX, boolean[] zeroZ, long t0,
+                                    Config cfg) {
         JumpLinearModel lin = new JumpLinearModel(sc, zeroX, zeroZ);
         double[] cx = new double[lin.n];
         double[] cz = new double[lin.n];
@@ -203,7 +215,7 @@ public final class ClosedFormSolve {
                 if (DEBUG) System.out.printf("  CLOSED -> %.2fus (margin=%.1e)%n", (System.nanoTime() - t0) / 1e3, margin);
                 return new Result(yaws, viol, true);
             }
-            if (ascending && rungStall >= RUNG_STALL_LIMIT) {
+            if (ascending && rungStall >= cfg.rungStallLimit) {
                 if (SolverTrace.on()) SolverTrace.log("CF", "ladder stalled after margin=%.2e (bestViol=%.3e)", margin, bestViol);
                 break;
             }

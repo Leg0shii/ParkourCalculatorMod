@@ -6,16 +6,67 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeOutcome;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeRuntime;
+import de.legoshi.parkourcalc.core.anglesolver.graph.ParamParse;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamValues;
+import de.legoshi.parkourcalc.core.anglesolver.solver.ClosedFormSolve;
+import de.legoshi.parkourcalc.core.anglesolver.solver.LatticeRepair;
+import de.legoshi.parkourcalc.core.anglesolver.solver.RelaxationRecovery;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SlpSolve;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class DualChainNode implements NodeRuntime {
 
     private final boolean keepBetter;
+    private final ParamValues params;
 
     public DualChainNode(ParamValues params) {
         this.keepBetter = params.getBool("keepBetter");
+        this.params = params;
+    }
+
+    private SlpSolve.Config slpConfig() {
+        SlpSolve.Config cfg = new SlpSolve.Config();
+        cfg.phase1Calls = params.getInt("slpPhase1Calls");
+        cfg.totalCalls = params.getInt("slpTotalCalls");
+        cfg.trStartDeg = params.getDouble("slpTrStartDeg");
+        cfg.trMaxDeg = params.getDouble("slpTrMaxDeg");
+        cfg.trMinDeg = params.getDouble("slpTrMinDeg");
+        cfg.lpMaxIter = params.getInt("slpLpMaxIter");
+        return cfg;
+    }
+
+    private ClosedFormSolve.Config cfConfig() {
+        ClosedFormSolve.Config cfg = new ClosedFormSolve.Config();
+        cfg.margins = ParamParse.doubles(params.getString("cfMargins"), cfg.margins);
+        cfg.maxInertiaPasses = params.getInt("cfMaxInertiaPasses");
+        cfg.rungStallLimit = params.getInt("cfRungStallLimit");
+        return cfg;
+    }
+
+    private RelaxationRecovery.Config rrConfig() {
+        RelaxationRecovery.Config cfg = new RelaxationRecovery.Config();
+        cfg.outerIters = params.getInt("rrOuterIters");
+        cfg.innerIters = params.getInt("rrInnerIters");
+        cfg.rhoStart = params.getDouble("rrRhoStart");
+        cfg.rhoGrow = params.getDouble("rrRhoGrow");
+        cfg.rhoMax = params.getDouble("rrRhoMax");
+        cfg.pinWidths = ParamParse.doubles(params.getString("rrPinWidths"), cfg.pinWidths);
+        cfg.seedMargins = ParamParse.doubles(params.getString("rrSeedMargins"), cfg.seedMargins);
+        cfg.dualRestarts = params.getInt("rrDualRestarts");
+        cfg.slpPhase1Calls = params.getInt("rrSlpPhase1Calls");
+        cfg.slpTotalCalls = params.getInt("rrSlpTotalCalls");
+        cfg.lattice = lrConfig();
+        return cfg;
+    }
+
+    private LatticeRepair.Config lrConfig() {
+        LatticeRepair.Config cfg = new LatticeRepair.Config();
+        cfg.schedule = ParamParse.pairs(params.getString("lrSchedule"), cfg.schedule);
+        cfg.maxRounds = params.getInt("lrMaxRounds");
+        cfg.startViolCap = params.getDouble("lrStartViolCap");
+        cfg.pairSteps = params.getInt("lrPairSteps");
+        return cfg;
     }
 
     @Override
@@ -23,7 +74,7 @@ public final class DualChainNode implements NodeRuntime {
         if (!ctx.exact()) return NodeOutcome.of(Guarantee.NONE, in);
         String[] chainName = new String[1];
         double[] chain = AngleSolverEngine.dualChain(ctx.exactModel, ctx.spec, ctx.scenario, nodeToken,
-                chainName, deadlineNanos);
+                chainName, deadlineNanos, slpConfig(), cfConfig(), rrConfig());
         if (chain == null) {
             if (!keepBetter) ctx.chainAppend("closed form");
             return NodeOutcome.of(Guarantee.NONE, in);

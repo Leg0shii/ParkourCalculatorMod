@@ -1449,8 +1449,22 @@ public final class AngleSolverEngine {
 
     public static double[] dualChain(ExactJumpModel em, JumpSpec spec, JumpPhysicsInputs sc,
                                      AtomicBoolean cancel, String[] nameOut, long deadlineNanos) {
+        return dualChain(em, spec, sc, cancel, nameOut, deadlineNanos, new SlpSolve.Config());
+    }
+
+    public static double[] dualChain(ExactJumpModel em, JumpSpec spec, JumpPhysicsInputs sc,
+                                     AtomicBoolean cancel, String[] nameOut, long deadlineNanos,
+                                     SlpSolve.Config slpCfg) {
+        return dualChain(em, spec, sc, cancel, nameOut, deadlineNanos, slpCfg, new ClosedFormSolve.Config(),
+                new RelaxationRecovery.Config());
+    }
+
+    public static double[] dualChain(ExactJumpModel em, JumpSpec spec, JumpPhysicsInputs sc,
+                                     AtomicBoolean cancel, String[] nameOut, long deadlineNanos,
+                                     SlpSolve.Config slpCfg, ClosedFormSolve.Config cfCfg,
+                                     RelaxationRecovery.Config rrCfg) {
         if (SolverTrace.on()) SolverTrace.log("CHAIN", "closed form start");
-        double[] yaws = ClosedFormSolve.optimize(em, spec, FEAS_TOL, cancel);
+        double[] yaws = ClosedFormSolve.optimize(em, spec, FEAS_TOL, cancel, cfCfg);
         if (yaws != null) {
             nameOut[0] = "closed form";
             if (SolverTrace.on()) SolverTrace.log("CHAIN", "closed form solved");
@@ -1458,7 +1472,7 @@ public final class AngleSolverEngine {
         }
         if (cancel.get()) return null;
         if (SolverTrace.on()) SolverTrace.log("CHAIN", "slp start");
-        yaws = SlpSolve.optimize(em, spec, FEAS_TOL, cancel);
+        yaws = SlpSolve.optimize(em, spec, FEAS_TOL, cancel, null, slpCfg);
         if (yaws != null) {
             nameOut[0] = "closed form -> SLP";
             if (SolverTrace.on()) SolverTrace.log("CHAIN", "slp solved");
@@ -1466,7 +1480,7 @@ public final class AngleSolverEngine {
         }
         if (deadlineNanos == 0L || deadlineNanos - System.nanoTime() >= RELAX_MIN_REMAINING_NANOS) {
             if (SolverTrace.on()) SolverTrace.log("CHAIN", "relaxation start");
-            yaws = RelaxationRecovery.solve(em, spec, FEAS_TOL, cancel);
+            yaws = RelaxationRecovery.solve(em, spec, FEAS_TOL, cancel, rrCfg);
             if (yaws != null) {
                 nameOut[0] = "closed form -> relaxation recovery";
                 if (SolverTrace.on()) SolverTrace.log("CHAIN", "relaxation solved");
@@ -1478,9 +1492,9 @@ public final class AngleSolverEngine {
         for (Objective alt : alternateObjectives(spec.objective)) {
             if (cancel.get()) return null;
             if (SolverTrace.on()) SolverTrace.log("CHAIN", "alt seed %s %s start", alt.axis, alt.sense);
-            double[] seed = ClosedFormSolve.optimize(em, new JumpSpec(sc, spec.constraints, alt), FEAS_TOL, cancel);
+            double[] seed = ClosedFormSolve.optimize(em, new JumpSpec(sc, spec.constraints, alt), FEAS_TOL, cancel, cfCfg);
             if (seed == null) continue;
-            yaws = SlpSolve.optimize(em, spec, FEAS_TOL, cancel, seed);
+            yaws = SlpSolve.optimize(em, spec, FEAS_TOL, cancel, seed, slpCfg);
             if (yaws != null) {
                 nameOut[0] = "closed form -> SLP (reseeded)";
                 if (SolverTrace.on()) SolverTrace.log("CHAIN", "reseeded slp solved");

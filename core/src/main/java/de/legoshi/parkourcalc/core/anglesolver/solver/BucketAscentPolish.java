@@ -24,11 +24,11 @@ public final class BucketAscentPolish {
      *  over-samples the ~0.0055 deg sine buckets so none is skipped. Wider block-2 hops islands, finer
      *  block-2 settles the wall-binding ticks onto their exact bucket pair. */
     public static final class Config {
-        final double[][] b1;
-        final double[][] b2;
-        final int maxRounds;
-        final int restarts;
-        final int pairSpan;
+        public final double[][] b1;
+        public final double[][] b2;
+        public final int maxRounds;
+        public final int restarts;
+        public final int pairSpan;
 
         public Config(double[][] b1, double[][] b2, int maxRounds, int restarts, int pairSpan) {
             this.b1 = b1;

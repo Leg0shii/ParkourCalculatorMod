@@ -16,11 +16,11 @@ public final class WrapWindowIls {
     private static final double NORM_HIGH_TOL = 1.0e-6;
     private static final double NORM_GAIN_TOL = 1.0e-7;
     private static final double PRIO_NORM_TOL = 1.0e-7;
-    private static final int CAND_HIGH_TARGET = 5;
 
     public static final class Config {
         public int span = 16;
         public int maxSpan = 512;
+        public int candHighTarget = 5;
         public long rngSeed = 0x5DEECE66DL;
         public boolean kicks = true;
         public long evalCap = 0L;
@@ -304,7 +304,7 @@ public final class WrapWindowIls {
     }
 
     public static float[] candSetFor(float cur, float incCell, int baseSpan, int maxSpan,
-                                     boolean modern, boolean boost) {
+                                     int candHighTarget, boolean modern, boolean boost) {
         double curNorm = normAt(cur);
         long curId = FacingLattice.jointCellId(cur, modern, boost);
         int sp = baseSpan;
@@ -328,7 +328,7 @@ public final class WrapWindowIls {
                     map.put(Long.valueOf(id), Float.valueOf(r));
                 }
             }
-            if (high >= CAND_HIGH_TARGET || sp >= maxSpan) {
+            if (high >= candHighTarget || sp >= maxSpan) {
                 if (Math.abs((double) incCell) <= MAX_ABS_GF) {
                     long incId = FacingLattice.jointCellId(incCell, modern, boost);
                     if (incId != curId && !map.containsKey(Long.valueOf(incId))) {
@@ -413,7 +413,7 @@ public final class WrapWindowIls {
     private static float[] candsFor(double[] gf, double[] inc, int t, boolean full, Config cfg,
                                     boolean modern, boolean boost) {
         if (full) return candFull((float) gf[t], cfg.span, modern, boost);
-        return candSetFor((float) gf[t], (float) inc[t], cfg.span, cfg.maxSpan, modern, boost);
+        return candSetFor((float) gf[t], (float) inc[t], cfg.span, cfg.maxSpan, cfg.candHighTarget, modern, boost);
     }
 
     private static float[] capFilter(float[] reps) {
