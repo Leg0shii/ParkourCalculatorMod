@@ -15,6 +15,7 @@ public final class NodeStatus {
     public long startNanos;
     public long elapsedNanos;
     public long budgetNanos;
+    public long evals;
     public int visits;
 
     NodeStatus(String nodeId, String label) {
@@ -29,6 +30,7 @@ public final class NodeStatus {
         s.startNanos = startNanos;
         s.elapsedNanos = elapsedNanos;
         s.budgetNanos = budgetNanos;
+        s.evals = evals;
         s.visits = visits;
         return s;
     }

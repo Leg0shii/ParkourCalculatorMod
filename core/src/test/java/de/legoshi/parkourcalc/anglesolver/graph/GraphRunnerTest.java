@@ -4,6 +4,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.Branch;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphEdge;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphNode;
+import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunState;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunner;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
 import de.legoshi.parkourcalc.core.anglesolver.graph.InputRequirement;
@@ -11,6 +12,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.NodeCatalog;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeCategory;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeOutcome;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeRuntime;
+import de.legoshi.parkourcalc.core.anglesolver.graph.NodeStatus;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeType;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamSpec;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
@@ -83,6 +85,31 @@ public class GraphRunnerTest {
         GraphContext ctx = TestScenarios.context(2, null, new AtomicBoolean(false));
         GraphRunner.run(g, ctx);
         assertEquals(Arrays.asList("a", "b"), order);
+    }
+
+    @Test
+    public void runStateRecordsTheWalk() {
+        GraphNode a = stub("a", (ctx, in, tok, dl) -> NodeOutcome.of(Guarantee.FOUND, in),
+                Guarantee.FOUND, Guarantee.NONE);
+        GraphNode b = stub("b", (ctx, in, tok, dl) -> NodeOutcome.of(Guarantee.DONE, in), Guarantee.DONE);
+        SolverGraph g = graph(
+                Arrays.asList(marker("entry", "entry"), marker("emit", "emit"), a, b),
+                Arrays.asList(
+                        new GraphEdge("entry", Guarantee.DONE, "a"),
+                        new GraphEdge("a", Guarantee.FOUND, "b"),
+                        new GraphEdge("b", Guarantee.DONE, "emit")));
+        GraphContext ctx = TestScenarios.context(2, null, new AtomicBoolean(false));
+        GraphRunner.run(g, ctx);
+        List<GraphRunState.Step> steps = ctx.runState.steps();
+        assertEquals(2, steps.size());
+        assertEquals("a", steps.get(0).nodeId);
+        assertEquals(Guarantee.FOUND, steps.get(0).taken);
+        assertEquals("b", steps.get(1).nodeId);
+        assertEquals(Guarantee.DONE, steps.get(1).taken);
+        assertNull(ctx.runState.activeNodeId());
+        assertEquals(NodeStatus.Phase.DONE, ctx.runState.status("a").phase);
+        assertEquals(1, ctx.runState.status("a").visits);
+        assertEquals(NodeStatus.Phase.DONE, ctx.runState.status("b").phase);
     }
 
     @Test

@@ -12,14 +12,20 @@ public final class ConstraintPlate {
     public final List<AABB> back;
     public final int tick;
     public final int[] constraintIndices;
+    public final boolean pickable;
     public boolean highlighted;
 
     public ConstraintPlate(ConstraintShapes.Sense sense, boolean satisfied, List<AABB> front, List<AABB> back, int tick, int[] constraintIndices) {
+        this(sense, satisfied, front, back, tick, constraintIndices, true);
+    }
+
+    public ConstraintPlate(ConstraintShapes.Sense sense, boolean satisfied, List<AABB> front, List<AABB> back, int tick, int[] constraintIndices, boolean pickable) {
         this.sense = sense;
         this.satisfied = satisfied;
         this.front = front;
         this.back = back;
         this.tick = tick;
         this.constraintIndices = constraintIndices;
+        this.pickable = pickable;
     }
 }

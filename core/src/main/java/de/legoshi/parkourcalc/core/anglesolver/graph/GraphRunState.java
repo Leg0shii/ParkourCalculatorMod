@@ -7,8 +7,26 @@ import java.util.Map;
 
 public final class GraphRunState {
 
+    public static final class Step {
+
+        public final String nodeId;
+        public final String label;
+        public Guarantee taken;
+
+        Step(String nodeId, String label) {
+            this.nodeId = nodeId;
+            this.label = label;
+        }
+
+        public Step copy() {
+            Step s = new Step(nodeId, label);
+            s.taken = taken;
+            return s;
+        }
+    }
+
     private final Map<String, NodeStatus> statuses = new LinkedHashMap<>();
-    private final List<String> breadcrumb = new ArrayList<>();
+    private final List<Step> steps = new ArrayList<>();
     private String activeNodeId;
     private int version;
 
@@ -24,16 +42,21 @@ public final class GraphRunState {
         s.budgetNanos = budgetNanos;
         s.visits++;
         activeNodeId = nodeId;
-        breadcrumb.add(label);
+        steps.add(new Step(nodeId, label));
         version++;
     }
 
-    public synchronized void end(String nodeId, Guarantee taken) {
+    public synchronized void end(String nodeId, Guarantee taken, long evalsDelta) {
         NodeStatus s = statuses.get(nodeId);
         if (s != null) {
             s.phase = NodeStatus.Phase.DONE;
             s.elapsedNanos = System.nanoTime() - s.startNanos;
             s.taken = taken;
+            s.evals += evalsDelta;
+        }
+        if (!steps.isEmpty()) {
+            Step last = steps.get(steps.size() - 1);
+            if (last.nodeId.equals(nodeId)) last.taken = taken;
         }
         if (nodeId.equals(activeNodeId)) activeNodeId = null;
         version++;
@@ -47,8 +70,10 @@ public final class GraphRunState {
         return activeNodeId;
     }
 
-    public synchronized List<String> breadcrumb() {
-        return new ArrayList<>(breadcrumb);
+    public synchronized List<Step> steps() {
+        List<Step> out = new ArrayList<>(steps.size());
+        for (Step s : steps) out.add(s.copy());
+        return out;
     }
 
     public synchronized List<NodeStatus> statuses() {

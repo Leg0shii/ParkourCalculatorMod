@@ -1,17 +1,22 @@
 package de.legoshi.parkourcalc.core.ui.anglesolver;
 
+import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
+import de.legoshi.parkourcalc.core.anglesolver.ConstraintText;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Branch;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphEdge;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphNode;
+import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunState;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphValidator;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
 import de.legoshi.parkourcalc.core.anglesolver.graph.InputRequirement;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeCatalog;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeCategory;
+import de.legoshi.parkourcalc.core.anglesolver.graph.NodeStatus;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeType;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamSpec;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ValidationIssue;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SolveProgress;
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
 import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
@@ -39,11 +44,13 @@ import imgui.type.ImLong;
 import imgui.type.ImString;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -63,11 +70,12 @@ public final class GraphEditorWindow implements RenderInterface {
 
     private static final int PIN_STRIDE = 32;
     private static final int OUTPUT_PIN_LIMIT = 16;
-    private static final int EDITOR_COLOR_PUSHES = 14;
+    private static final int EDITOR_COLOR_PUSHES = 16;
     private static final int SHAPE_CIRCLE = 0;
     private static final int SHAPE_CIRCLE_FILLED = 1;
     private static final int SHAPE_TRIANGLE_FILLED = 2;
 
+    private final AngleSolverEngine engine;
     private SaveHandler saveHandler;
 
     private boolean open;
@@ -118,6 +126,23 @@ public final class GraphEditorWindow implements RenderInterface {
     private float pinIconX;
     private float pinIconY;
 
+    private GraphRunState observedRun;
+    private int observedRunVersion = -1;
+    private List<GraphRunState.Step> runSteps = Collections.emptyList();
+    private final Map<String, NodeStatus> runStatuses = new HashMap<>();
+    private boolean flowInitialized;
+    private int flowedSteps;
+    private int breadcrumbSeenSteps;
+    private int lastProgressVersion = -1;
+    private boolean lastSampleFeasible;
+    private final List<Double> sampleTimes = new ArrayList<>();
+    private final List<Double> sampleObjectives = new ArrayList<>();
+    private final List<Double> sampleViolations = new ArrayList<>();
+
+    public GraphEditorWindow(AngleSolverEngine engine) {
+        this.engine = engine;
+    }
+
     public void setSaveHandler(SaveHandler handler) {
         this.saveHandler = handler;
     }
@@ -167,6 +192,7 @@ public final class GraphEditorWindow implements RenderInterface {
 
     @Override
     public void render(ImGuiIO io) {
+        pollRun();
         if (!open) return;
         NodeEditor.setCurrentEditor(context);
         float scale = ThemeManager.uiScale();
@@ -179,11 +205,59 @@ public final class GraphEditorWindow implements RenderInterface {
         if (visible) {
             renderToolbar();
             renderIssues();
+            renderRunPanel(scale);
             renderCanvas(scale);
             renderSaveErrorsModal();
             renderCloseModal();
         }
         ImGui.end();
+    }
+
+    private void pollRun() {
+        GraphRunState rs = engine != null ? engine.graphRunState() : null;
+        if (rs != observedRun) {
+            observedRun = rs;
+            observedRunVersion = -1;
+            runSteps = Collections.emptyList();
+            runStatuses.clear();
+            flowInitialized = false;
+            flowedSteps = 0;
+            breadcrumbSeenSteps = 0;
+            lastProgressVersion = -1;
+            lastSampleFeasible = false;
+            sampleTimes.clear();
+            sampleObjectives.clear();
+            sampleViolations.clear();
+        }
+        if (rs == null) return;
+        int v = rs.version();
+        if (v != observedRunVersion) {
+            observedRunVersion = v;
+            runSteps = rs.steps();
+            runStatuses.clear();
+            for (NodeStatus s : rs.statuses()) runStatuses.put(s.nodeId, s);
+        }
+        if (!flowInitialized) {
+            flowedSteps = completedStepCount();
+            flowInitialized = true;
+        }
+        SolveProgress p = engine.liveProgress();
+        if (p != null && p.haveBest()) {
+            int pv = p.version();
+            if (pv != lastProgressVersion) {
+                lastProgressVersion = pv;
+                lastSampleFeasible = p.isBestFeasible();
+                sampleTimes.add(engine.elapsedSeconds());
+                sampleObjectives.add(p.bestObjective());
+                sampleViolations.add(p.bestViolation());
+            }
+        }
+    }
+
+    private int completedStepCount() {
+        int n = runSteps.size();
+        if (n > 0 && runSteps.get(n - 1).taken == null) return n - 1;
+        return n;
     }
 
     private void drawTitleBar(float scale) {
@@ -295,6 +369,158 @@ public final class GraphEditorWindow implements RenderInterface {
         ImGui.endChild();
     }
 
+    private void renderRunPanel(float scale) {
+        if (observedRun == null || runSteps.isEmpty()) return;
+        boolean running = engine != null && engine.isGraphSolving();
+        float lineH = ImGui.getTextLineHeight();
+        if (running) {
+            ImVec2 p = ImGui.getCursorScreenPos();
+            SolverWidgets.spinner(ImGui.getWindowDrawList(), p.x + lineH * 0.5f, p.y + lineH * 0.5f,
+                    lineH * 0.30f, 1.6f * scale, ThemeManager.accentColor(), engine.elapsedSeconds());
+            ImGui.dummy(lineH, lineH);
+            ImGui.sameLine();
+            ImGui.text(String.format(Locale.ROOT, "Solving %.1fs", engine.elapsedSeconds()));
+        } else {
+            ThemeManager.pushTextColor(ThemeManager.textDimColor());
+            ImGui.text("Last run");
+            ThemeManager.popTextColor();
+        }
+        renderLiveStats();
+        renderBreadcrumb(running);
+        renderSparklines(scale);
+    }
+
+    private void renderLiveStats() {
+        if (sampleObjectives.isEmpty()) return;
+        String objText = "obj " + ConstraintText.fixedStat(sampleObjectives.get(sampleObjectives.size() - 1));
+        String violText = "viol " + ConstraintText.fixedStat(sampleViolations.get(sampleViolations.size() - 1));
+        float gap = ImGui.getStyle().getItemSpacing().x;
+        float w = ImGui.calcTextSize(objText).x + ImGui.calcTextSize(violText).x + gap;
+        ImGui.sameLine();
+        float avail = ImGui.getContentRegionAvail().x;
+        if (avail > w) ImGui.setCursorPosX(ImGui.getCursorPosX() + avail - w);
+        ThemeManager.pushTextColor(ThemeManager.accentColor());
+        ImGui.text(objText);
+        ThemeManager.popTextColor();
+        ImGui.sameLine();
+        ThemeManager.pushTextColor(lastSampleFeasible ? ThemeManager.okColor() : ThemeManager.warningColor());
+        ImGui.text(violText);
+        ThemeManager.popTextColor();
+    }
+
+    private void renderBreadcrumb(boolean running) {
+        float h = ImGui.getTextLineHeightWithSpacing() + ImGui.getStyle().getScrollbarSize();
+        ImGui.beginChild("##graph_run_breadcrumb", 0f, h, false, ImGuiWindowFlags.HorizontalScrollbar);
+        for (int i = 0; i < runSteps.size(); i++) {
+            GraphRunState.Step s = runSteps.get(i);
+            if (i > 0) {
+                ImGui.sameLine();
+                ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+                ImGui.text(">");
+                ThemeManager.popTextColor();
+                ImGui.sameLine();
+            }
+            boolean activeStep = running && i == runSteps.size() - 1 && s.taken == null;
+            int color = activeStep ? ThemeManager.okColor() : branchColor(nodeById(s.nodeId), s.taken);
+            ThemeManager.pushTextColor(color);
+            ImGui.text(s.label);
+            ThemeManager.popTextColor();
+            if (ImGui.isItemClicked()) focusNodeId = s.nodeId;
+            if (ImGui.isItemHovered()) ImGui.setTooltip(stepTooltip(s));
+        }
+        if (running && runSteps.size() != breadcrumbSeenSteps) {
+            ImGui.setScrollX(ImGui.getScrollMaxX());
+            breadcrumbSeenSteps = runSteps.size();
+        }
+        ImGui.endChild();
+    }
+
+    private String stepTooltip(GraphRunState.Step s) {
+        StringBuilder b = new StringBuilder(s.nodeId);
+        if (s.taken != null) b.append(" -> ").append(s.taken.name());
+        NodeStatus st = runStatuses.get(s.nodeId);
+        if (st != null) {
+            if (st.phase == NodeStatus.Phase.DONE && st.elapsedNanos > 0) {
+                b.append("\nlast visit ").append(String.format(Locale.ROOT, "%.2fs", st.elapsedNanos / 1.0e9));
+            }
+            if (st.visits > 1) b.append("\nvisits ").append(st.visits);
+            if (st.evals > 0) b.append("\nevals ").append(st.evals);
+        }
+        return b.toString();
+    }
+
+    private void renderSparklines(float scale) {
+        if (sampleTimes.size() < 2) return;
+        float gap = ImGui.getStyle().getItemSpacing().x;
+        float w = (ImGui.getContentRegionAvail().x - gap) * 0.5f;
+        float h = 40f * scale;
+        if (w < 40f) return;
+        sparkline("##graph_run_spark_obj", "objective", sampleObjectives, ThemeManager.accentColor(), w, h);
+        ImGui.sameLine();
+        sparkline("##graph_run_spark_viol", "violation", sampleViolations,
+                lastSampleFeasible ? ThemeManager.okColor() : ThemeManager.warningColor(), w, h);
+    }
+
+    private void sparkline(String id, String title, List<Double> values, int color, float w, float h) {
+        ImVec2 p = ImGui.getCursorScreenPos();
+        ImGui.invisibleButton(id, w, h);
+        ImDrawList dl = ImGui.getWindowDrawList();
+        dl.addRectFilled(p.x, p.y, p.x + w, p.y + h, ThemeManager.bgTintColor(0.45f), 3f);
+        int n = values.size();
+        double vMin = Double.POSITIVE_INFINITY;
+        double vMax = Double.NEGATIVE_INFINITY;
+        for (int i = 0; i < n; i++) {
+            double v = values.get(i);
+            vMin = Math.min(vMin, v);
+            vMax = Math.max(vMax, v);
+        }
+        double range = vMax - vMin;
+        if (range <= 0) range = Math.max(Math.abs(vMax) * 1.0e-6, 1.0e-9);
+        double t0 = sampleTimes.get(0);
+        double tRange = Math.max(sampleTimes.get(n - 1) - t0, 1.0e-9);
+        float pad = 4f;
+        float textH = ImGui.getTextLineHeight();
+        float innerW = w - 2f * pad;
+        float innerH = h - 2f * pad - textH;
+        float prevX = 0f;
+        float prevY = 0f;
+        for (int i = 0; i < n; i++) {
+            float px = p.x + pad + (float) ((sampleTimes.get(i) - t0) / tRange) * innerW;
+            float py = p.y + pad + textH + (float) (1.0 - (values.get(i) - vMin) / range) * innerH;
+            if (i > 0) {
+                dl.addLine(prevX, prevY, px, prevY, color, 1.5f);
+                dl.addLine(px, prevY, px, py, color, 1.5f);
+            }
+            prevX = px;
+            prevY = py;
+        }
+        dl.addText(p.x + pad, p.y + 2f, ThemeManager.textMutedColor(), title);
+        String val = ConstraintText.fixedStat(values.get(n - 1));
+        float vw = ImGui.calcTextSize(val).x;
+        dl.addText(p.x + w - pad - vw, p.y + 2f, color, val);
+    }
+
+    private GraphNode nodeById(String id) {
+        Integer nodeInt = nodeInts.get(id);
+        return nodeInt == null ? null : nodesByInt.get(nodeInt);
+    }
+
+    private int branchColor(GraphNode n, Guarantee taken) {
+        if (n == null || taken == null) return ThemeManager.textDimColor();
+        for (Branch b : n.type.branches) {
+            if (b.label != taken) continue;
+            switch (b.feas) {
+                case FEASIBLE:
+                    return ThemeManager.okColor();
+                case UNKNOWN:
+                    return ThemeManager.warningColor();
+                default:
+                    return ThemeManager.accentColor();
+            }
+        }
+        return ThemeManager.textDimColor();
+    }
+
     private void renderCanvas(float scale) {
         ImVec2 origin = ImGui.getCursorScreenPos();
         canvasOriginX = origin.x;
@@ -325,6 +551,7 @@ public final class GraphEditorWindow implements RenderInterface {
         for (GraphEdge e : edges) {
             drawLink(e);
         }
+        animateTakenEdges();
         handleLinkCreation();
         handleDeletion();
         ImVec2 mouse = ImGui.getMousePos();
@@ -380,6 +607,8 @@ public final class GraphEditorWindow implements RenderInterface {
         pushColor(NodeEditorStyleColor.LinkSelRectBorder, ThemeManager.focusColor());
         pushColor(NodeEditorStyleColor.PinRect, ThemeManager.accentTintColor(0.35f));
         pushColor(NodeEditorStyleColor.PinRectBorder, ThemeManager.accentColor());
+        pushColor(NodeEditorStyleColor.Flow, ThemeManager.accentColor());
+        pushColor(NodeEditorStyleColor.FlowMarker, ThemeManager.accentColor());
     }
 
     private static void pushColor(int index, int color) {
@@ -393,7 +622,11 @@ public final class GraphEditorWindow implements RenderInterface {
     private void drawNode(GraphNode n, float scale) {
         int id = nodeInts.get(n.id);
         boolean error = errorNodeIds.contains(n.id);
+        NodeStatus status = runStatuses.get(n.id);
+        boolean nodeRunning = status != null && status.phase == NodeStatus.Phase.RUNNING
+                && engine != null && engine.isGraphSolving();
         if (error) pushColor(NodeEditorStyleColor.NodeBorder, ThemeManager.dangerColor());
+        else if (nodeRunning) pushColor(NodeEditorStyleColor.NodeBorder, ThemeManager.okColor());
 
         NodeEditor.beginNode(id);
         Fonts.pushBold();
@@ -418,8 +651,56 @@ public final class GraphEditorWindow implements RenderInterface {
         }
         NodeEditor.endNode();
 
-        if (error) NodeEditor.popStyleColor(1);
+        if (error || nodeRunning) NodeEditor.popStyleColor(1);
         drawNodeHeader(n, id, error, headerBottom);
+        drawNodeRunStatus(n, id, status, nodeRunning, headerBottom, scale);
+    }
+
+    private void drawNodeRunStatus(GraphNode n, int id, NodeStatus status, boolean nodeRunning,
+                                   float headerBottom, float scale) {
+        if (status == null || status.visits == 0) return;
+        float w = NodeEditor.getNodeSizeX(id);
+        if (w <= 0f) return;
+        String text;
+        int color;
+        if (nodeRunning) {
+            double secs = (System.nanoTime() - status.startNanos) / 1.0e9;
+            String budget = status.budgetNanos > 0 ? "/" + (status.budgetNanos / 1_000_000_000L) + "s" : "";
+            text = String.format(Locale.ROOT, "%.1fs%s", secs, budget);
+            color = ThemeManager.okColor();
+        } else if (status.taken != null) {
+            text = status.visits > 1 ? status.taken.name() + " x" + status.visits : status.taken.name();
+            color = branchColor(n, status.taken);
+        } else {
+            return;
+        }
+        float x = NodeEditor.getNodePositionX(id);
+        float y = NodeEditor.getNodePositionY(id);
+        NodeEditorStyle style = NodeEditor.getStyle();
+        ImVec4 pad = style.getNodePadding();
+        ImDrawList dl = NodeEditor.getNodeBackgroundDrawList(id);
+        float tw = ImGui.calcTextSize(text).x;
+        float textY = headerBottom - 4f * scale - ImGui.getTextLineHeight();
+        if (tw <= w * 0.55f) dl.addText(x + w - pad.z - tw, textY, color, text);
+        if (!nodeRunning) return;
+        float nh = NodeEditor.getNodeSizeY(id);
+        float inset = style.getNodeBorderWidth() * 0.5f + 1f;
+        float barH = 3f * scale;
+        float x0 = x + inset;
+        float y1 = y + nh - inset;
+        float span = w - 2f * inset;
+        if (status.budgetNanos > 0) {
+            double frac = Math.min(1.0, (System.nanoTime() - status.startNanos) / (double) status.budgetNanos);
+            dl.addRectFilled(x0, y1 - barH, x0 + span * (float) frac, y1, ThemeManager.okTintColor(0.85f));
+        } else {
+            double t = ImGui.getTime() * 0.6;
+            float phase = (float) (t - Math.floor(t));
+            float segW = span * 0.25f;
+            float sx = x0 + (span + segW) * phase - segW;
+            float cx0 = Math.max(x0, sx);
+            float cx1 = Math.min(x0 + span, sx + segW);
+            if (cx1 > cx0) dl.addRectFilled(cx0, y1 - barH, cx1, y1, ThemeManager.okTintColor(0.85f));
+        }
     }
 
     private void drawNodeHeader(GraphNode n, int id, boolean error, float headerBottom) {
@@ -580,6 +861,24 @@ public final class GraphEditorWindow implements RenderInterface {
                 ((color >> 16) & 0xFF) / 255f,
                 ((color >>> 24) & 0xFF) / 255f,
                 2f);
+    }
+
+    private void animateTakenEdges() {
+        for (int i = flowedSteps; i < runSteps.size(); i++) {
+            GraphRunState.Step s = runSteps.get(i);
+            if (s.taken == null) break;
+            GraphEdge e = edgeFrom(s.nodeId, s.taken);
+            Integer linkId = e != null ? linkInts.get(e) : null;
+            if (linkId != null) NodeEditor.flow(linkId);
+            flowedSteps = i + 1;
+        }
+    }
+
+    private GraphEdge edgeFrom(String nodeId, Guarantee branch) {
+        for (GraphEdge e : edges) {
+            if (e.fromNode.equals(nodeId) && e.branch == branch) return e;
+        }
+        return null;
     }
 
     private void handleLinkCreation() {

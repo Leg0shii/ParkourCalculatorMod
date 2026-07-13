@@ -41,6 +41,7 @@ public final class GraphContext {
     private volatile double dualGap = Double.NaN;
     private volatile GraphNode currentNode;
     private volatile AtomicBoolean currentToken;
+    private long evalsAtNodeStart;
     private int jumpCount = -1;
     private boolean reachBoundSet;
     private double reachBound = Double.NaN;
@@ -145,6 +146,7 @@ public final class GraphContext {
         currentNode = node;
         AtomicBoolean token = watchdog.arm(deadlineNanos);
         currentToken = token;
+        evalsAtNodeStart = cmaesEvals.get() + smoothingEvals.get();
         runState.begin(node.id, node.type.label, budgetNanos);
         return token;
     }
@@ -153,7 +155,7 @@ public final class GraphContext {
         watchdog.disarm();
         currentToken = null;
         currentNode = null;
-        runState.end(node.id, taken);
+        runState.end(node.id, taken, cmaesEvals.get() + smoothingEvals.get() - evalsAtNodeStart);
     }
 
     public boolean advance() {

@@ -713,10 +713,42 @@ public final class AngleSolverEngine {
     }
 
     private volatile GraphContext currentGraphContext;
+    private volatile GraphRunState lastRunState;
+    private LiveTrajectory liveTraj;
+    private int liveTrajVersion = -1;
+    private long liveTrajSeq;
 
     public GraphRunState graphRunState() {
         GraphContext c = currentGraphContext;
-        return c == null ? null : c.runState;
+        return c != null ? c.runState : lastRunState;
+    }
+
+    public boolean isGraphSolving() {
+        return currentGraphContext != null;
+    }
+
+    public SolveProgress liveProgress() {
+        return currentProgress;
+    }
+
+    public LiveTrajectory liveTrajectory() {
+        SolveProgress p = currentProgress;
+        Job job = currentJob;
+        if (p == null || job == null || !p.haveBest()) {
+            liveTraj = null;
+            liveTrajVersion = -1;
+            return null;
+        }
+        int v = p.version();
+        if (liveTraj == null || v != liveTrajVersion) {
+            double[] yaws = p.bestYaws();
+            if (yaws == null) return liveTraj;
+            JumpPhysicsInputs sc = job.spec.asScenario();
+            ForwardPath path = model.forward(sc, sc.toGameFacings(yaws));
+            liveTraj = new LiveTrajectory(++liveTrajSeq, job.startTick, path.posX, path.posZ, p.isBestFeasible());
+            liveTrajVersion = v;
+        }
+        return liveTraj;
     }
 
     public boolean advanceNode() {
@@ -746,6 +778,7 @@ public final class AngleSolverEngine {
         }
         GraphContext ctx = new GraphContext(spec, model, freeBox, job.legalGoal, FEAS_TOL, cancel, progress,
                 sequentialSolve, job.budget, job.longRun);
+        lastRunState = ctx.runState;
         currentGraphContext = ctx;
         Candidate cand;
         try {

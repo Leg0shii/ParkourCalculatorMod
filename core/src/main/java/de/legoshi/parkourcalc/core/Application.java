@@ -154,13 +154,16 @@ public final class Application {
         VelocityMapController velocityMapController = new VelocityMapController(
                 angleSolverState, boxController, runner, saveController, inputData, forwardModel,
                 this::onUserChange, Math.max(2, Runtime.getRuntime().availableProcessors() - 2));
-        GraphEditorWindow graphEditorWindow = new GraphEditorWindow();
+        GraphEditorWindow graphEditorWindow = new GraphEditorWindow(angleSolverEngine);
         AngleSolverWindow angleSolverWindow = new AngleSolverWindow(angleSolverState, settings, inputData::size, angleSolverEngine, velocityMapController.widget(), graphStore, graphEditorWindow);
 
         // In-world constraint visualization (gh-145): plates appear while the solver view is open.
         constraintSource = new de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverConstraintSource(
                 angleSolverState, boxController, () -> settings.viewAngleSolver, settings, selection, constraintSelection);
         de.legoshi.parkourcalc.core.render.PathRenderPlan.setConstraintSource(constraintSource);
+        de.legoshi.parkourcalc.core.render.PathRenderPlan.setLiveSource(
+                new de.legoshi.parkourcalc.core.ui.anglesolver.LiveBestPathSource(
+                        angleSolverEngine, boxController, () -> settings.viewAngleSolver));
 
         TickInfoPanel tickInfoPanel = new TickInfoPanel(boxController, inputData, selection, settings, runner);
         PerfOverlay perfOverlay = new PerfOverlay();
