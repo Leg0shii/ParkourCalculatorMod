@@ -20,19 +20,22 @@ import de.legoshi.parkourcalc.core.ui.theme.Modal;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImDrawList;
-import imgui.ImFont;
 import imgui.ImGui;
 import imgui.ImGuiIO;
 import imgui.ImVec2;
-import imgui.extension.imnodes.ImNodes;
-import imgui.extension.imnodes.ImNodesStyle;
-import imgui.extension.imnodes.flag.ImNodesColorStyle;
-import imgui.extension.imnodes.flag.ImNodesPinShape;
-import imgui.extension.imnodes.flag.ImNodesStyleVar;
+import imgui.ImVec4;
+import imgui.extension.nodeditor.NodeEditor;
+import imgui.extension.nodeditor.NodeEditorConfig;
+import imgui.extension.nodeditor.NodeEditorContext;
+import imgui.extension.nodeditor.NodeEditorStyle;
+import imgui.extension.nodeditor.flag.NodeEditorPinKind;
+import imgui.extension.nodeditor.flag.NodeEditorStyleColor;
+import imgui.flag.ImDrawFlags;
 import imgui.flag.ImGuiCond;
 import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImDouble;
 import imgui.type.ImInt;
+import imgui.type.ImLong;
 import imgui.type.ImString;
 
 import java.util.ArrayList;
@@ -52,18 +55,18 @@ public final class GraphEditorWindow implements RenderInterface {
 
     private static final String WINDOW_ID = "###graph_editor";
     private static final String TITLE = "Graph Editor";
+    private static final String CANVAS_ID = "graph_editor_canvas";
     private static final String ADD_POPUP_ID = "##graph_editor_add";
+    private static final String ENUM_POPUP_ID = "##graph_editor_enum";
     private static final String SAVE_ERRORS_POPUP_ID = "###graph_editor_save_errors";
     private static final String CLOSE_POPUP_ID = "###graph_editor_close";
 
     private static final int PIN_STRIDE = 32;
-    private static final int STATIC_PIN_BASE = 16;
-    private static final int EDITOR_COLOR_PUSHES = 16;
-    private static final int ZOOM_STYLE_PUSHES = 12;
-    private static final float ZOOM_MIN = 0.4f;
-    private static final float ZOOM_MAX = 1.6f;
-    private static final float ZOOM_WHEEL_FACTOR = 1.1f;
-    private static final float PAN_DRAG_THRESHOLD = 4f;
+    private static final int OUTPUT_PIN_LIMIT = 16;
+    private static final int EDITOR_COLOR_PUSHES = 14;
+    private static final int SHAPE_CIRCLE = 0;
+    private static final int SHAPE_CIRCLE_FILLED = 1;
+    private static final int SHAPE_TRIANGLE_FILLED = 2;
 
     private SaveHandler saveHandler;
 
@@ -83,34 +86,47 @@ public final class GraphEditorWindow implements RenderInterface {
     private final Map<String, ImString> textBufs = new HashMap<>();
     private final ImInt intBuf = new ImInt();
     private final ImDouble doubleBuf = new ImDouble();
-    private final ImInt comboBuf = new ImInt();
     private final ImString saveNameInput = new ImString(64);
-    private final ImInt linkStartBuf = new ImInt();
-    private final ImInt linkEndBuf = new ImInt();
+    private final ImLong pinA = new ImLong();
+    private final ImLong pinB = new ImLong();
+    private final ImLong deletedLinkId = new ImLong();
+    private final ImLong deletedLinkStart = new ImLong();
+    private final ImLong deletedLinkEnd = new ImLong();
+    private final ImLong deletedNodeId = new ImLong();
 
     private List<ValidationIssue> issues = new ArrayList<>();
     private final Set<String> errorNodeIds = new HashSet<>();
     private final Set<GraphEdge> errorEdges = java.util.Collections.newSetFromMap(new IdentityHashMap<GraphEdge, Boolean>());
 
+    private NodeEditorContext context;
     private boolean applyPositions;
     private String saveError;
     private String pendingSaveName;
     private String focusNodeId;
+    private boolean fitRequested;
+    private boolean openAddPopupFromToolbar;
+    private boolean openEnumPopup;
+    private GraphNode enumPopupNode;
+    private ParamSpec enumPopupSpec;
     private float addPosX;
     private float addPosY;
-    private float zoom = 1f;
-    private boolean rightDragOnCanvas;
-    private float[] styleBase;
+    private float canvasMouseX;
+    private float canvasMouseY;
     private float canvasOriginX;
     private float canvasOriginY;
-    private float canvasSizeX;
-    private float canvasSizeY;
+    private float viewScale = 1f;
+    private float pinIconX;
+    private float pinIconY;
 
     public void setSaveHandler(SaveHandler handler) {
         this.saveHandler = handler;
     }
 
     public void open(SolverGraph source, String sourcePresetName) {
+        if (context != null) NodeEditor.destroyEditor(context);
+        NodeEditorConfig config = new NodeEditorConfig();
+        config.setSettingsFile(null);
+        context = NodeEditor.createEditor(config);
         nodes.clear();
         edges.clear();
         nodeInts.clear();
@@ -137,6 +153,12 @@ public final class GraphEditorWindow implements RenderInterface {
         saveError = null;
         pendingSaveName = null;
         focusNodeId = null;
+        fitRequested = false;
+        openAddPopupFromToolbar = false;
+        openEnumPopup = false;
+        enumPopupNode = null;
+        enumPopupSpec = null;
+        viewScale = 1f;
         if (allPositionsUnset()) autoLayout();
         applyPositions = true;
         revalidate();
@@ -146,6 +168,7 @@ public final class GraphEditorWindow implements RenderInterface {
     @Override
     public void render(ImGuiIO io) {
         if (!open) return;
+        NodeEditor.setCurrentEditor(context);
         float scale = ThemeManager.uiScale();
         ImGui.setNextWindowSize(940f * scale, 640f * scale, ImGuiCond.FirstUseEver);
         int flags = ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
@@ -157,7 +180,6 @@ public final class GraphEditorWindow implements RenderInterface {
             renderToolbar();
             renderIssues();
             renderCanvas(scale);
-            renderAddPopup();
             renderSaveErrorsModal();
             renderCloseModal();
         }
@@ -180,15 +202,13 @@ public final class GraphEditorWindow implements RenderInterface {
 
     private void renderToolbar() {
         if (Controls.secondaryButton("Add node")) {
-            ImVec2 mouse = ImGui.getMousePos();
-            addPosX = mouse.x;
-            addPosY = mouse.y;
-            ImGui.openPopup(ADD_POPUP_ID);
+            openAddPopupFromToolbar = true;
         }
         TooltipUtil.onHover("Add a node to the graph. Right-clicking the canvas works too.");
         ImGui.sameLine();
         if (Controls.secondaryButton("Delete selected")) deleteSelected();
-        TooltipUtil.onHover("Remove the selected nodes and links. Entry and Emit cannot be deleted.");
+        TooltipUtil.onHover("Remove the selected nodes and links. The Delete key works too."
+                + " Entry and Emit cannot be deleted.");
         ImGui.sameLine();
         if (Controls.secondaryButton("Auto layout")) {
             autoLayout();
@@ -197,11 +217,11 @@ public final class GraphEditorWindow implements RenderInterface {
         }
         TooltipUtil.onHover("Rearrange nodes left to right by distance from Entry.");
         ImGui.sameLine();
-        if (Controls.secondaryButton(Math.round(zoom * 100f) + "%")) {
-            setZoom(1f, canvasOriginX + canvasSizeX * 0.5f, canvasOriginY + canvasSizeY * 0.5f);
+        if (Controls.secondaryButton(Math.round(viewScale * 100f) + "%")) {
+            fitRequested = true;
         }
-        TooltipUtil.onHover("Canvas zoom. Scroll the mouse wheel over the canvas to zoom; click to reset."
-                + " Drag with the right or middle mouse button to pan.");
+        TooltipUtil.onHover("Canvas zoom. Scroll the mouse wheel over the canvas to zoom; click to fit the graph."
+                + " Drag with the right mouse button to pan.");
 
         ImGui.sameLine();
         float gap = ImGui.getStyle().getItemSpacing().x;
@@ -276,25 +296,26 @@ public final class GraphEditorWindow implements RenderInterface {
     }
 
     private void renderCanvas(float scale) {
-        if (focusNodeId != null) {
-            Integer id = nodeInts.get(focusNodeId);
-            if (id != null) ImNodes.editorMoveToNode(id);
-            focusNodeId = null;
-        }
-        captureStyleBase();
         ImVec2 origin = ImGui.getCursorScreenPos();
         canvasOriginX = origin.x;
         canvasOriginY = origin.y;
         pushEditorColors();
-        pushZoomStyle();
-        ImNodes.beginNodeEditor();
-        ImFont font = ImGui.getFont();
-        font.setScale(zoom);
-        Fonts.setBoldScale(zoom);
-        ImGui.pushFont(font);
+        NodeEditor.begin(CANVAS_ID);
+        if (fitRequested) {
+            NodeEditor.navigateToContent(0.25f);
+            fitRequested = false;
+        }
+        if (focusNodeId != null) {
+            Integer id = nodeInts.get(focusNodeId);
+            if (id != null) {
+                NodeEditor.selectNode(id, false);
+                NodeEditor.navigateToSelection(false, 0.25f);
+            }
+            focusNodeId = null;
+        }
         if (applyPositions) {
             for (GraphNode n : nodes) {
-                ImNodes.setNodeGridSpacePos(nodeInts.get(n.id), n.x * zoom, n.y * zoom);
+                NodeEditor.setNodePosition(nodeInts.get(n.id), n.x, n.y);
             }
             applyPositions = false;
         }
@@ -304,131 +325,77 @@ public final class GraphEditorWindow implements RenderInterface {
         for (GraphEdge e : edges) {
             drawLink(e);
         }
-        font.setScale(1f);
-        Fonts.setBoldScale(1f);
-        ImGui.popFont();
-        ImNodes.endNodeEditor();
-        for (int i = 0; i < ZOOM_STYLE_PUSHES; i++) {
-            ImNodes.popStyleVar();
-        }
-        for (int i = 0; i < EDITOR_COLOR_PUSHES; i++) {
-            ImNodes.popColorStyle();
-        }
-        ImVec2 size = ImGui.getItemRectSize();
-        canvasSizeX = size.x;
-        canvasSizeY = size.y;
         handleLinkCreation();
-        readbackPositions();
-        handleZoomInput();
-        handleCanvasDrag();
-    }
-
-    private void handleCanvasDrag() {
-        if (ImNodes.isEditorHovered() && ImGui.isMouseClicked(1)) {
-            rightDragOnCanvas = true;
-            ImVec2 mouse = ImGui.getMousePos();
-            addPosX = mouse.x;
-            addPosY = mouse.y;
-        }
-        if (!rightDragOnCanvas) return;
-        if (ImGui.isMouseDown(1)) {
-            if (ImGui.isMouseDragging(1, PAN_DRAG_THRESHOLD)) {
-                float dx = ImGui.getIO().getMouseDeltaX();
-                float dy = ImGui.getIO().getMouseDeltaY();
-                if (dx != 0f || dy != 0f) {
-                    ImVec2 pan = new ImVec2();
-                    ImNodes.editorContextGetPanning(pan);
-                    ImNodes.editorResetPanning(pan.x + dx, pan.y + dy);
-                }
-            }
-        } else if (ImGui.isMouseReleased(1)) {
-            rightDragOnCanvas = false;
-            if (Math.abs(ImGui.getMouseDragDeltaX(1)) < PAN_DRAG_THRESHOLD
-                    && Math.abs(ImGui.getMouseDragDeltaY(1)) < PAN_DRAG_THRESHOLD) {
-                ImGui.openPopup(ADD_POPUP_ID);
-            }
-        } else {
-            rightDragOnCanvas = false;
-        }
-    }
-
-    private void captureStyleBase() {
-        if (styleBase != null) return;
-        ImNodesStyle style = ImNodes.getStyle();
-        ImVec2 pad = new ImVec2();
-        style.getNodePadding(pad);
-        styleBase = new float[] {
-                style.getGridSpacing(), style.getNodeCornerRounding(), pad.x, pad.y,
-                style.getNodeBorderThickness(), style.getLinkThickness(), style.getLinkHoverDistance(),
-                style.getPinCircleRadius(), style.getPinQuadSideLength(), style.getPinTriangleSideLength(),
-                style.getPinLineThickness(), style.getPinHoverRadius(), style.getPinOffset()
-        };
-    }
-
-    private void pushZoomStyle() {
-        ImNodes.pushStyleVar(ImNodesStyleVar.GridSpacing, styleBase[0] * zoom);
-        ImNodes.pushStyleVar(ImNodesStyleVar.NodeCornerRounding, styleBase[1] * zoom);
-        ImNodes.pushStyleVar(ImNodesStyleVar.NodePadding, styleBase[2] * zoom, styleBase[3] * zoom);
-        ImNodes.pushStyleVar(ImNodesStyleVar.NodeBorderThickness, styleBase[4] * zoom);
-        ImNodes.pushStyleVar(ImNodesStyleVar.LinkThickness, styleBase[5] * zoom);
-        ImNodes.pushStyleVar(ImNodesStyleVar.LinkHoverDistance, styleBase[6] * zoom);
-        ImNodes.pushStyleVar(ImNodesStyleVar.PinCircleRadius, styleBase[7] * zoom);
-        ImNodes.pushStyleVar(ImNodesStyleVar.PinQuadSideLength, styleBase[8] * zoom);
-        ImNodes.pushStyleVar(ImNodesStyleVar.PinTriangleSideLength, styleBase[9] * zoom);
-        ImNodes.pushStyleVar(ImNodesStyleVar.PinLineThickness, styleBase[10] * zoom);
-        ImNodes.pushStyleVar(ImNodesStyleVar.PinHoverRadius, styleBase[11] * zoom);
-        ImNodes.pushStyleVar(ImNodesStyleVar.PinOffset, styleBase[12] * zoom);
-    }
-
-    private void handleZoomInput() {
-        if (!ImNodes.isEditorHovered()) return;
-        float wheel = ImGui.getIO().getMouseWheel();
-        if (wheel == 0f) return;
+        handleDeletion();
         ImVec2 mouse = ImGui.getMousePos();
-        setZoom(zoom * (float) Math.pow(ZOOM_WHEEL_FACTOR, wheel), mouse.x, mouse.y);
+        canvasMouseX = mouse.x;
+        canvasMouseY = mouse.y;
+        NodeEditor.suspend();
+        renderCanvasPopups(scale);
+        NodeEditor.resume();
+        NodeEditor.end();
+        NodeEditor.popStyleColor(EDITOR_COLOR_PUSHES);
+        readbackPositions();
+        updateViewScale();
     }
 
-    private void setZoom(float target, float fixedScreenX, float fixedScreenY) {
-        target = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, target));
-        if (target == zoom) return;
-        ImVec2 pan = new ImVec2();
-        ImNodes.editorContextGetPanning(pan);
-        float ratio = target / zoom;
-        float gridX = fixedScreenX - canvasOriginX - pan.x;
-        float gridY = fixedScreenY - canvasOriginY - pan.y;
-        ImNodes.editorResetPanning(pan.x + gridX * (1f - ratio), pan.y + gridY * (1f - ratio));
-        zoom = target;
-        applyPositions = true;
+    private void renderCanvasPopups(float scale) {
+        if (NodeEditor.showBackgroundContextMenu()) {
+            addPosX = canvasMouseX;
+            addPosY = canvasMouseY;
+            ImGui.openPopup(ADD_POPUP_ID);
+        } else if (openAddPopupFromToolbar) {
+            addPosX = NodeEditor.toCanvasX(canvasOriginX + 60f * scale);
+            addPosY = NodeEditor.toCanvasY(canvasOriginY + 60f * scale);
+            ImGui.openPopup(ADD_POPUP_ID);
+        }
+        openAddPopupFromToolbar = false;
+        if (openEnumPopup) {
+            ImGui.openPopup(ENUM_POPUP_ID);
+            openEnumPopup = false;
+        }
+        renderAddPopup();
+        renderEnumPopup();
+    }
+
+    private void updateViewScale() {
+        float c0 = NodeEditor.toCanvasX(canvasOriginX);
+        float c1 = NodeEditor.toCanvasX(canvasOriginX + 128f);
+        float d = c1 - c0;
+        if (d > 0.0001f) viewScale = 128f / d;
     }
 
     private void pushEditorColors() {
-        ImNodes.pushColorStyle(ImNodesColorStyle.NodeBackground, ThemeManager.panelColor());
-        ImNodes.pushColorStyle(ImNodesColorStyle.NodeBackgroundHovered, ThemeManager.hoverColor());
-        ImNodes.pushColorStyle(ImNodesColorStyle.NodeBackgroundSelected, ThemeManager.hoverColor());
-        ImNodes.pushColorStyle(ImNodesColorStyle.NodeOutline, ThemeManager.borderColor());
-        ImNodes.pushColorStyle(ImNodesColorStyle.TitleBar, ThemeManager.panelColor());
-        ImNodes.pushColorStyle(ImNodesColorStyle.TitleBarHovered, ThemeManager.hoverColor());
-        ImNodes.pushColorStyle(ImNodesColorStyle.TitleBarSelected, ThemeManager.focusColor());
-        ImNodes.pushColorStyle(ImNodesColorStyle.Link, ThemeManager.textDimColor());
-        ImNodes.pushColorStyle(ImNodesColorStyle.LinkHovered, ThemeManager.accentColor());
-        ImNodes.pushColorStyle(ImNodesColorStyle.LinkSelected, ThemeManager.focusColor());
-        ImNodes.pushColorStyle(ImNodesColorStyle.Pin, ThemeManager.accentColor());
-        ImNodes.pushColorStyle(ImNodesColorStyle.PinHovered, ThemeManager.focusColor());
-        ImNodes.pushColorStyle(ImNodesColorStyle.BoxSelector, ThemeManager.selectedTintColor(0.20f));
-        ImNodes.pushColorStyle(ImNodesColorStyle.BoxSelectorOutline, ThemeManager.focusColor());
-        ImNodes.pushColorStyle(ImNodesColorStyle.GridBackground, ThemeManager.bgDarkColor());
-        ImNodes.pushColorStyle(ImNodesColorStyle.GridLine, ThemeManager.bgTintColor(0.55f));
+        pushColor(NodeEditorStyleColor.Bg, ThemeManager.bgDarkColor());
+        pushColor(NodeEditorStyleColor.Grid, ThemeManager.bgTintColor(0.55f));
+        pushColor(NodeEditorStyleColor.NodeBg, ThemeManager.panelColor());
+        pushColor(NodeEditorStyleColor.NodeBorder, ThemeManager.borderColor());
+        pushColor(NodeEditorStyleColor.HovNodeBorder, ThemeManager.accentColor());
+        pushColor(NodeEditorStyleColor.SelNodeBorder, ThemeManager.focusColor());
+        pushColor(NodeEditorStyleColor.NodeSelRect, ThemeManager.selectedTintColor(0.20f));
+        pushColor(NodeEditorStyleColor.NodeSelRectBorder, ThemeManager.focusColor());
+        pushColor(NodeEditorStyleColor.HovLinkBorder, ThemeManager.accentColor());
+        pushColor(NodeEditorStyleColor.SelLinkBorder, ThemeManager.focusColor());
+        pushColor(NodeEditorStyleColor.LinkSelRect, ThemeManager.selectedTintColor(0.20f));
+        pushColor(NodeEditorStyleColor.LinkSelRectBorder, ThemeManager.focusColor());
+        pushColor(NodeEditorStyleColor.PinRect, ThemeManager.accentTintColor(0.35f));
+        pushColor(NodeEditorStyleColor.PinRectBorder, ThemeManager.accentColor());
+    }
+
+    private static void pushColor(int index, int color) {
+        NodeEditor.pushStyleColor(index,
+                (color & 0xFF) / 255f,
+                ((color >> 8) & 0xFF) / 255f,
+                ((color >> 16) & 0xFF) / 255f,
+                ((color >>> 24) & 0xFF) / 255f);
     }
 
     private void drawNode(GraphNode n, float scale) {
         int id = nodeInts.get(n.id);
         boolean error = errorNodeIds.contains(n.id);
-        ImNodes.pushColorStyle(ImNodesColorStyle.TitleBar,
-                error ? ThemeManager.dangerTintColor(0.55f) : categoryColor(n.type.category));
-        if (error) ImNodes.pushColorStyle(ImNodesColorStyle.NodeOutline, ThemeManager.dangerColor());
+        if (error) pushColor(NodeEditorStyleColor.NodeBorder, ThemeManager.dangerColor());
 
-        ImNodes.beginNode(id);
-        ImNodes.beginNodeTitleBar();
+        NodeEditor.beginNode(id);
         Fonts.pushBold();
         ImGui.text(n.type.label);
         Fonts.popBold();
@@ -436,62 +403,107 @@ public final class GraphEditorWindow implements RenderInterface {
         ThemeManager.pushTextColor(ThemeManager.textDimColor());
         ImGui.text(n.id);
         ThemeManager.popTextColor();
-        ImNodes.endNodeTitleBar();
+        float headerBottom = ImGui.getItemRectMaxY() + 4f * scale;
+        ImGui.dummy(0f, 4f * scale);
 
-        float itemW = 150f * scale * zoom;
+        float itemW = 150f * scale;
         if (!n.type.entryMarker) drawInputPin(n, id);
         List<ParamSpec> specs = n.type.params;
         for (int i = 0; i < specs.size(); i++) {
-            ImNodes.beginStaticAttribute(id * PIN_STRIDE + STATIC_PIN_BASE + i);
             drawParamWidget(n, specs.get(i), itemW);
-            ImNodes.endStaticAttribute();
         }
         List<Branch> branches = n.type.branches;
         for (int i = 0; i < branches.size(); i++) {
-            drawOutputPin(id, branches.get(i), i);
+            drawOutputPin(id, branches.get(i), i, scale);
         }
-        ImNodes.endNode();
+        NodeEditor.endNode();
 
-        if (error) ImNodes.popColorStyle();
-        ImNodes.popColorStyle();
+        if (error) NodeEditor.popStyleColor(1);
+        drawNodeHeader(n, id, error, headerBottom);
+    }
+
+    private void drawNodeHeader(GraphNode n, int id, boolean error, float headerBottom) {
+        float w = NodeEditor.getNodeSizeX(id);
+        if (w <= 0f) return;
+        float x = NodeEditor.getNodePositionX(id);
+        float y = NodeEditor.getNodePositionY(id);
+        NodeEditorStyle style = NodeEditor.getStyle();
+        float inset = style.getNodeBorderWidth() * 0.5f;
+        float rounding = Math.max(0f, style.getNodeRounding() - inset);
+        int color = error ? ThemeManager.dangerTintColor(0.55f) : categoryColor(n.type.category);
+        ImDrawList dl = NodeEditor.getNodeBackgroundDrawList(id);
+        dl.addRectFilled(x + inset, y + inset, x + w - inset, headerBottom, color, rounding, ImDrawFlags.RoundCornersTop);
+        dl.addLine(x + inset, headerBottom, x + w - inset, headerBottom, ThemeManager.borderColor(), 1f);
     }
 
     private void drawInputPin(GraphNode n, int id) {
         boolean feasible = n.type.requires == InputRequirement.FEASIBLE;
-        ImNodes.pushColorStyle(ImNodesColorStyle.Pin,
-                feasible ? ThemeManager.okColor() : ThemeManager.accentColor());
-        ImNodes.beginInputAttribute(id * PIN_STRIDE, feasible ? ImNodesPinShape.CircleFilled : ImNodesPinShape.Circle);
+        int color = feasible ? ThemeManager.okColor() : ThemeManager.accentColor();
+        NodeEditor.beginPin(id * PIN_STRIDE, NodeEditorPinKind.Input);
+        drawPinIcon(color, feasible ? SHAPE_CIRCLE_FILLED : SHAPE_CIRCLE);
+        NodeEditor.pinPivotRect(pinIconX, pinIconY, pinIconX, pinIconY);
+        ImGui.sameLine();
         ThemeManager.pushTextColor(ThemeManager.textMutedColor());
         ImGui.text(feasible ? "in (feasible)" : "in");
         ThemeManager.popTextColor();
-        ImNodes.endInputAttribute();
-        ImNodes.popColorStyle();
+        NodeEditor.endPin();
     }
 
-    private void drawOutputPin(int id, Branch branch, int branchIndex) {
+    private void drawOutputPin(int id, Branch branch, int branchIndex, float scale) {
         int color;
         int shape;
         switch (branch.feas) {
             case FEASIBLE:
                 color = ThemeManager.okColor();
-                shape = ImNodesPinShape.CircleFilled;
+                shape = SHAPE_CIRCLE_FILLED;
                 break;
             case UNKNOWN:
                 color = ThemeManager.warningColor();
-                shape = ImNodesPinShape.TriangleFilled;
+                shape = SHAPE_TRIANGLE_FILLED;
                 break;
             default:
                 color = ThemeManager.accentColor();
-                shape = ImNodesPinShape.Circle;
+                shape = SHAPE_CIRCLE;
                 break;
         }
-        ImNodes.pushColorStyle(ImNodesColorStyle.Pin, color);
-        ImNodes.beginOutputAttribute(id * PIN_STRIDE + 1 + branchIndex, shape);
+        String label = branch.label.name();
+        float nodeW = NodeEditor.getNodeSizeX(id);
+        if (nodeW > 0f) {
+            float iconW = 9f * scale + 2f;
+            float rowW = ImGui.calcTextSize(label).x + ImGui.getStyle().getItemSpacing().x + iconW;
+            ImVec4 pad = NodeEditor.getStyle().getNodePadding();
+            float target = NodeEditor.getNodePositionX(id) + nodeW - pad.z - rowW;
+            if (target > ImGui.getCursorScreenPosX()) {
+                ImGui.setCursorScreenPos(target, ImGui.getCursorScreenPosY());
+            }
+        }
+        NodeEditor.beginPin(id * PIN_STRIDE + 1 + branchIndex, NodeEditorPinKind.Output);
         ThemeManager.pushTextColor(ThemeManager.textMutedColor());
-        ImGui.text(branch.label.name());
+        ImGui.text(label);
         ThemeManager.popTextColor();
-        ImNodes.endOutputAttribute();
-        ImNodes.popColorStyle();
+        ImGui.sameLine();
+        drawPinIcon(color, shape);
+        NodeEditor.pinPivotRect(pinIconX, pinIconY, pinIconX, pinIconY);
+        NodeEditor.endPin();
+    }
+
+    private void drawPinIcon(int color, int shape) {
+        float scale = ThemeManager.uiScale();
+        float r = 4.5f * scale;
+        float h = ImGui.getTextLineHeight();
+        float cx = ImGui.getCursorScreenPosX() + r + 1f;
+        float cy = ImGui.getCursorScreenPosY() + h * 0.5f;
+        ImDrawList dl = ImGui.getWindowDrawList();
+        if (shape == SHAPE_CIRCLE) {
+            dl.addCircle(cx, cy, r, color, 12, 1.5f * scale);
+        } else if (shape == SHAPE_CIRCLE_FILLED) {
+            dl.addCircleFilled(cx, cy, r, color, 12);
+        } else {
+            dl.addTriangleFilled(cx - r, cy - r, cx - r, cy + r, cx + r, cy, color);
+        }
+        ImGui.dummy(2f * r + 2f, h);
+        pinIconX = cx;
+        pinIconY = cy;
     }
 
     private void drawParamWidget(GraphNode n, ParamSpec spec, float itemW) {
@@ -523,16 +535,16 @@ public final class GraphEditorWindow implements RenderInterface {
                 break;
             }
             case ENUM: {
-                int idx = 0;
                 String current = n.params.getString(spec.key);
-                for (int i = 0; i < spec.choices.length; i++) {
-                    if (spec.choices[i].equals(current)) idx = i;
+                if (Controls.secondaryButton(current + "##enum_" + n.id + "_" + spec.key, itemW)) {
+                    enumPopupNode = n;
+                    enumPopupSpec = spec;
+                    openEnumPopup = true;
                 }
-                comboBuf.set(idx);
-                if (Controls.combo(spec.label, comboBuf, spec.choices, itemW)) {
-                    n.params.set(spec.key, spec.choices[comboBuf.get()]);
-                    onEdited();
-                }
+                ImGui.sameLine();
+                ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+                ImGui.text(spec.label);
+                ThemeManager.popTextColor();
                 break;
             }
             case STRING: {
@@ -561,27 +573,42 @@ public final class GraphEditorWindow implements RenderInterface {
         GraphNode from = nodesByInt.get(fromInt);
         int branchIndex = branchIndexOf(from, e.branch);
         if (branchIndex < 0) return;
-        boolean error = errorEdges.contains(e);
-        if (error) ImNodes.pushColorStyle(ImNodesColorStyle.Link, ThemeManager.dangerColor());
-        ImNodes.link(linkId, fromInt * PIN_STRIDE + 1 + branchIndex, toInt * PIN_STRIDE);
-        if (error) ImNodes.popColorStyle();
+        int color = errorEdges.contains(e) ? ThemeManager.dangerColor() : ThemeManager.textDimColor();
+        NodeEditor.link(linkId, fromInt * PIN_STRIDE + 1 + branchIndex, toInt * PIN_STRIDE,
+                (color & 0xFF) / 255f,
+                ((color >> 8) & 0xFF) / 255f,
+                ((color >> 16) & 0xFF) / 255f,
+                ((color >>> 24) & 0xFF) / 255f,
+                2f);
     }
 
     private void handleLinkCreation() {
-        if (!ImNodes.isLinkCreated(linkStartBuf, linkEndBuf)) return;
-        int a = linkStartBuf.get();
-        int b = linkEndBuf.get();
-        int outPin;
-        int inPin;
-        if (isOutputPin(a) && isInputPin(b)) {
-            outPin = a;
-            inPin = b;
-        } else if (isOutputPin(b) && isInputPin(a)) {
-            outPin = b;
-            inPin = a;
-        } else {
-            return;
+        if (NodeEditor.beginCreate()) {
+            if (NodeEditor.queryNewLink(pinA, pinB)) {
+                long a = pinA.get();
+                long b = pinB.get();
+                if (a != 0 && b != 0) {
+                    long outPin = 0;
+                    long inPin = 0;
+                    if (isOutputPin(a) && isInputPin(b)) {
+                        outPin = a;
+                        inPin = b;
+                    } else if (isOutputPin(b) && isInputPin(a)) {
+                        outPin = b;
+                        inPin = a;
+                    }
+                    if (outPin == 0) {
+                        NodeEditor.rejectNewItem();
+                    } else if (NodeEditor.acceptNewItem()) {
+                        createLink((int) outPin, (int) inPin);
+                    }
+                }
+            }
         }
+        NodeEditor.endCreate();
+    }
+
+    private void createLink(int outPin, int inPin) {
         GraphNode from = nodesByInt.get(outPin / PIN_STRIDE);
         GraphNode to = nodesByInt.get(inPin / PIN_STRIDE);
         if (from == null || to == null) return;
@@ -601,42 +628,73 @@ public final class GraphEditorWindow implements RenderInterface {
         onEdited();
     }
 
-    private static boolean isInputPin(int pin) {
+    private void handleDeletion() {
+        boolean changed = false;
+        if (NodeEditor.beginDelete()) {
+            while (NodeEditor.queryDeletedLink(deletedLinkId, deletedLinkStart, deletedLinkEnd)) {
+                GraphEdge e = linksByInt.get((int) deletedLinkId.get());
+                if (e == null) {
+                    NodeEditor.acceptDeletedItem();
+                    continue;
+                }
+                if (NodeEditor.acceptDeletedItem()) {
+                    unregisterLink(e);
+                    edges.remove(e);
+                    changed = true;
+                }
+            }
+            while (NodeEditor.queryDeletedNode(deletedNodeId)) {
+                GraphNode node = nodesByInt.get((int) deletedNodeId.get());
+                if (node == null) {
+                    NodeEditor.acceptDeletedItem();
+                    continue;
+                }
+                if (node.type.entryMarker || node.type.emitMarker) {
+                    NodeEditor.rejectDeletedItem();
+                    continue;
+                }
+                if (NodeEditor.acceptDeletedItem()) {
+                    removeNode(node);
+                    changed = true;
+                }
+            }
+        }
+        NodeEditor.endDelete();
+        if (changed) onEdited();
+    }
+
+    private static boolean isInputPin(long pin) {
         return pin % PIN_STRIDE == 0;
     }
 
-    private static boolean isOutputPin(int pin) {
-        int k = pin % PIN_STRIDE;
-        return k >= 1 && k < STATIC_PIN_BASE;
+    private static boolean isOutputPin(long pin) {
+        long k = pin % PIN_STRIDE;
+        return k >= 1 && k < OUTPUT_PIN_LIMIT;
     }
 
     private void deleteSelected() {
         boolean changed = false;
-        int nodeCount = ImNodes.numSelectedNodes();
-        if (nodeCount > 0) {
-            int[] sel = new int[nodeCount];
-            ImNodes.getSelectedNodes(sel);
-            for (int id : sel) {
-                GraphNode node = nodesByInt.get(id);
+        int total = NodeEditor.getSelectedObjectCount();
+        if (total > 0) {
+            long[] selNodes = new long[total];
+            int nodeCount = NodeEditor.getSelectedNodes(selNodes, total);
+            for (int i = 0; i < nodeCount; i++) {
+                GraphNode node = nodesByInt.get((int) selNodes[i]);
                 if (node == null || node.type.entryMarker || node.type.emitMarker) continue;
                 removeNode(node);
                 changed = true;
             }
-        }
-        int linkCount = ImNodes.numSelectedLinks();
-        if (linkCount > 0) {
-            int[] sel = new int[linkCount];
-            ImNodes.getSelectedLinks(sel);
-            for (int id : sel) {
-                GraphEdge e = linksByInt.get(id);
+            long[] selLinks = new long[total];
+            int linkCount = NodeEditor.getSelectedLinks(selLinks, total);
+            for (int i = 0; i < linkCount; i++) {
+                GraphEdge e = linksByInt.get((int) selLinks[i]);
                 if (e == null) continue;
                 unregisterLink(e);
                 edges.remove(e);
                 changed = true;
             }
+            NodeEditor.clearSelection();
         }
-        ImNodes.clearNodeSelection();
-        ImNodes.clearLinkSelection();
         if (changed) onEdited();
     }
 
@@ -653,6 +711,10 @@ public final class GraphEditorWindow implements RenderInterface {
         }
         for (Iterator<String> it = textBufs.keySet().iterator(); it.hasNext(); ) {
             if (it.next().startsWith(node.id + "/")) it.remove();
+        }
+        if (enumPopupNode == node) {
+            enumPopupNode = null;
+            enumPopupSpec = null;
         }
     }
 
@@ -673,12 +735,28 @@ public final class GraphEditorWindow implements RenderInterface {
         ImGui.endPopup();
     }
 
+    private void renderEnumPopup() {
+        if (!ImGui.beginPopup(ENUM_POPUP_ID)) return;
+        if (enumPopupNode != null && enumPopupSpec != null) {
+            String current = enumPopupNode.params.getString(enumPopupSpec.key);
+            for (String choice : enumPopupSpec.choices) {
+                if (ImGui.menuItem(choice, "", choice.equals(current))) {
+                    enumPopupNode.params.set(enumPopupSpec.key, choice);
+                    onEdited();
+                }
+            }
+        }
+        ImGui.endPopup();
+    }
+
     private void addNode(NodeType type) {
         String id = uniqueNodeId(type.id);
         GraphNode node = new GraphNode(id, type, type.defaultParams());
+        node.x = addPosX;
+        node.y = addPosY;
         nodes.add(node);
         registerNode(node);
-        ImNodes.setNodeScreenSpacePos(nodeInts.get(id), addPosX, addPosY);
+        NodeEditor.setNodePosition(nodeInts.get(id), addPosX, addPosY);
         onEdited();
     }
 
@@ -772,8 +850,8 @@ public final class GraphEditorWindow implements RenderInterface {
         for (GraphNode n : nodes) {
             Integer id = nodeInts.get(n.id);
             if (id == null) continue;
-            float x = ImNodes.getNodeGridSpacePosX(id) / zoom;
-            float y = ImNodes.getNodeGridSpacePosY(id) / zoom;
+            float x = NodeEditor.getNodePositionX(id);
+            float y = NodeEditor.getNodePositionY(id);
             if (Math.abs(x - n.x) > 0.5f || Math.abs(y - n.y) > 0.5f) {
                 n.x = x;
                 n.y = y;
