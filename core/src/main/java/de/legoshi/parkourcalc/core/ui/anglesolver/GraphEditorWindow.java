@@ -629,6 +629,7 @@ public final class GraphEditorWindow implements RenderInterface {
         else if (nodeRunning) pushColor(NodeEditorStyleColor.NodeBorder, ThemeManager.okColor());
 
         NodeEditor.beginNode(id);
+        ImGui.pushID(id);
         Fonts.pushBold();
         ImGui.text(n.type.label);
         Fonts.popBold();
@@ -649,6 +650,7 @@ public final class GraphEditorWindow implements RenderInterface {
         for (int i = 0; i < branches.size(); i++) {
             drawOutputPin(id, branches.get(i), i, scale);
         }
+        ImGui.popID();
         NodeEditor.endNode();
 
         if (error || nodeRunning) NodeEditor.popStyleColor(1);
