@@ -93,6 +93,15 @@ public final class SolveRunRecord {
         public long evals;
     }
 
+    public static final class Race {
+        public boolean spawned;
+        public long spawnElapsedNanos;
+        public String winner;
+        public String exploreChain;
+        public String exploreGraphHash;
+        public List<NodeRun> exploreNodes = new ArrayList<NodeRun>();
+    }
+
     public static final class Counters {
         public long cmaesEvals;
         public long smoothingEvals;
@@ -103,6 +112,7 @@ public final class SolveRunRecord {
     public Outcome outcome;
     public List<Sample> trajectory = new ArrayList<Sample>();
     public List<NodeRun> nodes = new ArrayList<NodeRun>();
+    public Race race;
     public Counters counters;
     public String modVersion;
     public String mcVersion;

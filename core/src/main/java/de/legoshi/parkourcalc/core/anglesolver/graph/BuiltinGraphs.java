@@ -13,6 +13,38 @@ public final class BuiltinGraphs {
         return build("Optimize", 16, 4500, 4, "EXHAUSTIVE", false, true, true, 10, 3, optimizeSeconds);
     }
 
+    public static SolverGraph explore() {
+        return explore(10, 40, 10);
+    }
+
+    public static SolverGraph explore(int seedSec, int bnbSec, int ilsSec) {
+        GraphBuilder g = new GraphBuilder("Explore", true);
+        g.add("entry", "entry");
+        g.add("emit", "emit");
+        g.add("seed", "dualChain").set("seed", "keepBetter", true).set("seed", "budgetSec", seedSec);
+        router(g, "rFeas", "CANDIDATE_FEASIBLE_RAW");
+        g.add("bnbOpt", "bnb").set("bnbOpt", "mode", "OPTIMIZE")
+                .set("bnbOpt", "budgetSec", bnbSec).set("bnbOpt", "minBudgetMs", 0);
+        g.add("bnbFF", "bnb").set("bnbFF", "mode", "FIRST_FEASIBLE")
+                .set("bnbFF", "budgetSec", bnbSec).set("bnbFF", "minBudgetMs", 0);
+        router(g, "rIls", "CANDIDATE_FEASIBLE_RAW");
+        g.add("ils", "ilsPolish").set("ils", "budgetSec", ilsSec).set("ils", "roundCap", 400);
+        g.add("smooth", "smoothing").set("smooth", "countEvals", true);
+        g.edge("entry", Guarantee.DONE, "seed");
+        g.edge("seed", Guarantee.FOUND, "rFeas");
+        g.edge("seed", Guarantee.NONE, "bnbFF");
+        g.edge("rFeas", Guarantee.TRUE, "bnbOpt");
+        g.edge("rFeas", Guarantee.FALSE, "bnbFF");
+        bnbOut(g, "bnbOpt", "rIls");
+        bnbOut(g, "bnbFF", "rIls");
+        g.edge("rIls", Guarantee.TRUE, "ils");
+        g.edge("rIls", Guarantee.FALSE, "emit");
+        g.edge("ils", Guarantee.IMPROVED, "smooth");
+        g.edge("ils", Guarantee.UNCHANGED, "smooth");
+        g.edge("smooth", Guarantee.DONE, "emit");
+        return g.build();
+    }
+
     public static SolverGraph fromBudget(int restarts, int maxEval, int polishCount, boolean exhaustiveDepth,
                                          boolean stopOnFeasible, boolean ilsExhaustive, boolean useWindowSolver,
                                          int window, int commit, int timeBudgetSeconds) {

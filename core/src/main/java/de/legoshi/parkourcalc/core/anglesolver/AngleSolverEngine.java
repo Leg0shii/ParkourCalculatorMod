@@ -7,6 +7,7 @@ import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.BoxStyle;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
+import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Candidate;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphFactory;
@@ -197,6 +198,7 @@ public final class AngleSolverEngine {
         final SolveProgress progress;
         final long startNanos;
         volatile GraphContext ctx;
+        volatile SolveRunRecord.Race race;
         final AtomicBoolean written = new AtomicBoolean(false);
 
         RunRecording(SolveRunRecord.Config config, SolveRunRecord.Problem problem, SolveProgress progress, long startNanos) {
@@ -230,6 +232,7 @@ public final class AngleSolverEngine {
         out.chain = chain != null ? chain : (ctx != null ? ctx.chain() : null);
         r.outcome = out;
         r.trajectory = SolveRunRecord.samplesOf(rec.progress.samples());
+        r.race = rec.race;
         if (ctx != null) {
             r.nodes = SolveRunRecord.nodeRunsOf(ctx.runState.statuses());
             SolveRunRecord.Counters counters = new SolveRunRecord.Counters();
@@ -312,11 +315,13 @@ public final class AngleSolverEngine {
         final boolean ilsExhaustive;
         final JumpConstraint legalGoal;
         final SolverGraph graph;
+        final boolean raceExplore;
 
         Job(JumpSpec spec, Objective.Sense sense, int startTick, int landingTick,
             int numTicks, boolean[] strafeMask, boolean[] force45Mask, List<ConstraintAt> uiConstraints,
             SolveCore.Budget budget, long deadlineNanos, LongRunSolver.LongRunConfig longRun, boolean useWindowSolver,
-            boolean stopOnFeasible, boolean ilsExhaustive, JumpConstraint legalGoal, SolverGraph graph
+            boolean stopOnFeasible, boolean ilsExhaustive, JumpConstraint legalGoal, SolverGraph graph,
+            boolean raceExplore
         ) {
             this.spec = spec;
             this.sense = sense;
@@ -334,6 +339,7 @@ public final class AngleSolverEngine {
             this.ilsExhaustive = ilsExhaustive;
             this.legalGoal = legalGoal;
             this.graph = graph;
+            this.raceExplore = raceExplore;
         }
     }
 
@@ -422,7 +428,8 @@ public final class AngleSolverEngine {
         return new Job(spec, objective.sense, startTick, landingTick, numTicks, ph.strafeMask,
                 ph.force45Mask, uiCons,
                 budgetFor(state), deadlineNanosFor(state), longRunConfigFor(state), useWindowSolverFor(state),
-                stopOnFeasibleFor(state), ilsExhaustiveFor(state), legalGoal, GraphFactory.forState(state));
+                stopOnFeasibleFor(state), ilsExhaustiveFor(state), legalGoal, GraphFactory.forState(state),
+                state.getEffort() == AngleSolverState.Effort.FAST);
     }
 
     public String legalGoalWallLabel() {
@@ -845,6 +852,161 @@ public final class AngleSolverEngine {
     }
 
     /** Runs entirely on the worker thread, reading only the immutable Job. */
+    private static final long RACE_CHECKPOINT_NANOS = 20_000_000_000L;
+
+    private static final class ArmState {
+        volatile Candidate cand;
+        volatile boolean feasible;
+        volatile boolean done;
+    }
+
+    private static final class RaceRun {
+        final GraphContext winnerCtx;
+        final Candidate cand;
+        final JumpPhysicsInputs winnerSc;
+        final boolean exploreWon;
+
+        RaceRun(GraphContext winnerCtx, Candidate cand, JumpPhysicsInputs winnerSc, boolean exploreWon) {
+            this.winnerCtx = winnerCtx;
+            this.cand = cand;
+            this.winnerSc = winnerSc;
+            this.exploreWon = exploreWon;
+        }
+    }
+
+    private RaceRun runStagedRace(Job job, JumpSpec spec, JumpPhysicsInputs sc, StartBox freeBox,
+                                  AtomicBoolean master, SolveProgress progress, RunRecording rec) {
+        AtomicBoolean primaryTok = new AtomicBoolean(false);
+        GraphContext primaryCtx = new GraphContext(spec, model, freeBox, job.legalGoal, FEAS_TOL, primaryTok,
+                progress, sequentialSolve, job.budget, job.longRun);
+        if (rec != null) rec.ctx = primaryCtx;
+        lastRunState = primaryCtx.runState;
+        currentGraphContext = primaryCtx;
+        ArmState primary = new ArmState();
+        long raceStart = System.nanoTime();
+        Thread primaryThread = new Thread(() -> runArm(job.graph, primaryCtx, spec, primary), "angle-solver-primary");
+        primaryThread.setDaemon(true);
+        primaryThread.start();
+
+        SolverGraph exploreGraph = BuiltinGraphs.explore();
+        AtomicBoolean exploreTok = new AtomicBoolean(false);
+        GraphContext exploreCtx = null;
+        JumpSpec exploreSpec = null;
+        ArmState explore = null;
+        long spawnElapsed = 0L;
+        boolean spawnClosed = false;
+        SolveRunRecord.Race raceInfo = new SolveRunRecord.Race();
+        raceInfo.winner = "primary";
+        if (rec != null) rec.race = raceInfo;
+
+        try {
+            while (true) {
+                if (master.get()) {
+                    primaryTok.set(true);
+                    exploreTok.set(true);
+                }
+                if (exploreCtx == null && !spawnClosed && !master.get()) {
+                    boolean feasIncumbent = progress.haveBest() && progress.isBestFeasible();
+                    boolean atCheckpoint = System.nanoTime() - raceStart >= RACE_CHECKPOINT_NANOS;
+                    if (atCheckpoint && feasIncumbent) {
+                        spawnClosed = true;
+                    } else if ((atCheckpoint && !primary.done && !feasIncumbent)
+                            || (primary.done && !primary.feasible)) {
+                        SolveProgress exploreProgress = new SolveProgress(
+                                job.sense == Objective.Sense.MAX, job.stopOnFeasible);
+                        exploreProgress.forwardTo(progress, "explore");
+                        exploreSpec = new JumpSpec(sc.copy(), spec.constraints, spec.objective);
+                        exploreCtx = new GraphContext(exploreSpec, model, freeBox, job.legalGoal, FEAS_TOL,
+                                exploreTok, exploreProgress, sequentialSolve, job.budget, job.longRun);
+                        explore = new ArmState();
+                        spawnElapsed = System.nanoTime() - raceStart;
+                        raceInfo.spawned = true;
+                        raceInfo.spawnElapsedNanos = spawnElapsed;
+                        GraphContext ec = exploreCtx;
+                        JumpSpec es = exploreSpec;
+                        ArmState er = explore;
+                        Thread exploreThread = new Thread(() -> runArm(exploreGraph, ec, es, er),
+                                "angle-solver-explore");
+                        exploreThread.setDaemon(true);
+                        exploreThread.start();
+                        if (SolverTrace.on()) {
+                            SolverTrace.log("RACE", "explore arm spawned at %.1fs", spawnElapsed / 1.0e9);
+                        }
+                    }
+                }
+                if (explore != null) {
+                    if (primary.done && primary.feasible && !explore.done) exploreTok.set(true);
+                    if (explore.done && explore.feasible && !primary.done) primaryTok.set(true);
+                }
+                boolean exploreSettled = explore == null
+                        ? (primary.feasible || spawnClosed || master.get())
+                        : explore.done;
+                if (primary.done && exploreSettled) break;
+                try {
+                    Thread.sleep(20);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    primaryTok.set(true);
+                    exploreTok.set(true);
+                    break;
+                }
+            }
+
+            boolean exploreWon = false;
+            if (explore != null && explore.cand != null && explore.cand.yaws != null) {
+                boolean primaryOk = primary.cand != null && primary.cand.yaws != null;
+                if (!primaryOk) {
+                    exploreWon = true;
+                } else if (explore.feasible != primary.feasible) {
+                    exploreWon = explore.feasible;
+                } else if (explore.feasible) {
+                    double primaryObj = exactObjective(spec.asScenario(), spec, primary.cand.yaws);
+                    double exploreObj = exactObjective(exploreSpec.asScenario(), exploreSpec, explore.cand.yaws);
+                    exploreWon = job.sense == Objective.Sense.MAX ? exploreObj > primaryObj : exploreObj < primaryObj;
+                }
+            }
+            raceInfo.winner = exploreWon ? "explore" : "primary";
+            if (exploreCtx != null) {
+                raceInfo.exploreChain = exploreCtx.chain();
+                raceInfo.exploreGraphHash = SolveRunRecord.graphHash(exploreGraph);
+                raceInfo.exploreNodes = SolveRunRecord.nodeRunsOf(exploreCtx.runState.statuses());
+            }
+            if (SolverTrace.on() && explore != null) {
+                SolverTrace.log("RACE", "winner=%s primaryFeas=%s exploreFeas=%s",
+                        exploreWon ? "explore" : "primary", primary.feasible, explore.feasible);
+            }
+            if (exploreWon) {
+                exploreCtx.chainSuffix(" (explore)");
+                return new RaceRun(exploreCtx, explore.cand, exploreSpec.asScenario(), true);
+            }
+            return new RaceRun(primaryCtx, primary.cand, sc, false);
+        } finally {
+            currentGraphContext = null;
+        }
+    }
+
+    private void runArm(SolverGraph graph, GraphContext ctx, JumpSpec spec, ArmState out) {
+        try {
+            Candidate c = GraphRunner.run(graph, ctx);
+            out.cand = c;
+            if (c != null && c.yaws != null) {
+                JumpPhysicsInputs armSc = spec.asScenario();
+                double viol;
+                if (ctx.stageLocked()) {
+                    double[] gf = armSc.toGameFacings(c.yaws);
+                    viol = JumpConstraintCompiler.compile(spec).maxViolation(gf, model.forward(armSc, gf));
+                } else {
+                    viol = violationOf(armSc, spec, c.yaws);
+                }
+                out.feasible = viol <= FEAS_TOL;
+            }
+        } catch (RuntimeException e) {
+            if (SolverTrace.on()) SolverTrace.log("RACE", "arm error: %s", String.valueOf(e));
+        } finally {
+            out.done = true;
+        }
+    }
+
     private Outcome runJob(Job job, AtomicBoolean cancel, SolveProgress progress, RunRecording rec) {
         JumpSpec spec = job.spec;
         lastSpecDebug = spec;
@@ -864,16 +1026,25 @@ public final class AngleSolverEngine {
                     sc.numTicks, spec.constraints.size(), countJumps(sc),
                     job.deadlineNanos / 1_000_000_000L, job.useWindowSolver, job.ilsExhaustive, job.stopOnFeasible));
         }
-        GraphContext ctx = new GraphContext(spec, model, freeBox, job.legalGoal, FEAS_TOL, cancel, progress,
-                sequentialSolve, job.budget, job.longRun);
-        if (rec != null) rec.ctx = ctx;
-        lastRunState = ctx.runState;
-        currentGraphContext = ctx;
+        GraphContext ctx;
         Candidate cand;
-        try {
-            cand = GraphRunner.run(job.graph, ctx);
-        } finally {
-            currentGraphContext = null;
+        if (job.raceExplore) {
+            RaceRun race = runStagedRace(job, spec, sc, freeBox, cancel, progress, rec);
+            ctx = race.winnerCtx;
+            cand = race.cand;
+            if (race.exploreWon) sc = race.winnerSc;
+        } else {
+            GraphContext single = new GraphContext(spec, model, freeBox, job.legalGoal, FEAS_TOL, cancel, progress,
+                    sequentialSolve, job.budget, job.longRun);
+            if (rec != null) rec.ctx = single;
+            lastRunState = single.runState;
+            currentGraphContext = single;
+            try {
+                cand = GraphRunner.run(job.graph, single);
+            } finally {
+                currentGraphContext = null;
+            }
+            ctx = single;
         }
         if (cancel.get()) return null;
         if (cand == null || cand.yaws == null) {

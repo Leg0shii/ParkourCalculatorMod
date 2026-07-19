@@ -39,6 +39,8 @@ public final class SolveProgress {
     private String stage;
     private String bestSolver;
     private Supplier<String> activeNodeSource;
+    private SolveProgress forwardTarget;
+    private String forwardNode;
 
     public SolveProgress(boolean maximize, boolean stopOnFeasible) {
         this.maximize = maximize;
@@ -47,6 +49,11 @@ public final class SolveProgress {
 
     public synchronized void setActiveNodeSource(Supplier<String> source) {
         this.activeNodeSource = source;
+    }
+
+    public synchronized void forwardTo(SolveProgress target, String nodeLabel) {
+        this.forwardTarget = target;
+        this.forwardNode = nodeLabel;
     }
 
     public boolean stopOnFeasible() {
@@ -63,17 +70,31 @@ public final class SolveProgress {
 
     public synchronized void report(double[] absWrappedYaws, double objective, double violation, boolean feasible) {
         if (absWrappedYaws == null) return;
-        if (!haveBest || isBetter(feasible, objective, violation)) {
-            bestYaws = absWrappedYaws.clone();
-            bestObjective = objective;
-            bestViolation = violation;
-            bestFeasible = feasible;
-            bestSolver = stage;
-            haveBest = true;
-            version++;
-            String node = activeNodeSource != null ? activeNodeSource.get() : null;
-            samples.add(new Sample(System.nanoTime() - startNanos, objective, violation, feasible, stage, node));
+        String node = activeNodeSource != null ? activeNodeSource.get() : null;
+        boolean accepted = accept(absWrappedYaws, objective, violation, feasible, stage, node);
+        if (accepted && forwardTarget != null) {
+            forwardTarget.reportForwarded(absWrappedYaws, objective, violation, feasible, stage, forwardNode);
         }
+    }
+
+    synchronized void reportForwarded(double[] yaws, double objective, double violation, boolean feasible,
+                                      String fromStage, String node) {
+        if (yaws == null) return;
+        accept(yaws, objective, violation, feasible, fromStage, node);
+    }
+
+    private boolean accept(double[] yaws, double objective, double violation, boolean feasible,
+                           String fromStage, String node) {
+        if (haveBest && !isBetter(feasible, objective, violation)) return false;
+        bestYaws = yaws.clone();
+        bestObjective = objective;
+        bestViolation = violation;
+        bestFeasible = feasible;
+        bestSolver = fromStage;
+        haveBest = true;
+        version++;
+        samples.add(new Sample(System.nanoTime() - startNanos, objective, violation, feasible, fromStage, node));
+        return true;
     }
 
     public synchronized List<Sample> samples() {

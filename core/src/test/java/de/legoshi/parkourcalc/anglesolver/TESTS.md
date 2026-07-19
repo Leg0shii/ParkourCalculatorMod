@@ -52,6 +52,9 @@ anglesolver/
                            (solve/loopmm-tight-t39: the loopmm misses capture with its shipped-
                            disabled pad wall ENABLED; pins the near-miss B&B rescue landing the
                            tight spec at Z@71 >= -279.3 through the live engine, THOROUGH 45 s)
+                           (solve/loopmm-tight-t39-fast: the SAME capture under FAST effort; pins
+                           the staged late-race: primary fast starves, the explore arm spawns at
+                           the 20 s checkpoint and lands it, budget 90 s; the redirect-class gate)
   harness/                 shared plumbing; no test lives here
 resources/
   problems/<check>/        one folder per check; holds captures or .expect.json sidecars

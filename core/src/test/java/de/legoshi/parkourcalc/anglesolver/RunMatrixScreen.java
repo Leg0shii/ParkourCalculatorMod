@@ -134,38 +134,7 @@ public class RunMatrixScreen {
     }
 
     private static SolverGraph bnbHeavyGraph(int seedSec, int bnbSec, int ilsSec) {
-        GraphBuilder g = new GraphBuilder("bnb-heavy", true);
-        g.add("entry", "entry");
-        g.add("emit", "emit");
-        g.add("seed", "dualChain").set("seed", "keepBetter", true).set("seed", "budgetSec", seedSec);
-        g.add("rFeas", "router").set("rFeas", "predicate", "CANDIDATE_FEASIBLE_RAW");
-        g.add("bnbOpt", "bnb").set("bnbOpt", "mode", "OPTIMIZE")
-                .set("bnbOpt", "budgetSec", bnbSec).set("bnbOpt", "minBudgetMs", 0);
-        g.add("bnbFF", "bnb").set("bnbFF", "mode", "FIRST_FEASIBLE")
-                .set("bnbFF", "budgetSec", bnbSec).set("bnbFF", "minBudgetMs", 0);
-        g.add("rIls", "router").set("rIls", "predicate", "CANDIDATE_FEASIBLE_RAW");
-        g.add("ils", "ilsPolish").set("ils", "budgetSec", ilsSec).set("ils", "roundCap", 400);
-        g.add("smooth", "smoothing").set("smooth", "countEvals", true);
-        g.edge("entry", Guarantee.DONE, "seed");
-        g.edge("seed", Guarantee.FOUND, "rFeas");
-        g.edge("seed", Guarantee.NONE, "bnbFF");
-        g.edge("rFeas", Guarantee.TRUE, "bnbOpt");
-        g.edge("rFeas", Guarantee.FALSE, "bnbFF");
-        bnbOut(g, "bnbOpt", "rIls");
-        bnbOut(g, "bnbFF", "rIls");
-        g.edge("rIls", Guarantee.TRUE, "ils");
-        g.edge("rIls", Guarantee.FALSE, "emit");
-        g.edge("ils", Guarantee.IMPROVED, "smooth");
-        g.edge("ils", Guarantee.UNCHANGED, "smooth");
-        g.edge("smooth", Guarantee.DONE, "emit");
-        return g.build();
-    }
-
-    private static void bnbOut(GraphBuilder g, String id, String to) {
-        g.edge(id, Guarantee.FOUND, to);
-        g.edge(id, Guarantee.IMPROVED, to);
-        g.edge(id, Guarantee.UNCHANGED, to);
-        g.edge(id, Guarantee.NONE, to);
+        return BuiltinGraphs.explore(seedSec, bnbSec, ilsSec);
     }
 
     private static SolverGraph smoothHeavyGraph() {
