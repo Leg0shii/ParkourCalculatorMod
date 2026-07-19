@@ -6,7 +6,9 @@ import de.legoshi.parkourcalc.anglesolver.harness.ProblemCatalog;
 import de.legoshi.parkourcalc.anglesolver.harness.ProblemFixture;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
+import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphBuilder;
+import de.legoshi.parkourcalc.core.anglesolver.graph.GraphNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphValidator;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunRecord;
@@ -166,6 +168,18 @@ public class RunMatrixScreen {
         g.edge(id, Guarantee.NONE, to);
     }
 
+    private static SolverGraph smoothHeavyGraph() {
+        SolverGraph g = BuiltinGraphs.fast();
+        for (GraphNode n : g.nodes) {
+            if ("smoothing".equals(n.type.id)) {
+                n.params.set("maxRounds", 200);
+                n.params.set("maxEvals", 400000);
+                n.params.set("pairSpan", 8);
+            }
+        }
+        return g;
+    }
+
     private static void assertValid(SolverGraph graph) {
         List<ValidationIssue> issues = GraphValidator.validate(graph);
         if (GraphValidator.hasErrors(issues)) {
@@ -224,6 +238,8 @@ public class RunMatrixScreen {
         out.add(new Preset("bnb-heavy60", customGraph(bnbHeavyGraph(10, 40, 10))));
         out.add(new Preset("seed-only15", customGraph(seedOnlyGraph(15))));
         out.add(new Preset("cma-only20", customGraph(cmaOnlyGraph(20))));
+        out.add(new Preset("custom-fastgraph", customGraph(BuiltinGraphs.fast())));
+        out.add(new Preset("smooth-heavy", customGraph(smoothHeavyGraph())));
         return out;
     }
 

@@ -106,6 +106,41 @@ public class SolveRunRecordTest {
     }
 
     @Test
+    public void smoothnessStatsFromYaws() {
+        SolveRunRecord.Outcome out = new SolveRunRecord.Outcome();
+        SolveRunRecord.smoothnessOf(out, new double[] {10.0, 12.0, 12.0, 9.0, 11.0});
+        assertEquals(7.0, out.yawTravelDeg, 0.0);
+        assertEquals(2, (int) out.yawDirChanges);
+        assertEquals(3.0, out.yawMaxStepDeg, 0.0);
+
+        SolveRunRecord.Outcome ramp = new SolveRunRecord.Outcome();
+        SolveRunRecord.smoothnessOf(ramp, new double[] {0.0, 1.0, 2.0, 3.5});
+        assertEquals(3.5, ramp.yawTravelDeg, 0.0);
+        assertEquals(0, (int) ramp.yawDirChanges);
+        assertEquals(1.5, ramp.yawMaxStepDeg, 0.0);
+
+        SolveRunRecord.Outcome held = new SolveRunRecord.Outcome();
+        SolveRunRecord.smoothnessOf(held, new double[] {45.0, 45.0, 45.0});
+        assertEquals(0.0, held.yawTravelDeg, 0.0);
+        assertEquals(0, (int) held.yawDirChanges);
+        assertEquals(0.0, held.yawMaxStepDeg, 0.0);
+
+        SolveRunRecord.Outcome seam = new SolveRunRecord.Outcome();
+        SolveRunRecord.smoothnessOf(seam, new double[] {179.0, -179.0, -177.0});
+        assertEquals(4.0, seam.yawTravelDeg, 1.0e-12);
+        assertEquals(0, (int) seam.yawDirChanges);
+        assertEquals(2.0, seam.yawMaxStepDeg, 1.0e-12);
+
+        SolveRunRecord.Outcome none = new SolveRunRecord.Outcome();
+        SolveRunRecord.smoothnessOf(none, null);
+        assertNull(none.yawTravelDeg);
+        assertNull(none.yawDirChanges);
+        assertNull(none.yawMaxStepDeg);
+        SolveRunRecord.smoothnessOf(none, new double[] {90.0});
+        assertNull(none.yawTravelDeg);
+    }
+
+    @Test
     public void jsonlRoundTrip() {
         SolveRunRecord record = sampleRecord();
         String line = SolveRunRecord.toJsonLine(record);
@@ -120,6 +155,9 @@ public class SolveRunRecordTest {
         assertEquals(record.outcome.status, back.outcome.status);
         assertEquals(record.outcome.objective, back.outcome.objective);
         assertEquals(record.outcome.feasible, back.outcome.feasible);
+        assertEquals(record.outcome.yawTravelDeg, back.outcome.yawTravelDeg);
+        assertEquals(record.outcome.yawDirChanges, back.outcome.yawDirChanges);
+        assertEquals(record.outcome.yawMaxStepDeg, back.outcome.yawMaxStepDeg);
         assertEquals(record.trajectory.size(), back.trajectory.size());
         assertEquals(record.trajectory.get(0).node, back.trajectory.get(0).node);
         assertEquals(record.nodes.size(), back.nodes.size());
@@ -175,6 +213,7 @@ public class SolveRunRecordTest {
         out.violation = 0.0;
         out.feasible = true;
         out.chain = "closed form";
+        SolveRunRecord.smoothnessOf(out, new double[] {10.0, 12.0, 9.0});
         r.outcome = out;
         SolveRunRecord.Sample s = new SolveRunRecord.Sample();
         s.elapsedNanos = 1000L;

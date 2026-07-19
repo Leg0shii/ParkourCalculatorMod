@@ -70,6 +70,9 @@ public final class SolveRunRecord {
         public Double violation;
         public boolean feasible;
         public String chain;
+        public Double yawTravelDeg;
+        public Integer yawDirChanges;
+        public Double yawMaxStepDeg;
     }
 
     public static final class Sample {
@@ -160,6 +163,29 @@ public final class SolveRunRecord {
         p.objectiveTick = spec.objective.tick;
         p.freeStart = sc.startBox != null && sc.startBox.startFree();
         return p;
+    }
+
+    public static void smoothnessOf(Outcome out, double[] yaws) {
+        if (out == null || yaws == null || yaws.length < 2) return;
+        double travel = 0.0;
+        double maxStep = 0.0;
+        int dirChanges = 0;
+        int lastSign = 0;
+        for (int t = 1; t < yaws.length; t++) {
+            double d = yaws[t] - yaws[t - 1];
+            d -= 360.0 * Math.round(d / 360.0);
+            double a = Math.abs(d);
+            travel += a;
+            if (a > maxStep) maxStep = a;
+            int sign = d > 0.0 ? 1 : (d < 0.0 ? -1 : 0);
+            if (sign != 0) {
+                if (lastSign != 0 && sign != lastSign) dirChanges++;
+                lastSign = sign;
+            }
+        }
+        out.yawTravelDeg = travel;
+        out.yawDirChanges = dirChanges;
+        out.yawMaxStepDeg = maxStep;
     }
 
     public static List<Sample> samplesOf(List<SolveProgress.Sample> samples) {

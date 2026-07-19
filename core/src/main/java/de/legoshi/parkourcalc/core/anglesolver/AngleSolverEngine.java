@@ -208,7 +208,7 @@ public final class AngleSolverEngine {
     }
 
     private void finishRecord(RunRecording rec, String status, Double objective, Double violation,
-                              Boolean feasible, String chain) {
+                              Boolean feasible, String chain, double[] yaws) {
         if (rec == null || !rec.written.compareAndSet(false, true)) return;
         SolveRunRecord r = new SolveRunRecord();
         r.config = rec.config;
@@ -225,6 +225,7 @@ public final class AngleSolverEngine {
             out.violation = rec.progress.bestViolation();
             out.feasible = rec.progress.isBestFeasible();
         }
+        SolveRunRecord.smoothnessOf(out, yaws != null ? yaws : rec.progress.bestYaws());
         GraphContext ctx = rec.ctx;
         out.chain = chain != null ? chain : (ctx != null ? ctx.chain() : null);
         r.outcome = out;
@@ -515,7 +516,7 @@ public final class AngleSolverEngine {
                 if (o != null && !token.get()) pending = o;
             } catch (Throwable t) {
                 if (!token.get()) {
-                    finishRecord(rec, SolveRunRecord.STATUS_FAILED, null, null, null, null);
+                    finishRecord(rec, SolveRunRecord.STATUS_FAILED, null, null, null, null, null);
                     SolveResult fail = new SolveResult(false, 0, job.uiConstraints.size(),
                             job.startTick + 1, job.landingTick + 1);
                     pending = new Outcome(fail, null);
@@ -716,7 +717,7 @@ public final class AngleSolverEngine {
         if (!solving) return;
         AtomicBoolean token = cancel;
         if (token != null) token.set(true);
-        finishRecord(recording, SolveRunRecord.STATUS_CANCELLED, null, null, null, null);
+        finishRecord(recording, SolveRunRecord.STATUS_CANCELLED, null, null, null, null, null);
         recording = null;
         pending = null;
         solving = false;
@@ -738,10 +739,10 @@ public final class AngleSolverEngine {
         liveResult = null;
         liveVersion = -1;
         if (prog != null && job != null && prog.haveBest()) {
-            finishRecord(recording, SolveRunRecord.STATUS_STOPPED_BEST, null, null, null, prog.bestSolver());
+            finishRecord(recording, SolveRunRecord.STATUS_STOPPED_BEST, null, null, null, prog.bestSolver(), null);
             pending = finalizeBest(job, prog.bestYaws(), prog.bestSolver());
         } else {
-            finishRecord(recording, SolveRunRecord.STATUS_CANCELLED, null, null, null, null);
+            finishRecord(recording, SolveRunRecord.STATUS_CANCELLED, null, null, null, null, null);
             pending = null;
             solving = false;
         }
@@ -876,7 +877,7 @@ public final class AngleSolverEngine {
         }
         if (cancel.get()) return null;
         if (cand == null || cand.yaws == null) {
-            finishRecord(rec, SolveRunRecord.STATUS_FAILED, null, null, null, ctx.chain());
+            finishRecord(rec, SolveRunRecord.STATUS_FAILED, null, null, null, ctx.chain(), null);
             SolveResult fail = new SolveResult(false, 0, job.uiConstraints.size(),
                     job.startTick + 1, job.landingTick + 1);
             if (ctx.chain() != null) fail.setSolver(ctx.chain());
@@ -914,7 +915,7 @@ public final class AngleSolverEngine {
         double finalObjective = path.getPos(spec.objective.tick, spec.objective.axis);
         double finalViolation = JumpConstraintCompiler.compile(spec).maxViolation(gameFacings, path);
         finishRecord(rec, SolveRunRecord.STATUS_SOLVED, finalObjective, finalViolation,
-                finalViolation <= FEAS_TOL, solverName);
+                finalViolation <= FEAS_TOL, solverName, yaws);
         Plan plan = new Plan(job.startTick, yaws, job.strafeMask, job.force45Mask, 1, path, sc.startPos, stageLocked);
         return new Outcome(result, plan);
     }

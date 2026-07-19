@@ -50,7 +50,7 @@ Dispatch and classes:
 Smooth-long:
 - A6. AlmSnapStage scales to 60-100+ ticks. VERDICT: not assumed; bake-off required (section 3.3). The 0.08-block gateless model drift is precisely the kind of error expected to grow with horizon; the band decides, not the precedent.
 - A7. What is "smooth" and what does it trade. VERDICT: smoothness is a weighted objective term (objective - lambda*wiggle) that reaches inner-loop scoring (natively in ALM, via scoredObjective for CMA stages), because stage-level selection alone cannot produce smooth candidates from a wiggly pool. It trades ONLY against positional value margin WITHIN a fixed tick count; it never trades feasibility and never a tick (user ruling: losing a tick is worse than not smooth). All three candidate stats are recorded regardless.
-- A8. How wiggly are current solutions. VERDICT: confirmed as the mandatory first measurement (checklist step 3): add the three stats, replay the standing corpus, answer "CMA-intrinsic or polish-configuration gap" before any smooth-core work.
+- A8. How wiggly are current solutions. VERDICT (MEASURED 2026-07-19, step 3 done): wiggle is SEARCH-INTRINSIC, not a polish-configuration gap. Baseline (matrix-a8base1, 51 problems x fast/optimize60): closed-form solutions are perfectly smooth (0 reversals); horizon/CMA/recovery chains reverse direction on 15-62% of ticks; optimize60 is WIGGLIER than fast (20% vs 9% mean reversal rate, worse on 28 of 48 paired problems), so more budget worsens style. A 16x smoothing budget (matrix-a8smooth1) changed reversal counts by 0-2 and travel by <1% on the 7 worst problems, paying objective at the 1e-4..1e-5 scale where it moved at all. Consequence: the lambda term must live inside search scoring (step 5) and/or a smooth-by-construction core must win the bake-off (step 6); post-hoc polish is a dead end. Full analysis: docs/research/data/matrix-a8base1/analysis.md.
 - A9. Smoothness vs easiness ladder. VERDICT: hard separation. Lambda-wiggle serves TASers only. Rung 1 of the ladder is constant yaw, which is a constraint, not a smoothness score; TASer work must never be sold as stratfinder progress.
 
 Explore:
@@ -74,7 +74,7 @@ Objective-type test harness:
 Process / hygiene:
 - A20. Benchmark artifacts durability. VERDICT: ALREADY DONE, verified 2026-07-19: docs/research/data/ holds matrix-full1 (runs.jsonl + analysis.md) and matrix-gen1 (runs.jsonl + band.txt + analysis.md). Pending commit only.
 - A21. Uncommitted surface. VERDICT: checklist step 1; the user commits.
-- A22. CUSTOM + saved preset runs long. VERDICT: checklist step 2, BEFORE any preset-based benchmarking; every later step (band replay, staged-race gate, bake-off) trusts presets.
+- A22. CUSTOM + saved preset runs long. VERDICT (DIAGNOSED 2026-07-19, step 2 done): the suspected mechanism is FALSIFIED. Real artifacts (t1.json saved at M2, formatted_legacy.json saved at M5, both under loader-forge-1.8.9 run/client/parkourcalculator/graphs/) materialize with params byte-identical to their builders; M5 kept every catalog default equal to the old hard-coded constants, and the "missing" rescue nodes are the stopOnFeasible-gated part of the builder, not drift. Actual mechanism: both presets are snapshots of the legacy Custom shape built with timeBudgetSeconds=0, which bakes momentumAssembly budgetSec=240 and uncapped race nodes; under CUSTOM effort there is no overall deadline (timeBudgetSeconds default 0) and stopOnFeasible defaults false, so on problems the seed chain does not crack, nodes grind their full baked budgets. Reproduced headlessly on loopmm-tight-t39: CUSTOM+formatted_legacy = 242 s with the momentum node burning its full 240 s and returning NONE (final infeasible), vs 29.9 s solved for an optimize60-shaped graph; on nix-full-t1 and j001 the same presets behave normally. Deterministic (budget-cap exhaustion, not a race). CONSEQUENCE: saved presets ARE trustworthy for steps 3-6 (materialization is faithful; the matrix caps runs externally). The in-game trap is budget semantics, a design decision, not a defect; options recorded with the user. Round-trip fidelity already regression-locked by GraphPresetIOTest.
 - A23. Disabled constraints define the problem. VERDICT: rule stands unchanged; already recorded twice.
 
 ## 5. Assets inventory (what exists and is reusable)
@@ -112,7 +112,7 @@ Process / hygiene:
 
 ## 9. Next-session prompt
 
-"Read docs/research/split-solver-grill-brief-2026-07-19.md sections 3, 4, 6 and 10 (grilled, verdicts recorded). Execute checklist steps 2 and 3 from section 10: first diagnose the CUSTOM saved-preset long-run bug (A22, suspect pre-M5 presets materializing missing params at long catalog defaults), then add the three smoothness stats to SolveRunRecord and baseline the standing corpus (A8). Do not start objective-abstraction, staged-race, or bake-off work until both are done."
+"Read docs/research/split-solver-grill-brief-2026-07-19.md sections 3, 4, 6 and 10 (steps 1-3 done: A22 = budget semantics not a defect; A8 = wiggle is search-intrinsic, polish is a dead end). Execute checklist step 4: promote the bnb-heavy60 shape to a builtin, wire the staged late-race (explore arm spawns alongside fast at an effort-scaled checkpoint when no feasible incumbent exists, never kills fast), gate on loopmm-tight-t39 newly solvable AND nix-full-t1 still solved plus the gen-ladder loopmm/nix variants, and add arm-spawn telemetry for A4 contention."
 
 ## 10. Grill verdicts: persona stacks, verified facts, approved sequencing
 
@@ -131,8 +131,8 @@ Codebase facts verified during the grill (2026-07-19):
 
 Approved sequencing checklist (approved as ordered, 2026-07-19):
 1. User commits the outstanding surface (A21).
-2. Diagnose A22 (CUSTOM + saved preset long-run) before trusting any preset-based benchmark.
-3. A8 baseline: add total |delta yaw|, direction-change count, max per-tick delta to SolveRunRecord; replay the standing corpus; answer whether wiggle is CMA-intrinsic or a polish gap.
+2. DONE 2026-07-19: A22 diagnosed (see the A22 verdict in section 4); presets are trustworthy, benchmarking may proceed.
+3. DONE 2026-07-19: stats shipped (SolveRunRecord.smoothnessOf, wrap-normalized deltas, unit-tested); baseline + 16x-polish comparison ran (matrix-a8base1 + matrix-a8smooth1); verdict SEARCH-INTRINSIC, see the A8 verdict in section 4.
 4. Staged late-race: promote bnb-heavy60 to builtin; wire the checkpoint arm (spawn alongside, never kill fast); gate = loopmm-tight-t39 newly solvable AND nix-full-t1 still solved, plus the gen-ladder loopmm/nix variants; add arm-spawn telemetry for A4.
 5. Objective abstraction: run-level scoring config {base + lambda*wiggle} through scoredObjective; SolveRunRecord.metric records lambda; standing ladder stays lambda=0; create the TASer band; pin lambda from step 3 data.
 6. Bake-off (A6): incumbent-with-lambda vs AlmSnapStage at 60/80/100 ticks on the TASer band; winner takes the persona; build param-sweep mode (A18) here.
