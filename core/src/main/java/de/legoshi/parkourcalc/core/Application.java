@@ -9,6 +9,7 @@ import de.legoshi.parkourcalc.core.ports.Simulator;
 import de.legoshi.parkourcalc.core.io.OsSystemBridge;
 import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
+import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
@@ -41,6 +42,7 @@ import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverTable;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverWindow;
 import de.legoshi.parkourcalc.core.ui.anglesolver.GraphEditorWindow;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphPresetIO;
+import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunLog;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 
 import java.nio.file.Path;
@@ -150,6 +152,13 @@ public final class Application {
         ExactJumpModel forwardModel = ExactJumpModel.forMcVersion(mcVersion);
         AngleSolverEngine angleSolverEngine = new AngleSolverEngine(angleSolverState, boxController, inputData, this::onUserChange, forwardModel);
         angleSolverEngine.setOnStartMoved(runner::setStartPosition);
+        if (saveStore != null) {
+            angleSolverEngine.setRunLog(new SolveRunLog(saveStore.getSaveDir().resolve("runs"),
+                    saveStore.getModVersion(), saveStore.getMcVersion()));
+            angleSolverEngine.setProblemSnapshotSource(() -> SaveIO.snapshotJson(saveStore, inputData,
+                    runner.getStartPosition(), runner.getStartVelocity(), runner.getStartYaw(), runner.getStartPitch(),
+                    angleSolverState, boxController.getStates()));
+        }
         saveController.setSolverEngine(angleSolverEngine);
         VelocityMapController velocityMapController = new VelocityMapController(
                 angleSolverState, boxController, runner, saveController, inputData, forwardModel,

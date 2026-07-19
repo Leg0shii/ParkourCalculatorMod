@@ -14,6 +14,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.NodeCategory;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeStatus;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeType;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamSpec;
+import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunRecord;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ValidationIssue;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolveProgress;
@@ -134,10 +135,9 @@ public final class GraphEditorWindow implements RenderInterface {
     private int flowedSteps;
     private int breadcrumbSeenSteps;
     private int lastProgressVersion = -1;
-    private boolean lastSampleFeasible;
-    private final List<Double> sampleTimes = new ArrayList<>();
-    private final List<Double> sampleObjectives = new ArrayList<>();
-    private final List<Double> sampleViolations = new ArrayList<>();
+    private SolveRunRecord lastSeenRecord;
+    private List<SolveRunRecord.Sample> samples = Collections.emptyList();
+    private final Map<String, Integer> improvementCounts = new HashMap<>();
 
     public GraphEditorWindow(AngleSolverEngine engine) {
         this.engine = engine;
@@ -224,10 +224,8 @@ public final class GraphEditorWindow implements RenderInterface {
             flowedSteps = 0;
             breadcrumbSeenSteps = 0;
             lastProgressVersion = -1;
-            lastSampleFeasible = false;
-            sampleTimes.clear();
-            sampleObjectives.clear();
-            sampleViolations.clear();
+            lastSeenRecord = null;
+            setSamples(Collections.<SolveRunRecord.Sample>emptyList());
         }
         if (rs == null) return;
         int v = rs.version();
@@ -242,15 +240,30 @@ public final class GraphEditorWindow implements RenderInterface {
             flowInitialized = true;
         }
         SolveProgress p = engine.liveProgress();
-        if (p != null && p.haveBest()) {
+        if (p != null) {
             int pv = p.version();
             if (pv != lastProgressVersion) {
                 lastProgressVersion = pv;
-                lastSampleFeasible = p.isBestFeasible();
-                sampleTimes.add(engine.elapsedSeconds());
-                sampleObjectives.add(p.bestObjective());
-                sampleViolations.add(p.bestViolation());
+                setSamples(SolveRunRecord.samplesOf(p.samples()));
             }
+        } else {
+            SolveRunRecord rec = engine.lastRunRecord();
+            if (rec != lastSeenRecord) {
+                lastSeenRecord = rec;
+                lastProgressVersion = -1;
+                setSamples(rec != null && rec.trajectory != null
+                        ? rec.trajectory : Collections.<SolveRunRecord.Sample>emptyList());
+            }
+        }
+    }
+
+    private void setSamples(List<SolveRunRecord.Sample> list) {
+        samples = list;
+        improvementCounts.clear();
+        for (SolveRunRecord.Sample s : list) {
+            if (s.node == null) continue;
+            Integer c = improvementCounts.get(s.node);
+            improvementCounts.put(s.node, c == null ? 1 : c + 1);
         }
     }
 
@@ -387,13 +400,14 @@ public final class GraphEditorWindow implements RenderInterface {
         }
         renderLiveStats();
         renderBreadcrumb(running);
-        renderSparklines(scale);
+        renderIncumbentStrip(scale);
     }
 
     private void renderLiveStats() {
-        if (sampleObjectives.isEmpty()) return;
-        String objText = "obj " + ConstraintText.fixedStat(sampleObjectives.get(sampleObjectives.size() - 1));
-        String violText = "viol " + ConstraintText.fixedStat(sampleViolations.get(sampleViolations.size() - 1));
+        if (samples.isEmpty()) return;
+        SolveRunRecord.Sample last = samples.get(samples.size() - 1);
+        String objText = "obj " + ConstraintText.fixedStat(last.obj);
+        String violText = "viol " + ConstraintText.fixedStat(last.viol);
         float gap = ImGui.getStyle().getItemSpacing().x;
         float w = ImGui.calcTextSize(objText).x + ImGui.calcTextSize(violText).x + gap;
         ImGui.sameLine();
@@ -403,7 +417,7 @@ public final class GraphEditorWindow implements RenderInterface {
         ImGui.text(objText);
         ThemeManager.popTextColor();
         ImGui.sameLine();
-        ThemeManager.pushTextColor(lastSampleFeasible ? ThemeManager.okColor() : ThemeManager.warningColor());
+        ThemeManager.pushTextColor(last.feasible ? ThemeManager.okColor() : ThemeManager.warningColor());
         ImGui.text(violText);
         ThemeManager.popTextColor();
     }
@@ -449,55 +463,88 @@ public final class GraphEditorWindow implements RenderInterface {
         return b.toString();
     }
 
-    private void renderSparklines(float scale) {
-        if (sampleTimes.size() < 2) return;
-        float gap = ImGui.getStyle().getItemSpacing().x;
-        float w = (ImGui.getContentRegionAvail().x - gap) * 0.5f;
-        float h = 40f * scale;
-        if (w < 40f) return;
-        sparkline("##graph_run_spark_obj", "objective", sampleObjectives, ThemeManager.accentColor(), w, h);
-        ImGui.sameLine();
-        sparkline("##graph_run_spark_viol", "violation", sampleViolations,
-                lastSampleFeasible ? ThemeManager.okColor() : ThemeManager.warningColor(), w, h);
-    }
+    private static final float STRIP_PAD = 4f;
 
-    private void sparkline(String id, String title, List<Double> values, int color, float w, float h) {
+    private void renderIncumbentStrip(float scale) {
+        if (samples.size() < 2) return;
+        float w = ImGui.getContentRegionAvail().x;
+        float laneH = 40f * scale;
+        float h = laneH * 2f + 2f;
+        if (w < 60f) return;
         ImVec2 p = ImGui.getCursorScreenPos();
-        ImGui.invisibleButton(id, w, h);
+        ImGui.invisibleButton("##graph_run_strip", w, h);
         ImDrawList dl = ImGui.getWindowDrawList();
         dl.addRectFilled(p.x, p.y, p.x + w, p.y + h, ThemeManager.bgTintColor(0.45f), 3f);
-        int n = values.size();
+        long tEnd = samples.get(samples.size() - 1).elapsedNanos;
+        double tRange = Math.max((double) tEnd, 1.0);
+        SolveRunRecord.Sample last = samples.get(samples.size() - 1);
+        drawStripLane(dl, p.x, p.y, w, laneH, tRange, true, "objective", ThemeManager.accentColor());
+        drawStripLane(dl, p.x, p.y + laneH + 2f, w, laneH, tRange, false, "violation",
+                last.feasible ? ThemeManager.okColor() : ThemeManager.warningColor());
+        if (ImGui.isItemHovered()) {
+            stripTooltip(p.x, w, tRange);
+        }
+    }
+
+    private void drawStripLane(ImDrawList dl, float x, float y, float w, float h, double tRange,
+                               boolean useObj, String title, int valueColor) {
+        int n = samples.size();
         double vMin = Double.POSITIVE_INFINITY;
         double vMax = Double.NEGATIVE_INFINITY;
         for (int i = 0; i < n; i++) {
-            double v = values.get(i);
+            double v = useObj ? samples.get(i).obj : samples.get(i).viol;
             vMin = Math.min(vMin, v);
             vMax = Math.max(vMax, v);
         }
         double range = vMax - vMin;
         if (range <= 0) range = Math.max(Math.abs(vMax) * 1.0e-6, 1.0e-9);
-        double t0 = sampleTimes.get(0);
-        double tRange = Math.max(sampleTimes.get(n - 1) - t0, 1.0e-9);
-        float pad = 4f;
         float textH = ImGui.getTextLineHeight();
-        float innerW = w - 2f * pad;
-        float innerH = h - 2f * pad - textH;
+        float innerW = w - 2f * STRIP_PAD;
+        float innerH = h - 2f * STRIP_PAD - textH;
         float prevX = 0f;
         float prevY = 0f;
         for (int i = 0; i < n; i++) {
-            float px = p.x + pad + (float) ((sampleTimes.get(i) - t0) / tRange) * innerW;
-            float py = p.y + pad + textH + (float) (1.0 - (values.get(i) - vMin) / range) * innerH;
+            SolveRunRecord.Sample s = samples.get(i);
+            double v = useObj ? s.obj : s.viol;
+            float px = x + STRIP_PAD + (float) (s.elapsedNanos / tRange) * innerW;
+            float py = y + STRIP_PAD + textH + (float) (1.0 - (v - vMin) / range) * innerH;
+            int color = nodeStripColor(s.node);
             if (i > 0) {
                 dl.addLine(prevX, prevY, px, prevY, color, 1.5f);
                 dl.addLine(px, prevY, px, py, color, 1.5f);
             }
+            dl.addCircleFilled(px, py, 2.5f, color, 8);
             prevX = px;
             prevY = py;
         }
-        dl.addText(p.x + pad, p.y + 2f, ThemeManager.textMutedColor(), title);
-        String val = ConstraintText.fixedStat(values.get(n - 1));
+        dl.addText(x + STRIP_PAD, y + 2f, ThemeManager.textMutedColor(), title);
+        String val = ConstraintText.fixedStat(useObj ? samples.get(n - 1).obj : samples.get(n - 1).viol);
         float vw = ImGui.calcTextSize(val).x;
-        dl.addText(p.x + w - pad - vw, p.y + 2f, color, val);
+        dl.addText(x + w - STRIP_PAD - vw, y + 2f, valueColor, val);
+    }
+
+    private void stripTooltip(float x, float w, double tRange) {
+        float innerW = w - 2f * STRIP_PAD;
+        if (innerW <= 0f) return;
+        ImVec2 mouse = ImGui.getMousePos();
+        double tAt = (mouse.x - x - STRIP_PAD) / innerW * tRange;
+        SolveRunRecord.Sample nearest = samples.get(0);
+        for (SolveRunRecord.Sample s : samples) {
+            if (Math.abs(s.elapsedNanos - tAt) < Math.abs(nearest.elapsedNanos - tAt)) nearest = s;
+        }
+        StringBuilder b = new StringBuilder();
+        b.append(String.format(Locale.ROOT, "%.2fs", nearest.elapsedNanos / 1.0e9));
+        if (nearest.node != null) b.append("  ").append(nearest.node);
+        if (nearest.stage != null) b.append("  (").append(nearest.stage).append(')');
+        b.append("\nobj ").append(ConstraintText.fixedStat(nearest.obj));
+        b.append("  viol ").append(ConstraintText.fixedStat(nearest.viol));
+        ImGui.setTooltip(b.toString());
+    }
+
+    private int nodeStripColor(String nodeId) {
+        GraphNode n = nodeId == null ? null : nodeById(nodeId);
+        if (n == null) return ThemeManager.textDimColor();
+        return categoryColor(n.type.category);
     }
 
     private GraphNode nodeById(String id) {
@@ -660,30 +707,45 @@ public final class GraphEditorWindow implements RenderInterface {
 
     private void drawNodeRunStatus(GraphNode n, int id, NodeStatus status, boolean nodeRunning,
                                    float headerBottom, float scale) {
-        if (status == null || status.visits == 0) return;
+        Integer improvements = improvementCounts.get(n.id);
+        String badge = improvements != null && improvements > 0 ? "+" + improvements : null;
+        if ((status == null || status.visits == 0) && badge == null) return;
         float w = NodeEditor.getNodeSizeX(id);
         if (w <= 0f) return;
-        String text;
-        int color;
-        if (nodeRunning) {
-            double secs = (System.nanoTime() - status.startNanos) / 1.0e9;
-            String budget = status.budgetNanos > 0 ? "/" + (status.budgetNanos / 1_000_000_000L) + "s" : "";
-            text = String.format(Locale.ROOT, "%.1fs%s", secs, budget);
-            color = ThemeManager.okColor();
-        } else if (status.taken != null) {
-            text = status.visits > 1 ? status.taken.name() + " x" + status.visits : status.taken.name();
-            color = branchColor(n, status.taken);
-        } else {
-            return;
+        String text = null;
+        int color = ThemeManager.textDimColor();
+        if (status != null && status.visits > 0) {
+            if (nodeRunning) {
+                double secs = (System.nanoTime() - status.startNanos) / 1.0e9;
+                String budget = status.budgetNanos > 0 ? "/" + (status.budgetNanos / 1_000_000_000L) + "s" : "";
+                text = String.format(Locale.ROOT, "%.1fs%s", secs, budget);
+                color = ThemeManager.okColor();
+            } else if (status.taken != null) {
+                text = status.visits > 1 ? status.taken.name() + " x" + status.visits : status.taken.name();
+                color = branchColor(n, status.taken);
+            }
         }
+        if (text == null && badge == null) return;
         float x = NodeEditor.getNodePositionX(id);
         float y = NodeEditor.getNodePositionY(id);
         NodeEditorStyle style = NodeEditor.getStyle();
         ImVec4 pad = style.getNodePadding();
         ImDrawList dl = NodeEditor.getNodeBackgroundDrawList(id);
-        float tw = ImGui.calcTextSize(text).x;
         float textY = headerBottom - 4f * scale - ImGui.getTextLineHeight();
-        if (tw <= w * 0.55f) dl.addText(x + w - pad.z - tw, textY, color, text);
+        float rightEdge = x + w - pad.z;
+        float budgetW = w * 0.55f;
+        if (text != null) {
+            float tw = ImGui.calcTextSize(text).x;
+            if (tw <= budgetW) {
+                dl.addText(rightEdge - tw, textY, color, text);
+                rightEdge -= tw + 6f * scale;
+                budgetW -= tw + 6f * scale;
+            }
+        }
+        if (badge != null) {
+            float bw = ImGui.calcTextSize(badge).x;
+            if (bw <= budgetW) dl.addText(rightEdge - bw, textY, ThemeManager.accentColor(), badge);
+        }
         if (!nodeRunning) return;
         float nh = NodeEditor.getNodeSizeY(id);
         float inset = style.getNodeBorderWidth() * 0.5f + 1f;

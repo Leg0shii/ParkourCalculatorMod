@@ -12,6 +12,8 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphFactory;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunState;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunner;
+import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunLog;
+import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunRecord;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.BlockSolver;
@@ -172,6 +174,73 @@ public final class AngleSolverEngine {
     private volatile Job currentJob;
     private SolveResult liveResult;
     private int liveVersion = -1;
+    private volatile SolveRunLog runLog;
+    private volatile RunRecording recording;
+    private volatile SolveRunRecord lastRunRecord;
+    private volatile java.util.function.Supplier<String> problemSnapshotSource;
+
+    public void setRunLog(SolveRunLog log) {
+        this.runLog = log;
+    }
+
+    public void setProblemSnapshotSource(java.util.function.Supplier<String> source) {
+        this.problemSnapshotSource = source;
+    }
+
+    public SolveRunRecord lastRunRecord() {
+        return lastRunRecord;
+    }
+
+    private static final class RunRecording {
+        final SolveRunRecord.Config config;
+        final SolveRunRecord.Problem problem;
+        final SolveProgress progress;
+        final long startNanos;
+        volatile GraphContext ctx;
+        final AtomicBoolean written = new AtomicBoolean(false);
+
+        RunRecording(SolveRunRecord.Config config, SolveRunRecord.Problem problem, SolveProgress progress, long startNanos) {
+            this.config = config;
+            this.problem = problem;
+            this.progress = progress;
+            this.startNanos = startNanos;
+        }
+    }
+
+    private void finishRecord(RunRecording rec, String status, Double objective, Double violation,
+                              Boolean feasible, String chain) {
+        if (rec == null || !rec.written.compareAndSet(false, true)) return;
+        SolveRunRecord r = new SolveRunRecord();
+        r.config = rec.config;
+        r.problem = rec.problem;
+        SolveRunRecord.Outcome out = new SolveRunRecord.Outcome();
+        out.status = status;
+        out.wallNanos = System.nanoTime() - rec.startNanos;
+        if (objective != null) {
+            out.objective = objective;
+            out.violation = violation;
+            out.feasible = feasible != null && feasible;
+        } else if (rec.progress.haveBest()) {
+            out.objective = rec.progress.bestObjective();
+            out.violation = rec.progress.bestViolation();
+            out.feasible = rec.progress.isBestFeasible();
+        }
+        GraphContext ctx = rec.ctx;
+        out.chain = chain != null ? chain : (ctx != null ? ctx.chain() : null);
+        r.outcome = out;
+        r.trajectory = SolveRunRecord.samplesOf(rec.progress.samples());
+        if (ctx != null) {
+            r.nodes = SolveRunRecord.nodeRunsOf(ctx.runState.statuses());
+            SolveRunRecord.Counters counters = new SolveRunRecord.Counters();
+            counters.cmaesEvals = ctx.cmaesEvals.get();
+            counters.smoothingEvals = ctx.smoothingEvals.get();
+            r.counters = counters;
+        }
+        r.model = model.getClass().getSimpleName();
+        lastRunRecord = r;
+        SolveRunLog log = runLog;
+        if (log != null) log.append(r);
+    }
 
     public AngleSolverEngine(AngleSolverState state, BoxController boxes, InputData inputs, IntConsumer onApplied, ForwardModel model) {
         this.state = state;
@@ -428,13 +497,25 @@ public final class AngleSolverEngine {
         currentJob = job;
         liveResult = null;
         liveVersion = -1;
+        String presetName = state.getEffort() == AngleSolverState.Effort.CUSTOM ? state.getGraphPresetName() : null;
+        RunRecording rec = new RunRecording(
+                SolveRunRecord.configOf(job.graph, presetName, state.getEffort().name(), FEAS_TOL, job.spec.objective),
+                SolveRunRecord.problemOf(job.spec, countJumps(job.spec.asScenario())),
+                progress, t0);
+        recording = rec;
+        SolveRunLog log = runLog;
+        java.util.function.Supplier<String> snapshot = problemSnapshotSource;
+        if (log != null && snapshot != null && log.needsProblem(rec.problem.hash)) {
+            log.writeProblem(rec.problem.hash, snapshot.get());
+        }
         solving = true;
         Thread worker = new Thread(() -> {
             try {
-                Outcome o = runJob(job, token, progress);
+                Outcome o = runJob(job, token, progress, rec);
                 if (o != null && !token.get()) pending = o;
             } catch (Throwable t) {
                 if (!token.get()) {
+                    finishRecord(rec, SolveRunRecord.STATUS_FAILED, null, null, null, null);
                     SolveResult fail = new SolveResult(false, 0, job.uiConstraints.size(),
                             job.startTick + 1, job.landingTick + 1);
                     pending = new Outcome(fail, null);
@@ -635,6 +716,8 @@ public final class AngleSolverEngine {
         if (!solving) return;
         AtomicBoolean token = cancel;
         if (token != null) token.set(true);
+        finishRecord(recording, SolveRunRecord.STATUS_CANCELLED, null, null, null, null);
+        recording = null;
         pending = null;
         solving = false;
         currentProgress = null;
@@ -655,11 +738,14 @@ public final class AngleSolverEngine {
         liveResult = null;
         liveVersion = -1;
         if (prog != null && job != null && prog.haveBest()) {
+            finishRecord(recording, SolveRunRecord.STATUS_STOPPED_BEST, null, null, null, prog.bestSolver());
             pending = finalizeBest(job, prog.bestYaws(), prog.bestSolver());
         } else {
+            finishRecord(recording, SolveRunRecord.STATUS_CANCELLED, null, null, null, null);
             pending = null;
             solving = false;
         }
+        recording = null;
     }
 
     public SolveResult liveBestResult() {
@@ -702,6 +788,7 @@ public final class AngleSolverEngine {
         currentJob = null;
         liveResult = null;
         liveVersion = -1;
+        recording = null;
     }
 
     public boolean isSolving() {
@@ -757,7 +844,7 @@ public final class AngleSolverEngine {
     }
 
     /** Runs entirely on the worker thread, reading only the immutable Job. */
-    private Outcome runJob(Job job, AtomicBoolean cancel, SolveProgress progress) {
+    private Outcome runJob(Job job, AtomicBoolean cancel, SolveProgress progress, RunRecording rec) {
         JumpSpec spec = job.spec;
         lastSpecDebug = spec;
         JumpPhysicsInputs sc = spec.asScenario();
@@ -778,6 +865,7 @@ public final class AngleSolverEngine {
         }
         GraphContext ctx = new GraphContext(spec, model, freeBox, job.legalGoal, FEAS_TOL, cancel, progress,
                 sequentialSolve, job.budget, job.longRun);
+        if (rec != null) rec.ctx = ctx;
         lastRunState = ctx.runState;
         currentGraphContext = ctx;
         Candidate cand;
@@ -788,6 +876,7 @@ public final class AngleSolverEngine {
         }
         if (cancel.get()) return null;
         if (cand == null || cand.yaws == null) {
+            finishRecord(rec, SolveRunRecord.STATUS_FAILED, null, null, null, ctx.chain());
             SolveResult fail = new SolveResult(false, 0, job.uiConstraints.size(),
                     job.startTick + 1, job.landingTick + 1);
             if (ctx.chain() != null) fail.setSolver(ctx.chain());
@@ -822,6 +911,10 @@ public final class AngleSolverEngine {
         }
         if (ctx.cmaesEvals.get() > 0) addCmaBudget(result, job, ctx.cmaesEvals.get());
         if (ctx.smoothingEvals.get() > 0) result.addDetail("Smoothing evals", Long.toString(ctx.smoothingEvals.get()));
+        double finalObjective = path.getPos(spec.objective.tick, spec.objective.axis);
+        double finalViolation = JumpConstraintCompiler.compile(spec).maxViolation(gameFacings, path);
+        finishRecord(rec, SolveRunRecord.STATUS_SOLVED, finalObjective, finalViolation,
+                finalViolation <= FEAS_TOL, solverName);
         Plan plan = new Plan(job.startTick, yaws, job.strafeMask, job.force45Mask, 1, path, sc.startPos, stageLocked);
         return new Outcome(result, plan);
     }
@@ -1004,6 +1097,7 @@ public final class AngleSolverEngine {
         currentJob = null;
         liveResult = null;
         liveVersion = -1;
+        recording = null;
         solving = true;
         Thread worker = new Thread(() -> {
             try {

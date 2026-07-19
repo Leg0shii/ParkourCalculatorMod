@@ -1,0 +1,140 @@
+# Split-solver plan: grill brief (2026-07-19)
+
+Status: GRILLED 2026-07-19, same day. Every assumption A1-A23 carries a VERDICT line in section 4, section 6 carries the decisions, section 10 records the persona objective stacks, the amended architecture facts, and the approved sequencing checklist. The amended architecture in section 3 is approved for execution in that order. Nothing is built yet.
+
+Companions: `solver-graph-learning-survey.md` sections 8, 8b, 8c (measurements + corrections), `telemetry-handoff-2026-07-18.md` (telemetry as-shipped).
+
+## 1. The user's stated goals (source of truth for the grill)
+
+Verbatim intent, lightly structured, with grill annotations in brackets:
+
+1. Reduce solve time.
+2. Improve the objective where it matters, which is jump verification. [CONFIRMED 2026-07-19: the verifier wants a verdict against the given jump first; best value + margin is the secondary readout of the same run. See A11/A12 and section 10.]
+3. Improve long solves ("solve length") WITHOUT the wiggle that CMA-ES produces. Smooth yaw trajectories. [AMENDED 2026-07-19: the solver never minimizes tick count; the TASer cuts T by hand and re-solves. TASer mode = solve at the given T, then smooth as much as possible. See section 10.]
+4. A test harness that allows testing different OBJECTIVE TYPES (the named ones to start), so new modules can be evaluated quickly, including their parameter tuning.
+5. Support three personas:
+   - Stratfinders: need INPUT solving (keys, not only yaws) scored on an objective function that does not exist yet (seed: the human-easiness ladder, see section 5). [Persona ruling 2026-07-19: "the only thing that matters for the stratfinder is making the strat as easy as possible, nothing else".]
+   - TASers: long solves, smooth. [Persona ruling 2026-07-19: losing a tick is worse than being not smooth; smoothness never trades across a tick count.]
+   - Jump verifiers: is this jump possible, and what is the true best value. [Persona ruling 2026-07-19: a verifier does what a TASer does but does not care about wiggle or input difficulty.]
+6. The user explicitly rejects "squeezing everything into a monolithic solver". Wanted shape: a solver for long solves, a solver for loopmm-class jumps (large constraint area, lots of free room to explore), and the default solver for simple jumps.
+7. The user's own worry about their proposal: splitting brings back "a classifier for which solver is best", which this week's measurements no-go'd. [RESOLVED 2026-07-19: the grill went further than the counterposition; even structural predicates are dropped. Staged late-race replaces class detection entirely. See A1-A3.]
+
+## 2. Evidence base (what this week actually established)
+
+- Telemetry (Phase A+B, in-game verified): every solve emits a JSONL SolveRunRecord (config, problem hash, outcome, incumbent trajectory with per-node attribution); unseen problems auto-dump as replayable captures; editor shows node-colored incumbent strip + per-node improvement badges.
+- full1 matrix (44 problems x 5 presets, 120 s): learned selector no-go on the solved corpus; VBS-SBS gap ~0 feasibility, <=1.4e-4 objective. Time spread real (exh30 = optimize60 quality at half wall).
+- gen corpus (CaptureMutations: goal shift / corridor tighten / momentum scale; 190 mutants + frontier; 1002 records): 0 of 69 generated all-fail rungs cracked by bigger or structurally different presets. Capability frontier = 136 rungs + razor-proof-t1 + razor-weirdpane. band.txt is the standing benchmark ladder.
+- CORRECTIONS (survey 8c, user-caught): loopmm-3jump-solver-misses ships with its pad DISABLED (weakened spec, was mislabeled frontier); original all-fails were wrongly excluded from escalation. After completing them: bidirectional preset flips on the redirect/long class:
+  - loopmm-tight-t39: fast starves B&B (stuck viol 2e-2 at 120 s); bnb-heavy60 solves in 14.4 s (pattern B&B -> ILS); exh30 16.6 s. The user's years-old "run B&B first" claim is confirmed.
+  - nix-full-t1: mirror image; fast solves in 52.6 s via momentum assembly; bnb-heavy60 fails outright.
+- Conclusion carried into this plan: feasibility on the hard classes is decided by stage ORDER and allocation, i.e. by which solver shape runs, which is the user's split-solver intuition.
+
+## 3. The architecture as amended by the grill (2026-07-19)
+
+1. `simple`: the current fast chain (closed form -> SLP -> relax, race backup). Unchanged; dominant on its class.
+2. `explore`: the bnb-heavy60 shape (pattern B&B early -> ILS), promoted from test-side GraphBuilder to a builtin graph. It is never dispatched by predicate; it spawns as the second arm of a staged late-race: fast runs alone, and at an effort-scaled checkpoint, only if there is no feasible incumbent yet, the explore arm starts alongside (fast is NOT killed). Rationale: pure kill-and-switch loses nix-full-t1 (fast needs 52.6 s and can look stuck at a 20 s checkpoint while bnb-heavy fails outright); race-from-t0 pays contention on every trivial solve.
+3. `smooth-long`: NOT committed to AlmSnapStage. The TASer core is decided by a bake-off on the pinned-lambda TASer band at 60/80/100 ticks: incumbent chain with lambda scoring + existing polish vs AlmSnapStage with lambda. Winner takes the persona; the loser remains an ordinary graph node. Rationale: Stage A passed only a gate microbench, the Sheepram precedent is a razor-precision argument not a length argument, and nobody has ever measured the incumbent chain with smoothness in the score (A8).
+4. Dispatch: UI = Auto + every persona selectable. Auto is STRATEGY-ONLY: it picks how the search runs but never changes what is optimized (same spec = same metric at any length). Personas are the only objective switch. No free-room measure, no redirect predicate, no ML. Manual override via persona selection and Custom.
+5. Smoothness made measurable: all three candidate stats recorded in SolveRunRecord (total |delta yaw|, yaw-direction-change count, max per-tick delta). No metric is chosen by debate; logging all three is one field each.
+6. Persona mapping: see section 10 objective stacks.
+
+## 4. OPEN POINTS AND ASSUMPTIONS, with grill verdicts (2026-07-19)
+
+Dispatch and classes:
+- A1. Free-room area as a class signal. VERDICT: dropped as a requirement. Tick count already exists as a predicate (RouterPredicate.TICKS_LE_CAP); no free-room measure is needed because staged late-race replaces class detection. No thresholds get invented from n=2.
+- A2. Redirect detection. VERDICT: dropped. The explore arm spawns on "no feasible incumbent at the checkpoint", a signal that needs zero new machinery, not on structural detection.
+- A3. Do three classes partition the space. VERDICT: moot. Classes are search strategies racing under one objective; an overlap cannot misroute anything because both arms score identically.
+- A4. Racing contention. VERDICT: confirmed real by code (BoundPrunedRecovery takes availableProcessors()-2 threads, IlsPolish batches availableProcessors()). Bounded by the staged spawn (second arm only on non-simple solves, only after the checkpoint). Arm-spawn wall-clock telemetry is part of checklist step 4 so contention gets measured, not assumed.
+- A5. Split evidence is n=2. VERDICT: accepted for now. The gen-ladder loopmm/nix variants become the staged-race regression gate (checklist step 4), which firms the class up cheaply exactly as the brief hoped.
+
+Smooth-long:
+- A6. AlmSnapStage scales to 60-100+ ticks. VERDICT: not assumed; bake-off required (section 3.3). The 0.08-block gateless model drift is precisely the kind of error expected to grow with horizon; the band decides, not the precedent.
+- A7. What is "smooth" and what does it trade. VERDICT: smoothness is a weighted objective term (objective - lambda*wiggle) that reaches inner-loop scoring (natively in ALM, via scoredObjective for CMA stages), because stage-level selection alone cannot produce smooth candidates from a wiggly pool. It trades ONLY against positional value margin WITHIN a fixed tick count; it never trades feasibility and never a tick (user ruling: losing a tick is worse than not smooth). All three candidate stats are recorded regardless.
+- A8. How wiggly are current solutions. VERDICT: confirmed as the mandatory first measurement (checklist step 3): add the three stats, replay the standing corpus, answer "CMA-intrinsic or polish-configuration gap" before any smooth-core work.
+- A9. Smoothness vs easiness ladder. VERDICT: hard separation. Lambda-wiggle serves TASers only. Rung 1 of the ladder is constant yaw, which is a constraint, not a smoothness score; TASer work must never be sold as stratfinder progress.
+
+Explore:
+- A10. Pattern B&B-first generalizes. VERDICT: not assumed. B&B-first is an empirical race arm, not a routing rule; the gen-ladder variants in checklist step 4 are the evidence mechanism. The nix-vs-loopmm boundary stays unexplained and does not need explaining for the staged design to be safe.
+
+Jump verification persona:
+- A11. What the verifier needs. VERDICT (user-confirmed): verdict-first against the given jump; best value + margin secondary. Three-state vocabulary: POSSIBLE (byte-exact witness + margin), BOUND-BLOCKED (relaxed-model bound + margin, shown ONLY when a certifying stage actually ran), UNKNOWN (effort + best value + gap). The word "impossible" never appears unqualified; certified byte-exact impossibility remains off the table per the prior OMT/SMT-FP survey.
+- A12. Aggregating stage guarantees. VERDICT: v1 surfaces only certificates that already exist (closed form, capCertify dual gap) instead of swallowing them. No new aggregation plumbing; general relaxed-bound stages are admitted as real new scope and not scheduled.
+
+Stratfinder / input solving:
+- A13. Discrete input space. VERDICT: refinement before synthesis. v1 starts from a solved TAS and searches the discrete neighborhood descending the easiness ladder; full synthesis is not attempted first.
+- A14. X/Z model cannot score input candidates. VERDICT (user-confirmed): entity-verified search. The loader SimulatorEntity already evaluates a full key+yaw script byte-exactly including Y and collisions; the "entity cannot be the inner loop" ruling was about the continuous yaw solver's 1e5-1e6 evaluations, and discrete refinement needs orders of magnitude fewer. The X/Z model pre-filters only candidates whose slip pattern is untouched. No Y/collision-aware headless model is ever built; the standing "X,Z + tick only" ruling stands. Consequence: input-solving verification is in-game, matching the existing headless-test-boundary rule.
+- A15. Easiness objective form. VERDICT (user ruling): easiness is the ONLY thing that matters for a stratfinder besides making the jump. Lexicographic ladder descent: try rung 1, fall back down; output = best rung achieved + solution; manual rung-pin is the degenerate case.
+- A16. Strat output format and tolerances. VERDICT: partially resolved for free. Rung 1 is parameterized by (key combo, yaw, start position); the sweep's surviving intervals ARE the tolerance windows, so the rung-1 deliverable is a yaw window + start-position window. Tolerance for higher rungs stays open and deferred with the rest of the stratfinder build.
+
+Objective-type test harness:
+- A17. Objective is axis+tick+sense only. VERDICT: confirmed in code (AngleSolverEngine.java:400). The abstraction shrinks dramatically after the persona rulings: run-level scoring config {base axis/tick/sense + optional weighted wiggle term}. NO time objective type (the user cuts ticks by hand); easiness is outer-loop config for later; verification margin is a report, not an objective. The objectives-are-not-nodes ruling survives intact: lexicographic tiers (easiness rungs) live in outer drivers that re-solve fixed problems; only the weighted smooth/value blend enters inner-loop scoring.
+- A18. Parameter tuning support. VERDICT: build the param-sweep mode during the bake-off (checklist step 6), which needs it anyway for lambda pinning and ALM tuning.
+- A19. Metric plumbing. VERDICT: confirmed write-only in code. SolveRunRecord.metric becomes self-describing (records lambda) and is consumed by the band tooling in checklist step 5.
+
+Process / hygiene:
+- A20. Benchmark artifacts durability. VERDICT: ALREADY DONE, verified 2026-07-19: docs/research/data/ holds matrix-full1 (runs.jsonl + analysis.md) and matrix-gen1 (runs.jsonl + band.txt + analysis.md). Pending commit only.
+- A21. Uncommitted surface. VERDICT: checklist step 1; the user commits.
+- A22. CUSTOM + saved preset runs long. VERDICT: checklist step 2, BEFORE any preset-based benchmarking; every later step (band replay, staged-race gate, bake-off) trusts presets.
+- A23. Disabled constraints define the problem. VERDICT: rule stands unchanged; already recorded twice.
+
+## 5. Assets inventory (what exists and is reusable)
+
+- Graph runtime + node editor + presets (M1-M5, in-game verified) including Router predicates; the dispatch router fits this natively.
+- Telemetry: SolveRunRecord/SolveRunLog + per-node attribution + problem auto-dump.
+- RunMatrixScreen / MatrixAnalysisScreen / CaptureMutations / band mechanism; benchmark ladder (band.txt + 136 rungs + razor pair).
+- AlmSnapStage Stage A (built, V-gated, UNPROVEN on razor benches) = the smooth-long bake-off contender.
+- bnb-heavy60 graph (test-side GraphBuilder) = the explore arm; needs promotion to builtin.
+- Human-easiness ladder recorded in memory (user's exact hierarchy).
+- Known preset-flip regression pair: loopmm-tight-t39 (explore must win) + nix-full-t1 (simple/momentum must win).
+
+## 6. What the grill decided (2026-07-19)
+
+1. Classes: NOT the abstraction. Search strategies are. Persona is explicit (Auto + every persona selectable); Auto is strategy-only and never changes the objective; simple-vs-explore is handled by staged late-race, not detection; no predicates are invented from n=2.
+2. Smooth: three stats recorded always; mechanism = lambda-weighted wiggle term in inner-loop scoring; trades only value margin within a fixed T; never feasibility, never a tick. The solver does not minimize ticks; the TASer does, by hand.
+3. Verifier: verdict-first against the given jump (POSSIBLE / BOUND-BLOCKED / UNKNOWN with the honesty rules in A11); best value + margin is the secondary readout; only existing certificates are surfaced in v1.
+4. Stratfinder: well-posed ONLY as entity-verified discrete refinement (A14); rung 1 is the v1 target and emits tolerance windows for free; build stays LATER per section 8.
+5. Harness: minimal abstraction = run-level scoring config {base + lambda*wiggle}; no time type; easiness rungs are outer-loop config; objectives never become nodes. Standing ladder stays lambda=0 forever; TASer band is separate with one pinned lambda chosen after the A8 baseline; lambda recorded in SolveRunRecord.metric.
+6. Sequencing: approved as the numbered checklist in section 10.
+
+## 7. Positions taken during the discussion, with outcomes
+
+- Claim: structural rule dispatch + racing is NOT the no-go'd classifier. OUTCOME: superseded; the grill dropped even structural predicates. Staged late-race needs no signals at all.
+- Claim: smooth-long should be ALM/BFGS-based, not CMA-based. OUTCOME: demoted to bake-off hypothesis; the Sheepram precedent argues precision, not length.
+- Claim: the monolith looked dominant partly because the metric ignored solution style. OUTCOME: plausible, unproven; the A8 baseline is the measurement that settles it.
+- Retracted during the session: "nothing beats fast on feasibility" (survey 8c).
+
+## 8. Raw decisions already made by the user (do not relitigate)
+
+- All three mutation classes stay in the generator (goal shift, tighten, momentum incl. m0.0).
+- Learned selector stays parked regardless of the split decision.
+- Human-easiness solver is LATER; the grill recorded its design verdicts (A13-A16) but building it stays out of scope.
+- The user handles all git operations.
+
+## 9. Next-session prompt
+
+"Read docs/research/split-solver-grill-brief-2026-07-19.md sections 3, 4, 6 and 10 (grilled, verdicts recorded). Execute checklist steps 2 and 3 from section 10: first diagnose the CUSTOM saved-preset long-run bug (A22, suspect pre-M5 presets materializing missing params at long catalog defaults), then add the three smoothness stats to SolveRunRecord and baseline the standing corpus (A8). Do not start objective-abstraction, staged-race, or bake-off work until both are done."
+
+## 10. Grill verdicts: persona stacks, verified facts, approved sequencing
+
+Persona objective stacks (user-confirmed):
+- Auto: strategy dispatch only; the spec's objective is never altered; staged late-race inside.
+- TASer: T is fixed (the user cuts ticks by hand and re-solves; the solver never optimizes tick count). Job = solve at the given T, then smooth as much as possible; lambda controls how much positional value margin smoothness may eat; feasibility is never traded.
+- Stratfinder (later): feasibility, then easiness only; lexicographic ladder descent; entity-verified refinement starting from a solved TAS; rung 1 first.
+- Verifier: the TASer solve at lambda=0 and max effort; verdict-first three-state output; margins reported at the scales the reach-margin ruling demands where a certifying stage ran.
+
+Codebase facts verified during the grill (2026-07-19):
+- Objective = (axis, sense, tick) only: AngleSolverEngine.java:400.
+- SolveRunRecord.metric is serialized, never read.
+- RouterPredicate has TICKS_LE_CAP and JUMPS_LE_ONE; no free-room or redirect predicate exists.
+- BoundPrunedRecovery uses availableProcessors()-2 threads; IlsPolish batches availableProcessors(); racing oversubscribes by construction.
+- docs/research/data/ already holds matrix-full1 and matrix-gen1 durably (A20 done).
+
+Approved sequencing checklist (approved as ordered, 2026-07-19):
+1. User commits the outstanding surface (A21).
+2. Diagnose A22 (CUSTOM + saved preset long-run) before trusting any preset-based benchmark.
+3. A8 baseline: add total |delta yaw|, direction-change count, max per-tick delta to SolveRunRecord; replay the standing corpus; answer whether wiggle is CMA-intrinsic or a polish gap.
+4. Staged late-race: promote bnb-heavy60 to builtin; wire the checkpoint arm (spawn alongside, never kill fast); gate = loopmm-tight-t39 newly solvable AND nix-full-t1 still solved, plus the gen-ladder loopmm/nix variants; add arm-spawn telemetry for A4.
+5. Objective abstraction: run-level scoring config {base + lambda*wiggle} through scoredObjective; SolveRunRecord.metric records lambda; standing ladder stays lambda=0; create the TASer band; pin lambda from step 3 data.
+6. Bake-off (A6): incumbent-with-lambda vs AlmSnapStage at 60/80/100 ticks on the TASer band; winner takes the persona; build param-sweep mode (A18) here.
+7. Verifier verdict layer: three-state, verdict-first, surfacing existing certificates only.
+8. Later, unscheduled: stratfinder per A13-A16 verdicts (entity-verified refinement, rung 1, tolerance windows).

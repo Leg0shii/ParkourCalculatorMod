@@ -18,6 +18,15 @@ anglesolver/
                            PKC_BENCH_FILTER, PKC_BENCH_TAG, PKC_BENCH_TIMEOUT_MS tune it
   EngineFileScreen.java    drive the live engine on any save file headlessly; PKC_SOLVE_FILE=<path>,
                            optional PKC_SOLVE_EFFORT and PKC_SOLVE_TIMEOUT_MS
+  RunMatrixScreen.java     (preset x problem) run matrix over problems/solve + problems/closedform,
+                           cold starts, one SolveRunRecord JSONL line per run to
+                           build/reports/matrix-<tag>/runs.jsonl, resumable (recorded pairs skipped);
+                           PKC_MATRIX=1 to run, PKC_MATRIX_TAG, PKC_MATRIX_TIMEOUT_MS (default 120000,
+                           cap = censored CANCELLED record), PKC_MATRIX_LIMIT (problems per category),
+                           PKC_MATRIX_FILTER, PKC_MATRIX_PRESETS
+  MatrixAnalysisScreen.java  per-preset aggregates + SBS/VBS feasibility and objective-regret gap over
+                           a matrix runs.jsonl; PKC_MATRIX_ANALYZE=1 + PKC_MATRIX_TAG; writes
+                           build/reports/matrix-<tag>/analysis.md
   FreeStartTranslationTest.java  translation-aware free-start scoring: zero-width translated score
                            byte-equals the pinned score (razor-proof, j004, j318); the
                            free-translate-edge synthetic solves and adopts its known +X box-edge

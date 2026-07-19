@@ -63,6 +63,7 @@ public final class GraphContext {
         this.cmaBudget = cmaBudget;
         this.longRun = longRun;
         this.watchdog = new BudgetWatchdog(cancel);
+        if (progress != null) progress.setActiveNodeSource(runState::activeNodeId);
     }
 
     public boolean exact() {

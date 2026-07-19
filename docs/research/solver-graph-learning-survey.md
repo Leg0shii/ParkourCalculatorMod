@@ -125,6 +125,54 @@ Scoring: PAR-10 is runtime-only; our anytime setting needs a declared combinatio
 3. Does ISAC-style per-cluster configuration over jump features beat plain preset selection here, or is our config space small enough that clustering + SMAC-per-cluster closes real gap?
 4. Can Hydra-style marginal-contribution portfolio construction over the existing problems corpora grow the preset library automatically, and does the resulting VBS-SBS gap justify a learned selector at all?
 
-## 8. Sources
+## 8. Measurements: preset x problem run matrix (2026-07-18)
+
+Setup: `RunMatrixScreen` (core test sources), every problem under `problems/solve` (29) and `problems/closedform` (15) x 5 presets, cold starts, sequential, 120 s cap per run (cap = censored CANCELLED record), one `SolveRunRecord` JSONL line per run. 220 runs, 1 h 41 min wall. Artifacts: `core/build/reports/matrix-full1/runs.jsonl` + `analysis.md` (regenerate with `MatrixAnalysisScreen`). 15 captures are wired to both checks, so the 44 problem rows cover 29 unique problem hashes; duplicated rows agree, raw numbers below.
+
+Presets: `fast` (builtin Fast), `optimize60` (builtin Optimize, 60 s), `custom-exh30` (knobs 16/4500/2, window on, ilsExhaustive, 30 s), `custom-deep60` (32/9000/4, EXHAUSTIVE polish, 60 s), `custom-nowin60` (window solver OFF, ilsExhaustive, 60 s).
+
+| preset | feasible /44 | censored | mean wall (feas) s | mean regret | max regret |
+| --- | --- | --- | --- | --- | --- |
+| fast | 43 | 1 | 1.3 | 2.5e-2 | 9.7e-1 |
+| optimize60 | 44 | 1 | 35.0 | 1.28e-5 | 1.40e-4 |
+| custom-exh30 | 43 | 0 | 16.7 | 1.57e-5 | 1.76e-4 |
+| custom-deep60 | 43 | 2 | 57.3 | 1.09e-3 | 4.65e-2 |
+| custom-nowin60 | 41 | 1 | 32.8 | 6.29e-2 | 1.46e0 |
+
+Regret = |objective - best feasible objective across presets| per problem, over the preset's feasible runs.
+
+**SBS = optimize60** (44/44 feasible). **VBS = 44/44 feasible. Feasibility gap VBS-SBS: 0.** Objective gap: the oracle beats optimize60 on 13 unique problems, but the two largest gaps are 1.40e-4 (j017) and 1.25e-4 (j019), i.e. sine-residual scale; everything else is at or below 5.1e-6. Mean SBS regret 1.28e-5.
+
+Findings:
+
+1. **Go/no-go (survey section 4): NO-GO for the learned per-instance selector (L2) on this corpus.** The per-instance oracle buys 0 feasibility and at most ~1.4e-4 blocks of objective over always running optimize60. There is no gap for a selector to close; revisit only if the corpus grows classes of problems where presets flip.
+2. The real spread is **time, not quality**: custom-exh30 matches optimize60's quality (1.57e-5 vs 1.28e-5 mean regret) at half the wall (16.7 s vs 35.0 s), and fast covers 43/44 at 1.3 s with 2.5e-2 mean regret. A fast-first cascade is the SATzilla presolver lesson, and the shipped tier graphs already embody it.
+3. custom-nowin60 is strictly dominated (3 infeasible including plain j001, max regret 1.46): the receding-horizon window stage earns its place.
+4. custom-deep60 is a poor default (slowest, 1 infeasible via cap on loopmm-tight-t39) but produces the sharpest objective on ~9 unique problems by 1e-7..1.4e-4: polish depth only matters at the last sine bucket. Per the reach-margin ruling those margins can matter for records, so deep polish stays a Custom option, not a tier.
+5. fast and custom-deep60 each miss loopmm-tight-t39 at the cap; custom-exh30 and custom-nowin60 return solved-but-infeasible best-objective results on nix-full-t1 within budget.
+
+Caveats: single run per pair (stochastic stages unseeded, no repetition variance), quality-first hierarchical metric (time only as tie-break), 120 s cap, and the corpus is development-biased (these captures drove solver development, so the shipped pipeline is expected to dominate on them). ASlib-style train/test discipline is moot until there is a selector worth training.
+
+### 8b. Generated-corpus extension (2026-07-18/19)
+
+The user challenged the no-go on corpus grounds: the 29 problems are all solvable, so the gap measurement was near-tautological. Response: `CaptureMutations` (test harness) generates harder/easier siblings of real captures on the game's pixel grid, rows and inputs frozen: goal shift (landing region translated k/16 along the objective, the rung-ladder move), corridor tighten (every X/Z wall moves k/16 into the allowed region), momentum scale (seed velocity x0.5 / x0). 190 mutants from 37 bases + 8 known-hard frontier captures, all classes user-approved. Two-stage run under tag `matrix-gen1` (1002 records total):
+
+- Stage 1 triage (242 problems x fast / seed-only15 / cma-only20, 30 s cap, ~1.9 h): 77 all-solve, 22 disagreement, 140 all-fail. Disagreement is ONE-DIRECTIONAL: `fast` is feasible on every disagreement problem; no component preset ever solves what `fast` misses. Correction to the frontier labels: the hpk "misses" (j155, j335, j716, j717, j828) are dual-chain misses only; the full fast pipeline solves all five in <= 30 s. The genuine all-fail frontier is razor-proof-t1 and razor-weirdpane.
+- Stage 2 escalation (92-problem band = disagreement + frontier + first all-fail rung per mutation ladder, x optimize60 / custom-exh30 / bnb-heavy60, 90 s cap, ~3.5 h): **0 of 69 triage-all-fail rungs cracked by any bigger or structurally different preset.** Across all 242 problems and 8 presets, nothing beats `fast` on feasibility.
+
+Verdict, now on a corpus that is 58% unsolved: the earlier no-go holds and strengthens. Feasibility is decided by pipeline composition, not budget or preset choice; the shipped fast graph is feasibility-dominant over its own components and over 2-4x budgets. The 136 all-fail mutant rungs plus the razor pair form a standing capability benchmark: crossing them needs new solver stages (basin discovery, redirect handling), not configuration. Selector work stays parked; the generated ladder is the yardstick for future capability work. Artifacts: `core/build/reports/matrix-gen1/` (runs.jsonl, band.txt, analysis.md).
+
+### 8c. Correction after user challenge (2026-07-19)
+
+Two flaws in 8b, both caught by the user, both verified:
+
+1. The frontier entry `loopmm-3jump-solver-misses` ships with its landing pad DISABLED (Z in [-279.3, -277.7] at tick 71, `disabled: true`); the triage "solved" the weakened problem. The honest tight version (`loopmm-tight-t39`) all-failed the 30 s triage, and the stage-2 band construction wrongly excluded it (it only promoted generated all-fail rungs, not original ones). Same exclusion hit `nix-full-t1`. The frontier list now drops the weakened duplicate. Corpus-wide disabled-wall audit: only the two loopmm captures and `trp-optimize-feasible-swap` (4/32, by design) carry disabled constraints; the hpk and razor solves in 8b were on full specs and stand.
+2. "Nothing beats fast on feasibility" is RETRACTED. Completing the missing runs shows bidirectional preset flips on exactly the redirect/long class:
+   - `loopmm-tight-t39`: fast stuck at viol 2.0e-2 for its full budget (chain `receding horizon -> CMA-ES`, its B&B rescue never fires); bnb-heavy60 solves it in 14.4 s (`pattern B&B -> ILS`), custom-exh30 in 16.6 s, optimize60 in 29-30 s (both via `pattern B&B (near miss)`). This reproduces the user's long-standing report: the fast graph starves B&B; a graph that reaches B&B early lands the problem in seconds.
+   - `nix-full-t1`: the mirror image; fast solves in 52.6 s via momentum assembly, bnb-heavy60 fails outright, exh30 infeasible at 73.6 s (120 s run) / feasible-at-cap (90 s run).
+
+Amended verdict: the 0/69 generated-rung result and the capability-frontier conclusion stand, but composition is NOT uniformly dominant. On the redirect/long multi-jump class there is real, bidirectional, mechanism-legible disagreement driven by stage ORDER and budget allocation (when B&B fires; whether momentum assembly runs). With n=2 this is a graph-engineering finding, not selector training data: the concrete follow-up is fixing the fast graph's near-miss-to-B&B routing (its rescue gate skips these tick counts), and racing structurally different sub-chains inside one graph, before any learned dispatch is reconsidered.
+
+## 9. Sources
 
 Verified core: Kerschke et al. 2019 survey (ada.liacs.nl/papers/KerEtAl19.pdf); Schede et al. JAIR 2022 AC survey; ASlib (arXiv:1506.02465); AS competitions report (arXiv:1805.01214); Hydra (cs.ubc.ca/~hoos/Publ/XuEtAl10.pdf); SATzilla (arXiv:1111.2249); AMLB (arXiv:2207.12560); Auto-Sklearn 2.0 (arXiv:2007.04074). Background: Hutter et al. AIJ 2014 EPMs (ada.liacs.nl/papers/HutEtAl14.pdf); Hyperband (arXiv:1603.06560); BBO challenge (arXiv:2104.10201); BenLOC (arXiv:2506.02752); ML4CO (arXiv:2203.02433); Gasse et al. (arXiv:1906.01629); MiniZinc handbook 2.8.7 solvers chapter; SCIP CONS/EVENT docs (scipopt.org); Blender fields (code.blender.org/2021/08/attributes-and-fields/); ComfyUI workflow docs (docs.comfy.org).
