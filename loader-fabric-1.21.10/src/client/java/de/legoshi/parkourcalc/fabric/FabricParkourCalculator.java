@@ -12,12 +12,14 @@ import imgui.ImGui;
 import imgui.ImGuiIO;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.KeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.resources.Identifier;
@@ -49,25 +51,25 @@ public class FabricParkourCalculator implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         KeyMapping.Category category = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(MOD_ID, "general"));
-        toggleKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+        toggleKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.parkourcalculator.toggle_ui",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_G,
                 category
         ));
-        deselectKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+        deselectKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.parkourcalculator.deselect_all",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_L,
                 category
         ));
-        playbackKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+        playbackKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.parkourcalculator.toggle_playback",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_P,
                 category
         ));
-        landingConstraintsKeyBinding = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+        landingConstraintsKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.parkourcalculator.add_landing_constraints",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_B,
@@ -93,6 +95,8 @@ public class FabricParkourCalculator implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(FabricParkourCalculator::onEndTick);
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> application.onWorldChange());
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> application.onWorldChange());
+
+        LevelRenderEvents.AFTER_SOLID_FEATURES.register(FabricParkourCalculator::renderWorldOverlayBeforeTranslucent);
     }
 
     private static boolean wasPlaybackRunning = false;
@@ -157,10 +161,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
 
         boolean imguiWantsKeys = application.isControlPanelOpen() && ImGui.getIO().getWantTextInput();
-        boolean canDispatch = client.screen == null && !imguiWantsKeys;
+        boolean canDispatch = client.gui.screen() == null && !imguiWantsKeys;
 
         // The close/toggle bind must still work while a yaw field is focused; only a real MC screen (chat) blocks it.
-        if (toggled && client.screen == null) {
+        if (toggled && client.gui.screen() == null) {
             setOverlayOpen(!application.isControlPanelOpen());
         }
         if (deselectPressed && canDispatch) {
@@ -226,29 +230,27 @@ public class FabricParkourCalculator implements ClientModInitializer {
      * Called from SectionRenderStateMixin right before translucent terrain draws, so boxes depth-test
      * only against opaque geometry and stay visible through water, lava, and stained/tinted glass.
      */
-    public static void renderWorldOverlayBeforeTranslucent() {
-        Matrix4f matrix = pendingWorldMatrix;
-        pendingWorldMatrix = null;
-        if (matrix != null) {
-            onWorldRender(matrix);
+    public static void renderWorldOverlayBeforeTranslucent(LevelRenderContext context) {
+        if (context != null) {
+            onWorldRender(context);
         }
     }
 
     /** Called from WorldRendererMixin to render world overlays. */
-    public static void onWorldRender(Matrix4f positionMatrix) {
+    public static void onWorldRender(LevelRenderContext context) {
         application.tickDrag();
         if (application.isPlaybackRunning()) {
             application.renderPlayback();
             if (application.getSettings().keepBoxesDuringPlayback) {
-                worldRenderer.render(positionMatrix);
+                worldRenderer.render(context);
             }
             return;
         }
-        worldRenderer.render(positionMatrix);
+        worldRenderer.render(context);
     }
 
     /** Called from InGameHudMixin to queue the MACRO badge into the GUI state. */
-    public static void onHudRender(GuiGraphics context) {
+    public static void onHudRender(GuiGraphicsExtractor context) {
         if (!application.isReady()) return;
         if (application.isPlaybackRunning()) {
             hudRenderer.render(context);
@@ -259,7 +261,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
     public static void onGuiRendered() {
         if (!application.isReady()) return;
         // Pinned panels are hidden while any blocking screen (pause, inventory, chat) is open.
-        boolean allowDetached = Minecraft.getInstance().screen == null;
+        boolean allowDetached = Minecraft.getInstance().gui.screen() == null;
         ImGuiImpl.beginImGuiRendering();
         application.getOverlayManager().render(ImGui.getIO(), allowDetached);
         ImGuiImpl.endImGuiRendering();
@@ -275,7 +277,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     public static boolean isUiFocused() {
         // A vanilla screen (e.g. pause on tab-out) must take input precedence over ImGui.
-        return application.isControlPanelOpen() && Minecraft.getInstance().screen == null;
+        return application.isControlPanelOpen() && Minecraft.getInstance().gui.screen() == null;
     }
 
     public static boolean shouldSuppressLeftClick() {

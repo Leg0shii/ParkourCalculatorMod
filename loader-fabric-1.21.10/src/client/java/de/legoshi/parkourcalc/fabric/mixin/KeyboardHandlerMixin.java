@@ -4,7 +4,7 @@ import de.legoshi.parkourcalc.fabric.FabricParkourCalculator;
 import de.legoshi.parkourcalc.fabric.imgui.ImGuiImpl;
 import imgui.ImGui;
 import imgui.flag.ImGuiPopupFlags;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.minecraft.client.KeyboardHandler;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
@@ -26,7 +26,7 @@ public class KeyboardHandlerMixin {
 
         int glfwKey = input.key();
 
-        int toggleCode = KeyBindingHelper.getBoundKeyOf(FabricParkourCalculator.toggleKeyBinding).getValue();
+        int toggleCode = KeyMappingHelper.getBoundKeyOf(FabricParkourCalculator.toggleKeyBinding).getValue();
         if (glfwKey == toggleCode) {
             return;
         }

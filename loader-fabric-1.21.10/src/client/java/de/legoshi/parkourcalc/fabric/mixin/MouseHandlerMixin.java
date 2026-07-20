@@ -2,7 +2,7 @@ package de.legoshi.parkourcalc.fabric.mixin;
 
 import de.legoshi.parkourcalc.fabric.FabricParkourCalculator;
 import de.legoshi.parkourcalc.fabric.imgui.ImGuiImpl;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.minecraft.client.MouseHandler;
 import net.minecraft.client.input.MouseButtonInfo;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -36,7 +36,7 @@ public class MouseHandlerMixin {
 
         int button = input.button();
 
-        InputConstants.Key toggleKey = KeyBindingHelper.getBoundKeyOf(FabricParkourCalculator.toggleKeyBinding);
+        InputConstants.Key toggleKey = KeyMappingHelper.getBoundKeyOf(FabricParkourCalculator.toggleKeyBinding);
         if (toggleKey.getType() == InputConstants.Type.MOUSE && toggleKey.getValue() == button) {
             return;
         }
