@@ -93,14 +93,15 @@ public final class CmaesJumpHarness {
             if (stopped(cancel, earlyStop)) throw new SolveCancelledException();
             double[] gf = scenario.toGameFacings(Angles.wrapAll(F));
             ForwardPath pr = model.forward(scenario, gf);
+            double smooth = feasibilityOnly ? 0.0 : obj.smoothPenalty(F);
             if (free) {
                 double[] d = FreeStartSolve.bestTranslate(spec, gf, pr, box);
                 double o = sign * (pr.getPos(obj.tick, obj.axis) + (objAxis == 0 ? d[0] : d[1]));
-                return o + c.translatedPenalty(gf, pr, d[0], d[1], cfg.muIneq, cfg.muEq);
+                return o + smooth + c.translatedPenalty(gf, pr, d[0], d[1], cfg.muIneq, cfg.muEq);
             }
             double o = sign * pr.getPos(obj.tick, obj.axis);
             double pen = c.penalty(gf, pr, cfg.muIneq, cfg.muEq);
-            return o + pen;
+            return o + smooth + pen;
         };
 
         double[] lower = new double[n];
@@ -215,7 +216,8 @@ public final class CmaesJumpHarness {
         double[] gf = scenario.toGameFacings(Angles.wrapAll(abs));
         ForwardPath pr = model.forward(scenario, gf);
         // score folds ONLY the eq squared-penalty (muIneq=0 zeroes the ineq term); ineq is reported separately.
-        double score = sign * pr.getPos(obj.tick, obj.axis) + c.penalty(gf, pr, 0.0, cfg.muEq);
+        double smooth = feasibilityOnly ? 0.0 : obj.smoothPenalty(abs);
+        double score = sign * pr.getPos(obj.tick, obj.axis) + smooth + c.penalty(gf, pr, 0.0, cfg.muEq);
         double ineqViol = 0.0;
         for (JumpConstraint cc : c.ineq) ineqViol = Math.max(ineqViol, JumpConstraintCompiler.slack(cc, gf, pr));
         return new double[]{score, ineqViol};

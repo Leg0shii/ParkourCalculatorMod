@@ -23,7 +23,10 @@ anglesolver/
                            build/reports/matrix-<tag>/runs.jsonl, resumable (recorded pairs skipped);
                            PKC_MATRIX=1 to run, PKC_MATRIX_TAG, PKC_MATRIX_TIMEOUT_MS (default 120000,
                            cap = censored CANCELLED record), PKC_MATRIX_LIMIT (problems per category),
-                           PKC_MATRIX_FILTER, PKC_MATRIX_PRESETS
+                           PKC_MATRIX_FILTER, PKC_MATRIX_PRESETS, PKC_MATRIX_BAND (path to a band.txt
+                           allow-list of category/name keys); taser60-l* presets = optimize60 shape
+                           with a nonzero smoothLambda (the TASer band lives at
+                           docs/research/data/matrix-taser-pin1/band.txt)
   MatrixAnalysisScreen.java  per-preset aggregates + SBS/VBS feasibility and objective-regret gap over
                            a matrix runs.jsonl; PKC_MATRIX_ANALYZE=1 + PKC_MATRIX_TAG; writes
                            build/reports/matrix-<tag>/analysis.md

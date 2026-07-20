@@ -82,7 +82,9 @@ public final class IlsPolish {
                         bestScore = ps;
                         best = pol;
                     }
-                    if (progress != null) progress.report(best, sign * bestScore, 0.0, true);
+                    if (progress != null) {
+                        progress.report(best, SolveCore.objectiveOf(model, sc, obj, Angles.wrapAll(best)), 0.0, true);
+                    }
                 }
             }
         } catch (SolveCancelledException e) {
@@ -107,6 +109,6 @@ public final class IlsPolish {
         double[] gf = sc.toGameFacings(Angles.wrapAll(absWrapped));
         ForwardPath pr = model.forward(sc, gf);
         if (c.maxViolation(gf, pr) > FEAS_TOL) return Double.POSITIVE_INFINITY;
-        return sign * pr.getPos(obj.tick, obj.axis);
+        return sign * pr.getPos(obj.tick, obj.axis) + obj.smoothPenalty(absWrapped);
     }
 }

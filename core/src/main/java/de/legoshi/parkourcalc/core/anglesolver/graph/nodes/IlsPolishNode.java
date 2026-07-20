@@ -41,8 +41,8 @@ public final class IlsPolishNode implements NodeRuntime {
                 ctx.sequential, nodeToken, ctx.progress, cfg);
         if (ils != null) {
             boolean max = ctx.maximize();
-            double cur = ctx.exactObjective(in.yaws);
-            double ilsObj = ctx.exactObjective(ils);
+            double cur = ctx.scoredExactObjective(in.yaws);
+            double ilsObj = ctx.scoredExactObjective(ils);
             if (max ? ilsObj > cur : ilsObj < cur) {
                 ctx.chainAppend("ILS");
                 ctx.chainSuffix(" (better objective)");

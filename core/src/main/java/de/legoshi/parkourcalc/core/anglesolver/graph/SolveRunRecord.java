@@ -28,6 +28,7 @@ public final class SolveRunRecord {
         public String type;
         public double feasTol;
         public String sense;
+        public double smoothLambda;
     }
 
     public static final class Param {
@@ -128,6 +129,7 @@ public final class SolveRunRecord {
         c.metric.type = "hierarchical";
         c.metric.feasTol = feasTol;
         c.metric.sense = objective.sense.name();
+        c.metric.smoothLambda = objective.smoothLambda;
         for (GraphNode n : graph.nodes) {
             NodeConfig nc = new NodeConfig();
             nc.id = n.id;

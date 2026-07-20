@@ -404,7 +404,8 @@ public final class AngleSolverEngine {
         }
 
         List<JumpConstraint> constraints = new ArrayList<>();
-        Objective objective = new Objective(axis(state.getAxis()), sense(state.getGoal()), numTicks);
+        Objective objective = new Objective(axis(state.getAxis()), sense(state.getGoal()), numTicks,
+                state.getSmoothLambda());
         for (ConstraintAt ca : uiCons) {
             if (footprintCons != null && footprintCons.contains(ca.c)) continue;
             addMapped(constraints, ca.c, ca.absTick, ca.segTick, numTicks);
@@ -500,7 +501,8 @@ public final class AngleSolverEngine {
         startNanos = t0;
         AtomicBoolean token = new AtomicBoolean(false);
         cancel = token;
-        SolveProgress progress = new SolveProgress(job.sense == Objective.Sense.MAX, job.stopOnFeasible);
+        SolveProgress progress = new SolveProgress(job.sense == Objective.Sense.MAX, job.stopOnFeasible,
+                job.spec.objective.smoothLambda);
         currentProgress = progress;
         currentJob = job;
         liveResult = null;
@@ -913,7 +915,8 @@ public final class AngleSolverEngine {
                     } else if ((atCheckpoint && !primary.done && !feasIncumbent)
                             || (primary.done && !primary.feasible)) {
                         SolveProgress exploreProgress = new SolveProgress(
-                                job.sense == Objective.Sense.MAX, job.stopOnFeasible);
+                                job.sense == Objective.Sense.MAX, job.stopOnFeasible,
+                                spec.objective.smoothLambda);
                         exploreProgress.forwardTo(progress, "explore");
                         exploreSpec = new JumpSpec(sc.copy(), spec.constraints, spec.objective);
                         exploreCtx = new GraphContext(exploreSpec, model, freeBox, job.legalGoal, FEAS_TOL,
@@ -960,8 +963,10 @@ public final class AngleSolverEngine {
                 } else if (explore.feasible != primary.feasible) {
                     exploreWon = explore.feasible;
                 } else if (explore.feasible) {
-                    double primaryObj = exactObjective(spec.asScenario(), spec, primary.cand.yaws);
-                    double exploreObj = exactObjective(exploreSpec.asScenario(), exploreSpec, explore.cand.yaws);
+                    double primaryObj = spec.objective.scored(
+                            exactObjective(spec.asScenario(), spec, primary.cand.yaws), primary.cand.yaws);
+                    double exploreObj = exploreSpec.objective.scored(
+                            exactObjective(exploreSpec.asScenario(), exploreSpec, explore.cand.yaws), explore.cand.yaws);
                     exploreWon = job.sense == Objective.Sense.MAX ? exploreObj > primaryObj : exploreObj < primaryObj;
                 }
             }
@@ -1357,7 +1362,7 @@ public final class AngleSolverEngine {
      *  constraints; the user decides which coordinate to optimize, rather than the tool auto-choosing. */
     private List<Objective> objectiveCandidates(int numTicks) {
         return java.util.Collections.singletonList(
-                new Objective(axis(state.getAxis()), sense(state.getGoal()), numTicks));
+                new Objective(axis(state.getAxis()), sense(state.getGoal()), numTicks, state.getSmoothLambda()));
     }
 
     // ---- apply (main thread) --------------------------------------------------

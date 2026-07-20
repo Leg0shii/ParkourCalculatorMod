@@ -164,6 +164,7 @@ public final class AngleSolverState {
     private boolean stopOnFeasible;
     private boolean legalMode;
     private int optimizeSeconds = DEFAULT_OPTIMIZE_SECONDS;
+    private double smoothLambda;
     private final SolveBudget solveBudget = new SolveBudget();
     private String graphPresetName;
     private SolverGraph customGraph;
@@ -248,6 +249,14 @@ public final class AngleSolverState {
 
     public void setOptimizeSeconds(int v) {
         optimizeSeconds = clampInt(v, MIN_OPTIMIZE_SECONDS, MAX_OPTIMIZE_SECONDS);
+    }
+
+    public double getSmoothLambda() {
+        return smoothLambda;
+    }
+
+    public void setSmoothLambda(double v) {
+        smoothLambda = Math.max(0.0, v);
     }
 
     public SolveBudget getSolveBudget() {

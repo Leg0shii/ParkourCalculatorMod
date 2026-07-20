@@ -25,4 +25,14 @@ public final class Angles {
         while (delta < -180.0) delta += 360.0;
         return delta;
     }
+
+    public static double travelDeg(double[] f) {
+        double travel = 0.0;
+        for (int i = 1; i < f.length; i++) {
+            double d = f[i] - f[i - 1];
+            d -= 360.0 * Math.round(d / 360.0);
+            travel += Math.abs(d);
+        }
+        return travel;
+    }
 }

@@ -156,6 +156,14 @@ public class RunMatrixScreen {
         }
     }
 
+    private static Consumer<AngleSolverState> taser60(double lambda) {
+        return s -> {
+            s.setEffort(AngleSolverState.Effort.THOROUGH);
+            s.setOptimizeSeconds(60);
+            s.setSmoothLambda(lambda);
+        };
+    }
+
     private static Consumer<AngleSolverState> customGraph(SolverGraph graph) {
         assertValid(graph);
         return s -> {
@@ -171,6 +179,9 @@ public class RunMatrixScreen {
             s.setEffort(AngleSolverState.Effort.THOROUGH);
             s.setOptimizeSeconds(60);
         }));
+        out.add(new Preset("taser60-l1e5", taser60(1.0e-5)));
+        out.add(new Preset("taser60-l1e4", taser60(1.0e-4)));
+        out.add(new Preset("taser60-l1e3", taser60(1.0e-3)));
         out.add(new Preset("custom-exh30", s -> {
             s.setEffort(AngleSolverState.Effort.CUSTOM);
             s.setStopOnFeasible(false);

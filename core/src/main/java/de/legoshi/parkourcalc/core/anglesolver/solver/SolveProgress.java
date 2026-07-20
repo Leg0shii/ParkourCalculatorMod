@@ -27,11 +27,13 @@ public final class SolveProgress {
 
     private final boolean maximize;
     private final boolean stopOnFeasible;
+    private final double smoothLambda;
     private final long startNanos = System.nanoTime();
     private final List<Sample> samples = new ArrayList<>();
 
     private double[] bestYaws;
     private double bestObjective;
+    private double bestScored;
     private double bestViolation;
     private boolean bestFeasible;
     private boolean haveBest;
@@ -43,8 +45,13 @@ public final class SolveProgress {
     private String forwardNode;
 
     public SolveProgress(boolean maximize, boolean stopOnFeasible) {
+        this(maximize, stopOnFeasible, 0.0);
+    }
+
+    public SolveProgress(boolean maximize, boolean stopOnFeasible, double smoothLambda) {
         this.maximize = maximize;
         this.stopOnFeasible = stopOnFeasible;
+        this.smoothLambda = smoothLambda;
     }
 
     public synchronized void setActiveNodeSource(Supplier<String> source) {
@@ -85,9 +92,11 @@ public final class SolveProgress {
 
     private boolean accept(double[] yaws, double objective, double violation, boolean feasible,
                            String fromStage, String node) {
-        if (haveBest && !isBetter(feasible, objective, violation)) return false;
+        double scored = scoredOf(objective, yaws);
+        if (haveBest && !isBetter(feasible, scored)) return false;
         bestYaws = yaws.clone();
         bestObjective = objective;
+        bestScored = scored;
         bestViolation = violation;
         bestFeasible = feasible;
         bestSolver = fromStage;
@@ -95,6 +104,12 @@ public final class SolveProgress {
         version++;
         samples.add(new Sample(System.nanoTime() - startNanos, objective, violation, feasible, fromStage, node));
         return true;
+    }
+
+    private double scoredOf(double objective, double[] yaws) {
+        if (smoothLambda <= 0.0 || yaws == null || yaws.length < 2) return objective;
+        double pen = smoothLambda * Angles.travelDeg(yaws);
+        return maximize ? objective - pen : objective + pen;
     }
 
     public synchronized List<Sample> samples() {
@@ -105,9 +120,9 @@ public final class SolveProgress {
         return version;
     }
 
-    private boolean isBetter(boolean feasible, double objective, double violation) {
+    private boolean isBetter(boolean feasible, double scored) {
         if (feasible != bestFeasible) return feasible;
-        return maximize ? objective > bestObjective : objective < bestObjective;
+        return maximize ? scored > bestScored : scored < bestScored;
     }
 
     public synchronized boolean haveBest() {

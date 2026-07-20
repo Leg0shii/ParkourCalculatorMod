@@ -118,18 +118,23 @@ public final class SolveCore {
 
             if (feasible.isEmpty()) {
                 SolverRunResult best = null;
+                double bestS = 0.0;
                 for (SolverRunResult r : results) {
-                    if (best == null
-                            || (max ? r.objectiveValue > best.objectiveValue : r.objectiveValue < best.objectiveValue)) {
+                    double s = spec.objective.scored(r.objectiveValue, r.yawAbsDeg);
+                    if (best == null || (max ? s > bestS : s < bestS)) {
                         best = r;
+                        bestS = s;
                     }
                 }
                 if (best == null) return bestOrNull(progress);
                 return Angles.wrapAll(best.yawAbsDeg);
             }
 
-            feasible.sort((a, b) -> max ? Double.compare(b.objectiveValue, a.objectiveValue)
-                                        : Double.compare(a.objectiveValue, b.objectiveValue));
+            feasible.sort((a, b) -> {
+                double sa = spec.objective.scored(a.objectiveValue, a.yawAbsDeg);
+                double sb = spec.objective.scored(b.objectiveValue, b.yawAbsDeg);
+                return max ? Double.compare(sb, sa) : Double.compare(sa, sb);
+            });
             if (stopOnFeasible) return Angles.wrapAll(feasible.get(0).yawAbsDeg);
 
             List<double[]> top = new ArrayList<>();
@@ -143,12 +148,13 @@ public final class SolveCore {
             if (cancel.get()) return bestOrNull(progress);
 
             double[] yaws = polished.get(0);
-            double bestObj = objectiveOf(model, sc, spec.objective, yaws);
+            double bestObj = spec.objective.scored(objectiveOf(model, sc, spec.objective, yaws), yaws);
             for (int i = 1; i < polished.size(); i++) {
-                double o = objectiveOf(model, sc, spec.objective, polished.get(i));
+                double[] cand = polished.get(i);
+                double o = spec.objective.scored(objectiveOf(model, sc, spec.objective, cand), cand);
                 if (max ? o > bestObj : o < bestObj) {
                     bestObj = o;
-                    yaws = polished.get(i);
+                    yaws = cand;
                 }
             }
             return yaws;

@@ -1,0 +1,6 @@
+solve/nix-full-t1
+solve/trp-optimize-feasible-swap
+frontier/j155-4jmm_3bcmm_4.9375b
+solve/j003
+solve/j002
+solve/j001

@@ -84,8 +84,8 @@ public final class DualChainNode implements NodeRuntime {
             return NodeOutcome.of(Guarantee.FOUND, Candidate.of(ctx, chain));
         }
         boolean max = ctx.maximize();
-        double cur = ctx.exactObjective(in.yaws);
-        double chained = ctx.exactObjective(chain);
+        double cur = ctx.scoredExactObjective(in.yaws);
+        double chained = ctx.scoredExactObjective(chain);
         if (max ? chained > cur : chained < cur) {
             ctx.chainAppend(chainName[0]);
             return NodeOutcome.of(Guarantee.FOUND, Candidate.of(ctx, chain));

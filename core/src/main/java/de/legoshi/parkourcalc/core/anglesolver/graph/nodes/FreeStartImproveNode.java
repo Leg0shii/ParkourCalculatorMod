@@ -59,7 +59,8 @@ public final class FreeStartImproveNode implements NodeRuntime {
         double seedX = sc.startPos.x;
         double seedZ = sc.startPos.z;
         boolean seedFeasible = seedYaws != null && Scoring.violationOf(ctx.model, sc, spec, seedYaws) <= feasTol;
-        double seedObj = seedFeasible ? Scoring.exactObjective(ctx.model, sc, spec, seedYaws) : Double.NaN;
+        double seedObj = seedFeasible
+                ? spec.objective.scored(Scoring.exactObjective(ctx.model, sc, spec, seedYaws), seedYaws) : Double.NaN;
         double seedViol = seedYaws == null ? Double.POSITIVE_INFINITY : Scoring.violationOf(ctx.model, sc, spec, seedYaws);
         boolean max = ctx.maximize();
 
@@ -87,8 +88,8 @@ public final class FreeStartImproveNode implements NodeRuntime {
         if (conv != null && conv.feasible
                 && FreeStartSolve.violationAt(exact, spec, conv.yaws, conv.startX, conv.startZ) <= feasTol) {
             double[] convYaws = Angles.wrapAll(conv.yaws);
-            double convObj = Scoring.exactObjective(ctx.model,
-                    Scoring.pinnedScenario(sc, conv.startX, conv.startZ), spec, convYaws);
+            double convObj = spec.objective.scored(Scoring.exactObjective(ctx.model,
+                    Scoring.pinnedScenario(sc, conv.startX, conv.startZ), spec, convYaws), convYaws);
             if (!seedFeasible || (max ? convObj > seedObj : convObj < seedObj)) {
                 sc.startPos = new Vec3dCore(conv.startX, sc.startPos.y, conv.startZ);
                 sc.startBox = StartBox.pinned(conv.startX, conv.startZ, sc.initialVelocity.x, sc.initialVelocity.z);
@@ -158,8 +159,8 @@ public final class FreeStartImproveNode implements NodeRuntime {
             if (foundFeasible && !seedFeasible) {
                 adopt = true;
             } else if (foundFeasible) {
-                double freeObj = Scoring.exactObjective(ctx.model,
-                        Scoring.pinnedScenario(sc, foundX, foundZ), spec, foundYaws);
+                double freeObj = spec.objective.scored(Scoring.exactObjective(ctx.model,
+                        Scoring.pinnedScenario(sc, foundX, foundZ), spec, foundYaws), foundYaws);
                 adopt = max ? freeObj > seedObj : freeObj < seedObj;
             } else if (!seedFeasible) {
                 adopt = foundViol < seedViol;
