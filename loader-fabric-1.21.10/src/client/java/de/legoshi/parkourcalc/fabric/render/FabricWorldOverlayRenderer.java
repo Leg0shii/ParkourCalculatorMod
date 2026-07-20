@@ -9,6 +9,7 @@ import de.legoshi.parkourcalc.core.ui.BoxStyle;
 import de.legoshi.parkourcalc.core.ui.SelectionManager;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.ui.YawGizmoController;
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -31,7 +32,8 @@ public final class FabricWorldOverlayRenderer {
         this.yawGizmo = yawGizmo;
     }
 
-    public void render(Matrix4f positionMatrix) {
+    public void render(LevelRenderContext context) {
+
         if (boxController.isEmpty()) {
             cached.close();
             return;
@@ -44,11 +46,11 @@ public final class FabricWorldOverlayRenderer {
 
         PoseStack matrixStack = new PoseStack();
 
-        Vec3 cameraPos = client.gameRenderer.getMainCamera().getPosition();
+        Vec3 cameraPos = client.gameRenderer.mainCamera().position();
         matrixStack.pushPose();
         matrixStack.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z);
 
-        MultiBufferSource.BufferSource consumers = client.renderBuffers().bufferSource();
+        MultiBufferSource.BufferSource consumers = client.gameRenderer.renderBuffers().stagedVertexBuffer();
 
         PathRenderPlan plan = PathRenderPlan.build(boxController, settings, selection);
         cached.ensureBuilt(boxController, plan.structuralHash, plan.selection, plan.faceEmitter, plan.lineEmitter, plan.patch, plan.constraintFaceVerts, plan.constraintLineVerts);
