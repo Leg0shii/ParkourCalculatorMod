@@ -16,7 +16,7 @@ Watch the [angle solver tutorial](https://www.youtube.com/watch?v=ModmozoWaD0) o
 - Per-tick movement info (motion, speed, combined XZ distance)
 - Save and load input plans
 - Pin windows for quick access
-- Supports Fabric 1.21.10, Forge 1.8.9, and Forge 1.12.2
+- Supports Fabric on the latest Minecraft (currently 26.2), Forge 1.8.9, and Forge 1.12.2
 
 ## Usage
 
@@ -52,15 +52,15 @@ Click and drag the first box in the world to reposition.
 
 ## Building from Source
 
-Requires JDK 21.
+Requires JDK 21 (the Fabric module's JDK 25 toolchain is auto-provisioned).
 
 ```bash
-./gradlew :loader-fabric-1.21.10:build
+./gradlew :loader-fabric:build
 ```
 
-The output JAR lands in `loader-fabric-1.21.10/build/libs/`.
+The output JAR lands in `loader-fabric/build/libs/`.
 
-The repo is a Gradle multi-module project: `core/` holds Minecraft-free UI code (Java 8 compatible), and `loader-fabric-1.21.10/` is the Fabric mod itself. See `CLAUDE.md` for architecture details.
+The repo is a Gradle multi-module project: `core/` holds Minecraft-free UI code (Java 8 compatible), and `loader-fabric/` is the Fabric mod itself. See `CLAUDE.md` for architecture details.
 
 ## Contributing
 
@@ -70,12 +70,12 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full workflow. Quick summary: f
 
 Releases ship one jar per loader. Grab the matching file from the [latest release](https://github.com/Leg0shii/ParkourCalculatorMod/releases/latest) and follow the section for your loader. `<version>` below is the release tag without the `v` prefix (e.g. `1.0.0`).
 
-### Fabric 1.21.10
+### Fabric (latest Minecraft, currently 26.2)
 
-1. Install the [Fabric Loader](https://fabricmc.net/use/installer/) for Minecraft 1.21.10.
+1. Install the [Fabric Loader](https://fabricmc.net/use/installer/) for the Minecraft version named in the release notes.
 2. Install [Fabric API](https://modrinth.com/mod/fabric-api) into your `mods` folder.
-3. Download `pkc-fabric-1.21.10-<version>.jar` and drop it into the same `mods` folder.
-4. Launch the 1.21.10 Fabric profile.
+3. Download `pkc-fabric-<version>.jar` and drop it into the same `mods` folder.
+4. Launch the Fabric profile for that Minecraft version.
 
 ### Forge 1.8.9
 

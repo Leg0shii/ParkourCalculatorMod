@@ -14,7 +14,7 @@ Shared guidance for AI coding agents and contributors. This is the canonical gui
 ```
 core/                  Java 8.  ImGui-only UI/data + the angle solver. No MC, Fabric, Forge, or LWJGL imports.
 forge-core/            Java 8.  Shared for both Forge loaders: lwjgl2/ ImGui bootstrap, sim/ sprint machine. No MC imports.
-loader-fabric-1.21.10/ Java 21. Fabric (Loom, LWJGL3). MC-touching sim/render/mixins/entry point. Source under src/client/java.
+loader-fabric/         Java 25. Fabric (Loom, LWJGL3), tracks the latest MC (currently 26.2). MC-touching sim/render/mixins/entry point. Source under src/client/java.
 loader-forge-1.8.9/    Java 8.  Forge (Unimined FG2, LWJGL2). MC-touching code.
 loader-forge-1.12.2/   Java 8.  Forge (Unimined FG3, LWJGL2). MC-touching code.
 ```
@@ -47,9 +47,9 @@ The two Forge loaders are intentional duplicates: 1.8.9 and 1.12.2 have incompat
 | Constraint visualization | `core/.../render/ConstraintPlate.java`, `ConstraintShapes.java`; source `core/.../ui/anglesolver/AngleSolverConstraintSource.java` |
 | Playback (TAS replay) | `core/.../PlaybackController.java`; loader `FabricPlaybackBridge` and Forge equivalents |
 | Ports (core interfaces) | `core/.../ports/`: `MinecraftAccess`, `Simulator`, `BoxRenderer`, `PlaybackBridge`, `FilePickerPort` |
-| Simulation (Fabric) | `loader-fabric-1.21.10/.../sim/SimulatorEntity.java`, `FabricSimulator.java`, `SimulatorInput.java` |
-| Rendering (Fabric) | `loader-fabric-1.21.10/.../render/FabricWorldOverlayRenderer.java`, `FabricHudOverlayRenderer.java`; ImGui `imgui/ImGuiImpl.java` |
-| Mixins (Fabric) | `loader-fabric-1.21.10/.../fabric/mixin/`; registered in `parkourcalculator.client.mixins.json` (Forge uses the FML event bus, no mixins) |
+| Simulation (Fabric) | `loader-fabric/.../sim/SimulatorEntity.java`, `FabricSimulator.java`, `SimulatorInput.java` |
+| Rendering (Fabric) | `loader-fabric/.../render/FabricWorldOverlayRenderer.java`, `FabricHudOverlayRenderer.java`; ImGui `imgui/ImGuiImpl.java` |
+| Mixins (Fabric) | `loader-fabric/.../fabric/mixin/`; registered in `parkourcalculator.client.mixins.json` (Forge uses the FML event bus, no mixins) |
 
 **Tick indexing:** `posX[t]` = position at the *start* of tick `t` (before that tick's inputs); box `k` shows pre-tick state. A constraint on tick `n` affects `posX[n]`; to constrain what tick `n`'s input *produces*, place the constraint on tick `n+1`.
 
@@ -60,12 +60,12 @@ The two Forge loaders are intentional duplicates: 1.8.9 and 1.12.2 have incompat
 ./gradlew build                                # everything; output jars to <module>/build/libs/
 ./gradlew :core:build                          # shared core lib (runs tableStyleCheck)
 ./gradlew :forge-core:build
-./gradlew :loader-fabric-1.21.10:build         # / :runClient   -> pkc-fabric-1.21.10-VERSION.jar
+./gradlew :loader-fabric:build                 # / :runClient   -> pkc-fabric-VERSION.jar
 ./gradlew :loader-forge-1.8.9:build            # / :runClient   -> pkc-forge-1.8.9-VERSION.jar
 ./gradlew :loader-forge-1.12.2:build           # / :runClient   -> pkc-forge-1.12.2-VERSION.jar
 ```
 
-JDK 21 runs the Gradle daemon. `:runClient` auto-switches toolchain: Fabric uses JDK 21, the Forge loaders need a local JDK 8 (Adoptium). Do not run `:runClient` while MC is already open (shared `run/` file + world locks deadlock). Per-module toolchain rules: `docs/CODING_GUIDE.md` § Rules per module.
+JDK 21 runs the Gradle daemon. `:runClient` auto-switches toolchain: Fabric uses JDK 25 (auto-provisioned via foojay), the Forge loaders need a local JDK 8 (Adoptium). Do not run `:runClient` while MC is already open (shared `run/` file + world locks deadlock). Per-module toolchain rules: `docs/CODING_GUIDE.md` § Rules per module.
 
 
 ## Tests
@@ -89,7 +89,7 @@ To check an MC API surface, decompiled body, or local-var name, read the project
 Generate once:
 
 ```bash
-./gradlew :loader-fabric-1.21.10:genSources :loader-forge-1.8.9:genSources :loader-forge-1.12.2:genSources
+./gradlew :loader-fabric:genSources :loader-forge-1.8.9:genSources :loader-forge-1.12.2:genSources
 ```
 
 They appear under:

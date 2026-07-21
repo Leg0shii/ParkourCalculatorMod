@@ -26,7 +26,7 @@ body:
       options:
         - label: core
         - label: forge-core
-        - label: loader-fabric-1.21.10
+        - label: loader-fabric
         - label: loader-forge-1.8.9
         - label: loader-forge-1.12.2
 

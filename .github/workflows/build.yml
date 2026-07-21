@@ -37,6 +37,6 @@ jobs:
         with:
           name: Artifacts
           path: |
-            loader-fabric-1.21.10/build/libs/*.jar
+            loader-fabric/build/libs/*.jar
             loader-forge-1.8.9/build/libs/*.jar
             loader-forge-1.12.2/build/libs/*.jar
