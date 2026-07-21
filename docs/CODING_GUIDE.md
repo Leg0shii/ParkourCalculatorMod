@@ -9,7 +9,7 @@ How code is split across modules and how to decide where a new file goes. `CLAUD
 core/                  Java 8. ImGui-only UI, input data, the angle solver, value types, ports.
                        No Minecraft, Fabric, Forge, or LWJGL imports.
 forge-core/            Java 8. Shared by both Forge loaders. No Minecraft or Forge imports.
-loader-fabric-1.21.10/ Java 21. Fabric (Loom, LWJGL 3). MC-touching code. Source under src/client/java.
+loader-fabric/         Java 25. Fabric (Loom, LWJGL 3), tracks the latest MC. MC-touching code. Source under src/client/java.
 loader-forge-1.8.9/    Java 8.  Forge (Unimined, LWJGL 2). MC-touching code.
 loader-forge-1.12.2/   Java 8.  Forge (Unimined, LWJGL 2). MC-touching code.
 ```
@@ -41,9 +41,9 @@ If none fit, you probably do not need the file. Re-check.
 - **No logging framework.** Forge 1.8.9 ships no SLF4J. Core surfaces errors via exceptions or return values for the loader to log; verbose debug dumps go through `System.out` gated behind `DebugFlags`.
 - **No MC-filesystem I/O.** The save/config location is a loader concern (run-dir layout differs per version). Core takes a `Path` or stream from the loader.
 
-### `loader-fabric-1.21.10/`
+### `loader-fabric/`
 
-- **Java 21.** Use modern features where they help. Source lives under `src/client/java` (not `src/main`).
+- **Java 25** (auto-provisioned toolchain). Use modern features where they help. Source lives under `src/client/java` (not `src/main`).
 - **All MC-touching code lives here:** `SimulatorEntity`, `FabricSimulator` (implements the `Simulator` port), the world/HUD overlay renderers (implement `BoxRenderer`), `FabricPlaybackBridge`, `ImGuiImpl`, every Mixin, and the `FabricParkourCalculator` entry point. (`BoxController` is core, not here.)
 - **Bundles imgui-java 1.86.11** (binding + LWJGL 3 backend + natives) via Loom `include`. Only loader on LWJGL 3.
 - **Mixins** are declared in `parkourcalculator.client.mixins.json`. A new mixin must be added there or it silently will not apply.

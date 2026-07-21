@@ -42,7 +42,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            loader-fabric-1.21.10/build/libs/pkc-fabric-1.21.10-${{ steps.version.outputs.version }}.jar
+            loader-fabric/build/libs/pkc-fabric-${{ steps.version.outputs.version }}.jar
             loader-forge-1.8.9/build/libs/pkc-forge-1.8.9-${{ steps.version.outputs.version }}.jar
             loader-forge-1.12.2/build/libs/pkc-forge-1.12.2-${{ steps.version.outputs.version }}.jar
           prerelease: ${{ contains(github.ref_name, '-') }}

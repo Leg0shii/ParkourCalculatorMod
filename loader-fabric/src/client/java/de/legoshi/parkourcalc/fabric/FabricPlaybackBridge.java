@@ -1,0 +1,215 @@
+package de.legoshi.parkourcalc.fabric;
+
+import de.legoshi.parkourcalc.core.ports.PlaybackBridge;
+import de.legoshi.parkourcalc.core.sim.Vec3dCore;
+import de.legoshi.parkourcalc.core.ui.InputRow;
+import de.legoshi.parkourcalc.fabric.mixin.LocalPlayerAccessor;
+import de.legoshi.parkourcalc.fabric.mixin.KeyMappingAccessor;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.ClientInput;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.Options;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.world.entity.PositionMoveRotation;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.client.server.IntegratedServer;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.phys.Vec3;
+
+import java.util.Collections;
+import java.util.UUID;
+
+public final class FabricPlaybackBridge implements PlaybackBridge {
+
+    @Override
+    public boolean isGamePaused() {
+        return Minecraft.getInstance().isPaused();
+    }
+
+    private static final int EFFECT_DURATION_TICKS = 20000;
+
+    private final InputRow currentRow = new InputRow();
+    private ClientInput originalInput;
+
+    InputRow getCurrentRow() {
+        return currentRow;
+    }
+
+    void installPlaybackInput(LocalPlayer player) {
+        if (originalInput != null) return;
+        originalInput = player.input;
+        player.input = new PlaybackInput(this);
+    }
+
+    void restorePlaybackInput(LocalPlayer player) {
+        if (originalInput == null) return;
+        if (player.input instanceof PlaybackInput) {
+            player.input = originalInput;
+        }
+        originalInput = null;
+    }
+
+    @Override
+    public boolean isSingleplayer() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.getCurrentServer() != null) return false;
+        IntegratedServer s = mc.getSingleplayerServer();
+        if (s == null) return false;
+        return !s.isPublished();
+    }
+
+    @Override
+    public void teleport(Vec3dCore pos, Vec3dCore vel, float yaw, de.legoshi.parkourcalc.core.sim.Checkpoint carry) {
+        Minecraft mc = Minecraft.getInstance();
+        LocalPlayer client = mc.player;
+        if (client == null) return;
+        IntegratedServer server = mc.getSingleplayerServer();
+        if (server == null) return;
+        UUID uuid = client.getUUID();
+        server.execute(() -> {
+            ServerPlayer sp = server.getPlayerList().getPlayer(uuid);
+            if (sp == null) return;
+            // EntityPosition overload carries velocity in the teleport packet itself.
+            // The 5-arg overload zeroes velocity and the followup setVelocity+velocityModified
+            // path fires a SetEntityMotion packet that arrives ~1 tick late and stomps the
+            // player mid-playback.
+            sp.connection.teleport(
+                new PositionMoveRotation(new Vec3(pos.x, pos.y, pos.z), new Vec3(vel.x, vel.y, vel.z), yaw, sp.getXRot()),
+                Collections.emptySet()
+            );
+        });
+        client.absSnapTo(pos.x, pos.y, pos.z, yaw, client.getXRot());
+        client.setYBodyRot(yaw);
+        client.yBodyRotO = yaw;
+        client.setYHeadRot(yaw);
+        client.yHeadRotO = yaw;
+        client.setDeltaMovement(vel.x, vel.y, vel.z);
+        if (carry != null) {
+            de.legoshi.parkourcalc.fabric.sim.SimulatorEntity.applyCheckpoint(client, carry);
+        } else {
+            client.setOnGround(true);
+        }
+        client.fallDistance = 0.0;
+        // Suppress the player tick's position packet until the server's requestTeleport
+        // arms its teleport-pending state, otherwise the client races and trips moved-wrongly.
+        LocalPlayerAccessor acc = (LocalPlayerAccessor) client;
+        acc.pkc$setXLast(pos.x);
+        acc.pkc$setYLast(pos.y);
+        acc.pkc$setZLast(pos.z);
+        acc.pkc$setYRotLast(yaw);
+        acc.pkc$setXRotLast(client.getXRot());
+        acc.pkc$setPositionReminder(0);
+    }
+
+    @Override
+    public void setKey(InputRow.Key key, boolean pressed) {
+        currentRow.setKeyActive(key, pressed);
+        KeyMapping kb = bindFor(key);
+        if (kb == null) return;
+        kb.setDown(pressed);
+        if (pressed && isClickKey(key)) {
+            KeyMappingAccessor acc = (KeyMappingAccessor) kb;
+            acc.pkc$setClickCount(acc.pkc$getClickCount() + 1);
+        }
+    }
+
+    private static boolean isClickKey(InputRow.Key key) {
+        return key == InputRow.Key.LEFT_CLICK || key == InputRow.Key.RIGHT_CLICK;
+    }
+
+    @Override
+    public void setYaw(float absoluteYaw) {
+        LocalPlayer p = Minecraft.getInstance().player;
+        if (p == null) return;
+        p.setYRot(absoluteYaw);
+        p.yRotO = absoluteYaw;
+    }
+
+    @Override
+    public void setHeadYaw(float absoluteYaw) {
+        LocalPlayer p = Minecraft.getInstance().player;
+        if (p == null) return;
+        p.setYHeadRot(absoluteYaw);
+    }
+
+    @Override
+    public void setPitch(float absolutePitch) {
+        LocalPlayer p = Minecraft.getInstance().player;
+        if (p == null) return;
+        p.setXRot(absolutePitch);
+        p.xRotO = absolutePitch;
+    }
+
+    @Override
+    public void releaseAllKeys() {
+        for (InputRow.Key k : InputRow.Key.values()) {
+            setKey(k, false);
+        }
+    }
+
+    @Override
+    public void closeUI() {
+        FabricParkourCalculator.closeOverlay();
+    }
+
+    @Override
+    public void applyEffects(int speedAmplifier, int jumpBoostAmplifier) {
+        Minecraft mc = Minecraft.getInstance();
+        LocalPlayer client = mc.player;
+        if (client == null) return;
+        IntegratedServer server = mc.getSingleplayerServer();
+        if (server == null) return;
+        UUID uuid = client.getUUID();
+        server.execute(() -> {
+            ServerPlayer sp = server.getPlayerList().getPlayer(uuid);
+            if (sp == null) return;
+            sp.removeEffect(MobEffects.SPEED);
+            sp.removeEffect(MobEffects.JUMP_BOOST);
+            if (speedAmplifier > 0) {
+                sp.addEffect(new MobEffectInstance(MobEffects.SPEED, EFFECT_DURATION_TICKS, speedAmplifier - 1, false, false, true));
+            }
+            if (jumpBoostAmplifier > 0) {
+                sp.addEffect(new MobEffectInstance(MobEffects.JUMP_BOOST, EFFECT_DURATION_TICKS, jumpBoostAmplifier - 1, false, false, true));
+            }
+        });
+    }
+
+    @Override
+    public void dumpPlayerState(int tickIndex) {
+        LocalPlayer p = Minecraft.getInstance().player;
+        if (p == null) return;
+        MobEffectInstance spd = p.getEffect(MobEffects.SPEED);
+        MobEffectInstance jmp = p.getEffect(MobEffects.JUMP_BOOST);
+        double mvSp = p.getAttributeValue(Attributes.MOVEMENT_SPEED);
+        System.out.println("[PC-STATE play] t=" + tickIndex
+                + " pos=" + p.getX() + "," + p.getY() + "," + p.getZ()
+                + " mot=" + p.getDeltaMovement().x + "," + p.getDeltaMovement().y + "," + p.getDeltaMovement().z
+                + " yaw=" + p.getYRot()
+                + " onG=" + p.onGround()
+                + " spr=" + p.isSprinting()
+                + " sne=" + p.isShiftKeyDown()
+                + " colH=" + p.horizontalCollision
+                + " mvF=" + p.zza
+                + " mvS=" + p.xxa
+                + " spdAmp=" + (spd == null ? -1 : spd.getAmplifier())
+                + " jmpAmp=" + (jmp == null ? -1 : jmp.getAmplifier())
+                + " mvSpeed=" + mvSp);
+    }
+
+    private static KeyMapping bindFor(InputRow.Key key) {
+        Options o = Minecraft.getInstance().options;
+        return switch (key) {
+            case W -> o.keyUp;
+            case S -> o.keyDown;
+            case A -> o.keyLeft;
+            case D -> o.keyRight;
+            case JUMP -> o.keyJump;
+            case SNEAK -> o.keyShift;
+            case SPRINT -> o.keySprint;
+            case LEFT_CLICK -> o.keyAttack;
+            case RIGHT_CLICK -> o.keyUse;
+        };
+    }
+}

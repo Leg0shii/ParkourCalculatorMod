@@ -43,6 +43,16 @@ check (no sidecar, so `ProblemsTest` does not run them):
 
 - `loopmm-3jump-lands.json` / `loopmm-3jump-solver-misses.json`: the optimizer reach-failure witness pair
   for #186 (a hand route that lands at Z@71 = -279.29973 vs the solver's -279.30585, 0.0058 short).
+- `deserthard-sine262.json` / `deserthard-planrealization.json`: two recorded runs of the same 26.2
+  desert-hard solve; near-duplicates in content, but each pins what the other cannot.
+  `deserthard-sine262` contains the one jump (t=243, yaw 93.587) where the pre-26 and 26.x sine
+  chains pick different buckets, so `CaptureReplayRegressionTest` goes red if the Mth.sin/cos
+  rewrite port regresses (`loopmm-3jump-lands` is the legacy-chain control; the planrealization
+  run replays byte-exact under BOTH chains and cannot catch that). Its tail rows predate its
+  stored solve, so it cannot validate plan realization. `deserthard-planrealization` has rows in
+  sync with its result, so `PlanRealizationRegressionTest` rebuilds the plan path (spec +
+  toGameFacings) and requires the recorded resim to sit on it byte-exact; that pinned the 26.x
+  square-movement input rewrite. `ApplyYawRowsTest` feeds on the sine262 run's yaw sequence.
 
 See `docs/research/anvil-solver-quality-decision.md`. When #186 / #178 land, give these a `solve` sidecar
 with a `refObjective` to turn them into real regression checks.

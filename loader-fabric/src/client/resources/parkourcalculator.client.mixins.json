@@ -1,0 +1,21 @@
+{
+  "required": true,
+  "package": "de.legoshi.parkourcalc.fabric.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "AttackSuppressMixin",
+    "LocalPlayerAccessor",
+    "LocalPlayerTickMixin",
+    "FallDamageSuppressMixin",
+    "GameRendererMixin",
+    "HudMixin",
+    "KeyMappingAccessor",
+    "KeyboardHandlerMixin",
+    "LandingParticleSuppressMixin",
+    "MinecraftMixin",
+    "MouseHandlerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

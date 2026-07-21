@@ -22,16 +22,45 @@ public final class ExactJumpModel implements ForwardModel {
     /** MC's player combined-XZ momentum gate literal (LivingEntity.tickMovement), not 0.003*0.003. */
     private static final double COMBINED_INERTIA_SQ = 9.0E-6;
 
+    private static final float SQUARE_DIAG_INPUT = squareDiagInput();
+
+    private static float squareDiagInput() {
+        float dist = (float) Math.sqrt(2.0F);
+        float n = 1.0F / dist;
+        float s = n * 0.98F;
+        float len = (float) Math.sqrt(s * s + s * s);
+        float dirComp = s * (1.0F / len);
+        float tan = 1.0F;
+        float dtus = (float) Math.sqrt(1.0F + tan * tan);
+        float modLen = Math.min(len * dtus, 1.0F);
+        return dirComp * modLen;
+    }
+
     private final double inertiaThreshold;
     private final boolean perAxisInertia;
     /** Modern (1.21.10) arithmetic: double-pipeline movementInputToVelocity, 0.21600002F ground factor,
      *  double sprint-jump boost, Math.max'd jump impulse. False = the legacy 1.8.9 float moveFlying chain. */
     private final boolean modern;
+    /** 26.x Mth.sin/cos: double-indexed lookup into the regenerated table (see McSineTable.sinStep262). */
+    private final boolean sine262;
 
     public ExactJumpModel(double inertiaThreshold, boolean perAxisInertia, boolean modern) {
+        this(inertiaThreshold, perAxisInertia, modern, false);
+    }
+
+    public ExactJumpModel(double inertiaThreshold, boolean perAxisInertia, boolean modern, boolean sine262) {
         this.inertiaThreshold = inertiaThreshold;
         this.perAxisInertia = perAxisInertia;
         this.modern = modern;
+        this.sine262 = sine262;
+    }
+
+    private float tableSin(float rad) {
+        return sine262 ? McSineTable.sinStep262(rad) : McSineTable.sinStep(rad);
+    }
+
+    private float tableCos(float rad) {
+        return sine262 ? McSineTable.cosStep262(rad) : McSineTable.cosStep(rad);
     }
 
     public double inertiaThreshold() {
@@ -44,11 +73,13 @@ public final class ExactJumpModel implements ForwardModel {
 
     /** Inertia rule for a loader's MC version. 1.8.x: per-axis 0.005. 1.12.x: per-axis 0.003.
      *  1.9+ players (1.21.10 and the modern default here): combined-XZ |v|^2 &lt; 9.0E-6. Covers the
-     *  three loader versions; the per-axis-to-combined player switch lands between 1.12 and 1.21. */
+     *  three loader versions; the per-axis-to-combined player switch lands between 1.12 and 1.21.
+     *  Year-versioned MC (26.x onward) additionally runs the rewritten double-indexed sine lookup. */
     public static ExactJumpModel forMcVersion(String mcVersion) {
         if (mcVersion != null && mcVersion.startsWith("1.8")) return new ExactJumpModel(0.005, true, false);
         if (mcVersion != null && mcVersion.startsWith("1.12")) return new ExactJumpModel(0.003, true, false);
-        return new ExactJumpModel(0.003, false, true);
+        boolean sine262 = mcVersion != null && !mcVersion.startsWith("1.");
+        return new ExactJumpModel(0.003, false, true, sine262);
     }
 
     @Override
@@ -116,15 +147,15 @@ public final class ExactJumpModel implements ForwardModel {
                     vy = Math.max((double) Constants.JUMP_VEL_F, vy);
                     if (sprint) {
                         float fj = yawF * (float) (Math.PI / 180.0);
-                        vx += -McSineTable.sinStep(fj) * 0.2;
-                        vz += McSineTable.cosStep(fj) * 0.2;
+                        vx += -tableSin(fj) * 0.2;
+                        vz += tableCos(fj) * 0.2;
                     }
                 } else {
                     vy = (double) Constants.JUMP_VEL_F;
                     if (sprint) {
                         float fj = yawF * (float) (Math.PI / 180.0);
-                        vx -= McSineTable.sinStep(fj) * 0.2F;
-                        vz += McSineTable.cosStep(fj) * 0.2F;
+                        vx -= tableSin(fj) * 0.2F;
+                        vz += tableCos(fj) * 0.2F;
                     }
                 }
             }
@@ -147,7 +178,12 @@ public final class ExactJumpModel implements ForwardModel {
             float forward = scenario.forwardAt(t);
             float strafe;
             if (scenario.strafeAt(t) && !isJumpTick) {
-                strafe = scenario.strafeSign * 1.0F * 0.98F;
+                if (sine262) {
+                    forward = Math.signum(forward) * SQUARE_DIAG_INPUT;
+                    strafe = scenario.strafeSign * SQUARE_DIAG_INPUT;
+                } else {
+                    strafe = scenario.strafeSign * 1.0F * 0.98F;
+                }
             } else {
                 strafe = scenario.strafeInputAt(t);
             }
@@ -166,8 +202,8 @@ public final class ExactJumpModel implements ForwardModel {
                     sw *= (double) accelSpeed;
                     fw *= (double) accelSpeed;
                     float rad = yawF * (float) (Math.PI / 180.0);
-                    float sinD = McSineTable.sinStep(rad);
-                    float cosD = McSineTable.cosStep(rad);
+                    float sinD = tableSin(rad);
+                    float cosD = tableCos(rad);
                     vx += sw * (double) cosD - fw * (double) sinD;
                     vz += fw * (double) cosD + sw * (double) sinD;
                 }
@@ -182,8 +218,8 @@ public final class ExactJumpModel implements ForwardModel {
                     strafe *= fm;
                     forward *= fm;
                     float rad = yawF * (float) Math.PI / 180.0F;
-                    float sinD = McSineTable.sinStep(rad);
-                    float cosD = McSineTable.cosStep(rad);
+                    float sinD = tableSin(rad);
+                    float cosD = tableCos(rad);
                     vx += (double) (strafe * cosD - forward * sinD);
                     vz += (double) (forward * cosD + strafe * sinD);
                 }

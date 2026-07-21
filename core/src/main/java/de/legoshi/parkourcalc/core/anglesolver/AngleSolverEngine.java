@@ -1001,10 +1001,24 @@ public final class AngleSolverEngine {
         Plan p = lastPlan;
         List<InputRow> rows = inputs.getRows();
         if (p.startTick < 0 || p.startTick >= rows.size()) return;
-        double prevAbs = boxes.getYaw(p.startTick);
+        writeYawRows(rows, p.startTick, p.yaws, (float) boxes.getYaw(p.startTick));
         for (int k = 0; k < p.yaws.length && p.startTick + k < rows.size(); k++) {
-            InputRow row = rows.get(p.startTick + k);
-            double abs = p.yaws[k];
+            if (p.force45Mask[k]) {
+                // A Force-45 tick realizes its solve assumption in the rows (gh-104): W + sprint held
+                // on every tick, strafe per the mask (the grounded jump tick stays W-only). Keep ticks
+                // are left alone; their keys ARE what the solve ran.
+                rows.get(p.startTick + k).applyForce45(p.strafeMask[k], p.strafeSign);
+            }
+        }
+        onApplied.accept(p.startTick);
+        checkApplyDeviation(p);
+    }
+
+    public static void writeYawRows(List<InputRow> rows, int startTick, double[] yaws, float startYaw) {
+        double prevAbs = startYaw;
+        for (int k = 0; k < yaws.length && startTick + k < rows.size(); k++) {
+            InputRow row = rows.get(startTick + k);
+            double abs = yaws[k];
             if (row.isYawLocked()) {
                 row.setYaw((float) abs);
             } else {
@@ -1012,16 +1026,8 @@ public final class AngleSolverEngine {
                 delta = Angles.wrapDelta(delta);
                 row.setYaw((float) delta);
             }
-            if (p.force45Mask[k]) {
-                // A Force-45 tick realizes its solve assumption in the rows (gh-104): W + sprint held
-                // on every tick, strafe per the mask (the grounded jump tick stays W-only). Keep ticks
-                // are left alone; their keys ARE what the solve ran.
-                row.applyForce45(p.strafeMask[k], p.strafeSign);
-            }
             prevAbs = abs;
         }
-        onApplied.accept(p.startTick);
-        checkApplyDeviation(p);
     }
 
     /** Per-tick displacement tolerance. The 1.21.10 model is bit-exact to the sim (a clean tick differs by
