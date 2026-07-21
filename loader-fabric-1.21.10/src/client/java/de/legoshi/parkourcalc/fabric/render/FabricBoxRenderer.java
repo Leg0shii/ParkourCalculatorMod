@@ -4,41 +4,33 @@ import de.legoshi.parkourcalc.core.ports.BoxRenderer;
 import de.legoshi.parkourcalc.core.render.ArgbColor;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import net.minecraft.client.renderer.MultiBufferSource;
-import com.mojang.blaze3d.vertex.PoseStack;
 import org.joml.Matrix4f;
 
 /**
- * BoxRenderer port impl for Fabric 1.21.10. Two modes mirror the Forge loaders:
+ * BoxRenderer port impl for Fabric. Two modes mirror the Forge loaders:
  *
- *   - LINES: emit 12 GL_LINES edges into FabricRenderLayers.THIN_LINES (a custom
- *     layer that uses 1px lines without view_offset_z, unlike MC's RenderLayer
- *     .getLines() which expands to window_scale-wide quads that cover the box).
- *   - FACES: VertexRendering.drawFilledBox into FabricRenderLayers.TRANSLUCENT_BOX
- *     (custom layer with BlendFunction.TRANSLUCENT + translucent=true so it
- *     renders after the wireframe pass).
+ *   - LINES: emit 12 GL_LINES edges.
+ *   - FACES: filled boxes as triangles.
  *
- * FabricWorldOverlayRenderer calls render() twice (faces then lines), and the
- * VertexConsumerProvider.Immediate batches both layers, drawing on consumers.draw()
- * in the correct opaque→translucent order.
+ * Writes into a single VertexConsumer supplied by the caller (26.2 submit
+ * model: one consumer per RenderType via submitCustomGeometry).
  */
 public final class FabricBoxRenderer implements BoxRenderer {
 
-    private final PoseStack matrices;
-    private final MultiBufferSource consumers;
+    private final Matrix4f pose;
+    private final VertexConsumer consumer;
     private final Mode mode;
 
-    public FabricBoxRenderer(PoseStack matrices, MultiBufferSource consumers, Mode mode) {
-        this.matrices = matrices;
-        this.consumers = consumers;
+    public FabricBoxRenderer(Matrix4f pose, VertexConsumer consumer, Mode mode) {
+        this.pose = pose;
+        this.consumer = consumer;
         this.mode = mode;
     }
 
     @Override
     public void drawLine(double x1, double y1, double z1, double x2, double y2, double z2, int argb) {
         if (mode != Mode.LINES) return;
-        VertexConsumer consumer = consumers.getBuffer(FabricRenderLayers.THIN_LINES);
-        edge(consumer, matrices.last().pose(),
+        edge(consumer, pose,
                 (float) x1, (float) y1, (float) z1,
                 (float) x2, (float) y2, (float) z2, argb
         );
@@ -47,19 +39,16 @@ public final class FabricBoxRenderer implements BoxRenderer {
     @Override
     public void drawBox(AABB box, int argb) {
         if (mode == Mode.LINES) {
-            VertexConsumer consumer = consumers.getBuffer(FabricRenderLayers.THIN_LINES);
-            emitEdges(consumer, matrices.last().pose(), box, argb);
+            emitEdges(consumer, pose, box, argb);
         } else {
-            VertexConsumer consumer = consumers.getBuffer(FabricRenderLayers.TRANSLUCENT_BOX);
-            emitFaces(consumer, matrices.last().pose(), box, argb);
+            emitFaces(consumer, pose, box, argb);
         }
     }
 
     @Override
     public void drawTriangle(double x1, double y1, double z1, double x2, double y2, double z2, double x3, double y3, double z3, int argb) {
         if (mode != Mode.FACES) return;
-        VertexConsumer consumer = consumers.getBuffer(FabricRenderLayers.TRANSLUCENT_BOX);
-        tri(consumer, matrices.last().pose(),
+        tri(consumer, pose,
                 (float) x1, (float) y1, (float) z1,
                 (float) x2, (float) y2, (float) z2,
                 (float) x3, (float) y3, (float) z3, argb

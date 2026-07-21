@@ -34,7 +34,7 @@ final class FabricWorldDescriptors {
 
     private static String dimensionId(ClientLevel world) {
         ResourceKey<Level> key = world.dimension();
-        Identifier id = key.location();
+        Identifier id = key.identifier();
         return id.toString();
     }
 }

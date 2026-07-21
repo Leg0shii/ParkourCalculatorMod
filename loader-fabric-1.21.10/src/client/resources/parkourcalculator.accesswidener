@@ -16,3 +16,7 @@ accessible method net/minecraft/client/renderer/rendertype/RenderType create (Lj
 accessible field net/minecraft/world/entity/LivingEntity noJumpDelay I
 
 accessible class com/mojang/blaze3d/opengl/GlDevice
+
+# GpuDevice wraps the backend privately in 26.2; ImGui needs the GlDevice to
+# resolve the main render target's FBO id for direct GL drawing.
+accessible field com/mojang/blaze3d/systems/GpuDevice backend Lcom/mojang/blaze3d/systems/GpuDeviceBackend;

@@ -18,17 +18,21 @@ import imgui.gl3.ImGuiImplGl3;
 import imgui.glfw.ImGuiImplGlfw;
 import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.opengl.FrameBufferAttachment;
 import com.mojang.blaze3d.opengl.GlDevice;
 import com.mojang.blaze3d.opengl.GlTexture;
 import org.apache.commons.io.IOUtils;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11C;
+import org.lwjgl.opengl.GL21C;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL30C;
+import org.lwjgl.opengl.GL33C;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.function.IntConsumer;
 
@@ -75,6 +79,7 @@ public final class ImGuiImpl {
         GL11C.glPixelStorei(GL11C.GL_UNPACK_ROW_LENGTH, 0);
         GL11C.glPixelStorei(GL11C.GL_UNPACK_SKIP_ROWS, 0);
         GL11C.glPixelStorei(GL11C.GL_UNPACK_SKIP_PIXELS, 0);
+        GL21C.glBindBuffer(GL21C.GL_PIXEL_UNPACK_BUFFER, 0);
         imGuiGl3.init();
     }
 
@@ -112,6 +117,7 @@ public final class ImGuiImpl {
 
     public static void endImGuiRendering() {
         ImGui.render();
+        GL33C.glBindSampler(0, 0);
         imGuiGl3.renderDrawData(ImGui.getDrawData());
 
         GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
@@ -146,14 +152,16 @@ public final class ImGuiImpl {
     private static int currentFramebufferHeight() {
         Minecraft mc = Minecraft.getInstance();
         if (mc == null) return 0;
-        RenderTarget fb = mc.getMainRenderTarget();
+        RenderTarget fb = mc.gameRenderer.mainRenderTarget();
         return fb == null ? 0 : fb.height;
     }
 
     private static void bindMinecraftFramebuffer() {
-        RenderTarget framebuffer = Minecraft.getInstance().getMainRenderTarget();
-        int framebufferId = ((GlTexture) Objects.requireNonNull(framebuffer.getColorTexture()))
-                .getFbo(((GlDevice) RenderSystem.getDevice()).directStateAccess(), null);
+        RenderTarget framebuffer = Minecraft.getInstance().gameRenderer.mainRenderTarget();
+        GlDevice glDevice = (GlDevice) RenderSystem.getDevice().backend;
+        FrameBufferAttachment color = (GlTexture) Objects.requireNonNull(framebuffer.getColorTexture());
+        int framebufferId = glDevice.frameBufferCache()
+                .getFbo(glDevice.directStateAccess(), Collections.singletonList(color), null);
 
         GlStateManager._glBindFramebuffer(GL30C.GL_FRAMEBUFFER, framebufferId);
         GL11C.glViewport(0, 0, framebuffer.width, framebuffer.height);

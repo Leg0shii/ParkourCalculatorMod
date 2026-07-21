@@ -23,7 +23,6 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.KeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.resources.Identifier;
-import org.joml.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 
 public class FabricParkourCalculator implements ClientModInitializer {
@@ -97,6 +96,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> application.onWorldChange());
 
         LevelRenderEvents.AFTER_SOLID_FEATURES.register(FabricParkourCalculator::renderWorldOverlayBeforeTranslucent);
+        LevelRenderEvents.COLLECT_SUBMITS.register(FabricParkourCalculator::onCollectSubmits);
     }
 
     private static boolean wasPlaybackRunning = false;
@@ -219,15 +219,8 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
     }
 
-    private static Matrix4f pendingWorldMatrix;
-
-    /** Captured at WorldRenderer.render HEAD; consumed just before the translucent terrain pass. */
-    public static void captureWorldMatrix(Matrix4f positionMatrix) {
-        pendingWorldMatrix = positionMatrix;
-    }
-
     /**
-     * Called from SectionRenderStateMixin right before translucent terrain draws, so boxes depth-test
+     * Fires after solid features, before translucent terrain draws, so boxes depth-test
      * only against opaque geometry and stay visible through water, lava, and stained/tinted glass.
      */
     public static void renderWorldOverlayBeforeTranslucent(LevelRenderContext context) {
@@ -236,7 +229,6 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
     }
 
-    /** Called from WorldRendererMixin to render world overlays. */
     public static void onWorldRender(LevelRenderContext context) {
         application.tickDrag();
         if (application.isPlaybackRunning()) {
@@ -247,6 +239,13 @@ public class FabricParkourCalculator implements ClientModInitializer {
             return;
         }
         worldRenderer.render(context);
+    }
+
+    private static void onCollectSubmits(LevelRenderContext context) {
+        if (application.isPlaybackRunning() && !application.getSettings().keepBoxesDuringPlayback) {
+            return;
+        }
+        worldRenderer.submitGizmo(context);
     }
 
     /** Called from InGameHudMixin to queue the MACRO badge into the GUI state. */

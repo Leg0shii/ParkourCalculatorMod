@@ -37,15 +37,15 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
 
     @Override
     public Vec3dCore getEyePosition() {
-        Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
-        Vec3 p = camera.getPosition();
+        Camera camera = Minecraft.getInstance().gameRenderer.mainCamera();
+        Vec3 p = camera.position();
         return new Vec3dCore(p.x, p.y, p.z);
     }
 
     @Override
     public Vec3dCore getLookDirection() {
-        Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
-        Vec3 d = Vec3.directionFromRotation(camera.getXRot(), camera.getYRot());
+        Camera camera = Minecraft.getInstance().gameRenderer.mainCamera();
+        Vec3 d = Vec3.directionFromRotation(camera.xRot(), camera.yRot());
         return new Vec3dCore(d.x, d.y, d.z);
     }
 

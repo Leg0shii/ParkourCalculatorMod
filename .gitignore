@@ -43,3 +43,6 @@ replay_*.log
 
 # Claude Code agent worktrees (ephemeral, auto-cleaned)
 .claude/worktrees/
+
+tools/
+trash/
