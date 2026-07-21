@@ -14,7 +14,10 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunRecord;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ValidationIssue;
+import de.legoshi.parkourcalc.core.anglesolver.solver.AlmSnapStage;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
+import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
+import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.ui.InputData;
@@ -29,8 +32,10 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -86,13 +91,30 @@ public class RunMatrixScreen {
             new CaptureMutations.Mutation(0, 0, 0.0),
     };
 
-    private static final class Preset {
+    static final class AlmParams {
+        double lambda;
+        int budgetSec;
+        int seeds = 16;
+        int topK = 32;
+        boolean cooking = true;
+        double gateWiden = 1.0;
+    }
+
+    static final class Preset {
         final String id;
         final Consumer<AngleSolverState> apply;
+        final AlmParams alm;
 
         Preset(String id, Consumer<AngleSolverState> apply) {
             this.id = id;
             this.apply = apply;
+            this.alm = null;
+        }
+
+        Preset(String id, AlmParams alm) {
+            this.id = id;
+            this.apply = null;
+            this.alm = alm;
         }
     }
 
@@ -223,6 +245,96 @@ public class RunMatrixScreen {
         return out;
     }
 
+    static List<Preset> sweepPresets(String sweepSpec) {
+        List<Preset> statics = presets();
+        List<Preset> out = new ArrayList<>();
+        for (String entry : sweepSpec.split("\\|")) {
+            entry = entry.trim();
+            if (entry.isEmpty()) continue;
+            int colon = entry.indexOf(':');
+            String base = colon < 0 ? entry : entry.substring(0, colon).trim();
+            Map<String, String[]> grid = new LinkedHashMap<>();
+            if (colon >= 0) {
+                for (String kv : entry.substring(colon + 1).split(";")) {
+                    kv = kv.trim();
+                    if (kv.isEmpty()) continue;
+                    int eq = kv.indexOf('=');
+                    if (eq < 0) throw new IllegalArgumentException("sweep param without '=': " + kv);
+                    grid.put(kv.substring(0, eq).trim(), kv.substring(eq + 1).trim().split(","));
+                }
+            }
+            if (grid.isEmpty()) {
+                Preset found = null;
+                for (Preset p : statics) {
+                    if (p.id.equals(base)) {
+                        found = p;
+                        break;
+                    }
+                }
+                if (found != null) {
+                    out.add(found);
+                    continue;
+                }
+            }
+            for (Map<String, String> combo : cross(grid)) {
+                out.add(sweepPreset(base, combo));
+            }
+        }
+        return out;
+    }
+
+    private static List<Map<String, String>> cross(Map<String, String[]> grid) {
+        List<Map<String, String>> combos = new ArrayList<>();
+        combos.add(new LinkedHashMap<String, String>());
+        for (Map.Entry<String, String[]> e : grid.entrySet()) {
+            List<Map<String, String>> next = new ArrayList<>();
+            for (Map<String, String> c : combos) {
+                for (String v : e.getValue()) {
+                    Map<String, String> m = new LinkedHashMap<>(c);
+                    m.put(e.getKey(), v.trim());
+                    next.add(m);
+                }
+            }
+            combos = next;
+        }
+        return combos;
+    }
+
+    private static Preset sweepPreset(String base, Map<String, String> combo) {
+        StringBuilder id = new StringBuilder(base);
+        for (Map.Entry<String, String> e : combo.entrySet()) {
+            id.append('-').append(e.getKey()).append(e.getValue());
+        }
+        if (base.startsWith("taser")) {
+            final int sec = Integer.parseInt(base.substring("taser".length()));
+            final double lambda = Double.parseDouble(combo.getOrDefault("l", "0"));
+            for (String key : combo.keySet()) {
+                if (!"l".equals(key)) throw new IllegalArgumentException("unknown taser sweep param: " + key);
+            }
+            return new Preset(id.toString(), s -> {
+                s.setEffort(AngleSolverState.Effort.THOROUGH);
+                s.setOptimizeSeconds(sec);
+                s.setSmoothLambda(lambda);
+            });
+        }
+        if (base.startsWith("alm")) {
+            AlmParams ap = new AlmParams();
+            ap.budgetSec = Integer.parseInt(base.substring("alm".length()));
+            for (Map.Entry<String, String> e : combo.entrySet()) {
+                String key = e.getKey();
+                String v = e.getValue();
+                if ("l".equals(key)) ap.lambda = Double.parseDouble(v);
+                else if ("seeds".equals(key)) ap.seeds = Integer.parseInt(v);
+                else if ("topk".equals(key)) ap.topK = Integer.parseInt(v);
+                else if ("cooking".equals(key)) ap.cooking = !"0".equals(v);
+                else if ("gate".equals(key)) ap.gateWiden = Double.parseDouble(v);
+                else throw new IllegalArgumentException("unknown alm sweep param: " + key);
+            }
+            return new Preset(id.toString(), ap);
+        }
+        throw new IllegalArgumentException("unknown sweep base: " + base);
+    }
+
     @Test
     public void matrix() throws Exception {
         Assume.assumeTrue("set PKC_MATRIX=1 to run", System.getenv("PKC_MATRIX") != null);
@@ -283,8 +395,9 @@ public class RunMatrixScreen {
             problems = banded;
         }
 
+        String sweep = System.getenv("PKC_MATRIX_SWEEP");
         List<Preset> presets = new ArrayList<>();
-        for (Preset p : presets()) {
+        for (Preset p : sweep != null && !sweep.isEmpty() ? sweepPresets(sweep) : presets()) {
             if (presetFilter == null || presetFilter.contains(p.id)) presets.add(p);
         }
 
@@ -352,6 +465,9 @@ public class RunMatrixScreen {
         if (pr.mutation != null && !CaptureMutations.apply(file, pr.mutation)) {
             throw new IllegalStateException(pr.fullName() + ": mutation not applicable");
         }
+        if (preset.alm != null) {
+            return runAlmOne(preset.alm, file, timeoutMs);
+        }
         ExactJumpModel model = ExactJumpModel.forMcVersion(file.mcVersion);
         InputData inputs = new InputData();
         SaveIO.applyRowsTo(file, inputs);
@@ -379,6 +495,58 @@ public class RunMatrixScreen {
             rec.outcome.chain = "no record (invalid job)";
         }
         rec.mcVersion = file.mcVersion;
+        return rec;
+    }
+
+    private SolveRunRecord runAlmOne(AlmParams ap, SaveFile file, long timeoutMs) {
+        ExactJumpModel model = ExactJumpModel.forMcVersion(file.mcVersion);
+        InputData inputs = new InputData();
+        SaveIO.applyRowsTo(file, inputs);
+        AngleSolverState state = new AngleSolverState();
+        SaveIO.applyAngleSolverTo(file, state);
+        state.setSmoothLambda(ap.lambda);
+        state.clearResult();
+        AngleSolverEngine engine = new AngleSolverEngine(state, Fixtures.buildBoxes(file), inputs, t -> { }, model);
+        JumpSpec spec = engine.debugBuildSpec();
+        SolveRunRecord rec = new SolveRunRecord();
+        rec.mcVersion = file.mcVersion;
+        rec.outcome = new SolveRunRecord.Outcome();
+        if (spec == null) {
+            rec.outcome.status = SolveRunRecord.STATUS_FAILED;
+            rec.outcome.chain = "almSnapStage: no spec (invalid job)";
+            return rec;
+        }
+        JumpPhysicsInputs sc = spec.asScenario();
+        double[] dom = null;
+        if (sc.startBox != null && sc.startBox.startFree()) {
+            dom = new double[]{sc.startBox.pxLo - sc.startPos.x, sc.startBox.pxHi - sc.startPos.x,
+                    sc.startBox.pzLo - sc.startPos.z, sc.startBox.pzHi - sc.startPos.z};
+        }
+        int jumps = 0;
+        for (int t = 0; t < sc.numTicks; t++) {
+            if (sc.jumpAt(t)) jumps++;
+        }
+        rec.problem = SolveRunRecord.problemOf(spec, jumps);
+        rec.config = new SolveRunRecord.Config();
+        rec.config.effort = "ALM";
+        rec.config.metric = new SolveRunRecord.Metric();
+        rec.config.metric.type = "hierarchical";
+        rec.config.metric.feasTol = 0.0;
+        rec.config.metric.sense = spec.objective.sense.name();
+        rec.config.metric.smoothLambda = spec.objective.smoothLambda;
+        long budgetNanos = Math.min(ap.budgetSec * 1_000_000_000L, timeoutMs * 1_000_000L);
+        long t0 = System.nanoTime();
+        AlmSnapStage.SolveOutcome oc = AlmSnapStage.solve(model, spec, new ArrayList<double[]>(),
+                ap.seeds, ap.cooking, ap.topK, ap.gateWiden, dom, t0 + budgetNanos, null);
+        long wall = System.nanoTime() - t0;
+        rec.outcome.status = oc.feasible ? SolveRunRecord.STATUS_SOLVED : SolveRunRecord.STATUS_STOPPED_BEST;
+        rec.outcome.feasible = oc.feasible;
+        rec.outcome.objective = Double.isNaN(oc.objective) ? null : oc.objective;
+        rec.outcome.violation = Double.isNaN(oc.viol) || Double.isInfinite(oc.viol) ? null : oc.viol;
+        rec.outcome.wallNanos = wall;
+        rec.outcome.chain = "almSnapStage seeds=" + oc.seedsTried + " winner="
+                + (oc.winnerKind != null ? oc.winnerKind : "-") + "#" + oc.winnerSeedIndex;
+        SolveRunRecord.smoothnessOf(rec.outcome, oc.yawsDeg);
         return rec;
     }
 

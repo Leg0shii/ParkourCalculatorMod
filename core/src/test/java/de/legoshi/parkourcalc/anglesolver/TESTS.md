@@ -26,7 +26,14 @@ anglesolver/
                            PKC_MATRIX_FILTER, PKC_MATRIX_PRESETS, PKC_MATRIX_BAND (path to a band.txt
                            allow-list of category/name keys); taser60-l* presets = optimize60 shape
                            with a nonzero smoothLambda (the TASer band lives at
-                           docs/research/data/matrix-taser-pin1/band.txt)
+                           docs/research/data/matrix-taser-pin1/band.txt); PKC_MATRIX_SWEEP (A18)
+                           replaces the preset list with generated ones, `|`-separated entries of
+                           base:key=v1,v2;key2=... cross-producted per entry: taser<sec> takes l
+                           (engine path via setSmoothLambda), alm<sec> runs AlmSnapStage directly
+                           (keys l, seeds, topk, cooking, gate; free startBox becomes the translation
+                           domain) recording raw objective + smoothness stats per run, and a bare
+                           entry with no params reuses the static preset of that exact id
+                           (parse coverage: RunMatrixSweepTest)
   MatrixAnalysisScreen.java  per-preset aggregates + SBS/VBS feasibility and objective-regret gap over
                            a matrix runs.jsonl; PKC_MATRIX_ANALYZE=1 + PKC_MATRIX_TAG; writes
                            build/reports/matrix-<tag>/analysis.md

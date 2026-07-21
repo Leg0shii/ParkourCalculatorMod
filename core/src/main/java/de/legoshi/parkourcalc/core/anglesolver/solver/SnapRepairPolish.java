@@ -187,6 +187,7 @@ public final class SnapRepairPolish {
         final double hiZ;
         SmoothJumpProblem problem;
         JumpConstraintCompiler.Compiled compiled;
+        Objective objective;
         double objSign;
         int objTick;
         JumpPhysicsInputs.Axis objAxis;
@@ -241,6 +242,7 @@ public final class SnapRepairPolish {
 
             problem = SmoothJumpProblem.compile(spec, zeroX, zeroZ, modern, 0.0);
             compiled = JumpConstraintCompiler.compile(spec);
+            objective = spec.objective;
             objSign = problem.objectiveSign();
             objTick = spec.objective.tick;
             objAxis = spec.objective.axis;
@@ -335,7 +337,7 @@ public final class SnapRepairPolish {
             Trans tr = bestTranslationObj(compiled, gfD, path, loX, hiX, loZ, hiZ,
                     objAxisX ? 0 : 1, objMax);
             double obj = path.getPos(objTick, objAxis) + (objAxisX ? tr.tx : tr.tz);
-            double signed = objSign * obj;
+            double signed = objSign * obj + objective.smoothPenalty(gfD);
             boolean feas = tr.viol <= 0.0;
             boolean better;
             if (transBestGf == null) {
@@ -975,6 +977,11 @@ public final class SnapRepairPolish {
             return g.obj < champ.obj + margin;
         }
 
+        double smoothPen(float[] gf) {
+            if (objective.smoothLambda <= 0.0) return 0.0;
+            return objective.smoothPenalty(toDouble(gf));
+        }
+
         Grade fastGrade(float[] gf, boolean modePolish) {
             double rawObj = problem.fastValue(problem.objective(), gf);
             double vsqr = 0.0;
@@ -992,7 +999,7 @@ public final class SnapRepairPolish {
                 if (viol > FAST_EQ_TOL) feasible = false;
             }
             if (!modePolish && vsqr > 0.0) feasible = false;
-            return new Grade(objSign * rawObj, vsqr, feasible);
+            return new Grade(objSign * rawObj + smoothPen(gf), vsqr, feasible);
         }
 
         Exact exactGrade(double[] gfD, int fromTick) {
@@ -1014,7 +1021,7 @@ public final class SnapRepairPolish {
             }
             double rawObj = scratch.getPos(objTick, objAxis);
             boolean feasible = ineqViol <= 0.0 && eqViol <= EXACT_EQ_TOL;
-            Grade g = new Grade(objSign * rawObj, vsqr, feasible);
+            Grade g = new Grade(objSign * rawObj + objective.smoothPenalty(gfD), vsqr, feasible);
             return new Exact(g, scratch, rawObj, Math.max(ineqViol, eqViol));
         }
 

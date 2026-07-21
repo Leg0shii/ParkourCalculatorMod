@@ -10,6 +10,8 @@ public final class SmoothJumpProblem {
     private static final double DEG_PER_RAD = 180.0 / Math.PI;
     private static final float RAD_PER_DEG_F = (float) (Math.PI / 180.0);
     private static final float PI_F = (float) Math.PI;
+    private static final double WIGGLE_EPS = 1.0e-4;
+    private static final double TWO_PI = 2.0 * Math.PI;
 
     public static final class Term {
         public final double constant;
@@ -43,15 +45,17 @@ public final class SmoothJumpProblem {
     private final int n;
     private final boolean modern;
     private final double objectiveSign;
+    private final double smoothLambda;
     private final Term objective;
     private final List<Term> ineq;
     private final List<Term> eq;
 
-    private SmoothJumpProblem(int n, boolean modern, double objectiveSign, Term objective,
+    private SmoothJumpProblem(int n, boolean modern, double objectiveSign, double smoothLambda, Term objective,
                               List<Term> ineq, List<Term> eq) {
         this.n = n;
         this.modern = modern;
         this.objectiveSign = objectiveSign;
+        this.smoothLambda = smoothLambda;
         this.objective = objective;
         this.ineq = Collections.unmodifiableList(ineq);
         this.eq = Collections.unmodifiableList(eq);
@@ -96,7 +100,7 @@ public final class SmoothJumpProblem {
                 ineq.add(wallTerm(w, jlm, n, null));
             }
         }
-        return new SmoothJumpProblem(n, modern, objSign, objective, ineq, eq);
+        return new SmoothJumpProblem(n, modern, objSign, obj.smoothLambda, objective, ineq, eq);
     }
 
     private static Term wallTerm(JumpLinearModel.Wall w, JumpLinearModel jlm, int n, JumpConstraint source) {
@@ -110,7 +114,7 @@ public final class SmoothJumpProblem {
         ext.add(boxTerm(n, 0, -1.0, loX, "transbox:x-"));
         ext.add(boxTerm(n, 1, 1.0, -hiZ, "transbox:z+"));
         ext.add(boxTerm(n, 1, -1.0, loZ, "transbox:z-"));
-        return new SmoothJumpProblem(n, modern, objectiveSign, objective, ext, new ArrayList<>(eq));
+        return new SmoothJumpProblem(n, modern, objectiveSign, smoothLambda, objective, ext, new ArrayList<>(eq));
     }
 
     private static Term boxTerm(int n, int axis, double transCoef, double constant, String name) {
@@ -207,7 +211,7 @@ public final class SmoothJumpProblem {
         }
         Arrays.fill(gOut, 0.0);
         double objVal = termValue(objective, thetaRad, sinA, cosA) + shiftContribution(objective, tx, tz);
-        double value = objectiveSign * objVal;
+        double value = objectiveSign * objVal + wiggleValueGrad(thetaRad, gOut);
         accumGrad(objective, thetaRad, sinA, cosA, objectiveSign, gOut);
         addShiftGrad(objective, objectiveSign, gOut);
         for (int i = 0; i < ineq.size(); i++) {
@@ -258,7 +262,7 @@ public final class SmoothJumpProblem {
             cosA[k] = Math.cos(thetaRad[k]);
         }
         Arrays.fill(gOut, 0.0);
-        double value = objectiveSign * termValue(objective, thetaRad, sinA, cosA);
+        double value = objectiveSign * termValue(objective, thetaRad, sinA, cosA) + wiggleValueGrad(thetaRad, gOut);
         accumGrad(objective, thetaRad, sinA, cosA, objectiveSign, gOut);
         for (int i = 0; i < ineq.size(); i++) {
             Term term = ineq.get(i);
@@ -274,6 +278,33 @@ public final class SmoothJumpProblem {
             accumGrad(term, thetaRad, sinA, cosA, nu[j] + pen * hj, gOut);
         }
         return value;
+    }
+
+    private double wiggleValueGrad(double[] thetaRad, double[] gOut) {
+        if (smoothLambda <= 0.0 || n < 2) return 0.0;
+        double scale = smoothLambda * DEG_PER_RAD;
+        double v = 0.0;
+        for (int k = 1; k < n; k++) {
+            double d = thetaRad[k] - thetaRad[k - 1];
+            d -= TWO_PI * Math.round(d / TWO_PI);
+            double r = Math.sqrt(d * d + WIGGLE_EPS * WIGGLE_EPS);
+            v += scale * r;
+            double g = scale * d / r;
+            gOut[k] += g;
+            gOut[k - 1] -= g;
+        }
+        return v;
+    }
+
+    public double travelPenalty(double[] thetaRad) {
+        if (smoothLambda <= 0.0 || n < 2) return 0.0;
+        double travel = 0.0;
+        for (int k = 1; k < n; k++) {
+            double d = thetaRad[k] - thetaRad[k - 1];
+            d -= TWO_PI * Math.round(d / TWO_PI);
+            travel += Math.abs(d);
+        }
+        return smoothLambda * travel * DEG_PER_RAD;
     }
 
     private double termValue(Term t, double[] thetaRad, double[] sinA, double[] cosA) {
