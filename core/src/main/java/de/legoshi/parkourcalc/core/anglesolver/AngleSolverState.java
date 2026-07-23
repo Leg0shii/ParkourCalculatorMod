@@ -164,6 +164,8 @@ public final class AngleSolverState {
     private boolean stopOnFeasible;
     private boolean legalMode;
     private int optimizeSeconds = DEFAULT_OPTIMIZE_SECONDS;
+    public static final double TASER_SMOOTH_LAMBDA = 1.0e-3;
+
     private double smoothLambda;
     private final SolveBudget solveBudget = new SolveBudget();
     private String graphPresetName;
