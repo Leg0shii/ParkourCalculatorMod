@@ -110,6 +110,45 @@ belongs to the open A22 budget-semantics decision. Note the fairness nuance for 
 range: at real-path ~75 s the incumbent beats ALM's 60 s result at 80t (0.149831 vs 0.142181)
 while ALM keeps 100t (-20.020222 vs -20.023950).
 
+## Postscript: A6 reversal, hard deadline, dead-stage audit (same day)
+
+A6 REVERSED by the user: post-cap-ship, ALM's measured edge collapsed to +3.7 milliblocks on
+taser-100t (the true-60s incumbent later posted 0.151329 at 80t, beating ALM outright). ALM
+stays a shelf graph node; no arm wiring, no warm-seed plumbing. The bake-off gate worked.
+
+A22 HARD DEADLINE shipped: Job.deadlineNanos had been display-only since the M1 graph refactor
+(GraphRunner used per-node budgets exclusively; the only consumers were trace output and the
+result panel). Fix: GraphContext.setOverallDeadline, engine arms it from the job (THOROUGH =
+optimizeSeconds, CUSTOM t>0 = t, FAST/CUSTOM-t0 = none), GraphRunner stops the walk at the wall
+and clamps every node deadline to it. GraphRunnerDeadlineTest pins it. Verified: the taser
+rungs wall at exactly 60.0 s with equal-or-better objectives than the 75-77 s overrun runs
+(0.151329 at 80t, -20.023925 at 100t). Residual overrun bound = one node's min-floor (1-2 s).
+
+DEAD-STAGE AUDIT (tag deadaudit1, 54 corpus problems x fast + optimize60, 108 rows):
+
+- Health: fast 52/54 feasible, optimize60 51/54. Misses = the two known-unsolved razor frontier
+  problems (both presets) and nix-full-t1 at optimize60 only.
+- HONEST-BUDGET CONSEQUENCE: nix-full-t1 needs ~70 s of momentum work; fast (no wall) lands it,
+  and pre-fix THOROUGH landed it only by silently overrunning toward 120 s. With the honest
+  wall, Optimize at 60 s fails it (viol 0.44). Deliberate: raise the knob for such problems.
+  Standing-ladder note: future taser60 band runs will show nix-full-t1 infeasible; compare only
+  against equal honest budgets.
+- Stage census over winning chains: closed form 82, CMA-ES 56, ILS 20, receding horizon 34,
+  relaxation recovery 10, seam sweep 7, branch and bound 7, SLP 6, pattern B&B 4 (2 near-miss
+  nearBnb + 2 explore arm), capCertify certificates 3, setup peel 2, free start 2, momentum
+  assembly 1. Every stage earns corpus wins except two:
+  - wrapIls: 0 appearances. Explained, not dead: it fires only at viol <= 1e-2 with a legal
+    push, and no corpus row under shipped presets enters that window (razor rows miss at
+    0.16-0.44). It is the razor/wrap-depth machinery; KEEP.
+  - rescueBnb (the Fast-graph first-feasible pattern-B&B): 0 wins. It runs only when everything
+    else already failed, budget-bounded at ~3 s, and the tight-spec class it was built for now
+    lands via the late-race explore arm on the corpus. Prune candidate ONLY with a dedicated
+    leg proving the explore arm covers it (loopmm-tight + gen-ladder mutants, rescue removed);
+    not removed on this audit alone.
+- Verdict: the shipped graph is not bloated. 13 of 15 chain-visible stages earn wins on the
+  corpus; the two that do not are bounded failure-path nets with documented reasons to exist.
+  Smoothing/control nodes never label chains and cannot be judged by this method.
+
 ## Standing verdicts and open items
 
 - A6 DECLARED (user): split verdict. Incumbent stays TASer core; ALM is the mid-length arm,

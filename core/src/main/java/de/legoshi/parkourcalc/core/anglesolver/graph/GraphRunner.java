@@ -27,6 +27,8 @@ public final class GraphRunner {
         Candidate cand = null;
         while (true) {
             if (ctx.cancel.get()) return null;
+            long overall = ctx.overallDeadline();
+            if (overall > 0 && System.nanoTime() >= overall) return cand;
             if (cur == null || cur.type.emitMarker) return cand;
             if (cur.type.entryMarker) {
                 cur = next(graph, cur, Guarantee.DONE);
@@ -43,6 +45,7 @@ public final class GraphRunner {
             }
             long budgetNanos = budgetNanos(cur);
             long deadline = budgetNanos > 0 ? System.nanoTime() + budgetNanos : 0L;
+            if (overall > 0 && (deadline == 0L || overall < deadline)) deadline = overall;
             AtomicBoolean token = ctx.beginNode(cur, deadline, budgetNanos);
             Guarantee taken = null;
             try {

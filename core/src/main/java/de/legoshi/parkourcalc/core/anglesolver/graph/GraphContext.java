@@ -45,6 +45,7 @@ public final class GraphContext {
     private int jumpCount = -1;
     private boolean reachBoundSet;
     private double reachBound = Double.NaN;
+    private volatile long overallDeadlineNanos;
 
     public GraphContext(JumpSpec spec, ForwardModel model, StartBox freeBox, JumpConstraint legalGoal,
                         double feasTol, AtomicBoolean cancel, SolveProgress progress, boolean sequential,
@@ -68,6 +69,14 @@ public final class GraphContext {
 
     public boolean exact() {
         return exactModel != null;
+    }
+
+    public void setOverallDeadline(long absoluteNanos) {
+        this.overallDeadlineNanos = absoluteNanos;
+    }
+
+    public long overallDeadline() {
+        return overallDeadlineNanos;
     }
 
     public boolean maximize() {

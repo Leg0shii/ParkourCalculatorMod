@@ -1041,6 +1041,7 @@ public final class AngleSolverEngine {
         } else {
             GraphContext single = new GraphContext(spec, model, freeBox, job.legalGoal, FEAS_TOL, cancel, progress,
                     sequentialSolve, job.budget, job.longRun);
+            if (job.deadlineNanos > 0) single.setOverallDeadline(System.nanoTime() + job.deadlineNanos);
             if (rec != null) rec.ctx = single;
             lastRunState = single.runState;
             currentGraphContext = single;
