@@ -75,6 +75,31 @@ public class RunMatrixSweepTest {
     }
 
     @Test
+    public void captaserSweepRaisesRouterCaps() {
+        List<RunMatrixScreen.Preset> ps = RunMatrixScreen.sweepPresets("captaser60:l=1e-3;cap=128,256");
+        assertEquals(2, ps.size());
+        assertEquals("captaser60-l1e-3-cap128", ps.get(0).id);
+        assertEquals("captaser60-l1e-3-cap256", ps.get(1).id);
+        AngleSolverState state = new AngleSolverState();
+        ps.get(0).apply.accept(state);
+        assertEquals(AngleSolverState.Effort.CUSTOM, state.getEffort());
+        assertNotNull(state.getCustomGraph());
+        assertEquals(1.0e-3, state.getSmoothLambda(), 0.0);
+    }
+
+    @Test
+    public void fastcapSweepParses() {
+        List<RunMatrixScreen.Preset> ps = RunMatrixScreen.sweepPresets("fastcap:cap=256");
+        assertEquals(1, ps.size());
+        assertEquals("fastcap-cap256", ps.get(0).id);
+        AngleSolverState state = new AngleSolverState();
+        ps.get(0).apply.accept(state);
+        assertEquals(AngleSolverState.Effort.CUSTOM, state.getEffort());
+        assertNotNull(state.getCustomGraph());
+        assertEquals(0.0, state.getSmoothLambda(), 0.0);
+    }
+
+    @Test
     public void unknownBaseAndParamsThrow() {
         try {
             RunMatrixScreen.sweepPresets("warp60:l=1");

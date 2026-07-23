@@ -4,3 +4,5 @@ frontier/j155-4jmm_3bcmm_4.9375b
 solve/j003
 solve/j002
 solve/j001
+solve/taser-80t
+solve/taser-100t

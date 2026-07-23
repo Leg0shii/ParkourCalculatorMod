@@ -49,7 +49,7 @@ public final class NodeCatalog {
                 .branch(Branch.preserves(Guarantee.FALSE))
                 .param(ParamSpec.choice("predicate", "Predicate", predicateNames(), "HAS_CANDIDATE"))
                 .param(ParamSpec.decimal("epsilon", "Epsilon", 0.0, 1.0, 0.0))
-                .param(ParamSpec.integer("cap", "Tick cap", 0, 100000, 64))
+                .param(ParamSpec.integer("cap", "Tick cap", 0, 100000, BuiltinGraphs.IMPROVE_TICK_CAP))
                 .fallback(Guarantee.FALSE)
                 .factory(RouterNode::new)
                 .build());

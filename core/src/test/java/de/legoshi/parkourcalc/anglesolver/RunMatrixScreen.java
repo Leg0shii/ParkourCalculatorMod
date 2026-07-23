@@ -171,6 +171,19 @@ public class RunMatrixScreen {
         return g;
     }
 
+    private static SolverGraph raiseTickCaps(SolverGraph g, int cap) {
+        for (GraphNode n : g.nodes) {
+            if ("router".equals(n.type.id) && "TICKS_LE_CAP".equals(n.params.getString("predicate"))) {
+                n.params.set("cap", cap);
+            }
+        }
+        return g;
+    }
+
+    private static SolverGraph capRaisedOptimizeGraph(int budgetSec, int cap) {
+        return raiseTickCaps(BuiltinGraphs.optimize(budgetSec), cap);
+    }
+
     private static void assertValid(SolverGraph graph) {
         List<ValidationIssue> issues = GraphValidator.validate(graph);
         if (GraphValidator.hasErrors(issues)) {
@@ -304,6 +317,34 @@ public class RunMatrixScreen {
         StringBuilder id = new StringBuilder(base);
         for (Map.Entry<String, String> e : combo.entrySet()) {
             id.append('-').append(e.getKey()).append(e.getValue());
+        }
+        if (base.startsWith("fastcap")) {
+            int capV = 64;
+            for (Map.Entry<String, String> e : combo.entrySet()) {
+                if ("cap".equals(e.getKey())) capV = Integer.parseInt(e.getValue());
+                else throw new IllegalArgumentException("unknown fastcap sweep param: " + e.getKey());
+            }
+            return new Preset(id.toString(), customGraph(raiseTickCaps(BuiltinGraphs.fast(), capV)));
+        }
+        if (base.startsWith("captaser")) {
+            final int sec = Integer.parseInt(base.substring("captaser".length()));
+            double lambdaV = 0.0;
+            int capV = 64;
+            for (Map.Entry<String, String> e : combo.entrySet()) {
+                String key = e.getKey();
+                if ("l".equals(key)) lambdaV = Double.parseDouble(e.getValue());
+                else if ("cap".equals(key)) capV = Integer.parseInt(e.getValue());
+                else throw new IllegalArgumentException("unknown captaser sweep param: " + key);
+            }
+            final double lambda = lambdaV;
+            final SolverGraph graph = capRaisedOptimizeGraph(sec, capV);
+            assertValid(graph);
+            return new Preset(id.toString(), s -> {
+                s.setEffort(AngleSolverState.Effort.CUSTOM);
+                s.setCustomGraph(graph);
+                s.setStopOnFeasible(false);
+                s.setSmoothLambda(lambda);
+            });
         }
         if (base.startsWith("taser")) {
             final int sec = Integer.parseInt(base.substring("taser".length()));

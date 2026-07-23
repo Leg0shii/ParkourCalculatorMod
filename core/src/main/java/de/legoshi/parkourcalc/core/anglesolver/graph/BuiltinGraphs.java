@@ -2,6 +2,8 @@ package de.legoshi.parkourcalc.core.anglesolver.graph;
 
 public final class BuiltinGraphs {
 
+    public static final int IMPROVE_TICK_CAP = 256;
+
     private BuiltinGraphs() {
     }
 
@@ -276,6 +278,9 @@ public final class BuiltinGraphs {
 
     private static void router(GraphBuilder g, String id, String predicate) {
         g.add(id, "router").set(id, "predicate", predicate);
+        if ("TICKS_LE_CAP".equals(predicate)) {
+            g.set(id, "cap", IMPROVE_TICK_CAP);
+        }
     }
 
     private static void race(GraphBuilder g, String id, int restarts, int maxEval, int polishCount,
