@@ -70,6 +70,20 @@ public final class LongRunSolver {
             return new LongRunConfig(windowLadderFor(w), commits);
         }
 
+        public static LongRunConfig of(int window, int commit, int[] windowLadder, int[] commitLadder) {
+            LongRunConfig base = of(window, commit);
+            int[] wl = sanitizeLadder(windowLadder);
+            int[] cl = sanitizeLadder(commitLadder);
+            return new LongRunConfig(wl != null ? wl : base.windowLadder, cl != null ? cl : base.commitLadder);
+        }
+
+        private static int[] sanitizeLadder(int[] ladder) {
+            if (ladder == null || ladder.length == 0) return null;
+            int[] out = new int[ladder.length];
+            for (int i = 0; i < ladder.length; i++) out[i] = Math.max(1, ladder[i]);
+            return out;
+        }
+
         public int window() { return windowLadder[0]; }
 
         public int commit() { return commitLadder[0]; }

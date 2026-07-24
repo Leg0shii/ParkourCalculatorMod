@@ -152,6 +152,7 @@ public final class BoxController {
     public boolean isCursorOverConstraint(Vec3dCore rayOrigin, Vec3dCore rayDirection, ConstraintBoxSource source) {
         for (int i = 0; i < positions.size(); i++) {
             for (ConstraintPlate plate : source.platesAt(i)) {
+                if (!plate.pickable) continue;
                 if (closestPlateFace(plate, rayOrigin, rayDirection) >= 0) return true;
             }
         }
@@ -167,6 +168,7 @@ public final class BoxController {
         int[] bestIndices = null;
         for (int i = 0; i < positions.size(); i++) {
             for (ConstraintPlate plate : source.platesAt(i)) {
+                if (!plate.pickable) continue;
                 double t = closestPlateFace(plate, rayOrigin, rayDirection);
                 if (t >= 0 && t < bestT) {
                     bestT = t;

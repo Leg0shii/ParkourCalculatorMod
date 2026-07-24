@@ -25,4 +25,44 @@ public final class Angles {
         while (delta < -180.0) delta += 360.0;
         return delta;
     }
+
+    public static double travelDeg(double[] f) {
+        double travel = 0.0;
+        for (int i = 1; i < f.length; i++) {
+            double d = f[i] - f[i - 1];
+            d -= 360.0 * Math.round(d / 360.0);
+            travel += Math.abs(d);
+        }
+        return travel;
+    }
+
+    public static final double REVERSAL_FLOOR_DEG = 0.01;
+
+    public static int reversals(double[] f, double floorDeg) {
+        int count = 0;
+        int lastSign = 0;
+        for (int i = 1; i < f.length; i++) {
+            double d = f[i] - f[i - 1];
+            d -= 360.0 * Math.round(d / 360.0);
+            if (Math.abs(d) <= floorDeg) continue;
+            int sign = d > 0.0 ? 1 : -1;
+            if (lastSign != 0 && sign != lastSign) count++;
+            lastSign = sign;
+        }
+        return count;
+    }
+
+    public static double wiggleDeg(double[] f) {
+        if (f.length < 3) return 0.0;
+        double jerk = 0.0;
+        double prev = f[1] - f[0];
+        prev -= 360.0 * Math.round(prev / 360.0);
+        for (int i = 2; i < f.length; i++) {
+            double d = f[i] - f[i - 1];
+            d -= 360.0 * Math.round(d / 360.0);
+            jerk += Math.abs(d - prev);
+            prev = d;
+        }
+        return jerk;
+    }
 }

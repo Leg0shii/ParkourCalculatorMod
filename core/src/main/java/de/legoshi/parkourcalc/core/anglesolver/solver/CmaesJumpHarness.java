@@ -29,8 +29,16 @@ public final class CmaesJumpHarness {
     private static final double YAW_LOWER_DEG = -360.0;
     private static final double YAW_UPPER_DEG = 360.0;
 
-    private final double muIneq;
-    private final double muEq;
+    public static final class Config {
+        public double muIneq = 1.0e7;
+        public double muEq = 1.0e7;
+        public int lambda;
+        public double polishStepDeg = 45.0;
+        public int polishIters = 500;
+        public double polishFloorDeg = 1.0e-7;
+    }
+
+    private final Config cfg;
     private final double sigmaDeg;
     private final int maxEval;
     private final boolean feasibilityOnly;
@@ -46,11 +54,21 @@ public final class CmaesJumpHarness {
      *  while a different objective on the SAME problem lands feasible. Whether a solution EXISTS must not
      *  depend on what we optimize, so this mode recovers it. */
     public CmaesJumpHarness(double muIneq, double muEq, double sigmaDeg, int maxEval, boolean feasibilityOnly) {
-        this.muIneq = muIneq;
-        this.muEq = muEq;
+        this(configFor(muIneq, muEq), sigmaDeg, maxEval, feasibilityOnly);
+    }
+
+    public CmaesJumpHarness(Config cfg, double sigmaDeg, int maxEval, boolean feasibilityOnly) {
+        this.cfg = cfg;
         this.sigmaDeg = sigmaDeg;
         this.maxEval = maxEval;
         this.feasibilityOnly = feasibilityOnly;
+    }
+
+    private static Config configFor(double muIneq, double muEq) {
+        Config cfg = new Config();
+        cfg.muIneq = muIneq;
+        cfg.muEq = muEq;
+        return cfg;
     }
 
     public SolverRunResult solve(ForwardModel model, JumpSpec spec, double[] initialFAbsDeg, AtomicBoolean cancel) {
@@ -75,14 +93,15 @@ public final class CmaesJumpHarness {
             if (stopped(cancel, earlyStop)) throw new SolveCancelledException();
             double[] gf = scenario.toGameFacings(Angles.wrapAll(F));
             ForwardPath pr = model.forward(scenario, gf);
+            double smooth = feasibilityOnly ? 0.0 : obj.smoothPenalty(F);
             if (free) {
                 double[] d = FreeStartSolve.bestTranslate(spec, gf, pr, box);
                 double o = sign * (pr.getPos(obj.tick, obj.axis) + (objAxis == 0 ? d[0] : d[1]));
-                return o + c.translatedPenalty(gf, pr, d[0], d[1], muIneq, muEq);
+                return o + smooth + c.translatedPenalty(gf, pr, d[0], d[1], cfg.muIneq, cfg.muEq);
             }
             double o = sign * pr.getPos(obj.tick, obj.axis);
-            double pen = c.penalty(gf, pr, muIneq, muEq);
-            return o + pen;
+            double pen = c.penalty(gf, pr, cfg.muIneq, cfg.muEq);
+            return o + smooth + pen;
         };
 
         double[] lower = new double[n];
@@ -93,7 +112,7 @@ public final class CmaesJumpHarness {
             upper[i] = YAW_UPPER_DEG;
             sigma[i] = sigmaDeg;
         }
-        int lambda = 2 * (4 + (int) Math.floor(3.0 * Math.log(n)));
+        int lambda = cfg.lambda > 0 ? cfg.lambda : 2 * (4 + (int) Math.floor(3.0 * Math.log(n)));
         double[] start = clamp(initialFAbsDeg.clone());
 
         double[] fStar = start;
@@ -170,8 +189,8 @@ public final class CmaesJumpHarness {
         if (sv[1] > 0.0) return cur; // start not strictly feasible: leave it (another restart may be)
         double curScore = sv[0];
         int n = cur.length;
-        double step = 45.0;
-        for (int it = 0; it < 500 && step > 1.0e-7; it++) {
+        double step = cfg.polishStepDeg;
+        for (int it = 0; it < cfg.polishIters && step > cfg.polishFloorDeg; it++) {
             if (stopped(cancel, earlyStop)) throw new SolveCancelledException();
             boolean improved = false;
             for (int i = 0; i < n; i++) {
@@ -197,7 +216,8 @@ public final class CmaesJumpHarness {
         double[] gf = scenario.toGameFacings(Angles.wrapAll(abs));
         ForwardPath pr = model.forward(scenario, gf);
         // score folds ONLY the eq squared-penalty (muIneq=0 zeroes the ineq term); ineq is reported separately.
-        double score = sign * pr.getPos(obj.tick, obj.axis) + c.penalty(gf, pr, 0.0, muEq);
+        double smooth = feasibilityOnly ? 0.0 : obj.smoothPenalty(abs);
+        double score = sign * pr.getPos(obj.tick, obj.axis) + smooth + c.penalty(gf, pr, 0.0, cfg.muEq);
         double ineqViol = 0.0;
         for (JumpConstraint cc : c.ineq) ineqViol = Math.max(ineqViol, JumpConstraintCompiler.slack(cc, gf, pr));
         return new double[]{score, ineqViol};

@@ -90,13 +90,12 @@ public final class AlmBfgsCore {
             derivePattern(model, sc, firstN(x, n), curX, curZ);
         }
         SmoothJumpProblem problem = compileFor(spec, curX, curZ, model, velBound, translate, transDomain);
-        double objSign = problem.objectiveSign();
 
         AlmRun best = null;
         int refreshes = 0;
         while (true) {
             AlmRun run = runAlm(problem, x, cfg, deadlineNanos, cancel, counters, translate, transDomain);
-            best = better(best, run, cfg.feasTol, objSign);
+            best = better(best, run, cfg.feasTol);
             if (pinned) break;
             boolean[] nX = new boolean[n];
             boolean[] nZ = new boolean[n];
@@ -165,27 +164,30 @@ public final class AlmBfgsCore {
         final double[] x;
         final double smoothViol;
         final double smoothObjective;
+        final double scoredSigned;
         final int outerIters;
         final double tx;
         final double tz;
 
-        AlmRun(double[] x, double smoothViol, double smoothObjective, int outerIters, double tx, double tz) {
+        AlmRun(double[] x, double smoothViol, double smoothObjective, double scoredSigned,
+               int outerIters, double tx, double tz) {
             this.x = x;
             this.smoothViol = smoothViol;
             this.smoothObjective = smoothObjective;
+            this.scoredSigned = scoredSigned;
             this.outerIters = outerIters;
             this.tx = tx;
             this.tz = tz;
         }
     }
 
-    private static AlmRun better(AlmRun best, AlmRun run, double feasTol, double objSign) {
+    private static AlmRun better(AlmRun best, AlmRun run, double feasTol) {
         if (best == null) return run;
         boolean bFeas = best.smoothViol <= feasTol;
         boolean rFeas = run.smoothViol <= feasTol;
         if (rFeas != bFeas) return rFeas ? run : best;
         if (!rFeas) return run.smoothViol < best.smoothViol ? run : best;
-        return objSign * run.smoothObjective < objSign * best.smoothObjective ? run : best;
+        return run.scoredSigned < best.scoredSigned ? run : best;
     }
 
     private static AlmRun runAlm(SmoothJumpProblem p, double[] seed, Config cfg, long deadlineNanos,
@@ -263,7 +265,8 @@ public final class AlmBfgsCore {
         double tz = translate ? x[n + 1] : 0.0;
         double finalVio = smoothViolation(p, x, tx, tz);
         double obj = translate ? p.smoothValue(p.objective(), x, tx, tz) : p.smoothValue(p.objective(), x);
-        return new AlmRun(x, finalVio, obj, outer, tx, tz);
+        double scoredSigned = p.objectiveSign() * obj + p.travelPenalty(x);
+        return new AlmRun(x, finalVio, obj, scoredSigned, outer, tx, tz);
     }
 
     private static double smoothViolation(SmoothJumpProblem p, double[] theta, double tx, double tz) {

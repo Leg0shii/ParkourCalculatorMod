@@ -9,6 +9,7 @@ import de.legoshi.parkourcalc.core.ports.Simulator;
 import de.legoshi.parkourcalc.core.io.OsSystemBridge;
 import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
+import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
@@ -39,6 +40,9 @@ import de.legoshi.parkourcalc.core.anglesolver.ConstraintText;
 import de.legoshi.parkourcalc.core.ui.ConstraintKeyController;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverTable;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverWindow;
+import de.legoshi.parkourcalc.core.ui.anglesolver.GraphEditorWindow;
+import de.legoshi.parkourcalc.core.anglesolver.graph.GraphPresetIO;
+import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunLog;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 
 import java.nio.file.Path;
@@ -139,20 +143,36 @@ public final class Application {
         inputOverlay.setAngleSolver(angleSolverTable);
         StartStateTable startStateTable = new StartStateTable(runner, () -> onUserChange(-1));
         inputOverlay.setStartState(startStateTable);
-        String mcVersion = saveController.getSaveStore() != null ? saveController.getSaveStore().getMcVersion() : null;
+        FileSystemSaveStore saveStore = saveController.getSaveStore();
+        String mcVersion = saveStore != null ? saveStore.getMcVersion() : null;
+        FileSystemSaveStore graphStore = saveStore == null ? null : new FileSystemSaveStore(
+                saveStore.getSaveDir().resolve("graphs"), saveStore.getModVersion(), saveStore.getMcVersion(),
+                null, GraphPresetIO.infoParser());
+        saveController.setGraphStore(graphStore);
         ExactJumpModel forwardModel = ExactJumpModel.forMcVersion(mcVersion);
         AngleSolverEngine angleSolverEngine = new AngleSolverEngine(angleSolverState, boxController, inputData, this::onUserChange, forwardModel);
         angleSolverEngine.setOnStartMoved(runner::setStartPosition);
+        if (saveStore != null) {
+            angleSolverEngine.setRunLog(new SolveRunLog(saveStore.getSaveDir().resolve("runs"),
+                    saveStore.getModVersion(), saveStore.getMcVersion()));
+            angleSolverEngine.setProblemSnapshotSource(() -> SaveIO.snapshotJson(saveStore, inputData,
+                    runner.getStartPosition(), runner.getStartVelocity(), runner.getStartYaw(), runner.getStartPitch(),
+                    angleSolverState, boxController.getStates()));
+        }
         saveController.setSolverEngine(angleSolverEngine);
         VelocityMapController velocityMapController = new VelocityMapController(
                 angleSolverState, boxController, runner, saveController, inputData, forwardModel,
                 this::onUserChange, Math.max(2, Runtime.getRuntime().availableProcessors() - 2));
-        AngleSolverWindow angleSolverWindow = new AngleSolverWindow(angleSolverState, settings, inputData::size, angleSolverEngine, velocityMapController.widget());
+        GraphEditorWindow graphEditorWindow = new GraphEditorWindow(angleSolverEngine);
+        AngleSolverWindow angleSolverWindow = new AngleSolverWindow(angleSolverState, settings, inputData::size, angleSolverEngine, velocityMapController.widget(), graphStore, graphEditorWindow);
 
         // In-world constraint visualization (gh-145): plates appear while the solver view is open.
         constraintSource = new de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverConstraintSource(
                 angleSolverState, boxController, () -> settings.viewAngleSolver, settings, selection, constraintSelection);
         de.legoshi.parkourcalc.core.render.PathRenderPlan.setConstraintSource(constraintSource);
+        de.legoshi.parkourcalc.core.render.PathRenderPlan.setLiveSource(
+                new de.legoshi.parkourcalc.core.ui.anglesolver.LiveBestPathSource(
+                        angleSolverEngine, boxController, () -> settings.viewAngleSolver));
 
         TickInfoPanel tickInfoPanel = new TickInfoPanel(boxController, inputData, selection, settings, runner);
         PerfOverlay perfOverlay = new PerfOverlay();
@@ -164,6 +184,7 @@ public final class Application {
         );
         overlayManager.register(mainWindow);
         overlayManager.register(angleSolverWindow);
+        overlayManager.register(graphEditorWindow);
     }
 
     public void setFilePicker(FilePickerPort filePicker) {

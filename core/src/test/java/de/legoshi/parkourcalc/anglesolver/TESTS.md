@@ -18,6 +18,25 @@ anglesolver/
                            PKC_BENCH_FILTER, PKC_BENCH_TAG, PKC_BENCH_TIMEOUT_MS tune it
   EngineFileScreen.java    drive the live engine on any save file headlessly; PKC_SOLVE_FILE=<path>,
                            optional PKC_SOLVE_EFFORT and PKC_SOLVE_TIMEOUT_MS
+  RunMatrixScreen.java     (preset x problem) run matrix over problems/solve + problems/closedform,
+                           cold starts, one SolveRunRecord JSONL line per run to
+                           build/reports/matrix-<tag>/runs.jsonl, resumable (recorded pairs skipped);
+                           PKC_MATRIX=1 to run, PKC_MATRIX_TAG, PKC_MATRIX_TIMEOUT_MS (default 120000,
+                           cap = censored CANCELLED record), PKC_MATRIX_LIMIT (problems per category),
+                           PKC_MATRIX_FILTER, PKC_MATRIX_PRESETS, PKC_MATRIX_BAND (path to a band.txt
+                           allow-list of category/name keys); taser60-l* presets = optimize60 shape
+                           with a nonzero smoothLambda (the TASer band lives at
+                           docs/research/data/matrix-taser-pin1/band.txt); PKC_MATRIX_SWEEP (A18)
+                           replaces the preset list with generated ones, `|`-separated entries of
+                           base:key=v1,v2;key2=... cross-producted per entry: taser<sec> takes l
+                           (engine path via setSmoothLambda), alm<sec> runs AlmSnapStage directly
+                           (keys l, seeds, topk, cooking, gate; free startBox becomes the translation
+                           domain) recording raw objective + smoothness stats per run, and a bare
+                           entry with no params reuses the static preset of that exact id
+                           (parse coverage: RunMatrixSweepTest)
+  MatrixAnalysisScreen.java  per-preset aggregates + SBS/VBS feasibility and objective-regret gap over
+                           a matrix runs.jsonl; PKC_MATRIX_ANALYZE=1 + PKC_MATRIX_TAG; writes
+                           build/reports/matrix-<tag>/analysis.md
   FreeStartTranslationTest.java  translation-aware free-start scoring: zero-width translated score
                            byte-equals the pinned score (razor-proof, j004, j318); the
                            free-translate-edge synthetic solves and adopts its known +X box-edge
@@ -43,6 +62,9 @@ anglesolver/
                            (solve/loopmm-tight-t39: the loopmm misses capture with its shipped-
                            disabled pad wall ENABLED; pins the near-miss B&B rescue landing the
                            tight spec at Z@71 >= -279.3 through the live engine, THOROUGH 45 s)
+                           (solve/loopmm-tight-t39-fast: the SAME capture under FAST effort; pins
+                           the staged late-race: primary fast starves, the explore arm spawns at
+                           the 20 s checkpoint and lands it, budget 90 s; the redirect-class gate)
   harness/                 shared plumbing; no test lives here
 resources/
   problems/<check>/        one folder per check; holds captures or .expect.json sidecars

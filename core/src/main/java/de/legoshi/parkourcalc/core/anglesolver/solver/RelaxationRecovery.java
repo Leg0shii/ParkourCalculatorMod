@@ -6,16 +6,19 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class RelaxationRecovery {
 
-    private static final int OUTER_ITERS = 30;
-    private static final int INNER_ITERS = 500;
-    private static final double RHO_START = 100.0;
-    private static final double RHO_GROW = 3.0;
-    private static final double RHO_MAX = 1.0e6;
-    private static final double[] PIN_WIDTHS = {0.4, 0.15};
-    private static final double[] SEED_MARGINS = {0.0, 3.0e-4, 1.2e-3, 5.0e-3, 1.0e-2, 2.0e-2, 5.0e-2};
-    private static final int DUAL_RESTARTS = 5;
-    private static final int SLP_PHASE1_CALLS = 160;
-    private static final int SLP_TOTAL_CALLS = 220;
+    public static final class Config {
+        public int outerIters = 30;
+        public int innerIters = 500;
+        public double rhoStart = 100.0;
+        public double rhoGrow = 3.0;
+        public double rhoMax = 1.0e6;
+        public double[] pinWidths = {0.4, 0.15};
+        public double[] seedMargins = {0.0, 3.0e-4, 1.2e-3, 5.0e-3, 1.0e-2, 2.0e-2, 5.0e-2};
+        public int dualRestarts = 5;
+        public int slpPhase1Calls = 160;
+        public int slpTotalCalls = 220;
+        public LatticeRepair.Config lattice = new LatticeRepair.Config();
+    }
 
     public static boolean DEBUG = false;
     public static double[] debugLastStalled;
@@ -24,6 +27,11 @@ public final class RelaxationRecovery {
     }
 
     public static double[] solve(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel) {
+        return solve(exact, spec, feasTol, cancel, new Config());
+    }
+
+    public static double[] solve(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
+                                 Config cfg) {
         if (JumpLinearModel.hasFacingWall(spec.constraints)) return null;
         for (JumpConstraint c : spec.constraints) {
             if (c.cmp == JumpConstraint.Cmp.EQ) return null;
@@ -42,7 +50,7 @@ public final class RelaxationRecovery {
         double[] mMag = lin.mMagAll();
         long tSeed = System.nanoTime();
 
-        Seed base = seedAtMargin(exact, spec, sc, lin, cx, cz, mMag, walls, dual, 0.0, null, feasTol, cancel);
+        Seed base = seedAtMargin(exact, spec, sc, lin, cx, cz, mMag, walls, dual, 0.0, null, feasTol, cancel, cfg);
         double[] best = base.landed;
         double[] stalled = base.stalled;
         double[] stalledUx = base.stalled != null ? base.ux : null;
@@ -51,17 +59,17 @@ public final class RelaxationRecovery {
 
         if (best == null && !cancel.get() && stalled != null) {
             long tRepair = System.nanoTime();
-            double[] repaired = LatticeRepair.repair(exact, spec, stalled, feasTol, cancel);
+            double[] repaired = LatticeRepair.repair(exact, spec, stalled, feasTol, cancel, cfg.lattice);
             if (repaired != null && !cancel.get()) {
-                double[] hugged = SlpSolve.optimize(exact, spec, feasTol, cancel, repaired, SLP_PHASE1_CALLS, SLP_TOTAL_CALLS);
+                double[] hugged = SlpSolve.optimize(exact, spec, feasTol, cancel, repaired, cfg.slpPhase1Calls, cfg.slpTotalCalls);
                 best = hugged != null ? hugged : repaired;
             }
             if (SolverTrace.on()) SolverTrace.log("RXT", "repair done best=%s ms=%.1f", best != null, (System.nanoTime() - tRepair) / 1e6);
         }
 
         double[] warmLambda = base.warm;
-        for (int mi = 1; mi < SEED_MARGINS.length && best == null && !cancel.get(); mi++) {
-            Seed s = seedAtMargin(exact, spec, sc, lin, cx, cz, mMag, walls, dual, SEED_MARGINS[mi], warmLambda, feasTol, cancel);
+        for (int mi = 1; mi < cfg.seedMargins.length && best == null && !cancel.get(); mi++) {
+            Seed s = seedAtMargin(exact, spec, sc, lin, cx, cz, mMag, walls, dual, cfg.seedMargins[mi], warmLambda, feasTol, cancel, cfg);
             if (s.warm != null) warmLambda = s.warm;
             if (s.landed != null) {
                 best = s.landed;
@@ -86,16 +94,16 @@ public final class RelaxationRecovery {
         double[] pinProj = projectionSeedYaws(lin, spec.objective, stalledUx, stalledUz);
         double[] carry = pinDither;
         double[] pinResult = null;
-        for (double width : PIN_WIDTHS) {
+        for (double width : cfg.pinWidths) {
             if (cancel.get()) break;
             JumpSpec pinned = pinnedSpec(spec, lin, stalledUx, stalledUz, width);
             if (pinned == null) break;
             double[] r = ClosedFormSolve.optimize(exact, pinned, feasTol, cancel);
             if (r == null && !cancel.get()) {
-                r = SlpSolve.optimize(exact, pinned, feasTol, cancel, carry, SLP_PHASE1_CALLS, SLP_TOTAL_CALLS);
+                r = SlpSolve.optimize(exact, pinned, feasTol, cancel, carry, cfg.slpPhase1Calls, cfg.slpTotalCalls);
             }
             if (r == null && !cancel.get()) {
-                r = SlpSolve.optimize(exact, pinned, feasTol, cancel, pinProj, SLP_PHASE1_CALLS, SLP_TOTAL_CALLS);
+                r = SlpSolve.optimize(exact, pinned, feasTol, cancel, pinProj, cfg.slpPhase1Calls, cfg.slpTotalCalls);
             }
             if (r != null) {
                 carry = r;
@@ -105,7 +113,7 @@ public final class RelaxationRecovery {
         if (SolverTrace.on()) SolverTrace.log("RXT", "pin done result=%s ms=%.1f", pinResult != null, (System.nanoTime() - tPin) / 1e6);
         if (DEBUG) System.out.printf("  RELAX pinSlp=%s%n", pinResult != null ? "OK" : "null");
         if (pinResult != null && !cancel.get()) {
-            double[] polished = SlpSolve.optimize(exact, spec, feasTol, cancel, pinResult, SLP_PHASE1_CALLS, SLP_TOTAL_CALLS);
+            double[] polished = SlpSolve.optimize(exact, spec, feasTol, cancel, pinResult, cfg.slpPhase1Calls, cfg.slpTotalCalls);
             double[] candidate = polished != null ? polished : pinResult;
             best = better(exact, sc, spec, best, candidate);
         }
@@ -123,12 +131,12 @@ public final class RelaxationRecovery {
     private static Seed seedAtMargin(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc,
                                      JumpLinearModel lin, double[] cx, double[] cz, double[] mMag,
                                      List<JumpLinearModel.Wall> walls, CostateDualSolver dual, double margin,
-                                     double[] warmLambda, double feasTol, AtomicBoolean cancel) {
+                                     double[] warmLambda, double feasTol, AtomicBoolean cancel, Config cfg) {
         Seed out = new Seed();
         int n = lin.n;
         CostateDualSolver.Result warm = dual.solve(margin, warmLambda);
         if (warm == null) return out;
-        for (int i = 0; i < DUAL_RESTARTS; i++) {
+        for (int i = 0; i < cfg.dualRestarts; i++) {
             if (cancel.get()) return out;
             CostateDualSolver.Result next = dual.solve(margin, warm.lambda);
             if (next == null) break;
@@ -149,12 +157,12 @@ public final class RelaxationRecovery {
         out.uz = uz;
         double[] lambda = warm.lambda.clone();
         long tAl = System.nanoTime();
-        double alViol = relaxedPrimal(cx, cz, mMag, walls, lambda, ux, uz, cancel, margin);
+        double alViol = relaxedPrimal(cx, cz, mMag, walls, lambda, ux, uz, cancel, margin, cfg);
         if (Double.isNaN(alViol)) return out;
         double relaxedValue = dot(cx, cz, ux, uz);
         if (warm.value - relaxedValue > 0.02 * (1.0 + Math.abs(warm.value))) {
             if (SolverTrace.on()) SolverTrace.log("RXT", "relaxedPrimal short (value=%.9f vs dual=%.9f), rerun", relaxedValue, warm.value);
-            double v2 = relaxedPrimal(cx, cz, mMag, walls, lambda, ux, uz, cancel, margin);
+            double v2 = relaxedPrimal(cx, cz, mMag, walls, lambda, ux, uz, cancel, margin, cfg);
             if (Double.isNaN(v2)) return out;
             alViol = v2;
             relaxedValue = dot(cx, cz, ux, uz);
@@ -173,7 +181,7 @@ public final class RelaxationRecovery {
             for (double[] s : seeds) {
                 if (out.landed != null || cancel.get()) break;
                 double[] r = SlpSolve.optimizeBestEffort(exact, spec, feasTol, cancel, s,
-                        SLP_PHASE1_CALLS, SLP_TOTAL_CALLS, aware);
+                        cfg.slpPhase1Calls, cfg.slpTotalCalls, aware);
                 double[] feas = feasibleOrNull(exact, sc, spec, r, feasTol);
                 if (feas != null) {
                     out.landed = feas;
@@ -192,7 +200,7 @@ public final class RelaxationRecovery {
 
     static double relaxedPrimal(double[] cx, double[] cz, double[] mMag,
                                 List<JumpLinearModel.Wall> walls, double[] lambda,
-                                double[] ux, double[] uz, AtomicBoolean cancel, double margin) {
+                                double[] ux, double[] uz, AtomicBoolean cancel, double margin, Config cfg) {
         int n = ux.length;
         int m = walls.size();
         if (m == 0) return 0.0;
@@ -206,7 +214,7 @@ public final class RelaxationRecovery {
             b[j] = w.bPrime - (w.eq ? 0.0 : margin);
         }
 
-        double rho = RHO_START;
+        double rho = cfg.rhoStart;
         double prevViol = Double.POSITIVE_INFINITY;
         double prevValue = Double.NEGATIVE_INFINITY;
         int stall = 0;
@@ -221,7 +229,7 @@ public final class RelaxationRecovery {
         double[] gzv = new double[n];
         double[] slack = new double[m];
 
-        for (int outer = 0; outer < OUTER_ITERS; outer++) {
+        for (int outer = 0; outer < cfg.outerIters; outer++) {
             if (cancel.get()) return Double.NaN;
             double lip = rho * powerLambdaMax(axis, coef, n) + 1.0e-9;
             double step = 1.0 / lip;
@@ -230,7 +238,7 @@ public final class RelaxationRecovery {
             System.arraycopy(ux, 0, yx, 0, n);
             System.arraycopy(uz, 0, yz, 0, n);
             double tk = 1.0;
-            for (int inner = 0; inner < INNER_ITERS; inner++) {
+            for (int inner = 0; inner < cfg.innerIters; inner++) {
                 for (int t = 0; t < n; t++) {
                     gxv[t] = -cx[t];
                     gzv[t] = -cz[t];
@@ -303,7 +311,7 @@ public final class RelaxationRecovery {
             for (int j = 0; j < m; j++) {
                 lambda[j] = Math.max(0.0, lambda[j] + rho * slack[j]);
             }
-            if (maxViol > 0.6 * prevViol && rho < RHO_MAX) rho *= RHO_GROW;
+            if (maxViol > 0.6 * prevViol && rho < cfg.rhoMax) rho *= cfg.rhoGrow;
             prevViol = maxViol;
         }
         System.arraycopy(bestUx, 0, ux, 0, n);

@@ -41,8 +41,16 @@ public final class PathRenderPlan {
         constraintSource = source != null ? source : ConstraintBoxSource.NONE;
     }
 
+    private static volatile ConstraintBoxSource liveSource = ConstraintBoxSource.NONE;
+
+    public static void setLiveSource(ConstraintBoxSource source) {
+        liveSource = source != null ? source : ConstraintBoxSource.NONE;
+    }
+
     private static ConstraintBoxSource countedSource;
+    private static ConstraintBoxSource countedLiveSource;
     private static long countedRevision = Long.MIN_VALUE;
+    private static long countedLiveRevision = Long.MIN_VALUE;
     private static long countedGeometryRev = Long.MIN_VALUE;
     private static int countedFaceVerts;
     private static int countedLineVerts;
@@ -80,7 +88,9 @@ public final class PathRenderPlan {
         // Constraint plates ride a region appended after the path/hitbox/arrow geometry, so they bake
         // into the same buffers without disturbing the per-box offsets selection patching depends on.
         ConstraintBoxSource source = constraintSource;
+        ConstraintBoxSource live = liveSource;
         boolean drawConstraints = settings.showConstraints && source != ConstraintBoxSource.NONE;
+        boolean drawLive = live != ConstraintBoxSource.NONE;
         ConstraintPalette palette = new ConstraintPalette(
                 BoxStyle.constraintSatisfiedArgb(settings),
                 BoxStyle.constraintViolatedArgb(),
@@ -94,32 +104,49 @@ public final class PathRenderPlan {
             if (full) boxController.renderHitboxFullWireframe(faces, hitbox, settings.showSubtick, 0, 0, 0, ALL);
             if (settings.showYawArrows) boxController.renderYawArrows(faces, BoxStyle.yawArrowArgb(settings), 0, 0, 0, ALL);
             if (drawConstraints) boxController.renderConstraints(faces, source, palette, false, 0, 0, 0, ALL);
+            if (drawLive) boxController.renderConstraints(faces, live, palette, false, 0, 0, 0, ALL);
         };
 
         Consumer<BoxRenderer> lineEmitter = lines -> {
             boxController.render(lines, line, 0, 0, 0, ALL);
             if (settings.showSubtick) boxController.renderPath(lines, BoxStyle.subtickPathArgb(settings), 0, 0, 0, ALL);
             if (drawConstraints) boxController.renderConstraints(lines, source, palette, true, 0, 0, 0, ALL);
+            if (drawLive) boxController.renderConstraints(lines, live, palette, true, 0, 0, 0, ALL);
         };
 
         SelectionPatchSpec patch = new SelectionPatchSpec(face, line, hitbox, drawHitbox, full, settings.showSubtick);
 
+        ConstraintBoxSource countKeySource = drawConstraints ? source : null;
+        ConstraintBoxSource countKeyLive = drawLive ? live : null;
         long constraintRevision = drawConstraints ? source.revision() : 0L;
+        long liveRevision = drawLive ? live.revision() : 0L;
         int constraintFaceVerts = 0;
         int constraintLineVerts = 0;
-        if (drawConstraints) {
+        if (drawConstraints || drawLive) {
             long geometryRev = boxController.getGeometryRev();
-            if (source != countedSource || constraintRevision != countedRevision || geometryRev != countedGeometryRev) {
-                countedFaceVerts = boxController.constraintFaceVertexCount(source, palette);
-                countedLineVerts = boxController.constraintLineVertexCount(source, palette);
-                countedSource = source;
+            if (countKeySource != countedSource || countKeyLive != countedLiveSource
+                    || constraintRevision != countedRevision || liveRevision != countedLiveRevision
+                    || geometryRev != countedGeometryRev) {
+                countedFaceVerts = 0;
+                countedLineVerts = 0;
+                if (drawConstraints) {
+                    countedFaceVerts += boxController.constraintFaceVertexCount(source, palette);
+                    countedLineVerts += boxController.constraintLineVertexCount(source, palette);
+                }
+                if (drawLive) {
+                    countedFaceVerts += boxController.constraintFaceVertexCount(live, palette);
+                    countedLineVerts += boxController.constraintLineVertexCount(live, palette);
+                }
+                countedSource = countKeySource;
+                countedLiveSource = countKeyLive;
                 countedRevision = constraintRevision;
+                countedLiveRevision = liveRevision;
                 countedGeometryRev = geometryRev;
             }
             constraintFaceVerts = countedFaceVerts;
             constraintLineVerts = countedLineVerts;
         }
-        return new PathRenderPlan(structuralHash(settings, constraintRevision),
+        return new PathRenderPlan(structuralHash(settings, constraintRevision, liveRevision),
                 selectedBoxes, faceEmitter, lineEmitter, patch,
                 constraintFaceVerts, constraintLineVerts);
     }
@@ -127,7 +154,7 @@ public final class PathRenderPlan {
     /** Colors and overlay toggles, but NOT selection (which is patched in place). The constraint
      *  revision is mixed in so editing constraints (which leaves path positions untouched) still
      *  invalidates the cached buffers. */
-    private static int structuralHash(Settings settings, long constraintRevision) {
+    private static int structuralHash(Settings settings, long constraintRevision, long liveRevision) {
         int h = 1;
         h = 31 * h + Arrays.hashCode(settings.tickDefault);
         h = 31 * h + Arrays.hashCode(settings.tickSelected);
@@ -156,6 +183,7 @@ public final class PathRenderPlan {
         h = 31 * h + Float.hashCode(settings.constraintBackHeight);
         h = 31 * h + Float.hashCode(settings.constraintBackLength);
         h = 31 * h + Long.hashCode(constraintRevision);
+        h = 31 * h + Long.hashCode(liveRevision);
         return h;
     }
 }

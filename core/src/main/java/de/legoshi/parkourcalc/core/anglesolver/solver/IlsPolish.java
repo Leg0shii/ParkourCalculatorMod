@@ -9,10 +9,17 @@ import java.util.stream.Collectors;
 public final class IlsPolish {
 
     private static final double FEAS_TOL = 0.0;
-    private static final int PERTURB_TICKS_MIN = 3;
-    private static final int PERTURB_TICKS_SPAN = 13;
-    private static final double PERTURB_MAG_MIN = 3.0;
-    private static final double PERTURB_MAG_SPAN = 50.0;
+
+    public static final class Config {
+        public int perturbTicksMin = 3;
+        public int perturbTicksSpan = 13;
+        public double perturbMagMin = 3.0;
+        public double perturbMagSpan = 50.0;
+        public double climbMuIneq = 1.0e6;
+        public double climbMuEq = 1.0e6;
+        public double climbSigmaDeg = 4.0;
+        public int climbMaxEval = 80000;
+    }
 
     private IlsPolish() {
     }
@@ -20,6 +27,13 @@ public final class IlsPolish {
     public static double[] polish(ForwardModel model, JumpSpec spec, double[] feasibleSeedAbsWrapped,
                                   long deadlineNanos, int roundCap, boolean sequential,
                                   AtomicBoolean cancel, SolveProgress progress) {
+        return polish(model, spec, feasibleSeedAbsWrapped, deadlineNanos, roundCap, sequential, cancel, progress,
+                new Config());
+    }
+
+    public static double[] polish(ForwardModel model, JumpSpec spec, double[] feasibleSeedAbsWrapped,
+                                  long deadlineNanos, int roundCap, boolean sequential,
+                                  AtomicBoolean cancel, SolveProgress progress, Config cfg) {
         JumpConstraintCompiler.Compiled c = JumpConstraintCompiler.compile(spec);
         JumpPhysicsInputs sc = spec.asScenario();
         Objective obj = spec.objective;
@@ -41,15 +55,15 @@ public final class IlsPolish {
                 List<double[]> kicks = new ArrayList<>(batch);
                 for (int b = 0; b < batch; b++) {
                     double[] cand = base.clone();
-                    int ticks = PERTURB_TICKS_MIN + rng.nextInt(PERTURB_TICKS_SPAN);
-                    double mag = PERTURB_MAG_MIN + rng.nextDouble() * PERTURB_MAG_SPAN;
+                    int ticks = cfg.perturbTicksMin + rng.nextInt(cfg.perturbTicksSpan);
+                    double mag = cfg.perturbMagMin + rng.nextDouble() * cfg.perturbMagSpan;
                     for (int q = 0; q < ticks; q++) cand[rng.nextInt(n)] += (rng.nextDouble() * 2.0 - 1.0) * mag;
                     kicks.add(cand);
                 }
 
                 java.util.stream.Stream<double[]> stream = sequential ? kicks.stream() : kicks.parallelStream();
                 List<double[]> climbed = stream
-                        .map(k -> climb(model, spec, sc, c, obj, sign, k, cancel))
+                        .map(k -> climb(model, spec, sc, c, obj, sign, k, cancel, cfg))
                         .collect(Collectors.toList());
 
                 boolean improved = false;
@@ -68,7 +82,9 @@ public final class IlsPolish {
                         bestScore = ps;
                         best = pol;
                     }
-                    if (progress != null) progress.report(best, sign * bestScore, 0.0, true);
+                    if (progress != null) {
+                        progress.report(best, SolveCore.objectiveOf(model, sc, obj, Angles.wrapAll(best)), 0.0, true);
+                    }
                 }
             }
         } catch (SolveCancelledException e) {
@@ -79,9 +95,10 @@ public final class IlsPolish {
 
     private static double[] climb(ForwardModel model, JumpSpec spec, JumpPhysicsInputs sc,
                                   JumpConstraintCompiler.Compiled c, Objective obj, double sign,
-                                  double[] start, AtomicBoolean cancel) {
+                                  double[] start, AtomicBoolean cancel, Config cfg) {
         double[] cur = start;
-        SolverRunResult r = new CmaesJumpHarness(1.0e6, 1.0e6, 4.0, 80000).solve(model, spec, cur, cancel);
+        SolverRunResult r = new CmaesJumpHarness(cfg.climbMuIneq, cfg.climbMuEq, cfg.climbSigmaDeg, cfg.climbMaxEval)
+                .solve(model, spec, cur, cancel);
         if (score(model, sc, c, obj, sign, r.yawAbsDeg) < score(model, sc, c, obj, sign, cur)) cur = r.yawAbsDeg.clone();
         double[] pol = BucketAscentPolish.polish(model, spec, Angles.wrapAll(cur), BucketAscentPolish.FAST, cancel);
         return score(model, sc, c, obj, sign, pol) < score(model, sc, c, obj, sign, cur) ? pol : cur;
@@ -92,6 +109,6 @@ public final class IlsPolish {
         double[] gf = sc.toGameFacings(Angles.wrapAll(absWrapped));
         ForwardPath pr = model.forward(sc, gf);
         if (c.maxViolation(gf, pr) > FEAS_TOL) return Double.POSITIVE_INFINITY;
-        return sign * pr.getPos(obj.tick, obj.axis);
+        return sign * pr.getPos(obj.tick, obj.axis) + obj.smoothPenalty(absWrapped);
     }
 }

@@ -50,7 +50,9 @@ public final class SaveFile {
         public Boolean stopOnFeasible;                   // absent in old files -> false
         public Boolean legalMode;                        // absent in old files -> false
         public Integer optimizeSeconds;                  // absent in old files -> default
+        public Double smoothLambda;
         public SolveBudget customBudget;
+        public String graphPreset;
         public String defaultInputs;
         public String defaultSprint;                     // absent in old files -> ALWAYS
         public String defaultSlipperiness;

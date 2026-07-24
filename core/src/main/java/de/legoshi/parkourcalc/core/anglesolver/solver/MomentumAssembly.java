@@ -14,14 +14,17 @@ public final class MomentumAssembly {
     private static final double[] BOOST_AXES = {0, 90, 180, 270};
     private static final double[] BOOST_FAN = {0, 8, 16, 24, 4, 12, 20, 28, -8};
     private static final double[] MENU = {45, 0, 90, 135, 180, 225, 270, 315, 25, 65, 20, 70};
-    private static final int[] SEAM_TRIMS = {2, 0, 4};
-    private static final int TEMPLATE_TRIES = 6;
-    private static final int FRONTIER_TRIES = 6;
-    private static final int FRONTIER_CAP = 400000;
-    private static final double FRONTIER_SLACK = 0.35;
-    private static final double VX_CAP = 0.13;
-    private static final double CLOSER_EPS0 = 1.0e-3;
-    private static final long PER_CANDIDATE_NANOS = 120_000_000_000L;
+    public static final class Config {
+        public int[] seamTrims = {2, 0, 4};
+        public int templateTries = 6;
+        public int frontierTries = 6;
+        public int frontierCap = 400000;
+        public double frontierSlack = 0.35;
+        public double vxCap = 0.13;
+        public double closerEps0 = 1.0e-3;
+        public int perCandidateSec = 120;
+        public HomotopyCloser.Config closer = new HomotopyCloser.Config();
+    }
 
     public static final class Result {
         public final double[] yaws;
@@ -40,6 +43,11 @@ public final class MomentumAssembly {
 
     public static Result solve(ExactJumpModel model, JumpSpec spec, double feasTol, StartBox freeBox,
                                long deadlineNanos, AtomicBoolean cancel) {
+        return solve(model, spec, feasTol, freeBox, deadlineNanos, cancel, new Config());
+    }
+
+    public static Result solve(ExactJumpModel model, JumpSpec spec, double feasTol, StartBox freeBox,
+                               long deadlineNanos, AtomicBoolean cancel, Config cfg) {
         JumpPhysicsInputs sc = spec.asScenario();
         int n = sc.numTicks;
         int[] bounds = jumpBoundaries(sc);
@@ -50,7 +58,7 @@ public final class MomentumAssembly {
         int base = bounds[jumps - 2];
         int lo = bounds[jumps - 3] + 2;
         List<Integer> seams = new ArrayList<Integer>();
-        for (int trim : SEAM_TRIMS) {
+        for (int trim : cfg.seamTrims) {
             int s = base - trim;
             if (s >= lo && s >= 4 && s <= n - 8 && !seams.contains(s)) seams.add(s);
         }
@@ -60,19 +68,19 @@ public final class MomentumAssembly {
             List<double[]> templates = templates(model, sc, seam, dir);
             int tried = 0;
             for (double[] setup : templates) {
-                if (tried >= TEMPLATE_TRIES || out(deadlineNanos, cancel)) break;
-                Result r = tryCandidate(model, spec, sc, setup, seam, n, feasTol, freeBox, deadlineNanos, cancel);
+                if (tried >= cfg.templateTries || out(deadlineNanos, cancel)) break;
+                Result r = tryCandidate(model, spec, sc, setup, seam, n, feasTol, freeBox, deadlineNanos, cancel, cfg);
                 if (r != null) return r;
                 tried++;
             }
         }
         int seam = seams.isEmpty() ? base : seams.get(0);
         if (out(deadlineNanos, cancel)) return null;
-        List<double[]> frontier = frontierCandidates(model, spec, sc, seam, dir);
+        List<double[]> frontier = frontierCandidates(model, spec, sc, seam, dir, cfg);
         int tried = 0;
         for (double[] setup : frontier) {
-            if (tried >= FRONTIER_TRIES || out(deadlineNanos, cancel)) break;
-            Result r = tryCandidate(model, spec, sc, setup, seam, n, feasTol, freeBox, deadlineNanos, cancel);
+            if (tried >= cfg.frontierTries || out(deadlineNanos, cancel)) break;
+            Result r = tryCandidate(model, spec, sc, setup, seam, n, feasTol, freeBox, deadlineNanos, cancel, cfg);
             if (r != null) return r;
             tried++;
         }
@@ -81,7 +89,7 @@ public final class MomentumAssembly {
 
     private static Result tryCandidate(ExactJumpModel model, JumpSpec spec, JumpPhysicsInputs sc,
                                        double[] setup, int seam, int n, double feasTol, StartBox freeBox,
-                                       long deadlineNanos, AtomicBoolean cancel) {
+                                       long deadlineNanos, AtomicBoolean cancel, Config cfg) {
         double[] gfAll = new double[n];
         System.arraycopy(setup, 0, gfAll, 0, seam);
         for (int t = seam; t < n; t++) gfAll[t] = setup[seam - 1];
@@ -117,10 +125,11 @@ public final class MomentumAssembly {
                 new Vec3dCore(spAt.posX[seam], spAt.posY[seam], spAt.posZ[seam]),
                 new Vec3dCore(spAt.velX[seam], 0.0, spAt.velZ[seam]),
                 (float) setup[seam - 1]);
+        long perCandidateNanos = cfg.perCandidateSec * 1_000_000_000L;
         long candDeadline = deadlineNanos > 0
-                ? Math.min(deadlineNanos, System.nanoTime() + PER_CANDIDATE_NANOS)
-                : System.nanoTime() + PER_CANDIDATE_NANOS;
-        double[] y = HomotopyCloser.close(model, tail, null, CLOSER_EPS0, candDeadline, cancel);
+                ? Math.min(deadlineNanos, System.nanoTime() + perCandidateNanos)
+                : System.nanoTime() + perCandidateNanos;
+        double[] y = HomotopyCloser.close(model, tail, null, cfg.closerEps0, candDeadline, cancel, cfg.closer);
         if (y == null) return null;
 
         double[] yTail = Angles.wrapAll(y);
@@ -133,7 +142,7 @@ public final class MomentumAssembly {
         double viol = compiled.maxViolation(replay, model.forward(scAt, replay));
         if (viol > feasTol) {
             JumpSpec specAt = new JumpSpec(scAt, spec.constraints, spec.objective);
-            double[] rep = HomotopyCloser.descend(model, specAt, yaws, candDeadline, cancel);
+            double[] rep = HomotopyCloser.descend(model, specAt, yaws, candDeadline, cancel, cfg.closer);
             double[] rr = scAt.toGameFacings(Angles.wrapAll(rep));
             if (compiled.maxViolation(rr, model.forward(scAt, rr)) > feasTol) return null;
             yaws = Angles.wrapAll(rep);
@@ -275,7 +284,7 @@ public final class MomentumAssembly {
     }
 
     private static List<double[]> frontierCandidates(ExactJumpModel model, JumpSpec spec,
-                                                     JumpPhysicsInputs sc, int seam, double[] dir) {
+                                                     JumpPhysicsInputs sc, int seam, double[] dir, Config cfg) {
         List<Node> frontier = new ArrayList<Node>();
         frontier.add(new Node(0L, 0L, sc.initialVelocity.x, sc.initialVelocity.z, sc.startPos.x, sc.startPos.z, sc.startPos.z));
         for (int t = 0; t < seam && t < 32; t++) {
@@ -289,13 +298,13 @@ public final class MomentumAssembly {
             for (Node nd : frontier) {
                 for (int ai = 0; ai < MENU.length; ai++) {
                     Node c = step(model, sc, nd, ai, t);
-                    if (Math.abs(c.vx * dir[1] - c.vz * dir[0]) > VX_CAP) continue;
-                    if (violatesSetup(spec, t + 1, seam, c.px, c.pz)) continue;
+                    if (Math.abs(c.vx * dir[1] - c.vz * dir[0]) > cfg.vxCap) continue;
+                    if (violatesSetup(spec, t + 1, seam, c.px, c.pz, cfg.frontierSlack)) continue;
                     long key = ((Math.round(c.vz / 2e-4) * 270001L + Math.round((c.pz - c.dip) / 2e-2)) * 270001L
                             + Math.round(c.vx / 1e-3)) * 161L + Math.round(c.px / 5e-2);
                     Node prev = grid.get(key);
                     if (prev == null) {
-                        if (grid.size() < FRONTIER_CAP) grid.put(key, c);
+                        if (grid.size() < cfg.frontierCap) grid.put(key, c);
                     } else if (c.vz * dir[1] + c.vx * dir[0] > prev.vz * dir[1] + prev.vx * dir[0]) {
                         grid.put(key, c);
                     }
@@ -392,14 +401,15 @@ public final class MomentumAssembly {
         return new Node(na0, na1, p.velX[1], p.velZ[1], p.posX[1], p.posZ[1], Math.min(parent.dip, p.posZ[1]));
     }
 
-    private static boolean violatesSetup(JumpSpec spec, int tick, int seam, double px, double pz) {
+    private static boolean violatesSetup(JumpSpec spec, int tick, int seam, double px, double pz,
+                                         double frontierSlack) {
         if (tick >= seam) return false;
         for (JumpConstraint c : spec.constraints) {
             if (c.t1 != tick || c.t2 != null) continue;
             double val = c.mode == JumpConstraint.Mode.X ? px : (c.mode == JumpConstraint.Mode.Z ? pz : Double.NaN);
             if (Double.isNaN(val)) continue;
-            if (c.cmp == JumpConstraint.Cmp.GE && val < c.rhs - FRONTIER_SLACK) return true;
-            if (c.cmp == JumpConstraint.Cmp.LE && val > c.rhs + FRONTIER_SLACK) return true;
+            if (c.cmp == JumpConstraint.Cmp.GE && val < c.rhs - frontierSlack) return true;
+            if (c.cmp == JumpConstraint.Cmp.LE && val > c.rhs + frontierSlack) return true;
         }
         return false;
     }

@@ -75,6 +75,27 @@ public final class JumpPhysicsInputs {
         this.numTicks = numTicks;
     }
 
+    public JumpPhysicsInputs copy() {
+        JumpPhysicsInputs c = new JumpPhysicsInputs(numTicks);
+        c.startPos = startPos;
+        c.startYaw = startYaw;
+        c.initialVelocity = initialVelocity;
+        c.startBox = startBox;
+        c.jumpTick = jumpTick;
+        c.jumpPerTick = jumpPerTick;
+        c.strafeSign = strafeSign;
+        c.strafePerTick = strafePerTick;
+        c.speedAmplifier = speedAmplifier;
+        c.slipPerTick = slipPerTick;
+        c.yawLockedPerTick = yawLockedPerTick;
+        c.sprintPerTick = sprintPerTick;
+        c.incomingSprint = incomingSprint;
+        c.incomingAmp = incomingAmp;
+        c.forwardInputPerTick = forwardInputPerTick;
+        c.strafeInputPerTick = strafeInputPerTick;
+        return c;
+    }
+
     public int speedAmplifierAt(int tick) {
         if (speedAmplifier == null || tick < 0 || tick >= speedAmplifier.length) return 0;
         return speedAmplifier[tick];
