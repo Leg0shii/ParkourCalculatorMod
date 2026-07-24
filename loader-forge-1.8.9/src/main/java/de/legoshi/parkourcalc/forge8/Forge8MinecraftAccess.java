@@ -5,10 +5,12 @@ import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.Face;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2InputState;
+import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
+import net.minecraft.init.Blocks;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
@@ -69,6 +71,28 @@ public final class Forge8MinecraftAccess implements MinecraftAccess {
         BlockPos pos = new BlockPos(x, y, z);
         IBlockState state = world.getBlockState(pos);
         return state.getBlock().getCollisionBoundingBox(world, pos, state) != null;
+    }
+
+    @Override
+    public boolean isLadder(int x, int y, int z) {
+        World world = Minecraft.getMinecraft().theWorld;
+        if (world == null) return false;
+        return world.getBlockState(new BlockPos(x, y, z)).getBlock() == Blocks.ladder;
+    }
+
+    @Override
+    public boolean isSlimeBlock(int x, int y, int z) {
+        World world = Minecraft.getMinecraft().theWorld;
+        if (world == null) return false;
+        return world.getBlockState(new BlockPos(x, y, z)).getBlock() == Blocks.slime_block;
+    }
+
+    @Override
+    public boolean isIce(int x, int y, int z) {
+        World world = Minecraft.getMinecraft().theWorld;
+        if (world == null) return false;
+        Block block = world.getBlockState(new BlockPos(x, y, z)).getBlock();
+        return block == Blocks.ice || block == Blocks.packed_ice;
     }
 
     @Override

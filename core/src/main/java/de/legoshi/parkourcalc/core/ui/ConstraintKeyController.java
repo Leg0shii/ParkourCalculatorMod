@@ -40,6 +40,23 @@ public final class ConstraintKeyController {
         if (tick < 0) return;
         int bx = block[0], by = block[1], bz = block[2];
 
+        if (remove && mc.isLadder(bx, by, bz)) {
+            List<AABB> obstacles = mc.getCollisionBoxes(bx - 1, by, bz - 1, bx + 1, by + 1, bz + 1);
+            double[] r = ConstraintDeriver.deriveCell(bx, bz, by, bx + 0.5, bz + 0.5, obstacles);
+            state.setFootprint(tick, r[0], r[1], r[2], r[3]);
+            onChanged.run();
+            return;
+        }
+        if (remove && face == Face.POS_Y && (mc.isSlimeBlock(bx, by, bz) || mc.isIce(bx, by, bz))) {
+            Vec3dCore hit = mc.getLookedAtHitVec();
+            if (hit == null) return;
+            List<AABB> obstacles = mc.getCollisionBoxes(bx - 1, by + 1, bz - 1, bx + 1, by + 2, bz + 1);
+            double[] r = ConstraintDeriver.deriveCell(bx, bz, by + 1.0, hit.x, hit.z, obstacles);
+            state.setFootprint(tick, r[0], r[1], r[2], r[3]);
+            onChanged.run();
+            return;
+        }
+
         if (face == Face.POS_Y) {
             if (remove) {
                 state.clearFootprint(tick);

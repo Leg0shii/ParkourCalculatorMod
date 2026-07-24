@@ -91,26 +91,32 @@ public final class ConstraintDeriver {
     }
 
     public static double[] deriveFootprint(AABB support, double clickX, double clickZ, List<AABB> obstacles) {
-        double top = support.max.y;
-        double bodyHi = top + BODY_HEIGHT;
-        double xLo = support.min.x - HALF;
-        double xHi = support.max.x + HALF;
-        double zLo = support.min.z - HALF;
-        double zHi = support.max.z + HALF;
+        return clipByObstacles(
+                support.min.x - HALF, support.max.x + HALF, support.min.z - HALF, support.max.z + HALF,
+                support.max.y, clickX, clickZ, obstacles);
+    }
+
+    public static double[] deriveCell(int bx, int bz, double footY, double refX, double refZ, List<AABB> obstacles) {
+        return clipByObstacles(bx, bx + 1.0, bz, bz + 1.0, footY, refX, refZ, obstacles);
+    }
+
+    private static double[] clipByObstacles(double xLo, double xHi, double zLo, double zHi,
+                                            double footY, double refX, double refZ, List<AABB> obstacles) {
+        double bodyHi = footY + BODY_HEIGHT;
         if (obstacles != null) {
             for (AABB o : obstacles) {
                 if (o == null) continue;
-                if (o.max.y <= top + EPS) continue;
+                if (o.max.y <= footY + EPS) continue;
                 if (o.min.y >= bodyHi - EPS) continue;
-                boolean spansZ = o.min.z <= clickZ + EPS && o.max.z >= clickZ - EPS;
+                boolean spansZ = o.min.z <= refZ + EPS && o.max.z >= refZ - EPS;
                 if (spansZ) {
-                    if (o.max.x <= clickX + EPS) xLo = Math.max(xLo, o.max.x + HALF);
-                    if (o.min.x >= clickX - EPS) xHi = Math.min(xHi, o.min.x - HALF);
+                    if (o.max.x <= refX + EPS) xLo = Math.max(xLo, o.max.x + HALF);
+                    if (o.min.x >= refX - EPS) xHi = Math.min(xHi, o.min.x - HALF);
                 }
-                boolean spansX = o.min.x <= clickX + EPS && o.max.x >= clickX - EPS;
+                boolean spansX = o.min.x <= refX + EPS && o.max.x >= refX - EPS;
                 if (spansX) {
-                    if (o.max.z <= clickZ + EPS) zLo = Math.max(zLo, o.max.z + HALF);
-                    if (o.min.z >= clickZ - EPS) zHi = Math.min(zHi, o.min.z - HALF);
+                    if (o.max.z <= refZ + EPS) zLo = Math.max(zLo, o.max.z + HALF);
+                    if (o.min.z >= refZ - EPS) zHi = Math.min(zHi, o.min.z - HALF);
                 }
             }
         }

@@ -129,4 +129,39 @@ public class ConstraintDeriverTest {
         assertEquals(6 + HALF, r[1], EPS);
         assertEquals(9 + HALF, r[3], EPS);
     }
+
+    @Test
+    public void openCellKeepsExactBlockEdges() {
+        double[] r = ConstraintDeriver.deriveCell(5, 8, 64.0, 5.5, 8.5, Collections.<AABB>emptyList());
+        assertEquals(5.0, r[0], 0.0);
+        assertEquals(6.0, r[1], 0.0);
+        assertEquals(8.0, r[2], 0.0);
+        assertEquals(9.0, r[3], 0.0);
+    }
+
+    @Test
+    public void ladderPanelAndWallBehindClipTheCell() {
+        AABB panel = box(5.0, 64.0, 8.0, 6.0, 65.0, 8.125);
+        List<AABB> obstacles = Arrays.asList(panel, cube(5, 64, 7));
+        double[] r = ConstraintDeriver.deriveCell(5, 8, 64.0, 5.5, 8.5, obstacles);
+        assertEquals("panel face clips harder than the wall behind it", 8.125 + HALF, r[2], EPS);
+        assertEquals(9.0, r[3], 0.0);
+        assertEquals(5.0, r[0], 0.0);
+        assertEquals(6.0, r[1], 0.0);
+    }
+
+    @Test
+    public void adjacentWallClipsTheCellSide() {
+        List<AABB> obstacles = Arrays.asList(cube(6, 65, 8));
+        double[] r = ConstraintDeriver.deriveCell(5, 8, 65.0, 5.5, 8.5, obstacles);
+        assertEquals(6 - HALF, r[1], EPS);
+        assertEquals(5.0, r[0], 0.0);
+    }
+
+    @Test
+    public void cellIgnoresObstacleBelowTheFeet() {
+        List<AABB> obstacles = Arrays.asList(box(6.0, 63.0, 8.0, 7.0, 65.0, 9.0));
+        double[] r = ConstraintDeriver.deriveCell(5, 8, 65.0, 5.5, 8.5, obstacles);
+        assertEquals(6.0, r[1], 0.0);
+    }
 }

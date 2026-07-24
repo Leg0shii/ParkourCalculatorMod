@@ -8,6 +8,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -70,6 +72,29 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
         if (world == null) return false;
         BlockPos pos = new BlockPos(x, y, z);
         return !world.getBlockState(pos).getCollisionShape(world, pos).isEmpty();
+    }
+
+    @Override
+    public boolean isLadder(int x, int y, int z) {
+        ClientLevel world = Minecraft.getInstance().level;
+        if (world == null) return false;
+        return world.getBlockState(new BlockPos(x, y, z)).is(Blocks.LADDER);
+    }
+
+    @Override
+    public boolean isSlimeBlock(int x, int y, int z) {
+        ClientLevel world = Minecraft.getInstance().level;
+        if (world == null) return false;
+        return world.getBlockState(new BlockPos(x, y, z)).is(Blocks.SLIME_BLOCK);
+    }
+
+    @Override
+    public boolean isIce(int x, int y, int z) {
+        ClientLevel world = Minecraft.getInstance().level;
+        if (world == null) return false;
+        BlockState state = world.getBlockState(new BlockPos(x, y, z));
+        return state.is(Blocks.ICE) || state.is(Blocks.PACKED_ICE)
+                || state.is(Blocks.BLUE_ICE) || state.is(Blocks.FROSTED_ICE);
     }
 
     @Override

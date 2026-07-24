@@ -9,6 +9,7 @@ import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
+import net.minecraft.init.Blocks;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -68,6 +69,28 @@ public final class Forge12MinecraftAccess implements MinecraftAccess {
         if (world == null) return false;
         BlockPos pos = new BlockPos(x, y, z);
         return world.getBlockState(pos).getCollisionBoundingBox(world, pos) != Block.NULL_AABB;
+    }
+
+    @Override
+    public boolean isLadder(int x, int y, int z) {
+        World world = Minecraft.getMinecraft().world;
+        if (world == null) return false;
+        return world.getBlockState(new BlockPos(x, y, z)).getBlock() == Blocks.LADDER;
+    }
+
+    @Override
+    public boolean isSlimeBlock(int x, int y, int z) {
+        World world = Minecraft.getMinecraft().world;
+        if (world == null) return false;
+        return world.getBlockState(new BlockPos(x, y, z)).getBlock() == Blocks.SLIME_BLOCK;
+    }
+
+    @Override
+    public boolean isIce(int x, int y, int z) {
+        World world = Minecraft.getMinecraft().world;
+        if (world == null) return false;
+        Block block = world.getBlockState(new BlockPos(x, y, z)).getBlock();
+        return block == Blocks.ICE || block == Blocks.PACKED_ICE || block == Blocks.FROSTED_ICE;
     }
 
     @Override

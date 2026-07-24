@@ -38,6 +38,18 @@ public interface MinecraftAccess {
         return false;
     }
 
+    default boolean isLadder(int x, int y, int z) {
+        return false;
+    }
+
+    default boolean isSlimeBlock(int x, int y, int z) {
+        return false;
+    }
+
+    default boolean isIce(int x, int y, int z) {
+        return false;
+    }
+
     default Face getLookedAtFace() {
         return null;
     }
