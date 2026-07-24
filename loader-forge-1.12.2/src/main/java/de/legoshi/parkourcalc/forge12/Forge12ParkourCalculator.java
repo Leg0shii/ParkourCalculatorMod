@@ -131,17 +131,27 @@ public class Forge12ParkourCalculator {
             application.tickPlayback();
         } else {
             application.postTickPlayback();
+            playbackBridge.syncFrozenPlayerToServer();
         }
     }
 
     private void manageInputLifecycle() {
         net.minecraft.client.entity.EntityPlayerSP p = Minecraft.getMinecraft().player;
-        if (p == null) return;
+        if (p == null) {
+            if (wasPlaybackRunning) {
+                application.getPlayback().stop();
+                playbackBridge.resetInputOverride();
+                playbackBridge.endGhostPlayback();
+                wasPlaybackRunning = false;
+            }
+            return;
+        }
         boolean isRunning = application.isPlaybackRunning();
         if (isRunning && !wasPlaybackRunning) {
             playbackBridge.installPlaybackInput(p);
         } else if (!isRunning && wasPlaybackRunning) {
             playbackBridge.restorePlaybackInput(p);
+            playbackBridge.endGhostPlayback();
         }
         wasPlaybackRunning = isRunning;
     }
@@ -151,7 +161,9 @@ public class Forge12ParkourCalculator {
         if (event.phase != TickEvent.Phase.START) return;
         if (!application.isPlaybackRunning()) return;
         net.minecraft.entity.player.EntityPlayer p = event.player;
-        if (p != Minecraft.getMinecraft().player) return;
+        net.minecraft.entity.player.EntityPlayer target = playbackBridge.ghostEntity();
+        if (target == null) target = Minecraft.getMinecraft().player;
+        if (p != target) return;
         if (application.getPlayback().currentTick() == 0) {
             p.onGround = application.getPlayback().firstTickOnGround();
             p.fallDistance = 0.0F;
@@ -303,6 +315,10 @@ public class Forge12ParkourCalculator {
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onMouseEvent(MouseEvent event) {
         if (!event.isButtonstate()) return;
+        if (playbackBridge.ghostEntity() != null && event.getButton() >= 0) {
+            event.setCanceled(true);
+            return;
+        }
         if (event.getButton() == 0 && application.shouldSuppressLeftClick()) {
             event.setCanceled(true);
         }

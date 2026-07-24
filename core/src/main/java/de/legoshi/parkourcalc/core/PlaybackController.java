@@ -113,12 +113,12 @@ public final class PlaybackController {
     }
 
     public boolean canStart() {
-        return bridge != null && bridge.isSingleplayer() && inputData.size() > 0;
+        return bridge != null && (bridge.isSingleplayer() || bridge.supportsMultiplayerPlayback()) && inputData.size() > 0;
     }
 
     public String disabledReason() {
         if (bridge == null) return "Playback unavailable.";
-        if (!bridge.isSingleplayer()) return "Playback is disabled in multiplayer.";
+        if (!bridge.isSingleplayer() && !bridge.supportsMultiplayerPlayback()) return "Playback is disabled in multiplayer.";
         if (inputData.size() == 0) return "Input list is empty.";
         return "";
     }

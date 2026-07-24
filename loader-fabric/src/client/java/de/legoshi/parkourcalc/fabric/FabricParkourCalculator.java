@@ -135,19 +135,39 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     private static void manageInputLifecycle() {
         net.minecraft.client.player.LocalPlayer p = Minecraft.getInstance().player;
-        if (p == null) return;
+        if (p == null) {
+            if (wasPlaybackRunning) {
+                application.getPlayback().stop();
+                playbackBridge.resetInputOverride();
+                playbackBridge.endGhostPlayback();
+                wasPlaybackRunning = false;
+            }
+            return;
+        }
         boolean isRunning = application.isPlaybackRunning();
         if (isRunning && !wasPlaybackRunning) {
             playbackBridge.installPlaybackInput(p);
         } else if (!isRunning && wasPlaybackRunning) {
             playbackBridge.restorePlaybackInput(p);
+            playbackBridge.endGhostPlayback();
         }
         wasPlaybackRunning = isRunning;
     }
 
+    public static boolean isGhostPlaybackActive() {
+        return playbackBridge.ghostEntity() != null;
+    }
+
     public static boolean shouldForceGroundOnTick0(net.minecraft.client.player.LocalPlayer self) {
         return application.isPlaybackRunning()
+                && playbackBridge.ghostEntity() == null
                 && self == Minecraft.getInstance().player
+                && application.getPlayback().currentTick() == 0;
+    }
+
+    public static boolean shouldForceGroundOnGhostTick0(de.legoshi.parkourcalc.fabric.sim.GhostPlayerEntity self) {
+        return application.isPlaybackRunning()
+                && self == playbackBridge.ghostEntity()
                 && application.getPlayback().currentTick() == 0;
     }
 
@@ -163,6 +183,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         // Restore visual yaw after MC physics so render frames don't briefly show
         // the snap value the physics tick used.
         application.postTickPlayback();
+        playbackBridge.syncFrozenPlayerToServer();
     }
 
     private static void handleInput(Minecraft client) {

@@ -5,11 +5,16 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.fabric.mixin.LocalPlayerAccessor;
 import de.legoshi.parkourcalc.fabric.mixin.KeyMappingAccessor;
+import de.legoshi.parkourcalc.fabric.sim.GhostPlayerEntity;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.ClientInput;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.Options;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.PositionMoveRotation;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -29,25 +34,36 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
     }
 
     private static final int EFFECT_DURATION_TICKS = 20000;
+    private static final int GHOST_ENTITY_ID = -2100000000;
 
     private final InputRow currentRow = new InputRow();
     private ClientInput originalInput;
+    private boolean ghostMode;
+    private GhostPlayerEntity ghost;
 
     InputRow getCurrentRow() {
         return currentRow;
     }
 
+    GhostPlayerEntity ghostEntity() {
+        return ghost;
+    }
+
     void installPlaybackInput(LocalPlayer player) {
         if (originalInput != null) return;
         originalInput = player.input;
-        player.input = new PlaybackInput(this);
+        player.input = ghostMode ? new FrozenClientInput() : new PlaybackInput(this);
     }
 
     void restorePlaybackInput(LocalPlayer player) {
         if (originalInput == null) return;
-        if (player.input instanceof PlaybackInput) {
+        if (player.input instanceof PlaybackInput || player.input instanceof FrozenClientInput) {
             player.input = originalInput;
         }
+        originalInput = null;
+    }
+
+    void resetInputOverride() {
         originalInput = null;
     }
 
@@ -61,7 +77,91 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
     }
 
     @Override
+    public boolean supportsMultiplayerPlayback() {
+        Minecraft mc = Minecraft.getInstance();
+        return mc.player != null && mc.level != null;
+    }
+
+    private void beginGhostPlayback(Vec3dCore pos, Vec3dCore vel, float yaw, de.legoshi.parkourcalc.core.sim.Checkpoint carry) {
+        ghostMode = true;
+        Minecraft mc = Minecraft.getInstance();
+        ClientLevel level = mc.level;
+        LocalPlayer client = mc.player;
+        if (level == null || client == null) return;
+        removeGhostEntity();
+        GhostPlayerEntity g = new GhostPlayerEntity(level, client.getGameProfile());
+        g.setId(GHOST_ENTITY_ID);
+        g.setInput(currentRow);
+        g.absSnapTo(pos.x, pos.y, pos.z, yaw, client.getXRot());
+        g.setYBodyRot(yaw);
+        g.yBodyRotO = yaw;
+        g.setYHeadRot(yaw);
+        g.yHeadRotO = yaw;
+        g.setDeltaMovement(vel.x, vel.y, vel.z);
+        if (carry != null) {
+            g.applyCarry(carry);
+        } else {
+            g.setOnGround(true);
+        }
+        g.fallDistance = 0.0;
+        g.setOldPosAndRot();
+        g.copyModelCustomisationFrom(client);
+        level.addEntity(g);
+        ghost = g;
+        client.xxa = 0.0F;
+        client.zza = 0.0F;
+        client.setJumping(false);
+        mc.setCameraEntity(g);
+    }
+
+    void syncFrozenPlayerToServer() {
+        if (!ghostMode) return;
+        LocalPlayer p = Minecraft.getInstance().player;
+        if (p == null || p.isPassenger()) return;
+        LocalPlayerAccessor acc = (LocalPlayerAccessor) p;
+        double dx = p.getX() - acc.pkc$getXLast();
+        double dy = p.getY() - acc.pkc$getYLast();
+        double dz = p.getZ() - acc.pkc$getZLast();
+        acc.pkc$setPositionReminder(acc.pkc$getPositionReminder() + 1);
+        boolean moved = Mth.lengthSquared(dx, dy, dz) > Mth.square(2.0E-4) || acc.pkc$getPositionReminder() >= 20;
+        if (moved) {
+            p.connection.send(new ServerboundMovePlayerPacket.Pos(p.position(), p.onGround(), p.horizontalCollision));
+            acc.pkc$setXLast(p.getX());
+            acc.pkc$setYLast(p.getY());
+            acc.pkc$setZLast(p.getZ());
+            acc.pkc$setPositionReminder(0);
+        } else if (acc.pkc$getLastOnGround() != p.onGround() || acc.pkc$getLastHorizontalCollision() != p.horizontalCollision) {
+            p.connection.send(new ServerboundMovePlayerPacket.StatusOnly(p.onGround(), p.horizontalCollision));
+        }
+        acc.pkc$setLastOnGround(p.onGround());
+        acc.pkc$setLastHorizontalCollision(p.horizontalCollision);
+    }
+
+    void endGhostPlayback() {
+        Minecraft mc = Minecraft.getInstance();
+        if (ghost != null && mc.getCameraEntity() == ghost && mc.player != null) {
+            mc.setCameraEntity(mc.player);
+        }
+        removeGhostEntity();
+        ghostMode = false;
+    }
+
+    private void removeGhostEntity() {
+        GhostPlayerEntity g = ghost;
+        ghost = null;
+        if (g == null) return;
+        ClientLevel level = Minecraft.getInstance().level;
+        if (level != null && g.level() == level) {
+            level.removeEntity(GHOST_ENTITY_ID, Entity.RemovalReason.DISCARDED);
+        }
+    }
+
+    @Override
     public void teleport(Vec3dCore pos, Vec3dCore vel, float yaw, de.legoshi.parkourcalc.core.sim.Checkpoint carry) {
+        if (!isSingleplayer()) {
+            beginGhostPlayback(pos, vel, yaw, carry);
+            return;
+        }
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer client = mc.player;
         if (client == null) return;
@@ -106,6 +206,7 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
     @Override
     public void setKey(InputRow.Key key, boolean pressed) {
         currentRow.setKeyActive(key, pressed);
+        if (ghostMode) return;
         KeyMapping kb = bindFor(key);
         if (kb == null) return;
         kb.setDown(pressed);
@@ -121,6 +222,12 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
 
     @Override
     public void setYaw(float absoluteYaw) {
+        if (ghostMode) {
+            if (ghost == null) return;
+            ghost.setYRot(absoluteYaw);
+            ghost.yRotO = absoluteYaw;
+            return;
+        }
         LocalPlayer p = Minecraft.getInstance().player;
         if (p == null) return;
         p.setYRot(absoluteYaw);
@@ -129,6 +236,11 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
 
     @Override
     public void setHeadYaw(float absoluteYaw) {
+        if (ghostMode) {
+            if (ghost == null) return;
+            ghost.setYHeadRot(absoluteYaw);
+            return;
+        }
         LocalPlayer p = Minecraft.getInstance().player;
         if (p == null) return;
         p.setYHeadRot(absoluteYaw);
@@ -136,6 +248,12 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
 
     @Override
     public void setPitch(float absolutePitch) {
+        if (ghostMode) {
+            if (ghost == null) return;
+            ghost.setXRot(absolutePitch);
+            ghost.xRotO = absolutePitch;
+            return;
+        }
         LocalPlayer p = Minecraft.getInstance().player;
         if (p == null) return;
         p.setXRot(absolutePitch);
@@ -156,6 +274,17 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
 
     @Override
     public void applyEffects(int speedAmplifier, int jumpBoostAmplifier) {
+        if (ghostMode) {
+            if (ghost == null) return;
+            ghost.removeAllEffects();
+            if (speedAmplifier > 0) {
+                ghost.addEffect(new MobEffectInstance(MobEffects.SPEED, EFFECT_DURATION_TICKS, speedAmplifier - 1, false, false, true));
+            }
+            if (jumpBoostAmplifier > 0) {
+                ghost.addEffect(new MobEffectInstance(MobEffects.JUMP_BOOST, EFFECT_DURATION_TICKS, jumpBoostAmplifier - 1, false, false, true));
+            }
+            return;
+        }
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer client = mc.player;
         if (client == null) return;
@@ -178,7 +307,7 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
 
     @Override
     public void dumpPlayerState(int tickIndex) {
-        LocalPlayer p = Minecraft.getInstance().player;
+        net.minecraft.world.entity.player.Player p = ghost != null ? ghost : Minecraft.getInstance().player;
         if (p == null) return;
         MobEffectInstance spd = p.getEffect(MobEffects.SPEED);
         MobEffectInstance jmp = p.getEffect(MobEffects.JUMP_BOOST);

@@ -16,7 +16,7 @@ public class MouseHandlerMixin {
 
     @Inject(method = "turnPlayer", at = @At("HEAD"), cancellable = true)
     private void onUpdateMouse(CallbackInfo ci) {
-        if (FabricParkourCalculator.isUiFocused()) {
+        if (FabricParkourCalculator.isUiFocused() || FabricParkourCalculator.isGhostPlaybackActive()) {
             ci.cancel();
         }
     }
@@ -30,6 +30,10 @@ public class MouseHandlerMixin {
 
     @Inject(method = "onButton", at = @At("HEAD"), cancellable = true)
     private void onMouseButton(long window, MouseButtonInfo input, int action, CallbackInfo ci) {
+        if (FabricParkourCalculator.isGhostPlaybackActive()) {
+            ci.cancel();
+            return;
+        }
         if (!FabricParkourCalculator.isUiFocused()) {
             return;
         }

@@ -18,4 +18,20 @@ public interface LocalPlayerAccessor {
     @Accessor("xRotLast") void pkc$setXRotLast(float v);
 
     @Accessor("positionReminder") void pkc$setPositionReminder(int v);
+
+    @Accessor("xLast") double pkc$getXLast();
+
+    @Accessor("yLast") double pkc$getYLast();
+
+    @Accessor("zLast") double pkc$getZLast();
+
+    @Accessor("positionReminder") int pkc$getPositionReminder();
+
+    @Accessor("lastOnGround") boolean pkc$getLastOnGround();
+
+    @Accessor("lastOnGround") void pkc$setLastOnGround(boolean v);
+
+    @Accessor("lastHorizontalCollision") boolean pkc$getLastHorizontalCollision();
+
+    @Accessor("lastHorizontalCollision") void pkc$setLastHorizontalCollision(boolean v);
 }
