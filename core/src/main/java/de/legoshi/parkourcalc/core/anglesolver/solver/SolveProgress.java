@@ -108,7 +108,7 @@ public final class SolveProgress {
 
     private double scoredOf(double objective, double[] yaws) {
         if (smoothLambda <= 0.0 || yaws == null || yaws.length < 2) return objective;
-        double pen = smoothLambda * Angles.travelDeg(yaws);
+        double pen = smoothLambda * Angles.wiggleDeg(yaws);
         return maximize ? objective - pen : objective + pen;
     }
 

@@ -22,7 +22,8 @@ public class SmoothLambdaSaveTest {
 
     @Test
     public void savedLambdaLoads() {
-        SaveFile f = SaveIO.parseSafe("{\"version\":1,\"angleSolver\":{\"smoothLambda\":0.001}}");
+        SaveFile f = SaveIO.parseSafe(
+                "{\"version\":1,\"angleSolver\":{\"smoothLambda\":" + AngleSolverState.TASER_SMOOTH_LAMBDA + "}}");
         assertNotNull(f);
         AngleSolverState state = new AngleSolverState();
         SaveIO.applyAngleSolverTo(f, state);

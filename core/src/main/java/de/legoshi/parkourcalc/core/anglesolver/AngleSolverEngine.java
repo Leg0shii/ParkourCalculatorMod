@@ -1155,8 +1155,11 @@ public final class AngleSolverEngine {
         if (locked > 0) result.addDetail("Locked yaws", Integer.toString(locked));
         SolveRunRecord.Outcome smooth = new SolveRunRecord.Outcome();
         SolveRunRecord.smoothnessOf(smooth, yaws);
-        result.addDetail("Yaw travel", Math.round(smooth.yawTravelDeg) + " deg");
-        result.addDetail("Yaw reversals", Integer.toString(smooth.yawDirChanges));
+        if (smooth.yawTravelDeg != null) {
+            result.addDetail("Yaw travel", Math.round(smooth.yawTravelDeg) + " deg");
+            result.addDetail("Yaw reversals", Integer.toString(smooth.yawDirChanges));
+            result.addDetail("Yaw jerk", Math.round(smooth.yawJerkDeg) + " deg");
+        }
         if (job.spec.objective.smoothLambda > 0.0) {
             result.addDetail("Smooth lambda", Double.toString(job.spec.objective.smoothLambda));
         }

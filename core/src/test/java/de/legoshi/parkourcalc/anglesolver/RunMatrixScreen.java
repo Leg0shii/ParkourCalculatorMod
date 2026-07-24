@@ -318,6 +318,18 @@ public class RunMatrixScreen {
         for (Map.Entry<String, String> e : combo.entrySet()) {
             id.append('-').append(e.getKey()).append(e.getValue());
         }
+        if (base.startsWith("fastsmooth")) {
+            double lambdaV = 0.0;
+            for (Map.Entry<String, String> e : combo.entrySet()) {
+                if ("l".equals(e.getKey())) lambdaV = Double.parseDouble(e.getValue());
+                else throw new IllegalArgumentException("unknown fastsmooth sweep param: " + e.getKey());
+            }
+            final double lambda = lambdaV;
+            return new Preset(id.toString(), s -> {
+                s.setEffort(AngleSolverState.Effort.FAST);
+                s.setSmoothLambda(lambda);
+            });
+        }
         if (base.startsWith("fastcap")) {
             int capV = 64;
             for (Map.Entry<String, String> e : combo.entrySet()) {

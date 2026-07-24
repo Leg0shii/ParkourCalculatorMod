@@ -9,6 +9,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SmoothingPolish;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolveProgress;
 import org.junit.Test;
 
@@ -44,6 +45,32 @@ public class SmoothLambdaScoringTest {
     }
 
     @Test
+    public void microWigglesCostMoreThanOneCleanSweep() {
+        double[] jitter = {0.0, 1.0, 0.0, 1.0, 0.0};
+        double[] sweep = {0.0, 6.0, 12.0, 18.0};
+        assertTrue(Angles.travelDeg(jitter) < Angles.travelDeg(sweep));
+        assertTrue(Angles.wiggleDeg(jitter) > Angles.wiggleDeg(sweep));
+    }
+
+    @Test
+    public void staircaseCostsMoreThanConstantRateSweep() {
+        double[] staircase = {0.0, 0.0, 0.0, 18.0, 18.0, 18.0};
+        double[] ramp = {0.0, 3.6, 7.2, 10.8, 14.4, 18.0};
+        assertTrue(Angles.wiggleDeg(staircase) > Angles.wiggleDeg(ramp));
+        assertEquals(0.0, Angles.wiggleDeg(ramp), 1.0e-9);
+        assertEquals(0.0, Angles.wiggleDeg(new double[] {0.0, 6.0, 12.0, 18.0}), 1.0e-9);
+    }
+
+    @Test
+    public void subFloorJitterCountsNoReversals() {
+        double[] noise = {0.0, 0.005, 0.0, 0.005, 0.0};
+        assertEquals(0, Angles.reversals(noise, Angles.REVERSAL_FLOOR_DEG));
+        assertEquals(3, Angles.reversals(new double[] {0.0, 1.0, 0.0, 1.0, 0.0}, Angles.REVERSAL_FLOOR_DEG));
+        assertEquals(1, Angles.reversals(new double[] {179.0, -179.0, 178.0}, Angles.REVERSAL_FLOOR_DEG));
+        assertEquals(0, Angles.reversals(new double[] {0.0, 10.0, 10.0, 20.0}, Angles.REVERSAL_FLOOR_DEG));
+    }
+
+    @Test
     public void progressPrefersSmootherWithinFeasibility() {
         double[] wiggly = {0.0, 40.0, 0.0, 40.0, 0.0};
         double[] smooth = {0.0, 0.0, 0.0, 0.0, 0.0};
@@ -72,6 +99,19 @@ public class SmoothLambdaScoringTest {
     }
 
     @Test
+    public void smoothingSpendsScoredMarginWithLambda() {
+        JumpPhysicsInputs phys = TestScenarios.phys(8, null);
+        double[] wiggly = {0.0, 8.0, -8.0, 8.0, -8.0, 8.0, -8.0, 0.0};
+        JumpSpec spec = new JumpSpec(phys, Collections.<JumpConstraint>emptyList(),
+                new Objective(JumpPhysicsInputs.Axis.X, Objective.Sense.MIN, 8, 1.0));
+        double[] out = SmoothingPolish.smooth(ExactJumpModel.forMcVersion("1.8.9"), spec, wiggly.clone(),
+                new AtomicBoolean(false));
+        assertTrue(Angles.wiggleDeg(out) < Angles.wiggleDeg(wiggly));
+        assertTrue(Angles.reversals(out, Angles.REVERSAL_FLOOR_DEG)
+                < Angles.reversals(wiggly, Angles.REVERSAL_FLOOR_DEG));
+    }
+
+    @Test
     public void bucketAscentWithDominantLambdaNeverAddsTravel() {
         JumpPhysicsInputs phys = TestScenarios.phys(8, null);
         JumpSpec spec = new JumpSpec(phys, Collections.<JumpConstraint>emptyList(),
@@ -79,6 +119,6 @@ public class SmoothLambdaScoringTest {
         double[] start = {0.0, 30.0, -30.0, 30.0, -30.0, 30.0, -30.0, 0.0};
         double[] out = BucketAscentPolish.polish(ExactJumpModel.forMcVersion("1.8.9"), spec, start.clone(),
                 BucketAscentPolish.FAST, new AtomicBoolean(false));
-        assertTrue(Angles.travelDeg(out) <= Angles.travelDeg(start) + 1.0e-9);
+        assertTrue(Angles.wiggleDeg(out) <= Angles.wiggleDeg(start) + 1.0e-9);
     }
 }

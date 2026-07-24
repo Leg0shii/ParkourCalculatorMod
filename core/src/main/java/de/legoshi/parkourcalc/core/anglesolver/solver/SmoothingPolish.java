@@ -9,8 +9,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *  the same wrap + toGameFacings + byte-exact forward chain as the polish:
  *  <ul>
  *    <li>strict feasibility (FEAS_TOL = 0): smoothing never clips a wall;</li>
- *    <li>the objective never drops below the value the solve achieved: smoothing trades nothing
- *        for looks. Where every tick is load-bearing the pass is simply a no-op.</li>
+ *    <li>at lambda 0 the objective never drops below the value the solve achieved: smoothing trades
+ *        nothing for looks, and where every tick is load-bearing the pass is simply a no-op. With a
+ *        smooth lambda the gate is the scored objective instead: moves may spend raw objective at
+ *        the lambda exchange rate for less wiggle, ratcheting on the scored value.</li>
  *  </ul>
  *  Single-tick moves pull each facing toward its neighbors' angular midpoint with bisected steps;
  *  joint moves on nearby pairs make the canceling adjustments the objective floor blocks on single
@@ -26,6 +28,7 @@ public final class SmoothingPolish {
     public static final class Config {
         public int maxRounds = 24;
         public int maxEvals = 24_000;
+        public int evalsPerTick = 400;
         public int pairSpan = 3;
         /** Step fractions toward the midpoint target; bisection finds the largest gate-passing pull. */
         public double[] fractions = {1.0, 0.5, 0.25, 0.125};
@@ -48,25 +51,28 @@ public final class SmoothingPolish {
         JumpPhysicsInputs sc = spec.asScenario();
         double sign = spec.objective.sense == Objective.Sense.MAX ? -1.0 : 1.0;
 
-        Work w = new Work(model, sc, compiled, spec.objective, sign, cancel, cfg);
+        Work w = new Work(model, sc, compiled, spec.objective, sign, cancel, cfg,
+                Math.max(cfg.maxEvals, n * cfg.evalsPerTick));
         double[] y = Angles.wrapAll(yawsAbsWrapped.clone());
-        double floor = w.eval(y);
-        if (floor == Double.POSITIVE_INFINITY) return yawsAbsWrapped;
+        double start = w.eval(y);
+        if (start == Double.POSITIVE_INFINITY) return yawsAbsWrapped;
+        w.floor = start;
+        w.scoredFloor = start + spec.objective.smoothPenalty(y);
         double rough = roughness(sc.startYaw, y);
 
-        for (int round = 0; round < cfg.maxRounds && w.evals < cfg.maxEvals; round++) {
+        for (int round = 0; round < cfg.maxRounds && w.evals < w.evalCap; round++) {
             boolean moved = false;
             for (int t = 0; t < n; t++) {
-                double pulled = pullSingle(w, y, t, floor, rough);
+                double pulled = pullSingle(w, y, t, rough);
                 if (pulled < rough) { rough = pulled; moved = true; }
             }
             for (int i = 0; i < n; i++) {
                 for (int d = 1; d <= cfg.pairSpan && i + d < n; d++) {
-                    double pulled = pullPair(w, y, i, i + d, floor, rough);
+                    double pulled = pullPair(w, y, i, i + d, rough);
                     if (pulled < rough) { rough = pulled; moved = true; }
-                    pulled = pullTransfer(w, y, i, i + d, floor, rough);
+                    pulled = pullTransfer(w, y, i, i + d, rough);
                     if (pulled < rough) { rough = pulled; moved = true; }
-                    pulled = pullTransfer(w, y, i + d, i, floor, rough);
+                    pulled = pullTransfer(w, y, i + d, i, rough);
                     if (pulled < rough) { rough = pulled; moved = true; }
                 }
             }
@@ -98,15 +104,15 @@ public final class SmoothingPolish {
     /** Try bisected pulls of tick {@code t} toward its midpoint target; keep the first (largest) one
      *  that stays feasible, holds the objective floor, and strictly lowers roughness. Returns the new
      *  roughness (== {@code rough} when no pull is accepted). */
-    private static double pullSingle(Work w, double[] y, int t, double floor, double rough) {
+    private static double pullSingle(Work w, double[] y, int t, double rough) {
         double delta = Angles.wrapDelta(midTarget(w.sc.startYaw, y, t) - y[t]);
         if (Math.abs(delta) < MIN_MOVE_DEG) return rough;
         double orig = y[t];
         for (double f : w.cfg.fractions) {
-            if (w.evals >= w.cfg.maxEvals) break;
+            if (w.evals >= w.evalCap) break;
             y[t] = Angles.wrap(orig + delta * f);
             double r = roughness(w.sc.startYaw, y);
-            if (r < rough && w.eval(y) <= floor) return r;
+            if (r < rough && w.accepts(y)) return r;
         }
         y[t] = orig;
         return rough;
@@ -114,17 +120,17 @@ public final class SmoothingPolish {
 
     /** Joint pull of two nearby ticks toward their (current) midpoint targets at the same fraction:
      *  the move that lets opposite adjustments cancel through the objective floor. */
-    private static double pullPair(Work w, double[] y, int i, int j, double floor, double rough) {
+    private static double pullPair(Work w, double[] y, int i, int j, double rough) {
         double di = Angles.wrapDelta(midTarget(w.sc.startYaw, y, i) - y[i]);
         double dj = Angles.wrapDelta(midTarget(w.sc.startYaw, y, j) - y[j]);
         if (Math.abs(di) < MIN_MOVE_DEG && Math.abs(dj) < MIN_MOVE_DEG) return rough;
         double oi = y[i], oj = y[j];
         for (double f : w.cfg.fractions) {
-            if (w.evals >= w.cfg.maxEvals) break;
+            if (w.evals >= w.evalCap) break;
             y[i] = Angles.wrap(oi + di * f);
             y[j] = Angles.wrap(oj + dj * f);
             double r = roughness(w.sc.startYaw, y);
-            if (r < rough && w.eval(y) <= floor) return r;
+            if (r < rough && w.accepts(y)) return r;
         }
         y[i] = oi;
         y[j] = oj;
@@ -134,16 +140,16 @@ public final class SmoothingPolish {
     /** Anti-symmetric transfer: tick {@code i} pulls toward its target while {@code j} rotates the
      *  opposite way, redistributing objective budget between them: the move that dissolves a
      *  residual kink when the floor blocks each half alone. */
-    private static double pullTransfer(Work w, double[] y, int i, int j, double floor, double rough) {
+    private static double pullTransfer(Work w, double[] y, int i, int j, double rough) {
         double di = Angles.wrapDelta(midTarget(w.sc.startYaw, y, i) - y[i]);
         if (Math.abs(di) < MIN_MOVE_DEG) return rough;
         double oi = y[i], oj = y[j];
         for (double f : w.cfg.fractions) {
-            if (w.evals >= w.cfg.maxEvals) break;
+            if (w.evals >= w.evalCap) break;
             y[i] = Angles.wrap(oi + di * f);
             y[j] = Angles.wrap(oj - di * f);
             double r = roughness(w.sc.startYaw, y);
-            if (r < rough && w.eval(y) <= floor) return r;
+            if (r < rough && w.accepts(y)) return r;
         }
         y[i] = oi;
         y[j] = oj;
@@ -159,10 +165,13 @@ public final class SmoothingPolish {
         final double sign;
         final AtomicBoolean cancel;
         final Config cfg;
+        final int evalCap;
         int evals;
+        double floor;
+        double scoredFloor;
 
         Work(ForwardModel model, JumpPhysicsInputs sc, JumpConstraintCompiler.Compiled compiled,
-             Objective obj, double sign, AtomicBoolean cancel, Config cfg) {
+             Objective obj, double sign, AtomicBoolean cancel, Config cfg, int evalCap) {
             this.model = model;
             this.sc = sc;
             this.compiled = compiled;
@@ -170,6 +179,7 @@ public final class SmoothingPolish {
             this.sign = sign;
             this.cancel = cancel;
             this.cfg = cfg;
+            this.evalCap = evalCap;
         }
 
         /** sign*objective via the exact chain; +inf when any wall is crossed (same gate as the polish). */
@@ -180,6 +190,16 @@ public final class SmoothingPolish {
             ForwardPath path = model.forward(sc, gf);
             if (compiled.maxViolation(gf, path) > FEAS_TOL) return Double.POSITIVE_INFINITY;
             return sign * path.getPos(obj.tick, obj.axis);
+        }
+
+        boolean accepts(double[] absWrapped) {
+            double e = eval(absWrapped);
+            if (e == Double.POSITIVE_INFINITY) return false;
+            if (obj.smoothLambda <= 0.0) return e <= floor;
+            double scored = e + obj.smoothPenalty(absWrapped);
+            if (scored > scoredFloor) return false;
+            scoredFloor = scored;
+            return true;
         }
     }
 }
