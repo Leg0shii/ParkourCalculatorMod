@@ -109,6 +109,7 @@ public final class GraphEditorWindow implements RenderInterface {
 
     private NodeEditorContext context;
     private boolean applyPositions;
+    private boolean remeasureLayout;
     private String saveError;
     private String pendingSaveName;
     private String focusNodeId;
@@ -184,7 +185,8 @@ public final class GraphEditorWindow implements RenderInterface {
         enumPopupNode = null;
         enumPopupSpec = null;
         viewScale = 1f;
-        if (allPositionsUnset()) autoLayout();
+        remeasureLayout = allPositionsUnset();
+        if (remeasureLayout) autoLayout(false);
         applyPositions = true;
         revalidate();
         open = true;
@@ -298,7 +300,7 @@ public final class GraphEditorWindow implements RenderInterface {
                 + " Entry and Emit cannot be deleted.");
         ImGui.sameLine();
         if (Controls.secondaryButton("Auto layout")) {
-            autoLayout();
+            autoLayout(true);
             applyPositions = true;
             dirty = true;
         }
@@ -594,6 +596,13 @@ public final class GraphEditorWindow implements RenderInterface {
         }
         for (GraphNode n : nodes) {
             drawNode(n, scale);
+        }
+        if (remeasureLayout) {
+            remeasureLayout = false;
+            autoLayout(true);
+            for (GraphNode n : nodes) {
+                NodeEditor.setNodePosition(nodeInts.get(n.id), n.x, n.y);
+            }
         }
         for (GraphEdge e : edges) {
             drawLink(e);
@@ -1273,7 +1282,7 @@ public final class GraphEditorWindow implements RenderInterface {
         return true;
     }
 
-    private void autoLayout() {
+    private void autoLayout(boolean measured) {
         float scale = ThemeManager.uiScale();
         Map<String, Integer> depth = new HashMap<>();
         GraphNode entry = null;
@@ -1308,15 +1317,43 @@ public final class GraphEditorWindow implements RenderInterface {
         for (GraphNode n : nodes) {
             if (!depth.containsKey(n.id)) depth.put(n.id, maxDepth + 1);
         }
-        Map<Integer, Float> columnY = new HashMap<>();
-        for (GraphNode n : nodes) {
-            int d = depth.get(n.id);
-            Float y = columnY.get(d);
-            if (y == null) y = 30f * scale;
-            n.x = 30f * scale + d * 300f * scale;
-            n.y = y;
-            float estimated = (70f + 30f * (n.type.params.size() + n.type.branches.size())) * scale;
-            columnY.put(d, y + estimated);
+        float margin = 30f * scale;
+        float gapX = 60f * scale;
+        float gapY = 24f * scale;
+        float x = margin;
+        for (int d = 0; d <= maxDepth + 1; d++) {
+            float colW = 0f;
+            float y = margin;
+            for (GraphNode n : nodes) {
+                if (depth.get(n.id) != d) continue;
+                n.x = x;
+                n.y = y;
+                y += nodeHeight(n, measured, scale) + gapY;
+                colW = Math.max(colW, nodeWidth(n, measured, scale));
+            }
+            if (colW > 0f) x += colW + gapX;
         }
+    }
+
+    private float nodeWidth(GraphNode n, boolean measured, float scale) {
+        if (measured) {
+            Integer id = nodeInts.get(n.id);
+            if (id != null) {
+                float w = NodeEditor.getNodeSizeX(id);
+                if (w > 0f) return w;
+            }
+        }
+        return 260f * scale;
+    }
+
+    private float nodeHeight(GraphNode n, boolean measured, float scale) {
+        if (measured) {
+            Integer id = nodeInts.get(n.id);
+            if (id != null) {
+                float h = NodeEditor.getNodeSizeY(id);
+                if (h > 0f) return h;
+            }
+        }
+        return (80f + 34f * (n.type.params.size() + n.type.branches.size())) * scale;
     }
 }
