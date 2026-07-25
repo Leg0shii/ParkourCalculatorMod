@@ -117,7 +117,7 @@ public final class VelocityMapController {
         if (tc == null) return Double.NaN;
         double v = Double.NaN;
         for (Constraint c : tc.getConstraints()) {
-            if (!c.isEnabled() || c.getField() != field) continue;
+            if (!c.isEnabled() || c.getField() != field || c.isRelative()) continue;
             if (c.isRange()) {
                 v = max ? c.getLo() : c.getHi();
             } else if (max ? (c.getOp() == Constraint.Op.GE || c.getOp() == Constraint.Op.GT || c.getOp() == Constraint.Op.EQ)

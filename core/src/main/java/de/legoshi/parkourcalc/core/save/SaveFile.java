@@ -102,6 +102,8 @@ public final class SaveFile {
         public boolean loInclusive;
         public boolean hiInclusive;
         public boolean disabled;                         // absent in old saves = enabled
+        public Integer refTick;                          // X/Z only; absent = absolute
+        public boolean vsDz;                             // dX only; true = right side is dZ + value
     }
 
     public static final class Override {

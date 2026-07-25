@@ -94,6 +94,7 @@ public final class AngleSolverTable {
     private final ImInt levelBuf = new ImInt();
     private final ImInt fieldCombo = new ImInt();
     private final ImInt opCombo = new ImInt();
+    private final ImInt refBuf = new ImInt();
     private final String[] slipItems = Slipperiness.comboItems();
     private static final String[] FIELD_ITEMS = buildFieldItems();
     private static final Constraint.Op[] SCALAR_OPS =
@@ -526,7 +527,7 @@ public final class AngleSolverTable {
 
     private float constraintChipWidth(Constraint c) {
         float s = ThemeManager.uiScale();
-        String field = c.getField().label;
+        String field = ConstraintText.fieldLabel(c);
         String op = c.isRange() ? "" : c.getOp().glyph;
         String val = ConstraintText.chip(c);
         float pad = 5f * s;
@@ -552,7 +553,7 @@ public final class AngleSolverTable {
         float h = ImGui.getFrameHeight();
         ImDrawList dl = ImGui.getWindowDrawList();
 
-        String field = c.getField().label;
+        String field = ConstraintText.fieldLabel(c);
         String op = c.isRange() ? "" : c.getOp().glyph;
         String val = ConstraintText.chip(c);
         float pad = 5f * s;
@@ -935,6 +936,41 @@ public final class AngleSolverTable {
     private void renderConstraintValues(Constraint c) {
         float s = ThemeManager.uiScale();
         float numW = 108f * s;
+        if (c.getField() == Constraint.Field.X || c.getField() == Constraint.Field.Z) {
+            refBuf.set(c.getRefTick() == null ? 0 : c.getRefTick() + 1);
+            ImGui.setNextItemWidth(44f * s);
+            if (ImGui.inputInt("##ref", refBuf, 0)) {
+                int v = refBuf.get();
+                c.setRefTick(v <= 0 ? null : v - 1);
+            }
+            if (ImGui.isItemHovered()) {
+                ImGui.setTooltip("Reference tick: value is relative to " + c.getField().label
+                        + " at T# (0 = absolute)");
+            }
+            ImGui.sameLine();
+            if (c.isRelative()) {
+                ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+                ImGui.alignTextToFramePadding();
+                ImGui.text("+");
+                ThemeManager.popTextColor();
+                ImGui.sameLine();
+            }
+        }
+        if (c.getField() == Constraint.Field.DX) {
+            if (ImGui.checkbox("dZ##vs", c.isVsDz())) c.setVsDz(!c.isVsDz());
+            if (ImGui.isItemHovered()) {
+                ImGui.setTooltip("Compare against dZ as magnitudes: |dX| vs |dZ| + value."
+                        + " Collision resolves the larger-delta axis first (26.x).");
+            }
+            ImGui.sameLine();
+            if (c.isVsDz()) {
+                ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+                ImGui.alignTextToFramePadding();
+                ImGui.text("+");
+                ThemeManager.popTextColor();
+                ImGui.sameLine();
+            }
+        }
         if (c.isRange()) {
             ImGui.setNextItemWidth(numW);
             numberField("##lo", c.getLo(), c::setLo);
@@ -986,7 +1022,7 @@ public final class AngleSolverTable {
             dragTick = tick;
             dragIndex = index;
             dragPotion = null;
-            dragLabel = c.getField().label + (op.isEmpty() ? " " : " " + op + " ") + val;
+            dragLabel = ConstraintText.fieldLabel(c) + (op.isEmpty() ? " " : " " + op + " ") + val;
         }
     }
 

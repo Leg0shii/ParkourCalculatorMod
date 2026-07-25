@@ -217,9 +217,9 @@ public final class JumpLinearModel {
      *  {@code margin} (so the sine-table quantization keeps the exact model on the feasible side). Returns
      *  {@code null} for a constraint with no decision dependence (tick 0, or t1==t2): such a constraint is a
      *  constant, reported via {@code trivialInfeasible} when the constant itself violates it. F-mode (facing)
-     *  walls are not linear in the inputs and are rejected (caller falls back). */
+     *  and DXZ (cross-axis magnitude) walls are not linear in the inputs and are rejected (caller falls back). */
     public Wall compileWall(JumpConstraint c, double margin, boolean[] trivialInfeasible) {
-        if (c.mode == JumpConstraint.Mode.F) return null;
+        if (c.mode != JumpConstraint.Mode.X && c.mode != JumpConstraint.Mode.Z) return null;
         int axis = (c.mode == JumpConstraint.Mode.X) ? 0 : 1;
         int t1 = c.t1;
         Integer t2 = c.t2;

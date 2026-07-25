@@ -443,6 +443,8 @@ public final class SaveIO {
         out.loInclusive = c.isLoInclusive();
         out.hiInclusive = c.isHiInclusive();
         out.disabled = !c.isEnabled();
+        out.refTick = c.getRefTick();
+        out.vsDz = c.isVsDz();
         return out;
     }
 
@@ -457,6 +459,8 @@ public final class SaveIO {
             out = Constraint.scalar(field, op, c.value);
         }
         out.setEnabled(!c.disabled);
+        if (c.refTick != null && c.refTick >= 0) out.setRefTick(c.refTick);
+        if (c.vsDz) out.setVsDz(true);
         return out;
     }
 

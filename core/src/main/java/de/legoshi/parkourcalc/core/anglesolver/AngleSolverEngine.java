@@ -671,7 +671,7 @@ public final class AngleSolverEngine {
         if (!freeX && !freeZ) return null;
 
         for (ConstraintAt ca : uiCons) {
-            if (ca.segTick != 0) continue;
+            if (ca.segTick != 0 || ca.c.isRelative()) continue;
             if (freeX && ca.c.getField() == Constraint.Field.X) consumed.add(ca.c);
             if (freeZ && ca.c.getField() == Constraint.Field.Z) consumed.add(ca.c);
         }
@@ -694,7 +694,7 @@ public final class AngleSolverEngine {
         for (ConstraintAt ca : uiCons) {
             if (ca.segTick != 0) continue;
             Constraint c = ca.c;
-            if (c.getField() != field) continue;
+            if (c.getField() != field || c.isRelative()) continue;
             if (c.isRange()) {
                 hasRange = true;
                 lo = Math.max(lo, c.getLo());
@@ -1339,7 +1339,7 @@ public final class AngleSolverEngine {
         List<ConstraintAt> ordered = new ArrayList<>(derived);
         ordered.sort((a, b) -> Integer.compare(a.absTick, b.absTick));
         for (ConstraintAt ca : ordered) {
-            Double found = findValue(ca.c, ca.segTick, job.numTicks, gameFacings, path);
+            Double found = findValue(ca.c, ca.segTick, job.startTick, job.numTicks, gameFacings, path);
             if (found == null) continue;
             total++;
             boolean satisfied = satisfied(ca.c, found);
@@ -1526,13 +1526,26 @@ public final class AngleSolverEngine {
     // ---- constraint mapping (UI Constraint -> solver JumpConstraint) -----------
 
     private void addMapped(List<JumpConstraint> out, Constraint c, int absTick, int segTick, int numTicks) {
-        String tag = c.getField().label + "@" + absTick;
+        String tag = (c.isVsDz() ? "dXvsdZ" : ConstraintText.fieldLabel(c)) + "@" + absTick;
+        int startTick = absTick - segTick;
         switch (c.getField()) {
             case X:
-                addScalarOrRange(out, JumpConstraint.Mode.X, segTick, c, tag);
+                if (c.isRelative()) {
+                    int refSeg = c.getRefTick() - startTick;
+                    if (refSeg < 0 || refSeg > numTicks) break;
+                    addRelative(out, JumpConstraint.Mode.X, segTick, refSeg, c, tag);
+                } else {
+                    addScalarOrRange(out, JumpConstraint.Mode.X, segTick, c, tag);
+                }
                 break;
             case Z:
-                addScalarOrRange(out, JumpConstraint.Mode.Z, segTick, c, tag);
+                if (c.isRelative()) {
+                    int refSeg = c.getRefTick() - startTick;
+                    if (refSeg < 0 || refSeg > numTicks) break;
+                    addRelative(out, JumpConstraint.Mode.Z, segTick, refSeg, c, tag);
+                } else {
+                    addScalarOrRange(out, JumpConstraint.Mode.Z, segTick, c, tag);
+                }
                 break;
             case F:
                 if (segTick >= numTicks) break; // no facing for the post-final state
@@ -1540,15 +1553,16 @@ public final class AngleSolverEngine {
                 break;
             case DX:
                 if (segTick < 1) break; // velocity needs t-1
-                addVelocity(out, JumpConstraint.Mode.X, segTick, c, tag);
+                addRelative(out, c.isVsDz() ? JumpConstraint.Mode.DXZ : JumpConstraint.Mode.X,
+                        segTick, segTick - 1, c, tag);
                 break;
             case DZ:
                 if (segTick < 1) break;
-                addVelocity(out, JumpConstraint.Mode.Z, segTick, c, tag);
+                addRelative(out, JumpConstraint.Mode.Z, segTick, segTick - 1, c, tag);
                 break;
             case DF:
                 if (segTick < 1 || segTick >= numTicks) break;
-                addVelocity(out, JumpConstraint.Mode.F, segTick, c, tag);
+                addRelative(out, JumpConstraint.Mode.F, segTick, segTick - 1, c, tag);
                 break;
         }
     }
@@ -1572,18 +1586,18 @@ public final class AngleSolverEngine {
         }
     }
 
-    /** Per-tick delta (dX/dZ on positions, dF on facings): v[t1]-v[t1-1] against a range (GE/LE pair),
-     *  an equality (the same +-MET_TOL corridor as scalar fields, see addScalarOrRange), or a single
-     *  comparison wall. */
-    private void addVelocity(List<JumpConstraint> out, JumpConstraint.Mode mode, int t1, Constraint c, String tag) {
+    /** Two-tick difference (dX/dZ/dXZ on positions, dF on facings, relative X/Z against a reference tick):
+     *  v[t1]-v[t2] against a range (GE/LE pair), an equality (the same +-MET_TOL corridor as scalar
+     *  fields, see addScalarOrRange), or a single comparison wall. */
+    private void addRelative(List<JumpConstraint> out, JumpConstraint.Mode mode, int t1, int t2, Constraint c, String tag) {
         if (c.isRange()) {
-            out.add(new JumpConstraint(mode, t1, t1 - 1, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.GE, c.getLo(), tag + "lo"));
-            out.add(new JumpConstraint(mode, t1, t1 - 1, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.LE, c.getHi(), tag + "hi"));
+            out.add(new JumpConstraint(mode, t1, t2, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.GE, c.getLo(), tag + "lo"));
+            out.add(new JumpConstraint(mode, t1, t2, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.LE, c.getHi(), tag + "hi"));
         } else if (c.getOp() == Constraint.Op.EQ) {
-            out.add(new JumpConstraint(mode, t1, t1 - 1, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.GE, c.getValue() - MET_TOL, tag + "eqLo"));
-            out.add(new JumpConstraint(mode, t1, t1 - 1, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.LE, c.getValue() + MET_TOL, tag + "eqHi"));
+            out.add(new JumpConstraint(mode, t1, t2, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.GE, c.getValue() - MET_TOL, tag + "eqLo"));
+            out.add(new JumpConstraint(mode, t1, t2, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.LE, c.getValue() + MET_TOL, tag + "eqHi"));
         } else {
-            out.add(new JumpConstraint(mode, t1, t1 - 1, JumpConstraint.Op.MINUS, cmp(c.getOp()), c.getValue(), tag));
+            out.add(new JumpConstraint(mode, t1, t2, JumpConstraint.Op.MINUS, cmp(c.getOp()), c.getValue(), tag));
         }
     }
 
@@ -1608,7 +1622,7 @@ public final class AngleSolverEngine {
         List<ConstraintAt> ordered = new ArrayList<>(job.uiConstraints);
         ordered.sort((a, b) -> Integer.compare(a.absTick, b.absTick));
         for (ConstraintAt ca : ordered) {
-            Double found = findValue(ca.c, ca.segTick, job.numTicks, gameFacings, path);
+            Double found = findValue(ca.c, ca.segTick, job.startTick, job.numTicks, gameFacings, path);
             if (found == null) continue; // unmappable, e.g. velocity on tick 0
             total++;
             boolean ok = satisfied(ca.c, found);
@@ -1626,12 +1640,22 @@ public final class AngleSolverEngine {
     /** The value a constraint is judged against. F reads the GAME facing (what the solver enforced and the
      *  sim runs), wrapped for display; the wrapped-abs plan yaw differs from it by float accumulation,
      *  which the strict wall gate would mis-report on a hugged facing wall. */
-    private Double findValue(Constraint c, int segTick, int numTicks, double[] gameFacings, ForwardPath path) {
+    private Double findValue(Constraint c, int segTick, int startTick, int numTicks, double[] gameFacings, ForwardPath path) {
+        Integer refSeg = null;
+        if (c.isRelative()) {
+            int r = c.getRefTick() - startTick;
+            if (r < 0 || r > numTicks) return null;
+            refSeg = r;
+        }
         switch (c.getField()) {
-            case X: return path.posX[segTick];
-            case Z: return path.posZ[segTick];
+            case X: return refSeg != null ? path.posX[segTick] - path.posX[refSeg] : path.posX[segTick];
+            case Z: return refSeg != null ? path.posZ[segTick] - path.posZ[refSeg] : path.posZ[segTick];
             case F: return segTick < numTicks ? Angles.wrap(gameFacings[segTick]) : null;
-            case DX: return segTick >= 1 ? path.posX[segTick] - path.posX[segTick - 1] : null;
+            case DX: return segTick >= 1
+                    ? (c.isVsDz()
+                        ? Math.abs(path.posX[segTick] - path.posX[segTick - 1])
+                            - Math.abs(path.posZ[segTick] - path.posZ[segTick - 1])
+                        : path.posX[segTick] - path.posX[segTick - 1]) : null;
             case DZ: return segTick >= 1 ? path.posZ[segTick] - path.posZ[segTick - 1] : null;
             case DF: return segTick >= 1 && segTick < numTicks
                     ? Angles.wrap(gameFacings[segTick] - gameFacings[segTick - 1]) : null;
@@ -1662,7 +1686,7 @@ public final class AngleSolverEngine {
     }
 
     private SolveResult.Outcome outcome(Constraint c, int absTick, double found, boolean met) {
-        String field = c.getField().label;
+        String field = ConstraintText.fieldLabel(c);
         String tickLabel = "T" + (absTick + 1);
         if (c.isRange()) {
             double margin = Math.min(found - c.getLo(), c.getHi() - found);
@@ -1670,7 +1694,7 @@ public final class AngleSolverEngine {
             return new SolveResult.Outcome(field, tickLabel, ConstraintText.chip(c), ConstraintText.fixedStat(found), marginStr, met);
         }
         double v = c.getValue();
-        String relation = c.getOp().glyph + " " + ConstraintText.num(v);
+        String relation = c.getOp().glyph + " " + (c.isVsDz() ? ConstraintText.chip(c) : ConstraintText.num(v));
         double diff = c.getField() == Constraint.Field.F || c.getField() == Constraint.Field.DF
                 ? Angles.wrap(found - v) : (found - v);
         double margin;

@@ -488,7 +488,7 @@ public final class AngleSolverState {
     public void setFootprint(int tick, double xLo, double xHi, double zLo, double zHi) {
         if (tick < 0) return;
         List<Constraint> list = tickConstraints(tick).getConstraints();
-        list.removeIf(c -> c.isRange()
+        list.removeIf(c -> c.isRange() && !c.isRelative()
                 && (c.getField() == Constraint.Field.X || c.getField() == Constraint.Field.Z));
         list.add(Constraint.range(Constraint.Field.X, xLo, xHi, true, true));
         list.add(Constraint.range(Constraint.Field.Z, zLo, zHi, true, true));
@@ -497,7 +497,7 @@ public final class AngleSolverState {
     public void clearFootprint(int tick) {
         TickConstraints tc = ticks.get(tick);
         if (tc == null) return;
-        tc.getConstraints().removeIf(c -> c.isRange()
+        tc.getConstraints().removeIf(c -> c.isRange() && !c.isRelative()
                 && (c.getField() == Constraint.Field.X || c.getField() == Constraint.Field.Z));
     }
 
@@ -506,7 +506,7 @@ public final class AngleSolverState {
         List<Constraint> list = tickConstraints(tick).getConstraints();
         Constraint.Field field = wall.getField();
         boolean lower = isLowerBound(wall.getOp());
-        list.removeIf(c -> !c.isRange() && c.getField() == field
+        list.removeIf(c -> !c.isRange() && !c.isRelative() && c.getField() == field
                 && isWallOp(c.getOp()) && isLowerBound(c.getOp()) == lower);
         list.add(wall);
     }
@@ -514,7 +514,7 @@ public final class AngleSolverState {
     public void clearWall(int tick, Constraint.Field field, boolean lower) {
         TickConstraints tc = ticks.get(tick);
         if (tc == null) return;
-        tc.getConstraints().removeIf(c -> !c.isRange() && c.getField() == field
+        tc.getConstraints().removeIf(c -> !c.isRange() && !c.isRelative() && c.getField() == field
                 && isWallOp(c.getOp()) && isLowerBound(c.getOp()) == lower);
     }
 

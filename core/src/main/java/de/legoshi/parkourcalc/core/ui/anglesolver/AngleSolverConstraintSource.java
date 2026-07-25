@@ -24,7 +24,10 @@ import java.util.List;
  * tick index the constraint is keyed by), so the constraint->tick mapping is explicit.
  *
  * <p>Only enabled, spatial (X/Z) constraints produce geometry; facing/velocity constraints have no
- * world extent and are skipped (see {@link ConstraintShapes}). A co-tick bounded X range and Z range
+ * world extent and are skipped (see {@link ConstraintShapes}). A relative X/Z constraint resolves to
+ * absolute bounds against its reference tick's simulated position before shaping, so its plate floats
+ * with the current path (and vanishes while the reference tick has no simulated position); the
+ * geometry cache keys on the path revision, so a resim re-resolves it. A co-tick bounded X range and Z range
  * merge into a single landing pad; lone bounded ranges, equalities, and open-ended comparisons each
  * become their own plate. Each plate carries the indices (into the tick's constraint list) it came from
  * and whether it is highlighted by the current selection. Plates render only while the solver view is
@@ -64,9 +67,14 @@ public final class AngleSolverConstraintSource implements ConstraintBoxSource {
 
         List<Constraint> all = tc.getConstraints();
         List<Integer> drawable = new ArrayList<>();
+        Constraint[] resolved = new Constraint[all.size()];
         for (int i = 0; i < all.size(); i++) {
             Constraint c = all.get(i);
-            if (c.isEnabled() && ConstraintShapes.isDrawable(c)) drawable.add(i);
+            if (!c.isEnabled() || !ConstraintShapes.isDrawable(c)) continue;
+            Constraint r = resolveRelative(c);
+            if (r == null) continue;
+            resolved[i] = r;
+            drawable.add(i);
         }
         if (drawable.isEmpty()) return java.util.Collections.emptyList();
 
@@ -77,11 +85,11 @@ public final class AngleSolverConstraintSource implements ConstraintBoxSource {
 
         List<ConstraintPlate> out = new ArrayList<>();
         if (merged) {
-            out.add(tagged(ConstraintShapes.pad(all.get(xIdx), all.get(zIdx), foot, style, tickIndex, new int[]{xIdx, zIdx})));
+            out.add(tagged(ConstraintShapes.pad(resolved[xIdx], resolved[zIdx], foot, style, tickIndex, new int[]{xIdx, zIdx})));
         }
         for (int idx : drawable) {
             if (merged && (idx == xIdx || idx == zIdx)) continue;
-            Constraint c = all.get(idx);
+            Constraint c = resolved[idx];
             int[] one = {idx};
             ConstraintPlate plate;
             if (ConstraintShapes.sense(c.getOp()) == ConstraintShapes.Sense.EXCLUDE) {
@@ -94,6 +102,19 @@ public final class AngleSolverConstraintSource implements ConstraintBoxSource {
             out.add(tagged(plate));
         }
         return out;
+    }
+
+    private Constraint resolveRelative(Constraint c) {
+        if (!c.isRelative()) return c;
+        Vec3dCore ref = boxController.getPosition(c.getRefTick());
+        if (ref == null) return null;
+        double base = c.getField() == Constraint.Field.X ? ref.x : ref.z;
+        Constraint r = c.copy();
+        r.setRefTick(null);
+        r.setValue(r.getValue() + base);
+        r.setLo(r.getLo() + base);
+        r.setHi(r.getHi() + base);
+        return r;
     }
 
     private ConstraintPlate tagged(ConstraintPlate plate) {
@@ -140,6 +161,7 @@ public final class AngleSolverConstraintSource implements ConstraintBoxSource {
                 h = 31 * h + Double.hashCode(c.getHi());
                 h = 31 * h + (c.isLoInclusive() ? 1 : 0);
                 h = 31 * h + (c.isHiInclusive() ? 1 : 0);
+                h = 31 * h + (c.getRefTick() == null ? -1 : c.getRefTick());
             }
             if (anyDrawable) h = 31 * h + (selection.isSelected(tickKey + 1) ? 1 : 0);
         }

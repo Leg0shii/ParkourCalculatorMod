@@ -81,6 +81,9 @@ public final class JumpConstraintCompiler {
         for (JumpConstraint c : spec.constraints) {
             validateTick(c.t1, n, c.name);
             if (c.t2 != null) validateTick(c.t2, n, c.name);
+            if (c.mode == JumpConstraint.Mode.DXZ && c.t2 == null) {
+                throw new IllegalArgumentException("constraint " + c.name + ": DXZ requires t2");
+            }
             if (c.cmp == JumpConstraint.Cmp.EQ) {
                 eq.add(c);
             } else {
@@ -101,6 +104,9 @@ public final class JumpConstraintCompiler {
                 return path.posZ[c.t1] + opSign(c.op) * (c.t2 != null ? path.posZ[c.t2] : 0.0) - c.rhs;
             case F:
                 return Angles.wrap(F[c.t1] + opSign(c.op) * (c.t2 != null ? F[c.t2] : 0.0) - c.rhs);
+            case DXZ:
+                return Math.abs(path.posX[c.t1] - path.posX[c.t2])
+                        - Math.abs(path.posZ[c.t1] - path.posZ[c.t2]) - c.rhs;
             default:
                 throw new IllegalStateException("unknown mode: " + c.mode);
         }
