@@ -239,6 +239,8 @@ public final class Application {
     private void runSimulation(int dirtyTick) {
         if (!mc.isReady()) return;
         long t0 = Perf.now();
+        boolean incremental = dirtyTick > 0 && runner.canResumeFrom(dirtyTick)
+                && boxController.size() > dirtyTick && !DebugFlags.COMPARE_PARTIAL_SIM;
         List<TickState> path = mc.runOnServerThread(() -> dirtyTick < 0
                 ? runner.simulate(inputData)
                 : runner.simulateFrom(dirtyTick, inputData));
@@ -256,9 +258,13 @@ public final class Application {
             DebugFlags.compareAndLog(path, fresh, dirtyTick);
             path = fresh;
         }
-        boxController.clearAll();
-        for (TickState s : path) {
-            boxController.add(s);
+        if (incremental) {
+            boxController.replaceFrom(dirtyTick + 1, path.subList(dirtyTick + 1, path.size()));
+        } else {
+            boxController.clearAll();
+            for (TickState s : path) {
+                boxController.add(s);
+            }
         }
         boxController.setPitches(foldPitches(path.size()));
         if (!startDragController.isDragActive()) {

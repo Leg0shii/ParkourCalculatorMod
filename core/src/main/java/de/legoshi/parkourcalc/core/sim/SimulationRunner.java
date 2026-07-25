@@ -98,10 +98,14 @@ public final class SimulationRunner {
         return path;
     }
 
+    public boolean canResumeFrom(int dirtyTick) {
+        return dirtyTick > 0 && !checkpoints.isEmpty() && dirtyTick < checkpoints.size();
+    }
+
     /** Restore cached state at dirtyTick, then replay rows[dirtyTick..end]. Falls back to a full
      *  simulate if the cache is empty or dirtyTick is out of range. */
     public List<TickState> simulateFrom(int dirtyTick, InputData inputData) {
-        if (dirtyTick <= 0 || checkpoints.isEmpty() || dirtyTick >= checkpoints.size()) {
+        if (!canResumeFrom(dirtyTick)) {
             return simulate(inputData);
         }
 

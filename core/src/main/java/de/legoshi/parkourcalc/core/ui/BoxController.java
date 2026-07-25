@@ -45,12 +45,49 @@ public final class BoxController {
 
     private double boxSize = BoxStyle.BOX_SIZE;
     private long geometryRev = 1;
+    private int dirtyFrom = Integer.MAX_VALUE;
+    private long dirtyBaseRev = 1;
+
+    private void bumpGeometry(int from) {
+        geometryRev++;
+        if (from < dirtyFrom) dirtyFrom = from;
+    }
+
+    public int takeDirtyFrom(long sinceRev) {
+        int result;
+        if (sinceRev >= geometryRev) {
+            result = positions.size();
+        } else if (sinceRev >= dirtyBaseRev) {
+            result = Math.min(dirtyFrom, positions.size());
+        } else {
+            result = 0;
+        }
+        dirtyFrom = Integer.MAX_VALUE;
+        dirtyBaseRev = geometryRev;
+        return result;
+    }
 
     public void add(TickState state) {
         positions.add(state.position);
         states.add(state);
         tickAabbs.add(AABB.ofCenteredXZ(state.position, boxSize));
-        geometryRev++;
+        bumpGeometry(positions.size() - 1);
+    }
+
+    public void replaceFrom(int from, List<TickState> tail) {
+        while (positions.size() > from) {
+            int last = positions.size() - 1;
+            positions.remove(last);
+            states.remove(last);
+            tickAabbs.remove(last);
+        }
+        for (int i = 0; i < tail.size(); i++) {
+            TickState state = tail.get(i);
+            positions.add(state.position);
+            states.add(state);
+            tickAabbs.add(AABB.ofCenteredXZ(state.position, boxSize));
+        }
+        bumpGeometry(from);
     }
 
     public void clearAll() {
@@ -58,12 +95,26 @@ public final class BoxController {
         states.clear();
         tickAabbs.clear();
         pitches = new float[0];
-        geometryRev++;
+        bumpGeometry(0);
     }
 
     public void setPitches(float[] pitches) {
-        this.pitches = pitches != null ? pitches : new float[0];
-        geometryRev++;
+        float[] next = pitches != null ? pitches : new float[0];
+        int firstDiff = -1;
+        if (next.length != this.pitches.length) {
+            firstDiff = Math.min(next.length, this.pitches.length);
+        }
+        int common = Math.min(next.length, this.pitches.length);
+        for (int i = 0; i < common; i++) {
+            if (Float.compare(next[i], this.pitches[i]) != 0) {
+                firstDiff = firstDiff < 0 ? i : Math.min(firstDiff, i);
+                break;
+            }
+        }
+        this.pitches = next;
+        if (firstDiff >= 0) {
+            bumpGeometry(firstDiff);
+        }
     }
 
     public float getPitch(int index) {
@@ -86,7 +137,7 @@ public final class BoxController {
         for (Vec3dCore position : positions) {
             tickAabbs.add(AABB.ofCenteredXZ(position, size));
         }
-        geometryRev++;
+        bumpGeometry(0);
     }
 
     /** Monotonic counter; loaders snapshot it and rebuild cached buffers when it changes. */
@@ -223,6 +274,12 @@ public final class BoxController {
                        double camX, double camY, double camZ, double maxDistanceSq) {
         for (int i = 0; i < positions.size(); i++) {
             if (!inRange(i, camX, camY, camZ, maxDistanceSq)) continue;
+            renderer.drawBox(tickAabbs.get(i), picker.argbFor(i, states.get(i)));
+        }
+    }
+
+    public void render(BoxRenderer renderer, BoxColorPicker picker, int from, int to) {
+        for (int i = from; i < to; i++) {
             renderer.drawBox(tickAabbs.get(i), picker.argbFor(i, states.get(i)));
         }
     }
@@ -418,29 +475,39 @@ public final class BoxController {
 
     public void renderFacingArrows(BoxRenderer renderer, boolean drawYaw, boolean drawCombined, int yawArgb, int combinedArgb, double camX, double camY, double camZ, double maxDistanceSq) {
         if (positions.isEmpty()) return;
-        double half = boxSize * 0.5;
         // Arrow at box i is the outgoing facing: states[i+1].yaw is the look direction used
         // during the tick that leaves box i. The final box has no outgoing tick, so it gets no arrow.
         for (int i = 0; i + 1 < states.size(); i++) {
             if (!inRange(i, camX, camY, camZ, maxDistanceSq)) continue;
-            Vec3dCore p = positions.get(i);
+            emitFacingArrowAt(renderer, drawYaw, drawCombined, yawArgb, combinedArgb, i);
+        }
+    }
 
-            double yawRad = Math.toRadians(states.get(i + 1).yaw);
-            double fx = -Math.sin(yawRad);
-            double fz = Math.cos(yawRad);
+    public void renderFacingArrows(BoxRenderer renderer, boolean drawYaw, boolean drawCombined, int yawArgb, int combinedArgb, int from, int to) {
+        for (int i = from; i < to; i++) {
+            emitFacingArrowAt(renderer, drawYaw, drawCombined, yawArgb, combinedArgb, i);
+        }
+    }
 
-            if (drawYaw) {
-                emitArrow(renderer, p.x, p.y + half, p.z, fx, 0.0, fz, -fz, 0.0, fx, 0.0, 1.0, 0.0, yawArgb);
-            }
-            if (drawCombined) {
-                double pitchRad = Math.toRadians(getPitch(i + 1));
-                double cosP = Math.cos(pitchRad);
-                double sinP = Math.sin(pitchRad);
-                emitArrow(renderer, p.x, p.y + half, p.z,
-                        fx * cosP, -sinP, fz * cosP,
-                        -fz, 0.0, fx,
-                        fx * sinP, cosP, fz * sinP, combinedArgb);
-            }
+    private void emitFacingArrowAt(BoxRenderer renderer, boolean drawYaw, boolean drawCombined, int yawArgb, int combinedArgb, int i) {
+        double half = boxSize * 0.5;
+        Vec3dCore p = positions.get(i);
+
+        double yawRad = Math.toRadians(states.get(i + 1).yaw);
+        double fx = -Math.sin(yawRad);
+        double fz = Math.cos(yawRad);
+
+        if (drawYaw) {
+            emitArrow(renderer, p.x, p.y + half, p.z, fx, 0.0, fz, -fz, 0.0, fx, 0.0, 1.0, 0.0, yawArgb);
+        }
+        if (drawCombined) {
+            double pitchRad = Math.toRadians(getPitch(i + 1));
+            double cosP = Math.cos(pitchRad);
+            double sinP = Math.sin(pitchRad);
+            emitArrow(renderer, p.x, p.y + half, p.z,
+                    fx * cosP, -sinP, fz * cosP,
+                    -fz, 0.0, fx,
+                    fx * sinP, cosP, fz * sinP, combinedArgb);
         }
     }
 

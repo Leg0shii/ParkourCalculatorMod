@@ -135,7 +135,8 @@ public final class PathRenderPlan {
             if (drawLive) boxController.renderConstraints(lines, live, palette, true, 0, 0, 0, ALL);
         };
 
-        SelectionPatchSpec patch = new SelectionPatchSpec(face, line, hitbox, drawHitbox, full, settings.showSubtick, arrowsPerBox);
+        SelectionPatchSpec patch = new SelectionPatchSpec(face, line, hitbox, drawHitbox, full, settings.showSubtick, arrowsPerBox,
+                drawYawArrows, drawCombinedArrows, BoxStyle.yawArrowArgb(settings), BoxStyle.pitchArrowArgb(settings));
 
         ConstraintBoxSource countKeySource = drawConstraints ? source : null;
         ConstraintBoxSource countKeyLive = drawLive ? live : null;

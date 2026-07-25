@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.forge8.render;
 
+import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.ports.BoxRenderer;
 import de.legoshi.parkourcalc.core.render.PathVertexLayout;
 import de.legoshi.parkourcalc.core.render.SelectionPatchSpec;
@@ -61,11 +62,47 @@ public final class Forge8CachedBoxGeometry {
             }
             return;
         }
+        long buildStart = Perf.now();
+        if (built && structuralHash == lastStructuralHash && boxController.size() == boxCount
+                && hitboxEdges == 0 && !useSubtick && constraintFaceVerts == 0 && constraintLineVerts == 0) {
+            int dirty = boxController.takeDirtyFrom(lastGeometryRev);
+            if (dirty > 0) {
+                patchTail(boxController, Math.max(0, dirty - 1), patch);
+                lastGeometryRev = rev;
+                if (!selection.equals(bakedSelection)) {
+                    patchSelection(boxController, selection, patch);
+                }
+                Perf.stop("geomPatchTail", buildStart);
+                return;
+            }
+        }
         rebuild(boxController, faceEmitter, lineEmitter, patch);
+        boxController.takeDirtyFrom(rev);
+        Perf.stop("geomRebuild", buildStart);
         bakedSelection = new HashSet<Integer>(selection);
         lastGeometryRev = rev;
         lastStructuralHash = structuralHash;
         built = true;
+    }
+
+    private void patchTail(final BoxController boxController, final int from, final SelectionPatchSpec patch) {
+        final int n = boxCount;
+        writeVerts(faceVbo, PathVertexLayout.faceMainOffset(from), GL11.GL_TRIANGLES, BoxRenderer.Mode.FACES,
+                (n - from) * PathVertexLayout.FACE_VERTS_PER_BOX,
+                r -> boxController.render(r, patch.facePicker, from, n)
+        );
+        if (arrowsPerBox > 0 && from < n - 1) {
+            int stride = arrowsPerBox * PathVertexLayout.ARROW_VERTS_PER_BOX;
+            writeVerts(faceVbo, arrowBase + from * stride, GL11.GL_TRIANGLES, BoxRenderer.Mode.FACES,
+                    (n - 1 - from) * stride,
+                    r -> boxController.renderFacingArrows(r, patch.drawYawArrows, patch.drawCombinedArrows,
+                            patch.yawArrowArgb, patch.combinedArrowArgb, from, n - 1)
+            );
+        }
+        writeVerts(lineVbo, PathVertexLayout.lineMainOffset(from), GL11.GL_LINES, BoxRenderer.Mode.LINES,
+                (n - from) * PathVertexLayout.LINE_VERTS_PER_BOX,
+                r -> boxController.render(r, patch.linePicker, from, n)
+        );
     }
 
     private void rebuild(BoxController boxController, Consumer<BoxRenderer> faceEmitter, Consumer<BoxRenderer> lineEmitter, SelectionPatchSpec patch) {
