@@ -132,7 +132,7 @@ public final class FileMenu {
         ThemeManager.paddedSeparator();
         boolean hasName = controller.currentName() != null;
         if (ImGui.menuItem("Save", "Ctrl+S", false, hasName || controller.isDirty())) onSave();
-        if (ImGui.menuItem("Save As...")) onSaveAs();
+        if (ImGui.menuItem("Save As...", null, false, hasName)) onSaveAs();
         if (ImGui.menuItem("Save debug values", null, settings.saveDebugValues)) {
             settings.saveDebugValues = !settings.saveDebugValues;
             onSettingsChanged.run();
