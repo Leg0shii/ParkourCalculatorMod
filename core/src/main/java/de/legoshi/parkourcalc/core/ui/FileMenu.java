@@ -132,7 +132,7 @@ public final class FileMenu {
         ThemeManager.paddedSeparator();
         boolean hasName = controller.currentName() != null;
         if (ImGui.menuItem("Save", "Ctrl+S", false, hasName || controller.isDirty())) onSave();
-        if (ImGui.menuItem("Save As...")) onSaveAs();
+        if (ImGui.menuItem("Save As...", null, false, hasName)) onSaveAs();
         if (ImGui.menuItem("Save debug values", null, settings.saveDebugValues)) {
             settings.saveDebugValues = !settings.saveDebugValues;
             onSettingsChanged.run();
@@ -275,8 +275,10 @@ public final class FileMenu {
         pendingNameTitle = TITLE_NAME_SAVEAS;
     }
 
-    /** Ctrl+S: save under the current name, or fall into Save As when unnamed (gh-107). */
+    /** Ctrl+S: save under the current name, fall into Save As when unnamed but dirty (gh-107),
+     *  and do nothing when there is nothing to save (gh-158). */
     public void quickSave() {
+        if (controller.currentName() == null && !controller.isDirty()) return;
         onSave();
     }
 
