@@ -24,6 +24,21 @@ import java.util.function.Supplier;
 @SuppressWarnings("DuplicatedCode")
 public final class Forge12MinecraftAccess implements MinecraftAccess {
 
+    private static final double PICK_REACH = 64.0;
+
+    private static RayTraceResult clipLookRay() {
+        Minecraft mc = Minecraft.getMinecraft();
+        Entity view = mc.getRenderViewEntity();
+        World world = mc.world;
+        if (view == null || world == null) return null;
+        Vec3d eye = view.getPositionEyes(1.0F);
+        Vec3d look = view.getLook(1.0F);
+        Vec3d end = new Vec3d(eye.x + look.x * PICK_REACH, eye.y + look.y * PICK_REACH, eye.z + look.z * PICK_REACH);
+        RayTraceResult hit = world.rayTraceBlocks(eye, end);
+        if (hit == null || hit.typeOfHit != RayTraceResult.Type.BLOCK) return null;
+        return hit;
+    }
+
     @Override
     public Vec3dCore getPlayerPosition() {
         EntityPlayerSP player = Minecraft.getMinecraft().player;
@@ -56,8 +71,8 @@ public final class Forge12MinecraftAccess implements MinecraftAccess {
 
     @Override
     public int[] getLookedAtBlock() {
-        RayTraceResult hit = Minecraft.getMinecraft().objectMouseOver;
-        if (hit == null || hit.typeOfHit != RayTraceResult.Type.BLOCK) return null;
+        RayTraceResult hit = clipLookRay();
+        if (hit == null) return null;
         BlockPos pos = hit.getBlockPos();
         if (pos == null) return null;
         return new int[] {pos.getX(), pos.getY(), pos.getZ()};
@@ -95,15 +110,15 @@ public final class Forge12MinecraftAccess implements MinecraftAccess {
 
     @Override
     public Face getLookedAtFace() {
-        RayTraceResult hit = Minecraft.getMinecraft().objectMouseOver;
-        if (hit == null || hit.typeOfHit != RayTraceResult.Type.BLOCK) return null;
+        RayTraceResult hit = clipLookRay();
+        if (hit == null) return null;
         return toFace(hit.sideHit);
     }
 
     @Override
     public Vec3dCore getLookedAtHitVec() {
-        RayTraceResult hit = Minecraft.getMinecraft().objectMouseOver;
-        if (hit == null || hit.typeOfHit != RayTraceResult.Type.BLOCK || hit.hitVec == null) return null;
+        RayTraceResult hit = clipLookRay();
+        if (hit == null || hit.hitVec == null) return null;
         return new Vec3dCore(hit.hitVec.x, hit.hitVec.y, hit.hitVec.z);
     }
 

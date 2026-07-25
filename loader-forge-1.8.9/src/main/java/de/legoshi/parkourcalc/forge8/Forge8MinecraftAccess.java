@@ -25,6 +25,21 @@ import java.util.function.Supplier;
 @SuppressWarnings("DuplicatedCode")
 public final class Forge8MinecraftAccess implements MinecraftAccess {
 
+    private static final double PICK_REACH = 64.0;
+
+    private static MovingObjectPosition clipLookRay() {
+        Minecraft mc = Minecraft.getMinecraft();
+        Entity view = mc.getRenderViewEntity();
+        World world = mc.theWorld;
+        if (view == null || world == null) return null;
+        Vec3 eye = view.getPositionEyes(1.0F);
+        Vec3 look = view.getLook(1.0F);
+        Vec3 end = eye.addVector(look.xCoord * PICK_REACH, look.yCoord * PICK_REACH, look.zCoord * PICK_REACH);
+        MovingObjectPosition hit = world.rayTraceBlocks(eye, end);
+        if (hit == null || hit.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) return null;
+        return hit;
+    }
+
     @Override
     public Vec3dCore getPlayerPosition() {
         EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
@@ -57,8 +72,8 @@ public final class Forge8MinecraftAccess implements MinecraftAccess {
 
     @Override
     public int[] getLookedAtBlock() {
-        MovingObjectPosition hit = Minecraft.getMinecraft().objectMouseOver;
-        if (hit == null || hit.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) return null;
+        MovingObjectPosition hit = clipLookRay();
+        if (hit == null) return null;
         BlockPos pos = hit.getBlockPos();
         if (pos == null) return null;
         return new int[] {pos.getX(), pos.getY(), pos.getZ()};
@@ -97,15 +112,15 @@ public final class Forge8MinecraftAccess implements MinecraftAccess {
 
     @Override
     public Face getLookedAtFace() {
-        MovingObjectPosition hit = Minecraft.getMinecraft().objectMouseOver;
-        if (hit == null || hit.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) return null;
+        MovingObjectPosition hit = clipLookRay();
+        if (hit == null) return null;
         return toFace(hit.sideHit);
     }
 
     @Override
     public Vec3dCore getLookedAtHitVec() {
-        MovingObjectPosition hit = Minecraft.getMinecraft().objectMouseOver;
-        if (hit == null || hit.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK || hit.hitVec == null) return null;
+        MovingObjectPosition hit = clipLookRay();
+        if (hit == null || hit.hitVec == null) return null;
         return new Vec3dCore(hit.hitVec.xCoord, hit.hitVec.yCoord, hit.hitVec.zCoord);
     }
 
