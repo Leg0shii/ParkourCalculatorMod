@@ -86,8 +86,11 @@ public final class FabricWorldOverlayRenderer {
 
         CameraRenderState camera = context.levelState().cameraRenderState;
         Vec3 cameraPos = camera.pos;
+        boolean pitchMode = yawGizmo.isPitchMode();
         Float liveYaw = yawGizmo.getCurrentYawDegrees();
-        double yawDeg = liveYaw != null ? liveYaw : boxController.getYaw(gizmoIdx);
+        double yawDeg = pitchMode ? yawGizmo.getPlaneYawDegrees()
+                : (liveYaw != null ? liveYaw : boxController.getYaw(gizmoIdx));
+        double pitchDeg = yawGizmo.getGizmoPitchDegrees();
         double radius = BoxStyle.yawGizmoRadius(cameraPos.x - center.x, cameraPos.y - center.y, cameraPos.z - center.z);
         int circleArgb = BoxStyle.yawGizmoCircleArgb(settings);
         int directionArgb = BoxStyle.yawGizmoDirectionArgb(settings);
@@ -95,12 +98,14 @@ public final class FabricWorldOverlayRenderer {
         PoseStack poseStack = new PoseStack();
         poseStack.pushPose();
         poseStack.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z);
-        context.submitNodeCollector().submitCustomGeometry(poseStack, FabricRenderLayers.THIN_LINES, (pose, buffer) ->
-                boxController.renderYawGizmo(
-                        new FabricBoxRenderer(pose.pose(), buffer, BoxRenderer.Mode.LINES),
-                        center, yawDeg, radius, circleArgb, directionArgb
-                )
-        );
+        context.submitNodeCollector().submitCustomGeometry(poseStack, FabricRenderLayers.THIN_LINES, (pose, buffer) -> {
+            FabricBoxRenderer linesRenderer = new FabricBoxRenderer(pose.pose(), buffer, BoxRenderer.Mode.LINES);
+            if (pitchMode) {
+                boxController.renderPitchGizmo(linesRenderer, center, yawDeg, pitchDeg, radius, circleArgb, directionArgb);
+            } else {
+                boxController.renderYawGizmo(linesRenderer, center, yawDeg, radius, circleArgb, directionArgb);
+            }
+        });
         poseStack.popPose();
     }
 

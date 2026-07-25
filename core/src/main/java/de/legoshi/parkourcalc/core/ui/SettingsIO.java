@@ -51,6 +51,7 @@ public final class SettingsIO {
         }
 
         clampScaleIndex(settings);
+        clampArrowMode(settings);
         normalizeTickInfoStats(settings);
     }
 
@@ -93,6 +94,12 @@ public final class SettingsIO {
         if (settings.scaleIndex == Settings.AUTO_SCALE_INDEX) return;
         if (settings.scaleIndex < 0 || settings.scaleIndex >= Settings.PRESET_SCALES.length) {
             settings.scaleIndex = Settings.DEFAULT_SCALE_INDEX;
+        }
+    }
+
+    private static void clampArrowMode(Settings settings) {
+        if (settings.arrowMode < Settings.ARROW_MODE_YAW || settings.arrowMode > Settings.ARROW_MODE_COMBINED) {
+            settings.arrowMode = Settings.ARROW_MODE_YAW;
         }
     }
 

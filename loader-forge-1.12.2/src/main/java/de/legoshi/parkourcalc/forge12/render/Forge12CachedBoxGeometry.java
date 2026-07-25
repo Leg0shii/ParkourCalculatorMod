@@ -37,6 +37,7 @@ public final class Forge12CachedBoxGeometry {
 
     private int boxCount;
     private int hitboxEdges;
+    private int arrowsPerBox;
     private boolean useSubtick;
     private int[] hitboxStarts = new int[]{0};
     private int[] subtickStarts = new int[]{0};
@@ -79,6 +80,7 @@ public final class Forge12CachedBoxGeometry {
         boxCount = boxController.size();
         useSubtick = patch.showSubtick;
         hitboxEdges = patch.hitboxEdges();
+        arrowsPerBox = patch.arrowsPerBox;
         hitboxStarts = PathVertexLayout.hitboxVertexStarts(boxController, hitboxEdges, useSubtick);
 
         faceVbo = bake(GL11.GL_TRIANGLES, BoxRenderer.Mode.FACES, faceEmitter);
@@ -189,11 +191,12 @@ public final class Forge12CachedBoxGeometry {
                 GL11.glDrawArrays(GL11.GL_TRIANGLES, hitboxBase + hitboxStarts[a],
                         hitboxStarts[b] - hitboxStarts[a]);
             }
-            if (arrowBase < constraintFaceBase) {
+            if (arrowsPerBox > 0 && arrowBase < constraintFaceBase) {
+                int arrowStride = arrowsPerBox * PathVertexLayout.ARROW_VERTS_PER_BOX;
                 int arrowEnd = Math.min(b, boxCount - 1);
                 int arrowStart = Math.min(a, boxCount - 1);
                 if (arrowEnd > arrowStart) {
-                    GL11.glDrawArrays(GL11.GL_TRIANGLES, arrowBase + arrowStart * 60, (arrowEnd - arrowStart) * 60);
+                    GL11.glDrawArrays(GL11.GL_TRIANGLES, arrowBase + arrowStart * arrowStride, (arrowEnd - arrowStart) * arrowStride);
                 }
             }
         }

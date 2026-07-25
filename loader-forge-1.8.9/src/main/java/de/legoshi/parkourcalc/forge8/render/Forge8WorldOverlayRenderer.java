@@ -90,19 +90,29 @@ public final class Forge8WorldOverlayRenderer {
         int gizmoIdx = yawGizmo.getSelectedIndex();
         if (gizmoIdx >= 0) {
             Vec3dCore center = boxController.getCenter(gizmoIdx);
+            boolean pitchMode = yawGizmo.isPitchMode();
             Float liveYaw = yawGizmo.getCurrentYawDegrees();
-            double yawDeg = liveYaw != null ? liveYaw : boxController.getYaw(gizmoIdx);
+            double yawDeg = pitchMode ? yawGizmo.getPlaneYawDegrees()
+                    : (liveYaw != null ? liveYaw : boxController.getYaw(gizmoIdx));
             if (center != null) {
                 Tessellator tess = Tessellator.getInstance();
                 WorldRenderer buf = tess.getWorldRenderer();
                 buf.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
                 Forge8BoxRenderer linesRenderer = new Forge8BoxRenderer(buf, camX, camY, camZ, BoxRenderer.Mode.LINES);
                 double radius = BoxStyle.yawGizmoRadius(camX - center.x, camY - center.y, camZ - center.z);
-                boxController.renderYawGizmo(
-                        linesRenderer, center, yawDeg, radius,
-                        BoxStyle.yawGizmoCircleArgb(settings),
-                        BoxStyle.yawGizmoDirectionArgb(settings)
-                );
+                if (pitchMode) {
+                    boxController.renderPitchGizmo(
+                            linesRenderer, center, yawDeg, yawGizmo.getGizmoPitchDegrees(), radius,
+                            BoxStyle.yawGizmoCircleArgb(settings),
+                            BoxStyle.yawGizmoDirectionArgb(settings)
+                    );
+                } else {
+                    boxController.renderYawGizmo(
+                            linesRenderer, center, yawDeg, radius,
+                            BoxStyle.yawGizmoCircleArgb(settings),
+                            BoxStyle.yawGizmoDirectionArgb(settings)
+                    );
+                }
                 tess.draw();
             }
         }

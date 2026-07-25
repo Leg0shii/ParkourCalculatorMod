@@ -53,6 +53,7 @@ public final class CachedBoxGeometry implements AutoCloseable {
 
     private int boxCount;
     private int hitboxEdges;
+    private int arrowsPerBox;
     private boolean useSubtick;
     private int[] hitboxStarts = new int[]{0};
     private int[] subtickStarts = new int[]{0}; // per-box subtick offsets relative to lineMainTotal
@@ -95,6 +96,7 @@ public final class CachedBoxGeometry implements AutoCloseable {
         boxCount = boxController.size();
         useSubtick = patch.showSubtick;
         hitboxEdges = patch.hitboxEdges();
+        arrowsPerBox = patch.arrowsPerBox;
         hitboxStarts = PathVertexLayout.hitboxVertexStarts(boxController, hitboxEdges, useSubtick);
 
         faceSegments = bake(BoxRenderer.Mode.FACES, PrimitiveTopology.TRIANGLES, boxCount * FACE_BYTES_PER_BOX, "parkourcalc cached faces", faceEmitter);
@@ -225,11 +227,12 @@ public final class CachedBoxGeometry implements AutoCloseable {
             if (hitboxEdges != 0) {
                 drawRange(faceSegments, pipeline, PrimitiveTopology.TRIANGLES, modelView,hitboxBase + hitboxStarts[a], hitboxStarts[b] - hitboxStarts[a]);
             }
-            if (arrowBase < constraintFaceBase) {
+            if (arrowsPerBox > 0 && arrowBase < constraintFaceBase) {
+                int arrowStride = arrowsPerBox * PathVertexLayout.ARROW_VERTS_PER_BOX;
                 int arrowEnd = Math.min(b, boxCount - 1);
                 int arrowStart = Math.min(a, boxCount - 1);
                 if (arrowEnd > arrowStart) {
-                    drawRange(faceSegments, pipeline, PrimitiveTopology.TRIANGLES, modelView,arrowBase + arrowStart * 60, (arrowEnd - arrowStart) * 60);
+                    drawRange(faceSegments, pipeline, PrimitiveTopology.TRIANGLES, modelView,arrowBase + arrowStart * arrowStride, (arrowEnd - arrowStart) * arrowStride);
                 }
             }
         }

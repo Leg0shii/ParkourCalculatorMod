@@ -12,14 +12,16 @@ public final class SelectionPatchSpec {
     public final boolean showHitbox;
     public final boolean showFullHitbox;
     public final boolean showSubtick;
+    public final int arrowsPerBox;
 
-    public SelectionPatchSpec(BoxColorPicker facePicker, BoxColorPicker linePicker, BoxColorPicker hitboxPicker, boolean showHitbox, boolean showFullHitbox, boolean showSubtick) {
+    public SelectionPatchSpec(BoxColorPicker facePicker, BoxColorPicker linePicker, BoxColorPicker hitboxPicker, boolean showHitbox, boolean showFullHitbox, boolean showSubtick, int arrowsPerBox) {
         this.facePicker = facePicker;
         this.linePicker = linePicker;
         this.hitboxPicker = hitboxPicker;
         this.showHitbox = showHitbox;
         this.showFullHitbox = showFullHitbox;
         this.showSubtick = showSubtick;
+        this.arrowsPerBox = arrowsPerBox;
     }
 
     public int hitboxEdges() {

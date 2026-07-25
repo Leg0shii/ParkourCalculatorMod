@@ -27,6 +27,7 @@ public final class SettingsModal {
     private static final String TT_SCROLLBAR_SIZE = "Thickness of scrollbars: the width of vertical bars and the height of horizontal ones. Scales with UI Scale.";
     private static final String TT_SCROLLBAR_GRAB = "Minimum length of the draggable scrollbar grab. Also applies to slider grab handles. Scales with UI Scale.";
     private static final String TT_YAW_ARROWS = "Draws an arrow at each tick's position showing the facing angle that frame.";
+    private static final String TT_ARROW_MODE = "Which facing arrow to draw: the flat yaw arrow, or one arrow combining yaw and pitch into the actual look direction.";
     private static final String TT_HITBOX = "Draws the player's hitbox at the currently selected tick.";
     private static final String TT_FULL_HITBOX = "Draws hitboxes for every tick in the TAS, not just the active one. Heavy on long TASes.";
     private static final String TT_SUBTICK = "Renders the interpolated path between adjacent ticks, exposing collision moments inside a tick.";
@@ -63,7 +64,10 @@ public final class SettingsModal {
     private final Runnable onChanged;
     private final TickInfoStatsEditor tickInfoStatsEditor;
 
+    private static final String[] ARROW_MODE_LABELS = {"Yaw", "Combined"};
+
     private final ImInt scaleIndexBuf = new ImInt();
+    private final ImInt arrowModeBuf = new ImInt();
     private final float[] yawTurnCapBuf = new float[1];
     private final int[] pathRenderDistanceBuf = new int[1];
     private final float[] scrollbarSizeBuf = new float[1];
@@ -236,7 +240,16 @@ public final class SettingsModal {
         ThemeManager.sectionSpacing();
         sectionHeader("In-world overlays");
         if (beginLayoutTable("##settings_overlays")) {
-            checkboxRow("Show yaw arrows", "##show_yaw_arrows", settings.showYawArrows, TT_YAW_ARROWS, v -> settings.showYawArrows = v);
+            checkboxRow("Show facing arrows", "##show_yaw_arrows", settings.showYawArrows, TT_YAW_ARROWS, v -> settings.showYawArrows = v);
+            arrowModeBuf.set(settings.arrowMode);
+            row("Arrow type", () -> {
+                ImGui.setNextItemWidth(-1);
+                if (Controls.combo("##arrow_mode", arrowModeBuf, ARROW_MODE_LABELS)) {
+                    settings.arrowMode = arrowModeBuf.get();
+                    onChanged.run();
+                }
+                tooltipForLastItem(TT_ARROW_MODE);
+            });
             checkboxRow("Show hitbox", "##show_hitbox", settings.showHitbox, TT_HITBOX, v -> settings.showHitbox = v);
             checkboxRow("Show full hitbox", "##show_full_hitbox", settings.showFullHitbox, TT_FULL_HITBOX, v -> settings.showFullHitbox = v);
             checkboxRow("Subtick visualization", "##show_subtick", settings.showSubtick, TT_SUBTICK, v -> settings.showSubtick = v);
@@ -382,6 +395,7 @@ public final class SettingsModal {
         sectionHeader("Path and gizmos");
         renderColor("subtick path", settings.subtickPath, flags);
         renderColor("yaw arrows", settings.yawArrow, flags);
+        renderColor("combined arrows", settings.pitchArrow, flags);
         renderColor("yaw gizmo circle", settings.yawGizmoCircle, flags);
         renderColor("yaw gizmo direction", settings.yawGizmoDirection, flags);
 

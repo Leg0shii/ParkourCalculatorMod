@@ -93,7 +93,9 @@ public final class Application {
         this.yawGizmo = new YawGizmoController(
                 boxController,
                 this::handleStartYawChange,
-                this::handleTickYawChange
+                this::handleTickYawChange,
+                this::handleStartPitchChange,
+                this::handleTickPitchChange
         );
         this.playback = new PlaybackController(inputData, runner, settings);
         this.playback.setStartRangeResolver(this::resolvePlaybackStartRange);
@@ -245,10 +247,24 @@ public final class Application {
         for (TickState s : path) {
             boxController.add(s);
         }
+        boxController.setPitches(foldPitches(path.size()));
         if (!startDragController.isDragActive()) {
             selection.retainBelow(boxController.size());
         }
         Perf.stop("runSimulation", t0);
+    }
+
+    private float[] foldPitches(int count) {
+        float[] pitches = new float[count];
+        if (count == 0) return pitches;
+        pitches[0] = runner.getStartPitch();
+        List<InputRow> rows = inputData.getRows();
+        for (int i = 1; i < count; i++) {
+            pitches[i] = i - 1 < rows.size()
+                    ? PlaybackController.applyPitch(pitches[i - 1], rows.get(i - 1))
+                    : pitches[i - 1];
+        }
+        return pitches;
     }
 
     /** Fired by the loader on disconnect / world join. */
@@ -315,6 +331,22 @@ public final class Application {
         onUserChange(rowIndex);
     }
 
+    private void handleStartPitchChange(float pitch) {
+        runner.setStartPitch(pitch);
+        onUserChange(-1);
+    }
+
+    private void handleTickPitchChange(int rowIndex, float absolutePitch) {
+        if (rowIndex < 0 || rowIndex >= inputData.getRows().size()) return;
+        InputRow row = inputData.getRows().get(rowIndex);
+        if (row.isPitchLocked()) {
+            row.setPitch(absolutePitch);
+        } else {
+            row.setPitch(absolutePitch - boxController.getPitch(rowIndex));
+        }
+        onUserChange(rowIndex);
+    }
+
     private void onUserChange(int dirtyTick) {
         saveController.markDirty();
         runSimulation(dirtyTick);
@@ -349,6 +381,7 @@ public final class Application {
                 mc.getEyePosition(),
                 mc.getLookDirection(),
                 mc.isMousePressedRight(),
+                mc.isCtrlDown(),
                 mc.getCursorScreenX(),
                 mc.getCursorScreenY(),
                 isControlPanelOpen()

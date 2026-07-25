@@ -45,6 +45,11 @@ public final class BoxStyle {
         return toArgb(c[0], c[1], c[2], c[3]);
     }
 
+    public static int pitchArrowArgb(Settings settings) {
+        float[] c = settings.pitchArrow;
+        return toArgb(c[0], c[1], c[2], c[3]);
+    }
+
     public static int yawGizmoCircleArgb(Settings settings) {
         float[] c = settings.yawGizmoCircle;
         return toArgb(c[0], c[1], c[2], c[3]);

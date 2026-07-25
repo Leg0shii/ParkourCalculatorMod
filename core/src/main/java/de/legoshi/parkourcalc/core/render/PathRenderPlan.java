@@ -79,9 +79,13 @@ public final class PathRenderPlan {
         BoxColorPicker line = (i, s) -> BoxStyle.tickLineArgb(settings, s, selectedBoxes.contains(i));
         BoxColorPicker hitbox = (i, s) -> BoxStyle.hitboxLineArgb(settings, selectedBoxes.contains(i));
 
+        boolean drawYawArrows = settings.showYawArrows && settings.arrowMode == Settings.ARROW_MODE_YAW;
+        boolean drawCombinedArrows = settings.showYawArrows && settings.arrowMode == Settings.ARROW_MODE_COMBINED;
+        int arrowsPerBox = (drawYawArrows ? 1 : 0) + (drawCombinedArrows ? 1 : 0);
+
         // Drop the hitbox (not the path) when it would overflow a buffer, e.g. full hitbox + subtick at huge counts.
         int edges = PathVertexLayout.hitboxEdges(settings.showHitbox, settings.showFullHitbox);
-        boolean drawHitbox = edges != 0 && boxController.facePassFitsBudget(edges, settings.showSubtick, settings.showYawArrows);
+        boolean drawHitbox = edges != 0 && boxController.facePassFitsBudget(edges, settings.showSubtick, arrowsPerBox);
         boolean full = drawHitbox && settings.showFullHitbox;
         boolean floor = drawHitbox && !settings.showFullHitbox;
 
@@ -102,7 +106,8 @@ public final class PathRenderPlan {
             boxController.render(faces, face, 0, 0, 0, ALL);
             if (floor) boxController.renderHitboxFloorOutline(faces, hitbox, settings.showSubtick, 0, 0, 0, ALL);
             if (full) boxController.renderHitboxFullWireframe(faces, hitbox, settings.showSubtick, 0, 0, 0, ALL);
-            if (settings.showYawArrows) boxController.renderYawArrows(faces, BoxStyle.yawArrowArgb(settings), 0, 0, 0, ALL);
+            if (arrowsPerBox > 0) boxController.renderFacingArrows(faces, drawYawArrows, drawCombinedArrows,
+                    BoxStyle.yawArrowArgb(settings), BoxStyle.pitchArrowArgb(settings), 0, 0, 0, ALL);
             if (drawConstraints) boxController.renderConstraints(faces, source, palette, false, 0, 0, 0, ALL);
             if (drawLive) boxController.renderConstraints(faces, live, palette, false, 0, 0, 0, ALL);
         };
@@ -114,7 +119,7 @@ public final class PathRenderPlan {
             if (drawLive) boxController.renderConstraints(lines, live, palette, true, 0, 0, 0, ALL);
         };
 
-        SelectionPatchSpec patch = new SelectionPatchSpec(face, line, hitbox, drawHitbox, full, settings.showSubtick);
+        SelectionPatchSpec patch = new SelectionPatchSpec(face, line, hitbox, drawHitbox, full, settings.showSubtick, arrowsPerBox);
 
         ConstraintBoxSource countKeySource = drawConstraints ? source : null;
         ConstraintBoxSource countKeyLive = drawLive ? live : null;
@@ -165,6 +170,7 @@ public final class PathRenderPlan {
         h = 31 * h + Arrays.hashCode(settings.hitboxDefault);
         h = 31 * h + Arrays.hashCode(settings.hitboxSelected);
         h = 31 * h + Arrays.hashCode(settings.yawArrow);
+        h = 31 * h + Arrays.hashCode(settings.pitchArrow);
         h = 31 * h + Arrays.hashCode(settings.subtickPath);
         h = 31 * h + Arrays.hashCode(settings.constraintOutline);
         h = 31 * h + Arrays.hashCode(settings.constraintFill);
@@ -173,6 +179,7 @@ public final class PathRenderPlan {
         h = 31 * h + (settings.showHitbox ? 1 : 0);
         h = 31 * h + (settings.showFullHitbox ? 2 : 0);
         h = 31 * h + (settings.showYawArrows ? 4 : 0);
+        h = 31 * h + settings.arrowMode;
         h = 31 * h + (settings.showSubtick ? 8 : 0);
         h = 31 * h + (settings.showConstraints ? 16 : 0);
         h = 31 * h + (settings.constraintExpandByHitbox ? 32 : 0);
