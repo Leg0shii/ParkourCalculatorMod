@@ -123,6 +123,25 @@ public final class Forge12MinecraftAccess implements MinecraftAccess {
     }
 
     @Override
+    public double getEyeHeight(boolean sneaking) {
+        return sneaking ? 1.54 : 1.62;
+    }
+
+    @Override
+    public double clipBlockDistance(Vec3dCore origin, Vec3dCore direction, double maxDistance) {
+        World world = Minecraft.getMinecraft().world;
+        if (world == null) return -1.0;
+        Vec3d start = new Vec3d(origin.x, origin.y, origin.z);
+        Vec3d end = new Vec3d(
+                origin.x + direction.x * maxDistance,
+                origin.y + direction.y * maxDistance,
+                origin.z + direction.z * maxDistance);
+        RayTraceResult hit = world.rayTraceBlocks(start, end);
+        if (hit == null || hit.typeOfHit != RayTraceResult.Type.BLOCK || hit.hitVec == null) return -1.0;
+        return hit.hitVec.distanceTo(start);
+    }
+
+    @Override
     public List<AABB> getCollisionBoxes(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
         List<AABB> out = new ArrayList<>();
         World world = Minecraft.getMinecraft().world;

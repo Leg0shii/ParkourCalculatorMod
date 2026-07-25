@@ -15,6 +15,8 @@ public final class Settings {
     private static final float[] DEFAULT_SUBTICK_PATH = {0.976f, 0.886f, 0.686f, 0.80f};        // yellow     #f9e2af
     private static final float[] DEFAULT_YAW_ARROW = {0.831f, 0.929f, 0.976f, 0.529f};           // #D4EDF987
     private static final float[] DEFAULT_PITCH_ARROW = {0.976f, 0.886f, 0.686f, 0.529f};         // yellow     #f9e2af
+    private static final float[] DEFAULT_HIT_DISTANCE_LINE = {0.804f, 0.839f, 0.957f, 0.40f};
+    private static final float[] DEFAULT_HIT_DISTANCE_LINE_HIT = {0.651f, 0.890f, 0.631f, 0.90f};
     private static final float[] DEFAULT_YAW_GIZMO_CIRCLE = {0.804f, 0.839f, 0.957f, 0.70f};    // text       #cdd6f4
     private static final float[] DEFAULT_YAW_GIZMO_DIRECTION = {0.976f, 0.886f, 0.686f, 1.00f}; // yellow     #f9e2af
     private static final float[] DEFAULT_HITBOX_DEFAULT = {0.804f, 0.839f, 0.957f, 0.80f};      // text       #cdd6f4
@@ -44,6 +46,8 @@ public final class Settings {
 
     private static final boolean DEFAULT_SHOW_YAW_ARROWS = true;
     private static final int DEFAULT_ARROW_MODE = ARROW_MODE_YAW;
+    private static final boolean DEFAULT_SHOW_HIT_DISTANCE_LINES = false;
+    private static final boolean DEFAULT_HIT_DISTANCE_SELECTED_ONLY = false;
     private static final boolean DEFAULT_SHOW_HITBOX = false;
     private static final boolean DEFAULT_SHOW_FULL_HITBOX = false;
     private static final boolean DEFAULT_SHOW_SUBTICK = false;
@@ -108,6 +112,8 @@ public final class Settings {
     public final float[] subtickPath = DEFAULT_SUBTICK_PATH.clone();
     public final float[] yawArrow = DEFAULT_YAW_ARROW.clone();
     public final float[] pitchArrow = DEFAULT_PITCH_ARROW.clone();
+    public final float[] hitDistanceLine = DEFAULT_HIT_DISTANCE_LINE.clone();
+    public final float[] hitDistanceLineHit = DEFAULT_HIT_DISTANCE_LINE_HIT.clone();
     public final float[] yawGizmoCircle = DEFAULT_YAW_GIZMO_CIRCLE.clone();
     public final float[] yawGizmoDirection = DEFAULT_YAW_GIZMO_DIRECTION.clone();
     public final float[] hitboxDefault = DEFAULT_HITBOX_DEFAULT.clone();
@@ -128,6 +134,8 @@ public final class Settings {
 
     public boolean showYawArrows = DEFAULT_SHOW_YAW_ARROWS;
     public int arrowMode = DEFAULT_ARROW_MODE;
+    public boolean showHitDistanceLines = DEFAULT_SHOW_HIT_DISTANCE_LINES;
+    public boolean hitDistanceSelectedOnly = DEFAULT_HIT_DISTANCE_SELECTED_ONLY;
     public boolean showHitbox = DEFAULT_SHOW_HITBOX;
     public boolean showFullHitbox = DEFAULT_SHOW_FULL_HITBOX;
     public boolean showSubtick = DEFAULT_SHOW_SUBTICK;
@@ -207,6 +215,8 @@ public final class Settings {
         System.arraycopy(DEFAULT_SUBTICK_PATH, 0, subtickPath, 0, 4);
         System.arraycopy(DEFAULT_YAW_ARROW, 0, yawArrow, 0, 4);
         System.arraycopy(DEFAULT_PITCH_ARROW, 0, pitchArrow, 0, 4);
+        System.arraycopy(DEFAULT_HIT_DISTANCE_LINE, 0, hitDistanceLine, 0, 4);
+        System.arraycopy(DEFAULT_HIT_DISTANCE_LINE_HIT, 0, hitDistanceLineHit, 0, 4);
         System.arraycopy(DEFAULT_YAW_GIZMO_CIRCLE, 0, yawGizmoCircle, 0, 4);
         System.arraycopy(DEFAULT_YAW_GIZMO_DIRECTION, 0, yawGizmoDirection, 0, 4);
         System.arraycopy(DEFAULT_HITBOX_DEFAULT, 0, hitboxDefault, 0, 4);
@@ -225,6 +235,8 @@ public final class Settings {
         constraintBackLength = DEFAULT_CONSTRAINT_BACK_LENGTH;
         showYawArrows = DEFAULT_SHOW_YAW_ARROWS;
         arrowMode = DEFAULT_ARROW_MODE;
+        showHitDistanceLines = DEFAULT_SHOW_HIT_DISTANCE_LINES;
+        hitDistanceSelectedOnly = DEFAULT_HIT_DISTANCE_SELECTED_ONLY;
         showHitbox = DEFAULT_SHOW_HITBOX;
         showFullHitbox = DEFAULT_SHOW_FULL_HITBOX;
         showSubtick = DEFAULT_SHOW_SUBTICK;

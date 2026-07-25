@@ -62,6 +62,14 @@ public interface MinecraftAccess {
         return Collections.emptyList();
     }
 
+    default double getEyeHeight(boolean sneaking) {
+        return 1.62;
+    }
+
+    default double clipBlockDistance(Vec3dCore origin, Vec3dCore direction, double maxDistance) {
+        return -1.0;
+    }
+
     /** Current state of the left mouse button (true while held). */
     boolean isMousePressedLeft();
 

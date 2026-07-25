@@ -50,6 +50,16 @@ public final class BoxStyle {
         return toArgb(c[0], c[1], c[2], c[3]);
     }
 
+    public static int hitDistanceMissArgb(Settings settings) {
+        float[] c = settings.hitDistanceLine;
+        return toArgb(c[0], c[1], c[2], c[3]);
+    }
+
+    public static int hitDistanceHitArgb(Settings settings) {
+        float[] c = settings.hitDistanceLineHit;
+        return toArgb(c[0], c[1], c[2], c[3]);
+    }
+
     public static int yawGizmoCircleArgb(Settings settings) {
         float[] c = settings.yawGizmoCircle;
         return toArgb(c[0], c[1], c[2], c[3]);

@@ -5,6 +5,7 @@ import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.ports.BoxRenderer;
 import de.legoshi.parkourcalc.core.render.PathRenderPlan;
+import de.legoshi.parkourcalc.core.render.ReachProbe;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
@@ -20,6 +21,7 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
 import org.lwjgl.opengl.GL11;
 
+import java.util.Set;
 import java.util.function.Supplier;
 
 /** Renders the cached path geometry during RenderWorldLastEvent on MC 1.12.2; the yaw gizmo stays immediate. */
@@ -108,6 +110,23 @@ public final class Forge12WorldOverlayRenderer {
                     boxController.renderYawGizmo(linesRenderer, center, yawDeg, radius,
                             BoxStyle.yawGizmoCircleArgb(settings),
                             BoxStyle.yawGizmoDirectionArgb(settings));
+                }
+                tess.draw();
+            }
+        }
+
+        if (settings.showHitDistanceLines && settings.hitDistanceSelectedOnly) {
+            Set<Integer> selected = selection.getSelectedBoxes();
+            if (!selected.isEmpty()) {
+                Tessellator tess = Tessellator.getInstance();
+                BufferBuilder buf = tess.getBuffer();
+                buf.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
+                Forge12BoxRenderer linesRenderer = new Forge12BoxRenderer(buf, camX, camY, camZ, BoxRenderer.Mode.LINES);
+                ReachProbe probe = PathRenderPlan.reachProbe();
+                int miss = BoxStyle.hitDistanceMissArgb(settings);
+                int hit = BoxStyle.hitDistanceHitArgb(settings);
+                for (int i : selected) {
+                    boxController.renderHitDistanceLineAt(linesRenderer, probe, i, miss, hit);
                 }
                 tess.draw();
             }

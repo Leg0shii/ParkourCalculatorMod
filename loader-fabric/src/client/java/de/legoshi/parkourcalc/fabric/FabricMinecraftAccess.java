@@ -133,6 +133,25 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
     }
 
     @Override
+    public double getEyeHeight(boolean sneaking) {
+        return sneaking ? 1.27 : 1.62;
+    }
+
+    @Override
+    public double clipBlockDistance(Vec3dCore origin, Vec3dCore direction, double maxDistance) {
+        Minecraft mc = Minecraft.getInstance();
+        LocalPlayer player = mc.player;
+        ClientLevel world = mc.level;
+        if (player == null || world == null) return -1.0;
+        Vec3 start = new Vec3(origin.x, origin.y, origin.z);
+        Vec3 end = start.add(direction.x * maxDistance, direction.y * maxDistance, direction.z * maxDistance);
+        BlockHitResult hit = world.clip(new ClipContext(
+                start, end, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, player));
+        if (hit == null || hit.getType() != HitResult.Type.BLOCK) return -1.0;
+        return hit.getLocation().distanceTo(start);
+    }
+
+    @Override
     public List<AABB> getCollisionBoxes(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
         List<AABB> out = new ArrayList<>();
         ClientLevel world = Minecraft.getInstance().level;

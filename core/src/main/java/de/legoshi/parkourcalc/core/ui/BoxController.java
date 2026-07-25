@@ -6,6 +6,7 @@ import de.legoshi.parkourcalc.core.render.ConstraintPalette;
 import de.legoshi.parkourcalc.core.render.ConstraintPlate;
 import de.legoshi.parkourcalc.core.render.CountingBoxRenderer;
 import de.legoshi.parkourcalc.core.render.PathVertexLayout;
+import de.legoshi.parkourcalc.core.render.ReachProbe;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
@@ -30,6 +31,8 @@ public final class BoxController {
     private static final double ARROW_THICKNESS = 0.016;
 
     private static final int GIZMO_SEGMENTS = 48;
+
+    private static final double BLOCK_REACH = 4.5;
 
     private static final int SPAN = 0;
     private static final int INSET_LO = 1;
@@ -439,6 +442,29 @@ public final class BoxController {
                         fx * sinP, cosP, fz * sinP, combinedArgb);
             }
         }
+    }
+
+    public void renderHitDistanceLines(BoxRenderer renderer, ReachProbe probe, int missArgb, int hitArgb) {
+        for (int i = 0; i + 1 < states.size(); i++) {
+            renderHitDistanceLineAt(renderer, probe, i, missArgb, hitArgb);
+        }
+    }
+
+    public void renderHitDistanceLineAt(BoxRenderer renderer, ReachProbe probe, int i, int missArgb, int hitArgb) {
+        if (i < 0 || i + 1 >= states.size()) return;
+        Vec3dCore p = positions.get(i);
+        double eyeY = p.y + probe.eyeHeight(states.get(i).sneaking);
+        double yawRad = Math.toRadians(states.get(i + 1).yaw);
+        double pitchRad = Math.toRadians(getPitch(i + 1));
+        double cosP = Math.cos(pitchRad);
+        double dx = -Math.sin(yawRad) * cosP;
+        double dy = -Math.sin(pitchRad);
+        double dz = Math.cos(yawRad) * cosP;
+        double hit = probe.hitDistance(p.x, eyeY, p.z, dx, dy, dz, BLOCK_REACH);
+        double len = hit >= 0 ? hit : BLOCK_REACH;
+        renderer.drawLine(p.x, eyeY, p.z,
+                p.x + dx * len, eyeY + dy * len, p.z + dz * len,
+                hit >= 0 ? hitArgb : missArgb);
     }
 
     private static void emitArrow(BoxRenderer renderer, double cx, double cy, double cz,

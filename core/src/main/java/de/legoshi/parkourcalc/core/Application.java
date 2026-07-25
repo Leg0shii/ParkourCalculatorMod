@@ -175,6 +175,19 @@ public final class Application {
         de.legoshi.parkourcalc.core.render.PathRenderPlan.setLiveSource(
                 new de.legoshi.parkourcalc.core.ui.anglesolver.LiveBestPathSource(
                         angleSolverEngine, boxController, () -> settings.viewAngleSolver));
+        de.legoshi.parkourcalc.core.render.PathRenderPlan.setReachProbe(new de.legoshi.parkourcalc.core.render.ReachProbe() {
+            @Override
+            public double eyeHeight(boolean sneaking) {
+                return mc.getEyeHeight(sneaking);
+            }
+
+            @Override
+            public double hitDistance(double originX, double originY, double originZ,
+                                      double dirX, double dirY, double dirZ, double maxDistance) {
+                return mc.clipBlockDistance(new Vec3dCore(originX, originY, originZ),
+                        new Vec3dCore(dirX, dirY, dirZ), maxDistance);
+            }
+        });
 
         TickInfoPanel tickInfoPanel = new TickInfoPanel(boxController, inputData, selection, settings, runner);
         PerfOverlay perfOverlay = new PerfOverlay();

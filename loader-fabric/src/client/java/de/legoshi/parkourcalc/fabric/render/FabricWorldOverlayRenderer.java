@@ -5,6 +5,7 @@ import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.ports.BoxRenderer;
 import de.legoshi.parkourcalc.core.render.PathRenderPlan;
+import de.legoshi.parkourcalc.core.render.ReachProbe;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
@@ -18,6 +19,7 @@ import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 
+import java.util.Set;
 import java.util.function.Supplier;
 
 /** Renders the cached path geometry into the world from the AFTER_SOLID_FEATURES event; the yaw gizmo goes through the submit phase. */
@@ -74,6 +76,7 @@ public final class FabricWorldOverlayRenderer {
 
     public void submitGizmo(LevelRenderContext context) {
         submitSelectionBlocks(context);
+        submitSelectedHitDistance(context);
 
         int gizmoIdx = yawGizmo.getSelectedIndex();
         if (gizmoIdx < 0) {
@@ -104,6 +107,29 @@ public final class FabricWorldOverlayRenderer {
                 boxController.renderPitchGizmo(linesRenderer, center, yawDeg, pitchDeg, radius, circleArgb, directionArgb);
             } else {
                 boxController.renderYawGizmo(linesRenderer, center, yawDeg, radius, circleArgb, directionArgb);
+            }
+        });
+        poseStack.popPose();
+    }
+
+    private void submitSelectedHitDistance(LevelRenderContext context) {
+        if (!settings.showHitDistanceLines || !settings.hitDistanceSelectedOnly) return;
+        if (boxController.isEmpty()) return;
+        Set<Integer> selected = selection.getSelectedBoxes();
+        if (selected.isEmpty()) return;
+
+        CameraRenderState camera = context.levelState().cameraRenderState;
+        Vec3 cameraPos = camera.pos;
+        PoseStack poseStack = new PoseStack();
+        poseStack.pushPose();
+        poseStack.translate(-cameraPos.x, -cameraPos.y, -cameraPos.z);
+        context.submitNodeCollector().submitCustomGeometry(poseStack, FabricRenderLayers.THIN_LINES, (pose, buffer) -> {
+            FabricBoxRenderer linesRenderer = new FabricBoxRenderer(pose.pose(), buffer, BoxRenderer.Mode.LINES);
+            ReachProbe probe = PathRenderPlan.reachProbe();
+            int miss = BoxStyle.hitDistanceMissArgb(settings);
+            int hit = BoxStyle.hitDistanceHitArgb(settings);
+            for (int i : selected) {
+                boxController.renderHitDistanceLineAt(linesRenderer, probe, i, miss, hit);
             }
         });
         poseStack.popPose();

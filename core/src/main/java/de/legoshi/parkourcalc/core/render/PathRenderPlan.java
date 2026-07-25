@@ -47,6 +47,16 @@ public final class PathRenderPlan {
         liveSource = source != null ? source : ConstraintBoxSource.NONE;
     }
 
+    private static volatile ReachProbe reachProbe = ReachProbe.NONE;
+
+    public static void setReachProbe(ReachProbe probe) {
+        reachProbe = probe != null ? probe : ReachProbe.NONE;
+    }
+
+    public static ReachProbe reachProbe() {
+        return reachProbe;
+    }
+
     private static ConstraintBoxSource countedSource;
     private static ConstraintBoxSource countedLiveSource;
     private static long countedRevision = Long.MIN_VALUE;
@@ -112,9 +122,15 @@ public final class PathRenderPlan {
             if (drawLive) boxController.renderConstraints(faces, live, palette, false, 0, 0, 0, ALL);
         };
 
+        boolean drawReach = settings.showHitDistanceLines && !settings.hitDistanceSelectedOnly && boxController.size() >= 2;
+        int reachLineVerts = drawReach ? (boxController.size() - 1) * PathVertexLayout.LINE_VERTS_PER_SEGMENT : 0;
+        ReachProbe probe = reachProbe;
+
         Consumer<BoxRenderer> lineEmitter = lines -> {
             boxController.render(lines, line, 0, 0, 0, ALL);
             if (settings.showSubtick) boxController.renderPath(lines, BoxStyle.subtickPathArgb(settings), 0, 0, 0, ALL);
+            if (drawReach) boxController.renderHitDistanceLines(lines, probe,
+                    BoxStyle.hitDistanceMissArgb(settings), BoxStyle.hitDistanceHitArgb(settings));
             if (drawConstraints) boxController.renderConstraints(lines, source, palette, true, 0, 0, 0, ALL);
             if (drawLive) boxController.renderConstraints(lines, live, palette, true, 0, 0, 0, ALL);
         };
@@ -153,7 +169,7 @@ public final class PathRenderPlan {
         }
         return new PathRenderPlan(structuralHash(settings, constraintRevision, liveRevision),
                 selectedBoxes, faceEmitter, lineEmitter, patch,
-                constraintFaceVerts, constraintLineVerts);
+                constraintFaceVerts, constraintLineVerts + reachLineVerts);
     }
 
     /** Colors and overlay toggles, but NOT selection (which is patched in place). The constraint
@@ -171,6 +187,8 @@ public final class PathRenderPlan {
         h = 31 * h + Arrays.hashCode(settings.hitboxSelected);
         h = 31 * h + Arrays.hashCode(settings.yawArrow);
         h = 31 * h + Arrays.hashCode(settings.pitchArrow);
+        h = 31 * h + Arrays.hashCode(settings.hitDistanceLine);
+        h = 31 * h + Arrays.hashCode(settings.hitDistanceLineHit);
         h = 31 * h + Arrays.hashCode(settings.subtickPath);
         h = 31 * h + Arrays.hashCode(settings.constraintOutline);
         h = 31 * h + Arrays.hashCode(settings.constraintFill);
@@ -183,6 +201,8 @@ public final class PathRenderPlan {
         h = 31 * h + (settings.showSubtick ? 8 : 0);
         h = 31 * h + (settings.showConstraints ? 16 : 0);
         h = 31 * h + (settings.constraintExpandByHitbox ? 32 : 0);
+        h = 31 * h + (settings.showHitDistanceLines ? 64 : 0);
+        h = 31 * h + (settings.hitDistanceSelectedOnly ? 128 : 0);
         h = 31 * h + Float.hashCode(settings.constraintFrontWidth);
         h = 31 * h + Float.hashCode(settings.constraintFrontHeight);
         h = 31 * h + Float.hashCode(settings.constraintFrontLength);
