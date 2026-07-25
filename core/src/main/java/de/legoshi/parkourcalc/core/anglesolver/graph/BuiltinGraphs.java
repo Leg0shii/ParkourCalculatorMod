@@ -114,6 +114,14 @@ public final class BuiltinGraphs {
         g.add("freeImprove", "freeStartImprove")
                 .set("freeImprove", "budgetSec", freeSec)
                 .set("freeImprove", "iters", 3);
+        router(g, "rEarlyFree", "HAS_FREE_START");
+        g.add("freeRescue", "freeStartImprove")
+                .set("freeRescue", "jointOnly", true)
+                .set("freeRescue", "budgetSec", 2)
+                .set("freeRescue", "iters", 1);
+        if (!sof) {
+            router(g, "rEarlyFeas", "CANDIDATE_FEASIBLE_RAW");
+        }
         if (sof) {
             router(g, "rFeasFastCold", "CANDIDATE_FEASIBLE_RAW");
             router(g, "rFeasFastWarm", "CANDIDATE_FEASIBLE_RAW");
@@ -200,15 +208,23 @@ public final class BuiltinGraphs {
         g.edge("smoothWarm", Guarantee.DONE, "repWarm");
         g.edge("settledMark", Guarantee.DONE, "repSkip");
         g.edge("repSkip", Guarantee.DONE, "rMomGate");
-        g.edge("repA", Guarantee.DONE, sof ? "rFeasFastCold" : coldEntry);
+        g.edge("repA", Guarantee.DONE, sof ? "rFeasFastCold" : "rEarlyFeas");
         g.edge("repWarm", Guarantee.DONE, sof ? "rFeasFastWarm" : "raceWarm");
         if (sof) {
             g.edge("rFeasFastCold", Guarantee.TRUE, "lblFF");
-            g.edge("rFeasFastCold", Guarantee.FALSE, coldEntry);
+            g.edge("rFeasFastCold", Guarantee.FALSE, "rEarlyFree");
             g.edge("rFeasFastWarm", Guarantee.TRUE, "lblFF");
             g.edge("rFeasFastWarm", Guarantee.FALSE, "raceWarm");
             g.edge("lblFF", Guarantee.DONE, "rMomGate");
+            g.edge("freeRescue", Guarantee.IMPROVED, "lblFF");
+        } else {
+            g.edge("rEarlyFeas", Guarantee.TRUE, coldEntry);
+            g.edge("rEarlyFeas", Guarantee.FALSE, "rEarlyFree");
+            g.edge("freeRescue", Guarantee.IMPROVED, coldEntry);
         }
+        g.edge("rEarlyFree", Guarantee.TRUE, "freeRescue");
+        g.edge("rEarlyFree", Guarantee.FALSE, coldEntry);
+        g.edge("freeRescue", Guarantee.UNCHANGED, coldEntry);
         if (throttle) {
             g.edge("rRaceTicks", Guarantee.TRUE, "rRaceJumps");
             g.edge("rRaceTicks", Guarantee.FALSE, "raceColdFull");

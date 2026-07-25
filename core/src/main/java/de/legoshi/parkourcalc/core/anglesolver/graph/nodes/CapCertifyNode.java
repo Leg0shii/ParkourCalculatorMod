@@ -28,7 +28,7 @@ public final class CapCertifyNode implements NodeRuntime {
         if (skipIfSettled && ctx.settled()) return NodeOutcome.of(Guarantee.FALSE, in);
         double cap = Scoring.objectiveCap(ctx.spec);
         double achieved = ctx.exactObjective(in.yaws);
-        boolean atCap = !Double.isNaN(cap)
+        boolean atCap = !Double.isNaN(cap) && in.feasible
                 && (ctx.maximize() ? cap - achieved : achieved - cap) <= Scoring.CAP_GAP_TOL;
         if (atCap) {
             ctx.chainSuffix(", optimal at constraint cap");

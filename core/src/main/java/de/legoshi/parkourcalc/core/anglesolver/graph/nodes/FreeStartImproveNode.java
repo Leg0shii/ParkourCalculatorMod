@@ -25,11 +25,13 @@ public final class FreeStartImproveNode implements NodeRuntime {
 
     private final int iters;
     private final double sigmaDeg;
+    private final boolean jointOnly;
     private final FreeStartSolve.Config cfg;
 
     public FreeStartImproveNode(ParamValues params) {
         this.iters = params.getInt("iters");
         this.sigmaDeg = params.getDouble("sigmaDeg");
+        this.jointOnly = params.getBool("jointOnly");
         this.cfg = new FreeStartSolve.Config();
         cfg.maxIters = params.getInt("fsMaxIters");
         cfg.intervalMargin = params.getDouble("fsIntervalMargin");
@@ -43,10 +45,40 @@ public final class FreeStartImproveNode implements NodeRuntime {
     @Override
     public NodeOutcome execute(GraphContext ctx, Candidate in, AtomicBoolean nodeToken, long deadlineNanos) {
         if (!ctx.exact() || !ctx.freeStart) return NodeOutcome.of(Guarantee.UNCHANGED, in);
+        if (jointOnly) {
+            boolean seedFeasible = in != null && in.yaws != null
+                    && Scoring.violationOf(ctx.model, ctx.scenario, ctx.spec, in.yaws) <= ctx.feasTol;
+            if (seedFeasible) return NodeOutcome.of(Guarantee.UNCHANGED, in);
+            double[] rescued = jointRescue(ctx, nodeToken);
+            if (rescued == null) return NodeOutcome.of(Guarantee.UNCHANGED, in);
+            ctx.chainAppend("free start rescue");
+            return NodeOutcome.of(Guarantee.IMPROVED, Candidate.of(ctx, rescued));
+        }
         double[] improved = improve(ctx, in == null ? null : in.yaws, nodeToken, deadlineNanos);
         if (improved == null) return NodeOutcome.of(Guarantee.UNCHANGED, in);
         ctx.chainAppend("free start");
         return NodeOutcome.of(Guarantee.IMPROVED, Candidate.of(ctx, improved));
+    }
+
+    private double[] jointRescue(GraphContext ctx, AtomicBoolean cancel) {
+        JumpPhysicsInputs sc = ctx.scenario;
+        double seedX = sc.startPos.x;
+        double seedZ = sc.startPos.z;
+        sc.startBox = ctx.freeBox;
+        FreeStartSolve.Result conv = FreeStartSolve.solveJoint(ctx.exactModel, ctx.spec, ctx.feasTol, cancel, cfg);
+        if (conv == null || !conv.feasible) conv = FreeStartSolve.solve(ctx.exactModel, ctx.spec, ctx.feasTol, cancel, cfg);
+        if (conv != null && conv.feasible
+                && FreeStartSolve.violationAt(ctx.exactModel, ctx.spec, conv.yaws, conv.startX, conv.startZ) <= ctx.feasTol) {
+            sc.startPos = new Vec3dCore(conv.startX, sc.startPos.y, conv.startZ);
+            sc.startBox = StartBox.pinned(conv.startX, conv.startZ, sc.initialVelocity.x, sc.initialVelocity.z);
+            if (SolverTrace.on()) {
+                SolverTrace.log("ENGINE", "free rescue adopted start=(%.5f,%.5f)", conv.startX, conv.startZ);
+            }
+            return Angles.wrapAll(conv.yaws);
+        }
+        sc.startPos = new Vec3dCore(seedX, sc.startPos.y, seedZ);
+        sc.startBox = StartBox.pinned(seedX, seedZ, sc.initialVelocity.x, sc.initialVelocity.z);
+        return null;
     }
 
     private double[] improve(GraphContext ctx, double[] seedYaws, AtomicBoolean cancel, long deadline) {

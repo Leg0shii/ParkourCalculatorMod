@@ -215,6 +215,7 @@ public final class NodeCatalog {
                 .branch(Branch.preserves(Guarantee.UNCHANGED))
                 .param(ParamSpec.integer("budgetSec", "Budget (s)", 0, 600, 20))
                 .param(ParamSpec.integer("iters", "Iterations", 1, 10, 3))
+                .param(ParamSpec.bool("jointOnly", "Joint rescue only", false))
                 .param(ParamSpec.decimal("sigmaDeg", "Sigma (deg)", 1.0, 360.0, 90.0))
                 .param(ParamSpec.integer("fsMaxIters", "Translate iterations", 1, 100, 12))
                 .param(ParamSpec.decimal("fsIntervalMargin", "Pin interval margin", 0.0, 1.0, 1.0e-3))

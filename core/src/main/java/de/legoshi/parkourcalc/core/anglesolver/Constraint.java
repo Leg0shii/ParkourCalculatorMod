@@ -1,7 +1,7 @@
 package de.legoshi.parkourcalc.core.anglesolver;
 
 /**
- * One per-tick constraint. Every field (X/Z/F/dX/dZ) accepts either a scalar comparison or a
+ * One per-tick constraint. Every field (X/Z/F/dX/dZ/dF) accepts either a scalar comparison or a
  * range; the op carries the form (IN = range). Changing the op across that boundary converts
  * the values: entering a range seeds [value, value], leaving one keeps the lower bound.
  */
@@ -12,7 +12,8 @@ public final class Constraint {
         Z("Z"),
         F("F"),
         DX("dX"),
-        DZ("dZ");
+        DZ("dZ"),
+        DF("dF");
 
         public final String label;
 

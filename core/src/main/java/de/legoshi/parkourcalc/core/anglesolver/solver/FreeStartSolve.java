@@ -96,7 +96,6 @@ public final class FreeStartSolve {
         JumpPhysicsInputs base = spec.asScenario();
         StartBox box = base.startBox;
         if (box == null || !box.startFree()) return null;
-        if (JumpLinearModel.hasFacingWall(spec.constraints)) return solve(exact, spec, feasTol, cancel, cfg);
 
         double refX = 0.5 * (box.pxLo + box.pxHi);
         double refZ = 0.5 * (box.pzLo + box.pzHi);
@@ -104,13 +103,41 @@ public final class FreeStartSolve {
                 box.vxLo, box.vxHi, box.vzLo, box.vzHi);
         JumpPhysicsInputs refSc = copyWithStart(base, refX, refZ);
         JumpLinearModel lin = new JumpLinearModel(refSc);
+        FacingPrefold pre = FacingPrefold.analyze(spec.constraints, lin);
+        if (pre != null) {
+            return jointLadder(exact, spec, base, box, cbox, refSc, lin, refX, refZ, feasTol, cancel, cfg, pre);
+        }
+        FacingPrefold.ChainScan scan = FacingPrefold.scannable(spec.constraints, lin);
+        if (scan == null) return solve(exact, spec, feasTol, cancel, cfg);
+        double[] thetas = ClosedFormSolve.candidateThetas(spec, lin, scan, cbox);
+        if (thetas != null) {
+            for (double th : thetas) {
+                if (cancel != null && cancel.get()) return null;
+                Result r = jointLadder(exact, spec, base, box, cbox, refSc, lin, refX, refZ, feasTol, cancel,
+                        cfg, scan.at(th));
+                if (r != null && r.feasible) {
+                    if (SolverTrace.on()) SolverTrace.log("FREE", "joint chain scan solved theta=%.4f", th);
+                    return r;
+                }
+            }
+            if (SolverTrace.on()) SolverTrace.log("FREE", "joint chain scan miss cands=%d", thetas.length);
+        }
+        return solve(exact, spec, feasTol, cancel, cfg);
+    }
+
+    private static Result jointLadder(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs base, StartBox box,
+                                      StartBox cbox, JumpPhysicsInputs refSc, JumpLinearModel lin,
+                                      double refX, double refZ, double feasTol, AtomicBoolean cancel, Config cfg,
+                                      FacingPrefold pre) {
         double[] cx = new double[lin.n];
         double[] cz = new double[lin.n];
         lin.objectiveVectors(spec.objective, cx, cz);
         boolean[] trivial = {false};
         List<JumpLinearModel.Wall> walls = lin.compileWalls(spec.constraints, 0.0, trivial);
         if (trivial[0]) { lastJointDebug = "trivial-infeasible"; return null; }
-        CostateDualSolver solver = new CostateDualSolver(lin.n, cx, cz, lin.mMagAll(), walls, buildFreeP0(cbox, spec.objective));
+        FacingPrefold.Reduced red = pre.reduce(cx, cz, lin.mMagAll(), walls);
+        CostateDualSolver solver = new CostateDualSolver(red.n, red.cx, red.cz, red.mMag, red.walls,
+                buildFreeP0(cbox, spec.objective));
 
         double bestViol = Double.POSITIVE_INFINITY;
         double[] bestYaws = null;
@@ -120,7 +147,7 @@ public final class FreeStartSolve {
             CostateDualSolver.Result r = solver.solve(margin, warm);
             if (r == null) { lastJointDebug = "dual-null margin=" + margin; return null; }
             warm = r.lambda;
-            double[] yaws = recover(lin, spec.objective, r);
+            double[] yaws = pre.expand(lin, spec.objective, r);
             if (bestYaws == null) bestYaws = yaws;
             double[] gf = refSc.toGameFacings(Angles.wrapAll(yaws));
             ForwardPath path = exact.forward(refSc, gf);
@@ -295,17 +322,23 @@ public final class FreeStartSolve {
     private static double[] bestEffortShape(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
                                             Config cfg) {
         JumpPhysicsInputs sc = spec.asScenario();
-        if (!JumpLinearModel.hasFacingWall(spec.constraints)) {
-            JumpLinearModel lin = new JumpLinearModel(sc);
+        JumpLinearModel lin = new JumpLinearModel(sc);
+        FacingPrefold pre = FacingPrefold.analyze(spec.constraints, lin);
+        if (pre != null) {
             double[] cx = new double[lin.n];
             double[] cz = new double[lin.n];
             lin.objectiveVectors(spec.objective, cx, cz);
             boolean[] trivial = {false};
             List<JumpLinearModel.Wall> walls = lin.compileWalls(spec.constraints, 0.0, trivial);
             if (!trivial[0]) {
-                CostateDualSolver.Result r = new CostateDualSolver(lin.n, cx, cz, lin.mMagAll(), walls).solve(0.0, null);
-                if (r != null) return recover(lin, spec.objective, r);
+                FacingPrefold.Reduced red = pre.reduce(cx, cz, lin.mMagAll(), walls);
+                CostateDualSolver.Result r = new CostateDualSolver(red.n, red.cx, red.cz, red.mMag, red.walls)
+                        .solve(0.0, null);
+                if (r != null) return pre.expand(lin, spec.objective, r);
             }
+        } else {
+            ClosedFormSolve.Result graded = ClosedFormSolve.optimizeRobustGraded(exact, spec, feasTol, cancel);
+            if (graded != null) return graded.yaws;
         }
         double[] seed = objectiveSeed(sc, spec.objective);
         return SlpSolve.optimizeBestEffort(exact, spec, feasTol, cancel, seed, cfg.slpPhase1Calls, cfg.slpTotalCalls);
@@ -318,22 +351,6 @@ public final class FreeStartSolve {
         double gz = obj.axis == JumpPhysicsInputs.Axis.X ? 0.0 : (max ? 1.0 : -1.0);
         double[] yaws = new double[lin.n];
         for (int t = 0; t < lin.n; t++) yaws[t] = lin.recoverYawDeg(t, gx, gz);
-        return yaws;
-    }
-
-    private static double[] recover(JumpLinearModel lin, Objective obj, CostateDualSolver.Result r) {
-        int n = lin.n;
-        double[] yaws = new double[n];
-        boolean max = obj.sense == Objective.Sense.MAX;
-        boolean axisX = obj.axis == JumpPhysicsInputs.Axis.X;
-        for (int t = 0; t < n; t++) {
-            double gx = r.gx[t], gz = r.gz[t];
-            if (gx * gx + gz * gz < 1.0e-18) {
-                gx = axisX ? (max ? 1.0 : -1.0) : 0.0;
-                gz = axisX ? 0.0 : (max ? 1.0 : -1.0);
-            }
-            yaws[t] = lin.recoverYawDeg(t, gx, gz);
-        }
         return yaws;
     }
 

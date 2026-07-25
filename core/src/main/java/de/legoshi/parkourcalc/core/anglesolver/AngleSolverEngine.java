@@ -1546,6 +1546,10 @@ public final class AngleSolverEngine {
                 if (segTick < 1) break;
                 addVelocity(out, JumpConstraint.Mode.Z, segTick, c, tag);
                 break;
+            case DF:
+                if (segTick < 1 || segTick >= numTicks) break;
+                addVelocity(out, JumpConstraint.Mode.F, segTick, c, tag);
+                break;
         }
     }
 
@@ -1568,8 +1572,9 @@ public final class AngleSolverEngine {
         }
     }
 
-    /** Velocity (dX/dZ): pos[t1]-pos[t1-1] against a range (GE/LE pair), an equality (the same
-     *  +-MET_TOL corridor as scalar fields, see addScalarOrRange), or a single comparison wall. */
+    /** Per-tick delta (dX/dZ on positions, dF on facings): v[t1]-v[t1-1] against a range (GE/LE pair),
+     *  an equality (the same +-MET_TOL corridor as scalar fields, see addScalarOrRange), or a single
+     *  comparison wall. */
     private void addVelocity(List<JumpConstraint> out, JumpConstraint.Mode mode, int t1, Constraint c, String tag) {
         if (c.isRange()) {
             out.add(new JumpConstraint(mode, t1, t1 - 1, JumpConstraint.Op.MINUS, JumpConstraint.Cmp.GE, c.getLo(), tag + "lo"));
@@ -1628,6 +1633,8 @@ public final class AngleSolverEngine {
             case F: return segTick < numTicks ? Angles.wrap(gameFacings[segTick]) : null;
             case DX: return segTick >= 1 ? path.posX[segTick] - path.posX[segTick - 1] : null;
             case DZ: return segTick >= 1 ? path.posZ[segTick] - path.posZ[segTick - 1] : null;
+            case DF: return segTick >= 1 && segTick < numTicks
+                    ? Angles.wrap(gameFacings[segTick] - gameFacings[segTick - 1]) : null;
             default: return null;
         }
     }
@@ -1640,7 +1647,8 @@ public final class AngleSolverEngine {
         }
         double v = c.getValue();
         // Facings are angular: compare the wrapped difference so e.g. -179 satisfies a +179 target.
-        double f = c.getField() == Constraint.Field.F ? v + Angles.wrap(found - v) : found;
+        boolean angular = c.getField() == Constraint.Field.F || c.getField() == Constraint.Field.DF;
+        double f = angular ? v + Angles.wrap(found - v) : found;
         // Walls (the inequalities) are gated strictly at FEAS_TOL, so "Solved" never counts a clip as met;
         // only the exact target (=) keeps MET_TOL, since a single facing/position bucket is never hit to the bit.
         switch (c.getOp()) {
@@ -1663,7 +1671,8 @@ public final class AngleSolverEngine {
         }
         double v = c.getValue();
         String relation = c.getOp().glyph + " " + ConstraintText.num(v);
-        double diff = c.getField() == Constraint.Field.F ? Angles.wrap(found - v) : (found - v);
+        double diff = c.getField() == Constraint.Field.F || c.getField() == Constraint.Field.DF
+                ? Angles.wrap(found - v) : (found - v);
         double margin;
         switch (c.getOp()) {
             case LT:
