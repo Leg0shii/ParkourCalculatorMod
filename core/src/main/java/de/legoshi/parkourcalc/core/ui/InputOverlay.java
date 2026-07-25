@@ -1107,6 +1107,7 @@ public final class InputOverlay {
 
         if (pendingPitchLockToggleRow == rowIndex) {
             row.setPitchLocked(!row.isPitchLocked());
+            if (row.isPitchLocked()) clampPitchToAbsoluteRange(row);
             pendingPitchLockToggleRow = -1;
             notifyChange(rowIndex);
         }
@@ -1232,9 +1233,10 @@ public final class InputOverlay {
             row.setPitch(null);
         } else {
             try {
+                float limit = row.isPitchLocked() ? 90f : 180f;
                 float p = Float.parseFloat(text);
-                if (p < -90f) p = -90f;
-                if (p > 90f) p = 90f;
+                if (p < -limit) p = -limit;
+                if (p > limit) p = limit;
                 row.setPitch(p);
             } catch (NumberFormatException ignored) {
             }
@@ -1343,10 +1345,19 @@ public final class InputOverlay {
         int dirtyTick = Integer.MAX_VALUE;
         for (int idx : selection.getSelectedRows()) {
             if (idx < 0 || idx >= data.size()) continue;
-            data.get(idx).setPitchLocked(locked);
+            InputRow row = data.get(idx);
+            row.setPitchLocked(locked);
+            if (locked) clampPitchToAbsoluteRange(row);
             if (idx < dirtyTick) dirtyTick = idx;
         }
         if (dirtyTick != Integer.MAX_VALUE) notifyChange(dirtyTick);
+    }
+
+    private static void clampPitchToAbsoluteRange(InputRow row) {
+        Float p = row.getPitch();
+        if (p == null) return;
+        if (p < -90f) row.setPitch(-90f);
+        else if (p > 90f) row.setPitch(90f);
     }
 
     private void renderDuplicateOption() {
