@@ -7,3 +7,6 @@
 # These are Windows script files and should use crlf
 *.bat           text eol=crlf
 
+core/src/test/resources/**/*.json linguist-generated=true
+core/src/test/resources/**/*.expect.json linguist-generated=false
+
