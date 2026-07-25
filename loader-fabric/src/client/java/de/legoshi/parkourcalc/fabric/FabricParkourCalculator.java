@@ -3,6 +3,7 @@ package de.legoshi.parkourcalc.fabric;
 import de.legoshi.parkourcalc.core.Application;
 import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
+import de.legoshi.parkourcalc.core.io.OsSystemBridge;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.fabric.imgui.ImGuiImpl;
@@ -24,6 +25,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.KeyMapping;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.Util;
 import org.lwjgl.glfw.GLFW;
 
 public class FabricParkourCalculator implements ClientModInitializer {
@@ -105,6 +107,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
 
         application.setModVersion(modVersion());
+        OsSystemBridge.setPlatformOpeners(
+                p -> Util.getPlatform().openPath(p),
+                u -> Util.getPlatform().openUri(u)
+        );
         application.setFilePicker(new FabricFilePicker());
         application.setSaveStore(new FileSystemSaveStore(
                 FabricLoader.getInstance().getGameDir().resolve("parkourcalculator"),
