@@ -4,7 +4,14 @@ A TAS input planning mod for Minecraft. Simulate and visualize parkour movements
 
 <img width="2316" height="1785" alt="image" src="https://github.com/user-attachments/assets/eb8f31c5-9790-4ffd-bd7d-249e0dd811a1" />
 
-Watch the [angle solver tutorial](https://www.youtube.com/watch?v=ModmozoWaD0) or a [TAS created with the tool](https://youtu.be/YFWhPtJkWmY).
+Watch the [angle solver tutorial](https://www.youtube.com/watch?v=ModmozoWaD0).
+
+## TASes created with the tool
+- Jumpcraft X: https://www.youtube.com/watch?v=OYNSGP5gSJI
+- Jumpcraft XI: https://www.youtube.com/watch?v=Fu1xlAXp9UM
+- Drool City (Top 6): https://www.youtube.com/watch?v=hz71P3R8YBo
+- Utopica: https://www.youtube.com/watch?v=efh8SUA_13U
+- Bedwars Lobby Parkour: https://www.youtube.com/watch?v=9A_4NfM1F4I
 
 ## Features
 
