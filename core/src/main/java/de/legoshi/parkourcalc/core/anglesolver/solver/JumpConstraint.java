@@ -5,6 +5,8 @@ package de.legoshi.parkourcalc.core.anglesolver.solver;
  *  Modes:
  *    X / Z   evaluate against pos.x / pos.z at tick t1 (and optionally t2).
  *    F       evaluate against F[t1] (and optionally F[t2]); both in absolute yaw degrees.
+ *    DXZ     evaluate |x(t1)-x(t2)| - |z(t1)-z(t2)|; t2 required, op ignored. Nonlinear: never a
+ *            closed-form wall, enforced by the penalty stages and the exact certification.
  *  lhs is { v(t1)  op  v(t2) } when t2 != null, else just v(t1).
  *  The constraint reads as: lhs  cmp  rhs.
  */
@@ -13,7 +15,8 @@ public final class JumpConstraint {
     public enum Mode {
         X,
         Z,
-        F
+        F,
+        DXZ
     }
 
     public enum Op {

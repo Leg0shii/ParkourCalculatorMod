@@ -1,7 +1,11 @@
 package de.legoshi.parkourcalc.core.ports;
 
+import de.legoshi.parkourcalc.core.sim.AABB;
+import de.legoshi.parkourcalc.core.sim.Face;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Supplier;
 
 /**
@@ -32,6 +36,38 @@ public interface MinecraftAccess {
 
     default boolean isBlockSolid(int x, int y, int z) {
         return false;
+    }
+
+    default boolean isLadder(int x, int y, int z) {
+        return false;
+    }
+
+    default boolean isSlimeBlock(int x, int y, int z) {
+        return false;
+    }
+
+    default boolean isIce(int x, int y, int z) {
+        return false;
+    }
+
+    default Face getLookedAtFace() {
+        return null;
+    }
+
+    default Vec3dCore getLookedAtHitVec() {
+        return null;
+    }
+
+    default List<AABB> getCollisionBoxes(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
+        return Collections.emptyList();
+    }
+
+    default double getEyeHeight(boolean sneaking) {
+        return 1.62;
+    }
+
+    default double clipBlockDistance(Vec3dCore origin, Vec3dCore direction, double maxDistance) {
+        return -1.0;
     }
 
     /** Current state of the left mouse button (true while held). */

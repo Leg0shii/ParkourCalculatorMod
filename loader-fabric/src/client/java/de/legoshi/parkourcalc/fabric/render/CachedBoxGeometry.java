@@ -7,6 +7,7 @@ import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuTextureView;
+import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.ports.BoxRenderer;
 import de.legoshi.parkourcalc.core.render.PathVertexLayout;
 import de.legoshi.parkourcalc.core.render.SelectionPatchSpec;
@@ -53,6 +54,7 @@ public final class CachedBoxGeometry implements AutoCloseable {
 
     private int boxCount;
     private int hitboxEdges;
+    private int arrowsPerBox;
     private boolean useSubtick;
     private int[] hitboxStarts = new int[]{0};
     private int[] subtickStarts = new int[]{0}; // per-box subtick offsets relative to lineMainTotal
@@ -78,11 +80,59 @@ public final class CachedBoxGeometry implements AutoCloseable {
             }
             return;
         }
+        long buildStart = Perf.now();
+        if (built && structuralHash == lastStructuralHash && boxController.size() == boxCount
+                && hitboxEdges == 0 && !useSubtick && constraintFaceVerts == 0 && constraintLineVerts == 0) {
+            int dirty = boxController.takeDirtyFrom(lastGeometryRev);
+            if (dirty > 0 && patchTail(boxController, Math.max(0, dirty - 1), patch)) {
+                lastGeometryRev = rev;
+                if (!selection.equals(bakedSelection)) {
+                    patchSelection(boxController, selection, patch);
+                }
+                Perf.stop("geomPatchTail", buildStart);
+                return;
+            }
+        }
         rebuild(boxController, faceEmitter, lineEmitter, patch);
+        boxController.takeDirtyFrom(rev);
+        Perf.stop("geomRebuild", buildStart);
         bakedSelection = new HashSet<>(selection);
         lastGeometryRev = rev;
         lastStructuralHash = structuralHash;
         built = true;
+    }
+
+    private boolean patchTail(BoxController boxController, int from, SelectionPatchSpec patch) {
+        int n = boxCount;
+        boolean ok = writeVerts(
+                faceSegments,
+                PathVertexLayout.faceMainOffset(from),
+                PrimitiveTopology.TRIANGLES,
+                BoxRenderer.Mode.FACES,
+                r -> boxController.render(r, patch.facePicker, from, n)
+        );
+        if (ok && arrowsPerBox > 0 && from < n - 1) {
+            int stride = arrowsPerBox * PathVertexLayout.ARROW_VERTS_PER_BOX;
+            ok = writeVerts(
+                    faceSegments,
+                    arrowBase + from * stride,
+                    PrimitiveTopology.TRIANGLES,
+                    BoxRenderer.Mode.FACES,
+                    r -> boxController.renderFacingArrows(r, patch.drawYawArrows, patch.drawCombinedArrows,
+                            patch.yawArrowArgb, patch.combinedArrowArgb, from, n - 1)
+            );
+        }
+        if (ok) {
+            ok = writeVerts(
+                    lineSegments,
+                    PathVertexLayout.lineMainOffset(from),
+                    PrimitiveTopology.DEBUG_LINES,
+                    BoxRenderer.Mode.LINES,
+                    r -> boxController.render(r, patch.linePicker, from, n)
+            );
+        }
+        if (!ok) close();
+        return ok;
     }
 
     private void rebuild(BoxController boxController, Consumer<BoxRenderer> faceEmitter, Consumer<BoxRenderer> lineEmitter, SelectionPatchSpec patch) {
@@ -95,6 +145,7 @@ public final class CachedBoxGeometry implements AutoCloseable {
         boxCount = boxController.size();
         useSubtick = patch.showSubtick;
         hitboxEdges = patch.hitboxEdges();
+        arrowsPerBox = patch.arrowsPerBox;
         hitboxStarts = PathVertexLayout.hitboxVertexStarts(boxController, hitboxEdges, useSubtick);
 
         faceSegments = bake(BoxRenderer.Mode.FACES, PrimitiveTopology.TRIANGLES, boxCount * FACE_BYTES_PER_BOX, "parkourcalc cached faces", faceEmitter);
@@ -225,11 +276,12 @@ public final class CachedBoxGeometry implements AutoCloseable {
             if (hitboxEdges != 0) {
                 drawRange(faceSegments, pipeline, PrimitiveTopology.TRIANGLES, modelView,hitboxBase + hitboxStarts[a], hitboxStarts[b] - hitboxStarts[a]);
             }
-            if (arrowBase < constraintFaceBase) {
+            if (arrowsPerBox > 0 && arrowBase < constraintFaceBase) {
+                int arrowStride = arrowsPerBox * PathVertexLayout.ARROW_VERTS_PER_BOX;
                 int arrowEnd = Math.min(b, boxCount - 1);
                 int arrowStart = Math.min(a, boxCount - 1);
                 if (arrowEnd > arrowStart) {
-                    drawRange(faceSegments, pipeline, PrimitiveTopology.TRIANGLES, modelView,arrowBase + arrowStart * 60, (arrowEnd - arrowStart) * 60);
+                    drawRange(faceSegments, pipeline, PrimitiveTopology.TRIANGLES, modelView,arrowBase + arrowStart * arrowStride, (arrowEnd - arrowStart) * arrowStride);
                 }
             }
         }

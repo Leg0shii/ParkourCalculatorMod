@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.forge12;
 
 import de.legoshi.parkourcalc.core.Application;
 import de.legoshi.parkourcalc.core.PlaybackController;
+import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.forge.core.io.OsFilePicker;
 import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2ImGuiHost;
@@ -53,7 +54,8 @@ public class Forge12ParkourCalculator {
             application.getBoxController(),
             application.getSettings(),
             application.getSelection(),
-            application.getYawGizmo());
+            application.getYawGizmo(),
+            application::getAngleSolverState);
     private final Forge12HudOverlayRenderer hudRenderer = new Forge12HudOverlayRenderer();
     private final Forge12PlaybackBridge playbackBridge = new Forge12PlaybackBridge();
 
@@ -61,6 +63,12 @@ public class Forge12ParkourCalculator {
     private KeyBinding deselectKeyBinding;
     private KeyBinding playbackKeyBinding;
     private KeyBinding landingConstraintsKeyBinding;
+    private KeyBinding removeConstraintsKeyBinding;
+    private KeyBinding captureMomentumBlockKeyBinding;
+    private KeyBinding captureCollisionBlockKeyBinding;
+    private KeyBinding captureLandBlockKeyBinding;
+    private KeyBinding clearBlocksKeyBinding;
+    private boolean blockCaptureEnabled;
     private Path configPath;
     private Path saveDir;
 
@@ -81,7 +89,9 @@ public class Forge12ParkourCalculator {
                 Forge12WorldDescriptors::current
         ));
         application.setPlaybackBridge(playbackBridge);
+        application.setBlockPicker(new Forge12BlockPicker());
         application.initSettingsStorage(configPath);
+        blockCaptureEnabled = application.getSettings().experimentalBlockCapture;
         application.setupUi();
         imguiHost.setEditingYawSupplier(application::isEditingYaw);
         imguiHost.setAllowDetachedSupplier(() -> Minecraft.getMinecraft().currentScreen == null);
@@ -94,9 +104,22 @@ public class Forge12ParkourCalculator {
         ClientRegistry.registerKeyBinding(playbackKeyBinding);
         landingConstraintsKeyBinding = new KeyBinding("key.parkourcalculator.add_landing_constraints", Keyboard.KEY_B, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(landingConstraintsKeyBinding);
+        removeConstraintsKeyBinding = new KeyBinding("key.parkourcalculator.remove_selected_constraints", Keyboard.KEY_X, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(removeConstraintsKeyBinding);
+        if (blockCaptureEnabled) {
+            captureMomentumBlockKeyBinding = new KeyBinding("key.parkourcalculator.capture_momentum_block", Keyboard.KEY_M, "key.categories.parkourcalculator");
+            ClientRegistry.registerKeyBinding(captureMomentumBlockKeyBinding);
+            captureCollisionBlockKeyBinding = new KeyBinding("key.parkourcalculator.capture_collision_block", Keyboard.KEY_N, "key.categories.parkourcalculator");
+            ClientRegistry.registerKeyBinding(captureCollisionBlockKeyBinding);
+            captureLandBlockKeyBinding = new KeyBinding("key.parkourcalculator.capture_land_block", Keyboard.KEY_K, "key.categories.parkourcalculator");
+            ClientRegistry.registerKeyBinding(captureLandBlockKeyBinding);
+            clearBlocksKeyBinding = new KeyBinding("key.parkourcalculator.clear_blocks", Keyboard.KEY_DELETE, "key.categories.parkourcalculator");
+            ClientRegistry.registerKeyBinding(clearBlocksKeyBinding);
+        }
 
         MinecraftForge.EVENT_BUS.register(this);
-        LOG.info("ParkourCalculator init complete. G toggle, L deselect, P playback, B landing constraints.");
+        LOG.info("ParkourCalculator init complete. G toggle, L deselect, P playback, B landing constraints, X remove constraints."
+                + (blockCaptureEnabled ? " Block capture ON: M/N/K capture momentum/collision/land block, Delete clear blocks." : ""));
     }
 
     private boolean wasPlaybackRunning = false;
@@ -108,17 +131,27 @@ public class Forge12ParkourCalculator {
             application.tickPlayback();
         } else {
             application.postTickPlayback();
+            playbackBridge.syncFrozenPlayerToServer();
         }
     }
 
     private void manageInputLifecycle() {
         net.minecraft.client.entity.EntityPlayerSP p = Minecraft.getMinecraft().player;
-        if (p == null) return;
+        if (p == null) {
+            if (wasPlaybackRunning) {
+                application.getPlayback().stop();
+                playbackBridge.resetInputOverride();
+                playbackBridge.endGhostPlayback();
+                wasPlaybackRunning = false;
+            }
+            return;
+        }
         boolean isRunning = application.isPlaybackRunning();
         if (isRunning && !wasPlaybackRunning) {
             playbackBridge.installPlaybackInput(p);
         } else if (!isRunning && wasPlaybackRunning) {
             playbackBridge.restorePlaybackInput(p);
+            playbackBridge.endGhostPlayback();
         }
         wasPlaybackRunning = isRunning;
     }
@@ -128,7 +161,9 @@ public class Forge12ParkourCalculator {
         if (event.phase != TickEvent.Phase.START) return;
         if (!application.isPlaybackRunning()) return;
         net.minecraft.entity.player.EntityPlayer p = event.player;
-        if (p != Minecraft.getMinecraft().player) return;
+        net.minecraft.entity.player.EntityPlayer target = playbackBridge.ghostEntity();
+        if (target == null) target = Minecraft.getMinecraft().player;
+        if (p != target) return;
         if (application.getPlayback().currentTick() == 0) {
             p.onGround = application.getPlayback().firstTickOnGround();
             p.fallDistance = 0.0F;
@@ -197,6 +232,28 @@ public class Forge12ParkourCalculator {
         while (landingConstraintsKeyBinding.isPressed()) {
             landingConstraintsPressed = true;
         }
+        boolean removeConstraintsPressed = false;
+        while (removeConstraintsKeyBinding.isPressed()) {
+            removeConstraintsPressed = true;
+        }
+        boolean captureMomentum = false;
+        boolean captureCollision = false;
+        boolean captureLand = false;
+        boolean clearBlocks = false;
+        if (blockCaptureEnabled) {
+            while (captureMomentumBlockKeyBinding.isPressed()) {
+                captureMomentum = true;
+            }
+            while (captureCollisionBlockKeyBinding.isPressed()) {
+                captureCollision = true;
+            }
+            while (captureLandBlockKeyBinding.isPressed()) {
+                captureLand = true;
+            }
+            while (clearBlocksKeyBinding.isPressed()) {
+                clearBlocks = true;
+            }
+        }
         if (mc.currentScreen == null) {
             if (toggled) {
                 openOverlay(mc);
@@ -208,7 +265,24 @@ public class Forge12ParkourCalculator {
                 togglePlayback();
             }
             if (landingConstraintsPressed) {
-                application.addLandingConstraintsForLookedAtBlock();
+                boolean enter = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
+                boolean remove = Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL);
+                application.onConstraintKey(enter, remove);
+            }
+            if (removeConstraintsPressed) {
+                application.removeSelectedConstraints();
+            }
+            if (captureMomentum) {
+                application.captureAngleSolverBlock(BlockSelection.Kind.MOMENTUM);
+            }
+            if (captureCollision) {
+                application.captureAngleSolverBlock(BlockSelection.Kind.COLLISION);
+            }
+            if (captureLand) {
+                application.captureAngleSolverBlock(BlockSelection.Kind.LAND);
+            }
+            if (clearBlocks) {
+                application.clearAngleSolverBlocks();
             }
         }
         if (application.isReady()) {
@@ -241,6 +315,10 @@ public class Forge12ParkourCalculator {
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onMouseEvent(MouseEvent event) {
         if (!event.isButtonstate()) return;
+        if (playbackBridge.ghostEntity() != null && event.getButton() >= 0) {
+            event.setCanceled(true);
+            return;
+        }
         if (event.getButton() == 0 && application.shouldSuppressLeftClick()) {
             event.setCanceled(true);
         }

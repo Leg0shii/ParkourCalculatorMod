@@ -24,6 +24,10 @@ import java.util.function.Supplier;
  */
 public final class FileSystemSaveStore {
 
+    public interface InfoParser {
+        SaveInfo parse(String name, long lastModifiedMs, String contents);
+    }
+
     private static final String EXTENSION = ".json";
     private static final String TRASH_DIR = ".trash";
     private static final String TMP_SUFFIX = ".tmp";
@@ -33,14 +37,29 @@ public final class FileSystemSaveStore {
     private final String modVersion;
     private final String mcVersion;
     private final Supplier<WorldDescriptor> worldSupplier;
+    private final InfoParser infoParser;
 
     private final Map<String, SaveInfo> infoCache = new HashMap<String, SaveInfo>();
 
     public FileSystemSaveStore(Path saveDir, String modVersion, String mcVersion, Supplier<WorldDescriptor> worldSupplier) {
+        this(saveDir, modVersion, mcVersion, worldSupplier, new InfoParser() {
+            @Override
+            public SaveInfo parse(String name, long lastModifiedMs, String contents) {
+                SaveFile parsed = SaveIO.parseSafe(contents);
+                if (parsed != null) {
+                    return new SaveInfo(name, lastModifiedMs, parsed.mcVersion, WorldDescriptor.displayOf(parsed.world));
+                }
+                return new SaveInfo(name, lastModifiedMs, null, null);
+            }
+        });
+    }
+
+    public FileSystemSaveStore(Path saveDir, String modVersion, String mcVersion, Supplier<WorldDescriptor> worldSupplier, InfoParser infoParser) {
         this.saveDir = saveDir;
         this.modVersion = modVersion;
         this.mcVersion = mcVersion;
         this.worldSupplier = worldSupplier;
+        this.infoParser = infoParser;
     }
 
     public Path getSaveDir() {
@@ -90,12 +109,9 @@ public final class FileSystemSaveStore {
         return infos;
     }
 
-    private static SaveInfo parseInfo(Path p, String name, long mtime) {
+    private SaveInfo parseInfo(Path p, String name, long mtime) {
         try {
-            SaveFile parsed = SaveIO.parseSafe(new String(Files.readAllBytes(p), CHARSET));
-            if (parsed != null) {
-                return new SaveInfo(name, mtime, parsed.mcVersion, WorldDescriptor.displayOf(parsed.world));
-            }
+            return infoParser.parse(name, mtime, new String(Files.readAllBytes(p), CHARSET));
         } catch (IOException ignored) {
         }
         return new SaveInfo(name, mtime, null, null);

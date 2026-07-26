@@ -6,6 +6,7 @@ import de.legoshi.parkourcalc.core.render.ConstraintPalette;
 import de.legoshi.parkourcalc.core.render.ConstraintPlate;
 import de.legoshi.parkourcalc.core.render.CountingBoxRenderer;
 import de.legoshi.parkourcalc.core.render.PathVertexLayout;
+import de.legoshi.parkourcalc.core.render.ReachProbe;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
@@ -31,6 +32,8 @@ public final class BoxController {
 
     private static final int GIZMO_SEGMENTS = 48;
 
+    private static final double BLOCK_REACH = 4.5;
+
     private static final int SPAN = 0;
     private static final int INSET_LO = 1;
     private static final int INSET_HI = 2;
@@ -38,22 +41,85 @@ public final class BoxController {
     private final List<Vec3dCore> positions = new ArrayList<>();
     private final List<TickState> states = new ArrayList<>();
     private final List<AABB> tickAabbs = new ArrayList<>();
+    private float[] pitches = new float[0];
 
     private double boxSize = BoxStyle.BOX_SIZE;
     private long geometryRev = 1;
+    private int dirtyFrom = Integer.MAX_VALUE;
+    private long dirtyBaseRev = 1;
+
+    private void bumpGeometry(int from) {
+        geometryRev++;
+        if (from < dirtyFrom) dirtyFrom = from;
+    }
+
+    public int takeDirtyFrom(long sinceRev) {
+        int result;
+        if (sinceRev >= geometryRev) {
+            result = positions.size();
+        } else if (sinceRev >= dirtyBaseRev) {
+            result = Math.min(dirtyFrom, positions.size());
+        } else {
+            result = 0;
+        }
+        dirtyFrom = Integer.MAX_VALUE;
+        dirtyBaseRev = geometryRev;
+        return result;
+    }
 
     public void add(TickState state) {
         positions.add(state.position);
         states.add(state);
         tickAabbs.add(AABB.ofCenteredXZ(state.position, boxSize));
-        geometryRev++;
+        bumpGeometry(positions.size() - 1);
+    }
+
+    public void replaceFrom(int from, List<TickState> tail) {
+        while (positions.size() > from) {
+            int last = positions.size() - 1;
+            positions.remove(last);
+            states.remove(last);
+            tickAabbs.remove(last);
+        }
+        for (int i = 0; i < tail.size(); i++) {
+            TickState state = tail.get(i);
+            positions.add(state.position);
+            states.add(state);
+            tickAabbs.add(AABB.ofCenteredXZ(state.position, boxSize));
+        }
+        bumpGeometry(from);
     }
 
     public void clearAll() {
         positions.clear();
         states.clear();
         tickAabbs.clear();
-        geometryRev++;
+        pitches = new float[0];
+        bumpGeometry(0);
+    }
+
+    public void setPitches(float[] pitches) {
+        float[] next = pitches != null ? pitches : new float[0];
+        int firstDiff = -1;
+        if (next.length != this.pitches.length) {
+            firstDiff = Math.min(next.length, this.pitches.length);
+        }
+        int common = Math.min(next.length, this.pitches.length);
+        for (int i = 0; i < common; i++) {
+            if (Float.compare(next[i], this.pitches[i]) != 0) {
+                firstDiff = firstDiff < 0 ? i : Math.min(firstDiff, i);
+                break;
+            }
+        }
+        this.pitches = next;
+        if (firstDiff >= 0) {
+            bumpGeometry(firstDiff);
+        }
+    }
+
+    public float getPitch(int index) {
+        if (index < 0 || index >= pitches.length) return 0f;
+        return pitches[index];
     }
 
     public boolean isEmpty() {
@@ -71,7 +137,7 @@ public final class BoxController {
         for (Vec3dCore position : positions) {
             tickAabbs.add(AABB.ofCenteredXZ(position, size));
         }
-        geometryRev++;
+        bumpGeometry(0);
     }
 
     /** Monotonic counter; loaders snapshot it and rebuild cached buffers when it changes. */
@@ -152,6 +218,7 @@ public final class BoxController {
     public boolean isCursorOverConstraint(Vec3dCore rayOrigin, Vec3dCore rayDirection, ConstraintBoxSource source) {
         for (int i = 0; i < positions.size(); i++) {
             for (ConstraintPlate plate : source.platesAt(i)) {
+                if (!plate.pickable) continue;
                 if (closestPlateFace(plate, rayOrigin, rayDirection) >= 0) return true;
             }
         }
@@ -167,6 +234,7 @@ public final class BoxController {
         int[] bestIndices = null;
         for (int i = 0; i < positions.size(); i++) {
             for (ConstraintPlate plate : source.platesAt(i)) {
+                if (!plate.pickable) continue;
                 double t = closestPlateFace(plate, rayOrigin, rayDirection);
                 if (t >= 0 && t < bestT) {
                     bestT = t;
@@ -206,6 +274,12 @@ public final class BoxController {
                        double camX, double camY, double camZ, double maxDistanceSq) {
         for (int i = 0; i < positions.size(); i++) {
             if (!inRange(i, camX, camY, camZ, maxDistanceSq)) continue;
+            renderer.drawBox(tickAabbs.get(i), picker.argbFor(i, states.get(i)));
+        }
+    }
+
+    public void render(BoxRenderer renderer, BoxColorPicker picker, int from, int to) {
+        for (int i = from; i < to; i++) {
             renderer.drawBox(tickAabbs.get(i), picker.argbFor(i, states.get(i)));
         }
     }
@@ -303,12 +377,12 @@ public final class BoxController {
     }
 
     /** Whether the faces pass fits one buffer; loaders drop the hitbox (not the path) when it doesn't. */
-    public boolean facePassFitsBudget(int hitboxEdges, boolean useSubtickPositions, boolean showArrows) {
+    public boolean facePassFitsBudget(int hitboxEdges, boolean useSubtickPositions, int arrowsPerBox) {
         if (hitboxEdges == 0) return true;
         long n = positions.size();
         long faceVerts = n * PathVertexLayout.FACE_VERTS_PER_BOX
                 + (long) hitboxEdges * PathVertexLayout.THICK_EDGE_VERTS * totalHitboxWalk(useSubtickPositions)
-                + (showArrows && n > 0 ? (n - 1) * PathVertexLayout.ARROW_VERTS_PER_BOX : 0);
+                + (arrowsPerBox > 0 && n > 0 ? (n - 1) * (long) arrowsPerBox * PathVertexLayout.ARROW_VERTS_PER_BOX : 0);
         return faceVerts <= PathVertexLayout.MAX_PASS_VERTICES;
     }
 
@@ -399,70 +473,106 @@ public final class BoxController {
         return Collections.singletonList(positions.get(tickIndex));
     }
 
-    public void renderYawArrows(BoxRenderer renderer, int argb, double camX, double camY, double camZ, double maxDistanceSq) {
+    public void renderFacingArrows(BoxRenderer renderer, boolean drawYaw, boolean drawCombined, int yawArgb, int combinedArgb, double camX, double camY, double camZ, double maxDistanceSq) {
         if (positions.isEmpty()) return;
-        double half = boxSize * 0.5;
         // Arrow at box i is the outgoing facing: states[i+1].yaw is the look direction used
         // during the tick that leaves box i. The final box has no outgoing tick, so it gets no arrow.
         for (int i = 0; i + 1 < states.size(); i++) {
             if (!inRange(i, camX, camY, camZ, maxDistanceSq)) continue;
-            Vec3dCore p = positions.get(i);
-            double cx = p.x;
-            double cy = p.y + half;
-            double cz = p.z;
-
-            double yawRad = Math.toRadians(states.get(i + 1).yaw);
-            double fx = -Math.sin(yawRad);
-            double fz = Math.cos(yawRad);
-
-            double tipX = cx + fx * ARROW_SHAFT_LEN;
-            double tipZ = cz + fz * ARROW_SHAFT_LEN;
-            double baseX = tipX - fx * ARROW_HEAD_LEN;
-            double baseZ = tipZ - fz * ARROW_HEAD_LEN;
-
-            // Shaft: oriented thin box from box center to the base of the head.
-            double perpShaftX = -fz * (ARROW_THICKNESS * 0.5);
-            double perpShaftZ = fx * (ARROW_THICKNESS * 0.5);
-            emitOrientedShaft(renderer, cx, cy, cz, baseX, baseZ, perpShaftX, perpShaftZ, ARROW_THICKNESS, argb);
-
-            // Head: filled triangle, drawn as two coincident triangles for a slight Y extent so it reads from above/below.
-            double perpHeadX = -fz * ARROW_HEAD_HALF_WIDTH;
-            double perpHeadZ = fx * ARROW_HEAD_HALF_WIDTH;
-            double c1x = baseX + perpHeadX, c1z = baseZ + perpHeadZ;
-            double c2x = baseX - perpHeadX, c2z = baseZ - perpHeadZ;
-            double headLow = cy - ARROW_THICKNESS * 0.5;
-            double headHigh = cy + ARROW_THICKNESS * 0.5;
-            renderer.drawTriangle(tipX, headLow, tipZ, c1x, headLow, c1z, c2x, headLow, c2z, argb);
-            renderer.drawTriangle(tipX, headHigh, tipZ, c2x, headHigh, c2z, c1x, headHigh, c1z, argb);
-            // Side walls so the head has thickness when viewed edge-on.
-            renderer.drawTriangle(tipX, headLow, tipZ, c1x, headHigh, c1z, tipX, headHigh, tipZ, argb);
-            renderer.drawTriangle(tipX, headLow, tipZ, c1x, headLow, c1z, c1x, headHigh, c1z, argb);
-            renderer.drawTriangle(tipX, headLow, tipZ, tipX, headHigh, tipZ, c2x, headHigh, c2z, argb);
-            renderer.drawTriangle(tipX, headLow, tipZ, c2x, headHigh, c2z, c2x, headLow, c2z, argb);
-            renderer.drawTriangle(c1x, headLow, c1z, c2x, headHigh, c2z, c1x, headHigh, c1z, argb);
-            renderer.drawTriangle(c1x, headLow, c1z, c2x, headLow, c2z, c2x, headHigh, c2z, argb);
+            emitFacingArrowAt(renderer, drawYaw, drawCombined, yawArgb, combinedArgb, i);
         }
     }
 
-    private static void emitOrientedShaft(BoxRenderer renderer, double sx, double sy, double sz, double ex, double ez, double perpX, double perpZ, double thickness, int argb) {
-        double h = thickness * 0.5;
-        double yLow = sy - h, yHigh = sy + h;
-        double p0x = sx - perpX, p0z = sz - perpZ;
-        double p1x = sx + perpX, p1z = sz + perpZ;
-        double p2x = ex + perpX, p2z = ez + perpZ;
-        double p3x = ex - perpX, p3z = ez - perpZ;
-        renderer.drawTriangle(p0x, yLow, p0z, p1x, yLow, p1z, p2x, yLow, p2z, argb);
-        renderer.drawTriangle(p0x, yLow, p0z, p2x, yLow, p2z, p3x, yLow, p3z, argb);
-        renderer.drawTriangle(p0x, yHigh, p0z, p2x, yHigh, p2z, p1x, yHigh, p1z, argb);
-        renderer.drawTriangle(p0x, yHigh, p0z, p3x, yHigh, p3z, p2x, yHigh, p2z, argb);
-        renderer.drawTriangle(p0x, yLow, p0z, p1x, yHigh, p1z, p0x, yHigh, p0z, argb);
-        renderer.drawTriangle(p0x, yLow, p0z, p1x, yLow, p1z, p1x, yHigh, p1z, argb);
-        renderer.drawTriangle(p1x, yLow, p1z, p2x, yHigh, p2z, p1x, yHigh, p1z, argb);
-        renderer.drawTriangle(p1x, yLow, p1z, p2x, yLow, p2z, p2x, yHigh, p2z, argb);
-        renderer.drawTriangle(p2x, yLow, p2z, p3x, yHigh, p3z, p2x, yHigh, p2z, argb);
-        renderer.drawTriangle(p2x, yLow, p2z, p3x, yLow, p3z, p3x, yHigh, p3z, argb);
-        renderer.drawTriangle(p3x, yLow, p3z, p0x, yHigh, p0z, p3x, yHigh, p3z, argb);
-        renderer.drawTriangle(p3x, yLow, p3z, p0x, yLow, p0z, p0x, yHigh, p0z, argb);
+    public void renderFacingArrows(BoxRenderer renderer, boolean drawYaw, boolean drawCombined, int yawArgb, int combinedArgb, int from, int to) {
+        for (int i = from; i < to; i++) {
+            emitFacingArrowAt(renderer, drawYaw, drawCombined, yawArgb, combinedArgb, i);
+        }
+    }
+
+    private void emitFacingArrowAt(BoxRenderer renderer, boolean drawYaw, boolean drawCombined, int yawArgb, int combinedArgb, int i) {
+        double half = boxSize * 0.5;
+        Vec3dCore p = positions.get(i);
+
+        double yawRad = Math.toRadians(states.get(i + 1).yaw);
+        double fx = -Math.sin(yawRad);
+        double fz = Math.cos(yawRad);
+
+        if (drawYaw) {
+            emitArrow(renderer, p.x, p.y + half, p.z, fx, 0.0, fz, -fz, 0.0, fx, 0.0, 1.0, 0.0, yawArgb);
+        }
+        if (drawCombined) {
+            double pitchRad = Math.toRadians(getPitch(i + 1));
+            double cosP = Math.cos(pitchRad);
+            double sinP = Math.sin(pitchRad);
+            emitArrow(renderer, p.x, p.y + half, p.z,
+                    fx * cosP, -sinP, fz * cosP,
+                    -fz, 0.0, fx,
+                    fx * sinP, cosP, fz * sinP, combinedArgb);
+        }
+    }
+
+    public void renderHitDistanceLines(BoxRenderer renderer, ReachProbe probe, int missArgb, int hitArgb) {
+        for (int i = 0; i + 1 < states.size(); i++) {
+            renderHitDistanceLineAt(renderer, probe, i, missArgb, hitArgb);
+        }
+    }
+
+    public void renderHitDistanceLineAt(BoxRenderer renderer, ReachProbe probe, int i, int missArgb, int hitArgb) {
+        if (i < 0 || i + 1 >= states.size()) return;
+        Vec3dCore p = positions.get(i);
+        double eyeY = p.y + probe.eyeHeight(states.get(i).sneaking);
+        double yawRad = Math.toRadians(states.get(i + 1).yaw);
+        double pitchRad = Math.toRadians(getPitch(i + 1));
+        double cosP = Math.cos(pitchRad);
+        double dx = -Math.sin(yawRad) * cosP;
+        double dy = -Math.sin(pitchRad);
+        double dz = Math.cos(yawRad) * cosP;
+        double hit = probe.hitDistance(p.x, eyeY, p.z, dx, dy, dz, BLOCK_REACH);
+        double len = hit >= 0 ? hit : BLOCK_REACH;
+        renderer.drawLine(p.x, eyeY, p.z,
+                p.x + dx * len, eyeY + dy * len, p.z + dz * len,
+                hit >= 0 ? hitArgb : missArgb);
+    }
+
+    private static void emitArrow(BoxRenderer renderer, double cx, double cy, double cz,
+                                  double dx, double dy, double dz,
+                                  double rx, double ry, double rz,
+                                  double ux, double uy, double uz, int argb) {
+        double h = ARROW_THICKNESS * 0.5;
+        double tipX = cx + dx * ARROW_SHAFT_LEN, tipY = cy + dy * ARROW_SHAFT_LEN, tipZ = cz + dz * ARROW_SHAFT_LEN;
+        double baseX = tipX - dx * ARROW_HEAD_LEN, baseY = tipY - dy * ARROW_HEAD_LEN, baseZ = tipZ - dz * ARROW_HEAD_LEN;
+        double ox = ux * h, oy = uy * h, oz = uz * h;
+
+        // Shaft: oriented thin box from box center to the base of the head.
+        double p0x = cx - rx * h, p0y = cy - ry * h, p0z = cz - rz * h;
+        double p1x = cx + rx * h, p1y = cy + ry * h, p1z = cz + rz * h;
+        double p2x = baseX + rx * h, p2y = baseY + ry * h, p2z = baseZ + rz * h;
+        double p3x = baseX - rx * h, p3y = baseY - ry * h, p3z = baseZ - rz * h;
+        renderer.drawTriangle(p0x - ox, p0y - oy, p0z - oz, p1x - ox, p1y - oy, p1z - oz, p2x - ox, p2y - oy, p2z - oz, argb);
+        renderer.drawTriangle(p0x - ox, p0y - oy, p0z - oz, p2x - ox, p2y - oy, p2z - oz, p3x - ox, p3y - oy, p3z - oz, argb);
+        renderer.drawTriangle(p0x + ox, p0y + oy, p0z + oz, p2x + ox, p2y + oy, p2z + oz, p1x + ox, p1y + oy, p1z + oz, argb);
+        renderer.drawTriangle(p0x + ox, p0y + oy, p0z + oz, p3x + ox, p3y + oy, p3z + oz, p2x + ox, p2y + oy, p2z + oz, argb);
+        renderer.drawTriangle(p0x - ox, p0y - oy, p0z - oz, p1x + ox, p1y + oy, p1z + oz, p0x + ox, p0y + oy, p0z + oz, argb);
+        renderer.drawTriangle(p0x - ox, p0y - oy, p0z - oz, p1x - ox, p1y - oy, p1z - oz, p1x + ox, p1y + oy, p1z + oz, argb);
+        renderer.drawTriangle(p1x - ox, p1y - oy, p1z - oz, p2x + ox, p2y + oy, p2z + oz, p1x + ox, p1y + oy, p1z + oz, argb);
+        renderer.drawTriangle(p1x - ox, p1y - oy, p1z - oz, p2x - ox, p2y - oy, p2z - oz, p2x + ox, p2y + oy, p2z + oz, argb);
+        renderer.drawTriangle(p2x - ox, p2y - oy, p2z - oz, p3x + ox, p3y + oy, p3z + oz, p2x + ox, p2y + oy, p2z + oz, argb);
+        renderer.drawTriangle(p2x - ox, p2y - oy, p2z - oz, p3x - ox, p3y - oy, p3z - oz, p3x + ox, p3y + oy, p3z + oz, argb);
+        renderer.drawTriangle(p3x - ox, p3y - oy, p3z - oz, p0x + ox, p0y + oy, p0z + oz, p3x + ox, p3y + oy, p3z + oz, argb);
+        renderer.drawTriangle(p3x - ox, p3y - oy, p3z - oz, p0x - ox, p0y - oy, p0z - oz, p0x + ox, p0y + oy, p0z + oz, argb);
+
+        // Head: filled triangle, drawn as two coincident triangles for a slight Y extent so it reads from above/below.
+        double c1x = baseX + rx * ARROW_HEAD_HALF_WIDTH, c1y = baseY + ry * ARROW_HEAD_HALF_WIDTH, c1z = baseZ + rz * ARROW_HEAD_HALF_WIDTH;
+        double c2x = baseX - rx * ARROW_HEAD_HALF_WIDTH, c2y = baseY - ry * ARROW_HEAD_HALF_WIDTH, c2z = baseZ - rz * ARROW_HEAD_HALF_WIDTH;
+        renderer.drawTriangle(tipX - ox, tipY - oy, tipZ - oz, c1x - ox, c1y - oy, c1z - oz, c2x - ox, c2y - oy, c2z - oz, argb);
+        renderer.drawTriangle(tipX + ox, tipY + oy, tipZ + oz, c2x + ox, c2y + oy, c2z + oz, c1x + ox, c1y + oy, c1z + oz, argb);
+        // Side walls so the head has thickness when viewed edge-on.
+        renderer.drawTriangle(tipX - ox, tipY - oy, tipZ - oz, c1x + ox, c1y + oy, c1z + oz, tipX + ox, tipY + oy, tipZ + oz, argb);
+        renderer.drawTriangle(tipX - ox, tipY - oy, tipZ - oz, c1x - ox, c1y - oy, c1z - oz, c1x + ox, c1y + oy, c1z + oz, argb);
+        renderer.drawTriangle(tipX - ox, tipY - oy, tipZ - oz, tipX + ox, tipY + oy, tipZ + oz, c2x + ox, c2y + oy, c2z + oz, argb);
+        renderer.drawTriangle(tipX - ox, tipY - oy, tipZ - oz, c2x + ox, c2y + oy, c2z + oz, c2x - ox, c2y - oy, c2z - oz, argb);
+        renderer.drawTriangle(c1x - ox, c1y - oy, c1z - oz, c2x + ox, c2y + oy, c2z + oz, c1x + ox, c1y + oy, c1z + oz, argb);
+        renderer.drawTriangle(c1x - ox, c1y - oy, c1z - oz, c2x - ox, c2y - oy, c2z - oz, c2x + ox, c2y + oy, c2z + oz, argb);
     }
 
     public void renderYawGizmo(BoxRenderer renderer, Vec3dCore center, double yawDegrees, double radius, int circleArgb, int directionArgb) {
@@ -493,6 +603,47 @@ public final class BoxController {
         double perpZ = fx * headHalfWidth;
         renderer.drawLine(tipX, center.y, tipZ, baseX + perpX, center.y, baseZ + perpZ, directionArgb);
         renderer.drawLine(tipX, center.y, tipZ, baseX - perpX, center.y, baseZ - perpZ, directionArgb);
+    }
+
+    public void renderPitchGizmo(BoxRenderer renderer, Vec3dCore center, double yawDegrees, double pitchDegrees, double radius, int circleArgb, int directionArgb) {
+        double yawRad = Math.toRadians(yawDegrees);
+        double fx = -Math.sin(yawRad);
+        double fz = Math.cos(yawRad);
+
+        double prevX = center.x + fx * radius;
+        double prevY = center.y;
+        double prevZ = center.z + fz * radius;
+        for (int i = 1; i <= GIZMO_SEGMENTS; i++) {
+            double a = (i / (double) GIZMO_SEGMENTS) * Math.PI * 2.0;
+            double along = Math.cos(a) * radius;
+            double up = Math.sin(a) * radius;
+            double nx = center.x + fx * along;
+            double ny = center.y + up;
+            double nz = center.z + fz * along;
+            renderer.drawLine(prevX, prevY, prevZ, nx, ny, nz, circleArgb);
+            prevX = nx;
+            prevY = ny;
+            prevZ = nz;
+        }
+
+        double pitchRad = Math.toRadians(pitchDegrees);
+        double da = Math.cos(pitchRad);
+        double db = -Math.sin(pitchRad);
+        double tipX = center.x + fx * da * radius;
+        double tipY = center.y + db * radius;
+        double tipZ = center.z + fz * da * radius;
+        renderer.drawLine(center.x, center.y, center.z, tipX, tipY, tipZ, directionArgb);
+
+        double headLen = radius * 0.25;
+        double headHalfWidth = radius * 0.15;
+        double baseA = da * (radius - headLen);
+        double baseB = db * (radius - headLen);
+        double perpA = db * headHalfWidth;
+        double perpB = -da * headHalfWidth;
+        renderer.drawLine(tipX, tipY, tipZ,
+                center.x + fx * (baseA + perpA), center.y + baseB + perpB, center.z + fz * (baseA + perpA), directionArgb);
+        renderer.drawLine(tipX, tipY, tipZ,
+                center.x + fx * (baseA - perpA), center.y + baseB - perpB, center.z + fz * (baseA - perpA), directionArgb);
     }
 
     /** Per-box subtick vertex offsets, mirroring renderPath's emission exactly; starts[n] is the total. */

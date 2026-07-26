@@ -19,4 +19,8 @@ public final class Fonts {
     public static void popBold() {
         if (boldFont != null) ImGui.popFont();
     }
+
+    public static void setBoldScale(float scale) {
+        if (boldFont != null) boldFont.setScale(scale);
+    }
 }

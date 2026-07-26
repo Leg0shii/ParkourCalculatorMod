@@ -15,6 +15,8 @@ import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
+import de.legoshi.parkourcalc.core.anglesolver.graph.GraphPresetIO;
+import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -32,6 +34,7 @@ public final class SaveController {
     private final Runnable retriggerSimulation;
 
     private FileSystemSaveStore store;
+    private FileSystemSaveStore graphStore;
     private AngleSolverState angleSolver;
     private AngleSolverEngine solverEngine;
     private BoxController boxController;
@@ -50,6 +53,10 @@ public final class SaveController {
 
     void setSaveStore(FileSystemSaveStore store) {
         this.store = store;
+    }
+
+    void setGraphStore(FileSystemSaveStore graphStore) {
+        this.graphStore = graphStore;
     }
 
     void setAngleSolver(AngleSolverState angleSolver) {
@@ -93,6 +100,7 @@ public final class SaveController {
             if (solverEngine != null) solverEngine.onProblemReplaced();
             SaveIO.applyRowsTo(f, inputData);
             SaveIO.applyAngleSolverTo(f, angleSolver);
+            resolveGraphPreset();
             runner.invalidate();
             runner.setStartPosition(SaveIO.posOf(f.start));
             runner.setStartVelocity(SaveIO.velOf(f.start));
@@ -137,6 +145,7 @@ public final class SaveController {
         if (solverEngine != null) solverEngine.onProblemReplaced();
         SaveIO.applyRowsTo(result.value, inputData);
         SaveIO.applyAngleSolverTo(result.value, angleSolver);
+        resolveGraphPreset();
         // Must precede the setStart* calls: invalidate clears pending*, which they then refill.
         runner.invalidate();
         runner.setStartPosition(SaveIO.posOf(s));
@@ -148,6 +157,14 @@ public final class SaveController {
         dirty = false;
         clearTempTrajectory();
         return result;
+    }
+
+    private void resolveGraphPreset() {
+        if (angleSolver == null) return;
+        String name = angleSolver.getGraphPresetName();
+        if (name == null || graphStore == null || !graphStore.exists(name)) return;
+        Result<SolverGraph> graph = GraphPresetIO.loadGraph(graphStore, name);
+        if (graph.ok) angleSolver.setCustomGraph(graph.value);
     }
 
     public boolean delete(String name) {

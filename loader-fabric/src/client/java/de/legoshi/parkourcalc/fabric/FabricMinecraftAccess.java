@@ -1,24 +1,51 @@
 package de.legoshi.parkourcalc.fabric;
 
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
+import de.legoshi.parkourcalc.core.sim.AABB;
+import de.legoshi.parkourcalc.core.sim.Face;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.system.MemoryStack;
 
 import java.nio.DoubleBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 public final class FabricMinecraftAccess implements MinecraftAccess {
+
+    private static final double PICK_REACH = 64.0;
+
+    private static BlockHitResult clipLookRay() {
+        Minecraft mc = Minecraft.getInstance();
+        LocalPlayer player = mc.player;
+        ClientLevel world = mc.level;
+        if (player == null || world == null) return null;
+        Camera camera = mc.gameRenderer.mainCamera();
+        Vec3 eye = camera.position();
+        Vec3 look = Vec3.directionFromRotation(camera.xRot(), camera.yRot());
+        Vec3 end = eye.add(look.scale(PICK_REACH));
+        BlockHitResult hit = world.clip(new ClipContext(
+                eye, end, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, player));
+        if (hit == null || hit.getType() != HitResult.Type.BLOCK) return null;
+        return hit;
+    }
 
     @Override
     public Vec3dCore getPlayerPosition() {
@@ -51,9 +78,9 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
 
     @Override
     public int[] getLookedAtBlock() {
-        HitResult hit = Minecraft.getInstance().hitResult;
-        if (!(hit instanceof BlockHitResult) || hit.getType() != HitResult.Type.BLOCK) return null;
-        BlockPos pos = ((BlockHitResult) hit).getBlockPos();
+        BlockHitResult hit = clipLookRay();
+        if (hit == null) return null;
+        BlockPos pos = hit.getBlockPos();
         if (pos == null) return null;
         return new int[] {pos.getX(), pos.getY(), pos.getZ()};
     }
@@ -64,6 +91,91 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
         if (world == null) return false;
         BlockPos pos = new BlockPos(x, y, z);
         return !world.getBlockState(pos).getCollisionShape(world, pos).isEmpty();
+    }
+
+    @Override
+    public boolean isLadder(int x, int y, int z) {
+        ClientLevel world = Minecraft.getInstance().level;
+        if (world == null) return false;
+        return world.getBlockState(new BlockPos(x, y, z)).is(Blocks.LADDER);
+    }
+
+    @Override
+    public boolean isSlimeBlock(int x, int y, int z) {
+        ClientLevel world = Minecraft.getInstance().level;
+        if (world == null) return false;
+        return world.getBlockState(new BlockPos(x, y, z)).is(Blocks.SLIME_BLOCK);
+    }
+
+    @Override
+    public boolean isIce(int x, int y, int z) {
+        ClientLevel world = Minecraft.getInstance().level;
+        if (world == null) return false;
+        BlockState state = world.getBlockState(new BlockPos(x, y, z));
+        return state.is(Blocks.ICE) || state.is(Blocks.PACKED_ICE)
+                || state.is(Blocks.BLUE_ICE) || state.is(Blocks.FROSTED_ICE);
+    }
+
+    @Override
+    public Face getLookedAtFace() {
+        BlockHitResult hit = clipLookRay();
+        if (hit == null) return null;
+        return toFace(hit.getDirection());
+    }
+
+    @Override
+    public Vec3dCore getLookedAtHitVec() {
+        BlockHitResult hit = clipLookRay();
+        if (hit == null) return null;
+        Vec3 p = hit.getLocation();
+        if (p == null) return null;
+        return new Vec3dCore(p.x, p.y, p.z);
+    }
+
+    @Override
+    public double getEyeHeight(boolean sneaking) {
+        return sneaking ? 1.27 : 1.62;
+    }
+
+    @Override
+    public double clipBlockDistance(Vec3dCore origin, Vec3dCore direction, double maxDistance) {
+        Minecraft mc = Minecraft.getInstance();
+        LocalPlayer player = mc.player;
+        ClientLevel world = mc.level;
+        if (player == null || world == null) return -1.0;
+        Vec3 start = new Vec3(origin.x, origin.y, origin.z);
+        Vec3 end = start.add(direction.x * maxDistance, direction.y * maxDistance, direction.z * maxDistance);
+        BlockHitResult hit = world.clip(new ClipContext(
+                start, end, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, player));
+        if (hit == null || hit.getType() != HitResult.Type.BLOCK) return -1.0;
+        return hit.getLocation().distanceTo(start);
+    }
+
+    @Override
+    public List<AABB> getCollisionBoxes(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
+        List<AABB> out = new ArrayList<>();
+        ClientLevel world = Minecraft.getInstance().level;
+        if (world == null) return out;
+        net.minecraft.world.phys.AABB region = new net.minecraft.world.phys.AABB(minX, minY, minZ, maxX + 1.0, maxY + 1.0, maxZ + 1.0);
+        for (VoxelShape shape : world.getBlockCollisions(null, region)) {
+            for (net.minecraft.world.phys.AABB bb : shape.toAabbs()) {
+                out.add(new AABB(new Vec3dCore(bb.minX, bb.minY, bb.minZ), new Vec3dCore(bb.maxX, bb.maxY, bb.maxZ)));
+            }
+        }
+        return out;
+    }
+
+    private static Face toFace(Direction side) {
+        if (side == null) return null;
+        switch (side) {
+            case DOWN: return Face.NEG_Y;
+            case UP: return Face.POS_Y;
+            case NORTH: return Face.NEG_Z;
+            case SOUTH: return Face.POS_Z;
+            case WEST: return Face.NEG_X;
+            case EAST: return Face.POS_X;
+            default: return null;
+        }
     }
 
     @Override

@@ -8,11 +8,16 @@ import de.legoshi.parkourcalc.core.ui.InputRow;
  * Loader-side driver for "real-player input playback". Core holds the schedule
  * and tick counter; the bridge does the MC-touching work each tick.
  *
- * Multiplayer is refused at start() in the controller via isSingleplayer().
+ * Multiplayer is refused at start() in the controller via isSingleplayer(),
+ * unless the bridge opts in via supportsMultiplayerPlayback().
  */
 public interface PlaybackBridge {
 
     boolean isSingleplayer();
+
+    default boolean supportsMultiplayerPlayback() {
+        return false;
+    }
 
     /** Whether the client is paused (e.g. the Esc menu in singleplayer). While paused the world does
      *  not tick, so playback must freeze in place instead of consuming its schedule (gh-106). */

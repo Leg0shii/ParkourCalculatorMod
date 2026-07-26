@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.ui;
 
+import de.legoshi.parkourcalc.core.anglesolver.ConstraintDeriver;
 import de.legoshi.parkourcalc.core.render.ConstraintStyle;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.TickState;
@@ -23,7 +24,7 @@ public final class BoxStyle {
      */
     public static final float LINE_WIDTH = 3.0F;
 
-    public static final double HITBOX_HALF_WIDTH = 0.3;
+    public static final double HITBOX_HALF_WIDTH = ConstraintDeriver.HALF;
     public static final double HITBOX_HEIGHT_STANDING = 1.8;
     public static final double HITBOX_HEIGHT_SNEAKING = 1.5;
 
@@ -41,6 +42,21 @@ public final class BoxStyle {
 
     public static int yawArrowArgb(Settings settings) {
         float[] c = settings.yawArrow;
+        return toArgb(c[0], c[1], c[2], c[3]);
+    }
+
+    public static int pitchArrowArgb(Settings settings) {
+        float[] c = settings.pitchArrow;
+        return toArgb(c[0], c[1], c[2], c[3]);
+    }
+
+    public static int hitDistanceMissArgb(Settings settings) {
+        float[] c = settings.hitDistanceLine;
+        return toArgb(c[0], c[1], c[2], c[3]);
+    }
+
+    public static int hitDistanceHitArgb(Settings settings) {
+        float[] c = settings.hitDistanceLineHit;
         return toArgb(c[0], c[1], c[2], c[3]);
     }
 

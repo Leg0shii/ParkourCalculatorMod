@@ -21,12 +21,19 @@ public final class SolveCore {
         public final int maxEval;
         public final int polishCount;
         public final BucketAscentPolish.Config polishCfg;
+        public final CmaesJumpHarness.Config harness;
 
         public Budget(int restarts, int maxEval, int polishCount, BucketAscentPolish.Config polishCfg) {
+            this(restarts, maxEval, polishCount, polishCfg, new CmaesJumpHarness.Config());
+        }
+
+        public Budget(int restarts, int maxEval, int polishCount, BucketAscentPolish.Config polishCfg,
+                      CmaesJumpHarness.Config harness) {
             this.restarts = restarts;
             this.maxEval = maxEval;
             this.polishCount = polishCount;
             this.polishCfg = polishCfg;
+            this.harness = harness;
         }
     }
 
@@ -82,7 +89,7 @@ public final class SolveCore {
                 for (int r = 0; r < budget.restarts; r++) batch.add(firstBatch && r == 0 ? warm : randomInit(rng, n));
                 firstBatch = false;
                 inits.addAll(batch);
-                results.addAll(runRestarts(model, spec, sigmaDeg, budget.maxEval, batch, false, sequential, cancel, feasTol, progress));
+                results.addAll(runRestarts(model, spec, sigmaDeg, budget, batch, false, sequential, cancel, feasTol, progress));
                 if (cancel.get()) return bestOrNull(progress);
                 if (stopOnFeasible && hasFeasible(results, feasTol)) break;
             } while (deadlineNanos > 0 && System.nanoTime() < deadlineNanos && !cancel.get());
@@ -94,8 +101,10 @@ public final class SolveCore {
             // objective-weighted fitness can settle a hair infeasible for some directions (see the
             // feasibilityOnly constructor on CmaesJumpHarness). Purely additive: this only runs when we
             // would otherwise report no solution, so it can never regress a solve that already succeeds.
-            if (feasible.isEmpty()) {
-                List<SolverRunResult> feasOnly = runRestarts(model, spec, sigmaDeg, budget.maxEval, inits, true, sequential, cancel, feasTol, progress);
+            if (feasible.isEmpty() && (deadlineNanos == 0L || System.nanoTime() < deadlineNanos)) {
+                List<double[]> rescueInits = deadlineNanos > 0L && inits.size() > budget.restarts
+                        ? inits.subList(0, budget.restarts) : inits;
+                List<SolverRunResult> feasOnly = runRestarts(model, spec, sigmaDeg, budget, rescueInits, true, sequential, cancel, feasTol, progress);
                 if (cancel.get()) return bestOrNull(progress);
                 List<SolverRunResult> rescued = filterFeasible(feasOnly, feasTol);
                 if (!rescued.isEmpty()) {
@@ -109,18 +118,23 @@ public final class SolveCore {
 
             if (feasible.isEmpty()) {
                 SolverRunResult best = null;
+                double bestS = 0.0;
                 for (SolverRunResult r : results) {
-                    if (best == null
-                            || (max ? r.objectiveValue > best.objectiveValue : r.objectiveValue < best.objectiveValue)) {
+                    double s = spec.objective.scored(r.objectiveValue, r.yawAbsDeg);
+                    if (best == null || (max ? s > bestS : s < bestS)) {
                         best = r;
+                        bestS = s;
                     }
                 }
                 if (best == null) return bestOrNull(progress);
                 return Angles.wrapAll(best.yawAbsDeg);
             }
 
-            feasible.sort((a, b) -> max ? Double.compare(b.objectiveValue, a.objectiveValue)
-                                        : Double.compare(a.objectiveValue, b.objectiveValue));
+            feasible.sort((a, b) -> {
+                double sa = spec.objective.scored(a.objectiveValue, a.yawAbsDeg);
+                double sb = spec.objective.scored(b.objectiveValue, b.yawAbsDeg);
+                return max ? Double.compare(sb, sa) : Double.compare(sa, sb);
+            });
             if (stopOnFeasible) return Angles.wrapAll(feasible.get(0).yawAbsDeg);
 
             List<double[]> top = new ArrayList<>();
@@ -134,12 +148,13 @@ public final class SolveCore {
             if (cancel.get()) return bestOrNull(progress);
 
             double[] yaws = polished.get(0);
-            double bestObj = objectiveOf(model, sc, spec.objective, yaws);
+            double bestObj = spec.objective.scored(objectiveOf(model, sc, spec.objective, yaws), yaws);
             for (int i = 1; i < polished.size(); i++) {
-                double o = objectiveOf(model, sc, spec.objective, polished.get(i));
+                double[] cand = polished.get(i);
+                double o = spec.objective.scored(objectiveOf(model, sc, spec.objective, cand), cand);
                 if (max ? o > bestObj : o < bestObj) {
                     bestObj = o;
-                    yaws = polished.get(i);
+                    yaws = cand;
                 }
             }
             return yaws;
@@ -160,7 +175,7 @@ public final class SolveCore {
     /** One parallel multistart of CMA-ES restarts over {@code inits}. {@code feasibilityOnly} drops the
      *  objective so the search optimizes pure constraint satisfaction. */
     private static List<SolverRunResult> runRestarts(ForwardModel model, JumpSpec spec, double sigmaDeg,
-                                                     int maxEval, List<double[]> inits, boolean feasibilityOnly,
+                                                     Budget budget, List<double[]> inits, boolean feasibilityOnly,
                                                      boolean sequential, AtomicBoolean cancel, double feasTol,
                                                      SolveProgress progress) {
         boolean stopOnFeasible = !feasibilityOnly && progress != null && progress.stopOnFeasible();
@@ -171,7 +186,7 @@ public final class SolveCore {
                     if (found != null && found.get()) return null;
                     SolverRunResult rr;
                     try {
-                        rr = new CmaesJumpHarness(1.0e7, 1.0e7, sigmaDeg, maxEval, feasibilityOnly).solve(model, spec, in, cancel, found);
+                        rr = new CmaesJumpHarness(budget.harness, sigmaDeg, budget.maxEval, feasibilityOnly).solve(model, spec, in, cancel, found);
                     } catch (SolveCancelledException e) {
                         if (cancel.get()) throw e;
                         return null;

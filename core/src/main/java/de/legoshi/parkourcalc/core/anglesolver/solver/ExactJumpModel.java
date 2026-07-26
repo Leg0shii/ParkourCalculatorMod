@@ -71,6 +71,10 @@ public final class ExactJumpModel implements ForwardModel {
         return perAxisInertia;
     }
 
+    public boolean modern() {
+        return modern;
+    }
+
     /** Inertia rule for a loader's MC version. 1.8.x: per-axis 0.005. 1.12.x: per-axis 0.003.
      *  1.9+ players (1.21.10 and the modern default here): combined-XZ |v|^2 &lt; 9.0E-6. Covers the
      *  three loader versions; the per-axis-to-combined player switch lands between 1.12 and 1.21.
@@ -135,12 +139,13 @@ public final class ExactJumpModel implements ForwardModel {
 
             // (2) ground/air + jump, authored per tick (see class doc). jump() uses (float)(Math.PI/180.0)
             // for its rad cast (distinct from moveFlying's in step (4)).
-            int amp = scenario.speedAmplifierAt(t);
+            int amp = scenario.factorAmpAt(t);
             double slipOv = scenario.slipAt(t);
             boolean contact = !Double.isNaN(slipOv);
             float slipF = contact ? (float) slipOv : Constants.SLIP_F;
             boolean isJumpTick = scenario.jumpAt(t) && contact;
             boolean sprint = scenario.sprintAt(t);
+            boolean factorSprint = scenario.factorSprintAt(t);
             if (isJumpTick) {
                 if (modern) {
                     // jump(): Math.max'd impulse; the sprint boost stays double (float sin widened, * 0.2).
@@ -170,7 +175,7 @@ public final class ExactJumpModel implements ForwardModel {
                 accelSpeed = Constants.attrValueF(amp, sprint) * ground;
             } else {
                 f4 = 0.91F;
-                accelSpeed = sprint ? Constants.AIR_SPEED_F : Constants.AIR_SPEED_NO_SPRINT_F;
+                accelSpeed = factorSprint ? Constants.AIR_SPEED_F : Constants.AIR_SPEED_NO_SPRINT_F;
             }
 
             // (4) input acceleration. Inputs are authored per tick (gh-102): force-45 ticks carry the W+A

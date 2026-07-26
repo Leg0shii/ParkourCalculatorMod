@@ -18,7 +18,11 @@ plugins {
 // configuration is folded into `jar` below so Unimined's `remapJar` then operates
 // on a fat input.
 configurations {
-    shade
+    shade {
+        exclude group: 'org.lwjgl.lwjgl'
+        exclude group: 'net.java.jinput'
+        exclude group: 'net.java.jutils'
+    }
     implementation.extendsFrom shade
 }
 

@@ -3,15 +3,19 @@ package de.legoshi.parkourcalc.forge12;
 import de.legoshi.parkourcalc.core.ports.PlaybackBridge;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
+import de.legoshi.parkourcalc.forge12.sim.GhostPlayerEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.MobEffects;
+import net.minecraft.network.play.client.CPacketPlayer;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.server.integrated.IntegratedServer;
+import net.minecraft.util.MouseHelper;
 import net.minecraft.util.MovementInput;
 
 import java.util.UUID;
@@ -24,24 +28,37 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
         return Minecraft.getMinecraft().isGamePaused();
     }
 
+    private static final int GHOST_ENTITY_ID = -2100000000;
+
     private final InputRow currentRow = new InputRow();
     private MovementInput originalInput;
+    private boolean ghostMode;
+    private GhostPlayerEntity ghost;
+    private MouseHelper originalMouseHelper;
 
     InputRow getCurrentRow() {
         return currentRow;
     }
 
+    GhostPlayerEntity ghostEntity() {
+        return ghost;
+    }
+
     void installPlaybackInput(EntityPlayerSP player) {
         if (originalInput != null) return;
         originalInput = player.movementInput;
-        player.movementInput = new PlaybackMovementInput(this);
+        player.movementInput = ghostMode ? new FrozenMovementInput() : new PlaybackMovementInput(this);
     }
 
     void restorePlaybackInput(EntityPlayerSP player) {
         if (originalInput == null) return;
-        if (player.movementInput instanceof PlaybackMovementInput) {
+        if (player.movementInput instanceof PlaybackMovementInput || player.movementInput instanceof FrozenMovementInput) {
             player.movementInput = originalInput;
         }
+        originalInput = null;
+    }
+
+    void resetInputOverride() {
         originalInput = null;
     }
 
@@ -55,7 +72,97 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
     }
 
     @Override
+    public boolean supportsMultiplayerPlayback() {
+        Minecraft mc = Minecraft.getMinecraft();
+        return mc.player != null && mc.world != null;
+    }
+
+    private void beginGhostPlayback(Vec3dCore pos, Vec3dCore vel, float yaw, de.legoshi.parkourcalc.core.sim.Checkpoint carry) {
+        ghostMode = true;
+        Minecraft mc = Minecraft.getMinecraft();
+        WorldClient world = mc.world;
+        EntityPlayerSP client = mc.player;
+        if (world == null || client == null) return;
+        removeGhostEntity();
+        GhostPlayerEntity g = new GhostPlayerEntity(world, client.getGameProfile());
+        g.setInput(currentRow);
+        g.setLocationAndAngles(pos.x, pos.y, pos.z, yaw, client.rotationPitch);
+        g.renderYawOffset = yaw;
+        g.prevRenderYawOffset = yaw;
+        g.rotationYawHead = yaw;
+        g.prevRotationYawHead = yaw;
+        g.motionX = vel.x;
+        g.motionY = vel.y;
+        g.motionZ = vel.z;
+        if (carry != null) {
+            g.applyCarry(carry);
+        } else {
+            g.onGround = true;
+        }
+        g.fallDistance = 0.0F;
+        world.addEntityToWorld(GHOST_ENTITY_ID, g);
+        ghost = g;
+        client.moveStrafing = 0.0F;
+        client.moveForward = 0.0F;
+        client.isJumping = false;
+        if (originalMouseHelper == null) {
+            originalMouseHelper = mc.mouseHelper;
+            mc.mouseHelper = new FrozenMouseHelper();
+        }
+        mc.setRenderViewEntity(g);
+    }
+
+    void syncFrozenPlayerToServer() {
+        if (!ghostMode) return;
+        EntityPlayerSP p = Minecraft.getMinecraft().player;
+        if (p == null || p.connection == null || p.isRiding()) return;
+        double minY = p.getEntityBoundingBox().minY;
+        double d0 = p.posX - p.lastReportedPosX;
+        double d1 = minY - p.lastReportedPosY;
+        double d2 = p.posZ - p.lastReportedPosZ;
+        p.positionUpdateTicks++;
+        if (d0 * d0 + d1 * d1 + d2 * d2 > 9.0E-4D || p.positionUpdateTicks >= 20) {
+            p.connection.sendPacket(new CPacketPlayer.Position(p.posX, minY, p.posZ, p.onGround));
+            p.lastReportedPosX = p.posX;
+            p.lastReportedPosY = minY;
+            p.lastReportedPosZ = p.posZ;
+            p.positionUpdateTicks = 0;
+        } else {
+            p.connection.sendPacket(new CPacketPlayer(p.onGround));
+        }
+    }
+
+    void endGhostPlayback() {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (originalMouseHelper != null) {
+            if (mc.mouseHelper instanceof FrozenMouseHelper) {
+                mc.mouseHelper = originalMouseHelper;
+            }
+            originalMouseHelper = null;
+        }
+        if (ghost != null && mc.getRenderViewEntity() == ghost && mc.player != null) {
+            mc.setRenderViewEntity(mc.player);
+        }
+        removeGhostEntity();
+        ghostMode = false;
+    }
+
+    private void removeGhostEntity() {
+        GhostPlayerEntity g = ghost;
+        ghost = null;
+        if (g == null) return;
+        WorldClient world = Minecraft.getMinecraft().world;
+        if (world != null && g.world == world) {
+            world.removeEntityFromWorld(GHOST_ENTITY_ID);
+        }
+    }
+
+    @Override
     public void teleport(Vec3dCore pos, Vec3dCore vel, float yaw, de.legoshi.parkourcalc.core.sim.Checkpoint carry) {
+        if (!isSingleplayer()) {
+            beginGhostPlayback(pos, vel, yaw, carry);
+            return;
+        }
         Minecraft mc = Minecraft.getMinecraft();
         EntityPlayerSP client = mc.player;
         if (client == null) return;
@@ -105,6 +212,7 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
     @Override
     public void setKey(InputRow.Key key, boolean pressed) {
         currentRow.setKeyActive(key, pressed);
+        if (ghostMode) return;
         KeyBinding kb = bindFor(key);
         if (kb == null) return;
         KeyBinding.setKeyBindState(kb.getKeyCode(), pressed);
@@ -119,6 +227,12 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
 
     @Override
     public void setYaw(float absoluteYaw) {
+        if (ghostMode) {
+            if (ghost == null) return;
+            ghost.rotationYaw = absoluteYaw;
+            ghost.prevRotationYaw = absoluteYaw;
+            return;
+        }
         EntityPlayerSP p = Minecraft.getMinecraft().player;
         if (p == null) return;
         p.rotationYaw = absoluteYaw;
@@ -127,6 +241,11 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
 
     @Override
     public void setHeadYaw(float absoluteYaw) {
+        if (ghostMode) {
+            if (ghost == null) return;
+            ghost.rotationYawHead = absoluteYaw;
+            return;
+        }
         EntityPlayerSP p = Minecraft.getMinecraft().player;
         if (p == null) return;
         p.rotationYawHead = absoluteYaw;
@@ -134,6 +253,12 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
 
     @Override
     public void setPitch(float absolutePitch) {
+        if (ghostMode) {
+            if (ghost == null) return;
+            ghost.rotationPitch = absolutePitch;
+            ghost.prevRotationPitch = absolutePitch;
+            return;
+        }
         EntityPlayerSP p = Minecraft.getMinecraft().player;
         if (p == null) return;
         p.rotationPitch = absolutePitch;
@@ -162,6 +287,18 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
 
     @Override
     public void applyEffects(int speedAmplifier, int jumpBoostAmplifier) {
+        if (ghostMode) {
+            if (ghost == null) return;
+            ghost.removePotionEffect(MobEffects.SPEED);
+            ghost.removePotionEffect(MobEffects.JUMP_BOOST);
+            if (speedAmplifier > 0) {
+                ghost.addPotionEffect(new PotionEffect(MobEffects.SPEED, EFFECT_DURATION_TICKS, speedAmplifier - 1, false, false));
+            }
+            if (jumpBoostAmplifier > 0) {
+                ghost.addPotionEffect(new PotionEffect(MobEffects.JUMP_BOOST, EFFECT_DURATION_TICKS, jumpBoostAmplifier - 1, false, false));
+            }
+            return;
+        }
         Minecraft mc = Minecraft.getMinecraft();
         EntityPlayerSP client = mc.player;
         if (client == null) return;
@@ -198,7 +335,7 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
 
     @Override
     public void dumpPlayerState(int tickIndex) {
-        EntityPlayerSP p = Minecraft.getMinecraft().player;
+        net.minecraft.entity.player.EntityPlayer p = ghost != null ? ghost : Minecraft.getMinecraft().player;
         if (p == null) return;
         PotionEffect spd = p.getActivePotionEffect(MobEffects.SPEED);
         PotionEffect jmp = p.getActivePotionEffect(MobEffects.JUMP_BOOST);

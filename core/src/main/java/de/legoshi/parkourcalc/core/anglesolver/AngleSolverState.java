@@ -1,5 +1,7 @@
 package de.legoshi.parkourcalc.core.anglesolver;
 
+import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -46,12 +48,13 @@ public final class AngleSolverState {
         }
     }
 
-    /** Solve effort: trades wall-clock for the last micrometers of objective. FAST is ~100ms but uses a
-     *  smaller global search, so a hard jump can occasionally miss a feasible solution; bump up if so. */
+    /** Solve effort. FAST returns the first byte-exact feasible solution (lowest latency). THOROUGH
+     *  ("Optimize" in the UI; the constant keeps its name so old saves load) spends a time budget on the
+     *  best objective it can find. CUSTOM exposes every knob. */
     public enum Effort {
-        FAST("Fast", "Narrow search"),
-        THOROUGH("Thorough", "Wide search"),
-        CUSTOM("Custom", "Tuned search budget");
+        FAST("Fast", "First feasible solution"),
+        THOROUGH("Optimize", "Best result within the time budget"),
+        CUSTOM("Custom", "User graph preset");
 
         public final String label;
         public final String hint;
@@ -86,6 +89,9 @@ public final class AngleSolverState {
     public static final int MIN_TIME_BUDGET = 0;
     public static final int MAX_TIME_BUDGET = 600;
     public static final int DEFAULT_TIME_BUDGET = 0;
+    public static final int MIN_OPTIMIZE_SECONDS = 1;
+    public static final int MAX_OPTIMIZE_SECONDS = 600;
+    public static final int DEFAULT_OPTIMIZE_SECONDS = 10;
     public static final int MIN_WINDOW = 6;
     public static final int MAX_WINDOW = 14;
     public static final int DEFAULT_WINDOW = 10;
@@ -156,7 +162,14 @@ public final class AngleSolverState {
     private Goal goal = Goal.MAX;
     private Effort effort = Effort.FAST;
     private boolean stopOnFeasible;
+    private boolean legalMode;
+    private int optimizeSeconds = DEFAULT_OPTIMIZE_SECONDS;
+    public static final double TASER_SMOOTH_LAMBDA = 1.0e-2;
+
+    private double smoothLambda;
     private final SolveBudget solveBudget = new SolveBudget();
+    private String graphPresetName;
+    private SolverGraph customGraph;
 
     private InputMode defaultInputs = InputMode.FORCE_45;
     private SprintMode defaultSprint = SprintMode.ALWAYS;
@@ -165,11 +178,9 @@ public final class AngleSolverState {
 
     private final Map<Integer, TickConstraints> ticks = new LinkedHashMap<>();
 
-    // Block selections drive the block solver. start/land are single; collisions are a list. Picking is
-    // keybind-driven loader-side (a keypress captures the looked-at block), so there is no arming state here.
-    private BlockSelection startBlock;
-    private BlockSelection landBlock;
+    private final List<BlockSelection> momentumBlocks = new ArrayList<>();
     private final List<BlockSelection> collisionBlocks = new ArrayList<>();
+    private final List<BlockSelection> landBlocks = new ArrayList<>();
 
     /** Why the resimmed path left the solved path; picks the explanation tooltip in the result panel. */
     public enum DeviationKind { WALL, SNEAK, OTHER }
@@ -226,8 +237,48 @@ public final class AngleSolverState {
         this.stopOnFeasible = stopOnFeasible;
     }
 
+    public boolean isLegalMode() {
+        return legalMode;
+    }
+
+    public void setLegalMode(boolean legalMode) {
+        this.legalMode = legalMode;
+    }
+
+    public int getOptimizeSeconds() {
+        return optimizeSeconds;
+    }
+
+    public void setOptimizeSeconds(int v) {
+        optimizeSeconds = clampInt(v, MIN_OPTIMIZE_SECONDS, MAX_OPTIMIZE_SECONDS);
+    }
+
+    public double getSmoothLambda() {
+        return smoothLambda;
+    }
+
+    public void setSmoothLambda(double v) {
+        smoothLambda = Math.max(0.0, v);
+    }
+
     public SolveBudget getSolveBudget() {
         return solveBudget;
+    }
+
+    public String getGraphPresetName() {
+        return graphPresetName;
+    }
+
+    public void setGraphPresetName(String name) {
+        this.graphPresetName = name;
+    }
+
+    public SolverGraph getCustomGraph() {
+        return customGraph;
+    }
+
+    public void setCustomGraph(SolverGraph graph) {
+        this.customGraph = graph;
     }
 
     public boolean isStart(int tick) {
@@ -431,24 +482,49 @@ public final class AngleSolverState {
         tickConstraints(tick).getConstraints().add(Constraint.scalar(Constraint.Field.X, Constraint.Op.GT, 0.0));
     }
 
-    /** Keep in sync with BoxStyle.HITBOX_HALF_WIDTH / AngleSolverEngine#HALF. */
-    public static final double HITBOX_HALF_WIDTH = 0.3;
+    /** Keep in sync with BoxStyle.HITBOX_HALF_WIDTH / AngleSolverEngine#HALF / ConstraintDeriver.HALF. */
+    public static final double HITBOX_HALF_WIDTH = ConstraintDeriver.HALF;
 
-    public void addLandingConstraintsForBlock(int blockX, int blockY, int blockZ, int selectedTick,
-                                              boolean wallNegX, boolean wallPosX, boolean wallNegZ, boolean wallPosZ) {
-        if (selectedTick < 0) return;
-        double xLo = wallNegX ? blockX + HITBOX_HALF_WIDTH : blockX - HITBOX_HALF_WIDTH;
-        double xHi = wallPosX ? (blockX + 1.0) - HITBOX_HALF_WIDTH : (blockX + 1.0) + HITBOX_HALF_WIDTH;
-        double zLo = wallNegZ ? blockZ + HITBOX_HALF_WIDTH : blockZ - HITBOX_HALF_WIDTH;
-        double zHi = wallPosZ ? (blockZ + 1.0) - HITBOX_HALF_WIDTH : (blockZ + 1.0) + HITBOX_HALF_WIDTH;
-
-        List<Constraint> list = tickConstraints(selectedTick).getConstraints();
-        list.removeIf(
-                c -> c.isRange()
-                        && (c.getField() == Constraint.Field.X || c.getField() == Constraint.Field.Z)
-        );
+    public void setFootprint(int tick, double xLo, double xHi, double zLo, double zHi) {
+        if (tick < 0) return;
+        List<Constraint> list = tickConstraints(tick).getConstraints();
+        list.removeIf(c -> c.isRange() && !c.isRelative()
+                && (c.getField() == Constraint.Field.X || c.getField() == Constraint.Field.Z));
         list.add(Constraint.range(Constraint.Field.X, xLo, xHi, true, true));
         list.add(Constraint.range(Constraint.Field.Z, zLo, zHi, true, true));
+    }
+
+    public void clearFootprint(int tick) {
+        TickConstraints tc = ticks.get(tick);
+        if (tc == null) return;
+        tc.getConstraints().removeIf(c -> c.isRange() && !c.isRelative()
+                && (c.getField() == Constraint.Field.X || c.getField() == Constraint.Field.Z));
+    }
+
+    public void putScalarReplacingDirection(int tick, Constraint wall) {
+        if (tick < 0 || wall == null) return;
+        List<Constraint> list = tickConstraints(tick).getConstraints();
+        Constraint.Field field = wall.getField();
+        boolean lower = isLowerBound(wall.getOp());
+        list.removeIf(c -> !c.isRange() && !c.isRelative() && c.getField() == field
+                && isWallOp(c.getOp()) && isLowerBound(c.getOp()) == lower);
+        list.add(wall);
+    }
+
+    public void clearWall(int tick, Constraint.Field field, boolean lower) {
+        TickConstraints tc = ticks.get(tick);
+        if (tc == null) return;
+        tc.getConstraints().removeIf(c -> !c.isRange() && !c.isRelative() && c.getField() == field
+                && isWallOp(c.getOp()) && isLowerBound(c.getOp()) == lower);
+    }
+
+    private static boolean isWallOp(Constraint.Op op) {
+        return op == Constraint.Op.GE || op == Constraint.Op.GT
+                || op == Constraint.Op.LE || op == Constraint.Op.LT;
+    }
+
+    private static boolean isLowerBound(Constraint.Op op) {
+        return op == Constraint.Op.GE || op == Constraint.Op.GT;
     }
 
     /** Drops every constraint on ticks in [fromTick, toTick] (state overrides are left intact). Used by the
@@ -495,58 +571,63 @@ public final class AngleSolverState {
         return list.remove(index);
     }
 
-    // ---- block selections (drive the block solver) -----------------------------
-
-    public BlockSelection getStartBlock() {
-        return startBlock;
-    }
-
-    public void setStartBlock(BlockSelection block) {
-        this.startBlock = block;
-    }
-
-    public BlockSelection getLandBlock() {
-        return landBlock;
-    }
-
-    public void setLandBlock(BlockSelection block) {
-        this.landBlock = block;
+    public List<BlockSelection> getMomentumBlocks() {
+        return momentumBlocks;
     }
 
     public List<BlockSelection> getCollisionBlocks() {
         return collisionBlocks;
     }
 
-    public void addCollisionBlock(BlockSelection block) {
-        if (block != null) collisionBlocks.add(block);
+    public List<BlockSelection> getLandBlocks() {
+        return landBlocks;
     }
 
-    public void removeCollisionBlock(int index) {
-        if (index >= 0 && index < collisionBlocks.size()) collisionBlocks.remove(index);
+    private List<BlockSelection> blocksFor(BlockSelection.Kind kind) {
+        switch (kind) {
+            case MOMENTUM: return momentumBlocks;
+            case LAND: return landBlocks;
+            case COLLISION:
+            default: return collisionBlocks;
+        }
     }
 
-    /** Removes any selected block (start, land, or a collision) at these integer coords. Used by the
-     *  loader's "remove looked-at block" keybind. */
+    public void addBlock(BlockSelection block) {
+        if (block != null) blocksFor(block.kind).add(block);
+    }
+
+    public void toggleBlock(BlockSelection block) {
+        if (block == null) return;
+        boolean alreadySameRole = containsAt(blocksFor(block.kind), block.x, block.y, block.z);
+        removeBlockAt(block.x, block.y, block.z);
+        if (!alreadySameRole) blocksFor(block.kind).add(block);
+    }
+
+    private static boolean containsAt(List<BlockSelection> list, int x, int y, int z) {
+        for (BlockSelection b : list) {
+            if (b.x == x && b.y == y && b.z == z) return true;
+        }
+        return false;
+    }
+
     public void removeBlockAt(int x, int y, int z) {
-        if (startBlock != null && startBlock.x == x && startBlock.y == y && startBlock.z == z) startBlock = null;
-        if (landBlock != null && landBlock.x == x && landBlock.y == y && landBlock.z == z) landBlock = null;
+        momentumBlocks.removeIf(b -> b.x == x && b.y == y && b.z == z);
         collisionBlocks.removeIf(b -> b.x == x && b.y == y && b.z == z);
+        landBlocks.removeIf(b -> b.x == x && b.y == y && b.z == z);
     }
 
     public boolean hasAnyBlocks() {
-        return startBlock != null || landBlock != null || !collisionBlocks.isEmpty();
+        return !momentumBlocks.isEmpty() || !collisionBlocks.isEmpty() || !landBlocks.isEmpty();
     }
 
-    /** The only block the solver requires is a Land to reach. The Start block is optional: when picked it
-     *  pins the launch footprint (be inside it at the tick before the first jump); otherwise it is ignored. */
     public boolean hasRequiredBlocks() {
-        return landBlock != null;
+        return !landBlocks.isEmpty();
     }
 
     public void clearBlocks() {
-        startBlock = null;
-        landBlock = null;
+        momentumBlocks.clear();
         collisionBlocks.clear();
+        landBlocks.clear();
     }
 
     public SolveResult getResult() {
@@ -585,15 +666,17 @@ public final class AngleSolverState {
         goal = Goal.MAX;
         effort = Effort.FAST;
         stopOnFeasible = false;
+        legalMode = false;
+        optimizeSeconds = DEFAULT_OPTIMIZE_SECONDS;
         solveBudget.resetToDefaults();
+        graphPresetName = null;
+        customGraph = null;
         defaultInputs = InputMode.FORCE_45;
         defaultSprint = SprintMode.ALWAYS;
         defaultSlipperiness = Slipperiness.AIR;
         defaultPotions.clear();
         ticks.clear();
-        startBlock = null;
-        landBlock = null;
-        collisionBlocks.clear();
+        clearBlocks();
         result = null;
         applyDeviation = null;
         applyDeviationKind = null;

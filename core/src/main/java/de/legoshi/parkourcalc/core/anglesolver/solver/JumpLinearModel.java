@@ -20,11 +20,9 @@ import java.util.List;
  *  vectors {@code u_s}; the only nonconvexity is the per-tick fixed modulus {@code |u_t| = m_t}. This class
  *  builds the objective gradient vectors {@code c_t} and compiles the walls into that linear form, and
  *  recovers the absolute yaw a desired input direction corresponds to. The momentum-cancellation clamp is
- *  omitted: it only fires when a path's along-axis speed grazes MC's ~0.005 threshold, a borderline,
- *  float-sensitive event that even a clamp-aware linear model cannot place reliably. The continuous optimum
- *  is therefore solved clamp-free and the {@link ExactJumpModel} re-check downstream (with a small inward
- *  margin) is the source of truth, so any unmodeled clamp costs at most a sliver of objective, never
- *  feasibility. */
+ *  piecewise-affine (for a fixed per-axis zeroing pattern the map stays affine, with each input's friction
+ *  propagation cut at the first zeroing tick after it), so the pattern-aware constructor folds a given
+ *  pattern into the couplings; the pattern-free constructor keeps the clamp-free model. */
 public final class JumpLinearModel {
 
     private static final double RAD = Math.PI / 180.0;
@@ -35,10 +33,17 @@ public final class JumpLinearModel {
 
     private final double[] pConst;  // per-tick forward+jump input magnitude (the e^{iθ} is along +imag)
     private final double[] qConst;  // per-tick strafe input magnitude (along +real)
+    private final double[] fwd;
+    private final double[] boost;
     private final double[] mMag;    // |input_t| = hypot(pConst, qConst)  (constant modulus)
     private final double[] baseArg; // atan2(pConst, qConst): phase of the base input vector (q + i p)
+    private final double[] f4;      // per-tick friction multiplier
     private final double[] fPre;    // fPre[k] = prod_{i<k} f4[i]
     private final double[] sPre;    // sPre[k] = sum_{t<k} fPre[t]
+
+    private final boolean[][] zero;
+    private final int[][] zNext;
+    private final int[] zFirst;
 
     /** One wall compiled to {@code a·(Σ_s coef[s]·u_s) ≤ bPrime}, normalized so feasible == satisfied.
      *  {@code a} is the unit axis (X or Z); {@code coef[s]} is the friction coupling C(s,τ) with the
@@ -49,30 +54,53 @@ public final class JumpLinearModel {
         public final double bPrime;
         public final boolean eq;
         public final String name;
+        public final double p0coef;
 
-        Wall(int axis, double[] coef, double bPrime, boolean eq, String name) {
+        Wall(int axis, double[] coef, double bPrime, boolean eq, String name, double p0coef) {
             this.axis = axis;
             this.coef = coef;
             this.bPrime = bPrime;
             this.eq = eq;
             this.name = name;
+            this.p0coef = p0coef;
         }
     }
 
     public JumpLinearModel(JumpPhysicsInputs scenario) {
+        this(scenario, null, null);
+    }
+
+    public JumpLinearModel(JumpPhysicsInputs scenario, boolean[] zeroX, boolean[] zeroZ) {
         this.sc = scenario;
         this.n = scenario.numTicks;
         this.pConst = new double[n];
         this.qConst = new double[n];
+        this.fwd = new double[n];
+        this.boost = new double[n];
         this.mMag = new double[n];
         this.baseArg = new double[n];
+        this.f4 = new double[n];
         this.fPre = new double[n + 1];
         this.sPre = new double[n + 1];
         precompute();
+        this.zero = new boolean[2][];
+        this.zero[0] = zeroX;
+        this.zero[1] = zeroZ;
+        this.zNext = new int[2][];
+        this.zFirst = new int[]{n + 1, n + 1};
+        for (int a = 0; a < 2; a++) {
+            int[] nx = new int[n];
+            int next = n + 1;
+            for (int t = n - 1; t >= 0; t--) {
+                nx[t] = next;
+                if (zero[a] != null && zero[a][t]) next = t;
+            }
+            zNext[a] = nx;
+            zFirst[a] = next;
+        }
     }
 
     private void precompute() {
-        double[] f4 = new double[n];
         for (int t = 0; t < n; t++) {
             // Ground/air + jump authored per tick, matching ExactJumpModel: a tick is grounded iff its slip
             // is annotated (NaN = airborne), and a JUMP fires only while grounded.
@@ -84,10 +112,10 @@ public final class JumpLinearModel {
             double accelSpeed;
             if (contact) {
                 f4[t] = slip * 0.91;
-                accelSpeed = Constants.attrValueF(sc.speedAmplifierAt(t), sprint) * (0.16277136 / (f4[t] * f4[t] * f4[t]));
+                accelSpeed = Constants.attrValueF(sc.factorAmpAt(t), sprint) * (0.16277136 / (f4[t] * f4[t] * f4[t]));
             } else {
                 f4[t] = 0.91;
-                accelSpeed = sprint ? Constants.AIR_SPEED_F : Constants.AIR_SPEED_NO_SPRINT_F;
+                accelSpeed = sc.factorSprintAt(t) ? Constants.AIR_SPEED_F : Constants.AIR_SPEED_NO_SPRINT_F;
             }
             // Same per-tick input authoring as ExactJumpModel step (4) (gh-102).
             double forward0 = sc.forwardAt(t);
@@ -101,7 +129,9 @@ public final class JumpLinearModel {
                 fF = forward0 * scale;
                 sF = strafe0 * scale;
             }
-            pConst[t] = fF + (isJump && sprint ? 0.2 : 0.0);
+            fwd[t] = fF;
+            boost[t] = (isJump && sprint) ? 0.2 : 0.0;
+            pConst[t] = fF + boost[t];
             qConst[t] = sF;
             mMag[t] = Math.hypot(pConst[t], qConst[t]);
             baseArg[t] = Math.atan2(pConst[t], qConst[t]);
@@ -118,12 +148,28 @@ public final class JumpLinearModel {
         return mMag[t];
     }
 
+    public double forwardMag(int t) {
+        return fwd[t];
+    }
+
+    public double strafeMag(int t) {
+        return qConst[t];
+    }
+
+    public double boostAt(int t) {
+        return boost[t];
+    }
+
     /** Phase of the base input vector {@code (q + i p)} at tick t: the input added by a move at absolute yaw
      *  {@code y} (radians) is {@code mMag·e^{i(baseArg + y)}} = {@code (addX, addZ)}. So
      *  {@code d(addX)/dy = -addZ} and {@code d(addZ)/dy = addX}, which gives the analytic Jacobian of any
      *  X/Z position constraint wrt the per-tick facings (no forward needed). */
     public double baseArg(int t) {
         return baseArg[t];
+    }
+
+    public double friction(int t) {
+        return f4[t];
     }
 
     /** The per-tick input magnitudes (constant moduli), shared read-only with the dual solver. */
@@ -137,11 +183,20 @@ public final class JumpLinearModel {
         return (sPre[k] - sPre[s]) / fPre[s];
     }
 
+    public double coefAxis(int axis, int s, int k) {
+        if (s >= k) return 0.0;
+        int stop = zNext[axis][s];
+        int end = k < stop ? k : stop;
+        return (sPre[end] - sPre[s]) / fPre[s];
+    }
+
     /** Constant part of {@code pos_k} on the given axis: start position plus decayed initial velocity. */
     public double constPos(int k, int axis) {
-        double p0 = axis == 0 ? sc.startPos.x : sc.startPos.z;
-        double v0 = axis == 0 ? sc.initialVelocity.x : sc.initialVelocity.z;
-        return p0 + v0 * sPre[k];
+        StartBox box = sc.startBox;
+        double p0 = box != null ? (axis == 0 ? box.px : box.pz) : (axis == 0 ? sc.startPos.x : sc.startPos.z);
+        double v0 = box != null ? (axis == 0 ? box.vx : box.vz) : (axis == 0 ? sc.initialVelocity.x : sc.initialVelocity.z);
+        int end = k < zFirst[axis] ? k : zFirst[axis];
+        return p0 + v0 * sPre[end];
     }
 
     /** Per-tick objective gradient {@code c_t}: the 2D vector whose dot with {@code u_t} is the tick's
@@ -153,9 +208,8 @@ public final class JumpLinearModel {
         if (obj.axis == JumpPhysicsInputs.Axis.X) { dx = max ? 1.0 : -1.0; dz = 0.0; }
         else { dx = 0.0; dz = max ? 1.0 : -1.0; }
         for (int t = 0; t < n; t++) {
-            double c = coef(t, objTick);
-            cx[t] = c * dx;
-            cz[t] = c * dz;
+            cx[t] = coefAxis(0, t, objTick) * dx;
+            cz[t] = coefAxis(1, t, objTick) * dz;
         }
     }
 
@@ -163,9 +217,9 @@ public final class JumpLinearModel {
      *  {@code margin} (so the sine-table quantization keeps the exact model on the feasible side). Returns
      *  {@code null} for a constraint with no decision dependence (tick 0, or t1==t2): such a constraint is a
      *  constant, reported via {@code trivialInfeasible} when the constant itself violates it. F-mode (facing)
-     *  walls are not linear in the inputs and are rejected (caller falls back). */
+     *  and DXZ (cross-axis magnitude) walls are not linear in the inputs and are rejected (caller falls back). */
     public Wall compileWall(JumpConstraint c, double margin, boolean[] trivialInfeasible) {
-        if (c.mode == JumpConstraint.Mode.F) return null;
+        if (c.mode != JumpConstraint.Mode.X && c.mode != JumpConstraint.Mode.Z) return null;
         int axis = (c.mode == JumpConstraint.Mode.X) ? 0 : 1;
         int t1 = c.t1;
         Integer t2 = c.t2;
@@ -173,8 +227,8 @@ public final class JumpLinearModel {
 
         double[] coef = new double[n];
         for (int s = 0; s < n; s++) {
-            double k = coef(s, t1);
-            if (t2 != null) k += opSign * coef(s, t2);
+            double k = coefAxis(axis, s, t1);
+            if (t2 != null) k += opSign * coefAxis(axis, s, t2);
             coef[s] = k;
         }
         double constVal = constPos(t1, axis);
@@ -191,6 +245,9 @@ public final class JumpLinearModel {
         }
         if (!eq) bPrime -= margin;                // hug the wall this far inside
 
+        int tc = (t2 == null) ? 1 : (opSign > 0.0 ? 2 : 0);
+        double p0coef = (c.cmp == JumpConstraint.Cmp.GE) ? tc : -tc;
+
         boolean trivial = true;
         for (int s = 0; s < n; s++) if (coef[s] != 0.0) { trivial = false; break; }
         if (trivial) {
@@ -205,7 +262,7 @@ public final class JumpLinearModel {
             if (!ok && trivialInfeasible != null) trivialInfeasible[0] = true;
             return null;
         }
-        return new Wall(axis, coef, bPrime, eq, c.name);
+        return new Wall(axis, coef, bPrime, eq, c.name, p0coef);
     }
 
     /** Compile all walls of a spec; sets {@code trivialInfeasible[0]} if a constant constraint is violated. */
@@ -216,6 +273,55 @@ public final class JumpLinearModel {
             if (w != null) walls.add(w);
         }
         return walls;
+    }
+
+    public List<Wall> velocityWalls(double bound) {
+        List<Wall> walls = new ArrayList<>();
+        for (int a = 0; a < 2; a++) {
+            if (zero[a] == null) continue;
+            for (int t = 0; t < n; t++) {
+                if (!zero[a][t]) continue;
+                double[] coefHi = new double[n];
+                boolean any = false;
+                for (int s = 0; s < t; s++) {
+                    if (zNext[a][s] < t) continue;
+                    coefHi[s] = fPre[t] / fPre[s];
+                    any = true;
+                }
+                if (!any) continue;
+                double v0 = a == 0 ? sc.initialVelocity.x : sc.initialVelocity.z;
+                double constVal = zFirst[a] < t ? 0.0 : v0 * fPre[t];
+                double[] coefLo = new double[n];
+                for (int s = 0; s < t; s++) coefLo[s] = -coefHi[s];
+                String ax = a == 0 ? "X" : "Z";
+                walls.add(new Wall(a, coefHi, bound - constVal, false, "inertia" + ax + "@" + t + "+", 0.0));
+                walls.add(new Wall(a, coefLo, bound + constVal, false, "inertia" + ax + "@" + t + "-", 0.0));
+            }
+        }
+        return walls;
+    }
+
+    public void zeroingPattern(double[] yawsAbsWrapped, double threshold, boolean perAxis,
+                               boolean[] outZeroX, boolean[] outZeroZ) {
+        double vx = sc.initialVelocity.x;
+        double vz = sc.initialVelocity.z;
+        double thrSq = threshold * threshold;
+        for (int t = 0; t < n; t++) {
+            boolean zx = false, zz = false;
+            if (perAxis) {
+                if (Math.abs(vx) < threshold) { vx = 0.0; zx = true; }
+                if (Math.abs(vz) < threshold) { vz = 0.0; zz = true; }
+            } else {
+                if (vx * vx + vz * vz < thrSq) { vx = 0.0; vz = 0.0; zx = true; zz = true; }
+            }
+            outZeroX[t] = zx;
+            outZeroZ[t] = zz;
+            double phi = baseArg[t] + yawsAbsWrapped[t] * RAD;
+            vx += mMag[t] * Math.cos(phi);
+            vz += mMag[t] * Math.sin(phi);
+            vx *= f4[t];
+            vz *= f4[t];
+        }
     }
 
     /** True if any wall is an F-mode (facing) constraint, which this linear model cannot represent. */

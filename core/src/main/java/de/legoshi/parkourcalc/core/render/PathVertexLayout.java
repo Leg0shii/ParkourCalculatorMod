@@ -52,9 +52,9 @@ public final class PathVertexLayout {
         return starts;
     }
 
-    /** Yaw-arrow region vertex count in the faces buffer (0 when arrows are hidden / fewer than 2 boxes). */
-    public static int arrowRegionVertices(int boxCount, boolean showArrows) {
-        if (!showArrows || boxCount < 2) return 0;
-        return (boxCount - 1) * ARROW_VERTS_PER_BOX;
+    /** Arrow region vertex count in the faces buffer (0 when arrows are hidden / fewer than 2 boxes). */
+    public static int arrowRegionVertices(int boxCount, int arrowsPerBox) {
+        if (arrowsPerBox <= 0 || boxCount < 2) return 0;
+        return (boxCount - 1) * arrowsPerBox * ARROW_VERTS_PER_BOX;
     }
 }

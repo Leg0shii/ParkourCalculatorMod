@@ -27,6 +27,9 @@ public final class SettingsModal {
     private static final String TT_SCROLLBAR_SIZE = "Thickness of scrollbars: the width of vertical bars and the height of horizontal ones. Scales with UI Scale.";
     private static final String TT_SCROLLBAR_GRAB = "Minimum length of the draggable scrollbar grab. Also applies to slider grab handles. Scales with UI Scale.";
     private static final String TT_YAW_ARROWS = "Draws an arrow at each tick's position showing the facing angle that frame.";
+    private static final String TT_ARROW_MODE = "Which facing arrow to draw: the flat yaw arrow, or one arrow combining yaw and pitch into the actual look direction.";
+    private static final String TT_HIT_DISTANCE = "Draws a line from each tick's eye position along that tick's look direction, out to block reach (4.5). The line changes color when it hits a block within reach, showing where a click on that tick would land, e.g. on a button.";
+    private static final String TT_HIT_DISTANCE_SELECTED = "Limits the hit distance line to the currently selected ticks. Selected-tick lines re-cast every frame, so they also track world edits instantly.";
     private static final String TT_HITBOX = "Draws the player's hitbox at the currently selected tick.";
     private static final String TT_FULL_HITBOX = "Draws hitboxes for every tick in the TAS, not just the active one. Heavy on long TASes.";
     private static final String TT_SUBTICK = "Renders the interpolated path between adjacent ticks, exposing collision moments inside a tick.";
@@ -57,12 +60,16 @@ public final class SettingsModal {
     private static final String TT_AUTO_APPLY = "Applies a feasible Angle Solver solution to the input rows the moment the solve finishes, skipping the Apply confirmation.";
     private static final String TT_AUTO_SAVE = "Saves the open TAS automatically while it has unsaved changes, at most every 30 seconds. Needs a named save (use Save As once); Ctrl+S still saves instantly.";
     private static final String TT_SOLVER_PRECISION = "Decimal places for Angle Solver stats: solved yaws, objective values, constraint chips, and the constraint value editor.";
+    private static final String TT_EXPERIMENTAL_BLOCK_CAPTURE = "Enables in-world block capture: tag blocks by role with hotkeys (M momentum, N collision, K land, Delete clears). The hotkeys are registered at startup, so turning this on or off only takes effect after a game restart.";
 
     private final Settings settings;
     private final Runnable onChanged;
     private final TickInfoStatsEditor tickInfoStatsEditor;
 
+    private static final String[] ARROW_MODE_LABELS = {"Yaw", "Combined"};
+
     private final ImInt scaleIndexBuf = new ImInt();
+    private final ImInt arrowModeBuf = new ImInt();
     private final float[] yawTurnCapBuf = new float[1];
     private final int[] pathRenderDistanceBuf = new int[1];
     private final float[] scrollbarSizeBuf = new float[1];
@@ -222,13 +229,31 @@ public final class SettingsModal {
             });
             ThemeManager.endStandardFormTable();
         }
+
+        ThemeManager.sectionSpacing();
+        sectionHeader("Experimental");
+        if (beginLayoutTable("##settings_experimental")) {
+            checkboxRow("Block capture (restart required)", "##experimental_block_capture", settings.experimentalBlockCapture, TT_EXPERIMENTAL_BLOCK_CAPTURE, v -> settings.experimentalBlockCapture = v);
+            ThemeManager.endStandardFormTable();
+        }
     }
 
     private void renderVisualization() {
         ThemeManager.sectionSpacing();
         sectionHeader("In-world overlays");
         if (beginLayoutTable("##settings_overlays")) {
-            checkboxRow("Show yaw arrows", "##show_yaw_arrows", settings.showYawArrows, TT_YAW_ARROWS, v -> settings.showYawArrows = v);
+            checkboxRow("Show facing arrows", "##show_yaw_arrows", settings.showYawArrows, TT_YAW_ARROWS, v -> settings.showYawArrows = v);
+            arrowModeBuf.set(settings.arrowMode);
+            row("Arrow type", () -> {
+                ImGui.setNextItemWidth(-1);
+                if (Controls.combo("##arrow_mode", arrowModeBuf, ARROW_MODE_LABELS)) {
+                    settings.arrowMode = arrowModeBuf.get();
+                    onChanged.run();
+                }
+                tooltipForLastItem(TT_ARROW_MODE);
+            });
+            checkboxRow("Show hit distance lines", "##show_hit_distance", settings.showHitDistanceLines, TT_HIT_DISTANCE, v -> settings.showHitDistanceLines = v);
+            checkboxRow("Hit distance for selected ticks only", "##hit_distance_selected", settings.hitDistanceSelectedOnly, TT_HIT_DISTANCE_SELECTED, v -> settings.hitDistanceSelectedOnly = v);
             checkboxRow("Show hitbox", "##show_hitbox", settings.showHitbox, TT_HITBOX, v -> settings.showHitbox = v);
             checkboxRow("Show full hitbox", "##show_full_hitbox", settings.showFullHitbox, TT_FULL_HITBOX, v -> settings.showFullHitbox = v);
             checkboxRow("Subtick visualization", "##show_subtick", settings.showSubtick, TT_SUBTICK, v -> settings.showSubtick = v);
@@ -374,6 +399,9 @@ public final class SettingsModal {
         sectionHeader("Path and gizmos");
         renderColor("subtick path", settings.subtickPath, flags);
         renderColor("yaw arrows", settings.yawArrow, flags);
+        renderColor("combined arrows", settings.pitchArrow, flags);
+        renderColor("hit distance line", settings.hitDistanceLine, flags);
+        renderColor("hit distance line (in reach)", settings.hitDistanceLineHit, flags);
         renderColor("yaw gizmo circle", settings.yawGizmoCircle, flags);
         renderColor("yaw gizmo direction", settings.yawGizmoDirection, flags);
 

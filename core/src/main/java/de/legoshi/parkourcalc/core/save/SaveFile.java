@@ -48,7 +48,11 @@ public final class SaveFile {
         public String goal;
         public String effort;                            // absent in old files -> FAST
         public Boolean stopOnFeasible;                   // absent in old files -> false
+        public Boolean legalMode;                        // absent in old files -> false
+        public Integer optimizeSeconds;                  // absent in old files -> default
+        public Double smoothLambda;
         public SolveBudget customBudget;
+        public String graphPreset;
         public String defaultInputs;
         public String defaultSprint;                     // absent in old files -> ALWAYS
         public String defaultSlipperiness;
@@ -79,6 +83,7 @@ public final class SaveFile {
         public int y;
         public int z;
         public double[] box;                             // [minX,minY,minZ,maxX,maxY,maxZ]
+        public double[][] boxes;
     }
 
     public static final class Tick {
@@ -97,6 +102,8 @@ public final class SaveFile {
         public boolean loInclusive;
         public boolean hiInclusive;
         public boolean disabled;                         // absent in old saves = enabled
+        public Integer refTick;                          // X/Z only; absent = absolute
+        public boolean vsDz;                             // dX only; true = right side is dZ + value
     }
 
     public static final class Override {

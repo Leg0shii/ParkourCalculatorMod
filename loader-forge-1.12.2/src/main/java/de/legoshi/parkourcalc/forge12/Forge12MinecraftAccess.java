@@ -1,21 +1,43 @@
 package de.legoshi.parkourcalc.forge12;
 
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
+import de.legoshi.parkourcalc.core.sim.AABB;
+import de.legoshi.parkourcalc.core.sim.Face;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2InputState;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
+import net.minecraft.init.Blocks;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Supplier;
 
 @SuppressWarnings("DuplicatedCode")
 public final class Forge12MinecraftAccess implements MinecraftAccess {
+
+    private static final double PICK_REACH = 64.0;
+
+    private static RayTraceResult clipLookRay() {
+        Minecraft mc = Minecraft.getMinecraft();
+        Entity view = mc.getRenderViewEntity();
+        World world = mc.world;
+        if (view == null || world == null) return null;
+        Vec3d eye = view.getPositionEyes(1.0F);
+        Vec3d look = view.getLook(1.0F);
+        Vec3d end = new Vec3d(eye.x + look.x * PICK_REACH, eye.y + look.y * PICK_REACH, eye.z + look.z * PICK_REACH);
+        RayTraceResult hit = world.rayTraceBlocks(eye, end);
+        if (hit == null || hit.typeOfHit != RayTraceResult.Type.BLOCK) return null;
+        return hit;
+    }
 
     @Override
     public Vec3dCore getPlayerPosition() {
@@ -49,8 +71,8 @@ public final class Forge12MinecraftAccess implements MinecraftAccess {
 
     @Override
     public int[] getLookedAtBlock() {
-        RayTraceResult hit = Minecraft.getMinecraft().objectMouseOver;
-        if (hit == null || hit.typeOfHit != RayTraceResult.Type.BLOCK) return null;
+        RayTraceResult hit = clipLookRay();
+        if (hit == null) return null;
         BlockPos pos = hit.getBlockPos();
         if (pos == null) return null;
         return new int[] {pos.getX(), pos.getY(), pos.getZ()};
@@ -62,6 +84,86 @@ public final class Forge12MinecraftAccess implements MinecraftAccess {
         if (world == null) return false;
         BlockPos pos = new BlockPos(x, y, z);
         return world.getBlockState(pos).getCollisionBoundingBox(world, pos) != Block.NULL_AABB;
+    }
+
+    @Override
+    public boolean isLadder(int x, int y, int z) {
+        World world = Minecraft.getMinecraft().world;
+        if (world == null) return false;
+        return world.getBlockState(new BlockPos(x, y, z)).getBlock() == Blocks.LADDER;
+    }
+
+    @Override
+    public boolean isSlimeBlock(int x, int y, int z) {
+        World world = Minecraft.getMinecraft().world;
+        if (world == null) return false;
+        return world.getBlockState(new BlockPos(x, y, z)).getBlock() == Blocks.SLIME_BLOCK;
+    }
+
+    @Override
+    public boolean isIce(int x, int y, int z) {
+        World world = Minecraft.getMinecraft().world;
+        if (world == null) return false;
+        Block block = world.getBlockState(new BlockPos(x, y, z)).getBlock();
+        return block == Blocks.ICE || block == Blocks.PACKED_ICE || block == Blocks.FROSTED_ICE;
+    }
+
+    @Override
+    public Face getLookedAtFace() {
+        RayTraceResult hit = clipLookRay();
+        if (hit == null) return null;
+        return toFace(hit.sideHit);
+    }
+
+    @Override
+    public Vec3dCore getLookedAtHitVec() {
+        RayTraceResult hit = clipLookRay();
+        if (hit == null || hit.hitVec == null) return null;
+        return new Vec3dCore(hit.hitVec.x, hit.hitVec.y, hit.hitVec.z);
+    }
+
+    @Override
+    public double getEyeHeight(boolean sneaking) {
+        return sneaking ? 1.54 : 1.62;
+    }
+
+    @Override
+    public double clipBlockDistance(Vec3dCore origin, Vec3dCore direction, double maxDistance) {
+        World world = Minecraft.getMinecraft().world;
+        if (world == null) return -1.0;
+        Vec3d start = new Vec3d(origin.x, origin.y, origin.z);
+        Vec3d end = new Vec3d(
+                origin.x + direction.x * maxDistance,
+                origin.y + direction.y * maxDistance,
+                origin.z + direction.z * maxDistance);
+        RayTraceResult hit = world.rayTraceBlocks(start, end);
+        if (hit == null || hit.typeOfHit != RayTraceResult.Type.BLOCK || hit.hitVec == null) return -1.0;
+        return hit.hitVec.distanceTo(start);
+    }
+
+    @Override
+    public List<AABB> getCollisionBoxes(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
+        List<AABB> out = new ArrayList<>();
+        World world = Minecraft.getMinecraft().world;
+        if (world == null) return out;
+        AxisAlignedBB region = new AxisAlignedBB(minX, minY, minZ, maxX + 1.0, maxY + 1.0, maxZ + 1.0);
+        for (AxisAlignedBB bb : world.getCollisionBoxes(null, region)) {
+            out.add(new AABB(new Vec3dCore(bb.minX, bb.minY, bb.minZ), new Vec3dCore(bb.maxX, bb.maxY, bb.maxZ)));
+        }
+        return out;
+    }
+
+    private static Face toFace(EnumFacing side) {
+        if (side == null) return null;
+        switch (side) {
+            case DOWN: return Face.NEG_Y;
+            case UP: return Face.POS_Y;
+            case NORTH: return Face.NEG_Z;
+            case SOUTH: return Face.POS_Z;
+            case WEST: return Face.NEG_X;
+            case EAST: return Face.POS_X;
+            default: return null;
+        }
     }
 
     @Override

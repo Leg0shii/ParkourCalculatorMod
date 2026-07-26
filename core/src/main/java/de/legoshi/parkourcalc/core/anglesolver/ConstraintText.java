@@ -44,8 +44,20 @@ public final class ConstraintText {
         if (c.isRange()) {
             String lb = c.isLoInclusive() ? "[" : "(";
             String rb = c.isHiInclusive() ? "]" : ")";
-            return lb + num(c.getLo()) + ", " + num(c.getHi()) + rb;
+            String body = lb + num(c.getLo()) + ", " + num(c.getHi()) + rb;
+            return c.isVsDz() ? "dZ+" + body : body;
+        }
+        if (c.isVsDz()) {
+            double v = c.getValue();
+            if (v == 0.0) return "dZ";
+            return v > 0.0 ? "dZ+" + num(v) : "dZ-" + num(-v);
         }
         return num(c.getValue());
+    }
+
+    public static String fieldLabel(Constraint c) {
+        String label = c.getField().label;
+        if (!c.isRelative()) return label;
+        return label + "-" + label + "[T" + (c.getRefTick() + 1) + "]";
     }
 }

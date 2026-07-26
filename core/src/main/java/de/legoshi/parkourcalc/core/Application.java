@@ -1,12 +1,15 @@
 package de.legoshi.parkourcalc.core;
 
+import de.legoshi.parkourcalc.core.ports.BlockPicker;
 import de.legoshi.parkourcalc.core.ports.FilePickerPort;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
+import de.legoshi.parkourcalc.core.ports.PickedBlock;
 import de.legoshi.parkourcalc.core.ports.PlaybackBridge;
 import de.legoshi.parkourcalc.core.ports.Simulator;
 import de.legoshi.parkourcalc.core.io.OsSystemBridge;
 import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
+import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
@@ -32,9 +35,14 @@ import de.legoshi.parkourcalc.core.ui.TickInfoPanel;
 import de.legoshi.parkourcalc.core.ui.YawGizmoController;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
+import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.anglesolver.ConstraintText;
+import de.legoshi.parkourcalc.core.ui.ConstraintKeyController;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverTable;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverWindow;
+import de.legoshi.parkourcalc.core.ui.anglesolver.GraphEditorWindow;
+import de.legoshi.parkourcalc.core.anglesolver.graph.GraphPresetIO;
+import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunLog;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 
 import java.nio.file.Path;
@@ -67,7 +75,9 @@ public final class Application {
     private String modVersion = "?";
     private InputOverlay inputOverlay;
     private FilePickerPort filePicker;
+    private BlockPicker blockPicker;
     private AngleSolverState angleSolverState;
+    private ConstraintKeyController constraintKeyController;
     private final OsSystemBridge systemBridge = new OsSystemBridge();
 
     public Application(Simulator simulator, MinecraftAccess mc) {
@@ -83,7 +93,9 @@ public final class Application {
         this.yawGizmo = new YawGizmoController(
                 boxController,
                 this::handleStartYawChange,
-                this::handleTickYawChange
+                this::handleTickYawChange,
+                this::handleStartPitchChange,
+                this::handleTickPitchChange
         );
         this.playback = new PlaybackController(inputData, runner, settings);
         this.playback.setStartRangeResolver(this::resolvePlaybackStartRange);
@@ -125,25 +137,57 @@ public final class Application {
         );
 
         angleSolverState = new AngleSolverState();
+        constraintKeyController = new ConstraintKeyController(
+                mc, angleSolverState, selection, constraintSelection, saveController::markDirty);
         saveController.setAngleSolver(angleSolverState);
         saveController.setDebugSource(boxController, settings);
         AngleSolverTable angleSolverTable = new AngleSolverTable(angleSolverState, settings, selection, constraintSelection, inputData::size);
         inputOverlay.setAngleSolver(angleSolverTable);
         StartStateTable startStateTable = new StartStateTable(runner, () -> onUserChange(-1));
         inputOverlay.setStartState(startStateTable);
-        String mcVersion = saveController.getSaveStore() != null ? saveController.getSaveStore().getMcVersion() : null;
+        FileSystemSaveStore saveStore = saveController.getSaveStore();
+        String mcVersion = saveStore != null ? saveStore.getMcVersion() : null;
+        FileSystemSaveStore graphStore = saveStore == null ? null : new FileSystemSaveStore(
+                saveStore.getSaveDir().resolve("graphs"), saveStore.getModVersion(), saveStore.getMcVersion(),
+                null, GraphPresetIO.infoParser());
+        saveController.setGraphStore(graphStore);
         ExactJumpModel forwardModel = ExactJumpModel.forMcVersion(mcVersion);
         AngleSolverEngine angleSolverEngine = new AngleSolverEngine(angleSolverState, boxController, inputData, this::onUserChange, forwardModel);
+        angleSolverEngine.setOnStartMoved(runner::setStartPosition);
+        if (saveStore != null) {
+            angleSolverEngine.setRunLog(new SolveRunLog(saveStore.getSaveDir().resolve("runs"),
+                    saveStore.getModVersion(), saveStore.getMcVersion()));
+            angleSolverEngine.setProblemSnapshotSource(() -> SaveIO.snapshotJson(saveStore, inputData,
+                    runner.getStartPosition(), runner.getStartVelocity(), runner.getStartYaw(), runner.getStartPitch(),
+                    angleSolverState, boxController.getStates()));
+        }
         saveController.setSolverEngine(angleSolverEngine);
         VelocityMapController velocityMapController = new VelocityMapController(
                 angleSolverState, boxController, runner, saveController, inputData, forwardModel,
                 this::onUserChange, Math.max(2, Runtime.getRuntime().availableProcessors() - 2));
-        AngleSolverWindow angleSolverWindow = new AngleSolverWindow(angleSolverState, settings, inputData::size, angleSolverEngine, velocityMapController.widget());
+        GraphEditorWindow graphEditorWindow = new GraphEditorWindow(angleSolverEngine);
+        AngleSolverWindow angleSolverWindow = new AngleSolverWindow(angleSolverState, settings, inputData::size, angleSolverEngine, velocityMapController.widget(), graphStore, graphEditorWindow);
 
         // In-world constraint visualization (gh-145): plates appear while the solver view is open.
         constraintSource = new de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverConstraintSource(
                 angleSolverState, boxController, () -> settings.viewAngleSolver, settings, selection, constraintSelection);
         de.legoshi.parkourcalc.core.render.PathRenderPlan.setConstraintSource(constraintSource);
+        de.legoshi.parkourcalc.core.render.PathRenderPlan.setLiveSource(
+                new de.legoshi.parkourcalc.core.ui.anglesolver.LiveBestPathSource(
+                        angleSolverEngine, boxController, () -> settings.viewAngleSolver));
+        de.legoshi.parkourcalc.core.render.PathRenderPlan.setReachProbe(new de.legoshi.parkourcalc.core.render.ReachProbe() {
+            @Override
+            public double eyeHeight(boolean sneaking) {
+                return mc.getEyeHeight(sneaking);
+            }
+
+            @Override
+            public double hitDistance(double originX, double originY, double originZ,
+                                      double dirX, double dirY, double dirZ, double maxDistance) {
+                return mc.clipBlockDistance(new Vec3dCore(originX, originY, originZ),
+                        new Vec3dCore(dirX, dirY, dirZ), maxDistance);
+            }
+        });
 
         TickInfoPanel tickInfoPanel = new TickInfoPanel(boxController, inputData, selection, settings, runner);
         PerfOverlay perfOverlay = new PerfOverlay();
@@ -155,10 +199,19 @@ public final class Application {
         );
         overlayManager.register(mainWindow);
         overlayManager.register(angleSolverWindow);
+        overlayManager.register(graphEditorWindow);
     }
 
     public void setFilePicker(FilePickerPort filePicker) {
         this.filePicker = filePicker;
+    }
+
+    public void setBlockPicker(BlockPicker blockPicker) {
+        this.blockPicker = blockPicker;
+    }
+
+    public AngleSolverState getAngleSolverState() {
+        return angleSolverState;
     }
 
     public void initSettingsStorage(Path path) {
@@ -186,6 +239,8 @@ public final class Application {
     private void runSimulation(int dirtyTick) {
         if (!mc.isReady()) return;
         long t0 = Perf.now();
+        boolean incremental = dirtyTick > 0 && runner.canResumeFrom(dirtyTick)
+                && boxController.size() > dirtyTick && !DebugFlags.COMPARE_PARTIAL_SIM;
         List<TickState> path = mc.runOnServerThread(() -> dirtyTick < 0
                 ? runner.simulate(inputData)
                 : runner.simulateFrom(dirtyTick, inputData));
@@ -203,14 +258,32 @@ public final class Application {
             DebugFlags.compareAndLog(path, fresh, dirtyTick);
             path = fresh;
         }
-        boxController.clearAll();
-        for (TickState s : path) {
-            boxController.add(s);
+        if (incremental) {
+            boxController.replaceFrom(dirtyTick + 1, path.subList(dirtyTick + 1, path.size()));
+        } else {
+            boxController.clearAll();
+            for (TickState s : path) {
+                boxController.add(s);
+            }
         }
+        boxController.setPitches(foldPitches(path.size()));
         if (!startDragController.isDragActive()) {
             selection.retainBelow(boxController.size());
         }
         Perf.stop("runSimulation", t0);
+    }
+
+    private float[] foldPitches(int count) {
+        float[] pitches = new float[count];
+        if (count == 0) return pitches;
+        pitches[0] = runner.getStartPitch();
+        List<InputRow> rows = inputData.getRows();
+        for (int i = 1; i < count; i++) {
+            pitches[i] = i - 1 < rows.size()
+                    ? PlaybackController.applyPitch(pitches[i - 1], rows.get(i - 1))
+                    : pitches[i - 1];
+        }
+        return pitches;
     }
 
     /** Fired by the loader on disconnect / world join. */
@@ -277,6 +350,22 @@ public final class Application {
         onUserChange(rowIndex);
     }
 
+    private void handleStartPitchChange(float pitch) {
+        runner.setStartPitch(pitch);
+        onUserChange(-1);
+    }
+
+    private void handleTickPitchChange(int rowIndex, float absolutePitch) {
+        if (rowIndex < 0 || rowIndex >= inputData.getRows().size()) return;
+        InputRow row = inputData.getRows().get(rowIndex);
+        if (row.isPitchLocked()) {
+            row.setPitch(absolutePitch);
+        } else {
+            row.setPitch(absolutePitch - boxController.getPitch(rowIndex));
+        }
+        onUserChange(rowIndex);
+    }
+
     private void onUserChange(int dirtyTick) {
         saveController.markDirty();
         runSimulation(dirtyTick);
@@ -311,25 +400,30 @@ public final class Application {
                 mc.getEyePosition(),
                 mc.getLookDirection(),
                 mc.isMousePressedRight(),
+                mc.isCtrlDown(),
                 mc.getCursorScreenX(),
                 mc.getCursorScreenY(),
                 isControlPanelOpen()
         );
     }
 
-    public void addLandingConstraintsForLookedAtBlock() {
-        if (angleSolverState == null) return;
-        if (!mc.isReady()) return;
-        int[] block = mc.getLookedAtBlock();
-        if (block == null || block.length < 3) return;
-        int tick = selectedSolverTick();
-        if (tick < 0) return;
-        int bx = block[0], by = block[1], bz = block[2];
-        angleSolverState.addLandingConstraintsForBlock(bx, by, bz, tick,
-                isWalledSide(bx - 1, by, bz),
-                isWalledSide(bx + 1, by, bz),
-                isWalledSide(bx, by, bz - 1),
-                isWalledSide(bx, by, bz + 1));
+    public void onConstraintKey(boolean enter, boolean remove) {
+        if (constraintKeyController != null) constraintKeyController.onKey(enter, remove);
+    }
+
+    public void removeSelectedConstraints() {
+        if (constraintKeyController != null) constraintKeyController.removeSelected();
+    }
+
+    public void captureAngleSolverBlock(BlockSelection.Kind kind) {
+        if (blockPicker == null || angleSolverState == null || kind == null) return;
+        PickedBlock hit = blockPicker.pickLookedAtBlock();
+        if (hit == null) return;
+        angleSolverState.toggleBlock(new BlockSelection(kind, hit.x, hit.y, hit.z, hit.box, hit.boxes));
+    }
+
+    public void clearAngleSolverBlocks() {
+        if (angleSolverState != null) angleSolverState.clearBlocks();
     }
 
     private boolean isWalledSide(int neighborX, int blockY, int neighborZ) {

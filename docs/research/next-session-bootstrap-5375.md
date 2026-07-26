@@ -1,0 +1,9 @@
+# Bootstrap prompt: derive your own attack on 5.375bm
+
+Goal: the first legal solve of rung 5.375 (nix razor class), or a rigorous impossibility dossier. Binding rules that are NOT yours to re-derive: (1) records are LEGAL-METRIC only (every wall satisfied except the landing constraint; the community's 2.74e-4 legal attempt is the standing record); (2) nothing is claimed solved or a record until it replays clean in MY live tool (headless byte-exact verification is necessary, not sufficient); (3) the operational traps and user rulings recorded in docs/research/razor-campaign-2026-07-09-handoff.md are binding.
+
+PHASE 1, ANALYZE (before proposing anything): read razor-campaign-2026-07-09-handoff.md completely, then the design notes it lists, then inspect the actual artifacts (tools/miqcp/ results and points, core/build/reports/miqcp-* and pattern-pinned-*, the delivered game-folder files). Treat the prior session's CONCLUSIONS with skepticism: verify the load-bearing ones against the artifacts yourself (the annulus ceiling and its known quadrant inaccuracy, the MOVE-MILP certificate and exactly what neighborhood it covers, the wrap-window mechanism, the architecture verdict, the realization rules). Actively look for what the prior session missed or got wrong; it ran 22 hours and was anchored by its own history. Do NOT read next-session-prompt-5375.md yet; that is the prior session's opinionated lever list, and you should form your own first, then diff against it and justify any disagreement.
+
+PHASE 2, DERIVE: produce your own prioritized attack plan as a full mission prompt (levers ranked by evidence, definition of done per the binding rules, budget per lever, kill criteria per lever, delegation and instrumentation plan including a stall watchdog from minute one). Have it adversarially reviewed by one Opus subagent. Present the reviewed plan to me for approval BEFORE executing anything expensive.
+
+PHASE 3, EXECUTE only after my approval.

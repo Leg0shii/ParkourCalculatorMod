@@ -1,7 +1,7 @@
 package de.legoshi.parkourcalc.core.anglesolver;
 
 /**
- * One per-tick constraint. Every field (X/Z/F/dX/dZ) accepts either a scalar comparison or a
+ * One per-tick constraint. Every field (X/Z/F/dX/dZ/dF) accepts either a scalar comparison or a
  * range; the op carries the form (IN = range). Changing the op across that boundary converts
  * the values: entering a range seeds [value, value], leaving one keeps the lower bound.
  */
@@ -12,7 +12,8 @@ public final class Constraint {
         Z("Z"),
         F("F"),
         DX("dX"),
-        DZ("dZ");
+        DZ("dZ"),
+        DF("dF");
 
         public final String label;
 
@@ -43,6 +44,8 @@ public final class Constraint {
     private double hi;
     private boolean loInclusive;
     private boolean hiInclusive;
+    private Integer refTick;
+    private boolean vsDz;
     /** A disabled constraint keeps its definition but is invisible to the solver. */
     private boolean enabled = true;
 
@@ -71,6 +74,28 @@ public final class Constraint {
 
     public void setField(Field next) {
         this.field = next;
+        if (next != Field.X && next != Field.Z) refTick = null;
+        if (next != Field.DX) vsDz = false;
+    }
+
+    public Integer getRefTick() {
+        return refTick;
+    }
+
+    public void setRefTick(Integer refTick) {
+        this.refTick = (field == Field.X || field == Field.Z) ? refTick : null;
+    }
+
+    public boolean isRelative() {
+        return refTick != null;
+    }
+
+    public boolean isVsDz() {
+        return vsDz;
+    }
+
+    public void setVsDz(boolean vsDz) {
+        this.vsDz = vsDz && field == Field.DX;
     }
 
     public Op getOp() {
@@ -145,6 +170,8 @@ public final class Constraint {
         c.loInclusive = loInclusive;
         c.hiInclusive = hiInclusive;
         c.enabled = enabled;
+        c.refTick = refTick;
+        c.vsDz = vsDz;
         return c;
     }
 }

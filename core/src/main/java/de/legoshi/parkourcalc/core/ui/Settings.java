@@ -14,6 +14,9 @@ public final class Settings {
     private static final float[] DEFAULT_TICK_SOFT_COLLISION = {1.000f, 0.435f, 0.529f, 0.50f}; // rose       #ff6f87
     private static final float[] DEFAULT_SUBTICK_PATH = {0.976f, 0.886f, 0.686f, 0.80f};        // yellow     #f9e2af
     private static final float[] DEFAULT_YAW_ARROW = {0.831f, 0.929f, 0.976f, 0.529f};           // #D4EDF987
+    private static final float[] DEFAULT_PITCH_ARROW = {0.976f, 0.886f, 0.686f, 0.529f};         // yellow     #f9e2af
+    private static final float[] DEFAULT_HIT_DISTANCE_LINE = {0.804f, 0.839f, 0.957f, 0.40f};
+    private static final float[] DEFAULT_HIT_DISTANCE_LINE_HIT = {0.651f, 0.890f, 0.631f, 0.90f};
     private static final float[] DEFAULT_YAW_GIZMO_CIRCLE = {0.804f, 0.839f, 0.957f, 0.70f};    // text       #cdd6f4
     private static final float[] DEFAULT_YAW_GIZMO_DIRECTION = {0.976f, 0.886f, 0.686f, 1.00f}; // yellow     #f9e2af
     private static final float[] DEFAULT_HITBOX_DEFAULT = {0.804f, 0.839f, 0.957f, 0.80f};      // text       #cdd6f4
@@ -38,7 +41,13 @@ public final class Settings {
     public static final float CONSTRAINT_MAX_FRONT_LENGTH = 1.0f;
     public static final float CONSTRAINT_MAX_BACK_LENGTH = 16.0f;
 
+    public static final int ARROW_MODE_YAW = 0;
+    public static final int ARROW_MODE_COMBINED = 1;
+
     private static final boolean DEFAULT_SHOW_YAW_ARROWS = true;
+    private static final int DEFAULT_ARROW_MODE = ARROW_MODE_YAW;
+    private static final boolean DEFAULT_SHOW_HIT_DISTANCE_LINES = false;
+    private static final boolean DEFAULT_HIT_DISTANCE_SELECTED_ONLY = false;
     private static final boolean DEFAULT_SHOW_HITBOX = false;
     private static final boolean DEFAULT_SHOW_FULL_HITBOX = false;
     private static final boolean DEFAULT_SHOW_SUBTICK = false;
@@ -64,6 +73,7 @@ public final class Settings {
     private static final boolean DEFAULT_VIEW_VELOCITY_MAP = false;
     private static final boolean DEFAULT_SAVE_DEBUG_VALUES = false;
     private static final boolean DEFAULT_AUTO_APPLY_SOLVE = false;
+    private static final boolean DEFAULT_EXPERIMENTAL_BLOCK_CAPTURE = false;
 
     private static final boolean DEFAULT_KEEP_INPUT_TABLE_OPEN = false;
     private static final boolean DEFAULT_KEEP_TICK_INFO_OPEN = false;
@@ -101,6 +111,9 @@ public final class Settings {
     public final float[] tickSoftCollision = DEFAULT_TICK_SOFT_COLLISION.clone();
     public final float[] subtickPath = DEFAULT_SUBTICK_PATH.clone();
     public final float[] yawArrow = DEFAULT_YAW_ARROW.clone();
+    public final float[] pitchArrow = DEFAULT_PITCH_ARROW.clone();
+    public final float[] hitDistanceLine = DEFAULT_HIT_DISTANCE_LINE.clone();
+    public final float[] hitDistanceLineHit = DEFAULT_HIT_DISTANCE_LINE_HIT.clone();
     public final float[] yawGizmoCircle = DEFAULT_YAW_GIZMO_CIRCLE.clone();
     public final float[] yawGizmoDirection = DEFAULT_YAW_GIZMO_DIRECTION.clone();
     public final float[] hitboxDefault = DEFAULT_HITBOX_DEFAULT.clone();
@@ -120,6 +133,9 @@ public final class Settings {
     public float constraintBackLength = DEFAULT_CONSTRAINT_BACK_LENGTH;
 
     public boolean showYawArrows = DEFAULT_SHOW_YAW_ARROWS;
+    public int arrowMode = DEFAULT_ARROW_MODE;
+    public boolean showHitDistanceLines = DEFAULT_SHOW_HIT_DISTANCE_LINES;
+    public boolean hitDistanceSelectedOnly = DEFAULT_HIT_DISTANCE_SELECTED_ONLY;
     public boolean showHitbox = DEFAULT_SHOW_HITBOX;
     public boolean showFullHitbox = DEFAULT_SHOW_FULL_HITBOX;
     public boolean showSubtick = DEFAULT_SHOW_SUBTICK;
@@ -168,6 +184,8 @@ public final class Settings {
     // When on, a feasible Angle Solver solve is applied automatically the moment it finishes.
     public boolean autoApplySolve = DEFAULT_AUTO_APPLY_SOLVE;
 
+    public boolean experimentalBlockCapture = DEFAULT_EXPERIMENTAL_BLOCK_CAPTURE;
+
     // Keep these windows drawn (display-only) while the main UI is closed.
     public boolean keepInputTableOpen = DEFAULT_KEEP_INPUT_TABLE_OPEN;
     public boolean keepTickInfoOpen = DEFAULT_KEEP_TICK_INFO_OPEN;
@@ -196,6 +214,9 @@ public final class Settings {
         System.arraycopy(DEFAULT_TICK_SOFT_COLLISION, 0, tickSoftCollision, 0, 4);
         System.arraycopy(DEFAULT_SUBTICK_PATH, 0, subtickPath, 0, 4);
         System.arraycopy(DEFAULT_YAW_ARROW, 0, yawArrow, 0, 4);
+        System.arraycopy(DEFAULT_PITCH_ARROW, 0, pitchArrow, 0, 4);
+        System.arraycopy(DEFAULT_HIT_DISTANCE_LINE, 0, hitDistanceLine, 0, 4);
+        System.arraycopy(DEFAULT_HIT_DISTANCE_LINE_HIT, 0, hitDistanceLineHit, 0, 4);
         System.arraycopy(DEFAULT_YAW_GIZMO_CIRCLE, 0, yawGizmoCircle, 0, 4);
         System.arraycopy(DEFAULT_YAW_GIZMO_DIRECTION, 0, yawGizmoDirection, 0, 4);
         System.arraycopy(DEFAULT_HITBOX_DEFAULT, 0, hitboxDefault, 0, 4);
@@ -213,6 +234,9 @@ public final class Settings {
         constraintBackHeight = DEFAULT_CONSTRAINT_BACK_HEIGHT;
         constraintBackLength = DEFAULT_CONSTRAINT_BACK_LENGTH;
         showYawArrows = DEFAULT_SHOW_YAW_ARROWS;
+        arrowMode = DEFAULT_ARROW_MODE;
+        showHitDistanceLines = DEFAULT_SHOW_HIT_DISTANCE_LINES;
+        hitDistanceSelectedOnly = DEFAULT_HIT_DISTANCE_SELECTED_ONLY;
         showHitbox = DEFAULT_SHOW_HITBOX;
         showFullHitbox = DEFAULT_SHOW_FULL_HITBOX;
         showSubtick = DEFAULT_SHOW_SUBTICK;
@@ -247,6 +271,7 @@ public final class Settings {
         viewVelocityMap = DEFAULT_VIEW_VELOCITY_MAP;
         saveDebugValues = DEFAULT_SAVE_DEBUG_VALUES;
         autoApplySolve = DEFAULT_AUTO_APPLY_SOLVE;
+        experimentalBlockCapture = DEFAULT_EXPERIMENTAL_BLOCK_CAPTURE;
         keepInputTableOpen = DEFAULT_KEEP_INPUT_TABLE_OPEN;
         keepTickInfoOpen = DEFAULT_KEEP_TICK_INFO_OPEN;
         keepBoxesDuringPlayback = DEFAULT_KEEP_BOXES_DURING_PLAYBACK;

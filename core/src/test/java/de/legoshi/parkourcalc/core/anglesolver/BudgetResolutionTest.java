@@ -55,7 +55,7 @@ public class BudgetResolutionTest {
     }
 
     @Test
-    public void timeBudgetBecomesANanosecondDeadlineForCustomOnly() {
+    public void timeBudgetBecomesANanosecondDeadlinePerTier() {
         AngleSolverState s = new AngleSolverState();
         s.setEffort(AngleSolverState.Effort.CUSTOM);
         s.getSolveBudget().setTimeBudgetSeconds(30);
@@ -64,7 +64,39 @@ public class BudgetResolutionTest {
         assertEquals(0L, AngleSolverEngine.deadlineNanosFor(s));
         s.setEffort(AngleSolverState.Effort.THOROUGH);
         s.getSolveBudget().setTimeBudgetSeconds(30);
+        assertEquals("Optimize uses its own knob, not the Custom time budget",
+                10_000_000_000L, AngleSolverEngine.deadlineNanosFor(s));
+        s.setOptimizeSeconds(25);
+        assertEquals(25_000_000_000L, AngleSolverEngine.deadlineNanosFor(s));
+        s.setEffort(AngleSolverState.Effort.FAST);
         assertEquals(0L, AngleSolverEngine.deadlineNanosFor(s));
+    }
+
+    @Test
+    public void optimizeResolvesToAnytimeBatchesWithExhaustiveStages() {
+        AngleSolverState s = new AngleSolverState();
+        s.setEffort(AngleSolverState.Effort.THOROUGH);
+        SolveCore.Budget b = AngleSolverEngine.budgetFor(s);
+        assertEquals(16, b.restarts);
+        assertEquals(4500, b.maxEval);
+        assertEquals(4, b.polishCount);
+        assertSame(BucketAscentPolish.THOROUGH, b.polishCfg);
+        assertTrue(AngleSolverEngine.ilsExhaustiveFor(s));
+        assertFalse(AngleSolverEngine.stopOnFeasibleFor(s));
+    }
+
+    @Test
+    public void stopOnFeasibleIsForcedPerTier() {
+        AngleSolverState s = new AngleSolverState();
+        s.setEffort(AngleSolverState.Effort.FAST);
+        assertTrue("Fast always stops at the first feasible", AngleSolverEngine.stopOnFeasibleFor(s));
+        s.setEffort(AngleSolverState.Effort.THOROUGH);
+        s.setStopOnFeasible(true);
+        assertFalse("Optimize never stops early", AngleSolverEngine.stopOnFeasibleFor(s));
+        s.setEffort(AngleSolverState.Effort.CUSTOM);
+        assertTrue("Custom follows the toggle", AngleSolverEngine.stopOnFeasibleFor(s));
+        s.setStopOnFeasible(false);
+        assertFalse(AngleSolverEngine.stopOnFeasibleFor(s));
     }
 
     @Test

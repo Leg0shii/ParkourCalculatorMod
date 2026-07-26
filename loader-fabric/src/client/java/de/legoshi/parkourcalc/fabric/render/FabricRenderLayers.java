@@ -46,6 +46,11 @@ public final class FabricRenderLayers {
             RenderSetup.builder(THIN_LINES_PIPELINE).createRenderSetup()
     );
 
+    public static final RenderType TRANSLUCENT_FACES = RenderType.create(
+            "parkourcalc_translucent_faces",
+            RenderSetup.builder(TRANSLUCENT_BOX_PIPELINE).createRenderSetup()
+    );
+
     /** Exposed for CachedBoxGeometry's hand-rolled render passes (persistent GpuBuffer draws). */
     public static RenderPipeline translucentBoxPipeline() {
         return TRANSLUCENT_BOX_PIPELINE;

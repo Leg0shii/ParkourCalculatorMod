@@ -8,10 +8,12 @@ Contents:
 3. [Verified properties](#3-verified-properties)
 4. [Negative results and pitfalls](#4-negative-results-and-pitfalls)
 5. [Performance](#5-performance)
-6. [Block-constraint derivation (DERIVE)](#6-block-constraint-derivation-derive)
+6. [Block solving (shelved)](#6-block-solving-shelved)
 7. [Open directions](#7-open-directions)
 8. [Headless validation and build notes](#8-headless-validation-and-build-notes)
 9. [Citations](#9-citations)
+10. [Inertia folding and dual-path recovery (#204, 2026-07-03)](#10-inertia-folding-and-dual-path-recovery-204-2026-07-03)
+11. [Trace facility, B&B tuning, and the miss triage (gh-204 follow-up, 2026-07-03)](#11-trace-facility-bb-tuning-and-the-miss-triage-gh-204-follow-up-2026-07-03)
 
 ---
 
@@ -92,9 +94,9 @@ The closed form's optimality certificate (and the weak-duality bound behind it) 
 
 The engine therefore treats every linearized result as a seed and races the byte-exact search on all single-jump solves, except when a same-axis user cap at the objective tick is achieved to within 1e-6 — a model-free bound nothing can beat, and the only certificate strong enough to skip the race. The cost is the effort budget's CMA-ES pass (about 0.2 to 0.3 s at FAST) on solves that used to return in milliseconds; the multi-jump receding horizon is unchanged (its windows use the closed form internally as surrogates, where the certificate question does not arise — only the final user-facing objective carries the claim). Without a cap, the reported objective is the best the byte-exact search found, labeled by solver chain, never as "optimal".
 
-### 2.2 Status of block solving (DERIVE) on `main`
+### 2.2 Block solving
 
-`BlockSolver` (the forced-crossing-tick homotopy planner of section 6.1), `FreeSpaceDecomposition`, and the engine glue (`AngleSolverEngine.solveFromBlocks`) are present in `main` but currently dormant. No UI on `main` invokes them and no committed test covers them. The block-picker UI (Forge 1.8.9 keybinds, the in-world overlay, and the `BlockPicker` port) exists only on the unmerged `features/angle-optimizer` branch. The derive test harness together with the j154 fixtures was deleted at that branch's `65701fc` and is recoverable only from its git history (`65701fc~1`). When validated there, the planner matched the hand-solved j154 path to about 1e-4 and generalized across every obstacle subset of the j154 arc. The headless validation recipe of section 8.2 is the path to re-validating that work when it lands.
+Block-to-constraint solving (the DERIVE planner and the gh-212 blocks-only phase) was shelved 2026-07-04; its full record and post-mortem is `block-solver.md`. The shipped pipeline documented here does not depend on it.
 
 ---
 
@@ -144,7 +146,7 @@ The following results are negative and are recorded to prevent repetition. The f
 6. Endpoint-only collision checks are wrong (section 1.3) and were the actual cause of three in-game failures.
 7. Safety margins on derived walls are not affordable (section 1.3). Padding an edge by even 1e-3 makes extremely tight jumps infeasible.
 8. Deriving walls from a recorded route fails, because the route does not exist until after solving. A bad attempt yields useless walls, for example a north-of-obstacle wall on the landing tick, which renders the spec infeasible.
-9. Reactive nearest-exit and per-tick side flipping thrash, since the homotopy becomes inconsistent, and reactive cutting planes driven by the swept oracle do not converge on lookahead-coupled corner wraps, even with a depth-first search over pass sides and delayed-crossing options. The convergent variant of the idea is the principled SCP shell of section 6.2, which differs by a trust region, simultaneous multi-tick cuts, homotopy-aware initialization, and an L1 exact penalty.
+9. Reactive nearest-exit and per-tick side flipping thrash, since the homotopy becomes inconsistent, and reactive cutting planes driven by the swept oracle do not converge on lookahead-coupled corner wraps, even with a depth-first search over pass sides and delayed-crossing options. The convergent variant of the idea is the principled SCP shell described in `block-solver.md`, which differs by a trust region, simultaneous multi-tick cuts, homotopy-aware initialization, and an L1 exact penalty.
 
 ---
 
@@ -172,50 +174,9 @@ Smaller known improvements follow, in descending value. `ExactJumpModel.stepRang
 
 ---
 
-## 6. Block-constraint derivation (DERIVE)
+## 6. Block solving (shelved)
 
-The overall problem decomposes into two parts. SOLVE maps constraints and an objective to yaws and is solved, so the pipeline of section 2 can be treated as an oracle. DERIVE maps block hitboxes to a per-tick constraint set that admits a swept-clean landing, and it remains the open problem.
-
-### 6.1 The current planner (`BlockSolver`) and the canonical hard case
-
-The current method is a forced-crossing-tick geometric homotopy planner, headless-validated on the feature branch and dormant on `main` (section 2.2). The travel axis is the larger seed-to-land separation, and the perpendicular axis carries the keep-outs. Each obstacle is wrapped on the perpendicular side nearest the launch corridor. Because the swept X-clamp tests the start-of-tick travel coordinate, a forced crossing tick k\* pins the travel coordinate just past the tightest obstacle's exit edge, which makes the descent rate, and hence the keep-out window, deterministic rather than solver-dependent. The value of k\* is enumerated over a small window, and the keep-outs receive the +1 dilation of section 1.3. The objective is swept as well: the pad edge often sits at the reachability frontier, so the toward-pad objective lands on it while the away objective overshoots by about 1e-6, and all four endpoint objectives are tried. Every candidate is verified with `SweptCollision` and the landing footprint, and `Result.ok()` is never reported for a clipping or missing path.
-
-The canonical hard case is j154, hand-solved in-game. A two-block wall stands between start and land, with a skull just east of it. The player can pass neither over nor through, so the path must wrap the southeast corner: stay north of the head early, drift east by mid-flight, and cross south late. These constraints interlock with lookahead, since east must precede south and an early south crossing is unreachable. This is the case that defeats every reactive approach.
-
-Three limitations motivated further research. The heuristics (side selection, the k\* window, the +1 dilation) are bespoke and do not obviously generalize to dense clusters or three-dimensional wraps. The outer enumeration offers no completeness or optimality structure. Collision lives in two places, an approximate constraint set and an exact verifier, which invites false-pass and false-fail defects at the seams. Four alternatives were tried in a structured search and none beat this planner: homotopy-class enumeration, reachability corridors, reactive forced exits, and fixed descent schedules.
-
-### 6.2 Research synthesis
-
-A literature pass across five areas (lossless convexification, safe corridors and MILP, graphs of convex sets, SCP/SDF/MPCC, and swept CCD with homotopy and kinodynamic planning) converged with no surviving contradictions. One caveat applies: some quantitative figures rest on search summaries rather than full-text reads of the primary PDFs, so exact theorem numbers should be re-verified before any argument is built on them.
-
-The organizing principle is the theorem boundary of section 1.1. Its admissible workaround, holding the per-tick keep-out as a fixed convex cell outside the inner solve, is simultaneously the LCvx-compatible form, the safe-corridor face set, and a GCS node. The resulting architecture is the following.
-
-> GCS (or GCS\*) serves as the outer corridor selector and homotopy enumerator over cheap axis-aligned free-space cells, wrapping the existing closed-form dual as the inner per-cell solver, gated by the exact swept oracle. GCS supplies the discrete structure: completeness, tight corridor selection, and implicit homotopy enumeration. LCvx supplies what GCS cannot, namely the certified fixed-modulus inner solve, since the modulus sphere is a non-convex equality that no GCS node can represent. The oracle supplies what neither can, the exact asymmetric swept truth. GCS optimality is empirical rather than a priori: the relaxation is a lower bound and the rounded path an upper bound, and the gap is observed to be tight rather than theoretically bounded.
-
-The supporting findings are each independently useful.
-
-- IRIS and SFC region inflation should be skipped for AABB worlds. The free space is the complement of axis-aligned boxes, so its convex cells are axis-aligned rectangles obtainable by a coordinate sweep with no SDP involved, and ellipsoid inflation degenerates at gaps near 1e-6 in any case. `FreeSpaceDecomposition` implements this decomposition together with its adjacency graph, and the corridor selection layer on top is the missing half.
-- For homotopy enumeration the state of the art is the h-signature (Bhattacharya, Likhachev, and Kumar), which augments graph search with a partial signature so that a single search enumerates the K distinct classes. With affine dynamics the per-tick forward-reachable sets are disks of radius `sum(gains * m_t)`, so the temporal admissibility of a class or cell is a closed-form radius test.
-- Big-M MILP encodings are dominated by the perspective (convex-hull) formulation, and GCS is that formulation applied to corridor selection.
-- SCP with signed distances is the only collision-in-solver paradigm that preserves the fast convex inner solve, but every published collision model inflates through `d_safe`, epsilon, or alpha margins, which the no-margin requirement of section 1.3 forbids. The actionable recipe is an SCP shell (trust region plus L1 exact penalty) that linearizes our own exact asymmetric swept signed distance with zero margin and is gated by the exact oracle. It differs from the failed reactive cutting plane (section 4, item 9) in exactly the parts that secure convergence.
-- MPCC and contact-implicit methods are the worst fit, since LICQ and MFCQ fail at every feasible point and exactness holds only in a limit that permits interpenetration. Conservative-inclusion CCD libraries are safe but round toward false positives and require a positive standoff, which is incompatible with zero-clearance ground truth. Since segment-versus-AABB tests are already exact and closed-form, no CCD library is needed.
-- SST\* (kinodynamic sampling against the black-box clamp) is the completeness backstop when no convex cell captures the sweep, and it can be tuned offline via the headless harness.
-
-### 6.3 Target architecture
-
-```
-BLOCKS (AABBs)
-  [A] plane-sweep free-space decomposition -> axis-aligned cells      (DONE: FreeSpaceDecomposition)
-  [B] GCS/GCS* over cells, edges pruned by reachability disks,        (NEW: the outer layer)
-      h-signature of the chosen path = homotopy class (replaces k*)
-  [C] selected corridor -> cell faces as constraints for the          (REUSE: ClosedFormSolve,
-      existing closed-form dual (+ oblique half-spaces, section 1.2)   minimal alphabet extension)
-  [D] tight cell-boundary riding: SCP shell, zero margin              (NEW: only if needed)
-  [E] GATE: exact swept oracle + landing footprint                    (REUSE: SweptCollision)
-  [F] fallback: SST* against the black-box clamp                      (NEW: completeness backstop)
-```
-
-This architecture deletes from `BlockSolver` the bespoke side selection, the k\* enumeration window, the +1-dilation heuristic, and the duplication of collision across two places. Collision then lives in exactly one place, the gate.
+Block-to-constraint solving (deriving yaws from picked blocks, with no human constraints) has its own record: `block-solver.md`. It covers the DERIVE planner (`BlockSolver`, the forced-crossing-tick homotopy planner and its GCS/LCvx target architecture), the gh-212 blocks-only phase, the false-positive post-mortem, and what remains viable for a future attempt. The shipped angle solver in this document does not depend on any of it.
 
 ---
 
@@ -226,10 +187,9 @@ The following items are ranked by value per effort, together with their triggers
 1. Phase-2 long-run objective polish, the known remaining work. `LongRunSolver` returns a feasible run, but only the final window optimizes the real objective. The options are to re-solve the final k windows with progressively earlier seams under the committed prefix, where each re-solve is one window dual, or to run a global strictly feasible `BucketAscentPolish` on the byte-exact model starting from the feasible run. The latter is tractable at several hundred dimensions precisely because it only improves and never searches. `stepRange` (section 5.1) should be wired up first.
 2. Facing walls in the closed form, a capability item rather than a speed item. An F constraint is a sector constraint on the input direction. The inner maximization over the set where $\|u\| = m$ and $\hat{u}$ lies in the sector is still closed-form, since the costate direction can be clamped to the nearer sector edge. The dual stays convex and the zero-gap argument survives. Today a single F constraint anywhere disqualifies the entire fast path. This item should be built when the third trigger of section 5 fires.
 3. Cross-window warm starts (section 5.1), when a trigger of section 5 fires.
-4. The GCS corridor layer over `FreeSpaceDecomposition` (section 6.3), when block solving becomes active again.
-5. Folding the single-jump path into `LongRunSolver`. A one-jump run is one final window with the full ladder, so the fold deletes the `countJumps` branch at zero behavioral change. The cost to weigh is one extra call layer on the microsecond path.
-6. `JumpPhysicsInputs.jumpTick` survives only as a fallback and for `BlockSolver`'s launch footprint. Collapsing it to the mask plus a `firstJumpTick()` helper removes a field with two sources of truth.
-7. Direction-parallel window solves, a latency improvement only on windows whose first direction fails. Since j001 never fails a direction, this should be measured on a fixture that does before being built.
+4. Folding the single-jump path into `LongRunSolver`. A one-jump run is one final window with the full ladder, so the fold deletes the `countJumps` branch at zero behavioral change. The cost to weigh is one extra call layer on the microsecond path.
+5. `JumpPhysicsInputs.jumpTick` survives only as a fallback. Collapsing it to the mask plus a `firstJumpTick()` helper removes a field with two sources of truth.
+6. Direction-parallel window solves, a latency improvement only on windows whose first direction fails. Since j001 never fails a direction, this should be measured on a fixture that does before being built.
 
 ---
 
@@ -247,17 +207,9 @@ The committed captures do not carry a `debug[]` array. `ProblemFixture` rebuilds
 
 One measurement caveat applies. The engine `solve()` wall clock includes the worker-thread spawn overhead and must not be used for the microsecond fast-path number. The fast path is timed by running `ClosedFormSolve.optimize` in a tight loop, while `SolveBenchmark` provides the end-to-end number.
 
-### 8.2 Self-validation recipe for DERIVE work
+### 8.2 Validating block-derivation work
 
-```
-SaveIO.parseSafe(file) -> seed scenario from file.angleSolver.seed -> blocks from file.angleSolver.selectedBlocks
-constraints = DERIVE(blocks, scenario, feetY[])              <- the thing under test
-yaws = SolveCore.optimize(model, JumpSpec(scenario, constraints, objective), ...)
-path = model.forward(scenario, scenario.toGameFacings(yaws))
-VALID <=> no SweptCollision.firstHit over all moves AND path[N] in land footprint
-```
-
-`VALID` is ground truth. Both directions should stay covered: a recorded working solution must verify swept-clean (no false positives), and a known-clipping solution must be flagged (no false negatives).
+Shelved with the block solver. The derivation-validation recipe now lives in `block-solver.md`.
 
 ### 8.3 Build notes
 
@@ -302,3 +254,158 @@ Swept CCD / homotopy / kinodynamic
 - Bhattacharya, Likhachev, Kumar, "Topological Constraints in Search-Based Robot Path Planning" (h-signature), AAAI 2010 / *Auton. Robots* 2012. https://www.lehigh.edu/~sub216/local-files/topology_AURO_author_version_57596.pdf
 - Li, Littlefield, Bekris, "Asymptotically Optimal Sampling-based Kinodynamic Planning (SST/SST*)," *IJRR* 2016. https://arxiv.org/abs/1407.2896
 - "Collisions" (axis-sequential Y-X-Z collide-and-slide), Minecraft Parkour Wiki. https://www.mcpk.wiki/wiki/Collisions
+
+---
+
+## 10. Inertia folding and dual-path recovery (#204, 2026-07-03)
+
+Issue #204 asked for a stronger step-1 recovery after the dual bound so that multi-jump captures solve from the dual directly, without CMA-ES. Validation corpus: 27 proven-possible hpk captures (`core/src/test/resources/captures/hpk/`, d10 easier, d11 harder) plus `loopmm-3jump-lands`.
+
+### 10.1 What shipped
+
+- **Inertia folding.** MC's small-velocity momentum cutoff (per-axis 0.005 legacy, combined 9e-6 modern) is piecewise affine: for a fixed per-axis zeroing pattern, the position map stays affine in `u` with coefficients cut at the last zeroing tick. `JumpLinearModel` gained a pattern-aware constructor, `zeroingPattern` (a continuous stepper that reads the pattern off a candidate), and `velocityWalls` (validity walls keeping the pattern self-consistent). `ClosedFormSolve` runs an active-set fixed point (at most 4 passes, with a triviality guard) around its margin ladder. On loopmm this removes a 3.3e-2 inertia term from the recovery, leaving only the ~1e-4 sine residual (`InertiaFoldingTest`); j425 flips from miss to closed-form solve. The clamp-free `dualBound` is intentionally unchanged: with zeroing active the clamp-free dual is NOT a valid bound for the clamped dynamics (j1150 solves 1.03 beyond it).
+- **RelaxationRecovery.** The ball relaxation (`|u_t| <= m_t`) is a convex SOCP whose optimum equals the dual value. It is solved by augmented-Lagrangian FISTA warm-started from the production dual (plus 5 dual warm restarts; the production dual alone stops too early), then realized on the modulus sphere by two seeds: error-diffusion dithering (full-modulus wiggles cancelling accumulated deviation, the butterfly technique) and plain projection. Both seed budgeted best-effort SLP runs (clamp-free and pattern-aware LP walls; neither variant dominates), then a bucket-lattice repair (`LatticeRepair`) and a pin ladder (re-solving with the relaxed path pinned in two-sided bands). Deterministic end to end.
+- **Engine wiring.** `AngleSolverEngine.dualChain` = closed form -> SLP -> SLP reseeded from the three alternate-direction certified optima -> RelaxationRecovery. Single jumps got the RelaxationRecovery tail; multi-jump specs now run the whole chain when the receding-horizon solver misses (previously they fell straight through to CMA-ES). Chain results warm-start the race exactly like receding-horizon results.
+- **Gate.** `problems/dualrecovery/` sidecars wire every hpk capture into `ProblemsTest`: the chain must byte-exact-solve each in its saved direction, no CMA-ES, no warm start. Dev screens `HpkDualRecoveryScreen` (per-capture stage table) and `RelaxDiagScreen` (stall margins, recorded-path replay) run only with `PKC_SCREENS` set.
+
+Score: 24 of 28 solve from the dual chain (baseline before this work: 1). Runtimes range from sub-ms (closed form) to ~3 s (j346, relaxation recovery on n=39, m=110).
+
+### 10.2 A harness trap that mattered
+
+The test harness used to build placeholder boxes, so `Sprint: DERIVE` / `Inputs: KEEP` captures degraded to row-derived always-sprint specs (gh-120 sampling reads `boxes.getState(t+1)`). Under those wrong specs the recorded in-game paths were literally infeasible (violations up to 1.9) and unreproducible by `ExactJumpModel` (drift up to 2.06). `Fixtures.buildBoxes` now builds engine boxes from the capture's `debug` blocks; every hpk capture's recorded path replays byte-exact with zero violation. Any capture-driven work MUST use it; 12 of the 13 then-remaining misses were artifacts of the wrong specs.
+
+### 10.3 Bake-off results (all falsified except the relaxation)
+
+- **Bound-pruned B&B** over seam cells: 0/1 on the old base and dominated on corrected specs in its clamp-free form, but it became the breakthrough once branched over ZEROING PATTERNS (user push, 2026-07-03). Mechanism discovered on loopmm: the hand route runs |vx| = 0.00465 < 0.005 into tick 67, so the game zeroes X velocity for the last four airborne ticks; the human uses the momentum clamp as a free X-brake. That basin does not exist in the clamp-free affine model, so every clamp-free dual, LP, and cell bound points away from it. Fix: `BoundPrunedRecovery` now enumerates suffix zeroing patterns per axis (zero-a-from-tick-k), bounds each pattern's root with its own pattern-folded dual (validity walls included, so per-pattern bounds are sound), and runs the cell B&B inside patterns in best-bound order with a shared incumbent; velocity walls are evaluated in u-space by the restore machinery, and patterned searches use the inertia-aware SLP. Result: loopmm LANDS, Z@71 = -279.299912 (+8.8e-5 past the -279.3 pad edge; hand route -279.29973) via the zx@31 branch, byte-exact feasible, cold start, 144 s. Wired into the engine's Exhaustive-multi-jump path after the seam sweep.
+- **Seam-sweep** (pin grids over the loose constraint bands of intermediate ticks, bound-ranked SLP rescue, beam rescue): 0 additional FEASIBILITY solves on corrected specs (on j344 it exits instantly because all constraints sit on the landing tick and there are no seams), but it is the clear winner for the REACH problem: on loopmm's objective it hops from the local plateau (-279.3084, 0.0084 short of the pad) to -279.30046 (4.6e-4 short), 18x closer than the relaxation recovery and past the historic exhaustive-ILS plateau (~0.006). Budget-insensitive beyond ~60 s (a new basin wall, not starvation); BucketAscentPolish adds 5e-5, ILS adds nothing on top. Shipped as `SeamSweepRecovery` (incumbent-seedable) and wired into the engine's Exhaustive-multi-jump path (60% of the ILS budget, before ILS, better objective kept).
+- **Needle threader** (meet-in-the-middle over sine-bucket combinations on the most sensitive ticks, exact single-flip effect vectors, superposition prediction, exact validation): built and falsified. The full +-40-bucket enumeration on j344's five influential ticks tops out at a predicted margin of -1.5e-6, and large combined moves break superposition (predicted -1.5e-6, exact 1.7e-2). The remaining misses are not lattice-local.
+
+### 10.4 The frontier: four misses and their shapes
+
+All four stall at small exact violation but the feasible needle is in a DIFFERENT basin (recorded yaws differ by up to 170 deg):
+
+- `j717` (1.9e-4): X@21 LE vs X@26 GE conflict; the differential lives on the five air ticks between them, each with ~1e-6/bucket authority.
+- `j716` (1.1e-4): eight constraints simultaneously ~1e-4 violated across ticks 4..42; a fine-scale compromise point far from the recorded basin.
+- `j335` (1.8e-3): chained needle; the recorded path threads 1e-6..1e-7 margins at ticks 9, 16, and 21 with a 14-deg yaw redistribution.
+- `j828` (2.1e-1): coarse basin problem; the recovered path hugs the wrong X edge (margin 1.2e-8 at three pads) while the recorded path keeps 0.19..0.23 X margin. Also 13/39 relaxation ticks off-sphere, so the relaxed optimum genuinely wants sub-modulus thrust.
+
+These need a global stage (the continuous-relaxation global seed of the Wolfram/anvil notes), not a better polish. The dual chain's certify floor is the sine residual, ~1e-4 accumulated; corridors narrower than that are a lottery by construction.
+
+A fifth reach-class case, loopmm, is now CLOSED: the pattern-branched B&B lands it at Z@71 = -279.299912 (see 10.3). The remaining four misses should be re-attacked with the same lens: check each recorded path for zeroing events first (j717 and j816 are momentum jumps, prime suspects), then pattern-branched B&B; only what survives that is genuinely global-stage work. The reach benchmark for these loosened captures should score against the true pad edge, not the loosened constraints.
+
+## 11. Trace facility, B&B tuning, and the miss triage (gh-204 follow-up, 2026-07-03)
+
+The follow-up session executed `docs/research/dual-recovery-next-session.md`. Gate after it: `problems/dualrecovery/` at 27/28 (was 24/28), loopmm loose landing at ~4.3 s (was 6.5 s), tight landing now works at all.
+
+### 11.1 SolverTrace
+
+`solver/SolverTrace.java`: static trace sink, off by default, enabled via `PKC_SOLVER_TRACE=<tag>` (env) or `-Dpkc.solver.trace=<tag>`, or programmatically (`enable`/`disable`). Zero cost when off (call sites guard on `SolverTrace.on()`); events go to `build/reports/solver-trace-<tag>.txt` with a ms-since-solve-start column, a thread column, and a stage tag, all `Locale.ROOT`. Instrumented: ClosedFormSolve (per pass and per rung: margin, dual iters, dual value, exact violation, stop reason), SlpSolve (per LP: phase, trust radius, predicted vs exact violation, accept/reject; entry and phase transitions), RelaxationRecovery (the old RXT timing prints folded in, AL outer iterations, per-seed SLP outcomes), BoundPrunedRecovery (per node: pattern, depth, bound, seed violation, restore violation and iterations; SLP calls; the incumbent timeline; per-pattern summaries), SeamSweepRecovery (per cell: pins, closed-form outcome or bound; rescue ranks), and AngleSolverEngine (stage transitions with budgets). Every fix below was diagnosed from a trace file alone.
+
+### 11.2 Goal A results: what the trace falsified and what shipped
+
+The three levers proposed for the loopmm 6.5 s all had falsified premises:
+
+- Contention was not the bottleneck: on a 12-thread machine the 9 pattern searches all ran truly concurrently, and per-node time was identical in the winner and the siblings. Capping the pattern pool at 3 STARVED the winning zx@31 branch (7th by root bound) and lost the landing entirely; full concurrency is restored and required.
+- Ordering cells by restored violation loses the landing: the winning subtree's nodes restore at ~0.13 violation (the pad-hugging cells are exactly where Gauss-Newton stalls, see 11.4), so a violation penalty buries them. Falsified and reverted; node order stays best-bound (with a 2e-6-quantized depth-first tie-break, measured neutral).
+- The 600 nodes are SLP-time-bound, not guidance-bound: 85% of the winning branch's wall clock was in-tree SLP (337 calls, ~36 LPs each), and the landing itself came from an in-tree phase-2 SLP ascent. What shipped: in-tree SLP budget 40/60 (final polish keeps 160/220) plus an in-tree trust-region floor of 1e-3 deg (`SlpSolve.optimizeBestEffort` overload with `trMinDeg`; the shrink-to-1e-7 tail gained ~1e-7 blocks per call). Result: 6.5 s to ~4.3 s, same landing objective.
+- Pattern prediction from the incumbent's velocity profile is wired (`velocityProfile` + `patternScore` rank patterns by |v_axis(k)| distance to the threshold when a feasible seed exists) but is dormant on loopmm: the closed form has no feasible incumbent there, and the clamp-free fallback's profile does not graze the threshold. It orders submission only; it never gates a pattern out.
+- `stopAtObjective` is now derived in the engine's exhaustive path from the user's same-axis objective cap (`objectiveCap - CAP_GAP_TOL`).
+
+### 11.3 The miss triage: 3 of 4 solve blind
+
+Recorded debug velocities (diagnosis only) classify the four misses: j828 = genuine suffix zeroing (X zeroed from tick 16-17 to the window end, plus a 0.00485 graze at 11); j717 = standing-still prefix (inert for the model) plus a Z window at ticks 14-15; j335 = scattered Z windows (6-10) plus single-tick grazes (vx@14 = 0.004992, vz@20 = 0.004872); j716 = a single Z zeroing tick at 10.
+
+Empirically the existing blind suffix-pattern B&B already solves j335, j717, AND j828 byte-exact cold (first feasible in 0.15-0.85 s); the recorded window shapes were not required, alternative feasible paths exist inside the suffix family plus the free pattern. Their `dualrecovery` sidecars are flipped to `shouldSolve: true` with `bnbSeconds: 10`: the check now runs a bounded blind pattern-B&B (stop at first feasible) when the chain misses. A window-pattern family (per-axis zero-[k,k+len) enumeration, len 1..3, bounded per pattern) was built and falsified: on j716 the top window bounds are all late X windows, and folding the recorded wz@10 window by hand makes SLP stall FURTHER away (3.8e-3) than the clamp-free chain (1.1e-4). The zeroing tick is not j716's mechanism; j716 stays `shouldSolve: false` and is CLASS 3, genuinely global-stage (the fine-scale eight-constraint compromise of 10.4). The family was removed again; `HpkMissTriageScreen` keeps the probes.
+
+### 11.4 Audited bugs fixed
+
+- Exhaustive budget overrun (52 s vs 30 s): the anytime restart loop accumulates every batch's inits; on an infeasible result SolveCore's feasibility-only rescue pass re-ran ALL of them after the deadline had passed. The rescue now runs only if time remains and, under a deadline, on one batch of inits. j716 bench: 51.8 s to 30.2 s. Deadline-free paths are untouched (byte-identical).
+- Window solver skipping the chain: multi-jump specs now always run `dualChain` and keep the better objective, gated to race-sized spans (`numTicks <= 64`); ungated it cost j001 (n=353) a full chain including a relaxation recovery and blew its solve budget.
+- Failing closed form: the ascending margin ladder now breaks after 2 consecutive rungs with no exact-violation improvement (the m=110 ladders ran 8 rungs x 4 passes with violations plateauing after rung 3). A shortened alt-direction seed ladder was falsified (j344's reseed needs the late rungs) and reverted.
+- Tight-spec B&B never restoring: root cause is corridor width, not the restore. A pad wall in the improving direction turns the reach ascent into threading a corridor narrower than the ~1e-4 sine-residual floor from outside (loopmm tight: 8.8e-5). Fix: `BoundPrunedRecovery` detects an objective-improving wall at the objective tick and, when the root-bound-to-wall corridor is under 2e-3, drops it from the search model and keeps it as the acceptance floor (offers still check the full spec; nodes bounding under the floor prune). Tight loopmm now lands the same -279.299912 point. The corridor gate matters: converting unconditionally broke j335, whose wide-corridor fallback relies on the wall steering the search.
+
+### 11.5 Effort tiers reworked (same day)
+
+The labels stopped describing the machinery, so the tiers were redefined (enum constants unchanged for save compatibility; only labels and wiring moved):
+
+- **Fast** (FAST) = first byte-exact feasible solution, minimal latency. Stop-on-feasible is part of the tier's definition now, and a bounded (3 s, deadline-capped) first-feasible pattern-B&B rescue runs when chain and race both end infeasible on spans up to 64 ticks, so momentum-clamp jumps land on Fast too. Single-jump solve captures dropped from ~100 ms to ~30 ms (the race is skipped once the chain is feasible).
+- **Optimize** (THOROUGH) = best result within one time-budget knob (`optimizeSeconds`, default 10 s, persisted in saves). Resolves to anytime Fast-sized race batches (16/4500, polish 4, THOROUGH polish schedule) plus the exhaustive multi-jump stages by default; stop-on-feasible is forced off. When the exhaustive stages are pending, the race is capped at 2/5 of the budget so they actually get time (before this, a deadline starved sweep/B&B/ILS to zero: the race consumed the whole budget, which is also why CUSTOM+budget+exhaustive never ran its stages).
+- **Custom** unchanged; the stop-on-feasible toggle now only has effect there (the UI shows it forced-checked on Fast, forced-off on Optimize).
+
+Exhaustive shares rebalanced per the section 11.2/11.3 measurements: seam sweep min(20%, 60 s cap), pattern B&B 3/4 of the remainder, ILS the rest. The chain skips the relaxation stage when under 3 s of budget remain. Re-baselined sidecars: j021 and j022-noland (the two objective-precision witnesses that need the race) moved to `"effort": "THOROUGH"`; j021 under Optimize lands within 6e-4 of the Wolfram reference. `BudgetResolutionTest` pins the per-tier resolution (budgets, deadlines, forced stop-on-feasible).
+
+### 11.6 The d9 wave
+
+30 easier hpk captures (d9) were wired into the dualrecovery gate the same day: 27 solve through the chain directly, 2 (j129, j135) through the bnbSeconds pattern-B&B fallback, and 1 is a new frontier miss. With a late d11 addition (j155, 4jmm, chain-solved via reseeded SLP) the gate stands at 56/58 sidecars (57/59 counting the loopmm landing). The miss, j318 (Waza -0 to Block Pane Postwalled, n=13), is the sharpest zeroing knife-edge in the library: the recorded path carries |vx| = 0.0049999356 into tick 6, 6.4e-8 UNDER the momentum threshold, so the human's basin requires holding a ~1e-7 validity corridor on the clamp boundary, three orders of magnitude below the ~1e-4 sine-residual certify floor. The blind suffix B&B finds no alternative basin in 10 s. Classified global-stage alongside j716; its sidecar stays shouldSolve: false without a bnbSeconds fallback (no point burning gate time on it).
+
+### 11.7 Clamp-free census by tier
+
+`HpkMissTriageScreen.clampFreeClosedFormCensus` (PKC_SCREENS) measures how many gate captures the pre-gh-204 fast path alone solves: the clamp-free dual margin ladder, no inertia folding, no SLP, no recovery, no search. Result over the 58 dualrecovery captures, split by hpk tier:
+
+| Tier | Captures | Clamp-free CF | Full chain + B&B |
+|------|----------|---------------|------------------|
+| d9   | 30       | 8 (27%)       | 29 (j318 misses) |
+| d10  | 20       | 5 (25%)       | 20               |
+| d11  | 8        | 0 (0%)        | 7 (j716 misses)  |
+| all  | 58       | 13 (22%)      | 56               |
+
+Readings: up to d10, about a quarter of jumps are convex-easy (the LP optimum quantizes straight onto a feasible path); at d11 that population vanishes, so every d11 capture needs at least SLP. The solved-rate gradient across tiers (97/100/86%) is far flatter than the machinery-depth gradient: harder tiers are not much less solvable, they travel further down the chain before landing. The census also confirms the sine-floor band (clamp-free near-misses at 2.1e-6 to 5.8e-4 are exactly the ones SLP closes), that j318's clamp-free dual is unbounded at every margin (the knife-edge zeroing is required, not just helpful), and that today's stage-1 closed form solves 15/58 (folding adds j140, j248, j319, j425; the section 11.4 rung stall-break hands j321 and j345 to SLP instead, where they still solve).
+
+### 11.8 CI core-count fix and the loopmm landing gate
+
+The first CI run of the branch failed on j335: GitHub runners have 2-4 cores, so the B&B pattern pool (`cores - 2`) collapsed to a single thread and the first bound-ranked pattern hogged the whole search window, starving the winner (the same starvation mode section 11.2 measured for the pool-cap experiment). Fix: the pool has a floor of 2 threads, and when there are more patterns than threads each search gets a fair deadline slice (`window * threads / patterns`) instead of the shared deadline. On full-width machines nothing changes (slice inactive when threads == patterns). `:core:test -PtestCpus=N` pins `ActiveProcessorCount` on the test JVM to reproduce runner core counts locally; the gate is verified green at 12, 4, and 2 cores.
+
+The ticket's last open test-plan item is also closed: `loopmm-3jump-lands` is wired into `problems/dualrecovery/` with `refObjective: -279.3` and `maxObjectiveGap: 0`. The check runs the chain, detects the target shortfall (the chain plateaus short of the pad), then runs the blind pattern-B&B with `stopAtObjective` at the pad edge and asserts the landing. Measured: lands -279.299912 in ~3.3 s at 12 cores, ~35 s of the 60 s budget at 2 and 4 cores.
+
+### 11.9 Optimize dropped feasible results (user-reported, fixed)
+
+Reported on a 1.12.2 save (trp): under Optimize the live tracker showed success in ~0.1 s, then the final result said no solution after the budget. Root cause: since the #201 stop-on-feasible rework, SolveCore returns its best-OBJECTIVE result even when infeasible, but the engine's race-vs-incumbent comparison still assumed both candidates were feasible and compared objectives only, so an infeasible race result with a longer (unrealizable) reach replaced the feasible chain result. The stale assumption predates this branch; Optimize made it visible because that tier always races feasible chain results to the full budget. Fix: the comparison gates on byte-exact feasibility first (a feasible incumbent is never traded for an infeasible reach), objectives break ties only within the same feasibility class. Regression capture: captures/trp-optimize-feasible-swap.json with a solve sidecar at THOROUGH (the sidecar's new optimizeSeconds field overrides the save's budget for test time). EngineFileScreen (PKC_SOLVE_FILE=path, optional PKC_SOLVE_EFFORT / PKC_SOLVE_TIMEOUT_MS) drives the live engine on any save file headlessly; it is how the report was reproduced and verified.
+
+## 12. Regularized relaxation seed and pattern inference (gh-213, 2026-07-04)
+
+Follow-up from the #209 external review, implementing the five scope items whose pre-implementation diagnostics all ran the same day (recorded in the issue comment thread). Baseline: dualrecovery gate 56/58. After: 57/58. The whole `:core:test` stays green; the deletions and the seed rework carry a zero-regression invariant verified by a per-capture before/after diff.
+
+### 12.1 Margin-laddered relaxation seed
+
+`RelaxationRecovery.solve` was restructured around a wall-margin ladder `{0, 3e-4, 1.2e-3, 5e-3, 1e-2, 2e-2, 5e-2}`. Each rung runs the full seed pipeline (dual recovery, AL-FISTA relaxed primal, seed SLP) at that inward wall margin; `relaxedPrimal` now takes the margin and shifts every inequality `b'_j -= margin`, so the relaxed carry hugs the interior instead of the walls. A larger margin pushes the seed off the walls, which the bake-off showed lands captures the wall-hugging seed misses.
+
+The integration is guarded by an invariant, not a heuristic: margin 0 is the shipped seed-plus-repair path byte-for-byte, and the larger rungs run only when that path fully misses (the seed SLP and lattice repair both fail). So every capture landing today via the margin-0 seed or repair is byte-identical; only chain-misses climb the ladder. Measured effect: six captures that previously needed the `bnbSeconds` pattern-B&B or a reseeded SLP now land through the cheap relaxation chain (j129, j135, j335, j344, j717, j828), and j318 flips to `shouldSolve: true`, landing at -1886.296634 (the bake-off value, reproduced deterministically). j318 is not a facing-wall bail as the stage census read it: it lands from the 2e-2 interior seed, reached because the ladder continues past the first dual-unbounded rung rather than breaking on it.
+
+### 12.2 Pattern inference as axis + band; stage-1 banded incumbent
+
+The gh-204 onset ranking (11.2: `velocityProfile` + `patternScore` by |v_axis(k)| distance to threshold) is removed, falsified for parked axes where every k ties at zero cost. Its replacement in `BoundPrunedRecovery` is `carryProfile` + `inBand`: compute the clamp-free carry of the incumbent, find each axis's zero-cost band (the suffix where |carry_a| stays under the inertia threshold), and rank pattern submission by band membership, tie-broken by the folded dual bound `BoundPrunedRecovery` already computes. Ordering only, so no pattern is ever gated out.
+
+A stage-1 banded ladder was added: each enumerated pattern's closed form is certified via `ClosedFormSolve.optimizeWithPattern` (a fixed-pattern entry that reuses the existing margin `runLadder` with the pattern's zeroX/zeroZ) and the best byte-exact result seeds the B&B incumbent before the parallel search. On loopmm the banded incumbent certifies at -279.300515 (above the -279.3059 target); the search still lands the same -279.299912. Both changes are ordering plus incumbent only, so the whole dualrecovery gate is byte-identical after them.
+
+### 12.3 Pin extension: implemented and falsified on the corpus
+
+`pinnedSpec` was extended to pin a band around the relaxed path position on unconstrained interior ticks, not only the two-sided-bounded ticks it narrowed before (the old form pinned 5.8% of interior slots and landed 0/59). Falsified on this corpus: with the margin ladder landing everything the relaxation can reach, the pin stage is never entered on a solvable capture, so it lands nothing new (j716 still misses). Kept implemented per the ticket; a future stage census can delete it with this record as the evidence.
+
+### 12.4 Dead-stage deletions
+
+The SLP restart loop (`SLP_RESTARTS`) is removed: an ablation showed the stage census unchanged, j346 still landing via lattice repair at a 9.6e-5 objective shift (-740.295720 vs -740.295624), and the full gate green. The old pin ladder (the pre-extension `pinnedSpec`) is superseded by 12.3. j716 stays the sole `shouldSolve: false` miss, still genuinely global-stage (11.3/11.6).
+
+## 13. Reach stages gated on the dual gap, not jump count (2026-07-04)
+
+The exhaustive objective stages (seam sweep, B&B, ILS) were gated on `countJumps(sc) > 1`, so a single-takeoff obstacle jump got only CMA-ES for reach. Jump count is the wrong variable: the nonconvexity is collision, a keep-out active over an interval that falls outside LCvx (1.2), and that is orthogonal to takeoff count (j318, a postwalled single-takeoff jump, is as non-convex as any chain). The gate now runs the exhaustive stages when `countJumps > 1` OR the fast path leaves a dual-bound gap: `reachHeadroom` compares `ClosedFormSolve.dualBound` (a microsecond weak-duality certificate) to the post-CMA byte-exact objective and fires when the residual exceeds `REACH_GAP_EPS = 1e-6`. That floor is the dual solver's own convergence slack (it converges to ~1e-8 on the projected gradient, ~1e-6 in value), below which the bound is not tight enough to distinguish real reach headroom from solver noise; it is deliberately NOT set at the coarser ~1e-4 sine-residual floor, because on a byte-exact tool a sub-1e-4 reach gain is still real (a canonical hard jump clears by ~6.6e-7, 1.3) and the branch search must not abandon it. A single-takeoff jump within 1e-6 of the bound is the only case where the branch stages are skipped, and there the bound cannot certify that anything remains.
+
+Measured on the seven single-takeoff hpk captures (engine at Optimize, `ReachGapScreen`). At the 1e-6 floor the gate fires on the five with a positive dual gap (j344, j925, j111, j135, j320) and stays off only where the bound cannot certify headroom: j318 (unbounded dual, gap undefined) and j319 (the byte-exact path already exceeds the LP bound, gap negative). The recovered reach is small and sits at the scale of the engine's own run-to-run variance from time-bounded parallel search (the branch stages are deadline-bounded): the cleanest attributable witness is j344, where the ILS stage explicitly wins by +4e-6 blocks (recorded in the solver chain `... -> ILS (better objective)`); j135 shifts ~+1.7e-5. The gains are small because CMA-ES already closes most of the gap on small problems, its restarts covering the same basins the branch search would, so this is a fine-scale top-up, not a large lever (the branch search still earns its cost mainly on the large multi-jump problems the jump-count gate was really selecting for by size). They are nonetheless real and byte-exact, which is the whole point: against the margins this tool targets (a canonical hard jump clears by ~6.6e-7, 1.3) a sub-1e-4 reach gain is decisive, executed frame-perfect by the TAS audience, and the 1e-4 the gate first used wrongly abandoned it. Full `:core:test` green at both thresholds; the exhaustive stages share the deadline (the race is capped to 2/5 when they are pending), so enabling them redistributes the budget rather than extending it, and no timed capture regressed.
+
+## 14. The rung-5375 campaign port (solver-port-plan-2026-07-10, executed 2026-07-10)
+
+The 2026-07-08/10 razor campaign (docs/research/razor-campaign-2026-07-09-handoff.md, next-session-lever2-2026-07-10.md) proved that razor-class jumps are landed by riding norm>1 sine-LUT joint cells reached through wrap-window re-expressions (gf vs gf+-360), that a translated-scoring free start buys the last fractions, and that the legal (record) metric needs the goal wall objectified. This section records the port of those findings into the product solver, per the approved plan (solver-port-plan-2026-07-10.md; the old legality-knob item was dropped and |gameFacing| is hard-capped at 360 by user ruling, both default and max).
+
+**Translation-aware scoring (S3).** `runJob` used to discard the authored free box at the pin. The post-race scoring sites now score translated when the start is free: the CMA arbitration, the momentum-assembly and B&B-rescue entry checks, and the seam-sweep/B&B acceptances go through `scoredViol`/`scoredObjective`, which forward at the current start and evaluate `SnapRepairPolish.bestTranslation`/`bestTranslationObj` over the authored box relative to the current start (so mid-pipeline adoptions by MomentumAssembly or freeStartImprove recompute the domain automatically). The CMA race fitness, dualChain, and LongRunSolver stay pinned per the plan. A single terminal adoption step (`adoptWinningTranslation`) applies the winning translation once before finalize, byte-exact-verified at the translated start with keep-better semantics (objective translation preferred, min-viol fallback, adopt only on verified feasibility plus strict objective gain). A pinned box means a zero-width domain, byte-identical to `maxViolation` by construction (pinned both start at max(0, slacks); pinned by `FreeStartTranslationTest`).
+
+**Wrap-window lattice ILS stage (S4).** `WrapWindowIls` ports the campaign's norm-targeted lattice descent (MiqcpClose.normIls): per-tick joint-cell candidate sets from `FacingLattice.cellRepresentatives` at bases {0, +360, -360} with the adaptive-span norm filter and incumbent-cell injection, a drain-1-opt-then-2-opt/2optB round structure, and keep-best kick cycles over norm-significant wrap cells (bases to +-720, results capped). Every enumerated cell is filtered to |gf| <= 360 and the stage asserts the cap on its results; wrap720-class points (maxGf ~718) are deliberately not expressible. Scoring is the S3 translated metric (zero-width when pinned). The stage runs terminal in `runJob` (THOROUGH/CUSTOM, near-feasible trigger viol <= 1e-2 or legal mode), is scored and accepted in gf space, and on a byte-exact-verified close adopts with a LOCKED realization: all scenario ticks lock, `yaws := gf` raw, `SmoothingPolish` is skipped, and the Plan carries `lockYaws` so Apply writes locked RAW rows (`FacingReconstruction` cannot express >=180-deg deltas and unlocked rows wrapDelta; the weirdpane v1 drift showed unlocked rows lose razor points even below 180). `SnapRepairPolish`'s own polish path (which wraps to +-180) is never in the stage's path. Bounded regression: from the rung snap point (resources/points/rung5375-snap-point.json), a span-16 no-kick descent at a fixed 60k-eval cap reaches translated viol 3.483e-5 (bar 3.5e-5), deterministic. Full replication (env-gated, tag wi0710a, 600 s, kicks on): translated viol 1.1686e-5 under the 360 cap, BELOW the campaign's uncapped ILS floor 1.2247e-5 and within 1.5% of the gate-flip MILP's 1.152e-5 certified neighborhood.
+
+**Legal/record objective mode (S5).** `AngleSolverState.legalMode` (SaveIO round-trip, `AngleSolverWindow` toggle shown only while a qualifying goal wall exists). The goal wall is selected among scalar (t2 == null) position constraints on the objective axis at the objective tick whose cmp matches the objective sense, excluding EQ-derived corridor halves; exactly one tightest wall must exist (ties or an empty candidate set REFUSE with a message, the mode never guesses). Velocity walls, EQ pairs, and the range's cap half always stay hard: on the proof spec the split removes exactly `X@49lo` and keeps `X@49hi`. The engine solves the reduced spec with the objective unchanged, suffixes the solver name `(legal)`, and reports the shortfall against the removed wall. In legal mode the wrap stage descends the campaign's legalScore (hard-infeasible -> 1e6 + viol, else shortfall via `bestTranslationObj`); the rung-specific z-lo domain tighten was NOT ported (bespoke). Replay pins for the three delivered rung attempts (legal 9.6836e-5, wrap720 9.7048e-5, turn360 2.1213e-4) assert the recorded shortfalls to 1e-9 as a model-drift tripwire.
+
+**Gate-flip-aware candidate moves (S6).** The campaign's biggest discovery was that momentum-gate timing flips break vise-locked optima. `WrapWindowIls.Config.gateFlipMoves` additionally enumerates full candidate sets (norm filter bypassed) at gate-critical ticks (any-axis carry |v| in [thr/4, 4*thr]) and adds a targeted flip 2-opt pass over that band before the general pair moves, all under the 360 cap. A/B measurement (tag gf0710b, 600 s per rung arm; the capped stage cannot hold the 718-class ILS point, so both arms ran from the capped snap point with the fixed-gate ILS floor 1.2247e-5 and the MILP neighborhood 1.152e-5 as reference lines): rung A (no flips) 1.16856e-5 vs B (flips) 1.28530e-5, delta +1.17e-6; the flip candidates dilute the descent budget on the rung. Non-regression arms (warm gf wrapped into the window, 300k-eval caps): proof 0 vs 0, weirdpane -1.35e-6, uncorrected -1.98e-4 (flips mildly help the pattern-bound cases). Verdict per the plan's one-honest-A/B rule: no gain within budget on the rung, so the feature ships OFF by default (`Config.gateFlipMoves`, engine never sets it); the knob remains for pattern-bound experiments. Report: build/reports/gateflip-ab-gf0710b.txt.
+
+**Near-miss B&B rescue (2026-07-10, from the in-game loopmm tight-spec report; part of gh-217).** With a hard goal wall, the objective-pushing B&B in the exhaustive block is unreachable (it requires a feasible incumbent, and feasible means already landed), and the first-feasible rescue required stop-on-feasible with a 3 s cap; so no Optimize/Custom configuration could land the loopmm tight spec even though the blind pattern-B&B finds the -279.299912 landing in seconds. Fix: at ilsExhaustive tiers, when the pipeline's incumbent ends infeasible at viol <= 5e-2, momentum assembly is deferred (wrong tool at that range, and it eats the budget) and a blind `BoundPrunedRecovery` first-feasible rescue runs with min(60 s, half the remaining window). The 5e-2 gate is a worth-the-time heuristic only (the B&B never consumes the incumbent); it was set from measurement: the loopmm race plateau is 2.05e-2 (must qualify) while the razor-proof-t1 far miss is 1.8e-1 (must still get momentum assembly). Regression: problems/solve/loopmm-tight-t39 (the misses capture with the pad wall ENABLED, which ships disabled as the gh-186 loosened spec), THOROUGH 45 s, landing required; measured land at obj -279.299912346 viol 0 in ~23 s through the live engine path (trace: race 18 s to viol 2.05e-2, rescue solves in 6.1 s). Full suite green; j021 stays inside its 30 s wall.
+
+**FOLLOW-UP (next solver session): wire AlmSnapStage into the engine for basin discovery.** The Stage-A machinery (SmoothJumpProblem, AlmBfgsCore, SnapRepairPolish, FacingLattice) is built, committed, and unit-tested; the engine wiring (runJob + dual-chain hook, hard sub-budget) is fully designed and adversarially dispositioned in alm-snap-stage-b-design.md and was deferred by the port plan. The headline miss below makes it the flagged next lever: the smooth-then-snap floor (~2e-4) now composes with the shipped wrap-ILS closer (trigger 1e-2, proven to bridge the last 1e-4 class), so a gradient-descent stage that lands its incumbent in the 2e-4 neighborhood would hand the closer something closable and make the cold 5.4375 gate winnable end to end. Known risk, recorded honestly: the smooth surrogate can mis-grade razor corners (it grades the prover's exactly-feasible point 2.17e-4 infeasible and walks away from it), so this is a candidate, not a certainty; the licensed-solver global stage (research arm) remains the certified alternative. Acceptance for the follow-up: re-run RazorColdT1 (two consecutive fresh passes required before pinning the sidecar).
+
+**Headline gate (S7): MISS, attributed to basin discovery.** Cold 5.4375 from t1: the razor-proof-t1 capture (razor-proof-improved geometry, internal startTick 0, authored input rows with all yaw seeds stripped, first-tick footprint ranges freeing the start) driven through the live engine at THOROUGH, PASS = success plus a fresh-reparse byte-exact viol <= 0 (`RazorColdT1`, env-gated, reports at build/reports/razort1-<tag>.txt). Two fresh cold runs missed identically: rt0710a (180 s budget) and rt0710b (600 s budget, solver trace on) both end at met 9/14, obj 212.8532676246, finalStart at the footprint corner (215.3000000119, -1.4875000119). The rt0710b trace attributes the miss cleanly: receding horizon misses in 1.4 s; the CMA race runs 240 s and its best incumbent is viol 1.8e-1; momentum assembly runs its full 240 s and misses; free-start recovery lands at viol 2.2e-1. The wrap-ILS closer correctly never fires, because its near-feasible trigger is 1e-2 and the pipeline never gets within a factor of 18 of it. This is the plan's basin-discovery fork, not closing precision and not cap-bound: the discrete closer was never handed anything closable, reproducing the campaign's architecture verdict (the proof basin sits thousands of sine buckets from every basin the cold searches reach; the smooth-then-snap floor is ~2e-4, but only once a search finds the basin at all). The bar is not redefined: the fixture and the env-gated runner stay (captures/razor-proof-t1.json + RazorColdT1); the sidecar is NOT pinned into problems/solve (the plan pins only after two consecutive passes). Named remedy, deferred per the plan: the research arm's licensed global stage, with AlmSnapStage engine wiring (alm-snap-stage-b-design.md) as the in-Java candidate to revisit.
+

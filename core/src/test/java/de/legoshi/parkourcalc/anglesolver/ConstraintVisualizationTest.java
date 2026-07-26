@@ -358,7 +358,7 @@ public class ConstraintVisualizationTest {
         AngleSolverState state = new AngleSolverState();
         BoxController boxes = boxesWith(new Vec3dCore(5.5, 64.0, 8.5));
         state.tickConstraints(0).getConstraints().add(Constraint.scalar(Constraint.Field.DX, Constraint.Op.GT, 0.1)); // index 0, non-spatial
-        state.addLandingConstraintsForBlock(5, 64, 8, 0, false, false, false, false); // X at index 1, Z at index 2
+        state.setFootprint(0, 5 - H, 6 + H, 8 - H, 9 + H); // X at index 1, Z at index 2
 
         List<ConstraintPlate> plates = source(state, boxes).platesAt(0);
         assertEquals(1, plates.size());
@@ -415,6 +415,53 @@ public class ConstraintVisualizationTest {
         double core = new Settings().constraintFrontWidth * 0.5;
         assertEquals(3.5 - core, front.min.z, EPS);
         assertEquals(65.0, front.min.y, EPS);
+    }
+
+    @Test
+    public void relativeConstraintResolvesAgainstReferenceTick() {
+        AngleSolverState state = new AngleSolverState();
+        BoxController boxes = boxesWith(new Vec3dCore(0.5, 64.0, 0.5), new Vec3dCore(1.5, 64.0, 3.5));
+        Constraint c = Constraint.range(Constraint.Field.X, 1.0, 2.0, true, true);
+        c.setRefTick(0);
+        state.tickConstraints(1).getConstraints().add(c);
+
+        List<ConstraintPlate> plates = source(state, boxes).platesAt(1);
+        assertEquals(1, plates.size());
+        AABB front = plates.get(0).front.get(0);
+        assertEquals("relative lo shifts by the reference tick's X", (0.5 + 1.0) - H, front.min.x, EPS);
+        assertEquals((0.5 + 2.0) + H, front.max.x, EPS);
+        double core = new Settings().constraintFrontWidth * 0.5;
+        assertEquals("plate anchors at its own tick's foot", 3.5 - core, front.min.z, EPS);
+    }
+
+    @Test
+    public void relativeConstraintWithoutReferencePositionDrawsNothing() {
+        AngleSolverState state = new AngleSolverState();
+        BoxController boxes = boxesWith(new Vec3dCore(0.5, 64.0, 0.5), new Vec3dCore(1.5, 64.0, 0.5));
+        Constraint dangling = Constraint.scalar(Constraint.Field.X, Constraint.Op.GT, 1.0);
+        dangling.setRefTick(9);
+        state.tickConstraints(1).getConstraints().add(dangling);
+        state.tickConstraints(1).getConstraints().add(Constraint.scalar(Constraint.Field.Z, Constraint.Op.GT, 0.0));
+
+        List<ConstraintPlate> plates = source(state, boxes).platesAt(1);
+        assertEquals("only the absolute constraint draws", 1, plates.size());
+        assertArrayEquals(new int[]{1}, plates.get(0).constraintIndices);
+    }
+
+    @Test
+    public void revisionChangesWhenRefTickChanges() {
+        AngleSolverState state = new AngleSolverState();
+        BoxController boxes = boxesWith(new Vec3dCore(0.5, 64.0, 0.5), new Vec3dCore(1.5, 64.0, 0.5));
+        Constraint c = Constraint.scalar(Constraint.Field.X, Constraint.Op.GT, 5.0);
+        state.tickConstraints(0).getConstraints().add(c);
+
+        AngleSolverConstraintSource src = source(state, boxes);
+        long absolute = src.revision();
+        c.setRefTick(0);
+        long ref0 = src.revision();
+        assertNotEquals(absolute, ref0);
+        c.setRefTick(1);
+        assertNotEquals(ref0, src.revision());
     }
 
     @Test
@@ -498,7 +545,7 @@ public class ConstraintVisualizationTest {
     public void pickWorldPrefersBoxThenFallsBackToConstraint() {
         AngleSolverState state = new AngleSolverState();
         BoxController boxes = boxesWith(new Vec3dCore(0.5, 64.0, 0.5), new Vec3dCore(1.5, 64.0, 0.5), new Vec3dCore(2.5, 64.0, 0.5));
-        state.addLandingConstraintsForBlock(5, 64, 8, 1, false, false, false, false);
+        state.setFootprint(1, 5 - H, 6 + H, 8 - H, 9 + H);
         AngleSolverConstraintSource src = source(state, boxes);
 
         Vec3dCore down = new Vec3dCore(0.0, -1.0, 0.0);
@@ -539,7 +586,7 @@ public class ConstraintVisualizationTest {
     public void countMethodsEqualIndependentlyCountedEmission() {
         AngleSolverState state = new AngleSolverState();
         BoxController boxes = boxesWith(new Vec3dCore(5.5, 64.0, 8.5), new Vec3dCore(10.0, 64.0, 0.0));
-        state.addLandingConstraintsForBlock(5, 64, 8, 0, false, false, false, false);
+        state.setFootprint(0, 5 - H, 6 + H, 8 - H, 9 + H);
         state.tickConstraints(1).getConstraints().add(Constraint.scalar(Constraint.Field.X, Constraint.Op.GT, 5.0));
 
         AngleSolverConstraintSource src = source(state, boxes);
@@ -563,7 +610,7 @@ public class ConstraintVisualizationTest {
     public void planConstraintCountsEqualWhatTheFullEmitterBakes() {
         BoxController boxes = boxesWith(new Vec3dCore(5.5, 64.0, 8.5), new Vec3dCore(10.0, 64.0, 0.0));
         AngleSolverState state = new AngleSolverState();
-        state.addLandingConstraintsForBlock(5, 64, 8, 0, false, false, false, false);
+        state.setFootprint(0, 5 - H, 6 + H, 8 - H, 9 + H);
         state.tickConstraints(1).getConstraints().add(Constraint.scalar(Constraint.Field.X, Constraint.Op.GT, 5.0));
         Settings settings = new Settings();
         AngleSolverConstraintSource src = new AngleSolverConstraintSource(state, boxes, () -> true, settings, new SelectionManager(null), new ConstraintSelection());

@@ -41,6 +41,37 @@ public final class JumpConstraintCompiler {
             }
             return pen;
         }
+
+        public double translatedPenalty(double[] gameFacings, ForwardPath path, double dx, double dz, double muIneq, double muEq) {
+            double pen = 0.0;
+            for (JumpConstraint c : ineq) {
+                double s = translatedSlack(c, gameFacings, path, dx, dz);
+                if (s > 0) pen += muIneq * s * s;
+            }
+            for (JumpConstraint c : eq) {
+                double e = translatedEvaluate(c, gameFacings, path, dx, dz);
+                pen += muEq * e * e;
+            }
+            return pen;
+        }
+    }
+
+    public static double translatedEvaluate(JumpConstraint c, double[] F, ForwardPath path, double dx, double dz) {
+        double e = evaluate(c, F, path);
+        int tc = (c.t2 == null) ? 1 : (c.op == JumpConstraint.Op.PLUS ? 2 : 0);
+        if (c.mode == JumpConstraint.Mode.X) return e + tc * dx;
+        if (c.mode == JumpConstraint.Mode.Z) return e + tc * dz;
+        return e;
+    }
+
+    public static double translatedSlack(JumpConstraint c, double[] F, ForwardPath path, double dx, double dz) {
+        double e = translatedEvaluate(c, F, path, dx, dz);
+        switch (c.cmp) {
+            case GE: return e < 0 ? -e : 0.0;
+            case LE: return e > 0 ? e : 0.0;
+            case EQ: return Math.abs(e);
+        }
+        throw new IllegalStateException("unknown cmp: " + c.cmp);
     }
 
     public static Compiled compile(JumpSpec spec) {
@@ -50,6 +81,9 @@ public final class JumpConstraintCompiler {
         for (JumpConstraint c : spec.constraints) {
             validateTick(c.t1, n, c.name);
             if (c.t2 != null) validateTick(c.t2, n, c.name);
+            if (c.mode == JumpConstraint.Mode.DXZ && c.t2 == null) {
+                throw new IllegalArgumentException("constraint " + c.name + ": DXZ requires t2");
+            }
             if (c.cmp == JumpConstraint.Cmp.EQ) {
                 eq.add(c);
             } else {
@@ -70,6 +104,9 @@ public final class JumpConstraintCompiler {
                 return path.posZ[c.t1] + opSign(c.op) * (c.t2 != null ? path.posZ[c.t2] : 0.0) - c.rhs;
             case F:
                 return Angles.wrap(F[c.t1] + opSign(c.op) * (c.t2 != null ? F[c.t2] : 0.0) - c.rhs);
+            case DXZ:
+                return Math.abs(path.posX[c.t1] - path.posX[c.t2])
+                        - Math.abs(path.posZ[c.t1] - path.posZ[c.t2]) - c.rhs;
             default:
                 throw new IllegalStateException("unknown mode: " + c.mode);
         }

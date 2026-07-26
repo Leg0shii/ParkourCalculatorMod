@@ -70,6 +70,20 @@ public final class LongRunSolver {
             return new LongRunConfig(windowLadderFor(w), commits);
         }
 
+        public static LongRunConfig of(int window, int commit, int[] windowLadder, int[] commitLadder) {
+            LongRunConfig base = of(window, commit);
+            int[] wl = sanitizeLadder(windowLadder);
+            int[] cl = sanitizeLadder(commitLadder);
+            return new LongRunConfig(wl != null ? wl : base.windowLadder, cl != null ? cl : base.commitLadder);
+        }
+
+        private static int[] sanitizeLadder(int[] ladder) {
+            if (ladder == null || ladder.length == 0) return null;
+            int[] out = new int[ladder.length];
+            for (int i = 0; i < ladder.length; i++) out[i] = Math.max(1, ladder[i]);
+            return out;
+        }
+
         public int window() { return windowLadder[0]; }
 
         public int commit() { return commitLadder[0]; }
@@ -224,6 +238,16 @@ public final class LongRunSolver {
         int[] o = new int[m.size()];
         for (int k = 0; k < o.length; k++) o[k] = m.get(k);
         return o;
+    }
+
+    public static JumpSpec suffixSpec(JumpSpec full, int from, Vec3dCore pos, Vec3dCore vel, float yaw) {
+        JumpPhysicsInputs sc = full.asScenario();
+        JumpPhysicsInputs win = sliceScenario(sc, from, sc.numTicks, pos, vel, yaw);
+        win.incomingSprint = sc.sprintAt(from - 1);
+        win.incomingAmp = sc.speedAmplifierAt(from - 1);
+        List<JumpConstraint> cons = sliceConstraints(full, from, sc.numTicks);
+        Objective obj = new Objective(full.objective.axis, full.objective.sense, full.objective.tick - from);
+        return new JumpSpec(win, cons, obj);
     }
 
     /** A window's physics inputs: the masks for ticks [a, c), seeded with the chained exit state. */
