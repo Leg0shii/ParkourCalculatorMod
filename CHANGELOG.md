@@ -1,5 +1,36 @@
 # Changelog
 
+## [1.7.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.6.1...v1.7.0) (2026-07-26)
+
+
+### Features
+
+* angle solver node editor ([#228](https://github.com/Leg0shii/ParkourCalculatorMod/issues/228)) ([bafa94e](https://github.com/Leg0shii/ParkourCalculatorMod/commit/bafa94e9d4fd05472ccb6363937156486c53675e)), closes [#221](https://github.com/Leg0shii/ParkourCalculatorMod/issues/221)
+* client-side ghost playback for multiplayer on all loaders ([ff64a44](https://github.com/Leg0shii/ParkourCalculatorMod/commit/ff64a446fdeba2d03fe8f7e1b212e810fb53066d))
+* constraint hotkeys ([#208](https://github.com/Leg0shii/ParkourCalculatorMod/issues/208)) ([069e2e2](https://github.com/Leg0shii/ParkourCalculatorMod/commit/069e2e2277ce6e393e5b18bff3bc1240495450a6))
+* ctrl-drag pitch gizmo and pitch facing arrows ([0a9adbb](https://github.com/Leg0shii/ParkourCalculatorMod/commit/0a9adbbe2963ebd057e5bd8213778b3bcf323219))
+* ctrl+B adds ladder, slime, and ice cell constraints ([786e1dc](https://github.com/Leg0shii/ParkourCalculatorMod/commit/786e1dc9e8e98b9f348023f6bc8a9ba87f358bba))
+* dF constraint with closed-form and free-start solving ([d80d3e2](https://github.com/Leg0shii/ParkourCalculatorMod/commit/d80d3e2477d1b5d760ac5b64703306b53e844844))
+* **fabric-1.21.10:** update modern loader to 26.2 ([#161](https://github.com/Leg0shii/ParkourCalculatorMod/issues/161)) ([01b63c5](https://github.com/Leg0shii/ParkourCalculatorMod/commit/01b63c51c16347485cfaf5bf059efab129f68640))
+* hit distance lines showing block reach per tick ([4ee965d](https://github.com/Leg0shii/ParkourCalculatorMod/commit/4ee965da4cc6817a4dddd39b8f9ae8b0bbe53581))
+* relative X/Z and dX-vs-dZ constraints ([88da70a](https://github.com/Leg0shii/ParkourCalculatorMod/commit/88da70a5db9bb84d7843f093d262c81c21be03dd))
+
+
+### Bug Fixes
+
+* allow relative pitch turns up to 180 degrees ([78f8987](https://github.com/Leg0shii/ParkourCalculatorMod/commit/78f89876a3cc9845a62b0d565334e2b47d6a9b2c))
+* bump imgui dep for mac support ([#206](https://github.com/Leg0shii/ParkourCalculatorMod/issues/206)) ([e6e8fbc](https://github.com/Leg0shii/ParkourCalculatorMod/commit/e6e8fbc067a0760687a3c05d68bf84109c4563e8))
+* click on tick is at correct position in input table ([2720c46](https://github.com/Leg0shii/ParkourCalculatorMod/commit/2720c46acaecfd09cc461fb39398006005a690b3))
+* constraint hotkeys use own raycast instead of vanilla crosshair pick ([03f7247](https://github.com/Leg0shii/ParkourCalculatorMod/commit/03f7247e2a3f91eea4f10b8ed49f4bf8059eede9))
+* disable 'Save as...' button ([#231](https://github.com/Leg0shii/ParkourCalculatorMod/issues/231)) ([d3593ab](https://github.com/Leg0shii/ParkourCalculatorMod/commit/d3593abc94c3c00e1e1c505ba51552f17f76c921))
+* land tight-spec near-misses via a budgeted pattern-B&B rescue at Optimize/Custom ([467dd0e](https://github.com/Leg0shii/ParkourCalculatorMod/commit/467dd0e3d6b9c573e1afe306321b29bdf3c60b6d))
+* patch path geometry tail in place instead of full rebake on partial resim ([3c2fb9f](https://github.com/Leg0shii/ParkourCalculatorMod/commit/3c2fb9f55019d426f66603185f3f24b6f2e2eae0))
+* re-reference free-start solves into the footprint box when the start is dragged outside it ([101fd81](https://github.com/Leg0shii/ParkourCalculatorMod/commit/101fd8167b064daa819b390f0fd9c44c403b3530))
+* remove all process-spawning bytecode to pass Modrinth AutoMod ([08603ea](https://github.com/Leg0shii/ParkourCalculatorMod/commit/08603ea8033afe9bc313d7d5c7e1d9da80c06a41))
+* simplify solver ([8be49ac](https://github.com/Leg0shii/ParkourCalculatorMod/commit/8be49aca01984e0e5193472bf8e91bb35a73ee1b))
+* sprint lag v2 ([4462340](https://github.com/Leg0shii/ParkourCalculatorMod/commit/4462340a1869303517e4e3d66067cc8132d67faf))
+* stop the tick-table context menu from replacing open modals on right-click ([9ace8a0](https://github.com/Leg0shii/ParkourCalculatorMod/commit/9ace8a0af42da729b751b5f68a7f7d33cba37910))
+
 ## [1.6.1](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.6.0...v1.6.1) (2026-06-24)
 
 
