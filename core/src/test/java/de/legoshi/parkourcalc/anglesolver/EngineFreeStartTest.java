@@ -41,4 +41,24 @@ public class EngineFreeStartTest {
         assertNotNull("engine returned no result", r);
         assertTrue("j318 must still solve with free start enabled", r.isSuccess());
     }
+
+    @Test
+    public void seedDisplacedOutsideTheBoxIsReferencedBackAndSolves() {
+        ProblemFixture pf = ProblemFixture.load("dualrecovery", CAPTURE);
+        pf.file.angleSolver.seed.pos[0] += 3.0;
+        StartBox box = pf.specFor(null, null).asScenario().startBox;
+        assertNotNull("displaced capture must still build a start box", box);
+        assertTrue("displaced capture must still free the start", box.startFree());
+
+        ProblemFixture.Run run = pf.solve(60_000L);
+        SolveResult r = run.result;
+        assertNotNull("engine returned no result", r);
+        assertTrue("displaced seed must be re-referenced into the box and solve", r.isSuccess());
+
+        JumpPhysicsInputs sc = run.engine.lastSpecDebug().asScenario();
+        assertTrue("final start X outside the footprint: " + sc.startPos.x,
+                sc.startPos.x >= box.pxLo - 1.0e-9 && sc.startPos.x <= box.pxHi + 1.0e-9);
+        assertTrue("final start Z outside the footprint: " + sc.startPos.z,
+                sc.startPos.z >= box.pzLo - 1.0e-9 && sc.startPos.z <= box.pzHi + 1.0e-9);
+    }
 }

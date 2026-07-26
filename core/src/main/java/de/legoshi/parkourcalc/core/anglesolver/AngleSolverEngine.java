@@ -1021,6 +1021,15 @@ public final class AngleSolverEngine {
         StartBox freeBox = null;
         if (freeStart) {
             freeBox = sc.startBox;
+            double refX = Math.max(freeBox.pxLo, Math.min(freeBox.pxHi, sc.startPos.x));
+            double refZ = Math.max(freeBox.pzLo, Math.min(freeBox.pzHi, sc.startPos.z));
+            if (refX != sc.startPos.x || refZ != sc.startPos.z) {
+                if (SolverTrace.on()) {
+                    SolverTrace.log("ENGINE", "free start seed (%.4f,%.4f) outside box, re-referenced to (%.4f,%.4f)",
+                            sc.startPos.x, sc.startPos.z, refX, refZ);
+                }
+                sc.startPos = new Vec3dCore(refX, sc.startPos.y, refZ);
+            }
             sc.startBox = StartBox.pinned(sc.startPos.x, sc.startPos.z, sc.initialVelocity.x, sc.initialVelocity.z);
         }
 
