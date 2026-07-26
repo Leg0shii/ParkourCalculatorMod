@@ -1,10 +1,15 @@
 # Parkour Calculator
 
+[![build](https://github.com/Leg0shii/ParkourCalculatorMod/actions/workflows/build.yml/badge.svg)](https://github.com/Leg0shii/ParkourCalculatorMod/actions/workflows/build.yml)
+[![release](https://img.shields.io/github/v/release/Leg0shii/ParkourCalculatorMod)](https://github.com/Leg0shii/ParkourCalculatorMod/releases/latest)
+[![downloads](https://img.shields.io/github/downloads/Leg0shii/ParkourCalculatorMod/total)](https://github.com/Leg0shii/ParkourCalculatorMod/releases)
+[![license](https://img.shields.io/github/license/Leg0shii/ParkourCalculatorMod)](LICENSE)
+
 A TAS input planning mod for Minecraft. Simulate and visualize parkour movements before executing them.
 
-<img width="2316" height="1785" alt="image" src="https://github.com/user-attachments/assets/eb8f31c5-9790-4ffd-bd7d-249e0dd811a1" />
+![Angle solver TAS replayed client-sided on a server](docs/media/jump_showcase.gif)
 
-Watch the [angle solver tutorial](https://www.youtube.com/watch?v=ModmozoWaD0).
+▶ [Angle solver tutorial](https://www.youtube.com/watch?v=ModmozoWaD0)
 
 ## TASes created with the tool
 - Jumpcraft X: https://www.youtube.com/watch?v=OYNSGP5gSJI
@@ -15,15 +20,24 @@ Watch the [angle solver tutorial](https://www.youtube.com/watch?v=ModmozoWaD0).
 
 ## Features
 
-- Plan movement inputs tick-by-tick (WASD, jump, sneak, sprint, yaw)
-- Visualize the predicted path as boxes in the world
+- **Angle Solver**: give it constraints and it finds the yaw inputs that land the jump
+- **Free start position**: the solver picks the best starting spot within the start block's footprint
+- **Constraints**: absolute X/Z/F, relative X/Z against any reference tick, per-tick dX/dZ/dF deltas, and a dX vs dZ axis comparison
+- **Constraint hotkeys**: `B` adds wall and footprint constraints for the block you are looking at, `Ctrl+B` adds ladder/slime/ice cell constraints
+- **Node-graph solver pipelines** with per-stage time budgets (Custom effort)
+- Plan movement inputs tick-by-tick (WASD, jump, sneak, sprint, yaw, pitch)
+- Visualize the predicted path as boxes in the world, with per-tick movement info (motion, speed, combined XZ distance) and hit distance lines showing block reach
 - Drag the start box to test different setups
-- Angle solver: given your inputs and constraints, computes the best yaw angles for a jump
-- Replay planned inputs in-game with the TAS list following the active tick
-- Per-tick movement info (motion, speed, combined XZ distance)
+- Replay planned inputs in-game in singleplayer, with the TAS list following the active tick
+- **Client-sided multiplayer playback**: watch a replay of your TAS while on a server (visual only, see below)
+- Experimental block capture: pick blocks from the world with their real collision shapes
 - Save and load input plans
 - Pin windows for quick access
 - Supports Fabric on the latest Minecraft (currently 26.2), Forge 1.8.9, and Forge 1.12.2
+
+## Multiplayer
+
+Playback on a server is a client-sided replay: only you can see it, your own player never moves, and nothing is sent to the server. Playback that moves your player is deliberately restricted to singleplayer; on a server that would be macroing, and it will not be added.
 
 ## Usage
 
@@ -53,6 +67,8 @@ Click and drag the first box in the world to reposition.
 |-----|--------|
 | `G` | Toggle UI (rebindable) |
 | `ESC` | Close UI |
+| `B` | Add wall/footprint constraints for the targeted block |
+| `Ctrl+B` | Add ladder/slime/ice cell constraints |
 | `Ctrl+Click` | Toggle selection |
 | `Shift+Click` | Range select |
 | `Right-Click` | Context menu |
