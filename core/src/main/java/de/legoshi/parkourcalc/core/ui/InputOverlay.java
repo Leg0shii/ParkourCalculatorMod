@@ -1267,7 +1267,8 @@ public final class InputOverlay {
 
     private void renderContextMenu() {
 
-        if (ImGui.isMouseReleased(1) && ImGui.isWindowHovered(ImGuiHoveredFlags.ChildWindows | ImGuiHoveredFlags.AllowWhenBlockedByPopup)) {
+        boolean blockedByOtherPopup = ImGui.isPopupOpen("", ImGuiPopupFlags.AnyPopup) && !ImGui.isPopupOpen(ID_CONTEXT_MENU);
+        if (!blockedByOtherPopup && ImGui.isMouseReleased(1) && ImGui.isWindowHovered(ImGuiHoveredFlags.ChildWindows | ImGuiHoveredFlags.AllowWhenBlockedByPopup)) {
             if (hoveredRow >= 0 && !selection.isSelected(hoveredRow)) {
                 selection.selectOnly(hoveredRow);
             }
