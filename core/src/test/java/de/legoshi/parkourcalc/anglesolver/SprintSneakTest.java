@@ -118,9 +118,12 @@ public class SprintSneakTest {
     }
 
     @Test
-    public void sprintAlwaysOverridesTheSampledFlag() {
-        // The default mode assumes sprint everywhere; only Derive reads the recorded flag. Inputs stay sampled.
+    public void sprintAlwaysOverridesTheSampledFlagOnlyWhereSprintIsPossible() {
+        // The default mode assumes sprint everywhere; only Derive reads the recorded flag. Inputs stay
+        // sampled. The assumption stops at a sneak-scaled forward: 0.294 is below MC's 0.8 sprint floor,
+        // so the sim cannot sprint there and a solve that assumes it leaves the path on the next tick.
         InputData inputs = rows(2);
+        inputs.get(1).setKeyActive(InputRow.Key.SNEAK, true);
         BoxController boxes = new BoxController();
         boxes.add(unsampled());
         boxes.add(sampled(false, F, 0.0F));
@@ -128,8 +131,8 @@ public class SprintSneakTest {
         AngleSolverState state = new AngleSolverState();
         assertEquals(AngleSolverState.SprintMode.ALWAYS, state.getDefaultSprint());
         JumpPhysicsInputs sc = compile(inputs, boxes, 2, state);
-        assertTrue(sc.sprintAt(0));
-        assertTrue(sc.sprintAt(1));
+        assertTrue("a lost sprint on a full W is still assumed back on", sc.sprintAt(0));
+        assertFalse("the sneak-scaled tick cannot sprint, whatever the mode assumes", sc.sprintAt(1));
         assertEquals("inputs still come from the sample", SNEAK_F, sc.forwardAt(1), 0.0F);
     }
 

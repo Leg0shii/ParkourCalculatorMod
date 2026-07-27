@@ -593,7 +593,7 @@ public final class AngleSolverEngine {
                 if (sampled != null && sampled.hasMovementSample()) {
                     forwardIn[k] = sampled.moveForward;
                     strafeIn[k] = sampled.moveStrafe;
-                    sprintArr[k] = !deriveSprint || sampled.sprinting;
+                    sprintArr[k] = (!deriveSprint || sampled.sprinting) && forwardIn[k] >= SPRINT_SUSTAIN_F;
                 } else {
                     // No recorded run to sample: the rows' keys (gh-102) and the legacy sprint assumption.
                     forwardIn[k] = 0.98F * ((row.isKeyActive(InputRow.Key.W) ? 1 : 0) - (row.isKeyActive(InputRow.Key.S) ? 1 : 0));
