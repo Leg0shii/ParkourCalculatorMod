@@ -49,3 +49,6 @@ replay_*.log
 
 # deletion candidates awaiting review
 /trash/
+
+/docs/private
+bash.exe.stackdump
