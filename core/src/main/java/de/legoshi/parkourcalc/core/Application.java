@@ -137,21 +137,22 @@ public final class Application {
         );
 
         angleSolverState = new AngleSolverState();
+        FileSystemSaveStore saveStore = saveController.getSaveStore();
+        String mcVersion = saveStore != null ? saveStore.getMcVersion() : null;
+        ExactJumpModel forwardModel = ExactJumpModel.forMcVersion(mcVersion);
         constraintKeyController = new ConstraintKeyController(
-                mc, angleSolverState, selection, constraintSelection, saveController::markDirty);
+                mc, angleSolverState, selection, constraintSelection, saveController::markDirty,
+                forwardModel.modern());
         saveController.setAngleSolver(angleSolverState);
         saveController.setDebugSource(boxController, settings);
         AngleSolverTable angleSolverTable = new AngleSolverTable(angleSolverState, settings, selection, constraintSelection, inputData::size);
         inputOverlay.setAngleSolver(angleSolverTable);
         StartStateTable startStateTable = new StartStateTable(runner, () -> onUserChange(-1));
         inputOverlay.setStartState(startStateTable);
-        FileSystemSaveStore saveStore = saveController.getSaveStore();
-        String mcVersion = saveStore != null ? saveStore.getMcVersion() : null;
         FileSystemSaveStore graphStore = saveStore == null ? null : new FileSystemSaveStore(
                 saveStore.getSaveDir().resolve("graphs"), saveStore.getModVersion(), saveStore.getMcVersion(),
                 null, GraphPresetIO.infoParser());
         saveController.setGraphStore(graphStore);
-        ExactJumpModel forwardModel = ExactJumpModel.forMcVersion(mcVersion);
         AngleSolverEngine angleSolverEngine = new AngleSolverEngine(angleSolverState, boxController, inputData, this::onUserChange, forwardModel);
         angleSolverEngine.setOnStartMoved(runner::setStartPosition);
         if (saveStore != null) {

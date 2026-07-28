@@ -78,7 +78,7 @@ public class ConstraintDeriverTest {
 
     @Test
     public void footprintOnOpenBlockOverhangsBothWays() {
-        double[] r = ConstraintDeriver.deriveFootprint(cube(5, 64, 8), 5.5, 8.5, Collections.<AABB>emptyList());
+        double[] r = ConstraintDeriver.deriveFootprint(cube(5, 64, 8), 5.5, 8.5, Collections.<AABB>emptyList(), false);
         assertEquals(5 - HALF, r[0], EPS);
         assertEquals(6 + HALF, r[1], EPS);
         assertEquals(8 - HALF, r[2], EPS);
@@ -88,7 +88,7 @@ public class ConstraintDeriverTest {
     @Test
     public void footprintInsetsWhenAFlushNeighborBlocksTheHighXSide() {
         List<AABB> obstacles = Arrays.asList(cube(6, 65, 8));
-        double[] r = ConstraintDeriver.deriveFootprint(cube(5, 64, 8), 5.5, 8.5, obstacles);
+        double[] r = ConstraintDeriver.deriveFootprint(cube(5, 64, 8), 5.5, 8.5, obstacles, false);
         assertEquals("open low side keeps its overhang", 5 - HALF, r[0], EPS);
         assertEquals("flush neighbor pulls the high X in to edge minus half", 6 - HALF, r[1], EPS);
         assertEquals(8 - HALF, r[2], EPS);
@@ -98,7 +98,7 @@ public class ConstraintDeriverTest {
     @Test
     public void footprintIgnoresNeighborBelowTheStandSurface() {
         List<AABB> obstacles = Arrays.asList(box(6.0, 63.0, 8.0, 7.0, 65.0, 9.0));
-        double[] r = ConstraintDeriver.deriveFootprint(cube(5, 64, 8), 5.5, 8.5, obstacles);
+        double[] r = ConstraintDeriver.deriveFootprint(cube(5, 64, 8), 5.5, 8.5, obstacles, false);
         assertEquals("a neighbor whose top is at the stand surface does not block the body", 6 + HALF, r[1], EPS);
     }
 
@@ -107,7 +107,7 @@ public class ConstraintDeriverTest {
         AABB pane = box(5.5, 65.0, 8.4375, 6.0, 66.0, 8.5625);
         List<AABB> obstacles = Arrays.asList(pane);
 
-        double[] r = ConstraintDeriver.deriveFootprint(cube(5, 64, 8), 5.2, 8.5, obstacles);
+        double[] r = ConstraintDeriver.deriveFootprint(cube(5, 64, 8), 5.2, 8.5, obstacles, false);
         assertEquals("front face of a pane against a block sits at the cell centre", 5.5 - HALF, r[1], EPS);
         assertEquals(5 - HALF, r[0], EPS);
     }
@@ -117,7 +117,7 @@ public class ConstraintDeriverTest {
         AABB pane = box(5.0, 65.0, 8.4375, 5.5, 66.0, 8.5625);
         List<AABB> obstacles = Arrays.asList(pane);
 
-        double[] r = ConstraintDeriver.deriveFootprint(cube(5, 64, 8), 5.8, 8.5, obstacles);
+        double[] r = ConstraintDeriver.deriveFootprint(cube(5, 64, 8), 5.8, 8.5, obstacles, false);
         assertEquals("front face of a pane against a block sits at the cell centre", 5.5 + HALF, r[0], EPS);
         assertEquals(6 + HALF, r[1], EPS);
     }
@@ -125,9 +125,19 @@ public class ConstraintDeriverTest {
     @Test
     public void diagonalNeighborDoesNotInsetAStraightApproach() {
         List<AABB> obstacles = Arrays.asList(cube(6, 65, 9));
-        double[] r = ConstraintDeriver.deriveFootprint(cube(5, 64, 8), 5.5, 8.5, obstacles);
+        double[] r = ConstraintDeriver.deriveFootprint(cube(5, 64, 8), 5.5, 8.5, obstacles, false);
         assertEquals(6 + HALF, r[1], EPS);
         assertEquals(9 + HALF, r[3], EPS);
+    }
+
+    @Test
+    public void modernFootprintPullsSupportEdgesInByTheCollideEpsilon() {
+        double[] legacy = ConstraintDeriver.deriveFootprint(cube(5, 64, 8), 5.5, 8.5, Collections.<AABB>emptyList(), false);
+        double[] modern = ConstraintDeriver.deriveFootprint(cube(5, 64, 8), 5.5, 8.5, Collections.<AABB>emptyList(), true);
+        assertEquals(1.0e-7, modern[0] - legacy[0], 1.0e-9);
+        assertEquals(1.0e-7, legacy[1] - modern[1], 1.0e-9);
+        assertEquals(1.0e-7, modern[2] - legacy[2], 1.0e-9);
+        assertEquals(1.0e-7, legacy[3] - modern[3], 1.0e-9);
     }
 
     @Test

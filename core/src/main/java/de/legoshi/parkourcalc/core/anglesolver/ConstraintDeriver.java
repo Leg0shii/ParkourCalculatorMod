@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.core.anglesolver;
 
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.Face;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SupportOverlap;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
 import java.util.List;
@@ -90,9 +91,13 @@ public final class ConstraintDeriver {
         }
     }
 
-    public static double[] deriveFootprint(AABB support, double clickX, double clickZ, List<AABB> obstacles) {
+    public static double[] deriveFootprint(AABB support, double clickX, double clickZ, List<AABB> obstacles,
+                                           boolean modernCollision) {
         return clipByObstacles(
-                support.min.x - HALF, support.max.x + HALF, support.min.z - HALF, support.max.z + HALF,
+                SupportOverlap.minCenter(modernCollision, support.min.x, support.max.x),
+                SupportOverlap.maxCenter(modernCollision, support.min.x, support.max.x),
+                SupportOverlap.minCenter(modernCollision, support.min.z, support.max.z),
+                SupportOverlap.maxCenter(modernCollision, support.min.z, support.max.z),
                 support.max.y, clickX, clickZ, obstacles);
     }
 

@@ -418,8 +418,8 @@ public final class BlockSolver {
             if (hit.any()) { clean = false; break; }
         }
         double lx = path.posX[n], lz = path.posZ[n];
-        boolean landed = lx >= landFp[0] - 1e-9 && lx <= landFp[1] + 1e-9
-                && lz >= landFp[2] - 1e-9 && lz <= landFp[3] + 1e-9;
+        boolean landed = lx >= landFp[0] && lx <= landFp[1]
+                && lz >= landFp[2] && lz <= landFp[3];
         return new Eval(yaws, path, clean, landed);
     }
 

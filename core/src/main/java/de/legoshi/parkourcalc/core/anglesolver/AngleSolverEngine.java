@@ -35,6 +35,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolveProgress;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SupportOverlap;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -138,6 +139,7 @@ public final class AngleSolverEngine {
     /** Byte-exact forward, configured for the loader's MC inertia rule (see ExactJumpModel.forMcVersion).
      *  Stateless/immutable, so a single instance is shared read-only across the restart threads. */
     private final ForwardModel model;
+    private final boolean modernCollision;
 
     private Plan lastPlan;
 
@@ -252,6 +254,7 @@ public final class AngleSolverEngine {
         this.inputs = inputs;
         this.onApplied = onApplied;
         this.model = model;
+        this.modernCollision = model instanceof ExactJumpModel && ((ExactJumpModel) model).modern();
     }
 
     private static final class Plan {
@@ -1204,7 +1207,6 @@ public final class AngleSolverEngine {
 
     // ---- solve from blocks (off-thread) ----------------------------------------
 
-    private static final double HALF = BoxStyle.HITBOX_HALF_WIDTH;
     /** Total inner solves the block solver may spend before giving up (and honestly reporting no solution). */
     private static final int BLOCK_MAX_ITERS = 40;
 
@@ -1374,8 +1376,12 @@ public final class AngleSolverEngine {
     }
 
     /** [xlo, xhi, zlo, zhi] keep-out / footprint region: the block's horizontal AABB plus the half-width. */
-    private static double[] expand(AABB box) {
-        return new double[] {box.min.x - HALF, box.max.x + HALF, box.min.z - HALF, box.max.z + HALF};
+    private double[] expand(AABB box) {
+        return new double[] {
+                SupportOverlap.minCenter(modernCollision, box.min.x, box.max.x),
+                SupportOverlap.maxCenter(modernCollision, box.min.x, box.max.x),
+                SupportOverlap.minCenter(modernCollision, box.min.z, box.max.z),
+                SupportOverlap.maxCenter(modernCollision, box.min.z, box.max.z)};
     }
 
     /** The single objective the user picked (Axis + Goal). The block solver derives the keep-out
