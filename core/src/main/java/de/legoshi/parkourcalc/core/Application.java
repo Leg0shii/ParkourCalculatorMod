@@ -666,6 +666,21 @@ public final class Application {
         return saveController.getSaveStore();
     }
 
+    SaveController saves() {
+        return saveController;
+    }
+
+    InputData inputs() {
+        return inputData;
+    }
+
+    public String runSimVerifyBatch(Path dir) {
+        if (!isReady()) {
+            return "simverify: not in a world";
+        }
+        return SimVerifyBatch.run(this, dir);
+    }
+
     public void setPlaybackBridge(PlaybackBridge bridge) {
         playback.setBridge(bridge);
     }

@@ -69,10 +69,75 @@ anglesolver/
                            (solve/loopmm-tight-t39-fast: the SAME capture under FAST effort; pins
                            the staged late-race: primary fast starves, the explore arm spawns at
                            the 20 s checkpoint and lands it, budget 90 s; the redirect-class gate)
+  HpkMetricScreen.java     difficulty-metric lab over captures/hpk_human/ (one folder per HPK d-level,
+                           3 human-reconstructed strats each): measures yaw tolerance per capture
+                           (per-tick windows, uniform jitter radius, both around a window-centered
+                           anchor with the F/dF reconstruction constraints filtered out of the
+                           oracle) plus input-edge tick-shift windows (per key-change event, how many
+                           ticks earlier/later it can happen and still land), then scores every metric
+                           in metriclab/Metrics and prints per-d-level medians + Spearman vs d;
+                           PKC_METRIC=1 to run; report at core/build/hpk-metric/report.txt, raw data
+                           at measurements.csv, yaw-windows.csv and input-shift-windows.csv for
+                           offline metric tuning; captures with recording problems (result
+                           success=false, missing result.yaws, enabled constraints outside the solve
+                           segment) are listed as SKIPPED without failing the run
+  HpkPair45Screen.java     paired 45-variant generation over captures/hpk_human/: per capture, strips
+                           the F/dF reconstruction pins, switches inputs to Force 45, cold-solves the
+                           variant with the live engine, measures it with MeasurementEngine and prints
+                           human-vs-45 combinedV3 pairs; PKC_PAIR45=1 to run; report at
+                           core/build/hpk-metric/pairs45-report.txt, data at pairs45.csv, solved
+                           variant saves at pairs45/<name>.json (the simplify loop's starting points);
+                           45-unsolvable jumps are reported, not failures
+  HpkSimplifyScreen.java   greedy strat simplification over captures/hpk_human/ (issue #237 pipeline
+                           stages 2-3): starts from the pairs45 variant (regenerates it if absent,
+                           falls back to the human save where 45 is unsolvable), applies operators
+                           (keepify, jump-hold conversion, edge recentering into measured shift
+                           windows, WASD tap deletion, dF=0 no-turn chains), accepts a step only if
+                           the candidate stays feasible (yaw replay against the full constraint set,
+                           or a cold FAST re-solve for constraint-adding operators) AND combinedV3
+                           drops; key-editing operators require KEEP inputs (never Force-45), SPRINT
+                           keys are untouchable, jump-hold needs >= 10-tick fire spacing (jumpTicks
+                           cooldown), keepify rewrites the debug movement samples from the rows
+                           (stateful sprint derive) instead of stripping them; candidates are
+                           measured under the baseline capture name so jitter seeds match; final
+                           strat must cold re-solve; benchmarked against the human variant's
+                           combinedV3; final saves are self-contained handover artifacts (solved
+                           yaws baked into yaw-locked rows after the cold verify, Force-45 ticks
+                           realized into W/A/SPRINT keys with S/SNEAK cleared) so a loaded save
+                           runs its solved line in the real sim; the in-game SimVerifyBatch gate
+                           (Forge 1.8.9, key V, PKC_SIMVERIFY dir) is the final word per artifact
+                           (2026-07-28 review verdict); PKC_SIMPLIFY=1 to
+                           run, PKC_SIMPLIFY_ONLY=<substr> and PKC_SIMPLIFY_D=<levels> filter;
+                           outputs simplify-report.txt, simplify.csv, simplified saves under
+                           simplified/<name>.json
+  metriclab/               measurement vs scoring split for the jump difficulty metric (issue #237):
+                           MeasurementEngine (perturb-and-resim tolerance measurement, expensive,
+                           trusted; shift probes mutate a JSON-round-trip copy of the rows and
+                           rebuild the spec through the stock buildSpec path; SPRINT timing is
+                           probed via the recorded sprint flag chronology, never by key mutation,
+                           with engagement gated on grounded ticks; held-JUMP extensions onto
+                           grounded ticks respect the 10-tick jumpTicks cooldown; each shift side
+                           carries a free flag: never-failed = unconstrained, and a pure release's
+                           full tap-deletion failure is the press's constraint, not the release's),
+                           ScoringMetric + Metrics (cheap formulas over JumpMeasurements, tweak
+                           freely; combinedV3 zeroes the demand of any edge with a free side),
+                           HpkHumanSet (loads captures/hpk_human with optional <name>.meta.json
+                           sidecars: subTier, jumpClass, rung, notes), Variant45 (strip pins +
+                           Force 45 + attach a fresh solve result), HeadlessSolve (cold engine
+                           drive) and SimplifyLoop (the greedy operator loop) for the 45-pair and
+                           simplification work, MeasurementInvariantsTest (always-on:
+                           baseline replays feasible, zero-shift probe feasible, yaw windows within
+                           [0,180], shift windows within [0,5], shift edge counts match the
+                           input-edge counts, jitter bounded by the narrowest one-tick window,
+                           measurement deterministic incl. free flags, j001's sprint release reads
+                           free on both sides, j012's delayed sprint start reads (0,0) frame-exact)
   harness/                 shared plumbing; no test lives here
 resources/
   problems/<check>/        one folder per check; holds captures or .expect.json sidecars
   captures/                the shared capture library (one copy of each saved jump)
+  captures/hpk_human/      the difficulty-metric calibration set: d<level>/ folders of solved strat
+                           captures (KEEP inputs, recorded human strat + solver yaws); d-level is
+                           read from the folder name
 ```
 
 ## The checks (folder = check)

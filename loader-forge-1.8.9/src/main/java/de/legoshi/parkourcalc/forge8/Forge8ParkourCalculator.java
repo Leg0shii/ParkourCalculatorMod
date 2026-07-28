@@ -70,6 +70,7 @@ public class Forge8ParkourCalculator {
     private KeyBinding solveKeyBinding;
     private KeyBinding solverStartTickKeyBinding;
     private KeyBinding solverEndTickKeyBinding;
+    private KeyBinding simVerifyKeyBinding;
     private KeyBinding captureMomentumBlockKeyBinding;
     private KeyBinding captureCollisionBlockKeyBinding;
     private KeyBinding captureLandBlockKeyBinding;
@@ -120,6 +121,8 @@ public class Forge8ParkourCalculator {
         ClientRegistry.registerKeyBinding(solverStartTickKeyBinding);
         solverEndTickKeyBinding = new KeyBinding("key.parkourcalculator.set_solver_end", Keyboard.KEY_O, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(solverEndTickKeyBinding);
+        simVerifyKeyBinding = new KeyBinding("key.parkourcalculator.run_sim_verify", Keyboard.KEY_J, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(simVerifyKeyBinding);
         if (blockCaptureEnabled) {
             captureMomentumBlockKeyBinding = new KeyBinding("key.parkourcalculator.capture_momentum_block", Keyboard.KEY_M, "key.categories.parkourcalculator");
             ClientRegistry.registerKeyBinding(captureMomentumBlockKeyBinding);
@@ -133,7 +136,7 @@ public class Forge8ParkourCalculator {
 
         MinecraftForge.EVENT_BUS.register(this);
         LOG.info("ParkourCalculator init complete. G toggle, L deselect, P playback, B landing constraints, X remove constraints,"
-                + " H surface state, V solve, I/O solver start/goal tick."
+                + " H surface state, V solve, I/O solver start/goal tick, J sim-verify batch."
                 + (blockCaptureEnabled ? " Block capture ON: M/N/K capture momentum/collision/land block, Delete clear blocks." : ""));
     }
 
@@ -268,6 +271,10 @@ public class Forge8ParkourCalculator {
         while (solverEndTickKeyBinding.isPressed()) {
             solverEndPressed = true;
         }
+        boolean simVerifyPressed = false;
+        while (simVerifyKeyBinding.isPressed()) {
+            simVerifyPressed = true;
+        }
         boolean captureMomentum = false;
         boolean captureCollision = false;
         boolean captureLand = false;
@@ -316,6 +323,9 @@ public class Forge8ParkourCalculator {
             if (solverEndPressed) {
                 application.setSolverLandingTickFromSelection();
             }
+            if (simVerifyPressed) {
+                runSimVerify(mc);
+            }
             if (captureMomentum) {
                 application.captureAngleSolverBlock(BlockSelection.Kind.MOMENTUM);
             }
@@ -331,6 +341,18 @@ public class Forge8ParkourCalculator {
         }
         if (application.isReady()) {
             imguiHost.renderFrame(mc.displayWidth, mc.displayHeight);
+        }
+    }
+
+    private void runSimVerify(Minecraft mc) {
+        String env = System.getenv("PKC_SIMVERIFY");
+        Path dir = env != null && !env.isEmpty() ? new File(env).toPath() : saveDir.resolve("simverify");
+        LOG.info("Sim-verify batch over " + dir);
+        String summary = application.runSimVerifyBatch(dir);
+        LOG.info(summary);
+        if (mc.thePlayer != null) {
+            mc.thePlayer.addChatMessage(new net.minecraft.util.ChatComponentText(
+                    summary + " (report: " + dir.resolve("simverify-report.txt") + ")"));
         }
     }
 
