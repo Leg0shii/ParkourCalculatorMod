@@ -243,8 +243,8 @@ public final class LongRunSolver {
     public static JumpSpec suffixSpec(JumpSpec full, int from, Vec3dCore pos, Vec3dCore vel, float yaw) {
         JumpPhysicsInputs sc = full.asScenario();
         JumpPhysicsInputs win = sliceScenario(sc, from, sc.numTicks, pos, vel, yaw);
-        win.incomingSprint = sc.sprintAt(from - 1);
-        win.incomingAmp = sc.speedAmplifierAt(from - 1);
+        win.incomingSprint = from == 0 ? sc.incomingSprint : sc.sprintAt(from - 1);
+        win.incomingAmp = from == 0 ? sc.incomingAmp : sc.speedAmplifierAt(from - 1);
         List<JumpConstraint> cons = sliceConstraints(full, from, sc.numTicks);
         Objective obj = new Objective(full.objective.axis, full.objective.sense, full.objective.tick - from);
         return new JumpSpec(win, cons, obj);

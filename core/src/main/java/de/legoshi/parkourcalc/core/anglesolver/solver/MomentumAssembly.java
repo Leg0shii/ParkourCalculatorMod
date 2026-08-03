@@ -422,8 +422,8 @@ public final class MomentumAssembly {
         p.initialVelocity = vel;
         p.startYaw = yaw;
         p.strafeSign = sc.strafeSign;
-        p.incomingSprint = sc.sprintAt(a - 1);
-        p.incomingAmp = sc.speedAmplifierAt(a - 1);
+        p.incomingSprint = a == 0 ? sc.incomingSprint : sc.sprintAt(a - 1);
+        p.incomingAmp = a == 0 ? sc.incomingAmp : sc.speedAmplifierAt(a - 1);
         p.jumpPerTick = sliceBool(sc.jumpPerTick, a, len);
         p.strafePerTick = sliceBool(sc.strafePerTick, a, len);
         p.yawLockedPerTick = sliceBool(sc.yawLockedPerTick, a, len);
