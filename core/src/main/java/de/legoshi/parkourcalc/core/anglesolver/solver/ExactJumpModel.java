@@ -25,6 +25,8 @@ public final class ExactJumpModel implements ForwardModel {
     private static final double LADDER_XZ_CAP = (double) 0.15F;
     private static final double FLUID_JUMP_BOOST = (double) 0.04F;
     private static final double WATER_DRAG = (double) 0.8F;
+    private static final double WATER_SPRINT_DRAG = (double) 0.9F;
+    private static final double MODERN_FLUID_GRAVITY = Constants.GRAVITY / 16.0;
     private static final double WEB_Y_SCALE = (double) 0.05F;
 
     private static final float SQUARE_DIAG_INPUT = squareDiagInput();
@@ -148,12 +150,18 @@ public final class ExactJumpModel implements ForwardModel {
             double slipOv = scenario.slipAt(t);
             boolean contact = !Double.isNaN(slipOv);
             SurfaceKind kind = scenario.surfaceAt(t);
-            boolean fluid = kind == SurfaceKind.WATER || kind == SurfaceKind.LAVA;
+            boolean water = kind == SurfaceKind.WATER || kind == SurfaceKind.WATER_SHALLOW;
+            boolean shallowFluid = kind == SurfaceKind.WATER_SHALLOW || kind == SurfaceKind.LAVA_SHALLOW;
+            boolean fluid = water || kind == SurfaceKind.LAVA || kind == SurfaceKind.LAVA_SHALLOW;
             float slipF = contact ? (float) slipOv : Constants.SLIP_F;
-            boolean isJumpTick = !fluid && scenario.jumpAt(t) && contact;
+            boolean fluidGroundJump = modern && shallowFluid && scenario.jumpAt(t);
+            boolean isJumpTick = fluidGroundJump || (!fluid && scenario.jumpAt(t) && contact);
             boolean sprint = scenario.sprintAt(t);
             boolean factorSprint = scenario.factorSprintAt(t);
-            if (fluid && scenario.jumpAt(t)) {
+            if (modern && water && scenario.sneakAt(t)) {
+                vy -= FLUID_JUMP_BOOST;
+            }
+            if (fluid && scenario.jumpAt(t) && !fluidGroundJump) {
                 vy += FLUID_JUMP_BOOST;
             }
             if (isJumpTick) {
@@ -267,6 +275,10 @@ public final class ExactJumpModel implements ForwardModel {
                 posZ[t + 1] = posZ[t] + vz;
             }
 
+            if (modern && kind == SurfaceKind.LADDER && scenario.jumpAt(t)) {
+                vy = 0.2;
+            }
+
             if (kind == SurfaceKind.SOULSAND) {
                 double soulFactor = modern ? (double) 0.4F : 0.4;
                 vx *= soulFactor;
@@ -275,10 +287,33 @@ public final class ExactJumpModel implements ForwardModel {
 
             // (6) gravity then friction multiply, carried into next tick.
             if (fluid) {
-                double fluidDrag = kind == SurfaceKind.WATER ? WATER_DRAG : 0.5;
-                velX[t + 1] = vx * fluidDrag;
-                velZ[t + 1] = vz * fluidDrag;
-                velY[t + 1] = vy * fluidDrag - 0.02;
+                if (!modern) {
+                    double fluidDrag = water ? WATER_DRAG : 0.5;
+                    velX[t + 1] = vx * fluidDrag;
+                    velZ[t + 1] = vz * fluidDrag;
+                    velY[t + 1] = vy * fluidDrag - 0.02;
+                } else if (water) {
+                    double hDrag = sprint ? WATER_SPRINT_DRAG : WATER_DRAG;
+                    double yd = vy * WATER_DRAG;
+                    if (!sprint) {
+                        yd -= MODERN_FLUID_GRAVITY;
+                    }
+                    velX[t + 1] = vx * hDrag;
+                    velZ[t + 1] = vz * hDrag;
+                    velY[t + 1] = yd;
+                } else if (kind == SurfaceKind.LAVA_SHALLOW) {
+                    double yd = vy * WATER_DRAG;
+                    if (!sprint) {
+                        yd -= MODERN_FLUID_GRAVITY;
+                    }
+                    velX[t + 1] = vx * 0.5;
+                    velZ[t + 1] = vz * 0.5;
+                    velY[t + 1] = yd - 0.02;
+                } else {
+                    velX[t + 1] = vx * 0.5;
+                    velZ[t + 1] = vz * 0.5;
+                    velY[t + 1] = vy * 0.5 - 0.02;
+                }
             } else {
                 velX[t + 1] = vx * (double) f4;
                 velZ[t + 1] = vz * (double) f4;

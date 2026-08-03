@@ -14,7 +14,9 @@ public enum Slipperiness {
     SOULSAND("Soulsand", "0.60 x0.4", 0.6, SurfaceKind.SOULSAND),
     SOULSAND_ICE("Soulsand on ice", "0.98 x0.4", 0.98, SurfaceKind.SOULSAND),
     WATER("Water", "drag 0.80", 1.0, SurfaceKind.WATER),
+    WATER_SHALLOW("Water (shallow)", "drag 0.80", 1.0, SurfaceKind.WATER_SHALLOW),
     LAVA("Lava", "drag 0.50", 1.0, SurfaceKind.LAVA),
+    LAVA_SHALLOW("Lava (shallow)", "drag 0.50", 1.0, SurfaceKind.LAVA_SHALLOW),
     COBWEB("Cobweb", "0.60 x0.25", 0.6, SurfaceKind.COBWEB),
     COBWEB_AIR("Cobweb (air)", "1.00 x0.25", 1.0, SurfaceKind.COBWEB);
 
