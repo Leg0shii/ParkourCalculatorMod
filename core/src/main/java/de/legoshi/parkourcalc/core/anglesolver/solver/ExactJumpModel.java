@@ -22,6 +22,11 @@ public final class ExactJumpModel implements ForwardModel {
     /** MC's player combined-XZ momentum gate literal (LivingEntity.tickMovement), not 0.003*0.003. */
     private static final double COMBINED_INERTIA_SQ = 9.0E-6;
 
+    private static final double LADDER_XZ_CAP = (double) 0.15F;
+    private static final double FLUID_JUMP_BOOST = (double) 0.04F;
+    private static final double WATER_DRAG = (double) 0.8F;
+    private static final double WEB_Y_SCALE = (double) 0.05F;
+
     private static final float SQUARE_DIAG_INPUT = squareDiagInput();
 
     private static float squareDiagInput() {
@@ -142,10 +147,15 @@ public final class ExactJumpModel implements ForwardModel {
             int amp = scenario.factorAmpAt(t);
             double slipOv = scenario.slipAt(t);
             boolean contact = !Double.isNaN(slipOv);
+            SurfaceKind kind = scenario.surfaceAt(t);
+            boolean fluid = kind == SurfaceKind.WATER || kind == SurfaceKind.LAVA;
             float slipF = contact ? (float) slipOv : Constants.SLIP_F;
-            boolean isJumpTick = scenario.jumpAt(t) && contact;
+            boolean isJumpTick = !fluid && scenario.jumpAt(t) && contact;
             boolean sprint = scenario.sprintAt(t);
             boolean factorSprint = scenario.factorSprintAt(t);
+            if (fluid && scenario.jumpAt(t)) {
+                vy += FLUID_JUMP_BOOST;
+            }
             if (isJumpTick) {
                 if (modern) {
                     // jump(): Math.max'd impulse; the sprint boost stays double (float sin widened, * 0.2).
@@ -169,7 +179,10 @@ public final class ExactJumpModel implements ForwardModel {
             // raw slipperiness cube (getMovementSpeed(slipperiness)); legacy by the friction (slip*0.91) cube.
             float f4;
             float accelSpeed;
-            if (contact) {
+            if (fluid) {
+                f4 = 0.91F;
+                accelSpeed = 0.02F;
+            } else if (contact) {
                 f4 = slipF * 0.91F;
                 float ground = modern ? 0.21600002F / (slipF * slipF * slipF) : 0.16277136F / (f4 * f4 * f4);
                 accelSpeed = Constants.attrValueF(amp, sprint) * ground;
@@ -230,15 +243,47 @@ public final class ExactJumpModel implements ForwardModel {
                 }
             }
 
+            if (kind == SurfaceKind.LADDER) {
+                if (vx < -LADDER_XZ_CAP) vx = -LADDER_XZ_CAP;
+                else if (vx > LADDER_XZ_CAP) vx = LADDER_XZ_CAP;
+                if (vz < -LADDER_XZ_CAP) vz = -LADDER_XZ_CAP;
+                else if (vz > LADDER_XZ_CAP) vz = LADDER_XZ_CAP;
+                double ladderFloor = modern ? (double) -0.15F : -0.15;
+                if (vy < ladderFloor) vy = ladderFloor;
+                if (scenario.sneakAt(t) && vy < 0.0) vy = 0.0;
+            }
+
             // (5) move (collision-free): position uses pre-gravity velocity.
-            posX[t + 1] = posX[t] + vx;
-            posY[t + 1] = posY[t] + vy;
-            posZ[t + 1] = posZ[t] + vz;
+            if (kind == SurfaceKind.COBWEB) {
+                posX[t + 1] = posX[t] + vx * 0.25;
+                posY[t + 1] = posY[t] + vy * WEB_Y_SCALE;
+                posZ[t + 1] = posZ[t] + vz * 0.25;
+                vx = 0.0;
+                vy = 0.0;
+                vz = 0.0;
+            } else {
+                posX[t + 1] = posX[t] + vx;
+                posY[t + 1] = posY[t] + vy;
+                posZ[t + 1] = posZ[t] + vz;
+            }
+
+            if (kind == SurfaceKind.SOULSAND) {
+                double soulFactor = modern ? (double) 0.4F : 0.4;
+                vx *= soulFactor;
+                vz *= soulFactor;
+            }
 
             // (6) gravity then friction multiply, carried into next tick.
-            velX[t + 1] = vx * (double) f4;
-            velZ[t + 1] = vz * (double) f4;
-            velY[t + 1] = (vy - Constants.GRAVITY) * (double) Constants.Y_DRAG_F;
+            if (fluid) {
+                double fluidDrag = kind == SurfaceKind.WATER ? WATER_DRAG : 0.5;
+                velX[t + 1] = vx * fluidDrag;
+                velZ[t + 1] = vz * fluidDrag;
+                velY[t + 1] = vy * fluidDrag - 0.02;
+            } else {
+                velX[t + 1] = vx * (double) f4;
+                velZ[t + 1] = vz * (double) f4;
+                velY[t + 1] = (vy - Constants.GRAVITY) * (double) Constants.Y_DRAG_F;
+            }
         }
     }
 }

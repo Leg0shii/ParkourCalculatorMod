@@ -264,6 +264,8 @@ public final class LongRunSolver {
         p.yawLockedPerTick = sliceBool(sc.yawLockedPerTick, a, len);
         p.speedAmplifier = sliceInt(sc.speedAmplifier, a, len);
         p.slipPerTick = sliceDouble(sc.slipPerTick, a, len);
+        p.surfacePerTick = sliceKind(sc.surfacePerTick, a, len);
+        p.sneakPerTick = sliceBool(sc.sneakPerTick, a, len);
         // null arrays stay null so the slice keeps the source's legacy fallbacks (always-sprint, W held).
         p.sprintPerTick = sliceBool(sc.sprintPerTick, a, len);
         p.forwardInputPerTick = sliceFloat(sc.forwardInputPerTick, a, len, 1.0F * 0.98F);
@@ -303,6 +305,13 @@ public final class LongRunSolver {
         if (x == null) return null;
         double[] o = new double[len];
         for (int i = 0; i < len; i++) o[i] = from + i < x.length ? x[from + i] : Double.NaN;
+        return o;
+    }
+
+    private static SurfaceKind[] sliceKind(SurfaceKind[] x, int from, int len) {
+        if (x == null) return null;
+        SurfaceKind[] o = new SurfaceKind[len];
+        for (int i = 0; i < len; i++) o[i] = from + i < x.length ? x[from + i] : SurfaceKind.NORMAL;
         return o;
     }
 
