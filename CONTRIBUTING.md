@@ -4,12 +4,22 @@ The mod uses [Conventional Commits](https://www.conventionalcommits.org/) and [r
 
 ## Workflow
 
-1. Branch from `main` (`feature/<slug>` or `fix/<slug>`).
-2. Commit freely. Branch commits are discarded on squash, so `wip` messages are fine.
-3. Open a PR with a **Conventional Commit title** (e.g. `feat: add 1.20.4 loader`). The squash commit takes the PR title as its subject, so the prefix is what drives the version bump. For a breaking change, add `BREAKING CHANGE: <migration note>` to the PR description.
-4. Squash-merge. Repo settings enforce this and the branch auto-deletes.
+Two standing branches: `main` holds released code only, `dev` is the integration branch.
 
-Shipping is automated: every `feat:` / `fix:` / `feat!:` merge updates a rolling `chore(main): release X.Y.Z` PR. Merge that PR when you want to release; release-please tags `vX.Y.Z`, cuts the GitHub Release, and `release.yml` attaches the three loader jars.
+Features:
+1. Branch from `dev` (`feature/<slug>`).
+2. Commit freely. Branch commits are discarded on squash, so `wip` messages are fine.
+3. Open a PR against `dev` with a **Conventional Commit title** (e.g. `feat: add 1.20.4 loader`). The squash commit takes the PR title as its subject, so the prefix is what drives the version bump. For a breaking change, add `BREAKING CHANGE: <migration note>` to the PR description.
+4. QA before merging: a quick in-game pass on each loader whose code changed (core-only change: one loader is enough). A feature that fails QA does not merge; everything on `dev` is always releasable.
+5. Squash-merge; the branch auto-deletes.
+
+Fixes:
+- Bug exists in the released version: branch from `main` (`fix/<slug>`), PR against `main`, squash-merge, release immediately. Then merge `main` back into `dev` right away so the fix rides along and the next train merge stays clean.
+- Bug only exists on `dev`: branch from `dev` and fix it there.
+
+The weekly train: `weekly-train.yml` opens a `dev` to `main` PR on Sundays when `dev` is ahead. Merge it with a **merge commit, never squash**; the changelog is built from the individual commits it carries. A `dev` ruleset blocks the auto-delete-on-merge from removing the branch.
+
+Shipping is automated: every `feat:` / `fix:` / `feat!:` commit reaching `main` updates a rolling `chore(main): release X.Y.Z` PR. Merge that PR to release; release-please tags `vX.Y.Z` and cuts the GitHub Release as a draft. Publishing the draft (after a changelog glance) triggers `release.yml`, which builds and attaches the three loader jars and publishes the three Modrinth versions.
 
 ## Commit types
 

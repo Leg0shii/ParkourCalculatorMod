@@ -114,6 +114,11 @@ Unzip the relevant `-sources.jar` and grep for a single file (e.g. `EntityPlayer
 - **imgui-java is pinned to 1.86.12** everywhere (`core/` compileOnly; loaders `include`/`shade`). The LWJGL2 ImGui shim was built against 1.86.11, whose native method surface is a strict subset of 1.86.12 (the only addition is the unused `ImGuiKnobs` extension), so the shim stays satisfied. 1.86.12 is the floor: it is the first release whose macOS native is a universal binary (x86_64 + arm64); 1.86.11 was x86_64-only and crashed Apple Silicon with an `UnsatisfiedLinkError`. Do not bump higher (e.g. 1.90.0 throws `NoSuchMethodError` against the shim).
 
 
+## Branches & releases
+
+`main` = released code only; `dev` = integration branch. Features branch off `dev` and require a quick in-game QA pass on the touched loaders before merging (core-only change: one loader suffices), so `dev` is always releasable. Fixes for released bugs branch off `main` and release immediately; merge `main` back into `dev` right after. A weekly cron opens the `dev` to `main` train PR; it must merge as a true merge commit, never squash. Full flow: `CONTRIBUTING.md`.
+
+
 ## Don't
 
 - Add server-side code (client-only mod).

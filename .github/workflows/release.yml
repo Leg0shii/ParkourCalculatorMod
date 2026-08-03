@@ -46,3 +46,47 @@ jobs:
             loader-forge-1.8.9/build/libs/pkc-forge-1.8.9-${{ steps.version.outputs.version }}.jar
             loader-forge-1.12.2/build/libs/pkc-forge-1.12.2-${{ steps.version.outputs.version }}.jar
           prerelease: ${{ contains(github.ref_name, '-') }}
+
+      - name: fetch release changelog
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release view "$GITHUB_REF_NAME" --json body --jq .body > changelog.md
+
+      - name: publish fabric to modrinth
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: Lxy4H4lS
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          files: loader-fabric/build/libs/pkc-fabric-${{ steps.version.outputs.version }}.jar
+          name: ${{ steps.version.outputs.version }} (Fabric)
+          version: ${{ steps.version.outputs.version }}+fabric
+          version-type: ${{ contains(github.ref_name, '-') && 'beta' || 'release' }}
+          loaders: fabric
+          game-versions: '26.2'
+          changelog-file: changelog.md
+
+      - name: publish forge 1.8.9 to modrinth
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: Lxy4H4lS
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          files: loader-forge-1.8.9/build/libs/pkc-forge-1.8.9-${{ steps.version.outputs.version }}.jar
+          name: ${{ steps.version.outputs.version }} (Forge 1.8.9)
+          version: ${{ steps.version.outputs.version }}+forge-1.8.9
+          version-type: ${{ contains(github.ref_name, '-') && 'beta' || 'release' }}
+          loaders: forge
+          game-versions: '1.8.9'
+          changelog-file: changelog.md
+
+      - name: publish forge 1.12.2 to modrinth
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: Lxy4H4lS
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          files: loader-forge-1.12.2/build/libs/pkc-forge-1.12.2-${{ steps.version.outputs.version }}.jar
+          name: ${{ steps.version.outputs.version }} (Forge 1.12.2)
+          version: ${{ steps.version.outputs.version }}+forge-1.12.2
+          version-type: ${{ contains(github.ref_name, '-') && 'beta' || 'release' }}
+          loaders: forge
+          game-versions: '1.12.2'
+          changelog-file: changelog.md
