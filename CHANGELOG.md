@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.7.1](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.7.0...v1.7.1) (2026-08-03)
+
+
+### Bug Fixes
+
+* derive support footprint edges through the game's collision predicate ([538d554](https://github.com/Leg0shii/ParkourCalculatorMod/commit/538d5543cef853f4b4084a9d7018946adc65ff0d))
+* **solver:** keep the scenario seed on a window anchored at tick 0 ([#242](https://github.com/Leg0shii/ParkourCalculatorMod/issues/242)) ([646918e](https://github.com/Leg0shii/ParkourCalculatorMod/commit/646918eb3c2fdf8f9bfb8b5de5e7967d7d146592))
+
+
+### Continuous Integration
+
+* add dev release train and automated Modrinth publishing ([749430e](https://github.com/Leg0shii/ParkourCalculatorMod/commit/749430ed9c1af6ac7d4efc11654525cc256b0258))
+* include refactor, docs, ci and chore commits in the release changelog ([a615685](https://github.com/Leg0shii/ParkourCalculatorMod/commit/a61568597b8dfded85e2fedb68b56c35c09f3e55))
+
+
+### Miscellaneous Chores
+
+* cleanup ([8299988](https://github.com/Leg0shii/ParkourCalculatorMod/commit/829998852891ca8a6520a8188c2d6ad9bb722a35))
+* update README.md ([c32b8e3](https://github.com/Leg0shii/ParkourCalculatorMod/commit/c32b8e3946ec3b0693955a798a6fecf949e8c791))
+
 ## [1.7.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.6.1...v1.7.0) (2026-07-26)
 
 
