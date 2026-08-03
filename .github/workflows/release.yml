@@ -59,7 +59,7 @@ jobs:
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
           files: loader-fabric/build/libs/pkc-fabric-${{ steps.version.outputs.version }}.jar
           name: ${{ steps.version.outputs.version }} (Fabric)
-          version: ${{ steps.version.outputs.version }}+fabric
+          version: ${{ steps.version.outputs.version }}
           version-type: ${{ contains(github.ref_name, '-') && 'beta' || 'release' }}
           loaders: fabric
           game-versions: '26.2'
@@ -72,7 +72,7 @@ jobs:
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
           files: loader-forge-1.8.9/build/libs/pkc-forge-1.8.9-${{ steps.version.outputs.version }}.jar
           name: ${{ steps.version.outputs.version }} (Forge 1.8.9)
-          version: ${{ steps.version.outputs.version }}+forge-1.8.9
+          version: ${{ steps.version.outputs.version }}
           version-type: ${{ contains(github.ref_name, '-') && 'beta' || 'release' }}
           loaders: forge
           game-versions: '1.8.9'
@@ -85,7 +85,7 @@ jobs:
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
           files: loader-forge-1.12.2/build/libs/pkc-forge-1.12.2-${{ steps.version.outputs.version }}.jar
           name: ${{ steps.version.outputs.version }} (Forge 1.12.2)
-          version: ${{ steps.version.outputs.version }}+forge-1.12.2
+          version: ${{ steps.version.outputs.version }}
           version-type: ${{ contains(github.ref_name, '-') && 'beta' || 'release' }}
           loaders: forge
           game-versions: '1.12.2'
