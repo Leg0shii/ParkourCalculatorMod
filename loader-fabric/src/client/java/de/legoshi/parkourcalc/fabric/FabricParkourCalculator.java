@@ -189,6 +189,9 @@ public class FabricParkourCalculator implements ClientModInitializer {
         // Restore visual yaw after MC physics so render frames don't briefly show
         // the snap value the physics tick used.
         application.postTickPlayback();
+    }
+
+    public static void syncFrozenPlayerToServer() {
         playbackBridge.syncFrozenPlayerToServer();
     }
 
