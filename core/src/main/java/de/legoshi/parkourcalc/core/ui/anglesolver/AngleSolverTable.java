@@ -3,6 +3,7 @@ package de.legoshi.parkourcalc.core.ui.anglesolver;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.Constraint;
 import de.legoshi.parkourcalc.core.anglesolver.ConstraintText;
+import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.anglesolver.Potion;
 import de.legoshi.parkourcalc.core.anglesolver.PotionDose;
 import de.legoshi.parkourcalc.core.anglesolver.Slipperiness;
@@ -68,7 +69,7 @@ public final class AngleSolverTable {
 
     // Chip drag (manual): tracked across frames while a chip is held. A dragged chip is either a
     // constraint (dragIndex into the tick's list) or one facet of the tick's state override.
-    private enum DragKind { CONSTRAINT, STATE_INPUTS, STATE_SPRINT, STATE_SLIP, STATE_ADD, STATE_REMOVE }
+    private enum DragKind { CONSTRAINT, STATE_INPUTS, STATE_SPRINT, STATE_SLIP, STATE_MEDIUM, STATE_ADD, STATE_REMOVE }
 
     private boolean dragging;
     private DragKind dragKind = DragKind.CONSTRAINT;
@@ -90,12 +91,14 @@ public final class AngleSolverTable {
 
     private final ImString numBuf = new ImString(32);
     private final ImInt slipBuf = new ImInt();
+    private final ImInt mediumBuf = new ImInt();
     private final ImInt doseCombo = new ImInt();
     private final ImInt levelBuf = new ImInt();
     private final ImInt fieldCombo = new ImInt();
     private final ImInt opCombo = new ImInt();
     private final ImInt refBuf = new ImInt();
     private final String[] slipItems = Slipperiness.comboItems();
+    private final String[] mediumItems = Medium.comboItems();
     private static final String[] FIELD_ITEMS = buildFieldItems();
     private static final Constraint.Op[] SCALAR_OPS =
             {Constraint.Op.GT, Constraint.Op.LT, Constraint.Op.GE, Constraint.Op.LE, Constraint.Op.EQ};
@@ -249,6 +252,10 @@ public final class AngleSolverTable {
             case STATE_SLIP:
                 dst.setSlipperiness(src.getSlipperiness());
                 if (!dragAlt) src.clearSlipperiness();
+                break;
+            case STATE_MEDIUM:
+                dst.setMedium(src.getMedium());
+                if (!dragAlt) src.clearMedium();
                 break;
             case STATE_ADD: {
                 PotionDose srcDose = src.findAdded(dragPotion);
@@ -708,6 +715,9 @@ public final class AngleSolverTable {
         if (ov.overridesSlipperiness()) {
             specs.add(new StateChipSpec(DragKind.STATE_SLIP, null, "Slip", ov.getSlipperiness().label, false));
         }
+        if (ov.overridesMedium()) {
+            specs.add(new StateChipSpec(DragKind.STATE_MEDIUM, null, "Medium", ov.getMedium().label, false));
+        }
         for (PotionDose d : ov.getAdded()) {
             specs.add(new StateChipSpec(DragKind.STATE_ADD, d.potion, "Potion", "+" + d.potion.label + amp(d.level), false));
         }
@@ -814,7 +824,7 @@ public final class AngleSolverTable {
         int cn = tc == null ? 0 : tc.getConstraints().size();
         int potions = tc == null ? 0 : tc.getOverride().getAdded().size();
         float pad = 2f * ThemeManager.LG * s; // child top + bottom window padding
-        float stateRows = (3f + potions + 1f) * inputRow;  // Inputs, Sprint, Slipperiness, doses, + add
+        float stateRows = (4f + potions + 1f) * inputRow;  // Inputs, Sprint, Slipperiness, Medium, doses, + add
         float constraintRows = (cn + 1f) * inputRow;        // constraint rows + add button
         return pad
                 + sectionHead + stateRows
@@ -1038,7 +1048,7 @@ public final class AngleSolverTable {
 
     private float overrideLabelWidth() {
         float max = 0f;
-        for (String l : new String[]{"Inputs", "Sprint", "Slipperiness", "Potion"}) max = Math.max(max, ImGui.calcTextSize(l).x);
+        for (String l : new String[]{"Inputs", "Sprint", "Slipperiness", "Medium", "Potion"}) max = Math.max(max, ImGui.calcTextSize(l).x);
         return max + ThemeManager.SM * ThemeManager.uiScale();
     }
 
@@ -1082,6 +1092,16 @@ public final class AngleSolverTable {
         }
         ImGui.tableNextColumn();
         overrideTrailing(ov.overridesSlipperiness(), "inherits default (" + state.getDefaultSlipperiness().label + ")", "ovslr", ov::clearSlipperiness);
+
+        ovRowStart("Medium", isStateSelected(tick, DragKind.STATE_MEDIUM, null));
+        mediumBuf.set((ov.overridesMedium() ? ov.getMedium() : Medium.NONE).ordinal());
+        if (Controls.combo("##ovmedium", mediumBuf, mediumItems, ImGui.getContentRegionAvail().x)) {
+            Medium chosen = Medium.values()[mediumBuf.get()];
+            if (chosen == Medium.NONE) ov.clearMedium();
+            else ov.setMedium(chosen);
+        }
+        ImGui.tableNextColumn();
+        overrideTrailing(ov.overridesMedium(), "inherits default (" + Medium.NONE.label + ")", "ovmdr", ov::clearMedium);
 
         renderPotionRows(tick, ov);
 

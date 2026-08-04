@@ -40,6 +40,10 @@ public final class JumpPhysicsInputs {
      *  default ground/air split. null = all default. */
     public double[] slipPerTick = null;
 
+    public SurfaceKind[] surfacePerTick = null;
+
+    public boolean[] sneakPerTick = null;
+
     /** Per-tick yaw lock state (unlocked = float delta the game accumulates; locked = absolute facing). */
     public boolean[] yawLockedPerTick = null;
 
@@ -87,6 +91,8 @@ public final class JumpPhysicsInputs {
         c.strafePerTick = strafePerTick;
         c.speedAmplifier = speedAmplifier;
         c.slipPerTick = slipPerTick;
+        c.surfacePerTick = surfacePerTick;
+        c.sneakPerTick = sneakPerTick;
         c.yawLockedPerTick = yawLockedPerTick;
         c.sprintPerTick = sprintPerTick;
         c.incomingSprint = incomingSprint;
@@ -151,6 +157,16 @@ public final class JumpPhysicsInputs {
     public double slipAt(int tick) {
         if (slipPerTick == null || tick < 0 || tick >= slipPerTick.length) return Double.NaN;
         return slipPerTick[tick];
+    }
+
+    public SurfaceKind surfaceAt(int tick) {
+        if (surfacePerTick == null || tick < 0 || tick >= surfacePerTick.length) return SurfaceKind.NORMAL;
+        SurfaceKind kind = surfacePerTick[tick];
+        return kind == null ? SurfaceKind.NORMAL : kind;
+    }
+
+    public boolean sneakAt(int tick) {
+        return sneakPerTick != null && tick >= 0 && tick < sneakPerTick.length && sneakPerTick[tick];
     }
 
     /** Exact float32 facings the game runs: mirrors Apply's float deltas + the sim's float accumulation,

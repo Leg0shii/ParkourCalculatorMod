@@ -36,6 +36,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.SolveProgress;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SupportOverlap;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SurfaceKind;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -564,6 +565,8 @@ public final class AngleSolverEngine {
         boolean[] yawLocked = new boolean[numTicks];
         int[] speedAmp = new int[numTicks];
         double[] slipPerTick = new double[numTicks];
+        SurfaceKind[] surfacePerTick = new SurfaceKind[numTicks];
+        boolean[] sneakPerTick = new boolean[numTicks];
         float[] forwardIn = new float[numTicks];
         float[] strafeIn = new float[numTicks];
         boolean[] sprintArr = new boolean[numTicks];
@@ -576,9 +579,11 @@ public final class AngleSolverEngine {
             boolean jumpRow = row.isKeyActive(InputRow.Key.JUMP);
             // Ground/air is hand-defined per tick via slipperiness: a ground value (< 1.0) is grounded, AIR
             // (the default) is airborne. No dynamic fallback to a recorded trajectory.
-            double slip = slipValue(effSlipperiness(t));
+            double slip = effSlipperiness(t).slip;
             boolean ground = slip < 1.0;
             slipPerTick[k] = ground ? slip : Double.NaN;
+            surfacePerTick[k] = effMedium(t).kind;
+            sneakPerTick[k] = row.isKeyActive(InputRow.Key.SNEAK);
             jumpMask[k] = jumpRow;
             force45Mask[k] = effInputs(t) == AngleSolverState.InputMode.FORCE_45;
             // W-only only on a real (grounded) jump, so the 0.2 sprintjump boost stays aligned with travel.
@@ -618,6 +623,8 @@ public final class AngleSolverEngine {
         phys.strafePerTick = strafeMask;
         phys.speedAmplifier = speedAmp;
         phys.slipPerTick = slipPerTick;
+        phys.surfacePerTick = surfacePerTick;
+        phys.sneakPerTick = sneakPerTick;
         phys.yawLockedPerTick = yawLocked;
         phys.forwardInputPerTick = forwardIn;
         phys.strafeInputPerTick = strafeIn;
@@ -1515,6 +1522,12 @@ public final class AngleSolverEngine {
         return state.getDefaultSlipperiness();
     }
 
+    private Medium effMedium(int tick) {
+        StateOverride ov = overrideAt(tick);
+        if (ov != null && ov.overridesMedium()) return ov.getMedium();
+        return Medium.NONE;
+    }
+
     /** Effective Speed amplifier at a tick: override added/removed over the default potions. */
     private int effSpeedLevel(int tick) {
         StateOverride ov = overrideAt(tick);
@@ -1532,10 +1545,6 @@ public final class AngleSolverEngine {
     private StateOverride overrideAt(int tick) {
         TickConstraints tc = state.tickConstraintsOrNull(tick);
         return tc == null ? null : tc.getOverride();
-    }
-
-    private static double slipValue(Slipperiness s) {
-        return Double.parseDouble(s.valueLabel);
     }
 
     // ---- constraint mapping (UI Constraint -> solver JumpConstraint) -----------

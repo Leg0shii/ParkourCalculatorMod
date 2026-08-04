@@ -163,6 +163,8 @@ public final class MomentumAssembly {
         p.yawLockedPerTick = sc.yawLockedPerTick;
         p.speedAmplifier = sc.speedAmplifier;
         p.slipPerTick = sc.slipPerTick;
+        p.surfacePerTick = sc.surfacePerTick;
+        p.sneakPerTick = sc.sneakPerTick;
         p.sprintPerTick = sc.sprintPerTick;
         p.forwardInputPerTick = sc.forwardInputPerTick;
         p.strafeInputPerTick = sc.strafeInputPerTick;
@@ -388,6 +390,8 @@ public final class MomentumAssembly {
         sc.strafeSign = full.strafeSign;
         sc.jumpPerTick = new boolean[]{full.jumpAt(t)};
         sc.slipPerTick = new double[]{full.slipAt(t)};
+        sc.surfacePerTick = new SurfaceKind[]{full.surfaceAt(t)};
+        sc.sneakPerTick = new boolean[]{full.sneakAt(t)};
         sc.strafePerTick = new boolean[]{full.strafeAt(t)};
         sc.sprintPerTick = new boolean[]{full.sprintAt(t)};
         sc.forwardInputPerTick = new float[]{full.forwardAt(t)};
@@ -429,6 +433,8 @@ public final class MomentumAssembly {
         p.yawLockedPerTick = sliceBool(sc.yawLockedPerTick, a, len);
         p.speedAmplifier = sliceInt(sc.speedAmplifier, a, len);
         p.slipPerTick = sliceDouble(sc.slipPerTick, a, len);
+        p.surfacePerTick = sliceKind(sc.surfacePerTick, a, len);
+        p.sneakPerTick = sliceBool(sc.sneakPerTick, a, len);
         p.sprintPerTick = sliceBool(sc.sprintPerTick, a, len);
         p.forwardInputPerTick = sliceFloat(sc.forwardInputPerTick, a, len, 0.98F);
         p.strafeInputPerTick = sliceFloat(sc.strafeInputPerTick, a, len, 0.0F);
@@ -479,6 +485,13 @@ public final class MomentumAssembly {
         if (x == null) return null;
         double[] o = new double[len];
         for (int i = 0; i < len; i++) o[i] = f + i < x.length ? x[f + i] : Double.NaN;
+        return o;
+    }
+
+    private static SurfaceKind[] sliceKind(SurfaceKind[] x, int f, int len) {
+        if (x == null) return null;
+        SurfaceKind[] o = new SurfaceKind[len];
+        for (int i = 0; i < len; i++) o[i] = f + i < x.length ? x[f + i] : SurfaceKind.NORMAL;
         return o;
     }
 

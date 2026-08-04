@@ -369,6 +369,7 @@ public final class AngleSolverState {
             if (ov.overridesInputs() && ov.getInputs() == defaultInputs) ov.clearInputs();
             if (ov.overridesSprint() && ov.getSprint() == defaultSprint) ov.clearSprint();
             if (ov.overridesSlipperiness() && ov.getSlipperiness() == defaultSlipperiness) ov.clearSlipperiness();
+            if (ov.overridesMedium() && ov.getMedium() == Medium.NONE) ov.clearMedium();
             ov.getAdded().removeIf(this::isDefaultDose);
             ov.getRemoved().removeIf(p -> !hasDefaultPotion(p));
         }
