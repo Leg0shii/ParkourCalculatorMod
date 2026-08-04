@@ -1448,7 +1448,7 @@ public final class AngleSolverEngine {
         return Math.abs(start.x - s0.position.x) > 1.0e-9 || Math.abs(start.z - s0.position.z) > 1.0e-9;
     }
 
-    /** Per-tick displacement tolerance. The 1.21.10 model is bit-exact to the sim (a clean tick differs by
+    /** Per-tick displacement tolerance. The modern model is bit-exact to the sim (a clean tick differs by
      *  exactly 0.0), so this only guards versions without a proven model; per-tick comparison localizes the
      *  offending tick. Tight enough to catch even soft (sprint-keeping) grazes. */
     private static final double APPLY_MATCH_TOL = 1.0e-9;

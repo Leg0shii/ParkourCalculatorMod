@@ -13,11 +13,11 @@ public final class TickState {
     public final List<Vec3dCore> subtickPath;
 
     // velocity is post-tick motionX/Y/Z (after MC's per-axis collision clamp), so on a wall-clamp
-    // tick velocity.x may read 0 while the entity still moved on x. softCollision is the 1.21.10
-    // Entity.collidedSoftly state (grazing wall hit that does not break sprint); always false on
-    // legacy versions that don't model it. collisionAngleDegrees is the angle MC's hasCollidedSoftly
-    // computes between intended motion (forwardSpeed/sidewaysSpeed rotated by yaw) and post-collision
-    // adjusted motion; NaN on legacy loaders and when MC's 1e-5 speed gate skips it.
+    // tick velocity.x may read 0 while the entity still moved on x. softCollision is the 26.2
+    // Entity.minorHorizontalCollision state (grazing wall hit that does not break sprint); always false
+    // on legacy versions that don't model it. collisionAngleDegrees is the angle MC's
+    // isHorizontalCollisionMinor computes between intended motion (forwardSpeed/sidewaysSpeed rotated
+    // by yaw) and post-collision adjusted motion; NaN on legacy loaders and when MC's 1e-5 speed gate skips it.
     public final Vec3dCore velocity;
     public final boolean softCollision;
     public final double collisionAngleDegrees;

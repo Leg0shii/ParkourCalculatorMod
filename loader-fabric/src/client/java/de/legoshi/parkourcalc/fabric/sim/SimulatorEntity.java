@@ -207,9 +207,9 @@ public class SimulatorEntity extends Player {
     }
 
     /**
-     * Mirrors LocalPlayer.aiStep sprint block (mojmaps 1.21.10).
+     * Mirrors LocalPlayer.aiStep sprint block (mojmaps 26.2).
      * Sprint-window length is hard-coded to vanilla's 7 (MC reads it from
-     * client.options.getSprintWindow(), which the simulator has no access to).
+     * client.options.sprintWindow(), which the simulator has no access to).
      */
     @Override
     public void aiStep() {

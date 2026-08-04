@@ -33,11 +33,11 @@ public enum TickInfoStat {
     COLLISION("collision", "Collision", Kind.BOOL,
             "Horizontal collision occurred this tick (MC horizontalCollision)."),
     SOFT_COLLISION("softCollision", "Soft collision", Kind.BOOL,
-            "1.21.10 only: grazing wall hit that does NOT break sprint (Entity.collidedSoftly). Always false on 1.8.9/1.12.2.",
-            "1.21.10 only: grazing wall hit that does NOT break sprint. n/a when no horizontal collision is happening."),
+            "26.2 only: grazing wall hit that does NOT break sprint (Entity.minorHorizontalCollision). Always false on 1.8.9/1.12.2.",
+            "26.2 only: grazing wall hit that does NOT break sprint. n/a when no horizontal collision is happening."),
     COLLISION_ANGLE("collisionAngle", "Collision angle (deg)", Kind.NUM,
-            "1.21.10 only: angle between intended motion and post-collision motion. MC keeps sprint when this is below ~8 deg (0.13962634 rad).",
-            "1.21.10 only: angle between intended motion (forwardSpeed/sidewaysSpeed rotated by yaw) and post-collision motion. n/a on 1.8.9/1.12.2 or off-collision ticks.");
+            "26.2 only: angle between intended motion and post-collision motion. MC keeps sprint when this is below ~8 deg (0.13962634 rad).",
+            "26.2 only: angle between intended motion (forwardSpeed/sidewaysSpeed rotated by yaw) and post-collision motion. n/a on 1.8.9/1.12.2 or off-collision ticks.");
 
     public enum Kind {
         NUM,

@@ -14,7 +14,7 @@ package de.legoshi.parkourcalc.core.anglesolver.solver;
  *
  *  <p>Tick order (both eras): zero any sub-threshold motion carry, jump() impulse + sprint boost,
  *  ground/air accel pick, rotated-input add, move, gravity, friction multiply. The {@code modern} flag
- *  switches each stage's arithmetic between the legacy 1.8.9 float chain and the 1.21.10 double chain
+ *  switches each stage's arithmetic between the legacy 1.8.9 float chain and the modern double chain
  *  (movementInputToVelocity); threshold is 0.005 in 1.8.x and 0.003 in 1.9+, per-axis vs combined-XZ
  *  via {@link #perAxisInertia}. */
 public final class ExactJumpModel implements ForwardModel {
@@ -45,7 +45,7 @@ public final class ExactJumpModel implements ForwardModel {
 
     private final double inertiaThreshold;
     private final boolean perAxisInertia;
-    /** Modern (1.21.10) arithmetic: double-pipeline movementInputToVelocity, 0.21600002F ground factor,
+    /** Modern arithmetic: double-pipeline movementInputToVelocity, 0.21600002F ground factor,
      *  double sprint-jump boost, Math.max'd jump impulse. False = the legacy 1.8.9 float moveFlying chain. */
     private final boolean modern;
     /** 26.x Mth.sin/cos: double-indexed lookup into the regenerated table (see McSineTable.sinStep262). */
@@ -83,7 +83,7 @@ public final class ExactJumpModel implements ForwardModel {
     }
 
     /** Inertia rule for a loader's MC version. 1.8.x: per-axis 0.005. 1.12.x: per-axis 0.003.
-     *  1.9+ players (1.21.10 and the modern default here): combined-XZ |v|^2 &lt; 9.0E-6. Covers the
+     *  1.9+ players (the modern default here): combined-XZ |v|^2 &lt; 9.0E-6. Covers the
      *  three loader versions; the per-axis-to-combined player switch lands between 1.12 and 1.21.
      *  Year-versioned MC (26.x onward) additionally runs the rewritten double-indexed sine lookup. */
     public static ExactJumpModel forMcVersion(String mcVersion) {

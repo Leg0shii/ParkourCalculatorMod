@@ -34,7 +34,7 @@ The arc runs from manual planning to full autonomy. Every level stands on one fo
 
 This mod is the successor to the standalone desktop [ParkourCalculator](https://github.com/Leg0shii/ParkourCalculator) (JavaFX). The desktop app proved the concept across several Minecraft versions and even did AI pathfinding, but required rebuilding worlds in an external 3D editor. The mod removes that friction by operating directly on the loaded Minecraft world: no alt-tabbing, no reconstructed geometry.
 
-It ships for Fabric 1.21.10, Forge 1.12.2, and Forge 1.8.9 in parallel. The Fabric loader tracks the newest Minecraft version; the two Forge loaders exist because the speedrun community is still anchored on those eras.
+It ships for Fabric 26.2, Forge 1.12.2, and Forge 1.8.9 in parallel. The Fabric loader tracks the newest Minecraft version; the two Forge loaders exist because the speedrun community is still anchored on those eras.
 
 
 ## Design principles

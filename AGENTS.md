@@ -97,11 +97,11 @@ They appear under:
 ```
 .gradle/unimined/net/minecraft/minecraft/1.8.9/.../mcp-stable-22-1.8.9-searge-1.8.9/...-sources.jar
 .gradle/unimined/net/minecraft/minecraft/1.12.2/.../mcp-stable-39-1.12-searge-...-sources.jar
-.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-common-<hash>/1.21.10-...-sources.jar
-.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-clientOnly-<hash>/1.21.10-...-sources.jar
+.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-common-<hash>/26.2/...-26.2-sources.jar
+.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-clientOnly-<hash>/26.2/...-26.2-sources.jar
 ```
 
-Unzip the relevant `-sources.jar` and grep for a single file (e.g. `EntityPlayerSP.java`, `ClientPlayerEntity.java`). IntelliJ resolves these automatically on Ctrl-Click in any loader module.
+Unzip the relevant `-sources.jar` and grep for a single file (e.g. `EntityPlayerSP.java`, `LocalPlayer.java`). IntelliJ resolves these automatically on Ctrl-Click in any loader module.
 
 
 ## Critical patterns
