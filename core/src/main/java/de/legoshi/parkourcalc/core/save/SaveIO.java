@@ -11,6 +11,7 @@ import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.anglesolver.Constraint;
+import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.anglesolver.Potion;
 import de.legoshi.parkourcalc.core.anglesolver.PotionDose;
 import de.legoshi.parkourcalc.core.anglesolver.Slipperiness;
@@ -469,6 +470,7 @@ public final class SaveIO {
         out.inputs = ov.overridesInputs() ? ov.getInputs().name() : null;
         out.sprint = ov.overridesSprint() ? ov.getSprint().name() : null;
         out.slipperiness = ov.overridesSlipperiness() ? ov.getSlipperiness().name() : null;
+        out.medium = ov.overridesMedium() ? ov.getMedium().name() : null;
         for (PotionDose d : ov.getAdded()) {
             out.added.add(toSaveDose(d));
         }
@@ -486,6 +488,9 @@ public final class SaveIO {
         if (sprint != null) dst.setSprint(sprint);
         Slipperiness slip = parseEnumOrNull(Slipperiness.class, src.slipperiness);
         if (slip != null) dst.setSlipperiness(slip);
+        else if (src.slipperiness != null) applyFusedSlipperiness(src.slipperiness, dst);
+        Medium medium = parseEnumOrNull(Medium.class, src.medium);
+        if (medium != null && medium != Medium.NONE) dst.setMedium(medium);
         if (src.added != null) {
             for (SaveFile.Dose d : src.added) {
                 PotionDose dose = toDose(d);
@@ -497,6 +502,49 @@ public final class SaveIO {
                 Potion p = parseEnumOrNull(Potion.class, name);
                 if (p != null) dst.getRemoved().add(p);
             }
+        }
+    }
+
+    private static void applyFusedSlipperiness(String name, StateOverride dst) {
+        switch (name) {
+            case "LADDER":
+                dst.setSlipperiness(Slipperiness.AIR);
+                dst.setMedium(Medium.LADDER);
+                break;
+            case "SOULSAND":
+                dst.setSlipperiness(Slipperiness.DEFAULT);
+                dst.setMedium(Medium.SOULSAND);
+                break;
+            case "SOULSAND_ICE":
+                dst.setSlipperiness(Slipperiness.ICE);
+                dst.setMedium(Medium.SOULSAND);
+                break;
+            case "WATER":
+                dst.setSlipperiness(Slipperiness.AIR);
+                dst.setMedium(Medium.WATER);
+                break;
+            case "WATER_SHALLOW":
+                dst.setSlipperiness(Slipperiness.DEFAULT);
+                dst.setMedium(Medium.WATER);
+                break;
+            case "LAVA":
+                dst.setSlipperiness(Slipperiness.AIR);
+                dst.setMedium(Medium.LAVA);
+                break;
+            case "LAVA_SHALLOW":
+                dst.setSlipperiness(Slipperiness.DEFAULT);
+                dst.setMedium(Medium.LAVA);
+                break;
+            case "COBWEB":
+                dst.setSlipperiness(Slipperiness.DEFAULT);
+                dst.setMedium(Medium.COBWEB);
+                break;
+            case "COBWEB_AIR":
+                dst.setSlipperiness(Slipperiness.AIR);
+                dst.setMedium(Medium.COBWEB);
+                break;
+            default:
+                break;
         }
     }
 

@@ -579,11 +579,10 @@ public final class AngleSolverEngine {
             boolean jumpRow = row.isKeyActive(InputRow.Key.JUMP);
             // Ground/air is hand-defined per tick via slipperiness: a ground value (< 1.0) is grounded, AIR
             // (the default) is airborne. No dynamic fallback to a recorded trajectory.
-            Slipperiness surface = effSlipperiness(t);
-            double slip = surface.slip;
+            double slip = effSlipperiness(t).slip;
             boolean ground = slip < 1.0;
             slipPerTick[k] = ground ? slip : Double.NaN;
-            surfacePerTick[k] = surface.kind;
+            surfacePerTick[k] = effMedium(t).kind;
             sneakPerTick[k] = row.isKeyActive(InputRow.Key.SNEAK);
             jumpMask[k] = jumpRow;
             force45Mask[k] = effInputs(t) == AngleSolverState.InputMode.FORCE_45;
@@ -1521,6 +1520,12 @@ public final class AngleSolverEngine {
         StateOverride ov = overrideAt(tick);
         if (ov != null && ov.overridesSlipperiness()) return ov.getSlipperiness();
         return state.getDefaultSlipperiness();
+    }
+
+    private Medium effMedium(int tick) {
+        StateOverride ov = overrideAt(tick);
+        if (ov != null && ov.overridesMedium()) return ov.getMedium();
+        return Medium.NONE;
     }
 
     /** Effective Speed amplifier at a tick: override added/removed over the default potions. */

@@ -150,11 +150,10 @@ public final class ExactJumpModel implements ForwardModel {
             double slipOv = scenario.slipAt(t);
             boolean contact = !Double.isNaN(slipOv);
             SurfaceKind kind = scenario.surfaceAt(t);
-            boolean water = kind == SurfaceKind.WATER || kind == SurfaceKind.WATER_SHALLOW;
-            boolean shallowFluid = kind == SurfaceKind.WATER_SHALLOW || kind == SurfaceKind.LAVA_SHALLOW;
-            boolean fluid = water || kind == SurfaceKind.LAVA || kind == SurfaceKind.LAVA_SHALLOW;
+            boolean water = kind == SurfaceKind.WATER;
+            boolean fluid = water || kind == SurfaceKind.LAVA;
             float slipF = contact ? (float) slipOv : Constants.SLIP_F;
-            boolean fluidGroundJump = modern && shallowFluid && scenario.jumpAt(t);
+            boolean fluidGroundJump = modern && fluid && contact && scenario.jumpAt(t);
             boolean isJumpTick = fluidGroundJump || (!fluid && scenario.jumpAt(t) && contact);
             boolean sprint = scenario.sprintAt(t);
             boolean factorSprint = scenario.factorSprintAt(t);
@@ -301,7 +300,7 @@ public final class ExactJumpModel implements ForwardModel {
                     velX[t + 1] = vx * hDrag;
                     velZ[t + 1] = vz * hDrag;
                     velY[t + 1] = yd;
-                } else if (kind == SurfaceKind.LAVA_SHALLOW) {
+                } else if (contact) {
                     double yd = vy * WATER_DRAG;
                     if (!sprint) {
                         yd -= MODERN_FLUID_GRAVITY;

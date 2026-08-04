@@ -5,8 +5,6 @@ public enum SurfaceKind {
     LADDER,
     SOULSAND,
     WATER,
-    WATER_SHALLOW,
     LAVA,
-    LAVA_SHALLOW,
     COBWEB
 }

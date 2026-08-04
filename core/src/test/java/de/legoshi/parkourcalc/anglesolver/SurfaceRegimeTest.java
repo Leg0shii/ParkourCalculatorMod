@@ -2,12 +2,16 @@ package de.legoshi.parkourcalc.anglesolver;
 
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
+import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.anglesolver.Slipperiness;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SurfaceKind;
+import de.legoshi.parkourcalc.core.anglesolver.StateOverride;
+import de.legoshi.parkourcalc.core.save.SaveFile;
+import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
@@ -123,6 +127,57 @@ public class SurfaceRegimeTest {
     }
 
     @Test
+    public void soulsandJumpOffCaptureByteExact1122() {
+        JumpPhysicsInputs sc = new JumpPhysicsInputs(6);
+        sc.startPos = new Vec3dCore(513.6661639994444, 6.875, 164.41857952788826);
+        sc.startYaw = 0.0F;
+        sc.initialVelocity = new Vec3dCore(0.0, -0.0784000015258789, 0.0);
+        sc.jumpTick = -1;
+        sc.jumpPerTick = new boolean[]{false, false, false, false, true, false};
+        sc.slipPerTick = new double[]{0.6, 0.6, 0.6, 0.6, 0.6, Double.NaN};
+        sc.surfacePerTick = new SurfaceKind[]{SurfaceKind.SOULSAND, SurfaceKind.SOULSAND, SurfaceKind.SOULSAND,
+                SurfaceKind.SOULSAND, SurfaceKind.NORMAL, SurfaceKind.NORMAL};
+        ForwardPath p = ExactJumpModel.forMcVersion("1.12.2").forward(sc, new double[6]);
+        double[] z = {164.54597950891014, 164.70120364901905, 164.8625045861784,
+                165.02513269596773, 165.38805066327333, 165.61168389487776};
+        double[] vz = {0.027824159087028025, 0.033900956137470885, 0.0352281287674422,
+                0.035517983303495294, 0.19815323316488104, 0.20350624662504752};
+        for (int t = 1; t <= 6; t++) {
+            assertEquals("posZ tick " + t, z[t - 1], p.posZ[t], 0.0);
+            assertEquals("velZ tick " + t, vz[t - 1], p.velZ[t], 0.0);
+        }
+        assertEquals(513.6661639994444, p.posX[6], 0.0);
+    }
+
+    @Test
+    public void legacyFusedSlipperinessNamesSplitOnLoad() {
+        String json = "{\"angleSolver\":{\"ticks\":["
+                + "{\"tick\":0,\"override\":{\"slipperiness\":\"SOULSAND\"}},"
+                + "{\"tick\":1,\"override\":{\"slipperiness\":\"SOULSAND_ICE\"}},"
+                + "{\"tick\":2,\"override\":{\"slipperiness\":\"WATER_SHALLOW\"}},"
+                + "{\"tick\":3,\"override\":{\"slipperiness\":\"COBWEB_AIR\"}},"
+                + "{\"tick\":4,\"override\":{\"slipperiness\":\"LADDER\"}},"
+                + "{\"tick\":5,\"override\":{\"slipperiness\":\"ICE\",\"medium\":\"SOULSAND\"}}"
+                + "]}}";
+        SaveFile file = SaveIO.parseSafe(json);
+        assertNotNull(file);
+        AngleSolverState state = new AngleSolverState();
+        SaveIO.applyAngleSolverTo(file, state);
+        assertOverride(state, 0, Slipperiness.DEFAULT, Medium.SOULSAND);
+        assertOverride(state, 1, Slipperiness.ICE, Medium.SOULSAND);
+        assertOverride(state, 2, Slipperiness.DEFAULT, Medium.WATER);
+        assertOverride(state, 3, Slipperiness.AIR, Medium.COBWEB);
+        assertOverride(state, 4, Slipperiness.AIR, Medium.LADDER);
+        assertOverride(state, 5, Slipperiness.ICE, Medium.SOULSAND);
+    }
+
+    private static void assertOverride(AngleSolverState state, int tick, Slipperiness slip, Medium medium) {
+        StateOverride ov = state.tickConstraints(tick).getOverride();
+        assertEquals(slip, ov.getSlipperiness());
+        assertEquals(medium, ov.getMedium());
+    }
+
+    @Test
     public void waterUsesSwimAccelAndDrag() {
         JumpPhysicsInputs sc = scenario(1, Double.NaN, SurfaceKind.WATER, false, new Vec3dCore(0.0, 0.0, 0.3));
         ForwardPath p = run(LEGACY, sc);
@@ -177,7 +232,7 @@ public class SurfaceRegimeTest {
 
     @Test
     public void modernShallowWaterJumpIsGroundImpulse() {
-        JumpPhysicsInputs sc = scenario(1, Double.NaN, SurfaceKind.WATER_SHALLOW, true, Vec3dCore.ZERO);
+        JumpPhysicsInputs sc = scenario(1, 0.6, SurfaceKind.WATER, true, Vec3dCore.ZERO);
         ForwardPath p = run(MODERN, sc);
         assertEquals((double) 0.42F, p.posY[1] - p.posY[0], 0.0);
         assertEquals((double) 0.42F * (double) 0.8F, p.velY[1], 0.0);
@@ -187,7 +242,7 @@ public class SurfaceRegimeTest {
 
     @Test
     public void modernShallowLavaWadingDrag() {
-        JumpPhysicsInputs shallow = scenario(1, Double.NaN, SurfaceKind.LAVA_SHALLOW, false, new Vec3dCore(0.0, 0.0, 0.3));
+        JumpPhysicsInputs shallow = scenario(1, 0.6, SurfaceKind.LAVA, false, new Vec3dCore(0.0, 0.0, 0.3));
         shallow.sprintPerTick = new boolean[]{false};
         ForwardPath p = run(MODERN, shallow);
         double moved = p.posZ[1] - p.posZ[0];
@@ -214,35 +269,26 @@ public class SurfaceRegimeTest {
 
     @Test
     public void enumMapsKindsAndSlips() {
-        for (Slipperiness s : new Slipperiness[]{Slipperiness.DEFAULT, Slipperiness.SLIME, Slipperiness.ICE,
-                Slipperiness.PACKED_ICE, Slipperiness.BLUE_ICE, Slipperiness.AIR}) {
-            assertEquals(SurfaceKind.NORMAL, s.kind);
+        for (Slipperiness s : Slipperiness.values()) {
             assertEquals(Double.parseDouble(s.valueLabel), s.slip, 0.0);
         }
-        assertEquals(SurfaceKind.LADDER, Slipperiness.LADDER.kind);
-        assertEquals(SurfaceKind.SOULSAND, Slipperiness.SOULSAND.kind);
-        assertEquals(0.6, Slipperiness.SOULSAND.slip, 0.0);
-        assertEquals(SurfaceKind.SOULSAND, Slipperiness.SOULSAND_ICE.kind);
-        assertEquals(0.98, Slipperiness.SOULSAND_ICE.slip, 0.0);
-        assertEquals(SurfaceKind.WATER, Slipperiness.WATER.kind);
-        assertEquals(SurfaceKind.WATER_SHALLOW, Slipperiness.WATER_SHALLOW.kind);
-        assertEquals(1.0, Slipperiness.WATER_SHALLOW.slip, 0.0);
-        assertEquals(SurfaceKind.LAVA, Slipperiness.LAVA.kind);
-        assertEquals(SurfaceKind.LAVA_SHALLOW, Slipperiness.LAVA_SHALLOW.kind);
-        assertEquals(1.0, Slipperiness.LAVA_SHALLOW.slip, 0.0);
-        assertEquals(SurfaceKind.COBWEB, Slipperiness.COBWEB.kind);
-        assertEquals(0.6, Slipperiness.COBWEB.slip, 0.0);
-        assertEquals(SurfaceKind.COBWEB, Slipperiness.COBWEB_AIR.kind);
-        assertEquals(1.0, Slipperiness.COBWEB_AIR.slip, 0.0);
+        assertEquals(SurfaceKind.NORMAL, Medium.NONE.kind);
+        assertEquals(SurfaceKind.WATER, Medium.WATER.kind);
+        assertEquals(SurfaceKind.LAVA, Medium.LAVA.kind);
+        assertEquals(SurfaceKind.LADDER, Medium.LADDER.kind);
+        assertEquals(SurfaceKind.SOULSAND, Medium.SOULSAND.kind);
+        assertEquals(SurfaceKind.COBWEB, Medium.COBWEB.kind);
     }
 
     @Test
     public void engineCompilesSurfaceAndSneakPerTick() {
         int ticks = 5;
         AngleSolverState state = new AngleSolverState();
-        state.tickConstraints(1).getOverride().setSlipperiness(Slipperiness.SOULSAND);
-        state.tickConstraints(2).getOverride().setSlipperiness(Slipperiness.WATER);
-        state.tickConstraints(4).getOverride().setSlipperiness(Slipperiness.SOULSAND_ICE);
+        state.tickConstraints(1).getOverride().setSlipperiness(Slipperiness.DEFAULT);
+        state.tickConstraints(1).getOverride().setMedium(Medium.SOULSAND);
+        state.tickConstraints(2).getOverride().setMedium(Medium.WATER);
+        state.tickConstraints(4).getOverride().setSlipperiness(Slipperiness.ICE);
+        state.tickConstraints(4).getOverride().setMedium(Medium.SOULSAND);
         InputData inputs = new InputData();
         BoxController boxes = new BoxController();
         for (int t = 0; t < ticks; t++) {
