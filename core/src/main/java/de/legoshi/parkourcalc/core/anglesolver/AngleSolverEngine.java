@@ -1356,16 +1356,19 @@ public final class AngleSolverEngine {
         List<SolveResult.Outcome> outs = new ArrayList<>();
         List<ConstraintAt> ordered = new ArrayList<>(derived);
         ordered.sort((a, b) -> Integer.compare(a.absTick, b.absTick));
+        List<Integer> unmet = new ArrayList<>();
         for (ConstraintAt ca : ordered) {
             Double found = findValue(ca.c, ca.segTick, job.startTick, job.numTicks, gameFacings, path);
             if (found == null) continue;
             total++;
             boolean satisfied = satisfied(ca.c, found);
             if (satisfied) met++;
+            else unmet.add(ca.absTick);
             outs.add(outcome(ca.c, ca.absTick, found, satisfied));
         }
         SolveResult r = new SolveResult(ok, met, total, job.startTick + 1, job.landingTick + 1);
         r.getOutcomes().addAll(outs);
+        for (int t : unmet) r.addUnmetTick(t);
         for (int k = 0; k < yaws.length; k++) r.getYaws().add(new SolveResult.YawEntry(job.startTick + k + 1, yaws[k]));
         return r;
     }
@@ -1486,7 +1489,7 @@ public final class AngleSolverEngine {
             TickState c = boxes.getState(i);
             if (c != null && c.wallCollision) {
                 state.setApplyDeviation(head + ": it hit a wall the solve cannot see. Add a constraint to route around it.",
-                        AngleSolverState.DeviationKind.WALL);
+                        AngleSolverState.DeviationKind.WALL, t);
                 return;
             }
         }
@@ -1495,11 +1498,11 @@ public final class AngleSolverEngine {
             if (r < rows.size() && rows.get(r).isKeyActive(InputRow.Key.SNEAK)) {
                 state.setApplyDeviation(head + ": the sneak at T" + (r + 1)
                         + " ran at a different position in the sampled run" + tail,
-                        AngleSolverState.DeviationKind.SNEAK);
+                        AngleSolverState.DeviationKind.SNEAK, t);
                 return;
             }
         }
-        state.setApplyDeviation(head + tail, AngleSolverState.DeviationKind.OTHER);
+        state.setApplyDeviation(head + tail, AngleSolverState.DeviationKind.OTHER, t);
     }
 
     // ---- effective per-tick state (main thread, during snapshot) --------------
@@ -1645,16 +1648,19 @@ public final class AngleSolverEngine {
         List<SolveResult.Outcome> outs = new ArrayList<>();
         List<ConstraintAt> ordered = new ArrayList<>(job.uiConstraints);
         ordered.sort((a, b) -> Integer.compare(a.absTick, b.absTick));
+        List<Integer> unmet = new ArrayList<>();
         for (ConstraintAt ca : ordered) {
             Double found = findValue(ca.c, ca.segTick, job.startTick, job.numTicks, gameFacings, path);
             if (found == null) continue; // unmappable, e.g. velocity on tick 0
             total++;
             boolean ok = satisfied(ca.c, found);
             if (ok) met++;
+            else unmet.add(ca.absTick);
             outs.add(outcome(ca.c, ca.absTick, found, ok));
         }
         SolveResult r = new SolveResult(met == total, met, total, job.startTick + 1, job.landingTick + 1);
         r.getOutcomes().addAll(outs);
+        for (int t : unmet) r.addUnmetTick(t);
         for (int k = 0; k < yaws.length; k++) {
             r.getYaws().add(new SolveResult.YawEntry(job.startTick + k + 1, yaws[k]));
         }

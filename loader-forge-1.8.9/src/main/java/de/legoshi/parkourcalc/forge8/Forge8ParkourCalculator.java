@@ -4,6 +4,7 @@ import de.legoshi.parkourcalc.core.Application;
 import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
+import de.legoshi.parkourcalc.core.ui.theme.SolverHudStatus;
 import de.legoshi.parkourcalc.forge.core.io.OsFilePicker;
 import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2ImGuiHost;
 import de.legoshi.parkourcalc.forge8.render.Forge8HudOverlayRenderer;
@@ -66,6 +67,10 @@ public class Forge8ParkourCalculator {
     private KeyBinding playbackKeyBinding;
     private KeyBinding landingConstraintsKeyBinding;
     private KeyBinding removeConstraintsKeyBinding;
+    private KeyBinding applySurfaceStateKeyBinding;
+    private KeyBinding solveKeyBinding;
+    private KeyBinding solverStartTickKeyBinding;
+    private KeyBinding solverEndTickKeyBinding;
     private KeyBinding captureMomentumBlockKeyBinding;
     private KeyBinding captureCollisionBlockKeyBinding;
     private KeyBinding captureLandBlockKeyBinding;
@@ -108,6 +113,14 @@ public class Forge8ParkourCalculator {
         ClientRegistry.registerKeyBinding(landingConstraintsKeyBinding);
         removeConstraintsKeyBinding = new KeyBinding("key.parkourcalculator.remove_selected_constraints", Keyboard.KEY_X, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(removeConstraintsKeyBinding);
+        applySurfaceStateKeyBinding = new KeyBinding("key.parkourcalculator.apply_surface_state", Keyboard.KEY_H, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(applySurfaceStateKeyBinding);
+        solveKeyBinding = new KeyBinding("key.parkourcalculator.solve", Keyboard.KEY_V, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(solveKeyBinding);
+        solverStartTickKeyBinding = new KeyBinding("key.parkourcalculator.set_solver_start", Keyboard.KEY_I, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(solverStartTickKeyBinding);
+        solverEndTickKeyBinding = new KeyBinding("key.parkourcalculator.set_solver_end", Keyboard.KEY_O, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(solverEndTickKeyBinding);
         if (blockCaptureEnabled) {
             captureMomentumBlockKeyBinding = new KeyBinding("key.parkourcalculator.capture_momentum_block", Keyboard.KEY_M, "key.categories.parkourcalculator");
             ClientRegistry.registerKeyBinding(captureMomentumBlockKeyBinding);
@@ -120,7 +133,8 @@ public class Forge8ParkourCalculator {
         }
 
         MinecraftForge.EVENT_BUS.register(this);
-        LOG.info("ParkourCalculator init complete. G toggle, L deselect, P playback, B landing constraints, X remove constraints."
+        LOG.info("ParkourCalculator init complete. G toggle, L deselect, P playback, B landing constraints, X remove constraints,"
+                + " H surface state, V solve, I/O solver start/goal tick."
                 + (blockCaptureEnabled ? " Block capture ON: M/N/K capture momentum/collision/land block, Delete clear blocks." : ""));
     }
 
@@ -203,8 +217,13 @@ public class Forge8ParkourCalculator {
     @SubscribeEvent
     public void onHudRender(RenderGameOverlayEvent.Post event) {
         if (event.type != RenderGameOverlayEvent.ElementType.TEXT) return;
-        if (!application.isPlaybackRunning()) return;
-        hudRenderer.render();
+        if (application.isPlaybackRunning()) {
+            hudRenderer.render();
+        }
+        SolverHudStatus status = application.solverHudStatus();
+        if (status != null) {
+            hudRenderer.renderSolverStatus(status);
+        }
     }
 
     @SubscribeEvent
@@ -237,6 +256,22 @@ public class Forge8ParkourCalculator {
         boolean removeConstraintsPressed = false;
         while (removeConstraintsKeyBinding.isPressed()) {
             removeConstraintsPressed = true;
+        }
+        boolean applySurfaceStatePressed = false;
+        while (applySurfaceStateKeyBinding.isPressed()) {
+            applySurfaceStatePressed = true;
+        }
+        boolean solvePressed = false;
+        while (solveKeyBinding.isPressed()) {
+            solvePressed = true;
+        }
+        boolean solverStartPressed = false;
+        while (solverStartTickKeyBinding.isPressed()) {
+            solverStartPressed = true;
+        }
+        boolean solverEndPressed = false;
+        while (solverEndTickKeyBinding.isPressed()) {
+            solverEndPressed = true;
         }
         boolean captureMomentum = false;
         boolean captureCollision = false;
@@ -273,6 +308,18 @@ public class Forge8ParkourCalculator {
             }
             if (removeConstraintsPressed) {
                 application.removeSelectedConstraints();
+            }
+            if (applySurfaceStatePressed) {
+                application.applyPathSurfaceState();
+            }
+            if (solvePressed) {
+                application.solveAngleSolver();
+            }
+            if (solverStartPressed) {
+                application.setSolverStartTickFromSelection();
+            }
+            if (solverEndPressed) {
+                application.setSolverLandingTickFromSelection();
             }
             if (captureMomentum) {
                 application.captureAngleSolverBlock(BlockSelection.Kind.MOMENTUM);

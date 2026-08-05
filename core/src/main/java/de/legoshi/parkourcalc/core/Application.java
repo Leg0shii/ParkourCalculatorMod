@@ -6,6 +6,7 @@ import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.ports.PickedBlock;
 import de.legoshi.parkourcalc.core.ports.PlaybackBridge;
 import de.legoshi.parkourcalc.core.ports.Simulator;
+import de.legoshi.parkourcalc.core.ports.SurfaceSample;
 import de.legoshi.parkourcalc.core.io.OsSystemBridge;
 import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
@@ -36,10 +37,16 @@ import de.legoshi.parkourcalc.core.ui.SettingsModal;
 import de.legoshi.parkourcalc.core.ui.TickInfoPanel;
 import de.legoshi.parkourcalc.core.ui.YawGizmoController;
 import de.legoshi.parkourcalc.core.ui.theme.HudMessageStyle;
+import de.legoshi.parkourcalc.core.ui.theme.SolverHudStatus;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.anglesolver.ConstraintText;
+import de.legoshi.parkourcalc.core.anglesolver.Medium;
+import de.legoshi.parkourcalc.core.anglesolver.Slipperiness;
+import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
+import de.legoshi.parkourcalc.core.anglesolver.StateOverride;
+import de.legoshi.parkourcalc.core.anglesolver.TickConstraints;
 import de.legoshi.parkourcalc.core.ui.ConstraintKeyController;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverTable;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverWindow;
@@ -52,6 +59,7 @@ import de.legoshi.parkourcalc.core.undo.UndoController;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 /** Single-instance orchestrator wired by loaders via mixins / event handlers. */
@@ -81,6 +89,10 @@ public final class Application {
     private FilePickerPort filePicker;
     private BlockPicker blockPicker;
     private AngleSolverState angleSolverState;
+    private AngleSolverEngine solverEngine;
+    private String solverStatusText;
+    private int solverStatusColor;
+    private long solverStatusNanos;
     private ConstraintKeyController constraintKeyController;
     private UndoController<de.legoshi.parkourcalc.core.save.SaveFile> undoController;
     private final HudMessages hudMessages = new HudMessages();
@@ -162,6 +174,7 @@ public final class Application {
         saveController.setGraphStore(graphStore);
         AngleSolverEngine angleSolverEngine = new AngleSolverEngine(angleSolverState, boxController, inputData, this::onUserChange, forwardModel);
         angleSolverEngine.setOnStartMoved(runner::setStartPosition);
+        this.solverEngine = angleSolverEngine;
         if (saveStore != null) {
             angleSolverEngine.setRunLog(new SolveRunLog(saveStore.getSaveDir().resolve("runs"),
                     saveStore.getModVersion(), saveStore.getMcVersion()));
@@ -188,6 +201,7 @@ public final class Application {
         constraintSource = new de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverConstraintSource(
                 angleSolverState, boxController, () -> settings.viewAngleSolver, settings, selection, constraintSelection);
         de.legoshi.parkourcalc.core.render.PathRenderPlan.setConstraintSource(constraintSource);
+        de.legoshi.parkourcalc.core.render.PathRenderPlan.setDeviationTickSource(angleSolverState::getApplyDeviationTick);
         de.legoshi.parkourcalc.core.render.PathRenderPlan.setLiveSource(
                 new de.legoshi.parkourcalc.core.ui.anglesolver.LiveBestPathSource(
                         angleSolverEngine, boxController, () -> settings.viewAngleSolver));
@@ -422,6 +436,7 @@ public final class Application {
             saveController.tryReopenLastSave();
         }
         if (undoController != null) undoController.tick(System.nanoTime());
+        pollSolver();
         dragController.tick(
                 mc.getEyePosition(),
                 mc.getLookDirection(),
@@ -467,6 +482,98 @@ public final class Application {
 
     public void clearAngleSolverBlocks() {
         if (angleSolverState != null) angleSolverState.clearBlocks();
+    }
+
+    private static final long SOLVER_STATUS_NANOS = 4_000_000_000L;
+
+    private void pollSolver() {
+        if (solverEngine == null) return;
+        boolean wasSolving = solverEngine.isSolving();
+        solverEngine.poll();
+        if (!wasSolving || solverEngine.isSolving()) return;
+        SolveResult done = angleSolverState.getResult();
+        if (done == null) return;
+        if (done.isSuccess() && !done.getYaws().isEmpty()) {
+            solverEngine.apply();
+            if (angleSolverState.getApplyDeviation() != null) {
+                setSolverStatus("Solved · sim diverged at T" + (angleSolverState.getApplyDeviationTick() + 1),
+                        SolverHudStatus.COLOR_WARN);
+            } else {
+                setSolverStatus("Solved · applied", SolverHudStatus.COLOR_OK);
+            }
+        } else {
+            setSolverStatus("No solution · " + done.getMet() + "/" + done.getTotal() + " constraints met",
+                    SolverHudStatus.COLOR_DANGER);
+        }
+    }
+
+    private void setSolverStatus(String text, int colorArgb) {
+        solverStatusText = text;
+        solverStatusColor = colorArgb;
+        solverStatusNanos = System.nanoTime();
+    }
+
+    public SolverHudStatus solverHudStatus() {
+        if (solverEngine == null || isControlPanelOpen()) return null;
+        if (solverEngine.isSolving()) {
+            SolveResult live = solverEngine.liveBestResult();
+            String text = String.format(Locale.ROOT, "Solving %.1fs", solverEngine.elapsedSeconds());
+            if (live != null) text += " · " + live.getMet() + "/" + live.getTotal();
+            return new SolverHudStatus(text, SolverHudStatus.COLOR_INFO);
+        }
+        if (solverStatusText != null && System.nanoTime() - solverStatusNanos < SOLVER_STATUS_NANOS) {
+            return new SolverHudStatus(solverStatusText, solverStatusColor);
+        }
+        return null;
+    }
+
+    public void solveAngleSolver() {
+        if (solverEngine != null && mc.isReady()) solverEngine.solve();
+    }
+
+    public void setSolverStartTickFromSelection() {
+        int tick = firstSelectedRow();
+        if (tick < 0 || angleSolverState == null) return;
+        angleSolverState.setStartTick(tick);
+        saveController.markDirty();
+    }
+
+    public void setSolverLandingTickFromSelection() {
+        int tick = firstSelectedRow();
+        if (tick < 0 || angleSolverState == null) return;
+        angleSolverState.setLandingTick(tick);
+        saveController.markDirty();
+    }
+
+    private int firstSelectedRow() {
+        Set<Integer> rows = selection.getSelectedRows();
+        return rows.isEmpty() ? -1 : rows.iterator().next();
+    }
+
+    public void applyPathSurfaceState() {
+        if (angleSolverState == null || !mc.isReady()) return;
+        int rows = inputData.size();
+        boolean changed = false;
+        for (int t = 0; t < rows && t < boxController.size(); t++) {
+            TickState s = boxController.getState(t);
+            if (s == null || s.position == null) continue;
+            SurfaceSample sample = mc.sampleSurface(s.position);
+            if (sample == null) break;
+            Slipperiness slip = s.onGround && sample.groundSlipperiness != null
+                    ? sample.groundSlipperiness : Slipperiness.AIR;
+            Medium medium = sample.medium != null ? sample.medium : Medium.NONE;
+            boolean slipDefault = slip == angleSolverState.getDefaultSlipperiness();
+            boolean mediumNone = medium == Medium.NONE;
+            TickConstraints tc = angleSolverState.tickConstraintsOrNull(t);
+            if (tc == null && slipDefault && mediumNone) continue;
+            StateOverride ov = angleSolverState.tickConstraints(t).getOverride();
+            if (slipDefault) ov.clearSlipperiness();
+            else ov.setSlipperiness(slip);
+            if (mediumNone) ov.clearMedium();
+            else ov.setMedium(medium);
+            changed = true;
+        }
+        if (changed) saveController.markDirty();
     }
 
     private boolean isWalledSide(int neighborX, int blockY, int neighborZ) {

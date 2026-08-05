@@ -1,11 +1,15 @@
 package de.legoshi.parkourcalc.forge8;
 
+import de.legoshi.parkourcalc.core.anglesolver.Medium;
+import de.legoshi.parkourcalc.core.anglesolver.Slipperiness;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
+import de.legoshi.parkourcalc.core.ports.SurfaceSample;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.Face;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2InputState;
 import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -14,6 +18,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
@@ -108,6 +113,30 @@ public final class Forge8MinecraftAccess implements MinecraftAccess {
         if (world == null) return false;
         Block block = world.getBlockState(new BlockPos(x, y, z)).getBlock();
         return block == Blocks.ice || block == Blocks.packed_ice;
+    }
+
+    @Override
+    public SurfaceSample sampleSurface(Vec3dCore feetPos) {
+        World world = Minecraft.getMinecraft().theWorld;
+        if (world == null) return null;
+        int fx = MathHelper.floor_double(feetPos.x);
+        int fy = MathHelper.floor_double(feetPos.y);
+        int fz = MathHelper.floor_double(feetPos.z);
+        Block feetBlock = world.getBlockState(new BlockPos(fx, fy, fz)).getBlock();
+        Block belowBlock = world.getBlockState(new BlockPos(fx, fy - 1, fz)).getBlock();
+        Medium medium = Medium.NONE;
+        if (feetBlock == Blocks.web) {
+            medium = Medium.COBWEB;
+        } else if (feetBlock.getMaterial() == Material.water) {
+            medium = Medium.WATER;
+        } else if (feetBlock.getMaterial() == Material.lava) {
+            medium = Medium.LAVA;
+        } else if (feetBlock == Blocks.ladder || feetBlock == Blocks.vine) {
+            medium = Medium.LADDER;
+        } else if (feetBlock == Blocks.soul_sand || belowBlock == Blocks.soul_sand) {
+            medium = Medium.SOULSAND;
+        }
+        return new SurfaceSample(Slipperiness.fromFriction(belowBlock.slipperiness), medium);
     }
 
     @Override

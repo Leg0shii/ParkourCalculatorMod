@@ -6,6 +6,7 @@ import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.io.OsSystemBridge;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.core.ui.Settings;
+import de.legoshi.parkourcalc.core.ui.theme.SolverHudStatus;
 import de.legoshi.parkourcalc.fabric.imgui.ImGuiImpl;
 import de.legoshi.parkourcalc.fabric.render.FabricHudOverlayRenderer;
 import de.legoshi.parkourcalc.fabric.render.FabricWorldOverlayRenderer;
@@ -37,6 +38,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
     public static KeyMapping playbackKeyBinding;
     public static KeyMapping landingConstraintsKeyBinding;
     public static KeyMapping removeConstraintsKeyBinding;
+    private static KeyMapping applySurfaceStateKeyBinding;
+    private static KeyMapping solveKeyBinding;
+    private static KeyMapping solverStartTickKeyBinding;
+    private static KeyMapping solverEndTickKeyBinding;
     private static KeyMapping captureMomentumBlockKeyBinding;
     private static KeyMapping captureCollisionBlockKeyBinding;
     private static KeyMapping captureLandBlockKeyBinding;
@@ -88,6 +93,30 @@ public class FabricParkourCalculator implements ClientModInitializer {
                 "key.parkourcalculator.remove_selected_constraints",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_X,
+                category
+        ));
+        applySurfaceStateKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "key.parkourcalculator.apply_surface_state",
+                InputConstants.Type.KEYSYM,
+                GLFW.GLFW_KEY_H,
+                category
+        ));
+        solveKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "key.parkourcalculator.solve",
+                InputConstants.Type.KEYSYM,
+                GLFW.GLFW_KEY_V,
+                category
+        ));
+        solverStartTickKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "key.parkourcalculator.set_solver_start",
+                InputConstants.Type.KEYSYM,
+                GLFW.GLFW_KEY_I,
+                category
+        ));
+        solverEndTickKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "key.parkourcalculator.set_solver_end",
+                InputConstants.Type.KEYSYM,
+                GLFW.GLFW_KEY_O,
                 category
         ));
 
@@ -220,6 +249,22 @@ public class FabricParkourCalculator implements ClientModInitializer {
         while (removeConstraintsKeyBinding.consumeClick()) {
             removeConstraintsPressed = true;
         }
+        boolean applySurfaceStatePressed = false;
+        while (applySurfaceStateKeyBinding.consumeClick()) {
+            applySurfaceStatePressed = true;
+        }
+        boolean solvePressed = false;
+        while (solveKeyBinding.consumeClick()) {
+            solvePressed = true;
+        }
+        boolean solverStartPressed = false;
+        while (solverStartTickKeyBinding.consumeClick()) {
+            solverStartPressed = true;
+        }
+        boolean solverEndPressed = false;
+        while (solverEndTickKeyBinding.consumeClick()) {
+            solverEndPressed = true;
+        }
         boolean captureMomentum = false;
         boolean captureCollision = false;
         boolean captureLand = false;
@@ -262,6 +307,18 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
         if (removeConstraintsPressed && canDispatch) {
             application.removeSelectedConstraints();
+        }
+        if (applySurfaceStatePressed && canDispatch) {
+            application.applyPathSurfaceState();
+        }
+        if (solvePressed && canDispatch) {
+            application.solveAngleSolver();
+        }
+        if (solverStartPressed && canDispatch) {
+            application.setSolverStartTickFromSelection();
+        }
+        if (solverEndPressed && canDispatch) {
+            application.setSolverLandingTickFromSelection();
         }
         if (captureMomentum && canDispatch) {
             application.captureAngleSolverBlock(BlockSelection.Kind.MOMENTUM);
@@ -352,6 +409,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         if (!application.isReady()) return;
         if (application.isPlaybackRunning()) {
             hudRenderer.render(context);
+        }
+        SolverHudStatus status = application.solverHudStatus();
+        if (status != null) {
+            hudRenderer.renderSolverStatus(context, status);
         }
     }
 

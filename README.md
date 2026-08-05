@@ -25,6 +25,7 @@ A TAS input planning mod for Minecraft. Simulate and visualize parkour movements
 - **Free start position**: the solver picks the best starting spot within the start block's footprint
 - **Constraints**: absolute X/Z/F, relative X/Z against any reference tick, per-tick dX/dZ/dF deltas, and a dX vs dZ axis comparison
 - **Constraint hotkeys**: `B` adds wall and footprint constraints for the block you are looking at, `Ctrl+B` adds ladder/slime/ice cell constraints
+- **Solver hotkeys**: `V` solves and applies, `I`/`O` set the solver start/goal tick to the selected tick, `H` fills per-tick slipperiness and medium from the recorded path; a HUD status line shows solve progress and outcome while the UI is closed
 - **Node-graph solver pipelines** with per-stage time budgets (Custom effort)
 - Plan movement inputs tick-by-tick (WASD, jump, sneak, sprint, yaw, pitch)
 - Visualize the predicted path as boxes in the world, with per-tick movement info (motion, speed, combined XZ distance) and hit distance lines showing block reach

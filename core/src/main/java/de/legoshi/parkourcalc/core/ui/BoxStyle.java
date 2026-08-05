@@ -130,14 +130,24 @@ public final class BoxStyle {
         return toArgb(rgba[0], rgba[1], rgba[2], rgba[3]);
     }
 
+    private static final float[] TICK_DEVIATION = {1.000f, 0.184f, 0.831f, 0.60f};
+
     /** Fill color for a tick box: user-controlled alpha for translucency. */
     public static int tickFaceArgb(Settings settings, TickState state, boolean selected) {
-        return toArgb(pickChannel(settings, state, selected));
+        return tickFaceArgb(settings, state, selected, false);
+    }
+
+    public static int tickFaceArgb(Settings settings, TickState state, boolean selected, boolean deviation) {
+        return toArgb(pickChannel(settings, state, selected, deviation));
     }
 
     /** Outline color for a tick box: full alpha so the wireframe always reads. */
     public static int tickLineArgb(Settings settings, TickState state, boolean selected) {
-        float[] c = pickChannel(settings, state, selected);
+        return tickLineArgb(settings, state, selected, false);
+    }
+
+    public static int tickLineArgb(Settings settings, TickState state, boolean selected, boolean deviation) {
+        float[] c = pickChannel(settings, state, selected, deviation);
         return toArgb(c[0], c[1], c[2], 1.0f);
     }
 
@@ -155,10 +165,11 @@ public final class BoxStyle {
         return toArgb(c[0], c[1], c[2], 1.0f);
     }
 
-    /** selected > soft-collision > wall > in-air > sneak > default. Soft collision is a wall hit
-     *  that doesn't break sprint (1.21+), so it must win over the regular wall color. */
-    private static float[] pickChannel(Settings settings, TickState state, boolean selected) {
+    /** selected > deviation > soft-collision > wall > in-air > sneak > default. Soft collision is a wall
+     *  hit that doesn't break sprint (1.21+), so it must win over the regular wall color. */
+    private static float[] pickChannel(Settings settings, TickState state, boolean selected, boolean deviation) {
         if (selected) return settings.tickSelected;
+        if (deviation) return TICK_DEVIATION;
         if (state.softCollision) return settings.tickSoftCollision;
         if (state.wallCollision) return settings.tickWall;
         if (!state.onGround) return settings.tickAir;
