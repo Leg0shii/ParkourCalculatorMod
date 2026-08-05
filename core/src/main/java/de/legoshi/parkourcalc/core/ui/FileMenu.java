@@ -61,7 +61,7 @@ public final class FileMenu {
 
     private final SaveController controller;
 
-    private static final long AUTO_SAVE_INTERVAL_NANOS = 30L * 1_000_000_000L;
+    private static final long AUTO_SAVE_INTERVAL_NANOS = 2L * 1_000_000_000L;
     private long autoSaveIntervalNanos = AUTO_SAVE_INTERVAL_NANOS;
     private long autoSaveClockNanos;
     private final FilePickerPort filePicker;
@@ -282,10 +282,9 @@ public final class FileMenu {
         onSave();
     }
 
-    /** Call once per frame. While enabled, a named + dirty TAS is saved at most once per interval;
+    /** Call once per frame. A named + dirty TAS is saved at most once per interval;
      *  the clock arms on the first dirty frame so a fresh edit is never written instantly (gh-107). */
     public void tickAutoSave() {
-        if (!settings.autoSave) return;
         if (controller.isTempActive()) return;
         if (controller.currentName() == null || !controller.isDirty()) return;
         long now = System.nanoTime();

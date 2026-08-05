@@ -7,6 +7,7 @@ import de.legoshi.parkourcalc.core.save.SaveBrowseResult;
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.save.SaveInfo;
+import de.legoshi.parkourcalc.core.save.WorldDescriptor;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
@@ -29,6 +30,8 @@ import java.util.List;
 import java.util.Locale;
 
 public final class SaveController {
+
+    private static final String LAST_OPEN_FILE = ".lastopen";
 
     private final InputData inputData;
     private final SimulationRunner runner;
@@ -145,6 +148,7 @@ public final class SaveController {
             currentName = result.value;
             dirty = false;
             if (undo != null) undo.bindJournal(journalFor(currentName));
+            writeLastOpen(currentName);
         }
         return result;
     }
@@ -170,12 +174,60 @@ public final class SaveController {
         dirty = false;
         clearTempTrajectory();
         if (undo != null) undo.onDocumentReplaced(journalFor(name));
+        writeLastOpen(name);
         return result;
     }
 
     private UndoJournal journalFor(String name) {
         if (store == null || name == null) return null;
         return new UndoJournal(store.getSaveDir().resolve(".history").resolve(name + ".undo"));
+    }
+
+    public boolean tryReopenLastSave() {
+        if (store == null || currentName != null) return false;
+        String name = readLastOpen();
+        if (name == null) return false;
+        Result<SaveFile> peek = SaveIO.load(store, name);
+        if (!peek.ok) return false;
+        if (!worldMatches(peek.value.world, store.getWorldDescriptor())) return false;
+        return load(name).ok;
+    }
+
+    private static boolean worldMatches(SaveFile.World saved, WorldDescriptor current) {
+        if (saved == null || current == null) return false;
+        if (current.serverAddress != null || saved.serverAddress != null) {
+            return current.serverAddress != null && current.serverAddress.equals(saved.serverAddress);
+        }
+        return current.worldName != null && current.worldName.equals(saved.worldName);
+    }
+
+    private void writeLastOpen(String name) {
+        if (store == null || name == null) return;
+        try {
+            Files.createDirectories(store.getSaveDir());
+            Files.write(store.getSaveDir().resolve(LAST_OPEN_FILE), name.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException ignored) {
+        }
+    }
+
+    private String readLastOpen() {
+        if (store == null) return null;
+        Path file = store.getSaveDir().resolve(LAST_OPEN_FILE);
+        if (!Files.isRegularFile(file)) return null;
+        try {
+            String name = new String(Files.readAllBytes(file), StandardCharsets.UTF_8).trim();
+            return name.isEmpty() ? null : name;
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    private void clearLastOpenIf(String name) {
+        if (store == null || name == null || !name.equals(readLastOpen())) return;
+        try {
+            Files.deleteIfExists(store.getSaveDir().resolve(LAST_OPEN_FILE));
+        } catch (IOException ignored) {
+        }
     }
 
     private void resolveGraphPreset() {
@@ -195,6 +247,7 @@ public final class SaveController {
                 if (undo != null) undo.unbindIf(journal);
                 journal.delete();
             }
+            clearLastOpenIf(name);
             if (name.equals(currentName)) currentName = null;
         }
         return ok;

@@ -81,7 +81,6 @@ public final class Settings {
     private static final boolean DEFAULT_KEEP_BOXES_DURING_PLAYBACK = false;
 
     private static final float DEFAULT_YAW_FLICK_SPEED = 7200.0f;
-    private static final boolean DEFAULT_AUTO_SAVE = true;
     public static final float MIN_YAW_FLICK_SPEED = 30.0f;
     public static final float MAX_YAW_FLICK_SPEED = 7200.0f;
 
@@ -156,8 +155,6 @@ public final class Settings {
     public boolean showColRightClick = DEFAULT_SHOW_COL_RIGHT_CLICK;
 
     public float yawFlickSpeed = DEFAULT_YAW_FLICK_SPEED;
-
-    public boolean autoSave = DEFAULT_AUTO_SAVE;
 
     public int pathRenderDistance = DEFAULT_PATH_RENDER_DISTANCE;
     public boolean unlimitedPathRender = DEFAULT_UNLIMITED_PATH_RENDER;
@@ -255,7 +252,6 @@ public final class Settings {
         showColLeftClick = DEFAULT_SHOW_COL_LEFT_CLICK;
         showColRightClick = DEFAULT_SHOW_COL_RIGHT_CLICK;
         yawFlickSpeed = DEFAULT_YAW_FLICK_SPEED;
-        autoSave = DEFAULT_AUTO_SAVE;
         pathRenderDistance = DEFAULT_PATH_RENDER_DISTANCE;
         unlimitedPathRender = DEFAULT_UNLIMITED_PATH_RENDER;
         scrollbarSize = DEFAULT_SCROLLBAR_SIZE;

@@ -395,6 +395,7 @@ public final class Application {
             runner.setStartPosition(mc.getPlayerPosition());
             runSimulation();
             startInitialized = true;
+            saveController.tryReopenLastSave();
         }
         if (undoController != null) undoController.tick(System.nanoTime());
         dragController.tick(
