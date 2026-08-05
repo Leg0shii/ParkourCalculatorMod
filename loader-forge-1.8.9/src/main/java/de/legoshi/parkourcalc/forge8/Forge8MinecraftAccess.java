@@ -209,6 +209,16 @@ public final class Forge8MinecraftAccess implements MinecraftAccess {
     }
 
     @Override
+    public boolean isUndoChordDown() {
+        return Lwjgl2InputState.isUndoChordDown();
+    }
+
+    @Override
+    public boolean isRedoChordDown() {
+        return Lwjgl2InputState.isRedoChordDown();
+    }
+
+    @Override
     public boolean isShiftDown() {
         return Lwjgl2InputState.isShiftDown();
     }

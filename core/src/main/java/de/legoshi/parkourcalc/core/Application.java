@@ -44,6 +44,7 @@ import de.legoshi.parkourcalc.core.ui.anglesolver.GraphEditorWindow;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphPresetIO;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunLog;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
+import de.legoshi.parkourcalc.core.undo.UndoController;
 
 import java.nio.file.Path;
 import java.util.Collections;
@@ -78,6 +79,7 @@ public final class Application {
     private BlockPicker blockPicker;
     private AngleSolverState angleSolverState;
     private ConstraintKeyController constraintKeyController;
+    private UndoController undoController;
     private final OsSystemBridge systemBridge = new OsSystemBridge();
 
     public Application(Simulator simulator, MinecraftAccess mc) {
@@ -163,6 +165,11 @@ public final class Application {
                     angleSolverState, boxController.getStates()));
         }
         saveController.setSolverEngine(angleSolverEngine);
+        undoController = new UndoController(
+                () -> SaveIO.undoSnapshotJson(inputData, runner.getStartPosition(), runner.getStartVelocity(),
+                        runner.getStartYaw(), runner.getStartPitch(), angleSolverState),
+                saveController::applySnapshotJson);
+        saveController.setUndoController(undoController);
         VelocityMapController velocityMapController = new VelocityMapController(
                 angleSolverState, boxController, runner, saveController, inputData, forwardModel,
                 this::onUserChange, Math.max(2, Runtime.getRuntime().availableProcessors() - 2));
@@ -196,7 +203,7 @@ public final class Application {
         SettingsModal settingsModal = new SettingsModal(settings, this::saveSettings);
         MainWindowOverlay mainWindow = new MainWindowOverlay(
                 inputOverlay, inputData, fileMenu, settings, this::saveSettings,tickInfoPanel, perfOverlay,
-                settingsModal, systemBridge, saveController::getSaveStore, modVersion, mc
+                settingsModal, systemBridge, saveController::getSaveStore, modVersion, mc, this::undo, this::redo
         );
         overlayManager.register(mainWindow);
         overlayManager.register(angleSolverWindow);
@@ -293,7 +300,16 @@ public final class Application {
         boxController.clearAll();
         inputData.clear();
         saveController.discardCurrent();
+        if (undoController != null) undoController.onDocumentReplaced(null);
         startInitialized = false;
+    }
+
+    public void undo() {
+        if (undoController != null) undoController.undo();
+    }
+
+    public void redo() {
+        if (undoController != null) undoController.redo();
     }
 
     public void setStartToPlayer() {
@@ -380,6 +396,7 @@ public final class Application {
             runSimulation();
             startInitialized = true;
         }
+        if (undoController != null) undoController.tick(System.nanoTime());
         dragController.tick(
                 mc.getEyePosition(),
                 mc.getLookDirection(),

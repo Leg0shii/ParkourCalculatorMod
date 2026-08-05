@@ -17,6 +17,8 @@ import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphPresetIO;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
+import de.legoshi.parkourcalc.core.undo.UndoController;
+import de.legoshi.parkourcalc.core.undo.UndoJournal;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -39,6 +41,7 @@ public final class SaveController {
     private AngleSolverEngine solverEngine;
     private BoxController boxController;
     private Settings settings;
+    private UndoController undo;
     private String currentName;
     private boolean dirty;
     private String preTempSnapshotJson;
@@ -65,6 +68,10 @@ public final class SaveController {
 
     void setSolverEngine(AngleSolverEngine solverEngine) {
         this.solverEngine = solverEngine;
+    }
+
+    void setUndoController(UndoController undo) {
+        this.undo = undo;
     }
 
     /** Source for the optional per-tick debug dump (Settings.saveDebugValues gates it). */
@@ -95,20 +102,25 @@ public final class SaveController {
 
     public void restoreInitialTrajectory() {
         if (!tempActive || preTempSnapshotJson == null) return;
-        SaveFile f = SaveIO.parseSafe(preTempSnapshotJson);
-        if (f != null && f.start != null) {
-            if (solverEngine != null) solverEngine.onProblemReplaced();
-            SaveIO.applyRowsTo(f, inputData);
-            SaveIO.applyAngleSolverTo(f, angleSolver);
-            resolveGraphPreset();
-            runner.invalidate();
-            runner.setStartPosition(SaveIO.posOf(f.start));
-            runner.setStartVelocity(SaveIO.velOf(f.start));
-            runner.setStartYaw(f.start.yaw);
-            runner.setStartPitch(f.start.pitch != null ? f.start.pitch : PlaybackController.DEFAULT_PITCH);
-            retriggerSimulation.run();
-        }
+        applySnapshotJson(preTempSnapshotJson);
         clearTempTrajectory();
+    }
+
+    public void applySnapshotJson(String json) {
+        if (json == null) return;
+        SaveFile f = SaveIO.parseSafe(json);
+        if (f == null || f.start == null) return;
+        if (solverEngine != null) solverEngine.onProblemReplaced();
+        SaveIO.applyRowsTo(f, inputData);
+        SaveIO.applyAngleSolverTo(f, angleSolver);
+        resolveGraphPreset();
+        runner.invalidate();
+        runner.setStartPosition(SaveIO.posOf(f.start));
+        runner.setStartVelocity(SaveIO.velOf(f.start));
+        runner.setStartYaw(f.start.yaw);
+        runner.setStartPitch(f.start.pitch != null ? f.start.pitch : PlaybackController.DEFAULT_PITCH);
+        markDirty();
+        retriggerSimulation.run();
     }
 
     public void clearTempTrajectory() {
@@ -132,6 +144,7 @@ public final class SaveController {
         if (result.ok) {
             currentName = result.value;
             dirty = false;
+            if (undo != null) undo.bindJournal(journalFor(currentName));
         }
         return result;
     }
@@ -156,7 +169,13 @@ public final class SaveController {
         currentName = name;
         dirty = false;
         clearTempTrajectory();
+        if (undo != null) undo.onDocumentReplaced(journalFor(name));
         return result;
+    }
+
+    private UndoJournal journalFor(String name) {
+        if (store == null || name == null) return null;
+        return new UndoJournal(store.getSaveDir().resolve(".history").resolve(name + ".undo"));
     }
 
     private void resolveGraphPreset() {
@@ -170,7 +189,14 @@ public final class SaveController {
     public boolean delete(String name) {
         if (store == null) return false;
         boolean ok = store.moveToRecycleBin(name);
-        if (ok && name.equals(currentName)) currentName = null;
+        if (ok) {
+            UndoJournal journal = journalFor(name);
+            if (journal != null) {
+                if (undo != null) undo.unbindIf(journal);
+                journal.delete();
+            }
+            if (name.equals(currentName)) currentName = null;
+        }
         return ok;
     }
 
@@ -187,6 +213,7 @@ public final class SaveController {
         runner.setStartYaw(0.0F);
         runner.setStartPitch(PlaybackController.DEFAULT_PITCH);
         retriggerSimulation.run();
+        if (undo != null) undo.onDocumentReplaced(null);
     }
 
     public void discardCurrent() {

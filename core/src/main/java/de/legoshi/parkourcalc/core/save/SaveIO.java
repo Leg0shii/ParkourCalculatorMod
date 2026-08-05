@@ -54,6 +54,27 @@ public final class SaveIO {
         return new GsonBuilder().setPrettyPrinting().create().toJson(file);
     }
 
+    public static String undoSnapshotJson(InputData inputData, Vec3dCore startPos, Vec3dCore startVel,
+                                          float startYaw, float startPitch, AngleSolverState angleSolver) {
+        SaveFile file = new SaveFile();
+        file.version = SaveFile.FORMAT_VERSION;
+        SaveFile.Start start = new SaveFile.Start();
+        start.pos = new double[] { startPos.x, startPos.y, startPos.z };
+        start.vel = new double[] { startVel.x, startVel.y, startVel.z };
+        start.yaw = startYaw;
+        start.pitch = startPitch;
+        file.start = start;
+        List<SaveFile.Row> rows = new ArrayList<>(inputData.size());
+        for (InputRow row : inputData.getRows()) {
+            rows.add(toSaveRow(row));
+        }
+        file.rows = rows;
+        file.angleSolver = toSaveAngleSolver(angleSolver);
+        return COMPACT_GSON.toJson(file);
+    }
+
+    private static final Gson COMPACT_GSON = new Gson();
+
     public static Result<SaveFile> load(FileSystemSaveStore store, String rawName) {
         String name = sanitizeRelative(rawName);
         if (name == null) {
@@ -335,6 +356,7 @@ public final class SaveIO {
         for (Integer tick : s.populatedTicks()) {
             TickConstraints tc = s.tickConstraintsOrNull(tick);
             if (tc == null) continue;
+            if (tc.getConstraints().isEmpty() && tc.getOverride().isEmpty()) continue;
             SaveFile.Tick t = new SaveFile.Tick();
             t.tick = tick;
             for (Constraint c : tc.getConstraints()) {

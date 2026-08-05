@@ -50,8 +50,12 @@ public final class MainWindowOverlay implements RenderInterface {
     private final SaveStoreSupplier saveStoreSupplier;
     private final String modVersion;
     private final de.legoshi.parkourcalc.core.ports.MinecraftAccess mc;
+    private final Runnable onUndo;
+    private final Runnable onRedo;
 
     private boolean saveChordWasDown;
+    private boolean undoChordWasDown;
+    private boolean redoChordWasDown;
 
     private boolean openAboutRequested;
     private float lastHeaderHeight;
@@ -67,9 +71,11 @@ public final class MainWindowOverlay implements RenderInterface {
     public MainWindowOverlay(InputOverlay inputOverlay, InputData inputData, FileMenu fileMenu, Settings settings,
                              Runnable onSettingsChanged, TickInfoPanel tickInfoPanel, PerfOverlay perfOverlay,
                              SettingsModal settingsModal, OsSystemBridge systemBridge, SaveStoreSupplier saveStoreSupplier, String modVersion,
-                             de.legoshi.parkourcalc.core.ports.MinecraftAccess mc)
+                             de.legoshi.parkourcalc.core.ports.MinecraftAccess mc, Runnable onUndo, Runnable onRedo)
     {
         this.mc = mc;
+        this.onUndo = onUndo;
+        this.onRedo = onRedo;
         this.inputOverlay = inputOverlay;
         this.inputData = inputData;
         this.fileMenu = fileMenu;
@@ -87,6 +93,7 @@ public final class MainWindowOverlay implements RenderInterface {
     @Override
     public void render(ImGuiIO io) {
         handleQuickSaveChord();
+        handleUndoRedoChords(io);
         fileMenu.tickAutoSave();
         renderMainWindow(io, true);
         if (settings.viewTickInfo) tickInfoPanel.render(io);
@@ -98,6 +105,18 @@ public final class MainWindowOverlay implements RenderInterface {
         boolean down = mc != null && mc.isReady() && mc.isSaveChordDown();
         if (down && !saveChordWasDown) fileMenu.quickSave();
         saveChordWasDown = down;
+    }
+
+    private void handleUndoRedoChords(ImGuiIO io) {
+        boolean ready = mc != null && mc.isReady();
+        boolean undoDown = ready && mc.isUndoChordDown();
+        boolean redoDown = ready && mc.isRedoChordDown();
+        if (!io.getWantTextInput()) {
+            if (undoDown && !undoChordWasDown && onUndo != null) onUndo.run();
+            if (redoDown && !redoChordWasDown && onRedo != null) onRedo.run();
+        }
+        undoChordWasDown = undoDown;
+        redoChordWasDown = redoDown;
     }
 
     /** Display-only panels kept visible while the main UI is closed. ImGui receives no input here, so they don't edit. */
