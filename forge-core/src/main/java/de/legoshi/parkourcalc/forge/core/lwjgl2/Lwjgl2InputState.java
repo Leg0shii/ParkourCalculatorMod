@@ -28,6 +28,16 @@ public final class Lwjgl2InputState {
         return isCtrlDown() && Keyboard.isKeyDown(Keyboard.KEY_S);
     }
 
+    public static boolean isUndoChordDown() {
+        return isCtrlDown() && !isShiftDown() && Keyboard.isKeyDown(Keyboard.KEY_Z);
+    }
+
+    public static boolean isRedoChordDown() {
+        if (!isCtrlDown()) return false;
+        if (Keyboard.isKeyDown(Keyboard.KEY_Y)) return true;
+        return isShiftDown() && Keyboard.isKeyDown(Keyboard.KEY_Z);
+    }
+
     public static boolean isCtrlDown() {
         return Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL);
     }

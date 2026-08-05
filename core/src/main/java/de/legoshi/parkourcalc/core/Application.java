@@ -18,6 +18,8 @@ import de.legoshi.parkourcalc.core.ui.BoxDragController;
 import de.legoshi.parkourcalc.core.ui.BoxSelectController;
 import de.legoshi.parkourcalc.core.ui.ConstraintSelection;
 import de.legoshi.parkourcalc.core.ui.FileMenu;
+import de.legoshi.parkourcalc.core.ui.HudMessages;
+import de.legoshi.parkourcalc.core.ui.HudMessagesPanel;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputOverlay;
 import de.legoshi.parkourcalc.core.ui.InputRow;
@@ -33,6 +35,7 @@ import de.legoshi.parkourcalc.core.ui.StartStateTable;
 import de.legoshi.parkourcalc.core.ui.SettingsModal;
 import de.legoshi.parkourcalc.core.ui.TickInfoPanel;
 import de.legoshi.parkourcalc.core.ui.YawGizmoController;
+import de.legoshi.parkourcalc.core.ui.theme.HudMessageStyle;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
@@ -44,6 +47,7 @@ import de.legoshi.parkourcalc.core.ui.anglesolver.GraphEditorWindow;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphPresetIO;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunLog;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
+import de.legoshi.parkourcalc.core.undo.UndoController;
 
 import java.nio.file.Path;
 import java.util.Collections;
@@ -78,6 +82,8 @@ public final class Application {
     private BlockPicker blockPicker;
     private AngleSolverState angleSolverState;
     private ConstraintKeyController constraintKeyController;
+    private UndoController<de.legoshi.parkourcalc.core.save.SaveFile> undoController;
+    private final HudMessages hudMessages = new HudMessages();
     private final OsSystemBridge systemBridge = new OsSystemBridge();
 
     public Application(Simulator simulator, MinecraftAccess mc) {
@@ -85,6 +91,7 @@ public final class Application {
         this.selection = new SelectionManager(mc);
         this.runner = new SimulationRunner(simulator);
         this.saveController = new SaveController(inputData, runner, mc, this::runSimulation);
+        this.saveController.setRetriggerFrom(this::runSimulation);
         this.startDragController = new StartDragController(runner, boxController, selection,
                 saveController::markDirty, this::runSimulation, SimulationRunner.DEFAULT_MOVE_TICK_TOLERANCE);
         // Start box is the "Start" anchor: draggable to reposition, and tap-selectable as path index 0.
@@ -163,6 +170,14 @@ public final class Application {
                     angleSolverState, boxController.getStates()));
         }
         saveController.setSolverEngine(angleSolverEngine);
+        undoController = new UndoController<>(
+                () -> SaveIO.undoSignature(inputData, runner.getStartPosition(), runner.getStartVelocity(),
+                        runner.getStartYaw(), runner.getStartPitch(), angleSolverState),
+                () -> SaveIO.buildUndoSnapshot(inputData, runner.getStartPosition(), runner.getStartVelocity(),
+                        runner.getStartYaw(), runner.getStartPitch(), angleSolverState),
+                SaveIO::undoJson,
+                saveController::applySnapshotJson);
+        saveController.setUndoController(undoController);
         VelocityMapController velocityMapController = new VelocityMapController(
                 angleSolverState, boxController, runner, saveController, inputData, forwardModel,
                 this::onUserChange, Math.max(2, Runtime.getRuntime().availableProcessors() - 2));
@@ -194,9 +209,11 @@ public final class Application {
         PerfOverlay perfOverlay = new PerfOverlay();
         FileMenu fileMenu = new FileMenu(saveController, filePicker, settings, this::saveSettings);
         SettingsModal settingsModal = new SettingsModal(settings, this::saveSettings);
+        HudMessagesPanel hudMessagesPanel = new HudMessagesPanel(hudMessages, settings);
         MainWindowOverlay mainWindow = new MainWindowOverlay(
                 inputOverlay, inputData, fileMenu, settings, this::saveSettings,tickInfoPanel, perfOverlay,
-                settingsModal, systemBridge, saveController::getSaveStore, modVersion, mc
+                settingsModal, systemBridge, saveController::getSaveStore, modVersion, mc, this::undo, this::redo,
+                hudMessagesPanel
         );
         overlayManager.register(mainWindow);
         overlayManager.register(angleSolverWindow);
@@ -293,7 +310,30 @@ public final class Application {
         boxController.clearAll();
         inputData.clear();
         saveController.discardCurrent();
+        if (undoController != null) undoController.onDocumentReplaced(null);
         startInitialized = false;
+    }
+
+    public void undo() {
+        if (undoController == null) return;
+        boolean done = undoController.undo();
+        pushHudMessage(done ? "Undo" : "Nothing to undo",
+                done ? HudMessages.COLOR_DEFAULT : HudMessageStyle.COLOR_WARN);
+    }
+
+    public void redo() {
+        if (undoController == null) return;
+        boolean done = undoController.redo();
+        pushHudMessage(done ? "Redo" : "Nothing to redo",
+                done ? HudMessages.COLOR_DEFAULT : HudMessageStyle.COLOR_WARN);
+    }
+
+    public void pushHudMessage(String text) {
+        pushHudMessage(text, HudMessages.COLOR_DEFAULT);
+    }
+
+    public void pushHudMessage(String text, int colorArgb) {
+        hudMessages.push(text, colorArgb, System.nanoTime());
     }
 
     public void setStartToPlayer() {
@@ -379,7 +419,9 @@ public final class Application {
             runner.setStartPosition(mc.getPlayerPosition());
             runSimulation();
             startInitialized = true;
+            saveController.tryReopenLastSave();
         }
+        if (undoController != null) undoController.tick(System.nanoTime());
         dragController.tick(
                 mc.getEyePosition(),
                 mc.getLookDirection(),

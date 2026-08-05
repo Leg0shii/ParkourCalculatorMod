@@ -23,9 +23,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
- * gh-107: the auto-save tick saves a named + dirty TAS at most once per interval while the option
- * is on, and never touches an unnamed or clean session. (Lives in the core package for the
- * package-private SaveController wiring.)
+ * gh-107: the auto-save tick saves a named + dirty TAS at most once per interval, and never
+ * touches an unnamed or clean session. (Lives in the core package for the package-private
+ * SaveController wiring.)
  */
 public class AutoSaveTest {
 
@@ -82,7 +82,6 @@ public class AutoSaveTest {
     @Test
     public void autoSaveWritesNamedDirtySessionsAtMostOncePerInterval() throws Exception {
         Rig rig = new Rig(Files.createTempDirectory("pkc-autosave"));
-        rig.settings.autoSave = true;
         assertTrue(rig.controller.save("run").ok);
 
         rig.controller.markDirty();
@@ -93,28 +92,18 @@ public class AutoSaveTest {
         assertFalse("auto-save cleared the dirty flag by saving", rig.controller.isDirty());
         assertEquals("run", rig.controller.currentName());
 
+        rig.controller.flushPendingWrites();
         long stamp = Files.getLastModifiedTime(rig.store.getSaveDir().resolve("run.json")).toMillis();
         Thread.sleep(5);
         rig.menu.tickAutoSave();
+        rig.controller.flushPendingWrites();
         assertEquals(stamp, Files.getLastModifiedTime(rig.store.getSaveDir().resolve("run.json")).toMillis());
     }
 
     @Test
-    public void autoSaveIgnoresUnnamedSessionsAndCanBeDisabled() throws Exception {
-        Rig rig = new Rig(Files.createTempDirectory("pkc-autosave2"));
-
-        assertTrue("auto-save defaults to on", rig.settings.autoSave);
-        rig.settings.autoSave = false;
-        assertTrue(rig.controller.save("run").ok);
-        rig.controller.markDirty();
-        rig.menu.tickAutoSave();
-        Thread.sleep(1);
-        rig.menu.tickAutoSave();
-        assertTrue("auto-save must stay off when disabled", rig.controller.isDirty());
-
-        // On, but unnamed: never opens a popup or writes anything.
+    public void autoSaveIgnoresUnnamedSessions() throws Exception {
+        // Unnamed: never opens a popup or writes anything.
         Rig unnamed = new Rig(Files.createTempDirectory("pkc-autosave3"));
-        unnamed.settings.autoSave = true;
         unnamed.controller.markDirty();
         unnamed.menu.tickAutoSave();
         Thread.sleep(1);
@@ -128,7 +117,6 @@ public class AutoSaveTest {
     public void tempApplySuppressesAutoSaveAndRestoresInitialTrajectory() throws Exception {
         Rig rig = new Rig(Files.createTempDirectory("pkc-temp"));
         rig.controller.setAngleSolver(new AngleSolverState());
-        rig.settings.autoSave = true;
 
         rig.runner.setStartVelocity(new Vec3dCore(0.10, 0.0, 0.20));
         rig.data.getRows().clear();
@@ -139,6 +127,7 @@ public class AutoSaveTest {
         int origRows = rig.data.getRows().size();
         Vec3dCore origVel = rig.runner.getStartVelocity();
         Path saveFile = rig.store.getSaveDir().resolve("run.json");
+        rig.controller.flushPendingWrites();
         long savedStamp = Files.getLastModifiedTime(saveFile).toMillis();
 
         rig.controller.beginTempTrajectory();
@@ -153,6 +142,7 @@ public class AutoSaveTest {
         Thread.sleep(2);
         rig.menu.tickAutoSave();
         assertTrue("suppressed auto-save preserves the dirty flag", rig.controller.isDirty());
+        rig.controller.flushPendingWrites();
         assertEquals("suppressed auto-save writes nothing",
                 savedStamp, Files.getLastModifiedTime(saveFile).toMillis());
 

@@ -91,6 +91,14 @@ public interface MinecraftAccess {
         return false;
     }
 
+    default boolean isUndoChordDown() {
+        return false;
+    }
+
+    default boolean isRedoChordDown() {
+        return false;
+    }
+
     /** Either shift key currently held. Polled directly, not via ImGui IO. */
     boolean isShiftDown();
 

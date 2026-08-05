@@ -223,6 +223,39 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
         return isCtrlDown() && GLFW.glfwGetKey(window, GLFW.GLFW_KEY_S) == GLFW.GLFW_PRESS;
     }
 
+    private static int undoKey = GLFW.GLFW_KEY_UNKNOWN;
+    private static int redoKey = GLFW.GLFW_KEY_UNKNOWN;
+
+    private static int keyTyping(char letter, int fallback) {
+        for (int key = GLFW.GLFW_KEY_A; key <= GLFW.GLFW_KEY_Z; key++) {
+            String name = GLFW.glfwGetKeyName(key, 0);
+            if (name != null && name.length() == 1 && Character.toLowerCase(name.charAt(0)) == letter) return key;
+        }
+        return fallback;
+    }
+
+    private static void resolveEditKeys() {
+        if (undoKey != GLFW.GLFW_KEY_UNKNOWN) return;
+        undoKey = keyTyping('z', GLFW.GLFW_KEY_Z);
+        redoKey = keyTyping('y', GLFW.GLFW_KEY_Y);
+    }
+
+    @Override
+    public boolean isUndoChordDown() {
+        resolveEditKeys();
+        long window = Minecraft.getInstance().getWindow().handle();
+        return isCtrlDown() && !isShiftDown() && GLFW.glfwGetKey(window, undoKey) == GLFW.GLFW_PRESS;
+    }
+
+    @Override
+    public boolean isRedoChordDown() {
+        resolveEditKeys();
+        long window = Minecraft.getInstance().getWindow().handle();
+        if (!isCtrlDown()) return false;
+        if (GLFW.glfwGetKey(window, redoKey) == GLFW.GLFW_PRESS) return true;
+        return isShiftDown() && GLFW.glfwGetKey(window, undoKey) == GLFW.GLFW_PRESS;
+    }
+
     @Override
     public boolean isShiftDown() {
         long window = Minecraft.getInstance().getWindow().handle();
