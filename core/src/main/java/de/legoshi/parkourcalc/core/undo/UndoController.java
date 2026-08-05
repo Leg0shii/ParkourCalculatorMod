@@ -6,18 +6,27 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-public final class UndoController {
+public final class UndoController<T> {
 
     public static final long POLL_INTERVAL_NANOS = 250_000_000L;
     public static final long DEFAULT_BYTE_BUDGET = 16L << 20;
     public static final int DEFAULT_MAX_ENTRIES = 4096;
 
-    private final Supplier<String> snapshotSource;
+    private static ExecutorService worker;
+
+    private final Supplier<String> signatureSource;
+    private final Supplier<T> snapshotSource;
+    private final Function<T, String> serializer;
     private final Consumer<String> restorer;
     private final long byteBudget;
     private final int maxEntries;
@@ -26,17 +35,36 @@ public final class UndoController {
     private int cursor = -1;
     private long totalBytes;
     private String currentJson;
-    private String pendingJson;
+    private String currentSignature;
+    private String pendingSignature;
     private boolean polled;
     private long lastPollNanos;
     private UndoJournal journal;
+    private volatile boolean journalDead;
+    private Future<CaptureResult> pendingCapture;
+    private String pendingCaptureSignature;
 
-    public UndoController(Supplier<String> snapshotSource, Consumer<String> restorer) {
-        this(snapshotSource, restorer, DEFAULT_BYTE_BUDGET, DEFAULT_MAX_ENTRIES);
+    private static final class CaptureResult {
+        final String json;
+        final byte[] record;
+
+        CaptureResult(String json, byte[] record) {
+            this.json = json;
+            this.record = record;
+        }
     }
 
-    public UndoController(Supplier<String> snapshotSource, Consumer<String> restorer, long byteBudget, int maxEntries) {
+    public UndoController(Supplier<String> signatureSource, Supplier<T> snapshotSource,
+                          Function<T, String> serializer, Consumer<String> restorer) {
+        this(signatureSource, snapshotSource, serializer, restorer, DEFAULT_BYTE_BUDGET, DEFAULT_MAX_ENTRIES);
+    }
+
+    public UndoController(Supplier<String> signatureSource, Supplier<T> snapshotSource,
+                          Function<T, String> serializer, Consumer<String> restorer,
+                          long byteBudget, int maxEntries) {
+        this.signatureSource = signatureSource;
         this.snapshotSource = snapshotSource;
+        this.serializer = serializer;
         this.restorer = restorer;
         this.byteBudget = byteBudget;
         this.maxEntries = maxEntries;
@@ -46,23 +74,25 @@ public final class UndoController {
         if (polled && nowNanos - lastPollNanos < POLL_INTERVAL_NANOS) return;
         polled = true;
         lastPollNanos = nowNanos;
-        String json = snapshotSource.get();
-        if (json == null) return;
-        if (currentJson == null) {
-            commit(json);
-            pendingJson = null;
+        harvestCapture(false);
+        if (pendingCapture != null) return;
+        String sig = signatureSource.get();
+        if (sig == null) return;
+        if (currentSignature == null) {
+            beginCapture(sig);
+            pendingSignature = null;
             return;
         }
-        if (json.equals(currentJson)) {
-            pendingJson = null;
+        if (sig.equals(currentSignature)) {
+            pendingSignature = null;
             return;
         }
-        if (json.equals(pendingJson)) {
-            commit(json);
-            pendingJson = null;
+        if (sig.equals(pendingSignature)) {
+            beginCapture(sig);
+            pendingSignature = null;
             return;
         }
-        pendingJson = json;
+        pendingSignature = sig;
     }
 
     public boolean undo() {
@@ -93,13 +123,22 @@ public final class UndoController {
         return cursor >= 0 && cursor < entries.size() - 1;
     }
 
+    public void awaitPendingCapture() {
+        harvestCapture(true);
+        drainWorker();
+    }
+
     public void onDocumentReplaced(UndoJournal newJournal) {
+        harvestCapture(true);
+        drainWorker();
         entries.clear();
         cursor = -1;
         totalBytes = 0;
         currentJson = null;
-        pendingJson = null;
+        currentSignature = null;
+        pendingSignature = null;
         journal = newJournal;
+        journalDead = false;
         if (journal != null) {
             for (byte[] record : journal.read(byteBudget, maxEntries)) {
                 entries.add(record);
@@ -107,62 +146,143 @@ public final class UndoController {
             }
             cursor = entries.size() - 1;
         }
-        String live = snapshotSource.get();
+        if (cursor >= 0) currentJson = decompress(entries.get(cursor));
+        String sig = signatureSource.get();
+        if (sig == null) return;
+        T dto = snapshotSource.get();
+        if (dto == null) return;
+        String live = serializer.apply(dto);
         if (live == null) return;
-        if (cursor >= 0 && live.equals(decompress(entries.get(cursor)))) {
-            currentJson = live;
+        if (currentJson != null && live.equals(currentJson)) {
+            currentSignature = sig;
             return;
         }
-        commit(live);
+        commit(live, compress(live), sig);
     }
 
     public void bindJournal(UndoJournal newJournal) {
         if (newJournal == null) return;
         if (journal != null && journal.samePath(newJournal)) return;
+        harvestCapture(true);
         journal = newJournal;
-        if (!journal.rewrite(entries)) journal = null;
+        journalDead = false;
+        List<byte[]> copy = new ArrayList<>(entries);
+        worker().execute(() -> {
+            if (!newJournal.rewrite(copy)) journalDead = true;
+        });
     }
 
     public void unbindIf(UndoJournal other) {
-        if (journal != null && journal.samePath(other)) journal = null;
+        if (journal != null && journal.samePath(other)) {
+            drainWorker();
+            journal = null;
+        }
     }
 
     private boolean flushLive() {
-        String live = snapshotSource.get();
-        if (live == null) return false;
-        if (currentJson == null || !live.equals(currentJson)) {
-            commit(live);
+        harvestCapture(true);
+        String sig = signatureSource.get();
+        if (sig == null) return false;
+        if (currentSignature == null || !sig.equals(currentSignature)) {
+            if (!beginCapture(sig)) return false;
+            harvestCapture(true);
         }
-        pendingJson = null;
+        pendingSignature = null;
         return true;
+    }
+
+    private boolean beginCapture(String sig) {
+        T dto = snapshotSource.get();
+        if (dto == null) return false;
+        String topJson = currentJson;
+        pendingCaptureSignature = sig;
+        pendingCapture = worker().submit(() -> {
+            String json = serializer.apply(dto);
+            if (json == null) throw new IllegalStateException("null snapshot json");
+            if (json.equals(topJson)) return new CaptureResult(json, null);
+            return new CaptureResult(json, compress(json));
+        });
+        return true;
+    }
+
+    private void harvestCapture(boolean block) {
+        if (pendingCapture != null && (block || pendingCapture.isDone())) {
+            try {
+                CaptureResult r = pendingCapture.get(30, TimeUnit.SECONDS);
+                if (r.record == null) {
+                    currentJson = r.json;
+                    currentSignature = pendingCaptureSignature;
+                } else {
+                    commit(r.json, r.record, pendingCaptureSignature);
+                }
+            } catch (Exception ignored) {
+            }
+            pendingCapture = null;
+            pendingCaptureSignature = null;
+        }
+        if (journalDead) {
+            journal = null;
+            journalDead = false;
+        }
     }
 
     private void applyRestore(String json) {
         restorer.accept(json);
-        currentJson = snapshotSource.get();
-        pendingJson = null;
+        currentJson = json;
+        currentSignature = signatureSource.get();
+        pendingSignature = null;
     }
 
-    private void commit(String json) {
+    private void commit(String json, byte[] record, String sig) {
         boolean truncated = cursor < entries.size() - 1;
         while (entries.size() - 1 > cursor) {
             totalBytes -= entries.remove(entries.size() - 1).length;
         }
-        byte[] record = compress(json);
         entries.add(record);
         totalBytes += record.length;
         cursor = entries.size() - 1;
         currentJson = json;
+        currentSignature = sig;
         while (entries.size() > 1 && (totalBytes > byteBudget || entries.size() > maxEntries)) {
             totalBytes -= entries.remove(0).length;
             cursor--;
         }
-        if (journal == null) return;
-        boolean ok = truncated ? journal.rewrite(entries) : journal.append(record);
-        if (ok && journal.sizeBytes() > byteBudget * 2) {
-            ok = journal.rewrite(entries);
+        UndoJournal target = journal;
+        if (target == null) return;
+        List<byte[]> copy = new ArrayList<>(entries);
+        long budget = byteBudget;
+        worker().execute(() -> {
+            boolean ok = truncated ? target.rewrite(copy) : target.append(record);
+            if (ok && target.sizeBytes() > budget * 2) ok = target.rewrite(copy);
+            if (!ok) journalDead = true;
+        });
+    }
+
+    private void drainWorker() {
+        if (worker == null) return;
+        try {
+            worker.submit(() -> { }).get(30, TimeUnit.SECONDS);
+        } catch (Exception ignored) {
         }
-        if (!ok) journal = null;
+    }
+
+    private static ExecutorService worker() {
+        if (worker == null) {
+            ExecutorService executor = Executors.newSingleThreadExecutor(r -> {
+                Thread t = new Thread(r, "pkc-undo-writer");
+                t.setDaemon(true);
+                return t;
+            });
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                executor.shutdown();
+                try {
+                    executor.awaitTermination(3, TimeUnit.SECONDS);
+                } catch (InterruptedException ignored) {
+                }
+            }, "pkc-undo-flush"));
+            worker = executor;
+        }
+        return worker;
     }
 
     private static byte[] compress(String json) {

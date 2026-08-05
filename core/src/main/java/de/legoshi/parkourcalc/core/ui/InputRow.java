@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.core.ui;
 
 import java.util.EnumSet;
+import java.util.Objects;
 import java.util.Set;
 
 public class InputRow {
@@ -17,6 +18,7 @@ public class InputRow {
     private boolean pitchLocked;
     private int speedAmplifier;
     private int jumpBoostAmplifier;
+    private int modCount;
 
     // LEFT_CLICK / RIGHT_CLICK appended last to keep existing ordinals stable for old saves.
     public enum Key {
@@ -31,16 +33,17 @@ public class InputRow {
         return id;
     }
 
+    public int getModCount() {
+        return modCount;
+    }
+
     public boolean isKeyActive(Key key) {
         return activeKeys.contains(key);
     }
 
     public void setKeyActive(Key key, boolean active) {
-        if (active) {
-            activeKeys.add(key);
-        } else {
-            activeKeys.remove(key);
-        }
+        boolean changed = active ? activeKeys.add(key) : activeKeys.remove(key);
+        if (changed) modCount++;
     }
 
     public void applyForce45(boolean strafe, int strafeSign) {
@@ -55,6 +58,7 @@ public class InputRow {
     }
 
     public void setYaw(Float yaw) {
+        if (!Objects.equals(this.yaw, yaw)) modCount++;
         this.yaw = yaw;
     }
 
@@ -63,6 +67,7 @@ public class InputRow {
     }
 
     public void setYawLocked(boolean yawLocked) {
+        if (this.yawLocked != yawLocked) modCount++;
         this.yawLocked = yawLocked;
     }
 
@@ -71,6 +76,7 @@ public class InputRow {
     }
 
     public void setPitch(Float pitch) {
+        if (!Objects.equals(this.pitch, pitch)) modCount++;
         this.pitch = pitch;
     }
 
@@ -79,6 +85,7 @@ public class InputRow {
     }
 
     public void setPitchLocked(boolean pitchLocked) {
+        if (this.pitchLocked != pitchLocked) modCount++;
         this.pitchLocked = pitchLocked;
     }
 
@@ -87,7 +94,9 @@ public class InputRow {
     }
 
     public void setSpeedAmplifier(int amplifier) {
-        this.speedAmplifier = clampAmplifier(amplifier);
+        int clamped = clampAmplifier(amplifier);
+        if (this.speedAmplifier != clamped) modCount++;
+        this.speedAmplifier = clamped;
     }
 
     public int getJumpBoostAmplifier() {
@@ -95,7 +104,9 @@ public class InputRow {
     }
 
     public void setJumpBoostAmplifier(int amplifier) {
-        this.jumpBoostAmplifier = clampAmplifier(amplifier);
+        int clamped = clampAmplifier(amplifier);
+        if (this.jumpBoostAmplifier != clamped) modCount++;
+        this.jumpBoostAmplifier = clamped;
     }
 
     private static int clampAmplifier(int amplifier) {

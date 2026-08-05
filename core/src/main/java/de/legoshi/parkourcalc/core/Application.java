@@ -82,7 +82,7 @@ public final class Application {
     private BlockPicker blockPicker;
     private AngleSolverState angleSolverState;
     private ConstraintKeyController constraintKeyController;
-    private UndoController undoController;
+    private UndoController<de.legoshi.parkourcalc.core.save.SaveFile> undoController;
     private final HudMessages hudMessages = new HudMessages();
     private final OsSystemBridge systemBridge = new OsSystemBridge();
 
@@ -91,6 +91,7 @@ public final class Application {
         this.selection = new SelectionManager(mc);
         this.runner = new SimulationRunner(simulator);
         this.saveController = new SaveController(inputData, runner, mc, this::runSimulation);
+        this.saveController.setRetriggerFrom(this::runSimulation);
         this.startDragController = new StartDragController(runner, boxController, selection,
                 saveController::markDirty, this::runSimulation, SimulationRunner.DEFAULT_MOVE_TICK_TOLERANCE);
         // Start box is the "Start" anchor: draggable to reposition, and tap-selectable as path index 0.
@@ -169,9 +170,12 @@ public final class Application {
                     angleSolverState, boxController.getStates()));
         }
         saveController.setSolverEngine(angleSolverEngine);
-        undoController = new UndoController(
-                () -> SaveIO.undoSnapshotJson(inputData, runner.getStartPosition(), runner.getStartVelocity(),
+        undoController = new UndoController<>(
+                () -> SaveIO.undoSignature(inputData, runner.getStartPosition(), runner.getStartVelocity(),
                         runner.getStartYaw(), runner.getStartPitch(), angleSolverState),
+                () -> SaveIO.buildUndoSnapshot(inputData, runner.getStartPosition(), runner.getStartVelocity(),
+                        runner.getStartYaw(), runner.getStartPitch(), angleSolverState),
+                SaveIO::undoJson,
                 saveController::applySnapshotJson);
         saveController.setUndoController(undoController);
         VelocityMapController velocityMapController = new VelocityMapController(

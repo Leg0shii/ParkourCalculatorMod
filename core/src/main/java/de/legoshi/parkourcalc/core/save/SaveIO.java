@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.TimeZone;
 
 /** Pure save/load logic; Gson stays within the 2.2.4 subset (MC 1.8.9 ships it). */
@@ -63,6 +64,11 @@ public final class SaveIO {
 
     public static String undoSnapshotJson(InputData inputData, Vec3dCore startPos, Vec3dCore startVel,
                                           float startYaw, float startPitch, AngleSolverState angleSolver) {
+        return undoJson(buildUndoSnapshot(inputData, startPos, startVel, startYaw, startPitch, angleSolver));
+    }
+
+    public static SaveFile buildUndoSnapshot(InputData inputData, Vec3dCore startPos, Vec3dCore startVel,
+                                             float startYaw, float startPitch, AngleSolverState angleSolver) {
         SaveFile file = new SaveFile();
         file.version = SaveFile.FORMAT_VERSION;
         SaveFile.Start start = new SaveFile.Start();
@@ -77,7 +83,30 @@ public final class SaveIO {
         }
         file.rows = rows;
         file.angleSolver = toSaveAngleSolver(angleSolver);
+        return file;
+    }
+
+    public static String undoJson(SaveFile file) {
         return COMPACT_GSON.toJson(file);
+    }
+
+    public static String undoSignature(InputData inputData, Vec3dCore startPos, Vec3dCore startVel,
+                                       float startYaw, float startPitch, AngleSolverState angleSolver) {
+        List<InputRow> rows = inputData.getRows();
+        long h = 1125899906842597L;
+        for (int i = 0; i < rows.size(); i++) {
+            InputRow row = rows.get(i);
+            h = h * 31 + row.getId();
+            h = h * 31 + row.getModCount();
+        }
+        StringBuilder sb = new StringBuilder(160);
+        sb.append(rows.size()).append('#').append(h)
+                .append('#').append(startPos.x).append(',').append(startPos.y).append(',').append(startPos.z)
+                .append('#').append(startVel.x).append(',').append(startVel.y).append(',').append(startVel.z)
+                .append('#').append(startYaw).append('#').append(startPitch).append('#');
+        SaveFile.AngleSolver solver = toSaveAngleSolver(angleSolver);
+        if (solver != null) sb.append(COMPACT_GSON.toJson(solver));
+        return sb.toString();
     }
 
     private static final Gson COMPACT_GSON = new Gson();
@@ -319,6 +348,20 @@ public final class SaveIO {
         r.speedAmplifier = row.getSpeedAmplifier();
         r.jumpBoostAmplifier = row.getJumpBoostAmplifier();
         return r;
+    }
+
+    public static boolean rowMatches(SaveFile.Row r, InputRow row) {
+        if (r == null) return false;
+        for (InputRow.Key k : InputRow.Key.values()) {
+            boolean saved = r.keys != null && r.keys.contains(k.name());
+            if (saved != row.isKeyActive(k)) return false;
+        }
+        return Objects.equals(r.yaw, row.getYaw())
+                && r.yawLocked == row.isYawLocked()
+                && Objects.equals(r.pitch, row.getPitch())
+                && r.pitchLocked == row.isPitchLocked()
+                && r.speedAmplifier == row.getSpeedAmplifier()
+                && r.jumpBoostAmplifier == row.getJumpBoostAmplifier();
     }
 
     private static InputRow toInputRow(SaveFile.Row r) {

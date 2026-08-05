@@ -13,6 +13,7 @@ import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.InputData;
+import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
@@ -31,6 +32,7 @@ import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.IntConsumer;
 
 public final class SaveController {
 
@@ -40,6 +42,7 @@ public final class SaveController {
     private final SimulationRunner runner;
     private final MinecraftAccess mc;
     private final Runnable retriggerSimulation;
+    private IntConsumer retriggerFrom;
 
     private FileSystemSaveStore store;
     private FileSystemSaveStore graphStore;
@@ -47,7 +50,7 @@ public final class SaveController {
     private AngleSolverEngine solverEngine;
     private BoxController boxController;
     private Settings settings;
-    private UndoController undo;
+    private UndoController<?> undo;
     private static ExecutorService writeExecutor;
 
     private String currentName;
@@ -79,8 +82,12 @@ public final class SaveController {
         this.solverEngine = solverEngine;
     }
 
-    void setUndoController(UndoController undo) {
+    void setUndoController(UndoController<?> undo) {
         this.undo = undo;
+    }
+
+    void setRetriggerFrom(IntConsumer retriggerFrom) {
+        this.retriggerFrom = retriggerFrom;
     }
 
     /** Source for the optional per-tick debug dump (Settings.saveDebugValues gates it). */
@@ -120,16 +127,44 @@ public final class SaveController {
         SaveFile f = SaveIO.parseSafe(json);
         if (f == null || f.start == null) return;
         if (solverEngine != null) solverEngine.onProblemReplaced();
+        boolean incremental = retriggerFrom != null && startMatches(f.start);
+        int dirtyTick = incremental ? firstChangedRow(f.rows) : -1;
         SaveIO.applyRowsTo(f, inputData);
         SaveIO.applyAngleSolverTo(f, angleSolver);
         resolveGraphPreset();
-        runner.invalidate();
-        runner.setStartPosition(SaveIO.posOf(f.start));
-        runner.setStartVelocity(SaveIO.velOf(f.start));
-        runner.setStartYaw(f.start.yaw);
-        runner.setStartPitch(f.start.pitch != null ? f.start.pitch : PlaybackController.DEFAULT_PITCH);
         markDirty();
-        retriggerSimulation.run();
+        if (!incremental) {
+            runner.invalidate();
+            runner.setStartPosition(SaveIO.posOf(f.start));
+            runner.setStartVelocity(SaveIO.velOf(f.start));
+            runner.setStartYaw(f.start.yaw);
+            runner.setStartPitch(f.start.pitch != null ? f.start.pitch : PlaybackController.DEFAULT_PITCH);
+            retriggerSimulation.run();
+        } else if (dirtyTick >= 0) {
+            retriggerFrom.accept(dirtyTick);
+        }
+    }
+
+    private boolean startMatches(SaveFile.Start s) {
+        Vec3dCore pos = SaveIO.posOf(s);
+        Vec3dCore vel = SaveIO.velOf(s);
+        Vec3dCore curPos = runner.getStartPosition();
+        Vec3dCore curVel = runner.getStartVelocity();
+        float pitch = s.pitch != null ? s.pitch : PlaybackController.DEFAULT_PITCH;
+        return pos.x == curPos.x && pos.y == curPos.y && pos.z == curPos.z
+                && vel.x == curVel.x && vel.y == curVel.y && vel.z == curVel.z
+                && s.yaw == runner.getStartYaw()
+                && pitch == runner.getStartPitch();
+    }
+
+    private int firstChangedRow(List<SaveFile.Row> restored) {
+        List<InputRow> current = inputData.getRows();
+        int restoredSize = restored == null ? 0 : restored.size();
+        int shared = Math.min(current.size(), restoredSize);
+        for (int i = 0; i < shared; i++) {
+            if (!SaveIO.rowMatches(restored.get(i), current.get(i))) return i;
+        }
+        return current.size() == restoredSize ? -1 : shared;
     }
 
     public void clearTempTrajectory() {

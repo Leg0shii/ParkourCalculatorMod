@@ -64,19 +64,25 @@ public class UndoIntegrationTest {
         final SimulationRunner runner;
         final SaveController controller;
         final FileSystemSaveStore store;
-        final UndoController undo;
+        final UndoController<de.legoshi.parkourcalc.core.save.SaveFile> undo;
+        final List<Integer> partialResims = new java.util.ArrayList<>();
+        int fullResims;
         long now = 1L;
 
         Rig(Path dir) {
             runner = new SimulationRunner(new NullSimulator());
             runner.setStartVelocity(Vec3dCore.GROUND_REST_VELOCITY);
-            controller = new SaveController(data, runner, (MinecraftAccess) null, () -> { });
+            controller = new SaveController(data, runner, (MinecraftAccess) null, () -> fullResims++);
+            controller.setRetriggerFrom(partialResims::add);
             store = new FileSystemSaveStore(dir, "test", "1.8.9", () -> null);
             controller.setSaveStore(store);
             controller.setAngleSolver(solver);
-            undo = new UndoController(
-                    () -> SaveIO.undoSnapshotJson(data, runner.getStartPosition(), runner.getStartVelocity(),
+            undo = new UndoController<>(
+                    () -> SaveIO.undoSignature(data, runner.getStartPosition(), runner.getStartVelocity(),
                             runner.getStartYaw(), runner.getStartPitch(), solver),
+                    () -> SaveIO.buildUndoSnapshot(data, runner.getStartPosition(), runner.getStartVelocity(),
+                            runner.getStartYaw(), runner.getStartPitch(), solver),
+                    SaveIO::undoJson,
                     controller::applySnapshotJson);
             controller.setUndoController(undo);
         }
@@ -86,6 +92,7 @@ public class UndoIntegrationTest {
             undo.tick(now);
             now += STEP;
             undo.tick(now);
+            undo.awaitPendingCapture();
         }
     }
 
@@ -132,6 +139,7 @@ public class UndoIntegrationTest {
         rig1.data.getRows().add(new InputRow());
         rig1.settle();
         assertTrue(rig1.controller.save("run").ok);
+        rig1.undo.awaitPendingCapture();
         assertTrue(Files.isRegularFile(dir.resolve(".history").resolve("run.undo")));
 
         rig1.data.getRows().add(new InputRow());
@@ -159,11 +167,75 @@ public class UndoIntegrationTest {
         rig.data.getRows().add(new InputRow());
         rig.settle();
         assertTrue(rig.controller.save("run").ok);
+        rig.undo.awaitPendingCapture();
 
         Path journal = dir.resolve(".history").resolve("run.undo");
         assertTrue(Files.isRegularFile(journal));
         assertTrue(rig.controller.delete("run"));
         assertFalse(Files.exists(journal));
+    }
+
+    @Test
+    public void undoResimulatesOnlyFromTheFirstChangedTick() throws Exception {
+        Rig rig = new Rig(Files.createTempDirectory("pkc-undo-inc"));
+        for (int i = 0; i < 3; i++) {
+            InputRow row = new InputRow();
+            row.setKeyActive(InputRow.Key.W, true);
+            row.setYaw(16.3f + i);
+            row.setPitch(-24.75f);
+            rig.data.getRows().add(row);
+        }
+        rig.settle();
+
+        rig.data.getRows().get(2).setKeyActive(InputRow.Key.SNEAK, true);
+        rig.settle();
+
+        rig.fullResims = 0;
+        rig.partialResims.clear();
+        assertTrue(rig.undo.undo());
+        assertFalse(rig.data.getRows().get(2).isKeyActive(InputRow.Key.SNEAK));
+        assertEquals(0, rig.fullResims);
+        assertEquals(Collections.singletonList(2), rig.partialResims);
+
+        rig.partialResims.clear();
+        assertTrue(rig.undo.redo());
+        assertTrue(rig.data.getRows().get(2).isKeyActive(InputRow.Key.SNEAK));
+        assertEquals(0, rig.fullResims);
+        assertEquals(Collections.singletonList(2), rig.partialResims);
+    }
+
+    @Test
+    public void solverOnlyUndoSkipsResimulationEntirely() throws Exception {
+        Rig rig = new Rig(Files.createTempDirectory("pkc-undo-noresim"));
+        rig.data.getRows().add(new InputRow());
+        rig.settle();
+
+        rig.solver.addConstraint(5);
+        rig.settle();
+
+        rig.fullResims = 0;
+        rig.partialResims.clear();
+        assertTrue(rig.undo.undo());
+        assertNull(rig.solver.tickConstraintsOrNull(5));
+        assertEquals(0, rig.fullResims);
+        assertTrue(rig.partialResims.isEmpty());
+    }
+
+    @Test
+    public void startChangeUndoFallsBackToFullResimulation() throws Exception {
+        Rig rig = new Rig(Files.createTempDirectory("pkc-undo-fullresim"));
+        rig.data.getRows().add(new InputRow());
+        rig.settle();
+
+        rig.runner.setStartPosition(new Vec3dCore(3.0, 64.0, 1.0));
+        rig.settle();
+
+        rig.fullResims = 0;
+        rig.partialResims.clear();
+        assertTrue(rig.undo.undo());
+        assertEquals(0.0, rig.runner.getStartPosition().x, 0.0);
+        assertEquals(1, rig.fullResims);
+        assertTrue(rig.partialResims.isEmpty());
     }
 
     @Test

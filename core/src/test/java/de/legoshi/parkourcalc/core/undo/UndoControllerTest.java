@@ -24,21 +24,22 @@ public class UndoControllerTest {
 
     private long now = 1L;
 
-    private static UndoController controller(Doc doc) {
-        return new UndoController(() -> doc.value, json -> doc.value = json);
+    private static UndoController<String> controller(Doc doc) {
+        return new UndoController<>(() -> doc.value, () -> doc.value, s -> s, json -> doc.value = json);
     }
 
-    private void settle(UndoController u) {
+    private void settle(UndoController<String> u) {
         now += STEP;
         u.tick(now);
         now += STEP;
         u.tick(now);
+        u.awaitPendingCapture();
     }
 
     @Test
     public void commitsAfterStablePollsAndRoundTrips() {
         Doc doc = new Doc("a");
-        UndoController u = controller(doc);
+        UndoController<String> u = controller(doc);
         settle(u);
         assertFalse(u.canUndo());
 
@@ -56,7 +57,7 @@ public class UndoControllerTest {
     @Test
     public void coalescesWhileValueKeepsChanging() {
         Doc doc = new Doc("a");
-        UndoController u = controller(doc);
+        UndoController<String> u = controller(doc);
         settle(u);
 
         doc.value = "b1";
@@ -68,10 +69,12 @@ public class UndoControllerTest {
         doc.value = "b3";
         now += STEP;
         u.tick(now);
+        u.awaitPendingCapture();
         assertFalse(u.canUndo());
 
         now += STEP;
         u.tick(now);
+        u.awaitPendingCapture();
         assertTrue(u.canUndo());
         assertTrue(u.undo());
         assertEquals("a", doc.value);
@@ -80,7 +83,7 @@ public class UndoControllerTest {
     @Test
     public void undoFlushesPendingEdit() {
         Doc doc = new Doc("a");
-        UndoController u = controller(doc);
+        UndoController<String> u = controller(doc);
         settle(u);
 
         doc.value = "b";
@@ -93,7 +96,7 @@ public class UndoControllerTest {
     @Test
     public void newEditDropsRedoTail() {
         Doc doc = new Doc("a");
-        UndoController u = controller(doc);
+        UndoController<String> u = controller(doc);
         settle(u);
         doc.value = "b";
         settle(u);
@@ -112,7 +115,7 @@ public class UndoControllerTest {
     @Test
     public void identicalSnapshotsAreDeduped() {
         Doc doc = new Doc("a");
-        UndoController u = controller(doc);
+        UndoController<String> u = controller(doc);
         settle(u);
         settle(u);
         settle(u);
@@ -123,7 +126,8 @@ public class UndoControllerTest {
     @Test
     public void byteBudgetEvictsOldestEntries() {
         Doc doc = new Doc("v0");
-        UndoController u = new UndoController(() -> doc.value, json -> doc.value = json, 300L, 1000);
+        UndoController<String> u = new UndoController<>(() -> doc.value, () -> doc.value, s -> s,
+                json -> doc.value = json, 300L, 1000);
         settle(u);
         for (int i = 1; i <= 20; i++) {
             doc.value = "v" + i;
@@ -144,7 +148,7 @@ public class UndoControllerTest {
         Path file = dir.resolve("run.undo");
 
         Doc doc = new Doc("a");
-        UndoController u1 = controller(doc);
+        UndoController<String> u1 = controller(doc);
         u1.onDocumentReplaced(new UndoJournal(file));
         doc.value = "b";
         settle(u1);
@@ -152,7 +156,7 @@ public class UndoControllerTest {
         settle(u1);
 
         Doc doc2 = new Doc("c");
-        UndoController u2 = controller(doc2);
+        UndoController<String> u2 = controller(doc2);
         u2.onDocumentReplaced(new UndoJournal(file));
         assertTrue(u2.canUndo());
         assertTrue(u2.undo());
@@ -168,13 +172,13 @@ public class UndoControllerTest {
         Path file = dir.resolve("run.undo");
 
         Doc doc = new Doc("a");
-        UndoController u1 = controller(doc);
+        UndoController<String> u1 = controller(doc);
         u1.onDocumentReplaced(new UndoJournal(file));
         doc.value = "b";
         settle(u1);
 
         Doc doc2 = new Doc("x");
-        UndoController u2 = controller(doc2);
+        UndoController<String> u2 = controller(doc2);
         u2.onDocumentReplaced(new UndoJournal(file));
         assertEquals("x", doc2.value);
         assertTrue(u2.undo());
@@ -189,15 +193,16 @@ public class UndoControllerTest {
         Path file = dir.resolve("run.undo");
 
         Doc doc = new Doc("a");
-        UndoController u1 = controller(doc);
+        UndoController<String> u1 = controller(doc);
         u1.onDocumentReplaced(new UndoJournal(file));
         doc.value = "b";
         settle(u1);
+        u1.unbindIf(new UndoJournal(file));
 
         Files.write(file, new byte[] { 0, 0, 3, -24, 1, 2, 3 }, StandardOpenOption.APPEND);
 
         Doc doc2 = new Doc("b");
-        UndoController u2 = controller(doc2);
+        UndoController<String> u2 = controller(doc2);
         u2.onDocumentReplaced(new UndoJournal(file));
         assertTrue(u2.undo());
         assertEquals("a", doc2.value);
@@ -209,7 +214,7 @@ public class UndoControllerTest {
         Path file = dir.resolve("run.undo");
 
         Doc doc = new Doc("a");
-        UndoController u1 = controller(doc);
+        UndoController<String> u1 = controller(doc);
         u1.onDocumentReplaced(new UndoJournal(file));
         doc.value = "b";
         settle(u1);
@@ -221,7 +226,7 @@ public class UndoControllerTest {
         settle(u1);
 
         Doc doc2 = new Doc("d");
-        UndoController u2 = controller(doc2);
+        UndoController<String> u2 = controller(doc2);
         u2.onDocumentReplaced(new UndoJournal(file));
         assertTrue(u2.undo());
         assertEquals("b", doc2.value);
