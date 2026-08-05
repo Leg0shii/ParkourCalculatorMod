@@ -92,9 +92,11 @@ public class AutoSaveTest {
         assertFalse("auto-save cleared the dirty flag by saving", rig.controller.isDirty());
         assertEquals("run", rig.controller.currentName());
 
+        rig.controller.flushPendingWrites();
         long stamp = Files.getLastModifiedTime(rig.store.getSaveDir().resolve("run.json")).toMillis();
         Thread.sleep(5);
         rig.menu.tickAutoSave();
+        rig.controller.flushPendingWrites();
         assertEquals(stamp, Files.getLastModifiedTime(rig.store.getSaveDir().resolve("run.json")).toMillis());
     }
 
@@ -125,6 +127,7 @@ public class AutoSaveTest {
         int origRows = rig.data.getRows().size();
         Vec3dCore origVel = rig.runner.getStartVelocity();
         Path saveFile = rig.store.getSaveDir().resolve("run.json");
+        rig.controller.flushPendingWrites();
         long savedStamp = Files.getLastModifiedTime(saveFile).toMillis();
 
         rig.controller.beginTempTrajectory();
@@ -139,6 +142,7 @@ public class AutoSaveTest {
         Thread.sleep(2);
         rig.menu.tickAutoSave();
         assertTrue("suppressed auto-save preserves the dirty flag", rig.controller.isDirty());
+        rig.controller.flushPendingWrites();
         assertEquals("suppressed auto-save writes nothing",
                 savedStamp, Files.getLastModifiedTime(saveFile).toMillis());
 

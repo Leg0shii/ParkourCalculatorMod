@@ -37,14 +37,21 @@ public final class SaveIO {
         }
 
         SaveFile file = buildFile(store, inputData, startPos, startVel, startYaw, startPitch, angleSolver, states, fullDebug);
-        String json = new GsonBuilder().setPrettyPrinting().create().toJson(file);
 
         try {
-            store.write(name, json);
+            store.write(name, saveJson(file));
         } catch (IOException e) {
             return Result.failure("Failed to write save: " + e.getMessage());
         }
         return Result.success(name);
+    }
+
+    public static SaveFile buildSaveFile(FileSystemSaveStore store, InputData inputData, Vec3dCore startPos, Vec3dCore startVel, float startYaw, float startPitch, AngleSolverState angleSolver, List<TickState> states, boolean fullDebug) {
+        return buildFile(store, inputData, startPos, startVel, startYaw, startPitch, angleSolver, states, fullDebug);
+    }
+
+    public static String saveJson(SaveFile file) {
+        return new GsonBuilder().setPrettyPrinting().create().toJson(file);
     }
 
     public static String snapshotJson(FileSystemSaveStore store, InputData inputData, Vec3dCore startPos,
@@ -165,6 +172,8 @@ public final class SaveIO {
         }
 
         state.setResult(toResult(a.result));
+        state.setApplyDeviation(a.deviation,
+                parseEnum(AngleSolverState.DeviationKind.class, a.deviationKind, AngleSolverState.DeviationKind.OTHER));
     }
 
     public static Vec3dCore posOf(SaveFile.Start s) {
@@ -370,6 +379,8 @@ public final class SaveIO {
         for (BlockSelection b : s.getCollisionBlocks()) a.selectedBlocks.add(toSaveBlock(b));
         for (BlockSelection b : s.getLandBlocks()) a.selectedBlocks.add(toSaveBlock(b));
         a.result = toSaveResult(s.getResult());
+        a.deviation = s.getApplyDeviation();
+        a.deviationKind = s.getApplyDeviationKind() != null ? s.getApplyDeviationKind().name() : null;
         return a;
     }
 

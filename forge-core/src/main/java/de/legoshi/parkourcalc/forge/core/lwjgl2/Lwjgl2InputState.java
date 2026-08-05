@@ -29,13 +29,13 @@ public final class Lwjgl2InputState {
     }
 
     public static boolean isUndoChordDown() {
-        return isCtrlDown() && !isShiftDown()
-                && (Keyboard.isKeyDown(Keyboard.KEY_Z) || Keyboard.isKeyDown(Keyboard.KEY_Y));
+        return isCtrlDown() && !isShiftDown() && Keyboard.isKeyDown(Keyboard.KEY_Z);
     }
 
     public static boolean isRedoChordDown() {
-        return isCtrlDown() && isShiftDown()
-                && (Keyboard.isKeyDown(Keyboard.KEY_Z) || Keyboard.isKeyDown(Keyboard.KEY_Y));
+        if (!isCtrlDown()) return false;
+        if (Keyboard.isKeyDown(Keyboard.KEY_Y)) return true;
+        return isShiftDown() && Keyboard.isKeyDown(Keyboard.KEY_Z);
     }
 
     public static boolean isCtrlDown() {

@@ -167,6 +167,24 @@ public class UndoIntegrationTest {
     }
 
     @Test
+    public void undoRestoresApplyDeviation() throws Exception {
+        Rig rig = new Rig(Files.createTempDirectory("pkc-undo-dev"));
+        rig.data.getRows().add(new InputRow());
+        rig.settle();
+
+        rig.solver.setApplyDeviation("Sim left the solved path at T5", AngleSolverState.DeviationKind.WALL);
+        rig.settle();
+
+        assertTrue(rig.undo.undo());
+        assertNull(rig.solver.getApplyDeviation());
+        assertNull(rig.solver.getApplyDeviationKind());
+
+        assertTrue(rig.undo.redo());
+        assertEquals("Sim left the solved path at T5", rig.solver.getApplyDeviation());
+        assertEquals(AngleSolverState.DeviationKind.WALL, rig.solver.getApplyDeviationKind());
+    }
+
+    @Test
     public void undoSnapshotIsDeterministicAndRoundTripStable() throws Exception {
         Rig rig = new Rig(Files.createTempDirectory("pkc-undo-det"));
         InputRow row = new InputRow();
@@ -177,6 +195,7 @@ public class UndoIntegrationTest {
         rig.data.getRows().add(row);
         rig.solver.addConstraint(3);
         rig.solver.setLandingTick(7);
+        rig.solver.setApplyDeviation("diverged", AngleSolverState.DeviationKind.SNEAK);
         rig.runner.setStartPosition(new Vec3dCore(1.25, 64.0, -9.5));
         rig.runner.setStartYaw(45.0f);
 

@@ -52,6 +52,7 @@ public final class MainWindowOverlay implements RenderInterface {
     private final de.legoshi.parkourcalc.core.ports.MinecraftAccess mc;
     private final Runnable onUndo;
     private final Runnable onRedo;
+    private final HudMessagesPanel hudMessagesPanel;
 
     private boolean saveChordWasDown;
     private boolean undoChordWasDown;
@@ -71,11 +72,13 @@ public final class MainWindowOverlay implements RenderInterface {
     public MainWindowOverlay(InputOverlay inputOverlay, InputData inputData, FileMenu fileMenu, Settings settings,
                              Runnable onSettingsChanged, TickInfoPanel tickInfoPanel, PerfOverlay perfOverlay,
                              SettingsModal settingsModal, OsSystemBridge systemBridge, SaveStoreSupplier saveStoreSupplier, String modVersion,
-                             de.legoshi.parkourcalc.core.ports.MinecraftAccess mc, Runnable onUndo, Runnable onRedo)
+                             de.legoshi.parkourcalc.core.ports.MinecraftAccess mc, Runnable onUndo, Runnable onRedo,
+                             HudMessagesPanel hudMessagesPanel)
     {
         this.mc = mc;
         this.onUndo = onUndo;
         this.onRedo = onRedo;
+        this.hudMessagesPanel = hudMessagesPanel;
         this.inputOverlay = inputOverlay;
         this.inputData = inputData;
         this.fileMenu = fileMenu;
@@ -98,6 +101,7 @@ public final class MainWindowOverlay implements RenderInterface {
         renderMainWindow(io, true);
         if (settings.viewTickInfo) tickInfoPanel.render(io);
         if (settings.viewPerf) perfOverlay.render(io);
+        hudMessagesPanel.render(io, true);
     }
 
     /** Edge-triggered Ctrl+S while the panel is open: the loader reports the raw chord (gh-107). */
@@ -111,7 +115,7 @@ public final class MainWindowOverlay implements RenderInterface {
         boolean ready = mc != null && mc.isReady();
         boolean undoDown = ready && mc.isUndoChordDown();
         boolean redoDown = ready && mc.isRedoChordDown();
-        if (!io.getWantTextInput()) {
+        if (io == null || !io.getWantTextInput()) {
             if (undoDown && !undoChordWasDown && onUndo != null) onUndo.run();
             if (redoDown && !redoChordWasDown && onRedo != null) onRedo.run();
         }
@@ -122,6 +126,7 @@ public final class MainWindowOverlay implements RenderInterface {
     /** Display-only panels kept visible while the main UI is closed. ImGui receives no input here, so they don't edit. */
     @Override
     public void renderDetached(ImGuiIO io) {
+        if (settings.undoRedoWithoutUi) handleUndoRedoChords(null);
         fileMenu.tickAutoSave(); // unsaved edits keep auto-saving while the panel is closed
         if (settings.keepInputTableOpen) {
             renderMainWindow(io, false);
@@ -130,6 +135,7 @@ public final class MainWindowOverlay implements RenderInterface {
             dismissTransientPopups();
         }
         if (settings.keepTickInfoOpen) tickInfoPanel.render(io);
+        hudMessagesPanel.render(io, false);
     }
 
     /** Closes any modal/popup left open when the main UI is closed; they'd otherwise freeze on screen with no input to dismiss them. */

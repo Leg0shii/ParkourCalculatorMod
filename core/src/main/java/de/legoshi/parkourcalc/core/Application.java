@@ -18,6 +18,8 @@ import de.legoshi.parkourcalc.core.ui.BoxDragController;
 import de.legoshi.parkourcalc.core.ui.BoxSelectController;
 import de.legoshi.parkourcalc.core.ui.ConstraintSelection;
 import de.legoshi.parkourcalc.core.ui.FileMenu;
+import de.legoshi.parkourcalc.core.ui.HudMessages;
+import de.legoshi.parkourcalc.core.ui.HudMessagesPanel;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputOverlay;
 import de.legoshi.parkourcalc.core.ui.InputRow;
@@ -33,6 +35,7 @@ import de.legoshi.parkourcalc.core.ui.StartStateTable;
 import de.legoshi.parkourcalc.core.ui.SettingsModal;
 import de.legoshi.parkourcalc.core.ui.TickInfoPanel;
 import de.legoshi.parkourcalc.core.ui.YawGizmoController;
+import de.legoshi.parkourcalc.core.ui.theme.HudMessageStyle;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
@@ -80,6 +83,7 @@ public final class Application {
     private AngleSolverState angleSolverState;
     private ConstraintKeyController constraintKeyController;
     private UndoController undoController;
+    private final HudMessages hudMessages = new HudMessages();
     private final OsSystemBridge systemBridge = new OsSystemBridge();
 
     public Application(Simulator simulator, MinecraftAccess mc) {
@@ -201,9 +205,11 @@ public final class Application {
         PerfOverlay perfOverlay = new PerfOverlay();
         FileMenu fileMenu = new FileMenu(saveController, filePicker, settings, this::saveSettings);
         SettingsModal settingsModal = new SettingsModal(settings, this::saveSettings);
+        HudMessagesPanel hudMessagesPanel = new HudMessagesPanel(hudMessages, settings);
         MainWindowOverlay mainWindow = new MainWindowOverlay(
                 inputOverlay, inputData, fileMenu, settings, this::saveSettings,tickInfoPanel, perfOverlay,
-                settingsModal, systemBridge, saveController::getSaveStore, modVersion, mc, this::undo, this::redo
+                settingsModal, systemBridge, saveController::getSaveStore, modVersion, mc, this::undo, this::redo,
+                hudMessagesPanel
         );
         overlayManager.register(mainWindow);
         overlayManager.register(angleSolverWindow);
@@ -305,11 +311,25 @@ public final class Application {
     }
 
     public void undo() {
-        if (undoController != null) undoController.undo();
+        if (undoController == null) return;
+        boolean done = undoController.undo();
+        pushHudMessage(done ? "Undo" : "Nothing to undo",
+                done ? HudMessages.COLOR_DEFAULT : HudMessageStyle.COLOR_WARN);
     }
 
     public void redo() {
-        if (undoController != null) undoController.redo();
+        if (undoController == null) return;
+        boolean done = undoController.redo();
+        pushHudMessage(done ? "Redo" : "Nothing to redo",
+                done ? HudMessages.COLOR_DEFAULT : HudMessageStyle.COLOR_WARN);
+    }
+
+    public void pushHudMessage(String text) {
+        pushHudMessage(text, HudMessages.COLOR_DEFAULT);
+    }
+
+    public void pushHudMessage(String text, int colorArgb) {
+        hudMessages.push(text, colorArgb, System.nanoTime());
     }
 
     public void setStartToPlayer() {

@@ -285,6 +285,10 @@ public final class FileMenu {
     /** Call once per frame. A named + dirty TAS is saved at most once per interval;
      *  the clock arms on the first dirty frame so a fresh edit is never written instantly (gh-107). */
     public void tickAutoSave() {
+        String writeError = controller.drainWriteError();
+        if (writeError != null) {
+            setStatus(writeError, true);
+        }
         if (controller.isTempActive()) return;
         if (controller.currentName() == null || !controller.isDirty()) return;
         long now = System.nanoTime();

@@ -56,6 +56,11 @@ public final class SettingsModal {
     private static final String TT_COLOR_GENERIC = "Color used for this overlay. Alpha applies in-world.";
     private static final String TT_KEEP_INPUT_TABLE = "Keeps the input table window drawn as a display-only overlay even when the main UI is closed. It cannot be edited while closed.";
     private static final String TT_KEEP_TICK_INFO = "Keeps the Tick Info window drawn even when the main UI is closed.";
+    private static final String TT_UNDO_REDO_WITHOUT_UI = "Ctrl+Z / Ctrl+Y (or Ctrl+Shift+Z) undo and redo TAS edits even while the main UI is closed. Disabled while a Minecraft screen such as chat or the inventory is open.";
+    private static final String TT_HUD_MESSAGE_COUNT = "How many messages the notification stack shows at once. Older messages drop off the bottom.";
+    private static final String TT_HUD_MESSAGE_SCALE = "Text size of the notification stack, as a multiplier of the UI font size. The window grows with the text.";
+    private static final String TT_HUD_MESSAGE_COLOR = "Text color for normal notifications. Warnings keep their own color. While the main UI is open the window stays visible so it can be dragged; closed, it only appears while messages are showing.";
+    private static final String TT_HUD_MESSAGE_ORDER = "Downwards: new messages appear at the top and the window grows downward. Upwards: new messages appear at the bottom and the window grows upward from its bottom edge, like chat.";
     private static final String TT_KEEP_BOXES_PLAYBACK = "Keeps the tick-box path overlay drawn in-world while playback is running, instead of hiding it.";
     private static final String TT_AUTO_APPLY = "Applies a feasible Angle Solver solution to the input rows the moment the solve finishes, skipping the Apply confirmation.";
     private static final String TT_SOLVER_PRECISION = "Decimal places for Angle Solver stats: solved yaws, objective values, constraint chips, and the constraint value editor.";
@@ -66,6 +71,7 @@ public final class SettingsModal {
     private final TickInfoStatsEditor tickInfoStatsEditor;
 
     private static final String[] ARROW_MODE_LABELS = {"Yaw", "Combined"};
+    private static final String[] HUD_MESSAGE_ORDER_LABELS = {"Downwards", "Upwards"};
 
     private final ImInt scaleIndexBuf = new ImInt();
     private final ImInt arrowModeBuf = new ImInt();
@@ -75,6 +81,9 @@ public final class SettingsModal {
     private final float[] scrollbarGrabBuf = new float[1];
     private final int[] solverPrecisionBuf = new int[1];
     private final float[] constraintDimBuf = new float[1];
+    private final int[] hudMessageCountBuf = new int[1];
+    private final float[] hudMessageScaleBuf = new float[1];
+    private final ImInt hudMessageOrderBuf = new ImInt();
     private final String[] scaleLabels;
 
     private boolean openRequested;
@@ -201,6 +210,48 @@ public final class SettingsModal {
         if (beginLayoutTable("##settings_panels")) {
             checkboxRow("Input table", "##keep_input_table", settings.keepInputTableOpen, TT_KEEP_INPUT_TABLE, v -> settings.keepInputTableOpen = v);
             checkboxRow("Tick Info", "##keep_tick_info", settings.keepTickInfoOpen, TT_KEEP_TICK_INFO, v -> settings.keepTickInfoOpen = v);
+            checkboxRow("Undo/redo hotkeys", "##undo_redo_without_ui", settings.undoRedoWithoutUi, TT_UNDO_REDO_WITHOUT_UI, v -> settings.undoRedoWithoutUi = v);
+            ThemeManager.endStandardFormTable();
+        }
+
+        ThemeManager.sectionSpacing();
+        sectionHeader("Notifications");
+        if (beginLayoutTable("##settings_hud_messages")) {
+            row("Max messages", () -> {
+                hudMessageCountBuf[0] = settings.hudMessageCount;
+                ImGui.setNextItemWidth(-1);
+                if (Controls.sliderInt("##hud_message_count", hudMessageCountBuf,
+                        Settings.MIN_HUD_MESSAGE_COUNT, Settings.MAX_HUD_MESSAGE_COUNT, "%d messages")) {
+                    settings.hudMessageCount = hudMessageCountBuf[0];
+                }
+                if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
+                tooltipForLastItem(TT_HUD_MESSAGE_COUNT);
+            });
+            row("Text size", () -> {
+                hudMessageScaleBuf[0] = settings.hudMessageScale;
+                ImGui.setNextItemWidth(-1);
+                if (Controls.sliderFloat("##hud_message_scale", hudMessageScaleBuf,
+                        Settings.MIN_HUD_MESSAGE_SCALE, Settings.MAX_HUD_MESSAGE_SCALE, "%.1fx")) {
+                    settings.hudMessageScale = hudMessageScaleBuf[0];
+                }
+                if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
+                tooltipForLastItem(TT_HUD_MESSAGE_SCALE);
+            });
+            row("Text color", () -> {
+                ImGui.colorEdit4("##hud_message_color", settings.hudMessageColor,
+                        ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoDragDrop);
+                tooltipForLastItem(TT_HUD_MESSAGE_COLOR);
+                if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
+            });
+            hudMessageOrderBuf.set(settings.hudMessageOrder);
+            row("Stacking", () -> {
+                ImGui.setNextItemWidth(-1);
+                if (Controls.combo("##hud_message_order", hudMessageOrderBuf, HUD_MESSAGE_ORDER_LABELS)) {
+                    settings.hudMessageOrder = hudMessageOrderBuf.get();
+                    onChanged.run();
+                }
+                tooltipForLastItem(TT_HUD_MESSAGE_ORDER);
+            });
             ThemeManager.endStandardFormTable();
         }
 

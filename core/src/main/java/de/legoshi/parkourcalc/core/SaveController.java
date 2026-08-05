@@ -28,6 +28,9 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public final class SaveController {
 
@@ -45,10 +48,13 @@ public final class SaveController {
     private BoxController boxController;
     private Settings settings;
     private UndoController undo;
+    private static ExecutorService writeExecutor;
+
     private String currentName;
     private boolean dirty;
     private String preTempSnapshotJson;
     private boolean tempActive;
+    private volatile String pendingWriteError;
 
     public SaveController(InputData inputData, SimulationRunner runner, MinecraftAccess mc, Runnable retriggerSimulation) {
         this.inputData = inputData;
@@ -141,20 +147,68 @@ public final class SaveController {
 
     public Result<String> save(String name) {
         if (store == null) return Result.failure("Save store not initialized.");
+        String sanitized = SaveIO.sanitizeRelative(name);
+        if (sanitized == null) {
+            return Result.failure("Invalid save name. Use letters, numbers, dashes, or underscores.");
+        }
         List<TickState> states = boxController != null ? boxController.getStates() : null;
         boolean fullDebug = settings != null && settings.saveDebugValues;
-        Result<String> result = SaveIO.save(store, name, inputData, runner.getStartPosition(), runner.getStartVelocity(), runner.getStartYaw(), runner.getStartPitch(), angleSolver, states, fullDebug);
-        if (result.ok) {
-            currentName = result.value;
-            dirty = false;
-            if (undo != null) undo.bindJournal(journalFor(currentName));
-            writeLastOpen(currentName);
+        SaveFile file = SaveIO.buildSaveFile(store, inputData, runner.getStartPosition(), runner.getStartVelocity(),
+                runner.getStartYaw(), runner.getStartPitch(), angleSolver, states, fullDebug);
+        FileSystemSaveStore target = store;
+        writeExecutor().execute(() -> {
+            try {
+                target.write(sanitized, SaveIO.saveJson(file));
+            } catch (IOException e) {
+                pendingWriteError = "Failed to write save: " + e.getMessage();
+            }
+        });
+        currentName = sanitized;
+        dirty = false;
+        if (undo != null) undo.bindJournal(journalFor(currentName));
+        writeLastOpen(currentName);
+        return Result.success(sanitized);
+    }
+
+    private static ExecutorService writeExecutor() {
+        if (writeExecutor == null) {
+            ExecutorService executor = Executors.newSingleThreadExecutor(r -> {
+                Thread t = new Thread(r, "pkc-save-writer");
+                t.setDaemon(true);
+                return t;
+            });
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                executor.shutdown();
+                try {
+                    executor.awaitTermination(3, TimeUnit.SECONDS);
+                } catch (InterruptedException ignored) {
+                }
+            }, "pkc-save-flush"));
+            writeExecutor = executor;
         }
-        return result;
+        return writeExecutor;
+    }
+
+    public void flushPendingWrites() {
+        if (writeExecutor == null) return;
+        try {
+            writeExecutor.submit(() -> { }).get(10, TimeUnit.SECONDS);
+        } catch (Exception ignored) {
+        }
+    }
+
+    public String drainWriteError() {
+        String error = pendingWriteError;
+        if (error != null) {
+            pendingWriteError = null;
+            dirty = true;
+        }
+        return error;
     }
 
     public Result<SaveFile> load(String name) {
         if (store == null) return Result.failure("Save store not initialized.");
+        flushPendingWrites();
         Result<SaveFile> result = SaveIO.load(store, name);
         if (!result.ok) return result;
 
@@ -185,6 +239,7 @@ public final class SaveController {
 
     public boolean tryReopenLastSave() {
         if (store == null || currentName != null) return false;
+        flushPendingWrites();
         String name = readLastOpen();
         if (name == null) return false;
         Result<SaveFile> peek = SaveIO.load(store, name);
@@ -240,6 +295,7 @@ public final class SaveController {
 
     public boolean delete(String name) {
         if (store == null) return false;
+        flushPendingWrites();
         boolean ok = store.moveToRecycleBin(name);
         if (ok) {
             UndoJournal journal = journalFor(name);
@@ -277,11 +333,13 @@ public final class SaveController {
 
     public List<SaveInfo> list() {
         if (store == null) return Collections.emptyList();
+        flushPendingWrites();
         return store.list();
     }
 
     public SaveBrowseResult browse(String relDir) {
         if (store == null) return SaveBrowseResult.empty();
+        flushPendingWrites();
         return store.browse(relDir);
     }
 
@@ -296,13 +354,16 @@ public final class SaveController {
     public boolean exists(String name) {
         if (store == null) return false;
         String sanitized = SaveIO.sanitize(name);
-        return sanitized != null && store.exists(sanitized);
+        if (sanitized == null) return false;
+        flushPendingWrites();
+        return store.exists(sanitized);
     }
 
     /** Parse, copy into save dir under a non-colliding name, then load. */
     public Result<String> importFromPath(Path source) {
         if (store == null) return Result.failure("Save store not initialized.");
         if (source == null) return Result.failure("No file selected.");
+        flushPendingWrites();
 
         String json;
         try {
