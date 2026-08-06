@@ -377,6 +377,7 @@ public final class FreeStartSolve {
         a.sprintPerTick = b.sprintPerTick;
         a.incomingSprint = b.incomingSprint;
         a.incomingAmp = b.incomingAmp;
+        a.liveAirSprintFactor = b.liveAirSprintFactor;
         a.forwardInputPerTick = b.forwardInputPerTick;
         a.strafeInputPerTick = b.strafeInputPerTick;
         return a;

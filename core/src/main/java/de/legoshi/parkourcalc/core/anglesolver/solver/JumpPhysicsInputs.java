@@ -61,6 +61,8 @@ public final class JumpPhysicsInputs {
      *  single-tick model callers' behavior. */
     public Boolean incomingSprint = null;
 
+    public boolean liveAirSprintFactor = false;
+
     /** Speed-effect amplifier in force on the tick before this window's first tick. The ground attribute
      *  (getAIMoveSpeed = the movementSpeed snapshot) carries both the sprint and the speed-effect modifier,
      *  so the speed amplifier lags by the same one tick as sprint (see {@link #factorAmpAt}). Air is
@@ -99,6 +101,7 @@ public final class JumpPhysicsInputs {
         c.yawLockedPerTick = yawLockedPerTick;
         c.sprintPerTick = sprintPerTick;
         c.incomingSprint = incomingSprint;
+        c.liveAirSprintFactor = liveAirSprintFactor;
         c.incomingAmp = incomingAmp;
         c.forwardInputPerTick = forwardInputPerTick;
         c.strafeInputPerTick = strafeInputPerTick;
@@ -139,6 +142,10 @@ public final class JumpPhysicsInputs {
     public boolean factorSprintAt(int tick) {
         if (tick == 0) return incomingSprint != null ? incomingSprint : sprintAt(0);
         return sprintAt(tick - 1);
+    }
+
+    public boolean airFactorSprintAt(int tick) {
+        return liveAirSprintFactor ? sprintAt(tick) : factorSprintAt(tick);
     }
 
     /** Speed amplifier that drives this tick's ground movement factor, lagged one tick like the sprint
