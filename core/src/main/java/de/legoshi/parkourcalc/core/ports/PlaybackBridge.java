@@ -37,6 +37,8 @@ public interface PlaybackBridge {
 
     void releaseAllKeys();
 
+    default void suppressFlight() {}
+
     /** Close any open mod UI (control panel / GuiScreen) the same way the toggle key would. */
     void closeUI();
 

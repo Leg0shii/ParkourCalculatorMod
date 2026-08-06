@@ -94,6 +94,7 @@ public final class Settings {
     private static final int DEFAULT_HUD_MESSAGE_ORDER = HUD_MESSAGE_ORDER_DOWNWARDS;
 
     private static final boolean DEFAULT_KEEP_BOXES_DURING_PLAYBACK = false;
+    private static final boolean DEFAULT_DISABLE_FLIGHT_DURING_PLAYBACK = true;
 
     private static final float DEFAULT_YAW_FLICK_SPEED = 7200.0f;
     public static final float MIN_YAW_FLICK_SPEED = 30.0f;
@@ -212,6 +213,8 @@ public final class Settings {
     // Keep the tick-box path overlay drawn in-world during playback.
     public boolean keepBoxesDuringPlayback = DEFAULT_KEEP_BOXES_DURING_PLAYBACK;
 
+    public boolean disableFlightDuringPlayback = DEFAULT_DISABLE_FLIGHT_DURING_PLAYBACK;
+
     public static int defaultTickInfoPrecision() {
         return DEFAULT_TICK_INFO_PRECISION;
     }
@@ -300,5 +303,6 @@ public final class Settings {
         hudMessageScale = DEFAULT_HUD_MESSAGE_SCALE;
         hudMessageOrder = DEFAULT_HUD_MESSAGE_ORDER;
         keepBoxesDuringPlayback = DEFAULT_KEEP_BOXES_DURING_PLAYBACK;
+        disableFlightDuringPlayback = DEFAULT_DISABLE_FLIGHT_DURING_PLAYBACK;
     }
 }

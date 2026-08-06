@@ -13,7 +13,8 @@
     "KeyboardHandlerMixin",
     "LandingParticleSuppressMixin",
     "MinecraftMixin",
-    "MouseHandlerMixin"
+    "MouseHandlerMixin",
+    "PlayerAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -274,6 +274,18 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
     }
 
     @Override
+    public void suppressFlight() {
+        if (ghostMode) return;
+        EntityPlayerSP p = Minecraft.getMinecraft().thePlayer;
+        if (p == null) return;
+        p.flyToggleTimer = 0;
+        if (p.capabilities.isFlying) {
+            p.capabilities.isFlying = false;
+            p.sendPlayerAbilities();
+        }
+    }
+
+    @Override
     public void closeUI() {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc.currentScreen != null) {
