@@ -1438,10 +1438,13 @@ public final class InputOverlay {
     }
 
     private void handleKeyboardShortcuts() {
-        if (ImGui.isKeyPressed(ImGuiKey.Delete) && !selection.isEmpty()) {
+        if (ImGui.getIO().getWantTextInput()) {
+            return;
+        }
+        if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Delete)) && !selection.isEmpty()) {
             deleteSelectedRows();
         }
-        if (ImGui.isKeyPressed(ImGuiKey.Insert)) {
+        if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Insert))) {
             insertRowsAtSelectionOrEnd(rowsToAdd.get());
         }
     }
