@@ -21,6 +21,9 @@ public class KeyboardHandlerMixin {
     @Inject(method = "keyPress", at = @At("HEAD"), cancellable = true)
     private void onKey(long window, int action, KeyEvent input, CallbackInfo ci) {
         if (!FabricParkourCalculator.isUiFocused()) {
+            if (FabricParkourCalculator.consumeInGameConstraintChord(input.key(), action, input.modifiers())) {
+                ci.cancel();
+            }
             return;
         }
 

@@ -342,6 +342,20 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
     }
 
+    public static boolean consumeInGameConstraintChord(int glfwKey, int action, int modifiers) {
+        if (action != GLFW.GLFW_PRESS && action != GLFW.GLFW_REPEAT) return false;
+        if ((modifiers & GLFW.GLFW_MOD_CONTROL) == 0) return false;
+        Minecraft client = Minecraft.getInstance();
+        if (client.getWindow() == null || client.level == null) return false;
+        if (client.gui.screen() != null) return false;
+        if (glfwKey != boundKey(landingConstraintsKeyBinding)) return false;
+        if (action == GLFW.GLFW_PRESS) {
+            boolean enter = (modifiers & GLFW.GLFW_MOD_SHIFT) != 0;
+            application.onConstraintKey(enter, true);
+        }
+        return true;
+    }
+
     public static boolean dispatchOverlayHotkey(int glfwKey) {
         Minecraft client = Minecraft.getInstance();
         if (client.getWindow() == null) return false;
