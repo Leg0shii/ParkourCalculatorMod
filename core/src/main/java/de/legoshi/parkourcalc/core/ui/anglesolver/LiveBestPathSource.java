@@ -45,7 +45,7 @@ public final class LiveBestPathSource implements ConstraintBoxSource {
 
     @Override
     public List<ConstraintPlate> platesAt(int tickIndex) {
-        LiveTrajectory t = current();
+        LiveTrajectory t = shown;
         if (t == null) return Collections.emptyList();
         int k = tickIndex - t.startTick;
         if (k < 0 || k >= t.pointCount()) return Collections.emptyList();

@@ -40,6 +40,11 @@ import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.anglesolver.ConstraintText;
+import de.legoshi.parkourcalc.core.anglesolver.Medium;
+import de.legoshi.parkourcalc.core.anglesolver.Slipperiness;
+import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
+import de.legoshi.parkourcalc.core.anglesolver.StateOverride;
+import de.legoshi.parkourcalc.core.anglesolver.TickConstraints;
 import de.legoshi.parkourcalc.core.ui.ConstraintKeyController;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverTable;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverWindow;
@@ -52,6 +57,7 @@ import de.legoshi.parkourcalc.core.undo.UndoController;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 /** Single-instance orchestrator wired by loaders via mixins / event handlers. */
@@ -81,6 +87,7 @@ public final class Application {
     private FilePickerPort filePicker;
     private BlockPicker blockPicker;
     private AngleSolverState angleSolverState;
+    private AngleSolverEngine solverEngine;
     private ConstraintKeyController constraintKeyController;
     private UndoController<de.legoshi.parkourcalc.core.save.SaveFile> undoController;
     private final HudMessages hudMessages = new HudMessages();
@@ -162,6 +169,7 @@ public final class Application {
         saveController.setGraphStore(graphStore);
         AngleSolverEngine angleSolverEngine = new AngleSolverEngine(angleSolverState, boxController, inputData, this::onUserChange, forwardModel);
         angleSolverEngine.setOnStartMoved(runner::setStartPosition);
+        this.solverEngine = angleSolverEngine;
         if (saveStore != null) {
             angleSolverEngine.setRunLog(new SolveRunLog(saveStore.getSaveDir().resolve("runs"),
                     saveStore.getModVersion(), saveStore.getMcVersion()));
@@ -183,11 +191,15 @@ public final class Application {
                 this::onUserChange, Math.max(2, Runtime.getRuntime().availableProcessors() - 2));
         GraphEditorWindow graphEditorWindow = new GraphEditorWindow(angleSolverEngine);
         AngleSolverWindow angleSolverWindow = new AngleSolverWindow(angleSolverState, settings, inputData::size, angleSolverEngine, velocityMapController.widget(), graphStore, graphEditorWindow);
+        angleSolverWindow.setApplySurfaceState(this::applyPathSurfaceState);
 
         // In-world constraint visualization (gh-145): plates appear while the solver view is open.
         constraintSource = new de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverConstraintSource(
                 angleSolverState, boxController, () -> settings.viewAngleSolver, settings, selection, constraintSelection);
         de.legoshi.parkourcalc.core.render.PathRenderPlan.setConstraintSource(constraintSource);
+        de.legoshi.parkourcalc.core.render.PathRenderPlan.setDeviationTickSource(angleSolverState::getApplyDeviationTick);
+        de.legoshi.parkourcalc.core.render.PathRenderPlan.setSolverStartTickSource(angleSolverState::getStartTick);
+        de.legoshi.parkourcalc.core.render.PathRenderPlan.setSolverGoalTickSource(angleSolverState::getLandingTick);
         de.legoshi.parkourcalc.core.render.PathRenderPlan.setLiveSource(
                 new de.legoshi.parkourcalc.core.ui.anglesolver.LiveBestPathSource(
                         angleSolverEngine, boxController, () -> settings.viewAngleSolver));
@@ -422,6 +434,7 @@ public final class Application {
             saveController.tryReopenLastSave();
         }
         if (undoController != null) undoController.tick(System.nanoTime());
+        pollSolver();
         dragController.tick(
                 mc.getEyePosition(),
                 mc.getLookDirection(),
@@ -467,6 +480,108 @@ public final class Application {
 
     public void clearAngleSolverBlocks() {
         if (angleSolverState != null) angleSolverState.clearBlocks();
+    }
+
+    private void pollSolver() {
+        if (solverEngine == null) return;
+        boolean wasSolving = solverEngine.isSolving();
+        solverEngine.poll();
+        if (solverEngine.isSolving()) {
+            SolveResult live = solverEngine.liveBestResult();
+            String text = String.format(Locale.ROOT, "Solving %.1fs", solverEngine.elapsedSeconds());
+            if (live != null) text += " · " + live.getMet() + "/" + live.getTotal();
+            hudMessages.setStatus(text, HudMessages.COLOR_DEFAULT);
+            return;
+        }
+        hudMessages.clearStatus();
+        if (!wasSolving) return;
+        SolveResult done = angleSolverState.getResult();
+        if (done == null) return;
+        if (done.isSuccess() && !done.getYaws().isEmpty()) {
+            solverEngine.apply();
+            if (angleSolverState.getApplyDeviation() != null) {
+                pushHudMessage("Solved · sim diverged at T" + (angleSolverState.getApplyDeviationTick() + 1),
+                        HudMessageStyle.COLOR_WARN);
+            } else {
+                pushHudMessage("Solved · applied", HudMessageStyle.COLOR_OK);
+            }
+        } else {
+            pushHudMessage("No solution · " + done.getMet() + "/" + done.getTotal() + " constraints met",
+                    HudMessageStyle.COLOR_DANGER);
+        }
+    }
+
+    public void solveAngleSolver() {
+        if (solverEngine == null) return;
+        if (solverEngine.isSolving()) {
+            solverEngine.cancel();
+            pushHudMessage("Solve cancelled", HudMessageStyle.COLOR_WARN);
+            return;
+        }
+        if (mc.isReady()) solverEngine.solve();
+    }
+
+    public void setSolverStartTickFromSelection() {
+        if (angleSolverState == null) return;
+        int tick = firstSelectedRow();
+        if (tick < 0) {
+            pushHudMessage("No tick selected", HudMessageStyle.COLOR_WARN);
+            return;
+        }
+        angleSolverState.setStartTick(tick);
+        saveController.markDirty();
+        pushHudMessage("Solver start · T" + (tick + 1));
+    }
+
+    public void setSolverLandingTickFromSelection() {
+        if (angleSolverState == null) return;
+        int tick = firstSelectedRow();
+        if (tick < 0) {
+            pushHudMessage("No tick selected", HudMessageStyle.COLOR_WARN);
+            return;
+        }
+        angleSolverState.setLandingTick(tick);
+        saveController.markDirty();
+        pushHudMessage("Solver goal · T" + (tick + 1));
+    }
+
+    private int firstSelectedRow() {
+        Set<Integer> rows = selection.getSelectedRows();
+        return rows.isEmpty() ? -1 : rows.iterator().next();
+    }
+
+    public void applyPathSurfaceState() {
+        if (angleSolverState == null) return;
+        int start = Math.max(0, angleSolverState.getStartTick());
+        int end = Math.min(Math.min(inputData.size(), boxController.size() - 1), angleSolverState.getLandingTick());
+        if (end <= start) {
+            pushHudMessage("Solver range invalid", HudMessageStyle.COLOR_WARN);
+            return;
+        }
+        boolean changed = false;
+        for (int t = start; t < end; t++) {
+            TickState s = boxController.getState(t + 1);
+            if (s == null || !s.hasSurfaceSample()) continue;
+            Slipperiness slip = Double.isNaN(s.groundFriction)
+                    ? Slipperiness.AIR : Slipperiness.fromFriction(s.groundFriction);
+            Medium medium = s.medium;
+            boolean slipDefault = slip == angleSolverState.getDefaultSlipperiness();
+            boolean mediumNone = medium == Medium.NONE;
+            TickConstraints tc = angleSolverState.tickConstraintsOrNull(t);
+            if (tc == null && slipDefault && mediumNone) continue;
+            StateOverride ov = angleSolverState.tickConstraints(t).getOverride();
+            if (slipDefault) ov.clearSlipperiness();
+            else ov.setSlipperiness(slip);
+            if (mediumNone) {
+                ov.clearMedium();
+            } else {
+                ov.setMedium(medium);
+                if (medium == Medium.SOULSAND) ov.setSoulsandCells(Math.max(1, s.soulsandCells));
+            }
+            changed = true;
+        }
+        if (changed) saveController.markDirty();
+        pushHudMessage("Surface state applied · T" + (start + 1) + "-T" + end);
     }
 
     private boolean isWalledSide(int neighborX, int blockY, int neighborZ) {

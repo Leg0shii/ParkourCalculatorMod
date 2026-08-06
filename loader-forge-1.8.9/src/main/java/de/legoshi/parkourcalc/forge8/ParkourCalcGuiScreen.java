@@ -9,6 +9,7 @@ import net.minecraft.client.gui.GuiScreen;
 import org.lwjgl.input.Keyboard;
 
 import java.io.IOException;
+import java.util.function.IntPredicate;
 
 /** Open while ImGui is up so MC ungrabs the cursor and skips KeyBinding polling. */
 @SuppressWarnings("DuplicatedCode")
@@ -21,9 +22,10 @@ public final class ParkourCalcGuiScreen extends GuiScreen {
     private final SelectionManager selection;
     private final Application application;
     private final Runnable togglePlayback;
+    private final IntPredicate hotkeyDispatch;
     private final Runnable onClose;
 
-    public ParkourCalcGuiScreen(int toggleKeyCode, int deselectKeyCode, int playbackKeyCode, Lwjgl2ImGuiHost imguiHost, SelectionManager selection, Application application, Runnable togglePlayback, Runnable onClose) {
+    public ParkourCalcGuiScreen(int toggleKeyCode, int deselectKeyCode, int playbackKeyCode, Lwjgl2ImGuiHost imguiHost, SelectionManager selection, Application application, Runnable togglePlayback, IntPredicate hotkeyDispatch, Runnable onClose) {
         this.toggleKeyCode = toggleKeyCode;
         this.deselectKeyCode = deselectKeyCode;
         this.playbackKeyCode = playbackKeyCode;
@@ -31,6 +33,7 @@ public final class ParkourCalcGuiScreen extends GuiScreen {
         this.selection = selection;
         this.application = application;
         this.togglePlayback = togglePlayback;
+        this.hotkeyDispatch = hotkeyDispatch;
         this.onClose = onClose;
         this.allowUserInput = true;
     }
@@ -81,6 +84,9 @@ public final class ParkourCalcGuiScreen extends GuiScreen {
                 togglePlayback.run();
                 return;
             }
+            if (hotkeyDispatch.test(keyCode)) {
+                return;
+            }
         }
         imguiHost.forwardChar(typedChar);
     }
@@ -99,6 +105,9 @@ public final class ParkourCalcGuiScreen extends GuiScreen {
             }
             if (mouseAsKeyCode == playbackKeyCode) {
                 togglePlayback.run();
+                return;
+            }
+            if (hotkeyDispatch.test(mouseAsKeyCode)) {
                 return;
             }
         }

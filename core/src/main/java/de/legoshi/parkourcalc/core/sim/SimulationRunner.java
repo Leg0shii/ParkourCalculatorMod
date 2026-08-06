@@ -150,7 +150,10 @@ public final class SimulationRunner {
                 simulator.getCurrentCollisionAngleDegrees(),
                 simulator.isCurrentSprinting(),
                 simulator.getCurrentMoveForward(),
-                simulator.getCurrentMoveStrafe()
+                simulator.getCurrentMoveStrafe(),
+                simulator.getCurrentTickMedium(),
+                simulator.getCurrentTickGroundFriction(),
+                simulator.getCurrentTickSoulsandCells()
         );
     }
 

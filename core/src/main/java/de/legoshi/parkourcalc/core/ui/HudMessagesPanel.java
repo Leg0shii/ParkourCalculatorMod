@@ -34,7 +34,8 @@ public final class HudMessagesPanel {
     public void render(ImGuiIO io, boolean panelOpen) {
         long now = System.nanoTime();
         List<HudMessages.Entry> visible = messages.visible(now, settings.hudMessageCount);
-        if (visible.isEmpty() && !panelOpen) return;
+        String status = messages.getStatusText();
+        if (visible.isEmpty() && status == null && !panelOpen) return;
         boolean upwards = settings.hudMessageOrder == Settings.HUD_MESSAGE_ORDER_UPWARDS;
         if (upwards && !draggedLastFrame && !Float.isNaN(anchorBottomY)) {
             ImGui.setNextWindowPos(anchorX, anchorBottomY, ImGuiCond.Always, 0f, 1f);
@@ -44,13 +45,15 @@ public final class HudMessagesPanel {
         if (ImGui.begin(WINDOW_ID, WINDOW_FLAGS)) {
             if (imguiInstanceCalls == null) imguiInstanceCalls = new ImGui();
             imguiInstanceCalls.setWindowFontScale(settings.hudMessageScale);
-            if (visible.isEmpty()) {
+            if (visible.isEmpty() && status == null) {
                 ImGui.textDisabled("Notifications appear here. Drag to move.");
             } else if (upwards) {
                 for (int i = visible.size() - 1; i >= 0; i--) {
                     renderEntry(visible.get(i), now);
                 }
+                renderStatus(status);
             } else {
+                renderStatus(status);
                 for (HudMessages.Entry entry : visible) {
                     renderEntry(entry, now);
                 }
@@ -63,15 +66,23 @@ public final class HudMessagesPanel {
     }
 
     private void renderEntry(HudMessages.Entry entry, long now) {
-        float[] c = colorOf(entry);
+        float[] c = colorOf(entry.colorArgb);
         ImGui.pushStyleColor(ImGuiCol.Text, c[0], c[1], c[2], c[3] * entry.alphaAt(now));
         ImGui.text(entry.display());
         ImGui.popStyleColor();
     }
 
-    private float[] colorOf(HudMessages.Entry entry) {
-        if (entry.colorArgb == HudMessages.COLOR_DEFAULT) return settings.hudMessageColor;
-        int c = entry.colorArgb;
+    private void renderStatus(String status) {
+        if (status == null) return;
+        float[] c = colorOf(messages.getStatusColor());
+        ImGui.pushStyleColor(ImGuiCol.Text, c[0], c[1], c[2], c[3]);
+        ImGui.text(status);
+        ImGui.popStyleColor();
+    }
+
+    private float[] colorOf(int colorArgb) {
+        if (colorArgb == HudMessages.COLOR_DEFAULT) return settings.hudMessageColor;
+        int c = colorArgb;
         return new float[] {
                 ((c >>> 16) & 0xFF) / 255f,
                 ((c >>> 8) & 0xFF) / 255f,

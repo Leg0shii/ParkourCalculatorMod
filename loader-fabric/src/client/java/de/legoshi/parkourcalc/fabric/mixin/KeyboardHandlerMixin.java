@@ -53,6 +53,12 @@ public class KeyboardHandlerMixin {
             }
         }
 
+        if (action == GLFW.GLFW_PRESS && !ImGui.getIO().getWantTextInput()
+                && FabricParkourCalculator.dispatchOverlayHotkey(glfwKey)) {
+            ci.cancel();
+            return;
+        }
+
         ImGuiImpl.keyCallback(window, glfwKey, input.scancode(), action, input.modifiers());
         ci.cancel();
     }

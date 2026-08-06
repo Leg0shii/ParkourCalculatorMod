@@ -92,6 +92,7 @@ public final class AngleSolverTable {
     private final ImString numBuf = new ImString(32);
     private final ImInt slipBuf = new ImInt();
     private final ImInt mediumBuf = new ImInt();
+    private final ImInt soulsandCellsBuf = new ImInt();
     private final ImInt doseCombo = new ImInt();
     private final ImInt levelBuf = new ImInt();
     private final ImInt fieldCombo = new ImInt();
@@ -255,6 +256,7 @@ public final class AngleSolverTable {
                 break;
             case STATE_MEDIUM:
                 dst.setMedium(src.getMedium());
+                dst.setSoulsandCells(src.getSoulsandCells());
                 if (!dragAlt) src.clearMedium();
                 break;
             case STATE_ADD: {
@@ -716,7 +718,10 @@ public final class AngleSolverTable {
             specs.add(new StateChipSpec(DragKind.STATE_SLIP, null, "Slip", ov.getSlipperiness().label, false));
         }
         if (ov.overridesMedium()) {
-            specs.add(new StateChipSpec(DragKind.STATE_MEDIUM, null, "Medium", ov.getMedium().label, false));
+            String mediumLabel = ov.getMedium() == Medium.SOULSAND && ov.getSoulsandCells() > 1
+                    ? ov.getMedium().label + " x" + ov.getSoulsandCells()
+                    : ov.getMedium().label;
+            specs.add(new StateChipSpec(DragKind.STATE_MEDIUM, null, "Medium", mediumLabel, false));
         }
         for (PotionDose d : ov.getAdded()) {
             specs.add(new StateChipSpec(DragKind.STATE_ADD, d.potion, "Potion", "+" + d.potion.label + amp(d.level), false));
@@ -823,8 +828,9 @@ public final class AngleSolverTable {
         TickConstraints tc = state.tickConstraintsOrNull(tick);
         int cn = tc == null ? 0 : tc.getConstraints().size();
         int potions = tc == null ? 0 : tc.getOverride().getAdded().size();
+        int sandRow = tc != null && tc.getOverride().getMedium() == Medium.SOULSAND ? 1 : 0;
         float pad = 2f * ThemeManager.LG * s; // child top + bottom window padding
-        float stateRows = (4f + potions + 1f) * inputRow;  // Inputs, Sprint, Slipperiness, Medium, doses, + add
+        float stateRows = (4f + sandRow + potions + 1f) * inputRow;  // Inputs, Sprint, Slipperiness, Medium, doses, + add
         float constraintRows = (cn + 1f) * inputRow;        // constraint rows + add button
         return pad
                 + sectionHead + stateRows
@@ -1102,6 +1108,18 @@ public final class AngleSolverTable {
         }
         ImGui.tableNextColumn();
         overrideTrailing(ov.overridesMedium(), "inherits default (" + Medium.NONE.label + ")", "ovmdr", ov::clearMedium);
+
+        if (ov.getMedium() == Medium.SOULSAND) {
+            ovRowStart("Sand cells", false);
+            soulsandCellsBuf.set(ov.getSoulsandCells());
+            if (Controls.inputInt("##ovsandcells", soulsandCellsBuf, ImGui.getContentRegionAvail().x)) {
+                ov.setSoulsandCells(soulsandCellsBuf.get());
+            }
+            if (ImGui.isItemHovered()) {
+                ImGui.setTooltip("Soulsand blocks the hitbox overlaps at the end of the tick; each one multiplies motion by 0.4 on 1.8.9/1.12.2. H fills this from the simulation.");
+            }
+            ImGui.tableNextColumn();
+        }
 
         renderPotionRows(tick, ov);
 

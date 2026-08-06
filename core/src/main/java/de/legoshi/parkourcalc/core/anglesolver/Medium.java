@@ -20,6 +20,15 @@ public enum Medium {
         this.kind = kind;
     }
 
+    public static Medium fromFlags(boolean web, boolean water, boolean lava, boolean ladder, boolean soulsand) {
+        if (web) return COBWEB;
+        if (water) return WATER;
+        if (lava) return LAVA;
+        if (ladder) return LADDER;
+        if (soulsand) return SOULSAND;
+        return NONE;
+    }
+
     public static String[] comboItems() {
         Medium[] all = values();
         String[] items = new String[all.length];

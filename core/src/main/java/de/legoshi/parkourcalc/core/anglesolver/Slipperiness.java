@@ -19,6 +19,13 @@ public enum Slipperiness {
         this.slip = slip;
     }
 
+    public static Slipperiness fromFriction(double friction) {
+        if (friction >= 0.9885) return BLUE_ICE;
+        if (friction >= 0.97) return ICE;
+        if (friction >= 0.79) return SLIME;
+        return DEFAULT;
+    }
+
     /** Combo labels: "label · valueLabel" per entry (middle-dot U+00B7 separator). */
     public static String[] comboItems() {
         Slipperiness[] all = values();

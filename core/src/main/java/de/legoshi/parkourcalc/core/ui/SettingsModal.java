@@ -62,7 +62,6 @@ public final class SettingsModal {
     private static final String TT_HUD_MESSAGE_COLOR = "Text color for normal notifications. Warnings keep their own color. While the main UI is open the window stays visible so it can be dragged; closed, it only appears while messages are showing.";
     private static final String TT_HUD_MESSAGE_ORDER = "Downwards: new messages appear at the top and the window grows downward. Upwards: new messages appear at the bottom and the window grows upward from its bottom edge, like chat.";
     private static final String TT_KEEP_BOXES_PLAYBACK = "Keeps the tick-box path overlay drawn in-world while playback is running, instead of hiding it.";
-    private static final String TT_AUTO_APPLY = "Applies a feasible Angle Solver solution to the input rows the moment the solve finishes, skipping the Apply confirmation.";
     private static final String TT_SOLVER_PRECISION = "Decimal places for Angle Solver stats: solved yaws, objective values, constraint chips, and the constraint value editor.";
     private static final String TT_EXPERIMENTAL_BLOCK_CAPTURE = "Enables in-world block capture: tag blocks by role with hotkeys (M momentum, N collision, K land, Delete clears). The hotkeys are registered at startup, so turning this on or off only takes effect after a game restart.";
 
@@ -258,7 +257,6 @@ public final class SettingsModal {
         ThemeManager.sectionSpacing();
         sectionHeader("Angle Solver");
         if (beginLayoutTable("##settings_angle_solver")) {
-            checkboxRow("Auto-apply solutions", "##auto_apply_solve", settings.autoApplySolve, TT_AUTO_APPLY, v -> settings.autoApplySolve = v);
             row("Stats decimal places", () -> {
                 solverPrecisionBuf[0] = settings.solverStatsPrecision;
                 ImGui.setNextItemWidth(-1);
@@ -436,6 +434,9 @@ public final class SettingsModal {
         renderColor("tick box sneak", settings.tickSneak, flags);
         renderColor("tick box wall", settings.tickWall, flags);
         renderColor("tick box soft collision", settings.tickSoftCollision, flags);
+        renderColor("tick box solver start", settings.tickSolverStart, flags);
+        renderColor("tick box solver goal", settings.tickSolverGoal, flags);
+        renderColor("tick box desync", settings.tickDeviation, flags);
         renderColor("on-ground row tint", settings.tickGroundHighlight, flags);
 
         ThemeManager.sectionSpacing();

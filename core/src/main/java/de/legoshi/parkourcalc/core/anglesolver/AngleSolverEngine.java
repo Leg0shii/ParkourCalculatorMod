@@ -566,6 +566,7 @@ public final class AngleSolverEngine {
         int[] speedAmp = new int[numTicks];
         double[] slipPerTick = new double[numTicks];
         SurfaceKind[] surfacePerTick = new SurfaceKind[numTicks];
+        int[] soulsandCellsPerTick = new int[numTicks];
         boolean[] sneakPerTick = new boolean[numTicks];
         float[] forwardIn = new float[numTicks];
         float[] strafeIn = new float[numTicks];
@@ -583,6 +584,7 @@ public final class AngleSolverEngine {
             boolean ground = slip < 1.0;
             slipPerTick[k] = ground ? slip : Double.NaN;
             surfacePerTick[k] = effMedium(t).kind;
+            soulsandCellsPerTick[k] = effSoulsandCells(t);
             sneakPerTick[k] = row.isKeyActive(InputRow.Key.SNEAK);
             jumpMask[k] = jumpRow;
             force45Mask[k] = effInputs(t) == AngleSolverState.InputMode.FORCE_45;
@@ -624,6 +626,7 @@ public final class AngleSolverEngine {
         phys.speedAmplifier = speedAmp;
         phys.slipPerTick = slipPerTick;
         phys.surfacePerTick = surfacePerTick;
+        phys.soulsandCellsPerTick = soulsandCellsPerTick;
         phys.sneakPerTick = sneakPerTick;
         phys.yawLockedPerTick = yawLocked;
         phys.forwardInputPerTick = forwardIn;
@@ -1356,16 +1359,19 @@ public final class AngleSolverEngine {
         List<SolveResult.Outcome> outs = new ArrayList<>();
         List<ConstraintAt> ordered = new ArrayList<>(derived);
         ordered.sort((a, b) -> Integer.compare(a.absTick, b.absTick));
+        List<Integer> unmet = new ArrayList<>();
         for (ConstraintAt ca : ordered) {
             Double found = findValue(ca.c, ca.segTick, job.startTick, job.numTicks, gameFacings, path);
             if (found == null) continue;
             total++;
             boolean satisfied = satisfied(ca.c, found);
             if (satisfied) met++;
+            else unmet.add(ca.absTick);
             outs.add(outcome(ca.c, ca.absTick, found, satisfied));
         }
         SolveResult r = new SolveResult(ok, met, total, job.startTick + 1, job.landingTick + 1);
         r.getOutcomes().addAll(outs);
+        for (int t : unmet) r.addUnmetTick(t);
         for (int k = 0; k < yaws.length; k++) r.getYaws().add(new SolveResult.YawEntry(job.startTick + k + 1, yaws[k]));
         return r;
     }
@@ -1486,7 +1492,7 @@ public final class AngleSolverEngine {
             TickState c = boxes.getState(i);
             if (c != null && c.wallCollision) {
                 state.setApplyDeviation(head + ": it hit a wall the solve cannot see. Add a constraint to route around it.",
-                        AngleSolverState.DeviationKind.WALL);
+                        AngleSolverState.DeviationKind.WALL, t);
                 return;
             }
         }
@@ -1495,11 +1501,11 @@ public final class AngleSolverEngine {
             if (r < rows.size() && rows.get(r).isKeyActive(InputRow.Key.SNEAK)) {
                 state.setApplyDeviation(head + ": the sneak at T" + (r + 1)
                         + " ran at a different position in the sampled run" + tail,
-                        AngleSolverState.DeviationKind.SNEAK);
+                        AngleSolverState.DeviationKind.SNEAK, t);
                 return;
             }
         }
-        state.setApplyDeviation(head + tail, AngleSolverState.DeviationKind.OTHER);
+        state.setApplyDeviation(head + tail, AngleSolverState.DeviationKind.OTHER, t);
     }
 
     // ---- effective per-tick state (main thread, during snapshot) --------------
@@ -1526,6 +1532,12 @@ public final class AngleSolverEngine {
         StateOverride ov = overrideAt(tick);
         if (ov != null && ov.overridesMedium()) return ov.getMedium();
         return Medium.NONE;
+    }
+
+    private int effSoulsandCells(int tick) {
+        StateOverride ov = overrideAt(tick);
+        if (ov != null && ov.getMedium() == Medium.SOULSAND) return ov.getSoulsandCells();
+        return 1;
     }
 
     /** Effective Speed amplifier at a tick: override added/removed over the default potions. */
@@ -1645,16 +1657,19 @@ public final class AngleSolverEngine {
         List<SolveResult.Outcome> outs = new ArrayList<>();
         List<ConstraintAt> ordered = new ArrayList<>(job.uiConstraints);
         ordered.sort((a, b) -> Integer.compare(a.absTick, b.absTick));
+        List<Integer> unmet = new ArrayList<>();
         for (ConstraintAt ca : ordered) {
             Double found = findValue(ca.c, ca.segTick, job.startTick, job.numTicks, gameFacings, path);
             if (found == null) continue; // unmappable, e.g. velocity on tick 0
             total++;
             boolean ok = satisfied(ca.c, found);
             if (ok) met++;
+            else unmet.add(ca.absTick);
             outs.add(outcome(ca.c, ca.absTick, found, ok));
         }
         SolveResult r = new SolveResult(met == total, met, total, job.startTick + 1, job.landingTick + 1);
         r.getOutcomes().addAll(outs);
+        for (int t : unmet) r.addUnmetTick(t);
         for (int k = 0; k < yaws.length; k++) {
             r.getYaws().add(new SolveResult.YawEntry(job.startTick + k + 1, yaws[k]));
         }

@@ -547,6 +547,7 @@ public final class SaveIO {
         out.sprint = ov.overridesSprint() ? ov.getSprint().name() : null;
         out.slipperiness = ov.overridesSlipperiness() ? ov.getSlipperiness().name() : null;
         out.medium = ov.overridesMedium() ? ov.getMedium().name() : null;
+        out.soulsandCells = ov.getMedium() == Medium.SOULSAND && ov.getSoulsandCells() > 1 ? ov.getSoulsandCells() : null;
         for (PotionDose d : ov.getAdded()) {
             out.added.add(toSaveDose(d));
         }
@@ -567,6 +568,7 @@ public final class SaveIO {
         else if (src.slipperiness != null) applyFusedSlipperiness(src.slipperiness, dst);
         Medium medium = parseEnumOrNull(Medium.class, src.medium);
         if (medium != null && medium != Medium.NONE) dst.setMedium(medium);
+        if (src.soulsandCells != null && dst.getMedium() == Medium.SOULSAND) dst.setSoulsandCells(src.soulsandCells);
         if (src.added != null) {
             for (SaveFile.Dose d : src.added) {
                 PotionDose dose = toDose(d);

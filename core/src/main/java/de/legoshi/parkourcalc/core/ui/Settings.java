@@ -12,6 +12,9 @@ public final class Settings {
     private static final float[] DEFAULT_TICK_SNEAK = {1.000f, 0.604f, 0.239f, 0.50f};          // orange     #ff9a3d
     private static final float[] DEFAULT_TICK_WALL = {1.000f, 0.231f, 0.361f, 0.50f};           // red        #ff3b5c
     private static final float[] DEFAULT_TICK_SOFT_COLLISION = {1.000f, 0.435f, 0.529f, 0.50f}; // rose       #ff6f87
+    private static final float[] DEFAULT_TICK_SOLVER_START = {0.651f, 0.890f, 0.631f, 0.60f};   // green      #a6e3a1
+    private static final float[] DEFAULT_TICK_SOLVER_GOAL = {0.976f, 0.886f, 0.686f, 0.60f};    // yellow     #f9e2af
+    private static final float[] DEFAULT_TICK_DEVIATION = {1.000f, 0.184f, 0.831f, 0.60f};      // magenta    #ff2fd4
     private static final float[] DEFAULT_SUBTICK_PATH = {0.976f, 0.886f, 0.686f, 0.80f};        // yellow     #f9e2af
     private static final float[] DEFAULT_YAW_ARROW = {0.831f, 0.929f, 0.976f, 0.529f};           // #D4EDF987
     private static final float[] DEFAULT_PITCH_ARROW = {0.976f, 0.886f, 0.686f, 0.529f};         // yellow     #f9e2af
@@ -72,7 +75,6 @@ public final class Settings {
     private static final boolean DEFAULT_VIEW_ANGLE_SOLVER = false;
     private static final boolean DEFAULT_VIEW_VELOCITY_MAP = false;
     private static final boolean DEFAULT_SAVE_DEBUG_VALUES = false;
-    private static final boolean DEFAULT_AUTO_APPLY_SOLVE = false;
     private static final boolean DEFAULT_EXPERIMENTAL_BLOCK_CAPTURE = false;
 
     private static final boolean DEFAULT_KEEP_INPUT_TABLE_OPEN = false;
@@ -121,6 +123,9 @@ public final class Settings {
     public final float[] tickSneak = DEFAULT_TICK_SNEAK.clone();
     public final float[] tickWall = DEFAULT_TICK_WALL.clone();
     public final float[] tickSoftCollision = DEFAULT_TICK_SOFT_COLLISION.clone();
+    public final float[] tickSolverStart = DEFAULT_TICK_SOLVER_START.clone();
+    public final float[] tickSolverGoal = DEFAULT_TICK_SOLVER_GOAL.clone();
+    public final float[] tickDeviation = DEFAULT_TICK_DEVIATION.clone();
     public final float[] subtickPath = DEFAULT_SUBTICK_PATH.clone();
     public final float[] yawArrow = DEFAULT_YAW_ARROW.clone();
     public final float[] pitchArrow = DEFAULT_PITCH_ARROW.clone();
@@ -191,9 +196,6 @@ public final class Settings {
     // When on, each Save also writes the full per-tick SimulatorEntity state to the file (debug only).
     public boolean saveDebugValues = DEFAULT_SAVE_DEBUG_VALUES;
 
-    // When on, a feasible Angle Solver solve is applied automatically the moment it finishes.
-    public boolean autoApplySolve = DEFAULT_AUTO_APPLY_SOLVE;
-
     public boolean experimentalBlockCapture = DEFAULT_EXPERIMENTAL_BLOCK_CAPTURE;
 
     // Keep these windows drawn (display-only) while the main UI is closed.
@@ -229,6 +231,9 @@ public final class Settings {
         System.arraycopy(DEFAULT_TICK_SNEAK, 0, tickSneak, 0, 4);
         System.arraycopy(DEFAULT_TICK_WALL, 0, tickWall, 0, 4);
         System.arraycopy(DEFAULT_TICK_SOFT_COLLISION, 0, tickSoftCollision, 0, 4);
+        System.arraycopy(DEFAULT_TICK_SOLVER_START, 0, tickSolverStart, 0, 4);
+        System.arraycopy(DEFAULT_TICK_SOLVER_GOAL, 0, tickSolverGoal, 0, 4);
+        System.arraycopy(DEFAULT_TICK_DEVIATION, 0, tickDeviation, 0, 4);
         System.arraycopy(DEFAULT_SUBTICK_PATH, 0, subtickPath, 0, 4);
         System.arraycopy(DEFAULT_YAW_ARROW, 0, yawArrow, 0, 4);
         System.arraycopy(DEFAULT_PITCH_ARROW, 0, pitchArrow, 0, 4);
@@ -286,7 +291,6 @@ public final class Settings {
         viewAngleSolver = DEFAULT_VIEW_ANGLE_SOLVER;
         viewVelocityMap = DEFAULT_VIEW_VELOCITY_MAP;
         saveDebugValues = DEFAULT_SAVE_DEBUG_VALUES;
-        autoApplySolve = DEFAULT_AUTO_APPLY_SOLVE;
         experimentalBlockCapture = DEFAULT_EXPERIMENTAL_BLOCK_CAPTURE;
         keepInputTableOpen = DEFAULT_KEEP_INPUT_TABLE_OPEN;
         keepTickInfoOpen = DEFAULT_KEEP_TICK_INFO_OPEN;

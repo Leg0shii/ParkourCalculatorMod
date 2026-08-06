@@ -188,6 +188,7 @@ public final class AngleSolverState {
     private SolveResult result;
     private String applyDeviation;
     private DeviationKind applyDeviationKind;
+    private int applyDeviationTick = -1;
 
     public int getStartTick() {
         return startTick;
@@ -639,6 +640,7 @@ public final class AngleSolverState {
         result = null;
         applyDeviation = null;
         applyDeviationKind = null;
+        applyDeviationTick = -1;
     }
 
     public void setResult(SolveResult result) {
@@ -654,9 +656,18 @@ public final class AngleSolverState {
         return applyDeviationKind;
     }
 
+    public int getApplyDeviationTick() {
+        return applyDeviationTick;
+    }
+
     public void setApplyDeviation(String message, DeviationKind kind) {
+        setApplyDeviation(message, kind, -1);
+    }
+
+    public void setApplyDeviation(String message, DeviationKind kind, int tick) {
         this.applyDeviation = message;
         this.applyDeviationKind = message == null ? null : kind;
+        this.applyDeviationTick = message == null ? -1 : tick;
     }
 
     /** Wipes all state back to construction defaults; used before loading a saved problem. */
@@ -681,6 +692,7 @@ public final class AngleSolverState {
         result = null;
         applyDeviation = null;
         applyDeviationKind = null;
+        applyDeviationTick = -1;
     }
 
 }
