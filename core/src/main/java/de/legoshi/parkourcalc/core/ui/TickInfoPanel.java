@@ -9,11 +9,13 @@ import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImGui;
 import imgui.ImGuiIO;
 import imgui.flag.ImGuiCond;
+import imgui.flag.ImGuiMouseCursor;
 import imgui.flag.ImGuiTableColumnFlags;
 import imgui.flag.ImGuiWindowFlags;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Consumer;
 
 public final class TickInfoPanel implements RenderInterface {
 
@@ -35,17 +37,19 @@ public final class TickInfoPanel implements RenderInterface {
     private final SelectionManager selection;
     private final Settings settings;
     private final SimulationRunner runner;
+    private final Consumer<String> hudMessage;
     private int rowCounter;
 
     private int sampleDecimals = -1;
     private String numSample = "";
 
-    public TickInfoPanel(BoxController boxController, InputData inputData, SelectionManager selection, Settings settings, SimulationRunner runner) {
+    public TickInfoPanel(BoxController boxController, InputData inputData, SelectionManager selection, Settings settings, SimulationRunner runner, Consumer<String> hudMessage) {
         this.boxController = boxController;
         this.inputData = inputData;
         this.selection = selection;
         this.settings = settings;
         this.runner = runner;
+        this.hudMessage = hudMessage;
     }
 
     private float effectivePitch(int idx) {
@@ -128,8 +132,8 @@ public final class TickInfoPanel implements RenderInterface {
     }
 
     private void rowText(String label, String text, String tooltip) {
-        labelCell(label, tooltip);
-        centerSingleValueInMiddleColumn(text);
+        labelCell(label, tooltip, text);
+        copyableMiddleCell(text, label);
     }
 
     private void renderTable(int idx, TickState cur, TickState prev, TickState prev2, float appliedYaw, float appliedPitch, boolean isStart) {
@@ -279,71 +283,105 @@ public final class TickInfoPanel implements RenderInterface {
         }
     }
 
-    private void labelCell(String label, String tooltip) {
+    private void labelCell(String label, String tooltip, String copyText) {
         ImGui.tableNextRow();
         ThemeManager.paintTableRowBg(rowCounter++);
         ImGui.tableNextColumn();
-        ThemeManager.tableLeftmostCellPad();
+        if (copyText == null) {
+            ThemeManager.tableLeftmostCellPad();
+            ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+            ThemeManager.textLeft(label);
+            ThemeManager.popTextColor();
+            TooltipUtil.onHover(tooltip);
+            return;
+        }
         ThemeManager.pushTextColor(ThemeManager.textMutedColor());
-        ThemeManager.textLeft(label);
+        boolean clicked = ThemeManager.leftAlignedSelectable("row-" + label, label, false, 0);
         ThemeManager.popTextColor();
-        TooltipUtil.onHover(tooltip);
+        if (clicked) {
+            copyToClipboard(copyText, label);
+        }
+        if (ImGui.isItemHovered()) {
+            ImGui.setMouseCursor(ImGuiMouseCursor.Hand);
+            TooltipUtil.wrappedTooltip(tooltip);
+        }
+    }
+
+    private void copyToClipboard(String text, String what) {
+        ImGui.setClipboardText(text);
+        hudMessage.accept("Copied " + what);
     }
 
     private void rowTriple(String label, double x, double y, double z, int decimals, String tooltip) {
-        labelCell(label, tooltip);
-        numCell(x, decimals);
-        numCell(y, decimals);
-        numCell(z, decimals);
+        String fmt = fmtNumSingle(decimals);
+        labelCell(label, tooltip, String.format(Locale.US, fmt + " " + fmt + " " + fmt, x, y, z));
+        numCell(x, decimals, label + " " + COL_X);
+        numCell(y, decimals, label + " " + COL_Y);
+        numCell(z, decimals, label + " " + COL_Z);
         ThemeManager.tableRightmostCellTrailingPad();
     }
 
     private void rowXZ(String label, double x, double z, int decimals, String tooltip) {
-        labelCell(label, tooltip);
-        numCell(x, decimals);
+        String fmt = fmtNumSingle(decimals);
+        labelCell(label, tooltip, String.format(Locale.US, fmt + " " + fmt, x, z));
+        numCell(x, decimals, label + " " + COL_X);
         emptyCell();
-        numCell(z, decimals);
+        numCell(z, decimals, label + " " + COL_Z);
         ThemeManager.tableRightmostCellTrailingPad();
     }
 
     private void rowNum(String label, double v, int decimals, String tooltip) {
-        labelCell(label, tooltip);
-        centerSingleValueInMiddleColumn(String.format(Locale.US, fmtNumSingle(decimals), v));
+        String text = String.format(Locale.US, fmtNumSingle(decimals), v);
+        labelCell(label, tooltip, text);
+        copyableMiddleCell(text, label);
     }
 
     private void rowInt(String label, int v, String tooltip) {
-        labelCell(label, tooltip);
-        centerSingleValueInMiddleColumn(Integer.toString(v));
+        String text = Integer.toString(v);
+        labelCell(label, tooltip, text);
+        copyableMiddleCell(text, label);
     }
 
     private void rowBool(String label, boolean v, String tooltip) {
-        labelCell(label, tooltip);
+        String text = Boolean.toString(v);
+        labelCell(label, tooltip, text);
         int color = v ? ThemeManager.okColor() : ThemeManager.dangerColor();
         ThemeManager.pushTextColor(color);
-        centerSingleValueInMiddleColumn(Boolean.toString(v));
+        copyableMiddleCell(text, label);
         ThemeManager.popTextColor();
     }
 
     private void rowNa(String label, String tooltip) {
-        labelCell(label, tooltip);
+        labelCell(label, tooltip, null);
         ThemeManager.pushTextColor(ThemeManager.textDimColor());
-        centerSingleValueInMiddleColumn(NA);
+        ImGui.tableNextColumn();
+        ImGui.tableNextColumn();
+        ThemeManager.textCenter(NA);
+        ImGui.tableNextColumn();
+        ThemeManager.tableRightmostCellTrailingPad();
         ThemeManager.popTextColor();
     }
 
-    private void numCell(double v, int decimals) {
+    private void numCell(double v, int decimals, String what) {
         ImGui.tableNextColumn();
-        ThemeManager.textCenter(String.format(Locale.US, fmtNum(decimals), v));
+        String display = String.format(Locale.US, fmtNum(decimals), v);
+        if (ThemeManager.centeredSelectable("cell-" + what, display, false, 0)) {
+            copyToClipboard(String.format(Locale.US, fmtNumSingle(decimals), v), what);
+        }
+        if (ImGui.isItemHovered()) ImGui.setMouseCursor(ImGuiMouseCursor.Hand);
     }
 
     private static void emptyCell() {
         ImGui.tableNextColumn();
     }
 
-    private void centerSingleValueInMiddleColumn(String text) {
+    private void copyableMiddleCell(String text, String what) {
         ImGui.tableNextColumn();
         ImGui.tableNextColumn();
-        ThemeManager.textCenter(text);
+        if (ThemeManager.centeredSelectable("cell-" + what, text, false, 0)) {
+            copyToClipboard(text, what);
+        }
+        if (ImGui.isItemHovered()) ImGui.setMouseCursor(ImGuiMouseCursor.Hand);
         ImGui.tableNextColumn();
         ThemeManager.tableRightmostCellTrailingPad();
     }
