@@ -103,6 +103,8 @@ public final class PathRenderPlan {
         // into the same buffers without disturbing the per-box offsets selection patching depends on.
         ConstraintBoxSource source = constraintSource;
         ConstraintBoxSource live = liveSource;
+        source.beginFrame();
+        live.beginFrame();
         boolean drawConstraints = settings.showConstraints && source != ConstraintBoxSource.NONE;
         boolean drawLive = live != ConstraintBoxSource.NONE;
         ConstraintPalette palette = new ConstraintPalette(

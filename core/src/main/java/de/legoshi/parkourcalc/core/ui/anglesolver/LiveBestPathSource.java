@@ -32,20 +32,20 @@ public final class LiveBestPathSource implements ConstraintBoxSource {
         this.active = active;
     }
 
-    private LiveTrajectory current() {
+    @Override
+    public void beginFrame() {
         LiveTrajectory t = active.isActive() ? engine.liveTrajectory() : null;
-        if (t == shown) return shown;
+        if (t == shown) return;
         long now = System.nanoTime();
         if (t == null || shown == null || now - lastAdoptNanos >= ADOPT_INTERVAL_NANOS) {
             shown = t;
             lastAdoptNanos = now;
         }
-        return shown;
     }
 
     @Override
     public List<ConstraintPlate> platesAt(int tickIndex) {
-        LiveTrajectory t = current();
+        LiveTrajectory t = shown;
         if (t == null) return Collections.emptyList();
         int k = tickIndex - t.startTick;
         if (k < 0 || k >= t.pointCount()) return Collections.emptyList();
@@ -58,7 +58,7 @@ public final class LiveBestPathSource implements ConstraintBoxSource {
 
     @Override
     public long revision() {
-        LiveTrajectory t = current();
+        LiveTrajectory t = shown;
         return t == null ? 0L : t.seq;
     }
 }
