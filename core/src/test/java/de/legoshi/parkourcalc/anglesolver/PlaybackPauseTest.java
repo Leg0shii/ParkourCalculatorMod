@@ -1,17 +1,13 @@
 package de.legoshi.parkourcalc.anglesolver;
 
+import de.legoshi.parkourcalc.core.FakePlaybackBridge;
+import de.legoshi.parkourcalc.core.FakeSimulator;
 import de.legoshi.parkourcalc.core.PlaybackController;
-import de.legoshi.parkourcalc.core.ports.PlaybackBridge;
-import de.legoshi.parkourcalc.core.ports.Simulator;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
-import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import org.junit.Test;
-
-import java.util.EnumMap;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -24,82 +20,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class PlaybackPauseTest {
 
-    private static final class FakeBridge implements PlaybackBridge {
-        boolean paused;
-        int releaseAllCalls;
-        final Map<InputRow.Key, Boolean> keys = new EnumMap<InputRow.Key, Boolean>(InputRow.Key.class);
-
-        @Override
-        public boolean isSingleplayer() {
-            return true;
-        }
-
-        @Override
-        public boolean isGamePaused() {
-            return paused;
-        }
-
-        @Override
-        public void teleport(Vec3dCore pos, Vec3dCore vel, float yaw, de.legoshi.parkourcalc.core.sim.Checkpoint carry) {
-        }
-
-        @Override
-        public void setKey(InputRow.Key key, boolean pressed) {
-            keys.put(key, pressed);
-        }
-
-        @Override
-        public void setYaw(float absoluteYaw) {
-        }
-
-        @Override
-        public void releaseAllKeys() {
-            releaseAllCalls++;
-            keys.clear();
-        }
-
-        @Override
-        public void closeUI() {
-        }
-
-        @Override
-        public void applyEffects(int speedAmplifier, int jumpBoostAmplifier) {
-        }
-    }
-
-    /** The controller only reads the launch state from the runner; everything else is unused here. */
-    private static final class FakeSimulator implements Simulator {
-        private Vec3dCore startPos = Vec3dCore.ZERO;
-        private Vec3dCore startVel = Vec3dCore.ZERO;
-        private float startYaw;
-
-        @Override public void resetToStart() { }
-        @Override public void applyInput(InputRow row) { }
-        @Override public void tick() { }
-        @Override public Vec3dCore getCurrentPosition() { return Vec3dCore.ZERO; }
-        @Override public boolean isCurrentOnGround() { return false; }
-        @Override public boolean isCurrentSneaking() { return false; }
-        @Override public boolean isCurrentSprinting() { return false; }
-        @Override public float getCurrentMoveForward() { return Float.NaN; }
-        @Override public float getCurrentMoveStrafe() { return Float.NaN; }
-        @Override public boolean isCurrentWallCollision() { return false; }
-        @Override public Vec3dCore getCurrentVelocity() { return Vec3dCore.ZERO; }
-        @Override public boolean isCurrentSoftCollision() { return false; }
-        @Override public double getCurrentCollisionAngleDegrees() { return Double.NaN; }
-        @Override public float getCurrentYaw() { return 0f; }
-        @Override public java.util.List<Vec3dCore> getCurrentSubtickPath() { return java.util.Collections.emptyList(); }
-        @Override public Vec3dCore getStartPosition() { return startPos; }
-        @Override public void setStartPosition(Vec3dCore pos) { startPos = pos; }
-        @Override public Vec3dCore getStartVelocity() { return startVel; }
-        @Override public void setStartVelocity(Vec3dCore vel) { startVel = vel; }
-        @Override public float getStartYaw() { return startYaw; }
-        @Override public void setStartYaw(float yaw) { startYaw = yaw; }
-        @Override public de.legoshi.parkourcalc.core.sim.Checkpoint saveCheckpoint() { return null; }
-        @Override public void restoreCheckpoint(de.legoshi.parkourcalc.core.sim.Checkpoint checkpoint) { }
-        @Override public void invalidate() { }
-    }
-
-    private static PlaybackController controller(FakeBridge bridge, InputData data) {
+    private static PlaybackController controller(FakePlaybackBridge bridge, InputData data) {
         SimulationRunner runner = new SimulationRunner(new FakeSimulator());
         PlaybackController pc = new PlaybackController(data, runner, new Settings());
         pc.setBridge(bridge);
@@ -114,7 +35,7 @@ public class PlaybackPauseTest {
             row.setKeyActive(t == 2 ? InputRow.Key.A : InputRow.Key.W, true);
             data.getRows().add(row);
         }
-        FakeBridge bridge = new FakeBridge();
+        FakePlaybackBridge bridge = new FakePlaybackBridge();
         PlaybackController pc = controller(bridge, data);
 
         pc.start();
@@ -146,7 +67,7 @@ public class PlaybackPauseTest {
     public void pauseDuringTheFinishEaseStillStops() throws Exception {
         InputData data = new InputData();
         data.getRows().add(new InputRow());
-        FakeBridge bridge = new FakeBridge();
+        FakePlaybackBridge bridge = new FakePlaybackBridge();
         PlaybackController pc = controller(bridge, data);
 
         pc.start();
