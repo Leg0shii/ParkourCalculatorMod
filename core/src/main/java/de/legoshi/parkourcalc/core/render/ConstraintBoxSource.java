@@ -31,6 +31,9 @@ public interface ConstraintBoxSource {
     /** Drawable constraint plates anchored at the given tick, or an empty list if none. Never null. */
     List<ConstraintPlate> platesAt(int tickIndex);
 
+    default void beginFrame() {
+    }
+
     /**
      * Monotonic-ish content stamp: changes whenever the constraint geometry would change (edited
      * constraints, axis/value edits, etc.). Folded into the cached-geometry structural hash so the

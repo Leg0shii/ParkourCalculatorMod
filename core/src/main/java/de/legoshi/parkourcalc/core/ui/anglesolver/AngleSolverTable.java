@@ -395,7 +395,7 @@ public final class AngleSolverTable {
         float baseRowH = ThemeManager.tableRowHeight();
 
         TickConstraints tc = state.tickConstraintsOrNull(rowIndex);
-        final List<Constraint> list = tc == null ? null : tc.getConstraints();
+        final List<Constraint> list = tc == null ? null : new ArrayList<>(tc.getConstraints());
         if (list == null || list.isEmpty()) {
             constraintCellRects.put(rowIndex, cellRect(origin, cellW, grownRowH));
             rowContentH.put(rowIndex, baseRowH);
