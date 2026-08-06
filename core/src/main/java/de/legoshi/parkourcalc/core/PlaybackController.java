@@ -236,6 +236,9 @@ public final class PlaybackController {
             if (lastFrameNanos != 0L) lastFrameNanos += pausedFor;
             pausedAtNanos = 0L;
         }
+        if (settings.disableFlightDuringPlayback) {
+            bridge.suppressFlight();
+        }
         if (nextTick >= stopTick) {
             // Stop only once the visual has caught up to the final yaw and a tick
             // window has elapsed; a low cap can keep the ease running past the final input.
