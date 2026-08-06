@@ -43,7 +43,7 @@ public final class ConstraintKeyController {
         if (tick < 0) return;
         int bx = block[0], by = block[1], bz = block[2];
 
-        if (remove && mc.isLadder(bx, by, bz)) {
+        if (remove && mc.isClimbable(bx, by, bz)) {
             List<AABB> obstacles = mc.getCollisionBoxes(bx - 1, by, bz - 1, bx + 1, by + 1, bz + 1);
             double[] r = ConstraintDeriver.deriveCell(bx, bz, by, bx + 0.5, bz + 0.5, obstacles);
             state.setFootprint(tick, r[0], r[1], r[2], r[3]);

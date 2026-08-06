@@ -89,10 +89,11 @@ public final class Forge8MinecraftAccess implements MinecraftAccess {
     }
 
     @Override
-    public boolean isLadder(int x, int y, int z) {
+    public boolean isClimbable(int x, int y, int z) {
         World world = Minecraft.getMinecraft().theWorld;
         if (world == null) return false;
-        return world.getBlockState(new BlockPos(x, y, z)).getBlock() == Blocks.ladder;
+        Block block = world.getBlockState(new BlockPos(x, y, z)).getBlock();
+        return block == Blocks.ladder || block == Blocks.vine;
     }
 
     @Override
