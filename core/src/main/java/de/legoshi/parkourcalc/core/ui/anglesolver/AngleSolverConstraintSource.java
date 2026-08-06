@@ -119,8 +119,10 @@ public final class AngleSolverConstraintSource implements ConstraintBoxSource {
         Constraint r = c.copy();
         r.setRefTick(null);
         r.setValue(r.getValue() + base);
-        r.setLo(r.getLo() + base);
-        r.setHi(r.getHi() + base);
+        double lo = r.getLo() + base;
+        double hi = r.getHi() + base;
+        r.setLo(lo);
+        r.setHi(hi);
         return r;
     }
 

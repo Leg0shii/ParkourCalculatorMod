@@ -435,6 +435,21 @@ public class ConstraintVisualizationTest {
     }
 
     @Test
+    public void relativeReversedRangeResolvesBothBounds() {
+        AngleSolverState state = new AngleSolverState();
+        BoxController boxes = boxesWith(new Vec3dCore(0.5, 64.0, 0.5), new Vec3dCore(1.5, 64.0, 3.5));
+        Constraint c = Constraint.range(Constraint.Field.X, 2.0, 1.0, true, true);
+        c.setRefTick(0);
+        state.tickConstraints(1).getConstraints().add(c);
+
+        List<ConstraintPlate> plates = source(state, boxes).platesAt(1);
+        assertEquals(1, plates.size());
+        AABB front = plates.get(0).front.get(0);
+        assertEquals((0.5 + 1.0) - H, front.min.x, EPS);
+        assertEquals("upper bound survives the shift with reversed input order", (0.5 + 2.0) + H, front.max.x, EPS);
+    }
+
+    @Test
     public void relativeConstraintWithoutReferencePositionDrawsNothing() {
         AngleSolverState state = new AngleSolverState();
         BoxController boxes = boxesWith(new Vec3dCore(0.5, 64.0, 0.5), new Vec3dCore(1.5, 64.0, 0.5));
