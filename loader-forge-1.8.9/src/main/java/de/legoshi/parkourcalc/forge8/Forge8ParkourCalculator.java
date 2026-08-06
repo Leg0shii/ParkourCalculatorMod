@@ -4,7 +4,6 @@ import de.legoshi.parkourcalc.core.Application;
 import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
-import de.legoshi.parkourcalc.core.ui.theme.SolverHudStatus;
 import de.legoshi.parkourcalc.forge.core.io.OsFilePicker;
 import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2ImGuiHost;
 import de.legoshi.parkourcalc.forge8.render.Forge8HudOverlayRenderer;
@@ -220,10 +219,6 @@ public class Forge8ParkourCalculator {
         if (application.isPlaybackRunning()) {
             hudRenderer.render();
         }
-        SolverHudStatus status = application.solverHudStatus();
-        if (status != null) {
-            hudRenderer.renderSolverStatus(status);
-        }
     }
 
     @SubscribeEvent
@@ -349,8 +344,39 @@ public class Forge8ParkourCalculator {
                 application.getSelection(),
                 application,
                 this::togglePlayback,
+                this::dispatchHotkey,
                 () -> application.setControlPanelOpen(false)
         ));
+    }
+
+    private boolean dispatchHotkey(int keyCode) {
+        if (keyCode == landingConstraintsKeyBinding.getKeyCode()) {
+            boolean enter = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
+            boolean remove = Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL);
+            application.onConstraintKey(enter, remove);
+            return true;
+        }
+        if (keyCode == removeConstraintsKeyBinding.getKeyCode()) {
+            application.removeSelectedConstraints();
+            return true;
+        }
+        if (keyCode == applySurfaceStateKeyBinding.getKeyCode()) {
+            application.applyPathSurfaceState();
+            return true;
+        }
+        if (keyCode == solveKeyBinding.getKeyCode()) {
+            application.solveAngleSolver();
+            return true;
+        }
+        if (keyCode == solverStartTickKeyBinding.getKeyCode()) {
+            application.setSolverStartTickFromSelection();
+            return true;
+        }
+        if (keyCode == solverEndTickKeyBinding.getKeyCode()) {
+            application.setSolverLandingTickFromSelection();
+            return true;
+        }
+        return false;
     }
 
     @SubscribeEvent

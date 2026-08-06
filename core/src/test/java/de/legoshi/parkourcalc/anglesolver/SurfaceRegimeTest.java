@@ -127,6 +127,37 @@ public class SurfaceRegimeTest {
     }
 
     @Test
+    public void soulsandStacksPerOverlappedCellOnLegacy() {
+        Vec3dCore vel = new Vec3dCore(0.0, 0.0, 0.2);
+        JumpPhysicsInputs straddleSc = scenario(1, 0.6, SurfaceKind.SOULSAND, false, vel);
+        straddleSc.soulsandCellsPerTick = new int[]{2};
+        ForwardPath single = run(LEGACY, scenario(1, 0.6, SurfaceKind.SOULSAND, false, vel));
+        ForwardPath straddle = run(LEGACY, straddleSc);
+        assertEquals(single.posZ[1], straddle.posZ[1], 0.0);
+        double moved = straddle.posZ[1] - straddle.posZ[0];
+        assertEquals(moved * 0.4 * 0.4 * (double) (0.6F * 0.91F), straddle.velZ[1], 0.0);
+
+        JumpPhysicsInputs modernStraddleSc = scenario(1, 0.6, SurfaceKind.SOULSAND, false, vel);
+        modernStraddleSc.soulsandCellsPerTick = new int[]{2};
+        assertEquals(run(MODERN, scenario(1, 0.6, SurfaceKind.SOULSAND, false, vel)).velZ[1],
+                run(MODERN, modernStraddleSc).velZ[1], 0.0);
+    }
+
+    @Test
+    public void soulsandCellsRoundTripThroughSave() {
+        String json = "{\"angleSolver\":{\"ticks\":["
+                + "{\"tick\":0,\"override\":{\"medium\":\"SOULSAND\",\"soulsandCells\":2}},"
+                + "{\"tick\":1,\"override\":{\"medium\":\"SOULSAND\"}}"
+                + "]}}";
+        SaveFile file = SaveIO.parseSafe(json);
+        assertNotNull(file);
+        AngleSolverState state = new AngleSolverState();
+        SaveIO.applyAngleSolverTo(file, state);
+        assertEquals(2, state.tickConstraints(0).getOverride().getSoulsandCells());
+        assertEquals(1, state.tickConstraints(1).getOverride().getSoulsandCells());
+    }
+
+    @Test
     public void soulsandJumpOffCaptureByteExact1122() {
         JumpPhysicsInputs sc = new JumpPhysicsInputs(6);
         sc.startPos = new Vec3dCore(513.6661639994444, 6.875, 164.41857952788826);

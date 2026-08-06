@@ -279,9 +279,17 @@ public final class ExactJumpModel implements ForwardModel {
             }
 
             if (kind == SurfaceKind.SOULSAND) {
-                double soulFactor = modern ? (double) 0.4F : 0.4;
-                vx *= soulFactor;
-                vz *= soulFactor;
+                if (modern) {
+                    double soulFactor = (double) 0.4F;
+                    vx *= soulFactor;
+                    vz *= soulFactor;
+                } else {
+                    int cells = scenario.soulsandCellsAt(t);
+                    for (int c = 0; c < cells; c++) {
+                        vx *= 0.4;
+                        vz *= 0.4;
+                    }
+                }
             }
 
             // (6) gravity then friction multiply, carried into next tick.

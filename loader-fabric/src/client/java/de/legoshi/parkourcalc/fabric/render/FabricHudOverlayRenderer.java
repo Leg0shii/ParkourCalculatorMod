@@ -1,7 +1,6 @@
 package de.legoshi.parkourcalc.fabric.render;
 
 import de.legoshi.parkourcalc.core.ui.theme.MacroBadgeStyle;
-import de.legoshi.parkourcalc.core.ui.theme.SolverHudStatus;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -15,12 +14,5 @@ public final class FabricHudOverlayRenderer {
         String label = MacroBadgeStyle.LABEL;
         int x = context.guiWidth() - tr.width(label) - 4;
         context.text(tr, label, x, 4, MacroBadgeStyle.COLOR_ARGB, true);
-    }
-
-    public void renderSolverStatus(GuiGraphicsExtractor context, SolverHudStatus status) {
-        Minecraft client = Minecraft.getInstance();
-        Font tr = client.font;
-        int x = (context.guiWidth() - tr.width(status.text)) / 2;
-        context.text(tr, status.text, x, 4, status.colorArgb, true);
     }
 }

@@ -1,17 +1,22 @@
 package de.legoshi.parkourcalc.forge12.sim;
 
 import com.mojang.authlib.GameProfile;
+import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.forge.core.sim.PlayerSprintMachine;
 import de.legoshi.parkourcalc.core.sim.SubtickPath;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.MoverType;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.init.MobEffects;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
@@ -29,6 +34,9 @@ public class SimulatorEntity extends EntityPlayer {
 
     private InputRow currentInput = new InputRow();
     private PlayerSprintMachine.State sprintState = PlayerSprintMachine.State.initial();
+    private Medium tickMedium;
+    private double tickGroundFriction = Double.NaN;
+    private int tickSoulsandCells;
 
     private final ArrayList<Vec3dCore> subtickBuf = new ArrayList<Vec3dCore>(8);
     private boolean capturing = false;
@@ -91,6 +99,9 @@ public class SimulatorEntity extends EntityPlayer {
         this.motionX = startVelocity.x;
         this.motionY = startVelocity.y;
         this.motionZ = startVelocity.z;
+        this.tickMedium = null;
+        this.tickGroundFriction = Double.NaN;
+        this.tickSoulsandCells = 0;
     }
 
     @Override
@@ -106,6 +117,54 @@ public class SimulatorEntity extends EntityPlayer {
     public void onLivingUpdate() {
         applyMovementInput();
         super.onLivingUpdate();
+    }
+
+    @Override
+    public void travel(float strafe, float vertical, float forward) {
+        boolean web = this.isInWeb;
+        boolean water = this.isInWater();
+        boolean lava = this.isInLava();
+        boolean ladder = this.isOnLadder();
+        if (this.onGround) {
+            BlockPos below = new BlockPos(this.posX, this.getEntityBoundingBox().minY - 1.0D, this.posZ);
+            IBlockState underState = this.world.getBlockState(below);
+            tickGroundFriction = (double) underState.getBlock().getSlipperiness(underState, this.world, below, this);
+        } else {
+            tickGroundFriction = Double.NaN;
+        }
+        super.travel(strafe, vertical, forward);
+        tickSoulsandCells = countSoulsandCells();
+        tickMedium = Medium.fromFlags(web, water, lava, ladder, tickSoulsandCells > 0);
+    }
+
+    private int countSoulsandCells() {
+        AxisAlignedBB bb = this.getEntityBoundingBox();
+        BlockPos min = new BlockPos(bb.minX + 0.001, bb.minY + 0.001, bb.minZ + 0.001);
+        BlockPos max = new BlockPos(bb.maxX - 0.001, bb.maxY - 0.001, bb.maxZ - 0.001);
+        if (!this.world.isAreaLoaded(min, max)) return 0;
+        int count = 0;
+        for (int x = min.getX(); x <= max.getX(); x++) {
+            for (int y = min.getY(); y <= max.getY(); y++) {
+                for (int z = min.getZ(); z <= max.getZ(); z++) {
+                    if (this.world.getBlockState(new BlockPos(x, y, z)).getBlock() == Blocks.SOUL_SAND) {
+                        count++;
+                    }
+                }
+            }
+        }
+        return count;
+    }
+
+    public Medium capturedTickMedium() {
+        return tickMedium;
+    }
+
+    public double capturedTickGroundFriction() {
+        return tickGroundFriction;
+    }
+
+    public int capturedTickSoulsandCells() {
+        return tickSoulsandCells;
     }
 
     private void applyMovementInput() {

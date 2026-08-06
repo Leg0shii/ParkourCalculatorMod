@@ -265,6 +265,7 @@ public final class LongRunSolver {
         p.speedAmplifier = sliceInt(sc.speedAmplifier, a, len);
         p.slipPerTick = sliceDouble(sc.slipPerTick, a, len);
         p.surfacePerTick = sliceKind(sc.surfacePerTick, a, len);
+        p.soulsandCellsPerTick = sliceInt(sc.soulsandCellsPerTick, a, len);
         p.sneakPerTick = sliceBool(sc.sneakPerTick, a, len);
         // null arrays stay null so the slice keeps the source's legacy fallbacks (always-sprint, W held).
         p.sprintPerTick = sliceBool(sc.sprintPerTick, a, len);

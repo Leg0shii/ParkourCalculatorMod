@@ -566,6 +566,7 @@ public final class AngleSolverEngine {
         int[] speedAmp = new int[numTicks];
         double[] slipPerTick = new double[numTicks];
         SurfaceKind[] surfacePerTick = new SurfaceKind[numTicks];
+        int[] soulsandCellsPerTick = new int[numTicks];
         boolean[] sneakPerTick = new boolean[numTicks];
         float[] forwardIn = new float[numTicks];
         float[] strafeIn = new float[numTicks];
@@ -583,6 +584,7 @@ public final class AngleSolverEngine {
             boolean ground = slip < 1.0;
             slipPerTick[k] = ground ? slip : Double.NaN;
             surfacePerTick[k] = effMedium(t).kind;
+            soulsandCellsPerTick[k] = effSoulsandCells(t);
             sneakPerTick[k] = row.isKeyActive(InputRow.Key.SNEAK);
             jumpMask[k] = jumpRow;
             force45Mask[k] = effInputs(t) == AngleSolverState.InputMode.FORCE_45;
@@ -624,6 +626,7 @@ public final class AngleSolverEngine {
         phys.speedAmplifier = speedAmp;
         phys.slipPerTick = slipPerTick;
         phys.surfacePerTick = surfacePerTick;
+        phys.soulsandCellsPerTick = soulsandCellsPerTick;
         phys.sneakPerTick = sneakPerTick;
         phys.yawLockedPerTick = yawLocked;
         phys.forwardInputPerTick = forwardIn;
@@ -1529,6 +1532,12 @@ public final class AngleSolverEngine {
         StateOverride ov = overrideAt(tick);
         if (ov != null && ov.overridesMedium()) return ov.getMedium();
         return Medium.NONE;
+    }
+
+    private int effSoulsandCells(int tick) {
+        StateOverride ov = overrideAt(tick);
+        if (ov != null && ov.getMedium() == Medium.SOULSAND) return ov.getSoulsandCells();
+        return 1;
     }
 
     /** Effective Speed amplifier at a tick: override added/removed over the default potions. */

@@ -1,9 +1,6 @@
 package de.legoshi.parkourcalc.fabric;
 
-import de.legoshi.parkourcalc.core.anglesolver.Medium;
-import de.legoshi.parkourcalc.core.anglesolver.Slipperiness;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
-import de.legoshi.parkourcalc.core.ports.SurfaceSample;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.Face;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
@@ -16,8 +13,6 @@ import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.tags.BlockTags;
-import net.minecraft.tags.FluidTags;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.core.BlockPos;
@@ -119,29 +114,6 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
         BlockState state = world.getBlockState(new BlockPos(x, y, z));
         return state.is(Blocks.ICE) || state.is(Blocks.PACKED_ICE)
                 || state.is(Blocks.BLUE_ICE) || state.is(Blocks.FROSTED_ICE);
-    }
-
-    @Override
-    public SurfaceSample sampleSurface(Vec3dCore feetPos) {
-        ClientLevel world = Minecraft.getInstance().level;
-        if (world == null) return null;
-        BlockPos feet = BlockPos.containing(feetPos.x, feetPos.y, feetPos.z);
-        BlockPos below = BlockPos.containing(feetPos.x, feetPos.y - 0.500001, feetPos.z);
-        BlockState feetState = world.getBlockState(feet);
-        BlockState belowState = world.getBlockState(below);
-        Medium medium = Medium.NONE;
-        if (feetState.is(Blocks.COBWEB)) {
-            medium = Medium.COBWEB;
-        } else if (world.getFluidState(feet).is(FluidTags.WATER)) {
-            medium = Medium.WATER;
-        } else if (world.getFluidState(feet).is(FluidTags.LAVA)) {
-            medium = Medium.LAVA;
-        } else if (feetState.is(BlockTags.CLIMBABLE)) {
-            medium = Medium.LADDER;
-        } else if (feetState.is(Blocks.SOUL_SAND) || belowState.is(Blocks.SOUL_SAND)) {
-            medium = Medium.SOULSAND;
-        }
-        return new SurfaceSample(Slipperiness.fromFriction(belowState.getBlock().getFriction()), medium);
     }
 
     @Override

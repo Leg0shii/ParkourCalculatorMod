@@ -36,6 +36,25 @@ public final class HudMessages {
     }
 
     private final List<Entry> entries = new ArrayList<>();
+    private String statusText;
+    private int statusColor;
+
+    public void setStatus(String text, int colorArgb) {
+        statusText = text;
+        statusColor = colorArgb;
+    }
+
+    public void clearStatus() {
+        statusText = null;
+    }
+
+    public String getStatusText() {
+        return statusText;
+    }
+
+    public int getStatusColor() {
+        return statusColor;
+    }
 
     public void push(String text, int colorArgb, long nowNanos) {
         if (text == null || text.isEmpty()) return;

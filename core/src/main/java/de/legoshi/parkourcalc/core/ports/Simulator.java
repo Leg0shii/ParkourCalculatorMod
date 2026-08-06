@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.ports;
 
+import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.sim.Checkpoint;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
@@ -34,6 +35,18 @@ public interface Simulator {
     boolean isCurrentSoftCollision();
 
     double getCurrentCollisionAngleDegrees();
+
+    default Medium getCurrentTickMedium() {
+        return null;
+    }
+
+    default double getCurrentTickGroundFriction() {
+        return Double.NaN;
+    }
+
+    default int getCurrentTickSoulsandCells() {
+        return 0;
+    }
 
     float getCurrentYaw();
 

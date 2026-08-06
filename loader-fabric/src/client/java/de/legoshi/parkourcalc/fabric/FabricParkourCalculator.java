@@ -6,7 +6,6 @@ import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.io.OsSystemBridge;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.core.ui.Settings;
-import de.legoshi.parkourcalc.core.ui.theme.SolverHudStatus;
 import de.legoshi.parkourcalc.fabric.imgui.ImGuiImpl;
 import de.legoshi.parkourcalc.fabric.render.FabricHudOverlayRenderer;
 import de.legoshi.parkourcalc.fabric.render.FabricWorldOverlayRenderer;
@@ -343,6 +342,53 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
     }
 
+    public static boolean dispatchOverlayHotkey(int glfwKey) {
+        Minecraft client = Minecraft.getInstance();
+        if (client.getWindow() == null) return false;
+        if (glfwKey == boundKey(deselectKeyBinding)) {
+            application.getSelection().clear();
+            return true;
+        }
+        if (glfwKey == boundKey(playbackKeyBinding)) {
+            togglePlayback();
+            return true;
+        }
+        if (glfwKey == boundKey(landingConstraintsKeyBinding)) {
+            long window = client.getWindow().handle();
+            boolean enter = GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS
+                    || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS;
+            boolean remove = GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS
+                    || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_CONTROL) == GLFW.GLFW_PRESS;
+            application.onConstraintKey(enter, remove);
+            return true;
+        }
+        if (glfwKey == boundKey(removeConstraintsKeyBinding)) {
+            application.removeSelectedConstraints();
+            return true;
+        }
+        if (glfwKey == boundKey(applySurfaceStateKeyBinding)) {
+            application.applyPathSurfaceState();
+            return true;
+        }
+        if (glfwKey == boundKey(solveKeyBinding)) {
+            application.solveAngleSolver();
+            return true;
+        }
+        if (glfwKey == boundKey(solverStartTickKeyBinding)) {
+            application.setSolverStartTickFromSelection();
+            return true;
+        }
+        if (glfwKey == boundKey(solverEndTickKeyBinding)) {
+            application.setSolverLandingTickFromSelection();
+            return true;
+        }
+        return false;
+    }
+
+    private static int boundKey(KeyMapping mapping) {
+        return KeyMappingHelper.getBoundKeyOf(mapping).getValue();
+    }
+
     public static void closeOverlay() {
         if (application.isControlPanelOpen()) {
             setOverlayOpen(false);
@@ -409,10 +455,6 @@ public class FabricParkourCalculator implements ClientModInitializer {
         if (!application.isReady()) return;
         if (application.isPlaybackRunning()) {
             hudRenderer.render(context);
-        }
-        SolverHudStatus status = application.solverHudStatus();
-        if (status != null) {
-            hudRenderer.renderSolverStatus(context, status);
         }
     }
 

@@ -1,5 +1,7 @@
 package de.legoshi.parkourcalc.core.sim;
 
+import de.legoshi.parkourcalc.core.anglesolver.Medium;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -30,6 +32,10 @@ public final class TickState {
     public final float moveForward;
     public final float moveStrafe;
 
+    public final Medium medium;
+    public final double groundFriction;
+    public final int soulsandCells;
+
     public TickState(Vec3dCore position, boolean onGround, boolean sneaking, boolean wallCollision, float yaw, List<Vec3dCore> subtickPath, Vec3dCore velocity, boolean softCollision, double collisionAngleDegrees) {
         this(position, onGround, sneaking, wallCollision, yaw, subtickPath, velocity, softCollision, collisionAngleDegrees,
                 false, Float.NaN, Float.NaN);
@@ -37,6 +43,12 @@ public final class TickState {
 
     public TickState(Vec3dCore position, boolean onGround, boolean sneaking, boolean wallCollision, float yaw, List<Vec3dCore> subtickPath, Vec3dCore velocity, boolean softCollision, double collisionAngleDegrees,
                      boolean sprinting, float moveForward, float moveStrafe) {
+        this(position, onGround, sneaking, wallCollision, yaw, subtickPath, velocity, softCollision, collisionAngleDegrees,
+                sprinting, moveForward, moveStrafe, null, Double.NaN, 0);
+    }
+
+    public TickState(Vec3dCore position, boolean onGround, boolean sneaking, boolean wallCollision, float yaw, List<Vec3dCore> subtickPath, Vec3dCore velocity, boolean softCollision, double collisionAngleDegrees,
+                     boolean sprinting, float moveForward, float moveStrafe, Medium medium, double groundFriction, int soulsandCells) {
         this.position = position;
         this.onGround = onGround;
         this.sneaking = sneaking;
@@ -49,10 +61,17 @@ public final class TickState {
         this.sprinting = sprinting;
         this.moveForward = moveForward;
         this.moveStrafe = moveStrafe;
+        this.medium = medium;
+        this.groundFriction = groundFriction;
+        this.soulsandCells = soulsandCells;
     }
 
     /** Whether this state carries the post-tick movement sample (sprint + moveFlying inputs). */
     public boolean hasMovementSample() {
         return !Float.isNaN(moveForward);
+    }
+
+    public boolean hasSurfaceSample() {
+        return medium != null;
     }
 }

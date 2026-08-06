@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.fabric.sim;
 
 import com.mojang.authlib.GameProfile;
+import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.sim.SubtickPath;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
@@ -45,6 +46,9 @@ public class SimulatorEntity extends Player {
 
     private double lastCollisionAngleDegrees = Double.NaN;
     private boolean collisionAngleComputedThisTick = false;
+    private Medium tickMedium;
+    private double tickGroundFriction = Double.NaN;
+    private int tickSoulsandCells;
 
     public double getLastCollisionAngleDegrees() {
         return lastCollisionAngleDegrees;
@@ -103,6 +107,36 @@ public class SimulatorEntity extends Player {
 
         this.setPos(startPosition);
         this.setDeltaMovement(startVelocity);
+        this.tickMedium = null;
+        this.tickGroundFriction = Double.NaN;
+        this.tickSoulsandCells = 0;
+    }
+
+    @Override
+    public void travel(Vec3 input) {
+        boolean web = this.stuckSpeedMultiplier.lengthSqr() > 1.0E-7;
+        boolean fluid = this.shouldTravelInFluid(this.level().getFluidState(this.blockPosition()));
+        boolean water = fluid && this.isInWater();
+        boolean lava = fluid && !water && this.isInLava();
+        boolean ladder = this.onClimbable();
+        tickGroundFriction = this.onGround()
+                ? (double) this.level().getBlockState(this.getBlockPosBelowThatAffectsMyMovement()).getBlock().getFriction()
+                : Double.NaN;
+        super.travel(input);
+        tickSoulsandCells = this.getBlockSpeedFactor() != 1.0F ? 1 : 0;
+        tickMedium = Medium.fromFlags(web, water, lava, ladder, tickSoulsandCells > 0);
+    }
+
+    public Medium capturedTickMedium() {
+        return tickMedium;
+    }
+
+    public double capturedTickGroundFriction() {
+        return tickGroundFriction;
+    }
+
+    public int capturedTickSoulsandCells() {
+        return tickSoulsandCells;
     }
 
     @Override

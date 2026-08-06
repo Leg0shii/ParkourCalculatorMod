@@ -42,6 +42,8 @@ public final class JumpPhysicsInputs {
 
     public SurfaceKind[] surfacePerTick = null;
 
+    public int[] soulsandCellsPerTick = null;
+
     public boolean[] sneakPerTick = null;
 
     /** Per-tick yaw lock state (unlocked = float delta the game accumulates; locked = absolute facing). */
@@ -92,6 +94,7 @@ public final class JumpPhysicsInputs {
         c.speedAmplifier = speedAmplifier;
         c.slipPerTick = slipPerTick;
         c.surfacePerTick = surfacePerTick;
+        c.soulsandCellsPerTick = soulsandCellsPerTick;
         c.sneakPerTick = sneakPerTick;
         c.yawLockedPerTick = yawLockedPerTick;
         c.sprintPerTick = sprintPerTick;
@@ -163,6 +166,11 @@ public final class JumpPhysicsInputs {
         if (surfacePerTick == null || tick < 0 || tick >= surfacePerTick.length) return SurfaceKind.NORMAL;
         SurfaceKind kind = surfacePerTick[tick];
         return kind == null ? SurfaceKind.NORMAL : kind;
+    }
+
+    public int soulsandCellsAt(int tick) {
+        if (soulsandCellsPerTick == null || tick < 0 || tick >= soulsandCellsPerTick.length) return 1;
+        return Math.max(1, soulsandCellsPerTick[tick]);
     }
 
     public boolean sneakAt(int tick) {

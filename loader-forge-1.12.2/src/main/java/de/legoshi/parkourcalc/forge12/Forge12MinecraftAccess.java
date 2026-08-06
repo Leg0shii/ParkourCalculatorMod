@@ -1,16 +1,11 @@
 package de.legoshi.parkourcalc.forge12;
 
-import de.legoshi.parkourcalc.core.anglesolver.Medium;
-import de.legoshi.parkourcalc.core.anglesolver.Slipperiness;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
-import de.legoshi.parkourcalc.core.ports.SurfaceSample;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.Face;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2InputState;
 import net.minecraft.block.Block;
-import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
@@ -18,7 +13,6 @@ import net.minecraft.init.Blocks;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -112,31 +106,6 @@ public final class Forge12MinecraftAccess implements MinecraftAccess {
         if (world == null) return false;
         Block block = world.getBlockState(new BlockPos(x, y, z)).getBlock();
         return block == Blocks.ICE || block == Blocks.PACKED_ICE || block == Blocks.FROSTED_ICE;
-    }
-
-    @Override
-    public SurfaceSample sampleSurface(Vec3dCore feetPos) {
-        World world = Minecraft.getMinecraft().world;
-        if (world == null) return null;
-        int fx = MathHelper.floor(feetPos.x);
-        int fy = MathHelper.floor(feetPos.y);
-        int fz = MathHelper.floor(feetPos.z);
-        IBlockState feetState = world.getBlockState(new BlockPos(fx, fy, fz));
-        Block feetBlock = feetState.getBlock();
-        Block belowBlock = world.getBlockState(new BlockPos(fx, fy - 1, fz)).getBlock();
-        Medium medium = Medium.NONE;
-        if (feetBlock == Blocks.WEB) {
-            medium = Medium.COBWEB;
-        } else if (feetState.getMaterial() == Material.WATER) {
-            medium = Medium.WATER;
-        } else if (feetState.getMaterial() == Material.LAVA) {
-            medium = Medium.LAVA;
-        } else if (feetBlock == Blocks.LADDER || feetBlock == Blocks.VINE) {
-            medium = Medium.LADDER;
-        } else if (feetBlock == Blocks.SOUL_SAND || belowBlock == Blocks.SOUL_SAND) {
-            medium = Medium.SOULSAND;
-        }
-        return new SurfaceSample(Slipperiness.fromFriction(belowBlock.slipperiness), medium);
     }
 
     @Override

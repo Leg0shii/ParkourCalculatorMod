@@ -321,6 +321,7 @@ public final class AlmSnapStage {
         a.speedAmplifier = b.speedAmplifier;
         a.slipPerTick = b.slipPerTick;
         a.surfacePerTick = b.surfacePerTick;
+        a.soulsandCellsPerTick = b.soulsandCellsPerTick;
         a.sneakPerTick = b.sneakPerTick;
         a.yawLockedPerTick = b.yawLockedPerTick;
         a.sprintPerTick = b.sprintPerTick;

@@ -130,24 +130,22 @@ public final class BoxStyle {
         return toArgb(rgba[0], rgba[1], rgba[2], rgba[3]);
     }
 
-    private static final float[] TICK_DEVIATION = {1.000f, 0.184f, 0.831f, 0.60f};
-
     /** Fill color for a tick box: user-controlled alpha for translucency. */
     public static int tickFaceArgb(Settings settings, TickState state, boolean selected) {
-        return tickFaceArgb(settings, state, selected, false);
+        return tickFaceArgb(settings, state, selected, false, false, false);
     }
 
-    public static int tickFaceArgb(Settings settings, TickState state, boolean selected, boolean deviation) {
-        return toArgb(pickChannel(settings, state, selected, deviation));
+    public static int tickFaceArgb(Settings settings, TickState state, boolean selected, boolean deviation, boolean solverStart, boolean solverGoal) {
+        return toArgb(pickChannel(settings, state, selected, deviation, solverStart, solverGoal));
     }
 
     /** Outline color for a tick box: full alpha so the wireframe always reads. */
     public static int tickLineArgb(Settings settings, TickState state, boolean selected) {
-        return tickLineArgb(settings, state, selected, false);
+        return tickLineArgb(settings, state, selected, false, false, false);
     }
 
-    public static int tickLineArgb(Settings settings, TickState state, boolean selected, boolean deviation) {
-        float[] c = pickChannel(settings, state, selected, deviation);
+    public static int tickLineArgb(Settings settings, TickState state, boolean selected, boolean deviation, boolean solverStart, boolean solverGoal) {
+        float[] c = pickChannel(settings, state, selected, deviation, solverStart, solverGoal);
         return toArgb(c[0], c[1], c[2], 1.0f);
     }
 
@@ -165,11 +163,14 @@ public final class BoxStyle {
         return toArgb(c[0], c[1], c[2], 1.0f);
     }
 
-    /** selected > deviation > soft-collision > wall > in-air > sneak > default. Soft collision is a wall
-     *  hit that doesn't break sprint (1.21+), so it must win over the regular wall color. */
-    private static float[] pickChannel(Settings settings, TickState state, boolean selected, boolean deviation) {
+    /** selected > deviation > solver start > solver goal > soft-collision > wall > in-air > sneak > default.
+     *  Soft collision is a wall hit that doesn't break sprint (1.21+), so it must win over the regular
+     *  wall color. */
+    private static float[] pickChannel(Settings settings, TickState state, boolean selected, boolean deviation, boolean solverStart, boolean solverGoal) {
         if (selected) return settings.tickSelected;
-        if (deviation) return TICK_DEVIATION;
+        if (deviation) return settings.tickDeviation;
+        if (solverStart) return settings.tickSolverStart;
+        if (solverGoal) return settings.tickSolverGoal;
         if (state.softCollision) return settings.tickSoftCollision;
         if (state.wallCollision) return settings.tickWall;
         if (!state.onGround) return settings.tickAir;

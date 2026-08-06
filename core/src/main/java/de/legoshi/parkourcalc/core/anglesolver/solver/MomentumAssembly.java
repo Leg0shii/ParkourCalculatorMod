@@ -164,6 +164,7 @@ public final class MomentumAssembly {
         p.speedAmplifier = sc.speedAmplifier;
         p.slipPerTick = sc.slipPerTick;
         p.surfacePerTick = sc.surfacePerTick;
+        p.soulsandCellsPerTick = sc.soulsandCellsPerTick;
         p.sneakPerTick = sc.sneakPerTick;
         p.sprintPerTick = sc.sprintPerTick;
         p.forwardInputPerTick = sc.forwardInputPerTick;
@@ -391,6 +392,7 @@ public final class MomentumAssembly {
         sc.jumpPerTick = new boolean[]{full.jumpAt(t)};
         sc.slipPerTick = new double[]{full.slipAt(t)};
         sc.surfacePerTick = new SurfaceKind[]{full.surfaceAt(t)};
+        sc.soulsandCellsPerTick = new int[]{full.soulsandCellsAt(t)};
         sc.sneakPerTick = new boolean[]{full.sneakAt(t)};
         sc.strafePerTick = new boolean[]{full.strafeAt(t)};
         sc.sprintPerTick = new boolean[]{full.sprintAt(t)};
@@ -434,6 +436,7 @@ public final class MomentumAssembly {
         p.speedAmplifier = sliceInt(sc.speedAmplifier, a, len);
         p.slipPerTick = sliceDouble(sc.slipPerTick, a, len);
         p.surfacePerTick = sliceKind(sc.surfacePerTick, a, len);
+        p.soulsandCellsPerTick = sliceInt(sc.soulsandCellsPerTick, a, len);
         p.sneakPerTick = sliceBool(sc.sneakPerTick, a, len);
         p.sprintPerTick = sliceBool(sc.sprintPerTick, a, len);
         p.forwardInputPerTick = sliceFloat(sc.forwardInputPerTick, a, len, 0.98F);

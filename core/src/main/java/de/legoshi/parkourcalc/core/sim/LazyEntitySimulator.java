@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.core.sim;
 
 import de.legoshi.parkourcalc.core.DebugFlags;
+import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.ports.Simulator;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 
@@ -105,6 +106,21 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     @Override
     public final double getCurrentCollisionAngleDegrees() {
         return getCollisionAngleDegrees(ensureEntity());
+    }
+
+    @Override
+    public final Medium getCurrentTickMedium() {
+        return getTickMedium(ensureEntity());
+    }
+
+    @Override
+    public final double getCurrentTickGroundFriction() {
+        return getTickGroundFriction(ensureEntity());
+    }
+
+    @Override
+    public final int getCurrentTickSoulsandCells() {
+        return getTickSoulsandCells(ensureEntity());
     }
 
     @Override
@@ -223,6 +239,12 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     protected abstract boolean isSoftCollision(E entity);
 
     protected abstract double getCollisionAngleDegrees(E entity);
+
+    protected abstract Medium getTickMedium(E entity);
+
+    protected abstract double getTickGroundFriction(E entity);
+
+    protected abstract int getTickSoulsandCells(E entity);
 
     protected abstract float getYaw(E entity);
 

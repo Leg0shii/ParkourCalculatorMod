@@ -98,6 +98,7 @@ public final class AngleSolverWindow implements RenderInterface {
     private final String[] slipItems;
     private String[] presetNames;
     private String presetError;
+    private Runnable applySurfaceState = () -> { };
 
     private boolean yawsExpanded;
     private boolean detailsExpanded;
@@ -674,11 +675,22 @@ public final class AngleSolverWindow implements RenderInterface {
         return changed;
     }
 
+    public void setApplySurfaceState(Runnable action) {
+        applySurfaceState = action != null ? action : () -> { };
+    }
+
     private void renderActions() {
         if (engine.isSolving()) {
             renderSolvingIndicator();
             return;
         }
+        if (Controls.secondaryButton("Apply state")) {
+            applySurfaceState.run();
+        }
+        if (ImGui.isItemHovered()) {
+            ImGui.setTooltip("Capture each tick's surface state (ground + medium) from the simulation into the overrides, for the solve range (H).");
+        }
+        ImGui.sameLine();
         if (Controls.secondaryButton("Solve")) {
             yawsExpanded = false;
             detailsExpanded = false;

@@ -70,10 +70,6 @@ public interface MinecraftAccess {
         return -1.0;
     }
 
-    default SurfaceSample sampleSurface(Vec3dCore feetPos) {
-        return null;
-    }
-
     /** Current state of the left mouse button (true while held). */
     boolean isMousePressedLeft();
 

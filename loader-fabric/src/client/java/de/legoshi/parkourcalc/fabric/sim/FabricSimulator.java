@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.fabric.sim;
 
+import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.sim.ChunkRange;
 import de.legoshi.parkourcalc.core.sim.Checkpoint;
 import de.legoshi.parkourcalc.core.sim.LazyEntitySimulator;
@@ -172,6 +173,21 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
     @Override
     protected double getCollisionAngleDegrees(SimulatorEntity e) {
         return e.getLastCollisionAngleDegrees();
+    }
+
+    @Override
+    protected Medium getTickMedium(SimulatorEntity e) {
+        return e.capturedTickMedium();
+    }
+
+    @Override
+    protected double getTickGroundFriction(SimulatorEntity e) {
+        return e.capturedTickGroundFriction();
+    }
+
+    @Override
+    protected int getTickSoulsandCells(SimulatorEntity e) {
+        return e.capturedTickSoulsandCells();
     }
 
     @Override
