@@ -13,6 +13,7 @@ import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.core.BlockPos;
@@ -94,10 +95,10 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
     }
 
     @Override
-    public boolean isLadder(int x, int y, int z) {
+    public boolean isClimbable(int x, int y, int z) {
         ClientLevel world = Minecraft.getInstance().level;
         if (world == null) return false;
-        return world.getBlockState(new BlockPos(x, y, z)).is(Blocks.LADDER);
+        return world.getBlockState(new BlockPos(x, y, z)).is(BlockTags.CLIMBABLE);
     }
 
     @Override

@@ -38,7 +38,7 @@ public interface MinecraftAccess {
         return false;
     }
 
-    default boolean isLadder(int x, int y, int z) {
+    default boolean isClimbable(int x, int y, int z) {
         return false;
     }
 

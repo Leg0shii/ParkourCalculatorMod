@@ -24,7 +24,7 @@ A TAS input planning mod for Minecraft. Simulate and visualize parkour movements
 - **Angle Solver**: give it constraints and it finds the yaw inputs that land the jump
 - **Free start position**: the solver picks the best starting spot within the start block's footprint
 - **Constraints**: absolute X/Z/F, relative X/Z against any reference tick, per-tick dX/dZ/dF deltas, and a dX vs dZ axis comparison
-- **Constraint hotkeys**: `B` adds wall and footprint constraints for the block you are looking at, `Ctrl+B` adds ladder/slime/ice cell constraints
+- **Constraint hotkeys**: `B` adds wall and footprint constraints for the block you are looking at, `Ctrl+B` adds climbable (ladder, vine)/slime/ice cell constraints
 - **Solver hotkeys**: `V` solves and applies, `I`/`O` set the solver start/goal tick to the selected tick, `H` fills per-tick slipperiness and medium from the recorded path; a HUD status line shows solve progress and outcome while the UI is closed
 - **Node-graph solver pipelines** with per-stage time budgets (Custom effort)
 - Plan movement inputs tick-by-tick (WASD, jump, sneak, sprint, yaw, pitch)
@@ -70,7 +70,7 @@ Click and drag the first box in the world to reposition.
 | `G` | Toggle UI (rebindable) |
 | `ESC` | Close UI |
 | `B` | Add wall/footprint constraints for the targeted block |
-| `Ctrl+B` | Add ladder/slime/ice cell constraints |
+| `Ctrl+B` | Add climbable (ladder, vine)/slime/ice cell constraints |
 | `Ctrl+Click` | Toggle selection |
 | `Shift+Click` | Range select |
 | `Right-Click` | Context menu |
