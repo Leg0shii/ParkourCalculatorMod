@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.anglesolver.graph;
 
+import de.legoshi.parkourcalc.SlowSolverTests;
 import de.legoshi.parkourcalc.anglesolver.harness.Fixtures;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
@@ -14,6 +15,7 @@ import de.legoshi.parkourcalc.core.save.Result;
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.ui.InputData;
+import org.junit.experimental.categories.Category;
 import org.junit.Test;
 
 import java.nio.file.Files;
@@ -22,6 +24,7 @@ import java.nio.file.Path;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+@Category(SlowSolverTests.class)
 public class GraphPresetSolveTest {
 
     @Test

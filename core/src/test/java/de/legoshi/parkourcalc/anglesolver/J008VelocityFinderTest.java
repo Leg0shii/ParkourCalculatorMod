@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.anglesolver;
 
+import de.legoshi.parkourcalc.SlowSolverTests;
 import de.legoshi.parkourcalc.anglesolver.harness.ProblemFixture;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.velocity.VelocityFinder;
@@ -8,6 +9,7 @@ import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputData;
+import org.junit.experimental.categories.Category;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -19,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 /** Exercises the core {@link VelocityFinder} on j008-bfneo: it must reproduce the recorded jump
  *  (recorded v0 lands at the recorded spot) and return a ranked set of landing initial velocities. */
+@Category(SlowSolverTests.class)
 public class J008VelocityFinderTest {
 
     @Test

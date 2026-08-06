@@ -3,6 +3,10 @@
 A saved jump (capture) lives in a check folder, and `ProblemsTest` validates it for that check. To add
 coverage you drop a capture (or a tiny sidecar) into a folder. No Java change, no capture name in any test.
 
+`ProblemsTest` and the other engine-driving suites are tagged `@Category(SlowSolverTests.class)` and
+excluded from the default `:core:test` run; pass `-PslowTests` to run them (CI always does). See
+AGENTS.md "Tests" for the full slow list and when a full run is required.
+
 ```
 anglesolver/
   ProblemsTest.java        every capture under resources/problems/<check>/ is validated for that check

@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.anglesolver;
 
+import de.legoshi.parkourcalc.SlowSolverTests;
 import de.legoshi.parkourcalc.anglesolver.harness.ProblemCatalog;
 import de.legoshi.parkourcalc.anglesolver.harness.ProblemFixture;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
@@ -12,6 +13,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
+import org.junit.experimental.categories.Category;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -41,6 +43,7 @@ import static org.junit.Assert.fail;
  * </ul>
  */
 @RunWith(Parameterized.class)
+@Category(SlowSolverTests.class)
 public class ProblemsTest {
 
     @Parameters(name = "{0}/{1}")
