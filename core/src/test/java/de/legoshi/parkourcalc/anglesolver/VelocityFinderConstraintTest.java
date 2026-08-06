@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.anglesolver;
 
+import de.legoshi.parkourcalc.SlowSolverTests;
 import de.legoshi.parkourcalc.anglesolver.harness.Fixtures;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
@@ -8,6 +9,7 @@ import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputData;
+import org.junit.experimental.categories.Category;
 import org.junit.Test;
 
 import java.util.List;
@@ -18,6 +20,7 @@ import static org.junit.Assert.assertTrue;
  *  velocity counts as a hit iff every constraint is met, wherever the jump lands. bfsetup2 is a pure
  *  constraint + objective jump (no land block) whose solution travels ~2 blocks from the start; the old
  *  pad-walls rejected every such velocity. */
+@Category(SlowSolverTests.class)
 public class VelocityFinderConstraintTest {
 
     private static VelocityFinder build(SaveFile file, VelocityFinder.Accuracy acc) {

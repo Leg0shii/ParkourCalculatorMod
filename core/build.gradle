@@ -48,7 +48,11 @@ dependencies {
 }
 
 tasks.named('test') {
-	useJUnit()
+	useJUnit {
+		if (!project.hasProperty('slowTests')) {
+			excludeCategories 'de.legoshi.parkourcalc.SlowSolverTests'
+		}
+	}
 	if (project.hasProperty('testCpus')) {
 		jvmArgs "-XX:ActiveProcessorCount=${project.property('testCpus')}"
 	}

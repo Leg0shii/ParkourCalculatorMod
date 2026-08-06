@@ -36,7 +36,7 @@ jobs:
         run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
       - name: build
-        run: ./gradlew build -x tableStyleCheck -PreleaseVersion=${{ steps.version.outputs.version }} -Dorg.gradle.java.home="$JAVA_HOME"
+        run: ./gradlew build -x tableStyleCheck -PslowTests -PreleaseVersion=${{ steps.version.outputs.version }} -Dorg.gradle.java.home="$JAVA_HOME"
 
       - name: create github release
         uses: softprops/action-gh-release@v2
