@@ -186,31 +186,54 @@ public final class LongRunSolver {
      *  objective-independent; the closed form only certifies the objective's optimal vertex, so a direction
      *  whose vertex quantizes infeasibly returns null while another solves cleanly). When every direction
      *  fails, {@link SlpSolve} closes the window's duality gap primally; running it here, on the widest
-     *  window, keeps the run from degrading into greedy small-window commits. Only the last window hugs
+     *  window, keeps the run from degrading into greedy small-window commits. The SLP fallback ladders the
+     *  directions too: its dual-recovery seed degenerates objective-dependently, so on the last window a
+     *  failed real-objective SLP retries from the other directions' seeds. Only the last window hugs
      *  walls (its objective is the real one); a lead-in window's objective is a surrogate, so it solves
      *  centered, keeping the seam state away from extremes that could doom the continuation. The last
-     *  window never returns an alternate direction's solution: that only seeds the SLP ascent of the
-     *  real objective. */
+     *  window never returns an alternate direction's solution unhugged when the ascent works: an alternate
+     *  solve only seeds the SLP ascent of the real objective, and stays the feasible fallback if that
+     *  ascent fails. */
     private static double[] solveWindow(ExactJumpModel exact, JumpPhysicsInputs win, List<JumpConstraint> cons,
                                         Objective first, boolean last, AtomicBoolean cancel) {
-        int len = win.numTicks;
         double[] y = closedForm(exact, new JumpSpec(win, cons, first), last, cancel);
         if (y != null) return y;
-        for (JumpPhysicsInputs.Axis ax : new JumpPhysicsInputs.Axis[]{JumpPhysicsInputs.Axis.Z, JumpPhysicsInputs.Axis.X}) {
-            for (Objective.Sense se : Objective.Sense.values()) {
-                if (ax == first.axis && se == first.sense) continue;
-                if (cancel != null && cancel.get()) return null;
-                y = closedForm(exact, new JumpSpec(win, cons, new Objective(ax, se, len)), last, cancel);
-                if (y == null) continue;
-                if (!last) return y;
-                double[] hugged = SlpSolve.optimize(exact, new JumpSpec(win, cons, first), 0.0, cancel, y);
-                return hugged != null ? hugged : y; // y stays a feasible (if unhugged) fallback
-            }
+        for (Objective alt : alternates(first, win.numTicks)) {
+            if (cancel != null && cancel.get()) return null;
+            y = closedForm(exact, new JumpSpec(win, cons, alt), last, cancel);
+            if (y == null) continue;
+            if (!last) return y;
+            return hugObjective(exact, win, cons, first, y, cancel);
         }
         if (cancel != null && cancel.get()) return null;
         JumpSpec spec = new JumpSpec(win, cons, first);
-        return last ? SlpSolve.optimize(exact, spec, 0.0, cancel)
-                    : SlpSolve.optimizeCentered(exact, spec, 0.0, cancel);
+        y = last ? SlpSolve.optimize(exact, spec, 0.0, cancel)
+                 : SlpSolve.optimizeCentered(exact, spec, 0.0, cancel);
+        if (y != null || !last) return y;
+        for (Objective alt : alternates(first, win.numTicks)) {
+            if (cancel != null && cancel.get()) return null;
+            y = SlpSolve.optimize(exact, new JumpSpec(win, cons, alt), 0.0, cancel);
+            if (y == null) continue;
+            return hugObjective(exact, win, cons, first, y, cancel);
+        }
+        return null;
+    }
+
+    private static List<Objective> alternates(Objective first, int len) {
+        List<Objective> out = new ArrayList<>();
+        for (JumpPhysicsInputs.Axis ax : new JumpPhysicsInputs.Axis[]{JumpPhysicsInputs.Axis.Z, JumpPhysicsInputs.Axis.X}) {
+            for (Objective.Sense se : Objective.Sense.values()) {
+                if (ax == first.axis && se == first.sense) continue;
+                out.add(new Objective(ax, se, len));
+            }
+        }
+        return out;
+    }
+
+    private static double[] hugObjective(ExactJumpModel exact, JumpPhysicsInputs win, List<JumpConstraint> cons,
+                                         Objective first, double[] feasible, AtomicBoolean cancel) {
+        double[] hugged = SlpSolve.optimize(exact, new JumpSpec(win, cons, first), 0.0, cancel, feasible);
+        return hugged != null ? hugged : feasible; // the alternate stays a feasible (if unhugged) fallback
     }
 
     private static double[] closedForm(ExactJumpModel exact, JumpSpec spec, boolean last, AtomicBoolean cancel) {
