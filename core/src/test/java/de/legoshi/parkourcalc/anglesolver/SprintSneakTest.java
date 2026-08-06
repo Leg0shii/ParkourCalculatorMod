@@ -35,11 +35,16 @@ public class SprintSneakTest {
 
     private static JumpPhysicsInputs compile(InputData inputs, BoxController boxes, int numTicks,
                                              AngleSolverState state) {
+        return compile(inputs, boxes, numTicks, state, "1.8.9");
+    }
+
+    private static JumpPhysicsInputs compile(InputData inputs, BoxController boxes, int numTicks,
+                                             AngleSolverState state, String mcVersion) {
         state.setDefaultInputs(AngleSolverState.InputMode.KEEP);
         state.setStartTick(0);
         state.setLandingTick(numTicks);
         AngleSolverEngine engine = new AngleSolverEngine(state, boxes, inputs, t -> { },
-                ExactJumpModel.forMcVersion("1.8.9"));
+                ExactJumpModel.forMcVersion(mcVersion));
         JumpSpec spec = engine.debugBuildSpec();
         assertNotNull(spec);
         return spec.asScenario();
@@ -281,6 +286,74 @@ public class SprintSneakTest {
         assertEquals(on.posZ[1], pr.posZ[1], 0.0);
         assertTrue("tick 0's amplifier is what drives tick 1's ground factor",
                 Math.abs(pr.posZ[2] - on.posZ[2]) > 1.0E-9 || Math.abs(pr.posX[2] - on.posX[2]) > 1.0E-9);
+    }
+
+    @Test
+    public void modernAirSprintFactorEngagesSameTick() {
+        double[] yaws = {0.0};
+
+        JumpPhysicsInputs engage = scenario(1, Double.NaN, false);
+        engage.sprintPerTick = new boolean[]{true};
+        engage.incomingSprint = Boolean.FALSE;
+
+        ForwardPath m = ExactJumpModel.forMcVersion("26.2").forward(engage, engage.toGameFacings(yaws));
+        assertEquals("modern reads the off-ground speed live: tick 0 already gets the sprint air accel",
+                F * (double) Constants.AIR_SPEED_F, m.posZ[1] - m.posZ[0], 0.0);
+
+        ForwardPath l = ExactJumpModel.forMcVersion("1.8.9").forward(engage, engage.toGameFacings(yaws));
+        assertEquals("legacy keeps the lagged jumpMovementFactor on tick 0",
+                (double) (F * Constants.AIR_SPEED_NO_SPRINT_F), l.posZ[1] - l.posZ[0], 0.0);
+    }
+
+    @Test
+    public void modernAirSprintReleaseIsLiveToo() {
+        double[] yaws = {0.0};
+
+        JumpPhysicsInputs release = scenario(1, Double.NaN, false);
+        release.sprintPerTick = new boolean[]{false};
+        release.incomingSprint = Boolean.TRUE;
+
+        ForwardPath m = ExactJumpModel.forMcVersion("26.2").forward(release, release.toGameFacings(yaws));
+        assertEquals("modern drops to the non-sprint air accel the same tick",
+                F * (double) Constants.AIR_SPEED_NO_SPRINT_F, m.posZ[1] - m.posZ[0], 0.0);
+
+        ForwardPath l = ExactJumpModel.forMcVersion("1.8.9").forward(release, release.toGameFacings(yaws));
+        assertEquals("legacy carries the sprint factor one tick past the release",
+                (double) (F * Constants.AIR_SPEED_F), l.posZ[1] - l.posZ[0], 0.0);
+    }
+
+    @Test
+    public void airFactorSprintAtFollowsTheLiveFlag() {
+        JumpPhysicsInputs sc = scenario(2, Double.NaN, false);
+        sc.sprintPerTick = new boolean[]{true, false};
+        sc.incomingSprint = Boolean.FALSE;
+        assertFalse(sc.airFactorSprintAt(0));
+        assertTrue(sc.airFactorSprintAt(1));
+        sc.liveAirSprintFactor = true;
+        assertTrue(sc.airFactorSprintAt(0));
+        assertFalse(sc.airFactorSprintAt(1));
+    }
+
+    @Test
+    public void deriveSeedsAnAirborneSprintStartPerEra() {
+        InputData inputs = rows(1);
+        BoxController boxes = new BoxController();
+        boxes.add(sampled(false, 0.0F, 0.0F));
+        boxes.add(sampled(true, F, 0.0F));
+        JumpPhysicsInputs mc = compile(inputs, boxes, 1, deriving(), "26.2");
+        assertTrue("a modern engine authors the live air factor", mc.liveAirSprintFactor);
+        assertTrue(mc.sprintAt(0));
+        assertEquals(Boolean.FALSE, mc.incomingSprint);
+        ForwardPath p = ExactJumpModel.forMcVersion("26.2").forward(mc, mc.toGameFacings(new double[]{0.0}));
+        assertEquals("an airborne standstill start under Derive engages the sprint air accel on tick 0",
+                F * (double) Constants.AIR_SPEED_F, p.posZ[1] - p.posZ[0], 0.0);
+
+        InputData legacyInputs = rows(1);
+        BoxController legacyBoxes = new BoxController();
+        legacyBoxes.add(sampled(false, 0.0F, 0.0F));
+        legacyBoxes.add(sampled(true, F, 0.0F));
+        JumpPhysicsInputs lc = compile(legacyInputs, legacyBoxes, 1, deriving(), "1.8.9");
+        assertFalse("a legacy engine keeps the lagged air factor", lc.liveAirSprintFactor);
     }
 
     @Test

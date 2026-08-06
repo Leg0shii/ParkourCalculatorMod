@@ -156,7 +156,7 @@ public final class ExactJumpModel implements ForwardModel {
             boolean fluidGroundJump = modern && fluid && contact && scenario.jumpAt(t);
             boolean isJumpTick = fluidGroundJump || (!fluid && scenario.jumpAt(t) && contact);
             boolean sprint = scenario.sprintAt(t);
-            boolean factorSprint = scenario.factorSprintAt(t);
+            boolean airSprint = modern ? sprint : scenario.factorSprintAt(t);
             if (modern && water && scenario.sneakAt(t)) {
                 vy -= FLUID_JUMP_BOOST;
             }
@@ -195,7 +195,7 @@ public final class ExactJumpModel implements ForwardModel {
                 accelSpeed = Constants.attrValueF(amp, sprint) * ground;
             } else {
                 f4 = 0.91F;
-                accelSpeed = factorSprint ? Constants.AIR_SPEED_F : Constants.AIR_SPEED_NO_SPRINT_F;
+                accelSpeed = airSprint ? Constants.AIR_SPEED_F : Constants.AIR_SPEED_NO_SPRINT_F;
             }
 
             // (4) input acceleration. Inputs are authored per tick (gh-102): force-45 ticks carry the W+A

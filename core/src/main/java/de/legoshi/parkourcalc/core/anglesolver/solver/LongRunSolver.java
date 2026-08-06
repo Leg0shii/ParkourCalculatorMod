@@ -269,6 +269,7 @@ public final class LongRunSolver {
         p.sneakPerTick = sliceBool(sc.sneakPerTick, a, len);
         // null arrays stay null so the slice keeps the source's legacy fallbacks (always-sprint, W held).
         p.sprintPerTick = sliceBool(sc.sprintPerTick, a, len);
+        p.liveAirSprintFactor = sc.liveAirSprintFactor;
         p.forwardInputPerTick = sliceFloat(sc.forwardInputPerTick, a, len, 1.0F * 0.98F);
         p.strafeInputPerTick = sliceFloat(sc.strafeInputPerTick, a, len, 0.0F);
         return p;

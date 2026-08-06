@@ -115,7 +115,7 @@ public final class JumpLinearModel {
                 accelSpeed = Constants.attrValueF(sc.factorAmpAt(t), sprint) * (0.16277136 / (f4[t] * f4[t] * f4[t]));
             } else {
                 f4[t] = 0.91;
-                accelSpeed = sc.factorSprintAt(t) ? Constants.AIR_SPEED_F : Constants.AIR_SPEED_NO_SPRINT_F;
+                accelSpeed = sc.airFactorSprintAt(t) ? Constants.AIR_SPEED_F : Constants.AIR_SPEED_NO_SPRINT_F;
             }
             // Same per-tick input authoring as ExactJumpModel step (4) (gh-102).
             double forward0 = sc.forwardAt(t);
