@@ -8,12 +8,16 @@ import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImGui;
 import imgui.ImGuiIO;
+import imgui.ImVec2;
 import imgui.flag.ImGuiCond;
+import imgui.flag.ImGuiMouseCursor;
+import imgui.flag.ImGuiSelectableFlags;
 import imgui.flag.ImGuiTableColumnFlags;
 import imgui.flag.ImGuiWindowFlags;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Consumer;
 
 public final class TickInfoPanel implements RenderInterface {
 
@@ -35,17 +39,19 @@ public final class TickInfoPanel implements RenderInterface {
     private final SelectionManager selection;
     private final Settings settings;
     private final SimulationRunner runner;
+    private final Consumer<String> hudMessage;
     private int rowCounter;
 
     private int sampleDecimals = -1;
     private String numSample = "";
 
-    public TickInfoPanel(BoxController boxController, InputData inputData, SelectionManager selection, Settings settings, SimulationRunner runner) {
+    public TickInfoPanel(BoxController boxController, InputData inputData, SelectionManager selection, Settings settings, SimulationRunner runner, Consumer<String> hudMessage) {
         this.boxController = boxController;
         this.inputData = inputData;
         this.selection = selection;
         this.settings = settings;
         this.runner = runner;
+        this.hudMessage = hudMessage;
     }
 
     private float effectivePitch(int idx) {
@@ -128,7 +134,7 @@ public final class TickInfoPanel implements RenderInterface {
     }
 
     private void rowText(String label, String text, String tooltip) {
-        labelCell(label, tooltip);
+        labelCell(label, tooltip, text);
         centerSingleValueInMiddleColumn(text);
     }
 
@@ -279,19 +285,39 @@ public final class TickInfoPanel implements RenderInterface {
         }
     }
 
-    private void labelCell(String label, String tooltip) {
+    private void labelCell(String label, String tooltip, String copyText) {
         ImGui.tableNextRow();
-        ThemeManager.paintTableRowBg(rowCounter++);
+        int row = rowCounter++;
+        ThemeManager.paintTableRowBg(row);
         ImGui.tableNextColumn();
-        ThemeManager.tableLeftmostCellPad();
+        if (copyText == null) {
+            ThemeManager.tableLeftmostCellPad();
+            ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+            ThemeManager.textLeft(label);
+            ThemeManager.popTextColor();
+            TooltipUtil.onHover(tooltip);
+            return;
+        }
+        ImVec2 cellStart = ImGui.getCursorScreenPos();
+        float labelColumnRight = cellStart.x + ImGui.getContentRegionAvail().x;
         ThemeManager.pushTextColor(ThemeManager.textMutedColor());
-        ThemeManager.textLeft(label);
+        boolean clicked = ThemeManager.leftAlignedSelectable("copy-row-" + row, label, false, ImGuiSelectableFlags.SpanAllColumns);
         ThemeManager.popTextColor();
-        TooltipUtil.onHover(tooltip);
+        if (clicked) {
+            ImGui.setClipboardText(copyText);
+            hudMessage.accept("Copied " + label);
+        }
+        if (ImGui.isItemHovered()) {
+            ImGui.setMouseCursor(ImGuiMouseCursor.Hand);
+            if (ImGui.getMousePos().x <= labelColumnRight) {
+                TooltipUtil.wrappedTooltip(tooltip);
+            }
+        }
     }
 
     private void rowTriple(String label, double x, double y, double z, int decimals, String tooltip) {
-        labelCell(label, tooltip);
+        String fmt = fmtNumSingle(decimals);
+        labelCell(label, tooltip, String.format(Locale.US, fmt + " " + fmt + " " + fmt, x, y, z));
         numCell(x, decimals);
         numCell(y, decimals);
         numCell(z, decimals);
@@ -299,7 +325,8 @@ public final class TickInfoPanel implements RenderInterface {
     }
 
     private void rowXZ(String label, double x, double z, int decimals, String tooltip) {
-        labelCell(label, tooltip);
+        String fmt = fmtNumSingle(decimals);
+        labelCell(label, tooltip, String.format(Locale.US, fmt + " " + fmt, x, z));
         numCell(x, decimals);
         emptyCell();
         numCell(z, decimals);
@@ -307,25 +334,28 @@ public final class TickInfoPanel implements RenderInterface {
     }
 
     private void rowNum(String label, double v, int decimals, String tooltip) {
-        labelCell(label, tooltip);
-        centerSingleValueInMiddleColumn(String.format(Locale.US, fmtNumSingle(decimals), v));
+        String text = String.format(Locale.US, fmtNumSingle(decimals), v);
+        labelCell(label, tooltip, text);
+        centerSingleValueInMiddleColumn(text);
     }
 
     private void rowInt(String label, int v, String tooltip) {
-        labelCell(label, tooltip);
-        centerSingleValueInMiddleColumn(Integer.toString(v));
+        String text = Integer.toString(v);
+        labelCell(label, tooltip, text);
+        centerSingleValueInMiddleColumn(text);
     }
 
     private void rowBool(String label, boolean v, String tooltip) {
-        labelCell(label, tooltip);
+        String text = Boolean.toString(v);
+        labelCell(label, tooltip, text);
         int color = v ? ThemeManager.okColor() : ThemeManager.dangerColor();
         ThemeManager.pushTextColor(color);
-        centerSingleValueInMiddleColumn(Boolean.toString(v));
+        centerSingleValueInMiddleColumn(text);
         ThemeManager.popTextColor();
     }
 
     private void rowNa(String label, String tooltip) {
-        labelCell(label, tooltip);
+        labelCell(label, tooltip, null);
         ThemeManager.pushTextColor(ThemeManager.textDimColor());
         centerSingleValueInMiddleColumn(NA);
         ThemeManager.popTextColor();
