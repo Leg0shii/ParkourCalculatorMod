@@ -483,7 +483,7 @@ public final class FileMenu {
         Controls.inputTextHint("Name", "e.g. any-name", nameInput, 320);
         boolean enterPressed = !nameModalJustOpened
                 && ImGui.isItemFocused()
-                && ImGui.isKeyPressed(ImGuiKey.Enter, false);
+                && ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Enter), false);
 
         String currentTrim = nameInput.get().trim();
         if (!currentTrim.equals(lastNameInputSeen)) {
@@ -637,7 +637,7 @@ public final class FileMenu {
 
         Modal.footerSeparator();
         boolean canOpen = openSelected != null;
-        boolean enterPressed = canOpen && ImGui.isKeyPressed(ImGuiKey.Enter, false);
+        boolean enterPressed = canOpen && ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Enter), false);
         boolean openClicked;
         if (canOpen) {
             openClicked = Controls.primaryButton(BTN_OPEN) || enterPressed;
