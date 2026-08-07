@@ -49,6 +49,10 @@ public class MeasurementInvariantsTest {
         assertTrue("a d1 straight jump must not measure frame-perfect momentum timing, geo was "
                 + m.shiftGeoMomentumTicks, m.shiftGeoMomentumTicks > 1.0);
 
+        assertTrue("a d1 straight jump must admit a near-flat smoothest line, jerk was " + m.smoothJerkDeg,
+                m.smoothJerkDeg < 0.5);
+        assertEquals("a d1 straight jump must admit a reversal-free smoothest line", 0, m.smoothReversals);
+
         JumpMeasurements again = MeasurementEngine.measure(sample);
         assertEquals(m.jitterDeg, again.jitterDeg, 0.0);
         assertArrayEquals(m.windowLo, again.windowLo, 0.0);
@@ -57,6 +61,19 @@ public class MeasurementInvariantsTest {
         assertArrayEquals(m.shiftHi, again.shiftHi);
         assertTrue(Arrays.equals(m.shiftLoFree, again.shiftLoFree));
         assertTrue(Arrays.equals(m.shiftHiFree, again.shiftHiFree));
+        assertEquals(m.smoothJerkDeg, again.smoothJerkDeg, 0.0);
+        assertEquals(m.smoothVelSdDeg, again.smoothVelSdDeg, 0.0);
+        assertEquals(m.smoothTravelDeg, again.smoothTravelDeg, 0.0);
+        assertEquals(m.smoothReversals, again.smoothReversals);
+    }
+
+    @Test
+    public void flatRecordedLineKeepsFlatSmoothestLine() {
+        HpkHumanSet.Sample sample = HpkHumanSet.load("d1", "j014_1bm_Double_Neo");
+        JumpMeasurements m = MeasurementEngine.measure(sample);
+        assertTrue("j014's recorded line is flat and feasible, the smoothest line must not exceed it, jerk was "
+                + m.smoothJerkDeg, m.smoothJerkDeg < 1.0);
+        assertEquals(0, m.smoothReversals);
     }
 
     @Test

@@ -51,23 +51,24 @@ public class HpkMetricScreen {
             outcomes.add(o);
         }
 
-        ScoringMetric calMetric = Metrics.combinedV3();
+        ScoringMetric calMetric = Metrics.combinedV4();
         List<CalGroup> groups = calibrationGroups(measured, calMetric);
 
         StringWriter sw = new StringWriter();
         PrintWriter out = new PrintWriter(sw);
-        out.printf(Locale.ROOT, "%-52s %3s %5s %3s %2s %3s %5s %5s %2s %9s %9s %9s %7s %9s %5s %9s %7s%n",
+        out.printf(Locale.ROOT, "%-52s %3s %5s %3s %2s %3s %5s %5s %2s %9s %9s %9s %7s %9s %5s %9s %7s %3s %7s%n",
                 "capture", "d", "dHat", "n", "j", "tko", "edges", "turns", "JA",
-                "winMin", "winGeo", "jitter", "drift", "margin", "shMin", "shGeo", "ms");
+                "winMin", "winGeo", "jitter", "drift", "margin", "shMin", "shGeo", "smJrk", "rev", "ms");
         for (Outcome o : outcomes) {
             if (o.m != null) {
                 JumpMeasurements m = o.m;
-                out.printf(Locale.ROOT, "%-52s %3d %5s %3d %2d %3d %2d/%-2d %2d/%-2d %2s %9.4f %9.4f %9.4f %7.2f %9.5f %5s %9s %7d%n",
+                out.printf(Locale.ROOT, "%-52s %3d %5s %3d %2d %3d %2d/%-2d %2d/%-2d %2s %9.4f %9.4f %9.4f %7.2f %9.5f %5s %9s %7.2f %3d %7d%n",
                         m.name, m.dLevel, dHat(calMetric.score(m), groups), m.numTicks, m.jumps, m.takeoffTick,
                         m.inputEdgesMomentum, m.inputEdgesJump, m.turnTicksMomentum, m.turnTicksJump,
                         m.jumpAngle ? "Y" : "-", m.winMinDeg, m.winGeoDeg, m.jitterDeg, m.centerDriftDeg,
                         m.minMargin, shiftPair(m.shiftMinMomentumTicks, m.shiftMinJumpTicks),
-                        shiftGeoPair(m.shiftGeoMomentumTicks, m.shiftGeoJumpTicks), o.ms);
+                        shiftGeoPair(m.shiftGeoMomentumTicks, m.shiftGeoJumpTicks),
+                        m.smoothJerkDeg, m.smoothReversals, o.ms);
             } else if (o.skipMsg != null) {
                 out.printf(Locale.ROOT, "%-52s %3d SKIPPED %s%n", o.sample.name, o.sample.dLevel, o.skipMsg);
             } else {
@@ -320,7 +321,7 @@ public class HpkMetricScreen {
 
     private static void writeWindowsCsv(File f, List<JumpMeasurements> measured) throws Exception {
         StringBuilder sb = new StringBuilder();
-        sb.append("name,dLevel,tick,phase,loDeg,hiDeg\n");
+        sb.append("name,dLevel,tick,phase,loDeg,hiDeg,smoothYawDeg\n");
         for (JumpMeasurements m : measured) {
             for (int k = 0; k < m.numTicks; k++) {
                 sb.append(m.name).append(',')
@@ -328,7 +329,8 @@ public class HpkMetricScreen {
                         .append(k).append(',')
                         .append(k < m.takeoffTick ? "momentum" : "jump").append(',')
                         .append(String.format(Locale.ROOT, "%.4f", m.windowLo[k])).append(',')
-                        .append(String.format(Locale.ROOT, "%.4f", m.windowHi[k])).append('\n');
+                        .append(String.format(Locale.ROOT, "%.4f", m.windowHi[k])).append(',')
+                        .append(String.format(Locale.ROOT, "%.6f", m.smoothYaw[k])).append('\n');
             }
         }
         Files.write(f.toPath(), sb.toString().getBytes(StandardCharsets.UTF_8));

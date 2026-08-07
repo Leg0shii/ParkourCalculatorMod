@@ -74,17 +74,24 @@ anglesolver/
                            (per-tick windows, uniform jitter radius, both around a window-centered
                            anchor with the F/dF reconstruction constraints filtered out of the
                            oracle) plus input-edge tick-shift windows (per key-change event, how many
-                           ticks earlier/later it can happen and still land), then scores every metric
+                           ticks earlier/later it can happen and still land) plus the
+                           smoothest-feasible-line kinematics (coordinate descent on the sum of
+                           squared second yaw differences, dual-seeded from the centered anchor and
+                           the recorded line, every move feasibility-clamped; residual jerk, velocity
+                           sd, max turn speed and reversal count of that line measure the intrinsic
+                           camera-motion demand independent of how jagged the recorded solver line
+                           is), then scores every metric
                            in metriclab/Metrics and prints per-d-level medians + Spearman vs d;
                            PKC_METRIC=1 to run; report at core/build/hpk-metric/report.txt, raw data
-                           at measurements.csv, yaw-windows.csv and input-shift-windows.csv for
+                           at measurements.csv, yaw-windows.csv (incl. the smoothed line per tick)
+                           and input-shift-windows.csv for
                            offline metric tuning; captures with recording problems (result
                            success=false, missing result.yaws, enabled constraints outside the solve
                            segment) are listed as SKIPPED without failing the run
   HpkPair45Screen.java     paired 45-variant generation over captures/hpk_human/: per capture, strips
                            the F/dF reconstruction pins, switches inputs to Force 45, cold-solves the
                            variant with the live engine, measures it with MeasurementEngine and prints
-                           human-vs-45 combinedV3 pairs; PKC_PAIR45=1 to run; report at
+                           human-vs-45 combinedV4 pairs; PKC_PAIR45=1 to run; report at
                            core/build/hpk-metric/pairs45-report.txt, data at pairs45.csv, solved
                            variant saves at pairs45/<name>.json (the simplify loop's starting points);
                            45-unsolvable jumps are reported, not failures
@@ -94,14 +101,14 @@ anglesolver/
                            (keepify, jump-hold conversion, edge recentering into measured shift
                            windows, WASD tap deletion, dF=0 no-turn chains), accepts a step only if
                            the candidate stays feasible (yaw replay against the full constraint set,
-                           or a cold FAST re-solve for constraint-adding operators) AND combinedV3
+                           or a cold FAST re-solve for constraint-adding operators) AND combinedV4
                            drops; key-editing operators require KEEP inputs (never Force-45), SPRINT
                            keys are untouchable, jump-hold needs >= 10-tick fire spacing (jumpTicks
                            cooldown), keepify rewrites the debug movement samples from the rows
                            (stateful sprint derive) instead of stripping them; candidates are
                            measured under the baseline capture name so jitter seeds match; final
                            strat must cold re-solve; benchmarked against the human variant's
-                           combinedV3; final saves are self-contained handover artifacts (solved
+                           combinedV4; final saves are self-contained handover artifacts (solved
                            yaws baked into yaw-locked rows after the cold verify, Force-45 ticks
                            realized into W/A/SPRINT keys with S/SNEAK cleared) so a loaded save
                            runs its solved line in the real sim; the in-game SimVerifyBatch gate
@@ -110,6 +117,51 @@ anglesolver/
                            run, PKC_SIMPLIFY_ONLY=<substr> and PKC_SIMPLIFY_D=<levels> filter;
                            outputs simplify-report.txt, simplify.csv, simplified saves under
                            simplified/<name>.json
+  HpkTemplateScreen.java   named-strat template benchmark over captures/hpk_human/ (the stratfinder
+                           spike): per capture, StratTemplates generates the human strat vocabulary
+                           as parameterized instances (run(d)+jam, pessi(k), fmm(k), Mark(side,k),
+                           bwmm prefix arcs with jam/fmm/pessi follow-ups; each in a no-turn dF=0
+                           variant and a free-yaw variant), realizes each as a KEEP-mode save
+                           (template rows, derived debug samples, fresh slip schedule, runway
+                           X/Z range constraints on every generated ground tick, free start over
+                           the runway, human jump-phase rows and constraints time-translated to
+                           the template's fire tick), cold-solves each at 250 ms and scores
+                           feasible ones with combinedV4 against the human baseline;
+                           PKC_TEMPLATE=1 to run, PKC_TEMPLATE_ONLY / PKC_TEMPLATE_D /
+                           PKC_TEMPLATE_MS tune it; outputs template-report.txt, template.csv and
+                           template-instances.csv (per-instance success, elapsed ms, solver chain)
+  HpkReachScreen.java      soundness and prune-rate check for the ReachBound necessary-condition
+                           pre-screen: screens every template instance per capture, cross-checks
+                           pruned instances against recorded solver outcomes from the
+                           template-instances CSVs (any pruned-but-solved instance is a soundness
+                           violation), and reports prune rate on known-failed instances plus
+                           per-instance screen time; PKC_REACH=1 to run; outputs reach-report.txt;
+                           background: docs/research/stratfinder-levers-2026-08.md
+  HpkLadderScreen.java     screening-ladder benchmark over template instances: ReachBound prune,
+                           rung-1 solve at PKC_LADDER_R1_MS, met/total-ranked promotion
+                           (PKC_LADDER_PROMOTE=all|third|none) to PKC_LADDER_TOP_MS, recall and
+                           wall-time compared against the flat template-instances-timing250ms.csv
+                           baseline; PKC_LADDER=1 to run, PKC_LADDER_ONLY / PKC_LADDER_D filter,
+                           PKC_TEMPLATE_WIDE=1 widens the plan grid; outputs ladder-report.txt
+  HpkRelaxExportScreen.java per-instance disk-relaxation export (RelaxExport): tick schedule
+                           (accel magnitude, friction, jump boost) plus constraint gates as JSONL
+                           under build/hpk-metric/relax/, consumed by an out-of-tree LP solver for
+                           sound infeasibility certificates; PKC_RELAX_EXPORT=1 to run,
+                           PKC_RELAX_ONLY / PKC_RELAX_D filter
+  HpkSubstScreen.java      strat-substitution screen (StratSubstitutions): in-place key-timing
+                           edits over the recorded rows (post-jump onsets and releases shifted one
+                           tick, W/SPRINT/A/D/S), constraints and tick structure untouched, debug
+                           inputs re-derived via SimplifyLoop.deriveDebugSamples, free start within
+                           the save's own t0 constraint; the unmodified "self" variant is a canary
+                           (its failure means the capture or budget is broken, printed as CANARY
+                           FAIL); PKC_SUBST=1 to run, PKC_SUBST_ONLY / PKC_SUBST_D / PKC_SUBST_MS
+                           (default 2000); outputs subst-report.txt, subst.csv
+  HpkBakeScreen.java       bakes V-gate handover saves: re-solves the post-fix at-or-below-human
+                           winners (from template-postfix250ms.csv, delta <= 0) and the assault's
+                           tail-crack labels, scores with combinedV4, picks the best per capture,
+                           bakes yaws into rows (SimplifyLoop.bakeYawRows) and writes loadable
+                           saves under build/hpk-metric/templates/ plus bake-report.txt;
+                           PKC_BAKE=1 and PKC_TEMPLATE_WIDE=1 to run
   metriclab/               measurement vs scoring split for the jump difficulty metric (issue #237):
                            MeasurementEngine (perturb-and-resim tolerance measurement, expensive,
                            trusted; shift probes mutate a JSON-round-trip copy of the rows and
@@ -120,7 +172,11 @@ anglesolver/
                            carries a free flag: never-failed = unconstrained, and a pure release's
                            full tap-deletion failure is the press's constraint, not the release's),
                            ScoringMetric + Metrics (cheap formulas over JumpMeasurements, tweak
-                           freely; combinedV3 zeroes the demand of any edge with a free side),
+                           freely; combinedV3 zeroes the demand of any edge with a free side;
+                           combinedV4 = v3 + 0.15 * log1p(smoothJerkDeg), pricing the intrinsic
+                           camera-kinematics demand of the smoothest feasible line; the shared
+                           tolerance core floors jitter/winGeo at SIG_ANGLE_DEG = 360/65536,
+                           the significant-angle bucket, so sub-bucket precision is never priced),
                            HpkHumanSet (loads captures/hpk_human with optional <name>.meta.json
                            sidecars: subTier, jumpClass, rung, notes), Variant45 (strip pins +
                            Force 45 + attach a fresh solve result), HeadlessSolve (cold engine
@@ -129,8 +185,10 @@ anglesolver/
                            baseline replays feasible, zero-shift probe feasible, yaw windows within
                            [0,180], shift windows within [0,5], shift edge counts match the
                            input-edge counts, jitter bounded by the narrowest one-tick window,
-                           measurement deterministic incl. free flags, j001's sprint release reads
-                           free on both sides, j012's delayed sprint start reads (0,0) frame-exact)
+                           measurement deterministic incl. free flags and smoothness stats, j001's
+                           sprint release reads free on both sides, j012's delayed sprint start
+                           reads (0,0) frame-exact, j001's smoothest line is near-flat and
+                           reversal-free, j014's flat recorded line keeps a flat smoothest line)
   harness/                 shared plumbing; no test lives here
 resources/
   problems/<check>/        one folder per check; holds captures or .expect.json sidecars

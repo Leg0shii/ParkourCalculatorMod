@@ -56,6 +56,9 @@ tasks.named('test') {
 	if (project.hasProperty('testCpus')) {
 		jvmArgs "-XX:ActiveProcessorCount=${project.property('testCpus')}"
 	}
+	if (project.hasProperty('testHeap')) {
+		maxHeapSize = project.property('testHeap')
+	}
 }
 
 // Enforce the table-styling consolidation rules established in the Phase 1-5

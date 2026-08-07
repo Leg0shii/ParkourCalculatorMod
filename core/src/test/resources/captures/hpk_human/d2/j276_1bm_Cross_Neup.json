@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "createdAt": "2026-07-27T13:30:23Z",
-  "modVersion": "1.7.0",
+  "createdAt": "2026-08-07T13:32:29Z",
+  "modVersion": "1.7.1+build.249.756e412",
   "mcVersion": "1.8.9",
   "world": {
     "dimension": "Overworld",
@@ -233,7 +233,32 @@
     "ticks": [
       {
         "tick": 0,
-        "constraints": [],
+        "constraints": [
+          {
+            "range": true,
+            "field": "X",
+            "op": "IN",
+            "value": 0.0,
+            "lo": -820.3000000119208,
+            "hi": -818.6999999880792,
+            "loInclusive": true,
+            "hiInclusive": true,
+            "disabled": false,
+            "vsDz": false
+          },
+          {
+            "range": true,
+            "field": "Z",
+            "op": "IN",
+            "value": 0.0,
+            "lo": 309.6999999880791,
+            "hi": 310.7,
+            "loInclusive": true,
+            "hiInclusive": true,
+            "disabled": false,
+            "vsDz": false
+          }
+        ],
         "override": {
           "slipperiness": "DEFAULT",
           "added": [],
@@ -327,7 +352,7 @@
             "op": "IN",
             "value": 0.0,
             "lo": 309.69999998807907,
-            "hi": 311.13749998807907,
+            "hi": 310.7,
             "loInclusive": true,
             "hiInclusive": true,
             "disabled": false,
@@ -387,12 +412,24 @@
         "tick": 13,
         "constraints": [
           {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          },
+          {
             "range": true,
             "field": "X",
             "op": "IN",
             "value": 0.0,
-            "lo": -822.3000000119209,
-            "hi": -820.6999999880791,
+            "lo": -822.3000000119208,
+            "hi": -820.6999999880792,
             "loInclusive": true,
             "hiInclusive": true,
             "disabled": false,
@@ -403,22 +440,10 @@
             "field": "Z",
             "op": "IN",
             "value": 0.0,
-            "lo": 311.69999998807907,
-            "hi": 313.30000001192093,
+            "lo": 311.6999999880791,
+            "hi": 313.3000000119209,
             "loInclusive": true,
             "hiInclusive": true,
-            "disabled": false,
-            "vsDz": false
-          },
-          {
-            "range": false,
-            "field": "DF",
-            "op": "EQ",
-            "value": 0.0,
-            "lo": 0.0,
-            "hi": 0.0,
-            "loInclusive": false,
-            "hiInclusive": false,
             "disabled": false,
             "vsDz": false
           }

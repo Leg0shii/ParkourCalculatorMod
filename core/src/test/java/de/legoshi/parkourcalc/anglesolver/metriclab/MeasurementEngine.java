@@ -33,6 +33,8 @@ public final class MeasurementEngine {
     public static final double CENTER_STOP_DEG = 0.05;
     public static final int SHIFT_CAP_TICKS = 5;
     public static final int JUMP_HOLD_COOLDOWN_TICKS = 10;
+    public static final int SMOOTH_PASSES = 8;
+    public static final double SMOOTH_STOP_DEG = 0.01;
     public static final float KEY_INPUT_SCALE = 0.98F;
     public static final float SNEAK_INPUT_SCALE = 0.3F;
 
@@ -99,6 +101,7 @@ public final class MeasurementEngine {
         m.name = name;
         m.mcVersion = file.mcVersion;
         m.numTicks = n;
+        m.startYawDeg = sc.startYaw;
         m.facingConstraints = (compiled.ineq.size() + compiled.eq.size())
                 - (oracle.ineq.size() + oracle.eq.size());
         m.minMargin = minMargin(model, sc, oracle, anchor);
@@ -153,7 +156,134 @@ public final class MeasurementEngine {
         m.yawTravelDeg = smooth.yawTravelDeg != null ? smooth.yawTravelDeg : 0.0;
         m.yawReversals = smooth.yawDirChanges != null ? smooth.yawDirChanges : 0;
         m.yawJerkDeg = smooth.yawJerkDeg != null ? smooth.yawJerkDeg : 0.0;
+
+        long tSmooth = System.nanoTime();
+        double[] extA = withStart(sc.startYaw, smoothestLine(model, sc, oracle, anchor, name));
+        double[] extR = withStart(sc.startYaw, smoothestLine(model, sc, oracle, yawVec, name));
+        double[] extSmooth = accelSq(extR) <= accelSq(extA) ? extR : extA;
+        m.smoothMs = (System.nanoTime() - tSmooth) / 1_000_000L;
+        double[] extRecorded = withStart(sc.startYaw, yawVec);
+        m.yawVelSdDeg = velSd(extRecorded);
+        m.smoothTravelDeg = Angles.travelDeg(extSmooth);
+        m.smoothReversals = Angles.reversals(extSmooth, Angles.REVERSAL_FLOOR_DEG);
+        m.smoothJerkDeg = Angles.wiggleDeg(extSmooth);
+        m.smoothVelSdDeg = velSd(extSmooth);
+        m.smoothMaxTurnDeg = maxStep(extSmooth);
+        m.smoothYaw = Arrays.copyOfRange(extSmooth, 1, extSmooth.length);
         return m;
+    }
+
+    static double[] smoothestLine(ExactJumpModel model, JumpPhysicsInputs sc,
+                                  JumpConstraintCompiler.Compiled compiled, double[] anchor, String name) {
+        double[] line = Arrays.copyOf(anchor, anchor.length);
+        if (line.length < 2) {
+            return line;
+        }
+        for (int pass = 0; pass < SMOOTH_PASSES; pass++) {
+            double maxMove = 0.0;
+            for (int k = 0; k < line.length; k++) {
+                double d = smoothTarget(line, sc.startYaw, k) - line[k];
+                if (Math.abs(d) < BISECT_TOL_DEG) {
+                    continue;
+                }
+                double step = feasibleStep(model, sc, compiled, line, k, d);
+                line[k] += step;
+                maxMove = Math.max(maxMove, Math.abs(step));
+            }
+            if (maxMove < SMOOTH_STOP_DEG) {
+                break;
+            }
+        }
+        if (violation(model, sc, compiled, line) > 0.0) {
+            throw new IllegalStateException(name + ": smoothed line lost feasibility");
+        }
+        return line;
+    }
+
+    private static double smoothTarget(double[] line, double startYaw, int k) {
+        int n = line.length;
+        int j = k + 1;
+        double num = 0.0;
+        double den = 0.0;
+        for (int i = j - 1; i <= j + 1; i++) {
+            if (i < 1 || i > n - 1) {
+                continue;
+            }
+            double c = i == j ? -2.0 : 1.0;
+            double d = ext(line, startYaw, i + 1) - 2.0 * ext(line, startYaw, i) + ext(line, startYaw, i - 1);
+            num += c * d;
+            den += c * c;
+        }
+        if (den == 0.0) {
+            return line[k];
+        }
+        return line[k] - num / den;
+    }
+
+    private static double ext(double[] line, double startYaw, int i) {
+        return i == 0 ? startYaw : line[i - 1];
+    }
+
+    private static double feasibleStep(ExactJumpModel model, JumpPhysicsInputs sc,
+                                       JumpConstraintCompiler.Compiled compiled, double[] base, int k, double d) {
+        if (feasibleAt(model, sc, compiled, base, k, d)) {
+            return d;
+        }
+        double good = 0.0;
+        double bad = d;
+        while (Math.abs(bad - good) > BISECT_TOL_DEG) {
+            double mid = 0.5 * (good + bad);
+            if (feasibleAt(model, sc, compiled, base, k, mid)) {
+                good = mid;
+            } else {
+                bad = mid;
+            }
+        }
+        return good;
+    }
+
+    private static double[] withStart(double startYaw, double[] line) {
+        double[] ext = new double[line.length + 1];
+        ext[0] = startYaw;
+        System.arraycopy(line, 0, ext, 1, line.length);
+        return ext;
+    }
+
+    private static double accelSq(double[] ext) {
+        double sum = 0.0;
+        for (int i = 1; i + 1 < ext.length; i++) {
+            double d = ext[i + 1] - 2.0 * ext[i] + ext[i - 1];
+            sum += d * d;
+        }
+        return sum;
+    }
+
+    private static double velSd(double[] ext) {
+        if (ext.length < 2) {
+            return 0.0;
+        }
+        int n = ext.length - 1;
+        double[] d = new double[n];
+        double mean = 0.0;
+        for (int i = 0; i < n; i++) {
+            double v = Angles.wrapDelta(ext[i + 1] - ext[i]);
+            d[i] = v;
+            mean += v;
+        }
+        mean /= n;
+        double var = 0.0;
+        for (int i = 0; i < n; i++) {
+            var += (d[i] - mean) * (d[i] - mean);
+        }
+        return Math.sqrt(var / n);
+    }
+
+    private static double maxStep(double[] ext) {
+        double max = 0.0;
+        for (int i = 1; i < ext.length; i++) {
+            max = Math.max(max, Math.abs(Angles.wrapDelta(ext[i] - ext[i - 1])));
+        }
+        return max;
     }
 
     private static JumpConstraintCompiler.Compiled landingOracle(JumpConstraintCompiler.Compiled compiled) {

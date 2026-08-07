@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "createdAt": "2026-07-27T17:24:39Z",
-  "modVersion": "1.7.0",
+  "createdAt": "2026-08-07T13:54:12Z",
+  "modVersion": "1.7.1+build.249.756e412",
   "mcVersion": "1.8.9",
   "world": {
     "dimension": "Overworld",
@@ -414,7 +414,32 @@
       },
       {
         "tick": 0,
-        "constraints": [],
+        "constraints": [
+          {
+            "range": true,
+            "field": "X",
+            "op": "IN",
+            "value": 0.0,
+            "lo": -1003.3000000119208,
+            "hi": -1002.3000000119209,
+            "loInclusive": true,
+            "hiInclusive": true,
+            "disabled": false,
+            "vsDz": false
+          },
+          {
+            "range": true,
+            "field": "Z",
+            "op": "IN",
+            "value": 0.0,
+            "lo": 4974.94999998808,
+            "hi": 4975.137499988079,
+            "loInclusive": true,
+            "hiInclusive": true,
+            "disabled": false,
+            "vsDz": false
+          }
+        ],
         "override": {
           "slipperiness": "DEFAULT",
           "added": [],
@@ -770,345 +795,6 @@
         0.0
       ],
       "yaw": 66.655
-    },
-    "result": {
-      "success": true,
-      "met": 20,
-      "total": 20,
-      "startTick": 1,
-      "landingTick": 25,
-      "durationMs": 89,
-      "durationNanos": 89866900,
-      "finishedAt": "19:24:37",
-      "solver": "receding horizon -\u003e CMA-ES",
-      "objectiveValue": -1003.2981654194807,
-      "hasObjective": true,
-      "outcomes": [
-        {
-          "field": "X",
-          "tick": "T25",
-          "relation": "max",
-          "found": "-1003.29817",
-          "margin": "",
-          "met": true
-        },
-        {
-          "field": "dF",
-          "tick": "T2",
-          "relation": "\u003d 0",
-          "found": "0.00009",
-          "margin": "",
-          "met": true
-        },
-        {
-          "field": "dF",
-          "tick": "T3",
-          "relation": "\u003d 0",
-          "found": "0.00001",
-          "margin": "",
-          "met": true
-        },
-        {
-          "field": "dF",
-          "tick": "T4",
-          "relation": "\u003d 0",
-          "found": "0.00000",
-          "margin": "",
-          "met": true
-        },
-        {
-          "field": "dF",
-          "tick": "T5",
-          "relation": "\u003d 0",
-          "found": "0.00000",
-          "margin": "",
-          "met": true
-        },
-        {
-          "field": "dF",
-          "tick": "T6",
-          "relation": "\u003d 0",
-          "found": "0.00000",
-          "margin": "",
-          "met": true
-        },
-        {
-          "field": "dF",
-          "tick": "T7",
-          "relation": "\u003d 0",
-          "found": "0.00000",
-          "margin": "",
-          "met": true
-        },
-        {
-          "field": "dF",
-          "tick": "T8",
-          "relation": "\u003d 0",
-          "found": "0.00000",
-          "margin": "",
-          "met": true
-        },
-        {
-          "field": "dF",
-          "tick": "T9",
-          "relation": "\u003d 0",
-          "found": "0.00000",
-          "margin": "",
-          "met": true
-        },
-        {
-          "field": "dF",
-          "tick": "T10",
-          "relation": "\u003d 0",
-          "found": "0.00000",
-          "margin": "",
-          "met": true
-        },
-        {
-          "field": "dF",
-          "tick": "T11",
-          "relation": "\u003d 0",
-          "found": "0.00000",
-          "margin": "",
-          "met": true
-        },
-        {
-          "field": "dF",
-          "tick": "T12",
-          "relation": "\u003d 0",
-          "found": "0.00000",
-          "margin": "",
-          "met": true
-        },
-        {
-          "field": "X",
-          "tick": "T13",
-          "relation": "[-1003.3, -1002.3]",
-          "found": "-1003.30000",
-          "margin": "+0.00000",
-          "met": true
-        },
-        {
-          "field": "Z",
-          "tick": "T13",
-          "relation": "[4974.95, 4975.1375]",
-          "found": "4974.95000",
-          "margin": "+0.00000",
-          "met": true
-        },
-        {
-          "field": "dF",
-          "tick": "T13",
-          "relation": "\u003d 0",
-          "found": "0.00000",
-          "margin": "",
-          "met": true
-        },
-        {
-          "field": "Z",
-          "tick": "T15",
-          "relation": "\u003c\u003d 4975.1375",
-          "found": "4975.13748",
-          "margin": "+0.00002",
-          "met": true
-        },
-        {
-          "field": "X",
-          "tick": "T16",
-          "relation": "\u003c\u003d -1003.8",
-          "found": "-1003.80865",
-          "margin": "+0.00865",
-          "met": true
-        },
-        {
-          "field": "Z",
-          "tick": "T20",
-          "relation": "\u003e\u003d 4975.8625",
-          "found": "4975.86254",
-          "margin": "+0.00004",
-          "met": true
-        },
-        {
-          "field": "X",
-          "tick": "T20",
-          "relation": "\u003c\u003d -1003.8",
-          "found": "-1003.80004",
-          "margin": "+0.00004",
-          "met": true
-        },
-        {
-          "field": "X",
-          "tick": "T25",
-          "relation": "[-1003.3, -1002.3]",
-          "found": "-1003.29817",
-          "margin": "+0.00183",
-          "met": true
-        },
-        {
-          "field": "Z",
-          "tick": "T25",
-          "relation": "[4975.8625, 4976.3]",
-          "found": "4976.29999",
-          "margin": "+0.00001",
-          "met": true
-        }
-      ],
-      "yaws": [
-        {
-          "tick": 1,
-          "yaw": 66.6554800673388
-        },
-        {
-          "tick": 2,
-          "yaw": 66.65557541685655
-        },
-        {
-          "tick": 3,
-          "yaw": 66.65557995730977
-        },
-        {
-          "tick": 4,
-          "yaw": 66.65557995730977
-        },
-        {
-          "tick": 5,
-          "yaw": 66.65557995730977
-        },
-        {
-          "tick": 6,
-          "yaw": 66.65557995730977
-        },
-        {
-          "tick": 7,
-          "yaw": 66.65557995730977
-        },
-        {
-          "tick": 8,
-          "yaw": 66.65557995730977
-        },
-        {
-          "tick": 9,
-          "yaw": 66.65557995730977
-        },
-        {
-          "tick": 10,
-          "yaw": 66.65557995730977
-        },
-        {
-          "tick": 11,
-          "yaw": 66.65557995730977
-        },
-        {
-          "tick": 12,
-          "yaw": 66.65557995730977
-        },
-        {
-          "tick": 13,
-          "yaw": 66.65557995730977
-        },
-        {
-          "tick": 14,
-          "yaw": 4.388928699985729
-        },
-        {
-          "tick": 15,
-          "yaw": -16.921994260332564
-        },
-        {
-          "tick": 16,
-          "yaw": -26.968484317236005
-        },
-        {
-          "tick": 17,
-          "yaw": -36.70018604984284
-        },
-        {
-          "tick": 18,
-          "yaw": -41.29524766710537
-        },
-        {
-          "tick": 19,
-          "yaw": -45.599778323695844
-        },
-        {
-          "tick": 20,
-          "yaw": -49.576692392964425
-        },
-        {
-          "tick": 21,
-          "yaw": -49.87794898275681
-        },
-        {
-          "tick": 22,
-          "yaw": -49.87767688668579
-        },
-        {
-          "tick": 23,
-          "yaw": -49.87750682664141
-        },
-        {
-          "tick": 24,
-          "yaw": -49.87743880262365
-        }
-      ],
-      "details": [
-        {
-          "label": "Runtime",
-          "value": "89.9ms"
-        },
-        {
-          "label": "Finished",
-          "value": "19:24:37"
-        },
-        {
-          "label": "Model",
-          "value": "ExactJumpModel"
-        },
-        {
-          "label": "Jumps",
-          "value": "2"
-        },
-        {
-          "label": "Window",
-          "value": "10"
-        },
-        {
-          "label": "Commit",
-          "value": "3"
-        },
-        {
-          "label": "Yaw travel",
-          "value": "117 deg"
-        },
-        {
-          "label": "Yaw reversals",
-          "value": "0"
-        },
-        {
-          "label": "Yaw jerk",
-          "value": "125 deg"
-        },
-        {
-          "label": "CMA-ES restarts",
-          "value": "16"
-        },
-        {
-          "label": "CMA-ES max evals",
-          "value": "4500"
-        },
-        {
-          "label": "CMA-ES evals",
-          "value": "50330"
-        },
-        {
-          "label": "Polish basins",
-          "value": "2"
-        },
-        {
-          "label": "Smoothing evals",
-          "value": "4024"
-        }
-      ]
     }
   },
   "debug": [

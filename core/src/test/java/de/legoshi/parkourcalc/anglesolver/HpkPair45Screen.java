@@ -33,7 +33,7 @@ public class HpkPair45Screen {
     public void pairs() throws Exception {
         Assume.assumeTrue("set PKC_PAIR45=1 to run", "1".equals(System.getenv("PKC_PAIR45")));
         List<HpkHumanSet.Sample> samples = HpkHumanSet.loadAll();
-        ScoringMetric metric = Metrics.combinedV3();
+        ScoringMetric metric = Metrics.combinedV4();
 
         File dir = new File("build/hpk-metric/pairs45");
         dir.mkdirs();

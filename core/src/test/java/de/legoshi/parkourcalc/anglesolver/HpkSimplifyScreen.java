@@ -42,7 +42,7 @@ public class HpkSimplifyScreen {
         }
         String tag = dFilter != null && !dFilter.isEmpty() ? "-d" + dFilter.replace(",", "_") : "";
         List<HpkHumanSet.Sample> samples = HpkHumanSet.loadAll();
-        ScoringMetric metric = Metrics.combinedV3();
+        ScoringMetric metric = Metrics.combinedV4();
 
         File outDir = new File("build/hpk-metric/simplified");
         outDir.mkdirs();

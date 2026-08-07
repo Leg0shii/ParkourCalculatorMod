@@ -5,6 +5,8 @@ import java.util.List;
 
 public final class Metrics {
 
+    public static final double SIG_ANGLE_DEG = 360.0 / 65536.0;
+
     private Metrics() {
     }
 
@@ -18,6 +20,7 @@ public final class Metrics {
         out.add(combinedV1());
         out.add(combinedV2());
         out.add(combinedV3());
+        out.add(combinedV4());
         return out;
     }
 
@@ -138,6 +141,23 @@ public final class Metrics {
         };
     }
 
+    public static ScoringMetric combinedV4() {
+        return new ScoringMetric() {
+            public String name() {
+                return "combinedV4";
+            }
+
+            public double score(JumpMeasurements m) {
+                return toleranceCore(m)
+                        + 0.8 * effShiftDemandSum(m)
+                        + 0.06 * m.turnTicksJump
+                        + (m.jumpAngle ? 1.5 : 0.0)
+                        + (m.minMargin < 5.0e-5 ? 1.5 : 0.0)
+                        + 0.15 * Math.log1p(m.smoothJerkDeg);
+            }
+        };
+    }
+
     private static double effShiftDemandSum(JumpMeasurements m) {
         if (m.shiftEdgeRow == null) {
             return 0.0;
@@ -174,8 +194,8 @@ public final class Metrics {
     }
 
     private static double toleranceCore(JumpMeasurements m) {
-        double jitter = Math.max(m.jitterDeg, 1.0e-4);
-        double geo = Math.max(m.winGeoDeg, 1.0e-4);
+        double jitter = Math.max(m.jitterDeg, SIG_ANGLE_DEG);
+        double geo = Math.max(m.winGeoDeg, SIG_ANGLE_DEG);
         return -Math.log10(jitter) - 0.5 * Math.log10(geo);
     }
 }

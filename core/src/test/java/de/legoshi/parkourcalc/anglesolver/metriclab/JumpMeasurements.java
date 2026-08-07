@@ -8,6 +8,7 @@ public final class JumpMeasurements {
     public int dLevel;
     public String mcVersion;
     public int numTicks;
+    public double startYawDeg;
     public int jumps;
     public int takeoffTick;
     public int facingConstraints;
@@ -30,6 +31,14 @@ public final class JumpMeasurements {
     public double yawTravelDeg;
     public int yawReversals;
     public double yawJerkDeg;
+    public double yawVelSdDeg;
+    public double smoothTravelDeg;
+    public int smoothReversals;
+    public double smoothJerkDeg;
+    public double smoothVelSdDeg;
+    public double smoothMaxTurnDeg;
+    public double[] smoothYaw;
+    public long smoothMs;
     public int[] shiftEdgeRow;
     public boolean[] shiftEdgeMomentum;
     public String[] shiftEdgeKeys;
@@ -60,7 +69,8 @@ public final class JumpMeasurements {
         return "name,dLevel,mcVersion,numTicks,jumps,takeoffTick,facingConstraints,minMargin,jitterDeg,centerDriftDeg,winMinDeg,winGeoDeg,"
                 + "winMinMomentumDeg,winGeoMomentumDeg,winMinJumpDeg,winGeoJumpDeg,"
                 + "inputEdgesMomentum,inputEdgesJump,turnTicksMomentum,turnTicksJump,jumpAngle,"
-                + "yawTravelDeg,yawReversals,yawJerkDeg,"
+                + "yawTravelDeg,yawReversals,yawJerkDeg,yawVelSdDeg,startYawDeg,"
+                + "smoothTravelDeg,smoothReversals,smoothJerkDeg,smoothVelSdDeg,smoothMaxTurnDeg,"
                 + "shiftMinMomentumTicks,shiftGeoMomentumTicks,shiftMinJumpTicks,shiftGeoJumpTicks,"
                 + "shiftGeoMomentumEffTicks,shiftGeoJumpEffTicks,"
                 + "subTier,jumpClass,rung";
@@ -92,6 +102,13 @@ public final class JumpMeasurements {
         sb.append(num(yawTravelDeg)).append(',');
         sb.append(yawReversals).append(',');
         sb.append(num(yawJerkDeg)).append(',');
+        sb.append(num(yawVelSdDeg)).append(',');
+        sb.append(num(startYawDeg)).append(',');
+        sb.append(num(smoothTravelDeg)).append(',');
+        sb.append(smoothReversals).append(',');
+        sb.append(num(smoothJerkDeg)).append(',');
+        sb.append(num(smoothVelSdDeg)).append(',');
+        sb.append(num(smoothMaxTurnDeg)).append(',');
         sb.append(num(shiftMinMomentumTicks)).append(',');
         sb.append(num(shiftGeoMomentumTicks)).append(',');
         sb.append(num(shiftMinJumpTicks)).append(',');

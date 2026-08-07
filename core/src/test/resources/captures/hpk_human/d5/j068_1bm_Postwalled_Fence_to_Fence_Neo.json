@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "createdAt": "2026-07-27T15:07:58Z",
-  "modVersion": "1.7.0",
+  "createdAt": "2026-08-07T13:40:03Z",
+  "modVersion": "1.7.1+build.249.756e412",
   "mcVersion": "1.8.9",
   "world": {
     "dimension": "Overworld",
@@ -451,7 +451,32 @@
       },
       {
         "tick": 0,
-        "constraints": [],
+        "constraints": [
+          {
+            "range": true,
+            "field": "X",
+            "op": "IN",
+            "value": 0.0,
+            "lo": -245.9250000119209,
+            "hi": -245.0749999880791,
+            "loInclusive": true,
+            "hiInclusive": true,
+            "disabled": false,
+            "vsDz": false
+          },
+          {
+            "range": true,
+            "field": "Z",
+            "op": "IN",
+            "value": 0.0,
+            "lo": 645.0749999880792,
+            "hi": 645.6999999880791,
+            "loInclusive": true,
+            "hiInclusive": true,
+            "disabled": false,
+            "vsDz": false
+          }
+        ],
         "override": {
           "slipperiness": "DEFAULT",
           "added": [],
@@ -537,10 +562,6 @@
           "added": [],
           "removed": []
         }
-      },
-      {
-        "tick": 19,
-        "constraints": []
       },
       {
         "tick": 1,

@@ -239,7 +239,7 @@ public final class SimplifyLoop {
         return out;
     }
 
-    private static void bakeYawRows(SaveFile save, ExactJumpModel model) {
+    public static void bakeYawRows(SaveFile save, ExactJumpModel model) {
         if (save.angleSolver.result == null) {
             return;
         }
@@ -1079,7 +1079,7 @@ public final class SimplifyLoop {
         return v <= 0.0 ? y : null;
     }
 
-    private static void deriveDebugSamples(SaveFile save, JumpPhysicsInputs sc0) {
+    public static void deriveDebugSamples(SaveFile save, JumpPhysicsInputs sc0) {
         if (save.debug == null) {
             return;
         }

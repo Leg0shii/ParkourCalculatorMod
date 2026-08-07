@@ -46,6 +46,9 @@ public final class HeadlessSolve {
             sleep(2);
         }
         engine.poll();
+        if (engine.isSolving()) {
+            engine.cancel();
+        }
         long ms = (System.nanoTime() - t0) / 1_000_000L;
         SolveResult result = state.getResult();
         if (result != null && result.isSuccess()) {
