@@ -1,21 +1,31 @@
 package de.legoshi.parkourcalc.render;
 
+import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
+import de.legoshi.parkourcalc.core.anglesolver.Constraint;
 import de.legoshi.parkourcalc.core.ports.BoxRenderer;
+import de.legoshi.parkourcalc.core.render.PathRenderPlan;
 import de.legoshi.parkourcalc.core.render.PathVertexLayout;
+import de.legoshi.parkourcalc.core.render.TailPatchGate;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxColorPicker;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.BoxStyle;
+import de.legoshi.parkourcalc.core.ui.ConstraintSelection;
+import de.legoshi.parkourcalc.core.ui.SelectionManager;
 import de.legoshi.parkourcalc.core.ui.Settings;
+import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverConstraintSource;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 public class TailPatchEquivalenceTest {
 
@@ -179,6 +189,97 @@ public class TailPatchEquivalenceTest {
         int from = firstChangedPitch - 1;
         BoxController expected = controllerWith(states, after);
         assertEquals(fullFaces(expected, true, true), patchedFaces(baseFaces, bc, from, true, true));
+    }
+
+    @Test
+    public void constraintRegionPatchMatchesFullRebake() {
+        int n = 40;
+        int dirtyTick = 25;
+        List<TickState> before = path(n, 1);
+        List<TickState> after = new ArrayList<TickState>(before.subList(0, dirtyTick + 1));
+        for (int i = dirtyTick + 1; i < n; i++) {
+            TickState b = before.get(i);
+            after.add(state(b.position.x + 3.0, b.position.y, b.position.z + 3.0, b.yaw));
+        }
+
+        BoxController bc = controllerWith(before, new float[n]);
+        AngleSolverState solver =
+                new AngleSolverState();
+        solver.tickConstraints(10).getConstraints().add(Constraint.range(
+                Constraint.Field.X,
+                before.get(10).position.x - 0.5, before.get(10).position.x + 0.5, true, true));
+        solver.tickConstraints(30).getConstraints().add(Constraint.range(
+                Constraint.Field.X,
+                before.get(30).position.x - 0.5, before.get(30).position.x + 0.5, true, true));
+        PathRenderPlan.setConstraintSource(
+                new AngleSolverConstraintSource(
+                        solver, bc, () -> true, settings, new SelectionManager(null),
+                        new ConstraintSelection()));
+        PathRenderPlan.setLiveSource(null);
+        PathRenderPlan.setReachProbe(null);
+        try {
+            SelectionManager sel = new SelectionManager(null);
+            PathRenderPlan planBefore =
+                    PathRenderPlan.build(bc, settings, sel);
+            List<String> baseFaces = emit(planBefore.faceEmitter, BoxRenderer.Mode.FACES);
+            List<String> baseLines = emit(planBefore.lineEmitter, BoxRenderer.Mode.LINES);
+
+            long revBefore = bc.getGeometryRev();
+            bc.takeDirtyFrom(revBefore);
+            bc.replaceFrom(dirtyTick + 1, after.subList(dirtyTick + 1, n));
+            bc.setPitches(new float[n]);
+            assertEquals(dirtyTick + 1, bc.takeDirtyFrom(revBefore));
+
+            PathRenderPlan planAfter =
+                    PathRenderPlan.build(bc, settings, sel);
+            assertEquals(planBefore.structuralHash, planAfter.structuralHash);
+            assertEquals(planBefore.constraintFaceVerts, planAfter.constraintFaceVerts);
+            assertEquals(planBefore.constraintLineVerts, planAfter.constraintLineVerts);
+            assertTrue(planAfter.constraintFaceVerts > 0);
+            assertTrue(TailPatchGate.canPatch(
+                    true, true, true, planAfter.patch.hitboxEdges(), planAfter.patch.showSubtick,
+                    planAfter, planBefore.constraintFaceVerts, planBefore.constraintLineVerts));
+
+            int from = dirtyTick;
+            List<String> patchedFaces = new ArrayList<String>(baseFaces);
+            Rec fr = new Rec(BoxRenderer.Mode.FACES);
+            bc.render(fr, planAfter.patch.facePicker, from, n);
+            splice(patchedFaces, from * FACE_VERTS, n * FACE_VERTS, fr.verts);
+            int arrowsPerBox = planAfter.patch.arrowsPerBox;
+            if (arrowsPerBox > 0) {
+                Rec ar = new Rec(BoxRenderer.Mode.FACES);
+                bc.renderFacingArrows(ar, planAfter.patch.drawYawArrows, planAfter.patch.drawCombinedArrows,
+                        planAfter.patch.yawArrowArgb, planAfter.patch.combinedArrowArgb, from, n - 1);
+                int arrowBase = n * FACE_VERTS;
+                int stride = arrowsPerBox * ARROW_VERTS;
+                splice(patchedFaces, arrowBase + from * stride, arrowBase + (n - 1) * stride, ar.verts);
+            }
+            splice(patchedFaces, patchedFaces.size() - planAfter.constraintFaceVerts, patchedFaces.size(),
+                    emit(planAfter.constraintFaceEmitter, BoxRenderer.Mode.FACES));
+
+            List<String> patchedLines = new ArrayList<String>(baseLines);
+            Rec lr = new Rec(BoxRenderer.Mode.LINES);
+            bc.render(lr, planAfter.patch.linePicker, from, n);
+            splice(patchedLines, from * 24, n * 24, lr.verts);
+            splice(patchedLines, patchedLines.size() - planAfter.constraintLineVerts, patchedLines.size(),
+                    emit(planAfter.constraintLineEmitter, BoxRenderer.Mode.LINES));
+
+            assertEquals(emit(planAfter.faceEmitter, BoxRenderer.Mode.FACES), patchedFaces);
+            assertEquals(emit(planAfter.lineEmitter, BoxRenderer.Mode.LINES), patchedLines);
+            assertNotEquals(
+                    baseFaces.subList(baseFaces.size() - planAfter.constraintFaceVerts, baseFaces.size()),
+                    patchedFaces.subList(patchedFaces.size() - planAfter.constraintFaceVerts, patchedFaces.size()));
+        } finally {
+            PathRenderPlan.setConstraintSource(null);
+            PathRenderPlan.setLiveSource(null);
+            PathRenderPlan.setReachProbe(null);
+        }
+    }
+
+    private static List<String> emit(Consumer<BoxRenderer> emitter, BoxRenderer.Mode mode) {
+        Rec r = new Rec(mode);
+        emitter.accept(r);
+        return r.verts;
     }
 
     @Test

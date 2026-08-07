@@ -59,7 +59,7 @@ public final class FabricWorldOverlayRenderer {
         Vec3 cameraPos = camera.pos;
 
         PathRenderPlan plan = PathRenderPlan.build(boxController, settings, selection);
-        cached.ensureBuilt(boxController, plan.structuralHash, plan.selection, plan.faceEmitter, plan.lineEmitter, plan.patch, plan.constraintFaceVerts, plan.constraintLineVerts);
+        cached.ensureBuilt(boxController, plan);
 
         Matrix4f modelView = new Matrix4f(camera.viewRotationMatrix).translate(
                 (float) (cached.anchorX() - cameraPos.x),
