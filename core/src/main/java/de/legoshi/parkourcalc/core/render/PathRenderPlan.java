@@ -22,8 +22,12 @@ import java.util.function.IntSupplier;
  * one box; other constraints add a front box and a back box), so
  * {@link #constraintFaceVerts}/{@link #constraintLineVerts} are counted by replaying the exact constraint
  * emit through a {@link CountingBoxRenderer} ({@code BoxController.constraintFaceVertexCount}/
- * {@code constraintLineVertexCount}). Each loader draws the region as the trailing slice
- * {@code [faceTotal - constraintFaceVerts, faceTotal)} (and the line equivalent); the region is
+ * {@code constraintLineVertexCount}). Hit-distance reach lines bake just before the constraint region in
+ * the lines buffer and are tracked separately as {@link #reachLineVerts}, so a count-stable constraint
+ * region can be re-emitted in place ({@link #constraintFaceEmitter}/{@link #constraintLineEmitter})
+ * while reach lines, whose re-emit would raycast the world per tick, still force a rebuild. Each loader
+ * draws the trailing slice {@code [faceTotal - constraintFaceVerts, faceTotal)} (lines:
+ * {@code [lineTotal - reachLineVerts - constraintLineVerts, lineTotal)}); the region is
  * camera-run-independent, so it is drawn once, not per run.
  */
 public final class PathRenderPlan {
@@ -87,18 +91,26 @@ public final class PathRenderPlan {
     public final Set<Integer> selection;
     public final Consumer<BoxRenderer> faceEmitter;
     public final Consumer<BoxRenderer> lineEmitter;
+    public final Consumer<BoxRenderer> constraintFaceEmitter;
+    public final Consumer<BoxRenderer> constraintLineEmitter;
     public final SelectionPatchSpec patch;
     public final int constraintFaceVerts;
     public final int constraintLineVerts;
+    public final int reachLineVerts;
 
-    private PathRenderPlan(int structuralHash, Set<Integer> selection, Consumer<BoxRenderer> faceEmitter, Consumer<BoxRenderer> lineEmitter, SelectionPatchSpec patch, int constraintFaceVerts, int constraintLineVerts) {
+    private PathRenderPlan(int structuralHash, Set<Integer> selection, Consumer<BoxRenderer> faceEmitter, Consumer<BoxRenderer> lineEmitter,
+                           Consumer<BoxRenderer> constraintFaceEmitter, Consumer<BoxRenderer> constraintLineEmitter,
+                           SelectionPatchSpec patch, int constraintFaceVerts, int constraintLineVerts, int reachLineVerts) {
         this.structuralHash = structuralHash;
         this.selection = selection;
         this.faceEmitter = faceEmitter;
         this.lineEmitter = lineEmitter;
+        this.constraintFaceEmitter = constraintFaceEmitter;
+        this.constraintLineEmitter = constraintLineEmitter;
         this.patch = patch;
         this.constraintFaceVerts = constraintFaceVerts;
         this.constraintLineVerts = constraintLineVerts;
+        this.reachLineVerts = reachLineVerts;
     }
 
     public static PathRenderPlan build(BoxController boxController, Settings settings, SelectionManager selection) {
@@ -163,6 +175,16 @@ public final class PathRenderPlan {
             if (drawLive) boxController.renderConstraints(lines, live, palette, true, 0, 0, 0, ALL);
         };
 
+        Consumer<BoxRenderer> constraintFaceEmitter = faces -> {
+            if (drawConstraints) boxController.renderConstraints(faces, source, palette, false, 0, 0, 0, ALL);
+            if (drawLive) boxController.renderConstraints(faces, live, palette, false, 0, 0, 0, ALL);
+        };
+
+        Consumer<BoxRenderer> constraintLineEmitter = lines -> {
+            if (drawConstraints) boxController.renderConstraints(lines, source, palette, true, 0, 0, 0, ALL);
+            if (drawLive) boxController.renderConstraints(lines, live, palette, true, 0, 0, 0, ALL);
+        };
+
         SelectionPatchSpec patch = new SelectionPatchSpec(face, line, hitbox, drawHitbox, full, settings.showSubtick, arrowsPerBox,
                 drawYawArrows, drawCombinedArrows, BoxStyle.yawArrowArgb(settings), BoxStyle.pitchArrowArgb(settings));
 
@@ -197,8 +219,8 @@ public final class PathRenderPlan {
             constraintLineVerts = countedLineVerts;
         }
         return new PathRenderPlan(structuralHash(settings, constraintRevision, liveRevision, deviationTick, solverStartTick, solverGoalTick),
-                selectedBoxes, faceEmitter, lineEmitter, patch,
-                constraintFaceVerts, constraintLineVerts + reachLineVerts);
+                selectedBoxes, faceEmitter, lineEmitter, constraintFaceEmitter, constraintLineEmitter, patch,
+                constraintFaceVerts, constraintLineVerts, reachLineVerts);
     }
 
     /** Colors and overlay toggles, but NOT selection (which is patched in place). The constraint
