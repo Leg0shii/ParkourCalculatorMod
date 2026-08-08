@@ -239,8 +239,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         boolean imguiWantsKeys = application.isControlPanelOpen() && ImGui.getIO().getWantTextInput();
         boolean canDispatch = client.gui.screen() == null && !imguiWantsKeys;
 
-        // The close/toggle bind must still work while a yaw field is focused; only a real MC screen (chat) blocks it.
-        if (toggled && client.gui.screen() == null) {
+        if (toggled && canDispatch) {
             setOverlayOpen(!application.isControlPanelOpen());
         }
         if (deselectPressed && canDispatch) {
