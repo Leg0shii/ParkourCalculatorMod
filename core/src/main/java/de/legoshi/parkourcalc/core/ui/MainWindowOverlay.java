@@ -306,6 +306,10 @@ public final class MainWindowOverlay implements RenderInterface {
             settings.viewVelocityMap = !settings.viewVelocityMap;
             onSettingsChanged.run();
         }
+        if (ImGui.menuItem("Strat Finder", null, settings.viewStratFinder)) {
+            settings.viewStratFinder = !settings.viewStratFinder;
+            onSettingsChanged.run();
+        }
     }
 
     private void renderSettingsMenuItems() {

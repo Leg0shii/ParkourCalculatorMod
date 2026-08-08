@@ -112,7 +112,9 @@ anglesolver/
                            yaws baked into yaw-locked rows after the cold verify, Force-45 ticks
                            realized into W/A/SPRINT keys with S/SNEAK cleared) so a loaded save
                            runs its solved line in the real sim; the in-game SimVerifyBatch gate
-                           (Forge 1.8.9, key V, PKC_SIMVERIFY dir) is the final word per artifact
+                           (Forge 1.8.9, key J, bound only when PKC_SIMVERIFY is set; its value is
+                           the save dir, or the default simverify/ when set to 1) is the final word
+                           per artifact
                            (2026-07-28 review verdict); PKC_SIMPLIFY=1 to
                            run, PKC_SIMPLIFY_ONLY=<substr> and PKC_SIMPLIFY_D=<levels> filter;
                            outputs simplify-report.txt, simplify.csv, simplified saves under
@@ -155,7 +157,17 @@ anglesolver/
                            the save's own t0 constraint; the unmodified "self" variant is a canary
                            (its failure means the capture or budget is broken, printed as CANARY
                            FAIL); PKC_SUBST=1 to run, PKC_SUBST_ONLY / PKC_SUBST_D / PKC_SUBST_MS
-                           (default 2000); outputs subst-report.txt, subst.csv
+                           (default 2000); outputs subst-report.txt, subst.csv; since Strat Finder
+                           v1 shipped, StratSubstitutions and SimplifyLoop.deriveDebugSamples
+                           delegate to the product engine (core/main
+                           anglesolver/stratfinder/StratVariants), so this screen is the benchmark
+                           twin of the in-game feature by construction; the engine now enumerates
+                           +-12 ticks around each jump including one-tick tap moves, and emits
+                           yaw-shape variants (momentum-pinned /nt and /ja per row-set; nt45 and
+                           the nine nt[momentum|air] strafe patterns for the witness); /nt and
+                           /ja no-op on the hpk reconstructions because their dF pins already
+                           cover the momentum, while the strafe patterns add ~10 full-budget
+                           solves per capture to a full sweep
   HpkBakeScreen.java       bakes V-gate handover saves: re-solves the post-fix at-or-below-human
                            winners (from template-postfix250ms.csv, delta <= 0) and the assault's
                            tail-crack labels, scores with combinedV4, picks the best per capture,
@@ -190,6 +202,28 @@ anglesolver/
                            reads (0,0) frame-exact, j001's smoothest line is near-flat and
                            reversal-free, j014's flat recorded line keeps a flat smoothest line)
   harness/                 shared plumbing; no test lives here
+core/anglesolver/stratfinder/  Strat Finder v1 (the product form of the substitution engine)
+  StratVariantsTest.java   always-on: enumeration over the j012 capture (self first with zero edits,
+                           unique labels, every timing variant a single W/SPRINT/A/D/S key toggle
+                           or one-key tap move within +-12 ticks of a jump, constraint ticks
+                           untouched, effort FAST + stopOnFeasible stamped, stale result cleared;
+                           yaw shapes follow the playability rule: nt/ja pin dF=0 over the
+                           MOMENTUM ticks only, startTick+1 through the last JUMP row, ja
+                           exempting that row, nt45 switching to FORCE_45 with F/dF pins
+                           stripped; nt[momentum|air] strafe patterns rebuild the segment rows as
+                           canonical W+SPRINT runs with one strafe key per phase, JUMP rows
+                           preserved and strafe-free; all dedupe against a witness that already
+                           pins the chain) plus a keepify-convention unit check on
+                           StratVariants.deriveDebugSamples (sprint chronology: S kills it, SNEAK
+                           scales inputs by 0.3, samples land on debug[t+1])
+  StratFinderSweepTest.java  slow (SlowSolverTests): headless StratFinder sweep on j012 at 3000 ms;
+                           canary (self) must re-solve, items stream, cancel reaches the drive
+                           loop, every feasible item carries a parseable applied snapshot with
+                           unchanged row and constraint-tick counts
+  StratFinderFileScreen.java  headless strat-finder sweep on any save file: prints variant labels,
+                           feasibility, per-variant solve time and canary status;
+                           PKC_STRATFIND_FILE=<path> to run, PKC_STRATFIND_MS (default 2000);
+                           output lands in the test-results XML system-out
 resources/
   problems/<check>/        one folder per check; holds captures or .expect.json sidecars
   captures/                the shared capture library (one copy of each saved jump)

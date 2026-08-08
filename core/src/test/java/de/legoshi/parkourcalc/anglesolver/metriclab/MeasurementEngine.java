@@ -35,8 +35,8 @@ public final class MeasurementEngine {
     public static final int JUMP_HOLD_COOLDOWN_TICKS = 10;
     public static final int SMOOTH_PASSES = 8;
     public static final double SMOOTH_STOP_DEG = 0.01;
-    public static final float KEY_INPUT_SCALE = 0.98F;
-    public static final float SNEAK_INPUT_SCALE = 0.3F;
+    public static final float KEY_INPUT_SCALE = de.legoshi.parkourcalc.core.anglesolver.stratfinder.StratVariants.KEY_INPUT_SCALE;
+    public static final float SNEAK_INPUT_SCALE = de.legoshi.parkourcalc.core.anglesolver.stratfinder.StratVariants.SNEAK_INPUT_SCALE;
 
     private static final Gson GSON = new Gson();
 

@@ -189,8 +189,10 @@ public final class Application {
         VelocityMapController velocityMapController = new VelocityMapController(
                 angleSolverState, boxController, runner, saveController, inputData, forwardModel,
                 this::onUserChange, Math.max(2, Runtime.getRuntime().availableProcessors() - 2));
+        StratFinderController stratFinderController = new StratFinderController(
+                angleSolverState, boxController, runner, saveController, inputData, forwardModel);
         GraphEditorWindow graphEditorWindow = new GraphEditorWindow(angleSolverEngine);
-        AngleSolverWindow angleSolverWindow = new AngleSolverWindow(angleSolverState, settings, inputData::size, angleSolverEngine, velocityMapController.widget(), graphStore, graphEditorWindow);
+        AngleSolverWindow angleSolverWindow = new AngleSolverWindow(angleSolverState, settings, inputData::size, angleSolverEngine, velocityMapController.widget(), stratFinderController.widget(), graphStore, graphEditorWindow);
         angleSolverWindow.setApplySurfaceState(this::applyPathSurfaceState);
 
         // In-world constraint visualization (gh-145): plates appear while the solver view is open.

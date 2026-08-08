@@ -85,6 +85,7 @@ public final class AngleSolverWindow implements RenderInterface {
     private final IntSupplier rowCountSupplier;
     private final AngleSolverEngine engine;
     private final VelocityMapWidget velocityMap;
+    private final StratFinderWidget stratFinder;
     private final FileSystemSaveStore graphStore;
     private final GraphEditorWindow graphEditor;
     private final ImInt startTickBuf = new ImInt();
@@ -117,13 +118,14 @@ public final class AngleSolverWindow implements RenderInterface {
 
     public AngleSolverWindow(AngleSolverState state, Settings settings,
                              IntSupplier rowCountSupplier, AngleSolverEngine engine,
-                             VelocityMapWidget velocityMap, FileSystemSaveStore graphStore,
-                             GraphEditorWindow graphEditor) {
+                             VelocityMapWidget velocityMap, StratFinderWidget stratFinder,
+                             FileSystemSaveStore graphStore, GraphEditorWindow graphEditor) {
         this.state = state;
         this.settings = settings;
         this.rowCountSupplier = rowCountSupplier;
         this.engine = engine;
         this.velocityMap = velocityMap;
+        this.stratFinder = stratFinder;
         this.graphStore = graphStore;
         this.graphEditor = graphEditor;
         if (graphEditor != null) graphEditor.setSaveHandler(this::writePreset);
@@ -136,6 +138,11 @@ public final class AngleSolverWindow implements RenderInterface {
             velocityMap.setWindowOpen(settings.viewVelocityMap);
             velocityMap.renderWindow(ThemeManager.uiScale());
             settings.viewVelocityMap = velocityMap.isWindowOpen();
+        }
+        if (stratFinder != null) {
+            stratFinder.setWindowOpen(settings.viewStratFinder);
+            stratFinder.renderWindow(ThemeManager.uiScale());
+            settings.viewStratFinder = stratFinder.isWindowOpen();
         }
         if (!settings.viewAngleSolver) return;
         int rowCount = Math.max(1, rowCountSupplier.getAsInt());

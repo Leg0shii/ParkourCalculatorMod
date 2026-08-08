@@ -43,6 +43,7 @@ The two Forge loaders are intentional duplicates: 1.8.9 and 1.12.2 have incompat
 | Solver inner loop | `core/.../anglesolver/solver/ExactJumpModel.java` (byte-exact X/Z stepper), `McSineTable.java`, `Constants.java` |
 | Solver strategies | `solver/ClosedFormSolve.java` (fast convex), `SolveCore.java` (CMA-ES multistart), `LongRunSolver.java` (multi-jump), `BlockSolver.java` (obstacle avoidance) |
 | Velocity finder | `core/.../anglesolver/velocity/VelocityFinder.java` (vx/vz sweep against a pad) |
+| Strat finder (variant sweep) | `core/.../anglesolver/stratfinder/`: `StratVariants.java` (key-timing enumeration + row-derived samples), `StratFinder.java` (per-variant scratch solves, ranking); controller `core/.../StratFinderController.java`; UI `core/.../ui/anglesolver/StratFinderWidget.java` |
 | Solver UI | `core/.../ui/anglesolver/AngleSolverWindow.java`, `AngleSolverTable.java`, `SolverWidgets.java` |
 | Constraint visualization | `core/.../render/ConstraintPlate.java`, `ConstraintShapes.java`; source `core/.../ui/anglesolver/AngleSolverConstraintSource.java` |
 | Playback (TAS replay) | `core/.../PlaybackController.java`; loader `FabricPlaybackBridge` and Forge equivalents |

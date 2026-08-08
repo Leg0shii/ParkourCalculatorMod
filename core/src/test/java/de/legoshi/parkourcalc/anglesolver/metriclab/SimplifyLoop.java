@@ -1080,30 +1080,7 @@ public final class SimplifyLoop {
     }
 
     public static void deriveDebugSamples(SaveFile save, JumpPhysicsInputs sc0) {
-        if (save.debug == null) {
-            return;
-        }
-        int startTick = save.angleSolver.startTick;
-        boolean sprint = startTick < save.debug.size() && save.debug.get(startTick).sprinting;
-        int end = Math.min(startTick + sc0.numTicks - 1, save.rows.size() - 1);
-        for (int r = startTick; r <= end; r++) {
-            TreeSet<String> ks = keySetOf(save.rows.get(r));
-            boolean canRun = ks.contains("W") && !ks.contains("S") && !ks.contains("SNEAK");
-            if (!canRun) {
-                sprint = false;
-            } else if (!sprint && ks.contains("SPRINT")) {
-                sprint = true;
-            }
-            if (r + 1 >= save.debug.size()) {
-                break;
-            }
-            SaveFile.DebugTick d = save.debug.get(r + 1);
-            float scale = MeasurementEngine.KEY_INPUT_SCALE
-                    * (ks.contains("SNEAK") ? MeasurementEngine.SNEAK_INPUT_SCALE : 1.0F);
-            d.moveForward = scale * ((ks.contains("W") ? 1 : 0) - (ks.contains("S") ? 1 : 0));
-            d.moveStrafe = scale * ((ks.contains("A") ? 1 : 0) - (ks.contains("D") ? 1 : 0));
-            d.sprinting = sprint;
-        }
+        de.legoshi.parkourcalc.core.anglesolver.stratfinder.StratVariants.deriveDebugSamples(save, sc0);
     }
 
     private static boolean hasDfConstraint(SaveFile save, int absTick) {

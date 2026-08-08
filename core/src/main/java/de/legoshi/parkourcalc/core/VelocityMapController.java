@@ -83,7 +83,7 @@ public final class VelocityMapController {
         VelocityFinder.Anchor anchor =
                 new VelocityFinder.Anchor(st, seed.position, seed.yaw, seed.velocity.y, inputData.size());
         VelocityFinder vf = new VelocityFinder(factory, forwardModel, anchor, lt, boxController.getStates(), 20_000L);
-        double[] edge = objectiveEdge();
+        double[] edge = objectiveEdge(angleSolverState);
         int segTick = Double.isNaN(edge[0]) ? -1 : (int) Math.round(edge[1]) - st;
         vf.setObjectiveConstraint(edge[0], segTick);
         return vf;
@@ -93,17 +93,17 @@ public final class VelocityMapController {
      *  objective's improving direction, preferring the landing (objective) tick, else the latest tick that
      *  has one. Returns {value, absoluteTick}; value is NaN when the user set no such constraint. The offset
      *  is read at this constraint's own tick, not at the landing. */
-    private double[] objectiveEdge() {
+    static double[] objectiveEdge(AngleSolverState angleSolverState) {
         boolean axisX = angleSolverState.getAxis() == AngleSolverState.Axis.X;
         boolean max = angleSolverState.getGoal() == AngleSolverState.Goal.MAX;
         Constraint.Field field = axisX ? Constraint.Field.X : Constraint.Field.Z;
         int landing = angleSolverState.getLandingTick();
-        double atLanding = edgeAtTick(landing, field, max);
+        double atLanding = edgeAtTick(angleSolverState, landing, field, max);
         if (!Double.isNaN(atLanding)) return new double[]{atLanding, landing};
         double best = Double.NaN;
         int bestTick = Integer.MIN_VALUE;
         for (Integer tick : angleSolverState.populatedTicks()) {
-            double v = edgeAtTick(tick, field, max);
+            double v = edgeAtTick(angleSolverState, tick, field, max);
             if (!Double.isNaN(v) && tick > bestTick) {
                 best = v;
                 bestTick = tick;
@@ -112,7 +112,7 @@ public final class VelocityMapController {
         return new double[]{best, bestTick};
     }
 
-    private double edgeAtTick(int tick, Constraint.Field field, boolean max) {
+    private static double edgeAtTick(AngleSolverState angleSolverState, int tick, Constraint.Field field, boolean max) {
         TickConstraints tc = angleSolverState.tickConstraintsOrNull(tick);
         if (tc == null) return Double.NaN;
         double v = Double.NaN;

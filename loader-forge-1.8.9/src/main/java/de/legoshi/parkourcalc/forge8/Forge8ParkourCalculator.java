@@ -121,8 +121,10 @@ public class Forge8ParkourCalculator {
         ClientRegistry.registerKeyBinding(solverStartTickKeyBinding);
         solverEndTickKeyBinding = new KeyBinding("key.parkourcalculator.set_solver_end", Keyboard.KEY_O, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(solverEndTickKeyBinding);
-        simVerifyKeyBinding = new KeyBinding("key.parkourcalculator.run_sim_verify", Keyboard.KEY_J, "key.categories.parkourcalculator");
-        ClientRegistry.registerKeyBinding(simVerifyKeyBinding);
+        if (System.getenv("PKC_SIMVERIFY") != null) {
+            simVerifyKeyBinding = new KeyBinding("key.parkourcalculator.run_sim_verify", Keyboard.KEY_J, "key.categories.parkourcalculator");
+            ClientRegistry.registerKeyBinding(simVerifyKeyBinding);
+        }
         if (blockCaptureEnabled) {
             captureMomentumBlockKeyBinding = new KeyBinding("key.parkourcalculator.capture_momentum_block", Keyboard.KEY_M, "key.categories.parkourcalculator");
             ClientRegistry.registerKeyBinding(captureMomentumBlockKeyBinding);
@@ -136,7 +138,8 @@ public class Forge8ParkourCalculator {
 
         MinecraftForge.EVENT_BUS.register(this);
         LOG.info("ParkourCalculator init complete. G toggle, L deselect, P playback, B landing constraints, X remove constraints,"
-                + " H surface state, V solve, I/O solver start/goal tick, J sim-verify batch."
+                + " H surface state, V solve, I/O solver start/goal tick."
+                + (simVerifyKeyBinding != null ? " Sim-verify batch ON (PKC_SIMVERIFY): J." : "")
                 + (blockCaptureEnabled ? " Block capture ON: M/N/K capture momentum/collision/land block, Delete clear blocks." : ""));
     }
 
@@ -272,7 +275,7 @@ public class Forge8ParkourCalculator {
             solverEndPressed = true;
         }
         boolean simVerifyPressed = false;
-        while (simVerifyKeyBinding.isPressed()) {
+        while (simVerifyKeyBinding != null && simVerifyKeyBinding.isPressed()) {
             simVerifyPressed = true;
         }
         boolean captureMomentum = false;
@@ -346,7 +349,8 @@ public class Forge8ParkourCalculator {
 
     private void runSimVerify(Minecraft mc) {
         String env = System.getenv("PKC_SIMVERIFY");
-        Path dir = env != null && !env.isEmpty() ? new File(env).toPath() : saveDir.resolve("simverify");
+        Path dir = env != null && !env.isEmpty() && !"1".equals(env)
+                ? new File(env).toPath() : saveDir.resolve("simverify");
         LOG.info("Sim-verify batch over " + dir);
         String summary = application.runSimVerifyBatch(dir);
         LOG.info(summary);
