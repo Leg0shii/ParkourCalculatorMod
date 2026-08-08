@@ -9,12 +9,14 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Predicate;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -322,6 +324,79 @@ public class StratVariantsTest {
             assertEquals("tap move must add once in " + v.label, 1, adds);
             assertEquals("tap move must remove once in " + v.label, 1, removes);
         }
+    }
+
+    @Test
+    public void filterForcesFamiliesAndShapes() {
+        SaveFile save = witness();
+        ExactJumpModel model = ExactJumpModel.forMcVersion(save.mcVersion);
+        Set<String> allLabels = labelsOf(StratVariants.variants(save, model));
+
+        assertEquals(allLabels, labelsOf(StratVariants.variants(save, model, StratVariants.Filter.ALL)));
+
+        List<StratVariants.Variant> fmmOnly = StratVariants.variants(save, model, new StratVariants.Filter(
+                Collections.singleton(StratVariants.Filter.FAMILY_FMM), StratVariants.Filter.Shape.ANY));
+        assertEquals("self", fmmOnly.get(0).label);
+        assertTrue("no fmm variants enumerated", fmmOnly.size() > 1);
+        for (StratVariants.Variant v : fmmOnly) {
+            if ("self".equals(v.label)) continue;
+            assertTrue("non-fmm label " + v.label, v.label.startsWith("fmm"));
+        }
+        assertCoversMatching(allLabels, fmmOnly, l -> l.startsWith("fmm"), "fmm force");
+
+        List<StratVariants.Variant> ntOnly = StratVariants.variants(save, model,
+                new StratVariants.Filter(null, StratVariants.Filter.Shape.NT));
+        assertTrue("no nt variants enumerated", ntOnly.size() > 1);
+        for (StratVariants.Variant v : ntOnly) {
+            if ("self".equals(v.label)) continue;
+            assertTrue("non-nt label " + v.label, isNtShaped(v.label));
+        }
+        assertCoversMatching(allLabels, ntOnly, StratVariantsTest::isNtShaped, "nt force");
+
+        List<StratVariants.Variant> jaOnly = StratVariants.variants(save, model,
+                new StratVariants.Filter(null, StratVariants.Filter.Shape.JA));
+        for (StratVariants.Variant v : jaOnly) {
+            if ("self".equals(v.label)) continue;
+            assertTrue("non-ja label " + v.label, isJaShaped(v.label));
+        }
+        assertCoversMatching(allLabels, jaOnly, StratVariantsTest::isJaShaped, "ja force");
+
+        List<StratVariants.Variant> shapesOnly = StratVariants.variants(save, model, new StratVariants.Filter(
+                Collections.singleton(StratVariants.Filter.FAMILY_SHAPES), StratVariants.Filter.Shape.ANY));
+        assertTrue("no shape variants enumerated", shapesOnly.size() > 1);
+        for (StratVariants.Variant v : shapesOnly) {
+            if ("self".equals(v.label)) continue;
+            assertFalse("family label leaked into shapes-only: " + v.label, v.label.contains("/"));
+            assertTrue("non-shape label " + v.label, isShape(v.label));
+        }
+        assertCoversMatching(allLabels, shapesOnly, l -> !l.contains("/") && isShape(l), "shapes force");
+    }
+
+    private static void assertCoversMatching(Set<String> allLabels, List<StratVariants.Variant> filtered,
+                                             Predicate<String> matches, String what) {
+        Set<String> filteredLabels = labelsOf(filtered);
+        for (String label : allLabels) {
+            if (matches.test(label)) {
+                assertTrue(what + " dropped matching label " + label, filteredLabels.contains(label));
+            }
+        }
+    }
+
+    private static boolean isNtShaped(String label) {
+        return "nt".equals(label) || "nt45".equals(label) || label.startsWith("nt[")
+                || label.endsWith("/nt") || label.contains("/nt[");
+    }
+
+    private static boolean isJaShaped(String label) {
+        return "ja".equals(label) || label.endsWith("/ja");
+    }
+
+    private static Set<String> labelsOf(List<StratVariants.Variant> variants) {
+        Set<String> out = new HashSet<String>();
+        for (StratVariants.Variant v : variants) {
+            out.add(v.label);
+        }
+        return out;
     }
 
     @Test

@@ -58,6 +58,7 @@ public final class StratFinder {
     private final long budgetMs;
     private final double objectiveEdge;
     private final boolean objectiveMax;
+    private final StratVariants.Filter filter;
 
     private final AtomicBoolean cancelToken = new AtomicBoolean(false);
     private final List<Item> items = new CopyOnWriteArrayList<Item>();
@@ -66,12 +67,19 @@ public final class StratFinder {
 
     public StratFinder(SaveFile witness, ExactJumpModel model, FileSystemSaveStore store,
                        long budgetMs, double objectiveEdge, boolean objectiveMax) {
+        this(witness, model, store, budgetMs, objectiveEdge, objectiveMax, StratVariants.Filter.ALL);
+    }
+
+    public StratFinder(SaveFile witness, ExactJumpModel model, FileSystemSaveStore store,
+                       long budgetMs, double objectiveEdge, boolean objectiveMax,
+                       StratVariants.Filter filter) {
         this.witness = witness;
         this.model = model;
         this.store = store;
         this.budgetMs = budgetMs;
         this.objectiveEdge = objectiveEdge;
         this.objectiveMax = objectiveMax;
+        this.filter = filter == null ? StratVariants.Filter.ALL : filter;
     }
 
     public void start() {
@@ -117,7 +125,7 @@ public final class StratFinder {
 
     private void run() {
         try {
-            List<StratVariants.Variant> variants = StratVariants.variants(witness, model);
+            List<StratVariants.Variant> variants = StratVariants.variants(witness, model, filter);
             total = variants.size();
             for (StratVariants.Variant v : variants) {
                 if (cancelToken.get()) break;

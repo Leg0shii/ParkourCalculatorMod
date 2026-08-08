@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.core.ui.anglesolver;
 
 import de.legoshi.parkourcalc.core.anglesolver.stratfinder.StratFinder;
+import de.legoshi.parkourcalc.core.anglesolver.stratfinder.StratVariants;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
@@ -13,31 +14,56 @@ import imgui.flag.ImGuiTableColumnFlags;
 import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImBoolean;
 
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 public final class StratFinderWidget {
 
     public interface SweepStarter {
-        StratFinder start(long budgetMs);
+        StratFinder start(long budgetMs, StratVariants.Filter filter);
     }
 
+    private static final String WINDOW_ID = "###strat_finder";
+    private static final String TITLE = "Strat Finder";
     private static final String COL_VARIANT = "Variant";
     private static final String COL_EDITS = "Edits";
     private static final String COL_SOLVE = "Solve";
-    private static final int MAX_VISIBLE_ROWS = 10;
     private static final int BUDGET_MIN_MS = 250;
     private static final int BUDGET_MAX_MS = 10000;
     private static final int BUDGET_DEFAULT_MS = 2000;
+    private static final float MIN_TABLE_ROWS = 3f;
+
+    private static final String[] FORM_LABELS = {"Budget", "Shape", "Strats"};
+    private static final String[] SHAPE_LABELS = {"any", "nt", "ja"};
+    private static final String[] SHAPE_TIPS = {
+            "Keep every camera shape.",
+            "Only no-turn variants: camera pinned from the segment start through the last jump"
+                    + " press (includes nt45 and the nt[momentum|air] strafe patterns).",
+            "Only jump-angle variants: one turn allowed at the last jump press."};
+    private static final String[] FAMILY_TIPS = {
+            "Camera shapes and strafe patterns of the strat as loaded, no key-pattern family"
+                    + " applied.",
+            "One-tick shifts of existing W/SPRINT/A/D/S presses and releases within 12 ticks"
+                    + " of each jump.",
+            "Unsprinted momentum jump: fire on W+JUMP, SPRINT engages k ticks after the fire,"
+                    + " mid-air.",
+            "Fire on JUMP alone; W+SPRINT re-engage k ticks after the fire.",
+            "d-tick W+SPRINT runway into the jump at the fire tick.",
+            "Strafe-only fire (JUMP plus A or D); W+SPRINT re-engage k ticks after.",
+            "Backwards-momentum arc into the fire, composed with jam, fmm or pessi timings."};
+    private static final String SOLO_TIP = " Right-click: only this family.";
 
     private static final String FIND_TIP =
-            "Enumerate one-tick key-timing shifts of the loaded strat, no-turn shapes (nt: camera"
-                    + " pinned through the last jump press; ja: one turn allowed at the jump angle;"
-                    + " nt45: Force 45 under a pinned momentum camera) and canonical strafe patterns"
-                    + " nt[momentum|air]. Each variant is re-solved against the placed constraints;"
-                    + " click a row to preview it in the sim.";
+            "Enumerate variants of the loaded strat per the filters above: one-tick key-timing"
+                    + " shifts, strat families (fmm, pessi, run+jam, mark, bwmm) applied at the"
+                    + " existing jump ticks, no-turn shapes (nt, ja, nt45) and canonical strafe"
+                    + " patterns nt[momentum|air]. Each variant is re-solved against the placed"
+                    + " constraints; click a row to preview it in the sim.";
     private static final String BUDGET_TIP =
             "Per-variant solve budget. Tight strats need 2000 ms to re-solve their own line;"
                     + " lower budgets mark them infeasible.";
@@ -53,6 +79,11 @@ public final class StratFinderWidget {
 
     private StratFinder finder;
     private final int[] budgetBuf = {BUDGET_DEFAULT_MS};
+    private final boolean[] familyOn = new boolean[StratVariants.Filter.FAMILIES.size()];
+    private int shapeSel;
+    private String sweepKey;
+    private boolean sweepFiltered;
+    private long sweepStartNanos;
     private String selectedLabel;
     private boolean startFailed;
     private final ImBoolean windowOpen = new ImBoolean(false);
@@ -69,6 +100,7 @@ public final class StratFinderWidget {
         this.tempActive = tempActive;
         this.onRestoreTemp = onRestoreTemp;
         this.onKeepTemp = onKeepTemp;
+        Arrays.fill(familyOn, true);
     }
 
     public void setWindowOpen(boolean open) {
@@ -87,16 +119,24 @@ public final class StratFinderWidget {
         wasWindowOpen = open;
         if (!open) return;
         ImGui.setNextWindowPos(80f * scale, 120f * scale, ImGuiCond.FirstUseEver);
-        int flags = ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoScrollbar;
-        if (ImGui.begin("Strat Finder", windowOpen, flags)) {
-            renderBody(scale);
-        }
+        ImGui.setNextWindowSize(440f * scale, 460f * scale, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSizeConstraints(360f * scale, 320f * scale, Float.MAX_VALUE, Float.MAX_VALUE);
+        int flags = ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar
+                | ImGuiWindowFlags.NoScrollWithMouse;
+        ThemeManager.pushHeaderChrome();
+        boolean visible = ImGui.begin(WINDOW_ID, windowOpen, flags);
+        if (visible) ThemeManager.drawModalTitle(TITLE);
+        ThemeManager.popHeaderChrome();
+        if (visible) renderBody(scale);
         ImGui.end();
     }
 
     private void renderBody(float scale) {
-        float labelW = ImGui.calcTextSize("Budget").x + ThemeManager.SM * scale;
-        budgetRow(labelW);
+        float labelW = labelColumnWidth(scale);
+        float controlW = Math.max(SolverWidgets.segmentedMinWidth(SHAPE_LABELS), 160f * scale);
+        budgetRow(labelW, controlW);
+        shapeRow(labelW, controlW);
+        familyRow(labelW);
         actionRow();
         if (startFailed) {
             ImGui.textDisabled("Set up the solve segment first (start and goal tick).");
@@ -110,6 +150,7 @@ public final class StratFinderWidget {
             ImGui.popTextWrapPos();
             ThemeManager.popTextColor();
         }
+        staleSweepNote(f);
         List<StratFinder.Item> ranked = f.ranked();
         if (ranked.isEmpty()) {
             if (!f.isRunning() && f.total() == 0) {
@@ -118,22 +159,82 @@ public final class StratFinderWidget {
             return;
         }
         renderTable(ranked, scale);
-        if (!f.isRunning()) {
-            renderSweepSummary(ranked);
-        }
+        renderSweepSummary(f, ranked);
         handleArrowKeys(ranked);
         renderTempControls();
     }
 
-    private void budgetRow(float labelW) {
+    private float labelColumnWidth(float scale) {
+        float max = 0f;
+        for (String l : FORM_LABELS) max = Math.max(max, ImGui.calcTextSize(l).x);
+        return max + ThemeManager.SM * scale;
+    }
+
+    private void budgetRow(float labelW, float controlW) {
         Controls.pushInputFrameHeight();
         SolverWidgets.rowLabel("Budget", labelW);
-        ImGui.setNextItemWidth(120f * ThemeManager.uiScale());
+        ImGui.setNextItemWidth(controlW);
         if (ImGui.sliderInt("##sfbudget", budgetBuf, BUDGET_MIN_MS, BUDGET_MAX_MS, "%d ms")) {
             budgetBuf[0] = Math.max(BUDGET_MIN_MS, Math.min(BUDGET_MAX_MS, budgetBuf[0]));
         }
         TooltipUtil.onHover(BUDGET_TIP);
         Controls.popInputFrameHeight();
+    }
+
+    private void shapeRow(float labelW, float controlW) {
+        Controls.pushInputFrameHeight();
+        SolverWidgets.rowLabel("Shape", labelW);
+        int clicked = SolverWidgets.segmented("##sfshape", SHAPE_LABELS, SHAPE_TIPS, shapeSel, controlW);
+        Controls.popInputFrameHeight();
+        if (clicked >= 0) shapeSel = clicked;
+    }
+
+    private void familyRow(float labelW) {
+        List<String> families = StratVariants.Filter.FAMILIES;
+        Controls.pushInputFrameHeight();
+        SolverWidgets.rowLabel("Strats", labelW);
+        float startX = ImGui.getCursorPosX();
+        float wrapX = startX + ImGui.getContentRegionAvail().x;
+        for (int i = 0; i < families.size(); i++) {
+            String label = families.get(i);
+            if (i > 0) {
+                ImGui.sameLine();
+                float w = ImGui.getFrameHeight() + ImGui.getStyle().getItemInnerSpacing().x
+                        + ImGui.calcTextSize(label).x;
+                if (ImGui.getCursorPosX() + w > wrapX) {
+                    ImGui.newLine();
+                    ImGui.setCursorPosX(startX);
+                }
+            }
+            if (Controls.checkbox(label, familyOn[i])) {
+                familyOn[i] = !familyOn[i];
+            }
+            if (ImGui.isItemClicked(1)) {
+                Arrays.fill(familyOn, false);
+                familyOn[i] = true;
+            }
+            TooltipUtil.onHover(FAMILY_TIPS[i] + SOLO_TIP);
+        }
+        if (anyFamilyOff()) {
+            ImGui.sameLine();
+            if (ImGui.getCursorPosX() + ImGui.calcTextSize("all").x > wrapX) {
+                ImGui.newLine();
+                ImGui.setCursorPosX(startX);
+            }
+            ImGui.alignTextToFramePadding();
+            if (Controls.hyperlink("all")) {
+                Arrays.fill(familyOn, true);
+            }
+            TooltipUtil.onHover("Re-enable every strat family.");
+        }
+        Controls.popInputFrameHeight();
+    }
+
+    private boolean anyFamilyOff() {
+        for (boolean on : familyOn) {
+            if (!on) return true;
+        }
+        return false;
     }
 
     private void actionRow() {
@@ -147,6 +248,13 @@ public final class StratFinderWidget {
             TooltipUtil.onHover("Stop the sweep; found variants stay listed.");
             if (cancel) f.cancel();
             ImGui.sameLine();
+            float h = ImGui.getFrameHeight();
+            ImVec2 p = ImGui.getCursorScreenPos();
+            SolverWidgets.spinner(ImGui.getWindowDrawList(), p.x + h * 0.5f, p.y + h * 0.5f,
+                    h * 0.30f, 1.8f * ThemeManager.uiScale(), ThemeManager.accentColor(),
+                    (System.nanoTime() - sweepStartNanos) / 1e9);
+            ImGui.dummy(h, h);
+            ImGui.sameLine();
             ImGui.alignTextToFramePadding();
             ImGui.textDisabled(progressText(f));
         }
@@ -156,9 +264,39 @@ public final class StratFinderWidget {
         if (finder != null) finder.cancel();
         onPrepareFind.run();
         selectedLabel = null;
-        StratFinder started = starter.start(budgetBuf[0]);
+        StratFinder started = starter.start(budgetBuf[0], buildFilter());
         startFailed = started == null;
-        if (started != null) finder = started;
+        if (started != null) {
+            finder = started;
+            sweepKey = settingsKey();
+            sweepFiltered = shapeSel != 0 || anyFamilyOff();
+            sweepStartNanos = System.nanoTime();
+        }
+    }
+
+    private StratVariants.Filter buildFilter() {
+        Set<String> families = null;
+        if (anyFamilyOff()) {
+            families = new LinkedHashSet<String>();
+            for (int i = 0; i < familyOn.length; i++) {
+                if (familyOn[i]) families.add(StratVariants.Filter.FAMILIES.get(i));
+            }
+        }
+        StratVariants.Filter.Shape shape = shapeSel == 1 ? StratVariants.Filter.Shape.NT
+                : shapeSel == 2 ? StratVariants.Filter.Shape.JA
+                : StratVariants.Filter.Shape.ANY;
+        return new StratVariants.Filter(families, shape);
+    }
+
+    private String settingsKey() {
+        StringBuilder sb = new StringBuilder();
+        for (boolean on : familyOn) sb.append(on ? '1' : '0');
+        return sb.append('|').append(shapeSel).append('|').append(budgetBuf[0]).toString();
+    }
+
+    private void staleSweepNote(StratFinder f) {
+        if (f.isRunning() || sweepKey == null || sweepKey.equals(settingsKey())) return;
+        ImGui.textDisabled("Filters or budget changed since this sweep; Re-find to apply.");
     }
 
     private String progressText(StratFinder f) {
@@ -177,7 +315,9 @@ public final class StratFinderWidget {
             maxSolveW = Math.max(maxSolveW, ImGui.calcTextSize(solveText(it)).x);
         }
         float rowH = ThemeManager.tableRowHeight();
-        float tableH = rowH * (Math.min(ranked.size(), MAX_VISIBLE_ROWS) + 1.6f);
+        float contentH = rowH * (ranked.size() + 1.6f);
+        float availH = ImGui.getContentRegionAvail().y - footerHeight(scale);
+        float tableH = Math.max(rowH * (MIN_TABLE_ROWS + 1.6f), Math.min(availH, contentH));
         if (!ThemeManager.beginStandardClickableRowsTable("##sf_table", 3, 0, 0f, tableH)) return;
         ImGui.tableSetupScrollFreeze(0, 1);
         ImGui.tableSetupColumn(COL_VARIANT, ImGuiTableColumnFlags.WidthFixed,
@@ -193,6 +333,15 @@ public final class StratFinderWidget {
             renderRow(it, rowIndex++, rowH);
         }
         ThemeManager.endStandardTable();
+    }
+
+    private float footerHeight(float scale) {
+        float line = ImGui.getTextLineHeightWithSpacing();
+        float h = line;
+        if (tempActive.getAsBoolean()) {
+            h += 2f * line + ImGui.getFrameHeightWithSpacing();
+        }
+        return h + ThemeManager.XS * scale;
     }
 
     private void renderHeader() {
@@ -267,12 +416,17 @@ public final class StratFinderWidget {
         }
     }
 
-    private void renderSweepSummary(List<StratFinder.Item> ranked) {
+    private void renderSweepSummary(StratFinder f, List<StratFinder.Item> ranked) {
+        if (f.isRunning()) return;
         if (ranked.size() <= 1) {
             ImGui.pushTextWrapPos(0f);
-            ImGui.textDisabled("Only the original: no W/SPRINT/A/D/S press or release to shift within 12"
-                    + " ticks after a jump, and the facing shape is already pinned by dF constraints, so"
-                    + " there is nothing to vary.");
+            if (sweepFiltered) {
+                ImGui.textDisabled("Only the original: the active filters leave nothing to vary here.");
+            } else {
+                ImGui.textDisabled("Only the original: no W/SPRINT/A/D/S press or release to shift within 12"
+                        + " ticks after a jump, and the facing shape is already pinned by dF constraints, so"
+                        + " there is nothing to vary.");
+            }
             ImGui.popTextWrapPos();
             return;
         }

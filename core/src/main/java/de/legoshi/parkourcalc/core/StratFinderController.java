@@ -3,6 +3,7 @@ package de.legoshi.parkourcalc.core;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.stratfinder.StratFinder;
+import de.legoshi.parkourcalc.core.anglesolver.stratfinder.StratVariants;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
@@ -44,7 +45,7 @@ public final class StratFinderController {
         return widget;
     }
 
-    private StratFinder startSweep(long budgetMs) {
+    private StratFinder startSweep(long budgetMs, StratVariants.Filter filter) {
         FileSystemSaveStore store = saveController.getSaveStore();
         int st = angleSolverState.getStartTick();
         int lt = angleSolverState.getLandingTick();
@@ -57,7 +58,7 @@ public final class StratFinderController {
                 angleSolverState, boxController.getStates(), true);
         double[] edge = VelocityMapController.objectiveEdge(angleSolverState);
         boolean max = angleSolverState.getGoal() == AngleSolverState.Goal.MAX;
-        StratFinder finder = new StratFinder(witness, forwardModel, store, budgetMs, edge[0], max);
+        StratFinder finder = new StratFinder(witness, forwardModel, store, budgetMs, edge[0], max, filter);
         finder.start();
         return finder;
     }

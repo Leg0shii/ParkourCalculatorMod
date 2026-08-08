@@ -62,10 +62,71 @@ public final class StratVariants {
         }
     }
 
+    public static final class Filter {
+        public static final String FAMILY_SHAPES = "shapes";
+        public static final String FAMILY_SHIFTS = "shifts";
+        public static final String FAMILY_FMM = "fmm";
+        public static final String FAMILY_PESSI = "pessi";
+        public static final String FAMILY_RUN_JAM = "run+jam";
+        public static final String FAMILY_MARK = "mark";
+        public static final String FAMILY_BWMM = "bwmm";
+        public static final List<String> FAMILIES = Collections.unmodifiableList(Arrays.asList(
+                FAMILY_SHAPES, FAMILY_SHIFTS, FAMILY_FMM, FAMILY_PESSI,
+                FAMILY_RUN_JAM, FAMILY_MARK, FAMILY_BWMM));
+
+        public enum Shape {ANY, NT, JA}
+
+        public static final Filter ALL = new Filter(null, Shape.ANY);
+
+        private final Set<String> families;
+        public final Shape shape;
+
+        public Filter(Set<String> families, Shape shape) {
+            this.families = families == null ? null : new HashSet<String>(families);
+            this.shape = shape == null ? Shape.ANY : shape;
+        }
+
+        public boolean allowsFamily(String family) {
+            return families == null || families.contains(family);
+        }
+
+        public boolean allowsUnshaped() {
+            return shape == Shape.ANY;
+        }
+
+        public boolean allowsNt() {
+            return shape != Shape.JA;
+        }
+
+        public boolean allowsJa() {
+            return shape != Shape.NT;
+        }
+    }
+
+    public static String familyOfPlan(String planLabel) {
+        if (planLabel.startsWith("bwmm")) {
+            return Filter.FAMILY_BWMM;
+        }
+        if (planLabel.startsWith("fmm")) {
+            return Filter.FAMILY_FMM;
+        }
+        if (planLabel.startsWith("pessi")) {
+            return Filter.FAMILY_PESSI;
+        }
+        if (planLabel.startsWith("mark")) {
+            return Filter.FAMILY_MARK;
+        }
+        return Filter.FAMILY_RUN_JAM;
+    }
+
     private StratVariants() {
     }
 
     public static List<Variant> variants(SaveFile witness, ExactJumpModel model) {
+        return variants(witness, model, Filter.ALL);
+    }
+
+    public static List<Variant> variants(SaveFile witness, ExactJumpModel model, Filter filter) {
         List<Variant> out = new ArrayList<Variant>();
         JumpPhysicsInputs sc;
         try {
@@ -81,24 +142,31 @@ public final class StratVariants {
         Variant self = prepare("self", witness, witness, sc, 0);
         seen.add(signature(self.save));
         bases.add(self);
-        collectTimingVariants(bases, seen, witness, sc);
-        collectFamilyVariants(bases, seen, witness, sc);
-        for (Variant base : bases) {
-            out.add(base);
-            addShapeVariants(out, seen, witness, sc, base);
+        if (filter.allowsFamily(Filter.FAMILY_SHIFTS)) {
+            collectTimingVariants(bases, seen, witness, sc);
         }
-        addFamilyPatternVariants(out, seen, witness, sc);
+        collectFamilyVariants(bases, seen, witness, sc, filter);
+        for (Variant base : bases) {
+            if ("self".equals(base.label) || filter.allowsUnshaped()) {
+                out.add(base);
+            }
+            addShapeVariants(out, seen, witness, sc, base, filter);
+        }
+        addFamilyPatternVariants(out, seen, witness, sc, filter);
         return out;
     }
 
     private static void collectFamilyVariants(List<Variant> out, Set<String> seen,
-                                              SaveFile witness, JumpPhysicsInputs sc) {
+                                              SaveFile witness, JumpPhysicsInputs sc, Filter filter) {
         int fire = firstGroundedJumpTick(witness, sc);
         if (fire < 0) {
             return;
         }
         for (StratPlans.Plan plan : StratPlans.plans(false)) {
             if (!PRODUCT_FAMILIES.contains(plan.label)) {
+                continue;
+            }
+            if (!filter.allowsFamily(familyOfPlan(plan.label))) {
                 continue;
             }
             SaveFile s = applyFamily(witness, sc, plan, fire);
@@ -319,7 +387,11 @@ public final class StratVariants {
     }
 
     private static void addShapeVariants(List<Variant> out, Set<String> seen, SaveFile witness,
-                                         JumpPhysicsInputs sc, Variant base) {
+                                         JumpPhysicsInputs sc, Variant base, Filter filter) {
+        boolean self = "self".equals(base.label);
+        if (self && !filter.allowsFamily(Filter.FAMILY_SHAPES)) {
+            return;
+        }
         int startTick = witness.angleSolver.startTick;
         int landing = witness.angleSolver.landingTick;
         if (landing <= startTick) {
@@ -329,15 +401,17 @@ public final class StratVariants {
         if (lastFire <= startTick) {
             return;
         }
-        SaveFile nt = copy(base.save);
-        addMomentumChain(nt, startTick, lastFire, false);
-        addShaped(out, seen, shapeLabel(base.label, "nt"), nt, sc, base.edits);
-        if (lastFire > startTick + 1) {
+        if (filter.allowsNt()) {
+            SaveFile nt = copy(base.save);
+            addMomentumChain(nt, startTick, lastFire, false);
+            addShaped(out, seen, shapeLabel(base.label, "nt"), nt, sc, base.edits);
+        }
+        if (lastFire > startTick + 1 && filter.allowsJa()) {
             SaveFile ja = copy(base.save);
             addMomentumChain(ja, startTick, lastFire, true);
             addShaped(out, seen, shapeLabel(base.label, "ja"), ja, sc, base.edits);
         }
-        if ("self".equals(base.label)) {
+        if (self && filter.allowsNt()) {
             SaveFile nt45 = copy(base.save);
             nt45.angleSolver.defaultInputs = "FORCE_45";
             stripYawPins(nt45);
@@ -405,7 +479,10 @@ public final class StratVariants {
     }
 
     private static void addFamilyPatternVariants(List<Variant> out, Set<String> seen,
-                                                 SaveFile witness, JumpPhysicsInputs sc) {
+                                                 SaveFile witness, JumpPhysicsInputs sc, Filter filter) {
+        if (!filter.allowsNt()) {
+            return;
+        }
         int startTick = witness.angleSolver.startTick;
         int landing = witness.angleSolver.landingTick;
         if (landing <= startTick) {
@@ -418,6 +495,9 @@ public final class StratVariants {
         }
         for (StratPlans.Plan plan : StratPlans.plans(false)) {
             if (!PATTERN_FAMILIES.contains(plan.label)) {
+                continue;
+            }
+            if (!filter.allowsFamily(familyOfPlan(plan.label))) {
                 continue;
             }
             String side = familySide(plan);
