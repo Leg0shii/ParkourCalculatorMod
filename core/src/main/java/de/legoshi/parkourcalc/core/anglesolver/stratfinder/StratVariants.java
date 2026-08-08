@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -28,6 +29,26 @@ public final class StratVariants {
     private static final List<String> KEYS = Arrays.asList("W", "SPRINT", "A", "D", "S");
     private static final int WINDOW = 12;
     private static final int MAX_VARIANTS = 40;
+    private static final Set<String> PRODUCT_FAMILIES = allNarrowPlanLabels();
+
+    private static Set<String> allNarrowPlanLabels() {
+        Set<String> out = new HashSet<String>();
+        for (StratPlans.Plan p : StratPlans.plans(false)) {
+            out.add(p.label);
+        }
+        return out;
+    }
+    private static final Set<String> PATTERN_FAMILIES = patternFamilyLabels();
+
+    private static Set<String> patternFamilyLabels() {
+        Set<String> out = new HashSet<String>();
+        for (StratPlans.Plan p : StratPlans.plans(false)) {
+            if (p.label.startsWith("fmm") || p.label.startsWith("pessi") || p.label.startsWith("mark")) {
+                out.add(p.label);
+            }
+        }
+        return out;
+    }
 
     public static final class Variant {
         public final String label;
@@ -61,11 +82,178 @@ public final class StratVariants {
         seen.add(signature(self.save));
         bases.add(self);
         collectTimingVariants(bases, seen, witness, sc);
+        collectFamilyVariants(bases, seen, witness, sc);
         for (Variant base : bases) {
             out.add(base);
             addShapeVariants(out, seen, witness, sc, base);
         }
+        addFamilyPatternVariants(out, seen, witness, sc);
         return out;
+    }
+
+    private static void collectFamilyVariants(List<Variant> out, Set<String> seen,
+                                              SaveFile witness, JumpPhysicsInputs sc) {
+        int fire = firstGroundedJumpTick(witness, sc);
+        if (fire < 0) {
+            return;
+        }
+        for (StratPlans.Plan plan : StratPlans.plans(false)) {
+            if (!PRODUCT_FAMILIES.contains(plan.label)) {
+                continue;
+            }
+            SaveFile s = applyFamily(witness, sc, plan, fire);
+            if (s == null) {
+                continue;
+            }
+            if (!seen.add(signature(s))) {
+                continue;
+            }
+            out.add(prepare(plan.label, s, null, sc, changedRows(witness, s)));
+        }
+    }
+
+    private static int firstGroundedJumpTick(SaveFile witness, JumpPhysicsInputs sc) {
+        int startTick = witness.angleSolver.startTick;
+        int landing = witness.angleSolver.landingTick;
+        for (int k = 0; k < sc.numTicks; k++) {
+            int t = startTick + k;
+            if (t > landing || t >= witness.rows.size()) {
+                break;
+            }
+            if (!hasKey(witness.rows.get(t), "JUMP")) {
+                continue;
+            }
+            double slip = sc.slipAt(k);
+            if (!Double.isNaN(slip) && slip < 1.0) {
+                return t;
+            }
+        }
+        return -1;
+    }
+
+    private static SaveFile applyFamily(SaveFile witness, JumpPhysicsInputs sc,
+                                        StratPlans.Plan plan, int fire) {
+        SaveFile s = copy(witness);
+        if (!patchFamilyRows(s, plan, fire)) {
+            return null;
+        }
+        stampKeepDerive(s);
+        deriveDebugSamples(s, sc);
+        if (!sprintAtFireMatches(s, fire, plan)) {
+            return null;
+        }
+        return s;
+    }
+
+    private static boolean patchFamilyRows(SaveFile s, StratPlans.Plan plan, int fire) {
+        int startTick = s.angleSolver.startTick;
+        int landing = s.angleSolver.landingTick;
+        int approachStart = fire - plan.fire;
+        if (approachStart < startTick) {
+            return false;
+        }
+        int maxRel = plan.lastPatchRel();
+        if (fire + maxRel > Math.min(landing, s.rows.size() - 1)) {
+            return false;
+        }
+        for (int rel = 1; rel <= maxRel; rel++) {
+            if (hasKey(s.rows.get(fire + rel), "JUMP")) {
+                return false;
+            }
+        }
+        for (int t = approachStart; t < fire; t++) {
+            TreeSet<String> planKeys = plan.preRows.get(t - approachStart);
+            boolean planJump = planKeys != null && planKeys.contains("JUMP");
+            if (planJump != hasKey(s.rows.get(t), "JUMP")) {
+                return false;
+            }
+        }
+        boolean unsprintedWFire = plan.fireKeys.contains("W") && !plan.fireKeys.contains("SPRINT");
+        if (unsprintedWFire) {
+            for (int t = startTick; t < approachStart; t++) {
+                TreeSet<String> ks = keySetOf(s.rows.get(t));
+                if (ks.remove("SPRINT")) {
+                    s.rows.get(t).keys = new ArrayList<String>(ks);
+                }
+            }
+        }
+        for (int t = approachStart; t < fire; t++) {
+            TreeSet<String> planKeys = plan.preRows.get(t - approachStart);
+            TreeSet<String> ks = planKeys != null
+                    ? new TreeSet<String>(planKeys) : new TreeSet<String>();
+            preserveStrafe(s.rows.get(t), ks);
+            s.rows.get(t).keys = new ArrayList<String>(ks);
+        }
+        TreeSet<String> fk = new TreeSet<String>(plan.fireKeys);
+        preserveStrafe(s.rows.get(fire), fk);
+        s.rows.get(fire).keys = new ArrayList<String>(fk);
+        for (Map.Entry<Integer, String[][]> e : plan.post.entrySet()) {
+            int r = fire + e.getKey();
+            TreeSet<String> ks = keySetOf(s.rows.get(r));
+            Collections.addAll(ks, e.getValue()[0]);
+            for (String off : e.getValue()[1]) {
+                ks.remove(off);
+            }
+            s.rows.get(r).keys = new ArrayList<String>(ks);
+        }
+        String side = familySide(plan);
+        if (side != null) {
+            String other = "A".equals(side) ? "D" : "A";
+            int end = Math.min(landing, s.rows.size() - 1);
+            for (int t = fire + 1; t <= end; t++) {
+                if (hasKey(s.rows.get(t), "JUMP")) {
+                    break;
+                }
+                TreeSet<String> ks = keySetOf(s.rows.get(t));
+                ks.add(side);
+                ks.remove(other);
+                s.rows.get(t).keys = new ArrayList<String>(ks);
+            }
+        }
+        return true;
+    }
+
+    private static String familySide(StratPlans.Plan plan) {
+        if (plan.fireKeys.contains("A")) {
+            return "A";
+        }
+        if (plan.fireKeys.contains("D")) {
+            return "D";
+        }
+        return null;
+    }
+
+    private static void preserveStrafe(SaveFile.Row row, TreeSet<String> ks) {
+        if (ks.contains("A") || ks.contains("D")) {
+            return;
+        }
+        if (hasKey(row, "A")) {
+            ks.add("A");
+        }
+        if (hasKey(row, "D")) {
+            ks.add("D");
+        }
+    }
+
+    private static void stampKeepDerive(SaveFile s) {
+        s.angleSolver.defaultInputs = "KEEP";
+        s.angleSolver.defaultSprint = "DERIVE";
+        if (s.angleSolver.ticks == null) {
+            return;
+        }
+        for (SaveFile.Tick tick : s.angleSolver.ticks) {
+            if (tick != null && tick.override != null) {
+                tick.override.inputs = null;
+                tick.override.sprint = null;
+            }
+        }
+    }
+
+    private static boolean sprintAtFireMatches(SaveFile s, int fire, StratPlans.Plan plan) {
+        if (s.debug == null || fire + 1 >= s.debug.size()) {
+            return false;
+        }
+        return s.debug.get(fire + 1).sprinting == plan.fireKeys.contains("SPRINT");
     }
 
     private static void collectTimingVariants(List<Variant> bases, Set<String> seen,
@@ -142,26 +330,29 @@ public final class StratVariants {
             return;
         }
         SaveFile nt = copy(base.save);
-        for (int t = startTick + 1; t <= lastFire; t++) {
-            addDfZero(nt, t);
-        }
+        addMomentumChain(nt, startTick, lastFire, false);
         addShaped(out, seen, shapeLabel(base.label, "nt"), nt, sc, base.edits);
         if (lastFire > startTick + 1) {
             SaveFile ja = copy(base.save);
-            for (int t = startTick + 1; t < lastFire; t++) {
-                addDfZero(ja, t);
-            }
+            addMomentumChain(ja, startTick, lastFire, true);
             addShaped(out, seen, shapeLabel(base.label, "ja"), ja, sc, base.edits);
         }
         if ("self".equals(base.label)) {
             SaveFile nt45 = copy(base.save);
             nt45.angleSolver.defaultInputs = "FORCE_45";
             stripYawPins(nt45);
-            for (int t = startTick + 1; t <= lastFire; t++) {
-                addDfZero(nt45, t);
-            }
+            addMomentumChain(nt45, startTick, lastFire, false);
             addShaped(out, seen, "nt45", nt45, sc, base.edits);
             addStrafePatterns(out, seen, witness, sc, base, startTick, lastFire, landing);
+        }
+    }
+
+    private static void addMomentumChain(SaveFile s, int startTick, int lastFire, boolean exemptLastFire) {
+        for (int t = startTick + 1; t <= lastFire; t++) {
+            if (exemptLastFire && t == lastFire) {
+                continue;
+            }
+            addDfZero(s, t);
         }
     }
 
@@ -172,30 +363,94 @@ public final class StratVariants {
                                           int startTick, int lastFire, int landing) {
         for (String momentum : STRAFES) {
             for (String air : STRAFES) {
-                SaveFile s = copy(base.save);
-                int end = Math.min(landing, s.rows.size() - 1);
-                for (int r = Math.max(0, startTick); r <= end; r++) {
-                    SaveFile.Row row = s.rows.get(r);
-                    TreeSet<String> ks = new TreeSet<String>();
-                    ks.add("W");
-                    ks.add("SPRINT");
-                    if (row.keys != null && row.keys.contains("JUMP")) {
-                        ks.add("JUMP");
-                    }
-                    String strafe = r < lastFire ? momentum : r > lastFire ? air : "";
-                    if (!strafe.isEmpty()) {
-                        ks.add(strafe);
-                    }
-                    row.keys = new ArrayList<String>(ks);
+                SaveFile s = canonicalPattern(base.save, momentum, air, false, startTick, lastFire, landing);
+                stampKeepDerive(s);
+                addShaped(out, seen, patternLabel("", momentum, air, false), s, sc, changedRows(witness, s));
+                if (!air.isEmpty()) {
+                    SaveFile p = canonicalPattern(base.save, momentum, air, true, startTick, lastFire, landing);
+                    stampKeepDerive(p);
+                    addShaped(out, seen, patternLabel("", momentum, air, true), p, sc, changedRows(witness, p));
                 }
-                for (int t = startTick + 1; t <= lastFire; t++) {
-                    addDfZero(s, t);
-                }
-                String label = "nt[" + (momentum.isEmpty() ? "-" : momentum)
-                        + "|" + (air.isEmpty() ? "-" : air) + "]";
-                addShaped(out, seen, label, s, sc, changedRows(witness, s));
             }
         }
+    }
+
+    private static SaveFile canonicalPattern(SaveFile base, String momentum, String air, boolean airOnPress,
+                                             int startTick, int lastFire, int landing) {
+        SaveFile s = copy(base);
+        int end = Math.min(landing, s.rows.size() - 1);
+        for (int r = Math.max(0, startTick); r <= end; r++) {
+            SaveFile.Row row = s.rows.get(r);
+            TreeSet<String> ks = new TreeSet<String>();
+            ks.add("W");
+            ks.add("SPRINT");
+            if (row.keys != null && row.keys.contains("JUMP")) {
+                ks.add("JUMP");
+            }
+            String strafe = r < lastFire ? momentum
+                    : r > lastFire ? air
+                    : airOnPress ? air : "";
+            if (!strafe.isEmpty()) {
+                ks.add(strafe);
+            }
+            row.keys = new ArrayList<String>(ks);
+        }
+        addMomentumChain(s, startTick, lastFire, false);
+        return s;
+    }
+
+    private static String patternLabel(String familyPrefix, String momentum, String air, boolean airOnPress) {
+        return familyPrefix + "nt[" + (momentum.isEmpty() ? "-" : momentum)
+                + "|" + (air.isEmpty() ? "-" : air) + (airOnPress ? "*" : "") + "]";
+    }
+
+    private static void addFamilyPatternVariants(List<Variant> out, Set<String> seen,
+                                                 SaveFile witness, JumpPhysicsInputs sc) {
+        int startTick = witness.angleSolver.startTick;
+        int landing = witness.angleSolver.landingTick;
+        if (landing <= startTick) {
+            return;
+        }
+        int lastFire = lastJumpRow(witness, startTick, landing);
+        int fire = firstGroundedJumpTick(witness, sc);
+        if (fire < 0 || lastFire <= startTick) {
+            return;
+        }
+        for (StratPlans.Plan plan : StratPlans.plans(false)) {
+            if (!PATTERN_FAMILIES.contains(plan.label)) {
+                continue;
+            }
+            String side = familySide(plan);
+            for (String momentum : STRAFES) {
+                if (side != null && !momentum.equals(side)) {
+                    continue;
+                }
+                for (String air : STRAFES) {
+                    addFamilyPattern(out, seen, witness, sc, plan, fire,
+                            canonicalPattern(witness, momentum, air, false, startTick, lastFire, landing),
+                            patternLabel(plan.label + "/", momentum, air, false));
+                    if (!air.isEmpty()) {
+                        addFamilyPattern(out, seen, witness, sc, plan, fire,
+                                canonicalPattern(witness, momentum, air, true, startTick, lastFire, landing),
+                                patternLabel(plan.label + "/", momentum, air, true));
+                    }
+                }
+            }
+        }
+    }
+
+    private static void addFamilyPattern(List<Variant> out, Set<String> seen, SaveFile witness,
+                                         JumpPhysicsInputs sc, StratPlans.Plan plan, int fire,
+                                         SaveFile canon, String label) {
+        if (!patchFamilyRows(canon, plan, fire)) {
+            return;
+        }
+        stampKeepDerive(canon);
+        deriveDebugSamples(canon, sc);
+        if (!sprintAtFireMatches(canon, fire, plan)) {
+            return;
+        }
+        addShaped(out, seen, label, canon, sc, changedRows(witness, canon));
     }
 
     private static int changedRows(SaveFile witness, SaveFile variant) {
@@ -368,9 +623,10 @@ public final class StratVariants {
     private static String signature(SaveFile s) {
         StringBuilder sb = new StringBuilder();
         for (SaveFile.Row r : s.rows) {
-            sb.append(r.keys).append(';');
+            sb.append(keySetOf(r)).append(';');
         }
-        sb.append('|').append(s.angleSolver != null ? s.angleSolver.defaultInputs : null).append('|');
+        sb.append('|').append(s.angleSolver != null ? s.angleSolver.defaultInputs : null)
+                .append('|').append(s.angleSolver != null ? s.angleSolver.defaultSprint : null).append('|');
         List<Integer> dfTicks = new ArrayList<Integer>();
         List<Integer> fTicks = new ArrayList<Integer>();
         if (s.angleSolver != null && s.angleSolver.ticks != null) {

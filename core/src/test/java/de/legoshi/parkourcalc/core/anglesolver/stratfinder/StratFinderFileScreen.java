@@ -29,7 +29,7 @@ public class StratFinderFileScreen {
 
         StratFinder finder = new StratFinder(witness, model, store, solveMs, Double.NaN, true);
         finder.start();
-        long deadline = System.currentTimeMillis() + 60_000L + solveMs * 50L;
+        long deadline = System.currentTimeMillis() + 60_000L + solveMs * 600L;
         while (finder.isRunning() && System.currentTimeMillis() < deadline) {
             Thread.sleep(50);
         }

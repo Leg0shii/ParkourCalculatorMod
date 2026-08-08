@@ -9,8 +9,10 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -24,6 +26,15 @@ public class StratVariantsTest {
     private static final Gson GSON = new Gson();
     private static final Set<String> EDITABLE = new HashSet<String>(
             Arrays.asList("W", "SPRINT", "A", "D", "S"));
+    private static final Map<String, StratPlans.Plan> PLANS = planIndex();
+
+    private static Map<String, StratPlans.Plan> planIndex() {
+        Map<String, StratPlans.Plan> out = new HashMap<String, StratPlans.Plan>();
+        for (StratPlans.Plan p : StratPlans.plans(false)) {
+            out.put(p.label, p);
+        }
+        return out;
+    }
 
     private static SaveFile witness() {
         return GSON.fromJson(Fixtures.rawPool("hpk_human/d2/j012_1bm_4.25b"), SaveFile.class);
@@ -36,7 +47,7 @@ public class StratVariantsTest {
         List<StratVariants.Variant> variants = StratVariants.variants(save, model);
 
         assertFalse("no variants enumerated", variants.isEmpty());
-        assertTrue("cap exceeded", variants.size() <= 3 * 41);
+        assertTrue("cap exceeded", variants.size() <= 450);
 
         StratVariants.Variant self = variants.get(0);
         assertEquals("self", self.label);
@@ -48,6 +59,8 @@ public class StratVariantsTest {
         int lastFire = lastJump(save, startTick, landing);
         Set<String> labels = new HashSet<String>();
         int patterns = 0;
+        int familyBases = 0;
+        int familyPatterns = 0;
         for (StratVariants.Variant v : variants) {
             assertTrue("duplicate label " + v.label, labels.add(v.label));
             assertEquals("row count changed for " + v.label, save.rows.size(), v.save.rows.size());
@@ -56,9 +69,21 @@ public class StratVariantsTest {
             assertNull("stale result on " + v.label, v.save.angleSolver.result);
             if (v.label.startsWith("nt[")) {
                 patterns++;
+                assertKeepDerive(v);
                 assertStrafePattern(save, v, startTick, lastFire, landing);
+            } else if (v.label.contains("/nt[")) {
+                familyPatterns++;
+                assertFamilyPattern(save, v, startTick, lastFire, landing);
+            } else if (isFamily(v.label)) {
+                familyBases++;
+                assertFamilyVariant(save, v, startTick, landing);
             } else if (isShape(v.label)) {
-                assertShapeChain(v, startTick, lastFire);
+                assertShapeChain(save, v, startTick, lastFire);
+                String baseLabel = v.label.contains("/")
+                        ? v.label.substring(0, v.label.indexOf('/')) : "";
+                if (isFamily(baseLabel)) {
+                    assertKeepDerive(v);
+                }
             } else {
                 assertEquals("constraints changed for " + v.label,
                         GSON.toJson(save.angleSolver.ticks), GSON.toJson(v.save.angleSolver.ticks));
@@ -68,6 +93,8 @@ public class StratVariantsTest {
                 }
             }
         }
+        assertTrue("no family bases enumerated: " + familyBases, familyBases >= 8);
+        assertTrue("no family pattern composites: " + familyPatterns, familyPatterns >= 9);
 
         boolean momentumChainAlready = true;
         for (int t = startTick + 1; t <= lastFire; t++) {
@@ -98,12 +125,132 @@ public class StratVariantsTest {
                 || label.endsWith("/nt") || label.endsWith("/ja") || label.startsWith("nt[");
     }
 
-    private static void assertShapeChain(StratVariants.Variant v, int startTick, int lastFire) {
+    private static boolean isFamily(String label) {
+        return PLANS.containsKey(label);
+    }
+
+    private static void assertKeepDerive(StratVariants.Variant v) {
+        assertEquals("defaultInputs not KEEP in " + v.label, "KEEP", v.save.angleSolver.defaultInputs);
+        assertEquals("defaultSprint not DERIVE in " + v.label, "DERIVE", v.save.angleSolver.defaultSprint);
+    }
+
+    private static int firstJumpRow(SaveFile s, int startTick, int landing) {
+        for (int t = Math.max(0, startTick); t <= landing && t < s.rows.size(); t++) {
+            if (keySet(s.rows.get(t)).contains("JUMP")) return t;
+        }
+        return -1;
+    }
+
+    private static void assertJumpColumnPreserved(SaveFile witness, StratVariants.Variant v,
+                                                  int startTick, int landing) {
+        for (int r = Math.max(0, startTick); r <= landing && r < witness.rows.size(); r++) {
+            assertEquals("JUMP drifted at row " + r + " in " + v.label,
+                    keySet(witness.rows.get(r)).contains("JUMP"),
+                    keySet(v.save.rows.get(r)).contains("JUMP"));
+        }
+    }
+
+    private static void assertFamilyVariant(SaveFile witness, StratVariants.Variant v,
+                                            int startTick, int landing) {
+        StratPlans.Plan plan = PLANS.get(v.label);
+        assertKeepDerive(v);
+        assertJumpColumnPreserved(witness, v, startTick, landing);
+        Map<Integer, String> a = constraintDump(witness);
+        Map<Integer, String> b = constraintDump(v.save);
+        assertEquals("constraints changed in " + v.label, a, b);
+        int fire = firstJumpRow(witness, startTick, landing);
+        assertTrue("no fire row for " + v.label, fire >= 0);
+        assertEquals("fire sprint sample wrong in " + v.label,
+                plan.fireKeys.contains("SPRINT"), v.save.debug.get(fire + 1).sprinting);
+        int k = plan.lastPatchRel();
+        if (k > 0) {
+            assertTrue("sprint did not engage at rel " + k + " in " + v.label,
+                    v.save.debug.get(fire + k + 1).sprinting);
+        }
+    }
+
+    private static void assertFamilyPattern(SaveFile witness, StratVariants.Variant v,
+                                            int startTick, int lastFire, int landing) {
+        String familyLabel = v.label.substring(0, v.label.indexOf('/'));
+        StratPlans.Plan plan = PLANS.get(familyLabel);
+        assertTrue("unknown family in " + v.label, plan != null);
+        assertKeepDerive(v);
+        assertShapeChain(witness, v, startTick, lastFire);
+        int fire = firstJumpRow(witness, startTick, landing);
+        int k = plan.lastPatchRel();
+        String[] phases = parsePattern(v.label);
+        for (int r = Math.max(0, startTick); r <= landing && r < v.save.rows.size(); r++) {
+            TreeSet<String> ks = keySet(v.save.rows.get(r));
+            assertEquals("JUMP drifted at row " + r + " in " + v.label,
+                    keySet(witness.rows.get(r)).contains("JUMP"), ks.contains("JUMP"));
+            assertEquals("W wrong at row " + r + " in " + v.label,
+                    expectW(plan, fire, r), ks.contains("W"));
+            if (r >= fire) {
+                assertEquals("SPRINT wrong at row " + r + " in " + v.label,
+                        r >= fire + k, ks.contains("SPRINT"));
+            }
+            assertFalse("A and D together at row " + r + " in " + v.label,
+                    ks.contains("A") && ks.contains("D"));
+            String strafe = ks.contains("A") ? "A" : ks.contains("D") ? "D" : "-";
+            assertEquals("strafe wrong at row " + r + " in " + v.label,
+                    expectedStrafe(phases, r, lastFire), strafe);
+        }
+        assertEquals("fire sprint sample wrong in " + v.label,
+                false, v.save.debug.get(fire + 1).sprinting);
+    }
+
+    private static String expectedStrafe(String[] phases, int r, int lastFire) {
+        if (r < lastFire) return phases[0];
+        if (r > lastFire) return phases[1];
+        return "1".equals(phases[2]) ? phases[1] : "-";
+    }
+
+    private static boolean expectW(StratPlans.Plan plan, int fire, int r) {
+        if (r == fire) {
+            return plan.fireKeys.contains("W");
+        }
+        int rel = r - fire;
+        if (rel >= 1 && plan.post.containsKey(rel)) {
+            for (String on : plan.post.get(rel)[0]) {
+                if ("W".equals(on)) return true;
+            }
+            for (String off : plan.post.get(rel)[1]) {
+                if ("W".equals(off)) return false;
+            }
+        }
+        return true;
+    }
+
+    private static String[] parsePattern(String label) {
+        String inner = label.substring(label.indexOf('[') + 1, label.length() - 1);
+        boolean airOnPress = inner.endsWith("*");
+        if (airOnPress) {
+            inner = inner.substring(0, inner.length() - 1);
+        }
+        int bar = inner.indexOf('|');
+        return new String[]{inner.substring(0, bar), inner.substring(bar + 1), airOnPress ? "1" : "0"};
+    }
+
+    private static Map<Integer, String> constraintDump(SaveFile s) {
+        Map<Integer, String> out = new HashMap<Integer, String>();
+        if (s.angleSolver.ticks == null) return out;
+        for (SaveFile.Tick t : s.angleSolver.ticks) {
+            if (t == null) continue;
+            String slip = t.override != null ? t.override.slipperiness : null;
+            out.put(t.tick, GSON.toJson(t.constraints) + "|" + slip);
+        }
+        return out;
+    }
+
+    private static void assertShapeChain(SaveFile witness, StratVariants.Variant v,
+                                         int startTick, int lastFire) {
         boolean ja = "ja".equals(v.label) || v.label.endsWith("/ja");
         for (int t = startTick + 1; t <= lastFire; t++) {
             boolean pinned = hasDf(v.save, t);
             if (ja && t == lastFire) {
-                assertFalse("ja pinned its jump tick in " + v.label, pinned);
+                if (!hasDf(witness, t)) {
+                    assertFalse("ja pinned its jump tick in " + v.label, pinned);
+                }
             } else {
                 assertTrue("chain gap at T" + t + " in " + v.label, pinned);
             }
@@ -112,9 +259,8 @@ public class StratVariantsTest {
 
     private static void assertStrafePattern(SaveFile witness, StratVariants.Variant v,
                                             int startTick, int lastFire, int landing) {
-        assertShapeChain(v, startTick, lastFire);
-        String momentum = null;
-        String air = null;
+        assertShapeChain(witness, v, startTick, lastFire);
+        String[] phases = parsePattern(v.label);
         for (int r = startTick; r <= landing && r < v.save.rows.size(); r++) {
             TreeSet<String> ks = keySet(v.save.rows.get(r));
             assertTrue("W missing at row " + r + " in " + v.label, ks.contains("W"));
@@ -124,15 +270,8 @@ public class StratVariantsTest {
             String strafe = ks.contains("A") ? "A" : ks.contains("D") ? "D" : "-";
             assertFalse("A and D together at row " + r + " in " + v.label,
                     ks.contains("A") && ks.contains("D"));
-            if (r < lastFire) {
-                if (momentum == null) momentum = strafe;
-                assertEquals("momentum strafe inconsistent in " + v.label, momentum, strafe);
-            } else if (r == lastFire) {
-                assertEquals("strafe on the jump row in " + v.label, "-", strafe);
-            } else {
-                if (air == null) air = strafe;
-                assertEquals("air strafe inconsistent in " + v.label, air, strafe);
-            }
+            assertEquals("strafe wrong at row " + r + " in " + v.label,
+                    expectedStrafe(phases, r, lastFire), strafe);
         }
     }
 

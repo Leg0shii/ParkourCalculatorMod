@@ -61,7 +61,8 @@ public class StratFinderSweepTest {
             assertNotNull("result missing: " + item.label, applied.angleSolver.result);
             boolean shaped = "nt".equals(item.label) || "ja".equals(item.label)
                     || "nt45".equals(item.label) || item.label.startsWith("nt[")
-                    || item.label.endsWith("/nt") || item.label.endsWith("/ja");
+                    || item.label.endsWith("/nt") || item.label.endsWith("/ja")
+                    || item.label.contains("/nt[");
             if (!shaped) {
                 assertEquals("constraint tick count drifted: " + item.label,
                         witness.angleSolver.ticks.size(), applied.angleSolver.ticks.size());

@@ -212,10 +212,18 @@ core/anglesolver/stratfinder/  Strat Finder v1 (the product form of the substitu
                            exempting that row, nt45 switching to FORCE_45 with F/dF pins
                            stripped; nt[momentum|air] strafe patterns rebuild the segment rows as
                            canonical W+SPRINT runs with one strafe key per phase, JUMP rows
-                           preserved and strafe-free; all dedupe against a witness that already
-                           pins the chain) plus a keepify-convention unit check on
-                           StratVariants.deriveDebugSamples (sprint chronology: S kills it, SNEAK
-                           scales inputs by 0.3, samples land on debug[t+1])
+                           preserved and strafe-free in the plain nt[m|a] form, while nt[m|a*]
+                           holds the air strafe ON the last space press (the WDWA shape); all
+                           run under KEEP+DERIVE and dedupe against a witness that already pins
+                           the chain; timing families from the shared StratPlans grammar
+                           (fmm/pessi/run+jam/mark/bwmm) apply in place at the first grounded
+                           jump tick with constraints untouched, KEEP+DERIVE stamped, JUMP
+                           columns preserved, the derived fire-sprint sample matching the plan,
+                           and mark holding its side key through to the next press; fmm and
+                           pessi cross all strafe patterns as e.g. fmmK/nt[D|A*], mark crosses
+                           its held side with the air strafes) plus a keepify-convention unit
+                           check on StratVariants.deriveDebugSamples (sprint chronology: S kills
+                           it, SNEAK scales inputs by 0.3, samples land on debug[t+1])
   StratFinderSweepTest.java  slow (SlowSolverTests): headless StratFinder sweep on j012 at 3000 ms;
                            canary (self) must re-solve, items stream, cancel reaches the drive
                            loop, every feasible item carries a parseable applied snapshot with
@@ -224,6 +232,13 @@ core/anglesolver/stratfinder/  Strat Finder v1 (the product form of the substitu
                            feasibility, per-variant solve time and canary status;
                            PKC_STRATFIND_FILE=<path> to run, PKC_STRATFIND_MS (default 2000);
                            output lands in the test-results XML system-out
+  StratVariantSolveScreen.java  headless single-variant solves on any save: enumerates the sweep,
+                           picks labels from PKC_STRATSOLVE_LABELS (comma-separated), solves each
+                           via HeadlessSolve and prints feasibility plus every unmet outcome;
+                           PKC_STRATSOLVE_FILE=<path> to run, PKC_STRATSOLVE_MS (default 30000),
+                           PKC_STRATSOLVE_EFFORT overrides effort (CUSTOM bumps restarts/maxEval
+                           and turns on exhaustive ILS); gradle reuses stale results unless the
+                           filter or code changed, pass --rerun when only PKC_* env changed
 resources/
   problems/<check>/        one folder per check; holds captures or .expect.json sidecars
   captures/                the shared capture library (one copy of each saved jump)
