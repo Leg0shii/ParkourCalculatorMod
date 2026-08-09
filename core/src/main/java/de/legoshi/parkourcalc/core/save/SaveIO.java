@@ -11,6 +11,7 @@ import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.anglesolver.Constraint;
+import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.anglesolver.Potion;
 import de.legoshi.parkourcalc.core.anglesolver.PotionDose;
 import de.legoshi.parkourcalc.core.anglesolver.Slipperiness;
@@ -24,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.TimeZone;
 
 /** Pure save/load logic; Gson stays within the 2.2.4 subset (MC 1.8.9 ships it). */
@@ -36,14 +38,21 @@ public final class SaveIO {
         }
 
         SaveFile file = buildFile(store, inputData, startPos, startVel, startYaw, startPitch, angleSolver, states, fullDebug);
-        String json = new GsonBuilder().setPrettyPrinting().create().toJson(file);
 
         try {
-            store.write(name, json);
+            store.write(name, saveJson(file));
         } catch (IOException e) {
             return Result.failure("Failed to write save: " + e.getMessage());
         }
         return Result.success(name);
+    }
+
+    public static SaveFile buildSaveFile(FileSystemSaveStore store, InputData inputData, Vec3dCore startPos, Vec3dCore startVel, float startYaw, float startPitch, AngleSolverState angleSolver, List<TickState> states, boolean fullDebug) {
+        return buildFile(store, inputData, startPos, startVel, startYaw, startPitch, angleSolver, states, fullDebug);
+    }
+
+    public static String saveJson(SaveFile file) {
+        return new GsonBuilder().setPrettyPrinting().create().toJson(file);
     }
 
     public static String snapshotJson(FileSystemSaveStore store, InputData inputData, Vec3dCore startPos,
@@ -52,6 +61,55 @@ public final class SaveIO {
         SaveFile file = buildFile(store, inputData, startPos, startVel, startYaw, startPitch, angleSolver, states, false);
         return new GsonBuilder().setPrettyPrinting().create().toJson(file);
     }
+
+    public static String undoSnapshotJson(InputData inputData, Vec3dCore startPos, Vec3dCore startVel,
+                                          float startYaw, float startPitch, AngleSolverState angleSolver) {
+        return undoJson(buildUndoSnapshot(inputData, startPos, startVel, startYaw, startPitch, angleSolver));
+    }
+
+    public static SaveFile buildUndoSnapshot(InputData inputData, Vec3dCore startPos, Vec3dCore startVel,
+                                             float startYaw, float startPitch, AngleSolverState angleSolver) {
+        SaveFile file = new SaveFile();
+        file.version = SaveFile.FORMAT_VERSION;
+        SaveFile.Start start = new SaveFile.Start();
+        start.pos = new double[] { startPos.x, startPos.y, startPos.z };
+        start.vel = new double[] { startVel.x, startVel.y, startVel.z };
+        start.yaw = startYaw;
+        start.pitch = startPitch;
+        file.start = start;
+        List<SaveFile.Row> rows = new ArrayList<>(inputData.size());
+        for (InputRow row : inputData.getRows()) {
+            rows.add(toSaveRow(row));
+        }
+        file.rows = rows;
+        file.angleSolver = toSaveAngleSolver(angleSolver);
+        return file;
+    }
+
+    public static String undoJson(SaveFile file) {
+        return COMPACT_GSON.toJson(file);
+    }
+
+    public static String undoSignature(InputData inputData, Vec3dCore startPos, Vec3dCore startVel,
+                                       float startYaw, float startPitch, AngleSolverState angleSolver) {
+        List<InputRow> rows = inputData.getRows();
+        long h = 1125899906842597L;
+        for (int i = 0; i < rows.size(); i++) {
+            InputRow row = rows.get(i);
+            h = h * 31 + row.getId();
+            h = h * 31 + row.getModCount();
+        }
+        StringBuilder sb = new StringBuilder(160);
+        sb.append(rows.size()).append('#').append(h)
+                .append('#').append(startPos.x).append(',').append(startPos.y).append(',').append(startPos.z)
+                .append('#').append(startVel.x).append(',').append(startVel.y).append(',').append(startVel.z)
+                .append('#').append(startYaw).append('#').append(startPitch).append('#');
+        SaveFile.AngleSolver solver = toSaveAngleSolver(angleSolver);
+        if (solver != null) sb.append(COMPACT_GSON.toJson(solver));
+        return sb.toString();
+    }
+
+    private static final Gson COMPACT_GSON = new Gson();
 
     public static Result<SaveFile> load(FileSystemSaveStore store, String rawName) {
         String name = sanitizeRelative(rawName);
@@ -143,6 +201,8 @@ public final class SaveIO {
         }
 
         state.setResult(toResult(a.result));
+        state.setApplyDeviation(a.deviation,
+                parseEnum(AngleSolverState.DeviationKind.class, a.deviationKind, AngleSolverState.DeviationKind.OTHER));
     }
 
     public static Vec3dCore posOf(SaveFile.Start s) {
@@ -290,6 +350,20 @@ public final class SaveIO {
         return r;
     }
 
+    public static boolean rowMatches(SaveFile.Row r, InputRow row) {
+        if (r == null) return false;
+        for (InputRow.Key k : InputRow.Key.values()) {
+            boolean saved = r.keys != null && r.keys.contains(k.name());
+            if (saved != row.isKeyActive(k)) return false;
+        }
+        return Objects.equals(r.yaw, row.getYaw())
+                && r.yawLocked == row.isYawLocked()
+                && Objects.equals(r.pitch, row.getPitch())
+                && r.pitchLocked == row.isPitchLocked()
+                && r.speedAmplifier == row.getSpeedAmplifier()
+                && r.jumpBoostAmplifier == row.getJumpBoostAmplifier();
+    }
+
     private static InputRow toInputRow(SaveFile.Row r) {
         InputRow row = new InputRow();
         if (r != null && r.keys != null) {
@@ -334,6 +408,7 @@ public final class SaveIO {
         for (Integer tick : s.populatedTicks()) {
             TickConstraints tc = s.tickConstraintsOrNull(tick);
             if (tc == null) continue;
+            if (tc.getConstraints().isEmpty() && tc.getOverride().isEmpty()) continue;
             SaveFile.Tick t = new SaveFile.Tick();
             t.tick = tick;
             for (Constraint c : tc.getConstraints()) {
@@ -347,6 +422,8 @@ public final class SaveIO {
         for (BlockSelection b : s.getCollisionBlocks()) a.selectedBlocks.add(toSaveBlock(b));
         for (BlockSelection b : s.getLandBlocks()) a.selectedBlocks.add(toSaveBlock(b));
         a.result = toSaveResult(s.getResult());
+        a.deviation = s.getApplyDeviation();
+        a.deviationKind = s.getApplyDeviationKind() != null ? s.getApplyDeviationKind().name() : null;
         return a;
     }
 
@@ -469,6 +546,8 @@ public final class SaveIO {
         out.inputs = ov.overridesInputs() ? ov.getInputs().name() : null;
         out.sprint = ov.overridesSprint() ? ov.getSprint().name() : null;
         out.slipperiness = ov.overridesSlipperiness() ? ov.getSlipperiness().name() : null;
+        out.medium = ov.overridesMedium() ? ov.getMedium().name() : null;
+        out.soulsandCells = ov.getMedium() == Medium.SOULSAND && ov.getSoulsandCells() > 1 ? ov.getSoulsandCells() : null;
         for (PotionDose d : ov.getAdded()) {
             out.added.add(toSaveDose(d));
         }
@@ -486,6 +565,10 @@ public final class SaveIO {
         if (sprint != null) dst.setSprint(sprint);
         Slipperiness slip = parseEnumOrNull(Slipperiness.class, src.slipperiness);
         if (slip != null) dst.setSlipperiness(slip);
+        else if (src.slipperiness != null) applyFusedSlipperiness(src.slipperiness, dst);
+        Medium medium = parseEnumOrNull(Medium.class, src.medium);
+        if (medium != null && medium != Medium.NONE) dst.setMedium(medium);
+        if (src.soulsandCells != null && dst.getMedium() == Medium.SOULSAND) dst.setSoulsandCells(src.soulsandCells);
         if (src.added != null) {
             for (SaveFile.Dose d : src.added) {
                 PotionDose dose = toDose(d);
@@ -497,6 +580,49 @@ public final class SaveIO {
                 Potion p = parseEnumOrNull(Potion.class, name);
                 if (p != null) dst.getRemoved().add(p);
             }
+        }
+    }
+
+    private static void applyFusedSlipperiness(String name, StateOverride dst) {
+        switch (name) {
+            case "LADDER":
+                dst.setSlipperiness(Slipperiness.AIR);
+                dst.setMedium(Medium.LADDER);
+                break;
+            case "SOULSAND":
+                dst.setSlipperiness(Slipperiness.DEFAULT);
+                dst.setMedium(Medium.SOULSAND);
+                break;
+            case "SOULSAND_ICE":
+                dst.setSlipperiness(Slipperiness.ICE);
+                dst.setMedium(Medium.SOULSAND);
+                break;
+            case "WATER":
+                dst.setSlipperiness(Slipperiness.AIR);
+                dst.setMedium(Medium.WATER);
+                break;
+            case "WATER_SHALLOW":
+                dst.setSlipperiness(Slipperiness.DEFAULT);
+                dst.setMedium(Medium.WATER);
+                break;
+            case "LAVA":
+                dst.setSlipperiness(Slipperiness.AIR);
+                dst.setMedium(Medium.LAVA);
+                break;
+            case "LAVA_SHALLOW":
+                dst.setSlipperiness(Slipperiness.DEFAULT);
+                dst.setMedium(Medium.LAVA);
+                break;
+            case "COBWEB":
+                dst.setSlipperiness(Slipperiness.DEFAULT);
+                dst.setMedium(Medium.COBWEB);
+                break;
+            case "COBWEB_AIR":
+                dst.setSlipperiness(Slipperiness.AIR);
+                dst.setMedium(Medium.COBWEB);
+                break;
+            default:
+                break;
         }
     }
 

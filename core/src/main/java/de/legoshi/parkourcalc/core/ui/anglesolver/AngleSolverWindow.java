@@ -19,7 +19,6 @@ import de.legoshi.parkourcalc.core.save.SaveInfo;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.Fonts;
-import de.legoshi.parkourcalc.core.ui.theme.Modal;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImDrawList;
@@ -43,14 +42,13 @@ import java.util.function.IntSupplier;
 
 /**
  * The floating Angle Solver window: whole-problem inputs (start / goal tick, axis, goal),
- * the default per-tick state, the Solve / Apply actions, and the result panel.
+ * the default per-tick state, the Solve action, and the result panel.
  * Toggled from View > Angle Solver.
  */
 public final class AngleSolverWindow implements RenderInterface {
 
     private static final String WINDOW_ID = "###angle_solver";
     private static final String TITLE = "Angle Solver";
-    private static final String APPLY_POPUP_ID = "###angle_solver_apply";
 
     private static final String[] AXES = {"X", "Z"};
     private static final String[] GOALS = {"MAX", "MIN"};
@@ -100,6 +98,7 @@ public final class AngleSolverWindow implements RenderInterface {
     private final String[] slipItems;
     private String[] presetNames;
     private String presetError;
+    private Runnable applySurfaceState = () -> { };
 
     private boolean yawsExpanded;
     private boolean detailsExpanded;
@@ -139,12 +138,6 @@ public final class AngleSolverWindow implements RenderInterface {
             settings.viewVelocityMap = velocityMap.isWindowOpen();
         }
         if (!settings.viewAngleSolver) return;
-        boolean wasSolving = engine.isSolving();
-        engine.poll(); // publish a finished background solve on the main thread
-        if (wasSolving && !engine.isSolving() && settings.autoApplySolve) {
-            SolveResult done = state.getResult();
-            if (done != null && done.isSuccess() && !done.getYaws().isEmpty()) engine.apply();
-        }
         int rowCount = Math.max(1, rowCountSupplier.getAsInt());
         state.clampTicks(rowCount);
 
@@ -248,12 +241,10 @@ public final class AngleSolverWindow implements RenderInterface {
         trackObjectiveImprovement(panel);
         if (panel != null) {
             renderResultPanel(io, panel, scale);
-            if (!engine.isSolving()) autoApplyDisabledWarning(panel);
             ThemeManager.sectionSpacing();
         }
 
         renderActions();
-        renderApplyModal();
     }
 
     private void longSpanWarning(int span, float scale) {
@@ -276,14 +267,6 @@ public final class AngleSolverWindow implements RenderInterface {
         float bw = Math.max(1f, r * 0.18f);
         dl.addRectFilled(cx - bw * 0.5f, cy - r * 0.1f, cx + bw * 0.5f, cy + r * 0.55f, col);
         TooltipUtil.onHover(LONG_SPAN_TIP);
-    }
-
-    private void autoApplyDisabledWarning(SolveResult r) {
-        if (settings.autoApplySolve) return;
-        if (!r.isSuccess() || r.getYaws().isEmpty()) return;
-        ThemeManager.pushTextColor(ThemeManager.warningColor());
-        ImGui.text("You have auto apply disabled.");
-        ThemeManager.popTextColor();
     }
 
     /** Collapsible section header (triangle + title); returns the new expanded state. */
@@ -692,26 +675,28 @@ public final class AngleSolverWindow implements RenderInterface {
         return changed;
     }
 
+    public void setApplySurfaceState(Runnable action) {
+        applySurfaceState = action != null ? action : () -> { };
+    }
+
     private void renderActions() {
         if (engine.isSolving()) {
             renderSolvingIndicator();
             return;
         }
+        if (Controls.secondaryButton("Apply state")) {
+            applySurfaceState.run();
+        }
+        if (ImGui.isItemHovered()) {
+            ImGui.setTooltip("Capture each tick's surface state (ground + medium) from the simulation into the overrides, for the solve range (H).");
+        }
+        ImGui.sameLine();
         if (Controls.secondaryButton("Solve")) {
             yawsExpanded = false;
             detailsExpanded = false;
             solverExpanded = false;
             outcomesExpanded = true;
             engine.solve();
-        }
-        ImGui.sameLine();
-        SolveResult r = state.getResult();
-        // Only a feasible solve can be applied: an unmet constraint is a wall, so applying it always collides.
-        boolean hasSolution = r != null && r.isSuccess() && !r.getYaws().isEmpty();
-        if (hasSolution) {
-            if (Controls.secondaryButton("Apply")) ImGui.openPopup(APPLY_POPUP_ID);
-        } else {
-            Controls.disabledButton("Apply");
         }
     }
 
@@ -998,26 +983,4 @@ public final class AngleSolverWindow implements RenderInterface {
         ImGui.text(s);
     }
 
-    private void renderApplyModal() {
-        if (!Modal.begin("Overwrite inputs?", APPLY_POPUP_ID)) return;
-        SolveResult r = state.getResult();
-        int from = r != null ? Math.min(r.getStartTick(), r.getLandingTick()) : 1;
-        int to = r != null ? Math.max(r.getStartTick(), r.getLandingTick()) : 1;
-
-        ThemeManager.pushTextColor(ThemeManager.warningColor());
-        ImGui.text("Applying overwrites existing inputs.");
-        ThemeManager.popTextColor();
-        ImGui.textWrapped("The solved yaws will replace the inputs on ticks T" + from + " to T" + to
-                + ". Save a copy first if you want to keep the current inputs.");
-
-        Modal.footerSeparator();
-        if (Controls.secondaryButton("Save as Copy")) ImGui.closeCurrentPopup();
-        ImGui.sameLine();
-        Controls.cursorToRightAlignedButton("Apply");
-        if (Controls.secondaryButton("Apply")) {
-            engine.apply();
-            ImGui.closeCurrentPopup();
-        }
-        Modal.end();
-    }
 }

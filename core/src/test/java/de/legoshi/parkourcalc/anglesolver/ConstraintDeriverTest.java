@@ -72,6 +72,35 @@ public class ConstraintDeriverTest {
     }
 
     @Test
+    public void wallSnapsToTheCollisionFaceWhenTheHitLandsOffTheBoxes() {
+        AABB honey = box(5.0625, 64.0, 5.0625, 5.9375, 64.9375, 5.9375);
+        Vec3dCore outlineHit = new Vec3dCore(6.0, 64.97, 5.5);
+        Constraint c = ConstraintDeriver.deriveWall(Face.POS_X, Arrays.asList(honey), outlineHit, false);
+        assertEquals("hit above the inset collision still snaps to the collision face, not the outline",
+                5.9375 + HALF, c.getValue(), EPS);
+    }
+
+    @Test
+    public void wallPicksTheNearestBoxWhenNoneSpansTheHit() {
+        AABB bottomPlate = box(5.0, 64.0, 5.0, 6.0, 64.2, 6.0);
+        AABB insetTopPlate = box(5.0, 64.9, 5.0, 5.8, 65.0, 6.0);
+        Vec3dCore hit = new Vec3dCore(6.0, 64.85, 5.5);
+        Constraint c = ConstraintDeriver.deriveWall(Face.POS_X, Arrays.asList(bottomPlate, insetTopPlate), hit, false);
+        assertEquals("the nearest box wins over a farther box with a more extreme face",
+                5.8 + HALF, c.getValue(), EPS);
+    }
+
+    @Test
+    public void wallKeepsTheOutermostFaceAmongBoxesSpanningTheHit() {
+        AABB backPanel = box(5.8125, 64.0, 5.0, 6.0, 65.0, 6.0);
+        AABB topLip = box(5.6875, 64.75, 5.0, 5.8125, 65.0, 6.0);
+        Vec3dCore hit = new Vec3dCore(5.6875, 64.8, 5.5);
+        Constraint c = ConstraintDeriver.deriveWall(Face.NEG_X, Arrays.asList(backPanel, topLip), hit, false);
+        assertEquals("the lip in front of the panel sets the wall plane at the clicked height",
+                5.6875 - HALF, c.getValue(), EPS);
+    }
+
+    @Test
     public void wallReturnsNullForTopFace() {
         assertNull(ConstraintDeriver.deriveWall(Face.POS_Y, Collections.<AABB>emptyList(), new Vec3dCore(5.5, 65.0, 5.5), false));
     }
@@ -128,6 +157,40 @@ public class ConstraintDeriverTest {
         double[] r = ConstraintDeriver.deriveFootprint(cube(5, 64, 8), 5.5, 8.5, obstacles, false);
         assertEquals(6 + HALF, r[1], EPS);
         assertEquals(9 + HALF, r[3], EPS);
+    }
+
+    @Test
+    public void ownCellRiserAboveTheStandSurfaceClipsTheFootprint() {
+        AABB slab = box(5.0, 64.0, 8.0, 6.0, 64.5, 9.0);
+        AABB riser = box(5.5, 64.5, 8.0, 6.0, 65.0, 9.0);
+        double[] r = ConstraintDeriver.deriveFootprint(slab, 5.25, 8.5, Arrays.asList(riser), false);
+        assertEquals("the stair riser in the same cell blocks the body above the lower step", 5.5 - HALF, r[1], EPS);
+        assertEquals(5 - HALF, r[0], EPS);
+        assertEquals(8 - HALF, r[2], EPS);
+        assertEquals(9 + HALF, r[3], EPS);
+    }
+
+    @Test
+    public void coplanarCollinearBoxesMergeIntoOneSupport() {
+        AABB topLip = box(5.0, 64.75, 8.6875, 6.0, 65.0, 8.8125);
+        AABB backPanel = box(5.0, 64.0, 8.8125, 6.0, 65.0, 9.0);
+        AABB bottomLip = box(5.0, 64.0, 8.6875, 6.0, 64.25, 8.8125);
+        AABB merged = ConstraintDeriver.mergeCoplanarSupport(topLip, Arrays.asList(topLip, backPanel, bottomLip));
+        assertEquals(8.6875, merged.min.z, 0.0);
+        assertEquals("the flush back panel extends the standing surface", 9.0, merged.max.z, 0.0);
+        assertEquals(5.0, merged.min.x, 0.0);
+        assertEquals(6.0, merged.max.x, 0.0);
+        assertEquals(65.0, merged.max.y, 0.0);
+    }
+
+    @Test
+    public void ringWallsWithDifferentSpansStayUnmerged() {
+        AABB north = box(5.0, 64.0, 8.0, 6.0, 65.0, 8.125);
+        AABB east = box(5.875, 64.0, 8.0, 6.0, 65.0, 9.0);
+        AABB merged = ConstraintDeriver.mergeCoplanarSupport(north, Arrays.asList(north, east));
+        assertEquals("a rim wall keeps only the clicked strip", 8.125, merged.max.z, 0.0);
+        assertEquals(5.0, merged.min.x, 0.0);
+        assertEquals(6.0, merged.max.x, 0.0);
     }
 
     @Test

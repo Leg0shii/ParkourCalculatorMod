@@ -38,7 +38,7 @@ public interface MinecraftAccess {
         return false;
     }
 
-    default boolean isLadder(int x, int y, int z) {
+    default boolean isClimbable(int x, int y, int z) {
         return false;
     }
 
@@ -88,6 +88,14 @@ public interface MinecraftAccess {
     /** Whether the quick-save chord (Ctrl+S) is held right now. Loaders read their own raw keyboard
      *  (ImGui 1.86 exposes no portable letter-key ids), core edge-detects and saves (gh-107). */
     default boolean isSaveChordDown() {
+        return false;
+    }
+
+    default boolean isUndoChordDown() {
+        return false;
+    }
+
+    default boolean isRedoChordDown() {
         return false;
     }
 

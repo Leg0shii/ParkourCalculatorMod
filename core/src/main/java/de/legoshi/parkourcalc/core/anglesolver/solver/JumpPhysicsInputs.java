@@ -40,6 +40,12 @@ public final class JumpPhysicsInputs {
      *  default ground/air split. null = all default. */
     public double[] slipPerTick = null;
 
+    public SurfaceKind[] surfacePerTick = null;
+
+    public int[] soulsandCellsPerTick = null;
+
+    public boolean[] sneakPerTick = null;
+
     /** Per-tick yaw lock state (unlocked = float delta the game accumulates; locked = absolute facing). */
     public boolean[] yawLockedPerTick = null;
 
@@ -54,6 +60,8 @@ public final class JumpPhysicsInputs {
      *  This seeds that lag for tick 0. null = no seed: tick 0 falls back to its own sprint, preserving the
      *  single-tick model callers' behavior. */
     public Boolean incomingSprint = null;
+
+    public boolean liveAirSprintFactor = false;
 
     /** Speed-effect amplifier in force on the tick before this window's first tick. The ground attribute
      *  (getAIMoveSpeed = the movementSpeed snapshot) carries both the sprint and the speed-effect modifier,
@@ -87,9 +95,13 @@ public final class JumpPhysicsInputs {
         c.strafePerTick = strafePerTick;
         c.speedAmplifier = speedAmplifier;
         c.slipPerTick = slipPerTick;
+        c.surfacePerTick = surfacePerTick;
+        c.soulsandCellsPerTick = soulsandCellsPerTick;
+        c.sneakPerTick = sneakPerTick;
         c.yawLockedPerTick = yawLockedPerTick;
         c.sprintPerTick = sprintPerTick;
         c.incomingSprint = incomingSprint;
+        c.liveAirSprintFactor = liveAirSprintFactor;
         c.incomingAmp = incomingAmp;
         c.forwardInputPerTick = forwardInputPerTick;
         c.strafeInputPerTick = strafeInputPerTick;
@@ -132,6 +144,10 @@ public final class JumpPhysicsInputs {
         return sprintAt(tick - 1);
     }
 
+    public boolean airFactorSprintAt(int tick) {
+        return liveAirSprintFactor ? sprintAt(tick) : factorSprintAt(tick);
+    }
+
     /** Speed amplifier that drives this tick's ground movement factor, lagged one tick like the sprint
      *  factor (same snapshotted attribute). {@link #incomingAmp} seeds the pre-window tick; a null seed
      *  falls back to this tick's own amplifier. */
@@ -151,6 +167,21 @@ public final class JumpPhysicsInputs {
     public double slipAt(int tick) {
         if (slipPerTick == null || tick < 0 || tick >= slipPerTick.length) return Double.NaN;
         return slipPerTick[tick];
+    }
+
+    public SurfaceKind surfaceAt(int tick) {
+        if (surfacePerTick == null || tick < 0 || tick >= surfacePerTick.length) return SurfaceKind.NORMAL;
+        SurfaceKind kind = surfacePerTick[tick];
+        return kind == null ? SurfaceKind.NORMAL : kind;
+    }
+
+    public int soulsandCellsAt(int tick) {
+        if (soulsandCellsPerTick == null || tick < 0 || tick >= soulsandCellsPerTick.length) return 1;
+        return Math.max(1, soulsandCellsPerTick[tick]);
+    }
+
+    public boolean sneakAt(int tick) {
+        return sneakPerTick != null && tick >= 0 && tick < sneakPerTick.length && sneakPerTick[tick];
     }
 
     /** Exact float32 facings the game runs: mirrors Apply's float deltas + the sim's float accumulation,

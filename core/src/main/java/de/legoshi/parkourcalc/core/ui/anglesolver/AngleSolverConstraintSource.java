@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.core.ui.anglesolver;
 
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.Constraint;
+import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
 import de.legoshi.parkourcalc.core.anglesolver.TickConstraints;
 import de.legoshi.parkourcalc.core.render.ConstraintBoxSource;
 import de.legoshi.parkourcalc.core.render.ConstraintPlate;
@@ -83,9 +84,10 @@ public final class AngleSolverConstraintSource implements ConstraintBoxSource {
         int zIdx = firstBoundedRangeIndex(all, drawable, Constraint.Field.Z);
         boolean merged = xIdx >= 0 && zIdx >= 0;
 
+        boolean solverUnmet = solverUnmetTicks().contains(tickIndex);
         List<ConstraintPlate> out = new ArrayList<>();
         if (merged) {
-            out.add(tagged(ConstraintShapes.pad(resolved[xIdx], resolved[zIdx], foot, style, tickIndex, new int[]{xIdx, zIdx})));
+            out.add(tagged(ConstraintShapes.pad(resolved[xIdx], resolved[zIdx], foot, style, tickIndex, new int[]{xIdx, zIdx}), solverUnmet));
         }
         for (int idx : drawable) {
             if (merged && (idx == xIdx || idx == zIdx)) continue;
@@ -99,9 +101,14 @@ public final class AngleSolverConstraintSource implements ConstraintBoxSource {
             } else {
                 plate = ConstraintShapes.plane(c, foot, style, tickIndex, one);
             }
-            out.add(tagged(plate));
+            out.add(tagged(plate, solverUnmet));
         }
         return out;
+    }
+
+    private java.util.Set<Integer> solverUnmetTicks() {
+        SolveResult r = state.getResult();
+        return r == null ? java.util.Collections.emptySet() : r.getUnmetTicks();
     }
 
     private Constraint resolveRelative(Constraint c) {
@@ -112,12 +119,20 @@ public final class AngleSolverConstraintSource implements ConstraintBoxSource {
         Constraint r = c.copy();
         r.setRefTick(null);
         r.setValue(r.getValue() + base);
-        r.setLo(r.getLo() + base);
-        r.setHi(r.getHi() + base);
+        double lo = r.getLo() + base;
+        double hi = r.getHi() + base;
+        r.setLo(lo);
+        r.setHi(hi);
         return r;
     }
 
-    private ConstraintPlate tagged(ConstraintPlate plate) {
+    private ConstraintPlate tagged(ConstraintPlate plate, boolean solverUnmet) {
+        if (solverUnmet && plate.satisfied) {
+            ConstraintPlate unmet = new ConstraintPlate(plate.sense, false, plate.front, plate.back,
+                    plate.tick, plate.constraintIndices, plate.pickable);
+            unmet.highlighted = plate.highlighted;
+            plate = unmet;
+        }
         for (int idx : plate.constraintIndices) {
             if (constraintSelection.highlights(plate.tick, idx, selection)) {
                 plate.highlighted = true;
@@ -166,6 +181,7 @@ public final class AngleSolverConstraintSource implements ConstraintBoxSource {
             if (anyDrawable) h = 31 * h + (selection.isSelected(tickKey + 1) ? 1 : 0);
         }
         h = 31 * h + Long.hashCode(constraintSelection.revision());
+        h = 31 * h + solverUnmetTicks().hashCode();
         return h;
     }
 }

@@ -10,6 +10,7 @@ import de.legoshi.parkourcalc.core.ui.Settings;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.IntSupplier;
 
 /**
  * Loader-agnostic per-frame inputs for the cached geometry (hash, selection, bake emitters, patch spec).
@@ -21,8 +22,12 @@ import java.util.function.Consumer;
  * one box; other constraints add a front box and a back box), so
  * {@link #constraintFaceVerts}/{@link #constraintLineVerts} are counted by replaying the exact constraint
  * emit through a {@link CountingBoxRenderer} ({@code BoxController.constraintFaceVertexCount}/
- * {@code constraintLineVertexCount}). Each loader draws the region as the trailing slice
- * {@code [faceTotal - constraintFaceVerts, faceTotal)} (and the line equivalent); the region is
+ * {@code constraintLineVertexCount}). Hit-distance reach lines bake just before the constraint region in
+ * the lines buffer and are tracked separately as {@link #reachLineVerts}, so a count-stable constraint
+ * region can be re-emitted in place ({@link #constraintFaceEmitter}/{@link #constraintLineEmitter})
+ * while reach lines, whose re-emit would raycast the world per tick, still force a rebuild. Each loader
+ * draws the trailing slice {@code [faceTotal - constraintFaceVerts, faceTotal)} (lines:
+ * {@code [lineTotal - reachLineVerts - constraintLineVerts, lineTotal)}); the region is
  * camera-run-independent, so it is drawn once, not per run.
  */
 public final class PathRenderPlan {
@@ -57,6 +62,23 @@ public final class PathRenderPlan {
         return reachProbe;
     }
 
+    private static volatile IntSupplier deviationTickSource = () -> -1;
+
+    public static void setDeviationTickSource(IntSupplier source) {
+        deviationTickSource = source != null ? source : () -> -1;
+    }
+
+    private static volatile IntSupplier solverStartTickSource = () -> -1;
+    private static volatile IntSupplier solverGoalTickSource = () -> -1;
+
+    public static void setSolverStartTickSource(IntSupplier source) {
+        solverStartTickSource = source != null ? source : () -> -1;
+    }
+
+    public static void setSolverGoalTickSource(IntSupplier source) {
+        solverGoalTickSource = source != null ? source : () -> -1;
+    }
+
     private static ConstraintBoxSource countedSource;
     private static ConstraintBoxSource countedLiveSource;
     private static long countedRevision = Long.MIN_VALUE;
@@ -69,24 +91,40 @@ public final class PathRenderPlan {
     public final Set<Integer> selection;
     public final Consumer<BoxRenderer> faceEmitter;
     public final Consumer<BoxRenderer> lineEmitter;
+    public final Consumer<BoxRenderer> constraintFaceEmitter;
+    public final Consumer<BoxRenderer> constraintLineEmitter;
     public final SelectionPatchSpec patch;
     public final int constraintFaceVerts;
     public final int constraintLineVerts;
+    public final int reachLineVerts;
 
-    private PathRenderPlan(int structuralHash, Set<Integer> selection, Consumer<BoxRenderer> faceEmitter, Consumer<BoxRenderer> lineEmitter, SelectionPatchSpec patch, int constraintFaceVerts, int constraintLineVerts) {
+    private PathRenderPlan(int structuralHash, Set<Integer> selection, Consumer<BoxRenderer> faceEmitter, Consumer<BoxRenderer> lineEmitter,
+                           Consumer<BoxRenderer> constraintFaceEmitter, Consumer<BoxRenderer> constraintLineEmitter,
+                           SelectionPatchSpec patch, int constraintFaceVerts, int constraintLineVerts, int reachLineVerts) {
         this.structuralHash = structuralHash;
         this.selection = selection;
         this.faceEmitter = faceEmitter;
         this.lineEmitter = lineEmitter;
+        this.constraintFaceEmitter = constraintFaceEmitter;
+        this.constraintLineEmitter = constraintLineEmitter;
         this.patch = patch;
         this.constraintFaceVerts = constraintFaceVerts;
         this.constraintLineVerts = constraintLineVerts;
+        this.reachLineVerts = reachLineVerts;
     }
 
     public static PathRenderPlan build(BoxController boxController, Settings settings, SelectionManager selection) {
         Set<Integer> selectedBoxes = selection.getSelectedBoxes();
-        BoxColorPicker face = (i, s) -> BoxStyle.tickFaceArgb(settings, s, selectedBoxes.contains(i));
-        BoxColorPicker line = (i, s) -> BoxStyle.tickLineArgb(settings, s, selectedBoxes.contains(i));
+        int deviationTick = deviationTickSource.getAsInt();
+        int rawSolverStart = solverStartTickSource.getAsInt();
+        int rawSolverGoal = solverGoalTickSource.getAsInt();
+        boolean solverRangeValid = rawSolverGoal > rawSolverStart && rawSolverStart >= 0;
+        int solverStartTick = solverRangeValid ? rawSolverStart : -1;
+        int solverGoalTick = solverRangeValid ? rawSolverGoal : -1;
+        BoxColorPicker face = (i, s) -> BoxStyle.tickFaceArgb(settings, s, selectedBoxes.contains(i), i == deviationTick,
+                i == solverStartTick, i == solverGoalTick);
+        BoxColorPicker line = (i, s) -> BoxStyle.tickLineArgb(settings, s, selectedBoxes.contains(i), i == deviationTick,
+                i == solverStartTick, i == solverGoalTick);
         BoxColorPicker hitbox = (i, s) -> BoxStyle.hitboxLineArgb(settings, selectedBoxes.contains(i));
 
         boolean drawYawArrows = settings.showYawArrows && settings.arrowMode == Settings.ARROW_MODE_YAW;
@@ -103,6 +141,8 @@ public final class PathRenderPlan {
         // into the same buffers without disturbing the per-box offsets selection patching depends on.
         ConstraintBoxSource source = constraintSource;
         ConstraintBoxSource live = liveSource;
+        source.beginFrame();
+        live.beginFrame();
         boolean drawConstraints = settings.showConstraints && source != ConstraintBoxSource.NONE;
         boolean drawLive = live != ConstraintBoxSource.NONE;
         ConstraintPalette palette = new ConstraintPalette(
@@ -131,6 +171,16 @@ public final class PathRenderPlan {
             if (settings.showSubtick) boxController.renderPath(lines, BoxStyle.subtickPathArgb(settings), 0, 0, 0, ALL);
             if (drawReach) boxController.renderHitDistanceLines(lines, probe,
                     BoxStyle.hitDistanceMissArgb(settings), BoxStyle.hitDistanceHitArgb(settings));
+            if (drawConstraints) boxController.renderConstraints(lines, source, palette, true, 0, 0, 0, ALL);
+            if (drawLive) boxController.renderConstraints(lines, live, palette, true, 0, 0, 0, ALL);
+        };
+
+        Consumer<BoxRenderer> constraintFaceEmitter = faces -> {
+            if (drawConstraints) boxController.renderConstraints(faces, source, palette, false, 0, 0, 0, ALL);
+            if (drawLive) boxController.renderConstraints(faces, live, palette, false, 0, 0, 0, ALL);
+        };
+
+        Consumer<BoxRenderer> constraintLineEmitter = lines -> {
             if (drawConstraints) boxController.renderConstraints(lines, source, palette, true, 0, 0, 0, ALL);
             if (drawLive) boxController.renderConstraints(lines, live, palette, true, 0, 0, 0, ALL);
         };
@@ -168,15 +218,15 @@ public final class PathRenderPlan {
             constraintFaceVerts = countedFaceVerts;
             constraintLineVerts = countedLineVerts;
         }
-        return new PathRenderPlan(structuralHash(settings, constraintRevision, liveRevision),
-                selectedBoxes, faceEmitter, lineEmitter, patch,
-                constraintFaceVerts, constraintLineVerts + reachLineVerts);
+        return new PathRenderPlan(structuralHash(settings, constraintRevision, liveRevision, deviationTick, solverStartTick, solverGoalTick),
+                selectedBoxes, faceEmitter, lineEmitter, constraintFaceEmitter, constraintLineEmitter, patch,
+                constraintFaceVerts, constraintLineVerts, reachLineVerts);
     }
 
     /** Colors and overlay toggles, but NOT selection (which is patched in place). The constraint
      *  revision is mixed in so editing constraints (which leaves path positions untouched) still
      *  invalidates the cached buffers. */
-    private static int structuralHash(Settings settings, long constraintRevision, long liveRevision) {
+    private static int structuralHash(Settings settings, long constraintRevision, long liveRevision, int deviationTick, int solverStartTick, int solverGoalTick) {
         int h = 1;
         h = 31 * h + Arrays.hashCode(settings.tickDefault);
         h = 31 * h + Arrays.hashCode(settings.tickSelected);
@@ -184,6 +234,9 @@ public final class PathRenderPlan {
         h = 31 * h + Arrays.hashCode(settings.tickWall);
         h = 31 * h + Arrays.hashCode(settings.tickAir);
         h = 31 * h + Arrays.hashCode(settings.tickSneak);
+        h = 31 * h + Arrays.hashCode(settings.tickSolverStart);
+        h = 31 * h + Arrays.hashCode(settings.tickSolverGoal);
+        h = 31 * h + Arrays.hashCode(settings.tickDeviation);
         h = 31 * h + Arrays.hashCode(settings.hitboxDefault);
         h = 31 * h + Arrays.hashCode(settings.hitboxSelected);
         h = 31 * h + Arrays.hashCode(settings.yawArrow);
@@ -212,6 +265,9 @@ public final class PathRenderPlan {
         h = 31 * h + Float.hashCode(settings.constraintBackLength);
         h = 31 * h + Long.hashCode(constraintRevision);
         h = 31 * h + Long.hashCode(liveRevision);
+        h = 31 * h + deviationTick;
+        h = 31 * h + solverStartTick;
+        h = 31 * h + solverGoalTick;
         return h;
     }
 }

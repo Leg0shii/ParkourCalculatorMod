@@ -320,10 +320,14 @@ public final class AlmSnapStage {
         a.strafePerTick = b.strafePerTick;
         a.speedAmplifier = b.speedAmplifier;
         a.slipPerTick = b.slipPerTick;
+        a.surfacePerTick = b.surfacePerTick;
+        a.soulsandCellsPerTick = b.soulsandCellsPerTick;
+        a.sneakPerTick = b.sneakPerTick;
         a.yawLockedPerTick = b.yawLockedPerTick;
         a.sprintPerTick = b.sprintPerTick;
         a.incomingSprint = b.incomingSprint;
         a.incomingAmp = b.incomingAmp;
+        a.liveAirSprintFactor = b.liveAirSprintFactor;
         a.forwardInputPerTick = b.forwardInputPerTick;
         a.strafeInputPerTick = b.strafeInputPerTick;
         return new JumpSpec(a, spec.constraints, spec.objective);

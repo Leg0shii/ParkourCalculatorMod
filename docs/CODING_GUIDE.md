@@ -97,7 +97,7 @@ Rules:
 - **One interface per concern.** Do not lump everything the loader provides into one mega-interface.
 - **Defer the abstraction.** Do not add a port until some core code actually calls it. Speculative ports are dead weight.
 
-We use this manual pattern rather than Architectury's `@ExpectPlatform` because Architectury solves a different problem. It shares code between loaders on the *same* Minecraft version (for example Fabric and NeoForge on 1.21); our variation is across Minecraft *eras* (1.8.9, 1.12.2, 1.21.10), each with a single loader, where the APIs differ by generation (`Vec3` vs `Vec3d`, LWJGL 2 vs 3, whole render rewrites) and no unified API bridges them. Architectury's API and Loom also do not support 1.8.9 or 1.12.2 at all, and adopting Architectury Loom would displace Unimined, the toolchain those versions rely on. Revisit only if a second loader ever ships on the same MC version (for example NeoForge 1.21.10 beside Fabric 1.21.10).
+We use this manual pattern rather than Architectury's `@ExpectPlatform` because Architectury solves a different problem. It shares code between loaders on the *same* Minecraft version (for example Fabric and NeoForge on 1.21); our variation is across Minecraft *eras* (1.8.9, 1.12.2, 26.2), each with a single loader, where the APIs differ by generation (`Vec3` vs `Vec3d`, LWJGL 2 vs 3, whole render rewrites) and no unified API bridges them. Architectury's API and Loom also do not support 1.8.9 or 1.12.2 at all, and adopting Architectury Loom would displace Unimined, the toolchain those versions rely on. Revisit only if a second loader ever ships on the same MC version (for example NeoForge 26.2 beside Fabric 26.2).
 
 
 ## What we deliberately don't do

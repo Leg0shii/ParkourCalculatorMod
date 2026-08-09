@@ -2,8 +2,10 @@ package de.legoshi.parkourcalc.forge8.render;
 
 import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.ports.BoxRenderer;
+import de.legoshi.parkourcalc.core.render.PathRenderPlan;
 import de.legoshi.parkourcalc.core.render.PathVertexLayout;
 import de.legoshi.parkourcalc.core.render.SelectionPatchSpec;
+import de.legoshi.parkourcalc.core.render.TailPatchGate;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
@@ -49,40 +51,55 @@ public final class Forge8CachedBoxGeometry {
     private int lineTotal;
     private int constraintFaceVerts;
     private int constraintLineVerts;
+    private int reachLineVerts;
     private int lastBakeVertices;
     private Set<Integer> bakedSelection = new HashSet<Integer>();
 
-    public void ensureBuilt(BoxController boxController, int structuralHash, Set<Integer> selection, Consumer<BoxRenderer> faceEmitter, Consumer<BoxRenderer> lineEmitter, SelectionPatchSpec patch, int constraintFaceVerts, int constraintLineVerts) {
-        this.constraintFaceVerts = constraintFaceVerts;
-        this.constraintLineVerts = constraintLineVerts;
+    public void ensureBuilt(BoxController boxController, PathRenderPlan plan) {
         long rev = boxController.getGeometryRev();
-        if (built && rev == lastGeometryRev && structuralHash == lastStructuralHash) {
-            if (!selection.equals(bakedSelection)) {
-                patchSelection(boxController, selection, patch);
+        if (built && rev == lastGeometryRev && plan.structuralHash == lastStructuralHash) {
+            if (!plan.selection.equals(bakedSelection)) {
+                patchSelection(boxController, plan.selection, plan.patch);
             }
             return;
         }
         long buildStart = Perf.now();
-        if (built && structuralHash == lastStructuralHash && boxController.size() == boxCount
-                && hitboxEdges == 0 && !useSubtick && constraintFaceVerts == 0 && constraintLineVerts == 0) {
+        if (TailPatchGate.canPatch(built, plan.structuralHash == lastStructuralHash,
+                boxController.size() == boxCount, hitboxEdges, useSubtick, plan,
+                constraintFaceVerts, constraintLineVerts)) {
             int dirty = boxController.takeDirtyFrom(lastGeometryRev);
             if (dirty > 0) {
-                patchTail(boxController, Math.max(0, dirty - 1), patch);
+                patchTail(boxController, Math.max(0, dirty - 1), plan.patch);
+                patchConstraintRegion(plan);
                 lastGeometryRev = rev;
-                if (!selection.equals(bakedSelection)) {
-                    patchSelection(boxController, selection, patch);
+                if (!plan.selection.equals(bakedSelection)) {
+                    patchSelection(boxController, plan.selection, plan.patch);
                 }
                 Perf.stop("geomPatchTail", buildStart);
                 return;
             }
         }
-        rebuild(boxController, faceEmitter, lineEmitter, patch);
+        this.constraintFaceVerts = plan.constraintFaceVerts;
+        this.constraintLineVerts = plan.constraintLineVerts;
+        this.reachLineVerts = plan.reachLineVerts;
+        rebuild(boxController, plan.faceEmitter, plan.lineEmitter, plan.patch);
         boxController.takeDirtyFrom(rev);
         Perf.stop("geomRebuild", buildStart);
-        bakedSelection = new HashSet<Integer>(selection);
+        bakedSelection = new HashSet<Integer>(plan.selection);
         lastGeometryRev = rev;
-        lastStructuralHash = structuralHash;
+        lastStructuralHash = plan.structuralHash;
         built = true;
+    }
+
+    private void patchConstraintRegion(PathRenderPlan plan) {
+        if (constraintFaceVerts > 0) {
+            writeVerts(faceVbo, faceTotal - constraintFaceVerts, GL11.GL_TRIANGLES, BoxRenderer.Mode.FACES,
+                    constraintFaceVerts, plan.constraintFaceEmitter);
+        }
+        if (constraintLineVerts > 0) {
+            writeVerts(lineVbo, lineTotal - constraintLineVerts, GL11.GL_LINES, BoxRenderer.Mode.LINES,
+                    constraintLineVerts, plan.constraintLineEmitter);
+        }
     }
 
     private void patchTail(final BoxController boxController, final int from, final SelectionPatchSpec patch) {
@@ -241,8 +258,9 @@ public final class Forge8CachedBoxGeometry {
 
     public void drawLines(int[] runs) {
         if (lineVbo == null) return;
-        int constraintLineBase = lineTotal - constraintLineVerts;
-        boolean hasSubtick = lineMainTotal < constraintLineBase;
+        int trailingLineVerts = constraintLineVerts + reachLineVerts;
+        int trailingLineBase = lineTotal - trailingLineVerts;
+        boolean hasSubtick = lineMainTotal < trailingLineBase;
         beginArrays(lineVbo);
         for (int k = 0; k + 1 < runs.length; k += 2) {
             int a = runs[k];
@@ -252,8 +270,8 @@ public final class Forge8CachedBoxGeometry {
                 GL11.glDrawArrays(GL11.GL_LINES, lineMainTotal + subtickStarts[a], subtickStarts[b] - subtickStarts[a]);
             }
         }
-        if (constraintLineVerts > 0) {
-            GL11.glDrawArrays(GL11.GL_LINES, constraintLineBase, constraintLineVerts);
+        if (trailingLineVerts > 0) {
+            GL11.glDrawArrays(GL11.GL_LINES, trailingLineBase, trailingLineVerts);
         }
         endArrays(lineVbo);
     }

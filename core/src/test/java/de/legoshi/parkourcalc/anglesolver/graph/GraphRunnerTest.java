@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.anglesolver.graph;
 
+import de.legoshi.parkourcalc.SlowSolverTests;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Branch;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphEdge;
@@ -16,6 +17,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.NodeStatus;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeType;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamSpec;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
+import org.junit.experimental.categories.Category;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -29,6 +31,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+@Category(SlowSolverTests.class)
 public class GraphRunnerTest {
 
     private static GraphNode marker(String id, String typeId) {

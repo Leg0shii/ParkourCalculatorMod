@@ -48,10 +48,14 @@ public final class ConstraintDeriver {
     private static double faceFromBoxes(Constraint.Field field, int sign, List<AABB> boxes, Vec3dCore hitVec) {
         double fallback = (field == Constraint.Field.X) ? hitVec.x : hitVec.z;
         if (boxes == null || boxes.isEmpty()) return fallback;
+        double nearest = Double.POSITIVE_INFINITY;
+        for (AABB b : boxes) {
+            nearest = Math.min(nearest, tangentialGap(field, b, hitVec));
+        }
         boolean found = false;
         double best = 0;
         for (AABB b : boxes) {
-            if (!spansTangential(field, b, hitVec)) continue;
+            if (tangentialGap(field, b, hitVec) > nearest + SPAN_EPS) continue;
             double faceCoord;
             if (field == Constraint.Field.X) {
                 faceCoord = sign > 0 ? b.max.x : b.min.x;
@@ -68,12 +72,18 @@ public final class ConstraintDeriver {
         return found ? best : fallback;
     }
 
-    private static boolean spansTangential(Constraint.Field field, AABB b, Vec3dCore hitVec) {
-        boolean spansY = b.min.y <= hitVec.y + SPAN_EPS && b.max.y >= hitVec.y - SPAN_EPS;
-        if (field == Constraint.Field.X) {
-            return spansY && b.min.z <= hitVec.z + SPAN_EPS && b.max.z >= hitVec.z - SPAN_EPS;
-        }
-        return spansY && b.min.x <= hitVec.x + SPAN_EPS && b.max.x >= hitVec.x - SPAN_EPS;
+    private static double tangentialGap(Constraint.Field field, AABB b, Vec3dCore hitVec) {
+        double gapY = axisGap(hitVec.y, b.min.y, b.max.y);
+        double gapT = (field == Constraint.Field.X)
+                ? axisGap(hitVec.z, b.min.z, b.max.z)
+                : axisGap(hitVec.x, b.min.x, b.max.x);
+        return Math.max(gapY, gapT);
+    }
+
+    private static double axisGap(double v, double lo, double hi) {
+        if (v < lo) return lo - v;
+        if (v > hi) return v - hi;
+        return 0.0;
     }
 
     public static Constraint.Op opposite(Constraint.Op op) {
@@ -89,6 +99,37 @@ public final class ConstraintDeriver {
             default:
                 return op;
         }
+    }
+
+    public static AABB mergeCoplanarSupport(AABB seed, List<AABB> boxes) {
+        double top = seed.max.y;
+        double xLo = seed.min.x, xHi = seed.max.x;
+        double zLo = seed.min.z, zHi = seed.max.z;
+        double yLo = seed.min.y;
+        double bodyWidth = 2.0 * HALF;
+        boolean grew = true;
+        while (grew) {
+            grew = false;
+            for (AABB b : boxes) {
+                if (Math.abs(b.max.y - top) > EPS) continue;
+                boolean sameX = Math.abs(b.min.x - xLo) <= EPS && Math.abs(b.max.x - xHi) <= EPS;
+                boolean sameZ = Math.abs(b.min.z - zLo) <= EPS && Math.abs(b.max.z - zHi) <= EPS;
+                if (sameX && (b.min.z < zLo - EPS || b.max.z > zHi + EPS)
+                        && b.min.z - zHi < bodyWidth && zLo - b.max.z < bodyWidth) {
+                    zLo = Math.min(zLo, b.min.z);
+                    zHi = Math.max(zHi, b.max.z);
+                    yLo = Math.min(yLo, b.min.y);
+                    grew = true;
+                } else if (sameZ && (b.min.x < xLo - EPS || b.max.x > xHi + EPS)
+                        && b.min.x - xHi < bodyWidth && xLo - b.max.x < bodyWidth) {
+                    xLo = Math.min(xLo, b.min.x);
+                    xHi = Math.max(xHi, b.max.x);
+                    yLo = Math.min(yLo, b.min.y);
+                    grew = true;
+                }
+            }
+        }
+        return new AABB(new Vec3dCore(xLo, yLo, zLo), new Vec3dCore(xHi, top, zHi));
     }
 
     public static double[] deriveFootprint(AABB support, double clickX, double clickZ, List<AABB> obstacles,

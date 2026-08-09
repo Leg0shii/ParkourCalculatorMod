@@ -10,6 +10,7 @@ import imgui.ImFontConfig;
 import imgui.ImFontGlyphRangesBuilder;
 import imgui.ImGui;
 import imgui.ImGuiIO;
+import imgui.callback.ImStrConsumer;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
@@ -130,11 +131,21 @@ public final class Lwjgl2ImGuiHost {
         if (initialized) return;
         ImGui.createContext();
         imguiLwjgl2.init();
+        installGuardedClipboardCopy();
         configurePresetFonts();
         imguiGl3.init();
         applyScale(settings.scaleIndex);
         lastFrameNanos = System.nanoTime();
         initialized = true;
+    }
+
+    private static void installGuardedClipboardCopy() {
+        ImGui.getIO().setSetClipboardTextFn(new ImStrConsumer() {
+            @Override
+            public void accept(String text) {
+                AwtClipboard.setString(text);
+            }
+        });
     }
 
     private void applyPendingScale() {

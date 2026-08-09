@@ -61,6 +61,8 @@ public final class SaveFile {
         public List<BlockSel> selectedBlocks = new ArrayList<BlockSel>();
         public Start seed;                               // launch state (pos/vel/yaw) at startTick; what a solve begins from
         public Result result;                            // null = no solve yet
+        public String deviation;
+        public String deviationKind;
     }
 
     /** Nested (not flattened) so an absent block in an old save stays distinct from a real timeBudgetSeconds = 0. */
@@ -110,6 +112,8 @@ public final class SaveFile {
         public String inputs;                            // null = inherit
         public String sprint;                            // null = inherit
         public String slipperiness;                      // null = inherit
+        public String medium;                            // null = inherit
+        public Integer soulsandCells;                    // null = 1
         public List<Dose> added = new ArrayList<Dose>();
         public List<String> removed = new ArrayList<String>(); // Potion enum names
     }

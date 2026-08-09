@@ -27,7 +27,7 @@ public class KeyboardHandlerMixin {
         int glfwKey = input.key();
 
         int toggleCode = KeyMappingHelper.getBoundKeyOf(FabricParkourCalculator.toggleKeyBinding).getValue();
-        if (glfwKey == toggleCode) {
+        if (glfwKey == toggleCode && !ImGui.getIO().getWantTextInput()) {
             return;
         }
 
@@ -51,6 +51,12 @@ public class KeyboardHandlerMixin {
                 ci.cancel();
                 return;
             }
+        }
+
+        if (action == GLFW.GLFW_PRESS && !ImGui.getIO().getWantTextInput()
+                && FabricParkourCalculator.dispatchOverlayHotkey(glfwKey)) {
+            ci.cancel();
+            return;
         }
 
         ImGuiImpl.keyCallback(window, glfwKey, input.scancode(), action, input.modifiers());

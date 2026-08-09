@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.forge12.sim;
 
+import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.sim.ChunkRange;
 import de.legoshi.parkourcalc.core.sim.Checkpoint;
 import de.legoshi.parkourcalc.core.sim.LazyEntitySimulator;
@@ -160,6 +161,21 @@ public final class Forge12Simulator extends LazyEntitySimulator<SimulatorEntity>
     @Override
     protected double getCollisionAngleDegrees(SimulatorEntity e) {
         return Double.NaN;
+    }
+
+    @Override
+    protected Medium getTickMedium(SimulatorEntity e) {
+        return e.capturedTickMedium();
+    }
+
+    @Override
+    protected double getTickGroundFriction(SimulatorEntity e) {
+        return e.capturedTickGroundFriction();
+    }
+
+    @Override
+    protected int getTickSoulsandCells(SimulatorEntity e) {
+        return e.capturedTickSoulsandCells();
     }
 
     @Override

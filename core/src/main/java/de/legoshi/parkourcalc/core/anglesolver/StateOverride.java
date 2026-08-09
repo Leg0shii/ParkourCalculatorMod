@@ -12,9 +12,13 @@ import java.util.Set;
  */
 public final class StateOverride {
 
+    public static final int MAX_SOULSAND_CELLS = 8;
+
     private AngleSolverState.InputMode inputs;
     private AngleSolverState.SprintMode sprint;
     private Slipperiness slipperiness;
+    private Medium medium;
+    private int soulsandCells = 1;
     private final List<PotionDose> added = new ArrayList<>();
     private final Set<Potion> removed = EnumSet.noneOf(Potion.class);
 
@@ -66,6 +70,32 @@ public final class StateOverride {
         slipperiness = null;
     }
 
+    public Medium getMedium() {
+        return medium;
+    }
+
+    public void setMedium(Medium medium) {
+        this.medium = medium;
+        if (medium != Medium.SOULSAND) soulsandCells = 1;
+    }
+
+    public boolean overridesMedium() {
+        return medium != null;
+    }
+
+    public void clearMedium() {
+        medium = null;
+        soulsandCells = 1;
+    }
+
+    public int getSoulsandCells() {
+        return soulsandCells;
+    }
+
+    public void setSoulsandCells(int cells) {
+        soulsandCells = Math.max(1, Math.min(MAX_SOULSAND_CELLS, cells));
+    }
+
 
     public List<PotionDose> getAdded() {
         return added;
@@ -94,7 +124,7 @@ public final class StateOverride {
     }
 
     public boolean isEmpty() {
-        return !overridesInputs() && !overridesSprint() && !overridesSlipperiness() && !overridesPotion();
+        return !overridesInputs() && !overridesSprint() && !overridesSlipperiness() && !overridesMedium() && !overridesPotion();
     }
 
     /** Make this override an independent copy of {@code other} (doses deep-copied: they are mutable). */
@@ -102,6 +132,8 @@ public final class StateOverride {
         inputs = other.inputs;
         sprint = other.sprint;
         slipperiness = other.slipperiness;
+        medium = other.medium;
+        soulsandCells = other.soulsandCells;
         added.clear();
         for (PotionDose d : other.added) added.add(new PotionDose(d.potion, d.level));
         removed.clear();

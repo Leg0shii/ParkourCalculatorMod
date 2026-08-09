@@ -109,7 +109,7 @@ public final class Constraint {
             loInclusive = true;
             hiInclusive = true;
         } else if (op != Op.IN && this.op == Op.IN) {
-            value = lo;
+            value = Math.min(lo, hi);
         }
         this.op = op;
     }
@@ -123,7 +123,7 @@ public final class Constraint {
     }
 
     public double getLo() {
-        return lo;
+        return Math.min(lo, hi);
     }
 
     public void setLo(double lo) {
@@ -131,7 +131,7 @@ public final class Constraint {
     }
 
     public double getHi() {
-        return hi;
+        return Math.max(lo, hi);
     }
 
     public void setHi(double hi) {

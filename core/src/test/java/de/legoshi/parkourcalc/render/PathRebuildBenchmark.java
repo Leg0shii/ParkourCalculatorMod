@@ -3,7 +3,6 @@ package de.legoshi.parkourcalc.render;
 import de.legoshi.parkourcalc.core.ports.BoxRenderer;
 import de.legoshi.parkourcalc.core.render.PathRenderPlan;
 import de.legoshi.parkourcalc.core.render.PathVertexLayout;
-import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
@@ -12,8 +11,6 @@ import de.legoshi.parkourcalc.core.ui.SelectionManager;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import org.junit.Test;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -22,96 +19,6 @@ import java.util.List;
 import static org.junit.Assume.assumeTrue;
 
 public class PathRebuildBenchmark {
-
-    private static final class ByteSink implements BoxRenderer {
-        final ByteBuffer buf = ByteBuffer.allocateDirect(1 << 24).order(ByteOrder.nativeOrder());
-        final Mode mode;
-        final double ax;
-        final double ay;
-        final double az;
-        long vertices;
-
-        ByteSink(Mode mode, double ax, double ay, double az) {
-            this.mode = mode;
-            this.ax = ax;
-            this.ay = ay;
-            this.az = az;
-        }
-
-        void reset() {
-            buf.clear();
-            vertices = 0;
-        }
-
-        private void vertex(double x, double y, double z, int argb) {
-            if (buf.remaining() < 16) buf.clear();
-            buf.putFloat((float) (x - ax));
-            buf.putFloat((float) (y - ay));
-            buf.putFloat((float) (z - az));
-            buf.putInt(argb);
-            vertices++;
-        }
-
-        @Override
-        public void drawBox(AABB b, int argb) {
-            double x0 = b.min.x;
-            double y0 = b.min.y;
-            double z0 = b.min.z;
-            double x1 = b.max.x;
-            double y1 = b.max.y;
-            double z1 = b.max.z;
-            if (mode == Mode.LINES) {
-                line(x0, y0, z0, x1, y0, z0, argb);
-                line(x1, y0, z0, x1, y0, z1, argb);
-                line(x1, y0, z1, x0, y0, z1, argb);
-                line(x0, y0, z1, x0, y0, z0, argb);
-                line(x0, y1, z0, x1, y1, z0, argb);
-                line(x1, y1, z0, x1, y1, z1, argb);
-                line(x1, y1, z1, x0, y1, z1, argb);
-                line(x0, y1, z1, x0, y1, z0, argb);
-                line(x0, y0, z0, x0, y1, z0, argb);
-                line(x1, y0, z0, x1, y1, z0, argb);
-                line(x1, y0, z1, x1, y1, z1, argb);
-                line(x0, y0, z1, x0, y1, z1, argb);
-            } else {
-                tri(x0, y0, z0, x1, y0, z0, x1, y0, z1, argb);
-                tri(x0, y0, z0, x1, y0, z1, x0, y0, z1, argb);
-                tri(x0, y1, z0, x0, y1, z1, x1, y1, z1, argb);
-                tri(x0, y1, z0, x1, y1, z1, x1, y1, z0, argb);
-                tri(x0, y0, z0, x0, y1, z0, x1, y1, z0, argb);
-                tri(x0, y0, z0, x1, y1, z0, x1, y0, z0, argb);
-                tri(x0, y0, z1, x1, y0, z1, x1, y1, z1, argb);
-                tri(x0, y0, z1, x1, y1, z1, x0, y1, z1, argb);
-                tri(x0, y0, z0, x0, y0, z1, x0, y1, z1, argb);
-                tri(x0, y0, z0, x0, y1, z1, x0, y1, z0, argb);
-                tri(x1, y0, z0, x1, y1, z0, x1, y1, z1, argb);
-                tri(x1, y0, z0, x1, y1, z1, x1, y0, z1, argb);
-            }
-        }
-
-        private void line(double x1, double y1, double z1, double x2, double y2, double z2, int argb) {
-            vertex(x1, y1, z1, argb);
-            vertex(x2, y2, z2, argb);
-        }
-
-        private void tri(double x1, double y1, double z1, double x2, double y2, double z2, double x3, double y3, double z3, int argb) {
-            vertex(x1, y1, z1, argb);
-            vertex(x2, y2, z2, argb);
-            vertex(x3, y3, z3, argb);
-        }
-
-        @Override
-        public void drawLine(double x1, double y1, double z1, double x2, double y2, double z2, int argb) {
-            if (mode != Mode.LINES) return;
-            line(x1, y1, z1, x2, y2, z2, argb);
-        }
-
-        @Override
-        public void drawTriangle(double x1, double y1, double z1, double x2, double y2, double z2, double x3, double y3, double z3, int argb) {
-            if (mode != Mode.FACES) return;
-            tri(x1, y1, z1, x2, y2, z2, x3, y3, z3, argb);
-        }
-    }
 
     private static List<TickState> syntheticPath(int n) {
         List<TickState> states = new ArrayList<TickState>(n);
@@ -124,7 +31,7 @@ public class PathRebuildBenchmark {
     }
 
     private static long fullEmission(BoxController bc, List<TickState> states, Settings settings,
-                                     SelectionManager sel, ByteSink faces, ByteSink lines, long[] splits) {
+                                     SelectionManager sel, ByteSinkRenderer faces, ByteSinkRenderer lines, long[] splits) {
         long t0 = System.nanoTime();
         bc.clearAll();
         for (int i = 0; i < states.size(); i++) {
@@ -154,7 +61,7 @@ public class PathRebuildBenchmark {
     }
 
     private static long incrementalEmission(BoxController bc, List<TickState> path, int dirtyTick, Settings settings,
-                                            ByteSink faces, ByteSink lines) {
+                                            ByteSinkRenderer faces, ByteSinkRenderer lines) {
         long t0 = System.nanoTime();
         bc.replaceFrom(dirtyTick + 1, path.subList(dirtyTick + 1, path.size()));
         int n = bc.size();
@@ -177,8 +84,8 @@ public class PathRebuildBenchmark {
 
         Settings settings = new Settings();
         SelectionManager sel = new SelectionManager(null);
-        ByteSink faces = new ByteSink(BoxRenderer.Mode.FACES, 0, 64, 0);
-        ByteSink lines = new ByteSink(BoxRenderer.Mode.LINES, 0, 64, 0);
+        ByteSinkRenderer faces = new ByteSinkRenderer(BoxRenderer.Mode.FACES, 0, 64, 0);
+        ByteSinkRenderer lines = new ByteSinkRenderer(BoxRenderer.Mode.LINES, 0, 64, 0);
 
         int big = 100_000;
         int small = 80;

@@ -1,7 +1,7 @@
 package de.legoshi.parkourcalc.anglesolver;
 
+import de.legoshi.parkourcalc.core.FakePlaybackBridge;
 import de.legoshi.parkourcalc.core.PlaybackController;
-import de.legoshi.parkourcalc.core.ports.PlaybackBridge;
 import de.legoshi.parkourcalc.core.ports.Simulator;
 import de.legoshi.parkourcalc.core.sim.Checkpoint;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
@@ -85,20 +85,6 @@ public class AirborneStartJumpTest {
         OnGroundCheckpoint(boolean onGround) { this.onGround = onGround; }
     }
 
-    private static final class RecordingBridge implements PlaybackBridge {
-        Boolean teleportedOnGround;
-
-        @Override public boolean isSingleplayer() { return true; }
-        @Override public void teleport(Vec3dCore pos, Vec3dCore vel, float yaw, Checkpoint carry) {
-            teleportedOnGround = carry instanceof OnGroundCheckpoint ? ((OnGroundCheckpoint) carry).onGround : null;
-        }
-        @Override public void setKey(InputRow.Key key, boolean pressed) { }
-        @Override public void setYaw(float absoluteYaw) { }
-        @Override public void releaseAllKeys() { }
-        @Override public void closeUI() { }
-        @Override public void applyEffects(int speedAmplifier, int jumpBoostAmplifier) { }
-    }
-
     private static InputData jumpOnFirstRow() {
         InputData data = new InputData();
         InputRow row = new InputRow();
@@ -135,14 +121,15 @@ public class AirborneStartJumpTest {
         SimulationRunner runner = new SimulationRunner(new JumpGatedSimulator(false));
         runner.simulate(data);
 
-        RecordingBridge bridge = new RecordingBridge();
+        FakePlaybackBridge bridge = new FakePlaybackBridge();
         PlaybackController pc = new PlaybackController(data, runner, new Settings());
         pc.setBridge(bridge);
         pc.start();
 
-        assertEquals(
+        assertTrue("playback hands the sim's checkpoint to the teleport", bridge.teleportCarry instanceof OnGroundCheckpoint);
+        assertFalse(
                 "playback seats the player with the sim's airborne launch onGround, not a forced true",
-                Boolean.FALSE, bridge.teleportedOnGround
+                ((OnGroundCheckpoint) bridge.teleportCarry).onGround
         );
         assertFalse("the loader's tick-0 hook reads the same airborne value", pc.firstTickOnGround());
     }
@@ -153,14 +140,15 @@ public class AirborneStartJumpTest {
         SimulationRunner runner = new SimulationRunner(new JumpGatedSimulator(true));
         runner.simulate(data);
 
-        RecordingBridge bridge = new RecordingBridge();
+        FakePlaybackBridge bridge = new FakePlaybackBridge();
         PlaybackController pc = new PlaybackController(data, runner, new Settings());
         pc.setBridge(bridge);
         pc.start();
 
-        assertEquals(
+        assertTrue("playback hands the sim's checkpoint to the teleport", bridge.teleportCarry instanceof OnGroundCheckpoint);
+        assertTrue(
                 "a grounded start still launches on the ground so the jump fires",
-                Boolean.TRUE, bridge.teleportedOnGround
+                ((OnGroundCheckpoint) bridge.teleportCarry).onGround
         );
         assertTrue(pc.firstTickOnGround());
     }

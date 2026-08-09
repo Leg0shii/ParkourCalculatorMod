@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.anglesolver;
 
+import de.legoshi.parkourcalc.SlowSolverTests;
 import de.legoshi.parkourcalc.anglesolver.harness.ProblemFixture;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.velocity.VelocityFinder;
@@ -7,10 +8,12 @@ import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputData;
+import org.junit.experimental.categories.Category;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
 
+@Category(SlowSolverTests.class)
 public class J008VelocityFieldTest {
 
     @Test

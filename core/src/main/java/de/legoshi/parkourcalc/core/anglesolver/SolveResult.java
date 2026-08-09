@@ -1,7 +1,9 @@
 package de.legoshi.parkourcalc.core.anglesolver;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /** Solve outcome rendered by the result panel: per-constraint outcomes, found yaws, and solve stats. */
 public final class SolveResult {
@@ -58,6 +60,7 @@ public final class SolveResult {
     private final List<Outcome> outcomes = new ArrayList<>();
     private final List<YawEntry> yaws = new ArrayList<>();
     private final List<Detail> details = new ArrayList<>();
+    private final Set<Integer> unmetTicks = new LinkedHashSet<>();
 
     // Solve stats (filled by the engine; defaults are harmless when a solve fails before they are set).
     private long durationMs;
@@ -107,6 +110,14 @@ public final class SolveResult {
 
     public List<Detail> getDetails() {
         return details;
+    }
+
+    public Set<Integer> getUnmetTicks() {
+        return unmetTicks;
+    }
+
+    public void addUnmetTick(int tick) {
+        unmetTicks.add(tick);
     }
 
     public void addDetail(String label, String value) {

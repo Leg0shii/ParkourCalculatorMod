@@ -5,6 +5,7 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.fabric.mixin.LocalPlayerAccessor;
 import de.legoshi.parkourcalc.fabric.mixin.KeyMappingAccessor;
+import de.legoshi.parkourcalc.fabric.mixin.PlayerAccessor;
 import de.legoshi.parkourcalc.fabric.sim.GhostPlayerEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -16,6 +17,7 @@ import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.PositionMoveRotation;
+import net.minecraft.world.entity.player.Abilities;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -264,6 +266,19 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
     public void releaseAllKeys() {
         for (InputRow.Key k : InputRow.Key.values()) {
             setKey(k, false);
+        }
+    }
+
+    @Override
+    public void suppressFlight() {
+        if (ghostMode) return;
+        LocalPlayer p = Minecraft.getInstance().player;
+        if (p == null) return;
+        ((PlayerAccessor) p).pkc$setJumpTriggerTime(0);
+        Abilities abilities = p.getAbilities();
+        if (abilities.flying) {
+            abilities.flying = false;
+            p.onUpdateAbilities();
         }
     }
 

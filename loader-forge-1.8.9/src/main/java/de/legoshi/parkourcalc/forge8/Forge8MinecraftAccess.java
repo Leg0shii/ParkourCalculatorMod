@@ -89,10 +89,11 @@ public final class Forge8MinecraftAccess implements MinecraftAccess {
     }
 
     @Override
-    public boolean isLadder(int x, int y, int z) {
+    public boolean isClimbable(int x, int y, int z) {
         World world = Minecraft.getMinecraft().theWorld;
         if (world == null) return false;
-        return world.getBlockState(new BlockPos(x, y, z)).getBlock() == Blocks.ladder;
+        Block block = world.getBlockState(new BlockPos(x, y, z)).getBlock();
+        return block == Blocks.ladder || block == Blocks.vine;
     }
 
     @Override
@@ -150,9 +151,9 @@ public final class Forge8MinecraftAccess implements MinecraftAccess {
         if (world == null) return out;
         AxisAlignedBB mask = new AxisAlignedBB(minX, minY, minZ, maxX + 1.0, maxY + 1.0, maxZ + 1.0);
         List<AxisAlignedBB> boxes = new ArrayList<>();
-        for (int x = minX; x <= maxX; x++) {
-            for (int y = minY; y <= maxY; y++) {
-                for (int z = minZ; z <= maxZ; z++) {
+        for (int x = minX - 1; x <= maxX + 1; x++) {
+            for (int y = minY - 1; y <= maxY + 1; y++) {
+                for (int z = minZ - 1; z <= maxZ + 1; z++) {
                     BlockPos pos = new BlockPos(x, y, z);
                     IBlockState state = world.getBlockState(pos);
                     state.getBlock().addCollisionBoxesToList(world, pos, state, mask, boxes, null);
@@ -206,6 +207,16 @@ public final class Forge8MinecraftAccess implements MinecraftAccess {
     @Override
     public boolean isSaveChordDown() {
         return Lwjgl2InputState.isSaveChordDown();
+    }
+
+    @Override
+    public boolean isUndoChordDown() {
+        return Lwjgl2InputState.isUndoChordDown();
+    }
+
+    @Override
+    public boolean isRedoChordDown() {
+        return Lwjgl2InputState.isRedoChordDown();
     }
 
     @Override

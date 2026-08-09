@@ -184,7 +184,7 @@ public final class FileSystemSaveStore {
             for (Path p : stream) {
                 String fileName = p.getFileName().toString();
                 if (Files.isDirectory(p)) {
-                    if (TRASH_DIR.equals(fileName)) continue;
+                    if (fileName.startsWith(".")) continue;
                     folders.add(fileName);
                 } else if (Files.isRegularFile(p) && fileName.endsWith(EXTENSION)) {
                     String name = fileName.substring(0, fileName.length() - EXTENSION.length());

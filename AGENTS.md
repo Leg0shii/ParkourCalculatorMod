@@ -70,11 +70,16 @@ JDK 21 runs the Gradle daemon. `:runClient` auto-switches toolchain: Fabric uses
 
 ## Tests
 
-The real gate is `:core:test`. All tests are pure Java in `core/src/test/`, no MC needed, runs in seconds.
+The real gate is `:core:test`. All tests are pure Java in `core/src/test/`, no MC needed.
+
+The default run excludes the expensive solver suites and finishes in seconds; `-PslowTests` includes them (a few minutes, `ProblemsTest` alone is most of it). The slow set is every class tagged with the JUnit category `de.legoshi.parkourcalc.SlowSolverTests` (currently `ProblemsTest`, the `J008Velocity*` suites, `VelocityFieldReuseEquivalenceTest`, `VelocityFinderConstraintTest`, `IlsPolishTest`, `WrapWindowIlsTest`, `TranslationEliminationTest`, `EngineFreeStartTest`, `AnytimeRaceTest`, `GraphPresetSolveTest`, `GraphRunnerTest`). CI always runs with `-PslowTests`, so nothing merges on the fast suite alone.
 
 ```bash
-./gradlew :core:test
+./gradlew :core:test             # fast suite; run after any change
+./gradlew :core:test -PslowTests # full suite; required when solver code changes
 ```
+
+Run the full suite locally whenever the change touches solver code (`core/.../anglesolver/`, the model classes, velocity finder, graph) or the problem/capture resources; for anything else the fast suite is enough, CI covers the rest. When a new test class drives the solver engine on real captures, tag it `@Category(SlowSolverTests.class)` so the default run stays fast.
 
 - Folder-driven problem checks: `core/src/test/.../anglesolver/ProblemsTest.java` (parameterized over `problems/solve/` and `problems/closedform/`, sharing captures in `core/src/test/resources/captures/`). Map in `anglesolver/TESTS.md`.
 - Bit-exact model regression: `core/src/test/.../anglesolver/ModernStepRegressionTest.java` pins `ExactJumpModel`, `McSineTable`, `Constants` against a recorded 1.21.10 run. A failure means the model drifted; do not edit model code without a green run first.
@@ -97,11 +102,11 @@ They appear under:
 ```
 .gradle/unimined/net/minecraft/minecraft/1.8.9/.../mcp-stable-22-1.8.9-searge-1.8.9/...-sources.jar
 .gradle/unimined/net/minecraft/minecraft/1.12.2/.../mcp-stable-39-1.12-searge-...-sources.jar
-.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-common-<hash>/1.21.10-...-sources.jar
-.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-clientOnly-<hash>/1.21.10-...-sources.jar
+.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-common-<hash>/26.2/...-26.2-sources.jar
+.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-clientOnly-<hash>/26.2/...-26.2-sources.jar
 ```
 
-Unzip the relevant `-sources.jar` and grep for a single file (e.g. `EntityPlayerSP.java`, `ClientPlayerEntity.java`). IntelliJ resolves these automatically on Ctrl-Click in any loader module.
+Unzip the relevant `-sources.jar` and grep for a single file (e.g. `EntityPlayerSP.java`, `LocalPlayer.java`). IntelliJ resolves these automatically on Ctrl-Click in any loader module.
 
 
 ## Critical patterns

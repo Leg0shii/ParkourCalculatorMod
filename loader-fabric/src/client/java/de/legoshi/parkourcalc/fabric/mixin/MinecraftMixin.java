@@ -29,4 +29,10 @@ public class MinecraftMixin {
         ImGuiImpl.dispose();
     }
 
+    @Inject(method = "tick", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/client/multiplayer/ClientPacketListener;send(Lnet/minecraft/network/protocol/Packet;)V"))
+    private void pkc$syncFrozenPlayerBeforeTickEndPacket(CallbackInfo ci) {
+        FabricParkourCalculator.syncFrozenPlayerToServer();
+    }
+
 }

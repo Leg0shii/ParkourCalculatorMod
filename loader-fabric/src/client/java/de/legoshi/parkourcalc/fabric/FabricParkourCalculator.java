@@ -37,6 +37,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
     public static KeyMapping playbackKeyBinding;
     public static KeyMapping landingConstraintsKeyBinding;
     public static KeyMapping removeConstraintsKeyBinding;
+    private static KeyMapping applySurfaceStateKeyBinding;
+    private static KeyMapping solveKeyBinding;
+    private static KeyMapping solverStartTickKeyBinding;
+    private static KeyMapping solverEndTickKeyBinding;
     private static KeyMapping captureMomentumBlockKeyBinding;
     private static KeyMapping captureCollisionBlockKeyBinding;
     private static KeyMapping captureLandBlockKeyBinding;
@@ -88,6 +92,30 @@ public class FabricParkourCalculator implements ClientModInitializer {
                 "key.parkourcalculator.remove_selected_constraints",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_X,
+                category
+        ));
+        applySurfaceStateKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "key.parkourcalculator.apply_surface_state",
+                InputConstants.Type.KEYSYM,
+                GLFW.GLFW_KEY_H,
+                category
+        ));
+        solveKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "key.parkourcalculator.solve",
+                InputConstants.Type.KEYSYM,
+                GLFW.GLFW_KEY_V,
+                category
+        ));
+        solverStartTickKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "key.parkourcalculator.set_solver_start",
+                InputConstants.Type.KEYSYM,
+                GLFW.GLFW_KEY_I,
+                category
+        ));
+        solverEndTickKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "key.parkourcalculator.set_solver_end",
+                InputConstants.Type.KEYSYM,
+                GLFW.GLFW_KEY_O,
                 category
         ));
 
@@ -189,6 +217,9 @@ public class FabricParkourCalculator implements ClientModInitializer {
         // Restore visual yaw after MC physics so render frames don't briefly show
         // the snap value the physics tick used.
         application.postTickPlayback();
+    }
+
+    public static void syncFrozenPlayerToServer() {
         playbackBridge.syncFrozenPlayerToServer();
     }
 
@@ -217,6 +248,22 @@ public class FabricParkourCalculator implements ClientModInitializer {
         while (removeConstraintsKeyBinding.consumeClick()) {
             removeConstraintsPressed = true;
         }
+        boolean applySurfaceStatePressed = false;
+        while (applySurfaceStateKeyBinding.consumeClick()) {
+            applySurfaceStatePressed = true;
+        }
+        boolean solvePressed = false;
+        while (solveKeyBinding.consumeClick()) {
+            solvePressed = true;
+        }
+        boolean solverStartPressed = false;
+        while (solverStartTickKeyBinding.consumeClick()) {
+            solverStartPressed = true;
+        }
+        boolean solverEndPressed = false;
+        while (solverEndTickKeyBinding.consumeClick()) {
+            solverEndPressed = true;
+        }
         boolean captureMomentum = false;
         boolean captureCollision = false;
         boolean captureLand = false;
@@ -239,8 +286,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         boolean imguiWantsKeys = application.isControlPanelOpen() && ImGui.getIO().getWantTextInput();
         boolean canDispatch = client.gui.screen() == null && !imguiWantsKeys;
 
-        // The close/toggle bind must still work while a yaw field is focused; only a real MC screen (chat) blocks it.
-        if (toggled && client.gui.screen() == null) {
+        if (toggled && canDispatch) {
             setOverlayOpen(!application.isControlPanelOpen());
         }
         if (deselectPressed && canDispatch) {
@@ -259,6 +305,18 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
         if (removeConstraintsPressed && canDispatch) {
             application.removeSelectedConstraints();
+        }
+        if (applySurfaceStatePressed && canDispatch) {
+            application.applyPathSurfaceState();
+        }
+        if (solvePressed && canDispatch) {
+            application.solveAngleSolver();
+        }
+        if (solverStartPressed && canDispatch) {
+            application.setSolverStartTickFromSelection();
+        }
+        if (solverEndPressed && canDispatch) {
+            application.setSolverLandingTickFromSelection();
         }
         if (captureMomentum && canDispatch) {
             application.captureAngleSolverBlock(BlockSelection.Kind.MOMENTUM);
@@ -281,6 +339,53 @@ public class FabricParkourCalculator implements ClientModInitializer {
         } else if (pc.canStart()) {
             pc.start();
         }
+    }
+
+    public static boolean dispatchOverlayHotkey(int glfwKey) {
+        Minecraft client = Minecraft.getInstance();
+        if (client.getWindow() == null) return false;
+        if (glfwKey == boundKey(deselectKeyBinding)) {
+            application.getSelection().clear();
+            return true;
+        }
+        if (glfwKey == boundKey(playbackKeyBinding)) {
+            togglePlayback();
+            return true;
+        }
+        if (glfwKey == boundKey(landingConstraintsKeyBinding)) {
+            long window = client.getWindow().handle();
+            boolean enter = GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS
+                    || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS;
+            boolean remove = GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS
+                    || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_CONTROL) == GLFW.GLFW_PRESS;
+            application.onConstraintKey(enter, remove);
+            return true;
+        }
+        if (glfwKey == boundKey(removeConstraintsKeyBinding)) {
+            application.removeSelectedConstraints();
+            return true;
+        }
+        if (glfwKey == boundKey(applySurfaceStateKeyBinding)) {
+            application.applyPathSurfaceState();
+            return true;
+        }
+        if (glfwKey == boundKey(solveKeyBinding)) {
+            application.solveAngleSolver();
+            return true;
+        }
+        if (glfwKey == boundKey(solverStartTickKeyBinding)) {
+            application.setSolverStartTickFromSelection();
+            return true;
+        }
+        if (glfwKey == boundKey(solverEndTickKeyBinding)) {
+            application.setSolverLandingTickFromSelection();
+            return true;
+        }
+        return false;
+    }
+
+    private static int boundKey(KeyMapping mapping) {
+        return KeyMappingHelper.getBoundKeyOf(mapping).getValue();
     }
 
     public static void closeOverlay() {

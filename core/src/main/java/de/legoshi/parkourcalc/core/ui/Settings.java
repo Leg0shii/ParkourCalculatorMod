@@ -12,6 +12,9 @@ public final class Settings {
     private static final float[] DEFAULT_TICK_SNEAK = {1.000f, 0.604f, 0.239f, 0.50f};          // orange     #ff9a3d
     private static final float[] DEFAULT_TICK_WALL = {1.000f, 0.231f, 0.361f, 0.50f};           // red        #ff3b5c
     private static final float[] DEFAULT_TICK_SOFT_COLLISION = {1.000f, 0.435f, 0.529f, 0.50f}; // rose       #ff6f87
+    private static final float[] DEFAULT_TICK_SOLVER_START = {0.651f, 0.890f, 0.631f, 0.60f};   // green      #a6e3a1
+    private static final float[] DEFAULT_TICK_SOLVER_GOAL = {0.976f, 0.886f, 0.686f, 0.60f};    // yellow     #f9e2af
+    private static final float[] DEFAULT_TICK_DEVIATION = {1.000f, 0.184f, 0.831f, 0.60f};      // magenta    #ff2fd4
     private static final float[] DEFAULT_SUBTICK_PATH = {0.976f, 0.886f, 0.686f, 0.80f};        // yellow     #f9e2af
     private static final float[] DEFAULT_YAW_ARROW = {0.831f, 0.929f, 0.976f, 0.529f};           // #D4EDF987
     private static final float[] DEFAULT_PITCH_ARROW = {0.976f, 0.886f, 0.686f, 0.529f};         // yellow     #f9e2af
@@ -72,16 +75,28 @@ public final class Settings {
     private static final boolean DEFAULT_VIEW_ANGLE_SOLVER = false;
     private static final boolean DEFAULT_VIEW_VELOCITY_MAP = false;
     private static final boolean DEFAULT_SAVE_DEBUG_VALUES = false;
-    private static final boolean DEFAULT_AUTO_APPLY_SOLVE = false;
     private static final boolean DEFAULT_EXPERIMENTAL_BLOCK_CAPTURE = false;
 
     private static final boolean DEFAULT_KEEP_INPUT_TABLE_OPEN = false;
     private static final boolean DEFAULT_KEEP_TICK_INFO_OPEN = false;
+    private static final boolean DEFAULT_UNDO_REDO_WITHOUT_UI = true;
+
+    private static final float[] DEFAULT_HUD_MESSAGE_COLOR = {0.804f, 0.839f, 0.957f, 1.00f}; // text #cdd6f4
+    private static final int DEFAULT_HUD_MESSAGE_COUNT = 4;
+    public static final int MIN_HUD_MESSAGE_COUNT = 1;
+    public static final int MAX_HUD_MESSAGE_COUNT = 10;
+    private static final float DEFAULT_HUD_MESSAGE_SCALE = 1.0f;
+    public static final float MIN_HUD_MESSAGE_SCALE = 0.5f;
+    public static final float MAX_HUD_MESSAGE_SCALE = 2.0f;
+
+    public static final int HUD_MESSAGE_ORDER_DOWNWARDS = 0;
+    public static final int HUD_MESSAGE_ORDER_UPWARDS = 1;
+    private static final int DEFAULT_HUD_MESSAGE_ORDER = HUD_MESSAGE_ORDER_DOWNWARDS;
 
     private static final boolean DEFAULT_KEEP_BOXES_DURING_PLAYBACK = false;
+    private static final boolean DEFAULT_DISABLE_FLIGHT_DURING_PLAYBACK = true;
 
     private static final float DEFAULT_YAW_FLICK_SPEED = 7200.0f;
-    private static final boolean DEFAULT_AUTO_SAVE = true;
     public static final float MIN_YAW_FLICK_SPEED = 30.0f;
     public static final float MAX_YAW_FLICK_SPEED = 7200.0f;
 
@@ -109,6 +124,9 @@ public final class Settings {
     public final float[] tickSneak = DEFAULT_TICK_SNEAK.clone();
     public final float[] tickWall = DEFAULT_TICK_WALL.clone();
     public final float[] tickSoftCollision = DEFAULT_TICK_SOFT_COLLISION.clone();
+    public final float[] tickSolverStart = DEFAULT_TICK_SOLVER_START.clone();
+    public final float[] tickSolverGoal = DEFAULT_TICK_SOLVER_GOAL.clone();
+    public final float[] tickDeviation = DEFAULT_TICK_DEVIATION.clone();
     public final float[] subtickPath = DEFAULT_SUBTICK_PATH.clone();
     public final float[] yawArrow = DEFAULT_YAW_ARROW.clone();
     public final float[] pitchArrow = DEFAULT_PITCH_ARROW.clone();
@@ -157,8 +175,6 @@ public final class Settings {
 
     public float yawFlickSpeed = DEFAULT_YAW_FLICK_SPEED;
 
-    public boolean autoSave = DEFAULT_AUTO_SAVE;
-
     public int pathRenderDistance = DEFAULT_PATH_RENDER_DISTANCE;
     public boolean unlimitedPathRender = DEFAULT_UNLIMITED_PATH_RENDER;
 
@@ -181,17 +197,23 @@ public final class Settings {
     // When on, each Save also writes the full per-tick SimulatorEntity state to the file (debug only).
     public boolean saveDebugValues = DEFAULT_SAVE_DEBUG_VALUES;
 
-    // When on, a feasible Angle Solver solve is applied automatically the moment it finishes.
-    public boolean autoApplySolve = DEFAULT_AUTO_APPLY_SOLVE;
-
     public boolean experimentalBlockCapture = DEFAULT_EXPERIMENTAL_BLOCK_CAPTURE;
 
     // Keep these windows drawn (display-only) while the main UI is closed.
     public boolean keepInputTableOpen = DEFAULT_KEEP_INPUT_TABLE_OPEN;
     public boolean keepTickInfoOpen = DEFAULT_KEEP_TICK_INFO_OPEN;
 
+    public boolean undoRedoWithoutUi = DEFAULT_UNDO_REDO_WITHOUT_UI;
+
+    public final float[] hudMessageColor = DEFAULT_HUD_MESSAGE_COLOR.clone();
+    public int hudMessageCount = DEFAULT_HUD_MESSAGE_COUNT;
+    public float hudMessageScale = DEFAULT_HUD_MESSAGE_SCALE;
+    public int hudMessageOrder = DEFAULT_HUD_MESSAGE_ORDER;
+
     // Keep the tick-box path overlay drawn in-world during playback.
     public boolean keepBoxesDuringPlayback = DEFAULT_KEEP_BOXES_DURING_PLAYBACK;
+
+    public boolean disableFlightDuringPlayback = DEFAULT_DISABLE_FLIGHT_DURING_PLAYBACK;
 
     public static int defaultTickInfoPrecision() {
         return DEFAULT_TICK_INFO_PRECISION;
@@ -212,6 +234,9 @@ public final class Settings {
         System.arraycopy(DEFAULT_TICK_SNEAK, 0, tickSneak, 0, 4);
         System.arraycopy(DEFAULT_TICK_WALL, 0, tickWall, 0, 4);
         System.arraycopy(DEFAULT_TICK_SOFT_COLLISION, 0, tickSoftCollision, 0, 4);
+        System.arraycopy(DEFAULT_TICK_SOLVER_START, 0, tickSolverStart, 0, 4);
+        System.arraycopy(DEFAULT_TICK_SOLVER_GOAL, 0, tickSolverGoal, 0, 4);
+        System.arraycopy(DEFAULT_TICK_DEVIATION, 0, tickDeviation, 0, 4);
         System.arraycopy(DEFAULT_SUBTICK_PATH, 0, subtickPath, 0, 4);
         System.arraycopy(DEFAULT_YAW_ARROW, 0, yawArrow, 0, 4);
         System.arraycopy(DEFAULT_PITCH_ARROW, 0, pitchArrow, 0, 4);
@@ -255,7 +280,6 @@ public final class Settings {
         showColLeftClick = DEFAULT_SHOW_COL_LEFT_CLICK;
         showColRightClick = DEFAULT_SHOW_COL_RIGHT_CLICK;
         yawFlickSpeed = DEFAULT_YAW_FLICK_SPEED;
-        autoSave = DEFAULT_AUTO_SAVE;
         pathRenderDistance = DEFAULT_PATH_RENDER_DISTANCE;
         unlimitedPathRender = DEFAULT_UNLIMITED_PATH_RENDER;
         scrollbarSize = DEFAULT_SCROLLBAR_SIZE;
@@ -270,10 +294,15 @@ public final class Settings {
         viewAngleSolver = DEFAULT_VIEW_ANGLE_SOLVER;
         viewVelocityMap = DEFAULT_VIEW_VELOCITY_MAP;
         saveDebugValues = DEFAULT_SAVE_DEBUG_VALUES;
-        autoApplySolve = DEFAULT_AUTO_APPLY_SOLVE;
         experimentalBlockCapture = DEFAULT_EXPERIMENTAL_BLOCK_CAPTURE;
         keepInputTableOpen = DEFAULT_KEEP_INPUT_TABLE_OPEN;
         keepTickInfoOpen = DEFAULT_KEEP_TICK_INFO_OPEN;
+        undoRedoWithoutUi = DEFAULT_UNDO_REDO_WITHOUT_UI;
+        System.arraycopy(DEFAULT_HUD_MESSAGE_COLOR, 0, hudMessageColor, 0, 4);
+        hudMessageCount = DEFAULT_HUD_MESSAGE_COUNT;
+        hudMessageScale = DEFAULT_HUD_MESSAGE_SCALE;
+        hudMessageOrder = DEFAULT_HUD_MESSAGE_ORDER;
         keepBoxesDuringPlayback = DEFAULT_KEEP_BOXES_DURING_PLAYBACK;
+        disableFlightDuringPlayback = DEFAULT_DISABLE_FLIGHT_DURING_PLAYBACK;
     }
 }

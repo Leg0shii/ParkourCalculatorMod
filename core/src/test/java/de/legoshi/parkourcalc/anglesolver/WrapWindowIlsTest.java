@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.anglesolver;
 
+import de.legoshi.parkourcalc.SlowSolverTests;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -14,6 +15,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 import de.legoshi.parkourcalc.core.anglesolver.solver.WrapWindowIls;
 import de.legoshi.parkourcalc.core.save.SaveFile;
+import org.junit.experimental.categories.Category;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -29,6 +31,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+@Category(SlowSolverTests.class)
 public class WrapWindowIlsTest {
 
     private static final class Rung {

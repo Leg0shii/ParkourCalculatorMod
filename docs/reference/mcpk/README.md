@@ -2,7 +2,7 @@
 
 A faithful mirror of the physics-and-mechanics pages of the Minecraft Parkour Wiki (`https://www.mcpk.wiki`), captured here because the wiki sits behind a Cloudflare challenge that an agent cannot fetch. This is reference material (constants, formulas, source snippets, tables), not implementation. The plain-language glossary lives in the repo-root `CONTEXT.md`.
 
-This tool is a byte-exact replica of the 1.8 movement model documented here, so these constants are ground truth: if the code disagrees with a number on these pages, the code is almost certainly the bug. Versions noted as 1.9+ / 1.13 / 1.14 / 1.15 are differences the Fabric 1.21.10 loader must account for.
+This tool is a byte-exact replica of the 1.8 movement model documented here, so these constants are ground truth: if the code disagrees with a number on these pages, the code is almost certainly the bug. Versions noted as 1.9+ / 1.13 / 1.14 / 1.15 are differences the Fabric 26.2 loader must account for.
 
 ## Files
 

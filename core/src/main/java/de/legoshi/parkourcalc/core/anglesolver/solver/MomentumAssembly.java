@@ -157,12 +157,16 @@ public final class MomentumAssembly {
         p.startYaw = sc.startYaw;
         p.incomingSprint = sc.incomingSprint;
         p.incomingAmp = sc.incomingAmp;
+        p.liveAirSprintFactor = sc.liveAirSprintFactor;
         p.strafeSign = sc.strafeSign;
         p.jumpPerTick = sc.jumpPerTick;
         p.strafePerTick = sc.strafePerTick;
         p.yawLockedPerTick = sc.yawLockedPerTick;
         p.speedAmplifier = sc.speedAmplifier;
         p.slipPerTick = sc.slipPerTick;
+        p.surfacePerTick = sc.surfacePerTick;
+        p.soulsandCellsPerTick = sc.soulsandCellsPerTick;
+        p.sneakPerTick = sc.sneakPerTick;
         p.sprintPerTick = sc.sprintPerTick;
         p.forwardInputPerTick = sc.forwardInputPerTick;
         p.strafeInputPerTick = sc.strafeInputPerTick;
@@ -385,9 +389,13 @@ public final class MomentumAssembly {
         sc.startYaw = (float) MENU[ai];
         sc.incomingSprint = t == 0 ? full.incomingSprint : full.sprintAt(t - 1);
         sc.incomingAmp = t == 0 ? full.incomingAmp : full.speedAmplifierAt(t - 1);
+        sc.liveAirSprintFactor = full.liveAirSprintFactor;
         sc.strafeSign = full.strafeSign;
         sc.jumpPerTick = new boolean[]{full.jumpAt(t)};
         sc.slipPerTick = new double[]{full.slipAt(t)};
+        sc.surfacePerTick = new SurfaceKind[]{full.surfaceAt(t)};
+        sc.soulsandCellsPerTick = new int[]{full.soulsandCellsAt(t)};
+        sc.sneakPerTick = new boolean[]{full.sneakAt(t)};
         sc.strafePerTick = new boolean[]{full.strafeAt(t)};
         sc.sprintPerTick = new boolean[]{full.sprintAt(t)};
         sc.forwardInputPerTick = new float[]{full.forwardAt(t)};
@@ -424,11 +432,15 @@ public final class MomentumAssembly {
         p.strafeSign = sc.strafeSign;
         p.incomingSprint = a == 0 ? sc.incomingSprint : sc.sprintAt(a - 1);
         p.incomingAmp = a == 0 ? sc.incomingAmp : sc.speedAmplifierAt(a - 1);
+        p.liveAirSprintFactor = sc.liveAirSprintFactor;
         p.jumpPerTick = sliceBool(sc.jumpPerTick, a, len);
         p.strafePerTick = sliceBool(sc.strafePerTick, a, len);
         p.yawLockedPerTick = sliceBool(sc.yawLockedPerTick, a, len);
         p.speedAmplifier = sliceInt(sc.speedAmplifier, a, len);
         p.slipPerTick = sliceDouble(sc.slipPerTick, a, len);
+        p.surfacePerTick = sliceKind(sc.surfacePerTick, a, len);
+        p.soulsandCellsPerTick = sliceInt(sc.soulsandCellsPerTick, a, len);
+        p.sneakPerTick = sliceBool(sc.sneakPerTick, a, len);
         p.sprintPerTick = sliceBool(sc.sprintPerTick, a, len);
         p.forwardInputPerTick = sliceFloat(sc.forwardInputPerTick, a, len, 0.98F);
         p.strafeInputPerTick = sliceFloat(sc.strafeInputPerTick, a, len, 0.0F);
@@ -479,6 +491,13 @@ public final class MomentumAssembly {
         if (x == null) return null;
         double[] o = new double[len];
         for (int i = 0; i < len; i++) o[i] = f + i < x.length ? x[f + i] : Double.NaN;
+        return o;
+    }
+
+    private static SurfaceKind[] sliceKind(SurfaceKind[] x, int f, int len) {
+        if (x == null) return null;
+        SurfaceKind[] o = new SurfaceKind[len];
+        for (int i = 0; i < len; i++) o[i] = f + i < x.length ? x[f + i] : SurfaceKind.NORMAL;
         return o;
     }
 
