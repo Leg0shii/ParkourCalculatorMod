@@ -27,7 +27,7 @@ public class KeyboardHandlerMixin {
         int glfwKey = input.key();
 
         int toggleCode = KeyMappingHelper.getBoundKeyOf(FabricParkourCalculator.toggleKeyBinding).getValue();
-        if (glfwKey == toggleCode) {
+        if (glfwKey == toggleCode && !ImGui.getIO().getWantTextInput()) {
             return;
         }
 
