@@ -1,5 +1,46 @@
 # Changelog
 
+## [1.8.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.7.1...v1.8.0) (2026-08-09)
+
+
+### Features
+
+* add an option to disable creative flight during singleplayer playback ([#261](https://github.com/Leg0shii/ParkourCalculatorMod/issues/261)) ([514725e](https://github.com/Leg0shii/ParkourCalculatorMod/commit/514725e5283634dccbdd5f0631209936ecda535a))
+* add ladder, soulsand, water, lava and cobweb surface regimes to the solver ([#254](https://github.com/Leg0shii/ParkourCalculatorMod/issues/254)) ([0fd0696](https://github.com/Leg0shii/ParkourCalculatorMod/commit/0fd0696ae556489e398cf146932c3a1cc09ef885)), closes [#91](https://github.com/Leg0shii/ParkourCalculatorMod/issues/91) [#202](https://github.com/Leg0shii/ParkourCalculatorMod/issues/202)
+* add solver hotkeys with auto-applied solves and simulation-captured surface state ([#255](https://github.com/Leg0shii/ParkourCalculatorMod/issues/255)) ([#263](https://github.com/Leg0shii/ParkourCalculatorMod/issues/263)) ([a5335e8](https://github.com/Leg0shii/ParkourCalculatorMod/commit/a5335e83abc0a7ed0ee33191b93a06d286387230))
+* add undo/redo with persistent per-save history  ([#257](https://github.com/Leg0shii/ParkourCalculatorMod/issues/257)) ([2c8fd90](https://github.com/Leg0shii/ParkourCalculatorMod/commit/2c8fd905847ce6055aaa781a936db684d45ba1bd))
+* click a Tick Info row to copy its values ([#268](https://github.com/Leg0shii/ParkourCalculatorMod/issues/268)) ([23b5bac](https://github.com/Leg0shii/ParkourCalculatorMod/commit/23b5bacb790fcbb155e773069ecf31ec396e6438))
+
+
+### Bug Fixes
+
+* constraint chip delete crash and live best-path render crash ([#260](https://github.com/Leg0shii/ParkourCalculatorMod/issues/260)) ([6f1b2a6](https://github.com/Leg0shii/ParkourCalculatorMod/commit/6f1b2a6faac5072785baa1b9fb828586ecdf61a9))
+* **constraints:** generalize hotkey B over multi-box block shapes ([#274](https://github.com/Leg0shii/ParkourCalculatorMod/issues/274)) ([1cd6d84](https://github.com/Leg0shii/ParkourCalculatorMod/commit/1cd6d84e1b837ea08f1338edcc384a8707b4fa48))
+* **forge:** survive transient Windows clipboard contention on ImGui copy ([#275](https://github.com/Leg0shii/ParkourCalculatorMod/issues/275)) ([addb086](https://github.com/Leg0shii/ParkourCalculatorMod/commit/addb08618da12229af3682a58de03e88945d1061))
+* keep the gizmo tail patch alive while constraint plates are shown ([#276](https://github.com/Leg0shii/ParkourCalculatorMod/issues/276)) ([c2b46dc](https://github.com/Leg0shii/ParkourCalculatorMod/commit/c2b46dc85802eec5d48e430d8aa95fa65313e5f8))
+* recognize vines for ctrl+B cell constraints ([#266](https://github.com/Leg0shii/ParkourCalculatorMod/issues/266)) ([1ca9d3e](https://github.com/Leg0shii/ParkourCalculatorMod/commit/1ca9d3efd34926077e4d6ce6e35cfb029bed6c95))
+* route ImGuiKey constants through getKeyIndex so Del removes rows ([#262](https://github.com/Leg0shii/ParkourCalculatorMod/issues/262)) ([c705068](https://github.com/Leg0shii/ParkourCalculatorMod/commit/c7050682257b3c3f89456dfe0bd77c137e285c0c))
+* send playback move packets before the client tick end packet ([#246](https://github.com/Leg0shii/ParkourCalculatorMod/issues/246)) ([bf78c04](https://github.com/Leg0shii/ParkourCalculatorMod/commit/bf78c04e96a6b6c4cae252c7868ea3c7d3e4db71))
+* **solver:** accept range constraint bounds in either order ([#267](https://github.com/Leg0shii/ParkourCalculatorMod/issues/267)) ([756e412](https://github.com/Leg0shii/ParkourCalculatorMod/commit/756e412b10da05457a53d3fcb23d539dee19b356))
+* **solver:** ladder the receding-horizon SLP fallback over all Solve-For directions ([#273](https://github.com/Leg0shii/ParkourCalculatorMod/issues/273)) ([48ae717](https://github.com/Leg0shii/ParkourCalculatorMod/commit/48ae717a727ca8808418f81f7fa83824ec3b6560))
+* **solver:** read the modern air sprint factor live so Derive catches tick-0 engagement ([#264](https://github.com/Leg0shii/ParkourCalculatorMod/issues/264)) ([c6a473e](https://github.com/Leg0shii/ParkourCalculatorMod/commit/c6a473ecdae106a2974a02438df122503b75cd7f))
+* Toggle UI key no longer closes the overlay while typing in a text field ([#280](https://github.com/Leg0shii/ParkourCalculatorMod/issues/280)) ([b9649a9](https://github.com/Leg0shii/ParkourCalculatorMod/commit/b9649a9784e1cf335ecdfa39c9e64292962fc242))
+
+
+### Documentation
+
+* update stale 1.21.10 references to 26.2 in agent guidance and docs ([b9d760c](https://github.com/Leg0shii/ParkourCalculatorMod/commit/b9d760c30c4230d2e6d4de773d8e1bc60f6e4fd0))
+
+
+### Continuous Integration
+
+* publish Modrinth versions with plain semver version numbers ([4a7587c](https://github.com/Leg0shii/ParkourCalculatorMod/commit/4a7587c32881879de319ed12218e926e714f064b))
+
+
+### Miscellaneous Chores
+
+* weekly release train ([6c9db80](https://github.com/Leg0shii/ParkourCalculatorMod/commit/6c9db80e4126e6d1b4342c62648e6524649e18ff))
+
 ## [1.7.1](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.7.0...v1.7.1) (2026-08-03)
 
 
