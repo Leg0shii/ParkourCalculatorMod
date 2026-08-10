@@ -79,7 +79,7 @@ These were verified against the captures after a wrong earlier claim; treat as g
 
 ## 5. Traps and practicalities
 
-- Working tree state: branch `feature/stratfinder` carries UNCOMMITTED Strat Finder filter/window UX changes in 5 files (StratVariants, StratFinder, StratFinderController, StratFinderWidget, StratVariantsTest), headless-green, awaiting the user's commit and in-game QA. Do not clobber; new work should live in new files/packages where possible.
+- Working tree state: branch `feature/stratfinder`, clean; the Strat Finder filter/window UX landed as fd362d5 (headless-green, in-game QA still pending). New work should live in new files/packages where possible.
 - j154 was once flagged for re-save in the difficulty-metric thread; sanity-check the four captures load and their stored segments are consistent before building on them.
 - Captures' debug arrays exist because they were saved with fullDebug; debug[t] is the state at the start of tick t (`sprintAtFireMatches` reads debug[fire+1]).
 - The model is X/Z + tick only; collisions are never simulated; the placed constraints ARE the geometry. Never add collision simulation.
@@ -94,3 +94,19 @@ These were verified against the captures after a wrong earlier claim; treat as g
 2. M2: j716 (strafe-only press), then j1150 (backwards press, neutral hop, loop momentum; sprint state machine and edge-jump branching earn their keep here).
 3. M3: j154. Knife-edge entry; expect the start-position affine re-solve and byte-exact repair loop to matter.
 4. M4: regression: the solved four as fixture tests (SlowSolverTests category), plus a sanity pass over a few more multi-press hpk_human captures to defend "generalized".
+
+## 7. Results (updated 2026-08-09)
+
+Solved cold, byte-exact (viol 0.0 through ExactJumpModel), both pinned in ColdSearchRegressionTest via ColdSearch.certifyLine:
+
+1. j925 (d11): sig 0.0.2.3+3+3+3+3+3+3+3+3+3+1+, tail WA, momentum facing 65.5, start (-1002.4180295425370, 4975.1353120778750). Found at level 3 in 23 min by the scalar facing-bucket sweep. Human comparison, read after solving: the machine line shares the press schedule and the WD-hold momentum family with the human line but enters from a different start corner.
+2. j1150 (d11): sig 0.0.7.7.7.7.7.7.7.7.7.7.7.7.7.7.3+3+3+3+3+3+3+3+3+3+3+3+3+3+3+3+3+3+3+3+3+3+1+, tail WA, momentum facing 20.5625, start (-2803.2082353247533, 4970.3959033121230). Found at level 3 in 28.5 min by the facing-arc sweep (exhaustive low-level pass, 395M nodes, 744 certified). Human comparison, read after solving: sibling of the human line, same family (neutral first press, S+A coast, W+D sprint engage at t16, presses 0/13/25/38), the human coasts from t3 at facing 20.515625, the machine from t2 at 20.5625 from a different start.
+
+Pipeline state that produced j1150 (all general, no per-capture logic): one facing-arc sweep per change-level carrying velocity and displacement as linear forms in (sin, cos) of the facing; start-rect constraints eliminated pairwise into facing arcs; exhaustive DFS for levels <= 4 (no beams); per-sig arc union across gate branches; screening by direct probe at 2 degree steps over the merged arcs (rect width is anti-correlated with certifiability on facing-tied captures and must not be used as a screen); a monotonicity invariant that the full probe starts from the screen's best score and facing; certify seeded from the screened facing.
+
+Update 2026-08-09 (session 2): the fully-held (no-turn) jump class is now solved cold and generalized. A capture whose DF=0 chain covers every momentum AND air tick (ColdProblem.singleHeld = lastTied && airAllTied) is a single held facing throughout; the closed-form dual degenerates on it, so the mainline slice certify dual-nulls. The fix: heldChainScan now fires whenever ColdProblem.singleHeld (guard broadened from the old "open non-mergeable group" case, which missed the mergeable single-combo case like j012 tail=W), iterates the air tails {W,WA,WD}, scans the held facing -180..180 (0.25 deg + refine), and certifies byte-exact; the probe (probeSig/quickScoreSig) uses a coarse held-facing scan for singleHeld captures so the certifiable line ranks first; the seeded grammar pass and the engine escalation are both skipped for singleHeld captures (they add cost and never help there). Cold-solved byte-exact through solve():
+
+3. j012 (d2, validation): sig 1.1+1+1+1+1+1+1+1+1+1+1+1+, tail W, held facing -8.0, 1.8 s at level 1.
+4. Generalization sanity pass, all cold byte-exact: j264 (1+1+, 431 ms, level 0), j014 (3+1+1+1+1+1+, 4.5 s, level 1), j276 (1+1+1+1+1+1+, 458 ms, level 0). All four singleHeld captures are pinned in ColdSearchRegressionTest via certifyLine.
+
+Open: j716 (see coldsearch-handoff-2026-08-09.md section 5: the prefix seeder explodes and cannot emit a certifiable sibling; needs a per-cycle family cross-product seeder), j154 (byte-exact knife-edge: the stored line clears X@34 by 1e-9, all continuous solvers stall at ~1e-4, needs a discrete sine-bucket lattice search near the continuous optimum). Full -PslowTests green.

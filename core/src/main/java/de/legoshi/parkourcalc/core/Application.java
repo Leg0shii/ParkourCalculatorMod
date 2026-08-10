@@ -36,6 +36,7 @@ import de.legoshi.parkourcalc.core.ui.SettingsModal;
 import de.legoshi.parkourcalc.core.ui.TickInfoPanel;
 import de.legoshi.parkourcalc.core.ui.YawGizmoController;
 import de.legoshi.parkourcalc.core.ui.theme.HudMessageStyle;
+import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
@@ -191,6 +192,8 @@ public final class Application {
                 this::onUserChange, Math.max(2, Runtime.getRuntime().availableProcessors() - 2));
         StratFinderController stratFinderController = new StratFinderController(
                 angleSolverState, boxController, runner, saveController, inputData, forwardModel);
+        ColdFinderController coldFinderController = new ColdFinderController(
+                angleSolverState, boxController, runner, saveController, inputData, this::onUserChange);
         GraphEditorWindow graphEditorWindow = new GraphEditorWindow(angleSolverEngine);
         AngleSolverWindow angleSolverWindow = new AngleSolverWindow(angleSolverState, settings, inputData::size, angleSolverEngine, velocityMapController.widget(), stratFinderController.widget(), graphStore, graphEditorWindow);
         angleSolverWindow.setApplySurfaceState(this::applyPathSurfaceState);
@@ -232,6 +235,11 @@ public final class Application {
         overlayManager.register(mainWindow);
         overlayManager.register(angleSolverWindow);
         overlayManager.register(graphEditorWindow);
+        overlayManager.register(io -> {
+            coldFinderController.widget().setWindowOpen(settings.viewColdFinder);
+            coldFinderController.widget().renderWindow(ThemeManager.uiScale());
+            settings.viewColdFinder = coldFinderController.widget().isWindowOpen();
+        });
     }
 
     public void setFilePicker(FilePickerPort filePicker) {

@@ -75,6 +75,7 @@ public final class Settings {
     private static final boolean DEFAULT_VIEW_ANGLE_SOLVER = false;
     private static final boolean DEFAULT_VIEW_VELOCITY_MAP = false;
     private static final boolean DEFAULT_VIEW_STRAT_FINDER = false;
+    private static final boolean DEFAULT_VIEW_COLD_FINDER = false;
     private static final boolean DEFAULT_SAVE_DEBUG_VALUES = false;
     private static final boolean DEFAULT_EXPERIMENTAL_BLOCK_CAPTURE = false;
 
@@ -195,6 +196,7 @@ public final class Settings {
     public boolean viewAngleSolver = DEFAULT_VIEW_ANGLE_SOLVER;
     public boolean viewVelocityMap = DEFAULT_VIEW_VELOCITY_MAP;
     public boolean viewStratFinder = DEFAULT_VIEW_STRAT_FINDER;
+    public boolean viewColdFinder = DEFAULT_VIEW_COLD_FINDER;
 
     // When on, each Save also writes the full per-tick SimulatorEntity state to the file (debug only).
     public boolean saveDebugValues = DEFAULT_SAVE_DEBUG_VALUES;
@@ -296,6 +298,7 @@ public final class Settings {
         viewAngleSolver = DEFAULT_VIEW_ANGLE_SOLVER;
         viewVelocityMap = DEFAULT_VIEW_VELOCITY_MAP;
         viewStratFinder = DEFAULT_VIEW_STRAT_FINDER;
+        viewColdFinder = DEFAULT_VIEW_COLD_FINDER;
         saveDebugValues = DEFAULT_SAVE_DEBUG_VALUES;
         experimentalBlockCapture = DEFAULT_EXPERIMENTAL_BLOCK_CAPTURE;
         keepInputTableOpen = DEFAULT_KEEP_INPUT_TABLE_OPEN;
