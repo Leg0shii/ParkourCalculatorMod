@@ -1,0 +1,128 @@
+import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
+import java.security.MessageDigest
+import com.sun.net.httpserver.HttpServer
+import java.net.InetSocketAddress
+
+configurations {
+	deobfTool
+}
+
+repositories {
+	mavenCentral()
+	maven { url = 'https://maven.fabricmc.net/' }
+}
+
+dependencies {
+	deobfTool 'net.fabricmc:mapping-io:0.7.1'
+	deobfTool 'net.fabricmc:tiny-remapper:0.11.1'
+	deobfTool 'org.ow2.asm:asm:9.7'
+	deobfTool 'org.ow2.asm:asm-commons:9.7'
+	deobfTool 'org.ow2.asm:asm-tree:9.7'
+	deobfTool 'org.ow2.asm:asm-util:9.7'
+	deobfTool 'org.ow2.asm:asm-analysis:9.7'
+}
+
+def mcVersion = project.minecraft_version
+def workDir = file("${buildDir}/deobf-mc")
+def deobfJar = file("${workDir}/minecraft-${mcVersion}-deobf.jar")
+def metadataFile = file("${workDir}/custom-${mcVersion}.json")
+def convSource = file("gradle/deobf/DeobfConv.java")
+
+static String sha1(File f) {
+	def md = MessageDigest.getInstance("SHA-1")
+	f.withInputStream { is ->
+		byte[] buf = new byte[65536]
+		int n
+		while ((n = is.read(buf)) > 0) md.update(buf, 0, n)
+	}
+	return md.digest().collect { String.format("%02x", it) }.join()
+}
+
+static void download(String url, File dest) {
+	dest.parentFile.mkdirs()
+	new URL(url).openStream().withCloseable { is ->
+		java.nio.file.Files.copy(is, dest.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+	}
+}
+
+def javaLauncher = javaToolchains.launcherFor {
+	languageVersion = JavaLanguageVersion.of(21)
+}.get().executablePath.asFile.absolutePath
+
+def versionMeta = null
+
+def ensureDeobf = {
+	if (deobfJar.exists() && metadataFile.exists()) {
+		if (versionMeta == null) {
+			versionMeta = new JsonSlurper().parse(metadataFile)
+		}
+		return
+	}
+	workDir.mkdirs()
+	logger.lifecycle("[deobf-mc] Generating deobfuscated Minecraft ${mcVersion} (one-time; cached under ${workDir})")
+
+	def manifest = new JsonSlurper().parse(new URL("https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"))
+	def entry = manifest.versions.find { it.id == mcVersion }
+	if (entry == null) throw new GradleException("Minecraft version ${mcVersion} not found in Mojang manifest")
+	def meta = new JsonSlurper().parse(new URL(entry.url))
+
+	def clientUrl = meta.downloads.client.url
+	def mappingsUrl = meta.downloads.client_mappings.url
+	def clientJar = file("${workDir}/client-${mcVersion}.jar")
+	def clientTxt = file("${workDir}/client-${mcVersion}.txt")
+	def tiny = file("${workDir}/mappings-${mcVersion}.tiny")
+	download(clientUrl, clientJar)
+	download(mappingsUrl, clientTxt)
+
+	def toolCp = configurations.deobfTool.asPath
+	def runJava = { List<String> cmd ->
+		def pb = new ProcessBuilder([javaLauncher] + cmd)
+		pb.redirectErrorStream(true)
+		pb.inheritIO()
+		int code = pb.start().waitFor()
+		if (code != 0) throw new GradleException("deobf-mc command failed (exit ${code}): ${cmd}")
+	}
+	runJava(['-cp', toolCp, convSource.absolutePath, clientTxt.absolutePath, tiny.absolutePath])
+	runJava(['-cp', toolCp, 'net.fabricmc.tinyremapper.Main',
+			clientJar.absolutePath, deobfJar.absolutePath, tiny.absolutePath, 'target', 'source'])
+
+	meta.releaseTime = "2025-11-02T00:00:00+00:00"
+	meta.time = "2025-11-02T00:00:00+00:00"
+	meta.downloads = [client: [sha1: sha1(deobfJar), size: deobfJar.length(), url: "%BASE%/minecraft-${mcVersion}-deobf.jar".toString()]]
+	metadataFile.text = JsonOutput.toJson(meta)
+	versionMeta = new JsonSlurper().parse(metadataFile)
+	clientJar.delete()
+	clientTxt.delete()
+	tiny.delete()
+}
+
+ensureDeobf()
+
+def server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0)
+server.createContext("/", { exchange ->
+	def name = exchange.requestURI.path.replaceFirst('^/', '')
+	if (name == "custom.json") {
+		def base = "http://127.0.0.1:${exchange.localAddress.port}"
+		byte[] body = JsonOutput.toJson(versionMeta).replace("%BASE%", base).getBytes("UTF-8")
+		exchange.responseHeaders.set("Content-Type", "application/json")
+		exchange.sendResponseHeaders(200, body.length)
+		exchange.responseBody.withCloseable { it.write(body) }
+		return
+	}
+	def f = new File(workDir, name)
+	if (f.exists() && f.canonicalPath.startsWith(workDir.canonicalPath)) {
+		exchange.sendResponseHeaders(200, f.length())
+		exchange.responseBody.withCloseable { out -> f.withInputStream { it.transferTo(out) } }
+	} else {
+		exchange.sendResponseHeaders(404, -1)
+		exchange.close()
+	}
+})
+server.executor = java.util.concurrent.Executors.newSingleThreadExecutor()
+server.start()
+def port = server.address.port
+gradle.buildFinished { server.stop(0) }
+
+loom.customMinecraftMetadata = "http://127.0.0.1:${port}/custom.json"
+logger.lifecycle("[deobf-mc] Serving deobfuscated Minecraft ${mcVersion} metadata at http://127.0.0.1:${port}/custom.json")

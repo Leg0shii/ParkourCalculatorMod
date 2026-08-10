@@ -82,13 +82,15 @@ public final class ExactJumpModel implements ForwardModel {
         return modern;
     }
 
-    /** Inertia rule for a loader's MC version. 1.8.x: per-axis 0.005. 1.12.x: per-axis 0.003.
-     *  1.9+ players (the modern default here): combined-XZ |v|^2 &lt; 9.0E-6. Covers the
-     *  three loader versions; the per-axis-to-combined player switch lands between 1.12 and 1.21.
-     *  Year-versioned MC (26.x onward) additionally runs the rewritten double-indexed sine lookup. */
+    /** Inertia rule for a loader's MC version. 1.8.x: per-axis 0.005, legacy float chain.
+     *  1.12.x: per-axis 0.003, legacy float chain. 1.21.3: per-axis 0.003 on the modern double
+     *  pipeline (1.21.5 is where the player switched to the combined-XZ gate). 1.21.5+ players
+     *  (the modern default here): combined-XZ |v|^2 &lt; 9.0E-6. Year-versioned MC (26.x onward)
+     *  additionally runs the rewritten double-indexed sine lookup. */
     public static ExactJumpModel forMcVersion(String mcVersion) {
         if (mcVersion != null && mcVersion.startsWith("1.8")) return new ExactJumpModel(0.005, true, false);
         if (mcVersion != null && mcVersion.startsWith("1.12")) return new ExactJumpModel(0.003, true, false);
+        if (mcVersion != null && mcVersion.startsWith("1.21.3")) return new ExactJumpModel(0.003, true, true, false);
         boolean sine262 = mcVersion != null && !mcVersion.startsWith("1.");
         return new ExactJumpModel(0.003, false, true, sine262);
     }
