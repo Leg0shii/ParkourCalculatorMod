@@ -1,0 +1,359 @@
+package de.legoshi.parkourcalc.fabric;
+
+import de.legoshi.parkourcalc.core.ports.PlaybackBridge;
+import de.legoshi.parkourcalc.core.sim.Vec3dCore;
+import de.legoshi.parkourcalc.core.ui.InputRow;
+import de.legoshi.parkourcalc.fabric.mixin.LocalPlayerAccessor;
+import de.legoshi.parkourcalc.fabric.mixin.KeyMappingAccessor;
+import de.legoshi.parkourcalc.fabric.mixin.PlayerAccessor;
+import de.legoshi.parkourcalc.fabric.sim.GhostPlayerEntity;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.player.ClientInput;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.Options;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.PositionMoveRotation;
+import net.minecraft.world.entity.player.Abilities;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.client.server.IntegratedServer;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.phys.Vec3;
+
+import java.util.Collections;
+import java.util.UUID;
+
+public final class FabricPlaybackBridge implements PlaybackBridge {
+
+    @Override
+    public boolean isGamePaused() {
+        return Minecraft.getInstance().isPaused();
+    }
+
+    private static final int EFFECT_DURATION_TICKS = 20000;
+    private static final int GHOST_ENTITY_ID = -2100000000;
+
+    private final InputRow currentRow = new InputRow();
+    private ClientInput originalInput;
+    private boolean ghostMode;
+    private GhostPlayerEntity ghost;
+
+    InputRow getCurrentRow() {
+        return currentRow;
+    }
+
+    GhostPlayerEntity ghostEntity() {
+        return ghost;
+    }
+
+    void installPlaybackInput(LocalPlayer player) {
+        if (originalInput != null) return;
+        originalInput = player.input;
+        player.input = ghostMode ? new FrozenClientInput() : new PlaybackInput(this);
+    }
+
+    void restorePlaybackInput(LocalPlayer player) {
+        if (originalInput == null) return;
+        if (player.input instanceof PlaybackInput || player.input instanceof FrozenClientInput) {
+            player.input = originalInput;
+        }
+        originalInput = null;
+    }
+
+    void resetInputOverride() {
+        originalInput = null;
+    }
+
+    @Override
+    public boolean isSingleplayer() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.getCurrentServer() != null) return false;
+        IntegratedServer s = mc.getSingleplayerServer();
+        if (s == null) return false;
+        return !s.isPublished();
+    }
+
+    @Override
+    public boolean supportsMultiplayerPlayback() {
+        Minecraft mc = Minecraft.getInstance();
+        return mc.player != null && mc.level != null;
+    }
+
+    private void beginGhostPlayback(Vec3dCore pos, Vec3dCore vel, float yaw, de.legoshi.parkourcalc.core.sim.Checkpoint carry) {
+        ghostMode = true;
+        Minecraft mc = Minecraft.getInstance();
+        ClientLevel level = mc.level;
+        LocalPlayer client = mc.player;
+        if (level == null || client == null) return;
+        removeGhostEntity();
+        GhostPlayerEntity g = new GhostPlayerEntity(level, client.getGameProfile());
+        g.setId(GHOST_ENTITY_ID);
+        g.setInput(currentRow);
+        g.absMoveTo(pos.x, pos.y, pos.z, yaw, client.getXRot());
+        g.setYBodyRot(yaw);
+        g.yBodyRotO = yaw;
+        g.setYHeadRot(yaw);
+        g.yHeadRotO = yaw;
+        g.setDeltaMovement(vel.x, vel.y, vel.z);
+        if (carry != null) {
+            g.applyCarry(carry);
+        } else {
+            g.setOnGround(true);
+        }
+        g.fallDistance = 0.0F;
+        g.setOldPosAndRot();
+        g.copyModelCustomisationFrom(client);
+        level.addEntity(g);
+        ghost = g;
+        client.xxa = 0.0F;
+        client.zza = 0.0F;
+        client.setJumping(false);
+        mc.setCameraEntity(g);
+    }
+
+    void syncFrozenPlayerToServer() {
+        if (!ghostMode) return;
+        LocalPlayer p = Minecraft.getInstance().player;
+        if (p == null || p.isPassenger()) return;
+        LocalPlayerAccessor acc = (LocalPlayerAccessor) p;
+        double dx = p.getX() - acc.pkc$getXLast();
+        double dy = p.getY() - acc.pkc$getYLast();
+        double dz = p.getZ() - acc.pkc$getZLast();
+        acc.pkc$setPositionReminder(acc.pkc$getPositionReminder() + 1);
+        boolean moved = Mth.lengthSquared(dx, dy, dz) > Mth.square(2.0E-4) || acc.pkc$getPositionReminder() >= 20;
+        if (moved) {
+            p.connection.send(new ServerboundMovePlayerPacket.Pos(p.getX(), p.getY(), p.getZ(), p.onGround(), p.horizontalCollision));
+            acc.pkc$setXLast(p.getX());
+            acc.pkc$setYLast(p.getY());
+            acc.pkc$setZLast(p.getZ());
+            acc.pkc$setPositionReminder(0);
+        } else if (acc.pkc$getLastOnGround() != p.onGround() || acc.pkc$getLastHorizontalCollision() != p.horizontalCollision) {
+            p.connection.send(new ServerboundMovePlayerPacket.StatusOnly(p.onGround(), p.horizontalCollision));
+        }
+        acc.pkc$setLastOnGround(p.onGround());
+        acc.pkc$setLastHorizontalCollision(p.horizontalCollision);
+    }
+
+    void endGhostPlayback() {
+        Minecraft mc = Minecraft.getInstance();
+        if (ghost != null && mc.getCameraEntity() == ghost && mc.player != null) {
+            mc.setCameraEntity(mc.player);
+        }
+        removeGhostEntity();
+        ghostMode = false;
+    }
+
+    private void removeGhostEntity() {
+        GhostPlayerEntity g = ghost;
+        ghost = null;
+        if (g == null) return;
+        ClientLevel level = Minecraft.getInstance().level;
+        if (level != null && g.level() == level) {
+            level.removeEntity(GHOST_ENTITY_ID, Entity.RemovalReason.DISCARDED);
+        }
+    }
+
+    @Override
+    public void teleport(Vec3dCore pos, Vec3dCore vel, float yaw, de.legoshi.parkourcalc.core.sim.Checkpoint carry) {
+        if (!isSingleplayer()) {
+            beginGhostPlayback(pos, vel, yaw, carry);
+            return;
+        }
+        Minecraft mc = Minecraft.getInstance();
+        LocalPlayer client = mc.player;
+        if (client == null) return;
+        IntegratedServer server = mc.getSingleplayerServer();
+        if (server == null) return;
+        UUID uuid = client.getUUID();
+        server.execute(() -> {
+            ServerPlayer sp = server.getPlayerList().getPlayer(uuid);
+            if (sp == null) return;
+            // EntityPosition overload carries velocity in the teleport packet itself.
+            // The 5-arg overload zeroes velocity and the followup setVelocity+velocityModified
+            // path fires a SetEntityMotion packet that arrives ~1 tick late and stomps the
+            // player mid-playback.
+            sp.connection.teleport(
+                new PositionMoveRotation(new Vec3(pos.x, pos.y, pos.z), new Vec3(vel.x, vel.y, vel.z), yaw, sp.getXRot()),
+                Collections.emptySet()
+            );
+        });
+        client.absMoveTo(pos.x, pos.y, pos.z, yaw, client.getXRot());
+        client.setYBodyRot(yaw);
+        client.yBodyRotO = yaw;
+        client.setYHeadRot(yaw);
+        client.yHeadRotO = yaw;
+        client.setDeltaMovement(vel.x, vel.y, vel.z);
+        if (carry != null) {
+            de.legoshi.parkourcalc.fabric.sim.SimulatorEntity.applyCheckpoint(client, carry);
+        } else {
+            client.setOnGround(true);
+        }
+        client.fallDistance = 0.0F;
+        // Suppress the player tick's position packet until the server's requestTeleport
+        // arms its teleport-pending state, otherwise the client races and trips moved-wrongly.
+        LocalPlayerAccessor acc = (LocalPlayerAccessor) client;
+        acc.pkc$setXLast(pos.x);
+        acc.pkc$setYLast(pos.y);
+        acc.pkc$setZLast(pos.z);
+        acc.pkc$setYRotLast(yaw);
+        acc.pkc$setXRotLast(client.getXRot());
+        acc.pkc$setPositionReminder(0);
+    }
+
+    @Override
+    public void setKey(InputRow.Key key, boolean pressed) {
+        currentRow.setKeyActive(key, pressed);
+        if (ghostMode) return;
+        KeyMapping kb = bindFor(key);
+        if (kb == null) return;
+        kb.setDown(pressed);
+        if (pressed && isClickKey(key)) {
+            KeyMappingAccessor acc = (KeyMappingAccessor) kb;
+            acc.pkc$setClickCount(acc.pkc$getClickCount() + 1);
+        }
+    }
+
+    private static boolean isClickKey(InputRow.Key key) {
+        return key == InputRow.Key.LEFT_CLICK || key == InputRow.Key.RIGHT_CLICK;
+    }
+
+    @Override
+    public void setYaw(float absoluteYaw) {
+        if (ghostMode) {
+            if (ghost == null) return;
+            ghost.setYRot(absoluteYaw);
+            ghost.yRotO = absoluteYaw;
+            return;
+        }
+        LocalPlayer p = Minecraft.getInstance().player;
+        if (p == null) return;
+        p.setYRot(absoluteYaw);
+        p.yRotO = absoluteYaw;
+    }
+
+    @Override
+    public void setHeadYaw(float absoluteYaw) {
+        if (ghostMode) {
+            if (ghost == null) return;
+            ghost.setYHeadRot(absoluteYaw);
+            return;
+        }
+        LocalPlayer p = Minecraft.getInstance().player;
+        if (p == null) return;
+        p.setYHeadRot(absoluteYaw);
+    }
+
+    @Override
+    public void setPitch(float absolutePitch) {
+        if (ghostMode) {
+            if (ghost == null) return;
+            ghost.setXRot(absolutePitch);
+            ghost.xRotO = absolutePitch;
+            return;
+        }
+        LocalPlayer p = Minecraft.getInstance().player;
+        if (p == null) return;
+        p.setXRot(absolutePitch);
+        p.xRotO = absolutePitch;
+    }
+
+    @Override
+    public void releaseAllKeys() {
+        for (InputRow.Key k : InputRow.Key.values()) {
+            setKey(k, false);
+        }
+    }
+
+    @Override
+    public void suppressFlight() {
+        if (ghostMode) return;
+        LocalPlayer p = Minecraft.getInstance().player;
+        if (p == null) return;
+        ((PlayerAccessor) p).pkc$setJumpTriggerTime(0);
+        Abilities abilities = p.getAbilities();
+        if (abilities.flying) {
+            abilities.flying = false;
+            p.onUpdateAbilities();
+        }
+    }
+
+    @Override
+    public void closeUI() {
+        FabricParkourCalculator.closeOverlay();
+    }
+
+    @Override
+    public void applyEffects(int speedAmplifier, int jumpBoostAmplifier) {
+        if (ghostMode) {
+            if (ghost == null) return;
+            ghost.removeAllEffects();
+            if (speedAmplifier > 0) {
+                ghost.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, EFFECT_DURATION_TICKS, speedAmplifier - 1, false, false, true));
+            }
+            if (jumpBoostAmplifier > 0) {
+                ghost.addEffect(new MobEffectInstance(MobEffects.JUMP, EFFECT_DURATION_TICKS, jumpBoostAmplifier - 1, false, false, true));
+            }
+            return;
+        }
+        Minecraft mc = Minecraft.getInstance();
+        LocalPlayer client = mc.player;
+        if (client == null) return;
+        IntegratedServer server = mc.getSingleplayerServer();
+        if (server == null) return;
+        UUID uuid = client.getUUID();
+        server.execute(() -> {
+            ServerPlayer sp = server.getPlayerList().getPlayer(uuid);
+            if (sp == null) return;
+            sp.removeEffect(MobEffects.MOVEMENT_SPEED);
+            sp.removeEffect(MobEffects.JUMP);
+            if (speedAmplifier > 0) {
+                sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, EFFECT_DURATION_TICKS, speedAmplifier - 1, false, false, true));
+            }
+            if (jumpBoostAmplifier > 0) {
+                sp.addEffect(new MobEffectInstance(MobEffects.JUMP, EFFECT_DURATION_TICKS, jumpBoostAmplifier - 1, false, false, true));
+            }
+        });
+    }
+
+    @Override
+    public void dumpPlayerState(int tickIndex) {
+        net.minecraft.world.entity.player.Player p = ghost != null ? ghost : Minecraft.getInstance().player;
+        if (p == null) return;
+        MobEffectInstance spd = p.getEffect(MobEffects.MOVEMENT_SPEED);
+        MobEffectInstance jmp = p.getEffect(MobEffects.JUMP);
+        double mvSp = p.getAttributeValue(Attributes.MOVEMENT_SPEED);
+        System.out.println("[PC-STATE play] t=" + tickIndex
+                + " pos=" + p.getX() + "," + p.getY() + "," + p.getZ()
+                + " mot=" + p.getDeltaMovement().x + "," + p.getDeltaMovement().y + "," + p.getDeltaMovement().z
+                + " yaw=" + p.getYRot()
+                + " onG=" + p.onGround()
+                + " spr=" + p.isSprinting()
+                + " sne=" + p.isShiftKeyDown()
+                + " colH=" + p.horizontalCollision
+                + " mvF=" + p.zza
+                + " mvS=" + p.xxa
+                + " spdAmp=" + (spd == null ? -1 : spd.getAmplifier())
+                + " jmpAmp=" + (jmp == null ? -1 : jmp.getAmplifier())
+                + " mvSpeed=" + mvSp);
+    }
+
+    private static KeyMapping bindFor(InputRow.Key key) {
+        Options o = Minecraft.getInstance().options;
+        return switch (key) {
+            case W -> o.keyUp;
+            case S -> o.keyDown;
+            case A -> o.keyLeft;
+            case D -> o.keyRight;
+            case JUMP -> o.keyJump;
+            case SNEAK -> o.keyShift;
+            case SPRINT -> o.keySprint;
+            case LEFT_CLICK -> o.keyAttack;
+            case RIGHT_CLICK -> o.keyUse;
+        };
+    }
+}
