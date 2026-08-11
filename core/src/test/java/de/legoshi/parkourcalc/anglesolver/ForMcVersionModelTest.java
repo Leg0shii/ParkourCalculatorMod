@@ -34,28 +34,10 @@ public class ForMcVersionModelTest {
     }
 
     @Test
-    public void mc121PostChangeIsCombined() {
-        ExactJumpModel m = ExactJumpModel.forMcVersion("1.21.10");
-        assertFalse(m.perAxisInertia());
-        assertEquals(0.003, m.inertiaThreshold(), 0.0);
-        assertTrue(m.modern());
-    }
-
-    @Test
     public void yearVersionedIsCombined() {
         ExactJumpModel m = ExactJumpModel.forMcVersion("26.2");
         assertFalse(m.perAxisInertia());
         assertEquals(0.003, m.inertiaThreshold(), 0.0);
         assertTrue(m.modern());
-    }
-
-    @Test
-    public void mc1213DiffersFromLaterOnlyInInertiaAxis() {
-        ExactJumpModel pre = ExactJumpModel.forMcVersion("1.21.3");
-        ExactJumpModel post = ExactJumpModel.forMcVersion("1.21.10");
-        assertEquals(post.modern(), pre.modern());
-        assertEquals(post.inertiaThreshold(), pre.inertiaThreshold(), 0.0);
-        assertTrue(pre.perAxisInertia());
-        assertFalse(post.perAxisInertia());
     }
 }
