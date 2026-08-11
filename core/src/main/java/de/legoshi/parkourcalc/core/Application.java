@@ -173,9 +173,6 @@ public final class Application {
         if (saveStore != null) {
             angleSolverEngine.setRunLog(new SolveRunLog(saveStore.getSaveDir().resolve("runs"),
                     saveStore.getModVersion(), saveStore.getMcVersion()));
-            angleSolverEngine.setProblemSnapshotSource(() -> SaveIO.snapshotJson(saveStore, inputData,
-                    runner.getStartPosition(), runner.getStartVelocity(), runner.getStartYaw(), runner.getStartPitch(),
-                    angleSolverState, boxController.getStates()));
         }
         saveController.setSolverEngine(angleSolverEngine);
         undoController = new UndoController<>(
