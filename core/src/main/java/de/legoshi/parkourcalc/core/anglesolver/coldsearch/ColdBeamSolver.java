@@ -38,6 +38,8 @@ public final class ColdBeamSolver {
         public int[] brakes;
         public int glideLo = 1;
         public int glideHi;
+        public int[] alphabet;
+        public int maxChanges;
 
         public CycleConfig copy() {
             CycleConfig c = new CycleConfig();
@@ -49,7 +51,33 @@ public final class ColdBeamSolver {
             c.brakes = brakes == null ? null : brakes.clone();
             c.glideLo = glideLo;
             c.glideHi = glideHi;
+            c.alphabet = alphabet == null ? null : alphabet.clone();
+            c.maxChanges = maxChanges;
             return c;
+        }
+    }
+
+    private static final int SEQ_CAP = 2_000_000;
+
+    static List<int[]> cycleSequences(int L, int[] alphabet, int maxChanges, int cap) {
+        List<int[]> out = new ArrayList<int[]>();
+        genSeq(out, new int[L], 0, alphabet, maxChanges, -1, 0, cap);
+        return out;
+    }
+
+    private static void genSeq(List<int[]> out, int[] pat, int i, int[] alphabet,
+                               int maxChanges, int prev, int changes, int cap) {
+        if (out.size() >= cap) return;
+        if (i == pat.length) {
+            out.add(pat.clone());
+            return;
+        }
+        for (int c : alphabet) {
+            int nc = prev >= 0 && c != prev ? changes + 1 : changes;
+            if (nc > maxChanges) continue;
+            pat[i] = c;
+            genSeq(out, pat, i + 1, alphabet, maxChanges, c, nc, cap);
+            if (out.size() >= cap) return;
         }
     }
 
@@ -63,6 +91,9 @@ public final class ColdBeamSolver {
         public List<CycleConfig> cycles = new ArrayList<CycleConfig>();
         public SprintEngage sprintEngage = SprintEngage.ALWAYS;
         public int sprintEngageCycle = 0;
+        public int[] engageTicks;
+        public int[] alphabet;
+        public int maxChanges;
         public int beamCap = 4000;
         public int certifyCap = 4000;
         public double probeGate = 999.0;
@@ -71,6 +102,12 @@ public final class ColdBeamSolver {
         public int bucketBudget = DEFAULT_BUCKET_BUDGET;
         public int threads = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
         public long budgetMs = 600_000L;
+        public boolean incremental;
+        public long arcNodeCap = 300_000_000L;
+        public boolean mitm;
+        public int mitmFrontCap = 2;
+        public int mitmBackCap = 2;
+        public int mitmSeam = -1;
 
         CycleConfig cycle(int idx) {
             if (cycles != null && idx < cycles.size() && cycles.get(idx) != null) return cycles.get(idx);
@@ -109,9 +146,125 @@ public final class ColdBeamSolver {
     private ColdBeamSolver() {
     }
 
+    public static final class Feasible {
+        public final String sig;
+        public final ColdResult result;
+
+        Feasible(String sig, ColdResult result) {
+            this.sig = sig;
+            this.result = result;
+        }
+    }
+
+    public static final class ColdBeamResult {
+        public final List<Feasible> feasible;
+        public final int candidatesBuilt;
+        public final int certified;
+        public final long tailCut;
+        public final boolean truncated;
+
+        ColdBeamResult(List<Feasible> feasible, int candidatesBuilt, int certified, long tailCut, boolean truncated) {
+            this.feasible = feasible;
+            this.candidatesBuilt = candidatesBuilt;
+            this.certified = certified;
+            this.tailCut = tailCut;
+            this.truncated = truncated;
+        }
+    }
+
+    private static final class Built {
+        final ColdProblem p;
+        final ColdSearch.Config solverCfg;
+        final List<String> sigs;
+        final long tailCut;
+        final long deadline;
+
+        Built(ColdProblem p, ColdSearch.Config solverCfg, List<String> sigs, long tailCut, long deadline) {
+            this.p = p;
+            this.solverCfg = solverCfg;
+            this.sigs = sigs;
+            this.tailCut = tailCut;
+            this.deadline = deadline;
+        }
+    }
+
     public static ColdResult solve(SaveFile file, Config cfg, ProgressSink progress, AtomicBoolean cancel) {
         if (progress == null) progress = NO_PROGRESS;
         if (cancel == null) cancel = new AtomicBoolean(false);
+        if (cfg.mitm) {
+            ColdResult mr = tryMitm(file, cfg, cancel);
+            if (mr != null && mr.solved()) return mr;
+            if (cancel.get()) return null;
+        }
+        if (cfg.incremental) return solveIncremental(file, cfg, cancel);
+        Built b = build(file, cfg, progress, cancel);
+        if (cancel.get() || b.sigs.isEmpty()) return null;
+        String solvedSig = streamCertify(b.p, b.solverCfg, cfg, b.sigs, progress, cancel, b.deadline);
+        if (solvedSig == null) return null;
+        return ColdSearch.certifyLine(file, solvedSig, b.solverCfg);
+    }
+
+    private static ColdResult tryMitm(SaveFile file, Config cfg, AtomicBoolean cancel) {
+        if (cfg.alphabet == null || cfg.alphabet.length == 0) return null;
+        ColdProblem p;
+        try {
+            p = ColdProblem.fromSave(file);
+        } catch (RuntimeException e) {
+            return null;
+        }
+        ColdSearch.Config sc = new ColdSearch.Config();
+        sc.arcExhaustiveMaxLevel = 99;
+        ColdMitmSolver.Params params = new ColdMitmSolver.Params();
+        params.alphabet = cfg.alphabet;
+        params.frontCap = cfg.mitmFrontCap;
+        params.backCap = cfg.mitmBackCap;
+        params.seam = cfg.mitmSeam;
+        params.level = cfg.maxChanges > 0 ? cfg.maxChanges : cfg.mitmFrontCap + cfg.mitmBackCap + 1;
+        params.bucket = 30;
+        params.nodeCap = cfg.arcNodeCap;
+        return ColdMitmSolver.solve(p, sc, params, cancel);
+    }
+
+    public static ColdBeamResult solveRanked(SaveFile file, Config cfg, ProgressSink progress, AtomicBoolean cancel) {
+        if (progress == null) progress = NO_PROGRESS;
+        if (cancel == null) cancel = new AtomicBoolean(false);
+        Built b = build(file, cfg, progress, cancel);
+        List<Feasible> feasible = b.sigs.isEmpty()
+                ? new ArrayList<Feasible>()
+                : streamCertifyAll(b.p, b.solverCfg, cfg, b.sigs, progress, cancel, b.deadline);
+        boolean truncated = cancel.get() || System.nanoTime() > b.deadline;
+        return new ColdBeamResult(feasible, b.sigs.size(), feasible.size(), b.tailCut, truncated);
+    }
+
+    private static ColdResult solveIncremental(SaveFile file, Config cfg, AtomicBoolean cancel) {
+        ColdProblem p = ColdProblem.fromSave(file);
+        int nSegs = p.pressSegTicks.length;
+        ColdSearch.Config scfg = new ColdSearch.Config();
+        scfg.arcNodeCap = cfg.arcNodeCap;
+        scfg.certifyCap = cfg.certifyCap > 0 ? cfg.certifyCap : scfg.certifyCap;
+        scfg.timeBudgetMs = cfg.budgetMs;
+        scfg.segAlphabet = new int[nSegs][];
+        scfg.segMaxChanges = new int[nSegs];
+        for (int i = 0; i < nSegs; i++) {
+            CycleConfig cc = cfg.cycle(i);
+            int[] alpha = cc != null && cc.alphabet != null && cc.alphabet.length > 0 ? cc.alphabet
+                    : cfg.alphabet != null && cfg.alphabet.length > 0 ? cfg.alphabet
+                    : ColdStratFinder.DEFAULT_ALPHABET;
+            int kc = cc != null && cc.maxChanges > 0 ? cc.maxChanges
+                    : cfg.maxChanges > 0 ? cfg.maxChanges : 2;
+            scfg.segAlphabet[i] = alpha.clone();
+            scfg.segMaxChanges[i] = kc;
+        }
+        int oldBudget = ColdSearch.BUCKET_SLICE_BUDGET;
+        try {
+            ColdSearch.BUCKET_SLICE_BUDGET = cfg.bucketBudget;
+            return ColdSearch.solveConstrained(file, scfg, null, cancel);
+        } finally {
+            ColdSearch.BUCKET_SLICE_BUDGET = oldBudget;
+        }
+    }
+
+    private static Built build(SaveFile file, Config cfg, ProgressSink progress, AtomicBoolean cancel) {
         ColdProblem p = ColdProblem.fromSave(file);
         ColdSearch.Config solverCfg = new ColdSearch.Config();
 
@@ -144,7 +297,14 @@ public final class ColdBeamSolver {
             int L = b - a + 1;
             int endSeg = b + 1;
             boolean lastCycle = ci == cyc.length - 1;
-            List<int[]> fams = cycleFamilies(L, cfg, cfg.cycle(ci));
+            CycleConfig cc = cfg.cycle(ci);
+            int[] alpha = cc != null && cc.alphabet != null && cc.alphabet.length > 0 ? cc.alphabet
+                    : cfg.alphabet != null && cfg.alphabet.length > 0 ? cfg.alphabet : null;
+            int kc = cc != null && cc.maxChanges > 0 ? cc.maxChanges
+                    : cfg.maxChanges > 0 ? cfg.maxChanges : 2;
+            List<int[]> fams = alpha != null
+                    ? cycleSequences(L, alpha, kc, SEQ_CAP)
+                    : cycleFamilies(L, cfg, cc);
             List<int[][]> next = new ArrayList<int[][]>();
             for (int[][] partial : beam) {
                 for (int[] pat : fams) {
@@ -191,11 +351,7 @@ public final class ColdBeamSolver {
             sigs.add(sb.toString());
         }
         progress.onBuilt(sigs.size(), tailCut);
-        if (cancel.get() || sigs.isEmpty()) return null;
-
-        String solvedSig = streamCertify(p, solverCfg, cfg, sigs, progress, cancel, deadline);
-        if (solvedSig == null) return null;
-        return ColdSearch.certifyLine(file, solvedSig, solverCfg);
+        return new Built(p, solverCfg, sigs, tailCut, deadline);
     }
 
     private static String streamCertify(ColdProblem p, ColdSearch.Config solverCfg, Config cfg,
@@ -279,7 +435,69 @@ public final class ColdBeamSolver {
         return solvedSig.get();
     }
 
+    private static List<Feasible> streamCertifyAll(ColdProblem p, ColdSearch.Config solverCfg, Config cfg,
+                                                   List<String> sigs, final ProgressSink progress,
+                                                   final AtomicBoolean cancel, final long deadline) {
+        final String[] sigArr = sigs.toArray(new String[0]);
+        final int certifyCap = cfg.certifyCap;
+        final ColdProblem pp = p;
+        final ColdSearch.Config scfg = solverCfg;
+        final AtomicInteger nextIdx = new AtomicInteger(0);
+        final AtomicInteger certifiedCt = new AtomicInteger(0);
+        final List<Feasible> feasible = Collections.synchronizedList(new ArrayList<Feasible>());
+        final long streamStart = System.nanoTime();
+        final int nThreads = Math.max(1, cfg.threads);
+        final int oldBucketBudget = ColdSearch.BUCKET_SLICE_BUDGET;
+        try {
+            ColdSearch.BUCKET_SLICE_BUDGET = cfg.bucketBudget;
+            Thread[] workers = new Thread[nThreads];
+            for (int t = 0; t < nThreads; t++) {
+                workers[t] = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            ColdSearch.Sweep[] tcscan = buildScan(pp, scfg, 0.5, (int) Math.round(360.0 / 0.5));
+                            while (true) {
+                                if (cancel.get() || System.nanoTime() > deadline) break;
+                                if (certifiedCt.get() >= certifyCap) break;
+                                int i = nextIdx.getAndIncrement();
+                                if (i >= sigArr.length) break;
+                                String sig = sigArr[i];
+                                int done = certifiedCt.incrementAndGet();
+                                ColdResult r = ColdSearch.certifySig(pp, tcscan, sig, scfg, cancel);
+                                if (r != null && r.solved()) feasible.add(new Feasible(sig, r));
+                                if (done % 100 == 0) {
+                                    progress.onCertify(done, sigArr.length, feasible.size(),
+                                            (System.nanoTime() - streamStart) / 1_000_000L);
+                                }
+                            }
+                        } catch (Throwable ex) {
+                            cancel.set(true);
+                        }
+                    }
+                });
+            }
+            for (Thread w : workers) w.start();
+            for (Thread w : workers) {
+                try {
+                    w.join();
+                } catch (InterruptedException ie) {
+                    cancel.set(true);
+                    Thread.currentThread().interrupt();
+                }
+            }
+        } finally {
+            ColdSearch.BUCKET_SLICE_BUDGET = oldBucketBudget;
+        }
+        progress.onCertify(certifiedCt.get(), sigArr.length, feasible.size(),
+                (System.nanoTime() - streamStart) / 1_000_000L);
+        return new ArrayList<Feasible>(feasible);
+    }
+
     private static int[] engagePoints(Config cfg, int[][] cyc, int nSegs) {
+        if (cfg.engageTicks != null && cfg.engageTicks.length > 0) {
+            return cfg.engageTicks;
+        }
         if (cfg.sprintEngage == SprintEngage.SWEEP) {
             int[] pts = new int[cyc.length + 1];
             for (int i = 0; i < cyc.length; i++) pts[i] = cyc[i][0];

@@ -1,7 +1,5 @@
 package de.legoshi.parkourcalc.core.anglesolver.coldsearch;
 
-import com.google.gson.Gson;
-import de.legoshi.parkourcalc.anglesolver.harness.Fixtures;
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import org.junit.Assume;
 import org.junit.Test;
@@ -23,8 +21,7 @@ public class ColdBeamSolverSmokeScreen {
     @Test
     public void j154SolvesColdViaProductionBeam() {
         Assume.assumeTrue("set PKC_COLD_SMOKE=1", "1".equals(System.getenv("PKC_COLD_SMOKE")));
-        SaveFile file = new Gson().fromJson(
-                Fixtures.rawPool("hpk_human/d12/j154_1bm_Head_Butterfly_Neo"), SaveFile.class);
+        SaveFile file = ColdTestHarness.loadSave("hpk_human/d12/j154_1bm_Head_Butterfly_Neo");
 
         ColdBeamSolver.Config cfg = new ColdBeamSolver.Config();
         cfg.coasts = new int[] {KeyLine.A, KeyLine.SD};

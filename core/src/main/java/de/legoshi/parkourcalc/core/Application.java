@@ -192,8 +192,9 @@ public final class Application {
                 this::onUserChange, Math.max(2, Runtime.getRuntime().availableProcessors() - 2));
         StratFinderController stratFinderController = new StratFinderController(
                 angleSolverState, boxController, runner, saveController, inputData, forwardModel);
-        ColdFinderController coldFinderController = new ColdFinderController(
-                angleSolverState, boxController, runner, saveController, inputData, this::onUserChange);
+        ColdStratController coldStratController = new ColdStratController(
+                angleSolverState, boxController, runner, saveController, inputData, this::onUserChange,
+                open -> stratFinderController.widget().setWindowOpen(open));
         GraphEditorWindow graphEditorWindow = new GraphEditorWindow(angleSolverEngine);
         AngleSolverWindow angleSolverWindow = new AngleSolverWindow(angleSolverState, settings, inputData::size, angleSolverEngine, velocityMapController.widget(), stratFinderController.widget(), graphStore, graphEditorWindow);
         angleSolverWindow.setApplySurfaceState(this::applyPathSurfaceState);
@@ -236,10 +237,11 @@ public final class Application {
         overlayManager.register(angleSolverWindow);
         overlayManager.register(graphEditorWindow);
         overlayManager.register(io -> {
-            coldFinderController.widget().setWindowOpen(settings.viewColdFinder);
-            coldFinderController.widget().renderWindow(ThemeManager.uiScale());
-            settings.viewColdFinder = coldFinderController.widget().isWindowOpen();
+            coldStratController.widget().setWindowOpen(settings.viewStratFinder);
+            coldStratController.widget().renderWindow(ThemeManager.uiScale());
+            settings.viewStratFinder = coldStratController.widget().isWindowOpen();
         });
+        overlayManager.register(io -> stratFinderController.widget().renderWindow(ThemeManager.uiScale()));
     }
 
     public void setFilePicker(FilePickerPort filePicker) {

@@ -33,6 +33,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 public final class ColdSearch {
 
@@ -51,6 +53,9 @@ public final class ColdSearch {
         public int certifyCap = 400;
         public double rectSlack = 0.05;
         public long timeBudgetMs = 0L;
+        public int[][] segAlphabet;
+        public int[] segMaxChanges;
+        public int threads = Math.max(2, Runtime.getRuntime().availableProcessors());
     }
 
     private static final double MET_TOL = 1.0e-4;
@@ -103,6 +108,22 @@ public final class ColdSearch {
                 p.rectXLo, p.rectXHi, p.rectZLo, p.rectZHi);
         probeSig(p, Collections.singletonList(c), scan, cfg, cancel);
         return c.probeViol;
+    }
+
+    static ColdResult certifySig(ColdProblem p, Sweep[] scan, String sig, Config cfg, AtomicBoolean cancel) {
+        int n = p.lastPressSeg + 1;
+        int[] moveKey = new int[n];
+        boolean[] hold = new boolean[n];
+        int idx = 0;
+        for (int k = 0; k < n; k++) {
+            moveKey[k] = sig.charAt(idx) - '0';
+            hold[k] = sig.charAt(idx + 1) == '+';
+            idx += 2;
+        }
+        Candidate c = new Candidate(moveKey, hold, sig, 0.0, 0.0, 0.0, 0.0, 0.0,
+                p.rectXLo, p.rectXHi, p.rectZLo, p.rectZHi);
+        probeSig(p, Collections.singletonList(c), scan, cfg, cancel);
+        return certify(p, c, true, scan, cancel, System.nanoTime(), 0, 0, 0, 1, 1, false);
     }
 
     static long[] benchSig(ColdProblem p, Sweep[] scan, String sig, Config cfg, boolean doCertify,
@@ -208,6 +229,193 @@ public final class ColdSearch {
         long elapsed = (System.nanoTime() - t0) / 1_000_000L;
         return new ColdResult(null, Double.NaN, null, Double.NaN, Double.NaN, Double.POSITIVE_INFINITY,
                 null, elapsed, cfg.maxChanges, tot.nodes, tot.cands, tot.probed, tot.certified, tot.truncated);
+    }
+
+    public static ColdResult solveConstrained(SaveFile file, Config cfg, PrintStream log, AtomicBoolean cancel) {
+        long t0 = System.nanoTime();
+        ColdProblem p = ColdProblem.fromSave(file);
+        if (cancel == null) cancel = new AtomicBoolean(false);
+        long deadline = cfg.timeBudgetMs > 0 ? t0 + cfg.timeBudgetMs * 1_000_000L : Long.MAX_VALUE;
+        Totals tot = new Totals();
+
+        int maxLevel = 0;
+        if (cfg.segMaxChanges != null) {
+            for (int m : cfg.segMaxChanges) maxLevel += Math.max(0, m);
+        }
+        maxLevel = Math.min(maxLevel, cfg.maxChanges);
+
+        for (int level = 0; level <= maxLevel && System.nanoTime() < deadline; level++) {
+            long levelStart = System.nanoTime();
+            long[] stats = new long[3];
+            List<SigCollector> collectors = runLevel(p, cfg, level, deadline, cancel, stats);
+            tot.nodes += stats[0];
+            tot.cands += stats[1];
+            tot.truncated |= stats[2] != 0;
+            long arcMs = (System.nanoTime() - levelStart) / 1_000_000L;
+
+            Candidate[] ordered = sigsByMargin(collectors);
+            tot.certified += ordered.length;
+            long certStart = System.nanoTime();
+            String solvedSig = parallelCertifyFirst(p, cfg, ordered, cancel, deadline);
+            if (log != null) {
+                log.printf(Locale.ROOT,
+                        "COLD constrained level=%d emitted=%d distinct=%d nodes=%d arcMs=%d certMs=%d probeSumMs=%d certSumMs=%d certN=%d solved=%b%n",
+                        level, stats[1], ordered.length, stats[0], arcMs,
+                        (System.nanoTime() - certStart) / 1_000_000L,
+                        lastProbeNs / 1_000_000L, lastCertNs / 1_000_000L, lastCertCount, solvedSig != null);
+            }
+            if (solvedSig != null) return certifyLine(file, solvedSig, cfg);
+        }
+        long elapsed = (System.nanoTime() - t0) / 1_000_000L;
+        return new ColdResult(null, Double.NaN, null, Double.NaN, Double.NaN, Double.POSITIVE_INFINITY,
+                null, elapsed, maxLevel, tot.nodes, tot.cands, tot.probed, tot.certified, tot.truncated);
+    }
+
+    private static List<SigCollector> runLevel(final ColdProblem p, final Config cfg, final int level,
+                                               final long deadline, final AtomicBoolean cancel, long[] stats) {
+        boolean rootParallel = level <= cfg.arcExhaustiveMaxLevel && cfg.segAlphabet != null
+                && cfg.segAlphabet.length > 0 && cfg.segAlphabet[0] != null
+                && cfg.segAlphabet[0].length > 1 && cfg.threads > 1;
+        if (!rootParallel) {
+            SigCollector collector = new SigCollector(cfg);
+            ArcSweep sweep = new ArcSweep(p, cfg, level, collector);
+            sweep.setSegments(cfg.segAlphabet, cfg.segMaxChanges);
+            sweep.setBudget(deadline, cancel);
+            sweep.run();
+            stats[0] = sweep.nodes;
+            stats[1] = collector.emitted;
+            stats[2] = sweep.truncated || collector.truncated ? 1 : 0;
+            return Collections.singletonList(collector);
+        }
+        final int[] roots = cfg.segAlphabet[0];
+        final SigCollector[] cols = new SigCollector[roots.length];
+        final long[] nodes = new long[roots.length];
+        final long[] emitted = new long[roots.length];
+        final boolean[] trunc = new boolean[roots.length];
+        Thread[] threads = new Thread[roots.length];
+        for (int r = 0; r < roots.length; r++) {
+            final int ri = r;
+            threads[r] = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    SigCollector collector = new SigCollector(cfg);
+                    ArcSweep sweep = new ArcSweep(p, cfg, level, collector);
+                    sweep.setSegments(cfg.segAlphabet, cfg.segMaxChanges);
+                    sweep.setBudget(deadline, cancel);
+                    sweep.setRootCombo(roots[ri]);
+                    sweep.run();
+                    cols[ri] = collector;
+                    nodes[ri] = sweep.nodes;
+                    emitted[ri] = collector.emitted;
+                    trunc[ri] = sweep.truncated || collector.truncated;
+                }
+            });
+        }
+        for (Thread t : threads) t.start();
+        for (Thread t : threads) {
+            try {
+                t.join();
+            } catch (InterruptedException ie) {
+                cancel.set(true);
+                Thread.currentThread().interrupt();
+            }
+        }
+        List<SigCollector> out = new ArrayList<SigCollector>();
+        for (int r = 0; r < roots.length; r++) {
+            stats[0] += nodes[r];
+            stats[1] += emitted[r];
+            if (trunc[r]) stats[2] = 1;
+            if (cols[r] != null) out.add(cols[r]);
+        }
+        return out;
+    }
+
+    private static Candidate[] sigsByMargin(List<SigCollector> collectors) {
+        final Map<String, Candidate> best = new HashMap<String, Candidate>();
+        for (SigCollector collector : collectors) {
+            for (Map.Entry<String, List<Candidate>> e : collector.perSig.entrySet()) {
+                Candidate bc = null;
+                for (Candidate c : e.getValue()) {
+                    if (bc == null || c.margin > bc.margin) bc = c;
+                }
+                if (bc == null) continue;
+                Candidate prev = best.get(e.getKey());
+                if (prev == null || bc.margin > prev.margin) best.put(e.getKey(), bc);
+            }
+        }
+        List<Candidate> cands = new ArrayList<Candidate>(best.values());
+        Collections.sort(cands, new Comparator<Candidate>() {
+            @Override
+            public int compare(Candidate a, Candidate b) {
+                int c = Double.compare(b.margin, a.margin);
+                return c != 0 ? c : a.sig.compareTo(b.sig);
+            }
+        });
+        return cands.toArray(new Candidate[0]);
+    }
+
+    static int JOINT_FALLBACK_TOP = 64;
+    static long lastProbeNs;
+    static long lastCertNs;
+    static long lastCertCount;
+
+    private static String parallelCertifyFirst(final ColdProblem p, final Config cfg, final Candidate[] candArr,
+                                               final AtomicBoolean cancel, final long deadline) {
+        if (candArr.length == 0) return null;
+        final AtomicInteger nextIdx = new AtomicInteger(0);
+        final AtomicReference<String> solved = new AtomicReference<String>(null);
+        final AtomicBoolean abort = new AtomicBoolean(false);
+        final java.util.concurrent.atomic.AtomicLong probeNs = new java.util.concurrent.atomic.AtomicLong(0);
+        final java.util.concurrent.atomic.AtomicLong certNs = new java.util.concurrent.atomic.AtomicLong(0);
+        final AtomicInteger done = new AtomicInteger(0);
+        final int nThreads = Math.max(1, cfg.threads);
+        final int steps = (int) Math.round(360.0 / PROBE_SCAN_STEP);
+        Thread[] workers = new Thread[nThreads];
+        for (int t = 0; t < nThreads; t++) {
+            workers[t] = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Sweep[] scan = new Sweep[steps];
+                        for (int i = 0; i < steps; i++) {
+                            scan[i] = new Sweep(p, cfg, -180.0 + i * PROBE_SCAN_STEP, 0, null);
+                        }
+                        while (!abort.get()) {
+                            if (cancel.get() || System.nanoTime() > deadline) {
+                                abort.set(true);
+                                break;
+                            }
+                            int i = nextIdx.getAndIncrement();
+                            if (i >= candArr.length) break;
+                            boolean joint = i < JOINT_FALLBACK_TOP;
+                            long[] full = benchSig(p, scan, candArr[i].sig, cfg, true, joint, abort);
+                            probeNs.addAndGet(full[0]);
+                            certNs.addAndGet(full[1]);
+                            done.incrementAndGet();
+                            if (full[2] == 1 && solved.compareAndSet(null, candArr[i].sig)) {
+                                abort.set(true);
+                                return;
+                            }
+                        }
+                    } catch (Throwable ex) {
+                        // stop this worker; the others keep going
+                    }
+                }
+            });
+        }
+        for (Thread w : workers) w.start();
+        for (Thread w : workers) {
+            try {
+                w.join();
+            } catch (InterruptedException ie) {
+                abort.set(true);
+                Thread.currentThread().interrupt();
+            }
+        }
+        lastProbeNs = probeNs.get();
+        lastCertNs = certNs.get();
+        lastCertCount = done.get();
+        return solved.get();
     }
 
     private static ColdResult probeCertify(ColdProblem p, Config cfg, SigCollector collector, Sweep[] scan,

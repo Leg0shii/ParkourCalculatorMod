@@ -4,9 +4,9 @@ import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.coldsearch.ColdBeamSolver;
 import de.legoshi.parkourcalc.core.anglesolver.coldsearch.ColdProblem;
 import de.legoshi.parkourcalc.core.anglesolver.coldsearch.ColdResult;
+import de.legoshi.parkourcalc.core.anglesolver.coldsearch.ColdStratFinder;
 import de.legoshi.parkourcalc.core.anglesolver.coldsearch.KeyLine;
 import de.legoshi.parkourcalc.core.anglesolver.coldsearch.LineSpec;
-import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
@@ -14,13 +14,13 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
-import de.legoshi.parkourcalc.core.ui.coldfinder.ColdFinderWidget;
+import de.legoshi.parkourcalc.core.ui.coldfinder.ColdStratWidget;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.IntConsumer;
 
-public final class ColdFinderController {
+public final class ColdStratController {
 
     private static final InputRow.Key[] MOVE_KEYS = {
             InputRow.Key.W, InputRow.Key.A, InputRow.Key.S, InputRow.Key.D,
@@ -32,55 +32,60 @@ public final class ColdFinderController {
     private final SaveController saveController;
     private final InputData inputData;
     private final IntConsumer onUserChange;
-    private final ColdFinderWidget widget;
+    private final ColdStratWidget widget;
 
-    public ColdFinderController(AngleSolverState angleSolverState, BoxController boxController,
-                                SimulationRunner runner, SaveController saveController,
-                                InputData inputData, IntConsumer onUserChange) {
+    public ColdStratController(AngleSolverState angleSolverState, BoxController boxController,
+                               SimulationRunner runner, SaveController saveController,
+                               InputData inputData, IntConsumer onUserChange,
+                               java.util.function.Consumer<Boolean> freeYawWindow) {
         this.angleSolverState = angleSolverState;
         this.boxController = boxController;
         this.runner = runner;
         this.saveController = saveController;
         this.inputData = inputData;
         this.onUserChange = onUserChange;
-        this.widget = new ColdFinderWidget(this::inspect, this::run, this::applyResult);
+        this.widget = new ColdStratWidget(this::inspect, this::run, this::apply, freeYawWindow);
     }
 
-    public ColdFinderWidget widget() {
+    public ColdStratWidget widget() {
         return widget;
     }
 
     private SaveFile buildFile() {
-        FileSystemSaveStore store = saveController.getSaveStore();
-        if (store == null || inputData.size() == 0) return null;
-        return SaveIO.buildSaveFile(store, inputData, runner.getStartPosition(), runner.getStartVelocity(),
-                runner.getStartYaw(), runner.getStartPitch(), angleSolverState, boxController.getStates(), true);
+        if (saveController.getSaveStore() == null || inputData.size() == 0) return null;
+        return SaveIO.buildSaveFile(saveController.getSaveStore(), inputData, runner.getStartPosition(),
+                runner.getStartVelocity(), runner.getStartYaw(), runner.getStartPitch(),
+                angleSolverState, boxController.getStates(), true);
     }
 
-    private ProblemView inspect() {
+    private Problem inspect() {
         SaveFile file = buildFile();
-        if (file == null) return ProblemView.error("Load a recording and set the solve segment first.");
+        if (file == null) return Problem.error("Load a recording and set the solve segment first.");
+        ColdProblem p;
         try {
-            ColdProblem p = ColdProblem.fromSave(file);
-            return ProblemView.ok(p);
+            p = ColdProblem.fromSave(file);
         } catch (RuntimeException ex) {
-            String msg = ex.getMessage();
-            return ProblemView.error(msg != null ? msg : ex.toString());
+            return Problem.error(friendly(ex));
         }
+        boolean hasEnd = !p.tailWalls.isEmpty() || !p.momentumWalls.isEmpty();
+        return Problem.ok(file, p, hasEnd);
     }
 
-    private ColdFinderJob run(ColdBeamSolver.Config cfg) {
-        SaveFile file = buildFile();
+    private static String friendly(RuntimeException ex) {
+        String m = ex.getMessage();
+        if (m == null) return ex.toString();
+        if (m.contains("free start")) return "Set a start-position constraint at the first tick.";
+        if (m.contains("no free X/Z start rect")) return "Set a start-position constraint at the first tick.";
+        if (m.contains("empty segment")) return "Set the solve start and goal ticks (goal after start).";
+        return m;
+    }
+
+    private ColdStratJob run(SaveFile file, ColdStratFinder.Request req) {
         if (file == null) return null;
-        try {
-            ColdProblem.fromSave(file);
-        } catch (RuntimeException ex) {
-            return null;
-        }
-        return new ColdFinderJob(file, cfg);
+        return new ColdStratJob(file, req);
     }
 
-    private void applyResult(ColdResult r) {
+    private void apply(ColdResult r) {
         if (r == null || !r.solved()) return;
         KeyLine line = r.line;
         ColdProblem p = line.problem;
@@ -95,85 +100,76 @@ public final class ColdFinderController {
             row.setYawLocked(true);
             row.setYaw((float) gf[seg]);
         }
-        Vec3dCore curStart = runner.getStartPosition();
-        double startY = curStart != null ? curStart.y : 0.0;
+        Vec3dCore cur = runner.getStartPosition();
+        double startY = cur != null ? cur.y : 0.0;
         runner.setStartPosition(new Vec3dCore(r.startX, startY, r.startZ));
         runner.setStartYaw((float) gf[0]);
         onUserChange.accept(-1);
     }
 
-    /** Detected problem shape for the UI, or an error message when the segment is not cold-searchable. */
-    public static final class ProblemView {
+    public static final class Problem {
         public final boolean ok;
         public final String error;
+        public final boolean hasEndConstraint;
+        public final SaveFile file;
         public final int startTick;
         public final int landingTick;
-        public final int numTicks;
-        public final int[] cycleStartSeg;
-        public final int[] cyclePressSeg;
+        public final int[] segStart;
+        public final int[] segPress;
 
-        private ProblemView(boolean ok, String error, int startTick, int landingTick, int numTicks,
-                            int[] cycleStartSeg, int[] cyclePressSeg) {
+        private Problem(boolean ok, String error, boolean hasEndConstraint, SaveFile file,
+                        int startTick, int landingTick, int[] segStart, int[] segPress) {
             this.ok = ok;
             this.error = error;
+            this.hasEndConstraint = hasEndConstraint;
+            this.file = file;
             this.startTick = startTick;
             this.landingTick = landingTick;
-            this.numTicks = numTicks;
-            this.cycleStartSeg = cycleStartSeg;
-            this.cyclePressSeg = cyclePressSeg;
+            this.segStart = segStart;
+            this.segPress = segPress;
         }
 
-        static ProblemView error(String msg) {
-            return new ProblemView(false, msg, 0, 0, 0, new int[0], new int[0]);
+        static Problem error(String msg) {
+            return new Problem(false, msg, false, null, 0, 0, new int[0], new int[0]);
         }
 
-        static ProblemView ok(ColdProblem p) {
-            int[] press = p.pressSegTicks;
-            int[] start = new int[press.length];
-            int prev = -1;
-            for (int i = 0; i < press.length; i++) {
-                start[i] = prev + 1;
-                prev = press[i];
+        static Problem ok(SaveFile file, ColdProblem p, boolean hasEnd) {
+            List<ColdStratFinder.Segment> segs = ColdStratFinder.segmentsOf(p);
+            int[] start = new int[segs.size()];
+            int[] press = new int[segs.size()];
+            for (int i = 0; i < segs.size(); i++) {
+                start[i] = segs.get(i).startTick;
+                press[i] = segs.get(i).pressTick;
             }
-            return new ProblemView(true, null, p.startTick, p.landingTick, p.numTicks, start, press.clone());
+            return new Problem(true, null, hasEnd, file, p.startTick, p.landingTick, start, press);
         }
 
-        public int cycleCount() {
-            return cyclePressSeg.length;
+        public int segmentCount() {
+            return segPress.length;
         }
     }
 
-    /** A running cold solve: owns the worker thread, streams progress, and holds the solved result. */
-    public static final class ColdFinderJob implements ColdBeamSolver.ProgressSink {
+    public static final class ColdStratJob implements ColdBeamSolver.ProgressSink {
         private final Thread thread;
         private final AtomicBoolean cancel = new AtomicBoolean(false);
         private final long startNanos = System.nanoTime();
 
         private volatile boolean running = true;
         private volatile boolean finished;
-        private volatile ColdResult result;
+        private volatile ColdStratFinder.Result result;
         private volatile String status = "running";
-        private volatile String cycleLine = "";
-        private volatile int candidates = -1;
+        private volatile int built = -1;
         private volatile int done;
         private volatile int total;
-        private volatile int certified;
-        private volatile long certifyMs;
+        private volatile int feasible;
 
-        ColdFinderJob(final SaveFile file, final ColdBeamSolver.Config cfg) {
+        ColdStratJob(final SaveFile file, final ColdStratFinder.Request req) {
             this.thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        ColdResult r = ColdBeamSolver.solve(file, cfg, ColdFinderJob.this, cancel);
-                        result = r;
-                        if (r != null && r.solved()) {
-                            status = "solved";
-                        } else if (cancel.get()) {
-                            status = "cancelled";
-                        } else {
-                            status = "no solution";
-                        }
+                        result = ColdStratFinder.find(file, req, ColdStratJob.this, cancel);
+                        status = cancel.get() ? "cancelled" : "done";
                     } catch (Throwable ex) {
                         String m = ex.getMessage();
                         status = "error: " + (m != null ? m : ex.getClass().getSimpleName());
@@ -182,7 +178,7 @@ public final class ColdFinderController {
                         finished = true;
                     }
                 }
-            }, "cold-finder");
+            }, "cold-strat");
             this.thread.setDaemon(true);
             this.thread.start();
         }
@@ -199,7 +195,7 @@ public final class ColdFinderController {
             return finished;
         }
 
-        public ColdResult result() {
+        public ColdStratFinder.Result result() {
             return result;
         }
 
@@ -207,12 +203,8 @@ public final class ColdFinderController {
             return status;
         }
 
-        public String cycleLine() {
-            return cycleLine;
-        }
-
-        public int candidates() {
-            return candidates;
+        public int built() {
+            return built;
         }
 
         public int done() {
@@ -223,8 +215,8 @@ public final class ColdFinderController {
             return total;
         }
 
-        public int certified() {
-            return certified;
+        public int feasible() {
+            return feasible;
         }
 
         public double elapsedSeconds() {
@@ -233,28 +225,23 @@ public final class ColdFinderController {
 
         @Override
         public void onBuildCycle(int cycleIndex, int cycleCount, long extensions, int survivors, long tailCut) {
-            cycleLine = "cycle " + (cycleIndex + 1) + "/" + cycleCount + " · " + survivors + " survivors";
         }
 
         @Override
         public void onBuilt(int candidates, long tailCut) {
-            this.candidates = candidates;
-            this.total = candidates;
-            this.cycleLine = candidates + " candidates";
+            built = candidates;
+            total = candidates;
         }
 
         @Override
         public void onCertify(int done, int total, int certified, long elapsedMs) {
             this.done = done;
             this.total = total;
-            this.certified = certified;
-            this.certifyMs = elapsedMs;
+            this.feasible = certified;
         }
 
         @Override
         public void onSolved(String sig, int idx, int certified, long elapsedMs) {
-            this.certified = certified;
-            this.certifyMs = elapsedMs;
         }
     }
 }

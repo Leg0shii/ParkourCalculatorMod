@@ -55,6 +55,17 @@ public final class ThemeManager {
     private static final float[] TABLE_FOCUS_RING       = FOCUS;
     private static final float[] TABLE_POPULATED_BORDER = PANEL_ACTIVE;
 
+    private static final float[][] TRAJECTORY_PALETTE = {
+        rgb(0xcb, 0xa6, 0xf7, 1.00f),
+        rgb(0xa6, 0xe3, 0xa1, 1.00f),
+        rgb(0xfa, 0xb3, 0x87, 1.00f),
+        rgb(0x74, 0xc7, 0xec, 1.00f),
+        rgb(0xf5, 0xc2, 0xe7, 1.00f),
+        rgb(0xf9, 0xe2, 0xaf, 1.00f),
+    };
+    private static final float[] TRAJECTORY_MUTED = OVERLAY0;
+    private static final float[] TRAJECTORY_BAND = rgb(0x89, 0xdc, 0xeb, 0.33f);
+
     private static final float HAIR = 1.0f;
     private static final float XXS = 2.0f;
     public static final float XS = 4.0f;
@@ -678,6 +689,18 @@ public final class ThemeManager {
 
     public static int hoverColor() {
         return u32(PANEL_HOVER);
+    }
+
+    public static int trajectorySegmentColor(int i) {
+        return u32(TRAJECTORY_PALETTE[Math.floorMod(i, TRAJECTORY_PALETTE.length)]);
+    }
+
+    public static int trajectoryMutedColor() {
+        return u32(TRAJECTORY_MUTED);
+    }
+
+    public static int trajectoryBandColor() {
+        return u32(TRAJECTORY_BAND);
     }
 
     public static int borderColor() {

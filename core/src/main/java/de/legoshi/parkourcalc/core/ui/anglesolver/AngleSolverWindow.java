@@ -139,11 +139,6 @@ public final class AngleSolverWindow implements RenderInterface {
             velocityMap.renderWindow(ThemeManager.uiScale());
             settings.viewVelocityMap = velocityMap.isWindowOpen();
         }
-        if (stratFinder != null) {
-            stratFinder.setWindowOpen(settings.viewStratFinder);
-            stratFinder.renderWindow(ThemeManager.uiScale());
-            settings.viewStratFinder = stratFinder.isWindowOpen();
-        }
         if (!settings.viewAngleSolver) return;
         int rowCount = Math.max(1, rowCountSupplier.getAsInt());
         state.clampTicks(rowCount);

@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.PriorityQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 final class ArcSweep {
 
@@ -181,6 +182,7 @@ final class ArcSweep {
         final List<Form> upperZ;
         final int[] prefixKey;
         final boolean[] prefixHold;
+        final int segChanges;
         double rank;
         long sinkKey;
 
@@ -188,7 +190,7 @@ final class ArcSweep {
                  double dxs, double dxc, double dzs, double dzc,
                  boolean sprintPrev, int changes, Arcs arcs,
                  List<Form> lowerX, List<Form> upperX, List<Form> lowerZ, List<Form> upperZ,
-                 int[] prefixKey, boolean[] prefixHold) {
+                 int[] prefixKey, boolean[] prefixHold, int segChanges) {
             this.tick = tick;
             this.vxs = vxs;
             this.vxc = vxc;
@@ -207,6 +209,7 @@ final class ArcSweep {
             this.upperZ = upperZ;
             this.prefixKey = prefixKey;
             this.prefixHold = prefixHold;
+            this.segChanges = segChanges;
         }
     }
 
@@ -312,6 +315,66 @@ final class ArcSweep {
     private int dbgReached;
     private final int[] moveKey;
     private final boolean[] hold;
+
+    private boolean segMode;
+    private int[] segOf;
+    private boolean[] firstOfSeg;
+    private int[][] segAlpha;
+    private int[] segMaxChg;
+    private long deadlineNanos = Long.MAX_VALUE;
+    private AtomicBoolean cancelFlag;
+    private int rootCombo = -1;
+
+    private int seamTick = -1;
+    private List<ArcState> seamOut;
+    private int[] retainKey;
+    private boolean[] retainHold;
+    long seamCount;
+
+    List<ArcState> collectSeam(int m, int frontCap, long nodeCap) {
+        return collectSeam(m, frontCap, nodeCap, null, null);
+    }
+
+    List<ArcState> collectSeam(int m, int frontCap, long nodeCap, int[] rKey, boolean[] rHold) {
+        this.seamTick = m;
+        this.seamOut = new ArrayList<ArcState>();
+        this.retainKey = rKey;
+        this.retainHold = rHold;
+        this.seamCount = 0;
+        this.atMost = true;
+        this.sufCap = frontCap;
+        stageEnd = -1;
+        sink = null;
+        stageNodeCap = nodeCap;
+        stateNodeLimit = nodeCap;
+        stageNodes = 0;
+        stateNodes = 0;
+        stateAbort = false;
+        dfs(rootState());
+        truncated |= stateAbort;
+        return seamOut;
+    }
+
+    private boolean retainMatch() {
+        if (retainKey == null) return true;
+        for (int i = 0; i < retainKey.length; i++) {
+            if (moveKey[i] != retainKey[i] || hold[i] != retainHold[i]) return false;
+        }
+        return true;
+    }
+
+    int seamOf(int tick) {
+        return segMode ? segOf[tick] : 0;
+    }
+
+    void setBudget(long deadlineNanos, AtomicBoolean cancel) {
+        this.deadlineNanos = deadlineNanos;
+        this.cancelFlag = cancel;
+    }
+
+    void setRootCombo(int combo) {
+        this.rootCombo = combo;
+    }
 
     ArcSweep(ColdProblem p, ColdSearch.Config cfg, int level, ColdSearch.SigCollector out) {
         this.p = p;
@@ -482,7 +545,40 @@ final class ArcSweep {
         lz.add(new Form(0, 0, p.rectZLo));
         uz.add(new Form(0, 0, p.rectZHi));
         return new ArcState(0, 0, 0, 0, 0, 0, 0, 0, 0, false, 0, Arcs.FULL,
-                lx, ux, lz, uz, new int[0], new boolean[0]);
+                lx, ux, lz, uz, new int[0], new boolean[0], 0);
+    }
+
+    void setSegments(int[][] alpha, int[] maxChg) {
+        this.segAlpha = alpha;
+        this.segMaxChg = maxChg;
+        this.segMode = alpha != null;
+        if (!segMode) return;
+        this.segOf = new int[last + 1];
+        this.firstOfSeg = new boolean[last + 1];
+        int si = 0;
+        for (int k = 0; k <= last; k++) {
+            while (si < p.pressSegTicks.length - 1 && k > p.pressSegTicks[si]) si++;
+            segOf[k] = si;
+            firstOfSeg[k] = k == 0 || segOf[k] != segOf[k - 1];
+        }
+    }
+
+    void runConstrained(long nodeCap) {
+        this.atMost = true;
+        this.sufCap = Integer.MAX_VALUE / 2;
+        stageEnd = -1;
+        sink = null;
+        stageNodeCap = nodeCap;
+        stateNodeLimit = nodeCap;
+        stageNodes = 0;
+        stateNodes = 0;
+        stateAbort = false;
+        dfs(rootState());
+        truncated |= stateAbort;
+        if (debugTrace != null) {
+            debugTrace.append(String.format(Locale.ROOT,
+                    "constrained nodes=%d truncated=%b%n", stageNodes, stateAbort));
+        }
     }
 
     void runSeeded(StratPrefixes.Seed seed, int preLevelCap, int suffixCap, long nodeCap) {
@@ -625,6 +721,17 @@ final class ArcSweep {
     private void dfs(ArcState st) {
         if (stateAbort) return;
         int k = st.tick;
+        if (seamOut != null && k == seamTick) {
+            seamCount++;
+            if (retainMatch()) {
+                int[] pk = new int[k];
+                boolean[] ph = new boolean[k];
+                System.arraycopy(moveKey, 0, pk, 0, k);
+                System.arraycopy(hold, 0, ph, 0, k);
+                seamOut.add(copyWithPrefix(st, pk, ph));
+            }
+            return;
+        }
         if (sink != null && k == stageEnd) {
             int[] pk = new int[k];
             boolean[] ph = new boolean[k];
@@ -642,6 +749,11 @@ final class ArcSweep {
             stateAbort = true;
             return;
         }
+        if ((stageNodes & 0xFFFF) == 0
+                && (System.nanoTime() > deadlineNanos || (cancelFlag != null && cancelFlag.get()))) {
+            stateAbort = true;
+            return;
+        }
         int prevCombo = k > 0 ? moveKey[k - 1] : -1;
         boolean prevHold = k > 0 && hold[k - 1];
         if (seedMk != null && k >= seedStart && k < seedStart + seedMk.length) {
@@ -656,7 +768,7 @@ final class ArcSweep {
                 emit(st);
                 return;
             }
-            stepInto(st, k, combo, sprintCur, 0, null);
+            stepInto(st, k, combo, sprintCur, 0, st.segChanges, null);
             return;
         }
         if (seedMk != null && k < seedStart) {
@@ -670,14 +782,19 @@ final class ArcSweep {
                 boolean sprintCur = canRun && (st.sprintPrev || h);
                 moveKey[k] = combo;
                 hold[k] = h;
-                stepInto(st, k, combo, sprintCur, used, null);
+                stepInto(st, k, combo, sprintCur, used, st.segChanges, null);
                 if (stateAbort) return;
             }
             return;
         }
         int cap = atMost ? sufCap : level;
-        for (int ci = 0; ci < KeyLine.COMBO_COUNT; ci++) {
-            int combo = comboOrder(prevCombo, ci);
+        int segK = segMode ? segOf[k] : 0;
+        boolean firstT = segMode && firstOfSeg[k];
+        int segCap = segMode && segMaxChg != null && segK < segMaxChg.length ? segMaxChg[segK] : -1;
+        int alen = segMode ? segAlpha[segK].length : KeyLine.COMBO_COUNT;
+        for (int ci = 0; ci < alen; ci++) {
+            int combo = segMode ? segComboOrder(segAlpha[segK], prevCombo, ci) : comboOrder(prevCombo, ci);
+            if (rootCombo >= 0 && k == 0 && combo != rootCombo) continue;
             boolean canRun = KeyLine.canRun(combo);
             int holdOptions = !canRun ? 1 : (st.sprintPrev ? 1 : 2);
             for (int hi = 0; hi < holdOptions; hi++) {
@@ -687,6 +804,8 @@ final class ArcSweep {
                 int used = st.changes + change;
                 if (used > cap) continue;
                 if (!atMost && used + (last - k) < level) continue;
+                int newSegCh = firstT ? 0 : st.segChanges + change;
+                if (segCap >= 0 && newSegCh > segCap) continue;
                 boolean sprintCur = canRun && (st.sprintPrev || h);
                 moveKey[k] = combo;
                 hold[k] = h;
@@ -695,18 +814,33 @@ final class ArcSweep {
                     emit(st);
                     continue;
                 }
-                stepInto(st, k, combo, sprintCur, used, null);
+                stepInto(st, k, combo, sprintCur, used, newSegCh, null);
                 if (stateAbort) return;
             }
         }
     }
 
-    private ArcState copyWithPrefix(ArcState s, int[] pk, boolean[] ph) {
-        return new ArcState(s.tick, s.vxs, s.vxc, s.vzs, s.vzc, s.dxs, s.dxc, s.dzs, s.dzc,
-                s.sprintPrev, s.changes, s.arcs, s.lowerX, s.upperX, s.lowerZ, s.upperZ, pk, ph);
+    private static int segComboOrder(int[] alpha, int prevCombo, int i) {
+        if (prevCombo < 0) return alpha[i];
+        int pi = -1;
+        for (int j = 0; j < alpha.length; j++) {
+            if (alpha[j] == prevCombo) {
+                pi = j;
+                break;
+            }
+        }
+        if (pi < 0) return alpha[i];
+        if (i == 0) return alpha[pi];
+        return i - 1 < pi ? alpha[i - 1] : alpha[i];
     }
 
-    private void stepInto(ArcState st, int k, int combo, boolean sprintCur, int used, List<ArcState> collect) {
+    private ArcState copyWithPrefix(ArcState s, int[] pk, boolean[] ph) {
+        return new ArcState(s.tick, s.vxs, s.vxc, s.vzs, s.vzc, s.dxs, s.dxc, s.dzs, s.dzc,
+                s.sprintPrev, s.changes, s.arcs, s.lowerX, s.upperX, s.lowerZ, s.upperZ, pk, ph, s.segChanges);
+    }
+
+    private void stepInto(ArcState st, int k, int combo, boolean sprintCur, int used, int childSegChanges,
+                          List<ArcState> collect) {
         boolean xSmall = Math.hypot(st.vxs, st.vxc) < thr;
         boolean zSmall = Math.hypot(st.vzs, st.vzc) < thr;
         boolean xBig = !xSmall && minAbsOverArcs(st.vxs, st.vxc, st.arcs) >= thr;
@@ -813,7 +947,7 @@ final class ArcSweep {
                 if (!funnelOk(at, vxs, vxc, dxs, dxc, arcs, true)) continue;
                 if (!funnelOk(at, vzs, vzc, dzs, dzc, arcs, false)) continue;
                 ArcState child = new ArcState(at, vxs, vxc, vzs, vzc, dxs, dxc, dzs, dzc,
-                        sprintCur, used, arcs, lx, ux, lz, uz, st.prefixKey, st.prefixHold);
+                        sprintCur, used, arcs, lx, ux, lz, uz, st.prefixKey, st.prefixHold, childSegChanges);
                 if (collect != null) {
                     collect.add(child);
                 } else {
@@ -872,6 +1006,303 @@ final class ArcSweep {
         return i - 1 < prevCombo ? i - 1 : i;
     }
 
+    List<ArcState> continueFrom(ArcState start, int[] mk, boolean[] hd) {
+        List<ArcState> states = new ArrayList<ArcState>();
+        states.add(start);
+        boolean sprintPrev = start.sprintPrev;
+        for (int k = start.tick; k < last; k++) {
+            boolean canRun = KeyLine.canRun(mk[k]);
+            boolean sprintCur = canRun && (sprintPrev || hd[k]);
+            List<ArcState> next = new ArrayList<ArcState>();
+            for (ArcState st : states) {
+                stepInto(st, k, mk[k], sprintCur, st.changes, st.segChanges, next);
+            }
+            if (next.isEmpty()) return next;
+            states = next;
+            sprintPrev = sprintCur;
+        }
+        return states;
+    }
+
+    boolean tailFeasible(ArcState st) {
+        return tailMarginBest(st) >= -(cfg.rectSlack + FLOAT_DRIFT_MARGIN);
+    }
+
+    double tailMarginBest(ArcState st) {
+        if (st.arcs.isEmpty()) return Double.NEGATIVE_INFINITY;
+        double bestTail = Double.NEGATIVE_INFINITY;
+        for (int i = 0; i < st.arcs.lo.length; i++) {
+            bestTail = Math.max(bestTail, tailMarginAt(st, st.arcs.lo[i]));
+            bestTail = Math.max(bestTail, tailMarginAt(st, 0.5 * (st.arcs.lo[i] + st.arcs.hi[i])));
+            bestTail = Math.max(bestTail, tailMarginAt(st, st.arcs.hi[i]));
+        }
+        return bestTail;
+    }
+
+    static boolean MITM_TIGHT_TAIL = true;
+    private static final double MITM_TAIL_STEP_RAD = Math.toRadians(0.5);
+
+    private boolean mitmTailReachAt(ArcState st, double sin, double cos) {
+        if (tailWallSeg.length == 0) return true;
+        double lx = Double.NEGATIVE_INFINITY;
+        double ux = Double.POSITIVE_INFINITY;
+        for (Form f : st.lowerX) lx = Math.max(lx, f.at(sin, cos));
+        for (Form f : st.upperX) ux = Math.min(ux, f.at(sin, cos));
+        double lz = Double.NEGATIVE_INFINITY;
+        double uz = Double.POSITIVE_INFINITY;
+        for (Form f : st.lowerZ) lz = Math.max(lz, f.at(sin, cos));
+        for (Form f : st.upperZ) uz = Math.min(uz, f.at(sin, cos));
+        if (lx > ux || lz > uz) return false;
+        double dx = st.dxs * sin + st.dxc * cos;
+        double dz = st.dzs * sin + st.dzc * cos;
+        double xlo = lx + dx;
+        double xhi = ux + dx;
+        double zlo = lz + dz;
+        double zhi = uz + dz;
+        double vx = st.vxs * sin + st.vxc * cos;
+        double vz = st.vzs * sin + st.vzc * cos;
+        double vxlo = vx;
+        double vxhi = vx;
+        double vzlo = vz;
+        double vzhi = vz;
+        double slack = cfg.rectSlack + FLOAT_DRIFT_MARGIN;
+        for (int k = last; k < p.numTicks; k++) {
+            double a = 0.98 * (p.slip[k] < 1.0 ? accelGroundSprint[k] : Constants.AIR_SPEED_F);
+            if (pressAt[k] && p.slip[k] < 1.0) a += 0.2;
+            vxlo -= a;
+            vxhi += a;
+            vzlo -= a;
+            vzhi += a;
+            xlo += vxlo;
+            xhi += vxhi;
+            zlo += vzlo;
+            zhi += vzhi;
+            double f = p.slip[k] < 1.0 ? (double) (((float) p.slip[k]) * 0.91F) : 0.91;
+            vxlo *= f;
+            vxhi *= f;
+            vzlo *= f;
+            vzhi *= f;
+            int at = k + 1;
+            for (int i = 0; i < tailWallSeg.length; i++) {
+                if (tailWallSeg[i] != at) continue;
+                if (tailWallX[i]) {
+                    xlo = Math.max(xlo, tailWallLo[i] - slack);
+                    xhi = Math.min(xhi, tailWallHi[i] + slack);
+                    if (xlo > xhi) return false;
+                } else {
+                    zlo = Math.max(zlo, tailWallLo[i] - slack);
+                    zhi = Math.min(zhi, tailWallHi[i] + slack);
+                    if (zlo > zhi) return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private boolean mitmTailReachAny(ArcState st) {
+        if (tailWallSeg.length == 0) return true;
+        for (int i = 0; i < st.arcs.lo.length; i++) {
+            double lo = st.arcs.lo[i];
+            double hi = st.arcs.hi[i];
+            for (double th = lo; th < hi + 0.5 * MITM_TAIL_STEP_RAD; th += MITM_TAIL_STEP_RAD) {
+                double t = Math.min(th, hi);
+                if (mitmTailReachAt(st, Math.sin(t), Math.cos(t))) return true;
+            }
+        }
+        return false;
+    }
+
+    static final class BackTransfer {
+        final int m;
+        final int last;
+        final double[] cd;
+        final double[] cv;
+        final double[] kdxs;
+        final double[] kdxc;
+        final double[] kdzs;
+        final double[] kdzc;
+        final double[] kvxs;
+        final double[] kvxc;
+        final double[] kvzs;
+        final double[] kvzc;
+
+        BackTransfer(int m, int last) {
+            this.m = m;
+            this.last = last;
+            int n = last + 1;
+            this.cd = new double[n];
+            this.cv = new double[n];
+            this.kdxs = new double[n];
+            this.kdxc = new double[n];
+            this.kdzs = new double[n];
+            this.kdzc = new double[n];
+            this.kvxs = new double[n];
+            this.kvxc = new double[n];
+            this.kvzs = new double[n];
+            this.kvzc = new double[n];
+        }
+    }
+
+    BackTransfer backTransfer(int m, int[] mk, boolean[] hd, boolean sprintPrev0) {
+        BackTransfer bt = new BackTransfer(m, last);
+        double kvxs = 0, kvxc = 0, kvzs = 0, kvzc = 0;
+        double kdxs = 0, kdxc = 0, kdzs = 0, kdzc = 0;
+        double cv = 1.0;
+        double cd = 0.0;
+        boolean sprintPrev = sprintPrev0;
+        for (int k = m; k < last; k++) {
+            int combo = mk[k];
+            boolean canRun = KeyLine.canRun(combo);
+            boolean sprintCur = canRun && (sprintPrev || hd[k]);
+            boolean contact = p.slip[k] < 1.0;
+            double accelSpeed;
+            if (contact) {
+                accelSpeed = sprintCur ? accelGroundSprint[k] : accelGroundWalk[k];
+            } else {
+                boolean airSprint = k != 0 && sprintPrev;
+                accelSpeed = airSprint ? Constants.AIR_SPEED_F : Constants.AIR_SPEED_NO_SPRINT_F;
+            }
+            double s0 = 0.98 * KeyLine.STRAFE_SIGN[combo];
+            double f0 = 0.98 * KeyLine.FORWARD_SIGN[combo];
+            double fm = s0 * s0 + f0 * f0;
+            double sw = 0;
+            double fw = 0;
+            if (fm >= 1.0e-4) {
+                fm = Math.sqrt(fm);
+                if (fm < 1.0) fm = 1.0;
+                double scale = accelSpeed / fm;
+                sw = s0 * scale;
+                fw = f0 * scale;
+            }
+            boolean boost = contact && pressAt[k] && sprintCur;
+            double f4 = contact ? (double) (((float) p.slip[k]) * 0.91F) : (double) 0.91F;
+            double gxs = (boost ? -0.2 : 0.0) - fw;
+            double gxc = sw;
+            double gzs = sw;
+            double gzc = (boost ? 0.2 : 0.0) + fw;
+            double pvxs = kvxs + gxs;
+            double pvxc = kvxc + gxc;
+            double pvzs = kvzs + gzs;
+            double pvzc = kvzc + gzc;
+            double pcv = cv;
+            kdxs += pvxs;
+            kdxc += pvxc;
+            kdzs += pvzs;
+            kdzc += pvzc;
+            cd += pcv;
+            kvxs = f4 * pvxs;
+            kvxc = f4 * pvxc;
+            kvzs = f4 * pvzs;
+            kvzc = f4 * pvzc;
+            cv = f4 * pcv;
+            int at = k + 1;
+            bt.cd[at] = cd;
+            bt.cv[at] = cv;
+            bt.kdxs[at] = kdxs;
+            bt.kdxc[at] = kdxc;
+            bt.kdzs[at] = kdzs;
+            bt.kdzc[at] = kdzc;
+            bt.kvxs[at] = kvxs;
+            bt.kvxc[at] = kvxc;
+            bt.kvzs[at] = kvzs;
+            bt.kvzc[at] = kvzc;
+            sprintPrev = sprintCur;
+        }
+        return bt;
+    }
+
+    List<ColdProblem.Wall> backMomentumWalls(int m) {
+        List<ColdProblem.Wall> back = new ArrayList<ColdProblem.Wall>();
+        for (ColdProblem.Wall w : p.momentumWalls) {
+            if (w.segTick > m && w.segTick <= last) back.add(w);
+        }
+        return back;
+    }
+
+    boolean mitmTailFeasible(ArcState f, BackTransfer bt, List<ColdProblem.Wall> backWalls) {
+        return mitmTailMargin(f, bt, backWalls) >= -(cfg.rectSlack + FLOAT_DRIFT_MARGIN);
+    }
+
+    double mitmTailMargin(ArcState f, BackTransfer bt, List<ColdProblem.Wall> backWalls) {
+        return mitmTailMargin(f, bt, backWalls, null);
+    }
+
+    double mitmTailMargin(ArcState f, BackTransfer bt, List<ColdProblem.Wall> backWalls, long[] funnel) {
+        Arcs arc = f.arcs;
+        if (arc.isEmpty()) return Double.NEGATIVE_INFINITY;
+        List<Form> lx = f.lowerX;
+        List<Form> ux = f.upperX;
+        List<Form> lz = f.lowerZ;
+        List<Form> uz = f.upperZ;
+        boolean copied = false;
+        double margin = cfg.rectSlack + FLOAT_DRIFT_MARGIN;
+        for (ColdProblem.Wall w : backWalls) {
+            int at = w.segTick;
+            double dws;
+            double dwc;
+            if (w.axisX) {
+                dws = f.dxs + bt.cd[at] * f.vxs + bt.kdxs[at];
+                dwc = f.dxc + bt.cd[at] * f.vxc + bt.kdxc[at];
+            } else {
+                dws = f.dzs + bt.cd[at] * f.vzs + bt.kdzs[at];
+                dwc = f.dzc + bt.cd[at] * f.vzc + bt.kdzc[at];
+            }
+            if (!copied) {
+                lx = new ArrayList<Form>(lx);
+                ux = new ArrayList<Form>(ux);
+                lz = new ArrayList<Form>(lz);
+                uz = new ArrayList<Form>(uz);
+                copied = true;
+            }
+            if (w.axisX) {
+                if (w.lo != Double.NEGATIVE_INFINITY) {
+                    Form nl = new Form(-dws, -dwc, w.lo - margin);
+                    for (Form u : ux) arc = intersect(arc, leqForms(nl, u));
+                    lx.add(nl);
+                }
+                if (w.hi != Double.POSITIVE_INFINITY) {
+                    Form nu = new Form(-dws, -dwc, w.hi + margin);
+                    for (Form l : lx) arc = intersect(arc, leqForms(l, nu));
+                    ux.add(nu);
+                }
+            } else {
+                if (w.lo != Double.NEGATIVE_INFINITY) {
+                    Form nl = new Form(-dws, -dwc, w.lo - margin);
+                    for (Form u : uz) arc = intersect(arc, leqForms(nl, u));
+                    lz.add(nl);
+                }
+                if (w.hi != Double.POSITIVE_INFINITY) {
+                    Form nu = new Form(-dws, -dwc, w.hi + margin);
+                    for (Form l : lz) arc = intersect(arc, leqForms(l, nu));
+                    uz.add(nu);
+                }
+            }
+            if (arc.isEmpty()) {
+                if (funnel != null) funnel[0]++;
+                return Double.NEGATIVE_INFINITY;
+            }
+        }
+        int at = last;
+        double vxs = bt.cv[at] * f.vxs + bt.kvxs[at];
+        double vxc = bt.cv[at] * f.vxc + bt.kvxc[at];
+        double vzs = bt.cv[at] * f.vzs + bt.kvzs[at];
+        double vzc = bt.cv[at] * f.vzc + bt.kvzc[at];
+        double dxs = f.dxs + bt.cd[at] * f.vxs + bt.kdxs[at];
+        double dxc = f.dxc + bt.cd[at] * f.vxc + bt.kdxc[at];
+        double dzs = f.dzs + bt.cd[at] * f.vzs + bt.kdzs[at];
+        double dzc = f.dzc + bt.cd[at] * f.vzc + bt.kdzc[at];
+        ArcState lastSt = new ArcState(last, vxs, vxc, vzs, vzc, dxs, dxc, dzs, dzc,
+                false, 0, arc, lx, ux, lz, uz, null, null, 0);
+        double omni = tailMarginBest(lastSt);
+        double thr = -(cfg.rectSlack + FLOAT_DRIFT_MARGIN);
+        if (MITM_TIGHT_TAIL && omni >= thr && !mitmTailReachAny(lastSt)) {
+            if (funnel != null) funnel[1]++;
+            return Double.NEGATIVE_INFINITY;
+        }
+        if (funnel != null) funnel[omni >= thr ? 3 : 2]++;
+        return omni;
+    }
+
     List<List<ArcState>> walkStatesPerTick(int[] mk, boolean[] hd) {
         List<ArcState> states = new ArrayList<ArcState>();
         states.add(rootState());
@@ -882,7 +1313,7 @@ final class ArcSweep {
             boolean sprintCur = canRun && (sprintPrev || hd[k]);
             List<ArcState> next = new ArrayList<ArcState>();
             for (ArcState st : states) {
-                stepInto(st, k, mk[k], sprintCur, 0, next);
+                stepInto(st, k, mk[k], sprintCur, 0, st.segChanges, next);
             }
             perTick.add(next);
             if (next.isEmpty()) break;
@@ -890,6 +1321,21 @@ final class ArcSweep {
             sprintPrev = sprintCur;
         }
         return perTick;
+    }
+
+    double facingBandDeg(int[] mk, boolean[] hd) {
+        List<List<ArcState>> perTick = walkStatesPerTick(mk, hd);
+        List<ArcState> lastStates = null;
+        for (int i = perTick.size() - 1; i >= 0; i--) {
+            if (!perTick.get(i).isEmpty()) {
+                lastStates = perTick.get(i);
+                break;
+            }
+        }
+        if (lastStates == null) return 0.0;
+        double best = 0.0;
+        for (ArcState s : lastStates) best = Math.max(best, s.arcs.totalLength());
+        return Math.toDegrees(best);
     }
 
     static boolean anyContains(List<ArcState> states, double rad) {

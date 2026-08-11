@@ -1,8 +1,6 @@
 package de.legoshi.parkourcalc.core.anglesolver.coldsearch;
 
-import com.google.gson.Gson;
 import de.legoshi.parkourcalc.SlowSolverTests;
-import de.legoshi.parkourcalc.anglesolver.harness.Fixtures;
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -14,12 +12,8 @@ import static org.junit.Assert.assertTrue;
 @Category(SlowSolverTests.class)
 public class ColdSearchRegressionTest {
 
-    private static SaveFile load(String stem) {
-        return new Gson().fromJson(Fixtures.rawPool(stem), SaveFile.class);
-    }
-
     private static void assertLineCertifies(String stem, String sig) {
-        SaveFile file = load(stem);
+        SaveFile file = ColdTestHarness.loadSave(stem);
         ColdResult r = ColdSearch.certifyLine(file, sig, new ColdSearch.Config());
         assertNotNull(stem + ": no result", r);
         assertTrue(stem + ": line did not certify: " + r.summary(), r.solved());

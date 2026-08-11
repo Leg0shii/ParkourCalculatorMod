@@ -310,10 +310,6 @@ public final class MainWindowOverlay implements RenderInterface {
             settings.viewStratFinder = !settings.viewStratFinder;
             onSettingsChanged.run();
         }
-        if (ImGui.menuItem("Cold Strat Finder", null, settings.viewColdFinder)) {
-            settings.viewColdFinder = !settings.viewColdFinder;
-            onSettingsChanged.run();
-        }
     }
 
     private void renderSettingsMenuItems() {

@@ -138,7 +138,7 @@ anglesolver/
                            template-instances CSVs (any pruned-but-solved instance is a soundness
                            violation), and reports prune rate on known-failed instances plus
                            per-instance screen time; PKC_REACH=1 to run; outputs reach-report.txt;
-                           background: docs/research/stratfinder-levers-2026-08.md
+                           background: docs/research/stratfinder-coldsearch.md (section 6b)
   HpkLadderScreen.java     screening-ladder benchmark over template instances: ReachBound prune,
                            rung-1 solve at PKC_LADDER_R1_MS, met/total-ranked promotion
                            (PKC_LADDER_PROMOTE=all|third|none) to PKC_LADDER_TOP_MS, recall and

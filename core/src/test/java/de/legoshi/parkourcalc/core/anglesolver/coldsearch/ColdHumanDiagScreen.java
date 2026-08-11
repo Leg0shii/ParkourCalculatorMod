@@ -16,9 +16,9 @@ import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Runs the known human line for a capture through EVERY stage of the ColdCycleBeamScreen pipeline, to see
- * exactly where (if anywhere) a good solution falls out: survivor filter, coarse vs fine probe, the byte-exact
- * certify, and the candidate two-sided tail gate. PKC_COLD_DIAG_FILE + PKC_COLD_DIAG_SIG (the human sig).
+ * Runs the known human line for a capture through EVERY stage of the cold pipeline, to see exactly where
+ * (if anywhere) a good solution falls out: survivor filter, coarse vs fine probe, the byte-exact certify,
+ * and the candidate two-sided tail gate. PKC_COLD_DIAG_FILE + PKC_COLD_DIAG_SIG (the human sig).
  */
 public class ColdHumanDiagScreen {
 
@@ -212,10 +212,7 @@ public class ColdHumanDiagScreen {
     }
 
     private static ColdSearch.Sweep[] scan(ColdProblem p, ColdSearch.Config cfg, double step) {
-        int steps = (int) Math.round(360.0 / step);
-        ColdSearch.Sweep[] s = new ColdSearch.Sweep[steps];
-        for (int i = 0; i < steps; i++) s[i] = new ColdSearch.Sweep(p, cfg, -180.0 + i * step, 0, null);
-        return s;
+        return ColdTestHarness.buildScan(p, cfg, step);
     }
 
     private static String fmt(double v) {
