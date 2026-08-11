@@ -6,6 +6,7 @@ import de.legoshi.parkourcalc.core.save.Result;
 import de.legoshi.parkourcalc.core.save.SaveBrowseResult;
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveInfo;
+import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.Fonts;
 import de.legoshi.parkourcalc.core.ui.theme.Modal;
@@ -36,9 +37,11 @@ public final class FileMenu {
 
     private static final String POPUP_NAME_NEW = "###name_modal_new";
     private static final String POPUP_NAME_SAVEAS = "###name_modal_saveas";
+    private static final String POPUP_NAME_SLICE = "###name_modal_slice";
     private static final String POPUP_OPEN = "###open_modal";
     private static final String TITLE_NAME_NEW = "New TAS";
     private static final String TITLE_NAME_SAVEAS = "Save TAS As";
+    private static final String TITLE_NAME_SLICE = "Save Ticks as New TAS";
     private static final String TITLE_OPEN = "Open TAS";
     private static final String POPUP_DISCARD = "###discard";
     private static final String POPUP_OVERWRITE = "###overwrite";
@@ -386,6 +389,37 @@ public final class FileMenu {
     private void finalizeSaveAs(String name) {
         Result<String> r = controller.save(name);
         applyResult(r, "Saved as '%s'");
+    }
+
+    public void promptSaveSelectionAsTas(List<InputRow> rows, Vec3dCore pos, Vec3dCore vel, float yaw, float pitch) {
+        if (rows == null || rows.isEmpty()) return;
+        nameInput.set("");
+        nameModalError = null;
+        lastNameInputSeen = "";
+        nameModalConfirm = name -> doSaveSelectionAsTas(name, rows, pos, vel, yaw, pitch);
+        pendingNamePopupId = POPUP_NAME_SLICE;
+        pendingNameTitle = TITLE_NAME_SLICE;
+    }
+
+    private void doSaveSelectionAsTas(String name, List<InputRow> rows, Vec3dCore pos, Vec3dCore vel, float yaw, float pitch) {
+        if (name.isEmpty()) { nameModalError = "Name cannot be empty."; return; }
+        if (controller.exists(name)) {
+            overwriteCandidateName = name;
+            overwriteModalConfirm = () -> finalizeSaveSelectionAsTas(name, rows, pos, vel, yaw, pitch);
+            openOverwriteModal = true;
+            return;
+        }
+        finalizeSaveSelectionAsTas(name, rows, pos, vel, yaw, pitch);
+    }
+
+    private void finalizeSaveSelectionAsTas(String name, List<InputRow> rows, Vec3dCore pos, Vec3dCore vel, float yaw, float pitch) {
+        Result<String> r = controller.saveSelectionAsNewTas(name, rows, pos, vel, yaw, pitch);
+        if (r.ok) {
+            setStatus("Created '" + r.value + "' from selected ticks.", false);
+            cacheStale = true;
+        } else {
+            setStatus(r.error, true);
+        }
     }
 
     private void doLoad(String name) {

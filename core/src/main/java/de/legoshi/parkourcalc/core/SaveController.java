@@ -180,6 +180,15 @@ public final class SaveController {
                 runner.getStartYaw(), runner.getStartPitch(), angleSolver, states, fullDebug);
     }
 
+    public Result<String> saveSelectionAsNewTas(String rawName, List<InputRow> rows, Vec3dCore startPos,
+                                                Vec3dCore startVel, float startYaw, float startPitch) {
+        if (store == null) return Result.failure("Save store not initialized.");
+        if (rows == null || rows.isEmpty()) return Result.failure("No ticks selected.");
+        InputData slice = new InputData();
+        for (InputRow row : rows) slice.getRows().add(row);
+        return SaveIO.save(store, rawName, slice, startPos, startVel, startYaw, startPitch, null, null, false);
+    }
+
     public Result<String> save(String name) {
         if (store == null) return Result.failure("Save store not initialized.");
         String sanitized = SaveIO.sanitizeRelative(name);

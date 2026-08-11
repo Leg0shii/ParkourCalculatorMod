@@ -55,6 +55,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.undo.UndoController;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -141,6 +142,24 @@ public final class Application {
         return new PlaybackController.StartRange(first, stopExclusive, pos, vel, yaw, runner.getCheckpoint(first));
     }
 
+    private void promptSaveSelectionAsTas(FileMenu fileMenu) {
+        Set<Integer> rows = selection.getSelectedRows();
+        if (rows.isEmpty()) return;
+        int first = Collections.min(rows);
+        List<InputRow> copied = new ArrayList<>(rows.size());
+        for (int idx : rows) {
+            if (idx >= 0 && idx < inputData.size()) copied.add(inputData.get(idx).copy());
+        }
+        if (copied.isEmpty()) return;
+
+        TickState pre = boxController.getState(first);
+        Vec3dCore pos = pre != null ? pre.position : runner.getStartPosition();
+        Vec3dCore vel = pre != null ? pre.velocity : runner.getStartVelocity();
+        float yaw = pre != null ? pre.yaw : runner.getStartYaw();
+        float pitch = pre != null ? boxController.getPitch(first) : runner.getStartPitch();
+        fileMenu.promptSaveSelectionAsTas(copied, pos, vel, yaw, pitch);
+    }
+
     public void setModVersion(String modVersion) {
         this.modVersion = modVersion;
     }
@@ -220,6 +239,7 @@ public final class Application {
         TickInfoPanel tickInfoPanel = new TickInfoPanel(boxController, inputData, selection, settings, runner, this::pushHudMessage);
         PerfOverlay perfOverlay = new PerfOverlay();
         FileMenu fileMenu = new FileMenu(saveController, filePicker, settings, this::saveSettings);
+        inputOverlay.setSaveSelectionAsTasHandler(() -> promptSaveSelectionAsTas(fileMenu));
         SettingsModal settingsModal = new SettingsModal(settings, this::saveSettings);
         HudMessagesPanel hudMessagesPanel = new HudMessagesPanel(hudMessages, settings);
         MainWindowOverlay mainWindow = new MainWindowOverlay(

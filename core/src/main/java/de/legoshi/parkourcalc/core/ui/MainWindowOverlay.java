@@ -57,6 +57,8 @@ public final class MainWindowOverlay implements RenderInterface {
     private boolean saveChordWasDown;
     private boolean undoChordWasDown;
     private boolean redoChordWasDown;
+    private boolean copyChordWasDown;
+    private boolean pasteChordWasDown;
 
     private boolean openAboutRequested;
     private float lastHeaderHeight;
@@ -97,6 +99,7 @@ public final class MainWindowOverlay implements RenderInterface {
     public void render(ImGuiIO io) {
         handleQuickSaveChord();
         handleUndoRedoChords(io);
+        handleCopyPasteChords(io);
         fileMenu.tickAutoSave();
         renderMainWindow(io, true);
         if (settings.viewTickInfo) tickInfoPanel.render(io);
@@ -121,6 +124,19 @@ public final class MainWindowOverlay implements RenderInterface {
         }
         undoChordWasDown = undoDown;
         redoChordWasDown = redoDown;
+    }
+
+    private void handleCopyPasteChords(ImGuiIO io) {
+        boolean ready = mc != null && mc.isReady();
+        boolean copyDown = ready && mc.isCopyChordDown();
+        boolean pasteDown = ready && mc.isPasteChordDown();
+        boolean typing = io != null && io.getWantTextInput();
+        if (fileMenu.hasOpenTas() && !typing) {
+            if (copyDown && !copyChordWasDown) inputOverlay.copySelectedRows();
+            if (pasteDown && !pasteChordWasDown) inputOverlay.pasteRows();
+        }
+        copyChordWasDown = copyDown;
+        pasteChordWasDown = pasteDown;
     }
 
     /** Display-only panels kept visible while the main UI is closed. ImGui receives no input here, so they don't edit. */
