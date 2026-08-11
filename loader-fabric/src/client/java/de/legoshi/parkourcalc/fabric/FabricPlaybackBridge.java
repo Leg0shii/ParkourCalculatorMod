@@ -104,8 +104,11 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
             g.applyCarry(carry);
         } else {
             g.setOnGround(true);
+            g.fallDistance = 0.0;
         }
-        g.fallDistance = 0.0;
+        if (!FabricParkourCalculator.getSettings().allowDamage) {
+            g.fallDistance = 0.0;
+        }
         g.setOldPosAndRot();
         g.copyModelCustomisationFrom(client);
         level.addEntity(g);
@@ -192,8 +195,11 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
             de.legoshi.parkourcalc.fabric.sim.SimulatorEntity.applyCheckpoint(client, carry);
         } else {
             client.setOnGround(true);
+            client.fallDistance = 0.0;
         }
-        client.fallDistance = 0.0;
+        if (!FabricParkourCalculator.getSettings().allowDamage) {
+            client.fallDistance = 0.0;
+        }
         // Suppress the player tick's position packet until the server's requestTeleport
         // arms its teleport-pending state, otherwise the client races and trips moved-wrongly.
         LocalPlayerAccessor acc = (LocalPlayerAccessor) client;

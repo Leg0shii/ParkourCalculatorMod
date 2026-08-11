@@ -51,6 +51,7 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
         this.input.keyPresses = c.playerInput;
         this.noJumpDelay = c.jumpingCooldown;
         this.stuckSpeedMultiplier = c.movementMultiplier;
+        this.fallDistance = c.fallDistance;
     }
 
     @Override

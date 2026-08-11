@@ -98,8 +98,11 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
             g.applyCarry(carry);
         } else {
             g.onGround = true;
+            g.fallDistance = 0.0F;
         }
-        g.fallDistance = 0.0F;
+        if (!Forge12ParkourCalculator.isDamageAllowed()) {
+            g.fallDistance = 0.0F;
+        }
         world.addEntityToWorld(GHOST_ENTITY_ID, g);
         ghost = g;
         client.moveStrafing = 0.0F;
@@ -182,6 +185,10 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
                 sp.setSprinting(false);
                 sp.setSneaking(false);
                 sp.onGround = true;
+                sp.fallDistance = 0.0F;
+            }
+            if (!Forge12ParkourCalculator.isDamageAllowed()) {
+                sp.fallDistance = 0.0F;
             }
             sp.velocityChanged = false;
         });
@@ -197,8 +204,11 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
             de.legoshi.parkourcalc.forge12.sim.SimulatorEntity.applyCheckpoint(client, carry);
         } else {
             client.onGround = true;
+            client.fallDistance = 0.0F;
         }
-        client.fallDistance = 0.0F;
+        if (!Forge12ParkourCalculator.isDamageAllowed()) {
+            client.fallDistance = 0.0F;
+        }
         // Suppress onUpdateWalkingPlayer's position packet until the server's scheduled
         // setPlayerLocation arms targetPos, otherwise the client races and trips moved-wrongly.
         client.lastReportedPosX = pos.x;

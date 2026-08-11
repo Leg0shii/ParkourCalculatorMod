@@ -102,6 +102,10 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
                 sp.setSprinting(false);
                 sp.setSneaking(false);
                 sp.onGround = true;
+                sp.fallDistance = 0.0F;
+            }
+            if (!Forge8ParkourCalculator.isDamageAllowed()) {
+                sp.fallDistance = 0.0F;
             }
             sp.velocityChanged = false;
         });
@@ -117,8 +121,11 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
             de.legoshi.parkourcalc.forge8.sim.SimulatorEntity.applyCheckpoint(client, carry);
         } else {
             client.onGround = true;
+            client.fallDistance = 0.0F;
         }
-        client.fallDistance = 0.0F;
+        if (!Forge8ParkourCalculator.isDamageAllowed()) {
+            client.fallDistance = 0.0F;
+        }
         // Suppress onUpdateWalkingPlayer's position packet until the server's scheduled
         // setPlayerLocation arms targetPos, otherwise the client races and trips moved-wrongly.
         client.lastReportedPosX = pos.x;
@@ -150,8 +157,11 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
             g.applyCarry(carry);
         } else {
             g.onGround = true;
+            g.fallDistance = 0.0F;
         }
-        g.fallDistance = 0.0F;
+        if (!Forge8ParkourCalculator.isDamageAllowed()) {
+            g.fallDistance = 0.0F;
+        }
         g.getDataWatcher().updateObject(10, client.getDataWatcher().getWatchableObjectByte(10));
         world.addEntityToWorld(GHOST_ENTITY_ID, g);
         ghost = g;

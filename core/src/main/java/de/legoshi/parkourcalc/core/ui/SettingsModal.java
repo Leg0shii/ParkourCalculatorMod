@@ -64,6 +64,7 @@ public final class SettingsModal {
     private static final String TT_HUD_MESSAGE_ORDER = "Downwards: new messages appear at the top and the window grows downward. Upwards: new messages appear at the bottom and the window grows upward from its bottom edge, like chat.";
     private static final String TT_KEEP_BOXES_PLAYBACK = "Keeps the tick-box path overlay drawn in-world while playback is running, instead of hiding it.";
     private static final String TT_DISABLE_FLIGHT_PLAYBACK = "Prevents double-tapping jump from starting creative flight while playback is running (singleplayer). Flight behaves normally again once playback ends.";
+    private static final String TT_ALLOW_DAMAGE = "Lets the simulation and playback entity take real damage (for example fall damage) so its physics are reproduced. Health is pinned so it never loses hearts or dies. Off by default.";
     private static final String TT_SOLVER_PRECISION = "Decimal places for Angle Solver stats: solved yaws, objective values, constraint chips, and the constraint value editor.";
     private static final String TT_EXPERIMENTAL_BLOCK_CAPTURE = "Enables in-world block capture: tag blocks by role with hotkeys (M momentum, N collision, K land, Delete clears). The hotkeys are registered at startup, so turning this on or off only takes effect after a game restart.";
 
@@ -430,6 +431,7 @@ public final class SettingsModal {
         sectionHeader("Player");
         if (beginLayoutTable("##settings_playback_player")) {
             checkboxRow("Disable creative flight", "##disable_flight_playback", settings.disableFlightDuringPlayback, TT_DISABLE_FLIGHT_PLAYBACK, v -> settings.disableFlightDuringPlayback = v);
+            checkboxRow("Allow damage", "##allow_damage_playback", settings.allowDamage, TT_ALLOW_DAMAGE, v -> settings.allowDamage = v);
             ThemeManager.endStandardFormTable();
         }
     }

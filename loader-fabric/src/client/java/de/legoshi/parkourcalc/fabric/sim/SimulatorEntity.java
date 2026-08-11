@@ -3,6 +3,7 @@ package de.legoshi.parkourcalc.fabric.sim;
 import com.mojang.authlib.GameProfile;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
+import de.legoshi.parkourcalc.fabric.FabricParkourCalculator;
 import de.legoshi.parkourcalc.core.sim.SubtickPath;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
@@ -169,7 +170,19 @@ public class SimulatorEntity extends Player {
 
     @Override
     public boolean hurtServer(ServerLevel world, DamageSource source, float amount) {
-        return false;
+        if (!FabricParkourCalculator.getSettings().allowDamage) {
+            return false;
+        }
+        return super.hurtServer(world, source, amount);
+    }
+
+    @Override
+    public void setHealth(float health) {
+        if (FabricParkourCalculator.getSettings().allowDamage) {
+            super.setHealth(this.getMaxHealth());
+        } else {
+            super.setHealth(health);
+        }
     }
 
     @Override
@@ -463,6 +476,7 @@ public class SimulatorEntity extends Player {
         c.movementMultiplier = this.stuckSpeedMultiplier;
         c.pose = this.getPose();
         c.crouching = this.crouching;
+        c.fallDistance = this.fallDistance;
         return c;
     }
 
@@ -484,6 +498,7 @@ public class SimulatorEntity extends Player {
         this.input.seedKeyPresses(c.playerInput);
         this.noJumpDelay = c.jumpingCooldown;
         this.stuckSpeedMultiplier = c.movementMultiplier;
+        this.fallDistance = c.fallDistance;
     }
 
     public static void applyCheckpoint(net.minecraft.client.player.LocalPlayer p, de.legoshi.parkourcalc.core.sim.Checkpoint state) {
@@ -495,6 +510,7 @@ public class SimulatorEntity extends Player {
         p.setSprinting(c.sprinting);
         p.noJumpDelay = c.jumpingCooldown;
         p.stuckSpeedMultiplier = c.movementMultiplier;
+        p.fallDistance = c.fallDistance;
     }
 
     public static final class Checkpoint implements de.legoshi.parkourcalc.core.sim.Checkpoint {
@@ -511,5 +527,6 @@ public class SimulatorEntity extends Player {
         Vec3 movementMultiplier;
         Pose pose;
         boolean crouching;
+        double fallDistance;
     }
 }

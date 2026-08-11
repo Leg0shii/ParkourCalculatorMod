@@ -40,6 +40,7 @@ public class Forge12ParkourCalculator {
     public static final String MODID = "parkourcalculator";
 
     private static final Logger LOG = LogManager.getLogger("ParkourCalculator");
+    private static Forge12ParkourCalculator instance;
 
     private final Application application = new Application(
             new Forge12Simulator(),
@@ -84,6 +85,7 @@ public class Forge12ParkourCalculator {
 
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
+        instance = this;
         application.setModVersion(modVersion());
         application.setFilePicker(new OsFilePicker());
         application.setSaveStore(new FileSystemSaveStore(
@@ -186,9 +188,24 @@ public class Forge12ParkourCalculator {
     @SubscribeEvent
     public void onLivingAttack(net.minecraftforge.event.entity.living.LivingAttackEvent event) {
         if (!application.isPlaybackRunning()) return;
+        if (application.getSettings().allowDamage) return;
         if (event.getSource() != net.minecraft.util.DamageSource.FALL) return;
         if (!(event.getEntityLiving() instanceof net.minecraft.entity.player.EntityPlayer)) return;
         event.setCanceled(true);
+    }
+
+    @SubscribeEvent
+    public void onLivingHurt(net.minecraftforge.event.entity.living.LivingHurtEvent event) {
+        if (!application.isPlaybackRunning()) return;
+        if (!application.getSettings().allowDamage) return;
+        if (!(event.getEntityLiving() instanceof net.minecraft.entity.player.EntityPlayer)) return;
+        if (Minecraft.getMinecraft().player == null) return;
+        if (!event.getEntityLiving().getUniqueID().equals(Minecraft.getMinecraft().player.getUniqueID())) return;
+        event.setCanceled(true);
+    }
+
+    public static boolean isDamageAllowed() {
+        return instance != null && instance.application.getSettings().allowDamage;
     }
 
     @SubscribeEvent

@@ -40,6 +40,7 @@ public class Forge8ParkourCalculator {
     public static final String MODID = "parkourcalculator";
 
     private static final Logger LOG = LogManager.getLogger("ParkourCalculator");
+    private static Forge8ParkourCalculator instance;
 
     private final Application application = new Application(
             new Forge8Simulator(),
@@ -86,6 +87,7 @@ public class Forge8ParkourCalculator {
 
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
+        instance = this;
         application.setModVersion(modVersion());
         application.setFilePicker(new OsFilePicker());
         application.setSaveStore(new FileSystemSaveStore(
@@ -188,9 +190,24 @@ public class Forge8ParkourCalculator {
     @SubscribeEvent
     public void onLivingAttack(net.minecraftforge.event.entity.living.LivingAttackEvent event) {
         if (!application.isPlaybackRunning()) return;
+        if (application.getSettings().allowDamage) return;
         if (event.source != net.minecraft.util.DamageSource.fall) return;
         if (!(event.entityLiving instanceof net.minecraft.entity.player.EntityPlayer)) return;
         event.setCanceled(true);
+    }
+
+    @SubscribeEvent
+    public void onLivingHurt(net.minecraftforge.event.entity.living.LivingHurtEvent event) {
+        if (!application.isPlaybackRunning()) return;
+        if (!application.getSettings().allowDamage) return;
+        if (!(event.entityLiving instanceof net.minecraft.entity.player.EntityPlayer)) return;
+        if (Minecraft.getMinecraft().thePlayer == null) return;
+        if (!event.entityLiving.getUniqueID().equals(Minecraft.getMinecraft().thePlayer.getUniqueID())) return;
+        event.setCanceled(true);
+    }
+
+    public static boolean isDamageAllowed() {
+        return instance != null && instance.application.getSettings().allowDamage;
     }
 
     @SubscribeEvent

@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.forge12.sim;
 
 import com.mojang.authlib.GameProfile;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
+import de.legoshi.parkourcalc.forge12.Forge12ParkourCalculator;
 import de.legoshi.parkourcalc.forge.core.sim.PlayerSprintMachine;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.SubtickPath;
@@ -139,7 +140,19 @@ public class SimulatorEntity extends EntityPlayer {
 
     @Override
     public boolean attackEntityFrom(DamageSource source, float amount) {
-        return false;
+        if (!Forge12ParkourCalculator.isDamageAllowed()) {
+            return false;
+        }
+        return super.attackEntityFrom(source, amount);
+    }
+
+    @Override
+    public void setHealth(float health) {
+        if (Forge12ParkourCalculator.isDamageAllowed()) {
+            super.setHealth(this.getMaxHealth());
+        } else {
+            super.setHealth(health);
+        }
     }
 
     @Override
@@ -340,6 +353,7 @@ public class SimulatorEntity extends EntityPlayer {
         c.isInWeb = this.isInWeb;
         c.width = this.width;
         c.height = this.height;
+        c.fallDistance = this.fallDistance;
         return c;
     }
 
@@ -362,6 +376,7 @@ public class SimulatorEntity extends EntityPlayer {
         this.isInWeb = c.isInWeb;
         this.width = c.width;
         this.height = c.height;
+        this.fallDistance = c.fallDistance;
         this.setPosition(c.posX, c.posY, c.posZ);
     }
 
@@ -375,6 +390,7 @@ public class SimulatorEntity extends EntityPlayer {
         p.setAIMoveSpeed(c.landMovementFactor);
         p.jumpMovementFactor = c.jumpMovementFactor;
         p.jumpTicks = c.jumpTicks;
+        p.fallDistance = c.fallDistance;
         if (c.isInWeb) {
             p.setInWeb();
         }
@@ -394,5 +410,6 @@ public class SimulatorEntity extends EntityPlayer {
         boolean isInWeb;
         float width;
         float height;
+        float fallDistance;
     }
 }

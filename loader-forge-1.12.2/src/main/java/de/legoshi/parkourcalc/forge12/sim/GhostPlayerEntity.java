@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.forge12.sim;
 
 import com.mojang.authlib.GameProfile;
 import de.legoshi.parkourcalc.core.ui.InputRow;
+import de.legoshi.parkourcalc.forge12.Forge12ParkourCalculator;
 import de.legoshi.parkourcalc.forge.core.sim.PlayerSprintMachine;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
@@ -83,7 +84,10 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
 
     @Override
     public boolean attackEntityFrom(DamageSource source, float amount) {
-        return false;
+        if (!Forge12ParkourCalculator.isDamageAllowed()) {
+            return false;
+        }
+        return super.attackEntityFrom(source, amount);
     }
 
     @Override
