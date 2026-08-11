@@ -39,6 +39,7 @@ public final class InputOverlay {
     private static final String COL_PITCH = "Pit";
     private static final String COL_SPEED = "Speed";
     private static final String COL_JUMP_BOOST = "Jump";
+    private static final String COL_HOTBAR = "Slot";
     private static final float INDEX_DIGIT_WIDTH = 32f;
     private static final float INDEX_DIGIT_SLACK = 6f;
     private static final float TABLE_MIN_HEIGHT = 80f;
@@ -55,6 +56,7 @@ public final class InputOverlay {
 
     private static final String ID_SPEED_SUFFIX = "##speed";
     private static final String ID_JUMP_SUFFIX = "##jump";
+    private static final String ID_HOTBAR_SUFFIX = "##hotbar";
     private static final String ID_PITCH_INPUT = "##pitch";
 
     private static final String MENU_APPLY_SPEED_TO_ALL = "Apply tick 1 Speed to all rows";
@@ -65,6 +67,12 @@ public final class InputOverlay {
     };
     private static final float AMP_CELL_WIDTH = 110;
     private static final float AMP_COLUMN_WIDTH = 120;
+
+    private static final String[] HOTBAR_LABELS = {
+            "-", "1", "2", "3", "4", "5", "6", "7", "8", "9"
+    };
+    private static final float HOTBAR_CELL_WIDTH = 54;
+    private static final float HOTBAR_COLUMN_WIDTH = 64;
 
     private static final String MENU_SET_TO_PLAYER = "Set to user position";
     private static final String LABEL_ROWS = "Rows:";
@@ -110,6 +118,7 @@ public final class InputOverlay {
     private final ImString pitchInput = new ImString(32);
     private final ImInt rowsToAdd = new ImInt(1);
     private final ImInt ampBuf = new ImInt();
+    private final ImInt hotbarBuf = new ImInt();
 
     private int draggingRowIndex = -1;
     private int editingYawRow = -1;
@@ -292,6 +301,10 @@ public final class InputOverlay {
         return settings.showColJumpBoost;
     }
 
+    private boolean isHotbarColumnVisible() {
+        return settings.showColHotbar;
+    }
+
     private int potionColumnCount() {
         return (isSpeedColumnVisible() ? 1 : 0) + (isJumpBoostColumnVisible() ? 1 : 0);
     }
@@ -301,6 +314,7 @@ public final class InputOverlay {
         for (InputRow.Key key : MOVEMENT_KEYS) if (isKeyColumnVisible(key)) count++;
         for (InputRow.Key key : MODIFIER_KEYS) if (isKeyColumnVisible(key)) count++;
         for (InputRow.Key key : MOUSE_KEYS) if (isKeyColumnVisible(key)) count++;
+        if (isHotbarColumnVisible()) count++;
         if (isYawColumnVisible()) count++;
         if (isPitchColumnVisible()) count++;
         return count;
@@ -334,6 +348,7 @@ public final class InputOverlay {
         for (InputRow.Key key : MOUSE_KEYS) {
             if (isKeyColumnVisible(key)) columnSum += ThemeManager.tableColumnWidth(headerLabel(key), 0f);
         }
+        if (isHotbarColumnVisible()) columnSum += ThemeManager.tableColumnWidth(COL_HOTBAR, HOTBAR_COLUMN_WIDTH * scale);
         boolean speed = isSpeedColumnVisible();
         boolean jump = isJumpBoostColumnVisible();
         if (speed) {
@@ -546,6 +561,9 @@ public final class InputOverlay {
         setupKeyColumns(MOVEMENT_KEYS);
         setupKeyColumns(MODIFIER_KEYS);
         setupKeyColumns(MOUSE_KEYS);
+        if (isHotbarColumnVisible()) {
+            ImGui.tableSetupColumn(COL_HOTBAR, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableColumnWidth(COL_HOTBAR, HOTBAR_COLUMN_WIDTH * scale));
+        }
         if (isYawColumnVisible()) {
             ImGui.tableSetupColumn(COL_YAW, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableColumnWidth(COL_YAW, yawColumnWidth()));
         }
@@ -582,6 +600,11 @@ public final class InputOverlay {
         col = renderKeyColumnHeaders(MOVEMENT_KEYS, col);
         col = renderKeyColumnHeaders(MODIFIER_KEYS, col);
         col = renderKeyColumnHeaders(MOUSE_KEYS, col);
+        if (isHotbarColumnVisible()) {
+            ImGui.tableSetColumnIndex(col++);
+            ThemeManager.tableHeaderCentered(COL_HOTBAR);
+            TooltipUtil.onHover(headerColTooltip(COL_HOTBAR));
+        }
         if (isYawColumnVisible()) {
             ImGui.tableSetColumnIndex(col++);
             ThemeManager.tableHeaderCentered(COL_YAW);
@@ -636,6 +659,7 @@ public final class InputOverlay {
             case COL_PITCH: return "Pitch turn per tick; press F to lock a cell to an absolute pitch (-90 up to 90 down). Empty = inherit previous tick's pitch.";
             case COL_SPEED: return "Speed potion amplifier (none = no effect).";
             case COL_JUMP_BOOST: return "Jump Boost potion amplifier (none = no effect).";
+            case COL_HOTBAR: return "Held hotbar slot (1-9) to switch to during playback. Empty = keep the previous slot.";
             default: return col;
         }
     }
@@ -842,6 +866,7 @@ public final class InputOverlay {
         }
 
         renderKeyColumns(row, index, rowH);
+        if (isHotbarColumnVisible()) renderHotbarColumn(row, index);
         if (isYawColumnVisible()) renderYawColumn(row, index, centerY);
         if (isPitchColumnVisible()) renderPitchColumn(row, index, centerY);
         renderPotionColumns(row, index);
@@ -1164,6 +1189,17 @@ public final class InputOverlay {
             ImGui.setScrollY(top);
         } else if (bottom > scroll + viewportH) {
             ImGui.setScrollY(bottom - viewportH);
+        }
+    }
+
+    private void renderHotbarColumn(InputRow row, int rowIndex) {
+        ImGui.tableNextColumn();
+        float hotW = HOTBAR_CELL_WIDTH * uiScale();
+        hotbarBuf.set(row.getHotbarSlot());
+        ThemeManager.centerNextItem(hotW);
+        if (Controls.tableCombo(ID_HOTBAR_SUFFIX, hotbarBuf, HOTBAR_LABELS, hotW)) {
+            row.setHotbarSlot(hotbarBuf.get());
+            notifyChange(rowIndex);
         }
     }
 

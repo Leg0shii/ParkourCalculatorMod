@@ -321,6 +321,15 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
     }
 
     @Override
+    public void setHotbarSlot(int slotZeroBased) {
+        if (ghostMode) return;
+        if (slotZeroBased < 0 || slotZeroBased > 8) return;
+        LocalPlayer p = Minecraft.getInstance().player;
+        if (p == null) return;
+        p.getInventory().setSelectedSlot(slotZeroBased);
+    }
+
+    @Override
     public void dumpPlayerState(int tickIndex) {
         net.minecraft.world.entity.player.Player p = ghost != null ? ghost : Minecraft.getInstance().player;
         if (p == null) return;

@@ -270,6 +270,10 @@ public final class PlaybackController {
             lastSpeedAmplifier = speedAmp;
             lastJumpBoostAmplifier = jumpAmp;
         }
+        int hotbarSlot = row.getHotbarSlot();
+        if (hotbarSlot >= 1) {
+            bridge.setHotbarSlot(hotbarSlot - 1);
+        }
         Float yaw = row.getYaw();
         prevTickYaw = displayTargetYaw;
         if (yaw != null) {
