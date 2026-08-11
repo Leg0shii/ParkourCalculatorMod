@@ -14,7 +14,6 @@ import de.legoshi.parkourcalc.core.ui.SelectionManager;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.ui.YawGizmoController;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
@@ -51,21 +50,25 @@ public final class FabricWorldOverlayRenderer {
         poseStack.translate(-camPos.x, -camPos.y, -camPos.z);
         Matrix4f pose = poseStack.last().pose();
 
-        VertexConsumer faceBuf = buffers.getBuffer(FabricRenderLayers.TRANSLUCENT_FACES);
-        VertexConsumer lineBuf = buffers.getBuffer(FabricRenderLayers.LINES);
-        FabricBoxRenderer faces = new FabricBoxRenderer(pose, faceBuf, BoxRenderer.Mode.FACES);
-        FabricBoxRenderer lines = new FabricBoxRenderer(pose, lineBuf, BoxRenderer.Mode.LINES);
-
-        emitSelectionBlocks(faces, lines);
-
+        PathRenderPlan plan = null;
         if (!boxController.isEmpty()) {
             boxController.setBoxSize(BoxStyle.tickBoxSize(settings));
-            PathRenderPlan plan = PathRenderPlan.build(boxController, settings, selection);
+            plan = PathRenderPlan.build(boxController, settings, selection);
+            Perf.addBoxes(boxController.size());
+        }
+
+        FabricBoxRenderer faces = new FabricBoxRenderer(pose, buffers.getBuffer(FabricRenderLayers.TRANSLUCENT_FACES), BoxRenderer.Mode.FACES);
+        emitSelectionFaces(faces);
+        if (plan != null) {
             plan.faceEmitter.accept(faces);
+        }
+
+        FabricBoxRenderer lines = new FabricBoxRenderer(pose, buffers.getBuffer(FabricRenderLayers.LINES), BoxRenderer.Mode.LINES);
+        emitSelectionLines(lines);
+        if (plan != null) {
             plan.lineEmitter.accept(lines);
             emitGizmo(lines, camPos);
             emitSelectedHitDistance(lines);
-            Perf.addBoxes(boxController.size());
         }
 
         poseStack.popPose();
@@ -110,12 +113,20 @@ public final class FabricWorldOverlayRenderer {
         }
     }
 
-    private void emitSelectionBlocks(FabricBoxRenderer faces, FabricBoxRenderer lines) {
-        if (!settings.experimentalBlockCapture) return;
+    private void emitSelectionFaces(FabricBoxRenderer faces) {
+        AngleSolverState st = selectionBlocks();
+        if (st != null) emitSelections(st, faces, true);
+    }
+
+    private void emitSelectionLines(FabricBoxRenderer lines) {
+        AngleSolverState st = selectionBlocks();
+        if (st != null) emitSelections(st, lines, false);
+    }
+
+    private AngleSolverState selectionBlocks() {
+        if (!settings.experimentalBlockCapture) return null;
         AngleSolverState st = angleSolver != null ? angleSolver.get() : null;
-        if (st == null || !st.hasAnyBlocks()) return;
-        emitSelections(st, faces, true);
-        emitSelections(st, lines, false);
+        return (st != null && st.hasAnyBlocks()) ? st : null;
     }
 
     private void emitSelections(AngleSolverState st, FabricBoxRenderer r, boolean fill) {

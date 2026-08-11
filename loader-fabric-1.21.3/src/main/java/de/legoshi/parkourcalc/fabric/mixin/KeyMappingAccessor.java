@@ -5,6 +5,8 @@ import net.minecraft.client.KeyMapping;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
+import java.util.Map;
+
 @Mixin(KeyMapping.class)
 public interface KeyMappingAccessor {
 
@@ -13,4 +15,9 @@ public interface KeyMappingAccessor {
     @Accessor("clickCount") void pkc$setClickCount(int timesPressed);
 
     @Accessor("key") InputConstants.Key pkc$getKey();
+
+    @Accessor("CATEGORY_SORT_ORDER")
+    static Map<String, Integer> pkc$getCategorySortOrder() {
+        throw new AssertionError();
+    }
 }

@@ -16,6 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 @Mixin(Minecraft.class)
 public class MinecraftMixin {
@@ -38,6 +39,13 @@ public class MinecraftMixin {
                 merged[existing.length + i] = modKeys.get(i);
             }
             ((OptionsAccessor) (Object) options).pkc$setKeyMappings(merged);
+            Map<String, Integer> sortOrder = KeyMappingAccessor.pkc$getCategorySortOrder();
+            for (KeyMapping km : modKeys) {
+                String category = km.getCategory();
+                if (!sortOrder.containsKey(category)) {
+                    sortOrder.put(category, sortOrder.size() + 1);
+                }
+            }
             KeyMapping.resetMapping();
         }
         ImGuiImpl.create(window.getWindow(), FabricParkourCalculator.getSettings(), FabricParkourCalculator::resolveAutoScale);
