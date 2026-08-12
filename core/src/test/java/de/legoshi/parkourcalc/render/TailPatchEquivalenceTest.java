@@ -192,6 +192,72 @@ public class TailPatchEquivalenceTest {
     }
 
     @Test
+    public void hitboxTailPatchMatchesFullRebake() {
+        runHitboxScenario(false);
+        runHitboxScenario(true);
+    }
+
+    private void runHitboxScenario(boolean fullHitbox) {
+        int n = 40;
+        int dirtyTick = 25;
+        int edges = fullHitbox ? 12 : 4;
+        List<TickState> before = path(n, 1);
+        List<TickState> after = new ArrayList<TickState>(before.subList(0, dirtyTick + 1));
+        after.addAll(path(n, 2).subList(dirtyTick + 1, n));
+
+        BoxColorPicker hitboxPicker = (i, s) -> BoxStyle.hitboxLineArgb(settings, false);
+
+        BoxController bc = controllerWith(before, new float[n]);
+        List<String> baseFaces = hitboxFaces(bc, hitboxPicker, fullHitbox);
+
+        long revBefore = bc.getGeometryRev();
+        bc.takeDirtyFrom(revBefore);
+        bc.replaceFrom(dirtyTick + 1, after.subList(dirtyTick + 1, n));
+        bc.setPitches(new float[n]);
+        assertEquals(dirtyTick + 1, bc.takeDirtyFrom(revBefore));
+
+        int from = dirtyTick;
+        BoxController expected = controllerWith(after, new float[n]);
+        assertEquals(hitboxFaces(expected, hitboxPicker, fullHitbox),
+                patchedHitboxFaces(baseFaces, bc, hitboxPicker, fullHitbox, edges, from));
+    }
+
+    private List<String> hitboxFaces(BoxController bc, BoxColorPicker hitboxPicker, boolean fullHitbox) {
+        Rec r = new Rec(BoxRenderer.Mode.FACES);
+        bc.render(r, facePicker, 0, 0, 0, ALL);
+        if (fullHitbox) {
+            bc.renderHitboxFullWireframe(r, hitboxPicker, false, 0, 0, 0, ALL);
+        } else {
+            bc.renderHitboxFloorOutline(r, hitboxPicker, false, 0, 0, 0, ALL);
+        }
+        bc.renderFacingArrows(r, true, false, yawArgb, combinedArgb, 0, 0, 0, ALL);
+        return r.verts;
+    }
+
+    private List<String> patchedHitboxFaces(List<String> base, BoxController bc, BoxColorPicker hitboxPicker,
+                                            boolean fullHitbox, int edges, int from) {
+        int n = bc.size();
+        List<String> out = new ArrayList<String>(base);
+        Rec fr = new Rec(BoxRenderer.Mode.FACES);
+        bc.render(fr, facePicker, from, n);
+        splice(out, from * FACE_VERTS, n * FACE_VERTS, fr.verts);
+        int perBox = edges * PathVertexLayout.THICK_EDGE_VERTS;
+        int hitboxBase = n * FACE_VERTS;
+        Rec hr = new Rec(BoxRenderer.Mode.FACES);
+        if (fullHitbox) {
+            bc.renderHitboxFullWireframe(hr, hitboxPicker, false, from, n);
+        } else {
+            bc.renderHitboxFloorOutline(hr, hitboxPicker, false, from, n);
+        }
+        splice(out, hitboxBase + from * perBox, hitboxBase + n * perBox, hr.verts);
+        Rec ar = new Rec(BoxRenderer.Mode.FACES);
+        bc.renderFacingArrows(ar, true, false, yawArgb, combinedArgb, from, n - 1);
+        int arrowBase = hitboxBase + n * perBox;
+        splice(out, arrowBase + from * ARROW_VERTS, arrowBase + (n - 1) * ARROW_VERTS, ar.verts);
+        return out;
+    }
+
+    @Test
     public void constraintRegionPatchMatchesFullRebake() {
         int n = 40;
         int dirtyTick = 25;

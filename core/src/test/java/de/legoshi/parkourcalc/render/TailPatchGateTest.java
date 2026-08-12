@@ -96,4 +96,22 @@ public class TailPatchGateTest {
         assertFalse(TailPatchGate.canPatch(true, true, true, 0, true, plan, 0, 0));
         assertTrue(TailPatchGate.canPatch(true, true, true, 0, false, plan, 0, 0));
     }
+
+    @Test
+    public void matchingHitboxLayoutAllowsPatch() {
+        Settings settings = new Settings();
+        settings.showHitbox = true;
+        BoxController bc = boxes(4);
+        PathRenderPlan plan = PathRenderPlan.build(bc, settings, new SelectionManager(null));
+        assertEquals(4, plan.patch.hitboxEdges());
+        assertTrue(TailPatchGate.canPatch(true, true, true, 4, false, plan, 0, 0));
+        assertFalse(TailPatchGate.canPatch(true, true, true, 0, false, plan, 0, 0));
+        assertFalse(TailPatchGate.canPatch(true, true, true, 4, true, plan, 0, 0));
+
+        settings.showFullHitbox = true;
+        PathRenderPlan fullPlan = PathRenderPlan.build(bc, settings, new SelectionManager(null));
+        assertEquals(12, fullPlan.patch.hitboxEdges());
+        assertTrue(TailPatchGate.canPatch(true, true, true, 12, false, fullPlan, 0, 0));
+        assertFalse(TailPatchGate.canPatch(true, true, true, 4, false, fullPlan, 0, 0));
+    }
 }

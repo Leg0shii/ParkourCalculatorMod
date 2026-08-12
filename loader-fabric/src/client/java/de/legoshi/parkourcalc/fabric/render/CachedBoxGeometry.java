@@ -130,6 +130,18 @@ public final class CachedBoxGeometry implements AutoCloseable {
                 BoxRenderer.Mode.FACES,
                 r -> boxController.render(r, patch.facePicker, from, n)
         );
+        if (ok && hitboxEdges != 0) {
+            Consumer<BoxRenderer> emit = patch.showFullHitbox
+                    ? r -> boxController.renderHitboxFullWireframe(r, patch.hitboxPicker, useSubtick, from, n)
+                    : r -> boxController.renderHitboxFloorOutline(r, patch.hitboxPicker, useSubtick, from, n);
+            ok = writeVerts(
+                    faceSegments,
+                    hitboxBase + hitboxStarts[from],
+                    PrimitiveTopology.TRIANGLES,
+                    BoxRenderer.Mode.FACES,
+                    emit
+            );
+        }
         if (ok && arrowsPerBox > 0 && from < n - 1) {
             int stride = arrowsPerBox * PathVertexLayout.ARROW_VERTS_PER_BOX;
             ok = writeVerts(
