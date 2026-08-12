@@ -25,14 +25,14 @@ public final class Objective {
         this.smoothLambda = smoothLambda;
     }
 
-    public double smoothPenalty(double[] yawsAbs) {
+    public double smoothPenalty(double anchorYaw, double[] yawsAbs) {
         if (smoothLambda <= 0.0 || yawsAbs == null || yawsAbs.length < 2) return 0.0;
-        return smoothLambda * Angles.wiggleDeg(yawsAbs);
+        return smoothLambda * Angles.wiggleDeg(anchorYaw, yawsAbs);
     }
 
-    public double scored(double raw, double[] yawsAbs) {
+    public double scored(double raw, double anchorYaw, double[] yawsAbs) {
         if (smoothLambda <= 0.0) return raw;
-        double pen = smoothPenalty(yawsAbs);
+        double pen = smoothPenalty(anchorYaw, yawsAbs);
         return sense == Sense.MAX ? raw - pen : raw + pen;
     }
 }

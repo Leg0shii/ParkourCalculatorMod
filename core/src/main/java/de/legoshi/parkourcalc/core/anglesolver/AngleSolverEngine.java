@@ -412,7 +412,7 @@ public final class AngleSolverEngine {
                 state.getSmoothLambda());
         for (ConstraintAt ca : uiCons) {
             if (footprintCons != null && footprintCons.contains(ca.c)) continue;
-            addMapped(constraints, ca.c, ca.absTick, ca.segTick, numTicks);
+            addMapped(constraints, ca.c, ca.absTick, ca.segTick, numTicks, ph.inputs.startYaw);
         }
 
         JumpConstraint legalGoal = null;
@@ -444,8 +444,10 @@ public final class AngleSolverEngine {
         if (numTicks <= 0) return null;
         List<ConstraintAt> uiCons = collectUiConstraints(startTick, numTicks);
         List<JumpConstraint> constraints = new ArrayList<>();
+        TickState seamSeed = boxes.getState(startTick);
+        float seamSeedYaw = seamSeed != null ? seamSeed.yaw : 0f;
         for (ConstraintAt ca : uiCons) {
-            addMapped(constraints, ca.c, ca.absTick, ca.segTick, numTicks);
+            addMapped(constraints, ca.c, ca.absTick, ca.segTick, numTicks, seamSeedYaw);
         }
         Objective objective = new Objective(axis(state.getAxis()), sense(state.getGoal()), numTicks);
         String[] whyNot = new String[1];
@@ -506,7 +508,7 @@ public final class AngleSolverEngine {
         AtomicBoolean token = new AtomicBoolean(false);
         cancel = token;
         SolveProgress progress = new SolveProgress(job.sense == Objective.Sense.MAX, job.stopOnFeasible,
-                job.spec.objective.smoothLambda);
+                job.spec.objective.smoothLambda, job.spec.asScenario().startYaw);
         currentProgress = progress;
         currentJob = job;
         liveResult = null;
@@ -930,7 +932,7 @@ public final class AngleSolverEngine {
                             || (primary.done && !primary.feasible)) {
                         SolveProgress exploreProgress = new SolveProgress(
                                 job.sense == Objective.Sense.MAX, job.stopOnFeasible,
-                                spec.objective.smoothLambda);
+                                spec.objective.smoothLambda, sc.startYaw);
                         exploreProgress.forwardTo(progress, "explore");
                         exploreSpec = new JumpSpec(sc.copy(), spec.constraints, spec.objective);
                         exploreCtx = new GraphContext(exploreSpec, model, freeBox, job.legalGoal, FEAS_TOL,
@@ -978,9 +980,11 @@ public final class AngleSolverEngine {
                     exploreWon = explore.feasible;
                 } else if (explore.feasible) {
                     double primaryObj = spec.objective.scored(
-                            exactObjective(spec.asScenario(), spec, primary.cand.yaws), primary.cand.yaws);
+                            exactObjective(spec.asScenario(), spec, primary.cand.yaws),
+                            spec.asScenario().startYaw, primary.cand.yaws);
                     double exploreObj = exploreSpec.objective.scored(
-                            exactObjective(exploreSpec.asScenario(), exploreSpec, explore.cand.yaws), explore.cand.yaws);
+                            exactObjective(exploreSpec.asScenario(), exploreSpec, explore.cand.yaws),
+                            exploreSpec.asScenario().startYaw, explore.cand.yaws);
                     exploreWon = job.sense == Objective.Sense.MAX ? exploreObj > primaryObj : exploreObj < primaryObj;
                 }
             }
@@ -1362,7 +1366,8 @@ public final class AngleSolverEngine {
         ordered.sort((a, b) -> Integer.compare(a.absTick, b.absTick));
         List<Integer> unmet = new ArrayList<>();
         for (ConstraintAt ca : ordered) {
-            Double found = findValue(ca.c, ca.segTick, job.startTick, job.numTicks, gameFacings, path);
+            Double found = findValue(ca.c, ca.segTick, job.startTick, job.numTicks, gameFacings, path,
+                    job.ph.inputs.startYaw);
             if (found == null) continue;
             total++;
             boolean satisfied = satisfied(ca.c, found);
@@ -1562,7 +1567,7 @@ public final class AngleSolverEngine {
 
     // ---- constraint mapping (UI Constraint -> solver JumpConstraint) -----------
 
-    private void addMapped(List<JumpConstraint> out, Constraint c, int absTick, int segTick, int numTicks) {
+    private void addMapped(List<JumpConstraint> out, Constraint c, int absTick, int segTick, int numTicks, float seedYaw) {
         String tag = (c.isVsDz() ? "dXvsdZ" : ConstraintText.fieldLabel(c)) + "@" + absTick;
         int startTick = absTick - segTick;
         switch (c.getField()) {
@@ -1598,7 +1603,11 @@ public final class AngleSolverEngine {
                 addRelative(out, JumpConstraint.Mode.Z, segTick, segTick - 1, c, tag);
                 break;
             case DF:
-                if (segTick < 1 || segTick >= numTicks) break;
+                if (segTick >= numTicks) break;
+                if (segTick < 1) {
+                    addSeamDeltaFacing(out, c, tag, seedYaw);
+                    break;
+                }
                 addRelative(out, JumpConstraint.Mode.F, segTick, segTick - 1, c, tag);
                 break;
         }
@@ -1638,6 +1647,19 @@ public final class AngleSolverEngine {
         }
     }
 
+    private void addSeamDeltaFacing(List<JumpConstraint> out, Constraint c, String tag, float seedYaw) {
+        double base = seedYaw;
+        if (c.isRange()) {
+            out.add(new JumpConstraint(JumpConstraint.Mode.F, 0, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.GE, base + c.getLo(), tag + "lo"));
+            out.add(new JumpConstraint(JumpConstraint.Mode.F, 0, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.LE, base + c.getHi(), tag + "hi"));
+        } else if (c.getOp() == Constraint.Op.EQ) {
+            out.add(new JumpConstraint(JumpConstraint.Mode.F, 0, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.GE, base + c.getValue() - MET_TOL, tag + "eqLo"));
+            out.add(new JumpConstraint(JumpConstraint.Mode.F, 0, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.LE, base + c.getValue() + MET_TOL, tag + "eqHi"));
+        } else {
+            out.add(new JumpConstraint(JumpConstraint.Mode.F, 0, null, JumpConstraint.Op.PLUS, cmp(c.getOp()), base + c.getValue(), tag));
+        }
+    }
+
     private static JumpConstraint.Cmp cmp(Constraint.Op op) {
         switch (op) {
             case LT:
@@ -1660,7 +1682,8 @@ public final class AngleSolverEngine {
         ordered.sort((a, b) -> Integer.compare(a.absTick, b.absTick));
         List<Integer> unmet = new ArrayList<>();
         for (ConstraintAt ca : ordered) {
-            Double found = findValue(ca.c, ca.segTick, job.startTick, job.numTicks, gameFacings, path);
+            Double found = findValue(ca.c, ca.segTick, job.startTick, job.numTicks, gameFacings, path,
+                    job.spec.asScenario().startYaw);
             if (found == null) continue; // unmappable, e.g. velocity on tick 0
             total++;
             boolean ok = satisfied(ca.c, found);
@@ -1680,7 +1703,7 @@ public final class AngleSolverEngine {
     /** The value a constraint is judged against. F reads the GAME facing (what the solver enforced and the
      *  sim runs), wrapped for display; the wrapped-abs plan yaw differs from it by float accumulation,
      *  which the strict wall gate would mis-report on a hugged facing wall. */
-    private Double findValue(Constraint c, int segTick, int startTick, int numTicks, double[] gameFacings, ForwardPath path) {
+    private Double findValue(Constraint c, int segTick, int startTick, int numTicks, double[] gameFacings, ForwardPath path, float seedYaw) {
         Integer refSeg = null;
         if (c.isRelative()) {
             int r = c.getRefTick() - startTick;
@@ -1697,8 +1720,11 @@ public final class AngleSolverEngine {
                             - Math.abs(path.posZ[segTick] - path.posZ[segTick - 1])
                         : path.posX[segTick] - path.posX[segTick - 1]) : null;
             case DZ: return segTick >= 1 ? path.posZ[segTick] - path.posZ[segTick - 1] : null;
-            case DF: return segTick >= 1 && segTick < numTicks
-                    ? Angles.wrap(gameFacings[segTick] - gameFacings[segTick - 1]) : null;
+            case DF:
+                if (segTick >= numTicks) return null;
+                return segTick >= 1
+                        ? Angles.wrap(gameFacings[segTick] - gameFacings[segTick - 1])
+                        : Angles.wrap(gameFacings[0] - seedYaw);
             default: return null;
         }
     }

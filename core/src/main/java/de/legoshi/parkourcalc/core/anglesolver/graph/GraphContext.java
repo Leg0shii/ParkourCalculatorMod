@@ -100,7 +100,7 @@ public final class GraphContext {
     }
 
     public double scoredExactObjective(double[] yaws) {
-        return spec.objective.scored(Scoring.exactObjective(model, scenario, spec, yaws), yaws);
+        return spec.objective.scored(Scoring.exactObjective(model, scenario, spec, yaws), scenario.startYaw, yaws);
     }
 
     public synchronized String chain() {

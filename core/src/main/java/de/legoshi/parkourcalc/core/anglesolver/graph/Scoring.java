@@ -62,14 +62,14 @@ public final class Scoring {
     }
 
     public static double scoredObjective(ForwardModel model, JumpPhysicsInputs sc, JumpSpec spec, StartBox freeBox, double[] yaws) {
-        if (freeBox == null) return spec.objective.scored(exactObjective(model, sc, spec, yaws), yaws);
+        if (freeBox == null) return spec.objective.scored(exactObjective(model, sc, spec, yaws), sc.startYaw, yaws);
         double[] gf = sc.toGameFacings(yaws);
         ForwardPath p = model.forward(sc, gf);
         double[] d = translationDomain(sc, freeBox);
         boolean objX = spec.objective.axis == JumpPhysicsInputs.Axis.X;
         SnapRepairPolish.Trans tr = SnapRepairPolish.bestTranslationObj(JumpConstraintCompiler.compile(spec), gf, p,
                 d[0], d[1], d[2], d[3], objX ? 0 : 1, spec.objective.sense == Objective.Sense.MAX);
-        return spec.objective.scored(p.getPos(spec.objective.tick, spec.objective.axis) + (objX ? tr.tx : tr.tz), yaws);
+        return spec.objective.scored(p.getPos(spec.objective.tick, spec.objective.axis) + (objX ? tr.tx : tr.tz), sc.startYaw, yaws);
     }
 
     public static boolean reachHeadroom(ForwardModel model, JumpPhysicsInputs sc, JumpSpec spec,

@@ -120,7 +120,7 @@ public final class SolveCore {
                 SolverRunResult best = null;
                 double bestS = 0.0;
                 for (SolverRunResult r : results) {
-                    double s = spec.objective.scored(r.objectiveValue, r.yawAbsDeg);
+                    double s = spec.objective.scored(r.objectiveValue, sc.startYaw, r.yawAbsDeg);
                     if (best == null || (max ? s > bestS : s < bestS)) {
                         best = r;
                         bestS = s;
@@ -131,8 +131,8 @@ public final class SolveCore {
             }
 
             feasible.sort((a, b) -> {
-                double sa = spec.objective.scored(a.objectiveValue, a.yawAbsDeg);
-                double sb = spec.objective.scored(b.objectiveValue, b.yawAbsDeg);
+                double sa = spec.objective.scored(a.objectiveValue, sc.startYaw, a.yawAbsDeg);
+                double sb = spec.objective.scored(b.objectiveValue, sc.startYaw, b.yawAbsDeg);
                 return max ? Double.compare(sb, sa) : Double.compare(sa, sb);
             });
             if (stopOnFeasible) return Angles.wrapAll(feasible.get(0).yawAbsDeg);
@@ -148,10 +148,10 @@ public final class SolveCore {
             if (cancel.get()) return bestOrNull(progress);
 
             double[] yaws = polished.get(0);
-            double bestObj = spec.objective.scored(objectiveOf(model, sc, spec.objective, yaws), yaws);
+            double bestObj = spec.objective.scored(objectiveOf(model, sc, spec.objective, yaws), sc.startYaw, yaws);
             for (int i = 1; i < polished.size(); i++) {
                 double[] cand = polished.get(i);
-                double o = spec.objective.scored(objectiveOf(model, sc, spec.objective, cand), cand);
+                double o = spec.objective.scored(objectiveOf(model, sc, spec.objective, cand), sc.startYaw, cand);
                 if (max ? o > bestObj : o < bestObj) {
                     bestObj = o;
                     yaws = cand;

@@ -161,6 +161,6 @@ public final class BucketAscentPolish {
         ForwardPath pr = model.forward(scenario, gf);
         double viol = c.maxViolation(gf, pr);
         if (viol > FEAS_TOL) return Double.POSITIVE_INFINITY;
-        return sign * pr.getPos(obj.tick, obj.axis) + obj.smoothPenalty(abs);
+        return sign * pr.getPos(obj.tick, obj.axis) + obj.smoothPenalty(scenario.startYaw, abs);
     }
 }
