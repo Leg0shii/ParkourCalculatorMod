@@ -9,7 +9,8 @@ public final class TailPatchGate {
                                    int hitboxEdges, boolean useSubtick, PathRenderPlan plan,
                                    int bakedConstraintFaceVerts, int bakedConstraintLineVerts) {
         return built && structuralHashSame && boxCountSame
-                && hitboxEdges == 0 && !useSubtick
+                && hitboxEdges == plan.patch.hitboxEdges()
+                && !useSubtick
                 && plan.reachLineVerts == 0
                 && plan.constraintFaceVerts == bakedConstraintFaceVerts
                 && plan.constraintLineVerts == bakedConstraintLineVerts;

@@ -104,6 +104,13 @@ public class GizmoDragConstraintBench {
         int n = bc.size();
         faces.reset();
         bc.render(faces, plan.patch.facePicker, from, n);
+        if (plan.patch.hitboxEdges() != 0) {
+            if (plan.patch.showFullHitbox) {
+                bc.renderHitboxFullWireframe(faces, plan.patch.hitboxPicker, plan.patch.showSubtick, from, n);
+            } else {
+                bc.renderHitboxFloorOutline(faces, plan.patch.hitboxPicker, plan.patch.showSubtick, from, n);
+            }
+        }
         bc.renderFacingArrows(faces, plan.patch.drawYawArrows, plan.patch.drawCombinedArrows,
                 plan.patch.yawArrowArgb, plan.patch.combinedArrowArgb, from, Math.max(from, n - 1));
         plan.constraintFaceEmitter.accept(faces);
@@ -158,7 +165,9 @@ public class GizmoDragConstraintBench {
         SelectionManager sel = new SelectionManager(null);
         try {
             StringBuilder out = new StringBuilder();
-            for (int withConstraints = 0; withConstraints < 2; withConstraints++) {
+            for (int scenario = 0; scenario < 3; scenario++) {
+                int withConstraints = scenario == 1 ? 1 : 0;
+                settings.showFullHitbox = scenario == 2;
                 BoxController bc = controllerWith(path(N, 1));
                 AngleSolverState solver = new AngleSolverState();
                 if (withConstraints == 1) {
@@ -182,8 +191,9 @@ public class GizmoDragConstraintBench {
                 long[] r = driveFrames(bc, settings, sel, FRAMES, pathCounts);
 
                 out.append(String.format(
-                        "n=%d constraints=%s: patch frames %d (avg %.3f ms), rebuild frames %d (avg %.3f ms), plan avg %.3f ms, last verts %d%n",
+                        "n=%d constraints=%s hitbox=%s: patch frames %d (avg %.3f ms), rebuild frames %d (avg %.3f ms), plan avg %.3f ms, last verts %d%n",
                         N, withConstraints == 1 ? ("every " + CONSTRAINT_SPACING + " ticks") : "none",
+                        scenario == 2 ? "full" : "off",
                         pathCounts[0], pathCounts[0] == 0 ? 0 : r[0] / 1e6 / pathCounts[0],
                         pathCounts[1], pathCounts[1] == 0 ? 0 : r[1] / 1e6 / pathCounts[1],
                         r[2] / 1e6 / FRAMES, r[3]));

@@ -345,6 +345,13 @@ public final class BoxController {
         }
     }
 
+    public void renderHitboxFloorOutline(BoxRenderer renderer, BoxColorPicker picker, boolean useSubtickPositions,
+                                         int from, int to) {
+        for (int i = from; i < to; i++) {
+            emitHitboxFloorOutlineAt(renderer, picker.argbFor(i, states.get(i)), useSubtickPositions, i);
+        }
+    }
+
     /** Emits one tick's hitbox floor outline; used both by the full-pass loop and by selection patching. */
     public void emitHitboxFloorOutlineAt(BoxRenderer renderer, int argb, boolean useSubtickPositions, int i) {
         double t = BoxStyle.HITBOX_EDGE_THICKNESS;
@@ -365,7 +372,9 @@ public final class BoxController {
 
     /** Number of walk positions (sub-tick samples) for this tick; hitbox geometry scales by this. */
     public int hitboxWalkCount(int index, boolean useSubtickPositions) {
-        return walkFor(index, states.get(index), useSubtickPositions).size();
+        if (!useSubtickPositions) return 1;
+        List<Vec3dCore> path = states.get(index).subtickPath;
+        return path.isEmpty() ? 1 : path.size();
     }
 
     private long totalHitboxWalk(boolean useSubtickPositions) {
@@ -390,6 +399,13 @@ public final class BoxController {
                                           double camX, double camY, double camZ, double maxDistanceSq) {
         for (int i = 0; i < states.size(); i++) {
             if (!inRange(i, camX, camY, camZ, maxDistanceSq)) continue;
+            emitHitboxFullWireframeAt(renderer, picker.argbFor(i, states.get(i)), useSubtickPositions, i);
+        }
+    }
+
+    public void renderHitboxFullWireframe(BoxRenderer renderer, BoxColorPicker picker, boolean useSubtickPositions,
+                                          int from, int to) {
+        for (int i = from; i < to; i++) {
             emitHitboxFullWireframeAt(renderer, picker.argbFor(i, states.get(i)), useSubtickPositions, i);
         }
     }
