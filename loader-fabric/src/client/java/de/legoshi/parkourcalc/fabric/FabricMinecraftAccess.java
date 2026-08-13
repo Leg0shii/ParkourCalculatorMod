@@ -166,6 +166,20 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
         return out;
     }
 
+    @Override
+    public List<AABB> getBlockCollisionBoxes(int x, int y, int z) {
+        List<AABB> out = new ArrayList<>();
+        ClientLevel world = Minecraft.getInstance().level;
+        if (world == null) return out;
+        BlockPos pos = new BlockPos(x, y, z);
+        for (net.minecraft.world.phys.AABB bb : world.getBlockState(pos).getCollisionShape(world, pos).toAabbs()) {
+            out.add(new AABB(
+                    new Vec3dCore(x + bb.minX, y + bb.minY, z + bb.minZ),
+                    new Vec3dCore(x + bb.maxX, y + bb.maxY, z + bb.maxZ)));
+        }
+        return out;
+    }
+
     private static Face toFace(Direction side) {
         if (side == null) return null;
         switch (side) {

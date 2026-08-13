@@ -77,7 +77,7 @@ public final class ConstraintKeyController {
             } else {
                 Vec3dCore hit = mc.getLookedAtHitVec();
                 if (hit == null) return;
-                List<AABB> boxes = mc.getCollisionBoxes(bx, by, bz, bx, by, bz);
+                List<AABB> boxes = mc.getBlockCollisionBoxes(bx, by, bz);
                 state.putScalarReplacingDirection(tick, ConstraintDeriver.deriveWall(face, boxes, hit, enter));
             }
         } else {
@@ -104,7 +104,7 @@ public final class ConstraintKeyController {
     }
 
     private AABB supportBox(int bx, int by, int bz, Vec3dCore hit) {
-        List<AABB> boxes = mc.getCollisionBoxes(bx, by, bz, bx, by, bz);
+        List<AABB> boxes = mc.getBlockCollisionBoxes(bx, by, bz);
         AABB best = null;
         double bestGap = Double.POSITIVE_INFINITY;
         for (AABB b : boxes) {
