@@ -488,12 +488,20 @@ public final class AngleSolverState {
     public static final double HITBOX_HALF_WIDTH = ConstraintDeriver.HALF;
 
     public void setFootprint(int tick, double xLo, double xHi, double zLo, double zHi) {
+        setFootprint(tick, xLo, xHi, zLo, zHi, null);
+    }
+
+    public void setFootprint(int tick, double xLo, double xHi, double zLo, double zHi, Double surfaceY) {
         if (tick < 0) return;
         List<Constraint> list = tickConstraints(tick).getConstraints();
         list.removeIf(c -> c.isRange() && !c.isRelative()
                 && (c.getField() == Constraint.Field.X || c.getField() == Constraint.Field.Z));
-        list.add(Constraint.range(Constraint.Field.X, xLo, xHi, true, true));
-        list.add(Constraint.range(Constraint.Field.Z, zLo, zHi, true, true));
+        Constraint cx = Constraint.range(Constraint.Field.X, xLo, xHi, true, true);
+        cx.setSurfaceY(surfaceY);
+        Constraint cz = Constraint.range(Constraint.Field.Z, zLo, zHi, true, true);
+        cz.setSurfaceY(surfaceY);
+        list.add(cx);
+        list.add(cz);
     }
 
     public void clearFootprint(int tick) {

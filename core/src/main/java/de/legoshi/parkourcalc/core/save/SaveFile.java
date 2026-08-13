@@ -98,6 +98,8 @@ public final class SaveFile {
         public boolean range;                            // true = range (IN), false = scalar
         public String field;
         public String op;                                // scalar only
+        public Double surfaceY;
+        public boolean derived;
         public double value;
         public double lo;
         public double hi;

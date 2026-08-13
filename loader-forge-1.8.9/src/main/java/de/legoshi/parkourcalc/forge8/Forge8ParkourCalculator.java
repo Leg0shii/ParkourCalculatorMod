@@ -68,6 +68,7 @@ public class Forge8ParkourCalculator {
     private KeyBinding removeConstraintsKeyBinding;
     private KeyBinding applySurfaceStateKeyBinding;
     private KeyBinding solveKeyBinding;
+    private KeyBinding findStratsKeyBinding;
     private KeyBinding solverStartTickKeyBinding;
     private KeyBinding solverEndTickKeyBinding;
     private KeyBinding simVerifyKeyBinding;
@@ -121,6 +122,8 @@ public class Forge8ParkourCalculator {
         ClientRegistry.registerKeyBinding(solverStartTickKeyBinding);
         solverEndTickKeyBinding = new KeyBinding("key.parkourcalculator.set_solver_end", Keyboard.KEY_O, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(solverEndTickKeyBinding);
+        findStratsKeyBinding = new KeyBinding("key.parkourcalculator.find_strats", Keyboard.KEY_F, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(findStratsKeyBinding);
         if (System.getenv("PKC_SIMVERIFY") != null) {
             simVerifyKeyBinding = new KeyBinding("key.parkourcalculator.run_sim_verify", Keyboard.KEY_J, "key.categories.parkourcalculator");
             ClientRegistry.registerKeyBinding(simVerifyKeyBinding);
@@ -138,7 +141,7 @@ public class Forge8ParkourCalculator {
 
         MinecraftForge.EVENT_BUS.register(this);
         LOG.info("ParkourCalculator init complete. G toggle, L deselect, P playback, B landing constraints, X remove constraints,"
-                + " H surface state, V solve, I/O solver start/goal tick."
+                + " H surface state, V solve, I/O solver start/goal tick, F find strats."
                 + (simVerifyKeyBinding != null ? " Sim-verify batch ON (PKC_SIMVERIFY): J." : "")
                 + (blockCaptureEnabled ? " Block capture ON: M/N/K capture momentum/collision/land block, Delete clear blocks." : ""));
     }
@@ -274,6 +277,10 @@ public class Forge8ParkourCalculator {
         while (solverEndTickKeyBinding.isPressed()) {
             solverEndPressed = true;
         }
+        boolean findStratsPressed = false;
+        while (findStratsKeyBinding.isPressed()) {
+            findStratsPressed = true;
+        }
         boolean simVerifyPressed = false;
         while (simVerifyKeyBinding != null && simVerifyKeyBinding.isPressed()) {
             simVerifyPressed = true;
@@ -325,6 +332,10 @@ public class Forge8ParkourCalculator {
             }
             if (solverEndPressed) {
                 application.setSolverLandingTickFromSelection();
+            }
+            if (findStratsPressed) {
+                openOverlay(mc);
+                application.findStratsHotkey();
             }
             if (simVerifyPressed) {
                 runSimVerify(mc);
@@ -401,6 +412,28 @@ public class Forge8ParkourCalculator {
         if (keyCode == solverEndTickKeyBinding.getKeyCode()) {
             application.setSolverLandingTickFromSelection();
             return true;
+        }
+        if (keyCode == findStratsKeyBinding.getKeyCode()) {
+            application.findStratsHotkey();
+            return true;
+        }
+        if (blockCaptureEnabled) {
+            if (keyCode == captureMomentumBlockKeyBinding.getKeyCode()) {
+                application.captureAngleSolverBlock(BlockSelection.Kind.MOMENTUM);
+                return true;
+            }
+            if (keyCode == captureCollisionBlockKeyBinding.getKeyCode()) {
+                application.captureAngleSolverBlock(BlockSelection.Kind.COLLISION);
+                return true;
+            }
+            if (keyCode == captureLandBlockKeyBinding.getKeyCode()) {
+                application.captureAngleSolverBlock(BlockSelection.Kind.LAND);
+                return true;
+            }
+            if (keyCode == clearBlocksKeyBinding.getKeyCode()) {
+                application.clearAngleSolverBlocks();
+                return true;
+            }
         }
         return false;
     }

@@ -50,6 +50,9 @@ public final class ColdStratFinder {
 
     public static final class Strat {
         public final int[] directions;
+        public final int[][] seq;
+        public final int tailCombo;
+        public final String patternKey;
         public final int[] winLo;
         public final int[] winHi;
         public final int[] winCount;
@@ -59,9 +62,13 @@ public final class ColdStratFinder {
         public final int turns;
         public final ColdResult representative;
 
-        Strat(int[] directions, int[] winLo, int[] winHi, int[] winCount,
+        Strat(int[] directions, int[][] seq, int tailCombo, String patternKey,
+              int[] winLo, int[] winHi, int[] winCount,
               int feasibleCount, double difficulty, double bandDeg, int turns, ColdResult representative) {
             this.directions = directions;
+            this.seq = seq;
+            this.tailCombo = tailCombo;
+            this.patternKey = patternKey;
             this.winLo = winLo;
             this.winHi = winHi;
             this.winCount = winCount;
@@ -73,15 +80,105 @@ public final class ColdStratFinder {
         }
 
         public String label() {
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < directions.length; i++) {
-                if (i > 0) sb.append(" · ");
-                sb.append(KeyLine.COMBO_LABEL[directions[i]]);
-                if (winLo[i] == winHi[i]) sb.append(' ').append(winLo[i]).append('t');
-                else sb.append(' ').append(winLo[i]).append('-').append(winHi[i]).append('t');
-            }
-            return sb.toString();
+            return sequenceLabel(seq, tailCombo);
         }
+    }
+
+    public static String sequenceLabel(int[][] seq, int tailCombo) {
+        StringBuilder sb = new StringBuilder();
+        int lastCombo = KeyLine.NONE;
+        for (int i = 0; i < seq.length; i++) {
+            if (i > 0) {
+                sb.append(", ");
+            }
+            if (seq[i].length == 0) {
+                sb.append('-');
+            } else {
+                for (int j = 0; j < seq[i].length; j++) {
+                    if (j > 0) {
+                        sb.append('>');
+                    }
+                    sb.append(KeyLine.COMBO_LABEL[seq[i][j]]);
+                    lastCombo = seq[i][j];
+                }
+            }
+        }
+        if (tailCombo != lastCombo) {
+            sb.append(", air ").append(KeyLine.COMBO_LABEL[tailCombo]);
+        }
+        return sb.toString();
+    }
+
+    static final class SeqInfo {
+        final int[][] seq;
+        final String orderKey;
+        final String concreteKey;
+        final int firstPress;
+
+        SeqInfo(int[][] seq, String orderKey, String concreteKey, int firstPress) {
+            this.seq = seq;
+            this.orderKey = orderKey;
+            this.concreteKey = concreteKey;
+            this.firstPress = firstPress;
+        }
+    }
+
+    public static ColdResult concreteResult(de.legoshi.parkourcalc.core.save.SaveFile specSave,
+                                            KeyLine line, double facingDeg, double x0, double z0) {
+        ColdProblem p = ColdProblem.fromSave(specSave);
+        int n = p.landingTick;
+        double[] yaws = new double[n];
+        Arrays.fill(yaws, facingDeg);
+        de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs sc =
+                LineSpec.build(line, facingDeg, x0, z0).asScenario();
+        double[] gf = sc.toGameFacings(yaws);
+        de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath full =
+                de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel
+                        .forMcVersion(specSave.mcVersion).forward(sc, gf);
+        double[] px = new double[full.posX.length - 1];
+        double[] pz = new double[full.posZ.length - 1];
+        for (int t = 1; t < full.posX.length; t++) {
+            px[t - 1] = full.posX[t];
+            pz[t - 1] = full.posZ[t];
+        }
+        de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath stepPath =
+                new de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath(px, null, pz);
+        return new ColdResult(line, facingDeg, yaws, x0, z0, 0.0, stepPath, 0L, 0, 0L, 0, 0, 0, false);
+    }
+
+    static SeqInfo sequenceOf(int[] mk, List<Segment> segs, int tailCombo) {
+        int nSeg = segs.size();
+        int[][] seq = new int[nSeg][];
+        StringBuilder orderKey = new StringBuilder();
+        StringBuilder concreteKey = new StringBuilder();
+        for (int i = 0; i < nSeg; i++) {
+            Segment s = segs.get(i);
+            int from = s.startTick;
+            if (i == 0) {
+                while (from <= s.pressTick && from < mk.length && mk[from] == KeyLine.NONE) {
+                    from++;
+                }
+            }
+            List<Integer> order = new ArrayList<Integer>();
+            int prev = Integer.MIN_VALUE;
+            for (int t = from; t <= s.pressTick && t < mk.length; t++) {
+                int c = mk[t];
+                concreteKey.append((char) ('0' + c));
+                if (c != prev) {
+                    order.add(c);
+                    prev = c;
+                }
+            }
+            concreteKey.append('|');
+            seq[i] = new int[order.size()];
+            for (int j = 0; j < order.size(); j++) {
+                seq[i][j] = order.get(j);
+            }
+            orderKey.append(Arrays.toString(seq[i])).append('|');
+        }
+        orderKey.append('t').append(tailCombo);
+        concreteKey.append('t').append(tailCombo);
+        return new SeqInfo(seq, orderKey.toString(), concreteKey.toString(), segs.get(0).pressTick);
     }
 
     public static final class Result {
@@ -171,14 +268,33 @@ public final class ColdStratFinder {
         return out;
     }
 
+    public interface LineGate {
+        boolean pass(ColdResult r);
+    }
+
     public static Result find(SaveFile file, Request req,
                               ColdBeamSolver.ProgressSink progress, AtomicBoolean cancel) {
+        return find(file, req, progress, cancel, null);
+    }
+
+    public static Result find(SaveFile file, Request req,
+                              ColdBeamSolver.ProgressSink progress, AtomicBoolean cancel, LineGate gate) {
         ColdProblem p = ColdProblem.fromSave(file);
         List<Segment> segs = segmentsOf(p);
         ColdBeamSolver.Config cfg = buildBeamConfig(req, segs);
         ColdBeamSolver.ColdBeamResult beam = ColdBeamSolver.solveRanked(file, cfg, progress, cancel);
-        List<Strat> strats = collapse(p, segs, beam.feasible);
-        return new Result(strats, beam.candidatesBuilt, beam.certified, beam.feasible.size(), beam.truncated);
+        List<ColdBeamSolver.Feasible> feasible = beam.feasible;
+        if (gate != null) {
+            List<ColdBeamSolver.Feasible> gated = new ArrayList<ColdBeamSolver.Feasible>();
+            for (ColdBeamSolver.Feasible f : feasible) {
+                if (f.result != null && gate.pass(f.result)) {
+                    gated.add(f);
+                }
+            }
+            feasible = gated;
+        }
+        List<Strat> strats = collapse(p, segs, feasible);
+        return new Result(strats, beam.candidatesBuilt, beam.certified, feasible.size(), beam.truncated);
     }
 
     private static double bandDegOf(ColdProblem p, ColdResult rep) {
@@ -240,14 +356,20 @@ public final class ColdStratFinder {
         int nSeg = segs.size();
         Map<String, List<ColdBeamSolver.Feasible>> groups = new LinkedHashMap<String, List<ColdBeamSolver.Feasible>>();
         Map<String, int[]> groupDirs = new LinkedHashMap<String, int[]>();
+        Map<String, int[][]> groupSeq = new LinkedHashMap<String, int[][]>();
+        Map<String, Integer> groupTail = new LinkedHashMap<String, Integer>();
         for (ColdBeamSolver.Feasible f : feasible) {
             int[] mk = parseMoveKey(f.sig, p.lastPressSeg + 1);
-            int[] dirs = new int[nSeg];
-            for (int i = 0; i < nSeg; i++) dirs[i] = mk[segs.get(i).pressTick];
-            String key = Arrays.toString(dirs);
+            int tail = f.result.line.tailCombo;
+            SeqInfo info = sequenceOf(mk, segs, tail);
+            String key = info.orderKey;
             if (!groups.containsKey(key)) {
                 groups.put(key, new ArrayList<ColdBeamSolver.Feasible>());
+                int[] dirs = new int[nSeg];
+                for (int i = 0; i < nSeg; i++) dirs[i] = mk[segs.get(i).pressTick];
                 groupDirs.put(key, dirs);
+                groupSeq.put(key, info.seq);
+                groupTail.put(key, tail);
             }
             groups.get(key).add(f);
         }
@@ -255,6 +377,8 @@ public final class ColdStratFinder {
         List<Strat> out = new ArrayList<Strat>();
         for (Map.Entry<String, List<ColdBeamSolver.Feasible>> e : groups.entrySet()) {
             int[] dirs = groupDirs.get(e.getKey());
+            int[][] seq = groupSeq.get(e.getKey());
+            int tail = groupTail.get(e.getKey());
             List<ColdBeamSolver.Feasible> members = e.getValue();
             int[] lo = new int[nSeg];
             int[] hi = new int[nSeg];
@@ -283,7 +407,8 @@ public final class ColdStratFinder {
             int keyChanges = keyChangesOf(rep);
             int diagPresses = diagonalPressesOf(dirs);
             double diff = difficulty(cnt, segs, bandDeg, turns, keyChanges, diagPresses);
-            out.add(new Strat(dirs, lo, hi, cnt, members.size(), diff, bandDeg, turns, rep));
+            out.add(new Strat(dirs, seq, tail, e.getKey(), lo, hi, cnt, members.size(), diff,
+                    bandDeg, turns, rep));
         }
         Collections.sort(out, new Comparator<Strat>() {
             @Override

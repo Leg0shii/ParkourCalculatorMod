@@ -110,6 +110,23 @@ public class BlockCaptureSaveRoundTripTest {
     }
 
     @Test
+    public void footprintSurfaceYSurvivesTheRoundTrip() throws Exception {
+        FileSystemSaveStore store = store(Files.createTempDirectory("pkc-rt-surfacey"));
+
+        AngleSolverState in = new AngleSolverState();
+        in.setFootprint(7, 600.7, 602.3, 415.7, 417.3, 7.0);
+
+        AngleSolverState out = saveAndReload(store, in);
+
+        List<Constraint> list = out.tickConstraintsOrNull(7).getConstraints();
+        assertEquals(2, list.size());
+        for (Constraint c : list) {
+            assertTrue(c.isRange());
+            assertEquals(Double.valueOf(7.0), c.getSurfaceY());
+        }
+    }
+
+    @Test
     public void toggleReassignsRoleAndUntagsOnRepeat() {
         AngleSolverState state = new AngleSolverState();
 

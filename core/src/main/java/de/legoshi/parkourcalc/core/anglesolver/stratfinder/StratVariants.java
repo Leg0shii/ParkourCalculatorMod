@@ -29,25 +29,9 @@ public final class StratVariants {
     private static final List<String> KEYS = Arrays.asList("W", "SPRINT", "A", "D", "S");
     private static final int WINDOW = 12;
     private static final int MAX_VARIANTS = 40;
-    private static final Set<String> PRODUCT_FAMILIES = allNarrowPlanLabels();
 
-    private static Set<String> allNarrowPlanLabels() {
-        Set<String> out = new HashSet<String>();
-        for (StratPlans.Plan p : StratPlans.plans(false)) {
-            out.add(p.label);
-        }
-        return out;
-    }
-    private static final Set<String> PATTERN_FAMILIES = patternFamilyLabels();
-
-    private static Set<String> patternFamilyLabels() {
-        Set<String> out = new HashSet<String>();
-        for (StratPlans.Plan p : StratPlans.plans(false)) {
-            if (p.label.startsWith("fmm") || p.label.startsWith("pessi") || p.label.startsWith("mark")) {
-                out.add(p.label);
-            }
-        }
-        return out;
+    private static boolean isPatternFamily(String label) {
+        return label.startsWith("fmm") || label.startsWith("pessi") || label.startsWith("mark");
     }
 
     public static final class Variant {
@@ -80,10 +64,16 @@ public final class StratVariants {
 
         private final Set<String> families;
         public final Shape shape;
+        public final boolean wide;
 
         public Filter(Set<String> families, Shape shape) {
+            this(families, shape, false);
+        }
+
+        public Filter(Set<String> families, Shape shape, boolean wide) {
             this.families = families == null ? null : new HashSet<String>(families);
             this.shape = shape == null ? Shape.ANY : shape;
+            this.wide = wide;
         }
 
         public boolean allowsFamily(String family) {
@@ -162,10 +152,7 @@ public final class StratVariants {
         if (fire < 0) {
             return;
         }
-        for (StratPlans.Plan plan : StratPlans.plans(false)) {
-            if (!PRODUCT_FAMILIES.contains(plan.label)) {
-                continue;
-            }
+        for (StratPlans.Plan plan : StratPlans.plans(filter.wide)) {
             if (!filter.allowsFamily(familyOfPlan(plan.label))) {
                 continue;
             }
@@ -493,8 +480,8 @@ public final class StratVariants {
         if (fire < 0 || lastFire <= startTick) {
             return;
         }
-        for (StratPlans.Plan plan : StratPlans.plans(false)) {
-            if (!PATTERN_FAMILIES.contains(plan.label)) {
+        for (StratPlans.Plan plan : StratPlans.plans(filter.wide)) {
+            if (!isPatternFamily(plan.label)) {
                 continue;
             }
             if (!filter.allowsFamily(familyOfPlan(plan.label))) {
@@ -632,6 +619,31 @@ public final class StratVariants {
             }
         }
         return last;
+    }
+
+    public static SaveFile realizePlan(SaveFile witness, ExactJumpModel model, StratPlans.Plan plan) {
+        JumpPhysicsInputs sc;
+        try {
+            sc = scenario(witness, model);
+        } catch (RuntimeException ex) {
+            return null;
+        }
+        if (sc == null) {
+            return null;
+        }
+        int fire = firstGroundedJumpTick(witness, sc);
+        if (fire < 0) {
+            return null;
+        }
+        SaveFile s = applyFamily(witness, sc, plan, fire);
+        if (s == null) {
+            return null;
+        }
+        deriveDebugSamples(s, sc);
+        s.angleSolver.result = null;
+        s.angleSolver.effort = "FAST";
+        s.angleSolver.stopOnFeasible = Boolean.TRUE;
+        return s;
     }
 
     public static JumpPhysicsInputs scenario(SaveFile file, ExactJumpModel model) {

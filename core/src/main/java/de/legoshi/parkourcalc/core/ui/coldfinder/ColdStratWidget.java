@@ -1,70 +1,86 @@
 package de.legoshi.parkourcalc.core.ui.coldfinder;
 
-import de.legoshi.parkourcalc.core.ColdStratController.ColdStratJob;
-import de.legoshi.parkourcalc.core.ColdStratController.Problem;
-import de.legoshi.parkourcalc.core.anglesolver.coldsearch.ColdResult;
-import de.legoshi.parkourcalc.core.anglesolver.coldsearch.ColdStratFinder;
+import de.legoshi.parkourcalc.core.ColdStratController;
+import de.legoshi.parkourcalc.core.ColdStratController.Job;
+import de.legoshi.parkourcalc.core.ColdStratController.JumpInfo;
+import de.legoshi.parkourcalc.core.ColdStratController.Request;
+import de.legoshi.parkourcalc.core.ColdStratController.Row;
+import de.legoshi.parkourcalc.core.anglesolver.Slipperiness;
 import de.legoshi.parkourcalc.core.anglesolver.coldsearch.KeyLine;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
-import de.legoshi.parkourcalc.core.save.SaveFile;
+import de.legoshi.parkourcalc.core.anglesolver.stratfinder.JumpArcs;
+import de.legoshi.parkourcalc.core.anglesolver.stratfinder.ProblemCompiler;
+import de.legoshi.parkourcalc.core.anglesolver.stratfinder.StratDifficulty;
+import de.legoshi.parkourcalc.core.anglesolver.stratfinder.StratMeasure;
+import de.legoshi.parkourcalc.core.anglesolver.stratfinder.StratMeasurements;
+import de.legoshi.parkourcalc.core.anglesolver.stratfinder.StratProblem;
+import de.legoshi.parkourcalc.core.anglesolver.stratfinder.StratVariants;
 import de.legoshi.parkourcalc.core.ui.anglesolver.SolverWidgets;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
+import de.legoshi.parkourcalc.core.ui.theme.Fonts;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImDrawList;
 import imgui.ImGui;
 import imgui.ImVec2;
+import imgui.flag.ImGuiCol;
 import imgui.flag.ImGuiCond;
+import imgui.flag.ImGuiFocusedFlags;
+import imgui.flag.ImGuiKey;
 import imgui.flag.ImGuiSelectableFlags;
+import imgui.flag.ImGuiStyleVar;
 import imgui.flag.ImGuiTableColumnFlags;
 import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImBoolean;
+import imgui.type.ImInt;
+import imgui.type.ImString;
 
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
+import java.util.Map;
+import java.util.Set;
 
 public final class ColdStratWidget {
 
-    private static final String WINDOW_ID = "###strat_finder_v2";
+    private static final String WINDOW_ID = "###strat_finder";
     private static final String TITLE = "Strat Finder";
-    private static final int[] ALL_COMBOS = {KeyLine.NONE, KeyLine.W, KeyLine.WA, KeyLine.WD,
-            KeyLine.A, KeyLine.D, KeyLine.S, KeyLine.SA, KeyLine.SD};
-    private static final int[] PRESET_RUN = {KeyLine.NONE, KeyLine.W, KeyLine.WA, KeyLine.WD};
-    private static final String[] YAW_LABELS = {"no-turn", "ja"};
 
-    private static final int[] FAMILY_FWD = {KeyLine.NONE, KeyLine.W};
-    private static final int[] FAMILY_MARK = {KeyLine.NONE, KeyLine.W, KeyLine.A, KeyLine.D, KeyLine.WA, KeyLine.WD};
-    private static final int[] FAMILY_BFLY = {KeyLine.NONE, KeyLine.WA, KeyLine.WD, KeyLine.SA, KeyLine.SD, KeyLine.W};
+    private static final int BUDGET_MIN = 250;
+    private static final int BUDGET_MAX = 10000;
+    private static final int BUDGET_DEFAULT = 2000;
+    private static final int COLD_BUDGET_MIN = 5;
+    private static final int COLD_BUDGET_MAX = 300;
+    private static final int COLD_BUDGET_DEFAULT = 30;
 
-    public interface Starter {
-        ColdStratJob start(SaveFile file, ColdStratFinder.Request req);
-    }
+    private static final String COL_STRAT = "Strat";
+    private static final String COL_DIFF = "Difficulty";
+    private static final String COL_SLACK = "Slack";
 
-    private final Supplier<Problem> inspector;
-    private final Starter starter;
-    private final Consumer<ColdResult> applier;
-    private final Consumer<Boolean> freeYawWindow;
+    private final ColdStratController controller;
 
     private final ImBoolean windowOpen = new ImBoolean(false);
     private boolean wasWindowOpen;
 
-    private Problem problem;
-    private final List<SegUi> segs = new ArrayList<SegUi>();
-    private boolean freeYaws;
-    private ColdStratJob job;
-    private String selectedLabel;
-    private ColdStratFinder.Strat selectedStrat;
-    private int focusedSegment = -1;
+    private JumpInfo info;
+    private Job job;
+    private String lastConstraintSignature = "";
+    private String problemSyncError;
+    private final int[] budgetBuf = {BUDGET_DEFAULT};
+    private final int[] coldBudgetBuf = {COLD_BUDGET_DEFAULT};
+    private String selectedKey;
+    private int appliedShiftEdge = -1;
+    private int appliedShift;
+    private int appliedPressIdx = -1;
 
-    public ColdStratWidget(Supplier<Problem> inspector, Starter starter, Consumer<ColdResult> applier,
-                           Consumer<Boolean> freeYawWindow) {
-        this.inspector = inspector;
-        this.starter = starter;
-        this.applier = applier;
-        this.freeYawWindow = freeYawWindow;
+    private boolean problemExpanded = true;
+    private boolean advancedExpanded;
+    private final Map<String, ImString> coordBufs = new HashMap<String, ImString>();
+
+    public ColdStratWidget(ColdStratController controller) {
+        this.controller = controller;
     }
 
     public void setWindowOpen(boolean open) {
@@ -75,182 +91,212 @@ public final class ColdStratWidget {
         return windowOpen.get();
     }
 
+    public void onFindHotkey() {
+        if (job != null && job.isRunning()) {
+            job.cancel();
+            return;
+        }
+        if (problemValid()) {
+            startShape();
+        } else if (info != null && info.ready) {
+            startRefine();
+        }
+    }
+
     public void renderWindow(float scale) {
         boolean open = windowOpen.get();
-        if (!wasWindowOpen && open) rescan();
-        if (wasWindowOpen && !open && job != null) job.cancel();
+        if (wasWindowOpen && !open && job != null) {
+            job.cancel();
+        }
         wasWindowOpen = open;
-        if (!open) return;
-        ImGui.setNextWindowPos(100f * scale, 130f * scale, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSize(440f * scale, 520f * scale, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowSizeConstraints(360f * scale, 280f * scale, Float.MAX_VALUE, Float.MAX_VALUE);
+        if (!open) {
+            return;
+        }
+        ImGui.setNextWindowPos(120f * scale, 130f * scale, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSize(490f * scale, 620f * scale, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSizeConstraints(400f * scale, 300f * scale, Float.MAX_VALUE, Float.MAX_VALUE);
         ThemeManager.pushHeaderChrome();
         boolean visible = ImGui.begin(WINDOW_ID, windowOpen, ImGuiWindowFlags.NoCollapse);
-        if (visible) ThemeManager.drawModalTitle(TITLE);
+        if (visible) {
+            ThemeManager.drawModalTitle(TITLE);
+        }
         ThemeManager.popHeaderChrome();
-        if (visible) renderBody(scale);
+        if (visible) {
+            renderBody(scale);
+        }
         ImGui.end();
     }
 
-    private void rescan() {
-        if (job != null) {
-            job.cancel();
-            job = null;
+    private void renderBody(float scale) {
+        if (job == null || !job.isRunning()) {
+            info = controller.inspect();
         }
-        selectedLabel = null;
-        selectedStrat = null;
-        focusedSegment = -1;
-        problem = inspector.get();
-        segs.clear();
-        if (problem != null && problem.ok) {
-            for (int i = 0; i < problem.segmentCount(); i++) segs.add(new SegUi());
-        }
+        renderProblemSection(scale);
+        ThemeManager.sectionSpacing();
+        renderAdvancedSection(scale);
+        ThemeManager.paddedSeparator();
+        renderActionRow(scale);
+        renderResult(scale);
+        handleKeys();
     }
 
-    private void renderBody(float scale) {
-        if (Controls.secondaryButton("Rescan")) rescan();
-        TooltipUtil.onHover("Re-read the solve segment, press-cycles and constraints from the current inputs.");
+    private void renderProblemSection(float scale) {
+        problemExpanded = sectionToggle("Jump", "problem", problemExpanded, scale);
+        if (!problemExpanded) {
+            return;
+        }
+        String sig = controller.constraintSignature();
+        if (!sig.equals(lastConstraintSignature)) {
+            lastConstraintSignature = sig;
+            problemSyncError = controller.syncProblemFromConstraints();
+        }
+        if (problemSyncError != null) {
+            ThemeManager.pushTextColor(ThemeManager.dangerColor());
+            ImGui.textWrapped(problemSyncError);
+            ThemeManager.popTextColor();
+            dimText("The jump reads itself from the recording's jump presses plus one footprint"
+                    + " constraint per landing: select the landing row, look at the block, press B.");
+            renderRecordingSummary();
+            return;
+        }
+        StratProblem p = controller.problem();
+        if (p.start == null || p.segments.isEmpty()) {
+            dimText("No jump derived yet. Load a recording, then place one footprint constraint per"
+                    + " landing: select the landing row, look at the block, press B.");
+            renderRecordingSummary();
+            return;
+        }
+        ImGui.spacing();
+        for (int i = 0; i < p.segments.size(); i++) {
+            renderSegmentEditor(p, i, scale);
+        }
+        renderProblemStatus();
+        renderRecordingSummary();
+    }
+
+    private void renderSegmentEditor(StratProblem p, int idx, float scale) {
+        StratProblem.Segment seg = p.segments.get(idx);
+        ImGui.pushID("seg" + idx);
+        ImGui.spacing();
+        Fonts.pushBold();
+        ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+        ImGui.text("Jump " + (idx + 1));
+        ThemeManager.popTextColor();
+        Fonts.popBold();
+
+        StratProblem.Area land = seg.landings.isEmpty() ? null : seg.landings.get(0);
+        if (land == null) {
+            ImGui.popID();
+            return;
+        }
+        renderAirTime(p, idx, land, scale);
+
+        Controls.pushInputFrameHeight();
+        float labelW = ImGui.calcTextSize("Ground").x + ThemeManager.SM * scale;
+        SolverWidgets.rowLabel("Ground", labelW);
+        ImInt lo = new ImInt(seg.groundLo);
+        if (Controls.inputInt("##glo", lo, 100f * scale)) {
+            seg.groundLo = Math.max(1, lo.get());
+            seg.groundHi = Math.max(seg.groundLo, seg.groundHi);
+            controller.problemEdited();
+        }
+        TooltipUtil.onHover("Fewest grounded ticks before this fire (runway or platform ticks).");
         ImGui.sameLine();
         ImGui.alignTextToFramePadding();
-        if (problem == null) {
-            ImGui.textDisabled("Nothing loaded.");
+        ImGui.text("to");
+        ImGui.sameLine();
+        ImInt hi = new ImInt(seg.groundHi);
+        if (Controls.inputInt("##ghi", hi, 78f * scale)) {
+            seg.groundHi = Math.max(seg.groundLo, hi.get());
+            controller.problemEdited();
+        }
+        TooltipUtil.onHover("Most grounded ticks before this fire. Each count is its own schedule.");
+        ImGui.sameLine();
+        ImGui.alignTextToFramePadding();
+        ImGui.text("t");
+        Controls.popInputFrameHeight();
+        ImGui.popID();
+    }
+
+    private void renderAirTime(StratProblem p, int idx, StratProblem.Area land, float scale) {
+        StratProblem.Area from = idx == 0 ? p.start
+                : (p.segments.get(idx - 1).landings.isEmpty() ? null
+                : p.segments.get(idx - 1).landings.get(0));
+        if (from == null) {
             return;
         }
-        if (!problem.ok) {
-            ImGui.textDisabled("Not searchable");
-            warn(problem.error);
+        double dy = land.top() - from.top();
+        StratProblem.Segment seg = p.segments.get(idx);
+        int d = seg.airTicks > 0 ? seg.airTicks
+                : JumpArcs.duration(dy, JumpArcs.legacyThreshold(p.mcVersion));
+        float labelW = ImGui.calcTextSize("Ground").x + ThemeManager.SM * scale;
+        SolverWidgets.rowLabel("", labelW);
+        ThemeManager.pushTextColor(ThemeManager.textDimColor());
+        ImGui.text(d + "t air" + (dy == 0.0 ? "" : String.format(Locale.ROOT, " (%+.1f)", dy)));
+        ThemeManager.popTextColor();
+        TooltipUtil.onHover("Press to landing, from your recording's timing. Timing variants"
+                + " shift the whole jump; the air time stays.");
+    }
+
+    private void renderProblemStatus() {
+        ProblemCompiler.Compilation comp = controller.compiledProblem();
+        if (comp == null) {
             return;
         }
-        ImGui.text(String.format(Locale.ROOT, "T%d-T%d · %d segments",
-                problem.startTick + 1, problem.landingTick + 1, problem.segmentCount()));
-
-        ThemeManager.sectionSpacing();
-        renderSegments(scale);
-
-        ThemeManager.sectionSpacing();
-        if (Controls.checkbox("Free yaws (whole run)", freeYaws)) {
-            freeYaws = !freeYaws;
-            if (freeYawWindow != null) freeYawWindow.accept(freeYaws);
+        if (comp.specs.isEmpty()) {
+            warn(comp.notes.isEmpty() ? "No jumpable timing for this jump." : comp.notes.get(0));
+            return;
         }
-        TooltipUtil.onHover("Off = structured no-turn/ja search (cold, byte-exact). On opens the free-yaw"
-                + " Strat Finder (fast optimizer, per-tick yaws) in its own window.");
-
-        if (!problem.hasEndConstraint) warn("Set an end constraint (a landing target) before running.");
-
-        renderEstimate();
-
-        ThemeManager.paddedSeparator();
-        renderActions(scale);
-        renderResults(scale);
+        int n = comp.specs.size();
+        dimText(n + " timing" + (n == 1 ? "" : "s") + " to try"
+                + (comp.notes.isEmpty() ? "" : ", " + comp.notes.get(0)));
+        TooltipUtil.onHover("A timing is one concrete layout: how many grounded ticks before each"
+                + " fire and which block each arc lands on. Air time follows from the block heights.");
     }
 
-    private void renderEstimate() {
-        if (freeYaws) return;
-        int[] lengths = new int[segs.size()];
-        for (int i = 0; i < segs.size(); i++) {
-            lengths[i] = problem.segPress[i] - problem.segStart[i] + 1;
+    private void renderRecordingSummary() {
+        if (info == null || !info.loaded) {
+            return;
         }
-        int threads = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
-        ColdStratFinder.Estimate est = ColdStratFinder.estimate(lengths, currentSegConfigs(), 3, threads);
-        String candText = est.candidates >= Long.MAX_VALUE / 4
-                ? "> 2e18 candidates" : compact(est.candidates) + " candidates";
-        String timeText = est.seconds < 1.0 ? "< 1s" : est.seconds < 90.0
-                ? String.format(Locale.ROOT, "~%.0fs", est.seconds)
-                : String.format(Locale.ROOT, "~%.1f min", est.seconds / 60.0);
-        String text = "Search size: " + candText + " · " + timeText + " to build";
-        if (est.tooBig) {
-            warn(text + "  (large: narrow the keys or lower changes)");
-        } else {
-            ImGui.textDisabled(text);
+        ImGui.spacing();
+        ThemeManager.pushTextColor(ThemeManager.textDimColor());
+        ImGui.text(String.format(Locale.ROOT, "Recording: T%d-T%d, %d constraint%s%s",
+                info.startTick + 1, info.landingTick + 1, info.constraints,
+                info.constraints == 1 ? "" : "s",
+                info.ready ? "" : ", not solvable yet"));
+        ThemeManager.popTextColor();
+        if (!info.ready && info.message != null) {
+            warn(info.message);
         }
     }
 
-    private List<ColdStratFinder.SegmentConfig> currentSegConfigs() {
-        List<ColdStratFinder.SegmentConfig> out = new ArrayList<ColdStratFinder.SegmentConfig>();
-        for (SegUi s : segs) {
-            ColdStratFinder.SegmentConfig sc = new ColdStratFinder.SegmentConfig();
-            sc.ja = s.ja;
-            sc.alphabet = s.selectedAlphabet();
-            sc.maxChanges = s.maxChanges.get();
-            out.add(sc);
+    private void renderAdvancedSection(float scale) {
+        advancedExpanded = sectionToggle("Advanced", "advanced", advancedExpanded, scale);
+        if (!advancedExpanded) {
+            return;
         }
-        return out;
-    }
-
-    private static String compact(long n) {
-        if (n < 1_000L) return Long.toString(n);
-        if (n < 1_000_000L) return String.format(Locale.ROOT, "%.1fk", n / 1_000.0);
-        if (n < 1_000_000_000L) return String.format(Locale.ROOT, "%.1fM", n / 1_000_000.0);
-        return String.format(Locale.ROOT, "%.1fB", n / 1_000_000_000.0);
-    }
-
-    private void renderSegments(float scale) {
-        for (int i = 0; i < segs.size(); i++) {
-            SegUi s = segs.get(i);
-            String header = String.format(Locale.ROOT, "Segment %d · T%d-T%d · L=%d",
-                    i + 1, problem.startTick + problem.segStart[i] + 1,
-                    problem.startTick + problem.segPress[i] + 1,
-                    problem.segPress[i] - problem.segStart[i] + 1);
-            if (i == focusedSegment) {
-                ThemeManager.pushTextColor(ThemeManager.accentColor());
-                ImGui.text(header);
-                ThemeManager.popTextColor();
-            } else {
-                ImGui.text(header);
-            }
-            ImGui.indent(ThemeManager.SM * scale);
-            SolverWidgets.rowLabel("Yaw", 52f * scale);
-            int clicked = SolverWidgets.segmented("##yaw" + i, YAW_LABELS, s.ja ? 1 : 0,
-                    Math.max(SolverWidgets.segmentedMinWidth(YAW_LABELS), 130f * scale));
-            if (clicked >= 0) s.ja = clicked == 1;
-
-            SolverWidgets.rowLabel("Keys", 52f * scale);
-            float startX = ImGui.getCursorPosX();
-            float wrapX = startX + ImGui.getContentRegionAvail().x;
-            for (int k = 0; k < ALL_COMBOS.length; k++) {
-                int combo = ALL_COMBOS[k];
-                String name = KeyLine.COMBO_LABEL[combo];
-                if (k > 0) {
-                    ImGui.sameLine();
-                    float wNeed = ImGui.getFrameHeight() + ImGui.getStyle().getItemInnerSpacing().x
-                            + ImGui.calcTextSize(name).x + ImGui.getStyle().getItemSpacing().x;
-                    if (ImGui.getCursorPosX() + wNeed > wrapX) {
-                        ImGui.newLine();
-                        ImGui.setCursorPosX(startX);
-                    }
-                }
-                if (Controls.checkbox(name + "##k" + i + "_" + k, s.alpha[combo])) {
-                    s.alpha[combo] = !s.alpha[combo];
-                }
-            }
-
-            SolverWidgets.rowLabel("Changes", 52f * scale);
-            ImGui.setNextItemWidth(52f * scale);
-            if (ImGui.inputInt("##chg" + i, s.maxChanges, 0, 0)) {
-                s.maxChanges.set(Math.max(0, Math.min(problem.segPress[i] - problem.segStart[i] + 1, s.maxChanges.get())));
-            }
-            TooltipUtil.onHover("How many times the keys may change within this segment. 0 = hold one combo the"
-                    + " whole segment; higher = more freedom (and a bigger search).");
-            ImGui.sameLine();
-            if (Controls.secondaryButton("fmm##p" + i)) s.applyFamily(FAMILY_FWD, 1, false);
-            ImGui.sameLine();
-            if (Controls.secondaryButton("mark##p" + i)) s.applyFamily(FAMILY_MARK, 1, false);
-            ImGui.sameLine();
-            if (Controls.secondaryButton("bfly##p" + i)) s.applyFamily(FAMILY_BFLY, 2, true);
-            ImGui.sameLine();
-            if (Controls.secondaryButton("all##p" + i)) s.setAlphabet(ALL_COMBOS);
-            TooltipUtil.onHover("Family presets set this segment's keys + changes + yaw: fmm/pessi (forward,"
-                    + " late-sprint auto-searched), mark (sidestep), bfly (butterfly diagonals), all (every combo)."
-                    + " The sprint-engage timing and held length are searched, so the family only fixes the keys.");
-            ImGui.unindent(ThemeManager.SM * scale);
+        if (Controls.sliderInt("Block search", coldBudgetBuf, COLD_BUDGET_MIN, COLD_BUDGET_MAX, "%d s")) {
+            coldBudgetBuf[0] = Math.max(COLD_BUDGET_MIN, Math.min(COLD_BUDGET_MAX, coldBudgetBuf[0]));
         }
+        TooltipUtil.onHover("Total budget for the block search, split across the timings."
+                + " A two-jump route wants 60 s or more to sweep everything.");
+        if (Controls.sliderInt("Variant solve", budgetBuf, BUDGET_MIN, BUDGET_MAX, "%d ms")) {
+            budgetBuf[0] = Math.max(BUDGET_MIN, Math.min(BUDGET_MAX, budgetBuf[0]));
+        }
+        TooltipUtil.onHover("Per-variant solve budget for the recording search.");
     }
 
-    private void renderActions(float scale) {
+    private boolean problemValid() {
+        ProblemCompiler.Compilation comp = controller.compiledProblem();
+        return comp != null && !comp.specs.isEmpty();
+    }
+
+    private void renderActionRow(float scale) {
         boolean running = job != null && job.isRunning();
-        boolean canRun = problem != null && problem.ok && problem.hasEndConstraint && !freeYaws;
         if (running) {
-            if (Controls.secondaryButton("Cancel")) job.cancel();
+            if (Controls.secondaryButton("Cancel")) {
+                job.cancel();
+            }
             ImGui.sameLine();
             float h = ImGui.getFrameHeight();
             ImVec2 p = ImGui.getCursorScreenPos();
@@ -259,103 +305,553 @@ public final class ColdStratWidget {
             ImGui.dummy(h, h);
             ImGui.sameLine();
             ImGui.alignTextToFramePadding();
-            ImGui.textDisabled(progressText());
-        } else if (canRun) {
-            if (Controls.primaryButton("Run")) startRun();
-            TooltipUtil.onHover("Brute-force the configured families per segment, byte-exact certify, and"
-                    + " list the feasible strats ranked easiest first.");
-        } else if (freeYaws) {
-            Controls.disabledButton("Run");
-            TooltipUtil.onHover("Free-yaws path is not wired yet.");
+            ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+            ImGui.text(progressText());
+            ThemeManager.popTextColor();
+            return;
+        }
+        if (problemValid()) {
+            if (Controls.primaryButton("Find strats")) {
+                startShape();
+            }
+            TooltipUtil.onHover("Search the defined jump cold: every timing and key line from"
+                    + " scratch, world collisions respected. Ranked easiest first. Hotkey: F.");
         } else {
-            Controls.disabledButton("Run");
+            Controls.disabledButton("Find strats");
+        }
+        ImGui.sameLine();
+        if (info != null && info.ready) {
+            if (Controls.secondaryButton("Refine recording")) {
+                startRefine();
+            }
+            TooltipUtil.onHover("Substitute variants of your loaded recording: shifted edges,"
+                    + " reshaped lines, momentum families. Ranked easiest first.");
+        } else {
+            Controls.disabledButton("Refine recording");
         }
     }
 
     private String progressText() {
-        ColdStratJob j = job;
-        if (j == null) return "";
-        if (j.built() < 0) return "building";
-        return j.done() + " / " + j.total() + " · " + j.feasible() + " feasible";
+        Job j = job;
+        if (j == null) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        if (j.total() > 0) {
+            sb.append(j.done()).append(" / ").append(j.total());
+        } else {
+            sb.append("enumerating");
+        }
+        sb.append(", ").append(j.feasible()).append(" feasible");
+        String cold = j.coldProgress();
+        if (cold != null) {
+            sb.append(", ").append(cold);
+        }
+        return sb.toString();
     }
 
-    private void startRun() {
-        selectedLabel = null;
-        selectedStrat = null;
-        focusedSegment = -1;
-        ColdStratFinder.Request req = new ColdStratFinder.Request();
-        req.beam.threads = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
-        req.beam.bucketBudget = 6;
-        req.segments = currentSegConfigs();
-        ColdStratJob started = starter.start(problem.file, req);
-        if (started != null) job = started;
+    private void startShape() {
+        launch(new Request(false, true, null, StratVariants.Filter.Shape.ANY, budgetBuf[0],
+                coldBudgetBuf[0] * 1000L));
     }
 
-    private void renderResults(float scale) {
-        ColdStratJob j = job;
-        if (j == null) return;
-        ColdStratFinder.Result r = j.result();
-        if (r == null) return;
-        if (r.strats.isEmpty()) {
-            if (j.isFinished()) ImGui.textDisabled("No feasible strat for this configuration.");
+    private void startRefine() {
+        launch(new Request(true, false, null, StratVariants.Filter.Shape.ANY, budgetBuf[0],
+                coldBudgetBuf[0] * 1000L));
+    }
+
+    private void launch(Request request) {
+        if (job != null) {
+            job.cancel();
+        }
+        selectedKey = null;
+        clearShiftState();
+        Job started = controller.start(request);
+        if (started != null) {
+            job = started;
+        }
+    }
+
+    private void renderResult(float scale) {
+        Job j = job;
+        if (j == null) {
             return;
         }
-        ImGui.textDisabled(r.strats.size() + " strats · " + r.feasible + " lines");
-        if (r.truncated) warn("Search truncated (budget/cap hit). Narrow the keys or lower changes for full coverage.");
+        List<Row> items = j.items();
+        if (j.isFinished()) {
+            ThemeManager.sectionSpacing();
+            renderBanner(j, items, scale);
+        }
+        if (!items.isEmpty()) {
+            renderTable(items, scale);
+            Row sel = selectedItem(items);
+            if (sel != null) {
+                renderLeniency(sel, scale);
+                render3dView(sel, scale);
+            }
+        }
+        if (controller.isTempActive()) {
+            renderTempControls(selectedItem(items));
+        }
+    }
+
+    private Row selectedItem(List<Row> items) {
+        if (selectedKey == null) {
+            return null;
+        }
+        for (Row it : items) {
+            if (selectedKey.equals(it.key)) {
+                return it;
+            }
+        }
+        return null;
+    }
+
+    private void renderBanner(Job j, List<Row> items, float scale) {
+        boolean noResult = items.isEmpty();
+        int accent;
+        int fill;
+        int border;
+        String header;
+        String sub;
+        if (noResult) {
+            accent = ThemeManager.dangerColor();
+            fill = ThemeManager.dangerTintColor(0.10f);
+            border = ThemeManager.dangerTintColor(0.45f);
+            header = "No strat found for this jump.";
+            sub = j.notes().isEmpty()
+                    ? "Widen the key presets or ground ranges, or raise the budget in Advanced."
+                    : j.notes().get(0);
+        } else {
+            accent = ThemeManager.okColor();
+            fill = ThemeManager.okTintColor(0.10f);
+            border = ThemeManager.okTintColor(0.45f);
+            int n = items.size();
+            header = n + " strat" + (n == 1 ? "" : "s") + " solve" + (n == 1 ? "s" : "")
+                    + " this jump, easiest first";
+            sub = j.canaryFailed()
+                    ? "Your current line did not re-solve within the budget; raise it in Advanced."
+                    : null;
+        }
+
+        float pad = ThemeManager.SM * scale;
+        float lineH = ImGui.getTextLineHeightWithSpacing();
+        float availW = ImGui.getContentRegionAvail().x;
+        int textLines = wrappedLines(header, availW - 2f * pad)
+                + (sub != null ? wrappedLines(sub, availW - 2f * pad) : 0);
+        float hgt = textLines * lineH + 2f * pad;
+
+        ImGui.pushStyleColor(ImGuiCol.ChildBg, fill);
+        ImGui.pushStyleColor(ImGuiCol.Border, border);
+        ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, pad, pad);
+        ImGui.beginChild("##sf_banner", availW, hgt, true);
+        ThemeManager.pushTextColor(accent);
+        Fonts.pushBold();
+        ImGui.pushTextWrapPos(0f);
+        ImGui.text(header);
+        ImGui.popTextWrapPos();
+        Fonts.popBold();
+        ThemeManager.popTextColor();
+        if (sub != null) {
+            ThemeManager.pushTextColor(ThemeManager.textDimColor());
+            ImGui.pushTextWrapPos(0f);
+            ImGui.text(sub);
+            ImGui.popTextWrapPos();
+            ThemeManager.popTextColor();
+        }
+        ImGui.endChild();
+        ImGui.popStyleVar();
+        ImGui.popStyleColor(2);
+    }
+
+    private void renderTable(List<Row> items, float scale) {
+        float slackW = ImGui.calcTextSize(COL_SLACK).x;
+        for (Row it : items) {
+            slackW = Math.max(slackW, ImGui.calcTextSize(slackText(it)).x);
+        }
         float rowH = ThemeManager.tableRowHeight();
-        float tableH = Math.max(rowH * 4f, Math.min(ImGui.getContentRegionAvail().y, rowH * (r.strats.size() + 1.6f)));
-        if (!ThemeManager.beginStandardClickableRowsTable("##cs_table", 3, 0, 0f, tableH)) return;
+        float contentH = rowH * (items.size() + 1.6f);
+        float tableH = Math.max(rowH * (3f + 1.6f), Math.min(contentH, 300f * scale));
+        float pip = 2f * 3f * scale + 5f * scale;
+
+        ThemeManager.sectionSpacing();
+        if (!ThemeManager.beginStandardClickableRowsTable("##sf_results", 3, 0, 0f, tableH)) {
+            return;
+        }
         ImGui.tableSetupScrollFreeze(0, 1);
-        ImGui.tableSetupColumn("Strat", ImGuiTableColumnFlags.WidthStretch);
-        ImGui.tableSetupColumn("Diff", ImGuiTableColumnFlags.WidthFixed,
-                ThemeManager.tableColumnWidth("Diff", ImGui.calcTextSize("0.000").x));
-        ImGui.tableSetupColumn("Lines", ImGuiTableColumnFlags.WidthFixed,
-                ThemeManager.tableColumnWidth("Lines", ImGui.calcTextSize("Lines").x));
+        ImGui.tableSetupColumn(COL_STRAT, ImGuiTableColumnFlags.WidthStretch);
+        ImGui.tableSetupColumn(COL_DIFF, ImGuiTableColumnFlags.WidthFixed,
+                ThemeManager.tableNumericColumnWidth(COL_DIFF, ImGui.calcTextSize("-00.00").x + pip));
+        ImGui.tableSetupColumn(COL_SLACK, ImGuiTableColumnFlags.WidthFixed,
+                ThemeManager.tableRightmostColumnWidth(COL_SLACK, slackW, ThemeManager.tableScrollbarSlack()));
         ThemeManager.tableHeaderRow();
         ThemeManager.paintTableHeader();
         ImGui.tableSetColumnIndex(0);
         ThemeManager.tableLeftmostCellPad();
-        ThemeManager.tableHeader("Strat");
+        ThemeManager.tableHeader(COL_STRAT);
         ImGui.tableSetColumnIndex(1);
-        ThemeManager.tableHeader("Diff");
+        ThemeManager.tableHeader(COL_DIFF);
         ImGui.tableSetColumnIndex(2);
-        ThemeManager.tableHeader("Lines");
+        ThemeManager.tableHeader(COL_SLACK);
 
-        int idx = 0;
-        for (ColdStratFinder.Strat s : r.strats) {
-            ImGui.tableNextRow(0, rowH);
-            ThemeManager.paintTableRowBg(idx);
-            boolean selected = s.label().equals(selectedLabel);
-            ImGui.tableSetColumnIndex(0);
-            ThemeManager.tableLeftmostCellPad();
-            ImGui.alignTextToFramePadding();
-            if (ImGui.selectable(s.label() + "##cs" + idx, selected, ImGuiSelectableFlags.SpanAllColumns)) {
-                selectedLabel = s.label();
-                selectedStrat = s;
-                focusedSegment = -1;
-                applier.accept(s.representative);
-            }
-            TooltipUtil.onHover(String.format(Locale.ROOT,
-                    "facing band %.3f deg  ·  %d turns  ·  %d feasible lines",
-                    s.bandDeg, s.turns, s.feasibleCount));
-            ImGui.tableSetColumnIndex(1);
-            ImGui.alignTextToFramePadding();
-            ImGui.text(String.format(Locale.ROOT, "%.3f", s.difficulty));
-            ImGui.tableSetColumnIndex(2);
-            ImGui.alignTextToFramePadding();
-            ImGui.text(Integer.toString(s.feasibleCount));
-            idx++;
+        for (int i = 0; i < items.size(); i++) {
+            renderRow(items.get(i), i, rowH, scale);
         }
         ThemeManager.endStandardTable();
-
-        render3dView(scale);
     }
 
-    private void render3dView(float scale) {
-        if (selectedStrat == null || selectedStrat.representative == null) return;
-        ForwardPath path = selectedStrat.representative.path;
-        if (path == null || path.posX == null || path.posX.length < 2) return;
-        if (!ImGui.collapsingHeader("3D view")) return;
+    private void renderRow(Row item, int idx, float rowH, float scale) {
+        ImGui.tableNextRow(0, rowH);
+        ThemeManager.paintTableRowBg(idx);
+        boolean selected = item.key.equals(selectedKey);
+
+        ImGui.tableSetColumnIndex(0);
+        ThemeManager.tableLeftmostCellPad();
+        ImGui.alignTextToFramePadding();
+        if (ImGui.selectable(item.label + "##sfrow" + idx, selected,
+                ImGuiSelectableFlags.SpanAllColumns)) {
+            applyItem(item);
+        }
+        TooltipUtil.onHover(rowTooltip(item));
+
+        ImGui.tableSetColumnIndex(1);
+        drawPip(diffColor(item.difficulty), rowH, scale);
+        ImGui.alignTextToFramePadding();
+        ImGui.text(Double.isNaN(item.difficulty) ? "-"
+                : String.format(Locale.ROOT, "%.2f", item.difficulty));
+
+        ImGui.tableSetColumnIndex(2);
+        ImGui.alignTextToFramePadding();
+        if (item.pressHi > item.pressLo) {
+            ThemeManager.pushTextColor(ThemeManager.okColor());
+        } else {
+            int slack = worstSlack(item.measurements);
+            ThemeManager.pushTextColor(item.measurements == null
+                    ? ThemeManager.textDimColor() : slackColor(slack));
+        }
+        ImGui.text(slackText(item));
+        ThemeManager.popTextColor();
+        ThemeManager.tableRightmostCellTrailingPad();
+    }
+
+    private static String rowTooltip(Row item) {
+        StringBuilder sb = new StringBuilder();
+        if (item.detail != null && !item.detail.isEmpty()) {
+            sb.append(item.detail);
+        }
+        sb.append(sb.length() > 0 ? "\n" : "").append("Source: ")
+                .append("recording".equals(item.origin) ? "variant of your recording" : "cold from the blocks");
+        if (item.corpusEntries > 0) {
+            sb.append('\n').append("Community corpus: ").append(item.corpusEntries)
+                    .append(item.corpusEntries == 1 ? " entry." : " entries.");
+            if (item.corpusExample != null && !item.corpusExample.isEmpty()) {
+                sb.append('\n').append('"').append(trim(item.corpusExample, 140)).append('"');
+            }
+        }
+        StratMeasurements m = item.measurements;
+        if (m != null && !Double.isNaN(item.difficulty)) {
+            sb.append('\n').append(String.format(Locale.ROOT,
+                    "Difficulty %.2f: facing tolerance %.2f, timing demand %.2f",
+                    item.difficulty, StratDifficulty.toleranceCore(m),
+                    0.8 * StratDifficulty.effShiftDemandSum(m)));
+            if (m.turnTicksJump > 0) {
+                sb.append(String.format(Locale.ROOT, ", %d air turn tick%s",
+                        m.turnTicksJump, m.turnTicksJump == 1 ? "" : "s"));
+            }
+            if (m.jumpAngle) {
+                sb.append(", jump angle");
+            }
+            if (m.minMargin < StratDifficulty.TIGHT_MARGIN) {
+                sb.append(", razor margin");
+            }
+        }
+        if (!Double.isNaN(item.margin)) {
+            sb.append('\n').append(String.format(Locale.ROOT, "Objective margin %.4f", item.margin));
+        }
+        return sb.toString();
+    }
+
+    private static String trim(String s, int max) {
+        String flat = s.replace('\n', ' ').replace('\r', ' ');
+        return flat.length() <= max ? flat : flat.substring(0, max - 3) + "...";
+    }
+
+    private void applyItem(Row item) {
+        selectedKey = item.key;
+        clearShiftState();
+        if (item.snapshotJson != null) {
+            controller.apply(item.snapshotJson);
+        }
+    }
+
+    private void clearShiftState() {
+        appliedShiftEdge = -1;
+        appliedShift = 0;
+        appliedPressIdx = -1;
+    }
+
+    private void drawPip(int color, float rowH, float scale) {
+        ImDrawList dl = ImGui.getWindowDrawList();
+        ImVec2 cell = ImGui.getCursorScreenPos();
+        float r = 3f * scale;
+        float cellPadY = ImGui.getStyle().getCellPadding().y;
+        dl.addCircleFilled(cell.x + r, cell.y - cellPadY + rowH * 0.5f, r, color, 12);
+        ImGui.setCursorPosX(ImGui.getCursorPosX() + 2f * r + 5f * scale);
+    }
+
+    private static int diffColor(double diff) {
+        if (Double.isNaN(diff)) {
+            return ThemeManager.textDimColor();
+        }
+        if (diff <= 0.5) {
+            return ThemeManager.okColor();
+        }
+        if (diff <= 3.0) {
+            return ThemeManager.warningColor();
+        }
+        return ThemeManager.dangerColor();
+    }
+
+    private static int worstSlack(StratMeasurements m) {
+        if (m == null || m.shiftEdgeRow == null || m.shiftEdgeRow.length == 0) {
+            return -1;
+        }
+        int worst = Integer.MAX_VALUE;
+        boolean any = false;
+        for (int i = 0; i < m.shiftEdgeRow.length; i++) {
+            if (m.shiftLoFree[i] || m.shiftHiFree[i]) {
+                continue;
+            }
+            any = true;
+            worst = Math.min(worst, m.shiftLo[i] + m.shiftHi[i]);
+        }
+        return any ? worst : -1;
+    }
+
+    private static String slackText(Row item) {
+        if (item.pressHi > item.pressLo) {
+            return "T" + (item.pressLo + 1) + "-T" + (item.pressHi + 1);
+        }
+        if (item.measurements == null) {
+            return "?";
+        }
+        int slack = worstSlack(item.measurements);
+        if (slack < 0) {
+            return "free";
+        }
+        if (slack >= StratMeasure.SHIFT_CAP_TICKS) {
+            return StratMeasure.SHIFT_CAP_TICKS + "t+";
+        }
+        return slack + "t";
+    }
+
+    private static int slackColor(int slack) {
+        if (slack < 0) {
+            return ThemeManager.okColor();
+        }
+        if (slack == 0) {
+            return ThemeManager.dangerColor();
+        }
+        if (slack == 1) {
+            return ThemeManager.warningColor();
+        }
+        return ThemeManager.okColor();
+    }
+
+    private void renderLeniency(Row item, float scale) {
+        ThemeManager.sectionSpacing();
+        Fonts.pushBold();
+        ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+        ImGui.text("Leniency");
+        ThemeManager.popTextColor();
+        Fonts.popBold();
+        TooltipUtil.onHover("With the start position and the shown facing line fixed, how far each"
+                + " input edge can move and still land. Red is frame perfect, yellow one tick,"
+                + " green two or more. Click a shift to preview it.");
+        if (item.pressHi > item.pressLo) {
+            ThemeManager.pushTextColor(ThemeManager.okColor());
+            ImGui.textWrapped("Press space anywhere T" + (item.pressLo + 1) + "-T" + (item.pressHi + 1)
+                    + " from this exact position and facing, verified.");
+            ThemeManager.popTextColor();
+            if (item.windowSnapshots != null) {
+                Controls.pushInputFrameHeight();
+                for (int i = 0; i < item.windowSnapshots.length; i++) {
+                    if (item.windowSnapshots[i] == null) {
+                        continue;
+                    }
+                    if (i > 0) {
+                        ImGui.sameLine();
+                    }
+                    String lbl = "T" + (item.pressLo + i + 1);
+                    ImGui.pushID("press" + i);
+                    boolean active = appliedPressIdx == i;
+                    boolean clicked = active ? Controls.primaryButton(lbl)
+                            : Controls.secondaryButton(lbl);
+                    if (clicked) {
+                        appliedShiftEdge = -1;
+                        appliedShift = 0;
+                        appliedPressIdx = i;
+                        controller.apply(item.windowSnapshots[i]);
+                    }
+                    TooltipUtil.onHover("Preview this strat pressing space on " + lbl
+                            + ", same position and facing.");
+                    ImGui.popID();
+                }
+                Controls.popInputFrameHeight();
+            }
+        }
+        StratMeasurements m = item.measurements;
+        if (m == null) {
+            dimText("No measurement for this strat.");
+            return;
+        }
+        renderLeniencyStrip(item, m, scale);
+        renderLeniencyEdges(item, m, scale);
+    }
+
+    private void renderLeniencyStrip(Row item, StratMeasurements m, float scale) {
+        int n = m.numTicks;
+        if (n <= 0) {
+            return;
+        }
+        float w = ImGui.getContentRegionAvail().x;
+        float h = 22f * scale;
+        ImVec2 org = ImGui.getCursorScreenPos();
+        ImGui.dummy(w, h);
+        ImDrawList dl = ImGui.getWindowDrawList();
+        dl.addRectFilled(org.x, org.y, org.x + w, org.y + h, ThemeManager.panelColor(), 3f * scale);
+        float per = w / n;
+        if (per >= 5f * scale) {
+            for (int k = 1; k < n; k++) {
+                float x = org.x + per * k;
+                dl.addLine(x, org.y + h * 0.72f, x, org.y + h, ThemeManager.borderColor(), 1f);
+            }
+        }
+        float fx = org.x + per * (m.takeoffTick + 0.5f);
+        dl.addTriangleFilled(fx - 3f * scale, org.y + h, fx + 3f * scale, org.y + h,
+                fx, org.y + h - 5f * scale, ThemeManager.lockedColor());
+        for (int i = 0; i < m.shiftEdgeRow.length; i++) {
+            int rel = m.shiftEdgeRow[i] - item.startTick;
+            if (rel < 0 || rel > n) {
+                continue;
+            }
+            float x = org.x + per * rel;
+            int col = m.shiftLoFree[i] || m.shiftHiFree[i]
+                    ? ThemeManager.okColor() : slackColor(m.shiftLo[i] + m.shiftHi[i]);
+            dl.addRectFilled(x - 1.5f * scale, org.y + 2f * scale, x + 1.5f * scale,
+                    org.y + h * 0.66f, col, 1f * scale);
+        }
+    }
+
+    private void renderLeniencyEdges(Row item, StratMeasurements m, float scale) {
+        Controls.pushInputFrameHeight();
+        for (int i = 0; i < m.shiftEdgeRow.length; i++) {
+            int row = m.shiftEdgeRow[i];
+            boolean free = m.shiftLoFree[i] || m.shiftHiFree[i];
+            int col = free ? ThemeManager.okColor() : slackColor(m.shiftLo[i] + m.shiftHi[i]);
+            ImDrawList dl = ImGui.getWindowDrawList();
+            ImVec2 p = ImGui.getCursorScreenPos();
+            float sq = 7f * scale;
+            float fh = ImGui.getFrameHeight();
+            dl.addRectFilled(p.x, p.y + (fh - sq) * 0.5f, p.x + sq, p.y + (fh + sq) * 0.5f, col, 1f * scale);
+            ImGui.dummy(sq, fh);
+            ImGui.sameLine();
+            ImGui.alignTextToFramePadding();
+            ImGui.text("T" + (row + 1) + " " + edgeWords(m.shiftEdgeKeys[i]));
+            ImGui.sameLine();
+            ImGui.pushID(i);
+            if (free) {
+                ThemeManager.pushTextColor(ThemeManager.textDimColor());
+                ImGui.alignTextToFramePadding();
+                ImGui.text("free");
+                ThemeManager.popTextColor();
+                TooltipUtil.onHover("This edge can move anywhere within the probe cap without"
+                        + " breaking the jump.");
+            } else {
+                float wrapX = ImGui.getCursorPosX() + ImGui.getContentRegionAvail().x;
+                for (int s = -m.shiftLo[i]; s <= m.shiftHi[i]; s++) {
+                    if (s == 0) {
+                        continue;
+                    }
+                    boolean active = appliedShiftEdge == row && appliedShift == s;
+                    String chip = (s > 0 ? "+" : "") + s;
+                    float chipW = ImGui.calcTextSize(chip).x + 2f * ImGui.getStyle().getFramePadding().x;
+                    if (ImGui.getCursorPosX() + chipW > wrapX) {
+                        ImGui.newLine();
+                        ImGui.setCursorPosX(ImGui.getCursorPosX() + sq + 6f * scale);
+                    }
+                    boolean clicked = active ? Controls.primaryButton(chip)
+                            : Controls.secondaryButton(chip);
+                    if (clicked) {
+                        if (controller.applyShifted(item.snapshotJson, row, s)) {
+                            appliedShiftEdge = row;
+                            appliedShift = s;
+                        }
+                    }
+                    TooltipUtil.onHover("Move this edge by " + s + " tick" + (Math.abs(s) == 1 ? "" : "s")
+                            + " and preview it. Still lands, byte-exact.");
+                    ImGui.sameLine();
+                }
+                if (m.shiftLo[i] + m.shiftHi[i] == 0) {
+                    ThemeManager.pushTextColor(ThemeManager.dangerColor());
+                    ImGui.alignTextToFramePadding();
+                    ImGui.text("frame perfect");
+                    ThemeManager.popTextColor();
+                } else if (appliedShiftEdge == row && appliedShift != 0) {
+                    if (Controls.secondaryButton("reset")) {
+                        if (controller.applyShifted(item.snapshotJson, row, 0)) {
+                            appliedShiftEdge = -1;
+                            appliedShift = 0;
+                        }
+                    }
+                    TooltipUtil.onHover("Back to the unshifted strat.");
+                } else {
+                    ImGui.newLine();
+                }
+            }
+            ImGui.popID();
+        }
+        Controls.popInputFrameHeight();
+    }
+
+    private static String edgeWords(String keys) {
+        if (keys == null || keys.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        int i = 0;
+        while (i < keys.length()) {
+            char sign = keys.charAt(i);
+            int j = i + 1;
+            while (j < keys.length() && keys.charAt(j) != '+' && keys.charAt(j) != '-') {
+                j++;
+            }
+            String key = keys.substring(i + 1, j);
+            if (sb.length() > 0) {
+                sb.append(", ");
+            }
+            sb.append(sign == '+' ? "press " : "release ").append(keyWord(key));
+            i = j;
+        }
+        return sb.toString();
+    }
+
+    private static String keyWord(String key) {
+        if ("SPRINT".equals(key) || "SNEAK".equals(key) || "JUMP".equals(key)) {
+            return key.toLowerCase(Locale.ROOT);
+        }
+        return key;
+    }
+
+    private void render3dView(Row item, float scale) {
+        ForwardPath path = item.path;
+        if (path == null || path.posX == null || path.posX.length < 2) {
+            return;
+        }
+        ThemeManager.sectionSpacing();
+        if (!ImGui.collapsingHeader("3D view")) {
+            return;
+        }
 
         int n = path.posX.length;
         double cx = 0, cy = 0, cz = 0;
@@ -391,9 +887,7 @@ public final class ColdStratWidget {
         float w = Math.max(160f * scale, ImGui.getContentRegionAvail().x);
         float h = Math.max(150f * scale, Math.min(260f * scale, w * 0.55f));
         ImVec2 org = ImGui.getCursorScreenPos();
-        ImGui.invisibleButton("##cs3d", w, h);
-        boolean clicked = ImGui.isItemClicked();
-        ImVec2 mouse = ImGui.getMousePos();
+        ImGui.dummy(w, h);
         ImDrawList dl = ImGui.getWindowDrawList();
         dl.addRectFilled(org.x, org.y, org.x + w, org.y + h, ThemeManager.panelColor(), 4f * scale);
 
@@ -404,74 +898,127 @@ public final class ColdStratWidget {
         float offX = org.x + pad - minX * sc + ((w - 2 * pad) - spanX * sc) * 0.5f;
         float offY = org.y + pad - minY * sc + ((h - 2 * pad) - spanY * sc) * 0.5f;
 
-        float bestD = Float.MAX_VALUE;
-        int bestSeg = -1;
+        int takeoffIdx = item.measurements != null ? item.measurements.takeoffTick + 1 : -1;
         for (int i = 1; i < n; i++) {
             float ax = offX + sx[i - 1] * sc;
             float ay = offY + sy[i - 1] * sc;
             float bx = offX + sx[i] * sc;
             float by = offY + sy[i] * sc;
-            int seg = segmentOfTick(i - 1);
-            int col = seg < 0 ? ThemeManager.trajectoryMutedColor() : ThemeManager.trajectorySegmentColor(seg);
-            dl.addLine(ax, ay, bx, by, col, 2.0f * scale);
-            if (clicked) {
-                float d = distToSeg(mouse.x, mouse.y, ax, ay, bx, by);
-                if (d < bestD) {
-                    bestD = d;
-                    bestSeg = seg;
-                }
+            dl.addLine(ax, ay, bx, by, ThemeManager.accentColor(), 2.0f * scale);
+        }
+        dl.addCircleFilled(offX + sx[0] * sc, offY + sy[0] * sc, 3.5f * scale,
+                ThemeManager.lockedColor(), 8);
+        dl.addCircleFilled(offX + sx[n - 1] * sc, offY + sy[n - 1] * sc, 3.5f * scale,
+                ThemeManager.okColor(), 8);
+        if (takeoffIdx > 0 && takeoffIdx < n) {
+            dl.addCircleFilled(offX + sx[takeoffIdx] * sc, offY + sy[takeoffIdx] * sc, 3.0f * scale,
+                    ThemeManager.warningColor(), 8);
+        }
+        ImGui.textDisabled("auto-rotating, start blue, fire yellow, landing green");
+    }
+
+    private void renderTempControls(Row applied) {
+        ThemeManager.sectionSpacing();
+        warn("Strat applied as a temp trajectory. Auto-save is paused.");
+        if (applied != null && appliedShift == 0) {
+            boolean altPress = appliedPressIdx >= 0 && applied.pressHi > applied.pressLo
+                    && appliedPressIdx != (applied.pressLo + applied.pressHi) / 2 - applied.pressLo;
+            int div = altPress ? -1 : controller.divergenceTick(applied);
+            if (div >= 0) {
+                ThemeManager.pushTextColor(ThemeManager.dangerColor());
+                ImGui.textWrapped("The in-game simulation leaves this line at tick " + div
+                        + ", it likely hits a block there. Treat this strat as broken.");
+                ThemeManager.popTextColor();
             }
         }
-        dl.addCircleFilled(offX + sx[0] * sc, offY + sy[0] * sc, 3.5f * scale, ThemeManager.lockedColor(), 8);
-
-        drawBandFan(dl, offX, offY, sc, sinA, cosA, cx, cy, cz, path);
-
-        if (clicked && bestSeg >= 0 && bestD < 14f * scale) focusedSegment = bestSeg;
-        ImGui.textDisabled(String.format(Locale.ROOT,
-                "auto-rotating · click a leg to focus its segment · band %.3f deg", selectedStrat.bandDeg));
-    }
-
-    private void drawBandFan(ImDrawList dl, float offX, float offY, float sc,
-                             double sinA, double cosA, double cx, double cy, double cz, ForwardPath path) {
-        int last = problem.segPress[problem.segPress.length - 1];
-        int li = Math.min(last + 1, path.posX.length - 1);
-        double lx = path.posX[li] - cx;
-        double ly = path.posY[li] - cy;
-        double lz = path.posZ[li] - cz;
-        double baseFacing = selectedStrat.representative.facingDeg;
-        double band = Math.max(0.02, Math.min(30.0, selectedStrat.bandDeg));
-        int rays = 9;
-        double len = 1.6;
-        for (int r = 0; r <= rays; r++) {
-            double yaw = Math.toRadians(baseFacing - band * 0.5 + band * r / rays);
-            double dx = -Math.sin(yaw) * len;
-            double dz = Math.cos(yaw) * len;
-            double ex = lx + dx;
-            double ez = lz + dz;
-            float ax = offX + (float) (lx * cosA - lz * sinA) * sc;
-            float ay = offY + (float) ((lx * sinA + lz * cosA) * 0.5 - ly) * sc;
-            float bx = offX + (float) (ex * cosA - ez * sinA) * sc;
-            float by = offY + (float) ((ex * sinA + ez * cosA) * 0.5 - ly) * sc;
-            dl.addLine(ax, ay, bx, by, ThemeManager.trajectoryBandColor(), 1.2f);
+        if (Controls.secondaryButton("Reapply original")) {
+            controller.reapplyOriginal();
+            selectedKey = null;
+            clearShiftState();
+            return;
         }
-    }
-
-    private int segmentOfTick(int tick) {
-        for (int i = 0; i < problem.segPress.length; i++) {
-            if (tick >= problem.segStart[i] && tick <= problem.segPress[i]) return i;
+        TooltipUtil.onHover("Discard the preview and restore your loaded inputs. Hotkey: Esc.");
+        ImGui.sameLine();
+        if (Controls.primaryButton("Keep")) {
+            controller.keep();
         }
-        return -1;
+        TooltipUtil.onHover("Commit the preview as the new baseline; auto-save resumes. Hotkey: Enter.");
     }
 
-    private static float distToSeg(float px, float py, float ax, float ay, float bx, float by) {
-        float dx = bx - ax;
-        float dy = by - ay;
-        float len2 = dx * dx + dy * dy;
-        float t = len2 <= 1e-6f ? 0f : ((px - ax) * dx + (py - ay) * dy) / len2;
-        t = Math.max(0f, Math.min(1f, t));
-        float qx = ax + t * dx;
-        float qy = ay + t * dy;
-        return (float) Math.hypot(px - qx, py - qy);
+    private void handleKeys() {
+        if (!ImGui.isWindowFocused(ImGuiFocusedFlags.RootAndChildWindows) || ImGui.getIO().getWantTextInput()) {
+            return;
+        }
+        Job j = job;
+        if (j == null) {
+            return;
+        }
+        boolean temp = controller.isTempActive();
+        if (temp && (keyPressed(ImGuiKey.Escape) || keyPressed(ImGuiKey.Backspace))) {
+            controller.reapplyOriginal();
+            selectedKey = null;
+            clearShiftState();
+            return;
+        }
+        List<Row> items = j.items();
+        if (items.isEmpty()) {
+            return;
+        }
+        if (temp && keyPressed(ImGuiKey.Enter)) {
+            controller.keep();
+            return;
+        }
+        boolean down = keyPressed(ImGuiKey.DownArrow);
+        boolean up = keyPressed(ImGuiKey.UpArrow);
+        if (!down && !up) {
+            return;
+        }
+        int current = -1;
+        for (int i = 0; i < items.size(); i++) {
+            if (items.get(i).key.equals(selectedKey)) {
+                current = i;
+                break;
+            }
+        }
+        int next;
+        if (current < 0) {
+            next = down ? 0 : items.size() - 1;
+        } else {
+            next = Math.max(0, Math.min(items.size() - 1, current + (down ? 1 : -1)));
+        }
+        applyItem(items.get(next));
+    }
+
+    private static boolean keyPressed(int key) {
+        return ImGui.isKeyPressed(ImGui.getKeyIndex(key), false);
+    }
+
+    private static int wrappedLines(String s, float width) {
+        if (width <= 0f) {
+            return 1;
+        }
+        return Math.max(1, (int) Math.ceil(ImGui.calcTextSize(s).x / width));
+    }
+
+    private boolean sectionToggle(String title, String id, boolean expanded, float scale) {
+        ImDrawList dl = ImGui.getWindowDrawList();
+        float rowH = ImGui.getTextLineHeight();
+        ImVec2 origin = ImGui.getCursorScreenPos();
+        if (ImGui.invisibleButton("##" + id + "_toggle", ImGui.getContentRegionAvail().x, rowH)) {
+            expanded = !expanded;
+        }
+        int col = ImGui.isItemHovered() ? ThemeManager.textColor() : ThemeManager.textDimColor();
+        float cy = origin.y + rowH * 0.5f;
+        if (expanded) {
+            SolverWidgets.triangleDown(dl, origin.x + 4f * scale, cy, 3.3f * scale, col);
+        } else {
+            SolverWidgets.triangleRight(dl, origin.x + 4f * scale, cy, 3.3f * scale, col);
+        }
+        dl.addText(origin.x + 13f * scale, origin.y, col, title);
+        if (expanded) {
+            ThemeManager.bottomPaddedSeparator();
+        }
+        return expanded;
     }
 
     private static void warn(String msg) {
@@ -482,35 +1029,11 @@ public final class ColdStratWidget {
         ThemeManager.popTextColor();
     }
 
-    private static final class SegUi {
-        boolean ja;
-        final boolean[] alpha = new boolean[KeyLine.COMBO_COUNT];
-        final imgui.type.ImInt maxChanges = new imgui.type.ImInt(2);
-
-        SegUi() {
-            setAlphabet(PRESET_RUN);
-        }
-
-        void setAlphabet(int[] combos) {
-            java.util.Arrays.fill(alpha, false);
-            for (int c : combos) alpha[c] = true;
-        }
-
-        void applyFamily(int[] combos, int changes, boolean turn) {
-            setAlphabet(combos);
-            maxChanges.set(changes);
-            ja = turn;
-        }
-
-        int[] selectedAlphabet() {
-            List<Integer> out = new ArrayList<Integer>();
-            for (int combo : ALL_COMBOS) {
-                if (alpha[combo]) out.add(combo);
-            }
-            if (out.isEmpty()) return PRESET_RUN.clone();
-            int[] a = new int[out.size()];
-            for (int i = 0; i < a.length; i++) a[i] = out.get(i);
-            return a;
-        }
+    private static void dimText(String msg) {
+        ThemeManager.pushTextColor(ThemeManager.textDimColor());
+        ImGui.pushTextWrapPos(0f);
+        ImGui.text(msg);
+        ImGui.popTextWrapPos();
+        ThemeManager.popTextColor();
     }
 }

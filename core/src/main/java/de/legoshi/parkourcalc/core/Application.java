@@ -89,6 +89,7 @@ public final class Application {
     private BlockPicker blockPicker;
     private AngleSolverState angleSolverState;
     private AngleSolverEngine solverEngine;
+    private ColdStratController stratFinder;
     private ConstraintKeyController constraintKeyController;
     private UndoController<de.legoshi.parkourcalc.core.save.SaveFile> undoController;
     private final HudMessages hudMessages = new HudMessages();
@@ -190,14 +191,12 @@ public final class Application {
         VelocityMapController velocityMapController = new VelocityMapController(
                 angleSolverState, boxController, runner, saveController, inputData, forwardModel,
                 this::onUserChange, Math.max(2, Runtime.getRuntime().availableProcessors() - 2));
-        StratFinderController stratFinderController = new StratFinderController(
-                angleSolverState, boxController, runner, saveController, inputData, forwardModel);
-        ColdStratController coldStratController = new ColdStratController(
-                angleSolverState, boxController, runner, saveController, inputData, this::onUserChange,
-                open -> stratFinderController.widget().setWindowOpen(open));
+        stratFinder = new ColdStratController(
+                angleSolverState, boxController, runner, saveController, inputData, forwardModel, mc);
         GraphEditorWindow graphEditorWindow = new GraphEditorWindow(angleSolverEngine);
-        AngleSolverWindow angleSolverWindow = new AngleSolverWindow(angleSolverState, settings, inputData::size, angleSolverEngine, velocityMapController.widget(), stratFinderController.widget(), graphStore, graphEditorWindow);
+        AngleSolverWindow angleSolverWindow = new AngleSolverWindow(angleSolverState, settings, inputData::size, angleSolverEngine, velocityMapController.widget(), graphStore, graphEditorWindow);
         angleSolverWindow.setApplySurfaceState(this::applyPathSurfaceState);
+        angleSolverWindow.setDeriveFromBlocks(stratFinder::deriveSolverFromBlocks);
 
         // In-world constraint visualization (gh-145): plates appear while the solver view is open.
         constraintSource = new de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverConstraintSource(
@@ -237,11 +236,10 @@ public final class Application {
         overlayManager.register(angleSolverWindow);
         overlayManager.register(graphEditorWindow);
         overlayManager.register(io -> {
-            coldStratController.widget().setWindowOpen(settings.viewStratFinder);
-            coldStratController.widget().renderWindow(ThemeManager.uiScale());
-            settings.viewStratFinder = coldStratController.widget().isWindowOpen();
+            stratFinder.widget().setWindowOpen(settings.viewStratFinder);
+            stratFinder.widget().renderWindow(ThemeManager.uiScale());
+            settings.viewStratFinder = stratFinder.widget().isWindowOpen();
         });
-        overlayManager.register(io -> stratFinderController.widget().renderWindow(ThemeManager.uiScale()));
     }
 
     public void setFilePicker(FilePickerPort filePicker) {
@@ -531,6 +529,13 @@ public final class Application {
             return;
         }
         if (mc.isReady()) solverEngine.solve();
+    }
+
+    public void findStratsHotkey() {
+        if (stratFinder == null) return;
+        settings.viewStratFinder = true;
+        stratFinder.widget().setWindowOpen(true);
+        stratFinder.widget().onFindHotkey();
     }
 
     public void setSolverStartTickFromSelection() {

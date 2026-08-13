@@ -85,7 +85,6 @@ public final class AngleSolverWindow implements RenderInterface {
     private final IntSupplier rowCountSupplier;
     private final AngleSolverEngine engine;
     private final VelocityMapWidget velocityMap;
-    private final StratFinderWidget stratFinder;
     private final FileSystemSaveStore graphStore;
     private final GraphEditorWindow graphEditor;
     private final ImInt startTickBuf = new ImInt();
@@ -100,6 +99,8 @@ public final class AngleSolverWindow implements RenderInterface {
     private String[] presetNames;
     private String presetError;
     private Runnable applySurfaceState = () -> { };
+    private java.util.function.Supplier<String> deriveFromBlocks;
+    private String deriveMessage;
 
     private boolean yawsExpanded;
     private boolean detailsExpanded;
@@ -118,18 +119,21 @@ public final class AngleSolverWindow implements RenderInterface {
 
     public AngleSolverWindow(AngleSolverState state, Settings settings,
                              IntSupplier rowCountSupplier, AngleSolverEngine engine,
-                             VelocityMapWidget velocityMap, StratFinderWidget stratFinder,
+                             VelocityMapWidget velocityMap,
                              FileSystemSaveStore graphStore, GraphEditorWindow graphEditor) {
         this.state = state;
         this.settings = settings;
         this.rowCountSupplier = rowCountSupplier;
         this.engine = engine;
         this.velocityMap = velocityMap;
-        this.stratFinder = stratFinder;
         this.graphStore = graphStore;
         this.graphEditor = graphEditor;
         if (graphEditor != null) graphEditor.setSaveHandler(this::writePreset);
         this.slipItems = Slipperiness.comboItems();
+    }
+
+    public void setDeriveFromBlocks(java.util.function.Supplier<String> deriveFromBlocks) {
+        this.deriveFromBlocks = deriveFromBlocks;
     }
 
     @Override
@@ -180,6 +184,22 @@ public final class AngleSolverWindow implements RenderInterface {
         if (problemExpanded) {
             tickRow("Start tick", true, rowCount, labelW);
             tickRow("Goal tick", false, rowCount, labelW);
+            if (deriveFromBlocks != null) {
+                Controls.pushInputFrameHeight();
+                if (Controls.secondaryButton("From blocks (M/K)")) {
+                    deriveMessage = deriveFromBlocks.get();
+                }
+                TooltipUtil.onHover("Derive the goal tick, footprints and world walls from the picked"
+                        + " start block (M) and landing blocks (K) plus your recorded jump presses."
+                        + " Needs Block capture enabled in Settings.");
+                Controls.popInputFrameHeight();
+                if (deriveMessage != null) {
+                    boolean ok = deriveMessage.startsWith("Solver constrained");
+                    ThemeManager.pushTextColor(ok ? ThemeManager.accentColor() : ThemeManager.dangerColor());
+                    ImGui.textWrapped(deriveMessage);
+                    ThemeManager.popTextColor();
+                }
+            }
         }
         int span = state.getLandingTick() - state.getStartTick();
         if (span > LONG_SPAN_WARN_TICKS) longSpanWarning(span, scale);

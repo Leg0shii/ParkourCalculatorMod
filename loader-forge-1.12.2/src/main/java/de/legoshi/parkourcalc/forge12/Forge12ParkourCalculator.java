@@ -374,6 +374,24 @@ public class Forge12ParkourCalculator {
             application.setSolverLandingTickFromSelection();
             return true;
         }
+        if (blockCaptureEnabled) {
+            if (keyCode == captureMomentumBlockKeyBinding.getKeyCode()) {
+                application.captureAngleSolverBlock(BlockSelection.Kind.MOMENTUM);
+                return true;
+            }
+            if (keyCode == captureCollisionBlockKeyBinding.getKeyCode()) {
+                application.captureAngleSolverBlock(BlockSelection.Kind.COLLISION);
+                return true;
+            }
+            if (keyCode == captureLandBlockKeyBinding.getKeyCode()) {
+                application.captureAngleSolverBlock(BlockSelection.Kind.LAND);
+                return true;
+            }
+            if (keyCode == clearBlocksKeyBinding.getKeyCode()) {
+                application.clearAngleSolverBlocks();
+                return true;
+            }
+        }
         return false;
     }
 

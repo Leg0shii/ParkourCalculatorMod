@@ -46,6 +46,7 @@ public final class Constraint {
     private boolean hiInclusive;
     private Integer refTick;
     private boolean vsDz;
+    private Double surfaceY;
     /** A disabled constraint keeps its definition but is invisible to the solver. */
     private boolean enabled = true;
 
@@ -155,6 +156,14 @@ public final class Constraint {
         return op == Op.IN;
     }
 
+    public Double getSurfaceY() {
+        return surfaceY;
+    }
+
+    public void setSurfaceY(Double surfaceY) {
+        this.surfaceY = surfaceY;
+    }
+
     public boolean isEnabled() {
         return enabled;
     }
@@ -172,6 +181,7 @@ public final class Constraint {
         c.enabled = enabled;
         c.refTick = refTick;
         c.vsDz = vsDz;
+        c.surfaceY = surfaceY;
         return c;
     }
 }

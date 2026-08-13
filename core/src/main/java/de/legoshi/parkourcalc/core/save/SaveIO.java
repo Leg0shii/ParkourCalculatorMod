@@ -522,6 +522,7 @@ public final class SaveIO {
         out.disabled = !c.isEnabled();
         out.refTick = c.getRefTick();
         out.vsDz = c.isVsDz();
+        out.surfaceY = c.getSurfaceY();
         return out;
     }
 
@@ -538,6 +539,7 @@ public final class SaveIO {
         out.setEnabled(!c.disabled);
         if (c.refTick != null && c.refTick >= 0) out.setRefTick(c.refTick);
         if (c.vsDz) out.setVsDz(true);
+        out.setSurfaceY(c.surfaceY);
         return out;
     }
 
