@@ -99,6 +99,14 @@ public interface MinecraftAccess {
         return false;
     }
 
+    default boolean isCopyChordDown() {
+        return false;
+    }
+
+    default boolean isPasteChordDown() {
+        return false;
+    }
+
     /** Either shift key currently held. Polled directly, not via ImGui IO. */
     boolean isShiftDown();
 

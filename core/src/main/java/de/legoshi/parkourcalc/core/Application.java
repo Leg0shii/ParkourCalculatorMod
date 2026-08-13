@@ -11,6 +11,7 @@ import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
+import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
@@ -55,6 +56,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.undo.UndoController;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -141,6 +143,29 @@ public final class Application {
         return new PlaybackController.StartRange(first, stopExclusive, pos, vel, yaw, runner.getCheckpoint(first));
     }
 
+    private void promptSaveSelectionAsTas(FileMenu fileMenu) {
+        Set<Integer> rows = selection.getSelectedRows();
+        if (rows.isEmpty()) return;
+        int first = Collections.min(rows);
+        List<InputRow> copied = new ArrayList<>(rows.size());
+        List<Integer> sourceRows = new ArrayList<>(rows.size());
+        for (int idx : rows) {
+            if (idx >= 0 && idx < inputData.size()) {
+                copied.add(inputData.get(idx).copy());
+                sourceRows.add(idx);
+            }
+        }
+        if (copied.isEmpty()) return;
+
+        TickState pre = boxController.getState(first);
+        Vec3dCore pos = pre != null ? pre.position : runner.getStartPosition();
+        Vec3dCore vel = pre != null ? pre.velocity : runner.getStartVelocity();
+        float yaw = pre != null ? pre.yaw : runner.getStartYaw();
+        float pitch = pre != null ? boxController.getPitch(first) : runner.getStartPitch();
+        StartResumeState resume = pre != null ? runner.describeResumeAt(first) : runner.getStartResumeState();
+        fileMenu.promptSaveSelectionAsTas(copied, sourceRows, pos, vel, yaw, pitch, resume);
+    }
+
     public void setModVersion(String modVersion) {
         this.modVersion = modVersion;
     }
@@ -175,14 +200,14 @@ public final class Application {
                     saveStore.getModVersion(), saveStore.getMcVersion()));
             angleSolverEngine.setProblemSnapshotSource(() -> SaveIO.snapshotJson(saveStore, inputData,
                     runner.getStartPosition(), runner.getStartVelocity(), runner.getStartYaw(), runner.getStartPitch(),
-                    angleSolverState, boxController.getStates()));
+                    runner.getStartResumeState(), angleSolverState, boxController.getStates()));
         }
         saveController.setSolverEngine(angleSolverEngine);
         undoController = new UndoController<>(
                 () -> SaveIO.undoSignature(inputData, runner.getStartPosition(), runner.getStartVelocity(),
-                        runner.getStartYaw(), runner.getStartPitch(), angleSolverState),
+                        runner.getStartYaw(), runner.getStartPitch(), runner.getStartResumeState(), angleSolverState),
                 () -> SaveIO.buildUndoSnapshot(inputData, runner.getStartPosition(), runner.getStartVelocity(),
-                        runner.getStartYaw(), runner.getStartPitch(), angleSolverState),
+                        runner.getStartYaw(), runner.getStartPitch(), runner.getStartResumeState(), angleSolverState),
                 SaveIO::undoJson,
                 saveController::applySnapshotJson);
         saveController.setUndoController(undoController);
@@ -220,6 +245,7 @@ public final class Application {
         TickInfoPanel tickInfoPanel = new TickInfoPanel(boxController, inputData, selection, settings, runner, this::pushHudMessage);
         PerfOverlay perfOverlay = new PerfOverlay();
         FileMenu fileMenu = new FileMenu(saveController, filePicker, settings, this::saveSettings);
+        inputOverlay.setSaveSelectionAsTasHandler(() -> promptSaveSelectionAsTas(fileMenu));
         SettingsModal settingsModal = new SettingsModal(settings, this::saveSettings);
         HudMessagesPanel hudMessagesPanel = new HudMessagesPanel(hudMessages, settings);
         MainWindowOverlay mainWindow = new MainWindowOverlay(

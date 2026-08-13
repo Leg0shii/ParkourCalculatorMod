@@ -208,6 +208,16 @@ public final class Forge12MinecraftAccess implements MinecraftAccess {
     }
 
     @Override
+    public boolean isCopyChordDown() {
+        return Lwjgl2InputState.isCopyChordDown();
+    }
+
+    @Override
+    public boolean isPasteChordDown() {
+        return Lwjgl2InputState.isPasteChordDown();
+    }
+
+    @Override
     public boolean isShiftDown() {
         return Lwjgl2InputState.isShiftDown();
     }

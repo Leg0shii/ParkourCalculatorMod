@@ -16,4 +16,13 @@ public final class TickConstraints {
     public StateOverride getOverride() {
         return override;
     }
+
+    public TickConstraints copy() {
+        TickConstraints c = new TickConstraints();
+        for (Constraint constraint : constraints) {
+            c.constraints.add(constraint.copy());
+        }
+        c.override.copyFrom(override);
+        return c;
+    }
 }

@@ -3,6 +3,7 @@ package de.legoshi.parkourcalc.forge12.sim;
 import com.mojang.authlib.GameProfile;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.forge.core.sim.PlayerSprintMachine;
+import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.SubtickPath;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
@@ -81,6 +82,10 @@ public class SimulatorEntity extends EntityPlayer {
     }
 
     public void resetPlayer() {
+        resetPlayer(null);
+    }
+
+    public void resetPlayer(StartResumeState resume) {
         this.noClip = true;
         this.setHealth(this.getMaxHealth());
         this.motionX = 0.0;
@@ -102,6 +107,28 @@ public class SimulatorEntity extends EntityPlayer {
         this.tickMedium = null;
         this.tickGroundFriction = Double.NaN;
         this.tickSoulsandCells = 0;
+        if (resume != null) {
+            applyResume(resume);
+        }
+    }
+
+    private void applyResume(StartResumeState resume) {
+        this.onGround = resume.onGround;
+        this.collidedHorizontally = resume.wallContact;
+        this.setSprinting(resume.sprinting);
+        this.jumpTicks = resume.jumpCooldown;
+        this.isInWeb = resume.stuckMultiplier != null;
+        this.jumpMovementFactor = !Float.isNaN(resume.airSprintFactor)
+                ? resume.airSprintFactor
+                : (resume.sprinting ? 0.026F : 0.02F);
+        boolean prevSneak = resume.heldLastTick.contains(InputRow.Key.SNEAK);
+        float prevForward = (resume.heldLastTick.contains(InputRow.Key.W) ? 1.0F : 0.0F)
+                - (resume.heldLastTick.contains(InputRow.Key.S) ? 1.0F : 0.0F);
+        if (prevSneak) {
+            prevForward *= 0.3F;
+        }
+        this.sprintState = new PlayerSprintMachine.State(prevSneak, prevForward,
+                resume.sprintWindow, resume.sprintTicksLeft, resume.sprinting);
     }
 
     @Override

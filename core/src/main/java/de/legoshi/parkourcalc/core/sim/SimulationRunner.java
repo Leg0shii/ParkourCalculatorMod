@@ -197,6 +197,19 @@ public final class SimulationRunner {
         simulator.setStartYaw(yaw);
     }
 
+    public StartResumeState getStartResumeState() {
+        return simulator.getStartResumeState();
+    }
+
+    public void setStartResumeState(StartResumeState resume) {
+        simulator.setStartResumeState(resume);
+    }
+
+    public StartResumeState describeResumeAt(int index) {
+        Checkpoint c = getCheckpoint(index);
+        return c == null ? null : simulator.describeCheckpoint(c);
+    }
+
     public float getStartPitch() {
         return startPitch;
     }

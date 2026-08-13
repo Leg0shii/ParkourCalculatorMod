@@ -4,6 +4,7 @@ import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.sim.ChunkRange;
 import de.legoshi.parkourcalc.core.sim.Checkpoint;
 import de.legoshi.parkourcalc.core.sim.LazyEntitySimulator;
+import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import net.minecraft.client.Minecraft;
@@ -48,8 +49,31 @@ public final class Forge8Simulator extends LazyEntitySimulator<SimulatorEntity> 
         return new SimulatorEntity(simWorld, player.getGameProfile(), start, vel, yaw);
     }
 
-    @Override protected void resetEntity(SimulatorEntity e) {
-        e.resetPlayer();
+    @Override protected void resetEntity(SimulatorEntity e, StartResumeState resume) {
+        e.resetPlayer(resume);
+    }
+
+    @Override
+    protected StartResumeState describeResume(Checkpoint checkpoint) {
+        if (!(checkpoint instanceof SimulatorEntity.Checkpoint)) return null;
+        SimulatorEntity.Checkpoint c = (SimulatorEntity.Checkpoint) checkpoint;
+        StartResumeState r = new StartResumeState();
+        r.onGround = c.onGround;
+        r.wallContact = c.isCollidedHorizontally;
+        r.sprinting = c.sprinting;
+        r.jumpCooldown = c.jumpTicks;
+        r.airSprintFactor = c.jumpMovementFactor;
+        if (c.isInWeb) {
+            r.stuckMultiplier = new Vec3dCore(0.25, 0.05, 0.25);
+        }
+        if (c.sprintState != null) {
+            r.sprintWindow = c.sprintState.sprintToggleTimer;
+            r.sprintTicksLeft = c.sprintState.sprintingTicksLeft;
+            if (c.sprintState.prevSneak) r.heldLastTick.add(InputRow.Key.SNEAK);
+            if (c.sprintState.prevMoveForward > 0.0F) r.heldLastTick.add(InputRow.Key.W);
+            if (c.sprintState.prevMoveForward < 0.0F) r.heldLastTick.add(InputRow.Key.S);
+        }
+        return r;
     }
 
     @Override protected void setInput(SimulatorEntity e, InputRow row) {

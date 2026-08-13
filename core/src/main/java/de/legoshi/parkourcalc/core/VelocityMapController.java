@@ -63,7 +63,8 @@ public final class VelocityMapController {
         if (seed == null || store == null) return null;
 
         final String json = SaveIO.snapshotJson(store, inputData, runner.getStartPosition(),
-                runner.getStartVelocity(), runner.getStartYaw(), runner.getStartPitch(), angleSolverState, boxController.getStates());
+                runner.getStartVelocity(), runner.getStartYaw(), runner.getStartPitch(),
+                runner.getStartResumeState(), angleSolverState, boxController.getStates());
         this.velocitySnapshotJson = json;
         VelocityFinder.ProblemFactory factory = new VelocityFinder.ProblemFactory() {
             public AngleSolverState newState() {
