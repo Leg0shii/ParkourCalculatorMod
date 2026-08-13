@@ -123,6 +123,17 @@ public final class PlaybackController {
         return "";
     }
 
+    public boolean canTeleportToTick() {
+        return bridge != null && bridge.isSingleplayer() && !running;
+    }
+
+    public boolean teleportToTick(Vec3dCore pos, float yaw, float pitch) {
+        if (!canTeleportToTick()) return false;
+        bridge.teleport(pos, Vec3dCore.ZERO, yaw, null);
+        bridge.setPitch(pitch);
+        return true;
+    }
+
     public void start() {
         StartRange range = startRangeResolver != null ? startRangeResolver.get() : null;
         if (range == null) {

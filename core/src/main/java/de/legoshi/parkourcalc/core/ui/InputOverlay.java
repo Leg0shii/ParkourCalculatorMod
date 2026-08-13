@@ -78,6 +78,7 @@ public final class InputOverlay {
     private static final float HOTBAR_COLUMN_WIDTH = 64;
 
     private static final String MENU_SET_TO_PLAYER = "Set to user position";
+    private static final String MENU_TELEPORT_TO_TICK = "Teleport player to tick %d";
     private static final String LABEL_ROWS = "Rows:";
     private static final String MENU_ADD_AT_END = "Add %d row(s) at end";
     private static final String MENU_ADD_ABOVE = "Add %d row(s) above";
@@ -1369,6 +1370,7 @@ public final class InputOverlay {
             onSetPlayerPosition.run();
             notifyFullResim();
         }
+        renderTeleportToTickOption();
         renderApplyPotionOptions();
         renderYawLockOption();
         renderPitchLockOption();
@@ -1377,6 +1379,17 @@ public final class InputOverlay {
         renderDeleteOption();
 
         ImGui.endPopup();
+    }
+
+    private void renderTeleportToTickOption() {
+        if (playback == null || boxController == null || !playback.canTeleportToTick()) return;
+        int row = selection.singleSelectedRow();
+        if (row < 0) return;
+        TickState state = boxController.getState(row);
+        if (state == null) return;
+        if (contextButton(String.format(MENU_TELEPORT_TO_TICK, row + 1))) {
+            playback.teleportToTick(state.position, state.yaw, boxController.getPitch(row));
+        }
     }
 
     private void renderYawLockOption() {
