@@ -10,6 +10,8 @@ public class InputRow {
 
     public static final int MAX_AMPLIFIER = 9;
 
+    public static final int MAX_HOTBAR_SLOT = 9;
+
     private final int id;
     private final Set<Key> activeKeys = EnumSet.noneOf(Key.class);
     private Float yaw;
@@ -18,6 +20,7 @@ public class InputRow {
     private boolean pitchLocked;
     private int speedAmplifier;
     private int jumpBoostAmplifier;
+    private int hotbarSlot;
     private int modCount;
 
     // LEFT_CLICK / RIGHT_CLICK appended last to keep existing ordinals stable for old saves.
@@ -109,10 +112,26 @@ public class InputRow {
         this.jumpBoostAmplifier = clamped;
     }
 
+    public int getHotbarSlot() {
+        return hotbarSlot;
+    }
+
+    public void setHotbarSlot(int slot) {
+        int clamped = clampHotbarSlot(slot);
+        if (this.hotbarSlot != clamped) modCount++;
+        this.hotbarSlot = clamped;
+    }
+
     private static int clampAmplifier(int amplifier) {
         if (amplifier < 0) return 0;
         if (amplifier > MAX_AMPLIFIER) return MAX_AMPLIFIER;
         return amplifier;
+    }
+
+    private static int clampHotbarSlot(int slot) {
+        if (slot < 0) return 0;
+        if (slot > MAX_HOTBAR_SLOT) return MAX_HOTBAR_SLOT;
+        return slot;
     }
 
     public InputRow copy() {
@@ -124,6 +143,7 @@ public class InputRow {
         copy.pitchLocked = this.pitchLocked;
         copy.speedAmplifier = this.speedAmplifier;
         copy.jumpBoostAmplifier = this.jumpBoostAmplifier;
+        copy.hotbarSlot = this.hotbarSlot;
         return copy;
     }
 }

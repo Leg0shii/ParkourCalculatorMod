@@ -44,5 +44,8 @@ public interface PlaybackBridge {
 
     void applyEffects(int speedAmplifier, int jumpBoostAmplifier);
 
+    /** Switch the held hotbar slot (0-8) so playback places from the right slot. No-op if unsupported. */
+    default void setHotbarSlot(int slotZeroBased) {}
+
     default void dumpPlayerState(int tickIndex) {}
 }

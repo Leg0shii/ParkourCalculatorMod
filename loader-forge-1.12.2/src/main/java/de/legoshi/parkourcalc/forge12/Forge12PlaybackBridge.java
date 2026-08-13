@@ -346,6 +346,15 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
     }
 
     @Override
+    public void setHotbarSlot(int slotZeroBased) {
+        if (ghostMode) return;
+        if (slotZeroBased < 0 || slotZeroBased > 8) return;
+        EntityPlayerSP p = Minecraft.getMinecraft().player;
+        if (p == null) return;
+        p.inventory.currentItem = slotZeroBased;
+    }
+
+    @Override
     public void dumpPlayerState(int tickIndex) {
         net.minecraft.entity.player.EntityPlayer p = ghost != null ? ghost : Minecraft.getMinecraft().player;
         if (p == null) return;
