@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import de.legoshi.parkourcalc.core.sim.AABB;
+import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputData;
@@ -23,8 +24,10 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.TimeZone;
 
@@ -32,12 +35,16 @@ import java.util.TimeZone;
 public final class SaveIO {
 
     public static Result<String> save(FileSystemSaveStore store, String rawName, InputData inputData, Vec3dCore startPos, Vec3dCore startVel, float startYaw, float startPitch, AngleSolverState angleSolver, List<TickState> states, boolean fullDebug) {
+        return save(store, rawName, inputData, startPos, startVel, startYaw, startPitch, null, angleSolver, states, fullDebug);
+    }
+
+    public static Result<String> save(FileSystemSaveStore store, String rawName, InputData inputData, Vec3dCore startPos, Vec3dCore startVel, float startYaw, float startPitch, StartResumeState resume, AngleSolverState angleSolver, List<TickState> states, boolean fullDebug) {
         String name = sanitizeRelative(rawName);
         if (name == null) {
             return Result.failure("Invalid save name. Use letters, numbers, dashes, or underscores.");
         }
 
-        SaveFile file = buildFile(store, inputData, startPos, startVel, startYaw, startPitch, angleSolver, states, fullDebug);
+        SaveFile file = buildFile(store, inputData, startPos, startVel, startYaw, startPitch, resume, angleSolver, states, fullDebug);
 
         try {
             store.write(name, saveJson(file));
@@ -48,7 +55,11 @@ public final class SaveIO {
     }
 
     public static SaveFile buildSaveFile(FileSystemSaveStore store, InputData inputData, Vec3dCore startPos, Vec3dCore startVel, float startYaw, float startPitch, AngleSolverState angleSolver, List<TickState> states, boolean fullDebug) {
-        return buildFile(store, inputData, startPos, startVel, startYaw, startPitch, angleSolver, states, fullDebug);
+        return buildFile(store, inputData, startPos, startVel, startYaw, startPitch, null, angleSolver, states, fullDebug);
+    }
+
+    public static SaveFile buildSaveFile(FileSystemSaveStore store, InputData inputData, Vec3dCore startPos, Vec3dCore startVel, float startYaw, float startPitch, StartResumeState resume, AngleSolverState angleSolver, List<TickState> states, boolean fullDebug) {
+        return buildFile(store, inputData, startPos, startVel, startYaw, startPitch, resume, angleSolver, states, fullDebug);
     }
 
     public static String saveJson(SaveFile file) {
@@ -58,17 +69,23 @@ public final class SaveIO {
     public static String snapshotJson(FileSystemSaveStore store, InputData inputData, Vec3dCore startPos,
                                       Vec3dCore startVel, float startYaw, float startPitch,
                                       AngleSolverState angleSolver, List<TickState> states) {
-        SaveFile file = buildFile(store, inputData, startPos, startVel, startYaw, startPitch, angleSolver, states, false);
+        return snapshotJson(store, inputData, startPos, startVel, startYaw, startPitch, null, angleSolver, states);
+    }
+
+    public static String snapshotJson(FileSystemSaveStore store, InputData inputData, Vec3dCore startPos,
+                                      Vec3dCore startVel, float startYaw, float startPitch,
+                                      StartResumeState resume, AngleSolverState angleSolver, List<TickState> states) {
+        SaveFile file = buildFile(store, inputData, startPos, startVel, startYaw, startPitch, resume, angleSolver, states, false);
         return new GsonBuilder().setPrettyPrinting().create().toJson(file);
     }
 
     public static String undoSnapshotJson(InputData inputData, Vec3dCore startPos, Vec3dCore startVel,
-                                          float startYaw, float startPitch, AngleSolverState angleSolver) {
-        return undoJson(buildUndoSnapshot(inputData, startPos, startVel, startYaw, startPitch, angleSolver));
+                                          float startYaw, float startPitch, StartResumeState resume, AngleSolverState angleSolver) {
+        return undoJson(buildUndoSnapshot(inputData, startPos, startVel, startYaw, startPitch, resume, angleSolver));
     }
 
     public static SaveFile buildUndoSnapshot(InputData inputData, Vec3dCore startPos, Vec3dCore startVel,
-                                             float startYaw, float startPitch, AngleSolverState angleSolver) {
+                                             float startYaw, float startPitch, StartResumeState resume, AngleSolverState angleSolver) {
         SaveFile file = new SaveFile();
         file.version = SaveFile.FORMAT_VERSION;
         SaveFile.Start start = new SaveFile.Start();
@@ -76,6 +93,7 @@ public final class SaveIO {
         start.vel = new double[] { startVel.x, startVel.y, startVel.z };
         start.yaw = startYaw;
         start.pitch = startPitch;
+        start.resume = toSaveResume(resume);
         file.start = start;
         List<SaveFile.Row> rows = new ArrayList<>(inputData.size());
         for (InputRow row : inputData.getRows()) {
@@ -91,7 +109,7 @@ public final class SaveIO {
     }
 
     public static String undoSignature(InputData inputData, Vec3dCore startPos, Vec3dCore startVel,
-                                       float startYaw, float startPitch, AngleSolverState angleSolver) {
+                                       float startYaw, float startPitch, StartResumeState resume, AngleSolverState angleSolver) {
         List<InputRow> rows = inputData.getRows();
         long h = 1125899906842597L;
         for (int i = 0; i < rows.size(); i++) {
@@ -104,6 +122,9 @@ public final class SaveIO {
                 .append('#').append(startPos.x).append(',').append(startPos.y).append(',').append(startPos.z)
                 .append('#').append(startVel.x).append(',').append(startVel.y).append(',').append(startVel.z)
                 .append('#').append(startYaw).append('#').append(startPitch).append('#');
+        SaveFile.Resume res = toSaveResume(resume);
+        if (res != null) sb.append(COMPACT_GSON.toJson(res));
+        sb.append('#');
         SaveFile.AngleSolver solver = toSaveAngleSolver(angleSolver);
         if (solver != null) sb.append(COMPACT_GSON.toJson(solver));
         return sb.toString();
@@ -205,6 +226,48 @@ public final class SaveIO {
                 parseEnum(AngleSolverState.DeviationKind.class, a.deviationKind, AngleSolverState.DeviationKind.OTHER));
     }
 
+    public static AngleSolverState sliceAngleSolverState(AngleSolverState source, List<Integer> sourceRows) {
+        if (source == null || sourceRows == null || sourceRows.isEmpty()) return null;
+        SaveFile.AngleSolver a = toSaveAngleSolver(source);
+        if (a == null) return null;
+
+        Map<Integer, Integer> remap = new HashMap<>();
+        int maxRow = Integer.MIN_VALUE;
+        for (int j = 0; j < sourceRows.size(); j++) {
+            remap.put(sourceRows.get(j), j);
+            maxRow = Math.max(maxRow, sourceRows.get(j));
+        }
+        remap.put(maxRow + 1, sourceRows.size());
+
+        List<SaveFile.Tick> kept = new ArrayList<>();
+        if (a.ticks != null) {
+            for (SaveFile.Tick t : a.ticks) {
+                if (t == null) continue;
+                Integer mapped = remap.get(t.tick);
+                if (mapped != null) {
+                    t.tick = mapped;
+                    kept.add(t);
+                }
+            }
+        }
+        a.ticks = kept;
+
+        Integer start = remap.get(a.startTick);
+        Integer landing = remap.get(a.landingTick);
+        a.startTick = start != null ? start : 0;
+        a.landingTick = start != null && landing != null ? landing : 0;
+        a.result = null;
+        a.deviation = null;
+        a.deviationKind = null;
+        a.seed = null;
+
+        SaveFile holder = new SaveFile();
+        holder.angleSolver = a;
+        AngleSolverState out = new AngleSolverState();
+        applyAngleSolverTo(holder, out);
+        return out;
+    }
+
     public static Vec3dCore posOf(SaveFile.Start s) {
         return new Vec3dCore(s.pos[0], s.pos[1], s.pos[2]);
     }
@@ -212,7 +275,56 @@ public final class SaveIO {
     public static Vec3dCore velOf(SaveFile.Start s) {
         if (s.vel == null || s.vel.length < 3) return Vec3dCore.GROUND_REST_VELOCITY;
         Vec3dCore v = new Vec3dCore(s.vel[0], s.vel[1], s.vel[2]);
+        if (s.resume != null) return v;
         return v.equals(Vec3dCore.ZERO) ? Vec3dCore.GROUND_REST_VELOCITY : v;
+    }
+
+    public static StartResumeState resumeOf(SaveFile.Start s) {
+        SaveFile.Resume r = s != null ? s.resume : null;
+        if (r == null) return null;
+        StartResumeState resume = new StartResumeState();
+        resume.onGround = r.onGround;
+        resume.wallContact = r.wall;
+        resume.softWallContact = r.softWall;
+        resume.sprinting = r.sprinting;
+        resume.sprintWindow = r.sprintWindow;
+        resume.sprintTicksLeft = r.sprintTicksLeft;
+        resume.jumpCooldown = r.jumpCooldown;
+        resume.airSprintFactor = r.airSprintFactor != null ? r.airSprintFactor : Float.NaN;
+        if (r.stuck != null && r.stuck.length >= 3) {
+            resume.stuckMultiplier = new Vec3dCore(r.stuck[0], r.stuck[1], r.stuck[2]);
+        }
+        if (r.heldLastTick != null) {
+            for (String key : r.heldLastTick) {
+                try {
+                    resume.heldLastTick.add(InputRow.Key.valueOf(key));
+                } catch (IllegalArgumentException ignored) {
+                }
+            }
+        }
+        return resume;
+    }
+
+    public static SaveFile.Resume toSaveResume(StartResumeState resume) {
+        if (resume == null) return null;
+        SaveFile.Resume r = new SaveFile.Resume();
+        r.onGround = resume.onGround;
+        r.wall = resume.wallContact;
+        r.softWall = resume.softWallContact;
+        r.sprinting = resume.sprinting;
+        r.sprintWindow = resume.sprintWindow;
+        r.sprintTicksLeft = resume.sprintTicksLeft;
+        r.jumpCooldown = resume.jumpCooldown;
+        r.airSprintFactor = Float.isNaN(resume.airSprintFactor) ? null : resume.airSprintFactor;
+        if (resume.stuckMultiplier != null) {
+            r.stuck = new double[] { resume.stuckMultiplier.x, resume.stuckMultiplier.y, resume.stuckMultiplier.z };
+        }
+        if (!resume.heldLastTick.isEmpty()) {
+            List<String> held = new ArrayList<>(resume.heldLastTick.size());
+            for (InputRow.Key key : resume.heldLastTick) held.add(key.name());
+            r.heldLastTick = held;
+        }
+        return r;
     }
 
     public static SaveFile parseSafe(String contents) {
@@ -262,7 +374,7 @@ public final class SaveIO {
         return out.length() == 0 ? null : out.toString();
     }
 
-    private static SaveFile buildFile(FileSystemSaveStore store, InputData inputData, Vec3dCore startPos, Vec3dCore startVel, float startYaw, float startPitch, AngleSolverState angleSolver, List<TickState> states, boolean fullDebug) {
+    private static SaveFile buildFile(FileSystemSaveStore store, InputData inputData, Vec3dCore startPos, Vec3dCore startVel, float startYaw, float startPitch, StartResumeState resume, AngleSolverState angleSolver, List<TickState> states, boolean fullDebug) {
         SaveFile file = new SaveFile();
         file.version = SaveFile.FORMAT_VERSION;
         file.createdAt = nowIso8601();
@@ -275,6 +387,7 @@ public final class SaveIO {
         start.vel = new double[] { startVel.x, startVel.y, startVel.z };
         start.yaw = startYaw;
         start.pitch = startPitch;
+        start.resume = toSaveResume(resume);
         file.start = start;
 
         List<SaveFile.Row> rows = new ArrayList<>(inputData.size());

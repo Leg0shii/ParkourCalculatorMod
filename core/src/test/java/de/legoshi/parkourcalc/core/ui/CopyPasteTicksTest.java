@@ -1,12 +1,16 @@
 package de.legoshi.parkourcalc.core.ui;
 
+import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
+import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverTable;
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.TreeSet;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
 
 public class CopyPasteTicksTest {
 
@@ -88,6 +92,56 @@ public class CopyPasteTicksTest {
         assertEquals(9f, first.get(0).getYaw(), 0f);
         assertEquals(5f, first.get(1).getYaw(), 0f);
         assertEquals(6f, first.get(2).getYaw(), 0f);
+    }
+
+    @Test
+    public void pasteCarriesTickConstraintsAndShiftsExisting() {
+        InputData data = dataWithYaws(0f, 1f, 2f, 3f, 4f);
+        SelectionManager sel = new SelectionManager(null);
+        int[] dirty = { -99 };
+        InputOverlay ov = overlay(data, sel, dirty);
+        AngleSolverState solver = new AngleSolverState();
+        ov.setAngleSolver(new AngleSolverTable(solver, new Settings(), sel, new ConstraintSelection(), data::size));
+
+        solver.addConstraint(1);
+        solver.addConstraint(4);
+
+        sel.selectRows(1, 1);
+        ov.copySelectedRows();
+        sel.selectRows(2, 1);
+        ov.pasteRows();
+
+        assertEquals(6, data.size());
+        assertEquals(1, solver.tickConstraintsOrNull(1).getConstraints().size());
+        assertNotNull(solver.tickConstraintsOrNull(3));
+        assertEquals(1, solver.tickConstraintsOrNull(3).getConstraints().size());
+        assertNull(solver.tickConstraintsOrNull(4));
+        assertEquals(1, solver.tickConstraintsOrNull(5).getConstraints().size());
+        assertNotSame(solver.tickConstraintsOrNull(1).getConstraints().get(0),
+                solver.tickConstraintsOrNull(3).getConstraints().get(0));
+    }
+
+    @Test
+    public void pasteCarriesConstraintsAcrossDocumentSwap() {
+        InputData data = dataWithYaws(0f, 1f);
+        SelectionManager sel = new SelectionManager(null);
+        int[] dirty = { -99 };
+        InputOverlay ov = overlay(data, sel, dirty);
+        AngleSolverState solver = new AngleSolverState();
+        ov.setAngleSolver(new AngleSolverTable(solver, new Settings(), sel, new ConstraintSelection(), data::size));
+
+        solver.addConstraint(0);
+        sel.selectRows(0, 1);
+        ov.copySelectedRows();
+
+        data.clear();
+        solver.reset();
+        sel.clear();
+        ov.pasteRows();
+
+        assertEquals(1, data.size());
+        assertNotNull(solver.tickConstraintsOrNull(0));
+        assertEquals(1, solver.tickConstraintsOrNull(0).getConstraints().size());
     }
 
     @Test

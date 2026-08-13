@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core;
 
+import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.core.save.Result;
@@ -14,6 +15,7 @@ import org.junit.Test;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -54,7 +56,7 @@ public class SaveSelectionAsTasTest {
         Vec3dCore pos = new Vec3dCore(10.5, 64.0, -3.25);
         Vec3dCore vel = new Vec3dCore(0.12, -0.08, 0.34);
 
-        Result<String> saved = rig.controller.saveSelectionAsNewTas("slice1", rows, pos, vel, 45f, 10f);
+        Result<String> saved = rig.controller.saveSelectionAsNewTas("slice1", rows, Arrays.asList(0, 1), pos, vel, 45f, 10f, null);
         assertTrue(saved.ok);
 
         Result<SaveFile> loaded = SaveIO.load(rig.store, "slice1");
@@ -77,11 +79,45 @@ public class SaveSelectionAsTasTest {
     }
 
     @Test
+    public void sliceReanchorsSolverConstraintsAndWindow() throws Exception {
+        Path dir = Files.createTempDirectory("pkc-slice-solver");
+        Rig rig = new Rig(dir);
+        AngleSolverState solver = new AngleSolverState();
+        rig.controller.setAngleSolver(solver);
+        solver.addConstraint(5);
+        solver.addConstraint(7);
+        solver.addConstraint(2);
+        solver.setStartTick(5);
+        solver.setLandingTick(7);
+
+        List<InputRow> rows = new ArrayList<>();
+        rows.add(new InputRow());
+        rows.add(new InputRow());
+
+        Result<String> saved = rig.controller.saveSelectionAsNewTas("slice-solver", rows, Arrays.asList(5, 6),
+                new Vec3dCore(0, 64, 0), Vec3dCore.GROUND_REST_VELOCITY, 0f, 0f, null);
+        assertTrue(saved.ok);
+
+        Result<SaveFile> loaded = SaveIO.load(rig.store, "slice-solver");
+        assertTrue(loaded.ok);
+        SaveFile file = loaded.value;
+
+        assertEquals(2, file.angleSolver.ticks.size());
+        assertEquals(0, file.angleSolver.ticks.get(0).tick);
+        assertEquals(2, file.angleSolver.ticks.get(1).tick);
+        assertEquals(0, file.angleSolver.startTick);
+        assertEquals(2, file.angleSolver.landingTick);
+        assertEquals(3, solver.tickConstraintsOrNull(5).getConstraints().size()
+                + solver.tickConstraintsOrNull(7).getConstraints().size()
+                + solver.tickConstraintsOrNull(2).getConstraints().size());
+    }
+
+    @Test
     public void emptySelectionIsRejected() throws Exception {
         Path dir = Files.createTempDirectory("pkc-slice-empty");
         Rig rig = new Rig(dir);
-        Result<String> saved = rig.controller.saveSelectionAsNewTas("nope", new ArrayList<>(),
-                Vec3dCore.ZERO, Vec3dCore.ZERO, 0f, 0f);
+        Result<String> saved = rig.controller.saveSelectionAsNewTas("nope", new ArrayList<>(), new ArrayList<>(),
+                Vec3dCore.ZERO, Vec3dCore.ZERO, 0f, 0f, null);
         assertTrue(!saved.ok);
     }
 }

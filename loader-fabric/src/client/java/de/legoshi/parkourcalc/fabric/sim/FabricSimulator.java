@@ -4,8 +4,10 @@ import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.sim.ChunkRange;
 import de.legoshi.parkourcalc.core.sim.Checkpoint;
 import de.legoshi.parkourcalc.core.sim.LazyEntitySimulator;
+import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
+import net.minecraft.world.entity.player.Input;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -47,8 +49,34 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
         return new SimulatorEntity(simWorld, player.getGameProfile(), start, vel, yaw);
     }
 
-    @Override protected void resetEntity(SimulatorEntity e) {
-        e.resetPlayer();
+    @Override protected void resetEntity(SimulatorEntity e, StartResumeState resume) {
+        e.resetPlayer(resume);
+    }
+
+    @Override
+    protected StartResumeState describeResume(Checkpoint checkpoint) {
+        if (!(checkpoint instanceof SimulatorEntity.Checkpoint c)) return null;
+        StartResumeState r = new StartResumeState();
+        r.onGround = c.onGround;
+        r.wallContact = c.horizontalCollision;
+        r.softWallContact = c.collidedSoftly;
+        r.sprinting = c.sprinting;
+        r.sprintWindow = c.ticksLeftToDoubleTapSprint;
+        r.jumpCooldown = c.jumpingCooldown;
+        if (c.movementMultiplier != null && c.movementMultiplier.lengthSqr() > 1.0E-7) {
+            r.stuckMultiplier = new Vec3dCore(c.movementMultiplier.x, c.movementMultiplier.y, c.movementMultiplier.z);
+        }
+        Input held = c.playerInput;
+        if (held != null) {
+            if (held.forward()) r.heldLastTick.add(InputRow.Key.W);
+            if (held.backward()) r.heldLastTick.add(InputRow.Key.S);
+            if (held.left()) r.heldLastTick.add(InputRow.Key.A);
+            if (held.right()) r.heldLastTick.add(InputRow.Key.D);
+            if (held.jump()) r.heldLastTick.add(InputRow.Key.JUMP);
+            if (held.shift()) r.heldLastTick.add(InputRow.Key.SNEAK);
+            if (held.sprint()) r.heldLastTick.add(InputRow.Key.SPRINT);
+        }
+        return r;
     }
 
     @Override protected void setInput(SimulatorEntity e, InputRow row) {

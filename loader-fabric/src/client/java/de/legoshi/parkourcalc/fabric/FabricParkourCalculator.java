@@ -285,14 +285,15 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
         boolean imguiWantsKeys = application.isControlPanelOpen() && ImGui.getIO().getWantTextInput();
         boolean canDispatch = client.gui.screen() == null && !imguiWantsKeys;
+        boolean chordFree = canDispatch && !isCtrlHeld(client);
 
-        if (toggled && canDispatch) {
+        if (toggled && chordFree) {
             setOverlayOpen(!application.isControlPanelOpen());
         }
-        if (deselectPressed && canDispatch) {
+        if (deselectPressed && chordFree) {
             application.getSelection().clear();
         }
-        if (playbackPressed && canDispatch) {
+        if (playbackPressed && chordFree) {
             togglePlayback();
         }
         if (landingConstraintsPressed && canDispatch) {
@@ -303,31 +304,31 @@ public class FabricParkourCalculator implements ClientModInitializer {
                     || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_CONTROL) == GLFW.GLFW_PRESS;
             application.onConstraintKey(enter, remove);
         }
-        if (removeConstraintsPressed && canDispatch) {
+        if (removeConstraintsPressed && chordFree) {
             application.removeSelectedConstraints();
         }
-        if (applySurfaceStatePressed && canDispatch) {
+        if (applySurfaceStatePressed && chordFree) {
             application.applyPathSurfaceState();
         }
-        if (solvePressed && canDispatch) {
+        if (solvePressed && chordFree) {
             application.solveAngleSolver();
         }
-        if (solverStartPressed && canDispatch) {
+        if (solverStartPressed && chordFree) {
             application.setSolverStartTickFromSelection();
         }
-        if (solverEndPressed && canDispatch) {
+        if (solverEndPressed && chordFree) {
             application.setSolverLandingTickFromSelection();
         }
-        if (captureMomentum && canDispatch) {
+        if (captureMomentum && chordFree) {
             application.captureAngleSolverBlock(BlockSelection.Kind.MOMENTUM);
         }
-        if (captureCollision && canDispatch) {
+        if (captureCollision && chordFree) {
             application.captureAngleSolverBlock(BlockSelection.Kind.COLLISION);
         }
-        if (captureLand && canDispatch) {
+        if (captureLand && chordFree) {
             application.captureAngleSolverBlock(BlockSelection.Kind.LAND);
         }
-        if (clearBlocks && canDispatch) {
+        if (clearBlocks && chordFree) {
             application.clearAngleSolverBlocks();
         }
     }
@@ -344,6 +345,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
     public static boolean dispatchOverlayHotkey(int glfwKey) {
         Minecraft client = Minecraft.getInstance();
         if (client.getWindow() == null) return false;
+        if (isCtrlHeld(client) && glfwKey != boundKey(landingConstraintsKeyBinding)) return false;
         if (glfwKey == boundKey(deselectKeyBinding)) {
             application.getSelection().clear();
             return true;
@@ -386,6 +388,12 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     private static int boundKey(KeyMapping mapping) {
         return KeyMappingHelper.getBoundKeyOf(mapping).getValue();
+    }
+
+    private static boolean isCtrlHeld(Minecraft client) {
+        long window = client.getWindow().handle();
+        return GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS
+                || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_CONTROL) == GLFW.GLFW_PRESS;
     }
 
     public static void closeOverlay() {

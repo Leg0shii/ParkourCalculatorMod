@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.core.ui;
 
 import de.legoshi.parkourcalc.core.PlaybackController;
+import de.legoshi.parkourcalc.core.anglesolver.TickConstraints;
 import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.sim.TickState;
@@ -115,6 +116,7 @@ public final class InputOverlay {
     private final ImInt ampBuf = new ImInt();
 
     private final List<InputRow> clipboard = new ArrayList<>();
+    private final List<TickConstraints> clipboardTicks = new ArrayList<>();
     private Runnable onSaveSelectionAsTas;
 
     private int draggingRowIndex = -1;
@@ -1279,8 +1281,12 @@ public final class InputOverlay {
         Set<Integer> rows = selection.getSelectedRows();
         if (rows.isEmpty()) return;
         clipboard.clear();
+        clipboardTicks.clear();
         for (int idx : rows) {
-            if (idx >= 0 && idx < data.size()) clipboard.add(data.get(idx).copy());
+            if (idx >= 0 && idx < data.size()) {
+                clipboard.add(data.get(idx).copy());
+                clipboardTicks.add(angleSolver != null ? angleSolver.snapshotTick(idx) : null);
+            }
         }
     }
 
@@ -1293,6 +1299,11 @@ public final class InputOverlay {
             data.insertRow(insertAt + i, clipboard.get(i).copy());
         }
         solverRowsInserted(insertAt, clipboard.size());
+        if (angleSolver != null) {
+            for (int i = 0; i < clipboard.size() && i < clipboardTicks.size(); i++) {
+                angleSolver.applyTickSnapshot(insertAt + i, clipboardTicks.get(i));
+            }
+        }
         selection.selectRows(insertAt, clipboard.size());
         notifyChange(insertAt);
     }

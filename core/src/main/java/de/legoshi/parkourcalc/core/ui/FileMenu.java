@@ -6,6 +6,7 @@ import de.legoshi.parkourcalc.core.save.Result;
 import de.legoshi.parkourcalc.core.save.SaveBrowseResult;
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveInfo;
+import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.Fonts;
@@ -391,29 +392,29 @@ public final class FileMenu {
         applyResult(r, "Saved as '%s'");
     }
 
-    public void promptSaveSelectionAsTas(List<InputRow> rows, Vec3dCore pos, Vec3dCore vel, float yaw, float pitch) {
+    public void promptSaveSelectionAsTas(List<InputRow> rows, List<Integer> sourceRows, Vec3dCore pos, Vec3dCore vel, float yaw, float pitch, StartResumeState resume) {
         if (rows == null || rows.isEmpty()) return;
         nameInput.set("");
         nameModalError = null;
         lastNameInputSeen = "";
-        nameModalConfirm = name -> doSaveSelectionAsTas(name, rows, pos, vel, yaw, pitch);
+        nameModalConfirm = name -> doSaveSelectionAsTas(name, rows, sourceRows, pos, vel, yaw, pitch, resume);
         pendingNamePopupId = POPUP_NAME_SLICE;
         pendingNameTitle = TITLE_NAME_SLICE;
     }
 
-    private void doSaveSelectionAsTas(String name, List<InputRow> rows, Vec3dCore pos, Vec3dCore vel, float yaw, float pitch) {
+    private void doSaveSelectionAsTas(String name, List<InputRow> rows, List<Integer> sourceRows, Vec3dCore pos, Vec3dCore vel, float yaw, float pitch, StartResumeState resume) {
         if (name.isEmpty()) { nameModalError = "Name cannot be empty."; return; }
         if (controller.exists(name)) {
             overwriteCandidateName = name;
-            overwriteModalConfirm = () -> finalizeSaveSelectionAsTas(name, rows, pos, vel, yaw, pitch);
+            overwriteModalConfirm = () -> finalizeSaveSelectionAsTas(name, rows, sourceRows, pos, vel, yaw, pitch, resume);
             openOverwriteModal = true;
             return;
         }
-        finalizeSaveSelectionAsTas(name, rows, pos, vel, yaw, pitch);
+        finalizeSaveSelectionAsTas(name, rows, sourceRows, pos, vel, yaw, pitch, resume);
     }
 
-    private void finalizeSaveSelectionAsTas(String name, List<InputRow> rows, Vec3dCore pos, Vec3dCore vel, float yaw, float pitch) {
-        Result<String> r = controller.saveSelectionAsNewTas(name, rows, pos, vel, yaw, pitch);
+    private void finalizeSaveSelectionAsTas(String name, List<InputRow> rows, List<Integer> sourceRows, Vec3dCore pos, Vec3dCore vel, float yaw, float pitch, StartResumeState resume) {
+        Result<String> r = controller.saveSelectionAsNewTas(name, rows, sourceRows, pos, vel, yaw, pitch, resume);
         if (r.ok) {
             setStatus("Created '" + r.value + "' from selected ticks.", false);
             cacheStale = true;

@@ -46,9 +46,9 @@ public class UndoIntegrationTest {
             controller.setAngleSolver(solver);
             undo = new UndoController<>(
                     () -> SaveIO.undoSignature(data, runner.getStartPosition(), runner.getStartVelocity(),
-                            runner.getStartYaw(), runner.getStartPitch(), solver),
+                            runner.getStartYaw(), runner.getStartPitch(), runner.getStartResumeState(), solver),
                     () -> SaveIO.buildUndoSnapshot(data, runner.getStartPosition(), runner.getStartVelocity(),
-                            runner.getStartYaw(), runner.getStartPitch(), solver),
+                            runner.getStartYaw(), runner.getStartPitch(), runner.getStartResumeState(), solver),
                     SaveIO::undoJson,
                     controller::applySnapshotJson);
             controller.setUndoController(undo);
@@ -249,6 +249,6 @@ public class UndoIntegrationTest {
 
     private static String snapshot(Rig rig) {
         return SaveIO.undoSnapshotJson(rig.data, rig.runner.getStartPosition(), rig.runner.getStartVelocity(),
-                rig.runner.getStartYaw(), rig.runner.getStartPitch(), rig.solver);
+                rig.runner.getStartYaw(), rig.runner.getStartPitch(), rig.runner.getStartResumeState(), rig.solver);
     }
 }

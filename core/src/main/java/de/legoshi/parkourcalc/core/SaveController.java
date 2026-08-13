@@ -9,6 +9,7 @@ import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.save.SaveInfo;
 import de.legoshi.parkourcalc.core.save.WorldDescriptor;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
+import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
@@ -112,7 +113,8 @@ public final class SaveController {
         if (tempActive) return;
         List<TickState> states = boxController != null ? boxController.getStates() : null;
         preTempSnapshotJson = SaveIO.snapshotJson(store, inputData, runner.getStartPosition(),
-                runner.getStartVelocity(), runner.getStartYaw(), runner.getStartPitch(), angleSolver, states);
+                runner.getStartVelocity(), runner.getStartYaw(), runner.getStartPitch(),
+                runner.getStartResumeState(), angleSolver, states);
         tempActive = true;
     }
 
@@ -139,6 +141,7 @@ public final class SaveController {
             runner.setStartVelocity(SaveIO.velOf(f.start));
             runner.setStartYaw(f.start.yaw);
             runner.setStartPitch(f.start.pitch != null ? f.start.pitch : PlaybackController.DEFAULT_PITCH);
+            runner.setStartResumeState(SaveIO.resumeOf(f.start));
             retriggerSimulation.run();
         } else if (dirtyTick >= 0) {
             retriggerFrom.accept(dirtyTick);
@@ -154,7 +157,8 @@ public final class SaveController {
         return pos.x == curPos.x && pos.y == curPos.y && pos.z == curPos.z
                 && vel.x == curVel.x && vel.y == curVel.y && vel.z == curVel.z
                 && s.yaw == runner.getStartYaw()
-                && pitch == runner.getStartPitch();
+                && pitch == runner.getStartPitch()
+                && StartResumeState.sameAs(SaveIO.resumeOf(s), runner.getStartResumeState());
     }
 
     private int firstChangedRow(List<SaveFile.Row> restored) {
@@ -177,16 +181,18 @@ public final class SaveController {
         List<TickState> states = boxController != null ? boxController.getStates() : null;
         boolean fullDebug = settings != null && settings.saveDebugValues;
         return SaveIO.save(store, rawName, inputData, runner.getStartPosition(), runner.getStartVelocity(),
-                runner.getStartYaw(), runner.getStartPitch(), angleSolver, states, fullDebug);
+                runner.getStartYaw(), runner.getStartPitch(), runner.getStartResumeState(), angleSolver, states, fullDebug);
     }
 
-    public Result<String> saveSelectionAsNewTas(String rawName, List<InputRow> rows, Vec3dCore startPos,
-                                                Vec3dCore startVel, float startYaw, float startPitch) {
+    public Result<String> saveSelectionAsNewTas(String rawName, List<InputRow> rows, List<Integer> sourceRows,
+                                                Vec3dCore startPos, Vec3dCore startVel, float startYaw,
+                                                float startPitch, StartResumeState resume) {
         if (store == null) return Result.failure("Save store not initialized.");
         if (rows == null || rows.isEmpty()) return Result.failure("No ticks selected.");
         InputData slice = new InputData();
         for (InputRow row : rows) slice.getRows().add(row);
-        return SaveIO.save(store, rawName, slice, startPos, startVel, startYaw, startPitch, null, null, false);
+        AngleSolverState sliceSolver = SaveIO.sliceAngleSolverState(angleSolver, sourceRows);
+        return SaveIO.save(store, rawName, slice, startPos, startVel, startYaw, startPitch, resume, sliceSolver, null, false);
     }
 
     public Result<String> save(String name) {
@@ -198,7 +204,7 @@ public final class SaveController {
         List<TickState> states = boxController != null ? boxController.getStates() : null;
         boolean fullDebug = settings != null && settings.saveDebugValues;
         SaveFile file = SaveIO.buildSaveFile(store, inputData, runner.getStartPosition(), runner.getStartVelocity(),
-                runner.getStartYaw(), runner.getStartPitch(), angleSolver, states, fullDebug);
+                runner.getStartYaw(), runner.getStartPitch(), runner.getStartResumeState(), angleSolver, states, fullDebug);
         FileSystemSaveStore target = store;
         writeExecutor().execute(() -> {
             try {
@@ -267,6 +273,7 @@ public final class SaveController {
         runner.setStartVelocity(SaveIO.velOf(s));
         runner.setStartYaw(s.yaw);
         runner.setStartPitch(s.pitch != null ? s.pitch : PlaybackController.DEFAULT_PITCH);
+        runner.setStartResumeState(SaveIO.resumeOf(s));
         retriggerSimulation.run();
         currentName = name;
         dirty = false;

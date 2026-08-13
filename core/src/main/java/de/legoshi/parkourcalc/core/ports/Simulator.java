@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.core.ports;
 
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.sim.Checkpoint;
+import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 
@@ -63,6 +64,17 @@ public interface Simulator {
     float getStartYaw();
 
     void setStartYaw(float yaw);
+
+    default StartResumeState getStartResumeState() {
+        return null;
+    }
+
+    default void setStartResumeState(StartResumeState resume) {
+    }
+
+    default StartResumeState describeCheckpoint(Checkpoint checkpoint) {
+        return null;
+    }
 
     Checkpoint saveCheckpoint();
 

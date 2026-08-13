@@ -287,13 +287,14 @@ public class Forge8ParkourCalculator {
             }
         }
         if (mc.currentScreen == null) {
-            if (toggled) {
+            boolean chordFree = !isCtrlHeld();
+            if (toggled && chordFree) {
                 openOverlay(mc);
             }
-            if (deselectPressed) {
+            if (deselectPressed && chordFree) {
                 application.getSelection().clear();
             }
-            if (playbackPressed) {
+            if (playbackPressed && chordFree) {
                 togglePlayback();
             }
             if (landingConstraintsPressed) {
@@ -301,31 +302,31 @@ public class Forge8ParkourCalculator {
                 boolean remove = Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL);
                 application.onConstraintKey(enter, remove);
             }
-            if (removeConstraintsPressed) {
+            if (removeConstraintsPressed && chordFree) {
                 application.removeSelectedConstraints();
             }
-            if (applySurfaceStatePressed) {
+            if (applySurfaceStatePressed && chordFree) {
                 application.applyPathSurfaceState();
             }
-            if (solvePressed) {
+            if (solvePressed && chordFree) {
                 application.solveAngleSolver();
             }
-            if (solverStartPressed) {
+            if (solverStartPressed && chordFree) {
                 application.setSolverStartTickFromSelection();
             }
-            if (solverEndPressed) {
+            if (solverEndPressed && chordFree) {
                 application.setSolverLandingTickFromSelection();
             }
-            if (captureMomentum) {
+            if (captureMomentum && chordFree) {
                 application.captureAngleSolverBlock(BlockSelection.Kind.MOMENTUM);
             }
-            if (captureCollision) {
+            if (captureCollision && chordFree) {
                 application.captureAngleSolverBlock(BlockSelection.Kind.COLLISION);
             }
-            if (captureLand) {
+            if (captureLand && chordFree) {
                 application.captureAngleSolverBlock(BlockSelection.Kind.LAND);
             }
-            if (clearBlocks) {
+            if (clearBlocks && chordFree) {
                 application.clearAngleSolverBlocks();
             }
         }
@@ -349,7 +350,12 @@ public class Forge8ParkourCalculator {
         ));
     }
 
+    private static boolean isCtrlHeld() {
+        return Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL);
+    }
+
     private boolean dispatchHotkey(int keyCode) {
+        if (isCtrlHeld() && keyCode != landingConstraintsKeyBinding.getKeyCode()) return false;
         if (keyCode == landingConstraintsKeyBinding.getKeyCode()) {
             boolean enter = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
             boolean remove = Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL);
