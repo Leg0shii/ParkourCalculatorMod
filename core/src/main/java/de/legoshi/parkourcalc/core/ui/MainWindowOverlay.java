@@ -265,6 +265,7 @@ public final class MainWindowOverlay implements RenderInterface {
         // ImGui offsets the first entry by half the item spacing; pre-subtract it so "File" lines up under the title text.
         ImGui.setCursorPosX(ThemeManager.headerTextPadX() - ImGui.getStyle().getItemSpacing().x * 0.5f);
         menu("File", fileMenu::renderMenuItems);
+        menu("Edit", this::renderEditMenuItems);
         menu("View", this::renderViewMenuItems);
         menu("Settings", this::renderSettingsMenuItems);
         menu("Help", this::renderHelpMenuItems);
@@ -303,6 +304,11 @@ public final class MainWindowOverlay implements RenderInterface {
             ThemeManager.popMenuPopupChrome();
             ImGui.endMenu();
         }
+    }
+
+    private void renderEditMenuItems() {
+        if (ImGui.menuItem("Undo", "Ctrl+Z") && onUndo != null) onUndo.run();
+        if (ImGui.menuItem("Redo", "Ctrl+Y") && onRedo != null) onRedo.run();
     }
 
     private void renderViewMenuItems() {
