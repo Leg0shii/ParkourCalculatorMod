@@ -154,6 +154,21 @@ public final class Forge12MinecraftAccess implements MinecraftAccess {
         return out;
     }
 
+    @Override
+    public List<AABB> getBlockCollisionBoxes(int x, int y, int z) {
+        List<AABB> out = new ArrayList<>();
+        World world = Minecraft.getMinecraft().world;
+        if (world == null) return out;
+        BlockPos pos = new BlockPos(x, y, z);
+        AxisAlignedBB mask = new AxisAlignedBB(x - 1.0, y - 1.0, z - 1.0, x + 2.0, y + 2.0, z + 2.0);
+        List<AxisAlignedBB> boxes = new ArrayList<>();
+        world.getBlockState(pos).addCollisionBoxToList(world, pos, mask, boxes, null, false);
+        for (AxisAlignedBB bb : boxes) {
+            out.add(new AABB(new Vec3dCore(bb.minX, bb.minY, bb.minZ), new Vec3dCore(bb.maxX, bb.maxY, bb.maxZ)));
+        }
+        return out;
+    }
+
     private static Face toFace(EnumFacing side) {
         if (side == null) return null;
         switch (side) {

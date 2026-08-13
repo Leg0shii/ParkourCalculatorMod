@@ -107,4 +107,22 @@ public class ConstraintKeyControllerTest {
         assertEquals(Constraint.Op.GE, wall.getOp());
         assertEquals("wall sits on the inset collision face, not the outline hit", 5.9375 + HALF, wall.getValue(), EPS);
     }
+
+    @Test
+    public void footprintOnASlabUsesTheSlabNotTheWallProtrudingFromBelow() {
+        mc.addBlock(5, 63, 8, box(5.25, 63.0, 8.25, 5.75, 64.5, 8.75));
+        mc.addBlock(5, 64, 8, box(5.0, 64.0, 8.0, 6.0, 64.5, 9.0));
+        mc.lookedAtBlock = new int[] {5, 64, 8};
+        mc.lookedAtFace = Face.POS_Y;
+        mc.lookedAtHitVec = new Vec3dCore(5.5, 64.5, 8.5);
+
+        controller.onKey(false, false);
+
+        Constraint x = range(Constraint.Field.X);
+        assertEquals("slab footprint, not the wall's narrow cross-section", 5 - HALF, x.getLo(), EPS);
+        assertEquals(6 + HALF, x.getHi(), EPS);
+        Constraint z = range(Constraint.Field.Z);
+        assertEquals(8 - HALF, z.getLo(), EPS);
+        assertEquals(9 + HALF, z.getHi(), EPS);
+    }
 }

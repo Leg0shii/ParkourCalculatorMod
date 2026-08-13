@@ -6,16 +6,26 @@ import de.legoshi.parkourcalc.core.sim.Face;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 public class FakeMinecraftAccess implements MinecraftAccess {
 
     public final List<AABB> worldBoxes = new ArrayList<>();
+    public final Map<List<Integer>, List<AABB>> blockBoxes = new HashMap<>();
     public int[] lookedAtBlock;
     public Face lookedAtFace;
     public Vec3dCore lookedAtHitVec;
     public boolean ready = true;
+
+    public void addBlock(int x, int y, int z, AABB... boxes) {
+        List<AABB> own = new ArrayList<>(Arrays.asList(boxes));
+        blockBoxes.put(Arrays.asList(x, y, z), own);
+        worldBoxes.addAll(own);
+    }
 
     @Override public Vec3dCore getPlayerPosition() { return Vec3dCore.ZERO; }
     @Override public float getPlayerYaw() { return 0f; }
@@ -36,6 +46,13 @@ public class FakeMinecraftAccess implements MinecraftAccess {
             }
         }
         return out;
+    }
+
+    @Override
+    public List<AABB> getBlockCollisionBoxes(int x, int y, int z) {
+        List<AABB> own = blockBoxes.get(Arrays.asList(x, y, z));
+        if (own != null) return new ArrayList<>(own);
+        return MinecraftAccess.super.getBlockCollisionBoxes(x, y, z);
     }
 
     @Override public boolean isMousePressedLeft() { return false; }
