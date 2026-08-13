@@ -88,6 +88,8 @@ public class SimulatorEntity extends EntityPlayer {
     public void resetPlayer(StartResumeState resume) {
         this.noClip = true;
         this.setHealth(this.getMaxHealth());
+        this.setSneaking(false);
+        this.setSize(0.6F, 1.8F);
         this.motionX = 0.0;
         this.motionY = 0.0;
         this.motionZ = 0.0;
@@ -336,6 +338,8 @@ public class SimulatorEntity extends EntityPlayer {
         c.landMovementFactor = this.getAIMoveSpeed();
         c.jumpTicks = this.jumpTicks;
         c.isInWeb = this.isInWeb;
+        c.width = this.width;
+        c.height = this.height;
         return c;
     }
 
@@ -356,6 +360,8 @@ public class SimulatorEntity extends EntityPlayer {
         this.setAIMoveSpeed(c.landMovementFactor);
         this.jumpTicks = c.jumpTicks;
         this.isInWeb = c.isInWeb;
+        this.width = c.width;
+        this.height = c.height;
         this.setPosition(c.posX, c.posY, c.posZ);
     }
 
@@ -386,5 +392,7 @@ public class SimulatorEntity extends EntityPlayer {
         float landMovementFactor;
         int jumpTicks;
         boolean isInWeb;
+        float width;
+        float height;
     }
 }

@@ -410,6 +410,8 @@ public class SimulatorEntity extends Player {
         c.playerInput = this.input.keyPresses;
         c.jumpingCooldown = this.noJumpDelay;
         c.movementMultiplier = this.stuckSpeedMultiplier;
+        c.pose = this.getPose();
+        c.crouching = this.crouching;
         return c;
     }
 
@@ -417,6 +419,9 @@ public class SimulatorEntity extends Player {
         // Start from the clean spawn baseline (same as a full run's resetToStart) so no uncaptured
         // entity state from the previous run leaks in; the overlay below restores the history it carries.
         resetPlayer();
+        this.crouching = c.crouching;
+        this.setPose(c.pose);
+        this.refreshDimensions();
         this.setPos(c.pos);
         this.setDeltaMovement(c.velocity);
         this.setYRot(c.yaw);
@@ -453,5 +458,7 @@ public class SimulatorEntity extends Player {
         Input playerInput;
         int jumpingCooldown;
         Vec3 movementMultiplier;
+        Pose pose;
+        boolean crouching;
     }
 }
