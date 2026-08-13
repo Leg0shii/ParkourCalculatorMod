@@ -184,22 +184,6 @@ public class SolveRunRecordTest {
         assertTrue(back.finishedEpochMs > 0);
     }
 
-    @Test
-    public void problemDumpWritesOncePerHash() throws IOException {
-        Path dir = tmp.newFolder("runs2").toPath();
-        SolveRunLog log = new SolveRunLog(dir, "1.7.0", "26.2");
-        assertTrue(log.needsProblem("abc123"));
-        log.writeProblem("abc123", "{\"v\":1}");
-        assertFalse(log.needsProblem("abc123"));
-        Path file = dir.resolve("problems").resolve("abc123.json");
-        assertTrue(Files.isRegularFile(file));
-        log.writeProblem("abc123", "{\"v\":2}");
-        assertEquals("{\"v\":1}", new String(Files.readAllBytes(file), StandardCharsets.UTF_8));
-        SolveRunLog fresh = new SolveRunLog(dir, "1.7.0", "26.2");
-        assertFalse(fresh.needsProblem("abc123"));
-        assertFalse(log.needsProblem(null));
-    }
-
     private static SolveRunRecord sampleRecord() {
         SolverGraph graph = BuiltinGraphs.fast();
         JumpSpec spec = TestScenarios.spec(12, null);

@@ -181,14 +181,9 @@ public final class AngleSolverEngine {
     private volatile SolveRunLog runLog;
     private volatile RunRecording recording;
     private volatile SolveRunRecord lastRunRecord;
-    private volatile java.util.function.Supplier<String> problemSnapshotSource;
 
     public void setRunLog(SolveRunLog log) {
         this.runLog = log;
-    }
-
-    public void setProblemSnapshotSource(java.util.function.Supplier<String> source) {
-        this.problemSnapshotSource = source;
     }
 
     public SolveRunRecord lastRunRecord() {
@@ -517,11 +512,6 @@ public final class AngleSolverEngine {
                 SolveRunRecord.problemOf(job.spec, countJumps(job.spec.asScenario())),
                 progress, t0);
         recording = rec;
-        SolveRunLog log = runLog;
-        java.util.function.Supplier<String> snapshot = problemSnapshotSource;
-        if (log != null && snapshot != null && log.needsProblem(rec.problem.hash)) {
-            log.writeProblem(rec.problem.hash, snapshot.get());
-        }
         solving = true;
         Thread worker = new Thread(() -> {
             try {
