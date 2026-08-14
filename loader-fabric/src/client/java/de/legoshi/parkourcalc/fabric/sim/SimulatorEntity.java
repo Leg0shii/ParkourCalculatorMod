@@ -463,6 +463,7 @@ public class SimulatorEntity extends Player {
         c.movementMultiplier = this.stuckSpeedMultiplier;
         c.pose = this.getPose();
         c.crouching = this.crouching;
+        c.fallDistance = this.fallDistance;
         return c;
     }
 
@@ -484,17 +485,19 @@ public class SimulatorEntity extends Player {
         this.input.seedKeyPresses(c.playerInput);
         this.noJumpDelay = c.jumpingCooldown;
         this.stuckSpeedMultiplier = c.movementMultiplier;
+        this.fallDistance = c.fallDistance;
     }
 
     public static void applyCheckpoint(net.minecraft.client.player.LocalPlayer p, de.legoshi.parkourcalc.core.sim.Checkpoint state) {
-        if (!(state instanceof Checkpoint)) return;
-        Checkpoint c = (Checkpoint) state;
+        Checkpoint c = de.legoshi.parkourcalc.fabric.sim.paired.PairedCheckpoint.clientPart(state);
+        if (c == null) return;
         p.setOnGround(c.onGround);
         p.horizontalCollision = c.horizontalCollision;
         p.minorHorizontalCollision = c.collidedSoftly;
         p.setSprinting(c.sprinting);
         p.noJumpDelay = c.jumpingCooldown;
         p.stuckSpeedMultiplier = c.movementMultiplier;
+        p.fallDistance = c.fallDistance;
     }
 
     public static final class Checkpoint implements de.legoshi.parkourcalc.core.sim.Checkpoint {
@@ -511,5 +514,6 @@ public class SimulatorEntity extends Player {
         Vec3 movementMultiplier;
         Pose pose;
         boolean crouching;
+        double fallDistance;
     }
 }

@@ -207,11 +207,15 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
 
     @Override
     public final void invalidate() {
+        onInvalidate();
         entity = null;
         pendingStart = null;
         pendingVelocity = null;
         pendingYaw = null;
         startResume = null;
+    }
+
+    protected void onInvalidate() {
     }
 
     private E ensureEntity() {

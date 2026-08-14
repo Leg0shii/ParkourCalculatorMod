@@ -192,6 +192,9 @@ public final class PlaybackController {
         bridge.applyEffects(firstSpeedAmp, firstJumpAmp);
         lastSpeedAmplifier = firstSpeedAmp;
         lastJumpBoostAmplifier = firstJumpAmp;
+        if (settings.pairedSimulation) {
+            bridge.beginPlaybackCapture();
+        }
         running = true;
     }
 
@@ -211,6 +214,9 @@ public final class PlaybackController {
         if (bridge != null) {
             bridge.releaseAllKeys();
             bridge.applyEffects(0, 0);
+            if (settings.pairedSimulation) {
+                bridge.finishPlaybackCapture();
+            }
         }
         lastSpeedAmplifier = 0;
         lastJumpBoostAmplifier = 0;
@@ -347,6 +353,12 @@ public final class PlaybackController {
                 System.out.println(simTickDumps.get(t));
             }
             bridge.dumpPlayerState(t);
+        }
+        if (settings.pairedSimulation) {
+            int t = nextTick - 1 - warmupRemaining;
+            if (t >= 0) {
+                bridge.capturePlaybackSample(t);
+            }
         }
     }
 

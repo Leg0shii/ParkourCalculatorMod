@@ -210,7 +210,17 @@ public class FabricParkourCalculator implements ClientModInitializer {
     }
 
     public static boolean shouldSuppressFallDamage(net.minecraft.world.entity.Entity self) {
-        return application.isPlaybackRunning() && self instanceof net.minecraft.world.entity.player.Player;
+        return application.isPlaybackRunning()
+                && !application.getSettings().pairedSimulation
+                && self instanceof net.minecraft.world.entity.player.Player;
+    }
+
+    public static boolean shouldPinHealthDuringPlayback(net.minecraft.world.entity.Entity self) {
+        if (!application.isPlaybackRunning()) return false;
+        if (!application.getSettings().pairedSimulation) return false;
+        if (!(self instanceof net.minecraft.world.entity.player.Player)) return false;
+        net.minecraft.client.player.LocalPlayer local = Minecraft.getInstance().player;
+        return local != null && self.getUUID().equals(local.getUUID());
     }
 
     private static void onEndTick(Minecraft client) {
@@ -221,6 +231,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     public static void syncFrozenPlayerToServer() {
         playbackBridge.syncFrozenPlayerToServer();
+    }
+
+    public static java.util.List<de.legoshi.parkourcalc.core.sim.TickState> simStates() {
+        return application.getBoxController().getStates();
     }
 
     private static void handleInput(Minecraft client) {

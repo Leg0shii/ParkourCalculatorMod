@@ -54,6 +54,8 @@ public final class MainWindowOverlay implements RenderInterface {
     private final Runnable onRedo;
     private final HudMessagesPanel hudMessagesPanel;
 
+    private ServerEventLogPanel serverEventLogPanel;
+
     private boolean saveChordWasDown;
     private boolean undoChordWasDown;
     private boolean redoChordWasDown;
@@ -95,6 +97,10 @@ public final class MainWindowOverlay implements RenderInterface {
         inputOverlay.setFooterHeightProvider(fileMenu::statusStripHeight);
     }
 
+    public void setServerEventLogPanel(ServerEventLogPanel panel) {
+        this.serverEventLogPanel = panel;
+    }
+
     @Override
     public void render(ImGuiIO io) {
         handleQuickSaveChord();
@@ -104,6 +110,9 @@ public final class MainWindowOverlay implements RenderInterface {
         renderMainWindow(io, true);
         if (settings.viewTickInfo) tickInfoPanel.render(io);
         if (settings.viewPerf) perfOverlay.render(io);
+        if (settings.pairedSimulation && settings.viewServerEvents && serverEventLogPanel != null) {
+            serverEventLogPanel.render(io);
+        }
         hudMessagesPanel.render(io, true);
     }
 
@@ -314,6 +323,10 @@ public final class MainWindowOverlay implements RenderInterface {
     private void renderViewMenuItems() {
         if (ImGui.menuItem("Tick Info", null, settings.viewTickInfo)) {
             settings.viewTickInfo = !settings.viewTickInfo;
+            onSettingsChanged.run();
+        }
+        if (settings.pairedSimulation && ImGui.menuItem("Server Events", null, settings.viewServerEvents)) {
+            settings.viewServerEvents = !settings.viewServerEvents;
             onSettingsChanged.run();
         }
         if (ImGui.menuItem("Performance", null, settings.viewPerf)) {

@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.fabric.mixin;
 
 import de.legoshi.parkourcalc.fabric.sim.SimulatorEntity;
+import de.legoshi.parkourcalc.fabric.sim.paired.PairedServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.server.level.ServerLevel;
@@ -24,7 +25,7 @@ public abstract class LandingParticleSuppressMixin {
     private int pkc$skipLandingParticles(ServerLevel world, ParticleOptions particle,
                                          double x, double y, double z, int count,
                                          double offsetX, double offsetY, double offsetZ, double speed) {
-        if ((Object) this instanceof SimulatorEntity) {
+        if ((Object) this instanceof SimulatorEntity || (Object) this instanceof PairedServerPlayer) {
             return 0;
         }
         return world.sendParticles(particle, x, y, z, count, offsetX, offsetY, offsetZ, speed);

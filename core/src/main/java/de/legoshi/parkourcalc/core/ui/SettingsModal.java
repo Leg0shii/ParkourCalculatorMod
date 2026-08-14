@@ -66,10 +66,20 @@ public final class SettingsModal {
     private static final String TT_DISABLE_FLIGHT_PLAYBACK = "Prevents double-tapping jump from starting creative flight while playback is running (singleplayer). Flight behaves normally again once playback ends.";
     private static final String TT_SOLVER_PRECISION = "Decimal places for Angle Solver stats: solved yaws, objective values, constraint chips, and the constraint value editor.";
     private static final String TT_EXPERIMENTAL_BLOCK_CAPTURE = "Enables in-world block capture: tag blocks by role with hotkeys (M momentum, N collision, K land, Delete clears). The hotkeys are registered at startup, so turning this on or off only takes effect after a game restart.";
+    private static final String TT_PAIRED_SIMULATION = "Runs the simulation as a lockstep client-server pair (singleplayer only): a server-side player processes the simulated movement through the real server code, so server rulings like fall damage, velocity packets, rubber-banding and block interactions show up in the simulated path and in the server event log.";
+    private static final String TT_PAIRED_SIMULATION_UNSUPPORTED = "Paired simulation is not available on this loader yet.";
+
+    private static final String PAIRED_CONFIRM_POPUP_ID = "###paired_sim_confirm";
+    private static final String PAIRED_CONFIRM_TITLE = "Paired simulation";
 
     private final Settings settings;
     private final Runnable onChanged;
     private final TickInfoStatsEditor tickInfoStatsEditor;
+
+    private boolean pairedSimulationSupported;
+    private Runnable onPairedSimulationApplied;
+    private boolean openPairedConfirm;
+    private boolean pairedConfirmTarget;
 
     private static final String[] ARROW_MODE_LABELS = {"Yaw", "Combined"};
     private static final String[] HUD_MESSAGE_ORDER_LABELS = {"Downwards", "Upwards"};
@@ -104,6 +114,11 @@ public final class SettingsModal {
 
     public void open() {
         openRequested = true;
+    }
+
+    public void setPairedSimulationHook(boolean supported, Runnable onApplied) {
+        this.pairedSimulationSupported = supported;
+        this.onPairedSimulationApplied = onApplied;
     }
 
     /** active=false means the main UI is closed; dismiss the modal so it doesn't linger as a frozen, uncloseable ghost. */
@@ -158,12 +173,18 @@ public final class SettingsModal {
             Controls.endTabBar();
         }
 
+        renderPairedSimConfirm();
+
         Modal.footerSeparator();
         if (Controls.secondaryButton(RESET_BTN)) {
+            boolean pairedBefore = settings.pairedSimulation;
             settings.reset();
             ThemeManager.setScrollbarMetrics(settings.scrollbarSize, settings.scrollbarGrabMinSize);
             ConstraintText.statsPrecision = settings.solverStatsPrecision;
             onChanged.run();
+            if (pairedBefore != settings.pairedSimulation && onPairedSimulationApplied != null) {
+                onPairedSimulationApplied.run();
+            }
         }
         ImGui.sameLine();
         if (Modal.footerButton(CLOSE_BTN)) ImGui.closeCurrentPopup();
@@ -274,11 +295,58 @@ public final class SettingsModal {
         }
 
         ThemeManager.sectionSpacing();
+        sectionHeader("Simulation");
+        if (beginLayoutTable("##settings_simulation")) {
+            if (pairedSimulationSupported) {
+                row("Paired client-server sim", () -> {
+                    if (Controls.checkbox("##paired_simulation", settings.pairedSimulation)) {
+                        pairedConfirmTarget = !settings.pairedSimulation;
+                        openPairedConfirm = true;
+                    }
+                    tooltipForLastItem(TT_PAIRED_SIMULATION);
+                });
+            } else {
+                disabledCheckboxRow("Paired client-server sim", "##paired_simulation", settings.pairedSimulation, TT_PAIRED_SIMULATION_UNSUPPORTED);
+            }
+            ThemeManager.endStandardFormTable();
+        }
+
+        ThemeManager.sectionSpacing();
         sectionHeader("Experimental");
         if (beginLayoutTable("##settings_experimental")) {
             checkboxRow("Block capture (restart required)", "##experimental_block_capture", settings.experimentalBlockCapture, TT_EXPERIMENTAL_BLOCK_CAPTURE, v -> settings.experimentalBlockCapture = v);
             ThemeManager.endStandardFormTable();
         }
+    }
+
+    private void renderPairedSimConfirm() {
+        if (openPairedConfirm) {
+            ImGui.openPopup(PAIRED_CONFIRM_POPUP_ID);
+            openPairedConfirm = false;
+        }
+        if (!Modal.begin(PAIRED_CONFIRM_TITLE, PAIRED_CONFIRM_POPUP_ID)) return;
+        ImGui.text("WARNING: this resimulates your file from the beginning.");
+        ImGui.spacing();
+        if (pairedConfirmTarget) {
+            ImGui.text("The simulation gains a server-side player that can interact with");
+            ImGui.text("and modify the world: block interactions the TAS performs, damage");
+            ImGui.text("side effects, and every other consequence of the current file.");
+        } else {
+            ImGui.text("World changes made by the paired simulation are reverted before");
+            ImGui.text("the resimulation, so the world rewinds to its unmodified state.");
+        }
+        Modal.footerSeparator();
+        if (Controls.dangerButton(pairedConfirmTarget ? "Enable" : "Disable")) {
+            settings.pairedSimulation = pairedConfirmTarget;
+            onChanged.run();
+            ImGui.closeCurrentPopup();
+            if (onPairedSimulationApplied != null) {
+                onPairedSimulationApplied.run();
+            }
+        }
+        ImGui.sameLine();
+        if (Modal.footerButton("Cancel")) ImGui.closeCurrentPopup();
+        Modal.end();
     }
 
     private void renderVisualization() {
