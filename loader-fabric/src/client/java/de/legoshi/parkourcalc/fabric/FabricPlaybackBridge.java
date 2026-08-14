@@ -203,6 +203,10 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         acc.pkc$setYRotLast(yaw);
         acc.pkc$setXRotLast(client.getXRot());
         acc.pkc$setPositionReminder(0);
+        client.yBob = yaw;
+        client.yBobO = yaw;
+        client.xBob = client.getXRot();
+        client.xBobO = client.getXRot();
     }
 
     @Override
@@ -234,6 +238,8 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         if (p == null) return;
         p.setYRot(absoluteYaw);
         p.yRotO = absoluteYaw;
+        p.yBob = absoluteYaw;
+        p.yBobO = absoluteYaw;
     }
 
     @Override
@@ -260,6 +266,8 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         if (p == null) return;
         p.setXRot(absolutePitch);
         p.xRotO = absolutePitch;
+        p.xBob = absolutePitch;
+        p.xBobO = absolutePitch;
     }
 
     @Override

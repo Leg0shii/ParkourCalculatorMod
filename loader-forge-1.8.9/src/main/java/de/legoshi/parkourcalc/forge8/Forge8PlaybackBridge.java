@@ -127,6 +127,10 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
         client.lastReportedYaw = yaw;
         client.lastReportedPitch = client.rotationPitch;
         client.positionUpdateTicks = 0;
+        client.renderArmYaw = yaw;
+        client.prevRenderArmYaw = yaw;
+        client.renderArmPitch = client.rotationPitch;
+        client.prevRenderArmPitch = client.rotationPitch;
     }
 
     private void beginGhostPlayback(Vec3dCore pos, Vec3dCore vel, float yaw, de.legoshi.parkourcalc.core.sim.Checkpoint carry) {
@@ -238,6 +242,8 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
         if (p == null) return;
         p.rotationYaw = absoluteYaw;
         p.prevRotationYaw = absoluteYaw;
+        p.renderArmYaw = absoluteYaw;
+        p.prevRenderArmYaw = absoluteYaw;
     }
 
     @Override
@@ -264,6 +270,8 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
         if (p == null) return;
         p.rotationPitch = absolutePitch;
         p.prevRotationPitch = absolutePitch;
+        p.renderArmPitch = absolutePitch;
+        p.prevRenderArmPitch = absolutePitch;
     }
 
     @Override
