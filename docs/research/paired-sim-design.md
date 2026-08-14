@@ -90,7 +90,9 @@ Maintenance note: the pair touches more MC surface than the movement sim (handle
 
 ## 8. Module placement and ports
 
-Core stays Minecraft-free. Core gains: the event log data model (section 10), the extended checkpoint carrier shape (opaque server-side payload alongside the existing one), and whatever LazyEntitySimulator needs to sequence steps 1-6 abstractly. Loaders implement the pair behind the existing port pattern: entity construction, handler wiring, packet synthesis, journal application. The journal's block states are MC types and stay loader-side; core sees only counts and positions for UI. The paired path ships behind a settings toggle (default off) until the section 11 parity gate holds on a loader, then becomes that loader's default simulator.
+Core stays Minecraft-free. Core gains: the event log data model (section 10), the extended checkpoint carrier shape (opaque server-side payload alongside the existing one), and whatever LazyEntitySimulator needs to sequence steps 1-6 abstractly. Loaders implement the pair behind the existing port pattern: entity construction, handler wiring, packet synthesis, journal application. The journal's block states are MC types and stay loader-side; core sees only counts and positions for UI.
+
+The paired sim is opt-in, permanently: a Settings toggle (field on Settings, checkbox row in SettingsModal, persisted like allowDamage, default off), and the single-entity sim stays the default simulator on every loader. Consequences: toggling the setting must retrigger Application.runSimulation() like any input change; with the toggle off, behavior is exactly today's (no fake player constructed, no journal, no event log); and both sim paths are maintained side by side, which makes the section 11 parity gate a standing invariant between them, not a one-time promotion gate.
 
 ## 9. Interplay
 
@@ -106,7 +108,7 @@ The pair emits a per-run log of server-originating events: (tick, kind, payload)
 
 ## 11. Verification gates
 
-1. Baseline parity (the hard gate): on runs where the event log is empty, the paired sim's client trajectory is byte-identical to the current single-entity sim, on every loader, before the toggle defaults on. The pair must not perturb the no-event baseline.
+1. Baseline parity (the hard gate): on runs where the event log is empty, the paired sim's client trajectory is byte-identical to the single-entity sim, on every loader that ships the toggle, and it stays that way for as long as both paths exist (section 8 makes this a standing invariant, since the paired sim is permanently opt-in). The pair must not perturb the no-event baseline.
 2. Liveness: a run containing a position correction continues past it (proves the teleport-ack synthesis); a run containing damage continues with pinned health.
 3. Slime edge case: an edge landing constructed so client and server samples straddle the slime edge produces bounce plus damage plus a velocity-set event in the log, and the resulting trajectory matches an instrumented singleplayer playback of the same inputs under canonical timing.
 4. Trapdoor case: a recorded right click flips the trapdoor mid-pass, the post-flip path uses the new collision shape, the world shows the flip after the pass, and a later resim with the click removed restores the world (journal revert).
