@@ -75,8 +75,7 @@ public final class PairedServerSim {
     private int rightClickDelay;
     private int useSequence;
     private int journalSizeAtTickStart;
-    private boolean queuedUseThisTick;
-    private int journalSizeAtDrain;
+    private boolean shutdownDone;
 
     private PairedServerSim(ServerLevel level, PairedServerPlayer sp, PairedGameHandler handler) {
         this.level = level;
@@ -171,26 +170,30 @@ public final class PairedServerSim {
         journal.endWindow();
     }
 
-    public void beginTick(SimulatorEntity e) {
+    public void beginTick(SimulatorEntity e, InputRow row) {
         journal.beginWindow(tickIndex, true);
         journalSizeAtTickStart = journal.size();
-        queuedUseThisTick = false;
-        if (pendingClientbound.isEmpty()) return;
-        List<Packet<?>> toApply = new ArrayList<>(pendingClientbound);
-        pendingClientbound.clear();
-        for (Packet<?> packet : toApply) {
-            if (packet instanceof ClientboundSetEntityMotionPacket motion) {
-                if (motion.id() != sp.getId()) continue;
-                Vec3 applied = quantizeVelocity(motion.movement());
-                e.setDeltaMovement(applied);
-                addEvent(ServerSimEvent.Kind.VELOCITY_SET, formatVec(applied));
-                System.out.println("[PC-PAIR] T" + (tickIndex + 1) + " velocity applied " + formatVec(applied));
-            } else if (packet instanceof ClientboundPlayerPositionPacket position) {
-                applyPositionCorrection(e, position);
-            } else if (packet instanceof ClientboundKeepAlivePacket keepAlive) {
-                serverbound.add(new ServerboundKeepAlivePacket(keepAlive.getId()));
+        if (!pendingClientbound.isEmpty()) {
+            List<Packet<?>> toApply = new ArrayList<>(pendingClientbound);
+            pendingClientbound.clear();
+            for (Packet<?> packet : toApply) {
+                if (packet instanceof ClientboundSetEntityMotionPacket motion) {
+                    if (motion.id() != sp.getId()) continue;
+                    Vec3 applied = quantizeVelocity(motion.movement());
+                    e.setDeltaMovement(applied);
+                    addEvent(ServerSimEvent.Kind.VELOCITY_SET, formatVec(applied));
+                    System.out.println("[PC-PAIR] T" + (tickIndex + 1) + " velocity applied " + formatVec(applied));
+                } else if (packet instanceof ClientboundPlayerPositionPacket position) {
+                    applyPositionCorrection(e, position);
+                } else if (packet instanceof ClientboundKeepAlivePacket keepAlive) {
+                    serverbound.add(new ServerboundKeepAlivePacket(keepAlive.getId()));
+                }
             }
         }
+        if (row != null) {
+            pitch = PlaybackController.applyPitch(pitch, row);
+        }
+        synthesizeUseItem(e, row);
     }
 
     private void applyPositionCorrection(SimulatorEntity e, ClientboundPlayerPositionPacket packet) {
@@ -208,25 +211,17 @@ public final class PairedServerSim {
                 e.getX(), e.getY(), e.getZ(), e.getYRot(), e.getXRot(), false, false));
     }
 
-    public void afterClientTick(SimulatorEntity e, InputRow row) {
+    public void afterClientTick(SimulatorEntity e) {
         try {
-            if (row != null) {
-                pitch = PlaybackController.applyPitch(pitch, row);
-            }
             synthesizeInputPacket(e);
             synthesizeSprintCommand(e);
             synthesizeMovePacket(e);
-            synthesizeUseItem(e, row);
-            journalSizeAtDrain = journal.size();
             drainServerbound();
             reportReplayMismatch(e);
             sp.tick();
             flushHurtMarked();
             tickHandler();
             emitBlockChangeEvents();
-            if (queuedUseThisTick && journal.size() == journalSizeAtDrain) {
-                addEvent(ServerSimEvent.Kind.INTERACTION_REJECTED, "use had no effect");
-            }
         } finally {
             journal.endWindow();
             tickIndex++;
@@ -303,8 +298,12 @@ public final class PairedServerSim {
             addEvent(ServerSimEvent.Kind.INTERACTION_REJECTED, "no block in reach");
             return;
         }
-        serverbound.add(new ServerboundUseItemOnPacket(InteractionHand.MAIN_HAND, blockHit, ++useSequence));
-        queuedUseThisTick = true;
+        drainServerbound();
+        int sizeBefore = journal.size();
+        handler.handleUseItemOn(new ServerboundUseItemOnPacket(InteractionHand.MAIN_HAND, blockHit, ++useSequence));
+        if (journal.size() == sizeBefore) {
+            addEvent(ServerSimEvent.Kind.INTERACTION_REJECTED, "use had no effect");
+        }
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -404,7 +403,17 @@ public final class PairedServerSim {
         journal.notifyNetChanges();
     }
 
+    public void onReplayStart(int startTick) {
+        journal.rewindForReplay(startTick);
+    }
+
+    public void onReplayEnd() {
+        journal.reapplyAfterReplay();
+    }
+
     public void shutdown() {
+        if (shutdownDone) return;
+        shutdownDone = true;
         journal.shutdown();
         pendingClientbound.clear();
         serverbound.clear();

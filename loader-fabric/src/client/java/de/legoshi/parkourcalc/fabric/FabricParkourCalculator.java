@@ -16,6 +16,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.fabricmc.loader.api.FabricLoader;
@@ -47,8 +48,9 @@ public class FabricParkourCalculator implements ClientModInitializer {
     private static KeyMapping clearBlocksKeyBinding;
     private static boolean blockCaptureEnabled;
 
+    private static final FabricSimulator simulator = new FabricSimulator();
     private static final Application application = new Application(
-            new FabricSimulator(),
+            simulator,
             new FabricMinecraftAccess()
     );
     private static final FabricPlaybackBridge playbackBridge = new FabricPlaybackBridge();
@@ -155,6 +157,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(FabricParkourCalculator::onEndTick);
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> application.onWorldChange());
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> application.onWorldChange());
+        ServerLifecycleEvents.SERVER_STOPPING.register(simulator::onServerStopping);
 
         LevelRenderEvents.AFTER_SOLID_FEATURES.register(FabricParkourCalculator::renderWorldOverlayBeforeTranslucent);
         LevelRenderEvents.COLLECT_SUBMITS.register(FabricParkourCalculator::onCollectSubmits);

@@ -100,4 +100,10 @@ public interface Simulator {
 
     default void onPassEnd() {
     }
+
+    default void onReplayStart(int startTick) {
+    }
+
+    default void onReplayEnd() {
+    }
 }

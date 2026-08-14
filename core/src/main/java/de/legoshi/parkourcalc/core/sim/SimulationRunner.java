@@ -235,4 +235,12 @@ public final class SimulationRunner {
         startPitch = Math.max(-90f, Math.min(90f, pitch));
         simulator.setStartPitch(startPitch);
     }
+
+    public void onReplayStart(int startTick) {
+        simulator.onReplayStart(startTick);
+    }
+
+    public void onReplayEnd() {
+        simulator.onReplayEnd();
+    }
 }

@@ -194,6 +194,7 @@ public final class PlaybackController {
         lastJumpBoostAmplifier = firstJumpAmp;
         if (settings.pairedSimulation) {
             bridge.beginPlaybackCapture();
+            runner.onReplayStart(from);
         }
         running = true;
     }
@@ -216,6 +217,7 @@ public final class PlaybackController {
             bridge.applyEffects(0, 0);
             if (settings.pairedSimulation) {
                 bridge.finishPlaybackCapture();
+                runner.onReplayEnd();
             }
         }
         lastSpeedAmplifier = 0;

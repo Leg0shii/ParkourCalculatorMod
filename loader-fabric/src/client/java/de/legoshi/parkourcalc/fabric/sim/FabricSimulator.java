@@ -64,13 +64,39 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
     }
 
     @Override
+    public void onReplayStart(int startTick) {
+        PairedServerSim p = pair;
+        if (p == null) return;
+        p.level().getServer().execute(() -> p.onReplayStart(startTick));
+    }
+
+    @Override
+    public void onReplayEnd() {
+        PairedServerSim p = pair;
+        if (p == null) return;
+        p.level().getServer().execute(p::onReplayEnd);
+    }
+
+    @Override
     protected void onInvalidate() {
+        PairedServerSim p = pair;
         pair = null;
+        if (p != null) {
+            p.level().getServer().execute(p::shutdown);
+        }
+    }
+
+    public void onServerStopping(MinecraftServer server) {
+        PairedServerSim p = pair;
+        if (p == null || p.level().getServer() != server) return;
+        pair = null;
+        p.shutdown();
     }
 
     private void ensurePair(SimulatorEntity e) {
         if (!pairedEnabled) return;
         if (pair != null && pair.level() != e.level()) {
+            pair.shutdown();
             pair = null;
         }
         if (pair == null) {
@@ -173,7 +199,7 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
             e.tick();
             return;
         }
-        pair.beginTick(e);
+        pair.beginTick(e, lastRow);
         boolean ticked = false;
         try {
             preloadChunksAround(e);
@@ -182,7 +208,7 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
             ticked = true;
         } finally {
             if (ticked) {
-                pair.afterClientTick(e, lastRow);
+                pair.afterClientTick(e);
             } else {
                 pair.abortTick();
             }

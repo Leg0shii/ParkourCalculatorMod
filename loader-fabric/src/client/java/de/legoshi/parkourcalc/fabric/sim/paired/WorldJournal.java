@@ -98,6 +98,40 @@ public final class WorldJournal {
         entries.subList(size, entries.size()).clear();
     }
 
+    public void rewindForReplay(int startTick) {
+        if (entries.isEmpty()) return;
+        beginWindow(currentTick, false);
+        try {
+            for (Entry entry : entries) {
+                if (entry.tick < startTick) {
+                    level.setBlock(entry.pos, entry.after, Block.UPDATE_KNOWN_SHAPE);
+                }
+            }
+            for (int i = entries.size() - 1; i >= 0; i--) {
+                Entry entry = entries.get(i);
+                if (entry.tick >= startTick) {
+                    level.setBlock(entry.pos, entry.before, Block.UPDATE_KNOWN_SHAPE);
+                }
+            }
+        } finally {
+            endWindow();
+        }
+        notifyNetChanges();
+    }
+
+    public void reapplyAfterReplay() {
+        if (entries.isEmpty()) return;
+        beginWindow(currentTick, false);
+        try {
+            for (Entry entry : entries) {
+                level.setBlock(entry.pos, entry.after, Block.UPDATE_KNOWN_SHAPE);
+            }
+        } finally {
+            endWindow();
+        }
+        notifyNetChanges();
+    }
+
     public void notifyNetChanges() {
         for (Map.Entry<BlockPos, BlockState> viewed : clientView.entrySet()) {
             BlockState current = level.getBlockState(viewed.getKey());
