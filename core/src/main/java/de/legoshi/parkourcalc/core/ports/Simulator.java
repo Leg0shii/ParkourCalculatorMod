@@ -94,6 +94,9 @@ public interface Simulator {
     default void setPairedSimulation(boolean enabled) {
     }
 
+    default void setPairedDamage(boolean enabled) {
+    }
+
     default List<ServerSimEvent> takeServerSimEvents() {
         return Collections.emptyList();
     }

@@ -14,6 +14,7 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.OptionalInt;
+import java.util.function.BooleanSupplier;
 
 public final class PairedServerPlayer extends ServerPlayer {
 
@@ -27,6 +28,7 @@ public final class PairedServerPlayer extends ServerPlayer {
 
     private DamageSink damageSink;
     private FallRulingSink fallRulingSink;
+    private BooleanSupplier damageGate = () -> true;
 
     public PairedServerPlayer(MinecraftServer server, ServerLevel level, GameProfile profile) {
         super(server, level, profile, ClientInformation.createDefault());
@@ -42,6 +44,10 @@ public final class PairedServerPlayer extends ServerPlayer {
         this.fallRulingSink = sink;
     }
 
+    public void setDamageGate(BooleanSupplier gate) {
+        this.damageGate = gate;
+    }
+
     @Override
     protected void checkFallDamage(double ya, boolean onGround, BlockState onState, BlockPos pos) {
         if (fallRulingSink != null && onGround && this.fallDistance > 0.0) {
@@ -52,6 +58,9 @@ public final class PairedServerPlayer extends ServerPlayer {
 
     @Override
     public boolean hurtServer(ServerLevel level, DamageSource source, float amount) {
+        if (!damageGate.getAsBoolean()) {
+            return false;
+        }
         boolean applied = super.hurtServer(level, source, amount);
         if (applied && damageSink != null) {
             damageSink.onDamageRuled(source, amount);

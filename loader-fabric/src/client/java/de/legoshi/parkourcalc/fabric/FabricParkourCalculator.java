@@ -213,8 +213,9 @@ public class FabricParkourCalculator implements ClientModInitializer {
     }
 
     public static boolean shouldSuppressFallDamage(net.minecraft.world.entity.Entity self) {
+        Settings settings = application.getSettings();
         return application.isPlaybackRunning()
-                && !application.getSettings().pairedSimulation
+                && !(settings.pairedSimulation && settings.pairedDamage)
                 && self instanceof net.minecraft.world.entity.player.Player;
     }
 

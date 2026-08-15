@@ -68,6 +68,8 @@ public final class SettingsModal {
     private static final String TT_EXPERIMENTAL_BLOCK_CAPTURE = "Enables in-world block capture: tag blocks by role with hotkeys (M momentum, N collision, K land, Delete clears). The hotkeys are registered at startup, so turning this on or off only takes effect after a game restart.";
     private static final String TT_PAIRED_SIMULATION = "Runs the simulation as a lockstep client-server pair (singleplayer only): a server-side player processes the simulated movement through the real server code, so server rulings like fall damage, velocity packets, rubber-banding and block interactions show up in the simulated path and in the server event log.";
     private static final String TT_PAIRED_SIMULATION_UNSUPPORTED = "Paired simulation is not available on this loader yet.";
+    private static final String TT_PAIRED_DAMAGE = "When checked, the server rules damage as vanilla does: fall and bounce damage hit the paired entity and the real player during replay, including slime damage boosts. Uncheck to model a server that cancels all damage: no damage rulings or damage velocity boosts anywhere, while movement corrections (lagbacks) still apply. Changing this resimulates the file.";
+    private static final String TT_PAIRED_DAMAGE_DISABLED = "Only applies while the paired client-server sim is enabled.";
 
     private static final String PAIRED_CONFIRM_POPUP_ID = "###paired_sim_confirm";
     private static final String PAIRED_CONFIRM_TITLE = "Paired simulation";
@@ -178,11 +180,14 @@ public final class SettingsModal {
         Modal.footerSeparator();
         if (Controls.secondaryButton(RESET_BTN)) {
             boolean pairedBefore = settings.pairedSimulation;
+            boolean pairedDamageBefore = settings.pairedDamage;
             settings.reset();
             ThemeManager.setScrollbarMetrics(settings.scrollbarSize, settings.scrollbarGrabMinSize);
             ConstraintText.statsPrecision = settings.solverStatsPrecision;
             onChanged.run();
-            if (pairedBefore != settings.pairedSimulation && onPairedSimulationApplied != null) {
+            boolean pairedChanged = pairedBefore != settings.pairedSimulation
+                    || pairedDamageBefore != settings.pairedDamage;
+            if (pairedChanged && onPairedSimulationApplied != null) {
                 onPairedSimulationApplied.run();
             }
         }
@@ -307,6 +312,20 @@ public final class SettingsModal {
                 });
             } else {
                 disabledCheckboxRow("Paired client-server sim", "##paired_simulation", settings.pairedSimulation, TT_PAIRED_SIMULATION_UNSUPPORTED);
+            }
+            if (pairedSimulationSupported && settings.pairedSimulation) {
+                row("Server damage", () -> {
+                    if (Controls.checkbox("##paired_damage", settings.pairedDamage)) {
+                        settings.pairedDamage = !settings.pairedDamage;
+                        onChanged.run();
+                        if (onPairedSimulationApplied != null) {
+                            onPairedSimulationApplied.run();
+                        }
+                    }
+                    tooltipForLastItem(TT_PAIRED_DAMAGE);
+                });
+            } else {
+                disabledCheckboxRow("Server damage", "##paired_damage", settings.pairedDamage, TT_PAIRED_DAMAGE_DISABLED);
             }
             ThemeManager.endStandardFormTable();
         }

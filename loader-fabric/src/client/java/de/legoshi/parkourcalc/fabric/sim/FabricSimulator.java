@@ -29,6 +29,7 @@ import java.util.List;
 public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> {
 
     private boolean pairedEnabled;
+    private boolean pairedDamage = true;
     private PairedServerSim pair;
     private InputRow lastRow;
     private float startPitch = PlaybackController.DEFAULT_PITCH;
@@ -45,6 +46,12 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
             pair = null;
         }
         pairedEnabled = enabled;
+    }
+
+    @Override
+    public void setPairedDamage(boolean enabled) {
+        pairedDamage = enabled;
+        if (pair != null) pair.setDamageEnabled(enabled);
     }
 
     @Override
@@ -101,7 +108,10 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
         }
         if (pair == null) {
             pair = PairedServerSim.create(e);
-            if (pair != null) pair.setStartPitch(startPitch);
+            if (pair != null) {
+                pair.setStartPitch(startPitch);
+                pair.setDamageEnabled(pairedDamage);
+            }
         }
     }
 

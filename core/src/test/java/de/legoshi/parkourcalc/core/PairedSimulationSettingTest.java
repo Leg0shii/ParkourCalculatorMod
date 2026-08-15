@@ -16,6 +16,7 @@ public class PairedSimulationSettingTest {
     public void defaultsToOff() {
         Settings s = new Settings();
         assertFalse(s.pairedSimulation);
+        assertTrue(s.pairedDamage);
         assertTrue(s.viewServerEvents);
     }
 
@@ -25,6 +26,7 @@ public class PairedSimulationSettingTest {
 
         Settings saved = new Settings();
         saved.pairedSimulation = true;
+        saved.pairedDamage = false;
         saved.viewServerEvents = false;
         SettingsIO.save(file, saved);
 
@@ -32,6 +34,7 @@ public class PairedSimulationSettingTest {
         SettingsIO.load(file, loaded);
 
         assertTrue(loaded.pairedSimulation);
+        assertFalse(loaded.pairedDamage);
         assertFalse(loaded.viewServerEvents);
     }
 
@@ -39,9 +42,11 @@ public class PairedSimulationSettingTest {
     public void resetRestoresDefaults() {
         Settings s = new Settings();
         s.pairedSimulation = true;
+        s.pairedDamage = false;
         s.viewServerEvents = false;
         s.reset();
         assertFalse(s.pairedSimulation);
+        assertTrue(s.pairedDamage);
         assertTrue(s.viewServerEvents);
     }
 }

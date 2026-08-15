@@ -281,6 +281,7 @@ public final class Application {
             settings.pairedSimulation = false;
         }
         simulator.setPairedSimulation(settings.pairedSimulation);
+        simulator.setPairedDamage(settings.pairedDamage);
     }
 
     public void applyPairedSimulationChange() {
@@ -290,6 +291,7 @@ public final class Application {
         StartResumeState startResume = runner.getStartResumeState();
         mc.runOnServerThread(() -> {
             simulator.setPairedSimulation(settings.pairedSimulation);
+            simulator.setPairedDamage(settings.pairedDamage);
             runner.invalidate();
             return null;
         });

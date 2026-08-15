@@ -76,6 +76,7 @@ public final class PairedServerSim {
     private int useSequence;
     private int journalSizeAtTickStart;
     private boolean shutdownDone;
+    private boolean damageEnabled = true;
 
     private PairedServerSim(ServerLevel level, PairedServerPlayer sp, PairedGameHandler handler) {
         this.level = level;
@@ -95,6 +96,7 @@ public final class PairedServerSim {
         handler.setPacketSink(sim.pendingClientbound::add);
         sp.setDamageSink(sim::onDamageRuled);
         sp.setFallRulingSink(sim::onLandingRuled);
+        sp.setDamageGate(sim::isDamageEnabled);
         handler.handleAcceptPlayerLoad(new ServerboundPlayerLoadedPacket());
         return sim;
     }
@@ -105,6 +107,14 @@ public final class PairedServerSim {
 
     public void setStartPitch(float startPitch) {
         this.startPitch = startPitch;
+    }
+
+    public void setDamageEnabled(boolean enabled) {
+        this.damageEnabled = enabled;
+    }
+
+    public boolean isDamageEnabled() {
+        return damageEnabled;
     }
 
     public void resetForFullRun(SimulatorEntity e, StartResumeState resume) {
