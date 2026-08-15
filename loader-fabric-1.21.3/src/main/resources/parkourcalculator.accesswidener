@@ -28,3 +28,24 @@ accessible field net/minecraft/client/renderer/RenderStateShard NO_CULL Lnet/min
 accessible field net/minecraft/client/renderer/RenderStateShard RENDERTYPE_LINES_SHADER Lnet/minecraft/client/renderer/RenderStateShard$ShaderStateShard;
 accessible field net/minecraft/client/renderer/RenderStateShard VIEW_OFFSET_Z_LAYERING Lnet/minecraft/client/renderer/RenderStateShard$LayeringStateShard;
 accessible class net/minecraft/client/renderer/RenderStateShard$LayeringStateShard
+
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl tickCount I
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl firstGoodX D
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl firstGoodY D
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl firstGoodZ D
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl lastGoodX D
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl lastGoodY D
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl lastGoodZ D
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl awaitingPositionFromClient Lnet/minecraft/world/phys/Vec3;
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl awaitingTeleport I
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl awaitingTeleportTime I
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl clientIsFloating Z
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl aboveGroundTickCount I
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl aboveGroundVehicleTickCount I
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl receivedMovePacketCount I
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl knownMovePacketCount I
+accessible method net/minecraft/server/level/ServerPlayerGameMode setGameModeForPlayer (Lnet/minecraft/world/level/GameType;Lnet/minecraft/world/level/GameType;)V
+accessible field net/minecraft/server/level/ServerPlayer spawnInvulnerableTime I
+
+accessible field net/minecraft/server/MinecraftServer nextTickTimeNanos J
+accessible field net/minecraft/server/MinecraftServer delayedTasksMaxNextTickTimeNanos J

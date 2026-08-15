@@ -13,6 +13,8 @@
     "KeyMappingAccessor",
     "KeyboardHandlerMixin",
     "LandingParticleSuppressMixin",
+    "LockstepPongMixin",
+    "LockstepServerMixin",
     "MinecraftMixin",
     "MouseHandlerMixin",
     "PairedChunkTrackingMixin",

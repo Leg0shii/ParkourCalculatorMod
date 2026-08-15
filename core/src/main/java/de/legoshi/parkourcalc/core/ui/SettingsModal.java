@@ -64,6 +64,7 @@ public final class SettingsModal {
     private static final String TT_HUD_MESSAGE_ORDER = "Downwards: new messages appear at the top and the window grows downward. Upwards: new messages appear at the bottom and the window grows upward from its bottom edge, like chat.";
     private static final String TT_KEEP_BOXES_PLAYBACK = "Keeps the tick-box path overlay drawn in-world while playback is running, instead of hiding it.";
     private static final String TT_DISABLE_FLIGHT_PLAYBACK = "Prevents double-tapping jump from starting creative flight while playback is running (singleplayer). Flight behaves normally again once playback ends.";
+    private static final String TT_LOCKSTEP_REPLAY = "Ticks the integrated server in lockstep with the client while playback runs (singleplayer only): each client tick releases exactly one server tick and waits for its packets, so server effects like damage boosts and lagbacks land on the same tick every replay instead of occasionally arriving a tick late and desyncing the run.";
     private static final String TT_SOLVER_PRECISION = "Decimal places for Angle Solver stats: solved yaws, objective values, constraint chips, and the constraint value editor.";
     private static final String TT_EXPERIMENTAL_BLOCK_CAPTURE = "Enables in-world block capture: tag blocks by role with hotkeys (M momentum, N collision, K land, Delete clears). The hotkeys are registered at startup, so turning this on or off only takes effect after a game restart.";
     private static final String TT_PAIRED_SIMULATION = "Runs the simulation as a lockstep client-server pair (singleplayer only): a server-side player processes the simulated movement through the real server code, so server rulings like fall damage, velocity packets, rubber-banding and block interactions show up in the simulated path and in the server event log.";
@@ -517,6 +518,7 @@ public final class SettingsModal {
         sectionHeader("Player");
         if (beginLayoutTable("##settings_playback_player")) {
             checkboxRow("Disable creative flight", "##disable_flight_playback", settings.disableFlightDuringPlayback, TT_DISABLE_FLIGHT_PLAYBACK, v -> settings.disableFlightDuringPlayback = v);
+            checkboxRow("Lockstep replay", "##lockstep_replay", settings.lockstepReplay, TT_LOCKSTEP_REPLAY, v -> settings.lockstepReplay = v);
             ThemeManager.endStandardFormTable();
         }
     }

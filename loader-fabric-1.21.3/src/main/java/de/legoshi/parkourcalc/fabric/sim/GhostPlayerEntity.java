@@ -41,7 +41,8 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
     }
 
     public void applyCarry(de.legoshi.parkourcalc.core.sim.Checkpoint state) {
-        if (!(state instanceof SimulatorEntity.Checkpoint c)) return;
+        SimulatorEntity.Checkpoint c = de.legoshi.parkourcalc.fabric.sim.paired.PairedCheckpoint.clientPart(state);
+        if (c == null) return;
         this.setOnGround(c.onGround);
         this.horizontalCollision = c.horizontalCollision;
         this.minorHorizontalCollision = c.collidedSoftly;
@@ -50,6 +51,7 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
         this.input.keyPresses = c.playerInput;
         this.noJumpDelay = c.jumpingCooldown;
         this.stuckSpeedMultiplier = c.movementMultiplier;
+        this.fallDistance = c.fallDistance;
     }
 
     @Override

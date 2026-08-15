@@ -1,15 +1,12 @@
 package de.legoshi.parkourcalc.fabric.sim.paired;
 
 import com.mojang.authlib.GameProfile;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.sim.ServerSimEvent;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.fabric.sim.SimulatorEntity;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.LpVec3;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.common.ClientboundKeepAlivePacket;
 import net.minecraft.network.protocol.common.ServerboundKeepAlivePacket;
@@ -19,7 +16,6 @@ import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket;
-import net.minecraft.network.protocol.game.ServerboundPlayerLoadedPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -70,6 +66,7 @@ public final class PairedServerSim {
     private boolean lastOnGround;
     private boolean lastHorizontalCollision;
     private Input lastSentInput = Input.EMPTY;
+    private boolean lastShiftKeyDown;
     private boolean lastSprinting;
     private boolean prevRightClick;
     private int rightClickDelay;
@@ -97,7 +94,6 @@ public final class PairedServerSim {
         sp.setDamageSink(sim::onDamageRuled);
         sp.setFallRulingSink(sim::onLandingRuled);
         sp.setDamageGate(sim::isDamageEnabled);
-        handler.handleAcceptPlayerLoad(new ServerboundPlayerLoadedPacket());
         return sim;
     }
 
@@ -133,12 +129,13 @@ public final class PairedServerSim {
     }
 
     private void resetServerSide(SimulatorEntity e) {
-        sp.absSnapTo(e.getX(), e.getY(), e.getZ(), e.getYRot(), 0.0F);
+        sp.absMoveTo(e.getX(), e.getY(), e.getZ(), e.getYRot(), 0.0F);
         sp.setDeltaMovement(e.getDeltaMovement());
-        sp.fallDistance = 0.0;
+        sp.fallDistance = 0.0F;
         sp.setOnGround(false);
         sp.verticalCollisionBelow = false;
         sp.invulnerableTime = 0;
+        sp.spawnInvulnerableTime = 0;
         sp.hurtTime = 0;
         sp.hurtMarked = false;
         sp.setShiftKeyDown(false);
@@ -152,7 +149,8 @@ public final class PairedServerSim {
         }
         sp.hurtMarked = false;
         handler.resetPosition();
-        handler.resetFlyingTicks();
+        handler.aboveGroundTickCount = 0;
+        handler.aboveGroundVehicleTickCount = 0;
         handler.awaitingPositionFromClient = null;
         handler.awaitingTeleport = 0;
         handler.awaitingTeleportTime = 0;
@@ -169,6 +167,7 @@ public final class PairedServerSim {
         lastOnGround = e.onGround();
         lastHorizontalCollision = false;
         lastSentInput = Input.EMPTY;
+        lastShiftKeyDown = false;
         lastSprinting = false;
         prevRightClick = false;
         rightClickDelay = 0;
@@ -188,8 +187,8 @@ public final class PairedServerSim {
             pendingClientbound.clear();
             for (Packet<?> packet : toApply) {
                 if (packet instanceof ClientboundSetEntityMotionPacket motion) {
-                    if (motion.id() != sp.getId()) continue;
-                    Vec3 applied = quantizeVelocity(motion.movement());
+                    if (motion.getId() != sp.getId()) continue;
+                    Vec3 applied = new Vec3(motion.getXa(), motion.getYa(), motion.getZa());
                     e.setDeltaMovement(applied);
                     addEvent(ServerSimEvent.Kind.VELOCITY_SET, formatVec(applied));
                     System.out.println("[PC-PAIR] T" + (tickIndex + 1) + " velocity applied " + formatVec(applied));
@@ -223,6 +222,7 @@ public final class PairedServerSim {
 
     public void afterClientTick(SimulatorEntity e) {
         try {
+            synthesizeShiftCommand(e);
             synthesizeInputPacket(e);
             synthesizeSprintCommand(e);
             synthesizeMovePacket(e);
@@ -235,6 +235,16 @@ public final class PairedServerSim {
         } finally {
             journal.endWindow();
             tickIndex++;
+        }
+    }
+
+    private void synthesizeShiftCommand(SimulatorEntity e) {
+        boolean shift = e.isShiftKeyDown();
+        if (shift != lastShiftKeyDown) {
+            serverbound.add(new ServerboundPlayerCommandPacket(sp, shift
+                    ? ServerboundPlayerCommandPacket.Action.PRESS_SHIFT_KEY
+                    : ServerboundPlayerCommandPacket.Action.RELEASE_SHIFT_KEY));
+            lastShiftKeyDown = shift;
         }
     }
 
@@ -269,9 +279,10 @@ public final class PairedServerSim {
         boolean horizontalCollision = e.horizontalCollision;
         if (move && rot) {
             serverbound.add(new ServerboundMovePlayerPacket.PosRot(
-                    e.position(), e.getYRot(), e.getXRot(), onGround, horizontalCollision));
+                    e.getX(), e.getY(), e.getZ(), e.getYRot(), e.getXRot(), onGround, horizontalCollision));
         } else if (move) {
-            serverbound.add(new ServerboundMovePlayerPacket.Pos(e.position(), onGround, horizontalCollision));
+            serverbound.add(new ServerboundMovePlayerPacket.Pos(
+                    e.getX(), e.getY(), e.getZ(), onGround, horizontalCollision));
         } else if (rot) {
             serverbound.add(new ServerboundMovePlayerPacket.Rot(
                     e.getYRot(), e.getXRot(), onGround, horizontalCollision));
@@ -333,7 +344,7 @@ public final class PairedServerSim {
             sp.yo = sp.getY();
             sp.zo = sp.getZ();
             sp.doTick();
-            sp.absSnapTo(handler.firstGoodX, handler.firstGoodY, handler.firstGoodZ, sp.getYRot(), sp.getXRot());
+            sp.absMoveTo(handler.firstGoodX, handler.firstGoodY, handler.firstGoodZ, sp.getYRot(), sp.getXRot());
             handler.tickCount = before + 1;
             handler.knownMovePacketCount = handler.receivedMovePacketCount;
         }
@@ -358,16 +369,6 @@ public final class PairedServerSim {
             sp.hurtMarked = false;
             pendingClientbound.add(new ClientboundSetEntityMotionPacket(sp));
             System.out.println("[PC-PAIR] T" + (tickIndex + 1) + " velocity queued " + formatVec(sp.getDeltaMovement()));
-        }
-    }
-
-    private static Vec3 quantizeVelocity(Vec3 velocity) {
-        ByteBuf buf = Unpooled.buffer();
-        try {
-            LpVec3.write(buf, velocity);
-            return LpVec3.read(buf);
-        } finally {
-            buf.release();
         }
     }
 
@@ -479,6 +480,7 @@ public final class PairedServerSim {
         c.lastOnGround = lastOnGround;
         c.lastHorizontalCollision = lastHorizontalCollision;
         c.lastSentInput = lastSentInput;
+        c.lastShiftKeyDown = lastShiftKeyDown;
         c.lastSprinting = lastSprinting;
         c.prevRightClick = prevRightClick;
         c.rightClickDelay = rightClickDelay;
@@ -498,7 +500,7 @@ public final class PairedServerSim {
         } finally {
             journal.endWindow();
         }
-        sp.absSnapTo(c.posX, c.posY, c.posZ, c.yRot, c.xRot);
+        sp.absMoveTo(c.posX, c.posY, c.posZ, c.yRot, c.xRot);
         sp.setDeltaMovement(c.velX, c.velY, c.velZ);
         sp.fallDistance = c.fallDistance;
         sp.setOnGround(c.onGround);
@@ -534,6 +536,7 @@ public final class PairedServerSim {
         lastOnGround = c.lastOnGround;
         lastHorizontalCollision = c.lastHorizontalCollision;
         lastSentInput = c.lastSentInput;
+        lastShiftKeyDown = c.lastShiftKeyDown;
         lastSprinting = c.lastSprinting;
         prevRightClick = c.prevRightClick;
         rightClickDelay = c.rightClickDelay;
@@ -555,7 +558,7 @@ public final class PairedServerSim {
         double velX;
         double velY;
         double velZ;
-        double fallDistance;
+        float fallDistance;
         boolean onGround;
         boolean verticalCollisionBelow;
         int invulnerableTime;
@@ -587,6 +590,7 @@ public final class PairedServerSim {
         boolean lastOnGround;
         boolean lastHorizontalCollision;
         Input lastSentInput;
+        boolean lastShiftKeyDown;
         boolean lastSprinting;
         boolean prevRightClick;
         int rightClickDelay;

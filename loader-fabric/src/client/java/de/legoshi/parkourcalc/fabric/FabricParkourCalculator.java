@@ -177,6 +177,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
                 application.getPlayback().stop();
                 playbackBridge.resetInputOverride();
                 playbackBridge.endGhostPlayback();
+                ReplayLockstep.disengage();
                 wasPlaybackRunning = false;
             }
             return;
@@ -184,11 +185,22 @@ public class FabricParkourCalculator implements ClientModInitializer {
         boolean isRunning = application.isPlaybackRunning();
         if (isRunning && !wasPlaybackRunning) {
             playbackBridge.installPlaybackInput(p);
+            maybeEngageLockstep();
         } else if (!isRunning && wasPlaybackRunning) {
             playbackBridge.restorePlaybackInput(p);
             playbackBridge.endGhostPlayback();
+            ReplayLockstep.disengage();
         }
         wasPlaybackRunning = isRunning;
+    }
+
+    private static void maybeEngageLockstep() {
+        if (!application.getSettings().lockstepReplay) return;
+        if (!playbackBridge.isSingleplayer()) return;
+        net.minecraft.server.MinecraftServer server = Minecraft.getInstance().getSingleplayerServer();
+        if (server != null) {
+            ReplayLockstep.engage(server);
+        }
     }
 
     public static boolean isGhostPlaybackActive() {
@@ -231,6 +243,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         // Restore visual yaw after MC physics so render frames don't briefly show
         // the snap value the physics tick used.
         application.postTickPlayback();
+        ReplayLockstep.clientBarrier();
     }
 
     public static void syncFrozenPlayerToServer() {

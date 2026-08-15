@@ -18,6 +18,7 @@ public class PairedSimulationSettingTest {
         assertFalse(s.pairedSimulation);
         assertTrue(s.pairedDamage);
         assertTrue(s.viewServerEvents);
+        assertFalse(s.lockstepReplay);
     }
 
     @Test
@@ -28,6 +29,7 @@ public class PairedSimulationSettingTest {
         saved.pairedSimulation = true;
         saved.pairedDamage = false;
         saved.viewServerEvents = false;
+        saved.lockstepReplay = true;
         SettingsIO.save(file, saved);
 
         Settings loaded = new Settings();
@@ -36,6 +38,7 @@ public class PairedSimulationSettingTest {
         assertTrue(loaded.pairedSimulation);
         assertFalse(loaded.pairedDamage);
         assertFalse(loaded.viewServerEvents);
+        assertTrue(loaded.lockstepReplay);
     }
 
     @Test
@@ -44,9 +47,11 @@ public class PairedSimulationSettingTest {
         s.pairedSimulation = true;
         s.pairedDamage = false;
         s.viewServerEvents = false;
+        s.lockstepReplay = true;
         s.reset();
         assertFalse(s.pairedSimulation);
         assertTrue(s.pairedDamage);
         assertTrue(s.viewServerEvents);
+        assertFalse(s.lockstepReplay);
     }
 }

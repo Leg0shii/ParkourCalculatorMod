@@ -99,6 +99,7 @@ public final class Settings {
     private static final boolean DEFAULT_DISABLE_FLIGHT_DURING_PLAYBACK = true;
     private static final boolean DEFAULT_PAIRED_SIMULATION = false;
     private static final boolean DEFAULT_PAIRED_DAMAGE = true;
+    private static final boolean DEFAULT_LOCKSTEP_REPLAY = false;
 
     private static final float DEFAULT_YAW_FLICK_SPEED = 7200.0f;
     public static final float MIN_YAW_FLICK_SPEED = 30.0f;
@@ -222,6 +223,7 @@ public final class Settings {
     public boolean disableFlightDuringPlayback = DEFAULT_DISABLE_FLIGHT_DURING_PLAYBACK;
     public boolean pairedSimulation = DEFAULT_PAIRED_SIMULATION;
     public boolean pairedDamage = DEFAULT_PAIRED_DAMAGE;
+    public boolean lockstepReplay = DEFAULT_LOCKSTEP_REPLAY;
 
     public static int defaultTickInfoPrecision() {
         return DEFAULT_TICK_INFO_PRECISION;
@@ -316,5 +318,6 @@ public final class Settings {
         disableFlightDuringPlayback = DEFAULT_DISABLE_FLIGHT_DURING_PLAYBACK;
         pairedSimulation = DEFAULT_PAIRED_SIMULATION;
         pairedDamage = DEFAULT_PAIRED_DAMAGE;
+        lockstepReplay = DEFAULT_LOCKSTEP_REPLAY;
     }
 }

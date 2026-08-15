@@ -42,6 +42,10 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
     private ClientInput originalInput;
     private boolean ghostMode;
     private GhostPlayerEntity ghost;
+    private final java.util.List<ReplaySample> replaySamples = new java.util.ArrayList<>();
+
+    private record ReplaySample(int tick, Vec3 pos, Vec3 vel, boolean onGround) {
+    }
 
     InputRow getCurrentRow() {
         return currentRow;
@@ -104,8 +108,11 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
             g.applyCarry(carry);
         } else {
             g.setOnGround(true);
+            g.fallDistance = 0.0F;
         }
-        g.fallDistance = 0.0F;
+        if (!FabricParkourCalculator.getSettings().pairedSimulation) {
+            g.fallDistance = 0.0F;
+        }
         g.setOldPosAndRot();
         g.copyModelCustomisationFrom(client);
         level.addEntity(g);
@@ -114,6 +121,61 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         client.zza = 0.0F;
         client.setJumping(false);
         mc.setCameraEntity(g);
+    }
+
+    @Override
+    public void beginPlaybackCapture() {
+        replaySamples.clear();
+    }
+
+    @Override
+    public void capturePlaybackSample(int tickIndex) {
+        Entity subject = ghostMode ? ghost : Minecraft.getInstance().player;
+        if (subject == null) return;
+        replaySamples.add(new ReplaySample(tickIndex, subject.position(), subject.getDeltaMovement(), subject.onGround()));
+    }
+
+    @Override
+    public void finishPlaybackCapture() {
+        if (replaySamples.isEmpty()) return;
+        java.util.List<de.legoshi.parkourcalc.core.sim.TickState> states = FabricParkourCalculator.simStates();
+        int firstDiverged = -1;
+        for (ReplaySample sample : replaySamples) {
+            int idx = sample.tick() + 1;
+            if (idx < 0 || idx >= states.size()) continue;
+            de.legoshi.parkourcalc.core.sim.TickState sim = states.get(idx);
+            double d = Math.max(Math.abs(sample.pos().x - sim.position.x),
+                    Math.max(Math.abs(sample.pos().y - sim.position.y), Math.abs(sample.pos().z - sim.position.z)));
+            if (d > 1.0e-6) {
+                firstDiverged = sample.tick();
+                break;
+            }
+        }
+        if (firstDiverged < 0) {
+            System.out.println("[PC-REPLAY] no divergence across " + replaySamples.size() + " replayed ticks (eps 1e-6)");
+            replaySamples.clear();
+            return;
+        }
+        System.out.println("[PC-REPLAY] first divergence at T" + (firstDiverged + 1));
+        for (ReplaySample sample : replaySamples) {
+            if (sample.tick() < firstDiverged - 3 || sample.tick() > firstDiverged + 8) continue;
+            int idx = sample.tick() + 1;
+            String simPart;
+            if (idx >= 0 && idx < states.size()) {
+                de.legoshi.parkourcalc.core.sim.TickState sim = states.get(idx);
+                simPart = "sim=" + sim.position.x + "," + sim.position.y + "," + sim.position.z
+                        + " v=" + sim.velocity.x + "," + sim.velocity.y + "," + sim.velocity.z
+                        + " g=" + sim.onGround;
+            } else {
+                simPart = "sim=out-of-range";
+            }
+            System.out.println("[PC-REPLAY] T" + (sample.tick() + 1)
+                    + " real=" + sample.pos().x + "," + sample.pos().y + "," + sample.pos().z
+                    + " v=" + sample.vel().x + "," + sample.vel().y + "," + sample.vel().z
+                    + " g=" + sample.onGround()
+                    + " | " + simPart);
+        }
+        replaySamples.clear();
     }
 
     void syncFrozenPlayerToServer() {
@@ -192,8 +254,11 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
             de.legoshi.parkourcalc.fabric.sim.SimulatorEntity.applyCheckpoint(client, carry);
         } else {
             client.setOnGround(true);
+            client.fallDistance = 0.0F;
         }
-        client.fallDistance = 0.0F;
+        if (!FabricParkourCalculator.getSettings().pairedSimulation) {
+            client.fallDistance = 0.0F;
+        }
         // Suppress the player tick's position packet until the server's requestTeleport
         // arms its teleport-pending state, otherwise the client races and trips moved-wrongly.
         LocalPlayerAccessor acc = (LocalPlayerAccessor) client;

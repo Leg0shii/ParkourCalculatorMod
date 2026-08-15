@@ -33,6 +33,7 @@ public final class PlaybackController {
     private int stopTick;
     private int startTick;
     private int warmupRemaining;
+    private int lastCapturedTick = -1;
     private int lastSpeedAmplifier;
     private int lastJumpBoostAmplifier;
 
@@ -193,6 +194,7 @@ public final class PlaybackController {
         lastSpeedAmplifier = firstSpeedAmp;
         lastJumpBoostAmplifier = firstJumpAmp;
         if (settings.pairedSimulation) {
+            lastCapturedTick = -1;
             bridge.beginPlaybackCapture();
             runner.onReplayStart(from);
         }
@@ -358,7 +360,8 @@ public final class PlaybackController {
         }
         if (settings.pairedSimulation) {
             int t = nextTick - 1 - warmupRemaining;
-            if (t >= 0) {
+            if (t >= 0 && t != lastCapturedTick) {
+                lastCapturedTick = t;
                 bridge.capturePlaybackSample(t);
             }
         }

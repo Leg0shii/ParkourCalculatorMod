@@ -52,8 +52,9 @@ public class FabricParkourCalculator implements ClientModInitializer {
     private static final List<KeyMapping> MOD_KEYS = new ArrayList<>();
     private static boolean keysCreated = false;
 
+    private static final FabricSimulator simulator = new FabricSimulator();
     private static final Application application = new Application(
-            new FabricSimulator(),
+            simulator,
             new FabricMinecraftAccess()
     );
     private static final FabricPlaybackBridge playbackBridge = new FabricPlaybackBridge();
@@ -136,6 +137,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
                 application.getPlayback().stop();
                 playbackBridge.resetInputOverride();
                 playbackBridge.endGhostPlayback();
+                ReplayLockstep.disengage();
                 wasPlaybackRunning = false;
             }
             return;
@@ -143,11 +145,22 @@ public class FabricParkourCalculator implements ClientModInitializer {
         boolean isRunning = application.isPlaybackRunning();
         if (isRunning && !wasPlaybackRunning) {
             playbackBridge.installPlaybackInput(p);
+            maybeEngageLockstep();
         } else if (!isRunning && wasPlaybackRunning) {
             playbackBridge.restorePlaybackInput(p);
             playbackBridge.endGhostPlayback();
+            ReplayLockstep.disengage();
         }
         wasPlaybackRunning = isRunning;
+    }
+
+    private static void maybeEngageLockstep() {
+        if (!application.getSettings().lockstepReplay) return;
+        if (!playbackBridge.isSingleplayer()) return;
+        net.minecraft.server.MinecraftServer server = Minecraft.getInstance().getSingleplayerServer();
+        if (server != null) {
+            ReplayLockstep.engage(server);
+        }
     }
 
     public static void onWorldChange() {
@@ -176,11 +189,31 @@ public class FabricParkourCalculator implements ClientModInitializer {
     }
 
     public static boolean shouldSuppressFallDamage(net.minecraft.world.entity.Entity self) {
-        return application.isPlaybackRunning() && self instanceof net.minecraft.world.entity.player.Player;
+        Settings settings = application.getSettings();
+        return application.isPlaybackRunning()
+                && !(settings.pairedSimulation && settings.pairedDamage)
+                && self instanceof net.minecraft.world.entity.player.Player;
+    }
+
+    public static boolean shouldPinHealthDuringPlayback(net.minecraft.world.entity.Entity self) {
+        if (!application.isPlaybackRunning()) return false;
+        if (!application.getSettings().pairedSimulation) return false;
+        if (!(self instanceof net.minecraft.world.entity.player.Player)) return false;
+        net.minecraft.client.player.LocalPlayer local = Minecraft.getInstance().player;
+        return local != null && self.getUUID().equals(local.getUUID());
+    }
+
+    public static void onServerStopping(net.minecraft.server.MinecraftServer server) {
+        simulator.onServerStopping(server);
+    }
+
+    public static java.util.List<de.legoshi.parkourcalc.core.sim.TickState> simStates() {
+        return application.getBoxController().getStates();
     }
 
     public static void onEndTick() {
         application.postTickPlayback();
+        ReplayLockstep.clientBarrier();
     }
 
     public static void syncFrozenPlayerToServer() {

@@ -36,6 +36,12 @@ public class SimulatorInput extends ClientInput {
         }
     }
 
+    public void seedKeyPresses(Input presses) {
+        this.keyPresses = presses != null ? presses : Input.EMPTY;
+        this.forwardImpulse = axisValue(this.keyPresses.forward(), this.keyPresses.backward());
+        this.leftImpulse = axisValue(this.keyPresses.left(), this.keyPresses.right());
+    }
+
     private static float axisValue(boolean positive, boolean negative) {
         if (positive == negative) {
             return 0.0F;

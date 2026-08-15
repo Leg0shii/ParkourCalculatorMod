@@ -43,3 +43,7 @@ accessible field net/minecraft/server/network/ServerGamePacketListenerImpl above
 accessible field net/minecraft/server/network/ServerGamePacketListenerImpl receivedMovePacketCount I
 accessible field net/minecraft/server/network/ServerGamePacketListenerImpl knownMovePacketCount I
 accessible method net/minecraft/server/level/ServerPlayerGameMode setGameModeForPlayer (Lnet/minecraft/world/level/GameType;Lnet/minecraft/world/level/GameType;)V
+
+accessible field net/minecraft/server/MinecraftServer nextTickTimeNanos J
+accessible field net/minecraft/server/MinecraftServer delayedTasksMaxNextTickTimeNanos J
+accessible method net/minecraft/server/MinecraftServer pollTask ()Z
