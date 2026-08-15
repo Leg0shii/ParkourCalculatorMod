@@ -207,6 +207,10 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
         client.lastReportedYaw = yaw;
         client.lastReportedPitch = client.rotationPitch;
         client.positionUpdateTicks = 0;
+        client.renderArmYaw = yaw;
+        client.prevRenderArmYaw = yaw;
+        client.renderArmPitch = client.rotationPitch;
+        client.prevRenderArmPitch = client.rotationPitch;
     }
 
     @Override
@@ -237,6 +241,8 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
         if (p == null) return;
         p.rotationYaw = absoluteYaw;
         p.prevRotationYaw = absoluteYaw;
+        p.renderArmYaw = absoluteYaw;
+        p.prevRenderArmYaw = absoluteYaw;
     }
 
     @Override
@@ -263,6 +269,8 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
         if (p == null) return;
         p.rotationPitch = absolutePitch;
         p.prevRotationPitch = absolutePitch;
+        p.renderArmPitch = absolutePitch;
+        p.prevRenderArmPitch = absolutePitch;
     }
 
     @Override
