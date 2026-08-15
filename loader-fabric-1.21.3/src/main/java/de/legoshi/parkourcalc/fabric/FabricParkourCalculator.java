@@ -126,6 +126,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
     private static boolean wasPlaybackRunning = false;
 
     public static void onStartTick() {
+        ReplayLockstep.clientBarrierPreTick();
         manageInputLifecycle();
         application.tickPlayback();
     }
@@ -213,7 +214,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     public static void onEndTick() {
         application.postTickPlayback();
-        ReplayLockstep.clientBarrier();
+        ReplayLockstep.clientBarrierPostTick();
     }
 
     public static void syncFrozenPlayerToServer() {

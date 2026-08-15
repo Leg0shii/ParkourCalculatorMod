@@ -5,12 +5,14 @@ import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.Face;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2InputState;
+import de.legoshi.parkourcalc.forge8.sim.Forge8Simulator;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
+import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
@@ -20,6 +22,8 @@ import net.minecraft.world.World;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 
 @SuppressWarnings("DuplicatedCode")
@@ -262,12 +266,34 @@ public final class Forge8MinecraftAccess implements MinecraftAccess {
     }
 
     @Override
-    public <T> T runOnServerThread(Supplier<T> task) {
+    public <T> T runOnServerThread(final Supplier<T> task) {
         // 1.8.9 MinecraftServer.callFromMainThread waits up to one server tick (~50ms) before
         // running, which capped drag at 20fps. ChunkProviderServer has no synchronized or
         // thread-routing here, so we tick on the client thread against WorldServer directly.
         // Reads against a chunk the server is concurrently writing are racy but stable for
         // getBlockState in practice; if races ever surface we can dispatch then.
-        return task.get();
+        if (!Forge8Simulator.needsServerThread()) {
+            return task.get();
+        }
+        IntegratedServer server = Minecraft.getMinecraft().getIntegratedServer();
+        if (server == null) {
+            return task.get();
+        }
+        try {
+            return server.callFromMainThread(new Callable<T>() {
+                @Override
+                public T call() {
+                    return task.get();
+                }
+            }).get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        } catch (ExecutionException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof RuntimeException) throw (RuntimeException) cause;
+            if (cause instanceof Error) throw (Error) cause;
+            throw new RuntimeException(cause);
+        }
     }
 }

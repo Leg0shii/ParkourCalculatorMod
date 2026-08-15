@@ -14,10 +14,12 @@ public final class ReplayLockstep {
 
     private static final long PING_ID_BASE = 0x504B4C4B00000000L;
     private static final long WAIT_TIMEOUT_NANOS = 2_000_000_000L;
+    private static final long BUSY_SPIN_NANOS = 400_000L;
     private static final long PARK_NANOS = 50_000L;
     private static final long GATE_HORIZON_NANOS = 50_000_000L;
 
     private static volatile MinecraftServer engagedServer;
+    private static long pendingTarget = -1L;
     private static final AtomicInteger permits = new AtomicInteger();
     private static final AtomicLong completedTicks = new AtomicLong();
     private static final AtomicLong lastPongId = new AtomicLong(Long.MIN_VALUE);
@@ -28,12 +30,14 @@ public final class ReplayLockstep {
 
     public static void engage(MinecraftServer server) {
         permits.set(0);
+        pendingTarget = -1L;
         engagedServer = server;
     }
 
     public static void disengage() {
         engagedServer = null;
         permits.set(0);
+        pendingTarget = -1L;
     }
 
     public static void serverGate(MinecraftServer server) {
@@ -78,24 +82,42 @@ public final class ReplayLockstep {
         return true;
     }
 
-    public static void clientBarrier() {
+    public static void clientBarrierPostTick() {
         MinecraftServer server = engagedServer;
         if (server == null) return;
         Minecraft mc = Minecraft.getInstance();
         if (mc.isPaused()) {
             permits.set(0);
+            pendingTarget = -1L;
             return;
         }
+        if (pendingTarget >= 0L) return;
         ClientPacketListener connection = mc.getConnection();
         if (connection == null) {
             disengage();
             return;
         }
         if (!awaitPong(connection)) return;
-        long target = completedTicks.get() + 1;
+        pendingTarget = completedTicks.get() + 1;
         permits.incrementAndGet();
-        if (!awaitCompletion(target)) return;
-        awaitPong(connection);
+    }
+
+    public static void clientBarrierPreTick() {
+        MinecraftServer server = engagedServer;
+        if (server == null) return;
+        if (pendingTarget < 0L) return;
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.isPaused()) return;
+        ClientPacketListener connection = mc.getConnection();
+        if (connection == null) {
+            disengage();
+            return;
+        }
+        if (!awaitCompletion(pendingTarget)) return;
+        if (!awaitPong(connection)) return;
+        mc.packetProcessor().processQueuedPackets();
+        mc.runAllTasks();
+        pendingTarget = -1L;
     }
 
     private static boolean consumePermit() {
@@ -105,26 +127,35 @@ public final class ReplayLockstep {
     private static boolean awaitPong(ClientPacketListener connection) {
         long id = pingIds.incrementAndGet();
         connection.send(new ServerboundPingRequestPacket(id));
-        long deadline = System.nanoTime() + WAIT_TIMEOUT_NANOS;
+        long start = System.nanoTime();
         while (lastPongId.get() < id) {
             if (engagedServer == null) return false;
-            if (System.nanoTime() - deadline > 0) {
+            if (!spinPause(start)) {
                 abort("ping flush timed out");
                 return false;
             }
-            LockSupport.parkNanos(PARK_NANOS);
         }
         return true;
     }
 
     private static boolean awaitCompletion(long target) {
-        long deadline = System.nanoTime() + WAIT_TIMEOUT_NANOS;
+        long start = System.nanoTime();
         while (completedTicks.get() < target) {
             if (engagedServer == null) return false;
-            if (System.nanoTime() - deadline > 0) {
+            if (!spinPause(start)) {
                 abort("server tick wait timed out");
                 return false;
             }
+        }
+        return true;
+    }
+
+    private static boolean spinPause(long startNanos) {
+        long elapsed = System.nanoTime() - startNanos;
+        if (elapsed > WAIT_TIMEOUT_NANOS) return false;
+        if (elapsed < BUSY_SPIN_NANOS) {
+            Thread.yield();
+        } else {
             LockSupport.parkNanos(PARK_NANOS);
         }
         return true;

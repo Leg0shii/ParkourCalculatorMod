@@ -166,6 +166,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
     private static boolean wasPlaybackRunning = false;
 
     private static void onStartTick(Minecraft client) {
+        ReplayLockstep.clientBarrierPreTick();
         manageInputLifecycle();
         application.tickPlayback();
     }
@@ -243,7 +244,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         // Restore visual yaw after MC physics so render frames don't briefly show
         // the snap value the physics tick used.
         application.postTickPlayback();
-        ReplayLockstep.clientBarrier();
+        ReplayLockstep.clientBarrierPostTick();
     }
 
     public static void syncFrozenPlayerToServer() {

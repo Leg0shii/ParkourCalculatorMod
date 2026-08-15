@@ -47,3 +47,4 @@ accessible method net/minecraft/server/level/ServerPlayerGameMode setGameModeFor
 accessible field net/minecraft/server/MinecraftServer nextTickTimeNanos J
 accessible field net/minecraft/server/MinecraftServer delayedTasksMaxNextTickTimeNanos J
 accessible method net/minecraft/server/MinecraftServer pollTask ()Z
+accessible method net/minecraft/util/thread/BlockableEventLoop runAllTasks ()V

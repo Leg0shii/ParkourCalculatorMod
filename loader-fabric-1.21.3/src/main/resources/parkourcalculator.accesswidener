@@ -49,3 +49,4 @@ accessible field net/minecraft/server/level/ServerPlayer spawnInvulnerableTime I
 
 accessible field net/minecraft/server/MinecraftServer nextTickTimeNanos J
 accessible field net/minecraft/server/MinecraftServer delayedTasksMaxNextTickTimeNanos J
+accessible method net/minecraft/util/thread/BlockableEventLoop runAllTasks ()V
