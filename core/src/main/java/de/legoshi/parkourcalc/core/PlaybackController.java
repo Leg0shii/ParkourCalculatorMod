@@ -194,8 +194,10 @@ public final class PlaybackController {
         lastSpeedAmplifier = firstSpeedAmp;
         lastJumpBoostAmplifier = firstJumpAmp;
         if (settings.pairedSimulation) {
-            lastCapturedTick = -1;
-            bridge.beginPlaybackCapture();
+            if (DebugFlags.PAIRED_DIAGNOSTICS) {
+                lastCapturedTick = -1;
+                bridge.beginPlaybackCapture();
+            }
             runner.onReplayStart(from);
         }
         running = true;
@@ -218,7 +220,9 @@ public final class PlaybackController {
             bridge.releaseAllKeys();
             bridge.applyEffects(0, 0);
             if (settings.pairedSimulation) {
-                bridge.finishPlaybackCapture();
+                if (DebugFlags.PAIRED_DIAGNOSTICS) {
+                    bridge.finishPlaybackCapture();
+                }
                 runner.onReplayEnd();
             }
         }
@@ -358,7 +362,7 @@ public final class PlaybackController {
             }
             bridge.dumpPlayerState(t);
         }
-        if (settings.pairedSimulation) {
+        if (settings.pairedSimulation && DebugFlags.PAIRED_DIAGNOSTICS) {
             int t = nextTick - 1 - warmupRemaining;
             if (t >= 0 && t != lastCapturedTick) {
                 lastCapturedTick = t;

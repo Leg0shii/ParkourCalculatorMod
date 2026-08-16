@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.fabric.sim.paired;
 
 import com.mojang.authlib.GameProfile;
+import de.legoshi.parkourcalc.core.DebugFlags;
 import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.sim.ServerSimEvent;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
@@ -191,7 +192,9 @@ public final class PairedServerSim {
                     Vec3 applied = new Vec3(motion.getXa(), motion.getYa(), motion.getZa());
                     e.setDeltaMovement(applied);
                     addEvent(ServerSimEvent.Kind.VELOCITY_SET, formatVec(applied));
-                    System.out.println("[PC-PAIR] T" + (tickIndex + 1) + " velocity applied " + formatVec(applied));
+                    if (DebugFlags.PAIRED_DIAGNOSTICS) {
+                        System.out.println("[PC-PAIR] T" + (tickIndex + 1) + " velocity applied " + formatVec(applied));
+                    }
                 } else if (packet instanceof ClientboundPlayerPositionPacket position) {
                     applyPositionCorrection(e, position);
                 } else if (packet instanceof ClientboundKeepAlivePacket keepAlive) {
@@ -214,7 +217,9 @@ public final class PairedServerSim {
         e.setXRot(next.xRot());
         e.setOldPosAndRot();
         addEvent(ServerSimEvent.Kind.POSITION_CORRECTION, "to " + formatVec(next.position()));
-        System.out.println("[PC-PAIR] T" + (tickIndex + 1) + " lagback applied to " + formatVec(next.position()));
+        if (DebugFlags.PAIRED_DIAGNOSTICS) {
+            System.out.println("[PC-PAIR] T" + (tickIndex + 1) + " lagback applied to " + formatVec(next.position()));
+        }
         serverbound.add(new ServerboundAcceptTeleportationPacket(packet.id()));
         serverbound.add(new ServerboundMovePlayerPacket.PosRot(
                 e.getX(), e.getY(), e.getZ(), e.getYRot(), e.getXRot(), false, false));
@@ -351,6 +356,7 @@ public final class PairedServerSim {
     }
 
     private void reportReplayMismatch(SimulatorEntity e) {
+        if (!DebugFlags.PAIRED_DIAGNOSTICS) return;
         double dx = sp.getX() - e.getX();
         double dy = sp.getY() - e.getY();
         double dz = sp.getZ() - e.getZ();
@@ -368,11 +374,14 @@ public final class PairedServerSim {
         if (sp.hurtMarked) {
             sp.hurtMarked = false;
             pendingClientbound.add(new ClientboundSetEntityMotionPacket(sp));
-            System.out.println("[PC-PAIR] T" + (tickIndex + 1) + " velocity queued " + formatVec(sp.getDeltaMovement()));
+            if (DebugFlags.PAIRED_DIAGNOSTICS) {
+                System.out.println("[PC-PAIR] T" + (tickIndex + 1) + " velocity queued " + formatVec(sp.getDeltaMovement()));
+            }
         }
     }
 
     private void onLandingRuled(double fallDistance, BlockState sampledState, BlockPos sampledPos) {
+        if (!DebugFlags.PAIRED_DIAGNOSTICS) return;
         if (fallDistance < 1.0) return;
         System.out.println("[PC-PAIR] T" + (tickIndex + 1) + " landing fallDistance=" + fallDistance
                 + " sampled=" + sampledState.getBlock().getName().getString()
@@ -395,13 +404,15 @@ public final class PairedServerSim {
     private void onDamageRuled(DamageSource source, float amount) {
         addEvent(ServerSimEvent.Kind.DAMAGE_RULED,
                 source.type().msgId() + " for " + String.format(Locale.ROOT, "%.2f", amount));
-        System.out.println("[PC-PAIR] T" + (tickIndex + 1) + " damage-ruled " + source.type().msgId()
-                + " for " + String.format(Locale.ROOT, "%.2f", amount)
-                + " serverMotion=" + formatVec(sp.getDeltaMovement())
-                + " fallDistance=" + sp.fallDistance
-                + " onGround=" + sp.onGround()
-                + " pos=" + sp.getX() + "," + sp.getY() + "," + sp.getZ()
-                + " unloadedChunks=" + sp.touchingUnloadedChunk());
+        if (DebugFlags.PAIRED_DIAGNOSTICS) {
+            System.out.println("[PC-PAIR] T" + (tickIndex + 1) + " damage-ruled " + source.type().msgId()
+                    + " for " + String.format(Locale.ROOT, "%.2f", amount)
+                    + " serverMotion=" + formatVec(sp.getDeltaMovement())
+                    + " fallDistance=" + sp.fallDistance
+                    + " onGround=" + sp.onGround()
+                    + " pos=" + sp.getX() + "," + sp.getY() + "," + sp.getZ()
+                    + " unloadedChunks=" + sp.touchingUnloadedChunk());
+        }
     }
 
     private void addEvent(ServerSimEvent.Kind kind, String detail) {
