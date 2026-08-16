@@ -79,6 +79,7 @@ public final class AngleSolverTable {
     private String dragLabel = "";
     private boolean dragAlt;
     private int dropTick = -1; // cell under the cursor during drag; one frame lagged for the highlight
+    private Runnable deferredAction;
 
     private final Map<Integer, float[]> constraintCellRects = new HashMap<>();
     private final Map<Integer, float[]> stateCellRects = new HashMap<>();
@@ -222,6 +223,10 @@ public final class AngleSolverTable {
     }
 
     public void endRows() {
+        if (deferredAction != null) {
+            deferredAction.run();
+            deferredAction = null;
+        }
         if (!dragging) {
             dropTick = -1;
             return;
@@ -641,6 +646,13 @@ public final class AngleSolverTable {
             clearStateSelection();
         }
 
+        if (ImGui.isItemClicked(2)) {
+            deferredAction = () -> {
+                state.deleteConstraint(tick, index);
+                clearConstraintSelection();
+            };
+        }
+
         if (ImGui.beginPopupContextItem("chipctx" + tick + "_" + index)) {
             renderChipMenu(tick, index);
             ImGui.endPopup();
@@ -814,6 +826,24 @@ public final class AngleSolverTable {
             selectedStateKind = kind;
             selectedStatePotion = potion;
             clearConstraintSelection();
+        }
+
+        if (ImGui.isItemClicked(2)) {
+            deferredAction = () -> {
+                StateOverride ov = state.tickConstraints(tick).getOverride();
+                if (ov != null) {
+                    switch (kind) {
+                        case STATE_INPUTS: ov.clearInputs(); break;
+                        case STATE_SPRINT: ov.clearSprint(); break;
+                        case STATE_SLIP: ov.clearSlipperiness(); break;
+                        case STATE_MEDIUM: ov.clearMedium(); break;
+                        case STATE_ADD: ov.removeAdded(potion); break;
+                        case STATE_REMOVE: ov.getRemoved().remove(potion); break;
+                        default: break;
+                    }
+                }
+                clearStateSelection();
+            };
         }
     }
 
