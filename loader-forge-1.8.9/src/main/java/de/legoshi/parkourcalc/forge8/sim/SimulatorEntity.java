@@ -3,6 +3,7 @@ package de.legoshi.parkourcalc.forge8.sim;
 import com.mojang.authlib.GameProfile;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.forge.core.sim.PlayerSprintMachine;
+import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.SubtickPath;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
@@ -79,7 +80,12 @@ public class SimulatorEntity extends EntityPlayer {
     }
 
     public void resetPlayer() {
+        resetPlayer(null);
+    }
+
+    public void resetPlayer(StartResumeState resume) {
         this.noClip = true;
+        this.extinguish();
         this.setHealth(this.getMaxHealth());
         this.motionX = 0.0;
         this.motionY = 0.0;
@@ -100,6 +106,28 @@ public class SimulatorEntity extends EntityPlayer {
         this.tickMedium = null;
         this.tickGroundFriction = Double.NaN;
         this.tickSoulsandCells = 0;
+        if (resume != null) {
+            applyResume(resume);
+        }
+    }
+
+    private void applyResume(StartResumeState resume) {
+        this.onGround = resume.onGround;
+        this.isCollidedHorizontally = resume.wallContact;
+        this.setSprinting(resume.sprinting);
+        this.jumpTicks = resume.jumpCooldown;
+        this.isInWeb = resume.stuckMultiplier != null;
+        this.jumpMovementFactor = !Float.isNaN(resume.airSprintFactor)
+                ? resume.airSprintFactor
+                : (resume.sprinting ? 0.026F : 0.02F);
+        boolean prevSneak = resume.heldLastTick.contains(InputRow.Key.SNEAK);
+        float prevForward = (resume.heldLastTick.contains(InputRow.Key.W) ? 1.0F : 0.0F)
+                - (resume.heldLastTick.contains(InputRow.Key.S) ? 1.0F : 0.0F);
+        if (prevSneak) {
+            prevForward *= 0.3F;
+        }
+        this.sprintState = new PlayerSprintMachine.State(prevSneak, prevForward,
+                resume.sprintWindow, resume.sprintTicksLeft, resume.sprinting);
     }
 
     @Override
@@ -303,6 +331,7 @@ public class SimulatorEntity extends EntityPlayer {
         c.landMovementFactor = this.getAIMoveSpeed();
         c.jumpTicks = this.jumpTicks;
         c.isInWeb = this.isInWeb;
+        c.fallDistance = this.fallDistance;
         return c;
     }
 
@@ -323,12 +352,13 @@ public class SimulatorEntity extends EntityPlayer {
         this.setAIMoveSpeed(c.landMovementFactor);
         this.jumpTicks = c.jumpTicks;
         this.isInWeb = c.isInWeb;
+        this.fallDistance = c.fallDistance;
         this.setPosition(c.posX, c.posY, c.posZ);
     }
 
     public static void applyCheckpoint(EntityLivingBase p, de.legoshi.parkourcalc.core.sim.Checkpoint state) {
-        if (!(state instanceof Checkpoint)) return;
-        Checkpoint c = (Checkpoint) state;
+        Checkpoint c = de.legoshi.parkourcalc.forge8.sim.paired.PairedCheckpoint.clientPart(state);
+        if (c == null) return;
         p.onGround = c.onGround;
         p.isCollidedHorizontally = c.isCollidedHorizontally;
         p.setSprinting(c.sprinting);
@@ -336,6 +366,7 @@ public class SimulatorEntity extends EntityPlayer {
         p.setAIMoveSpeed(c.landMovementFactor);
         p.jumpMovementFactor = c.jumpMovementFactor;
         p.jumpTicks = c.jumpTicks;
+        p.fallDistance = c.fallDistance;
         if (c.isInWeb) {
             p.setInWeb();
         }
@@ -353,5 +384,6 @@ public class SimulatorEntity extends EntityPlayer {
         float landMovementFactor;
         int jumpTicks;
         boolean isInWeb;
+        float fallDistance;
     }
 }

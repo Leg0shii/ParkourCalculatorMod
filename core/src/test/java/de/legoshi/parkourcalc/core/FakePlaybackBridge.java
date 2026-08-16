@@ -18,6 +18,7 @@ public class FakePlaybackBridge implements PlaybackBridge {
     public Vec3dCore teleportVel;
     public float teleportYaw;
     public Checkpoint teleportCarry;
+    public float pitch;
     public final Map<InputRow.Key, Boolean> keys = new EnumMap<InputRow.Key, Boolean>(InputRow.Key.class);
 
     @Override public boolean isSingleplayer() { return true; }
@@ -34,6 +35,7 @@ public class FakePlaybackBridge implements PlaybackBridge {
 
     @Override public void setKey(InputRow.Key key, boolean pressed) { keys.put(key, pressed); }
     @Override public void setYaw(float absoluteYaw) { }
+    @Override public void setPitch(float absolutePitch) { pitch = absolutePitch; }
     @Override public void releaseAllKeys() { releaseAllCalls++; keys.clear(); }
     @Override public void suppressFlight() { suppressFlightCalls++; }
     @Override public void closeUI() { }

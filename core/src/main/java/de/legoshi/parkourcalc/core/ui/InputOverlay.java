@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.core.ui;
 
 import de.legoshi.parkourcalc.core.PlaybackController;
+import de.legoshi.parkourcalc.core.anglesolver.TickConstraints;
 import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.sim.TickState;
@@ -21,6 +22,8 @@ import imgui.flag.*;
 import imgui.type.ImInt;
 import imgui.type.ImString;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -39,6 +42,7 @@ public final class InputOverlay {
     private static final String COL_PITCH = "Pit";
     private static final String COL_SPEED = "Speed";
     private static final String COL_JUMP_BOOST = "Jump";
+    private static final String COL_HOTBAR = "Slot";
     private static final float INDEX_DIGIT_WIDTH = 32f;
     private static final float INDEX_DIGIT_SLACK = 6f;
     private static final float TABLE_MIN_HEIGHT = 80f;
@@ -55,6 +59,7 @@ public final class InputOverlay {
 
     private static final String ID_SPEED_SUFFIX = "##speed";
     private static final String ID_JUMP_SUFFIX = "##jump";
+    private static final String ID_HOTBAR_SUFFIX = "##hotbar";
     private static final String ID_PITCH_INPUT = "##pitch";
 
     private static final String MENU_APPLY_SPEED_TO_ALL = "Apply tick 1 Speed to all rows";
@@ -66,7 +71,14 @@ public final class InputOverlay {
     private static final float AMP_CELL_WIDTH = 110;
     private static final float AMP_COLUMN_WIDTH = 120;
 
+    private static final String[] HOTBAR_LABELS = {
+            "-", "1", "2", "3", "4", "5", "6", "7", "8", "9"
+    };
+    private static final float HOTBAR_CELL_WIDTH = 54;
+    private static final float HOTBAR_COLUMN_WIDTH = 64;
+
     private static final String MENU_SET_TO_PLAYER = "Set to user position";
+    private static final String MENU_TELEPORT_TO_TICK = "Teleport player to tick %d";
     private static final String LABEL_ROWS = "Rows:";
     private static final String MENU_ADD_AT_END = "Add %d row(s) at end";
     private static final String MENU_ADD_ABOVE = "Add %d row(s) above";
@@ -75,6 +87,7 @@ public final class InputOverlay {
     private static final String MENU_DELETE_SHORTCUT = "Del";
 
     private static final String MENU_DUPLICATE = "Duplicate selected";
+    private static final String MENU_SAVE_AS_NEW_TAS = "Save selected as new TAS";
 
     private static final String MENU_LOCK_YAW = "Lock yaw value";
     private static final String MENU_UNLOCK_YAW = "Unlock yaw value";
@@ -110,6 +123,11 @@ public final class InputOverlay {
     private final ImString pitchInput = new ImString(32);
     private final ImInt rowsToAdd = new ImInt(1);
     private final ImInt ampBuf = new ImInt();
+    private final ImInt hotbarBuf = new ImInt();
+
+    private final List<InputRow> clipboard = new ArrayList<>();
+    private final List<TickConstraints> clipboardTicks = new ArrayList<>();
+    private Runnable onSaveSelectionAsTas;
 
     private int draggingRowIndex = -1;
     private int editingYawRow = -1;
@@ -208,6 +226,10 @@ public final class InputOverlay {
         this.startState = startState;
     }
 
+    public void setSaveSelectionAsTasHandler(Runnable handler) {
+        this.onSaveSelectionAsTas = handler;
+    }
+
     private void solverRowsInserted(int index, int count) {
         if (angleSolver != null) angleSolver.onRowsInserted(index, count);
     }
@@ -292,6 +314,10 @@ public final class InputOverlay {
         return settings.showColJumpBoost;
     }
 
+    private boolean isHotbarColumnVisible() {
+        return settings.showColHotbar;
+    }
+
     private int potionColumnCount() {
         return (isSpeedColumnVisible() ? 1 : 0) + (isJumpBoostColumnVisible() ? 1 : 0);
     }
@@ -301,6 +327,7 @@ public final class InputOverlay {
         for (InputRow.Key key : MOVEMENT_KEYS) if (isKeyColumnVisible(key)) count++;
         for (InputRow.Key key : MODIFIER_KEYS) if (isKeyColumnVisible(key)) count++;
         for (InputRow.Key key : MOUSE_KEYS) if (isKeyColumnVisible(key)) count++;
+        if (isHotbarColumnVisible()) count++;
         if (isYawColumnVisible()) count++;
         if (isPitchColumnVisible()) count++;
         return count;
@@ -334,6 +361,7 @@ public final class InputOverlay {
         for (InputRow.Key key : MOUSE_KEYS) {
             if (isKeyColumnVisible(key)) columnSum += ThemeManager.tableColumnWidth(headerLabel(key), 0f);
         }
+        if (isHotbarColumnVisible()) columnSum += ThemeManager.tableColumnWidth(COL_HOTBAR, HOTBAR_COLUMN_WIDTH * scale);
         boolean speed = isSpeedColumnVisible();
         boolean jump = isJumpBoostColumnVisible();
         if (speed) {
@@ -546,6 +574,9 @@ public final class InputOverlay {
         setupKeyColumns(MOVEMENT_KEYS);
         setupKeyColumns(MODIFIER_KEYS);
         setupKeyColumns(MOUSE_KEYS);
+        if (isHotbarColumnVisible()) {
+            ImGui.tableSetupColumn(COL_HOTBAR, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableColumnWidth(COL_HOTBAR, HOTBAR_COLUMN_WIDTH * scale));
+        }
         if (isYawColumnVisible()) {
             ImGui.tableSetupColumn(COL_YAW, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableColumnWidth(COL_YAW, yawColumnWidth()));
         }
@@ -582,6 +613,11 @@ public final class InputOverlay {
         col = renderKeyColumnHeaders(MOVEMENT_KEYS, col);
         col = renderKeyColumnHeaders(MODIFIER_KEYS, col);
         col = renderKeyColumnHeaders(MOUSE_KEYS, col);
+        if (isHotbarColumnVisible()) {
+            ImGui.tableSetColumnIndex(col++);
+            ThemeManager.tableHeaderCentered(COL_HOTBAR);
+            TooltipUtil.onHover(headerColTooltip(COL_HOTBAR));
+        }
         if (isYawColumnVisible()) {
             ImGui.tableSetColumnIndex(col++);
             ThemeManager.tableHeaderCentered(COL_YAW);
@@ -636,6 +672,7 @@ public final class InputOverlay {
             case COL_PITCH: return "Pitch turn per tick; press F to lock a cell to an absolute pitch (-90 up to 90 down). Empty = inherit previous tick's pitch.";
             case COL_SPEED: return "Speed potion amplifier (none = no effect).";
             case COL_JUMP_BOOST: return "Jump Boost potion amplifier (none = no effect).";
+            case COL_HOTBAR: return "Held hotbar slot (1-9) to switch to during playback. Empty = keep the previous slot.";
             default: return col;
         }
     }
@@ -842,6 +879,7 @@ public final class InputOverlay {
         }
 
         renderKeyColumns(row, index, rowH);
+        if (isHotbarColumnVisible()) renderHotbarColumn(row, index);
         if (isYawColumnVisible()) renderYawColumn(row, index, centerY);
         if (isPitchColumnVisible()) renderPitchColumn(row, index, centerY);
         renderPotionColumns(row, index);
@@ -1167,6 +1205,17 @@ public final class InputOverlay {
         }
     }
 
+    private void renderHotbarColumn(InputRow row, int rowIndex) {
+        ImGui.tableNextColumn();
+        float hotW = HOTBAR_CELL_WIDTH * uiScale();
+        hotbarBuf.set(row.getHotbarSlot());
+        ThemeManager.centerNextItem(hotW);
+        if (Controls.tableCombo(ID_HOTBAR_SUFFIX, hotbarBuf, HOTBAR_LABELS, hotW)) {
+            row.setHotbarSlot(hotbarBuf.get());
+            notifyChange(rowIndex);
+        }
+    }
+
     private void renderPotionColumns(InputRow row, int rowIndex) {
         float ampW = AMP_CELL_WIDTH * uiScale();
         if (isSpeedColumnVisible()) {
@@ -1265,6 +1314,37 @@ public final class InputOverlay {
         notifyChange(dirtyTick == Integer.MAX_VALUE ? -1 : dirtyTick);
     }
 
+    public void copySelectedRows() {
+        Set<Integer> rows = selection.getSelectedRows();
+        if (rows.isEmpty()) return;
+        clipboard.clear();
+        clipboardTicks.clear();
+        for (int idx : rows) {
+            if (idx >= 0 && idx < data.size()) {
+                clipboard.add(data.get(idx).copy());
+                clipboardTicks.add(angleSolver != null ? angleSolver.snapshotTick(idx) : null);
+            }
+        }
+    }
+
+    public void pasteRows() {
+        if (clipboard.isEmpty()) return;
+        Set<Integer> selected = selection.getSelectedRows();
+        int insertAt = selected.isEmpty() ? data.size() : Collections.max(selected) + 1;
+        insertAt = Math.min(insertAt, data.size());
+        for (int i = 0; i < clipboard.size(); i++) {
+            data.insertRow(insertAt + i, clipboard.get(i).copy());
+        }
+        solverRowsInserted(insertAt, clipboard.size());
+        if (angleSolver != null) {
+            for (int i = 0; i < clipboard.size() && i < clipboardTicks.size(); i++) {
+                angleSolver.applyTickSnapshot(insertAt + i, clipboardTicks.get(i));
+            }
+        }
+        selection.selectRows(insertAt, clipboard.size());
+        notifyChange(insertAt);
+    }
+
     private void renderContextMenu() {
 
         boolean blockedByOtherPopup = ImGui.isPopupOpen("", ImGuiPopupFlags.AnyPopup) && !ImGui.isPopupOpen(ID_CONTEXT_MENU);
@@ -1282,6 +1362,7 @@ public final class InputOverlay {
         renderRowCountInput();
         renderAddRowOptions();
         renderDuplicateOption();
+        renderSaveAsNewTasOption();
 
         // Segment 2: position / yaw state for the current rows.
         ThemeManager.paddedSeparator();
@@ -1289,6 +1370,7 @@ public final class InputOverlay {
             onSetPlayerPosition.run();
             notifyFullResim();
         }
+        renderTeleportToTickOption();
         renderApplyPotionOptions();
         renderYawLockOption();
         renderPitchLockOption();
@@ -1297,6 +1379,17 @@ public final class InputOverlay {
         renderDeleteOption();
 
         ImGui.endPopup();
+    }
+
+    private void renderTeleportToTickOption() {
+        if (playback == null || boxController == null || !playback.canTeleportToTick()) return;
+        int row = selection.singleSelectedRow();
+        if (row < 0) return;
+        TickState state = boxController.getState(row);
+        if (state == null) return;
+        if (contextButton(String.format(MENU_TELEPORT_TO_TICK, row + 1))) {
+            playback.teleportToTick(state.position, state.yaw, boxController.getPitch(row));
+        }
     }
 
     private void renderYawLockOption() {
@@ -1366,6 +1459,14 @@ public final class InputOverlay {
 
         if (contextButton(MENU_DUPLICATE)) {
             duplicateSelectedRows();
+        }
+    }
+
+    private void renderSaveAsNewTasOption() {
+        if (onSaveSelectionAsTas == null || selection.getSelectedRows().isEmpty()) return;
+
+        if (contextButton(MENU_SAVE_AS_NEW_TAS)) {
+            onSaveSelectionAsTas.run();
         }
     }
 

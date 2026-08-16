@@ -8,13 +8,20 @@
     "LocalPlayerTickMixin",
     "FallDamageSuppressMixin",
     "GameRendererMixin",
+    "HealthPinMixin",
     "HudMixin",
     "KeyMappingAccessor",
     "KeyboardHandlerMixin",
     "LandingParticleSuppressMixin",
+    "LockstepPongMixin",
+    "LockstepServerMixin",
     "MinecraftMixin",
     "MouseHandlerMixin",
-    "PlayerAccessor"
+    "PacketDiagnosticsMixin",
+    "PairedChunkTrackingMixin",
+    "PairedSimSuppressMixin",
+    "PlayerAccessor",
+    "WorldJournalMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -140,6 +140,20 @@ public final class AngleSolverTable {
         state.onRowsInserted(index, count);
     }
 
+    public TickConstraints snapshotTick(int row) {
+        TickConstraints tc = state.tickConstraintsOrNull(row);
+        return tc != null ? tc.copy() : null;
+    }
+
+    public void applyTickSnapshot(int row, TickConstraints snapshot) {
+        if (snapshot == null) return;
+        TickConstraints dst = state.tickConstraints(row);
+        for (Constraint c : snapshot.getConstraints()) {
+            dst.getConstraints().add(c.copy());
+        }
+        dst.getOverride().copyFrom(snapshot.getOverride());
+    }
+
     public void onRowsRemoved(java.util.List<Integer> descendingIndices) {
         state.onRowsRemoved(descendingIndices);
     }

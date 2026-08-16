@@ -62,6 +62,10 @@ public interface MinecraftAccess {
         return Collections.emptyList();
     }
 
+    default List<AABB> getBlockCollisionBoxes(int x, int y, int z) {
+        return getCollisionBoxes(x, y, z, x, y, z);
+    }
+
     default double getEyeHeight(boolean sneaking) {
         return 1.62;
     }
@@ -96,6 +100,14 @@ public interface MinecraftAccess {
     }
 
     default boolean isRedoChordDown() {
+        return false;
+    }
+
+    default boolean isCopyChordDown() {
+        return false;
+    }
+
+    default boolean isPasteChordDown() {
         return false;
     }
 

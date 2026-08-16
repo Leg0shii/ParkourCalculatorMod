@@ -73,6 +73,24 @@ public class InputRowSaveRoundTripTest {
     }
 
     @Test
+    public void hotbarSlotRoundTrips() throws Exception {
+        FileSystemSaveStore store = store(Files.createTempDirectory("pkc-rt-hotbar"));
+
+        InputData in = new InputData();
+        InputRow r0 = new InputRow();
+        r0.setHotbarSlot(3);
+        in.getRows().add(r0);
+
+        InputRow r1 = new InputRow();
+        in.getRows().add(r1);
+
+        InputData out = saveAndReload(store, in);
+        assertEquals(2, out.size());
+        assertEquals(3, out.get(0).getHotbarSlot());
+        assertEquals("an unset hotbar slot stays 0 (inherit)", 0, out.get(1).getHotbarSlot());
+    }
+
+    @Test
     public void absentPitchRoundTripsAsNull() throws Exception {
         FileSystemSaveStore store = store(Files.createTempDirectory("pkc-rt-nopitch"));
 

@@ -16,6 +16,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.fabricmc.loader.api.FabricLoader;
@@ -47,8 +48,9 @@ public class FabricParkourCalculator implements ClientModInitializer {
     private static KeyMapping clearBlocksKeyBinding;
     private static boolean blockCaptureEnabled;
 
+    private static final FabricSimulator simulator = new FabricSimulator();
     private static final Application application = new Application(
-            new FabricSimulator(),
+            simulator,
             new FabricMinecraftAccess()
     );
     private static final FabricPlaybackBridge playbackBridge = new FabricPlaybackBridge();
@@ -155,6 +157,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(FabricParkourCalculator::onEndTick);
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> application.onWorldChange());
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> application.onWorldChange());
+        ServerLifecycleEvents.SERVER_STOPPING.register(simulator::onServerStopping);
 
         LevelRenderEvents.AFTER_SOLID_FEATURES.register(FabricParkourCalculator::renderWorldOverlayBeforeTranslucent);
         LevelRenderEvents.COLLECT_SUBMITS.register(FabricParkourCalculator::onCollectSubmits);
@@ -163,6 +166,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
     private static boolean wasPlaybackRunning = false;
 
     private static void onStartTick(Minecraft client) {
+        ReplayLockstep.clientBarrierPreTick();
         manageInputLifecycle();
         application.tickPlayback();
     }
@@ -174,6 +178,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
                 application.getPlayback().stop();
                 playbackBridge.resetInputOverride();
                 playbackBridge.endGhostPlayback();
+                ReplayLockstep.disengage();
                 wasPlaybackRunning = false;
             }
             return;
@@ -181,11 +186,22 @@ public class FabricParkourCalculator implements ClientModInitializer {
         boolean isRunning = application.isPlaybackRunning();
         if (isRunning && !wasPlaybackRunning) {
             playbackBridge.installPlaybackInput(p);
+            maybeEngageLockstep();
         } else if (!isRunning && wasPlaybackRunning) {
             playbackBridge.restorePlaybackInput(p);
             playbackBridge.endGhostPlayback();
+            ReplayLockstep.disengage();
         }
         wasPlaybackRunning = isRunning;
+    }
+
+    private static void maybeEngageLockstep() {
+        if (!application.getSettings().lockstepReplay) return;
+        if (!playbackBridge.isSingleplayer()) return;
+        net.minecraft.server.MinecraftServer server = Minecraft.getInstance().getSingleplayerServer();
+        if (server != null) {
+            ReplayLockstep.engage(server);
+        }
     }
 
     public static boolean isGhostPlaybackActive() {
@@ -210,17 +226,42 @@ public class FabricParkourCalculator implements ClientModInitializer {
     }
 
     public static boolean shouldSuppressFallDamage(net.minecraft.world.entity.Entity self) {
-        return application.isPlaybackRunning() && self instanceof net.minecraft.world.entity.player.Player;
+        Settings settings = application.getSettings();
+        return application.isPlaybackRunning()
+                && !(settings.pairedSimulation && settings.pairedDamage)
+                && self instanceof net.minecraft.world.entity.player.Player;
+    }
+
+    public static boolean shouldPinHealthDuringPlayback(net.minecraft.world.entity.Entity self) {
+        if (!application.isPlaybackRunning()) return false;
+        if (!application.getSettings().pairedSimulation) return false;
+        if (!(self instanceof net.minecraft.world.entity.player.Player)) return false;
+        net.minecraft.client.player.LocalPlayer local = Minecraft.getInstance().player;
+        return local != null && self.getUUID().equals(local.getUUID());
+    }
+
+    public static boolean shouldSuppressDamageDuringPlayback(net.minecraft.world.entity.Entity self) {
+        Settings settings = application.getSettings();
+        if (!application.isPlaybackRunning()) return false;
+        if (settings.pairedSimulation && settings.pairedDamage) return false;
+        if (!(self instanceof net.minecraft.world.entity.player.Player)) return false;
+        net.minecraft.client.player.LocalPlayer local = Minecraft.getInstance().player;
+        return local != null && self.getUUID().equals(local.getUUID());
     }
 
     private static void onEndTick(Minecraft client) {
         // Restore visual yaw after MC physics so render frames don't briefly show
         // the snap value the physics tick used.
         application.postTickPlayback();
+        ReplayLockstep.clientBarrierPostTick();
     }
 
     public static void syncFrozenPlayerToServer() {
         playbackBridge.syncFrozenPlayerToServer();
+    }
+
+    public static java.util.List<de.legoshi.parkourcalc.core.sim.TickState> simStates() {
+        return application.getBoxController().getStates();
     }
 
     private static void handleInput(Minecraft client) {
@@ -285,14 +326,15 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
         boolean imguiWantsKeys = application.isControlPanelOpen() && ImGui.getIO().getWantTextInput();
         boolean canDispatch = client.gui.screen() == null && !imguiWantsKeys;
+        boolean chordFree = canDispatch && !isCtrlHeld(client);
 
-        if (toggled && canDispatch) {
+        if (toggled && chordFree) {
             setOverlayOpen(!application.isControlPanelOpen());
         }
-        if (deselectPressed && canDispatch) {
+        if (deselectPressed && chordFree) {
             application.getSelection().clear();
         }
-        if (playbackPressed && canDispatch) {
+        if (playbackPressed && chordFree) {
             togglePlayback();
         }
         if (landingConstraintsPressed && canDispatch) {
@@ -303,31 +345,31 @@ public class FabricParkourCalculator implements ClientModInitializer {
                     || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_CONTROL) == GLFW.GLFW_PRESS;
             application.onConstraintKey(enter, remove);
         }
-        if (removeConstraintsPressed && canDispatch) {
+        if (removeConstraintsPressed && chordFree) {
             application.removeSelectedConstraints();
         }
-        if (applySurfaceStatePressed && canDispatch) {
+        if (applySurfaceStatePressed && chordFree) {
             application.applyPathSurfaceState();
         }
-        if (solvePressed && canDispatch) {
+        if (solvePressed && chordFree) {
             application.solveAngleSolver();
         }
-        if (solverStartPressed && canDispatch) {
+        if (solverStartPressed && chordFree) {
             application.setSolverStartTickFromSelection();
         }
-        if (solverEndPressed && canDispatch) {
+        if (solverEndPressed && chordFree) {
             application.setSolverLandingTickFromSelection();
         }
-        if (captureMomentum && canDispatch) {
+        if (captureMomentum && chordFree) {
             application.captureAngleSolverBlock(BlockSelection.Kind.MOMENTUM);
         }
-        if (captureCollision && canDispatch) {
+        if (captureCollision && chordFree) {
             application.captureAngleSolverBlock(BlockSelection.Kind.COLLISION);
         }
-        if (captureLand && canDispatch) {
+        if (captureLand && chordFree) {
             application.captureAngleSolverBlock(BlockSelection.Kind.LAND);
         }
-        if (clearBlocks && canDispatch) {
+        if (clearBlocks && chordFree) {
             application.clearAngleSolverBlocks();
         }
     }
@@ -344,6 +386,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
     public static boolean dispatchOverlayHotkey(int glfwKey) {
         Minecraft client = Minecraft.getInstance();
         if (client.getWindow() == null) return false;
+        if (isCtrlHeld(client) && glfwKey != boundKey(landingConstraintsKeyBinding)) return false;
         if (glfwKey == boundKey(deselectKeyBinding)) {
             application.getSelection().clear();
             return true;
@@ -386,6 +429,12 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     private static int boundKey(KeyMapping mapping) {
         return KeyMappingHelper.getBoundKeyOf(mapping).getValue();
+    }
+
+    private static boolean isCtrlHeld(Minecraft client) {
+        long window = client.getWindow().handle();
+        return GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS
+                || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_CONTROL) == GLFW.GLFW_PRESS;
     }
 
     public static void closeOverlay() {

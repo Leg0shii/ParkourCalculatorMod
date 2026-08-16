@@ -19,7 +19,7 @@ public class SimulatorInput extends ClientInput {
 
     @Override
     public void tick() {
-        this.keyPresses = new Input(
+        seedKeyPresses(new Input(
                 data.isKeyActive(InputRow.Key.W),
                 data.isKeyActive(InputRow.Key.S),
                 data.isKeyActive(InputRow.Key.A),
@@ -27,10 +27,13 @@ public class SimulatorInput extends ClientInput {
                 data.isKeyActive(InputRow.Key.JUMP),
                 data.isKeyActive(InputRow.Key.SNEAK),
                 data.isKeyActive(InputRow.Key.SPRINT)
-        );
+        ));
+    }
 
-        float forward = axisValue(keyPresses.forward(), keyPresses.backward());
-        float strafe = axisValue(keyPresses.left(), keyPresses.right());
+    public void seedKeyPresses(Input presses) {
+        this.keyPresses = presses != null ? presses : Input.EMPTY;
+        float forward = axisValue(this.keyPresses.forward(), this.keyPresses.backward());
+        float strafe = axisValue(this.keyPresses.left(), this.keyPresses.right());
         this.moveVector = new Vec2(strafe, forward).normalized();
     }
 

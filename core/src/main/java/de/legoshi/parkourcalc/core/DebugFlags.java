@@ -10,6 +10,7 @@ public final class DebugFlags {
 
     public static boolean DUMP_TICK_STATE = false;
     public static boolean COMPARE_PARTIAL_SIM = false;
+    public static boolean PAIRED_DIAGNOSTICS = false;
 
     public static List<String> simTickSink = null;
 

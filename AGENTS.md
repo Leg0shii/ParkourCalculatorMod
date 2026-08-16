@@ -82,9 +82,8 @@ The default run excludes the expensive solver suites and finishes in seconds; `-
 Run the full suite locally whenever the change touches solver code (`core/.../anglesolver/`, the model classes, velocity finder, graph) or the problem/capture resources; for anything else the fast suite is enough, CI covers the rest. When a new test class drives the solver engine on real captures, tag it `@Category(SlowSolverTests.class)` so the default run stays fast.
 
 - Folder-driven problem checks: `core/src/test/.../anglesolver/ProblemsTest.java` (parameterized over `problems/solve/` and `problems/closedform/`, sharing captures in `core/src/test/resources/captures/`). Map in `anglesolver/TESTS.md`.
-- Bit-exact model regression: `core/src/test/.../anglesolver/ModernStepRegressionTest.java` pins `ExactJumpModel`, `McSineTable`, `Constants` against a recorded 1.21.10 run. A failure means the model drifted; do not edit model code without a green run first.
 
-There is **no** Fabric/Forge test task. The old `loader-fabric-1.21.10:test` + `M3RegressionTest` (spike0) paths are gone; the regression moved to `core/` and was renamed `ModernStepRegressionTest`. `tableStyleCheck` runs on `:core:check`/`build` (CI skips it with `-x tableStyleCheck`); it has a known false positive on `SolverWidgets`.
+There is **no** Fabric/Forge test task; the old per-loader test paths are gone. `tableStyleCheck` runs on `:core:check`/`build` (CI skips it with `-x tableStyleCheck`); it has a known false positive on `SolverWidgets`.
 
 
 ## Reading MC source (use local decompiled sources, don't fetch from the web)

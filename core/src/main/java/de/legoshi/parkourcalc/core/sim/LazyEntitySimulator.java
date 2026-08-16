@@ -19,11 +19,12 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     private Vec3dCore pendingStart;
     private Vec3dCore pendingVelocity;
     private Float pendingYaw;
+    private StartResumeState startResume;
     private int debugTickIndex;
 
     @Override
     public final void resetToStart() {
-        resetEntity(ensureEntity());
+        resetEntity(ensureEntity(), startResume);
         debugTickIndex = 0;
     }
 
@@ -180,6 +181,21 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     }
 
     @Override
+    public final StartResumeState getStartResumeState() {
+        return startResume;
+    }
+
+    @Override
+    public final void setStartResumeState(StartResumeState resume) {
+        startResume = resume;
+    }
+
+    @Override
+    public final StartResumeState describeCheckpoint(Checkpoint checkpoint) {
+        return checkpoint == null ? null : describeResume(checkpoint);
+    }
+
+    @Override
     public final Checkpoint saveCheckpoint() {
         return saveCheckpoint(ensureEntity());
     }
@@ -191,10 +207,15 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
 
     @Override
     public final void invalidate() {
+        onInvalidate();
         entity = null;
         pendingStart = null;
         pendingVelocity = null;
         pendingYaw = null;
+        startResume = null;
+    }
+
+    protected void onInvalidate() {
     }
 
     private E ensureEntity() {
@@ -207,7 +228,9 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     /** Any of pendingStart/pendingVelocity/pendingYaw may be null; subclass falls back to defaults. */
     protected abstract E createEntity(Vec3dCore pendingStart, Vec3dCore pendingVelocity, Float pendingYaw);
 
-    protected abstract void resetEntity(E entity);
+    protected abstract void resetEntity(E entity, StartResumeState resume);
+
+    protected abstract StartResumeState describeResume(Checkpoint checkpoint);
 
     protected abstract void setInput(E entity, InputRow row);
 

@@ -72,15 +72,16 @@ public final class ParkourCalcGuiScreen extends GuiScreen {
         }
 
         if (!wantsText) {
-            if (keyCode == toggleKeyCode) {
+            boolean ctrlHeld = Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL);
+            if (keyCode == toggleKeyCode && !ctrlHeld) {
                 closeOverlay();
                 return;
             }
-            if (keyCode == deselectKeyCode) {
+            if (keyCode == deselectKeyCode && !ctrlHeld) {
                 selection.clear();
                 return;
             }
-            if (keyCode == playbackKeyCode) {
+            if (keyCode == playbackKeyCode && !ctrlHeld) {
                 togglePlayback.run();
                 return;
             }

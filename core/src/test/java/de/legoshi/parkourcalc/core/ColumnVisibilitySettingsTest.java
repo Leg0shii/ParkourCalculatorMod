@@ -25,6 +25,7 @@ public class ColumnVisibilitySettingsTest {
         assertFalse(s.showColPitch);
         assertFalse(s.showColLeftClick);
         assertFalse(s.showColRightClick);
+        assertFalse(s.showColHotbar);
     }
 
     @Test
@@ -36,6 +37,7 @@ public class ColumnVisibilitySettingsTest {
         saved.showColSneak = false;
         saved.showColPitch = true;
         saved.showColLeftClick = true;
+        saved.showColHotbar = true;
         SettingsIO.save(file, saved);
 
         Settings loaded = new Settings();
@@ -45,6 +47,7 @@ public class ColumnVisibilitySettingsTest {
         assertFalse(loaded.showColSneak);
         assertTrue("opted-in new column must persist", loaded.showColPitch);
         assertTrue(loaded.showColLeftClick);
+        assertTrue("opted-in hotbar column must persist", loaded.showColHotbar);
         assertTrue(loaded.showColA);
         assertFalse(loaded.showColRightClick);
     }
@@ -55,9 +58,11 @@ public class ColumnVisibilitySettingsTest {
         s.showColA = false;
         s.showColPitch = true;
         s.showColRightClick = true;
+        s.showColHotbar = true;
         s.reset();
         assertTrue(s.showColA);
         assertFalse(s.showColPitch);
         assertFalse(s.showColRightClick);
+        assertFalse(s.showColHotbar);
     }
 }

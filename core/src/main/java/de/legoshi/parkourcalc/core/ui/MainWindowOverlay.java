@@ -54,9 +54,13 @@ public final class MainWindowOverlay implements RenderInterface {
     private final Runnable onRedo;
     private final HudMessagesPanel hudMessagesPanel;
 
+    private ServerEventLogPanel serverEventLogPanel;
+
     private boolean saveChordWasDown;
     private boolean undoChordWasDown;
     private boolean redoChordWasDown;
+    private boolean copyChordWasDown;
+    private boolean pasteChordWasDown;
 
     private boolean openAboutRequested;
     private float lastHeaderHeight;
@@ -93,14 +97,22 @@ public final class MainWindowOverlay implements RenderInterface {
         inputOverlay.setFooterHeightProvider(fileMenu::statusStripHeight);
     }
 
+    public void setServerEventLogPanel(ServerEventLogPanel panel) {
+        this.serverEventLogPanel = panel;
+    }
+
     @Override
     public void render(ImGuiIO io) {
         handleQuickSaveChord();
         handleUndoRedoChords(io);
+        handleCopyPasteChords(io);
         fileMenu.tickAutoSave();
         renderMainWindow(io, true);
         if (settings.viewTickInfo) tickInfoPanel.render(io);
         if (settings.viewPerf) perfOverlay.render(io);
+        if (settings.pairedSimulation && settings.viewServerEvents && serverEventLogPanel != null) {
+            serverEventLogPanel.render(io);
+        }
         hudMessagesPanel.render(io, true);
     }
 
@@ -121,6 +133,19 @@ public final class MainWindowOverlay implements RenderInterface {
         }
         undoChordWasDown = undoDown;
         redoChordWasDown = redoDown;
+    }
+
+    private void handleCopyPasteChords(ImGuiIO io) {
+        boolean ready = mc != null && mc.isReady();
+        boolean copyDown = ready && mc.isCopyChordDown();
+        boolean pasteDown = ready && mc.isPasteChordDown();
+        boolean typing = io != null && io.getWantTextInput();
+        if (fileMenu.hasOpenTas() && !typing) {
+            if (copyDown && !copyChordWasDown) inputOverlay.copySelectedRows();
+            if (pasteDown && !pasteChordWasDown) inputOverlay.pasteRows();
+        }
+        copyChordWasDown = copyDown;
+        pasteChordWasDown = pasteDown;
     }
 
     /** Display-only panels kept visible while the main UI is closed. ImGui receives no input here, so they don't edit. */
@@ -249,6 +274,7 @@ public final class MainWindowOverlay implements RenderInterface {
         // ImGui offsets the first entry by half the item spacing; pre-subtract it so "File" lines up under the title text.
         ImGui.setCursorPosX(ThemeManager.headerTextPadX() - ImGui.getStyle().getItemSpacing().x * 0.5f);
         menu("File", fileMenu::renderMenuItems);
+        menu("Edit", this::renderEditMenuItems);
         menu("View", this::renderViewMenuItems);
         menu("Settings", this::renderSettingsMenuItems);
         menu("Help", this::renderHelpMenuItems);
@@ -289,9 +315,18 @@ public final class MainWindowOverlay implements RenderInterface {
         }
     }
 
+    private void renderEditMenuItems() {
+        if (ImGui.menuItem("Undo", "Ctrl+Z") && onUndo != null) onUndo.run();
+        if (ImGui.menuItem("Redo", "Ctrl+Y") && onRedo != null) onRedo.run();
+    }
+
     private void renderViewMenuItems() {
         if (ImGui.menuItem("Tick Info", null, settings.viewTickInfo)) {
             settings.viewTickInfo = !settings.viewTickInfo;
+            onSettingsChanged.run();
+        }
+        if (settings.pairedSimulation && ImGui.menuItem("Server Events", null, settings.viewServerEvents)) {
+            settings.viewServerEvents = !settings.viewServerEvents;
             onSettingsChanged.run();
         }
         if (ImGui.menuItem("Performance", null, settings.viewPerf)) {

@@ -1,7 +1,7 @@
 package de.legoshi.parkourcalc.core.anglesolver.solver;
 
 /** MC MathHelper/Mth sine table reproduced bit-identical, in both historical forms. sinStep/cosStep
- *  equal the float chain used through 1.21.10 (float scale 10430.378F, int cast). sinStep262/cosStep262
+ *  equal the float chain used before the 26.x rewrite (float scale 10430.378F, int cast). sinStep262/cosStep262
  *  equal the 26.x rewrite: double scale 65536/(2*PI), long cast + mask, and a table regenerated from
  *  {@code Math.sin(i / scale)} instead of {@code Math.sin(i * 2 * PI / 65536)}; both the index and some
  *  table values differ from the old chain at bucket boundaries. */

@@ -28,6 +28,20 @@ public final class SaveFile {
         public double[] vel;
         public float yaw;
         public Float pitch;
+        public Resume resume;
+    }
+
+    public static final class Resume {
+        public boolean onGround;
+        public boolean wall;
+        public boolean softWall;
+        public boolean sprinting;
+        public int sprintWindow;
+        public int sprintTicksLeft;
+        public int jumpCooldown;
+        public Float airSprintFactor;
+        public double[] stuck;
+        public List<String> heldLastTick;
     }
 
     public static final class Row {
@@ -38,6 +52,7 @@ public final class SaveFile {
         public boolean pitchLocked;
         public int speedAmplifier;
         public int jumpBoostAmplifier;
+        public int hotbarSlot;
     }
 
     /** Angle Solver problem: defaults, per-tick constraints/overrides, and last solve result. */

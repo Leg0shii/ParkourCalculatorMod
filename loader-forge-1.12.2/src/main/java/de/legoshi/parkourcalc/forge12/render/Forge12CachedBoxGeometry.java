@@ -108,6 +108,19 @@ public final class Forge12CachedBoxGeometry {
                 (n - from) * PathVertexLayout.FACE_VERTS_PER_BOX,
                 r -> boxController.render(r, patch.facePicker, from, n)
         );
+        if (hitboxEdges != 0) {
+            final boolean full = patch.showFullHitbox;
+            writeVerts(faceVbo, hitboxBase + hitboxStarts[from], GL11.GL_TRIANGLES, BoxRenderer.Mode.FACES,
+                    hitboxStarts[n] - hitboxStarts[from],
+                    r -> {
+                        if (full) {
+                            boxController.renderHitboxFullWireframe(r, patch.hitboxPicker, useSubtick, from, n);
+                        } else {
+                            boxController.renderHitboxFloorOutline(r, patch.hitboxPicker, useSubtick, from, n);
+                        }
+                    }
+            );
+        }
         if (arrowsPerBox > 0 && from < n - 1) {
             int stride = arrowsPerBox * PathVertexLayout.ARROW_VERTS_PER_BOX;
             writeVerts(faceVbo, arrowBase + from * stride, GL11.GL_TRIANGLES, BoxRenderer.Mode.FACES,

@@ -27,3 +27,24 @@ accessible field com/mojang/blaze3d/systems/GpuDevice backend Lcom/mojang/blaze3
 # keep the pending slowdown instead of dropping a tick of it; widened because
 # applyCheckpoint writes it on a LocalPlayer reference.
 accessible field net/minecraft/world/entity/Entity stuckSpeedMultiplier Lnet/minecraft/world/phys/Vec3;
+
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl tickCount I
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl firstGoodX D
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl firstGoodY D
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl firstGoodZ D
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl lastGoodX D
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl lastGoodY D
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl lastGoodZ D
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl awaitingPositionFromClient Lnet/minecraft/world/phys/Vec3;
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl awaitingTeleport I
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl awaitingTeleportTime I
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl clientIsFloating Z
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl aboveGroundTickCount I
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl receivedMovePacketCount I
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl knownMovePacketCount I
+accessible method net/minecraft/server/level/ServerPlayerGameMode setGameModeForPlayer (Lnet/minecraft/world/level/GameType;Lnet/minecraft/world/level/GameType;)V
+
+accessible field net/minecraft/server/MinecraftServer nextTickTimeNanos J
+accessible field net/minecraft/server/MinecraftServer delayedTasksMaxNextTickTimeNanos J
+accessible method net/minecraft/server/MinecraftServer pollTask ()Z
+accessible method net/minecraft/util/thread/BlockableEventLoop runAllTasks ()V

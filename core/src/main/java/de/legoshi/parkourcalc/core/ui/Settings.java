@@ -56,6 +56,7 @@ public final class Settings {
     private static final boolean DEFAULT_SHOW_SUBTICK = false;
     private static final boolean DEFAULT_SHOW_COL_SPEED = false;
     private static final boolean DEFAULT_SHOW_COL_JUMP_BOOST = false;
+    private static final boolean DEFAULT_SHOW_COL_HOTBAR = false;
     private static final boolean DEFAULT_SHOW_CONSTRAINTS = true;
     private static final boolean DEFAULT_HIGHLIGHT_ON_GROUND_ROWS = true;
 
@@ -71,6 +72,7 @@ public final class Settings {
     private static final boolean DEFAULT_SHOW_COL_RIGHT_CLICK = false;
 
     private static final boolean DEFAULT_VIEW_TICK_INFO = true;
+    private static final boolean DEFAULT_VIEW_SERVER_EVENTS = true;
     private static final boolean DEFAULT_VIEW_PERF_INFO = false;
     private static final boolean DEFAULT_VIEW_ANGLE_SOLVER = false;
     private static final boolean DEFAULT_VIEW_VELOCITY_MAP = false;
@@ -95,6 +97,9 @@ public final class Settings {
 
     private static final boolean DEFAULT_KEEP_BOXES_DURING_PLAYBACK = false;
     private static final boolean DEFAULT_DISABLE_FLIGHT_DURING_PLAYBACK = true;
+    private static final boolean DEFAULT_PAIRED_SIMULATION = false;
+    private static final boolean DEFAULT_PAIRED_DAMAGE = true;
+    private static final boolean DEFAULT_LOCKSTEP_REPLAY = false;
 
     private static final float DEFAULT_YAW_FLICK_SPEED = 7200.0f;
     public static final float MIN_YAW_FLICK_SPEED = 30.0f;
@@ -159,6 +164,7 @@ public final class Settings {
     public boolean showSubtick = DEFAULT_SHOW_SUBTICK;
     public boolean showColSpeed = DEFAULT_SHOW_COL_SPEED;
     public boolean showColJumpBoost = DEFAULT_SHOW_COL_JUMP_BOOST;
+    public boolean showColHotbar = DEFAULT_SHOW_COL_HOTBAR;
     public boolean showConstraints = DEFAULT_SHOW_CONSTRAINTS;
     public boolean highlightOnGroundRows = DEFAULT_HIGHLIGHT_ON_GROUND_ROWS;
 
@@ -190,6 +196,7 @@ public final class Settings {
 
     public String[] recentFiles = new String[0];
     public boolean viewTickInfo = DEFAULT_VIEW_TICK_INFO;
+    public boolean viewServerEvents = DEFAULT_VIEW_SERVER_EVENTS;
     public boolean viewPerf = DEFAULT_VIEW_PERF_INFO;
     public boolean viewAngleSolver = DEFAULT_VIEW_ANGLE_SOLVER;
     public boolean viewVelocityMap = DEFAULT_VIEW_VELOCITY_MAP;
@@ -214,6 +221,9 @@ public final class Settings {
     public boolean keepBoxesDuringPlayback = DEFAULT_KEEP_BOXES_DURING_PLAYBACK;
 
     public boolean disableFlightDuringPlayback = DEFAULT_DISABLE_FLIGHT_DURING_PLAYBACK;
+    public boolean pairedSimulation = DEFAULT_PAIRED_SIMULATION;
+    public boolean pairedDamage = DEFAULT_PAIRED_DAMAGE;
+    public boolean lockstepReplay = DEFAULT_LOCKSTEP_REPLAY;
 
     public static int defaultTickInfoPrecision() {
         return DEFAULT_TICK_INFO_PRECISION;
@@ -267,6 +277,7 @@ public final class Settings {
         showSubtick = DEFAULT_SHOW_SUBTICK;
         showColSpeed = DEFAULT_SHOW_COL_SPEED;
         showColJumpBoost = DEFAULT_SHOW_COL_JUMP_BOOST;
+        showColHotbar = DEFAULT_SHOW_COL_HOTBAR;
         showConstraints = DEFAULT_SHOW_CONSTRAINTS;
         highlightOnGroundRows = DEFAULT_HIGHLIGHT_ON_GROUND_ROWS;
         showColA = DEFAULT_SHOW_COL_A;
@@ -290,6 +301,7 @@ public final class Settings {
         scaleIndex = DEFAULT_SCALE_INDEX;
         recentFiles = new String[0];
         viewTickInfo = DEFAULT_VIEW_TICK_INFO;
+        viewServerEvents = DEFAULT_VIEW_SERVER_EVENTS;
         viewPerf = DEFAULT_VIEW_PERF_INFO;
         viewAngleSolver = DEFAULT_VIEW_ANGLE_SOLVER;
         viewVelocityMap = DEFAULT_VIEW_VELOCITY_MAP;
@@ -304,5 +316,8 @@ public final class Settings {
         hudMessageOrder = DEFAULT_HUD_MESSAGE_ORDER;
         keepBoxesDuringPlayback = DEFAULT_KEEP_BOXES_DURING_PLAYBACK;
         disableFlightDuringPlayback = DEFAULT_DISABLE_FLIGHT_DURING_PLAYBACK;
+        pairedSimulation = DEFAULT_PAIRED_SIMULATION;
+        pairedDamage = DEFAULT_PAIRED_DAMAGE;
+        lockstepReplay = DEFAULT_LOCKSTEP_REPLAY;
     }
 }

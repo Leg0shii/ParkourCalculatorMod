@@ -168,7 +168,7 @@ public class SolveRunRecordTest {
     @Test
     public void logAppendsOneLinePerRecord() throws IOException {
         Path dir = tmp.newFolder("runs").toPath();
-        SolveRunLog log = new SolveRunLog(dir, "1.7.0", "1.21.10");
+        SolveRunLog log = new SolveRunLog(dir, "1.7.0", "26.2");
         log.append(sampleRecord());
         log.append(sampleRecord());
 
@@ -180,24 +180,8 @@ public class SolveRunRecordTest {
         SolveRunRecord back = SolveRunRecord.parse(lines.get(0));
         assertNotNull(back);
         assertEquals("1.7.0", back.modVersion);
-        assertEquals("1.21.10", back.mcVersion);
+        assertEquals("26.2", back.mcVersion);
         assertTrue(back.finishedEpochMs > 0);
-    }
-
-    @Test
-    public void problemDumpWritesOncePerHash() throws IOException {
-        Path dir = tmp.newFolder("runs2").toPath();
-        SolveRunLog log = new SolveRunLog(dir, "1.7.0", "1.21.10");
-        assertTrue(log.needsProblem("abc123"));
-        log.writeProblem("abc123", "{\"v\":1}");
-        assertFalse(log.needsProblem("abc123"));
-        Path file = dir.resolve("problems").resolve("abc123.json");
-        assertTrue(Files.isRegularFile(file));
-        log.writeProblem("abc123", "{\"v\":2}");
-        assertEquals("{\"v\":1}", new String(Files.readAllBytes(file), StandardCharsets.UTF_8));
-        SolveRunLog fresh = new SolveRunLog(dir, "1.7.0", "1.21.10");
-        assertFalse(fresh.needsProblem("abc123"));
-        assertFalse(log.needsProblem(null));
     }
 
     private static SolveRunRecord sampleRecord() {

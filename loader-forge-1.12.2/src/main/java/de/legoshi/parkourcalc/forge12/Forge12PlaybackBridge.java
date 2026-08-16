@@ -98,8 +98,11 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
             g.applyCarry(carry);
         } else {
             g.onGround = true;
+            g.fallDistance = 0.0F;
         }
-        g.fallDistance = 0.0F;
+        if (!isPairedSimulationOn()) {
+            g.fallDistance = 0.0F;
+        }
         world.addEntityToWorld(GHOST_ENTITY_ID, g);
         ghost = g;
         client.moveStrafing = 0.0F;
@@ -183,7 +186,7 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
                 sp.setSneaking(false);
                 sp.onGround = true;
             }
-            sp.velocityChanged = false;
+            de.legoshi.parkourcalc.forge12.sim.paired.PairedCheckpoint.applyRestartState(sp, carry);
         });
         client.setPositionAndRotation(pos.x, pos.y, pos.z, yaw, client.rotationPitch);
         client.renderYawOffset = yaw;
@@ -197,8 +200,11 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
             de.legoshi.parkourcalc.forge12.sim.SimulatorEntity.applyCheckpoint(client, carry);
         } else {
             client.onGround = true;
+            client.fallDistance = 0.0F;
         }
-        client.fallDistance = 0.0F;
+        if (!isPairedSimulationOn()) {
+            client.fallDistance = 0.0F;
+        }
         // Suppress onUpdateWalkingPlayer's position packet until the server's scheduled
         // setPlayerLocation arms targetPos, otherwise the client races and trips moved-wrongly.
         client.lastReportedPosX = pos.x;
@@ -207,6 +213,10 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
         client.lastReportedYaw = yaw;
         client.lastReportedPitch = client.rotationPitch;
         client.positionUpdateTicks = 0;
+        client.renderArmYaw = yaw;
+        client.prevRenderArmYaw = yaw;
+        client.renderArmPitch = client.rotationPitch;
+        client.prevRenderArmPitch = client.rotationPitch;
     }
 
     @Override
@@ -237,6 +247,8 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
         if (p == null) return;
         p.rotationYaw = absoluteYaw;
         p.prevRotationYaw = absoluteYaw;
+        p.renderArmYaw = absoluteYaw;
+        p.prevRenderArmYaw = absoluteYaw;
     }
 
     @Override
@@ -263,6 +275,8 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
         if (p == null) return;
         p.rotationPitch = absolutePitch;
         p.prevRotationPitch = absolutePitch;
+        p.renderArmPitch = absolutePitch;
+        p.prevRenderArmPitch = absolutePitch;
     }
 
     @Override
@@ -343,6 +357,100 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
         if (jumpBoostAmplifier > 0) {
             client.addPotionEffect(new PotionEffect(MobEffects.JUMP_BOOST, EFFECT_DURATION_TICKS, jumpBoostAmplifier - 1, false, false));
         }
+    }
+
+    @Override
+    public void setHotbarSlot(int slotZeroBased) {
+        if (ghostMode) return;
+        if (slotZeroBased < 0 || slotZeroBased > 8) return;
+        EntityPlayerSP p = Minecraft.getMinecraft().player;
+        if (p == null) return;
+        p.inventory.currentItem = slotZeroBased;
+    }
+
+    private static boolean isPairedSimulationOn() {
+        de.legoshi.parkourcalc.core.ui.Settings s = Forge12ParkourCalculator.settings();
+        return s != null && s.pairedSimulation;
+    }
+
+    private static final class ReplaySample {
+        final int tick;
+        final double x;
+        final double y;
+        final double z;
+        final double vx;
+        final double vy;
+        final double vz;
+        final boolean onGround;
+
+        ReplaySample(int tick, double x, double y, double z, double vx, double vy, double vz, boolean onGround) {
+            this.tick = tick;
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.vx = vx;
+            this.vy = vy;
+            this.vz = vz;
+            this.onGround = onGround;
+        }
+    }
+
+    private final java.util.List<ReplaySample> replaySamples = new java.util.ArrayList<ReplaySample>();
+
+    @Override
+    public void beginPlaybackCapture() {
+        replaySamples.clear();
+    }
+
+    @Override
+    public void capturePlaybackSample(int tickIndex) {
+        net.minecraft.entity.player.EntityPlayer subject = ghostMode ? ghost : Minecraft.getMinecraft().player;
+        if (subject == null) return;
+        replaySamples.add(new ReplaySample(tickIndex, subject.posX, subject.posY, subject.posZ,
+                subject.motionX, subject.motionY, subject.motionZ, subject.onGround));
+    }
+
+    @Override
+    public void finishPlaybackCapture() {
+        if (replaySamples.isEmpty()) return;
+        java.util.List<de.legoshi.parkourcalc.core.sim.TickState> states = Forge12ParkourCalculator.simStates();
+        int firstDiverged = -1;
+        for (ReplaySample sample : replaySamples) {
+            int idx = sample.tick + 1;
+            if (idx < 0 || idx >= states.size()) continue;
+            de.legoshi.parkourcalc.core.sim.TickState sim = states.get(idx);
+            double d = Math.max(Math.abs(sample.x - sim.position.x),
+                    Math.max(Math.abs(sample.y - sim.position.y), Math.abs(sample.z - sim.position.z)));
+            if (d > 1.0e-6) {
+                firstDiverged = sample.tick;
+                break;
+            }
+        }
+        if (firstDiverged < 0) {
+            System.out.println("[PC-REPLAY] no divergence across " + replaySamples.size() + " replayed ticks (eps 1e-6)");
+            replaySamples.clear();
+            return;
+        }
+        System.out.println("[PC-REPLAY] first divergence at T" + (firstDiverged + 1));
+        for (ReplaySample sample : replaySamples) {
+            if (sample.tick < firstDiverged - 3 || sample.tick > firstDiverged + 8) continue;
+            int idx = sample.tick + 1;
+            String simPart;
+            if (idx >= 0 && idx < states.size()) {
+                de.legoshi.parkourcalc.core.sim.TickState sim = states.get(idx);
+                simPart = "sim=" + sim.position.x + "," + sim.position.y + "," + sim.position.z
+                        + " v=" + sim.velocity.x + "," + sim.velocity.y + "," + sim.velocity.z
+                        + " g=" + sim.onGround;
+            } else {
+                simPart = "sim=out-of-range";
+            }
+            System.out.println("[PC-REPLAY] T" + (sample.tick + 1)
+                    + " real=" + sample.x + "," + sample.y + "," + sample.z
+                    + " v=" + sample.vx + "," + sample.vy + "," + sample.vz
+                    + " g=" + sample.onGround
+                    + " | " + simPart);
+        }
+        replaySamples.clear();
     }
 
     @Override

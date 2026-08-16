@@ -110,6 +110,18 @@ public class SelectionManager {
         selectSingle(rowIndex);
     }
 
+    public void selectRows(int firstRow, int count) {
+        selectedRows.clear();
+        if (count <= 0 || firstRow < 0) {
+            lastClickedRow = -1;
+            return;
+        }
+        for (int i = 0; i < count; i++) {
+            selectedRows.add(firstRow + 1 + i);
+        }
+        lastClickedRow = firstRow + count;
+    }
+
     private void selectRange(int fromRow, int toRow, boolean addToExisting) {
         if (!addToExisting) {
             selectedRows.clear();
