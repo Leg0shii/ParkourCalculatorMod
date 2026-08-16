@@ -1,4 +1,4 @@
-accessWidener v2 official
+accessWidener v2 named
 
 # LivingEntity.noJumpDelay (private): captured in SimulatorEntity.Checkpoint
 # so replay preserves the post-jump cooldown; without it, edits upstream of a
