@@ -47,6 +47,10 @@ public final class ReplayLockstep {
     private ReplayLockstep() {
     }
 
+    static boolean isEngaged() {
+        return engaged;
+    }
+
     public static void engage() {
         if (engaged) return;
         NetHandlerPlayClient nh = Minecraft.getMinecraft().getNetHandler();

@@ -174,6 +174,7 @@ public class Forge12ParkourCalculator {
     public void onServerTick(TickEvent.ServerTickEvent event) {
         if (event.phase == TickEvent.Phase.START) {
             ReplayLockstep.serverTickStart();
+            ServerTaskPump.serverTickStart();
         } else {
             ReplayLockstep.serverTickEnd();
         }
