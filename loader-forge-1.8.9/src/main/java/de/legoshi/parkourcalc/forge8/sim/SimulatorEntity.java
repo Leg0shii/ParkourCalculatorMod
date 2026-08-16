@@ -356,8 +356,8 @@ public class SimulatorEntity extends EntityPlayer {
     }
 
     public static void applyCheckpoint(EntityLivingBase p, de.legoshi.parkourcalc.core.sim.Checkpoint state) {
-        if (!(state instanceof Checkpoint)) return;
-        Checkpoint c = (Checkpoint) state;
+        Checkpoint c = de.legoshi.parkourcalc.forge8.sim.paired.PairedCheckpoint.clientPart(state);
+        if (c == null) return;
         p.onGround = c.onGround;
         p.isCollidedHorizontally = c.isCollidedHorizontally;
         p.setSprinting(c.sprinting);

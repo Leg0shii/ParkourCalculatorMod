@@ -31,9 +31,10 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
     }
 
     public void applyCarry(de.legoshi.parkourcalc.core.sim.Checkpoint carry) {
+        SimulatorEntity.Checkpoint c = de.legoshi.parkourcalc.forge12.sim.paired.PairedCheckpoint.clientPart(carry);
         SimulatorEntity.applyCheckpoint(this, carry);
-        if (carry instanceof SimulatorEntity.Checkpoint) {
-            this.sprintState = ((SimulatorEntity.Checkpoint) carry).sprintState;
+        if (c != null) {
+            this.sprintState = c.sprintState;
         }
     }
 
