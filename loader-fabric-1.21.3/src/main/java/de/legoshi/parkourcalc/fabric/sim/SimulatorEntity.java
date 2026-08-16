@@ -100,6 +100,7 @@ public class SimulatorEntity extends Player {
     public void resetPlayer(StartResumeState resume) {
         this.noPhysics = true;
         this.removeAllEffects();
+        this.clearFire();
         this.setHealth(this.getMaxHealth());
         this.setPos(startPosition);
         this.setDeltaMovement(Vec3.ZERO);

@@ -17,6 +17,7 @@
     "LockstepServerMixin",
     "MinecraftMixin",
     "MouseHandlerMixin",
+    "PacketDiagnosticsMixin",
     "PairedChunkTrackingMixin",
     "PairedSimSuppressMixin",
     "PlayerAccessor",

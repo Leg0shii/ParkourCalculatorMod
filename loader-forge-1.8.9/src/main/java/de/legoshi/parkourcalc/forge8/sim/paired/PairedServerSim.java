@@ -151,6 +151,7 @@ public final class PairedServerSim {
         sp.hurtTime = 0;
         sp.setLastDamage(0.0F);
         sp.velocityChanged = false;
+        sp.extinguish();
         sp.setSneaking(false);
         sp.setSprinting(false);
         sp.respawnInvulnerabilityTicks = 0;
@@ -511,6 +512,7 @@ public final class PairedServerSim {
         c.hurtTime = sp.hurtTime;
         c.lastDamage = sp.getLastDamage();
         c.velocityChanged = sp.velocityChanged;
+        c.fire = sp.fire;
         c.sneaking = sp.isSneaking();
         c.sprinting = sp.isSprinting();
         c.hasMoved = handler.hasMoved;
@@ -557,6 +559,7 @@ public final class PairedServerSim {
         sp.hurtTime = c.hurtTime;
         sp.setLastDamage(c.lastDamage);
         sp.velocityChanged = c.velocityChanged;
+        sp.fire = c.fire;
         sp.setSneaking(c.sneaking);
         sp.setSprinting(c.sprinting);
         sp.respawnInvulnerabilityTicks = 0;
@@ -606,6 +609,7 @@ public final class PairedServerSim {
         int hurtTime;
         float lastDamage;
         boolean velocityChanged;
+        int fire;
         boolean sneaking;
         boolean sprinting;
         boolean hasMoved;

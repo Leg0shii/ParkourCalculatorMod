@@ -243,6 +243,7 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
                 new PositionMoveRotation(new Vec3(pos.x, pos.y, pos.z), new Vec3(vel.x, vel.y, vel.z), yaw, sp.getXRot()),
                 Collections.emptySet()
             );
+            de.legoshi.parkourcalc.fabric.sim.paired.PairedCheckpoint.applyRestartState(sp, carry);
         });
         client.absMoveTo(pos.x, pos.y, pos.z, yaw, client.getXRot());
         client.setYBodyRot(yaw);

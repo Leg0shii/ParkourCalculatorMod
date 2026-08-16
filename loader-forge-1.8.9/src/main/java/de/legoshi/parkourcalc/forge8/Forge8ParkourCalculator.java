@@ -224,7 +224,6 @@ public class Forge8ParkourCalculator {
     @SubscribeEvent
     public void onLivingAttack(net.minecraftforge.event.entity.living.LivingAttackEvent event) {
         if (!application.isPlaybackRunning()) return;
-        if (event.source != net.minecraft.util.DamageSource.fall) return;
         if (!(event.entityLiving instanceof net.minecraft.entity.player.EntityPlayer)) return;
         de.legoshi.parkourcalc.core.ui.Settings s = application.getSettings();
         if (s.pairedSimulation && s.pairedDamage) return;

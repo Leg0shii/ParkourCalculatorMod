@@ -204,6 +204,15 @@ public class FabricParkourCalculator implements ClientModInitializer {
         return local != null && self.getUUID().equals(local.getUUID());
     }
 
+    public static boolean shouldSuppressDamageDuringPlayback(net.minecraft.world.entity.Entity self) {
+        Settings settings = application.getSettings();
+        if (!application.isPlaybackRunning()) return false;
+        if (settings.pairedSimulation && settings.pairedDamage) return false;
+        if (!(self instanceof net.minecraft.world.entity.player.Player)) return false;
+        net.minecraft.client.player.LocalPlayer local = Minecraft.getInstance().player;
+        return local != null && self.getUUID().equals(local.getUUID());
+    }
+
     public static void onServerStopping(net.minecraft.server.MinecraftServer server) {
         simulator.onServerStopping(server);
     }
