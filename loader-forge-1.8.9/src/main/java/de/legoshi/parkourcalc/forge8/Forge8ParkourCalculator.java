@@ -79,6 +79,7 @@ public class Forge8ParkourCalculator {
     private KeyBinding playbackKeyBinding;
     private KeyBinding landingConstraintsKeyBinding;
     private KeyBinding removeConstraintsKeyBinding;
+    private KeyBinding extendPathAndSolveKeyBinding;
     private KeyBinding applySurfaceStateKeyBinding;
     private KeyBinding solveKeyBinding;
     private KeyBinding solverStartTickKeyBinding;
@@ -131,6 +132,8 @@ public class Forge8ParkourCalculator {
         ClientRegistry.registerKeyBinding(landingConstraintsKeyBinding);
         removeConstraintsKeyBinding = new KeyBinding("key.parkourcalculator.remove_selected_constraints", Keyboard.KEY_X, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(removeConstraintsKeyBinding);
+        extendPathAndSolveKeyBinding = new KeyBinding("key.parkourcalculator.extend_path_and_solve_to_block", Keyboard.KEY_U, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(extendPathAndSolveKeyBinding);
         applySurfaceStateKeyBinding = new KeyBinding("key.parkourcalculator.apply_surface_state", Keyboard.KEY_H, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(applySurfaceStateKeyBinding);
         solveKeyBinding = new KeyBinding("key.parkourcalculator.solve", Keyboard.KEY_V, "key.categories.parkourcalculator");
@@ -302,6 +305,10 @@ public class Forge8ParkourCalculator {
         while (removeConstraintsKeyBinding.isPressed()) {
             removeConstraintsPressed = true;
         }
+        boolean extendPathAndSolvePressed = false;
+        while (extendPathAndSolveKeyBinding.isPressed()) {
+            extendPathAndSolvePressed = true;
+        }
         boolean applySurfaceStatePressed = false;
         while (applySurfaceStateKeyBinding.isPressed()) {
             applySurfaceStatePressed = true;
@@ -354,6 +361,9 @@ public class Forge8ParkourCalculator {
             }
             if (removeConstraintsPressed && chordFree) {
                 application.removeSelectedConstraints();
+            }
+            if (extendPathAndSolvePressed && chordFree) {
+                triggerExtendPathAndSolve(mc);
             }
             if (applySurfaceStatePressed && chordFree) {
                 application.applyPathSurfaceState();
@@ -416,6 +426,10 @@ public class Forge8ParkourCalculator {
             application.removeSelectedConstraints();
             return true;
         }
+        if (keyCode == extendPathAndSolveKeyBinding.getKeyCode()) {
+            triggerExtendPathAndSolve(Minecraft.getMinecraft());
+            return true;
+        }
         if (keyCode == applySurfaceStateKeyBinding.getKeyCode()) {
             application.applyPathSurfaceState();
             return true;
@@ -474,6 +488,26 @@ public class Forge8ParkourCalculator {
         if (!event.isCancelable()) return;
         if (application.shouldSuppressLeftClick() || application.shouldSuppressRightClick()) {
             event.setCanceled(true);
+        }
+    }
+
+    private void triggerExtendPathAndSolve(Minecraft mc) {
+        if (mc.objectMouseOver != null && mc.objectMouseOver.typeOfHit == net.minecraft.util.MovingObjectPosition.MovingObjectType.BLOCK) {
+            net.minecraft.util.BlockPos pos = mc.objectMouseOver.getBlockPos();
+            double targetX = pos.getX() + 0.5;
+            double targetY = pos.getY() + 1.0;
+            if (mc.theWorld != null) {
+                net.minecraft.block.state.IBlockState state = mc.theWorld.getBlockState(pos);
+                net.minecraft.block.Block block = state.getBlock();
+                net.minecraft.util.AxisAlignedBB aabb = block.getCollisionBoundingBox(mc.theWorld, pos, state);
+                if (aabb != null) {
+                    targetY = aabb.maxY;
+                } else {
+                    targetY = pos.getY() + block.getBlockBoundsMaxY();
+                }
+            }
+            double targetZ = pos.getZ() + 0.5;
+            application.extendPathAndSolveToBlock(targetX, targetY, targetZ);
         }
     }
 
