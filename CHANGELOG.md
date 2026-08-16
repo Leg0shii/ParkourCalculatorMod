@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.9.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.8.0...v1.9.0) (2026-08-16)
+
+
+### Features
+
+* add native Fabric loader for Minecraft 1.21.3 ([#236](https://github.com/Leg0shii/ParkourCalculatorMod/issues/236)) ([#300](https://github.com/Leg0shii/ParkourCalculatorMod/issues/300)) ([1d6e52d](https://github.com/Leg0shii/ParkourCalculatorMod/commit/1d6e52d6ea470ee694df55839be41f012bea718a))
+* copy ticks to a new TAS and copy/paste table rows ([#294](https://github.com/Leg0shii/ParkourCalculatorMod/issues/294)) ([93a06e4](https://github.com/Leg0shii/ParkourCalculatorMod/commit/93a06e4a15ba8e0c007a91836e36a36198f460e2)), closes [#291](https://github.com/Leg0shii/ParkourCalculatorMod/issues/291)
+* paired client-server simulation and lockstep replay ([#322](https://github.com/Leg0shii/ParkourCalculatorMod/issues/322)) ([993884a](https://github.com/Leg0shii/ParkourCalculatorMod/commit/993884ab9e2de1b3e6292d0f7dda75af325e6440))
+* right click teleport to the selected tick, singleplayer only ([#305](https://github.com/Leg0shii/ParkourCalculatorMod/issues/305)) ([ac7786b](https://github.com/Leg0shii/ParkourCalculatorMod/commit/ac7786b39348dddeb941cb12e55f987895e438e5))
+* **ui:** add Edit menu with Undo/Redo items ([#295](https://github.com/Leg0shii/ParkourCalculatorMod/issues/295)) ([c70029d](https://github.com/Leg0shii/ParkourCalculatorMod/commit/c70029d2367b9184d8d5f887369ac071650397d2))
+* **ui:** add per-tick hotbar slot input column ([#297](https://github.com/Leg0shii/ParkourCalculatorMod/issues/297)) ([3a41006](https://github.com/Leg0shii/ParkourCalculatorMod/commit/3a410061d478a69a517b8540f8f0e05ba4b64b51))
+
+
+### Bug Fixes
+
+* derive B-key constraints from the looked-at block's own hitbox ([#309](https://github.com/Leg0shii/ParkourCalculatorMod/issues/309)) ([4f91245](https://github.com/Leg0shii/ParkourCalculatorMod/commit/4f91245ab4e7a3f3df99c00ecad79b199a83636d))
+* keep the gizmo tail patch alive while per-tick hitboxes are shown ([#304](https://github.com/Leg0shii/ParkourCalculatorMod/issues/304)) ([458fd73](https://github.com/Leg0shii/ParkourCalculatorMod/commit/458fd73d1eae76b46926fbe066efabfe7da0056f))
+* keep the simulator's player size consistent across resumed runs ([#310](https://github.com/Leg0shii/ParkourCalculatorMod/issues/310)) ([df1f67f](https://github.com/Leg0shii/ParkourCalculatorMod/commit/df1f67f8b4617401fa413150ac51e9644d41ea62))
+* **playback:** pin first-person arm sway to the driven rotation ([#316](https://github.com/Leg0shii/ParkourCalculatorMod/issues/316)) ([620b4f0](https://github.com/Leg0shii/ParkourCalculatorMod/commit/620b4f07559e5ce13d2569c524f45a84eedf503d))
+* **playback:** reset fire, fall and damage state across resims and replay restarts ([#327](https://github.com/Leg0shii/ParkourCalculatorMod/issues/327)) ([ce5e539](https://github.com/Leg0shii/ParkourCalculatorMod/commit/ce5e539993a854ee15e5cbae7960dc35a3f43081))
+* remap the pkc-fabric-1.21.3 jar to intermediary so it loads on production installs ([#324](https://github.com/Leg0shii/ParkourCalculatorMod/issues/324)) ([34e73b8](https://github.com/Leg0shii/ParkourCalculatorMod/commit/34e73b822759d938989f35f3e11aaff13733d1a2))
+* **solver:** stop dumping a full save snapshot per solve ([#312](https://github.com/Leg0shii/ParkourCalculatorMod/issues/312)) ([8849bcb](https://github.com/Leg0shii/ParkourCalculatorMod/commit/8849bcb42d23bf2504bcac023b32a2d2da338120))
+
+
+### Miscellaneous Chores
+
+* weekly release train ([2d452a5](https://github.com/Leg0shii/ParkourCalculatorMod/commit/2d452a5e30e64fca0a903b896e3ce80c4ffa00cf))
+
 ## [1.8.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.7.1...v1.8.0) (2026-08-09)
 
 
