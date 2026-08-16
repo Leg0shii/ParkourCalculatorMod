@@ -186,7 +186,7 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
                 sp.setSneaking(false);
                 sp.onGround = true;
             }
-            sp.velocityChanged = false;
+            de.legoshi.parkourcalc.forge12.sim.paired.PairedCheckpoint.applyRestartState(sp, carry);
         });
         client.setPositionAndRotation(pos.x, pos.y, pos.z, yaw, client.rotationPitch);
         client.renderYawOffset = yaw;

@@ -85,6 +85,7 @@ public class SimulatorEntity extends EntityPlayer {
 
     public void resetPlayer(StartResumeState resume) {
         this.noClip = true;
+        this.extinguish();
         this.setHealth(this.getMaxHealth());
         this.motionX = 0.0;
         this.motionY = 0.0;

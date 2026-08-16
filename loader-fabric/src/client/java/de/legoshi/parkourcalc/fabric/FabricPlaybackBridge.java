@@ -133,6 +133,10 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         Entity subject = ghostMode ? ghost : Minecraft.getInstance().player;
         if (subject == null) return;
         replaySamples.add(new ReplaySample(tickIndex, subject.position(), subject.getDeltaMovement(), subject.onGround()));
+        if (de.legoshi.parkourcalc.core.DebugFlags.PAIRED_DIAGNOSTICS && tickIndex <= 4) {
+            System.out.println("[PC-NET] tick T" + (tickIndex + 1)
+                    + " pos=" + subject.position() + " vel=" + subject.getDeltaMovement());
+        }
     }
 
     @Override
@@ -243,6 +247,7 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
                 new PositionMoveRotation(new Vec3(pos.x, pos.y, pos.z), new Vec3(vel.x, vel.y, vel.z), yaw, sp.getXRot()),
                 Collections.emptySet()
             );
+            de.legoshi.parkourcalc.fabric.sim.paired.PairedCheckpoint.applyRestartState(sp, carry);
         });
         client.absSnapTo(pos.x, pos.y, pos.z, yaw, client.getXRot());
         client.setYBodyRot(yaw);
@@ -272,6 +277,11 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         client.yBobO = yaw;
         client.xBob = client.getXRot();
         client.xBobO = client.getXRot();
+        if (de.legoshi.parkourcalc.core.DebugFlags.PAIRED_DIAGNOSTICS) {
+            System.out.println("[PC-NET] teleport snap pos=" + pos.x + "," + pos.y + "," + pos.z
+                    + " vel=" + vel.x + "," + vel.y + "," + vel.z
+                    + " clientFire=" + client.getRemainingFireTicks() + " sharedFlagFire=" + client.isOnFire());
+        }
     }
 
     @Override

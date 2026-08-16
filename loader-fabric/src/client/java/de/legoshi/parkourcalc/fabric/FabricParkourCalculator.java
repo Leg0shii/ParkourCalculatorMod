@@ -240,6 +240,15 @@ public class FabricParkourCalculator implements ClientModInitializer {
         return local != null && self.getUUID().equals(local.getUUID());
     }
 
+    public static boolean shouldSuppressDamageDuringPlayback(net.minecraft.world.entity.Entity self) {
+        Settings settings = application.getSettings();
+        if (!application.isPlaybackRunning()) return false;
+        if (settings.pairedSimulation && settings.pairedDamage) return false;
+        if (!(self instanceof net.minecraft.world.entity.player.Player)) return false;
+        net.minecraft.client.player.LocalPlayer local = Minecraft.getInstance().player;
+        return local != null && self.getUUID().equals(local.getUUID());
+    }
+
     private static void onEndTick(Minecraft client) {
         // Restore visual yaw after MC physics so render frames don't briefly show
         // the snap value the physics tick used.

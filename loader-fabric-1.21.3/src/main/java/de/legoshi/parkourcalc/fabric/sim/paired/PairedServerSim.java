@@ -139,6 +139,7 @@ public final class PairedServerSim {
         sp.spawnInvulnerableTime = 0;
         sp.hurtTime = 0;
         sp.hurtMarked = false;
+        sp.clearFire();
         sp.setShiftKeyDown(false);
         sp.setSprinting(false);
         handler.resetPosition();
@@ -465,6 +466,7 @@ public final class PairedServerSim {
         c.invulnerableTime = sp.invulnerableTime;
         c.hurtTime = sp.hurtTime;
         c.hurtMarked = sp.hurtMarked;
+        c.remainingFireTicks = sp.getRemainingFireTicks();
         c.shiftKeyDown = sp.isShiftKeyDown();
         c.sprinting = sp.isSprinting();
         c.awaitingPositionFromClient = handler.awaitingPositionFromClient;
@@ -519,6 +521,7 @@ public final class PairedServerSim {
         sp.invulnerableTime = c.invulnerableTime;
         sp.hurtTime = c.hurtTime;
         sp.hurtMarked = c.hurtMarked;
+        sp.setRemainingFireTicks(c.remainingFireTicks);
         sp.setShiftKeyDown(c.shiftKeyDown);
         sp.setSprinting(c.sprinting);
         handler.awaitingPositionFromClient = c.awaitingPositionFromClient;
@@ -575,6 +578,7 @@ public final class PairedServerSim {
         int invulnerableTime;
         int hurtTime;
         boolean hurtMarked;
+        int remainingFireTicks;
         boolean shiftKeyDown;
         boolean sprinting;
         Vec3 awaitingPositionFromClient;
