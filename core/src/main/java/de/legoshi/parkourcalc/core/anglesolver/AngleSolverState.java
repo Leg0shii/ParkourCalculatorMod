@@ -496,6 +496,28 @@ public final class AngleSolverState {
         list.add(Constraint.range(Constraint.Field.Z, zLo, zHi, true, true));
     }
 
+    public void mergeFootprint(int tick, double xLo, double xHi, double zLo, double zHi) {
+        if (tick < 0) return;
+        List<Constraint> list = tickConstraints(tick).getConstraints();
+        double finalXLo = xLo, finalXHi = xHi;
+        double finalZLo = zLo, finalZHi = zHi;
+
+        for (int i = list.size() - 1; i >= 0; i--) {
+            Constraint c = list.get(i);
+            if (c.isRange() && !c.isRelative() && c.getField() == Constraint.Field.X) {
+                finalXLo = Math.min(finalXLo, c.getLo());
+                finalXHi = Math.max(finalXHi, c.getHi());
+                list.remove(i);
+            } else if (c.isRange() && !c.isRelative() && c.getField() == Constraint.Field.Z) {
+                finalZLo = Math.min(finalZLo, c.getLo());
+                finalZHi = Math.max(finalZHi, c.getHi());
+                list.remove(i);
+            }
+        }
+        list.add(Constraint.range(Constraint.Field.X, finalXLo, finalXHi, true, true));
+        list.add(Constraint.range(Constraint.Field.Z, finalZLo, finalZHi, true, true));
+    }
+
     public void clearFootprint(int tick) {
         TickConstraints tc = ticks.get(tick);
         if (tc == null) return;
@@ -510,6 +532,29 @@ public final class AngleSolverState {
         boolean lower = isLowerBound(wall.getOp());
         list.removeIf(c -> !c.isRange() && !c.isRelative() && c.getField() == field
                 && isWallOp(c.getOp()) && isLowerBound(c.getOp()) == lower);
+        list.add(wall);
+    }
+
+    public void mergeWall(int tick, Constraint wall) {
+        if (tick < 0 || wall == null) return;
+        List<Constraint> list = tickConstraints(tick).getConstraints();
+        Constraint.Field field = wall.getField();
+        boolean lower = isLowerBound(wall.getOp());
+        double finalVal = wall.getValue();
+
+        for (int i = list.size() - 1; i >= 0; i--) {
+            Constraint c = list.get(i);
+            if (!c.isRange() && !c.isRelative() && c.getField() == field
+                    && isWallOp(c.getOp()) && isLowerBound(c.getOp()) == lower) {
+                if (lower) {
+                    finalVal = Math.min(finalVal, c.getValue()); // mehr Platz bei >=
+                } else {
+                    finalVal = Math.max(finalVal, c.getValue()); // mehr Platz bei <=
+                }
+                list.remove(i);
+            }
+        }
+        wall.setValue(finalVal);
         list.add(wall);
     }
 

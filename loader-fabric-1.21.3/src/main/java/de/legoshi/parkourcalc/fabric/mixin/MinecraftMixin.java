@@ -39,6 +39,25 @@ public class MinecraftMixin {
                 merged[existing.length + i] = modKeys.get(i);
             }
             ((OptionsAccessor) (Object) options).pkc$setKeyMappings(merged);
+
+            java.io.File optionsFile = new java.io.File(Minecraft.getInstance().gameDirectory, "options.txt");
+            if (optionsFile.exists()) {
+                try (java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.FileReader(optionsFile))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        String[] parts = line.split(":", 2);
+                        if (parts.length == 2 && parts[0].startsWith("key_key.parkourcalculator.")) {
+                            String name = parts[0].substring(4);
+                            for (KeyMapping km : modKeys) {
+                                if (km.getName().equals(name)) {
+                                    km.setKey(com.mojang.blaze3d.platform.InputConstants.getKey(parts[1]));
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception ignored) {}
+            }
+
             Map<String, Integer> sortOrder = KeyMappingAccessor.pkc$getCategorySortOrder();
             for (KeyMapping km : modKeys) {
                 String category = km.getCategory();
