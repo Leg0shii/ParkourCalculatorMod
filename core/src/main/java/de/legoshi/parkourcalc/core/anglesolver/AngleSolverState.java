@@ -547,9 +547,9 @@ public final class AngleSolverState {
             if (!c.isRange() && !c.isRelative() && c.getField() == field
                     && isWallOp(c.getOp()) && isLowerBound(c.getOp()) == lower) {
                 if (lower) {
-                    finalVal = Math.min(finalVal, c.getValue()); // mehr Platz bei >=
+                    finalVal = Math.min(finalVal, c.getValue());
                 } else {
-                    finalVal = Math.max(finalVal, c.getValue()); // mehr Platz bei <=
+                    finalVal = Math.max(finalVal, c.getValue());
                 }
                 list.remove(i);
             }
