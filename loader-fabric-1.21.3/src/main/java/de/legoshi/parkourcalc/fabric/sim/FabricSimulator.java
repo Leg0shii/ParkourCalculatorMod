@@ -1,18 +1,22 @@
 package de.legoshi.parkourcalc.fabric.sim;
 
+import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.sim.ChunkRange;
 import de.legoshi.parkourcalc.core.sim.Checkpoint;
 import de.legoshi.parkourcalc.core.sim.LazyEntitySimulator;
+import de.legoshi.parkourcalc.core.sim.ServerSimEvent;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
+import de.legoshi.parkourcalc.fabric.sim.paired.PairedCheckpoint;
+import de.legoshi.parkourcalc.fabric.sim.paired.PairedServerSim;
+import net.minecraft.world.entity.player.Input;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.player.Input;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -23,6 +27,93 @@ import net.minecraft.world.level.chunk.status.ChunkStatus;
 import java.util.List;
 
 public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> {
+
+    private boolean pairedEnabled;
+    private boolean pairedDamage = true;
+    private PairedServerSim pair;
+    private InputRow lastRow;
+    private float startPitch = PlaybackController.DEFAULT_PITCH;
+
+    @Override
+    public boolean supportsPairedSimulation() {
+        return true;
+    }
+
+    @Override
+    public void setPairedSimulation(boolean enabled) {
+        if (!enabled && pair != null) {
+            pair.shutdown();
+            pair = null;
+        }
+        pairedEnabled = enabled;
+    }
+
+    @Override
+    public void setPairedDamage(boolean enabled) {
+        pairedDamage = enabled;
+        if (pair != null) pair.setDamageEnabled(enabled);
+    }
+
+    @Override
+    public void setStartPitch(float pitch) {
+        startPitch = pitch;
+        if (pair != null) pair.setStartPitch(pitch);
+    }
+
+    @Override
+    public List<ServerSimEvent> takeServerSimEvents() {
+        return pair == null ? List.of() : pair.drainEvents();
+    }
+
+    @Override
+    public void onPassEnd() {
+        if (pair != null) pair.endPass();
+    }
+
+    @Override
+    public void onReplayStart(int startTick) {
+        PairedServerSim p = pair;
+        if (p == null) return;
+        p.level().getServer().execute(() -> p.onReplayStart(startTick));
+    }
+
+    @Override
+    public void onReplayEnd() {
+        PairedServerSim p = pair;
+        if (p == null) return;
+        p.level().getServer().execute(p::onReplayEnd);
+    }
+
+    @Override
+    protected void onInvalidate() {
+        PairedServerSim p = pair;
+        pair = null;
+        if (p != null) {
+            p.level().getServer().execute(p::shutdown);
+        }
+    }
+
+    public void onServerStopping(MinecraftServer server) {
+        PairedServerSim p = pair;
+        if (p == null || p.level().getServer() != server) return;
+        pair = null;
+        p.shutdown();
+    }
+
+    private void ensurePair(SimulatorEntity e) {
+        if (!pairedEnabled) return;
+        if (pair != null && pair.level() != e.level()) {
+            pair.shutdown();
+            pair = null;
+        }
+        if (pair == null) {
+            pair = PairedServerSim.create(e);
+            if (pair != null) {
+                pair.setStartPitch(startPitch);
+                pair.setDamageEnabled(pairedDamage);
+            }
+        }
+    }
 
     @Override
     protected SimulatorEntity createEntity(Vec3dCore pendingStart, Vec3dCore pendingVelocity, Float pendingYaw) {
@@ -50,12 +141,18 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
     }
 
     @Override protected void resetEntity(SimulatorEntity e, StartResumeState resume) {
-        e.resetPlayer(resume);
+        ensurePair(e);
+        if (pair != null) {
+            pair.resetForFullRun(e, resume);
+        } else {
+            e.resetPlayer(resume);
+        }
     }
 
     @Override
     protected StartResumeState describeResume(Checkpoint checkpoint) {
-        if (!(checkpoint instanceof SimulatorEntity.Checkpoint c)) return null;
+        SimulatorEntity.Checkpoint c = PairedCheckpoint.clientPart(checkpoint);
+        if (c == null) return null;
         StartResumeState r = new StartResumeState();
         r.onGround = c.onGround;
         r.wallContact = c.horizontalCollision;
@@ -80,6 +177,7 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
     }
 
     @Override protected void setInput(SimulatorEntity e, InputRow row) {
+        lastRow = row;
         e.input.setData(row);
     }
 
@@ -104,9 +202,27 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
 
     @Override
     protected void tickEntity(SimulatorEntity e) {
-        preloadChunksAround(e);
-        e.beginSubtickCapture();
-        e.tick();
+        ensurePair(e);
+        if (pair == null) {
+            preloadChunksAround(e);
+            e.beginSubtickCapture();
+            e.tick();
+            return;
+        }
+        pair.beginTick(e, lastRow);
+        boolean ticked = false;
+        try {
+            preloadChunksAround(e);
+            e.beginSubtickCapture();
+            e.tick();
+            ticked = true;
+        } finally {
+            if (ticked) {
+                pair.afterClientTick(e);
+            } else {
+                pair.abortTick();
+            }
+        }
     }
 
     /** isChunkLoaded short-circuits the common case; getChunk(FULL, true) only fires on miss. */
@@ -257,11 +373,19 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
 
     @Override
     protected Checkpoint saveCheckpoint(SimulatorEntity e) {
-        return e.saveCheckpoint();
+        SimulatorEntity.Checkpoint client = e.saveCheckpoint();
+        return pair != null ? new PairedCheckpoint(client, pair.saveCheckpoint()) : client;
     }
 
     @Override
     protected void restoreCheckpoint(SimulatorEntity e, Checkpoint checkpoint) {
-        e.restoreCheckpoint((SimulatorEntity.Checkpoint) checkpoint);
+        if (checkpoint instanceof PairedCheckpoint paired && pair != null) {
+            pair.restore(e, paired);
+            return;
+        }
+        SimulatorEntity.Checkpoint client = PairedCheckpoint.clientPart(checkpoint);
+        if (client != null) {
+            e.restoreCheckpoint(client);
+        }
     }
 }

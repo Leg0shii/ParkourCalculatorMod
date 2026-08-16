@@ -330,6 +330,7 @@ public class SimulatorEntity extends EntityPlayer {
         c.landMovementFactor = this.getAIMoveSpeed();
         c.jumpTicks = this.jumpTicks;
         c.isInWeb = this.isInWeb;
+        c.fallDistance = this.fallDistance;
         return c;
     }
 
@@ -350,12 +351,13 @@ public class SimulatorEntity extends EntityPlayer {
         this.setAIMoveSpeed(c.landMovementFactor);
         this.jumpTicks = c.jumpTicks;
         this.isInWeb = c.isInWeb;
+        this.fallDistance = c.fallDistance;
         this.setPosition(c.posX, c.posY, c.posZ);
     }
 
     public static void applyCheckpoint(EntityLivingBase p, de.legoshi.parkourcalc.core.sim.Checkpoint state) {
-        if (!(state instanceof Checkpoint)) return;
-        Checkpoint c = (Checkpoint) state;
+        Checkpoint c = de.legoshi.parkourcalc.forge8.sim.paired.PairedCheckpoint.clientPart(state);
+        if (c == null) return;
         p.onGround = c.onGround;
         p.isCollidedHorizontally = c.isCollidedHorizontally;
         p.setSprinting(c.sprinting);
@@ -363,6 +365,7 @@ public class SimulatorEntity extends EntityPlayer {
         p.setAIMoveSpeed(c.landMovementFactor);
         p.jumpMovementFactor = c.jumpMovementFactor;
         p.jumpTicks = c.jumpTicks;
+        p.fallDistance = c.fallDistance;
         if (c.isInWeb) {
             p.setInWeb();
         }
@@ -380,5 +383,6 @@ public class SimulatorEntity extends EntityPlayer {
         float landMovementFactor;
         int jumpTicks;
         boolean isInWeb;
+        float fallDistance;
     }
 }

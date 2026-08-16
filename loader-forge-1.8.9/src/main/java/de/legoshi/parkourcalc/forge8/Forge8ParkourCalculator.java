@@ -41,10 +41,23 @@ public class Forge8ParkourCalculator {
 
     private static final Logger LOG = LogManager.getLogger("ParkourCalculator");
 
+    private static Application APP;
+
+    private final Forge8Simulator simulator = new Forge8Simulator();
     private final Application application = new Application(
-            new Forge8Simulator(),
+            simulator,
             new Forge8MinecraftAccess()
     );
+
+    static de.legoshi.parkourcalc.core.ui.Settings settings() {
+        return APP != null ? APP.getSettings() : null;
+    }
+
+    static java.util.List<de.legoshi.parkourcalc.core.sim.TickState> simStates() {
+        return APP != null
+                ? APP.getBoxController().getStates()
+                : java.util.Collections.<de.legoshi.parkourcalc.core.sim.TickState>emptyList();
+    }
     private final Lwjgl2ImGuiHost imguiHost = new Lwjgl2ImGuiHost(
             application.getOverlayManager(),
             application.getSettings(),
@@ -80,8 +93,14 @@ public class Forge8ParkourCalculator {
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
+        APP = application;
         configPath = new File(event.getModConfigurationDirectory(), "parkourcalculator.json").toPath();
         saveDir = new File(Minecraft.getMinecraft().mcDataDir, "parkourcalculator").toPath();
+    }
+
+    @Mod.EventHandler
+    public void onServerStopping(net.minecraftforge.fml.common.event.FMLServerStoppingEvent event) {
+        simulator.onServerStopping(net.minecraftforge.fml.common.FMLCommonHandler.instance().getMinecraftServerInstance());
     }
 
     @Mod.EventHandler
@@ -142,11 +161,23 @@ public class Forge8ParkourCalculator {
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase == TickEvent.Phase.START) {
+            ReplayLockstep.clientBarrierPreTick();
             manageInputLifecycle();
             application.tickPlayback();
         } else {
             application.postTickPlayback();
             playbackBridge.syncFrozenPlayerToServer();
+            ReplayLockstep.clientBarrierPostTick();
+        }
+    }
+
+    @SubscribeEvent
+    public void onServerTick(TickEvent.ServerTickEvent event) {
+        if (event.phase == TickEvent.Phase.START) {
+            ReplayLockstep.serverTickStart();
+            ServerTaskPump.serverTickStart();
+        } else {
+            ReplayLockstep.serverTickEnd();
         }
     }
 
@@ -157,6 +188,7 @@ public class Forge8ParkourCalculator {
                 application.getPlayback().stop();
                 playbackBridge.resetInputOverride();
                 playbackBridge.endGhostPlayback();
+                ReplayLockstep.disengage();
                 wasPlaybackRunning = false;
             }
             return;
@@ -164,9 +196,13 @@ public class Forge8ParkourCalculator {
         boolean isRunning = application.isPlaybackRunning();
         if (isRunning && !wasPlaybackRunning) {
             playbackBridge.installPlaybackInput(p);
+            if (application.getSettings().lockstepReplay && playbackBridge.isSingleplayer()) {
+                ReplayLockstep.engage();
+            }
         } else if (!isRunning && wasPlaybackRunning) {
             playbackBridge.restorePlaybackInput(p);
             playbackBridge.endGhostPlayback();
+            ReplayLockstep.disengage();
         }
         wasPlaybackRunning = isRunning;
     }
@@ -190,6 +226,19 @@ public class Forge8ParkourCalculator {
         if (!application.isPlaybackRunning()) return;
         if (event.source != net.minecraft.util.DamageSource.fall) return;
         if (!(event.entityLiving instanceof net.minecraft.entity.player.EntityPlayer)) return;
+        de.legoshi.parkourcalc.core.ui.Settings s = application.getSettings();
+        if (s.pairedSimulation && s.pairedDamage) return;
+        event.setCanceled(true);
+    }
+
+    @SubscribeEvent
+    public void onLivingHurt(net.minecraftforge.event.entity.living.LivingHurtEvent event) {
+        if (!application.isPlaybackRunning()) return;
+        if (!application.getSettings().pairedSimulation) return;
+        if (!(event.entityLiving instanceof net.minecraft.entity.player.EntityPlayerMP)) return;
+        if (event.entityLiving instanceof de.legoshi.parkourcalc.forge8.sim.paired.PairedServerPlayer) return;
+        net.minecraft.client.entity.EntityPlayerSP local = Minecraft.getMinecraft().thePlayer;
+        if (local == null || !event.entityLiving.getUniqueID().equals(local.getUniqueID())) return;
         event.setCanceled(true);
     }
 
@@ -199,8 +248,10 @@ public class Forge8ParkourCalculator {
         // networkSystem.networkTick where the in-memory channel dispatches C03 inline.
         if (event.phase != TickEvent.Phase.END) return;
         if (!(event.player instanceof net.minecraft.entity.player.EntityPlayerMP)) return;
+        if (event.player instanceof de.legoshi.parkourcalc.forge8.sim.paired.PairedServerPlayer) return;
         if (!application.isPlaybackRunning()) return;
         if (!playbackBridge.isSingleplayer()) return;
+        if (application.getSettings().pairedSimulation) return;
         event.player.noClip = true;
     }
 
@@ -410,6 +461,7 @@ public class Forge8ParkourCalculator {
 
     @SubscribeEvent
     public void onClientDisconnect(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
+        ReplayLockstep.disengage();
         application.onWorldChange();
     }
 

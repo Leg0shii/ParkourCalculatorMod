@@ -17,6 +17,7 @@ public final class SimulationRunner {
     // checkpoints[i] is the simulator state needed to resume just before row[i] is applied.
     private final List<TickState> path = new ArrayList<>();
     private final List<Checkpoint> checkpoints = new ArrayList<>();
+    private final List<ServerSimEvent> serverEvents = new ArrayList<>();
 
     private float startPitch = PlaybackController.DEFAULT_PITCH;
 
@@ -90,11 +91,14 @@ public final class SimulationRunner {
     public List<TickState> simulate(InputData inputData) {
         path.clear();
         checkpoints.clear();
+        serverEvents.clear();
         simulator.resetToStart();
+        simulator.takeServerSimEvents();
         path.add(snapshot());
         checkpoints.add(simulator.saveCheckpoint());
 
         replayFrom(0, inputData.getRows());
+        simulator.onPassEnd();
         return path;
     }
 
@@ -114,8 +118,15 @@ public final class SimulationRunner {
             path.remove(path.size() - 1);
             checkpoints.remove(checkpoints.size() - 1);
         }
+        for (int i = serverEvents.size() - 1; i >= 0; i--) {
+            if (serverEvents.get(i).tick >= dirtyTick) {
+                serverEvents.remove(i);
+            }
+        }
+        simulator.takeServerSimEvents();
 
         replayFrom(dirtyTick, inputData.getRows());
+        simulator.onPassEnd();
         return path;
     }
 
@@ -123,9 +134,14 @@ public final class SimulationRunner {
         for (int i = startRow; i < rows.size(); i++) {
             simulator.applyInput(rows.get(i));
             simulator.tick();
+            serverEvents.addAll(simulator.takeServerSimEvents());
             path.add(snapshot());
             checkpoints.add(simulator.saveCheckpoint());
         }
+    }
+
+    public List<ServerSimEvent> getServerEvents() {
+        return java.util.Collections.unmodifiableList(serverEvents);
     }
 
     public boolean firstTickOnGround() {
@@ -170,6 +186,7 @@ public final class SimulationRunner {
     public void invalidate() {
         path.clear();
         checkpoints.clear();
+        serverEvents.clear();
         simulator.invalidate();
     }
 
@@ -216,5 +233,14 @@ public final class SimulationRunner {
 
     public void setStartPitch(float pitch) {
         startPitch = Math.max(-90f, Math.min(90f, pitch));
+        simulator.setStartPitch(startPitch);
+    }
+
+    public void onReplayStart(int startTick) {
+        simulator.onReplayStart(startTick);
+    }
+
+    public void onReplayEnd() {
+        simulator.onReplayEnd();
     }
 }

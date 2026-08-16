@@ -48,4 +48,10 @@ public interface PlaybackBridge {
     default void setHotbarSlot(int slotZeroBased) {}
 
     default void dumpPlayerState(int tickIndex) {}
+
+    default void beginPlaybackCapture() {}
+
+    default void capturePlaybackSample(int tickIndex) {}
+
+    default void finishPlaybackCapture() {}
 }

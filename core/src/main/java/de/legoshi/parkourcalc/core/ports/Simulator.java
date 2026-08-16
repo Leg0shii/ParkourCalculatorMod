@@ -2,10 +2,12 @@ package de.legoshi.parkourcalc.core.ports;
 
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.sim.Checkpoint;
+import de.legoshi.parkourcalc.core.sim.ServerSimEvent;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 
+import java.util.Collections;
 import java.util.List;
 
 public interface Simulator {
@@ -81,4 +83,30 @@ public interface Simulator {
     void restoreCheckpoint(Checkpoint checkpoint);
 
     void invalidate();
+
+    default boolean supportsPairedSimulation() {
+        return false;
+    }
+
+    default void setStartPitch(float pitch) {
+    }
+
+    default void setPairedSimulation(boolean enabled) {
+    }
+
+    default void setPairedDamage(boolean enabled) {
+    }
+
+    default List<ServerSimEvent> takeServerSimEvents() {
+        return Collections.emptyList();
+    }
+
+    default void onPassEnd() {
+    }
+
+    default void onReplayStart(int startTick) {
+    }
+
+    default void onReplayEnd() {
+    }
 }

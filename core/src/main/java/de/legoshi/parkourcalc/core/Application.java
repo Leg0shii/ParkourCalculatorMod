@@ -34,6 +34,7 @@ import de.legoshi.parkourcalc.core.ui.SettingsIO;
 import de.legoshi.parkourcalc.core.ui.StartDragController;
 import de.legoshi.parkourcalc.core.ui.StartStateTable;
 import de.legoshi.parkourcalc.core.ui.SettingsModal;
+import de.legoshi.parkourcalc.core.ui.ServerEventLogPanel;
 import de.legoshi.parkourcalc.core.ui.TickInfoPanel;
 import de.legoshi.parkourcalc.core.ui.YawGizmoController;
 import de.legoshi.parkourcalc.core.ui.theme.HudMessageStyle;
@@ -66,6 +67,7 @@ import java.util.Set;
 public final class Application {
 
     private final MinecraftAccess mc;
+    private final Simulator simulator;
 
     private final InputData inputData = new InputData();
     private final OverlayManager overlayManager = new OverlayManager();
@@ -97,6 +99,7 @@ public final class Application {
 
     public Application(Simulator simulator, MinecraftAccess mc) {
         this.mc = mc;
+        this.simulator = simulator;
         this.selection = new SelectionManager(mc);
         this.runner = new SimulationRunner(simulator);
         this.saveController = new SaveController(inputData, runner, mc, this::runSimulation);
@@ -240,16 +243,19 @@ public final class Application {
         });
 
         TickInfoPanel tickInfoPanel = new TickInfoPanel(boxController, inputData, selection, settings, runner, this::pushHudMessage);
+        ServerEventLogPanel serverEventLogPanel = new ServerEventLogPanel(runner, selection);
         PerfOverlay perfOverlay = new PerfOverlay();
         FileMenu fileMenu = new FileMenu(saveController, filePicker, settings, this::saveSettings);
         inputOverlay.setSaveSelectionAsTasHandler(() -> promptSaveSelectionAsTas(fileMenu));
         SettingsModal settingsModal = new SettingsModal(settings, this::saveSettings);
+        settingsModal.setPairedSimulationHook(simulator.supportsPairedSimulation(), this::applyPairedSimulationChange);
         HudMessagesPanel hudMessagesPanel = new HudMessagesPanel(hudMessages, settings);
         MainWindowOverlay mainWindow = new MainWindowOverlay(
                 inputOverlay, inputData, fileMenu, settings, this::saveSettings,tickInfoPanel, perfOverlay,
                 settingsModal, systemBridge, saveController::getSaveStore, modVersion, mc, this::undo, this::redo,
                 hudMessagesPanel
         );
+        mainWindow.setServerEventLogPanel(serverEventLogPanel);
         overlayManager.register(mainWindow);
         overlayManager.register(angleSolverWindow);
         overlayManager.register(graphEditorWindow);
@@ -271,6 +277,30 @@ public final class Application {
         this.settingsPath = path;
         SettingsIO.load(path, settings);
         ConstraintText.statsPrecision = settings.solverStatsPrecision;
+        if (!simulator.supportsPairedSimulation()) {
+            settings.pairedSimulation = false;
+        }
+        simulator.setPairedSimulation(settings.pairedSimulation);
+        simulator.setPairedDamage(settings.pairedDamage);
+    }
+
+    public void applyPairedSimulationChange() {
+        Vec3dCore startPos = runner.getStartPosition();
+        Vec3dCore startVel = runner.getStartVelocity();
+        float startYaw = runner.getStartYaw();
+        StartResumeState startResume = runner.getStartResumeState();
+        mc.runOnServerThread(() -> {
+            simulator.setPairedSimulation(settings.pairedSimulation);
+            simulator.setPairedDamage(settings.pairedDamage);
+            runner.invalidate();
+            return null;
+        });
+        runner.setStartPosition(startPos);
+        runner.setStartVelocity(startVel);
+        runner.setStartYaw(startYaw);
+        runner.setStartResumeState(startResume);
+        boxController.clearAll();
+        runSimulation();
     }
 
     public void saveSettings() {
