@@ -1,0 +1,45 @@
+name: modrinth-backfill
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'release tag whose fabric 1.21.3 jar should be published to Modrinth'
+        required: true
+        default: 'v1.9.0'
+
+permissions:
+  contents: read
+
+jobs:
+  backfill:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: derive version from tag
+        id: version
+        env:
+          TAG: ${{ inputs.tag }}
+        run: echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - name: download release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download "${{ inputs.tag }}" --repo "$GITHUB_REPOSITORY" --pattern "pkc-fabric-1.21.3-${{ steps.version.outputs.version }}.jar"
+
+      - name: fetch release changelog
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release view "${{ inputs.tag }}" --repo "$GITHUB_REPOSITORY" --json body --jq .body > changelog.md
+
+      - name: publish fabric 1.21.3 to modrinth
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: Lxy4H4lS
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          files: pkc-fabric-1.21.3-${{ steps.version.outputs.version }}.jar
+          name: ${{ steps.version.outputs.version }} (Fabric 1.21.3)
+          version: ${{ steps.version.outputs.version }}
+          version-type: ${{ contains(inputs.tag, '-') && 'beta' || 'release' }}
+          loaders: fabric
+          game-versions: '1.21.3'
+          changelog-file: changelog.md
