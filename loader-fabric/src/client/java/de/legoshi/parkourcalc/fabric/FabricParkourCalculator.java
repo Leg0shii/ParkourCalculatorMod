@@ -43,6 +43,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
     private static KeyMapping solveKeyBinding;
     private static KeyMapping solverStartTickKeyBinding;
     private static KeyMapping solverEndTickKeyBinding;
+    private static KeyMapping rerunSimulationKeyBinding;
     private static KeyMapping captureMomentumBlockKeyBinding;
     private static KeyMapping captureCollisionBlockKeyBinding;
     private static KeyMapping captureLandBlockKeyBinding;
@@ -125,6 +126,12 @@ public class FabricParkourCalculator implements ClientModInitializer {
                 "key.parkourcalculator.set_solver_end",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_O,
+                category
+        ));
+        rerunSimulationKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "key.parkourcalculator.rerun_simulation",
+                InputConstants.Type.KEYSYM,
+                GLFW.GLFW_KEY_R,
                 category
         ));
 
@@ -316,6 +323,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         while (solverEndTickKeyBinding.consumeClick()) {
             solverEndPressed = true;
         }
+        boolean rerunSimulationPressed = false;
+        while (rerunSimulationKeyBinding.consumeClick()) {
+            rerunSimulationPressed = true;
+        }
         boolean captureMomentum = false;
         boolean captureCollision = false;
         boolean captureLand = false;
@@ -373,6 +384,9 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
         if (solverEndPressed && chordFree) {
             application.setSolverLandingTickFromSelection();
+        }
+        if (rerunSimulationPressed && chordFree) {
+            application.runSimulation();
         }
         if (captureMomentum && chordFree) {
             application.captureAngleSolverBlock(BlockSelection.Kind.MOMENTUM);
