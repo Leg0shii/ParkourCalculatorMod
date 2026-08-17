@@ -203,6 +203,58 @@ public class ConstraintDeriverTest {
         assertEquals(1.0e-7, legacy[3] - modern[3], 1.0e-9);
     }
 
+    private static List<AABB> crossCornerWalls() {
+        return Arrays.asList(
+                box(6.0, 65.0, 7.0, 7.0, 66.0, 8.0),
+                box(4.0, 65.0, 7.0, 5.0, 66.0, 8.0),
+                box(6.0, 65.0, 9.0, 7.0, 66.0, 10.0),
+                box(4.0, 65.0, 9.0, 5.0, 66.0, 10.0));
+    }
+
+    @Test
+    public void intersectionCentreSplitsIntoTwoBarsAvoidingTheCornerWalls() {
+        List<double[]> areas = ConstraintDeriver.deriveFootprintAreas(cube(5, 64, 8), 5.5, 8.5, crossCornerWalls(), false);
+        assertEquals("a + intersection yields two bars", 2, areas.size());
+
+        double[] hBar = areas.get(0);
+        assertEquals("horizontal bar keeps the full X overhang", 5 - HALF, hBar[0], EPS);
+        assertEquals(6 + HALF, hBar[1], EPS);
+        assertEquals("horizontal bar Z is pulled off the corner walls", 8 + HALF, hBar[2], EPS);
+        assertEquals(9 - HALF, hBar[3], EPS);
+
+        double[] vBar = areas.get(1);
+        assertEquals("vertical bar X is pulled off the corner walls", 5 + HALF, vBar[0], EPS);
+        assertEquals(6 - HALF, vBar[1], EPS);
+        assertEquals("vertical bar keeps the full Z overhang", 8 - HALF, vBar[2], EPS);
+        assertEquals(9 + HALF, vBar[3], EPS);
+    }
+
+    @Test
+    public void openBlockStaysASingleFootprintArea() {
+        List<double[]> areas = ConstraintDeriver.deriveFootprintAreas(cube(5, 64, 8), 5.5, 8.5, Collections.<AABB>emptyList(), false);
+        assertEquals(1, areas.size());
+        double[] r = areas.get(0);
+        assertEquals(5 - HALF, r[0], EPS);
+        assertEquals(6 + HALF, r[1], EPS);
+        assertEquals(8 - HALF, r[2], EPS);
+        assertEquals(9 + HALF, r[3], EPS);
+    }
+
+    @Test
+    public void diagonalCornerAtOrBelowTheStandSurfaceDoesNotSplit() {
+        List<AABB> obstacles = Arrays.asList(box(6.0, 63.0, 9.0, 7.0, 65.0, 10.0));
+        List<double[]> areas = ConstraintDeriver.deriveFootprintAreas(cube(5, 64, 8), 5.5, 8.5, obstacles, false);
+        assertEquals("a corner whose top is at the stand surface does not clip the body", 1, areas.size());
+    }
+
+    @Test
+    public void flushCardinalNeighbourStaysASingleArea() {
+        List<AABB> obstacles = Arrays.asList(cube(6, 65, 8));
+        List<double[]> areas = ConstraintDeriver.deriveFootprintAreas(cube(5, 64, 8), 5.5, 8.5, obstacles, false);
+        assertEquals("a straight-on neighbour only insets one side, no split", 1, areas.size());
+        assertEquals(6 - HALF, areas.get(0)[1], EPS);
+    }
+
     @Test
     public void openCellKeepsExactBlockEdges() {
         double[] r = ConstraintDeriver.deriveCell(5, 8, 64.0, 5.5, 8.5, Collections.<AABB>emptyList());

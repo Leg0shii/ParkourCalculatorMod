@@ -496,6 +496,17 @@ public final class AngleSolverState {
         list.add(Constraint.range(Constraint.Field.Z, zLo, zHi, true, true));
     }
 
+    public void setFootprintAreas(int tick, List<double[]> areas) {
+        if (tick < 0 || areas == null || areas.isEmpty()) return;
+        List<Constraint> list = tickConstraints(tick).getConstraints();
+        list.removeIf(c -> c.isRange() && !c.isRelative()
+                && (c.getField() == Constraint.Field.X || c.getField() == Constraint.Field.Z));
+        for (double[] a : areas) {
+            list.add(Constraint.range(Constraint.Field.X, a[0], a[1], true, true));
+            list.add(Constraint.range(Constraint.Field.Z, a[2], a[3], true, true));
+        }
+    }
+
     public void mergeFootprint(int tick, double xLo, double xHi, double zLo, double zHi) {
         if (tick < 0) return;
         List<Constraint> list = tickConstraints(tick).getConstraints();

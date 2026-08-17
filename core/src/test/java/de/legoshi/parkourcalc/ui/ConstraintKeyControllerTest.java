@@ -54,6 +54,39 @@ public class ConstraintKeyControllerTest {
     }
 
     @Test
+    public void footprintAtACrossIntersectionCreatesTwoBarAreas() {
+        mc.addBlock(5, 64, 8, box(5.0, 64.0, 8.0, 6.0, 65.0, 9.0));
+        mc.worldBoxes.add(box(6.0, 65.0, 7.0, 7.0, 66.0, 8.0));
+        mc.worldBoxes.add(box(4.0, 65.0, 7.0, 5.0, 66.0, 8.0));
+        mc.worldBoxes.add(box(6.0, 65.0, 9.0, 7.0, 66.0, 10.0));
+        mc.worldBoxes.add(box(4.0, 65.0, 9.0, 5.0, 66.0, 10.0));
+        mc.lookedAtBlock = new int[] {5, 64, 8};
+        mc.lookedAtFace = Face.POS_Y;
+        mc.lookedAtHitVec = new Vec3dCore(5.5, 65.0, 8.5);
+
+        controller.onKey(false, false);
+
+        List<Constraint> list = constraints();
+        assertEquals("two X ranges and two Z ranges", 4, list.size());
+
+        Constraint xH = list.get(0), zH = list.get(1), xV = list.get(2), zV = list.get(3);
+        assertEquals(Constraint.Field.X, xH.getField());
+        assertEquals(Constraint.Field.Z, zH.getField());
+        assertEquals(Constraint.Field.X, xV.getField());
+        assertEquals(Constraint.Field.Z, zV.getField());
+
+        assertEquals(5 - HALF, xH.getLo(), EPS);
+        assertEquals(6 + HALF, xH.getHi(), EPS);
+        assertEquals(8 + HALF, zH.getLo(), EPS);
+        assertEquals(9 - HALF, zH.getHi(), EPS);
+
+        assertEquals(5 + HALF, xV.getLo(), EPS);
+        assertEquals(6 - HALF, xV.getHi(), EPS);
+        assertEquals(8 - HALF, zV.getLo(), EPS);
+        assertEquals(9 + HALF, zV.getHi(), EPS);
+    }
+
+    @Test
     public void footprintOnTheLowerStepIsClippedByTheRiserInTheSameCell() {
         mc.worldBoxes.add(box(5.0, 64.0, 8.0, 6.0, 64.5, 9.0));
         mc.worldBoxes.add(box(5.5, 64.5, 8.0, 6.0, 65.0, 9.0));

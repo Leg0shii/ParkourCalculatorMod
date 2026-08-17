@@ -28,8 +28,9 @@ import java.util.List;
  * world extent and are skipped (see {@link ConstraintShapes}). A relative X/Z constraint resolves to
  * absolute bounds against its reference tick's simulated position before shaping, so its plate floats
  * with the current path (and vanishes while the reference tick has no simulated position); the
- * geometry cache keys on the path revision, so a resim re-resolves it. A co-tick bounded X range and Z range
- * merge into a single landing pad; lone bounded ranges, equalities, and open-ended comparisons each
+ * geometry cache keys on the path revision, so a resim re-resolves it. Co-tick bounded X ranges and Z ranges
+ * pair off in list order, each pair becoming one landing pad (an intersection footprint stores two pairs, so
+ * it draws as two pads); leftover unpaired ranges, equalities, and open-ended comparisons each
  * become their own plate. Each plate carries the indices (into the tick's constraint list) it came from
  * and whether it is highlighted by the current selection. Plates render only while the solver view is
  * active.
@@ -80,17 +81,21 @@ public final class AngleSolverConstraintSource implements ConstraintBoxSource {
         if (drawable.isEmpty()) return java.util.Collections.emptyList();
 
         ConstraintStyle style = BoxStyle.constraintStyle(settings);
-        int xIdx = firstBoundedRangeIndex(all, drawable, Constraint.Field.X);
-        int zIdx = firstBoundedRangeIndex(all, drawable, Constraint.Field.Z);
-        boolean merged = xIdx >= 0 && zIdx >= 0;
+        List<Integer> xRanges = boundedRangeIndices(all, drawable, Constraint.Field.X);
+        List<Integer> zRanges = boundedRangeIndices(all, drawable, Constraint.Field.Z);
+        int pairs = Math.min(xRanges.size(), zRanges.size());
+        java.util.Set<Integer> paired = new java.util.HashSet<>();
 
         boolean solverUnmet = solverUnmetTicks().contains(tickIndex);
         List<ConstraintPlate> out = new ArrayList<>();
-        if (merged) {
+        for (int k = 0; k < pairs; k++) {
+            int xIdx = xRanges.get(k), zIdx = zRanges.get(k);
+            paired.add(xIdx);
+            paired.add(zIdx);
             out.add(tagged(ConstraintShapes.pad(resolved[xIdx], resolved[zIdx], foot, style, tickIndex, new int[]{xIdx, zIdx}), solverUnmet));
         }
         for (int idx : drawable) {
-            if (merged && (idx == xIdx || idx == zIdx)) continue;
+            if (paired.contains(idx)) continue;
             Constraint c = resolved[idx];
             int[] one = {idx};
             ConstraintPlate plate;
@@ -142,12 +147,13 @@ public final class AngleSolverConstraintSource implements ConstraintBoxSource {
         return plate;
     }
 
-    private static int firstBoundedRangeIndex(List<Constraint> all, List<Integer> drawable, Constraint.Field field) {
+    private static List<Integer> boundedRangeIndices(List<Constraint> all, List<Integer> drawable, Constraint.Field field) {
+        List<Integer> out = new ArrayList<>();
         for (int idx : drawable) {
             Constraint c = all.get(idx);
-            if (c.isRange() && c.getField() == field) return idx;
+            if (c.isRange() && c.getField() == field) out.add(idx);
         }
-        return -1;
+        return out;
     }
 
     /**
