@@ -77,21 +77,14 @@ public final class BlockSolver {
         public final Objective objective;
         public final boolean clean;
         public final boolean landed;
-        public final Objective fallbackObjective;
 
         Result(double[] yaws, ForwardPath path, List<Face> faces, Objective objective, boolean clean, boolean landed) {
-            this(yaws, path, faces, objective, clean, landed, null);
-        }
-
-        Result(double[] yaws, ForwardPath path, List<Face> faces, Objective objective, boolean clean, boolean landed,
-               Objective fallbackObjective) {
             this.yaws = yaws;
             this.path = path;
             this.faces = faces;
             this.objective = objective;
             this.clean = clean;
             this.landed = landed;
-            this.fallbackObjective = fallbackObjective;
         }
 
         public boolean ok() {
@@ -153,40 +146,14 @@ public final class BlockSolver {
                 ? ClosedFormSolve.optimize((ExactJumpModel) model, spec, feasTol, cancel) : null;
         Result fast = runPlanner(closedForm, model, sc, footprints, landFootprint, obstacles, heights,
                 objectives, maxSolves, cancel);
-        if (cancel.get()) return fast;
+        if ((fast != null && fast.ok()) || cancel.get()) return fast;
 
         InnerSolve cmaes = (spec, warm) ->
                 SolveCore.optimize(model, spec, budget, sigmaDeg, feasTol, cancel, warm);
-        if (fast != null && fast.ok()) {
-            if (fast.fallbackObjective == null) return fast;
-            Result rescued = rescueDirection(cmaes, model, sc, footprints, fast, obstacles, heights,
-                    landFootprint, cancel);
-            return rescued != null ? rescued : fast;
-        }
-
         Result slow = runPlanner(cmaes, model, sc, footprints, landFootprint, obstacles, heights,
                 objectives, maxSolves, cancel);
         if (slow != null && (fast == null || slow.ok() || better(slow, fast))) return slow;
         return fast;
-    }
-
-    private Result rescueDirection(InnerSolve inner, ForwardModel model, JumpPhysicsInputs sc,
-                                   List<JumpConstraint> footprints, Result fast, List<Obstacle> obstacles,
-                                   double[] heights, double[] landFootprint, AtomicBoolean cancel) {
-        List<AABB> blocks = new ArrayList<>();
-        for (Obstacle o : obstacles) blocks.add(o.block);
-        List<JumpConstraint> cons = new ArrayList<>(footprints);
-        for (Face f : fast.faces) {
-            cons.add(face(f.axisX, f.upper, f.segTick, f.value, "rescue@" + f.segTick));
-        }
-        Eval opt = evaluate(inner, model, sc, cons, fast.objective, blocks, heights, landFootprint,
-                cancel, fast.yaws, null);
-        if (opt.yaws == null || !opt.clean || !opt.landed) return null;
-        return new Result(opt.yaws, opt.path, fast.faces, fast.objective, true, true);
-    }
-
-    private static boolean sameDirection(Objective a, Objective b) {
-        return a.axis == b.axis && a.sense == b.sense;
     }
 
     private Result runPlanner(InnerSolve inner, ForwardModel model, JumpPhysicsInputs sc, List<JumpConstraint> footprints,
@@ -250,8 +217,7 @@ public final class BlockSolver {
                     }
                 }
                 // The user's direction is infeasible (e.g. it would leave the pad); hand back the feasible path.
-                Objective actual = sameDirection(feas.objective, userObj) ? null : feas.objective;
-                return new Result(feas.yaws, feas.path, feas.faces, userObj, true, true, actual);
+                return new Result(feas.yaws, feas.path, feas.faces, userObj, true, true);
             }
             if (feas.bestNonOk != null && (bestNonOk == null || better(feas.bestNonOk, bestNonOk))) {
                 bestNonOk = feas.bestNonOk;

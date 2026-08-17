@@ -1362,14 +1362,6 @@ public final class AngleSolverEngine {
         result.getOutcomes().add(0, objectiveOutcome(result, r.objective, job.startTick));
         addBaseDetails(result, solveNanos);
         result.addDetail("Derived walls", Integer.toString(r.faces.size()));
-        Objective userObj = job.objectives.isEmpty() ? r.objective : job.objectives.get(0);
-        if (r.ok() && r.fallbackObjective != null) {
-            result.setNotice(directionFallbackNotice(directionLabel(r.objective), directionLabel(r.fallbackObjective)));
-        } else if (!r.ok() && (r.objective.axis != userObj.axis || r.objective.sense != userObj.sense)) {
-            result.setNotice("No clean path found optimizing toward " + directionLabel(userObj)
-                    + "; showing the best attempt, which optimized toward " + directionLabel(r.objective)
-                    + ". Solve For was switched to match.");
-        }
         Plan plan = new Plan(job.startTick, r.yaws, job.ph.strafeMask, job.ph.force45Mask, 1, r.path, job.ph.inputs.startPos);
         AngleSolverState.Axis ax = r.objective.axis == JumpPhysicsInputs.Axis.X ? AngleSolverState.Axis.X : AngleSolverState.Axis.Z;
         AngleSolverState.Goal gl = r.objective.sense == Objective.Sense.MAX ? AngleSolverState.Goal.MAX : AngleSolverState.Goal.MIN;
