@@ -69,10 +69,13 @@ anglesolver/
                            (solve/loopmm-tight-t39-fast: the SAME capture under FAST effort; pins
                            the staged late-race: primary fast starves, the explore arm spawns at
                            the 20 s checkpoint and lands it, budget 90 s; the redirect-class gate)
-  DirectionFallbackReportTest.java  receding-horizon direction-fallback reporting (gh-290): every
-                           Solve-For direction on j024-bfly lands feasibly, and a reported fallback
-                           always names a direction other than the requested one; the notice gate
-                           itself is unit-tested fast in core/anglesolver/DirectionNoticeGateTest
+  LevelSetAscentTest.java  level-set objective ascent (gh-290): on keep-out-wall captures where the
+                           chosen Solve For degenerates the dual recovery (j003 X/MIN, j012 Z/MAX,
+                           j008-bfneo Z/MIN, taser-80t X/MIN), the goal-wall bisection strictly beats
+                           the plain SLP hug the reseeded path produces and reaches near the dual
+                           bound (j003 X/MIN: -27 hug -> -31.3 optimum). The dF gate (facing wall =>
+                           skip + info notice) is unit-tested fast in
+                           core/anglesolver/DfDirectionGateTest
   harness/                 shared plumbing; no test lives here
 resources/
   problems/<check>/        one folder per check; holds captures or .expect.json sidecars

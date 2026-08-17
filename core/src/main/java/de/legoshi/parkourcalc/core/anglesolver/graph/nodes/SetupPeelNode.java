@@ -15,7 +15,6 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.LongRunSolver;
-import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
@@ -70,7 +69,6 @@ public final class SetupPeelNode implements NodeRuntime {
         int steps = (int) Math.round(360.0 / stepDeg);
         double[] best = null;
         double bestViol = Double.POSITIVE_INFINITY;
-        Objective bestFallback = null;
         PeelWatchdog watchdog = new PeelWatchdog(cancel);
         Thread watchdogThread = new Thread(watchdog, "angle-solver-peel-watchdog");
         watchdogThread.setDaemon(true);
@@ -89,8 +87,7 @@ public final class SetupPeelNode implements NodeRuntime {
                         (float) gf[lead - 1]);
                 AtomicBoolean candCancel = watchdog.arm(
                         Math.min(stageDeadline, System.nanoTime() + candidateMs * 1_000_000L));
-                Objective[] fallback = new Objective[1];
-                double[] tailYaws = LongRunSolver.solve(em, tail, ctx.feasTol, candCancel, cfg, fallback);
+                double[] tailYaws = LongRunSolver.solve(em, tail, ctx.feasTol, candCancel, cfg);
                 watchdog.current = null;
                 if (tailYaws == null) {
                     if (SolverTrace.on()) SolverTrace.log("ENGINE", "peel cand=%.1f tail miss", yaws[0]);
@@ -101,14 +98,10 @@ public final class SetupPeelNode implements NodeRuntime {
                 double[] gfFull = sc.toGameFacings(full);
                 double viol = fullCompiled.maxViolation(gfFull, em.forward(sc, gfFull));
                 if (SolverTrace.on()) SolverTrace.log("ENGINE", "peel cand=%.1f tail solved viol=%.3e", full[0], viol);
-                if (viol <= ctx.feasTol) {
-                    if (fallback[0] != null) ctx.noteDirectionFallback(fallback[0], ctx.exactObjective(full));
-                    return full;
-                }
+                if (viol <= ctx.feasTol) return full;
                 if (viol < bestViol) {
                     bestViol = viol;
                     best = full;
-                    bestFallback = fallback[0];
                 }
             }
         } finally {
@@ -118,7 +111,6 @@ public final class SetupPeelNode implements NodeRuntime {
         if (SolverTrace.on()) {
             SolverTrace.log("ENGINE", "setup peel %s", best == null ? "miss" : "best viol=" + bestViol);
         }
-        if (best != null && bestFallback != null) ctx.noteDirectionFallback(bestFallback, ctx.exactObjective(best));
         return best;
     }
 

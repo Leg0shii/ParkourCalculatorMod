@@ -789,11 +789,11 @@ public final class AngleSolverWindow implements RenderInterface {
             + " tick to route around the wall, then re-solve.";
 
     private static final String DIRECTION_TIP =
-            "Whether a landing exists does not depend on the Solve-For direction, but the deterministic"
-            + " ascent that pushes the path toward the chosen direction can fail direction-dependently"
-            + " (degenerate dual recovery). When it does, the solver keeps a guaranteed-feasible path found"
-            + " through another direction rather than failing the whole solve. Raising the effort or the"
-            + " time budget gives the stochastic stages room to recover the chosen direction.";
+            "A delta-facing (dF) constraint pins the change in the player's facing between ticks, which the"
+            + " deterministic direction-optimizer (a position-linear method) cannot represent, so it is"
+            + " skipped and the general search optimizes the direction instead. This does not affect landing,"
+            + " only whether the shown path is the exact directional optimum. dF constraints are rare;"
+            + " ordinary keep-out walls are position constraints and are not affected.";
 
     private static final String SNEAK_TIP =
             "Sneak is not a pure key effect: when the slowdown kicks in, and how long the crouch pose"

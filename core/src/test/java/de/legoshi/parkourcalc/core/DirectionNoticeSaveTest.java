@@ -21,7 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 public class DirectionNoticeSaveTest {
 
-    private static final String NOTICE = AngleSolverEngine.directionFallbackNotice("min Z", "max X");
+    private static final String NOTICE = AngleSolverEngine.DF_DIRECTION_NOTICE;
 
     @Test
     public void noticeSurvivesSaveRoundTrip() throws Exception {
