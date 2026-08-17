@@ -148,6 +148,7 @@ public final class SaveFile {
         public long durationNanos;                       // precise solve compute time; 0 = legacy save
         public String finishedAt;                        // formatted clock time, null if unset
         public String solver;                            // algorithm label, null = legacy save
+        public String notice;
         public double objectiveValue;
         public boolean hasObjective;
         public List<Outcome> outcomes = new ArrayList<Outcome>();

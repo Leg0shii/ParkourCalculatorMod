@@ -1104,10 +1104,35 @@ public final class AngleSolverEngine {
         if (ctx.smoothingEvals.get() > 0) result.addDetail("Smoothing evals", Long.toString(ctx.smoothingEvals.get()));
         double finalObjective = path.getPos(spec.objective.tick, spec.objective.axis);
         double finalViolation = JumpConstraintCompiler.compile(spec).maxViolation(gameFacings, path);
+        attachDirectionNotice(result, ctx, spec.objective, finalObjective);
         finishRecord(rec, SolveRunRecord.STATUS_SOLVED, finalObjective, finalViolation,
                 finalViolation <= FEAS_TOL, solverName, yaws);
         Plan plan = new Plan(job.startTick, yaws, job.strafeMask, job.force45Mask, 1, path, sc.startPos, stageLocked);
         return new Outcome(result, plan);
+    }
+
+    private static final double DIRECTION_IMPROVE_EPS = 1.0e-9;
+
+    static void attachDirectionNotice(SolveResult result, GraphContext ctx, Objective requested,
+                                      double finalObjective) {
+        Objective actual = ctx.directionFallback();
+        if (actual == null) return;
+        double base = ctx.directionFallbackObjective();
+        boolean improved = requested.sense == Objective.Sense.MAX
+                ? finalObjective > base + DIRECTION_IMPROVE_EPS
+                : finalObjective < base - DIRECTION_IMPROVE_EPS;
+        if (improved) return;
+        result.setNotice(directionFallbackNotice(directionLabel(requested), directionLabel(actual)));
+    }
+
+    public static String directionLabel(Objective o) {
+        return (o.sense == Objective.Sense.MAX ? "max " : "min ")
+                + (o.axis == JumpPhysicsInputs.Axis.X ? "X" : "Z");
+    }
+
+    public static String directionFallbackNotice(String requested, String actual) {
+        return "Could not optimize toward " + requested + ": a feasible path was found but pushing it in that"
+                + " direction failed, so the shown path is optimized toward " + actual + " instead.";
     }
 
     /** The byte-exact objective value the given facings realize (for comparing two feasible candidates). */
@@ -1337,6 +1362,14 @@ public final class AngleSolverEngine {
         result.getOutcomes().add(0, objectiveOutcome(result, r.objective, job.startTick));
         addBaseDetails(result, solveNanos);
         result.addDetail("Derived walls", Integer.toString(r.faces.size()));
+        Objective userObj = job.objectives.isEmpty() ? r.objective : job.objectives.get(0);
+        if (r.ok() && r.fallbackObjective != null) {
+            result.setNotice(directionFallbackNotice(directionLabel(r.objective), directionLabel(r.fallbackObjective)));
+        } else if (!r.ok() && (r.objective.axis != userObj.axis || r.objective.sense != userObj.sense)) {
+            result.setNotice("No clean path found optimizing toward " + directionLabel(userObj)
+                    + "; showing the best attempt, which optimized toward " + directionLabel(r.objective)
+                    + ". Solve For was switched to match.");
+        }
         Plan plan = new Plan(job.startTick, r.yaws, job.ph.strafeMask, job.ph.force45Mask, 1, r.path, job.ph.inputs.startPos);
         AngleSolverState.Axis ax = r.objective.axis == JumpPhysicsInputs.Axis.X ? AngleSolverState.Axis.X : AngleSolverState.Axis.Z;
         AngleSolverState.Goal gl = r.objective.sense == Objective.Sense.MAX ? AngleSolverState.Goal.MAX : AngleSolverState.Goal.MIN;

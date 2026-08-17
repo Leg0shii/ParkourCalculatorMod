@@ -69,6 +69,10 @@ anglesolver/
                            (solve/loopmm-tight-t39-fast: the SAME capture under FAST effort; pins
                            the staged late-race: primary fast starves, the explore arm spawns at
                            the 20 s checkpoint and lands it, budget 90 s; the redirect-class gate)
+  DirectionFallbackReportTest.java  receding-horizon direction-fallback reporting (gh-290): every
+                           Solve-For direction on j024-bfly lands feasibly, and a reported fallback
+                           always names a direction other than the requested one; the notice gate
+                           itself is unit-tested fast in core/anglesolver/DirectionNoticeGateTest
   harness/                 shared plumbing; no test lives here
 resources/
   problems/<check>/        one folder per check; holds captures or .expect.json sidecars

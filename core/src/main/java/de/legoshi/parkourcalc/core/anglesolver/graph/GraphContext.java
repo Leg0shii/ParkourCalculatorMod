@@ -46,6 +46,8 @@ public final class GraphContext {
     private boolean reachBoundSet;
     private double reachBound = Double.NaN;
     private volatile long overallDeadlineNanos;
+    private volatile Objective directionFallback;
+    private volatile double directionFallbackObjective = Double.NaN;
 
     public GraphContext(JumpSpec spec, ForwardModel model, StartBox freeBox, JumpConstraint legalGoal,
                         double feasTol, AtomicBoolean cancel, SolveProgress progress, boolean sequential,
@@ -117,6 +119,19 @@ public final class GraphContext {
 
     public synchronized String chainWith(String name) {
         return Scoring.chain(chain, name);
+    }
+
+    public void noteDirectionFallback(Objective actual, double rawObjective) {
+        this.directionFallback = actual;
+        this.directionFallbackObjective = rawObjective;
+    }
+
+    public Objective directionFallback() {
+        return directionFallback;
+    }
+
+    public double directionFallbackObjective() {
+        return directionFallbackObjective;
     }
 
     public boolean stageLocked() {

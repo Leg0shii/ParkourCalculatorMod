@@ -69,6 +69,7 @@ public final class SolveResult {
     private long durationNanos;
     private String finishedAt;     // formatted clock time when the solve finished, null if unset
     private String solver;         // algorithm that produced the yaws, null if unset / legacy save
+    private String notice;
     private double objectiveValue;
     private boolean hasObjective;
 
@@ -154,6 +155,14 @@ public final class SolveResult {
 
     public void setSolver(String solver) {
         this.solver = solver;
+    }
+
+    public String getNotice() {
+        return notice;
+    }
+
+    public void setNotice(String notice) {
+        this.notice = notice;
     }
 
     public double getObjectiveValue() {

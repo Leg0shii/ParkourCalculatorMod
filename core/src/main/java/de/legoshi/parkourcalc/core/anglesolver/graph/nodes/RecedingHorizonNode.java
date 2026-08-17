@@ -8,6 +8,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.NodeRuntime;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamParse;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamValues;
 import de.legoshi.parkourcalc.core.anglesolver.solver.LongRunSolver;
+import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -27,9 +28,17 @@ public final class RecedingHorizonNode implements NodeRuntime {
         if (!ctx.exact()) return NodeOutcome.of(Guarantee.NONE, in);
         ctx.chainAppend("receding horizon");
         if (SolverTrace.on()) SolverTrace.log("ENGINE", "receding horizon start");
-        double[] fromScratch = LongRunSolver.solve(ctx.exactModel, ctx.spec, ctx.feasTol, nodeToken, cfg);
+        Objective[] fallback = new Objective[1];
+        double[] fromScratch = LongRunSolver.solve(ctx.exactModel, ctx.spec, ctx.feasTol, nodeToken, cfg, fallback);
         if (SolverTrace.on()) SolverTrace.log("ENGINE", "receding horizon %s", fromScratch != null ? "solved" : "miss");
         if (fromScratch == null) return NodeOutcome.of(Guarantee.NONE, in);
+        if (fallback[0] != null) {
+            ctx.noteDirectionFallback(fallback[0], ctx.exactObjective(fromScratch));
+            if (SolverTrace.on()) {
+                SolverTrace.log("ENGINE", "receding horizon direction fallback %s %s",
+                        fallback[0].axis, fallback[0].sense);
+            }
+        }
         return NodeOutcome.of(Guarantee.FOUND, Candidate.of(ctx, fromScratch));
     }
 }

@@ -768,6 +768,7 @@ public final class SaveIO {
         out.durationNanos = r.getDurationNanos();
         out.finishedAt = r.getFinishedAt();
         out.solver = r.getSolver();
+        out.notice = r.getNotice();
         out.objectiveValue = r.getObjectiveValue();
         out.hasObjective = r.hasObjective();
         for (SolveResult.Outcome o : r.getOutcomes()) {
@@ -802,6 +803,7 @@ public final class SaveIO {
         r.setDurationNanos(rd.durationNanos);
         r.setFinishedAt(rd.finishedAt);
         r.setSolver(rd.solver);
+        r.setNotice(rd.notice);
         if (rd.hasObjective) r.setObjective(rd.objectiveValue);
         if (rd.outcomes != null) {
             for (SaveFile.Outcome o : rd.outcomes) {
