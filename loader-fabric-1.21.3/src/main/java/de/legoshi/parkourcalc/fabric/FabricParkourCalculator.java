@@ -123,6 +123,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         application.setPlaybackBridge(playbackBridge);
         application.setBlockPicker(new FabricBlockPicker());
         application.setupUi();
+        Minecraft client = Minecraft.getInstance();
+        if (client != null && client.options != null) {
+            client.options.load();
+        }
     }
 
     private static boolean wasPlaybackRunning = false;

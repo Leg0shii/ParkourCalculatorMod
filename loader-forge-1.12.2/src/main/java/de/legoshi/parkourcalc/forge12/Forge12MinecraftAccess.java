@@ -212,6 +212,12 @@ public final class Forge12MinecraftAccess implements MinecraftAccess {
     }
 
     @Override
+    public boolean isAltDown() {
+        return org.lwjgl.input.Keyboard.isKeyDown(org.lwjgl.input.Keyboard.KEY_LMENU)
+                || org.lwjgl.input.Keyboard.isKeyDown(org.lwjgl.input.Keyboard.KEY_RMENU);
+    }
+
+    @Override
     public boolean isSaveChordDown() {
         return Lwjgl2InputState.isSaveChordDown();
     }
