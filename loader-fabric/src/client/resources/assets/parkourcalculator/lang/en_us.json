@@ -4,6 +4,7 @@
     "key.parkourcalculator.toggle_playback": "Start/Stop Playback",
     "key.parkourcalculator.add_landing_constraints": "Add block as constraint",
     "key.parkourcalculator.remove_selected_constraints": "Remove selected constraints",
+    "key.parkourcalculator.extend_path_and_solve_to_block": "Extend Path & Solve to Block",
     "key.parkourcalculator.apply_surface_state": "Apply surface state from path",
     "key.parkourcalculator.solve": "Solve and apply (Angle Solver)",
     "key.parkourcalculator.set_solver_start": "Set solver start tick",

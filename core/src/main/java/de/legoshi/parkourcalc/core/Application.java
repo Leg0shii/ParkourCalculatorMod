@@ -742,4 +742,84 @@ public final class Application {
     public void renderPlayback() {
         playback.renderFrame();
     }
+
+    public void extendPathAndSolveToBlock(double targetX, double targetY, double targetZ) {
+        List<InputRow> rows = this.inputData.getRows();
+        int originalSize = rows.size();
+
+        boolean wasAbove = false;
+        double startY = runner.getStartPosition().y;
+        if (originalSize > 0) {
+            TickState lastState = this.boxController.getState(originalSize - 1);
+            if (lastState != null) {
+                startY = lastState.position.y;
+            }
+        }
+        if (startY > targetY) {
+            wasAbove = true;
+        }
+
+        // 1. Probe-Airtime-Ticks mit W + Sprint anhängen
+        int maxSimTicks = 100;
+        for (int i = 0; i < maxSimTicks; i++) {
+            InputRow newRow = new InputRow();
+            newRow.setKeyActive(InputRow.Key.W, true);
+            newRow.setKeyActive(InputRow.Key.SPRINT, true);
+            rows.add(newRow);
+        }
+
+        this.runSimulation();
+
+        // 2. Exakten Lande-Tick finden
+        int crossingIndex = -1;
+        for (int i = originalSize; i < rows.size(); i++) {
+            TickState state = this.boxController.getState(i);
+            if (state == null) continue;
+
+            if (state.position.y > targetY) {
+                wasAbove = true;
+            }
+
+            if (wasAbove && state.position.y <= targetY && state.velocity.y <= 0) {
+                crossingIndex = i;
+                break;
+            }
+        }
+
+        if (crossingIndex == -1) {
+            while (rows.size() > originalSize) {
+                rows.remove(rows.size() - 1);
+            }
+            this.runSimulation();
+            pushHudMessage("Target height not reached", HudMessageStyle.COLOR_WARN);
+            return;
+        }
+
+        // 3. Überflüssige Ticks nach der Landung abschneiden
+        while (rows.size() > crossingIndex + 1) {
+            rows.remove(rows.size() - 1);
+        }
+
+        int jumpTick = crossingIndex;
+        this.selection.clear();
+        this.selection.handleClick(jumpTick);
+        this.onConstraintKey(false, false);
+
+        InputRow landingRow = rows.get(jumpTick);
+        if (landingRow != null) {
+            landingRow.setKeyActive(InputRow.Key.JUMP, true);
+        }
+
+        TickConstraints tc = this.angleSolverState.tickConstraints(jumpTick);
+        if (tc != null && tc.getOverride() != null) {
+            tc.getOverride().setSlipperiness(Slipperiness.DEFAULT);
+        }
+
+        this.runSimulation();
+        this.angleSolverState.setLandingTick(jumpTick);
+        saveController.markDirty();
+        this.solveAngleSolver();
+        pushHudMessage("Path extended to T" + (jumpTick + 1) + " · solving...", HudMessages.COLOR_DEFAULT);
+    }
 }
+

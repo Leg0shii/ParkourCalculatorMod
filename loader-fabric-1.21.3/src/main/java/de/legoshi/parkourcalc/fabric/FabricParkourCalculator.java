@@ -39,6 +39,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
     public static KeyMapping playbackKeyBinding;
     public static KeyMapping landingConstraintsKeyBinding;
     public static KeyMapping removeConstraintsKeyBinding;
+    public static KeyMapping extendPathAndSolveKeyBinding;
     private static KeyMapping applySurfaceStateKeyBinding;
     private static KeyMapping solveKeyBinding;
     private static KeyMapping solverStartTickKeyBinding;
@@ -81,6 +82,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         playbackKeyBinding = key("key.parkourcalculator.toggle_playback", GLFW.GLFW_KEY_P);
         landingConstraintsKeyBinding = key("key.parkourcalculator.add_landing_constraints", GLFW.GLFW_KEY_B);
         removeConstraintsKeyBinding = key("key.parkourcalculator.remove_selected_constraints", GLFW.GLFW_KEY_X);
+        extendPathAndSolveKeyBinding = key("key.parkourcalculator.extend_path_and_solve_to_block", GLFW.GLFW_KEY_U);
         applySurfaceStateKeyBinding = key("key.parkourcalculator.apply_surface_state", GLFW.GLFW_KEY_H);
         solveKeyBinding = key("key.parkourcalculator.solve", GLFW.GLFW_KEY_V);
         solverStartTickKeyBinding = key("key.parkourcalculator.set_solver_start", GLFW.GLFW_KEY_I);
@@ -254,6 +256,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         while (removeConstraintsKeyBinding.consumeClick()) {
             removeConstraintsPressed = true;
         }
+        boolean extendPathAndSolvePressed = false;
+        while (extendPathAndSolveKeyBinding.consumeClick()) {
+            extendPathAndSolvePressed = true;
+        }
         boolean applySurfaceStatePressed = false;
         while (applySurfaceStateKeyBinding.consumeClick()) {
             applySurfaceStatePressed = true;
@@ -312,6 +318,9 @@ public class FabricParkourCalculator implements ClientModInitializer {
         if (removeConstraintsPressed && canDispatch) {
             application.removeSelectedConstraints();
         }
+        if (extendPathAndSolvePressed && canDispatch) {
+            triggerExtendPathAndSolve(client);
+        }
         if (applySurfaceStatePressed && canDispatch) {
             application.applyPathSurfaceState();
         }
@@ -369,6 +378,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
         if (glfwKey == boundKey(removeConstraintsKeyBinding)) {
             application.removeSelectedConstraints();
+            return true;
+        }
+        if (glfwKey == boundKey(extendPathAndSolveKeyBinding)) {
+            triggerExtendPathAndSolve(client);
             return true;
         }
         if (glfwKey == boundKey(applySurfaceStateKeyBinding)) {
@@ -478,6 +491,23 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     public static void resolveAutoScale(int displayHeightPx) {
         application.resolveAutoScaleIfNeeded(displayHeightPx);
+    }
+
+    private static void triggerExtendPathAndSolve(Minecraft client) {
+        if (client.hitResult instanceof net.minecraft.world.phys.BlockHitResult blockHit && client.hitResult.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK) {
+            net.minecraft.core.BlockPos pos = blockHit.getBlockPos();
+            double targetX = pos.getX() + 0.5;
+            double targetY = pos.getY() + 1.0;
+            if (client.level != null) {
+                net.minecraft.world.level.block.state.BlockState state = client.level.getBlockState(pos);
+                net.minecraft.world.phys.shapes.VoxelShape shape = state.getCollisionShape(client.level, pos);
+                if (!shape.isEmpty()) {
+                    targetY = pos.getY() + shape.max(net.minecraft.core.Direction.Axis.Y);
+                }
+            }
+            double targetZ = pos.getZ() + 0.5;
+            application.extendPathAndSolveToBlock(targetX, targetY, targetZ);
+        }
     }
 
     private static String modVersion() {
