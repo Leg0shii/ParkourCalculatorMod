@@ -86,7 +86,7 @@ public class WrapWindowIlsTest {
     private void checkCells(float[] cells, boolean modern, String label) {
         Set<Long> ids = new HashSet<Long>();
         for (float c : cells) {
-            assertTrue(label + ": cell " + c + " beyond the 360 cap", Math.abs((double) c) <= 360.0);
+            assertTrue(label + ": cell " + c + " beyond the wrap cap", Math.abs((double) c) <= WrapWindowIls.MAX_ABS_GF);
             assertTrue(label + ": duplicate joint cell " + c,
                     ids.add(Long.valueOf(FacingLattice.jointCellId(c, modern, false))));
         }
@@ -104,8 +104,8 @@ public class WrapWindowIlsTest {
         assertNotNull(w1);
         System.out.printf(Locale.ROOT, "WRAPILS bounded: viol=%.9e evals=%d rounds=%d accepts=%d maxGf=%.3f%n",
                 w1.viol, w1.evals, w1.rounds, w1.accepts, WrapWindowIls.maxAbs(w1.gf));
-        assertTrue("bounded descent must not wrap output beyond 360: " + WrapWindowIls.maxAbs(w1.gf),
-                WrapWindowIls.maxAbs(w1.gf) <= 360.0);
+        assertTrue("bounded descent must not wrap output beyond the cap: " + WrapWindowIls.maxAbs(w1.gf),
+                WrapWindowIls.maxAbs(w1.gf) <= WrapWindowIls.MAX_ABS_GF);
         WrapWindowIls.Result w2 = WrapWindowIls.polish(r.model, r.spec, r.gf, r.domain, cfg, farDeadline, null);
         assertArrayEquals("bounded descent must be deterministic across two runs", w1.gf, w2.gf, 0.0);
         assertEquals("bounded descent viol must be deterministic",

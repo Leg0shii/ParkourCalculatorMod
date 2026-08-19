@@ -25,6 +25,7 @@ public final class WrapIlsNode implements NodeRuntime {
     private final long evalCap;
     private final int roundCap;
     private final boolean gateFlipMoves;
+    private final int maxAbsGf;
 
     public WrapIlsNode(ParamValues params) {
         this.minRemainingSec = params.getInt("minRemainingSec");
@@ -35,6 +36,7 @@ public final class WrapIlsNode implements NodeRuntime {
         this.evalCap = params.getInt("evalCap");
         this.roundCap = params.getInt("roundCap");
         this.gateFlipMoves = params.getBool("gateFlipMoves");
+        this.maxAbsGf = params.getInt("maxAbsGf");
     }
 
     @Override
@@ -57,6 +59,7 @@ public final class WrapIlsNode implements NodeRuntime {
         wcfg.evalCap = evalCap;
         wcfg.roundCap = roundCap;
         wcfg.gateFlipMoves = gateFlipMoves;
+        wcfg.maxAbsGf = maxAbsGf;
         if (ctx.legalGoal != null) {
             wcfg.legalObjective = ctx.spec.objective;
             wcfg.legalGoalRhs = ctx.legalGoal.rhs;

@@ -162,7 +162,7 @@ public final class BuiltinGraphs {
         }
         if (ilx) {
             router(g, "rWrapEps", "VIOLATION_AT_MOST");
-            g.set("rWrapEps", "epsilon", 1.0e-2);
+            g.set("rWrapEps", "epsilon", 5.0e-2);
             router(g, "rWrapFeas", "CANDIDATE_FEASIBLE_SCORED");
             router(g, "rWrapLegal", "LEGAL_PUSH");
             g.add("wrap", "wrapIls")
