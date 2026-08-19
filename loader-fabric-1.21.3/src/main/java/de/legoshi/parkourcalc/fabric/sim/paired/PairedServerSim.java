@@ -20,6 +20,7 @@ import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
@@ -130,6 +131,8 @@ public final class PairedServerSim {
     }
 
     private void resetServerSide(SimulatorEntity e) {
+        ServerPlayer real = level.getServer().getPlayerList().getPlayer(e.getUUID());
+        if (real != null) sp.getAttributes().assignBaseValues(real.getAttributes());
         sp.absMoveTo(e.getX(), e.getY(), e.getZ(), e.getYRot(), 0.0F);
         sp.setDeltaMovement(e.getDeltaMovement());
         sp.fallDistance = 0.0F;
