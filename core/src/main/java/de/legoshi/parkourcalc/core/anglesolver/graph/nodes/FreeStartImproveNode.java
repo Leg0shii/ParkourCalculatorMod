@@ -49,7 +49,7 @@ public final class FreeStartImproveNode implements NodeRuntime {
             boolean seedFeasible = in != null && in.yaws != null
                     && Scoring.violationOf(ctx.model, ctx.scenario, ctx.spec, in.yaws) <= ctx.feasTol;
             if (seedFeasible) return NodeOutcome.of(Guarantee.UNCHANGED, in);
-            double[] rescued = jointRescue(ctx, nodeToken);
+            double[] rescued = jointRescue(ctx, nodeToken, deadlineNanos);
             if (rescued == null) return NodeOutcome.of(Guarantee.UNCHANGED, in);
             ctx.chainAppend("free start rescue");
             return NodeOutcome.of(Guarantee.IMPROVED, Candidate.of(ctx, rescued));
@@ -60,21 +60,56 @@ public final class FreeStartImproveNode implements NodeRuntime {
         return NodeOutcome.of(Guarantee.IMPROVED, Candidate.of(ctx, improved));
     }
 
-    private double[] jointRescue(GraphContext ctx, AtomicBoolean cancel) {
+    private double[] jointRescue(GraphContext ctx, AtomicBoolean cancel, long deadlineNanos) {
         JumpPhysicsInputs sc = ctx.scenario;
         double seedX = sc.startPos.x;
         double seedZ = sc.startPos.z;
         sc.startBox = ctx.freeBox;
-        FreeStartSolve.Result conv = FreeStartSolve.solveJoint(ctx.exactModel, ctx.spec, ctx.feasTol, cancel, cfg);
-        if (conv == null || !conv.feasible) conv = FreeStartSolve.solve(ctx.exactModel, ctx.spec, ctx.feasTol, cancel, cfg);
+        FreeStartSolve.Result conv = FreeStartSolve.solveJointBest(ctx.exactModel, ctx.spec, ctx.feasTol, cancel, cfg);
+        double[] adoptYaws = null;
+        double adoptX = seedX;
+        double adoptZ = seedZ;
         if (conv != null && conv.feasible
                 && FreeStartSolve.violationAt(ctx.exactModel, ctx.spec, conv.yaws, conv.startX, conv.startZ) <= ctx.feasTol) {
-            sc.startPos = new Vec3dCore(conv.startX, sc.startPos.y, conv.startZ);
-            sc.startBox = StartBox.pinned(conv.startX, conv.startZ, sc.initialVelocity.x, sc.initialVelocity.z);
-            if (SolverTrace.on()) {
-                SolverTrace.log("ENGINE", "free rescue adopted start=(%.5f,%.5f)", conv.startX, conv.startZ);
+            adoptYaws = conv.yaws;
+            adoptX = conv.startX;
+            adoptZ = conv.startZ;
+        } else if (conv != null && !conv.feasible && deadlineNanos > System.nanoTime()) {
+            double nearViol = FreeStartSolve.violationAt(ctx.exactModel, ctx.spec, conv.yaws, conv.startX, conv.startZ);
+            if (nearViol <= cfg.jointPatternViolGate) {
+                if (SolverTrace.on()) {
+                    SolverTrace.log("ENGINE", "free rescue racing joint near miss viol=%.3e", nearViol);
+                }
+                double[] closed = SolveCore.optimize(new CountingForwardModel(ctx.model), ctx.spec, ctx.cmaBudget,
+                        sigmaDeg, ctx.feasTol, cancel, Angles.wrapAll(conv.yaws.clone()), deadlineNanos,
+                        ctx.sequential, ctx.progress);
+                if (closed != null) {
+                    double[] rs = FreeStartSolve.recoverStart(ctx.exactModel, ctx.spec, closed, cfg);
+                    if (rs != null
+                            && FreeStartSolve.violationAt(ctx.exactModel, ctx.spec, closed, rs[0], rs[1]) <= ctx.feasTol) {
+                        adoptYaws = closed;
+                        adoptX = rs[0];
+                        adoptZ = rs[1];
+                    }
+                }
             }
-            return Angles.wrapAll(conv.yaws);
+        }
+        if (adoptYaws == null) {
+            FreeStartSolve.Result it = FreeStartSolve.solve(ctx.exactModel, ctx.spec, ctx.feasTol, cancel, cfg);
+            if (it != null && it.feasible
+                    && FreeStartSolve.violationAt(ctx.exactModel, ctx.spec, it.yaws, it.startX, it.startZ) <= ctx.feasTol) {
+                adoptYaws = it.yaws;
+                adoptX = it.startX;
+                adoptZ = it.startZ;
+            }
+        }
+        if (adoptYaws != null) {
+            sc.startPos = new Vec3dCore(adoptX, sc.startPos.y, adoptZ);
+            sc.startBox = StartBox.pinned(adoptX, adoptZ, sc.initialVelocity.x, sc.initialVelocity.z);
+            if (SolverTrace.on()) {
+                SolverTrace.log("ENGINE", "free rescue adopted start=(%.5f,%.5f)", adoptX, adoptZ);
+            }
+            return Angles.wrapAll(adoptYaws);
         }
         sc.startPos = new Vec3dCore(seedX, sc.startPos.y, seedZ);
         sc.startBox = StartBox.pinned(seedX, seedZ, sc.initialVelocity.x, sc.initialVelocity.z);
