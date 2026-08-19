@@ -174,6 +174,10 @@ public final class SaveIO {
 
     /** Rebuilds the Angle Solver problem from the save. Always resets first, so a pre-feature save yields an empty solver. */
     public static void applyAngleSolverTo(SaveFile file, AngleSolverState state) {
+        applyAngleSolverTo(file, state, 0);
+    }
+
+    public static void applyAngleSolverTo(SaveFile file, AngleSolverState state, int rowCount) {
         if (state == null) return;
         state.reset();
         SaveFile.AngleSolver a = file.angleSolver;
@@ -201,10 +205,13 @@ public final class SaveIO {
             }
         }
 
+        if (rowCount > 0) state.clampTicks(rowCount);
+
         if (a.ticks != null) {
             for (SaveFile.Tick t : a.ticks) {
                 if (t == null) continue;
-                TickConstraints tc = state.tickConstraints(t.tick);
+                int tick = rowCount > 0 ? Math.min(Math.max(t.tick, 0), rowCount - 1) : t.tick;
+                TickConstraints tc = state.tickConstraints(tick);
                 if (t.constraints != null) {
                     for (SaveFile.Constraint c : t.constraints) {
                         Constraint constraint = toConstraint(c);

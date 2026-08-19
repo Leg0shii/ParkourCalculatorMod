@@ -265,7 +265,7 @@ public final class SaveController {
         SaveFile.Start s = result.value.start;
         if (solverEngine != null) solverEngine.onProblemReplaced();
         SaveIO.applyRowsTo(result.value, inputData);
-        SaveIO.applyAngleSolverTo(result.value, angleSolver);
+        SaveIO.applyAngleSolverTo(result.value, angleSolver, inputData.size());
         resolveGraphPreset();
         // Must precede the setStart* calls: invalidate clears pending*, which they then refill.
         runner.invalidate();
