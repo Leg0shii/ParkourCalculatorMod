@@ -63,7 +63,7 @@ public final class AngleSolverWindow implements RenderInterface {
     private static final String LEGACY_PRESET_ITEM = "Legacy budget";
 
     private static final String[] FORM_LABELS =
-            {"Start tick", "Goal tick", "Axis", "Goal", "Inputs", "Sprint", "Slipperiness", "Potion"};
+            {"Start tick", "Goal tick", "Axis", "Goal", "Inputs", "Sprint", "Slipperiness", "Potion", "Running ticks", "Timeout per step"};
 
     /** Unscaled; lines the details table up under the toggle title and sets it off from the solved values. */
     private static final float DETAIL_INDENT = 13f;
@@ -109,6 +109,13 @@ public final class AngleSolverWindow implements RenderInterface {
     private boolean defaultStateExpanded = true;
     private boolean advancedExpanded;
     private int doseToRemove;
+    private Runnable onBruteForce = () -> { };
+    private Runnable onCancelBruteForce = () -> { };
+
+    public void setBruteForceHandlers(Runnable onBruteForce, Runnable onCancelBruteForce) {
+        this.onBruteForce = onBruteForce != null ? onBruteForce : () -> { };
+        this.onCancelBruteForce = onCancelBruteForce != null ? onCancelBruteForce : () -> { };
+    }
 
     private static final float IMPROVE_FADE_SECS = 1.6f;
     private double improveTrackValue = Double.NaN;
@@ -488,6 +495,73 @@ public final class AngleSolverWindow implements RenderInterface {
             }
         }
         if (state.getEffort() == AngleSolverState.Effort.CUSTOM) renderPresetSection(labelW);
+
+        ThemeManager.paddedSeparator();
+        renderRunningTicksSection(labelW, scale);
+    }
+
+    private void renderRunningTicksSection(float labelW, float scale) {
+        Controls.pushInputFrameHeight();
+        ImGui.beginGroup();
+        SolverWidgets.rowLabel("Running ticks", labelW);
+
+        float btnW = ImGui.getFrameHeight();
+        float toggleW = btnW * 1.6f;
+        float spacing = ImGui.getStyle().getItemInnerSpacing().x;
+
+        boolean isEnabled = state.isBruteForceEnabled();
+        if (ImGui.button(isEnabled ? "ON" : "OFF", toggleW, btnW)) {
+            state.setBruteForceEnabled(!isEnabled);
+        }
+        if (ImGui.isItemHovered()) ImGui.setTooltip("Toggle Brute Forcer (deletes running ticks if ON and set to 0)");
+
+        if (isEnabled) {
+            ImGui.sameLine(0, spacing);
+            ImGui.setNextItemWidth(ImGui.getContentRegionAvail().x - btnW * 2 - spacing * 2);
+
+            String currentTicks = String.valueOf(state.getBruteForceTicks());
+            imgui.type.ImString bfStr = new imgui.type.ImString(currentTicks, 16);
+            if (ImGui.inputText("##bfTicks", bfStr, imgui.flag.ImGuiInputTextFlags.CharsDecimal)) {
+                try {
+                    int val = bfStr.get().isEmpty() ? 0 : Integer.parseInt(bfStr.get());
+                    state.setBruteForceTicks(Math.max(0, val));
+                } catch (NumberFormatException ignored) { }
+            }
+
+            ImGui.sameLine(0, spacing);
+            ImGui.pushButtonRepeat(true);
+            if (ImGui.button("-##bfMinus", btnW, btnW)) {
+                state.setBruteForceTicks(Math.max(0, state.getBruteForceTicks() - 1));
+            }
+            ImGui.sameLine(0, spacing);
+            if (ImGui.button("+##bfPlus", btnW, btnW)) {
+                state.setBruteForceTicks(state.getBruteForceTicks() + 1);
+            }
+            ImGui.popButtonRepeat();
+
+            ImGui.endGroup();
+            Controls.popInputFrameHeight();
+            TooltipUtil.onHover("Automatically test combinations of adding up to X running ticks before jumps to maximize distance.");
+
+            Controls.pushInputFrameHeight();
+            ImGui.beginGroup();
+            SolverWidgets.rowLabel("Timeout per step", labelW);
+            ImGui.setNextItemWidth(ImGui.getContentRegionAvail().x);
+            imgui.type.ImString bfTimeStr = new imgui.type.ImString(String.valueOf(state.getBruteForceTimeoutMs()), 16);
+            if (ImGui.inputText("##bfTimeout", bfTimeStr, imgui.flag.ImGuiInputTextFlags.CharsDecimal)) {
+                try {
+                    int val = bfTimeStr.get().isEmpty() ? 0 : Integer.parseInt(bfTimeStr.get());
+                    state.setBruteForceTimeoutMs(Math.max(1, val));
+                } catch (NumberFormatException ignored) { }
+            }
+            ImGui.endGroup();
+            Controls.popInputFrameHeight();
+            TooltipUtil.onHover("Maximum search time in milliseconds spent per branching step.");
+        } else {
+            ImGui.endGroup();
+            Controls.popInputFrameHeight();
+            TooltipUtil.onHover("Automatically test combinations of adding up to X running ticks before jumps to maximize distance.");
+        }
     }
 
     private static final String OPTIMIZE_TIME_TIP =
@@ -680,7 +754,7 @@ public final class AngleSolverWindow implements RenderInterface {
     }
 
     private void renderActions() {
-        if (engine.isSolving()) {
+        if (engine.isSolving() || state.isBruteForceActive()) {
             renderSolvingIndicator();
             return;
         }
@@ -696,7 +770,11 @@ public final class AngleSolverWindow implements RenderInterface {
             detailsExpanded = false;
             solverExpanded = false;
             outcomesExpanded = true;
-            engine.solve();
+            if (state.isBruteForceEnabled()) {
+                onBruteForce.run();
+            } else {
+                engine.solve();
+            }
         }
     }
 
@@ -715,7 +793,13 @@ public final class AngleSolverWindow implements RenderInterface {
 
         ImGui.sameLine();
         Controls.cursorToRightAlignedButton("Cancel");
-        if (Controls.secondaryButton("Cancel")) engine.stopAndUseBest();
+        if (Controls.secondaryButton("Cancel")) {
+            if (state.isBruteForceActive()) {
+                onCancelBruteForce.run();
+            } else {
+                engine.stopAndUseBest();
+            }
+        }
         if (ImGui.isItemHovered()) ImGui.setTooltip("Stop the search and keep the best solution found so far.");
     }
 

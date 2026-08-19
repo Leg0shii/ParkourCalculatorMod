@@ -715,6 +715,43 @@ public final class AngleSolverState {
         this.applyDeviationTick = message == null ? -1 : tick;
     }
 
+    private boolean bruteForceEnabled = false;
+    private int bruteForceTicks = 0;
+    private int bruteForceTimeoutMs = 200;
+    private boolean bruteForceActive = false;
+
+    public boolean isBruteForceEnabled() {
+        return bruteForceEnabled;
+    }
+
+    public void setBruteForceEnabled(boolean bruteForceEnabled) {
+        this.bruteForceEnabled = bruteForceEnabled;
+    }
+
+    public int getBruteForceTicks() {
+        return bruteForceTicks;
+    }
+
+    public void setBruteForceTicks(int bruteForceTicks) {
+        this.bruteForceTicks = Math.max(0, bruteForceTicks);
+    }
+
+    public int getBruteForceTimeoutMs() {
+        return bruteForceTimeoutMs;
+    }
+
+    public void setBruteForceTimeoutMs(int bruteForceTimeoutMs) {
+        this.bruteForceTimeoutMs = Math.max(1, bruteForceTimeoutMs);
+    }
+
+    public boolean isBruteForceActive() {
+        return bruteForceActive;
+    }
+
+    public void setBruteForceActive(boolean bruteForceActive) {
+        this.bruteForceActive = bruteForceActive;
+    }
+
     /** Wipes all state back to construction defaults; used before loading a saved problem. */
     public void reset() {
         startTick = 0;
@@ -738,6 +775,10 @@ public final class AngleSolverState {
         applyDeviation = null;
         applyDeviationKind = null;
         applyDeviationTick = -1;
+        bruteForceEnabled = false;
+        bruteForceTicks = 0;
+        bruteForceTimeoutMs = 200;
+        bruteForceActive = false;
     }
 
 }
