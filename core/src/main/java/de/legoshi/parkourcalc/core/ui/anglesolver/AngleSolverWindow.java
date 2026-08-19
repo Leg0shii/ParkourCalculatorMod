@@ -63,7 +63,7 @@ public final class AngleSolverWindow implements RenderInterface {
     private static final String LEGACY_PRESET_ITEM = "Legacy budget";
 
     private static final String[] FORM_LABELS =
-            {"Start tick", "Goal tick", "Axis", "Goal", "Inputs", "Sprint", "Slipperiness", "Potion"};
+            {"Start tick", "Goal tick", "Axis", "Goal", "Target angle", "Inputs", "Sprint", "Slipperiness", "Potion"};
 
     /** Unscaled; lines the details table up under the toggle title and sets it off from the solved values. */
     private static final float DETAIL_INDENT = 13f;
@@ -109,6 +109,11 @@ public final class AngleSolverWindow implements RenderInterface {
     private boolean defaultStateExpanded = true;
     private boolean advancedExpanded;
     private int doseToRemove;
+    private java.util.function.DoubleSupplier playerYawSupplier = () -> 0.0;
+
+    public void setPlayerYawSupplier(java.util.function.DoubleSupplier supplier) {
+        this.playerYawSupplier = supplier != null ? supplier : () -> 0.0;
+    }
 
     private static final float IMPROVE_FADE_SECS = 1.6f;
     private double improveTrackValue = Double.NaN;
@@ -186,10 +191,46 @@ public final class AngleSolverWindow implements RenderInterface {
 
         solveForExpanded = sectionToggle("Solve for", "solvefor", solveForExpanded, scale);
         if (solveForExpanded) {
-            int ax = segmentedRow("Axis", "axis", AXES, state.getAxis().ordinal(), labelW);
-            if (ax >= 0) state.setAxis(AngleSolverState.Axis.values()[ax]);
-            int gl = segmentedRow("Goal", "goal", GOALS, state.getGoal().ordinal(), labelW);
-            if (gl >= 0) state.setGoal(AngleSolverState.Goal.values()[gl]);
+            if (!state.isCustomAngle()) {
+                int ax = segmentedRow("Axis", "axis", AXES, state.getAxis().ordinal(), labelW);
+                if (ax >= 0) state.setAxis(AngleSolverState.Axis.values()[ax]);
+                int gl = segmentedRow("Goal", "goal", GOALS, state.getGoal().ordinal(), labelW);
+                if (gl >= 0) state.setGoal(AngleSolverState.Goal.values()[gl]);
+            } else {
+                Controls.pushInputFrameHeight();
+                ImGui.beginGroup();
+                SolverWidgets.rowLabel("Target angle", labelW);
+
+                float btnW = ImGui.getFrameHeight();
+                float spacing = ImGui.getStyle().getItemInnerSpacing().x;
+                float inputW = ImGui.getContentRegionAvail().x - btnW - spacing;
+
+                ImGui.setNextItemWidth(inputW);
+                imgui.type.ImString angStr = new imgui.type.ImString(ConstraintText.num(state.getCustomAngleDeg()), 32);
+                if (ImGui.inputText("##customAngleInput", angStr, imgui.flag.ImGuiInputTextFlags.CharsDecimal)) {
+                    try {
+                        state.setCustomAngleDeg(Double.parseDouble(angStr.get().trim()));
+                    } catch (NumberFormatException ignored) {}
+                }
+                TooltipUtil.onHover("Target facing angle in degrees to maximize distance towards (e.g. 45.0° for diagonal).");
+
+                ImGui.sameLine(0, spacing);
+                if (ImGui.button("P##setPlayerFacing", btnW, btnW)) {
+                    state.setCustomAngleDeg(playerYawSupplier.getAsDouble());
+                }
+                TooltipUtil.onHover("Set target angle to player's current facing yaw.");
+
+                ImGui.endGroup();
+                Controls.popInputFrameHeight();
+            }
+
+            ImGui.spacing();
+            if (Controls.checkbox("Custom angle##customAngleToggle", state.isCustomAngle())) {
+                state.setCustomAngle(!state.isCustomAngle());
+            }
+            TooltipUtil.onHover("Optimize trajectory distance towards a custom facing angle instead of a fixed X/Z axis.\n"
+                    + "NOTE: The fast closed-form solver is position-axis only; custom angle solves rely on the search optimizer.\n"
+                    + "Using 'Optimize' effort is recommended for maximum reach.");
 
             ImGui.spacing();
             boolean fastTier = state.getEffort() == AngleSolverState.Effort.FAST;

@@ -141,7 +141,8 @@ public final class SolveCore {
                 SolverRunResult best = null;
                 double bestS = 0.0;
                 for (SolverRunResult r : results) {
-                    double s = spec.objective.scored(r.objectiveValue, sc.startYaw, r.yawAbsDeg);
+                    double objVal = objectiveOf(model, sc, spec.objective, r.yawAbsDeg);
+                    double s = spec.objective.scored(objVal, sc.startYaw, r.yawAbsDeg);
                     if (best == null || (max ? s > bestS : s < bestS)) {
                         best = r;
                         bestS = s;
@@ -152,8 +153,8 @@ public final class SolveCore {
             }
 
             feasible.sort((a, b) -> {
-                double sa = spec.objective.scored(a.objectiveValue, sc.startYaw, a.yawAbsDeg);
-                double sb = spec.objective.scored(b.objectiveValue, sc.startYaw, b.yawAbsDeg);
+                double sa = spec.objective.scored(objectiveOf(model, sc, spec.objective, a.yawAbsDeg), sc.startYaw, a.yawAbsDeg);
+                double sb = spec.objective.scored(objectiveOf(model, sc, spec.objective, b.yawAbsDeg), sc.startYaw, b.yawAbsDeg);
                 return max ? Double.compare(sb, sa) : Double.compare(sa, sb);
             });
             if (stopOnFeasible) return Angles.wrapAll(feasible.get(0).yawAbsDeg);
@@ -244,7 +245,7 @@ public final class SolveCore {
     }
 
     public static double objectiveOf(ForwardModel model, JumpPhysicsInputs sc, Objective obj, double[] absWrapped) {
-        return model.forward(sc, sc.toGameFacings(absWrapped)).getPos(obj.tick, obj.axis);
+        return obj.evaluate(model.forward(sc, sc.toGameFacings(absWrapped)));
     }
 
     public static double maxViolation(SolverRunResult r) {

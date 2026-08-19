@@ -160,6 +160,8 @@ public final class AngleSolverState {
     private int landingTick;
     private Axis axis = Axis.X;
     private Goal goal = Goal.MAX;
+    private boolean customAngle = false;
+    private double customAngleDeg = 0.0;
     private Effort effort = Effort.FAST;
     private boolean stopOnFeasible;
     private boolean legalMode;
@@ -220,6 +222,24 @@ public final class AngleSolverState {
 
     public void setGoal(Goal goal) {
         this.goal = goal;
+    }
+
+    public boolean isCustomAngle() {
+        return customAngle;
+    }
+
+    public void setCustomAngle(boolean customAngle) {
+        this.customAngle = customAngle;
+    }
+
+    public double getCustomAngleDeg() {
+        return customAngleDeg;
+    }
+
+    public void setCustomAngleDeg(double customAngleDeg) {
+        while (customAngleDeg <= -180.0) customAngleDeg += 360.0;
+        while (customAngleDeg > 180.0) customAngleDeg -= 360.0;
+        this.customAngleDeg = customAngleDeg;
     }
 
     public Effort getEffort() {
@@ -721,6 +741,8 @@ public final class AngleSolverState {
         landingTick = 0;
         axis = Axis.X;
         goal = Goal.MAX;
+        customAngle = false;
+        customAngleDeg = 0.0;
         effort = Effort.FAST;
         stopOnFeasible = false;
         legalMode = false;

@@ -98,10 +98,14 @@ public final class CmaesJumpHarness {
             double smooth = feasibilityOnly ? 0.0 : obj.smoothPenalty(scenario.startYaw, F);
             if (free) {
                 double[] d = FreeStartSolve.bestTranslate(spec, gf, pr, box);
-                double o = sign * (pr.getPos(obj.tick, obj.axis) + (objAxis == 0 ? d[0] : d[1]));
+                double baseObj = obj.evaluate(pr);
+                double transObj = obj.customYaw != null
+                        ? -Math.sin(Math.toRadians(obj.customYaw)) * d[0] + Math.cos(Math.toRadians(obj.customYaw)) * d[1]
+                        : (objAxis == 0 ? d[0] : d[1]);
+                double o = sign * (baseObj + transObj);
                 return o + smooth + c.translatedPenalty(gf, pr, d[0], d[1], cfg.muIneq, cfg.muEq);
             }
-            double o = sign * pr.getPos(obj.tick, obj.axis);
+            double o = sign * obj.evaluate(pr);
             double pen = c.penalty(gf, pr, cfg.muIneq, cfg.muEq);
             return o + smooth + pen;
         };
@@ -154,7 +158,11 @@ public final class CmaesJumpHarness {
             dxFinal = d[0];
             dzFinal = d[1];
         }
-        double objectiveValue = finalPath.getPos(obj.tick, obj.axis) + (objAxis == 0 ? dxFinal : dzFinal);
+        double baseFinal = obj.evaluate(finalPath);
+        double transFinal = free ? (obj.customYaw != null
+                ? -Math.sin(Math.toRadians(obj.customYaw)) * dxFinal + Math.cos(Math.toRadians(obj.customYaw)) * dzFinal
+                : (objAxis == 0 ? dxFinal : dzFinal)) : 0.0;
+        double objectiveValue = baseFinal + transFinal;
         double[] ineqSlack = new double[c.ineq.size()];
         for (int i = 0; i < c.ineq.size(); i++) {
             ineqSlack[i] = free ? JumpConstraintCompiler.translatedSlack(c.ineq.get(i), gf, finalPath, dxFinal, dzFinal)
@@ -220,7 +228,7 @@ public final class CmaesJumpHarness {
         ForwardPath pr = model.forward(scenario, gf);
         // score folds ONLY the eq squared-penalty (muIneq=0 zeroes the ineq term); ineq is reported separately.
         double smooth = feasibilityOnly ? 0.0 : obj.smoothPenalty(scenario.startYaw, abs);
-        double score = sign * pr.getPos(obj.tick, obj.axis) + smooth + c.penalty(gf, pr, 0.0, cfg.muEq);
+        double score = sign * obj.evaluate(pr) + smooth + c.penalty(gf, pr, 0.0, cfg.muEq);
         double ineqViol = 0.0;
         for (JumpConstraint cc : c.ineq) ineqViol = Math.max(ineqViol, JumpConstraintCompiler.slack(cc, gf, pr));
         return new double[]{score, ineqViol};

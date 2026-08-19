@@ -102,6 +102,7 @@ public final class ClosedFormSolve {
 
     private static Result optimizeReturning(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
                                             double[] margins, boolean ascending, Config cfg) {
+        if (spec.objective.isCustomAngle()) return null;
         JumpPhysicsInputs sc = spec.asScenario();
 
         // The linear model represents only position (X/Z) walls. Facing pins and dF chains prefold into
@@ -435,7 +436,7 @@ public final class ClosedFormSolve {
      *  it. Valid even where the dual's recovery degenerates, so it certifies a primally-found solution
      *  without a search. {@code NaN} when no bound applies (facing walls, violated constant, unbounded). */
     public static double dualBound(JumpSpec spec) {
-        if (JumpLinearModel.hasFacingWall(spec.constraints)) return Double.NaN;
+        if (spec.objective.isCustomAngle() || JumpLinearModel.hasFacingWall(spec.constraints)) return Double.NaN;
         JumpPhysicsInputs sc = spec.asScenario();
         JumpLinearModel lin = new JumpLinearModel(sc);
         double[] cx = new double[lin.n];

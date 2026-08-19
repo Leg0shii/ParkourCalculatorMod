@@ -40,10 +40,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SupportOverlap;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SurfaceKind;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
@@ -405,8 +402,9 @@ public final class AngleSolverEngine {
         }
 
         List<JumpConstraint> constraints = new ArrayList<>();
-        Objective objective = new Objective(axis(state.getAxis()), sense(state.getGoal()), numTicks,
-                state.getSmoothLambda());
+        Objective objective = state.isCustomAngle()
+                ? new Objective(state.getCustomAngleDeg(), numTicks, state.getSmoothLambda())
+                : new Objective(axis(state.getAxis()), sense(state.getGoal()), numTicks, state.getSmoothLambda());
         for (ConstraintAt ca : uiCons) {
             if (footprintCons != null && footprintCons.contains(ca.c)) continue;
             addMapped(constraints, ca.c, ca.absTick, ca.segTick, numTicks, ph.inputs.startYaw);
@@ -1108,7 +1106,7 @@ public final class AngleSolverEngine {
         }
         if (ctx.cmaesEvals.get() > 0) addCmaBudget(result, job, ctx.cmaesEvals.get());
         if (ctx.smoothingEvals.get() > 0) result.addDetail("Smoothing evals", Long.toString(ctx.smoothingEvals.get()));
-        double finalObjective = path.getPos(spec.objective.tick, spec.objective.axis);
+        double finalObjective = spec.objective.evaluate(path);
         double finalViolation = JumpConstraintCompiler.compile(spec).maxViolation(gameFacings, path);
         if (finalViolation <= FEAS_TOL && JumpLinearModel.hasFacingWall(spec.constraints)) {
             result.setNotice(DF_DIRECTION_NOTICE);
@@ -1128,7 +1126,7 @@ public final class AngleSolverEngine {
     /** The byte-exact objective value the given facings realize (for comparing two feasible candidates). */
     private double exactObjective(JumpPhysicsInputs sc, JumpSpec spec, double[] yawsAbsWrapped) {
         ForwardPath p = model.forward(sc, sc.toGameFacings(yawsAbsWrapped));
-        return p.getPos(spec.objective.tick, spec.objective.axis);
+        return spec.objective.evaluate(p);
     }
 
     private double violationOf(JumpPhysicsInputs sc, JumpSpec spec, double[] yawsAbsWrapped) {
@@ -1156,7 +1154,7 @@ public final class AngleSolverEngine {
 
     private SolveResult buildResultWithObjective(Job job, double[] yaws, double[] gameFacings, ForwardPath path) {
         SolveResult result = buildResult(job, yaws, gameFacings, path);
-        result.setObjective(path.getPos(job.spec.objective.tick, job.spec.objective.axis));
+        result.setObjective(job.spec.objective.evaluate(path));
         result.getOutcomes().add(0, objectiveOutcome(result, job.spec.objective, job.startTick));
         return result;
     }
@@ -1204,6 +1202,11 @@ public final class AngleSolverEngine {
 
     /** The objective as the leading Solved-values row: axis @ tick, max/min as the relation, achieved value. */
     private static SolveResult.Outcome objectiveOutcome(SolveResult r, Objective o, int startTick) {
+        if (o.isCustomAngle()) {
+            return new SolveResult.Outcome("Angle", "T" + (startTick + o.tick + 1),
+                    String.format(Locale.ROOT, "%.1f°", o.customYaw),
+                    ConstraintText.fixedStat(r.getObjectiveValue()), "");
+        }
         String field = o.axis == JumpPhysicsInputs.Axis.X ? "X" : "Z";
         String sense = o.sense == Objective.Sense.MAX ? "max" : "min";
         return new SolveResult.Outcome(field, "T" + (startTick + o.tick + 1), sense,

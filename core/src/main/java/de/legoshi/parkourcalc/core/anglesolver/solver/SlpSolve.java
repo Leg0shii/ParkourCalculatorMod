@@ -105,6 +105,7 @@ public final class SlpSolve {
     private static double[] optimize(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
                                      double targetClearance, boolean hugObjective, double[] seedAbsWrapped,
                                      boolean bestEffort, boolean inertiaAware, Config cfg) {
+        if (spec.objective.isCustomAngle()) return null;
         List<JumpConstraint> constraints = spec.constraints;
         if (JumpLinearModel.hasFacingWall(constraints)) return null; // not position-linear
         for (JumpConstraint c : constraints) {

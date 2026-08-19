@@ -10,12 +10,21 @@ public final class Objective {
     public final Sense sense;
     public final int tick;
     public final double smoothLambda;
+    public final Double customYaw;
 
     public Objective(JumpPhysicsInputs.Axis axis, Sense sense, int tick) {
-        this(axis, sense, tick, 0.0);
+        this(axis, sense, tick, 0.0, null);
     }
 
     public Objective(JumpPhysicsInputs.Axis axis, Sense sense, int tick, double smoothLambda) {
+        this(axis, sense, tick, smoothLambda, null);
+    }
+
+    public Objective(double customYaw, int tick, double smoothLambda) {
+        this(JumpPhysicsInputs.Axis.X, Sense.MAX, tick, smoothLambda, customYaw);
+    }
+
+    public Objective(JumpPhysicsInputs.Axis axis, Sense sense, int tick, double smoothLambda, Double customYaw) {
         if (axis == JumpPhysicsInputs.Axis.Y) {
             throw new IllegalArgumentException("Y objective unsupported; use X or Z");
         }
@@ -23,6 +32,19 @@ public final class Objective {
         this.sense = sense;
         this.tick = tick;
         this.smoothLambda = smoothLambda;
+        this.customYaw = customYaw;
+    }
+
+    public boolean isCustomAngle() {
+        return customYaw != null;
+    }
+
+    public double evaluate(ForwardPath path) {
+        if (customYaw != null) {
+            double rad = Math.toRadians(customYaw);
+            return -Math.sin(rad) * path.posX[tick] + Math.cos(rad) * path.posZ[tick];
+        }
+        return path.getPos(tick, axis);
     }
 
     public double smoothPenalty(double anchorYaw, double[] yawsAbs) {
