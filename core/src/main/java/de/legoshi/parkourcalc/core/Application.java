@@ -961,6 +961,7 @@ public final class Application {
         double rootWeight = 1.0 / (budget + 1);
         bfCompletedProgress = 0.0;
         for (int i = budget; i >= 0; i--) {
+            if (!satisfiesRunTicks(i, bfJumpTicks.get(0))) continue;
             int[] combo = new int[bfJumpTicks.size()];
             combo[0] = i;
             bfQueue.addFirst(new BfTask(combo, 1, i, rootWeight, null));
@@ -1074,6 +1075,7 @@ public final class Application {
                     double childWeight = bfCurrentTask.weight / childCount;
 
                     for (int i = maxAllowed; i >= 0; i--) {
+                        if (!satisfiesRunTicks(i, nextJumpTick)) continue;
                         int[] nextCombo = bfCurrentTask.combo.clone();
                         nextCombo[bfCurrentTask.depth] = i;
                         bfQueue.addFirst(new BfTask(nextCombo, nextDepth, bfCurrentTask.sum + i, childWeight, successRows));
@@ -1295,6 +1297,33 @@ public final class Application {
         } else {
             angleSolverState.setLandingTick(bfOriginalLanding + totalExtra);
         }
+    }
+
+    private boolean satisfiesRunTicks(int extraTicks, int baseJumpTick) {
+        List<de.legoshi.parkourcalc.core.anglesolver.Constraint> constraints = bfBackupConstraints.get(baseJumpTick);
+        if (constraints == null) return true;
+
+        for (de.legoshi.parkourcalc.core.anglesolver.Constraint c : constraints) {
+            if (c.getField() != de.legoshi.parkourcalc.core.anglesolver.Constraint.Field.RT || !c.isEnabled()) continue;
+
+            double found = extraTicks;
+            if (c.isRange()) {
+                boolean lo = c.isLoInclusive() ? found >= c.getLo() : found > c.getLo();
+                boolean hi = c.isHiInclusive() ? found <= c.getHi() : found < c.getHi();
+                if (!(lo && hi)) return false;
+            } else {
+                double v = c.getValue();
+                switch (c.getOp()) {
+                    case GT: if (!(found > v)) return false; break;
+                    case GE: if (!(found >= v)) return false; break;
+                    case LT: if (!(found < v)) return false; break;
+                    case LE: if (!(found <= v)) return false; break;
+                    case EQ: if (!(found == v)) return false; break;
+                    default: break;
+                }
+            }
+        }
+        return true;
     }
 
     public void extendPathAndSolveToBlock(double targetX, double targetY, double targetZ) {

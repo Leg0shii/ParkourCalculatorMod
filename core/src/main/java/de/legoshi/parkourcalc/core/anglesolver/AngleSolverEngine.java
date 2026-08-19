@@ -1591,6 +1591,8 @@ public final class AngleSolverEngine {
                 if (segTick < 1 || segTick >= numTicks) break;
                 addRelative(out, JumpConstraint.Mode.F, segTick, segTick - 1, c, tag);
                 break;
+            case RT:
+                break;
         }
     }
 

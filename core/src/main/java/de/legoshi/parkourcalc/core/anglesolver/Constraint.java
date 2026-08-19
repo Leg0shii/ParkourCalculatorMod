@@ -13,7 +13,8 @@ public final class Constraint {
         F("F"),
         DX("dX"),
         DZ("dZ"),
-        DF("dF");
+        DF("dF"),
+        RT("RT");
 
         public final String label;
 
