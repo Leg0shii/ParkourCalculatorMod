@@ -284,7 +284,7 @@ public final class ClosedFormSolve {
 
     private static double scanScore(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, double[] yaws) {
         double o = exact.forward(sc, sc.toGameFacings(yaws)).getPos(spec.objective.tick, spec.objective.axis);
-        return spec.objective.scored(o, yaws);
+        return spec.objective.scored(o, sc.startYaw, yaws);
     }
 
     private static Result solveWithPrefold(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, double feasTol,

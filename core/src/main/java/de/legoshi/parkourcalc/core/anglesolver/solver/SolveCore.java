@@ -12,6 +12,10 @@ import java.util.stream.Collectors;
  *  absolute wrapped facings (what Apply writes), or null if cancelled. */
 public final class SolveCore {
 
+    private static final double NEAR_MISS_RESCUE_MAX_VIOL = 5.0e-2;
+    private static final double NEAR_MISS_RESCUE_SIGMA_DEG = 2.0;
+    private static final int NEAR_MISS_RESCUE_SEEDS = 4;
+
     private SolveCore() {
     }
 
@@ -97,6 +101,23 @@ public final class SolveCore {
             boolean max = spec.objective.sense == Objective.Sense.MAX;
             List<SolverRunResult> feasible = filterFeasible(results, feasTol);
 
+            if (feasible.isEmpty() && (deadlineNanos == 0L || System.nanoTime() < deadlineNanos)) {
+                List<double[]> seeds = nearMissSeeds(results, feasTol);
+                if (!seeds.isEmpty()) {
+                    List<SolverRunResult> seeded = runRestarts(model, spec, NEAR_MISS_RESCUE_SIGMA_DEG, budget,
+                            seeds, true, sequential, cancel, feasTol, progress);
+                    if (cancel.get()) return bestOrNull(progress);
+                    List<SolverRunResult> rescued = filterFeasible(seeded, feasTol);
+                    if (!rescued.isEmpty()) {
+                        results = seeded;
+                        feasible = rescued;
+                    } else {
+                        results = new ArrayList<>(results);
+                        results.addAll(seeded);
+                    }
+                }
+            }
+
             // Rescue pass: whether a solution EXISTS must not depend on the Solve-For direction, but the
             // objective-weighted fitness can settle a hair infeasible for some directions (see the
             // feasibilityOnly constructor on CmaesJumpHarness). Purely additive: this only runs when we
@@ -120,7 +141,7 @@ public final class SolveCore {
                 SolverRunResult best = null;
                 double bestS = 0.0;
                 for (SolverRunResult r : results) {
-                    double s = spec.objective.scored(r.objectiveValue, r.yawAbsDeg);
+                    double s = spec.objective.scored(r.objectiveValue, sc.startYaw, r.yawAbsDeg);
                     if (best == null || (max ? s > bestS : s < bestS)) {
                         best = r;
                         bestS = s;
@@ -131,8 +152,8 @@ public final class SolveCore {
             }
 
             feasible.sort((a, b) -> {
-                double sa = spec.objective.scored(a.objectiveValue, a.yawAbsDeg);
-                double sb = spec.objective.scored(b.objectiveValue, b.yawAbsDeg);
+                double sa = spec.objective.scored(a.objectiveValue, sc.startYaw, a.yawAbsDeg);
+                double sb = spec.objective.scored(b.objectiveValue, sc.startYaw, b.yawAbsDeg);
                 return max ? Double.compare(sb, sa) : Double.compare(sa, sb);
             });
             if (stopOnFeasible) return Angles.wrapAll(feasible.get(0).yawAbsDeg);
@@ -148,10 +169,10 @@ public final class SolveCore {
             if (cancel.get()) return bestOrNull(progress);
 
             double[] yaws = polished.get(0);
-            double bestObj = spec.objective.scored(objectiveOf(model, sc, spec.objective, yaws), yaws);
+            double bestObj = spec.objective.scored(objectiveOf(model, sc, spec.objective, yaws), sc.startYaw, yaws);
             for (int i = 1; i < polished.size(); i++) {
                 double[] cand = polished.get(i);
-                double o = spec.objective.scored(objectiveOf(model, sc, spec.objective, cand), cand);
+                double o = spec.objective.scored(objectiveOf(model, sc, spec.objective, cand), sc.startYaw, cand);
                 if (max ? o > bestObj : o < bestObj) {
                     bestObj = o;
                     yaws = cand;
@@ -170,6 +191,20 @@ public final class SolveCore {
     private static boolean hasFeasible(List<SolverRunResult> results, double feasTol) {
         for (SolverRunResult r : results) if (maxViolation(r) <= feasTol) return true;
         return false;
+    }
+
+    private static List<double[]> nearMissSeeds(List<SolverRunResult> results, double feasTol) {
+        List<SolverRunResult> near = new ArrayList<>();
+        for (SolverRunResult r : results) {
+            double v = maxViolation(r);
+            if (v > feasTol && v <= NEAR_MISS_RESCUE_MAX_VIOL) near.add(r);
+        }
+        near.sort((a, b) -> Double.compare(maxViolation(a), maxViolation(b)));
+        List<double[]> seeds = new ArrayList<>();
+        for (int i = 0; i < Math.min(NEAR_MISS_RESCUE_SEEDS, near.size()); i++) {
+            seeds.add(Angles.wrapAll(near.get(i).yawAbsDeg));
+        }
+        return seeds;
     }
 
     /** One parallel multistart of CMA-ES restarts over {@code inits}. {@code feasibilityOnly} drops the

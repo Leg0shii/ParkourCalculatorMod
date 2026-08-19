@@ -319,6 +319,7 @@ public final class NodeCatalog {
                 .param(ParamSpec.integer("evalCap", "Eval cap", 0, 1000000000, 0))
                 .param(ParamSpec.integer("roundCap", "Round cap", 0, 100000, 0))
                 .param(ParamSpec.bool("gateFlipMoves", "Gate flip moves", false))
+                .param(ParamSpec.integer("maxAbsGf", "Max |facing| (deg)", 360, 100000, 12000))
                 .advance()
                 .budgetParam("budgetSec")
                 .fallback(Guarantee.REJECTED)

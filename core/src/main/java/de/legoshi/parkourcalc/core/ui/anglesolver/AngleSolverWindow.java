@@ -505,9 +505,10 @@ public final class AngleSolverWindow implements RenderInterface {
 
     private static final String SMOOTH_TAS_TIP =
             "Prefers smooth yaw paths among equally feasible solutions: search scoring trades a little"
-            + " objective margin for less yaw travel and fewer direction reversals. Feasibility is never"
-            + " traded; whether the jump lands is decided exactly as without this. Best combined with"
-            + " Optimize effort when crafting a TAS; leave off to purely verify or maximize a jump.";
+            + " objective margin for steadier turn rates (less yaw jerk), including the turn out of the"
+            + " tick before the solve. Feasibility is never traded; whether the jump lands is decided"
+            + " exactly as without this. Best combined with Optimize effort when crafting a TAS; leave"
+            + " off to purely verify or maximize a jump.";
 
     private static final String LEGAL_MODE_TIP =
             "Record hunting: drops the single tightest goal wall on the objective axis at the goal tick and"

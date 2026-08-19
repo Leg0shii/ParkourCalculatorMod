@@ -337,7 +337,7 @@ public final class SnapRepairPolish {
             Trans tr = bestTranslationObj(compiled, gfD, path, loX, hiX, loZ, hiZ,
                     objAxisX ? 0 : 1, objMax);
             double obj = path.getPos(objTick, objAxis) + (objAxisX ? tr.tx : tr.tz);
-            double signed = objSign * obj + objective.smoothPenalty(gfD);
+            double signed = objSign * obj + objective.smoothPenalty(scenario.startYaw, gfD);
             boolean feas = tr.viol <= 0.0;
             boolean better;
             if (transBestGf == null) {
@@ -979,7 +979,7 @@ public final class SnapRepairPolish {
 
         double smoothPen(float[] gf) {
             if (objective.smoothLambda <= 0.0) return 0.0;
-            return objective.smoothPenalty(toDouble(gf));
+            return objective.smoothPenalty(scenario.startYaw, toDouble(gf));
         }
 
         Grade fastGrade(float[] gf, boolean modePolish) {
@@ -1021,7 +1021,7 @@ public final class SnapRepairPolish {
             }
             double rawObj = scratch.getPos(objTick, objAxis);
             boolean feasible = ineqViol <= 0.0 && eqViol <= EXACT_EQ_TOL;
-            Grade g = new Grade(objSign * rawObj + objective.smoothPenalty(gfD), vsqr, feasible);
+            Grade g = new Grade(objSign * rawObj + objective.smoothPenalty(scenario.startYaw, gfD), vsqr, feasible);
             return new Exact(g, scratch, rawObj, Math.max(ineqViol, eqViol));
         }
 

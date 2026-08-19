@@ -6,6 +6,7 @@ import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.Constraint;
 import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
+import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.save.SaveIO;
@@ -18,6 +19,7 @@ import java.util.function.Consumer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class DeltaFacingConstraintTest {
@@ -121,7 +123,16 @@ public class DeltaFacingConstraintTest {
             else assertEquals(1.0, w.rhs, 0.0);
         }
 
-        assertNameAbsent(spec, "dF@" + start);
+        List<JumpConstraint> seam = byPrefix(spec, "dF@" + start);
+        assertEquals(1, seam.size());
+        JumpConstraint s0 = seam.get(0);
+        assertEquals(JumpConstraint.Mode.F, s0.mode);
+        assertEquals(0, s0.t1);
+        assertNull(s0.t2);
+        assertEquals(JumpConstraint.Op.PLUS, s0.op);
+        assertEquals(JumpConstraint.Cmp.GE, s0.cmp);
+        assertEquals(spec.asScenario().startYaw, s0.rhs, 1.0e-9);
+
         assertNameAbsent(spec, "dF@" + landing);
     }
 
@@ -155,6 +166,29 @@ public class DeltaFacingConstraintTest {
         assertNotNull("solver label missing", r.getSolver());
         assertTrue("dF=0 must stay on the closed form, got: " + r.getSolver(),
                 r.getSolver().contains("closed form"));
+    }
+
+    @Test
+    public void seamTurnEqualityPinsTheFirstFacing() {
+        SolveResult plain = solve(build(state -> { }));
+        assertNotNull("baseline solve returned no result", plain);
+        assertTrue("baseline j004 must solve", plain.isSuccess());
+        double firstYaw = plain.getYaws().get(0).yaw;
+
+        double seed = build(state -> { }).engine.debugBuildSpec().asScenario().startYaw;
+        double target = Angles.wrap(firstYaw - seed);
+
+        Ctx bound = build(state -> state.tickConstraints(state.getStartTick()).getConstraints()
+                .add(Constraint.scalar(Constraint.Field.DF, Constraint.Op.EQ, target)));
+        SolveResult r = solve(bound);
+        assertNotNull("engine returned no result", r);
+        assertTrue("j004 must solve with the seam turn pinned at the baseline value", r.isSuccess());
+        boolean reported = false;
+        for (SolveResult.Outcome o : r.getOutcomes()) {
+            if ("dF".equals(o.field)) reported = true;
+        }
+        assertTrue("seam dF outcome row missing from the result panel", reported);
+        assertEquals(0.0, Angles.wrap(r.getYaws().get(0).yaw - seed - target), 2.0e-4);
     }
 
     @Test

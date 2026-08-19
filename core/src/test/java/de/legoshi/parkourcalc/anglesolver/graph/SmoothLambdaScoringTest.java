@@ -35,13 +35,25 @@ public class SmoothLambdaScoringTest {
     public void scoredAppliesLambdaBySense() {
         double[] yaws = {0.0, 10.0, 0.0};
         Objective maxObj = new Objective(JumpPhysicsInputs.Axis.X, Objective.Sense.MAX, 3, 0.01);
-        assertEquals(5.0 - 0.2, maxObj.scored(5.0, yaws), 1.0e-12);
+        assertEquals(5.0 - 0.3, maxObj.scored(5.0, 0.0, yaws), 1.0e-12);
         Objective minObj = new Objective(JumpPhysicsInputs.Axis.X, Objective.Sense.MIN, 3, 0.01);
-        assertEquals(5.0 + 0.2, minObj.scored(5.0, yaws), 1.0e-12);
+        assertEquals(5.0 + 0.3, minObj.scored(5.0, 0.0, yaws), 1.0e-12);
         Objective zero = new Objective(JumpPhysicsInputs.Axis.X, Objective.Sense.MAX, 3);
         assertEquals(0.0, zero.smoothLambda, 0.0);
-        assertEquals(5.0, zero.scored(5.0, yaws), 0.0);
-        assertEquals(0.0, zero.smoothPenalty(yaws), 0.0);
+        assertEquals(5.0, zero.scored(5.0, 0.0, yaws), 0.0);
+        assertEquals(0.0, zero.smoothPenalty(0.0, yaws), 0.0);
+    }
+
+    @Test
+    public void anchoredJerkCostsTheSeamTurn() {
+        double[] flat = {10.0, 10.0, 10.0};
+        assertEquals(0.0, Angles.wiggleDeg(10.0, flat), 0.0);
+        assertEquals(30.0, Angles.wiggleDeg(40.0, flat), 1.0e-12);
+        double[] flick = {40.0, 40.0, 40.0};
+        double[] ramp = {20.0, 30.0, 40.0};
+        assertTrue(Angles.wiggleDeg(10.0, flick) > Angles.wiggleDeg(10.0, ramp));
+        assertEquals(Angles.wiggleDeg(new double[] {10.0, 20.0, 5.0, 25.0}) + 10.0,
+                Angles.wiggleDeg(10.0, new double[] {10.0, 20.0, 5.0, 25.0}), 1.0e-12);
     }
 
     @Test

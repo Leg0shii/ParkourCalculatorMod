@@ -69,6 +69,9 @@ anglesolver/
                            (solve/loopmm-tight-t39-fast: the SAME capture under FAST effort; pins
                            the staged late-race: primary fast starves, the explore arm spawns at
                            the 20 s checkpoint and lands it, budget 90 s; the redirect-class gate)
+                           (solve/gh313-j121-dfneo: gh-313; hpk j121 neo with dF <= 0 walls, a
+                           facing-wall spec every deterministic recovery bails on; pins the
+                           near-miss seeded feasibility rescue in SolveCore under FAST effort)
   LevelSetAscentTest.java  level-set objective ascent (gh-290): on keep-out-wall captures where the
                            chosen Solve For degenerates the dual recovery (j003 X/MIN, j012 Z/MAX,
                            j008-bfneo Z/MIN, taser-80t X/MIN), the goal-wall bisection strictly beats
