@@ -76,6 +76,7 @@ public final class AngleSolverEngine {
     /** Per-effort solve budget (see {@link SolveCore}). FAST and Optimize share the small batch: FAST runs
      *  it once (stopping at the first feasible), Optimize keeps launching batches until its time budget. */
     static SolveCore.Budget budgetFor(AngleSolverState state) {
+        if (state.isBruteForceActive()) return new SolveCore.Budget(16, 4500, 2, BucketAscentPolish.FAST);
         switch (state.getEffort()) {
             case THOROUGH: return new SolveCore.Budget(16, 4500, 4, BucketAscentPolish.THOROUGH);
             case CUSTOM: {
@@ -89,6 +90,7 @@ public final class AngleSolverEngine {
     }
 
     static long deadlineNanosFor(AngleSolverState state) {
+        if (state.isBruteForceActive()) return 0L;
         switch (state.getEffort()) {
             case THOROUGH: return state.getOptimizeSeconds() * 1_000_000_000L;
             case CUSTOM: {
@@ -100,17 +102,18 @@ public final class AngleSolverEngine {
     }
 
     static LongRunSolver.LongRunConfig longRunConfigFor(AngleSolverState state) {
-        if (state.getEffort() != AngleSolverState.Effort.CUSTOM) return LongRunSolver.LongRunConfig.defaults();
+        if (state.isBruteForceActive() || state.getEffort() != AngleSolverState.Effort.CUSTOM) return LongRunSolver.LongRunConfig.defaults();
         AngleSolverState.SolveBudget b = state.getSolveBudget();
         return LongRunSolver.LongRunConfig.of(b.getWindow(), b.getCommit());
     }
 
     static boolean useWindowSolverFor(AngleSolverState state) {
-        if (state.getEffort() != AngleSolverState.Effort.CUSTOM) return true;
+        if (state.isBruteForceActive() || state.getEffort() != AngleSolverState.Effort.CUSTOM) return true;
         return state.getSolveBudget().getUseWindowSolver();
     }
 
     static boolean ilsExhaustiveFor(AngleSolverState state) {
+        if (state.isBruteForceActive()) return false;
         switch (state.getEffort()) {
             case THOROUGH: return true;
             case CUSTOM: return state.getSolveBudget().isIlsExhaustive();
@@ -119,6 +122,7 @@ public final class AngleSolverEngine {
     }
 
     static boolean stopOnFeasibleFor(AngleSolverState state) {
+        if (state.isBruteForceActive()) return true;
         switch (state.getEffort()) {
             case FAST: return true;
             case THOROUGH: return false;
@@ -429,7 +433,7 @@ public final class AngleSolverEngine {
                 ph.force45Mask, uiCons,
                 budgetFor(state), deadlineNanosFor(state), longRunConfigFor(state), useWindowSolverFor(state),
                 stopOnFeasibleFor(state), ilsExhaustiveFor(state), legalGoal, GraphFactory.forState(state),
-                state.getEffort() == AngleSolverState.Effort.FAST);
+                state.isBruteForceActive() || state.getEffort() == AngleSolverState.Effort.FAST);
     }
 
     public String legalGoalWallLabel() {

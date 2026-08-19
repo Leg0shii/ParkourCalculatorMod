@@ -8,6 +8,9 @@ public final class GraphFactory {
     }
 
     public static SolverGraph forState(AngleSolverState state) {
+        if (state.isBruteForceActive()) {
+            return BuiltinGraphs.fast();
+        }
         switch (state.getEffort()) {
             case THOROUGH:
                 return BuiltinGraphs.optimize(state.getOptimizeSeconds());

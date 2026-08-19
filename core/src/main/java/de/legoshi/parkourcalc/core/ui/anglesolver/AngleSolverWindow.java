@@ -518,7 +518,8 @@ public final class AngleSolverWindow implements RenderInterface {
         if (ImGui.button(isEnabled ? "ON" : "OFF", toggleW, btnW)) {
             state.setBruteForceEnabled(!isEnabled);
         }
-        TooltipUtil.onHover("Toggle Brute Forcer (deletes running ticks if ON and set to 0)");
+        TooltipUtil.onHover("Toggle Brute Forcer (deletes running ticks if ON and set to 0)\n"+
+                "This always uses the Fast-Effort for solving");
 
         if (isEnabled) {
             ImGui.sameLine();
