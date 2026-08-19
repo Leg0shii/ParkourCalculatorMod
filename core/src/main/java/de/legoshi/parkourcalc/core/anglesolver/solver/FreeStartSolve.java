@@ -174,7 +174,18 @@ public final class FreeStartSolve {
         double recViol = -1.0;
         if (bestYaws != null) {
             double[] rs2 = recoverStart(exact, spec, bestYaws, cfg);
-            if (rs2 != null) recViol = violationAt(exact, spec, bestYaws, rs2[0], rs2[1]);
+            if (rs2 != null) {
+                recViol = violationAt(exact, spec, bestYaws, rs2[0], rs2[1]);
+                double[] cfYaws = ClosedFormSolve.optimize(exact, specAtStart(base, spec, rs2[0], rs2[1]),
+                        feasTol, cancel);
+                if (cfYaws != null) {
+                    if (SolverTrace.on()) {
+                        SolverTrace.log("FREE", "joint recovered start certified by pinned closed form (%.5f,%.5f)",
+                                rs2[0], rs2[1]);
+                    }
+                    return new Result(cfYaws, rs2[0], rs2[1], true);
+                }
+            }
         }
         lastJointDebug = String.format("no-certify pinTranslateViol=%.3e recoverStartViol=%.3e", bestViol, recViol);
         return null;
@@ -221,7 +232,7 @@ public final class FreeStartSolve {
         if (flo <= fhi) return 0.5 * (flo + fhi);
         if (bHi < lo) return bHi;
         if (bLo > hi) return bLo;
-        return clamp(0.0, bLo, bHi);
+        return clamp(0.5 * (lo + hi), bLo, bHi);
     }
 
     public static double violationAt(ExactJumpModel exact, JumpSpec spec, double[] yaws, double p0x, double p0z) {
@@ -358,7 +369,7 @@ public final class FreeStartSolve {
         return new JumpSpec(copyWithStart(base, p0x, p0z), spec.constraints, spec.objective);
     }
 
-    private static JumpPhysicsInputs copyWithStart(JumpPhysicsInputs b, double p0x, double p0z) {
+    static JumpPhysicsInputs copyWithStart(JumpPhysicsInputs b, double p0x, double p0z) {
         JumpPhysicsInputs a = new JumpPhysicsInputs(b.numTicks);
         a.startPos = new Vec3dCore(p0x, b.startPos.y, p0z);
         a.startYaw = b.startYaw;

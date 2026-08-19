@@ -72,6 +72,11 @@ anglesolver/
                            (solve/gh313-j121-dfneo: gh-313; hpk j121 neo with dF <= 0 walls, a
                            facing-wall spec every deterministic recovery bails on; pins the
                            near-miss seeded feasibility rescue in SolveCore under FAST effort)
+                           (solve/gh283-j925-farseed: gh-283; hpk j925 momentum+neo with the start
+                           dragged ~2 blocks outside its tick-0 footprint box, cold rows; pins the
+                           seed-position-independent free-start solve, FAST 20 s: bestTranslate's
+                           conflict fallback must place conflicted candidates at the min-violation
+                           translation, never at the seed)
   LevelSetAscentTest.java  level-set objective ascent (gh-290): on keep-out-wall captures where the
                            chosen Solve For degenerates the dual recovery (j003 X/MIN, j012 Z/MAX,
                            j008-bfneo Z/MIN, taser-80t X/MIN), the goal-wall bisection strictly beats
