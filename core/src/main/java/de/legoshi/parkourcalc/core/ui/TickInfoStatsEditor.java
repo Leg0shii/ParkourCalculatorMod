@@ -105,7 +105,8 @@ public final class TickInfoStatsEditor {
         ThemeManager.pushTextColor(draggingIndex == index ? ThemeManager.textColor() : ThemeManager.textMutedColor());
         int selFlags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowItemOverlap
                 | ImGuiSelectableFlags.DontClosePopups;
-        ThemeManager.leftAlignedSelectable("stat" + index, label, draggingIndex == index, selFlags);
+        ThemeManager.leftAlignedSelectable("stat" + index, label, draggingIndex == index, selFlags,
+                0f, ImGui.getFrameHeight());
         ThemeManager.popTextColor();
         TooltipUtil.onHover(tooltip.isEmpty() ? TT_GRIP : tooltip);
         if (ImGui.isItemHovered()) ImGui.setMouseCursor(ImGuiMouseCursor.Hand);

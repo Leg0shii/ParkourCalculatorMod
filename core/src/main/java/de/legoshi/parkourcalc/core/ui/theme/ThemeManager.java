@@ -452,9 +452,13 @@ public final class ThemeManager {
     }
 
     public static boolean leftAlignedSelectable(String idSuffix, String label, boolean selected, int flags) {
+        return leftAlignedSelectable(idSuffix, label, selected, flags, 0f, 0f);
+    }
+
+    public static boolean leftAlignedSelectable(String idSuffix, String label, boolean selected, int flags, float sizeX, float sizeY) {
         ImVec2 cellOrigin = ImGui.getCursorScreenPos();
         ImGui.alignTextToFramePadding();
-        boolean clicked = ImGui.selectable("##" + idSuffix, selected, flags);
+        boolean clicked = ImGui.selectable("##" + idSuffix, selected, flags, sizeX, sizeY);
         if (label != null && !label.isEmpty()) {
             float tx = cellOrigin.x + tableEdgeCellInset();
             float ty = cellOrigin.y + ImGui.getStyle().getFramePadding().y;
