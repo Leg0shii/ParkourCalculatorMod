@@ -65,4 +65,18 @@ public final class Angles {
         }
         return jerk;
     }
+
+    public static double wiggleDeg(double anchorYaw, double[] f) {
+        if (f.length < 2) return 0.0;
+        double jerk = 0.0;
+        double prev = f[0] - anchorYaw;
+        prev -= 360.0 * Math.round(prev / 360.0);
+        for (int i = 1; i < f.length; i++) {
+            double d = f[i] - f[i - 1];
+            d -= 360.0 * Math.round(d / 360.0);
+            jerk += Math.abs(d - prev);
+            prev = d;
+        }
+        return jerk;
+    }
 }

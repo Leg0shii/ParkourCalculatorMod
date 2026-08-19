@@ -109,6 +109,6 @@ public final class IlsPolish {
         double[] gf = sc.toGameFacings(Angles.wrapAll(absWrapped));
         ForwardPath pr = model.forward(sc, gf);
         if (c.maxViolation(gf, pr) > FEAS_TOL) return Double.POSITIVE_INFINITY;
-        return sign * pr.getPos(obj.tick, obj.axis) + obj.smoothPenalty(absWrapped);
+        return sign * pr.getPos(obj.tick, obj.axis) + obj.smoothPenalty(sc.startYaw, absWrapped);
     }
 }

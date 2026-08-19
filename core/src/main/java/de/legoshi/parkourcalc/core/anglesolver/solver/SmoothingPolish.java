@@ -57,7 +57,7 @@ public final class SmoothingPolish {
         double start = w.eval(y);
         if (start == Double.POSITIVE_INFINITY) return yawsAbsWrapped;
         w.floor = start;
-        w.scoredFloor = start + spec.objective.smoothPenalty(y);
+        w.scoredFloor = start + spec.objective.smoothPenalty(sc.startYaw, y);
         double rough = roughness(sc.startYaw, y);
 
         for (int round = 0; round < cfg.maxRounds && w.evals < w.evalCap; round++) {
@@ -196,7 +196,7 @@ public final class SmoothingPolish {
             double e = eval(absWrapped);
             if (e == Double.POSITIVE_INFINITY) return false;
             if (obj.smoothLambda <= 0.0) return e <= floor;
-            double scored = e + obj.smoothPenalty(absWrapped);
+            double scored = e + obj.smoothPenalty(sc.startYaw, absWrapped);
             if (scored > scoredFloor) return false;
             scoredFloor = scored;
             return true;

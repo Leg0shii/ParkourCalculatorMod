@@ -210,7 +210,7 @@ public final class AlmSnapStage {
             JumpPhysicsInputs snapSc = snapSpec.asScenario();
             double solvedStartX = snapSc.startPos.x + snap.tx;
             double solvedStartZ = snapSc.startPos.z + snap.tz;
-            double signed = objSign * snap.exactObjective + spec.objective.smoothPenalty(snap.gameFacings);
+            double signed = objSign * snap.exactObjective + spec.objective.smoothPenalty(snapSc.startYaw, snap.gameFacings);
             if (better(snap.feasible, signed, snap.exactViol, bestFeasible, bestObjSigned, bestViol, bestYaws != null)) {
                 bestYaws = snap.absYawsDeg;
                 bestViol = snap.exactViol;

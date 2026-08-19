@@ -95,7 +95,7 @@ public final class CmaesJumpHarness {
             double[] F = ties == null ? R : ties.expand(R);
             double[] gf = scenario.toGameFacings(Angles.wrapAll(F));
             ForwardPath pr = model.forward(scenario, gf);
-            double smooth = feasibilityOnly ? 0.0 : obj.smoothPenalty(F);
+            double smooth = feasibilityOnly ? 0.0 : obj.smoothPenalty(scenario.startYaw, F);
             if (free) {
                 double[] d = FreeStartSolve.bestTranslate(spec, gf, pr, box);
                 double o = sign * (pr.getPos(obj.tick, obj.axis) + (objAxis == 0 ? d[0] : d[1]));
@@ -219,7 +219,7 @@ public final class CmaesJumpHarness {
         double[] gf = scenario.toGameFacings(Angles.wrapAll(abs));
         ForwardPath pr = model.forward(scenario, gf);
         // score folds ONLY the eq squared-penalty (muIneq=0 zeroes the ineq term); ineq is reported separately.
-        double smooth = feasibilityOnly ? 0.0 : obj.smoothPenalty(abs);
+        double smooth = feasibilityOnly ? 0.0 : obj.smoothPenalty(scenario.startYaw, abs);
         double score = sign * pr.getPos(obj.tick, obj.axis) + smooth + c.penalty(gf, pr, 0.0, cfg.muEq);
         double ineqViol = 0.0;
         for (JumpConstraint cc : c.ineq) ineqViol = Math.max(ineqViol, JumpConstraintCompiler.slack(cc, gf, pr));
