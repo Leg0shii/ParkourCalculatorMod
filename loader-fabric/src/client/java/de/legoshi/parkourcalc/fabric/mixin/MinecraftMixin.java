@@ -35,4 +35,9 @@ public class MinecraftMixin {
         FabricParkourCalculator.syncFrozenPlayerToServer();
     }
 
+    @Inject(method = "pauseIfInactive", at = @At("HEAD"), cancellable = true)
+    private void pkc$skipLostFocusPauseWhileUiOpen(CallbackInfo ci) {
+        if (FabricParkourCalculator.isControlPanelOpen()) ci.cancel();
+    }
+
 }
