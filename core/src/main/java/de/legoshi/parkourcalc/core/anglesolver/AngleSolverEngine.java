@@ -28,7 +28,9 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.SlpSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolveCore;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
+import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
+import de.legoshi.parkourcalc.core.anglesolver.solver.LevelSetAscent;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
@@ -1108,11 +1110,20 @@ public final class AngleSolverEngine {
         if (ctx.smoothingEvals.get() > 0) result.addDetail("Smoothing evals", Long.toString(ctx.smoothingEvals.get()));
         double finalObjective = path.getPos(spec.objective.tick, spec.objective.axis);
         double finalViolation = JumpConstraintCompiler.compile(spec).maxViolation(gameFacings, path);
+        if (finalViolation <= FEAS_TOL && JumpLinearModel.hasFacingWall(spec.constraints)) {
+            result.setNotice(DF_DIRECTION_NOTICE);
+        }
         finishRecord(rec, SolveRunRecord.STATUS_SOLVED, finalObjective, finalViolation,
                 finalViolation <= FEAS_TOL, solverName, yaws);
         Plan plan = new Plan(job.startTick, yaws, job.strafeMask, job.force45Mask, 1, path, sc.startPos, stageLocked);
         return new Outcome(result, plan);
     }
+
+    public static final String DF_DIRECTION_NOTICE =
+            "This jump has a delta-facing (dF) constraint. Landing does not depend on the Solve For"
+            + " direction, but optimizing toward it is not guaranteed here: the deterministic"
+            + " direction-optimizer only runs without dF constraints, so this result comes from the"
+            + " general search and may not be the exact directional optimum.";
 
     /** The byte-exact objective value the given facings realize (for comparing two feasible candidates). */
     private double exactObjective(JumpPhysicsInputs sc, JumpSpec spec, double[] yawsAbsWrapped) {
@@ -1845,17 +1856,15 @@ public final class AngleSolverEngine {
         if (SolverTrace.on()) SolverTrace.log("CHAIN", "slp start");
         yaws = SlpSolve.optimize(em, spec, FEAS_TOL, cancel, null, slpCfg);
         if (yaws != null) {
-            nameOut[0] = "closed form -> SLP";
             if (SolverTrace.on()) SolverTrace.log("CHAIN", "slp solved");
-            return yaws;
+            return levelSetTopUp(em, spec, yaws, cancel, "closed form -> SLP", nameOut);
         }
         if (deadlineNanos == 0L || deadlineNanos - System.nanoTime() >= RELAX_MIN_REMAINING_NANOS) {
             if (SolverTrace.on()) SolverTrace.log("CHAIN", "relaxation start");
             yaws = RelaxationRecovery.solve(em, spec, FEAS_TOL, cancel, rrCfg);
             if (yaws != null) {
-                nameOut[0] = "closed form -> relaxation recovery";
                 if (SolverTrace.on()) SolverTrace.log("CHAIN", "relaxation solved");
-                return yaws;
+                return levelSetTopUp(em, spec, yaws, cancel, "closed form -> relaxation recovery", nameOut);
             }
         } else if (SolverTrace.on()) {
             SolverTrace.log("CHAIN", "relaxation skipped (deadline)");
@@ -1867,13 +1876,27 @@ public final class AngleSolverEngine {
             if (seed == null) continue;
             yaws = SlpSolve.optimize(em, spec, FEAS_TOL, cancel, seed, slpCfg);
             if (yaws != null) {
-                nameOut[0] = "closed form -> SLP (reseeded)";
                 if (SolverTrace.on()) SolverTrace.log("CHAIN", "reseeded slp solved");
-                return yaws;
+                return levelSetTopUp(em, spec, yaws, cancel, "closed form -> SLP (reseeded)", nameOut);
             }
         }
         if (SolverTrace.on()) SolverTrace.log("CHAIN", "miss");
         return null;
+    }
+
+    /** A non-closed-form feasible result can be short of the objective's dual bound when the chosen Solve For
+     *  degenerates the dual recovery (optimizing into a same-axis position wall); ladder the objective up to
+     *  the bound via feasibility solves ({@link LevelSetAscent}). No-op with dF constraints (no dual bound). */
+    private static double[] levelSetTopUp(ExactJumpModel em, JumpSpec spec, double[] yaws, AtomicBoolean cancel,
+                                          String name, String[] nameOut) {
+        double[] improved = LevelSetAscent.improve(em, spec, yaws, FEAS_TOL, cancel);
+        if (improved != null && improved != yaws) {
+            nameOut[0] = name + " -> level set";
+            if (SolverTrace.on()) SolverTrace.log("CHAIN", "level set improved");
+            return improved;
+        }
+        nameOut[0] = name;
+        return yaws;
     }
 
     /** The other three Solve-For directions at the same tick, user's axis first. Seed sources only

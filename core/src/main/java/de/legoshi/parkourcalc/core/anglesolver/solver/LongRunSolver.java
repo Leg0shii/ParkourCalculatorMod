@@ -232,8 +232,11 @@ public final class LongRunSolver {
 
     private static double[] hugObjective(ExactJumpModel exact, JumpPhysicsInputs win, List<JumpConstraint> cons,
                                          Objective first, double[] feasible, AtomicBoolean cancel) {
-        double[] hugged = SlpSolve.optimize(exact, new JumpSpec(win, cons, first), 0.0, cancel, feasible);
-        return hugged != null ? hugged : feasible; // the alternate stays a feasible (if unhugged) fallback
+        JumpSpec spec = new JumpSpec(win, cons, first);
+        double[] hugged = SlpSolve.optimize(exact, spec, 0.0, cancel, feasible);
+        double[] base = hugged != null ? hugged : feasible; // the alternate stays a feasible (if unhugged) fallback
+        double[] laddered = LevelSetAscent.improve(exact, spec, base, 0.0, cancel);
+        return laddered != null ? laddered : base;
     }
 
     private static double[] closedForm(ExactJumpModel exact, JumpSpec spec, boolean last, AtomicBoolean cancel) {

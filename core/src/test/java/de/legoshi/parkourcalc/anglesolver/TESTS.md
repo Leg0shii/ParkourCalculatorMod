@@ -72,6 +72,13 @@ anglesolver/
                            (solve/gh313-j121-dfneo: gh-313; hpk j121 neo with dF <= 0 walls, a
                            facing-wall spec every deterministic recovery bails on; pins the
                            near-miss seeded feasibility rescue in SolveCore under FAST effort)
+  LevelSetAscentTest.java  level-set objective ascent (gh-290): on keep-out-wall captures where the
+                           chosen Solve For degenerates the dual recovery (j003 X/MIN, j012 Z/MAX,
+                           j008-bfneo Z/MIN, taser-80t X/MIN), the goal-wall bisection strictly beats
+                           the plain SLP hug the reseeded path produces and reaches near the dual
+                           bound (j003 X/MIN: -27 hug -> -31.3 optimum). The dF gate (facing wall =>
+                           skip + info notice) is unit-tested fast in
+                           core/anglesolver/DfDirectionGateTest
   harness/                 shared plumbing; no test lives here
 resources/
   problems/<check>/        one folder per check; holds captures or .expect.json sidecars

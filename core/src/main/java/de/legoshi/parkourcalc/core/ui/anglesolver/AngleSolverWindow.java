@@ -735,13 +735,16 @@ public final class AngleSolverWindow implements RenderInterface {
         float pad = ThemeManager.SM * scale;
         int devLines = deviation == null ? 0
                 : wrappedLineEstimate(deviation, ImGui.getContentRegionAvail().x - 2f * pad);
+        String notice = r.getNotice();
+        int noticeLines = notice == null ? 0
+                : wrappedLineEstimate(notice, ImGui.getContentRegionAvail().x - 2f * pad);
         List<SolveResult.Detail> details = detailRows(r);
         List<String> steps = solverSteps(r);
         int solverLines = steps.isEmpty() ? 0 : 1 + (solverExpanded ? steps.size() : 0);
         int detailLines = details.isEmpty() && steps.isEmpty() ? 0
                 : 1 + (detailsExpanded ? details.size() + solverLines : 0);
         int outcomeLines = r.getOutcomes().isEmpty() ? 0 : 1 + (outcomesExpanded ? r.getOutcomes().size() : 0);
-        int rows = 2 + detailLines + devLines + outcomeLines + 1 + (yawsExpanded ? r.getYaws().size() : 0);
+        int rows = 2 + detailLines + devLines + noticeLines + outcomeLines + 1 + (yawsExpanded ? r.getYaws().size() : 0);
         float fullH = rows * lineH + 2f * pad;
         float h = Math.min(fullH, io.getDisplaySizeY() * 0.4f); // cap so the pane scrolls instead of growing off-screen
 
@@ -764,6 +767,12 @@ public final class AngleSolverWindow implements RenderInterface {
             String tip = deviationTip(state.getApplyDeviationKind());
             if (tip != null) TooltipUtil.onHover(tip);
         }
+        if (notice != null) {
+            ThemeManager.pushTextColor(ThemeManager.warningColor());
+            ImGui.textWrapped(notice);
+            ThemeManager.popTextColor();
+            TooltipUtil.onHover(DIRECTION_TIP);
+        }
         renderOutcomes(r, scale);
         renderDetails(details, steps, scale);
         renderYawList(r, scale);
@@ -779,6 +788,13 @@ public final class AngleSolverWindow implements RenderInterface {
             + " the search orders of magnitude slower. Walls only show up when the real sim replays the"
             + " applied angles, which is what happened here. Add an X or Z constraint at the colliding"
             + " tick to route around the wall, then re-solve.";
+
+    private static final String DIRECTION_TIP =
+            "A delta-facing (dF) constraint pins the change in the player's facing between ticks, which the"
+            + " deterministic direction-optimizer (a position-linear method) cannot represent, so it is"
+            + " skipped and the general search optimizes the direction instead. This does not affect landing,"
+            + " only whether the shown path is the exact directional optimum. dF constraints are rare;"
+            + " ordinary keep-out walls are position constraints and are not affected.";
 
     private static final String SNEAK_TIP =
             "Sneak is not a pure key effect: when the slowdown kicks in, and how long the crouch pose"
