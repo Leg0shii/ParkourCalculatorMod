@@ -143,7 +143,7 @@ public class Forge8ParkourCalculator {
         ClientRegistry.registerKeyBinding(solverStartTickKeyBinding);
         solverEndTickKeyBinding = new KeyBinding("key.parkourcalculator.set_solver_end", Keyboard.KEY_O, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(solverEndTickKeyBinding);
-        rerunSimulationKeyBinding = new KeyBinding("key.parkourcalculator.rerun_simulation", Keyboard.KEY_R, "key.categories.parkourcalculator");
+        rerunSimulationKeyBinding = new KeyBinding("key.parkourcalculator.rerun_simulation", Keyboard.KEY_J, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(rerunSimulationKeyBinding);
         if (blockCaptureEnabled) {
             captureMomentumBlockKeyBinding = new KeyBinding("key.parkourcalculator.capture_momentum_block", Keyboard.KEY_M, "key.categories.parkourcalculator");

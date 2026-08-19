@@ -88,7 +88,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         solveKeyBinding = key("key.parkourcalculator.solve", GLFW.GLFW_KEY_V);
         solverStartTickKeyBinding = key("key.parkourcalculator.set_solver_start", GLFW.GLFW_KEY_I);
         solverEndTickKeyBinding = key("key.parkourcalculator.set_solver_end", GLFW.GLFW_KEY_O);
-        rerunSimulationKeyBinding = key("key.parkourcalculator.rerun_simulation", GLFW.GLFW_KEY_R);
+        rerunSimulationKeyBinding = key("key.parkourcalculator.rerun_simulation", GLFW.GLFW_KEY_J);
         if (blockCaptureEnabled) {
             captureMomentumBlockKeyBinding = key("key.parkourcalculator.capture_momentum_block", GLFW.GLFW_KEY_M);
             captureCollisionBlockKeyBinding = key("key.parkourcalculator.capture_collision_block", GLFW.GLFW_KEY_N);

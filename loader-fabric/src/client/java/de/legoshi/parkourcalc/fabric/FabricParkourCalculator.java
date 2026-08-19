@@ -131,7 +131,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         rerunSimulationKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.parkourcalculator.rerun_simulation",
                 InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_R,
+                GLFW.GLFW_KEY_J,
                 category
         ));
 
