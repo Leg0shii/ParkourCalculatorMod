@@ -76,6 +76,14 @@ public final class SaveFile {
         public List<BlockSel> selectedBlocks = new ArrayList<BlockSel>();
         public Start seed;                               // launch state (pos/vel/yaw) at startTick; what a solve begins from
         public Result result;                            // null = no solve yet
+        public Boolean bruteForceEnabled;
+        public Integer bruteForceTicks;
+        public Integer bruteForceTimeoutMs;
+        public Boolean bruteForceDynamicTimeout;
+        public Integer bruteForceDynamicAddPerJumpMs;
+        public Double bruteForceDynamicSafetyMult;
+        public Integer bruteForceDynamicSafetyMarginMs;
+        public Boolean bruteForceMinTicks;
         public String deviation;
         public String deviationKind;
     }

@@ -720,6 +720,10 @@ public final class AngleSolverState {
     private int bruteForceTimeoutMs = 200;
     private int bruteForceLiveTimeoutMs = 200;
     private boolean bruteForceDynamicTimeout = false;
+    private int bruteForceDynamicAddPerJumpMs = 50;
+    private double bruteForceDynamicSafetyMult = 1.1;
+    private int bruteForceDynamicSafetyMarginMs = 80;
+    private boolean bruteForceMinTicks = false;
     private boolean bruteForceActive = false;
 
     public boolean isBruteForceEnabled() {
@@ -763,6 +767,38 @@ public final class AngleSolverState {
         this.bruteForceDynamicTimeout = bruteForceDynamicTimeout;
     }
 
+    public int getBruteForceDynamicAddPerJumpMs() {
+        return bruteForceDynamicAddPerJumpMs;
+    }
+
+    public void setBruteForceDynamicAddPerJumpMs(int bruteForceDynamicAddPerJumpMs) {
+        this.bruteForceDynamicAddPerJumpMs = Math.max(0, bruteForceDynamicAddPerJumpMs);
+    }
+
+    public double getBruteForceDynamicSafetyMult() {
+        return bruteForceDynamicSafetyMult;
+    }
+
+    public void setBruteForceDynamicSafetyMult(double bruteForceDynamicSafetyMult) {
+        this.bruteForceDynamicSafetyMult = Math.max(1.0, bruteForceDynamicSafetyMult);
+    }
+
+    public int getBruteForceDynamicSafetyMarginMs() {
+        return bruteForceDynamicSafetyMarginMs;
+    }
+
+    public void setBruteForceDynamicSafetyMarginMs(int bruteForceDynamicSafetyMarginMs) {
+        this.bruteForceDynamicSafetyMarginMs = Math.max(0, bruteForceDynamicSafetyMarginMs);
+    }
+
+    public boolean isBruteForceMinTicks() {
+        return bruteForceMinTicks;
+    }
+
+    public void setBruteForceMinTicks(boolean bruteForceMinTicks) {
+        this.bruteForceMinTicks = bruteForceMinTicks;
+    }
+
     public boolean isBruteForceActive() {
         return bruteForceActive;
     }
@@ -799,6 +835,10 @@ public final class AngleSolverState {
         bruteForceTimeoutMs = 200;
         bruteForceLiveTimeoutMs = 200;
         bruteForceDynamicTimeout = false;
+        bruteForceDynamicAddPerJumpMs = 50;
+        bruteForceDynamicSafetyMult = 1.1;
+        bruteForceDynamicSafetyMarginMs = 80;
+        bruteForceMinTicks = false;
         bruteForceActive = false;
     }
 

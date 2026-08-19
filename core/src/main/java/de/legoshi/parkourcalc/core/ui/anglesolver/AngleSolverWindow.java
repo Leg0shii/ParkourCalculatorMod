@@ -63,7 +63,7 @@ public final class AngleSolverWindow implements RenderInterface {
     private static final String LEGACY_PRESET_ITEM = "Legacy budget";
 
     private static final String[] FORM_LABELS =
-            {"Start tick", "Goal tick", "Axis", "Goal", "Inputs", "Sprint", "Slipperiness", "Potion", "Running ticks", "Timeout per step"};
+            {"Start tick", "Goal tick", "Axis", "Goal", "Inputs", "Sprint", "Slipperiness", "Potion", "Run ticks", "Timeout per step"};
 
     /** Unscaled; lines the details table up under the toggle title and sets it off from the solved values. */
     private static final float DETAIL_INDENT = 13f;
@@ -502,23 +502,32 @@ public final class AngleSolverWindow implements RenderInterface {
 
     private void renderRunningTicksSection(float labelW, float scale) {
         Controls.pushInputFrameHeight();
-        ImGui.beginGroup();
-        SolverWidgets.rowLabel("Running ticks", labelW);
 
         float btnW = ImGui.getFrameHeight();
         float toggleW = btnW * 1.6f;
         float spacing = ImGui.getStyle().getItemInnerSpacing().x;
+        float startX = ImGui.getCursorPosX();
+        float unifiedLabelW = Math.max(labelW, ImGui.calcTextSize("Run ticks").x + toggleW + spacing * 2 + ThemeManager.SM * scale);
+
+        ImGui.beginGroup();
+        ImGui.alignTextToFramePadding();
+        ImGui.text("Run ticks");
+        ImGui.sameLine();
 
         boolean isEnabled = state.isBruteForceEnabled();
         if (ImGui.button(isEnabled ? "ON" : "OFF", toggleW, btnW)) {
             state.setBruteForceEnabled(!isEnabled);
         }
-        if (ImGui.isItemHovered()) ImGui.setTooltip("Toggle Brute Forcer (deletes running ticks if ON and set to 0)");
+        TooltipUtil.onHover("Toggle Brute Forcer (deletes running ticks if ON and set to 0)");
 
         if (isEnabled) {
-            ImGui.sameLine(0, spacing);
-            ImGui.setNextItemWidth(ImGui.getContentRegionAvail().x - btnW * 2 - spacing * 2);
+            ImGui.sameLine();
+            ImGui.setCursorPosX(startX + unifiedLabelW);
 
+            float checkColW = Math.max(ImGui.calcTextSize("Auto").x, ImGui.calcTextSize("Min").x) + btnW + spacing;
+            float sharedInputW = Math.max(30f, ImGui.getContentRegionAvail().x - btnW * 2 - checkColW - spacing * 3);
+
+            ImGui.setNextItemWidth(sharedInputW);
             String currentTicks = String.valueOf(state.getBruteForceTicks());
             imgui.type.ImString bfStr = new imgui.type.ImString(currentTicks, 16);
             if (ImGui.inputText("##bfTicks", bfStr, imgui.flag.ImGuiInputTextFlags.CharsDecimal)) {
@@ -527,6 +536,7 @@ public final class AngleSolverWindow implements RenderInterface {
                     state.setBruteForceTicks(Math.max(0, val));
                 } catch (NumberFormatException ignored) { }
             }
+            TooltipUtil.onHover("Maximum extra running ticks to test before jumps to maximize distance.");
 
             ImGui.sameLine(0, spacing);
             ImGui.pushButtonRepeat(true);
@@ -539,19 +549,22 @@ public final class AngleSolverWindow implements RenderInterface {
             }
             ImGui.popButtonRepeat();
 
+            ImGui.sameLine(0, spacing);
+            if (Controls.checkbox("Min##bfMinTicks", state.isBruteForceMinTicks())) {
+                state.setBruteForceMinTicks(!state.isBruteForceMinTicks());
+            }
+            TooltipUtil.onHover("Tests combinations starting from 0 ticks upwards to find a solution with the minimum required running ticks (up to the configured maximum).");
+
             ImGui.endGroup();
-            Controls.popInputFrameHeight();
-            TooltipUtil.onHover("Automatically test combinations of adding up to X running ticks before jumps to maximize distance.");
 
-            Controls.pushInputFrameHeight();
             ImGui.beginGroup();
-            SolverWidgets.rowLabel("Timeout per step", labelW);
-
-            float checkW = ImGui.calcTextSize("Auto").x + ImGui.getFrameHeight() + ImGui.getStyle().getItemSpacing().x;
-            float inputW = ImGui.getContentRegionAvail().x - checkW - ImGui.getStyle().getItemSpacing().x;
+            ImGui.alignTextToFramePadding();
+            ImGui.text("Timeout per step");
+            ImGui.sameLine();
+            ImGui.setCursorPosX(startX + unifiedLabelW);
 
             if (state.isBruteForceDynamicTimeout()) ImGui.beginDisabled();
-            ImGui.setNextItemWidth(inputW);
+            ImGui.setNextItemWidth(sharedInputW);
             int displayTimeout = state.isBruteForceDynamicTimeout() ? state.getBruteForceLiveTimeoutMs() : state.getBruteForceTimeoutMs();
             imgui.type.ImString bfTimeStr = new imgui.type.ImString(String.valueOf(displayTimeout), 16);
             if (ImGui.inputText("##bfTimeout", bfTimeStr, imgui.flag.ImGuiInputTextFlags.CharsDecimal)) {
@@ -560,9 +573,21 @@ public final class AngleSolverWindow implements RenderInterface {
                     state.setBruteForceTimeoutMs(Math.max(1, val));
                 } catch (NumberFormatException ignored) {}
             }
+            TooltipUtil.onHover("Maximum search time in milliseconds spent per branching step.");
+
+            ImGui.sameLine(0, spacing);
+            ImGui.pushButtonRepeat(true);
+            if (ImGui.button("-##bfTimeoutMinus", btnW, btnW)) {
+                state.setBruteForceTimeoutMs(Math.max(1, state.getBruteForceTimeoutMs() - 25));
+            }
+            ImGui.sameLine(0, spacing);
+            if (ImGui.button("+##bfTimeoutPlus", btnW, btnW)) {
+                state.setBruteForceTimeoutMs(state.getBruteForceTimeoutMs() + 25);
+            }
+            ImGui.popButtonRepeat();
             if (state.isBruteForceDynamicTimeout()) ImGui.endDisabled();
 
-            ImGui.sameLine();
+            ImGui.sameLine(0, spacing);
             if (Controls.checkbox("Auto##bfDynamicTimeout", state.isBruteForceDynamicTimeout())) {
                 state.setBruteForceDynamicTimeout(!state.isBruteForceDynamicTimeout());
             }
@@ -571,13 +596,53 @@ public final class AngleSolverWindow implements RenderInterface {
                     + "For in-depth searches, disable Auto and set a higher fixed timeout manually.");
 
             ImGui.endGroup();
-            Controls.popInputFrameHeight();
-            TooltipUtil.onHover("Maximum search time in milliseconds spent per branching step.");
+
+            if (state.isBruteForceDynamicTimeout()) {
+                ImGui.beginGroup();
+                ImGui.alignTextToFramePadding();
+                ImGui.text("Auto params");
+                ImGui.sameLine();
+                ImGui.setCursorPosX(startX + unifiedLabelW);
+
+                float totalAvail = ImGui.getContentRegionAvail().x;
+                float fieldW = Math.max(25f, (totalAvail - spacing * 2) / 3f);
+
+                ImGui.setNextItemWidth(fieldW);
+                imgui.type.ImString addStr = new imgui.type.ImString(String.valueOf(state.getBruteForceDynamicAddPerJumpMs()), 16);
+                if (ImGui.inputText("##bfDynAdd", addStr, imgui.flag.ImGuiInputTextFlags.CharsDecimal)) {
+                    try {
+                        state.setBruteForceDynamicAddPerJumpMs(Integer.parseInt(addStr.get()));
+                    } catch (NumberFormatException ignored) {}
+                }
+                TooltipUtil.onHover("+ms per jump: Milliseconds added to the initial timeout per additional jump distance.");
+
+                ImGui.sameLine(0, spacing);
+                ImGui.setNextItemWidth(fieldW);
+                imgui.type.ImString multStr = new imgui.type.ImString(String.valueOf(state.getBruteForceDynamicSafetyMult()), 16);
+                if (ImGui.inputText("##bfDynMult", multStr, imgui.flag.ImGuiInputTextFlags.CharsDecimal)) {
+                    try {
+                        state.setBruteForceDynamicSafetyMult(Double.parseDouble(multStr.get()));
+                    } catch (NumberFormatException ignored) {}
+                }
+                TooltipUtil.onHover("Safety multiplier: Multiplier applied to the actual measured solve duration.");
+
+                ImGui.sameLine(0, spacing);
+                ImGui.setNextItemWidth(fieldW);
+                imgui.type.ImString marginStr = new imgui.type.ImString(String.valueOf(state.getBruteForceDynamicSafetyMarginMs()), 16);
+                if (ImGui.inputText("##bfDynMargin", marginStr, imgui.flag.ImGuiInputTextFlags.CharsDecimal)) {
+                    try {
+                        state.setBruteForceDynamicSafetyMarginMs(Integer.parseInt(marginStr.get()));
+                    } catch (NumberFormatException ignored) {}
+                }
+                TooltipUtil.onHover("Safety margin (ms): Flat buffer added on top of the calculated timeout.");
+
+                ImGui.endGroup();
+            }
         } else {
             ImGui.endGroup();
-            Controls.popInputFrameHeight();
             TooltipUtil.onHover("Automatically test combinations of adding up to X running ticks before jumps to maximize distance.");
         }
+        Controls.popInputFrameHeight();
     }
 
     private static final String OPTIMIZE_TIME_TIP =

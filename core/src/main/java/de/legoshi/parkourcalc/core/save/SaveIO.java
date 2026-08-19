@@ -224,6 +224,15 @@ public final class SaveIO {
         state.setResult(toResult(a.result));
         state.setApplyDeviation(a.deviation,
                 parseEnum(AngleSolverState.DeviationKind.class, a.deviationKind, AngleSolverState.DeviationKind.OTHER));
+
+        if (a.bruteForceEnabled != null) state.setBruteForceEnabled(a.bruteForceEnabled);
+        if (a.bruteForceTicks != null) state.setBruteForceTicks(a.bruteForceTicks);
+        if (a.bruteForceTimeoutMs != null) state.setBruteForceTimeoutMs(a.bruteForceTimeoutMs);
+        if (a.bruteForceDynamicTimeout != null) state.setBruteForceDynamicTimeout(a.bruteForceDynamicTimeout);
+        if (a.bruteForceDynamicAddPerJumpMs != null) state.setBruteForceDynamicAddPerJumpMs(a.bruteForceDynamicAddPerJumpMs);
+        if (a.bruteForceDynamicSafetyMult != null) state.setBruteForceDynamicSafetyMult(a.bruteForceDynamicSafetyMult);
+        if (a.bruteForceDynamicSafetyMarginMs != null) state.setBruteForceDynamicSafetyMarginMs(a.bruteForceDynamicSafetyMarginMs);
+        if (a.bruteForceMinTicks != null) state.setBruteForceMinTicks(a.bruteForceMinTicks);
     }
 
     public static AngleSolverState sliceAngleSolverState(AngleSolverState source, List<Integer> sourceRows) {
@@ -538,6 +547,14 @@ public final class SaveIO {
         for (BlockSelection b : s.getCollisionBlocks()) a.selectedBlocks.add(toSaveBlock(b));
         for (BlockSelection b : s.getLandBlocks()) a.selectedBlocks.add(toSaveBlock(b));
         a.result = toSaveResult(s.getResult());
+        a.bruteForceEnabled = s.isBruteForceEnabled();
+        a.bruteForceTicks = s.getBruteForceTicks();
+        a.bruteForceTimeoutMs = s.getBruteForceTimeoutMs();
+        a.bruteForceDynamicTimeout = s.isBruteForceDynamicTimeout();
+        a.bruteForceDynamicAddPerJumpMs = s.getBruteForceDynamicAddPerJumpMs();
+        a.bruteForceDynamicSafetyMult = s.getBruteForceDynamicSafetyMult();
+        a.bruteForceDynamicSafetyMarginMs = s.getBruteForceDynamicSafetyMarginMs();
+        a.bruteForceMinTicks = s.isBruteForceMinTicks();
         a.deviation = s.getApplyDeviation();
         a.deviationKind = s.getApplyDeviationKind() != null ? s.getApplyDeviationKind().name() : null;
         return a;
