@@ -48,6 +48,7 @@ public final class PlaybackController {
     // Lerp endpoints displayedYaw chases; congruent to currentTickYaw mod 360.
     private float prevTickYaw;
     private float displayTargetYaw;
+    private float prevPrevTickYaw;
     private long tickEndNanos;
 
     // displayedYaw is the camera yaw; it equals the ideal lerp value when the
@@ -178,6 +179,7 @@ public final class PlaybackController {
         // A carried checkpoint is already post-settle; warm up only a from-the-top start that has none.
         warmupRemaining = (from == 0 && carry == null) ? WARMUP_TICKS : 0;
         prevTickYaw = yaw;
+        prevPrevTickYaw = yaw;
         currentTickYaw = yaw;
         displayTargetYaw = yaw;
         displayedYaw = yaw;
@@ -300,6 +302,7 @@ public final class PlaybackController {
             bridge.setHotbarSlot(hotbarSlot - 1);
         }
         Float yaw = row.getYaw();
+        prevPrevTickYaw = prevTickYaw;
         prevTickYaw = displayTargetYaw;
         if (yaw != null) {
             if (row.isYawLocked()) {
@@ -348,6 +351,25 @@ public final class PlaybackController {
         return d;
     }
 
+    private static float nextDisplayYaw(float base, InputRow row) {
+        Float yaw = row.getYaw();
+        if (yaw == null) return base;
+        if (row.isYawLocked()) return base + shortestDelta(base, yaw);
+        if (yaw != 0f) return base + yaw;
+        return base;
+    }
+
+    private static float catmullRom(float p0, float p1, float p2, float p3, float t) {
+        if (t <= 0f) return p1;
+        if (t >= 1f) return p2;
+        float t2 = t * t;
+        float t3 = t2 * t;
+        return 0.5f * ((2f * p1)
+                + (-p0 + p2) * t
+                + (2f * p0 - 5f * p1 + 4f * p2 - p3) * t2
+                + (-p0 + 3f * p1 - 3f * p2 + p3) * t3);
+    }
+
     /** Loader calls after MC's physics tick so the snap value never reaches a render. */
     public void postTick() {
         if (!running || bridge == null) return;
@@ -392,7 +414,10 @@ public final class PlaybackController {
         float partial = elapsed / (float) TICK_NANOS;
         if (partial < 0f) partial = 0f;
         if (partial > 1f) partial = 1f;
-        float idealYaw = prevTickYaw + (displayTargetYaw - prevTickYaw) * partial;
+        float nextTickYaw = nextTick < inputData.size()
+                ? nextDisplayYaw(displayTargetYaw, inputData.get(nextTick))
+                : displayTargetYaw;
+        float idealYaw = catmullRom(prevPrevTickYaw, prevTickYaw, displayTargetYaw, nextTickYaw, partial);
 
         float delta = idealYaw - displayedYaw;
         float maxStep = settings.yawFlickSpeed * dt;
