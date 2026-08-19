@@ -430,7 +430,7 @@ public final class Application {
 
     private void commitStartTap() {
         if (boxController.size() == 0) return;
-        selection.handleClick(0);
+        selection.handleClick(boxController.size() >= 2 ? 1 : 0);
         selection.requestScrollIntoView();
     }
 
