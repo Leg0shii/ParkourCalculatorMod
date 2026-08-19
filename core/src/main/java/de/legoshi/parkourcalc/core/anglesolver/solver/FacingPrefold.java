@@ -325,7 +325,11 @@ public final class FacingPrefold {
             double gz = r.gz[v];
             if (gx * gx + gz * gz < 1.0e-18) {
                 boolean max = obj.sense == Objective.Sense.MAX;
-                if (obj.axis == JumpPhysicsInputs.Axis.X) {
+                if (obj.isCustomAngle()) {
+                    double rad = Math.toRadians(obj.customYaw);
+                    gx = (max ? 1.0 : -1.0) * -Math.sin(rad);
+                    gz = (max ? 1.0 : -1.0) * Math.cos(rad);
+                } else if (obj.axis == JumpPhysicsInputs.Axis.X) {
                     gx = max ? 1.0 : -1.0;
                     gz = 0.0;
                 } else {

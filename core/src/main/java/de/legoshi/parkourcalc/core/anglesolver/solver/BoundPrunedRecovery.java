@@ -231,6 +231,7 @@ public final class BoundPrunedRecovery {
     }
 
     private static boolean isTargetWall(JumpConstraint c, JumpSpec spec, boolean max) {
+        if (spec.objective.isCustomAngle()) return false;
         JumpConstraint.Mode objMode = spec.objective.axis == JumpPhysicsInputs.Axis.X
                 ? JumpConstraint.Mode.X : JumpConstraint.Mode.Z;
         return c.mode == objMode && c.t1 == spec.objective.tick && c.t2 == null
@@ -263,7 +264,7 @@ public final class BoundPrunedRecovery {
         double[] gf = sc.toGameFacings(Angles.wrapAll(yawsAbs));
         ForwardPath path = exact.forward(sc, gf);
         if (compiled.maxViolation(gf, path) > 0.0) return Double.NaN;
-        double v = path.getPos(spec.objective.tick, spec.objective.axis);
+        double v = spec.objective.evaluate(path);
         return max ? v : -v;
     }
 
@@ -371,8 +372,14 @@ public final class BoundPrunedRecovery {
         CostateDualSolver.Result r = new CostateDualSolver(n, cx, cz, lin.mMagAll(), walls).solve(0.0, null);
         if (r == null) return null;
         boolean max = spec.objective.sense == Objective.Sense.MAX;
-        int axisIdx = spec.objective.axis == JumpPhysicsInputs.Axis.X ? 0 : 1;
-        double cp = lin.constPos(spec.objective.tick, axisIdx);
+        double cp;
+        if (spec.objective.isCustomAngle()) {
+            double rad = Math.toRadians(spec.objective.customYaw);
+            cp = -Math.sin(rad) * lin.constPos(spec.objective.tick, 0) + Math.cos(rad) * lin.constPos(spec.objective.tick, 1);
+        } else {
+            int axisIdx = spec.objective.axis == JumpPhysicsInputs.Axis.X ? 0 : 1;
+            cp = lin.constPos(spec.objective.tick, axisIdx);
+        }
         double bound = r.value + (max ? cp : -cp);
         return Double.isNaN(bound) ? null : bound;
     }
@@ -506,8 +513,14 @@ public final class BoundPrunedRecovery {
             this.cz = cz;
             this.mMag = lin.mMagAll();
             this.max = spec.objective.sense == Objective.Sense.MAX;
-            int axisIdx = spec.objective.axis == JumpPhysicsInputs.Axis.X ? 0 : 1;
-            double cp = lin.constPos(spec.objective.tick, axisIdx);
+            double cp;
+            if (spec.objective.isCustomAngle()) {
+                double rad = Math.toRadians(spec.objective.customYaw);
+                cp = -Math.sin(rad) * lin.constPos(spec.objective.tick, 0) + Math.cos(rad) * lin.constPos(spec.objective.tick, 1);
+            } else {
+                int axisIdx = spec.objective.axis == JumpPhysicsInputs.Axis.X ? 0 : 1;
+                cp = lin.constPos(spec.objective.tick, axisIdx);
+            }
             this.normConst = max ? cp : -cp;
             this.canonical = canonical;
             this.baseWalls = baseWalls;
@@ -1093,7 +1106,11 @@ public final class BoundPrunedRecovery {
                 double gx = r.gx[t];
                 double gz = r.gz[t];
                 if (gx * gx + gz * gz < 1.0e-18) {
-                    if (spec.objective.axis == JumpPhysicsInputs.Axis.X) {
+                    if (spec.objective.isCustomAngle()) {
+                        double rad = Math.toRadians(spec.objective.customYaw);
+                        gx = (max ? 1.0 : -1.0) * -Math.sin(rad);
+                        gz = (max ? 1.0 : -1.0) * Math.cos(rad);
+                    } else if (spec.objective.axis == JumpPhysicsInputs.Axis.X) {
                         gx = max ? 1.0 : -1.0;
                         gz = 0.0;
                     } else {
@@ -1130,7 +1147,7 @@ public final class BoundPrunedRecovery {
         }
 
         private double normObjective(ForwardPath path) {
-            double v = path.getPos(spec.objective.tick, spec.objective.axis);
+            double v = spec.objective.evaluate(path);
             return max ? v : -v;
         }
 

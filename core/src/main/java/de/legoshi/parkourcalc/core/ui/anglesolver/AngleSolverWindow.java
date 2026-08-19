@@ -229,7 +229,6 @@ public final class AngleSolverWindow implements RenderInterface {
                 state.setCustomAngle(!state.isCustomAngle());
             }
             TooltipUtil.onHover("Optimize trajectory distance towards a custom facing angle instead of a fixed X/Z axis.\n"
-                    + "NOTE: The fast closed-form solver is position-axis only; custom angle solves rely on the search optimizer.\n"
                     + "Using 'Optimize' effort is recommended for maximum reach.");
 
             ImGui.spacing();
@@ -873,9 +872,15 @@ public final class AngleSolverWindow implements RenderInterface {
             rows.add(new SolveResult.Detail("Finished", r.getFinishedAt()));
         }
         if (r.hasObjective()) {
-            String goal = state.getGoal() == AngleSolverState.Goal.MAX ? "max" : "min";
-            rows.add(new SolveResult.Detail("Objective",
-                    goal + " " + state.getAxis().name() + " = " + ConstraintText.fixedStat(r.getObjectiveValue())));
+            if (state.isCustomAngle()) {
+                rows.add(new SolveResult.Detail("Objective",
+                        String.format(Locale.ROOT, "yaw %.1f° = ", state.getCustomAngleDeg())
+                                + ConstraintText.fixedStat(r.getObjectiveValue())));
+            } else {
+                String goal = state.getGoal() == AngleSolverState.Goal.MAX ? "max" : "min";
+                rows.add(new SolveResult.Detail("Objective",
+                        goal + " " + state.getAxis().name() + " = " + ConstraintText.fixedStat(r.getObjectiveValue())));
+            }
         }
         return rows;
     }
@@ -950,7 +955,7 @@ public final class AngleSolverWindow implements RenderInterface {
         }
         double v = panel.getObjectiveValue();
         if (!Double.isNaN(improveTrackValue) && v != improveTrackValue) {
-            boolean max = state.getGoal() == AngleSolverState.Goal.MAX;
+            boolean max = state.isCustomAngle() || state.getGoal() == AngleSolverState.Goal.MAX;
             double delta = v - improveTrackValue;
             if (max ? delta > 0 : delta < 0) {
                 improveFlashStart = ImGui.getTime();

@@ -189,7 +189,7 @@ public final class SmoothingPolish {
             double[] gf = sc.toGameFacings(absWrapped);
             ForwardPath path = model.forward(sc, gf);
             if (compiled.maxViolation(gf, path) > FEAS_TOL) return Double.POSITIVE_INFINITY;
-            return sign * path.getPos(obj.tick, obj.axis);
+            return sign * obj.evaluate(path);
         }
 
         boolean accepts(double[] absWrapped) {

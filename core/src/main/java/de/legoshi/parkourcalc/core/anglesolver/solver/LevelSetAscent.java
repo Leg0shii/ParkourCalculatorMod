@@ -32,6 +32,7 @@ public final class LevelSetAscent {
     public static double[] improve(ExactJumpModel exact, JumpSpec spec, double[] witness,
                                    double feasTol, AtomicBoolean cancel, Config cfg) {
         if (witness == null) return null;
+        if (spec.objective.isCustomAngle()) return null;
         if (JumpLinearModel.hasFacingWall(spec.constraints)) return null;
         double bound = ClosedFormSolve.dualBound(spec);
         if (Double.isNaN(bound)) return null;
@@ -73,6 +74,6 @@ public final class LevelSetAscent {
 
     private static double objectiveOf(ExactJumpModel exact, JumpPhysicsInputs sc, JumpSpec spec, double[] yawsAbs) {
         double[] gf = sc.toGameFacings(Angles.wrapAll(yawsAbs));
-        return exact.forward(sc, gf).getPos(spec.objective.tick, spec.objective.axis);
+        return spec.objective.evaluate(exact.forward(sc, gf));
     }
 }

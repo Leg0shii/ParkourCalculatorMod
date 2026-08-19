@@ -453,6 +453,15 @@ public final class SeamSweepRecovery {
     }
 
     private Band preferredBand(Seam seam) {
+        if (obj.isCustomAngle()) {
+            double rad = Math.toRadians(obj.customYaw);
+            JumpConstraint.Mode preferred = Math.abs(Math.sin(rad)) > Math.abs(Math.cos(rad))
+                    ? JumpConstraint.Mode.X : JumpConstraint.Mode.Z;
+            for (Band band : seam.bands) {
+                if (band.mode == preferred) return band;
+            }
+            return seam.bands.get(0);
+        }
         JumpConstraint.Mode objMode = obj.axis == JumpPhysicsInputs.Axis.X
                 ? JumpConstraint.Mode.X : JumpConstraint.Mode.Z;
         for (Band band : seam.bands) {
@@ -518,7 +527,7 @@ public final class SeamSweepRecovery {
         double[] gf = sc.toGameFacings(wrapped);
         ForwardPath path = exact.forward(sc, gf);
         if (compiled.maxViolation(gf, path) > feasTol) return null;
-        double v = path.getPos(obj.tick, obj.axis);
+        double v = obj.evaluate(path);
         return new Best(wrapped, maxSense ? v : -v, path);
     }
 

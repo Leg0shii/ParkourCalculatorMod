@@ -102,7 +102,6 @@ public final class ClosedFormSolve {
 
     private static Result optimizeReturning(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
                                             double[] margins, boolean ascending, Config cfg) {
-        if (spec.objective.isCustomAngle()) return null;
         JumpPhysicsInputs sc = spec.asScenario();
 
         // The linear model represents only position (X/Z) walls. Facing pins and dF chains prefold into
@@ -284,7 +283,7 @@ public final class ClosedFormSolve {
     }
 
     private static double scanScore(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, double[] yaws) {
-        double o = exact.forward(sc, sc.toGameFacings(yaws)).getPos(spec.objective.tick, spec.objective.axis);
+        double o = spec.objective.evaluate(exact.forward(sc, sc.toGameFacings(yaws)));
         return spec.objective.scored(o, sc.startYaw, yaws);
     }
 
@@ -397,7 +396,7 @@ public final class ClosedFormSolve {
             }
             if (DEBUG) {
                 double[] gf = sc.toGameFacings(yaws);
-                double o = exact.forward(sc, gf).getPos(spec.objective.tick, spec.objective.axis);
+                double o = spec.objective.evaluate(exact.forward(sc, gf));
                 System.out.printf("  CLOSED margin=%.2e iters=%d pg=%.3e viol=%.2e obj=%.6f%n",
                         margin, solver.lastIters, solver.lastPgres, viol, o);
             }
@@ -436,7 +435,7 @@ public final class ClosedFormSolve {
      *  it. Valid even where the dual's recovery degenerates, so it certifies a primally-found solution
      *  without a search. {@code NaN} when no bound applies (facing walls, violated constant, unbounded). */
     public static double dualBound(JumpSpec spec) {
-        if (spec.objective.isCustomAngle() || JumpLinearModel.hasFacingWall(spec.constraints)) return Double.NaN;
+        if (JumpLinearModel.hasFacingWall(spec.constraints)) return Double.NaN;
         JumpPhysicsInputs sc = spec.asScenario();
         JumpLinearModel lin = new JumpLinearModel(sc);
         double[] cx = new double[lin.n];
@@ -448,8 +447,15 @@ public final class ClosedFormSolve {
         CostateDualSolver.Result r = new CostateDualSolver(lin.n, cx, cz, lin.mMagAll(), walls).solve(0.0, null);
         if (r == null) return Double.NaN;
         // r.value bounds max c·u with c MAX-normalized; fold the constant part back in (MIN is negated).
-        int axis = spec.objective.axis == JumpPhysicsInputs.Axis.X ? 0 : 1;
-        double constPos = lin.constPos(spec.objective.tick, axis);
+        double constPos;
+        if (spec.objective.isCustomAngle()) {
+            double rad = Math.toRadians(spec.objective.customYaw);
+            constPos = -Math.sin(rad) * lin.constPos(spec.objective.tick, 0)
+                    + Math.cos(rad) * lin.constPos(spec.objective.tick, 1);
+        } else {
+            int axis = spec.objective.axis == JumpPhysicsInputs.Axis.X ? 0 : 1;
+            constPos = lin.constPos(spec.objective.tick, axis);
+        }
         return spec.objective.sense == Objective.Sense.MAX ? constPos + r.value : constPos - r.value;
     }
 

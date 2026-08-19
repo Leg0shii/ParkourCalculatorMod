@@ -205,8 +205,17 @@ public final class JumpLinearModel {
         int objTick = obj.tick;
         double dx, dz;
         boolean max = obj.sense == Objective.Sense.MAX;
-        if (obj.axis == JumpPhysicsInputs.Axis.X) { dx = max ? 1.0 : -1.0; dz = 0.0; }
-        else { dx = 0.0; dz = max ? 1.0 : -1.0; }
+        if (obj.isCustomAngle()) {
+            double rad = Math.toRadians(obj.customYaw);
+            dx = (max ? 1.0 : -1.0) * -Math.sin(rad);
+            dz = (max ? 1.0 : -1.0) * Math.cos(rad);
+        } else if (obj.axis == JumpPhysicsInputs.Axis.X) {
+            dx = max ? 1.0 : -1.0;
+            dz = 0.0;
+        } else {
+            dx = 0.0;
+            dz = max ? 1.0 : -1.0;
+        }
         for (int t = 0; t < n; t++) {
             cx[t] = coefAxis(0, t, objTick) * dx;
             cz[t] = coefAxis(1, t, objTick) * dz;

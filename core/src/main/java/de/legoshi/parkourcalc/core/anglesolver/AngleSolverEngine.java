@@ -1874,7 +1874,10 @@ public final class AngleSolverEngine {
         }
         for (Objective alt : alternateObjectives(spec.objective)) {
             if (cancel.get()) return null;
-            if (SolverTrace.on()) SolverTrace.log("CHAIN", "alt seed %s %s start", alt.axis, alt.sense);
+            if (SolverTrace.on()) {
+                if (alt.isCustomAngle()) SolverTrace.log("CHAIN", "alt seed %.1f deg start", alt.customYaw);
+                else SolverTrace.log("CHAIN", "alt seed %s %s start", alt.axis, alt.sense);
+            }
             double[] seed = ClosedFormSolve.optimize(em, new JumpSpec(sc, spec.constraints, alt), FEAS_TOL, cancel, cfCfg);
             if (seed == null) continue;
             yaws = SlpSolve.optimize(em, spec, FEAS_TOL, cancel, seed, slpCfg);
@@ -1906,6 +1909,13 @@ public final class AngleSolverEngine {
      *  (a certified optimum of any direction is feasible for all of them), never the returned result. */
     private static List<Objective> alternateObjectives(Objective o) {
         List<Objective> out = new ArrayList<>(3);
+        if (o.isCustomAngle()) {
+            double base = o.customYaw;
+            for (double offset : new double[]{180.0, 90.0, -90.0}) {
+                out.add(new Objective(Angles.wrap(base + offset), o.tick, o.smoothLambda));
+            }
+            return out;
+        }
         JumpPhysicsInputs.Axis[] axisOrder = (o.axis == JumpPhysicsInputs.Axis.X)
                 ? new JumpPhysicsInputs.Axis[]{JumpPhysicsInputs.Axis.X, JumpPhysicsInputs.Axis.Z}
                 : new JumpPhysicsInputs.Axis[]{JumpPhysicsInputs.Axis.Z, JumpPhysicsInputs.Axis.X};

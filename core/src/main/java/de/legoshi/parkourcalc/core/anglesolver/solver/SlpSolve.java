@@ -105,7 +105,6 @@ public final class SlpSolve {
     private static double[] optimize(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
                                      double targetClearance, boolean hugObjective, double[] seedAbsWrapped,
                                      boolean bestEffort, boolean inertiaAware, Config cfg) {
-        if (spec.objective.isCustomAngle()) return null;
         List<JumpConstraint> constraints = spec.constraints;
         if (JumpLinearModel.hasFacingWall(constraints)) return null; // not position-linear
         for (JumpConstraint c : constraints) {
@@ -145,8 +144,17 @@ public final class SlpSolve {
                 double gx = r.gx[t], gz = r.gz[t];
                 if (gx * gx + gz * gz < 1.0e-18) {
                     boolean max = spec.objective.sense == Objective.Sense.MAX;
-                    if (spec.objective.axis == JumpPhysicsInputs.Axis.X) { gx = max ? 1.0 : -1.0; gz = 0.0; }
-                    else { gx = 0.0; gz = max ? 1.0 : -1.0; }
+                    if (spec.objective.isCustomAngle()) {
+                        double rad = Math.toRadians(spec.objective.customYaw);
+                        gx = (max ? 1.0 : -1.0) * -Math.sin(rad);
+                        gz = (max ? 1.0 : -1.0) * Math.cos(rad);
+                    } else if (spec.objective.axis == JumpPhysicsInputs.Axis.X) {
+                        gx = max ? 1.0 : -1.0;
+                        gz = 0.0;
+                    } else {
+                        gx = 0.0;
+                        gz = max ? 1.0 : -1.0;
+                    }
                 }
                 theta[t] = lin.recoverYawDeg(t, gx, gz);
             }
@@ -312,10 +320,10 @@ public final class SlpSolve {
         ForwardPath path = exact.forward(sc, gf);
         double finalViol = compiled.maxViolation(gf, path);
         if (DEBUG) System.out.printf("  SLP viol=%.3e obj=%.7f lps=%d (%.1f ms)%n", finalViol,
-                path.getPos(spec.objective.tick, spec.objective.axis), lpCalls, (System.nanoTime() - t0) / 1e6);
+                spec.objective.evaluate(path), lpCalls, (System.nanoTime() - t0) / 1e6);
         if (SolverTrace.on()) {
             SolverTrace.log("SLP", "end viol=%.3e obj=%.9f lps=%d ms=%.1f %s", finalViol,
-                    path.getPos(spec.objective.tick, spec.objective.axis), lpCalls,
+                    spec.objective.evaluate(path), lpCalls,
                     (System.nanoTime() - t0) / 1e6, finalViol <= feasTol ? "feasible" : (bestEffort ? "best effort" : "null"));
         }
         if (finalViol <= feasTol) return yaws;
@@ -348,7 +356,7 @@ public final class SlpSolve {
 
     /** Objective normalized so bigger is always better (MIN is negated), read off the byte-exact path. */
     private static double normObjective(ForwardPath path, Objective obj, boolean max) {
-        double v = path.getPos(obj.tick, obj.axis);
+        double v = obj.evaluate(path);
         return max ? v : -v;
     }
 }
