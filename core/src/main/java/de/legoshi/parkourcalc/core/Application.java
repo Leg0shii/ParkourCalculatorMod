@@ -741,6 +741,11 @@ public final class Application {
         playback.renderFrame();
     }
 
+    private static final int DYNAMIC_BASE_TIMEOUT_MS = 200;
+    private static final int DYNAMIC_ADD_PER_JUMP_MS = 20;
+    private static final double DYNAMIC_SAFETY_MULT = 1.0;
+    private static final int DYNAMIC_SAFETY_MARGIN_MS = 60;
+
     private boolean isBruteForcing = false;
     private boolean cancelBruteForce = false;
     private boolean bfWaitSolve = false;
@@ -753,6 +758,9 @@ public final class Application {
     private boolean bfFinalSolveWait = false;
     private long bfSolveStartTime = 0;
     private double bfCompletedProgress = 0.0;
+    private int bfSuccessfulStepCount = 0;
+    private int[] bfDepthTimeoutMs = null;
+    private boolean[] bfDepthHasSuccess = null;
 
     private static class BfTask {
         int[] combo;
@@ -791,6 +799,24 @@ public final class Application {
 
     public void cancelBruteForceTicks() {
         cancelBruteForce = true;
+    }
+
+    private int currentStepTimeoutMs() {
+        if (!angleSolverState.isBruteForceDynamicTimeout() || bfCurrentTask == null || bfDepthTimeoutMs == null) {
+            return angleSolverState.getBruteForceTimeoutMs();
+        }
+        int d = Math.min(bfCurrentTask.depth, bfDepthTimeoutMs.length - 1);
+        if (bfDepthTimeoutMs[d] <= 0) {
+            int prev = DYNAMIC_BASE_TIMEOUT_MS;
+            for (int k = d - 1; k >= 1; k--) {
+                if (bfDepthTimeoutMs[k] > 0) {
+                    prev = bfDepthTimeoutMs[k];
+                    break;
+                }
+            }
+            bfDepthTimeoutMs[d] = prev + DYNAMIC_ADD_PER_JUMP_MS;
+        }
+        return bfDepthTimeoutMs[d];
     }
 
     public void executeBruteForceRunningTicks() {
@@ -896,6 +922,11 @@ public final class Application {
 
         bfQueue.clear();
         bfCompletedProgress = 0.0;
+        bfSuccessfulStepCount = 0;
+        bfDepthTimeoutMs = new int[bfJumpTicks.size() + 1];
+        bfDepthHasSuccess = new boolean[bfJumpTicks.size() + 1];
+        bfDepthTimeoutMs[1] = DYNAMIC_BASE_TIMEOUT_MS;
+        angleSolverState.setBruteForceLiveTimeoutMs(DYNAMIC_BASE_TIMEOUT_MS);
         double rootWeight = 1.0 / (maxExtra + 1);
         for (int i = maxExtra; i >= 0; i--) {
             int[] combo = new int[bfJumpTicks.size()];
@@ -935,6 +966,7 @@ public final class Application {
             SolveResult r = angleSolverState.getResult();
             if (r != null) {
                 r.addDetail("Brute Force Time", String.format(Locale.ROOT, "%.2f s", bfTotalTimeMs / 1000.0));
+                r.addDetail("Successful Solves", String.valueOf(bfSuccessfulStepCount));
                 int sumTicks = 0;
                 if (bfBestCombo != null) {
                     for (int k : bfBestCombo) sumTicks += k;
@@ -965,7 +997,7 @@ public final class Application {
 
             solverEngine.poll();
             if (solverEngine.isSolving()) {
-                if (System.currentTimeMillis() - bfSolveStartTime > angleSolverState.getBruteForceTimeoutMs()) {
+                if (System.currentTimeMillis() - bfSolveStartTime > currentStepTimeoutMs()) {
                     solverEngine.cancel();
                 } else {
                     return;
@@ -977,6 +1009,19 @@ public final class Application {
 
             if (success) {
                 solverEngine.apply();
+                bfSuccessfulStepCount++;
+
+                long stepMs = System.currentTimeMillis() - bfSolveStartTime;
+                if (bfDepthTimeoutMs != null && bfCurrentTask.depth < bfDepthTimeoutMs.length) {
+                    int safeMs = Math.max(60, (int) (stepMs * DYNAMIC_SAFETY_MULT) + DYNAMIC_SAFETY_MARGIN_MS);
+                    int d = bfCurrentTask.depth;
+                    bfDepthTimeoutMs[d] = safeMs;
+                    bfDepthHasSuccess[d] = true;
+                    if (d + 1 < bfDepthTimeoutMs.length && !bfDepthHasSuccess[d + 1]) {
+                        bfDepthTimeoutMs[d + 1] = safeMs + DYNAMIC_ADD_PER_JUMP_MS;
+                    }
+                    angleSolverState.setBruteForceLiveTimeoutMs(bfDepthTimeoutMs[d]);
+                }
 
                 List<InputRow> successRows = new ArrayList<>();
                 for (InputRow row : inputData.getRows()) successRows.add(row.copy());
@@ -1061,6 +1106,7 @@ public final class Application {
             failResult.setSolver(cancelBruteForce ? "Brute Force (Cancelled)" : "Brute Force");
             failResult.addDetail("Brute Force", cancelBruteForce ? "Cancelled (Showing best result)" : "No solution (Showing best result)");
             failResult.addDetail("Brute Force Time", String.format(Locale.ROOT, "%.2f s", bfTotalTimeMs / 1000.0));
+            failResult.addDetail("Successful Solves", String.valueOf(bfSuccessfulStepCount));
             angleSolverState.setResult(failResult);
 
             pushHudMessage("No solution · Showing best result", HudMessageStyle.COLOR_DANGER);
@@ -1068,6 +1114,9 @@ public final class Application {
         }
 
         bfCurrentTask = bfQueue.removeFirst();
+        int curTimeout = currentStepTimeoutMs();
+        angleSolverState.setBruteForceLiveTimeoutMs(curTimeout);
+
         int pct = (int) Math.min(99, Math.max(0, bfCompletedProgress * 100));
         hudMessages.setStatus("Brute forcing · " + pct + "%", HudMessages.COLOR_DEFAULT);
 

@@ -546,14 +546,30 @@ public final class AngleSolverWindow implements RenderInterface {
             Controls.pushInputFrameHeight();
             ImGui.beginGroup();
             SolverWidgets.rowLabel("Timeout per step", labelW);
-            ImGui.setNextItemWidth(ImGui.getContentRegionAvail().x);
-            imgui.type.ImString bfTimeStr = new imgui.type.ImString(String.valueOf(state.getBruteForceTimeoutMs()), 16);
+
+            float checkW = ImGui.calcTextSize("Auto").x + ImGui.getFrameHeight() + ImGui.getStyle().getItemSpacing().x;
+            float inputW = ImGui.getContentRegionAvail().x - checkW - ImGui.getStyle().getItemSpacing().x;
+
+            if (state.isBruteForceDynamicTimeout()) ImGui.beginDisabled();
+            ImGui.setNextItemWidth(inputW);
+            int displayTimeout = state.isBruteForceDynamicTimeout() ? state.getBruteForceLiveTimeoutMs() : state.getBruteForceTimeoutMs();
+            imgui.type.ImString bfTimeStr = new imgui.type.ImString(String.valueOf(displayTimeout), 16);
             if (ImGui.inputText("##bfTimeout", bfTimeStr, imgui.flag.ImGuiInputTextFlags.CharsDecimal)) {
                 try {
                     int val = bfTimeStr.get().isEmpty() ? 0 : Integer.parseInt(bfTimeStr.get());
                     state.setBruteForceTimeoutMs(Math.max(1, val));
-                } catch (NumberFormatException ignored) { }
+                } catch (NumberFormatException ignored) {}
             }
+            if (state.isBruteForceDynamicTimeout()) ImGui.endDisabled();
+
+            ImGui.sameLine();
+            if (Controls.checkbox("Auto##bfDynamicTimeout", state.isBruteForceDynamicTimeout())) {
+                state.setBruteForceDynamicTimeout(!state.isBruteForceDynamicTimeout());
+            }
+            TooltipUtil.onHover("Automatically adapts step timeout based on measured solve times to speed up search.\n"
+                    + "WARNING: Intended for quick testing. Tight timeouts might skip possible solutions.\n"
+                    + "For in-depth searches, disable Auto and set a higher fixed timeout manually.");
+
             ImGui.endGroup();
             Controls.popInputFrameHeight();
             TooltipUtil.onHover("Maximum search time in milliseconds spent per branching step.");

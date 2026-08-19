@@ -718,6 +718,8 @@ public final class AngleSolverState {
     private boolean bruteForceEnabled = false;
     private int bruteForceTicks = 0;
     private int bruteForceTimeoutMs = 200;
+    private int bruteForceLiveTimeoutMs = 200;
+    private boolean bruteForceDynamicTimeout = false;
     private boolean bruteForceActive = false;
 
     public boolean isBruteForceEnabled() {
@@ -742,6 +744,23 @@ public final class AngleSolverState {
 
     public void setBruteForceTimeoutMs(int bruteForceTimeoutMs) {
         this.bruteForceTimeoutMs = Math.max(1, bruteForceTimeoutMs);
+        this.bruteForceLiveTimeoutMs = this.bruteForceTimeoutMs;
+    }
+
+    public int getBruteForceLiveTimeoutMs() {
+        return bruteForceLiveTimeoutMs;
+    }
+
+    public void setBruteForceLiveTimeoutMs(int bruteForceLiveTimeoutMs) {
+        this.bruteForceLiveTimeoutMs = bruteForceLiveTimeoutMs;
+    }
+
+    public boolean isBruteForceDynamicTimeout() {
+        return bruteForceDynamicTimeout;
+    }
+
+    public void setBruteForceDynamicTimeout(boolean bruteForceDynamicTimeout) {
+        this.bruteForceDynamicTimeout = bruteForceDynamicTimeout;
     }
 
     public boolean isBruteForceActive() {
@@ -778,6 +797,8 @@ public final class AngleSolverState {
         bruteForceEnabled = false;
         bruteForceTicks = 0;
         bruteForceTimeoutMs = 200;
+        bruteForceLiveTimeoutMs = 200;
+        bruteForceDynamicTimeout = false;
         bruteForceActive = false;
     }
 
