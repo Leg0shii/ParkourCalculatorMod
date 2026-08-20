@@ -35,8 +35,8 @@ public class GraphValidatorTest {
                 BuiltinGraphs.fast(),
                 BuiltinGraphs.optimize(10),
                 BuiltinGraphs.optimize(600),
-                BuiltinGraphs.fromBudget(16, 4500, 2, false, true, true, true, 10, 3, 0),
-                BuiltinGraphs.fromBudget(8, 2000, 1, true, false, false, false, 8, 2, 30)}) {
+                BuiltinGraphs.fromBudget(false, true, true, true, 10, 3, 0),
+                BuiltinGraphs.fromBudget(true, false, false, false, 8, 2, 30)}) {
             List<ValidationIssue> issues = GraphValidator.validate(g);
             assertFalse(g.name + ": " + issues, GraphValidator.hasErrors(issues));
         }
@@ -112,10 +112,10 @@ public class GraphValidatorTest {
     public void feasibleRequiresRejectsUnprovenSource() {
         GraphBuilder g = new GraphBuilder("t", false);
         g.add("entry", "entry").add("emit", "emit");
-        g.add("race", "cmaesRace");
+        g.add("race", "freeStartImprove");
         g.add("ils", "ilsPolish");
         g.edge("entry", Guarantee.DONE, "race");
-        g.edge("race", Guarantee.INFEASIBLE, "ils");
+        g.edge("race", Guarantee.IMPROVED, "ils");
         g.edge("ils", Guarantee.IMPROVED, "emit");
         List<ValidationIssue> issues = GraphValidator.validate(g.build());
         assertTrue(hasError(issues, "requires a FEASIBLE candidate"));
@@ -125,12 +125,12 @@ public class GraphValidatorTest {
     public void feasibleRequiresAcceptsFeasibilityRouterTrue() {
         GraphBuilder g = new GraphBuilder("t", false);
         g.add("entry", "entry").add("emit", "emit");
-        g.add("race", "cmaesRace");
+        g.add("race", "freeStartImprove");
         g.add("r", "router");
         g.set("r", "predicate", "CANDIDATE_FEASIBLE_RAW");
         g.add("ils", "ilsPolish");
         g.edge("entry", Guarantee.DONE, "race");
-        g.edge("race", Guarantee.INFEASIBLE, "r");
+        g.edge("race", Guarantee.IMPROVED, "r");
         g.edge("r", Guarantee.TRUE, "ils");
         g.edge("ils", Guarantee.IMPROVED, "emit");
         List<ValidationIssue> issues = GraphValidator.validate(g.build());

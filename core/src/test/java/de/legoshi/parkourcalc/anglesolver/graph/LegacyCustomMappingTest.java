@@ -42,7 +42,7 @@ public class LegacyCustomMappingTest {
     @Test
     public void defaultKnobsMapToTheDefaultFromBudgetGraph() {
         AngleSolverState s = custom(16, 4500, 2, AngleSolverState.PolishDepth.LIGHT, false, false, true, 10, 3, 0);
-        assertSameShape(BuiltinGraphs.fromBudget(16, 4500, 2, false, false, false, true, 10, 3, 0),
+        assertSameShape(BuiltinGraphs.fromBudget(false, false, false, true, 10, 3, 0),
                 GraphFactory.forState(s));
     }
 
@@ -50,7 +50,7 @@ public class LegacyCustomMappingTest {
     public void stopOnFeasibleMapsToTheRescueGraph() {
         AngleSolverState s = custom(16, 4500, 2, AngleSolverState.PolishDepth.LIGHT, true, false, true, 10, 3, 0);
         SolverGraph g = GraphFactory.forState(s);
-        assertSameShape(BuiltinGraphs.fromBudget(16, 4500, 2, false, true, false, true, 10, 3, 0), g);
+        assertSameShape(BuiltinGraphs.fromBudget(false, true, false, true, 10, 3, 0), g);
         assertNotNull(g.node("rescueBnb"));
     }
 
@@ -58,11 +58,7 @@ public class LegacyCustomMappingTest {
     public void exhaustiveKnobsMapToTheExhaustiveGraph() {
         AngleSolverState s = custom(32, 9000, 4, AngleSolverState.PolishDepth.EXHAUSTIVE, false, true, true, 12, 4, 60);
         SolverGraph g = GraphFactory.forState(s);
-        assertSameShape(BuiltinGraphs.fromBudget(32, 9000, 4, true, false, true, true, 12, 4, 60), g);
-        assertEquals(32, g.node("raceColdFull").params.getInt("restarts"));
-        assertEquals(9000, g.node("raceColdFull").params.getInt("maxEval"));
-        assertEquals(4, g.node("raceColdFull").params.getInt("polishCount"));
-        assertEquals("EXHAUSTIVE", g.node("raceColdFull").params.getString("polishDepth"));
+        assertSameShape(BuiltinGraphs.fromBudget(true, false, true, true, 12, 4, 60), g);
         assertEquals(60, g.node("seedSingle").params.getInt("budgetSec"));
         assertEquals(12, g.node("horizon").params.getInt("window"));
         assertEquals(4, g.node("horizon").params.getInt("commit"));
@@ -75,7 +71,7 @@ public class LegacyCustomMappingTest {
     public void windowSolverOffDropsHorizonAndPeel() {
         AngleSolverState s = custom(16, 4500, 2, AngleSolverState.PolishDepth.LIGHT, false, false, false, 10, 3, 0);
         SolverGraph g = GraphFactory.forState(s);
-        assertSameShape(BuiltinGraphs.fromBudget(16, 4500, 2, false, false, false, false, 10, 3, 0), g);
+        assertSameShape(BuiltinGraphs.fromBudget(false, false, false, false, 10, 3, 0), g);
         assertNull(g.node("horizon"));
         assertNull(g.node("peel"));
     }
@@ -92,7 +88,7 @@ public class LegacyCustomMappingTest {
     public void missingPresetFallsBackToTheLegacyMapping() {
         AngleSolverState s = custom(24, 6000, 3, AngleSolverState.PolishDepth.LIGHT, false, false, true, 10, 3, 0);
         s.setGraphPresetName("no-such-preset");
-        assertSameShape(BuiltinGraphs.fromBudget(24, 6000, 3, false, false, false, true, 10, 3, 0),
+        assertSameShape(BuiltinGraphs.fromBudget(false, false, false, true, 10, 3, 0),
                 GraphFactory.forState(s));
     }
 

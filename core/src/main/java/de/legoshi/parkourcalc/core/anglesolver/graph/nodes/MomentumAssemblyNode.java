@@ -31,16 +31,11 @@ public final class MomentumAssemblyNode implements NodeRuntime {
         cfg.vxCap = params.getDouble("vxCap");
         cfg.closerEps0 = params.getDouble("closerEps0");
         cfg.perCandidateSec = params.getInt("perCandidateSec");
-        cfg.closer.repairSigmas = ParamParse.doubles(params.getString("closerRepairSigmas"), cfg.closer.repairSigmas);
-        cfg.closer.repairMaxEval = params.getInt("closerRepairMaxEval");
         cfg.closer.maxRungs = params.getInt("closerMaxRungs");
         cfg.closer.maxRefines = params.getInt("closerMaxRefines");
         cfg.closer.epsFloor = params.getDouble("closerEpsFloor");
         cfg.closer.descentRounds = params.getInt("closerDescentRounds");
         cfg.closer.descentPairSpan = params.getInt("closerDescentPairSpan");
-        cfg.closer.entryRestarts = params.getInt("closerEntryRestarts");
-        cfg.closer.entryMaxEval = params.getInt("closerEntryMaxEval");
-        cfg.closer.entryPolishCount = params.getInt("closerEntryPolishCount");
     }
 
     @Override

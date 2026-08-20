@@ -1,7 +1,6 @@
 package de.legoshi.parkourcalc.core.anglesolver.graph.nodes;
 
 import de.legoshi.parkourcalc.core.anglesolver.graph.Candidate;
-import de.legoshi.parkourcalc.core.anglesolver.graph.CountingForwardModel;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeOutcome;
@@ -14,7 +13,6 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.FreeStartSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
-import de.legoshi.parkourcalc.core.anglesolver.solver.SolveCore;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
@@ -23,14 +21,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class FreeStartImproveNode implements NodeRuntime {
 
-    private final int iters;
-    private final double sigmaDeg;
     private final boolean jointOnly;
     private final FreeStartSolve.Config cfg;
 
     public FreeStartImproveNode(ParamValues params) {
-        this.iters = params.getInt("iters");
-        this.sigmaDeg = params.getDouble("sigmaDeg");
         this.jointOnly = params.getBool("jointOnly");
         this.cfg = new FreeStartSolve.Config();
         cfg.maxIters = params.getInt("fsMaxIters");
@@ -75,25 +69,6 @@ public final class FreeStartImproveNode implements NodeRuntime {
             adoptYaws = conv.yaws;
             adoptX = conv.startX;
             adoptZ = conv.startZ;
-        } else if (conv != null && !conv.feasible && deadlineNanos > System.nanoTime()) {
-            double nearViol = FreeStartSolve.violationAt(ctx.exactModel, ctx.spec, conv.yaws, conv.startX, conv.startZ);
-            if (nearViol <= cfg.jointPatternViolGate) {
-                if (SolverTrace.on()) {
-                    SolverTrace.log("ENGINE", "free rescue racing joint near miss viol=%.3e", nearViol);
-                }
-                double[] closed = SolveCore.optimize(new CountingForwardModel(ctx.model), ctx.spec, ctx.cmaBudget,
-                        sigmaDeg, ctx.feasTol, cancel, Angles.wrapAll(conv.yaws.clone()), deadlineNanos,
-                        ctx.sequential, ctx.progress);
-                if (closed != null) {
-                    double[] rs = FreeStartSolve.recoverStart(ctx.exactModel, ctx.spec, closed, cfg);
-                    if (rs != null
-                            && FreeStartSolve.violationAt(ctx.exactModel, ctx.spec, closed, rs[0], rs[1]) <= ctx.feasTol) {
-                        adoptYaws = closed;
-                        adoptX = rs[0];
-                        adoptZ = rs[1];
-                    }
-                }
-            }
         }
         if (adoptYaws == null) {
             FreeStartSolve.Result it = FreeStartSolve.solve(ctx.exactModel, ctx.spec, ctx.feasTol, cancel, cfg);
@@ -122,7 +97,6 @@ public final class FreeStartImproveNode implements NodeRuntime {
         JumpSpec spec = ctx.spec;
         JumpPhysicsInputs sc = ctx.scenario;
         StartBox freeBox = ctx.freeBox;
-        SolveCore.Budget budget = ctx.cmaBudget;
         double feasTol = ctx.feasTol;
         double seedX = sc.startPos.x;
         double seedZ = sc.startPos.z;
@@ -163,62 +137,6 @@ public final class FreeStartImproveNode implements NodeRuntime {
                 sc.startBox = StartBox.pinned(conv.startX, conv.startZ, sc.initialVelocity.x, sc.initialVelocity.z);
                 return convYaws;
             }
-        }
-
-        double p0x = seedX;
-        double p0z = seedZ;
-        sc.startPos = new Vec3dCore(seedX, sc.startPos.y, seedZ);
-        sc.startBox = freeBox;
-        long half = (deadline - System.nanoTime()) / 2;
-        double[] locYaws = SolveCore.optimize(new CountingForwardModel(ctx.model), spec, budget, sigmaDeg,
-                feasTol, cancel, seedYaws != null ? Angles.wrapAll(seedYaws) : null,
-                System.nanoTime() + half, ctx.sequential, ctx.progress);
-        double[] warm = locYaws != null ? locYaws : seedYaws;
-        if (locYaws != null && !cancel.get()) {
-            double[] rs = FreeStartSolve.recoverStart(exact, spec, locYaws, cfg);
-            if (rs != null) {
-                p0x = rs[0];
-                p0z = rs[1];
-                double v = FreeStartSolve.violationAt(exact, spec, locYaws, rs[0], rs[1]);
-                if (v < foundViol) {
-                    foundViol = v;
-                    foundYaws = locYaws;
-                    foundX = rs[0];
-                    foundZ = rs[1];
-                }
-            }
-        }
-
-        for (int iter = 0; iter < iters && !cancel.get(); iter++) {
-            long remaining = deadline - System.nanoTime();
-            if (remaining <= 0) break;
-            long iterDeadline = System.nanoTime() + remaining / (iters - iter);
-            sc.startPos = new Vec3dCore(p0x, sc.startPos.y, p0z);
-            sc.startBox = StartBox.pinned(p0x, p0z, sc.initialVelocity.x, sc.initialVelocity.z);
-            double[] warmW = warm != null ? Angles.wrapAll(warm) : null;
-            double[] yaws = SolveCore.optimize(new CountingForwardModel(ctx.model), spec, budget, sigmaDeg,
-                    feasTol, cancel, warmW, iterDeadline, ctx.sequential, ctx.progress);
-            if (yaws == null) yaws = warmW;
-            if (yaws == null) break;
-            warm = yaws;
-            sc.startBox = freeBox;
-            double[] rs = FreeStartSolve.recoverStart(exact, spec, yaws, cfg);
-            if (rs == null) break;
-            double viol = FreeStartSolve.violationAt(exact, spec, yaws, rs[0], rs[1]);
-            if (SolverTrace.on()) {
-                SolverTrace.log("ENGINE", "free iter=%d start=(%.5f,%.5f) -> recovered=(%.7f,%.7f) viol=%.3e",
-                        iter, p0x, p0z, rs[0], rs[1], viol);
-            }
-            if (viol < foundViol) {
-                foundViol = viol;
-                foundYaws = yaws;
-                foundX = rs[0];
-                foundZ = rs[1];
-            }
-            if (viol <= feasTol) break;
-            if (Math.abs(rs[0] - p0x) < 1.0e-9 && Math.abs(rs[1] - p0z) < 1.0e-9) break;
-            p0x = rs[0];
-            p0z = rs[1];
         }
 
         boolean adopt = false;

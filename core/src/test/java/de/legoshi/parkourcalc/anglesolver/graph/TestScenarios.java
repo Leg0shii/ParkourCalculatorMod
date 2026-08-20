@@ -58,6 +58,6 @@ final class TestScenarios {
 
     static GraphContext context(int numTicks, boolean[] jumpMask, AtomicBoolean cancel) {
         return new GraphContext(spec(numTicks, jumpMask), ExactJumpModel.forMcVersion("1.8.9"),
-                null, null, 0.0, cancel, null, true, null, null);
+                null, null, 0.0, cancel, null, true, null);
     }
 }

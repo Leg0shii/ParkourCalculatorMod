@@ -134,27 +134,6 @@ public class RunMatrixScreen {
         return g.build();
     }
 
-    private static SolverGraph cmaOnlyGraph(int budgetSec) {
-        GraphBuilder g = new GraphBuilder("cma-only", true);
-        g.add("entry", "entry");
-        g.add("emit", "emit");
-        g.add("race", "cmaesRace")
-                .set("race", "restarts", 16)
-                .set("race", "maxEval", 4500)
-                .set("race", "polishCount", 2)
-                .set("race", "polishDepth", "LIGHT")
-                .set("race", "sigmaDeg", 90.0)
-                .set("race", "warmStart", false)
-                .set("race", "budgetSec", budgetSec);
-        g.add("smooth", "smoothing").set("smooth", "countEvals", true);
-        g.edge("entry", Guarantee.DONE, "race");
-        g.edge("race", Guarantee.FEASIBLE, "smooth");
-        g.edge("race", Guarantee.INFEASIBLE, "smooth");
-        g.edge("race", Guarantee.NONE, "emit");
-        g.edge("smooth", Guarantee.DONE, "emit");
-        return g.build();
-    }
-
     private static SolverGraph bnbHeavyGraph(int seedSec, int bnbSec, int ilsSec) {
         return BuiltinGraphs.explore(seedSec, bnbSec, ilsSec);
     }
@@ -249,10 +228,8 @@ public class RunMatrixScreen {
             b.setTimeBudgetSeconds(60);
         }));
         out.add(new Preset("seed-only30", customGraph(seedOnlyGraph(30))));
-        out.add(new Preset("cma-only45", customGraph(cmaOnlyGraph(45))));
         out.add(new Preset("bnb-heavy60", customGraph(bnbHeavyGraph(10, 40, 10))));
         out.add(new Preset("seed-only15", customGraph(seedOnlyGraph(15))));
-        out.add(new Preset("cma-only20", customGraph(cmaOnlyGraph(20))));
         out.add(new Preset("custom-fastgraph", customGraph(BuiltinGraphs.fast())));
         out.add(new Preset("smooth-heavy", customGraph(smoothHeavyGraph())));
         return out;

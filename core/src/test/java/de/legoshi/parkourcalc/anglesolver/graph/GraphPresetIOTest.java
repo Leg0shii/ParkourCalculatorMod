@@ -120,14 +120,14 @@ public class GraphPresetIOTest {
     @Test
     public void outOfRangeParamsClampToTheSpec() {
         GraphPresetFile f = GraphPresetIO.fromGraph(BuiltinGraphs.fast());
-        for (GraphPresetFile.Param p : node(f, "raceColdFull").params) {
-            if ("restarts".equals(p.key)) p.num = 99999.0;
-            if ("sigmaDeg".equals(p.key)) p.num = -5.0;
+        for (GraphPresetFile.Param p : node(f, "rescueBnb").params) {
+            if ("budgetSec".equals(p.key)) p.num = 99999.0;
+            if ("minBudgetMs".equals(p.key)) p.num = -5.0;
         }
         Result<SolverGraph> r = GraphPresetIO.materialize(f);
         assertTrue(r.error, r.ok);
-        assertEquals(256, r.value.node("raceColdFull").params.getInt("restarts"));
-        assertEquals(1.0, r.value.node("raceColdFull").params.getDouble("sigmaDeg"), 0.0);
+        assertEquals(600, r.value.node("rescueBnb").params.getInt("budgetSec"));
+        assertEquals(0, r.value.node("rescueBnb").params.getInt("minBudgetMs"));
     }
 
     @Test

@@ -141,16 +141,18 @@ public final class BlockSolver {
 
     public Result solve(ForwardModel model, JumpPhysicsInputs sc, List<JumpConstraint> footprints,
                         double[] landFootprint, List<Obstacle> obstacles, double[] heights, List<Objective> objectives,
-                        SolveCore.Budget budget, double sigmaDeg, double feasTol, int maxSolves, AtomicBoolean cancel) {
+                        double feasTol, int maxSolves, AtomicBoolean cancel) {
         InnerSolve closedForm = (spec, warm) -> (model instanceof ExactJumpModel)
                 ? ClosedFormSolve.optimize((ExactJumpModel) model, spec, feasTol, cancel) : null;
         Result fast = runPlanner(closedForm, model, sc, footprints, landFootprint, obstacles, heights,
                 objectives, maxSolves, cancel);
         if ((fast != null && fast.ok()) || cancel.get()) return fast;
 
-        InnerSolve cmaes = (spec, warm) ->
-                SolveCore.optimize(model, spec, budget, sigmaDeg, feasTol, cancel, warm);
-        Result slow = runPlanner(cmaes, model, sc, footprints, landFootprint, obstacles, heights,
+        InnerSolve slp = (spec, warm) -> (model instanceof ExactJumpModel)
+                ? SlpSolve.optimize((ExactJumpModel) model, spec, feasTol, cancel,
+                        warm != null ? Angles.wrapAll(warm.clone()) : null)
+                : null;
+        Result slow = runPlanner(slp, model, sc, footprints, landFootprint, obstacles, heights,
                 objectives, maxSolves, cancel);
         if (slow != null && (fast == null || slow.ok() || better(slow, fast))) return slow;
         return fast;

@@ -22,8 +22,7 @@ public final class GraphFactory {
 
     public static SolverGraph legacyCustom(AngleSolverState state) {
         AngleSolverState.SolveBudget b = state.getSolveBudget();
-        return BuiltinGraphs.fromBudget(b.getRestarts(), b.getMaxEval(), b.getPolishCount(),
-                b.getPolishDepth() == AngleSolverState.PolishDepth.EXHAUSTIVE,
+        return BuiltinGraphs.fromBudget(b.getPolishDepth() == AngleSolverState.PolishDepth.EXHAUSTIVE,
                 state.isStopOnFeasible(), b.isIlsExhaustive(), b.getUseWindowSolver(),
                 b.getWindow(), b.getCommit(), b.getTimeBudgetSeconds());
     }
