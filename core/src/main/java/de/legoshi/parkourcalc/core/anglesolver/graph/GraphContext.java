@@ -8,7 +8,6 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.LongRunSolver;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
-import de.legoshi.parkourcalc.core.anglesolver.solver.SolveCore;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolveProgress;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 
@@ -29,7 +28,6 @@ public final class GraphContext {
     public final SolveProgress progress;
     public final GraphRunState runState = new GraphRunState();
     public final boolean sequential;
-    public final SolveCore.Budget cmaBudget;
     public final LongRunSolver.LongRunConfig longRun;
     public final AtomicLong cmaesEvals = new AtomicLong();
     public final AtomicLong smoothingEvals = new AtomicLong();
@@ -49,7 +47,7 @@ public final class GraphContext {
 
     public GraphContext(JumpSpec spec, ForwardModel model, StartBox freeBox, JumpConstraint legalGoal,
                         double feasTol, AtomicBoolean cancel, SolveProgress progress, boolean sequential,
-                        SolveCore.Budget cmaBudget, LongRunSolver.LongRunConfig longRun) {
+                        LongRunSolver.LongRunConfig longRun) {
         this.spec = spec;
         this.scenario = spec.asScenario();
         this.model = model;
@@ -61,7 +59,6 @@ public final class GraphContext {
         this.cancel = cancel;
         this.progress = progress;
         this.sequential = sequential;
-        this.cmaBudget = cmaBudget;
         this.longRun = longRun;
         this.watchdog = new BudgetWatchdog(cancel);
         if (progress != null) progress.setActiveNodeSource(runState::activeNodeId);

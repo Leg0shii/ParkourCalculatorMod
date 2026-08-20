@@ -25,7 +25,6 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.LongRunSolver;
 import de.legoshi.parkourcalc.core.anglesolver.solver.RelaxationRecovery;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SlpSolve;
-import de.legoshi.parkourcalc.core.anglesolver.solver.SolveCore;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
@@ -71,24 +70,7 @@ public final class AngleSolverEngine {
      *  single continuous region, so a moderate sigma finds it in a handful of restarts. Only one strafe
      *  sign is solved: A and D are mirror-symmetric (flip the sign and shift air-tick facings by 90deg
      *  for an identical trajectory), so the optimal objective is the same either way. */
-    private static final double CMAES_SIGMA_DEG = 90.0;
-
     private static final long RELAX_MIN_REMAINING_NANOS = 3_000_000_000L;
-
-    /** Per-effort solve budget (see {@link SolveCore}). FAST and Optimize share the small batch: FAST runs
-     *  it once (stopping at the first feasible), Optimize keeps launching batches until its time budget. */
-    static SolveCore.Budget budgetFor(AngleSolverState state) {
-        switch (state.getEffort()) {
-            case THOROUGH: return new SolveCore.Budget(16, 4500, 4, BucketAscentPolish.THOROUGH);
-            case CUSTOM: {
-                AngleSolverState.SolveBudget b = state.getSolveBudget();
-                BucketAscentPolish.Config cfg = b.getPolishDepth() == AngleSolverState.PolishDepth.EXHAUSTIVE
-                        ? BucketAscentPolish.THOROUGH : BucketAscentPolish.FAST;
-                return new SolveCore.Budget(b.getRestarts(), b.getMaxEval(), b.getPolishCount(), cfg);
-            }
-            default: return new SolveCore.Budget(16, 4500, 2, BucketAscentPolish.FAST);
-        }
-    }
 
     static long deadlineNanosFor(AngleSolverState state) {
         switch (state.getEffort()) {
@@ -308,7 +290,6 @@ public final class AngleSolverEngine {
         final boolean[] strafeMask;
         final boolean[] force45Mask;
         final List<ConstraintAt> uiConstraints;
-        final SolveCore.Budget budget;
         final long deadlineNanos;
         final LongRunSolver.LongRunConfig longRun;
         final boolean useWindowSolver;
@@ -320,7 +301,7 @@ public final class AngleSolverEngine {
 
         Job(JumpSpec spec, Objective.Sense sense, int startTick, int landingTick,
             int numTicks, boolean[] strafeMask, boolean[] force45Mask, List<ConstraintAt> uiConstraints,
-            SolveCore.Budget budget, long deadlineNanos, LongRunSolver.LongRunConfig longRun, boolean useWindowSolver,
+            long deadlineNanos, LongRunSolver.LongRunConfig longRun, boolean useWindowSolver,
             boolean stopOnFeasible, boolean ilsExhaustive, JumpConstraint legalGoal, SolverGraph graph,
             boolean raceExplore
         ) {
@@ -332,7 +313,6 @@ public final class AngleSolverEngine {
             this.strafeMask = strafeMask;
             this.force45Mask = force45Mask;
             this.uiConstraints = uiConstraints;
-            this.budget = budget;
             this.deadlineNanos = deadlineNanos;
             this.longRun = longRun;
             this.useWindowSolver = useWindowSolver;
@@ -429,7 +409,7 @@ public final class AngleSolverEngine {
         JumpSpec spec = new JumpSpec(ph.inputs, constraints, objective);
         return new Job(spec, objective.sense, startTick, landingTick, numTicks, ph.strafeMask,
                 ph.force45Mask, uiCons,
-                budgetFor(state), deadlineNanosFor(state), longRunConfigFor(state), useWindowSolverFor(state),
+                deadlineNanosFor(state), longRunConfigFor(state), useWindowSolverFor(state),
                 stopOnFeasibleFor(state), ilsExhaustiveFor(state), legalGoal, GraphFactory.forState(state),
                 state.getEffort() == AngleSolverState.Effort.FAST);
     }
@@ -888,7 +868,7 @@ public final class AngleSolverEngine {
                                   AtomicBoolean master, SolveProgress progress, RunRecording rec) {
         AtomicBoolean primaryTok = new AtomicBoolean(false);
         GraphContext primaryCtx = new GraphContext(spec, model, freeBox, job.legalGoal, FEAS_TOL, primaryTok,
-                progress, sequentialSolve, job.budget, job.longRun);
+                progress, sequentialSolve, job.longRun);
         if (rec != null) rec.ctx = primaryCtx;
         lastRunState = primaryCtx.runState;
         currentGraphContext = primaryCtx;
@@ -928,7 +908,7 @@ public final class AngleSolverEngine {
                         exploreProgress.forwardTo(progress, "explore");
                         exploreSpec = new JumpSpec(sc.copy(), spec.constraints, spec.objective);
                         exploreCtx = new GraphContext(exploreSpec, model, freeBox, job.legalGoal, FEAS_TOL,
-                                exploreTok, exploreProgress, sequentialSolve, job.budget, job.longRun);
+                                exploreTok, exploreProgress, sequentialSolve, job.longRun);
                         explore = new ArmState();
                         spawnElapsed = System.nanoTime() - raceStart;
                         raceInfo.spawned = true;
@@ -1059,7 +1039,7 @@ public final class AngleSolverEngine {
             if (race.exploreWon) sc = race.winnerSc;
         } else {
             GraphContext single = new GraphContext(spec, model, freeBox, job.legalGoal, FEAS_TOL, cancel, progress,
-                    sequentialSolve, job.budget, job.longRun);
+                    sequentialSolve, job.longRun);
             if (job.deadlineNanos > 0) single.setOverallDeadline(System.nanoTime() + job.deadlineNanos);
             if (rec != null) rec.ctx = single;
             lastRunState = single.runState;
@@ -1106,7 +1086,6 @@ public final class AngleSolverEngine {
             result.addDetail("Legal shortfall", String.format(java.util.Locale.ROOT,
                     "%.9e short of %s", shortfall, job.legalGoal.name));
         }
-        if (ctx.cmaesEvals.get() > 0) addCmaBudget(result, job, ctx.cmaesEvals.get());
         if (ctx.smoothingEvals.get() > 0) result.addDetail("Smoothing evals", Long.toString(ctx.smoothingEvals.get()));
         double finalObjective = path.getPos(spec.objective.tick, spec.objective.axis);
         double finalViolation = JumpConstraintCompiler.compile(spec).maxViolation(gameFacings, path);
@@ -1149,7 +1128,6 @@ public final class AngleSolverEngine {
         String name = solver == null || solver.isEmpty() ? "stopped early" : solver;
         SolveResult result = assembleResult(job, yaws, gameFacings, path, name, System.nanoTime() - startNanos, Double.NaN);
         result.addDetail("Stopped early", "kept best found");
-        if (name.contains("CMA-ES")) addCmaBudget(result, job, null);
         Plan plan = new Plan(job.startTick, yaws, job.strafeMask, job.force45Mask, 1, path, sc.startPos);
         return new Outcome(result, plan);
     }
@@ -1194,14 +1172,6 @@ public final class AngleSolverEngine {
         return result;
     }
 
-    private static void addCmaBudget(SolveResult result, Job job, Long evals) {
-        result.addDetail("CMA-ES restarts", Integer.toString(job.budget.restarts));
-        result.addDetail("CMA-ES max evals", Integer.toString(job.budget.maxEval));
-        if (evals != null) result.addDetail("CMA-ES evals", Long.toString(evals));
-        result.addDetail("Polish basins", Integer.toString(job.budget.polishCount));
-        if (job.deadlineNanos > 0) result.addDetail("Time budget", (job.deadlineNanos / 1_000_000_000L) + " s");
-    }
-
     /** The objective as the leading Solved-values row: axis @ tick, max/min as the relation, achieved value. */
     private static SolveResult.Outcome objectiveOutcome(SolveResult r, Objective o, int startTick) {
         String field = o.axis == JumpPhysicsInputs.Axis.X ? "X" : "Z";
@@ -1237,11 +1207,10 @@ public final class AngleSolverEngine {
         final int startTick;
         final int landingTick;
         final int numTicks;
-        final SolveCore.Budget budget;
 
         BlockJob(Phys ph, List<JumpConstraint> footprints, List<ConstraintAt> footprintUi, double[] landFp,
                  List<BlockSolver.Obstacle> obstacles, double[] heights, List<Objective> objectives, int startTick,
-                 int landingTick, int numTicks, SolveCore.Budget budget) {
+                 int landingTick, int numTicks) {
             this.ph = ph;
             this.footprints = footprints;
             this.footprintUi = footprintUi;
@@ -1252,7 +1221,6 @@ public final class AngleSolverEngine {
             this.startTick = startTick;
             this.landingTick = landingTick;
             this.numTicks = numTicks;
-            this.budget = budget;
         }
     }
 
@@ -1301,7 +1269,7 @@ public final class AngleSolverEngine {
 
         long t0 = System.nanoTime();
         BlockJob job = new BlockJob(ph, footprints, footprintUi, landFp, obstacles, heights, objectives,
-                startTick, landingTick, numTicks, budgetFor(state));
+                startTick, landingTick, numTicks);
         state.clearResult();
         lastPlan = null;
         pending = null;
@@ -1331,7 +1299,7 @@ public final class AngleSolverEngine {
     private Outcome runBlockJob(BlockJob job, AtomicBoolean cancel) {
         long solveStart = System.nanoTime();
         BlockSolver.Result r = new BlockSolver().solve(model, job.ph.inputs, job.footprints, job.landFp,
-                job.obstacles, job.heights, job.objectives, job.budget, CMAES_SIGMA_DEG, FEAS_TOL, BLOCK_MAX_ITERS, cancel);
+                job.obstacles, job.heights, job.objectives, FEAS_TOL, BLOCK_MAX_ITERS, cancel);
         long solveNanos = System.nanoTime() - solveStart;
         if (cancel.get() || r == null || r.yaws == null) return null;
 

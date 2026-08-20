@@ -10,16 +10,11 @@ public final class HomotopyCloser {
     private static final double[][] DESCENT_B2 = {{0.02, 0.0008}, {0.006, 0.0002}, {0.0015, 0.00004}};
 
     public static final class Config {
-        public double[] repairSigmas = {0.3, 1.0, 3.0};
-        public int repairMaxEval = 60000;
         public int maxRungs = 90;
         public int maxRefines = 6;
         public double epsFloor = 2.0e-6;
         public int descentRounds = 24;
         public int descentPairSpan = 3;
-        public int entryRestarts = 192;
-        public int entryMaxEval = 100000;
-        public int entryPolishCount = 8;
     }
 
     private HomotopyCloser() {
@@ -32,16 +27,14 @@ public final class HomotopyCloser {
 
     public static double[] close(ExactJumpModel model, JumpSpec spec, double[] warmAbs, double eps0,
                                  long deadlineNanos, AtomicBoolean cancel, Config cfg) {
-        SolveCore.Budget entryBudget = new SolveCore.Budget(cfg.entryRestarts, cfg.entryMaxEval,
-                cfg.entryPolishCount, BucketAscentPolish.FAST);
         double eps = eps0;
         double[] y = null;
         for (int i = 0; i < 2 && y == null; i++, eps *= 4.0) {
             if (out(deadlineNanos, cancel)) return null;
             JumpSpec relaxed = relax(spec, eps);
             double[] cand = warmAbs != null && slack(model, relaxed, warmAbs) <= 0.0 ? Angles.wrapAll(warmAbs.clone())
-                    : SolveCore.optimize(model, relaxed, entryBudget, 20.0, 0.0, cancel,
-                            warmAbs != null ? Angles.wrapAll(warmAbs.clone()) : null);
+                    : SlpSolve.optimizeBestEffort(model, relaxed, 0.0, cancel,
+                            warmAbs != null ? Angles.wrapAll(warmAbs.clone()) : null, 40, 60);
             if (cand == null) continue;
             if (slack(model, relaxed, cand) > 0.0) cand = descend(model, relaxed, cand, deadlineNanos, cancel, cfg);
             if (slack(model, relaxed, cand) <= 0.0) y = cand;
@@ -96,24 +89,7 @@ public final class HomotopyCloser {
 
     private static double[] repair(ExactJumpModel model, JumpSpec sp, double[] warm, AtomicBoolean cancel,
                                    Config cfg) {
-        double[] best = null;
-        double bestV = Double.POSITIVE_INFINITY;
-        for (double sigma : cfg.repairSigmas) {
-            SolverRunResult rr;
-            try {
-                rr = new CmaesJumpHarness(1.0e7, 1.0e7, sigma, cfg.repairMaxEval, true)
-                        .solve(model, sp, Angles.wrapAll(warm.clone()), cancel);
-            } catch (SolveCancelledException e) {
-                return best;
-            }
-            double vv = slack(model, sp, rr.yawAbsDeg);
-            if (vv < bestV) {
-                bestV = vv;
-                best = rr.yawAbsDeg;
-            }
-            if (vv <= 0.0) return rr.yawAbsDeg;
-        }
-        return best;
+        return descend(model, sp, warm, 0L, cancel, cfg);
     }
 
     public static double[] descend(ExactJumpModel model, JumpSpec spec, double[] start,
