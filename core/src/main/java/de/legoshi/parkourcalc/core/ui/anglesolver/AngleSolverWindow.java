@@ -237,14 +237,14 @@ public final class AngleSolverWindow implements RenderInterface {
 
         ThemeManager.paddedSeparator();
 
+        renderActions();
+
         SolveResult panel = engine.isSolving() ? engine.liveBestResult() : state.getResult();
         trackObjectiveImprovement(panel);
         if (panel != null) {
-            renderResultPanel(io, panel, scale);
             ThemeManager.sectionSpacing();
+            renderResultPanel(io, panel, scale);
         }
-
-        renderActions();
     }
 
     private void longSpanWarning(int span, float scale) {
@@ -693,10 +693,6 @@ public final class AngleSolverWindow implements RenderInterface {
         }
         ImGui.sameLine();
         if (Controls.secondaryButton("Solve")) {
-            yawsExpanded = false;
-            detailsExpanded = false;
-            solverExpanded = false;
-            outcomesExpanded = true;
             engine.solve();
         }
     }
