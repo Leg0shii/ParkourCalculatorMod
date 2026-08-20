@@ -11,6 +11,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SmoothJumpProblem;
+import de.legoshi.parkourcalc.core.anglesolver.solver.PathTranslation;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SnapRepairPolish;
 import org.junit.experimental.categories.Category;
 import org.junit.Test;
@@ -140,7 +141,7 @@ public class TranslationEliminationTest {
             ForwardPath path = model.forward(sc, gf);
 
             double pinned = translatedViol(compiled, gf, path, 0.0, 0.0);
-            SnapRepairPolish.Trans tr = SnapRepairPolish.bestTranslation(compiled, gf, path, loX, hiX, loZ, hiZ);
+            PathTranslation.Trans tr = PathTranslation.bestTranslation(compiled, gf, path, loX, hiX, loZ, hiZ);
             double cfViol = translatedViol(compiled, gf, path, tr.tx, tr.tz);
 
             double gridMin = Double.POSITIVE_INFINITY;

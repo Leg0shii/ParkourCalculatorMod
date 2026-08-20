@@ -105,7 +105,7 @@ public final class Application {
         this.saveController = new SaveController(inputData, runner, mc, this::runSimulation);
         this.saveController.setRetriggerFrom(this::runSimulation);
         this.startDragController = new StartDragController(runner, boxController, selection,
-                saveController::markDirty, this::runSimulation, SimulationRunner.DEFAULT_MOVE_TICK_TOLERANCE);
+                saveController::markDirty, this::runSimulation, SimulationRunner.DEFAULT_DRAG_TOLERANCE);
         // Start box is the "Start" anchor: draggable to reposition, and tap-selectable as path index 0.
         this.dragController = new BoxDragController(boxController, startDragController, this::commitStartTap);
         this.selectController = new BoxSelectController(this::pickWorld, this::commitWorldTap);

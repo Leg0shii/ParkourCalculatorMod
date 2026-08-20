@@ -28,6 +28,10 @@ anglesolver/
                            gradle daemon's test JVM)
   EngineFileScreen.java    drive the live engine on any save file headlessly; PKC_SOLVE_FILE=<path>,
                            optional PKC_SOLVE_EFFORT and PKC_SOLVE_TIMEOUT_MS
+  SolveNodeStatsScreen.java  per-node timing dump over problems/solve at expect efforts;
+                           -Dpkc.nodestats=1 to run, -Dpkc.nodestats.{tag,timeoutMs} tune it;
+                           TSV at build/reports/nodestats-<tag>.tsv (RUN + NODE rows); run via
+                           direct java -cp like FreeStartSweepBench
   RunMatrixScreen.java     (preset x problem) run matrix over problems/solve + problems/closedform,
                            cold starts, one SolveRunRecord JSONL line per run to
                            build/reports/matrix-<tag>/runs.jsonl, resumable (recorded pairs skipped);

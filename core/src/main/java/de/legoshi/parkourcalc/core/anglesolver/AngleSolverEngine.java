@@ -1,10 +1,8 @@
 package de.legoshi.parkourcalc.core.anglesolver;
 
-import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
-import de.legoshi.parkourcalc.core.ui.BoxStyle;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
@@ -17,7 +15,6 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunLog;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunRecord;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
-import de.legoshi.parkourcalc.core.anglesolver.solver.BlockSolver;
 import de.legoshi.parkourcalc.core.anglesolver.solver.BucketAscentPolish;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ClosedFormSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
@@ -36,7 +33,6 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolveProgress;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
-import de.legoshi.parkourcalc.core.anglesolver.solver.SupportOverlap;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SurfaceKind;
 
 import java.util.ArrayList;
@@ -322,26 +318,10 @@ public final class AngleSolverEngine {
     private static final class Outcome {
         final SolveResult result;
         final Plan plan;
-        // Block solve only: constraints to write into the table + the axis/goal to publish (null for a normal solve).
-        final List<ConstraintAt> derived;
-        final int derivedFrom;
-        final int derivedTo;
-        final AngleSolverState.Axis axis;
-        final AngleSolverState.Goal goal;
 
         Outcome(SolveResult result, Plan plan) {
-            this(result, plan, null, 0, 0, null, null);
-        }
-
-        Outcome(SolveResult result, Plan plan, List<ConstraintAt> derived, int derivedFrom, int derivedTo,
-                AngleSolverState.Axis axis, AngleSolverState.Goal goal) {
             this.result = result;
             this.plan = plan;
-            this.derived = derived;
-            this.derivedFrom = derivedFrom;
-            this.derivedTo = derivedTo;
-            this.axis = axis;
-            this.goal = goal;
         }
     }
 
@@ -767,13 +747,6 @@ public final class AngleSolverEngine {
         Outcome o = pending;
         if (o == null) return;
         pending = null;
-        if (o.derived != null) {
-            // Block solve: replace the segment's constraints with the derived ones and publish the objective.
-            state.clearConstraintsInRange(o.derivedFrom, o.derivedTo);
-            for (ConstraintAt ca : o.derived) state.tickConstraints(ca.absTick).getConstraints().add(ca.c);
-            if (o.axis != null) state.setAxis(o.axis);
-            if (o.goal != null) state.setGoal(o.goal);
-        }
         state.setResult(o.result);
         lastPlan = o.plan;
         solving = false;
@@ -829,11 +802,6 @@ public final class AngleSolverEngine {
             liveTrajVersion = v;
         }
         return liveTraj;
-    }
-
-    public boolean advanceNode() {
-        GraphContext c = currentGraphContext;
-        return c != null && c.advance();
     }
 
     /** Runs entirely on the worker thread, reading only the immutable Job. */
@@ -1184,194 +1152,6 @@ public final class AngleSolverEngine {
 
     private static String formatClock() {
         return new java.text.SimpleDateFormat("HH:mm:ss").format(new java.util.Date());
-    }
-
-    // ---- solve from blocks (off-thread) ----------------------------------------
-
-    /** Total inner solves the block solver may spend before giving up (and honestly reporting no solution). */
-    private static final int BLOCK_MAX_ITERS = 40;
-
-    private static final class BlockJob {
-        final Phys ph;
-        final List<JumpConstraint> footprints;
-        final List<ConstraintAt> footprintUi;
-        final double[] landFp;
-        final List<BlockSolver.Obstacle> obstacles;
-        final double[] heights;
-        final List<Objective> objectives;
-        final int startTick;
-        final int landingTick;
-        final int numTicks;
-
-        BlockJob(Phys ph, List<JumpConstraint> footprints, List<ConstraintAt> footprintUi, double[] landFp,
-                 List<BlockSolver.Obstacle> obstacles, double[] heights, List<Objective> objectives, int startTick,
-                 int landingTick, int numTicks) {
-            this.ph = ph;
-            this.footprints = footprints;
-            this.footprintUi = footprintUi;
-            this.landFp = landFp;
-            this.obstacles = obstacles;
-            this.heights = heights;
-            this.objectives = objectives;
-            this.startTick = startTick;
-            this.landingTick = landingTick;
-            this.numTicks = numTicks;
-        }
-    }
-
-    /** Solves the puzzle defined by the picked start / collision / land blocks: footprints pin the launch
-     *  and landing, and {@link BlockSolver} derives the per-tick keep-out walls that wrap the obstacles.
-     *  The objective is the user's Axis + Goal. Off-thread. */
-    public void solveFromBlocks() {
-        if (solving) return;
-        int startTick = state.getStartTick();
-        int landingTick = state.getLandingTick();
-        int numTicks = landingTick - startTick;
-        List<InputRow> rows = inputs.getRows();
-        List<BlockSelection> landBlocks = state.getLandBlocks();
-        BlockSelection land = landBlocks.isEmpty() ? null : landBlocks.get(0);
-        if (numTicks <= 0 || startTick < 0 || startTick >= boxes.size()
-                || landingTick > rows.size() || startTick >= rows.size() || land == null) {
-            state.setResult(new SolveResult(false, 0, 0, startTick + 1, landingTick + 1));
-            return;
-        }
-
-        Phys ph = buildPhys(startTick, numTicks);
-        int jumpAbs = ph.jumpTickRel < 0 ? -1 : startTick + ph.jumpTickRel;
-
-        List<JumpConstraint> footprints = new ArrayList<>();
-        List<ConstraintAt> footprintUi = new ArrayList<>();
-        addFootprint(footprints, footprintUi, numTicks, startTick, land.box);
-        double[] landFp = expand(land.box);
-
-        List<BlockSelection> momentumBlocks = state.getMomentumBlocks();
-        BlockSelection start = momentumBlocks.isEmpty() ? null : momentumBlocks.get(0);
-        if (start != null && jumpAbs > startTick) {
-            addFootprint(footprints, footprintUi, (jumpAbs - 1) - startTick, startTick, start.box);
-        }
-
-        List<BlockSolver.Obstacle> obstacles = new ArrayList<>();
-        for (BlockSelection c : state.getCollisionBlocks()) {
-            obstacles.add(new BlockSolver.Obstacle(c.box));
-        }
-        double[] heights = new double[numTicks + 1];
-        for (int st = 0; st <= numTicks; st++) {
-            TickState s = boxes.getState(startTick + st);
-            heights[st] = (s != null && s.sneaking) ? BoxStyle.HITBOX_HEIGHT_SNEAKING : BoxStyle.HITBOX_HEIGHT_STANDING;
-        }
-
-        List<Objective> objectives = objectiveCandidates(numTicks);
-
-        long t0 = System.nanoTime();
-        BlockJob job = new BlockJob(ph, footprints, footprintUi, landFp, obstacles, heights, objectives,
-                startTick, landingTick, numTicks);
-        state.clearResult();
-        lastPlan = null;
-        pending = null;
-        startNanos = t0;
-        AtomicBoolean token = new AtomicBoolean(false);
-        cancel = token;
-        currentProgress = null;
-        currentJob = null;
-        liveResult = null;
-        liveVersion = -1;
-        recording = null;
-        solving = true;
-        Thread worker = new Thread(() -> {
-            try {
-                Outcome o = runBlockJob(job, token);
-                if (o != null && !token.get()) pending = o;
-            } catch (Throwable t) {
-                if (!token.get()) {
-                    pending = new Outcome(new SolveResult(false, 0, 0, job.startTick + 1, job.landingTick + 1), null);
-                }
-            }
-        }, "angle-block-solver");
-        worker.setDaemon(true);
-        worker.start();
-    }
-
-    private Outcome runBlockJob(BlockJob job, AtomicBoolean cancel) {
-        long solveStart = System.nanoTime();
-        BlockSolver.Result r = new BlockSolver().solve(model, job.ph.inputs, job.footprints, job.landFp,
-                job.obstacles, job.heights, job.objectives, FEAS_TOL, BLOCK_MAX_ITERS, cancel);
-        long solveNanos = System.nanoTime() - solveStart;
-        if (cancel.get() || r == null || r.yaws == null) return null;
-
-        List<ConstraintAt> derived = new ArrayList<>(job.footprintUi);
-        for (BlockSolver.Face f : r.faces) {
-            int absTick = job.startTick + f.segTick;
-            Constraint c = Constraint.scalar(f.axisX ? Constraint.Field.X : Constraint.Field.Z,
-                    f.upper ? Constraint.Op.GE : Constraint.Op.LE, f.value);
-            derived.add(new ConstraintAt(absTick, f.segTick, c));
-        }
-
-        SolveResult result = buildBlockResult(job, r.yaws, job.ph.inputs.toGameFacings(r.yaws), r.path, derived, r.ok());
-        result.setDurationNanos(solveNanos);
-        result.setDurationMs(solveNanos / 1_000_000L);
-        result.setFinishedAt(formatClock());
-        result.setSolver("block solver");
-        result.setObjective(r.path.getPos(r.objective.tick, r.objective.axis));
-        result.getOutcomes().add(0, objectiveOutcome(result, r.objective, job.startTick));
-        addBaseDetails(result, solveNanos);
-        result.addDetail("Derived walls", Integer.toString(r.faces.size()));
-        Plan plan = new Plan(job.startTick, r.yaws, job.ph.strafeMask, job.ph.force45Mask, 1, r.path, job.ph.inputs.startPos);
-        AngleSolverState.Axis ax = r.objective.axis == JumpPhysicsInputs.Axis.X ? AngleSolverState.Axis.X : AngleSolverState.Axis.Z;
-        AngleSolverState.Goal gl = r.objective.sense == Objective.Sense.MAX ? AngleSolverState.Goal.MAX : AngleSolverState.Goal.MIN;
-        return new Outcome(result, plan, derived, job.startTick, job.landingTick, ax, gl);
-    }
-
-    private SolveResult buildBlockResult(BlockJob job, double[] yaws, double[] gameFacings, ForwardPath path,
-                                         List<ConstraintAt> derived, boolean ok) {
-        int total = 0;
-        int met = 0;
-        List<SolveResult.Outcome> outs = new ArrayList<>();
-        List<ConstraintAt> ordered = new ArrayList<>(derived);
-        ordered.sort((a, b) -> Integer.compare(a.absTick, b.absTick));
-        List<Integer> unmet = new ArrayList<>();
-        for (ConstraintAt ca : ordered) {
-            Double found = findValue(ca.c, ca.segTick, job.startTick, job.numTicks, gameFacings, path,
-                    job.ph.inputs.startYaw);
-            if (found == null) continue;
-            total++;
-            boolean satisfied = satisfied(ca.c, found);
-            if (satisfied) met++;
-            else unmet.add(ca.absTick);
-            outs.add(outcome(ca.c, ca.absTick, found, satisfied));
-        }
-        SolveResult r = new SolveResult(ok, met, total, job.startTick + 1, job.landingTick + 1);
-        r.getOutcomes().addAll(outs);
-        for (int t : unmet) r.addUnmetTick(t);
-        for (int k = 0; k < yaws.length; k++) r.getYaws().add(new SolveResult.YawEntry(job.startTick + k + 1, yaws[k]));
-        return r;
-    }
-
-    private void addFootprint(List<JumpConstraint> fps, List<ConstraintAt> ui, int segTick, int startTick, AABB box) {
-        if (segTick < 0) return;
-        double[] e = expand(box);
-        fps.add(new JumpConstraint(JumpConstraint.Mode.X, segTick, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.GE, e[0], "fpXlo"));
-        fps.add(new JumpConstraint(JumpConstraint.Mode.X, segTick, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.LE, e[1], "fpXhi"));
-        fps.add(new JumpConstraint(JumpConstraint.Mode.Z, segTick, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.GE, e[2], "fpZlo"));
-        fps.add(new JumpConstraint(JumpConstraint.Mode.Z, segTick, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.LE, e[3], "fpZhi"));
-        int absTick = startTick + segTick;
-        ui.add(new ConstraintAt(absTick, segTick, Constraint.range(Constraint.Field.X, e[0], e[1], true, true)));
-        ui.add(new ConstraintAt(absTick, segTick, Constraint.range(Constraint.Field.Z, e[2], e[3], true, true)));
-    }
-
-    /** [xlo, xhi, zlo, zhi] keep-out / footprint region: the block's horizontal AABB plus the half-width. */
-    private double[] expand(AABB box) {
-        return new double[] {
-                SupportOverlap.minCenter(modernCollision, box.min.x, box.max.x),
-                SupportOverlap.maxCenter(modernCollision, box.min.x, box.max.x),
-                SupportOverlap.minCenter(modernCollision, box.min.z, box.max.z),
-                SupportOverlap.maxCenter(modernCollision, box.min.z, box.max.z)};
-    }
-
-    /** The single objective the user picked (Axis + Goal). The block solver derives the keep-out
-     *  constraints; the user decides which coordinate to optimize, rather than the tool auto-choosing. */
-    private List<Objective> objectiveCandidates(int numTicks) {
-        return java.util.Collections.singletonList(
-                new Objective(axis(state.getAxis()), sense(state.getGoal()), numTicks, state.getSmoothLambda()));
     }
 
     // ---- apply (main thread) --------------------------------------------------

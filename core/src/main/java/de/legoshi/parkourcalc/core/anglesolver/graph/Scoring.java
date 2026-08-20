@@ -8,7 +8,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
-import de.legoshi.parkourcalc.core.anglesolver.solver.SnapRepairPolish;
+import de.legoshi.parkourcalc.core.anglesolver.solver.PathTranslation;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
@@ -57,7 +57,7 @@ public final class Scoring {
         double[] gf = sc.toGameFacings(Angles.wrapAll(yaws));
         ForwardPath p = model.forward(sc, gf);
         double[] d = translationDomain(sc, freeBox);
-        return SnapRepairPolish.bestTranslation(JumpConstraintCompiler.compile(spec), gf, p,
+        return PathTranslation.bestTranslation(JumpConstraintCompiler.compile(spec), gf, p,
                 d[0], d[1], d[2], d[3]).viol;
     }
 
@@ -67,7 +67,7 @@ public final class Scoring {
         ForwardPath p = model.forward(sc, gf);
         double[] d = translationDomain(sc, freeBox);
         boolean objX = spec.objective.axis == JumpPhysicsInputs.Axis.X;
-        SnapRepairPolish.Trans tr = SnapRepairPolish.bestTranslationObj(JumpConstraintCompiler.compile(spec), gf, p,
+        PathTranslation.Trans tr = PathTranslation.bestTranslationObj(JumpConstraintCompiler.compile(spec), gf, p,
                 d[0], d[1], d[2], d[3], objX ? 0 : 1, spec.objective.sense == Objective.Sense.MAX);
         return spec.objective.scored(p.getPos(spec.objective.tick, spec.objective.axis) + (objX ? tr.tx : tr.tz), sc.startYaw, yaws);
     }
@@ -130,9 +130,9 @@ public final class Scoring {
         double[] d = translationDomain(sc, freeBox);
         boolean objX = spec.objective.axis == JumpPhysicsInputs.Axis.X;
         boolean objMax = spec.objective.sense == Objective.Sense.MAX;
-        SnapRepairPolish.Trans trObj = SnapRepairPolish.bestTranslationObj(compiled, gf, p,
+        PathTranslation.Trans trObj = PathTranslation.bestTranslationObj(compiled, gf, p,
                 d[0], d[1], d[2], d[3], objX ? 0 : 1, objMax);
-        SnapRepairPolish.Trans trMin = SnapRepairPolish.bestTranslation(compiled, gf, p, d[0], d[1], d[2], d[3]);
+        PathTranslation.Trans trMin = PathTranslation.bestTranslation(compiled, gf, p, d[0], d[1], d[2], d[3]);
         if (tryAdoptTranslation(model, sc, spec, yaws, trObj, curViol, curObj, objMax, feasTol)) return true;
         return tryAdoptTranslation(model, sc, spec, yaws, trMin, curViol, curObj, objMax, feasTol);
     }
@@ -144,11 +144,11 @@ public final class Scoring {
         double[] d = freeBox != null ? translationDomain(sc, freeBox) : new double[] {0.0, 0.0, 0.0, 0.0};
         boolean objX = spec.objective.axis == JumpPhysicsInputs.Axis.X;
         boolean objMax = spec.objective.sense == Objective.Sense.MAX;
-        SnapRepairPolish.Trans trObj = SnapRepairPolish.bestTranslationObj(compiled, gf, p0,
+        PathTranslation.Trans trObj = PathTranslation.bestTranslationObj(compiled, gf, p0,
                 d[0], d[1], d[2], d[3], objX ? 0 : 1, objMax);
-        SnapRepairPolish.Trans trMin = SnapRepairPolish.bestTranslation(compiled, gf, p0, d[0], d[1], d[2], d[3]);
-        SnapRepairPolish.Trans[] cands = {trObj, trMin, new SnapRepairPolish.Trans(0.0, 0.0, 0.0)};
-        for (SnapRepairPolish.Trans tr : cands) {
+        PathTranslation.Trans trMin = PathTranslation.bestTranslation(compiled, gf, p0, d[0], d[1], d[2], d[3]);
+        PathTranslation.Trans[] cands = {trObj, trMin, new PathTranslation.Trans(0.0, 0.0, 0.0)};
+        for (PathTranslation.Trans tr : cands) {
             double x = sc.startPos.x + tr.tx;
             double z = sc.startPos.z + tr.tz;
             JumpPhysicsInputs at = pinnedScenario(sc, x, z);
@@ -163,7 +163,7 @@ public final class Scoring {
     }
 
     private static boolean tryAdoptTranslation(ForwardModel model, JumpPhysicsInputs sc, JumpSpec spec, double[] yaws,
-                                               SnapRepairPolish.Trans tr, double curViol, double curObj,
+                                               PathTranslation.Trans tr, double curViol, double curObj,
                                                boolean objMax, double feasTol) {
         if (tr.tx == 0.0 && tr.tz == 0.0) return false;
         double x = sc.startPos.x + tr.tx;

@@ -20,7 +20,6 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SnapRepairPolish;
-import de.legoshi.parkourcalc.core.anglesolver.solver.SolveCore;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
@@ -64,7 +63,6 @@ public class RazorBench {
         boolean cooking;
         int topK;
         double gateWiden;
-        boolean warmgen;
         boolean trans;
         String transMode;
         String tag;
@@ -111,7 +109,6 @@ public class RazorBench {
         cfg.cooking = envBool("PKC_RB_COOKING", false);
         cfg.topK = envInt("PKC_RB_TOPK", 32);
         cfg.gateWiden = envDouble("PKC_RB_GATEWIDEN", 4.0);
-        cfg.warmgen = envBool("PKC_RB_WARMGEN", false);
         cfg.trans = envBool("PKC_RB_TRANS", true);
         cfg.transMode = has("PKC_RB_TRANSMODE") ? env("PKC_RB_TRANSMODE").trim() : "recenter";
         cfg.tag = has("PKC_RB_TAG") ? env("PKC_RB_TAG") : "run";
@@ -134,8 +131,8 @@ public class RazorBench {
         if (has("PKC_RB_LEGAL")) emit(rep, "applied: PKC_RB_LEGAL=" + env("PKC_RB_LEGAL"));
         if (has("PKC_RB_DELIVER")) emit(rep, "applied: PKC_RB_DELIVER=" + env("PKC_RB_DELIVER"));
         emit(rep, String.format(Locale.ROOT,
-                "config: cases=%s budgetS=%d seeds=%d cooking=%b topK=%d gateWiden=%.3f warmgen=%b trans=%b transMode=%s legal=%b",
-                cfg.cases, cfg.budgetS, cfg.seeds, cfg.cooking, cfg.topK, cfg.gateWiden, cfg.warmgen, cfg.trans, cfg.transMode, cfg.legal));
+                "config: cases=%s budgetS=%d seeds=%d cooking=%b topK=%d gateWiden=%.3f trans=%b transMode=%s legal=%b",
+                cfg.cases, cfg.budgetS, cfg.seeds, cfg.cooking, cfg.topK, cfg.gateWiden, cfg.trans, cfg.transMode, cfg.legal));
 
         Throwable firstFailure = null;
         for (String c : cfg.cases) {
@@ -389,23 +386,6 @@ public class RazorBench {
         long deadline = System.nanoTime() + cfg.budgetS * 1_000_000_000L;
 
         List<double[]> warmSeeds = new ArrayList<>();
-        if (cfg.warmgen) {
-            long wgTotal = Math.min(cfg.budgetS / 2, 60L);
-            double[] starts = {0.0, 120.0, 240.0};
-            long wgEach = Math.max(1L, wgTotal / starts.length);
-            for (double a : starts) {
-                double[] s0 = new double[n];
-                Arrays.fill(s0, a);
-                long wgDeadline = System.nanoTime() + wgEach * 1_000_000_000L;
-                double[] got = SolveCore.optimize(model, spec,
-                        new SolveCore.Budget(64, 40000, 2, BucketAscentPolish.FAST),
-                        20.0, 0.0, cancel, Angles.wrapAll(s0), wgDeadline);
-                if (got != null) warmSeeds.add(Angles.wrapAll(got));
-            }
-            emit(rep, "applied: PKC_RB_WARMGEN=1 generated " + warmSeeds.size()
-                    + " cold warm seeds (SolveCore, budget " + wgTotal + "s)");
-        }
-
         double[] transDomain = transDomainFor(name, sc, cfg.trans, cfg.transMode, rep);
 
         long t0 = System.nanoTime();

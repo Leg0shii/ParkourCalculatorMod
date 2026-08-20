@@ -27,7 +27,6 @@ public class BuiltinGraphsTest {
         assertEquals("FIRST_FEASIBLE", g.node("rescueBnb").params.getString("mode"));
         assertEquals(3, g.node("rescueBnb").params.getInt("budgetSec"));
         assertNull(g.node("raceColdFull"));
-        assertEquals(240, g.node("momentum").params.getInt("budgetSec"));
         assertEquals(20, g.node("freeImprove").params.getInt("budgetSec"));
     }
 
@@ -93,6 +92,6 @@ public class BuiltinGraphsTest {
         SolverGraph g = BuiltinGraphs.fast();
         assertEquals("settledMark", g.edgeFor("rWarmTicks", Guarantee.FALSE).toNode);
         assertEquals("repSkip", g.edgeFor("settledMark", Guarantee.DONE).toNode);
-        assertEquals("rMomGate", g.edgeFor("repSkip", Guarantee.DONE).toNode);
+        assertEquals("rImproveFeas", g.edgeFor("repSkip", Guarantee.DONE).toNode);
     }
 }

@@ -28,32 +28,6 @@ public final class JumpConstraintCompiler {
             return v;
         }
 
-        /** Quadratic penalty: muIneq*slack^2 (slack>0 only) summed over ineq, plus muEq*residual^2 over eq. */
-        public double penalty(double[] gameFacings, ForwardPath path, double muIneq, double muEq) {
-            double pen = 0.0;
-            for (JumpConstraint c : ineq) {
-                double s = slack(c, gameFacings, path);
-                if (s > 0) pen += muIneq * s * s;
-            }
-            for (JumpConstraint c : eq) {
-                double e = evaluate(c, gameFacings, path);
-                pen += muEq * e * e;
-            }
-            return pen;
-        }
-
-        public double translatedPenalty(double[] gameFacings, ForwardPath path, double dx, double dz, double muIneq, double muEq) {
-            double pen = 0.0;
-            for (JumpConstraint c : ineq) {
-                double s = translatedSlack(c, gameFacings, path, dx, dz);
-                if (s > 0) pen += muIneq * s * s;
-            }
-            for (JumpConstraint c : eq) {
-                double e = translatedEvaluate(c, gameFacings, path, dx, dz);
-                pen += muEq * e * e;
-            }
-            return pen;
-        }
     }
 
     public static double translatedEvaluate(JumpConstraint c, double[] F, ForwardPath path, double dx, double dz) {

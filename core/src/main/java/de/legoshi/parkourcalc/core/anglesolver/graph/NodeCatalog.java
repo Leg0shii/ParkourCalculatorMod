@@ -7,7 +7,6 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.FreeStartImproveNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.IlsPolishNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.LabelNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.MarkSettledNode;
-import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.MomentumAssemblyNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.ReportNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.RecedingHorizonNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.RouterNode;
@@ -151,30 +150,6 @@ public final class NodeCatalog {
                 .fallback(Guarantee.NONE)
                 .factory(SetupPeelNode::new)
                 .build());
-        register(NodeType.builder("momentumAssembly", "Momentum assembly", NodeCategory.RECOVERY)
-                .requires(InputRequirement.ANY)
-                .branch(Branch.feasible(Guarantee.FOUND))
-                .branch(Branch.preserves(Guarantee.NONE))
-                .param(ParamSpec.integer("budgetSec", "Budget (s)", 0, 600, 240))
-                .param(ParamSpec.integer("minBudgetSec", "Minimum budget (s)", 0, 60, 2))
-                .param(ParamSpec.text("seamTrims", "Seam trims", "2,0,4"))
-                .param(ParamSpec.integer("templateTries", "Template tries", 1, 256, 6))
-                .param(ParamSpec.integer("frontierTries", "Frontier tries", 1, 256, 6))
-                .param(ParamSpec.integer("frontierCap", "Frontier grid cap", 1000, 10000000, 400000))
-                .param(ParamSpec.decimal("frontierSlack", "Frontier slack", 0.0, 10.0, 0.35))
-                .param(ParamSpec.decimal("vxCap", "Cross-axis velocity cap", 0.0, 10.0, 0.13))
-                .param(ParamSpec.decimal("closerEps0", "Closer epsilon start", 1.0e-6, 1.0, 1.0e-3))
-                .param(ParamSpec.integer("perCandidateSec", "Per-candidate budget (s)", 1, 600, 120))
-                .param(ParamSpec.integer("closerMaxRungs", "Closer max rungs", 1, 1000, 90))
-                .param(ParamSpec.integer("closerMaxRefines", "Closer max refines", 0, 100, 6))
-                .param(ParamSpec.decimal("closerEpsFloor", "Closer epsilon floor", 0.0, 1.0, 2.0e-6))
-                .param(ParamSpec.integer("closerDescentRounds", "Closer descent rounds", 1, 1000, 24))
-                .param(ParamSpec.integer("closerDescentPairSpan", "Closer descent pair span", 1, 64, 3))
-                .advance()
-                .budgetParam("budgetSec")
-                .fallback(Guarantee.NONE)
-                .factory(MomentumAssemblyNode::new)
-                .build());
         register(NodeType.builder("freeStartImprove", "Free start improve", NodeCategory.RECOVERY)
                 .requires(InputRequirement.ANY)
                 .branch(Branch.unknown(Guarantee.IMPROVED))
@@ -189,7 +164,6 @@ public final class NodeCatalog {
                 .param(ParamSpec.integer("fsSlpTotalCalls", "Shape SLP total calls", 1, 10000, 60))
                 .param(ParamSpec.text("fsJointMargins", "Joint margin ladder",
                         "0.0,1.0e-4,3.0e-4,6.0e-4,1.2e-3,2.5e-3,5.0e-3,1.0e-2"))
-                .advance()
                 .budgetParam("budgetSec")
                 .fallback(Guarantee.UNCHANGED)
                 .factory(FreeStartImproveNode::new)
@@ -216,7 +190,6 @@ public final class NodeCatalog {
                 .param(ParamSpec.decimal("treeSlpTrMinDeg", "Tree SLP trust floor (deg)", 0.0, 10.0, 1.0e-3))
                 .param(ParamSpec.integer("polishSlpPhase1Calls", "Polish SLP phase-1 calls", 1, 10000, 160))
                 .param(ParamSpec.integer("polishSlpTotalCalls", "Polish SLP total calls", 1, 10000, 220))
-                .advance()
                 .budgetParam("budgetSec")
                 .fallback(Guarantee.UNCHANGED)
                 .factory(BnbNode::new)
@@ -246,7 +219,6 @@ public final class NodeCatalog {
                 .param(ParamSpec.integer("beamSlpCap", "Beam SLP cap", 1, 256, 8))
                 .param(ParamSpec.decimal("polishReserveFraction", "Polish reserve fraction", 0.0, 0.9, 0.2))
                 .param(ParamSpec.decimal("longRunFraction", "Long-run slice fraction", 0.0, 1.0, 0.45))
-                .advance()
                 .budgetParam("budgetSec")
                 .fallback(Guarantee.UNCHANGED)
                 .factory(SeamSweepNode::new)
@@ -261,7 +233,6 @@ public final class NodeCatalog {
                 .param(ParamSpec.integer("perturbTicksSpan", "Kick ticks span", 1, 100, 13))
                 .param(ParamSpec.decimal("perturbMagMin", "Kick magnitude min (deg)", 0.0, 360.0, 3.0))
                 .param(ParamSpec.decimal("perturbMagSpan", "Kick magnitude span (deg)", 0.0, 360.0, 50.0))
-                .advance()
                 .budgetParam("budgetSec")
                 .fallback(Guarantee.UNCHANGED)
                 .factory(IlsPolishNode::new)
@@ -280,7 +251,6 @@ public final class NodeCatalog {
                 .param(ParamSpec.integer("roundCap", "Round cap", 0, 100000, 0))
                 .param(ParamSpec.bool("gateFlipMoves", "Gate flip moves", false))
                 .param(ParamSpec.integer("maxAbsGf", "Max |facing| (deg)", 360, 100000, 12000))
-                .advance()
                 .budgetParam("budgetSec")
                 .fallback(Guarantee.REJECTED)
                 .factory(WrapIlsNode::new)

@@ -10,6 +10,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
+import de.legoshi.parkourcalc.core.anglesolver.solver.PathTranslation;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SnapRepairPolish;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 import org.junit.Assume;
@@ -212,7 +213,7 @@ public class ProofNeighborhoodProbe {
         w.curGf = toFloatFacings(c, w.yaws);
         w.curD = toDouble(w.curGf);
         w.basePath = c.model.forward(c.sc, w.curD);
-        SnapRepairPolish.Trans tr = SnapRepairPolish.bestTranslation(c.compiled, w.curD, w.basePath,
+        PathTranslation.Trans tr = PathTranslation.bestTranslation(c.compiled, w.curD, w.basePath,
                 w.loX, w.hiX, w.loZ, w.hiZ);
         w.incumbentViol = tr.viol;
         w.incumbentObj = w.basePath.getPos(c.objTick, c.objAxis) + (c.objAxisX ? tr.tx : tr.tz);
@@ -257,7 +258,7 @@ public class ProofNeighborhoodProbe {
             work[t] = (double) reps[0];
             copyInto(scratch, w.basePath);
             c.model.stepRange(c.sc, work, t, scratch);
-            SnapRepairPolish.Trans tr = SnapRepairPolish.bestTranslation(c.compiled, work, scratch,
+            PathTranslation.Trans tr = PathTranslation.bestTranslation(c.compiled, work, scratch,
                     w.loX, w.hiX, w.loZ, w.hiZ);
             double atShift = maxTranslatedViol(c, work, scratch, tr.tx, tr.tz);
             double grid = gridMinMaxViol(c, work, scratch, w.loX, w.hiX, w.loZ, w.hiZ);
@@ -592,7 +593,7 @@ public class ProofNeighborhoodProbe {
     private void gradeAt(Ctx c, Winner w, double[] gfD, int fromTick, ForwardPath scratch, double[] out) {
         copyInto(scratch, w.basePath);
         c.model.stepRange(c.sc, gfD, fromTick, scratch);
-        SnapRepairPolish.Trans tr = SnapRepairPolish.bestTranslation(c.compiled, gfD, scratch,
+        PathTranslation.Trans tr = PathTranslation.bestTranslation(c.compiled, gfD, scratch,
                 w.loX, w.hiX, w.loZ, w.hiZ);
         double rawObj = scratch.getPos(c.objTick, c.objAxis);
         out[0] = tr.viol;
