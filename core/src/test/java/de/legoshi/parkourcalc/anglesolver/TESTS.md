@@ -77,6 +77,11 @@ anglesolver/
                            seed-position-independent free-start solve, FAST 20 s: bestTranslate's
                            conflict fallback must place conflicted candidates at the min-violation
                            translation, never at the seed)
+                           (solve/gh283-j990-cold: gh-283; hpk j990 dF=0 momentum chain with the
+                           seed ~2 blocks outside the start box, cold rows; pins the exact
+                           prefix-arc theta enumeration, the recoverStart-scored ladder fractions,
+                           and the theta micro-polish certify in the joint free-start dual,
+                           FAST 20 s)
   LevelSetAscentTest.java  level-set objective ascent (gh-290): on keep-out-wall captures where the
                            chosen Solve For degenerates the dual recovery (j003 X/MIN, j012 Z/MAX,
                            j008-bfneo Z/MIN, taser-80t X/MIN), the goal-wall bisection strictly beats
