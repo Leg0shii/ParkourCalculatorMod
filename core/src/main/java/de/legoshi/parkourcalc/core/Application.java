@@ -957,12 +957,25 @@ public final class Application {
     }
 
     private void seedCurrentMinTicksBudget() {
-        int budget = bfMinTicksTarget;
-        double rootWeight = 1.0 / (budget + 1);
-        bfCompletedProgress = 0.0;
+        int budget = angleSolverState.isBruteForceMinTicks() ? bfMinTicksTarget : angleSolverState.getBruteForceTicks();
+        int firstJump = bfJumpTicks.get(0);
+        int totalJumps = bfJumpTicks.size();
+
+        int validCount = 0;
         for (int i = budget; i >= 0; i--) {
-            if (!satisfiesRunTicks(i, bfJumpTicks.get(0))) continue;
-            int[] combo = new int[bfJumpTicks.size()];
+            if (satisfiesRunTicks(i, firstJump)) validCount++;
+        }
+
+        bfCompletedProgress = 0.0;
+        if (validCount == 0) {
+            bfCompletedProgress = 1.0;
+            return;
+        }
+
+        double rootWeight = 1.0 / validCount;
+        for (int i = budget; i >= 0; i--) {
+            if (!satisfiesRunTicks(i, firstJump)) continue;
+            int[] combo = new int[totalJumps];
             combo[0] = i;
             bfQueue.addFirst(new BfTask(combo, 1, i, rootWeight, null));
         }
@@ -1071,14 +1084,22 @@ public final class Application {
                     int maxAllowed = currentMax - bfCurrentTask.sum;
                     int nextJumpTick = bfJumpTicks.get(bfCurrentTask.depth);
 
-                    int childCount = maxAllowed + 1;
-                    double childWeight = bfCurrentTask.weight / childCount;
-
+                    List<Integer> validOptions = new ArrayList<>();
                     for (int i = maxAllowed; i >= 0; i--) {
-                        if (!satisfiesRunTicks(i, nextJumpTick)) continue;
-                        int[] nextCombo = bfCurrentTask.combo.clone();
-                        nextCombo[bfCurrentTask.depth] = i;
-                        bfQueue.addFirst(new BfTask(nextCombo, nextDepth, bfCurrentTask.sum + i, childWeight, successRows));
+                        if (satisfiesRunTicks(i, nextJumpTick)) {
+                            validOptions.add(i);
+                        }
+                    }
+
+                    if (validOptions.isEmpty()) {
+                        bfCompletedProgress += bfCurrentTask.weight;
+                    } else {
+                        double childWeight = bfCurrentTask.weight / validOptions.size();
+                        for (int i : validOptions) {
+                            int[] nextCombo = bfCurrentTask.combo.clone();
+                            nextCombo[bfCurrentTask.depth] = i;
+                            bfQueue.addFirst(new BfTask(nextCombo, nextDepth, bfCurrentTask.sum + i, childWeight, successRows));
+                        }
                     }
                 }
             } else {
@@ -1153,9 +1174,11 @@ public final class Application {
         angleSolverState.setBruteForceLiveTimeoutMs(curTimeout);
 
         int pct = (int) Math.min(99, Math.max(0, bfCompletedProgress * 100));
+        double elapsedSec = (System.currentTimeMillis() - bfTotalStartTime) / 1000.0;
+        String timeStr = String.format(Locale.ROOT, " (%.1fs)", elapsedSec);
         String statusText = angleSolverState.isBruteForceMinTicks()
-                ? "Brute forcing (Min: " + bfMinTicksTarget + "/" + angleSolverState.getBruteForceTicks() + "t) · " + pct + "%"
-                : "Brute forcing · " + pct + "%";
+                ? "Brute forcing (Min: " + bfMinTicksTarget + "/" + angleSolverState.getBruteForceTicks() + "t) · " + pct + "%" + timeStr
+                : "Brute forcing · " + pct + "%" + timeStr;
         hudMessages.setStatus(statusText, HudMessages.COLOR_DEFAULT);
 
         applyComboToState(bfCurrentTask.combo, bfCurrentTask.depth, bfCurrentTask.inheritedRows, false);
