@@ -24,9 +24,13 @@ public final class FreeStartSolve {
         public double jointPatternViolGate = 0.25;
         public double jointMarginMax = 0.25;
         public int jointBisectIters = 8;
+        public double jointWrapCloseGate = 0.05;
+        public boolean jointWrapClose = true;
     }
 
     private static final double[] JOINT_RECOVERY_FRACTIONS = {0.5, 0.25, 0.75, 0.0};
+    private static final long JOINT_WRAP_CLOSE_NANOS = 6_000_000_000L;
+    private static final double JOINT_WRAP_REPAIR_GATE = 1.0e-3;
 
     private static final class JointBest {
         double viol = Double.POSITIVE_INFINITY;
@@ -203,8 +207,49 @@ public final class FreeStartSolve {
                     }
                     return new Result(repaired, rs[0], rs[1], true);
                 }
+                if (cfg.jointWrapClose && overall.viol <= cfg.jointWrapCloseGate) {
+                    Result wr = jointWrapClose(exact, base, spec, box, overall.yaws, rs, feasTol, cancel);
+                    if (wr != null) return wr;
+                }
                 return new Result(Angles.wrapAll(overall.yaws.clone()), rs[0], rs[1], false);
             }
+        }
+        return null;
+    }
+
+    private static Result jointWrapClose(ExactJumpModel exact, JumpPhysicsInputs base, JumpSpec spec, StartBox box,
+                                         double[] yaws, double[] rs, double feasTol, AtomicBoolean cancel) {
+        JumpSpec atSpec = specAtStart(base, spec, rs[0], rs[1]);
+        JumpPhysicsInputs atSc = atSpec.asScenario();
+        double[] gf = atSc.toGameFacings(Angles.wrapAll(yaws.clone()));
+        double[] dom = {box.pxLo - rs[0], box.pxHi - rs[0], box.pzLo - rs[1], box.pzHi - rs[1]};
+        WrapWindowIls.Config wcfg = new WrapWindowIls.Config();
+        wcfg.roundCap = 1;
+        wcfg.evalCap = 4_000_000;
+        WrapWindowIls.Result w = WrapWindowIls.polish(exact, atSpec, gf, dom, wcfg,
+                System.nanoTime() + JOINT_WRAP_CLOSE_NANOS, cancel);
+        if (w == null || w.viol > JOINT_WRAP_REPAIR_GATE) {
+            if (SolverTrace.on()) {
+                SolverTrace.log("FREE", "joint wrap close miss viol=%s",
+                        w == null ? "-" : String.format(java.util.Locale.ROOT, "%.3e", w.viol));
+            }
+            return null;
+        }
+        double[] d = bestTranslate(atSpec, w.gf, exact.forward(atSc, w.gf), box);
+        double px = clamp(rs[0] + d[0], box.pxLo, box.pxHi);
+        double pz = clamp(rs[1] + d[1], box.pzLo, box.pzHi);
+        double v = violationAt(exact, spec, w.gf, px, pz);
+        if (SolverTrace.on()) {
+            SolverTrace.log("FREE", "joint wrap close ils=%.3e reaccum=%.3e start=(%.5f,%.5f)", w.viol, v, px, pz);
+        }
+        if (v <= feasTol) return new Result(Angles.wrapAll(w.gf.clone()), px, pz, true);
+        double[] repaired = LatticeRepair.repair(exact, specAtStart(base, spec, px, pz),
+                Angles.wrapAll(w.gf.clone()), feasTol, cancel);
+        if (repaired != null && violationAt(exact, spec, repaired, px, pz) <= feasTol) {
+            if (SolverTrace.on()) {
+                SolverTrace.log("FREE", "joint wrap close certified by lattice repair (%.5f,%.5f)", px, pz);
+            }
+            return new Result(repaired, px, pz, true);
         }
         return null;
     }
