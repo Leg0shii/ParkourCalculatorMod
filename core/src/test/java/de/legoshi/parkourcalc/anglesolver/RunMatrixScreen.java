@@ -14,10 +14,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunRecord;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ValidationIssue;
-import de.legoshi.parkourcalc.core.anglesolver.solver.AlmSnapStage;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
-import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
-import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.ui.InputData;
@@ -91,30 +88,13 @@ public class RunMatrixScreen {
             new CaptureMutations.Mutation(0, 0, 0.0),
     };
 
-    static final class AlmParams {
-        double lambda;
-        int budgetSec;
-        int seeds = 16;
-        int topK = 32;
-        boolean cooking = true;
-        double gateWiden = 1.0;
-    }
-
     static final class Preset {
         final String id;
         final Consumer<AngleSolverState> apply;
-        final AlmParams alm;
 
         Preset(String id, Consumer<AngleSolverState> apply) {
             this.id = id;
             this.apply = apply;
-            this.alm = null;
-        }
-
-        Preset(String id, AlmParams alm) {
-            this.id = id;
-            this.apply = null;
-            this.alm = alm;
         }
     }
 
@@ -340,21 +320,6 @@ public class RunMatrixScreen {
                 s.setSmoothLambda(lambda);
             });
         }
-        if (base.startsWith("alm")) {
-            AlmParams ap = new AlmParams();
-            ap.budgetSec = Integer.parseInt(base.substring("alm".length()));
-            for (Map.Entry<String, String> e : combo.entrySet()) {
-                String key = e.getKey();
-                String v = e.getValue();
-                if ("l".equals(key)) ap.lambda = Double.parseDouble(v);
-                else if ("seeds".equals(key)) ap.seeds = Integer.parseInt(v);
-                else if ("topk".equals(key)) ap.topK = Integer.parseInt(v);
-                else if ("cooking".equals(key)) ap.cooking = !"0".equals(v);
-                else if ("gate".equals(key)) ap.gateWiden = Double.parseDouble(v);
-                else throw new IllegalArgumentException("unknown alm sweep param: " + key);
-            }
-            return new Preset(id.toString(), ap);
-        }
         throw new IllegalArgumentException("unknown sweep base: " + base);
     }
 
@@ -488,9 +453,6 @@ public class RunMatrixScreen {
         if (pr.mutation != null && !CaptureMutations.apply(file, pr.mutation)) {
             throw new IllegalStateException(pr.fullName() + ": mutation not applicable");
         }
-        if (preset.alm != null) {
-            return runAlmOne(preset.alm, file, timeoutMs);
-        }
         ExactJumpModel model = ExactJumpModel.forMcVersion(file.mcVersion);
         InputData inputs = new InputData();
         SaveIO.applyRowsTo(file, inputs);
@@ -518,58 +480,6 @@ public class RunMatrixScreen {
             rec.outcome.chain = "no record (invalid job)";
         }
         rec.mcVersion = file.mcVersion;
-        return rec;
-    }
-
-    private SolveRunRecord runAlmOne(AlmParams ap, SaveFile file, long timeoutMs) {
-        ExactJumpModel model = ExactJumpModel.forMcVersion(file.mcVersion);
-        InputData inputs = new InputData();
-        SaveIO.applyRowsTo(file, inputs);
-        AngleSolverState state = new AngleSolverState();
-        SaveIO.applyAngleSolverTo(file, state);
-        state.setSmoothLambda(ap.lambda);
-        state.clearResult();
-        AngleSolverEngine engine = new AngleSolverEngine(state, Fixtures.buildBoxes(file), inputs, t -> { }, model);
-        JumpSpec spec = engine.debugBuildSpec();
-        SolveRunRecord rec = new SolveRunRecord();
-        rec.mcVersion = file.mcVersion;
-        rec.outcome = new SolveRunRecord.Outcome();
-        if (spec == null) {
-            rec.outcome.status = SolveRunRecord.STATUS_FAILED;
-            rec.outcome.chain = "almSnapStage: no spec (invalid job)";
-            return rec;
-        }
-        JumpPhysicsInputs sc = spec.asScenario();
-        double[] dom = null;
-        if (sc.startBox != null && sc.startBox.startFree()) {
-            dom = new double[]{sc.startBox.pxLo - sc.startPos.x, sc.startBox.pxHi - sc.startPos.x,
-                    sc.startBox.pzLo - sc.startPos.z, sc.startBox.pzHi - sc.startPos.z};
-        }
-        int jumps = 0;
-        for (int t = 0; t < sc.numTicks; t++) {
-            if (sc.jumpAt(t)) jumps++;
-        }
-        rec.problem = SolveRunRecord.problemOf(spec, jumps);
-        rec.config = new SolveRunRecord.Config();
-        rec.config.effort = "ALM";
-        rec.config.metric = new SolveRunRecord.Metric();
-        rec.config.metric.type = "hierarchical";
-        rec.config.metric.feasTol = 0.0;
-        rec.config.metric.sense = spec.objective.sense.name();
-        rec.config.metric.smoothLambda = spec.objective.smoothLambda;
-        long budgetNanos = Math.min(ap.budgetSec * 1_000_000_000L, timeoutMs * 1_000_000L);
-        long t0 = System.nanoTime();
-        AlmSnapStage.SolveOutcome oc = AlmSnapStage.solve(model, spec, new ArrayList<double[]>(),
-                ap.seeds, ap.cooking, ap.topK, ap.gateWiden, dom, t0 + budgetNanos, null);
-        long wall = System.nanoTime() - t0;
-        rec.outcome.status = oc.feasible ? SolveRunRecord.STATUS_SOLVED : SolveRunRecord.STATUS_STOPPED_BEST;
-        rec.outcome.feasible = oc.feasible;
-        rec.outcome.objective = Double.isNaN(oc.objective) ? null : oc.objective;
-        rec.outcome.violation = Double.isNaN(oc.viol) || Double.isInfinite(oc.viol) ? null : oc.viol;
-        rec.outcome.wallNanos = wall;
-        rec.outcome.chain = "almSnapStage seeds=" + oc.seedsTried + " winner="
-                + (oc.winnerKind != null ? oc.winnerKind : "-") + "#" + oc.winnerSeedIndex;
-        SolveRunRecord.smoothnessOf(rec.outcome, oc.yawsDeg);
         return rec;
     }
 
