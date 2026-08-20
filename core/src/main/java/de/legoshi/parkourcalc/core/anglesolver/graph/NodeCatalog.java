@@ -7,7 +7,6 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.FreeStartImproveNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.IlsPolishNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.LabelNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.MarkSettledNode;
-import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.MomentumAssemblyNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.ReportNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.RecedingHorizonNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.RouterNode;
@@ -150,30 +149,6 @@ public final class NodeCatalog {
                 .budgetParam("budgetSec")
                 .fallback(Guarantee.NONE)
                 .factory(SetupPeelNode::new)
-                .build());
-        register(NodeType.builder("momentumAssembly", "Momentum assembly", NodeCategory.RECOVERY)
-                .requires(InputRequirement.ANY)
-                .branch(Branch.feasible(Guarantee.FOUND))
-                .branch(Branch.preserves(Guarantee.NONE))
-                .param(ParamSpec.integer("budgetSec", "Budget (s)", 0, 600, 240))
-                .param(ParamSpec.integer("minBudgetSec", "Minimum budget (s)", 0, 60, 2))
-                .param(ParamSpec.text("seamTrims", "Seam trims", "2,0,4"))
-                .param(ParamSpec.integer("templateTries", "Template tries", 1, 256, 6))
-                .param(ParamSpec.integer("frontierTries", "Frontier tries", 1, 256, 6))
-                .param(ParamSpec.integer("frontierCap", "Frontier grid cap", 1000, 10000000, 400000))
-                .param(ParamSpec.decimal("frontierSlack", "Frontier slack", 0.0, 10.0, 0.35))
-                .param(ParamSpec.decimal("vxCap", "Cross-axis velocity cap", 0.0, 10.0, 0.13))
-                .param(ParamSpec.decimal("closerEps0", "Closer epsilon start", 1.0e-6, 1.0, 1.0e-3))
-                .param(ParamSpec.integer("perCandidateSec", "Per-candidate budget (s)", 1, 600, 120))
-                .param(ParamSpec.integer("closerMaxRungs", "Closer max rungs", 1, 1000, 90))
-                .param(ParamSpec.integer("closerMaxRefines", "Closer max refines", 0, 100, 6))
-                .param(ParamSpec.decimal("closerEpsFloor", "Closer epsilon floor", 0.0, 1.0, 2.0e-6))
-                .param(ParamSpec.integer("closerDescentRounds", "Closer descent rounds", 1, 1000, 24))
-                .param(ParamSpec.integer("closerDescentPairSpan", "Closer descent pair span", 1, 64, 3))
-                .advance()
-                .budgetParam("budgetSec")
-                .fallback(Guarantee.NONE)
-                .factory(MomentumAssemblyNode::new)
                 .build());
         register(NodeType.builder("freeStartImprove", "Free start improve", NodeCategory.RECOVERY)
                 .requires(InputRequirement.ANY)

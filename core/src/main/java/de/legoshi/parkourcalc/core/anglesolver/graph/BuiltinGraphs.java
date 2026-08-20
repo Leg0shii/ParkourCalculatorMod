@@ -56,14 +56,13 @@ public final class BuiltinGraphs {
         int tp = t > 0 ? t : 120;
         boolean exh = ilx && !sof;
         int peelSec = t > 0 ? Math.max(1, Math.min(12, t)) : 12;
-        int momentumSec = t > 0 ? (exh ? Math.max(2, t * 2 / 5) : Math.min(240, t)) : 240;
         int freeSec = t > 0 ? Math.min(20, t) : 20;
         int rescueSec = t > 0 ? Math.max(1, Math.min(3, t)) : 3;
         int sweepSec = Math.max(1, Math.min(60, tp / 5));
         int bnbSec = Math.max(1, (tp - sweepSec) * 3 / 4);
         int ilsSec = Math.max(1, tp - sweepSec - bnbSec);
         int nearBnbSec = Math.max(1, Math.min(60, tp / 2));
-        String coldEntry = "rMomGate";
+        String coldEntry = sof ? "rMomGate" : "rFree";
         String afterFree = sof ? "rRescueTicks" : "rHave";
         String afterCap = exh ? "rExhTicks" : (ilx ? "rWrapEps" : "rTrans");
 
@@ -87,15 +86,7 @@ public final class BuiltinGraphs {
         g.add("repA", "report");
         g.add("repWarm", "report");
         g.add("repSkip", "report");
-        if (ilx) {
-            router(g, "rMomGate", "VIOLATION_AT_MOST");
-            g.set("rMomGate", "epsilon", 5.0e-2);
-        } else {
-            router(g, "rMomGate", "CANDIDATE_FEASIBLE_SCORED");
-        }
-        g.add("momentum", "momentumAssembly")
-                .set("momentum", "budgetSec", momentumSec)
-                .set("momentum", "minBudgetSec", 2);
+        if (sof) router(g, "rMomGate", "CANDIDATE_FEASIBLE_SCORED");
         router(g, "rFree", "HAS_FREE_START");
         g.add("freeImprove", "freeStartImprove")
                 .set("freeImprove", "budgetSec", freeSec);
@@ -201,9 +192,9 @@ public final class BuiltinGraphs {
         g.edge("rWarmTicks", Guarantee.FALSE, "settledMark");
         g.edge("smoothWarm", Guarantee.DONE, "repWarm");
         g.edge("settledMark", Guarantee.DONE, "repSkip");
-        g.edge("repSkip", Guarantee.DONE, "rMomGate");
+        g.edge("repSkip", Guarantee.DONE, coldEntry);
         g.edge("repA", Guarantee.DONE, sof ? "rFeasFastCold" : "rEarlyFeas");
-        g.edge("repWarm", Guarantee.DONE, sof ? "rFeasFastWarm" : "rMomGate");
+        g.edge("repWarm", Guarantee.DONE, sof ? "rFeasFastWarm" : coldEntry);
         if (sof) {
             g.edge("rFeasFastCold", Guarantee.TRUE, "lblFF");
             g.edge("rFeasFastCold", Guarantee.FALSE, "rEarlyFree");
@@ -219,10 +210,10 @@ public final class BuiltinGraphs {
         g.edge("rEarlyFree", Guarantee.TRUE, "freeRescue");
         g.edge("rEarlyFree", Guarantee.FALSE, coldEntry);
         g.edge("freeRescue", Guarantee.UNCHANGED, coldEntry);
-        g.edge("rMomGate", Guarantee.TRUE, sof ? afterFree : "rFree");
-        g.edge("rMomGate", Guarantee.FALSE, "momentum");
-        g.edge("momentum", Guarantee.FOUND, "rFree");
-        g.edge("momentum", Guarantee.NONE, "rFree");
+        if (sof) {
+            g.edge("rMomGate", Guarantee.TRUE, afterFree);
+            g.edge("rMomGate", Guarantee.FALSE, "rFree");
+        }
         g.edge("rFree", Guarantee.TRUE, "freeImprove");
         g.edge("rFree", Guarantee.FALSE, afterFree);
         g.edge("freeImprove", Guarantee.IMPROVED, afterFree);

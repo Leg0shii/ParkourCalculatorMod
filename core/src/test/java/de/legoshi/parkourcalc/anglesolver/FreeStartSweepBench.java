@@ -72,6 +72,8 @@ public class FreeStartSweepBench {
         File dst = new File("build/reports/sweep-" + tag + ".txt");
         dst.getParentFile().mkdirs();
         Files.write(dst.toPath(), report.toString().getBytes(StandardCharsets.UTF_8));
+        Files.write(new File("build/reports/sweep-" + tag + "-nodes.tsv").toPath(),
+                stats.toString().getBytes(StandardCharsets.UTF_8));
     }
 
     private void benchOne(String stem, String json, String variant, long timeoutMs, boolean trace) {
@@ -135,6 +137,27 @@ public class FreeStartSweepBench {
         line("%-52s %-6s %8s %4d/%-2d %8d  %s | %s",
                 stem, variant, r.isSuccess(), r.getMet(), r.getTotal(), ms,
                 r.getSolver(), topNodes(engine.lastRunRecord()));
+        appendStats(stem, variant, ms, r, engine.lastRunRecord());
+    }
+
+    private final StringBuilder stats = new StringBuilder();
+
+    private void appendStats(String stem, String variant, long ms, SolveResult r, SolveRunRecord rec) {
+        if (rec == null) return;
+        stats.append(String.format(Locale.ROOT, "RUN\t%s\t%s\t%d\t%s\t%s%n",
+                stem, variant, ms, r.isSuccess(), r.getSolver()));
+        if (rec.nodes != null) {
+            for (SolveRunRecord.NodeRun n : rec.nodes) {
+                stats.append(String.format(Locale.ROOT, "NODE\t%s\t%s\t%s\t%d\t%d\t%s\t%d%n",
+                        stem, variant, n.id, n.visits, n.elapsedNanos / 1_000_000L, n.taken, n.evals));
+            }
+        }
+        if (rec.race != null && rec.race.exploreNodes != null) {
+            for (SolveRunRecord.NodeRun n : rec.race.exploreNodes) {
+                stats.append(String.format(Locale.ROOT, "NODE\t%s\t%s\texplore:%s\t%d\t%d\t%s\t%d%n",
+                        stem, variant, n.id, n.visits, n.elapsedNanos / 1_000_000L, n.taken, n.evals));
+            }
+        }
     }
 
     private static String topNodes(SolveRunRecord rec) {

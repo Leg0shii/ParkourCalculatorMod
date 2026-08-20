@@ -78,10 +78,10 @@ public class GraphPresetIOTest {
     @Test
     public void unknownNodeTypeNamesTheNode() {
         GraphPresetFile f = GraphPresetIO.fromGraph(BuiltinGraphs.fast());
-        node(f, "momentum").type = "bogus";
+        node(f, "freeImprove").type = "bogus";
         Result<SolverGraph> r = GraphPresetIO.materialize(f);
         assertFalse(r.ok);
-        assertTrue(r.error, r.error.contains("momentum"));
+        assertTrue(r.error, r.error.contains("freeImprove"));
         assertTrue(r.error, r.error.contains("bogus"));
     }
 
@@ -101,20 +101,20 @@ public class GraphPresetIOTest {
         GraphPresetFile.Param p = new GraphPresetFile.Param();
         p.key = "bogusKnob";
         p.num = 1.0;
-        node(f, "momentum").params.add(p);
+        node(f, "freeImprove").params.add(p);
         Result<SolverGraph> r = GraphPresetIO.materialize(f);
         assertFalse(r.ok);
         assertTrue(r.error, r.error.contains("bogusKnob"));
-        assertTrue(r.error, r.error.contains("momentum"));
+        assertTrue(r.error, r.error.contains("freeImprove"));
     }
 
     @Test
     public void duplicateNodeIdsAreRejected() {
         GraphPresetFile f = GraphPresetIO.fromGraph(BuiltinGraphs.fast());
-        f.nodes.add(node(f, "momentum"));
+        f.nodes.add(node(f, "freeImprove"));
         Result<SolverGraph> r = GraphPresetIO.materialize(f);
         assertFalse(r.ok);
-        assertTrue(r.error, r.error.contains("momentum"));
+        assertTrue(r.error, r.error.contains("freeImprove"));
     }
 
     @Test

@@ -18,6 +18,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.McSineTable;
+import de.legoshi.parkourcalc.core.anglesolver.solver.PathTranslation;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SnapRepairPolish;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 import de.legoshi.parkourcalc.core.save.SaveFile;
@@ -556,7 +557,7 @@ public class MiqcpClose {
         long wallMs = (System.nanoTime() - t0) / 1_000_000L;
 
         ForwardPath pBase = model.forward(sc, gf);
-        SnapRepairPolish.Trans trMin = SnapRepairPolish.bestTranslation(compiled, gf, pBase,
+        PathTranslation.Trans trMin = PathTranslation.bestTranslation(compiled, gf, pBase,
                 transDomain[0], transDomain[1], transDomain[2], transDomain[3]);
         double startX = sc.startPos.x + trMin.tx;
         double startZ = sc.startPos.z + trMin.tz;
@@ -578,7 +579,7 @@ public class MiqcpClose {
 
         boolean solved = reViol <= 0.0;
         if (solved) {
-            SnapRepairPolish.Trans trObj = SnapRepairPolish.bestTranslationObj(compiled, gf, pBase,
+            PathTranslation.Trans trObj = PathTranslation.bestTranslationObj(compiled, gf, pBase,
                     transDomain[0], transDomain[1], transDomain[2], transDomain[3], 0, true);
             double sX = sc.startPos.x + trObj.tx;
             double sZ = sc.startPos.z + trObj.tz;
@@ -719,7 +720,7 @@ public class MiqcpClose {
     private static double translatedViol(ExactJumpModel model, JumpPhysicsInputs sc,
                                          JumpConstraintCompiler.Compiled compiled, double[] gf, double[] transDomain) {
         ForwardPath p = model.forward(sc, gf);
-        SnapRepairPolish.Trans tr = SnapRepairPolish.bestTranslation(compiled, gf, p,
+        PathTranslation.Trans tr = PathTranslation.bestTranslation(compiled, gf, p,
                 transDomain[0], transDomain[1], transDomain[2], transDomain[3]);
         return tr.viol;
     }
@@ -1053,7 +1054,7 @@ public class MiqcpClose {
                     addErr = Math.max(addErr, Math.abs(meas - pred));
                 }
             }
-            SnapRepairPolish.Trans tr = SnapRepairPolish.bestTranslation(compiled, gf, p,
+            PathTranslation.Trans tr = PathTranslation.bestTranslation(compiled, gf, p,
                     transDomain[0], transDomain[1], transDomain[2], transDomain[3]);
             emit(rep, String.format(Locale.ROOT,
                     "sol[%02d] k=%d milpMinSlack=%+.9e translatedViol=%.9e additivityMaxErr(untranslated evals)=%.3e",
@@ -1069,7 +1070,7 @@ public class MiqcpClose {
             emit(rep, "no solutions to verify");
         } else {
             ForwardPath pB = model.forward(sc, bestGf);
-            SnapRepairPolish.Trans trMin = SnapRepairPolish.bestTranslation(compiled, bestGf, pB,
+            PathTranslation.Trans trMin = PathTranslation.bestTranslation(compiled, bestGf, pB,
                     transDomain[0], transDomain[1], transDomain[2], transDomain[3]);
             double startX = sc.startPos.x + trMin.tx;
             double startZ = sc.startPos.z + trMin.tz;
@@ -1086,7 +1087,7 @@ public class MiqcpClose {
                 persistSnapPoint(repoFile(ILS_POINT).getPath(), bestGf, trMin.tx, trMin.tz, reViol, objX);
                 emit(rep, "");
                 emit(rep, "*** RUNG 5.375 REACHED viol<=0 VIA MOVE-MILP: FIRST KNOWN SOLVE ***");
-                SnapRepairPolish.Trans trObj = SnapRepairPolish.bestTranslationObj(compiled, bestGf, pB,
+                PathTranslation.Trans trObj = PathTranslation.bestTranslationObj(compiled, bestGf, pB,
                         transDomain[0], transDomain[1], transDomain[2], transDomain[3], 0, true);
                 double sX = sc.startPos.x + trObj.tx;
                 double sZ = sc.startPos.z + trObj.tz;
@@ -1211,7 +1212,7 @@ public class MiqcpClose {
         }
 
         ForwardPath pB = model.forward(sc, best);
-        SnapRepairPolish.Trans tO = SnapRepairPolish.bestTranslationObj(legal, best, pB,
+        PathTranslation.Trans tO = PathTranslation.bestTranslationObj(legal, best, pB,
                 dom[0], dom[1], dom[2], dom[3], 0, true);
         double objX = pB.getPos(objTick, spec.objective.axis) + tO.tx;
         double shortfall = padRhs - objX;
@@ -1249,9 +1250,9 @@ public class MiqcpClose {
                                      JumpConstraintCompiler.Compiled legal, double[] gf, double[] dom,
                                      int objTick, double padRhs) {
         ForwardPath p = model.forward(sc, gf);
-        SnapRepairPolish.Trans tf = SnapRepairPolish.bestTranslation(legal, gf, p, dom[0], dom[1], dom[2], dom[3]);
+        PathTranslation.Trans tf = PathTranslation.bestTranslation(legal, gf, p, dom[0], dom[1], dom[2], dom[3]);
         if (tf.viol > 0.0) return 1.0e6 + tf.viol;
-        SnapRepairPolish.Trans to = SnapRepairPolish.bestTranslationObj(legal, gf, p,
+        PathTranslation.Trans to = PathTranslation.bestTranslationObj(legal, gf, p,
                 dom[0], dom[1], dom[2], dom[3], 0, true);
         if (to.viol > 0.0) return 1.0e6 + to.viol;
         return padRhs - (p.getPos(objTick, spec.objective.axis) + to.tx);
@@ -1285,7 +1286,7 @@ public class MiqcpClose {
         for (int i = 0; i < gfj.size(); i++) gf[i] = gfj.get(i).getAsDouble();
 
         ForwardPath p0 = model.forward(sc, gf);
-        SnapRepairPolish.Trans tr = SnapRepairPolish.bestTranslation(compiled, gf, p0,
+        PathTranslation.Trans tr = PathTranslation.bestTranslation(compiled, gf, p0,
                 transDomain[0], transDomain[1], transDomain[2], transDomain[3]);
         double startX = sc.startPos.x + tr.tx;
         double startZ = sc.startPos.z + tr.tz;
@@ -1457,7 +1458,7 @@ public class MiqcpClose {
                 tripleEvals, tripleMs, bestViol, curViol, bestViol < curViol, bestDesc));
         if (bestViol < curViol) {
             ForwardPath pBest = model.forward(sc, bestGf);
-            SnapRepairPolish.Trans trB = SnapRepairPolish.bestTranslation(compiled, bestGf, pBest,
+            PathTranslation.Trans trB = PathTranslation.bestTranslation(compiled, bestGf, pBest,
                     transDomain[0], transDomain[1], transDomain[2], transDomain[3]);
             ForwardPath fpB = forwardAt(model, sc, bestGf, sc.startPos.x + trB.tx, sc.startPos.z + trB.tz);
             double objB = fpB.getPos(spec.objective.tick, spec.objective.axis);

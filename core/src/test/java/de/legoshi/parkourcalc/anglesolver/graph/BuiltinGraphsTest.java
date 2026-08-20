@@ -27,7 +27,6 @@ public class BuiltinGraphsTest {
         assertEquals("FIRST_FEASIBLE", g.node("rescueBnb").params.getString("mode"));
         assertEquals(3, g.node("rescueBnb").params.getInt("budgetSec"));
         assertNull(g.node("raceColdFull"));
-        assertEquals(240, g.node("momentum").params.getInt("budgetSec"));
         assertEquals(20, g.node("freeImprove").params.getInt("budgetSec"));
     }
 

@@ -231,38 +231,6 @@ public class EngineFileScreen {
             return;
         }
 
-        if ("1".equals(System.getenv("PKC_ASSEMBLY")) && pre != null) {
-            de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec augSpec = padAugmented(pre);
-            de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs sc = augSpec.asScenario();
-            de.legoshi.parkourcalc.core.anglesolver.solver.MomentumAssembly.Config mc =
-                    new de.legoshi.parkourcalc.core.anglesolver.solver.MomentumAssembly.Config();
-            int asmSecs = envInt("PKC_ASM_SECS", 600);
-            mc.perCandidateSec = envInt("PKC_ASM_CAND_SECS", 120);
-            mc.templateTries = envInt("PKC_ASM_TRIES", 6);
-            mc.frontierTries = envInt("PKC_ASM_TRIES", 6);
-            de.legoshi.parkourcalc.core.anglesolver.solver.StartBox fb =
-                    sc.startBox != null && sc.startBox.startFree() ? sc.startBox : null;
-            long a0 = System.nanoTime();
-            de.legoshi.parkourcalc.core.anglesolver.solver.MomentumAssembly.Result ar =
-                    de.legoshi.parkourcalc.core.anglesolver.solver.MomentumAssembly.solve(
-                            model, augSpec, 0.0, fb, a0 + asmSecs * 1_000_000_000L,
-                            new java.util.concurrent.atomic.AtomicBoolean(false), mc);
-            long aMs = (System.nanoTime() - a0) / 1_000_000L;
-            if (ar == null) {
-                System.out.printf("ASSEMBLY null ms=%d%n", aMs);
-            } else {
-                double[] agf = sc.toGameFacings(ar.yaws);
-                de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath ap = model.forward(sc, agf);
-                double av = de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler
-                        .compile(augSpec).maxViolation(agf, ap);
-                double ao = ap.getPos(pre.objective.tick, pre.objective.axis);
-                System.out.printf("ASSEMBLY viol=%.6e obj=%.9f start=(%.5f,%.5f) ms=%d%n",
-                        av, ao, ar.startX, ar.startZ, aMs);
-                dumpVec("ASSEMBLYYAWS", ar.yaws, state.getStartTick());
-            }
-            return;
-        }
-
         if ("1".equals(System.getenv("PKC_BNB")) && pre != null) {
             int bnbSecs = envInt("PKC_BNB_SECS", 600);
             de.legoshi.parkourcalc.core.anglesolver.solver.BoundPrunedRecovery.Config bc =

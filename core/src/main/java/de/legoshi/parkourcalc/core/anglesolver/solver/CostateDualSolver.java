@@ -75,6 +75,8 @@ public final class CostateDualSolver {
     private final double[] dir;        // search direction [m]
     private final double[] ngx, ngz;   // candidate costates
     private final int[] freeIdx;       // free-set indices
+    private final double[] wOverNrm;   // per-tick m_t/‖g_t‖ for the Hessian build
+    private final double[] gxHat, gzHat; // per-tick ĝ components for the Hessian build
     private final double[][] H;        // free-set Hessian
     private final double[][] Lwork;    // Cholesky factor of (H + damp·I)
     private final double[] step;       // damped-Newton step on the free set
@@ -122,6 +124,9 @@ public final class CostateDualSolver {
         this.H = new double[m][m];
         this.Lwork = new double[m][m];
         this.step = new double[m];
+        this.wOverNrm = new double[n];
+        this.gxHat = new double[n];
+        this.gzHat = new double[n];
     }
 
     /** Result: the per-tick costate directions {@code (gx,gz)} (recover the yaw from these), the dual
@@ -419,27 +424,38 @@ public final class CostateDualSolver {
 
     /** Free-set Hessian H_{ab} = Σ_t (m_t/‖g_t‖)·coef_i·coef_j·([axis equal] − ĝ_i·ĝ_j), i=free[a], j=free[b]. */
     private void buildHessian(int nf) {
+        double curvX = 0.0;
+        double curvZ = 0.0;
+        if (freeP0 != null) {
+            curvX = supportCurv(hAxis(lambda, 0), 0);
+            curvZ = supportCurv(hAxis(lambda, 1), 1);
+        }
+        for (int t = 0; t < n; t++) {
+            double gxx = gx[t], gzz = gz[t];
+            double nrm = Math.sqrt(gxx * gxx + gzz * gzz + EPS2);
+            wOverNrm[t] = mMag[t] / nrm;
+            gxHat[t] = gxx / nrm;
+            gzHat[t] = gzz / nrm;
+        }
         for (int a = 0; a < nf; a++) {
             int i = freeIdx[a];
             double[] ci = coef[i];
             int ai = axis[i];
+            double[] hatI = ai == 0 ? gxHat : gzHat;
             for (int b = a; b < nf; b++) {
                 int j = freeIdx[b];
                 double[] cj = coef[j];
                 int aj = axis[j];
                 boolean sameAxis = (ai == aj);
+                double[] hatJ = aj == 0 ? gxHat : gzHat;
                 double sum = 0.0;
                 for (int t = 0; t < n; t++) {
                     double cc = ci[t] * cj[t];
                     if (cc == 0.0) continue;
-                    double gxx = gx[t], gzz = gz[t];
-                    double nrm = Math.sqrt(gxx * gxx + gzz * gzz + EPS2);
-                    double hi = (ai == 0 ? gxx : gzz) / nrm;
-                    double hj = (aj == 0 ? gxx : gzz) / nrm;
-                    sum += (mMag[t] / nrm) * cc * ((sameAxis ? 1.0 : 0.0) - hi * hj);
+                    sum += wOverNrm[t] * cc * ((sameAxis ? 1.0 : 0.0) - hatI[t] * hatJ[t]);
                 }
                 if (freeP0 != null && sameAxis) {
-                    sum += p0coef[i] * p0coef[j] * supportCurv(hAxis(lambda, ai), ai);
+                    sum += p0coef[i] * p0coef[j] * (ai == 0 ? curvX : curvZ);
                 }
                 H[a][b] = sum;
                 H[b][a] = sum;

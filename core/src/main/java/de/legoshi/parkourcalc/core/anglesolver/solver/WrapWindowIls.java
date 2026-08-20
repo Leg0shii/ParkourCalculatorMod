@@ -487,17 +487,17 @@ public final class WrapWindowIls {
         if (st.evalCap > 0 && st.evals >= st.evalCap) st.hitCap = true;
         ForwardPath p = model.forward(sc, gf);
         if (cfg.legalObjective == null) {
-            SnapRepairPolish.Trans tr = SnapRepairPolish.bestTranslation(compiled, gf, p,
+            PathTranslation.Trans tr = PathTranslation.bestTranslation(compiled, gf, p,
                     transDomain[0], transDomain[1], transDomain[2], transDomain[3]);
             return tr.viol;
         }
-        SnapRepairPolish.Trans tf = SnapRepairPolish.bestTranslation(compiled, gf, p,
+        PathTranslation.Trans tf = PathTranslation.bestTranslation(compiled, gf, p,
                 transDomain[0], transDomain[1], transDomain[2], transDomain[3]);
         if (tf.viol > 0.0) return LEGAL_HARD_INFEASIBLE + tf.viol;
         Objective obj = cfg.legalObjective;
         boolean objX = obj.axis == JumpPhysicsInputs.Axis.X;
         boolean max = obj.sense == Objective.Sense.MAX;
-        SnapRepairPolish.Trans to = SnapRepairPolish.bestTranslationObj(compiled, gf, p,
+        PathTranslation.Trans to = PathTranslation.bestTranslationObj(compiled, gf, p,
                 transDomain[0], transDomain[1], transDomain[2], transDomain[3], objX ? 0 : 1, max);
         if (to.viol > 0.0) return LEGAL_HARD_INFEASIBLE + to.viol;
         double achieved = p.getPos(obj.tick, obj.axis) + (objX ? to.tx : to.tz);
