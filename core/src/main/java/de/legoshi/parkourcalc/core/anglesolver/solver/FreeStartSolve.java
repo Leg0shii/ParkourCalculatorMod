@@ -24,7 +24,7 @@ public final class FreeStartSolve {
         public double jointPatternViolGate = 0.25;
         public double jointMarginMax = 0.25;
         public int jointBisectIters = 8;
-        public double jointWrapCloseGate = 0.05;
+        public double jointWrapCloseGate = 0.01;
         public boolean jointWrapClose = true;
     }
 

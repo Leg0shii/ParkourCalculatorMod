@@ -200,9 +200,6 @@ public class RunMatrixScreen {
             s.setEffort(AngleSolverState.Effort.CUSTOM);
             s.setStopOnFeasible(false);
             AngleSolverState.SolveBudget b = s.getSolveBudget();
-            b.setRestarts(16);
-            b.setMaxEval(4500);
-            b.setPolishCount(2);
             b.setUseWindowSolver(true);
             b.setIlsExhaustive(true);
             b.setTimeBudgetSeconds(30);
@@ -211,10 +208,6 @@ public class RunMatrixScreen {
             s.setEffort(AngleSolverState.Effort.CUSTOM);
             s.setStopOnFeasible(false);
             AngleSolverState.SolveBudget b = s.getSolveBudget();
-            b.setRestarts(32);
-            b.setMaxEval(9000);
-            b.setPolishCount(4);
-            b.setPolishDepth(AngleSolverState.PolishDepth.EXHAUSTIVE);
             b.setUseWindowSolver(true);
             b.setIlsExhaustive(false);
             b.setTimeBudgetSeconds(60);

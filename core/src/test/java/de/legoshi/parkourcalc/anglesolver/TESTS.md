@@ -20,6 +20,12 @@ anglesolver/
                            hand-pattern probes); skipped unless PKC_SCREENS is set
   HpkEngineBench.java      manual engine bench over captures/hpk/; PKC_BENCH=1 to run, PKC_BENCH_EXH,
                            PKC_BENCH_FILTER, PKC_BENCH_TAG, PKC_BENCH_TIMEOUT_MS tune it
+  FreeStartSweepBench.java manual free-start sweep over captures/hpk/ (synthesized tick-0 box, base +
+                           (+2.3,+1.7)-shifted seed variants, FAST, per-node timing from the run
+                           record); -Dpkc.sweep=1 to run, -Dpkc.sweep.{tag,variants,filter,timeoutMs,
+                           trace} tune it (or PKC_SWEEP-style env); report at build/reports/sweep-<tag>.txt.
+                           Run via direct java -cp <test classpath> (PKC_* env does not reach a warm
+                           gradle daemon's test JVM)
   EngineFileScreen.java    drive the live engine on any save file headlessly; PKC_SOLVE_FILE=<path>,
                            optional PKC_SOLVE_EFFORT and PKC_SOLVE_TIMEOUT_MS
   RunMatrixScreen.java     (preset x problem) run matrix over problems/solve + problems/closedform,

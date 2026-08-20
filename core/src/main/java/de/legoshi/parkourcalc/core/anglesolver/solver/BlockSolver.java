@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * <p>Inner solves go through a swappable {@link InnerSolve} strategy. The planner runs first with the
  * microsecond closed-form ({@link ClosedFormSolve}); if that pass cannot produce a clean+landed result it
- * re-runs with the proven CMA-ES multistart, so the fast path can only ever speed solving up, never
+ * re-runs with the warm-started SLP, so the fast path can only ever speed solving up, never
  * regress it. (The closed form returns null on an infeasible trial constraint set, which the search treats
  * as "skip this candidate" rather than a hard failure, exactly the prune signal a routing search wants.)
  */

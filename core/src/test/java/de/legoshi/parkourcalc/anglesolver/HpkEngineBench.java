@@ -78,9 +78,6 @@ public class HpkEngineBench {
         if (System.getenv("PKC_BENCH_EXH") != null) {
             state.setEffort(AngleSolverState.Effort.CUSTOM);
             AngleSolverState.SolveBudget b = state.getSolveBudget();
-            b.setRestarts(16);
-            b.setMaxEval(4500);
-            b.setPolishCount(2);
             b.setUseWindowSolver(true);
             b.setIlsExhaustive(true);
             b.setTimeBudgetSeconds(30);
@@ -131,7 +128,6 @@ public class HpkEngineBench {
         }
         if (s == null) return "-";
         if (s.contains("relaxation")) return "relax";
-        if (s.contains("CMA")) return "cmaes";
         if (s.contains("reseeded")) return "slp-alt";
         if (s.contains("SLP")) return "slp";
         if (s.contains("closed")) return "closed";

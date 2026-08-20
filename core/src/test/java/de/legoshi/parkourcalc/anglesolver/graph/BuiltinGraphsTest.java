@@ -69,7 +69,7 @@ public class BuiltinGraphsTest {
 
     @Test
     public void customWithStopOnFeasibleAndExhaustiveKeepsWrapButNoExhaustiveBlock() {
-        SolverGraph g = BuiltinGraphs.fromBudget(true, true, true, true, 10, 3, 60);
+        SolverGraph g = BuiltinGraphs.fromBudget(true, true, true, 10, 3, 60);
         assertFalse(GraphValidator.hasErrors(GraphValidator.validate(g)));
         assertNotNull(g.node("rescueBnb"));
         assertNotNull(g.node("wrap"));
@@ -80,7 +80,7 @@ public class BuiltinGraphsTest {
 
     @Test
     public void customWithoutWindowSolverHasNoHorizonOrPeel() {
-        SolverGraph g = BuiltinGraphs.fromBudget(false, false, false, false, 10, 3, 0);
+        SolverGraph g = BuiltinGraphs.fromBudget(false, false, false, 10, 3, 0);
         assertFalse(GraphValidator.hasErrors(GraphValidator.validate(g)));
         assertNull(g.node("horizon"));
         assertNull(g.node("peel"));
