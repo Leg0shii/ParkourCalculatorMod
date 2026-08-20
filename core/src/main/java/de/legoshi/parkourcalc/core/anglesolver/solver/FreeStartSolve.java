@@ -446,8 +446,12 @@ public final class FreeStartSolve {
 
         double bestViol = Double.POSITIVE_INFINITY;
         double[] bestYaws = null;
-        for (double frac : JOINT_RECOVERY_FRACTIONS) {
-            double margin = tStar * frac;
+        double[] margins = new double[JOINT_RECOVERY_FRACTIONS.length + cfg.jointMargins.length];
+        int marginCount = 0;
+        for (double frac : JOINT_RECOVERY_FRACTIONS) margins[marginCount++] = tStar * frac;
+        for (double m : cfg.jointMargins) if (m > 0.0 && m <= tStar) margins[marginCount++] = m;
+        for (int mi = 0; mi < marginCount; mi++) {
+            double margin = margins[mi];
             if (cancel != null && cancel.get()) return null;
             CostateDualSolver.Result r = solver.solve(margin, warm);
             if (r == null || solver.lastStalled) continue;
