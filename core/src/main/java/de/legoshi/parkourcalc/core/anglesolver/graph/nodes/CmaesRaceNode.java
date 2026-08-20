@@ -12,6 +12,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.BucketAscentPolish;
 import de.legoshi.parkourcalc.core.anglesolver.solver.CmaesJumpHarness;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolveCore;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
+import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -55,9 +56,19 @@ public final class CmaesRaceNode implements NodeRuntime {
             SolverTrace.log("ENGINE", "race start warm=%s deadlineMs=%d", warm != null,
                     deadlineNanos > 0 ? (deadlineNanos - System.nanoTime()) / 1_000_000L : -1);
         }
-        double[] cma = SolveCore.optimize(counting, ctx.spec, budget, sigmaDeg, ctx.feasTol, nodeToken,
-                warm, deadlineNanos, ctx.sequential, ctx.progress);
-        if (SolverTrace.on()) SolverTrace.log("ENGINE", "race end %s", cma != null ? "solved" : "miss");
+        StartBox savedBox = ctx.scenario.startBox;
+        if (ctx.freeBox != null) ctx.scenario.startBox = ctx.freeBox;
+        double[] cma;
+        try {
+            cma = SolveCore.optimize(counting, ctx.spec, budget, sigmaDeg, ctx.feasTol, nodeToken,
+                    warm, deadlineNanos, ctx.sequential, ctx.progress);
+        } finally {
+            ctx.scenario.startBox = savedBox;
+        }
+        if (SolverTrace.on()) {
+            SolverTrace.log("ENGINE", "race end %s", cma == null ? "miss"
+                    : ctx.scoredViol(cma) <= ctx.feasTol ? "solved" : "near miss");
+        }
         ctx.cmaesEvals.addAndGet(counting.evals());
         if (in == null || in.yaws == null) {
             ctx.chainAppend("CMA-ES");
