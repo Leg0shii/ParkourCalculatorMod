@@ -96,6 +96,32 @@ public final class FreeStartSolve {
             p0x = nx;
             p0z = nz;
         }
+        return slpAnchorGrid(exact, spec, base, box, feasTol, cancel);
+    }
+
+    private static final double[] ANCHOR_GRID_FRACTIONS = {0.5, 0.25, 0.75, 0.0, 1.0};
+
+    private static Result slpAnchorGrid(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs base, StartBox box,
+                                        double feasTol, AtomicBoolean cancel) {
+        double seedX = clamp(box.px, box.pxLo, box.pxHi);
+        double seedZ = clamp(box.pz, box.pzLo, box.pzHi);
+        for (double fx : ANCHOR_GRID_FRACTIONS) {
+            for (double fz : ANCHOR_GRID_FRACTIONS) {
+                if (cancel != null && cancel.get()) return null;
+                double px = box.pxLo + (box.pxHi - box.pxLo) * fx;
+                double pz = box.pzLo + (box.pzHi - box.pzLo) * fz;
+                if (Math.abs(px - seedX) < 1.0e-9 && Math.abs(pz - seedZ) < 1.0e-9) continue;
+                JumpSpec at = specAtStart(base, spec, px, pz);
+                double[] yaws = SlpSolve.optimize(exact, at, feasTol, cancel);
+                if (yaws != null && violationAt(exact, spec, yaws, px, pz) <= feasTol) {
+                    if (SolverTrace.on()) {
+                        SolverTrace.log("FREE", "anchor grid solved at (%.4f,%.4f)", px, pz);
+                    }
+                    return new Result(Angles.wrapAll(yaws.clone()), px, pz, true);
+                }
+            }
+        }
+        if (SolverTrace.on()) SolverTrace.log("FREE", "anchor grid miss");
         return null;
     }
 
