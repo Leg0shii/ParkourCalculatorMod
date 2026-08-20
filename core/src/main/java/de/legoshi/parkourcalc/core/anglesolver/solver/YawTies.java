@@ -14,18 +14,28 @@ public final class YawTies {
     private final double[] offset;
     private final double[] pinYaw;
     private final int[] repTick;
+    private final int[] group;
 
-    private YawTies(int n, int dims, int[] varOf, double[] offset, double[] pinYaw, int[] repTick) {
+    private YawTies(int n, int dims, int[] varOf, double[] offset, double[] pinYaw, int[] repTick, int[] group) {
         this.n = n;
         this.dims = dims;
         this.varOf = varOf;
         this.offset = offset;
         this.pinYaw = pinYaw;
         this.repTick = repTick;
+        this.group = group;
     }
 
     public int dims() {
         return dims;
+    }
+
+    public int varOf(int t) {
+        return varOf[t];
+    }
+
+    public int groupOf(int t) {
+        return group[t];
     }
 
     public int fullLength() {
@@ -142,7 +152,7 @@ public final class YawTies {
             varOf[t] = v;
         }
         if (dims == n) return null;
-        return new YawTies(n, dims, varOf, offset, pinYaw, Arrays.copyOf(rep, dims));
+        return new YawTies(n, dims, varOf, offset, pinYaw, Arrays.copyOf(rep, dims), group);
     }
 
     private static void tighten(double[] lo, double[] hi, int t, JumpConstraint.Cmp cmp, double rhs) {
