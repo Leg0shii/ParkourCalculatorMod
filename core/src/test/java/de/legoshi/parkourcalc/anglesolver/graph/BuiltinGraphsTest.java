@@ -92,6 +92,6 @@ public class BuiltinGraphsTest {
         SolverGraph g = BuiltinGraphs.fast();
         assertEquals("settledMark", g.edgeFor("rWarmTicks", Guarantee.FALSE).toNode);
         assertEquals("repSkip", g.edgeFor("settledMark", Guarantee.DONE).toNode);
-        assertEquals("rMomGate", g.edgeFor("repSkip", Guarantee.DONE).toNode);
+        assertEquals("rImproveFeas", g.edgeFor("repSkip", Guarantee.DONE).toNode);
     }
 }

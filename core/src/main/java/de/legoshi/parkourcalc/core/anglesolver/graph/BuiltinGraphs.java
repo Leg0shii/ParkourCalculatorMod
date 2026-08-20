@@ -62,7 +62,7 @@ public final class BuiltinGraphs {
         int bnbSec = Math.max(1, (tp - sweepSec) * 3 / 4);
         int ilsSec = Math.max(1, tp - sweepSec - bnbSec);
         int nearBnbSec = Math.max(1, Math.min(60, tp / 2));
-        String coldEntry = sof ? "rMomGate" : "rFree";
+        String coldEntry = sof ? "rImproveFeas" : "rFree";
         String afterFree = sof ? "rRescueTicks" : "rHave";
         String afterCap = exh ? "rExhTicks" : (ilx ? "rWrapEps" : "rTrans");
 
@@ -86,7 +86,7 @@ public final class BuiltinGraphs {
         g.add("repA", "report");
         g.add("repWarm", "report");
         g.add("repSkip", "report");
-        if (sof) router(g, "rMomGate", "CANDIDATE_FEASIBLE_SCORED");
+        if (sof) router(g, "rImproveFeas", "CANDIDATE_FEASIBLE_SCORED");
         router(g, "rFree", "HAS_FREE_START");
         g.add("freeImprove", "freeStartImprove")
                 .set("freeImprove", "budgetSec", freeSec);
@@ -199,8 +199,8 @@ public final class BuiltinGraphs {
             g.edge("rFeasFastCold", Guarantee.TRUE, "lblFF");
             g.edge("rFeasFastCold", Guarantee.FALSE, "rEarlyFree");
             g.edge("rFeasFastWarm", Guarantee.TRUE, "lblFF");
-            g.edge("rFeasFastWarm", Guarantee.FALSE, "rMomGate");
-            g.edge("lblFF", Guarantee.DONE, "rMomGate");
+            g.edge("rFeasFastWarm", Guarantee.FALSE, "rImproveFeas");
+            g.edge("lblFF", Guarantee.DONE, "rImproveFeas");
             g.edge("freeRescue", Guarantee.IMPROVED, "lblFF");
         } else {
             g.edge("rEarlyFeas", Guarantee.TRUE, coldEntry);
@@ -211,8 +211,8 @@ public final class BuiltinGraphs {
         g.edge("rEarlyFree", Guarantee.FALSE, coldEntry);
         g.edge("freeRescue", Guarantee.UNCHANGED, coldEntry);
         if (sof) {
-            g.edge("rMomGate", Guarantee.TRUE, afterFree);
-            g.edge("rMomGate", Guarantee.FALSE, "rFree");
+            g.edge("rImproveFeas", Guarantee.TRUE, afterFree);
+            g.edge("rImproveFeas", Guarantee.FALSE, "rFree");
         }
         g.edge("rFree", Guarantee.TRUE, "freeImprove");
         g.edge("rFree", Guarantee.FALSE, afterFree);
