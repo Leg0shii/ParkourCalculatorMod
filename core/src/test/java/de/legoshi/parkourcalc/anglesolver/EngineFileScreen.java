@@ -34,10 +34,6 @@ public class EngineFileScreen {
             AngleSolverState.SolveBudget b = state.getSolveBudget();
             b.setUseWindowSolver(false);
             b.setIlsExhaustive(true);
-            b.setPolishDepth(AngleSolverState.PolishDepth.EXHAUSTIVE);
-            b.setRestarts(16);
-            b.setMaxEval(4500);
-            b.setPolishCount(4);
             b.setTimeBudgetSeconds(System.getenv("PKC_FREE_SECS") != null
                     ? Integer.parseInt(System.getenv("PKC_FREE_SECS")) : 90);
         }

@@ -47,7 +47,7 @@ public final class BuiltinGraphs {
         return g.build();
     }
 
-    public static SolverGraph fromBudget(boolean exhaustiveDepth, boolean stopOnFeasible, boolean ilsExhaustive,
+    public static SolverGraph fromBudget(boolean stopOnFeasible, boolean ilsExhaustive,
                                          boolean useWindowSolver, int window, int commit, int timeBudgetSeconds) {
         return build("Custom", stopOnFeasible, ilsExhaustive, useWindowSolver, window, commit, timeBudgetSeconds);
     }
@@ -168,7 +168,7 @@ public final class BuiltinGraphs {
             g.add("horizon", "recedingHorizon")
                     .set("horizon", "window", window)
                     .set("horizon", "commit", commit);
-            router(g, "rChainTicks", "TICKS_LE_CAP");
+            if (!sof) router(g, "rChainTicks", "TICKS_LE_CAP");
             g.add("peel", "setupPeel")
                     .set("peel", "budgetSec", peelSec)
                     .set("peel", "candidateMs", 600)
@@ -185,10 +185,12 @@ public final class BuiltinGraphs {
         g.edge("cap1", Guarantee.AT_CAP, "repSkip");
         g.edge("cap1", Guarantee.FALSE, "repA");
         if (win) {
-            g.edge("horizon", Guarantee.FOUND, "rChainTicks");
+            g.edge("horizon", Guarantee.FOUND, sof ? "wrap0" : "rChainTicks");
             g.edge("horizon", Guarantee.NONE, "seedMulti");
-            g.edge("rChainTicks", Guarantee.TRUE, "seedMulti");
-            g.edge("rChainTicks", Guarantee.FALSE, "wrap0");
+            if (!sof) {
+                g.edge("rChainTicks", Guarantee.TRUE, "seedMulti");
+                g.edge("rChainTicks", Guarantee.FALSE, "wrap0");
+            }
             g.edge("peel", Guarantee.FOUND, "wrap0");
             g.edge("peel", Guarantee.NONE, "repA");
         }
@@ -217,7 +219,7 @@ public final class BuiltinGraphs {
         g.edge("rEarlyFree", Guarantee.TRUE, "freeRescue");
         g.edge("rEarlyFree", Guarantee.FALSE, coldEntry);
         g.edge("freeRescue", Guarantee.UNCHANGED, coldEntry);
-        g.edge("rMomGate", Guarantee.TRUE, "rFree");
+        g.edge("rMomGate", Guarantee.TRUE, sof ? afterFree : "rFree");
         g.edge("rMomGate", Guarantee.FALSE, "momentum");
         g.edge("momentum", Guarantee.FOUND, "rFree");
         g.edge("momentum", Guarantee.NONE, "rFree");

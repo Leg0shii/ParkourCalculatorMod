@@ -50,7 +50,7 @@ import java.util.function.IntConsumer;
 /** Bridges the Angle Solver UI to the byte-exact jump model and back into the live TAS.
  *
  * <p>Threading: {@link #solve()} snapshots the whole problem on the caller (main) thread into an
- * immutable {@link Job}, then runs the multistart solve on a daemon thread so the game never stalls.
+ * immutable {@link Job}, then runs the solve on a daemon thread so the game never stalls.
  * The worker touches only the snapshot, never live state. {@link #poll()} (called each frame on the
  * main thread) publishes a finished result into {@link AngleSolverState}. {@link #apply()} folds the
  * solved facings back into the rows and retriggers the sim.
@@ -66,10 +66,6 @@ public final class AngleSolverEngine {
     /** EQ corridor half-width and met-reporting slack (docs/research/angle-solver.md 3.1). */
     private static final double MET_TOL = 1.0e-4;
 
-    /** CMA-ES initial step (deg). With the wider-than-one-turn search bounds the global basin is a
-     *  single continuous region, so a moderate sigma finds it in a handful of restarts. Only one strafe
-     *  sign is solved: A and D are mirror-symmetric (flip the sign and shift air-tick facings by 90deg
-     *  for an identical trajectory), so the optimal objective is the same either way. */
     private static final long RELAX_MIN_REMAINING_NANOS = 3_000_000_000L;
 
     static long deadlineNanosFor(AngleSolverState state) {
@@ -218,7 +214,6 @@ public final class AngleSolverEngine {
         if (ctx != null) {
             r.nodes = SolveRunRecord.nodeRunsOf(ctx.runState.statuses());
             SolveRunRecord.Counters counters = new SolveRunRecord.Counters();
-            counters.cmaesEvals = ctx.cmaesEvals.get();
             counters.smoothingEvals = ctx.smoothingEvals.get();
             r.counters = counters;
         }

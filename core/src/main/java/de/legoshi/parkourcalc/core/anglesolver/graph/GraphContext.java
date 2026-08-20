@@ -29,7 +29,6 @@ public final class GraphContext {
     public final GraphRunState runState = new GraphRunState();
     public final boolean sequential;
     public final LongRunSolver.LongRunConfig longRun;
-    public final AtomicLong cmaesEvals = new AtomicLong();
     public final AtomicLong smoothingEvals = new AtomicLong();
 
     private final BudgetWatchdog watchdog;
@@ -157,7 +156,7 @@ public final class GraphContext {
         currentNode = node;
         AtomicBoolean token = watchdog.arm(deadlineNanos);
         currentToken = token;
-        evalsAtNodeStart = cmaesEvals.get() + smoothingEvals.get();
+        evalsAtNodeStart = smoothingEvals.get();
         runState.begin(node.id, node.type.label, budgetNanos);
         return token;
     }
@@ -166,7 +165,7 @@ public final class GraphContext {
         watchdog.disarm();
         currentToken = null;
         currentNode = null;
-        runState.end(node.id, taken, cmaesEvals.get() + smoothingEvals.get() - evalsAtNodeStart);
+        runState.end(node.id, taken, smoothingEvals.get() - evalsAtNodeStart);
     }
 
     public boolean advance() {

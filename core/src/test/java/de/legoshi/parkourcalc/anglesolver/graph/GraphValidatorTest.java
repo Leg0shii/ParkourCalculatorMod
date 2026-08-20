@@ -35,8 +35,8 @@ public class GraphValidatorTest {
                 BuiltinGraphs.fast(),
                 BuiltinGraphs.optimize(10),
                 BuiltinGraphs.optimize(600),
-                BuiltinGraphs.fromBudget(false, true, true, true, 10, 3, 0),
-                BuiltinGraphs.fromBudget(true, false, false, false, 8, 2, 30)}) {
+                BuiltinGraphs.fromBudget(true, true, true, 10, 3, 0),
+                BuiltinGraphs.fromBudget(false, false, false, 8, 2, 30)}) {
             List<ValidationIssue> issues = GraphValidator.validate(g);
             assertFalse(g.name + ": " + issues, GraphValidator.hasErrors(issues));
         }
