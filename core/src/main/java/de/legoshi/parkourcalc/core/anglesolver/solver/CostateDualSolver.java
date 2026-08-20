@@ -167,10 +167,12 @@ public final class CostateDualSolver {
     public int lastIters;
     /** Diagnostics: final projected-gradient residual of the last {@link #solve}. */
     public double lastPgres;
+    public boolean lastStalled;
 
     /** Minimize the dual with walls tightened inward by {@code margin}, warm-started from {@code warm}
      *  (null = cold, λ=0). Returns fresh arrays so the caller may keep them; internal state is reusable. */
     public Result solve(double margin, double[] warm) {
+        lastStalled = false;
         if (m == 0) {
             // No walls: the optimum is every input along the objective (costate = c). Closed form.
             double[] empty = new double[0];
@@ -203,7 +205,7 @@ public final class CostateDualSolver {
             // Early divergence bail (rationale at the DIVERGE_* constants).
             if (pgres < pgBest * (1.0 - DIVERGE_REL)) { pgBest = pgres; stall = 0; }
             else { if (pgres < pgBest) pgBest = pgres; stall++; }
-            if (pgBest > DIVERGE_PGRES && stall >= DIVERGE_STALL) break;
+            if (pgBest > DIVERGE_PGRES && stall >= DIVERGE_STALL) { lastStalled = true; break; }
 
             // Converge in costate space: at a degenerate optimum the multipliers λ keep wandering in the
             // null space of Aᵀ (pg never reaches 0), but the recovered inputs u*, all that the angles
