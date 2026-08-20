@@ -243,7 +243,7 @@ public final class FreeStartSolve {
                                            FacingPrefold.ChainScan scan, JointBest best, double feasTol,
                                            AtomicBoolean cancel, Config cfg) {
         if (best.yaws == null || Double.isNaN(best.theta)) return null;
-        if (best.viol > 0.05) return null;
+        if (best.viol > 0.15) return null;
         int n = refSc.numTicks;
         boolean[] open = new boolean[n];
         for (int t = 0; t < n; t++) open[t] = scan.openMember(t);
@@ -338,7 +338,10 @@ public final class FreeStartSolve {
                 inArc = ok;
             }
         }
-        if (arcs.isEmpty()) return new double[0];
+        if (arcs.isEmpty()) {
+            if (SolverTrace.on()) SolverTrace.log("FREE", "joint prefix arcs empty (chain<=%d)", lastOpen);
+            return new double[0];
+        }
 
         double total = 0.0;
         for (double[] arc : arcs) total += arc[1] - arc[0];
@@ -546,8 +549,8 @@ public final class FreeStartSolve {
         Objective obj = spec.objective;
         int objAxis = obj.axis == JumpPhysicsInputs.Axis.X ? 0 : 1;
         boolean max = obj.sense == Objective.Sense.MAX;
-        double dx = pickBest(loX, hiX, box.pxLo - box.px, box.pxHi - box.px, objAxis == 0, max);
-        double dz = pickBest(loZ, hiZ, box.pzLo - box.pz, box.pzHi - box.pz, objAxis == 1, max);
+        double dx = pickBest(loX, hiX, box.pxLo - path.posX[0], box.pxHi - path.posX[0], objAxis == 0, max);
+        double dz = pickBest(loZ, hiZ, box.pzLo - path.posZ[0], box.pzHi - path.posZ[0], objAxis == 1, max);
         return new double[] {dx, dz};
     }
 

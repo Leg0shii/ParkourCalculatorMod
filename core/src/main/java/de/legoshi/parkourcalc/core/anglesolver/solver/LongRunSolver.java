@@ -210,6 +210,10 @@ public final class LongRunSolver {
                             : new Objective(JumpPhysicsInputs.Axis.Z, Objective.Sense.MAX, c);
                     FreeStartSolve.Result fr = FreeStartSolve.solveJoint(
                             exact, new JumpSpec(freeSc, upTo, freeObj), 0.0, cancel);
+                    if (SolverTrace.on()) {
+                        SolverTrace.log("FREE", "window free retry we=%d cons=%d -> %s",
+                                we, upTo.size(), fr != null && fr.feasible ? "solved" : "miss");
+                    }
                     if (fr != null && fr.feasible) {
                         chosenStart[0] = fr.startX;
                         chosenStart[1] = fr.startZ;
