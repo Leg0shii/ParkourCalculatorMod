@@ -16,7 +16,6 @@ public final class NodeType {
     public final InputRequirement requires;
     public final List<Branch> branches;
     public final List<ParamSpec> params;
-    public final boolean advanceCapable;
     public final String budgetParam;
     public final Guarantee fallbackBranch;
     public final boolean entryMarker;
@@ -30,7 +29,6 @@ public final class NodeType {
         this.requires = b.requires;
         this.branches = Collections.unmodifiableList(new ArrayList<>(b.branches));
         this.params = Collections.unmodifiableList(new ArrayList<>(b.params));
-        this.advanceCapable = b.advanceCapable;
         this.budgetParam = b.budgetParam;
         this.fallbackBranch = b.fallbackBranch;
         this.entryMarker = b.entryMarker;
@@ -64,7 +62,6 @@ public final class NodeType {
         private InputRequirement requires = InputRequirement.ANY;
         private final List<Branch> branches = new ArrayList<>();
         private final List<ParamSpec> params = new ArrayList<>();
-        private boolean advanceCapable;
         private String budgetParam;
         private Guarantee fallbackBranch;
         private boolean entryMarker;
@@ -89,11 +86,6 @@ public final class NodeType {
 
         public Builder param(ParamSpec p) {
             params.add(p);
-            return this;
-        }
-
-        public Builder advance() {
-            this.advanceCapable = true;
             return this;
         }
 

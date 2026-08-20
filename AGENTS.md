@@ -41,7 +41,7 @@ The two Forge loaders are intentional duplicates: 1.8.9 and 1.12.2 have incompat
 | UI shell / theming | `core/.../ui/MainWindowOverlay.java`, `OverlayManager.java`, `ui/theme/ThemeManager.java` (Catppuccin Mocha), `Settings.java` |
 | Angle solver (core logic) | `core/.../anglesolver/AngleSolverEngine.java` (orchestrator), `AngleSolverState.java` |
 | Solver inner loop | `core/.../anglesolver/solver/ExactJumpModel.java` (byte-exact X/Z stepper), `McSineTable.java`, `Constants.java` |
-| Solver strategies | `solver/ClosedFormSolve.java` (fast convex), `SlpSolve.java` (linearized recovery), `LongRunSolver.java` (multi-jump), `BlockSolver.java` (obstacle avoidance) |
+| Solver strategies | `solver/ClosedFormSolve.java` (fast convex), `SlpSolve.java` (linearized recovery), `LongRunSolver.java` (multi-jump) |
 | Velocity finder | `core/.../anglesolver/velocity/VelocityFinder.java` (vx/vz sweep against a pad) |
 | Solver UI | `core/.../ui/anglesolver/AngleSolverWindow.java`, `AngleSolverTable.java`, `SolverWidgets.java` |
 | Constraint visualization | `core/.../render/ConstraintPlate.java`, `ConstraintShapes.java`; source `core/.../ui/anglesolver/AngleSolverConstraintSource.java` |

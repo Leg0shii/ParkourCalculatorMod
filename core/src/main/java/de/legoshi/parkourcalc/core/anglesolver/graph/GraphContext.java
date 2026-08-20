@@ -168,14 +168,6 @@ public final class GraphContext {
         runState.end(node.id, taken, smoothingEvals.get() - evalsAtNodeStart);
     }
 
-    public boolean advance() {
-        GraphNode n = currentNode;
-        AtomicBoolean t = currentToken;
-        if (n == null || t == null || !n.type.advanceCapable) return false;
-        t.set(true);
-        return true;
-    }
-
     void shutdown() {
         watchdog.shutdown();
     }
