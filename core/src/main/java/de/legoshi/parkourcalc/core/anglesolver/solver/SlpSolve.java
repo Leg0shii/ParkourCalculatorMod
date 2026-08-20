@@ -108,19 +108,18 @@ public final class SlpSolve {
         List<JumpConstraint> constraints = spec.constraints;
         JumpPhysicsInputs sc = spec.asScenario();
         YawTies ties = null;
-        List<JumpConstraint> yawIneq = new ArrayList<>();
         if (JumpLinearModel.hasFacingWall(constraints)) {
             ties = YawTies.of(constraints, sc.numTicks);
+            if (ties == null) return null; // not position-linear
             for (JumpConstraint c : constraints) {
                 if (c.mode != JumpConstraint.Mode.F) continue;
                 if (c.t1 < 0 || c.t1 >= sc.numTicks) continue;
                 boolean delta = c.t2 != null;
-                if (delta && !(c.op == JumpConstraint.Op.MINUS && c.t2 == c.t1 - 1 && c.t1 >= 1)) return null;
-                boolean absorbed = ties != null
-                        && (delta ? ties.groupOf(c.t1) == ties.groupOf(c.t1 - 1) : ties.varOf(c.t1) < 0);
-                if (absorbed) continue;
-                if (c.cmp == JumpConstraint.Cmp.EQ) return null;
-                yawIneq.add(c);
+                boolean absorbed = delta
+                        ? c.op == JumpConstraint.Op.MINUS && c.t2 == c.t1 - 1 && c.t1 >= 1
+                                && ties.groupOf(c.t1) == ties.groupOf(c.t1 - 1)
+                        : ties.varOf(c.t1) < 0;
+                if (!absorbed) return null; // not position-linear
             }
         }
         for (JumpConstraint c : constraints) {
@@ -141,9 +140,7 @@ public final class SlpSolve {
             if (trivialInfeasible[0]) return null; // a violated constant is unfixable
             if (w != null) { ineq.add(c); walls.add(w); }
         }
-        int mPos = walls.size();
-        ineq.addAll(yawIneq);
-        int m = ineq.size();
+        int m = walls.size();
         if (m == 0) return null; // nothing to restore; the closed form already handles the unconstrained case
 
         double[] cx = new double[n];
@@ -213,8 +210,8 @@ public final class SlpSolve {
                     List<JumpLinearModel.Wall> rebuilt = null;
                     if (anySet(zeroX) || anySet(zeroZ)) {
                         JumpLinearModel patterned = new JumpLinearModel(sc, zeroX.clone(), zeroZ.clone());
-                        rebuilt = new ArrayList<>(mPos);
-                        for (JumpConstraint c : ineq.subList(0, mPos)) {
+                        rebuilt = new ArrayList<>(m);
+                        for (JumpConstraint c : ineq) {
                             JumpLinearModel.Wall w = patterned.compileWall(c, 0.0, null);
                             if (w == null) { rebuilt = null; break; }
                             rebuilt.add(w);
@@ -243,24 +240,13 @@ public final class SlpSolve {
                 int nv = dims + 1; // facing deltas (deg) + worst-slack variable s
                 List<LinearConstraint> cons = new ArrayList<>(m + 2 * dims + 1);
                 for (int j = 0; j < m; j++) {
+                    JumpLinearModel.Wall wall = lpWalls.get(j);
                     double[] row = new double[nv];
-                    if (j < mPos) {
-                        JumpLinearModel.Wall wall = lpWalls.get(j);
-                        for (int t = 0; t < n; t++) {
-                            int v = col[t];
-                            if (v < 0) continue;
-                            double du = wall.axis == 0 ? -uz[t] : ux[t]; // d(u.axis)/dyaw, deg-scaled below
-                            row[v] += wall.coef[t] * du * RAD;
-                        }
-                    } else {
-                        JumpConstraint c = ineq.get(j);
-                        double sgn = c.cmp == JumpConstraint.Cmp.GE ? -1.0 : 1.0;
-                        int v1 = col[c.t1];
-                        if (v1 >= 0) row[v1] += sgn;
-                        if (c.t2 != null) {
-                            int v2 = col[c.t2];
-                            if (v2 >= 0) row[v2] -= sgn;
-                        }
+                    for (int t = 0; t < n; t++) {
+                        int v = col[t];
+                        if (v < 0) continue;
+                        double du = wall.axis == 0 ? -uz[t] : ux[t]; // d(u.axis)/dyaw, deg-scaled below
+                        row[v] += wall.coef[t] * du * RAD;
                     }
                     row[dims] = -1.0;
                     cons.add(new LinearConstraint(row, Relationship.LEQ, -viol[j]));
