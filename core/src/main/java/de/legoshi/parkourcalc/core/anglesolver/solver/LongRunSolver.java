@@ -3,7 +3,9 @@ package de.legoshi.parkourcalc.core.anglesolver.solver;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /** From-scratch solver for long multi-jump spans: the post-failure fallback for runs the closed-form dual
@@ -127,12 +129,13 @@ public final class LongRunSolver {
         if (jumps < 1) return null;
 
         double[] chosen = new double[2];
+        Map<Integer, Object> retryCache = new HashMap<>();
         for (int commit : cfg.commitLadder) {
             if (cancel != null && cancel.get()) return null;
             chosen[0] = Double.NaN;
             chosen[1] = Double.NaN;
             double[] gf = runHorizon(exact, sc, spec, bounds, jumps, commit, cfg.windowLadder, cancel,
-                    freeBox, chosen);
+                    freeBox, chosen, retryCache);
             if (gf == null || Double.isNaN(chosen[0])) continue;
             JumpPhysicsInputs at = FreeStartSolve.copyWithStart(sc, chosen[0], chosen[1]);
             double[] replay = at.toGameFacings(Angles.wrapAll(gf));
@@ -153,7 +156,7 @@ public final class LongRunSolver {
 
         for (int commit : cfg.commitLadder) {
             if (cancel != null && cancel.get()) return null;
-            double[] gf = runHorizon(exact, sc, spec, bounds, jumps, commit, cfg.windowLadder, cancel, null, null);
+            double[] gf = runHorizon(exact, sc, spec, bounds, jumps, commit, cfg.windowLadder, cancel, null, null, null);
             if (gf == null) continue;
             // Certify the chain Apply will actually realize, not the window-chained facings themselves:
             // the plan stores the wrapped facings and the game re-accumulates float deltas from them,
@@ -171,9 +174,11 @@ public final class LongRunSolver {
 
     /** One full receding-horizon sweep committing {@code commitJumps} jumps per window. Returns the chained
      *  game facings, or {@code null} if it gets stuck (no window solvable from some seam). */
+    private static final Object FREE_RETRY_MISS = new Object();
+
     private static double[] runHorizon(ExactJumpModel exact, JumpPhysicsInputs sc, JumpSpec spec, int[] bounds,
                                        int jumps, int commitJumps, int[] windowLadder, AtomicBoolean cancel,
-                                       StartBox freeBox, double[] chosenStart) {
+                                       StartBox freeBox, double[] chosenStart, Map<Integer, Object> retryCache) {
         int n = sc.numTicks;
         double[] gf = new double[n];
         Vec3dCore seedPos = sc.startPos, seedVel = sc.initialVelocity;
@@ -198,21 +203,27 @@ public final class LongRunSolver {
                         : new Objective(JumpPhysicsInputs.Axis.Z, Objective.Sense.MAX, c - a); // lead-in: any feasible
                 double[] yaws = solveWindow(exact, win, cons, obj, last, cancel);
                 if (yaws == null && i == 0 && freeBox != null) {
-                    JumpPhysicsInputs freeSc = FreeStartSolve.copyWithStart(sc, seedPos.x, seedPos.z);
-                    freeSc.startBox = new StartBox(seedPos.x, seedPos.z, seedVel.x, seedVel.z,
-                            freeBox.pxLo, freeBox.pxHi, freeBox.pzLo, freeBox.pzHi,
-                            seedVel.x, seedVel.x, seedVel.z, seedVel.z);
-                    List<JumpConstraint> upTo = new ArrayList<>();
-                    for (JumpConstraint jc : spec.constraints) {
-                        if (jc.t1 <= c && (jc.t2 == null || jc.t2 <= c)) upTo.add(jc);
-                    }
-                    Objective freeObj = last ? spec.objective
-                            : new Objective(JumpPhysicsInputs.Axis.Z, Objective.Sense.MAX, c);
-                    FreeStartSolve.Result fr = FreeStartSolve.solveJoint(
-                            exact, new JumpSpec(freeSc, upTo, freeObj), 0.0, cancel);
-                    if (SolverTrace.on()) {
-                        SolverTrace.log("FREE", "window free retry we=%d cons=%d -> %s",
-                                we, upTo.size(), fr != null && fr.feasible ? "solved" : "miss");
+                    Object cached = retryCache.get(we);
+                    FreeStartSolve.Result fr;
+                    if (cached != null) {
+                        fr = cached == FREE_RETRY_MISS ? null : (FreeStartSolve.Result) cached;
+                    } else {
+                        JumpPhysicsInputs freeSc = FreeStartSolve.copyWithStart(sc, seedPos.x, seedPos.z);
+                        freeSc.startBox = new StartBox(seedPos.x, seedPos.z, seedVel.x, seedVel.z,
+                                freeBox.pxLo, freeBox.pxHi, freeBox.pzLo, freeBox.pzHi,
+                                seedVel.x, seedVel.x, seedVel.z, seedVel.z);
+                        List<JumpConstraint> upTo = new ArrayList<>();
+                        for (JumpConstraint jc : spec.constraints) {
+                            if (jc.t1 <= c && (jc.t2 == null || jc.t2 <= c)) upTo.add(jc);
+                        }
+                        Objective freeObj = last ? spec.objective
+                                : new Objective(JumpPhysicsInputs.Axis.Z, Objective.Sense.MAX, c);
+                        fr = FreeStartSolve.solveJoint(exact, new JumpSpec(freeSc, upTo, freeObj), 0.0, cancel);
+                        retryCache.put(we, fr == null ? FREE_RETRY_MISS : fr);
+                        if (SolverTrace.on()) {
+                            SolverTrace.log("FREE", "window free retry we=%d cons=%d -> %s",
+                                    we, upTo.size(), fr != null && fr.feasible ? "solved" : "miss");
+                        }
                     }
                     if (fr != null && fr.feasible) {
                         chosenStart[0] = fr.startX;
