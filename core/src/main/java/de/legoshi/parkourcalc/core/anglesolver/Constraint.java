@@ -76,6 +76,10 @@ public final class Constraint {
         this.field = next;
         if (next != Field.X && next != Field.Z) refTick = null;
         if (next != Field.DX) vsDz = false;
+        if (next == Field.DF) {
+            op = Op.EQ;
+            value = 0.0;
+        }
     }
 
     public Integer getRefTick() {
