@@ -26,6 +26,7 @@ public final class FreeStartSolve {
         public int jointBisectIters = 8;
         public double jointWrapCloseGate = 0.01;
         public boolean jointWrapClose = true;
+        public double[] jointP0Ladder = {2.0e-3, 5.0e-4};
     }
 
     private static final double[] JOINT_RECOVERY_FRACTIONS = {0.5, 0.25, 0.75, 0.0};
@@ -61,8 +62,8 @@ public final class FreeStartSolve {
         StartBox box = base.startBox;
         if (box == null || !box.startFree()) return null;
 
-        double p0x = clamp(box.px, box.pxLo, box.pxHi);
-        double p0z = clamp(box.pz, box.pzLo, box.pzHi);
+        double p0x = 0.5 * (box.pxLo + box.pxHi);
+        double p0z = 0.5 * (box.pzLo + box.pzHi);
 
         if (SolverTrace.on()) {
             SolverTrace.log("FREE", "start box=%s seedStart=(%.4f,%.4f) center=(%.4f,%.4f)",
@@ -107,8 +108,8 @@ public final class FreeStartSolve {
 
     private static Result slpAnchorGrid(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs base, StartBox box,
                                         double feasTol, AtomicBoolean cancel) {
-        double seedX = clamp(box.px, box.pxLo, box.pxHi);
-        double seedZ = clamp(box.pz, box.pzLo, box.pzHi);
+        double seedX = 0.5 * (box.pxLo + box.pxHi);
+        double seedZ = 0.5 * (box.pzLo + box.pzHi);
         for (double fx : ANCHOR_GRID_FRACTIONS) {
             for (double fz : ANCHOR_GRID_FRACTIONS) {
                 if (cancel != null && cancel.get()) return null;
@@ -153,49 +154,22 @@ public final class FreeStartSolve {
         double[] arcThetas = null;
         FacingPrefold.ChainScan scan0 = FacingPrefold.scannable(spec.constraints, new JumpLinearModel(refSc));
         if (scan0 != null) arcThetas = prefixArcThetas(exact, spec, refSc, box, scan0);
-        JointBest freeBest = new JointBest();
-        Result r0 = jointDispatch(exact, spec, base, box, cbox, refSc, new JumpLinearModel(refSc),
-                refX, refZ, feasTol, cancel, cfg, freeBest, arcThetas);
-        if (r0 != null && r0.feasible) return r0;
-        if (freeBest.yaws == null || freeBest.viol > cfg.jointPatternViolGate) {
-            return solve(exact, spec, feasTol, cancel, cfg);
-        }
 
         JointBest overall = new JointBest();
-        if (freeBest.viol < overall.viol) {
-            overall.viol = freeBest.viol;
-            overall.yaws = freeBest.yaws;
-        }
-        java.util.ArrayDeque<boolean[][]> queue = new java.util.ArrayDeque<boolean[][]>();
-        java.util.Set<String> seen = new java.util.HashSet<String>();
-        enqueuePattern(queue, seen, refSc, exact, freeBest.yaws);
-        int tried = 0;
-        while (!queue.isEmpty() && tried < cfg.jointPatternCap) {
+        for (int rung = 0; rung <= cfg.jointP0Ladder.length; rung++) {
             if (cancel != null && cancel.get()) return null;
-            boolean[][] pat = queue.poll();
-            tried++;
-            JumpLinearModel lin = new JumpLinearModel(refSc, pat[0], pat[1]);
-            JointBest best = new JointBest();
-            Result r = jointDispatch(exact, spec, base, box, cbox, refSc, lin, refX, refZ, feasTol, cancel,
-                    cfg, best, arcThetas);
-            if (SolverTrace.on()) {
-                SolverTrace.log("FREE", "joint pattern %s bestViol=%s%s", SolverTrace.patternLabel(pat[0], pat[1]),
-                        best.yaws == null ? "none" : String.format(java.util.Locale.ROOT, "%.3e", best.viol),
-                        r != null && r.feasible ? " SOLVED" : "");
-            }
+            double smooth = rung == 0 ? CostateDualSolver.P0_SMOOTH_DEFAULT : cfg.jointP0Ladder[rung - 1];
+            if (rung > 0 && SolverTrace.on()) SolverTrace.log("FREE", "joint p0 rung smooth=%.1e", smooth);
+            Result r = jointAttempt(exact, spec, base, box, cbox, refSc, refX, refZ, feasTol, cancel, cfg,
+                    arcThetas, smooth, overall);
             if (r != null && r.feasible) return r;
-            if (best.yaws != null) {
-                if (best.viol < overall.viol) {
-                    overall.viol = best.viol;
-                    overall.yaws = best.yaws;
-                }
-                if (best.viol <= cfg.jointPatternViolGate) {
-                    enqueuePattern(queue, seen, refSc, exact, best.yaws);
-                }
-            }
         }
+
         Result fb = solve(exact, spec, feasTol, cancel, cfg);
-        if (fb != null) return fb;
+        if (fb != null) {
+            if (SolverTrace.on()) SolverTrace.log("FREE", "joint seed-lane win feasible=%s", fb.feasible);
+            return fb;
+        }
         if (overall.yaws != null) {
             double[] rs = recoverStart(exact, spec, overall.yaws, cfg);
             if (rs != null) {
@@ -212,6 +186,51 @@ public final class FreeStartSolve {
                     if (wr != null) return wr;
                 }
                 return new Result(Angles.wrapAll(overall.yaws.clone()), rs[0], rs[1], false);
+            }
+        }
+        return null;
+    }
+
+    private static Result jointAttempt(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs base, StartBox box,
+                                       StartBox cbox, JumpPhysicsInputs refSc, double refX, double refZ,
+                                       double feasTol, AtomicBoolean cancel, Config cfg, double[] arcThetas,
+                                       double smooth, JointBest overall) {
+        JointBest freeBest = new JointBest();
+        Result r0 = jointDispatch(exact, spec, base, box, cbox, refSc, new JumpLinearModel(refSc),
+                refX, refZ, feasTol, cancel, cfg, freeBest, arcThetas, smooth);
+        if (r0 != null && r0.feasible) return r0;
+        if (freeBest.yaws != null && freeBest.viol < overall.viol) {
+            overall.viol = freeBest.viol;
+            overall.yaws = freeBest.yaws;
+        }
+        if (freeBest.yaws == null || freeBest.viol > cfg.jointPatternViolGate) return null;
+
+        java.util.ArrayDeque<boolean[][]> queue = new java.util.ArrayDeque<boolean[][]>();
+        java.util.Set<String> seen = new java.util.HashSet<String>();
+        enqueuePattern(queue, seen, refSc, exact, freeBest.yaws);
+        int tried = 0;
+        while (!queue.isEmpty() && tried < cfg.jointPatternCap) {
+            if (cancel != null && cancel.get()) return null;
+            boolean[][] pat = queue.poll();
+            tried++;
+            JumpLinearModel lin = new JumpLinearModel(refSc, pat[0], pat[1]);
+            JointBest best = new JointBest();
+            Result r = jointDispatch(exact, spec, base, box, cbox, refSc, lin, refX, refZ, feasTol, cancel,
+                    cfg, best, arcThetas, smooth);
+            if (SolverTrace.on()) {
+                SolverTrace.log("FREE", "joint pattern %s bestViol=%s%s", SolverTrace.patternLabel(pat[0], pat[1]),
+                        best.yaws == null ? "none" : String.format(java.util.Locale.ROOT, "%.3e", best.viol),
+                        r != null && r.feasible ? " SOLVED" : "");
+            }
+            if (r != null && r.feasible) return r;
+            if (best.yaws != null) {
+                if (best.viol < overall.viol) {
+                    overall.viol = best.viol;
+                    overall.yaws = best.yaws;
+                }
+                if (best.viol <= cfg.jointPatternViolGate) {
+                    enqueuePattern(queue, seen, refSc, exact, best.yaws);
+                }
             }
         }
         return null;
@@ -259,10 +278,11 @@ public final class FreeStartSolve {
     private static Result jointDispatch(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs base, StartBox box,
                                         StartBox cbox, JumpPhysicsInputs refSc, JumpLinearModel lin,
                                         double refX, double refZ, double feasTol, AtomicBoolean cancel, Config cfg,
-                                        JointBest best, double[] arcThetas) {
+                                        JointBest best, double[] arcThetas, double smooth) {
         FacingPrefold pre = FacingPrefold.analyze(spec.constraints, lin);
         if (pre != null) {
-            return jointLadder(exact, spec, base, box, cbox, refSc, lin, refX, refZ, feasTol, cancel, cfg, pre, best);
+            return jointLadder(exact, spec, base, box, cbox, refSc, lin, refX, refZ, feasTol, cancel, cfg, pre, best,
+                    smooth);
         }
         FacingPrefold.ChainScan scan = FacingPrefold.scannable(spec.constraints, lin);
         if (scan == null) return null;
@@ -277,7 +297,7 @@ public final class FreeStartSolve {
             if (cancel != null && cancel.get()) return null;
             double before = best.viol;
             Result r = jointLadder(exact, spec, base, box, cbox, refSc, lin, refX, refZ, feasTol, cancel,
-                    cfg, scan.at(th), best);
+                    cfg, scan.at(th), best, smooth);
             if (best.viol < before) best.theta = th;
             if (r != null && r.feasible) {
                 if (SolverTrace.on()) SolverTrace.log("FREE", "joint chain scan solved theta=%.4f", th);
@@ -302,7 +322,7 @@ public final class FreeStartSolve {
             JumpLinearModel useLin = scan2 != null ? lin2 : lin;
             FacingPrefold.ChainScan useScan = scan2 != null ? scan2 : scan;
             Result rl = jointLadder(exact, spec, base, box, cbox, refSc, useLin, refX, refZ, feasTol, cancel,
-                    cfg, useScan.at(local.theta), local);
+                    cfg, useScan.at(local.theta), local, smooth);
             if (rl != null && rl.feasible) return rl;
             Result mp2 = thetaMicroPolish(exact, spec, refSc, useScan, local, feasTol, cancel, cfg);
             if (mp2 != null && mp2.feasible) return mp2;
@@ -477,7 +497,7 @@ public final class FreeStartSolve {
     private static Result jointLadder(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs base, StartBox box,
                                       StartBox cbox, JumpPhysicsInputs refSc, JumpLinearModel lin,
                                       double refX, double refZ, double feasTol, AtomicBoolean cancel, Config cfg,
-                                      FacingPrefold pre, JointBest passBest) {
+                                      FacingPrefold pre, JointBest passBest, double smooth) {
         double[] cx = new double[lin.n];
         double[] cz = new double[lin.n];
         lin.objectiveVectors(spec.objective, cx, cz);
@@ -487,8 +507,23 @@ public final class FreeStartSolve {
         walls.addAll(lin.velocityWalls(exact.inertiaThreshold()));
         FacingPrefold.Reduced red = pre.reduce(cx, cz, lin.mMagAll(), walls);
         CostateDualSolver solver = new CostateDualSolver(red.n, red.cx, red.cz, red.mMag, red.walls,
-                buildFreeP0(cbox, spec.objective));
+                buildFreeP0(cbox, spec.objective, smooth));
 
+        double pairCap = Double.POSITIVE_INFINITY;
+        for (int i = 0; i < red.walls.size(); i++) {
+            JumpLinearModel.Wall wi = red.walls.get(i);
+            if (wi.eq) continue;
+            for (int j = i + 1; j < red.walls.size(); j++) {
+                JumpLinearModel.Wall wj = red.walls.get(j);
+                if (wj.eq || wj.axis != wi.axis || wj.coef.length != wi.coef.length) continue;
+                if (wi.p0coef != -wj.p0coef) continue;
+                boolean anti = true;
+                for (int t = 0; t < wi.coef.length; t++) {
+                    if (wi.coef[t] != -wj.coef[t]) { anti = false; break; }
+                }
+                if (anti) pairCap = Math.min(pairCap, 0.5 * (wi.bPrime + wj.bPrime));
+            }
+        }
         CostateDualSolver.Result probe = solver.solve(0.0, null);
         if (probe == null || solver.lastStalled) {
             lastJointDebug = probe == null ? "branch-infeasible@0" : "branch-stalled@0";
@@ -496,7 +531,7 @@ public final class FreeStartSolve {
         }
         double[] warm = probe.lambda;
         double lo = 0.0;
-        double hi = cfg.jointMarginMax;
+        double hi = Math.min(cfg.jointMarginMax, Math.max(0.0, pairCap));
         CostateDualSolver.Result rHi = solver.solve(hi, warm);
         if (rHi != null && !solver.lastStalled) {
             lo = hi;
@@ -665,12 +700,12 @@ public final class FreeStartSolve {
         return new double[] {p0x, p0z};
     }
 
-    private static CostateDualSolver.FreeP0 buildFreeP0(StartBox box, Objective obj) {
+    private static CostateDualSolver.FreeP0 buildFreeP0(StartBox box, Objective obj, double smooth) {
         boolean max = obj.sense == Objective.Sense.MAX;
         double objDevX = obj.axis == JumpPhysicsInputs.Axis.X ? (max ? 1.0 : -1.0) : 0.0;
         double objDevZ = obj.axis == JumpPhysicsInputs.Axis.X ? 0.0 : (max ? 1.0 : -1.0);
         return new CostateDualSolver.FreeP0(box.pxLo - box.px, box.pxHi - box.px,
-                box.pzLo - box.pz, box.pzHi - box.pz, objDevX, objDevZ);
+                box.pzLo - box.pz, box.pzHi - box.pz, objDevX, objDevZ, smooth);
     }
 
     private static double[] pinTranslate(JumpSpec spec, double[] gf, ForwardPath path, StartBox box,
