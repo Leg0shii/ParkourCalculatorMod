@@ -804,9 +804,6 @@ public final class AngleSolverEngine {
         return liveTraj;
     }
 
-    /** Runs entirely on the worker thread, reading only the immutable Job. */
-    private static final long RACE_CHECKPOINT_NANOS = 20_000_000_000L;
-
     private static final class ArmState {
         volatile Candidate cand;
         volatile boolean feasible;
@@ -829,107 +826,47 @@ public final class AngleSolverEngine {
 
     private RaceRun runStagedRace(Job job, JumpSpec spec, JumpPhysicsInputs sc, StartBox freeBox,
                                   AtomicBoolean master, SolveProgress progress, RunRecording rec) {
-        AtomicBoolean primaryTok = new AtomicBoolean(false);
-        GraphContext primaryCtx = new GraphContext(spec, model, freeBox, job.legalGoal, FEAS_TOL, primaryTok,
+        GraphContext primaryCtx = new GraphContext(spec, model, freeBox, job.legalGoal, FEAS_TOL, master,
                 progress, sequentialSolve, job.longRun);
         if (rec != null) rec.ctx = primaryCtx;
         lastRunState = primaryCtx.runState;
         currentGraphContext = primaryCtx;
         ArmState primary = new ArmState();
         long raceStart = System.nanoTime();
-        Thread primaryThread = new Thread(() -> runArm(job.graph, primaryCtx, spec, primary), "angle-solver-primary");
-        primaryThread.setDaemon(true);
-        primaryThread.start();
-
-        SolverGraph exploreGraph = BuiltinGraphs.explore();
-        AtomicBoolean exploreTok = new AtomicBoolean(false);
-        GraphContext exploreCtx = null;
-        JumpSpec exploreSpec = null;
-        ArmState explore = null;
-        long spawnElapsed = 0L;
-        boolean spawnClosed = false;
         SolveRunRecord.Race raceInfo = new SolveRunRecord.Race();
         raceInfo.winner = "primary";
         if (rec != null) rec.race = raceInfo;
 
         try {
-            while (true) {
-                if (master.get()) {
-                    primaryTok.set(true);
-                    exploreTok.set(true);
-                }
-                if (exploreCtx == null && !spawnClosed && !master.get()) {
-                    boolean feasIncumbent = progress.haveBest() && progress.isBestFeasible();
-                    boolean atCheckpoint = System.nanoTime() - raceStart >= RACE_CHECKPOINT_NANOS;
-                    if (atCheckpoint && feasIncumbent) {
-                        spawnClosed = true;
-                    } else if ((atCheckpoint && !primary.done && !feasIncumbent)
-                            || (primary.done && !primary.feasible)) {
-                        SolveProgress exploreProgress = new SolveProgress(
-                                job.sense == Objective.Sense.MAX, job.stopOnFeasible,
-                                spec.objective.smoothLambda, sc.startYaw);
-                        exploreProgress.forwardTo(progress, "explore");
-                        exploreSpec = new JumpSpec(sc.copy(), spec.constraints, spec.objective);
-                        exploreCtx = new GraphContext(exploreSpec, model, freeBox, job.legalGoal, FEAS_TOL,
-                                exploreTok, exploreProgress, sequentialSolve, job.longRun);
-                        explore = new ArmState();
-                        spawnElapsed = System.nanoTime() - raceStart;
-                        raceInfo.spawned = true;
-                        raceInfo.spawnElapsedNanos = spawnElapsed;
-                        GraphContext ec = exploreCtx;
-                        JumpSpec es = exploreSpec;
-                        ArmState er = explore;
-                        Thread exploreThread = new Thread(() -> runArm(exploreGraph, ec, es, er),
-                                "angle-solver-explore");
-                        exploreThread.setDaemon(true);
-                        exploreThread.start();
-                        if (SolverTrace.on()) {
-                            SolverTrace.log("RACE", "explore arm spawned at %.1fs", spawnElapsed / 1.0e9);
-                        }
-                    }
-                }
-                if (explore != null) {
-                    if (primary.done && primary.feasible && !explore.done) exploreTok.set(true);
-                    if (explore.done && explore.feasible && !primary.done) primaryTok.set(true);
-                }
-                boolean exploreSettled = explore == null
-                        ? (primary.feasible || spawnClosed || master.get())
-                        : explore.done;
-                if (primary.done && exploreSettled) break;
-                try {
-                    Thread.sleep(20);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    primaryTok.set(true);
-                    exploreTok.set(true);
-                    break;
-                }
+            runArm(job.graph, primaryCtx, spec, primary);
+            boolean primaryOk = primary.cand != null && primary.cand.yaws != null;
+            if (master.get() || (primaryOk && primary.feasible)) {
+                return new RaceRun(primaryCtx, primary.cand, sc, false);
             }
 
-            boolean exploreWon = false;
-            if (explore != null && explore.cand != null && explore.cand.yaws != null) {
-                boolean primaryOk = primary.cand != null && primary.cand.yaws != null;
-                if (!primaryOk) {
-                    exploreWon = true;
-                } else if (explore.feasible != primary.feasible) {
-                    exploreWon = explore.feasible;
-                } else if (explore.feasible) {
-                    double primaryObj = spec.objective.scored(
-                            exactObjective(spec.asScenario(), spec, primary.cand.yaws),
-                            spec.asScenario().startYaw, primary.cand.yaws);
-                    double exploreObj = exploreSpec.objective.scored(
-                            exactObjective(exploreSpec.asScenario(), exploreSpec, explore.cand.yaws),
-                            exploreSpec.asScenario().startYaw, explore.cand.yaws);
-                    exploreWon = job.sense == Objective.Sense.MAX ? exploreObj > primaryObj : exploreObj < primaryObj;
-                }
+            SolverGraph exploreGraph = BuiltinGraphs.explore();
+            SolveProgress exploreProgress = new SolveProgress(
+                    job.sense == Objective.Sense.MAX, job.stopOnFeasible,
+                    spec.objective.smoothLambda, sc.startYaw);
+            exploreProgress.forwardTo(progress, "explore");
+            JumpSpec exploreSpec = new JumpSpec(sc.copy(), spec.constraints, spec.objective);
+            GraphContext exploreCtx = new GraphContext(exploreSpec, model, freeBox, job.legalGoal, FEAS_TOL,
+                    master, exploreProgress, sequentialSolve, job.longRun);
+            ArmState explore = new ArmState();
+            raceInfo.spawned = true;
+            raceInfo.spawnElapsedNanos = System.nanoTime() - raceStart;
+            if (SolverTrace.on()) {
+                SolverTrace.log("RACE", "explore stage started at %.1fs", raceInfo.spawnElapsedNanos / 1.0e9);
             }
+            runArm(exploreGraph, exploreCtx, exploreSpec, explore);
+
+            boolean exploreWon = explore.cand != null && explore.cand.yaws != null
+                    && (!primaryOk || explore.feasible);
             raceInfo.winner = exploreWon ? "explore" : "primary";
-            if (exploreCtx != null) {
-                raceInfo.exploreChain = exploreCtx.chain();
-                raceInfo.exploreGraphHash = SolveRunRecord.graphHash(exploreGraph);
-                raceInfo.exploreNodes = SolveRunRecord.nodeRunsOf(exploreCtx.runState.statuses());
-            }
-            if (SolverTrace.on() && explore != null) {
+            raceInfo.exploreChain = exploreCtx.chain();
+            raceInfo.exploreGraphHash = SolveRunRecord.graphHash(exploreGraph);
+            raceInfo.exploreNodes = SolveRunRecord.nodeRunsOf(exploreCtx.runState.statuses());
+            if (SolverTrace.on()) {
                 SolverTrace.log("RACE", "winner=%s primaryFeas=%s exploreFeas=%s",
                         exploreWon ? "explore" : "primary", primary.feasible, explore.feasible);
             }
