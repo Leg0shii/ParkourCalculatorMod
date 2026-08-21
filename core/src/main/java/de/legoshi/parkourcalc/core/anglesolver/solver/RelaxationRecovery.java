@@ -1,6 +1,5 @@
 package de.legoshi.parkourcalc.core.anglesolver.solver;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -12,12 +11,10 @@ public final class RelaxationRecovery {
         public double rhoStart = 100.0;
         public double rhoGrow = 3.0;
         public double rhoMax = 1.0e6;
-        public double[] pinWidths = {0.4, 0.15};
         public double[] seedMargins = {0.0, 3.0e-4, 1.2e-3, 5.0e-3, 1.0e-2, 2.0e-2, 5.0e-2};
         public int dualRestarts = 5;
         public int slpPhase1Calls = 160;
         public int slpTotalCalls = 220;
-        public LatticeRepair.Config lattice = new LatticeRepair.Config();
     }
 
     public static boolean DEBUG = false;
@@ -52,20 +49,7 @@ public final class RelaxationRecovery {
 
         Seed base = seedAtMargin(exact, spec, sc, lin, cx, cz, mMag, walls, dual, 0.0, null, feasTol, cancel, cfg);
         double[] best = base.landed;
-        double[] stalled = base.stalled;
-        double[] stalledUx = base.stalled != null ? base.ux : null;
-        double[] stalledUz = base.stalled != null ? base.uz : null;
-        if (DEBUG && stalled != null) debugLastStalled = stalled.clone();
-
-        if (best == null && !cancel.get() && stalled != null) {
-            long tRepair = System.nanoTime();
-            double[] repaired = LatticeRepair.repair(exact, spec, stalled, feasTol, cancel, cfg.lattice);
-            if (repaired != null && !cancel.get()) {
-                double[] hugged = SlpSolve.optimize(exact, spec, feasTol, cancel, repaired, cfg.slpPhase1Calls, cfg.slpTotalCalls);
-                best = hugged != null ? hugged : repaired;
-            }
-            if (SolverTrace.on()) SolverTrace.log("RXT", "repair done best=%s ms=%.1f", best != null, (System.nanoTime() - tRepair) / 1e6);
-        }
+        if (DEBUG && base.stalled != null) debugLastStalled = base.stalled.clone();
 
         double[] warmLambda = base.warm;
         for (int mi = 1; mi < cfg.seedMargins.length && best == null && !cancel.get(); mi++) {
@@ -75,55 +59,14 @@ public final class RelaxationRecovery {
                 best = s.landed;
                 break;
             }
-            if (s.stalled != null) {
-                double[] lower = lowerViolation(exact, sc, spec, stalled, s.stalled);
-                if (lower != stalled) {
-                    stalled = lower;
-                    stalledUx = s.ux;
-                    stalledUz = s.uz;
-                }
-            }
         }
         if (SolverTrace.on()) SolverTrace.log("RXT", "seedLadder done best=%s ms=%.1f", best != null, (System.nanoTime() - tSeed) / 1e6);
         if (DEBUG) System.out.printf("  RELAX seedSlp=%s%n", best != null ? "OK" : "null");
-
-        if (best != null || cancel.get()) return best;
-        if (stalledUx == null) return null;
-        long tPin = System.nanoTime();
-        double[] pinDither = ditherSeedYaws(lin, spec.objective, stalledUx, stalledUz);
-        double[] pinProj = projectionSeedYaws(lin, spec.objective, stalledUx, stalledUz);
-        double[] carry = pinDither;
-        double[] pinResult = null;
-        for (double width : cfg.pinWidths) {
-            if (cancel.get()) break;
-            JumpSpec pinned = pinnedSpec(spec, lin, stalledUx, stalledUz, width);
-            if (pinned == null) break;
-            double[] r = ClosedFormSolve.optimize(exact, pinned, feasTol, cancel);
-            if (r == null && !cancel.get()) {
-                r = SlpSolve.optimize(exact, pinned, feasTol, cancel, carry, cfg.slpPhase1Calls, cfg.slpTotalCalls);
-            }
-            if (r == null && !cancel.get()) {
-                r = SlpSolve.optimize(exact, pinned, feasTol, cancel, pinProj, cfg.slpPhase1Calls, cfg.slpTotalCalls);
-            }
-            if (r != null) {
-                carry = r;
-                pinResult = r;
-            }
-        }
-        if (SolverTrace.on()) SolverTrace.log("RXT", "pin done result=%s ms=%.1f", pinResult != null, (System.nanoTime() - tPin) / 1e6);
-        if (DEBUG) System.out.printf("  RELAX pinSlp=%s%n", pinResult != null ? "OK" : "null");
-        if (pinResult != null && !cancel.get()) {
-            double[] polished = SlpSolve.optimize(exact, spec, feasTol, cancel, pinResult, cfg.slpPhase1Calls, cfg.slpTotalCalls);
-            double[] candidate = polished != null ? polished : pinResult;
-            best = better(exact, sc, spec, best, candidate);
-        }
         return best;
     }
 
     private static final class Seed {
         double[] landed;
-        double[] ux;
-        double[] uz;
         double[] stalled;
         double[] warm;
     }
@@ -153,8 +96,6 @@ public final class RelaxationRecovery {
                 uz[t] = mMag[t] * gz / nrm;
             }
         }
-        out.ux = ux;
-        out.uz = uz;
         double[] lambda = warm.lambda.clone();
         long tAl = System.nanoTime();
         double alViol = relaxedPrimal(cx, cz, mMag, walls, lambda, ux, uz, cancel, margin, cfg);
@@ -422,46 +363,6 @@ public final class RelaxationRecovery {
         return yaws;
     }
 
-    private static JumpSpec pinnedSpec(JumpSpec spec, JumpLinearModel lin, double[] ux, double[] uz, double halfWidth) {
-        int n = lin.n;
-        int objTick = spec.objective.tick;
-        double[] lo = new double[2 * objTick];
-        double[] hi = new double[2 * objTick];
-        java.util.Arrays.fill(lo, Double.NEGATIVE_INFINITY);
-        java.util.Arrays.fill(hi, Double.POSITIVE_INFINITY);
-        for (JumpConstraint c : spec.constraints) {
-            if (c.mode == JumpConstraint.Mode.F || c.t2 != null || c.op != JumpConstraint.Op.PLUS) continue;
-            if (c.t1 <= 0 || c.t1 >= objTick) continue;
-            int idx = (c.mode == JumpConstraint.Mode.X ? 0 : 1) * objTick + c.t1;
-            if (c.cmp == JumpConstraint.Cmp.GE) lo[idx] = Math.max(lo[idx], c.rhs);
-            else if (c.cmp == JumpConstraint.Cmp.LE) hi[idx] = Math.min(hi[idx], c.rhs);
-        }
-        List<JumpConstraint> cons = new ArrayList<>(spec.constraints);
-        boolean any = false;
-        for (int a = 0; a < 2; a++) {
-            for (int t = 1; t < objTick; t++) {
-                int idx = a * objTick + t;
-                double clo = lo[idx];
-                double chi = hi[idx];
-                if (clo != Double.NEGATIVE_INFINITY && chi != Double.POSITIVE_INFINITY
-                        && chi - clo <= 2.5 * halfWidth) continue;
-                double pos = lin.constPos(t, a);
-                double[] u = a == 0 ? ux : uz;
-                for (int s = 0; s < t; s++) pos += lin.coef(s, t) * u[s];
-                double center = pos;
-                if (clo != Double.NEGATIVE_INFINITY) center = Math.max(center, clo + halfWidth);
-                if (chi != Double.POSITIVE_INFINITY) center = Math.min(center, chi - halfWidth);
-                JumpConstraint.Mode mode = a == 0 ? JumpConstraint.Mode.X : JumpConstraint.Mode.Z;
-                cons.add(new JumpConstraint(mode, t, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.GE,
-                        center - halfWidth, "relaxPinLo"));
-                cons.add(new JumpConstraint(mode, t, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.LE,
-                        center + halfWidth, "relaxPinHi"));
-                any = true;
-            }
-        }
-        return any ? new JumpSpec(spec.asScenario(), cons, spec.objective) : null;
-    }
-
     private static double[] feasibleOrNull(ExactJumpModel exact, JumpPhysicsInputs sc, JumpSpec spec,
                                            double[] yaws, double feasTol) {
         if (yaws == null) return null;
@@ -478,20 +379,5 @@ public final class RelaxationRecovery {
     private static double violationOf(ExactJumpModel exact, JumpPhysicsInputs sc, JumpSpec spec, double[] yaws) {
         double[] gf = sc.toGameFacings(Angles.wrapAll(yaws));
         return JumpConstraintCompiler.compile(spec).maxViolation(gf, exact.forward(sc, gf));
-    }
-
-    private static double[] better(ExactJumpModel exact, JumpPhysicsInputs sc, JumpSpec spec,
-                                   double[] a, double[] b) {
-        if (a == null) return b;
-        if (b == null) return a;
-        boolean max = spec.objective.sense == Objective.Sense.MAX;
-        double oa = objectiveOf(exact, sc, spec, a);
-        double ob = objectiveOf(exact, sc, spec, b);
-        return (max ? ob > oa : ob < oa) ? b : a;
-    }
-
-    private static double objectiveOf(ExactJumpModel exact, JumpPhysicsInputs sc, JumpSpec spec, double[] yaws) {
-        double[] gf = sc.toGameFacings(Angles.wrapAll(yaws));
-        return exact.forward(sc, gf).getPos(spec.objective.tick, spec.objective.axis);
     }
 }

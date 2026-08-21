@@ -107,17 +107,11 @@ public final class NodeCatalog {
                 .param(ParamSpec.decimal("rrRhoStart", "Relaxation rho start", 1.0e-6, 1.0e12, 100.0))
                 .param(ParamSpec.decimal("rrRhoGrow", "Relaxation rho growth", 1.0, 100.0, 3.0))
                 .param(ParamSpec.decimal("rrRhoMax", "Relaxation rho cap", 1.0, 1.0e18, 1.0e6))
-                .param(ParamSpec.text("rrPinWidths", "Relaxation pin widths", "0.4,0.15"))
                 .param(ParamSpec.text("rrSeedMargins", "Relaxation seed margins",
                         "0.0,3.0e-4,1.2e-3,5.0e-3,1.0e-2,2.0e-2,5.0e-2"))
                 .param(ParamSpec.integer("rrDualRestarts", "Relaxation dual restarts", 0, 100, 5))
                 .param(ParamSpec.integer("rrSlpPhase1Calls", "Relaxation SLP phase-1 calls", 1, 10000, 160))
                 .param(ParamSpec.integer("rrSlpTotalCalls", "Relaxation SLP total calls", 1, 10000, 220))
-                .param(ParamSpec.text("lrSchedule", "Lattice repair schedule",
-                        "0.5:0.05,0.12:0.012,0.03:0.003,0.008:0.0008,0.002:0.0001"))
-                .param(ParamSpec.integer("lrMaxRounds", "Lattice repair rounds", 1, 100, 8))
-                .param(ParamSpec.decimal("lrStartViolCap", "Lattice repair start cap", 0.0, 10.0, 0.08))
-                .param(ParamSpec.integer("lrPairSteps", "Lattice repair pair steps", 1, 32, 4))
                 .budgetParam("budgetSec")
                 .fallback(Guarantee.NONE)
                 .factory(DualChainNode::new)
