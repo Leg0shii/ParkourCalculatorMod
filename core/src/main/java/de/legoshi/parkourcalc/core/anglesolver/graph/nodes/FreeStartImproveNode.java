@@ -70,15 +70,6 @@ public final class FreeStartImproveNode implements NodeRuntime {
             adoptX = conv.startX;
             adoptZ = conv.startZ;
         }
-        if (adoptYaws == null) {
-            FreeStartSolve.Result it = FreeStartSolve.solve(ctx.exactModel, ctx.spec, ctx.feasTol, cancel, cfg);
-            if (it != null && it.feasible
-                    && FreeStartSolve.violationAt(ctx.exactModel, ctx.spec, it.yaws, it.startX, it.startZ) <= ctx.feasTol) {
-                adoptYaws = it.yaws;
-                adoptX = it.startX;
-                adoptZ = it.startZ;
-            }
-        }
         if (adoptYaws != null) {
             sc.startPos = new Vec3dCore(adoptX, sc.startPos.y, adoptZ);
             sc.startBox = StartBox.pinned(adoptX, adoptZ, sc.initialVelocity.x, sc.initialVelocity.z);
@@ -126,7 +117,6 @@ public final class FreeStartImproveNode implements NodeRuntime {
 
         sc.startBox = freeBox;
         FreeStartSolve.Result conv = FreeStartSolve.solveJoint(exact, spec, feasTol, cancel, cfg);
-        if (conv == null || !conv.feasible) conv = FreeStartSolve.solve(exact, spec, feasTol, cancel, cfg);
         if (conv != null && conv.feasible
                 && FreeStartSolve.violationAt(exact, spec, conv.yaws, conv.startX, conv.startZ) <= feasTol) {
             double[] convYaws = Angles.wrapAll(conv.yaws);
