@@ -226,6 +226,7 @@ public final class FreeStartSolve {
         WrapWindowIls.Config wcfg = new WrapWindowIls.Config();
         wcfg.roundCap = 1;
         wcfg.evalCap = 4_000_000;
+        wcfg.reaccumScore = true;
         WrapWindowIls.Result w = WrapWindowIls.polish(exact, atSpec, gf, dom, wcfg,
                 System.nanoTime() + JOINT_WRAP_CLOSE_NANOS, cancel);
         if (w == null || w.viol > JOINT_WRAP_REPAIR_GATE) {
@@ -235,7 +236,8 @@ public final class FreeStartSolve {
             }
             return null;
         }
-        double[] d = bestTranslate(atSpec, w.gf, exact.forward(atSc, w.gf), box);
+        double[] chain = atSc.toGameFacings(Angles.wrapAll(w.gf));
+        double[] d = bestTranslate(atSpec, chain, exact.forward(atSc, chain), box);
         double px = clamp(rs[0] + d[0], box.pxLo, box.pxHi);
         double pz = clamp(rs[1] + d[1], box.pzLo, box.pzHi);
         double v = violationAt(exact, spec, w.gf, px, pz);
@@ -657,20 +659,10 @@ public final class FreeStartSolve {
         double[] wrapped = Angles.wrapAll(yaws);
         double[] gf = refSc.toGameFacings(wrapped);
         ForwardPath path = exact.forward(refSc, gf);
-        double[] best = null;
-        for (double margin : cfg.jointMargins) {
-            double[] d = bestTranslate(spec, gf, path, box, margin);
-            double p0x = clamp(box.px + d[0], box.pxLo, box.pxHi);
-            double p0z = clamp(box.pz + d[1], box.pzLo, box.pzHi);
-            if (best == null) best = new double[] {p0x, p0z};
-            JumpSpec at = specAtStart(base, spec, p0x, p0z);
-            JumpPhysicsInputs atSc = at.asScenario();
-            double[] agf = atSc.toGameFacings(wrapped);
-            if (JumpConstraintCompiler.compile(at).maxViolation(agf, exact.forward(atSc, agf)) <= 0.0) {
-                return new double[] {p0x, p0z};
-            }
-        }
-        return best;
+        double[] d = bestTranslate(spec, gf, path, box, cfg.jointMargins.length > 0 ? cfg.jointMargins[0] : 0.0);
+        double p0x = clamp(box.px + d[0], box.pxLo, box.pxHi);
+        double p0z = clamp(box.pz + d[1], box.pzLo, box.pzHi);
+        return new double[] {p0x, p0z};
     }
 
     private static CostateDualSolver.FreeP0 buildFreeP0(StartBox box, Objective obj) {

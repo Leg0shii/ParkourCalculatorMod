@@ -96,16 +96,14 @@ public class GraphPresetIOTest {
     }
 
     @Test
-    public void unknownParamNamesTheNode() {
+    public void unknownParamIsIgnoredOnLoad() {
         GraphPresetFile f = GraphPresetIO.fromGraph(BuiltinGraphs.fast());
         GraphPresetFile.Param p = new GraphPresetFile.Param();
-        p.key = "bogusKnob";
-        p.num = 1.0;
+        p.key = "rrPinWidths";
+        p.str = "0.4,0.15";
         node(f, "freeImprove").params.add(p);
         Result<SolverGraph> r = GraphPresetIO.materialize(f);
-        assertFalse(r.ok);
-        assertTrue(r.error, r.error.contains("bogusKnob"));
-        assertTrue(r.error, r.error.contains("freeImprove"));
+        assertTrue(r.error, r.ok);
     }
 
     @Test

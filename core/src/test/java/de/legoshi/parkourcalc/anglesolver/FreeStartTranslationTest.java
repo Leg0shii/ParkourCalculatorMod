@@ -10,7 +10,6 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.PathTranslation;
-import de.legoshi.parkourcalc.core.anglesolver.solver.SnapRepairPolish;
 import org.junit.Test;
 
 import java.util.Random;

@@ -156,17 +156,4 @@ public final class PathTranslation {
         return v;
     }
 
-    static double clampAxis(double v, double lo, double hi) {
-        return v < lo ? lo : (v > hi ? hi : v);
-    }
-
-    static double ulpShift(double v, int ulps) {
-        double r = v;
-        if (ulps > 0) {
-            for (int i = 0; i < ulps; i++) r = Math.nextUp(r);
-        } else if (ulps < 0) {
-            for (int i = 0; i < -ulps; i++) r = Math.nextDown(r);
-        }
-        return r;
-    }
 }

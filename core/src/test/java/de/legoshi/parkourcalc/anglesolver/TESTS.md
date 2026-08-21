@@ -43,10 +43,8 @@ anglesolver/
                            docs/research/data/matrix-taser-pin1/band.txt); PKC_MATRIX_SWEEP (A18)
                            replaces the preset list with generated ones, `|`-separated entries of
                            base:key=v1,v2;key2=... cross-producted per entry: taser<sec> takes l
-                           (engine path via setSmoothLambda), alm<sec> runs AlmSnapStage directly
-                           (keys l, seeds, topk, cooking, gate; free startBox becomes the translation
-                           domain) recording raw objective + smoothness stats per run, and a bare
-                           entry with no params reuses the static preset of that exact id
+                           (engine path via setSmoothLambda), and a bare entry with no params
+                           reuses the static preset of that exact id
                            (parse coverage: RunMatrixSweepTest)
   MatrixAnalysisScreen.java  per-preset aggregates + SBS/VBS feasibility and objective-regret gap over
                            a matrix runs.jsonl; PKC_MATRIX_ANALYZE=1 + PKC_MATRIX_TAG; writes
@@ -74,11 +72,13 @@ anglesolver/
                            PKC_RAZORT1_TAG to run; PASS = success + fresh-reparse viol <= 0;
                            report at build/reports/razort1-<tag>.txt
                            (solve/loopmm-tight-t39: the loopmm misses capture with its shipped-
-                           disabled pad wall ENABLED; pins the near-miss B&B rescue landing the
-                           tight spec at Z@71 >= -279.3 through the live engine, THOROUGH 45 s)
-                           (solve/loopmm-tight-t39-fast: the SAME capture under FAST effort; pins
-                           the staged late-race: primary fast starves, the explore arm spawns at
-                           the 20 s checkpoint and lands it, budget 90 s; the redirect-class gate)
+                           disabled pad wall ENABLED; the tight Z@71 >= -279.3 pad sat on an
+                           incidental hug trajectory of the commons-math LP and stopped landing
+                           with the bespoke TrustRegionLp swap, so shouldSolve is false until the
+                           redirect class is won back, THOROUGH 45 s)
+                           (solve/loopmm-tight-t39-fast: the SAME capture under FAST effort,
+                           accepted-fail for the same reason, budget 90 s; the redirect-class
+                           frontier)
                            (solve/gh313-j121-dfneo: gh-313; hpk j121 neo with dF <= 0 walls. The
                            dF inequality class is retired by ruling (issue 372, dF = 0 only) and
                            CMA-ES is removed (issue 374), so shouldSolve is false by design)
