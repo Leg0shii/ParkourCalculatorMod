@@ -1,13 +1,5 @@
 package de.legoshi.parkourcalc.core.anglesolver.solver;
 
-import org.apache.commons.math3.optim.MaxIter;
-import org.apache.commons.math3.optim.PointValuePair;
-import org.apache.commons.math3.optim.linear.LinearConstraint;
-import org.apache.commons.math3.optim.linear.LinearConstraintSet;
-import org.apache.commons.math3.optim.linear.LinearObjectiveFunction;
-import org.apache.commons.math3.optim.linear.Relationship;
-import org.apache.commons.math3.optim.linear.SimplexSolver;
-import org.apache.commons.math3.optim.nonlinear.scalar.GoalType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -237,54 +229,34 @@ public final class SlpSolve {
                     ux[t] = lin.mMag(t) * Math.cos(phi);
                     uz[t] = lin.mMag(t) * Math.sin(phi);
                 }
-                int nv = dims + 1; // facing deltas (deg) + worst-slack variable s
-                List<LinearConstraint> cons = new ArrayList<>(m + 2 * dims + 1);
+                double[][] rows = new double[m][dims];
                 for (int j = 0; j < m; j++) {
                     JumpLinearModel.Wall wall = lpWalls.get(j);
-                    double[] row = new double[nv];
+                    double[] row = rows[j];
                     for (int t = 0; t < n; t++) {
                         int v = col[t];
                         if (v < 0) continue;
                         double du = wall.axis == 0 ? -uz[t] : ux[t]; // d(u.axis)/dyaw, deg-scaled below
                         row[v] += wall.coef[t] * du * RAD;
                     }
-                    row[dims] = -1.0;
-                    cons.add(new LinearConstraint(row, Relationship.LEQ, -viol[j]));
                 }
-                for (int v = 0; v < dims; v++) {
-                    double[] lo = new double[nv];
-                    lo[v] = 1.0;
-                    cons.add(new LinearConstraint(lo, Relationship.LEQ, tr));
-                    double[] hi = new double[nv];
-                    hi[v] = -1.0;
-                    cons.add(new LinearConstraint(hi, Relationship.LEQ, tr));
-                }
-                double[] objRow = new double[nv];
-                if (phase == 1) {
-                    objRow[dims] = 1.0; // minimize the worst linearized slack
-                } else {
+                double[] objRow = null;
+                if (phase != 1) {
+                    objRow = new double[dims];
                     for (int t = 0; t < n; t++) {
                         int v = col[t];
                         if (v < 0) continue;
                         objRow[v] += -(lpCx[t] * -uz[t] + lpCz[t] * ux[t]) * RAD; // maximize c.du
                     }
-                    double[] sCap = new double[nv];
-                    sCap[dims] = 1.0;
-                    // Stay strictly inside, but never demand deeper clearance than the point already has,
-                    // or ascending along a wall that must stay hugged would make the LP infeasible.
-                    cons.add(new LinearConstraint(sCap, Relationship.LEQ, Math.max(-CLEARANCE, maxViol)));
                 }
-                double[] d;
-                try {
-                    lpCalls++;
-                    PointValuePair sol = new SimplexSolver().optimize(new MaxIter(cfg.lpMaxIter),
-                            new LinearObjectiveFunction(objRow, 0.0), new LinearConstraintSet(cons),
-                            GoalType.MINIMIZE);
-                    d = sol.getPoint();
-                } catch (Exception e) {
-                    if (SolverTrace.on()) SolverTrace.log("SLP", "lp#%d phase=%d LP failed (%s), phase stop", lpCalls, phase, e.getClass().getSimpleName());
+                lpCalls++;
+                TrustRegionLp.Result lp = TrustRegionLp.solve(rows, viol, objRow, tr, phase == 1,
+                        Math.max(-CLEARANCE, maxViol), cfg.lpMaxIter);
+                if (lp == null) {
+                    if (SolverTrace.on()) SolverTrace.log("SLP", "lp#%d phase=%d LP failed, phase stop", lpCalls, phase);
                     break; // LP infeasible/degenerate at this linearization: stop the phase
                 }
+                double[] d = lp.d;
 
                 double[] cand = new double[n];
                 double step = 0.0;
@@ -304,7 +276,7 @@ public final class SlpSolve {
                         : cViol <= feasTol && cObj > objNorm;
                 if (SolverTrace.on()) {
                     SolverTrace.log("SLP", "lp#%d phase=%d tr=%.3g step=%.3g pred=%.3e viol=%.3e->%.3e obj=%.9f->%.9f %s",
-                            lpCalls, phase, tr, step, d[dims], maxViol, cViol, objNorm, cObj,
+                            lpCalls, phase, tr, step, lp.s, maxViol, cViol, objNorm, cObj,
                             accept ? "accept" : "reject");
                 }
                 if (accept) {
