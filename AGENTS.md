@@ -5,7 +5,7 @@ Shared guidance for AI coding agents and contributors. This is the canonical gui
 - `docs/reference/mcpk/`: in-repo mirror of the Minecraft Parkour Wiki physics (movement formulas, constants, the sine table, collision order, block friction, status effects, tiers). The byte-exact ground truth this tool replicates; if code disagrees with a number there, the code is the bug.
 - `docs/VISION.md`: north-star goal (two blocks in, full TAS out), the capability arc, design principles
 - `docs/CODING_GUIDE.md`: module rules, where new code goes, port pattern, per-module toolchains
-- `docs/research/`: angle-solver design record, ILS global-solve notes
+- `docs/research/`: angle-solver design record (includes the consolidated ILS notes), plus campaign and design records
 - `CONTRIBUTING.md`: feature definition checklist, Conventional Commits, release-please flow
 
 

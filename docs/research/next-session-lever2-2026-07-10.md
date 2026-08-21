@@ -3,10 +3,10 @@
 This file is the single rung 5.375 execution record. It was originally written as a next-session bootstrap (hence the filename, kept unchanged); the EXECUTION RECORD below is what actually ran. Consolidated 2026-08-21: the sections appended at the end carry the norm-cell mechanism, the adversarial-review record, and the Lever S saturation record from mission-5375-derived-2026-07-09.md, which is deleted.
 
 Status notes (2026-08-21):
-- The two pending in-tool confirmations landed: the legal attempt was user-confirmed, and the wrap720/turn360 tiers continued in solver-port-plan-2026-07-10.md territory (turn360-v2 at 2.017e-4).
+- The two pending in-tool confirmations landed: the legal attempt was user-confirmed, and the wrap720/turn360 tiers continued in angle-solver.md section 14 territory (turn360-v2 at 2.017e-4; that section holds the port record and its carried rulings, formerly solver-port-plan-2026-07-10.md, since deleted).
 - MiqcpClose was deleted in the 2026-08 cleanup.
 - The tools/ directory is git-ignored and machine-local; the numbers recorded here are the durable copy of the tools/miqcp artifacts.
-- The wrap-depth question was later mooted for the product solver by the |gameFacing| <= 360 hard-cap ruling (angle-solver.md).
+- The product solver first adopted a |gameFacing| <= 360 hard cap (2026-07-10 ruling, angle-solver.md section 14); the cap later became the wrapIls node parameter maxAbsGf, default 12000 (commit 3433c77e), so deep-wrap cells are expressible again; the standing legality preference for records is |gf| <= 720.
 
 ## EXECUTION RECORD 2026-07-10 (session cs0710a-j; read before continuing)
 

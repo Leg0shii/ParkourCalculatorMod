@@ -87,7 +87,7 @@ Against the shelving bar (would consider shipping near 50/53), 16-17 with the se
 
 **Keep and reuse:**
 
-1. **The capture plumbing** (`BlockSelection` model with collision sub-boxes, the three `AngleSolverState` block lists, `SaveFile.BlockSel` + `SaveIO` round-trip). This is durable, correct input for the eventual whole-jump solver and is independent of any solving. Shipped state 2026-08: the picker is product code on all three loaders (the `BlockPicker` port with `FabricBlockPicker` / `Forge8BlockPicker` / `Forge12BlockPicker`) behind `Settings.experimentalBlockCapture`, and `SaveFile.BlockSel` carries `box` plus the `boxes` collision sub-boxes.
+1. **The capture plumbing** (`BlockSelection` model with collision sub-boxes, the three `AngleSolverState` block lists, `SaveFile.BlockSel` + `SaveIO` round-trip). This is durable, correct input for the eventual whole-jump solver and is independent of any solving. Shipped state 2026-08: the picker is product code on all loaders (the `BlockPicker` port with `FabricBlockPicker` on both Fabric loaders plus `Forge8BlockPicker` / `Forge12BlockPicker`) behind `Settings.experimentalBlockCapture`, and `SaveFile.BlockSel` carries `box` plus the `boxes` collision sub-boxes.
 2. **The derivation machinery** as scaffolding: land/momentum footprints, keep-out-wall derivation from swept collisions, the edge-jump `pos[k-1]` indexing, the 1.8.9 collision-axis ordering rule. A whole-jump solver will still need to turn blocks into constraints.
 
 **Ideas that were not falsified, for a future attempt:**
@@ -118,7 +118,7 @@ The capture handoff doc was folded in here during the research-folder cleanup. I
 
 ## 8. Artifacts (for a future revival from git history)
 
-If block solving is resurrected, these were the pieces. This work was never committed to a shared branch, so it survives only if the pre-shelve working tree was archived to a branch or tag before the cleanup (strongly recommended before deleting anything). Update 2026-08-21: that archive never happened. The blocks-only pipeline and the probe screens are unrecoverable from history; only `BlockSolver.java` itself ever landed in git (and the 2026-08 cleanup deleted it from the tree), so this document's measurement record is the sole surviving evidence. The pieces:
+If block solving is resurrected, these were the pieces. This work was never committed to a shared branch, so it survives only if the pre-shelve working tree was archived to a branch or tag before the cleanup (strongly recommended before deleting anything). Update 2026-08-21: that archive never happened. The blocks-only pipeline (`BlocksOnlySolver`, `problems/blockonly/`) and the probe screens never landed in git and are unrecoverable; `BlockSolver.java` and `SweptCollision.java` did land and were deleted by the 2026-08 cleanup (recoverable from history); `ConstraintDeriver` is still live (its `deriveFootprint` serves the constraint UI). For everything that never landed, this document's measurement record is the sole surviving evidence. The pieces:
 
 - `core/.../anglesolver/BlocksOnlySolver.java` (the pipeline), reused `BlockSolver`, `SweptCollision`, `ConstraintDeriver`.
 - `AngleSolverEngine.solveFromBlocks` / `buildBlockResult` (the CMA-ES engine path).

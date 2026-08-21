@@ -7,9 +7,9 @@ exact problem, everything tried, the tooling, and the heavy machinery from the 5
 campaign to bring next.
 
 Branch: `feature/tas-solve-smoothness`. All code below is uncommitted on that branch.
-(Update 2026-08-21: committed as 6a4e6d94; the wrap-reserve fix, the MAX_ABS_GF change as
-`WrapWindowIls.Config.maxAbsGf`, `rWrapEps`, the `EngineFileScreen` hooks and `Roc2CellSetDump`
-are all in tree.)
+(Update 2026-08-21: committed in two pieces; the main-tree changes (GraphRunner wrap reserve, the
+MAX_ABS_GF change as `WrapWindowIls.Config.maxAbsGf`, `rWrapEps`) landed as 3433c77e, the test-tree
+harness (`EngineFileScreen` hooks, `Roc2CellSetDump`) and this doc as 6a4e6d94. All in tree.)
 
 ---
 
@@ -102,7 +102,7 @@ Clear stale `PKC_*` env between runs (they leak); read output from
 
 ## 5. Code changes on the branch (uncommitted)
 
-Update 2026-08-21: no longer uncommitted; everything below was committed as 6a4e6d94 (the cap
+Update 2026-08-21: no longer uncommitted; the main-tree cap change landed as 3433c77e (the cap
 now also lives as `WrapWindowIls.Config.maxAbsGf`).
 
 - `WrapWindowIls.MAX_ABS_GF` 360 -> 12000, and the two `WrapWindowIlsTest` cap assertions updated
@@ -230,8 +230,8 @@ there: viol=0, X@T6846 = -3754.300493889. The user re-saved the file mid-session
 
 ### 10.2 New tooling (all uncommitted, test-side unless noted)
 
-Update 2026-08-21: committed as 6a4e6d94 (GraphRunner wrap reserve, EngineFileScreen hooks,
-Roc2CellSetDump), with the exceptions noted per item below.
+Update 2026-08-21: committed (GraphRunner wrap reserve as 3433c77e; EngineFileScreen hooks and
+Roc2CellSetDump as 6a4e6d94), with the exceptions noted per item below.
 
 - `GraphRunner` (MAIN): reserves min(3s, budget/4) of the overall deadline for a pending `wrapIls`
   node. Fixes the wrap starvation. Fast + full `-PslowTests` suites green. THOROUGH 45s on roc2
