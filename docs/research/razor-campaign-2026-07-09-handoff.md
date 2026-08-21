@@ -1,13 +1,14 @@
 # Razor campaign handoff: 2026-07-08 evening to 2026-07-09 evening
 
-Read this FIRST before any razor work. Companions: alm-snap-stage-a-design.md (Stage A + all dispositions), alm-snap-stage-b-design.md (Stage B, three adversarial review rounds, B1x dispositions), sheepram-port-spec.md (normative port reference), nix-solver-handoff.md (the previous session's record). Memory file project_alm_snap_stage_a.md carries the condensed chronology.
+Read this FIRST before any razor work. Companions: alm-snap-stage-a-design.md (Stage A + all dispositions; deleted 2026-08-21, its surviving rationale carried into alm-snap-stage-b-design.md), alm-snap-stage-b-design.md (Stage B, three adversarial review rounds, B1x dispositions), sheepram-port-spec.md (normative port reference; deleted 2026-08-21, its audit and constants carried into nix-solver-handoff.md section 2), nix-solver-handoff.md (the previous session's record).
 
 ## Scoreboard (all delivered files verified byte-exact at write time; in-tool replay is the final arbiter)
 
 - 5.4375bm: SOLVED and IMPROVED, IN-TOOL CONFIRMED BY THE USER (2026-07-09 evening). SOLVED_5.4375bm_proof_improved.json (game folder) = viol 0, pad X 212.7001881826, +2.4e-5 over the prover's solve, best known in existence, replays working in the live tool. Seeded refinement of the prover's solution, not a cold solve. Annulus-certified headroom above it: +3.0e-4.
 - 5.375bm rung: NOT SOLVED (by anyone). USER RULING (final): our 1.2246666e-5 point is NOT a record of any kind because it is not legal (it violates five walls, not only the landing constraint); records on this jump are legal-metric only, and the COMMUNITY's 2.74e-4 legal attempt STANDS as the record. Our best LEGAL rung attempt is the warm-chained legal run at shortfall 2.005e-3 (all walls hard except the pad). The 1.2247e-5 point (ATTEMPT_5.375bm_closest.json) remains a research artifact: the closest known infeasible approach, with a rigorous MOVE-MILP certificate (optimal over its entire simultaneous non-gate-flipping cell-move neighborhood; gate-flip pairs/triples move only the 14th digit) and in-tool replay confirmed consistent with the model.
+- Addendum 2026-08-21: the rung 5.375 legal record fell the next day (2026-07-10): verified legal shortfall 9.683e-5 vs the community 2.74e-4, 2.83x better, later user-confirmed in-tool; full record in next-session-lever2-2026-07-10.md.
 - weirdpane: LEGAL RECORD, IN-TOOL CONFIRMED BY THE USER (2026-07-09 evening): ATTEMPT_weirdpane_legal_v2.json replays legal in the live tool, all hard walls including t38 held, only the t50 landing constraint short by 2.040e-3, beating the user's hand best 2.2718e-3. The v1 file (unlocked reconstructed rows) drifted ~1e-6 in-tool and flipped the three thinnest walls; locked raw rows are the proven realization.
-- Gate microbench: PASSED (gateless Sheepram-class model diverges 0.080 blocks on the proof trajectory; docs/research/gate-microbench.md).
+- Gate microbench: PASSED (gateless Sheepram-class model diverges 0.080 blocks on the proof trajectory; docs/research/gate-microbench.md, deleted 2026-08-21: GateMicrobenchTest is the living record and the headline is carried in alm-snap-stage-b-design.md).
 
 ## The five headline discoveries (each measured, citations in the design notes and reports)
 
@@ -23,7 +24,7 @@ Read this FIRST before any razor work. Companions: alm-snap-stage-a-design.md (S
 
 ## Open non-rung work
 
-- Engine wiring (AlmSnapStage into runJob + dualChain, hard sub-budget, nix-full-t1 wall-clock check) - designed, dispositioned, not built.
+- Engine wiring (AlmSnapStage into runJob + dualChain, hard sub-budget, nix-full-t1 wall-clock check) - designed, dispositioned, not built. [2026-08-21: subsequently built, then removed entirely with issue 380 / PR 382; see alm-snap-stage-b-design.md.]
 - Sheepram head-to-head on our cases in their DSL - never run.
 - Uncorrected/V4.5 class: pattern-bound (frozen-pattern diagnosis); needs gate enumeration (B2, designed + dispositioned) or template seeds.
 - The 5.4375 improved solution and weirdpane v2 in-game user verification: DONE (user-confirmed in-game 2026-07-09 late).
@@ -39,11 +40,13 @@ Read this FIRST before any razor work. Companions: alm-snap-stage-a-design.md (S
 
 - Gradle marks :core:test UP-TO-DATE on env-var-only reruns: ALWAYS --rerun (Gradle 9.1) and verify report mtimes; the daemon does not propagate fresh env vars to forked test JVMs: use --no-daemon on env-gated runs.
 - Subagents supervising long builds die silently (8+ incidents): run long jobs as direct background commands, and keep a watchdog Monitor (no-process + no-artifact for 6 min = stall event).
-- SnapRepairPolish wraps yaws to +-180 internally: structurally incompatible with wrap-window points; use the norm-ILS descent as the polisher there.
+- SnapRepairPolish wraps yaws to +-180 internally: structurally incompatible with wrap-window points; use the norm-ILS descent as the polisher there. [2026-08-21: SnapRepairPolish is deleted; WrapWindowIls is the live wrap machinery.]
 - COPT free tier caps at 2000 vars/2000 cons (fits the route MIQCP at 530-690 vars; does NOT fit 2428-binary move MILPs: use SCIP).
 - Row realization: locked RAW rows (SaveIO passes yaws through raw); never unlocked/delta rows for solver results; never wrapAll in a verify path for wrap-class points.
 - Display tick = internal + 1 in all user-facing communication; the delivered rung/weirdpane ATTEMPT files carry the proof/weirdpane angleSolver blocks and the rung's raised z-lo walls exist only as the harness's in-memory patch (RazorFixtures.applyRung5375Patch, count-asserted).
 
 ## Key artifacts
 
-Best rung point: tools/miqcp/rung5375-ils-point.json. Move table/solutions: rung5375-move-{table,solutions}.json. Certifications: tools/miqcp/results-*.json (+ logs). Reports: core/build/reports/miqcp-*.txt, razor-*.txt, pattern-pinned-*.txt, proof-neighborhood.txt, gate-microbench.md. Fixtures: captures/razor-{proof,proof-improved,weirdpane,weirdpane-attempt,weirdpane-attempt-v2,rung-attempt,uncorrected}.json. Harnesses: RazorBench (PKC_RB_*), PatternPinnedProbe (PKC_PP_* modes incl. warmchain/segtarget/normils), MiqcpDump/MiqcpClose (PKC_MIQCP_*), ProofNeighborhoodProbe (PKC_NP), RazorFixtures.
+Best rung point: tools/miqcp/rung5375-ils-point.json. Move table/solutions: rung5375-move-{table,solutions}.json. Certifications: tools/miqcp/results-*.json (+ logs). Reports: core/build/reports/miqcp-*.txt, razor-*.txt, pattern-pinned-*.txt, proof-neighborhood.txt, gate-microbench.md (the doc deleted 2026-08-21; GateMicrobenchTest is the living record, headline carried in alm-snap-stage-b-design.md). Fixtures: captures/razor-{proof,proof-improved,weirdpane,weirdpane-attempt,weirdpane-attempt-v2,rung-attempt,uncorrected}.json. Harnesses: RazorBench (PKC_RB_*), PatternPinnedProbe (PKC_PP_* modes incl. warmchain/segtarget/normils), MiqcpDump/MiqcpClose (PKC_MIQCP_*), ProofNeighborhoodProbe (PKC_NP), RazorFixtures.
+
+2026-08-21: after the cleanup, MiqcpDump, CellSetDump, NormCellProbe, StructureVariantDump (the last three added 2026-07-09/10), RazorFixtures, and the razor-* captures survive in the test tree; MiqcpClose, RazorBench, PatternPinnedProbe, and ProofNeighborhoodProbe are deleted. The tools/ directory is git-ignored and machine-local, so every tools/miqcp artifact named here is absent from a fresh clone; the certified numbers quoted in these docs are the durable copy.

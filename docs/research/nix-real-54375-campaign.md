@@ -1,5 +1,7 @@
 # The real 5.4375bm: campaign record (2026-07-08)
 
+Addendum 2026-08-21: the proof was later seeded and improved in-tool (+2.4e-5, user-confirmed; see razor-campaign-2026-07-09-handoff.md) and is pinned in-repo as captures/razor-proof.json. Section 5's "DLS over significant angles" description of Sheepram was corrected by source audit (nix-solver-handoff.md section 2): no significant-angle prioritization exists in their code. All section 2/6 harnesses except CoefDump were deleted in the 2026-08 cleanup.
+
 Status: **resolved by external proof, campaign closed**. The user hand-recreated the prover's run (5.4375bm_nix_proof.json); it replays byte-exact in ExactJumpModel (posDiff 8.9e-16, feasible viol 0, pad margin 1.64e-4) and satisfies our entire constraint encoding. Our spec was correct throughout; our best search residual was 2.59e-4 because the solution basin is a five-wall razor no search stage could thread. See section 6 for the post-mortem.
 
 ## 1. The problem

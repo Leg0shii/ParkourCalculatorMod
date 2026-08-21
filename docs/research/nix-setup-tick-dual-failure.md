@@ -1,10 +1,16 @@
 # Nix "setup tick" solve failure: why the closed-form dual dies on a redirecting prefix
 
+Status 2026-08-21: the shipped fix now lives as the SetupPeelNode graph node (the engine-stage setupPeel
+moved into the solver graph), and the nix-t25-setup-tick regression is still green. The four probe
+classes and the CMA-ES race described in the failure narrative were deleted in the 2026-08 cleanup.
+Appendix line numbers and git SHAs are historical; the 2026-08 history collapse invalidated the old SHAs.
+
 Handoff for a fresh session. Everything below was established on branch `nix-backward-march`
 (HEAD `b62f0c6`) against one save file. Production code is unchanged; four untracked probe tests
 under `core/src/test/.../anglesolver/` carry the experiments. Read "Tick indexing" before anything else.
 
-Related prior docs: `docs/research/nix-full-freestart.md`, `docs/research/nix-backward-march-handoff.md`.
+Related prior docs: `docs/research/nix-full-freestart.md`, `docs/research/nix-backward-march-handoff.md`
+(the backward-march file was consolidated into `nix-full-freestart.md` section 10 and deleted, 2026-08-21).
 This file is a smaller, sharper instance of the same "the setup is the hard part" story, isolated to a
 single grounded setup tick and traced to the exact failing step in `ClosedFormSolve`.
 

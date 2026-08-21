@@ -19,7 +19,7 @@ Sweep, 104 captures, ~25 s wall, 15.7 s of it inside `CostateDualSolver.solve`. 
 | LongRunSolver window CF ladders (`closedForm` via `runLadder`) | 5,826 | 2,874 | 8,710 | 7,546 |
 | FreeStartSolve jointLadder (probe + bisect + rungs, mostly under `runHorizon` free retry) | 2,349 | 1,411 | 5,902 | 4,851 |
 | SlpSolve dual seed | 588 | 279 | 502 | 459 |
-| everything else (RelaxationRecovery, dualBound, bestEffortShape) | 788 | 489 | 588 | 482 |
+| everything else (RelaxationRecovery, dualBound, bestEffortShape (since removed in the gh-386 cleanup)) | 788 | 489 | 588 | 482 |
 
 ProblemsTest flips the profile: `BoundPrunedRecovery` B&B node bounds dominate (935k solves, 405k capped, ~449 s in-dual summed across worker threads). Those are deadline-budgeted searches where an unconverged dual is still a valid (looser) bound, so their "capped time" is not removable wall time; it trades directly against pruning quality and the dualrecovery pins.
 
@@ -89,7 +89,7 @@ Method: merged JaCoCo line coverage over `:core:test -PslowTests` plus an agent-
 - **CPU shape unchanged post-fixes**: buildHessian 43 percent leaf (hottest single line: the O(walls^2 x ticks) multiply at 460), cholesky 18 percent, TrustRegionLp ~11 percent, free-start joint machine 45 percent inclusive. Node level: the only large burners are coldBnb (43 s) and explore:bnbFF (26 s), both the loopmm/nix accepted-fail pins burning their budgets by design.
 - **Largest waste ratio: SLP rejects 85 percent of its LP steps** (36,034 reject vs 6,197 accept in one sweep, ~6.8 LPs per accepted step). Trust-region adaptation is the lever; knife-edge risk per this record, measure-gated only.
 - **The pairCap fix is corpus-load-bearing**: 199 of 260 jointLadder invocations are margin-capped by inertia-wall antipodal pairs (0.005), not just j335's corridor.
-- **Corpus-dead code found (kill-audit candidates)**: the seed lane's 12-iteration translate loop never takes a single translate step corpus-wide (its 6 wins are 1 direct center solve + 5 anchor-grid; the loop only burns bestEffortShape before falling through); the `solveJointBest` tail LatticeRepair certify never succeeds (0 fires); jointWrapClose's internal lattice-repair branch never runs; jointDispatch's 6-iteration local-refinement loop on the scan path never enters its body; `LongRunSolver.solveFree` 6-arg overload has no caller.
+- **Corpus-dead code found (kill-audit candidates)**: the seed lane's 12-iteration translate loop never takes a single translate step corpus-wide (its 6 wins are 1 direct center solve + 5 anchor-grid; the loop only burns bestEffortShape (since removed in the gh-386 cleanup) before falling through); the `solveJointBest` tail LatticeRepair certify never succeeds (0 fires); jointWrapClose's internal lattice-repair branch never runs; jointDispatch's 6-iteration local-refinement loop on the scan path never enters its body; `LongRunSolver.solveFree` 6-arg overload has no caller.
 - **Feature surface without corpus coverage** (not dead, untested): exact EQ (==) X/Z constraints in bestTranslate/pinTranslate; `candidateThetas` pinned-member walls; custom window/commit ladder params on the horizon nodes.
 - j346 remains the slowest healthy capture (its rescue-miss paths now also pay the center chain, base ~5.5 s); j347 carries the largest capped-Newton grind (213 capped solves per run).
 

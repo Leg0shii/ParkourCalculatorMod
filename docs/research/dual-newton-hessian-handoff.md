@@ -7,6 +7,7 @@ Written at dev 64dada4 (the #382 squash merge). Read this before touching `Costa
 ## 0. State at handoff
 
 - Sweep baseline: `FreeStartSweepBench` 104/104 at **25.1 s** (down from 57.1 s at 8484ea5), over-2s runs: j346 base ~2.2-3.0 s, j347 base ~3.0 s, j347 shift ~2.4 s. `:core:check -PslowTests` green at ~2m40s.
+- Update (2026-08-21): the sweep baseline moved from 25.1 s to ~30 s after the #387-390 sharpening ladder shipped; accepted cost, see `dual-newton-iteration-audit.md` section 5.
 - `SlpSolve` now runs on the bespoke `TrustRegionLp` (bounded simplex, split step variables). commons-math3 is a test-only dependency of core (`TrustRegionLpTest` is the 300-instance randomized value-equivalence oracle against the old formulation). The loaders still bundle commons-math (Fabric `include`, Forge shade relocations); dropping that is packaging work with in-game QA.
 - Accepted frontier per ruling: `solve/loopmm-tight-t39` and `-fast` are `shouldSolve: false`; `dualrecovery/loopmm-3jump-lands` and `solve/j022-1bmhbfly-noland` carry `maxObjectiveGap: 5.0e-4`. Win-back criteria live in #383.
 
@@ -61,8 +62,8 @@ Measure first, kill-audit style: temporary counters (the RungAudit pattern from 
 
 ## 4. The five biggest remaining levers, ranked
 
-1. **Dual Newton iteration waste (#384)**: lanes A+B above. ~62% of solver CPU; the largest single win available, moderate risk (trajectory shifts in the capped population).
-2. **Free-start scan-volume restructure**: the 140-theta x ~6-round x ~12-solve multiplication is the machine that FEEDS lever 1; coarse-to-fine plus cross-round reuse attacks it structurally. Overlaps lane B; worth designing together. Farseed spends ~3.6 s here even before the Newton waste inside it.
+1. **Dual Newton iteration waste (#384)**: lanes A+B above. ~62% of solver CPU; the largest single win available, moderate risk (trajectory shifts in the capped population). DONE, negative: see `dual-newton-iteration-audit.md`; capped iterations are load-bearing.
+2. **Free-start scan-volume restructure**: the 140-theta x ~6-round x ~12-solve multiplication is the machine that FEEDS lever 1; coarse-to-fine plus cross-round reuse attacks it structurally. Overlaps lane B; worth designing together. Farseed spends ~3.6 s here even before the Newton waste inside it. Declined by the audit's section 4: the theta machine never runs on the sweep and the j990 pin protects its exact enumeration.
 3. **loopmm redirect win-back (#383)**: capability, not speed. The pad needs a deliberate crossing mechanism (the corridor between dual bound and pad is ~1e-5 deep; float-lattice realization inside it is the hard part). Acceptance criteria are in the issue.
 4. **FAST-path last-window polish cost**: pre-LP measurements showed `LevelSetAscent` + hug on last windows at ~6.2 s of the then-57 s sweep (20 calls, all wins) and window CF/SLP alternates at ~10 s combined; all contribute results, so this is a budget/semantics question (how much objective polish does first-feasible FAST owe?), needs a ruling plus re-measurement post-LP before touching.
 5. **Packaging simplification**: drop the commons-math bundles from the loaders (Fabric `include`, both Forge relocations plus the jar-relocator machinery that exists only for it) now that core no longer needs it at runtime. Mechanical, but it is loader packaging: needs the usual in-game QA pass on all three loaders.

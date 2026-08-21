@@ -7,6 +7,9 @@ exact problem, everything tried, the tooling, and the heavy machinery from the 5
 campaign to bring next.
 
 Branch: `feature/tas-solve-smoothness`. All code below is uncommitted on that branch.
+(Update 2026-08-21: committed in two pieces; the main-tree changes (GraphRunner wrap reserve, the
+MAX_ABS_GF change as `WrapWindowIls.Config.maxAbsGf`, `rWrapEps`) landed as 3433c77e, the test-tree
+harness (`EngineFileScreen` hooks, `Roc2CellSetDump`) and this doc as 6a4e6d94. All in tree.)
 
 ---
 
@@ -99,6 +102,9 @@ Clear stale `PKC_*` env between runs (they leak); read output from
 
 ## 5. Code changes on the branch (uncommitted)
 
+Update 2026-08-21: no longer uncommitted; the main-tree cap change landed as 3433c77e (the cap
+now also lives as `WrapWindowIls.Config.maxAbsGf`).
+
 - `WrapWindowIls.MAX_ABS_GF` 360 -> 12000, and the two `WrapWindowIlsTest` cap assertions updated
   to track `MAX_ABS_GF`. Needed because roc2 facings run ~2400 to 2835 degrees: the raw accumulated
   yaw is already ~2470 at T6796 (this jump sits ~6800 ticks into a run), so the working facings are
@@ -137,6 +143,10 @@ bases, gate band, start box); the full-circle bound is open.
 roc2 is a 3-jump neo-style reach problem at the byte-exact sine floor, the same family as the
 5.375/5.4375 nix neo jumps (the heaviest the project has done). What that campaign used, and when to
 reach for it (classes under `core/src/main/.../anglesolver/solver/`):
+
+(Update 2026-08-21: `MomentumAssembly`, `HomotopyCloser`, `AlmSnapStage` and `NixBackwardMarch`
+were since deleted in the 2026-08 cleanup; section 10.4 already proved them inapplicable to roc2,
+so nothing is lost.)
 
 - `WrapWindowIls` (Angle Wrap): re-expresses each heading as gf, gf +-360, gf +-720 to ride
   DIFFERENT LUT cells. On nix it was the only source of the 6.5e-5 -> 1.22e-5 gain. The extra reach
@@ -220,6 +230,9 @@ there: viol=0, X@T6846 = -3754.300493889. The user re-saved the file mid-session
 
 ### 10.2 New tooling (all uncommitted, test-side unless noted)
 
+Update 2026-08-21: committed (GraphRunner wrap reserve as 3433c77e; EngineFileScreen hooks and
+Roc2CellSetDump as 6a4e6d94), with the exceptions noted per item below.
+
 - `GraphRunner` (MAIN): reserves min(3s, budget/4) of the overall deadline for a pending `wrapIls`
   node. Fixes the wrap starvation. Fast + full `-PslowTests` suites green. THOROUGH 45s on roc2
   went from -3754.3037 (wrap never ran) to -3754.3012 (wrap runs).
@@ -227,7 +240,8 @@ there: viol=0, X@T6846 = -3754.300493889. The user re-saved the file mid-session
   positions, bit-exact gate for any window; prints `SEEDCHECKGF` base facings), `PKC_ASSEMBLY`,
   `PKC_BNB` (deep BnB standalone), `PKC_CLOSER` (HomotopyCloser from the solve result),
   `PKC_ADFLIP_TICKS` (A/D mirror scan through the real solver stack), wrap-push knobs
-  (`PKC_WRAP_SPAN/MAXSPAN/HIGH/GATEFLIP/BASE`).
+  (`PKC_WRAP_SPAN/MAXSPAN/HIGH/GATEFLIP/BASE`). (2026-08-21: `PKC_ASSEMBLY` and `PKC_CLOSER`
+  are gone; their target classes were deleted in the 2026-08 cleanup.)
 - `Roc2CellSetDump` (new): generalizes the 5375 CellSetDump to any save via `PKC_SOLVE_FILE`.
   Emits `tools/miqcp/roc2-cellset-span<sp>-<tag>.json`; aborts unless the cell-constant
   reconstruction is bit-exact vs `ExactJumpModel.forward`. Knobs: multi-point union
@@ -238,7 +252,8 @@ there: viol=0, X@T6846 = -3754.300493889. The user re-saved the file mid-session
   (MUST pass zlo-tighten 0: pinned start). COPT and Gurobi licenses reject these sizes; SCIP
   carries everything. LP-vs-byte-exact slop is ~1.5e-6 at corner-riding optima (solutions ride
   Z@6845hi); repair before delivery, harmless vs 1e-4 margins.
-- `NormScanScreen` (new): norm landscape scan across wrap re-expressions.
+- `NormScanScreen` (new): norm landscape scan across wrap re-expressions. (2026-08-21: never
+  committed, not in the tree.)
 
 ### 10.3 Proven scope ceilings (SCIP optimal, byte-exact recompute drift 0)
 
@@ -288,3 +303,9 @@ key/jump patterns (outside the angle solver's decision space), start-history cha
 Verdict so far: NOT impossible-certified (smooth headroom +0.39 to +1.4 remains, full-circle
 byte-exact unexplored beyond the sampled finder), but every searched-and-proven scope caps
 3.5e-4 to 4.9e-4 short of the pad.
+
+### 10.6 Final status addendum (2026-08-21)
+
+Later sessions established: `roc2-best.json` is the authoritative best (.000494 short, viol 0);
+`roc2.json` carries stale artifact walls; the tail is proven capped by the cell-set MILP; the
+open lever is the momentum windows around ticks 6796/6790.

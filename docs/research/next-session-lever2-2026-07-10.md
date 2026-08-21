@@ -1,4 +1,12 @@
-# Next session bootstrap: rung 5.375 Lever 2, gate-flip cell-set MILP
+# Rung 5.375 execution record: Lever 2, gate-flip cell-set MILP
+
+This file is the single rung 5.375 execution record. It was originally written as a next-session bootstrap (hence the filename, kept unchanged); the EXECUTION RECORD below is what actually ran. Consolidated 2026-08-21: the sections appended at the end carry the norm-cell mechanism, the adversarial-review record, and the Lever S saturation record from mission-5375-derived-2026-07-09.md, which is deleted.
+
+Status notes (2026-08-21):
+- The two pending in-tool confirmations landed: the legal attempt was user-confirmed, and the wrap720/turn360 tiers continued in angle-solver.md section 14 territory (turn360-v2 at 2.017e-4; that section holds the port record and its carried rulings, formerly solver-port-plan-2026-07-10.md, since deleted).
+- MiqcpClose was deleted in the 2026-08 cleanup.
+- The tools/ directory is git-ignored and machine-local; the numbers recorded here are the durable copy of the tools/miqcp artifacts.
+- The product solver first adopted a |gameFacing| <= 360 hard cap (2026-07-10 ruling, angle-solver.md section 14); the cap later became the wrapIls node parameter maxAbsGf, default 12000 (commit 3433c77e), so deep-wrap cells are expressible again; the standing legality preference for records is |gf| <= 720.
 
 ## EXECUTION RECORD 2026-07-10 (session cs0710a-j; read before continuing)
 
@@ -21,7 +29,7 @@ FULL-CIRCLE ARM (the last live question, attempted without licenses): tools/miqc
 
 WIDEN ARM RUN (same session, continued): span 365 (+-2 deg) dump cs0710k (77884 cells, recon bit-exact). Warm-start remap machinery added to cellset_milp.py (--warm-src-dump/--warm-sol, exact cell-constant matching self-verified to 1e-15, fix-solve-unfix injection because SCIP completesol is unreliable at 78k binaries). R2-widen (cs0710l, minimax tightened, 3600s): incumbent UNCHANGED -1.152396769e-5, dual bound -1.130991861e-5: PRIMARY CERTIFIED DEAD AT +-2 DEG WITH FREE GATES (verified cs0710n). R1-widen (cs0710m, legal, 3600s): incumbent UNCHANGED shortfall 9.683482978e-5, dual bound 212.6999065907 = certified legal-ceiling bracket [9.34e-5, 9.68e-5] at +-2 deg (verified cs0710o): the delivered point sits within 3.5e-6 of the in-window optimum. Gate-flip direction now CLOSED at both spans for PRIMARY; SECONDARY realized and near-ceiling. Caveats for dossier use: SCIP-only certificates (COPT unlicensed cap excludes 78k binaries; two-solver standard unmet without Gurobi eval, user sign-off required), timelimit bounds (not exact optima), feastol 1e-9, window/base-set/gate-band scope conditions as in the mission doc.
 
-Written 2026-07-10 ~01:45 at the end of the overnight execution session. Read this first, then the EXECUTION RECORD header of mission-5375-derived-2026-07-09.md, then razor-campaign-2026-07-09-handoff.md for the standing traps. Everything below is certified with artifacts on disk unless marked otherwise.
+Written 2026-07-10 ~01:45 at the end of the overnight execution session. Read this first, then the carried sections appended at the end of this file (formerly the EXECUTION RECORD header and sections 2/8 of mission-5375-derived-2026-07-09.md, since deleted), then razor-campaign-2026-07-09-handoff.md for the standing traps. Everything below is certified with artifacts on disk unless marked otherwise.
 
 ## 1. Binding rules (unchanged)
 
@@ -77,3 +85,38 @@ Step 4, outcomes:
 - COPT can go log-silent for 25+ minutes in deep B&B at ~1 thread while healthy: verify process CPU before calling a stall; watchdog threshold 20 min, and check liveness with ps -W in git bash (nested PowerShell liveness probes break on quoting).
 - Feascenter certificates on these models run 90-300s where the equivalent ceiling grind burned 100 minutes without an answer. Frame every decisive question as feasibility/feascenter if possible.
 - The suite gate is green as of session end (full :core:test, exit 0, new harnesses inert without env flags).
+
+## Carried from mission-5375-derived-2026-07-09.md (written 2026-07-09, consolidated 2026-08-21)
+
+The three sections below are carried from mission-5375-derived-2026-07-09.md before its deletion; they are the mechanism, the review record, and the Lever S saturation record the numbers above rest on. Measurements are reproduced as written on 2026-07-09/10.
+
+### The norm-cell structure (mission section 2, corrected by adversarial review)
+
+Cast-chain facts (verified in McSineTable.java:19-25, FacingLattice.java): sin index = (int)(x), cos index = (int)(x + 16384.0f), both from the SAME float x = rad*10430.378f; misalignment (the only source of |norm-1| beyond ~1e-7 table noise) can come only from rounding the +16384.0f add, i.e. binade-straddle zones of x. Envelope law VERIFIED to 4 significant figures against scan data: |norm - 1| <= (2*pi/65536)*|sin 2*theta| ~ 9.594e-5 at theta = +-45/135 deg.
+
+Signed region structure (reviewer's complete enumeration, matching the ILS scan counts exactly; re-derived and pinned by NormCellProbe nc0709a, section 2 above):
+- facings in (0, 90): only norm<1 cells (down to 1 - 9.59e-5 near 45); ZERO norm>1 cells at any wrap base to +-2880.
+- facings in (90, 180): norm>1 cells up to 1 + 9.594e-5 (max near 135).
+- facings in (180, 270): NO perturbed cells at all.
+- facings in (270, 360): norm>1 cells up to 1 + 9.594e-5 (max near 315).
+The original draft of the mission plan claimed elevated cells exist only in (270,360); that was FALSE (the scan's passNormHigh counts only the positive side, and the draft misread it). Deep wrap bases do not change the region structure (verified at the diagonal to +-2880): they only enrich cell choice inside the windows.
+
+Consequences:
+1. The annulus certificates ride norm ~1.0000969 at every diagonal tick t14-24 (facing ~45). At facing 45 there are ZERO realizable norm>1 cells, so the +5.1e-5 annulus ceiling is unrealizable UNDER THE CURRENT KEY PATTERN, and the realizable ceiling for that pattern is strictly lower.
+2. THE REFACE LEVER (found by the adversarial reviewer; the draft had wrongly refuted key re-authoring): the diagonal's movement heading phi = baseArg + facing is preserved by the mirror strafe key (baseArg -45 instead of +45, identical mMag), which moves the required facing from 45 to 135, INSIDE a norm>1 window at the envelope maximum (computed: max cell norm 1.0000959214 within +-1 deg of 135). Re-authoring the strafe key on the diagonal ticks makes norm-riding available exactly where the annulus model wanted it. At writing this was the most concrete unexplored solve path, and no impossibility dossier could claim pattern generality without certifying the refaced pattern too. [Outcome: the reface arm was run in Lever S and came out redundant with prepend, not additive; see section 2 above and the Lever S record below.]
+
+### Adversarial review record (mission section 8, 2026-07-09, one Opus reviewer)
+
+Verified correct by the reviewer: cast-chain premise; envelope law (4 sig figs vs scan); the (180,270) dead region; deep wraps cannot open the diagonal at fixed facing (checked to +-2880); annulus certificates ride unrealizable diagonal norms under the current pattern; MOVE-MILP minimax-only and k=0; SCIP annulus cross-check unmet (1.08e-4 gap); feascenter tolerance caveat real (incumbent norm exceeds its own cap by ~1e-6); legal baselines; zig-zag arithmetic (but aimed at a strawman).
+Findings and dispositions (all accepted):
+1. BLOCKER, reface lever falsely refuted: mirror strafe preserves phi and mMag while moving the diagonal facing to 135, where max cell norm 1.0000959 exists; the draft's "key re-authoring cannot rescue the diagonal" was deleted; the P1 reface arm was added as a primary lever; no dossier may claim pattern generality without certifying P1.
+2. MAJOR, norm-window law mis-stated: elevated cells exist in (0,90) negative-only, (90,180) positive, (270,360) positive, none in (180,270); passNormHigh is positive-side-only and the draft misread it. The mission's section 2 was rewritten signed; probe acceptance became two-sided.
+3. MAJOR, the probe acceptance baked in the positive-only blindness and +-2.8 deg coverage: the probe became complete-enumeration, signed, full +-30 deg tube.
+4. MAJOR, fork logic treated existence as certifiable: rewritten; only the negative direction certifies; feasible selections are candidates for byte-exact verification.
+5. MAJOR, SCIP cannot cross-check annulus MIQCPs: Lever 2 pivoted to the exact-cell-set MILP as primary; interval MIQCP demoted to corroboration; Gurobi eval named as the fallback second certifier with user sign-off.
+6. MAJOR, Lever 1 optimism: the X/Z vise structure means coupled k>1 moves and possible additivity degradation; a re-dump iteration loop was added; framing corrected to cheap-to-try.
+7. MINOR: double-recurrence fidelity added to the scope list; VMAX added to the scope list; feastol interactions noted (the cell-set MILP sidesteps quadratic feastol).
+
+### Lever S saturation record (mission EXECUTION RECORD header, 2026-07-09/10)
+
+Lever S EXECUTED (user re-directed to prepend mid-sweep): StructureVariantDump (PKC_SVAR_*) authored trust-gated variant dumps; control byte-exact. Mid-chain insertions certified dead (pre38-k1 partial bound ~212.6095; friction drains carried speed x0.546 per grounded tick). Prepend: circle feascenter t* = -1.431e-5 (k=1) vs -1.428e-5 (k=2): SATURATES at one tick. Reface (mirror strafe, diagonal t14-24): per-tick-capped annulus t* -3.535e-6 alone, -3.484e-6 with prepend: REDUNDANT with prepend, not additive. Base control capped t* -3.722e-6. ALL structures converge ~-3.6e-6; binding is the certified 7-wall vise (pad, raised rung Z, platform X pair, tail Z/Z/X). These numbers overlap section 2 above; the pre38-k1 partial bound and the vise wall naming are recorded only here.
