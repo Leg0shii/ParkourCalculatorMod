@@ -70,6 +70,24 @@ public final class FreeStartImproveNode implements NodeRuntime {
             adoptX = conv.startX;
             adoptZ = conv.startZ;
         }
+        if (adoptYaws == null && (cancel == null || !cancel.get())) {
+            double centerX = 0.5 * (ctx.freeBox.pxLo + ctx.freeBox.pxHi);
+            double centerZ = 0.5 * (ctx.freeBox.pzLo + ctx.freeBox.pzHi);
+            JumpPhysicsInputs pinned = Scoring.pinnedScenario(sc, centerX, centerZ);
+            JumpSpec pinnedSpec = new JumpSpec(pinned, ctx.spec.constraints, ctx.spec.objective);
+            String[] via = new String[1];
+            double[] chainYaws = de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine.dualChain(
+                    ctx.exactModel, pinnedSpec, pinned, cancel, via);
+            if (chainYaws != null
+                    && FreeStartSolve.violationAt(ctx.exactModel, ctx.spec, chainYaws, centerX, centerZ) <= ctx.feasTol) {
+                adoptYaws = chainYaws;
+                adoptX = centerX;
+                adoptZ = centerZ;
+                if (SolverTrace.on()) {
+                    SolverTrace.log("ENGINE", "free rescue center chain via=%s", via[0]);
+                }
+            }
+        }
         if (adoptYaws != null) {
             sc.startPos = new Vec3dCore(adoptX, sc.startPos.y, adoptZ);
             sc.startBox = StartBox.pinned(adoptX, adoptZ, sc.initialVelocity.x, sc.initialVelocity.z);

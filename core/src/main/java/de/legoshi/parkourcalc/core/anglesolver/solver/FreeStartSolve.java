@@ -509,6 +509,21 @@ public final class FreeStartSolve {
         CostateDualSolver solver = new CostateDualSolver(red.n, red.cx, red.cz, red.mMag, red.walls,
                 buildFreeP0(cbox, spec.objective, smooth));
 
+        double pairCap = Double.POSITIVE_INFINITY;
+        for (int i = 0; i < red.walls.size(); i++) {
+            JumpLinearModel.Wall wi = red.walls.get(i);
+            if (wi.eq) continue;
+            for (int j = i + 1; j < red.walls.size(); j++) {
+                JumpLinearModel.Wall wj = red.walls.get(j);
+                if (wj.eq || wj.axis != wi.axis || wj.coef.length != wi.coef.length) continue;
+                if (wi.p0coef != -wj.p0coef) continue;
+                boolean anti = true;
+                for (int t = 0; t < wi.coef.length; t++) {
+                    if (wi.coef[t] != -wj.coef[t]) { anti = false; break; }
+                }
+                if (anti) pairCap = Math.min(pairCap, 0.5 * (wi.bPrime + wj.bPrime));
+            }
+        }
         CostateDualSolver.Result probe = solver.solve(0.0, null);
         if (probe == null || solver.lastStalled) {
             lastJointDebug = probe == null ? "branch-infeasible@0" : "branch-stalled@0";
@@ -516,7 +531,7 @@ public final class FreeStartSolve {
         }
         double[] warm = probe.lambda;
         double lo = 0.0;
-        double hi = cfg.jointMarginMax;
+        double hi = Math.min(cfg.jointMarginMax, Math.max(0.0, pairCap));
         CostateDualSolver.Result rHi = solver.solve(hi, warm);
         if (rHi != null && !solver.lastStalled) {
             lo = hi;
