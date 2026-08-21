@@ -57,7 +57,24 @@ Measured on the sweep: fires on 49/129 failed last windows and 23/65 failed lead
 
 Handoff lane B items not pursued, with reasons: coarse-to-fine theta scanning and cross-round viability carry touch only the theta machine, which the sweep never enters and whose exact enumeration the j990 pin exists to protect, to shave ~3.6 s inside a 20 s budget currently met at ~7 s; weak-duality screening at 1-2 iterations is the jointLadder margin-0 probe that already exists (its skip path fired 0 times on the sweep, so there is nothing cheaper to screen with that would not re-enter section 3's lottery).
 
-## 5. What a future attempt would need
+## 5. Precision experiments (same day, prompted by the 4x2 field pair)
+
+A field save pair (4x2_1 / 4x2_1-nosolve, identical constraints, seed shifted ~0.6 blocks inside the T1 start box, one solves and one does not) exposed a free-start seed dependence: the analyze-path joint dual finds the feasible start region to within 5.5e-3 but nothing bridges the last gap for rigid dF=0 chains, and the engine regresses to seed-anchored solving. That raised the question this section answers: would a more precise dual solve close such gaps, and what does it cost? Two precision axes, both probed behind temporary properties.
+
+**Iteration precision (`MAX_ITER` 100 -> 200 / 400 / 1000 / 4000): dead in both directions.**
+
+- On the 4x2 pair: no cap value changes the outcome. At cap 1000 ZERO solves hit the cap on this jump (all self-terminate via the input-space stall) and total iterations grow only 12%. The plateau is a floor here, not slow convergence: the iterates stop moving at a point whose realization is 5.5e-3 off, and the error lives in the formulation, not in unfinished iteration.
+- On the sweep at cap 1000: 3.44M iterations (5.75x), 2,896 solves STILL capped at 1000 (a genuinely endless crawl population), converged only 379 -> 714 (+6.6% of the old capped population), wall 27.3 s -> 106.8 s (3.9x), and j816 shift is LOST (103/104). More iterations buy almost no convergence, cost 4x, and redraw the same downstream lottery as truncation did.
+
+**Formulation precision (`P0_SMOOTH` 0.05 -> 0.01 / 0.002 / 0.0005 on the free-start support term): the real lever, but not as a constant.**
+
+- The 4x2 nosolve save SOLVES at 0.002 and 0.0005 (26/26, faster than the failing run, and the 0.0005 objective beats the lucky-seed solve). The needle-class floor is smoothing bias in the recovered start position; sharpening the start term lands the needle. 0.01 is not enough.
+- As a global constant it fails the corpus: sweep 2.0-2.6x slower and 103/104 at BOTH sharp values, with a different capture dying at each (j1149 shift at 0.002, j346 shift at 0.0005). Same knife-edge lottery as every other global-constant perturbation in this record.
+- Surviving design candidate for the free-start near-miss fix: a targeted sharpening pass. On the near-miss path only, re-solve once with a sharp start term, warm-started from the smoothed lambda (homotopy), and recover the start from that. One extra solve, touches only the failure path, leaves every already-certifying jump byte-identical. To be prototyped against the 4x2 pair plus the full gates; the pair should land in problems/solve as the pin either way.
+
+The "recovered angles need only modest dual accuracy" javadoc on `CostateDualSolver` (original to PR #122, 2026-06-10) is role-scoped to the pinned closed-form fast path, where misses fall through to SLP and recovery; it is stale for the free-start start-finder role, where no such net exists for rigid chains. Correct it in the fix PR.
+
+## 6. What a future attempt would need
 
 - A speedup of the CONVERGENCE itself that is bit-compatible on converged solves and strictly-better on capped ones. Nothing of that shape was found; `buildHessian`/`choleskySolve` are already in the bit-identical-only zone.
 - Or callers restructured so capped iterates are never consumed (certify differently, not from dual recovery). That is solver architecture work, not a perf patch.
