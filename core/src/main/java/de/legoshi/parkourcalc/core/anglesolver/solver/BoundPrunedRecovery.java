@@ -184,7 +184,10 @@ public final class BoundPrunedRecovery {
                         try {
                             long wait = Math.max(1L, searchDeadline - System.nanoTime() + 2_000_000_000L);
                             search = futures.get(i).get(wait, java.util.concurrent.TimeUnit.NANOSECONDS);
+                        } catch (java.util.concurrent.TimeoutException e) {
+                            continue;
                         } catch (Exception e) {
+                            e.printStackTrace();
                             continue;
                         }
                         if (search == null) continue;
