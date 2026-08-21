@@ -2,6 +2,8 @@
 
 Written at dev 64dada4 (the #382 squash merge). Read this before touching `CostateDualSolver` or planning the next solver perf pass. Companion issues: #384 (the Hessian work), #383 (loopmm redirect win-back). Session record: issue #380, PR #382.
 
+**Update (issue #384 executed): section 2's two lanes were measured and are both dead. Read `dual-newton-iteration-audit.md` before re-attempting anything here; it carries the per-callsite audit, the contribution audit, and the corpus breakages.**
+
 ## 0. State at handoff
 
 - Sweep baseline: `FreeStartSweepBench` 104/104 at **25.1 s** (down from 57.1 s at 8484ea5), over-2s runs: j346 base ~2.2-3.0 s, j347 base ~3.0 s, j347 shift ~2.4 s. `:core:check -PslowTests` green at ~2m40s.
