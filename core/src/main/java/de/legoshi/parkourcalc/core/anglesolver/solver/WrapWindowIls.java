@@ -29,6 +29,7 @@ public final class WrapWindowIls {
         public double legalGoalRhs;
         public boolean gateFlipMoves;
         public double maxAbsGf = MAX_ABS_GF;
+        public boolean reaccumScore;
     }
 
     public static boolean[] gateCriticalTicks(ExactJumpModel model, JumpSpec spec, double[] gf) {
@@ -485,19 +486,20 @@ public final class WrapWindowIls {
                                 double[] gf, double[] transDomain, State st, Config cfg) {
         st.evals++;
         if (st.evalCap > 0 && st.evals >= st.evalCap) st.hitCap = true;
-        ForwardPath p = model.forward(sc, gf);
+        double[] eff = cfg.reaccumScore ? sc.toGameFacings(Angles.wrapAll(gf)) : gf;
+        ForwardPath p = model.forward(sc, eff);
         if (cfg.legalObjective == null) {
-            SnapRepairPolish.Trans tr = SnapRepairPolish.bestTranslation(compiled, gf, p,
+            PathTranslation.Trans tr = PathTranslation.bestTranslation(compiled, eff, p,
                     transDomain[0], transDomain[1], transDomain[2], transDomain[3]);
             return tr.viol;
         }
-        SnapRepairPolish.Trans tf = SnapRepairPolish.bestTranslation(compiled, gf, p,
+        PathTranslation.Trans tf = PathTranslation.bestTranslation(compiled, eff, p,
                 transDomain[0], transDomain[1], transDomain[2], transDomain[3]);
         if (tf.viol > 0.0) return LEGAL_HARD_INFEASIBLE + tf.viol;
         Objective obj = cfg.legalObjective;
         boolean objX = obj.axis == JumpPhysicsInputs.Axis.X;
         boolean max = obj.sense == Objective.Sense.MAX;
-        SnapRepairPolish.Trans to = SnapRepairPolish.bestTranslationObj(compiled, gf, p,
+        PathTranslation.Trans to = PathTranslation.bestTranslationObj(compiled, eff, p,
                 transDomain[0], transDomain[1], transDomain[2], transDomain[3], objX ? 0 : 1, max);
         if (to.viol > 0.0) return LEGAL_HARD_INFEASIBLE + to.viol;
         double achieved = p.getPos(obj.tick, obj.axis) + (objX ? to.tx : to.tz);

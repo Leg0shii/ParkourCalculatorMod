@@ -161,7 +161,7 @@ public class SolveRunRecordTest {
         assertEquals(record.trajectory.size(), back.trajectory.size());
         assertEquals(record.trajectory.get(0).node, back.trajectory.get(0).node);
         assertEquals(record.nodes.size(), back.nodes.size());
-        assertEquals(record.counters.cmaesEvals, back.counters.cmaesEvals);
+        assertEquals(record.counters.smoothingEvals, back.counters.smoothingEvals);
         assertNull(SolveRunRecord.parse("{not json"));
     }
 
@@ -216,7 +216,6 @@ public class SolveRunRecordTest {
         nr.evals = 12;
         r.nodes.add(nr);
         SolveRunRecord.Counters counters = new SolveRunRecord.Counters();
-        counters.cmaesEvals = 100L;
         counters.smoothingEvals = 5L;
         r.counters = counters;
         r.model = "ExactJumpModel";

@@ -1,57 +1,24 @@
 package de.legoshi.parkourcalc.core.anglesolver;
 
-import de.legoshi.parkourcalc.core.anglesolver.solver.BucketAscentPolish;
 import de.legoshi.parkourcalc.core.anglesolver.solver.LongRunSolver;
-import de.legoshi.parkourcalc.core.anglesolver.solver.SolveCore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 public class BudgetResolutionTest {
 
     @Test
-    public void fastResolvesToTheShippedFastBudget() {
+    public void fastAndCustomDefaultsHaveNoDeadline() {
         AngleSolverState s = new AngleSolverState();
         s.setEffort(AngleSolverState.Effort.FAST);
-        SolveCore.Budget b = AngleSolverEngine.budgetFor(s);
-        assertEquals(16, b.restarts);
-        assertEquals(4500, b.maxEval);
-        assertEquals(2, b.polishCount);
-        assertSame(BucketAscentPolish.FAST, b.polishCfg);
         assertEquals(0L, AngleSolverEngine.deadlineNanosFor(s));
-    }
-
-    @Test
-    public void customDefaultsAreByteForByteFast() {
-        AngleSolverState s = new AngleSolverState();
         s.setEffort(AngleSolverState.Effort.CUSTOM);
-        SolveCore.Budget b = AngleSolverEngine.budgetFor(s);
-        assertEquals(16, b.restarts);
-        assertEquals(4500, b.maxEval);
-        assertEquals(2, b.polishCount);
-        assertSame(BucketAscentPolish.FAST, b.polishCfg);
         assertEquals(0L, AngleSolverEngine.deadlineNanosFor(s));
         LongRunSolver.LongRunConfig lr = AngleSolverEngine.longRunConfigFor(s);
         assertEquals(10, lr.window());
         assertEquals(3, lr.commit());
-    }
-
-    @Test
-    public void customBudgetFlowsIntoTheResolvedBudget() {
-        AngleSolverState s = new AngleSolverState();
-        s.setEffort(AngleSolverState.Effort.CUSTOM);
-        s.getSolveBudget().setRestarts(80);
-        s.getSolveBudget().setMaxEval(30000);
-        s.getSolveBudget().setPolishCount(12);
-        s.getSolveBudget().setPolishDepth(AngleSolverState.PolishDepth.EXHAUSTIVE);
-        SolveCore.Budget b = AngleSolverEngine.budgetFor(s);
-        assertEquals(80, b.restarts);
-        assertEquals(30000, b.maxEval);
-        assertEquals(12, b.polishCount);
-        assertSame("Exhaustive maps to the THOROUGH schedule", BucketAscentPolish.THOROUGH, b.polishCfg);
     }
 
     @Test
@@ -73,14 +40,9 @@ public class BudgetResolutionTest {
     }
 
     @Test
-    public void optimizeResolvesToAnytimeBatchesWithExhaustiveStages() {
+    public void optimizeResolvesToExhaustiveStages() {
         AngleSolverState s = new AngleSolverState();
         s.setEffort(AngleSolverState.Effort.THOROUGH);
-        SolveCore.Budget b = AngleSolverEngine.budgetFor(s);
-        assertEquals(16, b.restarts);
-        assertEquals(4500, b.maxEval);
-        assertEquals(4, b.polishCount);
-        assertSame(BucketAscentPolish.THOROUGH, b.polishCfg);
         assertTrue(AngleSolverEngine.ilsExhaustiveFor(s));
         assertFalse(AngleSolverEngine.stopOnFeasibleFor(s));
     }

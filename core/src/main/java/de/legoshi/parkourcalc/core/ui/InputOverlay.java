@@ -430,12 +430,6 @@ public final class InputOverlay {
         }
     }
 
-    private float tableContentHeight(int rowCount) {
-        float rowH = ThemeManager.tableRowHeight();
-        float borderSlop = 4f; // outer borders + guard so an exact fit doesn't trip the scrollbar
-        return ThemeManager.tableHeaderRowHeight() + rowCount * rowH + borderSlop;
-    }
-
     private void renderEmptyTableHint() {
         ImVec2 rectMin = ImGui.getItemRectMin();
         ImVec2 rectMax = ImGui.getItemRectMax();

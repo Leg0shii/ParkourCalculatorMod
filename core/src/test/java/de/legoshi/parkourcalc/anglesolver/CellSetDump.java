@@ -18,7 +18,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.McSineTable;
-import de.legoshi.parkourcalc.core.anglesolver.solver.SnapRepairPolish;
+import de.legoshi.parkourcalc.core.anglesolver.solver.PathTranslation;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
@@ -334,14 +334,14 @@ public class CellSetDump {
             double violAtPred = full.maxViolation(gf, p);
 
             ForwardPath pB = model.forward(sc, gf);
-            SnapRepairPolish.Trans trFull = SnapRepairPolish.bestTranslation(full, gf, pB,
+            PathTranslation.Trans trFull = PathTranslation.bestTranslation(full, gf, pB,
                     domT[0], domT[1], domT[2], domT[3]);
-            SnapRepairPolish.Trans tf = SnapRepairPolish.bestTranslation(legal, gf, pB,
+            PathTranslation.Trans tf = PathTranslation.bestTranslation(legal, gf, pB,
                     domT[0], domT[1], domT[2], domT[3]);
             double legalShortfall = Double.NaN;
             double legalObjX = Double.NaN;
             if (tf.viol <= 0.0) {
-                SnapRepairPolish.Trans to = SnapRepairPolish.bestTranslationObj(legal, gf, pB,
+                PathTranslation.Trans to = PathTranslation.bestTranslationObj(legal, gf, pB,
                         domT[0], domT[1], domT[2], domT[3], 0, true);
                 if (to.viol <= 0.0) {
                     legalObjX = pB.getPos(objTick, spec.objective.axis) + to.tx;
@@ -442,7 +442,7 @@ public class CellSetDump {
         double startZ = sc.startPos.z;
         ForwardPath fp = model.forward(sc, gf);
         for (int it = 0; it < 4; it++) {
-            SnapRepairPolish.Trans to = SnapRepairPolish.bestTranslationObj(legal, gf, fp,
+            PathTranslation.Trans to = PathTranslation.bestTranslationObj(legal, gf, fp,
                     domT[0] - ctx, domT[1] - ctx, domT[2] - ctz, domT[3] - ctz, 0, true);
             ctx += to.tx;
             ctz += to.tz;

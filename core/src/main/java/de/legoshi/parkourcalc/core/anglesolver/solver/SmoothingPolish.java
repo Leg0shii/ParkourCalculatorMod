@@ -3,7 +3,7 @@ package de.legoshi.parkourcalc.core.anglesolver.solver;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /** Ties off underdetermined solves: a feasibility- and objective-preserving descent on the total
- *  turning of the facing path. Constraints rarely pin every tick, so CMA-ES / the dual leave the
+ *  turning of the facing path. Constraints rarely pin every tick, so the dual and the searches leave the
  *  free ticks wherever the search happened to land and the solved path wiggles. This pass minimizes
  *  the sum of squared facing deltas (anchored at the launch yaw) under two hard gates evaluated on
  *  the same wrap + toGameFacings + byte-exact forward chain as the polish:

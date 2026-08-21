@@ -34,10 +34,6 @@ public class EngineFileScreen {
             AngleSolverState.SolveBudget b = state.getSolveBudget();
             b.setUseWindowSolver(false);
             b.setIlsExhaustive(true);
-            b.setPolishDepth(AngleSolverState.PolishDepth.EXHAUSTIVE);
-            b.setRestarts(16);
-            b.setMaxEval(4500);
-            b.setPolishCount(4);
             b.setTimeBudgetSeconds(System.getenv("PKC_FREE_SECS") != null
                     ? Integer.parseInt(System.getenv("PKC_FREE_SECS")) : 90);
         }
@@ -232,38 +228,6 @@ public class EngineFileScreen {
                 }
             }
             System.out.println("SEEDCHECK firstMismatchTick=" + firstBad);
-            return;
-        }
-
-        if ("1".equals(System.getenv("PKC_ASSEMBLY")) && pre != null) {
-            de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec augSpec = padAugmented(pre);
-            de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs sc = augSpec.asScenario();
-            de.legoshi.parkourcalc.core.anglesolver.solver.MomentumAssembly.Config mc =
-                    new de.legoshi.parkourcalc.core.anglesolver.solver.MomentumAssembly.Config();
-            int asmSecs = envInt("PKC_ASM_SECS", 600);
-            mc.perCandidateSec = envInt("PKC_ASM_CAND_SECS", 120);
-            mc.templateTries = envInt("PKC_ASM_TRIES", 6);
-            mc.frontierTries = envInt("PKC_ASM_TRIES", 6);
-            de.legoshi.parkourcalc.core.anglesolver.solver.StartBox fb =
-                    sc.startBox != null && sc.startBox.startFree() ? sc.startBox : null;
-            long a0 = System.nanoTime();
-            de.legoshi.parkourcalc.core.anglesolver.solver.MomentumAssembly.Result ar =
-                    de.legoshi.parkourcalc.core.anglesolver.solver.MomentumAssembly.solve(
-                            model, augSpec, 0.0, fb, a0 + asmSecs * 1_000_000_000L,
-                            new java.util.concurrent.atomic.AtomicBoolean(false), mc);
-            long aMs = (System.nanoTime() - a0) / 1_000_000L;
-            if (ar == null) {
-                System.out.printf("ASSEMBLY null ms=%d%n", aMs);
-            } else {
-                double[] agf = sc.toGameFacings(ar.yaws);
-                de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath ap = model.forward(sc, agf);
-                double av = de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler
-                        .compile(augSpec).maxViolation(agf, ap);
-                double ao = ap.getPos(pre.objective.tick, pre.objective.axis);
-                System.out.printf("ASSEMBLY viol=%.6e obj=%.9f start=(%.5f,%.5f) ms=%d%n",
-                        av, ao, ar.startX, ar.startZ, aMs);
-                dumpVec("ASSEMBLYYAWS", ar.yaws, state.getStartTick());
-            }
             return;
         }
 
@@ -492,39 +456,6 @@ public class EngineFileScreen {
                     w == null ? -1 : w.rounds, w == null ? -1 : w.accepts, w == null ? -1 : w.evals,
                     w == null ? -1 : w.kickCycles, wpMs, wc.span, wc.gateFlipMoves);
             if (w != null) dumpVec("WRAPPUSHGF", w.gf, -1);
-        }
-        if ("1".equals(System.getenv("PKC_CLOSER")) && r != null && !r.getYaws().isEmpty()) {
-            de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec spec = engine.lastSpecDebug();
-            de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec augSpec = padAugmented(spec);
-            de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs sc = augSpec.asScenario();
-            int nt = sc.numTicks;
-            double[] abs = new double[nt];
-            java.util.List<SolveResult.YawEntry> yl = r.getYaws();
-            int off = yl.size() - nt;
-            for (int k = 0; k < nt; k++) {
-                int idx = off + k;
-                if (idx >= 0 && idx < yl.size()) abs[k] = yl.get(idx).yaw;
-            }
-            int clSecs = envInt("PKC_CLOSER_SECS", 600);
-            double warmSlack = de.legoshi.parkourcalc.core.anglesolver.solver.HomotopyCloser.slack(model, augSpec, abs);
-            double eps0 = Math.max(2.0 * Math.max(warmSlack, 0.0), 1.0e-3);
-            System.out.printf("CLOSER start warmSlack=%.6e eps0=%.6e secs=%d%n", warmSlack, eps0, clSecs);
-            long c0 = System.nanoTime();
-            double[] cy = de.legoshi.parkourcalc.core.anglesolver.solver.HomotopyCloser.close(
-                    model, augSpec, abs.clone(), eps0, c0 + clSecs * 1_000_000_000L,
-                    new java.util.concurrent.atomic.AtomicBoolean(false));
-            long cMs = (System.nanoTime() - c0) / 1_000_000L;
-            if (cy == null) {
-                System.out.printf("CLOSER null ms=%d%n", cMs);
-            } else {
-                double[] cgf = sc.toGameFacings(de.legoshi.parkourcalc.core.anglesolver.solver.Angles.wrapAll(cy.clone()));
-                de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath cp = model.forward(sc, cgf);
-                double cv = de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler
-                        .compile(augSpec).maxViolation(cgf, cp);
-                double co = cp.getPos(spec.objective.tick, spec.objective.axis);
-                System.out.printf("CLOSER viol=%.6e obj=%.9f ms=%d%n", cv, co, cMs);
-                dumpVec("CLOSERYAWS", cy, -1);
-            }
         }
         de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec dbg = engine.lastSpecDebug();
         if (dbg != null) {

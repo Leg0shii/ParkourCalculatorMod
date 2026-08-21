@@ -40,17 +40,16 @@ public class GraphRunnerTest {
     }
 
     private static GraphNode stub(String id, NodeRuntime runtime, Guarantee... branches) {
-        return stub(id, runtime, false, 0, branches);
+        return stub(id, runtime, 0, branches);
     }
 
-    private static GraphNode stub(String id, NodeRuntime runtime, boolean advance, int budgetSec,
+    private static GraphNode stub(String id, NodeRuntime runtime, int budgetSec,
                                   Guarantee... branches) {
         NodeType.Builder b = NodeType.builder("stub-" + id, id, NodeCategory.CONTROL)
                 .requires(InputRequirement.ANY)
                 .fallback(branches[branches.length - 1])
                 .factory(p -> runtime);
         for (Guarantee g : branches) b.branch(Branch.preserves(g));
-        if (advance) b.advance();
         if (budgetSec > 0) {
             b.param(ParamSpec.integer("budgetSec", "Budget (s)", 0, 600, budgetSec));
             b.budgetParam("budgetSec");
@@ -162,7 +161,7 @@ public class GraphRunnerTest {
                 sleep(5);
             }
             return NodeOutcome.of(tok.get() ? Guarantee.DONE : Guarantee.NONE, in);
-        }, false, 1, Guarantee.DONE, Guarantee.NONE);
+        }, 1, Guarantee.DONE, Guarantee.NONE);
         SolverGraph g = graph(
                 Arrays.asList(marker("entry", "entry"), marker("emit", "emit"), a),
                 Arrays.asList(new GraphEdge("entry", Guarantee.DONE, "a")));
@@ -202,42 +201,6 @@ public class GraphRunnerTest {
         canceller.start();
         assertNull(GraphRunner.run(g, ctx));
         assertTrue("no node after the cancelled one may run", order.isEmpty());
-    }
-
-    @Test
-    public void advanceTripsOnlyTheCurrentAdvanceCapableNode() {
-        List<String> order = new ArrayList<>();
-        GraphNode a = stub("a", (ctx, in, tok, dl) -> {
-            long failsafe = System.nanoTime() + 10_000_000_000L;
-            while (!tok.get() && System.nanoTime() < failsafe) {
-                sleep(5);
-            }
-            return NodeOutcome.of(Guarantee.DONE, in);
-        }, true, 0, Guarantee.DONE);
-        GraphNode b = stub("b", (ctx, in, tok, dl) -> {
-            order.add("b");
-            return NodeOutcome.of(Guarantee.DONE, in);
-        }, Guarantee.DONE);
-        SolverGraph g = graph(
-                Arrays.asList(marker("entry", "entry"), marker("emit", "emit"), a, b),
-                Arrays.asList(
-                        new GraphEdge("entry", Guarantee.DONE, "a"),
-                        new GraphEdge("a", Guarantee.DONE, "b"),
-                        new GraphEdge("b", Guarantee.DONE, "emit")));
-        GraphContext ctx = TestScenarios.context(2, null, new AtomicBoolean(false));
-        Thread advancer = new Thread(() -> {
-            long failsafe = System.nanoTime() + 10_000_000_000L;
-            while (!ctx.advance() && System.nanoTime() < failsafe) {
-                sleep(5);
-            }
-        });
-        advancer.setDaemon(true);
-        advancer.start();
-        long t0 = System.nanoTime();
-        GraphRunner.run(g, ctx);
-        long elapsedMs = (System.nanoTime() - t0) / 1_000_000L;
-        assertTrue("advance should end the node quickly, was " + elapsedMs + " ms", elapsedMs < 5000);
-        assertEquals(Arrays.asList("b"), order);
     }
 
     @Test

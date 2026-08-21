@@ -2,8 +2,8 @@ package de.legoshi.parkourcalc.core.anglesolver.solver;
 
 /** Byte-exact MC sprint-jump forward: a direct port of the real movement float chain (hard
  *  thresholds + exact MathHelper sine table + per-axis momentum cancellation). Reproduces the live
- *  SimulatorEntity to the ULP in X/Z for collision-free motion, so CMA-ES (derivative-free) optimizes
- *  and reports against it directly.
+ *  SimulatorEntity to the ULP in X/Z for collision-free motion, so the solver stages optimize
+ *  and report against it directly.
  *
  *  <p>Ground/air is authored per tick by {@link JumpPhysicsInputs#slipPerTick} (a ground value = on a
  *  surface, NaN = airborne) and jumps by {@link JumpPhysicsInputs#jumpPerTick}: a JUMP tick fires only

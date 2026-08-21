@@ -546,10 +546,6 @@ public final class SaveIO {
     private static void applyCustomBudget(SaveFile.SolveBudget src, AngleSolverState.SolveBudget dst) {
         dst.resetToDefaults();
         if (src == null) return;
-        dst.setRestarts(src.restarts);
-        dst.setMaxEval(src.maxEval);
-        dst.setPolishCount(src.polishCount);
-        dst.setPolishDepth(parseEnum(AngleSolverState.PolishDepth.class, src.polishDepth, AngleSolverState.PolishDepth.LIGHT));
         dst.setTimeBudgetSeconds(src.timeBudgetSeconds);
         dst.setWindow(src.window);   // before commit: commit's clamp depends on window
         dst.setCommit(src.commit);
@@ -559,10 +555,6 @@ public final class SaveIO {
 
     private static SaveFile.SolveBudget toSaveCustomBudget(AngleSolverState.SolveBudget b) {
         SaveFile.SolveBudget out = new SaveFile.SolveBudget();
-        out.restarts = b.getRestarts();
-        out.maxEval = b.getMaxEval();
-        out.polishCount = b.getPolishCount();
-        out.polishDepth = b.getPolishDepth().name();
         out.timeBudgetSeconds = b.getTimeBudgetSeconds();
         out.window = b.getWindow();
         out.commit = b.getCommit();

@@ -103,6 +103,12 @@ public final class LongRunSolver {
     private LongRunSolver() {
     }
 
+    public static final class WindowCache {
+        private final Map<String, double[]> map = new HashMap<>();
+    }
+
+    private static final double[] WINDOW_MISS = new double[0];
+
     public static double[] solve(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel) {
         return solve(exact, spec, feasTol, cancel, LongRunConfig.defaults());
     }
@@ -121,6 +127,11 @@ public final class LongRunSolver {
 
     public static FreeRun solveFree(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
                                     LongRunConfig cfg, StartBox freeBox) {
+        return solveFree(exact, spec, feasTol, cancel, cfg, freeBox, new WindowCache());
+    }
+
+    public static FreeRun solveFree(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
+                                    LongRunConfig cfg, StartBox freeBox, WindowCache windows) {
         if (freeBox == null || !freeBox.startFree()) return null;
         JumpPhysicsInputs sc = spec.asScenario();
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
@@ -135,7 +146,7 @@ public final class LongRunSolver {
             chosen[0] = Double.NaN;
             chosen[1] = Double.NaN;
             double[] gf = runHorizon(exact, sc, spec, bounds, jumps, commit, cfg.windowLadder, cancel,
-                    freeBox, chosen, retryCache);
+                    freeBox, chosen, retryCache, windows);
             if (gf == null || Double.isNaN(chosen[0])) continue;
             JumpPhysicsInputs at = FreeStartSolve.copyWithStart(sc, chosen[0], chosen[1]);
             double[] replay = at.toGameFacings(Angles.wrapAll(gf));
@@ -147,6 +158,11 @@ public final class LongRunSolver {
 
     public static double[] solve(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
                                  LongRunConfig cfg) {
+        return solve(exact, spec, feasTol, cancel, cfg, new WindowCache());
+    }
+
+    public static double[] solve(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
+                                 LongRunConfig cfg, WindowCache windows) {
         JumpPhysicsInputs sc = spec.asScenario();
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
         int[] bounds = jumpBoundaries(sc);
@@ -156,7 +172,8 @@ public final class LongRunSolver {
 
         for (int commit : cfg.commitLadder) {
             if (cancel != null && cancel.get()) return null;
-            double[] gf = runHorizon(exact, sc, spec, bounds, jumps, commit, cfg.windowLadder, cancel, null, null, null);
+            double[] gf = runHorizon(exact, sc, spec, bounds, jumps, commit, cfg.windowLadder, cancel, null, null, null,
+                    windows);
             if (gf == null) continue;
             // Certify the chain Apply will actually realize, not the window-chained facings themselves:
             // the plan stores the wrapped facings and the game re-accumulates float deltas from them,
@@ -178,7 +195,8 @@ public final class LongRunSolver {
 
     private static double[] runHorizon(ExactJumpModel exact, JumpPhysicsInputs sc, JumpSpec spec, int[] bounds,
                                        int jumps, int commitJumps, int[] windowLadder, AtomicBoolean cancel,
-                                       StartBox freeBox, double[] chosenStart, Map<Integer, Object> retryCache) {
+                                       StartBox freeBox, double[] chosenStart, Map<Integer, Object> retryCache,
+                                       WindowCache windows) {
         int n = sc.numTicks;
         double[] gf = new double[n];
         Vec3dCore seedPos = sc.startPos, seedVel = sc.initialVelocity;
@@ -201,7 +219,27 @@ public final class LongRunSolver {
                 Objective obj = last
                         ? new Objective(spec.objective.axis, spec.objective.sense, c - a)   // last window: real objective
                         : new Objective(JumpPhysicsInputs.Axis.Z, Objective.Sense.MAX, c - a); // lead-in: any feasible
-                double[] yaws = solveWindow(exact, win, cons, obj, last, cancel);
+                String winKey = windowKey(a, c, last, seedPos, seedVel, seedYaw);
+                double[] cachedWin = windows.map.get(winKey);
+                double[] yaws;
+                if (cachedWin != null) {
+                    yaws = cachedWin == WINDOW_MISS ? null : cachedWin.clone();
+                    if (SolverTrace.on()) {
+                        SolverTrace.log("LRS", "commit=%d window i=%d we=%d cached -> %s",
+                                commitJumps, i, we, yaws != null ? "solved" : "miss");
+                    }
+                } else {
+                    long winT0 = SolverTrace.on() ? System.nanoTime() : 0L;
+                    yaws = solveWindow(exact, win, cons, obj, last, cancel);
+                    if (cancel == null || !cancel.get()) {
+                        windows.map.put(winKey, yaws == null ? WINDOW_MISS : yaws.clone());
+                    }
+                    if (SolverTrace.on()) {
+                        SolverTrace.log("LRS", "commit=%d window i=%d we=%d ticks=%d cons=%d last=%s -> %s ms=%.1f",
+                                commitJumps, i, we, c - a, cons.size(), last, yaws != null ? "solved" : "miss",
+                                (System.nanoTime() - winT0) / 1.0e6);
+                    }
+                }
                 if (yaws == null && i == 0 && freeBox != null) {
                     Object cached = retryCache.get(we);
                     FreeStartSolve.Result fr;
@@ -253,6 +291,15 @@ public final class LongRunSolver {
             }
         }
         return gf;
+    }
+
+    private static String windowKey(int a, int c, boolean last, Vec3dCore pos, Vec3dCore vel, float yaw) {
+        return a + ":" + c + ":" + last
+                + ":" + Double.doubleToLongBits(pos.x) + ":" + Double.doubleToLongBits(pos.y)
+                + ":" + Double.doubleToLongBits(pos.z)
+                + ":" + Double.doubleToLongBits(vel.x) + ":" + Double.doubleToLongBits(vel.y)
+                + ":" + Double.doubleToLongBits(vel.z)
+                + ":" + Float.floatToIntBits(yaw);
     }
 
     /** Closed form on a window, trying the given objective then the other directions (feasibility is

@@ -106,7 +106,6 @@ public final class SolveRunRecord {
     }
 
     public static final class Counters {
-        public long cmaesEvals;
         public long smoothingEvals;
     }
 

@@ -9,7 +9,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
-import de.legoshi.parkourcalc.core.anglesolver.solver.SnapRepairPolish;
+import de.legoshi.parkourcalc.core.anglesolver.solver.PathTranslation;
 import org.junit.Test;
 
 import java.util.Random;
@@ -51,7 +51,7 @@ public class FreeStartTranslationTest {
             double[] gf = sc.toGameFacings(Angles.wrapAll(yawAbs));
             ForwardPath path = model.forward(sc, gf);
             double pinned = compiled.maxViolation(gf, path);
-            SnapRepairPolish.Trans tr = SnapRepairPolish.bestTranslation(compiled, gf, path, 0.0, 0.0, 0.0, 0.0);
+            PathTranslation.Trans tr = PathTranslation.bestTranslation(compiled, gf, path, 0.0, 0.0, 0.0, 0.0);
             assertEquals(label + " draw " + d + ": zero-width tx", 0.0, tr.tx, 0.0);
             assertEquals(label + " draw " + d + ": zero-width tz", 0.0, tr.tz, 0.0);
             assertEquals(label + " draw " + d + ": zero-width viol must byte-equal pinned",

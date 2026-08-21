@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/** Closed-form jump solve: the microsecond fast path tried ahead of the CMA-ES multistart.
+/** Closed-form jump solve: the microsecond fast path tried ahead of the slower recovery stages.
  *
  *  <p>It exploits the proven structure (horizontal motion is linear in the per-tick input vectors; the
  *  only nonconvexity is each input's fixed modulus) by solving the convex Lagrangian dual
@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *  <p>Returns absolute wrapped facings strictly feasible on the exact model, or {@code null} when the
  *  closed form does not apply (facing walls beyond {@link FacingPrefold} pins and dF=0 chains) or cannot
  *  certify feasibility; the caller then falls back
- *  ({@link SlpSolve}, then the full multistart), so this only ever makes solving faster, never less
+ *  ({@link SlpSolve}, then the recovery stages), so this only ever makes solving faster, never less
  *  reliable. Optimizing into a same-axis wall degenerates the dual's recovery, which is why one
  *  direction can fail here while the opposite certifies (docs/research/angle-solver.md 2.1.1). */
 public final class ClosedFormSolve {
