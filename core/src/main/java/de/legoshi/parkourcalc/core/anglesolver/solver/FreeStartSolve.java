@@ -62,8 +62,8 @@ public final class FreeStartSolve {
         StartBox box = base.startBox;
         if (box == null || !box.startFree()) return null;
 
-        double p0x = clamp(box.px, box.pxLo, box.pxHi);
-        double p0z = clamp(box.pz, box.pzLo, box.pzHi);
+        double p0x = 0.5 * (box.pxLo + box.pxHi);
+        double p0z = 0.5 * (box.pzLo + box.pzHi);
 
         if (SolverTrace.on()) {
             SolverTrace.log("FREE", "start box=%s seedStart=(%.4f,%.4f) center=(%.4f,%.4f)",
@@ -108,8 +108,8 @@ public final class FreeStartSolve {
 
     private static Result slpAnchorGrid(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs base, StartBox box,
                                         double feasTol, AtomicBoolean cancel) {
-        double seedX = clamp(box.px, box.pxLo, box.pxHi);
-        double seedZ = clamp(box.pz, box.pzLo, box.pzHi);
+        double seedX = 0.5 * (box.pxLo + box.pxHi);
+        double seedZ = 0.5 * (box.pzLo + box.pzHi);
         for (double fx : ANCHOR_GRID_FRACTIONS) {
             for (double fz : ANCHOR_GRID_FRACTIONS) {
                 if (cancel != null && cancel.get()) return null;
