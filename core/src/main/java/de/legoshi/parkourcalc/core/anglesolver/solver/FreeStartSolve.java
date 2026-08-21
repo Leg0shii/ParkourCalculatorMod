@@ -142,11 +142,89 @@ public final class FreeStartSolve {
         if (overall.yaws != null) {
             double[] rs = recoverStart(exact, spec, overall.yaws, cfg);
             if (rs != null) {
+                double rv = violationAt(exact, spec, overall.yaws, rs[0], rs[1]);
+                if (SolverTrace.on()) {
+                    SolverTrace.log("FREE", "joint tail rs=(%.5f,%.5f) rv=%.4e overallViol=%.4e", rs[0], rs[1], rv,
+                            overall.viol);
+                }
+                if (rv <= 0.1) {
+                    Result rot = anchorRotationScan(exact, spec, base, box, overall.yaws, rv, feasTol, cancel);
+                    if (rot != null) return rot;
+                }
                 if (cfg.jointWrapClose && overall.viol <= cfg.jointWrapCloseGate) {
                     Result wr = jointWrapClose(exact, base, spec, box, overall.yaws, rs, feasTol, cancel);
                     if (wr != null) return wr;
                 }
                 return new Result(Angles.wrapAll(overall.yaws.clone()), rs[0], rs[1], false);
+            }
+        }
+        return null;
+    }
+
+    private static Result anchorRotationScan(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs base,
+                                             StartBox box, double[] yaws, double rv0, double feasTol,
+                                             AtomicBoolean cancel) {
+        for (JumpConstraint c : spec.constraints) {
+            if (c.mode == JumpConstraint.Mode.F && c.t2 == null) return null;
+        }
+        Config cfg = new Config();
+        double bestD = 0.0;
+        double bestRv = rv0;
+        certifyBar = 0.02;
+        for (double d = -45.0; d <= 45.0; d += 0.25) {
+            if (cancel != null && cancel.get()) return null;
+            Result r = rotatedCertify(exact, spec, base, box, yaws, d, feasTol, cancel, cfg);
+            if (r != null && r.feasible) return r;
+            if (lastRotViol < bestRv) {
+                bestRv = lastRotViol;
+                bestD = d;
+            }
+        }
+        for (double refine : new double[] {0.02, 0.002}) {
+            double center = bestD;
+            for (int k = -10; k <= 10; k++) {
+                if (cancel != null && cancel.get()) return null;
+                Result r = rotatedCertify(exact, spec, base, box, yaws, center + k * refine, feasTol, cancel, cfg);
+                if (r != null && r.feasible) return r;
+                if (lastRotViol < bestRv) {
+                    bestRv = lastRotViol;
+                    bestD = center + k * refine;
+                }
+            }
+        }
+        if (SolverTrace.on()) {
+            SolverTrace.log("FREE", "joint rotation scan miss bestD=%.3f bestRv=%.4e", bestD, bestRv);
+        }
+        return null;
+    }
+
+    private static double lastRotViol;
+    private static double certifyBar;
+
+    private static Result rotatedCertify(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs base, StartBox box,
+                                         double[] yaws, double d, double feasTol, AtomicBoolean cancel,
+                                         Config cfg) {
+        lastRotViol = Double.POSITIVE_INFINITY;
+        double[] y2 = new double[yaws.length];
+        for (int t = 0; t < yaws.length; t++) y2[t] = yaws[t] + d;
+        double[] rs = recoverStart(exact, spec, y2, cfg);
+        if (rs == null) return null;
+        double v = violationAt(exact, spec, y2, rs[0], rs[1]);
+        lastRotViol = v;
+        if (v <= feasTol) {
+            if (SolverTrace.on()) {
+                SolverTrace.log("FREE", "joint rotation scan solved d=%.3f at (%.5f,%.5f)", d, rs[0], rs[1]);
+            }
+            return new Result(Angles.wrapAll(y2), rs[0], rs[1], true);
+        }
+        if (v < certifyBar) {
+            certifyBar = v;
+            double[] cfYaws = ClosedFormSolve.optimize(exact, specAtStart(base, spec, rs[0], rs[1]), feasTol, cancel);
+            if (cfYaws != null) {
+                if (SolverTrace.on()) {
+                    SolverTrace.log("FREE", "joint rotation scan certified d=%.3f at (%.5f,%.5f)", d, rs[0], rs[1]);
+                }
+                return new Result(cfYaws, rs[0], rs[1], true);
             }
         }
         return null;
