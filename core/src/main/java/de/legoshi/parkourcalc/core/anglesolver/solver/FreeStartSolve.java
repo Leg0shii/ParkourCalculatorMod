@@ -226,6 +226,7 @@ public final class FreeStartSolve {
         WrapWindowIls.Config wcfg = new WrapWindowIls.Config();
         wcfg.roundCap = 1;
         wcfg.evalCap = 4_000_000;
+        wcfg.reaccumScore = true;
         WrapWindowIls.Result w = WrapWindowIls.polish(exact, atSpec, gf, dom, wcfg,
                 System.nanoTime() + JOINT_WRAP_CLOSE_NANOS, cancel);
         if (w == null || w.viol > JOINT_WRAP_REPAIR_GATE) {
@@ -235,7 +236,8 @@ public final class FreeStartSolve {
             }
             return null;
         }
-        double[] d = bestTranslate(atSpec, w.gf, exact.forward(atSc, w.gf), box);
+        double[] chain = atSc.toGameFacings(Angles.wrapAll(w.gf));
+        double[] d = bestTranslate(atSpec, chain, exact.forward(atSc, chain), box);
         double px = clamp(rs[0] + d[0], box.pxLo, box.pxHi);
         double pz = clamp(rs[1] + d[1], box.pzLo, box.pzHi);
         double v = violationAt(exact, spec, w.gf, px, pz);
