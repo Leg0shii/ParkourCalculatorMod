@@ -1,5 +1,7 @@
 # Solver port plan: rung-5375 campaign findings into the v1.7.0 position-free solver
 
+EXECUTED. Outcome recorded in angle-solver.md's port section: S3-S5 shipped, S6 shipped off-by-default after the A/B, the S7 headline gate MISSED with basin-discovery attribution. The section 11 AlmSnapStage deferral was closed by issue 380 (the machinery was removed, PR 382). Branch names and the MiqcpClose/SnapRepairPolish/FacingReconstruction references are historical. The companion solver-port-handoff-2026-07-10.md was consolidated into this file's Phase-1 validation record (section 1) and deleted.
+
 APPROVED by the user 2026-07-10, with amendments: the old item 3 (legality knobs + winding re-expression) is DROPPED, and |gameFacing| is hard-capped at 360 as both default and max. This document is the exact plan for the executing session. Follow it step by step, in order; run the tests at every GATE; do not reorder, do not skip gates, do not re-ask for plan approval. Produced from a completed Phase 1 validation of docs/research/solver-port-handoff-2026-07-10.md plus one adversarial review (9 findings, all dispositioned into the specs below).
 
 ## 0. Binding rules
@@ -31,7 +33,7 @@ The user commits the existing uncommitted state on nix-backward-march:
 
 ## 3. S1: preconditions (executing session, first actions)
 
-1. Read, in order: this plan; docs/research/solver-port-handoff-2026-07-10.md; docs/research/free-start-handoff.md section 0 (mandatory before touching start-position code); docs/research/razor-campaign-2026-07-09-handoff.md (standing traps); docs/research/next-session-lever2-2026-07-10.md section 1 (the protocol).
+1. Read, in order: this plan; docs/research/solver-port-handoff-2026-07-10.md (since consolidated into this file and deleted, 2026-08-21); docs/research/free-start-handoff.md section 0 (mandatory before touching start-position code); docs/research/razor-campaign-2026-07-09-handoff.md (standing traps); docs/research/next-session-lever2-2026-07-10.md section 1 (the protocol).
 2. git status --porcelain: the tree must be clean. If any core/src file is dirty (S0 not done), STOP and escalate to the user. Untracked non-source leftovers (build outputs, scratch) may be ignored.
 3. Fresh full ./gradlew :core:test --rerun --no-daemon: green. GATE.
 

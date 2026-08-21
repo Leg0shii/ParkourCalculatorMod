@@ -7,6 +7,12 @@
 > (`angle-solver.md` 10.3). So read the "structured methods underperformed" conclusion as instance-specific
 > to j021's landscape, not a general law.
 
+> **Status (2026-08-21).** The CMA-ES machinery referenced throughout was removed (PRs 371/373/375). The
+> shipped `IlsPolish` climbs with `BucketAscentPolish` only and runs as the `ilsPolish` graph node, seeded
+> from the graph incumbent. `FreeSpaceDecomposition` no longer exists; `LongRunSolver` is the segment
+> decomposition. The tier set is Fast/Optimize/Custom. The companion `ils-session-handoff.md` was
+> consolidated into this file and deleted; its extra runtime datapoints and tuning findings appear below.
+
 Investigation (2026-06-13) into whether our bundleable, pure-Java angle solver can independently reach
 (and beat) the global optimum that a Wolfram/Cbc spatial branch-and-bound finds on the hard multi-jump
 fixture `j021-rinav1-01`, **without reusing Wolfram's answer**. Answer: **yes.**
@@ -72,10 +78,12 @@ structure-agnostic neighborhood ratchet wins.
 
 | stage | cost |
 |---|---|
-| single climb (the ILS per-candidate cost) | n=11: 30–190 ms; n=39: 1.2 s; n=176: 19 s; n=353: 131 s |
+| single climb (the ILS per-candidate cost) | n=11: 30–190 ms; n=28: 0.4 s; n=39: 1.2 s; n=176: 19 s; n=189: 22 s; n=353: 131 s |
 | ILS to beat Wolfram on j021 (n=39), 12-core parallel | **73–197 s (median ~100 s)** single run; ~1.5–2 min ensemble |
 
 Per-climb cost is **~O(n²)** (BucketAscent pair-scans dominate; CMA@50k under-budgets at large n).
+The quick near-optimal solve (race + one polish, no ILS) scales ~O(n^2.5) wall-clock: 3.3 s at n=39,
+150 s at n=176, so ~30–50 s extrapolated at n=100 (2026-06-13 session data).
 Implications for longer routes:
 - **~100 ticks:** feasible but slow — extrapolating between n=39 (1.2 s) and n=176 (19 s), a climb is
   ~5–8 s, so a full ILS run is roughly **~15–25 min** (offline only).
@@ -86,6 +94,16 @@ So whole-span ILS is the right tool for the **~10–40 tick multi-jump range**. 
 existing segment decomposition (`FreeSpaceDecomposition` / `LongRunSolver`) and apply ILS per segment, not
 monolithically. The per-climb O(n²) (chiefly BucketAscent) is the first thing to optimize for longer n
 (restrict block-2 pairs to wall-relevant ticks).
+
+## Tuning findings (from the 2026-06-13 session)
+
+- Batch size = number of logical cores: best-of-12 crosses in ~30 rounds where best-of-6 stalls for 300.
+  Accept the per-task contention slowdown; batch breadth matters more than per-task speed.
+- Lighter climbs backfire: a shallower per-round climb reaches the basin fast but stalls on the final
+  precision and needs ~3x more rounds. Keep the climb strong.
+- Run the THOROUGH polish only on rounds that improve; the FAST per-round polish stalls at the last ~1e-5.
+- Seeding from the cascade is mandatory: standalone random/CF/SLP seeding failed to find feasibility on
+  j022, where the engine's full cascade succeeds. Always seed from the shipped solve.
 
 ## Productization recommendation
 

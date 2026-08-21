@@ -1,6 +1,6 @@
 # Sheepram optimizer: port-ready algorithm specification
 
-Extracted 2026-07-08 from the Odin source at C:\Users\benja\Desktop\Coding\06 C++\Sheepram (all quotes re-verified against source line ranges). This is the normative reference for the AlmBfgsCore and SnapRepairPolish ports; where this document and any summary (including nix-solver-handoff.md section 2) disagree, THIS document follows the source and wins. Section 9 lists the known discrepancies.
+Extracted 2026-07-08 from the Odin source at C:\Users\benja\Desktop\Coding\06 C++\Sheepram (all quotes re-verified against source line ranges). Status 2026-08-21: this spec fed the AlmBfgsCore and SnapRepairPolish ports, which were built, shipped, and later removed with the ALM/CMA machinery (issue 380, PR 382). The document remains the in-repo algorithm record of Sheepram for any future effort; the snap-truncation and LUT-cell ideas live on in WrapWindowIls. Where this document and any summary (including nix-solver-handoff.md section 2) disagree, THIS document follows the source and wins. Section 9 lists the known discrepancies. The upstream Odin source now contains an optimizer_new.odin, so upstream line numbers may have drifted since extraction.
 
 Files under src/optimizer/: optimizer.odin, discrete.odin, exact_sim.odin, trig.odin, comp_expr.odin, raw_expr.odin, util.odin, trig_test.odin. Phase-1 driver and seeds live in src/app/solve.odin.
 

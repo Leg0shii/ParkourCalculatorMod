@@ -1,5 +1,7 @@
 # Stage B design note: exceed Sheepram (k-opt, gate enumeration, warm tournament)
 
+Status (2026-08-21): research line concluded. B1-B4 were never implemented; all Stage A machinery was removed in PR #382 (issue #380), and the research concluded per user ruling 2026-08-21. Kept as the record of why smooth-then-snap cannot cold-solve razor corners. The per-segment targeting-precision measurement defined in the B1x dispositions was never run and gates any re-attempt.
+
 Written 2026-07-09. Implements handoff nix-solver-handoff.md section 2b items 4-7 on top of the shipped Stage A (see alm-snap-stage-a-design.md, all sections, especially the section 8 dispositions and the round-3 evidence). Prerequisite in flight: analytic start-translation elimination (relative-space solving); this note's parameters bind only after that increment is validated. Companion evidence: build/reports/razor-r3-*.txt (slack profiles), the frozen-pattern diagnosis (uncorrected: smooth viol under an exact-consistent pattern equals exact viol to 6.7e-7), the j005 diagnostic (lattice-infeasible under +-3-bucket moves in its basin).
 
 Stage B definition of done (mission): beat Sheepram on EVERY benchmark: (1) proof cold viol <= 0 at objX >= 212.7001641 - 1e-6; (2) rung 5.375 viol < 2.74e-4, target viol <= 0; (3) weirdpane viol <= 0 at objX >= -8.8625, or a proven certificate that the instance is infeasible under its legal freedoms; (4) gate microbench stays passing; (5) wall-clock recorded; plus the direct head-to-head (run Sheepram's binary on cases 1-3 in its DSL) and the exactness edge documented. Every claimed solve re-verified byte-exact in a FRESH process before it is called solved.
@@ -41,6 +43,8 @@ Failure modes: 1. enumeration explosion (cap 12, log dropped count enum_dropped)
 Validation gates: (a) j005 closes (viol <= 0) or its enum_missed counter names the reason; (b) uncorrected improves by an order of magnitude (below 5e-3) with the correct-pattern smooth viol matching exact to 1e-5; stretch viol <= 0 at objX >= 8.7.
 
 ## Component B3: warm-diversity tournament (evidence rank 3)
+
+Annotation (2026-08-21): the seed sources named below (SolveCore CMA basins, MomentumAssembly templates) no longer exist; both were deleted in the CMA-ES removal and the follow-up cleanup.
 
 Evidence: the winning basin differed per problem (225 deg on proof, 45 deg on rung) and was reached only via the low-discrepancy prefix; uncorrected needs structured momentum seeds (constant and CMA-warm classes both plateau in ALM); MomentumAssembly templates exist and solved exactly this class (nix-full) but are not plugged into the new stage.
 

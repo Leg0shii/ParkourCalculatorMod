@@ -1,5 +1,7 @@
 # Solver handoff: nix razor jumps, complete record and next directions
 
+**Status 2026-08-21:** the section 0 scoreboard is superseded by razor-campaign-2026-07-09-handoff.md: 5.4375 was subsequently solved and improved in-tool (user-confirmed), rung 5.375's legal record was beaten (see next-session-lever2-2026-07-10.md), and the weirdpane legal record was achieved. The section 2b Stage A/B plan was executed as AlmSnapStage and later removed (issue 380; see the alm-snap design docs). Every harness named in sections 3-4 was deleted in the 2026-08 cleanup, so section 4's run instructions are historical. The failure taxonomy (section 1) and the Sheepram source audit (section 2) remain current research records.
+
 Written at session end 2026-07-08. Read this FIRST before touching any nix / razor-jump solving. Companion docs: nix-real-54375-campaign.md (the 5.4375 campaign detail), nix-full-freestart.md (the earlier nix-full arc), angle-solver.md (engine design record).
 
 ## 0. The honest scoreboard

@@ -1,5 +1,7 @@
 # Free start position (and entry velocity) as solve variables
 
+Status (2026-08-21): executed. Phases 0-2 shipped, phase 3 partially (StartBox velocity bounds), phase 4 superseded by the dF=0-chain free-start line (PRs 387-390, commit e171cc52). Current mechanics: `dual-newton-iteration-audit.md` sections 5-6 and `free-start-handoff.md` section 0.
+
 Implementation plan for a future session. Status: Phases 0, 1, 2 done. Branch context: this design was worked out on `v1.7.0`.
 
 Free-start trigger (decided with the user, supersedes the block-footprint approach in Sections 3-5): free the start iff the solve window begins at the route's first tick (`startTick == 0`, UI "tick 1") AND that tick carries an X and/or Z RANGE constraint (`Constraint.Op.IN`). The range IS the footprint box; an axis without a first-tick range stays pinned to the seed; one-sided/scalar first-tick constraints do NOT free an axis. No block capture, no `deriveFootprint`, no save-schema change: entirely constraint-driven. First-tick range constraints are pulled out of the wall list (they were the "trivial tick-0 constant") and become the box.
@@ -57,7 +59,7 @@ Validity caveat: a rigid translation is only exact while it does not change the 
 
 - `AngleSolverEngine.buildPhys` seeds `phys.startPos = seed.position` (`AngleSolverEngine.java:435`) and `phys.initialVelocity = seed.velocity` (`:437`) from the recorded `TickState`. So **every solve today is anchored.** This is the anchored path; keep it as the zero-width default.
 - There is no `startBlock` field. The nearest existing hook is `AngleSolverState`'s inert block lists `momentumBlocks` / `collisionBlocks` / `landBlocks` (`AngleSolverState.java:173-175`), each a `List<BlockSelection>` (`BlockSelection.java`, carries a world-space `AABB box` / `List<AABB> boxes`). A `Kind.MOMENTUM` (or a new `Kind.START`) selection is the natural free-start signal and footprint source.
-- `ConstraintDeriver.deriveFootprint(support, clickX, clickZ, obstacles)` (new on this branch) already computes an `[xLo,xHi,zLo,zHi]` standable footprint from a support block, shrinking around obstacles. This is the box for a free start. It is currently inert (see `docs/research/block-capture-handoff.md`).
+- `ConstraintDeriver.deriveFootprint(support, clickX, clickZ, obstacles)` (new on this branch) already computes an `[xLo,xHi,zLo,zHi]` standable footprint from a support block, shrinking around obstacles. This is the box for a free start. It is currently inert (see `docs/research/block-solver.md`).
 
 ## 5. The lift, concretely
 
@@ -90,7 +92,7 @@ Because it is the same convex machinery, it flows everywhere, but the *freedom* 
 
 Each phase ends green on the full gate (Section 8) before the next begins.
 
-**Phase 0. Anchored no-op scaffolding.** Introduce the bounded-variable plumbing with the box hard-wired to zero width (seed point). Wire `buildPhys` to always produce a zero-width box (read from `seed.position` / `seed.velocity`). Realization (A) or (B). Acceptance: the entire `:core:test` gate is byte-identical to `main` of this branch; the dualrecovery gate stays 58/59 solving; `ModernStepRegressionTest` green. This phase proves the lift changes nothing when the box is a point.
+**Phase 0. Anchored no-op scaffolding.** Introduce the bounded-variable plumbing with the box hard-wired to zero width (seed point). Wire `buildPhys` to always produce a zero-width box (read from `seed.position` / `seed.velocity`). Realization (A) or (B). Acceptance: the entire `:core:test` gate is byte-identical to `main` of this branch; the dualrecovery gate stays 58/59 solving; `ModernStepRegressionTest` green (that test was later deleted; the tripwire is now `CaptureReplayRegressionTest`). This phase proves the lift changes nothing when the box is a point.
 
 **Phase 1. Free-start on a single jump, realization (B).** Add the free-start signal (a `Kind.START` or reuse `Kind.MOMENTUM` `BlockSelection`) and derive the footprint box via `ConstraintDeriver.deriveFootprint`. Solve one hand-built free-start fixture where the jump is infeasible at the pinned start but feasible somewhere on the block. Assert the solver returns feasible and the pinned start lies in the footprint. Add it as a new regression fixture (Section 9). Anchored fixtures untouched.
 
@@ -110,13 +112,13 @@ The hpk jump dataset is the anti-regression gate. Do not merge any phase that is
 ./gradlew :core:test
 ```
 
-Pure Java, no Minecraft, runs in seconds. To reproduce CI core counts locally (the B&B pattern pool is core-count sensitive): `./gradlew :core:test -PtestCpus=2` (also verify at 4 and 12). Single suites: `./gradlew :core:test --tests '*ProblemsTest'` and `--tests '*ModernStepRegressionTest'`. `tableStyleCheck` does not run on `:core:test` (it is on `:core:check`/`build`, and has a known false positive on `SolverWidgets`; skip with `-x tableStyleCheck` there).
+Pure Java, no Minecraft, runs in seconds. To reproduce CI core counts locally (the B&B pattern pool is core-count sensitive): `./gradlew :core:test -PtestCpus=2` (also verify at 4 and 12). Single suites: `./gradlew :core:test --tests '*ProblemsTest'` and `--tests '*ModernStepRegressionTest'` (that test was since deleted; the byte-exact tripwire is now `CaptureReplayRegressionTest`). `tableStyleCheck` does not run on `:core:test` (it is on `:core:check`/`build`, and has a known false positive on `SolverWidgets`; skip with `-x tableStyleCheck` there).
 
 **What the gate covers (do not weaken any of it):**
 
 - **`ProblemsTest`** parameterizes over `core/src/test/resources/problems/{solve,closedform,dualrecovery}/`. The `dualrecovery/` folder holds 59 sidecars: all 58 hpk captures (`captures/hpk/d9` ×30, `d10` ×20, `d11` ×8) plus `loopmm-3jump-lands`.
 - `runDualRecovery` calls `AngleSolverEngine.dualChain(...)` only (closed form → SLP → reseeded SLP → relaxation recovery), **no CMA-ES, no warm start**, and asserts **byte-exact feasibility** (`compiled.maxViolation(gf, path) <= 0.0`). On a chain miss with `bnbSeconds` set it runs the blind pattern `BoundPrunedRecovery`. Only `loopmm` pins an objective (`refObjective: -279.3`, `maxObjectiveGap: 0.0`). Baseline: 56/58 hpk solve through the chain, `j716` is the sole `shouldSolve:false` frontier miss, `loopmm` lands via the B&B.
-- **`ModernStepRegressionTest`** pins `ExactJumpModel` / `McSineTable` / `Constants` bit-for-bit against three recorded 1.21.10 transitions (tolerance 0.0). Any drift in the step arithmetic fails immediately. Per `AGENTS.md`: do not edit model code without a green run first. **This plan must not touch the step model**; it only lifts constants into the LP, so this test is your tripwire proving the forward model is unchanged.
+- **`ModernStepRegressionTest`** pins `ExactJumpModel` / `McSineTable` / `Constants` bit-for-bit against three recorded 1.21.10 transitions (tolerance 0.0). Any drift in the step arithmetic fails immediately. Per `AGENTS.md`: do not edit model code without a green run first. **This plan must not touch the step model**; it only lifts constants into the LP, so this test is your tripwire proving the forward model is unchanged. Annotation (2026-08-21): that test was deleted; the byte-exact tripwire is now `CaptureReplayRegressionTest`.
 
 **The core invariant, restated:** the feature is gated on a free-start footprint. Every one of the 59 existing dualrecovery fixtures (and all solve/closedform fixtures) has no footprint, so its box is zero-width and its result must be byte-identical before and after every phase. If any existing fixture changes objective or feasibility, the lift has leaked into the anchored path and is a bug. Add a temporary per-capture before/after objective diff (the gh-213 work used exactly this zero-regression check) while developing Phase 0–2.
 
@@ -170,6 +172,6 @@ If a fixture references block geometry that `Fixtures.buildBoxes` does not yet r
 ## 12. Acceptance summary
 
 - Phases 0–2: full `:core:test` green at 2, 4, 12 cores; every pre-existing fixture byte-identical; new free-start fixtures pass.
-- `ModernStepRegressionTest` never touched.
-- No CMA-ES / warm start introduced into `dualChain`; determinism preserved.
+- `ModernStepRegressionTest` never touched. (That test was since deleted; the byte-exact tripwire is now `CaptureReplayRegressionTest`.)
+- No CMA-ES / warm start introduced into `dualChain`; determinism preserved. (Moot: CMA-ES was later removed entirely, PRs 371/373/375.)
 - The manual "place start, solve, nudge, re-solve" loop is replaced by one solve that pins the start position against the binding constraint.

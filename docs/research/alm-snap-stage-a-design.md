@@ -1,5 +1,7 @@
 # Stage A design note: AlmBfgsCore + SnapRepairPolish
 
+Status (2026-08-21): the machinery this note designed was removed in PR #382 (issue #380); the ALM+Snap research line concluded per user ruling 2026-08-21. Survivors in live code: FacingLattice, the JumpLinearModel forwardMag/strafeMag/boostAt accessors, the item-17 sprint/amp factor-lag fix, and the translation-elimination concept (now FreeStartSolve.bestTranslate). The rest of this doc is the dated historical record.
+
 Written 2026-07-08, revised same day after adversarial review (section 8 records every objection and its disposition). Implements handoff nix-solver-handoff.md section 2b items 1-3. Normative algorithm reference: docs/research/sheepram-port-spec.md (source-verified, wins over any summary). Interface facts were verified against the repo by a scouting pass and re-verified by the adversarial reviewer on 2026-07-08.
 
 Goal: a two-phase solver stage, continuous ALM+BFGS on the smooth compiled model followed by discrete snap/repair/polish over the sine-LUT lattice graded by the byte-exact ExactJumpModel (gates + sprint lag included), that beats Sheepram on the section 5 benchmark suite. Faithful port first, upgrades second.

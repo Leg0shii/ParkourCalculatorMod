@@ -26,12 +26,14 @@ Before the blocks-only phase, `BlockSolver` (core, `anglesolver/solver/BlockSolv
 
 The engine entry `AngleSolverEngine.solveFromBlocks()` is the CMA-ES-driven block path that predates the gh-204 linear stack. It was never rewired to the linear pipeline below.
 
+Note 2026-08-21: `BlockSolver` and `AngleSolverEngine.solveFromBlocks` were later deleted entirely in the 2026-08 simplification train (PRs 371-382). gh-307 tracks re-deriving block constraints from world geometry; this document is the reference record for that work.
+
 
 ## 3. What was built (the blocks-only pipeline, gh-212)
 
 `core/.../anglesolver/BlocksOnlySolver.java` derived the spec and ran the gh-204 linear stack (closed form, duals, SLP relaxation, first-feasible pattern B&B), never CMA-ES.
 
-**Task zero (plumbing, still valid, see section 7).** `BlockSelection.Kind` became `{MOMENTUM, COLLISION, LAND}` (legacy `START` loads as MOMENTUM, stray `LANDING` as LAND, via `SaveIO.parseBlockKind`). `AngleSolverState` gained three block lists (multiple LAND blocks are real: j153, j424 carry 2; j757 carries 3). `SaveFile.BlockSel` round-trips the role, integer coords, hull box, and collision sub-boxes. `BlockSelectionSaveRoundTripTest` guards it.
+**Task zero (plumbing, still valid, see section 7).** `BlockSelection.Kind` became `{MOMENTUM, COLLISION, LAND}` (legacy `START` loads as MOMENTUM via the alias in `SaveIO.toBlockSelection`). `AngleSolverState` gained three block lists (multiple LAND blocks are real: j153, j424 carry 2; j757 carries 3). `SaveFile.BlockSel` round-trips the role, integer coords, hull box, and collision sub-boxes. `BlockCaptureSaveRoundTripTest` guards it.
 
 **Spec derivation.**
 - Land footprint: union of LAND boxes expanded by the exact half-width `(double)(0.6f/2f)` at the landing tick.
@@ -85,7 +87,7 @@ Against the shelving bar (would consider shipping near 50/53), 16-17 with the se
 
 **Keep and reuse:**
 
-1. **The capture plumbing** (`BlockSelection` model with collision sub-boxes, the three `AngleSolverState` block lists, `SaveFile.BlockSel` + `SaveIO` round-trip, the in-world picker on `v1.7.0-block-capture`). This is durable, correct input for the eventual whole-jump solver and is independent of any solving. The picker collision-box fix (`block-capture-picker-fix.patch`: store `addCollisionBoxesToList`, not the selection box) is a real correctness fix for capture regardless of solving; nine captures with special blocks (snow layers, open fence gates, piston heads, pane arms) need re-capture with it.
+1. **The capture plumbing** (`BlockSelection` model with collision sub-boxes, the three `AngleSolverState` block lists, `SaveFile.BlockSel` + `SaveIO` round-trip). This is durable, correct input for the eventual whole-jump solver and is independent of any solving. Shipped state 2026-08: the picker is product code on all three loaders (the `BlockPicker` port with `FabricBlockPicker` / `Forge8BlockPicker` / `Forge12BlockPicker`) behind `Settings.experimentalBlockCapture`, and `SaveFile.BlockSel` carries `box` plus the `boxes` collision sub-boxes.
 2. **The derivation machinery** as scaffolding: land/momentum footprints, keep-out-wall derivation from swept collisions, the edge-jump `pos[k-1]` indexing, the 1.8.9 collision-axis ordering rule. A whole-jump solver will still need to turn blocks into constraints.
 
 **Ideas that were not falsified, for a future attempt:**
@@ -103,9 +105,20 @@ Against the shelving bar (would consider shipping near 50/53), 16-17 with the se
 - Exact-point equality pins in the linear stack (numerically over-constrained; use a small box if ever needed).
 
 
+## 7b. Capture-side design decisions (carried from block-capture-handoff.md, 2026-06-28; consolidated here 2026-08-21)
+
+The capture handoff doc was folded in here during the research-folder cleanup. Its settled decisions, still binding for the shipped picker and any future consumer:
+
+- **Capture is separable from derivation.** The picker was shelved because the block-to-constraint derivation was not trustworthy enough to ship, not because the picker was hard. A capture-only picker stores raw AABBs, valid regardless of any solver; the derivation gets built and tested against that captured data later. This breaks the chicken-and-egg between block data and the solver.
+- **Blocks are the durable source of truth; constraints are derived and disposable.** Capturing constraints bakes in one derivation; raw in-world AABBs are interpretation-agnostic and survive improvements to the derivation logic.
+- **Roles are hints on interpretation-agnostic geometry.** Do not over-categorize: no momentum sub-taxonomy (stepped, partial-cover, backwalled) until a consumer exists.
+- **All roles are lists, all optional, all inert to the current solver.** MOMENTUM, COLLISION, LAND; CEILING (headhitter) is deferred. User ruling 2026-06-28: START blocks ARE momentum blocks, so the START role was dropped and legacy `START` saves load as MOMENTUM.
+- **Fixture-library decisions from the same thread:** fixtures span from the momentum (long span), not from the takeoff; only capture jumps where a human strat exists (reachability guarantee); bracket each fixture with the best-known landing as a witness in `angleSolver.result` and classify live at test time, never freezing a "missed" flag, so a future fix migrates a fixture from missed to passing automatically; a landing of any kind (multi-block, ladder, vine, water, lava) collapses to a single XZ landing constraint at a specific tick, with the witness disambiguating which block and which tick.
+
+
 ## 8. Artifacts (for a future revival from git history)
 
-If block solving is resurrected, these were the pieces. This work was never committed to a shared branch, so it survives only if the pre-shelve working tree was archived to a branch or tag before the cleanup (strongly recommended before deleting anything). The pieces:
+If block solving is resurrected, these were the pieces. This work was never committed to a shared branch, so it survives only if the pre-shelve working tree was archived to a branch or tag before the cleanup (strongly recommended before deleting anything). Update 2026-08-21: that archive never happened. The blocks-only pipeline and the probe screens are unrecoverable from history; only `BlockSolver.java` itself ever landed in git (and the 2026-08 cleanup deleted it from the tree), so this document's measurement record is the sole surviving evidence. The pieces:
 
 - `core/.../anglesolver/BlocksOnlySolver.java` (the pipeline), reused `BlockSolver`, `SweptCollision`, `ConstraintDeriver`.
 - `AngleSolverEngine.solveFromBlocks` / `buildBlockResult` (the CMA-ES engine path).

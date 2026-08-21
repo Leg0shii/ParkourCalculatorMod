@@ -11,6 +11,8 @@
 > superseded and was never merged. What still stands: the anvil momentum-ceiling analysis below (a yaw
 > optimizer cannot land anvil at its recorded momentum; that is a route/momentum question, #178). Only the
 > loopmm optimizer-gap framing is retracted.
+>
+> 2026-08: CMA-ES was subsequently removed entirely (PRs 371/373/375); loopmm now lands via the graph's cold/rescue B&B nodes.
 
 Investigation + decision record (2026-06-23). Question raised: the `claude/brave-planck-lyr5ng` branch got
 within ~1.3e-6 of a known-good byte-exact result on the close-range anvil fixture; can we port that into

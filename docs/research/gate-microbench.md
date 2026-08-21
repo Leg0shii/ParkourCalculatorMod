@@ -1,6 +1,6 @@
 # Gate microbench: why a gateless sim mis-simulates the razor-proof family
 
-Written 2026-07-08. Benchmark 4 of the Stage A suite (alm-snap-stage-a-design.md section 5 item 4), the "Sheepram's model is provably wrong here" exhibit. Test: `GateMicrobenchTest.gatelessTwinMisSimulatesRazorProof`, helper `RazorFixtures`. Fixture: `core/src/test/resources/captures/razor-proof.json` (n = 49, objTick 49, mcVersion 1.8.9, axis X MAX). Deterministic, runs under plain `:core:test`.
+Written 2026-07-08. The finding: a simulator without the 1.8.9 momentum gate mis-simulates the razor-proof family, drifting ~8e-2 blocks off the recorded path by the objective tick; this is the "Sheepram's model is provably wrong here" exhibit (originally benchmark 4 of the Stage A suite, alm-snap-stage-a-design.md section 5; that research line has since concluded, but this result is machinery-independent). Test: `GateMicrobenchTest.gatelessTwinMisSimulatesRazorProof`, helper `RazorFixtures`. Fixture: `core/src/test/resources/captures/razor-proof.json` (n = 49, objTick 49, mcVersion 1.8.9, axis X MAX). Deterministic, runs under plain `:core:test`.
 
 ## Setup
 
