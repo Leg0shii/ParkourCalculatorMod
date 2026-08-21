@@ -477,6 +477,7 @@ public final class AngleSolverEngine {
                 Outcome o = runJob(job, token, progress, rec);
                 if (o != null && !token.get()) pending = o;
             } catch (Throwable t) {
+                t.printStackTrace();
                 if (!token.get()) {
                     finishRecord(rec, SolveRunRecord.STATUS_FAILED, null, null, null, null, null);
                     SolveResult fail = new SolveResult(false, 0, job.uiConstraints.size(),
@@ -897,6 +898,7 @@ public final class AngleSolverEngine {
             }
         } catch (RuntimeException e) {
             if (SolverTrace.on()) SolverTrace.log("RACE", "arm error: %s", String.valueOf(e));
+            e.printStackTrace();
         } finally {
             out.done = true;
         }

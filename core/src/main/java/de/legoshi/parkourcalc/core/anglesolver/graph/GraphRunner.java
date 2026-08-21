@@ -74,6 +74,7 @@ public final class GraphRunner {
                 cand = outcome.candidate;
             } catch (RuntimeException e) {
                 if (ctx.cancel.get() || !token.get()) throw e;
+                e.printStackTrace();
                 taken = cur.type.fallbackBranch != null ? cur.type.fallbackBranch : Guarantee.NONE;
             } finally {
                 ctx.endNode(cur, taken);
