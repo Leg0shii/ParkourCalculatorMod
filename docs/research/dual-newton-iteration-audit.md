@@ -75,6 +75,8 @@ A field save pair (4x2_1 / 4x2_1-nosolve, identical constraints, seed shifted ~0
 
 The "recovered angles need only modest dual accuracy" javadoc on `CostateDualSolver` (original to PR #122, 2026-06-10) is role-scoped to the pinned closed-form fast path, where misses fall through to SLP and recovery; it is stale for the free-start start-finder role, where no such net exists for rigid chains. Correct it in the fix PR.
 
+**Outcome (issue #386):** the sharpening ladder shipped. `FreeP0` carries a per-solve `smooth`; `solveJointBest` runs the smoothed attempt first (byte-identical to the old flow), then warm rungs at 2e-3 and 5e-4, then the seed lane, then the certify tail. The 4x2 pair solves bit-identically from all 9 probed in-box seeds (including every previously failing one and both corners); the corpus-wide in-box seed-parity screen (5 seeds x 52 captures, the bench's new `frac~fx~fz` variants) is clean except j335, whose two low-X seed failures pre-exist on dev with a P0-INDEPENDENT joint floor of 4.3e-2, a different mechanism and the open remaining witness of the class. Sweep cost of the ladder: 23.8 s -> 30.0 s (+26%, spread over failing-joint captures, worst j347 base 2.9 -> 4.3 s), inside the accepted 2-3x free-start envelope. The seed lane remains, demoted below the rungs, with removal as a follow-up kill-audit.
+
 ## 6. What a future attempt would need
 
 - A speedup of the CONVERGENCE itself that is bit-compatible on converged solves and strictly-better on capped ones. Nothing of that shape was found; `buildHessian`/`choleskySolve` are already in the bit-identical-only zone.
