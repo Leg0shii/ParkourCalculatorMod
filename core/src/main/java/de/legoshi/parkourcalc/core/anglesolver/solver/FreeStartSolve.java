@@ -13,12 +13,8 @@ public final class FreeStartSolve {
     private static final double EMPTY_TOL = 1.0e-9;
 
     public static final class Config {
-        public int maxIters = 12;
         public double intervalMargin = 1.0e-3;
         public double invariantTol = 1.0e-6;
-        public double stepTol = 1.0e-9;
-        public int slpPhase1Calls = 40;
-        public int slpTotalCalls = 60;
         public double[] jointMargins = {0.0, 1.0e-4, 3.0e-4, 6.0e-4, 1.2e-3, 2.5e-3, 5.0e-3, 1.0e-2};
         public int jointPatternCap = 8;
         public double jointPatternViolGate = 0.25;
@@ -54,10 +50,6 @@ public final class FreeStartSolve {
     }
 
     public static Result solve(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel) {
-        return solve(exact, spec, feasTol, cancel, new Config());
-    }
-
-    public static Result solve(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel, Config cfg) {
         JumpPhysicsInputs base = spec.asScenario();
         StartBox box = base.startBox;
         if (box == null || !box.startFree()) return null;
@@ -70,36 +62,13 @@ public final class FreeStartSolve {
                     box.label(), base.startPos.x, base.startPos.z, p0x, p0z);
         }
 
-        for (int iter = 0; iter < cfg.maxIters; iter++) {
-            if (cancel != null && cancel.get()) return null;
-            JumpSpec at = specAtStart(base, spec, p0x, p0z);
-
-            double[] yaws = ClosedFormSolve.optimize(exact, at, feasTol, cancel);
-            if (yaws == null) yaws = SlpSolve.optimize(exact, at, feasTol, cancel);
-            if (yaws != null) {
-                if (SolverTrace.on()) SolverTrace.log("FREE", "iter=%d feasible at start=(%.4f,%.4f)", iter, p0x, p0z);
-                return new Result(yaws, p0x, p0z, true);
-            }
-
-            double[] shape = bestEffortShape(exact, at, feasTol, cancel, cfg);
-            if (shape == null) break;
-            JumpPhysicsInputs atSc = at.asScenario();
-            double[] gf = atSc.toGameFacings(Angles.wrapAll(shape));
-            ForwardPath path = exact.forward(atSc, gf);
-
-            double[] delta = pinTranslate(spec, gf, path, box, p0x, p0z, cfg);
-            if (delta == null) {
-                if (SolverTrace.on()) SolverTrace.log("FREE", "iter=%d no feasible translation of the current shape", iter);
-                break;
-            }
-            double nx = clamp(p0x + delta[0], box.pxLo, box.pxHi);
-            double nz = clamp(p0z + delta[1], box.pzLo, box.pzHi);
-            if (SolverTrace.on()) {
-                SolverTrace.log("FREE", "iter=%d translate (%.4f,%.4f) -> (%.4f,%.4f)", iter, p0x, p0z, nx, nz);
-            }
-            if (Math.abs(nx - p0x) < cfg.stepTol && Math.abs(nz - p0z) < cfg.stepTol) break;
-            p0x = nx;
-            p0z = nz;
+        if (cancel != null && cancel.get()) return null;
+        JumpSpec at = specAtStart(base, spec, p0x, p0z);
+        double[] yaws = ClosedFormSolve.optimize(exact, at, feasTol, cancel);
+        if (yaws == null) yaws = SlpSolve.optimize(exact, at, feasTol, cancel);
+        if (yaws != null) {
+            if (SolverTrace.on()) SolverTrace.log("FREE", "feasible at center=(%.4f,%.4f)", p0x, p0z);
+            return new Result(yaws, p0x, p0z, true);
         }
         return slpAnchorGrid(exact, spec, base, box, feasTol, cancel);
     }
@@ -165,7 +134,7 @@ public final class FreeStartSolve {
             if (r != null && r.feasible) return r;
         }
 
-        Result fb = solve(exact, spec, feasTol, cancel, cfg);
+        Result fb = solve(exact, spec, feasTol, cancel);
         if (fb != null) {
             if (SolverTrace.on()) SolverTrace.log("FREE", "joint seed-lane win feasible=%s", fb.feasible);
             return fb;
@@ -173,14 +142,6 @@ public final class FreeStartSolve {
         if (overall.yaws != null) {
             double[] rs = recoverStart(exact, spec, overall.yaws, cfg);
             if (rs != null) {
-                double[] repaired = LatticeRepair.repair(exact, specAtStart(base, spec, rs[0], rs[1]),
-                        Angles.wrapAll(overall.yaws.clone()), feasTol, cancel);
-                if (repaired != null && violationAt(exact, spec, repaired, rs[0], rs[1]) <= feasTol) {
-                    if (SolverTrace.on()) {
-                        SolverTrace.log("FREE", "joint best certified by lattice repair (%.5f,%.5f)", rs[0], rs[1]);
-                    }
-                    return new Result(repaired, rs[0], rs[1], true);
-                }
                 if (cfg.jointWrapClose && overall.viol <= cfg.jointWrapCloseGate) {
                     Result wr = jointWrapClose(exact, base, spec, box, overall.yaws, rs, feasTol, cancel);
                     if (wr != null) return wr;
@@ -264,14 +225,6 @@ public final class FreeStartSolve {
             SolverTrace.log("FREE", "joint wrap close ils=%.3e reaccum=%.3e start=(%.5f,%.5f)", w.viol, v, px, pz);
         }
         if (v <= feasTol) return new Result(Angles.wrapAll(w.gf.clone()), px, pz, true);
-        double[] repaired = LatticeRepair.repair(exact, specAtStart(base, spec, px, pz),
-                Angles.wrapAll(w.gf.clone()), feasTol, cancel);
-        if (repaired != null && violationAt(exact, spec, repaired, px, pz) <= feasTol) {
-            if (SolverTrace.on()) {
-                SolverTrace.log("FREE", "joint wrap close certified by lattice repair (%.5f,%.5f)", px, pz);
-            }
-            return new Result(repaired, px, pz, true);
-        }
         return null;
     }
 
@@ -306,28 +259,6 @@ public final class FreeStartSolve {
         }
         Result mp = thetaMicroPolish(exact, spec, refSc, scan, best, feasTol, cancel, cfg);
         if (mp != null && mp.feasible) return mp;
-        JointBest local = new JointBest();
-        local.viol = best.viol;
-        local.yaws = best.yaws;
-        local.theta = best.theta;
-        for (int it = 0; it < 6 && local.yaws != null && !Double.isNaN(local.theta) && local.viol <= 0.05; it++) {
-            if (cancel != null && cancel.get()) return null;
-            double before = local.viol;
-            boolean[] zx = new boolean[refSc.numTicks];
-            boolean[] zz = new boolean[refSc.numTicks];
-            new JumpLinearModel(refSc).zeroingPattern(Angles.wrapAll(local.yaws.clone()),
-                    exact.inertiaThreshold(), exact.perAxisInertia(), zx, zz);
-            JumpLinearModel lin2 = new JumpLinearModel(refSc, zx, zz);
-            FacingPrefold.ChainScan scan2 = FacingPrefold.scannable(spec.constraints, lin2);
-            JumpLinearModel useLin = scan2 != null ? lin2 : lin;
-            FacingPrefold.ChainScan useScan = scan2 != null ? scan2 : scan;
-            Result rl = jointLadder(exact, spec, base, box, cbox, refSc, useLin, refX, refZ, feasTol, cancel,
-                    cfg, useScan.at(local.theta), local, smooth);
-            if (rl != null && rl.feasible) return rl;
-            Result mp2 = thetaMicroPolish(exact, spec, refSc, useScan, local, feasTol, cancel, cfg);
-            if (mp2 != null && mp2.feasible) return mp2;
-            if (local.viol >= before - 1.0e-9) break;
-        }
         if (SolverTrace.on()) SolverTrace.log("FREE", "joint chain scan miss cands=%d", thetas.length);
         return null;
     }
@@ -758,41 +689,6 @@ public final class FreeStartSolve {
         if (lo > hi) return 0.0;
         if (objectiveAxis) return max ? hi : lo;
         return clamp(0.0, lo, hi);
-    }
-
-    private static double[] bestEffortShape(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
-                                            Config cfg) {
-        JumpPhysicsInputs sc = spec.asScenario();
-        JumpLinearModel lin = new JumpLinearModel(sc);
-        FacingPrefold pre = FacingPrefold.analyze(spec.constraints, lin);
-        if (pre != null) {
-            double[] cx = new double[lin.n];
-            double[] cz = new double[lin.n];
-            lin.objectiveVectors(spec.objective, cx, cz);
-            boolean[] trivial = {false};
-            List<JumpLinearModel.Wall> walls = lin.compileWalls(spec.constraints, 0.0, trivial);
-            if (!trivial[0]) {
-                FacingPrefold.Reduced red = pre.reduce(cx, cz, lin.mMagAll(), walls);
-                CostateDualSolver.Result r = new CostateDualSolver(red.n, red.cx, red.cz, red.mMag, red.walls)
-                        .solve(0.0, null);
-                if (r != null) return pre.expand(lin, spec.objective, r);
-            }
-        } else {
-            ClosedFormSolve.Result graded = ClosedFormSolve.optimizeRobustGraded(exact, spec, feasTol, cancel);
-            if (graded != null) return graded.yaws;
-        }
-        double[] seed = objectiveSeed(sc, spec.objective);
-        return SlpSolve.optimizeBestEffort(exact, spec, feasTol, cancel, seed, cfg.slpPhase1Calls, cfg.slpTotalCalls);
-    }
-
-    private static double[] objectiveSeed(JumpPhysicsInputs sc, Objective obj) {
-        JumpLinearModel lin = new JumpLinearModel(sc);
-        boolean max = obj.sense == Objective.Sense.MAX;
-        double gx = obj.axis == JumpPhysicsInputs.Axis.X ? (max ? 1.0 : -1.0) : 0.0;
-        double gz = obj.axis == JumpPhysicsInputs.Axis.X ? 0.0 : (max ? 1.0 : -1.0);
-        double[] yaws = new double[lin.n];
-        for (int t = 0; t < lin.n; t++) yaws[t] = lin.recoverYawDeg(t, gx, gz);
-        return yaws;
     }
 
     private static JumpSpec specAtStart(JumpPhysicsInputs base, JumpSpec spec, double p0x, double p0z) {

@@ -27,12 +27,8 @@ public final class FreeStartImproveNode implements NodeRuntime {
     public FreeStartImproveNode(ParamValues params) {
         this.jointOnly = params.getBool("jointOnly");
         this.cfg = new FreeStartSolve.Config();
-        cfg.maxIters = params.getInt("fsMaxIters");
         cfg.intervalMargin = params.getDouble("fsIntervalMargin");
         cfg.invariantTol = params.getDouble("fsInvariantTol");
-        cfg.stepTol = params.getDouble("fsStepTol");
-        cfg.slpPhase1Calls = params.getInt("fsSlpPhase1Calls");
-        cfg.slpTotalCalls = params.getInt("fsSlpTotalCalls");
         cfg.jointMargins = ParamParse.doubles(params.getString("fsJointMargins"), cfg.jointMargins);
         cfg.jointWrapClose = false;
     }

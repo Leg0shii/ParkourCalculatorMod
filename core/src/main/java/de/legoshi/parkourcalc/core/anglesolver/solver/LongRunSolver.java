@@ -126,11 +126,6 @@ public final class LongRunSolver {
     }
 
     public static FreeRun solveFree(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
-                                    LongRunConfig cfg, StartBox freeBox) {
-        return solveFree(exact, spec, feasTol, cancel, cfg, freeBox, new WindowCache());
-    }
-
-    public static FreeRun solveFree(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
                                     LongRunConfig cfg, StartBox freeBox, WindowCache windows) {
         if (freeBox == null || !freeBox.startFree()) return null;
         JumpPhysicsInputs sc = spec.asScenario();
