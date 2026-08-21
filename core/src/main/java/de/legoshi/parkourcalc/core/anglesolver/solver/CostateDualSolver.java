@@ -25,10 +25,15 @@ import java.util.List;
  *  handful of iterations and a few microseconds; successive {@link #solve} calls (the margin ladder)
  *  warm-start from the previous λ.
  *
- *  <p>The norm is smoothed by a tiny {@code eps}. Recovered angles need only modest dual accuracy (a small
- *  inward margin is added downstream and feasibility re-checked on the byte-exact model), so the solve
- *  targets a constraint-slack tolerance, not machine precision. Returns the per-tick costate directions for
- *  {@link JumpLinearModel#recoverYawDeg}, or {@code null} if the dual is unbounded (primal infeasible). */
+ *  <p>The norm is smoothed by a tiny {@code eps}. On the pinned fast path, recovered angles need only modest
+ *  dual accuracy: a small inward margin is added downstream, feasibility is re-checked byte-exact, and a miss
+ *  falls through to the SLP and recovery stages, so imprecision costs speed, never solutions. That safety net
+ *  does NOT extend to the free-start role: there the {@link FreeP0} start-support smoothing biases the
+ *  recovered shape and start, rigid dF chains have no downstream repair, and a near-miss is a lost solve.
+ *  {@code FreeP0.smooth} is therefore per-solve; the free-start near-miss path retries sharper values
+ *  (see FreeStartSolve), a window bounded below by conditioning (the {@code 1/smooth} support curvature).
+ *  Returns the per-tick costate directions for {@link JumpLinearModel#recoverYawDeg}, or {@code null} if the
+ *  dual is unbounded (primal infeasible). */
 public final class CostateDualSolver {
 
     private static final double EPS2 = 1.0e-14;       // norm smoothing: ‖g‖ -> sqrt(‖g‖^2 + EPS2)
@@ -47,7 +52,7 @@ public final class CostateDualSolver {
     private static final double DIVERGE_REL = 0.05;   // an improvement must beat the best by this fraction
     private static final int DIVERGE_STALL = 12;      // ...for this many iterations running, else: diverged
     private static final double GAMMA = 1.0e-4;       // Armijo sufficient-decrease factor
-    private static final double P0_SMOOTH = 0.05;
+    public static final double P0_SMOOTH_DEFAULT = 0.05;
     private static final double RHO0 = 1.0e-2;        // initial Levenberg damping (fraction of σ_max)
     private static final double RHO_MIN = 1.0e-10;
     private static final double RHO_MAX = 1.0e8;
@@ -157,14 +162,17 @@ public final class CostateDualSolver {
         public final double dvHiZ;
         public final double objDevX;
         public final double objDevZ;
+        public final double smooth;
 
-        public FreeP0(double dvLoX, double dvHiX, double dvLoZ, double dvHiZ, double objDevX, double objDevZ) {
+        public FreeP0(double dvLoX, double dvHiX, double dvLoZ, double dvHiZ, double objDevX, double objDevZ,
+                      double smooth) {
             this.dvLoX = dvLoX;
             this.dvHiX = dvHiX;
             this.dvLoZ = dvLoZ;
             this.dvHiZ = dvHiZ;
             this.objDevX = objDevX;
             this.objDevZ = objDevZ;
+            this.smooth = smooth;
         }
     }
 
@@ -362,21 +370,21 @@ public final class CostateDualSolver {
 
     private double supportOf(double h, int a) {
         double d = deltaOf(h, a);
-        return h * d - 0.5 * P0_SMOOTH * d * d;
+        return h * d - 0.5 * freeP0.smooth * d * d;
     }
 
     private double deltaOf(double h, int a) {
         double lo = a == 0 ? freeP0.dvLoX : freeP0.dvLoZ;
         double hi = a == 0 ? freeP0.dvHiX : freeP0.dvHiZ;
-        double d = h / P0_SMOOTH;
+        double d = h / freeP0.smooth;
         return d < lo ? lo : (d > hi ? hi : d);
     }
 
     private double supportCurv(double h, int a) {
         double lo = a == 0 ? freeP0.dvLoX : freeP0.dvLoZ;
         double hi = a == 0 ? freeP0.dvHiX : freeP0.dvHiZ;
-        double d = h / P0_SMOOTH;
-        return (d > lo && d < hi) ? 1.0 / P0_SMOOTH : 0.0;
+        double d = h / freeP0.smooth;
+        return (d > lo && d < hi) ? 1.0 / freeP0.smooth : 0.0;
     }
 
     /** D(λ) = Σ_t m_t·sqrt(‖g_t‖^2+eps) + Σ_j λ_j b'_j, filling {@code outX,outZ} with the costates g_t. */

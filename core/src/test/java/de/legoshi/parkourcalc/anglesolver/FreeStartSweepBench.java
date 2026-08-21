@@ -106,6 +106,20 @@ public class FreeStartSweepBench {
                     }
                 }
             }
+        } else if (variant.startsWith("frac")) {
+            String[] f = variant.split("~");
+            double dx = (Double.parseDouble(f[1]) - 0.5) * 2.0 * BOX_HALF;
+            double dz = (Double.parseDouble(f[2]) - 0.5) * 2.0 * BOX_HALF;
+            file.angleSolver.seed.pos[0] += dx;
+            file.angleSolver.seed.pos[2] += dz;
+            if (file.debug != null) {
+                for (SaveFile.DebugTick d : file.debug) {
+                    if (d != null && d.pos != null && d.pos.length >= 3) {
+                        d.pos[0] += dx;
+                        d.pos[2] += dz;
+                    }
+                }
+            }
         }
 
         ExactJumpModel model = ExactJumpModel.forMcVersion(file.mcVersion);

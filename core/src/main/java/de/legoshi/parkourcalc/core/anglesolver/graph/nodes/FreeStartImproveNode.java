@@ -27,12 +27,8 @@ public final class FreeStartImproveNode implements NodeRuntime {
     public FreeStartImproveNode(ParamValues params) {
         this.jointOnly = params.getBool("jointOnly");
         this.cfg = new FreeStartSolve.Config();
-        cfg.maxIters = params.getInt("fsMaxIters");
         cfg.intervalMargin = params.getDouble("fsIntervalMargin");
         cfg.invariantTol = params.getDouble("fsInvariantTol");
-        cfg.stepTol = params.getDouble("fsStepTol");
-        cfg.slpPhase1Calls = params.getInt("fsSlpPhase1Calls");
-        cfg.slpTotalCalls = params.getInt("fsSlpTotalCalls");
         cfg.jointMargins = ParamParse.doubles(params.getString("fsJointMargins"), cfg.jointMargins);
         cfg.jointWrapClose = false;
     }
@@ -70,13 +66,22 @@ public final class FreeStartImproveNode implements NodeRuntime {
             adoptX = conv.startX;
             adoptZ = conv.startZ;
         }
-        if (adoptYaws == null) {
-            FreeStartSolve.Result it = FreeStartSolve.solve(ctx.exactModel, ctx.spec, ctx.feasTol, cancel, cfg);
-            if (it != null && it.feasible
-                    && FreeStartSolve.violationAt(ctx.exactModel, ctx.spec, it.yaws, it.startX, it.startZ) <= ctx.feasTol) {
-                adoptYaws = it.yaws;
-                adoptX = it.startX;
-                adoptZ = it.startZ;
+        if (adoptYaws == null && (cancel == null || !cancel.get())) {
+            double centerX = 0.5 * (ctx.freeBox.pxLo + ctx.freeBox.pxHi);
+            double centerZ = 0.5 * (ctx.freeBox.pzLo + ctx.freeBox.pzHi);
+            JumpPhysicsInputs pinned = Scoring.pinnedScenario(sc, centerX, centerZ);
+            JumpSpec pinnedSpec = new JumpSpec(pinned, ctx.spec.constraints, ctx.spec.objective);
+            String[] via = new String[1];
+            double[] chainYaws = de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine.dualChain(
+                    ctx.exactModel, pinnedSpec, pinned, cancel, via);
+            if (chainYaws != null
+                    && FreeStartSolve.violationAt(ctx.exactModel, ctx.spec, chainYaws, centerX, centerZ) <= ctx.feasTol) {
+                adoptYaws = chainYaws;
+                adoptX = centerX;
+                adoptZ = centerZ;
+                if (SolverTrace.on()) {
+                    SolverTrace.log("ENGINE", "free rescue center chain via=%s", via[0]);
+                }
             }
         }
         if (adoptYaws != null) {
@@ -126,7 +131,6 @@ public final class FreeStartImproveNode implements NodeRuntime {
 
         sc.startBox = freeBox;
         FreeStartSolve.Result conv = FreeStartSolve.solveJoint(exact, spec, feasTol, cancel, cfg);
-        if (conv == null || !conv.feasible) conv = FreeStartSolve.solve(exact, spec, feasTol, cancel, cfg);
         if (conv != null && conv.feasible
                 && FreeStartSolve.violationAt(exact, spec, conv.yaws, conv.startX, conv.startZ) <= feasTol) {
             double[] convYaws = Angles.wrapAll(conv.yaws);

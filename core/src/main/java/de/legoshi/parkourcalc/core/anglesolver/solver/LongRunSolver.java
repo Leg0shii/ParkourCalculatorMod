@@ -126,11 +126,6 @@ public final class LongRunSolver {
     }
 
     public static FreeRun solveFree(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
-                                    LongRunConfig cfg, StartBox freeBox) {
-        return solveFree(exact, spec, feasTol, cancel, cfg, freeBox, new WindowCache());
-    }
-
-    public static FreeRun solveFree(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
                                     LongRunConfig cfg, StartBox freeBox, WindowCache windows) {
         if (freeBox == null || !freeBox.startFree()) return null;
         JumpPhysicsInputs sc = spec.asScenario();
@@ -425,8 +420,9 @@ public final class LongRunSolver {
     private static List<JumpConstraint> sliceConstraints(JumpSpec full, int a, int c) {
         List<JumpConstraint> out = new ArrayList<>();
         for (JumpConstraint jc : full.constraints) {
-            boolean in1 = jc.t1 >= a && jc.t1 <= c;
-            boolean in2 = jc.t2 == null || (jc.t2 >= a && jc.t2 <= c);
+            int hi = jc.mode == JumpConstraint.Mode.F ? c - 1 : c;
+            boolean in1 = jc.t1 >= a && jc.t1 <= hi;
+            boolean in2 = jc.t2 == null || (jc.t2 >= a && jc.t2 <= hi);
             if (in1 && in2) {
                 Integer t2 = jc.t2 == null ? null : (jc.t2 - a);
                 out.add(new JumpConstraint(jc.mode, jc.t1 - a, t2, jc.op, jc.cmp, jc.rhs, jc.name));

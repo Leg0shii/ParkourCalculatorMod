@@ -24,8 +24,12 @@ anglesolver/
                            (+2.3,+1.7)-shifted seed variants, FAST, per-node timing from the run
                            record); -Dpkc.sweep=1 to run, -Dpkc.sweep.{tag,variants,filter,timeoutMs,
                            trace} tune it (or PKC_SWEEP-style env); report at build/reports/sweep-<tag>.txt.
-                           Run via direct java -cp <test classpath> (PKC_* env does not reach a warm
-                           gradle daemon's test JVM)
+                           A frac~fx~fz variant places the seed at those box fractions (in-box
+                           seed-parity screening for the gh-386 class; '~' not ':', a colon breaks
+                           the trace filename on Windows). Run via direct java -cp <test classpath>
+                           (PKC_* env does not reach a warm gradle daemon's test JVM)
+  SingleProblemProbe.java  run ONE ProblemsTest capture headlessly: -Dpkc.probe=<category>/<name>
+                           (e.g. solve/gh386-4x2-seedshift) via JUnitCore; prints success/met/ms/obj
   EngineFileScreen.java    drive the live engine on any save file headlessly; PKC_SOLVE_FILE=<path>,
                            optional PKC_SOLVE_EFFORT and PKC_SOLVE_TIMEOUT_MS
   SolveNodeStatsScreen.java  per-node timing dump over problems/solve at expect efforts;
