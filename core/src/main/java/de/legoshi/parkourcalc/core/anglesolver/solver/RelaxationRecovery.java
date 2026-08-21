@@ -180,6 +180,7 @@ public final class RelaxationRecovery {
         for (boolean aware : awareOptions) {
             for (double[] s : seeds) {
                 if (out.landed != null || cancel.get()) break;
+                if (!aware && s == seedProj) continue;
                 double[] r = SlpSolve.optimizeBestEffort(exact, spec, feasTol, cancel, s,
                         cfg.slpPhase1Calls, cfg.slpTotalCalls, aware);
                 double[] feas = feasibleOrNull(exact, sc, spec, r, feasTol);
