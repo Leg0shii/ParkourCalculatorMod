@@ -40,6 +40,7 @@ public final class FreeStartImproveNode implements NodeRuntime {
         cfg.slpPhase1Calls = params.getInt("fsSlpPhase1Calls");
         cfg.slpTotalCalls = params.getInt("fsSlpTotalCalls");
         cfg.jointMargins = ParamParse.doubles(params.getString("fsJointMargins"), cfg.jointMargins);
+        cfg.jointWrapClose = false;
     }
 
     @Override
