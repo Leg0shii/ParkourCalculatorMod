@@ -81,7 +81,19 @@ The "recovered angles need only modest dual accuracy" javadoc on `CostateDualSol
 
 **Outcome (issue #386):** the sharpening ladder shipped. `FreeP0` carries a per-solve `smooth`; `solveJointBest` runs the smoothed attempt first (byte-identical to the old flow), then warm rungs at 2e-3 and 5e-4, then the seed lane, then the certify tail. The 4x2 pair solves bit-identically from all 9 probed in-box seeds (including every previously failing one and both corners); the corpus-wide in-box seed-parity screen (5 seeds x 52 captures, the bench's new `frac~fx~fz` variants) is clean except j335, whose two low-X seed failures pre-exist on dev with a P0-INDEPENDENT joint floor of 4.3e-2, a different mechanism and the open remaining witness of the class. Sweep cost of the ladder: 23.8 s -> 30.0 s (+26%, spread over failing-joint captures, worst j347 base 2.9 -> 4.3 s), inside the accepted 2-3x free-start envelope. The seed lane remains, demoted below the rungs, with removal as a follow-up kill-audit.
 
-## 6. What a future attempt would need
+## 6. Full-solver execution audit (2026-08-21, end of the gh-386 session)
+
+Method: merged JaCoCo line coverage over `:core:test -PslowTests` plus an agent-instrumented 4-variant sweep (every line executed or not, the sound version of "a debug statement on every line"), JFR over the sweep, `SolveNodeStatsScreen` over problems/solve, and anomaly-signature scans over full sweep traces (58k lines, 104 runs). Findings, ranked:
+
+- **No correctness anomalies**: zero NaN, all pins green, in-box parity clean, window cache healthy (misses cached, no re-solve storms), `CostateDualSolver` has 100 percent line coverage.
+- **CPU shape unchanged post-fixes**: buildHessian 43 percent leaf (hottest single line: the O(walls^2 x ticks) multiply at 460), cholesky 18 percent, TrustRegionLp ~11 percent, free-start joint machine 45 percent inclusive. Node level: the only large burners are coldBnb (43 s) and explore:bnbFF (26 s), both the loopmm/nix accepted-fail pins burning their budgets by design.
+- **Largest waste ratio: SLP rejects 85 percent of its LP steps** (36,034 reject vs 6,197 accept in one sweep, ~6.8 LPs per accepted step). Trust-region adaptation is the lever; knife-edge risk per this record, measure-gated only.
+- **The pairCap fix is corpus-load-bearing**: 199 of 260 jointLadder invocations are margin-capped by inertia-wall antipodal pairs (0.005), not just j335's corridor.
+- **Corpus-dead code found (kill-audit candidates)**: the seed lane's 12-iteration translate loop never takes a single translate step corpus-wide (its 6 wins are 1 direct center solve + 5 anchor-grid; the loop only burns bestEffortShape before falling through); the `solveJointBest` tail LatticeRepair certify never succeeds (0 fires); jointWrapClose's internal lattice-repair branch never runs; jointDispatch's 6-iteration local-refinement loop on the scan path never enters its body; `LongRunSolver.solveFree` 6-arg overload has no caller.
+- **Feature surface without corpus coverage** (not dead, untested): exact EQ (==) X/Z constraints in bestTranslate/pinTranslate; `candidateThetas` pinned-member walls; custom window/commit ladder params on the horizon nodes.
+- j346 remains the slowest healthy capture (its rescue-miss paths now also pay the center chain, base ~5.5 s); j347 carries the largest capped-Newton grind (213 capped solves per run).
+
+## 7. What a future attempt would need
 
 - A speedup of the CONVERGENCE itself that is bit-compatible on converged solves and strictly-better on capped ones. Nothing of that shape was found; `buildHessian`/`choleskySolve` are already in the bit-identical-only zone.
 - Or callers restructured so capped iterates are never consumed (certify differently, not from dual recovery). That is solver architecture work, not a perf patch.
