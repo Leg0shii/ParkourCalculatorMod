@@ -150,12 +150,8 @@ public final class NodeCatalog {
                 .branch(Branch.preserves(Guarantee.UNCHANGED))
                 .param(ParamSpec.integer("budgetSec", "Budget (s)", 0, 600, 20))
                 .param(ParamSpec.bool("jointOnly", "Joint rescue only", false))
-                .param(ParamSpec.integer("fsMaxIters", "Translate iterations", 1, 100, 12))
                 .param(ParamSpec.decimal("fsIntervalMargin", "Pin interval margin", 0.0, 1.0, 1.0e-3))
                 .param(ParamSpec.decimal("fsInvariantTol", "Invariant slack tolerance", 0.0, 1.0, 1.0e-6))
-                .param(ParamSpec.decimal("fsStepTol", "Fixed-point step tolerance", 0.0, 1.0, 1.0e-9))
-                .param(ParamSpec.integer("fsSlpPhase1Calls", "Shape SLP phase-1 calls", 1, 10000, 40))
-                .param(ParamSpec.integer("fsSlpTotalCalls", "Shape SLP total calls", 1, 10000, 60))
                 .param(ParamSpec.text("fsJointMargins", "Joint margin ladder",
                         "0.0,1.0e-4,3.0e-4,6.0e-4,1.2e-3,2.5e-3,5.0e-3,1.0e-2"))
                 .budgetParam("budgetSec")
