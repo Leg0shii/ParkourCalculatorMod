@@ -348,6 +348,14 @@ public final class PairedServerSim {
         }
     }
 
+    public static String describeInput(Input in) {
+        if (in == null) return "null";
+        return (in.forward() ? "W" : "-") + (in.backward() ? "S" : "-")
+                + (in.left() ? "A" : "-") + (in.right() ? "D" : "-")
+                + (in.jump() ? "J" : "-") + (in.shift() ? "N" : "-")
+                + (in.sprint() ? "R" : "-");
+    }
+
     private void reportReplayMismatch(SimulatorEntity e) {
         if (!DebugFlags.PAIRED_DIAGNOSTICS) return;
         double dx = sp.getX() - e.getX();
@@ -368,12 +376,15 @@ public final class PairedServerSim {
             sp.hurtMarked = false;
             pendingClientbound.add(new ClientboundSetEntityMotionPacket(sp));
             if (DebugFlags.PAIRED_DIAGNOSTICS) {
-                System.out.println("[PC-PAIR] T" + (tickIndex + 1) + " velocity queued " + formatVec(sp.getDeltaMovement()));
+                Vec3 raw = sp.getDeltaMovement();
+                System.out.println("[PC-PAIR] T" + (tickIndex + 1) + " velocity queued " + formatVec(raw)
+                        + " raw=" + raw.x + "," + raw.y + "," + raw.z
+                        + " quantized=" + quantizeVelocity(raw));
             }
         }
     }
 
-    private static Vec3 quantizeVelocity(Vec3 velocity) {
+    static Vec3 quantizeVelocity(Vec3 velocity) {
         ByteBuf buf = Unpooled.buffer();
         try {
             LpVec3.write(buf, velocity);
@@ -495,6 +506,7 @@ public final class PairedServerSim {
         c.lastOnGround = lastOnGround;
         c.lastHorizontalCollision = lastHorizontalCollision;
         c.lastSentInput = lastSentInput;
+        c.serverLastClientInput = sp.getLastClientInput();
         c.lastSprinting = lastSprinting;
         c.prevRightClick = prevRightClick;
         c.rightClickDelay = rightClickDelay;
@@ -551,6 +563,7 @@ public final class PairedServerSim {
         lastOnGround = c.lastOnGround;
         lastHorizontalCollision = c.lastHorizontalCollision;
         lastSentInput = c.lastSentInput;
+        sp.setLastClientInput(c.serverLastClientInput);
         lastSprinting = c.lastSprinting;
         prevRightClick = c.prevRightClick;
         rightClickDelay = c.rightClickDelay;
@@ -605,6 +618,7 @@ public final class PairedServerSim {
         boolean lastOnGround;
         boolean lastHorizontalCollision;
         Input lastSentInput;
+        Input serverLastClientInput;
         boolean lastSprinting;
         boolean prevRightClick;
         int rightClickDelay;

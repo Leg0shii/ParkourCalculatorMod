@@ -19,23 +19,42 @@ public final class ReplayLockstep {
     private static final long GATE_HORIZON_NANOS = 50_000_000L;
 
     private static volatile MinecraftServer engagedServer;
+    private static volatile boolean startArmed;
+    private static volatile long startHopTarget;
     private static long pendingTarget = -1L;
     private static final AtomicInteger permits = new AtomicInteger();
     private static final AtomicLong completedTicks = new AtomicLong();
     private static final AtomicLong lastPongId = new AtomicLong(Long.MIN_VALUE);
     private static final AtomicLong pingIds = new AtomicLong(PING_ID_BASE);
+    private static final AtomicLong restartHopSerial = new AtomicLong();
 
     private ReplayLockstep() {
     }
 
     public static void engage(MinecraftServer server) {
+        if (engagedServer == server) return;
         permits.set(0);
         pendingTarget = -1L;
         engagedServer = server;
     }
 
+    public static void engageForStart(MinecraftServer server) {
+        startHopTarget = restartHopSerial.get() + 1;
+        startArmed = true;
+        engage(server);
+    }
+
+    public static void releaseStartArm() {
+        startArmed = false;
+    }
+
+    public static void onRestartHopComplete() {
+        restartHopSerial.incrementAndGet();
+    }
+
     public static void disengage() {
         engagedServer = null;
+        startArmed = false;
         permits.set(0);
         pendingTarget = -1L;
     }
@@ -85,6 +104,7 @@ public final class ReplayLockstep {
     public static void clientBarrierPostTick() {
         MinecraftServer server = engagedServer;
         if (server == null) return;
+        if (startArmed) return;
         Minecraft mc = Minecraft.getInstance();
         if (mc.isPaused()) {
             permits.set(0);
@@ -105,8 +125,12 @@ public final class ReplayLockstep {
     public static void clientBarrierPreTick() {
         MinecraftServer server = engagedServer;
         if (server == null) return;
-        if (pendingTarget < 0L) return;
         Minecraft mc = Minecraft.getInstance();
+        if (startArmed) {
+            startWindowBarrier(mc);
+            return;
+        }
+        if (pendingTarget < 0L) return;
         if (mc.isPaused()) return;
         ClientPacketListener connection = mc.getConnection();
         if (connection == null) {
@@ -118,6 +142,31 @@ public final class ReplayLockstep {
         mc.packetProcessor().processQueuedPackets();
         mc.runAllTasks();
         pendingTarget = -1L;
+    }
+
+    private static void startWindowBarrier(Minecraft mc) {
+        if (mc.isPaused()) return;
+        ClientPacketListener connection = mc.getConnection();
+        if (connection == null) {
+            disengage();
+            return;
+        }
+        if (!awaitRestartHop()) return;
+        if (!awaitPong(connection)) return;
+        mc.packetProcessor().processQueuedPackets();
+        mc.runAllTasks();
+    }
+
+    private static boolean awaitRestartHop() {
+        long start = System.nanoTime();
+        while (restartHopSerial.get() < startHopTarget) {
+            if (engagedServer == null) return false;
+            if (!spinPause(start)) {
+                abort("restart teleport wait timed out");
+                return false;
+            }
+        }
+        return true;
     }
 
     private static boolean consumePermit() {

@@ -58,6 +58,10 @@ public class Forge8ParkourCalculator {
                 ? APP.getBoxController().getStates()
                 : java.util.Collections.<de.legoshi.parkourcalc.core.sim.TickState>emptyList();
     }
+
+    static de.legoshi.parkourcalc.core.sim.Checkpoint simCheckpoint(int index) {
+        return APP != null ? APP.getCheckpoint(index) : null;
+    }
     private final Lwjgl2ImGuiHost imguiHost = new Lwjgl2ImGuiHost(
             application.getOverlayManager(),
             application.getSettings(),

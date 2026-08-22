@@ -31,6 +31,7 @@ public final class ReplayLockstep {
     private static final String PIPELINE_NAME = "pkc_lockstep";
 
     private static volatile boolean engaged;
+    private static volatile boolean startArmed;
     private static volatile boolean serverSideReady;
     private static volatile boolean serverboundMarkerSeen;
     private static volatile boolean clientboundMarkerSeen;
@@ -69,9 +70,19 @@ public final class ReplayLockstep {
         engaged = true;
     }
 
+    public static void engageForStart() {
+        engage();
+        startArmed = true;
+    }
+
+    public static void releaseStartArm() {
+        startArmed = false;
+    }
+
     public static void disengage() {
         if (!engaged && clientChannel == null && serverChannel == null) return;
         engaged = false;
+        startArmed = false;
         serverSideReady = false;
         permits.set(0);
         pendingTarget = -1L;
@@ -116,6 +127,7 @@ public final class ReplayLockstep {
             pendingTarget = -1L;
             return;
         }
+        if (startArmed) return;
         if (!serverSideReady) return;
         if (pendingTarget >= 0L) return;
         NetHandlerPlayClient nh = mc.getNetHandler();
@@ -142,7 +154,7 @@ public final class ReplayLockstep {
         if (server == null) return;
         if (!serverSideReady) {
             injectServerSide(server);
-            return;
+            if (!serverSideReady) return;
         }
         while (engaged && server.isServerRunning()) {
             if (permits.get() > 0) {
