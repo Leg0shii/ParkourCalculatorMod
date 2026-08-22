@@ -172,7 +172,7 @@ public final class NodeCatalog {
                 .param(ParamSpec.decimal("pruneTol", "Prune tolerance", 0.0, 1.0, 1.0e-6))
                 .param(ParamSpec.decimal("slpViolTrigger", "SLP trigger violation", 0.0, 10.0, 0.02))
                 .param(ParamSpec.text("seedMargins", "Seed margin ladder", "3.0e-4,1.2e-3,5.0e-3,2.0e-2"))
-                .param(ParamSpec.integer("maxPatterns", "Max patterns", 1, 256, 8))
+                .param(ParamSpec.integer("maxPatterns", "Max patterns", 1, 256, 64))
                 .param(ParamSpec.decimal("minSeamWidth", "Min seam width", 1.0e-4, 10.0, 0.04))
                 .param(ParamSpec.integer("restoreIters", "Restore iterations", 1, 1000, 45))
                 .param(ParamSpec.integer("treeSlpPhase1Calls", "Tree SLP phase-1 calls", 1, 10000, 40))
