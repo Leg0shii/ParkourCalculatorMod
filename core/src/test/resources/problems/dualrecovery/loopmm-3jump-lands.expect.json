@@ -3,5 +3,5 @@
   "shouldSolve": true,
   "bnbSeconds": 60,
   "refObjective": -279.3,
-  "maxObjectiveGap": 5.0e-4
+  "maxObjectiveGap": 0.0
 }

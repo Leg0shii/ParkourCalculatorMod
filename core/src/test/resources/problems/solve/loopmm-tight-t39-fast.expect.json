@@ -1,1 +1,1 @@
-{ "capture": "loopmm-tight-t39", "shouldSolve": false, "maxSolveMs": 90000 }
+{ "capture": "loopmm-tight-t39", "shouldSolve": true, "maxSolveMs": 90000 }

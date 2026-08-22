@@ -301,6 +301,26 @@ public final class JumpLinearModel {
         return walls;
     }
 
+    /** The complement of a {@link #velocityWalls} pair: one half-space keeping {@code v_axis(tick)} outside
+     *  the inertia band, on the {@code positive} side ({@code v >= bound}) or the negative one
+     *  ({@code v <= -bound}). Null when no input reaches the tick. */
+    public Wall keepAliveWall(int axis, int tick, double bound, boolean positive) {
+        if (tick <= 0 || tick >= n) return null;
+        double[] coef = new double[n];
+        boolean any = false;
+        for (int s = 0; s < tick; s++) {
+            if (zNext[axis][s] < tick) continue;
+            coef[s] = positive ? -(fPre[tick] / fPre[s]) : (fPre[tick] / fPre[s]);
+            any = true;
+        }
+        if (!any) return null;
+        double v0 = axis == 0 ? sc.initialVelocity.x : sc.initialVelocity.z;
+        double constVal = zFirst[axis] < tick ? 0.0 : v0 * fPre[tick];
+        double bPrime = positive ? constVal - bound : -bound - constVal;
+        String ax = axis == 0 ? "X" : "Z";
+        return new Wall(axis, coef, bPrime, false, "keep" + ax + "@" + tick + (positive ? "+" : "-"), 0.0);
+    }
+
     public void zeroingPattern(double[] yawsAbsWrapped, double threshold, boolean perAxis,
                                boolean[] outZeroX, boolean[] outZeroZ) {
         double vx = sc.initialVelocity.x;

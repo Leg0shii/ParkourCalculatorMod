@@ -18,6 +18,7 @@ public final class BoundPrunedRecovery {
     private static final double RESTORE_STEP_CAP_DEG = 20.0;
     private static final double BOUND_QUANTUM = 2.0e-6;
     private static final double TARGET_CONVERT_MAX_CORRIDOR = 2.0e-3;
+    private static final int MAX_KEEP_ALIVE = 4;
 
     public static final class Config {
         public double searchShare = 0.8;
@@ -103,6 +104,15 @@ public final class BoundPrunedRecovery {
                 if (!Double.isNaN(targetNorm) && !searchCancel.get()) {
                     rankYaws = ClosedFormSolve.optimize(exact, searchSpec, feasTol, searchCancel);
                 }
+            }
+            if (!searchCancel.get()) {
+                JumpLinearModel free = new JumpLinearModel(sc);
+                double[] gateRef = rankYaws != null ? rankYaws : freeDualSeed(searchSpec, free);
+                List<Pattern> keepAlive = keepAlivePatterns(exact, searchSpec, sc, free, gateRef);
+                if (SolverTrace.on()) {
+                    for (Pattern p : keepAlive) SolverTrace.log("BNB", "pattern %s bound=%.9f", p.label, p.normBound);
+                }
+                patterns.addAll(keepAlive);
             }
             for (Pattern p : patterns) {
                 if (!p.patterned || p.zeroX == null || searchCancel.get()) continue;
@@ -369,6 +379,64 @@ public final class BoundPrunedRecovery {
         Double bound = rootBound(spec, lin, vel);
         if (bound == null) return;
         cands.add(new Pattern(label, lin, vel, true, bound, k, zx && zz ? 0 : (zx ? 0 : 1), zeroX, zeroZ));
+    }
+
+    /** Patterns that hold the objective axis out of the inertia band at a momentum reversal, the branch
+     *  complementary to the zeroing patterns: the gate destroys the whole carry when the axis coasts through
+     *  the band, and the free relaxation cannot see that because it never models the gate at all. Nominated
+     *  where {@code reference} either trips the gate or reverses sign, in the sign the objective improves. */
+    private static List<Pattern> keepAlivePatterns(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc,
+                                                   JumpLinearModel free, double[] reference) {
+        List<Pattern> out = new ArrayList<>();
+        if (reference == null) return out;
+        int axis = spec.objective.axis == JumpPhysicsInputs.Axis.X ? 0 : 1;
+        boolean positive = spec.objective.sense == Objective.Sense.MAX;
+        ForwardPath path = exact.forward(sc, sc.toGameFacings(Angles.wrapAll(reference)));
+        double[] vel = axis == 0 ? path.velX : path.velZ;
+        if (vel == null) return out;
+        double thr = exact.inertiaThreshold();
+        for (int k = 1; k < free.n && out.size() < MAX_KEEP_ALIVE; k++) {
+            if (Math.abs(vel[k]) >= thr && vel[k - 1] * vel[k] >= 0.0) continue;
+            JumpLinearModel.Wall w = free.keepAliveWall(axis, k, thr, positive);
+            if (w == null) continue;
+            List<JumpLinearModel.Wall> velWalls = new ArrayList<>(1);
+            velWalls.add(w);
+            Double bound = rootBound(spec, free, velWalls);
+            if (bound == null) continue;
+            out.add(new Pattern(w.name, free, velWalls, true, bound, -1, -1, null, null));
+        }
+        return out;
+    }
+
+    /** The margin-0 dual recovery of the unpatterned model: the always-available reference trajectory when
+     *  the closed form found nothing to rank by. */
+    private static double[] freeDualSeed(JumpSpec spec, JumpLinearModel lin) {
+        boolean[] trivial = {false};
+        List<JumpLinearModel.Wall> walls = lin.compileWalls(spec.constraints, 0.0, trivial);
+        if (trivial[0]) return null;
+        int n = lin.n;
+        double[] cx = new double[n];
+        double[] cz = new double[n];
+        lin.objectiveVectors(spec.objective, cx, cz);
+        CostateDualSolver.Result r = new CostateDualSolver(n, cx, cz, lin.mMagAll(), walls).solve(0.0, null);
+        if (r == null) return null;
+        boolean max = spec.objective.sense == Objective.Sense.MAX;
+        double[] yaws = new double[n];
+        for (int t = 0; t < n; t++) {
+            double gx = r.gx[t];
+            double gz = r.gz[t];
+            if (gx * gx + gz * gz < 1.0e-18) {
+                if (spec.objective.axis == JumpPhysicsInputs.Axis.X) {
+                    gx = max ? 1.0 : -1.0;
+                    gz = 0.0;
+                } else {
+                    gx = 0.0;
+                    gz = max ? 1.0 : -1.0;
+                }
+            }
+            yaws[t] = lin.recoverYawDeg(t, gx, gz);
+        }
+        return yaws;
     }
 
     private static Double rootBound(JumpSpec spec, JumpLinearModel lin, List<JumpLinearModel.Wall> vel) {

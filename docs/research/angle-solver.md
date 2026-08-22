@@ -434,6 +434,7 @@ This document's narrative ends at the 2026-07-10 port. The later solver work has
 - The dual Newton iteration audit (issue 384): both truncation lanes measured dead, capped iterations are load-bearing. Record: `dual-newton-iteration-audit.md`.
 - The CMA-ES removal train (PRs 371 to 382): wrap-window ILS near-miss close, dF=0-only chains, full CMA-ES removal, the performance cleanup, and the issue 380 simplification (TrustRegionLp shipped; AlmSnapStage and its satellites removed).
 - Free-start seed independence (PRs 387 to 390, commit e171cc52): seed-independent free-start solves for dF=0 chains.
+- The loopmm redirect win-back (issue 383): the pattern enumeration of 10.3 branched only one way on the inertia disjunction; the complementary keep-alive branch (`JumpLinearModel.keepAliveWall`) holds the objective axis outside the band at a momentum reversal and is what lands the tight pad after the TrustRegionLp swap. Record: `dual-newton-hessian-handoff.md` section 6.
 
 ## 16. ILS global-solve findings (carried 2026-08-21 from ils-global-solve.md, since deleted)
 
