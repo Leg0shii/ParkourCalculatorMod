@@ -703,6 +703,10 @@ public final class Application {
         return boxController;
     }
 
+    public de.legoshi.parkourcalc.core.sim.Checkpoint getCheckpoint(int index) {
+        return runner.getCheckpoint(index);
+    }
+
     public Settings getSettings() {
         return settings;
     }

@@ -169,6 +169,7 @@ public final class PlaybackController {
             }
         }
         firstTickOnGround = runner.firstTickOnGround();
+        bridge.beginReplayLockstep();
         bridge.teleport(pos, vel, yaw, carry);
         // Drop any user-held key so the warmup runs with an empty InputRow like the simulator does.
         bridge.releaseAllKeys();
@@ -193,11 +194,11 @@ public final class PlaybackController {
         bridge.applyEffects(firstSpeedAmp, firstJumpAmp);
         lastSpeedAmplifier = firstSpeedAmp;
         lastJumpBoostAmplifier = firstJumpAmp;
+        if (DebugFlags.PAIRED_DIAGNOSTICS) {
+            lastCapturedTick = -1;
+            bridge.beginPlaybackCapture();
+        }
         if (settings.pairedSimulation) {
-            if (DebugFlags.PAIRED_DIAGNOSTICS) {
-                lastCapturedTick = -1;
-                bridge.beginPlaybackCapture();
-            }
             runner.onReplayStart(from);
         }
         running = true;
@@ -219,10 +220,10 @@ public final class PlaybackController {
         if (bridge != null) {
             bridge.releaseAllKeys();
             bridge.applyEffects(0, 0);
+            if (DebugFlags.PAIRED_DIAGNOSTICS) {
+                bridge.finishPlaybackCapture();
+            }
             if (settings.pairedSimulation) {
-                if (DebugFlags.PAIRED_DIAGNOSTICS) {
-                    bridge.finishPlaybackCapture();
-                }
                 runner.onReplayEnd();
             }
         }
@@ -281,6 +282,7 @@ public final class PlaybackController {
         if (warmupRemaining > 0) {
             bridge.releaseAllKeys();
             warmupRemaining--;
+            bridge.releaseReplayLockstep();
             return;
         }
 
@@ -318,6 +320,7 @@ public final class PlaybackController {
         bridge.setPitch(currentTickPitch);
         tickEndNanos = System.nanoTime();
         nextTick++;
+        bridge.releaseReplayLockstep();
     }
 
     private static float clampPitch(float pitch) {
@@ -362,7 +365,7 @@ public final class PlaybackController {
             }
             bridge.dumpPlayerState(t);
         }
-        if (settings.pairedSimulation && DebugFlags.PAIRED_DIAGNOSTICS) {
+        if (DebugFlags.PAIRED_DIAGNOSTICS) {
             int t = nextTick - 1 - warmupRemaining;
             if (t >= 0 && t != lastCapturedTick) {
                 lastCapturedTick = t;

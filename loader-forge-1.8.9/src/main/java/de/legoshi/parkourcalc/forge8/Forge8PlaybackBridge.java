@@ -78,6 +78,19 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
     }
 
     @Override
+    public void beginReplayLockstep() {
+        de.legoshi.parkourcalc.core.ui.Settings s = Forge8ParkourCalculator.settings();
+        if (s == null || !s.lockstepReplay) return;
+        if (!isSingleplayer()) return;
+        ReplayLockstep.engageForStart();
+    }
+
+    @Override
+    public void releaseReplayLockstep() {
+        ReplayLockstep.releaseStartArm();
+    }
+
+    @Override
     public void teleport(Vec3dCore pos, Vec3dCore vel, float yaw, de.legoshi.parkourcalc.core.sim.Checkpoint carry) {
         if (!isSingleplayer()) {
             beginGhostPlayback(pos, vel, yaw, carry);
@@ -113,6 +126,16 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
         client.motionX = vel.x;
         client.motionY = vel.y;
         client.motionZ = vel.z;
+        double[] pendingStomp = de.legoshi.parkourcalc.forge8.sim.paired.PairedCheckpoint.pendingVelocity(carry);
+        if (pendingStomp != null) {
+            client.motionX = pendingStomp[0];
+            client.motionY = pendingStomp[1];
+            client.motionZ = pendingStomp[2];
+            if (de.legoshi.parkourcalc.core.DebugFlags.PAIRED_DIAGNOSTICS) {
+                System.out.println("[PC-NET] restart applied pending velocity flush "
+                        + pendingStomp[0] + "," + pendingStomp[1] + "," + pendingStomp[2]);
+            }
+        }
         if (carry != null) {
             de.legoshi.parkourcalc.forge8.sim.SimulatorEntity.applyCheckpoint(client, carry);
         } else {
@@ -134,6 +157,12 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
         client.prevRenderArmYaw = yaw;
         client.renderArmPitch = client.rotationPitch;
         client.prevRenderArmPitch = client.rotationPitch;
+        if (de.legoshi.parkourcalc.core.DebugFlags.PAIRED_DIAGNOSTICS) {
+            System.out.println("[PC-NET] teleport snap pos=" + pos.x + "," + pos.y + "," + pos.z
+                    + " vel=" + vel.x + "," + vel.y + "," + vel.z
+                    + " carry=" + (carry == null ? "none" : carry.getClass().getSimpleName())
+                    + " clientFall=" + client.fallDistance + " clientOnGround=" + client.onGround);
+        }
     }
 
     private void beginGhostPlayback(Vec3dCore pos, Vec3dCore vel, float yaw, de.legoshi.parkourcalc.core.sim.Checkpoint carry) {
@@ -381,8 +410,13 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
         final double vy;
         final double vz;
         final boolean onGround;
+        final float fallDistance;
+        final float health;
+        final double[] serverVel;
+        final String serverDesc;
 
-        ReplaySample(int tick, double x, double y, double z, double vx, double vy, double vz, boolean onGround) {
+        ReplaySample(int tick, double x, double y, double z, double vx, double vy, double vz, boolean onGround,
+                     float fallDistance, float health, double[] serverVel, String serverDesc) {
             this.tick = tick;
             this.x = x;
             this.y = y;
@@ -391,10 +425,45 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
             this.vy = vy;
             this.vz = vz;
             this.onGround = onGround;
+            this.fallDistance = fallDistance;
+            this.health = health;
+            this.serverVel = serverVel;
+            this.serverDesc = serverDesc;
         }
     }
 
     private final java.util.List<ReplaySample> replaySamples = new java.util.ArrayList<ReplaySample>();
+
+    private EntityPlayerMP serverSideSelf() {
+        if (ghostMode) return null;
+        Minecraft mc = Minecraft.getMinecraft();
+        EntityPlayerSP client = mc.thePlayer;
+        IntegratedServer server = mc.getIntegratedServer();
+        if (client == null || server == null) return null;
+        return server.getConfigurationManager().getPlayerByUUID(client.getUniqueID());
+    }
+
+    private static String describeRealServer(EntityPlayerMP sp) {
+        String handlerPart = " handler=unavailable";
+        if (sp.playerNetServerHandler != null) {
+            handlerPart = " hasMoved=" + sp.playerNetServerHandler.hasMoved
+                    + " floating=" + sp.playerNetServerHandler.floatingTickCount
+                    + " lastPos=" + sp.playerNetServerHandler.lastPosX
+                    + "," + sp.playerNetServerHandler.lastPosY
+                    + "," + sp.playerNetServerHandler.lastPosZ;
+        }
+        return "realSrv=" + sp.motionX + "," + sp.motionY + "," + sp.motionZ
+                + " fall=" + sp.fallDistance
+                + " g=" + sp.onGround
+                + " spr=" + sp.isSprinting()
+                + " sneak=" + sp.isSneaking()
+                + " velChanged=" + sp.velocityChanged
+                + " hurtResist=" + sp.hurtResistantTime
+                + " hurtTime=" + sp.hurtTime
+                + " lastDmg=" + sp.lastDamage
+                + " fire=" + sp.fire
+                + handlerPart;
+    }
 
     @Override
     public void beginPlaybackCapture() {
@@ -405,8 +474,51 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
     public void capturePlaybackSample(int tickIndex) {
         net.minecraft.entity.player.EntityPlayer subject = ghostMode ? ghost : Minecraft.getMinecraft().thePlayer;
         if (subject == null) return;
+        EntityPlayerMP sp = serverSideSelf();
         replaySamples.add(new ReplaySample(tickIndex, subject.posX, subject.posY, subject.posZ,
-                subject.motionX, subject.motionY, subject.motionZ, subject.onGround));
+                subject.motionX, subject.motionY, subject.motionZ, subject.onGround,
+                subject.fallDistance, subject.getHealth(),
+                sp == null ? null : new double[]{sp.motionX, sp.motionY, sp.motionZ},
+                sp == null ? "realSrv=unavailable" : describeRealServer(sp)));
+    }
+
+    private static void printAccumulatorLine(ReplaySample sample) {
+        System.out.println("[PC-ACC] T" + (sample.tick + 1)
+                + " " + sample.serverDesc
+                + " | " + de.legoshi.parkourcalc.forge8.sim.paired.PairedCheckpoint.describeServer(
+                        Forge8ParkourCalculator.simCheckpoint(sample.tick + 1)));
+    }
+
+    private static boolean velMatches(double[] real, de.legoshi.parkourcalc.core.sim.Checkpoint pair) {
+        double[] p = de.legoshi.parkourcalc.forge8.sim.paired.PairedCheckpoint.serverVelocity(pair);
+        if (p == null) return true;
+        double dx = real[0] - p[0];
+        double dy = real[1] - p[1];
+        double dz = real[2] - p[2];
+        return dx * dx + dy * dy + dz * dz <= 1.0e-18;
+    }
+
+    private void reportAccumulator() {
+        int first = -1;
+        for (ReplaySample sample : replaySamples) {
+            if (sample.serverVel == null) continue;
+            if (velMatches(sample.serverVel, Forge8ParkourCalculator.simCheckpoint(sample.tick + 1))
+                    || velMatches(sample.serverVel, Forge8ParkourCalculator.simCheckpoint(sample.tick))) {
+                continue;
+            }
+            first = sample.tick;
+            break;
+        }
+        if (first < 0) {
+            System.out.println("[PC-ACC] server accumulator matches the pair across " + replaySamples.size()
+                    + " ticks (phase-tolerant)");
+            return;
+        }
+        System.out.println("[PC-ACC] server accumulator first differs at T" + (first + 1));
+        for (ReplaySample sample : replaySamples) {
+            if (sample.tick < first - 2 || sample.tick > first + 6) continue;
+            printAccumulatorLine(sample);
+        }
     }
 
     @Override
@@ -425,6 +537,7 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
                 break;
             }
         }
+        reportAccumulator();
         if (firstDiverged < 0) {
             System.out.println("[PC-REPLAY] no divergence across " + replaySamples.size() + " replayed ticks (eps 1e-6)");
             replaySamples.clear();
@@ -447,7 +560,10 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
                     + " real=" + sample.x + "," + sample.y + "," + sample.z
                     + " v=" + sample.vx + "," + sample.vy + "," + sample.vz
                     + " g=" + sample.onGround
+                    + " fall=" + sample.fallDistance
+                    + " hp=" + sample.health
                     + " | " + simPart);
+            printAccumulatorLine(sample);
         }
         replaySamples.clear();
     }

@@ -49,6 +49,12 @@ public interface PlaybackBridge {
 
     default void dumpPlayerState(int tickIndex) {}
 
+    /** Park the server before the restart state is applied, so no ungated tick can advance it. */
+    default void beginReplayLockstep() {}
+
+    /** Let the parked server run again, once the first replayed row has been sent. */
+    default void releaseReplayLockstep() {}
+
     default void beginPlaybackCapture() {}
 
     default void capturePlaybackSample(int tickIndex) {}

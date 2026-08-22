@@ -44,7 +44,8 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
     private GhostPlayerEntity ghost;
     private final java.util.List<ReplaySample> replaySamples = new java.util.ArrayList<>();
 
-    private record ReplaySample(int tick, Vec3 pos, Vec3 vel, boolean onGround) {
+    private record ReplaySample(int tick, Vec3 pos, Vec3 vel, boolean onGround, double fallDistance, float health,
+                                Vec3 serverVel, String serverDesc) {
     }
 
     InputRow getCurrentRow() {
@@ -123,6 +124,29 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         mc.setCameraEntity(g);
     }
 
+    private ServerPlayer serverSideSelf() {
+        if (ghostMode) return null;
+        Minecraft mc = Minecraft.getInstance();
+        LocalPlayer client = mc.player;
+        IntegratedServer server = mc.getSingleplayerServer();
+        if (client == null || server == null) return null;
+        return server.getPlayerList().getPlayer(client.getUUID());
+    }
+
+    @Override
+    public void beginReplayLockstep() {
+        if (!FabricParkourCalculator.getSettings().lockstepReplay) return;
+        if (!isSingleplayer()) return;
+        IntegratedServer server = Minecraft.getInstance().getSingleplayerServer();
+        if (server == null) return;
+        ReplayLockstep.engageForStart(server);
+    }
+
+    @Override
+    public void releaseReplayLockstep() {
+        ReplayLockstep.releaseStartArm();
+    }
+
     @Override
     public void beginPlaybackCapture() {
         replaySamples.clear();
@@ -130,12 +154,73 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
 
     @Override
     public void capturePlaybackSample(int tickIndex) {
-        Entity subject = ghostMode ? ghost : Minecraft.getInstance().player;
+        net.minecraft.world.entity.player.Player subject = ghostMode ? ghost : Minecraft.getInstance().player;
         if (subject == null) return;
-        replaySamples.add(new ReplaySample(tickIndex, subject.position(), subject.getDeltaMovement(), subject.onGround()));
+        ServerPlayer sp = serverSideSelf();
+        replaySamples.add(new ReplaySample(tickIndex, subject.position(), subject.getDeltaMovement(),
+                subject.onGround(), subject.fallDistance, subject.getHealth(),
+                sp == null ? Vec3.ZERO : sp.getDeltaMovement(),
+                sp == null ? "realSrv=unavailable" : describeRealServer(sp)));
         if (de.legoshi.parkourcalc.core.DebugFlags.PAIRED_DIAGNOSTICS && tickIndex <= 4) {
             System.out.println("[PC-NET] tick T" + (tickIndex + 1)
-                    + " pos=" + subject.position() + " vel=" + subject.getDeltaMovement());
+                    + " pos=" + subject.position() + " vel=" + subject.getDeltaMovement()
+                    + " fall=" + subject.fallDistance + " hp=" + subject.getHealth());
+        }
+    }
+
+    private static String describeRealServer(ServerPlayer sp) {
+        Vec3 v = sp.getDeltaMovement();
+        net.minecraft.server.network.ServerGamePacketListenerImpl conn = sp.connection;
+        return "realSrv=" + v.x + "," + v.y + "," + v.z
+                + " fall=" + sp.fallDistance
+                + " g=" + sp.onGround()
+                + " vCollB=" + sp.verticalCollisionBelow
+                + " spr=" + sp.isSprinting()
+                + " sneak=" + sp.isShiftKeyDown()
+                + " hurtMarked=" + sp.hurtMarked
+                + " invuln=" + sp.invulnerableTime
+                + " hurtTime=" + sp.hurtTime
+                + " fire=" + sp.getRemainingFireTicks()
+                + " in=" + de.legoshi.parkourcalc.fabric.sim.paired.PairedServerSim.describeInput(sp.getLastClientInput())
+                + " tp=" + (conn.awaitingPositionFromClient != null)
+                + " tpId=" + conn.awaitingTeleport
+                + " recv=" + conn.receivedMovePacketCount + "/" + conn.knownMovePacketCount
+                + " aboveG=" + conn.aboveGroundTickCount
+                + " lastGood=" + conn.lastGoodX + "," + conn.lastGoodY + "," + conn.lastGoodZ;
+    }
+
+    private static void printAccumulatorLine(ReplaySample sample) {
+        System.out.println("[PC-ACC] T" + (sample.tick() + 1)
+                + " " + sample.serverDesc()
+                + " | " + de.legoshi.parkourcalc.fabric.sim.paired.PairedCheckpoint.describeServer(
+                        FabricParkourCalculator.simCheckpoint(sample.tick() + 1)));
+    }
+
+    private static boolean matchesPair(Vec3 real, int checkpointIndex) {
+        Vec3 pair = de.legoshi.parkourcalc.fabric.sim.paired.PairedCheckpoint.serverVelocity(
+                FabricParkourCalculator.simCheckpoint(checkpointIndex));
+        return pair == null || real.distanceToSqr(pair) <= 1.0e-18;
+    }
+
+    private void reportAccumulator() {
+        int first = -1;
+        for (ReplaySample sample : replaySamples) {
+            if (matchesPair(sample.serverVel(), sample.tick() + 1)
+                    || matchesPair(sample.serverVel(), sample.tick())) {
+                continue;
+            }
+            first = sample.tick();
+            break;
+        }
+        if (first < 0) {
+            System.out.println("[PC-ACC] server accumulator matches the pair across " + replaySamples.size()
+                    + " ticks (phase-tolerant)");
+            return;
+        }
+        System.out.println("[PC-ACC] server accumulator first differs at T" + (first + 1));
+        for (ReplaySample sample : replaySamples) {
+            if (sample.tick() < first - 2 || sample.tick() > first + 6) continue;
+            printAccumulatorLine(sample);
         }
     }
 
@@ -155,6 +240,7 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
                 break;
             }
         }
+        reportAccumulator();
         if (firstDiverged < 0) {
             System.out.println("[PC-REPLAY] no divergence across " + replaySamples.size() + " replayed ticks (eps 1e-6)");
             replaySamples.clear();
@@ -177,7 +263,10 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
                     + " real=" + sample.pos().x + "," + sample.pos().y + "," + sample.pos().z
                     + " v=" + sample.vel().x + "," + sample.vel().y + "," + sample.vel().z
                     + " g=" + sample.onGround()
+                    + " fall=" + sample.fallDistance()
+                    + " hp=" + sample.health()
                     + " | " + simPart);
+            printAccumulatorLine(sample);
         }
         replaySamples.clear();
     }
@@ -236,25 +325,37 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         IntegratedServer server = mc.getSingleplayerServer();
         if (server == null) return;
         UUID uuid = client.getUUID();
+        Vec3 pendingStomp = de.legoshi.parkourcalc.fabric.sim.paired.PairedCheckpoint.pendingVelocity(carry);
+        Vec3 startVel = pendingStomp != null ? pendingStomp : new Vec3(vel.x, vel.y, vel.z);
+        if (pendingStomp != null && de.legoshi.parkourcalc.core.DebugFlags.PAIRED_DIAGNOSTICS) {
+            System.out.println("[PC-NET] restart applied pending velocity flush " + pendingStomp);
+        }
         server.execute(() -> {
-            ServerPlayer sp = server.getPlayerList().getPlayer(uuid);
-            if (sp == null) return;
-            // EntityPosition overload carries velocity in the teleport packet itself.
-            // The 5-arg overload zeroes velocity and the followup setVelocity+velocityModified
-            // path fires a SetEntityMotion packet that arrives ~1 tick late and stomps the
-            // player mid-playback.
-            sp.connection.teleport(
-                new PositionMoveRotation(new Vec3(pos.x, pos.y, pos.z), new Vec3(vel.x, vel.y, vel.z), yaw, sp.getXRot()),
-                Collections.emptySet()
-            );
-            de.legoshi.parkourcalc.fabric.sim.paired.PairedCheckpoint.applyRestartState(sp, carry);
+            try {
+                ServerPlayer sp = server.getPlayerList().getPlayer(uuid);
+                if (sp == null) return;
+                // EntityPosition overload carries velocity in the teleport packet itself.
+                // The 5-arg overload zeroes velocity and the followup setVelocity+velocityModified
+                // path fires a SetEntityMotion packet that arrives ~1 tick late and stomps the
+                // player mid-playback.
+                sp.connection.teleport(
+                    new PositionMoveRotation(new Vec3(pos.x, pos.y, pos.z), startVel, yaw, sp.getXRot()),
+                    Collections.emptySet()
+                );
+                de.legoshi.parkourcalc.fabric.sim.paired.PairedCheckpoint.applyRestartState(sp, carry);
+                if (carry instanceof de.legoshi.parkourcalc.fabric.sim.paired.PairedCheckpoint) {
+                    de.legoshi.parkourcalc.fabric.sim.paired.RestartSettle.arm(uuid, carry);
+                }
+            } finally {
+                ReplayLockstep.onRestartHopComplete();
+            }
         });
         client.absSnapTo(pos.x, pos.y, pos.z, yaw, client.getXRot());
         client.setYBodyRot(yaw);
         client.yBodyRotO = yaw;
         client.setYHeadRot(yaw);
         client.yHeadRotO = yaw;
-        client.setDeltaMovement(vel.x, vel.y, vel.z);
+        client.setDeltaMovement(startVel);
         if (carry != null) {
             de.legoshi.parkourcalc.fabric.sim.SimulatorEntity.applyCheckpoint(client, carry);
         } else {
@@ -280,6 +381,8 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         if (de.legoshi.parkourcalc.core.DebugFlags.PAIRED_DIAGNOSTICS) {
             System.out.println("[PC-NET] teleport snap pos=" + pos.x + "," + pos.y + "," + pos.z
                     + " vel=" + vel.x + "," + vel.y + "," + vel.z
+                    + " carry=" + (carry == null ? "none" : carry.getClass().getSimpleName())
+                    + " clientFall=" + client.fallDistance + " clientOnGround=" + client.onGround()
                     + " clientFire=" + client.getRemainingFireTicks() + " sharedFlagFire=" + client.isOnFire());
         }
     }

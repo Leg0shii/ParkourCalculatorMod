@@ -193,6 +193,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
                 playbackBridge.resetInputOverride();
                 playbackBridge.endGhostPlayback();
                 ReplayLockstep.disengage();
+                de.legoshi.parkourcalc.fabric.sim.paired.RestartSettle.clear();
                 wasPlaybackRunning = false;
             }
             return;
@@ -205,6 +206,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
             playbackBridge.restorePlaybackInput(p);
             playbackBridge.endGhostPlayback();
             ReplayLockstep.disengage();
+            de.legoshi.parkourcalc.fabric.sim.paired.RestartSettle.clear();
         }
         wasPlaybackRunning = isRunning;
     }
@@ -276,6 +278,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     public static java.util.List<de.legoshi.parkourcalc.core.sim.TickState> simStates() {
         return application.getBoxController().getStates();
+    }
+
+    public static de.legoshi.parkourcalc.core.sim.Checkpoint simCheckpoint(int index) {
+        return application.getCheckpoint(index);
     }
 
     private static void handleInput(Minecraft client) {
