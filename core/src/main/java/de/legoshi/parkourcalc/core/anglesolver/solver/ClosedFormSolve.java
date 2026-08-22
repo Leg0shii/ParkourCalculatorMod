@@ -452,6 +452,15 @@ public final class ClosedFormSolve {
         return spec.objective.sense == Objective.Sense.MAX ? constPos + r.value : constPos - r.value;
     }
 
+    public static double dualBoundIgnoringFacing(JumpSpec spec) {
+        if (!JumpLinearModel.hasFacingWall(spec.constraints)) return dualBound(spec);
+        List<JumpConstraint> kept = new ArrayList<>(spec.constraints.size());
+        for (JumpConstraint c : spec.constraints) {
+            if (c.mode != JumpConstraint.Mode.F) kept.add(c);
+        }
+        return dualBound(new JumpSpec(spec.asScenario(), kept, spec.objective));
+    }
+
     private static double violOnExact(ExactJumpModel exact, JumpPhysicsInputs sc,
                                       JumpConstraintCompiler.Compiled compiled, double[] yawsAbsWrapped) {
         double[] gf = sc.toGameFacings(yawsAbsWrapped);

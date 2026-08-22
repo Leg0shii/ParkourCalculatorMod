@@ -42,6 +42,8 @@ public final class GraphContext {
     private int jumpCount = -1;
     private boolean reachBoundSet;
     private double reachBound = Double.NaN;
+    private boolean headroomBoundSet;
+    private double headroomBound = Double.NaN;
     private volatile long overallDeadlineNanos;
 
     public GraphContext(JumpSpec spec, ForwardModel model, StartBox freeBox, JumpConstraint legalGoal,
@@ -150,6 +152,14 @@ public final class GraphContext {
             reachBoundSet = true;
         }
         return reachBound;
+    }
+
+    public synchronized double headroomBound() {
+        if (!headroomBoundSet) {
+            headroomBound = exact() ? ClosedFormSolve.dualBoundIgnoringFacing(spec) : Double.NaN;
+            headroomBoundSet = true;
+        }
+        return headroomBound;
     }
 
     public AtomicBoolean beginNode(GraphNode node, long deadlineNanos, long budgetNanos) {

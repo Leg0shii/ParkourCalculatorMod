@@ -58,9 +58,11 @@ public final class BuiltinGraphs {
         int peelSec = t > 0 ? Math.max(1, Math.min(12, t)) : 12;
         int freeSec = t > 0 ? Math.min(20, t) : 20;
         int rescueSec = t > 0 ? Math.max(1, Math.min(3, t)) : 3;
-        int sweepSec = Math.max(1, Math.min(60, tp / 5));
-        int bnbSec = Math.max(1, (tp - sweepSec) * 3 / 4);
-        int ilsSec = Math.max(1, tp - sweepSec - bnbSec);
+        long reserveNanos = ilx && t > 0 ? GraphRunner.wrapReserveNanos(t * 1_000_000_000L) : 0L;
+        int stageSec = Math.max(1, tp - (int) ((reserveNanos + 999_999_999L) / 1_000_000_000L));
+        int sweepSec = Math.max(1, Math.min(60, stageSec / 5));
+        int bnbSec = Math.max(1, (stageSec - sweepSec) * 3 / 4);
+        int ilsSec = t > 0 ? stageSec : Math.max(1, stageSec - sweepSec - bnbSec);
         int nearBnbSec = Math.max(1, Math.min(60, tp / 2));
         String coldEntry = sof ? "rImproveFeas" : "rFree";
         String afterFree = sof ? "rRescueTicks" : "rHave";
@@ -86,6 +88,7 @@ public final class BuiltinGraphs {
         g.add("repA", "report");
         g.add("repWarm", "report");
         g.add("repSkip", "report");
+        router(g, "rSeedHave", "HAS_CANDIDATE");
         if (sof) router(g, "rImproveFeas", "CANDIDATE_FEASIBLE_SCORED");
         router(g, "rFree", "HAS_FREE_START");
         g.add("freeImprove", "freeStartImprove")
@@ -186,7 +189,9 @@ public final class BuiltinGraphs {
             g.edge("peel", Guarantee.NONE, "repA");
         }
         g.edge("seedMulti", Guarantee.FOUND, "wrap0");
-        g.edge("seedMulti", Guarantee.NONE, win ? "peel" : "repA");
+        g.edge("seedMulti", Guarantee.NONE, "rSeedHave");
+        g.edge("rSeedHave", Guarantee.TRUE, "wrap0");
+        g.edge("rSeedHave", Guarantee.FALSE, win ? "peel" : "repA");
         g.edge("wrap0", Guarantee.DONE, "rWarmTicks");
         g.edge("rWarmTicks", Guarantee.TRUE, "smoothWarm");
         g.edge("rWarmTicks", Guarantee.FALSE, "settledMark");

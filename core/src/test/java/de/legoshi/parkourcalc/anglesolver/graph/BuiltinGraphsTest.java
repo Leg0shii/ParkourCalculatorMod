@@ -60,10 +60,34 @@ public class BuiltinGraphsTest {
     @Test
     public void optimizeExhaustiveBudgetsSplitTheWindow() {
         SolverGraph g = BuiltinGraphs.optimize(120);
-        assertEquals(24, g.node("sweep").params.getInt("budgetSec"));
-        assertEquals(72, g.node("bnbOpt").params.getInt("budgetSec"));
-        assertEquals(24, g.node("ils").params.getInt("budgetSec"));
+        assertEquals(23, g.node("sweep").params.getInt("budgetSec"));
+        assertEquals(70, g.node("bnbOpt").params.getInt("budgetSec"));
+        assertEquals(117, g.node("ils").params.getInt("budgetSec"));
         assertEquals(60, g.node("nearBnb").params.getInt("budgetSec"));
+
+        SolverGraph unbudgeted = BuiltinGraphs.fromBudget(false, true, true, 10, 3, 0);
+        assertEquals(24, unbudgeted.node("sweep").params.getInt("budgetSec"));
+        assertEquals(72, unbudgeted.node("bnbOpt").params.getInt("budgetSec"));
+        assertEquals(24, unbudgeted.node("ils").params.getInt("budgetSec"));
+    }
+
+    @Test
+    public void optimizeKeepsTheHorizonCandidateWhenTheSeedChainMisses() {
+        SolverGraph g = BuiltinGraphs.optimize(10);
+        assertFalse(GraphValidator.hasErrors(GraphValidator.validate(g)));
+        assertEquals("rSeedHave", g.edgeFor("seedMulti", Guarantee.NONE).toNode);
+        assertEquals("wrap0", g.edgeFor("rSeedHave", Guarantee.TRUE).toNode);
+        assertEquals("peel", g.edgeFor("rSeedHave", Guarantee.FALSE).toNode);
+    }
+
+    @Test
+    public void optimizeStageBudgetsLeaveRoomForTheWrapReserve() {
+        SolverGraph g = BuiltinGraphs.optimize(10);
+        int sweep = g.node("sweep").params.getInt("budgetSec");
+        int bnb = g.node("bnbOpt").params.getInt("budgetSec");
+        int ils = g.node("ils").params.getInt("budgetSec");
+        assertEquals(7, ils);
+        assertTrue(sweep + bnb <= ils);
     }
 
     @Test
@@ -84,7 +108,8 @@ public class BuiltinGraphsTest {
         assertNull(g.node("horizon"));
         assertNull(g.node("peel"));
         assertEquals("seedMulti", g.edgeFor("rJumps", Guarantee.FALSE).toNode);
-        assertEquals("repA", g.edgeFor("seedMulti", Guarantee.NONE).toNode);
+        assertEquals("rSeedHave", g.edgeFor("seedMulti", Guarantee.NONE).toNode);
+        assertEquals("repA", g.edgeFor("rSeedHave", Guarantee.FALSE).toNode);
     }
 
     @Test

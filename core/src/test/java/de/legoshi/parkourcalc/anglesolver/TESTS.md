@@ -10,6 +10,9 @@ AGENTS.md "Tests" for the full slow list and when a full run is required.
 ```
 anglesolver/
   ProblemsTest.java        every capture under resources/problems/<check>/ is validated for that check
+  OptimizeVsFastTest.java  gh-398 invariant on captures/gh398-optimize-2jump: Optimize's answer is never
+                           worse than Fast's, and the run publishes at least two incumbents so the live
+                           panel moves and Cancel keeps the best found so far
   HpkDualRecoveryScreen.java  dev miss-screen over captures/hpk/ (dual bound + full chain per capture);
                               skipped unless PKC_SCREENS is set; report at build/reports/hpk-screen.txt
   RelaxDiagScreen.java     dev per-capture recovery diagnostic (stall margins, recorded-path replay);

@@ -33,9 +33,7 @@ public final class GraphRunner {
         long wrapReserve = 0L;
         long overallAtStart = ctx.overallDeadline();
         if (wrapPending && overallAtStart > 0) {
-            long total = overallAtStart - System.nanoTime();
-            wrapReserve = Math.min(WRAP_RESERVE_MAX_NANOS, total / 4);
-            if (wrapReserve < 0) wrapReserve = 0;
+            wrapReserve = wrapReserveNanos(overallAtStart - System.nanoTime());
         }
         while (true) {
             if (ctx.cancel.get()) return null;
@@ -79,8 +77,21 @@ public final class GraphRunner {
             } finally {
                 ctx.endNode(cur, taken);
             }
+            reportIncumbent(ctx, cand);
             cur = next(graph, cur, taken);
         }
+    }
+
+    public static long wrapReserveNanos(long totalNanos) {
+        long reserve = Math.min(WRAP_RESERVE_MAX_NANOS, totalNanos / 4);
+        return reserve > 0 ? reserve : 0L;
+    }
+
+    private static void reportIncumbent(GraphContext ctx, Candidate cand) {
+        if (ctx.progress == null || cand == null || cand.yaws == null) return;
+        double violation = ctx.violationOf(cand.yaws);
+        ctx.progress.setStage(ctx.chain());
+        ctx.progress.report(cand.yaws, ctx.exactObjective(cand.yaws), violation, violation <= ctx.feasTol);
     }
 
     private static long budgetNanos(GraphNode n) {
