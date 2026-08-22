@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class GraphRunner {
 
     public static final int MAX_NODE_VISITS = 1024;
+    public static final long WRAP_RESERVE_MAX_NANOS = 3_000_000_000L;
 
     private GraphRunner() {
     }
@@ -25,6 +26,17 @@ public final class GraphRunner {
         Map<String, Integer> visits = new HashMap<>();
         GraphNode cur = graph.entry;
         Candidate cand = null;
+        boolean wrapPending = false;
+        for (GraphNode n : graph.nodes) {
+            if ("wrapIls".equals(n.type.id)) wrapPending = true;
+        }
+        long wrapReserve = 0L;
+        long overallAtStart = ctx.overallDeadline();
+        if (wrapPending && overallAtStart > 0) {
+            long total = overallAtStart - System.nanoTime();
+            wrapReserve = Math.min(WRAP_RESERVE_MAX_NANOS, total / 4);
+            if (wrapReserve < 0) wrapReserve = 0;
+        }
         while (true) {
             if (ctx.cancel.get()) return null;
             long overall = ctx.overallDeadline();
@@ -43,9 +55,17 @@ public final class GraphRunner {
                 rt = cur.type.factory.create(cur.params);
                 runtimes.put(cur.id, rt);
             }
+            boolean isWrap = "wrapIls".equals(cur.type.id);
+            if (isWrap) wrapPending = false;
             long budgetNanos = budgetNanos(cur);
             long deadline = budgetNanos > 0 ? System.nanoTime() + budgetNanos : 0L;
             if (overall > 0 && (deadline == 0L || overall < deadline)) deadline = overall;
+            if (wrapPending && wrapReserve > 0 && overall > 0 && !isWrap) {
+                long reserved = overall - wrapReserve;
+                long now = System.nanoTime();
+                if (reserved < now) reserved = now;
+                if (deadline == 0L || reserved < deadline) deadline = reserved;
+            }
             AtomicBoolean token = ctx.beginNode(cur, deadline, budgetNanos);
             Guarantee taken = null;
             try {
@@ -54,6 +74,7 @@ public final class GraphRunner {
                 cand = outcome.candidate;
             } catch (RuntimeException e) {
                 if (ctx.cancel.get() || !token.get()) throw e;
+                e.printStackTrace();
                 taken = cur.type.fallbackBranch != null ? cur.type.fallbackBranch : Guarantee.NONE;
             } finally {
                 ctx.endNode(cur, taken);

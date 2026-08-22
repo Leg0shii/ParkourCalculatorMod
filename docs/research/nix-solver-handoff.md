@@ -1,5 +1,7 @@
 # Solver handoff: nix razor jumps, complete record and next directions
 
+**Status 2026-08-21:** the section 0 scoreboard is superseded by razor-campaign-2026-07-09-handoff.md: 5.4375 was subsequently solved and improved in-tool (user-confirmed), rung 5.375's legal record was beaten (see next-session-lever2-2026-07-10.md), and the weirdpane legal record was achieved. The section 2b Stage A/B plan was executed as AlmSnapStage and later removed (issue 380; see alm-snap-stage-b-design.md). Every harness named in sections 3-4 was deleted in the 2026-08 cleanup, so section 4's run instructions are historical. The failure taxonomy (section 1) and the Sheepram source audit (section 2) remain current research records.
+
 Written at session end 2026-07-08. Read this FIRST before touching any nix / razor-jump solving. Companion docs: nix-real-54375-campaign.md (the 5.4375 campaign detail), nix-full-freestart.md (the earlier nix-full arc), angle-solver.md (engine design record).
 
 ## 0. The honest scoreboard
@@ -48,6 +50,20 @@ Files that matter: src/optimizer/{optimizer,discrete,exact_sim,trig,comp_expr,ra
 **What they have that we LACK (the actual gap, source-verified)**:
 1. A gradient-based smooth-model core: ALM+BFGS with analytic gradients converges superlinearly to razor wall-intersections; our workhorse is CMA sampling the piecewise-constant exact model, which plateaus (the observed 2.6e-4 walls). We have the compiled linear form (JumpLinearModel) but never built a first-order constrained optimizer on it.
 2. The snap -> repair -> polish discrete pipeline with fast-grade filtering and exact-verify acceptance. Our HomotopyCloser is continuation-only; its bucket descent has no systematic 1-opt full scans, no top-K exact-check ordering, no bounded-worse annealing.
+
+**Carried 2026-08-21 from sheepram-port-spec.md, since deleted: the normative constants and mechanics worth keeping (all source-verified at the 2026-07-08 extraction)**:
+- ACCEPT_TOL = 1e-5: ALM feasibility tolerance, exact-grader eq tolerance, and the worse-move drop bound (MAX_DROP = ACCEPT_TOL).
+- FAST_ERR = 5e-7: fast-grader ineq feasibility slack; rationale is TECHNICAL.md's tested claim that fast-vs-exact error per expression is e-7 level.
+- MAX_DOWN_HILLS = 128 is a whole-2-opt-phase worse-move budget (declared outside the round loop, never reset), not per-round.
+- Cooking samples 512*n random pairs per round with n = TOTAL tick count (model.n), not the search length.
+- The 2-opt delta set is exactly 20 deltas: all four sign combinations of the magnitude pairs (1,1),(1,2),(1,3),(2,1),(3,1); delta cap 3.
+- Line search: strong Wolfe with bisection-only zoom (c1 1e-4, c2 0.9, alpha0 1, 20 bracket + 20 zoom iterations) that NEVER returns a zero step: bracket exhaustion returns the last doubled alpha, zoom exhaustion the midpoint.
+- Snap is MC-style truncation toward zero, (int)(rad*10430.378f)&0xffff, not round-to-nearest.
+- The "exact" sim is mixed-precision: positions and velocities accumulate in f64; only the per-tick movement deltas (forward, strafe, sin/cos values, sprint-jump 0.2) are f32 promoted to f64.
+- Verified ABSENT: any inertia gate in exact_sim (no 0.005 threshold anywhere) and any automatic sprint delay (source comment: sprint delay is the user's job).
+- Multistart is constant-angle-only (uniform sweep 2*pi*i/N, N in [8,256], each seed constant across all ticks), single-threaded; eq tolerance 1e-5.
+
+The external Odin source remains at the user's local Sheepram checkout and now includes optimizer_new.odin, so upstream line numbers have drifted since the extraction.
 
 ## 2b. The dominance plan (goal: beat Sheepram on EVERY search)
 

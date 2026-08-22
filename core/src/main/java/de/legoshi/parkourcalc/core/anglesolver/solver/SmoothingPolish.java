@@ -3,7 +3,7 @@ package de.legoshi.parkourcalc.core.anglesolver.solver;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /** Ties off underdetermined solves: a feasibility- and objective-preserving descent on the total
- *  turning of the facing path. Constraints rarely pin every tick, so CMA-ES / the dual leave the
+ *  turning of the facing path. Constraints rarely pin every tick, so the dual and the searches leave the
  *  free ticks wherever the search happened to land and the solved path wiggles. This pass minimizes
  *  the sum of squared facing deltas (anchored at the launch yaw) under two hard gates evaluated on
  *  the same wrap + toGameFacings + byte-exact forward chain as the polish:
@@ -57,7 +57,7 @@ public final class SmoothingPolish {
         double start = w.eval(y);
         if (start == Double.POSITIVE_INFINITY) return yawsAbsWrapped;
         w.floor = start;
-        w.scoredFloor = start + spec.objective.smoothPenalty(y);
+        w.scoredFloor = start + spec.objective.smoothPenalty(sc.startYaw, y);
         double rough = roughness(sc.startYaw, y);
 
         for (int round = 0; round < cfg.maxRounds && w.evals < w.evalCap; round++) {
@@ -196,7 +196,7 @@ public final class SmoothingPolish {
             double e = eval(absWrapped);
             if (e == Double.POSITIVE_INFINITY) return false;
             if (obj.smoothLambda <= 0.0) return e <= floor;
-            double scored = e + obj.smoothPenalty(absWrapped);
+            double scored = e + obj.smoothPenalty(sc.startYaw, absWrapped);
             if (scored > scoredFloor) return false;
             scoredFloor = scored;
             return true;

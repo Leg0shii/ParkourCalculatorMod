@@ -93,7 +93,7 @@ public final class Application {
         this.saveController = new SaveController(inputData, runner, mc, this::runSimulation);
         this.saveController.setRetriggerFrom(this::runSimulation);
         this.startDragController = new StartDragController(runner, boxController, selection,
-                saveController::markDirty, this::runSimulation, SimulationRunner.DEFAULT_MOVE_TICK_TOLERANCE);
+                saveController::markDirty, this::runSimulation, SimulationRunner.DEFAULT_DRAG_TOLERANCE);
         // Start box is the "Start" anchor: draggable to reposition, and tap-selectable as path index 0.
         this.dragController = new BoxDragController(boxController, startDragController, this::commitStartTap);
         this.selectController = new BoxSelectController(this::pickWorld, this::commitWorldTap);
@@ -172,7 +172,7 @@ public final class Application {
         ExactJumpModel forwardModel = ExactJumpModel.forMcVersion(mcVersion);
         constraintKeyController = new ConstraintKeyController(
                 mc, angleSolverState, selection, constraintSelection, saveController::markDirty,
-                forwardModel.modern());
+                forwardModel.modern(), inputData::size);
         saveController.setAngleSolver(angleSolverState);
         saveController.setDebugSource(boxController, settings);
         AngleSolverTable angleSolverTable = new AngleSolverTable(angleSolverState, settings, selection, constraintSelection, inputData::size);
@@ -310,6 +310,7 @@ public final class Application {
 
     private void runSimulation(int dirtyTick) {
         if (!mc.isReady()) return;
+        if (!saveController.isSessionActive()) return;
         long t0 = Perf.now();
         boolean incremental = dirtyTick > 0 && runner.canResumeFrom(dirtyTick)
                 && boxController.size() > dirtyTick && !DebugFlags.COMPARE_PARTIAL_SIM;
@@ -363,7 +364,7 @@ public final class Application {
         runner.invalidate();
         boxController.clearAll();
         inputData.clear();
-        saveController.discardCurrent();
+        saveController.endSession();
         if (undoController != null) undoController.onDocumentReplaced(null);
         isBruteForcing = false;
         bfWaitSolve = false;
@@ -428,7 +429,7 @@ public final class Application {
 
     private void commitStartTap() {
         if (boxController.size() == 0) return;
-        selection.handleClick(0);
+        selection.handleClick(boxController.size() >= 2 ? 1 : 0);
         selection.requestScrollIntoView();
     }
 
@@ -480,7 +481,6 @@ public final class Application {
         if (!mc.isReady()) return;
         if (!startInitialized) {
             runner.setStartPosition(mc.getPlayerPosition());
-            runSimulation();
             startInitialized = true;
             saveController.tryReopenLastSave();
         }

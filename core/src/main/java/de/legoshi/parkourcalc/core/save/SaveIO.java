@@ -174,6 +174,10 @@ public final class SaveIO {
 
     /** Rebuilds the Angle Solver problem from the save. Always resets first, so a pre-feature save yields an empty solver. */
     public static void applyAngleSolverTo(SaveFile file, AngleSolverState state) {
+        applyAngleSolverTo(file, state, 0);
+    }
+
+    public static void applyAngleSolverTo(SaveFile file, AngleSolverState state, int rowCount) {
         if (state == null) return;
         state.reset();
         SaveFile.AngleSolver a = file.angleSolver;
@@ -201,10 +205,13 @@ public final class SaveIO {
             }
         }
 
+        if (rowCount > 0) state.clampTicks(rowCount);
+
         if (a.ticks != null) {
             for (SaveFile.Tick t : a.ticks) {
                 if (t == null) continue;
-                TickConstraints tc = state.tickConstraints(t.tick);
+                int tick = rowCount > 0 ? Math.min(Math.max(t.tick, 0), rowCount - 1) : t.tick;
+                TickConstraints tc = state.tickConstraints(tick);
                 if (t.constraints != null) {
                     for (SaveFile.Constraint c : t.constraints) {
                         Constraint constraint = toConstraint(c);
@@ -563,10 +570,6 @@ public final class SaveIO {
     private static void applyCustomBudget(SaveFile.SolveBudget src, AngleSolverState.SolveBudget dst) {
         dst.resetToDefaults();
         if (src == null) return;
-        dst.setRestarts(src.restarts);
-        dst.setMaxEval(src.maxEval);
-        dst.setPolishCount(src.polishCount);
-        dst.setPolishDepth(parseEnum(AngleSolverState.PolishDepth.class, src.polishDepth, AngleSolverState.PolishDepth.LIGHT));
         dst.setTimeBudgetSeconds(src.timeBudgetSeconds);
         dst.setWindow(src.window);   // before commit: commit's clamp depends on window
         dst.setCommit(src.commit);
@@ -576,10 +579,6 @@ public final class SaveIO {
 
     private static SaveFile.SolveBudget toSaveCustomBudget(AngleSolverState.SolveBudget b) {
         SaveFile.SolveBudget out = new SaveFile.SolveBudget();
-        out.restarts = b.getRestarts();
-        out.maxEval = b.getMaxEval();
-        out.polishCount = b.getPolishCount();
-        out.polishDepth = b.getPolishDepth().name();
         out.timeBudgetSeconds = b.getTimeBudgetSeconds();
         out.window = b.getWindow();
         out.commit = b.getCommit();
@@ -785,6 +784,7 @@ public final class SaveIO {
         out.durationNanos = r.getDurationNanos();
         out.finishedAt = r.getFinishedAt();
         out.solver = r.getSolver();
+        out.notice = r.getNotice();
         out.objectiveValue = r.getObjectiveValue();
         out.hasObjective = r.hasObjective();
         for (SolveResult.Outcome o : r.getOutcomes()) {
@@ -819,6 +819,7 @@ public final class SaveIO {
         r.setDurationNanos(rd.durationNanos);
         r.setFinishedAt(rd.finishedAt);
         r.setSolver(rd.solver);
+        r.setNotice(rd.notice);
         if (rd.hasObjective) r.setObjective(rd.objectiveValue);
         if (rd.outcomes != null) {
             for (SaveFile.Outcome o : rd.outcomes) {

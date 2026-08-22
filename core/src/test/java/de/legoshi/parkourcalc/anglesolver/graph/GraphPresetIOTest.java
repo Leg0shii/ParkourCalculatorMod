@@ -78,10 +78,10 @@ public class GraphPresetIOTest {
     @Test
     public void unknownNodeTypeNamesTheNode() {
         GraphPresetFile f = GraphPresetIO.fromGraph(BuiltinGraphs.fast());
-        node(f, "momentum").type = "bogus";
+        node(f, "freeImprove").type = "bogus";
         Result<SolverGraph> r = GraphPresetIO.materialize(f);
         assertFalse(r.ok);
-        assertTrue(r.error, r.error.contains("momentum"));
+        assertTrue(r.error, r.error.contains("freeImprove"));
         assertTrue(r.error, r.error.contains("bogus"));
     }
 
@@ -96,38 +96,36 @@ public class GraphPresetIOTest {
     }
 
     @Test
-    public void unknownParamNamesTheNode() {
+    public void unknownParamIsIgnoredOnLoad() {
         GraphPresetFile f = GraphPresetIO.fromGraph(BuiltinGraphs.fast());
         GraphPresetFile.Param p = new GraphPresetFile.Param();
-        p.key = "bogusKnob";
-        p.num = 1.0;
-        node(f, "momentum").params.add(p);
+        p.key = "rrPinWidths";
+        p.str = "0.4,0.15";
+        node(f, "freeImprove").params.add(p);
         Result<SolverGraph> r = GraphPresetIO.materialize(f);
-        assertFalse(r.ok);
-        assertTrue(r.error, r.error.contains("bogusKnob"));
-        assertTrue(r.error, r.error.contains("momentum"));
+        assertTrue(r.error, r.ok);
     }
 
     @Test
     public void duplicateNodeIdsAreRejected() {
         GraphPresetFile f = GraphPresetIO.fromGraph(BuiltinGraphs.fast());
-        f.nodes.add(node(f, "momentum"));
+        f.nodes.add(node(f, "freeImprove"));
         Result<SolverGraph> r = GraphPresetIO.materialize(f);
         assertFalse(r.ok);
-        assertTrue(r.error, r.error.contains("momentum"));
+        assertTrue(r.error, r.error.contains("freeImprove"));
     }
 
     @Test
     public void outOfRangeParamsClampToTheSpec() {
         GraphPresetFile f = GraphPresetIO.fromGraph(BuiltinGraphs.fast());
-        for (GraphPresetFile.Param p : node(f, "raceColdFull").params) {
-            if ("restarts".equals(p.key)) p.num = 99999.0;
-            if ("sigmaDeg".equals(p.key)) p.num = -5.0;
+        for (GraphPresetFile.Param p : node(f, "rescueBnb").params) {
+            if ("budgetSec".equals(p.key)) p.num = 99999.0;
+            if ("minBudgetMs".equals(p.key)) p.num = -5.0;
         }
         Result<SolverGraph> r = GraphPresetIO.materialize(f);
         assertTrue(r.error, r.ok);
-        assertEquals(256, r.value.node("raceColdFull").params.getInt("restarts"));
-        assertEquals(1.0, r.value.node("raceColdFull").params.getDouble("sigmaDeg"), 0.0);
+        assertEquals(600, r.value.node("rescueBnb").params.getInt("budgetSec"));
+        assertEquals(0, r.value.node("rescueBnb").params.getInt("minBudgetMs"));
     }
 
     @Test

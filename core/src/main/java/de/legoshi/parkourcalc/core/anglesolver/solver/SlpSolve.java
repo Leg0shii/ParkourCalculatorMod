@@ -1,13 +1,5 @@
 package de.legoshi.parkourcalc.core.anglesolver.solver;
 
-import org.apache.commons.math3.optim.MaxIter;
-import org.apache.commons.math3.optim.PointValuePair;
-import org.apache.commons.math3.optim.linear.LinearConstraint;
-import org.apache.commons.math3.optim.linear.LinearConstraintSet;
-import org.apache.commons.math3.optim.linear.LinearObjectiveFunction;
-import org.apache.commons.math3.optim.linear.Relationship;
-import org.apache.commons.math3.optim.linear.SimplexSolver;
-import org.apache.commons.math3.optim.nonlinear.scalar.GoalType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -106,12 +98,27 @@ public final class SlpSolve {
                                      double targetClearance, boolean hugObjective, double[] seedAbsWrapped,
                                      boolean bestEffort, boolean inertiaAware, Config cfg) {
         List<JumpConstraint> constraints = spec.constraints;
-        if (JumpLinearModel.hasFacingWall(constraints)) return null; // not position-linear
+        JumpPhysicsInputs sc = spec.asScenario();
+        YawTies ties = null;
+        if (JumpLinearModel.hasFacingWall(constraints)) {
+            ties = YawTies.of(constraints, sc.numTicks);
+            if (ties == null) return null; // not position-linear
+            for (JumpConstraint c : constraints) {
+                if (c.mode != JumpConstraint.Mode.F) continue;
+                if (c.t1 < 0 || c.t1 >= sc.numTicks) continue;
+                boolean delta = c.t2 != null;
+                boolean absorbed = delta
+                        ? c.op == JumpConstraint.Op.MINUS && c.t2 == c.t1 - 1 && c.t1 >= 1
+                                && ties.groupOf(c.t1) == ties.groupOf(c.t1 - 1)
+                        : ties.varOf(c.t1) < 0;
+                if (!absorbed) return null; // not position-linear
+            }
+        }
         for (JumpConstraint c : constraints) {
+            if (c.mode == JumpConstraint.Mode.F) continue;
             if (c.cmp == JumpConstraint.Cmp.EQ) return null; // UI maps EQ to a corridor; a true EQ cannot hold strict clearance
         }
 
-        JumpPhysicsInputs sc = spec.asScenario();
         JumpLinearModel lin = new JumpLinearModel(sc);
         int n = lin.n;
 
@@ -120,6 +127,7 @@ public final class SlpSolve {
         List<JumpConstraint> ineq = new ArrayList<>();
         List<JumpLinearModel.Wall> walls = new ArrayList<>();
         for (JumpConstraint c : constraints) {
+            if (c.mode == JumpConstraint.Mode.F) continue;
             JumpLinearModel.Wall w = lin.compileWall(c, 0.0, trivialInfeasible);
             if (trivialInfeasible[0]) return null; // a violated constant is unfixable
             if (w != null) { ineq.add(c); walls.add(w); }
@@ -151,10 +159,13 @@ public final class SlpSolve {
             }
         }
 
+        if (ties != null) theta = ties.expand(ties.reduce(theta));
+
         long t0 = System.nanoTime();
         if (SolverTrace.on()) {
-            SolverTrace.log("SLP", "start n=%d m=%d seed=%s budget=%d/%d bestEffort=%s inertiaAware=%s",
-                    n, m, seedAbsWrapped != null ? "given" : "dual", cfg.phase1Calls, cfg.totalCalls, bestEffort, inertiaAware);
+            SolverTrace.log("SLP", "start n=%d m=%d seed=%s budget=%d/%d bestEffort=%s inertiaAware=%s fold=%s",
+                    n, m, seedAbsWrapped != null ? "given" : "dual", cfg.phase1Calls, cfg.totalCalls, bestEffort,
+                    inertiaAware, ties == null ? "-" : String.valueOf(ties.dims()));
         }
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
         double[] viol = new double[m];
@@ -164,6 +175,9 @@ public final class SlpSolve {
         boolean max = spec.objective.sense == Objective.Sense.MAX;
         int lpCalls = 0;
         double tr = cfg.trStartDeg;
+        int dims = ties == null ? n : ties.dims();
+        int[] col = new int[n];
+        for (int t = 0; t < n; t++) col[t] = ties == null ? t : ties.varOf(t);
 
         boolean[] zeroX = new boolean[n];
         boolean[] zeroZ = new boolean[n];
@@ -215,55 +229,42 @@ public final class SlpSolve {
                     ux[t] = lin.mMag(t) * Math.cos(phi);
                     uz[t] = lin.mMag(t) * Math.sin(phi);
                 }
-                int nv = n + 1; // facing deltas (deg) + worst-slack variable s
-                List<LinearConstraint> cons = new ArrayList<>(m + 2 * n + 1);
+                double[][] rows = new double[m][dims];
                 for (int j = 0; j < m; j++) {
                     JumpLinearModel.Wall wall = lpWalls.get(j);
-                    double[] row = new double[nv];
+                    double[] row = rows[j];
                     for (int t = 0; t < n; t++) {
+                        int v = col[t];
+                        if (v < 0) continue;
                         double du = wall.axis == 0 ? -uz[t] : ux[t]; // d(u.axis)/dyaw, deg-scaled below
-                        row[t] = wall.coef[t] * du * RAD;
+                        row[v] += wall.coef[t] * du * RAD;
                     }
-                    row[n] = -1.0;
-                    cons.add(new LinearConstraint(row, Relationship.LEQ, -viol[j]));
                 }
-                for (int t = 0; t < n; t++) {
-                    double[] lo = new double[nv];
-                    lo[t] = 1.0;
-                    cons.add(new LinearConstraint(lo, Relationship.LEQ, tr));
-                    double[] hi = new double[nv];
-                    hi[t] = -1.0;
-                    cons.add(new LinearConstraint(hi, Relationship.LEQ, tr));
+                double[] objRow = null;
+                if (phase != 1) {
+                    objRow = new double[dims];
+                    for (int t = 0; t < n; t++) {
+                        int v = col[t];
+                        if (v < 0) continue;
+                        objRow[v] += -(lpCx[t] * -uz[t] + lpCz[t] * ux[t]) * RAD; // maximize c.du
+                    }
                 }
-                double[] objRow = new double[nv];
-                if (phase == 1) {
-                    objRow[n] = 1.0; // minimize the worst linearized slack
-                } else {
-                    for (int t = 0; t < n; t++) objRow[t] = -(lpCx[t] * -uz[t] + lpCz[t] * ux[t]) * RAD; // maximize c.du
-                    double[] sCap = new double[nv];
-                    sCap[n] = 1.0;
-                    // Stay strictly inside, but never demand deeper clearance than the point already has,
-                    // or ascending along a wall that must stay hugged would make the LP infeasible.
-                    cons.add(new LinearConstraint(sCap, Relationship.LEQ, Math.max(-CLEARANCE, maxViol)));
-                }
-                double[] d;
-                try {
-                    lpCalls++;
-                    PointValuePair sol = new SimplexSolver().optimize(new MaxIter(cfg.lpMaxIter),
-                            new LinearObjectiveFunction(objRow, 0.0), new LinearConstraintSet(cons),
-                            GoalType.MINIMIZE);
-                    d = sol.getPoint();
-                } catch (Exception e) {
-                    if (SolverTrace.on()) SolverTrace.log("SLP", "lp#%d phase=%d LP failed (%s), phase stop", lpCalls, phase, e.getClass().getSimpleName());
+                lpCalls++;
+                TrustRegionLp.Result lp = TrustRegionLp.solve(rows, viol, objRow, tr, phase == 1,
+                        Math.max(-CLEARANCE, maxViol), cfg.lpMaxIter);
+                if (lp == null) {
+                    if (SolverTrace.on()) SolverTrace.log("SLP", "lp#%d phase=%d LP failed, phase stop", lpCalls, phase);
                     break; // LP infeasible/degenerate at this linearization: stop the phase
                 }
+                double[] d = lp.d;
 
                 double[] cand = new double[n];
                 double step = 0.0;
                 for (int t = 0; t < n; t++) {
-                    cand[t] = theta[t] + d[t];
-                    step = Math.max(step, Math.abs(d[t]));
+                    int v = col[t];
+                    cand[t] = v < 0 ? theta[t] : theta[t] + d[v];
                 }
+                for (int v = 0; v < dims; v++) step = Math.max(step, Math.abs(d[v]));
                 double[] cgf = sc.toGameFacings(Angles.wrapAll(cand));
                 ForwardPath cpath = exact.forward(sc, cgf);
                 double cViol = exactSlacks(ineq, cgf, cpath, candViol);
@@ -275,7 +276,7 @@ public final class SlpSolve {
                         : cViol <= feasTol && cObj > objNorm;
                 if (SolverTrace.on()) {
                     SolverTrace.log("SLP", "lp#%d phase=%d tr=%.3g step=%.3g pred=%.3e viol=%.3e->%.3e obj=%.9f->%.9f %s",
-                            lpCalls, phase, tr, step, d[n], maxViol, cViol, objNorm, cObj,
+                            lpCalls, phase, tr, step, lp.s, maxViol, cViol, objNorm, cObj,
                             accept ? "accept" : "reject");
                 }
                 if (accept) {
@@ -298,6 +299,10 @@ public final class SlpSolve {
                     if (SolverTrace.on()) {
                         SolverTrace.log("SLP", "phase1 infeasible viol=%.3e lps=%d ms=%.1f%s",
                                 endViol, lpCalls, (System.nanoTime() - t0) / 1e6, bestEffort ? " (best effort kept)" : "");
+                    }
+                    if (!inertiaAware && !bestEffort) {
+                        return optimize(exact, spec, feasTol, cancel, targetClearance, hugObjective,
+                                Angles.wrapAll(theta), false, true, cfg);
                     }
                     return bestEffort ? Angles.wrapAll(theta) : null;
                 }

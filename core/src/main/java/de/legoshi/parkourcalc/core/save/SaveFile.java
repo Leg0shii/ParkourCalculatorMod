@@ -90,10 +90,6 @@ public final class SaveFile {
 
     /** Nested (not flattened) so an absent block in an old save stays distinct from a real timeBudgetSeconds = 0. */
     public static final class SolveBudget {
-        public int restarts;
-        public int maxEval;
-        public int polishCount;
-        public String polishDepth;
         public int timeBudgetSeconds;
         public int window;
         public int commit;
@@ -156,6 +152,7 @@ public final class SaveFile {
         public long durationNanos;                       // precise solve compute time; 0 = legacy save
         public String finishedAt;                        // formatted clock time, null if unset
         public String solver;                            // algorithm label, null = legacy save
+        public String notice;
         public double objectiveValue;
         public boolean hasObjective;
         public List<Outcome> outcomes = new ArrayList<Outcome>();

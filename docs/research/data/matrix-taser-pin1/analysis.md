@@ -70,3 +70,6 @@ taser60-l* = optimize60 shape (THOROUGH, 60 s) with the given smoothLambda. 120 
    ticks; at 80/100 ticks it is inert as currently plumbed, so the bake-off either needs the
    ALM contender to win there, an SLP-with-lambda extension, or a router-cap rethink. This is
    the measured shape of the "smooth-by-construction core may be required at length" hypothesis.
+
+Superseded in part (2026-08-21) by matrix-step6-finale/analysis.md: the metric moved from travel
+to jerk, the lambda pin is now 1e-2, the tick cap 256; band.txt remains the live TESTS.md contract.

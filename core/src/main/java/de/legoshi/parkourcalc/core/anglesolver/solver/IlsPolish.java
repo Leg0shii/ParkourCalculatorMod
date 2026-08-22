@@ -15,10 +15,6 @@ public final class IlsPolish {
         public int perturbTicksSpan = 13;
         public double perturbMagMin = 3.0;
         public double perturbMagSpan = 50.0;
-        public double climbMuIneq = 1.0e6;
-        public double climbMuEq = 1.0e6;
-        public double climbSigmaDeg = 4.0;
-        public int climbMaxEval = 80000;
     }
 
     private IlsPolish() {
@@ -83,7 +79,8 @@ public final class IlsPolish {
                         best = pol;
                     }
                     if (progress != null) {
-                        progress.report(best, SolveCore.objectiveOf(model, sc, obj, Angles.wrapAll(best)), 0.0, true);
+                        double[] rgf = sc.toGameFacings(Angles.wrapAll(best));
+                        progress.report(best, model.forward(sc, rgf).getPos(obj.tick, obj.axis), 0.0, true);
                     }
                 }
             }
@@ -97,9 +94,6 @@ public final class IlsPolish {
                                   JumpConstraintCompiler.Compiled c, Objective obj, double sign,
                                   double[] start, AtomicBoolean cancel, Config cfg) {
         double[] cur = start;
-        SolverRunResult r = new CmaesJumpHarness(cfg.climbMuIneq, cfg.climbMuEq, cfg.climbSigmaDeg, cfg.climbMaxEval)
-                .solve(model, spec, cur, cancel);
-        if (score(model, sc, c, obj, sign, r.yawAbsDeg) < score(model, sc, c, obj, sign, cur)) cur = r.yawAbsDeg.clone();
         double[] pol = BucketAscentPolish.polish(model, spec, Angles.wrapAll(cur), BucketAscentPolish.FAST, cancel);
         return score(model, sc, c, obj, sign, pol) < score(model, sc, c, obj, sign, cur) ? pol : cur;
     }
@@ -109,6 +103,6 @@ public final class IlsPolish {
         double[] gf = sc.toGameFacings(Angles.wrapAll(absWrapped));
         ForwardPath pr = model.forward(sc, gf);
         if (c.maxViolation(gf, pr) > FEAS_TOL) return Double.POSITIVE_INFINITY;
-        return sign * pr.getPos(obj.tick, obj.axis) + obj.smoothPenalty(absWrapped);
+        return sign * pr.getPos(obj.tick, obj.axis) + obj.smoothPenalty(sc.startYaw, absWrapped);
     }
 }

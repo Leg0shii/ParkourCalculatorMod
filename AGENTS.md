@@ -5,7 +5,7 @@ Shared guidance for AI coding agents and contributors. This is the canonical gui
 - `docs/reference/mcpk/`: in-repo mirror of the Minecraft Parkour Wiki physics (movement formulas, constants, the sine table, collision order, block friction, status effects, tiers). The byte-exact ground truth this tool replicates; if code disagrees with a number there, the code is the bug.
 - `docs/VISION.md`: north-star goal (two blocks in, full TAS out), the capability arc, design principles
 - `docs/CODING_GUIDE.md`: module rules, where new code goes, port pattern, per-module toolchains
-- `docs/research/`: angle-solver design record, ILS global-solve notes
+- `docs/research/`: angle-solver design record (includes the consolidated ILS notes), plus campaign and design records
 - `CONTRIBUTING.md`: feature definition checklist, Conventional Commits, release-please flow
 
 
@@ -41,7 +41,7 @@ The two Forge loaders are intentional duplicates: 1.8.9 and 1.12.2 have incompat
 | UI shell / theming | `core/.../ui/MainWindowOverlay.java`, `OverlayManager.java`, `ui/theme/ThemeManager.java` (Catppuccin Mocha), `Settings.java` |
 | Angle solver (core logic) | `core/.../anglesolver/AngleSolverEngine.java` (orchestrator), `AngleSolverState.java` |
 | Solver inner loop | `core/.../anglesolver/solver/ExactJumpModel.java` (byte-exact X/Z stepper), `McSineTable.java`, `Constants.java` |
-| Solver strategies | `solver/ClosedFormSolve.java` (fast convex), `SolveCore.java` (CMA-ES multistart), `LongRunSolver.java` (multi-jump), `BlockSolver.java` (obstacle avoidance) |
+| Solver strategies | `solver/ClosedFormSolve.java` (fast convex), `SlpSolve.java` (linearized recovery), `LongRunSolver.java` (multi-jump) |
 | Velocity finder | `core/.../anglesolver/velocity/VelocityFinder.java` (vx/vz sweep against a pad) |
 | Solver UI | `core/.../ui/anglesolver/AngleSolverWindow.java`, `AngleSolverTable.java`, `SolverWidgets.java` |
 | Constraint visualization | `core/.../render/ConstraintPlate.java`, `ConstraintShapes.java`; source `core/.../ui/anglesolver/AngleSolverConstraintSource.java` |
@@ -72,7 +72,7 @@ JDK 21 runs the Gradle daemon. `:runClient` auto-switches toolchain: Fabric uses
 
 The real gate is `:core:test`. All tests are pure Java in `core/src/test/`, no MC needed.
 
-The default run excludes the expensive solver suites and finishes in seconds; `-PslowTests` includes them (a few minutes, `ProblemsTest` alone is most of it). The slow set is every class tagged with the JUnit category `de.legoshi.parkourcalc.SlowSolverTests` (currently `ProblemsTest`, the `J008Velocity*` suites, `VelocityFieldReuseEquivalenceTest`, `VelocityFinderConstraintTest`, `IlsPolishTest`, `WrapWindowIlsTest`, `TranslationEliminationTest`, `EngineFreeStartTest`, `AnytimeRaceTest`, `GraphPresetSolveTest`, `GraphRunnerTest`). CI always runs with `-PslowTests`, so nothing merges on the fast suite alone.
+The default run excludes the expensive solver suites and finishes in seconds; `-PslowTests` includes them (a few minutes, `ProblemsTest` alone is most of it). The slow set is every class tagged with the JUnit category `de.legoshi.parkourcalc.SlowSolverTests` (currently `ProblemsTest`, the `J008Velocity*` suites, `VelocityFieldReuseEquivalenceTest`, `VelocityFinderConstraintTest`, `IlsPolishTest`, `WrapWindowIlsTest`, `TranslationEliminationTest`, `EngineFreeStartTest`, `GraphPresetSolveTest`, `GraphRunnerTest`, `LevelSetAscentTest`). CI always runs with `-PslowTests`, so nothing merges on the fast suite alone.
 
 ```bash
 ./gradlew :core:test             # fast suite; run after any change

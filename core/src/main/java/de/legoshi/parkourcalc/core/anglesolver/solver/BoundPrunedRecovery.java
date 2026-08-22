@@ -24,7 +24,7 @@ public final class BoundPrunedRecovery {
         public double pruneTol = 1.0e-6;
         public double slpViolTrigger = 0.02;
         public double[] seedMargins = {3.0e-4, 1.2e-3, 5.0e-3, 2.0e-2};
-        public int maxPatterns = 8;
+        public int maxPatterns = 64;
         public double minSeamWidth = 0.04;
         public int restoreIters = 45;
         public int treeSlpPhase1Calls = 40;
@@ -49,7 +49,11 @@ public final class BoundPrunedRecovery {
 
     public static double[] solve(ExactJumpModel exact, JumpSpec spec, double feasTol,
                                  AtomicBoolean cancel, long budgetNanos, double stopAtObjective, Config cfg) {
-        if (spec == null || JumpLinearModel.hasFacingWall(spec.constraints)) return null;
+        if (spec == null) return null;
+        if (JumpLinearModel.hasFacingWall(spec.constraints)
+                && FacingPrefold.analyze(spec.constraints, new JumpLinearModel(spec.asScenario())) == null) {
+            return null;
+        }
         long start = System.nanoTime();
         debugEpoch = start;
         long searchDeadline = start + (long) (budgetNanos * cfg.searchShare);
@@ -184,7 +188,10 @@ public final class BoundPrunedRecovery {
                         try {
                             long wait = Math.max(1L, searchDeadline - System.nanoTime() + 2_000_000_000L);
                             search = futures.get(i).get(wait, java.util.concurrent.TimeUnit.NANOSECONDS);
+                        } catch (java.util.concurrent.TimeoutException e) {
+                            continue;
                         } catch (Exception e) {
+                            e.printStackTrace();
                             continue;
                         }
                         if (search == null) continue;
@@ -330,10 +337,15 @@ public final class BoundPrunedRecovery {
         List<Pattern> cands = new ArrayList<>();
         for (int k = 1; k < n; k++) {
             if (perAxis) {
-                addPattern(cands, spec, sc, thr, k, true, false, "zx@" + k);
-                addPattern(cands, spec, sc, thr, k, false, true, "zz@" + k);
+                addPattern(cands, spec, sc, thr, k, n, true, false, "zx@" + k);
+                addPattern(cands, spec, sc, thr, k, n, false, true, "zz@" + k);
+                if (k < n - 1) {
+                    addPattern(cands, spec, sc, thr, k, k + 1, true, false, "zx1@" + k);
+                    addPattern(cands, spec, sc, thr, k, k + 1, false, true, "zz1@" + k);
+                }
             } else {
-                addPattern(cands, spec, sc, thr, k, true, true, "zxz@" + k);
+                addPattern(cands, spec, sc, thr, k, n, true, true, "zxz@" + k);
+                if (k < n - 1) addPattern(cands, spec, sc, thr, k, k + 1, true, true, "zxz1@" + k);
             }
         }
         cands.sort((a, b) -> Double.compare(b.normBound, a.normBound));
@@ -343,11 +355,11 @@ public final class BoundPrunedRecovery {
     }
 
     private static void addPattern(List<Pattern> cands, JumpSpec spec, JumpPhysicsInputs sc,
-                                   double thr, int k, boolean zx, boolean zz, String label) {
+                                   double thr, int k, int end, boolean zx, boolean zz, String label) {
         int n = sc.numTicks;
         boolean[] zeroX = new boolean[n];
         boolean[] zeroZ = new boolean[n];
-        for (int t = k; t < n; t++) {
+        for (int t = k; t < end; t++) {
             if (zx) zeroX[t] = true;
             if (zz) zeroZ[t] = true;
         }

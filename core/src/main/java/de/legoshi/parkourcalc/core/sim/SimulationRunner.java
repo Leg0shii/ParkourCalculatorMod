@@ -21,71 +21,10 @@ public final class SimulationRunner {
 
     private float startPitch = PlaybackController.DEFAULT_PITCH;
 
-    public static final double DEFAULT_MOVE_TICK_TOLERANCE = 1.0e-6;
+    public static final double DEFAULT_DRAG_TOLERANCE = 1.0e-6;
 
     public SimulationRunner(Simulator simulator) {
         this.simulator = simulator;
-    }
-
-    public enum MoveTickStatus {
-        APPLIED,
-        TICK_LOST,
-        COLLISION_CHANGED_PATH,
-        INVALID_INDEX
-    }
-
-    public static final class MoveTickResult {
-        public final MoveTickStatus status;
-        public final Vec3dCore offset;
-        public final Vec3dCore landedAt;
-
-        MoveTickResult(MoveTickStatus status, Vec3dCore offset, Vec3dCore landedAt) {
-            this.status = status;
-            this.offset = offset;
-            this.landedAt = landedAt;
-        }
-
-        public static MoveTickResult invalid() {
-            return new MoveTickResult(MoveTickStatus.INVALID_INDEX, null, null);
-        }
-
-        public boolean applied() {
-            return status == MoveTickStatus.APPLIED;
-        }
-    }
-
-    public MoveTickResult tryMoveTick(int tickIndex, Vec3dCore target, double tolerance, InputData inputData) {
-        if (tickIndex < 0 || tickIndex >= path.size()) {
-            return new MoveTickResult(MoveTickStatus.INVALID_INDEX, null, null);
-        }
-
-        Vec3dCore current = path.get(tickIndex).position;
-        Vec3dCore offset = target.sub(current);
-        Vec3dCore originalStart = simulator.getStartPosition();
-
-        simulator.setStartPosition(originalStart.add(offset));
-        List<TickState> shifted = simulate(inputData);
-
-        if (tickIndex >= shifted.size()) {
-            simulator.setStartPosition(originalStart);
-            simulate(inputData);
-            return new MoveTickResult(MoveTickStatus.TICK_LOST, offset, null);
-        }
-
-        Vec3dCore landed = shifted.get(tickIndex).position;
-        if (!within(landed, target, tolerance)) {
-            simulator.setStartPosition(originalStart);
-            simulate(inputData);
-            return new MoveTickResult(MoveTickStatus.COLLISION_CHANGED_PATH, offset, landed);
-        }
-
-        return new MoveTickResult(MoveTickStatus.APPLIED, offset, landed);
-    }
-
-    private static boolean within(Vec3dCore a, Vec3dCore b, double tol) {
-        return Math.abs(a.x - b.x) <= tol
-                && Math.abs(a.y - b.y) <= tol
-                && Math.abs(a.z - b.z) <= tol;
     }
 
     public List<TickState> simulate(InputData inputData) {

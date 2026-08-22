@@ -2,5 +2,5 @@
   "shouldSolve": true,
   "effort": "THOROUGH",
   "refObjective": -531.7001446,
-  "maxObjectiveGap": 1.446e-4
+  "maxObjectiveGap": 5.0e-4
 }

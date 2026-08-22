@@ -17,6 +17,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class ConstraintKeyControllerTest {
 
@@ -38,7 +39,7 @@ public class ConstraintKeyControllerTest {
         state = new AngleSolverState();
         state.setLandingTick(TICK);
         controller = new ConstraintKeyController(
-                mc, state, new SelectionManager(mc), new ConstraintSelection(), () -> { }, false);
+                mc, state, new SelectionManager(mc), new ConstraintSelection(), () -> { }, false, () -> TICK + 1);
     }
 
     private List<Constraint> constraints() {
@@ -51,6 +52,29 @@ public class ConstraintKeyControllerTest {
             if (c.isRange() && c.getField() == field) return c;
         }
         throw new AssertionError("no range constraint for " + field);
+    }
+
+    @Test
+    public void footprintAtACrossIntersectionFollowsThePlayerFacing() {
+        mc.addBlock(5, 64, 8, box(5.0, 64.0, 8.0, 6.0, 65.0, 9.0));
+        mc.worldBoxes.add(box(6.0, 65.0, 7.0, 7.0, 66.0, 8.0));
+        mc.worldBoxes.add(box(4.0, 65.0, 7.0, 5.0, 66.0, 8.0));
+        mc.worldBoxes.add(box(6.0, 65.0, 9.0, 7.0, 66.0, 10.0));
+        mc.worldBoxes.add(box(4.0, 65.0, 9.0, 5.0, 66.0, 10.0));
+        mc.lookedAtBlock = new int[] {5, 64, 8};
+        mc.lookedAtFace = Face.POS_Y;
+        mc.lookedAtHitVec = new Vec3dCore(5.5, 65.0, 8.5);
+        mc.playerYaw = -90f;
+
+        controller.onKey(false, false);
+
+        assertEquals("one X range and one Z range", 2, constraints().size());
+        Constraint x = range(Constraint.Field.X);
+        assertEquals("facing X keeps the full X overhang", 5 - HALF, x.getLo(), EPS);
+        assertEquals(6 + HALF, x.getHi(), EPS);
+        Constraint z = range(Constraint.Field.Z);
+        assertEquals("Z is pulled off the corner walls", 8 + HALF, z.getLo(), EPS);
+        assertEquals(9 - HALF, z.getHi(), EPS);
     }
 
     @Test
@@ -106,6 +130,21 @@ public class ConstraintKeyControllerTest {
         assertNotNull(wall);
         assertEquals(Constraint.Op.GE, wall.getOp());
         assertEquals("wall sits on the inset collision face, not the outline hit", 5.9375 + HALF, wall.getValue(), EPS);
+    }
+
+    @Test
+    public void staleLandingTickPastTheLastRowClampsToTheLastRow() {
+        state.setLandingTick(9);
+        mc.worldBoxes.add(box(5.0, 64.0, 5.0, 6.0, 65.0, 6.0));
+        mc.lookedAtBlock = new int[] {5, 64, 5};
+        mc.lookedAtFace = Face.POS_X;
+        mc.lookedAtHitVec = new Vec3dCore(6.0, 64.5, 5.5);
+
+        controller.onKey(false, false);
+
+        assertNull("no ghost entry past the route", state.tickConstraintsOrNull(9));
+        assertNotNull("wall clamped onto the last row", state.tickConstraintsOrNull(TICK));
+        assertEquals(1, state.tickConstraintsOrNull(TICK).getConstraints().size());
     }
 
     @Test

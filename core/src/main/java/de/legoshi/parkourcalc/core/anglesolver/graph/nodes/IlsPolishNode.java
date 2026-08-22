@@ -23,10 +23,6 @@ public final class IlsPolishNode implements NodeRuntime {
         cfg.perturbTicksSpan = params.getInt("perturbTicksSpan");
         cfg.perturbMagMin = params.getDouble("perturbMagMin");
         cfg.perturbMagSpan = params.getDouble("perturbMagSpan");
-        cfg.climbMuIneq = params.getDouble("climbMuIneq");
-        cfg.climbMuEq = params.getDouble("climbMuEq");
-        cfg.climbSigmaDeg = params.getDouble("climbSigmaDeg");
-        cfg.climbMaxEval = params.getInt("climbMaxEval");
     }
 
     @Override

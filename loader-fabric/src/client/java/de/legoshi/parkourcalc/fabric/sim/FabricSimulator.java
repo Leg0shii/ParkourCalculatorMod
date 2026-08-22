@@ -141,6 +141,8 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
     }
 
     @Override protected void resetEntity(SimulatorEntity e, StartResumeState resume) {
+        Player player = Minecraft.getInstance().player;
+        if (player != null) e.getAttributes().assignBaseValues(player.getAttributes());
         ensurePair(e);
         if (pair != null) {
             pair.resetForFullRun(e, resume);

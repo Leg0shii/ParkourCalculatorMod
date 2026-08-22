@@ -65,27 +65,6 @@ public final class AngleSolverState {
         }
     }
 
-    public enum PolishDepth {
-        LIGHT("Light"),
-        EXHAUSTIVE("Exhaustive");
-
-        public final String label;
-
-        PolishDepth(String label) {
-            this.label = label;
-        }
-    }
-
-    public static final int MIN_RESTARTS = 1;
-    public static final int MAX_RESTARTS = 256;
-    public static final int DEFAULT_RESTARTS = 16;
-    public static final int MIN_MAX_EVAL = 500;
-    public static final int MAX_MAX_EVAL = 100000;
-    public static final int DEFAULT_MAX_EVAL = 4500;
-    public static final int MIN_POLISH_COUNT = 1;
-    public static final int MAX_POLISH_COUNT = 64;
-    public static final int DEFAULT_POLISH_COUNT = 2;
-    public static final PolishDepth DEFAULT_POLISH_DEPTH = PolishDepth.LIGHT;
     public static final int MIN_TIME_BUDGET = 0;
     public static final int MAX_TIME_BUDGET = 600;
     public static final int DEFAULT_TIME_BUDGET = 0;
@@ -99,27 +78,11 @@ public final class AngleSolverState {
     public static final int DEFAULT_COMMIT = 3;
 
     public static final class SolveBudget {
-        private int restarts = DEFAULT_RESTARTS;
-        private int maxEval = DEFAULT_MAX_EVAL;
-        private int polishCount = DEFAULT_POLISH_COUNT;
-        private PolishDepth polishDepth = DEFAULT_POLISH_DEPTH;
         private int timeBudgetSeconds = DEFAULT_TIME_BUDGET;
         private int window = DEFAULT_WINDOW;
         private int commit = DEFAULT_COMMIT;
         private boolean useWindowSolver = true;
         private boolean ilsExhaustive = false;
-
-        public int getRestarts() { return restarts; }
-        public void setRestarts(int v) { restarts = clampInt(v, MIN_RESTARTS, MAX_RESTARTS); }
-
-        public int getMaxEval() { return maxEval; }
-        public void setMaxEval(int v) { maxEval = clampInt(v, MIN_MAX_EVAL, MAX_MAX_EVAL); }
-
-        public int getPolishCount() { return polishCount; }
-        public void setPolishCount(int v) { polishCount = clampInt(v, MIN_POLISH_COUNT, MAX_POLISH_COUNT); }
-
-        public PolishDepth getPolishDepth() { return polishDepth; }
-        public void setPolishDepth(PolishDepth v) { polishDepth = (v == null ? DEFAULT_POLISH_DEPTH : v); }
 
         public int getTimeBudgetSeconds() { return timeBudgetSeconds; }
         public void setTimeBudgetSeconds(int v) { timeBudgetSeconds = clampInt(v, MIN_TIME_BUDGET, MAX_TIME_BUDGET); }
@@ -140,10 +103,6 @@ public final class AngleSolverState {
         public void setIlsExhaustive(boolean v) { ilsExhaustive = v; }
 
         public void resetToDefaults() {
-            restarts = DEFAULT_RESTARTS;
-            maxEval = DEFAULT_MAX_EVAL;
-            polishCount = DEFAULT_POLISH_COUNT;
-            polishDepth = DEFAULT_POLISH_DEPTH;
             timeBudgetSeconds = DEFAULT_TIME_BUDGET;
             window = DEFAULT_WINDOW;
             commit = DEFAULT_COMMIT;

@@ -8,7 +8,6 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.LongRunSolver;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
-import de.legoshi.parkourcalc.core.anglesolver.solver.SolveCore;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolveProgress;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 
@@ -29,9 +28,7 @@ public final class GraphContext {
     public final SolveProgress progress;
     public final GraphRunState runState = new GraphRunState();
     public final boolean sequential;
-    public final SolveCore.Budget cmaBudget;
     public final LongRunSolver.LongRunConfig longRun;
-    public final AtomicLong cmaesEvals = new AtomicLong();
     public final AtomicLong smoothingEvals = new AtomicLong();
 
     private final BudgetWatchdog watchdog;
@@ -49,7 +46,7 @@ public final class GraphContext {
 
     public GraphContext(JumpSpec spec, ForwardModel model, StartBox freeBox, JumpConstraint legalGoal,
                         double feasTol, AtomicBoolean cancel, SolveProgress progress, boolean sequential,
-                        SolveCore.Budget cmaBudget, LongRunSolver.LongRunConfig longRun) {
+                        LongRunSolver.LongRunConfig longRun) {
         this.spec = spec;
         this.scenario = spec.asScenario();
         this.model = model;
@@ -61,7 +58,6 @@ public final class GraphContext {
         this.cancel = cancel;
         this.progress = progress;
         this.sequential = sequential;
-        this.cmaBudget = cmaBudget;
         this.longRun = longRun;
         this.watchdog = new BudgetWatchdog(cancel);
         if (progress != null) progress.setActiveNodeSource(runState::activeNodeId);
@@ -100,7 +96,7 @@ public final class GraphContext {
     }
 
     public double scoredExactObjective(double[] yaws) {
-        return spec.objective.scored(Scoring.exactObjective(model, scenario, spec, yaws), yaws);
+        return spec.objective.scored(Scoring.exactObjective(model, scenario, spec, yaws), scenario.startYaw, yaws);
     }
 
     public synchronized String chain() {
@@ -160,7 +156,7 @@ public final class GraphContext {
         currentNode = node;
         AtomicBoolean token = watchdog.arm(deadlineNanos);
         currentToken = token;
-        evalsAtNodeStart = cmaesEvals.get() + smoothingEvals.get();
+        evalsAtNodeStart = smoothingEvals.get();
         runState.begin(node.id, node.type.label, budgetNanos);
         return token;
     }
@@ -169,15 +165,7 @@ public final class GraphContext {
         watchdog.disarm();
         currentToken = null;
         currentNode = null;
-        runState.end(node.id, taken, cmaesEvals.get() + smoothingEvals.get() - evalsAtNodeStart);
-    }
-
-    public boolean advance() {
-        GraphNode n = currentNode;
-        AtomicBoolean t = currentToken;
-        if (n == null || t == null || !n.type.advanceCapable) return false;
-        t.set(true);
-        return true;
+        runState.end(node.id, taken, smoothingEvals.get() - evalsAtNodeStart);
     }
 
     void shutdown() {

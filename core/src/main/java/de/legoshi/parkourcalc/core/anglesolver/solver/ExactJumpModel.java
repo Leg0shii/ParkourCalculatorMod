@@ -1,9 +1,11 @@
 package de.legoshi.parkourcalc.core.anglesolver.solver;
 
+import de.legoshi.parkourcalc.core.sim.Vec3dCore;
+
 /** Byte-exact MC sprint-jump forward: a direct port of the real movement float chain (hard
  *  thresholds + exact MathHelper sine table + per-axis momentum cancellation). Reproduces the live
- *  SimulatorEntity to the ULP in X/Z for collision-free motion, so CMA-ES (derivative-free) optimizes
- *  and reports against it directly.
+ *  SimulatorEntity to the ULP in X/Z for collision-free motion, so the solver stages optimize
+ *  and report against it directly.
  *
  *  <p>Ground/air is authored per tick by {@link JumpPhysicsInputs#slipPerTick} (a ground value = on a
  *  surface, NaN = airborne) and jumps by {@link JumpPhysicsInputs#jumpPerTick}: a JUMP tick fires only
@@ -76,6 +78,19 @@ public final class ExactJumpModel implements ForwardModel {
 
     public boolean perAxisInertia() {
         return perAxisInertia;
+    }
+
+    public Vec3dCore zeroSubThresholdVelocity(Vec3dCore v) {
+        double vx = v.x;
+        double vz = v.z;
+        if (perAxisInertia) {
+            if (Math.abs(vx) < inertiaThreshold) vx = 0.0;
+            if (Math.abs(vz) < inertiaThreshold) vz = 0.0;
+        } else if (vx * vx + vz * vz < COMBINED_INERTIA_SQ) {
+            vx = 0.0;
+            vz = 0.0;
+        }
+        return vx == v.x && vz == v.z ? v : new Vec3dCore(vx, v.y, vz);
     }
 
     public boolean modern() {
