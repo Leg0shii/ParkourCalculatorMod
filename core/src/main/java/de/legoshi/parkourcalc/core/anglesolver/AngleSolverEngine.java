@@ -964,6 +964,7 @@ public final class AngleSolverEngine {
             SolveResult fail = new SolveResult(false, 0, job.uiConstraints.size(),
                     job.startTick + 1, job.landingTick + 1);
             if (ctx.chain() != null) fail.setSolver(ctx.chain());
+            if (hasUnsupportedDf(job)) fail.setNotice(DF_UNSUPPORTED_NOTICE);
             return new Outcome(fail, null);
         }
         double[] yaws = cand.yaws;
@@ -1004,6 +1005,18 @@ public final class AngleSolverEngine {
         Plan plan = new Plan(job.startTick, yaws, job.strafeMask, job.force45Mask, 1, path, sc.startPos, stageLocked);
         return new Outcome(result, plan);
     }
+
+    private static boolean hasUnsupportedDf(Job job) {
+        for (ConstraintAt ca : job.uiConstraints) if (ca.c.isUnsupportedDf()) return true;
+        return false;
+    }
+
+    public static final String DF_UNSUPPORTED_NOTICE =
+            "This jump carries a delta-facing (dF) constraint that is not dF = 0. Only dF = 0 is"
+            + " supported: the inequality and band shapes were retired, so every solver stage"
+            + " declines the problem before searching and the solve cannot succeed while one is"
+            + " present. Re-select the dF field on that constraint to reset it to dF = 0, or delete"
+            + " the constraint.";
 
     public static final String DF_DIRECTION_NOTICE =
             "This jump has a delta-facing (dF) constraint. Landing does not depend on the Solve For"

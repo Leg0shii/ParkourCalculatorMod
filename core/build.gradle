@@ -32,8 +32,8 @@ dependencies {
 	compileOnly 'com.google.code.gson:gson:2.8.0'
 
 	// commons-math3 is test-only since the bespoke TrustRegionLp replaced the SimplexSolver in
-	// SlpSolve: TrustRegionLpTest keeps it as the randomized equivalence oracle. The loaders still
-	// bundle their own copies (Fabric `include`, Forge `shade`); dropping those is follow-up work.
+	// SlpSolve: TrustRegionLpTest keeps it as the randomized equivalence oracle. No loader bundles
+	// it any more, so it must never be promoted out of the test source set.
 	testImplementation 'org.apache.commons:commons-math3:3.6.1'
 
 	// Test-only. Gson is compileOnly for main (the loaders provide it), so the test source set needs
