@@ -371,25 +371,6 @@ public class ConstraintVisualizationTest {
     }
 
     @Test
-    public void sourceDrawsAnIntersectionFootprintAsTwoPads() {
-        AngleSolverState state = new AngleSolverState();
-        BoxController boxes = boxesWith(new Vec3dCore(5.5, 64.0, 8.5));
-        state.setFootprintAreas(0, java.util.Arrays.asList(
-                new double[]{5 - H, 6 + H, 8 + H, 9 - H},
-                new double[]{5 + H, 6 - H, 8 - H, 9 + H}));
-
-        List<ConstraintPlate> plates = source(state, boxes).platesAt(0);
-        assertEquals("two co-tick X/Z range pairs draw as two pads", 2, plates.size());
-        assertArrayEquals(new int[]{0, 1}, plates.get(0).constraintIndices);
-        assertArrayEquals(new int[]{2, 3}, plates.get(1).constraintIndices);
-        assertEquals(1, plates.get(0).front.size());
-        assertTrue(plates.get(0).back.isEmpty());
-        assertEquals(1, plates.get(1).front.size());
-        assertEquals(ConstraintShapes.Sense.INCLUDE, plates.get(0).sense);
-        assertEquals(ConstraintShapes.Sense.INCLUDE, plates.get(1).sense);
-    }
-
-    @Test
     public void sourceKeepsLoneRangeAsStripAndExcludeSeparate() {
         AngleSolverState state = new AngleSolverState();
         BoxController boxes = boxesWith(new Vec3dCore(0.5, 64.0, 0.5), new Vec3dCore(1.5, 64.0, 0.5));

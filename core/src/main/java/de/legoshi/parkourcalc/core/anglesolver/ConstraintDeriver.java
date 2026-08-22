@@ -5,7 +5,6 @@ import de.legoshi.parkourcalc.core.sim.Face;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SupportOverlap;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public final class ConstraintDeriver {
@@ -135,53 +134,36 @@ public final class ConstraintDeriver {
 
     public static double[] deriveFootprint(AABB support, double clickX, double clickZ, List<AABB> obstacles,
                                            boolean modernCollision) {
-        return clipByObstacles(
+        double[] base = clipByObstacles(
                 SupportOverlap.minCenter(modernCollision, support.min.x, support.max.x),
                 SupportOverlap.maxCenter(modernCollision, support.min.x, support.max.x),
                 SupportOverlap.minCenter(modernCollision, support.min.z, support.max.z),
                 SupportOverlap.maxCenter(modernCollision, support.min.z, support.max.z),
                 support.max.y, clickX, clickZ, obstacles);
+        return clipByCornerObstacles(base, support.max.y, clickX, clickZ, obstacles);
     }
 
-    public static List<double[]> deriveFootprintAreas(AABB support, double clickX, double clickZ,
-                                                      List<AABB> obstacles, boolean modernCollision) {
-        double xLo = SupportOverlap.minCenter(modernCollision, support.min.x, support.max.x);
-        double xHi = SupportOverlap.maxCenter(modernCollision, support.min.x, support.max.x);
-        double zLo = SupportOverlap.minCenter(modernCollision, support.min.z, support.max.z);
-        double zHi = SupportOverlap.maxCenter(modernCollision, support.min.z, support.max.z);
-        double footY = support.max.y;
-        double[] base = clipByObstacles(xLo, xHi, zLo, zHi, footY, clickX, clickZ, obstacles);
-
-        List<double[]> areas = new ArrayList<>(2);
-        if (obstacles == null) {
-            areas.add(base);
-            return areas;
-        }
+    private static double[] clipByCornerObstacles(double[] base, double footY, double clickX, double clickZ,
+                                                  List<AABB> obstacles) {
+        if (obstacles == null) return base;
         double bodyHi = footY + BODY_HEIGHT;
-        double barZLo = base[2], barZHi = base[3];
-        double barXLo = base[0], barXHi = base[1];
+        double xLo = base[0], xHi = base[1];
+        double zLo = base[2], zHi = base[3];
         for (AABB o : obstacles) {
             if (o == null) continue;
             if (o.max.y <= footY + EPS) continue;
             if (o.min.y >= bodyHi - EPS) continue;
             if (o.max.x > base[0] - HALF + EPS && o.min.x < base[1] + HALF - EPS) {
-                if (o.max.z <= clickZ + EPS) barZLo = Math.max(barZLo, o.max.z + HALF);
-                if (o.min.z >= clickZ - EPS) barZHi = Math.min(barZHi, o.min.z - HALF);
+                if (o.max.z <= clickZ + EPS) zLo = Math.max(zLo, o.max.z + HALF);
+                if (o.min.z >= clickZ - EPS) zHi = Math.min(zHi, o.min.z - HALF);
             }
             if (o.max.z > base[2] - HALF + EPS && o.min.z < base[3] + HALF - EPS) {
-                if (o.max.x <= clickX + EPS) barXLo = Math.max(barXLo, o.max.x + HALF);
-                if (o.min.x >= clickX - EPS) barXHi = Math.min(barXHi, o.min.x - HALF);
+                if (o.max.x <= clickX + EPS) xLo = Math.max(xLo, o.max.x + HALF);
+                if (o.min.x >= clickX - EPS) xHi = Math.min(xHi, o.min.x - HALF);
             }
         }
-        boolean zNarrowed = barZLo > base[2] + EPS || barZHi < base[3] - EPS;
-        boolean xNarrowed = barXLo > base[0] + EPS || barXHi < base[1] - EPS;
-        if (zNarrowed && xNarrowed && barZLo < barZHi - EPS && barXLo < barXHi - EPS) {
-            areas.add(new double[] {base[0], base[1], barZLo, barZHi});
-            areas.add(new double[] {barXLo, barXHi, base[2], base[3]});
-        } else {
-            areas.add(base);
-        }
-        return areas;
+        if (xLo < xHi - EPS && zLo < zHi - EPS) return new double[] {xLo, xHi, zLo, zHi};
+        return base;
     }
 
     public static double[] deriveCell(int bx, int bz, double footY, double refX, double refZ, List<AABB> obstacles) {

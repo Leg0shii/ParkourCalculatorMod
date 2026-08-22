@@ -54,7 +54,7 @@ public class ConstraintKeyControllerTest {
     }
 
     @Test
-    public void footprintAtACrossIntersectionCreatesTwoBarAreas() {
+    public void footprintAtACrossIntersectionClipsToTheCornerSafeCell() {
         mc.addBlock(5, 64, 8, box(5.0, 64.0, 8.0, 6.0, 65.0, 9.0));
         mc.worldBoxes.add(box(6.0, 65.0, 7.0, 7.0, 66.0, 8.0));
         mc.worldBoxes.add(box(4.0, 65.0, 7.0, 5.0, 66.0, 8.0));
@@ -66,24 +66,13 @@ public class ConstraintKeyControllerTest {
 
         controller.onKey(false, false);
 
-        List<Constraint> list = constraints();
-        assertEquals("two X ranges and two Z ranges", 4, list.size());
-
-        Constraint xH = list.get(0), zH = list.get(1), xV = list.get(2), zV = list.get(3);
-        assertEquals(Constraint.Field.X, xH.getField());
-        assertEquals(Constraint.Field.Z, zH.getField());
-        assertEquals(Constraint.Field.X, xV.getField());
-        assertEquals(Constraint.Field.Z, zV.getField());
-
-        assertEquals(5 - HALF, xH.getLo(), EPS);
-        assertEquals(6 + HALF, xH.getHi(), EPS);
-        assertEquals(8 + HALF, zH.getLo(), EPS);
-        assertEquals(9 - HALF, zH.getHi(), EPS);
-
-        assertEquals(5 + HALF, xV.getLo(), EPS);
-        assertEquals(6 - HALF, xV.getHi(), EPS);
-        assertEquals(8 - HALF, zV.getLo(), EPS);
-        assertEquals(9 + HALF, zV.getHi(), EPS);
+        assertEquals("one X range and one Z range", 2, constraints().size());
+        Constraint x = range(Constraint.Field.X);
+        assertEquals(5 + HALF, x.getLo(), EPS);
+        assertEquals(6 - HALF, x.getHi(), EPS);
+        Constraint z = range(Constraint.Field.Z);
+        assertEquals(8 + HALF, z.getLo(), EPS);
+        assertEquals(9 - HALF, z.getHi(), EPS);
     }
 
     @Test
