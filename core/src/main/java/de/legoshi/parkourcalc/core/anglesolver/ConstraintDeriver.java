@@ -133,18 +133,18 @@ public final class ConstraintDeriver {
     }
 
     public static double[] deriveFootprint(AABB support, double clickX, double clickZ, List<AABB> obstacles,
-                                           boolean modernCollision) {
+                                           boolean modernCollision, float facingYawDeg) {
         double[] base = clipByObstacles(
                 SupportOverlap.minCenter(modernCollision, support.min.x, support.max.x),
                 SupportOverlap.maxCenter(modernCollision, support.min.x, support.max.x),
                 SupportOverlap.minCenter(modernCollision, support.min.z, support.max.z),
                 SupportOverlap.maxCenter(modernCollision, support.min.z, support.max.z),
                 support.max.y, clickX, clickZ, obstacles);
-        return clipByCornerObstacles(base, support.max.y, clickX, clickZ, obstacles);
+        return clipByCornerObstacles(base, support.max.y, clickX, clickZ, obstacles, facingYawDeg);
     }
 
     private static double[] clipByCornerObstacles(double[] base, double footY, double clickX, double clickZ,
-                                                  List<AABB> obstacles) {
+                                                  List<AABB> obstacles, float facingYawDeg) {
         if (obstacles == null) return base;
         double bodyHi = footY + BODY_HEIGHT;
         double xLo = base[0], xHi = base[1];
@@ -162,8 +162,21 @@ public final class ConstraintDeriver {
                 if (o.min.x >= clickX - EPS) xHi = Math.min(xHi, o.min.x - HALF);
             }
         }
-        if (xLo < xHi - EPS && zLo < zHi - EPS) return new double[] {xLo, xHi, zLo, zHi};
+        double yawRad = Math.toRadians(facingYawDeg);
+        boolean facingX = Math.abs(-Math.sin(yawRad)) >= Math.abs(Math.cos(yawRad));
+        double[] alongFacing = facingX
+                ? new double[] {base[0], base[1], zLo, zHi}
+                : new double[] {xLo, xHi, base[2], base[3]};
+        double[] acrossFacing = facingX
+                ? new double[] {xLo, xHi, base[2], base[3]}
+                : new double[] {base[0], base[1], zLo, zHi};
+        if (hasArea(alongFacing)) return alongFacing;
+        if (hasArea(acrossFacing)) return acrossFacing;
         return base;
+    }
+
+    private static boolean hasArea(double[] r) {
+        return r[0] < r[1] - EPS && r[2] < r[3] - EPS;
     }
 
     public static double[] deriveCell(int bx, int bz, double footY, double refX, double refZ, List<AABB> obstacles) {

@@ -19,6 +19,7 @@ public class FakeMinecraftAccess implements MinecraftAccess {
     public int[] lookedAtBlock;
     public Face lookedAtFace;
     public Vec3dCore lookedAtHitVec;
+    public float playerYaw;
     public boolean ready = true;
 
     public void addBlock(int x, int y, int z, AABB... boxes) {
@@ -28,7 +29,7 @@ public class FakeMinecraftAccess implements MinecraftAccess {
     }
 
     @Override public Vec3dCore getPlayerPosition() { return Vec3dCore.ZERO; }
-    @Override public float getPlayerYaw() { return 0f; }
+    @Override public float getPlayerYaw() { return playerYaw; }
     @Override public Vec3dCore getEyePosition() { return Vec3dCore.ZERO; }
     @Override public Vec3dCore getLookDirection() { return Vec3dCore.ZERO; }
     @Override public int[] getLookedAtBlock() { return lookedAtBlock; }

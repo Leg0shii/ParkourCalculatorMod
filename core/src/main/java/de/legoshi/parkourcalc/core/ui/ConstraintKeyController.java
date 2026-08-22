@@ -71,7 +71,8 @@ public final class ConstraintKeyController {
                 if (hit == null) return;
                 AABB support = supportBox(bx, by, bz, hit);
                 List<AABB> obstacles = mc.getCollisionBoxes(bx - 1, by, bz - 1, bx + 1, by + 2, bz + 1);
-                double[] r = ConstraintDeriver.deriveFootprint(support, hit.x, hit.z, obstacles, modernCollision);
+                double[] r = ConstraintDeriver.deriveFootprint(support, hit.x, hit.z, obstacles, modernCollision,
+                        mc.getPlayerYaw());
                 if (merge) {
                     state.mergeFootprint(tick, r[0], r[1], r[2], r[3]);
                 } else {
