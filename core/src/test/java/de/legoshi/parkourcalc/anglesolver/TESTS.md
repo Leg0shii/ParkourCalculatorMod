@@ -98,6 +98,12 @@ anglesolver/
                            prefix-arc theta enumeration, the recoverStart-scored ladder fractions,
                            and the theta micro-polish certify in the joint free-start dual,
                            FAST 20 s)
+                           (solve/inertia-1tick-neo: 1.8.9 neo whose landing is only feasible via
+                           a single-tick X inertia zeroing (vX dips under the 0.005 threshold
+                           mid-flight and re-accelerates after); the free relaxation is truly
+                           infeasible, so this pins the B&B rescue's single-tick zx1@k patterns
+                           and its dF=0 entry through the FacingPrefold-gated facing-wall check,
+                           FAST 20 s)
   LevelSetAscentTest.java  level-set objective ascent (gh-290): on keep-out-wall captures where the
                            chosen Solve For degenerates the dual recovery (j003 X/MIN, j012 Z/MAX,
                            j008-bfneo Z/MIN, taser-80t X/MIN), the goal-wall bisection strictly beats
