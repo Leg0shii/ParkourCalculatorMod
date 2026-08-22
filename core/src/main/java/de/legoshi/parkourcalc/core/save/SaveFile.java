@@ -53,6 +53,7 @@ public final class SaveFile {
         public int speedAmplifier;
         public int jumpBoostAmplifier;
         public int hotbarSlot;
+        public boolean runTick;
     }
 
     /** Angle Solver problem: defaults, per-tick constraints/overrides, and last solve result. */
@@ -76,14 +77,14 @@ public final class SaveFile {
         public List<BlockSel> selectedBlocks = new ArrayList<BlockSel>();
         public Start seed;                               // launch state (pos/vel/yaw) at startTick; what a solve begins from
         public Result result;                            // null = no solve yet
-        public Boolean bruteForceEnabled;
-        public Integer bruteForceTicks;
-        public Integer bruteForceTimeoutMs;
-        public Boolean bruteForceDynamicTimeout;
-        public Integer bruteForceDynamicAddPerJumpMs;
-        public Double bruteForceDynamicSafetyMult;
-        public Integer bruteForceDynamicSafetyMarginMs;
-        public Boolean bruteForceMinTicks;
+        public Boolean runTicksEnabled;
+        public Integer runTicksMax;
+        public Integer runTicksTimeoutMs;
+        public Boolean runTicksAdaptiveTimeout;
+        public Integer runTicksAddPerJumpMs;
+        public Double runTicksSafetyMult;
+        public Integer runTicksSafetyMarginMs;
+        public Boolean runTicksMinimize;
         public String deviation;
         public String deviationKind;
     }

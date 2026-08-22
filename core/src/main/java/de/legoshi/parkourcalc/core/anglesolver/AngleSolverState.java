@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.core.anglesolver;
 
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
+import de.legoshi.parkourcalc.core.anglesolver.runticks.RunTicksSettings;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -127,6 +128,7 @@ public final class AngleSolverState {
 
     private double smoothLambda;
     private final SolveBudget solveBudget = new SolveBudget();
+    private final RunTicksSettings runTicks = new RunTicksSettings();
     private String graphPresetName;
     private SolverGraph customGraph;
 
@@ -223,6 +225,10 @@ public final class AngleSolverState {
 
     public SolveBudget getSolveBudget() {
         return solveBudget;
+    }
+
+    public RunTicksSettings getRunTicks() {
+        return runTicks;
     }
 
     public String getGraphPresetName() {
@@ -674,98 +680,6 @@ public final class AngleSolverState {
         this.applyDeviationTick = message == null ? -1 : tick;
     }
 
-    private boolean bruteForceEnabled = false;
-    private int bruteForceTicks = 0;
-    private int bruteForceTimeoutMs = 200;
-    private int bruteForceLiveTimeoutMs = 200;
-    private boolean bruteForceDynamicTimeout = false;
-    private int bruteForceDynamicAddPerJumpMs = 50;
-    private double bruteForceDynamicSafetyMult = 1.1;
-    private int bruteForceDynamicSafetyMarginMs = 80;
-    private boolean bruteForceMinTicks = false;
-    private boolean bruteForceActive = false;
-
-    public boolean isBruteForceEnabled() {
-        return bruteForceEnabled;
-    }
-
-    public void setBruteForceEnabled(boolean bruteForceEnabled) {
-        this.bruteForceEnabled = bruteForceEnabled;
-    }
-
-    public int getBruteForceTicks() {
-        return bruteForceTicks;
-    }
-
-    public void setBruteForceTicks(int bruteForceTicks) {
-        this.bruteForceTicks = Math.max(0, bruteForceTicks);
-    }
-
-    public int getBruteForceTimeoutMs() {
-        return bruteForceTimeoutMs;
-    }
-
-    public void setBruteForceTimeoutMs(int bruteForceTimeoutMs) {
-        this.bruteForceTimeoutMs = Math.max(1, bruteForceTimeoutMs);
-        this.bruteForceLiveTimeoutMs = this.bruteForceTimeoutMs;
-    }
-
-    public int getBruteForceLiveTimeoutMs() {
-        return bruteForceLiveTimeoutMs;
-    }
-
-    public void setBruteForceLiveTimeoutMs(int bruteForceLiveTimeoutMs) {
-        this.bruteForceLiveTimeoutMs = bruteForceLiveTimeoutMs;
-    }
-
-    public boolean isBruteForceDynamicTimeout() {
-        return bruteForceDynamicTimeout;
-    }
-
-    public void setBruteForceDynamicTimeout(boolean bruteForceDynamicTimeout) {
-        this.bruteForceDynamicTimeout = bruteForceDynamicTimeout;
-    }
-
-    public int getBruteForceDynamicAddPerJumpMs() {
-        return bruteForceDynamicAddPerJumpMs;
-    }
-
-    public void setBruteForceDynamicAddPerJumpMs(int bruteForceDynamicAddPerJumpMs) {
-        this.bruteForceDynamicAddPerJumpMs = Math.max(0, bruteForceDynamicAddPerJumpMs);
-    }
-
-    public double getBruteForceDynamicSafetyMult() {
-        return bruteForceDynamicSafetyMult;
-    }
-
-    public void setBruteForceDynamicSafetyMult(double bruteForceDynamicSafetyMult) {
-        this.bruteForceDynamicSafetyMult = Math.max(1.0, bruteForceDynamicSafetyMult);
-    }
-
-    public int getBruteForceDynamicSafetyMarginMs() {
-        return bruteForceDynamicSafetyMarginMs;
-    }
-
-    public void setBruteForceDynamicSafetyMarginMs(int bruteForceDynamicSafetyMarginMs) {
-        this.bruteForceDynamicSafetyMarginMs = Math.max(0, bruteForceDynamicSafetyMarginMs);
-    }
-
-    public boolean isBruteForceMinTicks() {
-        return bruteForceMinTicks;
-    }
-
-    public void setBruteForceMinTicks(boolean bruteForceMinTicks) {
-        this.bruteForceMinTicks = bruteForceMinTicks;
-    }
-
-    public boolean isBruteForceActive() {
-        return bruteForceActive;
-    }
-
-    public void setBruteForceActive(boolean bruteForceActive) {
-        this.bruteForceActive = bruteForceActive;
-    }
-
     /** Wipes all state back to construction defaults; used before loading a saved problem. */
     public void reset() {
         startTick = 0;
@@ -789,16 +703,7 @@ public final class AngleSolverState {
         applyDeviation = null;
         applyDeviationKind = null;
         applyDeviationTick = -1;
-        bruteForceEnabled = false;
-        bruteForceTicks = 0;
-        bruteForceTimeoutMs = 200;
-        bruteForceLiveTimeoutMs = 200;
-        bruteForceDynamicTimeout = false;
-        bruteForceDynamicAddPerJumpMs = 50;
-        bruteForceDynamicSafetyMult = 1.1;
-        bruteForceDynamicSafetyMarginMs = 80;
-        bruteForceMinTicks = false;
-        bruteForceActive = false;
+        runTicks.resetToDefaults();
     }
 
 }

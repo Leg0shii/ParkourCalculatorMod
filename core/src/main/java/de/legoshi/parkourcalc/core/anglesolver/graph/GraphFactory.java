@@ -8,10 +8,11 @@ public final class GraphFactory {
     }
 
     public static SolverGraph forState(AngleSolverState state) {
-        if (state.isBruteForceActive()) {
-            return BuiltinGraphs.fast();
-        }
-        switch (state.getEffort()) {
+        return forState(state, state.getEffort());
+    }
+
+    public static SolverGraph forState(AngleSolverState state, AngleSolverState.Effort effort) {
+        switch (effort) {
             case THOROUGH:
                 return BuiltinGraphs.optimize(state.getOptimizeSeconds());
             case CUSTOM: {

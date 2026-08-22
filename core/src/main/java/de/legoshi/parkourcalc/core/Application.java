@@ -1,6 +1,5 @@
 package de.legoshi.parkourcalc.core;
 
-import de.legoshi.parkourcalc.core.anglesolver.*;
 import de.legoshi.parkourcalc.core.ports.BlockPicker;
 import de.legoshi.parkourcalc.core.ports.FilePickerPort;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
@@ -39,6 +38,15 @@ import de.legoshi.parkourcalc.core.ui.ServerEventLogPanel;
 import de.legoshi.parkourcalc.core.ui.TickInfoPanel;
 import de.legoshi.parkourcalc.core.ui.YawGizmoController;
 import de.legoshi.parkourcalc.core.ui.theme.HudMessageStyle;
+import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
+import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
+import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
+import de.legoshi.parkourcalc.core.anglesolver.ConstraintText;
+import de.legoshi.parkourcalc.core.anglesolver.Medium;
+import de.legoshi.parkourcalc.core.anglesolver.Slipperiness;
+import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
+import de.legoshi.parkourcalc.core.anglesolver.StateOverride;
+import de.legoshi.parkourcalc.core.anglesolver.TickConstraints;
 import de.legoshi.parkourcalc.core.ui.ConstraintKeyController;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverTable;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverWindow;
@@ -49,7 +57,11 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.undo.UndoController;
 
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 /** Single-instance orchestrator wired by loaders via mixins / event handlers. */
 public final class Application {
@@ -82,6 +94,7 @@ public final class Application {
     private AngleSolverEngine solverEngine;
     private ConstraintKeyController constraintKeyController;
     private UndoController<de.legoshi.parkourcalc.core.save.SaveFile> undoController;
+    private RunTicksController runTicks;
     private final HudMessages hudMessages = new HudMessages();
     private final OsSystemBridge systemBridge = new OsSystemBridge();
 
@@ -205,7 +218,9 @@ public final class Application {
         GraphEditorWindow graphEditorWindow = new GraphEditorWindow(angleSolverEngine);
         AngleSolverWindow angleSolverWindow = new AngleSolverWindow(angleSolverState, settings, inputData::size, angleSolverEngine, velocityMapController.widget(), graphStore, graphEditorWindow);
         angleSolverWindow.setApplySurfaceState(this::applyPathSurfaceState);
-        angleSolverWindow.setBruteForceHandlers(this::executeBruteForceRunningTicks, this::cancelBruteForceTicks);
+        runTicks = new RunTicksController(angleSolverState, angleSolverEngine, inputData, constraintSelection,
+                hudMessages, this::runSimulation, saveController::markDirty, this::pushHudMessage);
+        angleSolverWindow.setRunTicksControls(runTicks);
 
         // In-world constraint visualization (gh-145): plates appear while the solver view is open.
         constraintSource = new de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverConstraintSource(
@@ -366,14 +381,8 @@ public final class Application {
         inputData.clear();
         saveController.endSession();
         if (undoController != null) undoController.onDocumentReplaced(null);
-        isBruteForcing = false;
-        bfWaitSolve = false;
-        bfFinalSolveWait = false;
-        cancelBruteForce = false;
-        if (angleSolverState != null) {
-            angleSolverState.setBruteForceActive(false);
-            angleSolverState.clearResult();
-        }
+        if (runTicks != null) runTicks.reset();
+        if (angleSolverState != null) angleSolverState.clearResult();
         hudMessages.clearStatus();
         startInitialized = false;
     }
@@ -484,7 +493,9 @@ public final class Application {
             startInitialized = true;
             saveController.tryReopenLastSave();
         }
-        if (undoController != null) undoController.tick(System.nanoTime());
+        if (undoController != null && (runTicks == null || !runTicks.isRunning())) {
+            undoController.tick(System.nanoTime());
+        }
         pollSolver();
         dragController.tick(
                 mc.getEyePosition(),
@@ -535,8 +546,10 @@ public final class Application {
 
     private void pollSolver() {
         if (solverEngine == null) return;
-        pollBruteForce();
-        if (angleSolverState != null && angleSolverState.isBruteForceActive()) return;
+        if (runTicks != null) {
+            runTicks.poll();
+            if (runTicks.isRunning()) return;
+        }
         boolean wasSolving = solverEngine.isSolving();
         solverEngine.poll();
         if (solverEngine.isSolving()) {
@@ -566,11 +579,8 @@ public final class Application {
 
     public void solveAngleSolver() {
         if (solverEngine == null) return;
-        if (isBruteForcing || (angleSolverState != null && angleSolverState.isBruteForceActive())) {
-            cancelBruteForceTicks();
-            if (solverEngine.isSolving()) {
-                solverEngine.cancel();
-            }
+        if (runTicks != null && runTicks.isRunning()) {
+            runTicks.cancel();
             return;
         }
         if (solverEngine.isSolving()) {
@@ -578,7 +588,9 @@ public final class Application {
             pushHudMessage("Solve cancelled", HudMessageStyle.COLOR_WARN);
             return;
         }
-        if (mc.isReady()) solverEngine.solve();
+        if (!mc.isReady()) return;
+        if (runTicks != null) runTicks.start();
+        else solverEngine.solve();
     }
 
     public void setSolverStartTickFromSelection() {
@@ -748,605 +760,6 @@ public final class Application {
 
     public void renderPlayback() {
         playback.renderFrame();
-    }
-
-    private static final int DYNAMIC_BASE_TIMEOUT_MS = 200;
-
-    private boolean isBruteForcing = false;
-    private boolean cancelBruteForce = false;
-    private boolean bfWaitSolve = false;
-    private double bfBestDist = 0;
-    private int[] bfBestCombo = null;
-    private int bfBestDepth = 0;
-    private BfTask bfFurthestTask = null;
-    private long bfTotalStartTime = 0;
-    private long bfTotalTimeMs = 0;
-    private boolean bfFinalSolveWait = false;
-    private long bfSolveStartTime = 0;
-    private double bfCompletedProgress = 0.0;
-    private int bfSuccessfulStepCount = 0;
-    private int bfTotalStepCount = 0;
-    private int bfFullSolutionCount = 0;
-    private int bfMinTicksTarget = 0;
-    private int[] bfDepthTimeoutMs = null;
-    private boolean[] bfDepthHasSuccess = null;
-
-    private static class BfTask {
-        int[] combo;
-        int depth;
-        int sum;
-        double weight;
-        List<InputRow> inheritedRows;
-        BfTask(int[] combo, int depth, int sum, double weight, List<InputRow> inheritedRows) {
-            this.combo = combo;
-            this.depth = depth;
-            this.sum = sum;
-            this.weight = weight;
-            this.inheritedRows = inheritedRows;
-        }
-    }
-
-    private final java.util.LinkedList<BfTask> bfQueue = new java.util.LinkedList<>();
-    private BfTask bfCurrentTask = null;
-    private List<Integer> bfJumpTicks = null;
-    private int bfOriginalStart = 0;
-    private int bfOriginalLanding = 0;
-
-    private final List<InputRow> bfBackupRows = new ArrayList<>();
-    private final Map<Integer, List<de.legoshi.parkourcalc.core.anglesolver.Constraint>> bfBackupConstraints = new java.util.HashMap<>();
-    private final Map<Integer, Slipperiness> bfBackupSlip = new java.util.HashMap<>();
-    private final Map<Integer, Medium> bfBackupMedium = new java.util.HashMap<>();
-    private final Map<Integer, Integer> bfBackupSand = new java.util.HashMap<>();
-
-    private final List<InputRow> bfTrueOriginalRows = new ArrayList<>();
-    private final Map<Integer, List<de.legoshi.parkourcalc.core.anglesolver.Constraint>> bfTrueOriginalConstraints = new java.util.HashMap<>();
-    private final Map<Integer, Slipperiness> bfTrueOriginalSlip = new java.util.HashMap<>();
-    private final Map<Integer, Medium> bfTrueOriginalMedium = new java.util.HashMap<>();
-    private final Map<Integer, Integer> bfTrueOriginalSand = new java.util.HashMap<>();
-    private int bfTrueOriginalStart = 0;
-    private int bfTrueOriginalLanding = 0;
-
-    public void cancelBruteForceTicks() {
-        cancelBruteForce = true;
-    }
-
-    private int currentStepTimeoutMs() {
-        if (!angleSolverState.isBruteForceDynamicTimeout() || bfCurrentTask == null || bfDepthTimeoutMs == null) {
-            return angleSolverState.getBruteForceTimeoutMs();
-        }
-        int d = Math.min(bfCurrentTask.depth, bfDepthTimeoutMs.length - 1);
-        if (bfDepthTimeoutMs[d] <= 0) {
-            int prev = DYNAMIC_BASE_TIMEOUT_MS;
-            for (int k = d - 1; k >= 1; k--) {
-                if (bfDepthTimeoutMs[k] > 0) {
-                    prev = bfDepthTimeoutMs[k];
-                    break;
-                }
-            }
-            bfDepthTimeoutMs[d] = prev + angleSolverState.getBruteForceDynamicAddPerJumpMs();
-        }
-        return bfDepthTimeoutMs[d];
-    }
-
-    public void executeBruteForceRunningTicks() {
-        if (isBruteForcing) return;
-        if (!angleSolverState.isBruteForceEnabled()) {
-            solveAngleSolver();
-            return;
-        }
-
-        int maxExtra = angleSolverState.getBruteForceTicks();
-        cancelBruteForce = false;
-        int currentStart = angleSolverState.getStartTick();
-        int currentLanding = angleSolverState.getLandingTick();
-
-        bfTrueOriginalRows.clear();
-        for (InputRow r : inputData.getRows()) bfTrueOriginalRows.add(r.copy());
-
-        bfTrueOriginalConstraints.clear();
-        bfTrueOriginalSlip.clear();
-        bfTrueOriginalMedium.clear();
-        bfTrueOriginalSand.clear();
-        for (Integer t : angleSolverState.populatedTicks()) {
-            TickConstraints tc = angleSolverState.tickConstraintsOrNull(t);
-            if (tc != null) {
-                List<de.legoshi.parkourcalc.core.anglesolver.Constraint> copies = new ArrayList<>();
-                for (de.legoshi.parkourcalc.core.anglesolver.Constraint c : tc.getConstraints()) copies.add(c.copy());
-                bfTrueOriginalConstraints.put(t, copies);
-
-                if (tc.getOverride() != null) {
-                    if (tc.getOverride().overridesSlipperiness()) bfTrueOriginalSlip.put(t, tc.getOverride().getSlipperiness());
-                    if (tc.getOverride().overridesMedium()) {
-                        bfTrueOriginalMedium.put(t, tc.getOverride().getMedium());
-                        bfTrueOriginalSand.put(t, tc.getOverride().getSoulsandCells());
-                    }
-                }
-            }
-        }
-        bfTrueOriginalStart = currentStart;
-        bfTrueOriginalLanding = currentLanding;
-
-        List<Integer> removedTicksDesc = new ArrayList<>();
-        for (int i = currentLanding; i >= currentStart; i--) {
-            if (i >= inputData.size()) continue;
-            InputRow row = inputData.get(i);
-            boolean isJump = row.isKeyActive(InputRow.Key.JUMP);
-            TickConstraints tc = angleSolverState.tickConstraintsOrNull(i);
-            boolean hasDefaultSlip = tc != null && tc.getOverride() != null && tc.getOverride().overridesSlipperiness()
-                    && tc.getOverride().getSlipperiness() == Slipperiness.DEFAULT;
-
-            if (!isJump && hasDefaultSlip) {
-                inputData.getRows().remove(i);
-                removedTicksDesc.add(i);
-            }
-        }
-
-        if (!removedTicksDesc.isEmpty()) {
-            angleSolverState.onRowsRemoved(removedTicksDesc);
-            currentStart = angleSolverState.getStartTick();
-            currentLanding = angleSolverState.getLandingTick();
-        }
-
-        bfOriginalStart = currentStart;
-        bfOriginalLanding = currentLanding;
-
-        bfJumpTicks = new ArrayList<>();
-        int searchLimit = Math.min(inputData.size() - 1, Math.max(bfOriginalLanding, currentLanding));
-        for (int i = bfOriginalStart; i <= searchLimit; i++) {
-            if (inputData.get(i).isKeyActive(InputRow.Key.JUMP)) {
-                if (i == 0 || !inputData.get(i - 1).isKeyActive(InputRow.Key.JUMP)) {
-                    bfJumpTicks.add(i);
-                }
-            }
-        }
-
-        if (bfJumpTicks.isEmpty()) {
-            solveAngleSolver();
-            return;
-        }
-
-        bfBackupRows.clear();
-        for (InputRow r : inputData.getRows()) bfBackupRows.add(r.copy());
-
-        bfBackupConstraints.clear();
-        bfBackupSlip.clear();
-        bfBackupMedium.clear();
-        bfBackupSand.clear();
-        for (Integer t : angleSolverState.populatedTicks()) {
-            TickConstraints tc = angleSolverState.tickConstraintsOrNull(t);
-            if (tc != null) {
-                List<de.legoshi.parkourcalc.core.anglesolver.Constraint> copies = new ArrayList<>();
-                for (de.legoshi.parkourcalc.core.anglesolver.Constraint c : tc.getConstraints()) copies.add(c.copy());
-                bfBackupConstraints.put(t, copies);
-
-                if (tc.getOverride() != null) {
-                    if (tc.getOverride().overridesSlipperiness()) bfBackupSlip.put(t, tc.getOverride().getSlipperiness());
-                    if (tc.getOverride().overridesMedium()) {
-                        bfBackupMedium.put(t, tc.getOverride().getMedium());
-                        bfBackupSand.put(t, tc.getOverride().getSoulsandCells());
-                    }
-                }
-            }
-        }
-
-        bfQueue.clear();
-        bfCompletedProgress = 0.0;
-        bfSuccessfulStepCount = 0;
-        bfTotalStepCount = 0;
-        bfFullSolutionCount = 0;
-        bfMinTicksTarget = angleSolverState.isBruteForceMinTicks() ? 0 : maxExtra;
-        bfDepthTimeoutMs = new int[bfJumpTicks.size() + 1];
-        bfDepthHasSuccess = new boolean[bfJumpTicks.size() + 1];
-        bfDepthTimeoutMs[1] = DYNAMIC_BASE_TIMEOUT_MS;
-        angleSolverState.setBruteForceLiveTimeoutMs(DYNAMIC_BASE_TIMEOUT_MS);
-
-        seedCurrentMinTicksBudget();
-
-        isBruteForcing = true;
-        bfBestCombo = null;
-        bfBestDepth = 0;
-        bfFurthestTask = null;
-        bfBestDist = angleSolverState.getGoal() == AngleSolverState.Goal.MAX ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY;
-        bfWaitSolve = false;
-
-        bfTotalStartTime = System.currentTimeMillis();
-        bfFinalSolveWait = false;
-        angleSolverState.setBruteForceActive(true);
-
-        advanceBruteForce();
-    }
-
-    private void seedCurrentMinTicksBudget() {
-        int budget = angleSolverState.isBruteForceMinTicks() ? bfMinTicksTarget : angleSolverState.getBruteForceTicks();
-        int firstJump = bfJumpTicks.get(0);
-        int totalJumps = bfJumpTicks.size();
-
-        int validCount = 0;
-        for (int i = budget; i >= 0; i--) {
-            if (satisfiesRunTicks(i, firstJump)) validCount++;
-        }
-
-        bfCompletedProgress = 0.0;
-        if (validCount == 0) {
-            bfCompletedProgress = 1.0;
-            return;
-        }
-
-        double rootWeight = 1.0 / validCount;
-        for (int i = budget; i >= 0; i--) {
-            if (!satisfiesRunTicks(i, firstJump)) continue;
-            int[] combo = new int[totalJumps];
-            combo[0] = i;
-            bfQueue.addFirst(new BfTask(combo, 1, i, rootWeight, null));
-        }
-    }
-
-    public void pollBruteForce() {
-        if (!isBruteForcing && !bfFinalSolveWait) return;
-
-        if (bfFinalSolveWait) {
-            solverEngine.poll();
-            if (solverEngine.isSolving()) {
-                if (System.currentTimeMillis() - bfSolveStartTime > angleSolverState.getBruteForceTimeoutMs()) {
-                    solverEngine.cancel();
-                } else {
-                    return;
-                }
-            }
-
-            bfFinalSolveWait = false;
-            angleSolverState.setBruteForceActive(false);
-            hudMessages.clearStatus();
-
-            SolveResult r = angleSolverState.getResult();
-            if (r != null) {
-                r.addDetail("Brute Force Time", String.format(Locale.ROOT, "%.2f s", bfTotalTimeMs / 1000.0));
-                r.addDetail("Successful Solves", bfSuccessfulStepCount + "/" + bfTotalStepCount + " (" + bfFullSolutionCount + " full)");
-                int sumTicks = 0;
-                if (bfBestCombo != null) {
-                    for (int k : bfBestCombo) sumTicks += k;
-                }
-                r.addDetail("Brute Force", cancelBruteForce ? "Cancelled (Showing best found)" : "Finished (Found Solution)");
-                if (r.isSuccess() && !r.getYaws().isEmpty()) {
-                    solverEngine.apply();
-                    runSimulation();
-                }
-                if (bfBestCombo != null) {
-                    String msg = cancelBruteForce
-                            ? "Solved (Cancelled) · +" + sumTicks + " running ticks"
-                            : "Solved · +" + sumTicks + " running ticks";
-                    pushHudMessage(msg, HudMessageStyle.COLOR_OK);
-                }
-            }
-            return;
-        }
-
-        if (!isBruteForcing) return;
-        if (bfWaitSolve) {
-            if (cancelBruteForce) {
-                solverEngine.cancel();
-                bfWaitSolve = false;
-                advanceBruteForce();
-                return;
-            }
-
-            solverEngine.poll();
-            if (solverEngine.isSolving()) {
-                if (System.currentTimeMillis() - bfSolveStartTime > currentStepTimeoutMs()) {
-                    solverEngine.cancel();
-                } else {
-                    return;
-                }
-            }
-
-            SolveResult r = angleSolverState.getResult();
-            boolean success = r != null && r.isSuccess();
-
-            if (success) {
-                solverEngine.apply();
-                bfSuccessfulStepCount++;
-
-                long stepMs = System.currentTimeMillis() - bfSolveStartTime;
-                if (bfDepthTimeoutMs != null && bfCurrentTask.depth < bfDepthTimeoutMs.length) {
-                    int safeMs = Math.max(60, (int) (stepMs * angleSolverState.getBruteForceDynamicSafetyMult()) + angleSolverState.getBruteForceDynamicSafetyMarginMs());
-                    int d = bfCurrentTask.depth;
-                    bfDepthTimeoutMs[d] = safeMs;
-                    bfDepthHasSuccess[d] = true;
-                    if (d + 1 < bfDepthTimeoutMs.length && !bfDepthHasSuccess[d + 1]) {
-                        bfDepthTimeoutMs[d + 1] = safeMs + angleSolverState.getBruteForceDynamicAddPerJumpMs();
-                    }
-                    angleSolverState.setBruteForceLiveTimeoutMs(bfDepthTimeoutMs[d]);
-                }
-
-                List<InputRow> successRows = new ArrayList<>();
-                for (InputRow row : inputData.getRows()) successRows.add(row.copy());
-
-                if (bfCurrentTask.depth >= bfBestDepth) {
-                    bfBestDepth = bfCurrentTask.depth;
-                    bfFurthestTask = new BfTask(bfCurrentTask.combo.clone(), bfCurrentTask.depth, bfCurrentTask.sum, 0.0, successRows);
-                }
-
-                if (bfCurrentTask.depth == bfJumpTicks.size()) {
-                    bfFullSolutionCount++;
-                    if (r.hasObjective()) {
-                        double val = r.getObjectiveValue();
-                        boolean isMax = angleSolverState.getGoal() == AngleSolverState.Goal.MAX;
-                        if (bfBestCombo == null || (isMax && val > bfBestDist) || (!isMax && val < bfBestDist)) {
-                            bfBestDist = val;
-                            bfBestCombo = bfCurrentTask.combo.clone();
-                            bfFurthestTask = new BfTask(bfCurrentTask.combo.clone(), bfCurrentTask.depth, bfCurrentTask.sum, 0.0, successRows);
-                        }
-                    }
-                    bfCompletedProgress += bfCurrentTask.weight;
-                } else {
-                    int nextDepth = bfCurrentTask.depth + 1;
-                    int currentMax = angleSolverState.isBruteForceMinTicks() ? bfMinTicksTarget : angleSolverState.getBruteForceTicks();
-                    int maxAllowed = currentMax - bfCurrentTask.sum;
-                    int nextJumpTick = bfJumpTicks.get(bfCurrentTask.depth);
-
-                    List<Integer> validOptions = new ArrayList<>();
-                    for (int i = maxAllowed; i >= 0; i--) {
-                        if (satisfiesRunTicks(i, nextJumpTick)) {
-                            validOptions.add(i);
-                        }
-                    }
-
-                    if (validOptions.isEmpty()) {
-                        bfCompletedProgress += bfCurrentTask.weight;
-                    } else {
-                        double childWeight = bfCurrentTask.weight / validOptions.size();
-                        for (int i : validOptions) {
-                            int[] nextCombo = bfCurrentTask.combo.clone();
-                            nextCombo[bfCurrentTask.depth] = i;
-                            bfQueue.addFirst(new BfTask(nextCombo, nextDepth, bfCurrentTask.sum + i, childWeight, successRows));
-                        }
-                    }
-                }
-            } else {
-                bfCompletedProgress += bfCurrentTask.weight;
-            }
-
-            bfWaitSolve = false;
-            advanceBruteForce();
-        }
-    }
-
-    private void advanceBruteForce() {
-        if (cancelBruteForce || bfQueue.isEmpty()) {
-            if (!cancelBruteForce && angleSolverState.isBruteForceMinTicks() && bfBestCombo == null && bfMinTicksTarget < angleSolverState.getBruteForceTicks()) {
-                bfMinTicksTarget++;
-                seedCurrentMinTicksBudget();
-                if (!bfQueue.isEmpty()) {
-                    advanceBruteForce();
-                    return;
-                }
-            }
-
-            isBruteForcing = false;
-            bfTotalTimeMs = System.currentTimeMillis() - bfTotalStartTime;
-            hudMessages.clearStatus();
-
-            if (bfBestCombo != null && bfFurthestTask != null) {
-                applyComboToState(bfBestCombo, bfJumpTicks.size(), bfFurthestTask.inheritedRows, true);
-                runSimulation();
-                bfSolveStartTime = System.currentTimeMillis();
-                solverEngine.solve();
-                bfFinalSolveWait = true;
-                return;
-            }
-
-            angleSolverState.setBruteForceActive(false);
-
-            if (bfFurthestTask != null) {
-                applyComboToState(bfFurthestTask.combo, bfFurthestTask.depth, bfFurthestTask.inheritedRows, true);
-            } else {
-                applyComboToState(null, 0, null, true);
-            }
-            runSimulation();
-
-            int totalCons = 0;
-            for (Integer t : angleSolverState.populatedTicks()) {
-                TickConstraints tc = angleSolverState.tickConstraintsOrNull(t);
-                if (tc != null) {
-                    for (de.legoshi.parkourcalc.core.anglesolver.Constraint c : tc.getConstraints()) {
-                        if (c.isEnabled()) totalCons++;
-                    }
-                }
-            }
-
-            SolveResult failResult = new SolveResult(
-                    false, 0, totalCons,
-                    angleSolverState.getStartTick() + 1, angleSolverState.getLandingTick() + 1
-            );
-            failResult.setSolver(cancelBruteForce ? "Brute Force (Cancelled)" : "Brute Force");
-            failResult.addDetail("Brute Force", cancelBruteForce ? "Cancelled (Showing best result)" : "No solution (Showing best result)");
-            failResult.addDetail("Brute Force Time", String.format(Locale.ROOT, "%.2f s", bfTotalTimeMs / 1000.0));
-            failResult.addDetail("Successful Solves", bfSuccessfulStepCount + "/" + bfTotalStepCount + " (" + bfFullSolutionCount + " full)");
-            angleSolverState.setResult(failResult);
-
-            pushHudMessage("No solution · Showing best result", HudMessageStyle.COLOR_DANGER);
-            return;
-        }
-
-        bfCurrentTask = bfQueue.removeFirst();
-        bfTotalStepCount++;
-        int curTimeout = currentStepTimeoutMs();
-        angleSolverState.setBruteForceLiveTimeoutMs(curTimeout);
-
-        int pct = (int) Math.min(99, Math.max(0, bfCompletedProgress * 100));
-        double elapsedSec = (System.currentTimeMillis() - bfTotalStartTime) / 1000.0;
-        String timeStr = String.format(Locale.ROOT, " (%.1fs)", elapsedSec);
-        String statusText = angleSolverState.isBruteForceMinTicks()
-                ? "Brute forcing (Min: " + bfMinTicksTarget + "/" + angleSolverState.getBruteForceTicks() + "t) · " + pct + "%" + timeStr
-                : "Brute forcing · " + pct + "%" + timeStr;
-        hudMessages.setStatus(statusText, HudMessages.COLOR_DEFAULT);
-
-        applyComboToState(bfCurrentTask.combo, bfCurrentTask.depth, bfCurrentTask.inheritedRows, false);
-        runSimulation();
-        bfSolveStartTime = System.currentTimeMillis();
-        solverEngine.solve();
-        bfWaitSolve = true;
-    }
-
-    private void applyComboToState(int[] combo, int depth, List<InputRow> inheritedRows, boolean isFinal) {
-        constraintSelection.clear();
-
-        if (combo == null) {
-            inputData.getRows().clear();
-            for (InputRow r : bfTrueOriginalRows) inputData.getRows().add(r.copy());
-
-            angleSolverState.clearConstraintsInRange(0, Integer.MAX_VALUE);
-            for (Integer t : angleSolverState.populatedTicks()) {
-                TickConstraints tc = angleSolverState.tickConstraintsOrNull(t);
-                if (tc != null && tc.getOverride() != null) {
-                    tc.getOverride().clearSlipperiness();
-                    tc.getOverride().clearMedium();
-                }
-            }
-
-            for (Map.Entry<Integer, List<de.legoshi.parkourcalc.core.anglesolver.Constraint>> e : bfTrueOriginalConstraints.entrySet()) {
-                for (de.legoshi.parkourcalc.core.anglesolver.Constraint c : e.getValue()) {
-                    angleSolverState.tickConstraints(e.getKey()).getConstraints().add(c.copy());
-                }
-            }
-            for (Map.Entry<Integer, Slipperiness> e : bfTrueOriginalSlip.entrySet()) {
-                angleSolverState.tickConstraints(e.getKey()).getOverride().setSlipperiness(e.getValue());
-            }
-            for (Map.Entry<Integer, Medium> e : bfTrueOriginalMedium.entrySet()) {
-                angleSolverState.tickConstraints(e.getKey()).getOverride().setMedium(e.getValue());
-                Integer sand = bfTrueOriginalSand.get(e.getKey());
-                if (sand != null) angleSolverState.tickConstraints(e.getKey()).getOverride().setSoulsandCells(sand);
-            }
-
-            angleSolverState.setStartTick(bfTrueOriginalStart);
-            angleSolverState.setLandingTick(bfTrueOriginalLanding);
-            return;
-        }
-
-        inputData.getRows().clear();
-        for (InputRow r : bfBackupRows) inputData.getRows().add(r.copy());
-
-        angleSolverState.clearConstraintsInRange(0, Integer.MAX_VALUE);
-        for (Integer t : angleSolverState.populatedTicks()) {
-            TickConstraints tc = angleSolverState.tickConstraintsOrNull(t);
-            if (tc != null && tc.getOverride() != null) {
-                tc.getOverride().clearSlipperiness();
-                tc.getOverride().clearMedium();
-            }
-        }
-
-        for (Map.Entry<Integer, List<de.legoshi.parkourcalc.core.anglesolver.Constraint>> e : bfBackupConstraints.entrySet()) {
-            for (de.legoshi.parkourcalc.core.anglesolver.Constraint c : e.getValue()) {
-                angleSolverState.tickConstraints(e.getKey()).getConstraints().add(c.copy());
-            }
-        }
-        for (Map.Entry<Integer, Slipperiness> e : bfBackupSlip.entrySet()) {
-            angleSolverState.tickConstraints(e.getKey()).getOverride().setSlipperiness(e.getValue());
-        }
-        for (Map.Entry<Integer, Medium> e : bfBackupMedium.entrySet()) {
-            angleSolverState.tickConstraints(e.getKey()).getOverride().setMedium(e.getValue());
-            Integer sand = bfBackupSand.get(e.getKey());
-            if (sand != null) angleSolverState.tickConstraints(e.getKey()).getOverride().setSoulsandCells(sand);
-        }
-
-        angleSolverState.setStartTick(bfOriginalStart);
-
-        int totalExtra = 0;
-        for (int idx = bfJumpTicks.size() - 1; idx >= 0; idx--) {
-            int originalJump = bfJumpTicks.get(idx);
-            int extra = combo[idx];
-            if (extra == 0) continue;
-            totalExtra += extra;
-
-            angleSolverState.onRowsInserted(originalJump, extra);
-            int copyIdx = Math.max(0, originalJump - 1);
-
-            for (int k = 0; k < extra; k++) {
-                int newTick = originalJump + k;
-
-                InputRow newRow = inputData.get(copyIdx).copy();
-                newRow.setKeyActive(InputRow.Key.JUMP, false);
-                newRow.setKeyActive(InputRow.Key.W, true);
-                newRow.setKeyActive(InputRow.Key.SPRINT, true);
-                inputData.getRows().add(newTick, newRow);
-
-                TickConstraints src = angleSolverState.tickConstraintsOrNull(copyIdx);
-                if (src != null) {
-                    TickConstraints dst = angleSolverState.tickConstraints(newTick);
-                    for (de.legoshi.parkourcalc.core.anglesolver.Constraint c : src.getConstraints()) {
-                        if (c.isRange()) {
-                            dst.getConstraints().add(c.copy());
-                        }
-                    }
-                }
-
-                angleSolverState.tickConstraints(newTick).getOverride().setSlipperiness(Slipperiness.DEFAULT);
-            }
-
-            int shiftedJumpTick = originalJump + extra;
-            angleSolverState.tickConstraints(shiftedJumpTick).getOverride().setSlipperiness(Slipperiness.DEFAULT);
-        }
-
-        if (inheritedRows != null) {
-            int shift = 0;
-            for (int k = 0; k < depth - 1; k++) {
-                shift += combo[k];
-            }
-            int insertionIndex = bfJumpTicks.get(depth - 1) + shift;
-            int extra = combo[depth - 1];
-
-            for (int i = 0; i < inheritedRows.size(); i++) {
-                int mappedIndex = i < insertionIndex ? i : i + extra;
-                if (mappedIndex < inputData.size()) {
-                    InputRow src = inheritedRows.get(i);
-                    InputRow dst = inputData.get(mappedIndex);
-
-                    dst.setYaw(src.getYaw());
-                    dst.setYawLocked(src.isYawLocked());
-                    dst.setKeyActive(InputRow.Key.W, src.isKeyActive(InputRow.Key.W));
-                    dst.setKeyActive(InputRow.Key.A, src.isKeyActive(InputRow.Key.A));
-                    dst.setKeyActive(InputRow.Key.S, src.isKeyActive(InputRow.Key.S));
-                    dst.setKeyActive(InputRow.Key.D, src.isKeyActive(InputRow.Key.D));
-                    dst.setKeyActive(InputRow.Key.SPRINT, src.isKeyActive(InputRow.Key.SPRINT));
-                }
-            }
-        }
-
-        angleSolverState.setStartTick(bfOriginalStart);
-
-        if (!isFinal && depth < bfJumpTicks.size()) {
-            int nextJumpTick = bfJumpTicks.get(depth) + bfCurrentTask.sum;
-            angleSolverState.setLandingTick(Math.max(bfOriginalStart, nextJumpTick - 1));
-        } else {
-            angleSolverState.setLandingTick(bfOriginalLanding + totalExtra);
-        }
-    }
-
-    private boolean satisfiesRunTicks(int extraTicks, int baseJumpTick) {
-        List<de.legoshi.parkourcalc.core.anglesolver.Constraint> constraints = bfBackupConstraints.get(baseJumpTick);
-        if (constraints == null) return true;
-
-        for (de.legoshi.parkourcalc.core.anglesolver.Constraint c : constraints) {
-            if (c.getField() != de.legoshi.parkourcalc.core.anglesolver.Constraint.Field.RT || !c.isEnabled()) continue;
-
-            double found = extraTicks;
-            if (c.isRange()) {
-                boolean lo = c.isLoInclusive() ? found >= c.getLo() : found > c.getLo();
-                boolean hi = c.isHiInclusive() ? found <= c.getHi() : found < c.getHi();
-                if (!(lo && hi)) return false;
-            } else {
-                double v = c.getValue();
-                switch (c.getOp()) {
-                    case GT: if (!(found > v)) return false; break;
-                    case GE: if (!(found >= v)) return false; break;
-                    case LT: if (!(found < v)) return false; break;
-                    case LE: if (!(found <= v)) return false; break;
-                    case EQ: if (!(found == v)) return false; break;
-                    default: break;
-                }
-            }
-        }
-        return true;
     }
 
     public void extendPathAndSolveToBlock(double targetX, double targetY, double targetZ) {

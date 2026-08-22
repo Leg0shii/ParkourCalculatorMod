@@ -19,6 +19,7 @@ import de.legoshi.parkourcalc.core.anglesolver.Slipperiness;
 import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
 import de.legoshi.parkourcalc.core.anglesolver.StateOverride;
 import de.legoshi.parkourcalc.core.anglesolver.TickConstraints;
+import de.legoshi.parkourcalc.core.anglesolver.runticks.RunTicksSettings;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -232,14 +233,15 @@ public final class SaveIO {
         state.setApplyDeviation(a.deviation,
                 parseEnum(AngleSolverState.DeviationKind.class, a.deviationKind, AngleSolverState.DeviationKind.OTHER));
 
-        if (a.bruteForceEnabled != null) state.setBruteForceEnabled(a.bruteForceEnabled);
-        if (a.bruteForceTicks != null) state.setBruteForceTicks(a.bruteForceTicks);
-        if (a.bruteForceTimeoutMs != null) state.setBruteForceTimeoutMs(a.bruteForceTimeoutMs);
-        if (a.bruteForceDynamicTimeout != null) state.setBruteForceDynamicTimeout(a.bruteForceDynamicTimeout);
-        if (a.bruteForceDynamicAddPerJumpMs != null) state.setBruteForceDynamicAddPerJumpMs(a.bruteForceDynamicAddPerJumpMs);
-        if (a.bruteForceDynamicSafetyMult != null) state.setBruteForceDynamicSafetyMult(a.bruteForceDynamicSafetyMult);
-        if (a.bruteForceDynamicSafetyMarginMs != null) state.setBruteForceDynamicSafetyMarginMs(a.bruteForceDynamicSafetyMarginMs);
-        if (a.bruteForceMinTicks != null) state.setBruteForceMinTicks(a.bruteForceMinTicks);
+        RunTicksSettings runTicks = state.getRunTicks();
+        if (a.runTicksEnabled != null) runTicks.setEnabled(a.runTicksEnabled);
+        if (a.runTicksMax != null) runTicks.setMaxTicks(a.runTicksMax);
+        if (a.runTicksTimeoutMs != null) runTicks.setTimeoutMs(a.runTicksTimeoutMs);
+        if (a.runTicksAdaptiveTimeout != null) runTicks.setAdaptiveTimeout(a.runTicksAdaptiveTimeout);
+        if (a.runTicksAddPerJumpMs != null) runTicks.setAddPerJumpMs(a.runTicksAddPerJumpMs);
+        if (a.runTicksSafetyMult != null) runTicks.setSafetyMult(a.runTicksSafetyMult);
+        if (a.runTicksSafetyMarginMs != null) runTicks.setSafetyMarginMs(a.runTicksSafetyMarginMs);
+        if (a.runTicksMinimize != null) runTicks.setMinimize(a.runTicksMinimize);
     }
 
     public static AngleSolverState sliceAngleSolverState(AngleSolverState source, List<Integer> sourceRows) {
@@ -477,6 +479,7 @@ public final class SaveIO {
         r.speedAmplifier = row.getSpeedAmplifier();
         r.jumpBoostAmplifier = row.getJumpBoostAmplifier();
         r.hotbarSlot = row.getHotbarSlot();
+        r.runTick = row.isRunTick();
         return r;
     }
 
@@ -492,7 +495,8 @@ public final class SaveIO {
                 && r.pitchLocked == row.isPitchLocked()
                 && r.speedAmplifier == row.getSpeedAmplifier()
                 && r.jumpBoostAmplifier == row.getJumpBoostAmplifier()
-                && r.hotbarSlot == row.getHotbarSlot();
+                && r.hotbarSlot == row.getHotbarSlot()
+                && r.runTick == row.isRunTick();
     }
 
     private static InputRow toInputRow(SaveFile.Row r) {
@@ -513,6 +517,7 @@ public final class SaveIO {
             row.setSpeedAmplifier(r.speedAmplifier);
             row.setJumpBoostAmplifier(r.jumpBoostAmplifier);
             row.setHotbarSlot(r.hotbarSlot);
+            row.setRunTick(r.runTick);
         }
         return row;
     }
@@ -554,14 +559,15 @@ public final class SaveIO {
         for (BlockSelection b : s.getCollisionBlocks()) a.selectedBlocks.add(toSaveBlock(b));
         for (BlockSelection b : s.getLandBlocks()) a.selectedBlocks.add(toSaveBlock(b));
         a.result = toSaveResult(s.getResult());
-        a.bruteForceEnabled = s.isBruteForceEnabled();
-        a.bruteForceTicks = s.getBruteForceTicks();
-        a.bruteForceTimeoutMs = s.getBruteForceTimeoutMs();
-        a.bruteForceDynamicTimeout = s.isBruteForceDynamicTimeout();
-        a.bruteForceDynamicAddPerJumpMs = s.getBruteForceDynamicAddPerJumpMs();
-        a.bruteForceDynamicSafetyMult = s.getBruteForceDynamicSafetyMult();
-        a.bruteForceDynamicSafetyMarginMs = s.getBruteForceDynamicSafetyMarginMs();
-        a.bruteForceMinTicks = s.isBruteForceMinTicks();
+        RunTicksSettings runTicks = s.getRunTicks();
+        a.runTicksEnabled = runTicks.isEnabled();
+        a.runTicksMax = runTicks.getMaxTicks();
+        a.runTicksTimeoutMs = runTicks.getTimeoutMs();
+        a.runTicksAdaptiveTimeout = runTicks.isAdaptiveTimeout();
+        a.runTicksAddPerJumpMs = runTicks.getAddPerJumpMs();
+        a.runTicksSafetyMult = runTicks.getSafetyMult();
+        a.runTicksSafetyMarginMs = runTicks.getSafetyMarginMs();
+        a.runTicksMinimize = runTicks.isMinimize();
         a.deviation = s.getApplyDeviation();
         a.deviationKind = s.getApplyDeviationKind() != null ? s.getApplyDeviationKind().name() : null;
         return a;
