@@ -12,6 +12,7 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.IntSupplier;
 
 public final class ConstraintKeyController {
 
@@ -21,16 +22,18 @@ public final class ConstraintKeyController {
     private final ConstraintSelection constraintSelection;
     private final Runnable onChanged;
     private final boolean modernCollision;
+    private final IntSupplier rowCount;
 
     public ConstraintKeyController(MinecraftAccess mc, AngleSolverState state, SelectionManager selection,
                                    ConstraintSelection constraintSelection, Runnable onChanged,
-                                   boolean modernCollision) {
+                                   boolean modernCollision, IntSupplier rowCount) {
         this.mc = mc;
         this.state = state;
         this.selection = selection;
         this.constraintSelection = constraintSelection;
         this.onChanged = onChanged;
         this.modernCollision = modernCollision;
+        this.rowCount = rowCount;
     }
 
     public void onKey(boolean enter, boolean remove) {
@@ -133,7 +136,7 @@ public final class ConstraintKeyController {
 
     private int selectedTick() {
         Set<Integer> rows = selection.getSelectedRows();
-        if (!rows.isEmpty()) return rows.iterator().next();
-        return state.getLandingTick();
+        int tick = rows.isEmpty() ? state.getLandingTick() : rows.iterator().next();
+        return Math.min(tick, rowCount.getAsInt() - 1);
     }
 }

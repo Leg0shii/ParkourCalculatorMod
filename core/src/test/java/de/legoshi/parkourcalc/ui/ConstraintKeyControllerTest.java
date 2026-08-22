@@ -17,6 +17,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class ConstraintKeyControllerTest {
 
@@ -38,7 +39,7 @@ public class ConstraintKeyControllerTest {
         state = new AngleSolverState();
         state.setLandingTick(TICK);
         controller = new ConstraintKeyController(
-                mc, state, new SelectionManager(mc), new ConstraintSelection(), () -> { }, false);
+                mc, state, new SelectionManager(mc), new ConstraintSelection(), () -> { }, false, () -> TICK + 1);
     }
 
     private List<Constraint> constraints() {
@@ -129,6 +130,21 @@ public class ConstraintKeyControllerTest {
         assertNotNull(wall);
         assertEquals(Constraint.Op.GE, wall.getOp());
         assertEquals("wall sits on the inset collision face, not the outline hit", 5.9375 + HALF, wall.getValue(), EPS);
+    }
+
+    @Test
+    public void staleLandingTickPastTheLastRowClampsToTheLastRow() {
+        state.setLandingTick(9);
+        mc.worldBoxes.add(box(5.0, 64.0, 5.0, 6.0, 65.0, 6.0));
+        mc.lookedAtBlock = new int[] {5, 64, 5};
+        mc.lookedAtFace = Face.POS_X;
+        mc.lookedAtHitVec = new Vec3dCore(6.0, 64.5, 5.5);
+
+        controller.onKey(false, false);
+
+        assertNull("no ghost entry past the route", state.tickConstraintsOrNull(9));
+        assertNotNull("wall clamped onto the last row", state.tickConstraintsOrNull(TICK));
+        assertEquals(1, state.tickConstraintsOrNull(TICK).getConstraints().size());
     }
 
     @Test
