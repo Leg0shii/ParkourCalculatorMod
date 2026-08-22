@@ -69,6 +69,8 @@ public class AutoSaveTest {
     public void autoSaveIgnoresUnnamedSessions() throws Exception {
         // Unnamed: never opens a popup or writes anything.
         Rig unnamed = new Rig(Files.createTempDirectory("pkc-autosave3"));
+        assertTrue(unnamed.controller.save("seed").ok);
+        assertTrue(unnamed.controller.delete("seed"));
         unnamed.controller.markDirty();
         unnamed.menu.tickAutoSave();
         Thread.sleep(1);

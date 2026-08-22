@@ -56,6 +56,7 @@ public final class SaveController {
 
     private String currentName;
     private boolean dirty;
+    private boolean sessionActive;
     private String preTempSnapshotJson;
     private boolean tempActive;
     private volatile String pendingWriteError;
@@ -102,7 +103,17 @@ public final class SaveController {
     }
 
     void markDirty() {
+        if (!sessionActive) return;
         this.dirty = true;
+    }
+
+    public boolean isSessionActive() {
+        return sessionActive;
+    }
+
+    public void endSession() {
+        sessionActive = false;
+        discardCurrent();
     }
 
     public boolean isTempActive() {
@@ -215,6 +226,7 @@ public final class SaveController {
         });
         currentName = sanitized;
         dirty = false;
+        sessionActive = true;
         if (undo != null) undo.bindJournal(journalFor(currentName));
         writeLastOpen(currentName);
         return Result.success(sanitized);
@@ -263,6 +275,7 @@ public final class SaveController {
         if (!result.ok) return result;
 
         SaveFile.Start s = result.value.start;
+        sessionActive = true;
         if (solverEngine != null) solverEngine.onProblemReplaced();
         SaveIO.applyRowsTo(result.value, inputData);
         SaveIO.applyAngleSolverTo(result.value, angleSolver);
@@ -361,6 +374,7 @@ public final class SaveController {
     }
 
     public void newSession() {
+        sessionActive = true;
         inputData.clear();
         if (solverEngine != null) solverEngine.onProblemReplaced();
         if (angleSolver != null) angleSolver.reset();

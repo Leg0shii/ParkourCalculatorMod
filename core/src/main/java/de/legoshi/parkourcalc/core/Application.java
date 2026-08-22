@@ -321,6 +321,7 @@ public final class Application {
 
     private void runSimulation(int dirtyTick) {
         if (!mc.isReady()) return;
+        if (!saveController.isSessionActive()) return;
         long t0 = Perf.now();
         boolean incremental = dirtyTick > 0 && runner.canResumeFrom(dirtyTick)
                 && boxController.size() > dirtyTick && !DebugFlags.COMPARE_PARTIAL_SIM;
@@ -374,7 +375,7 @@ public final class Application {
         runner.invalidate();
         boxController.clearAll();
         inputData.clear();
-        saveController.discardCurrent();
+        saveController.endSession();
         if (undoController != null) undoController.onDocumentReplaced(null);
         startInitialized = false;
     }
@@ -482,7 +483,6 @@ public final class Application {
         if (!mc.isReady()) return;
         if (!startInitialized) {
             runner.setStartPosition(mc.getPlayerPosition());
-            runSimulation();
             startInitialized = true;
             saveController.tryReopenLastSave();
         }
