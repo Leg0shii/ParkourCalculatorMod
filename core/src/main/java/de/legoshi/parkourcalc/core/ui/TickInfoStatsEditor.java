@@ -91,6 +91,8 @@ public final class TickInfoStatsEditor {
         String label = stat != null ? stat.label() : setting.id;
         String tooltip = stat != null ? stat.tooltip() : "";
 
+        boolean hasDecimals = usesDecimals(stat);
+
         Controls.pushInputFrameHeight();
         float rowH = ThemeManager.tableRowHeight();
         ImGui.tableNextRow(0, rowH);
@@ -99,28 +101,32 @@ public final class TickInfoStatsEditor {
             ThemeManager.paintTableRowTint(ThemeManager.selectedTintColor(0.5f));
         }
 
+        float cellPadX = ImGui.getStyle().getCellPadding().x;
+
         ImGui.tableNextColumn();
         float rowTopScreen = ImGui.getCursorScreenPos().y - ImGui.getStyle().getCellPadding().y;
         ThemeManager.tableLeftmostCellPad();
         ThemeManager.pushTextColor(draggingIndex == index ? ThemeManager.textColor() : ThemeManager.textMutedColor());
         int selFlags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowItemOverlap
                 | ImGuiSelectableFlags.DontClosePopups;
-        ThemeManager.leftAlignedSelectable("stat" + index, label, draggingIndex == index, selFlags);
+        ThemeManager.leftAlignedSelectable("stat" + index, label, draggingIndex == index, selFlags,
+                0f, ImGui.getFrameHeight());
         ThemeManager.popTextColor();
-        TooltipUtil.onHover(tooltip.isEmpty() ? TT_GRIP : tooltip);
-        if (ImGui.isItemHovered()) ImGui.setMouseCursor(ImGuiMouseCursor.Hand);
+        float spanMinX = ImGui.getItemRectMin().x;
+        float spanMaxX = ImGui.getItemRectMax().x;
 
         handleRowDragDrop(index, rowTopScreen, rowH);
 
         ImGui.tableNextColumn();
+        float onCellX = ImGui.getCursorScreenPos().x;
         if (Controls.checkbox("##on" + index, setting.enabled)) {
             setting.enabled = !setting.enabled;
             onChanged.run();
         }
-        TooltipUtil.onHover(TT_TOGGLE);
 
         ImGui.tableNextColumn();
-        if (usesDecimals(stat)) {
+        float decCellX = ImGui.getCursorScreenPos().x;
+        if (hasDecimals) {
             decimalsBuf[0] = setting.decimals;
             ImGui.setNextItemWidth(-(2f * ThemeManager.tableEdgeCellInset()));
             if (Controls.sliderInt("##dec" + index, decimalsBuf,
@@ -128,10 +134,21 @@ public final class TickInfoStatsEditor {
                 setting.decimals = decimalsBuf[0];
             }
             if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
-            TooltipUtil.onHover(TT_DECIMALS);
         }
         ThemeManager.tableRightmostCellTrailingPad();
         Controls.popInputFrameHeight();
+
+        if (!ImGui.isWindowHovered()) return;
+        if (!ImGui.isMouseHoveringRect(spanMinX, rowTopScreen, spanMaxX, rowTopScreen + rowH, false)) return;
+        float mouseX = ImGui.getMousePos().x;
+        if (mouseX < onCellX - cellPadX) {
+            ImGui.setMouseCursor(ImGuiMouseCursor.Hand);
+            TooltipUtil.wrappedTooltip(tooltip.isEmpty() ? TT_GRIP : tooltip);
+        } else if (mouseX < decCellX - cellPadX) {
+            TooltipUtil.wrappedTooltip(TT_TOGGLE);
+        } else if (hasDecimals) {
+            TooltipUtil.wrappedTooltip(TT_DECIMALS);
+        }
     }
 
     private void handleRowDragDrop(int index, float rowTopScreen, float rowH) {
