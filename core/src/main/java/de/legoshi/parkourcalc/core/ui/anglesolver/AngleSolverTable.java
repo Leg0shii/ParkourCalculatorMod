@@ -1044,14 +1044,17 @@ public final class AngleSolverTable {
                 ImGui.sameLine();
             }
         }
-        if (c.getField() == Constraint.Field.DX) {
-            if (ImGui.checkbox("dZ##vs", c.isVsDz())) c.setVsDz(!c.isVsDz());
+        if (c.getField() == Constraint.Field.DX || c.getField() == Constraint.Field.DZ) {
+            String otherLabel = c.getField() == Constraint.Field.DX ? "dZ##vs" : "dX##vs";
+            String otherName = c.getField() == Constraint.Field.DX ? "dZ" : "dX";
+            String selfName = c.getField() == Constraint.Field.DX ? "dX" : "dZ";
+            if (ImGui.checkbox(otherLabel, c.isVsOther())) c.setVsOther(!c.isVsOther());
             if (ImGui.isItemHovered()) {
-                ImGui.setTooltip("Compare against dZ as magnitudes: |dX| vs |dZ| + value."
+                ImGui.setTooltip("Compare against " + otherName + " as magnitudes: |" + selfName + "| vs |" + otherName + "| + value."
                         + " Collision resolves the larger-delta axis first (26.x).");
             }
             ImGui.sameLine();
-            if (c.isVsDz()) {
+            if (c.isVsOther()) {
                 ThemeManager.pushTextColor(ThemeManager.textMutedColor());
                 ImGui.alignTextToFramePadding();
                 ImGui.text("+");

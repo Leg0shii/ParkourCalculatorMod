@@ -16,7 +16,8 @@ public final class JumpConstraint {
         X,
         Z,
         F,
-        DXZ
+        DXZ,
+        DZX
     }
 
     public enum Op {

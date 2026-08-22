@@ -45,7 +45,7 @@ public final class Constraint {
     private boolean loInclusive;
     private boolean hiInclusive;
     private Integer refTick;
-    private boolean vsDz;
+    private boolean vsOther;
     /** A disabled constraint keeps its definition but is invisible to the solver. */
     private boolean enabled = true;
 
@@ -75,7 +75,7 @@ public final class Constraint {
     public void setField(Field next) {
         this.field = next;
         if (next != Field.X && next != Field.Z) refTick = null;
-        if (next != Field.DX) vsDz = false;
+        if (next != Field.DX && next != Field.DZ) vsOther = false;
         if (next == Field.DF) {
             op = Op.EQ;
             value = 0.0;
@@ -94,12 +94,20 @@ public final class Constraint {
         return refTick != null;
     }
 
+    public boolean isVsOther() {
+        return vsOther;
+    }
+
+    public void setVsOther(boolean vsOther) {
+        this.vsOther = vsOther && (field == Field.DX || field == Field.DZ);
+    }
+
     public boolean isVsDz() {
-        return vsDz;
+        return isVsOther();
     }
 
     public void setVsDz(boolean vsDz) {
-        this.vsDz = vsDz && field == Field.DX;
+        setVsOther(vsDz);
     }
 
     public Op getOp() {
@@ -179,7 +187,7 @@ public final class Constraint {
         c.hiInclusive = hiInclusive;
         c.enabled = enabled;
         c.refTick = refTick;
-        c.vsDz = vsDz;
+        c.vsOther = vsOther;
         return c;
     }
 }
