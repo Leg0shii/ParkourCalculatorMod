@@ -561,6 +561,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         return application.isControlPanelOpen() && Minecraft.getInstance().gui.screen() == null;
     }
 
+    public static boolean isControlPanelOpen() {
+        return application.isControlPanelOpen();
+    }
+
     public static boolean shouldSuppressLeftClick() {
         return application.shouldSuppressLeftClick();
     }
