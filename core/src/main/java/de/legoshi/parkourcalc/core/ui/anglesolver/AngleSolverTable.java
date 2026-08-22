@@ -121,10 +121,6 @@ public final class AngleSolverTable {
         return 0;
     }
 
-    private static boolean dfConforming(Constraint c) {
-        return !c.isRange() && c.getOp() == Constraint.Op.EQ && c.getValue() == 0.0;
-    }
-
     private static String dfOpGlyph(Constraint c) {
         return c.isRange() ? Constraint.Op.IN.glyph : c.getOp().glyph;
     }
@@ -137,10 +133,10 @@ public final class AngleSolverTable {
     }
 
     private static String dfTooltip(Constraint c) {
-        return dfConforming(c)
-                ? "dF is supported as dF = 0 only (hold the facing of the previous tick)"
-                : "Unsupported dF shape from an older save; solves containing it will fail."
-                        + " Re-select the dF field to reset it to dF = 0, or delete it.";
+        return c.isUnsupportedDf()
+                ? "Unsupported dF shape from an older save; solves containing it will fail."
+                        + " Re-select the dF field to reset it to dF = 0, or delete it."
+                : "dF is supported as dF = 0 only (hold the facing of the previous tick)";
     }
 
     public AngleSolverTable(AngleSolverState state, Settings settings, SelectionManager selection,
@@ -987,7 +983,7 @@ public final class AngleSolverTable {
                 }
                 ImGui.tableNextColumn();
                 if (c.getField() == Constraint.Field.DF) {
-                    ImGui.textDisabled(dfConforming(c) ? "=" : dfOpGlyph(c));
+                    ImGui.textDisabled(c.isUnsupportedDf() ? dfOpGlyph(c) : "=");
                     if (ImGui.isItemHovered()) ImGui.setTooltip(dfTooltip(c));
                 } else {
                     opCombo.set(opItemIndex(c));
@@ -1004,7 +1000,7 @@ public final class AngleSolverTable {
                 }
                 ImGui.tableNextColumn();
                 if (c.getField() == Constraint.Field.DF) {
-                    ImGui.textDisabled(dfConforming(c) ? "0" : dfValueLabel(c));
+                    ImGui.textDisabled(c.isUnsupportedDf() ? dfValueLabel(c) : "0");
                     if (ImGui.isItemHovered()) ImGui.setTooltip(dfTooltip(c));
                 } else {
                     renderConstraintValues(c);

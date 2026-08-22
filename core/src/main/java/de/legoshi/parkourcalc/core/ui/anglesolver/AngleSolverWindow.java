@@ -771,7 +771,7 @@ public final class AngleSolverWindow implements RenderInterface {
             ThemeManager.pushTextColor(ThemeManager.warningColor());
             ImGui.textWrapped(notice);
             ThemeManager.popTextColor();
-            TooltipUtil.onHover(DIRECTION_TIP);
+            if (AngleSolverEngine.DF_DIRECTION_NOTICE.equals(notice)) TooltipUtil.onHover(DIRECTION_TIP);
         }
         renderOutcomes(r, scale);
         renderDetails(details, steps, scale);

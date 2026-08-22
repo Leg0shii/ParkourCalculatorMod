@@ -159,6 +159,10 @@ public final class Constraint {
         return op == Op.IN;
     }
 
+    public boolean isUnsupportedDf() {
+        return field == Field.DF && (isRange() || op != Op.EQ || value != 0.0);
+    }
+
     public boolean isEnabled() {
         return enabled;
     }
