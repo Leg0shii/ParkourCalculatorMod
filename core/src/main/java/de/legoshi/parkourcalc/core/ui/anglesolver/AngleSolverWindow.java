@@ -66,7 +66,7 @@ public final class AngleSolverWindow implements RenderInterface {
 
     private static final String[] FORM_LABELS =
             {"Start tick", "Goal tick", "Axis", "Goal", "Inputs", "Sprint", "Slipperiness", "Potion",
-             "Run ticks", "Max ticks", "Step timeout", "Step growth", "Safety factor", "Safety margin"};
+             "Enabled", "Max ticks", "Step timeout", "Step growth", "Safety factor", "Safety margin"};
 
     /** Unscaled; lines the details table up under the toggle title and sets it off from the solved values. */
     private static final float DETAIL_INDENT = 13f;
@@ -116,6 +116,7 @@ public final class AngleSolverWindow implements RenderInterface {
     private boolean solveForExpanded = true;
     private boolean defaultStateExpanded = true;
     private boolean advancedExpanded;
+    private boolean runTicksExpanded;
     private int doseToRemove;
     private RunTicksControls runTicks = RunTicksControls.NONE;
 
@@ -244,6 +245,9 @@ public final class AngleSolverWindow implements RenderInterface {
             potionRow(labelW);
         }
         state.pruneRedundantOverrides();
+
+        ThemeManager.sectionSpacing();
+        renderRunTicksSection(labelW, scale);
 
         ThemeManager.sectionSpacing();
         renderAdvanced(labelW, scale);
@@ -501,37 +505,39 @@ public final class AngleSolverWindow implements RenderInterface {
             }
         }
         if (state.getEffort() == AngleSolverState.Effort.CUSTOM) renderPresetSection(labelW);
-
-        ThemeManager.paddedSeparator();
-        renderRunTicksSection(labelW);
     }
 
     private static final String RUN_TICKS_TIP =
-            "Before solving, try adding up to N extra running ticks in front of each jump and keep the\n"
-            + "combination with the best objective. Every combination is solved at Fast effort.\n"
-            + "Rerunning first drops the run ticks a previous run inserted, so counts never stack.\n"
-            + "Put an RT constraint on a jump tick to restrict how many ticks that jump may get.";
+            "Before solving, try adding up to N extra running ticks in front of each jump and keep the"
+            + " combination with the best objective. Every combination is solved at Fast effort. The search"
+            + " owns the grounded ticks in the range: it drops them first, so counts never stack and Max"
+            + " ticks 0 strips the run ticks the range already has. If no combination lands the whole"
+            + " range, the path you started from is put back unchanged. Put an RT constraint on a jump tick"
+            + " to restrict how many ticks that jump may get.";
 
     private static final String RUN_TICKS_MAX_TIP =
             "Largest number of extra running ticks the search may hand out across all jumps together.";
 
     private static final String RUN_TICKS_MIN_TIP =
-            "Search 0, 1, 2 ... extra ticks in turn and stop at the first count that solves, so the\n"
-            + "result uses the fewest run ticks instead of the best objective.";
+            "Search 0, 1, 2 ... extra ticks in turn and stop at the first count that solves, so the result"
+            + " uses the fewest run ticks instead of the best objective.";
 
     private static final String RUN_TICKS_TIMEOUT_TIP =
             "How long one combination may be solved before it is written off as infeasible.";
 
     private static final String RUN_TICKS_AUTO_TIP =
-            "Derive the step timeout from measured solve times instead of the fixed value.\n"
-            + "WARNING: intended for quick passes. A tight timeout can write off solvable combinations;\n"
-            + "for a thorough search turn Auto off and set a generous fixed timeout.";
+            "Derive the step timeout from measured solve times instead of the fixed value. Intended for"
+            + " quick passes: a tight timeout writes off combinations that would have solved given longer,"
+            + " so for a thorough search turn Auto off and set a generous fixed timeout.";
 
-    private void renderRunTicksSection(float labelW) {
+    private void renderRunTicksSection(float labelW, float scale) {
+        runTicksExpanded = sectionToggle("Run ticks", "runticks", runTicksExpanded, scale);
+        if (!runTicksExpanded) return;
+
         RunTicksSettings cfg = state.getRunTicks();
 
         Controls.pushInputFrameHeight();
-        SolverWidgets.rowLabel("Run ticks", labelW);
+        SolverWidgets.rowLabel("Enabled", labelW);
         if (Controls.checkbox("##runTicksEnabled", cfg.isEnabled())) cfg.setEnabled(!cfg.isEnabled());
         Controls.popInputFrameHeight();
         TooltipUtil.onHover(RUN_TICKS_TIP);

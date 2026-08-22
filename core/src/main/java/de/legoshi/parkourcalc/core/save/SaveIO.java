@@ -479,7 +479,6 @@ public final class SaveIO {
         r.speedAmplifier = row.getSpeedAmplifier();
         r.jumpBoostAmplifier = row.getJumpBoostAmplifier();
         r.hotbarSlot = row.getHotbarSlot();
-        r.runTick = row.isRunTick();
         return r;
     }
 
@@ -495,8 +494,7 @@ public final class SaveIO {
                 && r.pitchLocked == row.isPitchLocked()
                 && r.speedAmplifier == row.getSpeedAmplifier()
                 && r.jumpBoostAmplifier == row.getJumpBoostAmplifier()
-                && r.hotbarSlot == row.getHotbarSlot()
-                && r.runTick == row.isRunTick();
+                && r.hotbarSlot == row.getHotbarSlot();
     }
 
     private static InputRow toInputRow(SaveFile.Row r) {
@@ -517,7 +515,6 @@ public final class SaveIO {
             row.setSpeedAmplifier(r.speedAmplifier);
             row.setJumpBoostAmplifier(r.jumpBoostAmplifier);
             row.setHotbarSlot(r.hotbarSlot);
-            row.setRunTick(r.runTick);
         }
         return row;
     }

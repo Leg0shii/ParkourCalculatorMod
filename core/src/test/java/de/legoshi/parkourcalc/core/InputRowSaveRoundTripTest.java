@@ -91,22 +91,6 @@ public class InputRowSaveRoundTripTest {
     }
 
     @Test
-    public void runTickMarkerRoundTrips() throws Exception {
-        FileSystemSaveStore store = store(Files.createTempDirectory("pkc-rt-runtick"));
-
-        InputData in = new InputData();
-        InputRow inserted = new InputRow();
-        inserted.setRunTick(true);
-        in.getRows().add(inserted);
-        in.getRows().add(new InputRow());
-
-        InputData out = saveAndReload(store, in);
-        assertEquals(2, out.size());
-        assertTrue("a run tick must stay identifiable so a rerun drops it", out.get(0).isRunTick());
-        assertFalse("a hand-authored row is never a run tick", out.get(1).isRunTick());
-    }
-
-    @Test
     public void absentPitchRoundTripsAsNull() throws Exception {
         FileSystemSaveStore store = store(Files.createTempDirectory("pkc-rt-nopitch"));
 

@@ -225,7 +225,7 @@ How much room to spare a jump succeeds by. The tool's goal is to certify routes 
 The movement before takeoff that builds the entry velocity a jump needs. The tool can find the run-up that produces a required velocity.
 
 **Run ticks**:
-Extra grounded W+sprint ticks inserted immediately before a jump to lengthen its run-up. The run-ticks search tries every combination of run-tick counts across the jumps in the solve range, solves each one, and keeps the combination with the best objective. Rows it inserts are marked so a rerun replaces them instead of stacking. An `RT` constraint on a jump tick restricts how many run ticks that jump may receive; the angle solver itself ignores `RT`.
+Extra grounded W+sprint ticks inserted immediately before a jump to lengthen its run-up. Inside a jump solve range everything is airborne except the run-up, which is why the range's default slipperiness is AIR; a non-jump tick in the range carrying a ground (`DEFAULT`) slipperiness override therefore *is* a run tick. The run-ticks search owns them: it drops the ones already in the range, then tries every combination of run-tick counts across the jumps, solves each one, and keeps the combination with the best objective. Max ticks 0 therefore strips the range's run ticks. An `RT` constraint on a jump tick restricts how many run ticks that jump may receive; the angle solver itself ignores `RT`.
 
 **Takeoff**:
 The tick and the spot on the start block where the player leaves the ground to begin a jump.

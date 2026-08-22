@@ -21,7 +21,6 @@ public class InputRow {
     private int speedAmplifier;
     private int jumpBoostAmplifier;
     private int hotbarSlot;
-    private boolean runTick;
     private int modCount;
 
     // LEFT_CLICK / RIGHT_CLICK appended last to keep existing ordinals stable for old saves.
@@ -123,15 +122,6 @@ public class InputRow {
         this.hotbarSlot = clamped;
     }
 
-    public boolean isRunTick() {
-        return runTick;
-    }
-
-    public void setRunTick(boolean runTick) {
-        if (this.runTick != runTick) modCount++;
-        this.runTick = runTick;
-    }
-
     private static int clampAmplifier(int amplifier) {
         if (amplifier < 0) return 0;
         if (amplifier > MAX_AMPLIFIER) return MAX_AMPLIFIER;
@@ -154,7 +144,6 @@ public class InputRow {
         copy.speedAmplifier = this.speedAmplifier;
         copy.jumpBoostAmplifier = this.jumpBoostAmplifier;
         copy.hotbarSlot = this.hotbarSlot;
-        copy.runTick = this.runTick;
         return copy;
     }
 }

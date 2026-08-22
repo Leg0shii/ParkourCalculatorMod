@@ -53,7 +53,6 @@ public final class SaveFile {
         public int speedAmplifier;
         public int jumpBoostAmplifier;
         public int hotbarSlot;
-        public boolean runTick;
     }
 
     /** Angle Solver problem: defaults, per-tick constraints/overrides, and last solve result. */

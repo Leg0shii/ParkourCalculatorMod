@@ -9,6 +9,7 @@ import de.legoshi.parkourcalc.core.anglesolver.StateOverride;
 import de.legoshi.parkourcalc.core.anglesolver.TickConstraints;
 import de.legoshi.parkourcalc.core.anglesolver.runticks.RunTicksControls;
 import de.legoshi.parkourcalc.core.anglesolver.runticks.RunTicksFilter;
+import de.legoshi.parkourcalc.core.anglesolver.runticks.RunTicksRows;
 import de.legoshi.parkourcalc.core.anglesolver.runticks.RunTicksSearch;
 import de.legoshi.parkourcalc.core.anglesolver.runticks.RunTicksSettings;
 import de.legoshi.parkourcalc.core.anglesolver.runticks.StepTimeouts;
@@ -61,8 +62,6 @@ public final class RunTicksController implements RunTicksControls {
     private SolveResult bestResult;
     private double bestObjective;
 
-    private int[] furthestCombo;
-    private List<InputRow> furthestRows;
     private int furthestDepth;
 
     public RunTicksController(AngleSolverState state, AngleSolverEngine engine, InputData inputs,
@@ -124,8 +123,6 @@ public final class RunTicksController implements RunTicksControls {
         bestResult = null;
         bestObjective = state.getGoal() == AngleSolverState.Goal.MAX
                 ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY;
-        furthestCombo = null;
-        furthestRows = null;
         furthestDepth = 0;
         searchStartMs = now();
         phase = Phase.STEP;
@@ -148,8 +145,6 @@ public final class RunTicksController implements RunTicksControls {
         bestCombo = null;
         bestRows = null;
         bestResult = null;
-        furthestCombo = null;
-        furthestRows = null;
         furthestDepth = 0;
         hud.clearStatus();
     }
@@ -176,11 +171,7 @@ public final class RunTicksController implements RunTicksControls {
             engine.apply();
             timeouts.recordSuccess(node.depth(), elapsedMs(stepStartMs));
             List<InputRow> solvedRows = copyRows();
-            if (node.depth() >= furthestDepth) {
-                furthestDepth = node.depth();
-                furthestCombo = node.combo().clone();
-                furthestRows = solvedRows;
-            }
+            furthestDepth = Math.max(furthestDepth, node.depth());
             if (node.depth() == search.jumpCount() && result.hasObjective()
                     && improvesBest(result.getObjectiveValue())) {
                 bestObjective = result.getObjectiveValue();
@@ -223,7 +214,7 @@ public final class RunTicksController implements RunTicksControls {
         state.setApplyDeviation(null, null);
 
         if (bestCombo != null) {
-            applyFinal(bestCombo, search.jumpCount(), bestRows);
+            applyFinal(bestCombo, bestRows);
             runSimulation.run();
             if (cancelRequested) {
                 phase = Phase.IDLE;
@@ -238,22 +229,19 @@ public final class RunTicksController implements RunTicksControls {
         }
 
         phase = Phase.IDLE;
-        if (furthestCombo != null) {
-            applyFinal(furthestCombo, furthestDepth, furthestRows);
-        } else {
-            originalDocument.restoreInto(inputs, state);
-        }
+        originalDocument.restoreInto(inputs, state);
         runSimulation.run();
-        markDirty.run();
 
         SolveResult failed = new SolveResult(false, 0, enabledConstraintCount(),
                 state.getStartTick() + 1, state.getLandingTick() + 1);
         failed.setSolver(cancelRequested ? "Run ticks (cancelled)" : "Run ticks");
         failed.addDetail("Run ticks", cancelRequested
-                ? "Cancelled (showing best result)" : "No solution (showing best result)");
+                ? "Cancelled, path restored" : "No solution, path restored");
+        failed.addDetail("Jumps solved", furthestDepth + "/" + search.jumpCount());
         addSearchDetails(failed);
         state.setResult(failed);
-        pushMessage.accept("No solution · showing best result", HudMessageStyle.COLOR_DANGER);
+        pushMessage.accept((cancelRequested ? "Cancelled · " : "No solution · ")
+                + "path restored", HudMessageStyle.COLOR_DANGER);
     }
 
     private void pollFinalSolve() {
@@ -310,8 +298,7 @@ public final class RunTicksController implements RunTicksControls {
         List<Integer> removed = new ArrayList<Integer>();
         for (int tick = state.getLandingTick(); tick >= state.getStartTick(); tick--) {
             if (tick < 0 || tick >= inputs.size()) continue;
-            InputRow row = inputs.get(tick);
-            if (row.isRunTick() && !row.isKeyActive(InputRow.Key.JUMP)) removed.add(tick);
+            if (RunTicksRows.isRunTick(inputs.get(tick), state.tickConstraintsOrNull(tick))) removed.add(tick);
         }
         if (removed.isEmpty()) return false;
         inputs.removeRows(removed);
@@ -350,8 +337,8 @@ public final class RunTicksController implements RunTicksControls {
         }
     }
 
-    private void applyFinal(int[] combo, int assignedJumps, List<InputRow> solvedRows) {
-        int totalExtra = rebuild(combo, assignedJumps);
+    private void applyFinal(int[] combo, List<InputRow> solvedRows) {
+        int totalExtra = rebuild(combo, jumpTicks.size());
         if (solvedRows != null) {
             for (int i = 0; i < solvedRows.size(); i++) copyChoices(solvedRows.get(i), i);
         }
@@ -387,7 +374,6 @@ public final class RunTicksController implements RunTicksControls {
                 row.setKeyActive(InputRow.Key.JUMP, false);
                 row.setKeyActive(InputRow.Key.W, true);
                 row.setKeyActive(InputRow.Key.SPRINT, true);
-                row.setRunTick(true);
                 inputs.insertRow(newTick, row);
                 if (template != null) {
                     List<Constraint> target = state.tickConstraints(newTick).getConstraints();
