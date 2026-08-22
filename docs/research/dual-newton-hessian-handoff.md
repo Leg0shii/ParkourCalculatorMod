@@ -10,6 +10,7 @@ Written at dev 64dada4 (the #382 squash merge). Read this before touching `Costa
 - Update (2026-08-21): the sweep baseline moved from 25.1 s to ~30 s after the #387-390 sharpening ladder shipped; accepted cost, see `dual-newton-iteration-audit.md` section 5.
 - `SlpSolve` now runs on the bespoke `TrustRegionLp` (bounded simplex, split step variables). commons-math3 is a test-only dependency of core (`TrustRegionLpTest` is the 300-instance randomized value-equivalence oracle against the old formulation). The loaders still bundle commons-math (Fabric `include`, Forge shade relocations); dropping that is packaging work with in-game QA.
 - Accepted frontier per ruling: `solve/loopmm-tight-t39` and `-fast` are `shouldSolve: false`; `dualrecovery/loopmm-3jump-lands` and `solve/j022-1bmhbfly-noland` carry `maxObjectiveGap: 5.0e-4`. Win-back criteria live in #383.
+- **Update (#383 executed): the three loopmm pins are back.** The pattern B&B grew a keep-alive branch (`JumpLinearModel.keepAliveWall`), so `solve/loopmm-tight-t39` and `-fast` are `shouldSolve: true` again and `dualrecovery/loopmm-3jump-lands` is back at `maxObjectiveGap: 0.0`. `solve/j022-1bmhbfly-noland` stays at 5.0e-4: its shortfall is a different mechanism, see section 6.
 
 ## 1. What the deep dive found
 
@@ -53,7 +54,7 @@ Measure first, kill-audit style: temporary counters (the RungAudit pattern from 
 
 ## 3. Traps learned this session (do not relearn these)
 
-- **LP value-equality does not imply trajectory-equality.** TrustRegionLp matches the old commons-math optimal VALUES on 300 randomized instances, yet the loopmm redirect class stopped landing: its pad (~1e-5 headroom under the dual bound) rode one lucky hug trajectory (1 hit in ~320 SLP calls; 0 in ~6,700 on the new LP, hugs top out 2-5e-4 short class-wide). Two rescue attempts failed and were reverted: a minimal-norm lexicographic face pass in the LP, and lifting the B&B's best search-spec-feasible near-miss with `LevelSetAscent` (the bisection cannot close the last ~2e-4 either). Do not re-attempt those two; #383 needs a genuinely different mechanism.
+- **LP value-equality does not imply trajectory-equality.** TrustRegionLp matches the old commons-math optimal VALUES on 300 randomized instances, yet the loopmm redirect class stopped landing: its pad (~1e-5 headroom under the dual bound) rode one lucky hug trajectory (1 hit in ~320 SLP calls; 0 in ~6,700 on the new LP, hugs top out 2-5e-4 short class-wide). Two rescue attempts failed and were reverted: a minimal-norm lexicographic face pass in the LP, and lifting the B&B's best search-spec-feasible near-miss with `LevelSetAscent` (the bisection cannot close the last ~2e-4 either). Do not re-attempt those two; the mechanism that actually won the class back is the inertia keep-alive branch in section 6.
 - **Split variables, not shifted ones.** The first reformulation (e = d + tr on commons-math) broke dualrecovery/j346 because phase-1 degeneracy parked uninvolved ticks at d = -tr. The split (d = p - q, both in [0, tr]) keeps uninvolved ticks at zero; that alone fixed j346. Phase-1 of this LP is massively degenerate; vertex selection is a real degree of freedom.
 - **The B&B floor conversion**: `BoundPrunedRecovery` converts a target wall into `searchSpec` (wall removed) + `floorNorm`; `offer()` checks the FULL spec, so near-misses are invisible today. If #383 wants them, that is where they surface.
 - Sidecar re-pin precedent: accepted-fail = `shouldSolve: false` (nix-full-t1 pattern); feasible-but-short = widen `maxObjectiveGap`.
@@ -64,7 +65,7 @@ Measure first, kill-audit style: temporary counters (the RungAudit pattern from 
 
 1. **Dual Newton iteration waste (#384)**: lanes A+B above. ~62% of solver CPU; the largest single win available, moderate risk (trajectory shifts in the capped population). DONE, negative: see `dual-newton-iteration-audit.md`; capped iterations are load-bearing.
 2. **Free-start scan-volume restructure**: the 140-theta x ~6-round x ~12-solve multiplication is the machine that FEEDS lever 1; coarse-to-fine plus cross-round reuse attacks it structurally. Overlaps lane B; worth designing together. Farseed spends ~3.6 s here even before the Newton waste inside it. Declined by the audit's section 4: the theta machine never runs on the sweep and the j990 pin protects its exact enumeration.
-3. **loopmm redirect win-back (#383)**: capability, not speed. The pad needs a deliberate crossing mechanism (the corridor between dual bound and pad is ~1e-5 deep; float-lattice realization inside it is the hard part). Acceptance criteria are in the issue.
+3. **loopmm redirect win-back (#383)**: capability, not speed. DONE, positive: the pad was never an LP-vertex problem, it was the inertia gate eating the reversal carry. See section 6.
 4. **FAST-path last-window polish cost**: pre-LP measurements showed `LevelSetAscent` + hug on last windows at ~6.2 s of the then-57 s sweep (20 calls, all wins) and window CF/SLP alternates at ~10 s combined; all contribute results, so this is a budget/semantics question (how much objective polish does first-feasible FAST owe?), needs a ruling plus re-measurement post-LP before touching.
 5. **Packaging simplification**: drop the commons-math bundles from the loaders (Fabric `include`, both Forge relocations plus the jar-relocator machinery that exists only for it) now that core no longer needs it at runtime. Mechanical, but it is loader packaging: needs the usual in-game QA pass on all three loaders.
 
@@ -78,3 +79,32 @@ java -XX:StartFlightRecording=filename=out.jfr,settings=profile -cp ... (aggrega
 ```
 
 Gates for any change here: sweep 104/104 with no capture meaningfully slower, `:core:check -PslowTests`, farseed/j990 FAST 20 s budgets, and the #383 pins staying at their re-pinned expectations.
+
+## 6. The loopmm redirect win-back (#383, executed 2026-08-22)
+
+The pad was never an LP-vertex problem. `dualrecovery/loopmm-3jump-lands` has exactly one binding wall
+(`Z@61 <= -282.825`); the whole objective reduces to "arrive at that wall with the most +Z velocity", and the
+final ten ticks all sit at `phi = 90` in every candidate. The 5e-4 that separated the landing trajectory from
+the missing one was a single inertia-gate firing at tick 4, where the Z velocity crosses zero during the
+momentum reversal: the missing trajectory coasts through the band at `vz = -0.0010..+0.0050` and the gate
+zeroes it, destroying the whole carry from ticks 0-3; the old commons-math trajectory happened to land at
+`vz = +0.00505825`, 5.8e-5 clear of the 0.005 threshold, and kept it. That is the "1 lucky hug in 320 calls".
+
+The pattern enumeration only ever branched one way on that disjunction. `zx@k`/`zz@k`/`zx1@k`/`zz1@k` are the
+"velocity IS inside the band" branch (`velocityWalls` pins `|v| <= thr` so the folded dynamics are
+self-consistent); nothing generated the complementary "velocity is OUTSIDE the band, on this side" branch, and
+the `free` pattern relaxes the gate away entirely instead of enforcing it. `JumpLinearModel.keepAliveWall`
+emits that complement (same coefficients as the `velocityWalls` pair, bound flipped a band width), and
+`BoundPrunedRecovery.keepAlivePatterns` nominates it on the objective axis, in the objective-improving sign,
+at ticks where a reference realization either trips the gate or reverses sign. Two candidates on loopmm
+(`keepZ@3+`, `keepZ@4+`); `keepZ@4+` lands at -279.29986, past the -279.3 pad. The reference is `rankYaws` when
+the closed form produced one, otherwise the margin-0 dual recovery of the free model.
+
+Measured cost: sweep 104/104, 32.7 s -> 33.6 s wall, zero solver-chain changes across all 104 rows;
+`:core:check -PslowTests` 2m45s. Nomination is capped at `MAX_KEEP_ALIVE = 4` patterns.
+
+What this does NOT fix: `solve/j022-1bmhbfly-noland`, still 2.7e-4 short (bar was 1.446e-4 pre-#382). Its
+dual-chain seed trips no gate at all in either the old or the new build; the seed itself regressed
+(-531.70000 old, -531.69975 new) because `LevelSetAscent` rungs that were feasible on commons-math are not on
+`TrustRegionLp`, and the ILS closes only ~1e-4 of that in its 2 s budget. That is LP hug quality in the
+level-set ladder, a separate lever; the pin stays at `maxObjectiveGap: 5.0e-4`.

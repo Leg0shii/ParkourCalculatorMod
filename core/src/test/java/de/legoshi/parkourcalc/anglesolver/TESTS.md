@@ -76,13 +76,12 @@ anglesolver/
                            PKC_RAZORT1_TAG to run; PASS = success + fresh-reparse viol <= 0;
                            report at build/reports/razort1-<tag>.txt
                            (solve/loopmm-tight-t39: the loopmm misses capture with its shipped-
-                           disabled pad wall ENABLED; the tight Z@71 >= -279.3 pad sat on an
-                           incidental hug trajectory of the commons-math LP and stopped landing
-                           with the bespoke TrustRegionLp swap, so shouldSolve is false until the
-                           redirect class is won back, THOROUGH 45 s)
+                           disabled pad wall ENABLED; the tight Z@71 >= -279.3 pad is reachable
+                           only while the Z inertia gate is held open across the momentum
+                           reversal, so this pins the pattern B&B's keep-alive branch,
+                           THOROUGH 45 s)
                            (solve/loopmm-tight-t39-fast: the SAME capture under FAST effort,
-                           accepted-fail for the same reason, budget 90 s; the redirect-class
-                           frontier)
+                           same keep-alive pin on the shorter chain, budget 90 s)
                            (solve/gh313-j121-dfneo: gh-313; hpk j121 neo with dF <= 0 walls. The
                            dF inequality class is retired by ruling (issue 372, dF = 0 only) and
                            CMA-ES is removed (issue 374), so shouldSolve is false by design)
