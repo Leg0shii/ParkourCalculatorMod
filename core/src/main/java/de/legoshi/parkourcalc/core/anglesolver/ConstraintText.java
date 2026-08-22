@@ -41,16 +41,17 @@ public final class ConstraintText {
     }
 
     public static String chip(Constraint c) {
+        String other = c.getField() == Constraint.Field.DX ? "dZ" : "dX";
         if (c.isRange()) {
             String lb = c.isLoInclusive() ? "[" : "(";
             String rb = c.isHiInclusive() ? "]" : ")";
             String body = lb + num(c.getLo()) + ", " + num(c.getHi()) + rb;
-            return c.isVsDz() ? "dZ+" + body : body;
+            return c.isVsOther() ? other + "+" + body : body;
         }
-        if (c.isVsDz()) {
+        if (c.isVsOther()) {
             double v = c.getValue();
-            if (v == 0.0) return "dZ";
-            return v > 0.0 ? "dZ+" + num(v) : "dZ-" + num(-v);
+            if (v == 0.0) return other;
+            return v > 0.0 ? other + "+" + num(v) : other + "-" + num(-v);
         }
         return num(c.getValue());
     }

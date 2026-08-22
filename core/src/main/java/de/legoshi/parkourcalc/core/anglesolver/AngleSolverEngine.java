@@ -1296,12 +1296,13 @@ public final class AngleSolverEngine {
                 break;
             case DX:
                 if (segTick < 1) break; // velocity needs t-1
-                addRelative(out, c.isVsDz() ? JumpConstraint.Mode.DXZ : JumpConstraint.Mode.X,
+                addRelative(out, c.isVsOther() ? JumpConstraint.Mode.DXZ : JumpConstraint.Mode.X,
                         segTick, segTick - 1, c, tag);
                 break;
             case DZ:
                 if (segTick < 1) break;
-                addRelative(out, JumpConstraint.Mode.Z, segTick, segTick - 1, c, tag);
+                addRelative(out, c.isVsOther() ? JumpConstraint.Mode.DZX : JumpConstraint.Mode.Z,
+                        segTick, segTick - 1, c, tag);
                 break;
             case DF:
                 if (segTick >= numTicks) break;
@@ -1416,11 +1417,15 @@ public final class AngleSolverEngine {
             case Z: return refSeg != null ? path.posZ[segTick] - path.posZ[refSeg] : path.posZ[segTick];
             case F: return segTick < numTicks ? Angles.wrap(gameFacings[segTick]) : null;
             case DX: return segTick >= 1
-                    ? (c.isVsDz()
-                        ? Math.abs(path.posX[segTick] - path.posX[segTick - 1])
-                            - Math.abs(path.posZ[segTick] - path.posZ[segTick - 1])
-                        : path.posX[segTick] - path.posX[segTick - 1]) : null;
-            case DZ: return segTick >= 1 ? path.posZ[segTick] - path.posZ[segTick - 1] : null;
+                    ? (c.isVsOther()
+                    ? Math.abs(path.posX[segTick] - path.posX[segTick - 1])
+                    - Math.abs(path.posZ[segTick] - path.posZ[segTick - 1])
+                    : path.posX[segTick] - path.posX[segTick - 1]) : null;
+            case DZ: return segTick >= 1
+                    ? (c.isVsOther()
+                    ? Math.abs(path.posZ[segTick] - path.posZ[segTick - 1])
+                    - Math.abs(path.posX[segTick] - path.posX[segTick - 1])
+                    : path.posZ[segTick] - path.posZ[segTick - 1]) : null;
             case DF:
                 if (segTick >= numTicks) return null;
                 return segTick >= 1
