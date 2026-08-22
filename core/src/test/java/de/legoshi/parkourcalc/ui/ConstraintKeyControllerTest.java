@@ -54,6 +54,29 @@ public class ConstraintKeyControllerTest {
     }
 
     @Test
+    public void footprintAtACrossIntersectionFollowsThePlayerFacing() {
+        mc.addBlock(5, 64, 8, box(5.0, 64.0, 8.0, 6.0, 65.0, 9.0));
+        mc.worldBoxes.add(box(6.0, 65.0, 7.0, 7.0, 66.0, 8.0));
+        mc.worldBoxes.add(box(4.0, 65.0, 7.0, 5.0, 66.0, 8.0));
+        mc.worldBoxes.add(box(6.0, 65.0, 9.0, 7.0, 66.0, 10.0));
+        mc.worldBoxes.add(box(4.0, 65.0, 9.0, 5.0, 66.0, 10.0));
+        mc.lookedAtBlock = new int[] {5, 64, 8};
+        mc.lookedAtFace = Face.POS_Y;
+        mc.lookedAtHitVec = new Vec3dCore(5.5, 65.0, 8.5);
+        mc.playerYaw = -90f;
+
+        controller.onKey(false, false);
+
+        assertEquals("one X range and one Z range", 2, constraints().size());
+        Constraint x = range(Constraint.Field.X);
+        assertEquals("facing X keeps the full X overhang", 5 - HALF, x.getLo(), EPS);
+        assertEquals(6 + HALF, x.getHi(), EPS);
+        Constraint z = range(Constraint.Field.Z);
+        assertEquals("Z is pulled off the corner walls", 8 + HALF, z.getLo(), EPS);
+        assertEquals(9 - HALF, z.getHi(), EPS);
+    }
+
+    @Test
     public void footprintOnTheLowerStepIsClippedByTheRiserInTheSameCell() {
         mc.worldBoxes.add(box(5.0, 64.0, 8.0, 6.0, 64.5, 9.0));
         mc.worldBoxes.add(box(5.5, 64.5, 8.0, 6.0, 65.0, 9.0));
