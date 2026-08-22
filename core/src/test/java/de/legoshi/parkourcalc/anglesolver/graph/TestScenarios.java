@@ -6,6 +6,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SolveProgress;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
@@ -57,7 +58,11 @@ final class TestScenarios {
     }
 
     static GraphContext context(int numTicks, boolean[] jumpMask, AtomicBoolean cancel) {
+        return context(numTicks, jumpMask, cancel, null);
+    }
+
+    static GraphContext context(int numTicks, boolean[] jumpMask, AtomicBoolean cancel, SolveProgress progress) {
         return new GraphContext(spec(numTicks, jumpMask), ExactJumpModel.forMcVersion("1.8.9"),
-                null, null, 0.0, cancel, null, true, null);
+                null, null, 0.0, cancel, progress, true, null);
     }
 }

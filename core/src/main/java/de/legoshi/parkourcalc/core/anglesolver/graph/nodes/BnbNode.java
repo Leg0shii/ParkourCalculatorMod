@@ -56,9 +56,7 @@ public final class BnbNode implements NodeRuntime {
             double[] yaws = Angles.wrapAll(rescue);
             ctx.chainAppend("pattern B&B");
             if (labelSuffix != null && !labelSuffix.isEmpty()) ctx.chainSuffix(labelSuffix);
-            Candidate out = Candidate.of(ctx, yaws);
-            if (ctx.progress != null) ctx.progress.report(yaws, out.objective, out.violation, true);
-            return NodeOutcome.of(Guarantee.FOUND, out);
+            return NodeOutcome.of(Guarantee.FOUND, Candidate.of(ctx, yaws));
         }
         if (in == null || in.yaws == null) return NodeOutcome.of(Guarantee.NONE, in);
         if (ctx.progress != null) ctx.progress.setStage(ctx.chainWith("branch and bound"));

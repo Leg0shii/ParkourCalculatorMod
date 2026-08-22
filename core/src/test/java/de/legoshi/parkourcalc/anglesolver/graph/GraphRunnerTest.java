@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.anglesolver.graph;
 
 import de.legoshi.parkourcalc.SlowSolverTests;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Branch;
+import de.legoshi.parkourcalc.core.anglesolver.graph.Candidate;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphEdge;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphNode;
@@ -17,6 +18,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.NodeStatus;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeType;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamSpec;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SolveProgress;
 import org.junit.experimental.categories.Category;
 import org.junit.Test;
 
@@ -26,6 +28,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -87,6 +90,36 @@ public class GraphRunnerTest {
         GraphContext ctx = TestScenarios.context(2, null, new AtomicBoolean(false));
         GraphRunner.run(g, ctx);
         assertEquals(Arrays.asList("a", "b"), order);
+    }
+
+    @Test
+    public void everyNodeCandidateIsOfferedToProgress() {
+        SolveProgress progress = new SolveProgress(true, false);
+        GraphContext ctx = TestScenarios.context(6, null, new AtomicBoolean(false), progress);
+        double[] left = {-90.0, -90.0, -90.0, -90.0, -90.0, -90.0};
+        double[] right = {90.0, 90.0, 90.0, 90.0, 90.0, 90.0};
+        boolean leftWins = ctx.exactObjective(left) > ctx.exactObjective(right);
+        double[] better = leftWins ? left : right;
+        double[] worse = leftWins ? right : left;
+
+        GraphNode a = stub("a", (c, in, tok, dl) ->
+                NodeOutcome.of(Guarantee.FOUND, Candidate.of(c, worse)), Guarantee.FOUND);
+        GraphNode b = stub("b", (c, in, tok, dl) ->
+                NodeOutcome.of(Guarantee.FOUND, Candidate.of(c, better)), Guarantee.FOUND);
+        GraphNode d = stub("d", (c, in, tok, dl) ->
+                NodeOutcome.of(Guarantee.FOUND, Candidate.of(c, worse)), Guarantee.FOUND);
+        SolverGraph g = graph(
+                Arrays.asList(marker("entry", "entry"), marker("emit", "emit"), a, b, d),
+                Arrays.asList(
+                        new GraphEdge("entry", Guarantee.DONE, "a"),
+                        new GraphEdge("a", Guarantee.FOUND, "b"),
+                        new GraphEdge("b", Guarantee.FOUND, "d"),
+                        new GraphEdge("d", Guarantee.FOUND, "emit")));
+        GraphRunner.run(g, ctx);
+
+        assertTrue(progress.haveBest());
+        assertEquals(2, progress.samples().size());
+        assertArrayEquals(better, progress.bestYaws(), 0.0);
     }
 
     @Test

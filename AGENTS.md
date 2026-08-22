@@ -72,7 +72,7 @@ JDK 21 runs the Gradle daemon. `:runClient` auto-switches toolchain: Fabric uses
 
 The real gate is `:core:test`. All tests are pure Java in `core/src/test/`, no MC needed.
 
-The default run excludes the expensive solver suites and finishes in seconds; `-PslowTests` includes them (a few minutes, `ProblemsTest` alone is most of it). The slow set is every class tagged with the JUnit category `de.legoshi.parkourcalc.SlowSolverTests` (currently `ProblemsTest`, the `J008Velocity*` suites, `VelocityFieldReuseEquivalenceTest`, `VelocityFinderConstraintTest`, `IlsPolishTest`, `WrapWindowIlsTest`, `TranslationEliminationTest`, `EngineFreeStartTest`, `GraphPresetSolveTest`, `GraphRunnerTest`, `LevelSetAscentTest`). CI always runs with `-PslowTests`, so nothing merges on the fast suite alone.
+The default run excludes the expensive solver suites and finishes in seconds; `-PslowTests` includes them (a few minutes, `ProblemsTest` alone is most of it). The slow set is every class tagged with the JUnit category `de.legoshi.parkourcalc.SlowSolverTests` (currently `ProblemsTest`, the `J008Velocity*` suites, `VelocityFieldReuseEquivalenceTest`, `VelocityFinderConstraintTest`, `IlsPolishTest`, `WrapWindowIlsTest`, `TranslationEliminationTest`, `EngineFreeStartTest`, `GraphPresetSolveTest`, `GraphRunnerTest`, `LevelSetAscentTest`, `OptimizeVsFastTest`). CI always runs with `-PslowTests`, so nothing merges on the fast suite alone.
 
 ```bash
 ./gradlew :core:test             # fast suite; run after any change
