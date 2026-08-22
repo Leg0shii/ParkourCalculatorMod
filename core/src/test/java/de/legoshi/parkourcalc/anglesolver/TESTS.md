@@ -104,6 +104,12 @@ anglesolver/
                            infeasible, so this pins the B&B rescue's single-tick zx1@k patterns
                            and its dF=0 entry through the FacingPrefold-gated facing-wall check,
                            FAST 20 s)
+                           (solve/inertia-1tick-neo-t31: the SAME capture with the window started
+                           ON the zeroing tick (startTick 30), so the seed vX 0.00498 is below the
+                           threshold and dead on arrival; pins the seed-velocity normalization
+                           (ExactJumpModel.zeroSubThresholdVelocity at buildPhys), without which
+                           every relaxation carries the phantom carry and no k>=1 pattern can
+                           represent a tick-0 zeroing, FAST 20 s)
   LevelSetAscentTest.java  level-set objective ascent (gh-290): on keep-out-wall captures where the
                            chosen Solve For degenerates the dual recovery (j003 X/MIN, j012 Z/MAX,
                            j008-bfneo Z/MIN, taser-80t X/MIN), the goal-wall bisection strictly beats

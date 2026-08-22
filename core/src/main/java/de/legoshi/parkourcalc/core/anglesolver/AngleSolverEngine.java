@@ -505,6 +505,10 @@ public final class AngleSolverEngine {
         }
     }
 
+    private Vec3dCore normalizeSeedVelocity(Vec3dCore v) {
+        return model instanceof ExactJumpModel ? ((ExactJumpModel) model).zeroSubThresholdVelocity(v) : v;
+    }
+
     private Phys buildPhys(int startTick, int numTicks) {
         List<InputRow> rows = inputs.getRows();
         TickState seed = boxes.getState(startTick);
@@ -568,8 +572,9 @@ public final class AngleSolverEngine {
         JumpPhysicsInputs phys = new JumpPhysicsInputs(numTicks);
         phys.startPos = seed.position;
         phys.startYaw = seed.yaw;
-        phys.initialVelocity = seed.velocity;
-        phys.startBox = StartBox.pinned(seed.position.x, seed.position.z, seed.velocity.x, seed.velocity.z);
+        Vec3dCore vel = normalizeSeedVelocity(seed.velocity);
+        phys.initialVelocity = vel;
+        phys.startBox = StartBox.pinned(seed.position.x, seed.position.z, vel.x, vel.z);
         phys.jumpTick = jumpTickRel;
         phys.jumpPerTick = jumpMask;
         phys.strafePerTick = strafeMask;
