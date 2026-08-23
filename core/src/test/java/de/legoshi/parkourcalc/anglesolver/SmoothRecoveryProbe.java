@@ -200,11 +200,20 @@ public class SmoothRecoveryProbe {
                 wallGrad(L, j, gf, J[i]);
                 r[i] = (L.walls.get(j).bPrime - margin) - wallValue(L, j, gf);
             }
+            double[][] W = smoothMetric(n);
+            double[][] JW = new double[m][n];
+            for (int a = 0; a < m; a++) {
+                for (int x = 0; x < n; x++) {
+                    double s = 0.0;
+                    for (int z = 0; z < n; z++) s += J[a][z] * W[z][x];
+                    JW[a][x] = s;
+                }
+            }
             double[][] jjt = new double[m][m];
             for (int a = 0; a < m; a++) {
                 for (int b = 0; b < m; b++) {
                     double s = 0.0;
-                    for (int t = 0; t < n; t++) s += J[a][t] * J[b][t];
+                    for (int x = 0; x < n; x++) s += JW[a][x] * J[b][x];
                     jjt[a][b] = s;
                 }
             }
@@ -218,7 +227,7 @@ public class SmoothRecoveryProbe {
                 double[] c = cur.clone();
                 for (int a = 0; a < m; a++) {
                     if (lam[a] == 0.0) continue;
-                    for (int t = 0; t < n; t++) c[t] += damp * lam[a] * J[a][t];
+                    for (int t = 0; t < n; t++) c[t] += damp * lam[a] * JW[a][t];
                 }
                 double v = linViol(L, c);
                 if (v < best - 1.0e-15) {
@@ -274,18 +283,17 @@ public class SmoothRecoveryProbe {
         }
 
         double margin = Double.parseDouble(System.getProperty("pkc.sr.margin", "5e-3"));
-        int rounds = Integer.getInteger("pkc.sr.rounds", 400);
-        double step = Double.parseDouble(System.getProperty("pkc.sr.step", "4"));
+        int rounds = Integer.getInteger("pkc.sr.rounds", 600);
+        double step = Double.parseDouble(System.getProperty("pkc.sr.step", "6"));
         int patternPasses = Integer.getInteger("pkc.sr.passes", 6);
 
         double[] gf = sc.toGameFacings(seed);
         double[] bestGf = gf.clone();
         double bestExact = comp.maxViolation(gf, model.forward(sc, gf));
-        System.out.printf("SR seed exactViol=%.4e (kept as the floor; recovery may only improve on it)%n", bestExact);
-        if (bestExact <= 0.0) {
-            System.out.println("SR seed already certifies, nothing to recover");
-        }
+        System.out.printf("SR seed exactViol=%.4e rev=%d runs=%d%n", bestExact,
+                reversals(anchor, fromGf(sc, gf, seed)), runsOf(anchor, fromGf(sc, gf, seed)));
 
+        // Phase 1: reach byte-exact feasibility at all.
         for (int pass = 0; pass < patternPasses && bestExact > 0.0; pass++) {
             double[] yNow = fromGf(sc, gf, seed);
             boolean[] zx = new boolean[n];
@@ -293,25 +301,41 @@ public class SmoothRecoveryProbe {
             new JumpLinearModel(sc).zeroingPattern(Angles.wrapAll(yNow), model.inertiaThreshold(),
                     model.perAxisInertia(), zx, zz);
             L = build(sc, spec, zx, zz);
-
-            boolean ok = restore(L, gf, margin, false);
-            double ev0 = comp.maxViolation(gf, model.forward(sc, gf));
-            System.out.printf("SR pass=%d restore=%s linViol=%11.4e exactViol=%11.4e rev=%d runs=%d%n",
-                    pass, ok, linViol(L, gf), ev0, reversals(anchor, fromGf(sc, gf, seed)),
-                    runsOf(anchor, fromGf(sc, gf, seed)));
-            if (ev0 < bestExact) {
-                bestExact = ev0;
+            restore(L, gf, margin, false);
+            double ev = comp.maxViolation(gf, model.forward(sc, gf));
+            System.out.printf("SR pass=%d linViol=%11.4e exactViol=%11.4e%n", pass, linViol(L, gf), ev);
+            if (ev < bestExact) {
+                bestExact = ev;
                 bestGf = gf.clone();
             }
+        }
+        gf = bestGf.clone();
+        if (bestExact > 0.0) {
+            System.out.printf("SR could not reach byte-exact feasibility, best=%.4e%n", bestExact);
+        }
 
+        // Phase 2: descend turn cost while holding byte-exact feasibility.
+        int acc = 0;
+        int rejFeas = 0;
+        int rejCost = 0;
+        if (bestExact <= 0.0) {
+            double[] y0 = fromGf(sc, gf, seed);
+            double cost = turnCost(anchor, y0);
+            System.out.printf("SR descent start turnCost=%.2f rev=%d runs=%d%n",
+                    cost, reversals(anchor, y0), runsOf(anchor, y0));
             double curStep = step;
-            int acc = 0;
             for (int it = 0; it < rounds; it++) {
                 double[] y = fromGf(sc, gf, seed);
+                boolean[] zx = new boolean[n];
+                boolean[] zz = new boolean[n];
+                new JumpLinearModel(sc).zeroingPattern(Angles.wrapAll(y), model.inertiaThreshold(),
+                        model.perAxisInertia(), zx, zz);
+                L = build(sc, spec, zx, zz);
+
                 double[] g = smoothGrad(anchor, y);
                 List<Integer> act = new ArrayList<Integer>();
                 for (int j = 0; j < L.walls.size(); j++) {
-                    if (wallValue(L, j, gf) - L.walls.get(j).bPrime > -margin * 4.0) act.add(j);
+                    if (wallValue(L, j, gf) - L.walls.get(j).bPrime > -margin * 6.0) act.add(j);
                 }
                 double[] d = g.clone();
                 if (!act.isEmpty()) {
@@ -343,35 +367,95 @@ public class SmoothRecoveryProbe {
                 double gn = 0.0;
                 for (double v : d) gn = Math.max(gn, Math.abs(v));
                 if (gn < 1.0e-12) break;
+
                 boolean moved = false;
-                double cost = smoothCost(anchor, y);
-                for (double a = curStep; a >= 1.0e-4; a *= 0.5) {
+                for (double a = curStep; a >= 1.0e-3; a *= 0.5) {
                     double[] c = gf.clone();
                     double k = a / gn;
                     for (int t = 0; t < n; t++) c[t] -= k * d[t];
-                    if (!restore(L, c, margin, false)) continue;
-                    double[] cy = fromGf(sc, c, seed);
-                    if (smoothCost(anchor, cy) >= cost) continue;
+                    if (!restoreExact(L, model, sc, comp, c, margin)) {
+                        rejFeas++;
+                        continue;
+                    }
+                    double cc = turnCost(anchor, fromGf(sc, c, seed));
+                    if (cc >= cost - 1.0e-12) {
+                        rejCost++;
+                        continue;
+                    }
                     gf = c;
+                    cost = cc;
                     moved = true;
                     acc++;
+                    if (a > curStep * 0.6) curStep = Math.min(curStep * 1.4, 40.0);
                     break;
                 }
                 if (!moved) {
                     curStep *= 0.6;
-                    if (curStep < 1.0e-4) break;
+                    if (curStep < 1.0e-3) break;
                 }
             }
-            double ev = comp.maxViolation(gf, model.forward(sc, gf));
-            System.out.printf("SR   smoothed accepted=%d exactViol=%11.4e rev=%d runs=%d%n",
-                    acc, ev, reversals(anchor, fromGf(sc, gf, seed)), runsOf(anchor, fromGf(sc, gf, seed)));
-            if (ev < bestExact) {
-                bestExact = ev;
-                bestGf = gf.clone();
-            }
-            if (ev <= 0.0) break;
+            bestGf = gf.clone();
         }
         gf = bestGf;
+        System.out.printf("SR descent accepted=%d rejectedInfeasible=%d rejectedNotSmoother=%d%n",
+                acc, rejFeas, rejCost);
+
+        // Phase 3: kill turn reversals directly. The jerk gradient cannot see them, so target each
+        // short same-sign run and flatten its span to a constant turn rate, widening until one lands
+        // byte-exact feasible and drops the reversal count.
+        if (comp.maxViolation(gf, model.forward(sc, gf)) <= 0.0) {
+            int killed = 0;
+            int tries = 0;
+            java.util.Set<String> stuck = new java.util.HashSet<String>();
+            while (true) {
+                double[] y = fromGf(sc, gf, seed);
+                int curRev = reversals(anchor, y);
+                List<int[]> rs = runSpans(anchor, y);
+                int[] pick = null;
+                double pickMass = 0.0;
+                for (int[] r : rs) {
+                    double mass = 0.0;
+                    double[] dd = deltas(anchor, y);
+                    for (int t = r[0]; t <= r[1]; t++) mass += dd[t];
+                    if (stuck.contains(r[0] + ":" + r[1])) continue;
+                    if (pick == null || Math.abs(mass) < Math.abs(pickMass)) {
+                        pick = r;
+                        pickMass = mass;
+                    }
+                }
+                if (pick == null) break;
+                boolean done = false;
+                boolean[] zx = new boolean[n];
+                boolean[] zz = new boolean[n];
+                new JumpLinearModel(sc).zeroingPattern(Angles.wrapAll(y), model.inertiaThreshold(),
+                        model.perAxisInertia(), zx, zz);
+                L = build(sc, spec, zx, zz);
+                for (int grow = 0; grow <= 16 && !done; grow++) {
+                    int lo = Math.max(0, pick[0] - grow);
+                    int hi = Math.min(n - 1, pick[1] + grow);
+                    double[] flat = flattenYaw(anchor, y, lo, hi);
+                    double[] c = sc.toGameFacings(Angles.wrapAll(flat));
+                    tries++;
+                    double preRev = reversals(anchor, flat);
+                    double preViol = comp.maxViolation(c, model.forward(sc, c));
+                    boolean fixed = restoreExact(L, model, sc, comp, c, margin);
+                    double[] cy = fromGf(sc, c, seed);
+                    int postRev = reversals(anchor, cy);
+                    System.out.printf("SR     try T%d..T%d grow=%d flatRev=%.0f preViol=%10.3e fixed=%-5s postRev=%d (cur=%d) %s%n",
+                            lo, hi, grow, preRev, preViol, fixed, postRev, curRev,
+                            !fixed ? "REPAIR-FAILED" : (postRev >= curRev ? "REPAIR-ADDED-REVERSALS" : "OK"));
+                    if (!fixed) continue;
+                    if (postRev >= curRev) continue;
+                    gf = c;
+                    done = true;
+                    killed++;
+                    System.out.printf("SR   killed run T%d..T%d mass=%+.2f -> rev=%d runs=%d%n",
+                            pick[0], pick[1], pickMass, reversals(anchor, cy), runsOf(anchor, cy));
+                }
+                if (!done) stuck.add(pick[0] + ":" + pick[1]);
+            }
+            System.out.printf("SR runkill killed=%d tries=%d%n", killed, tries);
+        }
 
         double[] fy = fromGf(sc, gf, seed);
         double ev = comp.maxViolation(gf, model.forward(sc, gf));
@@ -396,6 +480,116 @@ public class SmoothRecoveryProbe {
         }
         if (last != 0) sb.append(String.format("%+.1f", mass));
         System.out.println(sb);
+    }
+
+    /** Gauss-Newton on the linear walls, but stop the moment the BYTE-EXACT model is satisfied. */
+    static boolean restoreExact(Lin L, ExactJumpModel model, JumpPhysicsInputs sc,
+                                JumpConstraintCompiler.Compiled comp, double[] gf, double margin) {
+        if (comp.maxViolation(gf, model.forward(sc, gf)) <= 0.0) return true;
+        for (double m = margin; m <= margin * 16.0; m *= 2.0) {
+            double[] c = gf.clone();
+            restore(L, c, m, false);
+            if (comp.maxViolation(c, model.forward(sc, c)) <= 0.0) {
+                System.arraycopy(c, 0, gf, 0, gf.length);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static double[][] METRIC_CACHE;
+    private static int METRIC_N = -1;
+
+    /** (L^T L + eps I)^-1 with L the second-difference operator: makes the least-norm correction the
+     *  SMOOTHEST correction rather than the smallest, so a repair cannot re-introduce a flick. */
+    static double[][] smoothMetric(int n) {
+        double eps = Double.parseDouble(System.getProperty("pkc.sr.weps", "5e-3"));
+        if (METRIC_N == n && METRIC_CACHE != null) return METRIC_CACHE;
+        double[][] a = new double[n][n];
+        double[] cf = {1.0, -2.0, 1.0};
+        for (int t = 1; t < n - 1; t++) {
+            int[] idx = {t - 1, t, t + 1};
+            for (int i = 0; i < 3; i++) {
+                for (int k = 0; k < 3; k++) a[idx[i]][idx[k]] += cf[i] * cf[k];
+            }
+        }
+        for (int i = 0; i < n; i++) a[i][i] += eps;
+        METRIC_CACHE = invert(a);
+        METRIC_N = n;
+        return METRIC_CACHE;
+    }
+
+    static double[][] invert(double[][] a) {
+        int n = a.length;
+        double[][] w = new double[n][2 * n];
+        for (int i = 0; i < n; i++) {
+            System.arraycopy(a[i], 0, w[i], 0, n);
+            w[i][n + i] = 1.0;
+        }
+        for (int c = 0; c < n; c++) {
+            int piv = c;
+            for (int r = c + 1; r < n; r++) if (Math.abs(w[r][c]) > Math.abs(w[piv][c])) piv = r;
+            double[] tmp = w[c];
+            w[c] = w[piv];
+            w[piv] = tmp;
+            double d = w[c][c];
+            if (Math.abs(d) < 1.0e-16) d = d >= 0 ? 1.0e-16 : -1.0e-16;
+            for (int k = 0; k < 2 * n; k++) w[c][k] /= d;
+            for (int r = 0; r < n; r++) {
+                if (r == c) continue;
+                double f = w[r][c];
+                if (f == 0.0) continue;
+                for (int k = 0; k < 2 * n; k++) w[r][k] -= f * w[c][k];
+            }
+        }
+        double[][] out = new double[n][n];
+        for (int i = 0; i < n; i++) System.arraycopy(w[i], n, out[i], 0, n);
+        return out;
+    }
+
+    static List<int[]> runSpans(double anchor, double[] y) {
+        List<int[]> out = new ArrayList<int[]>();
+        double[] d = deltas(anchor, y);
+        int last = 0;
+        int start = 0;
+        for (int t = 0; t < d.length; t++) {
+            if (Math.abs(d[t]) <= FLOOR) continue;
+            int sg = d[t] > 0 ? 1 : -1;
+            if (last == 0) {
+                last = sg;
+                start = t;
+                continue;
+            }
+            if (sg != last) {
+                out.add(new int[] {start, t - 1});
+                last = sg;
+                start = t;
+            }
+        }
+        if (last != 0) out.add(new int[] {start, d.length - 1});
+        return out;
+    }
+
+    /** Replace ticks [lo..hi] with a constant turn rate between their neighbours. */
+    static double[] flattenYaw(double anchor, double[] y, int lo, int hi) {
+        int n = y.length;
+        double left = lo == 0 ? anchor : y[lo - 1];
+        double right = hi + 1 < n ? y[hi + 1] : y[hi];
+        int steps = hi + 1 < n ? hi - lo + 2 : hi - lo + 1;
+        double span = Angles.wrapDelta(right - left);
+        double[] c = y.clone();
+        for (int k = lo; k <= hi; k++) c[k] = Angles.wrap(left + span * (k - lo + 1.0) / steps);
+        return c;
+    }
+
+    static double turnCost(double anchor, double[] y) {
+        double[] d = deltas(anchor, y);
+        double j2 = 0.0;
+        for (int i = 1; i < d.length; i++) {
+            double v = d[i] - d[i - 1];
+            j2 += v * v;
+        }
+        return 90.0 * reversals(anchor, y) + 0.02 * Math.sqrt(j2);
     }
 
     static double smoothCost(double anchor, double[] y) {
