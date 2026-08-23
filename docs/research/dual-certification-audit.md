@@ -103,54 +103,86 @@ Nothing certifies at any value, and the ranking is not even monotone: `thousand/
 at 1e-22 while `mopus/1-dev` gets worse. The shrinkage is a symptom of sitting at a degenerate point,
 not the cause; removing the smoothing just relocates the degeneracy.
 
-## Why: this is a duality gap, not a bug
+## There is no duality gap. The dual optimum is fully degenerate.
 
-Each tick's decision is an angle, so `u_t` is constrained to a **circle** of radius `m_t`, not a
-disc. That primal is nonconvex. The Lagrangian decouples per tick and its maximiser is
-`u_t = m_t * g_t / |g_t|`, which is exactly the recovery above. For a nonconvex primal the Lagrangian
-maximiser is primal-feasible only when the multipliers happen to make it so; in general the dual
-returns a bound it cannot attain.
+An earlier revision of this document claimed a duality gap. **That was wrong**, and the correction
+matters because it changes what the fix is.
 
-The gap is directly measurable on `mopus/1-dev`: the dual reports `dualValue = 4.285996460` while the
-cap wall `X t=49` has `bPrime = 4.2855385`. Every primal-feasible point satisfies that wall, so the
-primal optimum is at most 4.2855385 and the dual bound sits **4.6e-4 above it**. The bound is not
-attained, so no amount of converging the dual will produce a feasible recovery.
+The relaxation from the circle `|u_t| = m_t` to the disc `|u_t| <= m_t` is **lossless**: both sets
+have the same support function, `max g·u = m|g|`. So the Lagrangian dual here is the dual of the
+convex disc problem, strong duality holds, and the bound is attained.
 
-Active-wall counts line up with this. Cold solve at margin 0, no inertia pattern:
+The measurements confirm it once the dual is allowed to converge. `MAX_ITER = 100` was truncating it
+at 42 iterations short of convergence:
 
-| save | walls | active multipliers | worst actual linear slack |
+| MAX_ITER | iters used | pgres | dualValue |
 | --- | --- | --- | --- |
-| dsfdsffds | 17 | 4 | -2.9e-10 |
-| ben-one-turn | 20 | 8 | -1.59 |
-| thousand/1 | 19 | 10 | -0.82 |
-| ben-test | 16 | 11 | -0.29 |
-| mopus/1-dev | 36 | 13 | -0.13 |
-| jvel | 64 | 39 | -1.65 |
+| 100 | 100 | 6.5875e-02 | 4.285996460 |
+| 1000 | **142** | **3.5151e-07** | **4.285538558** |
+| 10000 | 142 | 3.5151e-07 | 4.285538558 |
+| 100000 | 142 | 3.5151e-07 | 4.285538558 |
 
-With four active walls the maximiser lands feasible to 1e-10. As the active set grows it stops doing
-so. (These single-shot numbers are not the ladder's: `ben-one-turn` certifies through the full ladder,
-which sweeps margins and inertia patterns, despite this cold margin-0 probe being far off.)
+The cap wall `X t=49` has `bPrime = 4.2855385`. The converged dual value matches it to seven digits.
+The bound is tight.
+
+**The real problem is that the primal maximiser is undetermined.** At the converged optimum
+`|g_t| -> 0` for essentially every tick, so `c = A^T lambda` and the Lagrangian value is `lambda·b'`
+*whatever u is*. Every direction maximises it equally. The recovery `u_t = m_t g_t / |g_t|` is then
+dividing noise by noise, which is why it lands half a block infeasible.
+
+The smoothing constant sets the tradeoff, and neither end wins:
+
+| EPS2 | converged | dualValue | ticks with abs(g) < 1e-6 | worst recovery slack |
+| --- | --- | --- | --- | --- |
+| 1e-14 | yes, 142 it | 4.285538558 | 38 of 49 | -5.09e-1 |
+| 1e-20 | yes, 179 it | 4.285538467 | **49 of 49** | -5.09e-1 |
+| 1e-26 | no, pgres 2.1e-2 | 4.290575351 | 1 of 49 | -1.31e-1 |
+| 1e-32 | no, pgres 3.0e-2 | 4.293139044 | 1 of 49 | -1.50e-2 |
+
+Converging the dual makes the bound tight and the directions meaningless; keeping the directions
+meaningful stops the dual converging.
+
+## The optimal face is large, and that is the opportunity
+
+Because `|g_t| -> 0` everywhere, the dual determines **which walls are active** and nothing else. Any
+`u` on the circles that holds the active walls tight attains the optimum. With around 13 active walls
+against 49 tick angles, that is a large set of *equally optimal* solutions.
+
+That is exactly where turn-direction smoothness should be chosen. Recovering an arbitrary member and
+repairing it downstream is what shatters the shape (gh-414). Choosing the smoothest member of the
+optimal face would certify and be smooth in a single step, which removes the need for the downstream
+repair rather than patching it.
+
+Concretely, the recovery becomes: given the active set from the dual, find per-tick angles satisfying
+the active walls, minimising sign changes in the yaw deltas. Underdetermined and nonconvex in the
+angles, but 49 unknowns against ~13 equations is a lot of freedom to spend on shape.
 
 ## What to do next
 
-Making the dual itself return a linear-feasible point on these windows is **not reachable by tuning**.
-Margins, the iteration cap, the inertia pattern and the norm smoothing were each measured and each
-failed, and the duality gap above explains why: the bound is not attained, so a converged dual still
-recovers an infeasible point.
+The lever is the **primal recovery**, and it is a real opportunity rather than a dead end.
 
-That leaves two honest directions, both larger than a patch:
+The dual gives a tight bound and a correct active set. It does not give directions, and no amount of
+tuning will make it: at the optimum every direction maximises the Lagrangian equally. So build the
+recovery as its own step:
 
-- **Convexify the per-tick set.** Relax `u_t` from the circle to the disc `|u_t| <= m_t`, which makes
-  the primal convex and closes the gap, then handle the radial slack (the relaxed answer will want to
-  move less than full speed on some ticks). This changes what the closed form means, so it needs a
-  ruling before anyone builds it.
-- **Accept the gap and repair downstream.** This is what happens today: `RelaxationRecovery` (gh-204)
-  and `SlpSolve` pick up infeasible recoveries. The cost is that `SlpSolve` phase 1 returns a simplex
-  vertex and shatters the turn structure (gh-414). A repair that preserves turn direction would be
-  worth more here than a better dual.
+1. Take the active set from the converged dual.
+2. Solve for per-tick angles that hold the active walls tight.
+3. Among the solutions, pick the one minimising sign changes in the per-tick yaw deltas (gh-416).
 
-Do not re-attempt: margin ladder extension, `MAX_ITER` increases, `EPS2` changes, inertia pattern
-enumeration. All four are measured dead above.
+That certifies and is smooth in one step, which is strictly better than today's arrangement where an
+arbitrary member of the optimal face is recovered and then repaired by `SlpSolve` phase 1, whose
+simplex vertex shatters the turn structure (gh-414).
+
+Two notes for whoever builds it:
+
+- **`MAX_ITER = 100` truncates convergence** on this window; it needs 142. gh-384 measured *cuts* to
+  this cap and found them load-bearing on the corpus, so raising it needs its own corpus run rather
+  than a blind change.
+- **`EPS2` cannot be tuned to fix the recovery.** Converging the dual and keeping the directions
+  meaningful are opposed; see the table above.
+
+Do not re-attempt: margin ladder extension, inertia pattern enumeration, or `EPS2` changes as a route
+to certification. All measured dead above.
 
 A cheap detector still falls out of this audit: after the dual, evaluate its answer against the
 linear walls. If the linear model itself reports a violation, the margin ladder and the inertia
