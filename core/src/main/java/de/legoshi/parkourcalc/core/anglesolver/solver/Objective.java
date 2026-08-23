@@ -27,7 +27,7 @@ public final class Objective {
 
     public double smoothPenalty(double anchorYaw, double[] yawsAbs) {
         if (smoothLambda <= 0.0 || yawsAbs == null || yawsAbs.length < 2) return 0.0;
-        return smoothLambda * Angles.wiggleDeg(anchorYaw, yawsAbs);
+        return smoothLambda * Angles.turnCost(anchorYaw, yawsAbs);
     }
 
     public double scored(double raw, double anchorYaw, double[] yawsAbs) {
