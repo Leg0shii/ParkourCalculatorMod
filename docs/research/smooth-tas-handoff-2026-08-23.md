@@ -195,7 +195,104 @@ is the right home and the probe is not.
 Run them via direct `java -cp $(printTestCp)`; the init-script recipe is in the post-CMA cleanup
 notes. `-Dpkc.cf.repair=0` is a dev kill switch and should not ship as is.
 
-## 8. Open
+## 8. Target architecture: the direction to build next
+
+**User ruling, 2026-08-23.** The solver should be **as simple as possible: the dual, branching on
+inertia, and nothing else.** If a solve exists it must be **exact**, meaning violation at or below
+about 1e-5, so the recovery is genuinely minimal. Everything in sections 5 and 6 is a bandaid stacked
+on a bandaid, and the belief driving this is that the true optimum and the smoothest yaw sequence live
+at the dual's own answer, not at some point a repair dragged it to.
+
+That reading is right, and the code supports it. What follows is design grounded in the source, **not
+yet measured**. The experiment was cut short deliberately; run it first.
+
+### What is actually a bandaid today
+
+| thing | where | size |
+| --- | --- | --- |
+| ascending margin ladder | `ClosedFormSolve.Config.margins` | 8 rungs, `0` to `1e-2` |
+| robust margin ladder | `Config.marginsRobust` | 7 rungs, `5e-2` down to `0` |
+| inertia passes | `Config.maxInertiaPasses` | 4 |
+| rung stall bail | `Config.rungStallLimit` | 2 |
+| post-loop repair | `repairRecovery` (scratch `a93af643`) | 4 more margins |
+| shape cleanup | `DeWiggle` (PR #415) | a whole pass |
+
+The margins are the load-bearing bandaid, and everything downstream exists because they cost objective
+and shape. The ladder's own comment sizes them for "the ~1e-4 sine-table perturbation", yet the rungs
+run to 1e-2, a hundred times that. That gap is the tell: the margins are absorbing **linear-model
+error**, not quantization.
+
+### The replacement: defect correction
+
+`JumpLinearModel` already carries an **analytic Jacobian** of every X/Z wall with respect to the
+per-tick facings, and it needs no forward simulation. From the `baseArg` doc comment
+(`JumpLinearModel.java:163-169`): an input at absolute yaw `y` is `mMag * e^(i*(baseArg + y))`, so
+`d(addX)/dy = -addZ` and `d(addZ)/dy = addX`. Chained through `coefAxis(axis, s, k)`, that gives
+`d(pos_k)/d(yaw_t)` in closed form.
+
+So the residual and the Jacobian can come from **different models**:
+
+- **residual** from the byte-exact `ExactJumpModel.forward`, via `JumpConstraintCompiler.evaluate`
+- **Jacobian** from `JumpLinearModel`
+
+That is textbook defect correction. The linear model is wrong in *value* by about 1e-4 but its
+*derivative* is accurate, which is exactly the regime where defect correction converges fast: error
+should fall roughly 1e-4 per step, so 1e-4 to 1e-8 to 1e-12 in about three iterations. The whole
+margin ladder collapses into **one dual solve at margin 0 plus a Newton polish**, and the polish lands
+about 1e-5 inside the wall instead of the ladder's 1e-4 to 1e-2 or the repair's 1e-3 to 6e-2. Landing
+a hundred to a thousand times closer to the wall is what preserves both objective and shape, and it
+is why the repair and `DeWiggle` should both become unnecessary rather than being tuned.
+
+### The one hard caveat, and why 1e-5 is the right target
+
+**The exact model is a staircase in yaw, not a smooth function.** `ExactJumpModel` reads MC's
+65536-bucket sine table, so yaw enters through buckets about 0.0055 degrees wide. Inside a bucket the
+realized position does not move at all. A single-tick, single-bucket step moves the final position by
+roughly `m_t * coef * bucket_in_radians`, on the order of **3e-5 blocks**.
+
+Consequences to design around:
+
+- A plain Newton iteration will stall once its step is under a bucket. The polish must detect that and
+  stop, not thrash.
+- Driving the violation to exactly 0 is a **lattice** problem, not a continuous one. Combining ticks
+  reaches far finer than 3e-5, but the single-tick granularity is 3e-5.
+- **So "exact or maybe 1e-5" is not a compromise, it is the physical floor of the model.** The ask and
+  the mathematics agree. Do not chase 1e-9.
+- `LatticeRepair` and `FacingLattice` already exist in the solver package and are the natural home for
+  the final sub-bucket step if one is ever needed.
+
+### Facing constraints: fold them into the polish, not around it
+
+Today F-mode walls are handled by `FacingPrefold` pinning ticks before the dual runs, and anything it
+cannot take bails to `scannable` plus a 240-candidate anchor scan (`candidateThetas`). The polish can
+carry F walls directly instead: `evaluate` gives the F residual as `wrap(F[t1] +/- F[t2] - rhs)`, and
+`d(F[t])/d(yaw[t])` is 1 through `toGameFacings` for any unlocked tick. Rows with gradient `+/-1` are
+trivial to add, strictly more general than pinning, and would let the polish keep facing walls
+satisfied while it moves position walls. Check the locked-tick branch in
+`JumpPhysicsInputs.toGameFacings:196-199` before assuming the gradient is 1 everywhere.
+
+### Order to build it
+
+1. Write the polish standalone and measure it **as an add-on** to the existing margin-0 rung only.
+   Certified count over the 58 hpk captures is the number that decides everything.
+2. Only if it holds: cut `margins` to `{0.0}`, then delete `marginsRobust`, `rungStallLimit`,
+   `repairRecovery`, and re-measure at each step.
+3. Keep `maxInertiaPasses`. Inertia branching is not a bandaid, it is the piecewise structure of the
+   real problem, and the user's target keeps it.
+4. Re-measure reversals on the six saves in section 3 before touching `DeWiggle`. If the polish lands
+   at the dual's answer, `DeWiggle` should have nothing left to do, and that is the test of whether
+   this direction actually delivered.
+
+### Why this is expected to be smoother, not just simpler
+
+Section 4 established the dual's answer is the true optimum of the convex relaxation, with a tight
+bound and exact complementary slackness. Every margin rung deliberately walks **off** that answer. If
+the polish only has to move about 1e-5 rather than 5e-3, the recovered yaws stay essentially at the
+optimum, which is precisely where the user expects the smoothest yaw sequence to be. That expectation
+is consistent with everything measured in sections 4 and 6, but it is a **prediction, not a result**,
+until the hpk run in step 1 exists.
+
+## 9. Open
 
 - `ben-test` and `thousand/1` still do not certify through the production path.
 - The variant that gains hpk 40/38 is available if the three `loopmm` captures can be re-pinned.
@@ -204,4 +301,6 @@ notes. `-Dpkc.cf.repair=0` is a dev kill switch and should not ship as is.
   start are already modelled, is the piece that would let the downstream repair, and with it the need
   for `DeWiggle`, be dropped entirely.
 - `MAX_ITER = 100` truncates dual convergence at 142 on the reported window. Raising it is untested
-  against the corpus in the direction that matters.
+  against the corpus in the direction that matters. Note the target architecture makes this **more**
+  important, not less: with no margin ladder to paper over a half-converged dual, the dual's own
+  answer has to be right the first time.
