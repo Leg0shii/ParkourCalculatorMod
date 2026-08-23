@@ -20,6 +20,11 @@ anglesolver/
                            velocity against the inertia gate, and every constraint as the linear model
                            and the exact model each see it; skipped unless PKC_SCREENS is set,
                            PKC_DC_FILE names the save. Findings in docs/research/dual-certification-audit.md
+  CostateScreen.java       dev gh-418 diagnostic: runs CostateDualSolver directly on the walls the
+                           closed form builds and prints, per tick, the costate norm against the
+                           magnitude the recovery actually produces, then per wall what the dual
+                           believes against what the recovered yaws give; skipped unless PKC_SCREENS
+                           is set, PKC_CS_FILE names the save
   RelaxDiagScreen.java     dev per-capture recovery diagnostic (stall margins, recorded-path replay);
                            skipped unless PKC_SCREENS is set; report at build/reports/relax-diag.txt
   LoopmmReachScreen.java   dev reach diagnostic on loopmm (pattern-branched B&B loose/tight, engine

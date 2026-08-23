@@ -69,14 +69,89 @@ zeroes `vx` (-0.000919, under the 0.005 legacy per-axis threshold) and the linea
 applying the gate at different points within the tick. Pre-event drift is the sine table; the step is
 the inertia gate.
 
+## Inside the dual: where the infeasibility comes from
+
+Tool: `CostateScreen` (`PKC_SCREENS=1 PKC_CS_FILE=<save.json>`), which runs `CostateDualSolver`
+directly on the same walls `ClosedFormSolve` builds and prints, per tick, the costate norm and the
+magnitude the recovery actually produces, then per wall what the dual believes its value is against
+what the recovered yaws really give.
+
+`grad` recovers each tick as `u_t = m_t * g_t / sqrt(|g_t|^2 + EPS2)` with `EPS2 = 1e-14`. Where
+`|g_t|` approaches `sqrt(EPS2) = 1e-7` the smoothing term stops being negligible and the recovered
+vector falls **inside** the circle of radius `m_t` instead of sitting on it. On `mopus/1-dev`, tick 41
+has `|g| = 1.945e-07`, so the recovery returns magnitude 0.291182 against `m_t = 0.327400`, a ratio
+of **0.889**. Every wall whose coefficients reach past tick 41 is then evaluated against a vector
+11 percent short:
+
+| wall | tick | dual believes | recovered yaws give | slack believed | slack actual |
+| --- | --- | --- | --- | --- | --- |
+| 27 X | 49 | 4.2769175 | 4.4187883 | +8.62e-3 | **-1.33e-1** |
+| 29 Z | 49 | 5.5574759 | 5.5696812 | +4.33e-3 | **-7.87e-3** |
+
+So the dual converges believing wall 27 has slack and it does not.
+
+**Shrinking EPS2 does not fix it.** Sweeping `1e-14 / 1e-18 / 1e-22 / 1e-26 / 1e-30`, dual violation:
+
+| save | 1e-14 | 1e-18 | 1e-22 | 1e-26 | 1e-30 |
+| --- | --- | --- | --- | --- | --- |
+| mopus/1-dev | 3.77e-2 | 1.47e-1 | 5.03e-2 | 5.14e-2 | 6.07e-2 |
+| ben-test | 7.25e-2 | 7.31e-2 | 2.16e-1 | 9.70e-2 | 9.68e-2 |
+| thousand/1 | 1.116 | 6.39e-1 | 1.91e-1 | 2.60e-1 | 3.49e-1 |
+| jvel | 1.840 | 1.363 | 1.312 | 1.799 | 1.799 |
+
+Nothing certifies at any value, and the ranking is not even monotone: `thousand/1` improves sixfold
+at 1e-22 while `mopus/1-dev` gets worse. The shrinkage is a symptom of sitting at a degenerate point,
+not the cause; removing the smoothing just relocates the degeneracy.
+
+## Why: this is a duality gap, not a bug
+
+Each tick's decision is an angle, so `u_t` is constrained to a **circle** of radius `m_t`, not a
+disc. That primal is nonconvex. The Lagrangian decouples per tick and its maximiser is
+`u_t = m_t * g_t / |g_t|`, which is exactly the recovery above. For a nonconvex primal the Lagrangian
+maximiser is primal-feasible only when the multipliers happen to make it so; in general the dual
+returns a bound it cannot attain.
+
+The gap is directly measurable on `mopus/1-dev`: the dual reports `dualValue = 4.285996460` while the
+cap wall `X t=49` has `bPrime = 4.2855385`. Every primal-feasible point satisfies that wall, so the
+primal optimum is at most 4.2855385 and the dual bound sits **4.6e-4 above it**. The bound is not
+attained, so no amount of converging the dual will produce a feasible recovery.
+
+Active-wall counts line up with this. Cold solve at margin 0, no inertia pattern:
+
+| save | walls | active multipliers | worst actual linear slack |
+| --- | --- | --- | --- |
+| dsfdsffds | 17 | 4 | -2.9e-10 |
+| ben-one-turn | 20 | 8 | -1.59 |
+| thousand/1 | 19 | 10 | -0.82 |
+| ben-test | 16 | 11 | -0.29 |
+| mopus/1-dev | 36 | 13 | -0.13 |
+| jvel | 64 | 39 | -1.65 |
+
+With four active walls the maximiser lands feasible to 1e-10. As the active set grows it stops doing
+so. (These single-shot numbers are not the ladder's: `ben-one-turn` certifies through the full ladder,
+which sweeps margins and inertia patterns, despite this cold margin-0 probe being far off.)
+
 ## What to do next
 
-The lever is `CostateDualSolver` primal recovery, not the physics model, not the margins, and not
-the inertia pattern. `RelaxationRecovery` (gh-204) already exists downstream to repair degenerate
-dual recoveries; the open question is whether the dual can be made to return a linear-feasible point
-directly, since a certifying dual returns from `runLadder` immediately and `SlpSolve` never runs,
-which is what preserves the turn structure (gh-414).
+Making the dual itself return a linear-feasible point on these windows is **not reachable by tuning**.
+Margins, the iteration cap, the inertia pattern and the norm smoothing were each measured and each
+failed, and the duality gap above explains why: the bound is not attained, so a converged dual still
+recovers an infeasible point.
 
-A cheap detector already falls out of this audit: after the dual, evaluate its answer against the
-linear walls. If the linear model itself reports a violation, the margin ladder is pointless and the
-inertia passes are pointless, and the run should go straight to recovery.
+That leaves two honest directions, both larger than a patch:
+
+- **Convexify the per-tick set.** Relax `u_t` from the circle to the disc `|u_t| <= m_t`, which makes
+  the primal convex and closes the gap, then handle the radial slack (the relaxed answer will want to
+  move less than full speed on some ticks). This changes what the closed form means, so it needs a
+  ruling before anyone builds it.
+- **Accept the gap and repair downstream.** This is what happens today: `RelaxationRecovery` (gh-204)
+  and `SlpSolve` pick up infeasible recoveries. The cost is that `SlpSolve` phase 1 returns a simplex
+  vertex and shatters the turn structure (gh-414). A repair that preserves turn direction would be
+  worth more here than a better dual.
+
+Do not re-attempt: margin ladder extension, `MAX_ITER` increases, `EPS2` changes, inertia pattern
+enumeration. All four are measured dead above.
+
+A cheap detector still falls out of this audit: after the dual, evaluate its answer against the
+linear walls. If the linear model itself reports a violation, the margin ladder and the inertia
+passes are both provably pointless for that solve, and the run should go straight to recovery.
