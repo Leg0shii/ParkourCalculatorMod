@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.core.anglesolver;
 
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
+import de.legoshi.parkourcalc.core.anglesolver.runticks.RunTicksSettings;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -127,6 +128,7 @@ public final class AngleSolverState {
 
     private double smoothLambda;
     private final SolveBudget solveBudget = new SolveBudget();
+    private final RunTicksSettings runTicks = new RunTicksSettings();
     private String graphPresetName;
     private SolverGraph customGraph;
 
@@ -223,6 +225,10 @@ public final class AngleSolverState {
 
     public SolveBudget getSolveBudget() {
         return solveBudget;
+    }
+
+    public RunTicksSettings getRunTicks() {
+        return runTicks;
     }
 
     public String getGraphPresetName() {
@@ -697,6 +703,7 @@ public final class AngleSolverState {
         applyDeviation = null;
         applyDeviationKind = null;
         applyDeviationTick = -1;
+        runTicks.resetToDefaults();
     }
 
 }

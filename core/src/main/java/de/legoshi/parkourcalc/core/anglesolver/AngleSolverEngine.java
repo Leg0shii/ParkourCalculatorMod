@@ -65,7 +65,11 @@ public final class AngleSolverEngine {
     private static final long RELAX_MIN_REMAINING_NANOS = 3_000_000_000L;
 
     static long deadlineNanosFor(AngleSolverState state) {
-        switch (state.getEffort()) {
+        return deadlineNanosFor(state, state.getEffort());
+    }
+
+    static long deadlineNanosFor(AngleSolverState state, AngleSolverState.Effort effort) {
+        switch (effort) {
             case THOROUGH: return state.getOptimizeSeconds() * 1_000_000_000L;
             case CUSTOM: {
                 int secs = state.getSolveBudget().getTimeBudgetSeconds();
@@ -76,18 +80,30 @@ public final class AngleSolverEngine {
     }
 
     static LongRunSolver.LongRunConfig longRunConfigFor(AngleSolverState state) {
-        if (state.getEffort() != AngleSolverState.Effort.CUSTOM) return LongRunSolver.LongRunConfig.defaults();
+        return longRunConfigFor(state, state.getEffort());
+    }
+
+    static LongRunSolver.LongRunConfig longRunConfigFor(AngleSolverState state, AngleSolverState.Effort effort) {
+        if (effort != AngleSolverState.Effort.CUSTOM) return LongRunSolver.LongRunConfig.defaults();
         AngleSolverState.SolveBudget b = state.getSolveBudget();
         return LongRunSolver.LongRunConfig.of(b.getWindow(), b.getCommit());
     }
 
     static boolean useWindowSolverFor(AngleSolverState state) {
-        if (state.getEffort() != AngleSolverState.Effort.CUSTOM) return true;
+        return useWindowSolverFor(state, state.getEffort());
+    }
+
+    static boolean useWindowSolverFor(AngleSolverState state, AngleSolverState.Effort effort) {
+        if (effort != AngleSolverState.Effort.CUSTOM) return true;
         return state.getSolveBudget().getUseWindowSolver();
     }
 
     static boolean ilsExhaustiveFor(AngleSolverState state) {
-        switch (state.getEffort()) {
+        return ilsExhaustiveFor(state, state.getEffort());
+    }
+
+    static boolean ilsExhaustiveFor(AngleSolverState state, AngleSolverState.Effort effort) {
+        switch (effort) {
             case THOROUGH: return true;
             case CUSTOM: return state.getSolveBudget().isIlsExhaustive();
             default: return false;
@@ -95,7 +111,11 @@ public final class AngleSolverEngine {
     }
 
     static boolean stopOnFeasibleFor(AngleSolverState state) {
-        switch (state.getEffort()) {
+        return stopOnFeasibleFor(state, state.getEffort());
+    }
+
+    static boolean stopOnFeasibleFor(AngleSolverState state, AngleSolverState.Effort effort) {
+        switch (effort) {
             case FAST: return true;
             case THOROUGH: return false;
             default: return state.isStopOnFeasible();
@@ -331,7 +351,7 @@ public final class AngleSolverEngine {
      *  Returns null and publishes a no-solution result when the tick range is invalid. Shared by
      *  {@link #solve()} and exposed (via {@link #debugBuildSpec()}) so tests can obtain the exact compiled
      *  spec without spawning the worker / triggering the slow fallback. */
-    private Job buildJob() {
+    private Job buildJob(AngleSolverState.Effort effort) {
         int startTick = state.getStartTick();
         int landingTick = state.getLandingTick();
         int total = segmentConstraintCount(startTick, landingTick);
@@ -384,9 +404,10 @@ public final class AngleSolverEngine {
         JumpSpec spec = new JumpSpec(ph.inputs, constraints, objective);
         return new Job(spec, objective.sense, startTick, landingTick, numTicks, ph.strafeMask,
                 ph.force45Mask, uiCons,
-                deadlineNanosFor(state), longRunConfigFor(state), useWindowSolverFor(state),
-                stopOnFeasibleFor(state), ilsExhaustiveFor(state), legalGoal, GraphFactory.forState(state),
-                state.getEffort() == AngleSolverState.Effort.FAST);
+                deadlineNanosFor(state, effort), longRunConfigFor(state, effort), useWindowSolverFor(state, effort),
+                stopOnFeasibleFor(state, effort), ilsExhaustiveFor(state, effort), legalGoal,
+                GraphFactory.forState(state, effort),
+                effort == AngleSolverState.Effort.FAST);
     }
 
     public String legalGoalWallLabel() {
@@ -442,13 +463,17 @@ public final class AngleSolverEngine {
 
     /** Test-only: the compiled spec for the current UI state, built synchronously (no worker thread). */
     public JumpSpec debugBuildSpec() {
-        Job job = buildJob();
+        Job job = buildJob(state.getEffort());
         return job == null ? null : job.spec;
     }
 
     public void solve() {
+        solve(state.getEffort());
+    }
+
+    public void solve(AngleSolverState.Effort effort) {
         if (solving) return;
-        Job job = buildJob();
+        Job job = buildJob(effort);
         if (job == null) return; // invalid range: buildJob already published the failure result
 
         long t0 = System.nanoTime();
@@ -465,9 +490,9 @@ public final class AngleSolverEngine {
         currentJob = job;
         liveResult = null;
         liveVersion = -1;
-        String presetName = state.getEffort() == AngleSolverState.Effort.CUSTOM ? state.getGraphPresetName() : null;
+        String presetName = effort == AngleSolverState.Effort.CUSTOM ? state.getGraphPresetName() : null;
         RunRecording rec = new RunRecording(
-                SolveRunRecord.configOf(job.graph, presetName, state.getEffort().name(), FEAS_TOL, job.spec.objective),
+                SolveRunRecord.configOf(job.graph, presetName, effort.name(), FEAS_TOL, job.spec.objective),
                 SolveRunRecord.problemOf(job.spec, countJumps(job.spec.asScenario())),
                 progress, t0);
         recording = rec;
@@ -623,7 +648,7 @@ public final class AngleSolverEngine {
             TickConstraints tc = state.tickConstraintsOrNull(absTick);
             if (tc == null) continue;
             for (Constraint c : tc.getConstraints()) {
-                if (!c.isEnabled()) continue;
+                if (!c.isEnabled() || c.getField() == Constraint.Field.RT) continue;
                 uiCons.add(new ConstraintAt(absTick, segTick, c.copy()));
             }
         }
@@ -1312,6 +1337,8 @@ public final class AngleSolverEngine {
                 }
                 addRelative(out, JumpConstraint.Mode.F, segTick, segTick - 1, c, tag);
                 break;
+            default:
+                break;
         }
     }
 
@@ -1495,7 +1522,9 @@ public final class AngleSolverEngine {
             if (seg < 0 || seg > landingTick - startTick) continue;
             TickConstraints tc = state.tickConstraintsOrNull(tickKey);
             if (tc == null) continue;
-            for (Constraint c : tc.getConstraints()) if (c.isEnabled()) n++;
+            for (Constraint c : tc.getConstraints()) {
+                if (c.isEnabled() && c.getField() != Constraint.Field.RT) n++;
+            }
         }
         return n;
     }

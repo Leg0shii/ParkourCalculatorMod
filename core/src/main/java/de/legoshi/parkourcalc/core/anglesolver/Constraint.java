@@ -4,6 +4,9 @@ package de.legoshi.parkourcalc.core.anglesolver;
  * One per-tick constraint. Every field (X/Z/F/dX/dZ/dF) accepts either a scalar comparison or a
  * range; the op carries the form (IN = range). Changing the op across that boundary converts
  * the values: entering a range seeds [value, value], leaving one keeps the lower bound.
+ *
+ * <p>RT is the exception: it constrains how many run ticks the run-ticks search may insert before the
+ * jump on this tick, so the angle solver ignores it entirely (see RunTicksFilter).
  */
 public final class Constraint {
 
@@ -13,7 +16,8 @@ public final class Constraint {
         F("F"),
         DX("dX"),
         DZ("dZ"),
-        DF("dF");
+        DF("dF"),
+        RT("RT");
 
         public final String label;
 

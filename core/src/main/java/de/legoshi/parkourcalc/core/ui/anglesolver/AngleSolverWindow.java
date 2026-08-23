@@ -11,6 +11,8 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.GraphFactory;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphPresetFile;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphPresetIO;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
+import de.legoshi.parkourcalc.core.anglesolver.runticks.RunTicksControls;
+import de.legoshi.parkourcalc.core.anglesolver.runticks.RunTicksSettings;
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.core.save.Result;
@@ -63,7 +65,8 @@ public final class AngleSolverWindow implements RenderInterface {
     private static final String LEGACY_PRESET_ITEM = "Legacy budget";
 
     private static final String[] FORM_LABELS =
-            {"Start tick", "Goal tick", "Axis", "Goal", "Inputs", "Sprint", "Slipperiness", "Potion"};
+            {"Start tick", "Goal tick", "Axis", "Goal", "Inputs", "Sprint", "Slipperiness", "Potion",
+             "Enabled", "Max ticks", "Step timeout", "Step growth", "Safety factor", "Safety margin"};
 
     /** Unscaled; lines the details table up under the toggle title and sets it off from the solved values. */
     private static final float DETAIL_INDENT = 13f;
@@ -92,6 +95,11 @@ public final class AngleSolverWindow implements RenderInterface {
     private final ImInt slipBuf = new ImInt();
     private final ImInt doseCombo = new ImInt();
     private final ImInt levelBuf = new ImInt();
+    private final ImInt runTicksMaxBuf = new ImInt();
+    private final ImInt runTicksTimeoutBuf = new ImInt();
+    private final int[] runTicksGrowthBuf = new int[1];
+    private final float[] runTicksSafetyMultBuf = new float[1];
+    private final int[] runTicksSafetyMarginBuf = new int[1];
     private final int[] optimizeSecondsBuf = new int[1];
     private final ImInt presetBuf = new ImInt();
     private final ImString presetNameInput = new ImString(64);
@@ -108,7 +116,13 @@ public final class AngleSolverWindow implements RenderInterface {
     private boolean solveForExpanded = true;
     private boolean defaultStateExpanded = true;
     private boolean advancedExpanded;
+    private boolean runTicksExpanded;
     private int doseToRemove;
+    private RunTicksControls runTicks = RunTicksControls.NONE;
+
+    public void setRunTicksControls(RunTicksControls controls) {
+        this.runTicks = controls != null ? controls : RunTicksControls.NONE;
+    }
 
     private static final float IMPROVE_FADE_SECS = 1.6f;
     private double improveTrackValue = Double.NaN;
@@ -231,6 +245,9 @@ public final class AngleSolverWindow implements RenderInterface {
             potionRow(labelW);
         }
         state.pruneRedundantOverrides();
+
+        ThemeManager.sectionSpacing();
+        renderRunTicksSection(labelW, scale);
 
         ThemeManager.sectionSpacing();
         renderAdvanced(labelW, scale);
@@ -490,6 +507,97 @@ public final class AngleSolverWindow implements RenderInterface {
         if (state.getEffort() == AngleSolverState.Effort.CUSTOM) renderPresetSection(labelW);
     }
 
+    private static final String RUN_TICKS_TIP =
+            "Before solving, try adding up to N extra running ticks in front of each jump and keep the"
+            + " combination with the best objective. Every combination is solved at Fast effort. The search"
+            + " owns the grounded ticks in the range: it drops them first, so counts never stack and Max"
+            + " ticks 0 strips the run ticks the range already has. If no combination lands the whole"
+            + " range, the path you started from is put back unchanged. Put an RT constraint on a jump tick"
+            + " to restrict how many ticks that jump may get.";
+
+    private static final String RUN_TICKS_MAX_TIP =
+            "Largest number of extra running ticks the search may hand out across all jumps together.";
+
+    private static final String RUN_TICKS_MIN_TIP =
+            "Search 0, 1, 2 ... extra ticks in turn and stop at the first count that solves, so the result"
+            + " uses the fewest run ticks instead of the best objective.";
+
+    private static final String RUN_TICKS_TIMEOUT_TIP =
+            "How long one combination may be solved before it is written off as infeasible.";
+
+    private static final String RUN_TICKS_AUTO_TIP =
+            "Derive the step timeout from measured solve times instead of the fixed value. Intended for"
+            + " quick passes: a tight timeout writes off combinations that would have solved given longer,"
+            + " so for a thorough search turn Auto off and set a generous fixed timeout.";
+
+    private void renderRunTicksSection(float labelW, float scale) {
+        runTicksExpanded = sectionToggle("Run ticks", "runticks", runTicksExpanded, scale);
+        if (!runTicksExpanded) return;
+
+        RunTicksSettings cfg = state.getRunTicks();
+
+        Controls.pushInputFrameHeight();
+        SolverWidgets.rowLabel("Enabled", labelW);
+        if (Controls.checkbox("##runTicksEnabled", cfg.isEnabled())) cfg.setEnabled(!cfg.isEnabled());
+        Controls.popInputFrameHeight();
+        TooltipUtil.onHover(RUN_TICKS_TIP);
+        if (!cfg.isEnabled()) return;
+
+        float spacing = ImGui.getStyle().getItemInnerSpacing().x;
+        float boxW = ImGui.getFrameHeight() + spacing;
+
+        Controls.pushInputFrameHeight();
+        SolverWidgets.rowLabel("Max ticks", labelW);
+        runTicksMaxBuf.set(cfg.getMaxTicks());
+        float minW = boxW + ImGui.calcTextSize("Min").x;
+        if (Controls.inputInt("##runTicksMax", runTicksMaxBuf,
+                Math.max(60f, ImGui.getContentRegionAvail().x - minW - spacing))) {
+            cfg.setMaxTicks(runTicksMaxBuf.get());
+        }
+        TooltipUtil.onHover(RUN_TICKS_MAX_TIP);
+        ImGui.sameLine(0, spacing);
+        if (Controls.checkbox("Min##runTicksMinimize", cfg.isMinimize())) cfg.setMinimize(!cfg.isMinimize());
+        Controls.popInputFrameHeight();
+        TooltipUtil.onHover(RUN_TICKS_MIN_TIP);
+
+        Controls.pushInputFrameHeight();
+        SolverWidgets.rowLabel("Step timeout", labelW);
+        boolean auto = cfg.isAdaptiveTimeout();
+        runTicksTimeoutBuf.set(auto ? runTicks.liveTimeoutMs() : cfg.getTimeoutMs());
+        float autoW = boxW + ImGui.calcTextSize("Auto").x;
+        if (auto) ImGui.beginDisabled(true);
+        if (Controls.inputInt("##runTicksTimeout", runTicksTimeoutBuf,
+                Math.max(60f, ImGui.getContentRegionAvail().x - autoW - spacing))) {
+            cfg.setTimeoutMs(runTicksTimeoutBuf.get());
+        }
+        if (auto) ImGui.endDisabled();
+        TooltipUtil.onHover(RUN_TICKS_TIMEOUT_TIP);
+        ImGui.sameLine(0, spacing);
+        if (Controls.checkbox("Auto##runTicksAuto", auto)) cfg.setAdaptiveTimeout(!auto);
+        Controls.popInputFrameHeight();
+        TooltipUtil.onHover(RUN_TICKS_AUTO_TIP);
+
+        if (!auto) return;
+
+        runTicksGrowthBuf[0] = cfg.getAddPerJumpMs();
+        if (sliderIntRow("Step growth", "##runTicksGrowth", runTicksGrowthBuf, 0, 500, "+%d ms", labelW,
+                "Added to the timeout for each jump deeper the search goes.")) {
+            cfg.setAddPerJumpMs(runTicksGrowthBuf[0]);
+        }
+
+        runTicksSafetyMultBuf[0] = (float) cfg.getSafetyMult();
+        if (sliderFloatRow("Safety factor", "##runTicksSafetyMult", runTicksSafetyMultBuf, 1.0f, 3.0f, "x%.2f", labelW,
+                "Multiplier applied to the measured solve time before it becomes the next timeout.")) {
+            cfg.setSafetyMult(runTicksSafetyMultBuf[0]);
+        }
+
+        runTicksSafetyMarginBuf[0] = cfg.getSafetyMarginMs();
+        if (sliderIntRow("Safety margin", "##runTicksSafetyMargin", runTicksSafetyMarginBuf, 0, 500, "%d ms", labelW,
+                "Flat buffer added on top of the derived timeout.")) {
+            cfg.setSafetyMarginMs(runTicksSafetyMarginBuf[0]);
+        }
+    }
+
     private static final String OPTIMIZE_TIME_TIP =
             "How long Optimize keeps improving the result. It launches fresh search batches, and on"
             + " multi-jump spans the exhaustive reach stages (seam sweep, pattern branch and bound, ILS),"
@@ -664,6 +772,18 @@ public final class AngleSolverWindow implements RenderInterface {
     }
 
 
+    private boolean sliderFloatRow(String label, String id, float[] buf, float lo, float hi, String fmt, float labelW, String tip) {
+        Controls.pushInputFrameHeight();
+        ImGui.beginGroup();
+        SolverWidgets.rowLabel(label, labelW);
+        ImGui.setNextItemWidth(ImGui.getContentRegionAvail().x);
+        boolean changed = Controls.sliderFloat(id, buf, lo, hi, fmt);
+        ImGui.endGroup();
+        Controls.popInputFrameHeight();
+        if (tip != null) TooltipUtil.onHover(tip);
+        return changed;
+    }
+
     private boolean sliderIntRow(String label, String id, int[] buf, int lo, int hi, String fmt, float labelW, String tip) {
         Controls.pushInputFrameHeight();
         ImGui.beginGroup();
@@ -681,7 +801,7 @@ public final class AngleSolverWindow implements RenderInterface {
     }
 
     private void renderActions() {
-        if (engine.isSolving()) {
+        if (engine.isSolving() || runTicks.isRunning()) {
             renderSolvingIndicator();
             return;
         }
@@ -692,9 +812,7 @@ public final class AngleSolverWindow implements RenderInterface {
             ImGui.setTooltip("Capture each tick's surface state (ground + medium) from the simulation into the overrides, for the solve range (H).");
         }
         ImGui.sameLine();
-        if (Controls.secondaryButton("Solve")) {
-            engine.solve();
-        }
+        if (Controls.secondaryButton("Solve")) runTicks.start();
     }
 
     private void renderSolvingIndicator() {
@@ -712,7 +830,10 @@ public final class AngleSolverWindow implements RenderInterface {
 
         ImGui.sameLine();
         Controls.cursorToRightAlignedButton("Cancel");
-        if (Controls.secondaryButton("Cancel")) engine.stopAndUseBest();
+        if (Controls.secondaryButton("Cancel")) {
+            if (runTicks.isRunning()) runTicks.cancel();
+            else engine.stopAndUseBest();
+        }
         if (ImGui.isItemHovered()) ImGui.setTooltip("Stop the search and keep the best solution found so far.");
     }
 

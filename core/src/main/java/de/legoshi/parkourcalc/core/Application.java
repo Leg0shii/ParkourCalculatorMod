@@ -94,6 +94,7 @@ public final class Application {
     private AngleSolverEngine solverEngine;
     private ConstraintKeyController constraintKeyController;
     private UndoController<de.legoshi.parkourcalc.core.save.SaveFile> undoController;
+    private RunTicksController runTicks;
     private final HudMessages hudMessages = new HudMessages();
     private final OsSystemBridge systemBridge = new OsSystemBridge();
 
@@ -217,6 +218,9 @@ public final class Application {
         GraphEditorWindow graphEditorWindow = new GraphEditorWindow(angleSolverEngine);
         AngleSolverWindow angleSolverWindow = new AngleSolverWindow(angleSolverState, settings, inputData::size, angleSolverEngine, velocityMapController.widget(), graphStore, graphEditorWindow);
         angleSolverWindow.setApplySurfaceState(this::applyPathSurfaceState);
+        runTicks = new RunTicksController(angleSolverState, angleSolverEngine, inputData, constraintSelection,
+                hudMessages, this::runSimulation, saveController::markDirty, this::pushHudMessage);
+        angleSolverWindow.setRunTicksControls(runTicks);
 
         // In-world constraint visualization (gh-145): plates appear while the solver view is open.
         constraintSource = new de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverConstraintSource(
@@ -377,6 +381,9 @@ public final class Application {
         inputData.clear();
         saveController.endSession();
         if (undoController != null) undoController.onDocumentReplaced(null);
+        if (runTicks != null) runTicks.reset();
+        if (angleSolverState != null) angleSolverState.clearResult();
+        hudMessages.clearStatus();
         startInitialized = false;
     }
 
@@ -486,7 +493,9 @@ public final class Application {
             startInitialized = true;
             saveController.tryReopenLastSave();
         }
-        if (undoController != null) undoController.tick(System.nanoTime());
+        if (undoController != null && (runTicks == null || !runTicks.isRunning())) {
+            undoController.tick(System.nanoTime());
+        }
         pollSolver();
         dragController.tick(
                 mc.getEyePosition(),
@@ -537,6 +546,10 @@ public final class Application {
 
     private void pollSolver() {
         if (solverEngine == null) return;
+        if (runTicks != null) {
+            runTicks.poll();
+            if (runTicks.isRunning()) return;
+        }
         boolean wasSolving = solverEngine.isSolving();
         solverEngine.poll();
         if (solverEngine.isSolving()) {
@@ -566,12 +579,18 @@ public final class Application {
 
     public void solveAngleSolver() {
         if (solverEngine == null) return;
+        if (runTicks != null && runTicks.isRunning()) {
+            runTicks.cancel();
+            return;
+        }
         if (solverEngine.isSolving()) {
             solverEngine.cancel();
             pushHudMessage("Solve cancelled", HudMessageStyle.COLOR_WARN);
             return;
         }
-        if (mc.isReady()) solverEngine.solve();
+        if (!mc.isReady()) return;
+        if (runTicks != null) runTicks.start();
+        else solverEngine.solve();
     }
 
     public void setSolverStartTickFromSelection() {
