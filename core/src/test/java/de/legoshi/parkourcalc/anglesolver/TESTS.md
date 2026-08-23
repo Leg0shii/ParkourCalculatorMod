@@ -15,6 +15,11 @@ anglesolver/
                            panel moves and Cancel keeps the best found so far
   HpkDualRecoveryScreen.java  dev miss-screen over captures/hpk/ (dual bound + full chain per capture);
                               skipped unless PKC_SCREENS is set; report at build/reports/hpk-screen.txt
+  DualCertScreen.java      dev gh-418 diagnostic: at the dual's own answer, prints the linear model's
+                           predicted position against the byte-exact forward per tick, the per-tick
+                           velocity against the inertia gate, and every constraint as the linear model
+                           and the exact model each see it; skipped unless PKC_SCREENS is set,
+                           PKC_DC_FILE names the save. Findings in docs/research/dual-certification-audit.md
   RelaxDiagScreen.java     dev per-capture recovery diagnostic (stall margins, recorded-path replay);
                            skipped unless PKC_SCREENS is set; report at build/reports/relax-diag.txt
   LoopmmReachScreen.java   dev reach diagnostic on loopmm (pattern-branched B&B loose/tight, engine
