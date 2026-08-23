@@ -221,6 +221,7 @@ public class SmoothRecoveryProbe {
             for (int a = 0; a < m; a++) scale = Math.max(scale, Math.abs(jjt[a][a]));
             double[] lam = solveSym(jjt, r, scale * 1.0e-10 + 1.0e-20);
             double best = linViol(L, gf);
+            double bestTrue = TRUE_ACCEPT == null ? 0.0 : TRUE_ACCEPT.viol(gf);
             double[] cur = gf.clone();
             boolean moved = false;
             for (double damp = 1.0; damp >= 1.0 / 512.0; damp *= 0.5) {
@@ -230,15 +231,29 @@ public class SmoothRecoveryProbe {
                     for (int t = 0; t < n; t++) c[t] += damp * lam[a] * JW[a][t];
                 }
                 double v = linViol(L, c);
-                if (v < best - 1.0e-15) {
-                    System.arraycopy(c, 0, gf, 0, n);
-                    best = v;
-                    moved = true;
-                    break;
+                if (v >= best - 1.0e-15) continue;
+                if (TRUE_ACCEPT != null) {
+                    double tv = TRUE_ACCEPT.viol(c);
+                    if (tv > bestTrue && tv > 0.0) continue;
+                    bestTrue = tv;
                 }
+                System.arraycopy(c, 0, gf, 0, n);
+                best = v;
+                moved = true;
+                break;
             }
             if (!moved) {
-                if (trace) System.out.printf("SR     restore stalled at linViol=%.4e after %d its%n", best, it);
+                if (trace) {
+                    System.out.printf("SR     restore stalled at linViol=%.4e after %d its, %d walls bad%n",
+                            best, it, bad.size());
+                    for (int i = 0; i < bad.size(); i++) {
+                        int j = bad.get(i);
+                        System.out.printf("SR       blocker wall %d %s t=%d bPrime=%.6f value=%.6f over=%.4e%n",
+                                j, L.walls.get(j).axis == 0 ? "X" : "Z", L.cons.get(j).t1,
+                                L.walls.get(j).bPrime, wallValue(L, j, gf),
+                                wallValue(L, j, gf) - L.walls.get(j).bPrime);
+                    }
+                }
                 return linViol(L, gf) <= -margin * 0.5;
             }
         }
@@ -268,6 +283,18 @@ public class SmoothRecoveryProbe {
 
         System.out.printf("SR %s n=%d walls=%d maxiter=%s%n", new File(path).getName(), n, L.walls.size(),
                 System.getProperty("pkc.dual.maxiter", "100"));
+        if (!"0".equals(System.getProperty("pkc.sr.trueaccept", "1"))) {
+            final JumpPhysicsInputs fsc = sc;
+            final ExactJumpModel fmodel = model;
+            final JumpConstraintCompiler.Compiled fcomp = comp;
+            TRUE_ACCEPT = new TrueViol() {
+                public double viol(double[] g) {
+                    return fcomp.maxViolation(g, fmodel.forward(fsc, g));
+                }
+            };
+        } else {
+            TRUE_ACCEPT = null;
+        }
 
         ClosedFormSolve.Result dr = ClosedFormSolve.optimizeRobustGraded(model, spec, 0.0, cancel);
         double[] seed;
@@ -372,7 +399,7 @@ public class SmoothRecoveryProbe {
             new JumpLinearModel(sc).zeroingPattern(Angles.wrapAll(yNow), model.inertiaThreshold(),
                     model.perAxisInertia(), zx, zz);
             L = build(sc, spec, zx, zz);
-            restore(L, gf, margin, false);
+            restore(L, gf, margin, "1".equals(System.getProperty("pkc.sr.trace")));
             double ev = comp.maxViolation(gf, model.forward(sc, gf));
             int rv = reversals(anchor, fromGf(sc, gf, seed));
             boolean better;
@@ -584,6 +611,14 @@ public class SmoothRecoveryProbe {
         if (last != 0) sb.append(String.format("%+.1f", mass));
         System.out.println(sb);
     }
+
+    interface TrueViol {
+        double viol(double[] gf);
+    }
+
+    /** When set, restore() decides its step on the byte-exact violation as well as the linear one, so a
+     *  diverged linear model cannot walk the path away from feasibility while its own residual falls. */
+    static TrueViol TRUE_ACCEPT;
 
     /** Gauss-Newton on the linear walls, but stop the moment the BYTE-EXACT model is satisfied. */
     static boolean restoreExact(Lin L, ExactJumpModel model, JumpPhysicsInputs sc,
