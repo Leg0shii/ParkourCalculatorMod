@@ -294,6 +294,73 @@ public class SmoothRecoveryProbe {
         System.out.printf("SR seed exactViol=%.4e rev=%d runs=%d%n", bestExact, bestRev,
                 runsOf(anchor, fromGf(sc, gf, seed)));
 
+        // Phase 0: the Gauss-Newton restore is local, so a seed far from any feasible point stalls in
+        // a basin. Multi-start it: the dual answer first, then the saved solve if the file has one,
+        // then coherent random perturbations. Cheap, and it is the difference between reaching
+        // feasibility at all on the harder windows.
+        int starts = Integer.getInteger("pkc.sr.starts", 24);
+        if (bestExact > 0.0 && starts > 0) {
+            java.util.Random rng = new java.util.Random(20260823L);
+            List<double[]> seeds = new ArrayList<double[]>();
+            seeds.add(seed.clone());
+            if (!"0".equals(System.getProperty("pkc.sr.usesaved", "1")) && file.angleSolver.result != null && !file.angleSolver.result.yaws.isEmpty()) {
+                java.util.Map<Integer, Double> ym = new java.util.HashMap<Integer, Double>();
+                for (SaveFile.Yaw yy : file.angleSolver.result.yaws) ym.put(yy.tick, yy.yaw);
+                double[] sv = new double[n];
+                boolean full = true;
+                for (int k = 0; k < n; k++) {
+                    Double v = ym.get(state.getStartTick() + k + 1);
+                    if (v == null) full = false;
+                    sv[k] = v == null ? 0.0 : v;
+                }
+                if (full) seeds.add(sv);
+            }
+            int base = seeds.size();
+            for (int k = base; k < starts; k++) {
+                double[] c = seeds.get(rng.nextInt(base)).clone();
+                int nk = 1 + rng.nextInt(3);
+                for (int q = 0; q < nk; q++) {
+                    int i = rng.nextInt(n);
+                    int len = 1 + rng.nextInt(n - i);
+                    double mag = (rng.nextDouble() * 2.0 - 1.0) * 60.0;
+                    boolean ramp = rng.nextBoolean();
+                    for (int t = i; t < i + len; t++) {
+                        c[t] = Angles.wrap(c[t] + (ramp ? mag * (t - i + 1.0) / len : mag));
+                    }
+                }
+                seeds.add(c);
+            }
+            int feasFound = 0;
+            for (int si = 0; si < seeds.size(); si++) {
+                double[] cand = sc.toGameFacings(Angles.wrapAll(seeds.get(si)));
+                for (int pass = 0; pass < 3; pass++) {
+                    double[] yy = fromGf(sc, cand, seed);
+                    boolean[] zx = new boolean[n];
+                    boolean[] zz = new boolean[n];
+                    new JumpLinearModel(sc).zeroingPattern(Angles.wrapAll(yy), model.inertiaThreshold(),
+                            model.perAxisInertia(), zx, zz);
+                    Lin Ls = build(sc, spec, zx, zz);
+                    restore(Ls, cand, margin, false);
+                    if (comp.maxViolation(cand, model.forward(sc, cand)) <= 0.0) break;
+                }
+                double ev = comp.maxViolation(cand, model.forward(sc, cand));
+                int rv = reversals(anchor, fromGf(sc, cand, seed));
+                if (ev <= 0.0) feasFound++;
+                boolean better;
+                if (ev <= 0.0 && bestExact > 0.0) better = true;
+                else if (ev <= 0.0) better = rv < bestRev;
+                else better = ev < bestExact && rv <= bestRev;
+                if (better) {
+                    bestExact = ev;
+                    bestRev = rv;
+                    bestGf = cand.clone();
+                }
+            }
+            System.out.printf("SR multistart seeds=%d reachedFeasible=%d best exactViol=%.4e rev=%d%n",
+                    seeds.size(), feasFound, bestExact, bestRev);
+            gf = bestGf.clone();
+        }
+
         // Phase 1: reach byte-exact feasibility. The incumbent is floored on BOTH axes so a pass can
         // never hand back something worse than the seed: feasibility outranks shape, but between two
         // infeasible candidates a violation gain that costs reversals is refused, since an infeasible
