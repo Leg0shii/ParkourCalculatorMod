@@ -400,22 +400,26 @@ public class SmoothRecoveryProbe {
         System.out.printf("SR descent accepted=%d rejectedInfeasible=%d rejectedNotSmoother=%d%n",
                 acc, rejFeas, rejCost);
 
-        // Phase 3: kill turn reversals directly. The jerk gradient cannot see them, so target each
-        // short same-sign run and flatten its span to a constant turn rate, widening until one lands
-        // byte-exact feasible and drops the reversal count.
+        // Phase 3: walk toward the flattened shape along the feasible tangent space. Jumping to the
+        // flattened path and repairing afterwards makes the two steps fight: the flatten breaks
+        // feasibility by more than a least-norm correction can absorb without re-adding reversals.
+        // Projecting the flatten direction onto the null space of the active walls keeps the step
+        // feasible to first order, so the repair only has second-order drift to remove.
         if (comp.maxViolation(gf, model.forward(sc, gf)) <= 0.0) {
             int killed = 0;
             int tries = 0;
             java.util.Set<String> stuck = new java.util.HashSet<String>();
+            java.util.Map<String, Integer> touched = new java.util.HashMap<String, Integer>();
             while (true) {
                 double[] y = fromGf(sc, gf, seed);
                 int curRev = reversals(anchor, y);
+                double curJerk = jerkOf(anchor, y);
+                double[] dd = deltas(anchor, y);
                 List<int[]> rs = runSpans(anchor, y);
                 int[] pick = null;
                 double pickMass = 0.0;
                 for (int[] r : rs) {
                     double mass = 0.0;
-                    double[] dd = deltas(anchor, y);
                     for (int t = r[0]; t <= r[1]; t++) mass += dd[t];
                     if (stuck.contains(r[0] + ":" + r[1])) continue;
                     if (pick == null || Math.abs(mass) < Math.abs(pickMass)) {
@@ -424,37 +428,58 @@ public class SmoothRecoveryProbe {
                     }
                 }
                 if (pick == null) break;
-                boolean done = false;
+                String key = pick[0] + ":" + pick[1];
+                Integer seenN = touched.get(key);
+                int nSeen = seenN == null ? 0 : seenN;
+                if (nSeen >= 3) {
+                    stuck.add(key);
+                    continue;
+                }
+                touched.put(key, nSeen + 1);
+
                 boolean[] zx = new boolean[n];
                 boolean[] zz = new boolean[n];
                 new JumpLinearModel(sc).zeroingPattern(Angles.wrapAll(y), model.inertiaThreshold(),
                         model.perAxisInertia(), zx, zz);
                 L = build(sc, spec, zx, zz);
+                double[][] P = tangentProjector(L, gf, margin, n);
+
+                boolean done = false;
                 for (int grow = 0; grow <= 16 && !done; grow++) {
                     int lo = Math.max(0, pick[0] - grow);
                     int hi = Math.min(n - 1, pick[1] + grow);
-                    double[] flat = flattenYaw(anchor, y, lo, hi);
-                    double[] c = sc.toGameFacings(Angles.wrapAll(flat));
-                    tries++;
-                    double preRev = reversals(anchor, flat);
-                    double preViol = comp.maxViolation(c, model.forward(sc, c));
-                    boolean fixed = restoreExact(L, model, sc, comp, c, margin);
-                    double[] cy = fromGf(sc, c, seed);
-                    int postRev = reversals(anchor, cy);
-                    System.out.printf("SR     try T%d..T%d grow=%d flatRev=%.0f preViol=%10.3e fixed=%-5s postRev=%d (cur=%d) %s%n",
-                            lo, hi, grow, preRev, preViol, fixed, postRev, curRev,
-                            !fixed ? "REPAIR-FAILED" : (postRev >= curRev ? "REPAIR-ADDED-REVERSALS" : "OK"));
-                    if (!fixed) continue;
-                    if (postRev >= curRev) continue;
-                    gf = c;
-                    done = true;
-                    killed++;
-                    System.out.printf("SR   killed run T%d..T%d mass=%+.2f -> rev=%d runs=%d%n",
-                            pick[0], pick[1], pickMass, reversals(anchor, cy), runsOf(anchor, cy));
+                    double[] target = flattenYaw(anchor, y, lo, hi);
+                    double[] tgf = sc.toGameFacings(Angles.wrapAll(target));
+                    double[] dir = new double[n];
+                    for (int t = 0; t < n; t++) dir[t] = Angles.wrapDelta(tgf[t] - gf[t]);
+                    double[] pdir = apply(P, dir);
+                    double pn = 0.0;
+                    for (double v : pdir) pn = Math.max(pn, Math.abs(v));
+                    if (pn < 1.0e-12) continue;
+
+                    for (double frac = 1.0; frac >= 1.0 / 64.0 && !done; frac *= 0.5) {
+                        double[] c = gf.clone();
+                        for (int t = 0; t < n; t++) c[t] += frac * pdir[t];
+                        tries++;
+                        if (!restoreExact(L, model, sc, comp, c, margin)) continue;
+                        double[] cy = fromGf(sc, c, seed);
+                        int rv = reversals(anchor, cy);
+                        double jk = jerkOf(anchor, cy);
+                        if (rv > curRev) continue;
+                        if (rv == curRev && jk >= curJerk - 1.0e-9) continue;
+                        gf = c;
+                        done = true;
+                        if (rv < curRev) {
+                            killed++;
+                            touched.clear();
+                        }
+                        System.out.printf("SR   step run T%d..T%d mass=%+.2f span=%d frac=%.3f -> rev=%d jerk=%.1f%n",
+                                pick[0], pick[1], pickMass, grow, frac, rv, jk);
+                    }
                 }
                 if (!done) stuck.add(pick[0] + ":" + pick[1]);
             }
-            System.out.printf("SR runkill killed=%d tries=%d%n", killed, tries);
+            System.out.printf("SR face-walk reversalsRemoved=%d tries=%d%n", killed, tries);
         }
 
         double[] fy = fromGf(sc, gf, seed);
@@ -545,6 +570,67 @@ public class SmoothRecoveryProbe {
         double[][] out = new double[n][n];
         for (int i = 0; i < n; i++) System.arraycopy(w[i], n, out[i], 0, n);
         return out;
+    }
+
+    /** Projector onto the null space of the active wall gradients: I - J^T (J J^T)^-1 J. */
+    static double[][] tangentProjector(Lin L, double[] gf, double margin, int n) {
+        List<Integer> act = new ArrayList<Integer>();
+        for (int j = 0; j < L.walls.size(); j++) {
+            if (wallValue(L, j, gf) - L.walls.get(j).bPrime > -margin * 6.0) act.add(j);
+        }
+        double[][] P = new double[n][n];
+        for (int i = 0; i < n; i++) P[i][i] = 1.0;
+        if (act.isEmpty()) return P;
+        int m = act.size();
+        double[][] J = new double[m][n];
+        for (int i = 0; i < m; i++) wallGrad(L, act.get(i), gf, J[i]);
+        double[][] jjt = new double[m][m];
+        for (int a = 0; a < m; a++) {
+            for (int b = 0; b < m; b++) {
+                double sm = 0.0;
+                for (int t = 0; t < n; t++) sm += J[a][t] * J[b][t];
+                jjt[a][b] = sm;
+            }
+        }
+        double scale = 0.0;
+        for (int a = 0; a < m; a++) scale = Math.max(scale, Math.abs(jjt[a][a]));
+        double[][] inv = invert(addReg(jjt, scale * 1.0e-10 + 1.0e-20));
+        for (int r = 0; r < n; r++) {
+            for (int c = 0; c < n; c++) {
+                double sm = 0.0;
+                for (int a = 0; a < m; a++) {
+                    for (int b = 0; b < m; b++) sm += J[a][r] * inv[a][b] * J[b][c];
+                }
+                P[r][c] -= sm;
+            }
+        }
+        return P;
+    }
+
+    static double[][] addReg(double[][] a, double reg) {
+        double[][] o = new double[a.length][a.length];
+        for (int i = 0; i < a.length; i++) {
+            System.arraycopy(a[i], 0, o[i], 0, a.length);
+            o[i][i] += reg;
+        }
+        return o;
+    }
+
+    static double[] apply(double[][] P, double[] v) {
+        double[] o = new double[v.length];
+        for (int i = 0; i < v.length; i++) {
+            double s = 0.0;
+            for (int k = 0; k < v.length; k++) s += P[i][k] * v[k];
+            o[i] = s;
+        }
+        return o;
+    }
+
+    static double jerkOf(double anchor, double[] y) {
+        double[] d = deltas(anchor, y);
+        double s = 0.0;
+        for (int i = 1; i < d.length; i++) s += Math.abs(d[i] - d[i - 1]);
+        return s;
     }
 
     static List<int[]> runSpans(double anchor, double[] y) {
