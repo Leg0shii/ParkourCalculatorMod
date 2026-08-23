@@ -25,6 +25,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SlpSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
+import de.legoshi.parkourcalc.core.anglesolver.solver.FacingPrefold;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.LevelSetAscent;
@@ -168,6 +169,7 @@ public final class AngleSolverEngine {
     }
 
     private volatile boolean solving;
+    private volatile boolean smoothFinalResult = true;
     private volatile long startNanos;
     private volatile Outcome pending;
     private volatile AtomicBoolean cancel;
@@ -473,7 +475,12 @@ public final class AngleSolverEngine {
     }
 
     public void solve(AngleSolverState.Effort effort) {
+        solve(effort, true);
+    }
+
+    public void solve(AngleSolverState.Effort effort, boolean smoothFinal) {
         if (solving) return;
+        this.smoothFinalResult = smoothFinal;
         Job job = buildJob(effort);
         if (job == null) return; // invalid range: buildJob already published the failure result
 
@@ -1009,6 +1016,15 @@ public final class AngleSolverEngine {
         if (job.legalGoal != null) {
             solverName = solverName == null ? "legal mode" : solverName + " (legal)";
         }
+        boolean smoothRequested = spec.objective.smoothLambda > 0.0 || SMOOTH_FINAL_FACING;
+        if (smoothRequested && smoothFinalResult && model instanceof ExactJumpModel && !cancel.get()) {
+            try {
+                double[] smoothed = smoothFacing((ExactJumpModel) model, spec, sc, yaws, cancel);
+                if (smoothed != null) yaws = smoothed;
+            } catch (RuntimeException e) {
+                if (SolverTrace.on()) SolverTrace.log("ENGINE", "final facing smoothing failed: %s", String.valueOf(e));
+            }
+        }
         double[] gameFacings = sc.toGameFacings(yaws);
         ForwardPath path = model.forward(sc, gameFacings);
         SolveResult result = assembleResult(job, yaws, gameFacings, path, solverName, solveNanos, dualGap);
@@ -1030,6 +1046,44 @@ public final class AngleSolverEngine {
         Plan plan = new Plan(job.startTick, yaws, job.strafeMask, job.force45Mask, 1, path, sc.startPos, stageLocked);
         return new Outcome(result, plan);
     }
+
+    private double[] smoothFacing(ExactJumpModel em, JumpSpec spec, JumpPhysicsInputs sc, double[] yaws,
+                                  AtomicBoolean cancel) {
+        double[] gf = sc.toGameFacings(yaws);
+        JumpConstraintCompiler.Compiled comp = JumpConstraintCompiler.compile(spec);
+        if (comp.maxViolation(gf, em.forward(sc, gf)) > FEAS_TOL) return null;
+
+        JumpSpec guarded = spec;
+        JumpConstraint.Mode axisMode = spec.objective.axis == JumpPhysicsInputs.Axis.X ? JumpConstraint.Mode.X
+                : spec.objective.axis == JumpPhysicsInputs.Axis.Z ? JumpConstraint.Mode.Z : null;
+        if (axisMode != null) {
+            double achieved = em.forward(sc, gf).getPos(spec.objective.tick, spec.objective.axis);
+            boolean max = spec.objective.sense == Objective.Sense.MAX;
+            double rhs = max ? achieved - SMOOTH_OBJ_SLACK : achieved + SMOOTH_OBJ_SLACK;
+            JumpConstraint objGuard = new JumpConstraint(axisMode, spec.objective.tick, null, JumpConstraint.Op.PLUS,
+                    max ? JumpConstraint.Cmp.GE : JumpConstraint.Cmp.LE, rhs, "objGuard");
+            List<JumpConstraint> cons = new ArrayList<>(spec.constraints);
+            cons.add(objGuard);
+            guarded = new JumpSpec(sc, cons, spec.objective);
+        }
+
+        boolean[] frozen = null;
+        FacingPrefold pre = FacingPrefold.analyze(spec.constraints, new JumpLinearModel(sc));
+        if (pre != null && !pre.isIdentity()) {
+            frozen = new boolean[sc.numTicks];
+            for (int t = 0; t < sc.numTicks; t++) frozen[t] = pre.varIndex(t) < 0;
+        }
+
+        long deadline = System.nanoTime() + SMOOTH_BUDGET_NANOS;
+        double[] smoothed = ClosedFormSolve.recoverFace(em, guarded, FEAS_TOL, cancel, yaws, deadline, frozen);
+        if (smoothed == null) return null;
+        double[] smgf = sc.toGameFacings(smoothed);
+        return comp.maxViolation(smgf, em.forward(sc, smgf)) <= FEAS_TOL ? smoothed : null;
+    }
+
+    public static boolean SMOOTH_FINAL_FACING = "1".equals(System.getenv("PKC_SMOOTHFACING"));
+    private static final long SMOOTH_BUDGET_NANOS = 400_000_000L;
+    private static final double SMOOTH_OBJ_SLACK = 5.0e-5;
 
     private static boolean hasUnsupportedDf(Job job) {
         for (ConstraintAt ca : job.uiConstraints) if (ca.c.isUnsupportedDf()) return true;

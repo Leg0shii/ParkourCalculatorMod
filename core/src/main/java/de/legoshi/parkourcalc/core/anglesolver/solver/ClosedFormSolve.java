@@ -69,6 +69,15 @@ public final class ClosedFormSolve {
         return r != null && r.feasible ? r.yaws : null;
     }
 
+    public static double[] recoverFace(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
+                                       double[] seed, long deadlineNanos, boolean[] frozen) {
+        JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
+        SmoothFaceRecovery.Config fc = new SmoothFaceRecovery.Config();
+        fc.deadlineNanos = deadlineNanos;
+        fc.frozen = frozen;
+        return SmoothFaceRecovery.smooth(exact, spec, compiled, seed, feasTol, cancel, fc);
+    }
+
     public static double[] optimizeWithPattern(ExactJumpModel exact, JumpSpec spec, double feasTol,
                                                AtomicBoolean cancel, boolean[] zeroX, boolean[] zeroZ) {
         Config cfg = new Config();

@@ -204,7 +204,7 @@ public final class RunTicksController implements RunTicksControls {
         applyStep(node);
         runSimulation.run();
         stepStartMs = now();
-        engine.solve(AngleSolverState.Effort.FAST);
+        engine.solve(AngleSolverState.Effort.FAST, false);
         phase = Phase.STEP;
     }
 

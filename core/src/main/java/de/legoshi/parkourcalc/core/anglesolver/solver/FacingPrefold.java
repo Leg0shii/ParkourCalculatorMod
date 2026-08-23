@@ -122,6 +122,14 @@ public final class FacingPrefold {
         return k;
     }
 
+    public int varCount() {
+        return identity ? n : vars;
+    }
+
+    public int varIndex(int t) {
+        return identity ? t : varOf[t];
+    }
+
     public static FacingPrefold analyze(List<JumpConstraint> constraints, JumpLinearModel lin) {
         if (!hasFacing(constraints)) {
             return new FacingPrefold(lin.n, true, lin.n, null, null, null, null, null);
