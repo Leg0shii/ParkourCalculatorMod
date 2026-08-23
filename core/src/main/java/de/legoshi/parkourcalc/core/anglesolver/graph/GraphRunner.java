@@ -54,7 +54,7 @@ public final class GraphRunner {
                 runtimes.put(cur.id, rt);
             }
             boolean isWrap = "wrapIls".equals(cur.type.id);
-            if (isWrap) wrapPending = false;
+            if (isWrap || (wrapPending && !reachesWrap(graph, cur))) wrapPending = false;
             long budgetNanos = budgetNanos(cur);
             long deadline = budgetNanos > 0 ? System.nanoTime() + budgetNanos : 0L;
             if (overall > 0 && (deadline == 0L || overall < deadline)) deadline = overall;
@@ -99,6 +99,23 @@ public final class GraphRunner {
         if (p == null) return 0L;
         int secs = n.params.getInt(p);
         return secs > 0 ? secs * 1_000_000_000L : 0L;
+    }
+
+    private static boolean reachesWrap(SolverGraph g, GraphNode from) {
+        java.util.Set<String> seen = new java.util.HashSet<>();
+        java.util.ArrayDeque<GraphNode> queue = new java.util.ArrayDeque<>();
+        queue.add(from);
+        seen.add(from.id);
+        while (!queue.isEmpty()) {
+            GraphNode n = queue.poll();
+            if ("wrapIls".equals(n.type.id)) return true;
+            for (GraphEdge e : g.edges) {
+                if (!e.fromNode.equals(n.id)) continue;
+                GraphNode to = g.node(e.toNode);
+                if (to != null && seen.add(to.id)) queue.add(to);
+            }
+        }
+        return false;
     }
 
     private static GraphNode next(SolverGraph g, GraphNode n, Guarantee branch) {

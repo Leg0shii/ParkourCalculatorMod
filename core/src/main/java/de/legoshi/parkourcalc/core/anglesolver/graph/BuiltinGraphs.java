@@ -31,7 +31,7 @@ public final class BuiltinGraphs {
                 .set("bnbFF", "budgetSec", bnbSec).set("bnbFF", "minBudgetMs", 0);
         router(g, "rIls", "CANDIDATE_FEASIBLE_RAW");
         g.add("ils", "ilsPolish").set("ils", "budgetSec", ilsSec).set("ils", "roundCap", 400);
-        g.add("smooth", "smoothing").set("smooth", "countEvals", true);
+        g.add("smooth", "smoothing").set("smooth", "countEvals", true).set("smooth", "deWiggle", true);
         g.edge("entry", Guarantee.DONE, "seed");
         g.edge("seed", Guarantee.FOUND, "rFeas");
         g.edge("seed", Guarantee.NONE, "bnbFF");
@@ -157,7 +157,8 @@ public final class BuiltinGraphs {
         }
         router(g, "rTrans", "HAS_FREE_START");
         g.add("translate", "translatedStart");
-        g.add("smoothFinal", "smoothing").set("smoothFinal", "countEvals", true);
+        g.add("smoothFinal", "smoothing").set("smoothFinal", "countEvals", true)
+                .set("smoothFinal", "deWiggle", true);
         if (win) {
             g.add("horizon", "recedingHorizon")
                     .set("horizon", "window", window)

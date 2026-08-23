@@ -255,6 +255,7 @@ public final class NodeCatalog {
                 .requires(InputRequirement.ANY)
                 .branch(Branch.preserves(Guarantee.DONE))
                 .param(ParamSpec.bool("countEvals", "Count evals", false))
+                .param(ParamSpec.bool("deWiggle", "Remove short turn runs", false))
                 .param(ParamSpec.integer("maxRounds", "Max rounds", 1, 1000, 24))
                 .param(ParamSpec.integer("maxEvals", "Max evals", 100, 10000000, 24000))
                 .param(ParamSpec.integer("pairSpan", "Pair span", 1, 64, 3))
