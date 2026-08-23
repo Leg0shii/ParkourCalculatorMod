@@ -50,6 +50,12 @@ public final class BoundPrunedRecovery {
 
     public static double[] solve(ExactJumpModel exact, JumpSpec spec, double feasTol,
                                  AtomicBoolean cancel, long budgetNanos, double stopAtObjective, Config cfg) {
+        return solve(exact, spec, feasTol, cancel, budgetNanos, stopAtObjective, cfg, null);
+    }
+
+    public static double[] solve(ExactJumpModel exact, JumpSpec spec, double feasTol,
+                                 AtomicBoolean cancel, long budgetNanos, double stopAtObjective, Config cfg,
+                                 ClosestMiss miss) {
         if (spec == null) return null;
         if (JumpLinearModel.hasFacingWall(spec.constraints)
                 && FacingPrefold.analyze(spec.constraints, new JumpLinearModel(spec.asScenario())) == null) {
@@ -186,7 +192,7 @@ public final class BoundPrunedRecovery {
                                     ? Math.min(searchDeadline, System.nanoTime() + sliceNanos)
                                     : searchDeadline;
                             Search search = Search.build(exact, treeSpec, compiled, feasTol, searchCancel, deadline,
-                                    p.lin, p.velWalls, p.patterned, stopNorm, p.label, searchFloor, cfg);
+                                    p.lin, p.velWalls, p.patterned, stopNorm, p.label, searchFloor, cfg, miss);
                             if (search == null) return null;
                             if (seedYaws != null) search.offer(seedYaws);
                             search.run();
@@ -559,6 +565,7 @@ public final class BoundPrunedRecovery {
         final double stopNorm;
         final String label;
         final Config cfg;
+        final ClosestMiss miss;
         int lastRestoreIters;
 
         private Search(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel, long deadline,
@@ -567,12 +574,13 @@ public final class BoundPrunedRecovery {
                        int[] consOfWall, int[] seamTick, int[] seamAxis, int[] seamGeWall, int[] seamLeWall,
                        int[] seamGeCons, int[] seamLeCons, double[] seamConst, double[] baseLo, double[] baseHi,
                        int consWallCount, boolean patterned, double stopNorm, String label, double floorNorm,
-                       Config cfg) {
+                       Config cfg, ClosestMiss miss) {
             this.consWallCount = consWallCount;
             this.patterned = patterned;
             this.stopNorm = stopNorm;
             this.label = label;
             this.cfg = cfg;
+            this.miss = miss;
             this.incumbentNorm = floorNorm;
             this.exact = exact;
             this.spec = spec;
@@ -613,7 +621,7 @@ public final class BoundPrunedRecovery {
         static Search build(ExactJumpModel exact, JumpSpec spec, JumpConstraintCompiler.Compiled acceptCompiled,
                             double feasTol, AtomicBoolean cancel, long deadline,
                             JumpLinearModel lin, List<JumpLinearModel.Wall> velWalls, boolean patterned,
-                            double stopNorm, String label, double floorNorm, Config cfg) {
+                            double stopNorm, String label, double floorNorm, Config cfg, ClosestMiss miss) {
             JumpPhysicsInputs sc = spec.asScenario();
             int objTick = spec.objective.tick;
 
@@ -726,7 +734,7 @@ public final class BoundPrunedRecovery {
             lin.objectiveVectors(spec.objective, cx, cz);
             return new Search(exact, spec, feasTol, cancel, deadline, sc, lin, acceptCompiled, cx, cz, canonical, walls,
                     consOfWall, seamTick, seamAxis, seamGeWall, seamLeWall, seamGeCons, seamLeCons, seamConst,
-                    baseLo, baseHi, consWallCount, patterned, stopNorm, label, floorNorm, cfg);
+                    baseLo, baseHi, consWallCount, patterned, stopNorm, label, floorNorm, cfg, miss);
         }
 
         private static double reach(JumpLinearModel lin, int tick) {
@@ -1190,7 +1198,11 @@ public final class BoundPrunedRecovery {
             double[] wrapped = Angles.wrapAll(yawsAbs);
             double[] gf = sc.toGameFacings(wrapped);
             ForwardPath path = exact.forward(sc, gf);
-            if (compiled.maxViolation(gf, path) > feasTol) return Double.NaN;
+            double violation = compiled.maxViolation(gf, path);
+            if (violation > feasTol) {
+                if (miss != null) miss.offer(wrapped, violation);
+                return Double.NaN;
+            }
             double normed = normObjective(path);
             if (normed > incumbentNorm) {
                 incumbentNorm = normed;

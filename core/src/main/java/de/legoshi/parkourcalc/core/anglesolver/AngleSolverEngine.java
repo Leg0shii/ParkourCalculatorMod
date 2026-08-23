@@ -17,6 +17,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.BucketAscentPolish;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ClosedFormSolve;
+import de.legoshi.parkourcalc.core.anglesolver.solver.ClosestMiss;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.LongRunSolver;
 import de.legoshi.parkourcalc.core.anglesolver.solver.RelaxationRecovery;
@@ -986,8 +987,7 @@ public final class AngleSolverEngine {
         if (cancel.get()) return null;
         if (cand == null || cand.yaws == null) {
             finishRecord(rec, SolveRunRecord.STATUS_FAILED, null, null, null, ctx.chain(), null);
-            SolveResult fail = new SolveResult(false, 0, job.uiConstraints.size(),
-                    job.startTick + 1, job.landingTick + 1);
+            SolveResult fail = failureResult(job, sc, ctx, System.nanoTime() - solveStart);
             if (ctx.chain() != null) fail.setSolver(ctx.chain());
             if (hasUnsupportedDf(job)) fail.setNotice(DF_UNSUPPORTED_NOTICE);
             return new Outcome(fail, null);
@@ -1078,7 +1078,12 @@ public final class AngleSolverEngine {
     }
 
     private SolveResult buildResultWithObjective(Job job, double[] yaws, double[] gameFacings, ForwardPath path) {
-        SolveResult result = buildResult(job, yaws, gameFacings, path);
+        return buildResultWithObjective(job, yaws, gameFacings, path, true);
+    }
+
+    private SolveResult buildResultWithObjective(Job job, double[] yaws, double[] gameFacings, ForwardPath path,
+                                                 boolean feasible) {
+        SolveResult result = buildResult(job, yaws, gameFacings, path, feasible);
         result.setObjective(path.getPos(job.spec.objective.tick, job.spec.objective.axis));
         result.getOutcomes().add(0, objectiveOutcome(result, job.spec.objective, job.startTick));
         return result;
@@ -1123,6 +1128,61 @@ public final class AngleSolverEngine {
         String sense = o.sense == Objective.Sense.MAX ? "max" : "min";
         return new SolveResult.Outcome(field, "T" + (startTick + o.tick + 1), sense,
                 ConstraintText.fixedStat(r.getObjectiveValue()), "");
+    }
+
+    private SolveResult failureResult(Job job, JumpPhysicsInputs sc, GraphContext ctx, long solveNanos) {
+        double[] yaws = ctx.closestMiss().yaws();
+        double violation = ctx.closestMiss().violation();
+        String source = "closest attempt";
+        if (yaws != null && yaws.length != sc.numTicks) yaws = null;
+        if (yaws == null) {
+            yaws = currentRowYaws(job.startTick, job.numTicks);
+            source = "current path";
+            if (yaws != null) violation = ctx.violationOf(yaws);
+        }
+        if (yaws == null) {
+            return new SolveResult(false, 0, job.uiConstraints.size(), job.startTick + 1, job.landingTick + 1);
+        }
+        double[] gameFacings = sc.toGameFacings(yaws);
+        ForwardPath path = model.forward(sc, gameFacings);
+        SolveResult r = buildResultWithObjective(job, yaws, gameFacings, path, false);
+        r.setDurationNanos(solveNanos);
+        r.setDurationMs(solveNanos / 1_000_000L);
+        r.setFinishedAt(formatClock());
+        addBaseDetails(r, solveNanos);
+        r.addDetail("Values from", source);
+        if (!Double.isNaN(violation) && !Double.isInfinite(violation)) {
+            r.addDetail("Worst violation", ConstraintText.fixedStat(violation));
+        }
+        return r;
+    }
+
+    public SolveResult diagnoseCurrentPath() {
+        if (solving) return null;
+        Job job = buildJob(state.getEffort());
+        if (job == null) return null;
+        double[] yaws = currentRowYaws(job.startTick, job.numTicks);
+        if (yaws == null) return null;
+        JumpPhysicsInputs sc = job.spec.asScenario();
+        double[] gameFacings = sc.toGameFacings(yaws);
+        SolveResult r = buildResultWithObjective(job, yaws, gameFacings, model.forward(sc, gameFacings), false);
+        r.addDetail("Values from", "current path");
+        return r;
+    }
+
+    private double[] currentRowYaws(int startTick, int numTicks) {
+        List<InputRow> rows = inputs.getRows();
+        if (startTick < 0 || numTicks <= 0 || startTick + numTicks > rows.size()) return null;
+        if (startTick >= boxes.size()) return null;
+        double[] out = new double[numTicks];
+        double prevAbs = boxes.getYaw(startTick);
+        for (int k = 0; k < numTicks; k++) {
+            InputRow row = rows.get(startTick + k);
+            Float yaw = row.getYaw();
+            if (yaw != null) prevAbs = row.isYawLocked() ? yaw : prevAbs + yaw;
+            out[k] = prevAbs;
+        }
+        return Angles.wrapAll(out);
     }
 
     // The solver chain is not a detail row: the UI lists it in its own numbered section from getSolver().
@@ -1403,7 +1463,7 @@ public final class AngleSolverEngine {
 
     // ---- result panel (worker thread, from the Job snapshot) ------------------
 
-    private SolveResult buildResult(Job job, double[] yaws, double[] gameFacings, ForwardPath path) {
+    private SolveResult buildResult(Job job, double[] yaws, double[] gameFacings, ForwardPath path, boolean feasible) {
         int total = 0;
         int met = 0;
         List<SolveResult.Outcome> outs = new ArrayList<>();
@@ -1420,7 +1480,7 @@ public final class AngleSolverEngine {
             else unmet.add(ca.absTick);
             outs.add(outcome(ca.c, ca.absTick, found, ok));
         }
-        SolveResult r = new SolveResult(met == total, met, total, job.startTick + 1, job.landingTick + 1);
+        SolveResult r = new SolveResult(feasible && met == total, met, total, job.startTick + 1, job.landingTick + 1);
         r.getOutcomes().addAll(outs);
         for (int t : unmet) r.addUnmetTick(t);
         for (int k = 0; k < yaws.length; k++) {
@@ -1579,6 +1639,13 @@ public final class AngleSolverEngine {
                                      AtomicBoolean cancel, String[] nameOut, long deadlineNanos,
                                      SlpSolve.Config slpCfg, ClosedFormSolve.Config cfCfg,
                                      RelaxationRecovery.Config rrCfg) {
+        return dualChain(em, spec, sc, cancel, nameOut, deadlineNanos, slpCfg, cfCfg, rrCfg, null);
+    }
+
+    public static double[] dualChain(ExactJumpModel em, JumpSpec spec, JumpPhysicsInputs sc,
+                                     AtomicBoolean cancel, String[] nameOut, long deadlineNanos,
+                                     SlpSolve.Config slpCfg, ClosedFormSolve.Config cfCfg,
+                                     RelaxationRecovery.Config rrCfg, ClosestMiss miss) {
         if (SolverTrace.on()) SolverTrace.log("CHAIN", "closed form start");
         double[] yaws = ClosedFormSolve.optimize(em, spec, FEAS_TOL, cancel, cfCfg);
         if (yaws != null) {
@@ -1588,7 +1655,7 @@ public final class AngleSolverEngine {
         }
         if (cancel.get()) return null;
         if (SolverTrace.on()) SolverTrace.log("CHAIN", "slp start");
-        yaws = SlpSolve.optimize(em, spec, FEAS_TOL, cancel, null, slpCfg);
+        yaws = SlpSolve.optimize(em, spec, FEAS_TOL, cancel, null, slpCfg, miss);
         if (yaws != null) {
             if (SolverTrace.on()) SolverTrace.log("CHAIN", "slp solved");
             return levelSetTopUp(em, spec, yaws, cancel, "closed form -> SLP", nameOut);
@@ -1608,7 +1675,7 @@ public final class AngleSolverEngine {
             if (SolverTrace.on()) SolverTrace.log("CHAIN", "alt seed %s %s start", alt.axis, alt.sense);
             double[] seed = ClosedFormSolve.optimize(em, new JumpSpec(sc, spec.constraints, alt), FEAS_TOL, cancel, cfCfg);
             if (seed == null) continue;
-            yaws = SlpSolve.optimize(em, spec, FEAS_TOL, cancel, seed, slpCfg);
+            yaws = SlpSolve.optimize(em, spec, FEAS_TOL, cancel, seed, slpCfg, miss);
             if (yaws != null) {
                 if (SolverTrace.on()) SolverTrace.log("CHAIN", "reseeded slp solved");
                 return levelSetTopUp(em, spec, yaws, cancel, "closed form -> SLP (reseeded)", nameOut);

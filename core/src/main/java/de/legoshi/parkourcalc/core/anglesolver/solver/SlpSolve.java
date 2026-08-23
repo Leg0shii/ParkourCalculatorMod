@@ -38,7 +38,7 @@ public final class SlpSolve {
 
     /** Returns absolute wrapped facings with byte-exact {@code maxViolation <= feasTol}, or {@code null}. */
     public static double[] optimize(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel) {
-        return optimize(exact, spec, feasTol, cancel, CLEARANCE, true, null, false, false, new Config());
+        return optimize(exact, spec, feasTol, cancel, CLEARANCE, true, null, false, false, new Config(), null);
     }
 
     /** Like {@link #optimize}, but seeded from the given absolute wrapped facings instead of the dual
@@ -46,30 +46,35 @@ public final class SlpSolve {
      *  this spec's objective even where this direction's own dual recovery degenerates. */
     public static double[] optimize(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
                                     double[] seedAbsWrapped) {
-        return optimize(exact, spec, feasTol, cancel, CLEARANCE, true, seedAbsWrapped, false, false, new Config());
+        return optimize(exact, spec, feasTol, cancel, CLEARANCE, true, seedAbsWrapped, false, false, new Config(), null);
     }
 
     public static double[] optimize(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
                                     double[] seedAbsWrapped, Config cfg) {
-        return optimize(exact, spec, feasTol, cancel, CLEARANCE, true, seedAbsWrapped, false, false, cfg);
+        return optimize(exact, spec, feasTol, cancel, CLEARANCE, true, seedAbsWrapped, false, false, cfg, null);
+    }
+
+    public static double[] optimize(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
+                                    double[] seedAbsWrapped, Config cfg, ClosestMiss miss) {
+        return optimize(exact, spec, feasTol, cancel, CLEARANCE, true, seedAbsWrapped, false, false, cfg, miss);
     }
 
     public static double[] optimize(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
                                     double[] seedAbsWrapped, int phase1Calls, int totalCalls) {
         return optimize(exact, spec, feasTol, cancel, CLEARANCE, true, seedAbsWrapped, false, false,
-                withCalls(phase1Calls, totalCalls));
+                withCalls(phase1Calls, totalCalls), null);
     }
 
     public static double[] optimizeBestEffort(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
                                               double[] seedAbsWrapped, int phase1Calls, int totalCalls) {
         return optimize(exact, spec, feasTol, cancel, CLEARANCE, true, seedAbsWrapped, true, true,
-                withCalls(phase1Calls, totalCalls));
+                withCalls(phase1Calls, totalCalls), null);
     }
 
     public static double[] optimizeBestEffort(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
                                               double[] seedAbsWrapped, int phase1Calls, int totalCalls, boolean inertiaAware) {
         return optimize(exact, spec, feasTol, cancel, CLEARANCE, true, seedAbsWrapped, true, inertiaAware,
-                withCalls(phase1Calls, totalCalls));
+                withCalls(phase1Calls, totalCalls), null);
     }
 
     public static double[] optimizeBestEffort(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
@@ -77,14 +82,14 @@ public final class SlpSolve {
                                               double trMinDeg) {
         Config cfg = withCalls(phase1Calls, totalCalls);
         cfg.trMinDeg = trMinDeg;
-        return optimize(exact, spec, feasTol, cancel, CLEARANCE, true, seedAbsWrapped, true, inertiaAware, cfg);
+        return optimize(exact, spec, feasTol, cancel, CLEARANCE, true, seedAbsWrapped, true, inertiaAware, cfg, null);
     }
 
     /** Feasibility-only centered solve: phase 1 deepens clearance toward {@link Config#centerClearance}, the
      *  hugging phase 2 is skipped. For surrogate-objective solves (lead-in windows). */
     public static double[] optimizeCentered(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel) {
         Config cfg = new Config();
-        return optimize(exact, spec, feasTol, cancel, cfg.centerClearance, false, null, false, false, cfg);
+        return optimize(exact, spec, feasTol, cancel, cfg.centerClearance, false, null, false, false, cfg, null);
     }
 
     private static Config withCalls(int phase1Calls, int totalCalls) {
@@ -96,7 +101,7 @@ public final class SlpSolve {
 
     private static double[] optimize(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
                                      double targetClearance, boolean hugObjective, double[] seedAbsWrapped,
-                                     boolean bestEffort, boolean inertiaAware, Config cfg) {
+                                     boolean bestEffort, boolean inertiaAware, Config cfg, ClosestMiss miss) {
         List<JumpConstraint> constraints = spec.constraints;
         JumpPhysicsInputs sc = spec.asScenario();
         YawTies ties = null;
@@ -190,7 +195,10 @@ public final class SlpSolve {
         for (int phase = 1; phase <= (hugObjective ? 2 : 1) && lpCalls < cfg.totalCalls; phase++) {
             int budget = phase == 1 ? cfg.phase1Calls : cfg.totalCalls;
             while (lpCalls < budget) {
-                if (cancel != null && cancel.get()) return null;
+                if (cancel != null && cancel.get()) {
+                    offerMiss(miss, exact, sc, compiled, theta);
+                    return null;
+                }
                 double[] gf = sc.toGameFacings(Angles.wrapAll(theta));
                 ForwardPath path = exact.forward(sc, gf);
                 double maxViol = exactSlacks(ineq, gf, path, viol);
@@ -302,8 +310,9 @@ public final class SlpSolve {
                     }
                     if (!inertiaAware && !bestEffort) {
                         return optimize(exact, spec, feasTol, cancel, targetClearance, hugObjective,
-                                Angles.wrapAll(theta), false, true, cfg);
+                                Angles.wrapAll(theta), false, true, cfg, miss);
                     }
+                    offerMiss(miss, exact, sc, compiled, theta);
                     return bestEffort ? Angles.wrapAll(theta) : null;
                 }
                 if (SolverTrace.on()) SolverTrace.log("SLP", "phase1 done viol=%.3e lps=%d", endViol, lpCalls);
@@ -323,7 +332,16 @@ public final class SlpSolve {
                     (System.nanoTime() - t0) / 1e6, finalViol <= feasTol ? "feasible" : (bestEffort ? "best effort" : "null"));
         }
         if (finalViol <= feasTol) return yaws;
+        if (miss != null) miss.offer(yaws, finalViol);
         return bestEffort ? yaws : null;
+    }
+
+    private static void offerMiss(ClosestMiss miss, ExactJumpModel exact, JumpPhysicsInputs sc,
+                                  JumpConstraintCompiler.Compiled compiled, double[] theta) {
+        if (miss == null) return;
+        double[] yaws = Angles.wrapAll(theta);
+        double[] gf = sc.toGameFacings(yaws);
+        miss.offer(yaws, compiled.maxViolation(gf, exact.forward(sc, gf)));
     }
 
     private static boolean patternEquals(boolean[] a, boolean[] b) {

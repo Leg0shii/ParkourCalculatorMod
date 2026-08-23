@@ -62,7 +62,7 @@ public final class DualChainNode implements NodeRuntime {
         if (!ctx.exact()) return NodeOutcome.of(Guarantee.NONE, in);
         String[] chainName = new String[1];
         double[] chain = AngleSolverEngine.dualChain(ctx.exactModel, ctx.spec, ctx.scenario, nodeToken,
-                chainName, deadlineNanos, slpConfig(), cfConfig(), rrConfig());
+                chainName, deadlineNanos, slpConfig(), cfConfig(), rrConfig(), ctx.closestMiss());
         if (chain == null) {
             if (!keepBetter) ctx.chainAppend("closed form");
             return NodeOutcome.of(Guarantee.NONE, in);
