@@ -290,10 +290,14 @@ public class SmoothRecoveryProbe {
         double[] gf = sc.toGameFacings(seed);
         double[] bestGf = gf.clone();
         double bestExact = comp.maxViolation(gf, model.forward(sc, gf));
-        System.out.printf("SR seed exactViol=%.4e rev=%d runs=%d%n", bestExact,
-                reversals(anchor, fromGf(sc, gf, seed)), runsOf(anchor, fromGf(sc, gf, seed)));
+        int bestRev = reversals(anchor, fromGf(sc, gf, seed));
+        System.out.printf("SR seed exactViol=%.4e rev=%d runs=%d%n", bestExact, bestRev,
+                runsOf(anchor, fromGf(sc, gf, seed)));
 
-        // Phase 1: reach byte-exact feasibility at all.
+        // Phase 1: reach byte-exact feasibility. The incumbent is floored on BOTH axes so a pass can
+        // never hand back something worse than the seed: feasibility outranks shape, but between two
+        // infeasible candidates a violation gain that costs reversals is refused, since an infeasible
+        // result goes to the downstream repair anyway and only its shape survives being a seed.
         for (int pass = 0; pass < patternPasses && bestExact > 0.0; pass++) {
             double[] yNow = fromGf(sc, gf, seed);
             boolean[] zx = new boolean[n];
@@ -303,9 +307,16 @@ public class SmoothRecoveryProbe {
             L = build(sc, spec, zx, zz);
             restore(L, gf, margin, false);
             double ev = comp.maxViolation(gf, model.forward(sc, gf));
-            System.out.printf("SR pass=%d linViol=%11.4e exactViol=%11.4e%n", pass, linViol(L, gf), ev);
-            if (ev < bestExact) {
+            int rv = reversals(anchor, fromGf(sc, gf, seed));
+            boolean better;
+            if (ev <= 0.0 && bestExact > 0.0) better = true;
+            else if (ev <= 0.0) better = rv < bestRev;
+            else better = ev < bestExact && rv <= bestRev;
+            System.out.printf("SR pass=%d linViol=%11.4e exactViol=%11.4e rev=%d %s%n",
+                    pass, linViol(L, gf), ev, rv, better ? "TAKE" : "refused");
+            if (better) {
                 bestExact = ev;
+                bestRev = rv;
                 bestGf = gf.clone();
             }
         }
