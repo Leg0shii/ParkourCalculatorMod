@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.core.anglesolver.graph;
 
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.BnbNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.CapCertifyNode;
+import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.CoarseAscentNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.DualChainNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.FreeStartImproveNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.IlsPolishNode;
@@ -226,6 +227,13 @@ public final class NodeCatalog {
                 .budgetParam("budgetSec")
                 .fallback(Guarantee.UNCHANGED)
                 .factory(IlsPolishNode::new)
+                .build());
+        register(NodeType.builder("coarseAscent", "Coarse ascent", NodeCategory.POLISH)
+                .requires(InputRequirement.ANY)
+                .branch(Branch.feasible(Guarantee.IMPROVED))
+                .branch(Branch.preserves(Guarantee.UNCHANGED))
+                .fallback(Guarantee.UNCHANGED)
+                .factory(CoarseAscentNode::new)
                 .build());
         register(NodeType.builder("wrapIls", "Wrap ILS", NodeCategory.POLISH)
                 .requires(InputRequirement.ANY)

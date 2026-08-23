@@ -53,6 +53,28 @@ public final class BucketAscentPolish {
             12, 8, 3
     );
 
+    private static final double[][] COARSE = {{180.0, 5.0}, {180.0, 1.0}};
+
+    public static double[] coarse(ForwardModel model, JumpSpec spec, double[] startAbsWrapped, AtomicBoolean cancel) {
+        JumpConstraintCompiler.Compiled c = JumpConstraintCompiler.compile(spec);
+        JumpPhysicsInputs scenario = spec.asScenario();
+        Objective obj = spec.objective;
+        double sign = obj.sense == Objective.Sense.MAX ? -1.0 : 1.0;
+        double[] y = startAbsWrapped.clone();
+        if (score(model, scenario, c, obj, sign, y) == Double.POSITIVE_INFINITY) return y;
+        try {
+            for (double[] r : COARSE) {
+                for (int it = 0; it < 60; it++) {
+                    if (!block1(y, r[0], r[1], model, scenario, c, obj, sign, cancel)) break;
+                }
+            }
+            b1refine(y, model, scenario, c, obj, sign, THOROUGH, cancel);
+        } catch (SolveCancelledException e) {
+            return y;
+        }
+        return y;
+    }
+
     public static double[] polish(ForwardModel model, JumpSpec spec, double[] startAbsWrapped, Config cfg, AtomicBoolean cancel) {
         JumpConstraintCompiler.Compiled c = JumpConstraintCompiler.compile(spec);
         JumpPhysicsInputs scenario = spec.asScenario();

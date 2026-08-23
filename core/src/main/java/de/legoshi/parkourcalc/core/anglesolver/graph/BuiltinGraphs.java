@@ -88,6 +88,7 @@ public final class BuiltinGraphs {
         g.add("repA", "report");
         g.add("repWarm", "report");
         g.add("repSkip", "report");
+        if (!sof) g.add("coarseWarm", "coarseAscent");
         router(g, "rSeedHave", "HAS_CANDIDATE");
         if (sof) router(g, "rImproveFeas", "CANDIDATE_FEASIBLE_SCORED");
         router(g, "rFree", "HAS_FREE_START");
@@ -197,9 +198,13 @@ public final class BuiltinGraphs {
         g.edge("rWarmTicks", Guarantee.FALSE, "settledMark");
         g.edge("smoothWarm", Guarantee.DONE, "repWarm");
         g.edge("settledMark", Guarantee.DONE, "repSkip");
-        g.edge("repSkip", Guarantee.DONE, coldEntry);
+        g.edge("repSkip", Guarantee.DONE, sof ? coldEntry : "coarseWarm");
         g.edge("repA", Guarantee.DONE, sof ? "rFeasFastCold" : "rEarlyFeas");
-        g.edge("repWarm", Guarantee.DONE, sof ? "rFeasFastWarm" : coldEntry);
+        g.edge("repWarm", Guarantee.DONE, sof ? "rFeasFastWarm" : "coarseWarm");
+        if (!sof) {
+            g.edge("coarseWarm", Guarantee.IMPROVED, coldEntry);
+            g.edge("coarseWarm", Guarantee.UNCHANGED, coldEntry);
+        }
         if (sof) {
             g.edge("rFeasFastCold", Guarantee.TRUE, "lblFF");
             g.edge("rFeasFastCold", Guarantee.FALSE, "rEarlyFree");

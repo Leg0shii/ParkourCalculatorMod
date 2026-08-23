@@ -76,6 +76,11 @@ public class OptimizeVsFastTest {
                         + " is worse than fast's " + fast.result.getObjectiveValue(),
                 optimize.result.getObjectiveValue() <= fast.result.getObjectiveValue());
 
+        assertTrue("optimize objective " + optimize.result.getObjectiveValue()
+                        + " is short of the 1.9.0 baseline (-51.6214); the coarse ascent is not reaching"
+                        + " the flat-facing basin",
+                optimize.result.getObjectiveValue() <= -51.0);
+
         assertNotNull("optimize: no run record", optimize.record);
         assertTrue("optimize published " + optimize.record.trajectory.size()
                         + " incumbents; Cancel would keep the first candidate",
