@@ -113,10 +113,6 @@ public final class FacingPrefold {
         return identity;
     }
 
-    public int reducedVars() {
-        return identity ? n : vars;
-    }
-
     public int pinnedTicks() {
         if (identity) return 0;
         int k = 0;

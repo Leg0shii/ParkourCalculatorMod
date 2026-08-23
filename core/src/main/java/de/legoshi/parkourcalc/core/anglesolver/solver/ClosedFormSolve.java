@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/** Closed-form jump solve: the microsecond fast path tried ahead of the CMA-ES multistart.
+/** Closed-form jump solve: the microsecond fast path tried ahead of the slower recovery stages.
  *
  *  <p>It exploits the proven structure (horizontal motion is linear in the per-tick input vectors; the
  *  only nonconvexity is each input's fixed modulus) by solving the convex Lagrangian dual
@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *  <p>Returns absolute wrapped facings strictly feasible on the exact model, or {@code null} when the
  *  closed form does not apply (facing walls beyond {@link FacingPrefold} pins and dF=0 chains) or cannot
  *  certify feasibility; the caller then falls back
- *  ({@link SlpSolve}, then the full multistart), so this only ever makes solving faster, never less
+ *  ({@link SlpSolve}, then the recovery stages), so this only ever makes solving faster, never less
  *  reliable. Optimizing into a same-axis wall degenerates the dual's recovery, which is why one
  *  direction can fail here while the opposite certifies (docs/research/angle-solver.md 2.1.1). */
 public final class ClosedFormSolve {
@@ -284,7 +284,7 @@ public final class ClosedFormSolve {
 
     private static double scanScore(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, double[] yaws) {
         double o = exact.forward(sc, sc.toGameFacings(yaws)).getPos(spec.objective.tick, spec.objective.axis);
-        return spec.objective.scored(o, yaws);
+        return spec.objective.scored(o, sc.startYaw, yaws);
     }
 
     private static Result solveWithPrefold(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, double feasTol,
@@ -450,6 +450,15 @@ public final class ClosedFormSolve {
         int axis = spec.objective.axis == JumpPhysicsInputs.Axis.X ? 0 : 1;
         double constPos = lin.constPos(spec.objective.tick, axis);
         return spec.objective.sense == Objective.Sense.MAX ? constPos + r.value : constPos - r.value;
+    }
+
+    public static double dualBoundIgnoringFacing(JumpSpec spec) {
+        if (!JumpLinearModel.hasFacingWall(spec.constraints)) return dualBound(spec);
+        List<JumpConstraint> kept = new ArrayList<>(spec.constraints.size());
+        for (JumpConstraint c : spec.constraints) {
+            if (c.mode != JumpConstraint.Mode.F) kept.add(c);
+        }
+        return dualBound(new JumpSpec(spec.asScenario(), kept, spec.objective));
     }
 
     private static double violOnExact(ExactJumpModel exact, JumpPhysicsInputs sc,

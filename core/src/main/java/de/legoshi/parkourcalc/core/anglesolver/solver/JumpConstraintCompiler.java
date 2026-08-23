@@ -28,32 +28,6 @@ public final class JumpConstraintCompiler {
             return v;
         }
 
-        /** Quadratic penalty: muIneq*slack^2 (slack>0 only) summed over ineq, plus muEq*residual^2 over eq. */
-        public double penalty(double[] gameFacings, ForwardPath path, double muIneq, double muEq) {
-            double pen = 0.0;
-            for (JumpConstraint c : ineq) {
-                double s = slack(c, gameFacings, path);
-                if (s > 0) pen += muIneq * s * s;
-            }
-            for (JumpConstraint c : eq) {
-                double e = evaluate(c, gameFacings, path);
-                pen += muEq * e * e;
-            }
-            return pen;
-        }
-
-        public double translatedPenalty(double[] gameFacings, ForwardPath path, double dx, double dz, double muIneq, double muEq) {
-            double pen = 0.0;
-            for (JumpConstraint c : ineq) {
-                double s = translatedSlack(c, gameFacings, path, dx, dz);
-                if (s > 0) pen += muIneq * s * s;
-            }
-            for (JumpConstraint c : eq) {
-                double e = translatedEvaluate(c, gameFacings, path, dx, dz);
-                pen += muEq * e * e;
-            }
-            return pen;
-        }
     }
 
     public static double translatedEvaluate(JumpConstraint c, double[] F, ForwardPath path, double dx, double dz) {
@@ -81,8 +55,8 @@ public final class JumpConstraintCompiler {
         for (JumpConstraint c : spec.constraints) {
             validateTick(c.t1, n, c.name);
             if (c.t2 != null) validateTick(c.t2, n, c.name);
-            if (c.mode == JumpConstraint.Mode.DXZ && c.t2 == null) {
-                throw new IllegalArgumentException("constraint " + c.name + ": DXZ requires t2");
+            if ((c.mode == JumpConstraint.Mode.DXZ || c.mode == JumpConstraint.Mode.DZX) && c.t2 == null) {
+                throw new IllegalArgumentException("constraint " + c.name + ": " + c.mode + " requires t2");
             }
             if (c.cmp == JumpConstraint.Cmp.EQ) {
                 eq.add(c);
@@ -107,6 +81,9 @@ public final class JumpConstraintCompiler {
             case DXZ:
                 return Math.abs(path.posX[c.t1] - path.posX[c.t2])
                         - Math.abs(path.posZ[c.t1] - path.posZ[c.t2]) - c.rhs;
+            case DZX:
+                return Math.abs(path.posZ[c.t1] - path.posZ[c.t2])
+                        - Math.abs(path.posX[c.t1] - path.posX[c.t2]) - c.rhs;
             default:
                 throw new IllegalStateException("unknown mode: " + c.mode);
         }

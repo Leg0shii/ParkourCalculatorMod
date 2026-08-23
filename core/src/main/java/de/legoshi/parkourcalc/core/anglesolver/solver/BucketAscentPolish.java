@@ -5,17 +5,17 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/** Deterministic exhaustive block-coordinate ascent on the byte-exact model, run on a feasible CMA-ES
+/** Deterministic exhaustive block-coordinate ascent on the byte-exact model, run on a feasible
  *  result to finish the job. Each yaw selects one of MC's 65536 float32 sine-table buckets, so the
  *  objective is a step function and the inequality walls fragment the feasible region into disconnected
  *  discrete islands. A single-tick scan rails into one island's corner (a strict coordinate-wise local
  *  optimum); the joint two-tick scans here make the feasible moves that hop between islands, which
- *  CMA-ES's quadratic penalty cannot (the penalty puts a barrier on every wall).
+ *  a penalty-based search cannot (the penalty puts a barrier on every wall).
  *
- *  <p>Every candidate is evaluated with the same wrap + toGameFacings + forward chain CmaesJumpHarness
- *  uses, and rejected unless strictly feasible, so this can only improve a feasible start, never clip.
+ *  <p>Every candidate is evaluated with the wrap + toGameFacings + forward chain,
+ *  and rejected unless strictly feasible, so this can only improve a feasible start, never clip.
  *  No RNG affects the outcome: the optional perturbation restarts use a fixed seed. The {@link Config}
- *  trades depth for speed; the engine polishes several CMA-ES basins in parallel and keeps the best. */
+ *  trades depth for speed. */
 public final class BucketAscentPolish {
 
     private static final double FEAS_TOL = 0.0;
@@ -161,6 +161,6 @@ public final class BucketAscentPolish {
         ForwardPath pr = model.forward(scenario, gf);
         double viol = c.maxViolation(gf, pr);
         if (viol > FEAS_TOL) return Double.POSITIVE_INFINITY;
-        return sign * pr.getPos(obj.tick, obj.axis) + obj.smoothPenalty(abs);
+        return sign * pr.getPos(obj.tick, obj.axis) + obj.smoothPenalty(scenario.startYaw, abs);
     }
 }

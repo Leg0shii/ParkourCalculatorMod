@@ -56,8 +56,7 @@ public final class GraphPresetIO {
             if (n.params != null) {
                 for (GraphPresetFile.Param p : n.params) {
                     if (p == null || p.key == null) continue;
-                    String error = applyParam(params, type, p, n.id);
-                    if (error != null) return Result.failure(error);
+                    applyParam(params, type, p);
                 }
             }
             GraphNode node = new GraphNode(n.id, type, params);
@@ -94,7 +93,7 @@ public final class GraphPresetIO {
         return Result.success(graph);
     }
 
-    private static String applyParam(ParamValues params, NodeType type, GraphPresetFile.Param p, String nodeId) {
+    private static void applyParam(ParamValues params, NodeType type, GraphPresetFile.Param p) {
         ParamSpec spec = null;
         for (ParamSpec s : type.params) {
             if (s.key.equals(p.key)) {
@@ -103,7 +102,7 @@ public final class GraphPresetIO {
             }
         }
         if (spec == null) {
-            return "Unknown param '" + p.key + "' (node '" + nodeId + "').";
+            return;
         }
         switch (spec.kind) {
             case INT:
@@ -118,7 +117,6 @@ public final class GraphPresetIO {
                 if (p.str != null) params.set(p.key, p.str);
                 break;
         }
-        return null;
     }
 
     public static GraphPresetFile fromGraph(SolverGraph graph) {

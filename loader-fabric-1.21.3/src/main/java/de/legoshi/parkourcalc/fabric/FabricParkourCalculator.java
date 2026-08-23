@@ -39,10 +39,12 @@ public class FabricParkourCalculator implements ClientModInitializer {
     public static KeyMapping playbackKeyBinding;
     public static KeyMapping landingConstraintsKeyBinding;
     public static KeyMapping removeConstraintsKeyBinding;
+    public static KeyMapping extendPathAndSolveKeyBinding;
     private static KeyMapping applySurfaceStateKeyBinding;
     private static KeyMapping solveKeyBinding;
     private static KeyMapping solverStartTickKeyBinding;
     private static KeyMapping solverEndTickKeyBinding;
+    private static KeyMapping rerunSimulationKeyBinding;
     private static KeyMapping captureMomentumBlockKeyBinding;
     private static KeyMapping captureCollisionBlockKeyBinding;
     private static KeyMapping captureLandBlockKeyBinding;
@@ -81,10 +83,12 @@ public class FabricParkourCalculator implements ClientModInitializer {
         playbackKeyBinding = key("key.parkourcalculator.toggle_playback", GLFW.GLFW_KEY_P);
         landingConstraintsKeyBinding = key("key.parkourcalculator.add_landing_constraints", GLFW.GLFW_KEY_B);
         removeConstraintsKeyBinding = key("key.parkourcalculator.remove_selected_constraints", GLFW.GLFW_KEY_X);
+        extendPathAndSolveKeyBinding = key("key.parkourcalculator.extend_path_and_solve_to_block", GLFW.GLFW_KEY_U);
         applySurfaceStateKeyBinding = key("key.parkourcalculator.apply_surface_state", GLFW.GLFW_KEY_H);
         solveKeyBinding = key("key.parkourcalculator.solve", GLFW.GLFW_KEY_V);
         solverStartTickKeyBinding = key("key.parkourcalculator.set_solver_start", GLFW.GLFW_KEY_I);
         solverEndTickKeyBinding = key("key.parkourcalculator.set_solver_end", GLFW.GLFW_KEY_O);
+        rerunSimulationKeyBinding = key("key.parkourcalculator.rerun_simulation", GLFW.GLFW_KEY_J);
         if (blockCaptureEnabled) {
             captureMomentumBlockKeyBinding = key("key.parkourcalculator.capture_momentum_block", GLFW.GLFW_KEY_M);
             captureCollisionBlockKeyBinding = key("key.parkourcalculator.capture_collision_block", GLFW.GLFW_KEY_N);
@@ -121,6 +125,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         application.setPlaybackBridge(playbackBridge);
         application.setBlockPicker(new FabricBlockPicker());
         application.setupUi();
+        Minecraft client = Minecraft.getInstance();
+        if (client != null && client.options != null) {
+            client.options.load();
+        }
     }
 
     private static boolean wasPlaybackRunning = false;
@@ -254,6 +262,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         while (removeConstraintsKeyBinding.consumeClick()) {
             removeConstraintsPressed = true;
         }
+        boolean extendPathAndSolvePressed = false;
+        while (extendPathAndSolveKeyBinding.consumeClick()) {
+            extendPathAndSolvePressed = true;
+        }
         boolean applySurfaceStatePressed = false;
         while (applySurfaceStateKeyBinding.consumeClick()) {
             applySurfaceStatePressed = true;
@@ -269,6 +281,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         boolean solverEndPressed = false;
         while (solverEndTickKeyBinding.consumeClick()) {
             solverEndPressed = true;
+        }
+        boolean rerunSimulationPressed = false;
+        while (rerunSimulationKeyBinding.consumeClick()) {
+            rerunSimulationPressed = true;
         }
         boolean captureMomentum = false;
         boolean captureCollision = false;
@@ -312,6 +328,9 @@ public class FabricParkourCalculator implements ClientModInitializer {
         if (removeConstraintsPressed && canDispatch) {
             application.removeSelectedConstraints();
         }
+        if (extendPathAndSolvePressed && canDispatch) {
+            triggerExtendPathAndSolve(client);
+        }
         if (applySurfaceStatePressed && canDispatch) {
             application.applyPathSurfaceState();
         }
@@ -323,6 +342,9 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
         if (solverEndPressed && canDispatch) {
             application.setSolverLandingTickFromSelection();
+        }
+        if (rerunSimulationPressed && canDispatch) {
+            application.runSimulation();
         }
         if (captureMomentum && canDispatch) {
             application.captureAngleSolverBlock(BlockSelection.Kind.MOMENTUM);
@@ -371,6 +393,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
             application.removeSelectedConstraints();
             return true;
         }
+        if (glfwKey == boundKey(extendPathAndSolveKeyBinding)) {
+            triggerExtendPathAndSolve(client);
+            return true;
+        }
         if (glfwKey == boundKey(applySurfaceStateKeyBinding)) {
             application.applyPathSurfaceState();
             return true;
@@ -385,6 +411,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
         if (glfwKey == boundKey(solverEndTickKeyBinding)) {
             application.setSolverLandingTickFromSelection();
+            return true;
+        }
+        if (glfwKey == boundKey(rerunSimulationKeyBinding)) {
+            application.runSimulation();
             return true;
         }
         return false;
@@ -478,6 +508,23 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     public static void resolveAutoScale(int displayHeightPx) {
         application.resolveAutoScaleIfNeeded(displayHeightPx);
+    }
+
+    private static void triggerExtendPathAndSolve(Minecraft client) {
+        if (client.hitResult instanceof net.minecraft.world.phys.BlockHitResult blockHit && client.hitResult.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK) {
+            net.minecraft.core.BlockPos pos = blockHit.getBlockPos();
+            double targetX = pos.getX() + 0.5;
+            double targetY = pos.getY() + 1.0;
+            if (client.level != null) {
+                net.minecraft.world.level.block.state.BlockState state = client.level.getBlockState(pos);
+                net.minecraft.world.phys.shapes.VoxelShape shape = state.getCollisionShape(client.level, pos);
+                if (!shape.isEmpty()) {
+                    targetY = pos.getY() + shape.max(net.minecraft.core.Direction.Axis.Y);
+                }
+            }
+            double targetZ = pos.getZ() + 0.5;
+            application.extendPathAndSolveToBlock(targetX, targetY, targetZ);
+        }
     }
 
     private static String modVersion() {

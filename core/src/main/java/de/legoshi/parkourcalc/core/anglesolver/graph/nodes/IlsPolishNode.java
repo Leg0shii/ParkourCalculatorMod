@@ -23,10 +23,6 @@ public final class IlsPolishNode implements NodeRuntime {
         cfg.perturbTicksSpan = params.getInt("perturbTicksSpan");
         cfg.perturbMagMin = params.getDouble("perturbMagMin");
         cfg.perturbMagSpan = params.getDouble("perturbMagSpan");
-        cfg.climbMuIneq = params.getDouble("climbMuIneq");
-        cfg.climbMuEq = params.getDouble("climbMuEq");
-        cfg.climbSigmaDeg = params.getDouble("climbSigmaDeg");
-        cfg.climbMaxEval = params.getInt("climbMaxEval");
     }
 
     @Override
@@ -37,7 +33,8 @@ public final class IlsPolishNode implements NodeRuntime {
             SolverTrace.log("ENGINE", "ils start remainingMs=%d",
                     deadlineNanos > 0 ? (deadlineNanos - System.nanoTime()) / 1_000_000L : -1);
         }
-        double[] ils = IlsPolish.polish(ctx.model, ctx.spec, in.yaws, deadlineNanos, roundCap,
+        int rounds = deadlineNanos > 0 ? Integer.MAX_VALUE : roundCap;
+        double[] ils = IlsPolish.polish(ctx.model, ctx.spec, in.yaws, deadlineNanos, rounds,
                 ctx.sequential, nodeToken, ctx.progress, cfg);
         if (ils != null) {
             boolean max = ctx.maximize();

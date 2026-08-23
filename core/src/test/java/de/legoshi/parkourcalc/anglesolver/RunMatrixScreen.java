@@ -14,10 +14,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunRecord;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ValidationIssue;
-import de.legoshi.parkourcalc.core.anglesolver.solver.AlmSnapStage;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
-import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
-import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.ui.InputData;
@@ -91,30 +88,13 @@ public class RunMatrixScreen {
             new CaptureMutations.Mutation(0, 0, 0.0),
     };
 
-    static final class AlmParams {
-        double lambda;
-        int budgetSec;
-        int seeds = 16;
-        int topK = 32;
-        boolean cooking = true;
-        double gateWiden = 1.0;
-    }
-
     static final class Preset {
         final String id;
         final Consumer<AngleSolverState> apply;
-        final AlmParams alm;
 
         Preset(String id, Consumer<AngleSolverState> apply) {
             this.id = id;
             this.apply = apply;
-            this.alm = null;
-        }
-
-        Preset(String id, AlmParams alm) {
-            this.id = id;
-            this.apply = null;
-            this.alm = alm;
         }
     }
 
@@ -130,27 +110,6 @@ public class RunMatrixScreen {
         g.edge("seed", Guarantee.NONE, "emit");
         g.edge("cap", Guarantee.AT_CAP, "smooth");
         g.edge("cap", Guarantee.FALSE, "smooth");
-        g.edge("smooth", Guarantee.DONE, "emit");
-        return g.build();
-    }
-
-    private static SolverGraph cmaOnlyGraph(int budgetSec) {
-        GraphBuilder g = new GraphBuilder("cma-only", true);
-        g.add("entry", "entry");
-        g.add("emit", "emit");
-        g.add("race", "cmaesRace")
-                .set("race", "restarts", 16)
-                .set("race", "maxEval", 4500)
-                .set("race", "polishCount", 2)
-                .set("race", "polishDepth", "LIGHT")
-                .set("race", "sigmaDeg", 90.0)
-                .set("race", "warmStart", false)
-                .set("race", "budgetSec", budgetSec);
-        g.add("smooth", "smoothing").set("smooth", "countEvals", true);
-        g.edge("entry", Guarantee.DONE, "race");
-        g.edge("race", Guarantee.FEASIBLE, "smooth");
-        g.edge("race", Guarantee.INFEASIBLE, "smooth");
-        g.edge("race", Guarantee.NONE, "emit");
         g.edge("smooth", Guarantee.DONE, "emit");
         return g.build();
     }
@@ -221,9 +180,6 @@ public class RunMatrixScreen {
             s.setEffort(AngleSolverState.Effort.CUSTOM);
             s.setStopOnFeasible(false);
             AngleSolverState.SolveBudget b = s.getSolveBudget();
-            b.setRestarts(16);
-            b.setMaxEval(4500);
-            b.setPolishCount(2);
             b.setUseWindowSolver(true);
             b.setIlsExhaustive(true);
             b.setTimeBudgetSeconds(30);
@@ -232,10 +188,6 @@ public class RunMatrixScreen {
             s.setEffort(AngleSolverState.Effort.CUSTOM);
             s.setStopOnFeasible(false);
             AngleSolverState.SolveBudget b = s.getSolveBudget();
-            b.setRestarts(32);
-            b.setMaxEval(9000);
-            b.setPolishCount(4);
-            b.setPolishDepth(AngleSolverState.PolishDepth.EXHAUSTIVE);
             b.setUseWindowSolver(true);
             b.setIlsExhaustive(false);
             b.setTimeBudgetSeconds(60);
@@ -249,10 +201,8 @@ public class RunMatrixScreen {
             b.setTimeBudgetSeconds(60);
         }));
         out.add(new Preset("seed-only30", customGraph(seedOnlyGraph(30))));
-        out.add(new Preset("cma-only45", customGraph(cmaOnlyGraph(45))));
         out.add(new Preset("bnb-heavy60", customGraph(bnbHeavyGraph(10, 40, 10))));
         out.add(new Preset("seed-only15", customGraph(seedOnlyGraph(15))));
-        out.add(new Preset("cma-only20", customGraph(cmaOnlyGraph(20))));
         out.add(new Preset("custom-fastgraph", customGraph(BuiltinGraphs.fast())));
         out.add(new Preset("smooth-heavy", customGraph(smoothHeavyGraph())));
         return out;
@@ -369,21 +319,6 @@ public class RunMatrixScreen {
                 s.setOptimizeSeconds(sec);
                 s.setSmoothLambda(lambda);
             });
-        }
-        if (base.startsWith("alm")) {
-            AlmParams ap = new AlmParams();
-            ap.budgetSec = Integer.parseInt(base.substring("alm".length()));
-            for (Map.Entry<String, String> e : combo.entrySet()) {
-                String key = e.getKey();
-                String v = e.getValue();
-                if ("l".equals(key)) ap.lambda = Double.parseDouble(v);
-                else if ("seeds".equals(key)) ap.seeds = Integer.parseInt(v);
-                else if ("topk".equals(key)) ap.topK = Integer.parseInt(v);
-                else if ("cooking".equals(key)) ap.cooking = !"0".equals(v);
-                else if ("gate".equals(key)) ap.gateWiden = Double.parseDouble(v);
-                else throw new IllegalArgumentException("unknown alm sweep param: " + key);
-            }
-            return new Preset(id.toString(), ap);
         }
         throw new IllegalArgumentException("unknown sweep base: " + base);
     }
@@ -518,9 +453,6 @@ public class RunMatrixScreen {
         if (pr.mutation != null && !CaptureMutations.apply(file, pr.mutation)) {
             throw new IllegalStateException(pr.fullName() + ": mutation not applicable");
         }
-        if (preset.alm != null) {
-            return runAlmOne(preset.alm, file, timeoutMs);
-        }
         ExactJumpModel model = ExactJumpModel.forMcVersion(file.mcVersion);
         InputData inputs = new InputData();
         SaveIO.applyRowsTo(file, inputs);
@@ -548,58 +480,6 @@ public class RunMatrixScreen {
             rec.outcome.chain = "no record (invalid job)";
         }
         rec.mcVersion = file.mcVersion;
-        return rec;
-    }
-
-    private SolveRunRecord runAlmOne(AlmParams ap, SaveFile file, long timeoutMs) {
-        ExactJumpModel model = ExactJumpModel.forMcVersion(file.mcVersion);
-        InputData inputs = new InputData();
-        SaveIO.applyRowsTo(file, inputs);
-        AngleSolverState state = new AngleSolverState();
-        SaveIO.applyAngleSolverTo(file, state);
-        state.setSmoothLambda(ap.lambda);
-        state.clearResult();
-        AngleSolverEngine engine = new AngleSolverEngine(state, Fixtures.buildBoxes(file), inputs, t -> { }, model);
-        JumpSpec spec = engine.debugBuildSpec();
-        SolveRunRecord rec = new SolveRunRecord();
-        rec.mcVersion = file.mcVersion;
-        rec.outcome = new SolveRunRecord.Outcome();
-        if (spec == null) {
-            rec.outcome.status = SolveRunRecord.STATUS_FAILED;
-            rec.outcome.chain = "almSnapStage: no spec (invalid job)";
-            return rec;
-        }
-        JumpPhysicsInputs sc = spec.asScenario();
-        double[] dom = null;
-        if (sc.startBox != null && sc.startBox.startFree()) {
-            dom = new double[]{sc.startBox.pxLo - sc.startPos.x, sc.startBox.pxHi - sc.startPos.x,
-                    sc.startBox.pzLo - sc.startPos.z, sc.startBox.pzHi - sc.startPos.z};
-        }
-        int jumps = 0;
-        for (int t = 0; t < sc.numTicks; t++) {
-            if (sc.jumpAt(t)) jumps++;
-        }
-        rec.problem = SolveRunRecord.problemOf(spec, jumps);
-        rec.config = new SolveRunRecord.Config();
-        rec.config.effort = "ALM";
-        rec.config.metric = new SolveRunRecord.Metric();
-        rec.config.metric.type = "hierarchical";
-        rec.config.metric.feasTol = 0.0;
-        rec.config.metric.sense = spec.objective.sense.name();
-        rec.config.metric.smoothLambda = spec.objective.smoothLambda;
-        long budgetNanos = Math.min(ap.budgetSec * 1_000_000_000L, timeoutMs * 1_000_000L);
-        long t0 = System.nanoTime();
-        AlmSnapStage.SolveOutcome oc = AlmSnapStage.solve(model, spec, new ArrayList<double[]>(),
-                ap.seeds, ap.cooking, ap.topK, ap.gateWiden, dom, t0 + budgetNanos, null);
-        long wall = System.nanoTime() - t0;
-        rec.outcome.status = oc.feasible ? SolveRunRecord.STATUS_SOLVED : SolveRunRecord.STATUS_STOPPED_BEST;
-        rec.outcome.feasible = oc.feasible;
-        rec.outcome.objective = Double.isNaN(oc.objective) ? null : oc.objective;
-        rec.outcome.violation = Double.isNaN(oc.viol) || Double.isInfinite(oc.viol) ? null : oc.viol;
-        rec.outcome.wallNanos = wall;
-        rec.outcome.chain = "almSnapStage seeds=" + oc.seedsTried + " winner="
-                + (oc.winnerKind != null ? oc.winnerKind : "-") + "#" + oc.winnerSeedIndex;
-        SolveRunRecord.smoothnessOf(rec.outcome, oc.yawsDeg);
         return rec;
     }
 

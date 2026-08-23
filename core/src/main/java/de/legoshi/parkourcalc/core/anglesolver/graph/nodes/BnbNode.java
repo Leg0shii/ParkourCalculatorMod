@@ -50,15 +50,13 @@ public final class BnbNode implements NodeRuntime {
             if (ctx.progress != null) ctx.progress.setStage(ctx.chainWith("pattern B&B"));
             if (SolverTrace.on()) SolverTrace.log("ENGINE", "bnb rescue budgetMs=%d", remaining / 1_000_000L);
             double[] rescue = BoundPrunedRecovery.solve(ctx.exactModel, ctx.spec, ctx.feasTol, nodeToken,
-                    remaining, max ? -1.0e300 : 1.0e300, cfg);
+                    remaining, max ? -1.0e300 : 1.0e300, cfg, ctx.closestMiss());
             if (SolverTrace.on()) SolverTrace.log("ENGINE", "bnb rescue %s", rescue != null ? "solved" : "miss");
             if (rescue == null) return passthrough(in);
             double[] yaws = Angles.wrapAll(rescue);
             ctx.chainAppend("pattern B&B");
             if (labelSuffix != null && !labelSuffix.isEmpty()) ctx.chainSuffix(labelSuffix);
-            Candidate out = Candidate.of(ctx, yaws);
-            if (ctx.progress != null) ctx.progress.report(yaws, out.objective, out.violation, true);
-            return NodeOutcome.of(Guarantee.FOUND, out);
+            return NodeOutcome.of(Guarantee.FOUND, Candidate.of(ctx, yaws));
         }
         if (in == null || in.yaws == null) return NodeOutcome.of(Guarantee.NONE, in);
         if (ctx.progress != null) ctx.progress.setStage(ctx.chainWith("branch and bound"));
@@ -68,7 +66,8 @@ public final class BnbNode implements NodeRuntime {
             SolverTrace.log("ENGINE", "bnb start budgetMs=%d stopAt=%s", remaining / 1_000_000L,
                     Double.isNaN(stopAt) ? "-" : String.valueOf(stopAt));
         }
-        double[] bnb = BoundPrunedRecovery.solve(ctx.exactModel, ctx.spec, ctx.feasTol, nodeToken, remaining, stopAt, cfg);
+        double[] bnb = BoundPrunedRecovery.solve(ctx.exactModel, ctx.spec, ctx.feasTol, nodeToken, remaining, stopAt, cfg,
+                ctx.closestMiss());
         if (bnb != null) {
             double cur = ctx.scoredObjective(in.yaws);
             double bnbObj = ctx.scoredObjective(bnb);

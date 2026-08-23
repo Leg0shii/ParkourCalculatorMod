@@ -12,7 +12,7 @@ public final class WrapWindowIls {
     private WrapWindowIls() {
     }
 
-    public static final double MAX_ABS_GF = 360.0;
+    public static final double MAX_ABS_GF = 12000.0;
     private static final double NORM_HIGH_TOL = 1.0e-6;
     private static final double NORM_GAIN_TOL = 1.0e-7;
     private static final double PRIO_NORM_TOL = 1.0e-7;
@@ -28,6 +28,8 @@ public final class WrapWindowIls {
         public Objective legalObjective;
         public double legalGoalRhs;
         public boolean gateFlipMoves;
+        public double maxAbsGf = MAX_ABS_GF;
+        public boolean reaccumScore;
     }
 
     public static boolean[] gateCriticalTicks(ExactJumpModel model, JumpSpec spec, double[] gf) {
@@ -77,7 +79,7 @@ public final class WrapWindowIls {
         int n = sc.numTicks;
         if (gf0 == null || gf0.length != n) return null;
         for (double g : gf0) {
-            if (Math.abs(g) > MAX_ABS_GF) return null;
+            if (Math.abs(g) > cfg.maxAbsGf) return null;
         }
         boolean modern = model.modern();
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
@@ -86,6 +88,7 @@ public final class WrapWindowIls {
             boolean grounded = !Double.isNaN(sc.slipAt(t));
             boostTick[t] = sc.jumpAt(t) && grounded && sc.sprintAt(t);
         }
+        double cap = cfg.maxAbsGf;
         double[] gf = gf0.clone();
         double[] inc = gf0.clone();
         boolean[] gate = cfg.gateFlipMoves ? gateCriticalTicks(model, spec, gf0) : new boolean[n];
@@ -243,7 +246,7 @@ public final class WrapWindowIls {
                     if (j == i || !prio[j]) continue;
                     if (stopped(st, cancel)) break outerB;
                     float[] rj = capFilter(FacingLattice.cellRepresentatives((float) gf[j], -cfg.span, cfg.span,
-                            modern, boostTick[j]));
+                            modern, boostTick[j]), cap);
                     double si = gf[i];
                     double sj = gf[j];
                     double bestV = curViol;
@@ -287,7 +290,7 @@ public final class WrapWindowIls {
                 if (!cfg.kicks || stopped(st, cancel) || curViol <= 0.0) break;
                 kickCycles++;
                 System.arraycopy(bestGf, 0, gf, 0, n);
-                int applied = applyKick(rng, gf, prio, cfg.span, modern, boostTick);
+                int applied = applyKick(rng, gf, prio, cfg.span, modern, boostTick, cap);
                 if (applied == 0) break;
                 curViol = score(model, sc, compiled, gf, transDomain, st, cfg);
                 Arrays.fill(cands, null);
@@ -298,13 +301,18 @@ public final class WrapWindowIls {
             bestGf = gf.clone();
         }
         for (double g : bestGf) {
-            if (Math.abs(g) > MAX_ABS_GF) throw new IllegalStateException("stage produced gf beyond the 360 cap: " + g);
+            if (Math.abs(g) > cfg.maxAbsGf) throw new IllegalStateException("stage produced gf beyond the wrap cap: " + g);
         }
         return new Result(bestGf, bestViol, st.evals, rounds, accepts, kickCycles);
     }
 
     public static float[] candSetFor(float cur, float incCell, int baseSpan, int maxSpan,
                                      int candHighTarget, boolean modern, boolean boost) {
+        return candSetFor(cur, incCell, baseSpan, maxSpan, candHighTarget, modern, boost, MAX_ABS_GF);
+    }
+
+    public static float[] candSetFor(float cur, float incCell, int baseSpan, int maxSpan,
+                                     int candHighTarget, boolean modern, boolean boost, double cap) {
         double curNorm = normAt(cur);
         long curId = FacingLattice.jointCellId(cur, modern, boost);
         int sp = baseSpan;
@@ -316,7 +324,7 @@ public final class WrapWindowIls {
                 float base = (float) ((double) cur + b);
                 float[] reps = FacingLattice.cellRepresentatives(base, -sp, sp, modern, boost);
                 for (float r : reps) {
-                    if (Math.abs((double) r) > MAX_ABS_GF) continue;
+                    if (Math.abs((double) r) > cap) continue;
                     long id = FacingLattice.jointCellId(r, modern, boost);
                     if (id == curId) continue;
                     if (map.containsKey(Long.valueOf(id))) continue;
@@ -329,7 +337,7 @@ public final class WrapWindowIls {
                 }
             }
             if (high >= candHighTarget || sp >= maxSpan) {
-                if (Math.abs((double) incCell) <= MAX_ABS_GF) {
+                if (Math.abs((double) incCell) <= cap) {
                     long incId = FacingLattice.jointCellId(incCell, modern, boost);
                     if (incId != curId && !map.containsKey(Long.valueOf(incId))) {
                         map.put(Long.valueOf(incId), Float.valueOf(incCell));
@@ -342,6 +350,10 @@ public final class WrapWindowIls {
     }
 
     public static float[] candFull(float cur, int span, boolean modern, boolean boost) {
+        return candFull(cur, span, modern, boost, MAX_ABS_GF);
+    }
+
+    public static float[] candFull(float cur, int span, boolean modern, boolean boost, double cap) {
         long curId = FacingLattice.jointCellId(cur, modern, boost);
         LinkedHashMap<Long, Float> map = new LinkedHashMap<Long, Float>();
         double[] bases = {0.0, 360.0, -360.0};
@@ -349,7 +361,7 @@ public final class WrapWindowIls {
             float base = (float) ((double) cur + b);
             float[] reps = FacingLattice.cellRepresentatives(base, -span, span, modern, boost);
             for (float r : reps) {
-                if (Math.abs((double) r) > MAX_ABS_GF) continue;
+                if (Math.abs((double) r) > cap) continue;
                 long id = FacingLattice.jointCellId(r, modern, boost);
                 if (id == curId) continue;
                 Long key = Long.valueOf(id);
@@ -360,6 +372,10 @@ public final class WrapWindowIls {
     }
 
     public static float[] kickCells(float cur, int span, boolean modern, boolean boost) {
+        return kickCells(cur, span, modern, boost, MAX_ABS_GF, false);
+    }
+
+    public static float[] kickCells(float cur, int span, boolean modern, boolean boost, double cap, boolean any) {
         long curId = FacingLattice.jointCellId(cur, modern, boost);
         LinkedHashMap<Long, Float> map = new LinkedHashMap<Long, Float>();
         double[] bases = {360.0, -360.0, 720.0, -720.0};
@@ -367,10 +383,10 @@ public final class WrapWindowIls {
             float base = (float) ((double) cur + b);
             float[] reps = FacingLattice.cellRepresentatives(base, -span, span, modern, boost);
             for (float r : reps) {
-                if (Math.abs((double) r) > MAX_ABS_GF) continue;
+                if (Math.abs((double) r) > cap) continue;
                 long id = FacingLattice.jointCellId(r, modern, boost);
                 if (id == curId) continue;
-                if (Math.abs(normAt(r)) <= NORM_HIGH_TOL) continue;
+                if (!any && Math.abs(normAt(r)) <= NORM_HIGH_TOL) continue;
                 Long key = Long.valueOf(id);
                 if (!map.containsKey(key)) map.put(key, Float.valueOf(r));
             }
@@ -379,6 +395,11 @@ public final class WrapWindowIls {
     }
 
     static int applyKick(Random rng, double[] gf, boolean[] prio, int span, boolean modern, boolean[] boostTick) {
+        return applyKick(rng, gf, prio, span, modern, boostTick, MAX_ABS_GF);
+    }
+
+    static int applyKick(Random rng, double[] gf, boolean[] prio, int span, boolean modern, boolean[] boostTick,
+                         double cap) {
         int n = gf.length;
         List<Integer> pt = new ArrayList<Integer>();
         for (int t = 0; t < n; t++) {
@@ -389,10 +410,19 @@ public final class WrapWindowIls {
         int applied = 0;
         for (int attempt = 0; attempt < want * 6 && applied < want; attempt++) {
             int t = pt.get(rng.nextInt(pt.size())).intValue();
-            float[] cells = kickCells((float) gf[t], span, modern, boostTick[t]);
+            float[] cells = kickCells((float) gf[t], span, modern, boostTick[t], cap, false);
             if (cells.length == 0) continue;
             gf[t] = cells[rng.nextInt(cells.length)];
             applied++;
+        }
+        if (applied == 0) {
+            for (int attempt = 0; attempt < want * 6 && applied < want; attempt++) {
+                int t = pt.get(rng.nextInt(pt.size())).intValue();
+                float[] cells = kickCells((float) gf[t], span, modern, boostTick[t], cap, true);
+                if (cells.length == 0) continue;
+                gf[t] = cells[rng.nextInt(cells.length)];
+                applied++;
+            }
         }
         return applied;
     }
@@ -412,20 +442,21 @@ public final class WrapWindowIls {
 
     private static float[] candsFor(double[] gf, double[] inc, int t, boolean full, Config cfg,
                                     boolean modern, boolean boost) {
-        if (full) return candFull((float) gf[t], cfg.span, modern, boost);
-        return candSetFor((float) gf[t], (float) inc[t], cfg.span, cfg.maxSpan, cfg.candHighTarget, modern, boost);
+        if (full) return candFull((float) gf[t], cfg.span, modern, boost, cfg.maxAbsGf);
+        return candSetFor((float) gf[t], (float) inc[t], cfg.span, cfg.maxSpan, cfg.candHighTarget, modern, boost,
+                cfg.maxAbsGf);
     }
 
-    private static float[] capFilter(float[] reps) {
+    private static float[] capFilter(float[] reps, double cap) {
         int keep = 0;
         for (float r : reps) {
-            if (Math.abs((double) r) <= MAX_ABS_GF) keep++;
+            if (Math.abs((double) r) <= cap) keep++;
         }
         if (keep == reps.length) return reps;
         float[] out = new float[keep];
         int i = 0;
         for (float r : reps) {
-            if (Math.abs((double) r) <= MAX_ABS_GF) out[i++] = r;
+            if (Math.abs((double) r) <= cap) out[i++] = r;
         }
         return out;
     }
@@ -455,19 +486,20 @@ public final class WrapWindowIls {
                                 double[] gf, double[] transDomain, State st, Config cfg) {
         st.evals++;
         if (st.evalCap > 0 && st.evals >= st.evalCap) st.hitCap = true;
-        ForwardPath p = model.forward(sc, gf);
+        double[] eff = cfg.reaccumScore ? sc.toGameFacings(Angles.wrapAll(gf)) : gf;
+        ForwardPath p = model.forward(sc, eff);
         if (cfg.legalObjective == null) {
-            SnapRepairPolish.Trans tr = SnapRepairPolish.bestTranslation(compiled, gf, p,
+            PathTranslation.Trans tr = PathTranslation.bestTranslation(compiled, eff, p,
                     transDomain[0], transDomain[1], transDomain[2], transDomain[3]);
             return tr.viol;
         }
-        SnapRepairPolish.Trans tf = SnapRepairPolish.bestTranslation(compiled, gf, p,
+        PathTranslation.Trans tf = PathTranslation.bestTranslation(compiled, eff, p,
                 transDomain[0], transDomain[1], transDomain[2], transDomain[3]);
         if (tf.viol > 0.0) return LEGAL_HARD_INFEASIBLE + tf.viol;
         Objective obj = cfg.legalObjective;
         boolean objX = obj.axis == JumpPhysicsInputs.Axis.X;
         boolean max = obj.sense == Objective.Sense.MAX;
-        SnapRepairPolish.Trans to = SnapRepairPolish.bestTranslationObj(compiled, gf, p,
+        PathTranslation.Trans to = PathTranslation.bestTranslationObj(compiled, eff, p,
                 transDomain[0], transDomain[1], transDomain[2], transDomain[3], objX ? 0 : 1, max);
         if (to.viol > 0.0) return LEGAL_HARD_INFEASIBLE + to.viol;
         double achieved = p.getPos(obj.tick, obj.axis) + (objX ? to.tx : to.tz);

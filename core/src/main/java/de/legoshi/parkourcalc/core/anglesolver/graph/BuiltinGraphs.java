@@ -8,11 +8,11 @@ public final class BuiltinGraphs {
     }
 
     public static SolverGraph fast() {
-        return build("Fast", 16, 4500, 2, "LIGHT", true, false, true, 10, 3, 0);
+        return build("Fast", true, false, true, 10, 3, 0);
     }
 
     public static SolverGraph optimize(int optimizeSeconds) {
-        return build("Optimize", 16, 4500, 4, "EXHAUSTIVE", false, true, true, 10, 3, optimizeSeconds);
+        return build("Optimize", false, true, true, 10, 3, optimizeSeconds);
     }
 
     public static SolverGraph explore() {
@@ -31,7 +31,7 @@ public final class BuiltinGraphs {
                 .set("bnbFF", "budgetSec", bnbSec).set("bnbFF", "minBudgetMs", 0);
         router(g, "rIls", "CANDIDATE_FEASIBLE_RAW");
         g.add("ils", "ilsPolish").set("ils", "budgetSec", ilsSec).set("ils", "roundCap", 400);
-        g.add("smooth", "smoothing").set("smooth", "countEvals", true);
+        g.add("smooth", "smoothing").set("smooth", "countEvals", true).set("smooth", "deWiggle", true);
         g.edge("entry", Guarantee.DONE, "seed");
         g.edge("seed", Guarantee.FOUND, "rFeas");
         g.edge("seed", Guarantee.NONE, "bnbFF");
@@ -47,29 +47,24 @@ public final class BuiltinGraphs {
         return g.build();
     }
 
-    public static SolverGraph fromBudget(int restarts, int maxEval, int polishCount, boolean exhaustiveDepth,
-                                         boolean stopOnFeasible, boolean ilsExhaustive, boolean useWindowSolver,
-                                         int window, int commit, int timeBudgetSeconds) {
-        return build("Custom", restarts, maxEval, polishCount, exhaustiveDepth ? "EXHAUSTIVE" : "LIGHT",
-                stopOnFeasible, ilsExhaustive, useWindowSolver, window, commit, timeBudgetSeconds);
+    public static SolverGraph fromBudget(boolean stopOnFeasible, boolean ilsExhaustive,
+                                         boolean useWindowSolver, int window, int commit, int timeBudgetSeconds) {
+        return build("Custom", stopOnFeasible, ilsExhaustive, useWindowSolver, window, commit, timeBudgetSeconds);
     }
 
-    private static SolverGraph build(String name, int restarts, int maxEval, int polishCount, String polishDepth,
-                                     boolean sof, boolean ilx, boolean win, int window, int commit, int t) {
+    private static SolverGraph build(String name, boolean sof, boolean ilx, boolean win, int window, int commit, int t) {
         int tp = t > 0 ? t : 120;
         boolean exh = ilx && !sof;
-        boolean throttle = exh && t > 0;
-        int raceThrottledSec = Math.max(1, t * 2 / 5);
-        int raceWarmSec = throttle ? raceThrottledSec : t;
         int peelSec = t > 0 ? Math.max(1, Math.min(12, t)) : 12;
-        int momentumSec = t > 0 ? Math.min(240, t) : 240;
         int freeSec = t > 0 ? Math.min(20, t) : 20;
         int rescueSec = t > 0 ? Math.max(1, Math.min(3, t)) : 3;
-        int sweepSec = Math.max(1, Math.min(60, tp / 5));
-        int bnbSec = Math.max(1, (tp - sweepSec) * 3 / 4);
-        int ilsSec = Math.max(1, tp - sweepSec - bnbSec);
+        long reserveNanos = ilx && t > 0 ? GraphRunner.wrapReserveNanos(t * 1_000_000_000L) : 0L;
+        int stageSec = Math.max(1, tp - (int) ((reserveNanos + 999_999_999L) / 1_000_000_000L));
+        int sweepSec = Math.max(1, Math.min(60, stageSec / 5));
+        int bnbSec = Math.max(1, (stageSec - sweepSec) * 3 / 4);
+        int ilsSec = t > 0 ? stageSec : Math.max(1, stageSec - sweepSec - bnbSec);
         int nearBnbSec = Math.max(1, Math.min(60, tp / 2));
-        String coldEntry = throttle ? "rRaceTicks" : "raceColdFull";
+        String coldEntry = sof ? "rImproveFeas" : "rFree";
         String afterFree = sof ? "rRescueTicks" : "rHave";
         String afterCap = exh ? "rExhTicks" : (ilx ? "rWrapEps" : "rTrans");
 
@@ -93,32 +88,15 @@ public final class BuiltinGraphs {
         g.add("repA", "report");
         g.add("repWarm", "report");
         g.add("repSkip", "report");
-        race(g, "raceWarm", 16, 4500, 2, "LIGHT", true, raceWarmSec);
-        race(g, "raceColdFull", restarts, maxEval, polishCount, polishDepth, false, t);
-        if (throttle) {
-            race(g, "raceColdThrottled", restarts, maxEval, polishCount, polishDepth, false, raceThrottledSec);
-            router(g, "rRaceTicks", "TICKS_LE_CAP");
-            router(g, "rRaceJumps", "JUMPS_LE_ONE");
-            router(g, "rRaceHead", "HAS_REACH_HEADROOM");
-        }
-        if (ilx) {
-            router(g, "rMomGate", "VIOLATION_AT_MOST");
-            g.set("rMomGate", "epsilon", 5.0e-2);
-        } else {
-            router(g, "rMomGate", "CANDIDATE_FEASIBLE_SCORED");
-        }
-        g.add("momentum", "momentumAssembly")
-                .set("momentum", "budgetSec", momentumSec)
-                .set("momentum", "minBudgetSec", 2);
+        router(g, "rSeedHave", "HAS_CANDIDATE");
+        if (sof) router(g, "rImproveFeas", "CANDIDATE_FEASIBLE_SCORED");
         router(g, "rFree", "HAS_FREE_START");
         g.add("freeImprove", "freeStartImprove")
-                .set("freeImprove", "budgetSec", freeSec)
-                .set("freeImprove", "iters", 3);
+                .set("freeImprove", "budgetSec", freeSec);
         router(g, "rEarlyFree", "HAS_FREE_START");
         g.add("freeRescue", "freeStartImprove")
                 .set("freeRescue", "jointOnly", true)
-                .set("freeRescue", "budgetSec", 2)
-                .set("freeRescue", "iters", 1);
+                .set("freeRescue", "budgetSec", 2);
         if (!sof) {
             router(g, "rEarlyFeas", "CANDIDATE_FEASIBLE_RAW");
         }
@@ -135,6 +113,14 @@ public final class BuiltinGraphs {
                     .set("rescueBnb", "labelSuffix", " (first feasible)");
         }
         router(g, "rHave", "HAS_CANDIDATE");
+        if (exh) {
+            g.add("coldBnb", "bnb")
+                    .set("coldBnb", "mode", "FIRST_FEASIBLE")
+                    .set("coldBnb", "budgetSec", bnbSec)
+                    .set("coldBnb", "minBudgetMs", 0)
+                    .set("coldBnb", "labelSuffix", " (cold)");
+            router(g, "rColdHave", "HAS_CANDIDATE");
+        }
         g.add("cap2", "capCertify")
                 .set("cap2", "computeDualGap", false)
                 .set("cap2", "skipIfSettled", true);
@@ -162,7 +148,7 @@ public final class BuiltinGraphs {
         }
         if (ilx) {
             router(g, "rWrapEps", "VIOLATION_AT_MOST");
-            g.set("rWrapEps", "epsilon", 1.0e-2);
+            g.set("rWrapEps", "epsilon", 5.0e-2);
             router(g, "rWrapFeas", "CANDIDATE_FEASIBLE_SCORED");
             router(g, "rWrapLegal", "LEGAL_PUSH");
             g.add("wrap", "wrapIls")
@@ -171,12 +157,13 @@ public final class BuiltinGraphs {
         }
         router(g, "rTrans", "HAS_FREE_START");
         g.add("translate", "translatedStart");
-        g.add("smoothFinal", "smoothing").set("smoothFinal", "countEvals", true);
+        g.add("smoothFinal", "smoothing").set("smoothFinal", "countEvals", true)
+                .set("smoothFinal", "deWiggle", true);
         if (win) {
             g.add("horizon", "recedingHorizon")
                     .set("horizon", "window", window)
                     .set("horizon", "commit", commit);
-            router(g, "rChainTicks", "TICKS_LE_CAP");
+            if (!sof) router(g, "rChainTicks", "TICKS_LE_CAP");
             g.add("peel", "setupPeel")
                     .set("peel", "budgetSec", peelSec)
                     .set("peel", "candidateMs", 600)
@@ -193,29 +180,33 @@ public final class BuiltinGraphs {
         g.edge("cap1", Guarantee.AT_CAP, "repSkip");
         g.edge("cap1", Guarantee.FALSE, "repA");
         if (win) {
-            g.edge("horizon", Guarantee.FOUND, "rChainTicks");
+            g.edge("horizon", Guarantee.FOUND, sof ? "wrap0" : "rChainTicks");
             g.edge("horizon", Guarantee.NONE, "seedMulti");
-            g.edge("rChainTicks", Guarantee.TRUE, "seedMulti");
-            g.edge("rChainTicks", Guarantee.FALSE, "wrap0");
+            if (!sof) {
+                g.edge("rChainTicks", Guarantee.TRUE, "seedMulti");
+                g.edge("rChainTicks", Guarantee.FALSE, "wrap0");
+            }
             g.edge("peel", Guarantee.FOUND, "wrap0");
             g.edge("peel", Guarantee.NONE, "repA");
         }
         g.edge("seedMulti", Guarantee.FOUND, "wrap0");
-        g.edge("seedMulti", Guarantee.NONE, win ? "peel" : "repA");
+        g.edge("seedMulti", Guarantee.NONE, "rSeedHave");
+        g.edge("rSeedHave", Guarantee.TRUE, "wrap0");
+        g.edge("rSeedHave", Guarantee.FALSE, win ? "peel" : "repA");
         g.edge("wrap0", Guarantee.DONE, "rWarmTicks");
         g.edge("rWarmTicks", Guarantee.TRUE, "smoothWarm");
         g.edge("rWarmTicks", Guarantee.FALSE, "settledMark");
         g.edge("smoothWarm", Guarantee.DONE, "repWarm");
         g.edge("settledMark", Guarantee.DONE, "repSkip");
-        g.edge("repSkip", Guarantee.DONE, "rMomGate");
+        g.edge("repSkip", Guarantee.DONE, coldEntry);
         g.edge("repA", Guarantee.DONE, sof ? "rFeasFastCold" : "rEarlyFeas");
-        g.edge("repWarm", Guarantee.DONE, sof ? "rFeasFastWarm" : "raceWarm");
+        g.edge("repWarm", Guarantee.DONE, sof ? "rFeasFastWarm" : coldEntry);
         if (sof) {
             g.edge("rFeasFastCold", Guarantee.TRUE, "lblFF");
             g.edge("rFeasFastCold", Guarantee.FALSE, "rEarlyFree");
             g.edge("rFeasFastWarm", Guarantee.TRUE, "lblFF");
-            g.edge("rFeasFastWarm", Guarantee.FALSE, "raceWarm");
-            g.edge("lblFF", Guarantee.DONE, "rMomGate");
+            g.edge("rFeasFastWarm", Guarantee.FALSE, "rImproveFeas");
+            g.edge("lblFF", Guarantee.DONE, "rImproveFeas");
             g.edge("freeRescue", Guarantee.IMPROVED, "lblFF");
         } else {
             g.edge("rEarlyFeas", Guarantee.TRUE, coldEntry);
@@ -225,21 +216,10 @@ public final class BuiltinGraphs {
         g.edge("rEarlyFree", Guarantee.TRUE, "freeRescue");
         g.edge("rEarlyFree", Guarantee.FALSE, coldEntry);
         g.edge("freeRescue", Guarantee.UNCHANGED, coldEntry);
-        if (throttle) {
-            g.edge("rRaceTicks", Guarantee.TRUE, "rRaceJumps");
-            g.edge("rRaceTicks", Guarantee.FALSE, "raceColdFull");
-            g.edge("rRaceJumps", Guarantee.FALSE, "raceColdThrottled");
-            g.edge("rRaceJumps", Guarantee.TRUE, "rRaceHead");
-            g.edge("rRaceHead", Guarantee.TRUE, "raceColdThrottled");
-            g.edge("rRaceHead", Guarantee.FALSE, "raceColdFull");
-            raceOut(g, "raceColdThrottled", "rMomGate");
+        if (sof) {
+            g.edge("rImproveFeas", Guarantee.TRUE, afterFree);
+            g.edge("rImproveFeas", Guarantee.FALSE, "rFree");
         }
-        raceOut(g, "raceColdFull", "rMomGate");
-        raceOut(g, "raceWarm", "rMomGate");
-        g.edge("rMomGate", Guarantee.TRUE, "rFree");
-        g.edge("rMomGate", Guarantee.FALSE, "momentum");
-        g.edge("momentum", Guarantee.FOUND, "rFree");
-        g.edge("momentum", Guarantee.NONE, "rFree");
         g.edge("rFree", Guarantee.TRUE, "freeImprove");
         g.edge("rFree", Guarantee.FALSE, afterFree);
         g.edge("freeImprove", Guarantee.IMPROVED, afterFree);
@@ -252,7 +232,12 @@ public final class BuiltinGraphs {
             bnbOut(g, "rescueBnb", "rHave");
         }
         g.edge("rHave", Guarantee.TRUE, "cap2");
-        g.edge("rHave", Guarantee.FALSE, "emit");
+        g.edge("rHave", Guarantee.FALSE, exh ? "coldBnb" : "emit");
+        if (exh) {
+            bnbOut(g, "coldBnb", "rColdHave");
+            g.edge("rColdHave", Guarantee.TRUE, "cap2");
+            g.edge("rColdHave", Guarantee.FALSE, "emit");
+        }
         g.edge("cap2", Guarantee.AT_CAP, afterCap);
         g.edge("cap2", Guarantee.FALSE, afterCap);
         if (exh) {
@@ -297,24 +282,6 @@ public final class BuiltinGraphs {
         if ("TICKS_LE_CAP".equals(predicate)) {
             g.set(id, "cap", IMPROVE_TICK_CAP);
         }
-    }
-
-    private static void race(GraphBuilder g, String id, int restarts, int maxEval, int polishCount,
-                             String polishDepth, boolean warm, int budgetSec) {
-        g.add(id, "cmaesRace")
-                .set(id, "restarts", restarts)
-                .set(id, "maxEval", maxEval)
-                .set(id, "polishCount", polishCount)
-                .set(id, "polishDepth", polishDepth)
-                .set(id, "sigmaDeg", 90.0)
-                .set(id, "warmStart", warm)
-                .set(id, "budgetSec", budgetSec);
-    }
-
-    private static void raceOut(GraphBuilder g, String id, String to) {
-        g.edge(id, Guarantee.FEASIBLE, to);
-        g.edge(id, Guarantee.INFEASIBLE, to);
-        g.edge(id, Guarantee.NONE, to);
     }
 
     private static void bnbOut(GraphBuilder g, String id, String to) {

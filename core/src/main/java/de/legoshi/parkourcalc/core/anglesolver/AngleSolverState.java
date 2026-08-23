@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.core.anglesolver;
 
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
+import de.legoshi.parkourcalc.core.anglesolver.runticks.RunTicksSettings;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -65,27 +66,6 @@ public final class AngleSolverState {
         }
     }
 
-    public enum PolishDepth {
-        LIGHT("Light"),
-        EXHAUSTIVE("Exhaustive");
-
-        public final String label;
-
-        PolishDepth(String label) {
-            this.label = label;
-        }
-    }
-
-    public static final int MIN_RESTARTS = 1;
-    public static final int MAX_RESTARTS = 256;
-    public static final int DEFAULT_RESTARTS = 16;
-    public static final int MIN_MAX_EVAL = 500;
-    public static final int MAX_MAX_EVAL = 100000;
-    public static final int DEFAULT_MAX_EVAL = 4500;
-    public static final int MIN_POLISH_COUNT = 1;
-    public static final int MAX_POLISH_COUNT = 64;
-    public static final int DEFAULT_POLISH_COUNT = 2;
-    public static final PolishDepth DEFAULT_POLISH_DEPTH = PolishDepth.LIGHT;
     public static final int MIN_TIME_BUDGET = 0;
     public static final int MAX_TIME_BUDGET = 600;
     public static final int DEFAULT_TIME_BUDGET = 0;
@@ -99,27 +79,11 @@ public final class AngleSolverState {
     public static final int DEFAULT_COMMIT = 3;
 
     public static final class SolveBudget {
-        private int restarts = DEFAULT_RESTARTS;
-        private int maxEval = DEFAULT_MAX_EVAL;
-        private int polishCount = DEFAULT_POLISH_COUNT;
-        private PolishDepth polishDepth = DEFAULT_POLISH_DEPTH;
         private int timeBudgetSeconds = DEFAULT_TIME_BUDGET;
         private int window = DEFAULT_WINDOW;
         private int commit = DEFAULT_COMMIT;
         private boolean useWindowSolver = true;
         private boolean ilsExhaustive = false;
-
-        public int getRestarts() { return restarts; }
-        public void setRestarts(int v) { restarts = clampInt(v, MIN_RESTARTS, MAX_RESTARTS); }
-
-        public int getMaxEval() { return maxEval; }
-        public void setMaxEval(int v) { maxEval = clampInt(v, MIN_MAX_EVAL, MAX_MAX_EVAL); }
-
-        public int getPolishCount() { return polishCount; }
-        public void setPolishCount(int v) { polishCount = clampInt(v, MIN_POLISH_COUNT, MAX_POLISH_COUNT); }
-
-        public PolishDepth getPolishDepth() { return polishDepth; }
-        public void setPolishDepth(PolishDepth v) { polishDepth = (v == null ? DEFAULT_POLISH_DEPTH : v); }
 
         public int getTimeBudgetSeconds() { return timeBudgetSeconds; }
         public void setTimeBudgetSeconds(int v) { timeBudgetSeconds = clampInt(v, MIN_TIME_BUDGET, MAX_TIME_BUDGET); }
@@ -140,10 +104,6 @@ public final class AngleSolverState {
         public void setIlsExhaustive(boolean v) { ilsExhaustive = v; }
 
         public void resetToDefaults() {
-            restarts = DEFAULT_RESTARTS;
-            maxEval = DEFAULT_MAX_EVAL;
-            polishCount = DEFAULT_POLISH_COUNT;
-            polishDepth = DEFAULT_POLISH_DEPTH;
             timeBudgetSeconds = DEFAULT_TIME_BUDGET;
             window = DEFAULT_WINDOW;
             commit = DEFAULT_COMMIT;
@@ -168,6 +128,7 @@ public final class AngleSolverState {
 
     private double smoothLambda;
     private final SolveBudget solveBudget = new SolveBudget();
+    private final RunTicksSettings runTicks = new RunTicksSettings();
     private String graphPresetName;
     private SolverGraph customGraph;
 
@@ -264,6 +225,10 @@ public final class AngleSolverState {
 
     public SolveBudget getSolveBudget() {
         return solveBudget;
+    }
+
+    public RunTicksSettings getRunTicks() {
+        return runTicks;
     }
 
     public String getGraphPresetName() {
@@ -496,6 +461,28 @@ public final class AngleSolverState {
         list.add(Constraint.range(Constraint.Field.Z, zLo, zHi, true, true));
     }
 
+    public void mergeFootprint(int tick, double xLo, double xHi, double zLo, double zHi) {
+        if (tick < 0) return;
+        List<Constraint> list = tickConstraints(tick).getConstraints();
+        double finalXLo = xLo, finalXHi = xHi;
+        double finalZLo = zLo, finalZHi = zHi;
+
+        for (int i = list.size() - 1; i >= 0; i--) {
+            Constraint c = list.get(i);
+            if (c.isRange() && !c.isRelative() && c.getField() == Constraint.Field.X) {
+                finalXLo = Math.min(finalXLo, c.getLo());
+                finalXHi = Math.max(finalXHi, c.getHi());
+                list.remove(i);
+            } else if (c.isRange() && !c.isRelative() && c.getField() == Constraint.Field.Z) {
+                finalZLo = Math.min(finalZLo, c.getLo());
+                finalZHi = Math.max(finalZHi, c.getHi());
+                list.remove(i);
+            }
+        }
+        list.add(Constraint.range(Constraint.Field.X, finalXLo, finalXHi, true, true));
+        list.add(Constraint.range(Constraint.Field.Z, finalZLo, finalZHi, true, true));
+    }
+
     public void clearFootprint(int tick) {
         TickConstraints tc = ticks.get(tick);
         if (tc == null) return;
@@ -510,6 +497,29 @@ public final class AngleSolverState {
         boolean lower = isLowerBound(wall.getOp());
         list.removeIf(c -> !c.isRange() && !c.isRelative() && c.getField() == field
                 && isWallOp(c.getOp()) && isLowerBound(c.getOp()) == lower);
+        list.add(wall);
+    }
+
+    public void mergeWall(int tick, Constraint wall) {
+        if (tick < 0 || wall == null) return;
+        List<Constraint> list = tickConstraints(tick).getConstraints();
+        Constraint.Field field = wall.getField();
+        boolean lower = isLowerBound(wall.getOp());
+        double finalVal = wall.getValue();
+
+        for (int i = list.size() - 1; i >= 0; i--) {
+            Constraint c = list.get(i);
+            if (!c.isRange() && !c.isRelative() && c.getField() == field
+                    && isWallOp(c.getOp()) && isLowerBound(c.getOp()) == lower) {
+                if (lower) {
+                    finalVal = Math.min(finalVal, c.getValue());
+                } else {
+                    finalVal = Math.max(finalVal, c.getValue());
+                }
+                list.remove(i);
+            }
+        }
+        wall.setValue(finalVal);
         list.add(wall);
     }
 
@@ -693,6 +703,7 @@ public final class AngleSolverState {
         applyDeviation = null;
         applyDeviationKind = null;
         applyDeviationTick = -1;
+        runTicks.resetToDefaults();
     }
 
 }

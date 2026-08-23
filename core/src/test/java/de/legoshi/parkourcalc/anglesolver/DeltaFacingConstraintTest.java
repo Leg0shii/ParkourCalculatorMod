@@ -6,6 +6,7 @@ import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.Constraint;
 import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
+import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.save.SaveIO;
@@ -17,7 +18,10 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class DeltaFacingConstraintTest {
@@ -121,7 +125,16 @@ public class DeltaFacingConstraintTest {
             else assertEquals(1.0, w.rhs, 0.0);
         }
 
-        assertNameAbsent(spec, "dF@" + start);
+        List<JumpConstraint> seam = byPrefix(spec, "dF@" + start);
+        assertEquals(1, seam.size());
+        JumpConstraint s0 = seam.get(0);
+        assertEquals(JumpConstraint.Mode.F, s0.mode);
+        assertEquals(0, s0.t1);
+        assertNull(s0.t2);
+        assertEquals(JumpConstraint.Op.PLUS, s0.op);
+        assertEquals(JumpConstraint.Cmp.GE, s0.cmp);
+        assertEquals(spec.asScenario().startYaw, s0.rhs, 1.0e-9);
+
         assertNameAbsent(spec, "dF@" + landing);
     }
 
@@ -155,6 +168,72 @@ public class DeltaFacingConstraintTest {
         assertNotNull("solver label missing", r.getSolver());
         assertTrue("dF=0 must stay on the closed form, got: " + r.getSolver(),
                 r.getSolver().contains("closed form"));
+    }
+
+    @Test
+    public void seamTurnEqualityPinsTheFirstFacing() {
+        SolveResult plain = solve(build(state -> { }));
+        assertNotNull("baseline solve returned no result", plain);
+        assertTrue("baseline j004 must solve", plain.isSuccess());
+        double firstYaw = plain.getYaws().get(0).yaw;
+
+        double seed = build(state -> { }).engine.debugBuildSpec().asScenario().startYaw;
+        double target = Angles.wrap(firstYaw - seed);
+
+        Ctx bound = build(state -> state.tickConstraints(state.getStartTick()).getConstraints()
+                .add(Constraint.scalar(Constraint.Field.DF, Constraint.Op.EQ, target)));
+        SolveResult r = solve(bound);
+        assertNotNull("engine returned no result", r);
+        assertTrue("j004 must solve with the seam turn pinned at the baseline value", r.isSuccess());
+        boolean reported = false;
+        for (SolveResult.Outcome o : r.getOutcomes()) {
+            if ("dF".equals(o.field)) reported = true;
+        }
+        assertTrue("seam dF outcome row missing from the result panel", reported);
+        assertEquals(0.0, Angles.wrap(r.getYaws().get(0).yaw - seed - target), 2.0e-4);
+    }
+
+    @Test
+    public void onlyZeroEqualityCountsAsSupportedDf() {
+        assertFalse(Constraint.scalar(Constraint.Field.DF, Constraint.Op.EQ, 0.0).isUnsupportedDf());
+        assertTrue(Constraint.scalar(Constraint.Field.DF, Constraint.Op.LE, 0.0).isUnsupportedDf());
+        assertTrue(Constraint.scalar(Constraint.Field.DF, Constraint.Op.EQ, 1.0).isUnsupportedDf());
+        assertTrue(Constraint.range(Constraint.Field.DF, -1.0, 1.0, true, true).isUnsupportedDf());
+        assertFalse(Constraint.scalar(Constraint.Field.X, Constraint.Op.LE, 3.0).isUnsupportedDf());
+        assertFalse(Constraint.range(Constraint.Field.F, -1.0, 1.0, true, true).isUnsupportedDf());
+    }
+
+    @Test
+    public void unsupportedDfWallFailsWithTheExplanatoryNotice() {
+        Ctx ctx = build(state ->
+                addScalar(state, state.getStartTick() + 2, Constraint.Op.LE, 0.0));
+        SolveResult r = solve(ctx);
+        assertNotNull("engine returned no result", r);
+        assertFalse("a dF inequality is retired and must not solve", r.isSuccess());
+        assertEquals("failed solve must name the unsupported dF as the cause",
+                AngleSolverEngine.DF_UNSUPPORTED_NOTICE, r.getNotice());
+    }
+
+    @Test
+    public void unsupportedDfBandFailsWithTheExplanatoryNotice() {
+        Ctx ctx = build(state -> state.tickConstraints(state.getStartTick() + 2).getConstraints()
+                .add(Constraint.range(Constraint.Field.DF, -1.0, 1.0, true, true)));
+        SolveResult r = solve(ctx);
+        assertNotNull("engine returned no result", r);
+        assertFalse("a dF band is retired and must not solve", r.isSuccess());
+        assertEquals("failed solve must name the unsupported dF as the cause",
+                AngleSolverEngine.DF_UNSUPPORTED_NOTICE, r.getNotice());
+    }
+
+    @Test
+    public void supportedDfSolveCarriesNoUnsupportedNotice() {
+        Ctx ctx = build(state ->
+                addScalar(state, state.getStartTick() + 2, Constraint.Op.EQ, 0.0));
+        SolveResult r = solve(ctx);
+        assertNotNull("engine returned no result", r);
+        assertTrue("j004 must solve with a zero-turn tick", r.isSuccess());
+        assertNotEquals("a supported dF = 0 must not be reported as unsupported",
+                AngleSolverEngine.DF_UNSUPPORTED_NOTICE, r.getNotice());
     }
 
     @Test

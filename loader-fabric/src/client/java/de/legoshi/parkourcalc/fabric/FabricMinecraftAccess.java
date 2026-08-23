@@ -238,6 +238,13 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
         return isCtrlDown() && GLFW.glfwGetKey(window, GLFW.GLFW_KEY_S) == GLFW.GLFW_PRESS;
     }
 
+    @Override
+    public boolean isAltDown() {
+        long window = Minecraft.getInstance().getWindow().handle();
+        return GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_ALT) == GLFW.GLFW_PRESS
+                || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_ALT) == GLFW.GLFW_PRESS;
+    }
+
     private static int undoKey = GLFW.GLFW_KEY_UNKNOWN;
     private static int redoKey = GLFW.GLFW_KEY_UNKNOWN;
 

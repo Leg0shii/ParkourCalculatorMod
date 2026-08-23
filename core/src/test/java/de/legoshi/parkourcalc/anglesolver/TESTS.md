@@ -10,6 +10,9 @@ AGENTS.md "Tests" for the full slow list and when a full run is required.
 ```
 anglesolver/
   ProblemsTest.java        every capture under resources/problems/<check>/ is validated for that check
+  OptimizeVsFastTest.java  gh-398 invariant on captures/gh398-optimize-2jump: Optimize's answer is never
+                           worse than Fast's, and the run publishes at least two incumbents so the live
+                           panel moves and Cancel keeps the best found so far
   HpkDualRecoveryScreen.java  dev miss-screen over captures/hpk/ (dual bound + full chain per capture);
                               skipped unless PKC_SCREENS is set; report at build/reports/hpk-screen.txt
   RelaxDiagScreen.java     dev per-capture recovery diagnostic (stall margins, recorded-path replay);
@@ -20,8 +23,22 @@ anglesolver/
                            hand-pattern probes); skipped unless PKC_SCREENS is set
   HpkEngineBench.java      manual engine bench over captures/hpk/; PKC_BENCH=1 to run, PKC_BENCH_EXH,
                            PKC_BENCH_FILTER, PKC_BENCH_TAG, PKC_BENCH_TIMEOUT_MS tune it
+  FreeStartSweepBench.java manual free-start sweep over captures/hpk/ (synthesized tick-0 box, base +
+                           (+2.3,+1.7)-shifted seed variants, FAST, per-node timing from the run
+                           record); -Dpkc.sweep=1 to run, -Dpkc.sweep.{tag,variants,filter,timeoutMs,
+                           trace} tune it (or PKC_SWEEP-style env); report at build/reports/sweep-<tag>.txt.
+                           A frac~fx~fz variant places the seed at those box fractions (in-box
+                           seed-parity screening for the gh-386 class; '~' not ':', a colon breaks
+                           the trace filename on Windows). Run via direct java -cp <test classpath>
+                           (PKC_* env does not reach a warm gradle daemon's test JVM)
+  SingleProblemProbe.java  run ONE ProblemsTest capture headlessly: -Dpkc.probe=<category>/<name>
+                           (e.g. solve/gh386-4x2-seedshift) via JUnitCore; prints success/met/ms/obj
   EngineFileScreen.java    drive the live engine on any save file headlessly; PKC_SOLVE_FILE=<path>,
                            optional PKC_SOLVE_EFFORT and PKC_SOLVE_TIMEOUT_MS
+  SolveNodeStatsScreen.java  per-node timing dump over problems/solve at expect efforts;
+                           -Dpkc.nodestats=1 to run, -Dpkc.nodestats.{tag,timeoutMs} tune it;
+                           TSV at build/reports/nodestats-<tag>.tsv (RUN + NODE rows); run via
+                           direct java -cp like FreeStartSweepBench
   RunMatrixScreen.java     (preset x problem) run matrix over problems/solve + problems/closedform,
                            cold starts, one SolveRunRecord JSONL line per run to
                            build/reports/matrix-<tag>/runs.jsonl, resumable (recorded pairs skipped);
@@ -33,10 +50,8 @@ anglesolver/
                            docs/research/data/matrix-taser-pin1/band.txt); PKC_MATRIX_SWEEP (A18)
                            replaces the preset list with generated ones, `|`-separated entries of
                            base:key=v1,v2;key2=... cross-producted per entry: taser<sec> takes l
-                           (engine path via setSmoothLambda), alm<sec> runs AlmSnapStage directly
-                           (keys l, seeds, topk, cooking, gate; free startBox becomes the translation
-                           domain) recording raw objective + smoothness stats per run, and a bare
-                           entry with no params reuses the static preset of that exact id
+                           (engine path via setSmoothLambda), and a bare entry with no params
+                           reuses the static preset of that exact id
                            (parse coverage: RunMatrixSweepTest)
   MatrixAnalysisScreen.java  per-preset aggregates + SBS/VBS feasibility and objective-regret gap over
                            a matrix runs.jsonl; PKC_MATRIX_ANALYZE=1 + PKC_MATRIX_TAG; writes
@@ -64,11 +79,46 @@ anglesolver/
                            PKC_RAZORT1_TAG to run; PASS = success + fresh-reparse viol <= 0;
                            report at build/reports/razort1-<tag>.txt
                            (solve/loopmm-tight-t39: the loopmm misses capture with its shipped-
-                           disabled pad wall ENABLED; pins the near-miss B&B rescue landing the
-                           tight spec at Z@71 >= -279.3 through the live engine, THOROUGH 45 s)
-                           (solve/loopmm-tight-t39-fast: the SAME capture under FAST effort; pins
-                           the staged late-race: primary fast starves, the explore arm spawns at
-                           the 20 s checkpoint and lands it, budget 90 s; the redirect-class gate)
+                           disabled pad wall ENABLED; the tight Z@71 >= -279.3 pad is reachable
+                           only while the Z inertia gate is held open across the momentum
+                           reversal, so this pins the pattern B&B's keep-alive branch,
+                           THOROUGH 45 s)
+                           (solve/loopmm-tight-t39-fast: the SAME capture under FAST effort,
+                           same keep-alive pin on the shorter chain, budget 90 s)
+                           (solve/gh313-j121-dfneo: gh-313; hpk j121 neo with dF <= 0 walls. The
+                           dF inequality class is retired by ruling (issue 372, dF = 0 only) and
+                           CMA-ES is removed (issue 374), so shouldSolve is false by design)
+                           (solve/nix-full-t1: long multi-jump free start; accepted as not solving
+                           after the CMA-ES removal (issue 374) until the multi-jump seam work lands)
+                           (solve/gh283-j925-farseed: gh-283; hpk j925 momentum+neo with the start
+                           dragged ~2 blocks outside its tick-0 footprint box, cold rows; pins the
+                           seed-position-independent free-start solve, FAST 20 s: bestTranslate's
+                           conflict fallback must place conflicted candidates at the min-violation
+                           translation, never at the seed)
+                           (solve/gh283-j990-cold: gh-283; hpk j990 dF=0 momentum chain with the
+                           seed ~2 blocks outside the start box, cold rows; pins the exact
+                           prefix-arc theta enumeration, the recoverStart-scored ladder fractions,
+                           and the theta micro-polish certify in the joint free-start dual,
+                           FAST 20 s)
+                           (solve/inertia-1tick-neo: 1.8.9 neo whose landing is only feasible via
+                           a single-tick X inertia zeroing (vX dips under the 0.005 threshold
+                           mid-flight and re-accelerates after); the free relaxation is truly
+                           infeasible, so this pins the B&B rescue's single-tick zx1@k patterns
+                           and its dF=0 entry through the FacingPrefold-gated facing-wall check,
+                           FAST 20 s)
+                           (solve/inertia-1tick-neo-t31: the SAME capture with the window started
+                           ON the zeroing tick (startTick 30), so the seed vX 0.00498 is below the
+                           threshold and dead on arrival; pins the seed-velocity normalization
+                           (ExactJumpModel.zeroSubThresholdVelocity at buildPhys), without which
+                           every relaxation carries the phantom carry and no k>=1 pattern can
+                           represent a tick-0 zeroing, FAST 20 s)
+  LevelSetAscentTest.java  level-set objective ascent (gh-290): on keep-out-wall captures where the
+                           chosen Solve For degenerates the dual recovery (j003 X/MIN, j012 Z/MAX,
+                           j008-bfneo Z/MIN, taser-80t X/MIN), the goal-wall bisection strictly beats
+                           the plain SLP hug the reseeded path produces and reaches near the dual
+                           bound (j003 X/MIN: -27 hug -> -31.3 optimum). The dF gate (facing wall =>
+                           skip + info notice) is unit-tested fast in
+                           core/anglesolver/DfDirectionGateTest
   harness/                 shared plumbing; no test lives here
 resources/
   problems/<check>/        one folder per check; holds captures or .expect.json sidecars

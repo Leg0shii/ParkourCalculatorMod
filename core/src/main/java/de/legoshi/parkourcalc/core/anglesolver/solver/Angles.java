@@ -65,4 +65,45 @@ public final class Angles {
         }
         return jerk;
     }
+
+    public static final double REVERSAL_COST_DEG = 90.0;
+    public static final double RATE_TIEBREAK = 0.02;
+
+    public static int reversals(double anchorYaw, double[] f, double floorDeg) {
+        int count = 0;
+        int lastSign = 0;
+        double prev = anchorYaw;
+        for (double v : f) {
+            double d = v - prev;
+            d -= 360.0 * Math.round(d / 360.0);
+            prev = v;
+            if (Math.abs(d) <= floorDeg) continue;
+            int sign = d > 0.0 ? 1 : -1;
+            if (lastSign != 0 && sign != lastSign) count++;
+            lastSign = sign;
+        }
+        return count;
+    }
+
+    /** The turn-direction cost the Smooth (TAS) objective minimises: a fixed charge per sign change in
+     *  the per-tick yaw deltas. A run that keeps turning one way is free whatever its rates do, so
+     *  10 10 10 10 and 10 20 30 40 both cost nothing and 10 -10 10 -10 costs three reversals. */
+    public static double turnCost(double anchorYaw, double[] f) {
+        return REVERSAL_COST_DEG * reversals(anchorYaw, f, REVERSAL_FLOOR_DEG)
+                + RATE_TIEBREAK * wiggleDeg(anchorYaw, f);
+    }
+
+    public static double wiggleDeg(double anchorYaw, double[] f) {
+        if (f.length < 2) return 0.0;
+        double jerk = 0.0;
+        double prev = f[0] - anchorYaw;
+        prev -= 360.0 * Math.round(prev / 360.0);
+        for (int i = 1; i < f.length; i++) {
+            double d = f[i] - f[i - 1];
+            d -= 360.0 * Math.round(d / 360.0);
+            jerk += Math.abs(d - prev);
+            prev = d;
+        }
+        return jerk;
+    }
 }

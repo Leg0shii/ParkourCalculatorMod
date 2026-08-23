@@ -33,15 +33,53 @@ public class SmoothLambdaScoringTest {
 
     @Test
     public void scoredAppliesLambdaBySense() {
+        // deltas +10 then -10: one sign change, so one reversal at REVERSAL_COST_DEG.
         double[] yaws = {0.0, 10.0, 0.0};
+        double pen = 0.01 * Angles.turnCost(0.0, yaws);
         Objective maxObj = new Objective(JumpPhysicsInputs.Axis.X, Objective.Sense.MAX, 3, 0.01);
-        assertEquals(5.0 - 0.2, maxObj.scored(5.0, yaws), 1.0e-12);
+        assertEquals(5.0 - pen, maxObj.scored(5.0, 0.0, yaws), 1.0e-12);
         Objective minObj = new Objective(JumpPhysicsInputs.Axis.X, Objective.Sense.MIN, 3, 0.01);
-        assertEquals(5.0 + 0.2, minObj.scored(5.0, yaws), 1.0e-12);
+        assertEquals(5.0 + pen, minObj.scored(5.0, 0.0, yaws), 1.0e-12);
         Objective zero = new Objective(JumpPhysicsInputs.Axis.X, Objective.Sense.MAX, 3);
         assertEquals(0.0, zero.smoothLambda, 0.0);
-        assertEquals(5.0, zero.scored(5.0, yaws), 0.0);
-        assertEquals(0.0, zero.smoothPenalty(yaws), 0.0);
+        assertEquals(5.0, zero.scored(5.0, 0.0, yaws), 0.0);
+        assertEquals(0.0, zero.smoothPenalty(0.0, yaws), 0.0);
+    }
+
+
+    @Test
+    public void turnCostChargesSignChangesAndIgnoresRateChanges() {
+        // Relative yaw values are the deltas between consecutive absolute yaws. A run that keeps
+        // turning one way costs at most the rate tiebreak, far below a single reversal.
+        assertEquals(0.0, Angles.turnCost(0.0, new double[] {10.0, 20.0, 30.0, 40.0}), 0.0);   // 10 10 10 10
+        assertTrue(Angles.turnCost(0.0, new double[] {10.0, 30.0, 60.0, 100.0})                // 10 20 30 40
+                < Angles.REVERSAL_COST_DEG / 10.0);
+        assertTrue(Angles.turnCost(0.0, new double[] {10.0, 30.0, 40.0, 60.0})                 // 10 20 10 20
+                < Angles.REVERSAL_COST_DEG / 10.0);
+
+        // Flipping direction costs a fixed charge per flip, whatever the size of the flip.
+        assertEquals(3, Angles.reversals(0.0, new double[] {10.0, 0.0, 10.0, 0.0},             // 10 -10 10 -10
+                Angles.REVERSAL_FLOOR_DEG));
+        assertEquals(2, Angles.reversals(0.0, new double[] {10.0, 30.0, 29.0, 69.0},           // 10 20 -1 40
+                Angles.REVERSAL_FLOOR_DEG));
+        assertEquals(Angles.reversals(0.0, new double[] {10.0, 30.0, 29.0, 69.0}, Angles.REVERSAL_FLOOR_DEG),
+                Angles.reversals(0.0, new double[] {10.0, 30.0, 20.0, 60.0}, Angles.REVERSAL_FLOOR_DEG));
+
+        // A single reversal always outweighs any rate variation within one direction.
+        assertTrue(Angles.turnCost(0.0, new double[] {10.0, 30.0, 29.0, 69.0})
+                > Angles.turnCost(0.0, new double[] {10.0, 30.0, 60.0, 100.0}));
+    }
+
+    @Test
+    public void anchoredJerkCostsTheSeamTurn() {
+        double[] flat = {10.0, 10.0, 10.0};
+        assertEquals(0.0, Angles.wiggleDeg(10.0, flat), 0.0);
+        assertEquals(30.0, Angles.wiggleDeg(40.0, flat), 1.0e-12);
+        double[] flick = {40.0, 40.0, 40.0};
+        double[] ramp = {20.0, 30.0, 40.0};
+        assertTrue(Angles.wiggleDeg(10.0, flick) > Angles.wiggleDeg(10.0, ramp));
+        assertEquals(Angles.wiggleDeg(new double[] {10.0, 20.0, 5.0, 25.0}) + 10.0,
+                Angles.wiggleDeg(10.0, new double[] {10.0, 20.0, 5.0, 25.0}), 1.0e-12);
     }
 
     @Test

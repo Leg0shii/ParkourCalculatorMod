@@ -54,6 +54,17 @@ public final class Forge8CachedBoxGeometry {
     private int reachLineVerts;
     private int lastBakeVertices;
     private Set<Integer> bakedSelection = new HashSet<Integer>();
+    private WorldRenderer scratch;
+    private int scratchInts;
+
+    private WorldRenderer scratch(int vertexCount) {
+        int ints = vertexCount * INTS_PER_VERTEX + INTS_PER_VERTEX;
+        if (scratch == null || ints > scratchInts) {
+            scratch = new WorldRenderer(ints);
+            scratchInts = ints;
+        }
+        return scratch;
+    }
 
     public void ensureBuilt(BoxController boxController, PathRenderPlan plan) {
         long rev = boxController.getGeometryRev();
@@ -167,8 +178,8 @@ public final class Forge8CachedBoxGeometry {
         lastBakeVertices = (int) vertices;
         if (vertices == 0) return null;
 
-        // A private buffer, not the shared Tessellator, so a huge bake doesn't permanently inflate it.
-        WorldRenderer builder = new WorldRenderer((int) (vertices * INTS_PER_VERTEX) + INTS_PER_VERTEX);
+        // A reused private scratch buffer, not the shared Tessellator, so repeated bakes don't churn direct memory.
+        WorldRenderer builder = scratch((int) vertices);
         builder.begin(glMode, DefaultVertexFormats.POSITION_COLOR);
         emitter.accept(new Forge8BoxRenderer(builder, anchorX, anchorY, anchorZ, mode));
         builder.finishDrawing();
@@ -228,7 +239,7 @@ public final class Forge8CachedBoxGeometry {
 
     private void writeVerts(VertexBuffer vbo, int globalVertexOffset, int glMode, BoxRenderer.Mode mode,  int vertexCount, Consumer<BoxRenderer> emit) {
         if (vbo == null || vertexCount == 0) return;
-        WorldRenderer builder = new WorldRenderer(vertexCount * INTS_PER_VERTEX + INTS_PER_VERTEX);
+        WorldRenderer builder = scratch(vertexCount);
         builder.begin(glMode, DefaultVertexFormats.POSITION_COLOR);
         emit.accept(new Forge8BoxRenderer(builder, anchorX, anchorY, anchorZ, mode));
         builder.finishDrawing();
@@ -320,6 +331,8 @@ public final class Forge8CachedBoxGeometry {
 
     public void close() {
         release();
+        scratch = null;
+        scratchInts = 0;
         built = false;
         lastGeometryRev = -1;
     }

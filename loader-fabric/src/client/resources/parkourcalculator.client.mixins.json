@@ -21,6 +21,7 @@
     "PairedChunkTrackingMixin",
     "PairedSimSuppressMixin",
     "PlayerAccessor",
+    "RestartSettleMixin",
     "WorldJournalMixin"
   ],
   "injectors": {

@@ -8,7 +8,11 @@ public final class GraphFactory {
     }
 
     public static SolverGraph forState(AngleSolverState state) {
-        switch (state.getEffort()) {
+        return forState(state, state.getEffort());
+    }
+
+    public static SolverGraph forState(AngleSolverState state, AngleSolverState.Effort effort) {
+        switch (effort) {
             case THOROUGH:
                 return BuiltinGraphs.optimize(state.getOptimizeSeconds());
             case CUSTOM: {
@@ -22,9 +26,7 @@ public final class GraphFactory {
 
     public static SolverGraph legacyCustom(AngleSolverState state) {
         AngleSolverState.SolveBudget b = state.getSolveBudget();
-        return BuiltinGraphs.fromBudget(b.getRestarts(), b.getMaxEval(), b.getPolishCount(),
-                b.getPolishDepth() == AngleSolverState.PolishDepth.EXHAUSTIVE,
-                state.isStopOnFeasible(), b.isIlsExhaustive(), b.getUseWindowSolver(),
+        return BuiltinGraphs.fromBudget(state.isStopOnFeasible(), b.isIlsExhaustive(), b.getUseWindowSolver(),
                 b.getWindow(), b.getCommit(), b.getTimeBudgetSeconds());
     }
 }

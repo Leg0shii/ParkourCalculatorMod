@@ -66,6 +66,19 @@ jobs:
           game-versions: '26.2'
           changelog-file: changelog.md
 
+      - name: publish fabric 1.21.3 to modrinth
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: Lxy4H4lS
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          files: loader-fabric-1.21.3/build/libs/pkc-fabric-1.21.3-${{ steps.version.outputs.version }}.jar
+          name: ${{ steps.version.outputs.version }} (Fabric 1.21.3)
+          version: ${{ steps.version.outputs.version }}
+          version-type: ${{ contains(github.ref_name, '-') && 'beta' || 'release' }}
+          loaders: fabric
+          game-versions: '1.21.3'
+          changelog-file: changelog.md
+
       - name: publish forge 1.8.9 to modrinth
         uses: Kir-Antipov/mc-publish@v3.3
         with:

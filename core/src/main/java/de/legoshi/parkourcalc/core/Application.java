@@ -94,6 +94,7 @@ public final class Application {
     private AngleSolverEngine solverEngine;
     private ConstraintKeyController constraintKeyController;
     private UndoController<de.legoshi.parkourcalc.core.save.SaveFile> undoController;
+    private RunTicksController runTicks;
     private final HudMessages hudMessages = new HudMessages();
     private final OsSystemBridge systemBridge = new OsSystemBridge();
 
@@ -105,7 +106,7 @@ public final class Application {
         this.saveController = new SaveController(inputData, runner, mc, this::runSimulation);
         this.saveController.setRetriggerFrom(this::runSimulation);
         this.startDragController = new StartDragController(runner, boxController, selection,
-                saveController::markDirty, this::runSimulation, SimulationRunner.DEFAULT_MOVE_TICK_TOLERANCE);
+                saveController::markDirty, this::runSimulation, SimulationRunner.DEFAULT_DRAG_TOLERANCE);
         // Start box is the "Start" anchor: draggable to reposition, and tap-selectable as path index 0.
         this.dragController = new BoxDragController(boxController, startDragController, this::commitStartTap);
         this.selectController = new BoxSelectController(this::pickWorld, this::commitWorldTap);
@@ -184,7 +185,7 @@ public final class Application {
         ExactJumpModel forwardModel = ExactJumpModel.forMcVersion(mcVersion);
         constraintKeyController = new ConstraintKeyController(
                 mc, angleSolverState, selection, constraintSelection, saveController::markDirty,
-                forwardModel.modern());
+                forwardModel.modern(), inputData::size);
         saveController.setAngleSolver(angleSolverState);
         saveController.setDebugSource(boxController, settings);
         AngleSolverTable angleSolverTable = new AngleSolverTable(angleSolverState, settings, selection, constraintSelection, inputData::size);
@@ -217,6 +218,9 @@ public final class Application {
         GraphEditorWindow graphEditorWindow = new GraphEditorWindow(angleSolverEngine);
         AngleSolverWindow angleSolverWindow = new AngleSolverWindow(angleSolverState, settings, inputData::size, angleSolverEngine, velocityMapController.widget(), graphStore, graphEditorWindow);
         angleSolverWindow.setApplySurfaceState(this::applyPathSurfaceState);
+        runTicks = new RunTicksController(angleSolverState, angleSolverEngine, inputData, constraintSelection,
+                hudMessages, this::runSimulation, saveController::markDirty, this::pushHudMessage);
+        angleSolverWindow.setRunTicksControls(runTicks);
 
         // In-world constraint visualization (gh-145): plates appear while the solver view is open.
         constraintSource = new de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverConstraintSource(
@@ -321,6 +325,7 @@ public final class Application {
 
     private void runSimulation(int dirtyTick) {
         if (!mc.isReady()) return;
+        if (!saveController.isSessionActive()) return;
         long t0 = Perf.now();
         boolean incremental = dirtyTick > 0 && runner.canResumeFrom(dirtyTick)
                 && boxController.size() > dirtyTick && !DebugFlags.COMPARE_PARTIAL_SIM;
@@ -374,8 +379,11 @@ public final class Application {
         runner.invalidate();
         boxController.clearAll();
         inputData.clear();
-        saveController.discardCurrent();
+        saveController.endSession();
         if (undoController != null) undoController.onDocumentReplaced(null);
+        if (runTicks != null) runTicks.reset();
+        if (angleSolverState != null) angleSolverState.clearResult();
+        hudMessages.clearStatus();
         startInitialized = false;
     }
 
@@ -430,7 +438,7 @@ public final class Application {
 
     private void commitStartTap() {
         if (boxController.size() == 0) return;
-        selection.handleClick(0);
+        selection.handleClick(boxController.size() >= 2 ? 1 : 0);
         selection.requestScrollIntoView();
     }
 
@@ -482,11 +490,12 @@ public final class Application {
         if (!mc.isReady()) return;
         if (!startInitialized) {
             runner.setStartPosition(mc.getPlayerPosition());
-            runSimulation();
             startInitialized = true;
             saveController.tryReopenLastSave();
         }
-        if (undoController != null) undoController.tick(System.nanoTime());
+        if (undoController != null && (runTicks == null || !runTicks.isRunning())) {
+            undoController.tick(System.nanoTime());
+        }
         pollSolver();
         dragController.tick(
                 mc.getEyePosition(),
@@ -537,6 +546,10 @@ public final class Application {
 
     private void pollSolver() {
         if (solverEngine == null) return;
+        if (runTicks != null) {
+            runTicks.poll();
+            if (runTicks.isRunning()) return;
+        }
         boolean wasSolving = solverEngine.isSolving();
         solverEngine.poll();
         if (solverEngine.isSolving()) {
@@ -550,6 +563,7 @@ public final class Application {
         if (!wasSolving) return;
         SolveResult done = angleSolverState.getResult();
         if (done == null) return;
+        saveController.markDirty();
         if (done.isSuccess() && !done.getYaws().isEmpty()) {
             solverEngine.apply();
             if (angleSolverState.getApplyDeviation() != null) {
@@ -566,12 +580,18 @@ public final class Application {
 
     public void solveAngleSolver() {
         if (solverEngine == null) return;
+        if (runTicks != null && runTicks.isRunning()) {
+            runTicks.cancel();
+            return;
+        }
         if (solverEngine.isSolving()) {
             solverEngine.cancel();
             pushHudMessage("Solve cancelled", HudMessageStyle.COLOR_WARN);
             return;
         }
-        if (mc.isReady()) solverEngine.solve();
+        if (!mc.isReady()) return;
+        if (runTicks != null) runTicks.start();
+        else solverEngine.solve();
     }
 
     public void setSolverStartTickFromSelection() {
@@ -703,6 +723,10 @@ public final class Application {
         return boxController;
     }
 
+    public de.legoshi.parkourcalc.core.sim.Checkpoint getCheckpoint(int index) {
+        return runner.getCheckpoint(index);
+    }
+
     public Settings getSettings() {
         return settings;
     }
@@ -742,4 +766,84 @@ public final class Application {
     public void renderPlayback() {
         playback.renderFrame();
     }
+
+    public void extendPathAndSolveToBlock(double targetX, double targetY, double targetZ) {
+        List<InputRow> rows = this.inputData.getRows();
+        int originalSize = rows.size();
+
+        boolean wasAbove = false;
+        double startY = runner.getStartPosition().y;
+        if (originalSize > 0) {
+            TickState lastState = this.boxController.getState(originalSize - 1);
+            if (lastState != null) {
+                startY = lastState.position.y;
+            }
+        }
+        if (startY > targetY) {
+            wasAbove = true;
+        }
+
+        // 1. Probe-Airtime-Ticks mit W + Sprint anhängen
+        int maxSimTicks = 100;
+        for (int i = 0; i < maxSimTicks; i++) {
+            InputRow newRow = new InputRow();
+            newRow.setKeyActive(InputRow.Key.W, true);
+            newRow.setKeyActive(InputRow.Key.SPRINT, true);
+            rows.add(newRow);
+        }
+
+        this.runSimulation();
+
+        // 2. Exakten Lande-Tick finden
+        int crossingIndex = -1;
+        for (int i = originalSize; i < rows.size(); i++) {
+            TickState state = this.boxController.getState(i);
+            if (state == null) continue;
+
+            if (state.position.y > targetY) {
+                wasAbove = true;
+            }
+
+            if (wasAbove && state.position.y <= targetY && state.velocity.y <= 0) {
+                crossingIndex = i;
+                break;
+            }
+        }
+
+        if (crossingIndex == -1) {
+            while (rows.size() > originalSize) {
+                rows.remove(rows.size() - 1);
+            }
+            this.runSimulation();
+            pushHudMessage("Target height not reached", HudMessageStyle.COLOR_WARN);
+            return;
+        }
+
+        // 3. Überflüssige Ticks nach der Landung abschneiden
+        while (rows.size() > crossingIndex + 1) {
+            rows.remove(rows.size() - 1);
+        }
+
+        int jumpTick = crossingIndex;
+        this.selection.clear();
+        this.selection.handleClick(jumpTick);
+        this.onConstraintKey(false, false);
+
+        InputRow landingRow = rows.get(jumpTick);
+        if (landingRow != null) {
+            landingRow.setKeyActive(InputRow.Key.JUMP, true);
+        }
+
+        TickConstraints tc = this.angleSolverState.tickConstraints(jumpTick);
+        if (tc != null && tc.getOverride() != null) {
+            tc.getOverride().setSlipperiness(Slipperiness.DEFAULT);
+        }
+
+        this.runSimulation();
+        this.angleSolverState.setLandingTick(jumpTick);
+        saveController.markDirty();
+        this.solveAngleSolver();
+        pushHudMessage("Path extended to T" + (jumpTick + 1) + " · solving...", HudMessages.COLOR_DEFAULT);
+    }
 }
+

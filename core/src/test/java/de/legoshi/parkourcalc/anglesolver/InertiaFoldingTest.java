@@ -50,6 +50,61 @@ public class InertiaFoldingTest {
                 foldedDiff < 2.0e-3);
     }
 
+    @Test
+    public void keepAliveWallIsTheComplementOfTheZeroingWall() {
+        ProblemFixture pf = ProblemFixture.load("solve", "loopmm-3jump-lands");
+        JumpSpec spec = pf.specFor(AngleSolverState.Axis.Z, AngleSolverState.Goal.MAX);
+        JumpPhysicsInputs sc = spec.asScenario();
+        ExactJumpModel exact = pf.model;
+        int n = sc.numTicks;
+        double thr = exact.inertiaThreshold();
+
+        JumpLinearModel lin = new JumpLinearModel(sc);
+        double[] yaws = recoverMarginZero(lin, spec);
+        double[] gf = sc.toGameFacings(Angles.wrapAll(yaws));
+        ForwardPath path = exact.forward(sc, gf);
+        double[] ux = new double[n];
+        double[] uz = new double[n];
+        for (int t = 0; t < n; t++) {
+            double phi = lin.baseArg(t) + Angles.wrap(yaws[t]) * RAD;
+            ux[t] = lin.mMag(t) * Math.cos(phi);
+            uz[t] = lin.mMag(t) * Math.sin(phi);
+        }
+
+        for (int axis = 0; axis < 2; axis++) {
+            double[] vel = axis == 0 ? path.velX : path.velZ;
+            int firstGate = n;
+            for (int k = 0; k < n; k++) {
+                if (Math.abs(vel[k]) < thr) { firstGate = k; break; }
+            }
+            boolean[] mask = new boolean[n];
+            for (int k = 1; k < n; k++) {
+                mask[k] = true;
+                List<JumpLinearModel.Wall> zeroing = new JumpLinearModel(sc, axis == 0 ? mask : null,
+                        axis == 1 ? mask : null).velocityWalls(thr);
+                mask[k] = false;
+                JumpLinearModel.Wall keep = lin.keepAliveWall(axis, k, thr, true);
+                if (keep == null) continue;
+
+                JumpLinearModel.Wall mirror = null;
+                for (JumpLinearModel.Wall w : zeroing) if (w.name.endsWith("-")) mirror = w;
+                assertTrue("the zeroing pattern must emit the mirrored wall at " + axis + "@" + k, mirror != null);
+                for (int s = 0; s < n; s++) {
+                    assertTrue("keep-alive must reuse the zeroing coefficients at " + axis + "@" + k,
+                            keep.coef[s] == mirror.coef[s]);
+                }
+                assertTrue("keep-alive must sit a band width below the zeroing bound at " + axis + "@" + k,
+                        Math.abs(keep.bPrime - (mirror.bPrime - 2.0 * thr)) < 1.0e-15);
+
+                if (k > firstGate) continue;
+                double slack = -keep.bPrime;
+                for (int s = 0; s < n; s++) slack += keep.coef[s] * (axis == 0 ? ux[s] : uz[s]);
+                assertTrue("keep-alive slack must read the byte-exact velocity at " + axis + "@" + k
+                        + " (slack=" + slack + " vel=" + vel[k] + ")", Math.abs(slack - (thr - vel[k])) < 2.0e-3);
+            }
+        }
+    }
+
     private static double[] recoverMarginZero(JumpLinearModel lin, JumpSpec spec) {
         int n = lin.n;
         double[] cx = new double[n];

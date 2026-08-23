@@ -1,7 +1,6 @@
 package de.legoshi.parkourcalc.core.anglesolver.graph.nodes;
 
 import de.legoshi.parkourcalc.core.anglesolver.graph.Candidate;
-import de.legoshi.parkourcalc.core.anglesolver.graph.CountingForwardModel;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeOutcome;
@@ -14,7 +13,6 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.FreeStartSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
-import de.legoshi.parkourcalc.core.anglesolver.solver.SolveCore;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
@@ -23,23 +21,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class FreeStartImproveNode implements NodeRuntime {
 
-    private final int iters;
-    private final double sigmaDeg;
     private final boolean jointOnly;
     private final FreeStartSolve.Config cfg;
 
     public FreeStartImproveNode(ParamValues params) {
-        this.iters = params.getInt("iters");
-        this.sigmaDeg = params.getDouble("sigmaDeg");
         this.jointOnly = params.getBool("jointOnly");
         this.cfg = new FreeStartSolve.Config();
-        cfg.maxIters = params.getInt("fsMaxIters");
         cfg.intervalMargin = params.getDouble("fsIntervalMargin");
         cfg.invariantTol = params.getDouble("fsInvariantTol");
-        cfg.stepTol = params.getDouble("fsStepTol");
-        cfg.slpPhase1Calls = params.getInt("fsSlpPhase1Calls");
-        cfg.slpTotalCalls = params.getInt("fsSlpTotalCalls");
         cfg.jointMargins = ParamParse.doubles(params.getString("fsJointMargins"), cfg.jointMargins);
+        cfg.jointWrapClose = false;
     }
 
     @Override
@@ -49,7 +40,7 @@ public final class FreeStartImproveNode implements NodeRuntime {
             boolean seedFeasible = in != null && in.yaws != null
                     && Scoring.violationOf(ctx.model, ctx.scenario, ctx.spec, in.yaws) <= ctx.feasTol;
             if (seedFeasible) return NodeOutcome.of(Guarantee.UNCHANGED, in);
-            double[] rescued = jointRescue(ctx, nodeToken);
+            double[] rescued = jointRescue(ctx, nodeToken, deadlineNanos);
             if (rescued == null) return NodeOutcome.of(Guarantee.UNCHANGED, in);
             ctx.chainAppend("free start rescue");
             return NodeOutcome.of(Guarantee.IMPROVED, Candidate.of(ctx, rescued));
@@ -60,21 +51,46 @@ public final class FreeStartImproveNode implements NodeRuntime {
         return NodeOutcome.of(Guarantee.IMPROVED, Candidate.of(ctx, improved));
     }
 
-    private double[] jointRescue(GraphContext ctx, AtomicBoolean cancel) {
+    private double[] jointRescue(GraphContext ctx, AtomicBoolean cancel, long deadlineNanos) {
         JumpPhysicsInputs sc = ctx.scenario;
         double seedX = sc.startPos.x;
         double seedZ = sc.startPos.z;
         sc.startBox = ctx.freeBox;
-        FreeStartSolve.Result conv = FreeStartSolve.solveJoint(ctx.exactModel, ctx.spec, ctx.feasTol, cancel, cfg);
-        if (conv == null || !conv.feasible) conv = FreeStartSolve.solve(ctx.exactModel, ctx.spec, ctx.feasTol, cancel, cfg);
+        FreeStartSolve.Result conv = FreeStartSolve.solveJointBest(ctx.exactModel, ctx.spec, ctx.feasTol, cancel, cfg);
+        double[] adoptYaws = null;
+        double adoptX = seedX;
+        double adoptZ = seedZ;
         if (conv != null && conv.feasible
                 && FreeStartSolve.violationAt(ctx.exactModel, ctx.spec, conv.yaws, conv.startX, conv.startZ) <= ctx.feasTol) {
-            sc.startPos = new Vec3dCore(conv.startX, sc.startPos.y, conv.startZ);
-            sc.startBox = StartBox.pinned(conv.startX, conv.startZ, sc.initialVelocity.x, sc.initialVelocity.z);
-            if (SolverTrace.on()) {
-                SolverTrace.log("ENGINE", "free rescue adopted start=(%.5f,%.5f)", conv.startX, conv.startZ);
+            adoptYaws = conv.yaws;
+            adoptX = conv.startX;
+            adoptZ = conv.startZ;
+        }
+        if (adoptYaws == null && (cancel == null || !cancel.get())) {
+            double centerX = 0.5 * (ctx.freeBox.pxLo + ctx.freeBox.pxHi);
+            double centerZ = 0.5 * (ctx.freeBox.pzLo + ctx.freeBox.pzHi);
+            JumpPhysicsInputs pinned = Scoring.pinnedScenario(sc, centerX, centerZ);
+            JumpSpec pinnedSpec = new JumpSpec(pinned, ctx.spec.constraints, ctx.spec.objective);
+            String[] via = new String[1];
+            double[] chainYaws = de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine.dualChain(
+                    ctx.exactModel, pinnedSpec, pinned, cancel, via);
+            if (chainYaws != null
+                    && FreeStartSolve.violationAt(ctx.exactModel, ctx.spec, chainYaws, centerX, centerZ) <= ctx.feasTol) {
+                adoptYaws = chainYaws;
+                adoptX = centerX;
+                adoptZ = centerZ;
+                if (SolverTrace.on()) {
+                    SolverTrace.log("ENGINE", "free rescue center chain via=%s", via[0]);
+                }
             }
-            return Angles.wrapAll(conv.yaws);
+        }
+        if (adoptYaws != null) {
+            sc.startPos = new Vec3dCore(adoptX, sc.startPos.y, adoptZ);
+            sc.startBox = StartBox.pinned(adoptX, adoptZ, sc.initialVelocity.x, sc.initialVelocity.z);
+            if (SolverTrace.on()) {
+                SolverTrace.log("ENGINE", "free rescue adopted start=(%.5f,%.5f)", adoptX, adoptZ);
+            }
+            return Angles.wrapAll(adoptYaws);
         }
         sc.startPos = new Vec3dCore(seedX, sc.startPos.y, seedZ);
         sc.startBox = StartBox.pinned(seedX, seedZ, sc.initialVelocity.x, sc.initialVelocity.z);
@@ -86,13 +102,12 @@ public final class FreeStartImproveNode implements NodeRuntime {
         JumpSpec spec = ctx.spec;
         JumpPhysicsInputs sc = ctx.scenario;
         StartBox freeBox = ctx.freeBox;
-        SolveCore.Budget budget = ctx.cmaBudget;
         double feasTol = ctx.feasTol;
         double seedX = sc.startPos.x;
         double seedZ = sc.startPos.z;
         boolean seedFeasible = seedYaws != null && Scoring.violationOf(ctx.model, sc, spec, seedYaws) <= feasTol;
         double seedObj = seedFeasible
-                ? spec.objective.scored(Scoring.exactObjective(ctx.model, sc, spec, seedYaws), seedYaws) : Double.NaN;
+                ? spec.objective.scored(Scoring.exactObjective(ctx.model, sc, spec, seedYaws), sc.startYaw, seedYaws) : Double.NaN;
         double seedViol = seedYaws == null ? Double.POSITIVE_INFINITY : Scoring.violationOf(ctx.model, sc, spec, seedYaws);
         boolean max = ctx.maximize();
 
@@ -116,73 +131,16 @@ public final class FreeStartImproveNode implements NodeRuntime {
 
         sc.startBox = freeBox;
         FreeStartSolve.Result conv = FreeStartSolve.solveJoint(exact, spec, feasTol, cancel, cfg);
-        if (conv == null || !conv.feasible) conv = FreeStartSolve.solve(exact, spec, feasTol, cancel, cfg);
         if (conv != null && conv.feasible
                 && FreeStartSolve.violationAt(exact, spec, conv.yaws, conv.startX, conv.startZ) <= feasTol) {
             double[] convYaws = Angles.wrapAll(conv.yaws);
             double convObj = spec.objective.scored(Scoring.exactObjective(ctx.model,
-                    Scoring.pinnedScenario(sc, conv.startX, conv.startZ), spec, convYaws), convYaws);
+                    Scoring.pinnedScenario(sc, conv.startX, conv.startZ), spec, convYaws), sc.startYaw, convYaws);
             if (!seedFeasible || (max ? convObj > seedObj : convObj < seedObj)) {
                 sc.startPos = new Vec3dCore(conv.startX, sc.startPos.y, conv.startZ);
                 sc.startBox = StartBox.pinned(conv.startX, conv.startZ, sc.initialVelocity.x, sc.initialVelocity.z);
                 return convYaws;
             }
-        }
-
-        double p0x = seedX;
-        double p0z = seedZ;
-        sc.startPos = new Vec3dCore(seedX, sc.startPos.y, seedZ);
-        sc.startBox = freeBox;
-        long half = (deadline - System.nanoTime()) / 2;
-        double[] locYaws = SolveCore.optimize(new CountingForwardModel(ctx.model), spec, budget, sigmaDeg,
-                feasTol, cancel, seedYaws != null ? Angles.wrapAll(seedYaws) : null,
-                System.nanoTime() + half, ctx.sequential, ctx.progress);
-        double[] warm = locYaws != null ? locYaws : seedYaws;
-        if (locYaws != null && !cancel.get()) {
-            double[] rs = FreeStartSolve.recoverStart(exact, spec, locYaws, cfg);
-            if (rs != null) {
-                p0x = rs[0];
-                p0z = rs[1];
-                double v = FreeStartSolve.violationAt(exact, spec, locYaws, rs[0], rs[1]);
-                if (v < foundViol) {
-                    foundViol = v;
-                    foundYaws = locYaws;
-                    foundX = rs[0];
-                    foundZ = rs[1];
-                }
-            }
-        }
-
-        for (int iter = 0; iter < iters && !cancel.get(); iter++) {
-            long remaining = deadline - System.nanoTime();
-            if (remaining <= 0) break;
-            long iterDeadline = System.nanoTime() + remaining / (iters - iter);
-            sc.startPos = new Vec3dCore(p0x, sc.startPos.y, p0z);
-            sc.startBox = StartBox.pinned(p0x, p0z, sc.initialVelocity.x, sc.initialVelocity.z);
-            double[] warmW = warm != null ? Angles.wrapAll(warm) : null;
-            double[] yaws = SolveCore.optimize(new CountingForwardModel(ctx.model), spec, budget, sigmaDeg,
-                    feasTol, cancel, warmW, iterDeadline, ctx.sequential, ctx.progress);
-            if (yaws == null) yaws = warmW;
-            if (yaws == null) break;
-            warm = yaws;
-            sc.startBox = freeBox;
-            double[] rs = FreeStartSolve.recoverStart(exact, spec, yaws, cfg);
-            if (rs == null) break;
-            double viol = FreeStartSolve.violationAt(exact, spec, yaws, rs[0], rs[1]);
-            if (SolverTrace.on()) {
-                SolverTrace.log("ENGINE", "free iter=%d start=(%.5f,%.5f) -> recovered=(%.7f,%.7f) viol=%.3e",
-                        iter, p0x, p0z, rs[0], rs[1], viol);
-            }
-            if (viol < foundViol) {
-                foundViol = viol;
-                foundYaws = yaws;
-                foundX = rs[0];
-                foundZ = rs[1];
-            }
-            if (viol <= feasTol) break;
-            if (Math.abs(rs[0] - p0x) < 1.0e-9 && Math.abs(rs[1] - p0z) < 1.0e-9) break;
-            p0x = rs[0];
-            p0z = rs[1];
         }
 
         boolean adopt = false;
@@ -192,7 +150,7 @@ public final class FreeStartImproveNode implements NodeRuntime {
                 adopt = true;
             } else if (foundFeasible) {
                 double freeObj = spec.objective.scored(Scoring.exactObjective(ctx.model,
-                        Scoring.pinnedScenario(sc, foundX, foundZ), spec, foundYaws), foundYaws);
+                        Scoring.pinnedScenario(sc, foundX, foundZ), spec, foundYaws), sc.startYaw, foundYaws);
                 adopt = max ? freeObj > seedObj : freeObj < seedObj;
             } else if (!seedFeasible) {
                 adopt = foundViol < seedViol;

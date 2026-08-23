@@ -11,7 +11,6 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
-import de.legoshi.parkourcalc.core.anglesolver.solver.SolveCore;
 import org.junit.experimental.categories.Category;
 import org.junit.Test;
 
@@ -37,14 +36,14 @@ public class IlsPolishTest {
         assertNotNull("closed-form seed", seed);
         seed = Angles.wrapAll(seed);
         assertTrue("seed must be byte-exact feasible", feasible(spec, sc, model, seed));
-        double seedObj = SolveCore.objectiveOf(model, sc, obj, seed);
+        double seedObj = objectiveOf(model, sc, obj, seed);
 
         long deadline = System.nanoTime() + 2_000_000_000L;
         double[] out = IlsPolish.polish(model, spec, seed, deadline, 1, false, cancel, null);
         assertNotNull(out);
         assertTrue("ILS result must stay byte-exact feasible", feasible(spec, sc, model, out));
 
-        double outObj = SolveCore.objectiveOf(model, sc, obj, out);
+        double outObj = objectiveOf(model, sc, obj, out);
         double gain = max ? outObj - seedObj : seedObj - outObj;
         assertTrue("ILS regressed the objective by " + (-gain), gain >= -1e-9);
     }
@@ -70,5 +69,9 @@ public class IlsPolishTest {
         double[] gf = sc.toGameFacings(Angles.wrapAll(yaws));
         ForwardPath path = model.forward(sc, gf);
         return c.maxViolation(gf, path) <= 0.0;
+    }
+
+    private static double objectiveOf(ExactJumpModel model, JumpPhysicsInputs sc, Objective obj, double[] absWrapped) {
+        return model.forward(sc, sc.toGameFacings(absWrapped)).getPos(obj.tick, obj.axis);
     }
 }

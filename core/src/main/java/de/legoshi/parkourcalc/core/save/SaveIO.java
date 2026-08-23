@@ -19,6 +19,7 @@ import de.legoshi.parkourcalc.core.anglesolver.Slipperiness;
 import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
 import de.legoshi.parkourcalc.core.anglesolver.StateOverride;
 import de.legoshi.parkourcalc.core.anglesolver.TickConstraints;
+import de.legoshi.parkourcalc.core.anglesolver.runticks.RunTicksSettings;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -174,6 +175,10 @@ public final class SaveIO {
 
     /** Rebuilds the Angle Solver problem from the save. Always resets first, so a pre-feature save yields an empty solver. */
     public static void applyAngleSolverTo(SaveFile file, AngleSolverState state) {
+        applyAngleSolverTo(file, state, 0);
+    }
+
+    public static void applyAngleSolverTo(SaveFile file, AngleSolverState state, int rowCount) {
         if (state == null) return;
         state.reset();
         SaveFile.AngleSolver a = file.angleSolver;
@@ -201,10 +206,13 @@ public final class SaveIO {
             }
         }
 
+        if (rowCount > 0) state.clampTicks(rowCount);
+
         if (a.ticks != null) {
             for (SaveFile.Tick t : a.ticks) {
                 if (t == null) continue;
-                TickConstraints tc = state.tickConstraints(t.tick);
+                int tick = rowCount > 0 ? Math.min(Math.max(t.tick, 0), rowCount - 1) : t.tick;
+                TickConstraints tc = state.tickConstraints(tick);
                 if (t.constraints != null) {
                     for (SaveFile.Constraint c : t.constraints) {
                         Constraint constraint = toConstraint(c);
@@ -224,6 +232,16 @@ public final class SaveIO {
         state.setResult(toResult(a.result));
         state.setApplyDeviation(a.deviation,
                 parseEnum(AngleSolverState.DeviationKind.class, a.deviationKind, AngleSolverState.DeviationKind.OTHER));
+
+        RunTicksSettings runTicks = state.getRunTicks();
+        if (a.runTicksEnabled != null) runTicks.setEnabled(a.runTicksEnabled);
+        if (a.runTicksMax != null) runTicks.setMaxTicks(a.runTicksMax);
+        if (a.runTicksTimeoutMs != null) runTicks.setTimeoutMs(a.runTicksTimeoutMs);
+        if (a.runTicksAdaptiveTimeout != null) runTicks.setAdaptiveTimeout(a.runTicksAdaptiveTimeout);
+        if (a.runTicksAddPerJumpMs != null) runTicks.setAddPerJumpMs(a.runTicksAddPerJumpMs);
+        if (a.runTicksSafetyMult != null) runTicks.setSafetyMult(a.runTicksSafetyMult);
+        if (a.runTicksSafetyMarginMs != null) runTicks.setSafetyMarginMs(a.runTicksSafetyMarginMs);
+        if (a.runTicksMinimize != null) runTicks.setMinimize(a.runTicksMinimize);
     }
 
     public static AngleSolverState sliceAngleSolverState(AngleSolverState source, List<Integer> sourceRows) {
@@ -538,6 +556,15 @@ public final class SaveIO {
         for (BlockSelection b : s.getCollisionBlocks()) a.selectedBlocks.add(toSaveBlock(b));
         for (BlockSelection b : s.getLandBlocks()) a.selectedBlocks.add(toSaveBlock(b));
         a.result = toSaveResult(s.getResult());
+        RunTicksSettings runTicks = s.getRunTicks();
+        a.runTicksEnabled = runTicks.isEnabled();
+        a.runTicksMax = runTicks.getMaxTicks();
+        a.runTicksTimeoutMs = runTicks.getTimeoutMs();
+        a.runTicksAdaptiveTimeout = runTicks.isAdaptiveTimeout();
+        a.runTicksAddPerJumpMs = runTicks.getAddPerJumpMs();
+        a.runTicksSafetyMult = runTicks.getSafetyMult();
+        a.runTicksSafetyMarginMs = runTicks.getSafetyMarginMs();
+        a.runTicksMinimize = runTicks.isMinimize();
         a.deviation = s.getApplyDeviation();
         a.deviationKind = s.getApplyDeviationKind() != null ? s.getApplyDeviationKind().name() : null;
         return a;
@@ -546,10 +573,6 @@ public final class SaveIO {
     private static void applyCustomBudget(SaveFile.SolveBudget src, AngleSolverState.SolveBudget dst) {
         dst.resetToDefaults();
         if (src == null) return;
-        dst.setRestarts(src.restarts);
-        dst.setMaxEval(src.maxEval);
-        dst.setPolishCount(src.polishCount);
-        dst.setPolishDepth(parseEnum(AngleSolverState.PolishDepth.class, src.polishDepth, AngleSolverState.PolishDepth.LIGHT));
         dst.setTimeBudgetSeconds(src.timeBudgetSeconds);
         dst.setWindow(src.window);   // before commit: commit's clamp depends on window
         dst.setCommit(src.commit);
@@ -559,10 +582,6 @@ public final class SaveIO {
 
     private static SaveFile.SolveBudget toSaveCustomBudget(AngleSolverState.SolveBudget b) {
         SaveFile.SolveBudget out = new SaveFile.SolveBudget();
-        out.restarts = b.getRestarts();
-        out.maxEval = b.getMaxEval();
-        out.polishCount = b.getPolishCount();
-        out.polishDepth = b.getPolishDepth().name();
         out.timeBudgetSeconds = b.getTimeBudgetSeconds();
         out.window = b.getWindow();
         out.commit = b.getCommit();
@@ -768,6 +787,7 @@ public final class SaveIO {
         out.durationNanos = r.getDurationNanos();
         out.finishedAt = r.getFinishedAt();
         out.solver = r.getSolver();
+        out.notice = r.getNotice();
         out.objectiveValue = r.getObjectiveValue();
         out.hasObjective = r.hasObjective();
         for (SolveResult.Outcome o : r.getOutcomes()) {
@@ -792,6 +812,7 @@ public final class SaveIO {
             sd.value = d.value;
             out.details.add(sd);
         }
+        out.unmetTicks.addAll(r.getUnmetTicks());
         return out;
     }
 
@@ -802,6 +823,7 @@ public final class SaveIO {
         r.setDurationNanos(rd.durationNanos);
         r.setFinishedAt(rd.finishedAt);
         r.setSolver(rd.solver);
+        r.setNotice(rd.notice);
         if (rd.hasObjective) r.setObjective(rd.objectiveValue);
         if (rd.outcomes != null) {
             for (SaveFile.Outcome o : rd.outcomes) {
@@ -815,6 +837,11 @@ public final class SaveIO {
         }
         if (rd.details != null) {
             for (SaveFile.Detail d : rd.details) r.addDetail(d.label, d.value);
+        }
+        if (rd.unmetTicks != null) {
+            for (Integer t : rd.unmetTicks) {
+                if (t != null) r.addUnmetTick(t);
+            }
         }
         return r;
     }

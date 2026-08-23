@@ -4,6 +4,9 @@ package de.legoshi.parkourcalc.core.anglesolver;
  * One per-tick constraint. Every field (X/Z/F/dX/dZ/dF) accepts either a scalar comparison or a
  * range; the op carries the form (IN = range). Changing the op across that boundary converts
  * the values: entering a range seeds [value, value], leaving one keeps the lower bound.
+ *
+ * <p>RT is the exception: it constrains how many run ticks the run-ticks search may insert before the
+ * jump on this tick, so the angle solver ignores it entirely (see RunTicksFilter).
  */
 public final class Constraint {
 
@@ -13,7 +16,8 @@ public final class Constraint {
         F("F"),
         DX("dX"),
         DZ("dZ"),
-        DF("dF");
+        DF("dF"),
+        RT("RT");
 
         public final String label;
 
@@ -45,7 +49,7 @@ public final class Constraint {
     private boolean loInclusive;
     private boolean hiInclusive;
     private Integer refTick;
-    private boolean vsDz;
+    private boolean vsOther;
     /** A disabled constraint keeps its definition but is invisible to the solver. */
     private boolean enabled = true;
 
@@ -75,7 +79,11 @@ public final class Constraint {
     public void setField(Field next) {
         this.field = next;
         if (next != Field.X && next != Field.Z) refTick = null;
-        if (next != Field.DX) vsDz = false;
+        if (next != Field.DX && next != Field.DZ) vsOther = false;
+        if (next == Field.DF) {
+            op = Op.EQ;
+            value = 0.0;
+        }
     }
 
     public Integer getRefTick() {
@@ -90,12 +98,20 @@ public final class Constraint {
         return refTick != null;
     }
 
+    public boolean isVsOther() {
+        return vsOther;
+    }
+
+    public void setVsOther(boolean vsOther) {
+        this.vsOther = vsOther && (field == Field.DX || field == Field.DZ);
+    }
+
     public boolean isVsDz() {
-        return vsDz;
+        return isVsOther();
     }
 
     public void setVsDz(boolean vsDz) {
-        this.vsDz = vsDz && field == Field.DX;
+        setVsOther(vsDz);
     }
 
     public Op getOp() {
@@ -155,6 +171,10 @@ public final class Constraint {
         return op == Op.IN;
     }
 
+    public boolean isUnsupportedDf() {
+        return field == Field.DF && (isRange() || op != Op.EQ || value != 0.0);
+    }
+
     public boolean isEnabled() {
         return enabled;
     }
@@ -171,7 +191,7 @@ public final class Constraint {
         c.hiInclusive = hiInclusive;
         c.enabled = enabled;
         c.refTick = refTick;
-        c.vsDz = vsDz;
+        c.vsOther = vsOther;
         return c;
     }
 }

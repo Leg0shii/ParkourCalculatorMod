@@ -28,6 +28,7 @@ public final class SolveProgress {
     private final boolean maximize;
     private final boolean stopOnFeasible;
     private final double smoothLambda;
+    private final double anchorYaw;
     private final long startNanos = System.nanoTime();
     private final List<Sample> samples = new ArrayList<>();
 
@@ -45,13 +46,18 @@ public final class SolveProgress {
     private String forwardNode;
 
     public SolveProgress(boolean maximize, boolean stopOnFeasible) {
-        this(maximize, stopOnFeasible, 0.0);
+        this(maximize, stopOnFeasible, 0.0, 0.0);
     }
 
     public SolveProgress(boolean maximize, boolean stopOnFeasible, double smoothLambda) {
+        this(maximize, stopOnFeasible, smoothLambda, 0.0);
+    }
+
+    public SolveProgress(boolean maximize, boolean stopOnFeasible, double smoothLambda, double anchorYaw) {
         this.maximize = maximize;
         this.stopOnFeasible = stopOnFeasible;
         this.smoothLambda = smoothLambda;
+        this.anchorYaw = anchorYaw;
     }
 
     public synchronized void setActiveNodeSource(Supplier<String> source) {
@@ -108,7 +114,7 @@ public final class SolveProgress {
 
     private double scoredOf(double objective, double[] yaws) {
         if (smoothLambda <= 0.0 || yaws == null || yaws.length < 2) return objective;
-        double pen = smoothLambda * Angles.wiggleDeg(yaws);
+        double pen = smoothLambda * Angles.turnCost(anchorYaw, yaws);
         return maximize ? objective - pen : objective + pen;
     }
 

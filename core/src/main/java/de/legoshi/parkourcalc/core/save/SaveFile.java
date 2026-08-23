@@ -76,16 +76,20 @@ public final class SaveFile {
         public List<BlockSel> selectedBlocks = new ArrayList<BlockSel>();
         public Start seed;                               // launch state (pos/vel/yaw) at startTick; what a solve begins from
         public Result result;                            // null = no solve yet
+        public Boolean runTicksEnabled;
+        public Integer runTicksMax;
+        public Integer runTicksTimeoutMs;
+        public Boolean runTicksAdaptiveTimeout;
+        public Integer runTicksAddPerJumpMs;
+        public Double runTicksSafetyMult;
+        public Integer runTicksSafetyMarginMs;
+        public Boolean runTicksMinimize;
         public String deviation;
         public String deviationKind;
     }
 
     /** Nested (not flattened) so an absent block in an old save stays distinct from a real timeBudgetSeconds = 0. */
     public static final class SolveBudget {
-        public int restarts;
-        public int maxEval;
-        public int polishCount;
-        public String polishDepth;
         public int timeBudgetSeconds;
         public int window;
         public int commit;
@@ -148,11 +152,13 @@ public final class SaveFile {
         public long durationNanos;                       // precise solve compute time; 0 = legacy save
         public String finishedAt;                        // formatted clock time, null if unset
         public String solver;                            // algorithm label, null = legacy save
+        public String notice;
         public double objectiveValue;
         public boolean hasObjective;
         public List<Outcome> outcomes = new ArrayList<Outcome>();
         public List<Yaw> yaws = new ArrayList<Yaw>();
         public List<Detail> details = new ArrayList<Detail>();
+        public List<Integer> unmetTicks = new ArrayList<Integer>();
     }
 
     public static final class Detail {

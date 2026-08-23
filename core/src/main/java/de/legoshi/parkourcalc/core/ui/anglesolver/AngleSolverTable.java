@@ -79,6 +79,7 @@ public final class AngleSolverTable {
     private String dragLabel = "";
     private boolean dragAlt;
     private int dropTick = -1; // cell under the cursor during drag; one frame lagged for the highlight
+    private Runnable deferredAction;
 
     private final Map<Integer, float[]> constraintCellRects = new HashMap<>();
     private final Map<Integer, float[]> stateCellRects = new HashMap<>();
@@ -118,6 +119,24 @@ public final class AngleSolverTable {
         if (c.isRange()) return SCALAR_OPS.length + (c.isLoInclusive() ? 2 : 0) + (c.isHiInclusive() ? 1 : 0);
         for (int i = 0; i < SCALAR_OPS.length; i++) if (SCALAR_OPS[i] == c.getOp()) return i;
         return 0;
+    }
+
+    private static String dfOpGlyph(Constraint c) {
+        return c.isRange() ? Constraint.Op.IN.glyph : c.getOp().glyph;
+    }
+
+    private static String dfValueLabel(Constraint c) {
+        if (c.isRange()) {
+            return String.format(java.util.Locale.ROOT, "%.4g..%.4g !", c.getLo(), c.getHi());
+        }
+        return String.format(java.util.Locale.ROOT, "%.4g !", c.getValue());
+    }
+
+    private static String dfTooltip(Constraint c) {
+        return c.isUnsupportedDf()
+                ? "Unsupported dF shape from an older save; solves containing it will fail."
+                        + " Re-select the dF field to reset it to dF = 0, or delete it."
+                : "dF is supported as dF = 0 only (hold the facing of the previous tick)";
     }
 
     public AngleSolverTable(AngleSolverState state, Settings settings, SelectionManager selection,
@@ -222,6 +241,10 @@ public final class AngleSolverTable {
     }
 
     public void endRows() {
+        if (deferredAction != null) {
+            deferredAction.run();
+            deferredAction = null;
+        }
         if (!dragging) {
             dropTick = -1;
             return;
@@ -641,6 +664,13 @@ public final class AngleSolverTable {
             clearStateSelection();
         }
 
+        if (ImGui.isItemClicked(2)) {
+            deferredAction = () -> {
+                state.deleteConstraint(tick, index);
+                clearConstraintSelection();
+            };
+        }
+
         if (ImGui.beginPopupContextItem("chipctx" + tick + "_" + index)) {
             renderChipMenu(tick, index);
             ImGui.endPopup();
@@ -815,6 +845,24 @@ public final class AngleSolverTable {
             selectedStatePotion = potion;
             clearConstraintSelection();
         }
+
+        if (ImGui.isItemClicked(2)) {
+            deferredAction = () -> {
+                StateOverride ov = state.tickConstraints(tick).getOverride();
+                if (ov != null) {
+                    switch (kind) {
+                        case STATE_INPUTS: ov.clearInputs(); break;
+                        case STATE_SPRINT: ov.clearSprint(); break;
+                        case STATE_SLIP: ov.clearSlipperiness(); break;
+                        case STATE_MEDIUM: ov.clearMedium(); break;
+                        case STATE_ADD: ov.removeAdded(potion); break;
+                        case STATE_REMOVE: ov.getRemoved().remove(potion); break;
+                        default: break;
+                    }
+                }
+                clearStateSelection();
+            };
+        }
     }
 
     private boolean isStateSelected(int tick, DragKind kind, Potion potion) {
@@ -934,19 +982,29 @@ public final class AngleSolverTable {
                     c.setField(Constraint.Field.values()[fieldCombo.get()]);
                 }
                 ImGui.tableNextColumn();
-                opCombo.set(opItemIndex(c));
-                if (Controls.combo("##op", opCombo, OP_ITEMS, ImGui.getContentRegionAvail().x)) {
-                    int v = opCombo.get();
-                    if (v < SCALAR_OPS.length) {
-                        c.setOp(SCALAR_OPS[v]);
-                    } else {
-                        c.setOp(Constraint.Op.IN);
-                        int b = v - SCALAR_OPS.length;
-                        c.setInclusive((b & 2) != 0, (b & 1) != 0);
+                if (c.getField() == Constraint.Field.DF) {
+                    ImGui.textDisabled(c.isUnsupportedDf() ? dfOpGlyph(c) : "=");
+                    if (ImGui.isItemHovered()) ImGui.setTooltip(dfTooltip(c));
+                } else {
+                    opCombo.set(opItemIndex(c));
+                    if (Controls.combo("##op", opCombo, OP_ITEMS, ImGui.getContentRegionAvail().x)) {
+                        int v = opCombo.get();
+                        if (v < SCALAR_OPS.length) {
+                            c.setOp(SCALAR_OPS[v]);
+                        } else {
+                            c.setOp(Constraint.Op.IN);
+                            int b = v - SCALAR_OPS.length;
+                            c.setInclusive((b & 2) != 0, (b & 1) != 0);
+                        }
                     }
                 }
                 ImGui.tableNextColumn();
-                renderConstraintValues(c);
+                if (c.getField() == Constraint.Field.DF) {
+                    ImGui.textDisabled(c.isUnsupportedDf() ? dfValueLabel(c) : "0");
+                    if (ImGui.isItemHovered()) ImGui.setTooltip(dfTooltip(c));
+                } else {
+                    renderConstraintValues(c);
+                }
                 ImGui.tableNextColumn();
                 if (deleteX("del")) delete = i;
                 if (dim) ImGui.popStyleVar();
@@ -986,14 +1044,17 @@ public final class AngleSolverTable {
                 ImGui.sameLine();
             }
         }
-        if (c.getField() == Constraint.Field.DX) {
-            if (ImGui.checkbox("dZ##vs", c.isVsDz())) c.setVsDz(!c.isVsDz());
+        if (c.getField() == Constraint.Field.DX || c.getField() == Constraint.Field.DZ) {
+            String otherLabel = c.getField() == Constraint.Field.DX ? "dZ##vs" : "dX##vs";
+            String otherName = c.getField() == Constraint.Field.DX ? "dZ" : "dX";
+            String selfName = c.getField() == Constraint.Field.DX ? "dX" : "dZ";
+            if (ImGui.checkbox(otherLabel, c.isVsOther())) c.setVsOther(!c.isVsOther());
             if (ImGui.isItemHovered()) {
-                ImGui.setTooltip("Compare against dZ as magnitudes: |dX| vs |dZ| + value."
+                ImGui.setTooltip("Compare against " + otherName + " as magnitudes: |" + selfName + "| vs |" + otherName + "| + value."
                         + " Collision resolves the larger-delta axis first (26.x).");
             }
             ImGui.sameLine();
-            if (c.isVsDz()) {
+            if (c.isVsOther()) {
                 ThemeManager.pushTextColor(ThemeManager.textMutedColor());
                 ImGui.alignTextToFramePadding();
                 ImGui.text("+");

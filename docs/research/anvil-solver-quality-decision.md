@@ -11,6 +11,8 @@
 > superseded and was never merged. What still stands: the anvil momentum-ceiling analysis below (a yaw
 > optimizer cannot land anvil at its recorded momentum; that is a route/momentum question, #178). Only the
 > loopmm optimizer-gap framing is retracted.
+>
+> 2026-08: CMA-ES was subsequently removed entirely (PRs 371/373/375); loopmm now lands via the graph's cold/rescue B&B nodes.
 
 Investigation + decision record (2026-06-23). Question raised: the `claude/brave-planck-lyr5ng` branch got
 within ~1.3e-6 of a known-good byte-exact result on the close-range anvil fixture; can we port that into
@@ -62,7 +64,7 @@ Anvil is best treated as a *near-ceiling case at its recorded momentum*, not a s
 
 ## Loop mm, correctly understood (and why collision is not needed)
 
-An early framing (from the branch's `anvil-cold-solve.md`) called loop mm a "hitbox extension / collision
+An early framing (from `anvil-cold-solve.md` on the brave-planck branch; that file was never merged and the branch is gone) called loop mm a "hitbox extension / collision
 technique." That is wrong per the glossary (CONTEXT.md): **loop mm is repeated backward momentum**: move
 backward to open up run-up space so you accelerate over more distance and carry more velocity into the
 jump, looping back and forth to accumulate a little more each pass. The optimization is: go back far enough

@@ -36,10 +36,6 @@ public final class ConstraintSelection {
         }
     }
 
-    public boolean hasFocus() {
-        return !focus.isEmpty();
-    }
-
     public boolean isFocused(int tick, int index) {
         return focus.contains(key(tick, index));
     }

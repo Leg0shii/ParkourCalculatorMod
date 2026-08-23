@@ -36,7 +36,7 @@ public enum RouterPredicate {
                 return ctx.freeStart;
             case HAS_REACH_HEADROOM:
                 return yaws != null && Scoring.reachHeadroom(ctx.model, ctx.scenario, ctx.spec, yaws,
-                        ctx.reachBound(), ctx.feasTol);
+                        ctx.headroomBound(), ctx.feasTol);
             case LEGAL_PUSH:
                 return ctx.legalGoal != null;
             case AT_OBJECTIVE_CAP: {
