@@ -158,6 +158,7 @@ public final class SaveFile {
         public List<Outcome> outcomes = new ArrayList<Outcome>();
         public List<Yaw> yaws = new ArrayList<Yaw>();
         public List<Detail> details = new ArrayList<Detail>();
+        public List<Integer> unmetTicks = new ArrayList<Integer>();
     }
 
     public static final class Detail {

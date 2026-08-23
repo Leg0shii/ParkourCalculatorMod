@@ -812,6 +812,7 @@ public final class SaveIO {
             sd.value = d.value;
             out.details.add(sd);
         }
+        out.unmetTicks.addAll(r.getUnmetTicks());
         return out;
     }
 
@@ -836,6 +837,11 @@ public final class SaveIO {
         }
         if (rd.details != null) {
             for (SaveFile.Detail d : rd.details) r.addDetail(d.label, d.value);
+        }
+        if (rd.unmetTicks != null) {
+            for (Integer t : rd.unmetTicks) {
+                if (t != null) r.addUnmetTick(t);
+            }
         }
         return r;
     }
