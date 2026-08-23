@@ -232,8 +232,11 @@ public final class RunTicksController implements RunTicksControls {
         originalDocument.restoreInto(inputs, state);
         runSimulation.run();
 
-        SolveResult failed = new SolveResult(false, 0, enabledConstraintCount(),
-                state.getStartTick() + 1, state.getLandingTick() + 1);
+        SolveResult failed = engine.diagnoseCurrentPath();
+        if (failed == null) {
+            failed = new SolveResult(false, 0, enabledConstraintCount(),
+                    state.getStartTick() + 1, state.getLandingTick() + 1);
+        }
         failed.setSolver(cancelRequested ? "Run ticks (cancelled)" : "Run ticks");
         failed.addDetail("Run ticks", cancelRequested
                 ? "Cancelled, path restored" : "No solution, path restored");

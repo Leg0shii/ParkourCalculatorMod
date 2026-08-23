@@ -563,6 +563,7 @@ public final class Application {
         if (!wasSolving) return;
         SolveResult done = angleSolverState.getResult();
         if (done == null) return;
+        saveController.markDirty();
         if (done.isSuccess() && !done.getYaws().isEmpty()) {
             solverEngine.apply();
             if (angleSolverState.getApplyDeviation() != null) {

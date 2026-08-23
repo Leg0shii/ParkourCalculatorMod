@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.core.anglesolver.graph;
 
 import de.legoshi.parkourcalc.core.anglesolver.solver.ClosedFormSolve;
+import de.legoshi.parkourcalc.core.anglesolver.solver.ClosestMiss;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
@@ -30,6 +31,7 @@ public final class GraphContext {
     public final boolean sequential;
     public final LongRunSolver.LongRunConfig longRun;
     public final AtomicLong smoothingEvals = new AtomicLong();
+    private final ClosestMiss closestMiss = new ClosestMiss();
 
     private final BudgetWatchdog watchdog;
     private String chain;
@@ -67,6 +69,10 @@ public final class GraphContext {
 
     public boolean exact() {
         return exactModel != null;
+    }
+
+    public ClosestMiss closestMiss() {
+        return closestMiss;
     }
 
     public void setOverallDeadline(long absoluteNanos) {
