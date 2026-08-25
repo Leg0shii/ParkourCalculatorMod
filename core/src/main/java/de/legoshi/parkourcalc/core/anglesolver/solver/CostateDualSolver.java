@@ -64,6 +64,7 @@ public final class CostateDualSolver {
     private final double[] mMag;
     private final int[] axis;       // [m] wall axis (0=X,1=Z)
     private final double[][] coef;  // [m][n] wall coupling
+    private final int[] lastCoupled;
     private final double[] bBase;   // [m] margin-0 right-hand side
     private final boolean[] eq;     // [m]
     private final double[] p0coef;
@@ -101,6 +102,7 @@ public final class CostateDualSolver {
         this.freeP0 = freeP0;
         this.axis = new int[m];
         this.coef = new double[m][];
+        this.lastCoupled = new int[m];
         this.bBase = new double[m];
         this.eq = new boolean[m];
         this.p0coef = new double[m];
@@ -111,6 +113,10 @@ public final class CostateDualSolver {
             bBase[j] = w.bPrime;
             eq[j] = w.eq;
             p0coef[j] = w.p0coef;
+            int last = -1;
+            int lim = Math.min(w.coef.length, n);
+            for (int t = 0; t < lim; t++) if (w.coef[t] != 0.0) last = t;
+            lastCoupled[j] = last;
         }
         this.gx = new double[n];
         this.gz = new double[n];
@@ -456,8 +462,9 @@ public final class CostateDualSolver {
                 int aj = axis[j];
                 boolean sameAxis = (ai == aj);
                 double[] hatJ = aj == 0 ? gxHat : gzHat;
+                int bound = Math.min(lastCoupled[i], lastCoupled[j]) + 1;
                 double sum = 0.0;
-                for (int t = 0; t < n; t++) {
+                for (int t = 0; t < bound; t++) {
                     double cc = ci[t] * cj[t];
                     if (cc == 0.0) continue;
                     sum += wOverNrm[t] * cc * ((sameAxis ? 1.0 : 0.0) - hatI[t] * hatJ[t]);

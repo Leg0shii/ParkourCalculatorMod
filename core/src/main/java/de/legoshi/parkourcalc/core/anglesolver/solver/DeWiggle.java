@@ -26,7 +26,14 @@ public final class DeWiggle {
     private DeWiggle() {
     }
 
+    public static double MAX_GIVE_BACK = 8.0e-3;
+
     public static double[] run(ForwardModel model, JumpSpec spec, double[] yawsAbsWrapped, AtomicBoolean cancel) {
+        return run(model, spec, yawsAbsWrapped, cancel, MAX_GIVE_BACK);
+    }
+
+    public static double[] run(ForwardModel model, JumpSpec spec, double[] yawsAbsWrapped, AtomicBoolean cancel,
+                               double giveBack) {
         if (yawsAbsWrapped == null || yawsAbsWrapped.length < 3) return yawsAbsWrapped;
         JumpPhysicsInputs sc = spec.asScenario();
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
@@ -35,6 +42,8 @@ public final class DeWiggle {
         double anchor = sc.startYaw;
         double[] y = Angles.wrapAll(yawsAbsWrapped.clone());
         if (violation(model, sc, compiled, y) > FEAS_TOL) return yawsAbsWrapped;
+        boolean maxObj = spec.objective.sense == Objective.Sense.MAX;
+        double objFloor = objAt(model, sc, spec.objective, y) + (maxObj ? -giveBack : giveBack);
 
         Set<String> stuck = new HashSet<>();
         while (true) {
@@ -69,6 +78,8 @@ public final class DeWiggle {
                         if (c == null) continue;
                         if (runs(anchor, c).size() >= arcs) continue;
                     }
+                    double cObj = objAt(model, sc, spec.objective, c);
+                    if (maxObj ? cObj < objFloor : cObj > objFloor) continue;
                     taken = c;
                 }
             }
@@ -296,6 +307,10 @@ public final class DeWiggle {
                                     JumpConstraintCompiler.Compiled compiled, double[] y) {
         double[] gf = sc.toGameFacings(Angles.wrapAll(y));
         return compiled.maxViolation(gf, model.forward(sc, gf));
+    }
+
+    private static double objAt(ForwardModel model, JumpPhysicsInputs sc, Objective obj, double[] y) {
+        return model.forward(sc, sc.toGameFacings(Angles.wrapAll(y))).getPos(obj.tick, obj.axis);
     }
 
     private static double delta(double anchor, double[] y, int t) {

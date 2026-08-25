@@ -154,6 +154,53 @@ final class SmoothFaceRecovery {
         return exactViol(exact, sc, compiled, y) <= feasTol ? Angles.wrapAll(y) : null;
     }
 
+    static double[] smoothToward(ExactJumpModel exact, JumpSpec spec, JumpConstraintCompiler.Compiled compiled,
+                                 double[] seedYaws, double[] target, double feasTol, AtomicBoolean cancel, Config cfg) {
+        if (seedYaws == null) return null;
+        JumpPhysicsInputs sc = spec.asScenario();
+        double anchor = sc.startYaw;
+        double[] y = seedYaws.clone();
+        if (exactViol(exact, sc, compiled, y) > feasTol) return null;
+        if (target != null) globalToward(exact, sc, spec, compiled, y, anchor, target, cfg, cancel);
+        faceWalk(exact, sc, spec, compiled, y, anchor, cfg, cancel);
+        return exactViol(exact, sc, compiled, y) <= feasTol ? Angles.wrapAll(y) : null;
+    }
+
+    private static final int GLOBAL_ITERS = 8;
+
+    private static void globalToward(ExactJumpModel exact, JumpPhysicsInputs sc, JumpSpec spec,
+                                     JumpConstraintCompiler.Compiled compiled, double[] y, double anchor,
+                                     double[] target, Config cfg, AtomicBoolean cancel) {
+        int n = sc.numTicks;
+        for (int iter = 0; iter < GLOBAL_ITERS; iter++) {
+            if (cancel.get() || expired(cfg)) break;
+            int curRev = reversals(anchor, y);
+            double curJerk = jerkOf(anchor, y);
+            Rows R = build(sc, spec, patternOf(sc, exact, y));
+            double[][] P = tangentProjector(R, sc.toGameFacings(y), cfg.restoreMargin, n);
+            double[] dir = new double[n];
+            for (int t = 0; t < n; t++) dir[t] = Angles.wrapDelta(target[t] - y[t]);
+            double[] pdir = apply(P, dir);
+            double pn = 0.0;
+            for (double v : pdir) pn = Math.max(pn, Math.abs(v));
+            if (pn < 1.0e-12) break;
+            boolean stepped = false;
+            for (double frac = 1.0; frac >= 1.0 / 64.0 && !stepped; frac *= 0.5) {
+                double[] c = y.clone();
+                for (int t = 0; t < n; t++) c[t] += frac * pdir[t];
+                holdFrozen(c, y, cfg.frozen);
+                if (!restoreExact(R, exact, sc, compiled, c, cfg.restoreMargin, cfg.frozen)) continue;
+                int rv = reversals(anchor, c);
+                double jk = jerkOf(anchor, c);
+                if (rv > curRev) continue;
+                if (rv == curRev && jk >= curJerk - 1.0e-9) continue;
+                System.arraycopy(c, 0, y, 0, n);
+                stepped = true;
+            }
+            if (!stepped) break;
+        }
+    }
+
     private static void faceWalk(ExactJumpModel exact, JumpPhysicsInputs sc, JumpSpec spec,
                                  JumpConstraintCompiler.Compiled compiled, double[] y, double anchor,
                                  Config cfg, AtomicBoolean cancel) {

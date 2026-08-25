@@ -297,41 +297,22 @@ public final class LongRunSolver {
                 + ":" + Float.floatToIntBits(yaw);
     }
 
-    /** Closed form on a window, trying the given objective then the other directions (feasibility is
-     *  objective-independent; the closed form only certifies the objective's optimal vertex, so a direction
-     *  whose vertex quantizes infeasibly returns null while another solves cleanly). When every direction
-     *  fails, {@link SlpSolve} closes the window's duality gap primally; running it here, on the widest
-     *  window, keeps the run from degrading into greedy small-window commits. The SLP fallback ladders the
-     *  directions too: its dual-recovery seed degenerates objective-dependently, so on the last window a
-     *  failed real-objective SLP retries from the other directions' seeds. Only the last window hugs
-     *  walls (its objective is the real one); a lead-in window's objective is a surrogate, so it solves
-     *  centered, keeping the seam state away from extremes that could doom the continuation. The last
-     *  window never returns an alternate direction's solution unhugged when the ascent works: an alternate
-     *  solve only seeds the SLP ascent of the real objective, and stays the feasible fallback if that
-     *  ascent fails. */
     private static double[] solveWindow(ExactJumpModel exact, JumpPhysicsInputs win, List<JumpConstraint> cons,
                                         Objective first, boolean last, AtomicBoolean cancel) {
-        double[] y = closedForm(exact, new JumpSpec(win, cons, first), last, cancel);
+        if (last) {
+            AtomicBoolean token = cancel != null ? cancel : new AtomicBoolean(false);
+            return RecoveryLadder.solve(exact, new JumpSpec(win, cons, first), win, token, new String[1], 0L,
+                    new SlpSolve.Config(), new ClosedFormSolve.Config(), new RelaxationRecovery.Config(), null);
+        }
+        double[] y = ClosedFormSolve.optimizeRobust(exact, new JumpSpec(win, cons, first), 0.0, cancel);
         if (y != null) return y;
         for (Objective alt : alternates(first, win.numTicks)) {
             if (cancel != null && cancel.get()) return null;
-            y = closedForm(exact, new JumpSpec(win, cons, alt), last, cancel);
-            if (y == null) continue;
-            if (!last) return y;
-            return hugObjective(exact, win, cons, first, y, cancel);
+            y = ClosedFormSolve.optimizeRobust(exact, new JumpSpec(win, cons, alt), 0.0, cancel);
+            if (y != null) return y;
         }
         if (cancel != null && cancel.get()) return null;
-        JumpSpec spec = new JumpSpec(win, cons, first);
-        y = last ? SlpSolve.optimize(exact, spec, 0.0, cancel)
-                 : SlpSolve.optimizeCentered(exact, spec, 0.0, cancel);
-        if (y != null || !last) return y;
-        for (Objective alt : alternates(first, win.numTicks)) {
-            if (cancel != null && cancel.get()) return null;
-            y = SlpSolve.optimize(exact, new JumpSpec(win, cons, alt), 0.0, cancel);
-            if (y == null) continue;
-            return hugObjective(exact, win, cons, first, y, cancel);
-        }
-        return null;
+        return SlpSolve.optimizeCentered(exact, new JumpSpec(win, cons, first), 0.0, cancel);
     }
 
     private static List<Objective> alternates(Objective first, int len) {
@@ -343,20 +324,6 @@ public final class LongRunSolver {
             }
         }
         return out;
-    }
-
-    private static double[] hugObjective(ExactJumpModel exact, JumpPhysicsInputs win, List<JumpConstraint> cons,
-                                         Objective first, double[] feasible, AtomicBoolean cancel) {
-        JumpSpec spec = new JumpSpec(win, cons, first);
-        double[] hugged = SlpSolve.optimize(exact, spec, 0.0, cancel, feasible);
-        double[] base = hugged != null ? hugged : feasible; // the alternate stays a feasible (if unhugged) fallback
-        double[] laddered = LevelSetAscent.improve(exact, spec, base, 0.0, cancel);
-        return laddered != null ? laddered : base;
-    }
-
-    private static double[] closedForm(ExactJumpModel exact, JumpSpec spec, boolean last, AtomicBoolean cancel) {
-        return last ? ClosedFormSolve.optimize(exact, spec, 0.0, cancel)
-                    : ClosedFormSolve.optimizeRobust(exact, spec, 0.0, cancel);
     }
 
     /** Jump launch boundaries: the grounded ticks that begin an airborne arc, plus both endpoints, with

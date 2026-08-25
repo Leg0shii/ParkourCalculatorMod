@@ -43,6 +43,8 @@ public final class SmoothingPolish {
         return smooth(model, spec, yawsAbsWrapped, cancel, new Config());
     }
 
+    public static double MAX_GIVE_BACK = 8.0e-3;
+
     public static double[] smooth(ForwardModel model, JumpSpec spec, double[] yawsAbsWrapped, AtomicBoolean cancel,
                                   Config cfg) {
         int n = yawsAbsWrapped.length;
@@ -196,6 +198,7 @@ public final class SmoothingPolish {
             double e = eval(absWrapped);
             if (e == Double.POSITIVE_INFINITY) return false;
             if (obj.smoothLambda <= 0.0) return e <= floor;
+            if (e > floor + MAX_GIVE_BACK) return false;
             double scored = e + obj.smoothPenalty(sc.startYaw, absWrapped);
             if (scored > scoredFloor) return false;
             scoredFloor = scored;

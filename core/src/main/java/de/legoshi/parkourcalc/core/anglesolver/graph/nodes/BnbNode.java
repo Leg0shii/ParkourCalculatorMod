@@ -10,6 +10,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.ParamValues;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.BoundPrunedRecovery;
+import de.legoshi.parkourcalc.core.anglesolver.solver.GateMip;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -52,6 +53,8 @@ public final class BnbNode implements NodeRuntime {
             double[] rescue = BoundPrunedRecovery.solve(ctx.exactModel, ctx.spec, ctx.feasTol, nodeToken,
                     remaining, max ? -1.0e300 : 1.0e300, cfg, ctx.closestMiss());
             if (SolverTrace.on()) SolverTrace.log("ENGINE", "bnb rescue %s", rescue != null ? "solved" : "miss");
+            double[] gate = GateMip.improve(ctx.exactModel, ctx.spec, rescue, ctx.feasTol, nodeToken, deadlineNanos);
+            if (gate != null && (rescue == null || keepGate(ctx, gate, rescue, max))) rescue = gate;
             if (rescue == null) return passthrough(in);
             double[] yaws = Angles.wrapAll(rescue);
             ctx.chainAppend("pattern B&B");
@@ -68,6 +71,9 @@ public final class BnbNode implements NodeRuntime {
         }
         double[] bnb = BoundPrunedRecovery.solve(ctx.exactModel, ctx.spec, ctx.feasTol, nodeToken, remaining, stopAt, cfg,
                 ctx.closestMiss());
+        double[] gateSeed = bnb != null && keepGate(ctx, bnb, in.yaws, max) ? bnb : in.yaws;
+        double[] gate = GateMip.improve(ctx.exactModel, ctx.spec, gateSeed, ctx.feasTol, nodeToken, deadlineNanos);
+        if (gate != null && keepGate(ctx, gate, gateSeed, max)) bnb = gate;
         if (bnb != null) {
             double cur = ctx.scoredObjective(in.yaws);
             double bnbObj = ctx.scoredObjective(bnb);
@@ -78,6 +84,13 @@ public final class BnbNode implements NodeRuntime {
             }
         }
         return NodeOutcome.of(Guarantee.UNCHANGED, in);
+    }
+
+    private static boolean keepGate(GraphContext ctx, double[] cand, double[] ref, boolean max) {
+        if (ref == null) return true;
+        double c = ctx.scoredObjective(cand);
+        double r = ctx.scoredObjective(ref);
+        return max ? c > r : c < r;
     }
 
     private static NodeOutcome passthrough(Candidate in) {

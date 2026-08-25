@@ -187,11 +187,15 @@ public final class JumpPhysicsInputs {
     /** Exact float32 facings the game runs: mirrors Apply's float deltas + the sim's float accumulation,
      *  so the solver scores what the game executes (a (float) cast of the absolute facing drifts from this). */
     public double[] toGameFacings(double[] absWrapped) {
-        int n = absWrapped.length;
-        double[] g = new double[n];
-        double prevAbs = (double) startYaw;
-        float entity = startYaw;
-        for (int k = 0; k < n; k++) {
+        double[] g = new double[absWrapped.length];
+        toGameFacingsInto(absWrapped, 0, absWrapped.length, g, startYaw, (double) startYaw);
+        return g;
+    }
+
+    public void toGameFacingsInto(double[] absWrapped, int from, int to, double[] gOut, float seedEntity, double seedPrevAbs) {
+        float entity = seedEntity;
+        double prevAbs = seedPrevAbs;
+        for (int k = from; k < to; k++) {
             double abs = absWrapped[k];
             boolean locked = yawLockedPerTick != null && k < yawLockedPerTick.length && yawLockedPerTick[k];
             if (locked) {
@@ -201,9 +205,8 @@ public final class JumpPhysicsInputs {
                 delta = Angles.wrapDelta(delta);
                 entity = entity + (float) delta;
             }
-            g[k] = entity;
+            gOut[k] = entity;
             prevAbs = abs;
         }
-        return g;
     }
 }

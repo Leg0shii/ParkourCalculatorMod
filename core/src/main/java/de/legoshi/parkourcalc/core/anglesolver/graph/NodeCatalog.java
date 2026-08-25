@@ -13,6 +13,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.RouterNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.SeamSweepNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.SetupPeelNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.SmoothingNode;
+import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.SphereSnapNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.TranslatedStartNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.WrapIlsNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.WrapYawsNode;
@@ -244,6 +245,14 @@ public final class NodeCatalog {
                 .budgetParam("budgetSec")
                 .fallback(Guarantee.REJECTED)
                 .factory(WrapIlsNode::new)
+                .build());
+        register(NodeType.builder("sphereSnap", "Sphere snap", NodeCategory.POLISH)
+                .requires(InputRequirement.ANY)
+                .branch(Branch.feasible(Guarantee.ADOPTED))
+                .branch(Branch.preserves(Guarantee.REJECTED))
+                .param(ParamSpec.integer("minRemainingSec", "Minimum budget (s)", 0, 60, 0))
+                .fallback(Guarantee.REJECTED)
+                .factory(SphereSnapNode::new)
                 .build());
         register(NodeType.builder("translatedStart", "Translated start", NodeCategory.RECOVERY)
                 .requires(InputRequirement.ANY)

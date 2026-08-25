@@ -10,6 +10,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.ParamParse;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamValues;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ClosedFormSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.RelaxationRecovery;
+import de.legoshi.parkourcalc.core.anglesolver.solver.ResidualRescue;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SlpSolve;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -66,6 +67,11 @@ public final class DualChainNode implements NodeRuntime {
         if (chain == null) {
             if (!keepBetter) ctx.chainAppend("closed form");
             return NodeOutcome.of(Guarantee.NONE, in);
+        }
+        double[] improved = ResidualRescue.improve(ctx.exactModel, ctx.spec, chain, 0.0, nodeToken, deadlineNanos);
+        if (improved != null && improved != chain) {
+            chain = improved;
+            chainName[0] = chainName[0] + " -> residual";
         }
         if (in == null || in.yaws == null) {
             ctx.chainAppend(chainName[0]);

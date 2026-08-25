@@ -157,6 +157,7 @@ public final class BuiltinGraphs {
         }
         router(g, "rTrans", "HAS_FREE_START");
         g.add("translate", "translatedStart");
+        g.add("sphereSnap", "sphereSnap");
         g.add("smoothFinal", "smoothing").set("smoothFinal", "countEvals", true)
                 .set("smoothFinal", "deWiggle", true);
         if (win) {
@@ -271,8 +272,10 @@ public final class BuiltinGraphs {
             g.edge("wrap", Guarantee.REJECTED, "rTrans");
         }
         g.edge("rTrans", Guarantee.TRUE, "translate");
-        g.edge("rTrans", Guarantee.FALSE, "smoothFinal");
-        g.edge("translate", Guarantee.DONE, "smoothFinal");
+        g.edge("rTrans", Guarantee.FALSE, "sphereSnap");
+        g.edge("translate", Guarantee.DONE, "sphereSnap");
+        g.edge("sphereSnap", Guarantee.ADOPTED, "emit");
+        g.edge("sphereSnap", Guarantee.REJECTED, "smoothFinal");
         g.edge("smoothFinal", Guarantee.DONE, "emit");
         return g.build();
     }

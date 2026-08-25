@@ -138,6 +138,7 @@ public final class ExactJumpModel implements ForwardModel {
      *  this recomputes exactly the affected tail. Lets a local search re-evaluate a one-facing perturbation
      *  in {@code O(n - from)} instead of {@code O(n)}; the full {@link #forward} is {@code stepRange(.,.,0,.)}.
      *  {@code path} must carry velocity arrays (built by {@link #forward}). Byte-identical to a full forward. */
+    @Override
     public void stepRange(JumpPhysicsInputs scenario, double[] yawAbsDeg, int from, ForwardPath path) {
         int n = yawAbsDeg.length;
         double[] posX = path.posX, posY = path.posY, posZ = path.posZ;
