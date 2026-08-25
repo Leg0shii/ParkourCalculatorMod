@@ -25,8 +25,14 @@ NOT done / OVERSTATED (the audit corrected these; treat as facts):
   layered ON the fully-intact ClosedForm/SLP/Relax/BnB ladder; NO old solver is deleted. Three passthrough
   SmoothingNode instances (smooth/smoothWarm/smoothFinal) + dead-but-test-referenced SmoothingPolish + LatticeRepair
   still present.
-- The whole campaign is an UNCOMMITTED working tree (17 modified + ~29 untracked). "green across 6 runs" is not
-  reproducible/bisectable until committed. -PslowTests has never been independently re-run on a committed tree.
+- (RESOLVED for the commit half of OI-01) The campaign is now COMMITTED on branch
+  `feature/solver-rework-arch1-cutover` in 4 commits: 998ee62e feat (ARCH-1 code + cutover), dec2f52c test,
+  dbff526f docs, 0e8e55c1 chore (gitignore). Base = 3d19c9ff (feature/418 tip = origin/dev + the unmerged #418
+  smooth-TAS commit the campaign is stacked on). NOT pushed. The benchmark OLD baseline = 3d19c9ff (pre-campaign,
+  == HEAD before 998ee62e); NEW = branch HEAD. STILL OPEN: OI-02 (run -PslowTests on this committed tree and
+  record it - the committed content equals the tree the session ran green 6x, but no committed-tree run is
+  recorded yet); and the commits are logical groups (code/tests/docs), not per-P0..P7 (the working tree was a
+  mixed blob; per-stage was not reconstructable).
 - STRONGER is asserted by code inspection, not by any tight graph-path objective gate (the one tight gate, loopmm
   gap 0.0, bypasses the graph via dualChain+BoundPrunedRecovery). FASTER is UNMEASURED and the added unconditional
   disk-IPM work + the GateMip double-BnB point slower, not faster. Nothing ARCH-1 has ever run in a real MC client.
@@ -40,9 +46,10 @@ stronger/faster) is NOT yet met and NOT yet proven.
 
 ## The plan (execute in order; each code step green-gated on ./gradlew :core:test then -PslowTests before the next)
 
-- STEP 0 - baseline you can trust [OI-01, OI-02] (P0, blocks ship): commit the campaign into reviewable per-stage
-  commits (prune scratch StructureDump/*Screen/*Probe sprawl); run `./gradlew :core:test -PslowTests` on the
-  committed tree and RECORD runtime + pass/fail. Proceed only if GREEN. (Never commit/push without the user; ask.)
+- STEP 0 - baseline you can trust [OI-01 commit DONE, OI-02 open] (P0, blocks ship): the campaign is committed on
+  `feature/solver-rework-arch1-cutover` (SHAs in the status section; base 3d19c9ff). REMAINING: run
+  `./gradlew :core:test -PslowTests` on this committed tree and RECORD runtime + pass/fail (OI-02); proceed only if
+  GREEN. (Never push without the user; ask before any further commit.)
 - STEP 1 - zero-risk subtraction [OI-10, OI-12, OI-15]: delete the 3 passthrough SmoothingNode instances + class +
   NodeCatalog registration (rewire each inbound edge to its outbound target); retarget EngineFileScreen/RelaxDiagScreen
   off LatticeRepair then delete LatticeRepair; delete SmoothingPolish + retarget/relabel its 3 test dependents.
