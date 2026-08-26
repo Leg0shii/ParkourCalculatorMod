@@ -3,7 +3,7 @@ package de.legoshi.parkourcalc.core.anglesolver.solver;
 import java.util.LinkedHashSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/** The objective-aware byte-exact snap (ARCH-1 stage P2), replacing the violation-only {@link LatticeRepair}.
+/** The objective-aware byte-exact snap (ARCH-1 stage P2), replacing the earlier violation-only lattice repair.
  *  A continuous or convex-completed solution snaps to the movement's sine lookup grid, and the specific bucket
  *  a straightaway rounds to is the nearest one (Babai), but on the redirect and vanishing-costate ticks a
  *  neighbouring bucket can out-reach the continuous point byte-exact because the LUT gives some cells a

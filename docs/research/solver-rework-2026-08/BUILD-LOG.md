@@ -15,11 +15,306 @@ Stages and their detail are in IMPLEMENTATION-GUIDE.md section 0 (build order) a
 | P4 | inertia-gate big-M MIP (hybrid) | DONE | 2026-08-25: GateMip = disk-kernel gate bound (tight partition) + complete band-in/band-out branch + REAL infeasibility certificate; loopmm LANDS on the block -279.299869 (crosses the -279.300 edge P1/-ILS miss), dsf-neo 8086.29626 band-in, cert 32/32; default-off pkc.gateMip |
 | P5 | free-start (p0 vars + translation) + dF unification | DONE | 2026-08-25: free-start p0 columns + dF threading through DiskSocpKernel + residual folds dF (no longer bails, F8) - all verified; free-start bound == FreeP0/COPT ref + feasibility flip, dF=0 folds + composes with free-start disk tighter than shipped dual. F14 pin-mechanism merge DEFERRED as documented hygiene follow-up (risky refactor, no capability payoff) |
 | P6 | smoothing collapse (one trend-filter, shared reference) | DONE | 2026-08-25: TrendFilterSmooth = order-1 taut-string (Condat) seed + existing GN restores (DeWiggle-repair + face-walk) under ONE metric + ONE absolute give-back floor; drops SmoothingPolish L2 (F3), single budget (F6); hpk A/B parity (stack 160 -> trend 164 reversals, seed 328); default-off pkc.trendFilter; turnCost search-bias removal deferred to P7 |
-| P7 | entry-path unification + CUTOVER (one path, no flags) | IN PROGRESS | 2026-08-25: CUTOVER of ALL flags DONE. Every ARCH-1 capability flag (7) removed + the P0 tailScore lever; unified path is the DEFAULT, slow suite green (6 runs). REMAINING = deep old-solver DELETION where subsumed (ARCH-3 risk) + cleanup (turnCost bias, passthrough smoothing node, test-only SmoothingPolish) + in-game QA (nothing ARCH-1 has run in a client). See top CUTOVER entry |
+| P7 | entry-path unification + CUTOVER (one path, no flags) | IN PROGRESS | 2026-08-25: CUTOVER of ALL flags DONE + committed + post-cutover STEPS 0-2 closed. Committed-tree slow suite reproduced GREEN (5m05s). Removed the 3 passthrough smoothing nodes + SmoothingNode/SmoothingPolish/LatticeRepair (net -345 LOC) and the last behavior flag PKC_SMOOTHFACING (now ZERO capability flags on the default path). Doc/comment corrections landed. STEPS 3-5 also progressed: STEP 3 graph-path byte-exact gates DONE (GraphPathObjectiveGateTest; MEASURED GateMip inert on loopmm through the graph); STEP 4 OI-18 real-deadline threading DONE, OI-09 deferred (safe by final-replay backstop, no reproducing capture); STEP 5 OI-08 give-back bound DONE (worst-case 7.8884e-3 at the 8e-3 cap, hardened final), OI-14 turnCost removal deferred (invisible-to-corpus smoothness risk, prior evidence complementary). STEP 6 now DONE (OI-06 defensive 2s FAST terminal-polish bound, proven non-binding byte-identical across the corpus; OI-11 GateMip double-BnB warm-seed, monotone-safe, GateMipProbe-verified). REMAINING = STEP 7 deep old-solver DELETION where subsumed (ARCH-3 risk), STEP 8 in-game QA (nothing ARCH-1 has run in a client), STEP 9 benchmark+verdict, plus the two deferred items (OI-09, OI-14) each needing a new gate first. 2026-08-25 FINISH session: the one real benchmark regression j003 is FIXED (objective -30.27 -> -31.30 via a restored terminal-window objective hug; deadline overrun 11.7s -> 8.4s via enumeration-deadline checks in BoundPrunedRecovery/GateMip + LongRunSolver outer loops), residual dead code trimmed, and the STEP-7 low-risk dedup assessed (translation-support already deduped; F11/F12/F14 not byte-neutral, deferred). REMAINING = STEP 8 in-game QA + STEP 9 benchmark re-run. See top handoff entry |
 
 Status values: NOT STARTED / IN PROGRESS / DONE.
 
 ## Handoff entries (newest first; append one per session)
+
+### 2026-08-25 - ARCH-1 FINISH: dead-code cleanup + j003 regression FIXED + STEP-7 dedup assessed - SLOW GREEN
+
+Three tasks from HANDOFF-ARCH1-FINISH.md, all UNCOMMITTED (user commits). Fast suite + tableStyleCheck GREEN after
+each change; `:core:test -PslowTests` GREEN at the end (740 tests, 0 fail / 0 error, 40 env-gated skips - matches the
+STEP-6 baseline, so no regression).
+
+TASK 1 - DEAD CODE (deleted, verified by a mechanical grep sweep + an independent Explore agent):
+- The mechanical sweep proved the anglesolver main source ALREADY clean of dead classes / dead public+private methods
+  / dead private+public constants (STEP 1/2 was thorough). The handoff's two named class candidates are LIVE, kept:
+  LevelSetAscent (RecoveryLadder:60, the one tail) and BuiltinGraphs.explore() (AngleSolverEngine:884, FAST's second
+  race arm). No unused ParamSpec (every NodeCatalog param is read; budgetSec is consumed via the budgetParam mechanism).
+- Deleted `Guarantee.FEASIBLE/INFEASIBLE/NEAR_MISS` (3 enum values referenced NOWHERE; the `case FEASIBLE:` sites all
+  switch Branch.Feas/InputRequirement, not Guarantee; no preset serializes them).
+- Deleted the self-contained dead `recoverFace` unit: `ClosedFormSolve.recoverFace` + `SmoothFaceRecovery.smooth` (its
+  only caller) + `FaceSmoothScreen` (recoverFace's only caller, an env-gated diagnostic screen). An abandoned alternate
+  face-smoothing route; production's live smoother is `SmoothFaceRecovery.smoothToward` via TrendFilterSmooth.
+
+TASK 2 - j003 FIXED, BOTH DEFECTS (root-caused by an OLD-3d19c9ff-vs-NEW trace diff via CorpusBench THOROUGH-10s):
+- (B) OBJECTIVE. The cutover replaced `LongRunSolver.solveWindow(last=true)`'s legacy terminal ladder with
+  RecoveryLadder. RecoveryLadder returns the FIRST feasible (SLP-from-null-dual-seed -> levelSetTopUp -> -30.27); its
+  alt-seed step never runs because step 2 already succeeded. OLD's legacy `hugObjective`, when ClosedFormSolve.optimize
+  (first) fails, seeds SLP from an ALTERNATE-direction closed-form and hugs the real objective (SLP-from-alt-seed +
+  LevelSetAscent), reaching -31.30. The seam sweep in BOTH trees only polishes its ENTRY incumbent (OLD entered at
+  31.299990, NEW at 30.272950), so the gap is the terminal window - NOT the seam sweep or the BNB (OLD's BNB also
+  returns incumbent=none). FIX: restored the alt-direction objective hug as a keep-better post-step on the terminal
+  window (`hugBestObjective`/`hugObjective`/`feasibleObjective` in LongRunSolver; window-byte-exact-feasibility-gated,
+  keeps the better real objective vs RecoveryLadder). Keep-better preserves j021's unified-tail win BY CONSTRUCTION.
+- (A) DEADLINE OVERRUN. `BoundPrunedRecovery.enumeratePatterns` and `GateMip.enumeratePatterns` run their O(n) pattern
+  enumeration (a CostateDualSolver / DiskSocpKernel solve per critical tick) with NO clock check, so on n=176 the
+  enumeration eats the whole budget past the deadline. GateMip (P4, campaign-ADDED, ABSENT in OLD) was the silent 3.2s
+  post-BNB tail - which is exactly why OLD (no GateMip) stayed within 10s. FIX: threaded `searchCancel` into
+  BoundPrunedRecovery.enumeratePatterns (break on the search deadline) and `cancel`+`deadlineNanos` into
+  GateMip.enumeratePatterns (break on the overall deadline); added deadlineNanos checks to LongRunSolver's commitLadder
+  loop (solve + solveFree) and the runHorizon while-loop (were cancel-only).
+- MEASURED (CorpusBench, NEW-fixed vs OLD 3d19c9ff):
+  - j003 THOROUGH-10s: obj -30.272949638 -> -31.299999992 (OLD -31.299999863; NEW now TIES/slightly beats OLD, diff
+    1.3e-7), viol 0; wall 11703ms -> 8379ms (10s budget, overrun GONE). BNB now within budget (4166ms -> 2382ms);
+    GateMip 3.2s tail gone.
+  - j003 FAST: -30.27 -> -31.299999992 (FAST fixed too, matching OLD's every-budget -31.30).
+  - NO-REGRESSION spot-check (FAST, viol 0 success): j021 1067.844821108 (unified-tail win preserved), loopmm
+    -279.312440394 (byte-IDENTICAL to the pre-fix seed). Slow suite covers loopmm/j021/dsf-neo/j008b at expect-configs.
+
+TASK 3 - STEP-7 low-risk consolidation (dedup ONLY): the one genuinely byte-neutral dedup the handoff named, a shared
+free-start/translation support term, is ALREADY DONE - `Scoring.translationDomain` is the single shared helper (5
+callers: 4 in Scoring + WrapIlsNode), zero inline pxLo/pzLo duplicates remain (WrapWindowIls receives `transDomain` as
+a param). The other named items are NOT the byte-neutral dedups they were framed as, so per the "STOP and record
+honestly if not byte-neutral" rule they are DEFERRED: F14 (FacingPrefold 1e-9 vs YawTies 1e-6 pin merge) = a risky
+byte-exact-dF refactor with NO capability payoff (already P5-deferred for the same reason); F11 (FAST/OPTIMIZE
+seed-path parity) = a capability ADD (free-start+capCertify onto FAST-explore) = a BEHAVIOR change, not byte-neutral;
+F12 (cross-window dual warm-start) = perf-only, needs a warm-lambda API through CostateDualSolver/runLadder/runHorizon
+(not "cheap"), no correctness value.
+
+FILES CHANGED (all UNCOMMITTED): `LongRunSolver.java` (terminal-window hug + outer-loop deadline), `BoundPrunedRecovery
+.java` (enum deadline), `GateMip.java` (enum deadline), `Guarantee.java` (-3 values), `ClosedFormSolve.java`
+(-recoverFace), `SmoothFaceRecovery.java` (-smooth); deleted test `FaceSmoothScreen.java`.
+
+NEXT (remaining ARCH-1 work): STEP 8 in-game QA on the 3 touched loaders (26.2 Fabric + both Forge; user-only - nothing
+ARCH-1 has run in a client), then STEP 9 re-run the CorpusBench OLD-vs-NEW full-corpus benchmark on this tree for the
+FULL-SHIP verdict (j003 now closed; expect 0 feasibility regressions and the one objective regression resolved). The
+deep STEP-7 old-solver DELETION (OI-13) stays parked in ARCH-2 (issue #422) as instructed - not attempted.
+
+### 2026-08-25 - STEP 9 BENCHMARK + SHIP VERDICT (OLD 3d19c9ff vs NEW cutover, full corpus) - CONDITIONAL SHIP pending j003 + in-game
+
+Built the OLD-vs-NEW full-corpus benchmark (STEP 9 / OI-04) and rendered the 5-question verdict. Full record:
+`BENCHMARK-STEP9.md`; raw per-capture reports + comparator in `benchmark/`. NEW harness `CorpusBench.java`
+(env-gated PKC_CORPUS=1, stable-public-API only) dropped into a git worktree at OLD `3d19c9ff` (`C:/pkcold`,
+removed at end) to drive both trees; capture sets byte-identical (apples-to-apples). Objective = the ENGINE's
+shipped byte-exact-certified objective (success requires maxViolation<=0); an independent toGameFacings
+recompute flags yaw-lock / free-start divergence only (never the source of truth - the BUILD-LOG lesson).
+
+HEADLINE (FAST tier, the clean signal - no deadline): **0 feasibility regressions of 126** (1 gain). Objective
+**60 wins / 43 ties / 6 regressions** (5 sub-1e-2 + the one real one, j003). smoothLambda>0 (6 captures) all
+OLD==NEW to the bit (no give-back regression). Cold FAST (109 real jumps, excl. shared research-fixture
+timeouts): NEW median 107ms vs OLD 59ms (+48ms fixed floor from the unconditional recovery components) but
+BETTER tail (p90 562<731, max 3450<4727, sum 26.5<29.2s) - slower floor, faster hard cases, net-neutral aggregate.
+
+THOROUGH at a fixed 4s budget looked bad (3 feas "regressions" j144/j330/nix-t25, 17 obj regressions incl. j021
+-1.7e-2) but that is BUDGET STARVATION: all 3 succeed at FAST, and a 10s re-run (both trees, `*-TH10.tsv`)
+shows every suspect equal-or-better on NEW - j021 reaches 1067.8638 (+1.86e-2, matching the STEP-3 graph-path
+gate), j147 wins, rest tie. The optimize-tier regression mode is objective-crowded-out by NEW's higher fixed
+cost, not a weaker solver.
+
+THE ONE REAL REGRESSION: **j003.** OLD solves to -31.30 at every budget; NEW returns a worse-objective feasible
+point at FAST (-30.27, still success), worse at 4s (-29.32), and HANGS past its 10s deadline at THOROUGH (none
+at the 30s harness cap). j003 IS ProblemsTest-covered and the slow suite is GREEN, so it passes at its
+expect-config; the anomaly is under the bench's saved-state + effort-override. It is the single genuine
+regression to investigate (deadline-respect + first-feasible quality), NOT a feasibility or gate regression.
+
+VERDICT (evidence): SIMPLER PARTIAL (flags yes, structure no - STEP 7). MAINTAINABLE PASS-pending-commit.
+STABLER PASS w/ one flag (j003 hang). STRONGER PASS (wins>>regressions, 0 feas regressions, tight gate holds
+at 10s). FASTER MIXED (floor up +48ms, tail+aggregate down). No HARD-NO-SHIP condition is triggered by the
+benchmark. **CONDITIONAL SHIP is blocked on exactly (a) fix j003 and (b) STEP 8 in-game QA (user-only; replay
+the sphere-snap yaw-lock captures listed in BENCHMARK-STEP9 through SimulatorEntity).** FULL SHIP additionally
+needs STEP 7 (structure/LOC reduction + recover the FAST floor). No code changed this session (bench-only +
+docs); the STEP 6 tree is unchanged and still slow-green. CorpusBench + GraphPathObjectiveGateTest mapped in
+TESTS.md.
+
+NEXT: (1) diagnose+fix j003 (why NEW's FAST first-feasible lands short and THOROUGH overruns its deadline);
+(2) STEP 7 deep old-solver deletion (also the FAST-floor lever); (3) STEP 8 in-game QA (user); then re-run this
+benchmark on the final tree for the FULL-SHIP verdict.
+
+### 2026-08-25 - STEP 6 FINISHED (OI-06 FAST terminal-polish bound + OI-11 GateMip double-BnB warm-seed) - GREEN
+
+Closed the two remaining STEP 6 items. All UNCOMMITTED (user commits). Fast GREEN after each change; slow suite
+`:core:test -PslowTests` GREEN at the STEP 6 boundary (740 tests, 0 failures/0 errors, 40 env-gated skips);
+tableStyleCheck GREEN. STEP 6 is now DONE (OI-17 done prior; OI-11 + OI-06 done here).
+
+Files changed (4 main, no comments, no flags): `graph/nodes/SphereSnapNode.java`, `graph/nodes/DualChainNode.java`,
+`solver/GateMip.java`, `solver/BoundPrunedRecovery.java`.
+
+OI-06 DONE (bound residual+sphere on the deadline-free FAST path). The FAST tier has deadlineNanosFor=0L, so the two
+terminal polishers ran with NO wall-clock bound (only their internal iteration caps: SphereDecodeSnap MAX_ROUNDS=16 x
+MAX_ENUM=12 pairwise ~169-combo enumeration; ResidualRescue MAX_SWEEPS over the degenerate ticks). Added a
+deadline-free wall-clock cap: `SphereSnapNode` and `DualChainNode` pass `now + FAST_BUDGET` (2s) to snap/residual
+when `deadlineNanos <= 0`, and the real deadline unchanged otherwise (OPTIMIZE untouched). MEASURED via HpkEngineBench
+(FAST, real engine, 59 corpus captures, external wall-clock):
+- The tail IS non-trivial: at a tight 500ms/250ms cap, exactly ONE capture changed - j135_Waza_to_Cobblewall_-0.5
+  (relax FAST): obj -615.032605 -> -615.032706 (a 1.01e-4 give-up, JUST over the 1e-4 TIE bar) with time 475 -> 358ms.
+  So the residual polish there legitimately runs ~370ms and a tight cap CLIPS objective. A cap is a real
+  objective/latency tradeoff, not free.
+- Ruling: OI-06 is DEFENSIVE (there is NO actual cold outlier in the corpus - max FAST total is 2371ms, window-solver
+  dominated; the polishers peak ~370ms). So the cap must be NON-BINDING on the corpus (zero regression) while bounding
+  only the pathological many-turn-tick tail. Set both caps to 2s: HpkEngineBench FAST is now BYTE-IDENTICAL to the
+  pre-change baseline across all 59 captures (0 objective/success diffs; two repeat runs also bit-identical =>
+  the FAST path is deterministic here). The 2s cap is proven non-binding; it only ever fires on a future pathological
+  capture. (If a stricter FAST latency bound is ever wanted, j135 shows the cost: tightening below ~400ms starts
+  clipping real objective, so it is a policy choice, not a free win.)
+
+OI-11 DONE (reconcile the GateMip double-BnB - run the seam tree ONCE, warm). GateMip.solve's tree cold-miss
+(`treeCompletion`) re-ran `BoundPrunedRecovery.solve` from scratch (default Config, cold ClosedForm incumbent), after
+the caller (BnbNode) had ALREADY run BoundPrunedRecovery - the "double-BnB". Fix: added a warm-incumbent entry point
+`BoundPrunedRecovery.solve(..., cfg, miss, double[] warmIncumbent)` (the 8-arg delegates with null) that folds a
+feasible external incumbent into the pruning floor before the search (raises `incumbentNorm`/`seedNorm`).
+`GateMip.treeCompletion` now warm-seeds with `incumbent`, and `GateMip.solve` passes the better (by normed objective)
+of {gate best completion `bestYaws`, caller `seedBaseline` = the BnbNode BoundPrunedRecovery result}. This is
+MONOTONE-SAFE: a branch whose bound exceeds the warm incumbent is never pruned (bound >= any solution in it), so the
+warm run finds an incumbent >= the cold run's - it can only prune dominated branches faster, never lose a better
+solution. VERIFIED: `GateMipProbe` GREEN - loopmmLandsOnBlock (drives the tree cold-miss directly with the dualChain
+baseline as seed) still LANDS (normed >= -279.29999); j021NoRegress, dsfNeoBandIn, infeasibleGateConfigIsCertified all
+green. SCOPE NOTE (honest): through the ENGINE graph the double-BnB is INERT on the corpus (STEP 3: GateMip inert on
+loopmm through the graph; and `rescueBnb` is inert on FAST since remaining=0<=minBudgetMs=0), so the perf win only
+materializes where GateMip.solve's tree actually fires (loopmm-class standalone / a deep OPTIMIZE cold-miss with >3s
+left and the gate patterns short of the cert bound). The change is a strict-monotone improvement regardless and is
+exercised/green via GateMipProbe.loopmm.
+
+NEXT (unchanged order): STEP 7 (deep old-solver DELETION where subsumed - RelaxationRecovery/BoundPrunedRecovery -
+make the ARCH-1 residual the SOLE RecoveryLadder recovery capture-by-capture where the full slow suite stays
+byte-exact green; KEEP ClosedFormSolve/SlpSolve/CostateDualSolver; consolidate F11/F12/F14 + the ~5-site translation
+duplication; XL, ARCH-3 risk; record ARCH-2 cannot-collapse honestly, never reintroduce a flag) -> STEP 8 in-game QA
+(user-only; includes the sphereSnap yaw-lock check) -> STEP 9 OLD-vs-NEW full-corpus benchmark + SHIP VERDICT. The
+STEP 9 harness is HpkEngineBench (already drives the real engine at FAST/EXH across the corpus with external
+wall-clock); extend it to certify objective byte-exact via ExactJumpModel and to run the OLD tree from a worktree at
+the pre-campaign commit. Deferred: OI-09 (needs a constructed seam-straddle capture), OI-14 (needs a full-graph
+smoothLambda>0 reversal gate).
+
+### 2026-08-25 - POST-CUTOVER STEPS 3-6 (graph-path gates, deadline, give-back, determinism) - GREEN; OI-09/OI-14 deferred, OI-11/OI-06 remaining
+
+Continued the audit plan STEPS 3-5, green-gated. All UNCOMMITTED (user commits). Fast GREEN after each change; slow
+GREEN at STEP 3 (5m40s), OI-18, and the STEP 4+5 combined tree.
+
+STEP 3 (OI-05/19, test integrity):
+- NEW `GraphPathObjectiveGateTest` (@Category SlowSolverTests): solves j021 + loopmm through the FULL Optimize graph
+  (engine.solve, not dualChain) and re-certifies the objective byte-exact via ExactJumpModel (viol==0 required).
+- j021 graph reaches 1067.863806 (viol 0). MEASURED sensitivity: temporarily unwiring ResidualRescue from
+  DualChainNode drops it to 1067.862515 AND breaks byte-exact feasibility (viol 1.0e-4 while the solver still
+  self-reports success=true). This proves the gate is a real ResidualRescue test and is exactly why byte-exact
+  re-cert is mandatory. Gate asserts obj >= 1067.8637 and viol <= 0.
+- Tightened `problems/solve/j021-rinav1-01.expect.json` maxObjectiveGap 0.4 -> 1.0e-4 (the "tightened j021 graph
+  solve"): passes wired (achieved exceeds ref 1067.8636), RED if ResidualRescue regresses (unwired gap 1.085e-3).
+- loopmm-3jump-lands: NO OBJECTIVE REGRESSION (VERIFIED OLD-vs-NEW via engine.solve on both trees; a self-correction
+  of an earlier over-claim). Objective is Z/MAX; the block edge is Z = -279.300000. Per the ENGINE's own shipped
+  objective, loopmm LANDS on BOTH trees at -279.299868 (OLD 3d19c9ff engineObj -279.299868065; NEW cutover engineObj
+  -279.299868113). There is NO objective regression. THE EARLIER "MISS" WAS A TEST-HARNESS ARTIFACT: GraphPath
+  ObjectiveGateTest recomputed the objective by re-applying sc.toGameFacings(wrapAll(yaws)) through the ORIGINAL
+  (non-yaw-locked) lastSpecDebug scenario. SphereSnapNode adopts sphere-snapped results as a FULLY YAW-LOCKED stage
+  (yawLockedPerTick all true), for which toGameFacings is identity; re-applying it re-rounds and produces a phantom
+  -279.300084 (the harness bug, now fixed - the test asserts the engine shipped objective and bounds the divergence).
+  REAL (SEPARATE) FINDING to verify in-game: sphereSnap (P2, cutover-added) CONVERTS loopmm's landing from OLD's
+  round-trip-robust non-yaw-locked -279.299868 into a YAW-LOCK-DEPENDENT one (a naive yaw re-derivation gives
+  -279.300084, div 2.16e-4, which straddles the -279.3 edge). Landing in the real game therefore depends on
+  save/playback honoring the yaw-lock (the same class of dependence as the pre-existing wrapIls yaw-locked adoption).
+  This is NOT a demonstrated regression, but it IS the sphere-snap case of the mandatory STEP 8 SimulatorEntity
+  check: confirm sphere-adopted yaw-locked results actually land in-game. (GateMip is inert on loopmm's graph seed -
+  identical wired/unwired - but that is now moot for landing, since the graph already lands loopmm without it.)
+
+STEP 4 (OI-09/18, correctness):
+- OI-18 DONE (slow GREEN): threaded a real deadline through LongRunSolver.solve/solveFree -> runHorizon ->
+  solveWindow -> RecoveryLadder (was 0L). The terminal window now skips RelaxationRecovery when < 3s remain
+  (RELAX_MIN_REMAINING_NANOS), consistent with the proven single-jump tail; the other callers (VelocityFinder,
+  SeamSweepRecovery, SetupPeelNode, OneTailProbe) keep 0L. The slow gate GREEN proves no multi-jump capture
+  regressed to infeasible from the skip.
+- OI-09 DEFERRED (honest record): sliceConstraints drops a paired constraint straddling a window seam, BUT the
+  receding-horizon result is re-verified against the FULL spec byte-exact (LongRunSolver.solve:179-182 returns null
+  unless viol<=feasTol), so a dropped cross-seam constraint yields a MISS, never a false success. The frozen-value
+  substitution is a feasibility ENHANCEMENT, not a safety fix. Constraints are generated at solve time from scene
+  geometry (not stored in captures), so there is no reproducing seam-straddle capture to verify against, and the
+  substitution needs the committed trajectory threaded into sliceConstraints (not currently retained). Deferred as
+  an unverifiable core constraint-algebra change with marginal payoff; the drop is safe by the final-replay backstop.
+
+STEP 5 (OI-14/08, one smoothing owner):
+- OI-08 DONE: measured worst-case give-back on smoothLambda>0 hpk captures = 7.8884e-3 (TrendFilterSmoothProbe),
+  essentially AT the 8e-3 MAX_GIVE_BACK cap, so the cap is BINDING on the roughest captures (they would be smoother
+  with more room): measured-justified and load-bearing, NOT a loose value to tighten. The give-back is a deliberate
+  opt-in smooth-vs-objective tradeoff (smoothLambda>0 only). Hardened MAX_GIVE_BACK to `final`; the corpus
+  objective-guard assertion (per-capture trendGive <= budget + max <= budget) is already in TrendFilterSmoothProbe.
+- OI-14 DEFERRED (measured + honest): removing the turnCost search-bias (Objective.scored / SolveProgress.scoredOf,
+  plus smoothPenalty in BucketAscentPolish/IlsPolish) risks a smoothness (reversal) regression INVISIBLE to the
+  feasibility+objective corpus on opt-in smooth solves; prior campaign evidence records the turnCost bias and the
+  post-pass smoother as COMPLEMENTARY, not redundant. EXPERIMENT: ranking by raw objective left the
+  TrendFilterSmoothProbe identical (seed 328, trend 164), BUT that probe uses a ClosedFormSolve seed and does NOT
+  exercise the ILS/BnB/sweep polish ranking (scoredObjective) where the bias actually operates, so the full-graph
+  effect is UNVERIFIED and the corpus cannot catch it. Deferred pending a full-graph smoothLambda>0 reversal gate:
+  build that gate first, then remove the bias and verify against it.
+
+STEP 6 (OI-11/06/17, perf + determinism):
+- OI-17 DONE (determinism guard): NEW GraphPathObjectiveGateTest.graphSolveIsBitIdenticalAcrossRepeats solves j021
+  through the full graph twice and asserts the byte-exact shipped objective + violation are bit-identical
+  (Double.doubleToLongBits equality). Empirically the shipped objectives were bit-stable across every repeat this
+  session (j021 1067.863806395, loopmm -279.300084064, each identical across 3+ solves). Same-machine guard only;
+  the cross-machine confirmation (OI-17's "verified on a second machine") remains a manual step for the user.
+- OI-11 (GateMip double-BnB reconcile) REMAINING: informed by the STEP 3 finding that GateMip is INERT on loopmm
+  through the graph, reconsider whether GateMip earns its unconditional BnbNode cost on the graph path (it may be a
+  pure perf wart there); run the seam tree ONCE seeded by the already-computed BoundPrunedRecovery result.
+- OI-06 (bound residual+sphere on the deadline-free FAST path) REMAINING: FAST has deadlineNanosFor=0L; give
+  sphereSnap/residual a budget so the FAST tier has no cold outlier.
+
+NEXT (elevated for STEP 8/9, not a confirmed regression): (a) VERIFY IN-GAME that sphere-adopted yaw-locked results
+actually land through save/playback (the loopmm div 2.16e-4 case above, and the pre-existing wrapIls class). If
+playback does NOT honor the yaw-lock, sphereSnap's yaw-locked adoptions could miss where a non-yaw-locked result
+would not - that would make sphereSnap net-harmful and is the real thing to settle. CONCRETE FIX if so: make
+SphereDecodeSnap keep-better verify through the YAW ROUND-TRIP too - only adopt a snap whose objective also beats
+the seed after toGameFacings(wrapAll(out)) (not just in yaw-locked game-facing space); currently it verifies only
+via forward(sc, out) on the game facings, so an adopt that does not survive the round-trip (loopmm: game-facing
+-279.299868 vs round-trip -279.300084) is accepted. That guard makes sphereSnap robust regardless of playback. (b) The STEP 9 benchmark must
+compare OLD-vs-NEW on the ENGINE's shipped objective (never the harness recompute, which is wrong for yaw-locked
+results); flag every capture whose engine-vs-recompute divergence is nonzero as yaw-lock-dependent for in-game
+follow-up. THEN: finish STEP 6 (OI-11, OI-06), STEP 7 (deep old-solver deletion, XL, ARCH-3), STEP 8 in-game QA
+(user only), STEP 9 benchmark. The two deferred items (OI-09, OI-14) each need a new gate (a reproducing
+seam-straddle capture; a full-graph smoothness reversal gate) before they can be done safely.
+
+### 2026-08-25 - POST-CUTOVER STEPS 0-2 executed (baseline recorded, zero-risk subtraction, honesty+docs) - all GREEN
+
+Executed the audit plan's first three green-gated steps. Working tree is the committed cutover (HEAD 7556aceb,
+base 3d19c9ff = pre-campaign OLD benchmark baseline) plus these UNCOMMITTED changes. Fast suite GREEN after every
+edit; `:core:test -PslowTests` GREEN at each step boundary. NOT committed (user handles git).
+
+STEP 0 (OI-02, the trusted baseline). `:core:test -PslowTests` on the committed tree HEAD 7556aceb:
+BUILD SUCCESSFUL in 5m 05s, exit 0. The committed content now has an independently-reproduced green slow run
+recorded (previously only the pre-commit working tree had the "6 green runs"). OI-02 DONE.
+
+STEP 1 (OI-10/12/15, zero-risk subtraction; slow suite GREEN 4m 32s). Pure deletion, behavior-neutral:
+- OI-10: removed all THREE passthrough `SmoothingNode` instances from `BuiltinGraphs` (rewired each inbound edge
+  straight to its outbound target: explore `ils IMPROVED|UNCHANGED -> emit`; build `rWarmTicks TRUE -> repWarm`
+  and `sphereSnap REJECTED -> emit`). Deleted the `SmoothingNode` class and its `NodeCatalog` "smoothing"
+  registration. Retargeted the only remaining "smoothing" fixtures: GraphValidatorTest's 4 structural cases ->
+  `markSettled` (another single-DONE-branch node), and RunMatrixScreen (dropped the smooth node from
+  seedOnlyGraph, removed the now-dead smoothHeavyGraph + its "smooth-heavy" preset). No serialized preset
+  references "smoothing", so no back-compat surface.
+- OI-12: deleted `LatticeRepair`. Removed its diagnostic block in EngineFileScreen (evalMode=="2", env-gated)
+  and the two `LatticeRepair.DEBUG` toggles in RelaxDiagScreen; fixed SphereDecodeSnap's dangling
+  `{@link LatticeRepair}` javadoc.
+- OI-15: deleted `SmoothingPolish` + `SmoothingPolishTest` (its subject is gone). Stripped the four-pass-stack
+  A/B out of `TrendFilterSmoothProbe` (the stack no longer exists once SmoothingPolish is deleted), KEEPING the
+  forward-looking TrendFilterSmooth self-invariants (byte-exact feasible, never adds reversals over the seed,
+  give-back within the single budget, reversal-sum below the raw seed) and the worst-case give-back measurement.
+  That probe is now also the STEP 5 give-back vehicle. Removed the one SmoothingPolish method from
+  SmoothLambdaScoringTest; its turnCost/Objective tests stay for STEP 5.
+
+STEP 2 (OI-07/16, honesty + docs; slow suite GREEN 4m 32s):
+- OI-07 RESOLVED: deleted `AngleSolverEngine.SMOOTH_FINAL_FACING` (the `PKC_SMOOTHFACING` env behavior flag) and
+  drive `smoothRequested` from `spec.objective.smoothLambda > 0.0` alone. Byte-neutral on the default/CI path
+  (the flag was default-off). RESULT: the ONLY env var still read by main solver code is `PKC_SOLVER_TRACE`
+  (SolverTrace debug-log toggle). So there are now ZERO capability/behavior flags on the default solver path;
+  the audit's "zero flags is FALSE" correction is itself resolved (it is now true, trace excepted).
+- OI-16: (a) the flag count is corrected here (0 behavior flags after OI-07; the node count dropped by the
+  "smoothing" type + 3 instances). (b) corrected the BUILD-LOG NEXT-STEP misnaming that listed
+  ClosedFormSolve/SlpSolve as deletion candidates: they + CostateDualSolver are the convex-dual FOUNDATION, NOT
+  deletable; only RelaxationRecovery/BoundPrunedRecovery are STEP-7 deletion candidates where subsumed.
+  (c) corrected the IMPLEMENTATION-GUIDE j008b target: the true byte-exact optimum is -0.2153 (== shipped
+  -0.215314); the COPT continuous -0.197 is byte-exact INFEASIBLE and is NOT the target. (d) corrected the stale
+  ResidualRescue class comment (it said dF walls bail; the code folds dF=0 chains via FacingPrefold and only an
+  open unfoldable dF declines - now matches its own method javadoc).
+
+MEASURED structural delta (STEP 1 + STEP 2, working tree vs HEAD 7556aceb): 17 files, +41 / -611 lines;
+`anglesolver/` main source net -345 LOC; 3 main classes deleted (SmoothingNode, LatticeRepair, SmoothingPolish)
++ 1 test class (SmoothingPolishTest). This begins reversing the cutover's net-additive structure (audit:
+~+1,900 LOC / +7 classes). SIMPLER now: PASS-on-flags is genuine (0 behavior flags, was 1); FAIL-on-structure
+is shrinking (-3 classes so far); STEP 7 removes the rest of the layered old-solver duplication.
+
+NEXT (unchanged order): STEP 3 tight graph-path objective gates (OI-05/19) -> STEP 4 A07-7 dropped-constraint +
+real solveWindow deadline (OI-09/18) -> STEP 5 turnCost removal + MAX_GIVE_BACK bound (OI-14/08) -> STEP 6
+GateMip double-BnB reconcile + FAST sphere/residual budget + determinism CI (OI-11/06/17) -> STEP 7 deep
+old-solver deletion (OI-13/20) -> STEP 8 in-game QA (OI-03) -> STEP 9 benchmark + verdict (OI-04). No further
+commit without the user.
 
 ### 2026-08-25 - 10-AGENT VALIDATION AUDIT of the cutover - open items + benchmark + ship verdict
 
@@ -137,9 +432,11 @@ NEXT STEPS (in order):
    green-gate carefully.
 2. Deep old-solver deletion (the ARCH-1 headline, ARCH-3 risk): make the ARCH-1 primitive (disk kernel ->
    closed-form non-degenerate ticks -> residual dispatch -> snap -> certify) the SOLE recovery inside
-   `RecoveryLadder`, then DELETE ClosedFormSolve/SlpSolve/RelaxationRecovery/BoundPrunedRecovery WHERE proven
-   subsumed, reconciling the double-BnB (seed GateMip with the already-run BoundPrunedRecovery result). Where a
-   case cannot collapse, STOP and record the ARCH-3 cannot-fully-collapse honestly (do NOT reintroduce a flag).
+   `RecoveryLadder`, then DELETE RelaxationRecovery/BoundPrunedRecovery WHERE proven subsumed, reconciling the
+   double-BnB (seed GateMip with the already-run BoundPrunedRecovery result). KEEP ClosedFormSolve/SlpSolve/
+   CostateDualSolver: they are the convex-dual FOUNDATION the ARCH-1 primitive is built on, NOT deletable.
+   Where a case cannot collapse, STOP and record the ARCH-3 cannot-fully-collapse honestly (do NOT reintroduce
+   a flag).
 3. In-game QA on the touched loaders (26.2 Fabric + the two Forge) before calling it production-ready.
 
 ### 2026-08-25 - P7 entry-path unification (the one solve tail) - IN PROGRESS (headline landed; deep rewrites remain)

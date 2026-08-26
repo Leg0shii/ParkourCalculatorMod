@@ -93,7 +93,8 @@ public final class GateMip {
         double thr = exact.inertiaThreshold();
 
         double[] reference = referenceTrajectory(exact, spec, sc, free, seedBaseline, feasTol, cancel);
-        List<Pattern> patterns = enumeratePatterns(spec, sc, free, freeWalls, exact, reference, axisIdx, max, thr);
+        List<Pattern> patterns = enumeratePatterns(spec, sc, free, freeWalls, exact, reference, axisIdx, max, thr,
+                cancel, deadlineNanos);
 
         boolean freeFeasible = false;
         for (Pattern p : patterns) {
@@ -132,7 +133,16 @@ public final class GateMip {
             if (remaining(deadlineNanos) > TREE_MIN_BUDGET_NANOS) {
                 if (DEBUG) System.out.printf("  GATE tree cold-miss: fast=%.9f cert=%.9f treeBudgetMs=%d%n",
                         bestNormed, certBound, remaining(deadlineNanos) / 1_000_000L);
-                double[] tree = treeCompletion(exact, spec, feasTol, cancel, deadlineNanos, bestYaws);
+                double[] warmSeed = bestYaws;
+                if (seedBaseline != null) {
+                    double[] sb = Angles.wrapAll(seedBaseline);
+                    if (violationOf(exact, sc, compiled, sb) <= feasTol
+                            && (warmSeed == null || normedObjective(exact, sc, spec, sb, max)
+                                    > normedObjective(exact, sc, spec, warmSeed, max))) {
+                        warmSeed = sb;
+                    }
+                }
+                double[] tree = treeCompletion(exact, spec, feasTol, cancel, deadlineNanos, warmSeed);
                 if (tree != null && violationOf(exact, sc, compiled, tree) <= feasTol) {
                     double normed = normedObjective(exact, sc, spec, tree, max);
                     if (DEBUG) System.out.printf("  GATE tree result normed=%.9f%n", normed);
@@ -248,7 +258,8 @@ public final class GateMip {
 
     private static List<Pattern> enumeratePatterns(JumpSpec spec, JumpPhysicsInputs sc, JumpLinearModel free,
                                                    List<JumpLinearModel.Wall> freeWalls, ExactJumpModel exact,
-                                                   double[] reference, int axisIdx, boolean max, double thr) {
+                                                   double[] reference, int axisIdx, boolean max, double thr,
+                                                   AtomicBoolean cancel, long deadlineNanos) {
         int n = sc.numTicks;
         List<Pattern> out = new ArrayList<>();
 
@@ -257,8 +268,10 @@ public final class GateMip {
 
         boolean[] critical = bandCritical(exact, sc, free, reference, thr, n);
         List<Pattern> cands = new ArrayList<>();
+        enumerate:
         for (int a = 0; a < 2; a++) {
             for (int k = 1; k < n; k++) {
+                if (expired(cancel, deadlineNanos)) break enumerate;
                 if (!critical[a * n + k]) continue;
                 boolean[] zx = new boolean[n];
                 boolean[] zz = new boolean[n];
@@ -382,7 +395,7 @@ public final class GateMip {
         long budget = remaining(deadlineNanos);
         if (budget <= TREE_MIN_BUDGET_NANOS) return null;
         double[] tree = BoundPrunedRecovery.solve(exact, spec, feasTol, cancel, budget,
-                Double.NaN, new BoundPrunedRecovery.Config());
+                Double.NaN, new BoundPrunedRecovery.Config(), null, incumbent);
         return tree != null ? Angles.wrapAll(tree) : null;
     }
 

@@ -225,8 +225,9 @@ dropped-feasible surface, A09-7). Derive isSuccess from the same maxViolation<=F
 
 BYTE-EXACT + objective-aware caveat (measured, RESULTS section 2.2, stageE/byte-exact-roundtrip.md): the
 pin-scan already scores the BYTE-EXACT objective (step 3c), so it inherently does the objective-aware
-search that snapping a continuous optimum does not. That is why the pin-scan should land j008b at -0.197
-where snapping COPT's continuous optimum gave -0.2196. Confirm this.
+search that snapping a continuous optimum does not. The true byte-exact optimum on j008b is -0.2153 (matching
+the shipped -0.215314); the COPT continuous optimum -0.197 is byte-exact INFEASIBLE, so it is NOT the target
+(measured P2 2026-08-24).
 
 Wiring (only after the probe proves it): add it as a rescue in the OPTIMIZE/coupled path AFTER the existing
 chain, behind a default-off system property (e.g. `pkc.residualRescue`), keep-better semantics (byte-exact
@@ -244,7 +245,7 @@ Reference optima (COPT oracle, byte-exact-round-tripped; the target the rescue m
 | capture | shipped THOROUGH (byte-exact) | COPT continuous optimum | ARCH-1 byte-exact target | pass = |
 | --- | --- | --- | --- | --- |
 | j021-rinav1-01 | 1067.862397 | 1067.863733 | 1067.863789 | rescue reaches >= 1067.8637, viol 0 |
-| j008b-2jump | -0.215314 | -0.197052 | ~-0.197 (obj-aware) | rescue reaches ~-0.197, viol 0 |
+| j008b-2jump | -0.215314 | -0.197052 | -0.2153 (byte-exact) | rescue reaches <= -0.2153, viol 0 |
 | loopmm-3jump | -279.2997 (rec) | -279.299065 (clamp-free, gate) | needs gate MIP | do NOT expect the clamp-free number |
 | j005/j016/j019/j022 (single/half-angle) | already optimal | continuous is BELOW byte-exact | KEEP shipped (do not route) | no regression |
 
@@ -277,7 +278,8 @@ each change: `./gradlew :core:test`.
    as the completion, not a closed-form fix of only the degenerate tick.
 2. THE CONVEX PATH BAILS ON FACING CONSTRAINTS. ClosedFormSolve/RelaxationRecovery return null on any F/EQ
    wall. The pin must go through SlpSolve/YawTies.
-3. SNAPPING A CONTINUOUS OPTIMUM IS BYTE-EXACT SUBOPTIMAL on loose-degenerate (j008b -0.2196) and half-angle
+3. SNAPPING A CONTINUOUS OPTIMUM IS BYTE-EXACT SUBOPTIMAL on loose-degenerate (j008b: byte-exact -0.2153 beats
+   the snapped continuous -0.197) and half-angle
    (j005 -41.298) cases. Always score the BYTE-EXACT objective (the pin-scan does); never trust a
    continuous solution without a byte-exact round-trip. COPT is a near-exact reference, not a strict bound
    (byte-exact can out-reach it by up to 1e-2 b via half-angles).

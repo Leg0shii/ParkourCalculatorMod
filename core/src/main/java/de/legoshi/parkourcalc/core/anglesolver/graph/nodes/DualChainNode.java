@@ -17,6 +17,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class DualChainNode implements NodeRuntime {
 
+    private static final long FAST_RESIDUAL_BUDGET_NANOS = 2_000_000_000L;
+
     private final boolean keepBetter;
     private final ParamValues params;
 
@@ -68,7 +70,8 @@ public final class DualChainNode implements NodeRuntime {
             if (!keepBetter) ctx.chainAppend("closed form");
             return NodeOutcome.of(Guarantee.NONE, in);
         }
-        double[] improved = ResidualRescue.improve(ctx.exactModel, ctx.spec, chain, 0.0, nodeToken, deadlineNanos);
+        long residualDeadline = deadlineNanos > 0 ? deadlineNanos : System.nanoTime() + FAST_RESIDUAL_BUDGET_NANOS;
+        double[] improved = ResidualRescue.improve(ctx.exactModel, ctx.spec, chain, 0.0, nodeToken, residualDeadline);
         if (improved != null && improved != chain) {
             chain = improved;
             chainName[0] = chainName[0] + " -> residual";

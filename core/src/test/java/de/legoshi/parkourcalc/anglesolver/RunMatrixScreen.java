@@ -104,30 +104,16 @@ public class RunMatrixScreen {
         g.add("emit", "emit");
         g.add("seed", "dualChain").set("seed", "keepBetter", true).set("seed", "budgetSec", budgetSec);
         g.add("cap", "capCertify").set("cap", "computeDualGap", true);
-        g.add("smooth", "smoothing").set("smooth", "countEvals", true);
         g.edge("entry", Guarantee.DONE, "seed");
         g.edge("seed", Guarantee.FOUND, "cap");
         g.edge("seed", Guarantee.NONE, "emit");
-        g.edge("cap", Guarantee.AT_CAP, "smooth");
-        g.edge("cap", Guarantee.FALSE, "smooth");
-        g.edge("smooth", Guarantee.DONE, "emit");
+        g.edge("cap", Guarantee.AT_CAP, "emit");
+        g.edge("cap", Guarantee.FALSE, "emit");
         return g.build();
     }
 
     private static SolverGraph bnbHeavyGraph(int seedSec, int bnbSec, int ilsSec) {
         return BuiltinGraphs.explore(seedSec, bnbSec, ilsSec);
-    }
-
-    private static SolverGraph smoothHeavyGraph() {
-        SolverGraph g = BuiltinGraphs.fast();
-        for (GraphNode n : g.nodes) {
-            if ("smoothing".equals(n.type.id)) {
-                n.params.set("maxRounds", 200);
-                n.params.set("maxEvals", 400000);
-                n.params.set("pairSpan", 8);
-            }
-        }
-        return g;
     }
 
     private static SolverGraph raiseTickCaps(SolverGraph g, int cap) {
@@ -204,7 +190,6 @@ public class RunMatrixScreen {
         out.add(new Preset("bnb-heavy60", customGraph(bnbHeavyGraph(10, 40, 10))));
         out.add(new Preset("seed-only15", customGraph(seedOnlyGraph(15))));
         out.add(new Preset("custom-fastgraph", customGraph(BuiltinGraphs.fast())));
-        out.add(new Preset("smooth-heavy", customGraph(smoothHeavyGraph())));
         return out;
     }
 

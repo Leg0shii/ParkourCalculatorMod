@@ -143,17 +143,6 @@ final class SmoothFaceRecovery {
         return worst;
     }
 
-    static double[] smooth(ExactJumpModel exact, JumpSpec spec, JumpConstraintCompiler.Compiled compiled,
-                           double[] seedYaws, double feasTol, AtomicBoolean cancel, Config cfg) {
-        if (seedYaws == null) return null;
-        JumpPhysicsInputs sc = spec.asScenario();
-        double anchor = sc.startYaw;
-        double[] y = seedYaws.clone();
-        if (exactViol(exact, sc, compiled, y) > feasTol) return null;
-        faceWalk(exact, sc, spec, compiled, y, anchor, cfg, cancel);
-        return exactViol(exact, sc, compiled, y) <= feasTol ? Angles.wrapAll(y) : null;
-    }
-
     static double[] smoothToward(ExactJumpModel exact, JumpSpec spec, JumpConstraintCompiler.Compiled compiled,
                                  double[] seedYaws, double[] target, double feasTol, AtomicBoolean cancel, Config cfg) {
         if (seedYaws == null) return null;

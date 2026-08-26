@@ -31,7 +31,6 @@ public final class BuiltinGraphs {
                 .set("bnbFF", "budgetSec", bnbSec).set("bnbFF", "minBudgetMs", 0);
         router(g, "rIls", "CANDIDATE_FEASIBLE_RAW");
         g.add("ils", "ilsPolish").set("ils", "budgetSec", ilsSec).set("ils", "roundCap", 400);
-        g.add("smooth", "smoothing").set("smooth", "countEvals", true).set("smooth", "deWiggle", true);
         g.edge("entry", Guarantee.DONE, "seed");
         g.edge("seed", Guarantee.FOUND, "rFeas");
         g.edge("seed", Guarantee.NONE, "bnbFF");
@@ -41,9 +40,8 @@ public final class BuiltinGraphs {
         bnbOut(g, "bnbFF", "rIls");
         g.edge("rIls", Guarantee.TRUE, "ils");
         g.edge("rIls", Guarantee.FALSE, "emit");
-        g.edge("ils", Guarantee.IMPROVED, "smooth");
-        g.edge("ils", Guarantee.UNCHANGED, "smooth");
-        g.edge("smooth", Guarantee.DONE, "emit");
+        g.edge("ils", Guarantee.IMPROVED, "emit");
+        g.edge("ils", Guarantee.UNCHANGED, "emit");
         return g.build();
     }
 
@@ -83,7 +81,6 @@ public final class BuiltinGraphs {
                 .set("seedMulti", "budgetSec", t);
         g.add("wrap0", "wrapYaws");
         router(g, "rWarmTicks", "TICKS_LE_CAP");
-        g.add("smoothWarm", "smoothing").set("smoothWarm", "countEvals", false);
         g.add("settledMark", "markSettled");
         g.add("repA", "report");
         g.add("repWarm", "report");
@@ -158,8 +155,6 @@ public final class BuiltinGraphs {
         router(g, "rTrans", "HAS_FREE_START");
         g.add("translate", "translatedStart");
         g.add("sphereSnap", "sphereSnap");
-        g.add("smoothFinal", "smoothing").set("smoothFinal", "countEvals", true)
-                .set("smoothFinal", "deWiggle", true);
         if (win) {
             g.add("horizon", "recedingHorizon")
                     .set("horizon", "window", window)
@@ -195,9 +190,8 @@ public final class BuiltinGraphs {
         g.edge("rSeedHave", Guarantee.TRUE, "wrap0");
         g.edge("rSeedHave", Guarantee.FALSE, win ? "peel" : "repA");
         g.edge("wrap0", Guarantee.DONE, "rWarmTicks");
-        g.edge("rWarmTicks", Guarantee.TRUE, "smoothWarm");
+        g.edge("rWarmTicks", Guarantee.TRUE, "repWarm");
         g.edge("rWarmTicks", Guarantee.FALSE, "settledMark");
-        g.edge("smoothWarm", Guarantee.DONE, "repWarm");
         g.edge("settledMark", Guarantee.DONE, "repSkip");
         g.edge("repSkip", Guarantee.DONE, coldEntry);
         g.edge("repA", Guarantee.DONE, sof ? "rFeasFastCold" : "rEarlyFeas");
@@ -275,8 +269,7 @@ public final class BuiltinGraphs {
         g.edge("rTrans", Guarantee.FALSE, "sphereSnap");
         g.edge("translate", Guarantee.DONE, "sphereSnap");
         g.edge("sphereSnap", Guarantee.ADOPTED, "emit");
-        g.edge("sphereSnap", Guarantee.REJECTED, "smoothFinal");
-        g.edge("smoothFinal", Guarantee.DONE, "emit");
+        g.edge("sphereSnap", Guarantee.REJECTED, "emit");
         return g.build();
     }
 

@@ -20,9 +20,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *  global optimum. For the momentum/nix regime ({@code k} up to ~22) the same ascent exploits the low
  *  effective DOF of the coordinated momentum phase.
  *
- *  <p>Position specs only for now: facing (dF) walls bail to the baseline (the convex dual bound is not
- *  defined there), and the inertia gate is left to the byte-exact completion rather than modeled, so this
- *  does not chase the clamp-free gate optima. */
+ *  <p>Facing (dF) chains fold: a dF=0 chain is folded through {@link FacingPrefold}, while an open dF chain
+ *  that cannot fold declines to the baseline. The inertia gate is left to the byte-exact completion rather
+ *  than modeled, so this does not chase the clamp-free gate optima. */
 public final class ResidualRescue {
 
     public static boolean DEBUG = false;

@@ -1,0 +1,127 @@
+capture	tier	success	met	total	solver	sense	axis	objTick	hasObj	shippedObj	recertObj	recertViol	coldMs	warmMedMs	runs	smoothLambda	n
+bfsetup2	FAST	false	5	11	closed form	MIN	X	15	true	-1604.093264801	-1604.093264801	6.463967686e-02	464	464	1	0.000000	15
+deserthard-planrealization	FAST	true	81	81	receding horizon -> sphere snap	MAX	Z	353	true	12.223752951	12.223752951	0.000000000e+00	620	620	1	0.000000	353
+deserthard-sine262	FAST	true	81	81	receding horizon -> sphere snap	MAX	Z	353	true	12.223752951	12.223752951	0.000000000e+00	562	562	1	0.000000	353
+df-chain-free-start	FAST	true	13	13	closed form -> free start rescue (first feasible) -> translated start -> sphere snap	MAX	X	15	true	-3.905309935	-4.979365191	1.060736726e+00	53	53	1	0.000000	15
+f2f-dfchain-multijump	FAST	true	21	21	receding horizon (first feasible) -> sphere snap	MAX	X	24	true	-3.860444912	-3.860444912	0.000000000e+00	105	105	1	0.000000	24
+gh283-j925-farseed	FAST	true	22	22	receding horizon -> free window (first feasible) -> translated start -> sphere snap	MAX	X	24	true	-1003.298970405	-1005.785939834	2.485939822e+00	808	808	1	0.000000	24
+gh283-j990-cold	FAST	true	39	39	receding horizon -> free window (first feasible) -> translated start -> sphere snap	MAX	X	37	true	-4264.862308765	-4264.894961192	2.978667804e+00	183	183	1	0.000000	37
+gh313-j121-dfneo	FAST	false	12	12	closed form	MAX	X	9	true	-41.299403108	-41.299403108	0.000000000e+00	30	30	1	0.000000	9
+gh398-optimize-2jump	FAST	true	5	5	receding horizon (first feasible) -> sphere snap	MIN	X	24	true	-50.415829574	-50.415829574	0.000000000e+00	55	55	1	0.000000	24
+j140-head-to-chest-neo-_1.125	FAST	true	17	17	receding horizon (first feasible) -> sphere snap	MAX	X	44	true	-826.228918472	-826.228918472	0.000000000e+00	132	132	1	0.000000	44
+j144_1bm_5-1_Triple_Neo	FAST	true	14	14	receding horizon (first feasible) -> sphere snap	MAX	Z	42	true	987.701083567	987.701083567	0.000000000e+00	605	605	1	0.000000	42
+j148_1bm_Pregapped_Head_Butterfly_Neo_to_Ladder	FAST	true	12	12	receding horizon (first feasible) -> sphere snap	MIN	Z	28	true	1097.812594049	1097.812594049	0.000000000e+00	73	73	1	0.000000	28
+j149_1.5bm_Head_Butterfly_Neo_to_Ladder	FAST	true	14	14	receding horizon (first feasible) -> sphere snap	MIN	Z	39	true	1097.817245254	1097.817245254	0.000000000e+00	259	259	1	0.000000	39
+j152_Slab_to_Fence_3x3	FAST	true	12	12	receding horizon (first feasible) -> sphere snap	MAX	Z	28	true	1099.085424822	1099.085424822	0.000000000e+00	58	58	1	0.000000	28
+j153_Flat_Momentum_Head_to_Head_Neo	FAST	true	21	21	receding horizon (first feasible) -> sphere snap	MAX	X	84	true	-377.783687294	-377.783703720	0.000000000e+00	684	684	1	0.000000	84
+j335_1bmhh_Single_Fencegat_Butterfly_Neo	FAST	true	18	18	receding horizon (first feasible) -> sphere snap	MAX	X	21	true	-697.295600154	-697.295600154	0.000000000e+00	276	276	1	0.000000	21
+j342_3bc_Trapdoor_to_Trapdoor_Cross_Neo	FAST	true	12	12	receding horizon (first feasible) -> sphere snap	MAX	Z	23	true	983.723122615	983.723122615	0.000000000e+00	90	90	1	0.000000	23
+j343_Single_Piston_Butterfly_Neo	FAST	true	19	19	receding horizon (first feasible) -> sphere snap	MAX	X	25	true	-492.139492572	-492.139492572	0.000000000e+00	228	228	1	0.000000	25
+j344_Butterfly_Neo_to_Cobblewall_-0.5	FAST	true	5	5	closed form -> relaxation recovery -> level set (first feasible) -> sphere snap	MAX	X	12	true	-533.037197830	-533.037197830	0.000000000e+00	153	153	1	0.000000	12
+j345_3jmm_True_Nix_Neo	FAST	true	14	14	receding horizon (first feasible) -> sphere snap	MAX	X	49	true	-660.156416666	-660.156416666	0.000000000e+00	322	322	1	0.000000	49
+j346_1bm_Squeeze_to_Squeeze_Butterfly_Neo	FAST	true	57	57	receding horizon (first feasible) -> sphere snap	MAX	X	39	true	-740.294222967	-740.294222967	0.000000000e+00	2269	2269	1	0.000000	39
+j347_Trapdoor_to_Slab_Inverse_Nix_Neo_-0.5	FAST	true	54	54	receding horizon (first feasible) -> sphere snap	MAX	X	52	true	-575.297710832	-575.297710832	0.000000000e+00	1027	1027	1	0.000000	52
+j422_2jmm_Inverse_Nix_Neo	FAST	true	13	13	receding horizon (first feasible) -> sphere snap	MAX	X	36	true	-4100.290684689	-4100.290684689	0.000000000e+00	232	232	1	0.000000	36
+j424_1.4375bm_Double_Winged_Neo__0.25	FAST	true	14	14	receding horizon (first feasible) -> sphere snap	MAX	X	48	true	-4264.297115484	-4264.297115484	0.000000000e+00	74	74	1	0.000000	48
+j425_1jmm_Trapdoor_to_Daylight_Sensor_Nix_Neo__0.375	FAST	true	10	10	receding horizon (first feasible) -> sphere snap	MAX	X	24	true	-1847.293687542	-1847.293687542	0.000000000e+00	74	74	1	0.000000	24
+j703_1.5bm__x__T3c_Butterfly_-0.5	FAST	true	13	13	receding horizon (first feasible) -> sphere snap	MAX	X	39	true	-4389.297431116	-4389.297431116	0.000000000e+00	107	107	1	0.000000	39
+j717_Panewall_Momentum_Single_Block_Butterfly_Neo	FAST	true	17	17	receding horizon (first feasible) -> sphere snap	MAX	X	27	true	-82.151927708	-82.151927708	0.000000000e+00	123	123	1	0.000000	27
+j757_1bmhh_4.0625_1	FAST	true	12	12	receding horizon (first feasible) -> sphere snap	MAX	Z	18	true	1098.116190202	1098.116190202	3.098638956e-05	58	58	1	0.000000	18
+j816_Sidewalled_Piston_Momentum_Butterfly_Neo	FAST	true	19	19	receding horizon (first feasible) -> sphere snap	MAX	X	24	true	-862.296345281	-862.296345281	0.000000000e+00	74	74	1	0.000000	24
+j1099-1.1875bm_Head_Butterfly_Neo_fail	FAST	true	9	9	receding horizon (first feasible) -> sphere snap	MAX	X	29	true	-2500.442708845	-2500.442708845	0.000000000e+00	153	153	1	0.000000	29
+j1149-_X__Pane_to_Head_S_Neo	FAST	true	12	12	receding horizon (first feasible) -> sphere snap	MAX	X	37	true	-1324.768521987	-1324.768521987	0.000000000e+00	200	200	1	0.000000	37
+j1150-2x2bm_Nix_Neo	FAST	true	11	11	receding horizon (first feasible) -> sphere snap	MAX	X	49	true	-2805.297806586	-2805.297806586	0.000000000e+00	248	248	1	0.000000	49
+j155-4jmm_3bcmm_4.9375b	FAST	true	4	4	receding horizon (first feasible) -> sphere snap	MAX	Z	66	true	4984.763274063	4984.763274063	0.000000000e+00	379	379	1	0.000000	66
+j716-1bm_Cobblewall_to_Cobblewall_Winged_Neo	FAST	true	11	11	receding horizon (first feasible) -> sphere snap	MIN	X	42	true	-699.950175939	-699.950175939	0.000000000e+00	166	166	1	0.000000	42
+j718-2bm__Z__Pane_to_Pane_Neo	FAST	true	11	11	receding horizon (first feasible) -> sphere snap	MAX	X	37	true	-1902.861505876	-1902.861505876	0.000000000e+00	133	133	1	0.000000	37
+j828-1bm_5.3125-1.5	FAST	true	6	6	receding horizon (first feasible) -> sphere snap	MAX	Z	39	true	4978.013122799	4978.013122799	0.000000000e+00	138	138	1	0.000000	39
+j925-Sidewalled_Single_Piston_Butterfly_Neo_1bl	FAST	true	6	6	closed form -> SLP -> level set (first feasible) -> sphere snap	MAX	X	11	true	-1003.297969951	-1003.297969951	0.000000000e+00	218	218	1	0.000000	11
+j108_HH_Short_Pane_to_Pane_Neo	FAST	true	12	12	receding horizon (first feasible) -> sphere snap	MAX	X	25	true	-328.859034808	-328.859034808	0.000000000e+00	76	76	1	0.000000	25
+j111_0bm_Trapdoor_to_Trapdoor_Cross_Neo	FAST	true	5	5	closed form (first feasible) -> sphere snap	MAX	X	11	true	-452.440470517	-452.440470517	0.000000000e+00	43	43	1	0.000000	11
+j119_Head_Waza_to_Anvil	FAST	true	14	14	receding horizon (first feasible) -> sphere snap	MAX	X	26	true	-779.296559439	-779.296559439	0.000000000e+00	77	77	1	0.000000	26
+j120_3bm_5.0625b-0.5	FAST	true	14	14	receding horizon (first feasible) -> translated start -> sphere snap	MAX	Z	50	true	986.765890470	986.765888796	0.000000000e+00	45	45	1	0.000000	50
+j121_3jmm_Double_Winged_Neo__0.5	FAST	true	14	14	receding horizon (first feasible) -> sphere snap	MAX	X	46	true	-41.289422921	-41.289422921	0.000000000e+00	169	169	1	0.000000	46
+j122_1.5b_Head_Butterfly_Neo	FAST	true	14	14	receding horizon (first feasible) -> sphere snap	MAX	X	37	true	-82.295008482	-82.295008482	0.000000000e+00	123	123	1	0.000000	37
+j126_1bmhh_Pane_to_Pane_Neo	FAST	true	15	15	receding horizon (first feasible) -> translated start -> sphere snap	MAX	X	16	true	-247.854728113	-247.854792914	0.000000000e+00	61	61	1	0.000000	16
+j127_Head_to_Head_Neo	FAST	true	16	16	receding horizon (first feasible) -> sphere snap	MAX	X	48	true	-292.785704677	-292.785704677	0.000000000e+00	90	90	1	0.000000	48
+j128_Head_to_Head_Neo_1bl	FAST	true	16	16	receding horizon (first feasible) -> sphere snap	MAX	X	48	true	-333.766758898	-333.766758898	0.000000000e+00	293	293	1	0.000000	48
+j129_1.125bm_4.4375b	FAST	true	8	8	receding horizon (first feasible) -> sphere snap	MAX	Z	36	true	987.139961377	987.139961377	0.000000000e+00	246	246	1	0.000000	36
+j132_Flowerpot_Head_Waza	FAST	true	14	14	receding horizon (first feasible) -> sphere snap	MAX	X	24	true	-492.985599947	-492.985599947	0.000000000e+00	106	106	1	0.000000	24
+j133__X__2jmm_Pane_to_Pane_Neo	FAST	true	12	12	receding horizon (first feasible) -> sphere snap	MAX	Z	36	true	1028.144942012	1028.144942012	0.000000000e+00	139	139	1	0.000000	36
+j134_T_3mm_4jmm_4_1	FAST	true	10	10	receding horizon (first feasible) -> sphere snap	MAX	Z	44	true	986.702640675	986.702637229	0.000000000e+00	309	309	1	0.000000	44
+j135_Waza_to_Cobblewall_-0.5	FAST	true	16	16	closed form -> relaxation recovery -> level set -> residual (first feasible) -> translated start -> sphere snap	MAX	X	17	true	-615.032604824	-615.032605847	4.144666616e-05	527	527	1	0.000000	17
+j138_Ladder_to_Ladder_Cross_Neo	FAST	true	21	21	receding horizon (first feasible) -> sphere snap	MAX	X	25	true	-739.387884686	-739.387892703	0.000000000e+00	185	185	1	0.000000	25
+J143_Panewall_MM_Butterfly_Neo	FAST	true	14	14	receding horizon (first feasible) -> sphere snap	MAX	X	26	true	-0.299473985	-0.299473985	0.000000000e+00	90	90	1	0.000000	26
+j146_Truer_Head_Waza_to_Block	FAST	true	14	14	receding horizon (first feasible) -> sphere snap	MAX	X	26	true	-82.298294553	-82.298294553	0.000000000e+00	60	60	1	0.000000	26
+j147__X__1bm_Fence_to_Fence_Neo	FAST	true	14	14	receding horizon (first feasible) -> sphere snap	MAX	Z	37	true	1095.093100750	1095.093100750	0.000000000e+00	390	390	1	0.000000	37
+j150_1bm_Chest_Inverse_Nix_Neo_to_Block_1bl	FAST	true	14	14	receding horizon (first feasible) -> sphere snap	MAX	X	37	true	-247.282342016	-247.282342016	0.000000000e+00	75	75	1	0.000000	37
+j187_Sidewalled_3x2.1875bm_Nix_Neo	FAST	true	18	18	receding horizon (first feasible) -> sphere snap	MAX	X	38	true	-453.294290145	-453.294290145	0.000000000e+00	123	123	1	0.000000	38
+j246__X__1.9375bm_Triple_Neo	FAST	true	12	12	receding horizon (first feasible) -> sphere snap	MIN	X	36	true	-999.301632048	-999.301632048	0.000000000e+00	185	185	1	0.000000	36
+j248_6bm_Microturn_4.8125b_Chained_to_3.125bm_Neo	FAST	true	57	57	receding horizon (first feasible) -> sphere snap	MAX	Z	47	true	985.778261479	985.778261479	0.000000000e+00	135	135	1	0.000000	47
+j298_Backwalled_Block___Pane_3bm_Pane_to_Pane_Neo_1bl	FAST	true	14	14	receding horizon (first feasible) -> sphere snap	MAX	X	37	true	-2256.856302205	-2256.856302205	0.000000000e+00	246	246	1	0.000000	37
+j315_Egg_to_Block_Butterfly_Neo	FAST	true	14	14	receding horizon (first feasible) -> sphere snap	MAX	X	37	true	-1763.285855248	-1763.285855248	0.000000000e+00	216	216	1	0.000000	37
+j318_Waza_-0_to_Block_Pane_Postwalled	FAST	true	11	11	closed form -> relaxation recovery (first feasible) -> translated start -> sphere snap	MAX	X	13	true	-1886.297135795	-1886.297167721	2.630667287e-04	77	77	1	0.000000	13
+j319__X__1bm_Gapped_Butterfly_Neo_to_Egg	FAST	true	6	6	closed form (first feasible) -> sphere snap	MAX	Z	11	true	981.771143610	981.771143610	0.000000000e+00	29	29	1	0.000000	11
+j320_1bm_Gapped_Head_Butterfly_Neo	FAST	true	6	6	closed form (first feasible) -> sphere snap	MAX	X	11	true	-2009.298271177	-2009.298271177	0.000000000e+00	29	29	1	0.000000	11
+j321_c4.5_Pane_to_Pane_Neo_Pane_Postwalled	FAST	true	18	18	receding horizon (first feasible) -> sphere snap	MAX	X	36	true	-2051.857894461	-2051.857894461	0.000000000e+00	91	91	1	0.000000	36
+j328_Backwalled_3bm_Pane_to_Pane_Neo	FAST	true	16	16	receding horizon (first feasible) -> sphere snap	MAX	X	38	true	-2419.860117472	-2419.860117472	0.000000000e+00	106	106	1	0.000000	38
+j330_1.5bm_Double_Winged_Neo__0.25	FAST	true	24	24	receding horizon (first feasible) -> sphere snap	MAX	X	36	true	-2460.280048557	-2460.280048557	0.000000000e+00	450	450	1	0.000000	36
+j001	FAST	true	81	81	receding horizon -> sphere snap	MAX	Z	353	true	12.225777479	12.225777479	0.000000000e+00	824	824	1	0.000000	353
+j002	FAST	true	41	41	receding horizon (first feasible) -> sphere snap	MIN	X	189	true	-33.673799537	-33.673799537	0.000000000e+00	151	151	1	0.000000	189
+j003	FAST	true	39	39	receding horizon (first feasible) -> sphere snap	MIN	X	176	true	-30.272971168	-30.272971168	0.000000000e+00	606	606	1	0.000000	176
+j004	FAST	true	10	10	closed form (first feasible) -> sphere snap	MAX	X	11	true	-1889.049180097	-1889.049180097	0.000000000e+00	44	44	1	0.000000	11
+j005	FAST	true	10	10	closed form (first feasible) -> sphere snap	MAX	X	9	true	-41.297732421	-41.297732421	0.000000000e+00	44	44	1	0.000000	9
+j006	FAST	true	7	7	closed form (first feasible) -> sphere snap	MIN	X	11	true	-1599.700111681	-1599.700111681	0.000000000e+00	28	28	1	0.000000	11
+j007	FAST	true	13	13	receding horizon (first feasible) -> sphere snap	MIN	Z	28	true	-444.299999998	-444.299999998	0.000000000e+00	89	89	1	0.000000	28
+j008-bfneo	FAST	true	5	5	closed form -> residual (first feasible) -> sphere snap	MAX	X	11	true	-0.215386163	-0.215386163	0.000000000e+00	107	107	1	0.000000	11
+j008-hyper-fp	FAST	true	8	8	closed form (first feasible) -> sphere snap	MAX	X	11	true	-0.216293918	-0.216293918	0.000000000e+00	29	29	1	0.000000	11
+j008b-2jump	FAST	true	10	10	receding horizon (first feasible) -> sphere snap	MAX	X	25	true	-0.215318078	-0.215318078	0.000000000e+00	76	76	1	0.000000	25
+j009-headwazatoanvil	FAST	true	5	5	closed form (first feasible) -> sphere snap	MAX	X	11	true	-0.297867191	-0.297867191	0.000000000e+00	29	29	1	0.000000	11
+j010-Xp2hsneo	FAST	true	4	4	closed form (first feasible) -> sphere snap	MIN	Z	11	true	-0.205190444	-0.205190444	0.000000000e+00	29	29	1	0.000000	11
+j011-1.875x1bmdoublecross	FAST	true	5	5	closed form (first feasible) -> sphere snap	MIN	Z	11	true	-1.706399712	-1.706399712	0.000000000e+00	29	29	1	0.000000	11
+j012-pistonbasesidewallbf	FAST	true	4	4	closed form (first feasible) -> sphere snap	MAX	X	11	true	-0.296743871	-0.296743871	0.000000000e+00	30	30	1	0.000000	11
+j013-cw2cwwinged	FAST	true	4	4	closed form (first feasible) -> sphere snap	MAX	X	11	true	-0.049745446	-0.049745446	0.000000000e+00	45	45	1	0.000000	11
+j014-11bmreversenix	FAST	true	2	2	closed form (first feasible) -> sphere snap	MAX	X	11	true	0.702054565	0.702054565	0.000000000e+00	29	29	1	0.000000	11
+j015-1bmdoublewinged_1tier	FAST	true	3	3	closed form (first feasible) -> sphere snap	MAX	X	10	true	-0.291230610	-0.291230610	0.000000000e+00	29	29	1	0.000000	10
+j016-X2jmmp2p	FAST	true	4	4	closed form (first feasible) -> sphere snap	MAX	Z	11	true	-4.857908304	-4.857908304	0.000000000e+00	29	29	1	0.000000	11
+j017-postwalllightningneo	FAST	true	7	7	closed form (first feasible) -> sphere snap	MAX	Z	11	true	-1.217695648	-1.217695648	0.000000000e+00	45	45	1	0.000000	11
+j018-tds2tdsbf	FAST	true	6	6	closed form (first feasible) -> sphere snap	MAX	X	11	true	-4.294407594	-4.294407594	0.000000000e+00	43	43	1	0.000000	11
+j019-3jmmtruenix	FAST	true	4	4	closed form (first feasible) -> sphere snap	MAX	X	11	true	-13.303361437	-13.303361437	0.000000000e+00	44	44	1	0.000000	11
+j020-panewallsingleblockbf	FAST	true	5	5	closed form -> residual (first feasible) -> sphere snap	MAX	X	11	true	-4.299797616	-4.299797616	0.000000000e+00	138	138	1	0.000000	11
+j021-rinav1-01	FAST	true	13	13	receding horizon (first feasible) -> sphere snap	MAX	Z	39	true	1067.844821108	1067.844821108	0.000000000e+00	136	136	1	0.000000	39
+j022-1bmhbfly	FAST	true	5	5	closed form -> SLP -> level set (first feasible) -> sphere snap	MIN	X	11	true	-531.700146676	-531.700146676	0.000000000e+00	121	121	1	0.000000	11
+loopmm-3jump-lands	FAST	true	5	5	receding horizon (first feasible)	MAX	Z	33	true	-279.312440394	-279.312440394	0.000000000e+00	53	53	1	0.000000	33
+loopmm-3jump-solver-misses	FAST	true	5	5	receding horizon (first feasible)	MAX	Z	33	true	-279.312440394	-279.312440394	0.000000000e+00	55	55	1	0.000000	33
+loopmm-tight-t39	FAST	none											30002		1		
+nix-full-t1	FAST	none											30003		1		
+nix-t25-setup-tick	FAST	true	13	13	receding horizon (first feasible) -> sphere snap	MAX	X	37	true	8.696188778	8.696188778	0.000000000e+00	374	374	1	0.000000	37
+razor-proof-improved	FAST	none											30004		1		
+razor-proof-t1	FAST	none											30004		1		
+razor-proof	FAST	none											30011		1		
+razor-rung-attempt	FAST	none											30002		1		
+razor-rung-legal-attempt-turn360-v2	FAST	none											30484		1		
+razor-rung-legal-attempt-turn360	FAST	none											30005		1		
+razor-rung-legal-attempt-wrap720	FAST	none											30004		1		
+razor-rung-legal-attempt	FAST	none											30000		1		
+razor-uncorrected	FAST	none											30009		1		
+razor-weirdpane-attempt-v2	FAST	none											30001		1		
+razor-weirdpane-attempt	FAST	none											30122		1		
+razor-weirdpane	FAST	none											30005		1		
+synth-free-translate	FAST	true	1	1	closed form (first feasible) -> translated start	MAX	X	11	true	3.067949007	2.567949008	0.000000000e+00	29	29	1	0.000000	11
+synth-legal-shortfall	FAST	true	1	2	closed form (first feasible) -> translated start (legal)	MAX	X	11	true	3.067949007	2.567949008	0.000000000e+00	29	29	1	0.000000	11
+taser-100t	FAST	true	31	31	receding horizon (first feasible) -> sphere snap	MAX	X	99	true	-20.020265263	-20.020265263	0.000000000e+00	2115	2115	1	0.000000	99
+taser-80t	FAST	true	16	16	receding horizon (first feasible) -> sphere snap	MAX	X	79	true	0.136703744	0.136703744	0.000000000e+00	106	106	1	0.000000	79
+trp-optimize-feasible-swap	FAST	true	20	20	closed form (first feasible) -> sphere snap	MAX	X	62	true	4.237142832	4.237130192	0.000000000e+00	384	384	1	0.000000	62
+df-openchain-free-start	FAST	true	14	14	closed form -> free start rescue (first feasible) -> translated start -> sphere snap	MAX	X	15	true	-3.876580989	-4.331146496	4.419025780e-01	108	108	1	0.000000	15
+gh386-4x2-luckyseed	FAST	true	26	26	receding horizon (first feasible)	MAX	X	21	true	6525.843361148	6525.843361148	0.000000000e+00	135	135	1	0.010000	21
+gh386-4x2-seedshift	FAST	true	26	26	receding horizon -> free window (first feasible) -> translated start	MAX	X	21	true	6525.842209087	6527.132564275	1.290355187e+00	202	202	1	0.010000	21
+gh386-4x2b-luckyseed	FAST	true	26	26	receding horizon (first feasible) -> translated start	MAX	X	21	true	6525.845175676	6525.844900357	0.000000000e+00	74	74	1	0.010000	21
+gh386-4x2b-seedshift	FAST	true	26	26	receding horizon -> free window (first feasible) -> translated start	MAX	X	21	true	6525.854407893	6527.641288951	1.786881057e+00	90	90	1	0.010000	21
+gh386-4x2c-luckyseed	FAST	true	26	26	receding horizon (first feasible)	MAX	X	21	true	6525.826886291	6525.826886291	0.000000000e+00	106	106	1	0.010000	21
+gh386-4x2c-seedshift	FAST	true	26	26	receding horizon -> free window (first feasible) -> translated start	MAX	X	21	true	6525.826886291	6525.203232678	6.217673100e-01	107	107	1	0.010000	21
+gh386-j335-lowx	FAST	true	20	20	receding horizon -> free start rescue (first feasible) -> translated start -> sphere snap	MAX	X	21	true	-697.297991918	-697.748041029	4.491292738e-01	3450	3450	1	0.000000	21
+inertia-1tick-neo-t31	FAST	true	4	4	closed form (first feasible) -> sphere snap	MIN	X	9	true	8086.296848897	8086.296848897	0.000000000e+00	29	29	1	0.000000	9
+inertia-1tick-neo	FAST	true	5	5	closed form -> pattern B&B (first feasible) -> sphere snap	MIN	X	13	true	8086.296235674	8086.296235674	0.000000000e+00	42	42	1	0.000000	13
+j022-1bmhbfly-noland	FAST	true	4	4	closed form -> SLP -> level set -> residual (first feasible) -> sphere snap	MIN	X	11	true	-531.700130370	-531.700130370	0.000000000e+00	139	139	1	0.000000	11
+j023-1bmhbfly-eqlanding	FAST	true	5	5	closed form -> SLP (first feasible) -> sphere snap	MIN	X	11	true	-531.650099997	-531.650099997	0.000000000e+00	60	60	1	0.000000	11
+j024-bfly-goal-direction	FAST	true	16	16	receding horizon (first feasible) -> sphere snap	MIN	Z	42	true	44.208810963	44.208810963	0.000000000e+00	310	310	1	0.000000	42

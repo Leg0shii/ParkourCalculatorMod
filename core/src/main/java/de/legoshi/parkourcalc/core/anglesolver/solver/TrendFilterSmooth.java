@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class TrendFilterSmooth {
 
-    public static double MAX_GIVE_BACK = 8.0e-3;
+    public static final double MAX_GIVE_BACK = 8.0e-3;
 
     private static final double FEAS_TOL = 0.0;
     private static final double[] LAMBDAS = {0.5, 2.0, 8.0, 32.0};

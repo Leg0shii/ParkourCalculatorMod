@@ -31,11 +31,12 @@ public final class RecedingHorizonNode implements NodeRuntime {
         ctx.chainAppend("receding horizon");
         if (SolverTrace.on()) SolverTrace.log("ENGINE", "receding horizon start");
         LongRunSolver.WindowCache windows = new LongRunSolver.WindowCache();
-        double[] fromScratch = LongRunSolver.solve(ctx.exactModel, ctx.spec, ctx.feasTol, nodeToken, cfg, windows);
+        double[] fromScratch = LongRunSolver.solve(ctx.exactModel, ctx.spec, ctx.feasTol, nodeToken, cfg, windows,
+                deadlineNanos);
         if (SolverTrace.on()) SolverTrace.log("ENGINE", "receding horizon %s", fromScratch != null ? "solved" : "miss");
         if (fromScratch == null && ctx.freeStart && !ctx.stageLocked()) {
             LongRunSolver.FreeRun free = LongRunSolver.solveFree(ctx.exactModel, ctx.spec, ctx.feasTol, nodeToken,
-                    cfg, ctx.freeBox, windows);
+                    cfg, ctx.freeBox, windows, deadlineNanos);
             if (free != null) {
                 JumpPhysicsInputs sc = ctx.scenario;
                 sc.startPos = new Vec3dCore(free.startX, sc.startPos.y, free.startZ);

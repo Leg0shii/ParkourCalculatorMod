@@ -1014,7 +1014,7 @@ public final class AngleSolverEngine {
         if (job.legalGoal != null) {
             solverName = solverName == null ? "legal mode" : solverName + " (legal)";
         }
-        boolean smoothRequested = spec.objective.smoothLambda > 0.0 || SMOOTH_FINAL_FACING;
+        boolean smoothRequested = spec.objective.smoothLambda > 0.0;
         if (smoothRequested && smoothFinalResult && model instanceof ExactJumpModel && !cancel.get()) {
             long smoothBudget = job.deadlineNanos > 0
                     ? Math.min(job.deadlineNanos / 8, MAX_SMOOTH_BUDGET_NANOS) : SMOOTH_BUDGET_NANOS;
@@ -1056,7 +1056,6 @@ public final class AngleSolverEngine {
         return TrendFilterSmooth.smooth(em, spec, yaws, System.nanoTime() + budgetNanos, cancel);
     }
 
-    public static boolean SMOOTH_FINAL_FACING = "1".equals(System.getenv("PKC_SMOOTHFACING"));
     private static final long SMOOTH_BUDGET_NANOS = 400_000_000L;
     private static final long MAX_SMOOTH_BUDGET_NANOS = 6_000_000_000L;
 

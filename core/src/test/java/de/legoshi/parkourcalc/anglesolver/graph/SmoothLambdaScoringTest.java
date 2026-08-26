@@ -9,7 +9,6 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
-import de.legoshi.parkourcalc.core.anglesolver.solver.SmoothingPolish;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolveProgress;
 import org.junit.Test;
 
@@ -134,19 +133,6 @@ public class SmoothLambdaScoringTest {
         assertEquals(2.5e-4, c.metric.smoothLambda, 0.0);
         assertEquals(0.0, SolveRunRecord.configOf(BuiltinGraphs.fast(), null, "FAST", 0.0,
                 new Objective(JumpPhysicsInputs.Axis.Z, Objective.Sense.MIN, 12)).metric.smoothLambda, 0.0);
-    }
-
-    @Test
-    public void smoothingSpendsScoredMarginWithLambda() {
-        JumpPhysicsInputs phys = TestScenarios.phys(8, null);
-        double[] wiggly = {0.0, 8.0, -8.0, 8.0, -8.0, 8.0, -8.0, 0.0};
-        JumpSpec spec = new JumpSpec(phys, Collections.<JumpConstraint>emptyList(),
-                new Objective(JumpPhysicsInputs.Axis.X, Objective.Sense.MIN, 8, 1.0));
-        double[] out = SmoothingPolish.smooth(ExactJumpModel.forMcVersion("1.8.9"), spec, wiggly.clone(),
-                new AtomicBoolean(false));
-        assertTrue(Angles.wiggleDeg(out) < Angles.wiggleDeg(wiggly));
-        assertTrue(Angles.reversals(out, Angles.REVERSAL_FLOOR_DEG)
-                < Angles.reversals(wiggly, Angles.REVERSAL_FLOOR_DEG));
     }
 
     @Test

@@ -12,7 +12,6 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.RecedingHorizonNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.RouterNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.SeamSweepNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.SetupPeelNode;
-import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.SmoothingNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.SphereSnapNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.TranslatedStartNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.WrapIlsNode;
@@ -259,18 +258,6 @@ public final class NodeCatalog {
                 .branch(Branch.preserves(Guarantee.DONE))
                 .fallback(Guarantee.DONE)
                 .factory(TranslatedStartNode::new)
-                .build());
-        register(NodeType.builder("smoothing", "Smoothing", NodeCategory.POLISH)
-                .requires(InputRequirement.ANY)
-                .branch(Branch.preserves(Guarantee.DONE))
-                .param(ParamSpec.bool("countEvals", "Count evals", false))
-                .param(ParamSpec.bool("deWiggle", "Remove short turn runs", false))
-                .param(ParamSpec.integer("maxRounds", "Max rounds", 1, 1000, 24))
-                .param(ParamSpec.integer("maxEvals", "Max evals", 100, 10000000, 24000))
-                .param(ParamSpec.integer("pairSpan", "Pair span", 1, 64, 3))
-                .param(ParamSpec.text("fractions", "Pull fractions", "1.0,0.5,0.25,0.125"))
-                .fallback(Guarantee.DONE)
-                .factory(SmoothingNode::new)
                 .build());
     }
 

@@ -3,6 +3,7 @@ package de.legoshi.parkourcalc.anglesolver;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import de.legoshi.parkourcalc.anglesolver.harness.Fixtures;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
@@ -23,6 +24,8 @@ import org.junit.Assume;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.FileReader;
+import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
@@ -54,8 +57,19 @@ public class StructureDump {
         AngleSolverEngine engine = new AngleSolverEngine(state, Fixtures.buildBoxes(file), inputs, t -> { }, model);
         JumpSpec spec = engine.debugBuildSpec();
         JumpPhysicsInputs sc = spec.asScenario();
-        JumpLinearModel lm = new JumpLinearModel(sc);
         int n = sc.numTicks;
+        boolean[] zeroX = null;
+        boolean[] zeroZ = null;
+        String zeroPath = System.getenv("PKC_STRUCT_ZERO");
+        if (zeroPath != null && !zeroPath.isEmpty()) {
+            JsonObject pat;
+            try (Reader r = new FileReader(zeroPath)) {
+                pat = new JsonParser().parse(r).getAsJsonObject();
+            }
+            zeroX = readBools(pat.getAsJsonArray("zeroX"), n);
+            zeroZ = readBools(pat.getAsJsonArray("zeroZ"), n);
+        }
+        JumpLinearModel lm = zeroX != null ? new JumpLinearModel(sc, zeroX, zeroZ) : new JumpLinearModel(sc);
         int startTick = state.getStartTick();
 
         Objective obj = spec.objective;
@@ -70,6 +84,7 @@ public class StructureDump {
 
         boolean[] trivial = new boolean[1];
         List<JumpLinearModel.Wall> walls = lm.compileWalls(spec.constraints, 0.0, trivial);
+        if (zeroX != null) walls.addAll(lm.velocityWalls(model.inertiaThreshold()));
 
         JsonObject root = new JsonObject();
         root.addProperty("capture", path);
@@ -195,5 +210,12 @@ public class StructureDump {
         JsonArray j = new JsonArray();
         for (double v : a) j.add(v);
         return j;
+    }
+
+    private static boolean[] readBools(JsonArray a, int n) {
+        boolean[] out = new boolean[n];
+        int len = Math.min(n, a.size());
+        for (int i = 0; i < len; i++) out[i] = a.get(i).getAsBoolean();
+        return out;
     }
 }

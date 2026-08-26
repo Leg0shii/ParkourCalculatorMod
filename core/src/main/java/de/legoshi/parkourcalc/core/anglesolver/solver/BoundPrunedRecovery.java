@@ -56,6 +56,12 @@ public final class BoundPrunedRecovery {
     public static double[] solve(ExactJumpModel exact, JumpSpec spec, double feasTol,
                                  AtomicBoolean cancel, long budgetNanos, double stopAtObjective, Config cfg,
                                  ClosestMiss miss) {
+        return solve(exact, spec, feasTol, cancel, budgetNanos, stopAtObjective, cfg, miss, null);
+    }
+
+    public static double[] solve(ExactJumpModel exact, JumpSpec spec, double feasTol,
+                                 AtomicBoolean cancel, long budgetNanos, double stopAtObjective, Config cfg,
+                                 ClosestMiss miss, double[] warmIncumbent) {
         if (spec == null) return null;
         if (JumpLinearModel.hasFacingWall(spec.constraints)
                 && FacingPrefold.analyze(spec.constraints, new JumpLinearModel(spec.asScenario())) == null) {
@@ -89,7 +95,7 @@ public final class BoundPrunedRecovery {
                         Double.isNaN(stopAtObjective) ? "-" : SolverTrace.fmt("%.6f", stopAtObjective),
                         Double.isNaN(targetNorm) ? "-" : SolverTrace.fmt("%.6f", targetNorm));
             }
-            List<Pattern> patterns = enumeratePatterns(exact, searchSpec, sc, cfg.maxPatterns);
+            List<Pattern> patterns = enumeratePatterns(exact, searchSpec, sc, cfg.maxPatterns, searchCancel);
             if (patterns.isEmpty()) {
                 if (DEBUG) System.out.println("  BNB no viable pattern (trivial infeasible)");
                 if (SolverTrace.on()) SolverTrace.log("BNB", "no viable pattern (trivial infeasible)");
@@ -104,6 +110,15 @@ public final class BoundPrunedRecovery {
             double[] incumbentYaws = ClosedFormSolve.optimize(exact, spec, feasTol, searchCancel);
             double incumbentNorm = normIfFeasible(exact, sc, compiled, spec, max, incumbentYaws);
             double[] rankYaws = incumbentYaws;
+            if (warmIncumbent != null) {
+                double[] wy = Angles.wrapAll(warmIncumbent);
+                double wn = normIfFeasible(exact, sc, compiled, spec, max, wy);
+                if (!Double.isNaN(wn) && (Double.isNaN(incumbentNorm) || wn > incumbentNorm)) {
+                    incumbentNorm = wn;
+                    incumbentYaws = wy;
+                    rankYaws = wy;
+                }
+            }
             if (Double.isNaN(incumbentNorm)) {
                 incumbentYaws = null;
                 incumbentNorm = Double.NEGATIVE_INFINITY;
@@ -340,7 +355,7 @@ public final class BoundPrunedRecovery {
     }
 
     private static List<Pattern> enumeratePatterns(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc,
-                                                   int maxPatterns) {
+                                                   int maxPatterns, AtomicBoolean cancel) {
         int n = sc.numTicks;
         List<Pattern> out = new ArrayList<>();
         JumpLinearModel free = new JumpLinearModel(sc);
@@ -352,6 +367,7 @@ public final class BoundPrunedRecovery {
         boolean perAxis = exact.perAxisInertia();
         List<Pattern> cands = new ArrayList<>();
         for (int k = 1; k < n; k++) {
+            if (cancel != null && cancel.get()) break;
             if (perAxis) {
                 addPattern(cands, spec, sc, thr, k, n, true, false, "zx@" + k);
                 addPattern(cands, spec, sc, thr, k, n, false, true, "zz@" + k);

@@ -132,22 +132,7 @@ public class EngineFileScreen {
                         cv > 1.0e-7 ? "  <-VIOL" : "");
             }
             if ("2".equals(evalMode)) {
-                de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler.Compiled comp =
-                        de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler.compile(pre);
                 java.util.concurrent.atomic.AtomicBoolean cancel = new java.util.concurrent.atomic.AtomicBoolean(false);
-
-                long lr0 = System.nanoTime();
-                double[] rep = de.legoshi.parkourcalc.core.anglesolver.solver.LatticeRepair.repair(
-                        model, pre, savedYaws.clone(), 0.0, cancel);
-                if (rep == null) {
-                    System.out.printf("FILE LATTICEREPAIR null (refused/failed) ms=%d%n", (System.nanoTime() - lr0) / 1_000_000L);
-                } else {
-                    double[] rgf = sc.toGameFacings(rep);
-                    double rviol = comp.maxViolation(rgf, model.forward(sc, rgf));
-                    double robj = model.forward(sc, rgf).getPos(pre.objective.tick, pre.objective.axis);
-                    System.out.printf("FILE LATTICEREPAIR viol=%.6e obj=%.9f ms=%d%n",
-                            rviol, robj, (System.nanoTime() - lr0) / 1_000_000L);
-                }
 
                 double maxAbs = 0.0;
                 for (double g : gf) maxAbs = Math.max(maxAbs, Math.abs(g));

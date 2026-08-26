@@ -40,7 +40,6 @@ public class RelaxDiagScreen {
         PrintWriter out = new PrintWriter(sw);
         RelaxationRecovery.DEBUG = true;
         de.legoshi.parkourcalc.core.anglesolver.solver.SlpSolve.DEBUG = true;
-        de.legoshi.parkourcalc.core.anglesolver.solver.LatticeRepair.DEBUG = true;
         java.io.PrintStream orig = System.out;
         try {
             for (String rel : TARGETS) {
@@ -69,7 +68,6 @@ public class RelaxDiagScreen {
             System.setOut(orig);
             RelaxationRecovery.DEBUG = false;
             de.legoshi.parkourcalc.core.anglesolver.solver.SlpSolve.DEBUG = false;
-            de.legoshi.parkourcalc.core.anglesolver.solver.LatticeRepair.DEBUG = false;
         }
         out.flush();
         String report = sw.toString();

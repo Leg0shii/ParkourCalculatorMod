@@ -15,6 +15,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class SphereSnapNode implements NodeRuntime {
 
+    private static final long FAST_BUDGET_NANOS = 2_000_000_000L;
+
     private final int minRemainingSec;
 
     public SphereSnapNode(ParamValues params) {
@@ -28,8 +30,9 @@ public final class SphereSnapNode implements NodeRuntime {
         }
         long remaining = deadlineNanos > 0 ? deadlineNanos - System.nanoTime() : Long.MAX_VALUE;
         if (remaining <= minRemainingSec * 1_000_000_000L) return NodeOutcome.of(Guarantee.REJECTED, in);
+        long snapDeadline = deadlineNanos > 0 ? deadlineNanos : System.nanoTime() + FAST_BUDGET_NANOS;
         JumpPhysicsInputs sc = ctx.scenario;
-        double[] snapGf = SphereDecodeSnap.snap(ctx.exactModel, ctx.spec, in.yaws, ctx.feasTol, nodeToken, deadlineNanos);
+        double[] snapGf = SphereDecodeSnap.snap(ctx.exactModel, ctx.spec, in.yaws, ctx.feasTol, nodeToken, snapDeadline);
         if (snapGf == null) return NodeOutcome.of(Guarantee.REJECTED, in);
         if (!Scoring.adoptStageResult(ctx.model, sc, ctx.spec, ctx.freeBox, snapGf, ctx.feasTol)) {
             return NodeOutcome.of(Guarantee.REJECTED, in);

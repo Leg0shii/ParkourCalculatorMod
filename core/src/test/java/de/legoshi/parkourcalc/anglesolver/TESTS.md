@@ -13,6 +13,16 @@ anglesolver/
   OptimizeVsFastTest.java  gh-398 invariant on captures/gh398-optimize-2jump: Optimize's answer is never
                            worse than Fast's, and the run publishes at least two incumbents so the live
                            panel moves and Cancel keeps the best found so far
+  GraphPathObjectiveGateTest.java  objective gates that solve THROUGH the full Optimize graph (not dualChain),
+                           asserting the ENGINE's shipped objective (getObjectiveValue), which is computed with the
+                           post-solve scenario and so honors yaw-lock. j021-rinav1-01 must reach ResidualRescue's
+                           optimum (engineObj >= 1067.8637, div 0 = not yaw-locked, so the recompute is valid); goes
+                           RED if ResidualRescue is unwired from DualChainNode. loopmm-3jump-lands LANDS per the
+                           engine (engineObj -279.299868 >= -279.3 block edge). NOTE: sphereSnap adopts loopmm as a
+                           fully YAW-LOCKED stage, so the harness recompute (toGameFacings via the non-yaw-locked
+                           lastSpecDebug scenario) re-rounds to -279.300084 (div 2.16e-4); the test bounds that
+                           divergence and flags that landing is yaw-lock-dependent - VERIFY IN-GAME. Also a
+                           determinism guard (j021 solved twice, engineObj+recompute bit-identical)
   HpkDualRecoveryScreen.java  dev miss-screen over captures/hpk/ (dual bound + full chain per capture);
                               skipped unless PKC_SCREENS is set; report at build/reports/hpk-screen.txt
   RelaxDiagScreen.java     dev per-capture recovery diagnostic (stall margins, recorded-path replay);
@@ -23,6 +33,11 @@ anglesolver/
                            hand-pattern probes); skipped unless PKC_SCREENS is set
   HpkEngineBench.java      manual engine bench over captures/hpk/; PKC_BENCH=1 to run, PKC_BENCH_EXH,
                            PKC_BENCH_FILTER, PKC_BENCH_TAG, PKC_BENCH_TIMEOUT_MS tune it
+  CorpusBench.java         manual OLD-vs-NEW full-corpus bench (STEP 9): all captures at FAST/THOROUGH,
+                           external wall-clock + engine shipped objective + independent recompute (yaw-lock
+                           flag). PKC_CORPUS=1 to run; PKC_CORPUS_TIER/RUNS/OPT_SEC/FILTER/TAG/TIMEOUT_MS
+                           tune it. Drop into a git worktree at the OLD commit to bench both trees; compare
+                           with docs/research/solver-rework-2026-08/benchmark/compare.py
   FreeStartSweepBench.java manual free-start sweep over captures/hpk/ (synthesized tick-0 box, base +
                            (+2.3,+1.7)-shifted seed variants, FAST, per-node timing from the run
                            record); -Dpkc.sweep=1 to run, -Dpkc.sweep.{tag,variants,filter,timeoutMs,
@@ -35,6 +50,15 @@ anglesolver/
                            (e.g. solve/gh386-4x2-seedshift) via JUnitCore; prints success/met/ms/obj
   EngineFileScreen.java    drive the live engine on any save file headlessly; PKC_SOLVE_FILE=<path>,
                            optional PKC_SOLVE_EFFORT and PKC_SOLVE_TIMEOUT_MS
+  StructureDump.java       export a capture's compiled linear structure (walls, objective vectors,
+                           per-tick mMag/baseArg/friction, start box, warm replay) as json for the
+                           research/copt harness; PKC_STRUCT_FILE=<capture>, PKC_STRUCT_OUT=<json>,
+                           optional PKC_STRUCT_ZERO=<pattern json> folds an inertia-gate zeroing
+                           pattern (pattern-aware JumpLinearModel + velocityWalls); run --no-daemon
+  NoTurnReplay.java        byte-exact replay of a no-turn decode (keys + yaws + sprint + start) from
+                           research/copt through ExactJumpModel against a capture's compiled spec;
+                           PKC_NOTURN_CAPTURE, PKC_NOTURN_FILE, PKC_NOTURN_OUT; reports objective,
+                           per-constraint violations, positions and carry velocities (gate patterns)
   SolveNodeStatsScreen.java  per-node timing dump over problems/solve at expect efforts;
                            -Dpkc.nodestats=1 to run, -Dpkc.nodestats.{tag,timeoutMs} tune it;
                            TSV at build/reports/nodestats-<tag>.tsv (RUN + NODE rows); run via

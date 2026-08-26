@@ -126,7 +126,7 @@ public final class LongRunSolver {
     }
 
     public static FreeRun solveFree(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
-                                    LongRunConfig cfg, StartBox freeBox, WindowCache windows) {
+                                    LongRunConfig cfg, StartBox freeBox, WindowCache windows, long deadlineNanos) {
         if (freeBox == null || !freeBox.startFree()) return null;
         JumpPhysicsInputs sc = spec.asScenario();
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
@@ -138,10 +138,11 @@ public final class LongRunSolver {
         Map<Integer, Object> retryCache = new HashMap<>();
         for (int commit : cfg.commitLadder) {
             if (cancel != null && cancel.get()) return null;
+            if (deadlineNanos > 0L && System.nanoTime() >= deadlineNanos) return null;
             chosen[0] = Double.NaN;
             chosen[1] = Double.NaN;
             double[] gf = runHorizon(exact, sc, spec, bounds, jumps, commit, cfg.windowLadder, cancel,
-                    freeBox, chosen, retryCache, windows);
+                    freeBox, chosen, retryCache, windows, deadlineNanos);
             if (gf == null || Double.isNaN(chosen[0])) continue;
             JumpPhysicsInputs at = FreeStartSolve.copyWithStart(sc, chosen[0], chosen[1]);
             double[] replay = at.toGameFacings(Angles.wrapAll(gf));
@@ -158,6 +159,11 @@ public final class LongRunSolver {
 
     public static double[] solve(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
                                  LongRunConfig cfg, WindowCache windows) {
+        return solve(exact, spec, feasTol, cancel, cfg, windows, 0L);
+    }
+
+    public static double[] solve(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
+                                 LongRunConfig cfg, WindowCache windows, long deadlineNanos) {
         JumpPhysicsInputs sc = spec.asScenario();
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
         int[] bounds = jumpBoundaries(sc);
@@ -167,8 +173,9 @@ public final class LongRunSolver {
 
         for (int commit : cfg.commitLadder) {
             if (cancel != null && cancel.get()) return null;
+            if (deadlineNanos > 0L && System.nanoTime() >= deadlineNanos) return null;
             double[] gf = runHorizon(exact, sc, spec, bounds, jumps, commit, cfg.windowLadder, cancel, null, null, null,
-                    windows);
+                    windows, deadlineNanos);
             if (gf == null) continue;
             // Certify the chain Apply will actually realize, not the window-chained facings themselves:
             // the plan stores the wrapped facings and the game re-accumulates float deltas from them,
@@ -191,7 +198,7 @@ public final class LongRunSolver {
     private static double[] runHorizon(ExactJumpModel exact, JumpPhysicsInputs sc, JumpSpec spec, int[] bounds,
                                        int jumps, int commitJumps, int[] windowLadder, AtomicBoolean cancel,
                                        StartBox freeBox, double[] chosenStart, Map<Integer, Object> retryCache,
-                                       WindowCache windows) {
+                                       WindowCache windows, long deadlineNanos) {
         int n = sc.numTicks;
         double[] gf = new double[n];
         Vec3dCore seedPos = sc.startPos, seedVel = sc.initialVelocity;
@@ -200,6 +207,7 @@ public final class LongRunSolver {
         int i = 0;
         while (i < jumps) {
             if (cancel != null && cancel.get()) return null;
+            if (deadlineNanos > 0L && System.nanoTime() >= deadlineNanos) return null;
             boolean advanced = false;
             // Try the largest window that solves; shrink on failure for robustness near the run's end / hard spots.
             int prevWe = -1;
@@ -225,7 +233,7 @@ public final class LongRunSolver {
                     }
                 } else {
                     long winT0 = SolverTrace.on() ? System.nanoTime() : 0L;
-                    yaws = solveWindow(exact, win, cons, obj, last, cancel);
+                    yaws = solveWindow(exact, win, cons, obj, last, cancel, deadlineNanos);
                     if (cancel == null || !cancel.get()) {
                         windows.map.put(winKey, yaws == null ? WINDOW_MISS : yaws.clone());
                     }
@@ -298,11 +306,13 @@ public final class LongRunSolver {
     }
 
     private static double[] solveWindow(ExactJumpModel exact, JumpPhysicsInputs win, List<JumpConstraint> cons,
-                                        Objective first, boolean last, AtomicBoolean cancel) {
+                                        Objective first, boolean last, AtomicBoolean cancel, long deadlineNanos) {
         if (last) {
             AtomicBoolean token = cancel != null ? cancel : new AtomicBoolean(false);
-            return RecoveryLadder.solve(exact, new JumpSpec(win, cons, first), win, token, new String[1], 0L,
-                    new SlpSolve.Config(), new ClosedFormSolve.Config(), new RelaxationRecovery.Config(), null);
+            double[] primary = RecoveryLadder.solve(exact, new JumpSpec(win, cons, first), win, token, new String[1],
+                    deadlineNanos, new SlpSolve.Config(), new ClosedFormSolve.Config(), new RelaxationRecovery.Config(),
+                    null);
+            return hugBestObjective(exact, win, cons, first, primary, token, deadlineNanos);
         }
         double[] y = ClosedFormSolve.optimizeRobust(exact, new JumpSpec(win, cons, first), 0.0, cancel);
         if (y != null) return y;
@@ -313,6 +323,47 @@ public final class LongRunSolver {
         }
         if (cancel != null && cancel.get()) return null;
         return SlpSolve.optimizeCentered(exact, new JumpSpec(win, cons, first), 0.0, cancel);
+    }
+
+    private static double[] hugBestObjective(ExactJumpModel exact, JumpPhysicsInputs win, List<JumpConstraint> cons,
+                                             Objective first, double[] primary, AtomicBoolean cancel, long deadlineNanos) {
+        JumpSpec spec = new JumpSpec(win, cons, first);
+        JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
+        boolean max = first.sense == Objective.Sense.MAX;
+        double[] best = primary;
+        double bestObj = feasibleObjective(exact, win, compiled, first, primary);
+        for (Objective alt : alternates(first, win.numTicks)) {
+            if (cancel != null && cancel.get()) break;
+            if (deadlineNanos > 0L && System.nanoTime() >= deadlineNanos) break;
+            double[] seed = ClosedFormSolve.optimize(exact, new JumpSpec(win, cons, alt), 0.0, cancel);
+            if (seed == null) continue;
+            double[] hugged = hugObjective(exact, win, cons, first, seed, cancel);
+            double obj = feasibleObjective(exact, win, compiled, first, hugged);
+            if (Double.isNaN(obj)) continue;
+            if (Double.isNaN(bestObj) || (max ? obj > bestObj : obj < bestObj)) {
+                best = hugged;
+                bestObj = obj;
+            }
+        }
+        return best;
+    }
+
+    private static double[] hugObjective(ExactJumpModel exact, JumpPhysicsInputs win, List<JumpConstraint> cons,
+                                         Objective first, double[] feasible, AtomicBoolean cancel) {
+        JumpSpec spec = new JumpSpec(win, cons, first);
+        double[] hugged = SlpSolve.optimize(exact, spec, 0.0, cancel, feasible);
+        double[] base = hugged != null ? hugged : feasible;
+        double[] laddered = LevelSetAscent.improve(exact, spec, base, 0.0, cancel);
+        return laddered != null ? laddered : base;
+    }
+
+    private static double feasibleObjective(ExactJumpModel exact, JumpPhysicsInputs win,
+                                            JumpConstraintCompiler.Compiled compiled, Objective first, double[] yaws) {
+        if (yaws == null) return Double.NaN;
+        double[] gf = win.toGameFacings(yaws);
+        ForwardPath path = exact.forward(win, gf);
+        if (compiled.maxViolation(gf, path) > 0.0) return Double.NaN;
+        return path.getPos(first.tick, first.axis);
     }
 
     private static List<Objective> alternates(Objective first, int len) {
