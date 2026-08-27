@@ -60,3 +60,6 @@ research/copt/data/
 
 research/
 docs/research/solver-rework-2026-08/benchmark/*.tsv
+docs/research/global-solver-2026-08/
+docs/research/solver-rework-2026-08/
+docs/research/defect-correction-measured-2026-08-23.md
