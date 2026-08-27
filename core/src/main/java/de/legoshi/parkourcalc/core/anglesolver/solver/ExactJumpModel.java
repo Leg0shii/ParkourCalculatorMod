@@ -97,6 +97,10 @@ public final class ExactJumpModel implements ForwardModel {
         return modern;
     }
 
+    public boolean sine262() {
+        return sine262;
+    }
+
     /** Inertia rule for a loader's MC version. 1.8.x: per-axis 0.005, legacy float chain.
      *  1.12.x: per-axis 0.003, legacy float chain. 1.21.3: per-axis 0.003 on the modern double
      *  pipeline (1.21.5 is where the player switched to the combined-XZ gate). 1.21.5+ players

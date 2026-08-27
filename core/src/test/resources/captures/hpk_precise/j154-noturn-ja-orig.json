@@ -1,0 +1,1281 @@
+{
+ "version": 1,
+ "createdAt": "2026-08-26T14:04:37Z",
+ "modVersion": "1.9.0+build.318.7556ace.dirty",
+ "mcVersion": "1.8.9",
+ "world": {
+  "dimension": "Overworld",
+  "worldName": "Parkour World 1.8.9"
+ },
+ "start": {
+  "pos": [
+   -1599.7895256639963,
+   88.0,
+   4930.612167424873
+  ],
+  "vel": [
+   0.0,
+   -0.0784000015258789,
+   0.0
+  ],
+  "yaw": -76.615,
+  "pitch": 40.0
+ },
+ "rows": [
+  {
+   "keys": [
+    "A"
+   ],
+   "yaw": 0.006610000040382147,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "S",
+    "D"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "S",
+    "D",
+    "JUMP"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "S",
+    "D"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "S",
+    "D"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "S",
+    "D"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "S",
+    "D"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "S",
+    "D"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "S",
+    "D"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "S",
+    "D"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "S",
+    "D"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "S",
+    "D"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "S",
+    "D"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "S",
+    "D"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "S"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "W",
+    "A",
+    "SPRINT",
+    "JUMP"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "A"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "W",
+    "A",
+    "SPRINT"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "W",
+    "A",
+    "SPRINT"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "W",
+    "A",
+    "SPRINT"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "W",
+    "A",
+    "SPRINT"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "W",
+    "A",
+    "SPRINT"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "W",
+    "A",
+    "SPRINT"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "W",
+    "A",
+    "SPRINT"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "W",
+    "A",
+    "SPRINT"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "W",
+    "A",
+    "SPRINT"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "W",
+    "A",
+    "SPRINT"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "W",
+    "A",
+    "SPRINT"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "W",
+    "SPRINT",
+    "JUMP"
+   ],
+   "yaw": -103.00003051757812,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "W",
+    "A",
+    "SPRINT"
+   ],
+   "yaw": 2.8901450634002686,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "W",
+    "A",
+    "SPRINT"
+   ],
+   "yaw": -19.489564895629883,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "W",
+    "A",
+    "SPRINT"
+   ],
+   "yaw": -12.290513038635254,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "W",
+    "A",
+    "SPRINT"
+   ],
+   "yaw": -7.757768154144287,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "W",
+    "A",
+    "SPRINT"
+   ],
+   "yaw": -5.146103382110596,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "W",
+    "A",
+    "SPRINT"
+   ],
+   "yaw": -3.597773790359497,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "W",
+    "A",
+    "SPRINT"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "W",
+    "A",
+    "SPRINT"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "W",
+    "A",
+    "SPRINT"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [
+    "W",
+    "A",
+    "SPRINT"
+   ],
+   "yaw": 0.0,
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [],
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [],
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  },
+  {
+   "keys": [],
+   "yawLocked": false,
+   "pitchLocked": false,
+   "speedAmplifier": 0,
+   "jumpBoostAmplifier": 0,
+   "hotbarSlot": 0
+  }
+ ],
+ "angleSolver": {
+  "startTick": 0,
+  "landingTick": 39,
+  "axis": "X",
+  "goal": "MIN",
+  "effort": "FAST",
+  "stopOnFeasible": false,
+  "legalMode": false,
+  "optimizeSeconds": 10,
+  "customBudget": {
+   "timeBudgetSeconds": 0,
+   "window": 10,
+   "commit": 3,
+   "useWindowSolver": true,
+   "ilsExhaustive": false
+  },
+  "defaultInputs": "KEEP",
+  "defaultSprint": "DERIVE",
+  "defaultSlipperiness": "AIR",
+  "defaultPotions": [],
+  "ticks": [
+   {
+    "tick": 21,
+    "constraints": [
+     {
+      "range": false,
+      "field": "DF",
+      "op": "EQ",
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     }
+    ]
+   },
+   {
+    "tick": 29,
+    "constraints": [
+     {
+      "range": false,
+      "field": "Z",
+      "op": "GE",
+      "value": 4930.050000011921,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     }
+    ]
+   },
+   {
+    "tick": 30,
+    "constraints": [
+     {
+      "range": false,
+      "field": "X",
+      "op": "GE",
+      "value": -1599.199999988079,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     }
+    ]
+   },
+   {
+    "tick": 39,
+    "constraints": [
+     {
+      "range": false,
+      "field": "X",
+      "op": "LE",
+      "value": -1599.699999988079,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     }
+    ]
+   },
+   {
+    "tick": 38,
+    "constraints": [
+     {
+      "range": false,
+      "field": "Z",
+      "op": "LE",
+      "value": 4928.699999988079,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     }
+    ]
+   },
+   {
+    "tick": 34,
+    "constraints": [
+     {
+      "range": false,
+      "field": "Z",
+      "op": "LE",
+      "value": 4928.949999988079,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     },
+     {
+      "range": false,
+      "field": "X",
+      "op": "GE",
+      "value": -1599.199999988079,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     }
+    ]
+   },
+   {
+    "tick": 28,
+    "constraints": [],
+    "override": {
+     "slipperiness": "DEFAULT",
+     "added": [],
+     "removed": []
+    }
+   },
+   {
+    "tick": 0,
+    "constraints": [
+     {
+      "range": true,
+      "field": "X",
+      "op": "IN",
+      "value": 0.0,
+      "lo": -1601.3000000119207,
+      "hi": -1599.6999999880793,
+      "loInclusive": true,
+      "hiInclusive": true,
+      "disabled": false,
+      "vsDz": false
+     },
+     {
+      "range": true,
+      "field": "Z",
+      "op": "IN",
+      "value": 0.0,
+      "lo": 4930.300000011921,
+      "hi": 4931.30000001192,
+      "loInclusive": true,
+      "hiInclusive": true,
+      "disabled": false,
+      "vsDz": false
+     }
+    ],
+    "override": {
+     "slipperiness": "DEFAULT",
+     "added": [],
+     "removed": []
+    }
+   },
+   {
+    "tick": 1,
+    "constraints": [
+     {
+      "range": false,
+      "field": "DF",
+      "op": "EQ",
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     },
+     {
+      "range": true,
+      "field": "X",
+      "op": "IN",
+      "value": 0.0,
+      "lo": -1601.300000011921,
+      "hi": -1599.699999988079,
+      "loInclusive": true,
+      "hiInclusive": true,
+      "disabled": false,
+      "vsDz": false
+     },
+     {
+      "range": true,
+      "field": "Z",
+      "op": "IN",
+      "value": 0.0,
+      "lo": 4930.300000011921,
+      "hi": 4931.300000011921,
+      "loInclusive": true,
+      "hiInclusive": true,
+      "disabled": false,
+      "vsDz": false
+     }
+    ],
+    "override": {
+     "slipperiness": "DEFAULT",
+     "added": [],
+     "removed": []
+    }
+   },
+   {
+    "tick": 2,
+    "constraints": [
+     {
+      "range": false,
+      "field": "DF",
+      "op": "EQ",
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     }
+    ],
+    "override": {
+     "slipperiness": "DEFAULT",
+     "added": [],
+     "removed": []
+    }
+   },
+   {
+    "tick": 3,
+    "constraints": [
+     {
+      "range": false,
+      "field": "DF",
+      "op": "EQ",
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     }
+    ]
+   },
+   {
+    "tick": 4,
+    "constraints": [
+     {
+      "range": false,
+      "field": "DF",
+      "op": "EQ",
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     }
+    ]
+   },
+   {
+    "tick": 5,
+    "constraints": [
+     {
+      "range": false,
+      "field": "DF",
+      "op": "EQ",
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     }
+    ]
+   },
+   {
+    "tick": 6,
+    "constraints": [
+     {
+      "range": false,
+      "field": "DF",
+      "op": "EQ",
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     }
+    ]
+   },
+   {
+    "tick": 7,
+    "constraints": [
+     {
+      "range": false,
+      "field": "DF",
+      "op": "EQ",
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     }
+    ]
+   },
+   {
+    "tick": 8,
+    "constraints": [
+     {
+      "range": false,
+      "field": "DF",
+      "op": "EQ",
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     }
+    ]
+   },
+   {
+    "tick": 9,
+    "constraints": [
+     {
+      "range": false,
+      "field": "DF",
+      "op": "EQ",
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     }
+    ]
+   },
+   {
+    "tick": 10,
+    "constraints": [
+     {
+      "range": false,
+      "field": "DF",
+      "op": "EQ",
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     }
+    ]
+   },
+   {
+    "tick": 11,
+    "constraints": [
+     {
+      "range": false,
+      "field": "DF",
+      "op": "EQ",
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     }
+    ]
+   },
+   {
+    "tick": 12,
+    "constraints": [
+     {
+      "range": false,
+      "field": "DF",
+      "op": "EQ",
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     }
+    ]
+   },
+   {
+    "tick": 13,
+    "constraints": [
+     {
+      "range": false,
+      "field": "DF",
+      "op": "EQ",
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     }
+    ]
+   },
+   {
+    "tick": 14,
+    "constraints": [
+     {
+      "range": false,
+      "field": "DF",
+      "op": "EQ",
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     },
+     {
+      "range": true,
+      "field": "X",
+      "op": "IN",
+      "value": 0.0,
+      "lo": -1601.300000011921,
+      "hi": -1599.699999988079,
+      "loInclusive": true,
+      "hiInclusive": true,
+      "disabled": false,
+      "vsDz": false
+     },
+     {
+      "range": true,
+      "field": "Z",
+      "op": "IN",
+      "value": 0.0,
+      "lo": 4930.300000011921,
+      "hi": 4931.300000011921,
+      "loInclusive": true,
+      "hiInclusive": true,
+      "disabled": false,
+      "vsDz": false
+     }
+    ],
+    "override": {
+     "slipperiness": "DEFAULT",
+     "added": [],
+     "removed": []
+    }
+   },
+   {
+    "tick": 15,
+    "constraints": [
+     {
+      "range": false,
+      "field": "DF",
+      "op": "EQ",
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     }
+    ],
+    "override": {
+     "slipperiness": "DEFAULT",
+     "added": [],
+     "removed": []
+    }
+   },
+   {
+    "tick": 16,
+    "constraints": [
+     {
+      "range": false,
+      "field": "DF",
+      "op": "EQ",
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     }
+    ]
+   },
+   {
+    "tick": 17,
+    "constraints": [
+     {
+      "range": false,
+      "field": "DF",
+      "op": "EQ",
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     }
+    ]
+   },
+   {
+    "tick": 18,
+    "constraints": [
+     {
+      "range": false,
+      "field": "DF",
+      "op": "EQ",
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     }
+    ]
+   },
+   {
+    "tick": 19,
+    "constraints": [
+     {
+      "range": false,
+      "field": "DF",
+      "op": "EQ",
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     }
+    ]
+   },
+   {
+    "tick": 20,
+    "constraints": [
+     {
+      "range": false,
+      "field": "DF",
+      "op": "EQ",
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     }
+    ]
+   },
+   {
+    "tick": 22,
+    "constraints": [
+     {
+      "range": false,
+      "field": "DF",
+      "op": "EQ",
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     }
+    ]
+   },
+   {
+    "tick": 23,
+    "constraints": [
+     {
+      "range": false,
+      "field": "DF",
+      "op": "EQ",
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     }
+    ]
+   },
+   {
+    "tick": 24,
+    "constraints": [
+     {
+      "range": false,
+      "field": "DF",
+      "op": "EQ",
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     }
+    ]
+   },
+   {
+    "tick": 25,
+    "constraints": [
+     {
+      "range": false,
+      "field": "DF",
+      "op": "EQ",
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     }
+    ]
+   },
+   {
+    "tick": 26,
+    "constraints": [
+     {
+      "range": false,
+      "field": "DF",
+      "op": "EQ",
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     }
+    ]
+   },
+   {
+    "tick": 27,
+    "constraints": [
+     {
+      "range": false,
+      "field": "DF",
+      "op": "EQ",
+      "value": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "loInclusive": false,
+      "hiInclusive": false,
+      "disabled": false,
+      "vsDz": false
+     },
+     {
+      "range": true,
+      "field": "X",
+      "op": "IN",
+      "value": 0.0,
+      "lo": -1601.300000011921,
+      "hi": -1599.699999988079,
+      "loInclusive": true,
+      "hiInclusive": true,
+      "disabled": false,
+      "vsDz": false
+     },
+     {
+      "range": true,
+      "field": "Z",
+      "op": "IN",
+      "value": 0.0,
+      "lo": 4930.300000011921,
+      "hi": 4931.300000011921,
+      "loInclusive": true,
+      "hiInclusive": true,
+      "disabled": false,
+      "vsDz": false
+     }
+    ],
+    "override": {
+     "slipperiness": "DEFAULT",
+     "added": [],
+     "removed": []
+    }
+   }
+  ],
+  "selectedBlocks": [],
+  "seed": {
+   "pos": [
+    -1599.7762971403713,
+    88.0,
+    4930.833252897055
+   ],
+   "vel": [
+    0.0,
+    -0.0784000015258789,
+    0.0
+   ],
+   "yaw": -76.615
+  },
+  "runTicksEnabled": false,
+  "runTicksMax": 0,
+  "runTicksTimeoutMs": 200,
+  "runTicksAdaptiveTimeout": false,
+  "runTicksAddPerJumpMs": 50,
+  "runTicksSafetyMult": 1.1,
+  "runTicksSafetyMarginMs": 80,
+  "runTicksMinimize": false
+ }
+}

@@ -43,8 +43,13 @@ public class BuiltinGraphsTest {
         assertEquals(1000, g.node("nearBnb").params.getInt("minBudgetMs"));
         assertNotNull(g.node("coldBnb"));
         assertEquals("FIRST_FEASIBLE", g.node("coldBnb").params.getString("mode"));
-        assertEquals("coldBnb", g.edgeFor("rHave", Guarantee.FALSE).toNode);
+        assertEquals("foldRescue", g.edgeFor("rHave", Guarantee.FALSE).toNode);
+        assertEquals("coldBnb", g.edgeFor("foldRescue", Guarantee.NONE).toNode);
+        assertEquals("cap2", g.edgeFor("foldRescue", Guarantee.FOUND).toNode);
         assertEquals("cap2", g.edgeFor("rColdHave", Guarantee.TRUE).toNode);
+        assertEquals("ladderArm", g.edgeFor("rColdHave", Guarantee.FALSE).toNode);
+        assertNotNull(g.node("foldImprove"));
+        assertEquals("foldImprove", g.edgeFor("cap2", Guarantee.FALSE).toNode);
     }
 
     @Test

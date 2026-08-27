@@ -321,6 +321,12 @@ public final class JumpLinearModel {
         return new Wall(axis, coef, bPrime, false, "keep" + ax + "@" + tick + (positive ? "+" : "-"), 0.0);
     }
 
+    public double velocityCoef(int axis, int s, int t) {
+        if (s >= t) return 0.0;
+        if (zNext[axis][s] < t) return 0.0;
+        return fPre[t] / fPre[s];
+    }
+
     public void zeroingPattern(double[] yawsAbsWrapped, double threshold, boolean perAxis,
                                boolean[] outZeroX, boolean[] outZeroZ) {
         double vx = sc.initialVelocity.x;

@@ -223,7 +223,9 @@ public class DfChainKernelProbe {
         for (double th = -180.0; th < 180.0; th += stepDeg) {
             FacingPrefold pinned = c.scan.at(th);
             FacingPrefold.Reduced red = pinned.reduce(x.cx, x.cz, x.lin.mMagAll(), x.walls);
-            DiskSocpKernel.Result disk = DiskSocpKernel.solve(red.n, red.cx, red.cz, red.mMag, red.walls, x.freeP0);
+            DiskSocpKernel.Outcome oc = DiskSocpKernel.solveChords(red.n, red.cx, red.cz, red.mMag,
+                    red.walls, x.freeP0, null, null);
+            DiskSocpKernel.Result disk = oc.result;
             if (disk == null || !disk.converged) continue;
             c.tried++;
             double[] yaws = pinned.expand(x.lin, x.spec.objective, disk.gx, disk.gz);

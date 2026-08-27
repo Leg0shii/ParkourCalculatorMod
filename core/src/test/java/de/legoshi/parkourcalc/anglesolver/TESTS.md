@@ -136,6 +136,16 @@ anglesolver/
                            (ExactJumpModel.zeroSubThresholdVelocity at buildPhys), without which
                            every relaxation carries the phantom carry and no k>=1 pattern can
                            represent a tick-0 zeroing, FAST 20 s)
+                           (solve/thousand-1-dup2: #422 M1 acceptance; free-start multi-jump
+                           MAX X, THOROUGH 10 s, byte-exact at objective >= 6523.3076; the
+                           6523.30772 expect-class value is the M2a certification target)
+                           (solve/j1150-noturn-inner: #422 M1 acceptance on the PRECISE
+                           inputs_gone spec with the p2 no-turn schedule, THOROUGH 10 s,
+                           byte-exact at objective >= -2805.2990460856336, the p2 witness;
+                           FAST is deliberately not gated here, 3.3e-4 short, an M2a item)
+                           (solve/j154-noturn-ja-inner: #422 M1 acceptance on the corrected
+                           t34-plate spec, FAST, byte-exact at objective <= -1599.7001161289918,
+                           the in-game-verified F3 witness)
   LevelSetAscentTest.java  level-set objective ascent (gh-290): on keep-out-wall captures where the
                            chosen Solve For degenerates the dual recovery (j003 X/MIN, j012 Z/MAX,
                            j008-bfneo Z/MIN, taser-80t X/MIN), the goal-wall bisection strictly beats
@@ -143,6 +153,38 @@ anglesolver/
                            bound (j003 X/MIN: -27 hug -> -31.3 optimum). The dF gate (facing wall =>
                            skip + info notice) is unit-tested fast in
                            core/anglesolver/DfDirectionGateTest
+  FoldReplayDriverTest.java  #422 M1 fold driver: thousand-1-dup2 warm replay bit-exact
+                           (6523.307720901059, viol 0.0), cold driver byte-exact >= 6523.30 and
+                           bit-identical across 5 in-process runs, loopmm fold lands byte-exact,
+                           j003 chord-narrowed FAST/objective-rounds gates
+  WallHomotopyLadderTest.java  #422 M1 wall-homotopy ladder (rungs 0.05/0.01/0.002/0, warm-chained,
+                           true-spec scoring): hpk_precise witness replays bit-exact, j154 cold
+                           ladder lands byte-exact at or beyond the in-game F3 witness, collision
+                           wall classification, ladder determinism
+  BucketWalkTest.java      #422 M1 era-aware bucket machinery: gate-banded integer walk + objective
+                           walk + window-scan leaf + free-start ulp nudge; perturbed-witness anchors
+                           land byte-exact on both hpk_precise fixtures; polishFromAnchor
+                           bit-identical; center snapping sub-half-bucket across eras
+  DiskSocpKernelChordTest.java  fast-suite kernel coverage: two-axis ChordRow solves, the hardened
+                           IPM jitter ladder, and the weak-duality infeasibility certificate
+                           (FAIL_UNBOUNDED) that replaced the old fake-convergence
+  FoldDriverEngineTest.java  #422 M1 engine-level gates through engine.solve() (driver wired as
+                           primary recovery): thousand THOROUGH-10s, j003 FAST + THOROUGH-10s
+                           in-deadline, j1150-noturn-inner THOROUGH beats the p2 witness,
+                           j154-noturn-ja-inner FAST beats the F3 witness, FAST re-solve
+                           determinism
+  FoldDriverProbe.java     run the fold driver headlessly on any capture; PKC_FOLD_CAPTURE=<path or
+                           pool name>, optional PKC_FOLD_OUT/PKC_FOLD_DEBUG/PKC_FOLD_SEED/
+                           PKC_FOLD_REF (box-reference multi-start override); prints per-round
+                           bound/byteObj/maxViol/pattern events; run via direct java -cp
+  HomotopyProbe.java       ladder/margins/SLP/walk measurement probe; PKC_HOM_CAPTURE plus
+                           PKC_HOM_WARM (witness replay), PKC_HOM_MARGINS, PKC_HOM_POLISH +
+                           PKC_HOM_PERTURB (perturbed-anchor polish), PKC_HOM_POLISH2 (full
+                           ladder polish), PKC_HOM_SEEDPOLISH (engine FAST incumbent ->
+                           polishFromAnchor), PKC_HOM_ENGINE/DRIVER/LADDER/WALLS/DEBUG; run via
+                           direct java -cp; run :core:processTestResources after fixture edits
+  KernelDiagProbe.java     DiskSocpKernel failure diagnosis (base/folded/chord solves, jitter and
+                           certificate paths); env-gated, run via direct java -cp
   harness/                 shared plumbing; no test lives here
 resources/
   problems/<check>/        one folder per check; holds captures or .expect.json sidecars
@@ -172,6 +214,21 @@ resources/
 | `ProblemFixture` | load a capture + drive the engine (solve / directed); times it |
 | `Expect` | parse `<name>.expect.json`; supply defaults |
 | `ProblemCatalog` | discover check folders and the captures in them |
+
+## hpk_precise fixtures (#422 M1)
+
+PRECISE-spec knife-edge fixtures under `resources/captures/hpk_precise/`, each a triple
+`{orig,inner,witness}`; the `inner` variants are wired to `solve/` acceptance expects:
+
+- `j1150-noturn-*`: the PRECISE j1150 inputs_gone spec with the solved pure no-turn schedule
+  (#422 M0/M1). `inner` is the fixed-schedule inner problem (startTick 0, DF constraints
+  stripped); `witness` is the p2 decode that replays byte-exact at X@49 = -2805.2990460856336,
+  viol 0.0; `orig` is the untouched save. Wired via solve/j1150-noturn-inner.expect.json.
+- `j154-noturn-ja-*`: the corrected j154 spec with the X GE -1599.2 plate at t34 (user ruling
+  2026-08-27; the deeper D2 result is invalid against it). `inner` is the fixed-schedule inner
+  problem (DF stripped, debug synthesized from the solve artifacts); `witness` is the F3 decode,
+  the in-game-verified X@39 = -1599.7001161289918 at viol 0.0. Wired via
+  solve/j154-noturn-ja-inner.expect.json.
 
 ## Library-only captures (no check yet)
 

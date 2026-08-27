@@ -1,0 +1,1 @@
+{ "capture": "hpk_precise/j1150-noturn-inner", "shouldSolve": true, "effort": "THOROUGH", "optimizeSeconds": 10, "refObjective": -2805.2990460856336, "maxObjectiveGap": 0.0 }

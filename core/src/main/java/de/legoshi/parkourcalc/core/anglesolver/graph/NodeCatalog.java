@@ -3,7 +3,9 @@ package de.legoshi.parkourcalc.core.anglesolver.graph;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.BnbNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.CapCertifyNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.DualChainNode;
+import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.FoldDriverNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.FreeStartImproveNode;
+import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.HomotopyLadderNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.IlsPolishNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.LabelNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.MarkSettledNode;
@@ -183,6 +185,31 @@ public final class NodeCatalog {
                 .budgetParam("budgetSec")
                 .fallback(Guarantee.UNCHANGED)
                 .factory(BnbNode::new)
+                .build());
+        register(NodeType.builder("foldDriver", "Fold driver", NodeCategory.RECOVERY)
+                .requires(InputRequirement.ANY)
+                .branch(Branch.feasible(Guarantee.FOUND))
+                .branch(Branch.feasible(Guarantee.IMPROVED))
+                .branch(Branch.preserves(Guarantee.UNCHANGED))
+                .branch(Branch.preserves(Guarantee.NONE))
+                .param(ParamSpec.choice("mode", "Mode", new String[] {"RESCUE", "IMPROVE"}, "RESCUE"))
+                .param(ParamSpec.integer("budgetSec", "Budget (s)", 0, 600, 0))
+                .param(ParamSpec.integer("objectiveRounds", "Objective rounds", 0, 64, 0))
+                .param(ParamSpec.integer("multiStart", "Multi-start count", 0, 5, 0))
+                .param(ParamSpec.text("labelSuffix", "Chain suffix", ""))
+                .budgetParam("budgetSec")
+                .fallback(Guarantee.NONE)
+                .factory(FoldDriverNode::new)
+                .build());
+        register(NodeType.builder("homotopyLadder", "Homotopy ladder", NodeCategory.RECOVERY)
+                .requires(InputRequirement.ANY)
+                .branch(Branch.feasible(Guarantee.FOUND))
+                .branch(Branch.preserves(Guarantee.NONE))
+                .param(ParamSpec.integer("budgetSec", "Budget (s)", 0, 600, 0))
+                .param(ParamSpec.integer("cap", "Tick cap", 0, 100000, BuiltinGraphs.IMPROVE_TICK_CAP))
+                .budgetParam("budgetSec")
+                .fallback(Guarantee.NONE)
+                .factory(HomotopyLadderNode::new)
                 .build());
         register(NodeType.builder("seamSweep", "Seam sweep", NodeCategory.RECOVERY)
                 .requires(InputRequirement.FEASIBLE)

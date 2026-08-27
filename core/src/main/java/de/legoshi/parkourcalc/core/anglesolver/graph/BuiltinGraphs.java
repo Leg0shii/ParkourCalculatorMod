@@ -110,7 +110,14 @@ public final class BuiltinGraphs {
                     .set("rescueBnb", "labelSuffix", " (first feasible)");
         }
         router(g, "rHave", "HAS_CANDIDATE");
+        g.add("foldRescue", "foldDriver").set("foldRescue", "mode", "RESCUE");
+        g.add("ladderArm", "homotopyLadder");
         if (exh) {
+            g.add("foldImprove", "foldDriver")
+                    .set("foldImprove", "mode", "IMPROVE")
+                    .set("foldImprove", "objectiveRounds", 16)
+                    .set("foldImprove", "multiStart", 2)
+                    .set("foldImprove", "budgetSec", Math.max(1, Math.min(60, stageSec / 3)));
             g.add("coldBnb", "bnb")
                     .set("coldBnb", "mode", "FIRST_FEASIBLE")
                     .set("coldBnb", "budgetSec", bnbSec)
@@ -223,18 +230,31 @@ public final class BuiltinGraphs {
             g.edge("rRescueTicks", Guarantee.TRUE, "rRescueFeas");
             g.edge("rRescueTicks", Guarantee.FALSE, "rHave");
             g.edge("rRescueFeas", Guarantee.TRUE, "rHave");
-            g.edge("rRescueFeas", Guarantee.FALSE, "rescueBnb");
+            g.edge("rRescueFeas", Guarantee.FALSE, "foldRescue");
             bnbOut(g, "rescueBnb", "rHave");
         }
+        g.edge("foldRescue", Guarantee.FOUND, "cap2");
+        g.edge("foldRescue", Guarantee.IMPROVED, "cap2");
+        String foldMissTo = sof ? "rescueBnb" : (exh ? "coldBnb" : "ladderArm");
+        g.edge("foldRescue", Guarantee.UNCHANGED, foldMissTo);
+        g.edge("foldRescue", Guarantee.NONE, foldMissTo);
+        g.edge("ladderArm", Guarantee.FOUND, "cap2");
+        g.edge("ladderArm", Guarantee.NONE, "emit");
         g.edge("rHave", Guarantee.TRUE, "cap2");
-        g.edge("rHave", Guarantee.FALSE, exh ? "coldBnb" : "emit");
+        g.edge("rHave", Guarantee.FALSE, sof ? "ladderArm" : "foldRescue");
         if (exh) {
             bnbOut(g, "coldBnb", "rColdHave");
             g.edge("rColdHave", Guarantee.TRUE, "cap2");
-            g.edge("rColdHave", Guarantee.FALSE, "emit");
+            g.edge("rColdHave", Guarantee.FALSE, "ladderArm");
         }
         g.edge("cap2", Guarantee.AT_CAP, afterCap);
-        g.edge("cap2", Guarantee.FALSE, afterCap);
+        g.edge("cap2", Guarantee.FALSE, exh ? "foldImprove" : afterCap);
+        if (exh) {
+            g.edge("foldImprove", Guarantee.FOUND, afterCap);
+            g.edge("foldImprove", Guarantee.IMPROVED, afterCap);
+            g.edge("foldImprove", Guarantee.UNCHANGED, afterCap);
+            g.edge("foldImprove", Guarantee.NONE, afterCap);
+        }
         if (exh) {
             g.edge("rExhTicks", Guarantee.TRUE, "rExhFeas");
             g.edge("rExhTicks", Guarantee.FALSE, "rNearFeas");

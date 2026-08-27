@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.core.anglesolver.solver;
 
 import java.util.List;
+import java.util.Map;
 
 public final class DiskSocpKernel {
 
@@ -16,6 +17,13 @@ public final class DiskSocpKernel {
     private static final double LAMBDA_CAP = 1.0e12;
     private static final double ARMIJO = 1.0e-4;
     private static final double REG_FACTOR = 1.0e-4;
+    private static final double WARM_MIN = 1.0e-8;
+
+    public static final int FAIL_NONE = 0;
+    public static final int FAIL_CHOLESKY = 2;
+    public static final int FAIL_NAN = 3;
+    public static final int FAIL_UNBOUNDED = 4;
+    public static final int FAIL_DET = 5;
 
     private final int n;
     private final int m;
@@ -24,37 +32,53 @@ public final class DiskSocpKernel {
     private final double[] cz;
     private final double[] mMag;
     private final int[] axis;
-    private final double[][] coef;
+    private final double[][] coefX;
+    private final double[][] coefZ;
     private final int[] lastCoupled;
     private final double[] bPrime;
     private final boolean[] eq;
     private final int[] orthOf;
     private final double[] scale;
     private final double[] p0coef;
+    private final String[] rowName;
     private final CostateDualSolver.FreeP0 freeP0;
+    private final Map<String, Double> warmLambda;
+
+    private int failCode = FAIL_NONE;
+    private int failIter;
+    private double failMu = Double.NaN;
+    private double[] uRefX;
+    private double[] uRefZ;
 
     private DiskSocpKernel(int n, double[] cx, double[] cz, double[] mMag, List<JumpLinearModel.Wall> walls,
-                           CostateDualSolver.FreeP0 freeP0) {
+                           CostateDualSolver.FreeP0 freeP0, List<ChordRow> chords,
+                           Map<String, Double> warmLambda) {
         this.n = n;
-        this.m = walls.size();
+        int mw = walls.size();
+        int mc = chords == null ? 0 : chords.size();
+        this.m = mw + mc;
         this.cx = cx;
         this.cz = cz;
         this.mMag = mMag;
         this.freeP0 = freeP0;
+        this.warmLambda = warmLambda;
         this.axis = new int[m];
-        this.coef = new double[m][];
+        this.coefX = new double[m][];
+        this.coefZ = new double[m][];
         this.lastCoupled = new int[m];
         this.bPrime = new double[m];
         this.eq = new boolean[m];
         this.orthOf = new int[m];
         this.scale = new double[m];
         this.p0coef = new double[m];
+        this.rowName = new String[m];
         int po = 0;
-        for (int j = 0; j < m; j++) {
+        for (int j = 0; j < mw; j++) {
             JumpLinearModel.Wall w = walls.get(j);
             axis[j] = w.axis;
             eq[j] = w.eq;
             orthOf[j] = w.eq ? -1 : po++;
+            rowName[j] = w.name;
             int lim = Math.min(w.coef.length, n);
             double s = Math.abs(w.bPrime);
             for (int t = 0; t < lim; t++) s = Math.max(s, Math.abs(w.coef[t]));
@@ -66,12 +90,54 @@ public final class DiskSocpKernel {
                 cj[t] = w.coef[t] / s;
                 if (cj[t] != 0.0) last = t;
             }
-            coef[j] = cj;
+            if (w.axis == 0) {
+                coefX[j] = cj;
+                coefZ[j] = null;
+            } else {
+                coefX[j] = null;
+                coefZ[j] = cj;
+            }
             bPrime[j] = w.bPrime / s;
             lastCoupled[j] = last;
             p0coef[j] = w.p0coef / s;
         }
+        for (int q = 0; q < mc; q++) {
+            int j = mw + q;
+            ChordRow ch = chords.get(q);
+            axis[j] = -1;
+            eq[j] = false;
+            orthOf[j] = po++;
+            rowName[j] = ch.name;
+            double s = Math.max(Math.abs(ch.rhs), Math.max(Math.abs(ch.ax), Math.abs(ch.az)));
+            if (s <= 0.0) s = 1.0;
+            scale[j] = s;
+            double[] cxr = new double[n];
+            double[] czr = new double[n];
+            cxr[ch.tick] = -ch.ax / s;
+            czr[ch.tick] = -ch.az / s;
+            coefX[j] = cxr;
+            coefZ[j] = czr;
+            bPrime[j] = -ch.rhs / s;
+            lastCoupled[j] = ch.tick;
+            p0coef[j] = 0.0;
+        }
         this.p = po;
+    }
+
+    public static final class ChordRow {
+        public final int tick;
+        public final double ax;
+        public final double az;
+        public final double rhs;
+        public final String name;
+
+        public ChordRow(int tick, double ax, double az, double rhs, String name) {
+            this.tick = tick;
+            this.ax = ax;
+            this.az = az;
+            this.rhs = rhs;
+            this.name = name;
+        }
     }
 
     public static final class Result {
@@ -86,6 +152,8 @@ public final class DiskSocpKernel {
         public final double gap;
         public final double dvx;
         public final double dvz;
+        public double[] uxRef;
+        public double[] uzRef;
 
         Result(double[] gx, double[] gz, double[] ux, double[] uz, double[] lambda, double value,
                boolean converged, int iters, double gap, double dvx, double dvz) {
@@ -103,14 +171,42 @@ public final class DiskSocpKernel {
         }
     }
 
+    public static final class Outcome {
+        public final Result result;
+        public final int failCode;
+        public final int failIter;
+        public final double failMu;
+
+        Outcome(Result result, int failCode, int failIter, double failMu) {
+            this.result = result;
+            this.failCode = failCode;
+            this.failIter = failIter;
+            this.failMu = failMu;
+        }
+
+        public boolean infeasible() {
+            return failCode == FAIL_UNBOUNDED;
+        }
+    }
+
     public static Result solve(int n, double[] cx, double[] cz, double[] mMag,
                                List<JumpLinearModel.Wall> walls) {
-        return new DiskSocpKernel(n, cx, cz, mMag, walls, null).run();
+        return solve(n, cx, cz, mMag, walls, null);
     }
 
     public static Result solve(int n, double[] cx, double[] cz, double[] mMag,
                                List<JumpLinearModel.Wall> walls, CostateDualSolver.FreeP0 freeP0) {
-        return new DiskSocpKernel(n, cx, cz, mMag, walls, freeP0).run();
+        DiskSocpKernel k = new DiskSocpKernel(n, cx, cz, mMag, walls, freeP0, null, null);
+        Result r = k.run();
+        return k.failCode != FAIL_NONE ? null : r;
+    }
+
+    public static Outcome solveChords(int n, double[] cx, double[] cz, double[] mMag,
+                                      List<JumpLinearModel.Wall> walls, CostateDualSolver.FreeP0 freeP0,
+                                      List<ChordRow> chords, Map<String, Double> warmLambda) {
+        DiskSocpKernel k = new DiskSocpKernel(n, cx, cz, mMag, walls, freeP0, chords, warmLambda);
+        Result r = k.run();
+        return new Outcome(r, k.failCode, k.failIter, k.failMu);
     }
 
     private Result run() {
@@ -120,7 +216,17 @@ public final class DiskSocpKernel {
         double[] tau = new double[n];
         double[] gx = new double[n];
         double[] gz = new double[n];
-        for (int j = 0; j < m; j++) lambda[j] = eq[j] ? 0.0 : 1.0;
+        for (int j = 0; j < m; j++) {
+            double init = eq[j] ? 0.0 : 1.0;
+            if (warmLambda != null) {
+                Double w = warmLambda.get(rowName[j]);
+                if (w != null) {
+                    double ws = w * scale[j];
+                    init = eq[j] ? ws : Math.max(ws, WARM_MIN);
+                }
+            }
+            lambda[j] = init;
+        }
         costates(lambda, gx, gz);
         for (int t = 0; t < n; t++) tau[t] = Math.hypot(gx[t], gz[t]) + 1.0;
 
@@ -133,20 +239,31 @@ public final class DiskSocpKernel {
         double[] dLam = new double[m];
         double[] dTau = new double[n];
         double[] rhsLam = new double[m];
+        double[] bestLambda = null;
+        double[] bestTau = null;
+        double bestMu = Double.NaN;
 
         double nu = 2.0 * n + p;
         double mu = centeringMu(lambda, tau, gx, gz);
         boolean converged = false;
-        boolean unbounded = false;
+        boolean aborted = false;
         int iters = 0;
+        int numericFailOuters = 0;
         outer:
         for (int outer = 0; outer < MAX_OUTER && !converged; outer++) {
+            boolean numericFail = false;
             for (int inner = 0; inner < MAX_INNER; inner++) {
                 iters++;
                 gradient(lambda, tau, gx, gz, mu, gLam, gTau);
-                if (!assembleHessian(lambda, tau, gx, gz, mu, S, Mlt, Dtt) || !factor(S, L)) {
-                    unbounded = true;
-                    break outer;
+                if (!assembleHessian(lambda, tau, gx, gz, mu, S, Mlt, Dtt)) {
+                    fail(FAIL_DET, iters, mu);
+                    numericFail = true;
+                    break;
+                }
+                if (!factor(S, L)) {
+                    fail(FAIL_CHOLESKY, iters, mu);
+                    numericFail = true;
+                    break;
                 }
                 newtonDir(gLam, gTau, Mlt, Dtt, L, rhsLam, dLam, dTau);
                 double dec = 0.0;
@@ -160,17 +277,77 @@ public final class DiskSocpKernel {
                 for (int t = 0; t < n; t++) tau[t] += step * dTau[t];
                 costates(lambda, gx, gz);
                 for (int j = 0; j < m; j++) {
-                    if (Double.isNaN(lambda[j]) || Math.abs(lambda[j]) > LAMBDA_CAP) {
-                        unbounded = true;
+                    if (Double.isNaN(lambda[j])) {
+                        fail(FAIL_NAN, iters, mu);
+                        aborted = true;
+                        break outer;
+                    }
+                    if (Math.abs(lambda[j]) > LAMBDA_CAP) {
+                        fail(FAIL_UNBOUNDED, iters, mu);
+                        aborted = true;
                         break outer;
                     }
                 }
             }
-            if (mu * nu <= 1.0e-11) { converged = true; break; }
+            bestLambda = lambda.clone();
+            bestTau = tau.clone();
+            bestMu = mu;
+            if (uRefX == null && mu * nu <= 1.0e-4) {
+                uRefX = new double[n];
+                uRefZ = new double[n];
+                for (int t = 0; t < n; t++) {
+                    double w = tau[t] > 0.0 ? mMag[t] / tau[t] : 0.0;
+                    uRefX[t] = w * gx[t];
+                    uRefZ[t] = w * gz[t];
+                }
+            }
+            if (numericFail) {
+                numericFailOuters++;
+                if (numericFailOuters >= 3) break;
+            } else {
+                numericFailOuters = 0;
+                if (mu * nu <= 1.0e-11) { converged = true; break; }
+            }
             mu *= MU_REDUCE;
         }
-        if (unbounded) return null;
+        if (converged) {
+            failCode = FAIL_NONE;
+            failIter = 0;
+            failMu = Double.NaN;
+        }
+        if (aborted) {
+            if (failCode == FAIL_UNBOUNDED || bestLambda == null) return null;
+            lambda = bestLambda;
+            tau = bestTau;
+            mu = bestMu;
+            costates(lambda, gx, gz);
+        }
+        Result r = emit(lambda, tau, gx, gz, converged, iters, mu * nu);
+        double lb = primalLowBound();
+        if (r.value < lb - 1.0e-6 * (1.0 + Math.abs(lb))) {
+            fail(FAIL_UNBOUNDED, iters, mu);
+        }
+        return r;
+    }
 
+    private double primalLowBound() {
+        double lb = 0.0;
+        for (int t = 0; t < n; t++) lb -= mMag[t] * Math.hypot(cx[t], cz[t]);
+        if (freeP0 != null) {
+            lb -= Math.abs(freeP0.objDevX) * Math.max(Math.abs(freeP0.dvLoX), Math.abs(freeP0.dvHiX));
+            lb -= Math.abs(freeP0.objDevZ) * Math.max(Math.abs(freeP0.dvLoZ), Math.abs(freeP0.dvHiZ));
+        }
+        return lb;
+    }
+
+    private void fail(int code, int iter, double mu) {
+        this.failCode = code;
+        this.failIter = iter;
+        this.failMu = mu;
+    }
+
+    private Result emit(double[] lambda, double[] tau, double[] gx, double[] gz, boolean converged,
+                        int iters, double gap) {
         double[] ux = new double[n];
         double[] uz = new double[n];
         double value = 0.0;
@@ -192,7 +369,14 @@ public final class DiskSocpKernel {
         }
         double[] lambdaOut = new double[m];
         for (int j = 0; j < m; j++) lambdaOut[j] = lambda[j] / scale[j];
-        return new Result(gx, gz, ux, uz, lambdaOut, value, converged, iters, mu * nu, dvx, dvz);
+        Result r = new Result(gx, gz, ux, uz, lambdaOut, value, converged, iters, gap, dvx, dvz);
+        r.uxRef = uRefX;
+        r.uzRef = uRefZ;
+        return r;
+    }
+
+    public String rowNameAt(int j) {
+        return rowName[j];
     }
 
     private Result trivial() {
@@ -225,7 +409,9 @@ public final class DiskSocpKernel {
 
     private double hAxis(double[] lambda, int a) {
         double h = a == 0 ? freeP0.objDevX : freeP0.objDevZ;
-        for (int j = 0; j < m; j++) if (axis[j] == a) h += lambda[j] * p0coef[j];
+        for (int j = 0; j < Math.min(lambda.length, m); j++) {
+            if (axis[j] == a) h += lambda[j] * p0coef[j];
+        }
         return h;
     }
 
@@ -258,14 +444,22 @@ public final class DiskSocpKernel {
             den += h * h;
         }
         for (int j = 0; j < m; j++) {
-            double[] cj = coef[j];
+            double[] cxj = coefX[j];
+            double[] czj = coefZ[j];
             int last = lastCoupled[j];
-            double[] g = axis[j] == 0 ? gx : gz;
             double h = 0.0;
             for (int t = 0; t <= last; t++) {
-                if (cj[t] == 0.0) continue;
-                double det = tau[t] * tau[t] - gx[t] * gx[t] - gz[t] * gz[t];
-                h += 2.0 * cj[t] * g[t] / det;
+                double det = 0.0;
+                boolean have = false;
+                if (cxj != null && cxj[t] != 0.0) {
+                    det = tau[t] * tau[t] - gx[t] * gx[t] - gz[t] * gz[t];
+                    have = true;
+                    h += 2.0 * cxj[t] * gx[t] / det;
+                }
+                if (czj != null && czj[t] != 0.0) {
+                    if (!have) det = tau[t] * tau[t] - gx[t] * gx[t] - gz[t] * gz[t];
+                    h += 2.0 * czj[t] * gz[t] / det;
+                }
             }
             if (orthOf[j] >= 0) h += 1.0 / lambda[j];
             num += bPrime[j] * h;
@@ -281,10 +475,11 @@ public final class DiskSocpKernel {
         for (int j = 0; j < m; j++) {
             double lj = lambda[j];
             if (lj == 0.0) continue;
-            double[] cj = coef[j];
+            double[] cxj = coefX[j];
+            double[] czj = coefZ[j];
             int last = lastCoupled[j];
-            if (axis[j] == 0) for (int t = 0; t <= last; t++) gx[t] -= lj * cj[t];
-            else for (int t = 0; t <= last; t++) gz[t] -= lj * cj[t];
+            if (cxj != null) for (int t = 0; t <= last; t++) gx[t] -= lj * cxj[t];
+            if (czj != null) for (int t = 0; t <= last; t++) gz[t] -= lj * czj[t];
         }
     }
 
@@ -295,14 +490,22 @@ public final class DiskSocpKernel {
             gTau[t] = mMag[t] - mu * 2.0 * tau[t] / det;
         }
         for (int j = 0; j < m; j++) {
-            double[] cj = coef[j];
+            double[] cxj = coefX[j];
+            double[] czj = coefZ[j];
             int last = lastCoupled[j];
-            double[] g = axis[j] == 0 ? gx : gz;
             double acc = bPrime[j];
             for (int t = 0; t <= last; t++) {
-                if (cj[t] == 0.0) continue;
-                double det = tau[t] * tau[t] - gx[t] * gx[t] - gz[t] * gz[t];
-                acc -= mu * 2.0 * cj[t] * g[t] / det;
+                double det = 0.0;
+                boolean have = false;
+                if (cxj != null && cxj[t] != 0.0) {
+                    det = tau[t] * tau[t] - gx[t] * gx[t] - gz[t] * gz[t];
+                    have = true;
+                    acc -= mu * 2.0 * cxj[t] * gx[t] / det;
+                }
+                if (czj != null && czj[t] != 0.0) {
+                    if (!have) det = tau[t] * tau[t] - gx[t] * gx[t] - gz[t] * gz[t];
+                    acc -= mu * 2.0 * czj[t] * gz[t] / det;
+                }
             }
             if (orthOf[j] >= 0) acc -= mu / lambda[j];
             gLam[j] = acc + REG_FACTOR * mu * lambda[j];
@@ -310,7 +513,7 @@ public final class DiskSocpKernel {
         if (freeP0 != null) {
             double dsx = deltaOf(hAxis(lambda, 0), 0);
             double dsz = deltaOf(hAxis(lambda, 1), 1);
-            for (int j = 0; j < m; j++) gLam[j] += p0coef[j] * (axis[j] == 0 ? dsx : dsz);
+            for (int j = 0; j < m; j++) gLam[j] += p0coef[j] * (axis[j] == 0 ? dsx : (axis[j] == 1 ? dsz : 0.0));
         }
     }
 
@@ -331,8 +534,9 @@ public final class DiskSocpKernel {
             double curvX = supportCurv(hAxis(lambda, 0), 0);
             double curvZ = supportCurv(hAxis(lambda, 1), 1);
             for (int j = 0; j < m; j++) {
+                if (axis[j] < 0 || p0coef[j] == 0.0) continue;
                 double cv = axis[j] == 0 ? curvX : curvZ;
-                if (cv == 0.0 || p0coef[j] == 0.0) continue;
+                if (cv == 0.0) continue;
                 for (int k = 0; k < m; k++) {
                     if (axis[k] != axis[j] || p0coef[k] == 0.0) continue;
                     S[j][k] += p0coef[j] * p0coef[k] * cv;
@@ -345,17 +549,25 @@ public final class DiskSocpKernel {
             double invd2 = invd * invd;
             for (int j = 0; j < m; j++) {
                 if (t > lastCoupled[j]) continue;
-                double cjt = coef[j][t];
-                if (cjt == 0.0) continue;
-                double gj = axis[j] == 0 ? gx[t] : gz[t];
-                Mlt[j * n + t] = 4.0 * mu * tau[t] * cjt * gj * invd2;
+                double ajx = coefX[j] != null ? coefX[j][t] : 0.0;
+                double ajz = coefZ[j] != null ? coefZ[j][t] : 0.0;
+                if (ajx == 0.0 && ajz == 0.0) continue;
+                double ajg = 0.0;
+                if (ajx != 0.0) ajg += ajx * gx[t];
+                if (ajz != 0.0) ajg += ajz * gz[t];
+                Mlt[j * n + t] = 4.0 * mu * tau[t] * ajg * invd2;
                 for (int k = 0; k < m; k++) {
                     if (t > lastCoupled[k]) continue;
-                    double ckt = coef[k][t];
-                    if (ckt == 0.0) continue;
-                    double gk = axis[k] == 0 ? gx[t] : gz[t];
-                    double same = axis[j] == axis[k] ? invd : 0.0;
-                    S[j][k] += 2.0 * mu * cjt * ckt * (same + 2.0 * gj * gk * invd2);
+                    double akx = coefX[k] != null ? coefX[k][t] : 0.0;
+                    double akz = coefZ[k] != null ? coefZ[k][t] : 0.0;
+                    if (akx == 0.0 && akz == 0.0) continue;
+                    double akg = 0.0;
+                    if (akx != 0.0) akg += akx * gx[t];
+                    if (akz != 0.0) akg += akz * gz[t];
+                    double dotA = 0.0;
+                    if (ajx != 0.0 && akx != 0.0) dotA += ajx * akx;
+                    if (ajz != 0.0 && akz != 0.0) dotA += ajz * akz;
+                    S[j][k] += 2.0 * mu * (dotA * invd + 2.0 * ajg * akg * invd2);
                 }
             }
         }
@@ -420,10 +632,11 @@ public final class DiskSocpKernel {
                 for (int j = 0; j < m; j++) {
                     double lj = lambda[j] + a * dLam[j];
                     if (lj == 0.0) continue;
-                    double[] cj = coef[j];
+                    double[] cxj = coefX[j];
+                    double[] czj = coefZ[j];
                     int last = lastCoupled[j];
-                    if (axis[j] == 0) for (int t = 0; t <= last; t++) tmpGx[t] -= lj * cj[t];
-                    else for (int t = 0; t <= last; t++) tmpGz[t] -= lj * cj[t];
+                    if (cxj != null) for (int t = 0; t <= last; t++) tmpGx[t] -= lj * cxj[t];
+                    if (czj != null) for (int t = 0; t <= last; t++) tmpGz[t] -= lj * czj[t];
                 }
                 boolean feas = true;
                 for (int t = 0; t < n && feas; t++) {
@@ -444,10 +657,10 @@ public final class DiskSocpKernel {
         double d0 = 0.0, d1 = 0.0;
         for (int j = 0; j < m; j++) {
             if (t > lastCoupled[j]) continue;
-            double cjt = coef[j][t];
-            if (cjt == 0.0) continue;
-            if (axis[j] == 0) d0 -= cjt * dLam[j];
-            else d1 -= cjt * dLam[j];
+            double[] cxj = coefX[j];
+            double[] czj = coefZ[j];
+            if (cxj != null && cxj[t] != 0.0) d0 -= cxj[t] * dLam[j];
+            if (czj != null && czj[t] != 0.0) d1 -= czj[t] * dLam[j];
         }
         dg[0] = d0;
         dg[1] = d1;
@@ -487,7 +700,8 @@ public final class DiskSocpKernel {
             double hz = freeP0.objDevZ;
             for (int j = 0; j < m; j++) {
                 double lj = lambda[j] + a * dLam[j];
-                if (axis[j] == 0) hx += lj * p0coef[j]; else hz += lj * p0coef[j];
+                if (axis[j] == 0) hx += lj * p0coef[j];
+                else if (axis[j] == 1) hz += lj * p0coef[j];
             }
             v += supportOf(hx, 0) + supportOf(hz, 1);
         }
@@ -525,11 +739,25 @@ public final class DiskSocpKernel {
 
     private boolean factor(double[][] S, double[][] L) {
         double maxDiag = 0.0;
-        for (int j = 0; j < m; j++) maxDiag = Math.max(maxDiag, S[j][j]);
+        double minDiag = Double.POSITIVE_INFINITY;
+        for (int j = 0; j < m; j++) {
+            maxDiag = Math.max(maxDiag, S[j][j]);
+            minDiag = Math.min(minDiag, S[j][j]);
+        }
         double jitter = 0.0;
-        for (int attempt = 0; attempt < 6; attempt++) {
+        for (int attempt = 0; attempt < 12; attempt++) {
             if (cholesky(S, L, jitter)) return true;
             jitter = jitter == 0.0 ? 1.0e-12 * (maxDiag + 1.0) : jitter * 10.0;
+        }
+        if (DEBUG) {
+            double probe = jitter;
+            int extra = 0;
+            while (extra < 20 && !cholesky(S, L, probe)) {
+                probe *= 10.0;
+                extra++;
+            }
+            System.out.printf("  factor FAIL m=%d minDiag=%.3e maxDiag=%.3e lastJitter=%.3e passJitter=%.3e%n",
+                    m, minDiag, maxDiag, jitter, extra < 20 ? probe : Double.NaN);
         }
         return false;
     }
