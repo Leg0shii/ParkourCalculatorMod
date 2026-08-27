@@ -21,7 +21,6 @@ import static org.junit.Assert.assertTrue;
 @Category(SlowSolverTests.class)
 public class FoldDriverEngineTest {
 
-    private static final String THOUSAND = "thousand-1-dup2";
     private static final String J003 = "j003";
     private static final String J154_INNER = "hpk_precise/j154-noturn-ja-inner";
     private static final String J1150_INNER = "hpk_precise/j1150-noturn-inner";
@@ -57,14 +56,6 @@ public class FoldDriverEngineTest {
         SolveResult r = state.getResult();
         assertNotNull(pool + ": solve must publish a result inside " + timeoutMs + " ms", r);
         return r;
-    }
-
-    @Test
-    public void thousandThoroughReachesTheImproveStageClass() {
-        SolveResult r = solveTier(THOUSAND, true, 10, 30000);
-        assertTrue("thousand THOROUGH must solve", r.isSuccess());
-        assertTrue("thousand THOROUGH objective " + r.getObjectiveValue(),
-                r.getObjectiveValue() >= 6523.3076);
     }
 
     @Test

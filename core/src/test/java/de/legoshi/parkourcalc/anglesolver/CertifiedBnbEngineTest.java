@@ -116,17 +116,6 @@ public class CertifiedBnbEngineTest {
     }
 
     @Test
-    public void thousandThoroughHoldsTheM1Floor() {
-        SolveResult r = solveTier("thousand-1-dup2", true, 10, 40000);
-        assertTrue("thousand THOROUGH must solve", r.isSuccess());
-        System.out.printf(java.util.Locale.ROOT,
-                "thousand TH10 objective %.12f (M2a certification target 6523.30772 unreached, see design record)%n",
-                r.getObjectiveValue());
-        assertTrue("thousand THOROUGH objective " + r.getObjectiveValue(),
-                r.getObjectiveValue() >= 6523.3076);
-    }
-
-    @Test
     public void j1150InnerFastHoldsTheM1ClassWithTheCertifiedImprovement() {
         SolveResult r = solveTier("hpk_precise/j1150-noturn-inner", false, 0, 40000);
         assertTrue("j1150 inner FAST must solve", r.isSuccess());

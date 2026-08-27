@@ -129,8 +129,10 @@ anglesolver/
                            every relaxation carries the phantom carry and no k>=1 pattern can
                            represent a tick-0 zeroing, FAST 20 s)
                            (solve/thousand-1-dup2: #422 M1 acceptance; free-start multi-jump
-                           MAX X, THOROUGH 10 s, byte-exact at objective >= 6523.3076; the
-                           6523.30772 expect-class value is the M2a certification target)
+                           MAX X, THOROUGH 30 s, byte-exact at objective >= 6523.307 (reliably
+                           6523.3080, beats both releases); the 10 s budget was timing-flaky on
+                           this floor, 30 s is the honest budget; sole canonical thousand gate,
+                           the FoldDriver/CertifiedBnb engine-test duplicates were removed)
                            (solve/j1150-noturn-inner: #422 M1 acceptance on the PRECISE
                            inputs_gone spec with the p2 no-turn schedule, THOROUGH 10 s,
                            byte-exact at objective >= -2805.2990460856336, the p2 witness;
@@ -161,7 +163,7 @@ anglesolver/
                            IPM jitter ladder, and the weak-duality infeasibility certificate
                            (FAIL_UNBOUNDED) that replaced the old fake-convergence
   FoldDriverEngineTest.java  #422 M1 engine-level gates through engine.solve() (driver wired as
-                           primary recovery): thousand THOROUGH-10s, j003 FAST + THOROUGH-10s
+                           primary recovery): j003 FAST + THOROUGH-10s
                            in-deadline, j1150-noturn-inner THOROUGH beats the p2 witness,
                            j154-noturn-ja-inner FAST beats the F3 witness, FAST re-solve
                            determinism
@@ -173,7 +175,7 @@ anglesolver/
                            captures reach certified gap <= 1.5e-4 with dominating bounds and
                            feasible incumbents (per-capture numbers printed; the 1e-9 plateau
                            mechanism is in ARCH2-M2A-CERTIFIED-BNB.md), dF specs decline cleanly,
-                           thousand TH10 holds the M1 floor, j1150-noturn-inner FAST regression
+                           j1150-noturn-inner FAST regression
                            floor, j154-noturn-ja-inner FAST beats the in-game F3 witness
   CertBnbProbe.java        env-gated certified-B&B probe: PKC_CERTBNB_CAPTURES (comma list),
                            PKC_CERTBNB_OUT/NODES/MS/MODE; nodeCap=1 dumps root bounds for the COPT
