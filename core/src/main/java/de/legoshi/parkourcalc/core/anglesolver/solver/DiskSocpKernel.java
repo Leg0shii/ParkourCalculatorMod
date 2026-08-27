@@ -746,13 +746,13 @@ public final class DiskSocpKernel {
         }
         double jitter = 0.0;
         for (int attempt = 0; attempt < 12; attempt++) {
-            if (cholesky(S, L, jitter)) return true;
+            if (SpdCholesky.factor(S, L, m, jitter)) return true;
             jitter = jitter == 0.0 ? 1.0e-12 * (maxDiag + 1.0) : jitter * 10.0;
         }
         if (DEBUG) {
             double probe = jitter;
             int extra = 0;
-            while (extra < 20 && !cholesky(S, L, probe)) {
+            while (extra < 20 && !SpdCholesky.factor(S, L, m, probe)) {
                 probe *= 10.0;
                 extra++;
             }
@@ -762,32 +762,7 @@ public final class DiskSocpKernel {
         return false;
     }
 
-    private boolean cholesky(double[][] S, double[][] L, double jitter) {
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j <= i; j++) {
-                double s = S[i][j] + (i == j ? jitter : 0.0);
-                for (int k = 0; k < j; k++) s -= L[i][k] * L[j][k];
-                if (i == j) {
-                    if (s <= 0.0) return false;
-                    L[i][i] = Math.sqrt(s);
-                } else {
-                    L[i][j] = s / L[j][j];
-                }
-            }
-        }
-        return true;
-    }
-
     private void solveFactored(double[][] L, double[] x) {
-        for (int i = 0; i < m; i++) {
-            double s = x[i];
-            for (int k = 0; k < i; k++) s -= L[i][k] * x[k];
-            x[i] = s / L[i][i];
-        }
-        for (int i = m - 1; i >= 0; i--) {
-            double s = x[i];
-            for (int k = i + 1; k < m; k++) s -= L[k][i] * x[k];
-            x[i] = s / L[i][i];
-        }
+        SpdCholesky.solveInPlace(L, x, m);
     }
 }

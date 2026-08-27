@@ -442,23 +442,7 @@ public final class BoundPrunedRecovery {
         lin.objectiveVectors(spec.objective, cx, cz);
         CostateDualSolver.Result r = new CostateDualSolver(n, cx, cz, lin.mMagAll(), walls).solve(0.0, null);
         if (r == null) return null;
-        boolean max = spec.objective.sense == Objective.Sense.MAX;
-        double[] yaws = new double[n];
-        for (int t = 0; t < n; t++) {
-            double gx = r.gx[t];
-            double gz = r.gz[t];
-            if (gx * gx + gz * gz < 1.0e-18) {
-                if (spec.objective.axis == JumpPhysicsInputs.Axis.X) {
-                    gx = max ? 1.0 : -1.0;
-                    gz = 0.0;
-                } else {
-                    gx = 0.0;
-                    gz = max ? 1.0 : -1.0;
-                }
-            }
-            yaws[t] = lin.recoverYawDeg(t, gx, gz);
-        }
-        return yaws;
+        return lin.recoverAlongCostate(spec.objective, r.gx, r.gz);
     }
 
     private static Double rootBound(JumpSpec spec, JumpLinearModel lin, List<JumpLinearModel.Wall> vel) {
@@ -1113,28 +1097,9 @@ public final class BoundPrunedRecovery {
 
         private static boolean cholesky(double[][] a, double[] b, double[] out, int n, double dampAbs) {
             double[][] l = new double[n][n];
-            for (int i = 0; i < n; i++) {
-                for (int j = 0; j <= i; j++) {
-                    double s = a[i][j] + (i == j ? dampAbs : 0.0);
-                    for (int k = 0; k < j; k++) s -= l[i][k] * l[j][k];
-                    if (i == j) {
-                        if (s <= 0.0) return false;
-                        l[i][i] = Math.sqrt(s);
-                    } else {
-                        l[i][j] = s / l[j][j];
-                    }
-                }
-            }
-            for (int i = 0; i < n; i++) {
-                double s = b[i];
-                for (int k = 0; k < i; k++) s -= l[i][k] * out[k];
-                out[i] = s / l[i][i];
-            }
-            for (int i = n - 1; i >= 0; i--) {
-                double s = out[i];
-                for (int k = i + 1; k < n; k++) s -= l[k][i] * out[k];
-                out[i] = s / l[i][i];
-            }
+            if (!SpdCholesky.factor(a, l, n, dampAbs)) return false;
+            System.arraycopy(b, 0, out, 0, n);
+            SpdCholesky.solveInPlace(l, out, n);
             return true;
         }
 
@@ -1191,23 +1156,7 @@ public final class BoundPrunedRecovery {
         }
 
         private double[] recover(CostateDualSolver.Result r) {
-            int n = lin.n;
-            double[] yaws = new double[n];
-            for (int t = 0; t < n; t++) {
-                double gx = r.gx[t];
-                double gz = r.gz[t];
-                if (gx * gx + gz * gz < 1.0e-18) {
-                    if (spec.objective.axis == JumpPhysicsInputs.Axis.X) {
-                        gx = max ? 1.0 : -1.0;
-                        gz = 0.0;
-                    } else {
-                        gx = 0.0;
-                        gz = max ? 1.0 : -1.0;
-                    }
-                }
-                yaws[t] = lin.recoverYawDeg(t, gx, gz);
-            }
-            return yaws;
+            return lin.recoverAlongCostate(spec.objective, r.gx, r.gz);
         }
 
         double offer(double[] yawsAbs) {

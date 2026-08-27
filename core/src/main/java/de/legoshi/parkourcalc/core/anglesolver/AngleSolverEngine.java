@@ -10,6 +10,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphFactory;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunState;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunner;
+import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunLog;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunRecord;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
@@ -965,13 +966,11 @@ public final class AngleSolverEngine {
 
     /** The byte-exact objective value the given facings realize (for comparing two feasible candidates). */
     private double exactObjective(JumpPhysicsInputs sc, JumpSpec spec, double[] yawsAbsWrapped) {
-        ForwardPath p = model.forward(sc, sc.toGameFacings(yawsAbsWrapped));
-        return p.getPos(spec.objective.tick, spec.objective.axis);
+        return Scoring.exactObjective(model, sc, spec, yawsAbsWrapped);
     }
 
     private double violationOf(JumpPhysicsInputs sc, JumpSpec spec, double[] yawsAbsWrapped) {
-        double[] gf = sc.toGameFacings(Angles.wrapAll(yawsAbsWrapped));
-        return JumpConstraintCompiler.compile(spec).maxViolation(gf, model.forward(sc, gf));
+        return Scoring.violationOf(model, sc, spec, yawsAbsWrapped);
     }
 
     private SolveResult buildLiveResult(Job job, double[] yaws) {

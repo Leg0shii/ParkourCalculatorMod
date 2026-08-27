@@ -710,11 +710,7 @@ public final class FreeStartSolve {
     }
 
     private static CostateDualSolver.FreeP0 buildFreeP0(StartBox box, Objective obj, double smooth) {
-        boolean max = obj.sense == Objective.Sense.MAX;
-        double objDevX = obj.axis == JumpPhysicsInputs.Axis.X ? (max ? 1.0 : -1.0) : 0.0;
-        double objDevZ = obj.axis == JumpPhysicsInputs.Axis.X ? 0.0 : (max ? 1.0 : -1.0);
-        return new CostateDualSolver.FreeP0(box.pxLo - box.px, box.pxHi - box.px,
-                box.pzLo - box.pz, box.pzHi - box.pz, objDevX, objDevZ, smooth);
+        return CostateDualSolver.FreeP0.forObjective(box, obj, smooth);
     }
 
     private static double[] pinTranslate(JumpSpec spec, double[] gf, ForwardPath path, StartBox box,

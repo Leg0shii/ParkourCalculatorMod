@@ -369,4 +369,20 @@ public final class JumpLinearModel {
     public double recoverYawDeg(int t, double gx, double gz) {
         return Angles.wrap((Math.atan2(gz, gx) - baseArg[t]) * DEG);
     }
+
+    public double[] recoverAlongCostate(Objective obj, double[] gx, double[] gz) {
+        boolean max = obj.sense == Objective.Sense.MAX;
+        boolean axisX = obj.axis == JumpPhysicsInputs.Axis.X;
+        double[] yaws = new double[n];
+        for (int t = 0; t < n; t++) {
+            double x = gx[t];
+            double z = gz[t];
+            if (x * x + z * z < 1.0e-18) {
+                x = axisX ? (max ? 1.0 : -1.0) : 0.0;
+                z = axisX ? 0.0 : (max ? 1.0 : -1.0);
+            }
+            yaws[t] = recoverYawDeg(t, x, z);
+        }
+        return yaws;
+    }
 }

@@ -10,9 +10,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.solver.DegenerateTickAscent;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.FoldReplayDriver;
-import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
-import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
@@ -61,7 +59,8 @@ public final class FoldDriverNode implements NodeRuntime {
                     nodeToken, ascentDeadline);
             if (asc0 == null || asc0 == in.yaws) return NodeOutcome.of(miss, in);
             double cur0 = ctx.exactObjective(in.yaws);
-            double asc0Obj = verifiedObjective(ctx, asc0, ctx.scenario.startPos.x, ctx.scenario.startPos.z);
+            double asc0Obj = Scoring.verifiedObjectiveAt(ctx.model, ctx.scenario, ctx.spec, asc0,
+                    ctx.scenario.startPos.x, ctx.scenario.startPos.z, ctx.feasTol);
             boolean max0 = ctx.maximize();
             if (Double.isNaN(asc0Obj) || !(max0 ? asc0Obj > cur0 : asc0Obj < cur0)) {
                 return NodeOutcome.of(miss, in);
@@ -96,7 +95,8 @@ public final class FoldDriverNode implements NodeRuntime {
         double[] bestYaws = best.yawsDeg;
         double bestPx = best.px;
         double bestPz = best.pz;
-        double bestObj = verifiedObjective(ctx, bestYaws, bestPx, bestPz);
+        double bestObj = Scoring.verifiedObjectiveAt(ctx.model, ctx.scenario, ctx.spec, bestYaws, bestPx, bestPz,
+                ctx.feasTol);
         if (Double.isNaN(bestObj)) return NodeOutcome.of(miss, in);
         boolean max = ctx.maximize();
         if ((objectiveRounds > 0 || ascentMs > 0) && (nodeToken == null || !nodeToken.get())
@@ -108,7 +108,8 @@ public final class FoldDriverNode implements NodeRuntime {
             double[] asc = DegenerateTickAscent.improve(exact, pspec, bestYaws, ctx.feasTol,
                     nodeToken, ascDeadline);
             if (asc != null && asc != bestYaws) {
-                double ascObj = verifiedObjective(ctx, asc, bestPx, bestPz);
+                double ascObj = Scoring.verifiedObjectiveAt(ctx.model, ctx.scenario, ctx.spec, asc, bestPx, bestPz,
+                        ctx.feasTol);
                 if (!Double.isNaN(ascObj) && (max ? ascObj > bestObj : ascObj < bestObj)) {
                     bestYaws = asc;
                     bestObj = ascObj;
@@ -120,7 +121,7 @@ public final class FoldDriverNode implements NodeRuntime {
             boolean better = max ? bestObj > cur : bestObj < cur;
             if (!better && (improve || in.feasible)) return NodeOutcome.of(miss, in);
         }
-        adoptStart(ctx, bestPx, bestPz);
+        Scoring.adoptPinnedStart(ctx.scenario, bestPx, bestPz);
         ctx.chainAppend("fold driver" + (labelSuffix == null ? "" : labelSuffix));
         Candidate out = Candidate.of(ctx, bestYaws);
         return NodeOutcome.of(improve ? Guarantee.IMPROVED : Guarantee.FOUND, out);
@@ -175,23 +176,6 @@ public final class FoldDriverNode implements NodeRuntime {
         List<de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint> cons =
                 new ArrayList<>(ctx.spec.constraints);
         return new JumpSpec(sc, cons, ctx.spec.objective);
-    }
-
-    private double verifiedObjective(GraphContext ctx, double[] yaws, double px, double pz) {
-        JumpPhysicsInputs at = Scoring.pinnedScenario(ctx.scenario, px, pz);
-        double[] gf = at.toGameFacings(yaws);
-        ForwardPath path = ctx.model.forward(at, gf);
-        JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(ctx.spec);
-        if (compiled.maxViolation(gf, path) > ctx.feasTol) return Double.NaN;
-        return path.getPos(ctx.spec.objective.tick, ctx.spec.objective.axis);
-    }
-
-    private void adoptStart(GraphContext ctx, double px, double pz) {
-        JumpPhysicsInputs sc = ctx.scenario;
-        if (px != sc.startPos.x || pz != sc.startPos.z) {
-            sc.startPos = new Vec3dCore(px, sc.startPos.y, pz);
-        }
-        sc.startBox = StartBox.pinned(px, pz, sc.initialVelocity.x, sc.initialVelocity.z);
     }
 
     static void traceRounds(FoldReplayDriver.Result res) {

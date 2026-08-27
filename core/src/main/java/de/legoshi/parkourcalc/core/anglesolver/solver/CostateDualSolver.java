@@ -180,6 +180,15 @@ public final class CostateDualSolver {
             this.objDevZ = objDevZ;
             this.smooth = smooth;
         }
+
+        public static FreeP0 forObjective(StartBox box, Objective obj, double smooth) {
+            boolean max = obj.sense == Objective.Sense.MAX;
+            boolean axisX = obj.axis == JumpPhysicsInputs.Axis.X;
+            double objDevX = axisX ? (max ? 1.0 : -1.0) : 0.0;
+            double objDevZ = axisX ? 0.0 : (max ? 1.0 : -1.0);
+            return new FreeP0(box.pxLo - box.px, box.pxHi - box.px,
+                    box.pzLo - box.pz, box.pzHi - box.pz, objDevX, objDevZ, smooth);
+        }
     }
 
     /** Diagnostics: solver iterations spent in the last {@link #solve}. */
@@ -481,29 +490,9 @@ public final class CostateDualSolver {
     /** Solve {@code (H + damp·I)·step = −grad_free} for the free set via Cholesky. {@code H} is PSD so the
      *  damped matrix is positive definite for {@code damp>0}; returns false only on numerical breakdown. */
     private boolean choleskySolve(int nf, double damp) {
-        for (int a = 0; a < nf; a++) {
-            for (int b = 0; b <= a; b++) {
-                double s = H[a][b] + (a == b ? damp : 0.0);
-                for (int k = 0; k < b; k++) s -= Lwork[a][k] * Lwork[b][k];
-                if (a == b) {
-                    if (s <= 0.0) return false;
-                    Lwork[a][a] = Math.sqrt(s);
-                } else {
-                    Lwork[a][b] = s / Lwork[b][b];
-                }
-            }
-            step[a] = -gradient[freeIdx[a]];
-        }
-        for (int a = 0; a < nf; a++) {
-            double s = step[a];
-            for (int k = 0; k < a; k++) s -= Lwork[a][k] * step[k];
-            step[a] = s / Lwork[a][a];
-        }
-        for (int a = nf - 1; a >= 0; a--) {
-            double s = step[a];
-            for (int k = a + 1; k < nf; k++) s -= Lwork[k][a] * step[k];
-            step[a] = s / Lwork[a][a];
-        }
+        if (!SpdCholesky.factor(H, Lwork, nf, damp)) return false;
+        for (int a = 0; a < nf; a++) step[a] = -gradient[freeIdx[a]];
+        SpdCholesky.solveInPlace(Lwork, step, nf);
         return true;
     }
 }

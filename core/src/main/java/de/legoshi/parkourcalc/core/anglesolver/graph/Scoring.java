@@ -125,6 +125,22 @@ public final class Scoring {
         return a;
     }
 
+    public static double verifiedObjectiveAt(ForwardModel model, JumpPhysicsInputs base, JumpSpec spec,
+                                             double[] yaws, double px, double pz, double feasTol) {
+        JumpPhysicsInputs at = pinnedScenario(base, px, pz);
+        double[] gf = at.toGameFacings(yaws);
+        ForwardPath path = model.forward(at, gf);
+        if (JumpConstraintCompiler.compile(spec).maxViolation(gf, path) > feasTol) return Double.NaN;
+        return path.getPos(spec.objective.tick, spec.objective.axis);
+    }
+
+    public static void adoptPinnedStart(JumpPhysicsInputs sc, double px, double pz) {
+        if (px != sc.startPos.x || pz != sc.startPos.z) {
+            sc.startPos = new Vec3dCore(px, sc.startPos.y, pz);
+        }
+        sc.startBox = StartBox.pinned(px, pz, sc.initialVelocity.x, sc.initialVelocity.z);
+    }
+
     public static boolean adoptWinningTranslation(ForwardModel model, JumpPhysicsInputs sc, JumpSpec spec,
                                                   StartBox freeBox, double[] yaws, double feasTol) {
         double[] gf = sc.toGameFacings(yaws);

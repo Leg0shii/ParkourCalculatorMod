@@ -9,15 +9,11 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.ParamValues;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.solver.CertifiedBnb;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
-import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
-import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
-import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
-import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -88,7 +84,8 @@ public final class CertifiedBnbNode implements NodeRuntime {
             if (res.bestInfeasYaws != null) ctx.closestMiss().offer(res.bestInfeasYaws, res.bestInfeasViol);
             return NodeOutcome.of(miss, in);
         }
-        double obj = verifiedObjective(ctx, res);
+        double obj = Scoring.verifiedObjectiveAt(ctx.model, ctx.scenario, ctx.spec, res.yawsDeg, res.px, res.pz,
+                ctx.feasTol);
         if (Double.isNaN(obj)) return NodeOutcome.of(miss, in);
         boolean max = ctx.maximize();
         if (in != null && in.yaws != null) {
@@ -96,7 +93,7 @@ public final class CertifiedBnbNode implements NodeRuntime {
             boolean better = max ? obj > cur : obj < cur;
             if (!better && (optimize || in.feasible)) return NodeOutcome.of(miss, in);
         }
-        adoptStart(ctx, res);
+        Scoring.adoptPinnedStart(ctx.scenario, res.px, res.pz);
         ctx.chainAppend("certified B&B" + (labelSuffix == null ? "" : labelSuffix));
         Candidate out = Candidate.of(ctx, res.yawsDeg);
         return NodeOutcome.of(optimize ? Guarantee.IMPROVED : Guarantee.FOUND, out);
@@ -111,20 +108,4 @@ public final class CertifiedBnbNode implements NodeRuntime {
         return new JumpSpec(sc, cons, ctx.spec.objective);
     }
 
-    private double verifiedObjective(GraphContext ctx, CertifiedBnb.Result res) {
-        JumpPhysicsInputs at = Scoring.pinnedScenario(ctx.scenario, res.px, res.pz);
-        double[] gf = at.toGameFacings(res.yawsDeg);
-        ForwardPath path = ctx.model.forward(at, gf);
-        JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(ctx.spec);
-        if (compiled.maxViolation(gf, path) > ctx.feasTol) return Double.NaN;
-        return path.getPos(ctx.spec.objective.tick, ctx.spec.objective.axis);
-    }
-
-    private void adoptStart(GraphContext ctx, CertifiedBnb.Result res) {
-        JumpPhysicsInputs sc = ctx.scenario;
-        if (res.px != sc.startPos.x || res.pz != sc.startPos.z) {
-            sc.startPos = new Vec3dCore(res.px, sc.startPos.y, res.pz);
-        }
-        sc.startBox = StartBox.pinned(res.px, res.pz, sc.initialVelocity.x, sc.initialVelocity.z);
-    }
 }

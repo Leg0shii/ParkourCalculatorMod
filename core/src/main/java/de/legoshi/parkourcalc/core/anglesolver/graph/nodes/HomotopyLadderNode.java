@@ -8,15 +8,11 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.NodeRuntime;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamValues;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.solver.FoldReplayDriver;
-import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
-import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
-import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 import de.legoshi.parkourcalc.core.anglesolver.solver.WallHomotopyLadder;
-import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -54,17 +50,11 @@ public final class HomotopyLadderNode implements NodeRuntime {
             ctx.closestMiss().offer(best.yawsDeg, best.maxViolation);
             return NodeOutcome.of(Guarantee.NONE, in);
         }
-        JumpPhysicsInputs at = Scoring.pinnedScenario(ctx.scenario, best.px, best.pz);
-        double[] gf = at.toGameFacings(best.yawsDeg);
-        ForwardPath path = ctx.model.forward(at, gf);
-        if (JumpConstraintCompiler.compile(ctx.spec).maxViolation(gf, path) > ctx.feasTol) {
+        if (Double.isNaN(Scoring.verifiedObjectiveAt(ctx.model, ctx.scenario, ctx.spec, best.yawsDeg,
+                best.px, best.pz, ctx.feasTol))) {
             return NodeOutcome.of(Guarantee.NONE, in);
         }
-        JumpPhysicsInputs live = ctx.scenario;
-        if (best.px != live.startPos.x || best.pz != live.startPos.z) {
-            live.startPos = new Vec3dCore(best.px, live.startPos.y, best.pz);
-        }
-        live.startBox = StartBox.pinned(best.px, best.pz, live.initialVelocity.x, live.initialVelocity.z);
+        Scoring.adoptPinnedStart(ctx.scenario, best.px, best.pz);
         ctx.chainAppend("homotopy ladder");
         return NodeOutcome.of(Guarantee.FOUND, Candidate.of(ctx, best.yawsDeg));
     }

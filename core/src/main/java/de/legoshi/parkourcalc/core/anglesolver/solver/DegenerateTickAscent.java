@@ -67,11 +67,7 @@ public final class DegenerateTickAscent {
     private static CostateDualSolver.FreeP0 freeStartTerm(JumpPhysicsInputs sc, Objective obj) {
         StartBox box = sc.startBox;
         if (box == null || !box.startFree()) return null;
-        boolean max = obj.sense == Objective.Sense.MAX;
-        double objDevX = obj.axis == JumpPhysicsInputs.Axis.X ? (max ? 1.0 : -1.0) : 0.0;
-        double objDevZ = obj.axis == JumpPhysicsInputs.Axis.X ? 0.0 : (max ? 1.0 : -1.0);
-        return new CostateDualSolver.FreeP0(box.pxLo - box.px, box.pxHi - box.px,
-                box.pzLo - box.pz, box.pzHi - box.pz, objDevX, objDevZ, FREE_START_SMOOTH);
+        return CostateDualSolver.FreeP0.forObjective(box, obj, FREE_START_SMOOTH);
     }
 
     public static double[] improve(ExactJumpModel exact, JumpSpec spec, double[] baseline, double feasTol,

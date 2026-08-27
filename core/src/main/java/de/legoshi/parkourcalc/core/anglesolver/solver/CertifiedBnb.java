@@ -1197,11 +1197,7 @@ public final class CertifiedBnb {
     }
 
     private static CostateDualSolver.FreeP0 freeStartTerm(StartBox box, Objective obj) {
-        boolean max = obj.sense == Objective.Sense.MAX;
-        double objDevX = obj.axis == JumpPhysicsInputs.Axis.X ? (max ? 1.0 : -1.0) : 0.0;
-        double objDevZ = obj.axis == JumpPhysicsInputs.Axis.X ? 0.0 : (max ? 1.0 : -1.0);
-        return new CostateDualSolver.FreeP0(box.pxLo - box.px, box.pxHi - box.px,
-                box.pzLo - box.pz, box.pzHi - box.pz, objDevX, objDevZ, FREE_START_SMOOTH);
+        return CostateDualSolver.FreeP0.forObjective(box, obj, FREE_START_SMOOTH);
     }
 
     private static double clamp(double v, double lo, double hi) {
