@@ -130,20 +130,14 @@ public final class SlpSolve {
         boolean[] trivialInfeasible = {false};
         List<JumpConstraint> ineq = new ArrayList<>();
         List<JumpLinearModel.Wall> walls = new ArrayList<>();
-        int domSign = (spec.objective.sense == Objective.Sense.MAX) ? 1 : -1;
         for (JumpConstraint c : constraints) {
             if (c.mode == JumpConstraint.Mode.F) continue;
-            if (c.mode == JumpConstraint.Mode.DXZ || c.mode == JumpConstraint.Mode.DZX) {
-                lin.addCrossAxisWalls(walls, c, domSign, 0.0);
-                ineq.add(c);
-                continue;
-            }
             JumpLinearModel.Wall w = lin.compileWall(c, 0.0, trivialInfeasible);
-            if (trivialInfeasible[0]) return null;
+            if (trivialInfeasible[0]) return null; // a violated constant is unfixable
             if (w != null) { ineq.add(c); walls.add(w); }
         }
         int m = walls.size();
-        if (m == 0) return null;
+        if (m == 0) return null; // nothing to restore; the closed form already handles the unconstrained case
 
         double[] cx = new double[n];
         double[] cz = new double[n];
