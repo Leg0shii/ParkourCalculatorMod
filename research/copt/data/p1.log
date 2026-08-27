@@ -1,0 +1,154 @@
+Cardinal Optimizer v8.0.5. Build date May 30 2026
+Copyright Cardinal Operations 2026. All Rights Reserved
+
+Setting parameter 'Logging' to 1
+mip start: 404 vars
+Setting parameter 'TimeLimit' to 300
+Setting parameter 'FeasTol' to 1e-09
+Setting parameter 'NonConvex' to 2
+Setting parameter 'HeurLevel' to 3
+Setting parameter 'DivingHeurLevel' to 3
+Setting parameter 'RoundingHeurLevel' to 3
+Setting parameter 'SubMipHeurLevel' to 3
+Setting parameter 'PreRootHeurLevel' to 3
+Model fingerprint: e25be1bc
+
+Using Cardinal Optimizer v8.0.5 on Windows (25H2 Build 26200 - x86_64)
+The CPU model is AMD Ryzen 5 3600 6-Core Processor
+Hardware has 6 physical cores and 12 logical cores. Using instruction set X86_NATIVE (1)
+Maximizing a MIQCP problem
+
+The original problem has:
+    1903 rows, 588 columns and 7668 non-zero elements
+    400 binaries
+    11 quadratic constraints
+
+Starting the MIP solver with 12 threads and 32 tasks
+
+Loading 1 initial MIP solution
+Extending partial MIP solution # 1
+Extending partial MIP solution # 1 failed (infeasible)
+Initial MIP solution # 1 was rejected: partial
+Presolving the problem
+
+The presolved problem has:
+    1513 rows, 496 columns and 6198 non-zero elements
+    320 binaries
+    22 SOC rows and 66 non-zero elements
+
+Problem info:
+    Range of matrix coefficients:    [9e-05,7e+00]
+    Range of rhs coefficients:       [7e-04,5e+03]
+    Range of bound coefficients:     [7e-04,5e+03]
+    Range of cost coefficients:      [6e-03,5e+00]
+    Density of cost:                     15.5%
+
+     Nodes    Active  LPit/n  IntInf     BestBound  BestSolution     Gap   Time
+         0         1      --       0  8.264383e+00            --     Inf  0.08s
+         0         1      --     118 -2.552519e+00            --     Inf  0.54s
+         0         1      --      63 -2.572377e+00            --     Inf  2.84s
+         0         1      --      47 -2.576252e+00            --     Inf  2.87s
+         0         1      --      49 -2.576968e+00            --     Inf  2.89s
+         0         1      --      47 -2.577277e+00            --     Inf  2.91s
+         0         1      --      46 -2.577286e+00            --     Inf  2.93s
+         0         1      --      46 -2.577810e+00            --     Inf  2.95s
+         0         1      --      46 -2.578789e+00            --     Inf  2.96s
+         0         1      --      49 -2.579340e+00            --     Inf  2.98s
+         0         1      --      49 -2.579707e+00            --     Inf  3.00s
+         0         1      --      56 -2.579945e+00            --     Inf  3.02s
+         0         1      --      54 -2.583584e+00            --     Inf  3.04s
+         0         1      --      76 -2.583606e+00            --     Inf  3.06s
+         0         1      --      64 -2.583606e+00            --     Inf  3.09s
+
+     Nodes    Active  LPit/n  IntInf     BestBound  BestSolution     Gap   Time
+         0         1      --      61 -2.583674e+00            --     Inf  3.11s
+         0         1      --      60 -2.583693e+00            --     Inf  3.13s
+         0         1      --      60 -2.583701e+00            --     Inf  3.16s
+         0         1      --      63 -2.583809e+00            --     Inf  3.18s
+         0         1      --      63 -2.583828e+00            --     Inf  3.20s
+         0         1      --      63 -2.584011e+00            --     Inf  3.23s
+         0         1      --      63 -2.584113e+00            --     Inf  3.25s
+         0         1      --      63 -2.584158e+00            --     Inf  3.28s
+         0         1      --      61 -2.588271e+00            --     Inf  3.45s
+         1         2   553.0      61 -2.588271e+00            --     Inf  4.32s
+         2         2   279.5      61 -2.588307e+00            --     Inf  4.41s
+         3         4   186.7      59 -2.588307e+00            --     Inf  4.41s
+         4         1   143.3      64 -2.588756e+00            --     Inf  4.53s
+         5         2   117.4      62 -2.588756e+00            --     Inf  4.53s
+         6         3    98.7      62 -2.588756e+00            --     Inf  4.53s
+
+     Nodes    Active  LPit/n  IntInf     BestBound  BestSolution     Gap   Time
+         7         5    85.1      59 -2.588756e+00            --     Inf  4.53s
+         8         2    74.8      60 -2.589006e+00            --     Inf  4.68s
+         9         4    66.6      60 -2.589006e+00            --     Inf  4.68s
+        10         6    60.0      60 -2.589006e+00            --     Inf  4.68s
+        20        10    54.9      58 -2.589017e+00            --     Inf  4.79s
+        30        16    46.5      70 -2.589042e+00            --     Inf  5.30s
+        40        13    39.4      70 -2.589049e+00            --     Inf  5.41s
+        50         6    34.9      61 -2.589089e+00            --     Inf  5.55s
+        60        24    34.5      72 -2.589089e+00            --     Inf  5.55s
+        70        40    31.6      46 -2.589089e+00            --     Inf  5.55s
+        80        22    36.4      46 -2.589094e+00            --     Inf  5.85s
+        90        38    38.4      42 -2.589094e+00            --     Inf  5.85s
+       100        50    38.7      55 -2.589094e+00            --     Inf  5.85s
+       110        31    43.2      39 -2.589112e+00            --     Inf  6.04s
+       120        47    42.4      42 -2.589112e+00            --     Inf  6.04s
+
+     Nodes    Active  LPit/n  IntInf     BestBound  BestSolution     Gap   Time
+       130        63    42.2      53 -2.589112e+00            --     Inf  6.04s
+       140        48    41.8      57 -2.589112e+00            --     Inf  6.36s
+       150        60    45.7      52 -2.589112e+00            --     Inf  6.36s
+       160        72    46.2      50 -2.589112e+00            --     Inf  6.36s
+       170        53    50.3      60 -2.589112e+00            --     Inf  6.57s
+       180        64    53.0      64 -2.589112e+00            --     Inf  6.57s
+       190        77    53.8      44 -2.589112e+00            --     Inf  6.57s
+       200        53    55.1      41 -2.589112e+00            --     Inf  6.98s
+H      206        60    54.8      40 -2.589112e+00 -2.599488e+00  0.399%  6.98s
+H      206        60    54.8      40 -2.589112e+00 -2.599280e+00  0.391%  6.98s
+       300        87    52.0      43 -2.589139e+00 -2.599280e+00  0.390%  7.45s
+H      370       135    53.7      43 -2.589144e+00 -2.599279e+00  0.390%  7.72s
+       400       141    52.6      28 -2.589144e+00 -2.599279e+00  0.390%  7.92s
+       500       207    54.8      15 -2.589144e+00 -2.599279e+00  0.390%  8.29s
+H      596       291    52.8      18 -2.589144e+00 -2.599116e+00  0.384% 10.08s
+
+     Nodes    Active  LPit/n  IntInf     BestBound  BestSolution     Gap   Time
+       600       301    52.8      10 -2.589144e+00 -2.599116e+00  0.384% 10.08s
+H      606       311    52.4      21 -2.589144e+00 -2.599093e+00  0.383% 10.08s
+       700       396    50.9       6 -2.589144e+00 -2.599093e+00  0.383% 10.29s
+       800       500    51.8      17 -2.589144e+00 -2.599093e+00  0.383% 10.44s
+       900       602    50.8      25 -2.589144e+00 -2.599093e+00  0.383% 10.58s
+H      914       596    50.5      27 -2.589144e+00 -2.599093e+00  0.383% 11.24s
+      1000       674    48.5       6 -2.589144e+00 -2.599093e+00  0.383% 11.36s
+      1033         1    48.1       0 -2.599065e+00 -2.599093e+00  0.001% 14.29s
+
+Best solution   : -2.599093005
+Best bound      : -2.599064579
+Best gap        : 0.0011%
+Solve time      : 14.29
+Solve node      : 1033
+MIP status      : solved
+Solution status : integer optimal (relative gap limit 0.0001)
+
+Violations      :     absolute     relative
+    bounds      :            0            0
+    rows        :            0            0
+    integrality :            0
+  quadratics    :  1.54049e-09
+vars -> data/j1150-p1-vars.json
+decode -> data/noturn-j1150-p1-decode.json
+{
+ "status": 1,
+ "time": 14.311512470245361,
+ "S": -2.599093005288978,
+ "pos": -2805.2990929933685,
+ "S_bound": -2.5990645789252085,
+ "pos_bound": -2805.2990645670047,
+ "circleResid": 2.822408973202073e-12,
+ "abNorm": 1.000000000001411,
+ "maxTurnMagResid": 2.9624825075708072e-08,
+ "thetaDeg": 20.44982861697715,
+ "px": -2802.7446200135496,
+ "pz": 4970.2801872015125,
+ "sprintEngage": 20
+}
+combos: A SD A SA A WA SA SA NONE SA SA S SA SD S WD SD W WD D WD WD W W WD WD WD WD WD WD WD WD WD WD WD WD WD WD W
