@@ -208,7 +208,7 @@ public final class RunTicksSearch<P> {
             return out;
         }
         for (int extra = budget; extra >= 0; extra--) {
-            if (budget - extra > maxRest) continue;
+            if (minimize && budget - extra > maxRest) continue;
             if (options.allows(jumpIndex, extra)) out.add(extra);
         }
         return out;
