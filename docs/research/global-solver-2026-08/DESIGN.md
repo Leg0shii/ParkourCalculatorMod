@@ -1,5 +1,12 @@
 # A certified byte-exact global solver for the MC parkour angle problem (ARCH-2 research)
 
+STATUS 2026-08-26: PARTIALLY SUPERSEDED, do not build from this document alone. The Step 1 research pass
+(`ARCH2-STEP1-SIMPLIFY.md`, same folder) measured section 1 step 1 (chain FBBT as gate-fixer) DEAD and
+section 1 step 2 (costate warm start as feasible incumbent) UNSOUND as stated; build-order items 1 and 3
+change roles, items 6, 7, 8 are demoted. The surviving pieces are the disk kernel + arc chord cut, the
+3-way gate branch, and round-and-simulate. The authoritative build plan is the implementation-plan comment
+on issue #422; this document remains the design-rationale record.
+
 Synthesis of a 3-agent SOTA survey (2026-08-25): global-MINLP internals, tight relaxations, and
 structure-exploiting switched-trajectory optimization. All three converged on one architecture. This doc is
 the design record + build order. Raw agent findings summarized inline; key references at the end.
