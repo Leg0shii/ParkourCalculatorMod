@@ -579,7 +579,7 @@ public final class BucketWalk {
         return new AnchorSlp.Outcome(null, yaws, gf, path, px, pz, viol);
     }
 
-    private static float[] candidates(ExactJumpModel exact, JumpPhysicsInputs sc, int t, float gf, int window) {
+    static float[] candidates(ExactJumpModel exact, JumpPhysicsInputs sc, int t, float gf, int window) {
         if (!exact.sine262()) {
             boolean grounded = !Double.isNaN(sc.slipAt(t));
             boolean boost = !exact.modern() && grounded && sc.jumpAt(t) && sc.sprintAt(t);

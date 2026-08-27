@@ -30,6 +30,7 @@ public final class JumpLinearModel {
 
     public final int n;
     private final JumpPhysicsInputs sc;
+    private final boolean floatFriction;
 
     private final double[] pConst;  // per-tick forward+jump input magnitude (the e^{iθ} is along +imag)
     private final double[] qConst;  // per-tick strafe input magnitude (along +real)
@@ -71,6 +72,11 @@ public final class JumpLinearModel {
     }
 
     public JumpLinearModel(JumpPhysicsInputs scenario, boolean[] zeroX, boolean[] zeroZ) {
+        this(scenario, zeroX, zeroZ, false);
+    }
+
+    public JumpLinearModel(JumpPhysicsInputs scenario, boolean[] zeroX, boolean[] zeroZ, boolean floatFriction) {
+        this.floatFriction = floatFriction;
         this.sc = scenario;
         this.n = scenario.numTicks;
         this.pConst = new double[n];
@@ -111,10 +117,10 @@ public final class JumpLinearModel {
             double slip = contact ? slipOv : Constants.SLIP_F;
             double accelSpeed;
             if (contact) {
-                f4[t] = slip * 0.91;
+                f4[t] = floatFriction ? (double) ((float) slipOv * 0.91F) : slip * 0.91;
                 accelSpeed = Constants.attrValueF(sc.factorAmpAt(t), sprint) * (0.16277136 / (f4[t] * f4[t] * f4[t]));
             } else {
-                f4[t] = 0.91;
+                f4[t] = floatFriction ? (double) 0.91F : 0.91;
                 accelSpeed = sc.airFactorSprintAt(t) ? Constants.AIR_SPEED_F : Constants.AIR_SPEED_NO_SPRINT_F;
             }
             // Same per-tick input authoring as ExactJumpModel step (4) (gh-102).

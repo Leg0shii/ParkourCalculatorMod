@@ -36,9 +36,7 @@ public class ContinuousDiscreteScreen {
 
         SaveFile file = SaveIO.parseSafe(new String(Files.readAllBytes(new File(path).toPath()), StandardCharsets.UTF_8));
         ExactJumpModel exact = ExactJumpModel.forMcVersion(file.mcVersion);
-        Method build = HpkDualRecoveryScreen.class.getDeclaredMethod("buildSpec", SaveFile.class, ExactJumpModel.class);
-        build.setAccessible(true);
-        JumpSpec spec = (JumpSpec) build.invoke(null, file, exact);
+        JumpSpec spec = de.legoshi.parkourcalc.anglesolver.harness.EngineSpecs.buildSpec(file, exact);
         JumpPhysicsInputs sc = spec.asScenario();
         JumpConstraintCompiler.Compiled comp = JumpConstraintCompiler.compile(spec);
         int n = sc.numTicks;

@@ -74,12 +74,17 @@ public final class Scoring {
 
     public static boolean reachHeadroom(ForwardModel model, JumpPhysicsInputs sc, JumpSpec spec,
                                         double[] yaws, double dualBound, double feasTol) {
+        return reachHeadroom(model, sc, spec, yaws, dualBound, feasTol, 0.0);
+    }
+
+    public static boolean reachHeadroom(ForwardModel model, JumpPhysicsInputs sc, JumpSpec spec,
+                                        double[] yaws, double dualBound, double feasTol, double epsilon) {
         if (yaws == null || Double.isNaN(dualBound)) return false;
         if (violationOf(model, sc, spec, yaws) > feasTol) return false;
         boolean max = spec.objective.sense == Objective.Sense.MAX;
         double achieved = exactObjective(model, sc, spec, yaws);
         double gap = max ? dualBound - achieved : achieved - dualBound;
-        return gap > REACH_GAP_EPS;
+        return gap > Math.max(REACH_GAP_EPS, epsilon);
     }
 
     public static double objectiveCap(JumpSpec spec) {

@@ -1,0 +1,133 @@
+capture	tier	success	met	total	solver	sense	axis	objTick	hasObj	shippedObj	recertObj	recertViol	coldMs	warmMedMs	runs	smoothLambda	n
+bfsetup2	THOROUGH	false	5	11	-	MIN	X	15	true	-1604.093264801	-1604.093264801	6.463967686e-02	1125	1125	1	0.000000	15
+deserthard-planrealization	THOROUGH	true	81	81	receding horizon	MAX	Z	353	true	12.223453095	12.223453095	0.000000000e+00	12468	12468	1	0.000000	353
+deserthard-sine262	THOROUGH	true	81	81	receding horizon	MAX	Z	353	true	12.223453095	12.223453095	0.000000000e+00	12119	12119	1	0.000000	353
+df-chain-free-start	THOROUGH	true	13	13	free start rescue -> branch and bound -> ILS (better objective) -> translated start -> leaf snap	MAX	X	15	true	-3.877773080	-4.950828854	1.062952526e+00	3188	3188	1	0.000000	15
+f2f-dfchain-multijump	THOROUGH	true	21	21	receding horizon -> leaf snap	MAX	X	24	true	-3.860444542	-3.860444542	0.000000000e+00	3212	3212	1	0.000000	24
+gh283-j925-farseed	THOROUGH	true	22	22	receding horizon -> free window -> closed form -> SLP -> ILS (better objective) -> translated start -> leaf snap	MAX	X	24	true	-1003.298614392	-1005.785115988	2.485918418e+00	4287	4287	1	0.000000	24
+gh283-j990-cold	THOROUGH	true	39	39	receding horizon -> free window -> closed form -> SLP -> ILS (better objective) -> translated start -> leaf snap	MAX	X	37	true	-4264.862071114	-4264.894638341	2.979924769e+00	3291	3291	1	0.000000	37
+gh313-j121-dfneo	THOROUGH	false	12	12	-	MAX	X	9	true	-41.299403108	-41.299403108	0.000000000e+00	33	33	1	0.000000	9
+gh398-optimize-2jump	THOROUGH	true	5	5	receding horizon -> fold driver -> certified B&B -> ILS (better objective) -> leaf snap	MIN	X	24	true	-50.977229602	-50.977229602	0.000000000e+00	7553	7553	1	0.000000	24
+j140-head-to-chest-neo-_1.125	THOROUGH	true	17	17	receding horizon -> fold driver -> certified B&B -> ILS (better objective) -> leaf snap	MAX	X	44	true	-826.228855675	-826.228855723	0.000000000e+00	7689	7689	1	0.000000	44
+j144_1bm_5-1_Triple_Neo	THOROUGH	true	14	14	receding horizon -> certified B&B -> branch and bound -> ILS (better objective) -> leaf snap	MAX	Z	42	true	987.705161474	987.705161474	0.000000000e+00	7759	7759	1	0.000000	42
+j148_1bm_Pregapped_Head_Butterfly_Neo_to_Ladder	THOROUGH	true	12	12	receding horizon -> certified B&B -> leaf snap	MIN	Z	28	true	1097.807397219	1097.807400722	0.000000000e+00	6523	6523	1	0.000000	28
+j149_1.5bm_Head_Butterfly_Neo_to_Ladder	THOROUGH	true	14	14	receding horizon -> fold driver -> certified B&B -> leaf snap	MIN	Z	39	true	1097.816946587	1097.816946587	0.000000000e+00	7678	7678	1	0.000000	39
+j152_Slab_to_Fence_3x3	THOROUGH	true	12	12	receding horizon -> certified B&B -> leaf snap	MAX	Z	28	true	1099.086084508	1099.086084508	0.000000000e+00	7179	7179	1	0.000000	28
+j153_Flat_Momentum_Head_to_Head_Neo	THOROUGH	true	21	21	receding horizon -> fold driver -> certified B&B -> leaf snap	MAX	X	84	true	-377.783630016	-377.783630016	0.000000000e+00	7851	7851	1	0.000000	84
+j335_1bmhh_Single_Fencegat_Butterfly_Neo	THOROUGH	true	18	18	receding horizon -> fold driver -> certified B&B -> leaf snap	MAX	X	21	true	-697.295300388	-697.295300388	5.731133204e-03	7695	7695	1	0.000000	21
+j342_3bc_Trapdoor_to_Trapdoor_Cross_Neo	THOROUGH	true	12	12	receding horizon -> fold driver -> certified B&B -> ILS (better objective) -> leaf snap	MAX	Z	23	true	983.723050195	983.723050195	0.000000000e+00	5433	5433	1	0.000000	23
+j343_Single_Piston_Butterfly_Neo	THOROUGH	true	19	19	receding horizon -> fold driver -> certified B&B -> leaf snap	MAX	X	25	true	-492.139471522	-492.139471522	0.000000000e+00	7437	7437	1	0.000000	25
+j344_Butterfly_Neo_to_Cobblewall_-0.5	THOROUGH	true	5	5	closed form -> relaxation recovery -> level set -> fold driver -> ILS (better objective) -> leaf snap	MAX	X	12	true	-533.037181536	-533.037181536	0.000000000e+00	5225	5225	1	0.000000	12
+j345_3jmm_True_Nix_Neo	THOROUGH	true	14	14	receding horizon -> fold driver -> certified B&B -> leaf snap	MAX	X	49	true	-660.156381062	-660.156381062	0.000000000e+00	7398	7398	1	0.000000	49
+j346_1bm_Squeeze_to_Squeeze_Butterfly_Neo	THOROUGH	true	57	57	receding horizon -> fold driver -> certified B&B -> leaf snap	MAX	X	39	true	-740.293964515	-740.293964515	0.000000000e+00	8007	8007	1	0.000000	39
+j347_Trapdoor_to_Slab_Inverse_Nix_Neo_-0.5	THOROUGH	true	54	54	receding horizon -> fold driver -> certified B&B -> leaf snap	MAX	X	52	true	-575.297689459	-575.297689459	0.000000000e+00	7877	7877	1	0.000000	52
+j422_2jmm_Inverse_Nix_Neo	THOROUGH	true	13	13	receding horizon -> fold driver -> certified B&B -> ILS (better objective) -> leaf snap	MAX	X	36	true	-4100.290684413	-4100.290713725	3.123948386e-05	7781	7781	1	0.000000	36
+j424_1.4375bm_Double_Winged_Neo__0.25	THOROUGH	true	14	14	receding horizon -> fold driver -> certified B&B -> branch and bound -> ILS (better objective) -> leaf snap	MAX	X	48	true	-4264.287895437	-4264.287895437	0.000000000e+00	7583	7583	1	0.000000	48
+j425_1jmm_Trapdoor_to_Daylight_Sensor_Nix_Neo__0.375	THOROUGH	true	10	10	receding horizon -> fold driver -> certified B&B -> branch and bound -> ILS (better objective) -> leaf snap	MAX	X	24	true	-1847.290349322	-1847.290349322	0.000000000e+00	7414	7414	1	0.000000	24
+j703_1.5bm__x__T3c_Butterfly_-0.5	THOROUGH	true	13	13	receding horizon -> certified B&B -> ILS (better objective) -> leaf snap	MAX	X	39	true	-4389.297273810	-4389.297273810	0.000000000e+00	6402	6402	1	0.000000	39
+j717_Panewall_Momentum_Single_Block_Butterfly_Neo	THOROUGH	true	17	17	receding horizon -> fold driver -> certified B&B -> ILS (better objective) -> leaf snap	MAX	X	27	true	-82.151924359	-82.151924359	0.000000000e+00	7902	7902	1	0.000000	27
+j757_1bmhh_4.0625_1	THOROUGH	true	12	12	receding horizon -> fold driver -> certified B&B -> ILS (better objective) -> leaf snap	MAX	Z	18	true	1098.116243673	1098.116243673	0.000000000e+00	6459	6459	1	0.000000	18
+j816_Sidewalled_Piston_Momentum_Butterfly_Neo	THOROUGH	true	19	19	receding horizon -> fold driver -> certified B&B -> ILS (better objective) -> leaf snap	MAX	X	24	true	-862.296312281	-862.296312281	0.000000000e+00	5805	5805	1	0.000000	24
+j1099-1.1875bm_Head_Butterfly_Neo_fail	THOROUGH	true	9	9	receding horizon -> certified B&B -> leaf snap	MAX	X	29	true	-2500.442705627	-2500.442705627	0.000000000e+00	7889	7889	1	0.000000	29
+j1149-_X__Pane_to_Head_S_Neo	THOROUGH	true	12	12	receding horizon -> fold driver -> certified B&B -> leaf snap	MAX	X	37	true	-1324.768433311	-1324.768433311	0.000000000e+00	7698	7698	1	0.000000	37
+j1150-2x2bm_Nix_Neo	THOROUGH	true	11	11	receding horizon -> fold driver -> certified B&B -> branch and bound -> ILS (better objective) -> leaf snap	MAX	X	49	true	-2805.296173465	-2805.296173465	0.000000000e+00	7657	7657	1	0.000000	49
+j155-4jmm_3bcmm_4.9375b	THOROUGH	true	4	4	receding horizon -> fold driver -> certified B&B -> branch and bound -> ILS (better objective) -> leaf snap	MAX	Z	66	true	4984.763296200	4984.763296200	0.000000000e+00	7076	7076	1	0.000000	66
+j716-1bm_Cobblewall_to_Cobblewall_Winged_Neo	THOROUGH	true	11	11	receding horizon -> fold driver -> certified B&B -> branch and bound -> ILS (better objective) -> leaf snap	MIN	X	42	true	-699.950256462	-699.950256462	0.000000000e+00	7069	7069	1	0.000000	42
+j718-2bm__Z__Pane_to_Pane_Neo	THOROUGH	true	11	11	receding horizon -> fold driver -> certified B&B -> leaf snap	MAX	X	37	true	-1902.861504141	-1902.861504141	0.000000000e+00	7667	7667	1	0.000000	37
+j828-1bm_5.3125-1.5	THOROUGH	true	6	6	receding horizon -> fold driver -> branch and bound -> leaf snap	MAX	Z	39	true	4978.013122791	4978.013122791	0.000000000e+00	7616	7616	1	0.000000	39
+j925-Sidewalled_Single_Piston_Butterfly_Neo_1bl	THOROUGH	true	6	6	closed form -> SLP -> level set -> fold driver -> leaf snap	MAX	X	11	true	-1003.297970912	-1003.297970912	0.000000000e+00	5270	5270	1	0.000000	11
+j108_HH_Short_Pane_to_Pane_Neo	THOROUGH	true	12	12	receding horizon -> fold driver -> certified B&B -> ILS (better objective) -> leaf snap	MAX	X	25	true	-328.858930259	-328.858951256	0.000000000e+00	5582	5582	1	0.000000	25
+j111_0bm_Trapdoor_to_Trapdoor_Cross_Neo	THOROUGH	true	5	5	closed form -> fold driver -> branch and bound -> ILS (better objective) -> leaf snap	MAX	X	11	true	-452.440357152	-452.440357152	0.000000000e+00	5088	5088	1	0.000000	11
+j119_Head_Waza_to_Anvil	THOROUGH	true	14	14	receding horizon -> fold driver -> certified B&B -> leaf snap	MAX	X	26	true	-779.296490218	-779.296510185	1.453582922e-05	6523	6523	1	0.000000	26
+j120_3bm_5.0625b-0.5	THOROUGH	true	14	14	receding horizon -> fold driver -> certified B&B -> branch and bound -> ILS (better objective)	MAX	Z	50	true	986.765890632	986.765890632	0.000000000e+00	7589	7589	1	0.000000	50
+j121_3jmm_Double_Winged_Neo__0.5	THOROUGH	true	14	14	receding horizon -> fold driver -> certified B&B -> branch and bound -> leaf snap	MAX	X	46	true	-41.288824201	-41.288776471	4.772842695e-05	7726	7726	1	0.000000	46
+j122_1.5b_Head_Butterfly_Neo	THOROUGH	true	14	14	receding horizon -> fold driver -> certified B&B -> branch and bound -> ILS (better objective) -> leaf snap	MAX	X	37	true	-82.294555449	-82.294555449	0.000000000e+00	6743	6743	1	0.000000	37
+j126_1bmhh_Pane_to_Pane_Neo	THOROUGH	true	15	15	receding horizon -> fold driver -> certified B&B -> translated start -> leaf snap	MAX	X	16	true	-247.852231135	-247.905578694	5.334725537e-02	5977	5977	1	0.000000	16
+j127_Head_to_Head_Neo	THOROUGH	true	16	16	receding horizon -> fold driver -> certified B&B -> branch and bound -> ILS (better objective) -> leaf snap	MAX	X	48	true	-292.770761045	-292.770785503	2.506881629e-05	6940	6940	1	0.000000	48
+j128_Head_to_Head_Neo_1bl	THOROUGH	true	16	16	receding horizon -> fold driver -> certified B&B -> leaf snap	MAX	X	48	true	-333.765329915	-333.765329915	0.000000000e+00	7935	7935	1	0.000000	48
+j129_1.125bm_4.4375b	THOROUGH	true	8	8	receding horizon -> fold driver -> certified B&B -> branch and bound -> ILS (better objective)	MAX	Z	36	true	987.139961376	987.139961376	0.000000000e+00	7600	7600	1	0.000000	36
+j132_Flowerpot_Head_Waza	THOROUGH	true	14	14	receding horizon -> fold driver -> certified B&B -> ILS (better objective) -> leaf snap	MAX	X	24	true	-492.985488509	-492.985488509	0.000000000e+00	5806	5806	1	0.000000	24
+j133__X__2jmm_Pane_to_Pane_Neo	THOROUGH	true	12	12	receding horizon -> fold driver -> certified B&B -> branch and bound -> ILS (better objective)	MAX	Z	36	true	1028.151621555	1028.151621555	0.000000000e+00	7581	7581	1	0.000000	36
+j134_T_3mm_4jmm_4_1	THOROUGH	true	10	10	receding horizon -> fold driver -> certified B&B -> branch and bound -> leaf snap	MAX	Z	44	true	986.702671174	986.702671174	0.000000000e+00	7681	7681	1	0.000000	44
+j135_Waza_to_Cobblewall_-0.5	THOROUGH	true	16	16	closed form -> relaxation recovery -> level set -> fold driver -> certified B&B -> leaf snap	MAX	X	17	true	-615.032473564	-615.082788998	5.030589104e-02	6864	6864	1	0.000000	17
+j138_Ladder_to_Ladder_Cross_Neo	THOROUGH	true	21	21	receding horizon -> fold driver -> certified B&B -> branch and bound -> leaf snap	MAX	X	25	true	-739.377278035	-739.377278035	0.000000000e+00	7667	7667	1	0.000000	25
+J143_Panewall_MM_Butterfly_Neo	THOROUGH	true	14	14	receding horizon -> fold driver -> certified B&B -> ILS (better objective) -> leaf snap	MAX	X	26	true	-0.299473422	-0.299473422	0.000000000e+00	7735	7735	1	0.000000	26
+j146_Truer_Head_Waza_to_Block	THOROUGH	true	14	14	receding horizon -> fold driver -> certified B&B -> leaf snap	MAX	X	26	true	-82.298202195	-82.298202195	0.000000000e+00	6897	6897	1	0.000000	26
+j147__X__1bm_Fence_to_Fence_Neo	THOROUGH	true	14	14	receding horizon -> fold driver -> certified B&B -> branch and bound -> ILS (better objective) -> leaf snap	MAX	Z	37	true	1095.096537317	1095.096537317	0.000000000e+00	7406	7406	1	0.000000	37
+j150_1bm_Chest_Inverse_Nix_Neo_to_Block_1bl	THOROUGH	true	14	14	receding horizon -> fold driver -> certified B&B -> ILS (better objective) -> leaf snap	MAX	X	37	true	-247.282299468	-247.282299468	0.000000000e+00	6865	6865	1	0.000000	37
+j187_Sidewalled_3x2.1875bm_Nix_Neo	THOROUGH	true	18	18	receding horizon -> fold driver -> certified B&B -> branch and bound -> ILS (better objective) -> leaf snap	MAX	X	38	true	-453.277436114	-453.277436114	0.000000000e+00	7677	7677	1	0.000000	38
+j246__X__1.9375bm_Triple_Neo	THOROUGH	true	12	12	receding horizon -> fold driver -> certified B&B -> branch and bound -> ILS (better objective) -> leaf snap	MIN	X	36	true	-999.305533954	-999.305533954	0.000000000e+00	7331	7331	1	0.000000	36
+j248_6bm_Microturn_4.8125b_Chained_to_3.125bm_Neo	THOROUGH	true	57	57	receding horizon -> fold driver -> certified B&B	MAX	Z	47	true	985.778278219	985.778278219	0.000000000e+00	7621	7621	1	0.000000	47
+j298_Backwalled_Block___Pane_3bm_Pane_to_Pane_Neo_1bl	THOROUGH	true	14	14	receding horizon -> fold driver -> certified B&B -> leaf snap	MAX	X	37	true	-2256.852923375	-2256.852923375	0.000000000e+00	7625	7625	1	0.000000	37
+j315_Egg_to_Block_Butterfly_Neo	THOROUGH	true	14	14	receding horizon -> fold driver -> certified B&B -> leaf snap	MAX	X	37	true	-1763.285831864	-1763.285893692	0.000000000e+00	7710	7710	1	0.000000	37
+j318_Waza_-0_to_Block_Pane_Postwalled	THOROUGH	true	11	11	closed form -> relaxation recovery -> fold driver -> certified B&B -> branch and bound -> translated start -> leaf snap	MAX	X	13	true	-1886.292454754	-1886.292493431	1.326522912e-03	5168	5168	1	0.000000	13
+j319__X__1bm_Gapped_Butterfly_Neo_to_Egg	THOROUGH	true	6	6	closed form -> fold driver -> branch and bound -> ILS (better objective)	MAX	Z	11	true	981.771255675	981.771255675	0.000000000e+00	5085	5085	1	0.000000	11
+j320_1bm_Gapped_Head_Butterfly_Neo	THOROUGH	true	6	6	closed form -> fold driver -> branch and bound -> ILS (better objective) -> leaf snap	MAX	X	11	true	-2009.298233480	-2009.298233480	0.000000000e+00	5075	5075	1	0.000000	11
+j321_c4.5_Pane_to_Pane_Neo_Pane_Postwalled	THOROUGH	true	18	18	receding horizon -> fold driver -> certified B&B -> branch and bound -> ILS (better objective) -> leaf snap	MAX	X	36	true	-2051.857769369	-2051.857769369	4.479018253e-05	7875	7875	1	0.000000	36
+j328_Backwalled_3bm_Pane_to_Pane_Neo	THOROUGH	true	16	16	receding horizon -> fold driver -> certified B&B -> ILS (better objective) -> leaf snap	MAX	X	38	true	-2419.859996743	-2419.859996743	0.000000000e+00	7137	7137	1	0.000000	38
+j330_1.5bm_Double_Winged_Neo__0.25	THOROUGH	true	24	24	receding horizon -> certified B&B -> leaf snap	MAX	X	36	true	-2460.280045168	-2460.280045168	9.227459259e-07	7735	7735	1	0.000000	36
+j1150-noturn-inner	THOROUGH	true	13	13	receding horizon -> free start -> fold driver -> certified B&B -> ILS (better objective) -> translated start -> leaf snap	MAX	X	49	true	-2805.295765733	-2804.406643061	8.891226710e-01	7671	7671	1	0.000000	49
+j1150-noturn-orig	THOROUGH	true	6	6	closed form -> branch and bound -> ILS (better objective) -> leaf snap	MAX	X	11	true	-2805.298591393	-2805.298591393	0.000000000e+00	3074	3074	1	0.000000	11
+j154-noturn-ja-inner	THOROUGH	true	14	14	receding horizon -> free window -> fold driver -> certified B&B -> translated start -> leaf snap	MIN	X	39	true	-1599.700417747	-1599.376671680	3.237457927e-01	7575	7575	1	0.000000	39
+j154-noturn-ja-orig	THOROUGH	false	35	41	receding horizon	MIN	X	39	true	-1600.842626642	-1600.842626642	7.873884594e-01	913	913	1	0.000000	39
+j001	THOROUGH	true	81	81	receding horizon	MAX	Z	353	true	12.225674683	12.225674683	0.000000000e+00	11522	11522	1	0.000000	353
+j002	THOROUGH	true	41	41	receding horizon -> closed form -> SLP -> level set -> fold driver -> certified B&B -> leaf snap	MIN	X	189	true	-33.676983510	-33.676983510	0.000000000e+00	7786	7786	1	0.000000	189
+j003	THOROUGH	true	39	39	receding horizon -> fold driver -> certified B&B, optimal at constraint cap -> leaf snap	MIN	X	176	true	-31.299999993	-31.299999993	0.000000000e+00	7720	7720	1	0.000000	176
+j004	THOROUGH	true	10	10	closed form -> fold driver -> branch and bound -> ILS (better objective) -> leaf snap	MAX	X	11	true	-1889.049166706	-1889.049166706	0.000000000e+00	5121	5121	1	0.000000	11
+j005	THOROUGH	true	10	10	closed form -> fold driver -> certified B&B -> branch and bound -> ILS (better objective) -> leaf snap	MAX	X	9	true	-41.291511996	-41.312414060	1.241405953e-02	5155	5155	1	0.000000	9
+j006	THOROUGH	true	7	7	closed form -> fold driver -> branch and bound -> ILS (better objective)	MIN	X	11	true	-1599.700111114	-1599.700111114	0.000000000e+00	5082	5082	1	0.000000	11
+j007	THOROUGH	true	13	13	receding horizon, optimal at constraint cap -> ILS (better objective)	MIN	Z	28	true	-444.300000000	-444.300000000	0.000000000e+00	5189	5189	1	0.000000	28
+j008-bfneo	THOROUGH	true	5	5	closed form -> fold driver -> certified B&B	MAX	X	11	true	-0.215319252	-0.215319252	0.000000000e+00	5308	5308	1	0.000000	11
+j008-hyper-fp	THOROUGH	true	8	8	closed form -> fold driver -> certified B&B -> branch and bound -> ILS (better objective)	MAX	X	11	true	-0.215313836	-0.215313836	0.000000000e+00	5071	5071	1	0.000000	11
+j008b-2jump	THOROUGH	true	10	10	receding horizon -> fold driver -> certified B&B -> branch and bound -> ILS (better objective)	MAX	X	25	true	-0.215313834	-0.215313834	0.000000000e+00	7499	7499	1	0.000000	25
+j009-headwazatoanvil	THOROUGH	true	5	5	closed form -> fold driver -> branch and bound -> leaf snap	MAX	X	11	true	-0.297866425	-0.297869764	3.315130489e-06	5113	5113	1	0.000000	11
+j010-Xp2hsneo	THOROUGH	true	4	4	closed form -> fold driver -> certified B&B -> branch and bound -> ILS (better objective) -> leaf snap	MIN	Z	11	true	-0.205399598	-0.205399598	0.000000000e+00	5108	5108	1	0.000000	11
+j011-1.875x1bmdoublecross	THOROUGH	true	5	5	closed form -> fold driver -> leaf snap	MIN	Z	11	true	-1.706399753	-1.706399753	0.000000000e+00	5170	5170	1	0.000000	11
+j012-pistonbasesidewallbf	THOROUGH	true	4	4	closed form -> fold driver -> certified B&B -> leaf snap	MAX	X	11	true	-0.296743763	-0.296743763	0.000000000e+00	5069	5069	1	0.000000	11
+j013-cw2cwwinged	THOROUGH	true	4	4	closed form -> fold driver -> certified B&B -> leaf snap	MAX	X	11	true	-0.049745260	-0.049745260	0.000000000e+00	5069	5069	1	0.000000	11
+j014-11bmreversenix	THOROUGH	true	2	2	closed form -> fold driver -> certified B&B -> leaf snap	MAX	X	11	true	0.702054038	0.702054038	0.000000000e+00	5068	5068	1	0.000000	11
+j015-1bmdoublewinged_1tier	THOROUGH	true	3	3	closed form -> fold driver -> certified B&B -> branch and bound -> leaf snap	MAX	X	10	true	-0.289828085	-0.289828085	0.000000000e+00	5079	5079	1	0.000000	10
+j016-X2jmmp2p	THOROUGH	true	4	4	closed form -> fold driver -> certified B&B -> branch and bound -> leaf snap	MAX	Z	11	true	-4.856043879	-4.856043879	0.000000000e+00	5074	5074	1	0.000000	11
+j017-postwalllightningneo	THOROUGH	true	7	7	closed form -> fold driver -> certified B&B -> ILS (better objective) -> leaf snap	MAX	Z	11	true	-1.216859718	-1.216859718	0.000000000e+00	5091	5091	1	0.000000	11
+j018-tds2tdsbf	THOROUGH	true	6	6	closed form -> fold driver -> certified B&B -> branch and bound -> leaf snap	MAX	X	11	true	-4.294380807	-4.294380807	0.000000000e+00	5105	5105	1	0.000000	11
+j019-3jmmtruenix	THOROUGH	true	4	4	closed form -> fold driver -> certified B&B -> branch and bound -> ILS (better objective) -> leaf snap	MAX	X	11	true	-13.292318684	-13.292318684	0.000000000e+00	5101	5101	1	0.000000	11
+j020-panewallsingleblockbf	THOROUGH	true	5	5	closed form -> fold driver -> certified B&B	MAX	X	11	true	-4.299798399	-4.299798399	0.000000000e+00	5164	5164	1	0.000000	11
+j021-rinav1-01	THOROUGH	true	13	13	receding horizon -> fold driver -> certified B&B -> ILS (better objective) -> leaf snap	MAX	Z	39	true	1067.863804630	1067.863802066	0.000000000e+00	7687	7687	1	0.000000	39
+j022-1bmhbfly	THOROUGH	true	5	5	closed form -> SLP -> level set -> fold driver -> leaf snap	MIN	X	11	true	-531.700158073	-531.700158073	0.000000000e+00	5156	5156	1	0.000000	11
+loopmm-3jump-lands	THOROUGH	true	5	5	receding horizon -> fold driver -> certified B&B -> branch and bound -> leaf snap	MAX	Z	33	true	-279.299858481	-279.299858481	0.000000000e+00	7564	7564	1	0.000000	33
+loopmm-3jump-solver-misses	THOROUGH	true	5	5	receding horizon -> fold driver -> certified B&B -> branch and bound -> leaf snap	MAX	Z	33	true	-279.299858481	-279.299858481	0.000000000e+00	7588	7588	1	0.000000	33
+loopmm-tight-t39	THOROUGH	false	4	6	receding horizon	MAX	Z	33	true	-279.300210510	-279.300210510	2.105103542e-04	3624	3624	1	0.000000	33
+nix-full-t1	THOROUGH	false	9	15	receding horizon	MAX	X	54	true	8.695057384	8.695057384	4.945800490e-03	7608	7608	1	0.000000	54
+nix-t25-setup-tick	THOROUGH	true	13	13	receding horizon -> fold driver -> certified B&B -> ILS (better objective) -> leaf snap	MAX	X	37	true	8.698381204	8.698381204	0.000000000e+00	7622	7622	1	0.000000	37
+razor-proof-improved	THOROUGH	false	7	14	receding horizon	MAX	X	49	true	212.698849957	212.698849957	1.209298848e-03	7655	7655	1	0.000000	49
+razor-proof-t1	THOROUGH	false	7	14	receding horizon	MAX	X	49	true	212.699158839	212.699158839	8.411493672e-04	7550	7550	1	0.000000	49
+razor-proof	THOROUGH	false	9	14	receding horizon	MAX	X	49	true	212.699103077	212.699103077	9.000045075e-04	7570	7570	1	0.000000	49
+razor-rung-attempt	THOROUGH	false	7	14	receding horizon	MAX	X	49	true	212.696159957	212.696159957	3.861070929e-03	7589	7589	1	0.000000	49
+razor-rung-legal-attempt-turn360-v2	THOROUGH	false	11	14	receding horizon	MAX	X	49	true	212.709535817	212.709535817	1.335610495e-02	7610	7610	1	0.000000	49
+razor-rung-legal-attempt-turn360	THOROUGH	false	8	14	receding horizon	MAX	X	49	true	212.697734080	212.697734080	2.271339769e-03	7615	7615	1	0.000000	49
+razor-rung-legal-attempt-wrap720	THOROUGH	false	7	14	receding horizon	MAX	X	49	true	212.697108295	212.697108295	2.891693296e-03	7593	7593	1	0.000000	49
+razor-rung-legal-attempt	THOROUGH	false	7	14	receding horizon	MAX	X	49	true	212.696361392	212.696361392	3.688773130e-03	7572	7572	1	0.000000	49
+razor-uncorrected	THOROUGH	false	7	13	receding horizon	MAX	X	37	true	8.750418970	8.750418970	2.442679276e-02	7425	7425	1	0.000000	37
+razor-weirdpane-attempt-v2	THOROUGH	false	8	16	receding horizon	MAX	X	50	true	-8.870479627	-8.870479627	8.081534830e-03	7524	7524	1	0.000000	50
+razor-weirdpane-attempt	THOROUGH	false	8	16	receding horizon	MAX	X	50	true	-8.870370360	-8.870370360	7.956934285e-03	7609	7609	1	0.000000	50
+razor-weirdpane	THOROUGH	false	9	16	receding horizon	MAX	X	50	true	-8.856092302	-8.856092302	7.449676941e-03	7585	7585	1	0.000000	50
+synth-free-translate	THOROUGH	true	1	1	closed form -> free start -> certified B&B	MAX	X	11	true	3.067949101	2.567949101	0.000000000e+00	5044	5044	1	0.000000	11
+synth-legal-shortfall	THOROUGH	true	1	2	closed form -> free start -> certified B&B -> wrap ILS (legal)	MAX	X	11	true	3.068010924	2.567948916	0.000000000e+00	10021	10021	1	0.000000	11
+taser-100t	THOROUGH	true	31	31	receding horizon -> fold driver -> certified B&B -> leaf snap	MAX	X	99	true	-20.020241236	-20.020241236	0.000000000e+00	7679	7679	1	0.000000	99
+taser-80t	THOROUGH	true	16	16	receding horizon -> certified B&B	MAX	X	79	true	0.151542668	0.151542668	0.000000000e+00	6813	6813	1	0.000000	79
+thousand-1-dup2	THOROUGH	true	16	16	receding horizon -> fold driver -> certified B&B -> translated start -> leaf snap	MAX	X	49	true	6523.307342706	6523.307517587	3.895360678e-04	7694	7694	1	0.000000	49
+trp-optimize-feasible-swap	THOROUGH	true	20	20	closed form -> fold driver -> certified B&B -> ILS (better objective) -> leaf snap	MAX	X	62	true	4.237267524	4.237267524	0.000000000e+00	6563	6563	1	0.000000	62
+df-openchain-free-start	THOROUGH	true	14	14	free start rescue -> ILS (better objective) -> translated start -> leaf snap	MAX	X	15	true	-3.873675320	-4.328231585	4.419025780e-01	3076	3076	1	0.000000	15
+gh386-4x2-luckyseed	THOROUGH	true	26	26	receding horizon	MAX	X	21	true	6525.843361148	6525.843361148	0.000000000e+00	3116	3116	1	0.010000	21
+gh386-4x2-seedshift	THOROUGH	true	26	26	receding horizon -> free window -> closed form -> branch and bound -> translated start	MAX	X	21	true	6525.843821963	6527.135117934	1.291295970e+00	3097	3097	1	0.010000	21
+gh386-4x2b-luckyseed	THOROUGH	true	26	26	receding horizon	MAX	X	21	true	6525.845637813	6525.845637813	0.000000000e+00	3088	3088	1	0.010000	21
+gh386-4x2b-seedshift	THOROUGH	true	26	26	receding horizon -> free window -> closed form -> translated start	MAX	X	21	true	6525.856251591	6527.644231080	1.787979489e+00	3096	3096	1	0.010000	21
+gh386-4x2c-luckyseed	THOROUGH	true	26	26	receding horizon -> closed form	MAX	X	21	true	6525.826886291	6525.826886291	0.000000000e+00	3087	3087	1	0.010000	21
+gh386-4x2c-seedshift	THOROUGH	true	26	26	receding horizon -> free window -> closed form -> translated start	MAX	X	21	true	6525.828499247	6525.205767942	6.192320460e-01	3103	3103	1	0.010000	21
+gh386-j335-lowx	THOROUGH	true	20	20	receding horizon -> free start rescue -> fold driver -> certified B&B -> translated start -> leaf snap	MAX	X	21	true	-697.297072874	-698.091120267	7.938366442e-01	7586	7586	1	0.000000	21
+inertia-1tick-neo-t31	THOROUGH	true	4	4	closed form -> fold driver -> ILS (better objective) -> leaf snap	MIN	X	9	true	8086.296643568	8086.296643568	0.000000000e+00	5069	5069	1	0.000000	9
+inertia-1tick-neo	THOROUGH	true	5	5	pattern B&B -> ILS (better objective) -> leaf snap	MIN	X	13	true	8086.295869402	8086.295869402	0.000000000e+00	3062	3062	1	0.000000	13
+j022-1bmhbfly-noland	THOROUGH	true	4	4	closed form -> SLP -> level set -> fold driver -> certified B&B -> leaf snap	MIN	X	11	true	-531.700140779	-531.700140779	0.000000000e+00	5144	5144	1	0.000000	11
+j023-1bmhbfly-eqlanding	THOROUGH	true	5	5	closed form -> SLP -> fold driver -> certified B&B -> ILS (better objective), optimal at constraint cap	MIN	X	11	true	-531.650100000	-531.650100000	0.000000000e+00	5075	5075	1	0.000000	11
+j024-bfly-goal-direction	THOROUGH	true	16	16	receding horizon -> fold driver -> certified B&B -> leaf snap	MIN	Z	42	true	44.208658409	44.208658409	0.000000000e+00	7567	7567	1	0.000000	42
+ driver -> certified B&B -> leaf snap	MIN	Z	42	true	44.208658409	44.208658409	0.000000000e+00	7575	7575	1	0.000000	42

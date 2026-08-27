@@ -7,9 +7,11 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.NodeOutcome;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeRuntime;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamValues;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
+import de.legoshi.parkourcalc.core.anglesolver.solver.DegenerateTickAscent;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.FoldReplayDriver;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
+import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
@@ -27,40 +29,63 @@ public final class FoldDriverNode implements NodeRuntime {
     private static final long MIN_START_REMAINING_NANOS = 2_000_000_000L;
     private static final int MULTI_START_TICK_CAP = 120;
 
-    private final boolean improve;
     private final int objectiveRounds;
     private final int multiStart;
+    private final int ascentMs;
+    private final int tickCap;
     private final String labelSuffix;
 
     public FoldDriverNode(ParamValues params) {
-        this.improve = "IMPROVE".equals(params.getString("mode"));
         this.objectiveRounds = params.getInt("objectiveRounds");
         this.multiStart = params.getInt("multiStart");
+        this.ascentMs = params.getInt("ascentMs");
+        this.tickCap = params.getInt("tickCap");
         this.labelSuffix = params.getString("labelSuffix");
     }
 
     @Override
     public NodeOutcome execute(GraphContext ctx, Candidate in, AtomicBoolean nodeToken, long deadlineNanos) {
-        Guarantee miss = improve ? Guarantee.UNCHANGED : Guarantee.NONE;
+        boolean improve = in != null && in.yaws != null && in.feasible;
+        Guarantee miss = in != null && in.yaws != null ? Guarantee.UNCHANGED : Guarantee.NONE;
         if (!ctx.exact() || ctx.stageLocked()) return NodeOutcome.of(miss, in);
+        if (tickCap > 0 && ctx.scenario.numTicks > tickCap) return NodeOutcome.of(miss, in);
         if (JumpLinearModel.hasFacingWall(ctx.spec.constraints)) return NodeOutcome.of(miss, in);
+        if (improve && objectiveRounds <= 0) {
+            if (ascentMs <= 0) return NodeOutcome.of(miss, in);
+            long ascentDeadline = System.nanoTime() + ascentMs * 1_000_000L;
+            if (deadlineNanos > 0) ascentDeadline = Math.min(ascentDeadline, deadlineNanos);
+            JumpPhysicsInputs at0 = Scoring.pinnedScenario(ctx.scenario, ctx.scenario.startPos.x,
+                    ctx.scenario.startPos.z);
+            JumpSpec pspec0 = new JumpSpec(at0, new ArrayList<>(ctx.spec.constraints), ctx.spec.objective);
+            double[] asc0 = DegenerateTickAscent.improve(ctx.exactModel, pspec0, in.yaws, ctx.feasTol,
+                    nodeToken, ascentDeadline);
+            if (asc0 == null || asc0 == in.yaws) return NodeOutcome.of(miss, in);
+            double cur0 = ctx.exactObjective(in.yaws);
+            double asc0Obj = verifiedObjective(ctx, asc0, ctx.scenario.startPos.x, ctx.scenario.startPos.z);
+            boolean max0 = ctx.maximize();
+            if (Double.isNaN(asc0Obj) || !(max0 ? asc0Obj > cur0 : asc0Obj < cur0)) {
+                return NodeOutcome.of(miss, in);
+            }
+            ctx.chainAppend("fold driver" + (labelSuffix == null ? "" : labelSuffix));
+            return NodeOutcome.of(Guarantee.IMPROVED, Candidate.of(ctx, asc0));
+        }
         ExactJumpModel exact = ctx.exactModel;
         JumpSpec dspec = driverSpec(ctx, null);
 
         FoldReplayDriver.Params p = new FoldReplayDriver.Params();
         p.cancel = nodeToken;
         p.deadlineNanos = deadlineNanos;
-        p.objectiveRounds = improve ? objectiveRounds : 0;
+        p.objectiveRounds = objectiveRounds;
 
         FoldReplayDriver.Result res;
-        if (improve && in != null && in.yaws != null && in.feasible) {
+        if (improve) {
             res = FoldReplayDriver.polishFromAnchor(exact, dspec, in.yaws,
                     ctx.scenario.startPos.x, ctx.scenario.startPos.z, p);
         } else {
             res = FoldReplayDriver.solve(exact, dspec, p);
         }
         FoldReplayDriver.Round best = pickBest(ctx, res.best, null);
-        best = runMultiStarts(ctx, exact, p, best, nodeToken, deadlineNanos);
+        if (objectiveRounds > 0) best = runMultiStarts(ctx, exact, p, best, nodeToken, deadlineNanos);
         traceRounds(res);
 
         if (best == null) return NodeOutcome.of(miss, in);
@@ -68,24 +93,43 @@ public final class FoldDriverNode implements NodeRuntime {
             ctx.closestMiss().offer(best.yawsDeg, best.maxViolation);
             return NodeOutcome.of(miss, in);
         }
-        double bestObj = verifiedObjective(ctx, best);
+        double[] bestYaws = best.yawsDeg;
+        double bestPx = best.px;
+        double bestPz = best.pz;
+        double bestObj = verifiedObjective(ctx, bestYaws, bestPx, bestPz);
         if (Double.isNaN(bestObj)) return NodeOutcome.of(miss, in);
         boolean max = ctx.maximize();
+        if ((objectiveRounds > 0 || ascentMs > 0) && (nodeToken == null || !nodeToken.get())
+                && (deadlineNanos == 0L || System.nanoTime() < deadlineNanos)) {
+            long ascDeadline = ascentMs > 0 ? System.nanoTime() + ascentMs * 1_000_000L : deadlineNanos;
+            if (deadlineNanos > 0 && ascDeadline > 0) ascDeadline = Math.min(ascDeadline, deadlineNanos);
+            JumpPhysicsInputs at = Scoring.pinnedScenario(ctx.scenario, bestPx, bestPz);
+            JumpSpec pspec = new JumpSpec(at, new ArrayList<>(ctx.spec.constraints), ctx.spec.objective);
+            double[] asc = DegenerateTickAscent.improve(exact, pspec, bestYaws, ctx.feasTol,
+                    nodeToken, ascDeadline);
+            if (asc != null && asc != bestYaws) {
+                double ascObj = verifiedObjective(ctx, asc, bestPx, bestPz);
+                if (!Double.isNaN(ascObj) && (max ? ascObj > bestObj : ascObj < bestObj)) {
+                    bestYaws = asc;
+                    bestObj = ascObj;
+                }
+            }
+        }
         if (in != null && in.yaws != null) {
             double cur = ctx.exactObjective(in.yaws);
             boolean better = max ? bestObj > cur : bestObj < cur;
             if (!better && (improve || in.feasible)) return NodeOutcome.of(miss, in);
         }
-        adoptStart(ctx, best);
+        adoptStart(ctx, bestPx, bestPz);
         ctx.chainAppend("fold driver" + (labelSuffix == null ? "" : labelSuffix));
-        Candidate out = Candidate.of(ctx, best.yawsDeg);
+        Candidate out = Candidate.of(ctx, bestYaws);
         return NodeOutcome.of(improve ? Guarantee.IMPROVED : Guarantee.FOUND, out);
     }
 
     private FoldReplayDriver.Round runMultiStarts(GraphContext ctx, ExactJumpModel exact,
                                                   FoldReplayDriver.Params p, FoldReplayDriver.Round best,
                                                   AtomicBoolean nodeToken, long deadlineNanos) {
-        if (!improve || multiStart <= 0 || !ctx.freeStart || ctx.freeBox == null) return best;
+        if (multiStart <= 0 || !ctx.freeStart || ctx.freeBox == null) return best;
         if (ctx.scenario.numTicks > MULTI_START_TICK_CAP) return best;
         StartBox box = ctx.freeBox;
         List<double[]> refs = new ArrayList<>();
@@ -133,21 +177,21 @@ public final class FoldDriverNode implements NodeRuntime {
         return new JumpSpec(sc, cons, ctx.spec.objective);
     }
 
-    private double verifiedObjective(GraphContext ctx, FoldReplayDriver.Round best) {
-        JumpPhysicsInputs at = Scoring.pinnedScenario(ctx.scenario, best.px, best.pz);
-        double[] gf = at.toGameFacings(best.yawsDeg);
+    private double verifiedObjective(GraphContext ctx, double[] yaws, double px, double pz) {
+        JumpPhysicsInputs at = Scoring.pinnedScenario(ctx.scenario, px, pz);
+        double[] gf = at.toGameFacings(yaws);
         ForwardPath path = ctx.model.forward(at, gf);
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(ctx.spec);
         if (compiled.maxViolation(gf, path) > ctx.feasTol) return Double.NaN;
         return path.getPos(ctx.spec.objective.tick, ctx.spec.objective.axis);
     }
 
-    private void adoptStart(GraphContext ctx, FoldReplayDriver.Round best) {
+    private void adoptStart(GraphContext ctx, double px, double pz) {
         JumpPhysicsInputs sc = ctx.scenario;
-        if (best.px != sc.startPos.x || best.pz != sc.startPos.z) {
-            sc.startPos = new Vec3dCore(best.px, sc.startPos.y, best.pz);
+        if (px != sc.startPos.x || pz != sc.startPos.z) {
+            sc.startPos = new Vec3dCore(px, sc.startPos.y, pz);
         }
-        sc.startBox = StartBox.pinned(best.px, best.pz, sc.initialVelocity.x, sc.initialVelocity.z);
+        sc.startBox = StartBox.pinned(px, pz, sc.initialVelocity.x, sc.initialVelocity.z);
     }
 
     static void traceRounds(FoldReplayDriver.Result res) {

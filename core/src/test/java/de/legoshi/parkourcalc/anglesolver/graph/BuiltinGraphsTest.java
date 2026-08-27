@@ -1,127 +1,80 @@
 package de.legoshi.parkourcalc.anglesolver.graph;
 
 import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
-import de.legoshi.parkourcalc.core.anglesolver.graph.GraphEdge;
+import de.legoshi.parkourcalc.core.anglesolver.graph.GraphNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphValidator;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class BuiltinGraphsTest {
 
-    @Test
-    public void fastHasRescueButNoExhaustiveOrWrapStages() {
-        SolverGraph g = BuiltinGraphs.fast();
-        assertFalse(GraphValidator.hasErrors(GraphValidator.validate(g)));
-        assertNotNull(g.node("rescueBnb"));
-        assertNull(g.node("sweep"));
-        assertNull(g.node("ils"));
-        assertNull(g.node("wrap"));
-        assertNull(g.node("nearBnb"));
-        assertEquals("FIRST_FEASIBLE", g.node("rescueBnb").params.getString("mode"));
-        assertEquals(3, g.node("rescueBnb").params.getInt("budgetSec"));
-        assertNull(g.node("raceColdFull"));
-        assertEquals(20, g.node("freeImprove").params.getInt("budgetSec"));
+    private static final List<String> PIPELINE = Arrays.asList(
+            "entry", "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
+            "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap", "translate", "snap", "emit");
+
+    private static List<String> nodeIds(SolverGraph g) {
+        List<String> ids = new ArrayList<String>();
+        for (GraphNode n : g.nodes) ids.add(n.id);
+        return ids;
+    }
+
+    private static void assertLinear(SolverGraph g) {
+        for (int i = 0; i < PIPELINE.size() - 1; i++) {
+            String from = PIPELINE.get(i);
+            String to = PIPELINE.get(i + 1);
+            int wired = 0;
+            for (Guarantee br : Guarantee.values()) {
+                if (g.edgeFor(from, br) == null) continue;
+                wired++;
+                assertEquals(from + " branch " + br, to, g.edgeFor(from, br).toNode);
+            }
+            assertTrue(from + " has no outgoing edges", wired > 0);
+        }
     }
 
     @Test
-    public void optimizeHasNoRaceAndKeepsTheExhaustiveBlock() {
-        SolverGraph g = BuiltinGraphs.optimize(50);
-        assertFalse(GraphValidator.hasErrors(GraphValidator.validate(g)));
-        assertNull(g.node("raceColdFull"));
-        assertNull(g.node("raceColdThrottled"));
-        assertNull(g.node("raceWarm"));
-        assertNull(g.node("rescueBnb"));
-        assertNotNull(g.node("sweep"));
-        assertNotNull(g.node("nearBnb"));
-        assertEquals(1000, g.node("nearBnb").params.getInt("minBudgetMs"));
-        assertNotNull(g.node("coldBnb"));
-        assertEquals("FIRST_FEASIBLE", g.node("coldBnb").params.getString("mode"));
-        assertEquals("foldRescue", g.edgeFor("rHave", Guarantee.FALSE).toNode);
-        assertEquals("coldBnb", g.edgeFor("foldRescue", Guarantee.NONE).toNode);
-        assertEquals("cap2", g.edgeFor("foldRescue", Guarantee.FOUND).toNode);
-        assertEquals("cap2", g.edgeFor("rColdHave", Guarantee.TRUE).toNode);
-        assertEquals("ladderArm", g.edgeFor("rColdHave", Guarantee.FALSE).toNode);
-        assertNotNull(g.node("foldImprove"));
-        assertEquals("foldImprove", g.edgeFor("cap2", Guarantee.FALSE).toNode);
+    public void fastAndOptimizeShareTheSamePipelineShape() {
+        SolverGraph fast = BuiltinGraphs.fast();
+        SolverGraph opt = BuiltinGraphs.optimize(50);
+        assertFalse(GraphValidator.hasErrors(GraphValidator.validate(fast)));
+        assertFalse(GraphValidator.hasErrors(GraphValidator.validate(opt)));
+        assertEquals(PIPELINE, nodeIds(fast));
+        assertEquals(PIPELINE, nodeIds(opt));
+        assertLinear(fast);
+        assertLinear(opt);
     }
 
     @Test
-    public void optimizeWrapAdoptedGoesStraightToEmit() {
-        SolverGraph g = BuiltinGraphs.optimize(30);
-        GraphEdge adopted = g.edgeFor("wrap", Guarantee.ADOPTED);
-        assertNotNull(adopted);
-        assertEquals("emit", adopted.toNode);
-        GraphEdge rejected = g.edgeFor("wrap", Guarantee.REJECTED);
-        assertEquals("rTrans", rejected.toNode);
+    public void tiersDifferOnlyInBudgetsAndCaps() {
+        SolverGraph fast = BuiltinGraphs.fast();
+        SolverGraph opt = BuiltinGraphs.optimize(120);
+        assertEquals(0, fast.node("fold").params.getInt("objectiveRounds"));
+        assertTrue(opt.node("fold").params.getInt("objectiveRounds") > 0);
+        assertEquals(0, fast.node("cert").params.getInt("optNodeCap"));
+        assertTrue(opt.node("cert").params.getInt("optNodeCap") > 0);
+        assertEquals(32, fast.node("cert").params.getInt("ffNodeCap"));
+        assertEquals(0, fast.node("wrap").params.getInt("budgetSec"));
+        assertTrue(opt.node("wrap").params.getInt("budgetSec") > 0);
+        assertEquals(0, fast.node("seed").params.getInt("warmSec"));
+        assertEquals(1, opt.node("seed").params.getInt("warmSec"));
+        assertEquals(0, fast.node("snap").params.getInt("pairPass"));
+        assertEquals(1, opt.node("snap").params.getInt("pairPass"));
     }
 
     @Test
-    public void optimizeExhaustiveBudgetsSplitTheWindow() {
-        SolverGraph g = BuiltinGraphs.optimize(120);
-        assertEquals(23, g.node("sweep").params.getInt("budgetSec"));
-        assertEquals(70, g.node("bnbOpt").params.getInt("budgetSec"));
-        assertEquals(117, g.node("ils").params.getInt("budgetSec"));
-        assertEquals(60, g.node("nearBnb").params.getInt("budgetSec"));
-
-        SolverGraph unbudgeted = BuiltinGraphs.fromBudget(false, true, true, 10, 3, 0);
-        assertEquals(24, unbudgeted.node("sweep").params.getInt("budgetSec"));
-        assertEquals(72, unbudgeted.node("bnbOpt").params.getInt("budgetSec"));
-        assertEquals(24, unbudgeted.node("ils").params.getInt("budgetSec"));
-    }
-
-    @Test
-    public void optimizeKeepsTheHorizonCandidateWhenTheSeedChainMisses() {
-        SolverGraph g = BuiltinGraphs.optimize(10);
-        assertFalse(GraphValidator.hasErrors(GraphValidator.validate(g)));
-        assertEquals("rSeedHave", g.edgeFor("seedMulti", Guarantee.NONE).toNode);
-        assertEquals("wrap0", g.edgeFor("rSeedHave", Guarantee.TRUE).toNode);
-        assertEquals("peel", g.edgeFor("rSeedHave", Guarantee.FALSE).toNode);
-    }
-
-    @Test
-    public void optimizeStageBudgetsLeaveRoomForTheWrapReserve() {
-        SolverGraph g = BuiltinGraphs.optimize(10);
-        int sweep = g.node("sweep").params.getInt("budgetSec");
-        int bnb = g.node("bnbOpt").params.getInt("budgetSec");
-        int ils = g.node("ils").params.getInt("budgetSec");
-        assertEquals(7, ils);
-        assertTrue(sweep + bnb <= ils);
-    }
-
-    @Test
-    public void customWithStopOnFeasibleAndExhaustiveKeepsWrapButNoExhaustiveBlock() {
+    public void customFollowsTheSameShape() {
         SolverGraph g = BuiltinGraphs.fromBudget(true, true, true, 10, 3, 60);
         assertFalse(GraphValidator.hasErrors(GraphValidator.validate(g)));
-        assertNotNull(g.node("rescueBnb"));
-        assertNotNull(g.node("wrap"));
-        assertNull(g.node("sweep"));
-        assertNull(g.node("coldBnb"));
-        assertNull(g.node("raceColdFull"));
-    }
-
-    @Test
-    public void customWithoutWindowSolverHasNoHorizonOrPeel() {
-        SolverGraph g = BuiltinGraphs.fromBudget(false, false, false, 10, 3, 0);
-        assertFalse(GraphValidator.hasErrors(GraphValidator.validate(g)));
-        assertNull(g.node("horizon"));
-        assertNull(g.node("peel"));
-        assertEquals("seedMulti", g.edgeFor("rJumps", Guarantee.FALSE).toNode);
-        assertEquals("rSeedHave", g.edgeFor("seedMulti", Guarantee.NONE).toNode);
-        assertEquals("repA", g.edgeFor("rSeedHave", Guarantee.FALSE).toNode);
-    }
-
-    @Test
-    public void multiJumpSettledPathSkipsTheRace() {
-        SolverGraph g = BuiltinGraphs.fast();
-        assertEquals("settledMark", g.edgeFor("rWarmTicks", Guarantee.FALSE).toNode);
-        assertEquals("repSkip", g.edgeFor("settledMark", Guarantee.DONE).toNode);
-        assertEquals("rImproveFeas", g.edgeFor("repSkip", Guarantee.DONE).toNode);
+        assertEquals(PIPELINE, nodeIds(g));
+        assertLinear(g);
     }
 }

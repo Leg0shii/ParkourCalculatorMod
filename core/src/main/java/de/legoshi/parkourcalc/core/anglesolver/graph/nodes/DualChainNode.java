@@ -9,21 +9,19 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.NodeRuntime;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamParse;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamValues;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ClosedFormSolve;
-import de.legoshi.parkourcalc.core.anglesolver.solver.RelaxationRecovery;
-import de.legoshi.parkourcalc.core.anglesolver.solver.ResidualRescue;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SlpSolve;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class DualChainNode implements NodeRuntime {
 
-    private static final long FAST_RESIDUAL_BUDGET_NANOS = 2_000_000_000L;
-
     private final boolean keepBetter;
+    private final int warmSec;
     private final ParamValues params;
 
     public DualChainNode(ParamValues params) {
         this.keepBetter = params.getBool("keepBetter");
+        this.warmSec = params.getInt("warmSec");
         this.params = params;
     }
 
@@ -46,35 +44,18 @@ public final class DualChainNode implements NodeRuntime {
         return cfg;
     }
 
-    private RelaxationRecovery.Config rrConfig() {
-        RelaxationRecovery.Config cfg = new RelaxationRecovery.Config();
-        cfg.outerIters = params.getInt("rrOuterIters");
-        cfg.innerIters = params.getInt("rrInnerIters");
-        cfg.rhoStart = params.getDouble("rrRhoStart");
-        cfg.rhoGrow = params.getDouble("rrRhoGrow");
-        cfg.rhoMax = params.getDouble("rrRhoMax");
-        cfg.seedMargins = ParamParse.doubles(params.getString("rrSeedMargins"), cfg.seedMargins);
-        cfg.dualRestarts = params.getInt("rrDualRestarts");
-        cfg.slpPhase1Calls = params.getInt("rrSlpPhase1Calls");
-        cfg.slpTotalCalls = params.getInt("rrSlpTotalCalls");
-        return cfg;
-    }
-
     @Override
     public NodeOutcome execute(GraphContext ctx, Candidate in, AtomicBoolean nodeToken, long deadlineNanos) {
         if (!ctx.exact()) return NodeOutcome.of(Guarantee.NONE, in);
+        if (in != null && in.yaws != null && in.feasible && warmSec <= 0) {
+            return NodeOutcome.of(Guarantee.FOUND, in);
+        }
         String[] chainName = new String[1];
         double[] chain = AngleSolverEngine.dualChain(ctx.exactModel, ctx.spec, ctx.scenario, nodeToken,
-                chainName, deadlineNanos, slpConfig(), cfConfig(), rrConfig(), ctx.closestMiss());
+                chainName, deadlineNanos, slpConfig(), cfConfig(), ctx.closestMiss());
         if (chain == null) {
             if (!keepBetter) ctx.chainAppend("closed form");
             return NodeOutcome.of(Guarantee.NONE, in);
-        }
-        long residualDeadline = deadlineNanos > 0 ? deadlineNanos : System.nanoTime() + FAST_RESIDUAL_BUDGET_NANOS;
-        double[] improved = ResidualRescue.improve(ctx.exactModel, ctx.spec, chain, 0.0, nodeToken, residualDeadline);
-        if (improved != null && improved != chain) {
-            chain = improved;
-            chainName[0] = chainName[0] + " -> residual";
         }
         if (in == null || in.yaws == null) {
             ctx.chainAppend(chainName[0]);

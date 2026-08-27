@@ -216,35 +216,6 @@ public class EngineFileScreen {
             return;
         }
 
-        if ("1".equals(System.getenv("PKC_BNB")) && pre != null) {
-            int bnbSecs = envInt("PKC_BNB_SECS", 600);
-            de.legoshi.parkourcalc.core.anglesolver.solver.BoundPrunedRecovery.Config bc =
-                    new de.legoshi.parkourcalc.core.anglesolver.solver.BoundPrunedRecovery.Config();
-            bc.maxPatterns = envInt("PKC_BNB_PATTERNS", 64);
-            double stopAt = System.getenv("PKC_GOAL_RHS") != null
-                    ? Double.parseDouble(System.getenv("PKC_GOAL_RHS")) : Double.NaN;
-            boolean aug = "1".equals(System.getenv("PKC_BNB_AUG"));
-            de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec bspec = aug ? padAugmented(pre) : pre;
-            de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs sc = bspec.asScenario();
-            long b0 = System.nanoTime();
-            double[] by = de.legoshi.parkourcalc.core.anglesolver.solver.BoundPrunedRecovery.solve(
-                    model, bspec, 0.0, new java.util.concurrent.atomic.AtomicBoolean(false),
-                    bnbSecs * 1_000_000_000L, stopAt, bc);
-            long bMs = (System.nanoTime() - b0) / 1_000_000L;
-            if (by == null) {
-                System.out.printf("BNBDEEP null aug=%s ms=%d%n", aug, bMs);
-            } else {
-                double[] bgf = sc.toGameFacings(by);
-                de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath bp = model.forward(sc, bgf);
-                double bv = de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler
-                        .compile(padAugmented(pre)).maxViolation(bgf, bp);
-                double bo = bp.getPos(pre.objective.tick, pre.objective.axis);
-                System.out.printf("BNBDEEP viol=%.6e obj=%.9f aug=%s ms=%d%n", bv, bo, aug, bMs);
-                dumpVec("BNBYAWS", by, state.getStartTick());
-            }
-            return;
-        }
-
         String adflip = System.getenv("PKC_ADFLIP_TICKS");
         if (adflip != null && !adflip.isEmpty() && pre != null) {
             de.legoshi.parkourcalc.core.ui.BoxController boxes = de.legoshi.parkourcalc.anglesolver.harness.Fixtures.buildBoxes(file);

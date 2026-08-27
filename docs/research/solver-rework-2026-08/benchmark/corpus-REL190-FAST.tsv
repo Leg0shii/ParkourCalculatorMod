@@ -1,0 +1,132 @@
+capture	tier	success	met	total	solver	sense	axis	objTick	hasObj	shippedObj	recertObj	recertViol	coldMs	warmMedMs	runs	smoothLambda	n
+bfsetup2	FAST	false	5	11	closed form -> CMA-ES	MIN	X	15	true	-1604.072370944	-1604.072370944	7.852467632e-02	846	846	1	0.000000	15
+deserthard-planrealization	FAST	true	81	81	receding horizon	MAX	Z	353	true	12.223460033	12.223460033	0.000000000e+00	1394	1394	1	0.000000	353
+deserthard-sine262	FAST	true	81	81	receding horizon	MAX	Z	353	true	12.223460033	12.223460033	0.000000000e+00	1345	1345	1	0.000000	353
+df-chain-free-start	FAST	true	13	13	closed form -> free start rescue (first feasible) -> translated start	MAX	X	15	true	-3.871379133	-4.913338370	1.039613015e+00	237	237	1	0.000000	15
+f2f-dfchain-multijump	FAST	true	21	21	receding horizon (first feasible)	MAX	X	24	true	-3.860469594	-3.860469594	0.000000000e+00	74	74	1	0.000000	24
+gh283-j925-farseed	FAST	false	19	22	receding horizon -> CMA-ES -> free start	MAX	X	24	true	-1003.298757457	-1005.803395440	2.503395429e+00	20408	20408	1	0.000000	24
+gh283-j990-cold	FAST	none											30001		1		
+gh313-j121-dfneo	FAST	false	11	12	closed form -> CMA-ES	MAX	X	9	true	-41.300077567	-41.300077567	7.755461658e-05	139	139	1	0.000000	9
+gh398-optimize-2jump	FAST	true	5	5	receding horizon (first feasible)	MIN	X	24	true	-49.594136764	-49.594136764	0.000000000e+00	268	268	1	0.000000	24
+j140-head-to-chest-neo-_1.125	FAST	true	17	17	receding horizon (first feasible)	MAX	X	44	true	-826.229245387	-826.229245387	0.000000000e+00	105	105	1	0.000000	44
+j144_1bm_5-1_Triple_Neo	FAST	true	14	14	receding horizon -> closed form -> relaxation recovery (first feasible)	MAX	Z	42	true	987.702410363	987.702410363	0.000000000e+00	761	761	1	0.000000	42
+j148_1bm_Pregapped_Head_Butterfly_Neo_to_Ladder	FAST	true	12	12	receding horizon (first feasible)	MIN	Z	28	true	1097.813351455	1097.813351455	0.000000000e+00	24	24	1	0.000000	28
+j149_1.5bm_Head_Butterfly_Neo_to_Ladder	FAST	true	14	14	receding horizon (first feasible)	MIN	Z	39	true	1097.971721357	1097.971721357	0.000000000e+00	126	126	1	0.000000	39
+j152_Slab_to_Fence_3x3	FAST	true	12	12	receding horizon (first feasible)	MAX	Z	28	true	1099.084462143	1099.084462143	0.000000000e+00	24	24	1	0.000000	28
+j153_Flat_Momentum_Head_to_Head_Neo	FAST	true	21	21	receding horizon (first feasible)	MAX	X	84	true	-377.793245922	-377.793245922	0.000000000e+00	507	507	1	0.000000	84
+j335_1bmhh_Single_Fencegat_Butterfly_Neo	FAST	true	18	18	receding horizon -> closed form -> relaxation recovery (first feasible)	MAX	X	21	true	-697.298066047	-697.298066047	0.000000000e+00	921	921	1	0.000000	21
+j342_3bc_Trapdoor_to_Trapdoor_Cross_Neo	FAST	true	12	12	receding horizon (first feasible)	MAX	Z	23	true	983.722869478	983.722869478	0.000000000e+00	26	26	1	0.000000	23
+j343_Single_Piston_Butterfly_Neo	FAST	true	19	19	receding horizon -> closed form -> relaxation recovery (first feasible)	MAX	X	25	true	-492.143914303	-492.143914303	0.000000000e+00	189	189	1	0.000000	25
+j344_Butterfly_Neo_to_Cobblewall_-0.5	FAST	true	5	5	closed form -> relaxation recovery (first feasible)	MAX	X	12	true	-533.037286523	-533.037286523	0.000000000e+00	27	27	1	0.000000	12
+j345_3jmm_True_Nix_Neo	FAST	true	14	14	receding horizon -> closed form -> relaxation recovery (first feasible)	MAX	X	49	true	-660.192714189	-660.192714189	0.000000000e+00	199	199	1	0.000000	49
+j346_1bm_Squeeze_to_Squeeze_Butterfly_Neo	FAST	true	57	57	receding horizon -> closed form -> relaxation recovery (first feasible)	MAX	X	39	true	-740.296481708	-740.296481708	0.000000000e+00	8115	8115	1	0.000000	39
+j347_Trapdoor_to_Slab_Inverse_Nix_Neo_-0.5	FAST	true	54	54	receding horizon -> closed form -> relaxation recovery (first feasible)	MAX	X	52	true	-575.307501348	-575.307501348	0.000000000e+00	9296	9296	1	0.000000	52
+j422_2jmm_Inverse_Nix_Neo	FAST	true	13	13	receding horizon (first feasible)	MAX	X	36	true	-4100.295163572	-4100.295163572	0.000000000e+00	143	143	1	0.000000	36
+j424_1.4375bm_Double_Winged_Neo__0.25	FAST	true	14	14	receding horizon (first feasible)	MAX	X	48	true	-4264.299256685	-4264.299256685	0.000000000e+00	221	221	1	0.000000	48
+j425_1jmm_Trapdoor_to_Daylight_Sensor_Nix_Neo__0.375	FAST	true	10	10	receding horizon (first feasible)	MAX	X	24	true	-1847.293801220	-1847.293801220	0.000000000e+00	125	125	1	0.000000	24
+j703_1.5bm__x__T3c_Butterfly_-0.5	FAST	true	13	13	receding horizon (first feasible)	MAX	X	39	true	-4389.297769803	-4389.297769803	0.000000000e+00	161	161	1	0.000000	39
+j717_Panewall_Momentum_Single_Block_Butterfly_Neo	FAST	true	17	17	receding horizon -> closed form -> relaxation recovery (first feasible)	MAX	X	27	true	-82.152011417	-82.152011417	0.000000000e+00	311	311	1	0.000000	27
+j757_1bmhh_4.0625_1	FAST	true	12	12	receding horizon (first feasible)	MAX	Z	18	true	1098.116134801	1098.116134801	0.000000000e+00	26	26	1	0.000000	18
+j816_Sidewalled_Piston_Momentum_Butterfly_Neo	FAST	true	19	19	receding horizon (first feasible)	MAX	X	24	true	-862.296496216	-862.296496216	0.000000000e+00	27	27	1	0.000000	24
+j1099-1.1875bm_Head_Butterfly_Neo_fail	FAST	true	9	9	receding horizon (first feasible)	MAX	X	29	true	-2500.444949139	-2500.444949139	0.000000000e+00	65	65	1	0.000000	29
+j1149-_X__Pane_to_Head_S_Neo	FAST	true	12	12	receding horizon -> closed form -> relaxation recovery (first feasible)	MAX	X	37	true	-1324.776446322	-1324.776446322	0.000000000e+00	205	205	1	0.000000	37
+j1150-2x2bm_Nix_Neo	FAST	true	11	11	receding horizon -> closed form -> relaxation recovery (first feasible)	MAX	X	49	true	-2805.298751404	-2805.298751404	0.000000000e+00	1100	1100	1	0.000000	49
+j155-4jmm_3bcmm_4.9375b	FAST	true	4	4	receding horizon (first feasible)	MAX	Z	66	true	4984.763262905	4984.763262905	0.000000000e+00	1911	1911	1	0.000000	66
+j716-1bm_Cobblewall_to_Cobblewall_Winged_Neo	FAST	true	11	11	receding horizon -> closed form -> relaxation recovery (first feasible)	MIN	X	42	true	-699.950039612	-699.950039612	0.000000000e+00	1063	1063	1	0.000000	42
+j718-2bm__Z__Pane_to_Pane_Neo	FAST	true	11	11	receding horizon (first feasible)	MAX	X	37	true	-1902.862050560	-1902.862050560	0.000000000e+00	207	207	1	0.000000	37
+j828-1bm_5.3125-1.5	FAST	true	6	6	receding horizon -> closed form -> relaxation recovery (first feasible)	MAX	Z	39	true	4978.013114128	4978.013114128	0.000000000e+00	657	657	1	0.000000	39
+j925-Sidewalled_Single_Piston_Butterfly_Neo_1bl	FAST	true	6	6	closed form -> SLP (first feasible)	MAX	X	11	true	-1003.298570235	-1003.298570235	0.000000000e+00	49	49	1	0.000000	11
+j108_HH_Short_Pane_to_Pane_Neo	FAST	true	12	12	receding horizon (first feasible)	MAX	X	25	true	-328.859442087	-328.859442087	0.000000000e+00	80	80	1	0.000000	25
+j111_0bm_Trapdoor_to_Trapdoor_Cross_Neo	FAST	true	5	5	closed form (first feasible)	MAX	X	11	true	-452.440677012	-452.440677012	0.000000000e+00	90	90	1	0.000000	11
+j119_Head_Waza_to_Anvil	FAST	true	14	14	receding horizon (first feasible)	MAX	X	26	true	-779.296669996	-779.296669996	0.000000000e+00	85	85	1	0.000000	26
+j120_3bm_5.0625b-0.5	FAST	true	14	14	receding horizon (first feasible) -> translated start	MAX	Z	50	true	986.765890457	986.765888782	0.000000000e+00	4034	4034	1	0.000000	50
+j121_3jmm_Double_Winged_Neo__0.5	FAST	true	14	14	receding horizon (first feasible)	MAX	X	46	true	-41.295554016	-41.295554016	0.000000000e+00	169	169	1	0.000000	46
+j122_1.5b_Head_Butterfly_Neo	FAST	true	14	14	receding horizon (first feasible)	MAX	X	37	true	-82.295970294	-82.295970294	0.000000000e+00	47	47	1	0.000000	37
+j126_1bmhh_Pane_to_Pane_Neo	FAST	true	15	15	receding horizon (first feasible) -> translated start	MAX	X	16	true	-247.854755563	-247.854820604	0.000000000e+00	115	115	1	0.000000	16
+j127_Head_to_Head_Neo	FAST	true	16	16	receding horizon (first feasible)	MAX	X	48	true	-292.786337685	-292.786337685	0.000000000e+00	46	46	1	0.000000	48
+j128_Head_to_Head_Neo_1bl	FAST	true	16	16	receding horizon (first feasible)	MAX	X	48	true	-333.784156240	-333.784156240	0.000000000e+00	409	409	1	0.000000	48
+j129_1.125bm_4.4375b	FAST	true	8	8	receding horizon (first feasible)	MAX	Z	36	true	987.139954937	987.139954937	0.000000000e+00	357	357	1	0.000000	36
+j132_Flowerpot_Head_Waza	FAST	true	14	14	receding horizon (first feasible)	MAX	X	24	true	-492.985940238	-492.985940238	0.000000000e+00	24	24	1	0.000000	24
+j133__X__2jmm_Pane_to_Pane_Neo	FAST	true	12	12	receding horizon (first feasible)	MAX	Z	36	true	1028.143428969	1028.143428969	0.000000000e+00	86	86	1	0.000000	36
+j134_T_3mm_4jmm_4_1	FAST	true	10	10	receding horizon (first feasible)	MAX	Z	44	true	986.702626705	986.702626705	0.000000000e+00	614	614	1	0.000000	44
+j135_Waza_to_Cobblewall_-0.5	FAST	true	16	16	closed form -> relaxation recovery (first feasible) -> translated start	MAX	X	17	true	-615.035091388	-615.035108832	0.000000000e+00	249	249	1	0.000000	17
+j138_Ladder_to_Ladder_Cross_Neo	FAST	true	21	21	receding horizon -> closed form -> relaxation recovery (first feasible)	MAX	X	25	true	-739.421342051	-739.421342051	0.000000000e+00	148	148	1	0.000000	25
+J143_Panewall_MM_Butterfly_Neo	FAST	true	14	14	receding horizon -> closed form -> SLP (first feasible)	MAX	X	26	true	-0.299597126	-0.299597126	0.000000000e+00	46	46	1	0.000000	26
+j146_Truer_Head_Waza_to_Block	FAST	true	14	14	receding horizon (first feasible)	MAX	X	26	true	-82.298397842	-82.298397842	0.000000000e+00	26	26	1	0.000000	26
+j147__X__1bm_Fence_to_Fence_Neo	FAST	true	14	14	receding horizon -> closed form -> relaxation recovery (first feasible)	MAX	Z	37	true	1095.084763942	1095.084763942	0.000000000e+00	506	506	1	0.000000	37
+j150_1bm_Chest_Inverse_Nix_Neo_to_Block_1bl	FAST	true	14	14	receding horizon (first feasible)	MAX	X	37	true	-247.282503332	-247.282503332	0.000000000e+00	56	56	1	0.000000	37
+j187_Sidewalled_3x2.1875bm_Nix_Neo	FAST	true	18	18	receding horizon (first feasible)	MAX	X	38	true	-453.289611118	-453.289611118	0.000000000e+00	43	43	1	0.000000	38
+j246__X__1.9375bm_Triple_Neo	FAST	true	12	12	receding horizon -> closed form -> relaxation recovery (first feasible)	MIN	X	36	true	-999.304459075	-999.304459075	0.000000000e+00	101	101	1	0.000000	36
+j248_6bm_Microturn_4.8125b_Chained_to_3.125bm_Neo	FAST	true	57	57	receding horizon (first feasible)	MAX	Z	47	true	985.778279473	985.778279473	0.000000000e+00	64	64	1	0.000000	47
+j298_Backwalled_Block___Pane_3bm_Pane_to_Pane_Neo_1bl	FAST	true	14	14	receding horizon (first feasible)	MAX	X	37	true	-2256.856813163	-2256.856813163	0.000000000e+00	221	221	1	0.000000	37
+j315_Egg_to_Block_Butterfly_Neo	FAST	true	14	14	receding horizon -> closed form -> relaxation recovery (first feasible)	MAX	X	37	true	-1763.295967797	-1763.295967797	0.000000000e+00	188	188	1	0.000000	37
+j318_Waza_-0_to_Block_Pane_Postwalled	FAST	true	11	11	closed form -> relaxation recovery (first feasible) -> translated start	MAX	X	13	true	-1886.295873070	-1886.295875473	7.290392363e-04	102	102	1	0.000000	13
+j319__X__1bm_Gapped_Butterfly_Neo_to_Egg	FAST	true	6	6	closed form (first feasible)	MAX	Z	11	true	981.771208040	981.771208040	0.000000000e+00	24	24	1	0.000000	11
+j320_1bm_Gapped_Head_Butterfly_Neo	FAST	true	6	6	closed form (first feasible)	MAX	X	11	true	-2009.298375825	-2009.298375825	0.000000000e+00	26	26	1	0.000000	11
+j321_c4.5_Pane_to_Pane_Neo_Pane_Postwalled	FAST	true	18	18	receding horizon (first feasible)	MAX	X	36	true	-2051.858232177	-2051.858232177	0.000000000e+00	66	66	1	0.000000	36
+j328_Backwalled_3bm_Pane_to_Pane_Neo	FAST	true	16	16	receding horizon (first feasible)	MAX	X	38	true	-2419.860354720	-2419.860354720	0.000000000e+00	65	65	1	0.000000	38
+j330_1.5bm_Double_Winged_Neo__0.25	FAST	true	24	24	receding horizon -> closed form -> relaxation recovery (first feasible)	MAX	X	36	true	-2460.288939122	-2460.288939122	0.000000000e+00	249	249	1	0.000000	36
+j1150-noturn-inner	FAST	true	13	13	receding horizon (first feasible) -> translated start	MAX	X	49	true	-2805.298946354	-2805.298949588	0.000000000e+00	2016	2016	1	0.000000	49
+j1150-noturn-orig	FAST	true	5	5	closed form (first feasible)	MAX	X	11	true	-2805.298768267	-2805.298768267	0.000000000e+00	24	24	1	0.000000	11
+j154-noturn-ja-inner	FAST	true	14	14	receding horizon -> closed form -> relaxation recovery (first feasible) -> translated start	MIN	X	39	true	-1599.700140249	-1599.700139936	0.000000000e+00	1146	1146	1	0.000000	39
+j154-noturn-ja-orig	FAST	none											30002		1		
+j001	FAST	true	81	81	receding horizon	MAX	Z	353	true	12.225686684	12.225686684	0.000000000e+00	3162	3162	1	0.000000	353
+j002	FAST	true	41	41	receding horizon (first feasible)	MIN	X	189	true	-33.672901068	-33.672901068	0.000000000e+00	3048	3048	1	0.000000	189
+j003	FAST	true	39	39	receding horizon (first feasible), optimal at constraint cap	MIN	X	176	true	-31.299999290	-31.299999290	0.000000000e+00	1997	1997	1	0.000000	176
+j004	FAST	true	10	10	closed form (first feasible)	MAX	X	11	true	-1889.049325767	-1889.049325767	0.000000000e+00	65	65	1	0.000000	11
+j005	FAST	true	10	10	closed form (first feasible)	MAX	X	9	true	-41.298292475	-41.298292475	0.000000000e+00	100	100	1	0.000000	9
+j006	FAST	true	7	7	closed form (first feasible)	MIN	X	11	true	-1599.700052409	-1599.700052409	0.000000000e+00	67	67	1	0.000000	11
+j007	FAST	true	13	13	receding horizon -> closed form -> SLP (first feasible)	MIN	Z	28	true	-444.299990878	-444.299990878	0.000000000e+00	168	168	1	0.000000	28
+j008-bfneo	FAST	true	5	5	closed form (first feasible)	MAX	X	11	true	-0.218532369	-0.218532369	0.000000000e+00	88	88	1	0.000000	11
+j008-hyper-fp	FAST	true	8	8	closed form (first feasible)	MAX	X	11	true	-0.216311127	-0.216311127	0.000000000e+00	98	98	1	0.000000	11
+j008b-2jump	FAST	true	10	10	receding horizon (first feasible)	MAX	X	25	true	-0.259318821	-0.259318821	0.000000000e+00	126	126	1	0.000000	25
+j009-headwazatoanvil	FAST	true	5	5	closed form (first feasible)	MAX	X	11	true	-0.298045190	-0.298045190	0.000000000e+00	89	89	1	0.000000	11
+j010-Xp2hsneo	FAST	true	4	4	closed form (first feasible)	MIN	Z	11	true	-0.204867610	-0.204867610	0.000000000e+00	89	89	1	0.000000	11
+j011-1.875x1bmdoublecross	FAST	true	5	5	closed form (first feasible)	MIN	Z	11	true	-1.706388082	-1.706388082	0.000000000e+00	37	37	1	0.000000	11
+j012-pistonbasesidewallbf	FAST	true	4	4	closed form (first feasible)	MAX	X	11	true	-0.296766305	-0.296766305	0.000000000e+00	80	80	1	0.000000	11
+j013-cw2cwwinged	FAST	true	4	4	closed form (first feasible)	MAX	X	11	true	-0.049862810	-0.049862810	0.000000000e+00	116	116	1	0.000000	11
+j014-11bmreversenix	FAST	true	2	2	closed form (first feasible)	MAX	X	11	true	0.701749480	0.701749480	0.000000000e+00	116	116	1	0.000000	11
+j015-1bmdoublewinged_1tier	FAST	true	3	3	closed form (first feasible)	MAX	X	10	true	-0.291412263	-0.291412263	0.000000000e+00	74	74	1	0.000000	10
+j016-X2jmmp2p	FAST	true	4	4	closed form (first feasible)	MAX	Z	11	true	-4.857991791	-4.857991791	0.000000000e+00	120	120	1	0.000000	11
+j017-postwalllightningneo	FAST	true	7	7	closed form (first feasible)	MAX	Z	11	true	-1.217846059	-1.217846059	0.000000000e+00	67	67	1	0.000000	11
+j018-tds2tdsbf	FAST	true	6	6	closed form (first feasible)	MAX	X	11	true	-4.294532469	-4.294532469	0.000000000e+00	73	73	1	0.000000	11
+j019-3jmmtruenix	FAST	true	4	4	closed form (first feasible)	MAX	X	11	true	-13.303542122	-13.303542122	0.000000000e+00	65	65	1	0.000000	11
+j020-panewallsingleblockbf	FAST	true	5	5	closed form (first feasible)	MAX	X	11	true	-4.302029815	-4.302029815	0.000000000e+00	105	105	1	0.000000	11
+j021-rinav1-01	FAST	true	13	13	receding horizon (first feasible)	MAX	Z	39	true	1066.894753207	1066.894753207	0.000000000e+00	335	335	1	0.000000	39
+j022-1bmhbfly	FAST	true	5	5	closed form -> relaxation recovery (first feasible)	MIN	X	11	true	-531.700017422	-531.700017422	0.000000000e+00	85	85	1	0.000000	11
+loopmm-3jump-lands	FAST	true	5	5	receding horizon -> closed form -> SLP (first feasible)	MAX	Z	33	true	-279.310517374	-279.310517374	0.000000000e+00	182	182	1	0.000000	33
+loopmm-3jump-solver-misses	FAST	true	5	5	receding horizon -> closed form -> SLP (first feasible)	MAX	Z	33	true	-279.310517374	-279.310517374	0.000000000e+00	134	134	1	0.000000	33
+loopmm-tight-t39	FAST	none											30022		1		
+nix-full-t1	FAST	none											30001		1		
+nix-t25-setup-tick	FAST	true	13	13	receding horizon -> setup peel (first feasible)	MAX	X	37	true	8.697963572	8.697963572	0.000000000e+00	8905	8905	1	0.000000	37
+razor-proof-improved	FAST	none											29999		1		
+razor-proof-t1	FAST	none											30000		1		
+razor-proof	FAST	none											30000		1		
+razor-rung-attempt	FAST	none											29999		1		
+razor-rung-legal-attempt-turn360-v2	FAST	none											30002		1		
+razor-rung-legal-attempt-turn360	FAST	none											30014		1		
+razor-rung-legal-attempt-wrap720	FAST	none											30001		1		
+razor-rung-legal-attempt	FAST	none											30006		1		
+razor-uncorrected	FAST	none											30013		1		
+razor-weirdpane-attempt-v2	FAST	none											30000		1		
+razor-weirdpane-attempt	FAST	none											30005		1		
+razor-weirdpane	FAST	none											30015		1		
+synth-free-translate	FAST	true	1	1	closed form (first feasible) -> free start	MAX	X	11	true	3.067949008	2.567949008	0.000000000e+00	265	265	1	0.000000	11
+synth-legal-shortfall	FAST	false	1	2	closed form (first feasible) -> free start (legal)	MAX	X	11	true	3.067949008	2.567949008	0.000000000e+00	253	253	1	0.000000	11
+taser-100t	FAST	true	31	31	receding horizon (first feasible)	MAX	X	99	true	-21.262272836	-21.262272836	0.000000000e+00	4955	4955	1	0.000000	99
+taser-80t	FAST	true	16	16	receding horizon (first feasible)	MAX	X	79	true	0.141384436	0.141384436	0.000000000e+00	640	640	1	0.000000	79
+thousand-1-dup2	FAST	true	16	16	receding horizon -> closed form -> relaxation recovery (first feasible) -> translated start	MAX	X	49	true	6523.301722552	6523.301720184	0.000000000e+00	25628	25628	1	0.000000	49
+trp-optimize-feasible-swap	FAST	true	20	20	closed form (first feasible)	MAX	X	62	true	4.236883000	4.236883000	0.000000000e+00	423	423	1	0.000000	62
+df-openchain-free-start	FAST	true	14	14	closed form -> free start rescue (first feasible) -> translated start	MAX	X	15	true	-3.860990757	-4.299108928	4.357719461e-01	461	461	1	0.000000	15
+gh386-4x2-luckyseed	FAST	true	26	26	receding horizon (first feasible)	MAX	X	21	true	6525.843361148	6525.843361148	0.000000000e+00	167	167	1	0.010000	21
+gh386-4x2-seedshift	FAST	true	26	26	receding horizon -> free start rescue (first feasible) -> translated start	MAX	X	21	true	6525.844052272	6527.135482592	1.291430319e+00	129	129	1	0.010000	21
+gh386-4x2b-luckyseed	FAST	true	26	26	receding horizon (first feasible) -> free start -> translated start	MAX	X	21	true	6525.857403352	6525.864412817	7.159735309e-03	102	102	1	0.010000	21
+gh386-4x2b-seedshift	FAST	true	26	26	receding horizon -> free start rescue (first feasible) -> translated start	MAX	X	21	true	6525.857403352	6527.646069004	1.788665651e+00	102	102	1	0.010000	21
+gh386-4x2c-luckyseed	FAST	true	26	26	receding horizon (first feasible) -> free start -> translated start	MAX	X	21	true	6525.829420633	6525.830869769	1.449135643e-03	184	184	1	0.010000	21
+gh386-4x2c-seedshift	FAST	true	26	26	receding horizon -> free start rescue (first feasible) -> translated start	MAX	X	21	true	6525.829420633	6525.207216157	6.177838311e-01	161	161	1	0.010000	21
+gh386-j335-lowx	FAST	none											30000		1		
+inertia-1tick-neo-t31	FAST	true	4	4	closed form -> CMA-ES	MIN	X	9	true	8086.296673663	8086.296673663	0.000000000e+00	197	197	1	0.000000	9
+inertia-1tick-neo	FAST	true	4	4	closed form -> CMA-ES	MIN	X	13	true	8086.292231416	8086.292231416	0.000000000e+00	220	220	1	0.000000	13
+j022-1bmhbfly-noland	FAST	true	4	4	closed form -> SLP (first feasible)	MIN	X	11	true	-531.636401949	-531.636401949	0.000000000e+00	208	208	1	0.000000	11
+j023-1bmhbfly-eqlanding	FAST	true	5	5	closed form -> SLP (first feasible)	MIN	X	11	true	-531.650015912	-531.650015912	0.000000000e+00	167	167	1	0.000000	11
+j024-bfly-goal-direction	FAST	true	16	16	receding horizon (first feasible)	MIN	Z	42	true	44.218670484	44.218670484	0.000000000e+00	13005	13005	1	0.000000	42

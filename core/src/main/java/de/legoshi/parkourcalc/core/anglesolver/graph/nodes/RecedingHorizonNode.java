@@ -28,6 +28,8 @@ public final class RecedingHorizonNode implements NodeRuntime {
     @Override
     public NodeOutcome execute(GraphContext ctx, Candidate in, AtomicBoolean nodeToken, long deadlineNanos) {
         if (!ctx.exact()) return NodeOutcome.of(Guarantee.NONE, in);
+        if (ctx.jumpCount() <= 1) return NodeOutcome.of(Guarantee.NONE, in);
+        if (in != null && in.yaws != null) return NodeOutcome.of(Guarantee.NONE, in);
         ctx.chainAppend("receding horizon");
         if (SolverTrace.on()) SolverTrace.log("ENGINE", "receding horizon start");
         LongRunSolver.WindowCache windows = new LongRunSolver.WindowCache();

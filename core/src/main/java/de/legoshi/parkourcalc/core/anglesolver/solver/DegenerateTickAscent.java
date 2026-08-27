@@ -4,28 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/** The degenerate-tick residual rescue (ARCH-1 stage P1). A feasible baseline that hugs the wrong wall on a
- *  coupled multi-jump leaves measured objective on the table at the vanishing-costate ticks, where the
- *  active walls exactly cancel the objective pull and the input direction is undetermined by the convex
- *  dual. This finds those ticks, then re-optimizes the whole chain per candidate direction for them (pinning
- *  each degenerate facing and completing the rest with {@link SlpSolve}), scoring every candidate byte-exact
- *  on {@link ExactJumpModel}. It never regresses: a baseline is returned unchanged unless a strictly better
- *  byte-exact-feasible completion is found.
- *
- *  <p>The dispatcher switches on the residual dimension {@code k = |D|}. {@code k=0} returns the baseline.
- *  {@code k>=1} runs block-coordinate ascent over the degenerate ticks on the product of circles: each tick
- *  gets a full-circle coarse grid then a local refine, holding the other degenerate ticks pinned and letting
- *  the convex completion re-optimize every non-degenerate tick; sweeps repeat until no tick improves. For
- *  {@code k=1} (the measured-common redirect/neo case) this is a single global 1D scan and reaches the
- *  global optimum. For the momentum/nix regime ({@code k} up to ~22) the same ascent exploits the low
- *  effective DOF of the coordinated momentum phase.
- *
- *  <p>Facing (dF) chains fold: a dF=0 chain is folded through {@link FacingPrefold}, while an open dF chain
- *  that cannot fold declines to the baseline. The inertia gate is left to the byte-exact completion rather
- *  than modeled, so this does not chase the clamp-free gate optima. */
-public final class ResidualRescue {
-
-    public static boolean DEBUG = false;
+public final class DegenerateTickAscent {
 
     private static final double PIN_EPS = 5.0e-5;
     private static final double DEGEN_REL = 1.0e-5;
@@ -38,16 +17,9 @@ public final class ResidualRescue {
     private static final int SLP_PHASE1 = 40;
     private static final int SLP_TOTAL = 60;
 
-    private ResidualRescue() {
+    private DegenerateTickAscent() {
     }
 
-    /** The vanishing-costate ticks of the convex dual on the position walls (the clamp-free relaxation): the
-     *  ticks whose costate magnitude falls below {@link #DEGEN_REL} of the largest. A dF=0 chain is folded
-     *  through {@link FacingPrefold} first (each degenerate reduced variable maps back to its representative
-     *  tick), and a free start adds the {@link CostateDualSolver.FreeP0} box-support term, so the residual no
-     *  longer bails on facing walls. {@code null} when the fold declines (an open dF chain that must be
-     *  scanned, or a violated constant) or the dual is unbounded. An empty array means every tick is
-     *  costate-determined (single/easy jumps): nothing to rescue. */
     public static int[] degenerateTicks(JumpSpec spec) {
         JumpPhysicsInputs sc = spec.asScenario();
         JumpLinearModel lin = new JumpLinearModel(sc);
@@ -102,9 +74,6 @@ public final class ResidualRescue {
                 box.pzLo - box.pz, box.pzHi - box.pz, objDevX, objDevZ, FREE_START_SMOOTH);
     }
 
-    /** Improve {@code baseline} (a byte-exact-feasible facing sequence) by re-solving the degenerate-tick
-     *  residual, or return it unchanged when there is nothing better. Returns {@code null} only if
-     *  {@code baseline} is {@code null}. Never regresses the byte-exact objective. */
     public static double[] improve(ExactJumpModel exact, JumpSpec spec, double[] baseline, double feasTol,
                                    AtomicBoolean cancel, long deadlineNanos) {
         if (baseline == null) return null;
@@ -141,10 +110,7 @@ public final class ResidualRescue {
             if (degen.length == 1) break;
         }
 
-        if (better(currentObj, baseObj, max)) {
-            if (DEBUG) System.out.printf("  RESIDUAL k=%d obj %.9f -> %.9f%n", degen.length, baseObj, currentObj);
-            return current;
-        }
+        if (better(currentObj, baseObj, max)) return current;
         return baseline;
     }
 
@@ -198,9 +164,9 @@ public final class ResidualRescue {
         double lo = theta - PIN_EPS;
         double hi = theta + PIN_EPS;
         cons.add(new JumpConstraint(JumpConstraint.Mode.F, tick, null, JumpConstraint.Op.PLUS,
-                JumpConstraint.Cmp.GE, lo, "residualPinLo@" + tick));
+                JumpConstraint.Cmp.GE, lo, "ascentPinLo@" + tick));
         cons.add(new JumpConstraint(JumpConstraint.Mode.F, tick, null, JumpConstraint.Op.PLUS,
-                JumpConstraint.Cmp.LE, hi, "residualPinHi@" + tick));
+                JumpConstraint.Cmp.LE, hi, "ascentPinHi@" + tick));
     }
 
     private static double objectiveOf(ExactJumpModel exact, JumpPhysicsInputs sc, JumpSpec spec, double[] yaws) {
@@ -212,12 +178,12 @@ public final class ResidualRescue {
         return max ? a > b : a < b;
     }
 
-    public static final class Cand {
-        public final double[] yaws;
-        public final double obj;
-        public final boolean feasible;
-        public final double violation;
-        public final double theta;
+    private static final class Cand {
+        final double[] yaws;
+        final double obj;
+        final boolean feasible;
+        final double violation;
+        final double theta;
 
         Cand(double[] yaws, double obj, boolean feasible, double violation, double theta) {
             this.yaws = yaws;

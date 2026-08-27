@@ -109,35 +109,6 @@ public class GraphValidatorTest {
     }
 
     @Test
-    public void feasibleRequiresRejectsUnprovenSource() {
-        GraphBuilder g = new GraphBuilder("t", false);
-        g.add("entry", "entry").add("emit", "emit");
-        g.add("race", "freeStartImprove");
-        g.add("ils", "ilsPolish");
-        g.edge("entry", Guarantee.DONE, "race");
-        g.edge("race", Guarantee.IMPROVED, "ils");
-        g.edge("ils", Guarantee.IMPROVED, "emit");
-        List<ValidationIssue> issues = GraphValidator.validate(g.build());
-        assertTrue(hasError(issues, "requires a FEASIBLE candidate"));
-    }
-
-    @Test
-    public void feasibleRequiresAcceptsFeasibilityRouterTrue() {
-        GraphBuilder g = new GraphBuilder("t", false);
-        g.add("entry", "entry").add("emit", "emit");
-        g.add("race", "freeStartImprove");
-        g.add("r", "router");
-        g.set("r", "predicate", "CANDIDATE_FEASIBLE_RAW");
-        g.add("ils", "ilsPolish");
-        g.edge("entry", Guarantee.DONE, "race");
-        g.edge("race", Guarantee.IMPROVED, "r");
-        g.edge("r", Guarantee.TRUE, "ils");
-        g.edge("ils", Guarantee.IMPROVED, "emit");
-        List<ValidationIssue> issues = GraphValidator.validate(g.build());
-        assertFalse(issues.toString(), hasError(issues, "requires a FEASIBLE candidate"));
-    }
-
-    @Test
     public void unguardedCycleIsAnError() {
         GraphBuilder g = new GraphBuilder("t", false);
         g.add("entry", "entry").add("emit", "emit");
@@ -154,7 +125,7 @@ public class GraphValidatorTest {
         GraphBuilder g = new GraphBuilder("t", false);
         g.add("entry", "entry").add("emit", "emit");
         g.add("a", "router");
-        g.add("p", "ilsPolish");
+        g.add("p", "foldDriver");
         g.set("p", "budgetSec", 5);
         g.edge("entry", Guarantee.DONE, "a");
         g.edge("a", Guarantee.TRUE, "p");

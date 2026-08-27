@@ -3,42 +3,25 @@ package de.legoshi.parkourcalc.core.anglesolver.solver;
 import java.util.LinkedHashSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/** The objective-aware byte-exact snap (ARCH-1 stage P2), replacing the earlier violation-only lattice repair.
- *  A continuous or convex-completed solution snaps to the movement's sine lookup grid, and the specific bucket
- *  a straightaway rounds to is the nearest one (Babai), but on the redirect and vanishing-costate ticks a
- *  neighbouring bucket can out-reach the continuous point byte-exact because the LUT gives some cells a
- *  movement norm above one. This enumerates a bounded ball of sine buckets around the seed on exactly those
- *  coupled ticks, scores every candidate on the real {@link ExactJumpModel} objective (not a min-distance
- *  proxy), certifies feasibility byte-exact, and keeps the strictly better one. It never regresses: a seed is
- *  returned unimproved (as {@code null}) unless a byte-exact-feasible cell assignment beats it.
- *
- *  <p>Works in game-facing space, so the improved sequence is the exact per-tick facing the game runs; the
- *  caller adopts it as a fully yaw-locked stage (see the wrap-ILS node), which reproduces it to the ULP. The
- *  straightaway ticks stay at their seed cell (decoupled = nearest-bucket), so the enumerated set is only the
- *  degenerate and turn ticks, keeping the decode small. */
-public final class SphereDecodeSnap {
-
-    public static boolean DEBUG = false;
+public final class LeafSnap {
 
     private static final int BUCKET_RADIUS = 6;
+    private static final int BUCKET_RADIUS_DEEP = 8;
     private static final double TURN_DEG = 1.0;
     private static final int MAX_ENUM = 12;
-    private static final int MAX_ROUNDS = 16;
+    private static final int SINGLE_ROUNDS = 4;
+    private static final int DEEP_ROUNDS = 16;
     private static final double NORM_TOL = 1.0e-6;
 
-    private SphereDecodeSnap() {
+    private LeafSnap() {
     }
 
-    /** Snap {@code seedAbsWrapped} (a byte-exact-feasible facing sequence) to a strictly better sine-bucket
-     *  assignment, returned as the improved GAME FACINGS to be adopted yaw-locked. Returns {@code null} when
-     *  the seed is null, infeasible, or already optimal on the enumerated ball (nothing to adopt). */
     public static double[] snap(ExactJumpModel exact, JumpSpec spec, double[] seedAbsWrapped, double feasTol,
-                                AtomicBoolean cancel, long deadlineNanos) {
+                                AtomicBoolean cancel, long deadlineNanos, boolean pairPass) {
         if (seedAbsWrapped == null) return null;
         JumpPhysicsInputs sc = spec.asScenario();
         int n = sc.numTicks;
         if (seedAbsWrapped.length != n) return null;
-        boolean modern = exact.modern();
         boolean max = spec.objective.sense == Objective.Sense.MAX;
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
 
@@ -51,21 +34,18 @@ public final class SphereDecodeSnap {
         int[] enumTicks = enumerationTicks(spec, sc, gf);
         if (enumTicks.length == 0) return null;
 
-        boolean[] boost = new boolean[n];
-        for (int t = 0; t < n; t++) {
-            boolean grounded = !Double.isNaN(sc.slipAt(t));
-            boost[t] = sc.jumpAt(t) && grounded && sc.sprintAt(t);
-        }
+        int radius = pairPass ? BUCKET_RADIUS_DEEP : BUCKET_RADIUS;
+        int roundCap = pairPass ? DEEP_ROUNDS : SINGLE_ROUNDS;
         float[][] cells = new float[n][];
         for (int e : enumTicks) {
-            cells[e] = FacingLattice.cellRepresentatives((float) gf[e], -BUCKET_RADIUS, BUCKET_RADIUS, modern, boost[e]);
+            cells[e] = BucketWalk.candidates(exact, sc, e, (float) gf[e], radius);
         }
 
         Scorer sc0 = new Scorer(exact, sc, compiled, spec, gf, path);
         double bestObj = baseObj;
         boolean improved = true;
         int rounds = 0;
-        while (improved && rounds++ < MAX_ROUNDS) {
+        while (improved && rounds++ < roundCap) {
             if (stopped(cancel, deadlineNanos)) break;
             improved = false;
             for (int e : enumTicks) {
@@ -85,6 +65,7 @@ public final class SphereDecodeSnap {
                     improved = true;
                 }
             }
+            if (!pairPass) continue;
             for (int a = 0; a < enumTicks.length && !stopped(cancel, deadlineNanos); a++) {
                 for (int b = a + 1; b < enumTicks.length; b++) {
                     int ea = enumTicks[a];
@@ -122,14 +103,14 @@ public final class SphereDecodeSnap {
         if (compiled.maxViolation(out, check) > feasTol) return null;
         double outObj = check.getPos(spec.objective.tick, spec.objective.axis);
         if (!better(outObj, baseObj, max)) return null;
-        if (DEBUG) System.out.printf("  SPHERE snap obj %.9f -> %.9f (E=%d)%n", baseObj, outObj, enumTicks.length);
         return out;
     }
 
     private static int[] enumerationTicks(JumpSpec spec, JumpPhysicsInputs sc, double[] gf) {
         int n = gf.length;
         LinkedHashSet<Integer> set = new LinkedHashSet<>();
-        int[] degen = JumpLinearModel.hasFacingWall(spec.constraints) ? null : ResidualRescue.degenerateTicks(spec);
+        int[] degen = JumpLinearModel.hasFacingWall(spec.constraints)
+                ? null : DegenerateTickAscent.degenerateTicks(spec);
         if (degen != null) {
             for (int d : degen) if (d >= 0 && d < n) set.add(d);
         }

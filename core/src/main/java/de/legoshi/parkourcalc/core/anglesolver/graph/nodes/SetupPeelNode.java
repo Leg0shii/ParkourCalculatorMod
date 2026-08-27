@@ -39,6 +39,8 @@ public final class SetupPeelNode implements NodeRuntime {
     @Override
     public NodeOutcome execute(GraphContext ctx, Candidate in, AtomicBoolean nodeToken, long deadlineNanos) {
         if (!ctx.exact()) return NodeOutcome.of(Guarantee.NONE, in);
+        if (in != null && in.yaws != null) return NodeOutcome.of(Guarantee.NONE, in);
+        if (ctx.jumpCount() <= 1) return NodeOutcome.of(Guarantee.NONE, in);
         double[] peeled = peel(ctx, nodeToken, deadlineNanos);
         if (peeled == null) return NodeOutcome.of(Guarantee.NONE, in);
         ctx.chainAppend("setup peel");

@@ -1,0 +1,11 @@
+capture	n	sense	axis	rootBound	objective	feasible	gap	certified	nodes	kernelSolves	kernelMs
+j001	353	MAX	Z	69.8815763573	NaN	false	NaN	false	1	1	644
+j003	176	MIN	X	-88.5177996310	-31.2999999855	true	5.722e+01	false	1	1	83
+j005	9	MAX	X	-40.5750053575	-41.2973168687	true	7.223e-01	false	1	1	0
+j008b-2jump	25	MAX	X	5.82954071460	-0.215313869349	true	6.045e+00	false	1	1	1
+j016-X2jmmp2p	11	MAX	Z	-3.93403383261	-4.85790965376	true	9.239e-01	false	1	1	0
+j019-3jmmtruenix	11	MAX	X	-12.4128198847	-13.3032586884	true	8.904e-01	false	1	1	0
+j021-rinav1-01	39	MAX	Z	1077.50840351	NaN	false	NaN	false	1	1	4
+j022-1bmhbfly	11	MIN	X	-532.533679313	-531.700154155	true	8.335e-01	false	1	1	0
+loopmm-3jump-lands	33	MAX	Z	-271.663991512	-279.300424139	true	7.636e+00	false	1	1	1
+thousand-1-dup2	49	MAX	X	6539.43522667	6523.30260518	true	1.613e+01	false	1	1	17

@@ -22,10 +22,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class FreeStartImproveNode implements NodeRuntime {
 
     private final boolean jointOnly;
+    private final int warmSec;
     private final FreeStartSolve.Config cfg;
 
     public FreeStartImproveNode(ParamValues params) {
         this.jointOnly = params.getBool("jointOnly");
+        this.warmSec = params.getInt("warmSec");
         this.cfg = new FreeStartSolve.Config();
         cfg.intervalMargin = params.getDouble("fsIntervalMargin");
         cfg.invariantTol = params.getDouble("fsInvariantTol");
@@ -35,7 +37,10 @@ public final class FreeStartImproveNode implements NodeRuntime {
 
     @Override
     public NodeOutcome execute(GraphContext ctx, Candidate in, AtomicBoolean nodeToken, long deadlineNanos) {
-        if (!ctx.exact() || !ctx.freeStart) return NodeOutcome.of(Guarantee.UNCHANGED, in);
+        if (!ctx.exact() || !ctx.freeStart || ctx.stageLocked()) return NodeOutcome.of(Guarantee.UNCHANGED, in);
+        if (in != null && in.yaws != null && in.feasible && (jointOnly || warmSec <= 0)) {
+            return NodeOutcome.of(Guarantee.UNCHANGED, in);
+        }
         if (jointOnly) {
             boolean seedFeasible = in != null && in.yaws != null
                     && Scoring.violationOf(ctx.model, ctx.scenario, ctx.spec, in.yaws) <= ctx.feasTol;

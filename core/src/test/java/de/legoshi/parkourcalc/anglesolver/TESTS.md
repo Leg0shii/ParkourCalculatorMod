@@ -15,22 +15,14 @@ anglesolver/
                            panel moves and Cancel keeps the best found so far
   GraphPathObjectiveGateTest.java  objective gates that solve THROUGH the full Optimize graph (not dualChain),
                            asserting the ENGINE's shipped objective (getObjectiveValue), which is computed with the
-                           post-solve scenario and so honors yaw-lock. j021-rinav1-01 must reach ResidualRescue's
-                           optimum (engineObj >= 1067.8637, div 0 = not yaw-locked, so the recompute is valid); goes
-                           RED if ResidualRescue is unwired from DualChainNode. loopmm-3jump-lands LANDS per the
-                           engine (engineObj -279.299868 >= -279.3 block edge). NOTE: sphereSnap adopts loopmm as a
-                           fully YAW-LOCKED stage, so the harness recompute (toGameFacings via the non-yaw-locked
-                           lastSpecDebug scenario) re-rounds to -279.300084 (div 2.16e-4); the test bounds that
-                           divergence and flags that landing is yaw-lock-dependent - VERIFY IN-GAME. Also a
+                           post-solve scenario and so honors yaw-lock. j021-rinav1-01 must reach the deterministic
+                           optimum (engineObj >= 1067.8637, div 0 = not yaw-locked, so the recompute is valid); the
+                           degenerate-tick ascent in the fold stage carries it. loopmm-3jump-lands LANDS per the
+                           engine (engineObj >= -279.3 block edge via the pattern B&B stage). NOTE: the leaf snap
+                           can adopt loopmm as a fully YAW-LOCKED stage, so the harness recompute (toGameFacings via
+                           the non-yaw-locked lastSpecDebug scenario) may re-round short (bounded div); the test
+                           bounds that divergence and flags that landing is yaw-lock-dependent - VERIFY IN-GAME. Also a
                            determinism guard (j021 solved twice, engineObj+recompute bit-identical)
-  HpkDualRecoveryScreen.java  dev miss-screen over captures/hpk/ (dual bound + full chain per capture);
-                              skipped unless PKC_SCREENS is set; report at build/reports/hpk-screen.txt
-  RelaxDiagScreen.java     dev per-capture recovery diagnostic (stall margins, recorded-path replay);
-                           skipped unless PKC_SCREENS is set; report at build/reports/relax-diag.txt
-  LoopmmReachScreen.java   dev reach diagnostic on loopmm (pattern-branched B&B loose/tight, engine
-                           exhaustive); skipped unless PKC_SCREENS is set
-  HpkMissTriageScreen.java dev triage of the dualrecovery frontier misses (blind B&B per capture,
-                           hand-pattern probes); skipped unless PKC_SCREENS is set
   HpkEngineBench.java      manual engine bench over captures/hpk/; PKC_BENCH=1 to run, PKC_BENCH_EXH,
                            PKC_BENCH_FILTER, PKC_BENCH_TAG, PKC_BENCH_TIMEOUT_MS tune it
   CorpusBench.java         manual OLD-vs-NEW full-corpus bench (STEP 9): all captures at FAST/THOROUGH,
@@ -173,6 +165,22 @@ anglesolver/
                            in-deadline, j1150-noturn-inner THOROUGH beats the p2 witness,
                            j154-noturn-ja-inner FAST beats the F3 witness, FAST re-solve
                            determinism
+  CertifiedBnbTest.java    #422 M2a certified B&B fast units: SineTableGeometry containment (realized
+                           inputs inside boxes/chords/supports across all four eras incl. the legacy
+                           jump-tick double cast), a tiny 2-tick instance certifying at the enumerated
+                           optimum with gap <= CERT_EPS, near-threshold gate behavior, determinism
+  CertifiedBnbEngineTest.java  #422 M2a certified-search gates (SlowSolverTests): all 5 small
+                           captures reach certified gap <= 1.5e-4 with dominating bounds and
+                           feasible incumbents (per-capture numbers printed; the 1e-9 plateau
+                           mechanism is in ARCH2-M2A-CERTIFIED-BNB.md), dF specs decline cleanly,
+                           thousand TH10 holds the M1 floor, j1150-noturn-inner FAST regression
+                           floor, j154-noturn-ja-inner FAST beats the in-game F3 witness
+  CertBnbProbe.java        env-gated certified-B&B probe: PKC_CERTBNB_CAPTURES (comma list),
+                           PKC_CERTBNB_OUT/NODES/MS/MODE; nodeCap=1 dumps root bounds for the COPT
+                           root-bound validation (research/copt/certbnb_rootcheck.py)
+  PipelineShapeTest.java   #422 M2b G3 enforcement: every corpus capture visits the one linear
+                           pipeline stage sequence at BOTH built-in tiers (THOROUGH probed at 1 s);
+                           deadline-truncated runs must be a prefix of it
   FoldDriverProbe.java     run the fold driver headlessly on any capture; PKC_FOLD_CAPTURE=<path or
                            pool name>, optional PKC_FOLD_OUT/PKC_FOLD_DEBUG/PKC_FOLD_SEED/
                            PKC_FOLD_REF (box-reference multi-start override); prints per-round

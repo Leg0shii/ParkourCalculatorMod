@@ -32,6 +32,14 @@ public final class GraphBuilder {
         return this;
     }
 
+    public GraphBuilder chainAll(String from, String to) {
+        GraphNode n = node(from);
+        for (Branch b : n.type.branches) {
+            edges.add(new GraphEdge(from, b.label, to));
+        }
+        return this;
+    }
+
     private GraphNode node(String id) {
         for (GraphNode n : nodes) {
             if (n.id.equals(id)) return n;

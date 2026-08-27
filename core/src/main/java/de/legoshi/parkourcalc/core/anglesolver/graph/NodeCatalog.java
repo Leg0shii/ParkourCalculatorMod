@@ -2,19 +2,19 @@ package de.legoshi.parkourcalc.core.anglesolver.graph;
 
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.BnbNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.CapCertifyNode;
+import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.CertifiedBnbNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.DualChainNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.FoldDriverNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.FreeStartImproveNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.HomotopyLadderNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.IlsPolishNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.LabelNode;
+import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.LeafSnapNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.MarkSettledNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.ReportNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.RecedingHorizonNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.RouterNode;
-import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.SeamSweepNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.SetupPeelNode;
-import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.SphereSnapNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.TranslatedStartNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.WrapIlsNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.WrapYawsNode;
@@ -104,16 +104,7 @@ public final class NodeCatalog {
                         "0.0,1.0e-4,3.0e-4,6.0e-4,1.2e-3,2.5e-3,5.0e-3,1.0e-2"))
                 .param(ParamSpec.integer("cfMaxInertiaPasses", "Closed form inertia passes", 1, 16, 4))
                 .param(ParamSpec.integer("cfRungStallLimit", "Closed form rung stall limit", 1, 16, 2))
-                .param(ParamSpec.integer("rrOuterIters", "Relaxation outer iterations", 1, 1000, 30))
-                .param(ParamSpec.integer("rrInnerIters", "Relaxation inner iterations", 1, 100000, 500))
-                .param(ParamSpec.decimal("rrRhoStart", "Relaxation rho start", 1.0e-6, 1.0e12, 100.0))
-                .param(ParamSpec.decimal("rrRhoGrow", "Relaxation rho growth", 1.0, 100.0, 3.0))
-                .param(ParamSpec.decimal("rrRhoMax", "Relaxation rho cap", 1.0, 1.0e18, 1.0e6))
-                .param(ParamSpec.text("rrSeedMargins", "Relaxation seed margins",
-                        "0.0,3.0e-4,1.2e-3,5.0e-3,1.0e-2,2.0e-2,5.0e-2"))
-                .param(ParamSpec.integer("rrDualRestarts", "Relaxation dual restarts", 0, 100, 5))
-                .param(ParamSpec.integer("rrSlpPhase1Calls", "Relaxation SLP phase-1 calls", 1, 10000, 160))
-                .param(ParamSpec.integer("rrSlpTotalCalls", "Relaxation SLP total calls", 1, 10000, 220))
+                .param(ParamSpec.integer("warmSec", "Warm improve (s)", 0, 600, 0))
                 .budgetParam("budgetSec")
                 .fallback(Guarantee.NONE)
                 .factory(DualChainNode::new)
@@ -156,6 +147,7 @@ public final class NodeCatalog {
                 .param(ParamSpec.decimal("fsInvariantTol", "Invariant slack tolerance", 0.0, 1.0, 1.0e-6))
                 .param(ParamSpec.text("fsJointMargins", "Joint margin ladder",
                         "0.0,1.0e-4,3.0e-4,6.0e-4,1.2e-3,2.5e-3,5.0e-3,1.0e-2"))
+                .param(ParamSpec.integer("warmSec", "Warm improve (s)", 0, 600, 0))
                 .budgetParam("budgetSec")
                 .fallback(Guarantee.UNCHANGED)
                 .factory(FreeStartImproveNode::new)
@@ -166,25 +158,31 @@ public final class NodeCatalog {
                 .branch(Branch.feasible(Guarantee.IMPROVED))
                 .branch(Branch.preserves(Guarantee.UNCHANGED))
                 .branch(Branch.preserves(Guarantee.NONE))
-                .param(ParamSpec.choice("mode", "Mode", new String[] {"FIRST_FEASIBLE", "OPTIMIZE"}, "FIRST_FEASIBLE"))
-                .param(ParamSpec.integer("budgetSec", "Budget (s)", 0, 600, 3))
-                .param(ParamSpec.integer("minBudgetMs", "Minimum budget (ms)", 0, 600000, 0))
+                .param(ParamSpec.integer("budgetSec", "Budget (s)", 0, 600, 0))
+                .param(ParamSpec.integer("ffSec", "First-feasible budget (s)", 0, 600, 3))
+                .param(ParamSpec.integer("optSec", "Optimize budget (s)", 0, 600, 0))
+                .param(ParamSpec.integer("tickCap", "Tick cap", 0, 100000, BuiltinGraphs.IMPROVE_TICK_CAP))
                 .param(ParamSpec.text("labelSuffix", "Chain suffix", ""))
-                .param(ParamSpec.decimal("searchShare", "Search share of budget", 0.1, 1.0, 0.8))
-                .param(ParamSpec.decimal("pruneTol", "Prune tolerance", 0.0, 1.0, 1.0e-6))
-                .param(ParamSpec.decimal("slpViolTrigger", "SLP trigger violation", 0.0, 10.0, 0.02))
-                .param(ParamSpec.text("seedMargins", "Seed margin ladder", "3.0e-4,1.2e-3,5.0e-3,2.0e-2"))
-                .param(ParamSpec.integer("maxPatterns", "Max patterns", 1, 256, 64))
-                .param(ParamSpec.decimal("minSeamWidth", "Min seam width", 1.0e-4, 10.0, 0.04))
-                .param(ParamSpec.integer("restoreIters", "Restore iterations", 1, 1000, 45))
-                .param(ParamSpec.integer("treeSlpPhase1Calls", "Tree SLP phase-1 calls", 1, 10000, 40))
-                .param(ParamSpec.integer("treeSlpTotalCalls", "Tree SLP total calls", 1, 10000, 60))
-                .param(ParamSpec.decimal("treeSlpTrMinDeg", "Tree SLP trust floor (deg)", 0.0, 10.0, 1.0e-3))
-                .param(ParamSpec.integer("polishSlpPhase1Calls", "Polish SLP phase-1 calls", 1, 10000, 160))
-                .param(ParamSpec.integer("polishSlpTotalCalls", "Polish SLP total calls", 1, 10000, 220))
                 .budgetParam("budgetSec")
                 .fallback(Guarantee.UNCHANGED)
                 .factory(BnbNode::new)
+                .build());
+        register(NodeType.builder("certBnb", "Certified B&B", NodeCategory.RECOVERY)
+                .requires(InputRequirement.ANY)
+                .branch(Branch.feasible(Guarantee.FOUND))
+                .branch(Branch.feasible(Guarantee.IMPROVED))
+                .branch(Branch.preserves(Guarantee.UNCHANGED))
+                .branch(Branch.preserves(Guarantee.NONE))
+                .param(ParamSpec.integer("budgetSec", "Budget (s)", 0, 600, 0))
+                .param(ParamSpec.integer("ffSec", "First-feasible budget (s)", 0, 600, 3))
+                .param(ParamSpec.integer("ffNodeCap", "First-feasible node cap", 0, 1000000, 32))
+                .param(ParamSpec.integer("optSec", "Optimize budget (s)", 0, 600, 0))
+                .param(ParamSpec.integer("optNodeCap", "Optimize node cap", 0, 1000000, 0))
+                .param(ParamSpec.integer("tickCap", "Tick cap", 0, 100000, BuiltinGraphs.IMPROVE_TICK_CAP))
+                .param(ParamSpec.text("labelSuffix", "Chain suffix", ""))
+                .budgetParam("budgetSec")
+                .fallback(Guarantee.UNCHANGED)
+                .factory(CertifiedBnbNode::new)
                 .build());
         register(NodeType.builder("foldDriver", "Fold driver", NodeCategory.RECOVERY)
                 .requires(InputRequirement.ANY)
@@ -192,10 +190,11 @@ public final class NodeCatalog {
                 .branch(Branch.feasible(Guarantee.IMPROVED))
                 .branch(Branch.preserves(Guarantee.UNCHANGED))
                 .branch(Branch.preserves(Guarantee.NONE))
-                .param(ParamSpec.choice("mode", "Mode", new String[] {"RESCUE", "IMPROVE"}, "RESCUE"))
                 .param(ParamSpec.integer("budgetSec", "Budget (s)", 0, 600, 0))
                 .param(ParamSpec.integer("objectiveRounds", "Objective rounds", 0, 64, 0))
                 .param(ParamSpec.integer("multiStart", "Multi-start count", 0, 5, 0))
+                .param(ParamSpec.integer("ascentMs", "Ascent budget (ms)", 0, 600000, 0))
+                .param(ParamSpec.integer("tickCap", "Tick cap", 0, 100000, BuiltinGraphs.IMPROVE_TICK_CAP))
                 .param(ParamSpec.text("labelSuffix", "Chain suffix", ""))
                 .budgetParam("budgetSec")
                 .fallback(Guarantee.NONE)
@@ -211,41 +210,12 @@ public final class NodeCatalog {
                 .fallback(Guarantee.NONE)
                 .factory(HomotopyLadderNode::new)
                 .build());
-        register(NodeType.builder("seamSweep", "Seam sweep", NodeCategory.RECOVERY)
-                .requires(InputRequirement.FEASIBLE)
-                .branch(Branch.feasible(Guarantee.IMPROVED))
-                .branch(Branch.preserves(Guarantee.UNCHANGED))
-                .param(ParamSpec.integer("budgetSec", "Budget (s)", 0, 600, 12))
-                .param(ParamSpec.decimal("sweepPinHalf", "Sweep pin half-width", 1.0e-4, 10.0, 0.06))
-                .param(ParamSpec.decimal("narrowPinHalf", "Narrow pin half-width", 1.0e-4, 10.0, 0.03))
-                .param(ParamSpec.decimal("finePinHalf", "Fine pin half-width", 1.0e-4, 10.0, 0.015))
-                .param(ParamSpec.decimal("beamPinHalf", "Beam pin half-width", 1.0e-4, 10.0, 0.1))
-                .param(ParamSpec.decimal("holdPinHalf", "Hold pin half-width", 1.0e-4, 10.0, 0.10))
-                .param(ParamSpec.integer("maxSeams", "Max seams", 1, 64, 5))
-                .param(ParamSpec.integer("maxCells1d", "Cells (1 band)", 1, 256, 20))
-                .param(ParamSpec.integer("maxCells2d", "Cells (2 bands)", 1, 256, 10))
-                .param(ParamSpec.integer("narrowCells1d", "Narrow cells (1 band)", 1, 256, 28))
-                .param(ParamSpec.integer("narrowCells2d", "Narrow cells (2 bands)", 1, 256, 14))
-                .param(ParamSpec.integer("slpRescueCap", "SLP rescue cap", 0, 256, 6))
-                .param(ParamSpec.integer("narrowSlpRescueCap", "Narrow SLP rescue cap", 0, 256, 8))
-                .param(ParamSpec.integer("beamWidth", "Beam width", 1, 64, 3))
-                .param(ParamSpec.integer("beamMaxCells", "Beam max cells", 1, 256, 8))
-                .param(ParamSpec.integer("wideBeamWidth", "Wide beam width", 1, 64, 4))
-                .param(ParamSpec.integer("wideBeamMaxCells", "Wide beam max cells", 1, 256, 12))
-                .param(ParamSpec.integer("beamMaxSeams", "Beam max seams", 1, 64, 4))
-                .param(ParamSpec.integer("beamSlpCap", "Beam SLP cap", 1, 256, 8))
-                .param(ParamSpec.decimal("polishReserveFraction", "Polish reserve fraction", 0.0, 0.9, 0.2))
-                .param(ParamSpec.decimal("longRunFraction", "Long-run slice fraction", 0.0, 1.0, 0.45))
-                .budgetParam("budgetSec")
-                .fallback(Guarantee.UNCHANGED)
-                .factory(SeamSweepNode::new)
-                .build());
         register(NodeType.builder("ilsPolish", "ILS polish", NodeCategory.POLISH)
-                .requires(InputRequirement.FEASIBLE)
+                .requires(InputRequirement.ANY)
                 .branch(Branch.feasible(Guarantee.IMPROVED))
                 .branch(Branch.preserves(Guarantee.UNCHANGED))
                 .param(ParamSpec.integer("budgetSec", "Budget (s)", 0, 600, 120))
-                .param(ParamSpec.integer("roundCap", "Round cap", 1, 10000, 400))
+                .param(ParamSpec.integer("roundCap", "Round cap", 0, 10000, 400))
                 .param(ParamSpec.integer("perturbTicksMin", "Kick ticks min", 1, 100, 3))
                 .param(ParamSpec.integer("perturbTicksSpan", "Kick ticks span", 1, 100, 13))
                 .param(ParamSpec.decimal("perturbMagMin", "Kick magnitude min (deg)", 0.0, 360.0, 3.0))
@@ -272,13 +242,13 @@ public final class NodeCatalog {
                 .fallback(Guarantee.REJECTED)
                 .factory(WrapIlsNode::new)
                 .build());
-        register(NodeType.builder("sphereSnap", "Sphere snap", NodeCategory.POLISH)
+        register(NodeType.builder("leafSnap", "Leaf snap", NodeCategory.POLISH)
                 .requires(InputRequirement.ANY)
                 .branch(Branch.feasible(Guarantee.ADOPTED))
                 .branch(Branch.preserves(Guarantee.REJECTED))
-                .param(ParamSpec.integer("minRemainingSec", "Minimum budget (s)", 0, 60, 0))
+                .param(ParamSpec.integer("pairPass", "Pair pass", 0, 1, 0))
                 .fallback(Guarantee.REJECTED)
-                .factory(SphereSnapNode::new)
+                .factory(LeafSnapNode::new)
                 .build());
         register(NodeType.builder("translatedStart", "Translated start", NodeCategory.RECOVERY)
                 .requires(InputRequirement.ANY)

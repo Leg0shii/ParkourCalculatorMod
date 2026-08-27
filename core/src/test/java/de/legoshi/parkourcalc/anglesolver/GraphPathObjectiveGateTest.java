@@ -78,8 +78,8 @@ public class GraphPathObjectiveGateTest {
     public void j021GraphSolveReachesResidualOptimum() {
         Solved s = solveThroughGraph("j021-rinav1-01", AngleSolverState.Effort.THOROUGH, 12, 60_000L);
         assertTrue("j021 engine did not report success", s.success);
-        assertTrue("j021 shipped objective below the ResidualRescue optimum (engineObj=" + s.engineObj
-                + "); ResidualRescue may be unwired from DualChainNode", s.engineObj >= 1067.8637);
+        assertTrue("j021 shipped objective below the deterministic-optimum gate (engineObj=" + s.engineObj
+                + "); the optimize pipeline lost its improve stage", s.engineObj >= 1067.8637);
     }
 
     @Test

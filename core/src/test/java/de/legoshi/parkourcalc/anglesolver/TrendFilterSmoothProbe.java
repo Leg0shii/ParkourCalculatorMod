@@ -48,8 +48,7 @@ public class TrendFilterSmoothProbe {
         collect(resolve("/captures/hpk"), files);
         Collections.sort(files);
 
-        Method build = HpkDualRecoveryScreen.class.getDeclaredMethod("buildSpec", SaveFile.class, ExactJumpModel.class);
-        build.setAccessible(true);
+
 
         StringWriter sw = new StringWriter();
         PrintWriter out = new PrintWriter(sw);
@@ -64,7 +63,7 @@ public class TrendFilterSmoothProbe {
                 if (file == null || file.angleSolver == null || file.angleSolver.seed == null
                         || file.rows == null || file.rows.isEmpty()) continue;
                 ExactJumpModel exact = ExactJumpModel.forMcVersion(file.mcVersion);
-                JumpSpec raw = (JumpSpec) build.invoke(null, file, exact);
+                JumpSpec raw = de.legoshi.parkourcalc.anglesolver.harness.EngineSpecs.buildSpec(file, exact);
                 if (raw == null) continue;
                 JumpPhysicsInputs sc = raw.asScenario();
                 Objective smoothObj = new Objective(raw.objective.axis, raw.objective.sense, raw.objective.tick, SMOOTH_LAMBDA);

@@ -113,7 +113,7 @@ public class RunMatrixScreen {
     }
 
     private static SolverGraph bnbHeavyGraph(int seedSec, int bnbSec, int ilsSec) {
-        return BuiltinGraphs.explore(seedSec, bnbSec, ilsSec);
+        return BuiltinGraphs.optimize(seedSec + bnbSec + ilsSec);
     }
 
     private static SolverGraph raiseTickCaps(SolverGraph g, int cap) {
