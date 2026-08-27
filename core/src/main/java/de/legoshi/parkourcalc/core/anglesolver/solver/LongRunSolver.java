@@ -243,7 +243,7 @@ public final class LongRunSolver {
                                 (System.nanoTime() - winT0) / 1.0e6);
                     }
                 }
-                if (yaws == null && i == 0 && freeBox != null) {
+                if (i == 0 && freeBox != null) {
                     Object cached = retryCache.get(we);
                     FreeStartSolve.Result fr;
                     if (cached != null) {
