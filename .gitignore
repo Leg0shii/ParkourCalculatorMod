@@ -57,3 +57,6 @@ __pycache__/
 
 # COPT research scratch (struct/probe dumps, regenerated locally)
 research/copt/data/
+
+research/
+docs/research/solver-rework-2026-08/benchmark/*.tsv
