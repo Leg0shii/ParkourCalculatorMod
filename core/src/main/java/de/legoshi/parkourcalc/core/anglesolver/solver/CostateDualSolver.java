@@ -62,11 +62,13 @@ public final class CostateDualSolver {
     private final double[] cx;
     private final double[] cz;
     private final double[] mMag;
-    private final int[] axis;       // [m] wall axis (0=X,1=Z)
-    private final double[][] coef;  // [m][n] wall coupling
+    private final int[] axis;       // [m] wall axis (0=X, 1=Z, 2=2D)
+    private final double[][] coefX; // [m][n] wall coupling X
+    private final double[][] coefZ; // [m][n] wall coupling Z
     private final double[] bBase;   // [m] margin-0 right-hand side
     private final boolean[] eq;     // [m]
-    private final double[] p0coef;
+    private final double[] p0coefX;
+    private final double[] p0coefZ;
     private final FreeP0 freeP0;
 
     // Preallocated scratch reused across iterations and across solve() calls.
@@ -100,17 +102,21 @@ public final class CostateDualSolver {
         this.mMag = mMag;
         this.freeP0 = freeP0;
         this.axis = new int[m];
-        this.coef = new double[m][];
+        this.coefX = new double[m][];
+        this.coefZ = new double[m][];
         this.bBase = new double[m];
         this.eq = new boolean[m];
-        this.p0coef = new double[m];
+        this.p0coefX = new double[m];
+        this.p0coefZ = new double[m];
         for (int j = 0; j < m; j++) {
             JumpLinearModel.Wall w = walls.get(j);
             axis[j] = w.axis;
-            coef[j] = w.coef;
+            coefX[j] = w.coefX;
+            coefZ[j] = w.coefZ;
             bBase[j] = w.bPrime;
             eq[j] = w.eq;
-            p0coef[j] = w.p0coef;
+            p0coefX[j] = w.p0coefX;
+            p0coefZ[j] = w.p0coefZ;
         }
         this.gx = new double[n];
         this.gz = new double[n];
@@ -364,7 +370,8 @@ public final class CostateDualSolver {
 
     private double hAxis(double[] lam, int a) {
         double h = a == 0 ? freeP0.objDevX : freeP0.objDevZ;
-        for (int j = 0; j < m; j++) if (axis[j] == a) h += lam[j] * p0coef[j];
+        double[] p0c = a == 0 ? p0coefX : p0coefZ;
+        for (int j = 0; j < m; j++) h += lam[j] * p0c[j];
         return h;
     }
 
@@ -394,11 +401,13 @@ public final class CostateDualSolver {
         for (int j = 0; j < m; j++) {
             double lj = lam[j];
             if (lj == 0.0) continue;
-            double[] cj = coef[j];
-            if (axis[j] == 0) {
-                for (int t = 0; t < n; t++) outX[t] -= lj * cj[t];
-            } else {
-                for (int t = 0; t < n; t++) outZ[t] -= lj * cj[t];
+            double[] cxj = coefX[j];
+            double[] czj = coefZ[j];
+            if (cxj != null) {
+                for (int t = 0; t < n; t++) outX[t] -= lj * cxj[t];
+            }
+            if (czj != null) {
+                for (int t = 0; t < n; t++) outZ[t] -= lj * czj[t];
             }
         }
         double d = 0.0;
@@ -417,20 +426,25 @@ public final class CostateDualSolver {
             uz[t] = w * gZ[t];
         }
         for (int j = 0; j < m; j++) {
-            double[] cj = coef[j];
-            double[] u = (axis[j] == 0) ? ux : uz;
+            double[] cxj = coefX[j];
+            double[] czj = coefZ[j];
             double dot = 0.0;
-            for (int t = 0; t < n; t++) dot += cj[t] * u[t];
+            if (cxj != null) {
+                for (int t = 0; t < n; t++) dot += cxj[t] * ux[t];
+            }
+            if (czj != null) {
+                for (int t = 0; t < n; t++) dot += czj[t] * uz[t];
+            }
             out[j] = bPrime[j] - dot;
         }
         if (freeP0 != null) {
             double dsx = deltaOf(hAxis(lambda, 0), 0);
             double dsz = deltaOf(hAxis(lambda, 1), 1);
-            for (int j = 0; j < m; j++) out[j] += p0coef[j] * (axis[j] == 0 ? dsx : dsz);
+            for (int j = 0; j < m; j++) out[j] += p0coefX[j] * dsx + p0coefZ[j] * dsz;
         }
     }
 
-    /** Free-set Hessian H_{ab} = Σ_t (m_t/‖g_t‖)·coef_i·coef_j·([axis equal] − ĝ_i·ĝ_j), i=free[a], j=free[b]. */
+    /** Free-set Hessian H_{ab} = Σ_t (m_t/‖g_t‖)·(A_i·A_j - (A_i·ĝ)(A_j·ĝ)), i=free[a], j=free[b]. */
     private void buildHessian(int nf) {
         double curvX = 0.0;
         double curvZ = 0.0;
@@ -447,23 +461,28 @@ public final class CostateDualSolver {
         }
         for (int a = 0; a < nf; a++) {
             int i = freeIdx[a];
-            double[] ci = coef[i];
-            int ai = axis[i];
-            double[] hatI = ai == 0 ? gxHat : gzHat;
+            double[] cxi = coefX[i];
+            double[] czi = coefZ[i];
             for (int b = a; b < nf; b++) {
                 int j = freeIdx[b];
-                double[] cj = coef[j];
-                int aj = axis[j];
-                boolean sameAxis = (ai == aj);
-                double[] hatJ = aj == 0 ? gxHat : gzHat;
+                double[] cxj = coefX[j];
+                double[] czj = coefZ[j];
                 double sum = 0.0;
                 for (int t = 0; t < n; t++) {
-                    double cc = ci[t] * cj[t];
-                    if (cc == 0.0) continue;
-                    sum += wOverNrm[t] * cc * ((sameAxis ? 1.0 : 0.0) - hatI[t] * hatJ[t]);
+                    double cxit = (cxi != null) ? cxi[t] : 0.0;
+                    double czit = (czi != null) ? czi[t] : 0.0;
+                    double cxjt = (cxj != null) ? cxj[t] : 0.0;
+                    double czjt = (czj != null) ? czj[t] : 0.0;
+                    if (cxit == 0.0 && czit == 0.0) continue;
+                    if (cxjt == 0.0 && czjt == 0.0) continue;
+
+                    double dot = cxit * cxjt + czit * czjt;
+                    double hatI = cxit * gxHat[t] + czit * gzHat[t];
+                    double hatJ = cxjt * gxHat[t] + czjt * gzHat[t];
+                    sum += wOverNrm[t] * (dot - hatI * hatJ);
                 }
-                if (freeP0 != null && sameAxis) {
-                    sum += p0coef[i] * p0coef[j] * (ai == 0 ? curvX : curvZ);
+                if (freeP0 != null) {
+                    sum += p0coefX[i] * p0coefX[j] * curvX + p0coefZ[i] * p0coefZ[j] * curvZ;
                 }
                 H[a][b] = sum;
                 H[b][a] = sum;

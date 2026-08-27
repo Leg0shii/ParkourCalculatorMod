@@ -49,20 +49,41 @@ public final class JumpLinearModel {
      *  {@code a} is the unit axis (X or Z); {@code coef[s]} is the friction coupling C(s,τ) with the
      *  GE/LE sign folded in. An equality keeps a free (sign-unconstrained) multiplier. */
     public static final class Wall {
-        public final int axis;       // 0 = X, 1 = Z
-        public final double[] coef;  // length n; A_{j,s} = coef[s] * unit(axis)
+        public final int axis;       // 0 = X, 1 = Z, 2 = 2D (both coefX and coefZ)
+        public final double[] coefX;
+        public final double[] coefZ;
+        public final double[] coef;  // convenience: non-null axis coef for 1D, or coefX for 2D
         public final double bPrime;
         public final boolean eq;
         public final String name;
+        public final double p0coefX;
+        public final double p0coefZ;
         public final double p0coef;
 
-        Wall(int axis, double[] coef, double bPrime, boolean eq, String name, double p0coef) {
+        public Wall(int axis, double[] coef, double bPrime, boolean eq, String name, double p0coef) {
             this.axis = axis;
+            this.coefX = (axis == 0) ? coef : null;
+            this.coefZ = (axis == 1) ? coef : null;
             this.coef = coef;
             this.bPrime = bPrime;
             this.eq = eq;
             this.name = name;
+            this.p0coefX = (axis == 0) ? p0coef : 0.0;
+            this.p0coefZ = (axis == 1) ? p0coef : 0.0;
             this.p0coef = p0coef;
+        }
+
+        public Wall(double[] coefX, double[] coefZ, double bPrime, boolean eq, String name, double p0coefX, double p0coefZ) {
+            this.axis = 2;
+            this.coefX = coefX;
+            this.coefZ = coefZ;
+            this.coef = coefX != null ? coefX : coefZ;
+            this.bPrime = bPrime;
+            this.eq = eq;
+            this.name = name;
+            this.p0coefX = p0coefX;
+            this.p0coefZ = p0coefZ;
+            this.p0coef = (p0coefX != 0.0) ? p0coefX : p0coefZ;
         }
     }
 
@@ -218,6 +239,46 @@ public final class JumpLinearModel {
      *  {@code null} for a constraint with no decision dependence (tick 0, or t1==t2): such a constraint is a
      *  constant, reported via {@code trivialInfeasible} when the constant itself violates it. F-mode (facing)
      *  and DXZ (cross-axis magnitude) walls are not linear in the inputs and are rejected (caller falls back). */
+    public static boolean hasCrossAxis(List<JumpConstraint> constraints) {
+        for (JumpConstraint c : constraints) {
+            if (c.mode == JumpConstraint.Mode.DXZ || c.mode == JumpConstraint.Mode.DZX) return true;
+        }
+        return false;
+    }
+
+    public void addCrossAxisWalls(List<Wall> out, JumpConstraint c, int dominantSign, double margin) {
+        if (c.t2 == null) return;
+        boolean wantZDominant = (c.mode == JumpConstraint.Mode.DZX && c.cmp == JumpConstraint.Cmp.GE)
+                || (c.mode == JumpConstraint.Mode.DXZ && c.cmp == JumpConstraint.Cmp.LE);
+        double s = dominantSign >= 0 ? 1.0 : -1.0;
+        if (wantZDominant) {
+            out.add(compileCrossAxisWall(c.t1, c.t2, -1.0, s, c.rhs, margin, c.name + ".1"));
+            out.add(compileCrossAxisWall(c.t1, c.t2, 1.0, s, c.rhs, margin, c.name + ".2"));
+        } else {
+            out.add(compileCrossAxisWall(c.t1, c.t2, s, -1.0, c.rhs, margin, c.name + ".1"));
+            out.add(compileCrossAxisWall(c.t1, c.t2, s, 1.0, c.rhs, margin, c.name + ".2"));
+        }
+    }
+
+    public Wall compileCrossAxisWall(int t1, Integer t2, double signX, double signZ, double rhs,
+                                     double margin, String name) {
+        if (t2 == null) return null;
+        double constX = constPos(t1, 0) - constPos(t2, 0);
+        double constZ = constPos(t1, 1) - constPos(t2, 1);
+        double constVal = signX * constX + signZ * constZ;
+
+        double[] cx = new double[n];
+        double[] cz = new double[n];
+        for (int s = 0; s < n; s++) {
+            double kx = coefAxis(0, s, t1) - coefAxis(0, s, t2);
+            double kz = coefAxis(1, s, t1) - coefAxis(1, s, t2);
+            cx[s] = -signX * kx;
+            cz[s] = -signZ * kz;
+        }
+        double bPrime = constVal - rhs - margin;
+        return new Wall(cx, cz, bPrime, false, name, 0.0, 0.0);
+    }
+
     public Wall compileWall(JumpConstraint c, double margin, boolean[] trivialInfeasible) {
         if (c.mode != JumpConstraint.Mode.X && c.mode != JumpConstraint.Mode.Z) return null;
         int axis = (c.mode == JumpConstraint.Mode.X) ? 0 : 1;
@@ -267,8 +328,16 @@ public final class JumpLinearModel {
 
     /** Compile all walls of a spec; sets {@code trivialInfeasible[0]} if a constant constraint is violated. */
     public List<Wall> compileWalls(List<JumpConstraint> constraints, double margin, boolean[] trivialInfeasible) {
+        return compileWalls(constraints, margin, trivialInfeasible, 1);
+    }
+
+    public List<Wall> compileWalls(List<JumpConstraint> constraints, double margin, boolean[] trivialInfeasible, int dominantSign) {
         List<Wall> walls = new ArrayList<>();
         for (JumpConstraint c : constraints) {
+            if (c.mode == JumpConstraint.Mode.DXZ || c.mode == JumpConstraint.Mode.DZX) {
+                addCrossAxisWalls(walls, c, dominantSign, margin);
+                continue;
+            }
             Wall w = compileWall(c, margin, trivialInfeasible);
             if (w != null) walls.add(w);
         }
