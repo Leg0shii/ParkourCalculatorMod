@@ -45,7 +45,7 @@ public class RunTicksSearchTest {
 
     @Test
     public void minimizeVisitsEachSumExactlyOnceAcrossRungs() {
-        RunTicksSearch<Void> search = new RunTicksSearch<Void>(2, 2, true, ANY);
+        RunTicksSearch<Void> search = new RunTicksSearch<Void>(2, 0, true, ANY);
         assertEquals(0, search.target());
 
         assertEquals(Arrays.asList("[0, 0]"), exploreRung(search));
@@ -55,12 +55,28 @@ public class RunTicksSearchTest {
         assertTrue(search.nextRung());
         assertEquals(2, search.target());
         assertEquals(Arrays.asList("[0, 2]", "[1, 1]", "[2, 0]"), exploreRung(search));
-        assertFalse(search.nextRung());
+        assertTrue(search.nextRung());
+        assertEquals(3, search.target());
+        assertEquals(Arrays.asList("[0, 3]", "[1, 2]", "[2, 1]", "[3, 0]"), exploreRung(search));
+    }
+
+    @Test
+    public void minimizeStartsFromConfiguredRunTicks() {
+        RunTicksSearch<Void> search = new RunTicksSearch<Void>(2, 3, true, ANY);
+        assertEquals(3, search.target());
+        assertEquals(Arrays.asList("[0, 3]", "[1, 2]", "[2, 1]", "[3, 0]"), exploreRung(search));
+        assertTrue(search.nextRung());
+        assertEquals(4, search.target());
     }
 
     @Test
     public void theLadderCoversExactlyTheSweepWithoutRepeats() {
-        List<String> ladder = exploreAll(new RunTicksSearch<Void>(3, 3, true, ANY), true);
+        List<String> ladder = new ArrayList<String>();
+        RunTicksSearch<Void> search = new RunTicksSearch<Void>(3, 0, true, ANY);
+        while (search.target() <= 3) {
+            ladder.addAll(exploreRung(search));
+            if (search.target() == 3 || !search.nextRung()) break;
+        }
         List<String> sweep = exploreAll(new RunTicksSearch<Void>(3, 3, false, ANY), false);
         assertEquals(sweep.size(), ladder.size());
         assertEquals(new TreeSet<String>(sweep), new TreeSet<String>(ladder));
@@ -68,7 +84,7 @@ public class RunTicksSearchTest {
 
     @Test
     public void aRungCostsOnlyItsOwnCombinations() {
-        RunTicksSearch<Void> ladder = new RunTicksSearch<Void>(3, 3, true, ANY);
+        RunTicksSearch<Void> ladder = new RunTicksSearch<Void>(3, 0, true, ANY);
         exploreRung(ladder);
         assertEquals("the all-zero rung is one chain of solves", 3, ladder.steps());
         assertEquals(1, ladder.fullSolutions());
@@ -83,7 +99,7 @@ public class RunTicksSearchTest {
 
     @Test
     public void minimizeClimbsPastRungsTheConstraintsPruneAway() {
-        RunTicksSearch<Void> search = new RunTicksSearch<Void>(1, 3, true,
+        RunTicksSearch<Void> search = new RunTicksSearch<Void>(1, 0, true,
                 (jumpIndex, extraTicks) -> extraTicks >= 2);
         assertFalse("rung 0 and rung 1 are both impossible", search.hasNext());
         assertTrue(search.nextRung());

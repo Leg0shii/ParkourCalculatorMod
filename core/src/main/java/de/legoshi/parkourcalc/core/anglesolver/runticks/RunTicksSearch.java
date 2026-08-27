@@ -9,7 +9,10 @@ public final class RunTicksSearch<P> {
 
     public interface JumpOptions {
         boolean allows(int jumpIndex, int extraTicks);
-        int maxAllowed(int jumpIndex);
+
+        default int maxAllowed(int jumpIndex) {
+            return Integer.MAX_VALUE;
+        }
     }
 
     public static final class Node<P> {
@@ -78,10 +81,6 @@ public final class RunTicksSearch<P> {
         return target;
     }
 
-    public int maxTicks() {
-        return maxTicks;
-    }
-
     public boolean isMinimizing() {
         return minimize;
     }
@@ -109,11 +108,9 @@ public final class RunTicksSearch<P> {
     public boolean nextRung() {
         if (!minimize) return false;
         int prefixCap = prefixCapFor(furthestDepthReached);
-        if (target >= prefixCap || target >= MAX_UNCONSTRAINED_TICKS) {
-            return false;
-        }
         int maxTotal = maxRemaining(0);
-        while (target < maxTotal && target < MAX_UNCONSTRAINED_TICKS) {
+        int cap = Math.min(prefixCap, maxTotal);
+        while (target < cap && target < MAX_UNCONSTRAINED_TICKS) {
             target++;
             if (target > prefixCap) return false;
             seed();
