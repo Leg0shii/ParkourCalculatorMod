@@ -589,7 +589,7 @@ public final class AngleSolverWindow implements RenderInterface {
 
     private static final String RUN_TICKS_MAX_TIP =
             "Largest number of extra running ticks the search may hand out across all jumps together."
-            + "In Min mode, the search starts from this count upwards.";
+            + "\nIn Min mode, the search starts from this count upwards.";
 
     private static final String RUN_TICKS_MIN_TIP =
             "Search from the configured run ticks count upwards (n, n+1, n+2 ...) and stop at the first count that solves, so the result"
