@@ -45,18 +45,18 @@ public final class FreeStartImproveNode implements NodeRuntime {
             boolean seedFeasible = in != null && in.yaws != null
                     && Scoring.violationOf(ctx.model, ctx.scenario, ctx.spec, in.yaws) <= ctx.feasTol;
             if (seedFeasible) return NodeOutcome.of(Guarantee.UNCHANGED, in);
-            double[] rescued = jointRescue(ctx, nodeToken, deadlineNanos);
+            double[] rescued = jointRescue(ctx, nodeToken);
             if (rescued == null) return NodeOutcome.of(Guarantee.UNCHANGED, in);
             ctx.chainAppend("free start rescue");
             return NodeOutcome.of(Guarantee.IMPROVED, Candidate.of(ctx, rescued));
         }
-        double[] improved = improve(ctx, in == null ? null : in.yaws, nodeToken, deadlineNanos);
+        double[] improved = improve(ctx, in == null ? null : in.yaws, nodeToken);
         if (improved == null) return NodeOutcome.of(Guarantee.UNCHANGED, in);
         ctx.chainAppend("free start");
         return NodeOutcome.of(Guarantee.IMPROVED, Candidate.of(ctx, improved));
     }
 
-    private double[] jointRescue(GraphContext ctx, AtomicBoolean cancel, long deadlineNanos) {
+    private double[] jointRescue(GraphContext ctx, AtomicBoolean cancel) {
         JumpPhysicsInputs sc = ctx.scenario;
         double seedX = sc.startPos.x;
         double seedZ = sc.startPos.z;
@@ -102,7 +102,7 @@ public final class FreeStartImproveNode implements NodeRuntime {
         return null;
     }
 
-    private double[] improve(GraphContext ctx, double[] seedYaws, AtomicBoolean cancel, long deadline) {
+    private double[] improve(GraphContext ctx, double[] seedYaws, AtomicBoolean cancel) {
         ExactJumpModel exact = ctx.exactModel;
         JumpSpec spec = ctx.spec;
         JumpPhysicsInputs sc = ctx.scenario;

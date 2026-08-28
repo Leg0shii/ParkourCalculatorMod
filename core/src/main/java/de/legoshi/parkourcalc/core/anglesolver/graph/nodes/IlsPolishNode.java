@@ -13,11 +13,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class IlsPolishNode implements NodeRuntime {
 
-    private final int roundCap;
     private final IlsPolish.Config cfg;
 
     public IlsPolishNode(ParamValues params) {
-        this.roundCap = params.getInt("roundCap");
         this.cfg = new IlsPolish.Config();
         cfg.perturbTicksMin = params.getInt("perturbTicksMin");
         cfg.perturbTicksSpan = params.getInt("perturbTicksSpan");
@@ -28,14 +26,14 @@ public final class IlsPolishNode implements NodeRuntime {
     @Override
     public NodeOutcome execute(GraphContext ctx, Candidate in, AtomicBoolean nodeToken, long deadlineNanos) {
         if (in == null || in.yaws == null) return NodeOutcome.of(Guarantee.UNCHANGED, in);
-        if (roundCap <= 0 || !in.feasible || ctx.stageLocked()) return NodeOutcome.of(Guarantee.UNCHANGED, in);
+        if (!in.feasible || ctx.stageLocked()) return NodeOutcome.of(Guarantee.UNCHANGED, in);
+        if (deadlineNanos <= 0) return NodeOutcome.of(Guarantee.UNCHANGED, in);
         if (ctx.progress != null) ctx.progress.setStage(ctx.chainWith("ILS"));
         if (SolverTrace.on()) {
             SolverTrace.log("ENGINE", "ils start remainingMs=%d",
-                    deadlineNanos > 0 ? (deadlineNanos - System.nanoTime()) / 1_000_000L : -1);
+                    (deadlineNanos - System.nanoTime()) / 1_000_000L);
         }
-        int rounds = deadlineNanos > 0 ? Integer.MAX_VALUE : roundCap;
-        double[] ils = IlsPolish.polish(ctx.model, ctx.spec, in.yaws, deadlineNanos, rounds,
+        double[] ils = IlsPolish.polish(ctx.model, ctx.spec, in.yaws, deadlineNanos, Integer.MAX_VALUE,
                 ctx.sequential, nodeToken, ctx.progress, cfg);
         if (ils != null) {
             boolean max = ctx.maximize();

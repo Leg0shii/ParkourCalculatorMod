@@ -61,20 +61,16 @@ public final class BuiltinGraphs {
                 .set("fold", "tickCap", IMPROVE_TICK_CAP);
         g.add("ladder", "homotopyLadder");
         g.add("cert", "certBnb")
-                .set("cert", "budgetSec", fastTier ? ffSec : Math.max(ffSec, improveSec))
+                .set("cert", "budgetSec", fastTier ? 0 : Math.max(ffSec, improveSec))
                 .set("cert", "ffSec", ffSec)
                 .set("cert", "ffNodeCap", fastTier ? 32 : 256)
-                .set("cert", "optSec", fastTier ? 0 : improveSec)
-                .set("cert", "optNodeCap", fastTier ? 0 : 4096)
                 .set("cert", "tickCap", IMPROVE_TICK_CAP);
         g.add("bnb", "bnb")
-                .set("bnb", "budgetSec", fastTier ? 40 : Math.max(3, stageSec / 2))
+                .set("bnb", "budgetSec", fastTier ? 0 : Math.max(3, stageSec / 2))
                 .set("bnb", "ffSec", fastTier ? 40 : Math.max(3, stageSec / 3))
-                .set("bnb", "optSec", fastTier ? 0 : Math.max(3, stageSec / 2))
                 .set("bnb", "tickCap", IMPROVE_TICK_CAP);
         g.add("ils", "ilsPolish")
-                .set("ils", "budgetSec", fastTier ? 0 : Math.max(1, stageSec - 4))
-                .set("ils", "roundCap", fastTier ? 0 : 400);
+                .set("ils", "budgetSec", fastTier ? 0 : Math.max(1, stageSec - 4));
         g.add("cap2", "capCertify")
                 .set("cap2", "computeDualGap", false)
                 .set("cap2", "skipIfSettled", true);

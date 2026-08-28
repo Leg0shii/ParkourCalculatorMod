@@ -21,18 +21,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class CertifiedBnbNode implements NodeRuntime {
 
+    private static final int OPT_SAFETY_NODE_CAP = 500_000;
+
     private final int ffSec;
     private final int ffNodeCap;
-    private final int optSec;
-    private final int optNodeCap;
     private final int tickCap;
     private final String labelSuffix;
 
     public CertifiedBnbNode(ParamValues params) {
         this.ffSec = params.getInt("ffSec");
         this.ffNodeCap = params.getInt("ffNodeCap");
-        this.optSec = params.getInt("optSec");
-        this.optNodeCap = params.getInt("optNodeCap");
         this.tickCap = params.getInt("tickCap");
         this.labelSuffix = params.getString("labelSuffix");
     }
@@ -41,9 +39,20 @@ public final class CertifiedBnbNode implements NodeRuntime {
     public NodeOutcome execute(GraphContext ctx, Candidate in, AtomicBoolean nodeToken, long deadlineNanos) {
         boolean optimize = in != null && in.yaws != null && in.feasible;
         Guarantee miss = in != null && in.yaws != null ? Guarantee.UNCHANGED : Guarantee.NONE;
-        int cap = optimize ? optNodeCap : ffNodeCap;
-        int sec = optimize ? optSec : ffSec;
-        if (cap <= 0) return NodeOutcome.of(miss, in);
+        long now = System.nanoTime();
+        int cap;
+        long solveDeadline;
+        if (optimize) {
+            if (deadlineNanos <= 0 || now >= deadlineNanos) return NodeOutcome.of(miss, in);
+            cap = OPT_SAFETY_NODE_CAP;
+            solveDeadline = deadlineNanos;
+        } else {
+            if (ffNodeCap <= 0) return NodeOutcome.of(miss, in);
+            cap = ffNodeCap;
+            long sub = ffSec > 0 ? now + ffSec * 1_000_000_000L : 0L;
+            solveDeadline = deadlineNanos > 0 && sub > 0 ? Math.min(deadlineNanos, sub)
+                    : (deadlineNanos > 0 ? deadlineNanos : sub);
+        }
         if (!ctx.exact() || ctx.stageLocked()) return NodeOutcome.of(miss, in);
         if (tickCap > 0 && ctx.scenario.numTicks > tickCap) return NodeOutcome.of(miss, in);
         if (JumpLinearModel.hasFacingWall(ctx.spec.constraints)) return NodeOutcome.of(miss, in);
@@ -55,9 +64,7 @@ public final class CertifiedBnbNode implements NodeRuntime {
         cfg.nodeCap = cap;
         cfg.polishCap = optimize ? 12 : 2;
         cfg.cancel = nodeToken;
-        long sub = sec > 0 ? System.nanoTime() + sec * 1_000_000_000L : 0L;
-        cfg.deadlineNanos = deadlineNanos > 0 && sub > 0 ? Math.min(deadlineNanos, sub)
-                : (deadlineNanos > 0 ? deadlineNanos : sub);
+        cfg.deadlineNanos = solveDeadline;
         if (in != null && in.yaws != null) {
             cfg.seedYaws = in.yaws;
             cfg.seedPx = ctx.scenario.startPos.x;

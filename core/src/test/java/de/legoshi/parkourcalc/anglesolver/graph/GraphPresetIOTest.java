@@ -125,7 +125,7 @@ public class GraphPresetIOTest {
         Result<SolverGraph> r = GraphPresetIO.materialize(f);
         assertTrue(r.error, r.ok);
         assertEquals(600, r.value.node("cert").params.getInt("budgetSec"));
-        assertEquals(0, r.value.node("cert").params.getInt("optNodeCap"));
+        assertEquals(32, r.value.node("cert").params.getInt("ffNodeCap"));
     }
 
     @Test
