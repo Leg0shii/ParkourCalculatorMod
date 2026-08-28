@@ -152,16 +152,7 @@ public final class SlpSolve {
             CostateDualSolver dual = new CostateDualSolver(n, cx, cz, lin.mMagAll(), walls);
             CostateDualSolver.Result r = dual.solve(0.0, null);
             if (r == null) return null; // dual unbounded = continuous-infeasible certificate
-            theta = new double[n];
-            for (int t = 0; t < n; t++) {
-                double gx = r.gx[t], gz = r.gz[t];
-                if (gx * gx + gz * gz < 1.0e-18) {
-                    boolean max = spec.objective.sense == Objective.Sense.MAX;
-                    if (spec.objective.axis == JumpPhysicsInputs.Axis.X) { gx = max ? 1.0 : -1.0; gz = 0.0; }
-                    else { gx = 0.0; gz = max ? 1.0 : -1.0; }
-                }
-                theta[t] = lin.recoverYawDeg(t, gx, gz);
-            }
+            theta = lin.recoverAlongCostate(spec.objective, r.gx, r.gz);
         }
 
         if (ties != null) theta = ties.expand(ties.reduce(theta));

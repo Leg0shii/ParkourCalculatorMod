@@ -30,6 +30,7 @@ public final class JumpLinearModel {
 
     public final int n;
     private final JumpPhysicsInputs sc;
+    private final boolean floatFriction;
 
     private final double[] pConst;  // per-tick forward+jump input magnitude (the e^{iθ} is along +imag)
     private final double[] qConst;  // per-tick strafe input magnitude (along +real)
@@ -71,6 +72,11 @@ public final class JumpLinearModel {
     }
 
     public JumpLinearModel(JumpPhysicsInputs scenario, boolean[] zeroX, boolean[] zeroZ) {
+        this(scenario, zeroX, zeroZ, false);
+    }
+
+    public JumpLinearModel(JumpPhysicsInputs scenario, boolean[] zeroX, boolean[] zeroZ, boolean floatFriction) {
+        this.floatFriction = floatFriction;
         this.sc = scenario;
         this.n = scenario.numTicks;
         this.pConst = new double[n];
@@ -111,10 +117,10 @@ public final class JumpLinearModel {
             double slip = contact ? slipOv : Constants.SLIP_F;
             double accelSpeed;
             if (contact) {
-                f4[t] = slip * 0.91;
+                f4[t] = floatFriction ? (double) ((float) slipOv * 0.91F) : slip * 0.91;
                 accelSpeed = Constants.attrValueF(sc.factorAmpAt(t), sprint) * (0.16277136 / (f4[t] * f4[t] * f4[t]));
             } else {
-                f4[t] = 0.91;
+                f4[t] = floatFriction ? (double) 0.91F : 0.91;
                 accelSpeed = sc.airFactorSprintAt(t) ? Constants.AIR_SPEED_F : Constants.AIR_SPEED_NO_SPRINT_F;
             }
             // Same per-tick input authoring as ExactJumpModel step (4) (gh-102).
@@ -321,6 +327,12 @@ public final class JumpLinearModel {
         return new Wall(axis, coef, bPrime, false, "keep" + ax + "@" + tick + (positive ? "+" : "-"), 0.0);
     }
 
+    public double velocityCoef(int axis, int s, int t) {
+        if (s >= t) return 0.0;
+        if (zNext[axis][s] < t) return 0.0;
+        return fPre[t] / fPre[s];
+    }
+
     public void zeroingPattern(double[] yawsAbsWrapped, double threshold, boolean perAxis,
                                boolean[] outZeroX, boolean[] outZeroZ) {
         double vx = sc.initialVelocity.x;
@@ -356,5 +368,21 @@ public final class JumpLinearModel {
      *  caller's default. */
     public double recoverYawDeg(int t, double gx, double gz) {
         return Angles.wrap((Math.atan2(gz, gx) - baseArg[t]) * DEG);
+    }
+
+    public double[] recoverAlongCostate(Objective obj, double[] gx, double[] gz) {
+        boolean max = obj.sense == Objective.Sense.MAX;
+        boolean axisX = obj.axis == JumpPhysicsInputs.Axis.X;
+        double[] yaws = new double[n];
+        for (int t = 0; t < n; t++) {
+            double x = gx[t];
+            double z = gz[t];
+            if (x * x + z * z < 1.0e-18) {
+                x = axisX ? (max ? 1.0 : -1.0) : 0.0;
+                z = axisX ? 0.0 : (max ? 1.0 : -1.0);
+            }
+            yaws[t] = recoverYawDeg(t, x, z);
+        }
+        return yaws;
     }
 }

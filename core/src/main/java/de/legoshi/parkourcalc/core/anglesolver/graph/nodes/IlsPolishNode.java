@@ -28,6 +28,7 @@ public final class IlsPolishNode implements NodeRuntime {
     @Override
     public NodeOutcome execute(GraphContext ctx, Candidate in, AtomicBoolean nodeToken, long deadlineNanos) {
         if (in == null || in.yaws == null) return NodeOutcome.of(Guarantee.UNCHANGED, in);
+        if (roundCap <= 0 || !in.feasible || ctx.stageLocked()) return NodeOutcome.of(Guarantee.UNCHANGED, in);
         if (ctx.progress != null) ctx.progress.setStage(ctx.chainWith("ILS"));
         if (SolverTrace.on()) {
             SolverTrace.log("ENGINE", "ils start remainingMs=%d",

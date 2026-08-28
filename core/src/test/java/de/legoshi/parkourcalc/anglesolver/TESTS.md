@@ -13,16 +13,23 @@ anglesolver/
   OptimizeVsFastTest.java  gh-398 invariant on captures/gh398-optimize-2jump: Optimize's answer is never
                            worse than Fast's, and the run publishes at least two incumbents so the live
                            panel moves and Cancel keeps the best found so far
-  HpkDualRecoveryScreen.java  dev miss-screen over captures/hpk/ (dual bound + full chain per capture);
-                              skipped unless PKC_SCREENS is set; report at build/reports/hpk-screen.txt
-  RelaxDiagScreen.java     dev per-capture recovery diagnostic (stall margins, recorded-path replay);
-                           skipped unless PKC_SCREENS is set; report at build/reports/relax-diag.txt
-  LoopmmReachScreen.java   dev reach diagnostic on loopmm (pattern-branched B&B loose/tight, engine
-                           exhaustive); skipped unless PKC_SCREENS is set
-  HpkMissTriageScreen.java dev triage of the dualrecovery frontier misses (blind B&B per capture,
-                           hand-pattern probes); skipped unless PKC_SCREENS is set
+  GraphPathObjectiveGateTest.java  objective gates that solve THROUGH the full Optimize graph (not dualChain),
+                           asserting the ENGINE's shipped objective (getObjectiveValue), which is computed with the
+                           post-solve scenario and so honors yaw-lock. j021-rinav1-01 must reach the deterministic
+                           optimum (engineObj >= 1067.8637, div 0 = not yaw-locked, so the recompute is valid); the
+                           degenerate-tick ascent in the fold stage carries it. loopmm-3jump-lands LANDS per the
+                           engine (engineObj >= -279.3 block edge via the pattern B&B stage). NOTE: the leaf snap
+                           can adopt loopmm as a fully YAW-LOCKED stage, so the harness recompute (toGameFacings via
+                           the non-yaw-locked lastSpecDebug scenario) may re-round short (bounded div); the test
+                           bounds that divergence and flags that landing is yaw-lock-dependent - VERIFY IN-GAME. Also a
+                           determinism guard (j021 solved twice, engineObj+recompute bit-identical)
   HpkEngineBench.java      manual engine bench over captures/hpk/; PKC_BENCH=1 to run, PKC_BENCH_EXH,
                            PKC_BENCH_FILTER, PKC_BENCH_TAG, PKC_BENCH_TIMEOUT_MS tune it
+  CorpusBench.java         manual OLD-vs-NEW full-corpus bench (STEP 9): all captures at FAST/THOROUGH,
+                           external wall-clock + engine shipped objective + independent recompute (yaw-lock
+                           flag). PKC_CORPUS=1 to run; PKC_CORPUS_TIER/RUNS/OPT_SEC/FILTER/TAG/TIMEOUT_MS
+                           tune it. Drop into a git worktree at the OLD commit to bench both trees; compare
+                           with docs/research/solver-rework-2026-08/benchmark/compare.py
   FreeStartSweepBench.java manual free-start sweep over captures/hpk/ (synthesized tick-0 box, base +
                            (+2.3,+1.7)-shifted seed variants, FAST, per-node timing from the run
                            record); -Dpkc.sweep=1 to run, -Dpkc.sweep.{tag,variants,filter,timeoutMs,
@@ -35,6 +42,15 @@ anglesolver/
                            (e.g. solve/gh386-4x2-seedshift) via JUnitCore; prints success/met/ms/obj
   EngineFileScreen.java    drive the live engine on any save file headlessly; PKC_SOLVE_FILE=<path>,
                            optional PKC_SOLVE_EFFORT and PKC_SOLVE_TIMEOUT_MS
+  StructureDump.java       export a capture's compiled linear structure (walls, objective vectors,
+                           per-tick mMag/baseArg/friction, start box, warm replay) as json for the
+                           research/copt harness; PKC_STRUCT_FILE=<capture>, PKC_STRUCT_OUT=<json>,
+                           optional PKC_STRUCT_ZERO=<pattern json> folds an inertia-gate zeroing
+                           pattern (pattern-aware JumpLinearModel + velocityWalls); run --no-daemon
+  NoTurnReplay.java        byte-exact replay of a no-turn decode (keys + yaws + sprint + start) from
+                           research/copt through ExactJumpModel against a capture's compiled spec;
+                           PKC_NOTURN_CAPTURE, PKC_NOTURN_FILE, PKC_NOTURN_OUT; reports objective,
+                           per-constraint violations, positions and carry velocities (gate patterns)
   SolveNodeStatsScreen.java  per-node timing dump over problems/solve at expect efforts;
                            -Dpkc.nodestats=1 to run, -Dpkc.nodestats.{tag,timeoutMs} tune it;
                            TSV at build/reports/nodestats-<tag>.tsv (RUN + NODE rows); run via
@@ -112,6 +128,18 @@ anglesolver/
                            (ExactJumpModel.zeroSubThresholdVelocity at buildPhys), without which
                            every relaxation carries the phantom carry and no k>=1 pattern can
                            represent a tick-0 zeroing, FAST 20 s)
+                           (solve/thousand-1-dup2: #422 M1 acceptance; free-start multi-jump
+                           MAX X, THOROUGH 30 s, byte-exact at objective >= 6523.307 (reliably
+                           6523.3080, beats both releases); the 10 s budget was timing-flaky on
+                           this floor, 30 s is the honest budget; sole canonical thousand gate,
+                           the FoldDriver/CertifiedBnb engine-test duplicates were removed)
+                           (solve/j1150-noturn-inner: #422 M1 acceptance on the PRECISE
+                           inputs_gone spec with the p2 no-turn schedule, THOROUGH 10 s,
+                           byte-exact at objective >= -2805.2990460856336, the p2 witness;
+                           FAST is deliberately not gated here, 3.3e-4 short, an M2a item)
+                           (solve/j154-noturn-ja-inner: #422 M1 acceptance on the corrected
+                           t34-plate spec, FAST, byte-exact at objective <= -1599.7001161289918,
+                           the in-game-verified F3 witness)
   LevelSetAscentTest.java  level-set objective ascent (gh-290): on keep-out-wall captures where the
                            chosen Solve For degenerates the dual recovery (j003 X/MIN, j012 Z/MAX,
                            j008-bfneo Z/MIN, taser-80t X/MIN), the goal-wall bisection strictly beats
@@ -119,6 +147,55 @@ anglesolver/
                            bound (j003 X/MIN: -27 hug -> -31.3 optimum). The dF gate (facing wall =>
                            skip + info notice) is unit-tested fast in
                            core/anglesolver/DfDirectionGateTest
+  FoldReplayDriverTest.java  #422 M1 fold driver: thousand-1-dup2 warm replay bit-exact
+                           (6523.307720901059, viol 0.0), cold driver byte-exact >= 6523.30 and
+                           bit-identical across 5 in-process runs, loopmm fold lands byte-exact,
+                           j003 chord-narrowed FAST/objective-rounds gates
+  WallHomotopyLadderTest.java  #422 M1 wall-homotopy ladder (rungs 0.05/0.01/0.002/0, warm-chained,
+                           true-spec scoring): hpk_precise witness replays bit-exact, j154 cold
+                           ladder lands byte-exact at or beyond the in-game F3 witness, collision
+                           wall classification, ladder determinism
+  BucketWalkTest.java      #422 M1 era-aware bucket machinery: gate-banded integer walk + objective
+                           walk + window-scan leaf + free-start ulp nudge; perturbed-witness anchors
+                           land byte-exact on both hpk_precise fixtures; polishFromAnchor
+                           bit-identical; center snapping sub-half-bucket across eras
+  DiskSocpKernelChordTest.java  fast-suite kernel coverage: two-axis ChordRow solves, the hardened
+                           IPM jitter ladder, and the weak-duality infeasibility certificate
+                           (FAIL_UNBOUNDED) that replaced the old fake-convergence
+  FoldDriverEngineTest.java  #422 M1 engine-level gates through engine.solve() (driver wired as
+                           primary recovery): j003 FAST + THOROUGH-10s
+                           in-deadline, j1150-noturn-inner THOROUGH beats the p2 witness,
+                           j154-noturn-ja-inner FAST beats the F3 witness, FAST re-solve
+                           determinism
+  CertifiedBnbTest.java    #422 M2a certified B&B fast units: SineTableGeometry containment (realized
+                           inputs inside boxes/chords/supports across all four eras incl. the legacy
+                           jump-tick double cast), a tiny 2-tick instance certifying at the enumerated
+                           optimum with gap <= CERT_EPS, near-threshold gate behavior, determinism
+  CertifiedBnbEngineTest.java  #422 M2a certified-search gates (VerySlowSolverTests, -PverySlowTests; PRs to main only): all 5 small
+                           captures reach certified gap <= 1.5e-4 with dominating bounds and
+                           feasible incumbents (per-capture numbers printed; the 1e-9 plateau
+                           mechanism is in ARCH2-M2A-CERTIFIED-BNB.md), dF specs decline cleanly,
+                           j1150-noturn-inner FAST regression
+                           floor, j154-noturn-ja-inner FAST beats the in-game F3 witness
+  CertBnbProbe.java        env-gated certified-B&B probe: PKC_CERTBNB_CAPTURES (comma list),
+                           PKC_CERTBNB_OUT/NODES/MS/MODE; nodeCap=1 dumps root bounds for the COPT
+                           root-bound validation (research/copt/certbnb_rootcheck.py)
+  PipelineShapeTest.java   #422 M2b G3 enforcement (VerySlowSolverTests, -PverySlowTests; PRs to main only):
+                           every corpus capture visits the one linear
+                           pipeline stage sequence at BOTH built-in tiers (THOROUGH probed at 1 s);
+                           deadline-truncated runs must be a prefix of it
+  FoldDriverProbe.java     run the fold driver headlessly on any capture; PKC_FOLD_CAPTURE=<path or
+                           pool name>, optional PKC_FOLD_OUT/PKC_FOLD_DEBUG/PKC_FOLD_SEED/
+                           PKC_FOLD_REF (box-reference multi-start override); prints per-round
+                           bound/byteObj/maxViol/pattern events; run via direct java -cp
+  HomotopyProbe.java       ladder/margins/SLP/walk measurement probe; PKC_HOM_CAPTURE plus
+                           PKC_HOM_WARM (witness replay), PKC_HOM_MARGINS, PKC_HOM_POLISH +
+                           PKC_HOM_PERTURB (perturbed-anchor polish), PKC_HOM_POLISH2 (full
+                           ladder polish), PKC_HOM_SEEDPOLISH (engine FAST incumbent ->
+                           polishFromAnchor), PKC_HOM_ENGINE/DRIVER/LADDER/WALLS/DEBUG; run via
+                           direct java -cp; run :core:processTestResources after fixture edits
+  KernelDiagProbe.java     DiskSocpKernel failure diagnosis (base/folded/chord solves, jitter and
+                           certificate paths); env-gated, run via direct java -cp
   harness/                 shared plumbing; no test lives here
 resources/
   problems/<check>/        one folder per check; holds captures or .expect.json sidecars
@@ -148,6 +225,21 @@ resources/
 | `ProblemFixture` | load a capture + drive the engine (solve / directed); times it |
 | `Expect` | parse `<name>.expect.json`; supply defaults |
 | `ProblemCatalog` | discover check folders and the captures in them |
+
+## hpk_precise fixtures (#422 M1)
+
+PRECISE-spec knife-edge fixtures under `resources/captures/hpk_precise/`, each a triple
+`{orig,inner,witness}`; the `inner` variants are wired to `solve/` acceptance expects:
+
+- `j1150-noturn-*`: the PRECISE j1150 inputs_gone spec with the solved pure no-turn schedule
+  (#422 M0/M1). `inner` is the fixed-schedule inner problem (startTick 0, DF constraints
+  stripped); `witness` is the p2 decode that replays byte-exact at X@49 = -2805.2990460856336,
+  viol 0.0; `orig` is the untouched save. Wired via solve/j1150-noturn-inner.expect.json.
+- `j154-noturn-ja-*`: the corrected j154 spec with the X GE -1599.2 plate at t34 (user ruling
+  2026-08-27; the deeper D2 result is invalid against it). `inner` is the fixed-schedule inner
+  problem (DF stripped, debug synthesized from the solve artifacts); `witness` is the F3 decode,
+  the in-game-verified X@39 = -1599.7001161289918 at viol 0.0. Wired via
+  solve/j154-noturn-ja-inner.expect.json.
 
 ## Library-only captures (no check yet)
 

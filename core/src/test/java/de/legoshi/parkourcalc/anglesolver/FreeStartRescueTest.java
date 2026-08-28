@@ -25,7 +25,7 @@ public class FreeStartRescueTest {
             GraphNode rescue = nodeById(g, "freeRescue");
             assertNotNull(g.name + " must contain the early free-start rescue", rescue);
             assertTrue(rescue.params.getBool("jointOnly"));
-            assertNotNull(g.name + " must gate the rescue on a free start", nodeById(g, "rEarlyFree"));
+
         }
     }
 

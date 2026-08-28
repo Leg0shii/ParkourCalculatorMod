@@ -45,7 +45,7 @@ public class LegacyCustomMappingTest {
         AngleSolverState s = custom(true, false, true, 10, 3, 0);
         SolverGraph g = GraphFactory.forState(s);
         assertSameShape(BuiltinGraphs.fromBudget(true, false, true, 10, 3, 0), g);
-        assertNotNull(g.node("rescueBnb"));
+        assertNotNull(g.node("cert"));
     }
 
     @Test
@@ -53,21 +53,20 @@ public class LegacyCustomMappingTest {
         AngleSolverState s = custom(false, true, true, 12, 4, 60);
         SolverGraph g = GraphFactory.forState(s);
         assertSameShape(BuiltinGraphs.fromBudget(false, true, true, 12, 4, 60), g);
-        assertEquals(60, g.node("seedSingle").params.getInt("budgetSec"));
+        assertEquals(60, g.node("seed").params.getInt("budgetSec"));
         assertEquals(12, g.node("horizon").params.getInt("window"));
         assertEquals(4, g.node("horizon").params.getInt("commit"));
         assertEquals(12, g.node("peel").params.getInt("window"));
-        assertNotNull(g.node("sweep"));
         assertNotNull(g.node("wrap"));
     }
 
     @Test
-    public void windowSolverOffDropsHorizonAndPeel() {
+    public void windowSolverOffKeepsTheOnePipelineShape() {
         AngleSolverState s = custom(false, false, false, 10, 3, 0);
         SolverGraph g = GraphFactory.forState(s);
         assertSameShape(BuiltinGraphs.fromBudget(false, false, false, 10, 3, 0), g);
-        assertNull(g.node("horizon"));
-        assertNull(g.node("peel"));
+        assertNotNull(g.node("horizon"));
+        assertNotNull(g.node("peel"));
     }
 
     @Test

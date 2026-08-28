@@ -24,4 +24,10 @@ public final class CountingForwardModel implements ForwardModel {
         evals.incrementAndGet();
         return inner.forward(scenario, yawAbsDeg);
     }
+
+    @Override
+    public void stepRange(JumpPhysicsInputs scenario, double[] yawAbsDeg, int from, ForwardPath into) {
+        evals.incrementAndGet();
+        inner.stepRange(scenario, yawAbsDeg, from, into);
+    }
 }

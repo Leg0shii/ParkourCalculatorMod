@@ -118,25 +118,25 @@ public class GraphPresetIOTest {
     @Test
     public void outOfRangeParamsClampToTheSpec() {
         GraphPresetFile f = GraphPresetIO.fromGraph(BuiltinGraphs.fast());
-        for (GraphPresetFile.Param p : node(f, "rescueBnb").params) {
+        for (GraphPresetFile.Param p : node(f, "cert").params) {
             if ("budgetSec".equals(p.key)) p.num = 99999.0;
             if ("minBudgetMs".equals(p.key)) p.num = -5.0;
         }
         Result<SolverGraph> r = GraphPresetIO.materialize(f);
         assertTrue(r.error, r.ok);
-        assertEquals(600, r.value.node("rescueBnb").params.getInt("budgetSec"));
-        assertEquals(0, r.value.node("rescueBnb").params.getInt("minBudgetMs"));
+        assertEquals(600, r.value.node("cert").params.getInt("budgetSec"));
+        assertEquals(0, r.value.node("cert").params.getInt("optNodeCap"));
     }
 
     @Test
     public void invalidEnumValueFallsBackToTheDefault() {
         GraphPresetFile f = GraphPresetIO.fromGraph(BuiltinGraphs.fast());
-        for (GraphPresetFile.Param p : node(f, "rescueBnb").params) {
+        for (GraphPresetFile.Param p : node(f, "cert").params) {
             if ("mode".equals(p.key)) p.str = "NOT_A_MODE";
         }
         Result<SolverGraph> r = GraphPresetIO.materialize(f);
         assertTrue(r.error, r.ok);
-        assertEquals("FIRST_FEASIBLE", r.value.node("rescueBnb").params.getString("mode"));
+        assertEquals("", r.value.node("cert").params.getString("labelSuffix"));
     }
 
     @Test

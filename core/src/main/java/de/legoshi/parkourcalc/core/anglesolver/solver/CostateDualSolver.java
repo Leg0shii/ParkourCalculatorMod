@@ -64,6 +64,7 @@ public final class CostateDualSolver {
     private final double[] mMag;
     private final int[] axis;       // [m] wall axis (0=X,1=Z)
     private final double[][] coef;  // [m][n] wall coupling
+    private final int[] lastCoupled;
     private final double[] bBase;   // [m] margin-0 right-hand side
     private final boolean[] eq;     // [m]
     private final double[] p0coef;
@@ -101,6 +102,7 @@ public final class CostateDualSolver {
         this.freeP0 = freeP0;
         this.axis = new int[m];
         this.coef = new double[m][];
+        this.lastCoupled = new int[m];
         this.bBase = new double[m];
         this.eq = new boolean[m];
         this.p0coef = new double[m];
@@ -111,6 +113,10 @@ public final class CostateDualSolver {
             bBase[j] = w.bPrime;
             eq[j] = w.eq;
             p0coef[j] = w.p0coef;
+            int last = -1;
+            int lim = Math.min(w.coef.length, n);
+            for (int t = 0; t < lim; t++) if (w.coef[t] != 0.0) last = t;
+            lastCoupled[j] = last;
         }
         this.gx = new double[n];
         this.gz = new double[n];
@@ -173,6 +179,15 @@ public final class CostateDualSolver {
             this.objDevX = objDevX;
             this.objDevZ = objDevZ;
             this.smooth = smooth;
+        }
+
+        public static FreeP0 forObjective(StartBox box, Objective obj, double smooth) {
+            boolean max = obj.sense == Objective.Sense.MAX;
+            boolean axisX = obj.axis == JumpPhysicsInputs.Axis.X;
+            double objDevX = axisX ? (max ? 1.0 : -1.0) : 0.0;
+            double objDevZ = axisX ? 0.0 : (max ? 1.0 : -1.0);
+            return new FreeP0(box.pxLo - box.px, box.pxHi - box.px,
+                    box.pzLo - box.pz, box.pzHi - box.pz, objDevX, objDevZ, smooth);
         }
     }
 
@@ -456,8 +471,9 @@ public final class CostateDualSolver {
                 int aj = axis[j];
                 boolean sameAxis = (ai == aj);
                 double[] hatJ = aj == 0 ? gxHat : gzHat;
+                int bound = Math.min(lastCoupled[i], lastCoupled[j]) + 1;
                 double sum = 0.0;
-                for (int t = 0; t < n; t++) {
+                for (int t = 0; t < bound; t++) {
                     double cc = ci[t] * cj[t];
                     if (cc == 0.0) continue;
                     sum += wOverNrm[t] * cc * ((sameAxis ? 1.0 : 0.0) - hatI[t] * hatJ[t]);
@@ -474,29 +490,9 @@ public final class CostateDualSolver {
     /** Solve {@code (H + damp·I)·step = −grad_free} for the free set via Cholesky. {@code H} is PSD so the
      *  damped matrix is positive definite for {@code damp>0}; returns false only on numerical breakdown. */
     private boolean choleskySolve(int nf, double damp) {
-        for (int a = 0; a < nf; a++) {
-            for (int b = 0; b <= a; b++) {
-                double s = H[a][b] + (a == b ? damp : 0.0);
-                for (int k = 0; k < b; k++) s -= Lwork[a][k] * Lwork[b][k];
-                if (a == b) {
-                    if (s <= 0.0) return false;
-                    Lwork[a][a] = Math.sqrt(s);
-                } else {
-                    Lwork[a][b] = s / Lwork[b][b];
-                }
-            }
-            step[a] = -gradient[freeIdx[a]];
-        }
-        for (int a = 0; a < nf; a++) {
-            double s = step[a];
-            for (int k = 0; k < a; k++) s -= Lwork[a][k] * step[k];
-            step[a] = s / Lwork[a][a];
-        }
-        for (int a = nf - 1; a >= 0; a--) {
-            double s = step[a];
-            for (int k = a + 1; k < nf; k++) s -= Lwork[k][a] * step[k];
-            step[a] = s / Lwork[a][a];
-        }
+        if (!SpdCholesky.factor(H, Lwork, nf, damp)) return false;
+        for (int a = 0; a < nf; a++) step[a] = -gradient[freeIdx[a]];
+        SpdCholesky.solveInPlace(Lwork, step, nf);
         return true;
     }
 }

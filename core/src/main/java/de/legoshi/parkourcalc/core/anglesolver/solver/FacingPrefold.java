@@ -122,6 +122,18 @@ public final class FacingPrefold {
         return k;
     }
 
+    public int varCount() {
+        return identity ? n : vars;
+    }
+
+    public int varIndex(int t) {
+        return identity ? t : varOf[t];
+    }
+
+    public int repTick(int v) {
+        return identity ? v : repOf[v];
+    }
+
     public static FacingPrefold analyze(List<JumpConstraint> constraints, JumpLinearModel lin) {
         if (!hasFacing(constraints)) {
             return new FacingPrefold(lin.n, true, lin.n, null, null, null, null, null);
@@ -310,6 +322,10 @@ public final class FacingPrefold {
     }
 
     public double[] expand(JumpLinearModel lin, Objective obj, CostateDualSolver.Result r) {
+        return expand(lin, obj, r.gx, r.gz);
+    }
+
+    public double[] expand(JumpLinearModel lin, Objective obj, double[] costateX, double[] costateZ) {
         double[] yaws = new double[n];
         for (int t = 0; t < n; t++) {
             int v = identity ? t : varOf[t];
@@ -317,8 +333,8 @@ public final class FacingPrefold {
                 yaws[t] = pinYaw[t];
                 continue;
             }
-            double gx = r.gx[v];
-            double gz = r.gz[v];
+            double gx = costateX[v];
+            double gz = costateZ[v];
             if (gx * gx + gz * gz < 1.0e-18) {
                 boolean max = obj.sense == Objective.Sense.MAX;
                 if (obj.axis == JumpPhysicsInputs.Axis.X) {
