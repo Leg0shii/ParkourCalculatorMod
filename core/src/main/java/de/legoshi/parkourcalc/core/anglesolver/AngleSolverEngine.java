@@ -5,21 +5,21 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
-import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Candidate;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphFactory;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunState;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunner;
+import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunLog;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunRecord;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
-import de.legoshi.parkourcalc.core.anglesolver.solver.BucketAscentPolish;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ClosedFormSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ClosestMiss;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.LongRunSolver;
+import de.legoshi.parkourcalc.core.anglesolver.solver.RecoveryLadder;
 import de.legoshi.parkourcalc.core.anglesolver.solver.RelaxationRecovery;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SlpSolve;
@@ -27,7 +27,6 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
-import de.legoshi.parkourcalc.core.anglesolver.solver.LevelSetAscent;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
@@ -35,6 +34,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.SolveProgress;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SurfaceKind;
+import de.legoshi.parkourcalc.core.anglesolver.solver.TrendFilterSmooth;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -62,8 +62,6 @@ public final class AngleSolverEngine {
     private static final double FEAS_TOL = 0.0;
     /** EQ corridor half-width and met-reporting slack (docs/research/angle-solver.md 3.1). */
     private static final double MET_TOL = 1.0e-4;
-
-    private static final long RELAX_MIN_REMAINING_NANOS = 3_000_000_000L;
 
     static long deadlineNanosFor(AngleSolverState state) {
         return deadlineNanosFor(state, state.getEffort());
@@ -168,6 +166,7 @@ public final class AngleSolverEngine {
     }
 
     private volatile boolean solving;
+    private volatile boolean smoothFinalResult = true;
     private volatile long startNanos;
     private volatile Outcome pending;
     private volatile AtomicBoolean cancel;
@@ -309,13 +308,11 @@ public final class AngleSolverEngine {
         final boolean ilsExhaustive;
         final JumpConstraint legalGoal;
         final SolverGraph graph;
-        final boolean raceExplore;
 
         Job(JumpSpec spec, Objective.Sense sense, int startTick, int landingTick,
             int numTicks, boolean[] strafeMask, boolean[] force45Mask, List<ConstraintAt> uiConstraints,
             long deadlineNanos, LongRunSolver.LongRunConfig longRun, boolean useWindowSolver,
-            boolean stopOnFeasible, boolean ilsExhaustive, JumpConstraint legalGoal, SolverGraph graph,
-            boolean raceExplore
+            boolean stopOnFeasible, boolean ilsExhaustive, JumpConstraint legalGoal, SolverGraph graph
         ) {
             this.spec = spec;
             this.sense = sense;
@@ -332,7 +329,6 @@ public final class AngleSolverEngine {
             this.ilsExhaustive = ilsExhaustive;
             this.legalGoal = legalGoal;
             this.graph = graph;
-            this.raceExplore = raceExplore;
         }
     }
 
@@ -407,8 +403,7 @@ public final class AngleSolverEngine {
                 ph.force45Mask, uiCons,
                 deadlineNanosFor(state, effort), longRunConfigFor(state, effort), useWindowSolverFor(state, effort),
                 stopOnFeasibleFor(state, effort), ilsExhaustiveFor(state, effort), legalGoal,
-                GraphFactory.forState(state, effort),
-                effort == AngleSolverState.Effort.FAST);
+                GraphFactory.forState(state, effort));
     }
 
     public String legalGoalWallLabel() {
@@ -473,7 +468,12 @@ public final class AngleSolverEngine {
     }
 
     public void solve(AngleSolverState.Effort effort) {
+        solve(effort, true);
+    }
+
+    public void solve(AngleSolverState.Effort effort, boolean smoothFinal) {
         if (solving) return;
+        this.smoothFinalResult = smoothFinal;
         Job job = buildJob(effort);
         if (job == null) return; // invalid range: buildJob already published the failure result
 
@@ -836,105 +836,6 @@ public final class AngleSolverEngine {
         return liveTraj;
     }
 
-    private static final class ArmState {
-        volatile Candidate cand;
-        volatile boolean feasible;
-        volatile boolean done;
-    }
-
-    private static final class RaceRun {
-        final GraphContext winnerCtx;
-        final Candidate cand;
-        final JumpPhysicsInputs winnerSc;
-        final boolean exploreWon;
-
-        RaceRun(GraphContext winnerCtx, Candidate cand, JumpPhysicsInputs winnerSc, boolean exploreWon) {
-            this.winnerCtx = winnerCtx;
-            this.cand = cand;
-            this.winnerSc = winnerSc;
-            this.exploreWon = exploreWon;
-        }
-    }
-
-    private RaceRun runStagedRace(Job job, JumpSpec spec, JumpPhysicsInputs sc, StartBox freeBox,
-                                  AtomicBoolean master, SolveProgress progress, RunRecording rec) {
-        GraphContext primaryCtx = new GraphContext(spec, model, freeBox, job.legalGoal, FEAS_TOL, master,
-                progress, sequentialSolve, job.longRun);
-        if (rec != null) rec.ctx = primaryCtx;
-        lastRunState = primaryCtx.runState;
-        currentGraphContext = primaryCtx;
-        ArmState primary = new ArmState();
-        long raceStart = System.nanoTime();
-        SolveRunRecord.Race raceInfo = new SolveRunRecord.Race();
-        raceInfo.winner = "primary";
-        if (rec != null) rec.race = raceInfo;
-
-        try {
-            runArm(job.graph, primaryCtx, spec, primary);
-            boolean primaryOk = primary.cand != null && primary.cand.yaws != null;
-            if (master.get() || (primaryOk && primary.feasible)) {
-                return new RaceRun(primaryCtx, primary.cand, sc, false);
-            }
-
-            SolverGraph exploreGraph = BuiltinGraphs.explore();
-            SolveProgress exploreProgress = new SolveProgress(
-                    job.sense == Objective.Sense.MAX, job.stopOnFeasible,
-                    spec.objective.smoothLambda, sc.startYaw);
-            exploreProgress.forwardTo(progress, "explore");
-            JumpSpec exploreSpec = new JumpSpec(sc.copy(), spec.constraints, spec.objective);
-            GraphContext exploreCtx = new GraphContext(exploreSpec, model, freeBox, job.legalGoal, FEAS_TOL,
-                    master, exploreProgress, sequentialSolve, job.longRun);
-            ArmState explore = new ArmState();
-            raceInfo.spawned = true;
-            raceInfo.spawnElapsedNanos = System.nanoTime() - raceStart;
-            if (SolverTrace.on()) {
-                SolverTrace.log("RACE", "explore stage started at %.1fs", raceInfo.spawnElapsedNanos / 1.0e9);
-            }
-            runArm(exploreGraph, exploreCtx, exploreSpec, explore);
-
-            boolean exploreWon = explore.cand != null && explore.cand.yaws != null
-                    && (!primaryOk || explore.feasible);
-            raceInfo.winner = exploreWon ? "explore" : "primary";
-            raceInfo.exploreChain = exploreCtx.chain();
-            raceInfo.exploreGraphHash = SolveRunRecord.graphHash(exploreGraph);
-            raceInfo.exploreNodes = SolveRunRecord.nodeRunsOf(exploreCtx.runState.statuses());
-            if (SolverTrace.on()) {
-                SolverTrace.log("RACE", "winner=%s primaryFeas=%s exploreFeas=%s",
-                        exploreWon ? "explore" : "primary", primary.feasible, explore.feasible);
-            }
-            if (exploreWon) {
-                exploreCtx.chainSuffix(" (explore)");
-                return new RaceRun(exploreCtx, explore.cand, exploreSpec.asScenario(), true);
-            }
-            return new RaceRun(primaryCtx, primary.cand, sc, false);
-        } finally {
-            currentGraphContext = null;
-        }
-    }
-
-    private void runArm(SolverGraph graph, GraphContext ctx, JumpSpec spec, ArmState out) {
-        try {
-            Candidate c = GraphRunner.run(graph, ctx);
-            out.cand = c;
-            if (c != null && c.yaws != null) {
-                JumpPhysicsInputs armSc = spec.asScenario();
-                double viol;
-                if (ctx.stageLocked()) {
-                    double[] gf = armSc.toGameFacings(c.yaws);
-                    viol = JumpConstraintCompiler.compile(spec).maxViolation(gf, model.forward(armSc, gf));
-                } else {
-                    viol = violationOf(armSc, spec, c.yaws);
-                }
-                out.feasible = viol <= FEAS_TOL;
-            }
-        } catch (RuntimeException e) {
-            if (SolverTrace.on()) SolverTrace.log("RACE", "arm error: %s", String.valueOf(e));
-            e.printStackTrace();
-        } finally {
-            out.done = true;
-        }
-    }
-
     private Outcome runJob(Job job, AtomicBoolean cancel, SolveProgress progress, RunRecording rec) {
         JumpSpec spec = job.spec;
         lastSpecDebug = spec;
@@ -963,26 +864,17 @@ public final class AngleSolverEngine {
                     sc.numTicks, spec.constraints.size(), countJumps(sc),
                     job.deadlineNanos / 1_000_000_000L, job.useWindowSolver, job.ilsExhaustive, job.stopOnFeasible));
         }
-        GraphContext ctx;
+        GraphContext ctx = new GraphContext(spec, model, freeBox, job.legalGoal, FEAS_TOL, cancel, progress,
+                sequentialSolve, job.longRun);
+        if (job.deadlineNanos > 0) ctx.setOverallDeadline(System.nanoTime() + job.deadlineNanos);
+        if (rec != null) rec.ctx = ctx;
+        lastRunState = ctx.runState;
+        currentGraphContext = ctx;
         Candidate cand;
-        if (job.raceExplore) {
-            RaceRun race = runStagedRace(job, spec, sc, freeBox, cancel, progress, rec);
-            ctx = race.winnerCtx;
-            cand = race.cand;
-            if (race.exploreWon) sc = race.winnerSc;
-        } else {
-            GraphContext single = new GraphContext(spec, model, freeBox, job.legalGoal, FEAS_TOL, cancel, progress,
-                    sequentialSolve, job.longRun);
-            if (job.deadlineNanos > 0) single.setOverallDeadline(System.nanoTime() + job.deadlineNanos);
-            if (rec != null) rec.ctx = single;
-            lastRunState = single.runState;
-            currentGraphContext = single;
-            try {
-                cand = GraphRunner.run(job.graph, single);
-            } finally {
-                currentGraphContext = null;
-            }
-            ctx = single;
+        try {
+            cand = GraphRunner.run(job.graph, ctx);
+        } finally {
+            currentGraphContext = null;
         }
         if (cancel.get()) return null;
         if (cand == null || cand.yaws == null) {
@@ -1009,6 +901,18 @@ public final class AngleSolverEngine {
         if (job.legalGoal != null) {
             solverName = solverName == null ? "legal mode" : solverName + " (legal)";
         }
+        boolean smoothRequested = spec.objective.smoothLambda > 0.0;
+        if (smoothRequested && smoothFinalResult && model instanceof ExactJumpModel && !cancel.get()) {
+            long smoothBudget = job.deadlineNanos > 0
+                    ? Math.min(job.deadlineNanos / 8, MAX_SMOOTH_BUDGET_NANOS) : SMOOTH_BUDGET_NANOS;
+            try {
+                double[] smoothed = smoothFacing((ExactJumpModel) model, spec, sc, yaws, cancel, smoothBudget);
+                if (smoothed != null) yaws = smoothed;
+            } catch (RuntimeException e) {
+                if (SolverTrace.on()) SolverTrace.log("ENGINE", "final facing smoothing failed: %s", String.valueOf(e));
+            }
+            solveNanos = System.nanoTime() - solveStart;
+        }
         double[] gameFacings = sc.toGameFacings(yaws);
         ForwardPath path = model.forward(sc, gameFacings);
         SolveResult result = assembleResult(job, yaws, gameFacings, path, solverName, solveNanos, dualGap);
@@ -1031,6 +935,17 @@ public final class AngleSolverEngine {
         return new Outcome(result, plan);
     }
 
+    private double[] smoothFacing(ExactJumpModel em, JumpSpec spec, JumpPhysicsInputs sc, double[] yaws,
+                                  AtomicBoolean cancel, long budgetNanos) {
+        double[] gf = sc.toGameFacings(yaws);
+        JumpConstraintCompiler.Compiled comp = JumpConstraintCompiler.compile(spec);
+        if (comp.maxViolation(gf, em.forward(sc, gf)) > FEAS_TOL) return null;
+        return TrendFilterSmooth.smooth(em, spec, yaws, System.nanoTime() + budgetNanos, cancel);
+    }
+
+    private static final long SMOOTH_BUDGET_NANOS = 400_000_000L;
+    private static final long MAX_SMOOTH_BUDGET_NANOS = 6_000_000_000L;
+
     private static boolean hasUnsupportedDf(Job job) {
         for (ConstraintAt ca : job.uiConstraints) if (ca.c.isUnsupportedDf()) return true;
         return false;
@@ -1051,13 +966,11 @@ public final class AngleSolverEngine {
 
     /** The byte-exact objective value the given facings realize (for comparing two feasible candidates). */
     private double exactObjective(JumpPhysicsInputs sc, JumpSpec spec, double[] yawsAbsWrapped) {
-        ForwardPath p = model.forward(sc, sc.toGameFacings(yawsAbsWrapped));
-        return p.getPos(spec.objective.tick, spec.objective.axis);
+        return Scoring.exactObjective(model, sc, spec, yawsAbsWrapped);
     }
 
     private double violationOf(JumpPhysicsInputs sc, JumpSpec spec, double[] yawsAbsWrapped) {
-        double[] gf = sc.toGameFacings(Angles.wrapAll(yawsAbsWrapped));
-        return JumpConstraintCompiler.compile(spec).maxViolation(gf, model.forward(sc, gf));
+        return Scoring.violationOf(model, sc, spec, yawsAbsWrapped);
     }
 
     private SolveResult buildLiveResult(Job job, double[] yaws) {
@@ -1480,7 +1393,9 @@ public final class AngleSolverEngine {
             else unmet.add(ca.absTick);
             outs.add(outcome(ca.c, ca.absTick, found, ok));
         }
-        SolveResult r = new SolveResult(feasible && met == total, met, total, job.startTick + 1, job.landingTick + 1);
+        boolean success = feasible
+                && JumpConstraintCompiler.compile(job.spec).maxViolation(gameFacings, path) <= FEAS_TOL;
+        SolveResult r = new SolveResult(success, met, total, job.startTick + 1, job.landingTick + 1);
         r.getOutcomes().addAll(outs);
         for (int t : unmet) r.addUnmetTick(t);
         for (int k = 0; k < yaws.length; k++) {
@@ -1631,88 +1546,13 @@ public final class AngleSolverEngine {
     public static double[] dualChain(ExactJumpModel em, JumpSpec spec, JumpPhysicsInputs sc,
                                      AtomicBoolean cancel, String[] nameOut, long deadlineNanos,
                                      SlpSolve.Config slpCfg) {
-        return dualChain(em, spec, sc, cancel, nameOut, deadlineNanos, slpCfg, new ClosedFormSolve.Config(),
-                new RelaxationRecovery.Config());
+        return dualChain(em, spec, sc, cancel, nameOut, deadlineNanos, slpCfg, new ClosedFormSolve.Config(), null);
     }
 
     public static double[] dualChain(ExactJumpModel em, JumpSpec spec, JumpPhysicsInputs sc,
                                      AtomicBoolean cancel, String[] nameOut, long deadlineNanos,
-                                     SlpSolve.Config slpCfg, ClosedFormSolve.Config cfCfg,
-                                     RelaxationRecovery.Config rrCfg) {
-        return dualChain(em, spec, sc, cancel, nameOut, deadlineNanos, slpCfg, cfCfg, rrCfg, null);
-    }
-
-    public static double[] dualChain(ExactJumpModel em, JumpSpec spec, JumpPhysicsInputs sc,
-                                     AtomicBoolean cancel, String[] nameOut, long deadlineNanos,
-                                     SlpSolve.Config slpCfg, ClosedFormSolve.Config cfCfg,
-                                     RelaxationRecovery.Config rrCfg, ClosestMiss miss) {
-        if (SolverTrace.on()) SolverTrace.log("CHAIN", "closed form start");
-        double[] yaws = ClosedFormSolve.optimize(em, spec, FEAS_TOL, cancel, cfCfg);
-        if (yaws != null) {
-            nameOut[0] = "closed form";
-            if (SolverTrace.on()) SolverTrace.log("CHAIN", "closed form solved");
-            return yaws;
-        }
-        if (cancel.get()) return null;
-        if (SolverTrace.on()) SolverTrace.log("CHAIN", "slp start");
-        yaws = SlpSolve.optimize(em, spec, FEAS_TOL, cancel, null, slpCfg, miss);
-        if (yaws != null) {
-            if (SolverTrace.on()) SolverTrace.log("CHAIN", "slp solved");
-            return levelSetTopUp(em, spec, yaws, cancel, "closed form -> SLP", nameOut);
-        }
-        if (deadlineNanos == 0L || deadlineNanos - System.nanoTime() >= RELAX_MIN_REMAINING_NANOS) {
-            if (SolverTrace.on()) SolverTrace.log("CHAIN", "relaxation start");
-            yaws = RelaxationRecovery.solve(em, spec, FEAS_TOL, cancel, rrCfg);
-            if (yaws != null) {
-                if (SolverTrace.on()) SolverTrace.log("CHAIN", "relaxation solved");
-                return levelSetTopUp(em, spec, yaws, cancel, "closed form -> relaxation recovery", nameOut);
-            }
-        } else if (SolverTrace.on()) {
-            SolverTrace.log("CHAIN", "relaxation skipped (deadline)");
-        }
-        for (Objective alt : alternateObjectives(spec.objective)) {
-            if (cancel.get()) return null;
-            if (SolverTrace.on()) SolverTrace.log("CHAIN", "alt seed %s %s start", alt.axis, alt.sense);
-            double[] seed = ClosedFormSolve.optimize(em, new JumpSpec(sc, spec.constraints, alt), FEAS_TOL, cancel, cfCfg);
-            if (seed == null) continue;
-            yaws = SlpSolve.optimize(em, spec, FEAS_TOL, cancel, seed, slpCfg, miss);
-            if (yaws != null) {
-                if (SolverTrace.on()) SolverTrace.log("CHAIN", "reseeded slp solved");
-                return levelSetTopUp(em, spec, yaws, cancel, "closed form -> SLP (reseeded)", nameOut);
-            }
-        }
-        if (SolverTrace.on()) SolverTrace.log("CHAIN", "miss");
-        return null;
-    }
-
-    /** A non-closed-form feasible result can be short of the objective's dual bound when the chosen Solve For
-     *  degenerates the dual recovery (optimizing into a same-axis position wall); ladder the objective up to
-     *  the bound via feasibility solves ({@link LevelSetAscent}). No-op with dF constraints (no dual bound). */
-    private static double[] levelSetTopUp(ExactJumpModel em, JumpSpec spec, double[] yaws, AtomicBoolean cancel,
-                                          String name, String[] nameOut) {
-        double[] improved = LevelSetAscent.improve(em, spec, yaws, FEAS_TOL, cancel);
-        if (improved != null && improved != yaws) {
-            nameOut[0] = name + " -> level set";
-            if (SolverTrace.on()) SolverTrace.log("CHAIN", "level set improved");
-            return improved;
-        }
-        nameOut[0] = name;
-        return yaws;
-    }
-
-    /** The other three Solve-For directions at the same tick, user's axis first. Seed sources only
-     *  (a certified optimum of any direction is feasible for all of them), never the returned result. */
-    private static List<Objective> alternateObjectives(Objective o) {
-        List<Objective> out = new ArrayList<>(3);
-        JumpPhysicsInputs.Axis[] axisOrder = (o.axis == JumpPhysicsInputs.Axis.X)
-                ? new JumpPhysicsInputs.Axis[]{JumpPhysicsInputs.Axis.X, JumpPhysicsInputs.Axis.Z}
-                : new JumpPhysicsInputs.Axis[]{JumpPhysicsInputs.Axis.Z, JumpPhysicsInputs.Axis.X};
-        for (JumpPhysicsInputs.Axis ax : axisOrder) {
-            for (Objective.Sense se : new Objective.Sense[]{Objective.Sense.MAX, Objective.Sense.MIN}) {
-                if (ax == o.axis && se == o.sense) continue;
-                out.add(new Objective(ax, se, o.tick));
-            }
-        }
-        return out;
+                                     SlpSolve.Config slpCfg, ClosedFormSolve.Config cfCfg, ClosestMiss miss) {
+        return RecoveryLadder.solve(em, spec, sc, cancel, nameOut, deadlineNanos, slpCfg, cfCfg,
+                new RelaxationRecovery.Config(), miss);
     }
 }

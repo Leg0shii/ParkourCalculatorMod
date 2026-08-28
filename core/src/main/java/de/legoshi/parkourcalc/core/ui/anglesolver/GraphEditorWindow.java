@@ -11,6 +11,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
 import de.legoshi.parkourcalc.core.anglesolver.graph.InputRequirement;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeCatalog;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeCategory;
+import de.legoshi.parkourcalc.core.anglesolver.graph.NodeHelp;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeStatus;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeType;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamSpec;
@@ -118,6 +119,7 @@ public final class GraphEditorWindow implements RenderInterface {
     private boolean openEnumPopup;
     private GraphNode enumPopupNode;
     private ParamSpec enumPopupSpec;
+    private String pendingHelp;
     private float addPosX;
     private float addPosY;
     private float canvasMouseX;
@@ -594,6 +596,7 @@ public final class GraphEditorWindow implements RenderInterface {
             }
             applyPositions = false;
         }
+        pendingHelp = null;
         for (GraphNode n : nodes) {
             drawNode(n, scale);
         }
@@ -639,6 +642,24 @@ public final class GraphEditorWindow implements RenderInterface {
         }
         renderAddPopup();
         renderEnumPopup();
+        if (pendingHelp != null) showHelpTooltip(pendingHelp);
+    }
+
+    private void showHelpTooltip(String text) {
+        ImGui.beginTooltip();
+        ImGui.pushTextWrapPos(360f * ThemeManager.uiScale());
+        ImGui.text(text);
+        ImGui.popTextWrapPos();
+        ImGui.endTooltip();
+    }
+
+    private void helpMarker(String help) {
+        if (help == null) return;
+        ImGui.sameLine();
+        ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+        ImGui.text("(?)");
+        ThemeManager.popTextColor();
+        if (ImGui.isItemHovered()) pendingHelp = help;
     }
 
     private void updateViewScale() {
@@ -693,6 +714,7 @@ public final class GraphEditorWindow implements RenderInterface {
         ThemeManager.pushTextColor(ThemeManager.textDimColor());
         ImGui.text(n.id);
         ThemeManager.popTextColor();
+        helpMarker(NodeHelp.node(n.type.id));
         float headerBottom = ImGui.getItemRectMaxY() + 4f * scale;
         ImGui.dummy(0f, 4f * scale);
 
@@ -917,6 +939,7 @@ public final class GraphEditorWindow implements RenderInterface {
                 break;
             }
         }
+        helpMarker(NodeHelp.param(n.type.id, spec.key));
     }
 
     private void drawLink(GraphEdge e) {
@@ -1103,6 +1126,8 @@ public final class GraphEditorWindow implements RenderInterface {
                 last = t.category;
             }
             if (ImGui.menuItem(t.label)) addNode(t);
+            String help = NodeHelp.node(t.id);
+            if (help != null) TooltipUtil.onHover(help);
         }
         ImGui.endPopup();
     }

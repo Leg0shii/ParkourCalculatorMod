@@ -2,7 +2,7 @@ package de.legoshi.parkourcalc.anglesolver;
 
 import de.legoshi.parkourcalc.anglesolver.harness.ProblemFixture;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
-import de.legoshi.parkourcalc.core.anglesolver.solver.BoundPrunedRecovery;
+import de.legoshi.parkourcalc.core.anglesolver.solver.CertifiedBnb;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ClosedFormSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
@@ -12,7 +12,6 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
-import de.legoshi.parkourcalc.core.anglesolver.solver.SeamSweepRecovery;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import org.junit.Test;
@@ -73,18 +72,23 @@ public class ThoroughAdoptFeasibilityTest {
         // The flagged claim: THOROUGH sub-solvers key off the SEED and can return a start-infeasible result.
         // Run them on the mutated spec and confirm every returned candidate is feasible at the ADOPTED start.
         double[] convYaws = Angles.wrapAll(conv.yaws);
-        double[] bnb = BoundPrunedRecovery.solve(exact, freeSpec, 0.0, cancel, 2_000_000_000L, -1.0e300);
-        if (bnb != null) {
-            double v = violAtShared(exact, freeSpec, bnb);
-            assertTrue("BoundPrunedRecovery returned a candidate infeasible at the adopted start (viol=" + v + ")", v <= 0.0);
+        CertifiedBnb.Config bcfg = new CertifiedBnb.Config();
+        bcfg.mode = CertifiedBnb.Mode.FIRST_FEASIBLE;
+        bcfg.nodeCap = 64;
+        bcfg.cancel = cancel;
+        bcfg.deadlineNanos = System.nanoTime() + 2_000_000_000L;
+        bcfg.seedYaws = convYaws.clone();
+        bcfg.seedPx = shared.startPos.x;
+        bcfg.seedPz = shared.startPos.z;
+        CertifiedBnb.Result br = CertifiedBnb.solve(exact, freeSpec, bcfg);
+        if (br.feasible) {
+            JumpPhysicsInputs at = base(sc, br.px, br.pz);
+            double[] gf = at.toGameFacings(Angles.wrapAll(br.yawsDeg));
+            double v = JumpConstraintCompiler.compile(freeSpec).maxViolation(gf, exact.forward(at, gf));
+            assertTrue("CertifiedBnb returned a candidate infeasible at its own start (viol=" + v + ")", v <= 0.0);
         }
-        double[] swept = SeamSweepRecovery.solve(exact, freeSpec, 0.0, cancel, 2_000_000_000L, convYaws.clone());
-        if (swept != null) {
-            double v = violAtShared(exact, freeSpec, swept);
-            assertTrue("SeamSweepRecovery returned a candidate infeasible at the adopted start (viol=" + v + ")", v <= 0.0);
-        }
-        System.out.printf("THOROUGH sub-solvers at adopted start: bnb=%s swept=%s (both feasible or null)%n",
-                bnb == null ? "null" : "feasible", swept == null ? "null" : "feasible");
+        System.out.printf("THOROUGH sub-solver at adopted start: certBnb=%s (feasible or null)%n",
+                br.feasible ? "feasible" : "null");
     }
 
     private static double violAtShared(ExactJumpModel exact, JumpSpec spec, double[] yaws) {

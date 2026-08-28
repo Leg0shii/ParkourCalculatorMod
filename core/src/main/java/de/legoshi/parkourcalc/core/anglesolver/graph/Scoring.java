@@ -74,12 +74,17 @@ public final class Scoring {
 
     public static boolean reachHeadroom(ForwardModel model, JumpPhysicsInputs sc, JumpSpec spec,
                                         double[] yaws, double dualBound, double feasTol) {
+        return reachHeadroom(model, sc, spec, yaws, dualBound, feasTol, 0.0);
+    }
+
+    public static boolean reachHeadroom(ForwardModel model, JumpPhysicsInputs sc, JumpSpec spec,
+                                        double[] yaws, double dualBound, double feasTol, double epsilon) {
         if (yaws == null || Double.isNaN(dualBound)) return false;
         if (violationOf(model, sc, spec, yaws) > feasTol) return false;
         boolean max = spec.objective.sense == Objective.Sense.MAX;
         double achieved = exactObjective(model, sc, spec, yaws);
         double gap = max ? dualBound - achieved : achieved - dualBound;
-        return gap > REACH_GAP_EPS;
+        return gap > Math.max(REACH_GAP_EPS, epsilon);
     }
 
     public static double objectiveCap(JumpSpec spec) {
@@ -118,6 +123,22 @@ public final class Scoring {
         a.forwardInputPerTick = b.forwardInputPerTick;
         a.strafeInputPerTick = b.strafeInputPerTick;
         return a;
+    }
+
+    public static double verifiedObjectiveAt(ForwardModel model, JumpPhysicsInputs base, JumpSpec spec,
+                                             double[] yaws, double px, double pz, double feasTol) {
+        JumpPhysicsInputs at = pinnedScenario(base, px, pz);
+        double[] gf = at.toGameFacings(yaws);
+        ForwardPath path = model.forward(at, gf);
+        if (JumpConstraintCompiler.compile(spec).maxViolation(gf, path) > feasTol) return Double.NaN;
+        return path.getPos(spec.objective.tick, spec.objective.axis);
+    }
+
+    public static void adoptPinnedStart(JumpPhysicsInputs sc, double px, double pz) {
+        if (px != sc.startPos.x || pz != sc.startPos.z) {
+            sc.startPos = new Vec3dCore(px, sc.startPos.y, pz);
+        }
+        sc.startBox = StartBox.pinned(px, pz, sc.initialVelocity.x, sc.initialVelocity.z);
     }
 
     public static boolean adoptWinningTranslation(ForwardModel model, JumpPhysicsInputs sc, JumpSpec spec,
