@@ -38,7 +38,7 @@ public final class Scoring {
 
     public static double exactObjective(ForwardModel model, JumpPhysicsInputs sc, JumpSpec spec, double[] yawsAbsWrapped) {
         ForwardPath p = model.forward(sc, sc.toGameFacings(yawsAbsWrapped));
-        return p.getPos(spec.objective.tick, spec.objective.axis);
+        return spec.objective.evaluate(p);
     }
 
     public static double violationOf(ForwardModel model, JumpPhysicsInputs sc, JumpSpec spec, double[] yawsAbsWrapped) {
@@ -88,6 +88,7 @@ public final class Scoring {
     }
 
     public static double objectiveCap(JumpSpec spec) {
+        if (spec.objective.isCustomAngle()) return Double.NaN;
         Objective o = spec.objective;
         JumpConstraint.Mode mode = o.axis == JumpPhysicsInputs.Axis.X ? JumpConstraint.Mode.X : JumpConstraint.Mode.Z;
         boolean max = o.sense == Objective.Sense.MAX;
@@ -131,7 +132,7 @@ public final class Scoring {
         double[] gf = at.toGameFacings(yaws);
         ForwardPath path = model.forward(at, gf);
         if (JumpConstraintCompiler.compile(spec).maxViolation(gf, path) > feasTol) return Double.NaN;
-        return path.getPos(spec.objective.tick, spec.objective.axis);
+        return spec.objective.evaluate(path);
     }
 
     public static void adoptPinnedStart(JumpPhysicsInputs sc, double px, double pz) {
@@ -147,7 +148,7 @@ public final class Scoring {
         ForwardPath p = model.forward(sc, gf);
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
         double curViol = compiled.maxViolation(gf, p);
-        double curObj = p.getPos(spec.objective.tick, spec.objective.axis);
+        double curObj = spec.objective.evaluate(p);
         double[] d = translationDomain(sc, freeBox);
         boolean objX = spec.objective.axis == JumpPhysicsInputs.Axis.X;
         boolean objMax = spec.objective.sense == Objective.Sense.MAX;
@@ -194,7 +195,7 @@ public final class Scoring {
         ForwardPath p = model.forward(cand, gf);
         if (JumpConstraintCompiler.compile(spec).maxViolation(gf, p) > feasTol) return false;
         if (curViol <= feasTol) {
-            double obj = p.getPos(spec.objective.tick, spec.objective.axis);
+            double obj = spec.objective.evaluate(p);
             if (!(objMax ? obj > curObj : obj < curObj)) return false;
         }
         sc.startPos = new Vec3dCore(x, sc.startPos.y, z);

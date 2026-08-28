@@ -310,7 +310,7 @@ public final class DeWiggle {
     }
 
     private static double objAt(ForwardModel model, JumpPhysicsInputs sc, Objective obj, double[] y) {
-        return model.forward(sc, sc.toGameFacings(Angles.wrapAll(y))).getPos(obj.tick, obj.axis);
+        return obj.evaluate(model.forward(sc, sc.toGameFacings(Angles.wrapAll(y))));
     }
 
     private static double delta(double anchor, double[] y, int t) {

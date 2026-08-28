@@ -316,10 +316,10 @@ public final class SlpSolve {
         ForwardPath path = exact.forward(sc, gf);
         double finalViol = compiled.maxViolation(gf, path);
         if (DEBUG) System.out.printf("  SLP viol=%.3e obj=%.7f lps=%d (%.1f ms)%n", finalViol,
-                path.getPos(spec.objective.tick, spec.objective.axis), lpCalls, (System.nanoTime() - t0) / 1e6);
+                spec.objective.evaluate(path), lpCalls, (System.nanoTime() - t0) / 1e6);
         if (SolverTrace.on()) {
             SolverTrace.log("SLP", "end viol=%.3e obj=%.9f lps=%d ms=%.1f %s", finalViol,
-                    path.getPos(spec.objective.tick, spec.objective.axis), lpCalls,
+                    spec.objective.evaluate(path), lpCalls,
                     (System.nanoTime() - t0) / 1e6, finalViol <= feasTol ? "feasible" : (bestEffort ? "best effort" : "null"));
         }
         if (finalViol <= feasTol) return yaws;
@@ -361,7 +361,7 @@ public final class SlpSolve {
 
     /** Objective normalized so bigger is always better (MIN is negated), read off the byte-exact path. */
     private static double normObjective(ForwardPath path, Objective obj, boolean max) {
-        double v = path.getPos(obj.tick, obj.axis);
+        double v = obj.evaluate(path);
         return max ? v : -v;
     }
 }

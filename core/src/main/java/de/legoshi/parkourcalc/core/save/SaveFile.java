@@ -61,6 +61,9 @@ public final class SaveFile {
         public int landingTick;
         public String axis;
         public String goal;
+        public Boolean customAngle;
+        public Double customAngleDeg;
+        public String customAngleType;
         public String effort;                            // absent in old files -> FAST
         public Boolean stopOnFeasible;                   // absent in old files -> false
         public Boolean legalMode;                        // absent in old files -> false

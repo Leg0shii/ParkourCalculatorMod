@@ -283,7 +283,7 @@ public final class ClosedFormSolve {
     }
 
     private static double scanScore(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, double[] yaws) {
-        double o = exact.forward(sc, sc.toGameFacings(yaws)).getPos(spec.objective.tick, spec.objective.axis);
+        double o = spec.objective.evaluate(exact.forward(sc, sc.toGameFacings(yaws)));
         return spec.objective.scored(o, sc.startYaw, yaws);
     }
 
@@ -396,7 +396,7 @@ public final class ClosedFormSolve {
             }
             if (DEBUG) {
                 double[] gf = sc.toGameFacings(yaws);
-                double o = exact.forward(sc, gf).getPos(spec.objective.tick, spec.objective.axis);
+                double o = spec.objective.evaluate(exact.forward(sc, gf));
                 System.out.printf("  CLOSED margin=%.2e iters=%d pg=%.3e viol=%.2e obj=%.6f%n",
                         margin, solver.lastIters, solver.lastPgres, viol, o);
             }
@@ -447,8 +447,23 @@ public final class ClosedFormSolve {
         CostateDualSolver.Result r = new CostateDualSolver(lin.n, cx, cz, lin.mMagAll(), walls).solve(0.0, null);
         if (r == null) return Double.NaN;
         // r.value bounds max c·u with c MAX-normalized; fold the constant part back in (MIN is negated).
-        int axis = spec.objective.axis == JumpPhysicsInputs.Axis.X ? 0 : 1;
-        double constPos = lin.constPos(spec.objective.tick, axis);
+        double constPos;
+        if (spec.objective.isCustomAngle()) {
+            double rad = Math.toRadians(spec.objective.customYaw);
+            double dx = -Math.sin(rad);
+            double dz = Math.cos(rad);
+            if (spec.objective.isMotion()) {
+                int t = spec.objective.tick;
+                double c0 = lin.constPos(t, 0) - (t > 0 ? lin.constPos(t - 1, 0) : 0.0);
+                double c1 = lin.constPos(t, 1) - (t > 0 ? lin.constPos(t - 1, 1) : 0.0);
+                constPos = dx * c0 + dz * c1;
+            } else {
+                constPos = dx * lin.constPos(spec.objective.tick, 0) + dz * lin.constPos(spec.objective.tick, 1);
+            }
+        } else {
+            int axis = spec.objective.axis == JumpPhysicsInputs.Axis.X ? 0 : 1;
+            constPos = lin.constPos(spec.objective.tick, axis);
+        }
         return spec.objective.sense == Objective.Sense.MAX ? constPos + r.value : constPos - r.value;
     }
 

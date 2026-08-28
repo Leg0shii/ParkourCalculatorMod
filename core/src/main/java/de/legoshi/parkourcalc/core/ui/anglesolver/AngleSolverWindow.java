@@ -13,6 +13,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.GraphPresetIO;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.runticks.RunTicksControls;
 import de.legoshi.parkourcalc.core.anglesolver.runticks.RunTicksSettings;
+import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.core.save.Result;
@@ -65,7 +66,7 @@ public final class AngleSolverWindow implements RenderInterface {
     private static final String LEGACY_PRESET_ITEM = "Legacy budget";
 
     private static final String[] FORM_LABELS =
-            {"Start tick", "Goal tick", "Axis", "Goal", "Inputs", "Sprint", "Slipperiness", "Potion",
+            {"Start tick", "Goal tick", "Axis", "Goal", "Target angle", "Inputs", "Sprint", "Slipperiness", "Potion",
              "Enabled", "Max ticks", "Step timeout", "Step growth", "Safety factor", "Safety margin"};
 
     /** Unscaled; lines the details table up under the toggle title and sets it off from the solved values. */
@@ -103,6 +104,8 @@ public final class AngleSolverWindow implements RenderInterface {
     private final int[] optimizeSecondsBuf = new int[1];
     private final ImInt presetBuf = new ImInt();
     private final ImString presetNameInput = new ImString(64);
+    private final ImString customAngleBuf = new ImString(32);
+    private double lastSyncedCustomAngle = Double.NaN;
     private final String[] slipItems;
     private String[] presetNames;
     private String presetError;
@@ -119,6 +122,11 @@ public final class AngleSolverWindow implements RenderInterface {
     private boolean runTicksExpanded;
     private int doseToRemove;
     private RunTicksControls runTicks = RunTicksControls.NONE;
+    private java.util.function.DoubleSupplier playerYawSupplier = () -> 0.0;
+
+    public void setPlayerYawSupplier(java.util.function.DoubleSupplier supplier) {
+        this.playerYawSupplier = supplier != null ? supplier : () -> 0.0;
+    }
 
     public void setRunTicksControls(RunTicksControls controls) {
         this.runTicks = controls != null ? controls : RunTicksControls.NONE;
@@ -200,10 +208,69 @@ public final class AngleSolverWindow implements RenderInterface {
 
         solveForExpanded = sectionToggle("Solve for", "solvefor", solveForExpanded, scale);
         if (solveForExpanded) {
-            int ax = segmentedRow("Axis", "axis", AXES, state.getAxis().ordinal(), labelW);
-            if (ax >= 0) state.setAxis(AngleSolverState.Axis.values()[ax]);
-            int gl = segmentedRow("Goal", "goal", GOALS, state.getGoal().ordinal(), labelW);
-            if (gl >= 0) state.setGoal(AngleSolverState.Goal.values()[gl]);
+            if (!state.isCustomAngle()) {
+                int ax = segmentedRow("Axis", "axis", AXES, state.getAxis().ordinal(), labelW);
+                if (ax >= 0) state.setAxis(AngleSolverState.Axis.values()[ax]);
+                int gl = segmentedRow("Goal", "goal", GOALS, state.getGoal().ordinal(), labelW);
+                if (gl >= 0) state.setGoal(AngleSolverState.Goal.values()[gl]);
+            } else {
+                Controls.pushInputFrameHeight();
+                ImGui.beginGroup();
+                SolverWidgets.rowLabel("Target angle", labelW);
+
+                float btnW = ImGui.getFrameHeight();
+                float spacing = ImGui.getStyle().getItemInnerSpacing().x;
+                float segW = 96f * scale;
+                float inputW = Math.max(30f, ImGui.getContentRegionAvail().x - btnW - segW - 2f * spacing);
+
+                if (state.getCustomAngleDeg() != lastSyncedCustomAngle && !ImGui.isItemActive()) {
+                    customAngleBuf.set(String.format(Locale.ROOT, "%.4f", state.getCustomAngleDeg())
+                            .replaceAll("0+$", "").replaceAll("\\.$", ""));
+                    lastSyncedCustomAngle = state.getCustomAngleDeg();
+                }
+
+                ImGui.setNextItemWidth(inputW);
+                if (ImGui.inputText("##customAngleInput", customAngleBuf, imgui.flag.ImGuiInputTextFlags.CharsDecimal)) {
+                    try {
+                        String s = customAngleBuf.get().trim();
+                        if (!s.isEmpty() && !s.equals("-") && !s.equals(".")) {
+                            double val = Double.parseDouble(s);
+                            state.setCustomAngleDeg(val);
+                            lastSyncedCustomAngle = state.getCustomAngleDeg();
+                        }
+                    } catch (NumberFormatException ignored) {}
+                }
+                TooltipUtil.onHover("Target facing angle in degrees to optimize towards (e.g. 45.0° for diagonal).");
+
+                ImGui.sameLine(0, spacing);
+                if (ImGui.button("P##setPlayerFacing", btnW, btnW)) {
+                    double yaw = Angles.wrap(playerYawSupplier.getAsDouble());
+                    state.setCustomAngleDeg(yaw);
+                    customAngleBuf.set(String.format(Locale.ROOT, "%.4f", yaw)
+                            .replaceAll("0+$", "").replaceAll("\\.$", ""));
+                    lastSyncedCustomAngle = state.getCustomAngleDeg();
+                }
+                TooltipUtil.onHover("Set target angle to player's current facing yaw.");
+
+                ImGui.sameLine(0, spacing);
+                String[] typeItems = {"Pos", "Mot"};
+                String[] typeTooltips = {
+                        "Position: Maximize horizontal displacement/distance along the target angle.",
+                        "Motion: Maximize horizontal velocity/motion vector along the target angle at the goal tick."
+                };
+                int typePick = SolverWidgets.segmented("##customType", typeItems, typeTooltips, state.getCustomAngleType().ordinal(), segW);
+                if (typePick >= 0) state.setCustomAngleType(AngleSolverState.CustomAngleType.values()[typePick]);
+
+                ImGui.endGroup();
+                Controls.popInputFrameHeight();
+            }
+
+            ImGui.spacing();
+            if (Controls.checkbox("Custom angle##customAngleToggle", state.isCustomAngle())) {
+                state.setCustomAngle(!state.isCustomAngle());
+            }
+            TooltipUtil.onHover("Optimize trajectory distance or motion towards a custom facing angle instead of a fixed X/Z axis.\n"
+                    + "Using 'Optimize' effort is recommended for maximum reach.");
 
             ImGui.spacing();
             boolean fastTier = state.getEffort() == AngleSolverState.Effort.FAST;
@@ -949,9 +1016,16 @@ public final class AngleSolverWindow implements RenderInterface {
             rows.add(new SolveResult.Detail("Finished", r.getFinishedAt()));
         }
         if (r.hasObjective()) {
-            String goal = state.getGoal() == AngleSolverState.Goal.MAX ? "max" : "min";
-            rows.add(new SolveResult.Detail("Objective",
-                    goal + " " + state.getAxis().name() + " = " + ConstraintText.fixedStat(r.getObjectiveValue())));
+            if (state.isCustomAngle()) {
+                String mode = state.getCustomAngleType() == AngleSolverState.CustomAngleType.MOTION ? "mot" : "pos";
+                rows.add(new SolveResult.Detail("Objective",
+                        String.format(Locale.ROOT, "%s yaw %.1f° = ", mode, state.getCustomAngleDeg())
+                                + ConstraintText.fixedStat(r.getObjectiveValue())));
+            } else {
+                String goal = state.getGoal() == AngleSolverState.Goal.MAX ? "max" : "min";
+                rows.add(new SolveResult.Detail("Objective",
+                        goal + " " + state.getAxis().name() + " = " + ConstraintText.fixedStat(r.getObjectiveValue())));
+            }
         }
         return rows;
     }
@@ -1026,7 +1100,7 @@ public final class AngleSolverWindow implements RenderInterface {
         }
         double v = panel.getObjectiveValue();
         if (!Double.isNaN(improveTrackValue) && v != improveTrackValue) {
-            boolean max = state.getGoal() == AngleSolverState.Goal.MAX;
+            boolean max = state.isCustomAngle() || state.getGoal() == AngleSolverState.Goal.MAX;
             double delta = v - improveTrackValue;
             if (max ? delta > 0 : delta < 0) {
                 improveFlashStart = ImGui.getTime();

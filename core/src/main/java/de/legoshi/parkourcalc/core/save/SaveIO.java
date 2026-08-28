@@ -188,6 +188,9 @@ public final class SaveIO {
         state.setLandingTick(a.landingTick);
         state.setAxis(parseEnum(AngleSolverState.Axis.class, a.axis, AngleSolverState.Axis.X));
         state.setGoal(parseEnum(AngleSolverState.Goal.class, a.goal, AngleSolverState.Goal.MAX));
+        state.setCustomAngle(a.customAngle != null && a.customAngle);
+        if (a.customAngleDeg != null) state.setCustomAngleDeg(a.customAngleDeg);
+        state.setCustomAngleType(parseEnum(AngleSolverState.CustomAngleType.class, a.customAngleType, AngleSolverState.CustomAngleType.POSITION));
         state.setEffort(parseEnum(AngleSolverState.Effort.class, a.effort, AngleSolverState.Effort.FAST));
         state.setStopOnFeasible(a.stopOnFeasible != null && a.stopOnFeasible);
         state.setLegalMode(a.legalMode != null && a.legalMode);
@@ -526,6 +529,9 @@ public final class SaveIO {
         a.landingTick = s.getLandingTick();
         a.axis = s.getAxis().name();
         a.goal = s.getGoal().name();
+        a.customAngle = s.isCustomAngle();
+        a.customAngleDeg = s.getCustomAngleDeg();
+        a.customAngleType = s.getCustomAngleType().name();
         a.effort = s.getEffort().name();
         a.stopOnFeasible = s.isStopOnFeasible();
         a.legalMode = s.isLegalMode();
