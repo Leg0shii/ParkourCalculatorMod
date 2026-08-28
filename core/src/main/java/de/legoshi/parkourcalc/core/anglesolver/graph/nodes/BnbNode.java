@@ -17,14 +17,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class BnbNode implements NodeRuntime {
 
     private final int ffSec;
-    private final int optSec;
     private final int tickCap;
     private final String labelSuffix;
     private final BoundPrunedRecovery.Config cfg;
 
     public BnbNode(ParamValues params) {
         this.ffSec = params.getInt("ffSec");
-        this.optSec = params.getInt("optSec");
         this.tickCap = params.getInt("tickCap");
         this.labelSuffix = params.getString("labelSuffix");
         this.cfg = new BoundPrunedRecovery.Config();
@@ -34,8 +32,21 @@ public final class BnbNode implements NodeRuntime {
     public NodeOutcome execute(GraphContext ctx, Candidate in, AtomicBoolean nodeToken, long deadlineNanos) {
         boolean optimize = in != null && in.yaws != null && in.feasible;
         Guarantee miss = in != null && in.yaws != null ? Guarantee.UNCHANGED : Guarantee.NONE;
-        int sec = optimize ? optSec : ffSec;
-        if (sec <= 0) return NodeOutcome.of(miss, in);
+        long now = System.nanoTime();
+        long budgetNanos;
+        if (optimize) {
+            if (deadlineNanos <= 0) return NodeOutcome.of(miss, in);
+            budgetNanos = deadlineNanos - now;
+            if (budgetNanos <= 0) return NodeOutcome.of(miss, in);
+        } else {
+            if (ffSec <= 0) return NodeOutcome.of(miss, in);
+            budgetNanos = ffSec * 1_000_000_000L;
+            if (deadlineNanos > 0) {
+                long remaining = deadlineNanos - now;
+                if (remaining <= 0) return NodeOutcome.of(miss, in);
+                budgetNanos = Math.min(budgetNanos, remaining);
+            }
+        }
         if (!ctx.exact() || ctx.stageLocked()) return NodeOutcome.of(miss, in);
         if (tickCap > 0 && ctx.scenario.numTicks > tickCap) return NodeOutcome.of(miss, in);
         if (JumpLinearModel.hasFacingWall(ctx.spec.constraints)
@@ -44,12 +55,6 @@ public final class BnbNode implements NodeRuntime {
             return NodeOutcome.of(miss, in);
         }
         boolean max = ctx.maximize();
-        long budgetNanos = sec * 1_000_000_000L;
-        if (deadlineNanos > 0) {
-            long remaining = deadlineNanos - System.nanoTime();
-            if (remaining <= 0) return NodeOutcome.of(miss, in);
-            budgetNanos = Math.min(budgetNanos, remaining);
-        }
         if (ctx.progress != null) ctx.progress.setStage(ctx.chainWith("pattern B&B"));
         if (SolverTrace.on()) {
             SolverTrace.log("ENGINE", "bnb %s budgetMs=%d", optimize ? "optimize" : "rescue",

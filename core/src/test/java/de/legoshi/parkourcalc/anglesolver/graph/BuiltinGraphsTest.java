@@ -59,8 +59,8 @@ public class BuiltinGraphsTest {
         SolverGraph opt = BuiltinGraphs.optimize(120);
         assertEquals(0, fast.node("fold").params.getInt("objectiveRounds"));
         assertTrue(opt.node("fold").params.getInt("objectiveRounds") > 0);
-        assertEquals(0, fast.node("cert").params.getInt("optNodeCap"));
-        assertTrue(opt.node("cert").params.getInt("optNodeCap") > 0);
+        assertEquals(0, fast.node("cert").params.getInt("budgetSec"));
+        assertTrue(opt.node("cert").params.getInt("budgetSec") > 0);
         assertEquals(32, fast.node("cert").params.getInt("ffNodeCap"));
         assertEquals(0, fast.node("wrap").params.getInt("budgetSec"));
         assertTrue(opt.node("wrap").params.getInt("budgetSec") > 0);
