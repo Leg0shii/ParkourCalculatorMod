@@ -83,7 +83,11 @@ A heavier tier, `de.legoshi.parkourcalc.VerySlowSolverTests`, is excluded even u
 ./gradlew :core:test -PslowTests -PverySlowTests  # + the very-slow engine-acceptance tier
 ```
 
-Run the full suite locally whenever the change touches solver code (`core/.../anglesolver/`, the model classes, velocity finder, graph) or the problem/capture resources; for anything else the fast suite is enough, CI covers the rest. When a new test class drives the solver engine on real captures, tag it `@Category(SlowSolverTests.class)` so the default run stays fast; if it is a multi-minute gate that need not run on every PR, tag it `@Category(VerySlowSolverTests.class)` instead.
+Run the full suite locally whenever the change touches solver code (`core/.../anglesolver/`, the model classes, velocity finder, graph) or the problem/capture resources; for anything else the fast suite is enough, CI covers the rest.
+
+Add `-PverySlowTests` to that local run when your change could affect the **certified branch-and-bound** (`CertifiedBnb`, `SineTableGeometry`, `CertifiedBnbNode`, the certification bound/gap machinery) or the **pipeline stage sequence** (`BuiltinGraphs`, or any node's fire/guard/ordering that changes which stages run or in what order). CI runs that tier only on pull requests targeting `main` (the weekly `dev`-to-`main` train and main hotfixes), so on a feature-to-`dev` PR those two gates (`CertifiedBnbEngineTest`, `PipelineShapeTest`) are otherwise unchecked until the train, and a regression there would already have landed on `dev`. When in doubt on a solver change, run it; it adds a few minutes. Also run it before opening or approving a `dev`-to-`main` train PR, and before cutting a release.
+
+When a new test class drives the solver engine on real captures, tag it `@Category(SlowSolverTests.class)` so the default run stays fast; if it is a multi-minute gate that need not run on every PR, tag it `@Category(VerySlowSolverTests.class)` instead.
 
 - Folder-driven problem checks: `core/src/test/.../anglesolver/ProblemsTest.java` (parameterized over `problems/solve/` and `problems/closedform/`, sharing captures in `core/src/test/resources/captures/`). Map in `anglesolver/TESTS.md`.
 
