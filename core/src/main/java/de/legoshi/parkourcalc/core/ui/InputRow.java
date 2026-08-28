@@ -8,7 +8,7 @@ public class InputRow {
 
     private static int nextId = 0;
 
-    public static final int MAX_AMPLIFIER = 9;
+    public static final int MAX_AMPLIFIER = 255;
 
     public static final int MAX_HOTBAR_SLOT = 9;
 

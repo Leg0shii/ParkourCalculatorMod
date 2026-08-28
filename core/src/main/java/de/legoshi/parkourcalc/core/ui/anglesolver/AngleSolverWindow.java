@@ -479,7 +479,7 @@ public final class AngleSolverWindow implements RenderInterface {
         ImGui.setNextItemWidth(levelW);
         // step 0 hides the +/- buttons; at this width they would consume the whole field and leave nothing to type in.
         if (ImGui.inputInt("##lvl" + index, levelBuf, 0, 0)) {
-            dose.level = Math.max(1, Math.min(10, levelBuf.get()));
+            dose.level = Math.max(PotionDose.MIN_LEVEL, Math.min(PotionDose.MAX_LEVEL, levelBuf.get()));
         }
         ImGui.sameLine();
         if (SolverWidgets.deleteX("rm" + index)) doseToRemove = index;

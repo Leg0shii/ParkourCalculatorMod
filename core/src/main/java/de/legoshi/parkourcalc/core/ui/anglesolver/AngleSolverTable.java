@@ -1254,7 +1254,9 @@ public final class AngleSolverTable {
             levelBuf.set(d.level);
             ImGui.setNextItemWidth(levelW);
             // step 0 hides the +/- buttons, which would otherwise eat the whole narrow field.
-            if (ImGui.inputInt("##povl", levelBuf, 0, 0)) d.level = Math.max(1, Math.min(10, levelBuf.get()));
+            if (ImGui.inputInt("##povl", levelBuf, 0, 0)) {
+                d.level = Math.max(PotionDose.MIN_LEVEL, Math.min(PotionDose.MAX_LEVEL, levelBuf.get()));
+            }
             ImGui.tableNextColumn();
             cursorToRightDeleteX();
             if (deleteX("povx")) removeP = d.potion;
