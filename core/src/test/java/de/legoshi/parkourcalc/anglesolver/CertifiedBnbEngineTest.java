@@ -1,6 +1,6 @@
 package de.legoshi.parkourcalc.anglesolver;
 
-import de.legoshi.parkourcalc.SlowSolverTests;
+import de.legoshi.parkourcalc.VerySlowSolverTests;
 import de.legoshi.parkourcalc.anglesolver.harness.Fixtures;
 import de.legoshi.parkourcalc.anglesolver.harness.ProblemFixture;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
@@ -18,7 +18,7 @@ import org.junit.experimental.categories.Category;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-@Category(SlowSolverTests.class)
+@Category(VerySlowSolverTests.class)
 public class CertifiedBnbEngineTest {
 
     private static final String[] CERT_POOL = {"j004", "j005", "j006", "j022-1bmhbfly", "j008-bfneo"};

@@ -51,6 +51,9 @@ tasks.named('test') {
 		if (!project.hasProperty('slowTests')) {
 			excludeCategories 'de.legoshi.parkourcalc.SlowSolverTests'
 		}
+		if (!project.hasProperty('verySlowTests')) {
+			excludeCategories 'de.legoshi.parkourcalc.VerySlowSolverTests'
+		}
 	}
 	if (project.hasProperty('testCpus')) {
 		jvmArgs "-XX:ActiveProcessorCount=${project.property('testCpus')}"

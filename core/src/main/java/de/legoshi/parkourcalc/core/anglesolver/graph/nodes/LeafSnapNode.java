@@ -7,10 +7,10 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.NodeOutcome;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeRuntime;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamValues;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
+import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.LeafSnap;
 
-import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class LeafSnapNode implements NodeRuntime {
@@ -33,13 +33,17 @@ public final class LeafSnapNode implements NodeRuntime {
         double[] snapGf = LeafSnap.snap(ctx.exactModel, ctx.spec, in.yaws, ctx.feasTol, nodeToken,
                 snapDeadline, pairPass);
         if (snapGf == null) return NodeOutcome.of(Guarantee.REJECTED, in);
-        if (!Scoring.adoptStageResult(ctx.model, sc, ctx.spec, ctx.freeBox, snapGf, ctx.feasTol)) {
+        if (ctx.scoredViol(snapGf) > ctx.feasTol) return NodeOutcome.of(Guarantee.REJECTED, in);
+        if (in.feasible) {
+            boolean max = ctx.maximize();
+            double candObj = ctx.scoredObjective(snapGf);
+            double curObj = ctx.scoredObjective(in.yaws);
+            if (!(max ? candObj > curObj : candObj < curObj)) return NodeOutcome.of(Guarantee.REJECTED, in);
+        }
+        if (!Scoring.adoptStageResult(ctx.model, sc, ctx.spec, ctx.freeBox,
+                sc.toGameFacings(Angles.wrapAll(snapGf)), ctx.feasTol)) {
             return NodeOutcome.of(Guarantee.REJECTED, in);
         }
-        boolean[] lockAll = new boolean[sc.numTicks];
-        Arrays.fill(lockAll, true);
-        sc.yawLockedPerTick = lockAll;
-        ctx.setStageLocked(true);
         ctx.chainAppend("leaf snap");
         return NodeOutcome.of(Guarantee.ADOPTED, Candidate.of(ctx, snapGf));
     }

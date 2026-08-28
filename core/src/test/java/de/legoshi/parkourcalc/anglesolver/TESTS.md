@@ -171,7 +171,7 @@ anglesolver/
                            inputs inside boxes/chords/supports across all four eras incl. the legacy
                            jump-tick double cast), a tiny 2-tick instance certifying at the enumerated
                            optimum with gap <= CERT_EPS, near-threshold gate behavior, determinism
-  CertifiedBnbEngineTest.java  #422 M2a certified-search gates (SlowSolverTests): all 5 small
+  CertifiedBnbEngineTest.java  #422 M2a certified-search gates (VerySlowSolverTests, -PverySlowTests; PRs to main only): all 5 small
                            captures reach certified gap <= 1.5e-4 with dominating bounds and
                            feasible incumbents (per-capture numbers printed; the 1e-9 plateau
                            mechanism is in ARCH2-M2A-CERTIFIED-BNB.md), dF specs decline cleanly,
@@ -180,7 +180,8 @@ anglesolver/
   CertBnbProbe.java        env-gated certified-B&B probe: PKC_CERTBNB_CAPTURES (comma list),
                            PKC_CERTBNB_OUT/NODES/MS/MODE; nodeCap=1 dumps root bounds for the COPT
                            root-bound validation (research/copt/certbnb_rootcheck.py)
-  PipelineShapeTest.java   #422 M2b G3 enforcement: every corpus capture visits the one linear
+  PipelineShapeTest.java   #422 M2b G3 enforcement (VerySlowSolverTests, -PverySlowTests; PRs to main only):
+                           every corpus capture visits the one linear
                            pipeline stage sequence at BOTH built-in tiers (THOROUGH probed at 1 s);
                            deadline-truncated runs must be a prefix of it
   FoldDriverProbe.java     run the fold driver headlessly on any capture; PKC_FOLD_CAPTURE=<path or

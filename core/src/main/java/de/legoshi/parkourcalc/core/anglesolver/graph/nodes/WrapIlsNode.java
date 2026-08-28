@@ -12,7 +12,6 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.WrapWindowIls;
 
-import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class WrapIlsNode implements NodeRuntime {
@@ -79,16 +78,12 @@ public final class WrapIlsNode implements NodeRuntime {
         boolean adopt = w != null
                 && (ctx.legalGoal != null
                         ? w.viol < incScore && w.viol < WrapWindowIls.LEGAL_HARD_INFEASIBLE
-                        : w.viol <= ctx.feasTol)
-                && Scoring.adoptStageResult(ctx.model, sc, ctx.spec, ctx.freeBox, w.gf, ctx.feasTol);
+                        : w.viol <= ctx.feasTol && ctx.scoredViol(w.gf) <= ctx.feasTol)
+                && Scoring.adoptStageResult(ctx.model, sc, ctx.spec, ctx.freeBox,
+                        sc.toGameFacings(Angles.wrapAll(w.gf)), ctx.feasTol);
         if (adopt) {
-            double[] yaws = w.gf.clone();
-            boolean[] lockAll = new boolean[sc.numTicks];
-            Arrays.fill(lockAll, true);
-            sc.yawLockedPerTick = lockAll;
-            ctx.setStageLocked(true);
             ctx.chainAppend("wrap ILS");
-            return NodeOutcome.of(Guarantee.ADOPTED, Candidate.of(ctx, yaws));
+            return NodeOutcome.of(Guarantee.ADOPTED, Candidate.of(ctx, w.gf.clone()));
         }
         return NodeOutcome.of(Guarantee.REJECTED, in);
     }

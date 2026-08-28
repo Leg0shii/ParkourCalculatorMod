@@ -32,7 +32,10 @@ jobs:
       - name: make gradle wrapper executable
         run: chmod +x ./gradlew
       - name: build
-        run: ./gradlew build -x tableStyleCheck -PslowTests -Dorg.gradle.java.home="$JAVA_HOME"
+        run: |
+          EXTRA=""
+          if [ "${{ github.base_ref }}" = "main" ]; then EXTRA="-PverySlowTests"; fi
+          ./gradlew build -x tableStyleCheck -PslowTests $EXTRA -Dorg.gradle.java.home="$JAVA_HOME"
       - name: capture build artifacts
         uses: actions/upload-artifact@v4
         with:

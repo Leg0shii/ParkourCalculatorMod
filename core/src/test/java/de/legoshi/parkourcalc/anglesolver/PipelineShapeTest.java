@@ -1,6 +1,6 @@
 package de.legoshi.parkourcalc.anglesolver;
 
-import de.legoshi.parkourcalc.SlowSolverTests;
+import de.legoshi.parkourcalc.VerySlowSolverTests;
 import de.legoshi.parkourcalc.anglesolver.harness.Fixtures;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
@@ -26,14 +26,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-@Category(SlowSolverTests.class)
+@Category(VerySlowSolverTests.class)
 public class PipelineShapeTest {
 
     private static final List<String> PIPELINE = Arrays.asList(
             "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
             "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap", "translate", "snap");
 
-    private static final long TIMEOUT_MS = 25000;
+    private static final long TIMEOUT_MS = 4000;
 
     @Test
     public void everyCaptureVisitsTheSameStageSequenceAtBothTiers() throws Exception {
