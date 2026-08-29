@@ -454,10 +454,12 @@ public class SimulatorEntity extends Player {
         c.pos = this.position();
         c.velocity = this.getDeltaMovement();
         c.yaw = this.getYRot();
+        c.pitch = this.getXRot();
         c.onGround = this.onGround();
         c.horizontalCollision = this.horizontalCollision;
         c.collidedSoftly = this.minorHorizontalCollision;
         c.sprinting = this.isSprinting();
+        c.swimming = this.isSwimming();
         c.ticksLeftToDoubleTapSprint = this.sprintTriggerTime;
         c.playerInput = this.input.keyPresses;
         c.jumpingCooldown = this.noJumpDelay;
@@ -478,10 +480,12 @@ public class SimulatorEntity extends Player {
         this.setPos(c.pos);
         this.setDeltaMovement(c.velocity);
         this.setYRot(c.yaw);
+        this.setXRot(c.pitch);
         this.setOnGround(c.onGround);
         this.horizontalCollision = c.horizontalCollision;
         this.minorHorizontalCollision = c.collidedSoftly;
         this.setSprinting(c.sprinting);
+        this.setSwimming(c.swimming);
         this.sprintTriggerTime = c.ticksLeftToDoubleTapSprint;
         this.input.seedKeyPresses(c.playerInput);
         this.noJumpDelay = c.jumpingCooldown;
@@ -505,10 +509,12 @@ public class SimulatorEntity extends Player {
         Vec3 pos;
         Vec3 velocity;
         float yaw;
+        float pitch;
         boolean onGround;
         boolean horizontalCollision;
         boolean collidedSoftly;
         boolean sprinting;
+        boolean swimming;
         int ticksLeftToDoubleTapSprint;
         Input playerInput;
         int jumpingCooldown;
