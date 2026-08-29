@@ -22,7 +22,7 @@ public class TeleportTickSimTest {
     }
 
     @Test
-    public void teleportPlacesEntityAndZeroesHorizontalVelocity() {
+    public void teleportTickIsNoOpAndIgnoresItsOwnInputs() {
         MediumWorldFakeSimulator sim = new MediumWorldFakeSimulator(new MediumWorldFakeSimulator.World());
         SimulationRunner runner = new SimulationRunner(sim);
         runner.setStartPosition(new Vec3dCore(0.0, 100.0, 0.0));
@@ -32,7 +32,8 @@ public class TeleportTickSimTest {
         InputData data = new InputData();
         data.getRows().add(moving());
         data.getRows().add(moving());
-        InputRow teleportRow = new InputRow();
+        InputRow teleportRow = moving();
+        teleportRow.setKeyActive(InputRow.Key.JUMP, true);
         teleportRow.setTeleportEnabled(true);
         teleportRow.setTeleportDestination(50.0, 80.0, 50.0);
         data.getRows().add(teleportRow);
@@ -41,11 +42,11 @@ public class TeleportTickSimTest {
         List<TickState> path = runner.simulate(data);
 
         TickState afterTeleport = path.get(3);
-        assertEquals("teleport pins X (horizontal velocity zeroed, no strafe on the teleport tick)",
+        assertEquals("teleport pins X: the teleport tick's own inputs are ignored",
                 50.0, afterTeleport.position.x, 1.0e-9);
-        assertEquals("teleport pins Z (horizontal velocity zeroed, no strafe on the teleport tick)",
+        assertEquals("teleport pins Z: the teleport tick's own inputs are ignored",
                 50.0, afterTeleport.position.z, 1.0e-9);
-        assertEquals("Y falls by exactly the default rest velocity from the destination",
+        assertEquals("Y falls by exactly the default rest velocity from the destination (no jump)",
                 80.0 + Vec3dCore.GROUND_REST_VELOCITY.y, afterTeleport.position.y, 1.0e-9);
     }
 
@@ -60,7 +61,7 @@ public class TeleportTickSimTest {
         InputData data = new InputData();
         data.getRows().add(moving());
         data.getRows().add(moving());
-        InputRow teleportRow = new InputRow();
+        InputRow teleportRow = moving();
         data.getRows().add(teleportRow);
         data.getRows().add(new InputRow());
 

@@ -24,6 +24,8 @@ public final class PlaybackController {
     private static final long TELEPORT_NOTICE_HOLD_NANOS = 1_000_000_000L;
     private static final long TELEPORT_NOTICE_FADE_NANOS = 500_000_000L;
 
+    private static final InputRow TELEPORT_NOOP_ROW = new InputRow();
+
     public static final float DEFAULT_PITCH = 40f;
 
     private final InputData inputData;
@@ -305,14 +307,16 @@ public final class PlaybackController {
         }
 
         InputRow row = inputData.get(nextTick);
-        if (row.isTeleportEnabled()) {
+        boolean teleportTick = row.isTeleportEnabled();
+        if (teleportTick) {
             bridge.teleportInPlace(
                     new Vec3dCore(row.getTeleportX(), row.getTeleportY(), row.getTeleportZ()),
                     Vec3dCore.GROUND_REST_VELOCITY, currentTickYaw);
             teleportNoticeNanos = System.nanoTime();
         }
+        InputRow motion = teleportTick ? TELEPORT_NOOP_ROW : row;
         for (InputRow.Key key : InputRow.Key.values()) {
-            bridge.setKey(key, row.isKeyActive(key));
+            bridge.setKey(key, motion.isKeyActive(key));
         }
         int speedAmp = row.getSpeedAmplifier();
         int jumpAmp = row.getJumpBoostAmplifier();
@@ -325,10 +329,10 @@ public final class PlaybackController {
         if (hotbarSlot >= 1) {
             bridge.setHotbarSlot(hotbarSlot - 1);
         }
-        Float yaw = row.getYaw();
+        Float yaw = motion.getYaw();
         prevTickYaw = displayTargetYaw;
         if (yaw != null) {
-            if (row.isYawLocked()) {
+            if (motion.isYawLocked()) {
                 // Physics takes the raw target like setYawAbsolute; only the visible head
                 // turns the short way (e.g. -170 -> 135 turns -55, not +305).
                 currentTickYaw = yaw;
@@ -340,7 +344,7 @@ public final class PlaybackController {
         }
         bridge.setYaw(currentTickYaw);
         prevTickPitch = currentTickPitch;
-        currentTickPitch = applyPitch(currentTickPitch, row);
+        currentTickPitch = applyPitch(currentTickPitch, motion);
         bridge.setPitch(currentTickPitch);
         tickEndNanos = System.nanoTime();
         nextTick++;

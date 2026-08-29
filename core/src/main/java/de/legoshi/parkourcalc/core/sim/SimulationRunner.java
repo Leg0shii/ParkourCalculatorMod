@@ -10,6 +10,8 @@ import java.util.List;
 
 public final class SimulationRunner {
 
+    private static final InputRow TELEPORT_NOOP_ROW = new InputRow();
+
     private final Simulator simulator;
 
     // path[i] and checkpoints[i] are the snapshot+state captured at the same moment:
@@ -76,8 +78,10 @@ public final class SimulationRunner {
                 simulator.teleport(
                         new Vec3dCore(row.getTeleportX(), row.getTeleportY(), row.getTeleportZ()),
                         Vec3dCore.GROUND_REST_VELOCITY);
+                simulator.applyInput(TELEPORT_NOOP_ROW);
+            } else {
+                simulator.applyInput(row);
             }
-            simulator.applyInput(row);
             simulator.tick();
             serverEvents.addAll(simulator.takeServerSimEvents());
             path.add(snapshot());
