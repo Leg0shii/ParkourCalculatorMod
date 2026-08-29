@@ -65,7 +65,6 @@ public final class AngleSolverWindow implements RenderInterface {
                     + "sprint from that tick on, and the solve inherits it, so a broken path can\n"
                     + "make a solvable segment report no solution until the route is re-recorded."};
     private static final String[] EFFORTS = {"Fast", "Optimize", "Custom"};
-    private static final String LEGACY_PRESET_ITEM = "Legacy budget";
     private static final String FAST_PRESET_ITEM = BuiltinGraphs.FAST_PRESET;
     private static final String OPTIMIZE_PRESET_ITEM = BuiltinGraphs.OPTIMIZE_PRESET;
     private static final int BUILTIN_PRESET_COUNT = 2;
@@ -725,24 +724,21 @@ public final class AngleSolverWindow implements RenderInterface {
 
         String current = state.getGraphPresetName();
         int diskIdx = indexOfPreset(current);
-        boolean builtinFast = FAST_PRESET_ITEM.equals(current);
         boolean builtinOptimize = OPTIMIZE_PRESET_ITEM.equals(current);
-        boolean missing = current != null && !builtinFast && !builtinOptimize && diskIdx < 0;
+        boolean missing = current != null && !FAST_PRESET_ITEM.equals(current) && !builtinOptimize && diskIdx < 0;
 
-        int legacyIdx = BUILTIN_PRESET_COUNT + presetNames.length;
-        String[] items = new String[legacyIdx + 1 + (missing ? 1 : 0)];
+        String[] items = new String[BUILTIN_PRESET_COUNT + presetNames.length + (missing ? 1 : 0)];
         items[0] = FAST_PRESET_ITEM;
         items[1] = OPTIMIZE_PRESET_ITEM;
         System.arraycopy(presetNames, 0, items, BUILTIN_PRESET_COUNT, presetNames.length);
-        items[legacyIdx] = LEGACY_PRESET_ITEM;
-        if (missing) items[legacyIdx + 1] = current + " (missing)";
+        int missingIdx = items.length - 1;
+        if (missing) items[missingIdx] = current + " (missing)";
 
         int selected;
-        if (current == null) selected = legacyIdx;
-        else if (builtinFast) selected = 0;
-        else if (builtinOptimize) selected = 1;
+        if (builtinOptimize) selected = 1;
         else if (diskIdx >= 0) selected = BUILTIN_PRESET_COUNT + diskIdx;
-        else selected = legacyIdx + 1;
+        else if (missing) selected = missingIdx;
+        else selected = 0;
 
         Controls.pushInputFrameHeight();
         ImGui.beginGroup();
@@ -753,8 +749,7 @@ public final class AngleSolverWindow implements RenderInterface {
             int pick = presetBuf.get();
             if (pick == 0) selectBuiltinPreset(FAST_PRESET_ITEM);
             else if (pick == 1) selectBuiltinPreset(OPTIMIZE_PRESET_ITEM);
-            else if (pick < legacyIdx) selectPreset(presetNames[pick - BUILTIN_PRESET_COUNT]);
-            else if (pick == legacyIdx) selectLegacyBudget();
+            else if (pick < BUILTIN_PRESET_COUNT + presetNames.length) selectPreset(presetNames[pick - BUILTIN_PRESET_COUNT]);
         }
         ImGui.endGroup();
         Controls.popInputFrameHeight();
@@ -784,7 +779,7 @@ public final class AngleSolverWindow implements RenderInterface {
                 graphEditor.open(currentCustomGraph(),
                         state.getCustomGraph() != null ? state.getGraphPresetName() : null);
             }
-            TooltipUtil.onHover("Edit the selected graph on a node canvas. Legacy budget opens as an"
+            TooltipUtil.onHover("Edit the selected graph on a node canvas. A built-in opens as an"
                     + " unsaved draft; save it under a name to keep changes.");
         } else {
             Controls.disabledButton("Open editor");
@@ -799,11 +794,10 @@ public final class AngleSolverWindow implements RenderInterface {
 
     private static final String PRESET_TIP =
             "Which solver graph a Custom solve runs. Fast and Optimize are the built-in graphs the effort tiers"
-            + " use; they cannot be overwritten, but Duplicate copies one into an editable preset. Legacy budget"
-            + " rebuilds the graph from this save's Custom knobs, matching the pre-preset behavior byte for byte."
-            + " User presets are JSON files under parkourcalculator/graphs/ in the game folder: save the current"
-            + " graph, hand-edit the file, then Reload to pick up the changes. The selected preset name travels"
-            + " with the save file.";
+            + " use; they cannot be overwritten, but Duplicate copies one into an editable preset. User presets"
+            + " are JSON files under parkourcalculator/graphs/ in the game folder: save the current graph,"
+            + " hand-edit the file, then Reload to pick up the changes. The selected preset name travels with"
+            + " the save file.";
 
     private void refreshPresets() {
         List<SaveInfo> infos = graphStore.list();
@@ -817,12 +811,6 @@ public final class AngleSolverWindow implements RenderInterface {
 
     private void selectBuiltinPreset(String name) {
         state.setGraphPresetName(name);
-        state.setCustomGraph(null);
-        presetError = null;
-    }
-
-    private void selectLegacyBudget() {
-        state.setGraphPresetName(null);
         state.setCustomGraph(null);
         presetError = null;
     }
