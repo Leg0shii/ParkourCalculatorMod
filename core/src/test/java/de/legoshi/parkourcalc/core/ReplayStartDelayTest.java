@@ -1,6 +1,8 @@
 package de.legoshi.parkourcalc.core;
 
+import de.legoshi.parkourcalc.core.sim.Checkpoint;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
+import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.core.ui.Settings;
@@ -19,10 +21,14 @@ public class ReplayStartDelayTest {
     }
 
     private static InputData threeRowsFirstPressesW() {
+        return threeRowsPressW(0);
+    }
+
+    private static InputData threeRowsPressW(int pressIndex) {
         InputData data = new InputData();
         for (int t = 0; t < 3; t++) {
             InputRow row = new InputRow();
-            if (t == 0) row.setKeyActive(InputRow.Key.W, true);
+            if (t == pressIndex) row.setKeyActive(InputRow.Key.W, true);
             data.getRows().add(row);
         }
         return data;
@@ -59,6 +65,33 @@ public class ReplayStartDelayTest {
         }
         pc.tick();
         assertEquals(0, pc.currentTick());
+        assertEquals(Boolean.TRUE, bridge.keys.get(InputRow.Key.W));
+    }
+
+    @Test
+    public void midReplayDelayPinsPlayerThenStartsFromStartState() {
+        Settings settings = new Settings();
+        settings.replayStartDelayTicks = 3;
+        FakePlaybackBridge bridge = new FakePlaybackBridge();
+        PlaybackController pc = controller(bridge, threeRowsPressW(1), settings);
+
+        Vec3dCore pos = new Vec3dCore(5.0, 70.5, -3.0);
+        Vec3dCore vel = new Vec3dCore(0.24, -0.12, 0.05);
+        Checkpoint carry = new Checkpoint() {};
+        pc.start(1, 3, pos, vel, 12f, carry);
+
+        for (int i = 0; i < 3; i++) {
+            pc.tick();
+            assertEquals(-1, pc.currentTick());
+            assertEquals(pos, bridge.teleportPos);
+            assertEquals(Vec3dCore.ZERO, bridge.teleportVel);
+            assertFalse(bridge.keys.containsKey(InputRow.Key.W));
+        }
+
+        pc.tick();
+        assertEquals(1, pc.currentTick());
+        assertEquals(pos, bridge.teleportPos);
+        assertEquals(vel, bridge.teleportVel);
         assertEquals(Boolean.TRUE, bridge.keys.get(InputRow.Key.W));
     }
 }

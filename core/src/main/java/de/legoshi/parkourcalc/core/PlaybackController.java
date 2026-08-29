@@ -33,6 +33,12 @@ public final class PlaybackController {
     private int stopTick;
     private int startTick;
     private int warmupRemaining;
+    private int holdRemaining;
+    private boolean restorePending;
+    private Vec3dCore startPos;
+    private Vec3dCore startVel;
+    private float startYaw;
+    private Checkpoint startCarry;
     private int lastCapturedTick = -1;
     private int lastSpeedAmplifier;
     private int lastJumpBoostAmplifier;
@@ -177,7 +183,13 @@ public final class PlaybackController {
         nextTick = from;
         stopTick = to;
         // A carried checkpoint is already post-settle; warm up only a from-the-top start that has none.
-        warmupRemaining = ((from == 0 && carry == null) ? WARMUP_TICKS : 0) + Math.max(0, settings.replayStartDelayTicks);
+        warmupRemaining = (from == 0 && carry == null) ? WARMUP_TICKS : 0;
+        holdRemaining = Math.max(0, settings.replayStartDelayTicks);
+        restorePending = holdRemaining > 0;
+        startPos = pos;
+        startVel = vel;
+        startYaw = yaw;
+        startCarry = carry;
         prevTickYaw = yaw;
         currentTickYaw = yaw;
         displayTargetYaw = yaw;
@@ -214,6 +226,8 @@ public final class PlaybackController {
         if (!running) return;
         running = false;
         warmupRemaining = 0;
+        holdRemaining = 0;
+        restorePending = false;
         tickEndNanos = 0L;
         lastFrameNanos = 0L;
         pausedAtNanos = 0L;
@@ -278,6 +292,18 @@ public final class PlaybackController {
             return;
         }
 
+
+        if (holdRemaining > 0) {
+            holdRemaining--;
+            bridge.releaseAllKeys();
+            bridge.teleport(startPos, Vec3dCore.ZERO, startYaw, null);
+            bridge.releaseReplayLockstep();
+            return;
+        }
+        if (restorePending) {
+            restorePending = false;
+            bridge.teleport(startPos, startVel, startYaw, startCarry);
+        }
 
         if (warmupRemaining > 0) {
             bridge.releaseAllKeys();
@@ -357,6 +383,7 @@ public final class PlaybackController {
         bridge.setYaw(displayedYaw);
         bridge.setHeadYaw(displayedYaw);
         if (pitchEngaged) bridge.setPitch(displayedPitch);
+        if (restorePending) return;
         if (DebugFlags.DUMP_TICK_STATE) {
             // Negative index = warmup tick, so state going into tick 0 is visible.
             int t = nextTick - 1 - warmupRemaining;
