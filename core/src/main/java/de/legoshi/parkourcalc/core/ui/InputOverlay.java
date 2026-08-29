@@ -80,12 +80,17 @@ public final class InputOverlay {
 
     private static final String MENU_SET_TO_PLAYER = "Set to user position";
     private static final String MENU_TELEPORT_TO_TICK = "Teleport player to tick %d";
-    private static final String MENU_TELEPORT_DEST_ENABLE = "Teleport at this tick";
-    private static final String MENU_TELEPORT_DEST_TO_PLAYER = "Set destination to user position";
+    private static final String COL_TELEPORT = "Teleport";
     private static final String TELEPORT_X_LABEL = "X";
     private static final String TELEPORT_Y_LABEL = "Y";
     private static final String TELEPORT_Z_LABEL = "Z";
-    private static final float TELEPORT_COORD_INPUT_WIDTH = 200;
+    private static final String ID_TELEPORT_ENABLE = "##tpEnable";
+    private static final String ID_TELEPORT_X = "##tpx";
+    private static final String ID_TELEPORT_Y = "##tpy";
+    private static final String ID_TELEPORT_Z = "##tpz";
+    private static final String TELEPORT_SET_BTN = "Set";
+    private static final float TELEPORT_FIELD_WIDTH = 64;
+    private static final float TELEPORT_COLUMN_WIDTH = 320;
     private static final String LABEL_ROWS = "Rows:";
     private static final String MENU_ADD_AT_END = "Add %d row(s) at end";
     private static final String MENU_ADD_ABOVE = "Add %d row(s) above";
@@ -328,6 +333,10 @@ public final class InputOverlay {
         return settings.showColHotbar;
     }
 
+    private boolean isTeleportColumnVisible() {
+        return settings.showColTeleport;
+    }
+
     private int potionColumnCount() {
         return (isSpeedColumnVisible() ? 1 : 0) + (isJumpBoostColumnVisible() ? 1 : 0);
     }
@@ -338,6 +347,7 @@ public final class InputOverlay {
         for (InputRow.Key key : MODIFIER_KEYS) if (isKeyColumnVisible(key)) count++;
         for (InputRow.Key key : MOUSE_KEYS) if (isKeyColumnVisible(key)) count++;
         if (isHotbarColumnVisible()) count++;
+        if (isTeleportColumnVisible()) count++;
         if (isYawColumnVisible()) count++;
         if (isPitchColumnVisible()) count++;
         return count;
@@ -372,6 +382,7 @@ public final class InputOverlay {
             if (isKeyColumnVisible(key)) columnSum += ThemeManager.tableColumnWidth(headerLabel(key), 0f);
         }
         if (isHotbarColumnVisible()) columnSum += ThemeManager.tableColumnWidth(COL_HOTBAR, HOTBAR_COLUMN_WIDTH * scale);
+        if (isTeleportColumnVisible()) columnSum += ThemeManager.tableColumnWidth(COL_TELEPORT, TELEPORT_COLUMN_WIDTH * scale);
         boolean speed = isSpeedColumnVisible();
         boolean jump = isJumpBoostColumnVisible();
         if (speed) {
@@ -581,6 +592,9 @@ public final class InputOverlay {
         if (isHotbarColumnVisible()) {
             ImGui.tableSetupColumn(COL_HOTBAR, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableColumnWidth(COL_HOTBAR, HOTBAR_COLUMN_WIDTH * scale));
         }
+        if (isTeleportColumnVisible()) {
+            ImGui.tableSetupColumn(COL_TELEPORT, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableColumnWidth(COL_TELEPORT, TELEPORT_COLUMN_WIDTH * scale));
+        }
         if (isYawColumnVisible()) {
             ImGui.tableSetupColumn(COL_YAW, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableColumnWidth(COL_YAW, yawColumnWidth()));
         }
@@ -621,6 +635,11 @@ public final class InputOverlay {
             ImGui.tableSetColumnIndex(col++);
             ThemeManager.tableHeaderCentered(COL_HOTBAR);
             TooltipUtil.onHover(headerColTooltip(COL_HOTBAR));
+        }
+        if (isTeleportColumnVisible()) {
+            ImGui.tableSetColumnIndex(col++);
+            ThemeManager.tableHeaderCentered(COL_TELEPORT);
+            TooltipUtil.onHover(headerColTooltip(COL_TELEPORT));
         }
         if (isYawColumnVisible()) {
             ImGui.tableSetColumnIndex(col++);
@@ -677,6 +696,7 @@ public final class InputOverlay {
             case COL_SPEED: return "Speed potion amplifier (none = no effect).";
             case COL_JUMP_BOOST: return "Jump Boost potion amplifier (none = no effect).";
             case COL_HOTBAR: return "Held hotbar slot (1-9) to switch to during playback. Empty = keep the previous slot.";
+            case COL_TELEPORT: return "Teleport the player to X/Y/Z at the start of this tick, before its inputs. Applies to both the simulation and the replay.";
             default: return col;
         }
     }
@@ -884,6 +904,7 @@ public final class InputOverlay {
 
         renderKeyColumns(row, index, rowH);
         if (isHotbarColumnVisible()) renderHotbarColumn(row, index);
+        if (isTeleportColumnVisible()) renderTeleportColumn(row, index);
         if (isYawColumnVisible()) renderYawColumn(row, index, centerY);
         if (isPitchColumnVisible()) renderPitchColumn(row, index, centerY);
         renderPotionColumns(row, index);
@@ -1378,7 +1399,6 @@ public final class InputOverlay {
         renderApplyPotionOptions();
         renderYawLockOption();
         renderPitchLockOption();
-        renderTeleportDestinationOption();
 
         // Segment 3: destructive action, kept at the very bottom.
         renderDeleteOption();
@@ -1397,48 +1417,53 @@ public final class InputOverlay {
         }
     }
 
-    private void renderTeleportDestinationOption() {
-        int row = selection.singleSelectedRow();
-        if (row < 0 || row >= data.size()) return;
-        InputRow r = data.get(row);
-
-        ThemeManager.paddedSeparator();
-        boolean enabled = r.isTeleportEnabled();
-        if (Controls.checkbox(MENU_TELEPORT_DEST_ENABLE, enabled)) {
-            r.setTeleportEnabled(!enabled);
-            if (!enabled) syncTeleportInputs(r);
-            notifyChange(row);
+    private void renderTeleportColumn(InputRow row, int rowIndex) {
+        ImGui.tableNextColumn();
+        boolean enabled = row.isTeleportEnabled();
+        if (Controls.checkbox(ID_TELEPORT_ENABLE, enabled)) {
+            row.setTeleportEnabled(!enabled);
+            notifyChange(rowIndex);
         }
-        if (!r.isTeleportEnabled()) return;
+        TooltipUtil.onHover(headerColTooltip(COL_TELEPORT));
+        if (!row.isTeleportEnabled()) return;
 
-        if (ImGui.isWindowAppearing()) syncTeleportInputs(r);
+        teleportXInput.set(formatCoord(row.getTeleportX()));
+        teleportYInput.set(formatCoord(row.getTeleportY()));
+        teleportZInput.set(formatCoord(row.getTeleportZ()));
 
-        float width = TELEPORT_COORD_INPUT_WIDTH * uiScale();
+        float width = TELEPORT_FIELD_WIDTH * uiScale();
         boolean changed = false;
-        changed |= Controls.decimalField(TELEPORT_X_LABEL, teleportXInput, width);
-        changed |= Controls.decimalField(TELEPORT_Y_LABEL, teleportYInput, width);
-        changed |= Controls.decimalField(TELEPORT_Z_LABEL, teleportZInput, width);
+        ImGui.sameLine();
+        changed |= teleportField(TELEPORT_X_LABEL, ID_TELEPORT_X, teleportXInput, width);
+        ImGui.sameLine();
+        changed |= teleportField(TELEPORT_Y_LABEL, ID_TELEPORT_Y, teleportYInput, width);
+        ImGui.sameLine();
+        changed |= teleportField(TELEPORT_Z_LABEL, ID_TELEPORT_Z, teleportZInput, width);
         if (changed) {
-            r.setTeleportDestination(
-                    parseCoord(teleportXInput, r.getTeleportX()),
-                    parseCoord(teleportYInput, r.getTeleportY()),
-                    parseCoord(teleportZInput, r.getTeleportZ()));
-            notifyChange(row);
+            row.setTeleportDestination(
+                    parseCoord(teleportXInput, row.getTeleportX()),
+                    parseCoord(teleportYInput, row.getTeleportY()),
+                    parseCoord(teleportZInput, row.getTeleportZ()));
+            notifyChange(rowIndex);
         }
 
-        if (mc != null && mc.isReady()
-                && Controls.secondaryButton(MENU_TELEPORT_DEST_TO_PLAYER, ImGui.getContentRegionAvail().x)) {
-            Vec3dCore p = mc.getPlayerPosition();
-            r.setTeleportDestination(p.x, p.y, p.z);
-            syncTeleportInputs(r);
-            notifyChange(row);
+        if (mc != null && mc.isReady()) {
+            ImGui.sameLine();
+            if (Controls.secondaryButton(TELEPORT_SET_BTN)) {
+                Vec3dCore p = mc.getPlayerPosition();
+                row.setTeleportDestination(p.x, p.y, p.z);
+                notifyChange(rowIndex);
+            }
+            TooltipUtil.onHover(MENU_SET_TO_PLAYER);
         }
     }
 
-    private void syncTeleportInputs(InputRow r) {
-        teleportXInput.set(formatCoord(r.getTeleportX()));
-        teleportYInput.set(formatCoord(r.getTeleportY()));
-        teleportZInput.set(formatCoord(r.getTeleportZ()));
+    private boolean teleportField(String label, String id, ImString buf, float width) {
+        ImGui.alignTextToFramePadding();
+        ImGui.text(label);
+        ImGui.sameLine(0f, 3f * uiScale());
+        ImGui.setNextItemWidth(width);
+        return ImGui.inputText(id, buf, ImGuiInputTextFlags.CharsDecimal);
     }
 
     private static String formatCoord(double value) {

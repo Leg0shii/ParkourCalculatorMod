@@ -306,9 +306,9 @@ public final class PlaybackController {
 
         InputRow row = inputData.get(nextTick);
         if (row.isTeleportEnabled()) {
-            bridge.teleport(
+            bridge.teleportInPlace(
                     new Vec3dCore(row.getTeleportX(), row.getTeleportY(), row.getTeleportZ()),
-                    Vec3dCore.GROUND_REST_VELOCITY, currentTickYaw, null);
+                    Vec3dCore.GROUND_REST_VELOCITY, currentTickYaw);
             teleportNoticeNanos = System.nanoTime();
         }
         for (InputRow.Key key : InputRow.Key.values()) {

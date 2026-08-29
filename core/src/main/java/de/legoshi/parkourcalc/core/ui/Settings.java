@@ -70,6 +70,7 @@ public final class Settings {
     private static final boolean DEFAULT_SHOW_COL_PITCH = false;
     private static final boolean DEFAULT_SHOW_COL_LEFT_CLICK = false;
     private static final boolean DEFAULT_SHOW_COL_RIGHT_CLICK = false;
+    private static final boolean DEFAULT_SHOW_COL_TELEPORT = false;
 
     private static final boolean DEFAULT_VIEW_TICK_INFO = true;
     private static final boolean DEFAULT_VIEW_SERVER_EVENTS = true;
@@ -178,6 +179,7 @@ public final class Settings {
     public boolean showColPitch = DEFAULT_SHOW_COL_PITCH;
     public boolean showColLeftClick = DEFAULT_SHOW_COL_LEFT_CLICK;
     public boolean showColRightClick = DEFAULT_SHOW_COL_RIGHT_CLICK;
+    public boolean showColTeleport = DEFAULT_SHOW_COL_TELEPORT;
 
     public float yawFlickSpeed = DEFAULT_YAW_FLICK_SPEED;
 
@@ -290,6 +292,7 @@ public final class Settings {
         showColPitch = DEFAULT_SHOW_COL_PITCH;
         showColLeftClick = DEFAULT_SHOW_COL_LEFT_CLICK;
         showColRightClick = DEFAULT_SHOW_COL_RIGHT_CLICK;
+        showColTeleport = DEFAULT_SHOW_COL_TELEPORT;
         yawFlickSpeed = DEFAULT_YAW_FLICK_SPEED;
         pathRenderDistance = DEFAULT_PATH_RENDER_DISTANCE;
         unlimitedPathRender = DEFAULT_UNLIMITED_PATH_RENDER;

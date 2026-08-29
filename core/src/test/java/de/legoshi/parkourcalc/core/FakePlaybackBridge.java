@@ -18,6 +18,10 @@ public class FakePlaybackBridge implements PlaybackBridge {
     public Vec3dCore teleportVel;
     public float teleportYaw;
     public Checkpoint teleportCarry;
+    public int teleportInPlaceCalls;
+    public Vec3dCore teleportInPlacePos;
+    public Vec3dCore teleportInPlaceVel;
+    public float teleportInPlaceYaw;
     public float pitch;
     public final Map<InputRow.Key, Boolean> keys = new EnumMap<InputRow.Key, Boolean>(InputRow.Key.class);
 
@@ -31,6 +35,14 @@ public class FakePlaybackBridge implements PlaybackBridge {
         teleportYaw = yaw;
         teleportCarry = carry;
         teleportCalls++;
+    }
+
+    @Override
+    public void teleportInPlace(Vec3dCore pos, Vec3dCore vel, float yaw) {
+        teleportInPlacePos = pos;
+        teleportInPlaceVel = vel;
+        teleportInPlaceYaw = yaw;
+        teleportInPlaceCalls++;
     }
 
     @Override public void setKey(InputRow.Key key, boolean pressed) { keys.put(key, pressed); }

@@ -117,6 +117,27 @@ public class PlaybackRangeTest {
     }
 
     @Test
+    public void perTickTeleportDuringReplayUsesInPlaceTeleportNotRestartHop() {
+        InputData data = rows(7);
+        InputRow tp = data.get(5);
+        tp.setTeleportEnabled(true);
+        tp.setTeleportDestination(5, 6, 7);
+        FakePlaybackBridge bridge = new FakePlaybackBridge();
+        PlaybackController pc = controller(bridge, new SimulationRunner(new FakeSimulator()), data);
+
+        pc.start(4, data.size(), new Vec3dCore(0, 64, 0), Vec3dCore.ZERO, 0f);
+        int restartHopTeleports = bridge.teleportCalls;
+
+        for (int i = 0; i < 8 && bridge.teleportInPlaceCalls == 0; i++) pc.tick();
+
+        assertEquals("per-tick teleport routes through the in-place path", 1, bridge.teleportInPlaceCalls);
+        assertEquals(new Vec3dCore(5, 6, 7), bridge.teleportInPlacePos);
+        assertEquals(Vec3dCore.GROUND_REST_VELOCITY, bridge.teleportInPlaceVel);
+        assertEquals("restart-hop teleport is never used mid-replay for a per-tick teleport",
+                restartHopTeleports, bridge.teleportCalls);
+    }
+
+    @Test
     public void statusHintDescribesTheRangeButNotAFullFromTopReplay() {
         InputData data = rows(10);
         FakePlaybackBridge bridge = new FakePlaybackBridge();

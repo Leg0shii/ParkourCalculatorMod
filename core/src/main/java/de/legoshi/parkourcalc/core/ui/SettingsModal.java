@@ -36,6 +36,7 @@ public final class SettingsModal {
     private static final String TT_COL_SPEED_AMP = "Adds a per-tick Speed potion amplifier column to the input table.";
     private static final String TT_COL_JUMP_BOOST_AMP = "Adds a per-tick Jump Boost potion amplifier column to the input table.";
     private static final String TT_COL_HOTBAR = "Adds a per-tick hotbar slot column (1-9). During playback the held slot switches on ticks that set one; empty keeps the previous slot.";
+    private static final String TT_COL_TELEPORT = "Adds a per-tick teleport column. When enabled on a tick, the player teleports to the given X/Y/Z at the start of that tick, before its inputs, in both the simulation and the replay.";
     private static final String TT_CONSTRAINTS = "Draws Angle Solver position constraints (X/Z) as translucent plates at the tick they apply to. The front plate sits on the constraint; the back fades out toward the open/free direction. Only visible while the Angle Solver is open.";
     private static final String TT_C_EXPAND = "Grow each plate outward by the player hitbox half-width (0.3) so the plate covers your hitbox: your hitbox fits inside the plate exactly when the tick is valid.";
     private static final String TT_C_DIM = "Size in blocks. Width is across the constraint, height is vertical, length is along the plate (front depth from the boundary / back reach behind it).";
@@ -472,6 +473,7 @@ public final class SettingsModal {
             checkboxRow("Speed", "##show_speed", settings.showColSpeed, TT_COL_SPEED_AMP, v -> settings.showColSpeed = v);
             checkboxRow("Jump Boost", "##show_jump_boost", settings.showColJumpBoost, TT_COL_JUMP_BOOST_AMP, v -> settings.showColJumpBoost = v);
             checkboxRow("Hotbar slot", "##show_hotbar", settings.showColHotbar, TT_COL_HOTBAR, v -> settings.showColHotbar = v);
+            checkboxRow("Teleport", "##show_teleport", settings.showColTeleport, TT_COL_TELEPORT, v -> settings.showColTeleport = v);
             ThemeManager.endStandardFormTable();
         }
 
