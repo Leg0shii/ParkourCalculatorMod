@@ -689,24 +689,6 @@ public final class AngleSolverTable {
             ImGui.closeCurrentPopup();
         }
         ThemeManager.paddedSeparator();
-        ThemeManager.pushTextColor(ThemeManager.textDimColor());
-        ImGui.text("Copy to tick");
-        ThemeManager.popTextColor();
-        int copyPick = tickGrid("copy", tick);
-        if (copyPick >= 0) {
-            state.copyConstraint(tick, index, copyPick);
-            ImGui.closeCurrentPopup();
-        }
-        ThemeManager.pushTextColor(ThemeManager.textDimColor());
-        ImGui.text("Move to tick");
-        ThemeManager.popTextColor();
-        int movePick = tickGrid("move", tick);
-        if (movePick >= 0) {
-            state.moveConstraint(tick, index, movePick);
-            clearConstraintSelection();
-            ImGui.closeCurrentPopup();
-        }
-        ThemeManager.paddedSeparator();
         ThemeManager.pushTextColor(ThemeManager.dangerColor());
         boolean del = ImGui.menuItem("Delete");
         ThemeManager.popTextColor();
@@ -715,23 +697,6 @@ public final class AngleSolverTable {
             clearConstraintSelection();
             ImGui.closeCurrentPopup();
         }
-    }
-
-    /** Renders a wrapped grid of tick buttons (excluding current). Returns the picked tick, or -1. */
-    private int tickGrid(String id, int currentTick) {
-        int pick = -1;
-        int n = Math.max(1, rowCount.getAsInt());
-        ImGui.pushID(id);
-        int col = 0;
-        for (int t = 0; t < n; t++) {
-            if (t == currentTick) continue;
-            if (col > 0) ImGui.sameLine();
-            if (ImGui.button("T" + (t + 1))) pick = t;
-            col++;
-            if (col >= 6) col = 0;
-        }
-        ImGui.popID();
-        return pick;
     }
 
     private static final class StateChipSpec {
