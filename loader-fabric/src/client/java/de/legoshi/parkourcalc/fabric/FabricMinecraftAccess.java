@@ -10,6 +10,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.block.BasePressurePlateBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.server.MinecraftServer;
@@ -115,6 +116,15 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
         BlockState state = world.getBlockState(new BlockPos(x, y, z));
         return state.is(Blocks.ICE) || state.is(Blocks.PACKED_ICE)
                 || state.is(Blocks.BLUE_ICE) || state.is(Blocks.FROSTED_ICE);
+    }
+
+    @Override
+    public double[] getPressurePlateFootprint(int x, int y, int z) {
+        ClientLevel world = Minecraft.getInstance().level;
+        if (world == null) return null;
+        if (!(world.getBlockState(new BlockPos(x, y, z)).getBlock() instanceof BasePressurePlateBlock)) return null;
+        double inset = 0.0625;
+        return new double[] {x + inset, x + 1.0 - inset, z + inset, z + 1.0 - inset};
     }
 
     @Override

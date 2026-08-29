@@ -21,6 +21,7 @@ public class FakeMinecraftAccess implements MinecraftAccess {
     public Vec3dCore lookedAtHitVec;
     public float playerYaw;
     public boolean ready = true;
+    public double[] pressurePlateFootprint;
 
     public void addBlock(int x, int y, int z, AABB... boxes) {
         List<AABB> own = new ArrayList<>(Arrays.asList(boxes));
@@ -35,6 +36,7 @@ public class FakeMinecraftAccess implements MinecraftAccess {
     @Override public int[] getLookedAtBlock() { return lookedAtBlock; }
     @Override public Face getLookedAtFace() { return lookedAtFace; }
     @Override public Vec3dCore getLookedAtHitVec() { return lookedAtHitVec; }
+    @Override public double[] getPressurePlateFootprint(int x, int y, int z) { return pressurePlateFootprint; }
 
     @Override
     public List<AABB> getCollisionBoxes(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
