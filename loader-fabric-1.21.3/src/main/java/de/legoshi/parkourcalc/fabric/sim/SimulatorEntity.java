@@ -436,6 +436,7 @@ public class SimulatorEntity extends Player {
         c.horizontalCollision = this.horizontalCollision;
         c.collidedSoftly = this.minorHorizontalCollision;
         c.sprinting = this.isSprinting();
+        c.swimming = this.isSwimming();
         c.ticksLeftToDoubleTapSprint = this.sprintTriggerTime;
         c.playerInput = this.input.keyPresses;
         c.jumpingCooldown = this.noJumpDelay;
@@ -461,6 +462,7 @@ public class SimulatorEntity extends Player {
         this.horizontalCollision = c.horizontalCollision;
         this.minorHorizontalCollision = c.collidedSoftly;
         this.setSprinting(c.sprinting);
+        this.setSwimming(c.swimming);
         this.sprintTriggerTime = c.ticksLeftToDoubleTapSprint;
         this.input.seedKeyPresses(c.playerInput);
         this.noJumpDelay = c.jumpingCooldown;
@@ -489,6 +491,7 @@ public class SimulatorEntity extends Player {
         boolean horizontalCollision;
         boolean collidedSoftly;
         boolean sprinting;
+        boolean swimming;
         int ticksLeftToDoubleTapSprint;
         Input playerInput;
         int jumpingCooldown;
