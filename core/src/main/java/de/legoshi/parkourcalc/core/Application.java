@@ -219,6 +219,7 @@ public final class Application {
         AngleSolverWindow angleSolverWindow = new AngleSolverWindow(angleSolverState, settings, inputData::size, angleSolverEngine, velocityMapController.widget(), graphStore, graphEditorWindow);
         angleSolverWindow.setApplySurfaceState(this::applyPathSurfaceState);
         angleSolverWindow.setPlayerYawSupplier(mc::getPlayerYaw);
+        angleSolverWindow.setTeleportAtRow(t -> t >= 0 && t < inputData.size() && inputData.get(t).isTeleportEnabled());
         runTicks = new RunTicksController(angleSolverState, angleSolverEngine, inputData, constraintSelection,
                 hudMessages, this::runSimulation, saveController::markDirty, this::pushHudMessage);
         angleSolverWindow.setRunTicksControls(runTicks);

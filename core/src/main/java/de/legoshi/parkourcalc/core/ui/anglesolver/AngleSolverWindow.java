@@ -53,6 +53,8 @@ public final class AngleSolverWindow implements RenderInterface {
 
     private static final String WINDOW_ID = "###angle_solver";
     private static final String TITLE = "Angle Solver";
+    private static final String TELEPORT_SOLVE_BLOCKED =
+            "Can't solve: the start or goal tick sits on a teleport, which overrides that tick's position.";
 
     private static final String[] AXES = {"X", "Z"};
     private static final String[] GOALS = {"MAX", "MIN"};
@@ -124,9 +126,14 @@ public final class AngleSolverWindow implements RenderInterface {
     private int doseToRemove;
     private RunTicksControls runTicks = RunTicksControls.NONE;
     private java.util.function.DoubleSupplier playerYawSupplier = () -> 0.0;
+    private java.util.function.IntPredicate teleportAtRow = t -> false;
 
     public void setPlayerYawSupplier(java.util.function.DoubleSupplier supplier) {
         this.playerYawSupplier = supplier != null ? supplier : () -> 0.0;
+    }
+
+    public void setTeleportAtRow(java.util.function.IntPredicate predicate) {
+        this.teleportAtRow = predicate != null ? predicate : t -> false;
     }
 
     public void setRunTicksControls(RunTicksControls controls) {
@@ -886,7 +893,15 @@ public final class AngleSolverWindow implements RenderInterface {
             ImGui.setTooltip("Capture each tick's surface state (ground + medium) from the simulation into the overrides, for the solve range (H).");
         }
         ImGui.sameLine();
-        if (Controls.secondaryButton("Solve")) runTicks.start();
+        boolean teleportBlocked = teleportAtRow.test(state.getStartTick()) || teleportAtRow.test(state.getLandingTick());
+        if (teleportBlocked) {
+            Controls.disabledButton("Solve");
+            ThemeManager.pushTextColor(ThemeManager.warningColor());
+            ImGui.textWrapped(TELEPORT_SOLVE_BLOCKED);
+            ThemeManager.popTextColor();
+        } else if (Controls.secondaryButton("Solve")) {
+            runTicks.start();
+        }
     }
 
     private void renderSolvingIndicator() {

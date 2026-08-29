@@ -85,7 +85,6 @@ public final class InputOverlay {
     private static final String TELEPORT_Y_LABEL = "Y";
     private static final String TELEPORT_Z_LABEL = "Z";
     private static final String TELEPORT_ADD_LABEL = "+";
-    private static final String TELEPORT_ADD_TOOLTIP = "Add a teleport to this tick";
     private static final String TELEPORT_REMOVE_BTN = "Remove";
     private static final float TELEPORT_FIELD_WIDTH = 110;
     private static final float TELEPORT_COLUMN_WIDTH = 190;
@@ -108,6 +107,7 @@ public final class InputOverlay {
     private static final String YAW_FORMAT_DISPLAY = "% 12.6f";
 
     private static final String DRAG_DROP_TYPE = "INPUT_ROW";
+    private static final String TP_DRAG_TYPE = "TELEPORT_MOVE";
 
     private static final String PITCH_FORMAT_DISPLAY = "% 12.6f";
 
@@ -143,6 +143,11 @@ public final class InputOverlay {
     private Runnable onSaveSelectionAsTas;
 
     private int draggingRowIndex = -1;
+    private int draggingTeleportRow = -1;
+    private int pendingTeleportMoveFrom = -1;
+    private int pendingTeleportMoveTo = -1;
+    private float tpChipMinX;
+    private float tpChipMaxX;
     private int editingYawRow = -1;
     private int editingPitchRow = -1;
     private int pendingPitchFocusRow = -1;
@@ -529,6 +534,7 @@ public final class InputOverlay {
         }
         renderDropIndicator(ImGui.getWindowDrawList(), dragDrop);
         applyDragDrop(dragDrop);
+        applyPendingTeleportMove();
         if (solverActive) angleSolver.endRows();
         ImGui.endChild();
     }
@@ -916,6 +922,13 @@ public final class InputOverlay {
 
         if (solverActive) {
             angleSolver.drawStartLandingInset(index, rMinX, rMinY, rMaxX, rMaxY);
+        }
+
+        if (!solverActive && isTeleportColumnVisible() && row.isTeleportEnabled()) {
+            ImDrawList dl = ImGui.getWindowDrawList();
+            int scrim = ThemeManager.bgTintColor(0.5f);
+            if (tpChipMinX > rMinX) dl.addRectFilled(rMinX, rMinY, tpChipMinX, rMaxY, scrim);
+            if (tpChipMaxX < rMaxX) dl.addRectFilled(tpChipMaxX, rMinY, rMaxX, rMaxY, scrim);
         }
 
         ImGui.popID();
@@ -1437,16 +1450,40 @@ public final class InputOverlay {
         ImGui.invisibleButton("tpchip" + rowIndex, w, h);
         ImVec2 mn = ImGui.getItemRectMin();
         ImVec2 mx = ImGui.getItemRectMax();
+        tpChipMinX = mn.x;
+        tpChipMaxX = mx.x;
         boolean hover = ImGui.isItemHovered();
+        boolean dragging = teleportDragSource(rowIndex);
+        teleportDropTarget(rowIndex);
         dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.panelColor(), 3f * s);
         dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.teleportTintColor(hover ? 0.22f : 0.12f), 3f * s);
         dl.addRect(mn.x, mn.y, mx.x, mx.y, hover ? ThemeManager.teleportColor() : ThemeManager.teleportTintColor(0.55f), 3f * s, 0, 1f);
         float ty = mn.y + (h - ImGui.getFontSize()) * 0.5f;
         dl.addText(mn.x + pad, ty, ThemeManager.teleportColor(), label);
-        TooltipUtil.onHover(headerColTooltip(COL_TELEPORT));
-        if (ImGui.isItemClicked(0)) {
+        if (!dragging && ImGui.isItemClicked(0)) {
             syncTeleportInputs(row);
             ImGui.openPopup(popupId);
+        }
+    }
+
+    private boolean teleportDragSource(int rowIndex) {
+        if (ImGui.beginDragDropSource(ImGuiDragDropFlags.SourceNoPreviewTooltip)) {
+            draggingTeleportRow = rowIndex;
+            ImGui.setDragDropPayload(TP_DRAG_TYPE, Integer.valueOf(rowIndex));
+            ImGui.endDragDropSource();
+            return true;
+        }
+        return false;
+    }
+
+    private void teleportDropTarget(int rowIndex) {
+        if (ImGui.beginDragDropTarget()) {
+            if (ImGui.acceptDragDropPayload(TP_DRAG_TYPE) != null
+                    && draggingTeleportRow >= 0 && draggingTeleportRow != rowIndex) {
+                pendingTeleportMoveFrom = draggingTeleportRow;
+                pendingTeleportMoveTo = rowIndex;
+            }
+            ImGui.endDragDropTarget();
         }
     }
 
@@ -1462,11 +1499,11 @@ public final class InputOverlay {
         ImVec2 mn = ImGui.getItemRectMin();
         ImVec2 mx = ImGui.getItemRectMax();
         boolean hover = ImGui.isItemHovered();
+        teleportDropTarget(rowIndex);
         int tint = hover ? ThemeManager.teleportColor() : ThemeManager.textDimColor();
         dl.addRect(mn.x, mn.y, mx.x, mx.y, tint, 3f * s, 0, 1f);
         float ty = mn.y + (h - ImGui.getFontSize()) * 0.5f;
         dl.addText(mn.x + (w - textW) * 0.5f, ty, tint, TELEPORT_ADD_LABEL);
-        TooltipUtil.onHover(TELEPORT_ADD_TOOLTIP);
         if (ImGui.isItemClicked(0)) {
             Vec3dCore seed = teleportSeedPosition(rowIndex);
             row.setTeleportDestination(seed.x, seed.y, seed.z);
@@ -1513,6 +1550,22 @@ public final class InputOverlay {
             if (st != null && st.position != null) return st.position;
         }
         return Vec3dCore.ZERO;
+    }
+
+    private void applyPendingTeleportMove() {
+        if (pendingTeleportMoveFrom < 0) return;
+        int from = pendingTeleportMoveFrom;
+        int to = pendingTeleportMoveTo;
+        pendingTeleportMoveFrom = -1;
+        pendingTeleportMoveTo = -1;
+        if (from == to || from < 0 || from >= data.size() || to < 0 || to >= data.size()) return;
+        InputRow src = data.get(from);
+        if (!src.isTeleportEnabled()) return;
+        InputRow dst = data.get(to);
+        dst.setTeleportDestination(src.getTeleportX(), src.getTeleportY(), src.getTeleportZ());
+        dst.setTeleportEnabled(true);
+        src.setTeleportEnabled(false);
+        notifyChange(Math.min(from, to));
     }
 
     private void syncTeleportInputs(InputRow row) {
