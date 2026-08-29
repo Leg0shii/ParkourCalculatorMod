@@ -177,7 +177,7 @@ public final class PlaybackController {
         nextTick = from;
         stopTick = to;
         // A carried checkpoint is already post-settle; warm up only a from-the-top start that has none.
-        warmupRemaining = (from == 0 && carry == null) ? WARMUP_TICKS : 0;
+        warmupRemaining = ((from == 0 && carry == null) ? WARMUP_TICKS : 0) + Math.max(0, settings.replayStartDelayTicks);
         prevTickYaw = yaw;
         currentTickYaw = yaw;
         displayTargetYaw = yaw;

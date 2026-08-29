@@ -52,6 +52,7 @@ public final class SettingsIO {
 
         clampScaleIndex(settings);
         clampArrowMode(settings);
+        clampReplayStartDelay(settings);
         normalizeTickInfoStats(settings);
     }
 
@@ -100,6 +101,14 @@ public final class SettingsIO {
     private static void clampArrowMode(Settings settings) {
         if (settings.arrowMode < Settings.ARROW_MODE_YAW || settings.arrowMode > Settings.ARROW_MODE_COMBINED) {
             settings.arrowMode = Settings.ARROW_MODE_YAW;
+        }
+    }
+
+    private static void clampReplayStartDelay(Settings settings) {
+        if (settings.replayStartDelayTicks < Settings.MIN_REPLAY_START_DELAY_TICKS) {
+            settings.replayStartDelayTicks = Settings.MIN_REPLAY_START_DELAY_TICKS;
+        } else if (settings.replayStartDelayTicks > Settings.MAX_REPLAY_START_DELAY_TICKS) {
+            settings.replayStartDelayTicks = Settings.MAX_REPLAY_START_DELAY_TICKS;
         }
     }
 
