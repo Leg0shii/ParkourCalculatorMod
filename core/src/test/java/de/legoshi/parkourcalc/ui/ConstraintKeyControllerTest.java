@@ -10,6 +10,7 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.ConstraintKeyController;
 import de.legoshi.parkourcalc.core.ui.ConstraintSelection;
 import de.legoshi.parkourcalc.core.ui.SelectionManager;
+import de.legoshi.parkourcalc.core.ui.Settings;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -27,6 +28,7 @@ public class ConstraintKeyControllerTest {
 
     private FakeMinecraftAccess mc;
     private AngleSolverState state;
+    private Settings settings;
     private ConstraintKeyController controller;
 
     private static AABB box(double x0, double y0, double z0, double x1, double y1, double z1) {
@@ -38,8 +40,9 @@ public class ConstraintKeyControllerTest {
         mc = new FakeMinecraftAccess();
         state = new AngleSolverState();
         state.setLandingTick(TICK);
+        settings = new Settings();
         controller = new ConstraintKeyController(
-                mc, state, new SelectionManager(mc), new ConstraintSelection(), () -> { }, false, () -> TICK + 1);
+                mc, state, new SelectionManager(mc), new ConstraintSelection(), () -> { }, false, () -> TICK + 1, settings);
     }
 
     private List<Constraint> constraints() {
@@ -163,5 +166,51 @@ public class ConstraintKeyControllerTest {
         Constraint z = range(Constraint.Field.Z);
         assertEquals(8 - HALF, z.getLo(), EPS);
         assertEquals(9 + HALF, z.getHi(), EPS);
+    }
+
+    @Test
+    public void pressurePlateConstraintUsesTheInsetInteractionFootprint() {
+        mc.lookedAtBlock = new int[] {5, 64, 8};
+        mc.lookedAtFace = Face.POS_Y;
+        mc.pressurePlateFootprint = new double[] {5.125, 5.875, 8.125, 8.875};
+
+        controller.onKey(false, true);
+
+        assertEquals("one X range and one Z range", 2, constraints().size());
+        Constraint x = range(Constraint.Field.X);
+        assertEquals(5.125, x.getLo(), EPS);
+        assertEquals(5.875, x.getHi(), EPS);
+        Constraint z = range(Constraint.Field.Z);
+        assertEquals(8.125, z.getLo(), EPS);
+        assertEquals(8.875, z.getHi(), EPS);
+    }
+
+    @Test
+    public void pressurePlateFullBlockSettingOverridesToTheFullBlockFootprint() {
+        settings.pressurePlateFullBlock = true;
+        mc.lookedAtBlock = new int[] {5, 64, 8};
+        mc.lookedAtFace = Face.POS_Y;
+        mc.pressurePlateFootprint = new double[] {5.125, 5.875, 8.125, 8.875};
+
+        controller.onKey(false, true);
+
+        Constraint x = range(Constraint.Field.X);
+        assertEquals(5.0, x.getLo(), EPS);
+        assertEquals(6.0, x.getHi(), EPS);
+        Constraint z = range(Constraint.Field.Z);
+        assertEquals(8.0, z.getLo(), EPS);
+        assertEquals(9.0, z.getHi(), EPS);
+    }
+
+    @Test
+    public void nonPressurePlateBlockIgnoresThePressurePlatePath() {
+        mc.worldBoxes.add(box(5.0, 64.0, 8.0, 6.0, 65.0, 9.0));
+        mc.lookedAtBlock = new int[] {5, 64, 8};
+        mc.lookedAtFace = Face.POS_Y;
+        mc.pressurePlateFootprint = null;
+
+        controller.onKey(false, true);
+
+        assertNull("Ctrl on a plain top face clears rather than adds", state.tickConstraintsOrNull(TICK));
     }
 }

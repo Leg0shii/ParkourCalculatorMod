@@ -7,6 +7,7 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2InputState;
 import de.legoshi.parkourcalc.forge12.sim.Forge12Simulator;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockBasePressurePlate;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
@@ -111,6 +112,16 @@ public final class Forge12MinecraftAccess implements MinecraftAccess {
         if (world == null) return false;
         Block block = world.getBlockState(new BlockPos(x, y, z)).getBlock();
         return block == Blocks.ICE || block == Blocks.PACKED_ICE || block == Blocks.FROSTED_ICE;
+    }
+
+    @Override
+    public double[] getPressurePlateFootprint(int x, int y, int z) {
+        World world = Minecraft.getMinecraft().world;
+        if (world == null) return null;
+        Block block = world.getBlockState(new BlockPos(x, y, z)).getBlock();
+        if (!(block instanceof BlockBasePressurePlate)) return null;
+        double inset = 0.125;
+        return new double[] {x + inset, x + 1.0 - inset, z + inset, z + 1.0 - inset};
     }
 
     @Override

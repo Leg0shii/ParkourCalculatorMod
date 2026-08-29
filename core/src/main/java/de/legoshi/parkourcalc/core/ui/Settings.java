@@ -31,6 +31,7 @@ public final class Settings {
     private static final float[] DEFAULT_CONSTRAINT_HIGHLIGHT = {0.996f, 0.996f, 0.996f, 1.000f};
 
     private static final boolean DEFAULT_CONSTRAINT_EXPAND_BY_HITBOX = true;
+    private static final boolean DEFAULT_PRESSURE_PLATE_FULL_BLOCK = false;
     private static final float DEFAULT_CONSTRAINT_FRONT_WIDTH = 0.6f;
     private static final float DEFAULT_CONSTRAINT_FRONT_HEIGHT = 0.15f;
     private static final float DEFAULT_CONSTRAINT_FRONT_LENGTH = 0.01f;
@@ -148,6 +149,7 @@ public final class Settings {
     public final float[] constraintHighlight = DEFAULT_CONSTRAINT_HIGHLIGHT.clone();
 
     public boolean constraintExpandByHitbox = DEFAULT_CONSTRAINT_EXPAND_BY_HITBOX;
+    public boolean pressurePlateFullBlock = DEFAULT_PRESSURE_PLATE_FULL_BLOCK;
     public float constraintFrontWidth = DEFAULT_CONSTRAINT_FRONT_WIDTH;
     public float constraintFrontHeight = DEFAULT_CONSTRAINT_FRONT_HEIGHT;
     public float constraintFrontLength = DEFAULT_CONSTRAINT_FRONT_LENGTH;
@@ -262,6 +264,7 @@ public final class Settings {
         System.arraycopy(DEFAULT_CONSTRAINT_BACK, 0, constraintBack, 0, 4);
         System.arraycopy(DEFAULT_CONSTRAINT_HIGHLIGHT, 0, constraintHighlight, 0, 4);
         constraintExpandByHitbox = DEFAULT_CONSTRAINT_EXPAND_BY_HITBOX;
+        pressurePlateFullBlock = DEFAULT_PRESSURE_PLATE_FULL_BLOCK;
         constraintFrontWidth = DEFAULT_CONSTRAINT_FRONT_WIDTH;
         constraintFrontHeight = DEFAULT_CONSTRAINT_FRONT_HEIGHT;
         constraintFrontLength = DEFAULT_CONSTRAINT_FRONT_LENGTH;

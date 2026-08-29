@@ -38,6 +38,7 @@ public final class SettingsModal {
     private static final String TT_COL_HOTBAR = "Adds a per-tick hotbar slot column (1-9). During playback the held slot switches on ticks that set one; empty keeps the previous slot.";
     private static final String TT_CONSTRAINTS = "Draws Angle Solver position constraints (X/Z) as translucent plates at the tick they apply to. The front plate sits on the constraint; the back fades out toward the open/free direction. Only visible while the Angle Solver is open.";
     private static final String TT_C_EXPAND = "Grow each plate outward by the player hitbox half-width (0.3) so the plate covers your hitbox: your hitbox fits inside the plate exactly when the tick is valid.";
+    private static final String TT_PRESSURE_PLATE_FULL = "When adding a pressure plate constraint (Ctrl+B while looking at a pressure plate), use the full block footprint from .0 to 1.0 on X and Z instead of the version's inset interaction hitbox. Legacy versions inset the interaction box by 0.125, modern by 0.0625.";
     private static final String TT_C_DIM = "Size in blocks. Width is across the constraint, height is vertical, length is along the plate (front depth from the boundary / back reach behind it).";
     private static final String TT_GROUND_HIGHLIGHT = "Tints input rows whose simulated tick ended on the ground. Color is editable in Render Colors.";
     private static final String TT_COL_W = "W (forward) is always shown and can't be hidden.";
@@ -416,6 +417,7 @@ public final class SettingsModal {
         if (beginLayoutTable("##settings_constraint_shape")) {
             checkboxRow("Show constraints", "##show_constraints", settings.showConstraints, TT_CONSTRAINTS, v -> settings.showConstraints = v);
             checkboxRow("Expand by player hitbox", "##c_expand", settings.constraintExpandByHitbox, TT_C_EXPAND, v -> settings.constraintExpandByHitbox = v);
+            checkboxRow("Pressure plate full block", "##pressure_plate_full", settings.pressurePlateFullBlock, TT_PRESSURE_PLATE_FULL, v -> settings.pressurePlateFullBlock = v);
             ThemeManager.endStandardFormTable();
         }
 

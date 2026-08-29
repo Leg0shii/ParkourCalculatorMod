@@ -255,6 +255,7 @@ public final class PathRenderPlan {
         h = 31 * h + (settings.showSubtick ? 8 : 0);
         h = 31 * h + (settings.showConstraints ? 16 : 0);
         h = 31 * h + (settings.constraintExpandByHitbox ? 32 : 0);
+        h = 31 * h + (settings.pressurePlateFullBlock ? 256 : 0);
         h = 31 * h + (settings.showHitDistanceLines ? 64 : 0);
         h = 31 * h + (settings.hitDistanceSelectedOnly ? 128 : 0);
         h = 31 * h + Float.hashCode(settings.constraintFrontWidth);
