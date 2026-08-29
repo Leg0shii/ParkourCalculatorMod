@@ -146,8 +146,9 @@ public final class InputOverlay {
     private int draggingTeleportRow = -1;
     private int pendingTeleportMoveFrom = -1;
     private int pendingTeleportMoveTo = -1;
-    private float tpChipMinX;
-    private float tpChipMaxX;
+    private boolean tpChipDragged;
+    private float tpCellMinX;
+    private float tpCellMaxX;
     private int editingYawRow = -1;
     private int editingPitchRow = -1;
     private int pendingPitchFocusRow = -1;
@@ -597,7 +598,11 @@ public final class InputOverlay {
             ImGui.tableSetupColumn(COL_HOTBAR, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableColumnWidth(COL_HOTBAR, HOTBAR_COLUMN_WIDTH * scale));
         }
         if (isTeleportColumnVisible()) {
-            ImGui.tableSetupColumn(COL_TELEPORT, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableColumnWidth(COL_TELEPORT, TELEPORT_COLUMN_WIDTH * scale));
+            if (solverActive) {
+                ImGui.tableSetupColumn(COL_TELEPORT, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableColumnWidth(COL_TELEPORT, TELEPORT_COLUMN_WIDTH * scale));
+            } else {
+                ImGui.tableSetupColumn(COL_TELEPORT, ImGuiTableColumnFlags.WidthStretch, 1.0f);
+            }
         }
         if (isYawColumnVisible()) {
             ImGui.tableSetupColumn(COL_YAW, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableColumnWidth(COL_YAW, yawColumnWidth()));
@@ -927,8 +932,10 @@ public final class InputOverlay {
         if (!solverActive && isTeleportColumnVisible() && row.isTeleportEnabled()) {
             ImDrawList dl = ImGui.getWindowDrawList();
             int scrim = ThemeManager.bgTintColor(0.5f);
-            if (tpChipMinX > rMinX) dl.addRectFilled(rMinX, rMinY, tpChipMinX, rMaxY, scrim);
-            if (tpChipMaxX < rMaxX) dl.addRectFilled(tpChipMaxX, rMinY, rMaxX, rMaxY, scrim);
+            float gapLo = Math.max(rMinX, Math.min(tpCellMinX, rMaxX));
+            float gapHi = Math.max(rMinX, Math.min(tpCellMaxX, rMaxX));
+            if (gapLo > rMinX) dl.addRectFilled(rMinX, rMinY, gapLo, rMaxY, scrim);
+            if (gapHi < rMaxX) dl.addRectFilled(gapHi, rMinY, rMaxX, rMaxY, scrim);
         }
 
         ImGui.popID();
@@ -1430,6 +1437,8 @@ public final class InputOverlay {
 
     private void renderTeleportColumn(InputRow row, int rowIndex) {
         ImGui.tableNextColumn();
+        tpCellMinX = ImGui.getCursorScreenPos().x;
+        tpCellMaxX = tpCellMinX + ImGui.getContentRegionAvail().x;
         String popupId = "tpedit" + rowIndex;
         if (row.isTeleportEnabled()) {
             renderTeleportChip(row, rowIndex, popupId);
@@ -1450,19 +1459,21 @@ public final class InputOverlay {
         ImGui.invisibleButton("tpchip" + rowIndex, w, h);
         ImVec2 mn = ImGui.getItemRectMin();
         ImVec2 mx = ImGui.getItemRectMax();
-        tpChipMinX = mn.x;
-        tpChipMaxX = mx.x;
         boolean hover = ImGui.isItemHovered();
-        boolean dragging = teleportDragSource(rowIndex);
+        if (teleportDragSource(rowIndex)) tpChipDragged = true;
         teleportDropTarget(rowIndex);
         dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.panelColor(), 3f * s);
         dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.teleportTintColor(hover ? 0.22f : 0.12f), 3f * s);
         dl.addRect(mn.x, mn.y, mx.x, mx.y, hover ? ThemeManager.teleportColor() : ThemeManager.teleportTintColor(0.55f), 3f * s, 0, 1f);
         float ty = mn.y + (h - ImGui.getFontSize()) * 0.5f;
         dl.addText(mn.x + pad, ty, ThemeManager.teleportColor(), label);
-        if (!dragging && ImGui.isItemClicked(0)) {
-            syncTeleportInputs(row);
-            ImGui.openPopup(popupId);
+        if (ImGui.isItemDeactivated()) {
+            if (tpChipDragged) {
+                tpChipDragged = false;
+            } else {
+                syncTeleportInputs(row);
+                ImGui.openPopup(popupId);
+            }
         }
     }
 
