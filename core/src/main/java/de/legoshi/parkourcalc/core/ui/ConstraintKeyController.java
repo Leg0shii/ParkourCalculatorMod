@@ -147,10 +147,11 @@ public final class ConstraintKeyController {
     }
 
     private double[] pressurePlateFootprint(int bx, int bz, double[] interaction) {
+        double h = ConstraintDeriver.HALF;
         if (settings != null && settings.pressurePlateFullBlock) {
-            return new double[] {bx, bx + 1.0, bz, bz + 1.0};
+            return new double[] {bx - h, bx + 1.0 + h, bz - h, bz + 1.0 + h};
         }
-        return new double[] {interaction[0], interaction[1], interaction[2], interaction[3]};
+        return new double[] {interaction[0] - h, interaction[1] + h, interaction[2] - h, interaction[3] + h};
     }
 
     private int selectedTick() {

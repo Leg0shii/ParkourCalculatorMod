@@ -178,11 +178,11 @@ public class ConstraintKeyControllerTest {
 
         assertEquals("one X range and one Z range", 2, constraints().size());
         Constraint x = range(Constraint.Field.X);
-        assertEquals(5.125, x.getLo(), EPS);
-        assertEquals(5.875, x.getHi(), EPS);
+        assertEquals(5.125 - HALF, x.getLo(), EPS);
+        assertEquals(5.875 + HALF, x.getHi(), EPS);
         Constraint z = range(Constraint.Field.Z);
-        assertEquals(8.125, z.getLo(), EPS);
-        assertEquals(8.875, z.getHi(), EPS);
+        assertEquals(8.125 - HALF, z.getLo(), EPS);
+        assertEquals(8.875 + HALF, z.getHi(), EPS);
     }
 
     @Test
@@ -195,11 +195,11 @@ public class ConstraintKeyControllerTest {
         controller.onKey(false, true);
 
         Constraint x = range(Constraint.Field.X);
-        assertEquals(5.0, x.getLo(), EPS);
-        assertEquals(6.0, x.getHi(), EPS);
+        assertEquals(5.0 - HALF, x.getLo(), EPS);
+        assertEquals(6.0 + HALF, x.getHi(), EPS);
         Constraint z = range(Constraint.Field.Z);
-        assertEquals(8.0, z.getLo(), EPS);
-        assertEquals(9.0, z.getHi(), EPS);
+        assertEquals(8.0 - HALF, z.getLo(), EPS);
+        assertEquals(9.0 + HALF, z.getHi(), EPS);
     }
 
     @Test
