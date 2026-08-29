@@ -291,6 +291,9 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
                 new PositionMoveRotation(new Vec3(pos.x, pos.y, pos.z), startVel, yaw, sp.getXRot()),
                 Collections.emptySet()
             );
+            sp.setOnGround(true);
+            sp.setSprinting(false);
+            sp.fallDistance = 0;
         });
     }
 
