@@ -149,6 +149,7 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
         } else {
             e.resetPlayer(resume);
         }
+        e.setXRot(startPitch);
     }
 
     @Override
@@ -189,6 +190,14 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
 
     @Override protected void setYawAbsolute(SimulatorEntity e, float yaw) {
         e.setYRot(yaw);
+    }
+
+    @Override protected float getEntityPitch(SimulatorEntity e) {
+        return e.getXRot();
+    }
+
+    @Override protected void setEntityPitch(SimulatorEntity e, float pitch) {
+        e.setXRot(pitch);
     }
 
     @Override

@@ -454,6 +454,7 @@ public class SimulatorEntity extends Player {
         c.pos = this.position();
         c.velocity = this.getDeltaMovement();
         c.yaw = this.getYRot();
+        c.pitch = this.getXRot();
         c.onGround = this.onGround();
         c.horizontalCollision = this.horizontalCollision;
         c.collidedSoftly = this.minorHorizontalCollision;
@@ -478,6 +479,7 @@ public class SimulatorEntity extends Player {
         this.setPos(c.pos);
         this.setDeltaMovement(c.velocity);
         this.setYRot(c.yaw);
+        this.setXRot(c.pitch);
         this.setOnGround(c.onGround);
         this.horizontalCollision = c.horizontalCollision;
         this.minorHorizontalCollision = c.collidedSoftly;
@@ -505,6 +507,7 @@ public class SimulatorEntity extends Player {
         Vec3 pos;
         Vec3 velocity;
         float yaw;
+        float pitch;
         boolean onGround;
         boolean horizontalCollision;
         boolean collidedSoftly;

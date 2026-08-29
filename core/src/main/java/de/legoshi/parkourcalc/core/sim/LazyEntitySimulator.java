@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.core.sim;
 
 import de.legoshi.parkourcalc.core.DebugFlags;
+import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.ports.Simulator;
 import de.legoshi.parkourcalc.core.ui.InputRow;
@@ -40,6 +41,7 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
                 applyYaw(e, row.getYaw());
             }
         }
+        setEntityPitch(e, PlaybackController.applyPitch(getEntityPitch(e), row));
     }
 
     @Override
@@ -237,6 +239,13 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     protected abstract void applyYaw(E entity, float yaw);
 
     protected abstract void setYawAbsolute(E entity, float yaw);
+
+    protected float getEntityPitch(E entity) {
+        return 0f;
+    }
+
+    protected void setEntityPitch(E entity, float pitch) {
+    }
 
     /** UI amplifiers are 1-based (1 = level I); 0 means the effect is not active this tick. */
     protected abstract void applyTickEffects(E entity, int speedAmplifier, int jumpBoostAmplifier);
