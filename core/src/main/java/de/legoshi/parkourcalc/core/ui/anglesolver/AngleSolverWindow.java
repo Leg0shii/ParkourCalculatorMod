@@ -7,6 +7,7 @@ import de.legoshi.parkourcalc.core.anglesolver.Potion;
 import de.legoshi.parkourcalc.core.anglesolver.PotionDose;
 import de.legoshi.parkourcalc.core.anglesolver.Slipperiness;
 import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
+import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphFactory;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphPresetFile;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphPresetIO;
@@ -65,6 +66,9 @@ public final class AngleSolverWindow implements RenderInterface {
                     + "make a solvable segment report no solution until the route is re-recorded."};
     private static final String[] EFFORTS = {"Fast", "Optimize", "Custom"};
     private static final String LEGACY_PRESET_ITEM = "Legacy budget";
+    private static final String FAST_PRESET_ITEM = BuiltinGraphs.FAST_PRESET;
+    private static final String OPTIMIZE_PRESET_ITEM = BuiltinGraphs.OPTIMIZE_PRESET;
+    private static final int BUILTIN_PRESET_COUNT = 2;
 
     private static final String[] FORM_LABELS =
             {"Start tick", "Goal tick", "Axis", "Goal", "Target angle", "Inputs", "Sprint", "Slipperiness", "Potion",
@@ -720,13 +724,25 @@ public final class AngleSolverWindow implements RenderInterface {
         if (presetNames == null) refreshPresets();
 
         String current = state.getGraphPresetName();
-        int currentIdx = indexOfPreset(current);
-        boolean missing = current != null && currentIdx < 0;
-        String[] items = new String[presetNames.length + (missing ? 2 : 1)];
-        items[0] = LEGACY_PRESET_ITEM;
-        System.arraycopy(presetNames, 0, items, 1, presetNames.length);
-        if (missing) items[items.length - 1] = current + " (missing)";
-        int selected = current == null ? 0 : (missing ? items.length - 1 : currentIdx + 1);
+        int diskIdx = indexOfPreset(current);
+        boolean builtinFast = FAST_PRESET_ITEM.equals(current);
+        boolean builtinOptimize = OPTIMIZE_PRESET_ITEM.equals(current);
+        boolean missing = current != null && !builtinFast && !builtinOptimize && diskIdx < 0;
+
+        int legacyIdx = BUILTIN_PRESET_COUNT + presetNames.length;
+        String[] items = new String[legacyIdx + 1 + (missing ? 1 : 0)];
+        items[0] = FAST_PRESET_ITEM;
+        items[1] = OPTIMIZE_PRESET_ITEM;
+        System.arraycopy(presetNames, 0, items, BUILTIN_PRESET_COUNT, presetNames.length);
+        items[legacyIdx] = LEGACY_PRESET_ITEM;
+        if (missing) items[legacyIdx + 1] = current + " (missing)";
+
+        int selected;
+        if (current == null) selected = legacyIdx;
+        else if (builtinFast) selected = 0;
+        else if (builtinOptimize) selected = 1;
+        else if (diskIdx >= 0) selected = BUILTIN_PRESET_COUNT + diskIdx;
+        else selected = legacyIdx + 1;
 
         Controls.pushInputFrameHeight();
         ImGui.beginGroup();
@@ -735,13 +751,10 @@ public final class AngleSolverWindow implements RenderInterface {
         ImGui.setNextItemWidth(ImGui.getContentRegionAvail().x);
         if (Controls.combo("##graphPreset", presetBuf, items)) {
             int pick = presetBuf.get();
-            if (pick == 0) {
-                state.setGraphPresetName(null);
-                state.setCustomGraph(null);
-                presetError = null;
-            } else if (pick <= presetNames.length) {
-                selectPreset(presetNames[pick - 1]);
-            }
+            if (pick == 0) selectBuiltinPreset(FAST_PRESET_ITEM);
+            else if (pick == 1) selectBuiltinPreset(OPTIMIZE_PRESET_ITEM);
+            else if (pick < legacyIdx) selectPreset(presetNames[pick - BUILTIN_PRESET_COUNT]);
+            else if (pick == legacyIdx) selectLegacyBudget();
         }
         ImGui.endGroup();
         Controls.popInputFrameHeight();
@@ -785,17 +798,33 @@ public final class AngleSolverWindow implements RenderInterface {
     }
 
     private static final String PRESET_TIP =
-            "Which solver graph a Custom solve runs. Legacy budget rebuilds the graph from this save's"
-            + " Custom knobs, matching the pre-preset behavior byte for byte. Presets are JSON files under"
-            + " parkourcalculator/graphs/ in the game folder: save the current graph, hand-edit the file,"
-            + " then Reload to pick up the changes. The selected preset name travels with the save file.";
+            "Which solver graph a Custom solve runs. Fast and Optimize are the built-in graphs the effort tiers"
+            + " use; they cannot be overwritten, but Duplicate copies one into an editable preset. Legacy budget"
+            + " rebuilds the graph from this save's Custom knobs, matching the pre-preset behavior byte for byte."
+            + " User presets are JSON files under parkourcalculator/graphs/ in the game folder: save the current"
+            + " graph, hand-edit the file, then Reload to pick up the changes. The selected preset name travels"
+            + " with the save file.";
 
     private void refreshPresets() {
         List<SaveInfo> infos = graphStore.list();
-        String[] names = new String[infos.size()];
-        for (int i = 0; i < infos.size(); i++) names[i] = infos.get(i).name;
-        Arrays.sort(names);
-        presetNames = names;
+        List<String> names = new ArrayList<>();
+        for (SaveInfo info : infos) {
+            if (!BuiltinGraphs.isBuiltinPreset(info.name)) names.add(info.name);
+        }
+        Collections.sort(names);
+        presetNames = names.toArray(new String[0]);
+    }
+
+    private void selectBuiltinPreset(String name) {
+        state.setGraphPresetName(name);
+        state.setCustomGraph(null);
+        presetError = null;
+    }
+
+    private void selectLegacyBudget() {
+        state.setGraphPresetName(null);
+        state.setCustomGraph(null);
+        presetError = null;
     }
 
     private int indexOfPreset(String name) {
@@ -818,8 +847,7 @@ public final class AngleSolverWindow implements RenderInterface {
     }
 
     private SolverGraph currentCustomGraph() {
-        SolverGraph graph = state.getCustomGraph();
-        return graph != null ? graph : GraphFactory.legacyCustom(state);
+        return GraphFactory.forState(state, AngleSolverState.Effort.CUSTOM);
     }
 
     private void savePresetAs() {
@@ -842,6 +870,10 @@ public final class AngleSolverWindow implements RenderInterface {
     }
 
     boolean writePreset(String name, SolverGraph graph) {
+        if (BuiltinGraphs.isBuiltinPreset(name)) {
+            presetError = "\"" + name + "\" is a built-in preset. Choose another name.";
+            return false;
+        }
         GraphPresetFile file = GraphPresetIO.fromGraph(graph);
         file.name = name;
         file.createdAt = SaveIO.nowIso8601();

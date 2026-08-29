@@ -4,15 +4,22 @@ public final class BuiltinGraphs {
 
     public static final int IMPROVE_TICK_CAP = 256;
 
+    public static final String FAST_PRESET = "Fast";
+    public static final String OPTIMIZE_PRESET = "Optimize";
+
     private BuiltinGraphs() {
     }
 
+    public static boolean isBuiltinPreset(String name) {
+        return FAST_PRESET.equals(name) || OPTIMIZE_PRESET.equals(name);
+    }
+
     public static SolverGraph fast() {
-        return build("Fast", 10, 3, 0);
+        return build(FAST_PRESET, 10, 3, 0);
     }
 
     public static SolverGraph optimize(int optimizeSeconds) {
-        return build("Optimize", 10, 3, optimizeSeconds > 0 ? optimizeSeconds : 120);
+        return build(OPTIMIZE_PRESET, 10, 3, optimizeSeconds > 0 ? optimizeSeconds : 120);
     }
 
     public static SolverGraph fromBudget(boolean stopOnFeasible, boolean ilsExhaustive,
