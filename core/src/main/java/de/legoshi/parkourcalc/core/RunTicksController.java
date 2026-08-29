@@ -116,7 +116,17 @@ public final class RunTicksController implements RunTicksControls {
 
         searchBase = DocumentSnapshot.capture(inputs, state);
         search = new RunTicksSearch<List<InputRow>>(jumpTicks.size(), cfg.getMaxTicks(), cfg.isMinimize(),
-                this::allowsExtraTicks);
+                new RunTicksSearch.JumpOptions() {
+                    @Override
+                    public boolean allows(int jumpIndex, int extraTicks) {
+                        return allowsExtraTicks(jumpIndex, extraTicks);
+                    }
+
+                    @Override
+                    public int maxAllowed(int jumpIndex) {
+                        return maxAllowedTicks(jumpIndex);
+                    }
+                });
         timeouts = new StepTimeouts(cfg, jumpTicks.size());
         bestCombo = null;
         bestRows = null;
@@ -292,7 +302,7 @@ public final class RunTicksController implements RunTicksControls {
         int percent = (int) Math.min(99, Math.max(0, search.progress() * 100));
         String elapsed = String.format(Locale.ROOT, " (%.1fs)", elapsedMs(searchStartMs) / 1000.0);
         String text = search.isMinimizing()
-                ? "Run ticks (min " + search.target() + "/" + search.maxTicks() + "t) · " + percent + "%" + elapsed
+                ? "Run ticks (min " + search.target() + "t) · " + percent + "%" + elapsed
                 : "Run ticks · " + percent + "%" + elapsed;
         hud.setStatus(text, HudMessages.COLOR_DEFAULT);
     }
@@ -394,6 +404,11 @@ public final class RunTicksController implements RunTicksControls {
     private boolean allowsExtraTicks(int jumpIndex, int extraTicks) {
         TickConstraints tc = searchBase.constraintsAt(jumpTicks.get(jumpIndex));
         return RunTicksFilter.allows(tc == null ? null : tc.getConstraints(), extraTicks);
+    }
+
+    private int maxAllowedTicks(int jumpIndex) {
+        TickConstraints tc = searchBase.constraintsAt(jumpTicks.get(jumpIndex));
+        return RunTicksFilter.maxAllowed(tc == null ? null : tc.getConstraints());
     }
 
     private int enabledConstraintCount() {

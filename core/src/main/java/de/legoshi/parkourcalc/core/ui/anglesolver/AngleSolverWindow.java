@@ -32,6 +32,7 @@ import imgui.flag.ImGuiCol;
 import imgui.flag.ImGuiCond;
 import imgui.flag.ImGuiStyleVar;
 import imgui.flag.ImGuiWindowFlags;
+import imgui.type.ImFloat;
 import imgui.type.ImInt;
 import imgui.type.ImString;
 
@@ -67,7 +68,7 @@ public final class AngleSolverWindow implements RenderInterface {
 
     private static final String[] FORM_LABELS =
             {"Start tick", "Goal tick", "Axis", "Goal", "Target angle", "Inputs", "Sprint", "Slipperiness", "Potion",
-             "Enabled", "Max ticks", "Step timeout", "Step growth", "Safety factor", "Safety margin"};
+             "Enabled", "Run ticks", "Step timeout", "Step growth", "Safety factor", "Safety margin"};
 
     /** Unscaled; lines the details table up under the toggle title and sets it off from the solved values. */
     private static final float DETAIL_INDENT = 13f;
@@ -98,9 +99,9 @@ public final class AngleSolverWindow implements RenderInterface {
     private final ImInt levelBuf = new ImInt();
     private final ImInt runTicksMaxBuf = new ImInt();
     private final ImInt runTicksTimeoutBuf = new ImInt();
-    private final int[] runTicksGrowthBuf = new int[1];
-    private final float[] runTicksSafetyMultBuf = new float[1];
-    private final int[] runTicksSafetyMarginBuf = new int[1];
+    private final ImInt runTicksGrowthBuf = new ImInt();
+    private final ImFloat runTicksSafetyMultBuf = new ImFloat();
+    private final ImInt runTicksSafetyMarginBuf = new ImInt();
     private final int[] optimizeSecondsBuf = new int[1];
     private final ImInt presetBuf = new ImInt();
     private final ImString presetNameInput = new ImString(64);
@@ -398,6 +399,11 @@ public final class AngleSolverWindow implements RenderInterface {
         w = Math.max(w, segmentedRowWidth("Goal", GOALS, labelW));
         w = Math.max(w, segmentedRowWidth("Inputs", INPUTS, labelW));
         w = Math.max(w, segmentedRowWidth("Sprint", SPRINTS, labelW));
+        if (runTicksExpanded) {
+            float boxW = ImGui.getFrameHeight() + ImGui.getStyle().getItemInnerSpacing().x;
+            float checkColW = boxW + Math.max(ImGui.calcTextSize("Min").x, ImGui.calcTextSize("Auto").x);
+            w = Math.max(w, labelW + 110f * ThemeManager.uiScale() + checkColW);
+        }
         if (advancedExpanded) {
             w = Math.max(w, segmentedRowWidth("Effort", EFFORTS, labelW));
             if (state.getEffort() == AngleSolverState.Effort.CUSTOM) {
@@ -582,10 +588,11 @@ public final class AngleSolverWindow implements RenderInterface {
             + " to restrict how many ticks that jump may get.";
 
     private static final String RUN_TICKS_MAX_TIP =
-            "Largest number of extra running ticks the search may hand out across all jumps together.";
+            "Largest number of extra running ticks the search may hand out across all jumps together."
+            + "\nIn Min mode, the search starts from this count upwards.";
 
     private static final String RUN_TICKS_MIN_TIP =
-            "Search 0, 1, 2 ... extra ticks in turn and stop at the first count that solves, so the result"
+            "Search from the configured run ticks count upwards (n, n+1, n+2 ...) and stop at the first count that solves, so the result"
             + " uses the fewest run ticks instead of the best objective.";
 
     private static final String RUN_TICKS_TIMEOUT_TIP =
@@ -611,14 +618,15 @@ public final class AngleSolverWindow implements RenderInterface {
 
         float spacing = ImGui.getStyle().getItemInnerSpacing().x;
         float boxW = ImGui.getFrameHeight() + spacing;
+        float checkColW = boxW + Math.max(ImGui.calcTextSize("Min").x, ImGui.calcTextSize("Auto").x);
 
         Controls.pushInputFrameHeight();
-        SolverWidgets.rowLabel("Max ticks", labelW);
+        SolverWidgets.rowLabel("Run ticks", labelW);
+        float inputW = Math.max(40f * scale, ImGui.getContentRegionAvail().x - checkColW - spacing);
         runTicksMaxBuf.set(cfg.getMaxTicks());
-        float minW = boxW + ImGui.calcTextSize("Min").x;
-        if (Controls.inputInt("##runTicksMax", runTicksMaxBuf,
-                Math.max(60f, ImGui.getContentRegionAvail().x - minW - spacing))) {
-            cfg.setMaxTicks(runTicksMaxBuf.get());
+        ImGui.setNextItemWidth(inputW);
+        if (ImGui.inputInt("##runTicksMax", runTicksMaxBuf, 1, 5)) {
+            cfg.setMaxTicks(Math.max(0, runTicksMaxBuf.get()));
         }
         TooltipUtil.onHover(RUN_TICKS_MAX_TIP);
         ImGui.sameLine(0, spacing);
@@ -630,10 +638,9 @@ public final class AngleSolverWindow implements RenderInterface {
         SolverWidgets.rowLabel("Step timeout", labelW);
         boolean auto = cfg.isAdaptiveTimeout();
         runTicksTimeoutBuf.set(auto ? runTicks.liveTimeoutMs() : cfg.getTimeoutMs());
-        float autoW = boxW + ImGui.calcTextSize("Auto").x;
         if (auto) ImGui.beginDisabled(true);
-        if (Controls.inputInt("##runTicksTimeout", runTicksTimeoutBuf,
-                Math.max(60f, ImGui.getContentRegionAvail().x - autoW - spacing))) {
+        ImGui.setNextItemWidth(inputW);
+        if (ImGui.inputInt("##runTicksTimeout", runTicksTimeoutBuf, RunTicksSettings.TIMEOUT_NUDGE_MS, 100)) {
             cfg.setTimeoutMs(runTicksTimeoutBuf.get());
         }
         if (auto) ImGui.endDisabled();
@@ -645,23 +652,36 @@ public final class AngleSolverWindow implements RenderInterface {
 
         if (!auto) return;
 
-        runTicksGrowthBuf[0] = cfg.getAddPerJumpMs();
-        if (sliderIntRow("Step growth", "##runTicksGrowth", runTicksGrowthBuf, 0, 500, "+%d ms", labelW,
-                "Added to the timeout for each jump deeper the search goes.")) {
-            cfg.setAddPerJumpMs(runTicksGrowthBuf[0]);
+        Controls.pushInputFrameHeight();
+        SolverWidgets.rowLabel("Step growth", labelW);
+        runTicksGrowthBuf.set(cfg.getAddPerJumpMs());
+        ImGui.setNextItemWidth(inputW);
+        if (ImGui.inputInt("##runTicksGrowth", runTicksGrowthBuf, 10, 50)) {
+            cfg.setAddPerJumpMs(Math.max(0, runTicksGrowthBuf.get()));
         }
+        Controls.popInputFrameHeight();
+        TooltipUtil.onHover("Added to the timeout for each jump deeper the search goes (+ms per jump).");
 
-        runTicksSafetyMultBuf[0] = (float) cfg.getSafetyMult();
-        if (sliderFloatRow("Safety factor", "##runTicksSafetyMult", runTicksSafetyMultBuf, 1.0f, 3.0f, "x%.2f", labelW,
-                "Multiplier applied to the measured solve time before it becomes the next timeout.")) {
-            cfg.setSafetyMult(runTicksSafetyMultBuf[0]);
+        Controls.pushInputFrameHeight();
+        SolverWidgets.rowLabel("Safety factor", labelW);
+        runTicksSafetyMultBuf.set((float) cfg.getSafetyMult());
+        ImGui.setNextItemWidth(inputW);
+        if (ImGui.inputFloat("##runTicksMult", runTicksSafetyMultBuf, 0.1f, 0.5f, "%.2f")) {
+            float val = Math.max(1.0f, Math.round(runTicksSafetyMultBuf.get() * 100.0f) / 100.0f);
+            cfg.setSafetyMult(val);
         }
+        Controls.popInputFrameHeight();
+        TooltipUtil.onHover("Multiplier applied to the measured solve time before it becomes the next timeout.");
 
-        runTicksSafetyMarginBuf[0] = cfg.getSafetyMarginMs();
-        if (sliderIntRow("Safety margin", "##runTicksSafetyMargin", runTicksSafetyMarginBuf, 0, 500, "%d ms", labelW,
-                "Flat buffer added on top of the derived timeout.")) {
-            cfg.setSafetyMarginMs(runTicksSafetyMarginBuf[0]);
+        Controls.pushInputFrameHeight();
+        SolverWidgets.rowLabel("Safety margin", labelW);
+        runTicksSafetyMarginBuf.set(cfg.getSafetyMarginMs());
+        ImGui.setNextItemWidth(inputW);
+        if (ImGui.inputInt("##runTicksMargin", runTicksSafetyMarginBuf, 10, 50)) {
+            cfg.setSafetyMarginMs(Math.max(0, runTicksSafetyMarginBuf.get()));
         }
+        Controls.popInputFrameHeight();
+        TooltipUtil.onHover("Flat buffer added on top of the derived timeout (ms).");
     }
 
     private static final String OPTIMIZE_TIME_TIP =
@@ -837,18 +857,6 @@ public final class AngleSolverWindow implements RenderInterface {
         return true;
     }
 
-
-    private boolean sliderFloatRow(String label, String id, float[] buf, float lo, float hi, String fmt, float labelW, String tip) {
-        Controls.pushInputFrameHeight();
-        ImGui.beginGroup();
-        SolverWidgets.rowLabel(label, labelW);
-        ImGui.setNextItemWidth(ImGui.getContentRegionAvail().x);
-        boolean changed = Controls.sliderFloat(id, buf, lo, hi, fmt);
-        ImGui.endGroup();
-        Controls.popInputFrameHeight();
-        if (tip != null) TooltipUtil.onHover(tip);
-        return changed;
-    }
 
     private boolean sliderIntRow(String label, String id, int[] buf, int lo, int hi, String fmt, float labelW, String tip) {
         Controls.pushInputFrameHeight();
