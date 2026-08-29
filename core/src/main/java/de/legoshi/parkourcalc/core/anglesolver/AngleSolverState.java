@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.core.anglesolver;
 
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.runticks.RunTicksSettings;
+import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -116,10 +117,24 @@ public final class AngleSolverState {
         return v < lo ? lo : (v > hi ? hi : v);
     }
 
+    public enum CustomAngleType {
+        POSITION("Pos"),
+        MOTION("Mot");
+
+        public final String label;
+
+        CustomAngleType(String label) {
+            this.label = label;
+        }
+    }
+
     private int startTick;
     private int landingTick;
     private Axis axis = Axis.X;
     private Goal goal = Goal.MAX;
+    private boolean customAngle = false;
+    private double customAngleDeg = 0.0;
+    private CustomAngleType customAngleType = CustomAngleType.POSITION;
     private Effort effort = Effort.FAST;
     private boolean stopOnFeasible;
     private boolean legalMode;
@@ -181,6 +196,30 @@ public final class AngleSolverState {
 
     public void setGoal(Goal goal) {
         this.goal = goal;
+    }
+
+    public boolean isCustomAngle() {
+        return customAngle;
+    }
+
+    public void setCustomAngle(boolean customAngle) {
+        this.customAngle = customAngle;
+    }
+
+    public double getCustomAngleDeg() {
+        return customAngleDeg;
+    }
+
+    public void setCustomAngleDeg(double customAngleDeg) {
+        this.customAngleDeg = Angles.wrap(customAngleDeg);
+    }
+
+    public CustomAngleType getCustomAngleType() {
+        return customAngleType;
+    }
+
+    public void setCustomAngleType(CustomAngleType type) {
+        this.customAngleType = type != null ? type : CustomAngleType.POSITION;
     }
 
     public Effort getEffort() {
@@ -686,6 +725,9 @@ public final class AngleSolverState {
         landingTick = 0;
         axis = Axis.X;
         goal = Goal.MAX;
+        customAngle = false;
+        customAngleDeg = 0.0;
+        customAngleType = CustomAngleType.POSITION;
         effort = Effort.FAST;
         stopOnFeasible = false;
         legalMode = false;

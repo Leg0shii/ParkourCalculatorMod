@@ -168,7 +168,7 @@ public final class BucketAscentPolish {
         ForwardPath pr = model.forward(scenario, gf);
         double viol = c.maxViolation(gf, pr);
         if (viol > FEAS_TOL) return Double.POSITIVE_INFINITY;
-        return sign * pr.getPos(obj.tick, obj.axis) + obj.smoothPenalty(scenario.startYaw, abs);
+        return sign * obj.evaluate(pr) + obj.smoothPenalty(scenario.startYaw, abs);
     }
 
     private static final class TailScorer {
@@ -210,7 +210,7 @@ public final class BucketAscentPolish {
             model.stepRange(scenario, gf, from, path);
             double viol = c.maxViolation(gf, path);
             if (viol > FEAS_TOL) return Double.POSITIVE_INFINITY;
-            return sign * path.getPos(obj.tick, obj.axis) + obj.smoothPenalty(startYaw, y);
+            return sign * obj.evaluate(path) + obj.smoothPenalty(startYaw, y);
         }
     }
 }

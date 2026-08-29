@@ -211,11 +211,30 @@ public final class JumpLinearModel {
         int objTick = obj.tick;
         double dx, dz;
         boolean max = obj.sense == Objective.Sense.MAX;
-        if (obj.axis == JumpPhysicsInputs.Axis.X) { dx = max ? 1.0 : -1.0; dz = 0.0; }
-        else { dx = 0.0; dz = max ? 1.0 : -1.0; }
-        for (int t = 0; t < n; t++) {
-            cx[t] = coefAxis(0, t, objTick) * dx;
-            cz[t] = coefAxis(1, t, objTick) * dz;
+        if (obj.isCustomAngle()) {
+            double rad = Math.toRadians(obj.customYaw);
+            dx = (max ? 1.0 : -1.0) * -Math.sin(rad);
+            dz = (max ? 1.0 : -1.0) * Math.cos(rad);
+        } else if (obj.axis == JumpPhysicsInputs.Axis.X) {
+            dx = max ? 1.0 : -1.0;
+            dz = 0.0;
+        } else {
+            dx = 0.0;
+            dz = max ? 1.0 : -1.0;
+        }
+
+        if (obj.isMotion()) {
+            for (int t = 0; t < n; t++) {
+                double k0 = coefAxis(0, t, objTick) - (objTick > 0 ? coefAxis(0, t, objTick - 1) : 0.0);
+                double k1 = coefAxis(1, t, objTick) - (objTick > 0 ? coefAxis(1, t, objTick - 1) : 0.0);
+                cx[t] = k0 * dx;
+                cz[t] = k1 * dz;
+            }
+        } else {
+            for (int t = 0; t < n; t++) {
+                cx[t] = coefAxis(0, t, objTick) * dx;
+                cz[t] = coefAxis(1, t, objTick) * dz;
+            }
         }
     }
 
@@ -378,8 +397,14 @@ public final class JumpLinearModel {
             double x = gx[t];
             double z = gz[t];
             if (x * x + z * z < 1.0e-18) {
-                x = axisX ? (max ? 1.0 : -1.0) : 0.0;
-                z = axisX ? 0.0 : (max ? 1.0 : -1.0);
+                if (obj.isCustomAngle()) {
+                    double rad = Math.toRadians(obj.customYaw);
+                    x = (max ? 1.0 : -1.0) * -Math.sin(rad);
+                    z = (max ? 1.0 : -1.0) * Math.cos(rad);
+                } else {
+                    x = axisX ? (max ? 1.0 : -1.0) : 0.0;
+                    z = axisX ? 0.0 : (max ? 1.0 : -1.0);
+                }
             }
             yaws[t] = recoverYawDeg(t, x, z);
         }

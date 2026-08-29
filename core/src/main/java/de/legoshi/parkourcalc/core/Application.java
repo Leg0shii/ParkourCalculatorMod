@@ -218,6 +218,7 @@ public final class Application {
         GraphEditorWindow graphEditorWindow = new GraphEditorWindow(angleSolverEngine);
         AngleSolverWindow angleSolverWindow = new AngleSolverWindow(angleSolverState, settings, inputData::size, angleSolverEngine, velocityMapController.widget(), graphStore, graphEditorWindow);
         angleSolverWindow.setApplySurfaceState(this::applyPathSurfaceState);
+        angleSolverWindow.setPlayerYawSupplier(mc::getPlayerYaw);
         runTicks = new RunTicksController(angleSolverState, angleSolverEngine, inputData, constraintSelection,
                 hudMessages, this::runSimulation, saveController::markDirty, this::pushHudMessage);
         angleSolverWindow.setRunTicksControls(runTicks);

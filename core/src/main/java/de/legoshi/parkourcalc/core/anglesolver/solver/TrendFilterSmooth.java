@@ -30,7 +30,7 @@ public final class TrendFilterSmooth {
         if (comp.maxViolation(seedGf, exact.forward(sc, seedGf)) > FEAS_TOL) return seedAbsWrapped;
 
         boolean max = spec.objective.sense == Objective.Sense.MAX;
-        double reference = exact.forward(sc, seedGf).getPos(spec.objective.tick, spec.objective.axis);
+        double reference = spec.objective.evaluate(exact.forward(sc, seedGf));
         JumpSpec guarded = guard(sc, spec, max, reference, giveBack);
         JumpConstraintCompiler.Compiled guardedComp = JumpConstraintCompiler.compile(guarded);
         boolean[] frozen = frozenPins(sc, spec);
@@ -70,7 +70,7 @@ public final class TrendFilterSmooth {
                 if (cand == null) continue;
                 double[] cgf = sc.toGameFacings(cand);
                 if (comp.maxViolation(cgf, exact.forward(sc, cgf)) > FEAS_TOL) continue;
-                double obj = exact.forward(sc, cgf).getPos(spec.objective.tick, spec.objective.axis);
+                double obj = spec.objective.evaluate(exact.forward(sc, cgf));
                 if (max ? obj < reference - giveBack : obj > reference + giveBack) continue;
                 int rev = Angles.reversals(anchor, cand, Angles.REVERSAL_FLOOR_DEG);
                 double jk = jerk(anchor, cand);
@@ -89,6 +89,7 @@ public final class TrendFilterSmooth {
     private static final int MAX_PASSES = 6;
 
     private static JumpSpec guard(JumpPhysicsInputs sc, JumpSpec spec, boolean max, double reference, double giveBack) {
+        if (spec.objective.isCustomAngle()) return spec;
         JumpConstraint.Mode axisMode = spec.objective.axis == JumpPhysicsInputs.Axis.X ? JumpConstraint.Mode.X
                 : spec.objective.axis == JumpPhysicsInputs.Axis.Z ? JumpConstraint.Mode.Z : null;
         if (axisMode == null) return spec;
