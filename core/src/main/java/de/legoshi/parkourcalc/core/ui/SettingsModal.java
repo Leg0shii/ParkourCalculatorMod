@@ -88,7 +88,9 @@ public final class SettingsModal {
     private static final String[] ARROW_MODE_LABELS = {"Yaw", "Combined"};
     private static final String[] HUD_MESSAGE_ORDER_LABELS = {"Downwards", "Upwards"};
 
+    private static final String TT_REPLAY_START_DELAY = "Waits this many ticks after playback starts before the macro's inputs begin. The player holds at the start while the delay counts down; 0 starts immediately.";
     private final ImInt scaleIndexBuf = new ImInt();
+    private final int[] replayStartDelayBuf = new int[1];
     private final ImInt arrowModeBuf = new ImInt();
     private final float[] yawTurnCapBuf = new float[1];
     private final int[] pathRenderDistanceBuf = new int[1];
@@ -521,6 +523,21 @@ public final class SettingsModal {
         if (beginLayoutTable("##settings_playback_player")) {
             checkboxRow("Disable creative flight", "##disable_flight_playback", settings.disableFlightDuringPlayback, TT_DISABLE_FLIGHT_PLAYBACK, v -> settings.disableFlightDuringPlayback = v);
             checkboxRow("Lockstep replay", "##lockstep_replay", settings.lockstepReplay, TT_LOCKSTEP_REPLAY, v -> settings.lockstepReplay = v);
+            ThemeManager.endStandardFormTable();
+        }
+
+        ThemeManager.sectionSpacing();
+        sectionHeader("Start delay");
+        if (beginLayoutTable("##settings_playback_start_delay")) {
+            row("Delay before replay", () -> {
+                replayStartDelayBuf[0] = settings.replayStartDelayTicks;
+                ImGui.setNextItemWidth(-1);
+                if (Controls.sliderInt("##replay_start_delay", replayStartDelayBuf, Settings.MIN_REPLAY_START_DELAY_TICKS, Settings.MAX_REPLAY_START_DELAY_TICKS, "%d ticks")) {
+                    settings.replayStartDelayTicks = replayStartDelayBuf[0];
+                }
+                if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
+                tooltipForLastItem(TT_REPLAY_START_DELAY);
+            });
             ThemeManager.endStandardFormTable();
         }
     }

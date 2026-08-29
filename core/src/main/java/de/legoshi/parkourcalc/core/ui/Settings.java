@@ -111,6 +111,10 @@ public final class Settings {
     public static final int MAX_PATH_RENDER_DISTANCE = 512;
     private static final boolean DEFAULT_UNLIMITED_PATH_RENDER = false;
 
+    private static final int DEFAULT_REPLAY_START_DELAY_TICKS = 0;
+    public static final int MIN_REPLAY_START_DELAY_TICKS = 0;
+    public static final int MAX_REPLAY_START_DELAY_TICKS = 20;
+
     private static final int DEFAULT_TICK_INFO_PRECISION = 5;
     public static final int DEFAULT_SOLVER_STATS_PRECISION = 5;
     public static final int MIN_STAT_PRECISION = 1;
@@ -226,6 +230,7 @@ public final class Settings {
     public boolean pairedSimulation = DEFAULT_PAIRED_SIMULATION;
     public boolean pairedDamage = DEFAULT_PAIRED_DAMAGE;
     public boolean lockstepReplay = DEFAULT_LOCKSTEP_REPLAY;
+    public int replayStartDelayTicks = DEFAULT_REPLAY_START_DELAY_TICKS;
 
     public static int defaultTickInfoPrecision() {
         return DEFAULT_TICK_INFO_PRECISION;
@@ -322,5 +327,6 @@ public final class Settings {
         pairedSimulation = DEFAULT_PAIRED_SIMULATION;
         pairedDamage = DEFAULT_PAIRED_DAMAGE;
         lockstepReplay = DEFAULT_LOCKSTEP_REPLAY;
+        replayStartDelayTicks = DEFAULT_REPLAY_START_DELAY_TICKS;
     }
 }
