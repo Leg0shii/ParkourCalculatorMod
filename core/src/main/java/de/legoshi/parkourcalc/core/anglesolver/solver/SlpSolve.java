@@ -127,7 +127,6 @@ public final class SlpSolve {
         JumpLinearModel lin = new JumpLinearModel(sc);
         int n = lin.n;
 
-        // walls stays index-aligned with ineq so wall j's exact slack is constraint ineq.get(j)'s
         boolean[] trivialInfeasible = {false};
         List<JumpConstraint> ineq = new ArrayList<>();
         List<JumpLinearModel.Wall> walls = new ArrayList<>();
@@ -232,11 +231,15 @@ public final class SlpSolve {
                 for (int j = 0; j < m; j++) {
                     JumpLinearModel.Wall wall = lpWalls.get(j);
                     double[] row = rows[j];
+                    double[] cxj = wall.coefX;
+                    double[] czj = wall.coefZ;
                     for (int t = 0; t < n; t++) {
                         int v = col[t];
                         if (v < 0) continue;
-                        double du = wall.axis == 0 ? -uz[t] : ux[t]; // d(u.axis)/dyaw, deg-scaled below
-                        row[v] += wall.coef[t] * du * RAD;
+                        double du = 0.0;
+                        if (cxj != null && cxj[t] != 0.0) du += cxj[t] * -uz[t];
+                        if (czj != null && czj[t] != 0.0) du += czj[t] * ux[t];
+                        row[v] += du * RAD;
                     }
                 }
                 double[] objRow = null;

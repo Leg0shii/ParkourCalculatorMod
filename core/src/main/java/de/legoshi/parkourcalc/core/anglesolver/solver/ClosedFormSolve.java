@@ -77,7 +77,12 @@ public final class ClosedFormSolve {
         if (pre == null) return null;
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
         Result r = runLadder(exact, spec, sc, compiled, feasTol, cancel, cfg.margins, true, zeroX, zeroZ,
-                System.nanoTime(), cfg, pre);
+                System.nanoTime(), cfg, pre, 1);
+        if ((r == null || !r.feasible) && JumpLinearModel.hasCrossAxis(spec.constraints)) {
+            Result r2 = runLadder(exact, spec, sc, compiled, feasTol, cancel, cfg.margins, true, zeroX, zeroZ,
+                    System.nanoTime(), cfg, pre, -1);
+            if (r2 != null && r2.feasible) r = r2;
+        }
         return r != null && r.feasible ? r.yaws : null;
     }
 
@@ -303,7 +308,11 @@ public final class ClosedFormSolve {
                         pass, SolverTrace.patternLabel(zeroX, zeroZ), n, spec.constraints.size(),
                         ascending ? "ascending" : "robust");
             }
-            Result r = runLadder(exact, spec, sc, compiled, feasTol, cancel, margins, ascending, zeroX, zeroZ, t0, cfg, pre);
+            Result r = runLadder(exact, spec, sc, compiled, feasTol, cancel, margins, ascending, zeroX, zeroZ, t0, cfg, pre, 1);
+            if ((r == null || !r.feasible) && JumpLinearModel.hasCrossAxis(spec.constraints)) {
+                Result r2 = runLadder(exact, spec, sc, compiled, feasTol, cancel, margins, ascending, zeroX, zeroZ, t0, cfg, pre, -1);
+                if (r2 != null && (r == null || r2.feasible || r2.violation < r.violation)) r = r2;
+            }
             if (r == null) {
                 if (SolverTrace.on()) SolverTrace.log("CF", "pass=%d ladder empty (trivial/unbounded/cancel)", pass);
                 break;
@@ -348,16 +357,14 @@ public final class ClosedFormSolve {
     private static Result runLadder(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc,
                                     JumpConstraintCompiler.Compiled compiled, double feasTol, AtomicBoolean cancel,
                                     double[] margins, boolean ascending, boolean[] zeroX, boolean[] zeroZ, long t0,
-                                    Config cfg, FacingPrefold pre) {
+                                    Config cfg, FacingPrefold pre, int dominantSign) {
         JumpLinearModel lin = new JumpLinearModel(sc, zeroX, zeroZ);
         double[] cx = new double[lin.n];
         double[] cz = new double[lin.n];
         lin.objectiveVectors(spec.objective, cx, cz);
 
-        // Compile the wall structure once (margin applied inside the dual solve); a violated constant
-        // constraint is unfixable, so bail to the fallback immediately.
         boolean[] trivialInfeasible = {false};
-        List<JumpLinearModel.Wall> walls = lin.compileWalls(spec.constraints, 0.0, trivialInfeasible);
+        List<JumpLinearModel.Wall> walls = lin.compileWalls(spec.constraints, 0.0, trivialInfeasible, dominantSign);
         if (trivialInfeasible[0]) return null;
         double vBound = exact.perAxisInertia() ? exact.inertiaThreshold()
                 : exact.inertiaThreshold() / Math.sqrt(2.0);

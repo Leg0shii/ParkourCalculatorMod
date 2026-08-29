@@ -62,12 +62,16 @@ public final class CostateDualSolver {
     private final double[] cx;
     private final double[] cz;
     private final double[] mMag;
-    private final int[] axis;       // [m] wall axis (0=X,1=Z)
-    private final double[][] coef;  // [m][n] wall coupling
+    private final int[] axis;       // [m] wall axis (0=X, 1=Z, 2=2D)
+    private final double[][] coef;  // [m][n] wall coupling (1D legacy)
+    private final double[][] coefX; // [m][n] wall coupling X
+    private final double[][] coefZ; // [m][n] wall coupling Z
     private final int[] lastCoupled;
     private final double[] bBase;   // [m] margin-0 right-hand side
     private final boolean[] eq;     // [m]
     private final double[] p0coef;
+    private final double[] p0coefX;
+    private final double[] p0coefZ;
     private final FreeP0 freeP0;
 
     // Preallocated scratch reused across iterations and across solve() calls.
@@ -102,17 +106,25 @@ public final class CostateDualSolver {
         this.freeP0 = freeP0;
         this.axis = new int[m];
         this.coef = new double[m][];
+        this.coefX = new double[m][];
+        this.coefZ = new double[m][];
         this.lastCoupled = new int[m];
         this.bBase = new double[m];
         this.eq = new boolean[m];
         this.p0coef = new double[m];
+        this.p0coefX = new double[m];
+        this.p0coefZ = new double[m];
         for (int j = 0; j < m; j++) {
             JumpLinearModel.Wall w = walls.get(j);
             axis[j] = w.axis;
             coef[j] = w.coef;
+            coefX[j] = w.coefX;
+            coefZ[j] = w.coefZ;
             bBase[j] = w.bPrime;
             eq[j] = w.eq;
             p0coef[j] = w.p0coef;
+            p0coefX[j] = w.p0coefX;
+            p0coefZ[j] = w.p0coefZ;
             int last = -1;
             int lim = Math.min(w.coef.length, n);
             for (int t = 0; t < lim; t++) if (w.coef[t] != 0.0) last = t;
@@ -379,7 +391,10 @@ public final class CostateDualSolver {
 
     private double hAxis(double[] lam, int a) {
         double h = a == 0 ? freeP0.objDevX : freeP0.objDevZ;
-        for (int j = 0; j < m; j++) if (axis[j] == a) h += lam[j] * p0coef[j];
+        for (int j = 0; j < m; j++) {
+            if (axis[j] == a) h += lam[j] * p0coef[j];
+            else if (axis[j] == 2) h += lam[j] * (a == 0 ? p0coefX[j] : p0coefZ[j]);
+        }
         return h;
     }
 
@@ -409,11 +424,17 @@ public final class CostateDualSolver {
         for (int j = 0; j < m; j++) {
             double lj = lam[j];
             if (lj == 0.0) continue;
-            double[] cj = coef[j];
             if (axis[j] == 0) {
+                double[] cj = coef[j];
                 for (int t = 0; t < n; t++) outX[t] -= lj * cj[t];
-            } else {
+            } else if (axis[j] == 1) {
+                double[] cj = coef[j];
                 for (int t = 0; t < n; t++) outZ[t] -= lj * cj[t];
+            } else {
+                double[] cxj = coefX[j];
+                double[] czj = coefZ[j];
+                if (cxj != null) for (int t = 0; t < n; t++) outX[t] -= lj * cxj[t];
+                if (czj != null) for (int t = 0; t < n; t++) outZ[t] -= lj * czj[t];
             }
         }
         double d = 0.0;
@@ -432,16 +453,29 @@ public final class CostateDualSolver {
             uz[t] = w * gZ[t];
         }
         for (int j = 0; j < m; j++) {
-            double[] cj = coef[j];
-            double[] u = (axis[j] == 0) ? ux : uz;
-            double dot = 0.0;
-            for (int t = 0; t < n; t++) dot += cj[t] * u[t];
-            out[j] = bPrime[j] - dot;
+            if (axis[j] < 2) {
+                double[] cj = coef[j];
+                double[] u = (axis[j] == 0) ? ux : uz;
+                double dot = 0.0;
+                for (int t = 0; t < n; t++) dot += cj[t] * u[t];
+                out[j] = bPrime[j] - dot;
+            } else {
+                double[] cxj = coefX[j];
+                double[] czj = coefZ[j];
+                double dot = 0.0;
+                if (cxj != null) for (int t = 0; t < n; t++) dot += cxj[t] * ux[t];
+                if (czj != null) for (int t = 0; t < n; t++) dot += czj[t] * uz[t];
+                out[j] = bPrime[j] - dot;
+            }
         }
         if (freeP0 != null) {
             double dsx = deltaOf(hAxis(lambda, 0), 0);
             double dsz = deltaOf(hAxis(lambda, 1), 1);
-            for (int j = 0; j < m; j++) out[j] += p0coef[j] * (axis[j] == 0 ? dsx : dsz);
+            for (int j = 0; j < m; j++) {
+                if (axis[j] == 0) out[j] += p0coef[j] * dsx;
+                else if (axis[j] == 1) out[j] += p0coef[j] * dsz;
+                else out[j] += p0coefX[j] * dsx + p0coefZ[j] * dsz;
+            }
         }
     }
 
@@ -462,27 +496,53 @@ public final class CostateDualSolver {
         }
         for (int a = 0; a < nf; a++) {
             int i = freeIdx[a];
-            double[] ci = coef[i];
             int ai = axis[i];
-            double[] hatI = ai == 0 ? gxHat : gzHat;
             for (int b = a; b < nf; b++) {
                 int j = freeIdx[b];
-                double[] cj = coef[j];
                 int aj = axis[j];
-                boolean sameAxis = (ai == aj);
-                double[] hatJ = aj == 0 ? gxHat : gzHat;
                 int bound = Math.min(lastCoupled[i], lastCoupled[j]) + 1;
-                double sum = 0.0;
-                for (int t = 0; t < bound; t++) {
-                    double cc = ci[t] * cj[t];
-                    if (cc == 0.0) continue;
-                    sum += wOverNrm[t] * cc * ((sameAxis ? 1.0 : 0.0) - hatI[t] * hatJ[t]);
+                if (ai < 2 && aj < 2) {
+                    double[] ci = coef[i];
+                    double[] cj = coef[j];
+                    boolean sameAxis = (ai == aj);
+                    double[] hatI = ai == 0 ? gxHat : gzHat;
+                    double[] hatJ = aj == 0 ? gxHat : gzHat;
+                    double sum = 0.0;
+                    for (int t = 0; t < bound; t++) {
+                        double cc = ci[t] * cj[t];
+                        if (cc == 0.0) continue;
+                        sum += wOverNrm[t] * cc * ((sameAxis ? 1.0 : 0.0) - hatI[t] * hatJ[t]);
+                    }
+                    if (freeP0 != null && sameAxis) {
+                        sum += p0coef[i] * p0coef[j] * (ai == 0 ? curvX : curvZ);
+                    }
+                    H[a][b] = sum;
+                    H[b][a] = sum;
+                } else {
+                    double[] cxi = coefX[i];
+                    double[] czi = coefZ[i];
+                    double[] cxj = coefX[j];
+                    double[] czj = coefZ[j];
+                    double sum = 0.0;
+                    for (int t = 0; t < bound; t++) {
+                        double cxit = (cxi != null) ? cxi[t] : 0.0;
+                        double czit = (czi != null) ? czi[t] : 0.0;
+                        double cxjt = (cxj != null) ? cxj[t] : 0.0;
+                        double czjt = (czj != null) ? czj[t] : 0.0;
+                        if (cxit == 0.0 && czit == 0.0) continue;
+                        if (cxjt == 0.0 && czjt == 0.0) continue;
+
+                        double dot = cxit * cxjt + czit * czjt;
+                        double hatI = cxit * gxHat[t] + czit * gzHat[t];
+                        double hatJ = cxjt * gxHat[t] + czjt * gzHat[t];
+                        sum += wOverNrm[t] * (dot - hatI * hatJ);
+                    }
+                    if (freeP0 != null) {
+                        sum += p0coefX[i] * p0coefX[j] * curvX + p0coefZ[i] * p0coefZ[j] * curvZ;
+                    }
+                    H[a][b] = sum;
+                    H[b][a] = sum;
                 }
-                if (freeP0 != null && sameAxis) {
-                    sum += p0coef[i] * p0coef[j] * (ai == 0 ? curvX : curvZ);
-                }
-                H[a][b] = sum;
-                H[b][a] = sum;
             }
         }
     }
