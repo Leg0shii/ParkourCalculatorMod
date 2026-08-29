@@ -112,7 +112,7 @@ public final class Settings {
 
     private static final int DEFAULT_REPLAY_START_DELAY_TICKS = 0;
     public static final int MIN_REPLAY_START_DELAY_TICKS = 0;
-    public static final int MAX_REPLAY_START_DELAY_TICKS = 200;
+    public static final int MAX_REPLAY_START_DELAY_TICKS = 20;
 
     private static final int DEFAULT_TICK_INFO_PRECISION = 5;
     public static final int DEFAULT_SOLVER_STATS_PRECISION = 5;
