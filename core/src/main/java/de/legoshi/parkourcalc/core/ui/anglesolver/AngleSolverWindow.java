@@ -272,7 +272,6 @@ public final class AngleSolverWindow implements RenderInterface {
             TooltipUtil.onHover("Optimize trajectory distance or motion towards a custom facing angle instead of a fixed X/Z axis.\n"
                     + "Using 'Optimize' effort is recommended for maximum reach.");
 
-            ImGui.spacing();
             boolean fastTier = state.getEffort() == AngleSolverState.Effort.FAST;
             boolean optimizeTier = state.getEffort() == AngleSolverState.Effort.THOROUGH;
             boolean forced = fastTier || optimizeTier;
