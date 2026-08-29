@@ -136,7 +136,7 @@ public final class AngleSolverState {
     private double customAngleDeg = 0.0;
     private CustomAngleType customAngleType = CustomAngleType.POSITION;
     private Effort effort = Effort.FAST;
-    private boolean stopOnFeasible;
+    private boolean stopOnFeasible = true;
     private boolean legalMode;
     private int optimizeSeconds = DEFAULT_OPTIMIZE_SECONDS;
     public static final double TASER_SMOOTH_LAMBDA = 1.0e-2;
@@ -729,7 +729,7 @@ public final class AngleSolverState {
         customAngleDeg = 0.0;
         customAngleType = CustomAngleType.POSITION;
         effort = Effort.FAST;
-        stopOnFeasible = false;
+        stopOnFeasible = true;
         legalMode = false;
         optimizeSeconds = DEFAULT_OPTIMIZE_SECONDS;
         solveBudget.resetToDefaults();
