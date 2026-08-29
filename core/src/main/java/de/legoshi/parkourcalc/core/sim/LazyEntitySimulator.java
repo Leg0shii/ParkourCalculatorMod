@@ -43,6 +43,11 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     }
 
     @Override
+    public final void teleport(Vec3dCore pos, Vec3dCore velocity) {
+        teleportEntity(ensureEntity(), pos, velocity);
+    }
+
+    @Override
     public final void tick() {
         E e = ensureEntity();
         tickEntity(e);
@@ -233,6 +238,8 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     protected abstract StartResumeState describeResume(Checkpoint checkpoint);
 
     protected abstract void setInput(E entity, InputRow row);
+
+    protected abstract void teleportEntity(E entity, Vec3dCore pos, Vec3dCore velocity);
 
     protected abstract void applyYaw(E entity, float yaw);
 

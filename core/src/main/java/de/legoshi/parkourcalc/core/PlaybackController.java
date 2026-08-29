@@ -21,6 +21,9 @@ public final class PlaybackController {
     private static final long TICK_NANOS = 50_000_000L;
     private static final float MAX_FRAME_DT_SECONDS = 0.1f;
 
+    private static final long TELEPORT_NOTICE_HOLD_NANOS = 1_000_000_000L;
+    private static final long TELEPORT_NOTICE_FADE_NANOS = 500_000_000L;
+
     public static final float DEFAULT_PITCH = 40f;
 
     private final InputData inputData;
@@ -63,6 +66,8 @@ public final class PlaybackController {
     // Non-zero while the game sits paused: client ticks keep firing but the world does not advance,
     // so the schedule must freeze with it (gh-106). On resume the lerp clocks shift by the pause.
     private long pausedAtNanos;
+
+    private long teleportNoticeNanos;
 
     private final List<String> simTickDumps = new ArrayList<String>();
 
@@ -158,6 +163,7 @@ public final class PlaybackController {
 
         bridge.closeUI();
         pausedAtNanos = 0L;
+        teleportNoticeNanos = 0L;
 
         simTickDumps.clear();
         if (DebugFlags.DUMP_TICK_STATE) {
@@ -231,6 +237,18 @@ public final class PlaybackController {
         lastJumpBoostAmplifier = 0;
     }
 
+    public float teleportNoticeAlpha() {
+        if (teleportNoticeNanos == 0L) return 0f;
+        long age = System.nanoTime() - teleportNoticeNanos;
+        if (age < 0L) {
+            teleportNoticeNanos = 0L;
+            return 0f;
+        }
+        if (age <= TELEPORT_NOTICE_HOLD_NANOS) return 1f;
+        if (age >= TELEPORT_NOTICE_HOLD_NANOS + TELEPORT_NOTICE_FADE_NANOS) return 0f;
+        return 1f - (age - TELEPORT_NOTICE_HOLD_NANOS) / (float) TELEPORT_NOTICE_FADE_NANOS;
+    }
+
     public String statusHint() {
         if (!running) return "";
         boolean fromStart = startTick == 0;
@@ -287,6 +305,12 @@ public final class PlaybackController {
         }
 
         InputRow row = inputData.get(nextTick);
+        if (row.isTeleportEnabled()) {
+            bridge.teleport(
+                    new Vec3dCore(row.getTeleportX(), row.getTeleportY(), row.getTeleportZ()),
+                    Vec3dCore.GROUND_REST_VELOCITY, currentTickYaw, null);
+            teleportNoticeNanos = System.nanoTime();
+        }
         for (InputRow.Key key : InputRow.Key.values()) {
             bridge.setKey(key, row.isKeyActive(key));
         }

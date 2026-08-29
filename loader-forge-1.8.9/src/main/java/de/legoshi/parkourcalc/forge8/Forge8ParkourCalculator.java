@@ -277,7 +277,7 @@ public class Forge8ParkourCalculator {
     public void onHudRender(RenderGameOverlayEvent.Post event) {
         if (event.type != RenderGameOverlayEvent.ElementType.TEXT) return;
         if (application.isPlaybackRunning()) {
-            hudRenderer.render();
+            hudRenderer.render(application.getPlayback().teleportNoticeAlpha());
         }
     }
 

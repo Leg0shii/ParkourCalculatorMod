@@ -5,6 +5,7 @@ import de.legoshi.parkourcalc.core.anglesolver.TickConstraints;
 import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.sim.TickState;
+import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverTable;
 import de.legoshi.parkourcalc.core.ui.anglesolver.SolverWidgets;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
@@ -79,6 +80,12 @@ public final class InputOverlay {
 
     private static final String MENU_SET_TO_PLAYER = "Set to user position";
     private static final String MENU_TELEPORT_TO_TICK = "Teleport player to tick %d";
+    private static final String MENU_TELEPORT_DEST_ENABLE = "Teleport at this tick";
+    private static final String MENU_TELEPORT_DEST_TO_PLAYER = "Set destination to user position";
+    private static final String TELEPORT_X_LABEL = "X";
+    private static final String TELEPORT_Y_LABEL = "Y";
+    private static final String TELEPORT_Z_LABEL = "Z";
+    private static final float TELEPORT_COORD_INPUT_WIDTH = 200;
     private static final String LABEL_ROWS = "Rows:";
     private static final String MENU_ADD_AT_END = "Add %d row(s) at end";
     private static final String MENU_ADD_ABOVE = "Add %d row(s) above";
@@ -121,6 +128,9 @@ public final class InputOverlay {
     private final KeyDragSelect keyDragSelect = new KeyDragSelect();
     private final ImString yawInput = new ImString(32);
     private final ImString pitchInput = new ImString(32);
+    private final ImString teleportXInput = new ImString(32);
+    private final ImString teleportYInput = new ImString(32);
+    private final ImString teleportZInput = new ImString(32);
     private final ImInt rowsToAdd = new ImInt(1);
     private final ImInt ampBuf = new ImInt();
     private final ImInt hotbarBuf = new ImInt();
@@ -1368,6 +1378,7 @@ public final class InputOverlay {
         renderApplyPotionOptions();
         renderYawLockOption();
         renderPitchLockOption();
+        renderTeleportDestinationOption();
 
         // Segment 3: destructive action, kept at the very bottom.
         renderDeleteOption();
@@ -1383,6 +1394,62 @@ public final class InputOverlay {
         if (state == null) return;
         if (contextButton(String.format(MENU_TELEPORT_TO_TICK, row + 1))) {
             playback.teleportToTick(state.position, state.yaw, boxController.getPitch(row));
+        }
+    }
+
+    private void renderTeleportDestinationOption() {
+        int row = selection.singleSelectedRow();
+        if (row < 0 || row >= data.size()) return;
+        InputRow r = data.get(row);
+
+        ThemeManager.paddedSeparator();
+        boolean enabled = r.isTeleportEnabled();
+        if (Controls.checkbox(MENU_TELEPORT_DEST_ENABLE, enabled)) {
+            r.setTeleportEnabled(!enabled);
+            if (!enabled) syncTeleportInputs(r);
+            notifyChange(row);
+        }
+        if (!r.isTeleportEnabled()) return;
+
+        if (ImGui.isWindowAppearing()) syncTeleportInputs(r);
+
+        float width = TELEPORT_COORD_INPUT_WIDTH * uiScale();
+        boolean changed = false;
+        changed |= Controls.decimalField(TELEPORT_X_LABEL, teleportXInput, width);
+        changed |= Controls.decimalField(TELEPORT_Y_LABEL, teleportYInput, width);
+        changed |= Controls.decimalField(TELEPORT_Z_LABEL, teleportZInput, width);
+        if (changed) {
+            r.setTeleportDestination(
+                    parseCoord(teleportXInput, r.getTeleportX()),
+                    parseCoord(teleportYInput, r.getTeleportY()),
+                    parseCoord(teleportZInput, r.getTeleportZ()));
+            notifyChange(row);
+        }
+
+        if (mc != null && mc.isReady()
+                && Controls.secondaryButton(MENU_TELEPORT_DEST_TO_PLAYER, ImGui.getContentRegionAvail().x)) {
+            Vec3dCore p = mc.getPlayerPosition();
+            r.setTeleportDestination(p.x, p.y, p.z);
+            syncTeleportInputs(r);
+            notifyChange(row);
+        }
+    }
+
+    private void syncTeleportInputs(InputRow r) {
+        teleportXInput.set(formatCoord(r.getTeleportX()));
+        teleportYInput.set(formatCoord(r.getTeleportY()));
+        teleportZInput.set(formatCoord(r.getTeleportZ()));
+    }
+
+    private static String formatCoord(double value) {
+        return String.format(Locale.ROOT, "%.5f", value);
+    }
+
+    private static double parseCoord(ImString buf, double fallback) {
+        try {
+            return Double.parseDouble(buf.get().trim());
+        } catch (NumberFormatException e) {
+            return fallback;
         }
     }
 

@@ -183,6 +183,11 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
         e.input.setData(row);
     }
 
+    @Override protected void teleportEntity(SimulatorEntity e, Vec3dCore pos, Vec3dCore velocity) {
+        e.setPos(pos.x, pos.y, pos.z);
+        e.setDeltaMovement(velocity.x, velocity.y, velocity.z);
+    }
+
     @Override protected void applyYaw(SimulatorEntity e, float yaw) {
         e.setYRot(e.getYRot() + yaw);
     }

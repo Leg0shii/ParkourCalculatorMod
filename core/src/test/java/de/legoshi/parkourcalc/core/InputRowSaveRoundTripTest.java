@@ -105,6 +105,46 @@ public class InputRowSaveRoundTripTest {
     }
 
     @Test
+    public void teleportDestinationRoundTrips() throws Exception {
+        FileSystemSaveStore store = store(Files.createTempDirectory("pkc-rt-teleport"));
+
+        InputData in = new InputData();
+        InputRow r0 = new InputRow();
+        r0.setTeleportEnabled(true);
+        r0.setTeleportDestination(12.5, 65.0, -3.25);
+        in.getRows().add(r0);
+
+        InputRow r1 = new InputRow();
+        in.getRows().add(r1);
+
+        InputData out = saveAndReload(store, in);
+        assertEquals(2, out.size());
+
+        InputRow o0 = out.get(0);
+        assertTrue("teleport flag must survive a round-trip", o0.isTeleportEnabled());
+        assertEquals(12.5, o0.getTeleportX(), 0.0);
+        assertEquals(65.0, o0.getTeleportY(), 0.0);
+        assertEquals(-3.25, o0.getTeleportZ(), 0.0);
+
+        assertFalse("an untouched teleport stays disabled", out.get(1).isTeleportEnabled());
+    }
+
+    @Test
+    public void oldFormatRowWithoutTeleportLoadsDisabled() {
+        String json = "{\n" +
+                "  \"version\": 1,\n" +
+                "  \"start\": { \"pos\": [0.0, 0.0, 0.0], \"vel\": [0.0, 0.0, 0.0], \"yaw\": 0.0 },\n" +
+                "  \"rows\": [ { \"keys\": [\"W\"], \"yaw\": 0.0 } ]\n" +
+                "}";
+        SaveFile file = SaveIO.parseSafe(json);
+        assertNotNull(file);
+        InputData out = new InputData();
+        SaveIO.applyRowsTo(file, out);
+        assertEquals(1, out.size());
+        assertFalse("missing teleport field must load as disabled", out.get(0).isTeleportEnabled());
+    }
+
+    @Test
     public void oldFormatRowWithoutPitchOrMouseLoadsWithDefaults() {
         String json = "{\n" +
                 "  \"version\": 1,\n" +

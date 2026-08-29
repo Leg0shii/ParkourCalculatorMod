@@ -213,6 +213,13 @@ public final class Forge8Simulator extends LazyEntitySimulator<SimulatorEntity> 
         e.setInput(row);
     }
 
+    @Override protected void teleportEntity(SimulatorEntity e, Vec3dCore pos, Vec3dCore velocity) {
+        e.setPosition(pos.x, pos.y, pos.z);
+        e.motionX = velocity.x;
+        e.motionY = velocity.y;
+        e.motionZ = velocity.z;
+    }
+
     @Override protected void applyYaw(SimulatorEntity e, float yaw) {
         e.rotationYaw += yaw;
     }

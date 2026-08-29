@@ -482,6 +482,10 @@ public final class SaveIO {
         r.speedAmplifier = row.getSpeedAmplifier();
         r.jumpBoostAmplifier = row.getJumpBoostAmplifier();
         r.hotbarSlot = row.getHotbarSlot();
+        r.teleport = row.isTeleportEnabled();
+        r.teleportX = row.getTeleportX();
+        r.teleportY = row.getTeleportY();
+        r.teleportZ = row.getTeleportZ();
         return r;
     }
 
@@ -497,7 +501,11 @@ public final class SaveIO {
                 && r.pitchLocked == row.isPitchLocked()
                 && r.speedAmplifier == row.getSpeedAmplifier()
                 && r.jumpBoostAmplifier == row.getJumpBoostAmplifier()
-                && r.hotbarSlot == row.getHotbarSlot();
+                && r.hotbarSlot == row.getHotbarSlot()
+                && r.teleport == row.isTeleportEnabled()
+                && r.teleportX == row.getTeleportX()
+                && r.teleportY == row.getTeleportY()
+                && r.teleportZ == row.getTeleportZ();
     }
 
     private static InputRow toInputRow(SaveFile.Row r) {
@@ -518,6 +526,8 @@ public final class SaveIO {
             row.setSpeedAmplifier(r.speedAmplifier);
             row.setJumpBoostAmplifier(r.jumpBoostAmplifier);
             row.setHotbarSlot(r.hotbarSlot);
+            row.setTeleportDestination(r.teleportX, r.teleportY, r.teleportZ);
+            row.setTeleportEnabled(r.teleport);
         }
         return row;
     }
