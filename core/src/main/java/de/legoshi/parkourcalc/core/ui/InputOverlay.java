@@ -65,9 +65,6 @@ public final class InputOverlay {
     private static final String MENU_APPLY_SPEED_TO_ALL = "Apply tick 1 Speed to all rows";
     private static final String MENU_APPLY_JUMP_TO_ALL = "Apply tick 1 Jump to all rows";
 
-    private static final String[] AMP_LABELS = {
-            "none", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"
-    };
     private static final float AMP_CELL_WIDTH = 110;
     private static final float AMP_COLUMN_WIDTH = 120;
 
@@ -664,8 +661,8 @@ public final class InputOverlay {
             case COL_INDEX: return "Tick number (1-based). Each row is one game tick.";
             case COL_YAW: return "Yaw in degrees (-180 to 180). Empty = inherit previous tick's yaw.";
             case COL_PITCH: return "Pitch turn per tick; press F to lock a cell to an absolute pitch (-90 up to 90 down). Empty = inherit previous tick's pitch.";
-            case COL_SPEED: return "Speed potion amplifier (none = no effect).";
-            case COL_JUMP_BOOST: return "Jump Boost potion amplifier (none = no effect).";
+            case COL_SPEED: return "Speed potion amplifier, 0 to 255 (0 = no effect).";
+            case COL_JUMP_BOOST: return "Jump Boost potion amplifier, 0 to 255 (0 = no effect).";
             case COL_HOTBAR: return "Held hotbar slot (1-9) to switch to during playback. Empty = keep the previous slot.";
             default: return col;
         }
@@ -1216,7 +1213,8 @@ public final class InputOverlay {
             ImGui.tableNextColumn();
             ampBuf.set(row.getSpeedAmplifier());
             ThemeManager.centerNextItem(ampW);
-            if (Controls.tableCombo(ID_SPEED_SUFFIX, ampBuf, AMP_LABELS, ampW)) {
+            ImGui.setNextItemWidth(ampW);
+            if (ImGui.inputInt(ID_SPEED_SUFFIX, ampBuf, 0, 0)) {
                 row.setSpeedAmplifier(ampBuf.get());
                 notifyChange(rowIndex);
             }
@@ -1225,7 +1223,8 @@ public final class InputOverlay {
             ImGui.tableNextColumn();
             ampBuf.set(row.getJumpBoostAmplifier());
             ThemeManager.centerNextItem(ampW);
-            if (Controls.tableCombo(ID_JUMP_SUFFIX, ampBuf, AMP_LABELS, ampW)) {
+            ImGui.setNextItemWidth(ampW);
+            if (ImGui.inputInt(ID_JUMP_SUFFIX, ampBuf, 0, 0)) {
                 row.setJumpBoostAmplifier(ampBuf.get());
                 notifyChange(rowIndex);
             }
