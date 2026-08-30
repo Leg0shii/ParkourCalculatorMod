@@ -116,6 +116,8 @@ public final class AngleSolverWindow implements RenderInterface {
     private String[] presetNames;
     private String presetError;
     private Runnable applySurfaceState = () -> { };
+    private Runnable findNoTurn = () -> { };
+    private String noTurnStatus = "";
 
     private boolean yawsExpanded;
     private boolean detailsExpanded;
@@ -901,6 +903,14 @@ public final class AngleSolverWindow implements RenderInterface {
         applySurfaceState = action != null ? action : () -> { };
     }
 
+    public void setFindNoTurn(Runnable action) {
+        findNoTurn = action != null ? action : () -> { };
+    }
+
+    public void setNoTurnStatus(String status) {
+        noTurnStatus = status;
+    }
+
     private void renderActions() {
         if (engine.isSolving() || runTicks.isRunning()) {
             renderSolvingIndicator();
@@ -921,6 +931,15 @@ public final class AngleSolverWindow implements RenderInterface {
             ThemeManager.popTextColor();
         } else if (Controls.secondaryButton("Solve")) {
             runTicks.start();
+        }
+        if (Controls.secondaryButton("Find No-Turn")) {
+            findNoTurn.run();
+        }
+        if (ImGui.isItemHovered()) {
+            ImGui.setTooltip("Search key schedules (cold) for a byte-exact NO-TURN: a single settable facing across the run-up, then the turn. Mark the no-turn ticks with dF = 0, set the landing constraints, the jump rows, and a free-start box.");
+        }
+        if (noTurnStatus != null && !noTurnStatus.isEmpty()) {
+            ImGui.textWrapped(noTurnStatus);
         }
     }
 

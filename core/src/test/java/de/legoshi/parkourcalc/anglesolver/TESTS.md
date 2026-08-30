@@ -196,6 +196,12 @@ anglesolver/
                            direct java -cp; run :core:processTestResources after fixture edits
   KernelDiagProbe.java     DiskSocpKernel failure diagnosis (base/folded/chord solves, jitter and
                            certificate paths); env-gated, run via direct java -cp
+  NoTurnFinderTest.java    #424 outer no-turn stratfinder spike (core/.../anglesolver/noturn):
+                           machineryCertifiesAByteExactNoTurn drives the inner engine as the byte-exact
+                           oracle on the j1150 structure with a dF=0 chain and asserts a clean no-turn
+                           (viol 0, obj near the -2805.2990 pure-no-turn optimum); finderReturnsAByteExactNoTurn
+                           runs the full cold beam + full-jump screen + certify ladder and asserts a
+                           byte-exact no-turn comes back (cold, or the warm seed of the current inputs)
   harness/                 shared plumbing; no test lives here
 resources/
   problems/<check>/        one folder per check; holds captures or .expect.json sidecars
