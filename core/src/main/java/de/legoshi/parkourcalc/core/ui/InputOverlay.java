@@ -596,9 +596,6 @@ public final class InputOverlay {
         if (isHotbarColumnVisible()) {
             ImGui.tableSetupColumn(COL_HOTBAR, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableColumnWidth(COL_HOTBAR, HOTBAR_COLUMN_WIDTH * scale));
         }
-        if (isTeleportColumnVisible()) {
-            ImGui.tableSetupColumn(COL_TELEPORT, ImGuiTableColumnFlags.WidthStretch, 1.0f);
-        }
         if (isYawColumnVisible()) {
             ImGui.tableSetupColumn(COL_YAW, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableColumnWidth(COL_YAW, yawColumnWidth()));
         }
@@ -620,6 +617,9 @@ public final class InputOverlay {
             ImGui.tableSetupColumn(angleSolver.constraintsColumnHeaderLabel(), ImGuiTableColumnFlags.WidthStretch, 1.0f);
             ImGui.tableSetupColumn(angleSolver.stateColumnHeaderLabel(), ImGuiTableColumnFlags.WidthStretch, 0.8f);
         }
+        if (isTeleportColumnVisible()) {
+            ImGui.tableSetupColumn(COL_TELEPORT, ImGuiTableColumnFlags.WidthStretch, 1.0f);
+        }
         if (scrollFreeze) ImGui.tableSetupScrollFreeze(1, 1);
         if (renderHeaders) renderColumnHeadersWithTooltips(solverActive);
     }
@@ -639,11 +639,6 @@ public final class InputOverlay {
             ImGui.tableSetColumnIndex(col++);
             ThemeManager.tableHeaderCentered(COL_HOTBAR);
             TooltipUtil.onHover(headerColTooltip(COL_HOTBAR));
-        }
-        if (isTeleportColumnVisible()) {
-            ImGui.tableSetColumnIndex(col++);
-            ThemeManager.tableHeaderCentered(COL_TELEPORT);
-            TooltipUtil.onHover(headerColTooltip(COL_TELEPORT));
         }
         if (isYawColumnVisible()) {
             ImGui.tableSetColumnIndex(col++);
@@ -670,6 +665,11 @@ public final class InputOverlay {
             ThemeManager.tableHeaderCentered(angleSolver.constraintsColumnHeaderLabel());
             ImGui.tableSetColumnIndex(col++);
             ThemeManager.tableHeaderCentered(angleSolver.stateColumnHeaderLabel());
+        }
+        if (isTeleportColumnVisible()) {
+            ImGui.tableSetColumnIndex(col++);
+            ThemeManager.tableHeaderCentered(COL_TELEPORT);
+            TooltipUtil.onHover(headerColTooltip(COL_TELEPORT));
         }
         ThemeManager.tableRightmostCellTrailingPad();
     }
@@ -908,7 +908,6 @@ public final class InputOverlay {
 
         renderKeyColumns(row, index, rowH);
         if (isHotbarColumnVisible()) renderHotbarColumn(row, index);
-        if (isTeleportColumnVisible()) renderTeleportColumn(row, index);
         if (isYawColumnVisible()) renderYawColumn(row, index, centerY);
         if (isPitchColumnVisible()) renderPitchColumn(row, index, centerY);
         renderPotionColumns(row, index);
@@ -918,24 +917,20 @@ public final class InputOverlay {
             ImGui.tableNextColumn();
             angleSolver.renderStateCell(index, rowH);
         }
+        if (isTeleportColumnVisible()) renderTeleportColumn(row, index);
         ThemeManager.tableRightmostCellTrailingPad();
 
         if (solverActive) {
             angleSolver.drawStartLandingInset(index, rMinX, rMinY, rMaxX, rMaxY);
         }
 
-        if (!solverActive && isTeleportColumnVisible() && row.isTeleportEnabled()) {
-            ImDrawList dl = ImGui.getWindowDrawList();
-            int scrim = ThemeManager.bgTintColor(0.5f);
-            float gapLo = Math.max(rMinX, Math.min(tpCellMinX, rMaxX));
-            float gapHi = Math.max(rMinX, Math.min(tpCellMaxX, rMaxX));
-            if (gapLo > rMinX) dl.addRectFilled(rMinX, rMinY, gapLo, rMaxY, scrim);
-            if (gapHi < rMaxX) dl.addRectFilled(gapHi, rMinY, rMaxX, rMaxY, scrim);
+        if (isTeleportColumnVisible() && row.isTeleportEnabled() && tpCellMinX > rMinX) {
+            ImGui.getWindowDrawList().addRectFilled(rMinX, rMinY, tpCellMinX, rMaxY, ThemeManager.bgTintColor(0.5f));
         }
 
         if (draggingTeleportRow >= 0 && draggingTeleportRow != index && isTeleportColumnVisible()) {
-            ImVec2 m = ImGui.getMousePos();
-            if (m.y >= rMinY && m.y < rMaxY && m.x >= rMinX && m.x <= rMaxX) {
+            float my = ImGui.getMousePos().y;
+            if (my >= rMinY && my < rMaxY) {
                 teleportDropRow = index;
                 ImGui.getWindowDrawList().addRect(tpCellMinX, rMinY, tpCellMaxX, rMaxY,
                         ThemeManager.teleportColor(), 3f * uiScale(), 0, 2f);
