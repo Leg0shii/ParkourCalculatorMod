@@ -15,19 +15,23 @@ public final class BuiltinGraphs {
     }
 
     public static SolverGraph fast() {
-        return build(FAST_PRESET, 10, 3, 0);
+        return build(FAST_PRESET, 10, 3, 0, true);
+    }
+
+    public static SolverGraph fastRunTicks() {
+        return build("Fast (run ticks)", 10, 3, 0, false);
     }
 
     public static SolverGraph optimize(int optimizeSeconds) {
-        return build(OPTIMIZE_PRESET, 10, 3, optimizeSeconds > 0 ? optimizeSeconds : 120);
+        return build(OPTIMIZE_PRESET, 10, 3, optimizeSeconds > 0 ? optimizeSeconds : 120, true);
     }
 
     public static SolverGraph fromBudget(boolean stopOnFeasible, boolean ilsExhaustive,
                                          boolean useWindowSolver, int window, int commit, int timeBudgetSeconds) {
-        return build("Custom", window, commit, timeBudgetSeconds);
+        return build("Custom", window, commit, timeBudgetSeconds, true);
     }
 
-    private static SolverGraph build(String name, int window, int commit, int t) {
+    private static SolverGraph build(String name, int window, int commit, int t, boolean leafSnap) {
         boolean fastTier = t <= 0;
         int tp = fastTier ? 120 : t;
         long reserveNanos = fastTier ? 0L : GraphRunner.wrapReserveNanos(t * 1_000_000_000L);
@@ -85,8 +89,10 @@ public final class BuiltinGraphs {
                 .set("wrap", "budgetSec", fastTier ? 0 : tp)
                 .set("wrap", "minRemainingSec", 1);
         g.add("translate", "translatedStart");
-        g.add("snap", "leafSnap")
-                .set("snap", "pairPass", fastTier ? 0 : 1);
+        if (leafSnap) {
+            g.add("snap", "leafSnap")
+                    .set("snap", "pairPass", fastTier ? 0 : 1);
+        }
         g.add("emit", "emit");
 
         chain(g, "entry", "horizon");
@@ -104,8 +110,12 @@ public final class BuiltinGraphs {
         chain(g, "ils", "cap2");
         chain(g, "cap2", "wrap");
         chain(g, "wrap", "translate");
-        chain(g, "translate", "snap");
-        chain(g, "snap", "emit");
+        if (leafSnap) {
+            chain(g, "translate", "snap");
+            chain(g, "snap", "emit");
+        } else {
+            chain(g, "translate", "emit");
+        }
         return g.build();
     }
 
