@@ -5,6 +5,7 @@ import de.legoshi.parkourcalc.core.anglesolver.TickConstraints;
 import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.sim.TickState;
+import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverTable;
 import de.legoshi.parkourcalc.core.ui.anglesolver.SolverWidgets;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
@@ -76,6 +77,14 @@ public final class InputOverlay {
 
     private static final String MENU_SET_TO_PLAYER = "Set to user position";
     private static final String MENU_TELEPORT_TO_TICK = "Teleport player to tick %d";
+    private static final String COL_TELEPORT = "Teleport";
+    private static final String TELEPORT_X_LABEL = "X";
+    private static final String TELEPORT_Y_LABEL = "Y";
+    private static final String TELEPORT_Z_LABEL = "Z";
+    private static final String TELEPORT_ADD_LABEL = "+";
+    private static final String TELEPORT_REMOVE_BTN = "Remove";
+    private static final float TELEPORT_FIELD_WIDTH = 110;
+    private static final float TELEPORT_COLUMN_WIDTH = 190;
     private static final String LABEL_ROWS = "Rows:";
     private static final String MENU_ADD_AT_END = "Add %d row(s) at end";
     private static final String MENU_ADD_ABOVE = "Add %d row(s) above";
@@ -118,6 +127,9 @@ public final class InputOverlay {
     private final KeyDragSelect keyDragSelect = new KeyDragSelect();
     private final ImString yawInput = new ImString(32);
     private final ImString pitchInput = new ImString(32);
+    private final ImString teleportXInput = new ImString(32);
+    private final ImString teleportYInput = new ImString(32);
+    private final ImString teleportZInput = new ImString(32);
     private final ImInt rowsToAdd = new ImInt(1);
     private final ImInt ampBuf = new ImInt();
     private final ImInt hotbarBuf = new ImInt();
@@ -127,6 +139,11 @@ public final class InputOverlay {
     private Runnable onSaveSelectionAsTas;
 
     private int draggingRowIndex = -1;
+    private int draggingTeleportRow = -1;
+    private int teleportDropRow = -1;
+    private int teleportPressRow = -1;
+    private float tpCellMinX;
+    private float tpCellMaxX;
     private int editingYawRow = -1;
     private int editingPitchRow = -1;
     private int pendingPitchFocusRow = -1;
@@ -315,6 +332,10 @@ public final class InputOverlay {
         return settings.showColHotbar;
     }
 
+    private boolean isTeleportColumnVisible() {
+        return settings.showColTeleport;
+    }
+
     private int potionColumnCount() {
         return (isSpeedColumnVisible() ? 1 : 0) + (isJumpBoostColumnVisible() ? 1 : 0);
     }
@@ -325,6 +346,7 @@ public final class InputOverlay {
         for (InputRow.Key key : MODIFIER_KEYS) if (isKeyColumnVisible(key)) count++;
         for (InputRow.Key key : MOUSE_KEYS) if (isKeyColumnVisible(key)) count++;
         if (isHotbarColumnVisible()) count++;
+        if (isTeleportColumnVisible()) count++;
         if (isYawColumnVisible()) count++;
         if (isPitchColumnVisible()) count++;
         return count;
@@ -359,6 +381,7 @@ public final class InputOverlay {
             if (isKeyColumnVisible(key)) columnSum += ThemeManager.tableColumnWidth(headerLabel(key), 0f);
         }
         if (isHotbarColumnVisible()) columnSum += ThemeManager.tableColumnWidth(COL_HOTBAR, HOTBAR_COLUMN_WIDTH * scale);
+        if (isTeleportColumnVisible()) columnSum += ThemeManager.tableColumnWidth(COL_TELEPORT, TELEPORT_COLUMN_WIDTH * scale);
         boolean speed = isSpeedColumnVisible();
         boolean jump = isJumpBoostColumnVisible();
         if (speed) {
@@ -455,6 +478,7 @@ public final class InputOverlay {
 
         keyDragSelect.clearRowBounds();
         hoveredRow = -1;
+        teleportDropRow = -1;
         if (solverActive) angleSolver.beginRows();
 
         handleAutoScroll();
@@ -507,6 +531,7 @@ public final class InputOverlay {
         }
         renderDropIndicator(ImGui.getWindowDrawList(), dragDrop);
         applyDragDrop(dragDrop);
+        applyTeleportDrag();
         if (solverActive) angleSolver.endRows();
         ImGui.endChild();
     }
@@ -589,6 +614,9 @@ public final class InputOverlay {
             ImGui.tableSetupColumn(angleSolver.constraintsColumnHeaderLabel(), ImGuiTableColumnFlags.WidthStretch, 1.0f);
             ImGui.tableSetupColumn(angleSolver.stateColumnHeaderLabel(), ImGuiTableColumnFlags.WidthStretch, 0.8f);
         }
+        if (isTeleportColumnVisible()) {
+            ImGui.tableSetupColumn(COL_TELEPORT, ImGuiTableColumnFlags.WidthStretch, 1.0f);
+        }
         if (scrollFreeze) ImGui.tableSetupScrollFreeze(1, 1);
         if (renderHeaders) renderColumnHeadersWithTooltips(solverActive);
     }
@@ -635,6 +663,11 @@ public final class InputOverlay {
             ImGui.tableSetColumnIndex(col++);
             ThemeManager.tableHeaderCentered(angleSolver.stateColumnHeaderLabel());
         }
+        if (isTeleportColumnVisible()) {
+            ImGui.tableSetColumnIndex(col++);
+            ThemeManager.tableHeaderCentered(COL_TELEPORT);
+            TooltipUtil.onHover(headerColTooltip(COL_TELEPORT));
+        }
         ThemeManager.tableRightmostCellTrailingPad();
     }
 
@@ -664,6 +697,7 @@ public final class InputOverlay {
             case COL_SPEED: return "Speed potion amplifier, 0 to 255 (0 = no effect).";
             case COL_JUMP_BOOST: return "Jump Boost potion amplifier, 0 to 255 (0 = no effect).";
             case COL_HOTBAR: return "Held hotbar slot (1-9) to switch to during playback. Empty = keep the previous slot.";
+            case COL_TELEPORT: return "Teleport the player to X/Y/Z at the start of this tick, before its inputs. Applies to both the simulation and the replay.";
             default: return col;
         }
     }
@@ -880,10 +914,27 @@ public final class InputOverlay {
             ImGui.tableNextColumn();
             angleSolver.renderStateCell(index, rowH);
         }
+        if (isTeleportColumnVisible()) renderTeleportColumn(row, index);
         ThemeManager.tableRightmostCellTrailingPad();
 
         if (solverActive) {
             angleSolver.drawStartLandingInset(index, rMinX, rMinY, rMaxX, rMaxY);
+        }
+
+        if (isTeleportColumnVisible() && row.isTeleportEnabled() && tpCellMinX > rMinX) {
+            ImDrawList dl = ImGui.getWindowDrawList();
+            dl.pushClipRect(rMinX, rMinY, tpCellMinX, rMaxY, false);
+            dl.addRectFilled(rMinX, rMinY, tpCellMinX, rMaxY, ThemeManager.bgTintColor(0.66f));
+            dl.popClipRect();
+        }
+
+        if (draggingTeleportRow >= 0 && draggingTeleportRow != index && isTeleportColumnVisible()) {
+            float my = ImGui.getMousePos().y;
+            if (my >= rMinY && my < rMaxY) {
+                teleportDropRow = index;
+                ImGui.getWindowDrawList().addRect(tpCellMinX, rMinY, tpCellMaxX, rMaxY,
+                        ThemeManager.teleportColor(), 3f * uiScale(), 0, 2f);
+            }
         }
 
         ImGui.popID();
@@ -1382,6 +1433,178 @@ public final class InputOverlay {
         if (state == null) return;
         if (contextButton(String.format(MENU_TELEPORT_TO_TICK, row + 1))) {
             playback.teleportToTick(state.position, state.yaw, boxController.getPitch(row));
+        }
+    }
+
+    private void renderTeleportColumn(InputRow row, int rowIndex) {
+        ImGui.tableNextColumn();
+        tpCellMinX = ImGui.getCursorScreenPos().x;
+        tpCellMaxX = tpCellMinX + ImGui.getContentRegionAvail().x;
+        String popupId = "tpedit" + rowIndex;
+        if (row.isTeleportEnabled()) {
+            renderTeleportChip(row, rowIndex, popupId);
+        } else {
+            renderTeleportAddChip(row, rowIndex, popupId);
+        }
+        renderTeleportPopup(row, rowIndex, popupId);
+    }
+
+    private void renderTeleportChip(InputRow row, int rowIndex, String popupId) {
+        float s = uiScale();
+        float h = ImGui.getFrameHeight();
+        float pad = 6f * s;
+        ImDrawList dl = ImGui.getWindowDrawList();
+        String label = "TP " + fmtChip(row.getTeleportX()) + ", " + fmtChip(row.getTeleportY()) + ", " + fmtChip(row.getTeleportZ());
+        float w = pad + ImGui.calcTextSize(label).x + pad;
+
+        ImGui.invisibleButton("tpchip" + rowIndex, w, h);
+        ImVec2 mn = ImGui.getItemRectMin();
+        ImVec2 mx = ImGui.getItemRectMax();
+        boolean hover = ImGui.isItemHovered();
+        if (hover && ImGui.isMouseClicked(0)) {
+            teleportPressRow = rowIndex;
+        }
+        if (teleportPressRow == rowIndex && draggingTeleportRow < 0 && ImGui.isMouseDragging(0)) {
+            draggingTeleportRow = rowIndex;
+        }
+        boolean dragSource = draggingTeleportRow == rowIndex;
+        dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.panelColor(), 3f * s);
+        dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.teleportTintColor(hover || dragSource ? 0.22f : 0.12f), 3f * s);
+        dl.addRect(mn.x, mn.y, mx.x, mx.y, hover || dragSource ? ThemeManager.teleportColor() : ThemeManager.teleportTintColor(0.55f), 3f * s, 0, 1f);
+        float ty = mn.y + (h - ImGui.getFontSize()) * 0.5f;
+        dl.addText(mn.x + pad, ty, ThemeManager.teleportColor(), label);
+        if (teleportPressRow == rowIndex && draggingTeleportRow < 0 && hover && ImGui.isMouseReleased(0)) {
+            teleportPressRow = -1;
+            syncTeleportInputs(row);
+            ImGui.openPopup(popupId);
+        }
+    }
+
+    private void renderTeleportAddChip(InputRow row, int rowIndex, String popupId) {
+        float s = uiScale();
+        float h = ImGui.getFrameHeight();
+        float pad = 6f * s;
+        ImDrawList dl = ImGui.getWindowDrawList();
+        float textW = ImGui.calcTextSize(TELEPORT_ADD_LABEL).x;
+        float w = pad + textW + pad;
+
+        ImGui.invisibleButton("tpadd" + rowIndex, w, h);
+        ImVec2 mn = ImGui.getItemRectMin();
+        ImVec2 mx = ImGui.getItemRectMax();
+        boolean hover = ImGui.isItemHovered();
+        int tint = hover ? ThemeManager.teleportColor() : ThemeManager.textDimColor();
+        dl.addRect(mn.x, mn.y, mx.x, mx.y, tint, 3f * s, 0, 1f);
+        float ty = mn.y + (h - ImGui.getFontSize()) * 0.5f;
+        dl.addText(mn.x + (w - textW) * 0.5f, ty, tint, TELEPORT_ADD_LABEL);
+        if (ImGui.isItemClicked(0)) {
+            Vec3dCore seed = teleportSeedPosition(rowIndex);
+            row.setTeleportDestination(seed.x, seed.y, seed.z);
+            row.setTeleportEnabled(true);
+            syncTeleportInputs(row);
+            notifyChange(rowIndex);
+            ImGui.openPopup(popupId);
+        }
+    }
+
+    private void renderTeleportPopup(InputRow row, int rowIndex, String popupId) {
+        if (!ImGui.beginPopup(popupId)) return;
+        float width = TELEPORT_FIELD_WIDTH * uiScale();
+        boolean changed = false;
+        changed |= Controls.decimalField(TELEPORT_X_LABEL, teleportXInput, width);
+        changed |= Controls.decimalField(TELEPORT_Y_LABEL, teleportYInput, width);
+        changed |= Controls.decimalField(TELEPORT_Z_LABEL, teleportZInput, width);
+        if (changed) {
+            row.setTeleportDestination(
+                    parseCoord(teleportXInput, row.getTeleportX()),
+                    parseCoord(teleportYInput, row.getTeleportY()),
+                    parseCoord(teleportZInput, row.getTeleportZ()));
+            notifyChange(rowIndex);
+        }
+        ThemeManager.paddedSeparator();
+        if (mc != null && mc.isReady() && Controls.secondaryButton(MENU_SET_TO_PLAYER, ImGui.getContentRegionAvail().x)) {
+            Vec3dCore p = mc.getPlayerPosition();
+            row.setTeleportDestination(p.x, p.y, p.z);
+            syncTeleportInputs(row);
+            notifyChange(rowIndex);
+        }
+        if (Controls.dangerButton(TELEPORT_REMOVE_BTN, ImGui.getContentRegionAvail().x)) {
+            row.setTeleportEnabled(false);
+            notifyChange(rowIndex);
+            ImGui.closeCurrentPopup();
+        }
+        ImGui.endPopup();
+    }
+
+    private Vec3dCore teleportSeedPosition(int rowIndex) {
+        if (mc != null && mc.isReady()) return mc.getPlayerPosition();
+        if (boxController != null) {
+            TickState st = boxController.getState(rowIndex);
+            if (st != null && st.position != null) return st.position;
+        }
+        return Vec3dCore.ZERO;
+    }
+
+    private void applyTeleportDrag() {
+        if (draggingTeleportRow >= 0 && draggingTeleportRow < data.size()) {
+            InputRow src = data.get(draggingTeleportRow);
+            String label = "TP " + fmtChip(src.getTeleportX()) + ", " + fmtChip(src.getTeleportY()) + ", " + fmtChip(src.getTeleportZ());
+            String tail = teleportDropRow >= 0 && teleportDropRow != draggingTeleportRow ? "  -> T" + (teleportDropRow + 1) : "";
+            float s = uiScale();
+            float pad = 6f * s;
+            float h = ImGui.getFrameHeight();
+            float labelW = ImGui.calcTextSize(label).x;
+            float tailW = ImGui.calcTextSize(tail).x;
+            ImVec2 m = ImGui.getMousePos();
+            float x = m.x + 12f * s;
+            float y = m.y + 4f * s;
+            float w = pad + labelW + tailW + pad;
+            ImDrawList dl = ImGui.getForegroundDrawList();
+            dl.addRectFilled(x, y, x + w, y + h, ThemeManager.panelColor(), 3f * s);
+            dl.addRect(x, y, x + w, y + h, ThemeManager.teleportColor(), 3f * s, 0, 1f);
+            float ty = y + (h - ImGui.getFontSize()) * 0.5f;
+            dl.addText(x + pad, ty, ThemeManager.teleportColor(), label);
+            dl.addText(x + pad + labelW, ty, ThemeManager.okColor(), tail);
+        }
+        if (!ImGui.isMouseDown(0)) {
+            if (draggingTeleportRow >= 0 && ImGui.isMouseReleased(0)) {
+                moveTeleport(draggingTeleportRow, teleportDropRow);
+            }
+            draggingTeleportRow = -1;
+            teleportDropRow = -1;
+            teleportPressRow = -1;
+        }
+    }
+
+    private void moveTeleport(int from, int to) {
+        if (from == to || from < 0 || from >= data.size() || to < 0 || to >= data.size()) return;
+        InputRow src = data.get(from);
+        if (!src.isTeleportEnabled()) return;
+        InputRow dst = data.get(to);
+        dst.setTeleportDestination(src.getTeleportX(), src.getTeleportY(), src.getTeleportZ());
+        dst.setTeleportEnabled(true);
+        src.setTeleportEnabled(false);
+        notifyChange(Math.min(from, to));
+    }
+
+    private void syncTeleportInputs(InputRow row) {
+        teleportXInput.set(formatCoord(row.getTeleportX()));
+        teleportYInput.set(formatCoord(row.getTeleportY()));
+        teleportZInput.set(formatCoord(row.getTeleportZ()));
+    }
+
+    private static String fmtChip(double value) {
+        return String.format(Locale.ROOT, "%.2f", value);
+    }
+
+    private static String formatCoord(double value) {
+        return String.format(Locale.ROOT, "%.5f", value);
+    }
+
+    private static double parseCoord(ImString buf, double fallback) {
+        try {
+            return Double.parseDouble(buf.get().trim());
+        } catch (NumberFormatException e) {
+            return fallback;
         }
     }
 

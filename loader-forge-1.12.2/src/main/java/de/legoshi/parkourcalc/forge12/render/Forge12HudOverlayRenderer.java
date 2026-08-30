@@ -9,7 +9,7 @@ import net.minecraft.client.gui.ScaledResolution;
 @SuppressWarnings("DuplicatedCode")
 public final class Forge12HudOverlayRenderer {
 
-    public void render() {
+    public void render(float teleportAlpha) {
         Minecraft mc = Minecraft.getMinecraft();
         FontRenderer fr = mc.fontRenderer;
         if (fr == null) return;
@@ -17,5 +17,16 @@ public final class Forge12HudOverlayRenderer {
         String label = MacroBadgeStyle.LABEL;
         int x = sr.getScaledWidth() - fr.getStringWidth(label) - 4;
         fr.drawStringWithShadow(label, x, 4, MacroBadgeStyle.COLOR_ARGB);
+        int noticeColor = MacroBadgeStyle.teleportColorArgb(teleportAlpha);
+        if ((noticeColor >>> 24) >= 4) {
+            String notice = MacroBadgeStyle.TELEPORT_LABEL;
+            float sc = 0.5f;
+            float nx = sr.getScaledWidth() - fr.getStringWidth(notice) * sc - 4;
+            float ny = 4 + fr.FONT_HEIGHT + 2;
+            net.minecraft.client.renderer.GlStateManager.pushMatrix();
+            net.minecraft.client.renderer.GlStateManager.scale(sc, sc, 1f);
+            fr.drawStringWithShadow(notice, nx / sc, ny / sc, noticeColor);
+            net.minecraft.client.renderer.GlStateManager.popMatrix();
+        }
     }
 }

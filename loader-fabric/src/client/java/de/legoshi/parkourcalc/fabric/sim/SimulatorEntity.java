@@ -493,6 +493,25 @@ public class SimulatorEntity extends Player {
         this.fallDistance = c.fallDistance;
     }
 
+    public void teleportRest(double x, double y, double z, double vx, double vy, double vz) {
+        float keepYaw = this.getYRot();
+        this.setPos(x, y, z);
+        this.setDeltaMovement(vx, vy, vz);
+        this.setYRot(keepYaw);
+        this.setOnGround(true);
+        this.horizontalCollision = false;
+        this.minorHorizontalCollision = false;
+        this.setSprinting(false);
+        this.sprintTriggerTime = 0;
+        this.input.seedKeyPresses(new Input(false, false, false, false, false, false, false));
+        this.noJumpDelay = 0;
+        this.stuckSpeedMultiplier = Vec3.ZERO;
+        this.fallDistance = 0;
+        this.crouching = false;
+        this.setPose(Pose.STANDING);
+        this.refreshDimensions();
+    }
+
     public static void applyCheckpoint(net.minecraft.client.player.LocalPlayer p, de.legoshi.parkourcalc.core.sim.Checkpoint state) {
         Checkpoint c = de.legoshi.parkourcalc.fabric.sim.paired.PairedCheckpoint.clientPart(state);
         if (c == null) return;

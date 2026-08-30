@@ -16,6 +16,9 @@ public interface Simulator {
 
     void applyInput(InputRow row);
 
+    default void teleport(Vec3dCore pos, Vec3dCore velocity) {
+    }
+
     void tick();
 
     Vec3dCore getCurrentPosition();

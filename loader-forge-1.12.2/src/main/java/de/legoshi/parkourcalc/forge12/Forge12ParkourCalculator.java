@@ -272,7 +272,7 @@ public class Forge12ParkourCalculator {
     public void onHudRender(RenderGameOverlayEvent.Post event) {
         if (event.getType() != RenderGameOverlayEvent.ElementType.TEXT) return;
         if (application.isPlaybackRunning()) {
-            hudRenderer.render();
+            hudRenderer.render(application.getPlayback().teleportNoticeAlpha());
         }
     }
 

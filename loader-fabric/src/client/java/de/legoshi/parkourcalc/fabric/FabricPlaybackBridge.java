@@ -388,6 +388,32 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
     }
 
     @Override
+    public void teleportInPlace(Vec3dCore pos, Vec3dCore vel, float yaw) {
+        if (!isSingleplayer()) {
+            teleport(pos, vel, yaw, null);
+            return;
+        }
+        Minecraft mc = Minecraft.getInstance();
+        LocalPlayer client = mc.player;
+        if (client == null) return;
+        IntegratedServer server = mc.getSingleplayerServer();
+        if (server == null) return;
+        UUID uuid = client.getUUID();
+        Vec3 startVel = new Vec3(vel.x, vel.y, vel.z);
+        server.execute(() -> {
+            ServerPlayer sp = server.getPlayerList().getPlayer(uuid);
+            if (sp == null) return;
+            sp.connection.teleport(
+                new PositionMoveRotation(new Vec3(pos.x, pos.y, pos.z), startVel, yaw, sp.getXRot()),
+                Collections.emptySet()
+            );
+            sp.setOnGround(true);
+            sp.setSprinting(false);
+            sp.fallDistance = 0;
+        });
+    }
+
+    @Override
     public void setKey(InputRow.Key key, boolean pressed) {
         currentRow.setKeyActive(key, pressed);
         if (ghostMode) return;

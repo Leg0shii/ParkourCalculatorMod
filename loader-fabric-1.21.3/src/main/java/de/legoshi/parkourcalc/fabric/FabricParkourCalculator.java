@@ -470,7 +470,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
     public static void onHudRender(GuiGraphics context) {
         if (!application.isReady()) return;
         if (application.isPlaybackRunning()) {
-            hudRenderer.render(context);
+            hudRenderer.render(context, application.getPlayback().teleportNoticeAlpha());
         }
     }
 

@@ -53,6 +53,10 @@ public final class SaveFile {
         public int speedAmplifier;
         public int jumpBoostAmplifier;
         public int hotbarSlot;
+        public boolean teleport;
+        public double teleportX;
+        public double teleportY;
+        public double teleportZ;
     }
 
     /** Angle Solver problem: defaults, per-tick constraints/overrides, and last solve result. */

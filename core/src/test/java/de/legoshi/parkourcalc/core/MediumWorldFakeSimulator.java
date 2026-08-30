@@ -391,6 +391,15 @@ public class MediumWorldFakeSimulator extends LazyEntitySimulator<MediumWorldFak
 
     @Override protected void setInput(FakeEntity e, InputRow row) { e.row = row; }
 
+    @Override protected void teleportEntity(FakeEntity e, Vec3dCore pos, Vec3dCore velocity) {
+        e.x = pos.x;
+        e.y = pos.y;
+        e.z = pos.z;
+        e.vx = velocity.x;
+        e.vy = velocity.y;
+        e.vz = velocity.z;
+    }
+
     @Override protected void applyYaw(FakeEntity e, float yaw) { e.yaw = e.yaw + yaw; }
 
     @Override protected void setYawAbsolute(FakeEntity e, float yaw) { e.yaw = yaw; }
