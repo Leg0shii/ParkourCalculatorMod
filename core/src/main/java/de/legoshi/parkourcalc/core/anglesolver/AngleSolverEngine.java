@@ -351,6 +351,10 @@ public final class AngleSolverEngine {
      *  {@link #solve()} and exposed (via {@link #debugBuildSpec()}) so tests can obtain the exact compiled
      *  spec without spawning the worker / triggering the slow fallback. */
     private Job buildJob(AngleSolverState.Effort effort) {
+        return buildJob(effort, null);
+    }
+
+    private Job buildJob(AngleSolverState.Effort effort, SolverGraph graphOverride) {
         int startTick = state.getStartTick();
         int landingTick = state.getLandingTick();
         int total = segmentConstraintCount(startTick, landingTick);
@@ -410,7 +414,7 @@ public final class AngleSolverEngine {
                 ph.force45Mask, uiCons,
                 deadlineNanosFor(state, effort), longRunConfigFor(state, effort), useWindowSolverFor(state, effort),
                 stopOnFeasibleFor(state, effort), ilsExhaustiveFor(state, effort), legalGoal,
-                GraphFactory.forState(state, effort));
+                graphOverride != null ? graphOverride : GraphFactory.forState(state, effort));
     }
 
     public String legalGoalWallLabel() {
@@ -479,9 +483,13 @@ public final class AngleSolverEngine {
     }
 
     public void solve(AngleSolverState.Effort effort, boolean smoothFinal) {
+        solve(effort, smoothFinal, null);
+    }
+
+    public void solve(AngleSolverState.Effort effort, boolean smoothFinal, SolverGraph graphOverride) {
         if (solving) return;
         this.smoothFinalResult = smoothFinal;
-        Job job = buildJob(effort);
+        Job job = buildJob(effort, graphOverride);
         if (job == null) return; // invalid range: buildJob already published the failure result
 
         long t0 = System.nanoTime();
