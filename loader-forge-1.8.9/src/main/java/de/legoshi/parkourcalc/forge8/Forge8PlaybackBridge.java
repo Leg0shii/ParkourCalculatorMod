@@ -346,10 +346,10 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
             ghost.removePotionEffect(Potion.moveSpeed.id);
             ghost.removePotionEffect(Potion.jump.id);
             if (speedAmplifier > 0) {
-                ghost.addPotionEffect(new PotionEffect(Potion.moveSpeed.id, EFFECT_DURATION_TICKS, speedAmplifier - 1, false, false));
+                ghost.addPotionEffect(new PotionEffect(Potion.moveSpeed.id, EFFECT_DURATION_TICKS, clientAmplifier(speedAmplifier), false, false));
             }
             if (jumpBoostAmplifier > 0) {
-                ghost.addPotionEffect(new PotionEffect(Potion.jump.id, EFFECT_DURATION_TICKS, jumpBoostAmplifier - 1, false, false));
+                ghost.addPotionEffect(new PotionEffect(Potion.jump.id, EFFECT_DURATION_TICKS, clientAmplifier(jumpBoostAmplifier), false, false));
             }
             return;
         }
@@ -365,10 +365,10 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
             sp.removePotionEffect(Potion.moveSpeed.id);
             sp.removePotionEffect(Potion.jump.id);
             if (speedAmplifier > 0) {
-                sp.addPotionEffect(new PotionEffect(Potion.moveSpeed.id, EFFECT_DURATION_TICKS, speedAmplifier - 1, false, false));
+                sp.addPotionEffect(new PotionEffect(Potion.moveSpeed.id, EFFECT_DURATION_TICKS, clientAmplifier(speedAmplifier), false, false));
             }
             if (jumpBoostAmplifier > 0) {
-                sp.addPotionEffect(new PotionEffect(Potion.jump.id, EFFECT_DURATION_TICKS, jumpBoostAmplifier - 1, false, false));
+                sp.addPotionEffect(new PotionEffect(Potion.jump.id, EFFECT_DURATION_TICKS, clientAmplifier(jumpBoostAmplifier), false, false));
             }
         });
         applyClientEffects(client, speedAmplifier, jumpBoostAmplifier);
@@ -379,12 +379,16 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
         client.removePotionEffect(Potion.jump.id);
         Potion.moveSpeed.removeAttributesModifiersFromEntity(client, client.getAttributeMap(), 0);
         if (speedAmplifier > 0) {
-            client.addPotionEffect(new PotionEffect(Potion.moveSpeed.id, EFFECT_DURATION_TICKS, speedAmplifier - 1, false, false));
-            Potion.moveSpeed.applyAttributesModifiersToEntity(client, client.getAttributeMap(), speedAmplifier - 1);
+            client.addPotionEffect(new PotionEffect(Potion.moveSpeed.id, EFFECT_DURATION_TICKS, clientAmplifier(speedAmplifier), false, false));
+            Potion.moveSpeed.applyAttributesModifiersToEntity(client, client.getAttributeMap(), clientAmplifier(speedAmplifier));
         }
         if (jumpBoostAmplifier > 0) {
-            client.addPotionEffect(new PotionEffect(Potion.jump.id, EFFECT_DURATION_TICKS, jumpBoostAmplifier - 1, false, false));
+            client.addPotionEffect(new PotionEffect(Potion.jump.id, EFFECT_DURATION_TICKS, clientAmplifier(jumpBoostAmplifier), false, false));
         }
+    }
+
+    private static int clientAmplifier(int level) {
+        return (byte) (level - 1);
     }
 
     @Override

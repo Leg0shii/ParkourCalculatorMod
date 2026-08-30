@@ -77,7 +77,12 @@ public final class ClosedFormSolve {
         if (pre == null) return null;
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
         Result r = runLadder(exact, spec, sc, compiled, feasTol, cancel, cfg.margins, true, zeroX, zeroZ,
-                System.nanoTime(), cfg, pre);
+                System.nanoTime(), cfg, pre, 1);
+        if ((r == null || !r.feasible) && JumpLinearModel.hasCrossAxis(spec.constraints)) {
+            Result r2 = runLadder(exact, spec, sc, compiled, feasTol, cancel, cfg.margins, true, zeroX, zeroZ,
+                    System.nanoTime(), cfg, pre, -1);
+            if (r2 != null && r2.feasible) r = r2;
+        }
         return r != null && r.feasible ? r.yaws : null;
     }
 
@@ -283,7 +288,7 @@ public final class ClosedFormSolve {
     }
 
     private static double scanScore(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, double[] yaws) {
-        double o = exact.forward(sc, sc.toGameFacings(yaws)).getPos(spec.objective.tick, spec.objective.axis);
+        double o = spec.objective.evaluate(exact.forward(sc, sc.toGameFacings(yaws)));
         return spec.objective.scored(o, sc.startYaw, yaws);
     }
 
@@ -303,7 +308,11 @@ public final class ClosedFormSolve {
                         pass, SolverTrace.patternLabel(zeroX, zeroZ), n, spec.constraints.size(),
                         ascending ? "ascending" : "robust");
             }
-            Result r = runLadder(exact, spec, sc, compiled, feasTol, cancel, margins, ascending, zeroX, zeroZ, t0, cfg, pre);
+            Result r = runLadder(exact, spec, sc, compiled, feasTol, cancel, margins, ascending, zeroX, zeroZ, t0, cfg, pre, 1);
+            if ((r == null || !r.feasible) && JumpLinearModel.hasCrossAxis(spec.constraints)) {
+                Result r2 = runLadder(exact, spec, sc, compiled, feasTol, cancel, margins, ascending, zeroX, zeroZ, t0, cfg, pre, -1);
+                if (r2 != null && (r == null || r2.feasible || r2.violation < r.violation)) r = r2;
+            }
             if (r == null) {
                 if (SolverTrace.on()) SolverTrace.log("CF", "pass=%d ladder empty (trivial/unbounded/cancel)", pass);
                 break;
@@ -348,16 +357,14 @@ public final class ClosedFormSolve {
     private static Result runLadder(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc,
                                     JumpConstraintCompiler.Compiled compiled, double feasTol, AtomicBoolean cancel,
                                     double[] margins, boolean ascending, boolean[] zeroX, boolean[] zeroZ, long t0,
-                                    Config cfg, FacingPrefold pre) {
+                                    Config cfg, FacingPrefold pre, int dominantSign) {
         JumpLinearModel lin = new JumpLinearModel(sc, zeroX, zeroZ);
         double[] cx = new double[lin.n];
         double[] cz = new double[lin.n];
         lin.objectiveVectors(spec.objective, cx, cz);
 
-        // Compile the wall structure once (margin applied inside the dual solve); a violated constant
-        // constraint is unfixable, so bail to the fallback immediately.
         boolean[] trivialInfeasible = {false};
-        List<JumpLinearModel.Wall> walls = lin.compileWalls(spec.constraints, 0.0, trivialInfeasible);
+        List<JumpLinearModel.Wall> walls = lin.compileWalls(spec.constraints, 0.0, trivialInfeasible, dominantSign);
         if (trivialInfeasible[0]) return null;
         double vBound = exact.perAxisInertia() ? exact.inertiaThreshold()
                 : exact.inertiaThreshold() / Math.sqrt(2.0);
@@ -396,7 +403,7 @@ public final class ClosedFormSolve {
             }
             if (DEBUG) {
                 double[] gf = sc.toGameFacings(yaws);
-                double o = exact.forward(sc, gf).getPos(spec.objective.tick, spec.objective.axis);
+                double o = spec.objective.evaluate(exact.forward(sc, gf));
                 System.out.printf("  CLOSED margin=%.2e iters=%d pg=%.3e viol=%.2e obj=%.6f%n",
                         margin, solver.lastIters, solver.lastPgres, viol, o);
             }
@@ -447,8 +454,23 @@ public final class ClosedFormSolve {
         CostateDualSolver.Result r = new CostateDualSolver(lin.n, cx, cz, lin.mMagAll(), walls).solve(0.0, null);
         if (r == null) return Double.NaN;
         // r.value bounds max c·u with c MAX-normalized; fold the constant part back in (MIN is negated).
-        int axis = spec.objective.axis == JumpPhysicsInputs.Axis.X ? 0 : 1;
-        double constPos = lin.constPos(spec.objective.tick, axis);
+        double constPos;
+        if (spec.objective.isCustomAngle()) {
+            double rad = Math.toRadians(spec.objective.customYaw);
+            double dx = -Math.sin(rad);
+            double dz = Math.cos(rad);
+            if (spec.objective.isMotion()) {
+                int t = spec.objective.tick;
+                double c0 = lin.constPos(t, 0) - (t > 0 ? lin.constPos(t - 1, 0) : 0.0);
+                double c1 = lin.constPos(t, 1) - (t > 0 ? lin.constPos(t - 1, 1) : 0.0);
+                constPos = dx * c0 + dz * c1;
+            } else {
+                constPos = dx * lin.constPos(spec.objective.tick, 0) + dz * lin.constPos(spec.objective.tick, 1);
+            }
+        } else {
+            int axis = spec.objective.axis == JumpPhysicsInputs.Axis.X ? 0 : 1;
+            constPos = lin.constPos(spec.objective.tick, axis);
+        }
         return spec.objective.sense == Objective.Sense.MAX ? constPos + r.value : constPos - r.value;
     }
 

@@ -185,7 +185,7 @@ public final class Application {
         ExactJumpModel forwardModel = ExactJumpModel.forMcVersion(mcVersion);
         constraintKeyController = new ConstraintKeyController(
                 mc, angleSolverState, selection, constraintSelection, saveController::markDirty,
-                forwardModel.modern(), inputData::size);
+                forwardModel.modern(), inputData::size, settings);
         saveController.setAngleSolver(angleSolverState);
         saveController.setDebugSource(boxController, settings);
         AngleSolverTable angleSolverTable = new AngleSolverTable(angleSolverState, settings, selection, constraintSelection, inputData::size);
@@ -218,6 +218,8 @@ public final class Application {
         GraphEditorWindow graphEditorWindow = new GraphEditorWindow(angleSolverEngine);
         AngleSolverWindow angleSolverWindow = new AngleSolverWindow(angleSolverState, settings, inputData::size, angleSolverEngine, velocityMapController.widget(), graphStore, graphEditorWindow);
         angleSolverWindow.setApplySurfaceState(this::applyPathSurfaceState);
+        angleSolverWindow.setPlayerYawSupplier(mc::getPlayerYaw);
+        angleSolverWindow.setTeleportAtRow(t -> t >= 0 && t < inputData.size() && inputData.get(t).isTeleportEnabled());
         runTicks = new RunTicksController(angleSolverState, angleSolverEngine, inputData, constraintSelection,
                 hudMessages, this::runSimulation, saveController::markDirty, this::pushHudMessage);
         angleSolverWindow.setRunTicksControls(runTicks);
@@ -590,8 +592,22 @@ public final class Application {
             return;
         }
         if (!mc.isReady()) return;
+        if (solveRangeCrossesTeleport()) {
+            pushHudMessage("Can't solve: the solve range crosses a teleport", HudMessageStyle.COLOR_WARN);
+            return;
+        }
         if (runTicks != null) runTicks.start();
         else solverEngine.solve();
+    }
+
+    private boolean solveRangeCrossesTeleport() {
+        if (angleSolverState == null) return false;
+        int lo = Math.min(angleSolverState.getStartTick(), angleSolverState.getLandingTick());
+        int hi = Math.max(angleSolverState.getStartTick(), angleSolverState.getLandingTick());
+        for (int t = lo; t <= hi; t++) {
+            if (t >= 0 && t < inputData.size() && inputData.get(t).isTeleportEnabled()) return true;
+        }
+        return false;
     }
 
     public void setSolverStartTickFromSelection() {

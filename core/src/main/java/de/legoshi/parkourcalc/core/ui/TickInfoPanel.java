@@ -61,6 +61,13 @@ public final class TickInfoPanel implements RenderInterface {
         return p;
     }
 
+    private static float wrapDegrees(float value) {
+        float f = value % 360.0f;
+        if (f >= 180.0f) f -= 360.0f;
+        if (f < -180.0f) f += 360.0f;
+        return f;
+    }
+
     private static int clampPrecision(int p) {
         return Math.min(Math.max(p, Settings.MIN_STAT_PRECISION), Settings.MAX_STAT_PRECISION);
     }
@@ -185,6 +192,9 @@ public final class TickInfoPanel implements RenderInterface {
                 break;
             case YAW:
                 rowNum(stat.label(), appliedYaw, decimals, tip);
+                break;
+            case IN_GAME_YAW:
+                rowNum(stat.label(), wrapDegrees(appliedYaw), decimals, tip);
                 break;
             case PITCH:
                 rowNum(stat.label(), appliedPitch, decimals, tip);

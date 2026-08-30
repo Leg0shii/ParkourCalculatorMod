@@ -41,7 +41,7 @@ public class SolveRunRecordTest {
         assertEquals(16, a.length());
 
         SolverGraph mutated = BuiltinGraphs.fast();
-        mutated.node("seedSingle").params.set("budgetSec", 42);
+        mutated.node("seed").params.set("budgetSec", 42);
         assertNotEquals(a, SolveRunRecord.graphHash(mutated));
 
         assertNotEquals(a, SolveRunRecord.graphHash(BuiltinGraphs.optimize(60)));

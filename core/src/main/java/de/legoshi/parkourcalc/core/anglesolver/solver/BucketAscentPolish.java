@@ -54,18 +54,23 @@ public final class BucketAscentPolish {
     );
 
     public static double[] polish(ForwardModel model, JumpSpec spec, double[] startAbsWrapped, Config cfg, AtomicBoolean cancel) {
+        return polish(model, spec, startAbsWrapped, cfg, cancel, true);
+    }
+
+    public static double[] polish(ForwardModel model, JumpSpec spec, double[] startAbsWrapped, Config cfg, AtomicBoolean cancel, boolean tailScore) {
         JumpConstraintCompiler.Compiled c = JumpConstraintCompiler.compile(spec);
         JumpPhysicsInputs scenario = spec.asScenario();
         Objective obj = spec.objective;
         double sign = obj.sense == Objective.Sense.MAX ? -1.0 : 1.0;
         int n = startAbsWrapped.length;
         int[][] pairs = pairs(n, cfg.pairSpan);
+        TailScorer scorer = tailScore ? new TailScorer(model, scenario, c, obj, sign, n) : null;
 
         double[] best = startAbsWrapped.clone();
         if (score(model, scenario, c, obj, sign, best) == Double.POSITIVE_INFINITY) {
             return best; // start not strictly feasible: leave it (the engine only polishes feasible results)
         }
-        best = ascend(best, model, scenario, c, obj, sign, pairs, cfg, cancel);
+        best = ascend(best, model, scenario, c, obj, sign, pairs, cfg, cancel, scorer);
         double bestScore = score(model, scenario, c, obj, sign, best);
 
         if (cfg.restarts > 0) {
@@ -75,7 +80,7 @@ public final class BucketAscentPolish {
                 double[] y = best.clone();
                 double mag = 0.5 + 6.0 * rng.nextDouble();
                 for (int t = 0; t < n; t++) y[t] += (rng.nextDouble() * 2.0 - 1.0) * mag;
-                y = ascend(y, model, scenario, c, obj, sign, pairs, cfg, cancel);
+                y = ascend(y, model, scenario, c, obj, sign, pairs, cfg, cancel, scorer);
                 double s = score(model, scenario, c, obj, sign, y);
                 if (s < bestScore) { bestScore = s; best = y; }
             }
@@ -83,52 +88,53 @@ public final class BucketAscentPolish {
         return best;
     }
 
-    private static double[] ascend(double[] start, ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign, int[][] pairs, Config cfg, AtomicBoolean cancel) {
+    private static double[] ascend(double[] start, ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign, int[][] pairs, Config cfg, AtomicBoolean cancel, TailScorer scorer) {
         double[] y = start.clone();
         if (score(model, scenario, c, obj, sign, y) == Double.POSITIVE_INFINITY) return y;
-        b1refine(y, model, scenario, c, obj, sign, cfg, cancel);
+        b1refine(y, model, scenario, c, obj, sign, cfg, cancel, scorer);
         for (int round = 0; round < cfg.maxRounds; round++) {
             boolean moved = false;
             for (double[] r : cfg.b2) {
-                if (block2(y, pairs, r[0], r[1], model, scenario, c, obj, sign, cancel)) moved = true;
+                if (block2(y, pairs, r[0], r[1], model, scenario, c, obj, sign, cancel, scorer)) moved = true;
             }
-            b1refine(y, model, scenario, c, obj, sign, cfg, cancel);
+            b1refine(y, model, scenario, c, obj, sign, cfg, cancel, scorer);
             if (!moved) break;
         }
         return y;
     }
 
-    private static void b1refine(double[] y, ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign, Config cfg, AtomicBoolean cancel) {
+    private static void b1refine(double[] y, ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign, Config cfg, AtomicBoolean cancel, TailScorer scorer) {
         for (double[] r : cfg.b1) {
             for (int it = 0; it < 60; it++) {
-                if (!block1(y, r[0], r[1], model, scenario, c, obj, sign, cancel)) break;
+                if (!block1(y, r[0], r[1], model, scenario, c, obj, sign, cancel, scorer)) break;
             }
         }
     }
 
     /** Scan each tick over [-win, win] at step; keep the best strictly-feasible improvement. */
-    private static boolean block1(double[] y, double win, double step, ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign, AtomicBoolean cancel) {
+    private static boolean block1(double[] y, double win, double step, ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign, AtomicBoolean cancel, TailScorer scorer) {
         boolean improved = false;
-        double best = score(model, scenario, c, obj, sign, y);
+        double best = scorer != null ? scorer.sync(y) : score(model, scenario, c, obj, sign, y);
         int n = y.length;
         for (int t = 0; t < n; t++) {
             if (cancel != null && cancel.get()) throw new SolveCancelledException();
             double orig = y[t], bestY = orig, bestO = best;
             for (double d = -win; d <= win + 1e-12; d += step) {
                 y[t] = orig + d;
-                double o = score(model, scenario, c, obj, sign, y);
+                double o = scorer != null ? scorer.scoreFrom(y, t) : score(model, scenario, c, obj, sign, y);
                 if (o < bestO) { bestO = o; bestY = y[t]; }
             }
             y[t] = bestY;
+            if (scorer != null) scorer.scoreFrom(y, t);
             if (bestO < best) { best = bestO; improved = true; }
         }
         return improved;
     }
 
     /** Scan pairs jointly over a 2-D window; keep the best strictly-feasible improvement. */
-    private static boolean block2(double[] y, int[][] pairs, double win, double step, ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign, AtomicBoolean cancel) {
+    private static boolean block2(double[] y, int[][] pairs, double win, double step, ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign, AtomicBoolean cancel, TailScorer scorer) {
         boolean improved = false;
-        double best = score(model, scenario, c, obj, sign, y);
+        double best = scorer != null ? scorer.sync(y) : score(model, scenario, c, obj, sign, y);
         for (int[] pr : pairs) {
             if (cancel != null && cancel.get()) throw new SolveCancelledException();
             int i = pr[0], j = pr[1];
@@ -137,11 +143,12 @@ public final class BucketAscentPolish {
                 y[i] = oi + di;
                 for (double dj = -win; dj <= win + 1e-12; dj += step) {
                     y[j] = oj + dj;
-                    double o = score(model, scenario, c, obj, sign, y);
+                    double o = scorer != null ? scorer.scoreFrom(y, i) : score(model, scenario, c, obj, sign, y);
                     if (o < bo) { bo = o; bi = y[i]; bj = y[j]; }
                 }
             }
             y[i] = bi; y[j] = bj;
+            if (scorer != null) scorer.scoreFrom(y, i);
             if (bo < best) { best = bo; improved = true; }
         }
         return improved;
@@ -161,6 +168,49 @@ public final class BucketAscentPolish {
         ForwardPath pr = model.forward(scenario, gf);
         double viol = c.maxViolation(gf, pr);
         if (viol > FEAS_TOL) return Double.POSITIVE_INFINITY;
-        return sign * pr.getPos(obj.tick, obj.axis) + obj.smoothPenalty(scenario.startYaw, abs);
+        return sign * obj.evaluate(pr) + obj.smoothPenalty(scenario.startYaw, abs);
+    }
+
+    private static final class TailScorer {
+        private final ForwardModel model;
+        private final JumpPhysicsInputs scenario;
+        private final JumpConstraintCompiler.Compiled c;
+        private final Objective obj;
+        private final double sign;
+        private final int n;
+        private final float startYaw;
+        private final double startYawD;
+        private final double[] wrapped;
+        private final double[] gf;
+        private final ForwardPath path;
+
+        TailScorer(ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign, int n) {
+            this.model = model;
+            this.scenario = scenario;
+            this.c = c;
+            this.obj = obj;
+            this.sign = sign;
+            this.n = n;
+            this.startYaw = scenario.startYaw;
+            this.startYawD = (double) scenario.startYaw;
+            this.wrapped = new double[n];
+            this.gf = new double[n];
+            this.path = model.forward(scenario, new double[n]);
+        }
+
+        double sync(double[] y) {
+            return scoreFrom(y, 0);
+        }
+
+        double scoreFrom(double[] y, int from) {
+            for (int k = from; k < n; k++) wrapped[k] = Angles.wrap(y[k]);
+            float seedEntity = from == 0 ? startYaw : (float) gf[from - 1];
+            double seedPrevAbs = from == 0 ? startYawD : wrapped[from - 1];
+            scenario.toGameFacingsInto(wrapped, from, n, gf, seedEntity, seedPrevAbs);
+            model.stepRange(scenario, gf, from, path);
+            double viol = c.maxViolation(gf, path);
+            if (viol > FEAS_TOL) return Double.POSITIVE_INFINITY;
+            return sign * obj.evaluate(path) + obj.smoothPenalty(startYaw, y);
+        }
     }
 }

@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.anglesolver;
 
+import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.LongRunSolver;
 import org.junit.Test;
 
@@ -10,29 +11,30 @@ import static org.junit.Assert.assertTrue;
 public class BudgetResolutionTest {
 
     @Test
-    public void fastAndCustomDefaultsHaveNoDeadline() {
+    public void fastHasNoDeadlineCustomDefaultsToOptimizeSeconds() {
         AngleSolverState s = new AngleSolverState();
         s.setEffort(AngleSolverState.Effort.FAST);
         assertEquals(0L, AngleSolverEngine.deadlineNanosFor(s));
         s.setEffort(AngleSolverState.Effort.CUSTOM);
-        assertEquals(0L, AngleSolverEngine.deadlineNanosFor(s));
+        assertEquals(AngleSolverState.DEFAULT_OPTIMIZE_SECONDS * 1_000_000_000L,
+                AngleSolverEngine.deadlineNanosFor(s));
         LongRunSolver.LongRunConfig lr = AngleSolverEngine.longRunConfigFor(s);
         assertEquals(10, lr.window());
         assertEquals(3, lr.commit());
     }
 
     @Test
-    public void timeBudgetBecomesANanosecondDeadlinePerTier() {
+    public void customUsesOptimizeSecondsExceptOnTheFastPreset() {
         AngleSolverState s = new AngleSolverState();
         s.setEffort(AngleSolverState.Effort.CUSTOM);
-        s.getSolveBudget().setTimeBudgetSeconds(30);
+        s.setOptimizeSeconds(30);
         assertEquals(30_000_000_000L, AngleSolverEngine.deadlineNanosFor(s));
-        s.getSolveBudget().setTimeBudgetSeconds(0);
-        assertEquals(0L, AngleSolverEngine.deadlineNanosFor(s));
+        s.setGraphPresetName(BuiltinGraphs.FAST_PRESET);
+        assertEquals("the Fast preset never runs the optimize stages",
+                0L, AngleSolverEngine.deadlineNanosFor(s));
+        s.setGraphPresetName(null);
         s.setEffort(AngleSolverState.Effort.THOROUGH);
-        s.getSolveBudget().setTimeBudgetSeconds(30);
-        assertEquals("Optimize uses its own knob, not the Custom time budget",
-                10_000_000_000L, AngleSolverEngine.deadlineNanosFor(s));
+        assertEquals(30_000_000_000L, AngleSolverEngine.deadlineNanosFor(s));
         s.setOptimizeSeconds(25);
         assertEquals(25_000_000_000L, AngleSolverEngine.deadlineNanosFor(s));
         s.setEffort(AngleSolverState.Effort.FAST);

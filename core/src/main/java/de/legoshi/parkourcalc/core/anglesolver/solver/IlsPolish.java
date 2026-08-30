@@ -80,7 +80,7 @@ public final class IlsPolish {
                     }
                     if (progress != null) {
                         double[] rgf = sc.toGameFacings(Angles.wrapAll(best));
-                        progress.report(best, model.forward(sc, rgf).getPos(obj.tick, obj.axis), 0.0, true);
+                        progress.report(best, obj.evaluate(model.forward(sc, rgf)), 0.0, true);
                     }
                 }
             }
@@ -103,6 +103,6 @@ public final class IlsPolish {
         double[] gf = sc.toGameFacings(Angles.wrapAll(absWrapped));
         ForwardPath pr = model.forward(sc, gf);
         if (c.maxViolation(gf, pr) > FEAS_TOL) return Double.POSITIVE_INFINITY;
-        return sign * pr.getPos(obj.tick, obj.axis) + obj.smoothPenalty(sc.startYaw, absWrapped);
+        return sign * obj.evaluate(pr) + obj.smoothPenalty(sc.startYaw, absWrapped);
     }
 }

@@ -23,10 +23,11 @@ public final class ConstraintKeyController {
     private final Runnable onChanged;
     private final boolean modernCollision;
     private final IntSupplier rowCount;
+    private final Settings settings;
 
     public ConstraintKeyController(MinecraftAccess mc, AngleSolverState state, SelectionManager selection,
                                    ConstraintSelection constraintSelection, Runnable onChanged,
-                                   boolean modernCollision, IntSupplier rowCount) {
+                                   boolean modernCollision, IntSupplier rowCount, Settings settings) {
         this.mc = mc;
         this.state = state;
         this.selection = selection;
@@ -34,6 +35,7 @@ public final class ConstraintKeyController {
         this.onChanged = onChanged;
         this.modernCollision = modernCollision;
         this.rowCount = rowCount;
+        this.settings = settings;
     }
 
     public void onKey(boolean enter, boolean remove) {
@@ -48,6 +50,16 @@ public final class ConstraintKeyController {
 
         boolean merge = mc.isAltDown();
         if (merge) remove = false;
+
+        if (remove) {
+            double[] plate = mc.getPressurePlateFootprint(bx, by, bz);
+            if (plate != null) {
+                double[] r = pressurePlateFootprint(bx, bz, plate);
+                state.setFootprint(tick, r[0], r[1], r[2], r[3]);
+                onChanged.run();
+                return;
+            }
+        }
 
         if (remove && mc.isClimbable(bx, by, bz)) {
             List<AABB> obstacles = mc.getCollisionBoxes(bx - 1, by, bz - 1, bx + 1, by + 1, bz + 1);
@@ -132,6 +144,14 @@ public final class ConstraintKeyController {
         }
         if (best != null) return ConstraintDeriver.mergeCoplanarSupport(best, boxes);
         return new AABB(new Vec3dCore(bx, by, bz), new Vec3dCore(bx + 1.0, by + 1.0, bz + 1.0));
+    }
+
+    private double[] pressurePlateFootprint(int bx, int bz, double[] interaction) {
+        double h = ConstraintDeriver.HALF;
+        if (settings != null && settings.pressurePlateFullBlock) {
+            return new double[] {bx - h, bx + 1.0 + h, bz - h, bz + 1.0 + h};
+        }
+        return new double[] {interaction[0] - h, interaction[1] + h, interaction[2] - h, interaction[3] + h};
     }
 
     private int selectedTick() {

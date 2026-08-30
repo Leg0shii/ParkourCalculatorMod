@@ -356,6 +356,21 @@ public class SimulatorEntity extends EntityPlayer {
         this.setPosition(c.posX, c.posY, c.posZ);
     }
 
+    public void teleportRest(double x, double y, double z, double vx, double vy, double vz) {
+        this.setPosition(x, y, z);
+        this.motionX = vx;
+        this.motionY = vy;
+        this.motionZ = vz;
+        this.onGround = true;
+        this.isCollidedHorizontally = false;
+        this.setSprinting(false);
+        this.setSneaking(false);
+        this.sprintState = PlayerSprintMachine.State.initial();
+        this.jumpTicks = 0;
+        this.isInWeb = false;
+        this.fallDistance = 0;
+    }
+
     public static void applyCheckpoint(EntityLivingBase p, de.legoshi.parkourcalc.core.sim.Checkpoint state) {
         Checkpoint c = de.legoshi.parkourcalc.forge8.sim.paired.PairedCheckpoint.clientPart(state);
         if (c == null) return;

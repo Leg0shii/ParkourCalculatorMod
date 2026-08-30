@@ -50,6 +50,10 @@ public interface MinecraftAccess {
         return false;
     }
 
+    default double[] getPressurePlateFootprint(int x, int y, int z) {
+        return null;
+    }
+
     default Face getLookedAtFace() {
         return null;
     }

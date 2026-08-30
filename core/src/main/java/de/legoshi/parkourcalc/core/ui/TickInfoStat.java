@@ -6,6 +6,8 @@ public enum TickInfoStat {
             "Tick number (1-based), matching the input table's Tick column."),
     YAW("yaw", "Yaw", Kind.NUM,
             "Facing applied during this tick (drives this tick's movement). MC convention: 0 = +Z, increases CW looking down."),
+    IN_GAME_YAW("inGameYaw", "In-game yaw", Kind.NUM,
+            "Same facing as Yaw, wrapped to [-180, 180) as shown on the F3 debug screen. Drops the accumulated full turns."),
     PITCH("pitch", "Pitch", Kind.NUM,
             "Camera pitch held during this tick (-90 up, 90 down). Defaults to 40; each row adds a relative turn unless locked to an absolute value. Display only; pitch does not affect movement."),
     SPEED_XZ("speedXZ", "Speed (XZ)", Kind.NUM,

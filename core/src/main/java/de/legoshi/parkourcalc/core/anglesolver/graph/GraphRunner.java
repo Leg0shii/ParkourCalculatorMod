@@ -38,7 +38,6 @@ public final class GraphRunner {
         while (true) {
             if (ctx.cancel.get()) return null;
             long overall = ctx.overallDeadline();
-            if (overall > 0 && System.nanoTime() >= overall) return cand;
             if (cur == null || cur.type.emitMarker) return cand;
             if (cur.type.entryMarker) {
                 cur = next(graph, cur, Guarantee.DONE);
@@ -56,11 +55,12 @@ public final class GraphRunner {
             boolean isWrap = "wrapIls".equals(cur.type.id);
             if (isWrap || (wrapPending && !reachesWrap(graph, cur))) wrapPending = false;
             long budgetNanos = budgetNanos(cur);
-            long deadline = budgetNanos > 0 ? System.nanoTime() + budgetNanos : 0L;
+            long now = System.nanoTime();
+            long deadline = budgetNanos > 0 ? now + budgetNanos : 0L;
             if (overall > 0 && (deadline == 0L || overall < deadline)) deadline = overall;
+            if (overall > 0 && now >= overall) deadline = now;
             if (wrapPending && wrapReserve > 0 && overall > 0 && !isWrap) {
                 long reserved = overall - wrapReserve;
-                long now = System.nanoTime();
                 if (reserved < now) reserved = now;
                 if (deadline == 0L || reserved < deadline) deadline = reserved;
             }

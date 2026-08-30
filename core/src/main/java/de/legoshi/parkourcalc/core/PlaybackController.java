@@ -21,6 +21,11 @@ public final class PlaybackController {
     private static final long TICK_NANOS = 50_000_000L;
     private static final float MAX_FRAME_DT_SECONDS = 0.1f;
 
+    private static final long TELEPORT_NOTICE_HOLD_NANOS = 1_000_000_000L;
+    private static final long TELEPORT_NOTICE_FADE_NANOS = 500_000_000L;
+
+    private static final InputRow TELEPORT_NOOP_ROW = new InputRow();
+
     public static final float DEFAULT_PITCH = 40f;
 
     private final InputData inputData;
@@ -33,6 +38,12 @@ public final class PlaybackController {
     private int stopTick;
     private int startTick;
     private int warmupRemaining;
+    private int holdRemaining;
+    private boolean restorePending;
+    private Vec3dCore startPos;
+    private Vec3dCore startVel;
+    private float startYaw;
+    private Checkpoint startCarry;
     private int lastCapturedTick = -1;
     private int lastSpeedAmplifier;
     private int lastJumpBoostAmplifier;
@@ -63,6 +74,8 @@ public final class PlaybackController {
     // Non-zero while the game sits paused: client ticks keep firing but the world does not advance,
     // so the schedule must freeze with it (gh-106). On resume the lerp clocks shift by the pause.
     private long pausedAtNanos;
+
+    private long teleportNoticeNanos;
 
     private final List<String> simTickDumps = new ArrayList<String>();
 
@@ -158,6 +171,7 @@ public final class PlaybackController {
 
         bridge.closeUI();
         pausedAtNanos = 0L;
+        teleportNoticeNanos = 0L;
 
         simTickDumps.clear();
         if (DebugFlags.DUMP_TICK_STATE) {
@@ -178,6 +192,12 @@ public final class PlaybackController {
         stopTick = to;
         // A carried checkpoint is already post-settle; warm up only a from-the-top start that has none.
         warmupRemaining = (from == 0 && carry == null) ? WARMUP_TICKS : 0;
+        holdRemaining = Math.max(0, settings.replayStartDelayTicks);
+        restorePending = holdRemaining > 0;
+        startPos = pos;
+        startVel = vel;
+        startYaw = yaw;
+        startCarry = carry;
         prevTickYaw = yaw;
         currentTickYaw = yaw;
         displayTargetYaw = yaw;
@@ -214,6 +234,8 @@ public final class PlaybackController {
         if (!running) return;
         running = false;
         warmupRemaining = 0;
+        holdRemaining = 0;
+        restorePending = false;
         tickEndNanos = 0L;
         lastFrameNanos = 0L;
         pausedAtNanos = 0L;
@@ -229,6 +251,18 @@ public final class PlaybackController {
         }
         lastSpeedAmplifier = 0;
         lastJumpBoostAmplifier = 0;
+    }
+
+    public float teleportNoticeAlpha() {
+        if (teleportNoticeNanos == 0L) return 0f;
+        long age = System.nanoTime() - teleportNoticeNanos;
+        if (age < 0L) {
+            teleportNoticeNanos = 0L;
+            return 0f;
+        }
+        if (age <= TELEPORT_NOTICE_HOLD_NANOS) return 1f;
+        if (age >= TELEPORT_NOTICE_HOLD_NANOS + TELEPORT_NOTICE_FADE_NANOS) return 0f;
+        return 1f - (age - TELEPORT_NOTICE_HOLD_NANOS) / (float) TELEPORT_NOTICE_FADE_NANOS;
     }
 
     public String statusHint() {
@@ -279,6 +313,18 @@ public final class PlaybackController {
         }
 
 
+        if (holdRemaining > 0) {
+            holdRemaining--;
+            bridge.releaseAllKeys();
+            bridge.teleport(startPos, Vec3dCore.ZERO, startYaw, null);
+            bridge.releaseReplayLockstep();
+            return;
+        }
+        if (restorePending) {
+            restorePending = false;
+            bridge.teleport(startPos, startVel, startYaw, startCarry);
+        }
+
         if (warmupRemaining > 0) {
             bridge.releaseAllKeys();
             warmupRemaining--;
@@ -287,8 +333,16 @@ public final class PlaybackController {
         }
 
         InputRow row = inputData.get(nextTick);
+        boolean teleportTick = row.isTeleportEnabled();
+        if (teleportTick) {
+            bridge.teleportInPlace(
+                    new Vec3dCore(row.getTeleportX(), row.getTeleportY(), row.getTeleportZ()),
+                    Vec3dCore.GROUND_REST_VELOCITY, currentTickYaw);
+            teleportNoticeNanos = System.nanoTime();
+        }
+        InputRow motion = teleportTick ? TELEPORT_NOOP_ROW : row;
         for (InputRow.Key key : InputRow.Key.values()) {
-            bridge.setKey(key, row.isKeyActive(key));
+            bridge.setKey(key, motion.isKeyActive(key));
         }
         int speedAmp = row.getSpeedAmplifier();
         int jumpAmp = row.getJumpBoostAmplifier();
@@ -301,10 +355,10 @@ public final class PlaybackController {
         if (hotbarSlot >= 1) {
             bridge.setHotbarSlot(hotbarSlot - 1);
         }
-        Float yaw = row.getYaw();
+        Float yaw = motion.getYaw();
         prevTickYaw = displayTargetYaw;
         if (yaw != null) {
-            if (row.isYawLocked()) {
+            if (motion.isYawLocked()) {
                 // Physics takes the raw target like setYawAbsolute; only the visible head
                 // turns the short way (e.g. -170 -> 135 turns -55, not +305).
                 currentTickYaw = yaw;
@@ -316,7 +370,7 @@ public final class PlaybackController {
         }
         bridge.setYaw(currentTickYaw);
         prevTickPitch = currentTickPitch;
-        currentTickPitch = applyPitch(currentTickPitch, row);
+        currentTickPitch = applyPitch(currentTickPitch, motion);
         bridge.setPitch(currentTickPitch);
         tickEndNanos = System.nanoTime();
         nextTick++;
@@ -357,6 +411,7 @@ public final class PlaybackController {
         bridge.setYaw(displayedYaw);
         bridge.setHeadYaw(displayedYaw);
         if (pitchEngaged) bridge.setPitch(displayedPitch);
+        if (restorePending) return;
         if (DebugFlags.DUMP_TICK_STATE) {
             // Negative index = warmup tick, so state going into tick 0 is visible.
             int t = nextTick - 1 - warmupRemaining;

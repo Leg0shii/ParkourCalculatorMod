@@ -31,6 +31,7 @@ public final class Settings {
     private static final float[] DEFAULT_CONSTRAINT_HIGHLIGHT = {0.996f, 0.996f, 0.996f, 1.000f};
 
     private static final boolean DEFAULT_CONSTRAINT_EXPAND_BY_HITBOX = true;
+    private static final boolean DEFAULT_PRESSURE_PLATE_FULL_BLOCK = false;
     private static final float DEFAULT_CONSTRAINT_FRONT_WIDTH = 0.6f;
     private static final float DEFAULT_CONSTRAINT_FRONT_HEIGHT = 0.15f;
     private static final float DEFAULT_CONSTRAINT_FRONT_LENGTH = 0.01f;
@@ -70,6 +71,7 @@ public final class Settings {
     private static final boolean DEFAULT_SHOW_COL_PITCH = false;
     private static final boolean DEFAULT_SHOW_COL_LEFT_CLICK = false;
     private static final boolean DEFAULT_SHOW_COL_RIGHT_CLICK = false;
+    private static final boolean DEFAULT_SHOW_COL_TELEPORT = false;
 
     private static final boolean DEFAULT_VIEW_TICK_INFO = true;
     private static final boolean DEFAULT_VIEW_SERVER_EVENTS = true;
@@ -110,6 +112,10 @@ public final class Settings {
     public static final int MAX_PATH_RENDER_DISTANCE = 512;
     private static final boolean DEFAULT_UNLIMITED_PATH_RENDER = false;
 
+    private static final int DEFAULT_REPLAY_START_DELAY_TICKS = 0;
+    public static final int MIN_REPLAY_START_DELAY_TICKS = 0;
+    public static final int MAX_REPLAY_START_DELAY_TICKS = 20;
+
     private static final int DEFAULT_TICK_INFO_PRECISION = 5;
     public static final int DEFAULT_SOLVER_STATS_PRECISION = 5;
     public static final int MIN_STAT_PRECISION = 1;
@@ -148,6 +154,7 @@ public final class Settings {
     public final float[] constraintHighlight = DEFAULT_CONSTRAINT_HIGHLIGHT.clone();
 
     public boolean constraintExpandByHitbox = DEFAULT_CONSTRAINT_EXPAND_BY_HITBOX;
+    public boolean pressurePlateFullBlock = DEFAULT_PRESSURE_PLATE_FULL_BLOCK;
     public float constraintFrontWidth = DEFAULT_CONSTRAINT_FRONT_WIDTH;
     public float constraintFrontHeight = DEFAULT_CONSTRAINT_FRONT_HEIGHT;
     public float constraintFrontLength = DEFAULT_CONSTRAINT_FRONT_LENGTH;
@@ -178,6 +185,7 @@ public final class Settings {
     public boolean showColPitch = DEFAULT_SHOW_COL_PITCH;
     public boolean showColLeftClick = DEFAULT_SHOW_COL_LEFT_CLICK;
     public boolean showColRightClick = DEFAULT_SHOW_COL_RIGHT_CLICK;
+    public boolean showColTeleport = DEFAULT_SHOW_COL_TELEPORT;
 
     public float yawFlickSpeed = DEFAULT_YAW_FLICK_SPEED;
 
@@ -224,6 +232,7 @@ public final class Settings {
     public boolean pairedSimulation = DEFAULT_PAIRED_SIMULATION;
     public boolean pairedDamage = DEFAULT_PAIRED_DAMAGE;
     public boolean lockstepReplay = DEFAULT_LOCKSTEP_REPLAY;
+    public int replayStartDelayTicks = DEFAULT_REPLAY_START_DELAY_TICKS;
 
     public static int defaultTickInfoPrecision() {
         return DEFAULT_TICK_INFO_PRECISION;
@@ -262,6 +271,7 @@ public final class Settings {
         System.arraycopy(DEFAULT_CONSTRAINT_BACK, 0, constraintBack, 0, 4);
         System.arraycopy(DEFAULT_CONSTRAINT_HIGHLIGHT, 0, constraintHighlight, 0, 4);
         constraintExpandByHitbox = DEFAULT_CONSTRAINT_EXPAND_BY_HITBOX;
+        pressurePlateFullBlock = DEFAULT_PRESSURE_PLATE_FULL_BLOCK;
         constraintFrontWidth = DEFAULT_CONSTRAINT_FRONT_WIDTH;
         constraintFrontHeight = DEFAULT_CONSTRAINT_FRONT_HEIGHT;
         constraintFrontLength = DEFAULT_CONSTRAINT_FRONT_LENGTH;
@@ -290,6 +300,7 @@ public final class Settings {
         showColPitch = DEFAULT_SHOW_COL_PITCH;
         showColLeftClick = DEFAULT_SHOW_COL_LEFT_CLICK;
         showColRightClick = DEFAULT_SHOW_COL_RIGHT_CLICK;
+        showColTeleport = DEFAULT_SHOW_COL_TELEPORT;
         yawFlickSpeed = DEFAULT_YAW_FLICK_SPEED;
         pathRenderDistance = DEFAULT_PATH_RENDER_DISTANCE;
         unlimitedPathRender = DEFAULT_UNLIMITED_PATH_RENDER;
@@ -319,5 +330,6 @@ public final class Settings {
         pairedSimulation = DEFAULT_PAIRED_SIMULATION;
         pairedDamage = DEFAULT_PAIRED_DAMAGE;
         lockstepReplay = DEFAULT_LOCKSTEP_REPLAY;
+        replayStartDelayTicks = DEFAULT_REPLAY_START_DELAY_TICKS;
     }
 }

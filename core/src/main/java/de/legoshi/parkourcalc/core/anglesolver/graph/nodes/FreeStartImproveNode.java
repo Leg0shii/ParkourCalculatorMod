@@ -22,10 +22,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class FreeStartImproveNode implements NodeRuntime {
 
     private final boolean jointOnly;
+    private final int warmSec;
     private final FreeStartSolve.Config cfg;
 
     public FreeStartImproveNode(ParamValues params) {
         this.jointOnly = params.getBool("jointOnly");
+        this.warmSec = params.getInt("warmSec");
         this.cfg = new FreeStartSolve.Config();
         cfg.intervalMargin = params.getDouble("fsIntervalMargin");
         cfg.invariantTol = params.getDouble("fsInvariantTol");
@@ -35,23 +37,26 @@ public final class FreeStartImproveNode implements NodeRuntime {
 
     @Override
     public NodeOutcome execute(GraphContext ctx, Candidate in, AtomicBoolean nodeToken, long deadlineNanos) {
-        if (!ctx.exact() || !ctx.freeStart) return NodeOutcome.of(Guarantee.UNCHANGED, in);
+        if (!ctx.exact() || !ctx.freeStart || ctx.stageLocked()) return NodeOutcome.of(Guarantee.UNCHANGED, in);
+        if (in != null && in.yaws != null && in.feasible && (jointOnly || warmSec <= 0)) {
+            return NodeOutcome.of(Guarantee.UNCHANGED, in);
+        }
         if (jointOnly) {
             boolean seedFeasible = in != null && in.yaws != null
                     && Scoring.violationOf(ctx.model, ctx.scenario, ctx.spec, in.yaws) <= ctx.feasTol;
             if (seedFeasible) return NodeOutcome.of(Guarantee.UNCHANGED, in);
-            double[] rescued = jointRescue(ctx, nodeToken, deadlineNanos);
+            double[] rescued = jointRescue(ctx, nodeToken);
             if (rescued == null) return NodeOutcome.of(Guarantee.UNCHANGED, in);
             ctx.chainAppend("free start rescue");
             return NodeOutcome.of(Guarantee.IMPROVED, Candidate.of(ctx, rescued));
         }
-        double[] improved = improve(ctx, in == null ? null : in.yaws, nodeToken, deadlineNanos);
+        double[] improved = improve(ctx, in == null ? null : in.yaws, nodeToken);
         if (improved == null) return NodeOutcome.of(Guarantee.UNCHANGED, in);
         ctx.chainAppend("free start");
         return NodeOutcome.of(Guarantee.IMPROVED, Candidate.of(ctx, improved));
     }
 
-    private double[] jointRescue(GraphContext ctx, AtomicBoolean cancel, long deadlineNanos) {
+    private double[] jointRescue(GraphContext ctx, AtomicBoolean cancel) {
         JumpPhysicsInputs sc = ctx.scenario;
         double seedX = sc.startPos.x;
         double seedZ = sc.startPos.z;
@@ -97,7 +102,7 @@ public final class FreeStartImproveNode implements NodeRuntime {
         return null;
     }
 
-    private double[] improve(GraphContext ctx, double[] seedYaws, AtomicBoolean cancel, long deadline) {
+    private double[] improve(GraphContext ctx, double[] seedYaws, AtomicBoolean cancel) {
         ExactJumpModel exact = ctx.exactModel;
         JumpSpec spec = ctx.spec;
         JumpPhysicsInputs sc = ctx.scenario;

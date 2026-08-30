@@ -28,25 +28,28 @@ public final class RecedingHorizonNode implements NodeRuntime {
     @Override
     public NodeOutcome execute(GraphContext ctx, Candidate in, AtomicBoolean nodeToken, long deadlineNanos) {
         if (!ctx.exact()) return NodeOutcome.of(Guarantee.NONE, in);
+        if (ctx.jumpCount() <= 1) return NodeOutcome.of(Guarantee.NONE, in);
+        if (in != null && in.yaws != null) return NodeOutcome.of(Guarantee.NONE, in);
         ctx.chainAppend("receding horizon");
         if (SolverTrace.on()) SolverTrace.log("ENGINE", "receding horizon start");
         LongRunSolver.WindowCache windows = new LongRunSolver.WindowCache();
-        double[] fromScratch = LongRunSolver.solve(ctx.exactModel, ctx.spec, ctx.feasTol, nodeToken, cfg, windows);
+        double[] fromScratch = LongRunSolver.solve(ctx.exactModel, ctx.spec, ctx.feasTol, nodeToken, cfg, windows,
+                deadlineNanos);
         if (SolverTrace.on()) SolverTrace.log("ENGINE", "receding horizon %s", fromScratch != null ? "solved" : "miss");
-        if (fromScratch == null && ctx.freeStart && !ctx.stageLocked()) {
-            LongRunSolver.FreeRun free = LongRunSolver.solveFree(ctx.exactModel, ctx.spec, ctx.feasTol, nodeToken,
-                    cfg, ctx.freeBox, windows);
-            if (free != null) {
-                JumpPhysicsInputs sc = ctx.scenario;
-                sc.startPos = new Vec3dCore(free.startX, sc.startPos.y, free.startZ);
-                sc.startBox = StartBox.pinned(free.startX, free.startZ, sc.initialVelocity.x, sc.initialVelocity.z);
-                ctx.chainAppend("free window");
-                if (SolverTrace.on()) {
-                    SolverTrace.log("ENGINE", "receding horizon free window start=(%.5f,%.5f)",
-                            free.startX, free.startZ);
-                }
-                return NodeOutcome.of(Guarantee.FOUND, Candidate.of(ctx, free.gf));
+        LongRunSolver.FreeRun free = ctx.freeStart && !ctx.stageLocked()
+                ? LongRunSolver.solveFree(ctx.exactModel, ctx.spec, ctx.feasTol, nodeToken, cfg, ctx.freeBox,
+                        new LongRunSolver.WindowCache(), deadlineNanos)
+                : null;
+        if (free != null) {
+            JumpPhysicsInputs sc = ctx.scenario;
+            sc.startPos = new Vec3dCore(free.startX, sc.startPos.y, free.startZ);
+            sc.startBox = StartBox.pinned(free.startX, free.startZ, sc.initialVelocity.x, sc.initialVelocity.z);
+            ctx.chainAppend("free window");
+            if (SolverTrace.on()) {
+                SolverTrace.log("ENGINE", "receding horizon free window start=(%.5f,%.5f)",
+                        free.startX, free.startZ);
             }
+            return NodeOutcome.of(Guarantee.FOUND, Candidate.of(ctx, free.gf));
         }
         if (fromScratch == null) return NodeOutcome.of(Guarantee.NONE, in);
         return NodeOutcome.of(Guarantee.FOUND, Candidate.of(ctx, fromScratch));

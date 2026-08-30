@@ -12,7 +12,6 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.WrapWindowIls;
 
-import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class WrapIlsNode implements NodeRuntime {
@@ -42,10 +41,13 @@ public final class WrapIlsNode implements NodeRuntime {
     @Override
     public NodeOutcome execute(GraphContext ctx, Candidate in, AtomicBoolean nodeToken, long deadlineNanos) {
         if (!ctx.exact() || in == null || in.yaws == null) return NodeOutcome.of(Guarantee.REJECTED, in);
+        if (ctx.stageLocked()) return NodeOutcome.of(Guarantee.REJECTED, in);
         long remaining = deadlineNanos > 0 ? deadlineNanos - System.nanoTime() : 0L;
         if (remaining <= minRemainingSec * 1_000_000_000L) return NodeOutcome.of(Guarantee.REJECTED, in);
+        if (in.feasible && ctx.legalGoal == null) return NodeOutcome.of(Guarantee.REJECTED, in);
         JumpPhysicsInputs sc = ctx.scenario;
         double incViol = ctx.scoredViol(in.yaws);
+        if (incViol > 5.0e-2) return NodeOutcome.of(Guarantee.REJECTED, in);
         if (ctx.progress != null) ctx.progress.setStage(ctx.chainWith("wrap ILS"));
         if (SolverTrace.on()) SolverTrace.log("ENGINE", "wrap ils start incViol=%.3e", incViol);
         double[] gfInc = sc.toGameFacings(Angles.wrapAll(in.yaws));
@@ -76,16 +78,12 @@ public final class WrapIlsNode implements NodeRuntime {
         boolean adopt = w != null
                 && (ctx.legalGoal != null
                         ? w.viol < incScore && w.viol < WrapWindowIls.LEGAL_HARD_INFEASIBLE
-                        : w.viol <= ctx.feasTol)
-                && Scoring.adoptStageResult(ctx.model, sc, ctx.spec, ctx.freeBox, w.gf, ctx.feasTol);
+                        : w.viol <= ctx.feasTol && ctx.scoredViol(w.gf) <= ctx.feasTol)
+                && Scoring.adoptStageResult(ctx.model, sc, ctx.spec, ctx.freeBox,
+                        sc.toGameFacings(Angles.wrapAll(w.gf)), ctx.feasTol);
         if (adopt) {
-            double[] yaws = w.gf.clone();
-            boolean[] lockAll = new boolean[sc.numTicks];
-            Arrays.fill(lockAll, true);
-            sc.yawLockedPerTick = lockAll;
-            ctx.setStageLocked(true);
             ctx.chainAppend("wrap ILS");
-            return NodeOutcome.of(Guarantee.ADOPTED, Candidate.of(ctx, yaws));
+            return NodeOutcome.of(Guarantee.ADOPTED, Candidate.of(ctx, w.gf.clone()));
         }
         return NodeOutcome.of(Guarantee.REJECTED, in);
     }

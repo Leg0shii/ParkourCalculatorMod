@@ -213,6 +213,10 @@ public final class Forge8Simulator extends LazyEntitySimulator<SimulatorEntity> 
         e.setInput(row);
     }
 
+    @Override protected void teleportEntity(SimulatorEntity e, Vec3dCore pos, Vec3dCore velocity) {
+        e.teleportRest(pos.x, pos.y, pos.z, velocity.x, velocity.y, velocity.z);
+    }
+
     @Override protected void applyYaw(SimulatorEntity e, float yaw) {
         e.rotationYaw += yaw;
     }
@@ -225,11 +229,15 @@ public final class Forge8Simulator extends LazyEntitySimulator<SimulatorEntity> 
     protected void applyTickEffects(SimulatorEntity e, int speedAmplifier, int jumpBoostAmplifier) {
         e.clearActivePotions();
         if (speedAmplifier > 0) {
-            e.addPotionEffect(new PotionEffect(Potion.moveSpeed.id, 2, speedAmplifier - 1));
+            e.addPotionEffect(new PotionEffect(Potion.moveSpeed.id, 2, clientAmplifier(speedAmplifier)));
         }
         if (jumpBoostAmplifier > 0) {
-            e.addPotionEffect(new PotionEffect(Potion.jump.id, 2, jumpBoostAmplifier - 1));
+            e.addPotionEffect(new PotionEffect(Potion.jump.id, 2, clientAmplifier(jumpBoostAmplifier)));
         }
+    }
+
+    static int clientAmplifier(int level) {
+        return (byte) (level - 1);
     }
 
     @Override

@@ -431,10 +431,12 @@ public class SimulatorEntity extends Player {
         c.pos = this.position();
         c.velocity = this.getDeltaMovement();
         c.yaw = this.getYRot();
+        c.pitch = this.getXRot();
         c.onGround = this.onGround();
         c.horizontalCollision = this.horizontalCollision;
         c.collidedSoftly = this.minorHorizontalCollision;
         c.sprinting = this.isSprinting();
+        c.swimming = this.isSwimming();
         c.ticksLeftToDoubleTapSprint = this.sprintTriggerTime;
         c.playerInput = this.input.keyPresses;
         c.jumpingCooldown = this.noJumpDelay;
@@ -455,15 +457,36 @@ public class SimulatorEntity extends Player {
         this.setPos(c.pos);
         this.setDeltaMovement(c.velocity);
         this.setYRot(c.yaw);
+        this.setXRot(c.pitch);
         this.setOnGround(c.onGround);
         this.horizontalCollision = c.horizontalCollision;
         this.minorHorizontalCollision = c.collidedSoftly;
         this.setSprinting(c.sprinting);
+        this.setSwimming(c.swimming);
         this.sprintTriggerTime = c.ticksLeftToDoubleTapSprint;
         this.input.seedKeyPresses(c.playerInput);
         this.noJumpDelay = c.jumpingCooldown;
         this.stuckSpeedMultiplier = c.movementMultiplier;
         this.fallDistance = c.fallDistance;
+    }
+
+    public void teleportRest(double x, double y, double z, double vx, double vy, double vz) {
+        float keepYaw = this.getYRot();
+        this.setPos(x, y, z);
+        this.setDeltaMovement(vx, vy, vz);
+        this.setYRot(keepYaw);
+        this.setOnGround(true);
+        this.horizontalCollision = false;
+        this.minorHorizontalCollision = false;
+        this.setSprinting(false);
+        this.sprintTriggerTime = 0;
+        this.input.seedKeyPresses(new Input(false, false, false, false, false, false, false));
+        this.noJumpDelay = 0;
+        this.stuckSpeedMultiplier = Vec3.ZERO;
+        this.fallDistance = 0;
+        this.crouching = false;
+        this.setPose(Pose.STANDING);
+        this.refreshDimensions();
     }
 
     public static void applyCheckpoint(net.minecraft.client.player.LocalPlayer p, de.legoshi.parkourcalc.core.sim.Checkpoint state) {
@@ -482,10 +505,12 @@ public class SimulatorEntity extends Player {
         Vec3 pos;
         Vec3 velocity;
         float yaw;
+        float pitch;
         boolean onGround;
         boolean horizontalCollision;
         boolean collidedSoftly;
         boolean sprinting;
+        boolean swimming;
         int ticksLeftToDoubleTapSprint;
         Input playerInput;
         int jumpingCooldown;

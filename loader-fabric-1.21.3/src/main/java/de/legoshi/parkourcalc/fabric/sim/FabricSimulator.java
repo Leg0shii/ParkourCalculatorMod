@@ -149,6 +149,7 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
         } else {
             e.resetPlayer(resume);
         }
+        e.setXRot(startPitch);
     }
 
     @Override
@@ -183,12 +184,24 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
         e.input.setData(row);
     }
 
+    @Override protected void teleportEntity(SimulatorEntity e, Vec3dCore pos, Vec3dCore velocity) {
+        e.teleportRest(pos.x, pos.y, pos.z, velocity.x, velocity.y, velocity.z);
+    }
+
     @Override protected void applyYaw(SimulatorEntity e, float yaw) {
         e.setYRot(e.getYRot() + yaw);
     }
 
     @Override protected void setYawAbsolute(SimulatorEntity e, float yaw) {
         e.setYRot(yaw);
+    }
+
+    @Override protected float getEntityPitch(SimulatorEntity e) {
+        return e.getXRot();
+    }
+
+    @Override protected void setEntityPitch(SimulatorEntity e, float pitch) {
+        e.setXRot(pitch);
     }
 
     @Override

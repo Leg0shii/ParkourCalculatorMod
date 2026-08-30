@@ -18,6 +18,33 @@ public final class RunTicksFilter {
         return true;
     }
 
+    public static int maxAllowed(List<Constraint> atJumpTick) {
+        if (atJumpTick == null) return Integer.MAX_VALUE;
+        int max = Integer.MAX_VALUE;
+        for (Constraint c : atJumpTick) {
+            if (c.getField() != Constraint.Field.RT || !c.isEnabled()) continue;
+            if (c.isRange()) {
+                int hi = (int) Math.floor(c.getHi() - (c.isHiInclusive() ? 0.0 : 1.0e-6));
+                max = Math.min(max, hi);
+            } else {
+                switch (c.getOp()) {
+                    case EQ:
+                        max = Math.min(max, (int) Math.round(c.getValue()));
+                        break;
+                    case LE:
+                        max = Math.min(max, (int) Math.floor(c.getValue()));
+                        break;
+                    case LT:
+                        max = Math.min(max, (int) Math.ceil(c.getValue() - 1.0));
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        return Math.max(0, max);
+    }
+
     private static boolean satisfies(Constraint c, double found) {
         if (c.isRange()) {
             boolean lo = c.isLoInclusive() ? found >= c.getLo() : found > c.getLo();

@@ -53,6 +53,10 @@ public final class SaveFile {
         public int speedAmplifier;
         public int jumpBoostAmplifier;
         public int hotbarSlot;
+        public boolean teleport;
+        public double teleportX;
+        public double teleportY;
+        public double teleportZ;
     }
 
     /** Angle Solver problem: defaults, per-tick constraints/overrides, and last solve result. */
@@ -61,6 +65,9 @@ public final class SaveFile {
         public int landingTick;
         public String axis;
         public String goal;
+        public Boolean customAngle;
+        public Double customAngleDeg;
+        public String customAngleType;
         public String effort;                            // absent in old files -> FAST
         public Boolean stopOnFeasible;                   // absent in old files -> false
         public Boolean legalMode;                        // absent in old files -> false

@@ -99,9 +99,24 @@ public final class SlpSolve {
         return cfg;
     }
 
+    public static double[] optimizeLocked(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
+                                          double[] seedAbsWrapped, boolean[] lockVars, int phase1Calls,
+                                          int totalCalls, boolean inertiaAware) {
+        return optimize(exact, spec, feasTol, cancel, CLEARANCE, true, seedAbsWrapped, true, inertiaAware,
+                withCalls(phase1Calls, totalCalls), null, lockVars);
+    }
+
     private static double[] optimize(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
                                      double targetClearance, boolean hugObjective, double[] seedAbsWrapped,
                                      boolean bestEffort, boolean inertiaAware, Config cfg, ClosestMiss miss) {
+        return optimize(exact, spec, feasTol, cancel, targetClearance, hugObjective, seedAbsWrapped,
+                bestEffort, inertiaAware, cfg, miss, null);
+    }
+
+    private static double[] optimize(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
+                                     double targetClearance, boolean hugObjective, double[] seedAbsWrapped,
+                                     boolean bestEffort, boolean inertiaAware, Config cfg, ClosestMiss miss,
+                                     boolean[] lockVars) {
         List<JumpConstraint> constraints = spec.constraints;
         JumpPhysicsInputs sc = spec.asScenario();
         YawTies ties = null;
@@ -127,7 +142,6 @@ public final class SlpSolve {
         JumpLinearModel lin = new JumpLinearModel(sc);
         int n = lin.n;
 
-        // walls stays index-aligned with ineq so wall j's exact slack is constraint ineq.get(j)'s
         boolean[] trivialInfeasible = {false};
         List<JumpConstraint> ineq = new ArrayList<>();
         List<JumpLinearModel.Wall> walls = new ArrayList<>();
@@ -152,16 +166,7 @@ public final class SlpSolve {
             CostateDualSolver dual = new CostateDualSolver(n, cx, cz, lin.mMagAll(), walls);
             CostateDualSolver.Result r = dual.solve(0.0, null);
             if (r == null) return null; // dual unbounded = continuous-infeasible certificate
-            theta = new double[n];
-            for (int t = 0; t < n; t++) {
-                double gx = r.gx[t], gz = r.gz[t];
-                if (gx * gx + gz * gz < 1.0e-18) {
-                    boolean max = spec.objective.sense == Objective.Sense.MAX;
-                    if (spec.objective.axis == JumpPhysicsInputs.Axis.X) { gx = max ? 1.0 : -1.0; gz = 0.0; }
-                    else { gx = 0.0; gz = max ? 1.0 : -1.0; }
-                }
-                theta[t] = lin.recoverYawDeg(t, gx, gz);
-            }
+            theta = lin.recoverAlongCostate(spec.objective, r.gx, r.gz);
         }
 
         if (ties != null) theta = ties.expand(ties.reduce(theta));
@@ -182,7 +187,11 @@ public final class SlpSolve {
         double tr = cfg.trStartDeg;
         int dims = ties == null ? n : ties.dims();
         int[] col = new int[n];
-        for (int t = 0; t < n; t++) col[t] = ties == null ? t : ties.varOf(t);
+        for (int t = 0; t < n; t++) {
+            int v = ties == null ? t : ties.varOf(t);
+            if (v >= 0 && lockVars != null && v < lockVars.length && lockVars[v]) v = -1;
+            col[t] = v;
+        }
 
         boolean[] zeroX = new boolean[n];
         boolean[] zeroZ = new boolean[n];
@@ -241,11 +250,15 @@ public final class SlpSolve {
                 for (int j = 0; j < m; j++) {
                     JumpLinearModel.Wall wall = lpWalls.get(j);
                     double[] row = rows[j];
+                    double[] cxj = wall.coefX;
+                    double[] czj = wall.coefZ;
                     for (int t = 0; t < n; t++) {
                         int v = col[t];
                         if (v < 0) continue;
-                        double du = wall.axis == 0 ? -uz[t] : ux[t]; // d(u.axis)/dyaw, deg-scaled below
-                        row[v] += wall.coef[t] * du * RAD;
+                        double du = 0.0;
+                        if (cxj != null && cxj[t] != 0.0) du += cxj[t] * -uz[t];
+                        if (czj != null && czj[t] != 0.0) du += czj[t] * ux[t];
+                        row[v] += du * RAD;
                     }
                 }
                 double[] objRow = null;
@@ -310,7 +323,7 @@ public final class SlpSolve {
                     }
                     if (!inertiaAware && !bestEffort) {
                         return optimize(exact, spec, feasTol, cancel, targetClearance, hugObjective,
-                                Angles.wrapAll(theta), false, true, cfg, miss);
+                                Angles.wrapAll(theta), false, true, cfg, miss, lockVars);
                     }
                     offerMiss(miss, exact, sc, compiled, theta);
                     return bestEffort ? Angles.wrapAll(theta) : null;
@@ -325,10 +338,10 @@ public final class SlpSolve {
         ForwardPath path = exact.forward(sc, gf);
         double finalViol = compiled.maxViolation(gf, path);
         if (DEBUG) System.out.printf("  SLP viol=%.3e obj=%.7f lps=%d (%.1f ms)%n", finalViol,
-                path.getPos(spec.objective.tick, spec.objective.axis), lpCalls, (System.nanoTime() - t0) / 1e6);
+                spec.objective.evaluate(path), lpCalls, (System.nanoTime() - t0) / 1e6);
         if (SolverTrace.on()) {
             SolverTrace.log("SLP", "end viol=%.3e obj=%.9f lps=%d ms=%.1f %s", finalViol,
-                    path.getPos(spec.objective.tick, spec.objective.axis), lpCalls,
+                    spec.objective.evaluate(path), lpCalls,
                     (System.nanoTime() - t0) / 1e6, finalViol <= feasTol ? "feasible" : (bestEffort ? "best effort" : "null"));
         }
         if (finalViol <= feasTol) return yaws;
@@ -370,7 +383,7 @@ public final class SlpSolve {
 
     /** Objective normalized so bigger is always better (MIN is negated), read off the byte-exact path. */
     private static double normObjective(ForwardPath path, Objective obj, boolean max) {
-        double v = path.getPos(obj.tick, obj.axis);
+        double v = obj.evaluate(path);
         return max ? v : -v;
     }
 }

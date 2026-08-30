@@ -27,6 +27,10 @@ public interface PlaybackBridge {
 
     void teleport(Vec3dCore pos, Vec3dCore vel, float yaw, Checkpoint carry);
 
+    default void teleportInPlace(Vec3dCore pos, Vec3dCore vel, float yaw) {
+        teleport(pos, vel, yaw, null);
+    }
+
     void setKey(InputRow.Key key, boolean pressed);
 
     void setYaw(float absoluteYaw);

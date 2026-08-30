@@ -121,6 +121,7 @@ public class MediumWorldFakeSimulator extends LazyEntitySimulator<MediumWorldFak
         double x, y, z;
         double vx, vy, vz;
         float yaw;
+        float pitch;
         boolean onGround;
         boolean horizontalCollision;
         boolean pendingStuck;
@@ -302,6 +303,7 @@ public class MediumWorldFakeSimulator extends LazyEntitySimulator<MediumWorldFak
     private static final class FakeCheckpoint implements Checkpoint {
         final double x, y, z, vx, vy, vz;
         final float yaw;
+        final float pitch;
         final boolean onGround, horizontalCollision, pendingStuck, sprinting;
         final int noJumpDelay;
         final InputRow row;
@@ -314,6 +316,7 @@ public class MediumWorldFakeSimulator extends LazyEntitySimulator<MediumWorldFak
             vy = e.vy;
             vz = e.vz;
             yaw = e.yaw;
+            pitch = e.pitch;
             onGround = e.onGround;
             horizontalCollision = e.horizontalCollision;
             pendingStuck = e.pendingStuck;
@@ -330,6 +333,7 @@ public class MediumWorldFakeSimulator extends LazyEntitySimulator<MediumWorldFak
             e.vy = vy;
             e.vz = vz;
             e.yaw = yaw;
+            e.pitch = pitch;
             e.onGround = onGround;
             e.horizontalCollision = horizontalCollision;
             e.pendingStuck = pendingStuck;
@@ -340,6 +344,7 @@ public class MediumWorldFakeSimulator extends LazyEntitySimulator<MediumWorldFak
     }
 
     private final World world;
+    private float startPitch;
 
     public MediumWorldFakeSimulator(World world) {
         this.world = world;
@@ -349,6 +354,8 @@ public class MediumWorldFakeSimulator extends LazyEntitySimulator<MediumWorldFak
         return world;
     }
 
+    @Override public void setStartPitch(float pitch) { this.startPitch = pitch; }
+
     @Override
     protected FakeEntity createEntity(Vec3dCore pendingStart, Vec3dCore pendingVelocity, Float pendingYaw) {
         Vec3dCore start = pendingStart != null ? pendingStart : Vec3dCore.ZERO;
@@ -357,7 +364,10 @@ public class MediumWorldFakeSimulator extends LazyEntitySimulator<MediumWorldFak
         return new FakeEntity(world, start, vel, yaw);
     }
 
-    @Override protected void resetEntity(FakeEntity e, StartResumeState resume) { e.reset(resume); }
+    @Override protected void resetEntity(FakeEntity e, StartResumeState resume) {
+        e.reset(resume);
+        e.pitch = startPitch;
+    }
 
     @Override
     protected StartResumeState describeResume(Checkpoint checkpoint) {
@@ -380,6 +390,15 @@ public class MediumWorldFakeSimulator extends LazyEntitySimulator<MediumWorldFak
     }
 
     @Override protected void setInput(FakeEntity e, InputRow row) { e.row = row; }
+
+    @Override protected void teleportEntity(FakeEntity e, Vec3dCore pos, Vec3dCore velocity) {
+        e.x = pos.x;
+        e.y = pos.y;
+        e.z = pos.z;
+        e.vx = velocity.x;
+        e.vy = velocity.y;
+        e.vz = velocity.z;
+    }
 
     @Override protected void applyYaw(FakeEntity e, float yaw) { e.yaw = e.yaw + yaw; }
 
@@ -416,6 +435,10 @@ public class MediumWorldFakeSimulator extends LazyEntitySimulator<MediumWorldFak
     @Override protected int getTickSoulsandCells(FakeEntity e) { return 0; }
 
     @Override protected float getYaw(FakeEntity e) { return e.yaw; }
+
+    @Override protected float getEntityPitch(FakeEntity e) { return e.pitch; }
+
+    @Override protected void setEntityPitch(FakeEntity e, float pitch) { e.pitch = pitch; }
 
     @Override protected List<Vec3dCore> getSubtickPath(FakeEntity e) { return Collections.emptyList(); }
 

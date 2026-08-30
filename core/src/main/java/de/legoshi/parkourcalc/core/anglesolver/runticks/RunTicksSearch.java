@@ -9,6 +9,10 @@ public final class RunTicksSearch<P> {
 
     public interface JumpOptions {
         boolean allows(int jumpIndex, int extraTicks);
+
+        default int maxAllowed(int jumpIndex) {
+            return Integer.MAX_VALUE;
+        }
     }
 
     public static final class Node<P> {
@@ -48,6 +52,8 @@ public final class RunTicksSearch<P> {
     private final boolean minimize;
     private final JumpOptions options;
 
+    public static final int MAX_UNCONSTRAINED_TICKS = 40;
+
     private final Deque<Node<P>> queue = new ArrayDeque<Node<P>>();
     private Node<P> current;
     private int target;
@@ -55,13 +61,15 @@ public final class RunTicksSearch<P> {
     private int steps;
     private int successes;
     private int fullSolutions;
+    private int furthestDepthReached;
 
     public RunTicksSearch(int jumpCount, int maxTicks, boolean minimize, JumpOptions options) {
         this.jumpCount = Math.max(0, jumpCount);
         this.maxTicks = Math.max(0, maxTicks);
         this.minimize = minimize;
         this.options = options;
-        this.target = minimize ? 0 : this.maxTicks;
+        this.target = this.maxTicks;
+        this.furthestDepthReached = 0;
         seed();
     }
 
@@ -71,10 +79,6 @@ public final class RunTicksSearch<P> {
 
     public int target() {
         return target;
-    }
-
-    public int maxTicks() {
-        return maxTicks;
     }
 
     public boolean isMinimizing() {
@@ -103,12 +107,38 @@ public final class RunTicksSearch<P> {
 
     public boolean nextRung() {
         if (!minimize) return false;
-        while (target < maxTicks) {
+        int prefixCap = prefixCapFor(furthestDepthReached);
+        int maxTotal = maxRemaining(0);
+        int cap = Math.min(prefixCap, maxTotal);
+        while (target < cap && target < MAX_UNCONSTRAINED_TICKS) {
             target++;
+            if (target > prefixCap) return false;
             seed();
             if (!queue.isEmpty()) return true;
         }
         return false;
+    }
+
+    private int prefixCapFor(int depth) {
+        long sum = 0;
+        for (int j = 0; j <= depth && j < jumpCount; j++) {
+            int m = options.maxAllowed(j);
+            if (m == Integer.MAX_VALUE) return Integer.MAX_VALUE;
+            sum += m;
+            if (sum >= Integer.MAX_VALUE) return Integer.MAX_VALUE;
+        }
+        return (int) Math.min(Integer.MAX_VALUE, sum);
+    }
+
+    private int maxRemaining(int fromJumpIndex) {
+        long sum = 0;
+        for (int j = fromJumpIndex; j < jumpCount; j++) {
+            int m = options.maxAllowed(j);
+            if (m == Integer.MAX_VALUE) return Integer.MAX_VALUE;
+            sum += m;
+            if (sum >= Integer.MAX_VALUE) return Integer.MAX_VALUE;
+        }
+        return (int) Math.min(Integer.MAX_VALUE, sum);
     }
 
     public Node<P> take() {
@@ -128,6 +158,7 @@ public final class RunTicksSearch<P> {
     public void recordSuccess(P childPayload) {
         successes++;
         if (current == null) return;
+        furthestDepthReached = Math.max(furthestDepthReached, current.depth);
         if (current.depth >= jumpCount) {
             fullSolutions++;
             completed += current.weight;
@@ -171,11 +202,13 @@ public final class RunTicksSearch<P> {
         List<Integer> out = new ArrayList<Integer>();
         int budget = target - sum;
         if (budget < 0) return out;
+        int maxRest = jumpIndex + 1 < jumpCount ? maxRemaining(jumpIndex + 1) : 0;
         if (minimize && jumpIndex == jumpCount - 1) {
             if (options.allows(jumpIndex, budget)) out.add(budget);
             return out;
         }
         for (int extra = budget; extra >= 0; extra--) {
+            if (minimize && budget - extra > maxRest) continue;
             if (options.allows(jumpIndex, extra)) out.add(extra);
         }
         return out;

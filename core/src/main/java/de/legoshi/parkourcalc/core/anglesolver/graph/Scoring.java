@@ -38,7 +38,7 @@ public final class Scoring {
 
     public static double exactObjective(ForwardModel model, JumpPhysicsInputs sc, JumpSpec spec, double[] yawsAbsWrapped) {
         ForwardPath p = model.forward(sc, sc.toGameFacings(yawsAbsWrapped));
-        return p.getPos(spec.objective.tick, spec.objective.axis);
+        return spec.objective.evaluate(p);
     }
 
     public static double violationOf(ForwardModel model, JumpPhysicsInputs sc, JumpSpec spec, double[] yawsAbsWrapped) {
@@ -74,15 +74,21 @@ public final class Scoring {
 
     public static boolean reachHeadroom(ForwardModel model, JumpPhysicsInputs sc, JumpSpec spec,
                                         double[] yaws, double dualBound, double feasTol) {
+        return reachHeadroom(model, sc, spec, yaws, dualBound, feasTol, 0.0);
+    }
+
+    public static boolean reachHeadroom(ForwardModel model, JumpPhysicsInputs sc, JumpSpec spec,
+                                        double[] yaws, double dualBound, double feasTol, double epsilon) {
         if (yaws == null || Double.isNaN(dualBound)) return false;
         if (violationOf(model, sc, spec, yaws) > feasTol) return false;
         boolean max = spec.objective.sense == Objective.Sense.MAX;
         double achieved = exactObjective(model, sc, spec, yaws);
         double gap = max ? dualBound - achieved : achieved - dualBound;
-        return gap > REACH_GAP_EPS;
+        return gap > Math.max(REACH_GAP_EPS, epsilon);
     }
 
     public static double objectiveCap(JumpSpec spec) {
+        if (spec.objective.isCustomAngle()) return Double.NaN;
         Objective o = spec.objective;
         JumpConstraint.Mode mode = o.axis == JumpPhysicsInputs.Axis.X ? JumpConstraint.Mode.X : JumpConstraint.Mode.Z;
         boolean max = o.sense == Objective.Sense.MAX;
@@ -120,13 +126,29 @@ public final class Scoring {
         return a;
     }
 
+    public static double verifiedObjectiveAt(ForwardModel model, JumpPhysicsInputs base, JumpSpec spec,
+                                             double[] yaws, double px, double pz, double feasTol) {
+        JumpPhysicsInputs at = pinnedScenario(base, px, pz);
+        double[] gf = at.toGameFacings(yaws);
+        ForwardPath path = model.forward(at, gf);
+        if (JumpConstraintCompiler.compile(spec).maxViolation(gf, path) > feasTol) return Double.NaN;
+        return spec.objective.evaluate(path);
+    }
+
+    public static void adoptPinnedStart(JumpPhysicsInputs sc, double px, double pz) {
+        if (px != sc.startPos.x || pz != sc.startPos.z) {
+            sc.startPos = new Vec3dCore(px, sc.startPos.y, pz);
+        }
+        sc.startBox = StartBox.pinned(px, pz, sc.initialVelocity.x, sc.initialVelocity.z);
+    }
+
     public static boolean adoptWinningTranslation(ForwardModel model, JumpPhysicsInputs sc, JumpSpec spec,
                                                   StartBox freeBox, double[] yaws, double feasTol) {
         double[] gf = sc.toGameFacings(yaws);
         ForwardPath p = model.forward(sc, gf);
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
         double curViol = compiled.maxViolation(gf, p);
-        double curObj = p.getPos(spec.objective.tick, spec.objective.axis);
+        double curObj = spec.objective.evaluate(p);
         double[] d = translationDomain(sc, freeBox);
         boolean objX = spec.objective.axis == JumpPhysicsInputs.Axis.X;
         boolean objMax = spec.objective.sense == Objective.Sense.MAX;
@@ -173,7 +195,7 @@ public final class Scoring {
         ForwardPath p = model.forward(cand, gf);
         if (JumpConstraintCompiler.compile(spec).maxViolation(gf, p) > feasTol) return false;
         if (curViol <= feasTol) {
-            double obj = p.getPos(spec.objective.tick, spec.objective.axis);
+            double obj = spec.objective.evaluate(p);
             if (!(objMax ? obj > curObj : obj < curObj)) return false;
         }
         sc.startPos = new Vec3dCore(x, sc.startPos.y, z);

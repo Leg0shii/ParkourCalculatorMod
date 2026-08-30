@@ -30,6 +30,7 @@ public final class JumpLinearModel {
 
     public final int n;
     private final JumpPhysicsInputs sc;
+    private final boolean floatFriction;
 
     private final double[] pConst;  // per-tick forward+jump input magnitude (the e^{iθ} is along +imag)
     private final double[] qConst;  // per-tick strafe input magnitude (along +real)
@@ -49,20 +50,41 @@ public final class JumpLinearModel {
      *  {@code a} is the unit axis (X or Z); {@code coef[s]} is the friction coupling C(s,τ) with the
      *  GE/LE sign folded in. An equality keeps a free (sign-unconstrained) multiplier. */
     public static final class Wall {
-        public final int axis;       // 0 = X, 1 = Z
-        public final double[] coef;  // length n; A_{j,s} = coef[s] * unit(axis)
+        public final int axis;       // 0 = X, 1 = Z, 2 = 2D (both coefX and coefZ)
+        public final double[] coefX;
+        public final double[] coefZ;
+        public final double[] coef;  // convenience: non-null axis coef for 1D, or coefX for 2D
         public final double bPrime;
         public final boolean eq;
         public final String name;
+        public final double p0coefX;
+        public final double p0coefZ;
         public final double p0coef;
 
-        Wall(int axis, double[] coef, double bPrime, boolean eq, String name, double p0coef) {
+        public Wall(int axis, double[] coef, double bPrime, boolean eq, String name, double p0coef) {
             this.axis = axis;
+            this.coefX = (axis == 0) ? coef : null;
+            this.coefZ = (axis == 1) ? coef : null;
             this.coef = coef;
             this.bPrime = bPrime;
             this.eq = eq;
             this.name = name;
+            this.p0coefX = (axis == 0) ? p0coef : 0.0;
+            this.p0coefZ = (axis == 1) ? p0coef : 0.0;
             this.p0coef = p0coef;
+        }
+
+        public Wall(double[] coefX, double[] coefZ, double bPrime, boolean eq, String name, double p0coefX, double p0coefZ) {
+            this.axis = 2;
+            this.coefX = coefX;
+            this.coefZ = coefZ;
+            this.coef = coefX != null ? coefX : coefZ;
+            this.bPrime = bPrime;
+            this.eq = eq;
+            this.name = name;
+            this.p0coefX = p0coefX;
+            this.p0coefZ = p0coefZ;
+            this.p0coef = (p0coefX != 0.0) ? p0coefX : p0coefZ;
         }
     }
 
@@ -71,6 +93,11 @@ public final class JumpLinearModel {
     }
 
     public JumpLinearModel(JumpPhysicsInputs scenario, boolean[] zeroX, boolean[] zeroZ) {
+        this(scenario, zeroX, zeroZ, false);
+    }
+
+    public JumpLinearModel(JumpPhysicsInputs scenario, boolean[] zeroX, boolean[] zeroZ, boolean floatFriction) {
+        this.floatFriction = floatFriction;
         this.sc = scenario;
         this.n = scenario.numTicks;
         this.pConst = new double[n];
@@ -111,10 +138,10 @@ public final class JumpLinearModel {
             double slip = contact ? slipOv : Constants.SLIP_F;
             double accelSpeed;
             if (contact) {
-                f4[t] = slip * 0.91;
+                f4[t] = floatFriction ? (double) ((float) slipOv * 0.91F) : slip * 0.91;
                 accelSpeed = Constants.attrValueF(sc.factorAmpAt(t), sprint) * (0.16277136 / (f4[t] * f4[t] * f4[t]));
             } else {
-                f4[t] = 0.91;
+                f4[t] = floatFriction ? (double) 0.91F : 0.91;
                 accelSpeed = sc.airFactorSprintAt(t) ? Constants.AIR_SPEED_F : Constants.AIR_SPEED_NO_SPRINT_F;
             }
             // Same per-tick input authoring as ExactJumpModel step (4) (gh-102).
@@ -205,11 +232,30 @@ public final class JumpLinearModel {
         int objTick = obj.tick;
         double dx, dz;
         boolean max = obj.sense == Objective.Sense.MAX;
-        if (obj.axis == JumpPhysicsInputs.Axis.X) { dx = max ? 1.0 : -1.0; dz = 0.0; }
-        else { dx = 0.0; dz = max ? 1.0 : -1.0; }
-        for (int t = 0; t < n; t++) {
-            cx[t] = coefAxis(0, t, objTick) * dx;
-            cz[t] = coefAxis(1, t, objTick) * dz;
+        if (obj.isCustomAngle()) {
+            double rad = Math.toRadians(obj.customYaw);
+            dx = (max ? 1.0 : -1.0) * -Math.sin(rad);
+            dz = (max ? 1.0 : -1.0) * Math.cos(rad);
+        } else if (obj.axis == JumpPhysicsInputs.Axis.X) {
+            dx = max ? 1.0 : -1.0;
+            dz = 0.0;
+        } else {
+            dx = 0.0;
+            dz = max ? 1.0 : -1.0;
+        }
+
+        if (obj.isMotion()) {
+            for (int t = 0; t < n; t++) {
+                double k0 = coefAxis(0, t, objTick) - (objTick > 0 ? coefAxis(0, t, objTick - 1) : 0.0);
+                double k1 = coefAxis(1, t, objTick) - (objTick > 0 ? coefAxis(1, t, objTick - 1) : 0.0);
+                cx[t] = k0 * dx;
+                cz[t] = k1 * dz;
+            }
+        } else {
+            for (int t = 0; t < n; t++) {
+                cx[t] = coefAxis(0, t, objTick) * dx;
+                cz[t] = coefAxis(1, t, objTick) * dz;
+            }
         }
     }
 
@@ -218,6 +264,46 @@ public final class JumpLinearModel {
      *  {@code null} for a constraint with no decision dependence (tick 0, or t1==t2): such a constraint is a
      *  constant, reported via {@code trivialInfeasible} when the constant itself violates it. F-mode (facing)
      *  and DXZ (cross-axis magnitude) walls are not linear in the inputs and are rejected (caller falls back). */
+    public static boolean hasCrossAxis(List<JumpConstraint> constraints) {
+        for (JumpConstraint c : constraints) {
+            if (c.mode == JumpConstraint.Mode.DXZ || c.mode == JumpConstraint.Mode.DZX) return true;
+        }
+        return false;
+    }
+
+    public void addCrossAxisWalls(List<Wall> out, JumpConstraint c, int dominantSign, double margin) {
+        if (c.t2 == null) return;
+        boolean wantZDominant = (c.mode == JumpConstraint.Mode.DZX && c.cmp == JumpConstraint.Cmp.GE)
+                || (c.mode == JumpConstraint.Mode.DXZ && c.cmp == JumpConstraint.Cmp.LE);
+        double s = dominantSign >= 0 ? 1.0 : -1.0;
+        if (wantZDominant) {
+            out.add(compileCrossAxisWall(c.t1, c.t2, -1.0, s, c.rhs, margin, c.name + ".1"));
+            out.add(compileCrossAxisWall(c.t1, c.t2, 1.0, s, c.rhs, margin, c.name + ".2"));
+        } else {
+            out.add(compileCrossAxisWall(c.t1, c.t2, s, -1.0, c.rhs, margin, c.name + ".1"));
+            out.add(compileCrossAxisWall(c.t1, c.t2, s, 1.0, c.rhs, margin, c.name + ".2"));
+        }
+    }
+
+    public Wall compileCrossAxisWall(int t1, Integer t2, double signX, double signZ, double rhs,
+                                     double margin, String name) {
+        if (t2 == null) return null;
+        double constX = constPos(t1, 0) - constPos(t2, 0);
+        double constZ = constPos(t1, 1) - constPos(t2, 1);
+        double constVal = signX * constX + signZ * constZ;
+
+        double[] cx = new double[n];
+        double[] cz = new double[n];
+        for (int s = 0; s < n; s++) {
+            double kx = coefAxis(0, s, t1) - coefAxis(0, s, t2);
+            double kz = coefAxis(1, s, t1) - coefAxis(1, s, t2);
+            cx[s] = -signX * kx;
+            cz[s] = -signZ * kz;
+        }
+        double bPrime = constVal - rhs - margin;
+        return new Wall(cx, cz, bPrime, false, name, 0.0, 0.0);
+    }
+
     public Wall compileWall(JumpConstraint c, double margin, boolean[] trivialInfeasible) {
         if (c.mode != JumpConstraint.Mode.X && c.mode != JumpConstraint.Mode.Z) return null;
         int axis = (c.mode == JumpConstraint.Mode.X) ? 0 : 1;
@@ -267,8 +353,16 @@ public final class JumpLinearModel {
 
     /** Compile all walls of a spec; sets {@code trivialInfeasible[0]} if a constant constraint is violated. */
     public List<Wall> compileWalls(List<JumpConstraint> constraints, double margin, boolean[] trivialInfeasible) {
+        return compileWalls(constraints, margin, trivialInfeasible, 1);
+    }
+
+    public List<Wall> compileWalls(List<JumpConstraint> constraints, double margin, boolean[] trivialInfeasible, int dominantSign) {
         List<Wall> walls = new ArrayList<>();
         for (JumpConstraint c : constraints) {
+            if (c.mode == JumpConstraint.Mode.DXZ || c.mode == JumpConstraint.Mode.DZX) {
+                addCrossAxisWalls(walls, c, dominantSign, margin);
+                continue;
+            }
             Wall w = compileWall(c, margin, trivialInfeasible);
             if (w != null) walls.add(w);
         }
@@ -321,6 +415,12 @@ public final class JumpLinearModel {
         return new Wall(axis, coef, bPrime, false, "keep" + ax + "@" + tick + (positive ? "+" : "-"), 0.0);
     }
 
+    public double velocityCoef(int axis, int s, int t) {
+        if (s >= t) return 0.0;
+        if (zNext[axis][s] < t) return 0.0;
+        return fPre[t] / fPre[s];
+    }
+
     public void zeroingPattern(double[] yawsAbsWrapped, double threshold, boolean perAxis,
                                boolean[] outZeroX, boolean[] outZeroZ) {
         double vx = sc.initialVelocity.x;
@@ -356,5 +456,27 @@ public final class JumpLinearModel {
      *  caller's default. */
     public double recoverYawDeg(int t, double gx, double gz) {
         return Angles.wrap((Math.atan2(gz, gx) - baseArg[t]) * DEG);
+    }
+
+    public double[] recoverAlongCostate(Objective obj, double[] gx, double[] gz) {
+        boolean max = obj.sense == Objective.Sense.MAX;
+        boolean axisX = obj.axis == JumpPhysicsInputs.Axis.X;
+        double[] yaws = new double[n];
+        for (int t = 0; t < n; t++) {
+            double x = gx[t];
+            double z = gz[t];
+            if (x * x + z * z < 1.0e-18) {
+                if (obj.isCustomAngle()) {
+                    double rad = Math.toRadians(obj.customYaw);
+                    x = (max ? 1.0 : -1.0) * -Math.sin(rad);
+                    z = (max ? 1.0 : -1.0) * Math.cos(rad);
+                } else {
+                    x = axisX ? (max ? 1.0 : -1.0) : 0.0;
+                    z = axisX ? 0.0 : (max ? 1.0 : -1.0);
+                }
+            }
+            yaws[t] = recoverYawDeg(t, x, z);
+        }
+        return yaws;
     }
 }

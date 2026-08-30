@@ -8,7 +8,7 @@ public class InputRow {
 
     private static int nextId = 0;
 
-    public static final int MAX_AMPLIFIER = 9;
+    public static final int MAX_AMPLIFIER = 255;
 
     public static final int MAX_HOTBAR_SLOT = 9;
 
@@ -21,6 +21,10 @@ public class InputRow {
     private int speedAmplifier;
     private int jumpBoostAmplifier;
     private int hotbarSlot;
+    private boolean teleportEnabled;
+    private double teleportX;
+    private double teleportY;
+    private double teleportZ;
     private int modCount;
 
     // LEFT_CLICK / RIGHT_CLICK appended last to keep existing ordinals stable for old saves.
@@ -122,6 +126,34 @@ public class InputRow {
         this.hotbarSlot = clamped;
     }
 
+    public boolean isTeleportEnabled() {
+        return teleportEnabled;
+    }
+
+    public void setTeleportEnabled(boolean enabled) {
+        if (this.teleportEnabled != enabled) modCount++;
+        this.teleportEnabled = enabled;
+    }
+
+    public double getTeleportX() {
+        return teleportX;
+    }
+
+    public double getTeleportY() {
+        return teleportY;
+    }
+
+    public double getTeleportZ() {
+        return teleportZ;
+    }
+
+    public void setTeleportDestination(double x, double y, double z) {
+        if (this.teleportX != x || this.teleportY != y || this.teleportZ != z) modCount++;
+        this.teleportX = x;
+        this.teleportY = y;
+        this.teleportZ = z;
+    }
+
     private static int clampAmplifier(int amplifier) {
         if (amplifier < 0) return 0;
         if (amplifier > MAX_AMPLIFIER) return MAX_AMPLIFIER;
@@ -144,6 +176,10 @@ public class InputRow {
         copy.speedAmplifier = this.speedAmplifier;
         copy.jumpBoostAmplifier = this.jumpBoostAmplifier;
         copy.hotbarSlot = this.hotbarSlot;
+        copy.teleportEnabled = this.teleportEnabled;
+        copy.teleportX = this.teleportX;
+        copy.teleportY = this.teleportY;
+        copy.teleportZ = this.teleportZ;
         return copy;
     }
 }

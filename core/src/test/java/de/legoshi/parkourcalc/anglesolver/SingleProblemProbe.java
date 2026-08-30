@@ -18,5 +18,10 @@ public class SingleProblemProbe {
         System.out.printf("PROBE %s success=%s met=%d/%d %d ms%s%n",
                 target, r != null && r.isSuccess(), r == null ? 0 : r.getMet(), r == null ? 0 : r.getTotal(),
                 run.elapsedMs, r != null && r.hasObjective() ? String.format("  obj=%.7f", r.getObjectiveValue()) : "");
+        if (r != null) {
+            System.out.println("PROBE solver=" + r.getSolver());
+            if (r.getNotice() != null) System.out.println("PROBE notice=" + r.getNotice());
+            for (SolveResult.Detail d : r.getDetails()) System.out.println("PROBE detail  " + d.label + " = " + d.value);
+        }
     }
 }

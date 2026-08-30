@@ -9,7 +9,6 @@ import org.junit.Test;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class GraphRunnerDeadlineTest {
@@ -25,11 +24,11 @@ public class GraphRunnerDeadlineTest {
     }
 
     @Test
-    public void expiredOverallDeadlineStopsWalkBeforeNodes() {
+    public void expiredOverallDeadlineStillWalksWithExpiredNodeDeadlines() {
         GraphContext ctx = TestScenarios.context(4, null, new AtomicBoolean(false));
         ctx.setOverallDeadline(System.nanoTime() - 1L);
         GraphRunner.run(settledGraph(), ctx);
-        assertFalse(ctx.settled());
+        assertTrue(ctx.settled());
     }
 
     @Test

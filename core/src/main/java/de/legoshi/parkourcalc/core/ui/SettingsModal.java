@@ -36,8 +36,10 @@ public final class SettingsModal {
     private static final String TT_COL_SPEED_AMP = "Adds a per-tick Speed potion amplifier column to the input table.";
     private static final String TT_COL_JUMP_BOOST_AMP = "Adds a per-tick Jump Boost potion amplifier column to the input table.";
     private static final String TT_COL_HOTBAR = "Adds a per-tick hotbar slot column (1-9). During playback the held slot switches on ticks that set one; empty keeps the previous slot.";
+    private static final String TT_COL_TELEPORT = "Adds a per-tick teleport column. When enabled on a tick, the player teleports to the given X/Y/Z at the start of that tick, before its inputs, in both the simulation and the replay.";
     private static final String TT_CONSTRAINTS = "Draws Angle Solver position constraints (X/Z) as translucent plates at the tick they apply to. The front plate sits on the constraint; the back fades out toward the open/free direction. Only visible while the Angle Solver is open.";
     private static final String TT_C_EXPAND = "Grow each plate outward by the player hitbox half-width (0.3) so the plate covers your hitbox: your hitbox fits inside the plate exactly when the tick is valid.";
+    private static final String TT_PRESSURE_PLATE_FULL = "When adding a pressure plate constraint (Ctrl+B while looking at a pressure plate), use the full block footprint from .0 to 1.0 on X and Z instead of the version's inset interaction hitbox. Legacy versions inset the interaction box by 0.125, modern by 0.0625.";
     private static final String TT_C_DIM = "Size in blocks. Width is across the constraint, height is vertical, length is along the plate (front depth from the boundary / back reach behind it).";
     private static final String TT_GROUND_HIGHLIGHT = "Tints input rows whose simulated tick ended on the ground. Color is editable in Render Colors.";
     private static final String TT_COL_W = "W (forward) is always shown and can't be hidden.";
@@ -87,7 +89,9 @@ public final class SettingsModal {
     private static final String[] ARROW_MODE_LABELS = {"Yaw", "Combined"};
     private static final String[] HUD_MESSAGE_ORDER_LABELS = {"Downwards", "Upwards"};
 
+    private static final String TT_REPLAY_START_DELAY = "Waits this many ticks after playback starts before the macro's inputs begin. The player holds at the start while the delay counts down; 0 starts immediately.";
     private final ImInt scaleIndexBuf = new ImInt();
+    private final int[] replayStartDelayBuf = new int[1];
     private final ImInt arrowModeBuf = new ImInt();
     private final float[] yawTurnCapBuf = new float[1];
     private final int[] pathRenderDistanceBuf = new int[1];
@@ -416,6 +420,7 @@ public final class SettingsModal {
         if (beginLayoutTable("##settings_constraint_shape")) {
             checkboxRow("Show constraints", "##show_constraints", settings.showConstraints, TT_CONSTRAINTS, v -> settings.showConstraints = v);
             checkboxRow("Expand by player hitbox", "##c_expand", settings.constraintExpandByHitbox, TT_C_EXPAND, v -> settings.constraintExpandByHitbox = v);
+            checkboxRow("Pressure plate full block", "##pressure_plate_full", settings.pressurePlateFullBlock, TT_PRESSURE_PLATE_FULL, v -> settings.pressurePlateFullBlock = v);
             ThemeManager.endStandardFormTable();
         }
 
@@ -472,6 +477,7 @@ public final class SettingsModal {
             checkboxRow("Speed", "##show_speed", settings.showColSpeed, TT_COL_SPEED_AMP, v -> settings.showColSpeed = v);
             checkboxRow("Jump Boost", "##show_jump_boost", settings.showColJumpBoost, TT_COL_JUMP_BOOST_AMP, v -> settings.showColJumpBoost = v);
             checkboxRow("Hotbar slot", "##show_hotbar", settings.showColHotbar, TT_COL_HOTBAR, v -> settings.showColHotbar = v);
+            checkboxRow("Teleport", "##show_teleport", settings.showColTeleport, TT_COL_TELEPORT, v -> settings.showColTeleport = v);
             ThemeManager.endStandardFormTable();
         }
 
@@ -519,6 +525,21 @@ public final class SettingsModal {
         if (beginLayoutTable("##settings_playback_player")) {
             checkboxRow("Disable creative flight", "##disable_flight_playback", settings.disableFlightDuringPlayback, TT_DISABLE_FLIGHT_PLAYBACK, v -> settings.disableFlightDuringPlayback = v);
             checkboxRow("Lockstep replay", "##lockstep_replay", settings.lockstepReplay, TT_LOCKSTEP_REPLAY, v -> settings.lockstepReplay = v);
+            ThemeManager.endStandardFormTable();
+        }
+
+        ThemeManager.sectionSpacing();
+        sectionHeader("Start delay");
+        if (beginLayoutTable("##settings_playback_start_delay")) {
+            row("Delay before replay", () -> {
+                replayStartDelayBuf[0] = settings.replayStartDelayTicks;
+                ImGui.setNextItemWidth(-1);
+                if (Controls.sliderInt("##replay_start_delay", replayStartDelayBuf, Settings.MIN_REPLAY_START_DELAY_TICKS, Settings.MAX_REPLAY_START_DELAY_TICKS, "%d ticks")) {
+                    settings.replayStartDelayTicks = replayStartDelayBuf[0];
+                }
+                if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
+                tooltipForLastItem(TT_REPLAY_START_DELAY);
+            });
             ThemeManager.endStandardFormTable();
         }
     }

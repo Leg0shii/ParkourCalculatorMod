@@ -7,6 +7,8 @@ import de.legoshi.parkourcalc.core.anglesolver.Slipperiness;
 import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
 import de.legoshi.parkourcalc.core.anglesolver.StateOverride;
 import de.legoshi.parkourcalc.core.anglesolver.TickConstraints;
+import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
+import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.runticks.RunTicksControls;
 import de.legoshi.parkourcalc.core.anglesolver.runticks.RunTicksFilter;
 import de.legoshi.parkourcalc.core.anglesolver.runticks.RunTicksRows;
@@ -31,6 +33,8 @@ public final class RunTicksController implements RunTicksControls {
     private static final InputRow.Key[] INHERITED_KEYS = {
             InputRow.Key.W, InputRow.Key.A, InputRow.Key.S, InputRow.Key.D, InputRow.Key.SPRINT
     };
+
+    private static final SolverGraph FAST_GRAPH = BuiltinGraphs.fastRunTicks();
 
     private enum Phase { IDLE, STEP, FINAL }
 
@@ -116,7 +120,17 @@ public final class RunTicksController implements RunTicksControls {
 
         searchBase = DocumentSnapshot.capture(inputs, state);
         search = new RunTicksSearch<List<InputRow>>(jumpTicks.size(), cfg.getMaxTicks(), cfg.isMinimize(),
-                this::allowsExtraTicks);
+                new RunTicksSearch.JumpOptions() {
+                    @Override
+                    public boolean allows(int jumpIndex, int extraTicks) {
+                        return allowsExtraTicks(jumpIndex, extraTicks);
+                    }
+
+                    @Override
+                    public int maxAllowed(int jumpIndex) {
+                        return maxAllowedTicks(jumpIndex);
+                    }
+                });
         timeouts = new StepTimeouts(cfg, jumpTicks.size());
         bestCombo = null;
         bestRows = null;
@@ -204,7 +218,7 @@ public final class RunTicksController implements RunTicksControls {
         applyStep(node);
         runSimulation.run();
         stepStartMs = now();
-        engine.solve(AngleSolverState.Effort.FAST);
+        engine.solve(AngleSolverState.Effort.FAST, false, FAST_GRAPH);
         phase = Phase.STEP;
     }
 
@@ -223,7 +237,7 @@ public final class RunTicksController implements RunTicksControls {
             }
             stepTimeoutMs = Math.max(settings().getTimeoutMs(), timeouts.forDepth(search.jumpCount()));
             stepStartMs = now();
-            engine.solve(AngleSolverState.Effort.FAST);
+            engine.solve(AngleSolverState.Effort.FAST, true, FAST_GRAPH);
             phase = Phase.FINAL;
             return;
         }
@@ -292,7 +306,7 @@ public final class RunTicksController implements RunTicksControls {
         int percent = (int) Math.min(99, Math.max(0, search.progress() * 100));
         String elapsed = String.format(Locale.ROOT, " (%.1fs)", elapsedMs(searchStartMs) / 1000.0);
         String text = search.isMinimizing()
-                ? "Run ticks (min " + search.target() + "/" + search.maxTicks() + "t) · " + percent + "%" + elapsed
+                ? "Run ticks (min " + search.target() + "t) · " + percent + "%" + elapsed
                 : "Run ticks · " + percent + "%" + elapsed;
         hud.setStatus(text, HudMessages.COLOR_DEFAULT);
     }
@@ -394,6 +408,11 @@ public final class RunTicksController implements RunTicksControls {
     private boolean allowsExtraTicks(int jumpIndex, int extraTicks) {
         TickConstraints tc = searchBase.constraintsAt(jumpTicks.get(jumpIndex));
         return RunTicksFilter.allows(tc == null ? null : tc.getConstraints(), extraTicks);
+    }
+
+    private int maxAllowedTicks(int jumpIndex) {
+        TickConstraints tc = searchBase.constraintsAt(jumpTicks.get(jumpIndex));
+        return RunTicksFilter.maxAllowed(tc == null ? null : tc.getConstraints());
     }
 
     private int enabledConstraintCount() {

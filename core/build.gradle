@@ -47,9 +47,13 @@ dependencies {
 }
 
 tasks.named('test') {
+	systemProperties providers.systemPropertiesPrefixedBy('pkc.').get()
 	useJUnit {
 		if (!project.hasProperty('slowTests')) {
 			excludeCategories 'de.legoshi.parkourcalc.SlowSolverTests'
+		}
+		if (!project.hasProperty('verySlowTests')) {
+			excludeCategories 'de.legoshi.parkourcalc.VerySlowSolverTests'
 		}
 	}
 	if (project.hasProperty('testCpus')) {

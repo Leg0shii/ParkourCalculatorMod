@@ -7,12 +7,14 @@ import de.legoshi.parkourcalc.core.anglesolver.Potion;
 import de.legoshi.parkourcalc.core.anglesolver.PotionDose;
 import de.legoshi.parkourcalc.core.anglesolver.Slipperiness;
 import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
+import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphFactory;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphPresetFile;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphPresetIO;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.runticks.RunTicksControls;
 import de.legoshi.parkourcalc.core.anglesolver.runticks.RunTicksSettings;
+import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.core.save.Result;
@@ -31,6 +33,7 @@ import imgui.flag.ImGuiCol;
 import imgui.flag.ImGuiCond;
 import imgui.flag.ImGuiStyleVar;
 import imgui.flag.ImGuiWindowFlags;
+import imgui.type.ImFloat;
 import imgui.type.ImInt;
 import imgui.type.ImString;
 
@@ -51,6 +54,8 @@ public final class AngleSolverWindow implements RenderInterface {
 
     private static final String WINDOW_ID = "###angle_solver";
     private static final String TITLE = "Angle Solver";
+    private static final String TELEPORT_SOLVE_BLOCKED =
+            "Can't solve: the solve range crosses a tick with a teleport, which overrides that tick's movement.";
 
     private static final String[] AXES = {"X", "Z"};
     private static final String[] GOALS = {"MAX", "MIN"};
@@ -62,11 +67,13 @@ public final class AngleSolverWindow implements RenderInterface {
                     + "sprint from that tick on, and the solve inherits it, so a broken path can\n"
                     + "make a solvable segment report no solution until the route is re-recorded."};
     private static final String[] EFFORTS = {"Fast", "Optimize", "Custom"};
-    private static final String LEGACY_PRESET_ITEM = "Legacy budget";
+    private static final String FAST_PRESET_ITEM = BuiltinGraphs.FAST_PRESET;
+    private static final String OPTIMIZE_PRESET_ITEM = BuiltinGraphs.OPTIMIZE_PRESET;
+    private static final int BUILTIN_PRESET_COUNT = 2;
 
     private static final String[] FORM_LABELS =
-            {"Start tick", "Goal tick", "Axis", "Goal", "Inputs", "Sprint", "Slipperiness", "Potion",
-             "Enabled", "Max ticks", "Step timeout", "Step growth", "Safety factor", "Safety margin"};
+            {"Start tick", "Goal tick", "Axis", "Goal", "Target angle", "Inputs", "Sprint", "Slipperiness", "Potion",
+             "Enabled", "Run ticks", "Step timeout", "Step growth", "Safety factor", "Safety margin"};
 
     /** Unscaled; lines the details table up under the toggle title and sets it off from the solved values. */
     private static final float DETAIL_INDENT = 13f;
@@ -97,12 +104,14 @@ public final class AngleSolverWindow implements RenderInterface {
     private final ImInt levelBuf = new ImInt();
     private final ImInt runTicksMaxBuf = new ImInt();
     private final ImInt runTicksTimeoutBuf = new ImInt();
-    private final int[] runTicksGrowthBuf = new int[1];
-    private final float[] runTicksSafetyMultBuf = new float[1];
-    private final int[] runTicksSafetyMarginBuf = new int[1];
+    private final ImInt runTicksGrowthBuf = new ImInt();
+    private final ImFloat runTicksSafetyMultBuf = new ImFloat();
+    private final ImInt runTicksSafetyMarginBuf = new ImInt();
     private final int[] optimizeSecondsBuf = new int[1];
     private final ImInt presetBuf = new ImInt();
     private final ImString presetNameInput = new ImString(64);
+    private final ImString customAngleBuf = new ImString(32);
+    private double lastSyncedCustomAngle = Double.NaN;
     private final String[] slipItems;
     private String[] presetNames;
     private String presetError;
@@ -119,6 +128,16 @@ public final class AngleSolverWindow implements RenderInterface {
     private boolean runTicksExpanded;
     private int doseToRemove;
     private RunTicksControls runTicks = RunTicksControls.NONE;
+    private java.util.function.DoubleSupplier playerYawSupplier = () -> 0.0;
+    private java.util.function.IntPredicate teleportAtRow = t -> false;
+
+    public void setPlayerYawSupplier(java.util.function.DoubleSupplier supplier) {
+        this.playerYawSupplier = supplier != null ? supplier : () -> 0.0;
+    }
+
+    public void setTeleportAtRow(java.util.function.IntPredicate predicate) {
+        this.teleportAtRow = predicate != null ? predicate : t -> false;
+    }
 
     public void setRunTicksControls(RunTicksControls controls) {
         this.runTicks = controls != null ? controls : RunTicksControls.NONE;
@@ -200,12 +219,70 @@ public final class AngleSolverWindow implements RenderInterface {
 
         solveForExpanded = sectionToggle("Solve for", "solvefor", solveForExpanded, scale);
         if (solveForExpanded) {
-            int ax = segmentedRow("Axis", "axis", AXES, state.getAxis().ordinal(), labelW);
-            if (ax >= 0) state.setAxis(AngleSolverState.Axis.values()[ax]);
-            int gl = segmentedRow("Goal", "goal", GOALS, state.getGoal().ordinal(), labelW);
-            if (gl >= 0) state.setGoal(AngleSolverState.Goal.values()[gl]);
+            if (!state.isCustomAngle()) {
+                int ax = segmentedRow("Axis", "axis", AXES, state.getAxis().ordinal(), labelW);
+                if (ax >= 0) state.setAxis(AngleSolverState.Axis.values()[ax]);
+                int gl = segmentedRow("Goal", "goal", GOALS, state.getGoal().ordinal(), labelW);
+                if (gl >= 0) state.setGoal(AngleSolverState.Goal.values()[gl]);
+            } else {
+                Controls.pushInputFrameHeight();
+                ImGui.beginGroup();
+                SolverWidgets.rowLabel("Target angle", labelW);
+
+                float btnW = ImGui.getFrameHeight();
+                float spacing = ImGui.getStyle().getItemInnerSpacing().x;
+                float segW = 96f * scale;
+                float inputW = Math.max(30f, ImGui.getContentRegionAvail().x - btnW - segW - 2f * spacing);
+
+                if (state.getCustomAngleDeg() != lastSyncedCustomAngle && !ImGui.isItemActive()) {
+                    customAngleBuf.set(String.format(Locale.ROOT, "%.4f", state.getCustomAngleDeg())
+                            .replaceAll("0+$", "").replaceAll("\\.$", ""));
+                    lastSyncedCustomAngle = state.getCustomAngleDeg();
+                }
+
+                ImGui.setNextItemWidth(inputW);
+                if (ImGui.inputText("##customAngleInput", customAngleBuf, imgui.flag.ImGuiInputTextFlags.CharsDecimal)) {
+                    try {
+                        String s = customAngleBuf.get().trim();
+                        if (!s.isEmpty() && !s.equals("-") && !s.equals(".")) {
+                            double val = Double.parseDouble(s);
+                            state.setCustomAngleDeg(val);
+                            lastSyncedCustomAngle = state.getCustomAngleDeg();
+                        }
+                    } catch (NumberFormatException ignored) {}
+                }
+                TooltipUtil.onHover("Target facing angle in degrees to optimize towards (e.g. 45.0° for diagonal).");
+
+                ImGui.sameLine(0, spacing);
+                if (ImGui.button("P##setPlayerFacing", btnW, btnW)) {
+                    double yaw = Angles.wrap(playerYawSupplier.getAsDouble());
+                    state.setCustomAngleDeg(yaw);
+                    customAngleBuf.set(String.format(Locale.ROOT, "%.4f", yaw)
+                            .replaceAll("0+$", "").replaceAll("\\.$", ""));
+                    lastSyncedCustomAngle = state.getCustomAngleDeg();
+                }
+                TooltipUtil.onHover("Set target angle to player's current facing yaw.");
+
+                ImGui.sameLine(0, spacing);
+                String[] typeItems = {"Pos", "Mot"};
+                String[] typeTooltips = {
+                        "Position: Maximize horizontal displacement/distance along the target angle.",
+                        "Motion: Maximize horizontal velocity/motion vector along the target angle at the goal tick."
+                };
+                int typePick = SolverWidgets.segmented("##customType", typeItems, typeTooltips, state.getCustomAngleType().ordinal(), segW);
+                if (typePick >= 0) state.setCustomAngleType(AngleSolverState.CustomAngleType.values()[typePick]);
+
+                ImGui.endGroup();
+                Controls.popInputFrameHeight();
+            }
 
             ImGui.spacing();
+            if (Controls.checkbox("Custom angle##customAngleToggle", state.isCustomAngle())) {
+                state.setCustomAngle(!state.isCustomAngle());
+            }
+            TooltipUtil.onHover("Optimize trajectory distance or motion towards a custom facing angle instead of a fixed X/Z axis.\n"
+                    + "Using 'Optimize' effort is recommended for maximum reach.");
+
             boolean fastTier = state.getEffort() == AngleSolverState.Effort.FAST;
             boolean optimizeTier = state.getEffort() == AngleSolverState.Effort.THOROUGH;
             boolean forced = fastTier || optimizeTier;
@@ -332,6 +409,11 @@ public final class AngleSolverWindow implements RenderInterface {
         w = Math.max(w, segmentedRowWidth("Goal", GOALS, labelW));
         w = Math.max(w, segmentedRowWidth("Inputs", INPUTS, labelW));
         w = Math.max(w, segmentedRowWidth("Sprint", SPRINTS, labelW));
+        if (runTicksExpanded) {
+            float boxW = ImGui.getFrameHeight() + ImGui.getStyle().getItemInnerSpacing().x;
+            float checkColW = boxW + Math.max(ImGui.calcTextSize("Min").x, ImGui.calcTextSize("Auto").x);
+            w = Math.max(w, labelW + 110f * ThemeManager.uiScale() + checkColW);
+        }
         if (advancedExpanded) {
             w = Math.max(w, segmentedRowWidth("Effort", EFFORTS, labelW));
             if (state.getEffort() == AngleSolverState.Effort.CUSTOM) {
@@ -479,7 +561,7 @@ public final class AngleSolverWindow implements RenderInterface {
         ImGui.setNextItemWidth(levelW);
         // step 0 hides the +/- buttons; at this width they would consume the whole field and leave nothing to type in.
         if (ImGui.inputInt("##lvl" + index, levelBuf, 0, 0)) {
-            dose.level = Math.max(1, Math.min(10, levelBuf.get()));
+            dose.level = Math.max(PotionDose.MIN_LEVEL, Math.min(PotionDose.MAX_LEVEL, levelBuf.get()));
         }
         ImGui.sameLine();
         if (SolverWidgets.deleteX("rm" + index)) doseToRemove = index;
@@ -516,10 +598,11 @@ public final class AngleSolverWindow implements RenderInterface {
             + " to restrict how many ticks that jump may get.";
 
     private static final String RUN_TICKS_MAX_TIP =
-            "Largest number of extra running ticks the search may hand out across all jumps together.";
+            "Largest number of extra running ticks the search may hand out across all jumps together."
+            + "\nIn Min mode, the search starts from this count upwards.";
 
     private static final String RUN_TICKS_MIN_TIP =
-            "Search 0, 1, 2 ... extra ticks in turn and stop at the first count that solves, so the result"
+            "Search from the configured run ticks count upwards (n, n+1, n+2 ...) and stop at the first count that solves, so the result"
             + " uses the fewest run ticks instead of the best objective.";
 
     private static final String RUN_TICKS_TIMEOUT_TIP =
@@ -545,14 +628,15 @@ public final class AngleSolverWindow implements RenderInterface {
 
         float spacing = ImGui.getStyle().getItemInnerSpacing().x;
         float boxW = ImGui.getFrameHeight() + spacing;
+        float checkColW = boxW + Math.max(ImGui.calcTextSize("Min").x, ImGui.calcTextSize("Auto").x);
 
         Controls.pushInputFrameHeight();
-        SolverWidgets.rowLabel("Max ticks", labelW);
+        SolverWidgets.rowLabel("Run ticks", labelW);
+        float inputW = Math.max(40f * scale, ImGui.getContentRegionAvail().x - checkColW - spacing);
         runTicksMaxBuf.set(cfg.getMaxTicks());
-        float minW = boxW + ImGui.calcTextSize("Min").x;
-        if (Controls.inputInt("##runTicksMax", runTicksMaxBuf,
-                Math.max(60f, ImGui.getContentRegionAvail().x - minW - spacing))) {
-            cfg.setMaxTicks(runTicksMaxBuf.get());
+        ImGui.setNextItemWidth(inputW);
+        if (ImGui.inputInt("##runTicksMax", runTicksMaxBuf, 1, 5)) {
+            cfg.setMaxTicks(Math.max(0, runTicksMaxBuf.get()));
         }
         TooltipUtil.onHover(RUN_TICKS_MAX_TIP);
         ImGui.sameLine(0, spacing);
@@ -564,10 +648,9 @@ public final class AngleSolverWindow implements RenderInterface {
         SolverWidgets.rowLabel("Step timeout", labelW);
         boolean auto = cfg.isAdaptiveTimeout();
         runTicksTimeoutBuf.set(auto ? runTicks.liveTimeoutMs() : cfg.getTimeoutMs());
-        float autoW = boxW + ImGui.calcTextSize("Auto").x;
         if (auto) ImGui.beginDisabled(true);
-        if (Controls.inputInt("##runTicksTimeout", runTicksTimeoutBuf,
-                Math.max(60f, ImGui.getContentRegionAvail().x - autoW - spacing))) {
+        ImGui.setNextItemWidth(inputW);
+        if (ImGui.inputInt("##runTicksTimeout", runTicksTimeoutBuf, RunTicksSettings.TIMEOUT_NUDGE_MS, 100)) {
             cfg.setTimeoutMs(runTicksTimeoutBuf.get());
         }
         if (auto) ImGui.endDisabled();
@@ -579,23 +662,36 @@ public final class AngleSolverWindow implements RenderInterface {
 
         if (!auto) return;
 
-        runTicksGrowthBuf[0] = cfg.getAddPerJumpMs();
-        if (sliderIntRow("Step growth", "##runTicksGrowth", runTicksGrowthBuf, 0, 500, "+%d ms", labelW,
-                "Added to the timeout for each jump deeper the search goes.")) {
-            cfg.setAddPerJumpMs(runTicksGrowthBuf[0]);
+        Controls.pushInputFrameHeight();
+        SolverWidgets.rowLabel("Step growth", labelW);
+        runTicksGrowthBuf.set(cfg.getAddPerJumpMs());
+        ImGui.setNextItemWidth(inputW);
+        if (ImGui.inputInt("##runTicksGrowth", runTicksGrowthBuf, 10, 50)) {
+            cfg.setAddPerJumpMs(Math.max(0, runTicksGrowthBuf.get()));
         }
+        Controls.popInputFrameHeight();
+        TooltipUtil.onHover("Added to the timeout for each jump deeper the search goes (+ms per jump).");
 
-        runTicksSafetyMultBuf[0] = (float) cfg.getSafetyMult();
-        if (sliderFloatRow("Safety factor", "##runTicksSafetyMult", runTicksSafetyMultBuf, 1.0f, 3.0f, "x%.2f", labelW,
-                "Multiplier applied to the measured solve time before it becomes the next timeout.")) {
-            cfg.setSafetyMult(runTicksSafetyMultBuf[0]);
+        Controls.pushInputFrameHeight();
+        SolverWidgets.rowLabel("Safety factor", labelW);
+        runTicksSafetyMultBuf.set((float) cfg.getSafetyMult());
+        ImGui.setNextItemWidth(inputW);
+        if (ImGui.inputFloat("##runTicksMult", runTicksSafetyMultBuf, 0.1f, 0.5f, "%.2f")) {
+            float val = Math.max(1.0f, Math.round(runTicksSafetyMultBuf.get() * 100.0f) / 100.0f);
+            cfg.setSafetyMult(val);
         }
+        Controls.popInputFrameHeight();
+        TooltipUtil.onHover("Multiplier applied to the measured solve time before it becomes the next timeout.");
 
-        runTicksSafetyMarginBuf[0] = cfg.getSafetyMarginMs();
-        if (sliderIntRow("Safety margin", "##runTicksSafetyMargin", runTicksSafetyMarginBuf, 0, 500, "%d ms", labelW,
-                "Flat buffer added on top of the derived timeout.")) {
-            cfg.setSafetyMarginMs(runTicksSafetyMarginBuf[0]);
+        Controls.pushInputFrameHeight();
+        SolverWidgets.rowLabel("Safety margin", labelW);
+        runTicksSafetyMarginBuf.set(cfg.getSafetyMarginMs());
+        ImGui.setNextItemWidth(inputW);
+        if (ImGui.inputInt("##runTicksMargin", runTicksSafetyMarginBuf, 10, 50)) {
+            cfg.setSafetyMarginMs(Math.max(0, runTicksSafetyMarginBuf.get()));
         }
+        Controls.popInputFrameHeight();
+        TooltipUtil.onHover("Flat buffer added on top of the derived timeout (ms).");
     }
 
     private static final String OPTIMIZE_TIME_TIP =
@@ -634,13 +730,22 @@ public final class AngleSolverWindow implements RenderInterface {
         if (presetNames == null) refreshPresets();
 
         String current = state.getGraphPresetName();
-        int currentIdx = indexOfPreset(current);
-        boolean missing = current != null && currentIdx < 0;
-        String[] items = new String[presetNames.length + (missing ? 2 : 1)];
-        items[0] = LEGACY_PRESET_ITEM;
-        System.arraycopy(presetNames, 0, items, 1, presetNames.length);
-        if (missing) items[items.length - 1] = current + " (missing)";
-        int selected = current == null ? 0 : (missing ? items.length - 1 : currentIdx + 1);
+        int diskIdx = indexOfPreset(current);
+        boolean builtinOptimize = OPTIMIZE_PRESET_ITEM.equals(current);
+        boolean missing = current != null && !FAST_PRESET_ITEM.equals(current) && !builtinOptimize && diskIdx < 0;
+
+        String[] items = new String[BUILTIN_PRESET_COUNT + presetNames.length + (missing ? 1 : 0)];
+        items[0] = FAST_PRESET_ITEM;
+        items[1] = OPTIMIZE_PRESET_ITEM;
+        System.arraycopy(presetNames, 0, items, BUILTIN_PRESET_COUNT, presetNames.length);
+        int missingIdx = items.length - 1;
+        if (missing) items[missingIdx] = current + " (missing)";
+
+        int selected;
+        if (builtinOptimize) selected = 1;
+        else if (diskIdx >= 0) selected = BUILTIN_PRESET_COUNT + diskIdx;
+        else if (missing) selected = missingIdx;
+        else selected = 0;
 
         Controls.pushInputFrameHeight();
         ImGui.beginGroup();
@@ -649,13 +754,9 @@ public final class AngleSolverWindow implements RenderInterface {
         ImGui.setNextItemWidth(ImGui.getContentRegionAvail().x);
         if (Controls.combo("##graphPreset", presetBuf, items)) {
             int pick = presetBuf.get();
-            if (pick == 0) {
-                state.setGraphPresetName(null);
-                state.setCustomGraph(null);
-                presetError = null;
-            } else if (pick <= presetNames.length) {
-                selectPreset(presetNames[pick - 1]);
-            }
+            if (pick == 0) selectBuiltinPreset(FAST_PRESET_ITEM);
+            else if (pick == 1) selectBuiltinPreset(OPTIMIZE_PRESET_ITEM);
+            else if (pick < BUILTIN_PRESET_COUNT + presetNames.length) selectPreset(presetNames[pick - BUILTIN_PRESET_COUNT]);
         }
         ImGui.endGroup();
         Controls.popInputFrameHeight();
@@ -685,7 +786,7 @@ public final class AngleSolverWindow implements RenderInterface {
                 graphEditor.open(currentCustomGraph(),
                         state.getCustomGraph() != null ? state.getGraphPresetName() : null);
             }
-            TooltipUtil.onHover("Edit the selected graph on a node canvas. Legacy budget opens as an"
+            TooltipUtil.onHover("Edit the selected graph on a node canvas. A built-in opens as an"
                     + " unsaved draft; save it under a name to keep changes.");
         } else {
             Controls.disabledButton("Open editor");
@@ -699,17 +800,26 @@ public final class AngleSolverWindow implements RenderInterface {
     }
 
     private static final String PRESET_TIP =
-            "Which solver graph a Custom solve runs. Legacy budget rebuilds the graph from this save's"
-            + " Custom knobs, matching the pre-preset behavior byte for byte. Presets are JSON files under"
-            + " parkourcalculator/graphs/ in the game folder: save the current graph, hand-edit the file,"
-            + " then Reload to pick up the changes. The selected preset name travels with the save file.";
+            "Which solver graph a Custom solve runs. Fast and Optimize are the built-in graphs the effort tiers"
+            + " use; they cannot be overwritten, but Duplicate copies one into an editable preset. User presets"
+            + " are JSON files under parkourcalculator/graphs/ in the game folder: save the current graph,"
+            + " hand-edit the file, then Reload to pick up the changes. The selected preset name travels with"
+            + " the save file.";
 
     private void refreshPresets() {
         List<SaveInfo> infos = graphStore.list();
-        String[] names = new String[infos.size()];
-        for (int i = 0; i < infos.size(); i++) names[i] = infos.get(i).name;
-        Arrays.sort(names);
-        presetNames = names;
+        List<String> names = new ArrayList<>();
+        for (SaveInfo info : infos) {
+            if (!BuiltinGraphs.isBuiltinPreset(info.name)) names.add(info.name);
+        }
+        Collections.sort(names);
+        presetNames = names.toArray(new String[0]);
+    }
+
+    private void selectBuiltinPreset(String name) {
+        state.setGraphPresetName(name);
+        state.setCustomGraph(null);
+        presetError = null;
     }
 
     private int indexOfPreset(String name) {
@@ -732,8 +842,7 @@ public final class AngleSolverWindow implements RenderInterface {
     }
 
     private SolverGraph currentCustomGraph() {
-        SolverGraph graph = state.getCustomGraph();
-        return graph != null ? graph : GraphFactory.legacyCustom(state);
+        return GraphFactory.forState(state, AngleSolverState.Effort.CUSTOM);
     }
 
     private void savePresetAs() {
@@ -756,6 +865,10 @@ public final class AngleSolverWindow implements RenderInterface {
     }
 
     boolean writePreset(String name, SolverGraph graph) {
+        if (BuiltinGraphs.isBuiltinPreset(name)) {
+            presetError = "\"" + name + "\" is a built-in preset. Choose another name.";
+            return false;
+        }
         GraphPresetFile file = GraphPresetIO.fromGraph(graph);
         file.name = name;
         file.createdAt = SaveIO.nowIso8601();
@@ -771,18 +884,6 @@ public final class AngleSolverWindow implements RenderInterface {
         return true;
     }
 
-
-    private boolean sliderFloatRow(String label, String id, float[] buf, float lo, float hi, String fmt, float labelW, String tip) {
-        Controls.pushInputFrameHeight();
-        ImGui.beginGroup();
-        SolverWidgets.rowLabel(label, labelW);
-        ImGui.setNextItemWidth(ImGui.getContentRegionAvail().x);
-        boolean changed = Controls.sliderFloat(id, buf, lo, hi, fmt);
-        ImGui.endGroup();
-        Controls.popInputFrameHeight();
-        if (tip != null) TooltipUtil.onHover(tip);
-        return changed;
-    }
 
     private boolean sliderIntRow(String label, String id, int[] buf, int lo, int hi, String fmt, float labelW, String tip) {
         Controls.pushInputFrameHeight();
@@ -812,7 +913,24 @@ public final class AngleSolverWindow implements RenderInterface {
             ImGui.setTooltip("Capture each tick's surface state (ground + medium) from the simulation into the overrides, for the solve range (H).");
         }
         ImGui.sameLine();
-        if (Controls.secondaryButton("Solve")) runTicks.start();
+        boolean teleportBlocked = solveRangeCrossesTeleport();
+        if (teleportBlocked) {
+            Controls.disabledButton("Solve");
+            ThemeManager.pushTextColor(ThemeManager.warningColor());
+            ImGui.textWrapped(TELEPORT_SOLVE_BLOCKED);
+            ThemeManager.popTextColor();
+        } else if (Controls.secondaryButton("Solve")) {
+            runTicks.start();
+        }
+    }
+
+    private boolean solveRangeCrossesTeleport() {
+        int lo = Math.min(state.getStartTick(), state.getLandingTick());
+        int hi = Math.max(state.getStartTick(), state.getLandingTick());
+        for (int t = lo; t <= hi; t++) {
+            if (teleportAtRow.test(t)) return true;
+        }
+        return false;
     }
 
     private void renderSolvingIndicator() {
@@ -949,9 +1067,16 @@ public final class AngleSolverWindow implements RenderInterface {
             rows.add(new SolveResult.Detail("Finished", r.getFinishedAt()));
         }
         if (r.hasObjective()) {
-            String goal = state.getGoal() == AngleSolverState.Goal.MAX ? "max" : "min";
-            rows.add(new SolveResult.Detail("Objective",
-                    goal + " " + state.getAxis().name() + " = " + ConstraintText.fixedStat(r.getObjectiveValue())));
+            if (state.isCustomAngle()) {
+                String mode = state.getCustomAngleType() == AngleSolverState.CustomAngleType.MOTION ? "mot" : "pos";
+                rows.add(new SolveResult.Detail("Objective",
+                        String.format(Locale.ROOT, "%s yaw %.1f° = ", mode, state.getCustomAngleDeg())
+                                + ConstraintText.fixedStat(r.getObjectiveValue())));
+            } else {
+                String goal = state.getGoal() == AngleSolverState.Goal.MAX ? "max" : "min";
+                rows.add(new SolveResult.Detail("Objective",
+                        goal + " " + state.getAxis().name() + " = " + ConstraintText.fixedStat(r.getObjectiveValue())));
+            }
         }
         return rows;
     }
@@ -1026,7 +1151,7 @@ public final class AngleSolverWindow implements RenderInterface {
         }
         double v = panel.getObjectiveValue();
         if (!Double.isNaN(improveTrackValue) && v != improveTrackValue) {
-            boolean max = state.getGoal() == AngleSolverState.Goal.MAX;
+            boolean max = state.isCustomAngle() || state.getGoal() == AngleSolverState.Goal.MAX;
             double delta = v - improveTrackValue;
             if (max ? delta > 0 : delta < 0) {
                 improveFlashStart = ImGui.getTime();

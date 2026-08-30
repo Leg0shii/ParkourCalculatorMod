@@ -51,6 +51,15 @@ public final class Controls {
         return changed;
     }
 
+    public static boolean decimalField(String label, ImString holder, float width) {
+        pushInputFrameHeight();
+        beginLabeled(label, width <= 0 ? DEFAULT_NUM_WIDTH : width);
+        boolean changed = ImGui.inputText(idFor(label), holder, ImGuiInputTextFlags.CharsDecimal);
+        popInputFrameHeight();
+        drawFocusRingIfActive();
+        return changed;
+    }
+
     // ---- sliders ---------------------------------------------------------------
 
     public static boolean sliderFloat(String label, float[] ref, float lo, float hi, String fmt) {
