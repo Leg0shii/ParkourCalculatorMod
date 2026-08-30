@@ -597,11 +597,7 @@ public final class InputOverlay {
             ImGui.tableSetupColumn(COL_HOTBAR, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableColumnWidth(COL_HOTBAR, HOTBAR_COLUMN_WIDTH * scale));
         }
         if (isTeleportColumnVisible()) {
-            if (solverActive) {
-                ImGui.tableSetupColumn(COL_TELEPORT, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableColumnWidth(COL_TELEPORT, TELEPORT_COLUMN_WIDTH * scale));
-            } else {
-                ImGui.tableSetupColumn(COL_TELEPORT, ImGuiTableColumnFlags.WidthStretch, 1.0f);
-            }
+            ImGui.tableSetupColumn(COL_TELEPORT, ImGuiTableColumnFlags.WidthStretch, 1.0f);
         }
         if (isYawColumnVisible()) {
             ImGui.tableSetupColumn(COL_YAW, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableColumnWidth(COL_YAW, yawColumnWidth()));
@@ -1555,8 +1551,22 @@ public final class InputOverlay {
         if (draggingTeleportRow >= 0 && draggingTeleportRow < data.size()) {
             InputRow src = data.get(draggingTeleportRow);
             String label = "TP " + fmtChip(src.getTeleportX()) + ", " + fmtChip(src.getTeleportY()) + ", " + fmtChip(src.getTeleportZ());
+            String tail = teleportDropRow >= 0 && teleportDropRow != draggingTeleportRow ? "  -> T" + (teleportDropRow + 1) : "";
+            float s = uiScale();
+            float pad = 6f * s;
+            float h = ImGui.getFrameHeight();
+            float labelW = ImGui.calcTextSize(label).x;
+            float tailW = ImGui.calcTextSize(tail).x;
             ImVec2 m = ImGui.getMousePos();
-            ImGui.getForegroundDrawList().addText(m.x + 14f * uiScale(), m.y, ThemeManager.teleportColor(), label);
+            float x = m.x + 12f * s;
+            float y = m.y + 4f * s;
+            float w = pad + labelW + tailW + pad;
+            ImDrawList dl = ImGui.getForegroundDrawList();
+            dl.addRectFilled(x, y, x + w, y + h, ThemeManager.panelColor(), 3f * s);
+            dl.addRect(x, y, x + w, y + h, ThemeManager.teleportColor(), 3f * s, 0, 1f);
+            float ty = y + (h - ImGui.getFontSize()) * 0.5f;
+            dl.addText(x + pad, ty, ThemeManager.teleportColor(), label);
+            dl.addText(x + pad + labelW, ty, ThemeManager.okColor(), tail);
         }
         if (!ImGui.isMouseDown(0)) {
             if (draggingTeleportRow >= 0 && ImGui.isMouseReleased(0)) {
