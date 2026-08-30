@@ -15,23 +15,24 @@ public final class BuiltinGraphs {
     }
 
     public static SolverGraph fast() {
-        return build(FAST_PRESET, 10, 3, 0, true);
+        return build(FAST_PRESET, 10, 3, 0, false);
     }
 
     public static SolverGraph fastRunTicks() {
-        return build("Fast (run ticks)", 10, 3, 0, false);
+        return build("Fast (run ticks)", 10, 3, 0, true);
     }
 
     public static SolverGraph optimize(int optimizeSeconds) {
-        return build(OPTIMIZE_PRESET, 10, 3, optimizeSeconds > 0 ? optimizeSeconds : 120, true);
+        return build(OPTIMIZE_PRESET, 10, 3, optimizeSeconds > 0 ? optimizeSeconds : 120, false);
     }
 
     public static SolverGraph fromBudget(boolean stopOnFeasible, boolean ilsExhaustive,
                                          boolean useWindowSolver, int window, int commit, int timeBudgetSeconds) {
-        return build("Custom", window, commit, timeBudgetSeconds, true);
+        return build("Custom", window, commit, timeBudgetSeconds, false);
     }
 
-    private static SolverGraph build(String name, int window, int commit, int t, boolean leafSnap) {
+    private static SolverGraph build(String name, int window, int commit, int t, boolean runTicks) {
+        boolean leafSnap = !runTicks;
         boolean fastTier = t <= 0;
         int tp = fastTier ? 120 : t;
         long reserveNanos = fastTier ? 0L : GraphRunner.wrapReserveNanos(t * 1_000_000_000L);
@@ -95,10 +96,17 @@ public final class BuiltinGraphs {
         }
         g.add("emit", "emit");
 
-        chain(g, "entry", "horizon");
-        chain(g, "horizon", "wrap0");
-        chain(g, "wrap0", "seed");
-        chain(g, "seed", "cap1");
+        if (runTicks) {
+            chain(g, "entry", "seed");
+            chain(g, "seed", "horizon");
+            chain(g, "horizon", "wrap0");
+            chain(g, "wrap0", "cap1");
+        } else {
+            chain(g, "entry", "horizon");
+            chain(g, "horizon", "wrap0");
+            chain(g, "wrap0", "seed");
+            chain(g, "seed", "cap1");
+        }
         chain(g, "cap1", "freeRescue");
         chain(g, "freeRescue", "peel");
         chain(g, "peel", "freeImprove");
