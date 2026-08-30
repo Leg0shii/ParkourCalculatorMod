@@ -38,7 +38,8 @@ public final class CapCertifyNode implements NodeRuntime {
         if (computeDualGap) {
             double bound = ctx.reachBound();
             if (!Double.isNaN(bound)) {
-                ctx.setDualGap(ctx.maximize() ? bound - achieved : achieved - bound);
+                double gap = ctx.maximize() ? bound - achieved : achieved - bound;
+                return NodeOutcome.of(Guarantee.FALSE, in.withDualGap(gap));
             }
         }
         return NodeOutcome.of(Guarantee.FALSE, in);

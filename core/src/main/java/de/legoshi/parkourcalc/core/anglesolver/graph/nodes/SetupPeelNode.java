@@ -24,6 +24,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class SetupPeelNode implements NodeRuntime {
 
+    private static final long FOLD_PEEL_CAP_NANOS = 3_000_000_000L;
+
     private final int candidateMs;
     private final double stepDeg;
     private final LongRunSolver.LongRunConfig longRun;
@@ -41,6 +43,10 @@ public final class SetupPeelNode implements NodeRuntime {
         if (!ctx.exact()) return NodeOutcome.of(Guarantee.NONE, in);
         if (in != null && in.yaws != null) return NodeOutcome.of(Guarantee.NONE, in);
         if (ctx.jumpCount() <= 1) return NodeOutcome.of(Guarantee.NONE, in);
+        if (ctx.foldableDf() && ctx.overallDeadline() > 0) {
+            long cap = System.nanoTime() + FOLD_PEEL_CAP_NANOS;
+            deadlineNanos = deadlineNanos > 0 ? Math.min(deadlineNanos, cap) : cap;
+        }
         double[] peeled = peel(ctx, nodeToken, deadlineNanos);
         if (peeled == null) return NodeOutcome.of(Guarantee.NONE, in);
         ctx.chainAppend("setup peel");

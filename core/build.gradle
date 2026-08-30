@@ -47,6 +47,7 @@ dependencies {
 }
 
 tasks.named('test') {
+	systemProperties providers.systemPropertiesPrefixedBy('pkc.').get()
 	useJUnit {
 		if (!project.hasProperty('slowTests')) {
 			excludeCategories 'de.legoshi.parkourcalc.SlowSolverTests'

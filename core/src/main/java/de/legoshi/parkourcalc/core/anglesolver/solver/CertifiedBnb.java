@@ -27,8 +27,21 @@ public final class CertifiedBnb {
     private static final byte SECTOR_ZP = 4;
     private static final byte SECTOR_ZN = 5;
     private static final byte OPEN_ANY = 6;
+    private static final int FULL = Integer.MIN_VALUE;
 
     private CertifiedBnb() {
+    }
+
+    private static double degCenter(int idx) {
+        return SineTableGeometry.degOfIndexCenter(idx);
+    }
+
+    private static double loDeg(Node nd, int t) {
+        return nd.iLo[t] == FULL ? Double.NaN : degCenter(nd.iLo[t]);
+    }
+
+    private static double hiDeg(Node nd, int t) {
+        return nd.iLo[t] == FULL ? Double.NaN : degCenter(nd.iHi[t]);
     }
 
     public enum Mode { FIRST_FEASIBLE, OPTIMIZE }
@@ -47,6 +60,7 @@ public final class CertifiedBnb {
         public Double seedPx;
         public Double seedPz;
         public GapSink gapSink;
+        public boolean homotopy;
     }
 
     public static final class Result {
@@ -87,19 +101,19 @@ public final class CertifiedBnb {
 
     private static final class Node {
         final long id;
-        final double[] lo;
-        final double[] hi;
+        final int[] iLo;
+        final int[] iHi;
         final byte[] gx;
         final byte[] gz;
         final int depth;
         double score;
         Map<String, Double> warm;
 
-        Node(long id, double[] lo, double[] hi, byte[] gx, byte[] gz, int depth, double score,
+        Node(long id, int[] iLo, int[] iHi, byte[] gx, byte[] gz, int depth, double score,
              Map<String, Double> warm) {
             this.id = id;
-            this.lo = lo;
-            this.hi = hi;
+            this.iLo = iLo;
+            this.iHi = iHi;
             this.gx = gx;
             this.gz = gz;
             this.depth = depth;
@@ -126,6 +140,7 @@ public final class CertifiedBnb {
         final double refPz;
         final CostateDualSolver.FreeP0 freeP0;
         final double[] f4;
+        final YawTies ties;
         long nextId = 1L;
         int nodes;
         int kernelSolves;
@@ -143,9 +158,10 @@ public final class CertifiedBnb {
         long incVersion;
         long sweptVersion = -1L;
 
-        Search(ExactJumpModel exact, JumpSpec spec, Config cfg) {
+        Search(ExactJumpModel exact, JumpSpec spec, Config cfg, YawTies ties) {
             this.exact = exact;
             this.spec = spec;
+            this.ties = ties;
             this.sc = spec.asScenario();
             this.compiled = JumpConstraintCompiler.compile(spec);
             this.geom = new SineTableGeometry(exact, sc);
@@ -171,23 +187,63 @@ public final class CertifiedBnb {
         }
     }
 
+    public static boolean foldable(JumpSpec spec) {
+        return JumpLinearModel.hasFacingWall(spec.constraints)
+                && foldTies(spec.constraints, spec.asScenario().numTicks) != null;
+    }
+
+    private static YawTies foldTies(List<JumpConstraint> constraints, int n) {
+        YawTies ties = YawTies.of(constraints, n);
+        if (ties == null) return null;
+        for (JumpConstraint c : constraints) {
+            if (c.mode != JumpConstraint.Mode.F) continue;
+            boolean absorbed = c.t2 != null
+                    ? c.op == JumpConstraint.Op.MINUS && c.t2 == c.t1 - 1 && c.t1 >= 1
+                            && ties.groupOf(c.t1) == ties.groupOf(c.t1 - 1)
+                    : ties.varOf(c.t1) < 0;
+            if (!absorbed) return null;
+        }
+        return ties;
+    }
+
     public static Result solve(ExactJumpModel exact, JumpSpec spec, Config cfg) {
         JumpPhysicsInputs sc = spec.asScenario();
-        if (JumpLinearModel.hasFacingWall(spec.constraints) || !SineTableGeometry.supported(sc)) {
+        YawTies ties = null;
+        if (JumpLinearModel.hasFacingWall(spec.constraints)) {
+            ties = foldTies(spec.constraints, sc.numTicks);
+            if (ties == null) {
+                return new Result(true, null, 0, 0, Double.NaN, false, Double.NaN, Double.NaN, false,
+                        0, 0, 0L, null, Double.POSITIVE_INFINITY);
+            }
+        }
+        if (!SineTableGeometry.supported(sc)) {
             return new Result(true, null, 0, 0, Double.NaN, false, Double.NaN, Double.NaN, false,
                     0, 0, 0L, null, Double.POSITIVE_INFINITY);
         }
-        Search s = new Search(exact, spec, cfg);
+        Search s = new Search(exact, spec, cfg, ties);
         if (cfg.seedYaws != null && cfg.seedYaws.length == s.n) {
             double px = cfg.seedPx != null ? cfg.seedPx : s.refPx;
             double pz = cfg.seedPz != null ? cfg.seedPz : s.refPz;
             replayCandidate(s, Angles.wrapAll(cfg.seedYaws), px, pz, true);
+            if (ties != null && s.incYaws == null && cfg.mode == Mode.FIRST_FEASIBLE) {
+                GateFoldFinder.Result gr = GateFoldFinder.solve(exact, spec, ties, cfg.cancel,
+                        cfg.deadlineNanos, true, cfg.homotopy);
+                if (gr != null) {
+                    replayCandidate(s, Angles.wrapAll(gr.yawsDeg), gr.px, gr.pz, false);
+                }
+            }
         } else {
             double[] cf = ClosedFormSolve.optimize(exact, spec, 0.0,
                     cfg.cancel != null ? cfg.cancel : new AtomicBoolean(false));
             if (cf != null) {
                 replayCandidate(s, Angles.wrapAll(cf), s.refPx, s.refPz, false);
-            } else if (cfg.mode == Mode.OPTIMIZE) {
+            } else if (ties != null && cfg.mode == Mode.FIRST_FEASIBLE) {
+                GateFoldFinder.Result gr = GateFoldFinder.solve(exact, spec, ties, cfg.cancel,
+                        cfg.deadlineNanos, true, cfg.homotopy);
+                if (gr != null) {
+                    replayCandidate(s, Angles.wrapAll(gr.yawsDeg), gr.px, gr.pz, false);
+                }
+            } else if (cfg.mode == Mode.OPTIMIZE && ties == null) {
                 FoldReplayDriver.Params dp = new FoldReplayDriver.Params();
                 dp.cancel = cfg.cancel;
                 dp.deadlineNanos = cfg.deadlineNanos;
@@ -203,15 +259,22 @@ public final class CertifiedBnb {
                 }
             }
         }
+        if (ties != null && cfg.mode == Mode.OPTIMIZE) {
+            GateFoldFinder.Result gr = GateFoldFinder.solve(exact, spec, ties, cfg.cancel,
+                    cfg.deadlineNanos, false, cfg.homotopy);
+            if (gr != null && gr.feasible()) {
+                replayCandidate(s, Angles.wrapAll(gr.yawsDeg), gr.px, gr.pz, false);
+            }
+        }
 
         PriorityQueue<Node> open = new PriorityQueue<Node>(64, (a, b) -> {
             if (a.score != b.score) return a.score > b.score ? -1 : 1;
             return Long.compare(b.id, a.id);
         });
-        double[] lo = new double[s.n];
-        double[] hi = new double[s.n];
-        Arrays.fill(lo, Double.NaN);
-        Arrays.fill(hi, Double.NaN);
+        int[] lo = new int[s.n];
+        int[] hi = new int[s.n];
+        Arrays.fill(lo, FULL);
+        Arrays.fill(hi, FULL);
         open.add(new Node(s.nextId++, lo, hi, new byte[s.n], s.perAxis ? new byte[s.n] : null,
                 0, Double.POSITIVE_INFINITY, null));
 
@@ -449,7 +512,7 @@ public final class CertifiedBnb {
 
     private static List<Node> evaluate(Search s, Node nd, PriorityQueue<Node> open) {
         SineTableGeometry.RangeInfo[] ri = new SineTableGeometry.RangeInfo[s.n];
-        for (int t = 0; t < s.n; t++) ri[t] = s.geom.rangeInfo(t, nd.lo[t], nd.hi[t]);
+        for (int t = 0; t < s.n; t++) ri[t] = s.geom.rangeInfo(t, loDeg(nd, t), hiDeg(nd, t));
         Intervals iv = propagate(s, nd, ri);
         if (iv.infeasible) return null;
 
@@ -491,7 +554,7 @@ public final class CertifiedBnb {
         addGateRows(s, nd, iv, lin, rows);
         List<DiskSocpKernel.ChordRow> chords = new ArrayList<DiskSocpKernel.ChordRow>();
         for (int t = 0; t < s.n; t++) {
-            if (Double.isNaN(nd.lo[t])) continue;
+            if (nd.iLo[t] == FULL) continue;
             SineTableGeometry.RangeInfo r = ri[t];
             double rad = s.geom.radiusUpper(t);
             if (r.uxHi < rad) rows.add(boxRow(s.n, 0, t, 1.0, r.uxHi, "bxh@" + t));
@@ -533,7 +596,7 @@ public final class CertifiedBnb {
 
         double val = 0.0;
         for (int t = 0; t < s.n; t++) {
-            val += s.geom.support(t, gxv[t], gzv[t], nd.lo[t], nd.hi[t]);
+            val += s.geom.support(t, gxv[t], gzv[t], loDeg(nd, t), hiDeg(nd, t));
         }
         for (int j = 0; j < rows.size() && j < lambda.length; j++) {
             JumpLinearModel.Wall w = rows.get(j);
@@ -578,32 +641,33 @@ public final class CertifiedBnb {
         }
         if (score <= s.incScore + CERT_EPS) return null;
 
+        double leafPx = s.refPx;
+        double leafPz = s.refPz;
+        if (s.free && oc.result != null) {
+            leafPx = clamp(s.refPx + oc.result.dvx, s.box.pxLo, s.box.pxHi);
+            leafPz = clamp(s.refPz + oc.result.dvz, s.box.pzLo, s.box.pzHi);
+        }
         double[] decoded = decode(s, nd, lin, ux != null ? ux : gxv, uz != null ? uz : gzv);
         ForwardPath decPath = null;
         boolean[] decZx = new boolean[s.n];
         boolean[] decZz = new boolean[s.n];
         if (decoded != null) {
-            double dpx = s.refPx;
-            double dpz = s.refPz;
-            if (s.free && oc.result != null) {
-                dpx = clamp(s.refPx + oc.result.dvx, s.box.pxLo, s.box.pxHi);
-                dpz = clamp(s.refPz + oc.result.dvz, s.box.pzLo, s.box.pzHi);
-            }
-            decPath = replayCandidate(s, decoded, dpx, dpz, true);
+            decPath = replayCandidate(s, decoded, leafPx, leafPz, true);
             if (decPath != null) FoldReplayDriver.extractPattern(s.exact, decPath, s.n, decZx, decZz);
         }
         if (s.cfg.mode == Mode.FIRST_FEASIBLE && s.incYaws != null) return null;
 
-        if (!iv.anyFree && !s.free) {
+        if (s.ties == null) {
             boolean allNarrow = true;
             for (int t = 0; t < s.n; t++) {
                 if (!s.geom.hasInput(t)) continue;
-                if (s.geom.bucketSpan(nd.lo[t], nd.hi[t]) > 64) {
+                if (s.geom.bucketSpan(loDeg(nd, t), hiDeg(nd, t)) > 64) {
                     allNarrow = false;
                     break;
                 }
             }
-            if (allNarrow && leafClose(s, nd, lin, cx, cz, rows)) {
+            boolean closeBound = !iv.anyFree && !s.free;
+            if (allNarrow && leafClose(s, nd, lin, cx, cz, rows, leafPx, leafPz, closeBound)) {
                 return null;
             }
         }
@@ -613,7 +677,7 @@ public final class CertifiedBnb {
             if (SolverTrace.on()) {
                 StringBuilder sb = new StringBuilder();
                 for (int t = 0; t < s.n; t++) {
-                    sb.append(s.geom.hasInput(t) ? s.geom.bucketSpan(nd.lo[t], nd.hi[t]) : 0).append(',');
+                    sb.append(s.geom.hasInput(t) ? s.geom.bucketSpan(loDeg(nd, t), hiDeg(nd, t)) : 0).append(',');
                 }
                 SolverTrace.log("CERT", "stuck node=%d depth=%d score=%.9f anyFree=%s spans=%s",
                         nd.id, nd.depth, nd.score, iv.anyFree, sb);
@@ -700,22 +764,72 @@ public final class CertifiedBnb {
             double nz = uz[t];
             double norm = Math.hypot(nx, nz);
             double y;
+            boolean full = nd.iLo[t] == FULL;
             if (!s.geom.hasInput(t) || norm < 1.0e-12) {
-                y = Double.isNaN(nd.lo[t]) ? last : 0.5 * (nd.lo[t] + nd.hi[t]);
+                y = full ? last : 0.5 * (loDeg(nd, t) + hiDeg(nd, t));
             } else {
                 y = lin.recoverYawDeg(t, nx, nz);
-                if (!Double.isNaN(nd.lo[t])) {
-                    double mid = 0.5 * (nd.lo[t] + nd.hi[t]);
+                if (!full) {
+                    double loD = loDeg(nd, t);
+                    double hiD = hiDeg(nd, t);
+                    double mid = 0.5 * (loD + hiD);
                     double rel = y + 360.0 * Math.round((mid - y) / 360.0);
-                    if (rel < nd.lo[t]) rel = nd.lo[t];
-                    if (rel > nd.hi[t]) rel = nd.hi[t];
+                    if (rel < loD) rel = loD;
+                    if (rel > hiD) rel = hiD;
                     y = Angles.wrap(rel);
                 }
             }
             yaws[t] = y;
             last = y;
         }
-        return yaws;
+        if (s.ties != null) {
+            return s.ties.expand(s.ties.reduce(yaws));
+        }
+        double[] snapped = latticeSnap(s, yaws, ux, uz);
+        return snapped != null ? snapped : yaws;
+    }
+
+    private static double[] latticeSnap(Search s, double[] yaws, double[] ux, double[] uz) {
+        int n = s.n;
+        float[][] cands = new float[n][];
+        int[] picks = new int[n];
+        double[] u = new double[2];
+        for (int t = 0; t < n; t++) {
+            if (!s.geom.hasInput(t)) {
+                cands[t] = new float[]{(float) Angles.wrap(yaws[t])};
+                continue;
+            }
+            float[] reps = leafCandidates(s, t, yaws[t], yaws[t]);
+            if (reps.length == 0) {
+                cands[t] = new float[]{(float) Angles.wrap(yaws[t])};
+                continue;
+            }
+            double nx = ux[t];
+            double nz = uz[t];
+            float pick = reps[0];
+            if (Math.hypot(nx, nz) < 1.0e-12) {
+                double bestD = Double.POSITIVE_INFINITY;
+                for (float rep : reps) {
+                    double d = Math.abs(Angles.wrapDelta((double) rep - yaws[t]));
+                    if (d < bestD) {
+                        bestD = d;
+                        pick = rep;
+                    }
+                }
+            } else {
+                double best = Double.NEGATIVE_INFINITY;
+                for (float rep : reps) {
+                    s.geom.exactU(t, rep, u);
+                    double dot = nx * u[0] + nz * u[1];
+                    if (dot > best) {
+                        best = dot;
+                        pick = rep;
+                    }
+                }
+            }
+            cands[t] = new float[]{pick};
+        }
+        return realizeCombo(s, cands, picks);
     }
 
     private static ForwardPath replayCandidate(Search s, double[] yaws, double px, double pz, boolean allowPolish) {
@@ -764,7 +878,7 @@ public final class CertifiedBnb {
     }
 
     private static void argmaxSweep(Search s) {
-        if (s.incYaws == null) return;
+        if (s.incYaws == null || s.ties != null) return;
         int window = s.exact.sine262() ? 4 : 64;
         double[] yaws = s.incYaws.clone();
         JumpPhysicsInputs scRep = FoldReplayDriver.pinnedCopy(s.sc, s.incPx, s.incPz);
@@ -838,7 +952,7 @@ public final class CertifiedBnb {
     }
 
     private static boolean leafClose(Search s, Node nd, JumpLinearModel lin, double[] cx, double[] cz,
-                                     List<JumpLinearModel.Wall> rows) {
+                                     List<JumpLinearModel.Wall> rows, double px, double pz, boolean closeBound) {
         LeafState st = new LeafState();
         int n = s.n;
         float[][] cands = new float[n][];
@@ -848,14 +962,14 @@ public final class CertifiedBnb {
         double[] u = new double[2];
         for (int t = 0; t < n; t++) {
             if (!s.geom.hasInput(t)) {
-                double mid = Double.isNaN(nd.lo[t]) ? 0.0 : 0.5 * (nd.lo[t] + nd.hi[t]);
+                double mid = nd.iLo[t] == FULL ? 0.0 : 0.5 * (loDeg(nd, t) + hiDeg(nd, t));
                 cands[t] = new float[]{(float) Angles.wrap(mid)};
                 st.scores[t] = new double[]{0.0};
                 st.uxs[t] = new double[]{0.0};
                 st.uzs[t] = new double[]{0.0};
                 continue;
             }
-            cands[t] = leafCandidates(s, t, nd.lo[t], nd.hi[t]);
+            cands[t] = leafCandidates(s, t, loDeg(nd, t), hiDeg(nd, t));
             int m = cands[t].length;
             st.scores[t] = new double[m];
             st.uxs[t] = new double[m];
@@ -878,8 +992,11 @@ public final class CertifiedBnb {
         st.walls = kept.toArray(new JumpLinearModel.Wall[0]);
         st.wallRhs = new double[mw];
         st.wallSuffixMin = new double[mw][n + 1];
+        double dvx = px - s.refPx;
+        double dvz = pz - s.refPz;
         for (int j = 0; j < mw; j++) {
-            st.wallRhs[j] = st.walls[j].bPrime + LEAF_REARRANGE;
+            double p0shift = st.walls[j].p0coef * (st.walls[j].axis == 0 ? dvx : dvz);
+            st.wallRhs[j] = st.walls[j].bPrime + p0shift + LEAF_REARRANGE;
             for (int t = n - 1; t >= 0; t--) {
                 double c = t < st.walls[j].coef.length ? st.walls[j].coef[t] : 0.0;
                 double mn = Double.POSITIVE_INFINITY;
@@ -918,7 +1035,7 @@ public final class CertifiedBnb {
         if (st.bestVal > Double.NEGATIVE_INFINITY) {
             double[] yaws = realizeCombo(s, cands, st.bestPick);
             if (yaws != null) {
-                JumpPhysicsInputs scRep = FoldReplayDriver.pinnedCopy(s.sc, s.refPx, s.refPz);
+                JumpPhysicsInputs scRep = FoldReplayDriver.pinnedCopy(s.sc, px, pz);
                 double[] gf = scRep.toGameFacings(yaws);
                 ForwardPath rp = s.exact.forward(scRep, gf);
                 double rv = s.compiled.maxViolation(gf, rp);
@@ -928,11 +1045,12 @@ public final class CertifiedBnb {
                     SolverTrace.log("CERT", "leaf argmax lin=%.12f replayObj=%.12f viol=%.3e",
                             st.bestVal + (s.max ? cpv : -cpv), ro, rv);
                 }
-                replayCandidate(s, yaws, s.refPx, s.refPz, false);
+                replayCandidate(s, yaws, px, pz, false);
             } else if (SolverTrace.on()) {
                 SolverTrace.log("CERT", "leaf argmax unrealizable lin=%.12f", st.bestVal);
             }
         }
+        if (!closeBound) return false;
         double closed = Math.min(nd.score, latticeBound);
         if (closed <= s.incScore + CERT_EPS) return true;
         nd.score = closed;
@@ -1092,7 +1210,7 @@ public final class CertifiedBnb {
         if (gateTick < 0) {
             for (int t = 0; t < s.n; t++) {
                 if (!s.geom.hasInput(t)) continue;
-                double span = s.geom.bucketSpan(nd.lo[t], nd.hi[t]);
+                double span = s.geom.bucketSpan(loDeg(nd, t), hiDeg(nd, t));
                 if (span <= 2 * SineTableGeometry.SLOP_IDX + 2) continue;
                 double gnorm = Math.hypot(gxv[t], gzv[t]);
                 double unorm = ux != null ? Math.hypot(ux[t], uz[t]) : 0.0;
@@ -1141,18 +1259,19 @@ public final class CertifiedBnb {
             return out;
         }
         if (arcTick < 0) return null;
-        double loT = nd.lo[arcTick];
-        double hiT = nd.hi[arcTick];
-        if (Double.isNaN(loT)) {
+        if (nd.iLo[arcTick] == FULL) {
             double theta = decoded != null ? decoded[arcTick] : 0.0;
-            double[] la = {theta - 90.0, theta + 90.0};
-            double[] lb = {theta + 90.0, theta + 270.0};
-            out.add(childArc(s, nd, arcTick, la[0], la[1]));
-            out.add(childArc(s, nd, arcTick, lb[0], lb[1]));
+            int a0 = SineTableGeometry.idxOf(theta - 90.0);
+            int a1 = SineTableGeometry.idxOf(theta + 90.0);
+            int b1 = SineTableGeometry.idxOf(theta + 270.0);
+            out.add(childArc(s, nd, arcTick, a0, a1));
+            out.add(childArc(s, nd, arcTick, a1, b1));
         } else {
-            double mid = 0.5 * (loT + hiT);
+            int loT = nd.iLo[arcTick];
+            int hiT = nd.iHi[arcTick];
+            int mid = (loT + hiT) >> 1;
             out.add(childArc(s, nd, arcTick, loT, mid));
-            out.add(childArc(s, nd, arcTick, mid, hiT));
+            out.add(childArc(s, nd, arcTick, mid + 1, hiT));
         }
         return out;
     }
@@ -1164,11 +1283,11 @@ public final class CertifiedBnb {
             byte[] ngz = nd.gz.clone();
             if (gateAxis == 0) ngx[gateTick] = st;
             else ngz[gateTick] = st;
-            out.add(new Node(s.nextId++, nd.lo, nd.hi, ngx, ngz, nd.depth + 1, nd.score, warm));
+            out.add(new Node(s.nextId++, nd.iLo, nd.iHi, ngx, ngz, nd.depth + 1, nd.score, warm));
         } else {
             byte[] ngx = nd.gx.clone();
             ngx[gateTick] = st;
-            out.add(new Node(s.nextId++, nd.lo, nd.hi, ngx, null, nd.depth + 1, nd.score, warm));
+            out.add(new Node(s.nextId++, nd.iLo, nd.iHi, ngx, null, nd.depth + 1, nd.score, warm));
         }
     }
 
@@ -1188,11 +1307,24 @@ public final class CertifiedBnb {
         return inj * (1.0 + coefScale) * (1.0 + band);
     }
 
-    private static Node childArc(Search s, Node nd, int t, double lo, double hi) {
-        double[] nlo = nd.lo.clone();
-        double[] nhi = nd.hi.clone();
-        nlo[t] = lo;
-        nhi[t] = hi;
+    private static Node childArc(Search s, Node nd, int t, int iLo, int iHi) {
+        int[] nlo = nd.iLo.clone();
+        int[] nhi = nd.iHi.clone();
+        int v = s.ties != null ? s.ties.varOf(t) : -1;
+        if (v >= 0) {
+            double loDeg = degCenter(iLo);
+            double hiDeg = degCenter(iHi);
+            double offT = s.ties.offsetOf(t);
+            for (int u = 0; u < s.n; u++) {
+                if (s.ties.varOf(u) != v) continue;
+                double d = s.ties.offsetOf(u) - offT;
+                nlo[u] = SineTableGeometry.idxOf(loDeg + d);
+                nhi[u] = SineTableGeometry.idxOf(hiDeg + d);
+            }
+        } else {
+            nlo[t] = iLo;
+            nhi[t] = iHi;
+        }
         return new Node(s.nextId++, nlo, nhi, nd.gx, nd.gz, nd.depth + 1, nd.score, nd.warm);
     }
 

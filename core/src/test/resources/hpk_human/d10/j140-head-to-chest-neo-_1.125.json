@@ -1,0 +1,2964 @@
+{
+  "version": 1,
+  "createdAt": "2026-08-29T23:38:52Z",
+  "modVersion": "1.10.0+build.328.f2e5f27",
+  "mcVersion": "1.8.9",
+  "world": {
+    "dimension": "Overworld",
+    "serverAddress": "play.cerkour.net"
+  },
+  "start": {
+    "pos": [
+      -819.161797,
+      73.375,
+      976.217406
+    ],
+    "vel": [
+      0.0,
+      -0.0784000015258789,
+      0.0
+    ],
+    "yaw": 59.54,
+    "pitch": 40.0
+  },
+  "rows": [
+    {
+      "keys": [
+        "JUMP"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT",
+        "JUMP"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT",
+        "JUMP"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT",
+        "JUMP"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT",
+        "JUMP"
+      ],
+      "yaw": -70.46041,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": -8.113403,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 4.3286133,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 10.843504,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": -28.619383,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": -2.7520752,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": -9.772339,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    }
+  ],
+  "angleSolver": {
+    "startTick": 0,
+    "landingTick": 44,
+    "axis": "X",
+    "goal": "MAX",
+    "customAngle": false,
+    "customAngleDeg": 0.0,
+    "customAngleType": "POSITION",
+    "effort": "THOROUGH",
+    "stopOnFeasible": false,
+    "legalMode": false,
+    "optimizeSeconds": 20,
+    "customBudget": {
+      "timeBudgetSeconds": 0,
+      "window": 14,
+      "commit": 13,
+      "useWindowSolver": true,
+      "ilsExhaustive": true
+    },
+    "defaultInputs": "KEEP",
+    "defaultSprint": "DERIVE",
+    "defaultSlipperiness": "AIR",
+    "defaultPotions": [],
+    "ticks": [
+      {
+        "tick": 0,
+        "constraints": [
+          {
+            "range": true,
+            "field": "X",
+            "op": "IN",
+            "value": 0.0,
+            "lo": -820.3000000119208,
+            "hi": -818.6999999880792,
+            "loInclusive": true,
+            "hiInclusive": true,
+            "disabled": false,
+            "vsDz": false
+          },
+          {
+            "range": true,
+            "field": "Z",
+            "op": "IN",
+            "value": 0.0,
+            "lo": 975.6999999880792,
+            "hi": 977.3000000119208,
+            "loInclusive": true,
+            "hiInclusive": true,
+            "disabled": false,
+            "vsDz": false
+          }
+        ],
+        "override": {
+          "slipperiness": "DEFAULT",
+          "added": [],
+          "removed": []
+        }
+      },
+      {
+        "tick": 12,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ],
+        "override": {
+          "slipperiness": "DEFAULT",
+          "added": [],
+          "removed": []
+        }
+      },
+      {
+        "tick": 20,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ],
+        "override": {
+          "slipperiness": "DEFAULT",
+          "added": [],
+          "removed": []
+        }
+      },
+      {
+        "tick": 28,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ],
+        "override": {
+          "slipperiness": "DEFAULT",
+          "added": [],
+          "removed": []
+        }
+      },
+      {
+        "tick": 36,
+        "constraints": [
+          {
+            "range": false,
+            "field": "X",
+            "op": "GE",
+            "value": -825.8,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          },
+          {
+            "range": false,
+            "field": "Z",
+            "op": "GE",
+            "value": 981.95,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          },
+          {
+            "range": false,
+            "field": "Z",
+            "op": "LE",
+            "value": 982.7,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          },
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ],
+        "override": {
+          "slipperiness": "DEFAULT",
+          "added": [],
+          "removed": []
+        }
+      },
+      {
+        "tick": 37,
+        "constraints": [
+          {
+            "range": false,
+            "field": "Z",
+            "op": "LE",
+            "value": 982.7,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ],
+        "override": {
+          "slipperiness": "DEFAULT",
+          "added": [],
+          "removed": []
+        }
+      },
+      {
+        "tick": 11,
+        "constraints": [
+          {
+            "range": true,
+            "field": "X",
+            "op": "IN",
+            "value": 0.0,
+            "lo": -820.3,
+            "hi": -818.7,
+            "loInclusive": true,
+            "hiInclusive": true,
+            "disabled": false,
+            "vsDz": false
+          },
+          {
+            "range": true,
+            "field": "Z",
+            "op": "IN",
+            "value": 0.0,
+            "lo": 975.7,
+            "hi": 977.3,
+            "loInclusive": true,
+            "hiInclusive": true,
+            "disabled": false,
+            "vsDz": false
+          },
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 19,
+        "constraints": [
+          {
+            "range": true,
+            "field": "X",
+            "op": "IN",
+            "value": 0.0,
+            "lo": -822.3,
+            "hi": -820.7,
+            "loInclusive": true,
+            "hiInclusive": true,
+            "disabled": false,
+            "vsDz": false
+          },
+          {
+            "range": true,
+            "field": "Z",
+            "op": "IN",
+            "value": 0.0,
+            "lo": 977.7,
+            "hi": 979.3,
+            "loInclusive": true,
+            "hiInclusive": true,
+            "disabled": false,
+            "vsDz": false
+          },
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 27,
+        "constraints": [
+          {
+            "range": true,
+            "field": "X",
+            "op": "IN",
+            "value": 0.0,
+            "lo": -824.3,
+            "hi": -822.7,
+            "loInclusive": true,
+            "hiInclusive": true,
+            "disabled": false,
+            "vsDz": false
+          },
+          {
+            "range": true,
+            "field": "Z",
+            "op": "IN",
+            "value": 0.0,
+            "lo": 979.7,
+            "hi": 981.3,
+            "loInclusive": true,
+            "hiInclusive": true,
+            "disabled": false,
+            "vsDz": false
+          },
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 35,
+        "constraints": [
+          {
+            "range": false,
+            "field": "X",
+            "op": "GE",
+            "value": -825.8,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          },
+          {
+            "range": false,
+            "field": "Z",
+            "op": "GE",
+            "value": 981.95,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          },
+          {
+            "range": false,
+            "field": "Z",
+            "op": "LE",
+            "value": 982.7,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          },
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 38,
+        "constraints": [
+          {
+            "range": false,
+            "field": "X",
+            "op": "LE",
+            "value": -826.3,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 43,
+        "constraints": [
+          {
+            "range": false,
+            "field": "X",
+            "op": "LE",
+            "value": -826.3,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          },
+          {
+            "range": false,
+            "field": "Z",
+            "op": "GE",
+            "value": 984.3,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 44,
+        "constraints": [
+          {
+            "range": false,
+            "field": "X",
+            "op": "GE",
+            "value": -826.2375,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 1,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 2,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 3,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 4,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 5,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 6,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 7,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 8,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 9,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 10,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 13,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 14,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 15,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 16,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 17,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 18,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 21,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 22,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 23,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 24,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 26,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 25,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 29,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 30,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 31,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 32,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 33,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 34,
+        "constraints": [
+          {
+            "range": false,
+            "field": "DF",
+            "op": "EQ",
+            "value": 0.0,
+            "lo": 0.0,
+            "hi": 0.0,
+            "loInclusive": false,
+            "hiInclusive": false,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      }
+    ],
+    "selectedBlocks": [
+      {
+        "kind": "MOMENTUM",
+        "x": -826,
+        "y": 76,
+        "z": 982,
+        "box": [
+          -825.5,
+          76.25,
+          982.25,
+          -825.0,
+          76.75,
+          982.75
+        ],
+        "boxes": [
+          [
+            -825.5,
+            76.25,
+            982.25,
+            -825.0,
+            76.75,
+            982.75
+          ]
+        ]
+      },
+      {
+        "kind": "MOMENTUM",
+        "x": -824,
+        "y": 75,
+        "z": 980,
+        "box": [
+          -824.0,
+          75.0,
+          980.0,
+          -823.0,
+          75.75,
+          981.0
+        ],
+        "boxes": [
+          [
+            -824.0,
+            75.0,
+            980.0,
+            -823.0,
+            75.75,
+            981.0
+          ]
+        ]
+      },
+      {
+        "kind": "MOMENTUM",
+        "x": -822,
+        "y": 74,
+        "z": 978,
+        "box": [
+          -822.0,
+          74.0,
+          978.0,
+          -821.0,
+          74.625,
+          979.0
+        ],
+        "boxes": [
+          [
+            -822.0,
+            74.0,
+            978.0,
+            -821.0,
+            74.625,
+            979.0
+          ]
+        ]
+      },
+      {
+        "kind": "MOMENTUM",
+        "x": -820,
+        "y": 73,
+        "z": 976,
+        "box": [
+          -820.0,
+          73.0,
+          976.0,
+          -819.0,
+          73.5,
+          977.0
+        ],
+        "boxes": [
+          [
+            -820.0,
+            73.0,
+            976.0,
+            -819.0,
+            73.5,
+            977.0
+          ]
+        ]
+      },
+      {
+        "kind": "COLLISION",
+        "x": -826,
+        "y": 77,
+        "z": 983,
+        "box": [
+          -826.0,
+          77.0,
+          983.0,
+          -825.0,
+          78.0,
+          984.0
+        ],
+        "boxes": [
+          [
+            -826.0,
+            77.0,
+            983.0,
+            -825.0,
+            78.0,
+            984.0
+          ]
+        ]
+      },
+      {
+        "kind": "COLLISION",
+        "x": -826,
+        "y": 78,
+        "z": 983,
+        "box": [
+          -826.0,
+          78.0,
+          983.0,
+          -825.0,
+          79.0,
+          984.0
+        ],
+        "boxes": [
+          [
+            -826.0,
+            78.0,
+            983.0,
+            -825.0,
+            79.0,
+            984.0
+          ]
+        ]
+      },
+      {
+        "kind": "LAND",
+        "x": -826,
+        "y": 77,
+        "z": 984,
+        "box": [
+          -825.9375,
+          77.0,
+          984.0625,
+          -825.0625,
+          77.875,
+          984.9375
+        ],
+        "boxes": [
+          [
+            -825.9375,
+            77.0,
+            984.0625,
+            -825.0625,
+            77.875,
+            984.9375
+          ]
+        ]
+      }
+    ],
+    "seed": {
+      "pos": [
+        -819.161797,
+        73.375,
+        976.217406
+      ],
+      "vel": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "yaw": 59.54
+    },
+    "result": {
+      "success": true,
+      "met": 5,
+      "total": 5,
+      "startTick": 38,
+      "landingTick": 45,
+      "durationMs": 17016,
+      "durationNanos": 17016579400,
+      "finishedAt": "01:38:50",
+      "solver": "closed form -\u003e fold driver -\u003e certified B\u0026B -\u003e leaf snap",
+      "objectiveValue": -826.2331232850145,
+      "hasObjective": true,
+      "outcomes": [
+        {
+          "field": "X",
+          "tick": "T45",
+          "relation": "max",
+          "found": "-826.233123285015",
+          "margin": "",
+          "met": true
+        },
+        {
+          "field": "Z",
+          "tick": "T38",
+          "relation": "\u003c\u003d 982.7",
+          "found": "982.696999985827",
+          "margin": "+0.003000014173",
+          "met": true
+        },
+        {
+          "field": "X",
+          "tick": "T39",
+          "relation": "\u003c\u003d -826.3",
+          "found": "-826.300005688148",
+          "margin": "+0.000005688148",
+          "met": true
+        },
+        {
+          "field": "X",
+          "tick": "T44",
+          "relation": "\u003c\u003d -826.3",
+          "found": "-826.303459061970",
+          "margin": "+0.003459061970",
+          "met": true
+        },
+        {
+          "field": "Z",
+          "tick": "T44",
+          "relation": "\u003e\u003d 984.3",
+          "found": "984.300000058636",
+          "margin": "+0.000000058636",
+          "met": true
+        },
+        {
+          "field": "X",
+          "tick": "T45",
+          "relation": "\u003e\u003d -826.2375",
+          "found": "-826.233123285015",
+          "margin": "+0.004376714985",
+          "met": true
+        }
+      ],
+      "yaws": [
+        {
+          "tick": 38,
+          "yaw": -10.92041015625
+        },
+        {
+          "tick": 39,
+          "yaw": -19.0338134765625
+        },
+        {
+          "tick": 40,
+          "yaw": -14.7052001953125
+        },
+        {
+          "tick": 41,
+          "yaw": -3.8616957664489746
+        },
+        {
+          "tick": 42,
+          "yaw": -32.4810791015625
+        },
+        {
+          "tick": 43,
+          "yaw": -35.233154296875
+        },
+        {
+          "tick": 44,
+          "yaw": -45.0054931640625
+        }
+      ],
+      "details": [
+        {
+          "label": "Runtime",
+          "value": "17.02s"
+        },
+        {
+          "label": "Finished",
+          "value": "01:38:50"
+        },
+        {
+          "label": "Model",
+          "value": "ExactJumpModel"
+        },
+        {
+          "label": "Dual bound gap",
+          "value": "0.000030805101"
+        },
+        {
+          "label": "Jumps",
+          "value": "1"
+        },
+        {
+          "label": "Yaw travel",
+          "value": "64 deg"
+        },
+        {
+          "label": "Yaw reversals",
+          "value": "2"
+        },
+        {
+          "label": "Yaw jerk",
+          "value": "91 deg"
+        }
+      ],
+      "unmetTicks": []
+    },
+    "runTicksEnabled": false,
+    "runTicksMax": 0,
+    "runTicksTimeoutMs": 200,
+    "runTicksAdaptiveTimeout": false,
+    "runTicksAddPerJumpMs": 50,
+    "runTicksSafetyMult": 1.1,
+    "runTicksSafetyMarginMs": 80,
+    "runTicksMinimize": false
+  },
+  "debug": [
+    {
+      "pos": [
+        -819.161797,
+        73.375,
+        976.217406
+      ],
+      "vel": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "yaw": 59.54,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": false,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.0,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -819.161797,
+        73.79499998688698,
+        976.217406
+      ],
+      "vel": [
+        0.0,
+        0.33319999363422365,
+        0.0
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": false,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.0,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -819.1668163970091,
+        74.1281999805212,
+        976.2367658978221
+      ],
+      "vel": [
+        -0.004567651409978252,
+        0.24813599859094576,
+        0.017617507525882425
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -819.1733416136333,
+        74.37633597911214,
+        976.2795512710267
+      ],
+      "vel": [
+        -0.005937947299098689,
+        0.16477328182606651,
+        0.038934690738231977
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -819.1858047775565,
+        74.54110926093821,
+        976.3436538274435
+      ],
+      "vel": [
+        -0.011341479497007362,
+        0.08307781780646721,
+        0.05833332802053544
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -819.2036714736777,
+        74.62418707874468,
+        976.4271550211428
+      ],
+      "vel": [
+        -0.016258693938817525,
+        0.0030162615090425808,
+        0.0759860884561811
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -819.2264553842406,
+        74.62418707874468,
+        976.5283089752776
+      ],
+      "vel": [
+        -0.020733359209823856,
+        -0.0784000015258789,
+        0.09205010091558072
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -819.2537139600745,
+        74.5457870772188,
+        976.6455269418718
+      ],
+      "vel": [
+        -0.024805304723792384,
+        -0.1552320045166016,
+        0.10666835267492987
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -819.2850444814225,
+        74.3905550727022,
+        976.7773631602254
+      ],
+      "vel": [
+        -0.02851077524829477,
+        -0.230527368912964,
+        0.11997096215931649
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -819.3200804732949,
+        74.16002770378924,
+        976.9225019880633
+      ],
+      "vel": [
+        -0.03188275352277176,
+        -0.30431682745754424,
+        0.13207633713898315
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -819.3584884434417,
+        73.8557108763317,
+        977.079746190881
+      ],
+      "vel": [
+        -0.03495125384097948,
+        -0.37663049823865513,
+        0.1430922286879559
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -819.3999649139068,
+        73.47908037809304,
+        977.2480062852476
+      ],
+      "vel": [
+        -0.03774358921102313,
+        -0.44749789698341763,
+        0.15311669028642436
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -819.444233719742,
+        73.375,
+        977.4262908412127
+      ],
+      "vel": [
+        -0.04028461447099476,
+        -0.0784000015258789,
+        0.16223895060393262
+      ],
+      "yaw": 59.54,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -819.689532052669,
+        73.79499998688698,
+        977.8157717549648
+      ],
+      "vel": [
+        -0.13393290533481433,
+        0.33319999363422365,
+        0.2126566036092424
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -819.8454271424629,
+        74.1281999805212,
+        978.0413470553128
+      ],
+      "vel": [
+        -0.14186453580085612,
+        0.24813599859094576,
+        0.20527352923264766
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -820.0092538627227,
+        74.37633597911214,
+        978.2595392812842
+      ],
+      "vel": [
+        -0.14908231973296943,
+        0.16477328182606651,
+        0.1985549313563176
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -820.1802983669147,
+        74.54110926093821,
+        978.4710129093793
+      ],
+      "vel": [
+        -0.15565050330048646,
+        0.08307781780646721,
+        0.19244100711265502
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -820.3579110546742,
+        74.62418707874468,
+        978.6763726132307
+      ],
+      "vel": [
+        -0.16162755051918443,
+        0.0030162615090425808,
+        0.18687733589057803
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -820.5415007896523,
+        74.62418707874468,
+        978.87616864586
+      ],
+      "vel": [
+        -0.16706666364495387,
+        -0.0784000015258789,
+        0.18181439493257487
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -820.7305296377563,
+        74.5457870772188,
+        979.0709017375314
+      ],
+      "vel": [
+        -0.17201625673205048,
+        -0.1552320045166016,
+        0.17720711852801108
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -820.9245080789473,
+        74.5,
+        979.2610275527982
+      ],
+      "vel": [
+        -0.17652038657111666,
+        -0.0784000015258789,
+        0.1730144968790274
+      ],
+      "yaw": 59.54,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -821.3832270287365,
+        74.91999998688698,
+        979.6000381839583
+      ],
+      "vel": [
+        -0.2504605756765754,
+        0.33319999363422365,
+        0.18509982611329262
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -821.6556497888721,
+        75.2531999805212,
+        979.7980567068104
+      ],
+      "vel": [
+        -0.24790471886791848,
+        0.24813599859094576,
+        0.1801968609886281
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -821.925516692199,
+        75.50133597911214,
+        979.9911722645378
+      ],
+      "vel": [
+        -0.24557888910501066,
+        0.16477328182606651,
+        0.17573516259659802
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -822.193057765763,
+        75.66610926093821,
+        980.1798261238732
+      ],
+      "vel": [
+        -0.24346238395976724,
+        0.08307781780646721,
+        0.17167501694283793
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -822.4584823341818,
+        75.74918707874468,
+        980.3644198375548
+      ],
+      "vel": [
+        -0.24153636422208818,
+        0.0030162615090425808,
+        0.16798028429143472
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -822.7219808828628,
+        75.74918707874468,
+        980.545318818585
+      ],
+      "vel": [
+        -0.23978368621028834,
+        -0.0784000015258789,
+        0.16461807748175955
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -822.9837267535321,
+        75.6707870772188,
+        980.7228555928056
+      ],
+      "vel": [
+        -0.23818874917358465,
+        -0.1552320045166016,
+        0.16155846919677777
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -823.2438776871646,
+        75.625,
+        980.8973327587411
+      ],
+      "vel": [
+        -0.23673735642835544,
+        -0.0784000015258789,
+        0.15877422557720294
+      ],
+      "yaw": 59.54,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -823.762813606811,
+        76.04499998688698,
+        981.2221031185994
+      ],
+      "vel": [
+        -0.2833390450375484,
+        0.33319999363422365,
+        0.17732463707938786
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -824.0681148363076,
+        76.3781999805212,
+        981.4123464524176
+      ],
+      "vel": [
+        -0.2778241268486761,
+        0.24813599859094576,
+        0.17312143876386232
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -824.3679011476153,
+        76.62633597911214,
+        981.5983865879202
+      ],
+      "vel": [
+        -0.27280555115216776,
+        0.16477328182606651,
+        0.16929652818650082
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -824.6626688832264,
+        76.79110926093821,
+        981.7806018128455
+      ],
+      "vel": [
+        -0.2682386471367278,
+        0.08307781780646721,
+        0.16581585946078958
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -824.9528697148221,
+        76.87418707874468,
+        981.959336369045
+      ],
+      "vel": [
+        -0.2640827643629056,
+        0.0030162615090425808,
+        0.1626484508291082
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -825.238914663644,
+        76.87418707874468,
+        982.1349035166129
+      ],
+      "vel": [
+        -0.26030091092973506,
+        -0.0784000015258789,
+        0.15976610889120954
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -825.5211777590326,
+        76.7957870772188,
+        982.3075883222429
+      ],
+      "vel": [
+        -0.2568594242063668,
+        -0.1552320045166016,
+        0.15714317765212932
+      ],
+      "yaw": 59.54,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -825.799999367698,
+        76.75,
+        982.4776501966337
+      ],
+      "vel": [
+        -0.2537276711978451,
+        -0.0784000015258789,
+        0.1547563101557772
+      ],
+      "yaw": 59.54,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -826.1635379574653,
+        76.75,
+        982.6969999858268
+      ],
+      "vel": [
+        -0.198492093068384,
+        -0.0784000015258789,
+        0.11976499881043119
+      ],
+      "yaw": 59.54,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -826.3000056881484,
+        77.16999998688698,
+        983.1382361691293
+      ],
+      "vel": [
+        -0.07451138960767231,
+        0.33319999363422365,
+        0.24091498406609657
+      ],
+      "yaw": -10.92041,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -826.351141711873,
+        77.5031999805212,
+        983.3905350098421
+      ],
+      "vel": [
+        -0.04653378293044552,
+        0.24813599859094576,
+        0.2295919516654604
+      ],
+      "yaw": -19.033813,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -826.3752260218843,
+        77.75133597911214,
+        983.6332426413528
+      ],
+      "vel": [
+        -0.02191672274195469,
+        0.16477328182606651,
+        0.22086395103997455
+      ],
+      "yaw": -14.7052,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -826.3775615291701,
+        77.91610926093821,
+        983.8712114434747
+      ],
+      "vel": [
+        -0.002125311691353296,
+        0.08307781780646721,
+        0.21655161617194735
+      ],
+      "yaw": -3.8616962,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -826.3521796939925,
+        77.99918707874468,
+        984.0933988725253
+      ],
+      "vel": [
+        0.023097470677227228,
+        0.0030162615090425808,
+        0.20219056626310322
+      ],
+      "yaw": -32.48108,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -826.3034590619695,
+        77.99918707874468,
+        984.3000000586359
+      ],
+      "vel": [
+        0.044335776418631664,
+        -0.0784000015258789,
+        0.18800708477895928
+      ],
+      "yaw": -35.233154,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -826.2331232850145,
+        77.9207870772188,
+        984.4880046502643
+      ],
+      "vel": [
+        0.06400555887374601,
+        -0.1552320045166016,
+        0.17108418331248523
+      ],
+      "yaw": -45.005493,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -826.1431177256043,
+        77.875,
+        984.6590863404263
+      ],
+      "vel": [
+        0.08190506142376064,
+        -0.0784000015258789,
+        0.1556843425341731
+      ],
+      "yaw": -45.005493,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -825.9312126987512,
+        77.875,
+        984.8147582181391
+      ],
+      "vel": [
+        0.11570015810065178,
+        -0.0784000015258789,
+        0.08499685510381566
+      ],
+      "yaw": -45.005493,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    }
+  ]
+}

@@ -22,6 +22,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class CertifiedBnbNode implements NodeRuntime {
 
     private static final int OPT_SAFETY_NODE_CAP = 500_000;
+    private static final long FOLD_FF_NANOS = 30_000_000_000L;
+    private static final long FOLD_TAIL_NANOS = 1_500_000_000L;
 
     private final int ffSec;
     private final int ffNodeCap;
@@ -42,6 +44,7 @@ public final class CertifiedBnbNode implements NodeRuntime {
         long now = System.nanoTime();
         int cap;
         long solveDeadline;
+        AtomicBoolean cancelToken = nodeToken;
         if (optimize) {
             if (deadlineNanos <= 0 || now >= deadlineNanos) return NodeOutcome.of(miss, in);
             cap = OPT_SAFETY_NODE_CAP;
@@ -52,10 +55,17 @@ public final class CertifiedBnbNode implements NodeRuntime {
             long sub = ffSec > 0 ? now + ffSec * 1_000_000_000L : 0L;
             solveDeadline = deadlineNanos > 0 && sub > 0 ? Math.min(deadlineNanos, sub)
                     : (deadlineNanos > 0 ? deadlineNanos : sub);
+            long overall = ctx.overallDeadline();
+            if (ctx.foldableDf() && overall > 0) {
+                long foldDeadline = Math.min(overall - FOLD_TAIL_NANOS, now + FOLD_FF_NANOS);
+                if (foldDeadline > solveDeadline) {
+                    solveDeadline = foldDeadline;
+                    cancelToken = ctx.cancel;
+                }
+            }
         }
         if (!ctx.exact() || ctx.stageLocked()) return NodeOutcome.of(miss, in);
         if (tickCap > 0 && ctx.scenario.numTicks > tickCap) return NodeOutcome.of(miss, in);
-        if (JumpLinearModel.hasFacingWall(ctx.spec.constraints)) return NodeOutcome.of(miss, in);
         ExactJumpModel exact = ctx.exactModel;
         JumpSpec dspec = bnbSpec(ctx);
 
@@ -63,17 +73,13 @@ public final class CertifiedBnbNode implements NodeRuntime {
         cfg.mode = optimize ? CertifiedBnb.Mode.OPTIMIZE : CertifiedBnb.Mode.FIRST_FEASIBLE;
         cfg.nodeCap = cap;
         cfg.polishCap = optimize ? 12 : 2;
-        cfg.cancel = nodeToken;
+        cfg.cancel = cancelToken;
         cfg.deadlineNanos = solveDeadline;
+        cfg.homotopy = ctx.foldableDf() && ctx.overallDeadline() > 0;
         if (in != null && in.yaws != null) {
             cfg.seedYaws = in.yaws;
             cfg.seedPx = ctx.scenario.startPos.x;
             cfg.seedPz = ctx.scenario.startPos.z;
-        }
-        if (optimize) {
-            cfg.gapSink = (incObj, boundObj, gap) -> {
-                if (!Double.isNaN(gap)) ctx.setDualGap(gap);
-            };
         }
         CertifiedBnb.Result res = CertifiedBnb.solve(exact, dspec, cfg);
         if (SolverTrace.on()) {
@@ -86,7 +92,6 @@ public final class CertifiedBnbNode implements NodeRuntime {
                     res.certified, res.nodes, res.kernelNanos / 1_000_000L);
         }
         if (res.declined) return NodeOutcome.of(miss, in);
-        if (optimize && res.feasible && !Double.isNaN(res.gap)) ctx.setDualGap(res.gap);
         if (!res.feasible) {
             if (res.bestInfeasYaws != null) ctx.closestMiss().offer(res.bestInfeasYaws, res.bestInfeasViol);
             return NodeOutcome.of(miss, in);
@@ -103,6 +108,7 @@ public final class CertifiedBnbNode implements NodeRuntime {
         Scoring.adoptPinnedStart(ctx.scenario, res.px, res.pz);
         ctx.chainAppend("certified B&B" + (labelSuffix == null ? "" : labelSuffix));
         Candidate out = Candidate.of(ctx, res.yawsDeg);
+        if (optimize && !Double.isNaN(res.gap)) out = out.withDualGap(res.gap);
         return NodeOutcome.of(optimize ? Guarantee.IMPROVED : Guarantee.FOUND, out);
     }
 

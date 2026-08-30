@@ -1,0 +1,4196 @@
+{
+  "version": 1,
+  "createdAt": "2026-08-29T21:15:42Z",
+  "modVersion": "1.10.0+build.327.c4e76b9",
+  "mcVersion": "1.8.9",
+  "world": {
+    "dimension": "Overworld",
+    "serverAddress": "play.cerkour.net"
+  },
+  "start": {
+    "pos": [
+      -100.50009972602129,
+      88.0,
+      4966.321523691352
+    ],
+    "vel": [
+      0.0,
+      -0.0784000015258789,
+      0.0
+    ],
+    "yaw": 0.0,
+    "pitch": 40.0
+  },
+  "rows": [
+    {
+      "keys": [
+        "JUMP"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT",
+        "JUMP"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT",
+        "JUMP"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 44.995667,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0013961792,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT",
+        "JUMP"
+      ],
+      "yaw": -44.997063,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 44.995667,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0013961792,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT",
+        "JUMP"
+      ],
+      "yaw": -44.997063,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 44.997063,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT",
+        "JUMP"
+      ],
+      "yaw": -44.997063,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 44.997063,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yaw": 0.0,
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "A",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    },
+    {
+      "keys": [
+        "W",
+        "SPRINT"
+      ],
+      "yawLocked": false,
+      "pitchLocked": false,
+      "speedAmplifier": 0,
+      "jumpBoostAmplifier": 0,
+      "hotbarSlot": 0,
+      "teleport": false,
+      "teleportX": 0.0,
+      "teleportY": 0.0,
+      "teleportZ": 0.0
+    }
+  ],
+  "angleSolver": {
+    "startTick": 0,
+    "landingTick": 66,
+    "axis": "Z",
+    "goal": "MAX",
+    "customAngle": false,
+    "customAngleDeg": 0.0,
+    "customAngleType": "POSITION",
+    "effort": "THOROUGH",
+    "stopOnFeasible": false,
+    "legalMode": false,
+    "optimizeSeconds": 10,
+    "customBudget": {
+      "timeBudgetSeconds": 0,
+      "window": 10,
+      "commit": 3,
+      "useWindowSolver": true,
+      "ilsExhaustive": false
+    },
+    "defaultInputs": "KEEP",
+    "defaultSprint": "DERIVE",
+    "defaultSlipperiness": "AIR",
+    "defaultPotions": [],
+    "ticks": [
+      {
+        "tick": 66,
+        "constraints": [
+          {
+            "range": true,
+            "field": "X",
+            "op": "IN",
+            "value": 0.0,
+            "lo": -101.23750001192091,
+            "hi": -99.76249998807909,
+            "loInclusive": true,
+            "hiInclusive": true,
+            "disabled": false,
+            "vsDz": false
+          },
+          {
+            "range": true,
+            "field": "Z",
+            "op": "IN",
+            "value": 0.0,
+            "lo": 4984.76249998808,
+            "hi": 4985.699999988079,
+            "loInclusive": true,
+            "hiInclusive": true,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 54,
+        "constraints": [
+          {
+            "range": true,
+            "field": "X",
+            "op": "IN",
+            "value": 0.0,
+            "lo": -101.30000001192091,
+            "hi": -99.69999998807909,
+            "loInclusive": true,
+            "hiInclusive": true,
+            "disabled": false,
+            "vsDz": false
+          },
+          {
+            "range": true,
+            "field": "Z",
+            "op": "IN",
+            "value": 0.0,
+            "lo": 4979.69999998808,
+            "hi": 4980.42500001192,
+            "loInclusive": true,
+            "hiInclusive": true,
+            "disabled": false,
+            "vsDz": false
+          }
+        ]
+      },
+      {
+        "tick": 0,
+        "constraints": [
+          {
+            "range": true,
+            "field": "X",
+            "op": "IN",
+            "value": 0.0,
+            "lo": -101.30000001192091,
+            "hi": -99.69999998807909,
+            "loInclusive": true,
+            "hiInclusive": true,
+            "disabled": false,
+            "vsDz": false
+          },
+          {
+            "range": true,
+            "field": "Z",
+            "op": "IN",
+            "value": 0.0,
+            "lo": 4966.300000011921,
+            "hi": 4967.30000001192,
+            "loInclusive": true,
+            "hiInclusive": true,
+            "disabled": false,
+            "vsDz": false
+          }
+        ],
+        "override": {
+          "slipperiness": "DEFAULT",
+          "added": [],
+          "removed": []
+        }
+      },
+      {
+        "tick": 11,
+        "constraints": [],
+        "override": {
+          "slipperiness": "DEFAULT",
+          "added": [],
+          "removed": []
+        }
+      },
+      {
+        "tick": 22,
+        "constraints": [],
+        "override": {
+          "slipperiness": "DEFAULT",
+          "added": [],
+          "removed": []
+        }
+      },
+      {
+        "tick": 33,
+        "constraints": [],
+        "override": {
+          "slipperiness": "DEFAULT",
+          "added": [],
+          "removed": []
+        }
+      },
+      {
+        "tick": 44,
+        "constraints": [],
+        "override": {
+          "slipperiness": "DEFAULT",
+          "added": [],
+          "removed": []
+        }
+      },
+      {
+        "tick": 55,
+        "constraints": [],
+        "override": {
+          "slipperiness": "DEFAULT",
+          "added": [],
+          "removed": []
+        }
+      }
+    ],
+    "selectedBlocks": [],
+    "seed": {
+      "pos": [
+        -100.50009972602129,
+        88.0,
+        4966.321523691352
+      ],
+      "vel": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "yaw": 0.0
+    },
+    "result": {
+      "success": true,
+      "met": 6,
+      "total": 6,
+      "startTick": 1,
+      "landingTick": 67,
+      "durationMs": 6718,
+      "durationNanos": 6718145500,
+      "finishedAt": "23:15:21",
+      "solver": "receding horizon -\u003e free window -\u003e fold driver -\u003e certified B\u0026B -\u003e translated start",
+      "objectiveValue": 4984.76318619175,
+      "hasObjective": true,
+      "outcomes": [
+        {
+          "field": "Z",
+          "tick": "T67",
+          "relation": "max",
+          "found": "4984.76319",
+          "margin": "",
+          "met": true
+        },
+        {
+          "field": "X",
+          "tick": "T1",
+          "relation": "[-101.3, -99.7]",
+          "found": "-100.50010",
+          "margin": "+0.79990",
+          "met": true
+        },
+        {
+          "field": "Z",
+          "tick": "T1",
+          "relation": "[4966.3, 4967.3]",
+          "found": "4966.32152",
+          "margin": "+0.02152",
+          "met": true
+        },
+        {
+          "field": "X",
+          "tick": "T55",
+          "relation": "[-101.3, -99.7]",
+          "found": "-100.50003",
+          "margin": "+0.79997",
+          "met": true
+        },
+        {
+          "field": "Z",
+          "tick": "T55",
+          "relation": "[4979.7, 4980.425]",
+          "found": "4980.42500",
+          "margin": "+0.00000",
+          "met": true
+        },
+        {
+          "field": "X",
+          "tick": "T67",
+          "relation": "[-101.2375, -99.7625]",
+          "found": "-100.50000",
+          "margin": "+0.73750",
+          "met": true
+        },
+        {
+          "field": "Z",
+          "tick": "T67",
+          "relation": "[4984.7625, 4985.7]",
+          "found": "4984.76319",
+          "margin": "+0.00069",
+          "met": true
+        }
+      ],
+      "yaws": [
+        {
+          "tick": 1,
+          "yaw": 0.0
+        },
+        {
+          "tick": 2,
+          "yaw": 0.0
+        },
+        {
+          "tick": 3,
+          "yaw": 0.0
+        },
+        {
+          "tick": 4,
+          "yaw": 0.0
+        },
+        {
+          "tick": 5,
+          "yaw": 0.0
+        },
+        {
+          "tick": 6,
+          "yaw": 0.0
+        },
+        {
+          "tick": 7,
+          "yaw": 0.0
+        },
+        {
+          "tick": 8,
+          "yaw": 0.0
+        },
+        {
+          "tick": 9,
+          "yaw": 0.0
+        },
+        {
+          "tick": 10,
+          "yaw": 0.0
+        },
+        {
+          "tick": 11,
+          "yaw": 0.0
+        },
+        {
+          "tick": 12,
+          "yaw": 0.0
+        },
+        {
+          "tick": 13,
+          "yaw": 0.0
+        },
+        {
+          "tick": 14,
+          "yaw": 0.0
+        },
+        {
+          "tick": 15,
+          "yaw": 0.0
+        },
+        {
+          "tick": 16,
+          "yaw": 0.0
+        },
+        {
+          "tick": 17,
+          "yaw": 0.0
+        },
+        {
+          "tick": 18,
+          "yaw": 0.0
+        },
+        {
+          "tick": 19,
+          "yaw": 0.0
+        },
+        {
+          "tick": 20,
+          "yaw": 0.0
+        },
+        {
+          "tick": 21,
+          "yaw": 0.0
+        },
+        {
+          "tick": 22,
+          "yaw": 0.0
+        },
+        {
+          "tick": 23,
+          "yaw": 0.0
+        },
+        {
+          "tick": 24,
+          "yaw": 44.99566650390625
+        },
+        {
+          "tick": 25,
+          "yaw": 44.99566650390625
+        },
+        {
+          "tick": 26,
+          "yaw": 44.99566650390625
+        },
+        {
+          "tick": 27,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 28,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 29,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 30,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 31,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 32,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 33,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 34,
+          "yaw": 0.0
+        },
+        {
+          "tick": 35,
+          "yaw": 44.99566650390625
+        },
+        {
+          "tick": 36,
+          "yaw": 44.99566650390625
+        },
+        {
+          "tick": 37,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 38,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 39,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 40,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 41,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 42,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 43,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 44,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 45,
+          "yaw": 0.0
+        },
+        {
+          "tick": 46,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 47,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 48,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 49,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 50,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 51,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 52,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 53,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 54,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 55,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 56,
+          "yaw": 0.0
+        },
+        {
+          "tick": 57,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 58,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 59,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 60,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 61,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 62,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 63,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 64,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 65,
+          "yaw": 44.99706268310547
+        },
+        {
+          "tick": 66,
+          "yaw": 44.99706268310547
+        }
+      ],
+      "details": [
+        {
+          "label": "Runtime",
+          "value": "6.72s"
+        },
+        {
+          "label": "Finished",
+          "value": "23:15:21"
+        },
+        {
+          "label": "Model",
+          "value": "ExactJumpModel"
+        },
+        {
+          "label": "Dual bound gap",
+          "value": "12.47393"
+        },
+        {
+          "label": "Jumps",
+          "value": "6"
+        },
+        {
+          "label": "Window",
+          "value": "10"
+        },
+        {
+          "label": "Commit",
+          "value": "3"
+        },
+        {
+          "label": "Yaw travel",
+          "value": "315 deg"
+        },
+        {
+          "label": "Yaw reversals",
+          "value": "6"
+        },
+        {
+          "label": "Yaw jerk",
+          "value": "630 deg"
+        }
+      ],
+      "unmetTicks": []
+    },
+    "runTicksEnabled": false,
+    "runTicksMax": 0,
+    "runTicksTimeoutMs": 200,
+    "runTicksAdaptiveTimeout": false,
+    "runTicksAddPerJumpMs": 50,
+    "runTicksSafetyMult": 1.1,
+    "runTicksSafetyMarginMs": 80,
+    "runTicksMinimize": false
+  },
+  "debug": [
+    {
+      "pos": [
+        -100.50009972602129,
+        88.0,
+        4966.321523691352
+      ],
+      "vel": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "yaw": 0.0,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": false,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.0,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -100.50009972602129,
+        88.41999998688698,
+        4966.321523691352
+      ],
+      "vel": [
+        0.0,
+        0.33319999363422365,
+        0.0
+      ],
+      "yaw": 0.0,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": false,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.0,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -100.50009972602129,
+        88.7531999805212,
+        4966.321523691352
+      ],
+      "vel": [
+        0.0,
+        0.24813599859094576,
+        0.0
+      ],
+      "yaw": 0.0,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": false,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.0,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -100.50009972602129,
+        89.00133597911214,
+        4966.321523691352
+      ],
+      "vel": [
+        0.0,
+        0.16477328182606651,
+        0.0
+      ],
+      "yaw": 0.0,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": false,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.0,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -100.50009972602129,
+        89.16610926093821,
+        4966.321523691352
+      ],
+      "vel": [
+        0.0,
+        0.08307781780646721,
+        0.0
+      ],
+      "yaw": 0.0,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": false,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.0,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -100.50009972602129,
+        89.20000004768372,
+        4966.321523691352
+      ],
+      "vel": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "yaw": 0.0,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": false,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.0,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -100.50009972602129,
+        89.12160004615784,
+        4966.321523691352
+      ],
+      "vel": [
+        0.0,
+        -0.1552320045166016,
+        0.0
+      ],
+      "yaw": 0.0,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": false,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.0,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -100.50009972602129,
+        88.96636804164123,
+        4966.321523691352
+      ],
+      "vel": [
+        0.0,
+        -0.230527368912964,
+        0.0
+      ],
+      "yaw": 0.0,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": false,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.0,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -100.50009972602129,
+        88.73584067272827,
+        4966.321523691352
+      ],
+      "vel": [
+        0.0,
+        -0.30431682745754424,
+        0.0
+      ],
+      "yaw": 0.0,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": false,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.0,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -100.50009972602129,
+        88.43152384527073,
+        4966.321523691352
+      ],
+      "vel": [
+        0.0,
+        -0.37663049823865513,
+        0.0
+      ],
+      "yaw": 0.0,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": false,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.0,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -100.50009972602129,
+        88.05489334703208,
+        4966.321523691352
+      ],
+      "vel": [
+        0.0,
+        -0.44749789698341763,
+        0.0
+      ],
+      "yaw": 0.0,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": false,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.0,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -100.50009972602129,
+        88.0,
+        4966.3411236915845
+      ],
+      "vel": [
+        0.0,
+        -0.0784000015258789,
+        0.017836000725567347
+      ],
+      "yaw": 0.0,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": false,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -100.50009972602129,
+        88.41999998688698,
+        4966.686359676312
+      ],
+      "vel": [
+        0.0,
+        0.33319999363422365,
+        0.18849886955595266
+      ],
+      "yaw": 0.0,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -100.50009972602129,
+        88.7531999805212,
+        4966.9003385443075
+      ],
+      "vel": [
+        0.0,
+        0.24813599859094576,
+        0.19472077548772693
+      ],
+      "yaw": 0.0,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -100.50009972602129,
+        89.00133597911214,
+        4967.1205393182345
+      ],
+      "vel": [
+        0.0,
+        0.16477328182606651,
+        0.2003827100488175
+      ],
+      "yaw": 0.0,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -100.50009972602129,
+        89.16610926093821,
+        4967.346402026723
+      ],
+      "vel": [
+        0.0,
+        0.08307781780646721,
+        0.20553507064790005
+      ],
+      "yaw": 0.0,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -100.50009972602129,
+        89.20000004768372,
+        4967.57741709581
+      ],
+      "vel": [
+        0.0,
+        -0.0784000015258789,
+        0.21022371892819122
+      ],
+      "yaw": 0.0,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -100.50009972602129,
+        89.12160004615784,
+        4967.813120813178
+      ],
+      "vel": [
+        0.0,
+        -0.1552320045166016,
+        0.21449038898622086
+      ],
+      "yaw": 0.0,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -100.50009972602129,
+        88.96636804164123,
+        4968.053091200604
+      ],
+      "vel": [
+        0.0,
+        -0.230527368912964,
+        0.2183730588509257
+      ],
+      "yaw": 0.0,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -100.50009972602129,
+        88.73584067272827,
+        4968.296944257895
+      ],
+      "vel": [
+        0.0,
+        -0.30431682745754424,
+        0.22190628852963418
+      ],
+      "yaw": 0.0,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -100.50009972602129,
+        88.43152384527073,
+        4968.544330544864
+      ],
+      "vel": [
+        0.0,
+        -0.37663049823865513,
+        0.22512152762992155
+      ],
+      "yaw": 0.0,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -100.50009972602129,
+        88.05489334703208,
+        4968.794932070934
+      ],
+      "vel": [
+        0.0,
+        -0.44749789698341763,
+        0.22804739529550605
+      ],
+      "yaw": 0.0,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -100.50009972602129,
+        88.0,
+        4969.048459464669
+      ],
+      "vel": [
+        0.0,
+        -0.0784000015258789,
+        0.23070993494792189
+      ],
+      "yaw": 0.0,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -100.50009972602129,
+        88.41999998688698,
+        4969.606569383619
+      ],
+      "vel": [
+        0.0,
+        0.33319999363422365,
+        0.3047280511416831
+      ],
+      "yaw": 0.0,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -100.50009723287076,
+        88.7531999805212,
+        4969.937297435297
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        0.24813599859094576,
+        0.300962535700782
+      ],
+      "yaw": 44.995667,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50009473972023,
+        89.00133597911214,
+        4970.264259971535
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        0.16477328182606651,
+        0.29753591655080747
+      ],
+      "yaw": 44.995667,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.5000922465697,
+        89.16610926093821,
+        4970.587795888622
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        0.08307781780646721,
+        0.2944176930344639
+      ],
+      "yaw": 44.995667,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50008975341916,
+        89.20000004768372,
+        4970.908213582193
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        -0.0784000015258789,
+        0.29158010955281266
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50008726026863,
+        89.12160004615784,
+        4971.225793692282
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        -0.1552320045166016,
+        0.2889979085100914
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.5000847671181,
+        88.96636804164123,
+        4971.540791601329
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        -0.230527368912964,
+        0.2866481054934941
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50008227396756,
+        88.73584067272827,
+        4971.853439707359
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        -0.30431682745754424,
+        0.2845097846867646
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50007978081703,
+        88.43152384527073,
+        4972.163949492582
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        -0.37663049823865513,
+        0.282563912696561
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.5000772876665,
+        88.05489334703208,
+        4972.472513405815
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        -0.44749789698341763,
+        0.28079316913444324
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50007479451597,
+        88.0,
+        4972.779306575486
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        -0.0784000015258789,
+        0.27918179244647645
+      ],
+      "yaw": 44.997063,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50007479451597,
+        88.41999998688698,
+        4973.385888351934
+      ],
+      "vel": [
+        0.0,
+        0.33319999363422365,
+        0.3311936884099472
+      ],
+      "yaw": 0.0,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -100.50007230136544,
+        88.7531999805212,
+        4973.743082040881
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        0.24813599859094576,
+        0.32504626630899125
+      ],
+      "yaw": 44.995667,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.5000698082149,
+        89.00133597911214,
+        4974.094128307726
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        0.16477328182606651,
+        0.3194521120358988
+      ],
+      "yaw": 44.995667,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50006731506437,
+        89.16610926093821,
+        4974.439580420299
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        0.08307781780646721,
+        0.31436143150067214
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50006482191384,
+        89.20000004768372,
+        4974.7799418523355
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        -0.0784000015258789,
+        0.3097289120801075
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.5000623287633,
+        89.12160004615784,
+        4975.115670764952
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        -0.1552320045166016,
+        0.305513319285901
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50005983561277,
+        88.96636804164123,
+        4975.447184084774
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        -0.230527368912964,
+        0.30167712973261473
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50005734246224,
+        88.73584067272827,
+        4975.774861215043
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        -0.30431682745754424,
+        0.2981861971385162
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50005484931171,
+        88.43152384527073,
+        4976.0990474127175
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        -0.37663049823865513,
+        0.29500944838633314
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50005235616118,
+        88.05489334703208,
+        4976.420056861641
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        -0.44749789698341763,
+        0.29211860693853303
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50004986301064,
+        88.0,
+        4976.738175469116
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        -0.0784000015258789,
+        0.2894879411452196
+      ],
+      "yaw": 44.997063,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50004986301064,
+        88.41999998688698,
+        4977.355063394263
+      ],
+      "vel": [
+        0.0,
+        0.33319999363422365,
+        0.3368208462530701
+      ],
+      "yaw": 0.0,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -100.50004736986011,
+        88.7531999805212,
+        4977.717884241053
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        0.24813599859094576,
+        0.33016698009381124
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50004487670958,
+        89.00133597911214,
+        4978.0740512216835
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        0.16477328182606651,
+        0.32411196171438106
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50004238355905,
+        89.16610926093821,
+        4978.424163183934
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        0.08307781780646721,
+        0.31860189483030044
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50003989040852,
+        89.20000004768372,
+        4978.7687650793005
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        -0.0784000015258789,
+        0.3135877338212798
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50003739725798,
+        89.12160004615784,
+        4979.108352813658
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        -0.1552320045166016,
+        0.3090248471715694
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50003490410745,
+        88.96636804164123,
+        4979.443377661366
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        -0.230527368912964,
+        0.3048726202006665
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50003241095692,
+        88.73584067272827,
+        4979.774250282103
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        -0.30431682745754424,
+        0.3010940935482484
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50002991780639,
+        88.43152384527073,
+        4980.101344376188
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        -0.37663049823865513,
+        0.2976556341954521
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50002742465585,
+        88.05489334703208,
+        4980.42500001092
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        -0.44749789698341763,
+        0.2945266360942303
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50002493150532,
+        88.0,
+        4980.74552664755
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        -0.0784000015258789,
+        0.2916792477400572
+      ],
+      "yaw": 44.997063,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50002493150532,
+        88.41999998688698,
+        4981.364605879292
+      ],
+      "vel": [
+        0.0,
+        0.33319999363422365,
+        0.33801729979282263
+      ],
+      "yaw": 0.0,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -100.50002243835479,
+        88.7531999805212,
+        4981.7286231796215
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        0.24813599859094576,
+        0.33125575284636427
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50001994520426,
+        89.00133597911214,
+        4982.085878933004
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        0.16477328182606651,
+        0.32510274494775854
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50001745205373,
+        89.16610926093821,
+        4982.436981678488
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        0.08307781780646721,
+        0.31950350759865825
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.5000149589032,
+        89.24918707874468,
+        4982.7824851866235
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        0.0030162615090425808,
+        0.3144082014641312
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50001246575266,
+        89.24918707874468,
+        4983.122893388624
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        -0.0784000015258789,
+        0.3097714727480818
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50000997260213,
+        89.1707870772188,
+        4983.458664861909
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        -0.1552320045166016,
+        0.3055520494948738
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.5000074794516,
+        89.0155550727022,
+        4983.79021691194
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        -0.230527368912964,
+        0.30171237422379577
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50000498630106,
+        88.78502770378924,
+        4984.1179292867
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        -0.30431682745754424,
+        0.29821826962641523
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.50000249315053,
+        88.4807108763317,
+        4984.442147556862
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        -0.37663049823865513,
+        0.2950386343511624
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.5,
+        88.10408037809304,
+        4984.76318619175
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        -0.44749789698341763,
+        0.2921451661672931
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.49999750684947,
+        87.875,
+        4985.081331358453
+      ],
+      "vel": [
+        2.2687670497290036E-6,
+        -0.0784000015258789,
+        0.2895121100440878
+      ],
+      "yaw": 44.997063,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.98
+    },
+    {
+      "pos": [
+        -100.59007425885648,
+        87.875,
+        4985.4609374984
+      ],
+      "vel": [
+        -0.049181912308434494,
+        -0.0784000015258789,
+        0.20726497648570644
+      ],
+      "yaw": 44.997063,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -100.72933292317192,
+        88.0,
+        4985.7582965047895
+      ],
+      "vel": [
+        -0.07603523954792425,
+        -0.0784000015258789,
+        0.16235803634677112
+      ],
+      "yaw": 44.997063,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -100.89544491472685,
+        88.0,
+        4986.01074857104
+      ],
+      "vel": [
+        -0.09069715792370599,
+        -0.0784000015258789,
+        0.13783884418294387
+      ],
+      "yaw": 44.997063,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -101.07621882465756,
+        88.0,
+        4986.137499988079
+      ],
+      "vel": [
+        -0.09870256628673203,
+        -0.0784000015258789,
+        0.0
+      ],
+      "yaw": 44.997063,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": true,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -101.2442112093504,
+        88.0,
+        4986.137499988079
+      ],
+      "vel": [
+        -0.09172385269625553,
+        -0.0784000015258789,
+        0.0
+      ],
+      "yaw": 44.997063,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": false,
+      "wallCollision": true,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -101.40522488045276,
+        88.0,
+        4986.137499988079
+      ],
+      "vel": [
+        -0.08791347463326997,
+        -0.0784000015258789,
+        0.0
+      ],
+      "yaw": 44.997063,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": false,
+      "wallCollision": true,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -101.56242817349214,
+        88.0,
+        4986.137499988079
+      ],
+      "vel": [
+        -0.08583300796922817,
+        -0.0784000015258789,
+        0.0
+      ],
+      "yaw": 44.997063,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": false,
+      "wallCollision": true,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -101.71755099986747,
+        88.0,
+        4986.137499988079
+      ],
+      "vel": [
+        -0.08469707303871951,
+        -0.0784000015258789,
+        0.0
+      ],
+      "yaw": 44.997063,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": false,
+      "wallCollision": true,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -101.8715378913123,
+        88.0,
+        4986.20680309087
+      ],
+      "vel": [
+        -0.08407685249462155,
+        -0.0784000015258789,
+        0.03783949851921209
+      ],
+      "yaw": 44.997063,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": false,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -102.04569149581393,
+        88.0,
+        4986.334736619293
+      ],
+      "vel": [
+        -0.09508787910259653,
+        -0.0784000015258789,
+        0.06985171463221287
+      ],
+      "yaw": 44.997063,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -102.23085612692353,
+        88.0,
+        4986.494682363828
+      ],
+      "vel": [
+        -0.10109990032886293,
+        -0.0784000015258789,
+        0.087330386660105
+      ],
+      "yaw": 44.997063,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -102.4220327792594,
+        88.0,
+        4986.672106780392
+      ],
+      "vel": [
+        -0.10438246429968281,
+        -0.0784000015258789,
+        0.09687374269581997
+      ],
+      "yaw": 44.997063,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -102.6164919955661,
+        87.92159999847412,
+        4986.699999988079
+      ],
+      "vel": [
+        -0.10617474443592852,
+        -0.1552320045166016,
+        0.0
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": true,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -102.74068209301113,
+        87.76636799395752,
+        4986.699999988079
+      ],
+      "vel": [
+        -0.11301299193199518,
+        -0.230527368912964,
+        0.0
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": false,
+      "wallCollision": true,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -102.8675530493694,
+        87.53584062504456,
+        4986.7138606105
+      ],
+      "vel": [
+        -0.11545257361335282,
+        -0.30431682745754424,
+        0.012613166766534678
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": false,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -102.99686358740904,
+        87.23152379758702,
+        4986.7403343996875
+      ],
+      "vel": [
+        -0.11767259300736883,
+        -0.37663049823865513,
+        0.0240911488548747
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -103.13255153342551,
+        86.85489329934836,
+        4986.782444356758
+      ],
+      "vel": [
+        -0.12347603443354893,
+        -0.44749789698341763,
+        0.03832006203874301
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -103.13749998807907,
+        86.40739540236494,
+        4986.838783227013
+      ],
+      "vel": [
+        0.0,
+        -0.5169479491049732,
+        0.05126837340923127
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": true,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -103.15551534108818,
+        85.89044745325997,
+        4986.908070408638
+      ],
+      "vel": [
+        -0.01639397171075674,
+        -0.5850090015087522,
+        0.06305133709595857
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": false,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -103.18576727722521,
+        85.30543845175121,
+        4986.984982368155
+      ],
+      "vel": [
+        -0.027529262678091183,
+        -0.6517088341626173,
+        0.0699898851774441
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -103.2313118929124,
+        84.6537296175886,
+        4987.072991061548
+      ],
+      "vel": [
+        -0.041445601469803355,
+        -0.7170746714356033,
+        0.08008791329602344
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -103.29077284739131,
+        83.936654946153,
+        4987.17109778306
+      ],
+      "vel": [
+        -0.054109470135231943,
+        -0.7811331932098841,
+        0.08927711914876196
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -103.36289767053565,
+        83.15552175294312,
+        4987.278393710424
+      ],
+      "vel": [
+        -0.06563359095289513,
+        -0.8439105457704985,
+        0.09763929671575053
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -103.44654661449765,
+        82.31161120717262,
+        4987.394051815356
+      ],
+      "vel": [
+        -0.07612054119920073,
+        -0.9054323524772837,
+        0.10524887852101696
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -103.54068250870596,
+        81.40617885469534,
+        4987.5173195020925
+      ],
+      "vel": [
+        -0.08566366619837004,
+        -0.9657237242233685,
+        0.11217359816337863
+      ],
+      "yaw": 44.997063,
+      "onGround": false,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -103.64436152791343,
+        81.0,
+        4987.647511908472
+      ],
+      "vel": [
+        -0.09434791019789253,
+        -0.0784000015258789,
+        0.11847509321953575
+      ],
+      "yaw": 44.997063,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": false,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -103.69999998807907,
+        81.0,
+        4987.699999988079
+      ],
+      "vel": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "yaw": 44.997063,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": true,
+      "wallCollision": true,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -103.69999998807907,
+        81.0,
+        4987.699999988079
+      ],
+      "vel": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "yaw": 44.997063,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": false,
+      "wallCollision": true,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -103.69999998807907,
+        81.0,
+        4987.699999988079
+      ],
+      "vel": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "yaw": 44.997063,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": false,
+      "wallCollision": true,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -103.69999998807907,
+        81.0,
+        4987.699999988079
+      ],
+      "vel": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "yaw": 44.997063,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": false,
+      "wallCollision": true,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -103.69999998807907,
+        81.0,
+        4987.699999988079
+      ],
+      "vel": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "yaw": 44.997063,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": false,
+      "wallCollision": true,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -103.69999998807907,
+        81.0,
+        4987.699999988079
+      ],
+      "vel": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "yaw": 44.997063,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": false,
+      "wallCollision": true,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    },
+    {
+      "pos": [
+        -103.69999998807907,
+        81.0,
+        4987.699999988079
+      ],
+      "vel": [
+        0.0,
+        -0.0784000015258789,
+        0.0
+      ],
+      "yaw": 44.997063,
+      "onGround": true,
+      "sneaking": false,
+      "sprinting": false,
+      "wallCollision": true,
+      "softCollision": false,
+      "moveForward": 0.98,
+      "moveStrafe": 0.0
+    }
+  ]
+}

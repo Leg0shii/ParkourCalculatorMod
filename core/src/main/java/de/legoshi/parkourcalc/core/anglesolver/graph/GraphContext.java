@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.anglesolver.graph;
 
+import de.legoshi.parkourcalc.core.anglesolver.solver.CertifiedBnb;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ClosedFormSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ClosestMiss;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
@@ -37,11 +38,11 @@ public final class GraphContext {
     private String chain;
     private volatile boolean stageLocked;
     private volatile boolean settled;
-    private volatile double dualGap = Double.NaN;
     private volatile GraphNode currentNode;
     private volatile AtomicBoolean currentToken;
     private long evalsAtNodeStart;
     private int jumpCount = -1;
+    private int foldableDf = -1;
     private boolean reachBoundSet;
     private double reachBound = Double.NaN;
     private boolean headroomBoundSet;
@@ -139,17 +140,14 @@ public final class GraphContext {
         this.settled = settled;
     }
 
-    public double dualGap() {
-        return dualGap;
-    }
-
-    public void setDualGap(double gap) {
-        this.dualGap = gap;
-    }
-
     public synchronized int jumpCount() {
         if (jumpCount < 0) jumpCount = Scoring.countJumps(scenario);
         return jumpCount;
+    }
+
+    public synchronized boolean foldableDf() {
+        if (foldableDf < 0) foldableDf = exact() && CertifiedBnb.foldable(spec) ? 1 : 0;
+        return foldableDf == 1;
     }
 
     public synchronized double reachBound() {

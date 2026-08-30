@@ -34,12 +34,14 @@ public final class BuiltinGraphs {
         int stageSec = Math.max(1, tp - (int) ((reserveNanos + 999_999_999L) / 1_000_000_000L));
         int improveSec = Math.max(1, Math.min(60, stageSec / 3));
         int ffSec = fastTier ? 3 : Math.max(1, Math.min(30, stageSec / 2));
+        int horizonSec = fastTier ? 0 : Math.max(2, Math.min(12, stageSec / 3));
 
         GraphBuilder g = new GraphBuilder(name, true);
         g.add("entry", "entry");
         g.add("horizon", "recedingHorizon")
                 .set("horizon", "window", window)
-                .set("horizon", "commit", commit);
+                .set("horizon", "commit", commit)
+                .set("horizon", "budgetSec", horizonSec);
         g.add("wrap0", "wrapYaws");
         g.add("seed", "dualChain")
                 .set("seed", "keepBetter", true)

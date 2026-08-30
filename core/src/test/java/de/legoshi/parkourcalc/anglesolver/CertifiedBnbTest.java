@@ -1,5 +1,8 @@
 package de.legoshi.parkourcalc.anglesolver;
 
+import de.legoshi.parkourcalc.SlowSolverTests;
+import de.legoshi.parkourcalc.anglesolver.harness.ProblemFixture;
+import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.CertifiedBnb;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
@@ -13,11 +16,13 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.SineTableGeometry;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -165,6 +170,11 @@ public class CertifiedBnbTest {
                 res.objective >= best - 1.0e-12);
         assertTrue("bound " + res.boundObjective + " must dominate the incumbent",
                 res.boundObjective >= res.objective - CertifiedBnb.CERT_EPS);
+
+        double verified = Scoring.verifiedObjectiveAt(model, sc, spec, res.yawsDeg, res.px, res.pz, 0.0);
+        assertFalse("certified optimum must be byte-exact lattice-attainable", Double.isNaN(verified));
+        assertEquals("certified objective must equal its byte-exact re-simulation",
+                res.objective, verified, CertifiedBnb.CERT_EPS);
     }
 
     @Test
@@ -190,6 +200,34 @@ public class CertifiedBnbTest {
         }
         assertTrue("carry 0.0049 must gate-zero at t0 in every replay", sawZeroX0);
         assertTrue("some replays must keep X alive at t1", sawOpenX1);
+    }
+
+    @Test
+    @Category(SlowSolverTests.class)
+    public void innerNoTurnCertIncumbentIsAttainableAndBoundIsSound() {
+        ProblemFixture pf = ProblemFixture.load("solve", "j1150-noturn-inner");
+        JumpSpec spec = pf.specFor(null, null);
+        CertifiedBnb.Config cfg = new CertifiedBnb.Config();
+        cfg.mode = CertifiedBnb.Mode.OPTIMIZE;
+        cfg.nodeCap = 200_000;
+        cfg.polishCap = 12;
+        cfg.deadlineNanos = System.nanoTime() + 4_000_000_000L;
+        CertifiedBnb.Result res = CertifiedBnb.solve(pf.model, spec, cfg);
+        assertFalse("cert must not decline this foldable no-turn dF problem", res.declined);
+
+        if (res.feasible) {
+            double verified = Scoring.verifiedObjectiveAt(pf.model, spec.asScenario(), spec,
+                    res.yawsDeg, res.px, res.pz, 0.0);
+            assertFalse("any cert incumbent must be byte-exact lattice-attainable", Double.isNaN(verified));
+            assertEquals("cert's reported objective must equal its byte-exact re-simulation",
+                    res.objective, verified, 1.0e-9);
+        }
+        if (res.certified) {
+            assertTrue("the certified dual bound " + res.boundObjective + " must dominate its own incumbent "
+                            + res.objective, res.boundObjective >= res.objective - CertifiedBnb.CERT_EPS);
+            assertTrue("a certified gap must be non-negative and within CERT_EPS (was " + res.gap + ")",
+                    res.gap >= 0.0 && res.gap <= CertifiedBnb.CERT_EPS);
+        }
     }
 
     @Test

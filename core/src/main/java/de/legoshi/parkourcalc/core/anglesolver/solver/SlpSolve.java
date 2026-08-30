@@ -99,9 +99,24 @@ public final class SlpSolve {
         return cfg;
     }
 
+    public static double[] optimizeLocked(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
+                                          double[] seedAbsWrapped, boolean[] lockVars, int phase1Calls,
+                                          int totalCalls, boolean inertiaAware) {
+        return optimize(exact, spec, feasTol, cancel, CLEARANCE, true, seedAbsWrapped, true, inertiaAware,
+                withCalls(phase1Calls, totalCalls), null, lockVars);
+    }
+
     private static double[] optimize(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
                                      double targetClearance, boolean hugObjective, double[] seedAbsWrapped,
                                      boolean bestEffort, boolean inertiaAware, Config cfg, ClosestMiss miss) {
+        return optimize(exact, spec, feasTol, cancel, targetClearance, hugObjective, seedAbsWrapped,
+                bestEffort, inertiaAware, cfg, miss, null);
+    }
+
+    private static double[] optimize(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
+                                     double targetClearance, boolean hugObjective, double[] seedAbsWrapped,
+                                     boolean bestEffort, boolean inertiaAware, Config cfg, ClosestMiss miss,
+                                     boolean[] lockVars) {
         List<JumpConstraint> constraints = spec.constraints;
         JumpPhysicsInputs sc = spec.asScenario();
         YawTies ties = null;
@@ -172,7 +187,11 @@ public final class SlpSolve {
         double tr = cfg.trStartDeg;
         int dims = ties == null ? n : ties.dims();
         int[] col = new int[n];
-        for (int t = 0; t < n; t++) col[t] = ties == null ? t : ties.varOf(t);
+        for (int t = 0; t < n; t++) {
+            int v = ties == null ? t : ties.varOf(t);
+            if (v >= 0 && lockVars != null && v < lockVars.length && lockVars[v]) v = -1;
+            col[t] = v;
+        }
 
         boolean[] zeroX = new boolean[n];
         boolean[] zeroZ = new boolean[n];
@@ -304,7 +323,7 @@ public final class SlpSolve {
                     }
                     if (!inertiaAware && !bestEffort) {
                         return optimize(exact, spec, feasTol, cancel, targetClearance, hugObjective,
-                                Angles.wrapAll(theta), false, true, cfg, miss);
+                                Angles.wrapAll(theta), false, true, cfg, miss, lockVars);
                     }
                     offerMiss(miss, exact, sc, compiled, theta);
                     return bestEffort ? Angles.wrapAll(theta) : null;
