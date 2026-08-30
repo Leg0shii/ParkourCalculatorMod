@@ -38,6 +38,10 @@ public final class YawTies {
         return group[t];
     }
 
+    public double offsetOf(int t) {
+        return offset[t];
+    }
+
     public int fullLength() {
         return n;
     }

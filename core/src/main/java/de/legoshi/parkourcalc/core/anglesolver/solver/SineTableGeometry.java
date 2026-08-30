@@ -195,6 +195,10 @@ public final class SineTableGeometry {
         return (int) Math.floor(gfDeg * IDX_PER_DEG);
     }
 
+    public static double degOfIndexCenter(int idx) {
+        return (idx + 0.5) / IDX_PER_DEG;
+    }
+
     public double support(int t, double gx, double gz, double loDeg, double hiDeg) {
         double s = 0.0;
         if (fly[t] != null) s += partSupport(fly[t], gx, gz, loDeg, hiDeg);

@@ -894,7 +894,7 @@ public final class AngleSolverEngine {
         double[] yaws = cand.yaws;
         String solverName = ctx.chain();
         boolean stageLocked = ctx.stageLocked();
-        double dualGap = ctx.dualGap();
+        double dualGap = Double.isNaN(ctx.reachBound()) ? Double.NaN : cand.dualGap;
         long solveNanos = System.nanoTime() - solveStart;
         if (SolverTrace.on()) {
             double doneViol = stageLocked

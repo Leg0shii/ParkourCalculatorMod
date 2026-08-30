@@ -15,6 +15,7 @@ import de.legoshi.parkourcalc.core.ui.InputData;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -74,12 +75,13 @@ public class CertifiedBnbEngineTest {
     }
 
     @Test
-    public void dfChainSpecsDeclineCleanly() {
+    public void foldableDfChainsAreHandledNotDeclined() {
         ProblemFixture fx = ProblemFixture.load("solve", "inertia-1tick-neo");
         JumpSpec spec = fx.specFor(null, null);
         assertNotNull(spec);
+        assertTrue("inertia-1tick-neo must be a foldable dF chain", CertifiedBnb.foldable(spec));
         CertifiedBnb.Result res = certify(fx.model, spec, 10000);
-        assertTrue("facing-wall (dF) specs must decline to the existing nodes", res.declined);
+        assertFalse("a foldable dF chain must no longer decline; the certified fold path owns it", res.declined);
     }
 
     private static SolveResult solveTier(String pool, boolean thorough, int optSec, long timeoutMs) {

@@ -259,7 +259,8 @@ public final class LongRunSolver {
                         }
                         Objective freeObj = last ? spec.objective
                                 : new Objective(JumpPhysicsInputs.Axis.Z, Objective.Sense.MAX, c);
-                        fr = FreeStartSolve.solveJoint(exact, new JumpSpec(freeSc, upTo, freeObj), 0.0, cancel);
+                        fr = FreeStartSolve.solveJoint(exact, new JumpSpec(freeSc, upTo, freeObj), 0.0, cancel,
+                                deadlineNanos);
                         retryCache.put(we, fr == null ? FREE_RETRY_MISS : fr);
                         if (SolverTrace.on()) {
                             SolverTrace.log("FREE", "window free retry we=%d cons=%d -> %s",
