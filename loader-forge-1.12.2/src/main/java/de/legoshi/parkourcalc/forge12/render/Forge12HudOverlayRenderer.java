@@ -20,7 +20,7 @@ public final class Forge12HudOverlayRenderer {
         int noticeColor = MacroBadgeStyle.teleportColorArgb(teleportAlpha);
         if ((noticeColor >>> 24) >= 4) {
             String notice = MacroBadgeStyle.TELEPORT_LABEL;
-            float sc = 0.25f;
+            float sc = 0.5f;
             float nx = sr.getScaledWidth() - fr.getStringWidth(notice) * sc - 4;
             float ny = 4 + fr.FONT_HEIGHT + 2;
             net.minecraft.client.renderer.GlStateManager.pushMatrix();
