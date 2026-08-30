@@ -1,5 +1,42 @@
 # Changelog
 
+## [1.11.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.10.0...v1.11.0) (2026-08-30)
+
+
+### Features
+
+* add a configurable replay start delay ([#445](https://github.com/Leg0shii/ParkourCalculatorMod/issues/445)) ([a3cd1e0](https://github.com/Leg0shii/ParkourCalculatorMod/commit/a3cd1e09b318ae9fe3507027008806f64940d195))
+* add custom target angle objective to angle solver ([#370](https://github.com/Leg0shii/ParkourCalculatorMod/issues/370)) ([121d20f](https://github.com/Leg0shii/ParkourCalculatorMod/commit/121d20f18067f8a265d0239762ab56190040aa3e))
+* add per-tick teleport destinations ([#443](https://github.com/Leg0shii/ParkourCalculatorMod/issues/443)) ([cf6d402](https://github.com/Leg0shii/ParkourCalculatorMod/commit/cf6d402bfc64de6c32d6d4ced03fd6df17349cfd)), closes [#438](https://github.com/Leg0shii/ParkourCalculatorMod/issues/438)
+* add pressure plate hitbox constraint (Ctrl+B) ([#442](https://github.com/Leg0shii/ParkourCalculatorMod/issues/442)) ([4c5226f](https://github.com/Leg0shii/ParkourCalculatorMod/commit/4c5226fd9e6f197420c63c76926f046bdee6b402)), closes [#437](https://github.com/Leg0shii/ParkourCalculatorMod/issues/437)
+* **anglesolver:** cold gate-pattern start solver + lattice-exact certified core ([#447](https://github.com/Leg0shii/ParkourCalculatorMod/issues/447)) ([96e15d0](https://github.com/Leg0shii/ParkourCalculatorMod/commit/96e15d080c86b8119b9d42f96d5de19647cab45d))
+* list Fast and Optimize as built-in graph presets in Custom ([#444](https://github.com/Leg0shii/ParkourCalculatorMod/issues/444)) ([109cc17](https://github.com/Leg0shii/ParkourCalculatorMod/commit/109cc1780f507bbf87511b00b1dd9d62a246ce18)), closes [#336](https://github.com/Leg0shii/ParkourCalculatorMod/issues/336)
+* remove the slow polish stage from the run-ticks fast solve ([#456](https://github.com/Leg0shii/ParkourCalculatorMod/issues/456)) ([e4dbf98](https://github.com/Leg0shii/ParkourCalculatorMod/commit/e4dbf9838b51d431e46ee2851ec717887a7f9377))
+* **runticks:** refine UI layout and improve min mode search logic ([#426](https://github.com/Leg0shii/ParkourCalculatorMod/issues/426)) ([2ba0745](https://github.com/Leg0shii/ParkourCalculatorMod/commit/2ba0745976ac4bd7ec8c28ed466f5a9d50c2dd4d))
+* show the in-game yaw in tick info ([#453](https://github.com/Leg0shii/ParkourCalculatorMod/issues/453)) ([6295709](https://github.com/Leg0shii/ParkourCalculatorMod/commit/62957096151ad749ef9429474b6e96eb0e3a6815))
+* **solver:** certified B&B, one-path pipeline, cleanup, free-start seed-independence ([#427](https://github.com/Leg0shii/ParkourCalculatorMod/issues/427)) ([be584ed](https://github.com/Leg0shii/ParkourCalculatorMod/commit/be584eda23c56ed23b6d1138a68e0449580e3f38))
+* **solver:** one authoritative time budget per node ([#431](https://github.com/Leg0shii/ParkourCalculatorMod/issues/431)) ([06c0573](https://github.com/Leg0shii/ParkourCalculatorMod/commit/06c0573d8005e5cef458ac4562733c8954ff22c6))
+* **ui:** allow Speed and Jump Boost amplifiers up to 255 ([#433](https://github.com/Leg0shii/ParkourCalculatorMod/issues/433)) ([575e82c](https://github.com/Leg0shii/ParkourCalculatorMod/commit/575e82cfa37a72ba48eef0b029fc2e076b41fb72))
+* **ui:** per-node and per-param help in the graph editor ([#430](https://github.com/Leg0shii/ParkourCalculatorMod/issues/430)) ([#432](https://github.com/Leg0shii/ParkourCalculatorMod/issues/432)) ([6d8fdc8](https://github.com/Leg0shii/ParkourCalculatorMod/commit/6d8fdc86f3cdfc978bd6f02a5f44f5ee9f56a683))
+
+
+### Bug Fixes
+
+* **anglesolver:** Custom defaults to the Optimize graph and budget ([#452](https://github.com/Leg0shii/ParkourCalculatorMod/issues/452)) ([f5a80b7](https://github.com/Leg0shii/ParkourCalculatorMod/commit/f5a80b763d486d6a0dff36929ccd19d3b5a90356))
+* **anglesolver:** support cross-axis dX-vs-dZ constraints in closed-form and SLP solvers ([#425](https://github.com/Leg0shii/ParkourCalculatorMod/issues/425)) ([320509e](https://github.com/Leg0shii/ParkourCalculatorMod/commit/320509ee90797b8edb6dfed288eb2aad0b3292b0))
+* **sim:** apply per-tick pitch so water trajectory matches replay ([#441](https://github.com/Leg0shii/ParkourCalculatorMod/issues/441)) ([b8a888c](https://github.com/Leg0shii/ParkourCalculatorMod/commit/b8a888c7743f14d50d5511614d0452847130e36d)), closes [#423](https://github.com/Leg0shii/ParkourCalculatorMod/issues/423)
+
+
+### Code Refactoring
+
+* **anglesolver:** remove copy-to-tick and move-to-tick from constraint menu ([#440](https://github.com/Leg0shii/ParkourCalculatorMod/issues/440)) ([40d15a3](https://github.com/Leg0shii/ParkourCalculatorMod/commit/40d15a3b208260f0a086db5a800118bbf2365bc4)), closes [#420](https://github.com/Leg0shii/ParkourCalculatorMod/issues/420)
+* **solver:** remove unreachable CountingForwardModel ([#436](https://github.com/Leg0shii/ParkourCalculatorMod/issues/436)) ([20f32b7](https://github.com/Leg0shii/ParkourCalculatorMod/commit/20f32b73b7f412b4e614120cc1574e4c2b438cae))
+
+
+### Miscellaneous Chores
+
+* weekly release train ([583011f](https://github.com/Leg0shii/ParkourCalculatorMod/commit/583011f8dd19c5476ffc2eaf24b0268283a40924))
+
 ## [1.10.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.9.0...v1.10.0) (2026-08-23)
 
 
