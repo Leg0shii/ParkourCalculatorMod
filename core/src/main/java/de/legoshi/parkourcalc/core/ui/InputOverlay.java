@@ -925,7 +925,10 @@ public final class InputOverlay {
         }
 
         if (isTeleportColumnVisible() && row.isTeleportEnabled() && tpCellMinX > rMinX) {
-            ImGui.getWindowDrawList().addRectFilled(rMinX, rMinY, tpCellMinX, rMaxY, ThemeManager.bgTintColor(0.5f));
+            ImDrawList dl = ImGui.getWindowDrawList();
+            dl.pushClipRect(rMinX, rMinY, tpCellMinX, rMaxY, false);
+            dl.addRectFilled(rMinX, rMinY, tpCellMinX, rMaxY, ThemeManager.bgTintColor(0.66f));
+            dl.popClipRect();
         }
 
         if (draggingTeleportRow >= 0 && draggingTeleportRow != index && isTeleportColumnVisible()) {

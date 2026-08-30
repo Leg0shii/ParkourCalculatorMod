@@ -21,8 +21,13 @@ public final class Forge8HudOverlayRenderer {
         int noticeColor = MacroBadgeStyle.teleportColorArgb(teleportAlpha);
         if ((noticeColor >>> 24) >= 4) {
             String notice = MacroBadgeStyle.TELEPORT_LABEL;
-            int nx = sr.getScaledWidth() - fr.getStringWidth(notice) - 4;
-            fr.drawStringWithShadow(notice, nx, 4 + fr.FONT_HEIGHT + 2, noticeColor);
+            float sc = 0.25f;
+            float nx = sr.getScaledWidth() - fr.getStringWidth(notice) * sc - 4;
+            float ny = 4 + fr.FONT_HEIGHT + 2;
+            GlStateManager.pushMatrix();
+            GlStateManager.scale(sc, sc, 1f);
+            fr.drawStringWithShadow(notice, nx / sc, ny / sc, noticeColor);
+            GlStateManager.popMatrix();
         }
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
     }
