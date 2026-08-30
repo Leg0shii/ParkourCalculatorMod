@@ -29,10 +29,10 @@ public class BuiltinPresetSelectionTest {
     }
 
     @Test
-    public void freshCustomBuildsTheFastGraphShape() {
+    public void freshCustomBuildsTheOptimizeGraphShape() {
         AngleSolverState s = new AngleSolverState();
         s.setEffort(AngleSolverState.Effort.CUSTOM);
-        assertEquals(shape(BuiltinGraphs.fast()), shape(GraphFactory.forState(s)));
+        assertEquals(shape(BuiltinGraphs.optimize(s.getOptimizeSeconds())), shape(GraphFactory.forState(s)));
     }
 
     @Test
@@ -55,13 +55,11 @@ public class BuiltinPresetSelectionTest {
     }
 
     @Test
-    public void recordedNonDefaultBudgetKeepsItsLegacyGraph() {
+    public void unknownCustomPresetFallsBackToOptimize() {
         AngleSolverState s = new AngleSolverState();
         s.setEffort(AngleSolverState.Effort.CUSTOM);
-        s.getSolveBudget().setWindow(12);
-        s.getSolveBudget().setCommit(4);
-        s.getSolveBudget().setTimeBudgetSeconds(60);
-        assertEquals(json(BuiltinGraphs.fromBudget(true, false, true, 12, 4, 60)),
-                json(GraphFactory.forState(s)));
+        s.setGraphPresetName("longer");
+        s.setOptimizeSeconds(60);
+        assertEquals(json(BuiltinGraphs.optimize(60)), json(GraphFactory.forState(s)));
     }
 }

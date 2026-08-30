@@ -7,6 +7,7 @@ import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Candidate;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
+import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphFactory;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunState;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunner;
@@ -71,8 +72,9 @@ public final class AngleSolverEngine {
         switch (effort) {
             case THOROUGH: return state.getOptimizeSeconds() * 1_000_000_000L;
             case CUSTOM: {
-                int secs = state.getSolveBudget().getTimeBudgetSeconds();
-                return secs > 0 ? secs * 1_000_000_000L : 0L;
+                if (BuiltinGraphs.FAST_PRESET.equals(state.getGraphPresetName())) return 0L;
+                int optSecs = state.getOptimizeSeconds();
+                return optSecs > 0 ? optSecs * 1_000_000_000L : 0L;
             }
             default: return 0L;
         }
