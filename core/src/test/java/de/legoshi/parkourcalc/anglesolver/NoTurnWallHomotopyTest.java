@@ -1,6 +1,6 @@
 package de.legoshi.parkourcalc.anglesolver;
 
-import de.legoshi.parkourcalc.SlowSolverTests;
+import de.legoshi.parkourcalc.VerySlowSolverTests;
 import de.legoshi.parkourcalc.anglesolver.harness.Fixtures;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.Assert.assertTrue;
 
-@Category(SlowSolverTests.class)
+@Category(VerySlowSolverTests.class)
 public class NoTurnWallHomotopyTest {
 
     private NoTurnProblem load(String capture) throws Exception {
