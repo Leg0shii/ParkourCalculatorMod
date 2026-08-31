@@ -42,8 +42,10 @@ public class NoTurnWallHomotopyTest {
         WallHomotopyDriver.Config cfg = new WallHomotopyDriver.Config();
         cfg.seedMaxEdges = 3;
         cfg.seedMinDwell = 6;
-        cfg.seedPerFirstKey = 2;
-        cfg.beamCap = 6;
+        cfg.seedPerFirstKey = 1;
+        cfg.seedBasinCertifyCap = 6;
+        cfg.beamKeepPerBasin = true;
+        cfg.beamCap = 10;
         cfg.beamPerEdge = 2;
         cfg.ladder = new double[]{0.30, 0.12, 0.08, 0.05, 0.03};
         cfg.repairKeepPerTick = 3;
@@ -93,11 +95,14 @@ public class NoTurnWallHomotopyTest {
             assertTrue("edges within the minimal ja family", best.edges <= 6);
             assertTrue("free start interior to the box", interior);
         } else {
-            System.out.println("  NOTE: fully cold seed + continuation tracking exercised here as a "
-                    + "diagnostic; the jaScreen cold seed lands in adjacent basins that the bounded "
-                    + "local repair does not carry to the six-edge needle. The delta=0 continuation "
-                    + "close to byte-exact V6 is exercised by "
-                    + "NoTurnWallHomotopyCrackTest.continuationReachesByteExactV6");
+            System.out.println("  NOTE: fully cold coverage seed (every first-key basin certified at "
+                    + "the fat wall) plus continuation tracking exercised here as a diagnostic. The "
+                    + "byte-exact six-edge family V6 descends from an SD-first coarse ancestor "
+                    + "(SD x6 S x9 WA x13 W) that both the disk relaxation and the ja screen rank near "
+                    + "the bottom of the SD basin (about 1593 of 4859 SD-first families), so no bounded "
+                    + "per-basin quota surfaces it and the covered basins lack its jump-phase geometry. "
+                    + "The delta=0 continuation close to byte-exact V6 from that coarse ancestor is "
+                    + "exercised by NoTurnWallHomotopyCrackTest.continuationReachesByteExactV6");
         }
     }
 }

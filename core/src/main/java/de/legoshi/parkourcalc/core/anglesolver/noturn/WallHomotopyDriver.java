@@ -35,6 +35,8 @@ public final class WallHomotopyDriver {
         public int seedScreenPhi = 15;
         public int seedCertifyCap = 70;
         public int seedPerFirstKey = 1;
+        public int seedBasinCertifyCap = 8;
+        public boolean beamKeepPerBasin = true;
         public int beamCap = 10;
         public int beamPerEdge = 3;
         public int repairWindowRadius = 1;
@@ -48,6 +50,7 @@ public final class WallHomotopyDriver {
         public boolean finalBroadRepair = true;
         public int finalRepairCertifyCap = 40;
         public boolean speculativeClose = true;
+        public double speculativeMaxDelta = 1.0;
         public int speculativeMinEdges = 5;
         public int speculativeMaxEdges = 5;
         public int speculativeCount = 8;
@@ -190,7 +193,7 @@ public final class WallHomotopyDriver {
                 next.addAll(repair(wp, inc, delta, graph, budget));
             }
             List<Incumbent> pool = dedup(next);
-            if (cfg.speculativeClose) {
+            if (cfg.speculativeClose && delta <= cfg.speculativeMaxDelta) {
                 Incumbent hit = speculativeClose(problem, finalGraph, pool);
                 if (hit != null) return accept(problem, hit);
             }
@@ -289,26 +292,35 @@ public final class WallHomotopyDriver {
             idx[i] = i;
         }
         Arrays.sort(idx, Comparator.comparingDouble(a -> scores[a]));
-        log("seed: enumerated " + fams.size() + " families, screened and ranked");
+
+        java.util.Map<Integer, List<Integer>> byBasin = new java.util.LinkedHashMap<>();
+        for (int r = 0; r < idx.length; r++) {
+            int fk = fams.get(idx[r])[0];
+            byBasin.computeIfAbsent(fk, k -> new ArrayList<>()).add(idx[r]);
+        }
+        log("seed: enumerated " + fams.size() + " families across " + byBasin.size() + " first-key basins");
 
         SolverGraph graph = de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs.optimize(cfg.seedOptimizeSec);
         List<Incumbent> beam = new ArrayList<>();
-        int[] perFirstKey = new int[NoTurnKeys.COUNT];
-        int cap = Math.min(cfg.seedCertifyCap, fams.size());
-        for (int r = 0; r < cap; r++) {
-            if (cancelled() || System.nanoTime() > deadline) break;
-            if (beam.size() >= cfg.beamCap) break;
-            int[] combos = fams.get(idx[r]);
-            int firstKey = combos[0];
-            if (perFirstKey[firstKey] >= cfg.seedPerFirstKey) continue;
-            boolean[] sprint = NoTurnKeys.latchSprint(combos, 0);
-            NoTurnCertifier.Result res = certify(wp, combos, sprint, graph, cfg.seedCertifyNanos);
-            if (res != null && res.feasible) {
-                log("  seed feasible rank=" + r + " firstKey=" + NoTurnKeys.label(firstKey)
-                        + " " + NoTurnKeys.describe(combos) + " obj=" + fmt(res.objective));
-                perFirstKey[firstKey]++;
-                beam.add(bind(combos, sprint, delta, res));
+        for (java.util.Map.Entry<Integer, List<Integer>> e : byBasin.entrySet()) {
+            int fk = e.getKey();
+            int feas = 0;
+            int certs = 0;
+            for (int gi : e.getValue()) {
+                if (cancelled() || System.nanoTime() > deadline) break;
+                if (feas >= cfg.seedPerFirstKey || certs >= cfg.seedBasinCertifyCap) break;
+                int[] combos = fams.get(gi);
+                boolean[] sprint = NoTurnKeys.latchSprint(combos, 0);
+                NoTurnCertifier.Result res = certify(wp, combos, sprint, graph, cfg.seedCertifyNanos);
+                certs++;
+                if (res != null && res.feasible) {
+                    log("  seed feasible basin=" + NoTurnKeys.label(fk) + " (" + certs + " certs) "
+                            + NoTurnKeys.describe(combos) + " obj=" + fmt(res.objective));
+                    feas++;
+                    beam.add(bind(combos, sprint, delta, res));
+                }
             }
+            if (feas == 0) log("  seed basin=" + NoTurnKeys.label(fk) + " infeasible in " + certs + " certs");
         }
         return dedup(beam);
     }
@@ -556,13 +568,21 @@ public final class WallHomotopyDriver {
     private List<Incumbent> trim(List<Incumbent> in) {
         in.sort(Comparator.comparingInt((Incumbent i) -> i.edges).thenComparingDouble(i -> i.objective));
         List<Incumbent> kept = new ArrayList<>();
+        if (cfg.beamKeepPerBasin) {
+            Set<Integer> basins = new LinkedHashSet<>();
+            for (Incumbent i : in) {
+                if (basins.add(i.combos[0])) kept.add(i);
+            }
+        }
         java.util.Map<Integer, Integer> perEdge = new java.util.HashMap<>();
+        for (Incumbent i : kept) perEdge.merge(i.edges, 1, Integer::sum);
         for (Incumbent i : in) {
+            if (kept.size() >= cfg.beamCap) break;
+            if (kept.contains(i)) continue;
             int c = perEdge.getOrDefault(i.edges, 0);
             if (c >= cfg.beamPerEdge) continue;
             kept.add(i);
             perEdge.put(i.edges, c + 1);
-            if (kept.size() >= cfg.beamCap) break;
         }
         for (Incumbent i : in) {
             if (kept.size() >= cfg.beamCap) break;
