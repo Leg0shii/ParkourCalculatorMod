@@ -8,6 +8,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +42,7 @@ public final class BendersMaster {
 
         public int maxCertifies = 60;
         public int continuationCap = 6;
+        public int continuationLead = 40;
         public int refineExtraAfterIncumbent = 8;
         public long deadlineNanos = 480_000_000_000L;
 
@@ -66,7 +68,10 @@ public final class BendersMaster {
         public int diskFeasibleCount;
         public boolean v6AncestorProposed;
         public boolean v6AncestorCertifiedFat;
+        public boolean v6AncestorContinued;
         public boolean v6Closed;
+        public int closedContinuationIndex = -1;
+        public int ancestorContinuationIndex = -1;
         public double bestObjective = Double.NaN;
         public final StringBuilder log = new StringBuilder();
     }
@@ -132,6 +137,10 @@ public final class BendersMaster {
                 + " mode=" + cfg.mode + " alphabet=" + cfg.alphabet.length
                 + " minDwell=" + cfg.minDwell + " maxEdges=" + cfg.maxEdges + " ja=" + cfg.ja);
 
+        if (cfg.mode == SlaveMode.FAT_CONTINUATION) {
+            return solveFatContinuation(problem, master, screens, iis, wpFat, fatGraph, finalGraph, deadline);
+        }
+
         NoTurnResult incumbent = null;
         int certifiesSinceIncumbent = 0;
 
@@ -196,6 +205,154 @@ public final class BendersMaster {
             progress.update("benders: " + incumbent.describe(), 1.0);
         }
         return incumbent;
+    }
+
+    private static final class FatFeasible {
+        final int[] combos;
+        final int edges;
+        final double objective;
+        final boolean isV6Anc;
+
+        FatFeasible(int[] combos, int edges, double objective, boolean isV6Anc) {
+            this.combos = combos;
+            this.edges = edges;
+            this.objective = objective;
+            this.isV6Anc = isV6Anc;
+        }
+
+        String key() {
+            return BendersMaster.key(combos);
+        }
+    }
+
+    private NoTurnResult solveFatContinuation(NoTurnProblem problem, MinTvMaster master,
+                                              Map<String, Screen> screens, IisExtractor iis,
+                                              NoTurnProblem wpFat, SolverGraph fatGraph,
+                                              SolverGraph finalGraph, long deadline) {
+        List<FatFeasible> pool = new ArrayList<>();
+        java.util.Set<String> continued = new java.util.LinkedHashSet<>();
+        boolean exhausted = false;
+        boolean max = problem.objective.sense == Objective.Sense.MAX;
+
+        while (!cancelled() && System.nanoTime() < deadline) {
+            while (!exhausted && !cancelled() && System.nanoTime() < deadline
+                    && trace.certifies < cfg.maxCertifies
+                    && unContinued(pool, continued) < cfg.continuationLead) {
+                int[] sigma = master.next();
+                if (sigma == null) {
+                    exhausted = true;
+                    log("enumeration exhausted");
+                    break;
+                }
+                trace.masterIterations++;
+                int edges = NoTurnKeys.countEdges(sigma);
+                trace.smallestEdgeReached = Math.min(trace.smallestEdgeReached, edges);
+
+                Screen sc = screens.get(key(sigma));
+                if (cfg.screenSkip && sc != null) {
+                    boolean skip = !sc.diskFeasible || (sc.screened && sc.viol > cfg.screenKeep);
+                    if (skip) {
+                        trace.screenSkipped++;
+                        continue;
+                    }
+                }
+                boolean isV6Anc = isV6Ancestor(sigma, problem.setupEnd);
+                if (isV6Anc) {
+                    trace.v6AncestorProposed = true;
+                    log("*** V6 ancestor proposed at iter " + trace.masterIterations + " edges=" + edges);
+                }
+                int engage = (sc != null && sc.engage != Integer.MAX_VALUE) ? sc.engage : 0;
+                boolean[] sprint = NoTurnKeys.latchSprint(sigma, engage);
+                NoTurnCertifier.Result rf = certify(wpFat, sigma, sprint, fatGraph, cfg.fatCertifyNanos);
+                trace.certifies++;
+                if (rf == null || !rf.feasible) {
+                    if (cfg.useCuts) {
+                        NoGoodCut cut = iis.extract(sigma, sprint, rf == null ? null : rf.yaws,
+                                rf == null ? problem.refStart().x : rf.startX,
+                                rf == null ? problem.refStart().z : rf.startZ);
+                        if (cut != null && cut.size() < sigma.length) {
+                            master.addCut(cut);
+                            trace.noGoodCuts++;
+                        }
+                    }
+                    continue;
+                }
+                trace.fatFeasible++;
+                pool.add(new FatFeasible(sigma.clone(), edges, rf.objective, isV6Anc));
+                if (isV6Anc) {
+                    trace.v6AncestorCertifiedFat = true;
+                    log("  *** V6 ancestor FAT-FEASIBLE #" + trace.fatFeasible + " obj=" + fmt(rf.objective));
+                } else {
+                    log("  fat-feasible#" + trace.fatFeasible + " edges=" + edges + " obj=" + fmt(rf.objective)
+                            + " [" + NoTurnKeys.describe(sigma) + "]");
+                }
+            }
+
+            boolean canRefill = !exhausted && trace.certifies < cfg.maxCertifies;
+
+            List<FatFeasible> ranked = new ArrayList<>();
+            for (FatFeasible ff : pool) if (!continued.contains(ff.key())) ranked.add(ff);
+            ranked.sort(Comparator.comparingInt((FatFeasible f) -> f.edges)
+                    .thenComparingDouble(f -> max ? -f.objective : f.objective));
+            if (ranked.isEmpty()) {
+                if (!canRefill) break;
+                continue;
+            }
+
+            for (FatFeasible ff : ranked) {
+                if (cancelled() || System.nanoTime() >= deadline) break;
+                if (trace.continuations >= cfg.continuationCap) break;
+                continued.add(ff.key());
+                trace.continuations++;
+                int idx = (int) trace.continuations;
+                if (ff.isV6Anc) {
+                    trace.v6AncestorContinued = true;
+                    trace.ancestorContinuationIndex = idx;
+                }
+                log("continuation#" + idx + " edges=" + ff.edges + " obj=" + fmt(ff.objective)
+                        + (ff.isV6Anc ? " <== V6 ANCESTOR" : "") + " [" + NoTurnKeys.describe(ff.combos) + "]");
+                NoTurnResult res = runContinuation(problem, finalGraph, ff.combos);
+                if (res != null && res.violation <= 0.0) {
+                    trace.smallestSurvivorEdges = res.edges;
+                    trace.bestObjective = res.objective;
+                    trace.closedContinuationIndex = idx;
+                    log("  continuation CLOSED edges=" + res.edges + " obj=" + fmt(res.objective)
+                            + " [" + NoTurnKeys.describe(res.combos) + "]");
+                    progress.update("benders: " + res.describe(), 1.0);
+                    return res;
+                }
+                log("  continuation#" + idx + " did not close");
+            }
+
+            if (trace.continuations >= cfg.continuationCap) break;
+            if (!canRefill && unContinued(pool, continued) == 0) break;
+        }
+
+        progress.update("benders: no byte-exact survivor in budget (iters=" + trace.masterIterations
+                + " fatFeasible=" + trace.fatFeasible + " continuations=" + trace.continuations + ")", 1.0);
+        log("no incumbent. fatFeasible=" + trace.fatFeasible + " continuations=" + trace.continuations
+                + " v6AncestorProposed=" + trace.v6AncestorProposed
+                + " v6AncestorCertifiedFat=" + trace.v6AncestorCertifiedFat
+                + " v6AncestorContinued=" + trace.v6AncestorContinued
+                + " smallestEdgeReached=" + trace.smallestEdgeReached);
+        return null;
+    }
+
+    private int unContinued(List<FatFeasible> pool, java.util.Set<String> continued) {
+        int c = 0;
+        for (FatFeasible ff : pool) if (!continued.contains(ff.key())) c++;
+        return c;
+    }
+
+    private NoTurnResult runContinuation(NoTurnProblem problem, SolverGraph finalGraph, int[] sigma) {
+        WallHomotopyDriver.Config hc = continuationConfig();
+        WallHomotopyDriver hom = new WallHomotopyDriver(model, hc, cancel, (s, f) -> { });
+        List<int[]> seeds = new ArrayList<>();
+        seeds.add(sigma);
+        NoTurnResult cont = hom.runFromSeeds(problem, finalGraph, seeds);
+        trace.certifies += hom.trace().certifies;
+        if (cont != null && cont.violation <= 0.0 && hom.trace().rediscoveredV6) trace.v6Closed = true;
+        return cont;
     }
 
     private NoTurnResult slave(NoTurnProblem problem, NoTurnProblem wp0, NoTurnProblem wpFat,
@@ -291,14 +448,15 @@ public final class BendersMaster {
         return new int[]{firstRun, firstRun + 1};
     }
 
-    private WallHomotopyDriver.Config continuationConfig() {
+    public static WallHomotopyDriver.Config buildContinuationConfig(double fatDelta, boolean ja,
+                                                                    int turnCombo, long budgetNanos) {
         WallHomotopyDriver.Config hc = new WallHomotopyDriver.Config();
-        hc.jaFree = cfg.ja;
-        hc.turnCombo = cfg.turnCombo;
-        hc.ladder = new double[]{cfg.fatDelta, 0.10, 0.06, 0.03, 0.01, 0.0};
+        hc.jaFree = ja;
+        hc.turnCombo = turnCombo;
+        hc.ladder = new double[]{fatDelta, 0.10, 0.06, 0.03, 0.01, 0.0};
         hc.beamCap = 6;
         hc.beamPerEdge = 2;
-        hc.repairKeepPerTick = 6;
+        hc.repairKeepPerTick = 7;
         hc.repairWindowRadiusMax = 1;
         hc.rungOptimizeSec = 3;
         hc.rungCertifyNanos = 4_500_000_000L;
@@ -306,8 +464,12 @@ public final class BendersMaster {
         hc.repairAllowPairs = false;
         hc.speculativeCount = 8;
         hc.speculativeCertifyCap = 16;
-        hc.totalBudgetNanos = cfg.continuationBudgetNanos;
+        hc.totalBudgetNanos = budgetNanos;
         return hc;
+    }
+
+    private WallHomotopyDriver.Config continuationConfig() {
+        return buildContinuationConfig(cfg.fatDelta, cfg.ja, cfg.turnCombo, cfg.continuationBudgetNanos);
     }
 
     private Map<String, Screen> precomputeScreens(List<int[]> raw, StructurePoolDriver screen) {
