@@ -404,6 +404,42 @@ public final class StructurePoolDriver {
         return pool;
     }
 
+    public static List<int[]> enumerateRaw(int setupEnd, boolean takeoffW, int minDwell,
+                                           int maxEdges, int[] alphabet) {
+        List<int[]> out = new ArrayList<>();
+        int[] combos = new int[setupEnd + 1];
+        enumRawSeg(out, combos, 0, -1, 0, setupEnd, takeoffW, minDwell, maxEdges, alphabet);
+        return out;
+    }
+
+    private static void enumRawSeg(List<int[]> out, int[] combos, int start, int lastLabel, int edges,
+                                   int setupEnd, boolean takeoffW, int minDwell, int maxEdges, int[] alphabet) {
+        int lastBranch = takeoffW ? setupEnd - 1 : setupEnd;
+        if (start > lastBranch) {
+            if (takeoffW) {
+                int c = NoTurnKeys.W;
+                int ne = (lastLabel >= 0 && c != lastLabel) ? edges + 1 : edges;
+                if (ne > maxEdges) return;
+                combos[setupEnd] = c;
+            }
+            out.add(combos.clone());
+            return;
+        }
+        int remaining = lastBranch - start + 1;
+        int dwell = Math.min(minDwell, remaining);
+        for (int c : alphabet) {
+            if (c == lastLabel) continue;
+            int ne = (lastLabel >= 0) ? edges + 1 : edges;
+            if (ne > maxEdges) continue;
+            for (int len = dwell; len <= remaining; len++) {
+                int rem = remaining - len;
+                if (rem > 0 && rem < minDwell) continue;
+                for (int t = start; t < start + len; t++) combos[t] = c;
+                enumRawSeg(out, combos, start + len, c, ne, setupEnd, takeoffW, minDwell, maxEdges, alphabet);
+            }
+        }
+    }
+
     private void enumSeg(int[] combos, int start, int lastLabel, int edges) {
         if (cancelled()) return;
         boolean hasTakeoff = problem.jump[setupEnd];
