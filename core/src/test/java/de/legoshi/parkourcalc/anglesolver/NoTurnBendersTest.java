@@ -87,7 +87,7 @@ public class NoTurnBendersTest {
     }
 
     @Test
-    public void j154ColdDiagnostic() throws Exception {
+    public void j154ColdCracksThroughMaster() throws Exception {
         NoTurnProblem p = load("hpk_precise/j154-noturn-ja-inner");
 
         BendersMaster.Config cfg = new BendersMaster.Config();
@@ -103,18 +103,18 @@ public class NoTurnBendersTest {
         cfg.useCuts = false;
         cfg.fatOptimizeSec = 4;
         cfg.fatCertifyNanos = 6_000_000_000L;
-        cfg.continuationCap = 2;
-        cfg.continuationBudgetNanos = 60_000_000_000L;
-        cfg.maxCertifies = 150;
-        cfg.refineExtraAfterIncumbent = 1;
-        cfg.deadlineNanos = 800_000_000_000L;
+        cfg.continuationLead = 25;
+        cfg.continuationCap = 12;
+        cfg.continuationBudgetNanos = 600_000_000_000L;
+        cfg.maxCertifies = 1_000_000;
+        cfg.deadlineNanos = 4_500_000_000_000L;
 
         BendersMaster m = new BendersMaster(p.model, cfg, new AtomicBoolean(false), (s, f) -> { });
         long t0 = System.nanoTime();
         NoTurnResult best = m.solve(p, BuiltinGraphs.optimize(8));
         double wallSec = (System.nanoTime() - t0) / 1e9;
 
-        System.out.println("=== j154 BendersMaster cold DIAGNOSTIC ===");
+        System.out.println("=== j154 BendersMaster cold ===");
         System.out.println(m.trace().log);
         System.out.println("  masterIterations=" + m.trace().masterIterations
                 + " certifies=" + m.trace().certifies + " continuations=" + m.trace().continuations
@@ -125,6 +125,9 @@ public class NoTurnBendersTest {
                         ? "none" : m.trace().smallestSurvivorEdges)
                 + " v6AncestorProposed=" + m.trace().v6AncestorProposed
                 + " v6AncestorCertifiedFat=" + m.trace().v6AncestorCertifiedFat
+                + " v6AncestorContinued=" + m.trace().v6AncestorContinued
+                + " ancestorContinuationIndex=" + m.trace().ancestorContinuationIndex
+                + " closedContinuationIndex=" + m.trace().closedContinuationIndex
                 + " v6Closed=" + m.trace().v6Closed + " wallSec=" + wallSec);
         if (best != null) {
             System.out.println("  survivor edges=" + best.edges + " keys=" + NoTurnKeys.describe(best.combos)
@@ -132,13 +135,12 @@ public class NoTurnBendersTest {
                     + " freeStart px=" + best.startX + " pz=" + best.startZ + " interior=" + interior(p, best));
         }
 
-        boolean cracked = best != null && best.violation <= 0.0 && best.ja && best.edges <= 6
-                && best.objective >= -1599.71 && best.objective <= -1599.69 && interior(p, best);
-        if (cracked) {
-            System.out.println("  j154 CRACKED COLD");
-            assertTrue("byte-exact ja optimum", true);
-        } else {
-            System.out.println("  j154 NOT cracked cold in budget (honest diagnostic; see trace above)");
-        }
+        assertNotNull("benders master cracks j154 cold", best);
+        assertTrue("byte-exact clean (FEAS_TOL=0)", best.violation <= 0.0);
+        assertTrue("jump-angle engaged on the last setup tick", best.ja);
+        assertTrue("min-edge ja family (V6 is six edges)", best.edges <= 6);
+        assertTrue("objective near the byte-exact ja optimum (X MIN, ref -1599.7001161289918)",
+                best.objective >= -1599.71 && best.objective <= -1599.69);
+        assertTrue("free start interior to the box", interior(p, best));
     }
 }
