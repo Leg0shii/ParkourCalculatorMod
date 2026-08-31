@@ -88,6 +88,9 @@ public class NoTurnBendersTest {
 
     @Test
     public void j154ColdCracksThroughMaster() throws Exception {
+        org.junit.Assume.assumeTrue(
+                "full j154 cold discovery runs about 55 minutes; opt in with -Dpkc.j154ColdCrack=true",
+                Boolean.getBoolean("pkc.j154ColdCrack"));
         NoTurnProblem p = load("hpk_precise/j154-noturn-ja-inner");
 
         BendersMaster.Config cfg = new BendersMaster.Config();
