@@ -122,13 +122,8 @@ public final class NoTurnProblem {
                 continue;
             }
             int combo = combos[t];
-            if (jump[t]) {
-                fwd[t] = NoTurnKeys.SCALE;
-                strafe[t] = 0.0F;
-            } else {
-                fwd[t] = NoTurnKeys.forwardInput(combo);
-                strafe[t] = NoTurnKeys.strafeInput(combo);
-            }
+            fwd[t] = NoTurnKeys.forwardInput(combo);
+            strafe[t] = NoTurnKeys.strafeInput(combo);
             spr[t] = sprint[t];
         }
         sc.forwardInputPerTick = fwd;

@@ -636,16 +636,24 @@ public final class Application {
         noTurnDone = false;
         noTurnResult = null;
         noTurnStatus = "No-turn: starting";
-        de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnFinder.Config cfg =
-                new de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnFinder.Config();
         de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph graph =
                 de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs.optimize(6);
-        de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnFinder finder =
-                new de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnFinder(forwardModel, cfg, noTurnCancel,
+        de.legoshi.parkourcalc.core.anglesolver.noturn.StructurePoolDriver.Config poolCfg =
+                new de.legoshi.parkourcalc.core.anglesolver.noturn.StructurePoolDriver.Config();
+        de.legoshi.parkourcalc.core.anglesolver.noturn.StructurePoolDriver driver =
+                new de.legoshi.parkourcalc.core.anglesolver.noturn.StructurePoolDriver(forwardModel, poolCfg, noTurnCancel,
                         (stage, frac) -> noTurnStatus = "No-turn: " + stage);
         noTurnThread = new Thread(() -> {
             try {
-                noTurnResult = finder.run(problem, graph);
+                de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnResult r = driver.run(problem, graph);
+                if (r == null && !noTurnCancel.get()) {
+                    de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnFinder finder =
+                            new de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnFinder(forwardModel,
+                                    new de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnFinder.Config(), noTurnCancel,
+                                    (stage, frac) -> noTurnStatus = "No-turn (beam): " + stage);
+                    r = finder.run(problem, graph);
+                }
+                noTurnResult = r;
             } catch (Throwable t) {
                 t.printStackTrace();
                 noTurnStatus = "No-turn: error";

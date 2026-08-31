@@ -111,15 +111,8 @@ public final class NoTurnModel {
     }
 
     public void magArg(int t, int combo, boolean sprintEff, boolean sprintNow, double[] out) {
-        double forward0;
-        double strafe0;
-        if (isJump[t]) {
-            forward0 = NoTurnKeys.SCALE;
-            strafe0 = 0.0;
-        } else {
-            forward0 = NoTurnKeys.forwardInput(combo);
-            strafe0 = NoTurnKeys.strafeInput(combo);
-        }
+        double forward0 = NoTurnKeys.forwardInput(combo);
+        double strafe0 = NoTurnKeys.strafeInput(combo);
         double accel = sprintEff ? accelSprint[t] : accelNoSprint[t];
         double fm = forward0 * forward0 + strafe0 * strafe0;
         double fF = 0.0;
