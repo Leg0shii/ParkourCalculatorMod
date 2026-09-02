@@ -165,6 +165,32 @@ Two of the three cold components are built and byte-exact validated in Java; the
 
 Test tiers: the ~55 min fully-cold j154 discovery (`NoTurnBendersTest.j154ColdCracksThroughMaster`) is gated behind `-Dpkc.j154ColdCrack=true` so it stays reproducible on demand without ballooning CI; the fast Benders proofs (j1150 cold through the master, the master-continuation-config guard, the IIS-extractor and min-TV-ordering unit tests) carry the very-slow and fast tiers.
 
+### Performance: where the ~55 min goes and how to push it
+
+Measured on the j154 fully-cold run: `wallSec` 3292.6, 795 certifies, about 4.1 s per certify.
+- Reaching the ancestor is cheap: the master hits V6's 3-edge ancestor at iteration 99 as the 25th fat-feasible structure, one fat certify each (~4 to 6 s) plus disk-infeasible skips.
+- The continuation phase dominates. Fat-feasible structures run best-first by fat-wall objective; the ancestor ranks 5th, so four objective-better peers run their full continuation first. Each continuation is budgeted up to 600 s and the four non-closing peers largely consume it, so roughly 40+ min is spent on continuations that never reach delta=0. The ancestor closes at continuation index 5.
+
+Levers, largest win first:
+1. **Parallelize the continuations.** They are independent and CPU-bound pure Java; running the fat-feasible pool across N cores cuts the continuation phase by about N. Lowest risk, largest wall-clock win.
+2. **Early-abort stalled continuations.** The four non-closing peers burn their full 600 s budget without advancing past a delta rung. A stall detector (abort when the ladder cannot clear a rung within K certifies) plus a smaller per-continuation budget reclaims most of that time.
+3. **Rank the fat-feasible pool so the ancestor is first, not fifth.** Re-rank at a tighter wall (delta 0.15 instead of 0.30, where fewer peers survive), or by a short probe-continuation that ranks structures by how far they track down the ladder in a small budget, rather than by fat-wall objective alone.
+4. **Sound IIS no-good cuts.** A certified-sound cut (full-support, or a drop-and-recheck-tightened truncation) prunes slabs of related infeasible structures, cutting both the enumeration and the peer count. The truncated cut is currently unsound (`useCuts=false`); making it sound is the flagged next lever and pays off most when many structures share one infeasibility cause.
+5. **Warm-start the inner certify across delta rungs** and tune the ladder (fewer, better-placed rungs near the active-set flips). Scales every certify; hardest to touch since it is the shipped engine.
+
+Combined, levers 1 to 3 plausibly bring j154 from ~55 min to well under 10 min.
+
+### Reproduction and operator notes
+
+- Fully-cold j154 discovery: `./gradlew :core:test --tests 'de.legoshi.parkourcalc.anglesolver.NoTurnBendersTest.j154ColdCracksThroughMaster' -PslowTests -PverySlowTests -Dpkc.j154ColdCrack=true -x tableStyleCheck`. The `pkc.` prefix is required: `core/build.gradle` only forwards `pkc.`-prefixed system properties to the forked test JVM, so a bare `-Dj154ColdCrack` is silently ignored and the test skips.
+- Solve a new structure cold: build a `NoTurnProblem` from the saved jump (pattern in `NoTurnBendersTest.load`), then `new BendersMaster(model, cfg, cancel, progress).solve(problem, BuiltinGraphs.optimize(8))`. Pure no-turn structures (like j1150) are solved by `StructurePoolDriver` alone; jump-angle structures (like j154) need `BendersMaster` in `FAT_CONTINUATION` mode with `ja=true`.
+- Key `BendersMaster.Config` knobs: `alphabet`, `minDwell`, `maxEdges`, `ja`, `mode`, `continuationLead` and `continuationCap` (how many fat-feasible structures to buffer and continue), `fatCertifyNanos`, `continuationBudgetNanos`, `deadlineNanos`, `useCuts`. The per-structure continuation config is centralized in `BendersMaster.buildContinuationConfig` (guarded by `NoTurnWallHomotopyCrackTest.masterContinuationConfigClosesV6FromAncestor`); do not diverge it from the config proven to close V6.
+- Trace fields (`m.trace()`): `masterIterations`, `certifies`, `fatFeasible`, `continuations`, `ancestorContinuationIndex`, `closedContinuationIndex`, `v6Closed`, `smallestEdgeReached`, and the full `log`.
+
+### In-game wiring status
+
+The **Find No-Turn** button (`Application.findNoTurn`) runs `StructurePoolDriver` as the primary cold solver with `NoTurnFinder` as the beam fallback, so it covers pure no-turn structures like j1150 in-game. `WallHomotopyDriver` and `BendersMaster` are NOT yet wired to the button, so jump-angle structures like j154 are solved through the test or CLI path, not the UI. Wiring the Benders master behind the button (a background thread with progress, mirroring the existing `StructurePoolDriver` path) is the remaining integration step for in-game ja cold-solving, and it should carry a visible budget or cancel because a cold ja solve can run minutes to tens of minutes.
+
 ### Why no cheap forward oracle is faithful (measured, `ScreenFalseNegativeDiagnosticTest`)
 
 A controlled peel-back on the true-feasible V6 family isolates why every cheap ranker gives false negatives, and rules out the tempting fixes (a finer theta grid, a better free-start model, a takeoff-velocity target). All numbers measured on j154 (n=39, takeoff tick 28, air phase ticks 29-38, four walls at 1e-6).
