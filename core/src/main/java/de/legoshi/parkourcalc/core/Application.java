@@ -98,6 +98,15 @@ public final class Application {
     private final HudMessages hudMessages = new HudMessages();
     private final OsSystemBridge systemBridge = new OsSystemBridge();
 
+    private de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel forwardModel;
+    private de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverWindow angleSolverWindow;
+    private Thread noTurnThread;
+    private volatile boolean noTurnDone;
+    private volatile de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnResult noTurnResult;
+    private volatile String noTurnStatus = "";
+    private final java.util.concurrent.atomic.AtomicBoolean noTurnCancel = new java.util.concurrent.atomic.AtomicBoolean(false);
+    private int noTurnStartTick;
+
     public Application(Simulator simulator, MinecraftAccess mc) {
         this.mc = mc;
         this.simulator = simulator;
@@ -182,7 +191,7 @@ public final class Application {
         angleSolverState = new AngleSolverState();
         FileSystemSaveStore saveStore = saveController.getSaveStore();
         String mcVersion = saveStore != null ? saveStore.getMcVersion() : null;
-        ExactJumpModel forwardModel = ExactJumpModel.forMcVersion(mcVersion);
+        forwardModel = ExactJumpModel.forMcVersion(mcVersion);
         constraintKeyController = new ConstraintKeyController(
                 mc, angleSolverState, selection, constraintSelection, saveController::markDirty,
                 forwardModel.modern(), inputData::size, settings);
@@ -218,6 +227,8 @@ public final class Application {
         GraphEditorWindow graphEditorWindow = new GraphEditorWindow(angleSolverEngine);
         AngleSolverWindow angleSolverWindow = new AngleSolverWindow(angleSolverState, settings, inputData::size, angleSolverEngine, velocityMapController.widget(), graphStore, graphEditorWindow);
         angleSolverWindow.setApplySurfaceState(this::applyPathSurfaceState);
+        angleSolverWindow.setFindNoTurn(this::findNoTurn);
+        this.angleSolverWindow = angleSolverWindow;
         angleSolverWindow.setPlayerYawSupplier(mc::getPlayerYaw);
         angleSolverWindow.setTeleportAtRow(t -> t >= 0 && t < inputData.size() && inputData.get(t).isTeleportEnabled());
         runTicks = new RunTicksController(angleSolverState, angleSolverEngine, inputData, constraintSelection,
@@ -499,6 +510,7 @@ public final class Application {
             undoController.tick(System.nanoTime());
         }
         pollSolver();
+        pollNoTurn();
         dragController.tick(
                 mc.getEyePosition(),
                 mc.getLookDirection(),
@@ -598,6 +610,99 @@ public final class Application {
         }
         if (runTicks != null) runTicks.start();
         else solverEngine.solve();
+    }
+
+    public void findNoTurn() {
+        if (angleSolverState == null || solverEngine == null || forwardModel == null) return;
+        if (noTurnThread != null) {
+            noTurnCancel.set(true);
+            pushHudMessage("No-turn search cancelled", HudMessageStyle.COLOR_WARN);
+            return;
+        }
+        if (solverEngine.isSolving() || (runTicks != null && runTicks.isRunning())) {
+            pushHudMessage("Finish the current solve first", HudMessageStyle.COLOR_WARN);
+            return;
+        }
+        if (!mc.isReady()) return;
+        de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec spec = solverEngine.debugBuildSpec();
+        de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnProblem problem =
+                de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnProblem.from(spec, forwardModel);
+        if (problem.issue != null) {
+            pushHudMessage("No-turn: " + problem.issue, HudMessageStyle.COLOR_WARN);
+            return;
+        }
+        noTurnStartTick = angleSolverState.getStartTick();
+        noTurnCancel.set(false);
+        noTurnDone = false;
+        noTurnResult = null;
+        noTurnStatus = "No-turn: starting";
+        de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph graph =
+                de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs.optimize(6);
+        de.legoshi.parkourcalc.core.anglesolver.noturn.StructurePoolDriver.Config poolCfg =
+                new de.legoshi.parkourcalc.core.anglesolver.noturn.StructurePoolDriver.Config();
+        de.legoshi.parkourcalc.core.anglesolver.noturn.StructurePoolDriver driver =
+                new de.legoshi.parkourcalc.core.anglesolver.noturn.StructurePoolDriver(forwardModel, poolCfg, noTurnCancel,
+                        (stage, frac) -> noTurnStatus = "No-turn: " + stage);
+        noTurnThread = new Thread(() -> {
+            try {
+                de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnResult r = driver.run(problem, graph);
+                if (r == null && !noTurnCancel.get()) {
+                    de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnFinder finder =
+                            new de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnFinder(forwardModel,
+                                    new de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnFinder.Config(), noTurnCancel,
+                                    (stage, frac) -> noTurnStatus = "No-turn (beam): " + stage);
+                    r = finder.run(problem, graph);
+                }
+                noTurnResult = r;
+            } catch (Throwable t) {
+                t.printStackTrace();
+                noTurnStatus = "No-turn: error";
+            } finally {
+                noTurnDone = true;
+            }
+        }, "noturn-finder");
+        noTurnThread.setDaemon(true);
+        noTurnThread.start();
+        pushHudMessage("No-turn search started");
+    }
+
+    private void pollNoTurn() {
+        if (angleSolverWindow != null) {
+            angleSolverWindow.setNoTurnStatus(noTurnThread != null ? noTurnStatus : "");
+        }
+        if (noTurnThread == null || !noTurnDone) return;
+        noTurnThread = null;
+        de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnResult r = noTurnResult;
+        if (r == null) {
+            pushHudMessage("No-turn: none found", HudMessageStyle.COLOR_DANGER);
+            return;
+        }
+        applyNoTurn(r);
+        pushHudMessage("No-turn applied · " + r.describe(), HudMessageStyle.COLOR_OK);
+    }
+
+    private void applyNoTurn(de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnResult r) {
+        int start = noTurnStartTick;
+        if (!r.warm) {
+            for (int t = 0; t < r.combos.length; t++) {
+                int idx = start + t;
+                if (idx < 0 || idx >= inputData.size()) continue;
+                InputRow row = inputData.get(idx);
+                int c = r.combos[t];
+                row.setKeyActive(InputRow.Key.W, de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnKeys.forwardSign(c) > 0);
+                row.setKeyActive(InputRow.Key.S, de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnKeys.forwardSign(c) < 0);
+                row.setKeyActive(InputRow.Key.A, de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnKeys.strafeSign(c) > 0);
+                row.setKeyActive(InputRow.Key.D, de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnKeys.strafeSign(c) < 0);
+                row.setKeyActive(InputRow.Key.SPRINT, r.sprint[t]);
+            }
+        }
+        if (r.yaws != null) {
+            AngleSolverEngine.writeYawRows(inputData.getRows(), start, r.yaws, (float) boxController.getYaw(start));
+        }
+        Vec3dCore cur = runner.getStartPosition();
+        runner.setStartPosition(new Vec3dCore(r.startX, cur.y, r.startZ));
+        saveController.markDirty();
+        onUserChange(start);
     }
 
     private boolean solveRangeCrossesTeleport() {
