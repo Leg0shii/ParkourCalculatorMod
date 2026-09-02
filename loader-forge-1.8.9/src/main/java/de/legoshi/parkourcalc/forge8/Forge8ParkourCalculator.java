@@ -89,6 +89,7 @@ public class Forge8ParkourCalculator {
     private KeyBinding solverStartTickKeyBinding;
     private KeyBinding solverEndTickKeyBinding;
     private KeyBinding rerunSimulationKeyBinding;
+    private KeyBinding togglePathKeyBinding;
     private KeyBinding captureMomentumBlockKeyBinding;
     private KeyBinding captureCollisionBlockKeyBinding;
     private KeyBinding captureLandBlockKeyBinding;
@@ -149,6 +150,8 @@ public class Forge8ParkourCalculator {
         ClientRegistry.registerKeyBinding(solverEndTickKeyBinding);
         rerunSimulationKeyBinding = new KeyBinding("key.parkourcalculator.rerun_simulation", Keyboard.KEY_J, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(rerunSimulationKeyBinding);
+        togglePathKeyBinding = new KeyBinding("key.parkourcalculator.toggle_path", Keyboard.KEY_Y, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(togglePathKeyBinding);
         if (blockCaptureEnabled) {
             captureMomentumBlockKeyBinding = new KeyBinding("key.parkourcalculator.capture_momentum_block", Keyboard.KEY_M, "key.categories.parkourcalculator");
             ClientRegistry.registerKeyBinding(captureMomentumBlockKeyBinding);
@@ -336,6 +339,10 @@ public class Forge8ParkourCalculator {
         while (rerunSimulationKeyBinding.isPressed()) {
             rerunSimulationPressed = true;
         }
+        boolean togglePathPressed = false;
+        while (togglePathKeyBinding.isPressed()) {
+            togglePathPressed = true;
+        }
         boolean captureMomentum = false;
         boolean captureCollision = false;
         boolean captureLand = false;
@@ -390,6 +397,9 @@ public class Forge8ParkourCalculator {
             }
             if (rerunSimulationPressed && chordFree) {
                 application.runSimulation();
+            }
+            if (togglePathPressed && chordFree) {
+                application.toggleShowPath();
             }
             if (captureMomentum && chordFree) {
                 application.captureAngleSolverBlock(BlockSelection.Kind.MOMENTUM);
@@ -464,12 +474,17 @@ public class Forge8ParkourCalculator {
             application.runSimulation();
             return true;
         }
+        if (keyCode == togglePathKeyBinding.getKeyCode()) {
+            application.toggleShowPath();
+            return true;
+        }
         return false;
     }
 
     @SubscribeEvent
     public void onWorldRender(RenderWorldLastEvent event) {
         application.tickDrag();
+        if (!application.getSettings().showPath) return;
         if (application.isPlaybackRunning() && !application.getSettings().keepBoxesDuringPlayback) return;
         worldRenderer.render(event.partialTicks);
     }

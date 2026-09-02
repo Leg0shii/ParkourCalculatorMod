@@ -313,6 +313,12 @@ public final class Application {
         SettingsIO.save(settingsPath, settings);
     }
 
+    public void toggleShowPath() {
+        settings.showPath = !settings.showPath;
+        saveSettings();
+        pushHudMessage(settings.showPath ? "Path shown" : "Path hidden");
+    }
+
     /** Loader calls this each frame with the display height; resolves the auto-scale sentinel once, then persists. */
     public void resolveAutoScaleIfNeeded(int displayHeightPx) {
         if (settings.scaleIndex != Settings.AUTO_SCALE_INDEX) return;
