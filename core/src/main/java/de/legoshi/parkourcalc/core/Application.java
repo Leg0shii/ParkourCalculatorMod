@@ -176,7 +176,7 @@ public final class Application {
 
     public void setupUi() {
         inputOverlay = new InputOverlay(inputData, settings, selection, this::onUserChange,
-                this::setStartToPlayer, playback, mc, boxController
+                this::setStartToPlayer, playback, mc, boxController, this::pushHudMessage
         );
 
         angleSolverState = new AngleSolverState();
