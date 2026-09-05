@@ -1451,7 +1451,7 @@ public final class InputOverlay {
             Vec3dCore p = state.position;
             float yaw = wrapDegrees(state.yaw);
             float pitch = boxController.getPitch(row);
-            String command = "/tp @p " + p.x + " " + p.y + " " + p.z + " " + yaw + " " + pitch;
+            String command = "/tp " + p.x + " " + p.y + " " + p.z + " " + yaw + " " + pitch;
             ImGui.setClipboardText(command);
             if (hudMessage != null) {
                 hudMessage.accept("Copied teleport for tick " + (row + 1));
