@@ -58,19 +58,24 @@ public final class BucketAscentPolish {
     }
 
     public static double[] polish(ForwardModel model, JumpSpec spec, double[] startAbsWrapped, Config cfg, AtomicBoolean cancel, boolean tailScore) {
+        return polish(model, spec, startAbsWrapped, cfg, cancel, tailScore, null);
+    }
+
+    public static double[] polish(ForwardModel model, JumpSpec spec, double[] startAbsWrapped, Config cfg, AtomicBoolean cancel, boolean tailScore, int[] freeTicks) {
         JumpConstraintCompiler.Compiled c = JumpConstraintCompiler.compile(spec);
         JumpPhysicsInputs scenario = spec.asScenario();
         Objective obj = spec.objective;
         double sign = obj.sense == Objective.Sense.MAX ? -1.0 : 1.0;
         int n = startAbsWrapped.length;
-        int[][] pairs = pairs(n, cfg.pairSpan);
+        boolean[] isFree = freeMask(freeTicks, n);
+        int[][] pairs = pairs(n, cfg.pairSpan, isFree);
         TailScorer scorer = tailScore ? new TailScorer(model, scenario, c, obj, sign, n) : null;
 
         double[] best = startAbsWrapped.clone();
         if (score(model, scenario, c, obj, sign, best) == Double.POSITIVE_INFINITY) {
             return best; // start not strictly feasible: leave it (the engine only polishes feasible results)
         }
-        best = ascend(best, model, scenario, c, obj, sign, pairs, cfg, cancel, scorer);
+        best = ascend(best, model, scenario, c, obj, sign, pairs, cfg, cancel, scorer, isFree);
         double bestScore = score(model, scenario, c, obj, sign, best);
 
         if (cfg.restarts > 0) {
@@ -79,8 +84,11 @@ public final class BucketAscentPolish {
                 if (cancel != null && cancel.get()) throw new SolveCancelledException();
                 double[] y = best.clone();
                 double mag = 0.5 + 6.0 * rng.nextDouble();
-                for (int t = 0; t < n; t++) y[t] += (rng.nextDouble() * 2.0 - 1.0) * mag;
-                y = ascend(y, model, scenario, c, obj, sign, pairs, cfg, cancel, scorer);
+                for (int t = 0; t < n; t++) {
+                    double d = (rng.nextDouble() * 2.0 - 1.0) * mag;
+                    if (isFree[t]) y[t] += d;
+                }
+                y = ascend(y, model, scenario, c, obj, sign, pairs, cfg, cancel, scorer, isFree);
                 double s = score(model, scenario, c, obj, sign, y);
                 if (s < bestScore) { bestScore = s; best = y; }
             }
@@ -88,35 +96,36 @@ public final class BucketAscentPolish {
         return best;
     }
 
-    private static double[] ascend(double[] start, ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign, int[][] pairs, Config cfg, AtomicBoolean cancel, TailScorer scorer) {
+    private static double[] ascend(double[] start, ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign, int[][] pairs, Config cfg, AtomicBoolean cancel, TailScorer scorer, boolean[] isFree) {
         double[] y = start.clone();
         if (score(model, scenario, c, obj, sign, y) == Double.POSITIVE_INFINITY) return y;
-        b1refine(y, model, scenario, c, obj, sign, cfg, cancel, scorer);
+        b1refine(y, model, scenario, c, obj, sign, cfg, cancel, scorer, isFree);
         for (int round = 0; round < cfg.maxRounds; round++) {
             boolean moved = false;
             for (double[] r : cfg.b2) {
                 if (block2(y, pairs, r[0], r[1], model, scenario, c, obj, sign, cancel, scorer)) moved = true;
             }
-            b1refine(y, model, scenario, c, obj, sign, cfg, cancel, scorer);
+            b1refine(y, model, scenario, c, obj, sign, cfg, cancel, scorer, isFree);
             if (!moved) break;
         }
         return y;
     }
 
-    private static void b1refine(double[] y, ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign, Config cfg, AtomicBoolean cancel, TailScorer scorer) {
+    private static void b1refine(double[] y, ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign, Config cfg, AtomicBoolean cancel, TailScorer scorer, boolean[] isFree) {
         for (double[] r : cfg.b1) {
             for (int it = 0; it < 60; it++) {
-                if (!block1(y, r[0], r[1], model, scenario, c, obj, sign, cancel, scorer)) break;
+                if (!block1(y, r[0], r[1], model, scenario, c, obj, sign, cancel, scorer, isFree)) break;
             }
         }
     }
 
     /** Scan each tick over [-win, win] at step; keep the best strictly-feasible improvement. */
-    private static boolean block1(double[] y, double win, double step, ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign, AtomicBoolean cancel, TailScorer scorer) {
+    private static boolean block1(double[] y, double win, double step, ForwardModel model, JumpPhysicsInputs scenario, JumpConstraintCompiler.Compiled c, Objective obj, double sign, AtomicBoolean cancel, TailScorer scorer, boolean[] isFree) {
         boolean improved = false;
         double best = scorer != null ? scorer.sync(y) : score(model, scenario, c, obj, sign, y);
         int n = y.length;
         for (int t = 0; t < n; t++) {
+            if (!isFree[t]) continue;
             if (cancel != null && cancel.get()) throw new SolveCancelledException();
             double orig = y[t], bestY = orig, bestO = best;
             for (double d = -win; d <= win + 1e-12; d += step) {
@@ -154,12 +163,27 @@ public final class BucketAscentPolish {
         return improved;
     }
 
-    private static int[][] pairs(int n, int span) {
+    private static int[][] pairs(int n, int span, boolean[] isFree) {
         List<int[]> p = new ArrayList<>();
         for (int i = 0; i < n; i++) {
-            for (int d = 1; d <= span && i + d < n; d++) p.add(new int[]{i, i + d});
+            if (!isFree[i]) continue;
+            for (int d = 1; d <= span && i + d < n; d++) {
+                if (isFree[i + d]) p.add(new int[]{i, i + d});
+            }
         }
         return p.toArray(new int[0][]);
+    }
+
+    private static boolean[] freeMask(int[] freeTicks, int n) {
+        boolean[] m = new boolean[n];
+        if (freeTicks == null) {
+            java.util.Arrays.fill(m, true);
+            return m;
+        }
+        for (int t : freeTicks) {
+            if (t >= 0 && t < n) m[t] = true;
+        }
+        return m;
     }
 
     /** sign*objective via the exact wrap + game-facing + byte-exact forward; +inf if any wall is crossed. */
