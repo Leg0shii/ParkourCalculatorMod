@@ -45,6 +45,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
     private static KeyMapping solverStartTickKeyBinding;
     private static KeyMapping solverEndTickKeyBinding;
     private static KeyMapping rerunSimulationKeyBinding;
+    private static KeyMapping copyTeleportKeyBinding;
     private static KeyMapping captureMomentumBlockKeyBinding;
     private static KeyMapping captureCollisionBlockKeyBinding;
     private static KeyMapping captureLandBlockKeyBinding;
@@ -89,6 +90,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         solverStartTickKeyBinding = key("key.parkourcalculator.set_solver_start", GLFW.GLFW_KEY_I);
         solverEndTickKeyBinding = key("key.parkourcalculator.set_solver_end", GLFW.GLFW_KEY_O);
         rerunSimulationKeyBinding = key("key.parkourcalculator.rerun_simulation", GLFW.GLFW_KEY_J);
+        copyTeleportKeyBinding = key("key.parkourcalculator.copy_teleport", GLFW.GLFW_KEY_K);
         if (blockCaptureEnabled) {
             captureMomentumBlockKeyBinding = key("key.parkourcalculator.capture_momentum_block", GLFW.GLFW_KEY_M);
             captureCollisionBlockKeyBinding = key("key.parkourcalculator.capture_collision_block", GLFW.GLFW_KEY_N);
@@ -286,6 +288,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         while (rerunSimulationKeyBinding.consumeClick()) {
             rerunSimulationPressed = true;
         }
+        boolean copyTeleportPressed = false;
+        while (copyTeleportKeyBinding.consumeClick()) {
+            copyTeleportPressed = true;
+        }
         boolean captureMomentum = false;
         boolean captureCollision = false;
         boolean captureLand = false;
@@ -345,6 +351,9 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
         if (rerunSimulationPressed && canDispatch) {
             application.runSimulation();
+        }
+        if (copyTeleportPressed && canDispatch) {
+            application.copyTeleportCommand();
         }
         if (captureMomentum && canDispatch) {
             application.captureAngleSolverBlock(BlockSelection.Kind.MOMENTUM);
@@ -415,6 +424,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
         if (glfwKey == boundKey(rerunSimulationKeyBinding)) {
             application.runSimulation();
+            return true;
+        }
+        if (glfwKey == boundKey(copyTeleportKeyBinding)) {
+            application.copyTeleportCommand();
             return true;
         }
         return false;

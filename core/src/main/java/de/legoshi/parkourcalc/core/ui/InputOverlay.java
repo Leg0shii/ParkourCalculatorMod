@@ -10,6 +10,7 @@ import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverTable;
 import de.legoshi.parkourcalc.core.ui.anglesolver.SolverWidgets;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
+import de.legoshi.parkourcalc.core.ui.util.TeleportCommand;
 import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImDrawList;
 import imgui.ImGui;
@@ -1448,22 +1449,11 @@ public final class InputOverlay {
         TickState state = boxController.getState(row);
         if (state == null) return;
         if (contextButton(MENU_COPY_TELEPORT)) {
-            Vec3dCore p = state.position;
-            float yaw = wrapDegrees(state.yaw);
-            float pitch = boxController.getPitch(row);
-            String command = "/tp " + p.x + " " + p.y + " " + p.z + " " + yaw + " " + pitch;
-            ImGui.setClipboardText(command);
+            ImGui.setClipboardText(TeleportCommand.format(state.position, state.yaw, boxController.getPitch(row)));
             if (hudMessage != null) {
                 hudMessage.accept("Copied teleport for tick " + (row + 1));
             }
         }
-    }
-
-    private static float wrapDegrees(float value) {
-        float f = value % 360.0f;
-        if (f >= 180.0f) f -= 360.0f;
-        if (f < -180.0f) f += 360.0f;
-        return f;
     }
 
     private void renderTeleportColumn(InputRow row, int rowIndex) {
