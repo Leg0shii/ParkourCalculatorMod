@@ -84,6 +84,7 @@ public class Forge12ParkourCalculator {
     private KeyBinding solverStartTickKeyBinding;
     private KeyBinding solverEndTickKeyBinding;
     private KeyBinding rerunSimulationKeyBinding;
+    private KeyBinding togglePathKeyBinding;
     private KeyBinding copyTeleportKeyBinding;
     private KeyBinding captureMomentumBlockKeyBinding;
     private KeyBinding captureCollisionBlockKeyBinding;
@@ -145,6 +146,8 @@ public class Forge12ParkourCalculator {
         ClientRegistry.registerKeyBinding(solverEndTickKeyBinding);
         rerunSimulationKeyBinding = new KeyBinding("key.parkourcalculator.rerun_simulation", Keyboard.KEY_J, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(rerunSimulationKeyBinding);
+        togglePathKeyBinding = new KeyBinding("key.parkourcalculator.toggle_path", Keyboard.KEY_Y, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(togglePathKeyBinding);
         copyTeleportKeyBinding = new KeyBinding("key.parkourcalculator.copy_teleport", Keyboard.KEY_K, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(copyTeleportKeyBinding);
         if (blockCaptureEnabled) {
@@ -334,6 +337,10 @@ public class Forge12ParkourCalculator {
         while (rerunSimulationKeyBinding.isPressed()) {
             rerunSimulationPressed = true;
         }
+        boolean togglePathPressed = false;
+        while (togglePathKeyBinding.isPressed()) {
+            togglePathPressed = true;
+        }
         boolean copyTeleportPressed = false;
         while (copyTeleportKeyBinding.isPressed()) {
             copyTeleportPressed = true;
@@ -392,6 +399,9 @@ public class Forge12ParkourCalculator {
             }
             if (rerunSimulationPressed && chordFree) {
                 application.runSimulation();
+            }
+            if (togglePathPressed && chordFree) {
+                application.toggleShowPath();
             }
             if (copyTeleportPressed && chordFree) {
                 application.copyTeleportCommand();
@@ -469,6 +479,10 @@ public class Forge12ParkourCalculator {
             application.runSimulation();
             return true;
         }
+        if (keyCode == togglePathKeyBinding.getKeyCode()) {
+            application.toggleShowPath();
+            return true;
+        }
         if (keyCode == copyTeleportKeyBinding.getKeyCode()) {
             application.copyTeleportCommand();
             return true;
@@ -479,6 +493,7 @@ public class Forge12ParkourCalculator {
     @SubscribeEvent
     public void onWorldRender(RenderWorldLastEvent event) {
         application.tickDrag();
+        if (!application.getSettings().showPath) return;
         if (application.isPlaybackRunning() && !application.getSettings().keepBoxesDuringPlayback) return;
         worldRenderer.render(event.getPartialTicks());
     }

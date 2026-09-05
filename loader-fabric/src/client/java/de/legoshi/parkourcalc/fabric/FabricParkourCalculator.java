@@ -44,6 +44,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
     private static KeyMapping solverStartTickKeyBinding;
     private static KeyMapping solverEndTickKeyBinding;
     private static KeyMapping rerunSimulationKeyBinding;
+    private static KeyMapping togglePathKeyBinding;
     private static KeyMapping copyTeleportKeyBinding;
     private static KeyMapping captureMomentumBlockKeyBinding;
     private static KeyMapping captureCollisionBlockKeyBinding;
@@ -133,6 +134,12 @@ public class FabricParkourCalculator implements ClientModInitializer {
                 "key.parkourcalculator.rerun_simulation",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_J,
+                category
+        ));
+        togglePathKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "key.parkourcalculator.toggle_path",
+                InputConstants.Type.KEYSYM,
+                GLFW.GLFW_KEY_Y,
                 category
         ));
         copyTeleportKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
@@ -340,6 +347,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         while (rerunSimulationKeyBinding.consumeClick()) {
             rerunSimulationPressed = true;
         }
+        boolean togglePathPressed = false;
+        while (togglePathKeyBinding.consumeClick()) {
+            togglePathPressed = true;
+        }
         boolean copyTeleportPressed = false;
         while (copyTeleportKeyBinding.consumeClick()) {
             copyTeleportPressed = true;
@@ -404,6 +415,9 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
         if (rerunSimulationPressed && chordFree) {
             application.runSimulation();
+        }
+        if (togglePathPressed && chordFree) {
+            application.toggleShowPath();
         }
         if (copyTeleportPressed && chordFree) {
             application.copyTeleportCommand();
@@ -476,6 +490,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
             application.setSolverLandingTickFromSelection();
             return true;
         }
+        if (glfwKey == boundKey(togglePathKeyBinding)) {
+            application.toggleShowPath();
+            return true;
+        }
         if (glfwKey == boundKey(copyTeleportKeyBinding)) {
             application.copyTeleportCommand();
             return true;
@@ -537,17 +555,23 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     public static void onWorldRender(LevelRenderContext context) {
         application.tickDrag();
+        boolean showPath = application.getSettings().showPath;
         if (application.isPlaybackRunning()) {
             application.renderPlayback();
-            if (application.getSettings().keepBoxesDuringPlayback) {
+            if (showPath && application.getSettings().keepBoxesDuringPlayback) {
                 worldRenderer.render(context);
             }
             return;
         }
-        worldRenderer.render(context);
+        if (showPath) {
+            worldRenderer.render(context);
+        }
     }
 
     private static void onCollectSubmits(LevelRenderContext context) {
+        if (!application.getSettings().showPath) {
+            return;
+        }
         if (application.isPlaybackRunning() && !application.getSettings().keepBoxesDuringPlayback) {
             return;
         }

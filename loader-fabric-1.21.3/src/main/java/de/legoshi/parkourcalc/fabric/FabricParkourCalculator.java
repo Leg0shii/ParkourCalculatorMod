@@ -45,6 +45,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
     private static KeyMapping solverStartTickKeyBinding;
     private static KeyMapping solverEndTickKeyBinding;
     private static KeyMapping rerunSimulationKeyBinding;
+    private static KeyMapping togglePathKeyBinding;
     private static KeyMapping copyTeleportKeyBinding;
     private static KeyMapping captureMomentumBlockKeyBinding;
     private static KeyMapping captureCollisionBlockKeyBinding;
@@ -90,6 +91,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         solverStartTickKeyBinding = key("key.parkourcalculator.set_solver_start", GLFW.GLFW_KEY_I);
         solverEndTickKeyBinding = key("key.parkourcalculator.set_solver_end", GLFW.GLFW_KEY_O);
         rerunSimulationKeyBinding = key("key.parkourcalculator.rerun_simulation", GLFW.GLFW_KEY_J);
+        togglePathKeyBinding = key("key.parkourcalculator.toggle_path", GLFW.GLFW_KEY_Y);
         copyTeleportKeyBinding = key("key.parkourcalculator.copy_teleport", GLFW.GLFW_KEY_K);
         if (blockCaptureEnabled) {
             captureMomentumBlockKeyBinding = key("key.parkourcalculator.capture_momentum_block", GLFW.GLFW_KEY_M);
@@ -288,6 +290,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         while (rerunSimulationKeyBinding.consumeClick()) {
             rerunSimulationPressed = true;
         }
+        boolean togglePathPressed = false;
+        while (togglePathKeyBinding.consumeClick()) {
+            togglePathPressed = true;
+        }
         boolean copyTeleportPressed = false;
         while (copyTeleportKeyBinding.consumeClick()) {
             copyTeleportPressed = true;
@@ -351,6 +357,9 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
         if (rerunSimulationPressed && canDispatch) {
             application.runSimulation();
+        }
+        if (togglePathPressed && canDispatch) {
+            application.toggleShowPath();
         }
         if (copyTeleportPressed && canDispatch) {
             application.copyTeleportCommand();
@@ -426,6 +435,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
             application.runSimulation();
             return true;
         }
+        if (glfwKey == boundKey(togglePathKeyBinding)) {
+            application.toggleShowPath();
+            return true;
+        }
         if (glfwKey == boundKey(copyTeleportKeyBinding)) {
             application.copyTeleportCommand();
             return true;
@@ -469,15 +482,18 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     public static void onWorldRenderClassic(PoseStack poseStack, Vec3 camPos) {
         application.tickDrag();
+        boolean showPath = application.getSettings().showPath;
         MultiBufferSource.BufferSource buffers = Minecraft.getInstance().renderBuffers().bufferSource();
         if (application.isPlaybackRunning()) {
             application.renderPlayback();
-            if (application.getSettings().keepBoxesDuringPlayback) {
+            if (showPath && application.getSettings().keepBoxesDuringPlayback) {
                 worldRenderer.render(poseStack, buffers, camPos);
             }
             return;
         }
-        worldRenderer.render(poseStack, buffers, camPos);
+        if (showPath) {
+            worldRenderer.render(poseStack, buffers, camPos);
+        }
     }
 
     public static void onHudRender(GuiGraphics context) {
