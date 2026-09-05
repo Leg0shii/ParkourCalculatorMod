@@ -45,6 +45,8 @@ public final class NodeHelp {
     static {
         shared("budgetSec", "How many seconds this stage may run. 0 means no separate limit, so it just"
                 + " shares the overall solve time. Higher lets it search longer.");
+        shared("budgetMs", "A finer millisecond cap on this stage, used to bail out fast when it is only"
+                + " a first attempt. 0 means no millisecond cap, so the second-based limit applies.");
         shared("tickCap", "If the jump takes more than this many ticks, skip this stage entirely."
                 + " A guard so very long jumps do not make the solve crawl.");
         shared("labelSuffix", "Optional text added to the solution's name when this stage succeeds, so you"

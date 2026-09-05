@@ -13,13 +13,24 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class BuiltinGraphsTest {
 
-    private static final List<String> PIPELINE = Arrays.asList(
+    private static final List<String> FAST_NODES = Arrays.asList(
+            "entry", "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
+            "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap", "translate", "emit");
+
+    private static final List<String> FAST_CHAIN = Arrays.asList(
+            "entry", "seed", "horizon", "wrap0", "cap1", "freeRescue", "peel", "freeImprove",
+            "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap", "translate", "emit");
+
+    private static final List<String> OPTIMIZE_NODES = Arrays.asList(
             "entry", "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
             "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap", "translate", "snap", "emit");
+
+    private static final List<String> OPTIMIZE_CHAIN = OPTIMIZE_NODES;
 
     private static List<String> nodeIds(SolverGraph g) {
         List<String> ids = new ArrayList<String>();
@@ -27,10 +38,10 @@ public class BuiltinGraphsTest {
         return ids;
     }
 
-    private static void assertLinear(SolverGraph g) {
-        for (int i = 0; i < PIPELINE.size() - 1; i++) {
-            String from = PIPELINE.get(i);
-            String to = PIPELINE.get(i + 1);
+    private static void assertLinear(SolverGraph g, List<String> chain) {
+        for (int i = 0; i < chain.size() - 1; i++) {
+            String from = chain.get(i);
+            String to = chain.get(i + 1);
             int wired = 0;
             for (Guarantee br : Guarantee.values()) {
                 if (g.edgeFor(from, br) == null) continue;
@@ -42,15 +53,20 @@ public class BuiltinGraphsTest {
     }
 
     @Test
-    public void fastAndOptimizeShareTheSamePipelineShape() {
+    public void fastIsSeedFirstWithoutLeafSnap() {
         SolverGraph fast = BuiltinGraphs.fast();
-        SolverGraph opt = BuiltinGraphs.optimize(50);
         assertFalse(GraphValidator.hasErrors(GraphValidator.validate(fast)));
+        assertEquals(FAST_NODES, nodeIds(fast));
+        assertLinear(fast, FAST_CHAIN);
+        assertNull("fast has no leaf snap stage", fast.node("snap"));
+    }
+
+    @Test
+    public void optimizeIsHorizonFirstWithLeafSnap() {
+        SolverGraph opt = BuiltinGraphs.optimize(50);
         assertFalse(GraphValidator.hasErrors(GraphValidator.validate(opt)));
-        assertEquals(PIPELINE, nodeIds(fast));
-        assertEquals(PIPELINE, nodeIds(opt));
-        assertLinear(fast);
-        assertLinear(opt);
+        assertEquals(OPTIMIZE_NODES, nodeIds(opt));
+        assertLinear(opt, OPTIMIZE_CHAIN);
     }
 
     @Test
@@ -66,15 +82,26 @@ public class BuiltinGraphsTest {
         assertTrue(opt.node("wrap").params.getInt("budgetSec") > 0);
         assertEquals(0, fast.node("seed").params.getInt("warmSec"));
         assertEquals(1, opt.node("seed").params.getInt("warmSec"));
-        assertEquals(0, fast.node("snap").params.getInt("pairPass"));
+        assertEquals(BuiltinGraphs.FAST_SEED_CAP_MS, fast.node("seed").params.getInt("budgetMs"));
+        assertEquals(0, opt.node("seed").params.getInt("budgetMs"));
+        assertNull("fast has no leaf snap stage", fast.node("snap"));
         assertEquals(1, opt.node("snap").params.getInt("pairPass"));
     }
 
     @Test
-    public void customFollowsTheSameShape() {
+    public void fastRunTicksIsSeedFirstAndUncapped() {
+        SolverGraph rt = BuiltinGraphs.fastRunTicks();
+        assertFalse(GraphValidator.hasErrors(GraphValidator.validate(rt)));
+        assertEquals(FAST_NODES, nodeIds(rt));
+        assertLinear(rt, FAST_CHAIN);
+        assertEquals(0, rt.node("seed").params.getInt("budgetMs"));
+    }
+
+    @Test
+    public void customFollowsTheOptimizeShape() {
         SolverGraph g = BuiltinGraphs.fromBudget(true, true, true, 10, 3, 60);
         assertFalse(GraphValidator.hasErrors(GraphValidator.validate(g)));
-        assertEquals(PIPELINE, nodeIds(g));
-        assertLinear(g);
+        assertEquals(OPTIMIZE_NODES, nodeIds(g));
+        assertLinear(g, OPTIMIZE_CHAIN);
     }
 }

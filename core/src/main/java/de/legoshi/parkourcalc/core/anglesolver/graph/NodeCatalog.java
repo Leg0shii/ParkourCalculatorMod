@@ -94,6 +94,7 @@ public final class NodeCatalog {
                 .branch(Branch.preserves(Guarantee.NONE))
                 .param(ParamSpec.bool("keepBetter", "Keep better vs incumbent", false))
                 .param(ParamSpec.integer("budgetSec", "Max time (s)", 0, 600, 0))
+                .param(ParamSpec.integer("budgetMs", "Max time (ms)", 0, 600000, 0))
                 .param(ParamSpec.integer("slpPhase1Calls", "SLP phase-1 calls", 1, 10000, 40))
                 .param(ParamSpec.integer("slpTotalCalls", "SLP total calls", 1, 10000, 60))
                 .param(ParamSpec.decimal("slpTrStartDeg", "SLP trust region start (deg)", 0.001, 360.0, 30.0))

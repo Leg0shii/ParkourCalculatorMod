@@ -17,11 +17,13 @@ public final class DualChainNode implements NodeRuntime {
 
     private final boolean keepBetter;
     private final int warmSec;
+    private final int capMs;
     private final ParamValues params;
 
     public DualChainNode(ParamValues params) {
         this.keepBetter = params.getBool("keepBetter");
         this.warmSec = params.getInt("warmSec");
+        this.capMs = params.getInt("budgetMs");
         this.params = params;
     }
 
@@ -51,8 +53,9 @@ public final class DualChainNode implements NodeRuntime {
             return NodeOutcome.of(Guarantee.FOUND, in);
         }
         String[] chainName = new String[1];
+        long ladderDeadline = capMs > 0 ? 0L : deadlineNanos;
         double[] chain = AngleSolverEngine.dualChain(ctx.exactModel, ctx.spec, ctx.scenario, nodeToken,
-                chainName, deadlineNanos, slpConfig(), cfConfig(), ctx.closestMiss());
+                chainName, ladderDeadline, slpConfig(), cfConfig(), ctx.closestMiss());
         if (chain == null) {
             if (!keepBetter) ctx.chainAppend("closed form");
             return NodeOutcome.of(Guarantee.NONE, in);
