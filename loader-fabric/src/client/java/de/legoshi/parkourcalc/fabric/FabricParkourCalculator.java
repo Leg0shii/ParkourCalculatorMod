@@ -44,6 +44,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
     private static KeyMapping solverStartTickKeyBinding;
     private static KeyMapping solverEndTickKeyBinding;
     private static KeyMapping rerunSimulationKeyBinding;
+    private static KeyMapping copyTeleportKeyBinding;
     private static KeyMapping captureMomentumBlockKeyBinding;
     private static KeyMapping captureCollisionBlockKeyBinding;
     private static KeyMapping captureLandBlockKeyBinding;
@@ -132,6 +133,12 @@ public class FabricParkourCalculator implements ClientModInitializer {
                 "key.parkourcalculator.rerun_simulation",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_J,
+                category
+        ));
+        copyTeleportKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "key.parkourcalculator.copy_teleport",
+                InputConstants.Type.KEYSYM,
+                GLFW.GLFW_KEY_K,
                 category
         ));
 
@@ -333,6 +340,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         while (rerunSimulationKeyBinding.consumeClick()) {
             rerunSimulationPressed = true;
         }
+        boolean copyTeleportPressed = false;
+        while (copyTeleportKeyBinding.consumeClick()) {
+            copyTeleportPressed = true;
+        }
         boolean captureMomentum = false;
         boolean captureCollision = false;
         boolean captureLand = false;
@@ -393,6 +404,9 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
         if (rerunSimulationPressed && chordFree) {
             application.runSimulation();
+        }
+        if (copyTeleportPressed && chordFree) {
+            application.copyTeleportCommand();
         }
         if (captureMomentum && chordFree) {
             application.captureAngleSolverBlock(BlockSelection.Kind.MOMENTUM);
@@ -460,6 +474,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
         if (glfwKey == boundKey(solverEndTickKeyBinding)) {
             application.setSolverLandingTickFromSelection();
+            return true;
+        }
+        if (glfwKey == boundKey(copyTeleportKeyBinding)) {
+            application.copyTeleportCommand();
             return true;
         }
         return false;
