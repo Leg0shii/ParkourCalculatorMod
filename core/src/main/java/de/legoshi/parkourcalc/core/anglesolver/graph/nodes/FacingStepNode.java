@@ -82,7 +82,8 @@ public final class FacingStepNode implements NodeRuntime {
             recordIncoming(ctx, in);
         }
 
-        if (state.workIdx < state.work.size() && System.nanoTime() < deadlineNanos
+        if ((state.incumbentFeasible || state.best.yaws != null) && state.workIdx < state.work.size()
+                && System.nanoTime() < deadlineNanos
                 && !(nodeToken != null && nodeToken.get())) {
             Work w = state.work.get(state.workIdx++);
             if (ctx.freeStart) Scoring.adoptPinnedStart(sc, w.startX, w.startZ);
@@ -150,6 +151,7 @@ public final class FacingStepNode implements NodeRuntime {
             if (Double.isNaN(obj)) continue;
             double[] full = fullYaws(yaw0, lead, tail, sc.numTicks);
             Vec3dCore start = startFull(ctx, bd, bd.px, bd.pz);
+            state.best.consider(state.max, full.clone(), start.x, start.z, obj);
             seeds.add(new Seed(full, start.x, start.z, windowObjective(ctx, bd, bd.px, bd.pz, tail)));
         }
         seeds.sort((a, b) -> state.max ? Double.compare(b.rank, a.rank) : Double.compare(a.rank, b.rank));

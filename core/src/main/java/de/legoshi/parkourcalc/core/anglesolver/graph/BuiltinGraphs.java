@@ -68,7 +68,7 @@ public final class BuiltinGraphs {
                 .set("freeImprove", "budgetSec", fastTier ? 20 : Math.min(20, t))
                 .set("freeImprove", "warmSec", fastTier ? 0 : 1);
         g.add("sweep", "facingStep")
-                .set("sweep", "budgetSec", fastTier ? 0 : 20);
+                .set("sweep", "budgetSec", fastTier ? 0 : Math.max(2, Math.min(20, stageSec / 3)));
         g.add("ils2", "ilsPolish")
                 .set("ils2", "budgetSec", fastTier ? 0 : 3)
                 .set("ils2", "perturbMagMin", 0.0055)

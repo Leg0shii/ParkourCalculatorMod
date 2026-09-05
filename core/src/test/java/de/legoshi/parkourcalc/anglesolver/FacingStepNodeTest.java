@@ -167,9 +167,11 @@ public class FacingStepNodeTest {
         assertEquals("takeoff box X width equals the StartBox width", 2.0 * h, xHi - xLo, 1.0e-9);
         assertEquals("takeoff box Z width equals the StartBox width", 2.0 * h, zHi - zLo, 1.0e-9);
 
-        NodeOutcome out = node.execute(ctx, null, new AtomicBoolean(false),
+        Candidate incumbent = Candidate.of(ctx, new double[n]);
+        assertTrue("zero yaws satisfy the dF chain", incumbent.feasible);
+        NodeOutcome out = node.execute(ctx, incumbent, new AtomicBoolean(false),
                 System.nanoTime() + 5_000_000_000L);
-        assertEquals("with a work item the node emits TRUE to continue the loop", Guarantee.TRUE, out.branch);
+        assertEquals("with a feasible incumbent and a work item the node emits TRUE to continue the loop", Guarantee.TRUE, out.branch);
         Vec3dCore start = ctx.scenario.startPos;
         assertTrue("committed start X stays inside the StartBox",
                 start.x >= freeBox.pxLo - 1.0e-9 && start.x <= freeBox.pxHi + 1.0e-9);
