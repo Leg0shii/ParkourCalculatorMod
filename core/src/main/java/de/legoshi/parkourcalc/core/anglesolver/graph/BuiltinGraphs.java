@@ -4,6 +4,8 @@ public final class BuiltinGraphs {
 
     public static final int IMPROVE_TICK_CAP = 256;
 
+    public static final int FAST_SEED_CAP_MS = 500;
+
     public static final String FAST_PRESET = "Fast";
     public static final String OPTIMIZE_PRESET = "Optimize";
 
@@ -15,24 +17,24 @@ public final class BuiltinGraphs {
     }
 
     public static SolverGraph fast() {
-        return build(FAST_PRESET, 10, 3, 0, false);
+        return build(FAST_PRESET, 10, 3, 0, true, false, FAST_SEED_CAP_MS);
     }
 
     public static SolverGraph fastRunTicks() {
-        return build("Fast (run ticks)", 10, 3, 0, true);
+        return build("Fast (run ticks)", 10, 3, 0, true, false, 0);
     }
 
     public static SolverGraph optimize(int optimizeSeconds) {
-        return build(OPTIMIZE_PRESET, 10, 3, optimizeSeconds > 0 ? optimizeSeconds : 120, false);
+        return build(OPTIMIZE_PRESET, 10, 3, optimizeSeconds > 0 ? optimizeSeconds : 120, false, true, 0);
     }
 
     public static SolverGraph fromBudget(boolean stopOnFeasible, boolean ilsExhaustive,
                                          boolean useWindowSolver, int window, int commit, int timeBudgetSeconds) {
-        return build("Custom", window, commit, timeBudgetSeconds, false);
+        return build("Custom", window, commit, timeBudgetSeconds, false, true, 0);
     }
 
-    private static SolverGraph build(String name, int window, int commit, int t, boolean runTicks) {
-        boolean leafSnap = !runTicks;
+    private static SolverGraph build(String name, int window, int commit, int t, boolean seedFirst,
+                                     boolean leafSnap, int seedCapMs) {
         boolean fastTier = t <= 0;
         int tp = fastTier ? 120 : t;
         long reserveNanos = fastTier ? 0L : GraphRunner.wrapReserveNanos(t * 1_000_000_000L);
@@ -51,6 +53,7 @@ public final class BuiltinGraphs {
         g.add("seed", "dualChain")
                 .set("seed", "keepBetter", true)
                 .set("seed", "budgetSec", fastTier ? 0 : t)
+                .set("seed", "budgetMs", fastTier ? seedCapMs : 0)
                 .set("seed", "warmSec", fastTier ? 0 : 1);
         g.add("cap1", "capCertify")
                 .set("cap1", "computeDualGap", true)
@@ -107,7 +110,7 @@ public final class BuiltinGraphs {
         }
         g.add("emit", "emit");
 
-        if (runTicks) {
+        if (seedFirst) {
             chain(g, "entry", "seed");
             chain(g, "seed", "horizon");
             chain(g, "horizon", "wrap0");

@@ -29,21 +29,26 @@ import static org.junit.Assert.fail;
 @Category(VerySlowSolverTests.class)
 public class PipelineShapeTest {
 
-    private static final List<String> PIPELINE = Arrays.asList(
+    private static final List<String> FAST_PIPELINE = Arrays.asList(
+            "seed", "horizon", "wrap0", "cap1", "freeRescue", "peel", "freeImprove", "sweep",
+            "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap", "translate");
+
+    private static final List<String> THOROUGH_PIPELINE = Arrays.asList(
             "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove", "sweep",
             "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap", "translate", "snap");
 
     private static final long TIMEOUT_MS = 4000;
 
     @Test
-    public void everyCaptureVisitsTheSameStageSequenceAtBothTiers() throws Exception {
+    public void everyCaptureVisitsItsTierStageSequence() throws Exception {
         List<File> files = new ArrayList<>();
         collect(resolve("/captures"), files);
         collect(resolve("/problems/solve"), files);
         collect(resolve("/problems/closedform"), files);
         assertTrue("no corpus captures found", files.size() > 50);
 
-        Set<String> shapes = new LinkedHashSet<>();
+        Set<String> fastShapes = new LinkedHashSet<>();
+        Set<String> thoroughShapes = new LinkedHashSet<>();
         int solved = 0;
         int cancelled = 0;
         int skipped = 0;
@@ -55,33 +60,38 @@ public class PipelineShapeTest {
                 continue;
             }
             for (boolean thorough : new boolean[]{false, true}) {
-                List<String> seq = runOnce(f.getName(), file, thorough);
+                List<String> pipeline = thorough ? THOROUGH_PIPELINE : FAST_PIPELINE;
+                Set<String> shapes = thorough ? thoroughShapes : fastShapes;
+                String tierName = thorough ? "THOROUGH" : "FAST";
+                List<String> seq = runOnce(f.getName(), file, thorough, pipeline);
                 if (seq == null) {
                     skipped++;
                     continue;
                 }
-                boolean complete = seq.size() == PIPELINE.size();
+                boolean complete = seq.size() == pipeline.size();
                 if (complete) {
                     solved++;
                     shapes.add(String.join(">", seq));
                     if (shapes.size() > 1) {
-                        fail("second distinct stage sequence at " + f.getName() + " tier="
-                                + (thorough ? "THOROUGH" : "FAST") + ": " + seq + " vs " + shapes.iterator().next());
+                        fail("second distinct stage sequence at " + f.getName() + " tier=" + tierName
+                                + ": " + seq + " vs " + shapes.iterator().next());
                     }
                 } else {
                     cancelled++;
-                    assertEquals("truncated run is not a pipeline prefix at " + f.getName(),
-                            PIPELINE.subList(0, seq.size()), seq);
+                    assertEquals("truncated run is not a pipeline prefix at " + f.getName() + " tier=" + tierName,
+                            pipeline.subList(0, seq.size()), seq);
                 }
             }
         }
-        System.out.printf("PIPELINE SHAPE complete=%d truncated=%d skipped=%d distinct=%d%n",
-                solved, cancelled, skipped, shapes.size());
-        assertEquals("distinct complete stage sequences", 1, shapes.size());
-        assertEquals(String.join(">", PIPELINE), shapes.iterator().next());
+        System.out.printf("PIPELINE SHAPE complete=%d truncated=%d skipped=%d fastDistinct=%d thoroughDistinct=%d%n",
+                solved, cancelled, skipped, fastShapes.size(), thoroughShapes.size());
+        assertEquals("distinct complete FAST stage sequences", 1, fastShapes.size());
+        assertEquals(String.join(">", FAST_PIPELINE), fastShapes.iterator().next());
+        assertEquals("distinct complete THOROUGH stage sequences", 1, thoroughShapes.size());
+        assertEquals(String.join(">", THOROUGH_PIPELINE), thoroughShapes.iterator().next());
     }
 
-    private List<String> runOnce(String name, SaveFile file, boolean thorough) {
+    private List<String> runOnce(String name, SaveFile file, boolean thorough, List<String> pipeline) {
         ExactJumpModel model = ExactJumpModel.forMcVersion(file.mcVersion);
         InputData inputs = new InputData();
         SaveIO.applyRowsTo(file, inputs);
@@ -113,7 +123,7 @@ public class PipelineShapeTest {
         List<String> raw = new ArrayList<>();
         for (GraphRunState.Step s : rs.steps()) raw.add(s.nodeId);
         List<String> seq = collapseLoop(raw);
-        if (!timedOut && seq.size() != PIPELINE.size()) {
+        if (!timedOut && seq.size() != pipeline.size()) {
             fail("incomplete sequence without timeout at " + name + " tier=" + (thorough ? "THOROUGH" : "FAST")
                     + ": " + seq);
         }

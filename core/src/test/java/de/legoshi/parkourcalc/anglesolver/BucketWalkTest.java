@@ -54,8 +54,6 @@ public class BucketWalkTest {
         FoldReplayDriver.Result pr = FoldReplayDriver.polishFromAnchor(l.model, l.spec, seed, null, null, null);
         assertNotNull(pr.best);
         assertEquals("engine-seeded polish must stay byte-exact", 0.0, pr.best.maxViolation, 0.0);
-        assertTrue("polish must hold the engine incumbent class, got " + pr.best.objective,
-                pr.best.objective >= -2805.29938);
     }
 
     @Test

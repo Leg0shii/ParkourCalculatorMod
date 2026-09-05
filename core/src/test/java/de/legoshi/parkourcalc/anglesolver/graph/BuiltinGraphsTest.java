@@ -15,18 +15,32 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class BuiltinGraphsTest {
 
-    private static final List<String> PIPELINE = Arrays.asList(
+    private static final List<String> FAST_NODES = Arrays.asList(
+            "entry", "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
+            "sweep", "ils2", "translate2", "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap",
+            "translate", "emit");
+
+    private static final List<String> OPTIMIZE_NODES = Arrays.asList(
             "entry", "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
             "sweep", "ils2", "translate2", "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap",
             "translate", "snap", "emit");
 
-    private static final List<String> LINEAR_PAIRS_FROM = Arrays.asList(
-            "entry", "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
-            "ils2", "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap", "translate", "snap");
+    private static final String[][] FAST_PAIRS = {
+            {"entry", "seed"}, {"seed", "horizon"}, {"horizon", "wrap0"}, {"wrap0", "cap1"},
+            {"cap1", "freeRescue"}, {"freeRescue", "peel"}, {"peel", "freeImprove"}, {"freeImprove", "sweep"},
+            {"ils2", "translate2"}, {"fold", "ladder"}, {"ladder", "cert"}, {"cert", "bnb"}, {"bnb", "ils"},
+            {"ils", "cap2"}, {"cap2", "wrap"}, {"wrap", "translate"}, {"translate", "emit"}};
+
+    private static final String[][] OPTIMIZE_PAIRS = {
+            {"entry", "horizon"}, {"horizon", "wrap0"}, {"wrap0", "seed"}, {"seed", "cap1"},
+            {"cap1", "freeRescue"}, {"freeRescue", "peel"}, {"peel", "freeImprove"}, {"freeImprove", "sweep"},
+            {"ils2", "translate2"}, {"fold", "ladder"}, {"ladder", "cert"}, {"cert", "bnb"}, {"bnb", "ils"},
+            {"ils", "cap2"}, {"cap2", "wrap"}, {"wrap", "translate"}, {"translate", "snap"}, {"snap", "emit"}};
 
     private static List<String> nodeIds(SolverGraph g) {
         List<String> ids = new ArrayList<String>();
@@ -34,9 +48,10 @@ public class BuiltinGraphsTest {
         return ids;
     }
 
-    private static void assertLinearExceptLoop(SolverGraph g) {
-        for (String from : LINEAR_PAIRS_FROM) {
-            String to = PIPELINE.get(PIPELINE.indexOf(from) + 1);
+    private static void assertLinear(SolverGraph g, String[][] pairs) {
+        for (String[] pair : pairs) {
+            String from = pair[0];
+            String to = pair[1];
             int wired = 0;
             for (Guarantee br : Guarantee.values()) {
                 GraphEdge e = g.edgeFor(from, br);
@@ -63,16 +78,21 @@ public class BuiltinGraphsTest {
     }
 
     @Test
-    public void fastAndOptimizeShareTheSamePipelineShape() {
+    public void fastIsSeedFirstWithoutLeafSnap() {
         SolverGraph fast = BuiltinGraphs.fast();
-        SolverGraph opt = BuiltinGraphs.optimize(50);
         assertFalse(GraphValidator.hasErrors(GraphValidator.validate(fast)));
-        assertFalse(GraphValidator.hasErrors(GraphValidator.validate(opt)));
-        assertEquals(PIPELINE, nodeIds(fast));
-        assertEquals(PIPELINE, nodeIds(opt));
-        assertLinearExceptLoop(fast);
-        assertLinearExceptLoop(opt);
+        assertEquals(FAST_NODES, nodeIds(fast));
+        assertLinear(fast, FAST_PAIRS);
         assertLoopEdges(fast, false);
+        assertNull("fast has no leaf snap stage", fast.node("snap"));
+    }
+
+    @Test
+    public void optimizeIsHorizonFirstWithLeafSnap() {
+        SolverGraph opt = BuiltinGraphs.optimize(50);
+        assertFalse(GraphValidator.hasErrors(GraphValidator.validate(opt)));
+        assertEquals(OPTIMIZE_NODES, nodeIds(opt));
+        assertLinear(opt, OPTIMIZE_PAIRS);
         assertLoopEdges(opt, true);
     }
 
@@ -89,7 +109,9 @@ public class BuiltinGraphsTest {
         assertTrue(opt.node("wrap").params.getInt("budgetSec") > 0);
         assertEquals(0, fast.node("seed").params.getInt("warmSec"));
         assertEquals(1, opt.node("seed").params.getInt("warmSec"));
-        assertEquals(0, fast.node("snap").params.getInt("pairPass"));
+        assertEquals(BuiltinGraphs.FAST_SEED_CAP_MS, fast.node("seed").params.getInt("budgetMs"));
+        assertEquals(0, opt.node("seed").params.getInt("budgetMs"));
+        assertNull("fast has no leaf snap stage", fast.node("snap"));
         assertEquals(1, opt.node("snap").params.getInt("pairPass"));
         assertEquals(0, fast.node("sweep").params.getInt("budgetSec"));
         assertTrue(opt.node("sweep").params.getInt("budgetSec") > 0);
@@ -98,11 +120,21 @@ public class BuiltinGraphsTest {
     }
 
     @Test
-    public void customFollowsTheSameShape() {
+    public void fastRunTicksIsSeedFirstAndUncapped() {
+        SolverGraph rt = BuiltinGraphs.fastRunTicks();
+        assertFalse(GraphValidator.hasErrors(GraphValidator.validate(rt)));
+        assertEquals(FAST_NODES, nodeIds(rt));
+        assertLinear(rt, FAST_PAIRS);
+        assertLoopEdges(rt, false);
+        assertEquals(0, rt.node("seed").params.getInt("budgetMs"));
+    }
+
+    @Test
+    public void customFollowsTheOptimizeShape() {
         SolverGraph g = BuiltinGraphs.fromBudget(true, true, true, 10, 3, 60);
         assertFalse(GraphValidator.hasErrors(GraphValidator.validate(g)));
-        assertEquals(PIPELINE, nodeIds(g));
-        assertLinearExceptLoop(g);
+        assertEquals(OPTIMIZE_NODES, nodeIds(g));
+        assertLinear(g, OPTIMIZE_PAIRS);
         assertLoopEdges(g, true);
     }
 }
