@@ -139,6 +139,22 @@ public final class NodeHelp {
                 + " checks more angles but is slower, since it makes roughly 360 divided by this many"
                 + " attempts.");
 
+        node("runUpSweep", "For jumps with a fixed-facing run-up before takeoff. It tries small changes to"
+                + " the run-up aim, one significant-angle step at a time, re-solving the jump after each and"
+                + " keeping the best landing. When the start is free it also slides the standing spot.");
+        param("runUpSweep", "windowDeg", "How far, in degrees, the run-up aim may wander either side of its"
+                + " current value. 0 tries only the current aim; larger explores more run-up angles.");
+        param("runUpSweep", "maxBuckets", "The most distinct run-up aims to try. Caps the work when the"
+                + " window is wide.");
+        param("runUpSweep", "stage1Ms", "Milliseconds spent on the quick first solve of each run-up aim,"
+                + " used only to rank them. Lower screens more aims but each more shallowly.");
+        param("runUpSweep", "topK", "How many of the best-ranked run-up aims go on to the slower polish"
+                + " pass. Higher polishes more of them.");
+        param("runUpSweep", "stage2Sec", "Seconds of polish spent on each kept run-up aim. Higher polishes"
+                + " each one harder.");
+        param("runUpSweep", "positionMode", "Whether takeoff stays pinned, is free to slide, or both are"
+                + " tried. Sliding only helps when the start block position is left free.");
+
         node("freeStartImprove", "Only works when the start block position is left free. It nudges both the"
                 + " aim angles and the exact standing spot together to make the jump land, or land better.");
         param("freeStartImprove", "jointOnly", "Only do the rescue pass that moves the start to make the"

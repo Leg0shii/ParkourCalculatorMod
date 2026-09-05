@@ -14,6 +14,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.MarkSettledNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.ReportNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.RecedingHorizonNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.RouterNode;
+import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.RunUpSweepNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.SetupPeelNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.TranslatedStartNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.WrapIlsNode;
@@ -196,6 +197,24 @@ public final class NodeCatalog {
                 .budgetParam("budgetSec")
                 .fallback(Guarantee.NONE)
                 .factory(FoldDriverNode::new)
+                .build());
+        register(NodeType.builder("runUpSweep", "Run-up sweep", NodeCategory.RECOVERY)
+                .requires(InputRequirement.ANY)
+                .branch(Branch.feasible(Guarantee.FOUND))
+                .branch(Branch.feasible(Guarantee.IMPROVED))
+                .branch(Branch.preserves(Guarantee.UNCHANGED))
+                .branch(Branch.preserves(Guarantee.NONE))
+                .param(ParamSpec.integer("budgetSec", "Max time (s)", 0, 600, 30))
+                .param(ParamSpec.decimal("windowDeg", "Sweep window (deg)", 0.0, 10.0, 0.1))
+                .param(ParamSpec.integer("maxBuckets", "Max buckets", 1, 100000, 400))
+                .param(ParamSpec.integer("stage1Ms", "Stage-1 per bucket (ms)", 1, 600000, 300))
+                .param(ParamSpec.integer("topK", "Top-K to polish", 1, 64, 6))
+                .param(ParamSpec.integer("stage2Sec", "Stage-2 per bucket (s)", 0, 600, 3))
+                .param(ParamSpec.choice("positionMode", "Takeoff position mode",
+                        new String[]{"pin", "free", "both"}, "both"))
+                .budgetParam("budgetSec")
+                .fallback(Guarantee.UNCHANGED)
+                .factory(RunUpSweepNode::new)
                 .build());
         register(NodeType.builder("homotopyLadder", "Homotopy ladder", NodeCategory.RECOVERY)
                 .requires(InputRequirement.ANY)

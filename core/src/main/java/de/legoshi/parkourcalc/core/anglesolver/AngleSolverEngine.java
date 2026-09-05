@@ -188,6 +188,10 @@ public final class AngleSolverEngine {
         return lastRunRecord;
     }
 
+    public Vec3dCore lastPlanStart() {
+        return lastPlan == null ? null : lastPlan.start;
+    }
+
     private static final class RunRecording {
         final SolveRunRecord.Config config;
         final SolveRunRecord.Problem problem;
