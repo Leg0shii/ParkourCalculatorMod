@@ -55,6 +55,14 @@ public class FacingStepNodeTest {
     }
 
     @Test
+    public void pinnedLeadingChainReturnsMinusOne() {
+        List<JumpConstraint> cons = dfChain(4);
+        cons.add(new JumpConstraint(JumpConstraint.Mode.F, 0, null, JumpConstraint.Op.PLUS,
+                JumpConstraint.Cmp.EQ, -76.6, "f0"));
+        assertEquals(-1, FacingStepNode.leadingChain(cons, 10));
+    }
+
+    @Test
     public void leadingDfChainDetected() {
         int lead = 4;
         assertEquals(lead, FacingStepNode.leadingChain(dfChain(lead), 10));

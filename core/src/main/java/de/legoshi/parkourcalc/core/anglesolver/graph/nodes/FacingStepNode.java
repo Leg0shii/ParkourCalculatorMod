@@ -283,7 +283,7 @@ public final class FacingStepNode implements NodeRuntime {
 
     public static int leadingChain(List<JumpConstraint> constraints, int n) {
         YawTies ties = YawTies.of(constraints, n);
-        if (ties == null) return -1;
+        if (ties == null || ties.varOf(0) < 0) return -1;
         int g0 = ties.groupOf(0);
         int lead = 1;
         while (lead < n && ties.groupOf(lead) == g0) lead++;
