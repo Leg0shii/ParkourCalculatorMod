@@ -198,6 +198,7 @@ public final class Application {
         saveController.setGraphStore(graphStore);
         AngleSolverEngine angleSolverEngine = new AngleSolverEngine(angleSolverState, boxController, inputData, this::onUserChange, forwardModel);
         angleSolverEngine.setOnStartMoved(runner::setStartPosition);
+        angleSolverEngine.setOnStartYawChanged(runner::setStartYaw);
         this.solverEngine = angleSolverEngine;
         if (saveStore != null) {
             angleSolverEngine.setRunLog(new SolveRunLog(saveStore.getSaveDir().resolve("runs"),
