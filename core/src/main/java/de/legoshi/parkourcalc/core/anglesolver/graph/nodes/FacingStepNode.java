@@ -12,7 +12,6 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.ClosedFormSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.FoldReplayDriver;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
-import de.legoshi.parkourcalc.core.anglesolver.solver.IlsPolish;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
@@ -30,145 +29,177 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public final class RunUpSweepNode implements NodeRuntime {
+public final class FacingStepNode implements NodeRuntime {
 
     private static final double SAMPLE_STEP_DEG = 0.001;
-    private static final int STAGE1_OBJECTIVE_ROUNDS = 32;
-    private static final int STAGE2_OBJECTIVE_ROUNDS = 64;
+    private static final int SEED_MS = 300;
+    private static final int SEED_OBJECTIVE_ROUNDS = 32;
 
     private final int budgetSec;
     private final double windowDeg;
     private final int maxBuckets;
-    private final int stage1Ms;
     private final int topK;
-    private final int stage2Sec;
-    private final String positionMode;
 
-    public RunUpSweepNode(ParamValues params) {
+    private State state;
+
+    public FacingStepNode(ParamValues params) {
         this.budgetSec = params.getInt("budgetSec");
         this.windowDeg = params.getDouble("windowDeg");
         this.maxBuckets = params.getInt("maxBuckets");
-        this.stage1Ms = params.getInt("stage1Ms");
         this.topK = params.getInt("topK");
-        this.stage2Sec = params.getInt("stage2Sec");
-        this.positionMode = params.getString("positionMode");
     }
 
     @Override
     public NodeOutcome execute(GraphContext ctx, Candidate in, AtomicBoolean nodeToken, long deadlineNanos) {
         Guarantee miss = in != null && in.yaws != null ? Guarantee.UNCHANGED : Guarantee.NONE;
-        if (!ctx.exact()) return NodeOutcome.of(miss, in);
+        if (state == null || state.ctx != ctx) state = new State(ctx);
+        if (state.disabled) return NodeOutcome.of(miss, in);
+        if (!ctx.exact() || budgetSec <= 0) {
+            state.disabled = true;
+            return NodeOutcome.of(miss, in);
+        }
 
-        JumpSpec spec = ctx.spec;
         JumpPhysicsInputs sc = ctx.scenario;
         int n = sc.numTicks;
-        int lead = leadingChain(spec.constraints, n);
-        if (lead < 2 || lead >= n) return NodeOutcome.of(miss, in);
 
-        boolean haveIncumbent = in != null && in.yaws != null;
-        boolean incumbentFeasible = haveIncumbent && in.feasible;
-        double incumbentObj = incumbentFeasible ? ctx.exactObjective(in.yaws) : Double.NaN;
-        double center = haveIncumbent ? in.yaws[0] : sc.startYaw;
+        if (!state.seeded) {
+            state.seeded = true;
+            int lead = leadingChain(ctx.spec.constraints, n);
+            if (lead < 2 || lead >= n) {
+                state.disabled = true;
+                return NodeOutcome.of(miss, in);
+            }
+            state.max = ctx.maximize();
+            state.originalStart = new Vec3dCore(sc.startPos.x, sc.startPos.y, sc.startPos.z);
+            boolean incumbentFeasible = in != null && in.yaws != null && in.feasible;
+            state.incumbentFeasible = incumbentFeasible;
+            state.incumbentYaws = incumbentFeasible ? in.yaws.clone() : null;
+            state.incumbentObj = incumbentFeasible ? ctx.exactObjective(in.yaws) : Double.NaN;
+            double center = in != null && in.yaws != null ? in.yaws[0] : sc.startYaw;
+            seed(ctx, lead, center, nodeToken, deadlineNanos);
+            recordIncoming(ctx, in);
+        } else {
+            recordIncoming(ctx, in);
+        }
 
-        long nodeDeadline = System.nanoTime() + budgetSec * 1_000_000_000L;
-        if (deadlineNanos > 0) nodeDeadline = Math.min(nodeDeadline, deadlineNanos);
+        if (state.workIdx < state.work.size() && System.nanoTime() < deadlineNanos
+                && !(nodeToken != null && nodeToken.get())) {
+            Work w = state.work.get(state.workIdx++);
+            if (ctx.freeStart) Scoring.adoptPinnedStart(sc, w.startX, w.startZ);
+            return NodeOutcome.of(Guarantee.TRUE, Candidate.of(ctx, w.yaws));
+        }
 
+        return finish(ctx, in, miss);
+    }
+
+    private void recordIncoming(GraphContext ctx, Candidate in) {
+        if (in == null || in.yaws == null) return;
+        if (ctx.violationOf(in.yaws) > ctx.feasTol) return;
+        JumpPhysicsInputs sc = ctx.scenario;
+        if (ctx.freeStart) {
+            double sx = sc.startPos.x;
+            double sz = sc.startPos.z;
+            if (sx < ctx.freeBox.pxLo - ctx.feasTol || sx > ctx.freeBox.pxHi + ctx.feasTol
+                    || sz < ctx.freeBox.pzLo - ctx.feasTol || sz > ctx.freeBox.pzHi + ctx.feasTol) return;
+        }
+        double obj = ctx.exactObjective(in.yaws);
+        state.best.consider(state.max, in.yaws.clone(), sc.startPos.x, sc.startPos.z, obj);
+    }
+
+    private NodeOutcome finish(GraphContext ctx, Candidate in, Guarantee miss) {
+        JumpPhysicsInputs sc = ctx.scenario;
+        if (SolverTrace.on()) {
+            SolverTrace.log("ENGINE", "facing sweep buckets=%d best=%s",
+                    state.work.size(), state.best.yaws == null ? "miss" : String.format("%.9f", state.best.obj));
+        }
+        boolean beats;
+        if (!state.incumbentFeasible) {
+            beats = state.best.yaws != null;
+        } else {
+            beats = state.best.yaws != null
+                    && (state.max ? state.best.obj > state.incumbentObj : state.best.obj < state.incumbentObj);
+        }
+        if (beats) {
+            if (ctx.freeStart) Scoring.adoptPinnedStart(sc, state.best.startX, state.best.startZ);
+            ctx.chainAppend("facing sweep");
+            return NodeOutcome.of(Guarantee.IMPROVED, Candidate.of(ctx, state.best.yaws));
+        }
+        if (ctx.freeStart) Scoring.adoptPinnedStart(sc, state.originalStart.x, state.originalStart.z);
+        if (state.incumbentFeasible && state.incumbentYaws != null) {
+            return NodeOutcome.of(Guarantee.UNCHANGED, Candidate.of(ctx, state.incumbentYaws));
+        }
+        return NodeOutcome.of(miss, in);
+    }
+
+    private void seed(GraphContext ctx, int lead, double center, AtomicBoolean cancel, long deadlineNanos) {
+        JumpPhysicsInputs sc = ctx.scenario;
         boolean locked0 = sc.yawLockedPerTick != null && sc.yawLockedPerTick.length > 0 && sc.yawLockedPerTick[0];
         List<Double> bucketYaws = enumerate(sc.startYaw, locked0, center, windowDeg, maxBuckets);
-
-        boolean max = ctx.maximize();
-        boolean doPin = !"free".equals(positionMode);
-        boolean doFree = ctx.freeStart && !"pin".equals(positionMode);
-
-        Best best = new Best(max);
-        List<Bucket> feasible = new ArrayList<>();
-        int enumerated = 0;
-        int feasibleCount = 0;
-
+        List<Seed> seeds = new ArrayList<>();
         for (Double y0 : bucketYaws) {
-            if (nodeToken != null && nodeToken.get()) break;
-            if (System.nanoTime() >= nodeDeadline) break;
+            if (cancel != null && cancel.get()) break;
+            if (deadlineNanos > 0 && System.nanoTime() >= deadlineNanos) break;
             double yaw0 = y0;
             Bucket bd = prep(ctx, yaw0, lead);
             if (bd == null) continue;
-            enumerated++;
-
-            long stage1Deadline = Math.min(nodeDeadline, System.nanoTime() + stage1Ms * 1_000_000L);
-            double[] tail = solvePinned(ctx, bd, STAGE1_OBJECTIVE_ROUNDS, stage1Deadline, nodeToken);
+            long seedDeadline = System.nanoTime() + SEED_MS * 1_000_000L;
+            if (deadlineNanos > 0) seedDeadline = Math.min(seedDeadline, deadlineNanos);
+            double[] tail = solveSeed(ctx, bd, seedDeadline, cancel);
             if (tail == null) continue;
-            feasibleCount++;
-
             double obj = verifyFull(ctx, bd, yaw0, lead, tail, bd.px, bd.pz);
-            if (!Double.isNaN(obj)) {
-                bd.tail = tail;
-                bd.stage1Obj = obj;
-                feasible.add(bd);
-                best.consider(fullYaws(yaw0, lead, tail, n), startFull(ctx, bd, bd.px, bd.pz), obj);
-            }
+            if (Double.isNaN(obj)) continue;
+            double[] full = fullYaws(yaw0, lead, tail, sc.numTicks);
+            Vec3dCore start = startFull(ctx, bd, bd.px, bd.pz);
+            seeds.add(new Seed(full, start.x, start.z, windowObjective(ctx, bd, bd.px, bd.pz, tail)));
         }
-
-        feasible.sort((a, b) -> max ? Double.compare(b.stage1Obj, a.stage1Obj) : Double.compare(a.stage1Obj, b.stage1Obj));
-        int kept = Math.min(topK, feasible.size());
-        int polished = 0;
-
+        seeds.sort((a, b) -> state.max ? Double.compare(b.rank, a.rank) : Double.compare(a.rank, b.rank));
+        int kept = Math.min(topK, seeds.size());
         for (int i = 0; i < kept; i++) {
-            if (nodeToken != null && nodeToken.get()) break;
-            if (System.nanoTime() >= nodeDeadline) break;
-            Bucket bd = feasible.get(i);
-            polished++;
+            Seed s = seeds.get(i);
+            state.work.add(new Work(s.yaws, s.startX, s.startZ));
+        }
+    }
 
-            if (doPin) {
-                long ilsDeadline = Math.min(nodeDeadline, System.nanoTime() + stage2Sec * 1_000_000_000L);
-                JumpSpec win = windowSpec(ctx, bd, bd.px, bd.pz, null);
-                double[] pol = IlsPolish.polish(ctx.model, win, bd.tail, ilsDeadline, Integer.MAX_VALUE,
-                        ctx.sequential, nodeToken, null, ilsConfig());
-                double obj = verifyFull(ctx, bd, bd.yaw0, lead, pol, bd.px, bd.pz);
-                if (!Double.isNaN(obj)) best.consider(fullYaws(bd.yaw0, lead, pol, n), startFull(ctx, bd, bd.px, bd.pz), obj);
-            }
+    private double windowObjective(GraphContext ctx, Bucket bd, double px, double pz, double[] tail) {
+        JumpSpec win = windowSpec(ctx, bd, px, pz);
+        return Scoring.verifiedObjectiveAt(ctx.model, win.asScenario(), win, tail, px, pz, ctx.feasTol);
+    }
 
-            if (doFree) {
-                if (nodeToken != null && nodeToken.get()) break;
-                if (System.nanoTime() >= nodeDeadline) break;
-                long freeDeadline = Math.min(nodeDeadline, System.nanoTime() + stage2Sec * 1_000_000_000L);
-                StartBox box = new StartBox(bd.px, bd.pz, bd.vel.x, bd.vel.z,
-                        bd.xLo, bd.xHi, bd.zLo, bd.zHi, bd.vel.x, bd.vel.x, bd.vel.z, bd.vel.z);
-                JumpSpec win = windowSpec(ctx, bd, bd.px, bd.pz, box);
-                FoldReplayDriver.Params p = new FoldReplayDriver.Params();
-                p.cancel = nodeToken;
-                p.deadlineNanos = freeDeadline;
-                p.objectiveRounds = STAGE2_OBJECTIVE_ROUNDS;
-                FoldReplayDriver.Result res = FoldReplayDriver.solve(ctx.exactModel, win, p);
-                if (res.best != null && res.best.feasible()) {
-                    double[] freeTail = res.best.yawsDeg;
-                    double fx = res.best.px;
-                    double fz = res.best.pz;
-                    double obj = verifyFull(ctx, bd, bd.yaw0, lead, freeTail, fx, fz);
-                    if (!Double.isNaN(obj)) best.consider(fullYaws(bd.yaw0, lead, freeTail, n), startFull(ctx, bd, fx, fz), obj);
-                    long ilsDeadline = Math.min(nodeDeadline, System.nanoTime() + stage2Sec * 1_000_000_000L);
-                    JumpSpec winPin = windowSpec(ctx, bd, fx, fz, null);
-                    double[] pol = IlsPolish.polish(ctx.model, winPin, freeTail, ilsDeadline, Integer.MAX_VALUE,
-                            ctx.sequential, nodeToken, null, ilsConfig());
-                    double obj2 = verifyFull(ctx, bd, bd.yaw0, lead, pol, fx, fz);
-                    if (!Double.isNaN(obj2)) best.consider(fullYaws(bd.yaw0, lead, pol, n), startFull(ctx, bd, fx, fz), obj2);
-                }
+    private double[] solveSeed(GraphContext ctx, Bucket bd, long deadline, AtomicBoolean cancel) {
+        ExactJumpModel em = ctx.exactModel;
+        JumpSpec win = windowSpec(ctx, bd, bd.px, bd.pz);
+        double[] cf = ClosedFormSolve.optimize(em, win, ctx.feasTol, cancel);
+        double bestObj = Double.NaN;
+        double[] bestTail = null;
+        boolean max = ctx.maximize();
+        if (cf != null) {
+            double o = Scoring.verifiedObjectiveAt(ctx.model, win.asScenario(), win, cf, bd.px, bd.pz, ctx.feasTol);
+            if (!Double.isNaN(o)) {
+                bestObj = o;
+                bestTail = cf;
             }
         }
-
-        if (SolverTrace.on()) {
-            SolverTrace.log("ENGINE", "run-up sweep buckets=%d feasible=%d polished=%d best=%s",
-                    enumerated, feasibleCount, polished,
-                    best.yaws == null ? "miss" : String.format("%.9f", best.obj));
+        FoldReplayDriver.Params p = new FoldReplayDriver.Params();
+        p.cancel = cancel;
+        p.deadlineNanos = deadline;
+        p.objectiveRounds = SEED_OBJECTIVE_ROUNDS;
+        FoldReplayDriver.Result res = FoldReplayDriver.solve(em, win, p);
+        if (res.best != null && res.best.feasible()) {
+            double o = Scoring.verifiedObjectiveAt(ctx.model, win.asScenario(), win, res.best.yawsDeg,
+                    bd.px, bd.pz, ctx.feasTol);
+            if (!Double.isNaN(o) && (bestTail == null || (max ? o > bestObj : o < bestObj))) {
+                bestObj = o;
+                bestTail = res.best.yawsDeg;
+            }
         }
+        return bestTail;
+    }
 
-        if (best.yaws == null) return NodeOutcome.of(miss, in);
-        boolean better = !incumbentFeasible || (max ? best.obj > incumbentObj : best.obj < incumbentObj);
-        if (!better) return NodeOutcome.of(miss, in);
-
-        if (ctx.freeStart && (best.startX != sc.startPos.x || best.startZ != sc.startPos.z)) {
-            Scoring.adoptPinnedStart(sc, best.startX, best.startZ);
-        }
-        ctx.chainAppend("run-up sweep");
-        return NodeOutcome.of(incumbentFeasible ? Guarantee.IMPROVED : Guarantee.FOUND, Candidate.of(ctx, best.yaws));
+    private JumpSpec windowSpec(GraphContext ctx, Bucket bd, double px, double pz) {
+        JumpSpec win = LongRunSolver.suffixSpec(ctx.spec, bd.lead,
+                new Vec3dCore(px, bd.ty, pz), bd.vel, bd.takeoffYaw);
+        win.asScenario().startBox = StartBox.pinned(px, pz, bd.vel.x, bd.vel.z);
+        return win;
     }
 
     private Bucket prep(GraphContext ctx, double yaw0, int lead) {
@@ -222,62 +253,20 @@ public final class RunUpSweepNode implements NodeRuntime {
         return new Bucket(lead, yaw0, tx, tz, ty, px, pz, vel, takeoffYaw, xLo, xHi, zLo, zHi);
     }
 
-    private JumpSpec windowSpec(GraphContext ctx, Bucket bd, double px, double pz, StartBox box) {
-        JumpSpec win = LongRunSolver.suffixSpec(ctx.spec, bd.lead,
-                new Vec3dCore(px, bd.ty, pz), bd.vel, bd.takeoffYaw);
-        win.asScenario().startBox = box != null ? box : StartBox.pinned(px, pz, bd.vel.x, bd.vel.z);
-        return win;
-    }
-
-    private double[] solvePinned(GraphContext ctx, Bucket bd, int objectiveRounds, long deadline, AtomicBoolean cancel) {
-        ExactJumpModel em = ctx.exactModel;
-        JumpSpec win = windowSpec(ctx, bd, bd.px, bd.pz, null);
-        double[] cf = ClosedFormSolve.optimize(em, win, ctx.feasTol, cancel);
-        double bestObj = Double.NaN;
-        double[] bestTail = null;
-        boolean max = ctx.maximize();
-        if (cf != null) {
-            double o = windowObjective(ctx, win, bd.px, bd.pz, cf);
-            if (!Double.isNaN(o)) {
-                bestObj = o;
-                bestTail = cf;
-            }
-        }
-        FoldReplayDriver.Params p = new FoldReplayDriver.Params();
-        p.cancel = cancel;
-        p.deadlineNanos = deadline;
-        p.objectiveRounds = objectiveRounds;
-        FoldReplayDriver.Result res = FoldReplayDriver.solve(em, win, p);
-        if (res.best != null && res.best.feasible()) {
-            double o = windowObjective(ctx, win, bd.px, bd.pz, res.best.yawsDeg);
-            if (!Double.isNaN(o) && (bestTail == null || (max ? o > bestObj : o < bestObj))) {
-                bestObj = o;
-                bestTail = res.best.yawsDeg;
-            }
-        }
-        return bestTail;
-    }
-
-    private double windowObjective(GraphContext ctx, JumpSpec win, double px, double pz, double[] tail) {
-        return Scoring.verifiedObjectiveAt(ctx.model, win.asScenario(), win, tail, px, pz, ctx.feasTol);
-    }
-
     private double verifyFull(GraphContext ctx, Bucket bd, double yaw0, int lead, double[] tail, double px, double pz) {
         if (tail == null) return Double.NaN;
         double[] full = fullYaws(yaw0, lead, tail, ctx.scenario.numTicks);
         Vec3dCore start = startFull(ctx, bd, px, pz);
         if (ctx.freeStart && (start.x < ctx.freeBox.pxLo - ctx.feasTol || start.x > ctx.freeBox.pxHi + ctx.feasTol
-                || start.z < ctx.freeBox.pzLo - ctx.feasTol || start.z > ctx.freeBox.pzHi + ctx.feasTol)) return Double.NaN;
+                || start.z < ctx.freeBox.pzLo - ctx.feasTol || start.z > ctx.freeBox.pzHi + ctx.feasTol)) {
+            return Double.NaN;
+        }
         return Scoring.verifiedObjectiveAt(ctx.model, ctx.scenario, ctx.spec, full, start.x, start.z, ctx.feasTol);
     }
 
-    private static Vec3dCore startFullVec(GraphContext ctx, Bucket bd, double px, double pz) {
-        JumpPhysicsInputs sc = ctx.scenario;
-        return new Vec3dCore(sc.startPos.x + (px - bd.tx0), sc.startPos.y, sc.startPos.z + (pz - bd.tz0));
-    }
-
     private Vec3dCore startFull(GraphContext ctx, Bucket bd, double px, double pz) {
-        return startFullVec(ctx, bd, px, pz);
+        JumpPhysicsInputs sc = ctx.scenario;
+        return new Vec3dCore(state.originalStart.x + (px - bd.tx0), sc.startPos.y, state.originalStart.z + (pz - bd.tz0));
     }
 
     private static double[] fullYaws(double yaw0, int lead, double[] tail, int n) {
@@ -285,13 +274,6 @@ public final class RunUpSweepNode implements NodeRuntime {
         for (int t = 0; t < lead; t++) full[t] = yaw0;
         for (int t = lead; t < n; t++) full[t] = tail[t - lead];
         return Angles.wrapAll(full);
-    }
-
-    private IlsPolish.Config ilsConfig() {
-        IlsPolish.Config cfg = new IlsPolish.Config();
-        cfg.perturbMagMin = 0.0055;
-        cfg.perturbMagSpan = 9.9945;
-        return cfg;
     }
 
     private static double clamp(double v, double lo, double hi) {
@@ -341,6 +323,50 @@ public final class RunUpSweepNode implements NodeRuntime {
         return out;
     }
 
+    private static final class State {
+        final GraphContext ctx;
+        boolean seeded;
+        boolean disabled;
+        boolean max;
+        Vec3dCore originalStart;
+        boolean incumbentFeasible;
+        double[] incumbentYaws;
+        double incumbentObj = Double.NaN;
+        final List<Work> work = new ArrayList<>();
+        int workIdx;
+        final Best best = new Best();
+
+        State(GraphContext ctx) {
+            this.ctx = ctx;
+        }
+    }
+
+    private static final class Work {
+        final double[] yaws;
+        final double startX;
+        final double startZ;
+
+        Work(double[] yaws, double startX, double startZ) {
+            this.yaws = yaws;
+            this.startX = startX;
+            this.startZ = startZ;
+        }
+    }
+
+    private static final class Seed {
+        final double[] yaws;
+        final double startX;
+        final double startZ;
+        final double rank;
+
+        Seed(double[] yaws, double startX, double startZ, double rank) {
+            this.yaws = yaws;
+            this.startX = startX;
+            this.startZ = startZ;
+            this.rank = rank;
+        }
+    }
+
     private static final class Bucket {
         final int lead;
         final double yaw0;
@@ -355,8 +381,6 @@ public final class RunUpSweepNode implements NodeRuntime {
         final double xHi;
         final double zLo;
         final double zHi;
-        double[] tail;
-        double stage1Obj;
 
         Bucket(int lead, double yaw0, double tx0, double tz0, double ty, double px, double pz, Vec3dCore vel,
                float takeoffYaw, double xLo, double xHi, double zLo, double zHi) {
@@ -377,22 +401,17 @@ public final class RunUpSweepNode implements NodeRuntime {
     }
 
     private static final class Best {
-        final boolean max;
         double[] yaws;
         double startX;
         double startZ;
         double obj = Double.NaN;
 
-        Best(boolean max) {
-            this.max = max;
-        }
-
-        void consider(double[] candYaws, Vec3dCore start, double candObj) {
+        void consider(boolean max, double[] candYaws, double x, double z, double candObj) {
             if (Double.isNaN(candObj)) return;
             if (yaws == null || (max ? candObj > obj : candObj < obj)) {
                 yaws = candYaws;
-                startX = start.x;
-                startZ = start.z;
+                startX = x;
+                startZ = z;
                 obj = candObj;
             }
         }

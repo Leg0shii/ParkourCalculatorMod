@@ -56,12 +56,26 @@ by about 1e-4.
 
 1. Chain-aware ILS: `IlsPolish.Config.freeTicks` (from `YawTies` singleton groups, set by `IlsPolishNode`), kicks and
    `BucketAscentPolish` scans restricted to free ticks, count clamped to the free set; null path bit-identical.
-2. `runUpSweep` node (`RunUpSweepNode`, registered in `NodeCatalog`, help in `NodeHelp`): enumerate yaw0 buckets in
-   `windowDeg` around the incumbent facing, per bucket run-up sim + takeoff box, stage 1 pinned window solve
-   (`LongRunSolver.suffixSpec`, `ClosedFormSolve`, `FoldReplayDriver`), top-K stage 2 ILS polish pinned and free
-   (`FoldReplayDriver` with `startBox = B`), full-spec byte-exact verify including StartBox containment, keep-better
-   commit. Params: budgetSec, windowDeg, maxBuckets, stage1Ms, topK, stage2Sec, positionMode pin|free|both.
-3. Tests: `IlsPolishFreeTicksTest`, `RunUpSweepNodeTest` (incl. the StartBox containment regression from j828).
+2. `facingStep` node (`FacingStepNode`, registered in `NodeCatalog`, help in `NodeHelp`), a loop-driven redesign of
+   the rejected monolithic `runUpSweep` that no longer re-orchestrates polish or translation internally. On its first
+   visit it enumerates yaw0 buckets in `windowDeg` around the incumbent facing, computes the run-up state and takeoff
+   box B(yaw0) per bucket, seeds each tail with a short pinned window solve (`LongRunSolver.suffixSpec`,
+   `ClosedFormSolve`, `FoldReplayDriver`, about 300 ms), and keeps the top-K seeds as a work list. That seeding is the
+   only solver call in the node. It then walks the work list one bucket per visit: it sets the scenario start for the
+   bucket (`Scoring.adoptPinnedStart` when the start is free, StartBox-clipped into B and the free box) and emits the
+   seeded path on the TRUE branch so the graph's own `ilsPolish` (`ils2`, chain-aware, tail ticks only) and
+   `translatedStart` (`translate2`, best feasible translation inside the free box) refine it. On the next visit it
+   re-reads the refined candidate, re-verifies it byte-exact at the current start with an explicit free-box
+   containment check, and keeps the best. When the work list is exhausted or the budget is spent it restores the best
+   start and returns IMPROVED (chain suffix "facing sweep"), else restores the original start and returns
+   UNCHANGED/NONE. Params: budgetSec, windowDeg, maxBuckets, topK. Graph wiring in `BuiltinGraphs.build` for all tiers
+   inserts sweep, ils2, translate2 after `freeImprove`: freeImprove to sweep; sweep TRUE to ils2; sweep
+   FOUND/IMPROVED/UNCHANGED/NONE to fold; ils2 to translate2; translate2 back to sweep in non-fast tiers (the loop,
+   guarded because ils2 carries a positive budget), or translate2 to fold in the Fast tier where sweep has budget 0,
+   returns immediately and never enters the loop.
+3. Tests: `IlsPolishFreeTicksTest`, `FacingStepNodeTest` (catalog/params, no-chain UNCHANGED, budget-0 never TRUE,
+   enumeration window/max, StartBox containment from j828), `BuiltinGraphsTest` (per-branch loop edges per tier),
+   `PipelineShapeTest` (collapses the sweep/ils2/translate2 cycle to one pass before comparing).
 
 ## Benchmark (hpk_human d10, d11, d12 without j155; `longer` preset; 60 s per jump; gap > 0 = short of reference)
 
@@ -85,8 +99,8 @@ does not check the box. Fixed by intersecting the translated StartBox into the t
 
 ## Open items
 
-- Builtin Fast/Optimize graphs do not include `runUpSweep` yet (would change the stage sequence guarded by
-  `PipelineShapeTest`); the user preset `longer_sweep.json` carries it after `freeStartImprove`.
+- Builtin Fast/Optimize graphs now include the `facingStep` loop after `freeStartImprove`; `PipelineShapeTest`
+  collapses the loop to a single pass so both tiers share one canonical shape.
 - `SolveResult` detail "Dual bound gap" is empty whenever the terminal node is ILS (the candidate's dual gap is not
   carried through `ilsPolish`); pre-existing display gap.
 - Bucket enumeration uses the 1.8.9 legacy deg-to-rad chain; on other MC versions this only affects dedup

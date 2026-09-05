@@ -1,10 +1,13 @@
 package de.legoshi.parkourcalc.anglesolver;
 
+import de.legoshi.parkourcalc.core.anglesolver.graph.Candidate;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
+import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeCatalog;
+import de.legoshi.parkourcalc.core.anglesolver.graph.NodeOutcome;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeType;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamValues;
-import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.RunUpSweepNode;
+import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.FacingStepNode;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
@@ -25,24 +28,23 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
-public class RunUpSweepNodeTest {
+public class FacingStepNodeTest {
 
     @Test
     public void catalogRegistrationAndDefaults() {
-        NodeType type = NodeCatalog.byId("runUpSweep");
-        assertNotNull("runUpSweep must be registered", type);
-        assertEquals("Run-up sweep", type.label);
+        NodeType type = NodeCatalog.byId("facingStep");
+        assertNotNull("facingStep must be registered", type);
+        assertEquals("Facing step", type.label);
         ParamValues p = type.defaultParams();
-        assertEquals(30, p.getInt("budgetSec"));
+        assertEquals(20, p.getInt("budgetSec"));
         assertEquals(0.1, p.getDouble("windowDeg"), 0.0);
         assertEquals(400, p.getInt("maxBuckets"));
-        assertEquals(300, p.getInt("stage1Ms"));
         assertEquals(6, p.getInt("topK"));
-        assertEquals(3, p.getInt("stage2Sec"));
-        assertEquals("both", p.getString("positionMode"));
         assertEquals("budgetSec", type.budgetParam);
+        assertNotNull("TRUE branch declared for the loop", type.branch(Guarantee.TRUE));
     }
 
     @Test
@@ -50,26 +52,69 @@ public class RunUpSweepNodeTest {
         List<JumpConstraint> cons = new ArrayList<>();
         cons.add(new JumpConstraint(JumpConstraint.Mode.X, 5, null, JumpConstraint.Op.PLUS,
                 JumpConstraint.Cmp.GE, 1.0, "x"));
-        assertEquals(-1, RunUpSweepNode.leadingChain(cons, 10));
+        assertEquals(-1, FacingStepNode.leadingChain(cons, 10));
     }
 
     @Test
     public void leadingDfChainDetected() {
         int lead = 4;
-        List<JumpConstraint> cons = dfChain(lead);
-        assertEquals(lead, RunUpSweepNode.leadingChain(cons, 10));
+        assertEquals(lead, FacingStepNode.leadingChain(dfChain(lead), 10));
+    }
+
+    @Test
+    public void noChainSpecReturnsUnchanged() {
+        int n = 12;
+        JumpPhysicsInputs sc = phys(n, 4);
+        List<JumpConstraint> cons = new ArrayList<>();
+        cons.add(new JumpConstraint(JumpConstraint.Mode.X, 5, null, JumpConstraint.Op.PLUS,
+                JumpConstraint.Cmp.GE, -1.0e9, "x"));
+        JumpSpec spec = new JumpSpec(sc, cons,
+                new Objective(JumpPhysicsInputs.Axis.X, Objective.Sense.MAX, n));
+        ExactJumpModel model = ExactJumpModel.forMcVersion("1.8.9");
+        GraphContext ctx = new GraphContext(spec, model, null, null, 1.0e-9,
+                new AtomicBoolean(false), null, true, null);
+        FacingStepNode node = new FacingStepNode(NodeCatalog.byId("facingStep").defaultParams()
+                .set("budgetSec", 3));
+        double[] yaws = new double[n];
+        Arrays.fill(yaws, sc.startYaw);
+        Candidate in = Candidate.of(ctx, yaws);
+        NodeOutcome out = node.execute(ctx, in, new AtomicBoolean(false),
+                System.nanoTime() + 3_000_000_000L);
+        assertEquals(Guarantee.UNCHANGED, out.branch);
+    }
+
+    @Test
+    public void budgetZeroNeverReturnsTrue() {
+        int n = 12;
+        int lead = 4;
+        JumpPhysicsInputs sc = phys(n, lead);
+        JumpSpec spec = new JumpSpec(sc, dfChain(lead),
+                new Objective(JumpPhysicsInputs.Axis.X, Objective.Sense.MAX, n));
+        ExactJumpModel model = ExactJumpModel.forMcVersion("1.8.9");
+        GraphContext ctx = new GraphContext(spec, model, null, null, 1.0e-9,
+                new AtomicBoolean(false), null, true, null);
+        FacingStepNode node = new FacingStepNode(NodeCatalog.byId("facingStep").defaultParams()
+                .set("budgetSec", 0));
+        double[] yaws = new double[n];
+        Arrays.fill(yaws, sc.startYaw);
+        Candidate in = Candidate.of(ctx, yaws);
+        for (int i = 0; i < 5; i++) {
+            NodeOutcome out = node.execute(ctx, in, new AtomicBoolean(false),
+                    System.nanoTime() + 3_000_000_000L);
+            assertNotEquals("fast tier must never enter the loop", Guarantee.TRUE, out.branch);
+        }
     }
 
     @Test
     public void enumerateAlwaysIncludesCenterBucket() {
-        List<Double> zero = RunUpSweepNode.enumerate(0.0F, false, -161.38, 0.0, 400);
+        List<Double> zero = FacingStepNode.enumerate(0.0F, false, -161.38, 0.0, 400);
         assertEquals("windowDeg 0 yields only the incumbent bucket", 1, zero.size());
         assertEquals(-161.38, zero.get(0), 0.0);
     }
 
     @Test
     public void enumerateRespectsWindowAndMax() {
-        List<Double> wide = RunUpSweepNode.enumerate(0.0F, false, -161.38, 0.1, 400);
+        List<Double> wide = FacingStepNode.enumerate(0.0F, false, -161.38, 0.1, 400);
         assertTrue("a 0.1 deg window spans several sine buckets", wide.size() > 1);
         assertEquals("center is always first", -161.38, wide.get(0), 0.0);
 
@@ -77,19 +122,19 @@ public class RunUpSweepNodeTest {
         double half = 0.1 + 1.0e-9;
         for (double y : wide) {
             assertTrue("sample stays within the window", Math.abs(y - (-161.38)) <= half);
-            buckets.add(RunUpSweepNode.sineBucket(RunUpSweepNode.gf0(0.0F, false, y)));
+            buckets.add(FacingStepNode.sineBucket(FacingStepNode.gf0(0.0F, false, y)));
         }
         assertEquals("every enumerated yaw is a distinct sine bucket", wide.size(), buckets.size());
 
-        List<Double> capped = RunUpSweepNode.enumerate(0.0F, false, -161.38, 0.1, 3);
+        List<Double> capped = FacingStepNode.enumerate(0.0F, false, -161.38, 0.1, 3);
         assertTrue("maxBuckets caps the enumeration", capped.size() <= 3);
 
-        List<Double> one = RunUpSweepNode.enumerate(0.0F, false, -161.38, 0.1, 1);
+        List<Double> one = FacingStepNode.enumerate(0.0F, false, -161.38, 0.1, 1);
         assertEquals("maxBuckets 1 yields only the center", 1, one.size());
     }
 
     @Test
-    public void freeStartBoxIntersectedIntoTakeoffBox() throws Exception {
+    public void freeStartBoxIntersectedIntoTakeoffBoxAndEmittedStartStaysInside() throws Exception {
         int n = 12;
         int lead = 4;
         JumpPhysicsInputs sc = phys(n, lead);
@@ -105,13 +150,11 @@ public class RunUpSweepNodeTest {
         GraphContext ctx = new GraphContext(spec, model, freeBox, null, 1.0e-9,
                 new AtomicBoolean(false), null, true, null);
 
-        ParamValues p = NodeCatalog.byId("runUpSweep").defaultParams()
-                .set("windowDeg", 0.0).set("maxBuckets", 1)
-                .set("budgetSec", 3).set("stage1Ms", 100).set("topK", 1).set("stage2Sec", 1)
-                .set("positionMode", "free");
-        RunUpSweepNode node = new RunUpSweepNode(p);
+        ParamValues p = NodeCatalog.byId("facingStep").defaultParams()
+                .set("windowDeg", 0.0).set("maxBuckets", 1).set("budgetSec", 3).set("topK", 1);
+        FacingStepNode node = new FacingStepNode(p);
 
-        Method prep = RunUpSweepNode.class.getDeclaredMethod("prep", GraphContext.class, double.class, int.class);
+        Method prep = FacingStepNode.class.getDeclaredMethod("prep", GraphContext.class, double.class, int.class);
         prep.setAccessible(true);
         Object bucket = prep.invoke(node, ctx, (double) sc.startYaw, lead);
         assertNotNull("prep must produce a takeoff box for the center bucket", bucket);
@@ -124,7 +167,9 @@ public class RunUpSweepNodeTest {
         assertEquals("takeoff box X width equals the StartBox width", 2.0 * h, xHi - xLo, 1.0e-9);
         assertEquals("takeoff box Z width equals the StartBox width", 2.0 * h, zHi - zLo, 1.0e-9);
 
-        node.execute(ctx, null, new AtomicBoolean(false), 0L);
+        NodeOutcome out = node.execute(ctx, null, new AtomicBoolean(false),
+                System.nanoTime() + 5_000_000_000L);
+        assertEquals("with a work item the node emits TRUE to continue the loop", Guarantee.TRUE, out.branch);
         Vec3dCore start = ctx.scenario.startPos;
         assertTrue("committed start X stays inside the StartBox",
                 start.x >= freeBox.pxLo - 1.0e-9 && start.x <= freeBox.pxHi + 1.0e-9);
