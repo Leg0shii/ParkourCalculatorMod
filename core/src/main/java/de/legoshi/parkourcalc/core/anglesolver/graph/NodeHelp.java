@@ -146,8 +146,6 @@ public final class NodeHelp {
                 + " current value. 0 tries only the current aim; larger explores more run-up angles.");
         param("facingStep", "maxBuckets", "The most distinct run-up aims to try. Caps the work when the"
                 + " window is wide.");
-        param("facingStep", "topK", "How many of the best-ranked run-up aims are handed on to the polish"
-                + " loop. Higher polishes more of them.");
 
         node("freeStartImprove", "Only works when the start block position is left free. It nudges both the"
                 + " aim angles and the exact standing spot together to make the jump land, or land better.");

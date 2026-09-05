@@ -105,3 +105,30 @@ does not check the box. Fixed by intersecting the translated StartBox into the t
   carried through `ilsPolish`); pre-existing display gap.
 - Bucket enumeration uses the 1.8.9 legacy deg-to-rad chain; on other MC versions this only affects dedup
   efficiency, never correctness (the full-spec verify is byte-exact per model).
+
+## Loop body A/B and the live tracker (2026-09-05, later)
+
+`topK` was removed: the loop walks every full-spec-feasible seed in rank order until its own deadline
+(`budgetSec` from the first visit, capped by the run deadline). Two loop bodies were measured under builtin Optimize
+at 60 s on the 11 jumps: body A = `ils2 -> translate2`, body B = `cert2 -> bnb2 -> ils2 -> translate2` with 3 s
+budgets each. Gap > 0 = short of reference.
+
+| jump | body A | body B |
+| --- | --- | --- |
+| j140 | +4.44e-4 | +4.41e-4 |
+| j345 | +2.56e-3 | +2.56e-3 |
+| j1099 | +0.657 | +0.657 |
+| j1149 | +2.10e-3 | +2.02e-3 |
+| j1150 | -3.75e-5 | -3.52e-5 |
+| j716 | +6e-7 | +6e-7 |
+| j718 | -6.32e-4 | -6.32e-4 |
+| j828 | -1.54e-5 | -7.3e-6 |
+| j925 | -1.66e-4 | -1.66e-4 |
+| j154 | +2e-7 | +4e-7 |
+
+Two wins each above 1e-6, identical j716 and j154, identical total time: body A stays the builtin default, body B
+remains expressible in a custom preset.
+
+Live tracker: a loop candidate was displayed with an impossible objective (j716 -699.950307, 42/44 met) because the
+live result was rebuilt at poll time against whatever start the scenario held by then. `SolveProgress` now snapshots
+the start together with the best candidate and the engine builds the live result at that start.

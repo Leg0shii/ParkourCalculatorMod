@@ -208,7 +208,6 @@ public final class NodeCatalog {
                 .param(ParamSpec.integer("budgetSec", "Max time (s)", 0, 600, 20))
                 .param(ParamSpec.decimal("windowDeg", "Sweep window (deg)", 0.0, 10.0, 0.1))
                 .param(ParamSpec.integer("maxBuckets", "Max buckets", 1, 100000, 400))
-                .param(ParamSpec.integer("topK", "Top-K to polish", 1, 64, 6))
                 .budgetParam("budgetSec")
                 .fallback(Guarantee.UNCHANGED)
                 .factory(FacingStepNode::new)

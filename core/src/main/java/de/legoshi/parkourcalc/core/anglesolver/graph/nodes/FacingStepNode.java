@@ -38,7 +38,6 @@ public final class FacingStepNode implements NodeRuntime {
     private final int budgetSec;
     private final double windowDeg;
     private final int maxBuckets;
-    private final int topK;
 
     private State state;
 
@@ -46,7 +45,6 @@ public final class FacingStepNode implements NodeRuntime {
         this.budgetSec = params.getInt("budgetSec");
         this.windowDeg = params.getDouble("windowDeg");
         this.maxBuckets = params.getInt("maxBuckets");
-        this.topK = params.getInt("topK");
     }
 
     @Override
@@ -70,6 +68,7 @@ public final class FacingStepNode implements NodeRuntime {
                 return NodeOutcome.of(miss, in);
             }
             state.max = ctx.maximize();
+            state.loopDeadline = System.nanoTime() + budgetSec * 1_000_000_000L;
             state.originalStart = new Vec3dCore(sc.startPos.x, sc.startPos.y, sc.startPos.z);
             boolean incumbentFeasible = in != null && in.yaws != null && in.feasible;
             state.incumbentFeasible = incumbentFeasible;
@@ -82,8 +81,10 @@ public final class FacingStepNode implements NodeRuntime {
             recordIncoming(ctx, in);
         }
 
+        long loopEnd = state.loopDeadline;
+        if (deadlineNanos > 0) loopEnd = Math.min(loopEnd, deadlineNanos);
         if ((state.incumbentFeasible || state.best.yaws != null) && state.workIdx < state.work.size()
-                && System.nanoTime() < deadlineNanos
+                && System.nanoTime() < loopEnd
                 && !(nodeToken != null && nodeToken.get())) {
             Work w = state.work.get(state.workIdx++);
             if (ctx.freeStart) Scoring.adoptPinnedStart(sc, w.startX, w.startZ);
@@ -155,9 +156,7 @@ public final class FacingStepNode implements NodeRuntime {
             seeds.add(new Seed(full, start.x, start.z, windowObjective(ctx, bd, bd.px, bd.pz, tail)));
         }
         seeds.sort((a, b) -> state.max ? Double.compare(b.rank, a.rank) : Double.compare(a.rank, b.rank));
-        int kept = Math.min(topK, seeds.size());
-        for (int i = 0; i < kept; i++) {
-            Seed s = seeds.get(i);
+        for (Seed s : seeds) {
             state.work.add(new Work(s.yaws, s.startX, s.startZ));
         }
     }
@@ -330,6 +329,7 @@ public final class FacingStepNode implements NodeRuntime {
         boolean seeded;
         boolean disabled;
         boolean max;
+        long loopDeadline;
         Vec3dCore originalStart;
         boolean incumbentFeasible;
         double[] incumbentYaws;
