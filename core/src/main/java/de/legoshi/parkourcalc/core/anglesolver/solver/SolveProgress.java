@@ -38,10 +38,14 @@ public final class SolveProgress {
     private double bestViolation;
     private boolean bestFeasible;
     private boolean haveBest;
+    private double bestStartX = Double.NaN;
+    private double bestStartZ = Double.NaN;
+    private boolean bestHasStart;
     private int version;
     private String stage;
     private String bestSolver;
     private Supplier<String> activeNodeSource;
+    private Supplier<double[]> startSource;
     private SolveProgress forwardTarget;
     private String forwardNode;
 
@@ -62,6 +66,10 @@ public final class SolveProgress {
 
     public synchronized void setActiveNodeSource(Supplier<String> source) {
         this.activeNodeSource = source;
+    }
+
+    public synchronized void setStartSource(Supplier<double[]> source) {
+        this.startSource = source;
     }
 
     public synchronized void forwardTo(SolveProgress target, String nodeLabel) {
@@ -106,6 +114,16 @@ public final class SolveProgress {
         bestViolation = violation;
         bestFeasible = feasible;
         bestSolver = fromStage;
+        double[] start = startSource != null ? startSource.get() : null;
+        if (start != null && start.length >= 2) {
+            bestStartX = start[0];
+            bestStartZ = start[1];
+            bestHasStart = true;
+        } else {
+            bestStartX = Double.NaN;
+            bestStartZ = Double.NaN;
+            bestHasStart = false;
+        }
         haveBest = true;
         version++;
         samples.add(new Sample(System.nanoTime() - startNanos, objective, violation, feasible, fromStage, node));
@@ -149,5 +167,17 @@ public final class SolveProgress {
 
     public synchronized double[] bestYaws() {
         return bestYaws == null ? null : bestYaws.clone();
+    }
+
+    public synchronized boolean hasBestStart() {
+        return bestHasStart;
+    }
+
+    public synchronized double bestStartX() {
+        return bestStartX;
+    }
+
+    public synchronized double bestStartZ() {
+        return bestStartZ;
     }
 }

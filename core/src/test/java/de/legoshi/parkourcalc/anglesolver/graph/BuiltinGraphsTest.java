@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.anglesolver.graph;
 
 import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
+import de.legoshi.parkourcalc.core.anglesolver.graph.GraphEdge;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphValidator;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
@@ -13,13 +14,19 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class BuiltinGraphsTest {
 
     private static final List<String> PIPELINE = Arrays.asList(
             "entry", "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
-            "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap", "translate", "snap", "emit");
+            "sweep", "ils2", "translate2", "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap",
+            "translate", "snap", "emit");
+
+    private static final List<String> LINEAR_PAIRS_FROM = Arrays.asList(
+            "entry", "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
+            "ils2", "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap", "translate", "snap");
 
     private static List<String> nodeIds(SolverGraph g) {
         List<String> ids = new ArrayList<String>();
@@ -27,18 +34,32 @@ public class BuiltinGraphsTest {
         return ids;
     }
 
-    private static void assertLinear(SolverGraph g) {
-        for (int i = 0; i < PIPELINE.size() - 1; i++) {
-            String from = PIPELINE.get(i);
-            String to = PIPELINE.get(i + 1);
+    private static void assertLinearExceptLoop(SolverGraph g) {
+        for (String from : LINEAR_PAIRS_FROM) {
+            String to = PIPELINE.get(PIPELINE.indexOf(from) + 1);
             int wired = 0;
             for (Guarantee br : Guarantee.values()) {
-                if (g.edgeFor(from, br) == null) continue;
+                GraphEdge e = g.edgeFor(from, br);
+                if (e == null) continue;
                 wired++;
-                assertEquals(from + " branch " + br, to, g.edgeFor(from, br).toNode);
+                assertEquals(from + " branch " + br, to, e.toNode);
             }
             assertTrue(from + " has no outgoing edges", wired > 0);
         }
+    }
+
+    private static void assertLoopEdges(SolverGraph g, boolean looping) {
+        assertNotNull("sweep TRUE must continue into ils2", g.edgeFor("sweep", Guarantee.TRUE));
+        assertEquals("ils2", g.edgeFor("sweep", Guarantee.TRUE).toNode);
+        for (Guarantee br : new Guarantee[]{Guarantee.FOUND, Guarantee.IMPROVED, Guarantee.UNCHANGED, Guarantee.NONE}) {
+            assertNotNull("sweep " + br + " must exit to fold", g.edgeFor("sweep", br));
+            assertEquals("sweep " + br, "fold", g.edgeFor("sweep", br).toNode);
+        }
+        assertEquals("ils2", "translate2", g.edgeFor("ils2", Guarantee.IMPROVED).toNode);
+        assertEquals("ils2", "translate2", g.edgeFor("ils2", Guarantee.UNCHANGED).toNode);
+        assertNotNull(g.edgeFor("translate2", Guarantee.DONE));
+        assertEquals("translate2 back edge only when the tier runs the loop",
+                looping ? "sweep" : "fold", g.edgeFor("translate2", Guarantee.DONE).toNode);
     }
 
     @Test
@@ -49,8 +70,10 @@ public class BuiltinGraphsTest {
         assertFalse(GraphValidator.hasErrors(GraphValidator.validate(opt)));
         assertEquals(PIPELINE, nodeIds(fast));
         assertEquals(PIPELINE, nodeIds(opt));
-        assertLinear(fast);
-        assertLinear(opt);
+        assertLinearExceptLoop(fast);
+        assertLinearExceptLoop(opt);
+        assertLoopEdges(fast, false);
+        assertLoopEdges(opt, true);
     }
 
     @Test
@@ -68,6 +91,10 @@ public class BuiltinGraphsTest {
         assertEquals(1, opt.node("seed").params.getInt("warmSec"));
         assertEquals(0, fast.node("snap").params.getInt("pairPass"));
         assertEquals(1, opt.node("snap").params.getInt("pairPass"));
+        assertEquals(0, fast.node("sweep").params.getInt("budgetSec"));
+        assertTrue(opt.node("sweep").params.getInt("budgetSec") > 0);
+        assertEquals(0, fast.node("ils2").params.getInt("budgetSec"));
+        assertTrue(opt.node("ils2").params.getInt("budgetSec") > 0);
     }
 
     @Test
@@ -75,6 +102,7 @@ public class BuiltinGraphsTest {
         SolverGraph g = BuiltinGraphs.fromBudget(true, true, true, 10, 3, 60);
         assertFalse(GraphValidator.hasErrors(GraphValidator.validate(g)));
         assertEquals(PIPELINE, nodeIds(g));
-        assertLinear(g);
+        assertLinearExceptLoop(g);
+        assertLoopEdges(g, true);
     }
 }

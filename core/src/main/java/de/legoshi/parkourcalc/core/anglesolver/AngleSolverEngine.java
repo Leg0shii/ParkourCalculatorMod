@@ -194,6 +194,10 @@ public final class AngleSolverEngine {
         return lastRunRecord;
     }
 
+    public Vec3dCore lastPlanStart() {
+        return lastPlan == null ? null : lastPlan.start;
+    }
+
     private static final class RunRecording {
         final SolveRunRecord.Config config;
         final SolveRunRecord.Problem problem;
@@ -793,7 +797,9 @@ public final class AngleSolverEngine {
         if (liveResult == null || v != liveVersion) {
             double[] yaws = p.bestYaws();
             if (yaws == null) return liveResult;
-            liveResult = buildLiveResult(job, yaws);
+            liveResult = p.hasBestStart()
+                    ? buildLiveResult(job, yaws, p.bestStartX(), p.bestStartZ())
+                    : buildLiveResult(job, yaws);
             liveVersion = v;
         }
         return liveResult;
@@ -861,6 +867,11 @@ public final class AngleSolverEngine {
             double[] yaws = p.bestYaws();
             if (yaws == null) return liveTraj;
             JumpPhysicsInputs sc = job.spec.asScenario();
+            if (p.hasBestStart() && !Double.isNaN(p.bestStartX()) && !Double.isNaN(p.bestStartZ())
+                    && (p.bestStartX() != sc.startPos.x || p.bestStartZ() != sc.startPos.z)) {
+                sc = sc.copy();
+                sc.startPos = new Vec3dCore(p.bestStartX(), sc.startPos.y, p.bestStartZ());
+            }
             ForwardPath path = model.forward(sc, sc.toGameFacings(yaws));
             liveTraj = new LiveTrajectory(++liveTrajSeq, job.startTick, path.posX, path.posZ, p.isBestFeasible());
             liveTrajVersion = v;
@@ -902,6 +913,7 @@ public final class AngleSolverEngine {
         if (rec != null) rec.ctx = ctx;
         lastRunState = ctx.runState;
         currentGraphContext = ctx;
+        progress.setStartSource(() -> new double[] {sc.startPos.x, sc.startPos.z});
         Candidate cand;
         try {
             cand = GraphRunner.run(job.graph, ctx);
@@ -1011,6 +1023,18 @@ public final class AngleSolverEngine {
 
     private SolveResult buildLiveResult(Job job, double[] yaws) {
         JumpPhysicsInputs sc = job.spec.asScenario();
+        double[] gameFacings = sc.toGameFacings(yaws);
+        return buildResultWithObjective(job, yaws, gameFacings, model.forward(sc, gameFacings));
+    }
+
+    private SolveResult buildLiveResult(Job job, double[] yaws, double startX, double startZ) {
+        JumpPhysicsInputs base = job.spec.asScenario();
+        if (Double.isNaN(startX) || Double.isNaN(startZ)
+                || (startX == base.startPos.x && startZ == base.startPos.z)) {
+            return buildLiveResult(job, yaws);
+        }
+        JumpPhysicsInputs sc = base.copy();
+        sc.startPos = new Vec3dCore(startX, base.startPos.y, startZ);
         double[] gameFacings = sc.toGameFacings(yaws);
         return buildResultWithObjective(job, yaws, gameFacings, model.forward(sc, gameFacings));
     }

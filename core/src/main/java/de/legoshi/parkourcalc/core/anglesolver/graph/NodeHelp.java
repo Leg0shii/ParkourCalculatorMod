@@ -139,6 +139,14 @@ public final class NodeHelp {
                 + " checks more angles but is slower, since it makes roughly 360 divided by this many"
                 + " attempts.");
 
+        node("facingStep", "For jumps with a fixed-facing run-up before takeoff. It tries small changes to"
+                + " the run-up aim, one significant-angle step at a time, seeds each promising aim, then hands"
+                + " the best ones to the polish and translate stages in a loop, keeping the best landing.");
+        param("facingStep", "windowDeg", "How far, in degrees, the run-up aim may wander either side of its"
+                + " current value. 0 tries only the current aim; larger explores more run-up angles.");
+        param("facingStep", "maxBuckets", "The most distinct run-up aims to try. Caps the work when the"
+                + " window is wide.");
+
         node("freeStartImprove", "Only works when the start block position is left free. It nudges both the"
                 + " aim angles and the exact standing spot together to make the jump land, or land better.");
         param("freeStartImprove", "jointOnly", "Only do the rescue pass that moves the start to make the"
