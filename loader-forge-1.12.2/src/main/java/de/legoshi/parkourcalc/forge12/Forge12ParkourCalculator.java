@@ -85,6 +85,7 @@ public class Forge12ParkourCalculator {
     private KeyBinding solverEndTickKeyBinding;
     private KeyBinding rerunSimulationKeyBinding;
     private KeyBinding togglePathKeyBinding;
+    private KeyBinding copyTeleportKeyBinding;
     private KeyBinding captureMomentumBlockKeyBinding;
     private KeyBinding captureCollisionBlockKeyBinding;
     private KeyBinding captureLandBlockKeyBinding;
@@ -147,6 +148,8 @@ public class Forge12ParkourCalculator {
         ClientRegistry.registerKeyBinding(rerunSimulationKeyBinding);
         togglePathKeyBinding = new KeyBinding("key.parkourcalculator.toggle_path", Keyboard.KEY_Y, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(togglePathKeyBinding);
+        copyTeleportKeyBinding = new KeyBinding("key.parkourcalculator.copy_teleport", Keyboard.KEY_K, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(copyTeleportKeyBinding);
         if (blockCaptureEnabled) {
             captureMomentumBlockKeyBinding = new KeyBinding("key.parkourcalculator.capture_momentum_block", Keyboard.KEY_M, "key.categories.parkourcalculator");
             ClientRegistry.registerKeyBinding(captureMomentumBlockKeyBinding);
@@ -338,6 +341,10 @@ public class Forge12ParkourCalculator {
         while (togglePathKeyBinding.isPressed()) {
             togglePathPressed = true;
         }
+        boolean copyTeleportPressed = false;
+        while (copyTeleportKeyBinding.isPressed()) {
+            copyTeleportPressed = true;
+        }
         boolean captureMomentum = false;
         boolean captureCollision = false;
         boolean captureLand = false;
@@ -395,6 +402,9 @@ public class Forge12ParkourCalculator {
             }
             if (togglePathPressed && chordFree) {
                 application.toggleShowPath();
+            }
+            if (copyTeleportPressed && chordFree) {
+                application.copyTeleportCommand();
             }
             if (captureMomentum && chordFree) {
                 application.captureAngleSolverBlock(BlockSelection.Kind.MOMENTUM);
@@ -471,6 +481,10 @@ public class Forge12ParkourCalculator {
         }
         if (keyCode == togglePathKeyBinding.getKeyCode()) {
             application.toggleShowPath();
+            return true;
+        }
+        if (keyCode == copyTeleportKeyBinding.getKeyCode()) {
+            application.copyTeleportCommand();
             return true;
         }
         return false;
