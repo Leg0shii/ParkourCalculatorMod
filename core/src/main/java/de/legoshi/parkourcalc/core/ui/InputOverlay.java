@@ -1438,7 +1438,7 @@ public final class InputOverlay {
         TickState state = boxController.getState(row);
         if (state == null) return;
         if (contextButton(String.format(MENU_TELEPORT_TO_TICK, row + 1))) {
-            playback.teleportToTick(state.position, state.yaw, boxController.getPitch(row));
+            playback.teleportToTick(state.position, boxController.getAppliedYaw(row), boxController.getAppliedPitch(row));
         }
     }
 
@@ -1449,7 +1449,8 @@ public final class InputOverlay {
         TickState state = boxController.getState(row);
         if (state == null) return;
         if (contextButton(MENU_COPY_TELEPORT)) {
-            ImGui.setClipboardText(TeleportCommand.format(state.position, state.yaw, boxController.getPitch(row)));
+            ImGui.setClipboardText(TeleportCommand.format(state.position,
+                    boxController.getAppliedYaw(row), boxController.getAppliedPitch(row)));
             if (hudMessage != null) {
                 hudMessage.accept("Copied teleport for tick " + (row + 1));
             }

@@ -427,7 +427,8 @@ public final class Application {
             copyStartTeleportCommand();
             return;
         }
-        ImGui.setClipboardText(TeleportCommand.format(state.position, state.yaw, boxController.getPitch(row)));
+        ImGui.setClipboardText(TeleportCommand.format(state.position,
+                boxController.getAppliedYaw(row), boxController.getAppliedPitch(row)));
         pushHudMessage("Copied teleport for tick " + (row + 1));
     }
 
