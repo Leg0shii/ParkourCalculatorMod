@@ -30,11 +30,11 @@ import static org.junit.Assert.fail;
 public class PipelineShapeTest {
 
     private static final List<String> FAST_PIPELINE = Arrays.asList(
-            "seed", "horizon", "wrap0", "cap1", "freeRescue", "peel", "freeImprove",
+            "seed", "horizon", "wrap0", "cap1", "freeRescue", "peel", "freeImprove", "sweep",
             "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap", "translate");
 
     private static final List<String> THOROUGH_PIPELINE = Arrays.asList(
-            "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
+            "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove", "sweep",
             "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap", "translate", "snap");
 
     private static final long TIMEOUT_MS = 4000;
@@ -120,13 +120,24 @@ public class PipelineShapeTest {
         engine.poll();
         GraphRunState rs = engine.graphRunState();
         if (rs == null) return null;
-        List<String> seq = new ArrayList<>();
-        for (GraphRunState.Step s : rs.steps()) seq.add(s.nodeId);
+        List<String> raw = new ArrayList<>();
+        for (GraphRunState.Step s : rs.steps()) raw.add(s.nodeId);
+        List<String> seq = collapseLoop(raw);
         if (!timedOut && seq.size() != pipeline.size()) {
             fail("incomplete sequence without timeout at " + name + " tier=" + (thorough ? "THOROUGH" : "FAST")
                     + ": " + seq);
         }
         return seq;
+    }
+
+    private static List<String> collapseLoop(List<String> seq) {
+        List<String> out = new ArrayList<>();
+        for (String id : seq) {
+            String mapped = id.equals("sweep") || id.equals("ils2") || id.equals("translate2") ? "sweep" : id;
+            if (!out.isEmpty() && out.get(out.size() - 1).equals(mapped)) continue;
+            out.add(mapped);
+        }
+        return out;
     }
 
     private static File resolve(String path) throws Exception {

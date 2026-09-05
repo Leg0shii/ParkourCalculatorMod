@@ -13,6 +13,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.LeafSnapNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.MarkSettledNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.ReportNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.RecedingHorizonNode;
+import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.FacingStepNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.RouterNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.SetupPeelNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.TranslatedStartNode;
@@ -197,6 +198,20 @@ public final class NodeCatalog {
                 .budgetParam("budgetSec")
                 .fallback(Guarantee.NONE)
                 .factory(FoldDriverNode::new)
+                .build());
+        register(NodeType.builder("facingStep", "Facing step", NodeCategory.RECOVERY)
+                .requires(InputRequirement.ANY)
+                .branch(Branch.feasible(Guarantee.FOUND))
+                .branch(Branch.feasible(Guarantee.IMPROVED))
+                .branch(Branch.preserves(Guarantee.UNCHANGED))
+                .branch(Branch.preserves(Guarantee.NONE))
+                .branch(Branch.unknown(Guarantee.TRUE))
+                .param(ParamSpec.integer("budgetSec", "Max time (s)", 0, 600, 20))
+                .param(ParamSpec.decimal("windowDeg", "Sweep window (deg)", 0.0, 10.0, 0.1))
+                .param(ParamSpec.integer("maxBuckets", "Max buckets", 1, 100000, 400))
+                .budgetParam("budgetSec")
+                .fallback(Guarantee.UNCHANGED)
+                .factory(FacingStepNode::new)
                 .build());
         register(NodeType.builder("homotopyLadder", "Homotopy ladder", NodeCategory.RECOVERY)
                 .requires(InputRequirement.ANY)

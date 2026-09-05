@@ -70,6 +70,15 @@ public final class BuiltinGraphs {
         g.add("freeImprove", "freeStartImprove")
                 .set("freeImprove", "budgetSec", fastTier ? 20 : Math.min(20, t))
                 .set("freeImprove", "warmSec", fastTier ? 0 : 1);
+        g.add("sweep", "facingStep")
+                .set("sweep", "budgetSec", fastTier ? 0 : Math.max(2, Math.min(20, stageSec / 3)));
+        g.add("ils2", "ilsPolish")
+                .set("ils2", "budgetSec", fastTier ? 0 : 3)
+                .set("ils2", "perturbMagMin", 0.0055)
+                .set("ils2", "perturbMagSpan", 10.0)
+                .set("ils2", "perturbTicksMin", 15)
+                .set("ils2", "perturbTicksSpan", 15);
+        g.add("translate2", "translatedStart");
         g.add("fold", "foldDriver")
                 .set("fold", "objectiveRounds", fastTier ? 0 : 16)
                 .set("fold", "multiStart", fastTier ? 0 : 2)
@@ -115,7 +124,18 @@ public final class BuiltinGraphs {
         chain(g, "cap1", "freeRescue");
         chain(g, "freeRescue", "peel");
         chain(g, "peel", "freeImprove");
-        chain(g, "freeImprove", "fold");
+        chain(g, "freeImprove", "sweep");
+        g.edge("sweep", Guarantee.TRUE, "ils2");
+        g.edge("sweep", Guarantee.FOUND, "fold");
+        g.edge("sweep", Guarantee.IMPROVED, "fold");
+        g.edge("sweep", Guarantee.UNCHANGED, "fold");
+        g.edge("sweep", Guarantee.NONE, "fold");
+        chain(g, "ils2", "translate2");
+        if (fastTier) {
+            g.edge("translate2", Guarantee.DONE, "fold");
+        } else {
+            g.edge("translate2", Guarantee.DONE, "sweep");
+        }
         chain(g, "fold", "ladder");
         chain(g, "ladder", "cert");
         chain(g, "cert", "bnb");

@@ -38,6 +38,7 @@ import de.legoshi.parkourcalc.core.ui.ServerEventLogPanel;
 import de.legoshi.parkourcalc.core.ui.TickInfoPanel;
 import de.legoshi.parkourcalc.core.ui.YawGizmoController;
 import de.legoshi.parkourcalc.core.ui.theme.HudMessageStyle;
+import de.legoshi.parkourcalc.core.ui.util.TeleportCommand;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
@@ -55,6 +56,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.GraphPresetIO;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunLog;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.undo.UndoController;
+import imgui.ImGui;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -176,7 +178,7 @@ public final class Application {
 
     public void setupUi() {
         inputOverlay = new InputOverlay(inputData, settings, selection, this::onUserChange,
-                this::setStartToPlayer, playback, mc, boxController
+                this::setStartToPlayer, playback, mc, boxController, this::pushHudMessage
         );
 
         angleSolverState = new AngleSolverState();
@@ -190,7 +192,7 @@ public final class Application {
         saveController.setDebugSource(boxController, settings);
         AngleSolverTable angleSolverTable = new AngleSolverTable(angleSolverState, settings, selection, constraintSelection, inputData::size);
         inputOverlay.setAngleSolver(angleSolverTable);
-        StartStateTable startStateTable = new StartStateTable(runner, () -> onUserChange(-1));
+        StartStateTable startStateTable = new StartStateTable(runner, () -> onUserChange(-1), this::copyStartTeleportCommand);
         inputOverlay.setStartState(startStateTable);
         FileSystemSaveStore graphStore = saveStore == null ? null : new FileSystemSaveStore(
                 saveStore.getSaveDir().resolve("graphs"), saveStore.getModVersion(), saveStore.getMcVersion(),
@@ -198,6 +200,7 @@ public final class Application {
         saveController.setGraphStore(graphStore);
         AngleSolverEngine angleSolverEngine = new AngleSolverEngine(angleSolverState, boxController, inputData, this::onUserChange, forwardModel);
         angleSolverEngine.setOnStartMoved(runner::setStartPosition);
+        angleSolverEngine.setOnStartYawChanged(runner::setStartYaw);
         this.solverEngine = angleSolverEngine;
         if (saveStore != null) {
             angleSolverEngine.setRunLog(new SolveRunLog(saveStore.getSaveDir().resolve("runs"),
@@ -313,6 +316,12 @@ public final class Application {
         SettingsIO.save(settingsPath, settings);
     }
 
+    public void toggleShowPath() {
+        settings.showPath = !settings.showPath;
+        saveSettings();
+        pushHudMessage(settings.showPath ? "Path shown" : "Path hidden");
+    }
+
     /** Loader calls this each frame with the display height; resolves the auto-scale sentinel once, then persists. */
     public void resolveAutoScaleIfNeeded(int displayHeightPx) {
         if (settings.scaleIndex != Settings.AUTO_SCALE_INDEX) return;
@@ -416,6 +425,24 @@ public final class Application {
         runner.setStartPosition(mc.getPlayerPosition());
         runner.setStartYaw(mc.getPlayerYaw());
         onUserChange(-1);
+    }
+
+    public void copyTeleportCommand() {
+        int row = firstSelectedRow();
+        TickState state = row >= 0 ? boxController.getState(row) : null;
+        if (state == null) {
+            copyStartTeleportCommand();
+            return;
+        }
+        ImGui.setClipboardText(TeleportCommand.format(state.position,
+                boxController.getAppliedYaw(row), boxController.getAppliedPitch(row)));
+        pushHudMessage("Copied teleport for tick " + (row + 1));
+    }
+
+    public void copyStartTeleportCommand() {
+        ImGui.setClipboardText(TeleportCommand.format(
+                runner.getStartPosition(), runner.getStartYaw(), runner.getStartPitch()));
+        pushHudMessage("Copied teleport for start");
     }
 
     private WorldPick pickWorld(Vec3dCore rayOrigin, Vec3dCore rayDirection) {

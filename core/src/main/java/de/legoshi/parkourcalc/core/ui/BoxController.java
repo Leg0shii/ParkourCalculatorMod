@@ -166,6 +166,16 @@ public final class BoxController {
         return states.get(index).yaw;
     }
 
+    public float getAppliedYaw(int index) {
+        if (index < 0 || index >= states.size()) return 0f;
+        return states.get(index + 1 < states.size() ? index + 1 : index).yaw;
+    }
+
+    public float getAppliedPitch(int index) {
+        if (index < 0) return 0f;
+        return getPitch(index + 1 < pitches.length ? index + 1 : index);
+    }
+
     /** Unmodifiable view of recorded per-tick states; index aligned with positions. */
     public List<TickState> getStates() {
         return Collections.unmodifiableList(states);

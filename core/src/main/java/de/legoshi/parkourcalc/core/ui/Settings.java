@@ -111,6 +111,7 @@ public final class Settings {
     public static final int MIN_PATH_RENDER_DISTANCE = 16;
     public static final int MAX_PATH_RENDER_DISTANCE = 512;
     private static final boolean DEFAULT_UNLIMITED_PATH_RENDER = false;
+    private static final boolean DEFAULT_SHOW_PATH = true;
 
     private static final int DEFAULT_REPLAY_START_DELAY_TICKS = 0;
     public static final int MIN_REPLAY_START_DELAY_TICKS = 0;
@@ -191,6 +192,7 @@ public final class Settings {
 
     public int pathRenderDistance = DEFAULT_PATH_RENDER_DISTANCE;
     public boolean unlimitedPathRender = DEFAULT_UNLIMITED_PATH_RENDER;
+    public boolean showPath = DEFAULT_SHOW_PATH;
 
     public float scrollbarSize = DEFAULT_SCROLLBAR_SIZE;
     public float scrollbarGrabMinSize = DEFAULT_SCROLLBAR_GRAB_MIN_SIZE;
@@ -304,6 +306,7 @@ public final class Settings {
         yawFlickSpeed = DEFAULT_YAW_FLICK_SPEED;
         pathRenderDistance = DEFAULT_PATH_RENDER_DISTANCE;
         unlimitedPathRender = DEFAULT_UNLIMITED_PATH_RENDER;
+        showPath = DEFAULT_SHOW_PATH;
         scrollbarSize = DEFAULT_SCROLLBAR_SIZE;
         scrollbarGrabMinSize = DEFAULT_SCROLLBAR_GRAB_MIN_SIZE;
         tickInfoPrecision = DEFAULT_TICK_INFO_PRECISION;
