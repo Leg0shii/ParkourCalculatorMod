@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.12.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.11.0...v1.12.0) (2026-09-06)
+
+
+### Features
+
+* add a hotkey to toggle path rendering ([#467](https://github.com/Leg0shii/ParkourCalculatorMod/issues/467)) ([b276c61](https://github.com/Leg0shii/ParkourCalculatorMod/commit/b276c61d37fd833d94c37d9b194524c4f7120c01))
+* **anglesolver:** chain-aware ILS and run-up facing sweep node ([#469](https://github.com/Leg0shii/ParkourCalculatorMod/issues/469)) ([2d25661](https://github.com/Leg0shii/ParkourCalculatorMod/commit/2d25661572b4d02eddc6184be78a541cff0d38e7))
+* copy a tick as a teleport command ([#466](https://github.com/Leg0shii/ParkourCalculatorMod/issues/466)) ([ce28612](https://github.com/Leg0shii/ParkourCalculatorMod/commit/ce286126483138c04770d0635100d22286df09e3))
+
+
+### Bug Fixes
+
+* **anglesolver:** let a dF = 0 on Tick 1 solve the start facing ([b69b8c7](https://github.com/Leg0shii/ParkourCalculatorMod/commit/b69b8c711a9d04f4af632371b423428246e7f6ce))
+* **anglesolver:** let a dF = 0 on Tick 1 solve the start facing ([b69b8c7](https://github.com/Leg0shii/ParkourCalculatorMod/commit/b69b8c711a9d04f4af632371b423428246e7f6ce))
+* **anglesolver:** let a dF = 0 on Tick 1 solve the start facing ([c8f297a](https://github.com/Leg0shii/ParkourCalculatorMod/commit/c8f297a1c5e451d93186e166286714c33185c06a)), closes [#468](https://github.com/Leg0shii/ParkourCalculatorMod/issues/468)
+* use 1.12.2 folded deg-to-rad in ExactJumpModel moveFlying ([c981ba5](https://github.com/Leg0shii/ParkourCalculatorMod/commit/c981ba5c666eb10a9c68e52f47dd59af6c191561))
+* use 1.12.2 folded deg-to-rad in ExactJumpModel moveFlying ([15b73ac](https://github.com/Leg0shii/ParkourCalculatorMod/commit/15b73ac221001e16f5455e025f0d49993c03ecb3))
+
+
+### Performance Improvements
+
+* **anglesolver:** run the deterministic seed first in Fast with a 500 ms miss cap ([#470](https://github.com/Leg0shii/ParkourCalculatorMod/issues/470)) ([8db1ded](https://github.com/Leg0shii/ParkourCalculatorMod/commit/8db1ded369d0d70eddd52506ab479854a2ebba5f))
+
+
+### Miscellaneous Chores
+
+* weekly release train ([5f35a22](https://github.com/Leg0shii/ParkourCalculatorMod/commit/5f35a226a7935a76dbe62dc59964c90cadf7de4a))
+
 ## [1.11.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.10.0...v1.11.0) (2026-08-30)
 
 
