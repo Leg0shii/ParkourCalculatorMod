@@ -52,16 +52,23 @@ public final class ExactJumpModel implements ForwardModel {
     private final boolean modern;
     /** 26.x Mth.sin/cos: double-indexed lookup into the regenerated table (see McSineTable.sinStep262). */
     private final boolean sine262;
+    private final boolean foldedInputRad;
 
     public ExactJumpModel(double inertiaThreshold, boolean perAxisInertia, boolean modern) {
         this(inertiaThreshold, perAxisInertia, modern, false);
     }
 
     public ExactJumpModel(double inertiaThreshold, boolean perAxisInertia, boolean modern, boolean sine262) {
+        this(inertiaThreshold, perAxisInertia, modern, sine262, false);
+    }
+
+    public ExactJumpModel(double inertiaThreshold, boolean perAxisInertia, boolean modern, boolean sine262,
+                          boolean foldedInputRad) {
         this.inertiaThreshold = inertiaThreshold;
         this.perAxisInertia = perAxisInertia;
         this.modern = modern;
         this.sine262 = sine262;
+        this.foldedInputRad = foldedInputRad;
     }
 
     private float tableSin(float rad) {
@@ -108,7 +115,7 @@ public final class ExactJumpModel implements ForwardModel {
      *  additionally runs the rewritten double-indexed sine lookup. */
     public static ExactJumpModel forMcVersion(String mcVersion) {
         if (mcVersion != null && mcVersion.startsWith("1.8")) return new ExactJumpModel(0.005, true, false);
-        if (mcVersion != null && mcVersion.startsWith("1.12")) return new ExactJumpModel(0.003, true, false);
+        if (mcVersion != null && mcVersion.startsWith("1.12")) return new ExactJumpModel(0.003, true, false, false, true);
         if (mcVersion != null && mcVersion.startsWith("1.21.3")) return new ExactJumpModel(0.003, true, true, false);
         boolean sine262 = mcVersion != null && !mcVersion.startsWith("1.");
         return new ExactJumpModel(0.003, false, true, sine262);
@@ -264,7 +271,7 @@ public final class ExactJumpModel implements ForwardModel {
                     fm = accelSpeed / fm;
                     strafe *= fm;
                     forward *= fm;
-                    float rad = yawF * (float) Math.PI / 180.0F;
+                    float rad = foldedInputRad ? yawF * (float) (Math.PI / 180.0) : yawF * (float) Math.PI / 180.0F;
                     float sinD = tableSin(rad);
                     float cosD = tableCos(rad);
                     vx += (double) (strafe * cosD - forward * sinD);

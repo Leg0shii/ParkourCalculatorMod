@@ -25,7 +25,7 @@ public class CopyPasteTicksTest {
     }
 
     private static InputOverlay overlay(InputData data, SelectionManager sel, int[] dirtySink) {
-        return new InputOverlay(data, new Settings(), sel, t -> dirtySink[0] = t, null, null, null, null);
+        return new InputOverlay(data, new Settings(), sel, t -> dirtySink[0] = t, null, null, null, null, null);
     }
 
     @Test

@@ -95,10 +95,19 @@ public final class GraphRunner {
     }
 
     private static long budgetNanos(GraphNode n) {
+        long ms = budgetMillis(n);
+        if (ms > 0) return ms * 1_000_000L;
         String p = n.type.budgetParam;
         if (p == null) return 0L;
         int secs = n.params.getInt(p);
         return secs > 0 ? secs * 1_000_000_000L : 0L;
+    }
+
+    private static long budgetMillis(GraphNode n) {
+        for (ParamSpec s : n.type.params) {
+            if ("budgetMs".equals(s.key)) return n.params.getInt("budgetMs");
+        }
+        return 0L;
     }
 
     private static boolean reachesWrap(SolverGraph g, GraphNode from) {

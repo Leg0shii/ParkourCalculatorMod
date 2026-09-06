@@ -22,9 +22,11 @@ import java.util.function.DoubleConsumer;
 public final class StartStateTable {
 
     private static final int PRECISION = 5;
+    private static final String COPY_TELEPORT_LABEL = "Copy teleport command";
 
     private final SimulationRunner runner;
     private final Runnable reSimulate;
+    private final Runnable copyTeleport;
 
     private boolean expanded;
     private float measuredContentH = -1f;
@@ -34,9 +36,10 @@ public final class StartStateTable {
     private String activeField;
     private ImDrawList drawerDrawList;
 
-    public StartStateTable(SimulationRunner runner, Runnable reSimulate) {
+    public StartStateTable(SimulationRunner runner, Runnable reSimulate, Runnable copyTeleport) {
         this.runner = runner;
         this.reSimulate = reSimulate;
+        this.copyTeleport = copyTeleport;
     }
 
     public boolean isExpanded() {
@@ -66,6 +69,7 @@ public final class StartStateTable {
                 + sectionHead + 3f * inputRow
                 + sectionHead + 3f * inputRow
                 + sectionHead + 2f * inputRow
+                + spacing + inputRow
                 + sectionHead + 9f * inputRow
                 + fhs;
     }
@@ -101,6 +105,11 @@ public final class StartStateTable {
         ThemeManager.sectionSpacing();
         sectionHeader("Rotation");
         rotationEditor(runner.getStartYaw(), runner.getStartPitch());
+
+        ThemeManager.sectionSpacing();
+        if (Controls.secondaryButton(COPY_TELEPORT_LABEL, ImGui.getContentRegionAvail().x) && copyTeleport != null) {
+            copyTeleport.run();
+        }
 
         ThemeManager.sectionSpacing();
         sectionHeader("Resume state");

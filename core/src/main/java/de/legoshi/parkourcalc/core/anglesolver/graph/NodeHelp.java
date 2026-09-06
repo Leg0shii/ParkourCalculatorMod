@@ -45,6 +45,8 @@ public final class NodeHelp {
     static {
         shared("budgetSec", "How many seconds this stage may run. 0 means no separate limit, so it just"
                 + " shares the overall solve time. Higher lets it search longer.");
+        shared("budgetMs", "A finer millisecond cap on this stage, used to bail out fast when it is only"
+                + " a first attempt. 0 means no millisecond cap, so the second-based limit applies.");
         shared("tickCap", "If the jump takes more than this many ticks, skip this stage entirely."
                 + " A guard so very long jumps do not make the solve crawl.");
         shared("labelSuffix", "Optional text added to the solution's name when this stage succeeds, so you"
@@ -138,6 +140,14 @@ public final class NodeHelp {
         param("setupPeel", "stepDeg", "How far apart, in degrees, the starting aims it sweeps are. Smaller"
                 + " checks more angles but is slower, since it makes roughly 360 divided by this many"
                 + " attempts.");
+
+        node("facingStep", "For jumps with a fixed-facing run-up before takeoff. It tries small changes to"
+                + " the run-up aim, one significant-angle step at a time, seeds each promising aim, then hands"
+                + " the best ones to the polish and translate stages in a loop, keeping the best landing.");
+        param("facingStep", "windowDeg", "How far, in degrees, the run-up aim may wander either side of its"
+                + " current value. 0 tries only the current aim; larger explores more run-up angles.");
+        param("facingStep", "maxBuckets", "The most distinct run-up aims to try. Caps the work when the"
+                + " window is wide.");
 
         node("freeStartImprove", "Only works when the start block position is left free. It nudges both the"
                 + " aim angles and the exact standing spot together to make the jump land, or land better.");

@@ -165,8 +165,8 @@ anglesolver/
   FoldDriverEngineTest.java  #422 M1 engine-level gates through engine.solve() (driver wired as
                            primary recovery): j003 FAST + THOROUGH-10s
                            in-deadline, j1150-noturn-inner THOROUGH beats the p2 witness,
-                           j154-noturn-ja-inner FAST beats the F3 witness, FAST re-solve
-                           determinism
+                           j154-noturn-ja-inner FAST solves (feasibility only, FAST has no
+                           objective bar), FAST re-solve determinism
   CertifiedBnbTest.java    #422 M2a certified B&B fast units: SineTableGeometry containment (realized
                            inputs inside boxes/chords/supports across all four eras incl. the legacy
                            jump-tick double cast), a tiny 2-tick instance certifying at the enumerated
@@ -175,8 +175,8 @@ anglesolver/
                            captures reach certified gap <= 1.5e-4 with dominating bounds and
                            feasible incumbents (per-capture numbers printed; the 1e-9 plateau
                            mechanism is in ARCH2-M2A-CERTIFIED-BNB.md), dF specs decline cleanly,
-                           j1150-noturn-inner FAST regression
-                           floor, j154-noturn-ja-inner FAST beats the in-game F3 witness
+                           j1150-noturn-inner and j154-noturn-ja-inner solve under FAST
+                           (feasibility only, FAST has no objective bar)
   CertBnbProbe.java        env-gated certified-B&B probe: PKC_CERTBNB_CAPTURES (comma list),
                            PKC_CERTBNB_OUT/NODES/MS/MODE; nodeCap=1 dumps root bounds for the COPT
                            root-bound validation (research/copt/certbnb_rootcheck.py)

@@ -15,6 +15,7 @@ public final class IlsPolish {
         public int perturbTicksSpan = 13;
         public double perturbMagMin = 3.0;
         public double perturbMagSpan = 50.0;
+        public int[] freeTicks = null;
     }
 
     private IlsPolish() {
@@ -50,11 +51,7 @@ public final class IlsPolish {
                 double[] base = best;
                 List<double[]> kicks = new ArrayList<>(batch);
                 for (int b = 0; b < batch; b++) {
-                    double[] cand = base.clone();
-                    int ticks = cfg.perturbTicksMin + rng.nextInt(cfg.perturbTicksSpan);
-                    double mag = cfg.perturbMagMin + rng.nextDouble() * cfg.perturbMagSpan;
-                    for (int q = 0; q < ticks; q++) cand[rng.nextInt(n)] += (rng.nextDouble() * 2.0 - 1.0) * mag;
-                    kicks.add(cand);
+                    kicks.add(kickCandidate(base, rng, n, cfg));
                 }
 
                 java.util.stream.Stream<double[]> stream = sequential ? kicks.stream() : kicks.parallelStream();
@@ -72,7 +69,7 @@ public final class IlsPolish {
                     }
                 }
                 if (improved) {
-                    double[] pol = BucketAscentPolish.polish(model, spec, Angles.wrapAll(best), BucketAscentPolish.THOROUGH, cancel);
+                    double[] pol = BucketAscentPolish.polish(model, spec, Angles.wrapAll(best), BucketAscentPolish.THOROUGH, cancel, true, cfg.freeTicks);
                     double ps = score(model, sc, c, obj, sign, pol);
                     if (ps < bestScore) {
                         bestScore = ps;
@@ -90,11 +87,32 @@ public final class IlsPolish {
         return best;
     }
 
+    public static double[] kickCandidate(double[] base, Random rng, int n, Config cfg) {
+        double[] cand = base.clone();
+        int[] free = cfg.freeTicks;
+        boolean useFree = free != null && free.length > 0;
+        int freeN = useFree ? free.length : n;
+        int ticks;
+        if (useFree) {
+            int lo = Math.min(cfg.perturbTicksMin, freeN);
+            int span = Math.max(1, Math.min(cfg.perturbTicksSpan, freeN));
+            ticks = Math.min(freeN, lo + rng.nextInt(span));
+        } else {
+            ticks = cfg.perturbTicksMin + rng.nextInt(cfg.perturbTicksSpan);
+        }
+        double mag = cfg.perturbMagMin + rng.nextDouble() * cfg.perturbMagSpan;
+        for (int q = 0; q < ticks; q++) {
+            int idx = useFree ? free[rng.nextInt(freeN)] : rng.nextInt(n);
+            cand[idx] += (rng.nextDouble() * 2.0 - 1.0) * mag;
+        }
+        return cand;
+    }
+
     private static double[] climb(ForwardModel model, JumpSpec spec, JumpPhysicsInputs sc,
                                   JumpConstraintCompiler.Compiled c, Objective obj, double sign,
                                   double[] start, AtomicBoolean cancel, Config cfg) {
         double[] cur = start;
-        double[] pol = BucketAscentPolish.polish(model, spec, Angles.wrapAll(cur), BucketAscentPolish.FAST, cancel);
+        double[] pol = BucketAscentPolish.polish(model, spec, Angles.wrapAll(cur), BucketAscentPolish.FAST, cancel, true, cfg.freeTicks);
         return score(model, sc, c, obj, sign, pol) < score(model, sc, c, obj, sign, cur) ? pol : cur;
     }
 

@@ -10,6 +10,7 @@ import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverTable;
 import de.legoshi.parkourcalc.core.ui.anglesolver.SolverWidgets;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
+import de.legoshi.parkourcalc.core.ui.util.TeleportCommand;
 import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImDrawList;
 import imgui.ImGui;
@@ -28,6 +29,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 import java.util.function.Supplier;
 
@@ -77,6 +79,7 @@ public final class InputOverlay {
 
     private static final String MENU_SET_TO_PLAYER = "Set to user position";
     private static final String MENU_TELEPORT_TO_TICK = "Teleport player to tick %d";
+    private static final String MENU_COPY_TELEPORT = "Copy teleport command";
     private static final String COL_TELEPORT = "Teleport";
     private static final String TELEPORT_X_LABEL = "X";
     private static final String TELEPORT_Y_LABEL = "Y";
@@ -122,6 +125,7 @@ public final class InputOverlay {
     private final PlaybackController playback;
     private final MinecraftAccess mc;
     private final BoxController boxController;
+    private final Consumer<String> hudMessage;
 
     private final SelectionManager selection;
     private final KeyDragSelect keyDragSelect = new KeyDragSelect();
@@ -216,7 +220,7 @@ public final class InputOverlay {
 
     public InputOverlay(InputData data, Settings settings, SelectionManager selection, IntConsumer onDataChangedAt,
                         Runnable onSetPlayerPosition, PlaybackController playback,
-                        MinecraftAccess mc, BoxController boxController
+                        MinecraftAccess mc, BoxController boxController, Consumer<String> hudMessage
     ) {
         this.data = data;
         this.settings = settings;
@@ -226,6 +230,7 @@ public final class InputOverlay {
         this.playback = playback;
         this.mc = mc;
         this.boxController = boxController;
+        this.hudMessage = hudMessage;
     }
 
     private AngleSolverTable angleSolver;
@@ -1415,6 +1420,7 @@ public final class InputOverlay {
             notifyFullResim();
         }
         renderTeleportToTickOption();
+        renderCopyAsTeleportOption();
         renderApplyPotionOptions();
         renderYawLockOption();
         renderPitchLockOption();
@@ -1432,7 +1438,22 @@ public final class InputOverlay {
         TickState state = boxController.getState(row);
         if (state == null) return;
         if (contextButton(String.format(MENU_TELEPORT_TO_TICK, row + 1))) {
-            playback.teleportToTick(state.position, state.yaw, boxController.getPitch(row));
+            playback.teleportToTick(state.position, boxController.getAppliedYaw(row), boxController.getAppliedPitch(row));
+        }
+    }
+
+    private void renderCopyAsTeleportOption() {
+        if (boxController == null) return;
+        int row = selection.singleSelectedRow();
+        if (row < 0) return;
+        TickState state = boxController.getState(row);
+        if (state == null) return;
+        if (contextButton(MENU_COPY_TELEPORT)) {
+            ImGui.setClipboardText(TeleportCommand.format(state.position,
+                    boxController.getAppliedYaw(row), boxController.getAppliedPitch(row)));
+            if (hudMessage != null) {
+                hudMessage.accept("Copied teleport for tick " + (row + 1));
+            }
         }
     }
 

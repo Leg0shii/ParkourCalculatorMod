@@ -25,6 +25,22 @@ public class EngineFileScreen {
         SaveIO.applyRowsTo(file, inputs);
         AngleSolverState state = new AngleSolverState();
         SaveIO.applyAngleSolverTo(file, state);
+        String graphFile = System.getenv("PKC_GRAPH_FILE");
+        if (graphFile != null && !graphFile.isEmpty()) {
+            String gc = new String(Files.readAllBytes(new File(graphFile).toPath()), StandardCharsets.UTF_8);
+            de.legoshi.parkourcalc.core.save.Result<de.legoshi.parkourcalc.core.anglesolver.graph.GraphPresetFile> parsed =
+                    de.legoshi.parkourcalc.core.anglesolver.graph.GraphPresetIO.parse(gc);
+            if (!parsed.ok) throw new IllegalStateException("graph parse: " + parsed.error);
+            de.legoshi.parkourcalc.core.save.Result<de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph> mat =
+                    de.legoshi.parkourcalc.core.anglesolver.graph.GraphPresetIO.materialize(parsed.value);
+            if (!mat.ok) throw new IllegalStateException("graph materialize: " + mat.error);
+            state.setEffort(AngleSolverState.Effort.CUSTOM);
+            String pn = file.angleSolver != null && file.angleSolver.graphPreset != null
+                    ? file.angleSolver.graphPreset : "customFile";
+            state.setGraphPresetName(pn);
+            state.setCustomGraph(mat.value);
+            System.out.printf("FILE GRAPH loaded=%s nodes=%d preset=%s%n", graphFile, mat.value.nodes.size(), pn);
+        }
         String effort = System.getenv("PKC_SOLVE_EFFORT");
         if (effort != null && !effort.isEmpty()) state.setEffort(AngleSolverState.Effort.valueOf(effort));
         String optSec = System.getenv("PKC_OPTIMIZE_SECONDS");
@@ -417,7 +433,21 @@ public class EngineFileScreen {
         if (dbg != null) {
             de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs ph = dbg.asScenario();
             de.legoshi.parkourcalc.core.anglesolver.solver.StartBox box = ph.startBox;
-            System.out.printf("FILE finalStart=(%.4f,%.4f) box=%s%n", ph.startPos.x, ph.startPos.z, box == null ? "null" : box.label());
+            System.out.printf("FILE finalStart=(%.15f,%.15f) box=%s%n", ph.startPos.x, ph.startPos.z, box == null ? "null" : box.label());
+        }
+        de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunRecord rec = engine.lastRunRecord();
+        if (rec != null) {
+            System.out.printf("RECORD chain=%s freeStart=%s status=%s wallMs=%d obj=%s viol=%s%n",
+                    rec.outcome == null ? "null" : rec.outcome.chain,
+                    rec.problem == null ? "?" : Boolean.toString(rec.problem.freeStart),
+                    rec.outcome == null ? "?" : rec.outcome.status,
+                    rec.outcome == null ? -1 : rec.outcome.wallNanos / 1_000_000L,
+                    rec.outcome == null || rec.outcome.objective == null ? "-" : String.format("%.9f", rec.outcome.objective),
+                    rec.outcome == null || rec.outcome.violation == null ? "-" : String.format("%.3e", rec.outcome.violation));
+            for (de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunRecord.NodeRun nr : rec.nodes) {
+                System.out.printf("RECNODE id=%s label=%s visits=%d ms=%d taken=%s evals=%d%n",
+                        nr.id, nr.label, nr.visits, nr.elapsedNanos / 1_000_000L, nr.taken, nr.evals);
+            }
         }
     }
 

@@ -136,7 +136,8 @@ public final class AngleSolverTable {
         return c.isUnsupportedDf()
                 ? "Unsupported dF shape from an older save; solves containing it will fail."
                         + " Re-select the dF field to reset it to dF = 0, or delete it."
-                : "dF is supported as dF = 0 only (hold the facing of the previous tick)";
+                : "dF is supported as dF = 0 only (hold the facing of the previous tick;"
+                        + " on Tick 1 the start facing is solved for and Apply moves it)";
     }
 
     public AngleSolverTable(AngleSolverState state, Settings settings, SelectionManager selection,

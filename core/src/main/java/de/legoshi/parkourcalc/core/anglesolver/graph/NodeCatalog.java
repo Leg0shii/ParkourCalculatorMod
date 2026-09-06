@@ -13,6 +13,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.LeafSnapNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.MarkSettledNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.ReportNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.RecedingHorizonNode;
+import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.FacingStepNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.RouterNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.SetupPeelNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.TranslatedStartNode;
@@ -94,6 +95,7 @@ public final class NodeCatalog {
                 .branch(Branch.preserves(Guarantee.NONE))
                 .param(ParamSpec.bool("keepBetter", "Keep better vs incumbent", false))
                 .param(ParamSpec.integer("budgetSec", "Max time (s)", 0, 600, 0))
+                .param(ParamSpec.integer("budgetMs", "Max time (ms)", 0, 600000, 0))
                 .param(ParamSpec.integer("slpPhase1Calls", "SLP phase-1 calls", 1, 10000, 40))
                 .param(ParamSpec.integer("slpTotalCalls", "SLP total calls", 1, 10000, 60))
                 .param(ParamSpec.decimal("slpTrStartDeg", "SLP trust region start (deg)", 0.001, 360.0, 30.0))
@@ -196,6 +198,20 @@ public final class NodeCatalog {
                 .budgetParam("budgetSec")
                 .fallback(Guarantee.NONE)
                 .factory(FoldDriverNode::new)
+                .build());
+        register(NodeType.builder("facingStep", "Facing step", NodeCategory.RECOVERY)
+                .requires(InputRequirement.ANY)
+                .branch(Branch.feasible(Guarantee.FOUND))
+                .branch(Branch.feasible(Guarantee.IMPROVED))
+                .branch(Branch.preserves(Guarantee.UNCHANGED))
+                .branch(Branch.preserves(Guarantee.NONE))
+                .branch(Branch.unknown(Guarantee.TRUE))
+                .param(ParamSpec.integer("budgetSec", "Max time (s)", 0, 600, 20))
+                .param(ParamSpec.decimal("windowDeg", "Sweep window (deg)", 0.0, 10.0, 0.1))
+                .param(ParamSpec.integer("maxBuckets", "Max buckets", 1, 100000, 400))
+                .budgetParam("budgetSec")
+                .fallback(Guarantee.UNCHANGED)
+                .factory(FacingStepNode::new)
                 .build());
         register(NodeType.builder("homotopyLadder", "Homotopy ladder", NodeCategory.RECOVERY)
                 .requires(InputRequirement.ANY)
