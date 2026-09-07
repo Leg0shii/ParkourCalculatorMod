@@ -116,8 +116,7 @@ public final class AngleSolverWindow implements RenderInterface {
     private String[] presetNames;
     private String presetError;
     private Runnable applySurfaceState = () -> { };
-    private Runnable findNoTurn = () -> { };
-    private String noTurnStatus = "";
+    private Runnable openStratfinder = () -> { };
 
     private boolean yawsExpanded;
     private boolean detailsExpanded;
@@ -903,12 +902,8 @@ public final class AngleSolverWindow implements RenderInterface {
         applySurfaceState = action != null ? action : () -> { };
     }
 
-    public void setFindNoTurn(Runnable action) {
-        findNoTurn = action != null ? action : () -> { };
-    }
-
-    public void setNoTurnStatus(String status) {
-        noTurnStatus = status;
+    public void setOpenStratfinder(Runnable action) {
+        openStratfinder = action != null ? action : () -> { };
     }
 
     private void renderActions() {
@@ -932,14 +927,11 @@ public final class AngleSolverWindow implements RenderInterface {
         } else if (Controls.secondaryButton("Solve")) {
             runTicks.start();
         }
-        if (Controls.secondaryButton("Find No-Turn")) {
-            findNoTurn.run();
+        if (Controls.secondaryButton("Stratfinder")) {
+            openStratfinder.run();
         }
         if (ImGui.isItemHovered()) {
-            ImGui.setTooltip("Search key schedules (cold) for a byte-exact NO-TURN: a single settable facing across the run-up, then the turn. Mark the no-turn ticks with dF = 0, set the landing constraints, the jump rows, and a free-start box.");
-        }
-        if (noTurnStatus != null && !noTurnStatus.isEmpty()) {
-            ImGui.textWrapped(noTurnStatus);
+            ImGui.setTooltip("Open the stratfinder: a cold search over key schedules for a byte-exact NO-TURN line, with live results you can apply while it runs.");
         }
     }
 

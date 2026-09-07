@@ -25,14 +25,23 @@ public final class NoTurnProblem {
     public final int[] jumpTicks;
     public final int setupEnd;
     public final boolean[] tied;
+    public final boolean explicitTies;
+    public final boolean jaAll;
+    public final int[] segment;
 
     public final List<JumpConstraint> walls;
 
     public String issue;
 
     private static final double DF_EPS = 1.0e-3;
+    private static final int DEFAULT_AIR_COMBO = NoTurnKeys.WA;
 
     private NoTurnProblem(JumpSpec baseSpec, ExactJumpModel model) {
+        this(baseSpec, model, false);
+    }
+
+    private NoTurnProblem(JumpSpec baseSpec, ExactJumpModel model, boolean jaAll) {
+        this.jaAll = jaAll;
         this.baseSpec = baseSpec;
         this.model = model;
         this.base = baseSpec.asScenario();
@@ -52,17 +61,25 @@ public final class NoTurnProblem {
         for (int i = 0; i < jt.size(); i++) jumpTicks[i] = jt.get(i);
 
         this.tied = new boolean[n];
+        this.segment = new int[n];
+        for (int t = 0; t < n; t++) segment[t] = t;
         int maxTied = -1;
         for (JumpConstraint c : baseSpec.constraints) {
             if (c.mode == JumpConstraint.Mode.F && c.t2 != null
-                    && c.op == JumpConstraint.Op.MINUS && c.cmp == JumpConstraint.Cmp.EQ
-                    && Math.abs(c.rhs) <= DF_EPS) {
+                    && c.op == JumpConstraint.Op.MINUS && Math.abs(c.rhs) <= DF_EPS) {
                 markTied(c.t1);
                 markTied(c.t2);
                 maxTied = Math.max(maxTied, Math.max(c.t1, c.t2));
+                if (c.t1 >= 0 && c.t1 < n && c.t2 >= 0 && c.t2 < n) {
+                    int a = root(c.t1);
+                    int b = root(c.t2);
+                    if (a != b) segment[Math.max(a, b)] = Math.min(a, b);
+                }
             }
         }
+        for (int t = 0; t < n; t++) segment[t] = root(t);
         int lastJump = jumpTicks.length > 0 ? jumpTicks[jumpTicks.length - 1] : -1;
+        this.explicitTies = maxTied >= 0;
         int end;
         if (maxTied >= 0) {
             end = Math.max(maxTied, lastJump);
@@ -74,6 +91,19 @@ public final class NoTurnProblem {
             for (int t = 1; t <= end; t++) markTied(t);
         }
         this.setupEnd = Math.min(Math.max(end, 0), n - 1);
+        if (jaAll) {
+            for (int jtk : jumpTicks) if (jtk <= setupEnd) tied[jtk] = false;
+        }
+        if (base.forwardInputPerTick != null && base.strafeInputPerTick != null) {
+            for (int t = setupEnd + 1; t < n; t++) {
+                boolean idle = Math.abs(base.forwardInputPerTick[t]) < 1.0e-4
+                        && Math.abs(base.strafeInputPerTick[t]) < 1.0e-4;
+                if (!idle) continue;
+                base.forwardInputPerTick[t] = NoTurnKeys.forwardInput(DEFAULT_AIR_COMBO);
+                base.strafeInputPerTick[t] = NoTurnKeys.strafeInput(DEFAULT_AIR_COMBO);
+                if (base.sprintPerTick != null) base.sprintPerTick[t] = true;
+            }
+        }
 
         this.walls = new ArrayList<>();
         for (JumpConstraint c : baseSpec.constraints) {
@@ -88,14 +118,28 @@ public final class NoTurnProblem {
         if (t >= 0 && t < n) tied[t] = true;
     }
 
+    private int root(int t) {
+        while (segment[t] != t) t = segment[t];
+        return t;
+    }
+
+    private int mainSegment() {
+        for (int t = 0; t <= setupEnd; t++) if (tied[t]) return segment[t];
+        return -1;
+    }
+
     public static NoTurnProblem from(JumpSpec baseSpec, ExactJumpModel model) {
+        return from(baseSpec, model, false);
+    }
+
+    public static NoTurnProblem from(JumpSpec baseSpec, ExactJumpModel model, boolean jaAll) {
         if (baseSpec == null) {
             NoTurnProblem p = new NoTurnProblem(new JumpSpec(new JumpPhysicsInputs(1), new ArrayList<>(),
                     new Objective(JumpPhysicsInputs.Axis.X, Objective.Sense.MAX, 0)), model);
             p.issue = "no solver problem is set up (start tick, landing tick, objective)";
             return p;
         }
-        NoTurnProblem p = new NoTurnProblem(baseSpec, model);
+        NoTurnProblem p = new NoTurnProblem(baseSpec, model, jaAll);
         if (p.setupEnd < 1) p.issue = "the run-up is too short to search (need at least one setup tick)";
         if (p.walls.isEmpty()) p.issue = "no landing constraints found; add X/Z landing walls first";
         return p;
@@ -105,20 +149,63 @@ public final class NoTurnProblem {
         return t == setupEnd && !tied[t];
     }
 
+    public boolean jaAllowed() {
+        return !explicitTies;
+    }
+
+    public boolean freeDirection(int t) {
+        if (t < 0 || t >= n) return false;
+        if (explicitTies) return !tied[t] || segment[t] != mainSegment();
+        return jaAll && jump[t];
+    }
+
     public boolean assignsCombo(int t) {
         return t >= 0 && t <= setupEnd;
     }
 
+    public int airCombo(int[] combos) {
+        if (combos == null || combos.length == 0 || setupEnd >= combos.length) return -1;
+        int last = combos[setupEnd];
+        return NoTurnKeys.isRun(last) ? last : -1;
+    }
+
+    public int baseAirCombo() {
+        if (setupEnd + 1 >= n) return -1;
+        float f = base.forwardAt(setupEnd + 1);
+        float s = base.strafeInputAt(setupEnd + 1);
+        int fs = f > 1.0e-4f ? 1 : f < -1.0e-4f ? -1 : 0;
+        int ss = s > 1.0e-4f ? 1 : s < -1.0e-4f ? -1 : 0;
+        for (int c = 0; c < NoTurnKeys.COUNT; c++) {
+            if (NoTurnKeys.forwardSign(c) == fs && NoTurnKeys.strafeSign(c) == ss) return c;
+        }
+        return NoTurnKeys.NONE;
+    }
+
     public JumpSpec buildSpec(int[] combos, boolean[] sprint, int turnCombo, boolean jaFree) {
+        return buildSpec(combos, sprint, turnCombo, jaFree, -1);
+    }
+
+    public JumpSpec buildSpec(int[] combos, boolean[] sprint, int turnCombo, boolean jaFree, int hold) {
         JumpPhysicsInputs sc = base.copy();
         float[] fwd = new float[n];
         float[] strafe = new float[n];
         boolean[] spr = new boolean[n];
         for (int t = 0; t < n; t++) {
             if (t > setupEnd) {
-                fwd[t] = base.forwardAt(t);
-                strafe[t] = base.strafeInputAt(t);
-                spr[t] = base.sprintPerTick == null || base.sprintAt(t);
+                boolean idle = Math.abs(base.forwardAt(t)) < 1.0e-4 && Math.abs(base.strafeInputAt(t)) < 1.0e-4;
+                if (hold >= 0) {
+                    fwd[t] = NoTurnKeys.forwardInput(hold);
+                    strafe[t] = NoTurnKeys.strafeInput(hold);
+                    spr[t] = sprint[setupEnd];
+                } else if (idle && NoTurnKeys.isMove(turnCombo)) {
+                    fwd[t] = NoTurnKeys.forwardInput(turnCombo);
+                    strafe[t] = NoTurnKeys.strafeInput(turnCombo);
+                    spr[t] = NoTurnKeys.isRun(turnCombo);
+                } else {
+                    fwd[t] = base.forwardAt(t);
+                    strafe[t] = base.strafeInputAt(t);
+                    spr[t] = base.sprintPerTick == null || base.sprintAt(t);
+                }
                 continue;
             }
             int combo = combos[t];
@@ -132,7 +219,7 @@ public final class NoTurnProblem {
         sc.strafePerTick = null;
         sc.sneakPerTick = null;
 
-        return new JumpSpec(sc, noTurnConstraints(jaFree), objective);
+        return new JumpSpec(sc, explicitTies ? new ArrayList<>(baseSpec.constraints) : noTurnConstraints(jaFree), objective);
     }
 
     public List<JumpConstraint> noTurnConstraints(boolean jaFree) {
@@ -140,7 +227,7 @@ public final class NoTurnProblem {
         int prev = -1;
         for (int t = 0; t <= setupEnd; t++) {
             if (!tied[t] || (jaFree && t == setupEnd)) {
-                prev = -1;
+                if (!(jaAll && jump[t])) prev = -1;
                 continue;
             }
             if (prev >= 0) {
@@ -153,7 +240,7 @@ public final class NoTurnProblem {
     }
 
     public JumpSpec baseSpecWithDf(boolean jaFree) {
-        return new JumpSpec(base.copy(), noTurnConstraints(jaFree), objective);
+        return new JumpSpec(base.copy(), explicitTies ? new ArrayList<>(baseSpec.constraints) : noTurnConstraints(jaFree), objective);
     }
 
     public int[] baseCombos() {

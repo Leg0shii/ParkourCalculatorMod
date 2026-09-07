@@ -9,12 +9,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class NoTurnFinder {
 
     public interface Progress {
         void update(String stage, double fraction);
+
+        default void found(NoTurnResult result) {
+        }
     }
 
     public static final class Config {
@@ -24,10 +29,13 @@ public final class NoTurnFinder {
         public int perLevelCertify = 6;
         public int screenCap = 400;
         public long certifyBudgetNanos = 6_000_000_000L;
+        public long searchBudgetNanos = 2_000_000_000L;
         public long totalCertifyBudgetNanos = 180_000_000_000L;
         public int turnCombo = NoTurnKeys.WA;
         public boolean allowJa = true;
         public boolean warmSeedFallback = true;
+        public int[] jumpCombos = {NoTurnKeys.W, NoTurnKeys.WA, NoTurnKeys.WD};
+        public int threads = 0;
         public int[] alphabet = {NoTurnKeys.NONE, NoTurnKeys.W, NoTurnKeys.WA, NoTurnKeys.WD,
                 NoTurnKeys.A, NoTurnKeys.D, NoTurnKeys.S, NoTurnKeys.SA, NoTurnKeys.SD};
     }
@@ -93,7 +101,7 @@ public final class NoTurnFinder {
             List<State> next = new ArrayList<>(Math.min(beam.size() * 12, 200000));
             boolean jumpTick = problem.jump[t];
             for (State s : beam) {
-                int[] combos = jumpTick ? new int[]{NoTurnKeys.W} : cfg.alphabet;
+                int[] combos = jumpTick ? cfg.jumpCombos : cfg.alphabet;
                 for (int c : combos) {
                     int newEdges = s.edges + ((t > 0 && c != s.lastCombo) ? 1 : 0);
                     if (newEdges > cfg.maxEdges) continue;
@@ -148,21 +156,36 @@ public final class NoTurnFinder {
             return Double.compare(a.viol, b.viol);
         });
 
-        certifyLadder(problem, graph, scored, jaByStructure);
-        if (feasible.isEmpty() && cfg.allowJa && !jaByStructure && !cancelled()) {
-            progress.update("no pure no-turn; retrying with a jump-angle", 0.97);
-            certifyLadder(problem, graph, scored, true);
+        SolverGraph searchGraph = NoTurnCertifier.searchGraph(cfg.searchBudgetNanos);
+        ExecutorService exec = Executors.newFixedThreadPool(NoTurnParallel.resolveThreads(cfg.threads));
+        try {
+            certifyLadder(problem, searchGraph, exec, scored, jaByStructure);
+            if (feasible.isEmpty() && cfg.allowJa && problem.jaAllowed() && !jaByStructure && !cancelled()) {
+                progress.update("no pure no-turn; retrying with a jump-angle", 0.97);
+                certifyLadder(problem, searchGraph, exec, scored, true);
+            }
+        } finally {
+            exec.shutdownNow();
         }
         if (feasible.isEmpty() && cfg.warmSeedFallback && !cancelled()) {
             warmSeedFallback(problem, jaByStructure);
         }
 
         feasible.sort(rankResults(problem.objective));
+        NoTurnResult top = best();
+        if (top != null) {
+            NoTurnResult polished = new NoTurnCertifier(model).polish(problem, top, graph, cfg.certifyBudgetNanos, cancel);
+            if (polished != null) {
+                feasible.set(0, polished);
+                progress.found(polished);
+            }
+        }
         progress.update(feasible.isEmpty() ? "no byte-exact no-turn found" : "found " + feasible.size(), 1.0);
         return best();
     }
 
-    private void certifyLadder(NoTurnProblem problem, SolverGraph graph, List<Scored> scored, boolean ja) {
+    private void certifyLadder(NoTurnProblem problem, SolverGraph searchGraph, ExecutorService exec,
+                               List<Scored> scored, boolean ja) {
         java.util.TreeMap<Integer, List<Scored>> byEdge = new java.util.TreeMap<>();
         for (Scored s : scored) {
             if (s.viol > 1.0e-6) continue;
@@ -174,34 +197,32 @@ public final class NoTurnFinder {
         long deadline = System.nanoTime() + cfg.totalCertifyBudgetNanos;
         for (List<Scored> list : byEdge.values()) {
             if (cancelled() || System.nanoTime() > deadline) break;
-            int take = Math.min(cfg.perLevelCertify, list.size());
+            final int take = Math.min(cfg.perLevelCertify, list.size());
             int edges = list.get(0).state.edges;
+            progress.update("verify edges=" + edges + (ja ? "+ja" : "") + " x" + take + " (parallel)",
+                    0.78 + 0.2 * Math.min(1.0, (feasible.size() + 1.0) / 3.0));
+            final List<Scored> flist = list;
+            List<NoTurnResult> results = NoTurnParallel.collectAll(exec, take, cancel, (idx, tc) -> {
+                if (System.nanoTime() > deadline) return null;
+                State st = flist.get(idx).state;
+                return certifyCombos(problem, searchGraph, st.combos, st.sprint, ja, cfg.searchBudgetNanos, tc);
+            });
             boolean anyHere = false;
-            for (int i = 0; i < take; i++) {
-                if (cancelled() || System.nanoTime() > deadline) break;
-                State st = list.get(i).state;
-                progress.update("verify edges=" + edges + (ja ? "+ja" : "") + " " + (i + 1) + "/" + take
-                        + " [" + NoTurnKeys.describe(st.combos) + "]", 0.78 + 0.2 * Math.min(1.0, (feasible.size() + 1.0) / 3.0));
-                NoTurnResult r = certifyState(problem, graph, st, ja);
-                progress.update("  -> " + (r != null ? "FEASIBLE obj=" + String.format(java.util.Locale.ROOT, "%.7f", r.objective)
-                        : "infeasible"), 0.78 + 0.2 * Math.min(1.0, (feasible.size() + 1.0) / 3.0));
+            for (NoTurnResult r : results) {
                 if (r != null) {
                     feasible.add(r);
                     anyHere = true;
+                    progress.found(r);
                 }
             }
             if (anyHere) break;
         }
     }
 
-    private NoTurnResult certifyState(NoTurnProblem problem, SolverGraph graph, State s, boolean ja) {
-        return certifyCombos(problem, graph, s.combos, s.sprint, ja, cfg.certifyBudgetNanos);
-    }
-
     private NoTurnResult certifyCombos(NoTurnProblem problem, SolverGraph graph, int[] combos, boolean[] sprint,
-                                       boolean ja, long budgetNanos) {
+                                       boolean ja, long budgetNanos, AtomicBoolean cancelTok) {
         JumpSpec spec = problem.buildSpec(combos, sprint, cfg.turnCombo, ja);
-        NoTurnCertifier.Result cr = new NoTurnCertifier(model).certify(spec, graph, budgetNanos, cancel);
+        NoTurnCertifier.Result cr = new NoTurnCertifier(model).certifySearch(spec, budgetNanos, cancelTok);
         if (cr == null || !cr.feasible) return null;
         int engage = -1;
         for (int t = 0; t < sprint.length; t++) {
@@ -210,8 +231,12 @@ public final class NoTurnFinder {
                 break;
             }
         }
-        return new NoTurnResult(combos.clone(), sprint.clone(), cfg.turnCombo, ja, NoTurnKeys.countEdges(combos),
+        NoTurnResult out = new NoTurnResult(combos.clone(), sprint.clone(), cfg.turnCombo, ja, NoTurnKeys.countEdges(combos),
                 engage, cr.objective, cr.violation, cr.startX, cr.startZ, cr.yaws);
+        out.pressCount = StructurePoolDriver.fullPresses(problem, combos, -1);
+        out.airCombo = -1;
+        out.boundary = StructurePoolDriver.airBoundary(problem, combos, -1);
+        return out;
     }
 
     private void warmSeedFallback(NoTurnProblem problem, boolean jaByStructure) {
@@ -220,10 +245,13 @@ public final class NoTurnFinder {
         long budget = Math.max(cfg.certifyBudgetNanos, 15_000_000_000L);
         progress.update("cold search empty; certifying the current inputs as a no-turn seed", 0.9);
         NoTurnResult r = certifyBaseSeed(problem, warmGraph, jaByStructure, budget);
-        if (r == null && cfg.allowJa && !jaByStructure) {
+        if (r == null && cfg.allowJa && problem.jaAllowed() && !jaByStructure) {
             r = certifyBaseSeed(problem, warmGraph, true, budget);
         }
-        if (r != null) feasible.add(r);
+        if (r != null) {
+            feasible.add(r);
+            progress.found(r);
+        }
     }
 
     private NoTurnResult certifyBaseSeed(NoTurnProblem problem, SolverGraph graph, boolean ja, long budgetNanos) {
