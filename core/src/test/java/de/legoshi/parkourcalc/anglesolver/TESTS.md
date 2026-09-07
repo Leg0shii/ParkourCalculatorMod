@@ -208,6 +208,18 @@ anglesolver/
                            (viol 0, obj near the -2805.2990 pure-no-turn optimum); finderReturnsAByteExactNoTurn
                            runs the full cold beam + full-jump screen + certify ladder and asserts a
                            byte-exact no-turn comes back (cold, or the warm seed of the current inputs)
+  NoTurnColdBench.java     no-turn stratfinder timing harness (skipped unless -Dpkc.bench.capture is
+                           set): certifies the recorded keys as a no-turn structure (driver=human), a
+                           given schedule (driver=keys), or runs the pool / in-game / beam / benders
+                           drivers with per-certify timings; pkc.bench.{driver,graph,freeBox,startTick,
+                           allowJa,threads,searchSec,certifySec,totalSec,maxCertify,dumpPool,out};
+                           pair with -Dpkc.graphTrace=true (per-node ms), -Dpkc.solver.trace=<tag>,
+                           -PpkcJfr=<file.jfr>; a ';' list of captures runs them in one JVM
+  NoTurnFastCheckBench.java  FastCheck heuristic benchmark (skipped unless -Dpkc.fc.cases=<jsonl> is
+                           set): runs one FastCheck implementation (-Dpkc.fc.impl=<FQCN>, default
+                           SearchGraphCheck) over a case list, re-verifies every FEASIBLE witness
+                           byte-exactly and reports HIT/MISS/FALSE_REJECT/BOGUS/REJECT/UNDECIDED with
+                           wall and thread CPU ms; -Dpkc.fc.{budgetMs,only,repeat,out}
   harness/                 shared plumbing; no test lives here
 resources/
   problems/<check>/        one folder per check; holds captures or .expect.json sidecars

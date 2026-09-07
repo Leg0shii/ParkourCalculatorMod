@@ -59,6 +59,9 @@ tasks.named('test') {
 	if (project.hasProperty('testCpus')) {
 		jvmArgs "-XX:ActiveProcessorCount=${project.property('testCpus')}"
 	}
+	if (project.hasProperty('pkcJfr')) {
+		jvmArgs "-XX:StartFlightRecording=filename=${project.property('pkcJfr')},settings=profile,dumponexit=true", "-XX:FlightRecorderOptions=stackdepth=512"
+	}
 }
 
 // Enforce the table-styling consolidation rules established in the Phase 1-5

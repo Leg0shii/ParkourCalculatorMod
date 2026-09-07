@@ -67,6 +67,8 @@ public final class YawTies {
         double[] absHi = filled(n, Double.POSITIVE_INFINITY);
         double[] linkLo = filled(n, Double.NEGATIVE_INFINITY);
         double[] linkHi = filled(n, Double.POSITIVE_INFINITY);
+        int[] linkTo = new int[n];
+        Arrays.fill(linkTo, -1);
         boolean anyF = false;
         for (JumpConstraint c : constraints) {
             if (c.mode != JumpConstraint.Mode.F) continue;
@@ -74,8 +76,10 @@ public final class YawTies {
             anyF = true;
             if (c.t2 == null) {
                 tighten(absLo, absHi, c.t1, c.cmp, c.rhs);
-            } else if (c.op == JumpConstraint.Op.MINUS && c.t2 == c.t1 - 1 && c.t1 >= 1) {
+            } else if (c.op == JumpConstraint.Op.MINUS && c.t2 >= 0 && c.t2 < c.t1
+                    && (linkTo[c.t1] < 0 || linkTo[c.t1] == c.t2)) {
                 tighten(linkLo, linkHi, c.t1, c.cmp, c.rhs);
+                linkTo[c.t1] = c.t2;
             }
         }
         if (!anyF) return null;
@@ -111,9 +115,9 @@ public final class YawTies {
         double[] offset = new double[n];
         int last = -1;
         for (int t = 0; t < n; t++) {
-            if (t >= 1 && link[t]) {
-                group[t] = group[t - 1];
-                offset[t] = offset[t - 1] + linkOffset[t];
+            if (t >= 1 && link[t] && linkTo[t] >= 0) {
+                group[t] = group[linkTo[t]];
+                offset[t] = offset[linkTo[t]] + linkOffset[t];
             } else {
                 group[t] = ++last;
                 offset[t] = 0.0;
