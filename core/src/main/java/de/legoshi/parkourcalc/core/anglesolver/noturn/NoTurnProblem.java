@@ -244,18 +244,24 @@ public final class NoTurnProblem {
     }
 
     public int[] baseCombos() {
+        return combosOf(base, setupEnd);
+    }
+
+    public boolean[] baseSprint() {
+        return sprintOf(base, setupEnd);
+    }
+
+    public static int[] combosOf(JumpPhysicsInputs sc, int setupEnd) {
         int[] combos = new int[setupEnd + 1];
         for (int t = 0; t <= setupEnd; t++) {
-            int f = sign(base.forwardAt(t));
-            int s = sign(base.strafeInputAt(t));
-            combos[t] = NoTurnKeys.comboFor(f, s);
+            combos[t] = NoTurnKeys.comboFor(sign(sc.forwardAt(t)), sign(sc.strafeInputAt(t)));
         }
         return combos;
     }
 
-    public boolean[] baseSprint() {
+    public static boolean[] sprintOf(JumpPhysicsInputs sc, int setupEnd) {
         boolean[] spr = new boolean[setupEnd + 1];
-        for (int t = 0; t <= setupEnd; t++) spr[t] = base.sprintAt(t);
+        for (int t = 0; t <= setupEnd; t++) spr[t] = sc.sprintAt(t);
         return spr;
     }
 
@@ -273,11 +279,16 @@ public final class NoTurnProblem {
     }
 
     public Vec3dCore refStart() {
-        if (freeBox != null) {
-            double rx = Math.max(freeBox.pxLo, Math.min(freeBox.pxHi, base.startPos.x));
-            double rz = Math.max(freeBox.pzLo, Math.min(freeBox.pzHi, base.startPos.z));
-            return new Vec3dCore(rx, base.startPos.y, rz);
+        return refStart(base);
+    }
+
+    public static Vec3dCore refStart(JumpPhysicsInputs sc) {
+        StartBox box = sc.startBox;
+        if (box != null && box.startFree()) {
+            double rx = Math.max(box.pxLo, Math.min(box.pxHi, sc.startPos.x));
+            double rz = Math.max(box.pzLo, Math.min(box.pzHi, sc.startPos.z));
+            return new Vec3dCore(rx, sc.startPos.y, rz);
         }
-        return base.startPos;
+        return sc.startPos;
     }
 }

@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.anglesolver.noturn;
 
+import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunner;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
@@ -592,7 +593,7 @@ public final class WallHomotopyDriver {
         return r;
     }
 
-    private static final boolean TRACE_CERT = Boolean.getBoolean("pkc.graphTrace");
+    private static final boolean TRACE_CERT = GraphRunner.TRACE;
 
     private void beginSearch() {
         searchGraph = NoTurnCertifier.searchGraph(cfg.searchBudgetNanos);

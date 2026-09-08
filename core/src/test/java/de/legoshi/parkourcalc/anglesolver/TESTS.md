@@ -212,14 +212,23 @@ anglesolver/
                            set): certifies the recorded keys as a no-turn structure (driver=human), a
                            given schedule (driver=keys), or runs the pool / in-game / beam / benders
                            drivers with per-certify timings; pkc.bench.{driver,graph,freeBox,startTick,
-                           allowJa,threads,searchSec,certifySec,totalSec,maxCertify,dumpPool,out};
-                           pair with -Dpkc.graphTrace=true (per-node ms), -Dpkc.solver.trace=<tag>,
+                           allowJa,threads,searchSec,nearSearchMs,certifySec,totalSec,maxCertify,
+                           extraCertify,extraSec,dumpPool,out}; keys/engage/repeat/cascade for
+                           driver=keys, dfMarks to add dF=0 marks, contCap/contLead/contSec/parCont/
+                           deepPairRepair for driver=benders; pair with -Dpkc.graphTrace=true (per-node
+                           ms plus one [pool]/[whd]/[bm] line per certify), -Dpkc.solver.trace=<tag>,
                            -PpkcJfr=<file.jfr>; a ';' list of captures runs them in one JVM
   NoTurnFastCheckBench.java  FastCheck heuristic benchmark (skipped unless -Dpkc.fc.cases=<jsonl> is
                            set): runs one FastCheck implementation (-Dpkc.fc.impl=<FQCN>, default
                            SearchGraphCheck) over a case list, re-verifies every FEASIBLE witness
                            byte-exactly and reports HIT/MISS/FALSE_REJECT/BOGUS/REJECT/UNDECIDED with
-                           wall and thread CPU ms; -Dpkc.fc.{budgetMs,only,repeat,out}
+                           wall and thread CPU ms; -Dpkc.fc.{budgetMs,only,repeat,parallel,out};
+                           parallel=N runs the cases on N threads with one impl instance each (the
+                           oversubscription gate for the thread-CPU budgets); -Dpkc.fc.audit=<FQCN>
+                           runs a second FastCheck on every case (budget -Dpkc.fc.auditBudgetMs, 100)
+                           and counts a CONTRADICTION whenever it says INFEASIBLE while the main impl
+                           returned a byte-verified FEASIBLE witness (the real-pool soundness audit of
+                           a rejection check: feed it pool dumps plus the in-game found lines)
   harness/                 shared plumbing; no test lives here
 resources/
   problems/<check>/        one folder per check; holds captures or .expect.json sidecars

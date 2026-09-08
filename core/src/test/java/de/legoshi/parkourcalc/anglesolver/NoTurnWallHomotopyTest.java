@@ -102,7 +102,7 @@ public class NoTurnWallHomotopyTest {
                     + "the bottom of the SD basin (about 1593 of 4859 SD-first families), so no bounded "
                     + "per-basin quota surfaces it and the covered basins lack its jump-phase geometry. "
                     + "The delta=0 continuation close to byte-exact V6 from that coarse ancestor is "
-                    + "exercised by NoTurnWallHomotopyCrackTest.continuationReachesByteExactV6");
+                    + "exercised by NoTurnWallHomotopyCrackTest.masterContinuationConfigClosesV6FromAncestor");
         }
     }
 }

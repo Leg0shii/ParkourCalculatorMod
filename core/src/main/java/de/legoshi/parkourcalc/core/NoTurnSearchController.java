@@ -155,8 +155,8 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
         SolverGraph graph = BuiltinGraphs.optimize(6);
         StructurePoolDriver.Config poolCfg = new StructurePoolDriver.Config();
         poolCfg.allowJa = true;
-        poolCfg.certifyBudgetNanos = 4_000_000_000L;
-        poolCfg.extraCertify = 200;
+        poolCfg.certifyBudgetNanos = 0L;
+        poolCfg.extraCertify = 1000;
         poolCfg.extraCertifyNanos = 45_000_000_000L;
         StructurePoolDriver driver = new StructurePoolDriver(model, poolCfg, cancel, new StructurePoolDriver.Progress() {
             @Override
@@ -169,7 +169,9 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
                 onFound(r);
             }
         });
-        NoTurnFinder finder = new NoTurnFinder(model, new NoTurnFinder.Config(), cancel, new NoTurnFinder.Progress() {
+        NoTurnFinder.Config beamCfg = new NoTurnFinder.Config();
+        beamCfg.certifyBudgetNanos = 0L;
+        NoTurnFinder finder = new NoTurnFinder(model, beamCfg, cancel, new NoTurnFinder.Progress() {
             @Override
             public void update(String s, double f) {
                 stage = "beam: " + s;

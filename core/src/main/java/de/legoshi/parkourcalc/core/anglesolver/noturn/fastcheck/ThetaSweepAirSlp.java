@@ -12,6 +12,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SlpSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
+import de.legoshi.parkourcalc.core.anglesolver.solver.WorkDeadline;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
 import java.util.ArrayList;
@@ -29,17 +30,16 @@ public final class ThetaSweepAirSlp implements FastCheck {
     @Override
     public FastCheckVerdict check(NoTurnProblem problem, JumpSpec spec, ExactJumpModel model, long budgetNanos,
                                   AtomicBoolean cancel) {
-        long deadline = System.nanoTime() + budgetNanos;
+        WorkDeadline deadline = WorkDeadline.in(WorkDeadline.Clock.WALL, budgetNanos);
         JumpPhysicsInputs scFree = spec.asScenario();
         int n = scFree.numTicks;
         StartBox freeBox = (scFree.startBox != null && scFree.startBox.startFree()) ? scFree.startBox : null;
 
-        double refX = scFree.startPos.x;
-        double refZ = scFree.startPos.z;
+        Vec3dCore ref = NoTurnProblem.refStart(scFree);
+        double refX = ref.x;
+        double refZ = ref.z;
         JumpSpec runSpec = spec;
         if (freeBox != null) {
-            refX = Math.max(freeBox.pxLo, Math.min(freeBox.pxHi, scFree.startPos.x));
-            refZ = Math.max(freeBox.pzLo, Math.min(freeBox.pzHi, scFree.startPos.z));
             JumpPhysicsInputs scRun = scFree.copy();
             scRun.startPos = new Vec3dCore(refX, scFree.startPos.y, refZ);
             scRun.startBox = StartBox.pinned(refX, refZ, scFree.initialVelocity.x, scFree.initialVelocity.z);
@@ -89,8 +89,8 @@ public final class ThetaSweepAirSlp implements FastCheck {
         int tried = 0;
         for (double[] c : cand) {
             if (cancel != null && cancel.get()) break;
-            if (tried > 0 && System.nanoTime() + PER_THETA_NANOS > deadline) break;
-            if (System.nanoTime() >= deadline) break;
+            if (tried > 0 && deadline.remainingNanos() < PER_THETA_NANOS) break;
+            if (deadline.over()) break;
             double theta = c[0];
             for (int t = 0; t < n; t++) singleAim[t] = theta;
             double[] seed = Angles.wrapAll(singleAim);

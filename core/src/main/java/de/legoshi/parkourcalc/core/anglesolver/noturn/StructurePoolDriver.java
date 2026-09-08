@@ -3,11 +3,9 @@ package de.legoshi.parkourcalc.core.anglesolver.noturn;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
-import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
-import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
 
 import java.util.ArrayList;
@@ -51,11 +49,10 @@ public final class StructurePoolDriver {
         public long extraCertifyNanos = 8_000_000_000L;
         public long certifyBudgetNanos = 9_000_000_000L;
         public long searchBudgetNanos = 2_000_000_000L;
+        public long nearSearchBudgetNanos = 1_000_000_000L;
         public long totalBudgetNanos = 240_000_000_000L;
         public int turnCombo = NoTurnKeys.WA;
         public boolean allowJa = false;
-        public boolean jaOnly = false;
-        public int onlyEdgeLevel = -1;
         public int threads = 0;
     }
 
@@ -95,18 +92,18 @@ public final class StructurePoolDriver {
     private final AtomicBoolean cancel;
     private final Progress progress;
 
-    private NoTurnProblem problem;
+    NoTurnProblem problem;
     private NoTurnModel nt;
-    private int setupEnd;
+    int setupEnd;
     private int n;
     private int flexTick;
-    private boolean maximize;
-    private boolean objAxisX;
-    private int objTick;
+    boolean maximize;
+    boolean objAxisX;
+    int objTick;
     private int objAxis;
 
     private double refX, refZ;
-    private double loShiftX, hiShiftX, loShiftZ, hiShiftZ;
+    double loShiftX, hiShiftX, loShiftZ, hiShiftZ;
 
     private Group[] groups;
     private double objConst;
@@ -117,10 +114,11 @@ public final class StructurePoolDriver {
     private double[][] mag;
     private Group[] byteWallGroup;
 
-    private double[][] gc;
-    private double[][] gs;
-    private double[][] gcz;
-    private double[][] gsz;
+    double[][] gc;
+    double[][] gs;
+    double[][] gcz;
+    double[][] gsz;
+    private final double[] abBuf = new double[2];
 
     private double[] cosG;
     private double[] sinG;
@@ -136,29 +134,22 @@ public final class StructurePoolDriver {
     private double[] bCoefVarA;
     private boolean[] sprintABuf;
     private boolean[] sprintBBuf;
+    private boolean[] sprintEBuf;
 
-    private JumpPhysicsInputs byteSc;
-    private float[] byteFwd;
-    private float[] byteStrafe;
-    private boolean[] byteSpr;
-    private double[] byteWrapped;
-    private double[] byteGf;
-    private ForwardPath bytePath;
-    private double[] byteViolBuf;
-    private double[] byteObjBuf;
-    private double byteStartX, byteStartY, byteStartZ;
-    private double byteVelX, byteVelY, byteVelZ;
-    private float byteStartYaw;
+    ByteForward bf;
+    MultiFacingScreen multi;
+    double[] byteViolBuf;
+    double[] byteObjBuf;
 
-    private List<JumpConstraint> byteWalls;
-    private double[] byteWallAirA;
-    private double[] byteWallAirB;
+    List<JumpConstraint> byteWalls;
+    double[] byteWallAirA;
+    double[] byteWallAirB;
     private double[][] airTabA;
     private double[][] airTabB;
     private double[] airTabObjA;
     private double[] airTabObjB;
     private double[] airTabReach;
-    private static final int[] AIR_HOLD_COMBOS = {NoTurnKeys.W, NoTurnKeys.WA, NoTurnKeys.WD};
+    static final int[] AIR_HOLD_COMBOS = {NoTurnKeys.W, NoTurnKeys.WA, NoTurnKeys.WD};
     private double[] byteShiftBuf;
     private double byteObjAirA;
     private double byteObjAirB;
@@ -174,16 +165,17 @@ public final class StructurePoolDriver {
     private double byteBestHiX;
     private double byteBestLoZ;
     private double byteBestHiZ;
-    private double[] bytePhiBuf;
-    private double[] byteLoXBuf;
-    private double[] byteHiXBuf;
-    private double[] byteLoZBuf;
-    private double[] byteHiZBuf;
+    double[] bytePhiBuf;
+    double[] byteLoXBuf;
+    double[] byteHiXBuf;
+    double[] byteLoZBuf;
+    double[] byteHiZBuf;
 
     private final List<Candidate> pool = new ArrayList<>();
     private long scored;
     private long byteScreened;
-    private java.util.concurrent.atomic.AtomicLong sharedScored;
+    private int scoreLevel = -1;
+    private AtomicBoolean stop;
 
     public StructurePoolDriver(ExactJumpModel model, Config cfg, AtomicBoolean cancel, Progress progress) {
         this.model = model;
@@ -396,25 +388,14 @@ public final class StructurePoolDriver {
         this.bCoefVarA = new double[groups.length];
         this.sprintABuf = new boolean[setupEnd + 1];
         this.sprintBBuf = new boolean[setupEnd + 1];
+        this.sprintEBuf = new boolean[setupEnd + 1];
 
-        this.byteSc = problem.base.copy();
-        this.byteFwd = new float[n];
-        this.byteStrafe = new float[n];
-        this.byteSpr = new boolean[n];
+        this.bf = new ByteForward(model, problem.base);
         for (int t = setupEnd + 1; t < n; t++) {
-            byteFwd[t] = problem.base.forwardAt(t);
-            byteStrafe[t] = problem.base.strafeInputAt(t);
-            byteSpr[t] = problem.base.sprintPerTick == null || problem.base.sprintAt(t);
+            bf.fwd[t] = problem.base.forwardAt(t);
+            bf.strafe[t] = problem.base.strafeInputAt(t);
+            bf.spr[t] = problem.base.sprintPerTick == null || problem.base.sprintAt(t);
         }
-        byteSc.forwardInputPerTick = byteFwd;
-        byteSc.strafeInputPerTick = byteStrafe;
-        byteSc.sprintPerTick = byteSpr;
-        byteSc.strafePerTick = null;
-        byteSc.sneakPerTick = null;
-        this.byteWrapped = new double[n];
-        this.byteGf = new double[n];
-        this.bytePath = new ForwardPath(new double[n + 1], new double[n + 1], new double[n + 1],
-                new double[n + 1], new double[n + 1], new double[n + 1]);
         this.byteViolBuf = new double[cfg.byteSweepSteps];
         this.byteObjBuf = new double[cfg.byteSweepSteps];
         this.bytePhiBuf = new double[cfg.byteSweepSteps];
@@ -422,13 +403,14 @@ public final class StructurePoolDriver {
         this.byteHiXBuf = new double[cfg.byteSweepSteps];
         this.byteLoZBuf = new double[cfg.byteSweepSteps];
         this.byteHiZBuf = new double[cfg.byteSweepSteps];
-        this.byteStartX = byteSc.startPos.x;
-        this.byteStartY = byteSc.startPos.y;
-        this.byteStartZ = byteSc.startPos.z;
-        this.byteVelX = byteSc.initialVelocity.x;
-        this.byteVelY = byteSc.initialVelocity.y;
-        this.byteVelZ = byteSc.initialVelocity.z;
-        this.byteStartYaw = byteSc.startYaw;
+        this.multi = multiTied(problem) ? new MultiFacingScreen(this, lm) : null;
+    }
+
+    public static boolean multiTied(NoTurnProblem problem) {
+        if (problem == null || !problem.explicitTies) return false;
+        java.util.HashSet<Integer> roots = new java.util.HashSet<>();
+        for (int t = 0; t <= problem.setupEnd; t++) if (problem.tied[t]) roots.add(problem.segment[t]);
+        return roots.size() >= 2;
     }
 
     private void selectAirVariant(int v) {
@@ -479,8 +461,23 @@ public final class StructurePoolDriver {
         return NoTurnKeys.NONE;
     }
 
-    private static int idx(int combo, boolean sprintEff, boolean sprintNow) {
+    static int idx(int combo, boolean sprintEff, boolean sprintNow) {
         return (combo << 2) | ((sprintEff ? 1 : 0) << 1) | (sprintNow ? 1 : 0);
+    }
+
+    static void sumAB(double[][] tabA, double[][] tabB, double[] coef, int[] ticks, int[] combos, boolean[] sprint,
+                      double[] out) {
+        double a = 0.0, b = 0.0;
+        for (int i = 0; i < coef.length; i++) {
+            double cf = coef[i];
+            if (cf == 0.0) continue;
+            int t = ticks == null ? i : ticks[i];
+            int id = idx(combos[t], sprint[t], sprint[t]);
+            a += cf * tabA[t][id];
+            b += cf * tabB[t][id];
+        }
+        out[0] = a;
+        out[1] = b;
     }
 
     private double diskLastObj;
@@ -490,42 +487,14 @@ public final class StructurePoolDriver {
 
     private void computeGroupCoefs(int[] combos, boolean[] sprint) {
         for (Group g : groups) {
-            double a = 0.0, b = 0.0;
-            if (g.axis == 0) {
-                for (int t = 0; t <= setupEnd; t++) {
-                    double cf = g.coefSetup[t];
-                    if (cf == 0.0) continue;
-                    int id = idx(combos[t], sprint[t], sprint[t]);
-                    a += cf * gc[t][id];
-                    b += cf * gs[t][id];
-                }
-            } else {
-                for (int t = 0; t <= setupEnd; t++) {
-                    double cf = g.coefSetup[t];
-                    if (cf == 0.0) continue;
-                    int id = idx(combos[t], sprint[t], sprint[t]);
-                    a += cf * gcz[t][id];
-                    b += cf * gsz[t][id];
-                }
-            }
-            g.aCoef = a;
-            g.bCoef = b;
+            boolean axisX = g.axis == 0;
+            sumAB(axisX ? gc : gcz, axisX ? gs : gsz, g.coefSetup, null, combos, sprint, abBuf);
+            g.aCoef = abBuf[0];
+            g.bCoef = abBuf[1];
         }
-        double objA = 0.0, objB = 0.0;
-        for (int t = 0; t <= setupEnd; t++) {
-            double cf = objCoefSetup[t];
-            if (cf == 0.0) continue;
-            int id = idx(combos[t], sprint[t], sprint[t]);
-            if (objAxisX) {
-                objA += cf * gc[t][id];
-                objB += cf * gs[t][id];
-            } else {
-                objA += cf * gcz[t][id];
-                objB += cf * gsz[t][id];
-            }
-        }
-        curObjA = objA;
-        curObjB = objB;
+        sumAB(objAxisX ? gc : gcz, objAxisX ? gs : gsz, objCoefSetup, null, combos, sprint, abBuf);
+        curObjA = abBuf[0];
+        curObjB = abBuf[1];
         computeFreeSlack(combos, sprint);
     }
 
@@ -695,24 +664,25 @@ public final class StructurePoolDriver {
 
     private void fillByteScenario(int[] combos, boolean[] sprint, int hold) {
         computeFreeSlack(combos, sprint);
+        if (multi != null) multi.computeCoefs(combos, sprint);
         boolean holdSprint = hold >= 0 && sprint[setupEnd];
         selectAirVariant(airVariant(hold, holdSprint));
         for (int t = setupEnd + 1; t < n; t++) {
             if (hold >= 0) {
-                byteFwd[t] = NoTurnKeys.forwardInput(hold);
-                byteStrafe[t] = NoTurnKeys.strafeInput(hold);
-                byteSpr[t] = holdSprint;
+                bf.fwd[t] = NoTurnKeys.forwardInput(hold);
+                bf.strafe[t] = NoTurnKeys.strafeInput(hold);
+                bf.spr[t] = holdSprint;
             } else {
-                byteFwd[t] = problem.base.forwardAt(t);
-                byteStrafe[t] = problem.base.strafeInputAt(t);
-                byteSpr[t] = problem.base.sprintPerTick == null || problem.base.sprintAt(t);
+                bf.fwd[t] = problem.base.forwardAt(t);
+                bf.strafe[t] = problem.base.strafeInputAt(t);
+                bf.spr[t] = problem.base.sprintPerTick == null || problem.base.sprintAt(t);
             }
         }
         for (int t = 0; t <= setupEnd; t++) {
             int combo = combos[t];
-            byteFwd[t] = NoTurnKeys.forwardInput(combo);
-            byteStrafe[t] = NoTurnKeys.strafeInput(combo);
-            byteSpr[t] = sprint[t];
+            bf.fwd[t] = NoTurnKeys.forwardInput(combo);
+            bf.strafe[t] = NoTurnKeys.strafeInput(combo);
+            bf.spr[t] = sprint[t];
         }
     }
 
@@ -721,27 +691,17 @@ public final class StructurePoolDriver {
         double half = cfg.byteSweepDeg;
         double theta = centerTheta - half + i * (2.0 * half / (steps - 1));
         double w = Angles.wrap(theta);
-        int nt2 = byteSc.numTicks;
-        for (int t = 0; t < nt2; t++) byteWrapped[t] = w;
-        byteSc.toGameFacingsInto(byteWrapped, 0, nt2, byteGf, byteStartYaw, (double) byteStartYaw);
-        bytePath.posX[0] = byteStartX;
-        bytePath.posY[0] = byteStartY;
-        bytePath.posZ[0] = byteStartZ;
-        bytePath.velX[0] = byteVelX;
-        bytePath.velY[0] = byteVelY;
-        bytePath.velZ[0] = byteVelZ;
-        model.stepRange(byteSc, byteGf, 0, bytePath);
+        for (int t = 0; t < bf.n; t++) bf.wrapped[t] = w;
+        bf.run();
         for (int wi = 0; wi < byteWalls.size(); wi++) {
             JumpConstraint wc = byteWalls.get(wi);
-            int axis = (wc.mode == JumpConstraint.Mode.X) ? 0 : 1;
-            double value = bytePath.getPos(wc.t1, axis == 0 ? JumpPhysicsInputs.Axis.X : JumpPhysicsInputs.Axis.Z);
-            double shift = wc.rhs - value;
+            double shift = wc.rhs - bf.wallPos(wc);
             double freeSlack = byteWallGroup[wi] != null ? byteWallGroup[wi].freeSlack : 0.0;
             if (wc.cmp == JumpConstraint.Cmp.LE) shift += freeSlack;
             else if (wc.cmp == JumpConstraint.Cmp.GE) shift -= freeSlack;
             byteShiftBuf[wi] = shift;
         }
-        double base = bytePath.getPos(objTick, objAxisX ? JumpPhysicsInputs.Axis.X : JumpPhysicsInputs.Axis.Z);
+        double base = bf.pos(objTick, objAxisX);
         double wRad = Math.toRadians(w);
         double cw = Math.cos(wRad);
         double sw = Math.sin(wRad);
@@ -794,30 +754,29 @@ public final class StructurePoolDriver {
         double dz = 0.5 * (byteLoZBuf[bi] + byteHiZBuf[bi]);
         dx = Math.max(loShiftX, Math.min(hiShiftX, dx));
         dz = Math.max(loShiftZ, Math.min(hiShiftZ, dz));
-        int nt2 = byteSc.numTicks;
-        for (int t = 0; t < nt2; t++) byteWrapped[t] = t <= setupEnd ? w : Angles.wrap(phiDeg);
-        byteSc.toGameFacingsInto(byteWrapped, 0, nt2, byteGf, byteStartYaw, (double) byteStartYaw);
-        bytePath.posX[0] = byteStartX + dx;
-        bytePath.posY[0] = byteStartY;
-        bytePath.posZ[0] = byteStartZ + dz;
-        bytePath.velX[0] = byteVelX;
-        bytePath.velY[0] = byteVelY;
-        bytePath.velZ[0] = byteVelZ;
-        model.stepRange(byteSc, byteGf, 0, bytePath);
+        for (int t = 0; t < bf.n; t++) bf.wrapped[t] = t <= setupEnd ? w : Angles.wrap(phiDeg);
+        bf.runShifted(dx, dz);
         double viol = 0.0;
         int worst = -1;
         for (int wi = 0; wi < byteWalls.size(); wi++) {
             JumpConstraint wc = byteWalls.get(wi);
-            int axis = (wc.mode == JumpConstraint.Mode.X) ? 0 : 1;
-            double value = bytePath.getPos(wc.t1, axis == 0 ? JumpPhysicsInputs.Axis.X : JumpPhysicsInputs.Axis.Z);
+            double value = bf.wallPos(wc);
             double v = wc.cmp == JumpConstraint.Cmp.LE ? value - wc.rhs : wc.rhs - value;
             if (v > viol) {
                 viol = v;
                 worst = wi;
             }
         }
-        double obj = bytePath.getPos(objTick, objAxisX ? JumpPhysicsInputs.Axis.X : JumpPhysicsInputs.Axis.Z);
+        double obj = bf.pos(objTick, objAxisX);
         return new double[]{viol, w, phiDeg, dx, dz, bs[0], worst, obj, byteLoXBuf[bi], byteHiXBuf[bi], byteLoZBuf[bi], byteHiZBuf[bi]};
+    }
+
+    public boolean multiSegment() {
+        return multi != null;
+    }
+
+    public void fillMultiSeed(double[] seedOut) {
+        multi.fillSeed(seedOut);
     }
 
     public String wallLabel(int wi) {
@@ -872,6 +831,7 @@ public final class StructurePoolDriver {
         fillByteScenario(combos, sprint, airHold);
         int steps = cfg.byteSweepSteps;
         for (int i = 0; i < steps; i++) byteViolBuf[i] = Double.POSITIVE_INFINITY;
+        if (multi != null) return multi.screen();
         int stride = Math.max(1, cfg.byteCoarseStride);
         double coarseMin = Double.POSITIVE_INFINITY;
         int ic = 0;
@@ -906,82 +866,6 @@ public final class StructurePoolDriver {
         double half = cfg.byteSweepDeg;
         double bestTheta = centerTheta - half + bi * (2.0 * half / (steps - 1));
         return new double[]{bestViol, bestTheta, byteObjBuf[bi]};
-    }
-
-    public List<Candidate> enumerate(NoTurnProblem problem) {
-        prepare(problem);
-        pool.clear();
-        scored = 0;
-        byteScreened = 0;
-        int[] combos = new int[setupEnd + 1];
-        enumSeg(combos, 0, -1, 0);
-        return pool;
-    }
-
-    public List<Candidate> enumerateParallel(NoTurnProblem problem, int threads) {
-        prepare(problem);
-        pool.clear();
-        scored = 0;
-        byteScreened = 0;
-        boolean hasTakeoff = problem.jump[setupEnd];
-        int lastBranch = hasTakeoff ? setupEnd - 1 : setupEnd;
-        if (threads <= 1 || lastBranch < 0) {
-            int[] combos = new int[setupEnd + 1];
-            enumSeg(combos, 0, -1, 0);
-            return pool;
-        }
-        int remaining = lastBranch + 1;
-        int dwell = flexTick == 0 ? 1 : Math.min(cfg.minDwell, remaining);
-        final List<int[]> heads = new ArrayList<>();
-        for (int c : cfg.alphabet) {
-            for (int len = dwell; len <= remaining; len++) {
-                int rem = remaining - len;
-                if (rem > 0 && rem < cfg.minDwell && len != flexTick) continue;
-                heads.add(new int[]{c, len});
-            }
-        }
-        final java.util.concurrent.atomic.AtomicLong shared = new java.util.concurrent.atomic.AtomicLong();
-        final java.util.concurrent.atomic.AtomicInteger next = new java.util.concurrent.atomic.AtomicInteger();
-        List<StructurePoolDriver> workers = new ArrayList<>();
-        int workerCount = Math.min(threads, heads.size());
-        for (int i = 0; i < workerCount; i++) {
-            StructurePoolDriver w = new StructurePoolDriver(model, cfg, cancel, i == 0 ? progress : null);
-            w.sharedScored = shared;
-            w.prepare(problem);
-            workers.add(w);
-        }
-        ExecutorService exec = Executors.newFixedThreadPool(workerCount);
-        List<java.util.concurrent.Future<?>> futures = new ArrayList<>();
-        try {
-            for (final StructurePoolDriver w : workers) {
-                futures.add(exec.submit(() -> {
-                    int[] combos = new int[setupEnd + 1];
-                    int h;
-                    while ((h = next.getAndIncrement()) < heads.size()) {
-                        if (cancelled()) return;
-                        int c = heads.get(h)[0];
-                        int len = heads.get(h)[1];
-                        for (int t = 0; t < len; t++) combos[t] = c;
-                        w.enumSeg(combos, len, c, 0);
-                    }
-                }));
-            }
-            for (java.util.concurrent.Future<?> f : futures) {
-                try {
-                    f.get();
-                } catch (InterruptedException | java.util.concurrent.ExecutionException e) {
-                    throw new IllegalStateException(e);
-                }
-            }
-        } finally {
-            exec.shutdownNow();
-        }
-        for (StructurePoolDriver w : workers) {
-            pool.addAll(w.pool);
-            scored += w.scored;
-            byteScreened += w.byteScreened;
-        }
-        return pool;
     }
 
     public static List<int[]> enumerateRaw(int setupEnd, boolean takeoffW, int minDwell,
@@ -1020,6 +904,10 @@ public final class StructurePoolDriver {
         }
     }
 
+    private int effMaxEdges() {
+        return scoreLevel >= 0 ? scoreLevel : cfg.maxEdges;
+    }
+
     private void enumSeg(int[] combos, int start, int lastLabel, int edges) {
         if (cancelled()) return;
         boolean hasTakeoff = problem.jump[setupEnd];
@@ -1028,7 +916,7 @@ public final class StructurePoolDriver {
             if (hasTakeoff) {
                 for (int c : cfg.takeoffCombos) {
                     int ne = (lastLabel >= 0 && c != lastLabel) ? edges + 1 : edges;
-                    if (ne > cfg.maxEdges) continue;
+                    if (ne > effMaxEdges()) continue;
                     combos[setupEnd] = c;
                     evalComplete(combos);
                 }
@@ -1042,7 +930,7 @@ public final class StructurePoolDriver {
         for (int c : cfg.alphabet) {
             if (c == lastLabel) continue;
             int ne = (lastLabel >= 0) ? edges + 1 : edges;
-            if (ne > cfg.maxEdges) continue;
+            if (ne > effMaxEdges()) continue;
             for (int len = dwell; len <= remaining; len++) {
                 int rem = remaining - len;
                 if (rem > 0 && rem < cfg.minDwell && start + len != flexTick) continue;
@@ -1053,6 +941,7 @@ public final class StructurePoolDriver {
     }
 
     private void evalComplete(int[] combos) {
+        if (scoreLevel >= 0 && NoTurnKeys.countEdges(combos) != scoreLevel) return;
         int firstRun = -1;
         for (int t = 0; t <= setupEnd; t++) {
             if (NoTurnKeys.isRun(combos[t])) {
@@ -1102,16 +991,20 @@ public final class StructurePoolDriver {
             sprintB[firstRun] = false;
             evalOneVariant(combos, sprintB, objAB, objBB);
         }
+        if (multi != null && firstRun >= 0) {
+            int maxEngage = Math.min(firstRun + 3, setupEnd);
+            for (int e = firstRun + 2; e <= maxEngage; e++) {
+                boolean[] sprintE = sprintEBuf;
+                for (int t = 0; t <= setupEnd; t++) sprintE[t] = NoTurnKeys.isRun(combos[t]) && t >= e;
+                computeGroupCoefs(combos, sprintE);
+                evalOneVariant(combos, sprintE, curObjA, curObjB);
+            }
+        }
     }
 
     private void evalOneVariant(int[] combos, boolean[] sprint, double objA, double objB) {
         double diskTheta = scanGrid(objA, objB);
         scored++;
-        if ((scored & 511) == 0) {
-            long total = sharedScored != null ? sharedScored.addAndGet(512) : scored;
-            progress.update("scoring schedules: " + total + " scored",
-                    0.05 + 0.35 * total / (total + 4000.0));
-        }
         if (Double.isNaN(diskTheta)) return;
         int engageTick = -1;
         for (int t = 0; t < sprint.length; t++) {
@@ -1143,13 +1036,11 @@ public final class StructurePoolDriver {
 
     private Comparator<Candidate> rankPool() {
         return (a, b) -> {
-            int ta = certifyTier(a);
-            int tb = certifyTier(b);
+            int ta = certifyTier(cfg, a);
+            int tb = certifyTier(cfg, b);
             if (ta != tb) return Integer.compare(ta, tb);
-            if (ta < SCREEN_MISS_TIER) {
-                long ba = Math.round(a.byteViol / VIOL_BUCKET);
-                long bb = Math.round(b.byteViol / VIOL_BUCKET);
-                if (ba != bb) return Long.compare(ba, bb);
+            if (ta == SCREEN_EXACT_TIER) {
+                if (a.presses != b.presses) return Integer.compare(a.presses, b.presses);
                 if (a.backward != b.backward) return Integer.compare(a.backward, b.backward);
                 if (a.boundary != b.boundary) return Integer.compare(a.boundary, b.boundary);
                 return Double.compare(a.byteViol, b.byteViol);
@@ -1161,26 +1052,15 @@ public final class StructurePoolDriver {
         };
     }
 
-    private static final int RETRY_AHEAD = 5;
-    private static final int CERTIFY_THREAD_CAP = 8;
-    private static final double VIOL_BUCKET = 0.005;
-    private static final int SCREEN_MISS_TIER = 1000;
+    static final int SCREEN_EXACT_TIER = 0;
+    static final int SCREEN_NEAR_TIER = 1;
+    static final int SCREEN_MISS_TIER = 1000;
 
-    private int certifyTier(Candidate c) {
-        if (c.byteViol <= cfg.byteExact) return 2 * c.presses;
-        if (c.byteViol <= cfg.byteFeasible) return 2 * c.presses + 1;
+    static int certifyTier(Config cfg, Candidate c) {
+        if (c.byteViol <= cfg.byteExact) return SCREEN_EXACT_TIER;
+        if (c.byteViol <= cfg.byteFeasible) return SCREEN_NEAR_TIER;
         return SCREEN_MISS_TIER;
     }
-
-    private static int tierPresses(int key) {
-        return key / 2;
-    }
-
-    private static boolean tierExact(int key) {
-        return key < SCREEN_MISS_TIER && (key & 1) == 0;
-    }
-
-    private static final boolean TRACE_CERT = Boolean.getBoolean("pkc.graphTrace");
 
     public static boolean betterResult(boolean maximize, NoTurnResult a, NoTurnResult b) {
         int pa = NoTurnKeys.countPresses(a.combos);
@@ -1209,7 +1089,19 @@ public final class StructurePoolDriver {
     }
 
     private boolean cancelled() {
-        return cancel != null && cancel.get();
+        return (cancel != null && cancel.get()) || (stop != null && stop.get());
+    }
+
+    private static final class LevelResult {
+        final List<Candidate> pool;
+        final long scored;
+        final long byteScreened;
+
+        LevelResult(List<Candidate> pool, long scored, long byteScreened) {
+            this.pool = pool;
+            this.scored = scored;
+            this.byteScreened = byteScreened;
+        }
     }
 
     public NoTurnResult run(NoTurnProblem problem, SolverGraph graph) {
@@ -1219,111 +1111,76 @@ public final class StructurePoolDriver {
         }
         long start = System.nanoTime();
         progress.update("enumerating low-edge schedules", 0.0);
-        enumerateParallel(problem, NoTurnParallel.resolveThreads(cfg.threads));
-        pool.sort(rankPool());
-        if (pool.size() > cfg.poolCap) pool.subList(cfg.poolCap, pool.size()).clear();
-        progress.update("scored " + scored + " (" + byteScreened + " byte-screened, " + pool.size() + " kept)", 0.4);
 
-        java.util.TreeMap<Integer, List<Candidate>> byEdge = new java.util.TreeMap<>();
-        for (Candidate c : pool) byEdge.computeIfAbsent(certifyTier(c), k -> new ArrayList<>()).add(c);
+        prepare(problem);
+        pool.clear();
+        scored = 0;
+        byteScreened = 0;
 
-        final NoTurnCertifier cert = new NoTurnCertifier(model);
-        final SolverGraph searchGraph = NoTurnCertifier.searchGraph(cfg.searchBudgetNanos);
+        final boolean multi = multiTied(problem);
+        final int enumThreads = Math.max(1, NoTurnParallel.resolveThreads(cfg.threads));
+        final boolean takeoff = problem.jump[setupEnd];
         final long deadline = start + cfg.totalBudgetNanos;
-        int threads = Math.min(CERTIFY_THREAD_CAP, NoTurnParallel.resolveThreads(cfg.threads));
-        ExecutorService exec = Executors.newFixedThreadPool(threads);
-        int certs = 0;
-        int extraCerts = 0;
-        long extraDeadline = Long.MAX_VALUE;
-        int foundPresses = -1;
-        NoTurnResult best = null;
-        final int planned = Math.min(cfg.maxCertify, pool.size());
+        final boolean jaOk = cfg.allowJa && problem.jaAllowed();
+        final AtomicBoolean stopEnum = new AtomicBoolean(false);
+        PoolCertifier certifier = new PoolCertifier(model, cfg, cancel, progress, problem, deadline, multi);
+        ExecutorService pipeExec = Executors.newSingleThreadExecutor();
+        List<List<Candidate>> perLevel = new ArrayList<>();
         try {
-            final boolean jaOk = cfg.allowJa && problem.jaAllowed();
-            final boolean maximize = problem.objective.sense == Objective.Sense.MAX;
-            int passes = jaOk && !cfg.jaOnly ? 2 : 1;
-            for (int pass = 0; pass < passes && best == null; pass++) {
-            final boolean jaPass = pass == 1;
-            certs = 0;
-            for (java.util.Map.Entry<Integer, List<Candidate>> e : byEdge.entrySet()) {
-                if (best != null) {
-                    if (extraCerts >= cfg.extraCertify || System.nanoTime() > extraDeadline) break;
+            LevelResult current = enumerateLevel(problem, enumThreads, takeoff, 0, stopEnum);
+            for (int level = 0; level <= cfg.maxEdges; level++) {
+                final int nextLevel = level + 1;
+                java.util.concurrent.Future<LevelResult> nextF = null;
+                if (nextLevel <= cfg.maxEdges && !cancelled()) {
+                    nextF = pipeExec.submit(() -> enumerateLevel(problem, enumThreads, takeoff, nextLevel, stopEnum));
                 }
-                if (cfg.onlyEdgeLevel >= 0 && (e.getKey() >= SCREEN_MISS_TIER || tierPresses(e.getKey()) != cfg.onlyEdgeLevel)) continue;
-                final List<Candidate> list = e.getValue();
-                final String levelLabel = (best != null ? "explore " : "") + (e.getKey() >= SCREEN_MISS_TIER ? "screen-miss by viol"
-                        : "presses=" + tierPresses(e.getKey()) + (tierExact(e.getKey()) ? " (screen-exact)" : " (screen-near)"));
-                for (int from = 0; from < list.size(); from += cfg.perEdgeCertify) {
-                    if (cancelled() || System.nanoTime() > deadline || certs >= cfg.maxCertify) break;
-                    if (best != null && (extraCerts >= cfg.extraCertify || System.nanoTime() > extraDeadline)) break;
-                    int take = Math.min(cfg.perEdgeCertify, list.size() - from);
-                    take = Math.min(take, cfg.maxCertify - certs);
-                    if (take <= 0) break;
-                    final int base = from;
-                    final int certsBefore = certs;
-                    final java.util.concurrent.atomic.AtomicInteger batchDone = new java.util.concurrent.atomic.AtomicInteger();
-                    progress.update("certify " + levelLabel + " " + (from + 1) + "-" + (from + take) + "/" + list.size()
-                            + " (parallel " + threads + ")" + (best != null ? " best=" + best.describe() : ""),
-                            0.4 + 0.55 * certs / Math.max(1, planned));
-                    List<NoTurnResult> batch = NoTurnParallel.collectAll(exec, take, cancel, (idx, tc) -> {
-                        if (System.nanoTime() > deadline) return null;
-                        Candidate c = list.get(base + idx);
-                        NoTurnResult rr;
-                        if (cfg.jaOnly && jaOk) {
-                            NoTurnResult rj = certifyOne(cert, problem, searchGraph, cfg.searchBudgetNanos, c, true, tc);
-                            NoTurnResult rp = rj == null ? null
-                                    : certifyOne(cert, problem, searchGraph, cfg.searchBudgetNanos, c, false, tc);
-                            rr = rp != null ? rp : rj;
-                        } else {
-                            rr = certifyOne(cert, problem, searchGraph, cfg.searchBudgetNanos, c, jaPass, tc);
-                        }
-                        int doneNow = certsBefore + batchDone.incrementAndGet();
-                        progress.update("certify " + levelLabel + " " + doneNow + "/" + planned
-                                + " (parallel " + threads + ")", 0.4 + 0.55 * doneNow / Math.max(1, planned));
-                        if (rr != null) progress.found(rr);
-                        return rr;
-                    });
-                    certs += take;
-                    if (best != null) extraCerts += take;
-                    int firstHit = -1;
-                    for (int i = 0; i < batch.size(); i++) {
-                        if (batch.get(i) != null) {
-                            firstHit = i;
-                            break;
-                        }
-                    }
-                    int retried = 0;
-                    boolean exactLevel = tierExact(e.getKey());
-                    for (int i = 0; exactLevel && i < firstHit && retried < RETRY_AHEAD && !cancelled(); i++) {
-                        if (batch.get(i) != null) continue;
-                        retried++;
-                        Candidate c = list.get(base + i);
-                        progress.update("re-certify " + levelLabel + " #" + (base + i + 1) + " alone", 0.4 + 0.55 * certs / Math.max(1, planned));
-                        NoTurnResult rr = certifyOne(cert, problem, searchGraph, 2L * cfg.searchBudgetNanos, c, jaPass, cancel);
-                        if (rr != null) {
-                            batch.set(i, rr);
-                            progress.found(rr);
-                        }
-                    }
-                    boolean hadBest = best != null;
-                    for (NoTurnResult r : batch) {
-                        if (r == null) continue;
-                        if (best == null || betterResult(maximize, r, best)) best = r;
-                    }
-                    if (best != null && !hadBest) {
-                        foundPresses = e.getKey() >= SCREEN_MISS_TIER ? -1 : tierPresses(e.getKey());
-                        extraDeadline = System.nanoTime() + cfg.extraCertifyNanos;
-                    }
+                pool.addAll(current.pool);
+                scored += current.scored;
+                byteScreened += current.byteScreened;
+                List<Candidate> ranked = new ArrayList<>(current.pool);
+                ranked.sort(rankPool());
+                if (ranked.size() > cfg.poolCap) ranked.subList(cfg.poolCap, ranked.size()).clear();
+                perLevel.add(ranked);
+                if (multi) {
+                    progress.update("enumerating edges=" + level + " (" + scored + " scored)", 0.4);
+                } else {
+                    progress.update("certify edges=" + level + " (" + ranked.size() + " kept, " + scored + " scored)", 0.4);
+                    certifier.certifyLevel(ranked, false, true);
                 }
+                if (nextF == null) break;
+                if (cancelled() || certifier.variationsOver()) stopEnum.set(true);
+                current = awaitLevel(nextF);
+                if (stopEnum.get()) break;
             }
+
+            pool.sort(rankPool());
+            if (pool.size() > cfg.poolCap) pool.subList(cfg.poolCap, pool.size()).clear();
+
+            if (multi) certifier.certifyLevel(pool, false, true);
+
+            List<Candidate> miss = new ArrayList<>();
+            for (Candidate c : pool) if (certifyTier(cfg, c) >= SCREEN_MISS_TIER) miss.add(c);
+            if (!certifier.variationsOver()) certifier.certifyLevel(miss, false, false);
+
+            if (certifier.best() == null && jaOk && !cancelled()) {
+                certifier.resetCertifyCount();
+                for (List<Candidate> ranked : perLevel) {
+                    if (certifier.variationsOver()) break;
+                    certifier.certifyLevel(ranked, true, true);
+                }
+                if (certifier.best() == null) certifier.certifyLevel(miss, true, false);
             }
         } finally {
-            exec.shutdownNow();
+            stopEnum.set(true);
+            pipeExec.shutdownNow();
+            certifier.shutdown();
         }
+
+        NoTurnResult best = certifier.best();
         progress.update(best == null ? "no byte-exact no-turn found" : "found " + best.describe(), 1.0);
-        if (best != null) {
+        if (best != null && cfg.certifyBudgetNanos > 0) {
             progress.update("polishing " + best.describe(), 0.97);
-            NoTurnResult polished = cert.polish(problem, best, graph, cfg.certifyBudgetNanos, cancel);
+            NoTurnResult polished = new NoTurnCertifier(model).polish(problem, best, graph, cfg.certifyBudgetNanos, cancel);
             if (polished != null) {
                 best = polished;
                 progress.found(polished);
@@ -1332,22 +1189,81 @@ public final class StructurePoolDriver {
         return best;
     }
 
-    private NoTurnResult certifyOne(NoTurnCertifier cert, NoTurnProblem problem, SolverGraph graph,
-                                    long budget, Candidate c, boolean ja, AtomicBoolean cancelTok) {
-        JumpSpec spec = problem.buildSpec(c.combos, c.sprint, cfg.turnCombo, ja, c.airHold);
-        long t0 = System.nanoTime();
-        NoTurnCertifier.Result cr = cert.certifySearch(spec, budget, cancelTok);
-        if (TRACE_CERT) {
-            System.out.println(String.format(java.util.Locale.ROOT, "[pool] certify ms=%.1f feasible=%s ja=%s engage=%d keys=%s",
-                    (System.nanoTime() - t0) / 1e6, cr != null && cr.feasible, ja, c.engage, NoTurnKeys.describe(c.combos)));
+    private static LevelResult awaitLevel(java.util.concurrent.Future<LevelResult> f) {
+        try {
+            return f.get();
+        } catch (InterruptedException | java.util.concurrent.ExecutionException e) {
+            throw new IllegalStateException(e);
         }
-        if (cr == null || !cr.feasible) return null;
-        NoTurnResult out = new NoTurnResult(c.combos.clone(), c.sprint.clone(), cfg.turnCombo, ja,
-                NoTurnKeys.countEdges(c.combos), c.engage, cr.objective, cr.violation, cr.startX, cr.startZ, cr.yaws);
-        out.pressCount = c.presses + c.boundary;
-        out.airCombo = c.airHold;
-        out.boundary = c.boundary;
-        return out;
+    }
+
+    private LevelResult enumerateLevel(NoTurnProblem problem, int threads, boolean takeoff, int level,
+                                       AtomicBoolean stopFlag) {
+        int lastBranch = takeoff ? setupEnd - 1 : setupEnd;
+        if (threads <= 1 || lastBranch < 0) {
+            StructurePoolDriver w = new StructurePoolDriver(model, cfg, cancel, null);
+            w.stop = stopFlag;
+            w.prepare(problem);
+            w.scoreLevel = level;
+            int[] combos = new int[setupEnd + 1];
+            w.enumSeg(combos, 0, -1, 0);
+            return new LevelResult(w.pool, w.scored, w.byteScreened);
+        }
+        int remaining = lastBranch + 1;
+        int dwell = flexTick == 0 ? 1 : Math.min(cfg.minDwell, remaining);
+        final List<int[]> heads = new ArrayList<>();
+        for (int c : cfg.alphabet) {
+            for (int len = dwell; len <= remaining; len++) {
+                int rem = remaining - len;
+                if (rem > 0 && rem < cfg.minDwell && len != flexTick) continue;
+                heads.add(new int[]{c, len});
+            }
+        }
+        final java.util.concurrent.atomic.AtomicInteger next = new java.util.concurrent.atomic.AtomicInteger();
+        List<StructurePoolDriver> workers = new ArrayList<>();
+        int workerCount = Math.min(threads, heads.size());
+        for (int i = 0; i < workerCount; i++) {
+            StructurePoolDriver w = new StructurePoolDriver(model, cfg, cancel, null);
+            w.stop = stopFlag;
+            w.prepare(problem);
+            w.scoreLevel = level;
+            workers.add(w);
+        }
+        ExecutorService exec = Executors.newFixedThreadPool(Math.max(1, workerCount));
+        List<java.util.concurrent.Future<?>> futures = new ArrayList<>();
+        try {
+            for (final StructurePoolDriver w : workers) {
+                futures.add(exec.submit(() -> {
+                    int[] combos = new int[setupEnd + 1];
+                    int h;
+                    while ((h = next.getAndIncrement()) < heads.size()) {
+                        if (w.cancelled()) return;
+                        int c = heads.get(h)[0];
+                        int len = heads.get(h)[1];
+                        for (int t = 0; t < len; t++) combos[t] = c;
+                        w.enumSeg(combos, len, c, 0);
+                    }
+                }));
+            }
+            for (java.util.concurrent.Future<?> f : futures) {
+                try {
+                    f.get();
+                } catch (InterruptedException | java.util.concurrent.ExecutionException e) {
+                    throw new IllegalStateException(e);
+                }
+            }
+        } finally {
+            exec.shutdownNow();
+        }
+        List<Candidate> out = new ArrayList<>();
+        long sc = 0;
+        long bs = 0;
+        for (StructurePoolDriver w : workers) {
+            out.addAll(w.pool);
+            sc += w.scored;
+            bs += w.byteScreened;
+        }
+        return new LevelResult(out, sc, bs);
     }
 
     static int airBoundary(NoTurnProblem problem, int[] combos, int airHold) {

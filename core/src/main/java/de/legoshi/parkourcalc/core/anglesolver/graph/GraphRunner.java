@@ -87,7 +87,7 @@ public final class GraphRunner {
         }
     }
 
-    private static final boolean TRACE = Boolean.getBoolean("pkc.graphTrace");
+    public static final boolean TRACE = Boolean.getBoolean("pkc.graphTrace");
 
     private static void traceNode(GraphContext ctx, GraphNode node, Guarantee taken, Candidate cand) {
         NodeStatus st = ctx.runState.status(node.id);

@@ -40,58 +40,6 @@ public class NoTurnWallHomotopyCrackTest {
     }
 
     @Test
-    public void continuationReachesByteExactV6() throws Exception {
-        NoTurnProblem p = load("hpk_precise/j154-noturn-ja-inner");
-
-        WallHomotopyDriver.Config cfg = new WallHomotopyDriver.Config();
-        cfg.ladder = new double[]{0.30, 0.10, 0.06};
-        cfg.beamCap = 6;
-        cfg.beamPerEdge = 2;
-        cfg.repairKeepPerTick = 7;
-        cfg.repairWindowRadiusMax = 1;
-        cfg.rungOptimizeSec = 3;
-        cfg.rungCertifyNanos = 4_500_000_000L;
-        cfg.repairCertifyCap = 40;
-        cfg.repairAllowPairs = false;
-        cfg.speculativeCount = 8;
-        cfg.speculativeCertifyCap = 16;
-        cfg.totalBudgetNanos = 1_000_000_000_000L;
-
-        WallHomotopyDriver drv = new WallHomotopyDriver(p.model, cfg, new AtomicBoolean(false),
-                (stage, frac) -> { });
-
-        List<int[]> coarse = new ArrayList<>();
-        coarse.add(fam("SDx6 Sx9 WAx13 W"));
-
-        long t0 = System.nanoTime();
-        NoTurnResult best = drv.runFromSeeds(p, BuiltinGraphs.optimize(8), coarse);
-        double wallSec = (System.nanoTime() - t0) / 1e9;
-
-        boolean interior = false;
-        if (best != null && p.freeBox != null) {
-            interior = best.startX > p.freeBox.pxLo + 1e-6 && best.startX < p.freeBox.pxHi - 1e-6
-                    && best.startZ > p.freeBox.pzLo + 1e-6 && best.startZ < p.freeBox.pzHi - 1e-6;
-        }
-        System.out.println("j154 wall-homotopy from coarse windup-jump seed:");
-        System.out.println("  certifies=" + drv.trace().certifies
-                + " rediscoveredV6=" + drv.trace().rediscoveredV6 + " wallClock=" + wallSec + " s");
-        if (best != null) {
-            System.out.println("  edges=" + best.edges + " keys=" + NoTurnKeys.describe(best.combos)
-                    + " sprint@" + best.sprintEngage + " ja=" + best.ja
-                    + " objective=" + best.objective + " violation=" + best.violation);
-            System.out.println("  freeStart px=" + best.startX + " pz=" + best.startZ + " interior=" + interior);
-        }
-
-        assertNotNull("continuation closes a byte-exact ja family at delta=0", best);
-        assertTrue("byte-exact clean (ExactJumpModel certify at FEAS_TOL=0)", best.violation <= 0.0);
-        assertTrue("jump-angle engaged on the last setup tick", best.ja);
-        assertTrue("objective near the byte-exact ja optimum (X MIN, ref -1599.7001161289918)",
-                best.objective >= -1599.71 && best.objective <= -1599.69);
-        assertTrue("min-edge ja family (V6 is six edges)", best.edges <= 6);
-        assertTrue("free start interior to the box", interior);
-    }
-
-    @Test
     public void masterContinuationConfigClosesV6FromAncestor() throws Exception {
         NoTurnProblem p = load("hpk_precise/j154-noturn-ja-inner");
 

@@ -173,7 +173,7 @@ public final class NoTurnFinder {
 
         feasible.sort(rankResults(problem.objective));
         NoTurnResult top = best();
-        if (top != null) {
+        if (top != null && cfg.certifyBudgetNanos > 0) {
             NoTurnResult polished = new NoTurnCertifier(model).polish(problem, top, graph, cfg.certifyBudgetNanos, cancel);
             if (polished != null) {
                 feasible.set(0, polished);

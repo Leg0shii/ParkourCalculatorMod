@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.core.anglesolver.noturn;
 
 import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
+import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunner;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
@@ -12,7 +13,11 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 public final class BendersMaster {
 
@@ -24,21 +29,30 @@ public final class BendersMaster {
 
     public static final class Config {
         public int[] alphabet = {NoTurnKeys.SD, NoTurnKeys.S, NoTurnKeys.WA, NoTurnKeys.W,
-                NoTurnKeys.WD, NoTurnKeys.SA, NoTurnKeys.A, NoTurnKeys.D};
+                NoTurnKeys.WD, NoTurnKeys.SA, NoTurnKeys.A, NoTurnKeys.D, NoTurnKeys.NONE};
         public int minDwell = 6;
         public int maxEdges = 3;
         public int turnCombo = NoTurnKeys.WA;
         public boolean ja = true;
+
+        public boolean parallelContinuations = false;
+        public int continuationThreads = 0;
+        public int parallelWidth = 6;
 
         public SlaveMode mode = SlaveMode.FAT_CONTINUATION;
         public double fatDelta = 0.30;
         public boolean coarseEdgeSorted = true;
         public boolean useCuts = true;
 
-        public boolean screenOrder = false;
-        public boolean screenSkip = false;
-        public double screenKeep = 0.30;
+        public boolean screenOrder = true;
+        public boolean screenSkip = true;
+        public double screenKeep = 0.50;
         public int screenByteCap = 60000;
+
+        public boolean deepPairRepair = false;
+        public int deepSeedCap = 300;
+        public long deepCertifyNanos = 1_200_000_000L;
+        public int deepCandidateCap = 8000;
 
         public int maxCertifies = 60;
         public int continuationCap = 6;
@@ -75,6 +89,9 @@ public final class BendersMaster {
         public int closedContinuationIndex = -1;
         public int ancestorContinuationIndex = -1;
         public double bestObjective = Double.NaN;
+        public long deepFamilyCandidates;
+        public long deepFamilyCertifies;
+        public int deepFamilySeeds;
         public final StringBuilder log = new StringBuilder();
     }
 
@@ -139,7 +156,14 @@ public final class BendersMaster {
 
         log("master start: structures=" + raw.size() + " diskFeasible=" + trace.diskFeasibleCount
                 + " mode=" + cfg.mode + " alphabet=" + cfg.alphabet.length
-                + " minDwell=" + cfg.minDwell + " maxEdges=" + cfg.maxEdges + " ja=" + cfg.ja);
+                + " minDwell=" + cfg.minDwell + " maxEdges=" + cfg.maxEdges + " ja=" + cfg.ja
+                + " parCont=" + cfg.parallelContinuations + " parWidth=" + cfg.parallelWidth);
+
+        if (cfg.deepPairRepair) {
+            return polishResult(problem,
+                    solveDeepFamily(problem, master, screens, wpFat, wp0, fatGraph, deadline),
+                    finalGraph);
+        }
 
         if (cfg.mode == SlaveMode.FAT_CONTINUATION) {
             return polishResult(problem,
@@ -211,6 +235,123 @@ public final class BendersMaster {
             progress.update("benders: " + incumbent.describe(), 1.0);
         }
         return polishResult(problem, incumbent, finalGraph);
+    }
+
+    private NoTurnResult solveDeepFamily(NoTurnProblem problem, MinTvMaster master,
+                                         Map<String, Screen> screens, NoTurnProblem wpFat, NoTurnProblem wp0,
+                                         SolverGraph fatGraph, long deadline) {
+        long now = System.nanoTime();
+        long collectDeadline = now + Math.max(0L, (deadline - now) / 4);
+        List<int[]> seeds = new ArrayList<>();
+        List<Double> seedViol = new ArrayList<>();
+        while (!cancelled() && System.nanoTime() < collectDeadline && seeds.size() < cfg.deepSeedCap) {
+            int[] sigma = master.next();
+            if (sigma == null) {
+                log("enumeration exhausted");
+                break;
+            }
+            trace.masterIterations++;
+            trace.smallestEdgeReached = Math.min(trace.smallestEdgeReached, NoTurnKeys.countEdges(sigma));
+            Screen sc = screens.get(key(sigma));
+            if (cfg.screenSkip && sc != null) {
+                boolean skip = !sc.diskFeasible || (sc.screened && sc.viol > cfg.screenKeep);
+                if (skip) {
+                    trace.screenSkipped++;
+                    continue;
+                }
+            }
+            int engage = (sc != null && sc.engage != Integer.MAX_VALUE) ? sc.engage : 0;
+            boolean[] sprint = NoTurnKeys.latchSprint(sigma, engage);
+            NoTurnCertifier.Result rf = certify(wpFat, sigma, sprint, fatGraph, cfg.fatCertifyNanos);
+            trace.certifies++;
+            if (rf == null || !rf.feasible) continue;
+            trace.fatFeasible++;
+            seeds.add(sigma.clone());
+            seedViol.add(sc == null || Double.isNaN(sc.viol) ? Double.POSITIVE_INFINITY : sc.viol);
+        }
+        trace.deepFamilySeeds = seeds.size();
+        log("deep-family: collected " + seeds.size() + " fat-feasible seeds (fatCerts=" + trace.certifies + ")");
+
+        Integer[] order = new Integer[seeds.size()];
+        for (int i = 0; i < order.length; i++) order[i] = i;
+        java.util.Arrays.sort(order, (a, b) -> Double.compare(seedViol.get(a), seedViol.get(b)));
+
+        java.util.LinkedHashMap<String, int[]> uniq = new java.util.LinkedHashMap<>();
+        for (int oi : order) {
+            for (int[] c : deepFamilyCandidates(seeds.get(oi), problem.setupEnd, problem.jumpTicks)) {
+                if (uniq.size() >= cfg.deepCandidateCap) break;
+                uniq.putIfAbsent(key(c), c);
+            }
+            if (uniq.size() >= cfg.deepCandidateCap) break;
+        }
+        final List<int[]> candidates = new ArrayList<>(uniq.values());
+        trace.deepFamilyCandidates = candidates.size();
+        log("deep-family: " + candidates.size() + " unique candidates, certify budget "
+                + fmt(cfg.deepCertifyNanos / 1e9) + "s each");
+        if (candidates.isEmpty()) {
+            progress.update("benders: deep-family produced no candidates", 1.0);
+            return null;
+        }
+
+        int threads = Math.max(1, NoTurnParallel.resolveThreads(cfg.threads));
+        ExecutorService pool = Executors.newFixedThreadPool(threads);
+        AtomicLong certAcc = new AtomicLong();
+        try {
+            NoTurnResult hit = NoTurnParallel.firstNonNull(pool, candidates.size(), cancel, (idx, tc) -> {
+                if (cancelled() || System.nanoTime() >= deadline) return null;
+                int[] c = candidates.get(idx);
+                boolean[] sprint = NoTurnKeys.latchSprint(c, 0);
+                certAcc.incrementAndGet();
+                NoTurnCertifier.Result r = deepCertify(wp0, c, sprint);
+                if (r != null && r.feasible) return bind(c, sprint, NoTurnKeys.countEdges(c), r);
+                return null;
+            });
+            trace.deepFamilyCertifies = certAcc.get();
+            trace.certifies += certAcc.get();
+            if (hit != null) {
+                trace.smallestSurvivorEdges = hit.edges;
+                trace.bestObjective = hit.objective;
+                log("deep-family CLOSED edges=" + hit.edges + " obj=" + fmt(hit.objective)
+                        + " [" + NoTurnKeys.describe(hit.combos) + "]");
+                progress.update("benders: " + hit.describe(), 1.0);
+                return hit;
+            }
+        } finally {
+            pool.shutdownNow();
+        }
+        log("deep-family: no close after " + certAcc.get() + " candidate certifies");
+        progress.update("benders: deep-family no survivor (seeds=" + seeds.size()
+                + " candidates=" + candidates.size() + " certs=" + certAcc.get() + ")", 1.0);
+        return null;
+    }
+
+    private List<int[]> deepFamilyCandidates(int[] seed, int setupEnd, int[] jumpTicks) {
+        int[] brakes = {NoTurnKeys.SA, NoTurnKeys.SD, NoTurnKeys.S, NoTurnKeys.A,
+                NoTurnKeys.D, NoTurnKeys.WA, NoTurnKeys.WD, NoTurnKeys.W};
+        List<int[]> out = new ArrayList<>();
+        for (int jt : jumpTicks) {
+            if (jt <= 0 || jt >= setupEnd) continue;
+            for (int tb = jt; tb >= jt - 1 && tb >= 1; tb--) {
+                int[] single = seed.clone();
+                single[tb] = NoTurnKeys.NONE;
+                out.add(single);
+                int ta = tb - 1;
+                if (ta < 1) continue;
+                for (int b : brakes) {
+                    if (b == seed[ta] && seed[tb] == NoTurnKeys.NONE) continue;
+                    int[] c = seed.clone();
+                    c[ta] = b;
+                    c[tb] = NoTurnKeys.NONE;
+                    out.add(c);
+                }
+            }
+        }
+        return out;
+    }
+
+    private NoTurnCertifier.Result deepCertify(NoTurnProblem wp0, int[] combos, boolean[] sprint) {
+        JumpSpec spec = wp0.buildSpec(combos, sprint, cfg.turnCombo, cfg.ja);
+        return new NoTurnCertifier(model).certifySearch(spec, cfg.deepCertifyNanos, cancel);
     }
 
     private static final class FatFeasible {
@@ -305,32 +446,18 @@ public final class BendersMaster {
                 continue;
             }
 
-            for (FatFeasible ff : ranked) {
-                if (cancelled() || System.nanoTime() >= deadline) break;
-                if (trace.continuations >= cfg.continuationCap) break;
-                continued.add(ff.key());
-                trace.continuations++;
-                int idx = (int) trace.continuations;
-                if (ff.isV6Anc) {
-                    trace.v6AncestorContinued = true;
-                    trace.ancestorContinuationIndex = idx;
-                }
-                log("continuation#" + idx + " edges=" + ff.edges + " obj=" + fmt(ff.objective)
-                        + (ff.isV6Anc ? " <== V6 ANCESTOR" : "") + " [" + NoTurnKeys.describe(ff.combos) + "]");
-                NoTurnResult res = runContinuation(problem, finalGraph, ff.combos);
-                if (res != null && res.violation <= 0.0) {
-                    trace.smallestSurvivorEdges = res.edges;
-                    trace.bestObjective = res.objective;
-                    trace.closedContinuationIndex = idx;
-                    log("  continuation CLOSED edges=" + res.edges + " obj=" + fmt(res.objective)
-                            + " [" + NoTurnKeys.describe(res.combos) + "]");
-                    progress.update("benders: " + res.describe(), 1.0);
-                    return res;
-                }
-                log("  continuation#" + idx + " did not close");
+            int room = cfg.continuationCap - (int) trace.continuations;
+            if (room > 0) {
+                int width = Math.min(ranked.size(),
+                        cfg.parallelContinuations ? Math.min(room, Math.max(1, cfg.parallelWidth)) : room);
+                List<FatFeasible> batch = ranked.subList(0, width);
+                NoTurnResult res = cfg.parallelContinuations
+                        ? runContinuationBatch(problem, finalGraph, batch, continued, deadline)
+                        : runContinuationSequential(problem, finalGraph, batch, continued, deadline);
+                if (res != null) return res;
             }
-
             if (trace.continuations >= cfg.continuationCap) break;
+
             if (!canRefill && unContinued(pool, continued) == 0) break;
         }
 
@@ -350,15 +477,156 @@ public final class BendersMaster {
         return c;
     }
 
-    private NoTurnResult runContinuation(NoTurnProblem problem, SolverGraph finalGraph, int[] sigma) {
+    private static final class ContOutcome {
+        final NoTurnResult result;
+        final long certifies;
+        final boolean rediscoveredV6;
+
+        ContOutcome(NoTurnResult result, long certifies, boolean rediscoveredV6) {
+            this.result = result;
+            this.certifies = certifies;
+            this.rediscoveredV6 = rediscoveredV6;
+        }
+    }
+
+    private ContOutcome runHomotopy(NoTurnProblem problem, SolverGraph finalGraph, int[] sigma,
+                                    AtomicBoolean flag, int innerThreads) {
         WallHomotopyDriver.Config hc = continuationConfig();
-        WallHomotopyDriver hom = new WallHomotopyDriver(model, hc, cancel, (s, f) -> { });
+        if (innerThreads > 0) hc.threads = innerThreads;
+        WallHomotopyDriver hom = new WallHomotopyDriver(model, hc, flag, (s, f) -> { });
         List<int[]> seeds = new ArrayList<>();
         seeds.add(sigma);
         NoTurnResult cont = hom.runFromSeeds(problem, finalGraph, seeds);
-        trace.certifies += hom.trace().certifies;
-        if (cont != null && cont.violation <= 0.0 && hom.trace().rediscoveredV6) trace.v6Closed = true;
-        return cont;
+        return new ContOutcome(cont, hom.trace().certifies, hom.trace().rediscoveredV6);
+    }
+
+    private NoTurnResult runContinuation(NoTurnProblem problem, SolverGraph finalGraph, int[] sigma) {
+        ContOutcome o = runHomotopy(problem, finalGraph, sigma, cancel, 0);
+        trace.certifies += o.certifies;
+        if (o.result != null && o.result.violation <= 0.0 && o.rediscoveredV6) trace.v6Closed = true;
+        return o.result;
+    }
+
+    private NoTurnResult runContinuationSequential(NoTurnProblem problem, SolverGraph finalGraph,
+                                                   List<FatFeasible> batch, java.util.Set<String> continued,
+                                                   long deadline) {
+        for (FatFeasible ff : batch) {
+            if (cancelled() || System.nanoTime() >= deadline) break;
+            if (trace.continuations >= cfg.continuationCap) break;
+            continued.add(ff.key());
+            trace.continuations++;
+            int idx = (int) trace.continuations;
+            if (ff.isV6Anc) {
+                trace.v6AncestorContinued = true;
+                trace.ancestorContinuationIndex = idx;
+            }
+            log("continuation#" + idx + " edges=" + ff.edges + " obj=" + fmt(ff.objective)
+                    + (ff.isV6Anc ? " <== V6 ANCESTOR" : "") + " [" + NoTurnKeys.describe(ff.combos) + "]");
+            NoTurnResult res = runContinuation(problem, finalGraph, ff.combos);
+            if (res != null && res.violation <= 0.0) {
+                trace.smallestSurvivorEdges = res.edges;
+                trace.bestObjective = res.objective;
+                trace.closedContinuationIndex = idx;
+                log("  continuation CLOSED edges=" + res.edges + " obj=" + fmt(res.objective)
+                        + " [" + NoTurnKeys.describe(res.combos) + "]");
+                progress.update("benders: " + res.describe(), 1.0);
+                return res;
+            }
+            log("  continuation#" + idx + " did not close");
+        }
+        return null;
+    }
+
+    private NoTurnResult runContinuationBatch(NoTurnProblem problem, SolverGraph finalGraph,
+                                              List<FatFeasible> batch, java.util.Set<String> continued,
+                                              long deadline) {
+        int slots = batch.size();
+        if (slots <= 0) return null;
+        if (slots == 1) return runContinuationSequential(problem, finalGraph, batch, continued, deadline);
+
+        int auto = NoTurnParallel.resolveThreads(cfg.threads);
+        int inner = cfg.continuationThreads > 0 ? cfg.continuationThreads
+                : Math.max(2, (auto + slots - 1) / slots);
+        int base = (int) trace.continuations;
+        List<int[]> combos = new ArrayList<>(slots);
+        List<AtomicBoolean> flags = new ArrayList<>(slots);
+        for (int i = 0; i < slots; i++) {
+            FatFeasible ff = batch.get(i);
+            continued.add(ff.key());
+            trace.continuations++;
+            combos.add(ff.combos);
+            flags.add(new AtomicBoolean(false));
+            int idx = base + i + 1;
+            if (ff.isV6Anc) {
+                trace.v6AncestorContinued = true;
+                trace.ancestorContinuationIndex = idx;
+            }
+            log("continuation#" + idx + " edges=" + ff.edges + " obj=" + fmt(ff.objective)
+                    + (ff.isV6Anc ? " <== V6 ANCESTOR" : "") + " [" + NoTurnKeys.describe(ff.combos)
+                    + "] (parallel threads=" + inner + ")");
+        }
+
+        ExecutorService pool = Executors.newFixedThreadPool(slots);
+        AtomicLong certAcc = new AtomicLong();
+        List<Future<NoTurnResult>> futures = new ArrayList<>(slots);
+        for (int i = 0; i < slots; i++) {
+            final int[] sigma = combos.get(i);
+            final AtomicBoolean flag = flags.get(i);
+            futures.add(pool.submit(() -> {
+                if (cancelled() || flag.get()) return null;
+                ContOutcome o = runHomotopy(problem, finalGraph, sigma, flag, inner);
+                certAcc.addAndGet(o.certifies);
+                if (o.result != null && o.result.violation <= 0.0) {
+                    if (o.rediscoveredV6) trace.v6Closed = true;
+                    return o.result;
+                }
+                return null;
+            }));
+        }
+
+        NoTurnResult winner = null;
+        int winnerIdx = -1;
+        while (!cancelled() && System.nanoTime() < deadline) {
+            int done = 0;
+            for (int i = 0; i < slots; i++) {
+                Future<NoTurnResult> f = futures.get(i);
+                if (!f.isDone()) continue;
+                done++;
+                try {
+                    NoTurnResult r = f.get();
+                    if (r != null) {
+                        winner = r;
+                        winnerIdx = i;
+                        break;
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+            if (winner != null || done == slots) break;
+            try {
+                Thread.sleep(40L);
+            } catch (InterruptedException e) {
+                break;
+            }
+        }
+
+        for (AtomicBoolean flag : flags) flag.set(true);
+        for (Future<NoTurnResult> f : futures) f.cancel(true);
+        pool.shutdownNow();
+        trace.certifies += certAcc.get();
+
+        if (winner != null) {
+            int idx = base + winnerIdx + 1;
+            trace.smallestSurvivorEdges = winner.edges;
+            trace.bestObjective = winner.objective;
+            trace.closedContinuationIndex = idx;
+            log("  continuation#" + idx + " CLOSED edges=" + winner.edges + " obj=" + fmt(winner.objective)
+                    + " [" + NoTurnKeys.describe(winner.combos) + "]");
+            progress.update("benders: " + winner.describe(), 1.0);
+            return winner;
+        }
+        log("  continuation batch of " + slots + " did not close");
+        return null;
     }
 
     private NoTurnResult slave(NoTurnProblem problem, NoTurnProblem wp0, NoTurnProblem wpFat,
@@ -548,7 +816,7 @@ public final class BendersMaster {
         return r;
     }
 
-    private static final boolean TRACE_CERT = Boolean.getBoolean("pkc.graphTrace");
+    private static final boolean TRACE_CERT = GraphRunner.TRACE;
 
     private NoTurnResult polishResult(NoTurnProblem problem, NoTurnResult res, SolverGraph finalGraph) {
         if (res == null) return null;

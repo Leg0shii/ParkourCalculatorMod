@@ -7,16 +7,21 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunner;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
+import de.legoshi.parkourcalc.core.anglesolver.noturn.fastcheck.CascadeCheck;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
 import de.legoshi.parkourcalc.core.anglesolver.solver.FreeStartSolve;
+import de.legoshi.parkourcalc.core.anglesolver.solver.GateFoldFinder;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
+import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.LongRunSolver;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
+import de.legoshi.parkourcalc.core.anglesolver.solver.WorkDeadline;
+import de.legoshi.parkourcalc.core.anglesolver.solver.YawTies;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -90,42 +95,38 @@ public final class NoTurnCertifier {
 
     public Result certifySearch(JumpSpec spec, long budgetNanos, AtomicBoolean cancel) {
         JumpPhysicsInputs scFree = spec.asScenario();
-        StartBox freeBox = (scFree.startBox != null && scFree.startBox.startFree()) ? scFree.startBox : null;
-        double refX = scFree.startPos.x;
-        double refZ = scFree.startPos.z;
-        if (freeBox != null) {
-            refX = Math.max(freeBox.pxLo, Math.min(freeBox.pxHi, scFree.startPos.x));
-            refZ = Math.max(freeBox.pzLo, Math.min(freeBox.pzHi, scFree.startPos.z));
-        }
+        Vec3dCore ref = NoTurnProblem.refStart(scFree);
         NoTurnProblem problem = NoTurnProblem.from(spec, model);
-        FastCheckVerdict v = new de.legoshi.parkourcalc.core.anglesolver.noturn.fastcheck.CascadeCheck()
-                .check(problem, spec, model, budgetNanos, cancel);
-        if (v.kind != FastCheckVerdict.Kind.FEASIBLE || v.yaws == null) {
-            return new Result(false, Double.NaN, Double.POSITIVE_INFINITY, null, refX, refZ);
-        }
-        double px = Double.isNaN(v.px) ? refX : v.px;
-        double pz = Double.isNaN(v.pz) ? refZ : v.pz;
-        JumpPhysicsInputs scPin = Scoring.pinnedScenario(scFree, px, pz);
-        double[] gf = scPin.toGameFacings(Angles.wrapAll(v.yaws));
-        ForwardPath fp = model.forward(scPin, gf);
-        double viol = JumpConstraintCompiler.compile(spec).maxViolation(gf, fp);
-        Objective obj = spec.objective;
-        double value = fp.getPos(obj.tick, obj.axis);
-        return new Result(viol <= 0.0, value, viol, Angles.wrapAll(v.yaws), px, pz);
+        FastCheckVerdict v = new CascadeCheck().check(problem, spec, model, budgetNanos, cancel);
+        if (v.kind != FastCheckVerdict.Kind.FEASIBLE || v.yaws == null) return miss(ref);
+        double px = Double.isNaN(v.px) ? ref.x : v.px;
+        double pz = Double.isNaN(v.pz) ? ref.z : v.pz;
+        return verified(spec, scFree, Angles.wrapAll(v.yaws), px, pz);
+    }
+
+    public Result certifyWarm(JumpSpec spec, double[] warmSeed, long budgetNanos, AtomicBoolean cancel) {
+        JumpPhysicsInputs scFree = spec.asScenario();
+        Vec3dCore ref = NoTurnProblem.refStart(scFree);
+        int n = scFree.numTicks;
+        if (!JumpLinearModel.hasFacingWall(spec.constraints)) return miss(ref);
+        YawTies ties = YawTies.of(spec.constraints, n);
+        if (ties == null) return miss(ref);
+        double[] seed = (warmSeed != null && warmSeed.length == n) ? warmSeed : null;
+        WorkDeadline deadline = WorkDeadline.in(WorkDeadline.Clock.THREAD_CPU, budgetNanos);
+        GateFoldFinder.Result gr = GateFoldFinder.solve(model, spec, ties, cancel, deadline, true, true, seed);
+        if (gr == null || !gr.feasible()) return miss(ref);
+        return verified(spec, scFree, Angles.wrapAll(gr.yawsDeg), gr.px, gr.pz);
     }
 
     public Result certify(JumpSpec spec, SolverGraph graph, long budgetNanos, AtomicBoolean cancel) {
         JumpPhysicsInputs scFree = spec.asScenario();
         StartBox freeBox = (scFree.startBox != null && scFree.startBox.startFree()) ? scFree.startBox : null;
+        Vec3dCore ref = NoTurnProblem.refStart(scFree);
 
         JumpPhysicsInputs scRun = scFree.copy();
-        double refX = scFree.startPos.x;
-        double refZ = scFree.startPos.z;
         if (freeBox != null) {
-            refX = Math.max(freeBox.pxLo, Math.min(freeBox.pxHi, scFree.startPos.x));
-            refZ = Math.max(freeBox.pzLo, Math.min(freeBox.pzHi, scFree.startPos.z));
-            scRun.startPos = new Vec3dCore(refX, scFree.startPos.y, refZ);
-            scRun.startBox = StartBox.pinned(refX, refZ, scFree.initialVelocity.x, scFree.initialVelocity.z);
+            scRun.startPos = ref;
+            scRun.startBox = StartBox.pinned(ref.x, ref.z, scFree.initialVelocity.x, scFree.initialVelocity.z);
         }
         JumpSpec runSpec = new JumpSpec(scRun, spec.constraints, spec.objective);
 
@@ -133,13 +134,11 @@ public final class NoTurnCertifier {
                 LongRunSolver.LongRunConfig.defaults());
         if (budgetNanos > 0) ctx.setOverallDeadline(System.nanoTime() + budgetNanos);
         Candidate cand = GraphRunner.run(graph, ctx);
-        if (cand == null || cand.yaws == null) {
-            return new Result(false, Double.NaN, Double.POSITIVE_INFINITY, null, refX, refZ);
-        }
+        if (cand == null || cand.yaws == null) return miss(ref);
         double[] yaws = cand.yaws;
 
-        double px = refX;
-        double pz = refZ;
+        double px = ref.x;
+        double pz = ref.z;
         if (freeBox != null) {
             double[] st = FreeStartSolve.recoverStart(model, spec, yaws);
             if (st != null) {
@@ -147,13 +146,19 @@ public final class NoTurnCertifier {
                 pz = st[1];
             }
         }
+        return verified(spec, scFree, yaws, px, pz);
+    }
 
+    private Result verified(JumpSpec spec, JumpPhysicsInputs scFree, double[] yaws, double px, double pz) {
         JumpPhysicsInputs scPin = Scoring.pinnedScenario(scFree, px, pz);
         double[] gf = scPin.toGameFacings(Angles.wrapAll(yaws));
         ForwardPath fp = model.forward(scPin, gf);
         double viol = JumpConstraintCompiler.compile(spec).maxViolation(gf, fp);
         Objective obj = spec.objective;
-        double value = fp.getPos(obj.tick, obj.axis);
-        return new Result(viol <= 0.0, value, viol, yaws, px, pz);
+        return new Result(viol <= 0.0, fp.getPos(obj.tick, obj.axis), viol, yaws, px, pz);
+    }
+
+    private static Result miss(Vec3dCore ref) {
+        return new Result(false, Double.NaN, Double.POSITIVE_INFINITY, null, ref.x, ref.z);
     }
 }

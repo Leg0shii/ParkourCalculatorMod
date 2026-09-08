@@ -28,8 +28,11 @@ public final class GateFoldFinder {
     private static final int HOMO_ITERS = 34;
     private static final double HOMO_START_STEP = 45.0;
     private static final long HOMO_BUDGET_NANOS = 6_000_000_000L;
+    private static final long WARM_PROBE_NANOS = 30_000_000L;
+    private static final int HOMO_WARM_STARTS = 5;
     private static final double HOMO_DEDUP_DEG = 0.5;
     private static final int HOMO_SEED_CAP = 4;
+    private static final long WARM_EARLY_NANOS = 15_000_000L;
 
     public static final class Result {
         public final double[] yawsDeg;
@@ -72,33 +75,75 @@ public final class GateFoldFinder {
     public static Result solve(ExactJumpModel exact, JumpSpec spec, YawTies ties,
                                AtomicBoolean cancel, long deadlineNanos, boolean stopOnFeasible, boolean homotopy,
                                double[] warmSeed) {
+        return solve(exact, spec, ties, cancel, WorkDeadline.wallAbsolute(deadlineNanos), stopOnFeasible, homotopy,
+                warmSeed);
+    }
+
+    public static Result solve(ExactJumpModel exact, JumpSpec spec, YawTies ties,
+                               AtomicBoolean cancel, WorkDeadline deadline, boolean stopOnFeasible, boolean homotopy,
+                               double[] warmSeed) {
         JumpPhysicsInputs sc = spec.asScenario();
         int n = sc.numTicks;
         if (ties == null || !JumpLinearModel.hasFacingWall(spec.constraints)) return null;
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
         boolean max = spec.objective.sense == Objective.Sense.MAX;
-        boolean optimize = !stopOnFeasible;
         StartBox box = sc.startBox;
         boolean free = box != null && box.startFree();
         double thr = exact.inertiaThreshold();
         boolean perAxis = exact.perAxisInertia();
 
         double[] slpSeed = (warmSeed != null && warmSeed.length == n) ? Angles.wrapAll(warmSeed) : null;
+        boolean canHomo = homotopy && !deadline.isNone();
+        Result best = slpSeed != null && stopOnFeasible
+                ? solveWarm(exact, spec, sc, compiled, ties, slpSeed, box, free, max, perAxis, thr, canHomo, cancel,
+                        deadline)
+                : solveCold(exact, spec, sc, compiled, ties, slpSeed, box, free, max, perAxis, thr, stopOnFeasible,
+                        canHomo, cancel, deadline);
+        if (best == null) return null;
+        return deepen(exact, spec, sc, compiled, ties, best, box, free, max, perAxis, thr, stopOnFeasible, cancel,
+                deadline);
+    }
+
+    private static Result solveWarm(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc,
+                                    JumpConstraintCompiler.Compiled compiled, YawTies ties, double[] seed,
+                                    StartBox box, boolean free, boolean max, boolean perAxis, double thr,
+                                    boolean canHomo, AtomicBoolean cancel, WorkDeadline deadline) {
+        Result best = evalSeed(exact, sc, compiled, spec, seed, box, free, false, max);
+        if (best.feasible()) return best;
+        best = betterFeas(best, enumerateFromSeed(exact, spec, sc, compiled, ties, seed, box, free, max,
+                perAxis, thr, cancel, deadline.capIn(WARM_EARLY_NANOS), true, best), max);
+        if (best.feasible()) return best;
+        double[] refined = SlpSolve.optimizeBestEffort(exact, spec, 0.0, cancel, seed, 40, 60, true);
+        double[] baseline = refined != null ? refined : seed;
+        if (canHomo) {
+            best = enumerateSeeds(java.util.Collections.singletonList(baseline), best, exact, spec, sc, compiled,
+                    ties, box, free, max, perAxis, thr, false, true, cancel, deadline.capIn(WARM_PROBE_NANOS));
+            if (best.feasible()) return best;
+            best = homotopyIncremental(best, exact, spec, sc, compiled, ties, baseline, box, free, max, perAxis,
+                    thr, false, cancel, deadline.capIn(HOMO_BUDGET_NANOS));
+            if (best.feasible()) return best;
+        }
+        List<double[]> seeds = buildSeeds(exact, spec, sc, ties, baseline, cancel, deadline);
+        return enumerateSeeds(seeds, best, exact, spec, sc, compiled, ties, box, free, max, perAxis, thr,
+                false, true, cancel, deadline);
+    }
+
+    private static Result solveCold(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc,
+                                    JumpConstraintCompiler.Compiled compiled, YawTies ties, double[] slpSeed,
+                                    StartBox box, boolean free, boolean max, boolean perAxis, double thr,
+                                    boolean stopOnFeasible, boolean canHomo, AtomicBoolean cancel,
+                                    WorkDeadline deadline) {
+        boolean optimize = !stopOnFeasible;
         double[] baseline = SlpSolve.optimizeBestEffort(exact, spec, 0.0, cancel, slpSeed, 120, 200, true);
         if (baseline == null) baseline = seedFromDual(exact, spec, sc, ties);
         if (baseline == null) return null;
-
-        Result best = evalAbsolute(exact, sc, compiled, spec, baseline, box, free);
-        best = betterFeas(best, translatePolish(exact, sc, compiled, spec, baseline, box, free, optimize, max), max);
-
-        List<double[]> seeds = buildSeeds(exact, spec, sc, ties, baseline, cancel, deadlineNanos);
-        if (homotopy && deadlineNanos != 0L) {
-            long homoDeadline = Math.min(deadlineNanos, System.nanoTime() + HOMO_BUDGET_NANOS);
+        Result best = evalSeed(exact, sc, compiled, spec, baseline, box, free, optimize, max);
+        List<double[]> seeds = buildSeeds(exact, spec, sc, ties, baseline, cancel, deadline);
+        if (canHomo) {
             List<double[]> homo = homotopySeeds(exact, spec, sc, ties, baseline, box, free, perAxis, thr,
-                    cancel, homoDeadline);
+                    cancel, deadline.capIn(HOMO_BUDGET_NANOS));
             for (double[] hy : homo) {
-                best = betterFeas(best, evalAbsolute(exact, sc, compiled, spec, hy, box, free), max);
-                best = betterFeas(best, translatePolish(exact, sc, compiled, spec, hy, box, free, optimize, max), max);
+                best = betterFeas(best, evalSeed(exact, sc, compiled, spec, hy, box, free, optimize, max), max);
             }
             if (stopOnFeasible && !homo.isEmpty()) {
                 homo.sort((a, b) -> Double.compare(
@@ -108,43 +153,47 @@ public final class GateFoldFinder {
                 seeds.addAll(0, new ArrayList<double[]>(homo.subList(0, cap)));
             }
         }
-        for (double[] seed : seeds) {
-            if (cancel != null && cancel.get()) break;
-            if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) break;
-            Result before = best;
-            best = betterFeas(best, enumerateFromSeed(exact, spec, sc, compiled, ties, seed, box, free, max,
-                    perAxis, thr, cancel, deadlineNanos, stopOnFeasible, best), max);
-            if (best != before && best != null && (best.viol > 0.0 && best.viol < POLISH_TRIGGER)) {
-                best = betterFeas(best, latticePolish(exact, spec, sc, compiled, ties, best, box, free, max,
-                        optimize, cancel, deadlineNanos), max);
-            }
-            if (stopOnFeasible && best != null && best.feasible()) break;
-        }
+        return enumerateSeeds(seeds, best, exact, spec, sc, compiled, ties, box, free, max, perAxis, thr,
+                optimize, stopOnFeasible, cancel, deadline);
+    }
+
+    private static Result evalSeed(ExactJumpModel exact, JumpPhysicsInputs sc, JumpConstraintCompiler.Compiled compiled,
+                                   JumpSpec spec, double[] yaws, StartBox box, boolean free, boolean optimize,
+                                   boolean max) {
+        Result r = evalAbsolute(exact, sc, compiled, spec, yaws, box, free);
+        return betterFeas(r, translatePolish(exact, sc, compiled, spec, yaws, box, free, optimize, max), max);
+    }
+
+    private static Result deepen(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc,
+                                 JumpConstraintCompiler.Compiled compiled, YawTies ties, Result best,
+                                 StartBox box, boolean free, boolean max, boolean perAxis, double thr,
+                                 boolean stopOnFeasible, AtomicBoolean cancel, WorkDeadline deadline) {
+        boolean optimize = !stopOnFeasible;
         for (int round = 0; round < DEEPEN_ROUNDS && best != null && !best.feasible(); round++) {
             if (cancel != null && cancel.get()) break;
-            if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) break;
+            if (deadline.over()) break;
             double prev = best.viol;
             best = enumerateFromSeed(exact, spec, sc, compiled, ties, best.yawsDeg, box, free, max,
-                    perAxis, thr, cancel, deadlineNanos, stopOnFeasible, best);
+                    perAxis, thr, cancel, deadline, stopOnFeasible, best);
             if (best != null && best.viol > 0.0 && best.viol < POLISH_TRIGGER) {
                 best = betterFeas(best, latticePolish(exact, spec, sc, compiled, ties, best, box, free, max,
-                        optimize, cancel, deadlineNanos), max);
+                        optimize, cancel, deadline), max);
             }
             if (best == null || best.feasible() || best.viol >= prev - 1.0e-6) break;
         }
         if (optimize && best != null && best.feasible()) {
             best = betterFeas(best, latticePolish(exact, spec, sc, compiled, ties, best, box, free, max,
-                    true, cancel, deadlineNanos), max);
+                    true, cancel, deadline), max);
             for (int round = 0; round < OBJ_DEEPEN_ROUNDS; round++) {
                 if (cancel != null && cancel.get()) break;
-                if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) break;
+                if (deadline.over()) break;
                 double prevObj = best.objective;
                 Result deep = enumerateFromSeed(exact, spec, sc, compiled, ties, best.yawsDeg, box, free, max,
-                        perAxis, thr, cancel, deadlineNanos, false, best);
+                        perAxis, thr, cancel, deadline, false, best);
                 best = betterFeas(best, deep, max);
                 if (best.feasible()) {
                     best = betterFeas(best, latticePolish(exact, spec, sc, compiled, ties, best, box, free, max,
-                            true, cancel, deadlineNanos), max);
+                            true, cancel, deadline), max);
                 }
                 if (!(betterObjLat(best.objective, prevObj, max) && Math.abs(best.objective - prevObj) > 1.0e-9)) break;
             }
@@ -152,10 +201,30 @@ public final class GateFoldFinder {
         return best;
     }
 
+    private static Result enumerateSeeds(List<double[]> seeds, Result best, ExactJumpModel exact, JumpSpec spec,
+                                         JumpPhysicsInputs sc, JumpConstraintCompiler.Compiled compiled, YawTies ties,
+                                         StartBox box, boolean free, boolean max, boolean perAxis, double thr,
+                                         boolean optimize, boolean stopOnFeasible, AtomicBoolean cancel,
+                                         WorkDeadline deadline) {
+        for (double[] seed : seeds) {
+            if (cancel != null && cancel.get()) break;
+            if (deadline.over()) break;
+            Result before = best;
+            best = betterFeas(best, enumerateFromSeed(exact, spec, sc, compiled, ties, seed, box, free, max,
+                    perAxis, thr, cancel, deadline, stopOnFeasible, best), max);
+            if (best != before && best != null && (best.viol > 0.0 && best.viol < POLISH_TRIGGER)) {
+                best = betterFeas(best, latticePolish(exact, spec, sc, compiled, ties, best, box, free, max,
+                        optimize, cancel, deadline), max);
+            }
+            if (stopOnFeasible && best != null && best.feasible()) break;
+        }
+        return best;
+    }
+
     private static Result latticePolish(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc,
                                         JumpConstraintCompiler.Compiled compiled, YawTies ties, Result start,
                                         StartBox box, boolean free, boolean max, boolean optimize,
-                                        AtomicBoolean cancel, long deadlineNanos) {
+                                        AtomicBoolean cancel, WorkDeadline deadline) {
         int n = sc.numTicks;
         int dims = ties.dims();
         double[] red = ties.reduce(start.yawsDeg);
@@ -172,7 +241,7 @@ public final class GateFoldFinder {
         for (int pass = 0; pass < 8 && improved; pass++) {
             improved = false;
             if (cancel != null && cancel.get()) break;
-            if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) break;
+            if (deadline.over()) break;
             for (int v = 0; v < dims; v++) {
                 double center = red[v];
                 double bestCand = center;
@@ -229,7 +298,7 @@ public final class GateFoldFinder {
     }
 
     private static List<double[]> buildSeeds(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc,
-                                             YawTies ties, double[] baseline, AtomicBoolean cancel, long deadline) {
+                                             YawTies ties, double[] baseline, AtomicBoolean cancel, WorkDeadline deadline) {
         List<double[]> seeds = new ArrayList<double[]>();
         seeds.add(baseline);
         int dims = ties.dims();
@@ -239,7 +308,7 @@ public final class GateFoldFinder {
             lock[v] = true;
             for (double ang = 0.0; ang < 360.0; ang += 45.0) {
                 if (cancel != null && cancel.get()) return seeds;
-                if (deadline != 0L && System.nanoTime() >= deadline) return seeds;
+                if (deadline.over()) return seeds;
                 double[] s = baseline.clone();
                 for (int t = 0; t < sc.numTicks; t++) if (ties.varOf(t) == v) s[t] = ang + ties.offsetOf(t);
                 double[] r = SlpSolve.optimizeLocked(exact, spec, 0.0, cancel, s, lock, 60, 100, true);
@@ -249,18 +318,9 @@ public final class GateFoldFinder {
         return seeds;
     }
 
-    private static List<double[]> homotopySeeds(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc,
-                                                YawTies ties, double[] baseline, StartBox box, boolean free,
-                                                boolean perAxis, double realThr, AtomicBoolean cancel,
-                                                long deadlineNanos) {
-        List<double[]> out = new ArrayList<double[]>();
-        List<double[]> reducedKept = new ArrayList<double[]>();
+    private static List<double[]> homotopyStarts(JumpPhysicsInputs sc, YawTies ties, double[] baseline) {
         int n = sc.numTicks;
         int dims = ties.dims();
-        double refPx = box != null ? box.px : sc.startPos.x;
-        double refPz = box != null ? box.pz : sc.startPos.z;
-        JumpLinearModel linFull = new JumpLinearModel(sc, null, null);
-
         int vBig = 0;
         int bigCount = -1;
         for (int v = 0; v < dims; v++) {
@@ -271,7 +331,6 @@ public final class GateFoldFinder {
                 vBig = v;
             }
         }
-
         List<double[]> starts = new ArrayList<double[]>();
         starts.add(ties.expand(ties.reduce(baseline.clone())));
         for (double ang = 0.0; ang < 360.0; ang += HOMO_START_STEP) {
@@ -279,34 +338,93 @@ public final class GateFoldFinder {
             red[vBig] = ang;
             starts.add(ties.expand(red));
         }
+        return starts;
+    }
 
-        for (double[] start : starts) {
+    private static double[] homotopyRun(JumpLinearModel linFull, JumpPhysicsInputs sc, YawTies ties, JumpSpec spec,
+                                        double[] start, StartBox box, boolean free, boolean perAxis, double realThr,
+                                        double refPx, double refPz, AtomicBoolean cancel, WorkDeadline deadline) {
+        int n = sc.numTicks;
+        double[] theta = start.clone();
+        double px = refPx;
+        double pz = refPz;
+        for (int r = 0; r <= HOMO_RUNGS; r++) {
             if (cancel != null && cancel.get()) break;
-            if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) break;
-            double[] theta = start.clone();
-            double px = refPx;
-            double pz = refPz;
-            for (int r = 0; r <= HOMO_RUNGS; r++) {
-                if (cancel != null && cancel.get()) break;
-                if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) break;
-                double thrRung = realThr * Math.pow(2.0, -(HOMO_RUNGS - r));
-                boolean[] zx = new boolean[n];
-                boolean[] zz = new boolean[n];
-                linFull.zeroingPattern(Angles.wrapAll(theta), thrRung, perAxis, zx, zz);
-                double[] step = continuationStep(sc, ties, zx, zz, spec, theta, px, pz, box, free,
-                        refPx, refPz, thrRung, cancel, deadlineNanos);
-                if (step == null) continue;
-                System.arraycopy(step, 0, theta, 0, n);
-                px = step[n];
-                pz = step[n + 1];
-            }
-            double[] red = ties.reduce(Angles.wrapAll(theta));
+            if (deadline.over()) break;
+            double thrRung = realThr * Math.pow(2.0, -(HOMO_RUNGS - r));
+            boolean[] zx = new boolean[n];
+            boolean[] zz = new boolean[n];
+            linFull.zeroingPattern(Angles.wrapAll(theta), thrRung, perAxis, zx, zz);
+            double[] step = continuationStep(sc, ties, zx, zz, spec, theta, px, pz, box, free,
+                    refPx, refPz, thrRung, cancel, deadline);
+            if (step == null) continue;
+            System.arraycopy(step, 0, theta, 0, n);
+            px = step[n];
+            pz = step[n + 1];
+        }
+        return Angles.wrapAll(theta);
+    }
+
+    private static List<double[]> homotopySeeds(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc,
+                                                YawTies ties, double[] baseline, StartBox box, boolean free,
+                                                boolean perAxis, double realThr, AtomicBoolean cancel,
+                                                WorkDeadline deadline) {
+        List<double[]> out = new ArrayList<double[]>();
+        List<double[]> reducedKept = new ArrayList<double[]>();
+        double refPx = box != null ? box.px : sc.startPos.x;
+        double refPz = box != null ? box.pz : sc.startPos.z;
+        JumpLinearModel linFull = new JumpLinearModel(sc, null, null);
+
+        for (double[] start : homotopyStarts(sc, ties, baseline)) {
+            if (cancel != null && cancel.get()) break;
+            if (deadline.over()) break;
+            double[] wrapped = homotopyRun(linFull, sc, ties, spec, start, box, free, perAxis, realThr,
+                    refPx, refPz, cancel, deadline);
+            double[] red = ties.reduce(wrapped);
             if (isNovel(reducedKept, red)) {
                 reducedKept.add(red);
-                out.add(Angles.wrapAll(theta));
+                out.add(wrapped);
             }
         }
         return out;
+    }
+
+    private static Result homotopyIncremental(Result best, ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc,
+                                              JumpConstraintCompiler.Compiled compiled, YawTies ties, double[] baseline,
+                                              StartBox box, boolean free, boolean max, boolean perAxis, double thr,
+                                              boolean optimize, AtomicBoolean cancel, WorkDeadline deadline) {
+        double refPx = box != null ? box.px : sc.startPos.x;
+        double refPz = box != null ? box.pz : sc.startPos.z;
+        JumpLinearModel linFull = new JumpLinearModel(sc, null, null);
+        List<double[]> reducedKept = new ArrayList<double[]>();
+        List<double[]> pending = new ArrayList<double[]>();
+        List<double[]> starts = homotopyStarts(sc, ties, baseline);
+        for (int si = 0; si < starts.size(); si++) {
+            if (cancel != null && cancel.get()) break;
+            if (deadline.over()) break;
+            double[] wrapped = homotopyRun(linFull, sc, ties, spec, starts.get(si), box, free, perAxis, thr,
+                    refPx, refPz, cancel, deadline);
+            double[] red = ties.reduce(wrapped);
+            if (isNovel(reducedKept, red)) {
+                reducedKept.add(red);
+                best = betterFeas(best, evalSeed(exact, sc, compiled, spec, wrapped, box, free, optimize, max), max);
+                if (best != null && best.feasible()) return best;
+                pending.add(wrapped);
+            }
+            boolean checkpoint = si + 1 == HOMO_WARM_STARTS || si + 1 == starts.size();
+            if (checkpoint && !pending.isEmpty()) {
+                pending.sort((a, b) -> Double.compare(
+                        evalAbsolute(exact, sc, compiled, spec, a, box, free).viol,
+                        evalAbsolute(exact, sc, compiled, spec, b, box, free).viol));
+                int cap = Math.min(pending.size(), HOMO_SEED_CAP);
+                List<double[]> top = new ArrayList<double[]>(pending.subList(0, cap));
+                pending.subList(0, cap).clear();
+                best = enumerateSeeds(top, best, exact, spec, sc, compiled, ties, box, free, max, perAxis, thr,
+                        optimize, true, cancel, deadline);
+                if (best != null && best.feasible()) return best;
+            }
+        }
+        return best;
     }
 
     private static boolean isNovel(List<double[]> kept, double[] red) {
@@ -324,7 +442,7 @@ public final class GateFoldFinder {
     private static double[] continuationStep(JumpPhysicsInputs sc, YawTies ties, boolean[] zx, boolean[] zz,
                                              JumpSpec spec, double[] thetaFull, double px0, double pz0,
                                              StartBox box, boolean free, double refPx, double refPz,
-                                             double thrRung, AtomicBoolean cancel, long deadlineNanos) {
+                                             double thrRung, AtomicBoolean cancel, WorkDeadline deadline) {
         int n = sc.numTicks;
         JumpLinearModel lin = new JumpLinearModel(sc, zx, zz);
         boolean[] trivial = {false};
@@ -348,7 +466,7 @@ public final class GateFoldFinder {
         double curViol = linResidual(lin, walls, theta, px, pz, refPx, refPz, free, ux, uz);
         for (int it = 0; it < HOMO_ITERS; it++) {
             if (cancel != null && cancel.get()) break;
-            if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) break;
+            if (deadline.over()) break;
             if (curViol <= 0.0) break;
             for (int t = 0; t < n; t++) {
                 double phi = lin.baseArg(t) + theta[t] * RAD;
@@ -445,7 +563,7 @@ public final class GateFoldFinder {
     private static Result enumerateFromSeed(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc,
                                             JumpConstraintCompiler.Compiled compiled, YawTies ties, double[] seed,
                                             StartBox box, boolean free, boolean max, boolean perAxis, double thr,
-                                            AtomicBoolean cancel, long deadlineNanos, boolean stopOnFeasible,
+                                            AtomicBoolean cancel, WorkDeadline deadline, boolean stopOnFeasible,
                                             Result best) {
         int n = sc.numTicks;
         boolean optimize = !stopOnFeasible;
@@ -463,7 +581,7 @@ public final class GateFoldFinder {
         int k = bits.size();
         for (int combo = 0; combo < (1 << k); combo++) {
             if (cancel != null && cancel.get()) break;
-            if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) break;
+            if (deadline.over()) break;
             boolean[] zx = baseZeroX.clone();
             boolean[] zz = baseZeroZ.clone();
             boolean changed = false;
@@ -476,7 +594,7 @@ public final class GateFoldFinder {
             if (!changed && combo != 0) continue;
             if (!perAxis) for (int t = 0; t < n; t++) { boolean z = zx[t] || zz[t]; zx[t] = z; zz[t] = z; }
             Result r = solvePattern(exact, spec, sc, compiled, ties, zx, zz, seed, box, free, max,
-                    optimize, cancel, deadlineNanos);
+                    optimize, cancel, deadline);
             if (DEBUG && r != null) {
                 StringBuilder sb = new StringBuilder();
                 for (int i = 0; i < k; i++) if ((combo & (1 << i)) != 0) {
@@ -503,7 +621,7 @@ public final class GateFoldFinder {
     private static Result solvePattern(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc,
                                        JumpConstraintCompiler.Compiled compiled, YawTies ties,
                                        boolean[] zx, boolean[] zz, double[] seed, StartBox box, boolean free,
-                                       boolean max, boolean optimize, AtomicBoolean cancel, long deadlineNanos) {
+                                       boolean max, boolean optimize, AtomicBoolean cancel, WorkDeadline deadline) {
         int n = sc.numTicks;
         JumpLinearModel lin = new JumpLinearModel(sc, zx, zz);
         boolean[] trivial = {false};
@@ -537,7 +655,7 @@ public final class GateFoldFinder {
 
         for (int it = 0; it < SLP_ITERS; it++) {
             if (cancel != null && cancel.get()) break;
-            if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) break;
+            if (deadline.over()) break;
             for (int t = 0; t < n; t++) {
                 double phi = lin.baseArg(t) + theta[t] * RAD;
                 ux[t] = lin.mMag(t) * Math.cos(phi);
@@ -604,7 +722,7 @@ public final class GateFoldFinder {
         }
         if (optimize && best != null && bestSpec == 0.0) {
             Result asc = objectiveAscent(exact, spec, sc, compiled, ties, lin, walls, box, free, max,
-                    refPx, refPz, best.yawsDeg, best.px, best.pz, cancel, deadlineNanos);
+                    refPx, refPz, best.yawsDeg, best.px, best.pz, cancel, deadline);
             best = betterFeas(best, asc, max);
         }
         double[] tpTheta = best != null ? best.yawsDeg : theta;
@@ -617,7 +735,7 @@ public final class GateFoldFinder {
                                           JumpConstraintCompiler.Compiled compiled, YawTies ties, JumpLinearModel lin,
                                           List<JumpLinearModel.Wall> walls, StartBox box,
                                           boolean free, boolean max, double refPx, double refPz, double[] seedYaws,
-                                          double px0, double pz0, AtomicBoolean cancel, long deadlineNanos) {
+                                          double px0, double pz0, AtomicBoolean cancel, WorkDeadline deadline) {
         int n = sc.numTicks;
         int m = walls.size();
         int dims = ties.dims();
@@ -643,7 +761,7 @@ public final class GateFoldFinder {
 
         for (int it = 0; it < OBJ_ITERS; it++) {
             if (cancel != null && cancel.get()) break;
-            if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) break;
+            if (deadline.over()) break;
             for (int t = 0; t < n; t++) {
                 double phi = lin.baseArg(t) + theta[t] * RAD;
                 ux[t] = lin.mMag(t) * Math.cos(phi);

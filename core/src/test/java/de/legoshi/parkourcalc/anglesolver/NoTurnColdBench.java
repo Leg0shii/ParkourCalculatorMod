@@ -264,13 +264,11 @@ public class NoTurnColdBench {
         }
         if (driver.equals("pool") || driver.equals("all") || driver.equals("ingame")) {
             StructurePoolDriver.Config cfg = new StructurePoolDriver.Config();
-            if (certifySec > 0) cfg.certifyBudgetNanos = certifySec * 1_000_000_000L;
+            if (certifySec >= 0) cfg.certifyBudgetNanos = certifySec * 1_000_000_000L;
             if (totalSec > 0) cfg.totalBudgetNanos = totalSec * 1_000_000_000L;
             if (maxCertify > 0) cfg.maxCertify = maxCertify;
             cfg.allowJa = ja || Boolean.getBoolean("pkc.bench.allowJa");
             if (Integer.getInteger("pkc.bench.poolCap", -1) > 0) cfg.poolCap = Integer.getInteger("pkc.bench.poolCap");
-            cfg.jaOnly = Boolean.getBoolean("pkc.bench.jaOnly");
-            if (Integer.getInteger("pkc.bench.edgeLevel", -1) >= 0) cfg.onlyEdgeLevel = Integer.getInteger("pkc.bench.edgeLevel");
             if (Integer.getInteger("pkc.bench.maxEdges", -1) > 0) cfg.maxEdges = Integer.getInteger("pkc.bench.maxEdges");
             if (Integer.getInteger("pkc.bench.minDwell", -1) > 0) cfg.minDwell = Integer.getInteger("pkc.bench.minDwell");
             if (Integer.getInteger("pkc.bench.perEdgeCertify", -1) > 0) cfg.perEdgeCertify = Integer.getInteger("pkc.bench.perEdgeCertify");
@@ -283,8 +281,10 @@ public class NoTurnColdBench {
             if (benchThreads >= 0) cfg.threads = benchThreads;
             long benchSearchSec = Long.getLong("pkc.bench.searchSec", -1L);
             if (benchSearchSec > 0) cfg.searchBudgetNanos = benchSearchSec * 1_000_000_000L;
+            long benchNearSearchMs = Long.getLong("pkc.bench.nearSearchMs", -1L);
+            if (benchNearSearchMs > 0) cfg.nearSearchBudgetNanos = benchNearSearchMs * 1_000_000L;
             line("pool search: threads=" + cfg.threads + " (0=auto=" + NoTurnColdBench.autoThreads()
-                    + ") searchBudget=" + cfg.searchBudgetNanos / 1e9 + "s polishBudget=" + cfg.certifyBudgetNanos / 1e9 + "s");
+                    + ") searchBudget=" + cfg.searchBudgetNanos / 1e9 + "s nearSearchBudget=" + cfg.nearSearchBudgetNanos / 1e9 + "s polishBudget=" + cfg.certifyBudgetNanos / 1e9 + "s");
             line("pool cfg: maxEdges=" + cfg.maxEdges + " minDwell=" + cfg.minDwell + " diskGrid=" + cfg.diskGrid
                     + " byteSweepSteps=" + cfg.byteSweepSteps + " poolCap=" + cfg.poolCap
                     + " perEdgeCertify=" + cfg.perEdgeCertify + " maxCertify=" + cfg.maxCertify
@@ -315,7 +315,7 @@ public class NoTurnColdBench {
             if (r != null) found = r;
             if (r == null && driver.equals("ingame")) {
                 NoTurnFinder.Config bcfg = new NoTurnFinder.Config();
-                if (certifySec > 0) bcfg.certifyBudgetNanos = certifySec * 1_000_000_000L;
+                if (certifySec >= 0) bcfg.certifyBudgetNanos = certifySec * 1_000_000_000L;
                 if (totalSec > 0) bcfg.totalCertifyBudgetNanos = totalSec * 1_000_000_000L;
                 NoTurnFinder finder = new NoTurnFinder(model, bcfg, cancel, (s, f) -> progress("[beam]", s));
                 long b = System.nanoTime();
@@ -329,7 +329,7 @@ public class NoTurnColdBench {
         }
         if (driver.equals("beam")) {
             NoTurnFinder.Config bcfg = new NoTurnFinder.Config();
-            if (certifySec > 0) bcfg.certifyBudgetNanos = certifySec * 1_000_000_000L;
+            if (certifySec >= 0) bcfg.certifyBudgetNanos = certifySec * 1_000_000_000L;
             if (totalSec > 0) bcfg.totalCertifyBudgetNanos = totalSec * 1_000_000_000L;
             NoTurnFinder finder = new NoTurnFinder(model, bcfg, cancel, (s, f) -> progress("[beam]", s));
             long b = System.nanoTime();
@@ -357,6 +357,7 @@ public class NoTurnColdBench {
             if (Integer.getInteger("pkc.bench.maxEdges", -1) > 0) cfg.maxEdges = Integer.getInteger("pkc.bench.maxEdges");
             if (Integer.getInteger("pkc.bench.minDwell", -1) > 0) cfg.minDwell = Integer.getInteger("pkc.bench.minDwell");
             if (Long.getLong("pkc.bench.contSec", -1L) > 0) cfg.continuationBudgetNanos = Long.getLong("pkc.bench.contSec") * 1_000_000_000L;
+            if (System.getProperty("pkc.bench.parCont") != null) cfg.parallelContinuations = Boolean.parseBoolean(System.getProperty("pkc.bench.parCont"));
             if (Boolean.getBoolean("pkc.bench.fullAlphabet")) {
                 cfg.alphabet = new int[]{NoTurnKeys.SD, NoTurnKeys.S, NoTurnKeys.WA, NoTurnKeys.W, NoTurnKeys.WD,
                         NoTurnKeys.SA, NoTurnKeys.A, NoTurnKeys.D, NoTurnKeys.NONE};
@@ -365,16 +366,21 @@ public class NoTurnColdBench {
                 cfg.delta0CertifyNanos = certifySec * 1_000_000_000L;
                 cfg.fatCertifyNanos = certifySec * 1_000_000_000L;
             }
+            cfg.deepPairRepair = Boolean.parseBoolean(System.getProperty("pkc.bench.deepPairRepair", "true"));
+            if (cfg.deepPairRepair) cfg.maxCertifies = Math.max(cfg.maxCertifies, 100000);
             line("benders cfg: ja=" + cfg.ja + " mode=" + cfg.mode + " minDwell=" + cfg.minDwell + " maxEdges="
-                    + cfg.maxEdges + " maxCertifies=" + cfg.maxCertifies + " deadline=" + cfg.deadlineNanos / 1e9 + "s");
+                    + cfg.maxEdges + " maxCertifies=" + cfg.maxCertifies + " deepPairRepair=" + cfg.deepPairRepair
+                    + " deepSeedCap=" + cfg.deepSeedCap + " deadline=" + cfg.deadlineNanos / 1e9 + "s");
             BendersMaster m = new BendersMaster(model, cfg, cancel, (s, f) -> progress("[benders]", s));
             long b = System.nanoTime();
             NoTurnResult br = m.solve(p, graph);
             closeCertify("[benders]");
             line(String.format(Locale.ROOT, "benders: wall=%.1fs iterations=%d certifies=%d continuations=%d "
-                            + "fatFeasible=%d structures=%d found=%s", (System.nanoTime() - b) / 1e9,
+                            + "fatFeasible=%d structures=%d deepSeeds=%d deepCandidates=%d deepCerts=%d found=%s",
+                    (System.nanoTime() - b) / 1e9,
                     m.trace().masterIterations, m.trace().certifies, m.trace().continuations,
-                    m.trace().fatFeasible, m.trace().totalStructures, br != null));
+                    m.trace().fatFeasible, m.trace().totalStructures, m.trace().deepFamilySeeds,
+                    m.trace().deepFamilyCandidates, m.trace().deepFamilyCertifies, br != null));
             certifyStats("benders");
             line("benders trace log:\n" + m.trace().log);
             describe("benders", br, humanCombos);
