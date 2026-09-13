@@ -12,6 +12,7 @@ public final class BuiltinGraphs {
 
     public static final int SWEEP_SEEDS = 64;
     public static final int MULTI_START_SWEEP_SEC = 20;
+    public static final int MIN_SWEEP_SEC = 3;
 
     private BuiltinGraphs() {
     }
@@ -53,11 +54,12 @@ public final class BuiltinGraphs {
 
         GraphBuilder g = new GraphBuilder(name, true);
         g.add("entry", "entry");
-        boolean sweep = sweepSeeds > 0;
+        int sweepSec = fastTier ? MULTI_START_SWEEP_SEC : Math.min(20, stageSec / 4);
+        boolean sweep = sweepSeeds > 0 && sweepSec >= MIN_SWEEP_SEC;
         if (sweep) {
             g.add("seeds", "seedSweep")
                     .set("seeds", "seeds", sweepSeeds)
-                    .set("seeds", "budgetSec", fastTier ? MULTI_START_SWEEP_SEC : Math.max(3, Math.min(20, stageSec / 4)));
+                    .set("seeds", "budgetSec", sweepSec);
         }
         g.add("horizon", "recedingHorizon")
                 .set("horizon", "window", window)

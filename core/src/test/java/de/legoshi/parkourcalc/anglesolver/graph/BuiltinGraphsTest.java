@@ -142,6 +142,7 @@ public class BuiltinGraphsTest {
         assertNull("plain fast has no seed sweep", BuiltinGraphs.fast().node("seeds"));
         assertNull("run-ticks fast has no seed sweep", BuiltinGraphs.fastRunTicks().node("seeds"));
         assertTrue(BuiltinGraphs.optimize(60).node("seeds").params.getInt("budgetSec") > 0);
+        assertNull("a short optimize has no seed sweep", BuiltinGraphs.optimize(10).node("seeds"));
         assertTrue(BuiltinGraphs.isBuiltinPreset(BuiltinGraphs.MULTI_START_PRESET));
     }
 
