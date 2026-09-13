@@ -57,6 +57,7 @@ public final class StructurePoolDriver {
         public boolean jaOnly = false;
         public int onlyEdgeLevel = -1;
         public int threads = 0;
+        public boolean playable = false;
     }
 
     public static final class Candidate {
@@ -1190,6 +1191,9 @@ public final class StructurePoolDriver {
         int bb = NoTurnKeys.countBackward(b.combos);
         if (ba != bb) return ba < bb;
         if (a.boundary != b.boundary) return a.boundary < b.boundary;
+        int ra = NoTurnCertifier.reversals(a.yaws);
+        int rb = NoTurnCertifier.reversals(b.yaws);
+        if (ra != rb) return ra < rb;
         long turnA = Math.round(maxTurnDeg(a.yaws));
         long turnB = Math.round(maxTurnDeg(b.yaws));
         if (turnA != turnB) return turnA < turnB;
@@ -1227,7 +1231,7 @@ public final class StructurePoolDriver {
         java.util.TreeMap<Integer, List<Candidate>> byEdge = new java.util.TreeMap<>();
         for (Candidate c : pool) byEdge.computeIfAbsent(certifyTier(c), k -> new ArrayList<>()).add(c);
 
-        final NoTurnCertifier cert = new NoTurnCertifier(model);
+        final NoTurnCertifier cert = new NoTurnCertifier(model, cfg.playable);
         final SolverGraph searchGraph = NoTurnCertifier.searchGraph(cfg.searchBudgetNanos);
         final long deadline = start + cfg.totalBudgetNanos;
         int threads = Math.min(CERTIFY_THREAD_CAP, NoTurnParallel.resolveThreads(cfg.threads));
