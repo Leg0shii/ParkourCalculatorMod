@@ -117,7 +117,7 @@ public final class NodeCatalog {
                 .branch(Branch.feasible(Guarantee.FOUND))
                 .branch(Branch.preserves(Guarantee.NONE))
                 .param(ParamSpec.integer("seeds", "Start seeds", 0, 1024, BuiltinGraphs.SWEEP_SEEDS))
-                .param(ParamSpec.integer("threads", "Threads (0 = auto)", 0, 256, 0))
+                .param(ParamSpec.integer("threads", "Threads (0 = all but one core)", 0, 256, 2))
                 .param(ParamSpec.integer("budgetSec", "Max time (s)", 0, 600, 15))
                 .budgetParam("budgetSec")
                 .fallback(Guarantee.NONE)

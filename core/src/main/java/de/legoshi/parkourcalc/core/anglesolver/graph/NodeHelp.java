@@ -134,7 +134,8 @@ public final class NodeHelp {
                 + " position is free; a pinned start passes straight through.");
         param("seedSweep", "seeds", "How many start positions to try. The box centre and corners come first,"
                 + " then an even spread. More finds better basins but takes longer.");
-        param("seedSweep", "threads", "How many solves run at once. 0 uses all but one processor core.");
+        param("seedSweep", "threads", "How many solves run at once. The default of 2 keeps the game responsive;"
+                + " raise it for a faster sweep, or 0 to use all but one processor core.");
 
         node("recedingHorizon", "Builds a multi-jump route from scratch by solving a few ticks at a time and"
                 + " locking in the front of it as it goes. Only runs for routes longer than one jump.");

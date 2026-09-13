@@ -102,6 +102,7 @@ public final class SeedSweepNode implements NodeRuntime {
         ExecutorService pool = Executors.newFixedThreadPool(nThreads, r -> {
             Thread t = new Thread(r, "seed-sweep-" + seq.incrementAndGet());
             t.setDaemon(true);
+            t.setPriority(Thread.MIN_PRIORITY);
             return t;
         });
         List<Future<?>> futures = new ArrayList<>();
