@@ -51,7 +51,7 @@ final class PoolCertifier {
         this.cancel = cancel;
         this.progress = progress;
         this.problem = problem;
-        this.cert = new NoTurnCertifier(model);
+        this.cert = new NoTurnCertifier(model, cfg.playable);
         this.threads = Math.min(CERTIFY_THREAD_CAP, NoTurnParallel.resolveThreads(cfg.threads));
         this.exec = Executors.newFixedThreadPool(threads);
         this.deadline = deadline;
@@ -108,7 +108,7 @@ final class PoolCertifier {
                 List<Candidate> batch = new ArrayList<>(room);
                 while (from < list.size() && batch.size() < room) {
                     Candidate c = list.get(from++);
-                    if (!found.contains(scheduleKey(c.combos, c.engage, c.airHold, ja))) batch.add(c);
+                    if (!found.contains(scheduleKey(c.combos, c.engage, ja))) batch.add(c);
                 }
                 if (batch.isEmpty()) break;
                 certifyBatch(batch, ja, budget, label, list.size());
@@ -144,7 +144,7 @@ final class PoolCertifier {
     }
 
     private NoTurnResult certifyOne(Candidate c, boolean ja, long budget, AtomicBoolean cancelTok) {
-        JumpSpec spec = problem.buildSpec(c.combos, c.sprint, cfg.turnCombo, ja, c.airHold);
+        JumpSpec spec = problem.buildSpec(c.combos, c.sprint, cfg.turnCombo, ja);
         long t0 = System.nanoTime();
         NoTurnCertifier.Result cr = cert.certifySearch(spec, budget, cancelTok);
         if (GraphRunner.TRACE) {
@@ -153,105 +153,91 @@ final class PoolCertifier {
                     NoTurnKeys.describe(c.combos)));
         }
         if (cr == null || !cr.feasible) return null;
-        return bind(c.combos, c.sprint, c.engage, c.airHold, ja, cr);
+        return bind(c.combos, c.sprint, c.engage, ja, cr);
     }
 
-    private NoTurnResult bind(int[] combos, boolean[] sprint, int engage, int airHold, boolean ja,
-                              NoTurnCertifier.Result cr) {
+    private NoTurnResult bind(int[] combos, boolean[] sprint, int engage, boolean ja, NoTurnCertifier.Result cr) {
         NoTurnResult out = new NoTurnResult(combos.clone(), sprint.clone(), cfg.turnCombo, ja,
-                NoTurnKeys.countEdges(combos), engage, cr.objective, cr.violation, cr.startX, cr.startZ, cr.yaws);
-        out.boundary = StructurePoolDriver.airBoundary(problem, combos, airHold);
-        out.pressCount = NoTurnKeys.countPresses(combos) + out.boundary;
-        out.airCombo = airHold;
+                StructurePoolDriver.countEdges(cfg, problem, combos), engage, cr.objective, cr.violation, cr.startX,
+                cr.startZ, cr.yaws);
+        out.pressCount = StructurePoolDriver.countPresses(cfg, problem, combos);
         return out;
     }
 
-    private static String scheduleKey(int[] combos, int engage, int airHold, boolean ja) {
+    private static String scheduleKey(int[] combos, int engage, boolean ja) {
         StringBuilder sb = new StringBuilder(combos.length + 12);
-        for (int c : combos) sb.append((char) ('a' + c));
-        sb.append('|').append(engage).append('|').append(airHold);
+        sb.append(NoTurnKeys.key(combos));
+        sb.append('|').append(engage);
         if (ja) sb.append("|ja");
         return sb.toString();
     }
 
     private static String keyOf(NoTurnResult r) {
-        return scheduleKey(r.combos, r.sprintEngage, r.airCombo, r.ja);
-    }
-
-    private static int firstTrue(boolean[] flags) {
-        for (int t = 0; t < flags.length; t++) if (flags[t]) return t;
-        return -1;
+        return scheduleKey(r.combos, r.sprintEngage, r.ja);
     }
 
     private static final class WarmItem {
         final int[] combos;
         final boolean[] sprint;
         final int engage;
-        final int airHold;
         final boolean ja;
         final double[] seed;
 
-        WarmItem(int[] combos, boolean[] sprint, int engage, int airHold, boolean ja, double[] seed) {
+        WarmItem(int[] combos, boolean[] sprint, int engage, boolean ja, double[] seed) {
             this.combos = combos;
             this.sprint = sprint;
             this.engage = engage;
-            this.airHold = airHold;
             this.ja = ja;
             this.seed = seed;
         }
     }
 
-    private void addNeighbour(List<WarmItem> out, int[] combos, int engageReq, int airHold, boolean ja,
-                              double[] seed) {
+    private void addNeighbour(List<WarmItem> out, int[] combos, int engageReq, boolean ja, double[] seed) {
         int latch = engageReq < 0 ? Integer.MAX_VALUE : engageReq;
         boolean[] sprint = NoTurnKeys.latchSprint(combos, latch);
-        int eng = firstTrue(sprint);
-        String key = scheduleKey(combos, eng, airHold, ja);
+        int eng = NoTurnKeys.firstSprint(sprint);
+        String key = scheduleKey(combos, eng, ja);
         if (found.contains(key) || !warmTried.add(key)) return;
-        out.add(new WarmItem(combos, sprint, eng, airHold, ja, seed));
+        out.add(new WarmItem(combos, sprint, eng, ja, seed));
     }
 
     private List<WarmItem> neighbours(NoTurnResult r) {
         List<WarmItem> out = new ArrayList<>();
         int[] base = r.combos;
-        int se = base.length - 1;
+        int last = base.length - 1;
         int engage = r.sprintEngage;
-        int airHold = r.airCombo;
         boolean ja = r.ja;
         double[] seed = r.yaws;
-        for (int b = 1; b <= se; b++) {
+        for (int b = 1; b <= last; b++) {
             if (base[b] == base[b - 1]) continue;
             int[] left = base.clone();
             left[b - 1] = base[b];
-            addNeighbour(out, left, engage, airHold, ja, seed);
+            addNeighbour(out, left, engage, ja, seed);
             int[] right = base.clone();
             right[b] = base[b - 1];
-            addNeighbour(out, right, engage, airHold, ja, seed);
+            addNeighbour(out, right, engage, ja, seed);
         }
-        addNeighbour(out, base.clone(), engage - 1, airHold, ja, seed);
-        addNeighbour(out, base.clone(), engage + 1, airHold, ja, seed);
-        if (se >= 0 && NoTurnKeys.isRun(base[se])) {
-            int st = se;
-            while (st - 1 >= 0 && base[st - 1] == base[se]) st--;
+        addNeighbour(out, base.clone(), engage - 1, ja, seed);
+        addNeighbour(out, base.clone(), engage + 1, ja, seed);
+        for (int jt : problem.jumpTicks) {
+            if (jt > last) continue;
+            int end = jt;
+            while (end + 1 <= last && base[end + 1] == base[jt]) end++;
             for (int combo : cfg.takeoffCombos) {
-                if (combo == base[se]) continue;
+                if (combo == base[jt]) continue;
                 int[] v = base.clone();
-                for (int t = st; t <= se; t++) v[t] = combo;
-                addNeighbour(out, v, engage, airHold, ja, seed);
+                for (int t = jt; t <= end; t++) v[t] = combo;
+                addNeighbour(out, v, engage, ja, seed);
             }
         }
-        for (int alt : StructurePoolDriver.AIR_HOLD_COMBOS) {
-            if (alt != airHold) addNeighbour(out, base.clone(), engage, alt, ja, seed);
-        }
-        if (airHold != -1) addNeighbour(out, base.clone(), engage, -1, ja, seed);
         return out;
     }
 
     private NoTurnResult certifyWarmOne(WarmItem w, long budget, AtomicBoolean tc) {
-        JumpSpec spec = problem.buildSpec(w.combos, w.sprint, cfg.turnCombo, w.ja, w.airHold);
+        JumpSpec spec = problem.buildSpec(w.combos, w.sprint, cfg.turnCombo, w.ja);
         NoTurnCertifier.Result cr = cert.certifyWarm(spec, w.seed, budget, tc);
         if (cr == null || !cr.feasible) return null;
-        return bind(w.combos, w.sprint, w.engage, w.airHold, w.ja, cr);
+        return bind(w.combos, w.sprint, w.engage, w.ja, cr);
     }
 
     private void exploreWarm(List<NoTurnResult> seeds) {

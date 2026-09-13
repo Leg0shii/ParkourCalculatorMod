@@ -468,42 +468,14 @@ public final class GateFoldFinder {
             if (cancel != null && cancel.get()) break;
             if (deadline.over()) break;
             if (curViol <= 0.0) break;
-            for (int t = 0; t < n; t++) {
-                double phi = lin.baseArg(t) + theta[t] * RAD;
-                ux[t] = lin.mMag(t) * Math.cos(phi);
-                uz[t] = lin.mMag(t) * Math.sin(phi);
-            }
+            inputVectors(lin, theta, ux, uz);
             double[][] rows = new double[m][vars];
             double[] wv = new double[m];
-            for (int j = 0; j < m; j++) {
-                JumpLinearModel.Wall w = walls.get(j);
-                double val = -w.bPrime;
-                double[] cf = w.coef;
-                for (int t = 0; t < n; t++) {
-                    double c = t < cf.length ? cf[t] : 0.0;
-                    if (c == 0.0) continue;
-                    double uAxis = w.axis == 0 ? ux[t] : uz[t];
-                    double dAxis = w.axis == 0 ? -uz[t] : ux[t];
-                    val += c * uAxis;
-                    int v = col[t];
-                    if (v >= 0) rows[j][v] += c * dAxis * RAD;
-                }
-                if (free && w.p0coef != 0.0) {
-                    int sc0 = w.axis == 0 ? dims : dims + 1;
-                    double dstart = w.axis == 0 ? (px - refPx) : (pz - refPz);
-                    val += -w.p0coef * dstart;
-                    rows[j][sc0] += -w.p0coef * START_SCALE;
-                }
-                wv[j] = val;
-            }
+            linearizeWalls(walls, n, dims, col, ux, uz, free, px, pz, refPx, refPz, rows, wv);
             TrustRegionLp.Result lp = TrustRegionLp.solve(rows, wv, null, tr, true, -1.0e-9, 2000);
             if (lp == null) break;
             double[] d = lp.d;
-            double[] cand = theta.clone();
-            for (int t = 0; t < n; t++) {
-                int v = col[t];
-                if (v >= 0) cand[t] = theta[t] + d[v];
-            }
+            double[] cand = stepYaws(theta, d, col);
             double cpx = px;
             double cpz = pz;
             if (free) {
@@ -511,8 +483,7 @@ public final class GateFoldFinder {
                 cpz = clamp(pz + d[dims + 1] * START_SCALE, box.pzLo, box.pzHi);
             }
             double candViol = linResidual(lin, walls, cand, cpx, cpz, refPx, refPz, free, ux, uz);
-            double step = 0.0;
-            for (int v = 0; v < vars; v++) step = Math.max(step, Math.abs(d[v]));
+            double step = maxStep(d, vars);
             if (candViol < curViol - 1.0e-12) {
                 theta = cand;
                 px = cpx;
@@ -536,11 +507,7 @@ public final class GateFoldFinder {
                                       double px, double pz, double refPx, double refPz, boolean free,
                                       double[] ux, double[] uz) {
         int n = theta.length;
-        for (int t = 0; t < n; t++) {
-            double phi = lin.baseArg(t) + theta[t] * RAD;
-            ux[t] = lin.mMag(t) * Math.cos(phi);
-            uz[t] = lin.mMag(t) * Math.sin(phi);
-        }
+        inputVectors(lin, theta, ux, uz);
         double worst = 0.0;
         for (JumpLinearModel.Wall w : walls) {
             double val = -w.bPrime;
@@ -656,34 +623,10 @@ public final class GateFoldFinder {
         for (int it = 0; it < SLP_ITERS; it++) {
             if (cancel != null && cancel.get()) break;
             if (deadline.over()) break;
-            for (int t = 0; t < n; t++) {
-                double phi = lin.baseArg(t) + theta[t] * RAD;
-                ux[t] = lin.mMag(t) * Math.cos(phi);
-                uz[t] = lin.mMag(t) * Math.sin(phi);
-            }
+            inputVectors(lin, theta, ux, uz);
             double[][] rows = new double[m][vars];
             double[] wv = new double[m];
-            for (int j = 0; j < m; j++) {
-                JumpLinearModel.Wall w = walls.get(j);
-                double val = -w.bPrime;
-                double[] cf = w.coef;
-                for (int t = 0; t < n; t++) {
-                    double c = t < cf.length ? cf[t] : 0.0;
-                    if (c == 0.0) continue;
-                    double uAxis = w.axis == 0 ? ux[t] : uz[t];
-                    double dAxis = w.axis == 0 ? -uz[t] : ux[t];
-                    val += c * uAxis;
-                    int v = col[t];
-                    if (v >= 0) rows[j][v] += c * dAxis * RAD;
-                }
-                if (free && w.p0coef != 0.0) {
-                    int sc0 = w.axis == 0 ? dims : dims + 1;
-                    double dstart = w.axis == 0 ? (px - refPx) : (pz - refPz);
-                    val += -w.p0coef * dstart;
-                    rows[j][sc0] += -w.p0coef * START_SCALE;
-                }
-                wv[j] = val;
-            }
+            linearizeWalls(walls, n, dims, col, ux, uz, free, px, pz, refPx, refPz, rows, wv);
             double curSpec = specViol(exact, sc, compiled, theta, px, pz);
             if (curSpec < bestSpec) {
                 bestSpec = curSpec;
@@ -694,11 +637,7 @@ public final class GateFoldFinder {
             TrustRegionLp.Result lp = TrustRegionLp.solve(rows, wv, null, tr, true, -1.0e-9, 2000);
             if (lp == null) break;
             double[] d = lp.d;
-            double[] cand = theta.clone();
-            for (int t = 0; t < n; t++) {
-                int v = col[t];
-                if (v >= 0) cand[t] = theta[t] + d[v];
-            }
+            double[] cand = stepYaws(theta, d, col);
             double cpx = px;
             double cpz = pz;
             if (free) {
@@ -706,8 +645,7 @@ public final class GateFoldFinder {
                 cpz = clamp(pz + d[dims + 1] * START_SCALE, box.pzLo, box.pzHi);
             }
             double candMerit = merit(exact, sc, compiled, spec, cand, cpx, cpz, forcedTicks, exact.inertiaThreshold());
-            double step = 0.0;
-            for (int v = 0; v < vars; v++) step = Math.max(step, Math.abs(d[v]));
+            double step = maxStep(d, vars);
             if (candMerit < curMerit - 1.0e-12) {
                 theta = cand;
                 px = cpx;
@@ -762,34 +700,10 @@ public final class GateFoldFinder {
         for (int it = 0; it < OBJ_ITERS; it++) {
             if (cancel != null && cancel.get()) break;
             if (deadline.over()) break;
-            for (int t = 0; t < n; t++) {
-                double phi = lin.baseArg(t) + theta[t] * RAD;
-                ux[t] = lin.mMag(t) * Math.cos(phi);
-                uz[t] = lin.mMag(t) * Math.sin(phi);
-            }
+            inputVectors(lin, theta, ux, uz);
             double[][] rows = new double[m][vars];
             double[] wv = new double[m];
-            for (int j = 0; j < m; j++) {
-                JumpLinearModel.Wall w = walls.get(j);
-                double val = -w.bPrime;
-                double[] cf = w.coef;
-                for (int t = 0; t < n; t++) {
-                    double c = t < cf.length ? cf[t] : 0.0;
-                    if (c == 0.0) continue;
-                    double uAxis = w.axis == 0 ? ux[t] : uz[t];
-                    double dAxis = w.axis == 0 ? -uz[t] : ux[t];
-                    val += c * uAxis;
-                    int v = col[t];
-                    if (v >= 0) rows[j][v] += c * dAxis * RAD;
-                }
-                if (free && w.p0coef != 0.0) {
-                    int sc0 = w.axis == 0 ? dims : dims + 1;
-                    double dstart = w.axis == 0 ? (px - refPx) : (pz - refPz);
-                    val += -w.p0coef * dstart;
-                    rows[j][sc0] += -w.p0coef * START_SCALE;
-                }
-                wv[j] = val;
-            }
+            linearizeWalls(walls, n, dims, col, ux, uz, free, px, pz, refPx, refPz, rows, wv);
             double[] objRow = new double[vars];
             for (int t = 0; t < n; t++) {
                 int v = col[t];
@@ -803,11 +717,7 @@ public final class GateFoldFinder {
             TrustRegionLp.Result lp = TrustRegionLp.solve(rows, wv, objRow, tr, false, 0.0, 2000);
             if (lp == null) break;
             double[] d = lp.d;
-            double[] cand = theta.clone();
-            for (int t = 0; t < n; t++) {
-                int v = col[t];
-                if (v >= 0) cand[t] = theta[t] + d[v];
-            }
+            double[] cand = stepYaws(theta, d, col);
             double cpx = px;
             double cpz = pz;
             if (free) {
@@ -816,8 +726,7 @@ public final class GateFoldFinder {
             }
             double cViol = specViol(exact, sc, compiled, cand, cpx, cpz);
             double cObj = objOf(exact, sc, spec, cand, cpx, cpz);
-            double step = 0.0;
-            for (int v = 0; v < vars; v++) step = Math.max(step, Math.abs(d[v]));
+            double step = maxStep(d, vars);
             if (cViol == 0.0 && betterObjLat(cObj, bestObj, max)) {
                 theta = cand;
                 px = cpx;
@@ -972,6 +881,55 @@ public final class GateFoldFinder {
         c.startPos = new de.legoshi.parkourcalc.core.sim.Vec3dCore(px, sc.startPos.y, pz);
         c.startBox = StartBox.pinned(px, pz, sc.initialVelocity.x, sc.initialVelocity.z);
         return c;
+    }
+
+    private static void inputVectors(JumpLinearModel lin, double[] theta, double[] ux, double[] uz) {
+        for (int t = 0; t < theta.length; t++) {
+            double phi = lin.baseArg(t) + theta[t] * RAD;
+            ux[t] = lin.mMag(t) * Math.cos(phi);
+            uz[t] = lin.mMag(t) * Math.sin(phi);
+        }
+    }
+
+    private static void linearizeWalls(List<JumpLinearModel.Wall> walls, int n, int dims, int[] col, double[] ux,
+                                       double[] uz, boolean free, double px, double pz, double refPx, double refPz,
+                                       double[][] rows, double[] wv) {
+        for (int j = 0; j < walls.size(); j++) {
+            JumpLinearModel.Wall w = walls.get(j);
+            double val = -w.bPrime;
+            double[] cf = w.coef;
+            for (int t = 0; t < n; t++) {
+                double c = t < cf.length ? cf[t] : 0.0;
+                if (c == 0.0) continue;
+                double uAxis = w.axis == 0 ? ux[t] : uz[t];
+                double dAxis = w.axis == 0 ? -uz[t] : ux[t];
+                val += c * uAxis;
+                int v = col[t];
+                if (v >= 0) rows[j][v] += c * dAxis * RAD;
+            }
+            if (free && w.p0coef != 0.0) {
+                int sc0 = w.axis == 0 ? dims : dims + 1;
+                double dstart = w.axis == 0 ? (px - refPx) : (pz - refPz);
+                val += -w.p0coef * dstart;
+                rows[j][sc0] += -w.p0coef * START_SCALE;
+            }
+            wv[j] = val;
+        }
+    }
+
+    private static double[] stepYaws(double[] theta, double[] d, int[] col) {
+        double[] cand = theta.clone();
+        for (int t = 0; t < theta.length; t++) {
+            int v = col[t];
+            if (v >= 0) cand[t] = theta[t] + d[v];
+        }
+        return cand;
+    }
+
+    private static double maxStep(double[] d, int vars) {
+        double step = 0.0;
+        for (int v = 0; v < vars; v++) step = Math.max(step, Math.abs(d[v]));
+        return step;
     }
 
     private static double clamp(double v, double lo, double hi) {

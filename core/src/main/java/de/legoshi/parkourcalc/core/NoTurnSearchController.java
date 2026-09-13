@@ -6,12 +6,14 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnFinder;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnKeys;
+import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnOptimizePass;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnProblem;
+import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnRanking;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnResult;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.StructurePoolDriver;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
+import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
-import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
@@ -20,11 +22,14 @@ import de.legoshi.parkourcalc.core.ui.HudMessages;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow;
+import de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow.Ending;
+import de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow.Phase;
 import de.legoshi.parkourcalc.core.ui.theme.HudMessageStyle;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BooleanSupplier;
@@ -32,6 +37,10 @@ import java.util.function.IntConsumer;
 import java.util.function.ObjIntConsumer;
 
 public final class NoTurnSearchController implements StratfinderWindow.Host {
+
+    public static final int MIN_BUDGET_SECONDS = 1;
+    public static final int MAX_BUDGET_SECONDS = 120;
+    public static final int DEFAULT_BUDGET_SECONDS = 10;
 
     private final InputData inputData;
     private final SimulationRunner runner;
@@ -50,17 +59,25 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
 
     private Thread thread;
     private volatile boolean done;
+    private volatile Phase phase = Phase.IDLE;
+    private volatile Ending ending = Ending.NONE;
     private volatile String stage = "";
     private volatile double fraction;
     private volatile String outcome = "";
     private volatile List<NoTurnResult> ranked = Collections.emptyList();
     private volatile boolean reapplySelected;
+    private volatile boolean optimizeQueued;
     private volatile NoTurnResult selected;
     private volatile NoTurnProblem problem;
+    private volatile JumpConstraint goalWall;
+    private volatile NoTurnRanking.Mode rankMode = NoTurnRanking.Mode.EASIEST;
+    private volatile int budgetSeconds = DEFAULT_BUDGET_SECONDS;
+    private volatile int optimizedInPass;
+    private volatile boolean playable = true;
     private long startNanos;
     private long endNanos;
     private int startTick;
-    private boolean maximize;
+    private boolean freeStartYaw;
 
     public NoTurnSearchController(InputData inputData, SimulationRunner runner, BoxController boxController,
                                   SaveController saveController, AngleSolverState state, AngleSolverEngine engine,
@@ -80,8 +97,18 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
     }
 
     @Override
-    public boolean isSearching() {
+    public boolean isBusy() {
         return thread != null;
+    }
+
+    @Override
+    public Phase phase() {
+        return phase;
+    }
+
+    @Override
+    public Ending ending() {
+        return ending;
     }
 
     @Override
@@ -122,17 +149,68 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
     }
 
     @Override
+    public NoTurnRanking.Mode rankMode() {
+        return rankMode;
+    }
+
+    @Override
+    public void setRankMode(NoTurnRanking.Mode mode) {
+        if (mode == null || mode == rankMode) return;
+        rankMode = mode;
+        synchronized (results) {
+            rerankLocked();
+        }
+    }
+
+    @Override
+    public int budgetSeconds() {
+        return budgetSeconds;
+    }
+
+    @Override
+    public void setBudgetSeconds(int seconds) {
+        budgetSeconds = Math.max(MIN_BUDGET_SECONDS, Math.min(MAX_BUDGET_SECONDS, seconds));
+    }
+
+    @Override
+    public boolean playable() {
+        return playable;
+    }
+
+    @Override
+    public void setPlayable(boolean value) {
+        playable = value;
+    }
+
+    @Override
+    public int unoptimizedCount() {
+        int n = 0;
+        for (NoTurnResult r : ranked) if (!r.optimized) n++;
+        return n;
+    }
+
+    @Override
+    public double offsetOf(NoTurnResult r) {
+        NoTurnProblem p = problem;
+        if (p == null || r == null) return Double.NaN;
+        return NoTurnRanking.offset(goalWall, p.objective, r.objective);
+    }
+
+    @Override
+    public String goalWallLabel() {
+        JumpConstraint w = goalWall;
+        return w != null ? w.name : null;
+    }
+
+    @Override
     public void start() {
         if (thread != null) return;
-        if (engine.isSolving() || otherSolveRunning.getAsBoolean()) {
-            pushMessage.accept("Finish the current solve first", HudMessageStyle.COLOR_WARN);
-            return;
-        }
-        if (!mc.isReady()) return;
+        if (!canRun()) return;
         JumpSpec spec = engine.debugBuildSpec();
         NoTurnProblem p = NoTurnProblem.from(spec, model);
         if (p.issue != null) {
             outcome = p.issue;
+            ending = Ending.EMPTY;
             pushMessage.accept("No-turn: " + p.issue, HudMessageStyle.COLOR_WARN);
             return;
         }
@@ -143,21 +221,17 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
         selected = null;
         reapplySelected = false;
         problem = p;
+        goalWall = NoTurnRanking.goalWall(p.baseSpec.constraints, p.objective);
         startTick = state.getStartTick();
-        maximize = p.objective.sense == Objective.Sense.MAX;
-        cancel.set(false);
-        done = false;
-        outcome = "";
-        stage = "starting";
-        fraction = 0.0;
-        startNanos = System.nanoTime();
-        endNanos = startNanos;
+        freeStartYaw = engine.debugFreeStartYaw();
+        beginRun(Phase.SEARCH, "starting");
         SolverGraph graph = BuiltinGraphs.optimize(6);
         StructurePoolDriver.Config poolCfg = new StructurePoolDriver.Config();
         poolCfg.allowJa = true;
         poolCfg.certifyBudgetNanos = 0L;
         poolCfg.extraCertify = 1000;
         poolCfg.extraCertifyNanos = 45_000_000_000L;
+        poolCfg.playable = playable;
         StructurePoolDriver driver = new StructurePoolDriver(model, poolCfg, cancel, new StructurePoolDriver.Progress() {
             @Override
             public void update(String s, double f) {
@@ -171,6 +245,7 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
         });
         NoTurnFinder.Config beamCfg = new NoTurnFinder.Config();
         beamCfg.certifyBudgetNanos = 0L;
+        beamCfg.playable = playable;
         NoTurnFinder finder = new NoTurnFinder(model, beamCfg, cancel, new NoTurnFinder.Progress() {
             @Override
             public void update(String s, double f) {
@@ -183,20 +258,32 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
                 onFound(r);
             }
         });
-        thread = new Thread(() -> {
-            try {
-                NoTurnResult r = driver.run(p, graph);
-                if (r == null && !cancel.get()) finder.run(p, graph);
-            } catch (Throwable t) {
-                t.printStackTrace();
-                stage = "error: " + t;
-            } finally {
-                done = true;
+        launch(() -> {
+            NoTurnResult r = driver.run(p, graph);
+            if (r == null && !cancel.get()) finder.run(p, graph);
+            if (optimizeQueued && !ranked.isEmpty()) {
+                cancel.set(false);
+                runOptimizePass();
             }
-        }, "noturn-finder");
-        thread.setDaemon(true);
-        thread.start();
+        });
         pushMessage.accept("No-turn search started", HudMessages.COLOR_DEFAULT);
+    }
+
+    @Override
+    public void optimize() {
+        if (problem == null || ranked.isEmpty() || unoptimizedCount() == 0) return;
+        if (thread != null) {
+            if (phase != Phase.SEARCH || optimizeQueued) return;
+            optimizeQueued = true;
+            cancel.set(true);
+            stage = "stopping the search";
+            pushMessage.accept("No-turn: optimizing the lines found so far", HudMessages.COLOR_DEFAULT);
+            return;
+        }
+        if (!canRun()) return;
+        beginRun(Phase.OPTIMIZE, "starting");
+        launch(this::runOptimizePass);
+        pushMessage.accept("No-turn: optimizing " + unoptimizedCount() + " lines", HudMessages.COLOR_DEFAULT);
     }
 
     @Override
@@ -204,7 +291,8 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
         if (thread == null) return;
         cancel.set(true);
         stage = "cancelling";
-        pushMessage.accept("No-turn search cancelled", HudMessageStyle.COLOR_WARN);
+        pushMessage.accept("No-turn " + (phase == Phase.OPTIMIZE ? "optimize" : "search") + " cancelled",
+                HudMessageStyle.COLOR_WARN);
     }
 
     @Override
@@ -226,26 +314,99 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
         thread = null;
         endNanos = System.nanoTime();
         fraction = 1.0;
+        Phase finished = phase;
+        phase = Phase.IDLE;
         List<NoTurnResult> list = ranked;
         if (cancel.get()) {
-            outcome = list.isEmpty() ? "cancelled, nothing found" : "cancelled, " + list.size() + " kept";
+            ending = list.isEmpty() ? Ending.EMPTY : Ending.CANCELLED;
+            outcome = list.isEmpty() ? "cancelled, nothing found"
+                    : "cancelled, " + list.size() + (list.size() == 1 ? " line" : " lines") + " kept";
             return;
         }
         if (list.isEmpty()) {
-            outcome = "none found";
+            ending = Ending.EMPTY;
+            outcome = "no line found";
             pushMessage.accept("No-turn: none found", HudMessageStyle.COLOR_DANGER);
             return;
         }
-        outcome = list.size() + " found";
+        ending = Ending.FOUND;
+        if (finished == Phase.OPTIMIZE) {
+            outcome = optimizedInPass + " of " + list.size() + " lines improved";
+        } else {
+            outcome = list.size() + (list.size() == 1 ? " line" : " lines") + " found";
+        }
         if (selected == null) {
             select(list.get(0));
-            pushMessage.accept("No-turn applied · " + list.get(0).describe(), HudMessageStyle.COLOR_OK);
+            pushMessage.accept("No-turn applied: " + list.get(0).describe(), HudMessageStyle.COLOR_OK);
         }
     }
 
+    private boolean canRun() {
+        if (engine.isSolving() || otherSolveRunning.getAsBoolean()) {
+            pushMessage.accept("Finish the current solve first", HudMessageStyle.COLOR_WARN);
+            return false;
+        }
+        return mc.isReady();
+    }
+
+    private void beginRun(Phase p, String firstStage) {
+        cancel.set(false);
+        optimizeQueued = false;
+        done = false;
+        phase = p;
+        ending = Ending.NONE;
+        outcome = "";
+        stage = firstStage;
+        fraction = 0.0;
+        optimizedInPass = 0;
+        startNanos = System.nanoTime();
+        endNanos = startNanos;
+    }
+
+    private void launch(Runnable body) {
+        thread = new Thread(() -> {
+            try {
+                body.run();
+            } catch (Throwable t) {
+                t.printStackTrace();
+                stage = "error: " + t;
+            } finally {
+                done = true;
+            }
+        }, "noturn-finder");
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    private void runOptimizePass() {
+        NoTurnProblem p = problem;
+        if (p == null) return;
+        phase = Phase.OPTIMIZE;
+        fraction = 0.0;
+        NoTurnOptimizePass pass = new NoTurnOptimizePass(model, 0, cancel, new NoTurnOptimizePass.Progress() {
+            @Override
+            public void update(String s, double f) {
+                stage = s;
+                fraction = Math.max(0.0, Math.min(1.0, f));
+            }
+
+            @Override
+            public void optimized(NoTurnResult before, NoTurnResult after) {
+                onOptimized(before, after);
+            }
+        });
+        optimizedInPass = pass.run(p, ranked, budgetSeconds);
+    }
+
     private void onStage(String s, double f) {
-        stage = s;
+        int cut = s.indexOf(" best=");
+        stage = cut > 0 ? s.substring(0, cut) : s;
         if (f > fraction || f >= 1.0) fraction = Math.min(1.0, f);
+    }
+
+    private Comparator<NoTurnResult> order() {
+        NoTurnProblem p = problem;
+        return NoTurnRanking.by(rankMode, goalWall, p.objective);
     }
 
     private void onFound(NoTurnResult r) {
@@ -260,23 +421,43 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
             }
             if (same >= 0) {
                 NoTurnResult old = results.get(same);
-                if (!StructurePoolDriver.betterResult(maximize, r, old)) return;
+                if (order().compare(r, old) >= 0) return;
                 results.remove(same);
                 if (selected == old) {
                     selected = r;
                     reapplySelected = true;
                 }
             }
-            int at = results.size();
+            results.add(r);
+            rerankLocked();
+        }
+    }
+
+    private void onOptimized(NoTurnResult before, NoTurnResult after) {
+        synchronized (results) {
+            int at = -1;
             for (int i = 0; i < results.size(); i++) {
-                if (StructurePoolDriver.betterResult(maximize, r, results.get(i))) {
+                if (results.get(i) == before) {
                     at = i;
                     break;
                 }
             }
-            results.add(at, r);
-            ranked = Collections.unmodifiableList(new ArrayList<>(results));
+            if (at < 0) return;
+            if (after != before) {
+                results.set(at, after);
+                if (selected == before) {
+                    selected = after;
+                    reapplySelected = true;
+                }
+            }
+            rerankLocked();
         }
+    }
+
+    private void rerankLocked() {
+        List<NoTurnResult> copy = new ArrayList<>(results);
+        if (problem != null) copy.sort(order());
+        ranked = Collections.unmodifiableList(copy);
     }
 
     private static boolean sameKeys(NoTurnResult a, NoTurnResult b) {
@@ -297,26 +478,8 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
                 row.setKeyActive(InputRow.Key.D, NoTurnKeys.strafeSign(c) < 0);
                 row.setKeyActive(InputRow.Key.SPRINT, r.sprint[t]);
             }
-            NoTurnProblem p = problem;
-            if (p != null && p.base.forwardInputPerTick != null && p.base.strafeInputPerTick != null) {
-                boolean holdSprint = r.airCombo >= 0 && r.sprint.length > 0 && r.sprint[r.sprint.length - 1];
-                for (int t = r.combos.length; t < p.n; t++) {
-                    int idx = start + t;
-                    if (idx < 0 || idx >= inputData.size()) continue;
-                    InputRow row = inputData.get(idx);
-                    float fwd = r.airCombo >= 0 ? NoTurnKeys.forwardInput(r.airCombo) : p.base.forwardInputPerTick[t];
-                    float strafe = r.airCombo >= 0 ? NoTurnKeys.strafeInput(r.airCombo) : p.base.strafeInputPerTick[t];
-                    row.setKeyActive(InputRow.Key.W, fwd > 1.0e-4f);
-                    row.setKeyActive(InputRow.Key.S, fwd < -1.0e-4f);
-                    row.setKeyActive(InputRow.Key.A, strafe > 1.0e-4f);
-                    row.setKeyActive(InputRow.Key.D, strafe < -1.0e-4f);
-                    row.setKeyActive(InputRow.Key.SPRINT, r.airCombo >= 0 ? holdSprint : p.base.sprintAt(t));
-                }
-            }
         }
-        if (r.yaws != null) {
-            AngleSolverEngine.writeYawRows(inputData.getRows(), start, r.yaws, (float) boxController.getYaw(start));
-        }
+        if (r.yaws != null) engine.writeYaws(inputData.getRows(), start, r.yaws, freeStartYaw);
         Vec3dCore cur = runner.getStartPosition();
         runner.setStartPosition(new Vec3dCore(r.startX, cur.y, r.startZ));
         saveController.markDirty();

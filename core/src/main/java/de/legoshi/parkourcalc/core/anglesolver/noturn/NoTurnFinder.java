@@ -2,11 +2,11 @@ package de.legoshi.parkourcalc.core.anglesolver.noturn;
 
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
+import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -34,6 +34,7 @@ public final class NoTurnFinder {
         public int turnCombo = NoTurnKeys.WA;
         public boolean allowJa = true;
         public boolean warmSeedFallback = true;
+        public boolean playable = false;
         public int[] jumpCombos = {NoTurnKeys.W, NoTurnKeys.WA, NoTurnKeys.WD};
         public int threads = 0;
         public int[] alphabet = {NoTurnKeys.NONE, NoTurnKeys.W, NoTurnKeys.WA, NoTurnKeys.WD,
@@ -103,7 +104,7 @@ public final class NoTurnFinder {
             for (State s : beam) {
                 int[] combos = jumpTick ? cfg.jumpCombos : cfg.alphabet;
                 for (int c : combos) {
-                    int newEdges = s.edges + ((t > 0 && c != s.lastCombo) ? 1 : 0);
+                    int newEdges = s.edges + ((t > 0 && c != s.lastCombo && !jumpTick) ? 1 : 0);
                     if (newEdges > cfg.maxEdges) continue;
                     boolean run = NoTurnKeys.isRun(c);
                     if (run && !s.engaged) {
@@ -174,7 +175,8 @@ public final class NoTurnFinder {
         feasible.sort(rankResults(problem.objective));
         NoTurnResult top = best();
         if (top != null && cfg.certifyBudgetNanos > 0) {
-            NoTurnResult polished = new NoTurnCertifier(model).polish(problem, top, graph, cfg.certifyBudgetNanos, cancel);
+            NoTurnResult polished = new NoTurnCertifier(model, cfg.playable)
+                    .polish(problem, top, graph, cfg.certifyBudgetNanos, cancel);
             if (polished != null) {
                 feasible.set(0, polished);
                 progress.found(polished);
@@ -222,20 +224,17 @@ public final class NoTurnFinder {
     private NoTurnResult certifyCombos(NoTurnProblem problem, SolverGraph graph, int[] combos, boolean[] sprint,
                                        boolean ja, long budgetNanos, AtomicBoolean cancelTok) {
         JumpSpec spec = problem.buildSpec(combos, sprint, cfg.turnCombo, ja);
-        NoTurnCertifier.Result cr = new NoTurnCertifier(model).certifySearch(spec, budgetNanos, cancelTok);
+        NoTurnCertifier.Result cr = new NoTurnCertifier(model, cfg.playable).certifySearch(spec, budgetNanos, cancelTok);
         if (cr == null || !cr.feasible) return null;
-        int engage = -1;
-        for (int t = 0; t < sprint.length; t++) {
-            if (sprint[t]) {
-                engage = t;
-                break;
-            }
-        }
-        NoTurnResult out = new NoTurnResult(combos.clone(), sprint.clone(), cfg.turnCombo, ja, NoTurnKeys.countEdges(combos),
-                engage, cr.objective, cr.violation, cr.startX, cr.startZ, cr.yaws);
-        out.pressCount = StructurePoolDriver.fullPresses(problem, combos, -1);
-        out.airCombo = -1;
-        out.boundary = StructurePoolDriver.airBoundary(problem, combos, -1);
+        return fullResult(problem, spec, ja, cr);
+    }
+
+    private NoTurnResult fullResult(NoTurnProblem problem, JumpSpec spec, boolean ja, NoTurnCertifier.Result cr) {
+        JumpPhysicsInputs sc = spec.asScenario();
+        int[] full = NoTurnProblem.combosOf(sc, problem.n - 1);
+        boolean[] fullSprint = NoTurnProblem.sprintOf(sc, problem.n - 1);
+        NoTurnResult out = NoTurnResult.of(full, fullSprint, cfg.turnCombo, ja, cr);
+        out.pressCount = NoTurnKeys.countPresses(full, problem.jump);
         return out;
     }
 
@@ -256,19 +255,9 @@ public final class NoTurnFinder {
 
     private NoTurnResult certifyBaseSeed(NoTurnProblem problem, SolverGraph graph, boolean ja, long budgetNanos) {
         JumpSpec spec = problem.baseSpecWithDf(ja);
-        NoTurnCertifier.Result cr = new NoTurnCertifier(model).certify(spec, graph, budgetNanos, cancel);
+        NoTurnCertifier.Result cr = new NoTurnCertifier(model, cfg.playable).certify(spec, graph, budgetNanos, cancel);
         if (cr == null || !cr.feasible) return null;
-        int[] combos = problem.baseCombos();
-        boolean[] sprint = problem.baseSprint();
-        int engage = -1;
-        for (int t = 0; t < sprint.length; t++) {
-            if (sprint[t]) {
-                engage = t;
-                break;
-            }
-        }
-        NoTurnResult r = new NoTurnResult(combos, sprint, cfg.turnCombo, ja, NoTurnKeys.countEdges(combos),
-                engage, cr.objective, cr.violation, cr.startX, cr.startZ, cr.yaws);
+        NoTurnResult r = fullResult(problem, spec, ja, cr);
         r.warm = true;
         return r;
     }

@@ -27,6 +27,16 @@ public final class ThetaSweepAirSlp implements FastCheck {
     private static final double DEDUP_DEG = 3.0;
     private static final long PER_THETA_NANOS = 100_000_000L;
 
+    private final boolean playable;
+
+    public ThetaSweepAirSlp() {
+        this(false);
+    }
+
+    public ThetaSweepAirSlp(boolean playable) {
+        this.playable = playable;
+    }
+
     @Override
     public FastCheckVerdict check(NoTurnProblem problem, JumpSpec spec, ExactJumpModel model, long budgetNanos,
                                   AtomicBoolean cancel) {
@@ -38,13 +48,7 @@ public final class ThetaSweepAirSlp implements FastCheck {
         Vec3dCore ref = NoTurnProblem.refStart(scFree);
         double refX = ref.x;
         double refZ = ref.z;
-        JumpSpec runSpec = spec;
-        if (freeBox != null) {
-            JumpPhysicsInputs scRun = scFree.copy();
-            scRun.startPos = new Vec3dCore(refX, scFree.startPos.y, refZ);
-            scRun.startBox = StartBox.pinned(refX, refZ, scFree.initialVelocity.x, scFree.initialVelocity.z);
-            runSpec = new JumpSpec(scRun, spec.constraints, spec.objective);
-        }
+        JumpSpec runSpec = NoTurnProblem.pinnedAtRef(spec);
 
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
         JumpPhysicsInputs verifyBase = Scoring.pinnedScenario(scFree, refX, refZ);
@@ -94,7 +98,8 @@ public final class ThetaSweepAirSlp implements FastCheck {
             double theta = c[0];
             for (int t = 0; t < n; t++) singleAim[t] = theta;
             double[] seed = Angles.wrapAll(singleAim);
-            double[] yaws = SlpSolve.optimize(model, runSpec, 0.0, cancel, seed, cfg);
+            double[] yaws = playable ? SlpSolve.optimizeCentered(model, runSpec, 0.0, cancel, seed, cfg) : null;
+            if (yaws == null) yaws = SlpSolve.optimize(model, runSpec, 0.0, cancel, seed, cfg);
             tried++;
             if (yaws == null) continue;
             double[] wrapped = Angles.wrapAll(yaws);

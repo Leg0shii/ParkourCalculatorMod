@@ -235,7 +235,6 @@ public final class Application {
                 angleSolverEngine, forwardModel, mc, this::onUserChange, this::pushHudMessage, runTicks::isRunning);
         de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow stratfinderWindow =
                 new de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow(noTurnSearch);
-        angleSolverWindow.setOpenStratfinder(stratfinderWindow::open);
 
         // In-world constraint visualization (gh-145): plates appear while the solver view is open.
         constraintSource = new de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverConstraintSource(
@@ -275,6 +274,17 @@ public final class Application {
                 hudMessagesPanel
         );
         mainWindow.setServerEventLogPanel(serverEventLogPanel);
+        mainWindow.setStratfinderMenu(stratfinderWindow::isOpen, () -> {
+            if (stratfinderWindow.isOpen()) {
+                stratfinderWindow.close();
+                return;
+            }
+            if (!settings.viewAngleSolver) {
+                settings.viewAngleSolver = true;
+                saveSettings();
+            }
+            stratfinderWindow.open();
+        });
         overlayManager.register(mainWindow);
         overlayManager.register(angleSolverWindow);
         overlayManager.register(graphEditorWindow);

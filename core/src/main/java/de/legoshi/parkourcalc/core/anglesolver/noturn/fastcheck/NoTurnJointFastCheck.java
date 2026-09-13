@@ -90,7 +90,7 @@ public final class NoTurnJointFastCheck implements FastCheck {
         List<JumpConstraint> walls = new ArrayList<>();
         int lastTick = 0;
         for (JumpConstraint c : spec.constraints) {
-            if ((c.mode == JumpConstraint.Mode.X || c.mode == JumpConstraint.Mode.Z) && c.t2 == null) {
+            if (NoTurnProblem.isFlat(c)) {
                 if (c.t1 < 0 || c.t1 > n) return FastCheckVerdict.unknown("wall tick out of range");
                 walls.add(c);
                 lastTick = Math.max(lastTick, c.t1);

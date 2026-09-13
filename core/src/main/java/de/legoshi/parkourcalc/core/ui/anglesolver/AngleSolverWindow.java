@@ -117,7 +117,6 @@ public final class AngleSolverWindow implements RenderInterface {
     private String[] presetNames;
     private String presetError;
     private Runnable applySurfaceState = () -> { };
-    private Runnable openStratfinder = () -> { };
 
     private boolean yawsExpanded;
     private boolean detailsExpanded;
@@ -908,10 +907,6 @@ public final class AngleSolverWindow implements RenderInterface {
         applySurfaceState = action != null ? action : () -> { };
     }
 
-    public void setOpenStratfinder(Runnable action) {
-        openStratfinder = action != null ? action : () -> { };
-    }
-
     private void renderActions() {
         if (engine.isSolving() || runTicks.isRunning()) {
             renderSolvingIndicator();
@@ -932,12 +927,6 @@ public final class AngleSolverWindow implements RenderInterface {
             ThemeManager.popTextColor();
         } else if (Controls.secondaryButton("Solve")) {
             runTicks.start();
-        }
-        if (Controls.secondaryButton("Stratfinder")) {
-            openStratfinder.run();
-        }
-        if (ImGui.isItemHovered()) {
-            ImGui.setTooltip("Open the stratfinder: a cold search over key schedules for a byte-exact NO-TURN line, with live results you can apply while it runs.");
         }
     }
 

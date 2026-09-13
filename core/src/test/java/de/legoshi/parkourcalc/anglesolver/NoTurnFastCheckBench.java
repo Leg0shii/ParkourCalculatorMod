@@ -2,25 +2,14 @@ package de.legoshi.parkourcalc.anglesolver;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import de.legoshi.parkourcalc.anglesolver.harness.Fixtures;
-import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
-import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
-import de.legoshi.parkourcalc.core.anglesolver.Constraint;
-import de.legoshi.parkourcalc.core.anglesolver.TickConstraints;
-import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
+import de.legoshi.parkourcalc.anglesolver.harness.NoTurnCapture;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.FastCheck;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.FastCheckVerdict;
+import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnCertifier;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnKeys;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnProblem;
-import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
-import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
-import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
-import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
-import de.legoshi.parkourcalc.core.save.SaveFile;
-import de.legoshi.parkourcalc.core.save.SaveIO;
-import de.legoshi.parkourcalc.core.ui.InputData;
 import org.junit.Assume;
 import org.junit.Test;
 
@@ -144,7 +133,7 @@ public class NoTurnFastCheckBench {
             pc.c = c;
             pc.L = L;
             try {
-                int[] combos = parseKeys(c.keys, L.problem.setupEnd + 1);
+                int[] combos = NoTurnKeys.parse(c.keys, L.problem.setupEnd + 1);
                 boolean[] sprint = NoTurnKeys.latchSprint(combos, c.engage < 0 ? L.problem.setupEnd + 5 : c.engage);
                 pc.spec = L.problem.buildSpec(combos, sprint, NoTurnKeys.WA, c.ja);
             } catch (RuntimeException e) {
@@ -254,13 +243,9 @@ public class NoTurnFastCheckBench {
             boolean verified = false;
             double viol = Double.NaN;
             if (v.kind == FastCheckVerdict.Kind.FEASIBLE && v.yaws != null) {
-                JumpPhysicsInputs sc = spec.asScenario();
                 double px = Double.isNaN(v.px) ? p.refStart().x : v.px;
                 double pz = Double.isNaN(v.pz) ? p.refStart().z : v.pz;
-                JumpPhysicsInputs scPin = Scoring.pinnedScenario(sc, px, pz);
-                double[] gf = scPin.toGameFacings(Angles.wrapAll(v.yaws));
-                ForwardPath fp = pc.L.model.forward(scPin, gf);
-                viol = JumpConstraintCompiler.compile(spec).maxViolation(gf, fp);
+                viol = NoTurnCertifier.maxViolation(pc.L.model, spec, v.yaws, px, pz);
                 verified = viol <= 0.0;
             }
             String outcome;
@@ -337,53 +322,16 @@ public class NoTurnFastCheckBench {
     }
 
     private Loaded load(Case c) throws Exception {
-        String raw;
-        File direct = new File(c.capture);
-        if (direct.isFile()) raw = new String(Files.readAllBytes(direct.toPath()), StandardCharsets.UTF_8);
-        else raw = Fixtures.rawPool(c.capture);
-        SaveFile file = SaveIO.parseSafe(raw);
-        if (file == null) throw new IllegalStateException(c.capture + ": failed to parse");
-        ExactJumpModel model = ExactJumpModel.forMcVersion(file.mcVersion);
-        InputData inputs = new InputData();
-        SaveIO.applyRowsTo(file, inputs);
-        AngleSolverState state = new AngleSolverState();
-        SaveIO.applyAngleSolverTo(file, state);
-        if (c.startTick >= 0) state.setStartTick(c.startTick);
-        AngleSolverEngine engine = new AngleSolverEngine(state, Fixtures.buildBoxes(file), inputs, t -> { }, model);
-        JumpSpec spec = engine.debugBuildSpec();
+        NoTurnCapture cap = NoTurnCapture.load(c.capture);
+        if (c.startTick >= 0) cap.state.setStartTick(c.startTick);
+        JumpSpec spec = cap.buildSpec();
         if (spec == null) throw new IllegalStateException(c.capture + ": no spec");
-        JumpPhysicsInputs sc0 = spec.asScenario();
-        boolean hasFree = sc0.startBox != null && sc0.startBox.startFree();
-        if (c.freeBox > 0 && !hasFree) {
-            TickConstraints tc = state.tickConstraints(state.getStartTick());
-            tc.getConstraints().add(Constraint.range(Constraint.Field.X, sc0.startPos.x - c.freeBox,
-                    sc0.startPos.x + c.freeBox, true, true));
-            tc.getConstraints().add(Constraint.range(Constraint.Field.Z, sc0.startPos.z - c.freeBox,
-                    sc0.startPos.z + c.freeBox, true, true));
-            engine = new AngleSolverEngine(state, Fixtures.buildBoxes(file), inputs, t -> { }, model);
-            spec = engine.debugBuildSpec();
-        }
+        if (cap.addFreeBox(spec, c.freeBox)) spec = cap.buildSpec();
         Loaded L = new Loaded();
-        L.problem = NoTurnProblem.from(spec, model);
-        L.model = model;
+        L.problem = NoTurnProblem.from(spec, cap.model);
+        L.model = cap.model;
         if (L.problem.issue != null) throw new IllegalStateException(c.capture + ": " + L.problem.issue);
         return L;
     }
 
-    static int[] parseKeys(String text, int len) {
-        String[] labels = {"-", "W", "WA", "WD", "A", "D", "S", "SA", "SD"};
-        int[] combos = new int[len];
-        int t = 0;
-        for (String tok : text.trim().split(" +")) {
-            if (tok.isEmpty()) continue;
-            int x = tok.indexOf('x');
-            String label = x > 0 ? tok.substring(0, x) : tok;
-            int count = x > 0 ? Integer.parseInt(tok.substring(x + 1)) : 1;
-            int combo = Arrays.asList(labels).indexOf(label);
-            if (combo < 0) throw new IllegalArgumentException("bad key token " + tok);
-            for (int i = 0; i < count && t < len; i++) combos[t++] = combo;
-        }
-        if (t != len) throw new IllegalArgumentException("keys cover " + t + " ticks, need " + len);
-        return combos;
-    }
 }

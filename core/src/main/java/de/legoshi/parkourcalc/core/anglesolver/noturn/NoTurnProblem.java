@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.core.anglesolver.noturn;
 
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
+import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
@@ -28,8 +29,13 @@ public final class NoTurnProblem {
     public final boolean explicitTies;
     public final boolean jaAll;
     public final int[] segment;
+    public final int[] unit;
+    public final int unitCount;
+    public final int mainUnit;
+    public final int tiedUnits;
 
     public final List<JumpConstraint> walls;
+    public final List<JumpConstraint> flatWalls;
 
     public String issue;
 
@@ -94,6 +100,29 @@ public final class NoTurnProblem {
         if (jaAll) {
             for (int jtk : jumpTicks) if (jtk <= setupEnd) tied[jtk] = false;
         }
+        this.unit = new int[n];
+        int[] unitOfRoot = new int[n];
+        java.util.Arrays.fill(unitOfRoot, -1);
+        int count = 0;
+        int main = -1;
+        int tiedRoots = 0;
+        for (int t = 0; t < n; t++) {
+            boolean shared = explicitTies ? tied[t] : t <= setupEnd && !(jaAll && jump[t]);
+            if (!shared) {
+                unit[t] = count++;
+                continue;
+            }
+            int root = explicitTies ? segment[t] : 0;
+            if (unitOfRoot[root] < 0) {
+                unitOfRoot[root] = count++;
+                tiedRoots++;
+            }
+            unit[t] = unitOfRoot[root];
+            if (main < 0) main = unit[t];
+        }
+        this.unitCount = count;
+        this.mainUnit = main;
+        this.tiedUnits = tiedRoots;
         if (base.forwardInputPerTick != null && base.strafeInputPerTick != null) {
             for (int t = setupEnd + 1; t < n; t++) {
                 boolean idle = Math.abs(base.forwardInputPerTick[t]) < 1.0e-4
@@ -106,12 +135,62 @@ public final class NoTurnProblem {
         }
 
         this.walls = new ArrayList<>();
+        this.flatWalls = new ArrayList<>();
         for (JumpConstraint c : baseSpec.constraints) {
             if (c.mode == JumpConstraint.Mode.X || c.mode == JumpConstraint.Mode.Z
                     || c.mode == JumpConstraint.Mode.DXZ || c.mode == JumpConstraint.Mode.DZX) {
                 walls.add(c);
+                if (isFlat(c)) flatWalls.add(c);
             }
         }
+    }
+
+    public static boolean isFlat(JumpConstraint w) {
+        return w.t2 == null && (w.mode == JumpConstraint.Mode.X || w.mode == JumpConstraint.Mode.Z);
+    }
+
+    public NoTurnProblem widened(double delta) {
+        List<JumpConstraint> wc = new ArrayList<>();
+        for (JumpConstraint w : baseSpec.constraints) {
+            if (isFlat(w)) {
+                double rhs = w.rhs;
+                if (w.cmp == JumpConstraint.Cmp.LE) rhs += delta;
+                else if (w.cmp == JumpConstraint.Cmp.GE) rhs -= delta;
+                wc.add(new JumpConstraint(w.mode, w.t1, w.t2, w.op, w.cmp, rhs, w.name));
+            } else {
+                wc.add(w);
+            }
+        }
+        return from(new JumpSpec(base.copy(), wc, objective), model);
+    }
+
+    public static JumpSpec pinnedAtRef(JumpSpec spec) {
+        JumpPhysicsInputs scFree = spec.asScenario();
+        JumpPhysicsInputs scRun = scFree.copy();
+        if (scFree.startBox != null && scFree.startBox.startFree()) {
+            Vec3dCore ref = refStart(scFree);
+            scRun.startPos = ref;
+            scRun.startBox = StartBox.pinned(ref.x, ref.z, scFree.initialVelocity.x, scFree.initialVelocity.z);
+        }
+        return new JumpSpec(scRun, spec.constraints, spec.objective);
+    }
+
+    public static int worstFlatWallTick(List<JumpConstraint> walls, ForwardPath fp, double[] worstInOut) {
+        double worst = worstInOut[0];
+        int tick = -1;
+        for (JumpConstraint w : walls) {
+            if (!isFlat(w)) continue;
+            int axis = w.mode == JumpConstraint.Mode.X ? 0 : 1;
+            double v = fp.getPos(w.t1, axis == 0 ? JumpPhysicsInputs.Axis.X : JumpPhysicsInputs.Axis.Z);
+            double viol = w.cmp == JumpConstraint.Cmp.LE ? v - w.rhs
+                    : w.cmp == JumpConstraint.Cmp.GE ? w.rhs - v : Math.abs(v - w.rhs);
+            if (viol > worst) {
+                worst = viol;
+                tick = w.t1;
+            }
+        }
+        worstInOut[0] = worst;
+        return tick;
     }
 
     private void markTied(int t) {
@@ -163,41 +242,20 @@ public final class NoTurnProblem {
         return t >= 0 && t <= setupEnd;
     }
 
-    public int airCombo(int[] combos) {
-        if (combos == null || combos.length == 0 || setupEnd >= combos.length) return -1;
-        int last = combos[setupEnd];
-        return NoTurnKeys.isRun(last) ? last : -1;
-    }
-
-    public int baseAirCombo() {
-        if (setupEnd + 1 >= n) return -1;
-        float f = base.forwardAt(setupEnd + 1);
-        float s = base.strafeInputAt(setupEnd + 1);
-        int fs = f > 1.0e-4f ? 1 : f < -1.0e-4f ? -1 : 0;
-        int ss = s > 1.0e-4f ? 1 : s < -1.0e-4f ? -1 : 0;
-        for (int c = 0; c < NoTurnKeys.COUNT; c++) {
-            if (NoTurnKeys.forwardSign(c) == fs && NoTurnKeys.strafeSign(c) == ss) return c;
-        }
-        return NoTurnKeys.NONE;
+    public boolean multiTied() {
+        return explicitTies && tiedUnits >= 2;
     }
 
     public JumpSpec buildSpec(int[] combos, boolean[] sprint, int turnCombo, boolean jaFree) {
-        return buildSpec(combos, sprint, turnCombo, jaFree, -1);
-    }
-
-    public JumpSpec buildSpec(int[] combos, boolean[] sprint, int turnCombo, boolean jaFree, int hold) {
         JumpPhysicsInputs sc = base.copy();
         float[] fwd = new float[n];
         float[] strafe = new float[n];
         boolean[] spr = new boolean[n];
+        int given = Math.min(n, combos.length);
         for (int t = 0; t < n; t++) {
-            if (t > setupEnd) {
+            if (t >= given) {
                 boolean idle = Math.abs(base.forwardAt(t)) < 1.0e-4 && Math.abs(base.strafeInputAt(t)) < 1.0e-4;
-                if (hold >= 0) {
-                    fwd[t] = NoTurnKeys.forwardInput(hold);
-                    strafe[t] = NoTurnKeys.strafeInput(hold);
-                    spr[t] = sprint[setupEnd];
-                } else if (idle && NoTurnKeys.isMove(turnCombo)) {
+                if (idle && NoTurnKeys.isMove(turnCombo)) {
                     fwd[t] = NoTurnKeys.forwardInput(turnCombo);
                     strafe[t] = NoTurnKeys.strafeInput(turnCombo);
                     spr[t] = NoTurnKeys.isRun(turnCombo);
@@ -244,11 +302,11 @@ public final class NoTurnProblem {
     }
 
     public int[] baseCombos() {
-        return combosOf(base, setupEnd);
+        return combosOf(base, n - 1);
     }
 
     public boolean[] baseSprint() {
-        return sprintOf(base, setupEnd);
+        return sprintOf(base, n - 1);
     }
 
     public static int[] combosOf(JumpPhysicsInputs sc, int setupEnd) {

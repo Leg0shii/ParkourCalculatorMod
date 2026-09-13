@@ -208,11 +208,24 @@ anglesolver/
                            (viol 0, obj near the -2805.2990 pure-no-turn optimum); finderReturnsAByteExactNoTurn
                            runs the full cold beam + full-jump screen + certify ladder and asserts a
                            byte-exact no-turn comes back (cold, or the warm seed of the current inputs)
+  NoTurnRankingTest.java   stratfinder list order (core/.../anglesolver/noturn/NoTurnRanking): Easiest =
+                           no jump-angle flick first, then fewest input changes (key edges incl. the first
+                           press and the air hold, plus sprint toggles; a key change landing on a jump
+                           tick is free, the WAD rhythm), then fewest backward ticks, then smallest turn,
+                           offset as the tie-break; Furthest = largest offset past the goal wall on the
+                           objective axis, easiest order as the tie-break; goal-wall pick and the
+                           MIN-sense offset sign; fast, no capture
+  NoTurnPlayableTest.java  Human yaws mode of the no-turn certifier (slow): certifies the j1150 pure and
+                           j154 jump-angle structures plain and playable through the search cascade and the
+                           Optimize graph, prints objective, reversals, max turn and the air yaw deltas, and
+                           asserts the playable line stays byte-exact with no more turn reversals
+  NoTurnPlayableUnitTest.java  reversal count, the reversal key in StructurePoolDriver.betterResult, and
+                           NoTurnCertifier.landingGiveBack (margin above the near landing wall); fast
   NoTurnColdBench.java     no-turn stratfinder timing harness (skipped unless -Dpkc.bench.capture is
                            set): certifies the recorded keys as a no-turn structure (driver=human), a
                            given schedule (driver=keys), or runs the pool / in-game / beam / benders
                            drivers with per-certify timings; pkc.bench.{driver,graph,freeBox,startTick,
-                           allowJa,threads,searchSec,nearSearchMs,certifySec,totalSec,maxCertify,
+                           allowJa,playable,threads,searchSec,nearSearchMs,certifySec,totalSec,maxCertify,
                            extraCertify,extraSec,dumpPool,out}; keys/engage/repeat/cascade for
                            driver=keys, dfMarks to add dF=0 marks, contCap/contLead/contSec/parCont/
                            deepPairRepair for driver=benders; pair with -Dpkc.graphTrace=true (per-node
@@ -229,7 +242,9 @@ anglesolver/
                            and counts a CONTRADICTION whenever it says INFEASIBLE while the main impl
                            returned a byte-verified FEASIBLE witness (the real-pool soundness audit of
                            a rejection check: feed it pool dumps plus the in-game found lines)
-  harness/                 shared plumbing; no test lives here
+  harness/                 shared plumbing; no test lives here (NoTurnCapture loads a capture by path or
+                           pool key into model + inputs + state, builds the engine spec, and adds the
+                           synthetic free-start box the no-turn benches share)
 resources/
   problems/<check>/        one folder per check; holds captures or .expect.json sidecars
   captures/                the shared capture library (one copy of each saved jump)

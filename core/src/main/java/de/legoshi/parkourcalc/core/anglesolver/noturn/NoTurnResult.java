@@ -15,8 +15,7 @@ public final class NoTurnResult {
     public final double[] yaws;
     public boolean warm = false;
     public int pressCount = -1;
-    public int airCombo = -1;
-    public int boundary = 0;
+    public volatile boolean optimized = false;
 
     public NoTurnResult(int[] combos, boolean[] sprint, int turnCombo, boolean ja, int edges, int sprintEngage,
                         double objective, double violation, double startX, double startZ, double[] yaws) {
@@ -31,6 +30,20 @@ public final class NoTurnResult {
         this.startX = startX;
         this.startZ = startZ;
         this.yaws = yaws;
+    }
+
+    public static NoTurnResult of(int[] combos, boolean[] sprint, int turnCombo, boolean ja, NoTurnCertifier.Result cr) {
+        return new NoTurnResult(combos.clone(), sprint.clone(), turnCombo, ja, NoTurnKeys.countEdges(combos),
+                NoTurnKeys.firstSprint(sprint), cr.objective, cr.violation, cr.startX, cr.startZ, cr.yaws);
+    }
+
+    public NoTurnResult withCertified(NoTurnCertifier.Result cr) {
+        NoTurnResult out = new NoTurnResult(combos.clone(), sprint.clone(), turnCombo, ja, edges, sprintEngage,
+                cr.objective, cr.violation, cr.startX, cr.startZ, cr.yaws);
+        out.warm = warm;
+        out.pressCount = pressCount;
+        out.optimized = optimized;
+        return out;
     }
 
     public String describe() {

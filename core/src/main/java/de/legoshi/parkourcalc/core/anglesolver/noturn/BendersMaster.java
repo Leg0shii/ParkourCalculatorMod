@@ -4,7 +4,6 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunner;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
-import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
 
@@ -192,7 +191,7 @@ public final class BendersMaster {
                 break;
             }
 
-            Screen sc = screens.get(key(sigma));
+            Screen sc = screens.get(NoTurnKeys.key(sigma));
             if (cfg.screenSkip && sc != null) {
                 boolean skip = !sc.diskFeasible || (sc.screened && sc.viol > cfg.screenKeep);
                 if (skip) {
@@ -252,7 +251,7 @@ public final class BendersMaster {
             }
             trace.masterIterations++;
             trace.smallestEdgeReached = Math.min(trace.smallestEdgeReached, NoTurnKeys.countEdges(sigma));
-            Screen sc = screens.get(key(sigma));
+            Screen sc = screens.get(NoTurnKeys.key(sigma));
             if (cfg.screenSkip && sc != null) {
                 boolean skip = !sc.diskFeasible || (sc.screened && sc.viol > cfg.screenKeep);
                 if (skip) {
@@ -280,7 +279,7 @@ public final class BendersMaster {
         for (int oi : order) {
             for (int[] c : deepFamilyCandidates(seeds.get(oi), problem.setupEnd, problem.jumpTicks)) {
                 if (uniq.size() >= cfg.deepCandidateCap) break;
-                uniq.putIfAbsent(key(c), c);
+                uniq.putIfAbsent(NoTurnKeys.key(c), c);
             }
             if (uniq.size() >= cfg.deepCandidateCap) break;
         }
@@ -368,7 +367,7 @@ public final class BendersMaster {
         }
 
         String key() {
-            return BendersMaster.key(combos);
+            return NoTurnKeys.key(combos);
         }
     }
 
@@ -395,7 +394,7 @@ public final class BendersMaster {
                 int edges = NoTurnKeys.countEdges(sigma);
                 trace.smallestEdgeReached = Math.min(trace.smallestEdgeReached, edges);
 
-                Screen sc = screens.get(key(sigma));
+                Screen sc = screens.get(NoTurnKeys.key(sigma));
                 if (cfg.screenSkip && sc != null) {
                     boolean skip = !sc.diskFeasible || (sc.screened && sc.viol > cfg.screenKeep);
                     if (skip) {
@@ -410,20 +409,8 @@ public final class BendersMaster {
                 }
                 int engage = (sc != null && sc.engage != Integer.MAX_VALUE) ? sc.engage : 0;
                 boolean[] sprint = NoTurnKeys.latchSprint(sigma, engage);
-                NoTurnCertifier.Result rf = certify(wpFat, sigma, sprint, fatGraph, cfg.fatCertifyNanos);
-                trace.certifies++;
-                if (rf == null || !rf.feasible) {
-                    if (cfg.useCuts) {
-                        NoGoodCut cut = iis.extract(sigma, sprint, rf == null ? null : rf.yaws,
-                                rf == null ? problem.refStart().x : rf.startX,
-                                rf == null ? problem.refStart().z : rf.startZ);
-                        if (cut != null && cut.size() < sigma.length) {
-                            master.addCut(cut);
-                            trace.noGoodCuts++;
-                        }
-                    }
-                    continue;
-                }
+                NoTurnCertifier.Result rf = fatCertifyOrCut(problem, wpFat, fatGraph, master, iis, sigma, sprint, null);
+                if (rf == null) continue;
                 trace.fatFeasible++;
                 pool.add(new FatFeasible(sigma.clone(), edges, rf.objective, isV6Anc));
                 if (isV6Anc) {
@@ -670,21 +657,9 @@ public final class BendersMaster {
         }
 
         boolean[] sprint = NoTurnKeys.latchSprint(sigma, engage);
-        NoTurnCertifier.Result rf = certify(wpFat, sigma, sprint, fatGraph, cfg.fatCertifyNanos);
-        trace.certifies++;
-        if (rf == null || !rf.feasible) {
-            if (cfg.useCuts) {
-                NoGoodCut cut = iis.extract(sigma, sprint, rf == null ? null : rf.yaws,
-                        rf == null ? problem.refStart().x : rf.startX,
-                        rf == null ? problem.refStart().z : rf.startZ);
-                if (cut != null && cut.size() < sigma.length) {
-                    master.addCut(cut);
-                    trace.noGoodCuts++;
-                    log("  fat-infeasible -> " + cut.describe());
-                }
-            }
-            return null;
-        }
+        NoTurnCertifier.Result rf = fatCertifyOrCut(problem, wpFat, fatGraph, master, iis, sigma, sprint,
+                "  fat-infeasible -> ");
+        if (rf == null) return null;
         trace.fatFeasible++;
         if (isV6Anc) {
             trace.v6AncestorCertifiedFat = true;
@@ -779,7 +754,7 @@ public final class BendersMaster {
                     sc.screened = true;
                 }
             }
-            map.put(key(c), sc);
+            map.put(NoTurnKeys.key(c), sc);
         }
         return map;
     }
@@ -791,7 +766,7 @@ public final class BendersMaster {
         double[] sortViol = new double[nItems];
         for (int i = 0; i < nItems; i++) {
             idx[i] = i;
-            Screen sc = screens.get(key(raw.get(i)));
+            Screen sc = screens.get(NoTurnKeys.key(raw.get(i)));
             sortViol[i] = (sc == null || Double.isNaN(sc.viol)) ? Double.POSITIVE_INFINITY : sc.viol;
         }
         java.util.Arrays.sort(idx, (a, b) -> {
@@ -832,19 +807,26 @@ public final class BendersMaster {
 
     private NoTurnProblem widened(NoTurnProblem problem, double delta) {
         if (delta == 0.0) return NoTurnProblem.from(problem.baseSpec, model);
-        List<JumpConstraint> wc = new ArrayList<>();
-        for (JumpConstraint w : problem.baseSpec.constraints) {
-            if ((w.mode == JumpConstraint.Mode.X || w.mode == JumpConstraint.Mode.Z) && w.t2 == null) {
-                double rhs = w.rhs;
-                if (w.cmp == JumpConstraint.Cmp.LE) rhs += delta;
-                else if (w.cmp == JumpConstraint.Cmp.GE) rhs -= delta;
-                wc.add(new JumpConstraint(w.mode, w.t1, w.t2, w.op, w.cmp, rhs, w.name));
-            } else {
-                wc.add(w);
+        return problem.widened(delta);
+    }
+
+    private NoTurnCertifier.Result fatCertifyOrCut(NoTurnProblem problem, NoTurnProblem wpFat, SolverGraph fatGraph,
+                                                   MinTvMaster master, IisExtractor iis, int[] sigma, boolean[] sprint,
+                                                   String cutLog) {
+        NoTurnCertifier.Result rf = certify(wpFat, sigma, sprint, fatGraph, cfg.fatCertifyNanos);
+        trace.certifies++;
+        if (rf != null && rf.feasible) return rf;
+        if (cfg.useCuts) {
+            NoGoodCut cut = iis.extract(sigma, sprint, rf == null ? null : rf.yaws,
+                    rf == null ? problem.refStart().x : rf.startX,
+                    rf == null ? problem.refStart().z : rf.startZ);
+            if (cut != null && cut.size() < sigma.length) {
+                master.addCut(cut);
+                trace.noGoodCuts++;
+                if (cutLog != null) log(cutLog + cut.describe());
             }
         }
-        JumpSpec wb = new JumpSpec(problem.base.copy(), wc, problem.objective);
-        return NoTurnProblem.from(wb, model);
+        return null;
     }
 
     private static int firstRun(int[] combos) {
@@ -863,12 +845,6 @@ public final class BendersMaster {
         for (int t = 6; t <= 14; t++) if (combos[t] != NoTurnKeys.S) return false;
         for (int t = 15; t <= 27; t++) if (combos[t] != NoTurnKeys.WA) return false;
         return combos[28] == NoTurnKeys.W;
-    }
-
-    private static String key(int[] combos) {
-        StringBuilder sb = new StringBuilder(combos.length);
-        for (int c : combos) sb.append((char) ('a' + c));
-        return sb.toString();
     }
 
     private static String fmt(double d) {

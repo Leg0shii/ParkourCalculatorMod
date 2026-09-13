@@ -233,7 +233,7 @@ public final class WallHomotopyDriver {
 
     private NoTurnResult accept(NoTurnProblem problem, Incumbent best) {
         if (isV6(best.combos)) trace.rediscoveredV6 = true;
-        int engage = firstSprint(best.sprint);
+        int engage = NoTurnKeys.firstSprint(best.sprint);
         NoTurnResult res = new NoTurnResult(best.combos.clone(), best.sprint.clone(), cfg.turnCombo, cfg.jaFree,
                 best.edges, engage, best.objective, best.violation, best.startX, best.startZ, best.yaws);
         progress.update("wall-homotopy cold: " + res.describe(), 1.0);
@@ -256,7 +256,7 @@ public final class WallHomotopyDriver {
         for (Incumbent inc : cands) {
             if (tried >= cfg.speculativeCount) break;
             if (cancelled() || System.nanoTime() > deadline) break;
-            if (!specTried.add(key(inc.combos))) continue;
+            if (!specTried.add(NoTurnKeys.key(inc.combos))) continue;
             tried++;
             log("  speculative close delta=0 on [" + NoTurnKeys.describe(inc.combos) + "] edges=" + inc.edges);
             NoTurnCertifier.Result r = certify(wp0, inc.combos, inc.sprint, finalGraph, cfg.finalCertifyNanos);
@@ -274,7 +274,7 @@ public final class WallHomotopyDriver {
             for (int[] m : ranked) {
                 if (cancelled() || System.nanoTime() > deadline) break;
                 if (certs >= cfg.speculativeCertifyCap) break;
-                if (!specTried.add(key(m))) continue;
+                if (!specTried.add(NoTurnKeys.key(m))) continue;
                 boolean[] sprint = NoTurnKeys.latchSprint(m, 0);
                 NoTurnCertifier.Result rr = certify(wp0, m, sprint, finalGraph, cfg.finalCertifyNanos);
                 certs++;
@@ -292,7 +292,8 @@ public final class WallHomotopyDriver {
     private List<Incumbent> seed(NoTurnProblem wp, double delta) {
         int setupEnd = wp.setupEnd;
         boolean takeoffW = wp.jump[setupEnd];
-        List<int[]> fams = enumerate(setupEnd, takeoffW, cfg.seedMinDwell, cfg.seedMaxEdges);
+        List<int[]> fams = StructurePoolDriver.enumerateRaw(setupEnd, takeoffW, cfg.seedMinDwell, cfg.seedMaxEdges,
+                cfg.alphabet);
         ScreenCtx sc = new ScreenCtx(wp);
         double[] scores = new double[fams.size()];
         Integer[] idx = new Integer[fams.size()];
@@ -362,7 +363,7 @@ public final class WallHomotopyDriver {
     private List<Incumbent> repair(NoTurnProblem wp, Incumbent inc, double delta, SolverGraph graph, long budget) {
         log("  repair start delta=" + fmt(delta) + " inc=[" + NoTurnKeys.describe(inc.combos) + "] edges=" + inc.edges);
         Set<String> tried = new LinkedHashSet<>();
-        tried.add(key(inc.combos));
+        tried.add(NoTurnKeys.key(inc.combos));
         java.util.Map<Integer, List<Incumbent>> byTick = new java.util.LinkedHashMap<>();
         int totalFound = 0;
         for (int radius = cfg.repairWindowRadius; radius <= cfg.repairWindowRadiusMax; radius += 1) {
@@ -372,7 +373,7 @@ public final class WallHomotopyDriver {
             final List<int[]> batch = new ArrayList<>();
             for (int[] m : ranked) {
                 if (batch.size() >= cfg.repairCertifyCap) break;
-                if (!tried.add(key(m))) continue;
+                if (!tried.add(NoTurnKeys.key(m))) continue;
                 batch.add(m);
             }
             final NoTurnProblem fwp = wp;
@@ -409,7 +410,7 @@ public final class WallHomotopyDriver {
             for (int[] m : ranked) {
                 if (cancelled() || System.nanoTime() > deadline) break;
                 if (certs >= cfg.repairPairCap) break;
-                if (!tried.add(key(m))) continue;
+                if (!tried.add(NoTurnKeys.key(m))) continue;
                 boolean[] sprint = NoTurnKeys.latchSprint(m, 0);
                 NoTurnCertifier.Result r = certify(wp, m, sprint, graph, budget);
                 certs++;
@@ -438,13 +439,13 @@ public final class WallHomotopyDriver {
         List<int[]> muts = singleFlips(wp, inc.combos, wp.setupEnd);
         List<int[]> ranked = rankMutations(inc.combos, muts);
         Set<String> tried = new LinkedHashSet<>();
-        tried.add(key(inc.combos));
+        tried.add(NoTurnKeys.key(inc.combos));
         List<Incumbent> found = new ArrayList<>();
         int certs = 0;
         for (int[] m : ranked) {
             if (cancelled() || System.nanoTime() > deadline) break;
             if (certs >= cfg.finalRepairCertifyCap) break;
-            if (!tried.add(key(m))) continue;
+            if (!tried.add(NoTurnKeys.key(m))) continue;
             boolean[] sprint = NoTurnKeys.latchSprint(m, 0);
             NoTurnCertifier.Result r = certify(wp, m, sprint, graph, budget);
             certs++;
@@ -553,24 +554,9 @@ public final class WallHomotopyDriver {
     private int bindingTick(NoTurnProblem wp, Incumbent inc) {
         if (inc.yaws == null) return -1;
         JumpSpec spec = wp.buildSpec(inc.combos, inc.sprint, cfg.turnCombo, cfg.jaFree);
-        JumpPhysicsInputs pin = de.legoshi.parkourcalc.core.anglesolver.graph.Scoring
-                .pinnedScenario(spec.asScenario(), inc.startX, inc.startZ);
-        double[] gf = pin.toGameFacings(Angles.wrapAll(inc.yaws));
-        ForwardPath fp = model.forward(pin, gf);
-        double worst = -1;
-        int wt = -1;
-        for (JumpConstraint w : wp.walls) {
-            if ((w.mode != JumpConstraint.Mode.X && w.mode != JumpConstraint.Mode.Z) || w.t2 != null) continue;
-            int axis = w.mode == JumpConstraint.Mode.X ? 0 : 1;
-            double v = fp.getPos(w.t1, axis == 0 ? JumpPhysicsInputs.Axis.X : JumpPhysicsInputs.Axis.Z);
-            double viol = w.cmp == JumpConstraint.Cmp.LE ? v - w.rhs
-                    : w.cmp == JumpConstraint.Cmp.GE ? w.rhs - v : Math.abs(v - w.rhs);
-            if (viol > worst) {
-                worst = viol;
-                wt = w.t1;
-            }
-        }
-        return wt;
+        ForwardPath fp = NoTurnCertifier.forwardAt(model, spec.asScenario(), inc.yaws, inc.startX, inc.startZ, null);
+        double[] worst = {-1};
+        return NoTurnProblem.worstFlatWallTick(wp.walls, fp, worst);
     }
 
     private NoTurnCertifier.Result certify(NoTurnProblem wp, int[] combos, boolean[] sprint,
@@ -627,7 +613,7 @@ public final class WallHomotopyDriver {
         Set<String> seen = new LinkedHashSet<>();
         List<Incumbent> out = new ArrayList<>();
         for (Incumbent i : in) {
-            if (seen.add(key(i.combos))) out.add(i);
+            if (seen.add(NoTurnKeys.key(i.combos))) out.add(i);
         }
         return out;
     }
@@ -664,41 +650,6 @@ public final class WallHomotopyDriver {
         return max ? a.objective > b.objective : a.objective < b.objective;
     }
 
-    private List<int[]> enumerate(int setupEnd, boolean takeoffW, int minDwell, int maxEdges) {
-        List<int[]> out = new ArrayList<>();
-        int[] combos = new int[setupEnd + 1];
-        enumRec(out, combos, 0, -1, 0, setupEnd, takeoffW, minDwell, maxEdges);
-        return out;
-    }
-
-    private void enumRec(List<int[]> out, int[] combos, int start, int lastLabel, int edges,
-                         int setupEnd, boolean takeoffW, int minDwell, int maxEdges) {
-        int lastBranch = takeoffW ? setupEnd - 1 : setupEnd;
-        if (start > lastBranch) {
-            if (takeoffW) {
-                int c = NoTurnKeys.W;
-                int ne = (lastLabel >= 0 && c != lastLabel) ? edges + 1 : edges;
-                if (ne > maxEdges) return;
-                combos[setupEnd] = c;
-            }
-            out.add(combos.clone());
-            return;
-        }
-        int remaining = lastBranch - start + 1;
-        int dwell = Math.min(minDwell, remaining);
-        for (int c : cfg.alphabet) {
-            if (c == lastLabel) continue;
-            int ne = (lastLabel >= 0) ? edges + 1 : edges;
-            if (ne > maxEdges) continue;
-            for (int len = dwell; len <= remaining; len++) {
-                int rem = remaining - len;
-                if (rem > 0 && rem < minDwell) continue;
-                for (int t = start; t < start + len; t++) combos[t] = c;
-                enumRec(out, combos, start + len, c, ne, setupEnd, takeoffW, minDwell, maxEdges);
-            }
-        }
-    }
-
     private final class ScreenCtx {
         final NoTurnProblem wp;
         final int n;
@@ -725,11 +676,7 @@ public final class WallHomotopyDriver {
             } else {
                 loX = hiX = loZ = hiZ = 0.0;
             }
-            for (JumpConstraint w : wp.walls) {
-                if ((w.mode == JumpConstraint.Mode.X || w.mode == JumpConstraint.Mode.Z) && w.t2 == null) {
-                    flatWalls.add(w);
-                }
-            }
+            flatWalls.addAll(wp.flatWalls);
             Objective obj = wp.objective;
             tgtX = axisCenter(obj.tick, 0);
             tgtZ = axisCenter(obj.tick, 1);
@@ -802,19 +749,7 @@ public final class WallHomotopyDriver {
     }
 
     private NoTurnProblem widened(NoTurnProblem problem, double delta) {
-        List<JumpConstraint> wc = new ArrayList<>();
-        for (JumpConstraint w : problem.baseSpec.constraints) {
-            if ((w.mode == JumpConstraint.Mode.X || w.mode == JumpConstraint.Mode.Z) && w.t2 == null) {
-                double rhs = w.rhs;
-                if (w.cmp == JumpConstraint.Cmp.LE) rhs += delta;
-                else if (w.cmp == JumpConstraint.Cmp.GE) rhs -= delta;
-                wc.add(new JumpConstraint(w.mode, w.t1, w.t2, w.op, w.cmp, rhs, w.name));
-            } else {
-                wc.add(w);
-            }
-        }
-        JumpSpec wb = new JumpSpec(problem.base.copy(), wc, problem.objective);
-        NoTurnProblem wp = NoTurnProblem.from(wb, model);
+        NoTurnProblem wp = problem.widened(delta);
         jumpTicksCache = wp.jumpTicks;
         return wp;
     }
@@ -830,17 +765,6 @@ public final class WallHomotopyDriver {
         for (int t = 17; t <= 27; t++) v6[t] = NoTurnKeys.WA;
         v6[28] = NoTurnKeys.W;
         return Arrays.equals(combos, v6);
-    }
-
-    private static int firstSprint(boolean[] sprint) {
-        for (int t = 0; t < sprint.length; t++) if (sprint[t]) return t;
-        return -1;
-    }
-
-    private static String key(int[] combos) {
-        StringBuilder sb = new StringBuilder(combos.length);
-        for (int c : combos) sb.append((char) ('a' + c));
-        return sb.toString();
     }
 
     private static String describe(Incumbent i) {

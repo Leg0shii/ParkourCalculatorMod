@@ -70,6 +70,35 @@ public final class NoTurnKeys {
         return sb.toString();
     }
 
+    public static int[] parse(String text, int len) {
+        int[] combos = new int[len];
+        int t = 0;
+        for (String tok : text.trim().split(" +")) {
+            if (tok.isEmpty()) continue;
+            int x = tok.indexOf('x');
+            String label = x > 0 ? tok.substring(0, x) : tok;
+            int count = x > 0 ? Integer.parseInt(tok.substring(x + 1)) : 1;
+            int combo = java.util.Arrays.asList(LABEL).indexOf(label);
+            if (combo < 0) throw new IllegalArgumentException("bad key token " + tok);
+            for (int i = 0; i < count && t < len; i++) combos[t++] = combo;
+        }
+        if (t == 0) throw new IllegalArgumentException("no keys given for " + len + " ticks");
+        int last = combos[t - 1];
+        while (t < len) combos[t++] = last;
+        return combos;
+    }
+
+    public static String key(int[] combos) {
+        StringBuilder sb = new StringBuilder(combos.length);
+        for (int c : combos) sb.append((char) ('a' + c));
+        return sb.toString();
+    }
+
+    public static int firstSprint(boolean[] sprint) {
+        for (int t = 0; t < sprint.length; t++) if (sprint[t]) return t;
+        return -1;
+    }
+
     public static boolean[] latchSprint(int[] combos, int engageTick) {
         boolean[] sprint = new boolean[combos.length];
         boolean on = false;
@@ -101,6 +130,23 @@ public final class NoTurnKeys {
 
     public static int countPresses(int[] combos) {
         return countEdges(combos) + (combos.length > 0 && combos[0] != NONE ? 1 : 0);
+    }
+
+    public static int countEdges(int[] combos, boolean[] freeTick) {
+        int edges = 0;
+        for (int t = 1; t < combos.length; t++) {
+            if (combos[t] != combos[t - 1] && !isFree(freeTick, t)) edges++;
+        }
+        return edges;
+    }
+
+    public static int countPresses(int[] combos, boolean[] freeTick) {
+        boolean first = combos.length > 0 && combos[0] != NONE && !isFree(freeTick, 0);
+        return countEdges(combos, freeTick) + (first ? 1 : 0);
+    }
+
+    private static boolean isFree(boolean[] freeTick, int t) {
+        return freeTick != null && t < freeTick.length && freeTick[t];
     }
 
     public static int countBackward(int[] combos) {

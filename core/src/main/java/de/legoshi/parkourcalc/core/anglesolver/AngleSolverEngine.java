@@ -488,6 +488,11 @@ public final class AngleSolverEngine {
         return job == null ? null : job.spec;
     }
 
+    public boolean debugFreeStartYaw() {
+        Job job = buildJob(state.getEffort());
+        return job != null && job.freeStartYaw;
+    }
+
     public void solve() {
         solve(state.getEffort());
     }
@@ -1226,15 +1231,7 @@ public final class AngleSolverEngine {
                 rows.get(p.startTick + k).setYawLocked(true);
             }
         }
-        if (p.freeStartYaw && p.yaws.length > 0) {
-            float startYaw = (float) p.yaws[0];
-            if (startYaw != boxes.getYaw(p.startTick)) onStartYawChanged.accept(startYaw);
-            InputRow first = rows.get(p.startTick);
-            first.setYaw(first.isYawLocked() ? startYaw : 0f);
-            writeYawRows(rows, p.startTick, p.yaws, 1, p.yaws[0]);
-        } else {
-            writeYawRows(rows, p.startTick, p.yaws, (float) boxes.getYaw(p.startTick));
-        }
+        writeYaws(rows, p.startTick, p.yaws, p.freeStartYaw);
         for (int k = 0; k < p.yaws.length && p.startTick + k < rows.size(); k++) {
             if (p.force45Mask[k]) {
                 // A Force-45 tick realizes its solve assumption in the rows (gh-104): W + sprint held
@@ -1245,6 +1242,18 @@ public final class AngleSolverEngine {
         }
         onApplied.accept(p.startTick);
         checkApplyDeviation(p);
+    }
+
+    public void writeYaws(List<InputRow> rows, int startTick, double[] yaws, boolean freeStartYaw) {
+        if (freeStartYaw && yaws.length > 0) {
+            float startYaw = (float) yaws[0];
+            if (startYaw != boxes.getYaw(startTick)) onStartYawChanged.accept(startYaw);
+            InputRow first = rows.get(startTick);
+            first.setYaw(first.isYawLocked() ? startYaw : 0f);
+            writeYawRows(rows, startTick, yaws, 1, yaws[0]);
+        } else {
+            writeYawRows(rows, startTick, yaws, (float) boxes.getYaw(startTick));
+        }
     }
 
     public static void writeYawRows(List<InputRow> rows, int startTick, double[] yaws, float startYaw) {

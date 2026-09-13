@@ -1,7 +1,5 @@
 package de.legoshi.parkourcalc.core.anglesolver.noturn;
 
-import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
-import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
@@ -43,26 +41,16 @@ public final class IisExtractor {
         int bindingWall = -1;
         double worst = Double.NEGATIVE_INFINITY;
         if (yaws != null) {
-            JumpPhysicsInputs pin = Scoring.pinnedScenario(sc, startX, startZ);
-            double[] gf = pin.toGameFacings(Angles.wrapAll(yaws));
-            ForwardPath fp = model.forward(pin, gf);
-            for (JumpConstraint w : problem.walls) {
-                if (!isFlat(w)) continue;
-                int axis = w.mode == JumpConstraint.Mode.X ? 0 : 1;
-                double v = fp.getPos(w.t1, axis == 0 ? JumpPhysicsInputs.Axis.X : JumpPhysicsInputs.Axis.Z);
-                double viol = w.cmp == JumpConstraint.Cmp.LE ? v - w.rhs
-                        : w.cmp == JumpConstraint.Cmp.GE ? w.rhs - v : Math.abs(v - w.rhs);
-                if (viol > worst) {
-                    worst = viol;
-                    bindingWall = w.t1;
-                }
-            }
+            ForwardPath fp = NoTurnCertifier.forwardAt(model, sc, yaws, startX, startZ, null);
+            double[] w0 = {worst};
+            bindingWall = NoTurnProblem.worstFlatWallTick(problem.walls, fp, w0);
+            worst = w0[0];
         }
         if (bindingWall < 0) {
             bindingWall = problem.objective.tick;
             worst = 0.0;
             for (JumpConstraint w : problem.walls) {
-                if (isFlat(w) && w.t1 == problem.objective.tick) {
+                if (NoTurnProblem.isFlat(w) && w.t1 == problem.objective.tick) {
                     bindingWall = w.t1;
                     break;
                 }
@@ -122,12 +110,8 @@ public final class IisExtractor {
     private int lastLandingTick() {
         int t = problem.setupEnd + 1;
         for (JumpConstraint w : problem.walls) {
-            if (isFlat(w) && w.t1 > problem.setupEnd && w.t1 < problem.n) t = Math.max(t, w.t1);
+            if (NoTurnProblem.isFlat(w) && w.t1 > problem.setupEnd && w.t1 < problem.n) t = Math.max(t, w.t1);
         }
         return Math.min(t, problem.n - 1);
-    }
-
-    private static boolean isFlat(JumpConstraint w) {
-        return w.t2 == null && (w.mode == JumpConstraint.Mode.X || w.mode == JumpConstraint.Mode.Z);
     }
 }

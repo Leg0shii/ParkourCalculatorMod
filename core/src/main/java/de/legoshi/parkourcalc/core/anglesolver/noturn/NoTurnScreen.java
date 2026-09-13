@@ -26,11 +26,7 @@ public final class NoTurnScreen {
         this.problem = problem;
         this.model = problem.model;
         this.setupEnd = problem.setupEnd;
-        for (JumpConstraint w : problem.walls) {
-            if ((w.mode == JumpConstraint.Mode.X || w.mode == JumpConstraint.Mode.Z) && w.t2 == null) {
-                walls.add(w);
-            }
-        }
+        walls.addAll(problem.flatWalls);
         JumpLinearModel lm = new JumpLinearModel(problem.base);
         this.turnBaseArg = new double[problem.n];
         for (int t = 0; t < problem.n; t++) turnBaseArg[t] = lm.baseArg(t);

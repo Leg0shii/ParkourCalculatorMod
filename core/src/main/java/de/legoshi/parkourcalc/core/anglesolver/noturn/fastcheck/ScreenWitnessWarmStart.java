@@ -15,7 +15,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class ScreenWitnessWarmStart implements FastCheck {
 
     public static final long WARM_CAP_NANOS = 500_000_000L;
-    private static final int CIRCLE_CENTERS = 20;
 
     private NoTurnProblem preparedProblem;
     private StructurePoolDriver driver;
@@ -35,44 +34,19 @@ public final class ScreenWitnessWarmStart implements FastCheck {
         if (driver == null || preparedProblem != problem) prepare(problem);
         JumpPhysicsInputs sc = spec.asScenario();
         int n = sc.numTicks;
-        int se = problem.setupEnd;
-        int[] combos = NoTurnProblem.combosOf(sc, se);
-        boolean[] sprint = NoTurnProblem.sprintOf(sc, se);
+        int[] combos = NoTurnProblem.combosOf(sc, n - 1);
+        boolean[] sprint = NoTurnProblem.sprintOf(sc, n - 1);
 
         double center = driver.diskFeasibleTheta(combos, sprint, null);
-        double[] witness = null;
-        String seedNote;
-        double bestCenter = center;
-        if (!Double.isNaN(center)) {
-            witness = driver.screenExact(combos, sprint, center);
-            seedNote = "disk";
-        } else {
-            for (int k = 0; k < CIRCLE_CENTERS; k++) {
-                double c = -180.0 + k * (360.0 / CIRCLE_CENTERS);
-                double[] w = driver.screenExact(combos, sprint, c);
-                if (witness == null || w[5] < witness[5]) {
-                    witness = w;
-                    bestCenter = c;
-                }
-            }
-            seedNote = "circle";
-        }
-        double theta = witness[1];
-        double phi = witness[2];
+        double[] witness = driver.screenExact(combos, sprint, center);
         double[] warmSeed = new double[n];
-        if (driver.multiSegment()) {
-            driver.screenExact(combos, sprint, bestCenter);
-            driver.fillMultiSeed(warmSeed);
-            seedNote = seedNote + "-multi";
-        } else {
-            for (int t = 0; t < n; t++) warmSeed[t] = t <= se ? theta : phi;
-        }
+        driver.fillSeed(warmSeed);
 
         NoTurnCertifier.Result r = new NoTurnCertifier(model)
                 .certifyWarm(spec, warmSeed, Math.min(budgetNanos, WARM_CAP_NANOS), cancel);
         if (r.feasible) {
             return FastCheckVerdict.feasible(r.yaws, r.startX, r.startZ, String.format(Locale.ROOT,
-                    "screenWarm seed=%s theta=%.4f phi=%.3f", seedNote, theta, phi));
+                    "screenWarm seed=%s theta=%.4f", Double.isNaN(center) ? "circle" : "disk", witness[1]));
         }
         return FastCheckVerdict.unknown(String.format(Locale.ROOT, "screenWarm miss screenViol=%.3g", witness[5]));
     }

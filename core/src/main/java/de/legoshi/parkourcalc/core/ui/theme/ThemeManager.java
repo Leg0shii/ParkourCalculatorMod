@@ -280,6 +280,35 @@ public final class ThemeManager {
         tableHeader(label, HAlign.RIGHT);
     }
 
+    public static boolean tableSortHeader(String label, HAlign alignment, boolean active) {
+        Fonts.pushBold();
+        ImVec2 cellOrigin = ImGui.getCursorScreenPos();
+        float avail = ImGui.getContentRegionAvail().x;
+        ImGui.tableHeader("##" + label);
+        boolean clicked = ImGui.isItemClicked();
+        float textW = ImGui.calcTextSize(label).x;
+        float mark = ImGui.getFontSize() * 0.4f;
+        float gap = mark * 0.75f;
+        float total = active ? textW + gap + mark : textW;
+        float dx;
+        if (alignment == HAlign.LEFT) dx = 0f;
+        else if (alignment == HAlign.CENTER) dx = (avail - total) * 0.5f;
+        else dx = avail - total;
+        if (dx < 0f) dx = 0f;
+        float x = cellOrigin.x + dx;
+        drawHeaderText(x, label);
+        if (active) {
+            ImVec2 rmin = ImGui.getItemRectMin();
+            ImVec2 rmax = ImGui.getItemRectMax();
+            float cy = (rmin.y + rmax.y) * 0.5f;
+            float tx = x + textW + gap;
+            ImGui.getWindowDrawList().addTriangleFilled(tx, cy - mark * 0.45f, tx + mark, cy - mark * 0.45f,
+                    tx + mark * 0.5f, cy + mark * 0.45f, u32(TABLE_HEADER_TEXT));
+        }
+        Fonts.popBold();
+        return clicked;
+    }
+
     private static void renderAlignedHeaderOverlay(String label, HAlign alignment) {
         ImVec2 cellOrigin = ImGui.getCursorScreenPos();
         float avail = ImGui.getContentRegionAvail().x; // reliable cell width inside a table (getColumnWidth is the legacy columns API)
@@ -340,7 +369,11 @@ public final class ThemeManager {
     }
 
     public static void sectionSpacing() {
-        ImGui.dummy(0f, SECTION_SPACING * appliedScale);
+        ImGui.dummy(0f, sectionSpacingHeight());
+    }
+
+    public static float sectionSpacingHeight() {
+        return SECTION_SPACING * appliedScale;
     }
 
     public static void verticalSpace(float height) {
