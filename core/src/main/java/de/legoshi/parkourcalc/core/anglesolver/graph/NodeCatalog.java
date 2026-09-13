@@ -15,6 +15,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.ReportNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.RecedingHorizonNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.FacingStepNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.RouterNode;
+import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.SeedSweepNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.SetupPeelNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.TranslatedStartNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.WrapIlsNode;
@@ -110,6 +111,17 @@ public final class NodeCatalog {
                 .budgetParam("budgetSec")
                 .fallback(Guarantee.NONE)
                 .factory(DualChainNode::new)
+                .build());
+        register(NodeType.builder("seedSweep", "Seed sweep", NodeCategory.SEED)
+                .requires(InputRequirement.ANY)
+                .branch(Branch.feasible(Guarantee.FOUND))
+                .branch(Branch.preserves(Guarantee.NONE))
+                .param(ParamSpec.integer("seeds", "Start seeds", 0, 1024, BuiltinGraphs.SWEEP_SEEDS))
+                .param(ParamSpec.integer("threads", "Threads (0 = auto)", 0, 256, 0))
+                .param(ParamSpec.integer("budgetSec", "Max time (s)", 0, 600, 15))
+                .budgetParam("budgetSec")
+                .fallback(Guarantee.NONE)
+                .factory(SeedSweepNode::new)
                 .build());
         register(NodeType.builder("recedingHorizon", "Receding horizon", NodeCategory.WINDOWING)
                 .requires(InputRequirement.NONE)

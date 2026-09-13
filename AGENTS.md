@@ -41,7 +41,7 @@ The two Forge loaders are intentional duplicates: 1.8.9 and 1.12.2 have incompat
 | UI shell / theming | `core/.../ui/MainWindowOverlay.java`, `OverlayManager.java`, `ui/theme/ThemeManager.java` (Catppuccin Mocha), `Settings.java` |
 | Angle solver (core logic) | `core/.../anglesolver/AngleSolverEngine.java` (orchestrator), `AngleSolverState.java` |
 | Solver inner loop | `core/.../anglesolver/solver/ExactJumpModel.java` (byte-exact X/Z stepper), `McSineTable.java`, `Constants.java` |
-| Solver strategies | `solver/ClosedFormSolve.java` (fast convex), `SlpSolve.java` (linearized recovery), `LongRunSolver.java` (multi-jump) |
+| Solver strategies | `solver/ClosedFormSolve.java` (fast convex), `SlpSolve.java` (linearized recovery), `LongRunSolver.java` (multi-jump), `graph/nodes/SeedSweepNode.java` (best-of-N parallel Fast over the free start box: the `Fast (multi-start)` preset and the first Optimize stage; Optimize also adopts the previous successful solve as its incumbent, #486) |
 | Velocity finder | `core/.../anglesolver/velocity/VelocityFinder.java` (vx/vz sweep against a pad) |
 | Run-ticks search | `core/.../RunTicksController.java` (drives the document + engine); `core/.../anglesolver/runticks/` (`RunTicksSettings`, `RunTicksSearch` tree, `RunTicksRows` for what counts as a run tick, `RunTicksFilter` for the RT constraint, `StepTimeouts`) |
 | Solver UI | `core/.../ui/anglesolver/AngleSolverWindow.java`, `AngleSolverTable.java`, `SolverWidgets.java` |

@@ -69,7 +69,8 @@ public final class AngleSolverWindow implements RenderInterface {
     private static final String[] EFFORTS = {"Fast", "Optimize", "Custom"};
     private static final String FAST_PRESET_ITEM = BuiltinGraphs.FAST_PRESET;
     private static final String OPTIMIZE_PRESET_ITEM = BuiltinGraphs.OPTIMIZE_PRESET;
-    private static final int BUILTIN_PRESET_COUNT = 2;
+    private static final String MULTI_START_PRESET_ITEM = BuiltinGraphs.MULTI_START_PRESET;
+    private static final int BUILTIN_PRESET_COUNT = 3;
 
     private static final String[] FORM_LABELS =
             {"Start tick", "Goal tick", "Axis", "Goal", "Target angle", "Inputs", "Sprint", "Slipperiness", "Potion",
@@ -732,17 +733,21 @@ public final class AngleSolverWindow implements RenderInterface {
         String current = state.getGraphPresetName();
         int diskIdx = indexOfPreset(current);
         boolean builtinOptimize = OPTIMIZE_PRESET_ITEM.equals(current);
-        boolean missing = current != null && !FAST_PRESET_ITEM.equals(current) && !builtinOptimize && diskIdx < 0;
+        boolean builtinMulti = MULTI_START_PRESET_ITEM.equals(current);
+        boolean missing = current != null && !FAST_PRESET_ITEM.equals(current) && !builtinOptimize
+                && !builtinMulti && diskIdx < 0;
 
         String[] items = new String[BUILTIN_PRESET_COUNT + presetNames.length + (missing ? 1 : 0)];
         items[0] = FAST_PRESET_ITEM;
         items[1] = OPTIMIZE_PRESET_ITEM;
+        items[2] = MULTI_START_PRESET_ITEM;
         System.arraycopy(presetNames, 0, items, BUILTIN_PRESET_COUNT, presetNames.length);
         int missingIdx = items.length - 1;
         if (missing) items[missingIdx] = current + " (missing)";
 
         int selected;
         if (builtinOptimize) selected = 1;
+        else if (builtinMulti) selected = 2;
         else if (diskIdx >= 0) selected = BUILTIN_PRESET_COUNT + diskIdx;
         else if (missing) selected = missingIdx;
         else selected = 0;
@@ -756,6 +761,7 @@ public final class AngleSolverWindow implements RenderInterface {
             int pick = presetBuf.get();
             if (pick == 0) selectBuiltinPreset(FAST_PRESET_ITEM);
             else if (pick == 1) selectBuiltinPreset(OPTIMIZE_PRESET_ITEM);
+            else if (pick == 2) selectBuiltinPreset(MULTI_START_PRESET_ITEM);
             else if (pick < BUILTIN_PRESET_COUNT + presetNames.length) selectPreset(presetNames[pick - BUILTIN_PRESET_COUNT]);
         }
         ImGui.endGroup();
