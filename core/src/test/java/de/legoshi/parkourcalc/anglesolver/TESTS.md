@@ -202,7 +202,49 @@ anglesolver/
                            direct java -cp; run :core:processTestResources after fixture edits
   KernelDiagProbe.java     DiskSocpKernel failure diagnosis (base/folded/chord solves, jitter and
                            certificate paths); env-gated, run via direct java -cp
-  harness/                 shared plumbing; no test lives here
+  NoTurnFinderTest.java    #424 outer no-turn stratfinder spike (core/.../anglesolver/noturn):
+                           machineryCertifiesAByteExactNoTurn drives the inner engine as the byte-exact
+                           oracle on the j1150 structure with a dF=0 chain and asserts a clean no-turn
+                           (viol 0, obj near the -2805.2990 pure-no-turn optimum); finderReturnsAByteExactNoTurn
+                           runs the full cold beam + full-jump screen + certify ladder and asserts a
+                           byte-exact no-turn comes back (cold, or the warm seed of the current inputs)
+  NoTurnRankingTest.java   stratfinder list order (core/.../anglesolver/noturn/NoTurnRanking): Easiest =
+                           no jump-angle flick first, then fewest input changes (key edges incl. the first
+                           press and the air hold, plus sprint toggles; a key change landing on a jump
+                           tick is free, the WAD rhythm), then fewest backward ticks, then smallest turn,
+                           offset as the tie-break; Furthest = largest offset past the goal wall on the
+                           objective axis, easiest order as the tie-break; goal-wall pick and the
+                           MIN-sense offset sign; fast, no capture
+  NoTurnPlayableTest.java  Human yaws mode of the no-turn certifier (slow): certifies the j1150 pure and
+                           j154 jump-angle structures plain and playable through the search cascade and the
+                           Optimize graph, prints objective, reversals, max turn and the air yaw deltas, and
+                           asserts the playable line stays byte-exact with no more turn reversals
+  NoTurnPlayableUnitTest.java  reversal count, the reversal key in StructurePoolDriver.betterResult, and
+                           NoTurnCertifier.landingGiveBack (margin above the near landing wall); fast
+  NoTurnColdBench.java     no-turn stratfinder timing harness (skipped unless -Dpkc.bench.capture is
+                           set): certifies the recorded keys as a no-turn structure (driver=human), a
+                           given schedule (driver=keys), or runs the pool / in-game / beam / benders
+                           drivers with per-certify timings; pkc.bench.{driver,graph,freeBox,startTick,
+                           allowJa,playable,threads,searchSec,nearSearchMs,certifySec,totalSec,maxCertify,
+                           extraCertify,extraSec,dumpPool,out}; keys/engage/repeat/cascade for
+                           driver=keys, dfMarks to add dF=0 marks, contCap/contLead/contSec/parCont/
+                           deepPairRepair for driver=benders; pair with -Dpkc.graphTrace=true (per-node
+                           ms plus one [pool]/[whd]/[bm] line per certify), -Dpkc.solver.trace=<tag>,
+                           -PpkcJfr=<file.jfr>; a ';' list of captures runs them in one JVM
+  NoTurnFastCheckBench.java  FastCheck heuristic benchmark (skipped unless -Dpkc.fc.cases=<jsonl> is
+                           set): runs one FastCheck implementation (-Dpkc.fc.impl=<FQCN>, default
+                           SearchGraphCheck) over a case list, re-verifies every FEASIBLE witness
+                           byte-exactly and reports HIT/MISS/FALSE_REJECT/BOGUS/REJECT/UNDECIDED with
+                           wall and thread CPU ms; -Dpkc.fc.{budgetMs,only,repeat,parallel,out};
+                           parallel=N runs the cases on N threads with one impl instance each (the
+                           oversubscription gate for the thread-CPU budgets); -Dpkc.fc.audit=<FQCN>
+                           runs a second FastCheck on every case (budget -Dpkc.fc.auditBudgetMs, 100)
+                           and counts a CONTRADICTION whenever it says INFEASIBLE while the main impl
+                           returned a byte-verified FEASIBLE witness (the real-pool soundness audit of
+                           a rejection check: feed it pool dumps plus the in-game found lines)
+  harness/                 shared plumbing; no test lives here (NoTurnCapture loads a capture by path or
+                           pool key into model + inputs + state, builds the engine spec, and adds the
+                           synthetic free-start box the no-turn benches share)
 resources/
   problems/<check>/        one folder per check; holds captures or .expect.json sidecars
   captures/                the shared capture library (one copy of each saved jump)

@@ -156,6 +156,10 @@ public final class Controls {
     }
 
     /** On-screen width of a styled button for this label, including the shared BUTTON_PAD_X padding (which the default FramePadding underestimates). */
+    public static float buttonHeight() {
+        return ImGui.getFontSize() + 2f * BUTTON_PAD_Y * ThemeManager.uiScale();
+    }
+
     public static float buttonWidth(String label) {
         return ImGui.calcTextSize(label).x + 2f * BUTTON_PAD_X * ThemeManager.uiScale();
     }

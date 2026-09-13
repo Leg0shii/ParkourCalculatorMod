@@ -100,6 +100,10 @@ public final class Application {
     private final HudMessages hudMessages = new HudMessages();
     private final OsSystemBridge systemBridge = new OsSystemBridge();
 
+    private de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel forwardModel;
+    private de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverWindow angleSolverWindow;
+    private NoTurnSearchController noTurnSearch;
+
     public Application(Simulator simulator, MinecraftAccess mc) {
         this.mc = mc;
         this.simulator = simulator;
@@ -184,7 +188,7 @@ public final class Application {
         angleSolverState = new AngleSolverState();
         FileSystemSaveStore saveStore = saveController.getSaveStore();
         String mcVersion = saveStore != null ? saveStore.getMcVersion() : null;
-        ExactJumpModel forwardModel = ExactJumpModel.forMcVersion(mcVersion);
+        forwardModel = ExactJumpModel.forMcVersion(mcVersion);
         constraintKeyController = new ConstraintKeyController(
                 mc, angleSolverState, selection, constraintSelection, saveController::markDirty,
                 forwardModel.modern(), inputData::size, settings);
@@ -221,11 +225,16 @@ public final class Application {
         GraphEditorWindow graphEditorWindow = new GraphEditorWindow(angleSolverEngine);
         AngleSolverWindow angleSolverWindow = new AngleSolverWindow(angleSolverState, settings, inputData::size, angleSolverEngine, velocityMapController.widget(), graphStore, graphEditorWindow);
         angleSolverWindow.setApplySurfaceState(this::applyPathSurfaceState);
+        this.angleSolverWindow = angleSolverWindow;
         angleSolverWindow.setPlayerYawSupplier(mc::getPlayerYaw);
         angleSolverWindow.setTeleportAtRow(t -> t >= 0 && t < inputData.size() && inputData.get(t).isTeleportEnabled());
         runTicks = new RunTicksController(angleSolverState, angleSolverEngine, inputData, constraintSelection,
                 hudMessages, this::runSimulation, saveController::markDirty, this::pushHudMessage);
         angleSolverWindow.setRunTicksControls(runTicks);
+        noTurnSearch = new NoTurnSearchController(inputData, runner, boxController, saveController, angleSolverState,
+                angleSolverEngine, forwardModel, mc, this::onUserChange, this::pushHudMessage, runTicks::isRunning);
+        de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow stratfinderWindow =
+                new de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow(noTurnSearch);
 
         // In-world constraint visualization (gh-145): plates appear while the solver view is open.
         constraintSource = new de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverConstraintSource(
@@ -265,9 +274,21 @@ public final class Application {
                 hudMessagesPanel
         );
         mainWindow.setServerEventLogPanel(serverEventLogPanel);
+        mainWindow.setStratfinderMenu(stratfinderWindow::isOpen, () -> {
+            if (stratfinderWindow.isOpen()) {
+                stratfinderWindow.close();
+                return;
+            }
+            if (!settings.viewAngleSolver) {
+                settings.viewAngleSolver = true;
+                saveSettings();
+            }
+            stratfinderWindow.open();
+        });
         overlayManager.register(mainWindow);
         overlayManager.register(angleSolverWindow);
         overlayManager.register(graphEditorWindow);
+        overlayManager.register(stratfinderWindow);
     }
 
     public void setFilePicker(FilePickerPort filePicker) {
@@ -526,6 +547,7 @@ public final class Application {
             undoController.tick(System.nanoTime());
         }
         pollSolver();
+        if (noTurnSearch != null) noTurnSearch.poll();
         dragController.tick(
                 mc.getEyePosition(),
                 mc.getLookDirection(),

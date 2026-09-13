@@ -87,6 +87,10 @@ public final class ExactJumpModel implements ForwardModel {
         return perAxisInertia;
     }
 
+    public double combinedInertiaBound() {
+        return Math.sqrt(COMBINED_INERTIA_SQ);
+    }
+
     public Vec3dCore zeroSubThresholdVelocity(Vec3dCore v) {
         double vx = v.x;
         double vz = v.z;
