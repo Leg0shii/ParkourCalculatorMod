@@ -61,15 +61,9 @@ public final class WallHomotopyDriver {
         public int speculativeCertifyCap = 16;
         public int turnCombo = NoTurnKeys.WA;
         public boolean jaFree = true;
-        public long seedCertifyNanos = 6_000_000_000L;
-        public long rungCertifyNanos = 9_000_000_000L;
-        public long repairCertifyNanos = 9_000_000_000L;
         public long finalCertifyNanos = 45_000_000_000L;
         public long searchBudgetNanos = 3_000_000_000L;
         public long totalBudgetNanos = 900_000_000_000L;
-        public int seedOptimizeSec = 4;
-        public int rungOptimizeSec = 5;
-        public int finalOptimizeSec = 8;
         public int threads = 0;
     }
 
@@ -109,7 +103,6 @@ public final class WallHomotopyDriver {
     private final Trace trace = new Trace();
     private final Set<String> specTried = new LinkedHashSet<>();
     private long deadline;
-    private SolverGraph searchGraph;
     private ExecutorService exec;
 
     public WallHomotopyDriver(ExactJumpModel model, Config cfg, AtomicBoolean cancel, Progress progress) {
@@ -154,11 +147,10 @@ public final class WallHomotopyDriver {
         beginSearch();
         double seedDelta = cfg.ladder[0];
         NoTurnProblem seedWp = widened(problem, seedDelta);
-        SolverGraph graph = de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs.optimize(cfg.seedOptimizeSec);
         List<Incumbent> beam = new ArrayList<>();
         for (int[] combos : seedCombos) {
             boolean[] sprint = NoTurnKeys.latchSprint(combos, 0);
-            NoTurnCertifier.Result res = certify(seedWp, combos, sprint, graph, cfg.seedCertifyNanos);
+            NoTurnCertifier.Result res = certify(seedWp, combos, sprint, cancel);
             if (res != null && res.feasible) {
                 log("  injected seed feasible " + NoTurnKeys.describe(combos) + " obj=" + fmt(res.objective));
                 beam.add(bind(combos, sprint, seedDelta, res));
@@ -184,29 +176,27 @@ public final class WallHomotopyDriver {
             double delta = cfg.ladder[k];
             NoTurnProblem wp = widened(problem, delta);
             boolean isFinal = delta == 0.0;
-            SolverGraph graph = isFinal ? finalGraph : de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs.optimize(cfg.rungOptimizeSec);
-            long budget = isFinal ? cfg.finalCertifyNanos : cfg.rungCertifyNanos;
 
             List<Incumbent> next = new ArrayList<>();
             for (Incumbent inc : beam) {
                 if (cancelled() || System.nanoTime() > deadline) break;
-                NoTurnCertifier.Result r = certify(wp, inc.combos, inc.sprint, graph, budget);
+                NoTurnCertifier.Result r = certify(wp, inc.combos, inc.sprint, cancel);
                 if (r != null && r.feasible) {
                     next.add(bind(inc.combos, inc.sprint, delta, r));
                     continue;
                 }
                 if (isFinal) {
-                    if (cfg.finalBroadRepair) next.addAll(finalRepair(wp, inc, graph, budget));
+                    if (cfg.finalBroadRepair) next.addAll(finalRepair(wp, inc));
                     continue;
                 }
-                next.addAll(repair(wp, inc, delta, graph, budget));
+                next.addAll(repair(wp, inc, delta));
             }
             List<Incumbent> pool = dedup(next);
             if (cfg.speculativeClose && delta <= cfg.speculativeMaxDelta) {
-                Incumbent hit = speculativeClose(problem, finalGraph, pool);
+                Incumbent hit = speculativeClose(problem, pool);
                 if (hit != null) return accept(problem, hit);
             }
-            beam = trim(pool);
+            beam = trim(pool, problem.objective.sense == Objective.Sense.MAX);
             log("rung@" + fmt(delta) + " -> " + beam.size() + " incumbents");
             for (Incumbent i : beam) log("  " + describe(i));
             if (beam.isEmpty()) {
@@ -239,7 +229,7 @@ public final class WallHomotopyDriver {
         return res;
     }
 
-    private Incumbent speculativeClose(NoTurnProblem problem, SolverGraph finalGraph, List<Incumbent> pool) {
+    private Incumbent speculativeClose(NoTurnProblem problem, List<Incumbent> pool) {
         List<Incumbent> cands = new ArrayList<>();
         for (Incumbent i : pool) {
             if (i.edges >= cfg.speculativeMinEdges && i.edges <= cfg.speculativeMaxEdges) cands.add(i);
@@ -258,7 +248,7 @@ public final class WallHomotopyDriver {
             if (!specTried.add(key(inc.combos))) continue;
             tried++;
             log("  speculative close delta=0 on [" + NoTurnKeys.describe(inc.combos) + "] edges=" + inc.edges);
-            NoTurnCertifier.Result r = certify(wp0, inc.combos, inc.sprint, finalGraph, cfg.finalCertifyNanos);
+            NoTurnCertifier.Result r = certify(wp0, inc.combos, inc.sprint, cancel);
             if (r != null && r.feasible) {
                 log("  speculative: incumbent already closes at delta=0");
                 return bind(inc.combos, inc.sprint, 0.0, r);
@@ -275,7 +265,7 @@ public final class WallHomotopyDriver {
                 if (certs >= cfg.speculativeCertifyCap) break;
                 if (!specTried.add(key(m))) continue;
                 boolean[] sprint = NoTurnKeys.latchSprint(m, 0);
-                NoTurnCertifier.Result rr = certify(wp0, m, sprint, finalGraph, cfg.finalCertifyNanos);
+                NoTurnCertifier.Result rr = certify(wp0, m, sprint, cancel);
                 certs++;
                 if ((certs % 5) == 0) log("    ...speculative flip tried " + certs);
                 if (rr != null && rr.feasible) {
@@ -309,7 +299,6 @@ public final class WallHomotopyDriver {
         }
         log("seed: enumerated " + fams.size() + " families across " + byBasin.size() + " first-key basins");
 
-        SolverGraph graph = de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs.optimize(cfg.seedOptimizeSec);
         final NoTurnProblem fwp = wp;
         List<Incumbent> beam = new ArrayList<>();
         for (java.util.Map.Entry<Integer, List<Integer>> e : byBasin.entrySet()) {
@@ -343,7 +332,7 @@ public final class WallHomotopyDriver {
                     if (cancelled() || System.nanoTime() > deadline) break;
                     if (feas >= cfg.seedPerFirstKey) break;
                     boolean[] sprint = NoTurnKeys.latchSprint(combos, 0);
-                    NoTurnCertifier.Result res = certify(fwp, combos, sprint, graph, cfg.seedCertifyNanos);
+                    NoTurnCertifier.Result res = certify(fwp, combos, sprint, cancel);
                     certs++;
                     if (res != null && res.feasible) {
                         log("  seed feasible basin=" + NoTurnKeys.label(fk) + " (" + certs + " certs) "
@@ -358,7 +347,7 @@ public final class WallHomotopyDriver {
         return dedup(beam);
     }
 
-    private List<Incumbent> repair(NoTurnProblem wp, Incumbent inc, double delta, SolverGraph graph, long budget) {
+    private List<Incumbent> repair(NoTurnProblem wp, Incumbent inc, double delta) {
         log("  repair start delta=" + fmt(delta) + " inc=[" + NoTurnKeys.describe(inc.combos) + "] edges=" + inc.edges);
         Set<String> tried = new LinkedHashSet<>();
         tried.add(key(inc.combos));
@@ -410,7 +399,7 @@ public final class WallHomotopyDriver {
                 if (certs >= cfg.repairPairCap) break;
                 if (!tried.add(key(m))) continue;
                 boolean[] sprint = NoTurnKeys.latchSprint(m, 0);
-                NoTurnCertifier.Result r = certify(wp, m, sprint, graph, budget);
+                NoTurnCertifier.Result r = certify(wp, m, sprint, cancel);
                 certs++;
                 if (r != null && r.feasible) {
                     log("  repair(pair) ok " + NoTurnKeys.describe(m));
@@ -432,7 +421,7 @@ public final class WallHomotopyDriver {
         return -1;
     }
 
-    private List<Incumbent> finalRepair(NoTurnProblem wp, Incumbent inc, SolverGraph graph, long budget) {
+    private List<Incumbent> finalRepair(NoTurnProblem wp, Incumbent inc) {
         log("  final repair delta=0 inc=[" + NoTurnKeys.describe(inc.combos) + "] edges=" + inc.edges);
         List<int[]> muts = singleFlips(wp, inc.combos, wp.setupEnd);
         List<int[]> ranked = rankMutations(inc.combos, muts);
@@ -445,7 +434,7 @@ public final class WallHomotopyDriver {
             if (certs >= cfg.finalRepairCertifyCap) break;
             if (!tried.add(key(m))) continue;
             boolean[] sprint = NoTurnKeys.latchSprint(m, 0);
-            NoTurnCertifier.Result r = certify(wp, m, sprint, graph, budget);
+            NoTurnCertifier.Result r = certify(wp, m, sprint, cancel);
             certs++;
             if ((certs % 6) == 0) log("    ...final flip tried " + certs);
             if (r != null && r.feasible) {
@@ -572,11 +561,6 @@ public final class WallHomotopyDriver {
         return wt;
     }
 
-    private NoTurnCertifier.Result certify(NoTurnProblem wp, int[] combos, boolean[] sprint,
-                                           SolverGraph graph, long budget) {
-        return certify(wp, combos, sprint, cancel);
-    }
-
     private NoTurnCertifier.Result certify(NoTurnProblem wp, int[] combos, boolean[] sprint, AtomicBoolean cancelTok) {
         synchronized (trace) {
             trace.certifies++;
@@ -595,7 +579,6 @@ public final class WallHomotopyDriver {
     private static final boolean TRACE_CERT = Boolean.getBoolean("pkc.graphTrace");
 
     private void beginSearch() {
-        searchGraph = NoTurnCertifier.searchGraph(cfg.searchBudgetNanos);
         exec = Executors.newFixedThreadPool(NoTurnParallel.resolveThreads(cfg.threads));
     }
 
@@ -631,8 +614,8 @@ public final class WallHomotopyDriver {
         return out;
     }
 
-    private List<Incumbent> trim(List<Incumbent> in) {
-        in.sort(Comparator.comparingInt((Incumbent i) -> i.edges).thenComparingDouble(i -> i.objective));
+    private List<Incumbent> trim(List<Incumbent> in, boolean max) {
+        in.sort(Comparator.comparingInt((Incumbent i) -> i.edges).thenComparingDouble(i -> max ? -i.objective : i.objective));
         List<Incumbent> kept = new ArrayList<>();
         if (cfg.beamKeepPerBasin) {
             Set<Integer> basins = new LinkedHashSet<>();

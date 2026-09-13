@@ -1,6 +1,5 @@
 package de.legoshi.parkourcalc.core.anglesolver.noturn;
 
-import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
@@ -46,10 +45,7 @@ public final class BendersMaster {
         public int refineExtraAfterIncumbent = 8;
         public long deadlineNanos = 480_000_000_000L;
 
-        public int delta0OptimizeSec = 8;
-        public int fatOptimizeSec = 4;
         public long delta0CertifyNanos = 12_000_000_000L;
-        public long fatCertifyNanos = 6_000_000_000L;
         public long searchBudgetNanos = 2_000_000_000L;
         public long continuationBudgetNanos = 90_000_000_000L;
         public int threads = 0;
@@ -90,7 +86,6 @@ public final class BendersMaster {
     private final AtomicBoolean cancel;
     private final Progress progress;
     private final Trace trace = new Trace();
-    private SolverGraph searchGraph;
 
     public BendersMaster(ExactJumpModel model, Config cfg, AtomicBoolean cancel, Progress progress) {
         this.model = model;
@@ -109,7 +104,6 @@ public final class BendersMaster {
             return null;
         }
         long deadline = System.nanoTime() + cfg.deadlineNanos;
-        searchGraph = NoTurnCertifier.searchGraph(cfg.searchBudgetNanos);
 
         int setupEnd = problem.setupEnd;
         boolean takeoffW = problem.jump[setupEnd];
@@ -134,8 +128,6 @@ public final class BendersMaster {
 
         NoTurnProblem wpFat = widened(problem, cfg.fatDelta);
         NoTurnProblem wp0 = widened(problem, 0.0);
-        SolverGraph fatGraph = BuiltinGraphs.optimize(cfg.fatOptimizeSec);
-        SolverGraph delta0Graph = BuiltinGraphs.optimize(cfg.delta0OptimizeSec);
 
         log("master start: structures=" + raw.size() + " diskFeasible=" + trace.diskFeasibleCount
                 + " mode=" + cfg.mode + " alphabet=" + cfg.alphabet.length
@@ -143,7 +135,7 @@ public final class BendersMaster {
 
         if (cfg.mode == SlaveMode.FAT_CONTINUATION) {
             return polishResult(problem,
-                    solveFatContinuation(problem, master, screens, iis, wpFat, fatGraph, finalGraph, deadline),
+                    solveFatContinuation(problem, master, screens, iis, wpFat, finalGraph, deadline),
                     finalGraph);
         }
 
@@ -185,7 +177,7 @@ public final class BendersMaster {
             }
 
             int engage = (sc != null && sc.engage != Integer.MAX_VALUE) ? sc.engage : 0;
-            NoTurnResult survivor = slave(problem, wp0, wpFat, delta0Graph, fatGraph, finalGraph,
+            NoTurnResult survivor = slave(problem, wp0, wpFat, finalGraph,
                     sigma, engage, isV6Anc, iis, master, deadline);
             if (survivor != null) {
                 if (incumbent == null || survivor.edges < incumbent.edges
@@ -233,8 +225,7 @@ public final class BendersMaster {
 
     private NoTurnResult solveFatContinuation(NoTurnProblem problem, MinTvMaster master,
                                               Map<String, Screen> screens, IisExtractor iis,
-                                              NoTurnProblem wpFat, SolverGraph fatGraph,
-                                              SolverGraph finalGraph, long deadline) {
+                                              NoTurnProblem wpFat, SolverGraph finalGraph, long deadline) {
         List<FatFeasible> pool = new ArrayList<>();
         java.util.Set<String> continued = new java.util.LinkedHashSet<>();
         boolean exhausted = false;
@@ -269,7 +260,7 @@ public final class BendersMaster {
                 }
                 int engage = (sc != null && sc.engage != Integer.MAX_VALUE) ? sc.engage : 0;
                 boolean[] sprint = NoTurnKeys.latchSprint(sigma, engage);
-                NoTurnCertifier.Result rf = certify(wpFat, sigma, sprint, fatGraph, cfg.fatCertifyNanos);
+                NoTurnCertifier.Result rf = certify(wpFat, sigma, sprint);
                 trace.certifies++;
                 if (rf == null || !rf.feasible) {
                     if (cfg.useCuts) {
@@ -362,7 +353,7 @@ public final class BendersMaster {
     }
 
     private NoTurnResult slave(NoTurnProblem problem, NoTurnProblem wp0, NoTurnProblem wpFat,
-                               SolverGraph delta0Graph, SolverGraph fatGraph, SolverGraph finalGraph,
+                               SolverGraph finalGraph,
                                int[] sigma, int engage, boolean isV6Anc, IisExtractor iis,
                                MinTvMaster master, long deadline) {
         int firstRun = firstRun(sigma);
@@ -375,7 +366,7 @@ public final class BendersMaster {
             for (int eng : engages) {
                 if (cancelled() || System.nanoTime() >= deadline || trace.certifies >= cfg.maxCertifies) break;
                 boolean[] sprint = NoTurnKeys.latchSprint(sigma, eng);
-                NoTurnCertifier.Result r = certify(wp0, sigma, sprint, delta0Graph, cfg.delta0CertifyNanos);
+                NoTurnCertifier.Result r = certify(wp0, sigma, sprint);
                 trace.certifies++;
                 if (r != null && r.feasible) {
                     log("  delta=0 close (engage=" + eng + ") edges=" + edges + " obj=" + fmt(r.objective)
@@ -402,7 +393,7 @@ public final class BendersMaster {
         }
 
         boolean[] sprint = NoTurnKeys.latchSprint(sigma, engage);
-        NoTurnCertifier.Result rf = certify(wpFat, sigma, sprint, fatGraph, cfg.fatCertifyNanos);
+        NoTurnCertifier.Result rf = certify(wpFat, sigma, sprint);
         trace.certifies++;
         if (rf == null || !rf.feasible) {
             if (cfg.useCuts) {
@@ -464,8 +455,6 @@ public final class BendersMaster {
         hc.beamPerEdge = 2;
         hc.repairKeepPerTick = 7;
         hc.repairWindowRadiusMax = 1;
-        hc.rungOptimizeSec = 3;
-        hc.rungCertifyNanos = 4_500_000_000L;
         hc.repairCertifyCap = 40;
         hc.repairAllowPairs = false;
         hc.excludeJumpTicksFromRepair = false;
@@ -535,8 +524,7 @@ public final class BendersMaster {
         return out;
     }
 
-    private NoTurnCertifier.Result certify(NoTurnProblem wp, int[] combos, boolean[] sprint,
-                                           SolverGraph graph, long budget) {
+    private NoTurnCertifier.Result certify(NoTurnProblem wp, int[] combos, boolean[] sprint) {
         JumpSpec spec = wp.buildSpec(combos, sprint, cfg.turnCombo, cfg.ja);
         long t0 = System.nanoTime();
         NoTurnCertifier.Result r = new NoTurnCertifier(model).certifySearch(spec, cfg.searchBudgetNanos, cancel);

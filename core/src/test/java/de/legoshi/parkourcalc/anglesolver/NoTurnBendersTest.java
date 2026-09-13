@@ -57,7 +57,6 @@ public class NoTurnBendersTest {
         cfg.screenSkip = true;
         cfg.screenKeep = 0.22;
         cfg.useCuts = false;
-        cfg.delta0OptimizeSec = 8;
         cfg.maxCertifies = 24;
         cfg.refineExtraAfterIncumbent = 3;
         cfg.deadlineNanos = 300_000_000_000L;
@@ -104,8 +103,6 @@ public class NoTurnBendersTest {
         cfg.screenOrder = false;
         cfg.screenSkip = false;
         cfg.useCuts = false;
-        cfg.fatOptimizeSec = 4;
-        cfg.fatCertifyNanos = 6_000_000_000L;
         cfg.continuationLead = 25;
         cfg.continuationCap = 12;
         cfg.continuationBudgetNanos = 600_000_000_000L;

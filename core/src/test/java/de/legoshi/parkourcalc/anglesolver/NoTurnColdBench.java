@@ -363,7 +363,6 @@ public class NoTurnColdBench {
             }
             if (certifySec > 0) {
                 cfg.delta0CertifyNanos = certifySec * 1_000_000_000L;
-                cfg.fatCertifyNanos = certifySec * 1_000_000_000L;
             }
             line("benders cfg: ja=" + cfg.ja + " mode=" + cfg.mode + " minDwell=" + cfg.minDwell + " maxEdges="
                     + cfg.maxEdges + " maxCertifies=" + cfg.maxCertifies + " deadline=" + cfg.deadlineNanos / 1e9 + "s");
