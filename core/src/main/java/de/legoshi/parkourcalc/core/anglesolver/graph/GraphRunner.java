@@ -13,19 +13,23 @@ public final class GraphRunner {
     }
 
     public static Candidate run(SolverGraph graph, GraphContext ctx) {
+        return run(graph, ctx, null);
+    }
+
+    public static Candidate run(SolverGraph graph, GraphContext ctx, Candidate initial) {
         try {
-            return walk(graph, ctx);
+            return walk(graph, ctx, initial);
         } finally {
             ctx.shutdown();
         }
     }
 
-    private static Candidate walk(SolverGraph graph, GraphContext ctx) {
+    private static Candidate walk(SolverGraph graph, GraphContext ctx, Candidate initial) {
         if (graph.entry == null || graph.emit == null) return null;
         Map<String, NodeRuntime> runtimes = new HashMap<>();
         Map<String, Integer> visits = new HashMap<>();
         GraphNode cur = graph.entry;
-        Candidate cand = null;
+        Candidate cand = initial;
         boolean wrapPending = false;
         for (GraphNode n : graph.nodes) {
             if ("wrapIls".equals(n.type.id)) wrapPending = true;

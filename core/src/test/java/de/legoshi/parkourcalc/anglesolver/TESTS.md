@@ -13,6 +13,12 @@ anglesolver/
   OptimizeVsFastTest.java  gh-398 invariant on captures/gh398-optimize-2jump: Optimize's answer is never
                            worse than Fast's, and the run publishes at least two incumbents so the live
                            panel moves and Cancel keeps the best found so far
+  SeedSweepTest.java       gh-486 gates on captures/gh486-cross2-freestart (1.8.9, 2 jumps, free start): the
+                           "Fast (multi-start)" preset (seedSweep node, best-of-N parallel Fast over the start
+                           box) is never worse than a single Fast and reaches the in-game Fast basin that
+                           motivated the ticket; Optimize adopts the previous successful solve as its
+                           incumbent (solver chain starts with "incumbent") and never ends worse than it;
+                           a pinned start passes through the sweep instantly (gh398-optimize-2jump)
   GraphPathObjectiveGateTest.java  objective gates that solve THROUGH the full Optimize graph (not dualChain),
                            asserting the ENGINE's shipped objective (getObjectiveValue), which is computed with the
                            post-solve scenario and so honors yaw-lock. j021-rinav1-01 must reach the deterministic

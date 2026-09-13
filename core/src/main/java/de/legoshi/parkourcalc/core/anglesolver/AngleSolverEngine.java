@@ -72,7 +72,8 @@ public final class AngleSolverEngine {
         switch (effort) {
             case THOROUGH: return state.getOptimizeSeconds() * 1_000_000_000L;
             case CUSTOM: {
-                if (BuiltinGraphs.FAST_PRESET.equals(state.getGraphPresetName())) return 0L;
+                String preset = state.getGraphPresetName();
+                if (BuiltinGraphs.FAST_PRESET.equals(preset) || BuiltinGraphs.MULTI_START_PRESET.equals(preset)) return 0L;
                 int optSecs = state.getOptimizeSeconds();
                 return optSecs > 0 ? optSecs * 1_000_000_000L : 0L;
             }
@@ -318,6 +319,8 @@ public final class AngleSolverEngine {
         final JumpConstraint legalGoal;
         final SolverGraph graph;
         final boolean freeStartYaw;
+        double[] incumbentYaws;
+        Vec3dCore incumbentStart;
 
         Job(JumpSpec spec, Objective.Sense sense, int startTick, int landingTick,
             int numTicks, boolean[] strafeMask, boolean[] force45Mask, List<ConstraintAt> uiConstraints,
@@ -502,6 +505,7 @@ public final class AngleSolverEngine {
         this.smoothFinalResult = smoothFinal;
         Job job = buildJob(effort, graphOverride);
         if (job == null) return; // invalid range: buildJob already published the failure result
+        offerIncumbent(job, effort);
 
         long t0 = System.nanoTime();
         // Show the spinner instead of a stale result.
@@ -540,6 +544,36 @@ public final class AngleSolverEngine {
         }, "angle-solver");
         worker.setDaemon(true);
         worker.start();
+    }
+
+    private void offerIncumbent(Job job, AngleSolverState.Effort effort) {
+        if (effort == AngleSolverState.Effort.FAST || BuiltinGraphs.FAST_PRESET.equals(job.graph.name)) return;
+        Plan prev = lastPlan;
+        SolveResult prevResult = state.getResult();
+        if (prev == null || prevResult == null || !prevResult.isSuccess() || prev.lockYaws) return;
+        if (prev.startTick != job.startTick || prev.yaws.length != job.numTicks) return;
+        job.incumbentYaws = prev.yaws.clone();
+        job.incumbentStart = prev.start;
+    }
+
+    private Candidate adoptIncumbent(Job job, JumpPhysicsInputs sc, JumpSpec spec, StartBox freeBox, GraphContext ctx) {
+        if (job.incumbentYaws == null) return null;
+        double px = sc.startPos.x;
+        double pz = sc.startPos.z;
+        Vec3dCore s = job.incumbentStart;
+        if (freeBox != null && s != null
+                && s.x >= freeBox.pxLo && s.x <= freeBox.pxHi && s.z >= freeBox.pzLo && s.z <= freeBox.pzHi) {
+            px = s.x;
+            pz = s.z;
+        }
+        double obj = Scoring.verifiedObjectiveAt(model, sc, spec, job.incumbentYaws, px, pz, FEAS_TOL);
+        if (Double.isNaN(obj)) return null;
+        Scoring.adoptPinnedStart(sc, px, pz);
+        ctx.chainAppend("incumbent");
+        if (SolverTrace.on()) {
+            SolverTrace.log("ENGINE", "incumbent adopted obj=%.9f start=(%.5f,%.5f)", obj, px, pz);
+        }
+        return Candidate.of(ctx, job.incumbentYaws);
     }
 
     /** Per-tick physics snapshot shared by solve() and the block solver. */
@@ -914,9 +948,10 @@ public final class AngleSolverEngine {
         lastRunState = ctx.runState;
         currentGraphContext = ctx;
         progress.setStartSource(() -> new double[] {sc.startPos.x, sc.startPos.z});
+        Candidate initial = adoptIncumbent(job, sc, spec, freeBox, ctx);
         Candidate cand;
         try {
-            cand = GraphRunner.run(job.graph, ctx);
+            cand = GraphRunner.run(job.graph, ctx, initial);
         } finally {
             currentGraphContext = null;
         }
@@ -1470,7 +1505,7 @@ public final class AngleSolverEngine {
             boolean ok = satisfied(ca.c, found);
             if (ok) met++;
             else unmet.add(ca.absTick);
-            outs.add(outcome(ca.c, ca.absTick, found, ok));
+            outs.add(outcome(ca.c, ca.absTick, found, ok, objectiveSense(job.spec.objective, ca.c, ca.segTick)));
         }
         boolean success = feasible
                 && JumpConstraintCompiler.compile(job.spec).maxViolation(gameFacings, path) <= FEAS_TOL;
@@ -1538,11 +1573,21 @@ public final class AngleSolverEngine {
         }
     }
 
-    private SolveResult.Outcome outcome(Constraint c, int absTick, double found, boolean met) {
+    private static Objective.Sense objectiveSense(Objective o, Constraint c, int segTick) {
+        if (o.isCustomAngle() || !c.isRange() || segTick != o.tick) return null;
+        JumpPhysicsInputs.Axis axis = c.getField() == Constraint.Field.X ? JumpPhysicsInputs.Axis.X
+                : c.getField() == Constraint.Field.Z ? JumpPhysicsInputs.Axis.Z : null;
+        return axis == o.axis ? o.sense : null;
+    }
+
+    private SolveResult.Outcome outcome(Constraint c, int absTick, double found, boolean met, Objective.Sense sense) {
         String field = ConstraintText.fieldLabel(c);
         String tickLabel = "T" + (absTick + 1);
         if (c.isRange()) {
-            double margin = Math.min(found - c.getLo(), c.getHi() - found);
+            double margin;
+            if (sense == Objective.Sense.MAX) margin = found - c.getLo();
+            else if (sense == Objective.Sense.MIN) margin = c.getHi() - found;
+            else margin = Math.min(found - c.getLo(), c.getHi() - found);
             String marginStr = (margin >= 0 ? "+" : "") + ConstraintText.fixedStat(margin);
             return new SolveResult.Outcome(field, tickLabel, ConstraintText.chip(c), ConstraintText.fixedStat(found), marginStr, met);
         }
