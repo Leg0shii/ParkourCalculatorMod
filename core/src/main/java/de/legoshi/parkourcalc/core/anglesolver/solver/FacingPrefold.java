@@ -47,6 +47,13 @@ public final class FacingPrefold {
             return parsed.group[t] == openGroup;
         }
 
+        public boolean singleHeading() {
+            for (int t = 0; t < parsed.n; t++) {
+                if (parsed.group[t] != openGroup) return false;
+            }
+            return true;
+        }
+
         public boolean pinnedMember(int t) {
             return !Double.isNaN(parsed.groupPin[parsed.group[t]]);
         }

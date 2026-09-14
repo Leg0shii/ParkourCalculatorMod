@@ -26,7 +26,7 @@ public class OverConstrainedChainTest {
     private static final long MAX_RUNTIME_MS = 20_000L;
 
     @Test
-    public void fullyPinnedNoTurnChainReportsZeroFreeAngles() {
+    public void singleHeadingNoTurnChainReportsOneFreeAngle() {
         SaveFile file = SaveIO.parseSafe(Fixtures.rawPool(CAPTURE));
         assertNotNull(CAPTURE + ": failed to parse", file);
         ExactJumpModel model = ExactJumpModel.forMcVersion(file.mcVersion);
@@ -71,13 +71,12 @@ public class OverConstrainedChainTest {
         }
 
         assertNotNull("no result within " + POLL_TIMEOUT_MS + " ms", result);
-        assertFalse("the fully pinned chain is infeasible, the solve must not succeed", result.isSuccess());
+        assertFalse("the single-heading chain is infeasible, the solve must not succeed", result.isSuccess());
         assertNotNull("failure carries no notice", result.getNotice());
         assertTrue("notice does not start with the over-constrained diagnostic: " + result.getNotice(),
-                result.getNotice().contains("0 free angles"));
-        assertNotNull("solver label missing", result.getSolver());
-        assertTrue("solver label does not name the pinned chain: " + result.getSolver(),
-                result.getSolver().contains("pinned chain"));
+                result.getNotice().startsWith("1 free angle"));
+        assertTrue("notice does not report the miss distance: " + result.getNotice(),
+                result.getNotice().contains("misses by"));
         assertTrue("over-constrained solve took " + elapsedMs + " ms, expected under " + MAX_RUNTIME_MS,
                 elapsedMs < MAX_RUNTIME_MS);
     }

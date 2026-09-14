@@ -994,7 +994,9 @@ public final class AngleSolverEngine {
         currentGraphContext = ctx;
         progress.setStartSource(() -> new double[] {sc.startPos.x, sc.startPos.z});
         Candidate initial = adoptIncumbent(job, sc, spec, freeBox, ctx);
-        double[] pinnedYaws = pinnedChainYaws(spec, sc);
+        FacingPrefold chainPrefold = chainPrefold(spec, sc);
+        double[] pinnedYaws = chainPrefold == null ? null : chainPrefold.pinnedYaws();
+        boolean singleHeading = singleHeadingChain(spec, sc, chainPrefold);
         Candidate cand;
         try {
             if (pinnedYaws != null && freeBox == null) {
@@ -1015,6 +1017,9 @@ public final class AngleSolverEngine {
             if (ctx.chain() != null) fail.setSolver(ctx.chain());
             if (hasUnsupportedDf(job)) fail.setNotice(DF_UNSUPPORTED_NOTICE);
             else if (pinnedYaws != null) fail.setNotice(pinnedChainNotice(sc, ctx.violationOf(pinnedYaws), freeBox != null));
+            else if (singleHeading) {
+                fail.setNotice(singleHeadingNotice(sc, ctx.closestMiss().violation(), freeBox != null));
+            }
             return new Outcome(fail, null);
         }
         double[] yaws = cand.yaws;
@@ -1092,11 +1097,30 @@ public final class AngleSolverEngine {
         return false;
     }
 
-    private static double[] pinnedChainYaws(JumpSpec spec, JumpPhysicsInputs sc) {
+    private static FacingPrefold chainPrefold(JumpSpec spec, JumpPhysicsInputs sc) {
         if (!JumpLinearModel.hasFacingWall(spec.constraints)) return null;
         FacingPrefold pre = FacingPrefold.analyze(spec.constraints, new JumpLinearModel(sc));
-        if (pre == null || pre.isIdentity() || pre.varCount() > 0) return null;
-        return pre.pinnedYaws();
+        if (pre == null || pre.isIdentity()) return null;
+        return pre;
+    }
+
+    private static boolean singleHeadingChain(JumpSpec spec, JumpPhysicsInputs sc, FacingPrefold pre) {
+        if (!JumpLinearModel.hasFacingWall(spec.constraints)) return false;
+        if (pre != null) return pre.varCount() == 1 && pre.pinnedTicks() == 0;
+        FacingPrefold.ChainScan scan = FacingPrefold.scannable(spec.constraints, new JumpLinearModel(sc));
+        return scan != null && scan.singleHeading();
+    }
+
+    private static String singleHeadingNotice(JumpPhysicsInputs sc, double violation, boolean freeStart) {
+        String head = "1 free angle: the no-turn (dF = 0) constraints tie all " + sc.numTicks + " ticks in the"
+                + " segment to a single heading, so the solver could only sweep that one angle.";
+        String miss = Double.isNaN(violation) || Double.isInfinite(violation) ? ""
+                : " The best heading misses by " + ConstraintText.fixedStat(violation) + ".";
+        String tail = freeStart
+                ? " The start position was free too, and no start inside its box makes a single heading land."
+                : " Free a turn by clearing a dF = 0 on the tick where the turn should happen, or start the"
+                + " segment before the turn so it is inside the solve.";
+        return head + miss + tail;
     }
 
     private static String pinnedChainNotice(JumpPhysicsInputs sc, double violation, boolean freeStart) {

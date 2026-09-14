@@ -97,7 +97,7 @@ public class WallHomotopyLadderTest {
         assertNotNull(plain.best);
         WallHomotopyLadder.Result ladder = WallHomotopyLadder.solve(l.model, l.spec, null, 0L);
         assertNotNull(ladder.best);
-        assertEquals("all four rungs must run", 4, ladder.rungs.size());
+        assertEquals("every rung must run", WallHomotopyLadder.DELTAS.length, ladder.rungs.size());
         assertTrue("ladder must improve on the plain driver, got ladder " + ladder.best.maxViolation
                 + " vs plain " + plain.best.maxViolation,
                 ladder.best.maxViolation < plain.best.maxViolation);

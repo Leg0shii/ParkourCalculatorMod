@@ -96,6 +96,9 @@ anglesolver/
                            capture, FAST) lands 15/15 at the goal wall with a non-positive shortfall,
                            both on the plain Fast graph and with the seed stage starved to 1 ms (the
                            receding-horizon path that used to stop 0.92 short once the wall was dropped)
+  OverConstrainedChainTest.java  gh-454 (SlowSolverTests): a segment whose dF = 0 constraints tie every
+                           tick to one heading (gh454-p2s-overconstrained capture, THOROUGH) fails
+                           within 20 s and carries the "1 free angle ... misses by" notice
   RazorLegalReplayTest.java  byte-exact replay pins for the three delivered rung legal attempts
                            (legal / wrap720 / turn360): locked RAW rows realized without wrapping,
                            hard walls feasible under the rung patch, shortfall within 1e-9 of the
