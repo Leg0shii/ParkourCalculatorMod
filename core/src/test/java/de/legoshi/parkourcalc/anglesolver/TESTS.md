@@ -314,5 +314,10 @@ check (no sidecar, so `ProblemsTest` does not run them):
   sync with its result, so `PlanRealizationRegressionTest` rebuilds the plan path (spec +
   toGameFacings) and requires the recorded resim to sit on it byte-exact; that pinned the 26.x
   square-movement input rewrite. `ApplyYawRowsTest` feeds on the sine262 run's yaw sequence.
+- `gh484-sprint-reengage.json`: the gh-484 capture (Forge 1.8.9), saved after its solve was applied, so
+  its debug trace is the resim of the solved yaws. Its segment holds an S tick that drops sprint and a
+  sprint-key re-engage while airborne, and no wall collision. `MidAirSprintReengageTest` requires the
+  compiled spec to replay that trace byte-exact, pinning the sampled sprint flags and the lagged 1.8.9
+  air factor across the re-engage.
 
 See `docs/research/anvil-solver-quality-decision.md`.
