@@ -5,6 +5,17 @@ package de.legoshi.parkourcalc.core.anglesolver.solver;
  *  multi-turn inputs, and this math is byte-exact-sensitive, so do not fold one into the other. */
 public final class Angles {
 
+    public static final double RAD_PER_DEG = Math.PI / 180.0;
+    public static final double DEG_PER_RAD = 180.0 / Math.PI;
+
+    public static double rad(double deg) {
+        return deg * RAD_PER_DEG;
+    }
+
+    public static double deg(double rad) {
+        return rad * DEG_PER_RAD;
+    }
+
     /** Reduce to (-180,180] via the modulo idiom (single subtraction, valid for the search box's <=2-turn range). */
     public static double wrap(double d) {
         d = d % 360.0;

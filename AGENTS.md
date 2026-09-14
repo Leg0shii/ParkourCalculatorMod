@@ -82,7 +82,10 @@ A heavier tier, `de.legoshi.parkourcalc.VerySlowSolverTests`, is excluded even u
 ./gradlew :core:test                          # fast suite; run after any change
 ./gradlew :core:test -PslowTests              # full suite; required when solver code changes
 ./gradlew :core:test -PslowTests -PverySlowTests  # + the very-slow engine-acceptance tier
+./gradlew :core:testJava8                     # the same suite on a Java 8 launcher (the Forge loaders' JVM); honors -PslowTests
 ```
+
+The solver's search path uses `StrictMath` (and `Angles.rad`/`Angles.deg` instead of `Math.toRadians`/`toDegrees`) so a solve is bit-identical on Java 8 and JDK 21; `CrossJvmDeterminismTest` pins golden hashes of the linear model, closed form and fold replay on one fixture, and CI runs `:core:testJava8` on every push so the shipping runtime is exercised. Keep `Math.*` trig out of `core/.../anglesolver/` (the byte-exact `ExactJumpModel` and `McSineTable` are the deliberate exceptions: they mirror MC's own calls).
 
 Run the full suite locally whenever the change touches solver code (`core/.../anglesolver/`, the model classes, velocity finder, graph) or the problem/capture resources; for anything else the fast suite is enough, CI covers the rest.
 

@@ -426,7 +426,7 @@ public final class CertifiedBnb {
                     dx = iv.injX[t];
                     dz = iv.injZ[t];
                 } else if (st != OPEN_ANY) {
-                    double sectorBound = s.thr / Math.sqrt(2.0);
+                    double sectorBound = s.thr / StrictMath.sqrt(2.0);
                     if (st == SECTOR_XP) vxLo = Math.max(vxLo, sectorBound);
                     else if (st == SECTOR_XN) vxHi = Math.min(vxHi, -sectorBound);
                     else if (st == SECTOR_ZP) vzLo = Math.max(vzLo, sectorBound);
@@ -705,7 +705,7 @@ public final class CertifiedBnb {
 
     private static void addGateRows(Search s, Node nd, Intervals iv, JumpLinearModel lin,
                                     List<JumpLinearModel.Wall> rows) {
-        double sector = s.thr / Math.sqrt(2.0);
+        double sector = s.thr / StrictMath.sqrt(2.0);
         for (int t = 1; t < s.n; t++) {
             if (s.perAxis) {
                 addAxisGateRows(s, iv, lin, rows, 0, t, iv.effX[t], nd.gx[t], iv.slackDx[t]);
@@ -762,7 +762,7 @@ public final class CertifiedBnb {
         for (int t = 0; t < s.n; t++) {
             double nx = ux[t];
             double nz = uz[t];
-            double norm = Math.hypot(nx, nz);
+            double norm = StrictMath.hypot(nx, nz);
             double y;
             boolean full = nd.iLo[t] == FULL;
             if (!s.geom.hasInput(t) || norm < 1.0e-12) {
@@ -807,7 +807,7 @@ public final class CertifiedBnb {
             double nx = ux[t];
             double nz = uz[t];
             float pick = reps[0];
-            if (Math.hypot(nx, nz) < 1.0e-12) {
+            if (StrictMath.hypot(nx, nz) < 1.0e-12) {
                 double bestD = Double.POSITIVE_INFINITY;
                 for (float rep : reps) {
                     double d = Math.abs(Angles.wrapDelta((double) rep - yaws[t]));
@@ -1174,7 +1174,7 @@ public final class CertifiedBnb {
                                      double[] gxv, double[] gzv, double[] ux, double[] uz,
                                      double[] decoded, ForwardPath decPath, boolean[] decZx, boolean[] decZz) {
         double gmax = 0.0;
-        for (int t = 0; t < s.n; t++) gmax = Math.max(gmax, Math.hypot(gxv[t], gzv[t]));
+        for (int t = 0; t < s.n; t++) gmax = Math.max(gmax, StrictMath.hypot(gxv[t], gzv[t]));
         int gateAxis = -1;
         int gateTick = -1;
         double gateImpact = 0.0;
@@ -1212,14 +1212,14 @@ public final class CertifiedBnb {
                 if (!s.geom.hasInput(t)) continue;
                 double span = s.geom.bucketSpan(loDeg(nd, t), hiDeg(nd, t));
                 if (span <= 2 * SineTableGeometry.SLOP_IDX + 2) continue;
-                double gnorm = Math.hypot(gxv[t], gzv[t]);
-                double unorm = ux != null ? Math.hypot(ux[t], uz[t]) : 0.0;
+                double gnorm = StrictMath.hypot(gxv[t], gzv[t]);
+                double unorm = ux != null ? StrictMath.hypot(ux[t], uz[t]) : 0.0;
                 double slackFrac = s.geom.radiusUpper(t) > 0.0
                         ? Math.max(0.0, s.geom.radiusUpper(t) - unorm) / s.geom.radiusUpper(t) : 0.0;
                 double degen = gmax > 0.0 && gnorm < 1.0e-5 * gmax ? 1.0 : 0.0;
                 double widthRad = Math.min(span, 65536.0) * (2.0 * Math.PI / 65536.0);
                 double imp = s.geom.radiusUpper(t) * Math.max(gnorm, 1.0e-3 * gmax)
-                        * (slackFrac + degen + (1.0 - Math.cos(Math.min(widthRad * 0.5, Math.PI))));
+                        * (slackFrac + degen + (1.0 - StrictMath.cos(Math.min(widthRad * 0.5, Math.PI))));
                 if (imp > arcImpact) {
                     arcImpact = imp;
                     arcTick = t;

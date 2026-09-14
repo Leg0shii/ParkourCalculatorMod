@@ -6,7 +6,7 @@ import java.util.List;
 
 public final class FacingPrefold {
 
-    private static final double PIN_WIDTH_MAX = 2.5e-4;
+    public static final double PIN_WIDTH_MAX = 180.0 / 32768.0 * 1.05;
     private static final double PIN_MATCH_TOL = 1.0e-9;
     private static final double OFFSET_ZERO_TOL = 1.0e-12;
     private static final double BASE_ARG_TOL = 1.0e-12;
@@ -62,7 +62,7 @@ public final class FacingPrefold {
         public double pinnedInput(int t, int axis) {
             double phi = parsed.baseArg[t]
                     + (parsed.groupPin[parsed.group[t]] + parsed.offset[t]) * RAD;
-            return axis == 0 ? parsed.mMag[t] * Math.cos(phi) : parsed.mMag[t] * Math.sin(phi);
+            return axis == 0 ? parsed.mMag[t] * StrictMath.cos(phi) : parsed.mMag[t] * StrictMath.sin(phi);
         }
 
     }
@@ -75,6 +75,7 @@ public final class FacingPrefold {
         final boolean[] mergeOk;
         final double[] mMag;
         final double[] baseArg;
+        boolean exactLinks = true;
 
         Parsed(int n, int[] group, double[] offset, double[] groupPin, boolean[] mergeOk,
                double[] mMag, double[] baseArg) {
@@ -96,9 +97,15 @@ public final class FacingPrefold {
     private final double[] pinYaw;
     private final double[] mMag;
     private final double[] baseArg;
+    private final boolean exactLinks;
 
     private FacingPrefold(int n, boolean identity, int vars, int[] varOf, int[] repOf, double[] pinYaw,
                           double[] mMag, double[] baseArg) {
+        this(n, identity, vars, varOf, repOf, pinYaw, mMag, baseArg, true);
+    }
+
+    private FacingPrefold(int n, boolean identity, int vars, int[] varOf, int[] repOf, double[] pinYaw,
+                          double[] mMag, double[] baseArg, boolean exactLinks) {
         this.n = n;
         this.identity = identity;
         this.vars = vars;
@@ -107,6 +114,11 @@ public final class FacingPrefold {
         this.pinYaw = pinYaw;
         this.mMag = mMag;
         this.baseArg = baseArg;
+        this.exactLinks = exactLinks;
+    }
+
+    public boolean exactLinks() {
+        return exactLinks;
     }
 
     public boolean isIdentity() {
@@ -124,6 +136,35 @@ public final class FacingPrefold {
 
     public int varCount() {
         return identity ? n : vars;
+    }
+
+    public double[] pinnedYaws() {
+        if (identity || vars > 0) return null;
+        double[] out = new double[n];
+        for (int t = 0; t < n; t++) out[t] = Angles.wrap(pinYaw[t]);
+        return out;
+    }
+
+    public double pinnedObjectiveTerm(double[] cx, double[] cz) {
+        if (identity) return 0.0;
+        double sum = 0.0;
+        for (int t = 0; t < n; t++) {
+            if (varOf[t] >= 0) continue;
+            sum += cx[t] * pinnedInput(t, 0) + cz[t] * pinnedInput(t, 1);
+        }
+        return sum;
+    }
+
+    public static boolean exactPins(List<JumpConstraint> constraints) {
+        for (JumpConstraint c : constraints) {
+            if (c.mode != JumpConstraint.Mode.F) continue;
+            if (c.t2 != null) {
+                if (c.cmp != JumpConstraint.Cmp.EQ && !(c.name != null && (c.name.endsWith("eqLo") || c.name.endsWith("eqHi")))) return false;
+                continue;
+            }
+            if (c.name == null || !(c.name.endsWith("eqLo") || c.name.endsWith("eqHi"))) return false;
+        }
+        return true;
     }
 
     public int varIndex(int t) {
@@ -205,11 +246,13 @@ public final class FacingPrefold {
         }
         boolean[] link = new boolean[n];
         double[] linkOffset = new double[n];
+        boolean exactLinks = true;
         if (linkLo != null) {
             for (int t = 0; t < n; t++) {
                 if (linkLo[t] == Double.NEGATIVE_INFINITY && linkHi[t] == Double.POSITIVE_INFINITY) continue;
                 double width = linkHi[t] - linkLo[t];
                 if (!(width >= 0.0) || width > PIN_WIDTH_MAX) return null;
+                if (width > 0.0) exactLinks = false;
                 link[t] = true;
                 linkOffset[t] = 0.5 * (linkLo[t] + linkHi[t]);
             }
@@ -262,7 +305,9 @@ public final class FacingPrefold {
             mm[t] = lin.mMag(t);
             ba[t] = lin.baseArg(t);
         }
-        return new Parsed(n, group, offset, groupPin, mergeOk, mm, ba);
+        Parsed parsed = new Parsed(n, group, offset, groupPin, mergeOk, mm, ba);
+        parsed.exactLinks = exactLinks;
+        return parsed;
     }
 
     private static FacingPrefold assemble(Parsed p, double[] groupPin) {
@@ -290,7 +335,8 @@ public final class FacingPrefold {
             varOf[t] = v;
             if (p.mMag[rep[v]] <= 0.0 && p.mMag[t] > 0.0) rep[v] = t;
         }
-        return new FacingPrefold(n, false, vars, varOf, Arrays.copyOf(rep, vars), pinYaw, p.mMag, p.baseArg);
+        return new FacingPrefold(n, false, vars, varOf, Arrays.copyOf(rep, vars), pinYaw, p.mMag, p.baseArg,
+                p.exactLinks);
     }
 
     public Reduced reduce(double[] cx, double[] cz, double[] mMagAll, List<JumpLinearModel.Wall> walls) {
@@ -338,9 +384,9 @@ public final class FacingPrefold {
             if (gx * gx + gz * gz < 1.0e-18) {
                 boolean max = obj.sense == Objective.Sense.MAX;
                 if (obj.isCustomAngle()) {
-                    double rad = Math.toRadians(obj.customYaw);
-                    gx = (max ? 1.0 : -1.0) * -Math.sin(rad);
-                    gz = (max ? 1.0 : -1.0) * Math.cos(rad);
+                    double rad = Angles.rad(obj.customYaw);
+                    gx = (max ? 1.0 : -1.0) * -StrictMath.sin(rad);
+                    gz = (max ? 1.0 : -1.0) * StrictMath.cos(rad);
                 } else if (obj.axis == JumpPhysicsInputs.Axis.X) {
                     gx = max ? 1.0 : -1.0;
                     gz = 0.0;
@@ -356,7 +402,7 @@ public final class FacingPrefold {
 
     private double pinnedInput(int t, int axis) {
         double phi = baseArg[t] + pinYaw[t] * RAD;
-        return axis == 0 ? mMag[t] * Math.cos(phi) : mMag[t] * Math.sin(phi);
+        return axis == 0 ? mMag[t] * StrictMath.cos(phi) : mMag[t] * StrictMath.sin(phi);
     }
 
     private static void tighten(double[] lo, double[] hi, int t, JumpConstraint.Cmp cmp, double rhs) {

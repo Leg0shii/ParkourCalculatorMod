@@ -52,9 +52,9 @@ public final class Objective {
 
     public double evaluate(ForwardPath path) {
         if (customYaw != null) {
-            double rad = Math.toRadians(customYaw);
-            double dx = -Math.sin(rad);
-            double dz = Math.cos(rad);
+            double rad = Angles.rad(customYaw);
+            double dx = -StrictMath.sin(rad);
+            double dz = StrictMath.cos(rad);
             if (type == Type.MOTION) {
                 double vx = tick > 0 ? path.posX[tick] - path.posX[tick - 1] : path.posX[tick];
                 double vz = tick > 0 ? path.posZ[tick] - path.posZ[tick - 1] : path.posZ[tick];

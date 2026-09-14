@@ -500,6 +500,25 @@ public final class AngleSolverState {
         list.add(Constraint.range(Constraint.Field.Z, zLo, zHi, true, true));
     }
 
+    public double[] footprintOrNull(int tick) {
+        TickConstraints tc = ticks.get(tick);
+        if (tc == null) return null;
+        double xLo = Double.POSITIVE_INFINITY, xHi = Double.NEGATIVE_INFINITY;
+        double zLo = Double.POSITIVE_INFINITY, zHi = Double.NEGATIVE_INFINITY;
+        for (Constraint c : tc.getConstraints()) {
+            if (!c.isRange() || c.isRelative()) continue;
+            if (c.getField() == Constraint.Field.X) {
+                xLo = Math.min(xLo, c.getLo());
+                xHi = Math.max(xHi, c.getHi());
+            } else if (c.getField() == Constraint.Field.Z) {
+                zLo = Math.min(zLo, c.getLo());
+                zHi = Math.max(zHi, c.getHi());
+            }
+        }
+        if (xLo > xHi || zLo > zHi) return null;
+        return new double[] {xLo, xHi, zLo, zHi};
+    }
+
     public void mergeFootprint(int tick, double xLo, double xHi, double zLo, double zHi) {
         if (tick < 0) return;
         List<Constraint> list = tickConstraints(tick).getConstraints();

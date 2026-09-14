@@ -57,7 +57,7 @@ public final class InputOverlay {
             InputRow.Key.SPRINT, InputRow.Key.SNEAK, InputRow.Key.JUMP
     };
     private static final InputRow.Key[] MOUSE_KEYS = {
-            InputRow.Key.LEFT_CLICK, InputRow.Key.RIGHT_CLICK
+            InputRow.Key.LEFT_CLICK, InputRow.Key.RIGHT_CLICK, InputRow.Key.CLOSE_INVENTORY
     };
 
     private static final String ID_SPEED_SUFFIX = "##speed";
@@ -157,6 +157,8 @@ public final class InputOverlay {
     private int yawCallbackRow = -1;
     private int carryYawCursorPos;
     private int hoveredRow = -1;
+    private float scrollViewMinY = Float.NEGATIVE_INFINITY;
+    private float scrollViewMaxY = Float.POSITIVE_INFINITY;
     private int pendingLockToggleRow = -1;
     private int pitchCallbackRow = -1;
     private int pendingPitchLockToggleRow = -1;
@@ -313,6 +315,7 @@ public final class InputOverlay {
             case JUMP: return settings.showColJump;
             case LEFT_CLICK: return settings.showColLeftClick;
             case RIGHT_CLICK: return settings.showColRightClick;
+            case CLOSE_INVENTORY: return settings.showColCloseInventory;
             default: return true;
         }
     }
@@ -484,12 +487,14 @@ public final class InputOverlay {
         keyDragSelect.clearRowBounds();
         hoveredRow = -1;
         teleportDropRow = -1;
-        if (solverActive) angleSolver.beginRows();
+        if (solverActive) angleSolver.beginRows(clipMin.x, clipMin.y, clipMin.x + clipSize.x, clipMin.y + clipSize.y);
 
         handleAutoScroll();
 
         float viewTop = clipMin.y;
         float viewBot = clipMin.y + clipSize.y;
+        scrollViewMinY = viewTop;
+        scrollViewMaxY = viewBot;
         int total = data.getRows().size();
 
         // One state across the segments so a drag can start in one and drop in the other (gh-119).
@@ -714,6 +719,7 @@ public final class InputOverlay {
             case JUMP: return "Spc";
             case LEFT_CLICK: return "LMB";
             case RIGHT_CLICK: return "RMB";
+            case CLOSE_INVENTORY: return "Inv";
             default: return key.name();
         }
     }
@@ -729,6 +735,7 @@ public final class InputOverlay {
             case JUMP: return "Jump (Space)";
             case LEFT_CLICK: return "Left click / attack (hold)";
             case RIGHT_CLICK: return "Right click / use (hold)";
+            case CLOSE_INVENTORY: return "Close the open inventory / container screen on this tick (playback only)";
             default: return key.name();
         }
     }
@@ -927,10 +934,14 @@ public final class InputOverlay {
         }
 
         if (isTeleportColumnVisible() && row.isTeleportEnabled() && tpCellMinX > rMinX) {
-            ImDrawList dl = ImGui.getWindowDrawList();
-            dl.pushClipRect(rMinX, rMinY, tpCellMinX, rMaxY, false);
-            dl.addRectFilled(rMinX, rMinY, tpCellMinX, rMaxY, ThemeManager.bgTintColor(0.66f));
-            dl.popClipRect();
+            float tintMinY = Math.max(rMinY, scrollViewMinY);
+            float tintMaxY = Math.min(rMaxY, scrollViewMaxY);
+            if (tintMaxY > tintMinY) {
+                ImDrawList dl = ImGui.getWindowDrawList();
+                dl.pushClipRect(rMinX, tintMinY, tpCellMinX, tintMaxY, false);
+                dl.addRectFilled(rMinX, rMinY, tpCellMinX, rMaxY, ThemeManager.bgTintColor(0.66f));
+                dl.popClipRect();
+            }
         }
 
         if (draggingTeleportRow >= 0 && draggingTeleportRow != index && isTeleportColumnVisible()) {

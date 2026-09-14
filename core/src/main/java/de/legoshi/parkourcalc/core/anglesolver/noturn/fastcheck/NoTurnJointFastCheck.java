@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.anglesolver.noturn.fastcheck;
 
+import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.FastCheck;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.FastCheckVerdict;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnProblem;
@@ -142,7 +143,7 @@ public final class NoTurnJointFastCheck implements FastCheck {
         for (int t = 0; t < n; t++) inG[t] = find(parent, t) == gRoot;
         double bandDeg = 0.0;
         for (int i = 0; i < links.size(); i++) if (inG[links.get(i)[0]]) bandDeg += bands.get(i);
-        double tiedDev = bandDeg > 0.0 ? Math.toRadians(bandDeg) + PAIR_DEV : 0.0;
+        double tiedDev = bandDeg > 0.0 ? Angles.rad(bandDeg) + PAIR_DEV : 0.0;
 
         JumpLinearModel lm = new JumpLinearModel(sc, null, null, true);
         double[] q = new double[n];
@@ -265,11 +266,11 @@ public final class NoTurnJointFastCheck implements FastCheck {
         m.epsCase = new double[W];
         for (int i = 0; i < W; i++) m.epsBase[i] = m.wl.get(i).baseEps;
 
-        m.apo = 1.0 / Math.cos(Math.PI / KGON);
+        m.apo = 1.0 / StrictMath.cos(Math.PI / KGON);
         for (int j = 0; j < KGON; j++) {
             double al = j * (2.0 * Math.PI / KGON);
-            m.kcos[j] = Math.cos(al);
-            m.ksin[j] = Math.sin(al);
+            m.kcos[j] = StrictMath.cos(al);
+            m.ksin[j] = StrictMath.sin(al);
         }
 
         double[] stack = new double[4096];
@@ -464,8 +465,8 @@ public final class NoTurnJointFastCheck implements FastCheck {
         int maxRows = wallRows + kgonRows + 8;
         LpFeas lp = new LpFeas(nVar, maxRows);
 
-        double loRad = Math.toRadians(loDeg);
-        double hiRad = Math.toRadians(hiDeg);
+        double loRad = Angles.rad(loDeg);
+        double hiRad = Angles.rad(hiDeg);
         lp.setBound(0, ab[0], ab[1]);
         lp.setBound(1, ab[2], ab[3]);
         lp.setBound(2, m.sxLo, m.sxHi);
@@ -478,9 +479,9 @@ public final class NoTurnJointFastCheck implements FastCheck {
 
         double thm = 0.5 * (loRad + hiRad);
         double h = 0.5 * (hiRad - loRad);
-        double cm = Math.cos(thm), sm = Math.sin(thm);
-        double cosh = Math.cos(h);
-        double sinh = Math.sin(h);
+        double cm = StrictMath.cos(thm), sm = StrictMath.sin(thm);
+        double cosh = StrictMath.cos(h);
+        double sinh = StrictMath.sin(h);
         double[] r1 = new double[nVar];
         r1[0] = cm; r1[1] = sm;
         lp.addRow(r1, 1.0 + EPS_TRIG);
@@ -550,16 +551,16 @@ public final class NoTurnJointFastCheck implements FastCheck {
     }
 
     private static double[] inflatedArcBox(double loDeg, double hiDeg) {
-        double lo = Math.toRadians(loDeg);
-        double hi = Math.toRadians(hiDeg);
-        double aMin = Math.min(Math.cos(lo), Math.cos(hi));
-        double aMax = Math.max(Math.cos(lo), Math.cos(hi));
-        double bMin = Math.min(Math.sin(lo), Math.sin(hi));
-        double bMax = Math.max(Math.sin(lo), Math.sin(hi));
+        double lo = Angles.rad(loDeg);
+        double hi = Angles.rad(hiDeg);
+        double aMin = Math.min(StrictMath.cos(lo), StrictMath.cos(hi));
+        double aMax = Math.max(StrictMath.cos(lo), StrictMath.cos(hi));
+        double bMin = Math.min(StrictMath.sin(lo), StrictMath.sin(hi));
+        double bMax = Math.max(StrictMath.sin(lo), StrictMath.sin(hi));
         for (int k = -4; k <= 4; k++) {
             double crit = k * (Math.PI / 2.0);
             if (crit > lo - 1e-12 && crit < hi + 1e-12) {
-                double c = Math.cos(crit), s = Math.sin(crit);
+                double c = StrictMath.cos(crit), s = StrictMath.sin(crit);
                 if (c < aMin) aMin = c;
                 if (c > aMax) aMax = c;
                 if (s < bMin) bMin = s;

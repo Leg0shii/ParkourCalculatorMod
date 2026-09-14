@@ -342,7 +342,11 @@ public final class PlaybackController {
         }
         InputRow motion = teleportTick ? TELEPORT_NOOP_ROW : row;
         for (InputRow.Key key : InputRow.Key.values()) {
+            if (key == InputRow.Key.CLOSE_INVENTORY) continue;
             bridge.setKey(key, motion.isKeyActive(key));
+        }
+        if (motion.isKeyActive(InputRow.Key.CLOSE_INVENTORY)) {
+            bridge.closeInventory();
         }
         int speedAmp = row.getSpeedAmplifier();
         int jumpAmp = row.getJumpBoostAmplifier();

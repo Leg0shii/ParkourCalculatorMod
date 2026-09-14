@@ -13,6 +13,8 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.WallHomotopyLadder;
+import de.legoshi.parkourcalc.core.anglesolver.solver.WrapWindowIls;
+import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -29,7 +31,7 @@ public final class HomotopyLadderNode implements NodeRuntime {
     public NodeOutcome execute(GraphContext ctx, Candidate in, AtomicBoolean nodeToken, long deadlineNanos) {
         if (!ctx.exact() || ctx.stageLocked()) return NodeOutcome.of(Guarantee.NONE, in);
         if (in != null && in.feasible) return NodeOutcome.of(Guarantee.NONE, in);
-        if (ctx.scenario.numTicks > tickCap) return NodeOutcome.of(Guarantee.NONE, in);
+        if (tickCap > 0 && ctx.scenario.numTicks > tickCap) return NodeOutcome.of(Guarantee.NONE, in);
         if (JumpLinearModel.hasFacingWall(ctx.spec.constraints)) return NodeOutcome.of(Guarantee.NONE, in);
 
         JumpPhysicsInputs sc = ctx.scenario.copy();
@@ -46,16 +48,43 @@ public final class HomotopyLadderNode implements NodeRuntime {
         }
         FoldReplayDriver.Round best = lr.best;
         if (best == null) return NodeOutcome.of(Guarantee.NONE, in);
+        double[] yaws = best.yawsDeg;
+        String stage = "homotopy ladder";
         if (!best.feasible()) {
             ctx.closestMiss().offer(best.yawsDeg, best.maxViolation);
-            return NodeOutcome.of(Guarantee.NONE, in);
+            yaws = snapNearMiss(ctx, sc, best, nodeToken, deadlineNanos);
+            if (yaws == null) return NodeOutcome.of(Guarantee.NONE, in);
+            stage = "homotopy ladder -> cell snap";
         }
-        if (Double.isNaN(Scoring.verifiedObjectiveAt(ctx.model, ctx.scenario, ctx.spec, best.yawsDeg,
+        if (Double.isNaN(Scoring.verifiedObjectiveAt(ctx.model, ctx.scenario, ctx.spec, yaws,
                 best.px, best.pz, ctx.feasTol))) {
             return NodeOutcome.of(Guarantee.NONE, in);
         }
         Scoring.adoptPinnedStart(ctx.scenario, best.px, best.pz);
-        ctx.chainAppend("homotopy ladder");
-        return NodeOutcome.of(Guarantee.FOUND, Candidate.of(ctx, best.yawsDeg));
+        ctx.chainAppend(stage);
+        return NodeOutcome.of(Guarantee.FOUND, Candidate.of(ctx, yaws));
+    }
+
+    public static final double NEAR_MISS_VIOL = 2.0e-3;
+    private static final long SNAP_BUDGET_NANOS = 1_000_000_000L;
+
+    private static double[] snapNearMiss(GraphContext ctx, JumpPhysicsInputs sc, FoldReplayDriver.Round miss,
+                                         AtomicBoolean nodeToken, long deadlineNanos) {
+        if (!(miss.maxViolation <= NEAR_MISS_VIOL)) return null;
+        long now = System.nanoTime();
+        long snapDeadline = deadlineNanos > 0 ? Math.min(deadlineNanos, now + SNAP_BUDGET_NANOS) : now + SNAP_BUDGET_NANOS;
+        if (snapDeadline <= now) return null;
+        JumpPhysicsInputs at = Scoring.pinnedScenario(sc, miss.px, miss.pz);
+        JumpSpec pinned = new JumpSpec(at, new ArrayList<>(ctx.spec.constraints), ctx.spec.objective);
+        double[] gf = at.toGameFacings(Angles.wrapAll(miss.yawsDeg));
+        WrapWindowIls.Config cfg = new WrapWindowIls.Config();
+        WrapWindowIls.Result w = WrapWindowIls.polish(ctx.exactModel, pinned, gf, new double[] {0.0, 0.0, 0.0, 0.0},
+                cfg, snapDeadline, nodeToken);
+        if (SolverTrace.on()) {
+            SolverTrace.log("LADDER", "near miss viol=%.3e snap -> %s", miss.maxViolation,
+                    w == null ? "none" : String.format(java.util.Locale.ROOT, "viol=%.3e evals=%d", w.viol, w.evals));
+        }
+        if (w == null || !(w.viol <= ctx.feasTol)) return null;
+        return Angles.wrapAll(w.gf);
     }
 }

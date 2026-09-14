@@ -45,8 +45,8 @@ public final class NoTurnModel {
         this.setupEnd = problem.setupEnd;
         for (int g = 0; g < GRID; g++) {
             double th = g * (2.0 * Math.PI / GRID);
-            sinTheta[g] = Math.sin(th);
-            cosTheta[g] = Math.cos(th);
+            sinTheta[g] = StrictMath.sin(th);
+            cosTheta[g] = StrictMath.cos(th);
         }
         this.f4 = new double[n];
         this.contact = new boolean[n];
@@ -118,7 +118,7 @@ public final class NoTurnModel {
         double fF = 0.0;
         double sF = 0.0;
         if (fm >= 1.0e-4) {
-            double raw = Math.sqrt(fm);
+            double raw = StrictMath.sqrt(fm);
             if (raw < 1.0) raw = 1.0;
             double scale = accel / raw;
             fF = forward0 * scale;
@@ -127,7 +127,7 @@ public final class NoTurnModel {
         double boost = (isJump[t] && sprintNow) ? 0.2 : 0.0;
         double p = fF + boost;
         double q = sF;
-        out[0] = Math.hypot(p, q);
-        out[1] = Math.atan2(p, q);
+        out[0] = StrictMath.hypot(p, q);
+        out[1] = StrictMath.atan2(p, q);
     }
 }

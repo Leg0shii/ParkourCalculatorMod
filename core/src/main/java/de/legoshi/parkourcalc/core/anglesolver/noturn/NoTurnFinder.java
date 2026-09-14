@@ -305,10 +305,10 @@ public final class NoTurnFinder {
         m.magArg(t, combo, eEff, sprintNow, ma);
         double mMag = ma[0];
         double baseArg = ma[1];
-        double uxS = -mMag * Math.sin(baseArg);
-        double uxC = mMag * Math.cos(baseArg);
-        double uzS = mMag * Math.cos(baseArg);
-        double uzC = mMag * Math.sin(baseArg);
+        double uxS = -mMag * StrictMath.sin(baseArg);
+        double uxC = mMag * StrictMath.cos(baseArg);
+        double uzS = mMag * StrictMath.cos(baseArg);
+        double uzC = mMag * StrictMath.sin(baseArg);
         double f4 = m.f4(t);
 
         double[] a = s.acc.clone();

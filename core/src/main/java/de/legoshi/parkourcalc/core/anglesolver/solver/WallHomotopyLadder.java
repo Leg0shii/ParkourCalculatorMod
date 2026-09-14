@@ -9,7 +9,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class WallHomotopyLadder {
 
-    public static final double[] DELTAS = {0.05, 0.01, 0.002, 0.0};
+    public static final double INNER_MARGIN = 3.0e-4;
+    public static final double[] DELTAS = {0.05, 0.01, 0.002, 0.0, -INNER_MARGIN};
     public static final double COLLISION_CLEARANCE = 2.0e-6;
 
     private WallHomotopyLadder() {
@@ -48,7 +49,7 @@ public final class WallHomotopyLadder {
             if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) break;
             FoldReplayDriver.Params p = new FoldReplayDriver.Params();
             p.specWallRelax = delta;
-            if (delta == 0.0) {
+            if (delta <= 0.0) {
                 p.clearance = COLLISION_CLEARANCE;
                 p.clearanceWalls = clearanceWalls;
             }
