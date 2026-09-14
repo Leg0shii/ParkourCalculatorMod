@@ -30,22 +30,8 @@ public class WallHitSprintHealTest {
     private static final float SNEAK_F = 0.29400003F;
 
     private static JumpPhysicsInputs compile(BoxController boxes, int startTick, int numTicks) {
-        return compile(boxes, startTick, numTicks, null);
-    }
-
-    private static JumpPhysicsInputs compile(BoxController boxes, int startTick, int numTicks, String[] keys) {
         InputData inputs = new InputData();
-        for (int t = 0; t < boxes.size() - 1; t++) {
-            InputRow row = new InputRow();
-            if (keys != null && t < keys.length) {
-                for (char c : keys[t].toCharArray()) {
-                    if (c == 'W') row.setKeyActive(InputRow.Key.W, true);
-                    if (c == 'S') row.setKeyActive(InputRow.Key.S, true);
-                    if (c == 'r') row.setKeyActive(InputRow.Key.SPRINT, true);
-                }
-            }
-            inputs.getRows().add(row);
-        }
+        for (int t = 0; t < boxes.size() - 1; t++) inputs.getRows().add(new InputRow());
         AngleSolverState state = new AngleSolverState();
         state.setDefaultInputs(AngleSolverState.InputMode.KEEP);
         state.setDefaultSprint(AngleSolverState.SprintMode.DERIVE);
@@ -115,53 +101,6 @@ public class WallHitSprintHealTest {
         JumpPhysicsInputs sc = compile(boxes, 1, 2); // window starts at tick 1; its yaws cannot avoid the hit
         assertFalse(sc.sprintAt(0));
         assertFalse(sc.sprintAt(1));
-    }
-
-    @Test
-    public void blockedReEngageAfterBackwardTickIsHealed() {
-        BoxController boxes = new BoxController();
-        boxes.add(sampled(true, F, false, false));
-        boxes.add(sampled(true, F, false, false));
-        boxes.add(sampled(false, -F, true, false));
-        boxes.add(sampled(false, F, true, false));
-        boxes.add(sampled(false, F, false, false));
-        boxes.add(sampled(true, F, false, false));
-        JumpPhysicsInputs sc = compile(boxes, 0, 5, new String[] {"Wr", "Sr", "Wr", "Wr", "Wr"});
-        assertTrue(sc.sprintAt(0));
-        assertFalse("S is a genuine stop", sc.sprintAt(1));
-        assertTrue("the wall hit blocked a re-engage the rows asked for", sc.sprintAt(2));
-        assertTrue("the heal carries while W and the key are held", sc.sprintAt(3));
-        assertTrue(sc.sprintAt(4));
-    }
-
-    @Test
-    public void blockedReEngageWithoutTheSprintKeyIsKept() {
-        BoxController boxes = new BoxController();
-        boxes.add(sampled(true, F, false, false));
-        boxes.add(sampled(true, F, false, false));
-        boxes.add(sampled(false, -F, true, false));
-        boxes.add(sampled(false, F, true, false));
-        boxes.add(sampled(false, F, false, false));
-        JumpPhysicsInputs sc = compile(boxes, 0, 4, new String[] {"Wr", "Sr", "W", "W"});
-        assertFalse(sc.sprintAt(1));
-        assertFalse("no sprint key on the row, so the hit did not block an engage", sc.sprintAt(2));
-        assertFalse(sc.sprintAt(3));
-    }
-
-    @Test
-    public void laterHitAfterAGenuineStopIsStillHealed() {
-        BoxController boxes = new BoxController();
-        boxes.add(sampled(true, F, false, false));
-        boxes.add(sampled(true, F, true, false));
-        boxes.add(sampled(false, F, false, false));
-        boxes.add(sampled(false, SNEAK_F, true, false));
-        boxes.add(sampled(false, F, false, false));
-        boxes.add(sampled(true, F, false, false));
-        JumpPhysicsInputs sc = compile(boxes, 0, 5, new String[] {"Wr", "Wr", "Wr", "Wr", "Wr"});
-        assertTrue(sc.sprintAt(1));
-        assertFalse("sneak is a genuine stop", sc.sprintAt(2));
-        assertTrue("a second wall hit can start a second heal", sc.sprintAt(3));
-        assertTrue(sc.sprintAt(4));
     }
 
     @Test

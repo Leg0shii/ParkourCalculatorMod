@@ -275,15 +275,9 @@ public final class AngleSolverEngine {
         final Vec3dCore start;
         final boolean lockYaws;
         final boolean freeStartYaw;
-        final JumpPhysicsInputs scenario;
 
         Plan(int startTick, double[] yaws, boolean[] strafeMask, boolean[] force45Mask, int strafeSign,
              ForwardPath path, Vec3dCore start, boolean lockYaws, boolean freeStartYaw) {
-            this(startTick, yaws, strafeMask, force45Mask, strafeSign, path, start, lockYaws, freeStartYaw, null);
-        }
-
-        Plan(int startTick, double[] yaws, boolean[] strafeMask, boolean[] force45Mask, int strafeSign,
-             ForwardPath path, Vec3dCore start, boolean lockYaws, boolean freeStartYaw, JumpPhysicsInputs scenario) {
             this.startTick = startTick;
             this.yaws = yaws;
             this.strafeMask = strafeMask;
@@ -291,7 +285,6 @@ public final class AngleSolverEngine {
             this.strafeSign = strafeSign;
             this.path = path;
             this.start = start;
-            this.scenario = scenario;
             this.lockYaws = lockYaws;
             this.freeStartYaw = freeStartYaw;
         }
@@ -718,23 +711,17 @@ public final class AngleSolverEngine {
     /** Sprint lost to an in-window wall hit is healed while the inputs sustain it: the solve exists to route
      *  around that wall, so the broken run's post-hit sprint=false samples would doom the remaining jumps. */
     private void healWallHitSprint(int startTick, int numTicks, boolean[] sprint, float[] forwardIn) {
-        List<InputRow> rows = inputs.getRows();
         boolean healing = false;
         for (int k = 1; k < numTicks; k++) {
             if (sprint[k]) { healing = false; continue; }
             if (!healing) {
                 TickState hit = boxes.getState(startTick + k);
-                boolean wallHit = hit != null && hit.wallCollision && !hit.softCollision;
-                healing = wallHit && (sprint[k - 1] || sprintKeyHeld(rows, startTick + k));
+                healing = sprint[k - 1] && hit != null && hit.wallCollision && !hit.softCollision;
             }
             if (!healing) continue;
-            if (forwardIn[k] < SPRINT_SUSTAIN_F) { healing = false; continue; }
+            if (forwardIn[k] < SPRINT_SUSTAIN_F) return;
             sprint[k] = true;
         }
-    }
-
-    private static boolean sprintKeyHeld(List<InputRow> rows, int tick) {
-        return tick >= 0 && tick < rows.size() && rows.get(tick).isKeyActive(InputRow.Key.SPRINT);
     }
 
     private static boolean consumeFirstTickZeroTurn(List<ConstraintAt> uiCons, Set<Constraint> consumed) {
@@ -1078,7 +1065,7 @@ public final class AngleSolverEngine {
 
     private static Plan planOf(Job job, double[] yaws, ForwardPath path, JumpPhysicsInputs sc, boolean lockYaws) {
         return new Plan(job.startTick, yaws, job.strafeMask, job.force45Mask, 1, path, sc.startPos, lockYaws,
-                job.freeStartYaw, sc);
+                job.freeStartYaw);
     }
 
     private double[] smoothFacing(ExactJumpModel em, JumpSpec spec, JumpPhysicsInputs sc, double[] yaws,
@@ -1397,7 +1384,7 @@ public final class AngleSolverEngine {
                 double dx = (s.position.x - prev.position.x) - (p.path.posX[k] - p.path.posX[k - 1]);
                 double dz = (s.position.z - prev.position.z) - (p.path.posZ[k] - p.path.posZ[k - 1]);
                 if (Math.abs(dx) <= APPLY_MATCH_TOL && Math.abs(dz) <= APPLY_MATCH_TOL) continue;
-                publishDeviation(p, t);
+                publishDeviation(p.startTick, t);
                 return;
             }
         }
@@ -1408,8 +1395,7 @@ public final class AngleSolverEngine {
      *  forced-crouch pose can outlive the key by a few ticks. */
     private static final int SNEAK_DESYNC_LOOKBACK = 5;
 
-    private void publishDeviation(Plan p, int t) {
-        int startTick = p.startTick;
+    private void publishDeviation(int startTick, int t) {
         String head = "Sim left the solved path at T" + (t + 1);
         String tail = ". Re-solving from this run might fix it.";
         for (int i = startTick + 1; i <= t; i++) {
@@ -1419,16 +1405,6 @@ public final class AngleSolverEngine {
                         AngleSolverState.DeviationKind.WALL, t);
                 return;
             }
-        }
-        int sprintTick = firstSprintSampleMismatch(p, t);
-        if (sprintTick >= 0) {
-            state.setApplyDeviation(head + ": sprint at T" + (sprintTick + 1) + " ran "
-                    + (p.scenario.sprintAt(sprintTick - startTick) ? "off" : "on")
-                    + " where the sampled run the solve used had it "
-                    + (p.scenario.sprintAt(sprintTick - startTick) ? "on" : "off")
-                    + ". Re-solving from this run picks up the new sprint state.",
-                    AngleSolverState.DeviationKind.OTHER, t);
-            return;
         }
         List<InputRow> rows = inputs.getRows();
         for (int r = t; r >= Math.max(startTick, t - SNEAK_DESYNC_LOOKBACK); r--) {
@@ -1440,18 +1416,6 @@ public final class AngleSolverEngine {
             }
         }
         state.setApplyDeviation(head + tail, AngleSolverState.DeviationKind.OTHER, t);
-    }
-
-    private int firstSprintSampleMismatch(Plan p, int t) {
-        if (p.scenario == null || p.scenario.sprintPerTick == null) return -1;
-        for (int tick = p.startTick; tick < t; tick++) {
-            int k = tick - p.startTick;
-            if (k >= p.scenario.sprintPerTick.length) break;
-            TickState sampled = boxes.getState(tick + 1);
-            if (sampled == null || !sampled.hasMovementSample()) continue;
-            if (sampled.sprinting != p.scenario.sprintAt(k)) return tick;
-        }
-        return -1;
     }
 
     // ---- effective per-tick state (main thread, during snapshot) --------------
