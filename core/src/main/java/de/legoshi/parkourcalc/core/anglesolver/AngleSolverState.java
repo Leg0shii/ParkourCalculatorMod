@@ -421,7 +421,6 @@ public final class AngleSolverState {
         dst.getOverride().copyFrom(src.getOverride());
     }
 
-
     /** A row moved with InputData.moveRow's drop-line semantics: {@code to} is the gap index, a no-op
      *  when it neighbors {@code from}; otherwise list-remove at {@code from} + insert at the effective
      *  destination. Tick data rotates the same way. */
@@ -517,28 +516,6 @@ public final class AngleSolverState {
         }
         if (xLo > xHi || zLo > zHi) return null;
         return new double[] {xLo, xHi, zLo, zHi};
-    }
-
-    public void mergeFootprint(int tick, double xLo, double xHi, double zLo, double zHi) {
-        if (tick < 0) return;
-        List<Constraint> list = tickConstraints(tick).getConstraints();
-        double finalXLo = xLo, finalXHi = xHi;
-        double finalZLo = zLo, finalZHi = zHi;
-
-        for (int i = list.size() - 1; i >= 0; i--) {
-            Constraint c = list.get(i);
-            if (c.isRange() && !c.isRelative() && c.getField() == Constraint.Field.X) {
-                finalXLo = Math.min(finalXLo, c.getLo());
-                finalXHi = Math.max(finalXHi, c.getHi());
-                list.remove(i);
-            } else if (c.isRange() && !c.isRelative() && c.getField() == Constraint.Field.Z) {
-                finalZLo = Math.min(finalZLo, c.getLo());
-                finalZHi = Math.max(finalZHi, c.getHi());
-                list.remove(i);
-            }
-        }
-        list.add(Constraint.range(Constraint.Field.X, finalXLo, finalXHi, true, true));
-        list.add(Constraint.range(Constraint.Field.Z, finalZLo, finalZHi, true, true));
     }
 
     public void clearFootprint(int tick) {

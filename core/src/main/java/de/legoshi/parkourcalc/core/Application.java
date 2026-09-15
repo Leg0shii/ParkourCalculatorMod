@@ -191,7 +191,7 @@ public final class Application {
         forwardModel = ExactJumpModel.forMcVersion(mcVersion);
         constraintKeyController = new ConstraintKeyController(
                 mc, angleSolverState, selection, constraintSelection, saveController::markDirty,
-                forwardModel.modern(), inputData::size, settings);
+                forwardModel.modern(), inputData::size, settings, this::pushHudMessage);
         saveController.setAngleSolver(angleSolverState);
         saveController.setDebugSource(boxController, settings);
         AngleSolverTable angleSolverTable = new AngleSolverTable(angleSolverState, settings, selection, constraintSelection, inputData::size);

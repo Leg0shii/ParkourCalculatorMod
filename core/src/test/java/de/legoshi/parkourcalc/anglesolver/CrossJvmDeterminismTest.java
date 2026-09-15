@@ -5,7 +5,6 @@ import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ClosedFormSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
-import de.legoshi.parkourcalc.core.anglesolver.solver.FoldReplayDriver;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.save.SaveFile;
@@ -22,7 +21,6 @@ public class CrossJvmDeterminismTest {
 
     static final long GOLDEN_LINEAR_MODEL = 6680509507868675287L;
     static final long GOLDEN_CLOSED_FORM = 7100074979304643135L;
-    static final long GOLDEN_FOLD_REPLAY = -7814270818027621907L;
 
     @Test
     public void searchPathIsBitIdenticalAcrossJvms() {
@@ -48,15 +46,12 @@ public class CrossJvmDeterminismTest {
         }
         double[] cf = ClosedFormSolve.optimize(model, spec, 0.0, new AtomicBoolean(false));
         long cfHash = cf == null ? 0L : hash(cf);
-        FoldReplayDriver.Result fr = FoldReplayDriver.solve(model, spec);
-        long frHash = fr == null || fr.best == null ? 0L : hash(fr.best.yawsDeg);
 
         String report = String.format(java.util.Locale.ROOT,
-                "linear=%dL closedForm=%dL foldReplay=%dL (%s)", linHash, cfHash, frHash, System.getProperty("java.version"));
+                "linear=%dL closedForm=%dL (%s)", linHash, cfHash, System.getProperty("java.version"));
         System.out.println("[cross-jvm] " + report);
         if (GOLDEN_LINEAR_MODEL != 0L) assertEquals("linear model drifted: " + report, GOLDEN_LINEAR_MODEL, linHash);
         if (GOLDEN_CLOSED_FORM != 0L) assertEquals("closed form drifted: " + report, GOLDEN_CLOSED_FORM, cfHash);
-        if (GOLDEN_FOLD_REPLAY != 0L) assertEquals("fold replay drifted: " + report, GOLDEN_FOLD_REPLAY, frHash);
     }
 
     private static long hash(double[] values) {

@@ -42,7 +42,8 @@ public class ConstraintKeyControllerTest {
         state.setLandingTick(TICK);
         settings = new Settings();
         controller = new ConstraintKeyController(
-                mc, state, new SelectionManager(mc), new ConstraintSelection(), () -> { }, false, () -> TICK + 1, settings);
+                mc, state, new SelectionManager(mc), new ConstraintSelection(), () -> { }, false, () -> TICK + 1, settings,
+                s -> { });
     }
 
     private List<Constraint> constraints() {

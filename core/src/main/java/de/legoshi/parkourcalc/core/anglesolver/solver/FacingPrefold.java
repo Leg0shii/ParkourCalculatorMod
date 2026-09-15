@@ -7,6 +7,7 @@ import java.util.List;
 public final class FacingPrefold {
 
     public static final double PIN_WIDTH_MAX = 180.0 / 32768.0 * 1.05;
+    public static final double RANGE_PIN_WIDTH_MAX = 2.5e-4;
     private static final double PIN_MATCH_TOL = 1.0e-9;
     private static final double OFFSET_ZERO_TOL = 1.0e-12;
     private static final double BASE_ARG_TOL = 1.0e-12;
@@ -258,7 +259,8 @@ public final class FacingPrefold {
             for (int t = 0; t < n; t++) {
                 if (absLo[t] == Double.NEGATIVE_INFINITY && absHi[t] == Double.POSITIVE_INFINITY) continue;
                 double width = absHi[t] - absLo[t];
-                if (!(width >= 0.0) || width > PIN_WIDTH_MAX) return null;
+                double widthMax = Double.isNaN(absPin[t]) ? RANGE_PIN_WIDTH_MAX : PIN_WIDTH_MAX;
+                if (!(width >= 0.0) || width > widthMax) return null;
                 pin[t] = Angles.wrap(Double.isNaN(absPin[t]) ? 0.5 * (absLo[t] + absHi[t]) : absPin[t]);
             }
         }
@@ -269,7 +271,7 @@ public final class FacingPrefold {
             for (int t = 0; t < n; t++) {
                 if (linkLo[t] == Double.NEGATIVE_INFINITY && linkHi[t] == Double.POSITIVE_INFINITY) continue;
                 double width = linkHi[t] - linkLo[t];
-                if (!(width >= 0.0) || width > PIN_WIDTH_MAX) return null;
+                if (!(width >= 0.0) || width > RANGE_PIN_WIDTH_MAX) return null;
                 if (width > 0.0) exactLinks = false;
                 link[t] = true;
                 linkOffset[t] = 0.5 * (linkLo[t] + linkHi[t]);

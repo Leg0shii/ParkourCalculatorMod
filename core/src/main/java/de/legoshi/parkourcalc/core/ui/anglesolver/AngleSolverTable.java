@@ -65,6 +65,10 @@ public final class AngleSolverTable {
 
     private int selectedStateTick = -1;
     private DragKind selectedStateKind;
+    private float viewMinX = Float.NEGATIVE_INFINITY;
+    private float viewMinY = Float.NEGATIVE_INFINITY;
+    private float viewMaxX = Float.POSITIVE_INFINITY;
+    private float viewMaxY = Float.POSITIVE_INFINITY;
     private Potion selectedStatePotion;
 
     // Chip drag (manual): tracked across frames while a chip is held. A dragged chip is either a
@@ -240,11 +244,6 @@ public final class AngleSolverTable {
         constraintCellRects.clear();
         stateCellRects.clear();
     }
-
-    private float viewMinX = Float.NEGATIVE_INFINITY;
-    private float viewMinY = Float.NEGATIVE_INFINITY;
-    private float viewMaxX = Float.POSITIVE_INFINITY;
-    private float viewMaxY = Float.POSITIVE_INFINITY;
 
     public void beginRows(float viewMinX, float viewMinY, float viewMaxX, float viewMaxY) {
         beginRows();

@@ -325,6 +325,12 @@ public final class AngleSolverEngine {
         Vec3dCore incumbentStart;
         Job legalFallback;
 
+        Job withDeadline(long deadlineNanos) {
+            return new Job(spec, sense, startTick, landingTick, numTicks, strafeMask, force45Mask, uiConstraints,
+                    deadlineNanos, longRun, useWindowSolver, stopOnFeasible, ilsExhaustive, legalGoal, graph,
+                    freeStartYaw);
+        }
+
         Job(JumpSpec spec, Objective.Sense sense, int startTick, int landingTick,
             int numTicks, boolean[] strafeMask, boolean[] force45Mask, List<ConstraintAt> uiConstraints,
             long deadlineNanos, LongRunSolver.LongRunConfig longRun, boolean useWindowSolver,
@@ -551,9 +557,13 @@ public final class AngleSolverEngine {
         solving = true;
         Thread worker = new Thread(() -> {
             try {
+                long firstStart = System.nanoTime();
                 Outcome o = runJob(job, token, progress, rec);
                 if (o != null && !token.get() && job.legalFallback != null && !o.result.isSuccess()) {
-                    o = runLegalFallback(job.legalFallback, token, progress, rec);
+                    long remaining = job.deadlineNanos > 0 ? job.deadlineNanos - (System.nanoTime() - firstStart) : 0L;
+                    if (job.deadlineNanos <= 0 || remaining > 0) {
+                        o = runLegalFallback(job.legalFallback.withDeadline(remaining), token, progress, rec);
+                    }
                 }
                 if (o != null && !token.get()) pending = o;
             } catch (Throwable t) {

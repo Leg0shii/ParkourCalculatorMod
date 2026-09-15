@@ -78,6 +78,7 @@ public final class HomotopyLadderNode implements NodeRuntime {
         JumpSpec pinned = new JumpSpec(at, new ArrayList<>(ctx.spec.constraints), ctx.spec.objective);
         double[] gf = at.toGameFacings(Angles.wrapAll(miss.yawsDeg));
         WrapWindowIls.Config cfg = new WrapWindowIls.Config();
+        cfg.maxAbsGf = 180.0;
         WrapWindowIls.Result w = WrapWindowIls.polish(ctx.exactModel, pinned, gf, new double[] {0.0, 0.0, 0.0, 0.0},
                 cfg, snapDeadline, nodeToken);
         if (SolverTrace.on()) {

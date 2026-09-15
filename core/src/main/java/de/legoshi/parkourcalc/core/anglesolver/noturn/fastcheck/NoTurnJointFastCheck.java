@@ -1,9 +1,9 @@
 package de.legoshi.parkourcalc.core.anglesolver.noturn.fastcheck;
 
-import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.FastCheck;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.FastCheckVerdict;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnProblem;
+import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
