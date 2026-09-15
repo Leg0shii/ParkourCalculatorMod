@@ -8,6 +8,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.FacingLattice;
 import de.legoshi.parkourcalc.core.anglesolver.solver.FacingPrefold;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
+import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
@@ -72,6 +73,32 @@ public class FacingCellCompileTest {
         assertEquals(id, FacingLattice.jointCellId((float) hi, false, false, false));
         assertFalse("the corridor is the cell, not a tolerance band", hi - lo == 2.0e-4);
         assertFalse(Double.isNaN(ClosedFormSolve.dualBound(spec)));
+    }
+
+    @Test
+    public void edgeFloatTargetKeepsItsPinAndTheFullCell() {
+        float[] cell = FacingLattice.jointCellInterval(33.3f, false, false, false);
+        double[] targets = {cell[0], Math.nextDown((double) cell[0]), cell[1], Math.nextUp((double) cell[1])};
+        for (double target : targets) {
+            AngleSolverState state = new AngleSolverState();
+            AngleSolverEngine engine = engine(state, "1.8.9");
+            state.tickConstraints(2).getConstraints().add(Constraint.scalar(Constraint.Field.F, Constraint.Op.EQ, target));
+            JumpSpec spec = engine.debugBuildSpec();
+            assertNotNull(spec);
+            double lo = Double.NaN;
+            double hi = Double.NaN;
+            for (JumpConstraint w : facingWalls(spec)) {
+                assertEquals(target, w.pin, 0.0);
+                if (w.cmp == JumpConstraint.Cmp.GE) lo = w.rhs;
+                else hi = w.rhs;
+            }
+            assertEquals("window is the full cell for target " + target, (double) cell[0], lo, 0.0);
+            assertEquals("window is the full cell for target " + target, (double) cell[1], hi, 0.0);
+            FacingPrefold pre = FacingPrefold.analyze(spec.constraints, new JumpLinearModel(spec.asScenario()));
+            assertNotNull("edge target must still prefold", pre);
+            assertEquals("the prefold pins the typed value, not the cell midpoint", target, pre.pinnedYawAt(2), 0.0);
+            assertFalse(Double.isNaN(ClosedFormSolve.dualBound(spec)));
+        }
     }
 
     @Test

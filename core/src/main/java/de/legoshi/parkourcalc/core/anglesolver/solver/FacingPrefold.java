@@ -145,6 +145,11 @@ public final class FacingPrefold {
         return identity ? n : vars;
     }
 
+    public double pinnedYawAt(int t) {
+        if (identity || varOf[t] >= 0) return Double.NaN;
+        return Angles.wrap(pinYaw[t]);
+    }
+
     public double[] pinnedYaws() {
         if (identity || vars > 0) return null;
         double[] out = new double[n];
@@ -220,6 +225,7 @@ public final class FacingPrefold {
         int n = lin.n;
         double[] absLo = null;
         double[] absHi = null;
+        double[] absPin = null;
         double[] linkLo = null;
         double[] linkHi = null;
         for (JumpConstraint c : constraints) {
@@ -229,8 +235,13 @@ public final class FacingPrefold {
                 if (absLo == null) {
                     absLo = filled(n, Double.NEGATIVE_INFINITY);
                     absHi = filled(n, Double.POSITIVE_INFINITY);
+                    absPin = filled(n, Double.NaN);
                 }
                 tighten(absLo, absHi, c.t1, c.cmp, c.rhs);
+                if (c.pin != null) {
+                    if (Double.isNaN(absPin[c.t1])) absPin[c.t1] = c.pin;
+                    else if (Math.abs(Angles.wrap(absPin[c.t1] - c.pin)) > PIN_MATCH_TOL) return null;
+                }
             } else if (c.op == JumpConstraint.Op.MINUS && c.t2 == c.t1 - 1 && c.t1 >= 1) {
                 if (linkLo == null) {
                     linkLo = filled(n, Double.NEGATIVE_INFINITY);
@@ -248,7 +259,7 @@ public final class FacingPrefold {
                 if (absLo[t] == Double.NEGATIVE_INFINITY && absHi[t] == Double.POSITIVE_INFINITY) continue;
                 double width = absHi[t] - absLo[t];
                 if (!(width >= 0.0) || width > PIN_WIDTH_MAX) return null;
-                pin[t] = Angles.wrap(0.5 * (absLo[t] + absHi[t]));
+                pin[t] = Angles.wrap(Double.isNaN(absPin[t]) ? 0.5 * (absLo[t] + absHi[t]) : absPin[t]);
             }
         }
         boolean[] link = new boolean[n];

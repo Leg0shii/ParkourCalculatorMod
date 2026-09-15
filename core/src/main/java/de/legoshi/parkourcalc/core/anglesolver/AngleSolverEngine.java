@@ -1569,11 +1569,10 @@ public final class AngleSolverEngine {
         boolean grounded = !Double.isNaN(phys.slipAt(segTick));
         boolean boostTick = !modern && grounded && phys.jumpAt(segTick) && phys.sprintAt(segTick);
         float[] cell = FacingLattice.jointCellInterval((float) targetDeg, modern, sine262, boostTick);
-        double halfWidth = Math.max(0.0, Math.min(targetDeg - cell[0], cell[1] - targetDeg));
-        double lo = targetDeg - halfWidth;
-        double hi = targetDeg + halfWidth;
-        out.add(new JumpConstraint(JumpConstraint.Mode.F, segTick, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.GE, lo, tag + "eqLo"));
-        out.add(new JumpConstraint(JumpConstraint.Mode.F, segTick, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.LE, hi, tag + "eqHi"));
+        double lo = cell[0];
+        double hi = cell[1];
+        out.add(new JumpConstraint(JumpConstraint.Mode.F, segTick, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.GE, lo, tag + "eqLo", targetDeg));
+        out.add(new JumpConstraint(JumpConstraint.Mode.F, segTick, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.LE, hi, tag + "eqHi", targetDeg));
     }
 
     private void addSeamDeltaFacing(List<JumpConstraint> out, Constraint c, String tag, float seedYaw) {
