@@ -12,6 +12,7 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 
 public final class ConstraintKeyController {
@@ -24,10 +25,12 @@ public final class ConstraintKeyController {
     private final boolean modernCollision;
     private final IntSupplier rowCount;
     private final Settings settings;
+    private final Consumer<String> hudMessage;
 
     public ConstraintKeyController(MinecraftAccess mc, AngleSolverState state, SelectionManager selection,
                                    ConstraintSelection constraintSelection, Runnable onChanged,
-                                   boolean modernCollision, IntSupplier rowCount, Settings settings) {
+                                   boolean modernCollision, IntSupplier rowCount, Settings settings,
+                                   Consumer<String> hudMessage) {
         this.mc = mc;
         this.state = state;
         this.selection = selection;
@@ -36,6 +39,7 @@ public final class ConstraintKeyController {
         this.modernCollision = modernCollision;
         this.rowCount = rowCount;
         this.settings = settings;
+        this.hudMessage = hudMessage;
     }
 
     public void onKey(boolean enter, boolean remove) {
@@ -89,7 +93,8 @@ public final class ConstraintKeyController {
                 double[] r = ConstraintDeriver.deriveFootprint(support, hit.x, hit.z, obstacles, modernCollision,
                         mc.getPlayerYaw());
                 if (merge) {
-                    state.mergeFootprint(tick, r[0], r[1], r[2], r[3]);
+                    double[] merged = mergedFootprint(tick, r, support.max.y, hit);
+                    state.setFootprint(tick, merged[0], merged[1], merged[2], merged[3]);
                 } else {
                     state.setFootprint(tick, r[0], r[1], r[2], r[3]);
                 }
@@ -129,6 +134,25 @@ public final class ConstraintKeyController {
         for (int[] ti : toDelete) state.deleteConstraint(ti[0], ti[1]);
         constraintSelection.clear();
         onChanged.run();
+    }
+
+    private double[] mergedFootprint(int tick, double[] fresh, double footY, Vec3dCore hit) {
+        double[] existing = state.footprintOrNull(tick);
+        if (existing == null) return fresh;
+        double[] union = {
+                Math.min(fresh[0], existing[0]), Math.max(fresh[1], existing[1]),
+                Math.min(fresh[2], existing[2]), Math.max(fresh[3], existing[3])};
+        double h = ConstraintDeriver.HALF;
+        int by = (int) Math.floor(footY);
+        List<AABB> obstacles = mc.getCollisionBoxes(
+                (int) Math.floor(union[0] - h), by, (int) Math.floor(union[2] - h),
+                (int) Math.ceil(union[1] + h), by + 2, (int) Math.ceil(union[3] + h));
+        double[] clipped = ConstraintDeriver.clipMergedFootprint(union, existing, footY, hit.x, hit.z, obstacles);
+        if (clipped != null) return clipped;
+        if (hudMessage != null) {
+            hudMessage.accept("Merged footprint at T" + (tick + 1) + " spans a block; kept the plain union");
+        }
+        return union;
     }
 
     private AABB supportBox(int bx, int by, int bz, Vec3dCore hit) {
