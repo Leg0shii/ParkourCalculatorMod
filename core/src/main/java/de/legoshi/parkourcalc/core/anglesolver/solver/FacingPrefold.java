@@ -47,6 +47,13 @@ public final class FacingPrefold {
             return parsed.group[t] == openGroup;
         }
 
+        public boolean singleHeading() {
+            for (int t = 0; t < parsed.n; t++) {
+                if (parsed.group[t] != openGroup) return false;
+            }
+            return true;
+        }
+
         public boolean pinnedMember(int t) {
             return !Double.isNaN(parsed.groupPin[parsed.group[t]]);
         }
@@ -120,6 +127,13 @@ public final class FacingPrefold {
             if (varOf[t] < 0) k++;
         }
         return k;
+    }
+
+    public double[] pinnedYaws() {
+        if (identity || vars > 0) return null;
+        double[] out = new double[n];
+        for (int t = 0; t < n; t++) out[t] = Angles.wrap(pinYaw[t]);
+        return out;
     }
 
     public int varCount() {
