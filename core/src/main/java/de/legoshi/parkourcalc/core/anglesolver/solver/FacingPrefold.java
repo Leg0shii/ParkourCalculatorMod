@@ -62,7 +62,7 @@ public final class FacingPrefold {
         public double pinnedInput(int t, int axis) {
             double phi = parsed.baseArg[t]
                     + (parsed.groupPin[parsed.group[t]] + parsed.offset[t]) * RAD;
-            return axis == 0 ? parsed.mMag[t] * Math.cos(phi) : parsed.mMag[t] * Math.sin(phi);
+            return axis == 0 ? parsed.mMag[t] * StrictMath.cos(phi) : parsed.mMag[t] * StrictMath.sin(phi);
         }
 
     }
@@ -338,9 +338,9 @@ public final class FacingPrefold {
             if (gx * gx + gz * gz < 1.0e-18) {
                 boolean max = obj.sense == Objective.Sense.MAX;
                 if (obj.isCustomAngle()) {
-                    double rad = Math.toRadians(obj.customYaw);
-                    gx = (max ? 1.0 : -1.0) * -Math.sin(rad);
-                    gz = (max ? 1.0 : -1.0) * Math.cos(rad);
+                    double rad = Angles.rad(obj.customYaw);
+                    gx = (max ? 1.0 : -1.0) * -StrictMath.sin(rad);
+                    gz = (max ? 1.0 : -1.0) * StrictMath.cos(rad);
                 } else if (obj.axis == JumpPhysicsInputs.Axis.X) {
                     gx = max ? 1.0 : -1.0;
                     gz = 0.0;
@@ -356,7 +356,7 @@ public final class FacingPrefold {
 
     private double pinnedInput(int t, int axis) {
         double phi = baseArg[t] + pinYaw[t] * RAD;
-        return axis == 0 ? mMag[t] * Math.cos(phi) : mMag[t] * Math.sin(phi);
+        return axis == 0 ? mMag[t] * StrictMath.cos(phi) : mMag[t] * StrictMath.sin(phi);
     }
 
     private static void tighten(double[] lo, double[] hi, int t, JumpConstraint.Cmp cmp, double rhs) {

@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.anglesolver;
 
+import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.Face;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SupportOverlap;
@@ -162,8 +163,8 @@ public final class ConstraintDeriver {
                 if (o.min.x >= clickX - EPS) xHi = Math.min(xHi, o.min.x - HALF);
             }
         }
-        double yawRad = Math.toRadians(facingYawDeg);
-        boolean facingX = Math.abs(-Math.sin(yawRad)) >= Math.abs(Math.cos(yawRad));
+        double yawRad = Angles.rad(facingYawDeg);
+        boolean facingX = Math.abs(-StrictMath.sin(yawRad)) >= Math.abs(StrictMath.cos(yawRad));
         double[] alongFacing = facingX
                 ? new double[] {base[0], base[1], zLo, zHi}
                 : new double[] {xLo, xHi, base[2], base[3]};

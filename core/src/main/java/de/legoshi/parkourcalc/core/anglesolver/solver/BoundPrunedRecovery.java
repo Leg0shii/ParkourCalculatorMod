@@ -341,8 +341,8 @@ public final class BoundPrunedRecovery {
             out[0][t] = Math.abs(vx);
             out[1][t] = Math.abs(vz);
             double phi = free.baseArg(t) + yawsAbs[t] * RAD;
-            vx += free.mMag(t) * Math.cos(phi);
-            vz += free.mMag(t) * Math.sin(phi);
+            vx += free.mMag(t) * StrictMath.cos(phi);
+            vz += free.mMag(t) * StrictMath.sin(phi);
             vx *= free.friction(t);
             vz *= free.friction(t);
         }
@@ -460,9 +460,9 @@ public final class BoundPrunedRecovery {
         boolean max = spec.objective.sense == Objective.Sense.MAX;
         double cp;
         if (spec.objective.isCustomAngle()) {
-            double rad = Math.toRadians(spec.objective.customYaw);
-            double dx = -Math.sin(rad);
-            double dz = Math.cos(rad);
+            double rad = Angles.rad(spec.objective.customYaw);
+            double dx = -StrictMath.sin(rad);
+            double dz = StrictMath.cos(rad);
             if (spec.objective.isMotion()) {
                 int t = spec.objective.tick;
                 double c0 = lin.constPos(t, 0) - (t > 0 ? lin.constPos(t - 1, 0) : 0.0);
@@ -612,9 +612,9 @@ public final class BoundPrunedRecovery {
             this.max = spec.objective.sense == Objective.Sense.MAX;
             double cp;
             if (spec.objective.isCustomAngle()) {
-                double rad = Math.toRadians(spec.objective.customYaw);
-                double dx = -Math.sin(rad);
-                double dz = Math.cos(rad);
+                double rad = Angles.rad(spec.objective.customYaw);
+                double dx = -StrictMath.sin(rad);
+                double dz = StrictMath.cos(rad);
                 if (spec.objective.isMotion()) {
                     int t = spec.objective.tick;
                     double c0 = lin.constPos(t, 0) - (t > 0 ? lin.constPos(t - 1, 0) : 0.0);
@@ -922,8 +922,8 @@ public final class BoundPrunedRecovery {
                 lastRestoreIters = iter + 1;
                 for (int t = 0; t < n; t++) {
                     double phi = lin.baseArg(t) + theta[t] * RAD;
-                    ux[t] = lin.mMag(t) * Math.cos(phi);
-                    uz[t] = lin.mMag(t) * Math.sin(phi);
+                    ux[t] = lin.mMag(t) * StrictMath.cos(phi);
+                    uz[t] = lin.mMag(t) * StrictMath.sin(phi);
                 }
                 for (int p = 0; p < n; p++) {
                     java.util.Arrays.fill(a[p], 0.0);
@@ -1107,8 +1107,8 @@ public final class BoundPrunedRecovery {
                         uz = new double[n];
                         for (int t = 0; t < n; t++) {
                             double phi = lin.baseArg(t) + theta[t] * RAD;
-                            ux[t] = lin.mMag(t) * Math.cos(phi);
-                            uz[t] = lin.mMag(t) * Math.sin(phi);
+                            ux[t] = lin.mMag(t) * StrictMath.cos(phi);
+                            uz[t] = lin.mMag(t) * StrictMath.sin(phi);
                         }
                     }
                     JumpLinearModel.Wall w = walls.get(j);

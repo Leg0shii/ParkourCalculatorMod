@@ -35,7 +35,7 @@ jobs:
         run: |
           EXTRA=""
           if [ "${{ github.base_ref }}" = "main" ]; then EXTRA="-PverySlowTests"; fi
-          ./gradlew build -x tableStyleCheck -PslowTests $EXTRA -Dorg.gradle.java.home="$JAVA_HOME"
+          ./gradlew build :core:testJava8 -x tableStyleCheck -PslowTests $EXTRA -Dorg.gradle.java.home="$JAVA_HOME"
       - name: capture build artifacts
         uses: actions/upload-artifact@v4
         with:
