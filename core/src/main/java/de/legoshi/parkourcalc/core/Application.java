@@ -548,13 +548,14 @@ public final class Application {
         }
         pollSolver();
         if (noTurnSearch != null) noTurnSearch.poll();
+        boolean pathInert = isControlPanelOpen() || !settings.showPath;
         dragController.tick(
                 mc.getEyePosition(),
                 mc.getLookDirection(),
                 mc.isMousePressedLeft(),
                 mc.getCursorScreenX(),
                 mc.getCursorScreenY(),
-                isControlPanelOpen(),
+                pathInert,
                 mc.isShiftDown()
         );
         selectController.tick(
@@ -563,7 +564,7 @@ public final class Application {
                 mc.isMousePressedLeft(),
                 mc.getCursorScreenX(),
                 mc.getCursorScreenY(),
-                isControlPanelOpen()
+                pathInert
         );
         yawGizmo.tick(
                 mc.getEyePosition(),
@@ -572,7 +573,7 @@ public final class Application {
                 mc.isCtrlDown(),
                 mc.getCursorScreenX(),
                 mc.getCursorScreenY(),
-                isControlPanelOpen()
+                pathInert
         );
     }
 
@@ -749,7 +750,7 @@ public final class Application {
 
     public boolean shouldSuppressLeftClick() {
         if (isPlaybackRunning()) return false;
-        if (isControlPanelOpen()) return false;
+        if (isControlPanelOpen() || !settings.showPath) return false;
         if (dragController.isDragging()) return true;
         if (!mc.isReady()) return false;
         return yawGizmo.isCursorOverAnyBox(mc.getEyePosition(), mc.getLookDirection())
@@ -758,7 +759,7 @@ public final class Application {
 
     public boolean shouldSuppressRightClick() {
         if (isPlaybackRunning()) return false;
-        if (isControlPanelOpen()) return false;
+        if (isControlPanelOpen() || !settings.showPath) return false;
         if (yawGizmo.isEngaged()) return true;
         if (!mc.isReady()) return false;
         return yawGizmo.isCursorOverAnyBox(mc.getEyePosition(), mc.getLookDirection());
