@@ -321,6 +321,13 @@ public final class AngleSolverEngine {
         final boolean freeStartYaw;
         double[] incumbentYaws;
         Vec3dCore incumbentStart;
+        Job legalFallback;
+
+        Job withDeadline(long deadlineNanos) {
+            return new Job(spec, sense, startTick, landingTick, numTicks, strafeMask, force45Mask, uiConstraints,
+                    deadlineNanos, longRun, useWindowSolver, stopOnFeasible, ilsExhaustive, legalGoal, graph,
+                    freeStartYaw);
+        }
 
         Job(JumpSpec spec, Objective.Sense sense, int startTick, int landingTick,
             int numTicks, boolean[] strafeMask, boolean[] force45Mask, List<ConstraintAt> uiConstraints,
@@ -417,15 +424,28 @@ public final class AngleSolverEngine {
                 state.setResult(r);
                 return null;
             }
-            constraints.remove(legalGoal);
         }
 
+        boolean stopOnFeasible = stopOnFeasibleFor(state, effort);
+        boolean legalWallHard = legalGoal != null && stopOnFeasible;
+        if (legalGoal != null && !legalWallHard) constraints.remove(legalGoal);
+        SolverGraph graph = graphOverride != null ? graphOverride : GraphFactory.forState(state, effort);
         JumpSpec spec = new JumpSpec(ph.inputs, constraints, objective);
-        return new Job(spec, objective.sense, startTick, landingTick, numTicks, ph.strafeMask,
+        Job job = new Job(spec, objective.sense, startTick, landingTick, numTicks, ph.strafeMask,
                 ph.force45Mask, uiCons,
                 deadlineNanosFor(state, effort), longRunConfigFor(state, effort), useWindowSolverFor(state, effort),
-                stopOnFeasibleFor(state, effort), ilsExhaustiveFor(state, effort), legalGoal,
-                graphOverride != null ? graphOverride : GraphFactory.forState(state, effort), freeStartYaw);
+                stopOnFeasible, ilsExhaustiveFor(state, effort), legalGoal, graph, freeStartYaw);
+        if (legalWallHard) {
+            List<JumpConstraint> reduced = new ArrayList<>(constraints);
+            reduced.remove(legalGoal);
+            JumpSpec fallbackSpec = new JumpSpec(ph.inputs.copy(), reduced, objective);
+            job.legalFallback = new Job(fallbackSpec, objective.sense, startTick, landingTick, numTicks,
+                    ph.strafeMask, ph.force45Mask, uiCons,
+                    deadlineNanosFor(state, effort), longRunConfigFor(state, effort),
+                    useWindowSolverFor(state, effort), stopOnFeasible, ilsExhaustiveFor(state, effort),
+                    legalGoal, graph, freeStartYaw);
+        }
+        return job;
     }
 
     public String legalGoalWallLabel() {
@@ -535,7 +555,14 @@ public final class AngleSolverEngine {
         solving = true;
         Thread worker = new Thread(() -> {
             try {
+                long firstStart = System.nanoTime();
                 Outcome o = runJob(job, token, progress, rec);
+                if (o != null && !token.get() && job.legalFallback != null && !o.result.isSuccess()) {
+                    long remaining = job.deadlineNanos > 0 ? job.deadlineNanos - (System.nanoTime() - firstStart) : 0L;
+                    if (job.deadlineNanos <= 0 || remaining > 0) {
+                        o = runLegalFallback(job.legalFallback.withDeadline(remaining), token, progress, rec);
+                    }
+                }
                 if (o != null && !token.get()) pending = o;
             } catch (Throwable t) {
                 t.printStackTrace();
@@ -918,6 +945,14 @@ public final class AngleSolverEngine {
         return liveTraj;
     }
 
+    private Outcome runLegalFallback(Job fallback, AtomicBoolean cancel, SolveProgress progress, RunRecording rec) {
+        RunRecording fallbackRec = new RunRecording(rec.config,
+                SolveRunRecord.problemOf(fallback.spec, countJumps(fallback.spec.asScenario())), progress, rec.startNanos);
+        currentJob = fallback;
+        recording = fallbackRec;
+        return runJob(fallback, cancel, progress, fallbackRec);
+    }
+
     private Outcome runJob(Job job, AtomicBoolean cancel, SolveProgress progress, RunRecording rec) {
         JumpSpec spec = job.spec;
         lastSpecDebug = spec;
@@ -946,8 +981,8 @@ public final class AngleSolverEngine {
                     sc.numTicks, spec.constraints.size(), countJumps(sc),
                     job.deadlineNanos / 1_000_000_000L, job.useWindowSolver, job.ilsExhaustive, job.stopOnFeasible));
         }
-        GraphContext ctx = new GraphContext(spec, model, freeBox, job.legalGoal, FEAS_TOL, cancel, progress,
-                sequentialSolve, job.longRun);
+        GraphContext ctx = new GraphContext(spec, model, freeBox, job.legalFallback != null ? null : job.legalGoal,
+                FEAS_TOL, cancel, progress, sequentialSolve, job.longRun);
         if (job.deadlineNanos > 0) ctx.setOverallDeadline(System.nanoTime() + job.deadlineNanos);
         if (rec != null) rec.ctx = ctx;
         lastRunState = ctx.runState;

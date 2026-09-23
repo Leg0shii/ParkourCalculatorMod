@@ -92,6 +92,10 @@ anglesolver/
                            spec; velocity/EQ/cap/off-tick/off-axis never selected; ties refuse);
                            deterministic legal solve on the synth-legal-shortfall fixture with the
                            reported shortfall and every hard wall met
+  LegalModeGh459Test.java  gh-459 (SlowSolverTests): legal mode on a landable jump (gh459-legal-mode
+                           capture, FAST) lands 15/15 at the goal wall with a non-positive shortfall,
+                           both on the plain Fast graph and with the seed stage starved to 1 ms (the
+                           receding-horizon path that used to stop 0.92 short once the wall was dropped)
   RazorLegalReplayTest.java  byte-exact replay pins for the three delivered rung legal attempts
                            (legal / wrap720 / turn360): locked RAW rows realized without wrapping,
                            hard walls feasible under the rung patch, shortfall within 1e-9 of the
