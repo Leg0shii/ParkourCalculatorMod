@@ -972,6 +972,10 @@ public final class AngleSolverEngine {
         String solverName = ctx.chain();
         boolean stageLocked = ctx.stageLocked();
         double dualGap = Double.isNaN(ctx.reachBound()) ? Double.NaN : cand.dualGap;
+        if (Double.isNaN(dualGap) && ctx.dualGapRequested() && !Double.isNaN(ctx.reachBound()) && cand.feasible) {
+            double bound = ctx.reachBound();
+            dualGap = Math.max(0.0, ctx.maximize() ? bound - cand.objective : cand.objective - bound);
+        }
         long solveNanos = System.nanoTime() - solveStart;
         if (SolverTrace.on()) {
             double doneViol = stageLocked
