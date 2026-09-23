@@ -5,6 +5,7 @@ import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.Constraint;
 import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
+import de.legoshi.parkourcalc.core.anglesolver.solver.FacingPrefold;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
@@ -70,12 +71,18 @@ public class FirstTickDeltaFacingTest {
         List<JumpConstraint> walls = facingWalls(spec);
         assertEquals(2, walls.size());
         float seed = spec.asScenario().startYaw;
+        double lo = Double.NaN;
+        double hi = Double.NaN;
         for (JumpConstraint w : walls) {
             assertEquals(0, w.t1);
             assertNull(w.t2);
             assertEquals(JumpConstraint.Op.PLUS, w.op);
-            assertEquals(seed, w.rhs, MET_TOL + 1.0e-9);
+            assertEquals(seed, w.rhs, FacingPrefold.PIN_WIDTH_MAX);
+            if (w.cmp == JumpConstraint.Cmp.GE) lo = w.rhs;
+            else hi = w.rhs;
         }
+        assertTrue("the seam pin must bracket the seed facing", lo <= seed && seed <= hi);
+        assertTrue("the seam pin is one sine-table joint cell", hi - lo <= FacingPrefold.PIN_WIDTH_MAX);
         assertFalse(spec.asScenario().yawLockedPerTick[0]);
     }
 

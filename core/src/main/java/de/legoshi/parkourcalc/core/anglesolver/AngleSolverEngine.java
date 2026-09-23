@@ -19,6 +19,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ClosedFormSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ClosestMiss;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
+import de.legoshi.parkourcalc.core.anglesolver.solver.FacingLattice;
 import de.legoshi.parkourcalc.core.anglesolver.solver.LongRunSolver;
 import de.legoshi.parkourcalc.core.anglesolver.solver.RecoveryLadder;
 import de.legoshi.parkourcalc.core.anglesolver.solver.RelaxationRecovery;
@@ -403,7 +404,7 @@ public final class AngleSolverEngine {
                 state.getSmoothLambda());
         for (ConstraintAt ca : uiCons) {
             if (consumed.contains(ca.c)) continue;
-            addMapped(constraints, ca.c, ca.absTick, ca.segTick, numTicks, ph.inputs.startYaw);
+            addMapped(constraints, ca.c, ca.absTick, ca.segTick, numTicks, ph.inputs.startYaw, ph.inputs);
         }
 
         JumpConstraint legalGoal = null;
@@ -441,7 +442,7 @@ public final class AngleSolverEngine {
         consumeFirstTickZeroTurn(uiCons, consumed);
         for (ConstraintAt ca : uiCons) {
             if (consumed.contains(ca.c)) continue;
-            addMapped(constraints, ca.c, ca.absTick, ca.segTick, numTicks, seamSeedYaw);
+            addMapped(constraints, ca.c, ca.absTick, ca.segTick, numTicks, seamSeedYaw, null);
         }
         Objective objective = new Objective(axis(state.getAxis()), sense(state.getGoal()), numTicks);
         String[] whyNot = new String[1];
@@ -1388,7 +1389,8 @@ public final class AngleSolverEngine {
 
     // ---- constraint mapping (UI Constraint -> solver JumpConstraint) -----------
 
-    private void addMapped(List<JumpConstraint> out, Constraint c, int absTick, int segTick, int numTicks, float seedYaw) {
+    private void addMapped(List<JumpConstraint> out, Constraint c, int absTick, int segTick, int numTicks, float seedYaw,
+                           JumpPhysicsInputs phys) {
         String tag = (c.isVsDz() ? "dXvsdZ" : ConstraintText.fieldLabel(c)) + "@" + absTick;
         int startTick = absTick - segTick;
         switch (c.getField()) {
@@ -1412,6 +1414,10 @@ public final class AngleSolverEngine {
                 break;
             case F:
                 if (segTick >= numTicks) break; // no facing for the post-final state
+                if (!c.isRange() && c.getOp() == Constraint.Op.EQ && phys != null) {
+                    addFacingCell(out, segTick, c.getValue(), tag, phys);
+                    break;
+                }
                 addScalarOrRange(out, JumpConstraint.Mode.F, segTick, c, tag);
                 break;
             case DX:
@@ -1427,6 +1433,10 @@ public final class AngleSolverEngine {
             case DF:
                 if (segTick >= numTicks) break;
                 if (segTick < 1) {
+                    if (c.getOp() == Constraint.Op.EQ && !c.isRange() && phys != null) {
+                        addFacingCell(out, 0, (double) seedYaw + c.getValue(), tag, phys);
+                        break;
+                    }
                     addSeamDeltaFacing(out, c, tag, seedYaw);
                     break;
                 }
@@ -1469,6 +1479,18 @@ public final class AngleSolverEngine {
         } else {
             out.add(new JumpConstraint(mode, t1, t2, JumpConstraint.Op.MINUS, cmp(c.getOp()), c.getValue(), tag));
         }
+    }
+
+    private void addFacingCell(List<JumpConstraint> out, int segTick, double targetDeg, String tag, JumpPhysicsInputs phys) {
+        boolean modern = model instanceof ExactJumpModel && ((ExactJumpModel) model).modern();
+        boolean sine262 = model instanceof ExactJumpModel && ((ExactJumpModel) model).sine262();
+        boolean grounded = !Double.isNaN(phys.slipAt(segTick));
+        boolean boostTick = !modern && grounded && phys.jumpAt(segTick) && phys.sprintAt(segTick);
+        float[] cell = FacingLattice.jointCellInterval((float) targetDeg, modern, sine262, boostTick);
+        double lo = cell[0];
+        double hi = cell[1];
+        out.add(new JumpConstraint(JumpConstraint.Mode.F, segTick, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.GE, lo, tag + "eqLo", targetDeg));
+        out.add(new JumpConstraint(JumpConstraint.Mode.F, segTick, null, JumpConstraint.Op.PLUS, JumpConstraint.Cmp.LE, hi, tag + "eqHi", targetDeg));
     }
 
     private void addSeamDeltaFacing(List<JumpConstraint> out, Constraint c, String tag, float seedYaw) {
