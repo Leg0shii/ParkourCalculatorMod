@@ -11,12 +11,14 @@ import net.minecraft.block.BlockBasePressurePlate;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.multiplayer.PlayerControllerMP;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
@@ -143,6 +145,21 @@ public final class Forge8MinecraftAccess implements MinecraftAccess {
     @Override
     public double getEyeHeight(boolean sneaking) {
         return sneaking ? 1.54 : 1.62;
+    }
+
+    @Override
+    public double getBlockReach() {
+        PlayerControllerMP controller = Minecraft.getMinecraft().playerController;
+        return controller != null ? controller.getBlockReachDistance() : 4.5;
+    }
+
+    @Override
+    public Vec3dCore getLookVector(float yawDeg, float pitchDeg) {
+        float f = MathHelper.cos(-yawDeg * 0.017453292F - (float) Math.PI);
+        float f1 = MathHelper.sin(-yawDeg * 0.017453292F - (float) Math.PI);
+        float f2 = -MathHelper.cos(-pitchDeg * 0.017453292F);
+        float f3 = MathHelper.sin(-pitchDeg * 0.017453292F);
+        return new Vec3dCore(f1 * f2, f3, f * f2);
     }
 
     @Override

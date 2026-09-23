@@ -78,6 +78,17 @@ public interface MinecraftAccess {
         return -1.0;
     }
 
+    default double getBlockReach() {
+        return 4.5;
+    }
+
+    default Vec3dCore getLookVector(float yawDeg, float pitchDeg) {
+        double yawRad = Math.toRadians(yawDeg);
+        double pitchRad = Math.toRadians(pitchDeg);
+        double cosP = Math.cos(pitchRad);
+        return new Vec3dCore(-Math.sin(yawRad) * cosP, -Math.sin(pitchRad), Math.cos(yawRad) * cosP);
+    }
+
     /** Current state of the left mouse button (true while held). */
     boolean isMousePressedLeft();
 
