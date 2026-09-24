@@ -351,7 +351,7 @@ public final class GateFoldFinder {
         for (int r = 0; r <= HOMO_RUNGS; r++) {
             if (cancel != null && cancel.get()) break;
             if (deadline.over()) break;
-            double thrRung = realThr * Math.pow(2.0, -(HOMO_RUNGS - r));
+            double thrRung = realThr * StrictMath.pow(2.0, -(HOMO_RUNGS - r));
             boolean[] zx = new boolean[n];
             boolean[] zz = new boolean[n];
             linFull.zeroingPattern(Angles.wrapAll(theta), thrRung, perAxis, zx, zz);
@@ -747,8 +747,8 @@ public final class GateFoldFinder {
         if (obj.isMotion()) return 0.0;
         double s = obj.sense == Objective.Sense.MAX ? 1.0 : -1.0;
         if (obj.isCustomAngle()) {
-            double rad = Math.toRadians(obj.customYaw);
-            return axis == 0 ? s * -Math.sin(rad) : s * Math.cos(rad);
+            double rad = Angles.rad(obj.customYaw);
+            return axis == 0 ? s * -StrictMath.sin(rad) : s * StrictMath.cos(rad);
         }
         if (obj.axis == JumpPhysicsInputs.Axis.X) return axis == 0 ? s : 0.0;
         return axis == 1 ? s : 0.0;
@@ -886,8 +886,8 @@ public final class GateFoldFinder {
     private static void inputVectors(JumpLinearModel lin, double[] theta, double[] ux, double[] uz) {
         for (int t = 0; t < theta.length; t++) {
             double phi = lin.baseArg(t) + theta[t] * RAD;
-            ux[t] = lin.mMag(t) * Math.cos(phi);
-            uz[t] = lin.mMag(t) * Math.sin(phi);
+            ux[t] = lin.mMag(t) * StrictMath.cos(phi);
+            uz[t] = lin.mMag(t) * StrictMath.sin(phi);
         }
     }
 

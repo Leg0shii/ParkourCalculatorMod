@@ -116,7 +116,7 @@ final class SmoothFaceRecovery {
         for (int t = 0; t < lin.n; t++) {
             if (w.coef[t] == 0.0) continue;
             double phi = lin.baseArg(t) + gf[t] * RAD;
-            double u = w.axis == 0 ? Math.cos(phi) : Math.sin(phi);
+            double u = w.axis == 0 ? StrictMath.cos(phi) : StrictMath.sin(phi);
             s += w.coef[t] * lin.mMag(t) * u;
         }
         return s;
@@ -129,7 +129,7 @@ final class SmoothFaceRecovery {
                 continue;
             }
             double phi = lin.baseArg(t) + gf[t] * RAD;
-            double d = w.axis == 0 ? -Math.sin(phi) : Math.cos(phi);
+            double d = w.axis == 0 ? -StrictMath.sin(phi) : StrictMath.cos(phi);
             out[t] = w.coef[t] * lin.mMag(t) * d * RAD;
         }
     }

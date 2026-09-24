@@ -132,16 +132,16 @@ final class UnitScreen {
 
     void fillSeed(double[] seedOut) {
         for (int t = 0; t < seedOut.length; t++) {
-            seedOut[t] = Angles.wrap(Math.toDegrees(bestFacing[groupOf[t]]));
+            seedOut[t] = Angles.wrap(Angles.deg(bestFacing[groupOf[t]]));
         }
     }
 
     double[] screen(double centerTheta) {
         double coarse = 2.0 * Math.PI / REF;
-        double refRad = Math.toRadians(Angles.wrap(Double.isNaN(centerTheta) ? 0.0 : centerTheta));
+        double refRad = Angles.rad(Angles.wrap(Double.isNaN(centerTheta) ? 0.0 : centerTheta));
         for (int g = 0; g < groups; g++) {
-            unitCos[g] = Math.cos(refRad);
-            unitSin[g] = Math.sin(refRad);
+            unitCos[g] = StrictMath.cos(refRad);
+            unitSin[g] = StrictMath.sin(refRad);
         }
         linearize();
 
@@ -154,7 +154,7 @@ final class UnitScreen {
             double best = Double.POSITIVE_INFINITY;
             if (k == 0) {
                 for (double off : RESTART_OFFSETS) {
-                    double v = solveFrom(theta, Math.cos(theta + off), Math.sin(theta + off), null, null, true);
+                    double v = solveFrom(theta, StrictMath.cos(theta + off), StrictMath.sin(theta + off), null, null, true);
                     if (v < best) {
                         best = v;
                         keep(coarseCos[k], coarseSin[k]);
@@ -165,7 +165,7 @@ final class UnitScreen {
                 best = solveFrom(theta, 0.0, 0.0, coarseCos[from], coarseSin[from], false);
                 keep(coarseCos[k], coarseSin[k]);
                 if (k % RESTART_EVERY == 0) {
-                    double v = solveFrom(theta, Math.cos(theta), Math.sin(theta), null, null, true);
+                    double v = solveFrom(theta, StrictMath.cos(theta), StrictMath.sin(theta), null, null, true);
                     if (v < best) {
                         best = v;
                         keep(coarseCos[k], coarseSin[k]);
@@ -222,7 +222,7 @@ final class UnitScreen {
         }
         resetShift();
         double viol = descentViol(shiftAcc, null, null, 0.0, 0.0, true);
-        for (int g = 0; g < groups; g++) bestFacing[g] = Math.atan2(unitSin[g], unitCos[g]);
+        for (int g = 0; g < groups; g++) bestFacing[g] = StrictMath.atan2(unitSin[g], unitCos[g]);
         double dp;
         if (d.maximize) dp = d.objAxisX ? Math.min(bestHiX, d.hiShiftX) : Math.min(bestHiZ, d.hiShiftZ);
         else dp = d.objAxisX ? Math.max(bestLoX, d.loShiftX) : Math.max(bestLoZ, d.loShiftZ);
@@ -232,7 +232,7 @@ final class UnitScreen {
         d.witnessHiX = bestHiX;
         d.witnessLoZ = bestLoZ;
         d.witnessHiZ = bestHiZ;
-        return new double[]{viol, Angles.wrap(Math.toDegrees(bestTheta)), bestObj};
+        return new double[]{viol, Angles.wrap(Angles.deg(bestTheta)), bestObj};
     }
 
     private int nearestCoarse(double theta, double coarse) {
@@ -254,7 +254,7 @@ final class UnitScreen {
         }
         for (int t = 0; t < bf.n; t++) {
             int g = groupOf[t];
-            bf.wrapped[t] = Angles.wrap(Math.toDegrees(Math.atan2(baseSin[g], baseCos[g])));
+            bf.wrapped[t] = Angles.wrap(Angles.deg(StrictMath.atan2(baseSin[g], baseCos[g])));
         }
         bf.run();
         for (int wi = 0; wi < walls; wi++) {
@@ -268,8 +268,8 @@ final class UnitScreen {
                              boolean global) {
         for (int g = 0; g < groups; g++) {
             if (g == mainGroup) {
-                unitCos[g] = Math.cos(theta);
-                unitSin[g] = Math.sin(theta);
+                unitCos[g] = StrictMath.cos(theta);
+                unitSin[g] = StrictMath.sin(theta);
             } else if (fromCos != null) {
                 unitCos[g] = fromCos[g];
                 unitSin[g] = fromSin[g];
@@ -305,11 +305,11 @@ final class UnitScreen {
             for (int wi = 0; wi < walls; wi++) {
                 shiftNoU[wi] = shiftAcc[wi] + ua[wi] * (unitCos[g] - bc) + ub[wi] * (unitSin[g] - bs);
             }
-            double bestPsi = Math.atan2(unitSin[g], unitCos[g]);
+            double bestPsi = StrictMath.atan2(unitSin[g], unitCos[g]);
             double bestV = descentViol(shiftNoU, ua, ub, unitCos[g] - bc, unitSin[g] - bs, false);
             for (int kk = 0; global && kk < UNIT_STEPS; kk++) {
                 double psi = -Math.PI + kk * (2.0 * Math.PI / UNIT_STEPS);
-                double v = descentViol(shiftNoU, ua, ub, Math.cos(psi) - bc, Math.sin(psi) - bs, false);
+                double v = descentViol(shiftNoU, ua, ub, StrictMath.cos(psi) - bc, StrictMath.sin(psi) - bs, false);
                 if (v < bestV) {
                     bestV = v;
                     bestPsi = psi;
@@ -321,7 +321,7 @@ final class UnitScreen {
                 for (int j = -UNIT_REFINE; j <= UNIT_REFINE; j++) {
                     if (j == 0) continue;
                     double psi = center + j * rstep;
-                    double v = descentViol(shiftNoU, ua, ub, Math.cos(psi) - bc, Math.sin(psi) - bs, false);
+                    double v = descentViol(shiftNoU, ua, ub, StrictMath.cos(psi) - bc, StrictMath.sin(psi) - bs, false);
                     if (v < bestV) {
                         bestV = v;
                         bestPsi = psi;
@@ -329,8 +329,8 @@ final class UnitScreen {
                 }
                 rstep /= (UNIT_REFINE + 1);
             }
-            unitCos[g] = Math.cos(bestPsi);
-            unitSin[g] = Math.sin(bestPsi);
+            unitCos[g] = StrictMath.cos(bestPsi);
+            unitSin[g] = StrictMath.sin(bestPsi);
             for (int wi = 0; wi < walls; wi++) {
                 shiftAcc[wi] = shiftNoU[wi] - ua[wi] * (unitCos[g] - bc) - ub[wi] * (unitSin[g] - bs);
             }

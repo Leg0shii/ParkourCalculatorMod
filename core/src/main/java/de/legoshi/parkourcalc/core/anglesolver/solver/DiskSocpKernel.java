@@ -228,7 +228,7 @@ public final class DiskSocpKernel {
             lambda[j] = init;
         }
         costates(lambda, gx, gz);
-        for (int t = 0; t < n; t++) tau[t] = Math.hypot(gx[t], gz[t]) + 1.0;
+        for (int t = 0; t < n; t++) tau[t] = StrictMath.hypot(gx[t], gz[t]) + 1.0;
 
         double[] gLam = new double[m];
         double[] gTau = new double[n];
@@ -332,7 +332,7 @@ public final class DiskSocpKernel {
 
     private double primalLowBound() {
         double lb = 0.0;
-        for (int t = 0; t < n; t++) lb -= mMag[t] * Math.hypot(cx[t], cz[t]);
+        for (int t = 0; t < n; t++) lb -= mMag[t] * StrictMath.hypot(cx[t], cz[t]);
         if (freeP0 != null) {
             lb -= Math.abs(freeP0.objDevX) * Math.max(Math.abs(freeP0.dvLoX), Math.abs(freeP0.dvHiX));
             lb -= Math.abs(freeP0.objDevZ) * Math.max(Math.abs(freeP0.dvLoZ), Math.abs(freeP0.dvHiZ));
@@ -355,7 +355,7 @@ public final class DiskSocpKernel {
             double w = tau[t] > 0.0 ? mMag[t] / tau[t] : 0.0;
             ux[t] = w * gx[t];
             uz[t] = w * gz[t];
-            value += mMag[t] * Math.hypot(gx[t], gz[t]);
+            value += mMag[t] * StrictMath.hypot(gx[t], gz[t]);
         }
         for (int j = 0; j < m; j++) value += lambda[j] * bPrime[j];
         double dvx = 0.0;
@@ -386,7 +386,7 @@ public final class DiskSocpKernel {
         double[] uz = new double[n];
         double value = 0.0;
         for (int t = 0; t < n; t++) {
-            double nrm = Math.hypot(gx[t], gz[t]);
+            double nrm = StrictMath.hypot(gx[t], gz[t]);
             value += mMag[t] * nrm;
             if (nrm > 0.0) {
                 ux[t] = mMag[t] * gx[t] / nrm;
@@ -673,9 +673,9 @@ public final class DiskSocpKernel {
         for (int t = 0; t < n; t++) {
             v += mMag[t] * tau[t];
             double det = tau[t] * tau[t] - gx[t] * gx[t] - gz[t] * gz[t];
-            v -= mu * Math.log(det);
+            v -= mu * StrictMath.log(det);
         }
-        for (int j = 0; j < m; j++) if (orthOf[j] >= 0) v -= mu * Math.log(lambda[j]);
+        for (int j = 0; j < m; j++) if (orthOf[j] >= 0) v -= mu * StrictMath.log(lambda[j]);
         if (freeP0 != null) v += supportOf(hAxis(lambda, 0), 0) + supportOf(hAxis(lambda, 1), 1);
         return v;
     }
@@ -692,9 +692,9 @@ public final class DiskSocpKernel {
             double tt = tau[t] + a * dTau[t];
             v += mMag[t] * tt;
             double det = tt * tt - gx[t] * gx[t] - gz[t] * gz[t];
-            v -= mu * Math.log(det);
+            v -= mu * StrictMath.log(det);
         }
-        for (int j = 0; j < m; j++) if (orthOf[j] >= 0) v -= mu * Math.log(lambda[j] + a * dLam[j]);
+        for (int j = 0; j < m; j++) if (orthOf[j] >= 0) v -= mu * StrictMath.log(lambda[j] + a * dLam[j]);
         if (freeP0 != null) {
             double hx = freeP0.objDevX;
             double hz = freeP0.objDevZ;
@@ -715,12 +715,12 @@ public final class DiskSocpKernel {
         double step = INF;
         if (a < 0.0) {
             double disc = b * b - a * c;
-            double sq = Math.sqrt(disc);
+            double sq = StrictMath.sqrt(disc);
             step = Math.min(step, minPos((-b - sq) / a, (-b + sq) / a));
         } else if (a > 0.0) {
             double disc = b * b - a * c;
             if (disc > 0.0) {
-                double sq = Math.sqrt(disc);
+                double sq = StrictMath.sqrt(disc);
                 step = Math.min(step, minPos((-b - sq) / a, (-b + sq) / a));
             }
         } else if (b < 0.0) {

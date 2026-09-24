@@ -716,8 +716,8 @@ public final class WallHomotopyDriver {
                     int aimTick = Math.min(setupEnd + 1, n - 1);
                     double apx = probe.getPos(aimTick, JumpPhysicsInputs.Axis.X);
                     double apz = probe.getPos(aimTick, JumpPhysicsInputs.Axis.Z);
-                    double world = Math.atan2(tgtZ - apz, tgtX - apx);
-                    for (int t = setupEnd + 1; t < n; t++) yaws[t] = Math.toDegrees(world) - Math.toDegrees(baseArg[t]);
+                    double world = StrictMath.atan2(tgtZ - apz, tgtX - apx);
+                    for (int t = setupEnd + 1; t < n; t++) yaws[t] = Angles.deg(world) - Angles.deg(baseArg[t]);
                     double[] gf = sc.toGameFacings(Angles.wrapAll(yaws));
                     ForwardPath fp = model.forward(sc, gf);
                     double v = wallViol(fp);
