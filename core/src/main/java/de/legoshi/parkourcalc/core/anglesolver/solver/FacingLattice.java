@@ -41,6 +41,60 @@ public final class FacingLattice {
         return id;
     }
 
+    public static int sinIndex262(float gfDeg) {
+        float rad = radOf(gfDeg, true, false);
+        return (int) ((long) ((double) rad * McSineTable.INDEX_FROM_RAD_262) & 65535L);
+    }
+
+    public static int cosIndex262(float gfDeg) {
+        float rad = radOf(gfDeg, true, false);
+        return (int) ((long) ((double) rad * McSineTable.INDEX_FROM_RAD_262 + McSineTable.COS_INDEX_OFFSET_262) & 65535L);
+    }
+
+    public static long jointCellId(float gfDeg, boolean modern, boolean sine262, boolean jumpBoostTick) {
+        if (!sine262) return jointCellId(gfDeg, modern, jumpBoostTick);
+        long msin = sinIndex262(gfDeg);
+        long mcos = cosIndex262(gfDeg);
+        return (msin << 48) | (mcos << 32);
+    }
+
+    public static float[] jointCellInterval(float gfDeg, boolean modern, boolean sine262, boolean jumpBoostTick) {
+        long id = jointCellId(gfDeg, modern, sine262, jumpBoostTick);
+        float below = (float) ((double) gfDeg - 1.5 * DEG_PER_BUCKET);
+        float above = (float) ((double) gfDeg + 1.5 * DEG_PER_BUCKET);
+        float lo = gfDeg;
+        if (jointCellId(below, modern, sine262, jumpBoostTick) != id) {
+            float a = below;
+            float b = gfDeg;
+            while (Math.nextUp(a) < b) {
+                float m = midFloat(a, b);
+                if (jointCellId(m, modern, sine262, jumpBoostTick) == id) b = m;
+                else a = m;
+            }
+            lo = b;
+        } else {
+            lo = below;
+        }
+        float hi = gfDeg;
+        if (jointCellId(above, modern, sine262, jumpBoostTick) != id) {
+            float a = gfDeg;
+            float b = above;
+            while (Math.nextUp(a) < b) {
+                float m = midFloat(a, b);
+                if (jointCellId(m, modern, sine262, jumpBoostTick) == id) a = m;
+                else b = m;
+            }
+            hi = a;
+        } else {
+            hi = above;
+        }
+        return new float[] {lo, hi};
+    }
+
+    public static double maxJointCellWidthDeg() {
+        return DEG_PER_BUCKET;
+    }
+
     static int movementSinOf(long id) {
         return (int) ((id >>> 48) & 0xffffL);
     }
