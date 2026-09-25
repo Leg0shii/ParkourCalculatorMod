@@ -2,6 +2,8 @@ package de.legoshi.parkourcalc.forge8.render;
 
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
+import de.legoshi.parkourcalc.core.multireplay.MultiReplay;
+import de.legoshi.parkourcalc.core.multireplay.MultiReplayGeometry;
 import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.ports.BoxRenderer;
 import de.legoshi.parkourcalc.core.render.PathRenderPlan;
@@ -39,6 +41,7 @@ public final class Forge8WorldOverlayRenderer {
     private final YawGizmoController yawGizmo;
     private final Supplier<AngleSolverState> angleSolver;
     private final Forge8CachedBoxGeometry cached = new Forge8CachedBoxGeometry();
+    private final Forge8MultiReplayMesh replayMesh = new Forge8MultiReplayMesh();
 
     public Forge8WorldOverlayRenderer(BoxController boxController, Settings settings, SelectionManager selection,
                                       YawGizmoController yawGizmo, Supplier<AngleSolverState> angleSolver) {
@@ -147,6 +150,46 @@ public final class Forge8WorldOverlayRenderer {
         GlStateManager.popMatrix();
         Perf.stop("worldOverlay", renderStart);
         Perf.addBoxes(boxController.size());
+    }
+
+    public void renderMultiReplay(MultiReplay replay, float partialTicks) {
+        if (replay == null || replay.isEmpty()) {
+            replayMesh.close();
+            return;
+        }
+        Entity view = Minecraft.getMinecraft().getRenderViewEntity();
+        if (view == null) return;
+        replayMesh.ensureBuilt(replay);
+
+        double camX = view.lastTickPosX + (view.posX - view.lastTickPosX) * partialTicks;
+        double camY = view.lastTickPosY + (view.posY - view.lastTickPosY) * partialTicks;
+        double camZ = view.lastTickPosZ + (view.posZ - view.lastTickPosZ) * partialTicks;
+
+        GlStateManager.pushMatrix();
+        GlStateManager.disableTexture2D();
+        GlStateManager.disableLighting();
+        GlStateManager.disableCull();
+        GlStateManager.enableBlend();
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+        boolean throughBlocks = replay.isThroughBlocks();
+        if (throughBlocks) GlStateManager.disableDepth();
+
+        if (!replay.isPlayerModels()) replayMesh.draw(replay, camX, camY, camZ);
+
+        Tessellator tess = Tessellator.getInstance();
+        WorldRenderer buf = tess.getWorldRenderer();
+        GL11.glLineWidth(replay.lineWidth());
+        buf.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION_COLOR);
+        MultiReplayGeometry.renderLines(replay, new Forge8BoxRenderer(buf, camX, camY, camZ, BoxRenderer.Mode.LINES));
+        tess.draw();
+        GL11.glLineWidth(1.0F);
+
+        if (throughBlocks) GlStateManager.enableDepth();
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+        GlStateManager.disableBlend();
+        GlStateManager.enableCull();
+        GlStateManager.enableTexture2D();
+        GlStateManager.popMatrix();
     }
 
     private void renderSelectionBlocks(double camX, double camY, double camZ) {

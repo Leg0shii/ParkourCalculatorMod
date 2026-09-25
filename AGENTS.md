@@ -48,6 +48,7 @@ The two Forge loaders are intentional duplicates: 1.8.9 and 1.12.2 have incompat
 | Solver UI | `core/.../ui/anglesolver/AngleSolverWindow.java`, `AngleSolverTable.java`, `SolverWidgets.java` |
 | Constraint visualization | `core/.../render/ConstraintPlate.java`, `ConstraintShapes.java`; source `core/.../ui/anglesolver/AngleSolverConstraintSource.java` |
 | Playback (TAS replay) | `core/.../PlaybackController.java`; loader `FabricPlaybackBridge` and Forge equivalents |
+| Multi replay (folder of saves as colored sphere tracks, 1.8.9 only) | `core/.../multireplay/` (`MultiReplay` state + `ReplayClock`, `MultiReplayLoader` simulates each file, `MultiReplayGeometry` spheres and lines), `core/.../ui/MultiReplayWindow.java` (controls + legend); drawn by `Forge8WorldOverlayRenderer.renderMultiReplay`, enabled via `Application.enableMultiReplay()` in `Forge8ParkourCalculator` |
 | Ports (core interfaces) | `core/.../ports/`: `MinecraftAccess`, `Simulator`, `BoxRenderer`, `PlaybackBridge`, `FilePickerPort` |
 | Simulation (Fabric) | `loader-fabric/.../sim/SimulatorEntity.java`, `FabricSimulator.java`, `SimulatorInput.java` |
 | Rendering (Fabric) | `loader-fabric/.../render/FabricWorldOverlayRenderer.java`, `FabricHudOverlayRenderer.java`; ImGui `imgui/ImGuiImpl.java` |

@@ -7,4 +7,12 @@ public interface FilePickerPort {
 
     /** Returns the picked path, or null on cancel / failure. Filter: *.json. */
     Path pickJsonFile();
+
+    default Path pickFolder() {
+        return null;
+    }
+
+    default boolean supportsFolderPick() {
+        return false;
+    }
 }

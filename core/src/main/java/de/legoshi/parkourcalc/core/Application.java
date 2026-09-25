@@ -103,6 +103,8 @@ public final class Application {
     private de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel forwardModel;
     private de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverWindow angleSolverWindow;
     private NoTurnSearchController noTurnSearch;
+    private boolean multiReplayEnabled;
+    private de.legoshi.parkourcalc.core.multireplay.MultiReplay multiReplay;
 
     public Application(Simulator simulator, MinecraftAccess mc) {
         this.mc = mc;
@@ -289,6 +291,57 @@ public final class Application {
         overlayManager.register(angleSolverWindow);
         overlayManager.register(graphEditorWindow);
         overlayManager.register(stratfinderWindow);
+        if (multiReplayEnabled) setupMultiReplay(mainWindow);
+    }
+
+    private void setupMultiReplay(MainWindowOverlay mainWindow) {
+        multiReplay = new de.legoshi.parkourcalc.core.multireplay.MultiReplay();
+        final de.legoshi.parkourcalc.core.multireplay.MultiReplayLoader loader =
+                new de.legoshi.parkourcalc.core.multireplay.MultiReplayLoader(simulator, runner, mc, this::runSimulation);
+        final de.legoshi.parkourcalc.core.ui.MultiReplayWindow window = new de.legoshi.parkourcalc.core.ui.MultiReplayWindow(
+                multiReplay, new de.legoshi.parkourcalc.core.ui.MultiReplayWindow.Host() {
+            @Override
+            public void load(String folder) {
+                Path path;
+                try {
+                    path = java.nio.file.Paths.get(folder.trim());
+                } catch (RuntimeException e) {
+                    multiReplay.replaceTracks(folder, Collections.<de.legoshi.parkourcalc.core.multireplay.ReplayTrack>emptyList(),
+                            Collections.singletonList("Invalid path: " + folder));
+                    return;
+                }
+                de.legoshi.parkourcalc.core.multireplay.MultiReplayLoader.Outcome out = loader.load(path);
+                multiReplay.replaceTracks(path.toString(), out.tracks, out.errors);
+                if (!out.tracks.isEmpty()) {
+                    pushHudMessage("Loaded " + out.tracks.size() + " replays", HudMessageStyle.COLOR_OK);
+                } else {
+                    pushHudMessage("No replays loaded", HudMessageStyle.COLOR_WARN);
+                }
+            }
+
+            @Override
+            public Path pickFolder() {
+                return filePicker != null ? filePicker.pickFolder() : null;
+            }
+
+            @Override
+            public boolean canPickFolder() {
+                return filePicker != null && filePicker.supportsFolderPick();
+            }
+        });
+        mainWindow.setMultiReplayMenu(window::isOpen, () -> {
+            if (window.isOpen()) window.close();
+            else window.open();
+        });
+        overlayManager.register(window);
+    }
+
+    public void enableMultiReplay() {
+        multiReplayEnabled = true;
+    }
+
+    public de.legoshi.parkourcalc.core.multireplay.MultiReplay getMultiReplay() {
+        return multiReplay;
     }
 
     public void setFilePicker(FilePickerPort filePicker) {
@@ -415,6 +468,7 @@ public final class Application {
         if (undoController != null) undoController.onDocumentReplaced(null);
         if (runTicks != null) runTicks.reset();
         if (angleSolverState != null) angleSolverState.clearResult();
+        if (multiReplay != null) multiReplay.clear();
         hudMessages.clearStatus();
         startInitialized = false;
     }

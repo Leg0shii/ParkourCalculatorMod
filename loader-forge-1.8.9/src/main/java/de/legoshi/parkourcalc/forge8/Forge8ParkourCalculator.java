@@ -76,6 +76,8 @@ public class Forge8ParkourCalculator {
             application::getAngleSolverState
     );
     private final Forge8HudOverlayRenderer hudRenderer = new Forge8HudOverlayRenderer();
+    private final de.legoshi.parkourcalc.forge8.render.Forge8ReplayPlayers replayPlayers =
+            new de.legoshi.parkourcalc.forge8.render.Forge8ReplayPlayers();
     private final Forge8PlaybackBridge playbackBridge = new Forge8PlaybackBridge();
 
     private KeyBinding toggleKeyBinding;
@@ -125,6 +127,7 @@ public class Forge8ParkourCalculator {
         application.setBlockPicker(new Forge8BlockPicker());
         application.initSettingsStorage(configPath);
         blockCaptureEnabled = application.getSettings().experimentalBlockCapture;
+        application.enableMultiReplay();
         application.setupUi();
         imguiHost.setEditingYawSupplier(application::isEditingYaw);
         imguiHost.setAllowDetachedSupplier(() -> Minecraft.getMinecraft().currentScreen == null);
@@ -289,7 +292,14 @@ public class Forge8ParkourCalculator {
 
     @SubscribeEvent
     public void onRenderTick(TickEvent.RenderTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) return;
+        if (event.phase == TickEvent.Phase.START) {
+            de.legoshi.parkourcalc.core.multireplay.MultiReplay replay = application.getMultiReplay();
+            if (replay != null) {
+                replay.advance(System.nanoTime());
+                replayPlayers.update(replay, event.renderTickTime);
+            }
+            return;
+        }
 
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null) return;
@@ -498,6 +508,7 @@ public class Forge8ParkourCalculator {
     @SubscribeEvent
     public void onWorldRender(RenderWorldLastEvent event) {
         application.tickDrag();
+        worldRenderer.renderMultiReplay(application.getMultiReplay(), event.partialTicks);
         if (!application.getSettings().showPath) return;
         if (application.isPlaybackRunning() && !application.getSettings().keepBoxesDuringPlayback) return;
         worldRenderer.render(event.partialTicks);
@@ -522,6 +533,7 @@ public class Forge8ParkourCalculator {
     @SubscribeEvent
     public void onClientDisconnect(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
         ReplayLockstep.disengage();
+        replayPlayers.clear();
         application.onWorldChange();
     }
 

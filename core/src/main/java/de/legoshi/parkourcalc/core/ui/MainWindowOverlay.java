@@ -45,6 +45,8 @@ public final class MainWindowOverlay implements RenderInterface {
     private final Runnable onSettingsChanged;
     private java.util.function.BooleanSupplier stratfinderOpen = () -> false;
     private Runnable toggleStratfinder = () -> { };
+    private java.util.function.BooleanSupplier multiReplayOpen = () -> false;
+    private Runnable toggleMultiReplay;
     private final TickInfoPanel tickInfoPanel;
     private final PerfOverlay perfOverlay;
     private final SettingsModal settingsModal;
@@ -106,6 +108,11 @@ public final class MainWindowOverlay implements RenderInterface {
     public void setStratfinderMenu(java.util.function.BooleanSupplier isOpen, Runnable toggle) {
         this.stratfinderOpen = isOpen;
         this.toggleStratfinder = toggle;
+    }
+
+    public void setMultiReplayMenu(java.util.function.BooleanSupplier isOpen, Runnable toggle) {
+        this.multiReplayOpen = isOpen;
+        this.toggleMultiReplay = toggle;
     }
 
     @Override
@@ -345,6 +352,9 @@ public final class MainWindowOverlay implements RenderInterface {
             onSettingsChanged.run();
         }
         if (ImGui.menuItem("Stratfinder", null, stratfinderOpen.getAsBoolean())) toggleStratfinder.run();
+        if (toggleMultiReplay != null && ImGui.menuItem("Multi Replay", null, multiReplayOpen.getAsBoolean())) {
+            toggleMultiReplay.run();
+        }
         if (ImGui.menuItem("Velocity Map", null, settings.viewVelocityMap)) {
             settings.viewVelocityMap = !settings.viewVelocityMap;
             onSettingsChanged.run();
