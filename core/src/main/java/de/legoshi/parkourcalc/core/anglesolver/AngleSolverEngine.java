@@ -376,6 +376,10 @@ public final class AngleSolverEngine {
     }
 
     private Job buildJob(AngleSolverState.Effort effort, SolverGraph graphOverride) {
+        return buildJob(effort, graphOverride, true);
+    }
+
+    private Job buildJob(AngleSolverState.Effort effort, SolverGraph graphOverride, boolean publishFailure) {
         int startTick = state.getStartTick();
         int landingTick = state.getLandingTick();
         int total = segmentConstraintCount(startTick, landingTick);
@@ -384,7 +388,7 @@ public final class AngleSolverEngine {
         int numTicks = landingTick - startTick;
         if (numTicks <= 0 || startTick < 0 || startTick >= boxes.size()
                 || landingTick > rows.size() || startTick >= rows.size()) {
-            state.setResult(new SolveResult(false, 0, total, startTick + 1, landingTick + 1));
+            if (publishFailure) state.setResult(new SolveResult(false, 0, total, startTick + 1, landingTick + 1));
             return null;
         }
 
@@ -419,10 +423,12 @@ public final class AngleSolverEngine {
             String[] whyNot = new String[1];
             legalGoal = selectLegalGoalWall(constraints, objective, whyNot);
             if (legalGoal == null) {
-                SolveResult r = new SolveResult(false, 0, total, startTick + 1, landingTick + 1);
-                r.setSolver("legal mode");
-                r.addDetail("Legal mode", whyNot[0]);
-                state.setResult(r);
+                if (publishFailure) {
+                    SolveResult r = new SolveResult(false, 0, total, startTick + 1, landingTick + 1);
+                    r.setSolver("legal mode");
+                    r.addDetail("Legal mode", whyNot[0]);
+                    state.setResult(r);
+                }
                 return null;
             }
         }
@@ -1215,6 +1221,30 @@ public final class AngleSolverEngine {
             r.addDetail("Worst violation", ConstraintText.fixedStat(violation));
         }
         return r;
+    }
+
+    public static final class PathSnapshot {
+        public final JumpSpec spec;
+        public final double[] yaws;
+        public final int startTick;
+
+        PathSnapshot(JumpSpec spec, double[] yaws, int startTick) {
+            this.spec = spec;
+            this.yaws = yaws;
+            this.startTick = startTick;
+        }
+    }
+
+    public PathSnapshot snapshotCurrentPath() {
+        Job job = buildJob(state.getEffort(), null, false);
+        if (job == null) return null;
+        double[] yaws = currentRowYaws(job.startTick, job.numTicks);
+        if (yaws == null) return null;
+        return new PathSnapshot(job.spec, yaws, job.startTick);
+    }
+
+    public ForwardModel forwardModel() {
+        return model;
     }
 
     public SolveResult diagnoseCurrentPath() {

@@ -126,6 +126,10 @@ public interface MinecraftAccess {
     /** True when the player and world are both available to query. */
     boolean isReady();
 
+    default float getMouseSensitivity() {
+        return 0.5f;
+    }
+
     /** True when the client owns the integrated server (singleplayer or LAN host). */
     boolean isSinglePlayer();
 

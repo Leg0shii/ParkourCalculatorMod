@@ -272,6 +272,11 @@ public final class Forge8MinecraftAccess implements MinecraftAccess {
     }
 
     @Override
+    public float getMouseSensitivity() {
+        return Minecraft.getMinecraft().gameSettings.mouseSensitivity;
+    }
+
+    @Override
     public boolean isReady() {
         Minecraft mc = Minecraft.getMinecraft();
         return mc.thePlayer != null && mc.theWorld != null;

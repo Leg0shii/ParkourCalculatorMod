@@ -94,6 +94,7 @@ public final class Application {
     private BlockPicker blockPicker;
     private AngleSolverState angleSolverState;
     private AngleSolverEngine solverEngine;
+    private TurnProfileController turnProfile;
     private ConstraintKeyController constraintKeyController;
     private UndoController<de.legoshi.parkourcalc.core.save.SaveFile> undoController;
     private RunTicksController runTicks;
@@ -235,6 +236,9 @@ public final class Application {
                 angleSolverEngine, forwardModel, mc, this::onUserChange, this::pushHudMessage, runTicks::isRunning);
         de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow stratfinderWindow =
                 new de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow(noTurnSearch);
+        turnProfile = new TurnProfileController(angleSolverEngine, inputData, () -> settings.viewTurnProfile);
+        de.legoshi.parkourcalc.core.ui.anglesolver.TurnProfileWindow turnProfileWindow =
+                new de.legoshi.parkourcalc.core.ui.anglesolver.TurnProfileWindow(turnProfile, settings, mc::getMouseSensitivity);
 
         // In-world constraint visualization (gh-145): plates appear while the solver view is open.
         constraintSource = new de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverConstraintSource(
@@ -289,6 +293,7 @@ public final class Application {
         overlayManager.register(angleSolverWindow);
         overlayManager.register(graphEditorWindow);
         overlayManager.register(stratfinderWindow);
+        overlayManager.register(turnProfileWindow);
     }
 
     public void setFilePicker(FilePickerPort filePicker) {
@@ -390,6 +395,7 @@ public final class Application {
         if (!startDragController.isDragActive()) {
             selection.retainBelow(boxController.size());
         }
+        if (turnProfile != null) turnProfile.refresh();
         Perf.stop("runSimulation", t0);
     }
 
