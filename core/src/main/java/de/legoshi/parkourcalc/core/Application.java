@@ -258,6 +258,17 @@ public final class Application {
                 return mc.clipBlockDistance(new Vec3dCore(originX, originY, originZ),
                         new Vec3dCore(dirX, dirY, dirZ), maxDistance);
             }
+
+            @Override
+            public double blockReach() {
+                return mc.getBlockReach();
+            }
+
+            @Override
+            public double[] lookDirection(float yawDeg, float pitchDeg) {
+                Vec3dCore d = mc.getLookVector(yawDeg, pitchDeg);
+                return new double[] {d.x, d.y, d.z};
+            }
         });
 
         TickInfoPanel tickInfoPanel = new TickInfoPanel(boxController, inputData, selection, settings, runner, this::pushHudMessage);
