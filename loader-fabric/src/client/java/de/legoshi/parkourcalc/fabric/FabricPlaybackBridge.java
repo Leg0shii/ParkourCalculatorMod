@@ -575,6 +575,18 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
             case SPRINT -> o.keySprint;
             case LEFT_CLICK -> o.keyAttack;
             case RIGHT_CLICK -> o.keyUse;
+            case CLOSE_INVENTORY -> null;
         };
+    }
+
+    @Override
+    public void closeInventory() {
+        if (ghostMode) return;
+        Minecraft mc = Minecraft.getInstance();
+        LocalPlayer p = mc.player;
+        if (p == null) return;
+        if (mc.gui.screen() instanceof net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?>) {
+            p.closeContainer();
+        }
     }
 }

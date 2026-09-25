@@ -71,6 +71,7 @@ public final class Settings {
     private static final boolean DEFAULT_SHOW_COL_PITCH = false;
     private static final boolean DEFAULT_SHOW_COL_LEFT_CLICK = false;
     private static final boolean DEFAULT_SHOW_COL_RIGHT_CLICK = false;
+    private static final boolean DEFAULT_SHOW_COL_CLOSE_INVENTORY = false;
     private static final boolean DEFAULT_SHOW_COL_TELEPORT = false;
 
     private static final boolean DEFAULT_VIEW_TICK_INFO = true;
@@ -186,6 +187,7 @@ public final class Settings {
     public boolean showColPitch = DEFAULT_SHOW_COL_PITCH;
     public boolean showColLeftClick = DEFAULT_SHOW_COL_LEFT_CLICK;
     public boolean showColRightClick = DEFAULT_SHOW_COL_RIGHT_CLICK;
+    public boolean showColCloseInventory = DEFAULT_SHOW_COL_CLOSE_INVENTORY;
     public boolean showColTeleport = DEFAULT_SHOW_COL_TELEPORT;
 
     public float yawFlickSpeed = DEFAULT_YAW_FLICK_SPEED;
@@ -302,6 +304,7 @@ public final class Settings {
         showColPitch = DEFAULT_SHOW_COL_PITCH;
         showColLeftClick = DEFAULT_SHOW_COL_LEFT_CLICK;
         showColRightClick = DEFAULT_SHOW_COL_RIGHT_CLICK;
+        showColCloseInventory = DEFAULT_SHOW_COL_CLOSE_INVENTORY;
         showColTeleport = DEFAULT_SHOW_COL_TELEPORT;
         yawFlickSpeed = DEFAULT_YAW_FLICK_SPEED;
         pathRenderDistance = DEFAULT_PATH_RENDER_DISTANCE;
