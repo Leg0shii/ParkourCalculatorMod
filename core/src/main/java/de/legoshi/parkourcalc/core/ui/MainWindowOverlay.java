@@ -349,6 +349,10 @@ public final class MainWindowOverlay implements RenderInterface {
             settings.viewVelocityMap = !settings.viewVelocityMap;
             onSettingsChanged.run();
         }
+        if (ImGui.menuItem("Turn Profile", null, settings.viewTurnProfile)) {
+            settings.viewTurnProfile = !settings.viewTurnProfile;
+            onSettingsChanged.run();
+        }
     }
 
     private void renderSettingsMenuItems() {
