@@ -1,13 +1,17 @@
 package de.legoshi.parkourcalc.core.anglesolver.graph;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public final class ParamValues {
 
     private final List<ParamSpec> specs;
     private final Map<String, Object> values = new LinkedHashMap<>();
+    private final Set<String> readKeys = new LinkedHashSet<>();
 
     public ParamValues(List<ParamSpec> specs) {
         this.specs = specs;
@@ -43,26 +47,34 @@ public final class ParamValues {
         return this;
     }
 
+    public Set<String> readKeys() {
+        return Collections.unmodifiableSet(readKeys);
+    }
+
     public int getInt(String key) {
         ParamSpec s = spec(key);
+        readKeys.add(key);
         Object v = values.get(key);
         return v == null ? (int) s.def : ((Number) v).intValue();
     }
 
     public double getDouble(String key) {
         ParamSpec s = spec(key);
+        readKeys.add(key);
         Object v = values.get(key);
         return v == null ? s.def : ((Number) v).doubleValue();
     }
 
     public boolean getBool(String key) {
         ParamSpec s = spec(key);
+        readKeys.add(key);
         Object v = values.get(key);
         return v == null ? s.defBool : (Boolean) v;
     }
 
     public String getString(String key) {
         ParamSpec s = spec(key);
+        readKeys.add(key);
         Object v = values.get(key);
         return v == null ? s.defString : (String) v;
     }

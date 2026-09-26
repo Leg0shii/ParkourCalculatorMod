@@ -6,7 +6,8 @@ import java.util.List;
 
 public final class FacingPrefold {
 
-    private static final double PIN_WIDTH_MAX = 2.5e-4;
+    public static final double PIN_WIDTH_MAX = 180.0 / 32768.0 * 1.05;
+    public static final double RANGE_PIN_WIDTH_MAX = 2.5e-4;
     private static final double PIN_MATCH_TOL = 1.0e-9;
     private static final double OFFSET_ZERO_TOL = 1.0e-12;
     private static final double BASE_ARG_TOL = 1.0e-12;
@@ -75,6 +76,7 @@ public final class FacingPrefold {
         final boolean[] mergeOk;
         final double[] mMag;
         final double[] baseArg;
+        boolean exactLinks = true;
 
         Parsed(int n, int[] group, double[] offset, double[] groupPin, boolean[] mergeOk,
                double[] mMag, double[] baseArg) {
@@ -96,9 +98,15 @@ public final class FacingPrefold {
     private final double[] pinYaw;
     private final double[] mMag;
     private final double[] baseArg;
+    private final boolean exactLinks;
 
     private FacingPrefold(int n, boolean identity, int vars, int[] varOf, int[] repOf, double[] pinYaw,
                           double[] mMag, double[] baseArg) {
+        this(n, identity, vars, varOf, repOf, pinYaw, mMag, baseArg, true);
+    }
+
+    private FacingPrefold(int n, boolean identity, int vars, int[] varOf, int[] repOf, double[] pinYaw,
+                          double[] mMag, double[] baseArg, boolean exactLinks) {
         this.n = n;
         this.identity = identity;
         this.vars = vars;
@@ -107,6 +115,11 @@ public final class FacingPrefold {
         this.pinYaw = pinYaw;
         this.mMag = mMag;
         this.baseArg = baseArg;
+        this.exactLinks = exactLinks;
+    }
+
+    public boolean exactLinks() {
+        return exactLinks;
     }
 
     public boolean isIdentity() {
@@ -124,6 +137,33 @@ public final class FacingPrefold {
 
     public int varCount() {
         return identity ? n : vars;
+    }
+
+    public double pinnedYawAt(int t) {
+        if (identity || varOf[t] >= 0) return Double.NaN;
+        return Angles.wrap(pinYaw[t]);
+    }
+
+    public double pinnedObjectiveTerm(double[] cx, double[] cz) {
+        if (identity) return 0.0;
+        double sum = 0.0;
+        for (int t = 0; t < n; t++) {
+            if (varOf[t] >= 0) continue;
+            sum += cx[t] * pinnedInput(t, 0) + cz[t] * pinnedInput(t, 1);
+        }
+        return sum;
+    }
+
+    public static boolean exactPins(List<JumpConstraint> constraints) {
+        for (JumpConstraint c : constraints) {
+            if (c.mode != JumpConstraint.Mode.F) continue;
+            if (c.t2 != null) {
+                if (c.cmp != JumpConstraint.Cmp.EQ && !(c.name != null && (c.name.endsWith("eqLo") || c.name.endsWith("eqHi")))) return false;
+                continue;
+            }
+            if (c.name == null || !(c.name.endsWith("eqLo") || c.name.endsWith("eqHi"))) return false;
+        }
+        return true;
     }
 
     public int varIndex(int t) {
@@ -172,6 +212,7 @@ public final class FacingPrefold {
         int n = lin.n;
         double[] absLo = null;
         double[] absHi = null;
+        double[] absPin = null;
         double[] linkLo = null;
         double[] linkHi = null;
         for (JumpConstraint c : constraints) {
@@ -181,8 +222,13 @@ public final class FacingPrefold {
                 if (absLo == null) {
                     absLo = filled(n, Double.NEGATIVE_INFINITY);
                     absHi = filled(n, Double.POSITIVE_INFINITY);
+                    absPin = filled(n, Double.NaN);
                 }
                 tighten(absLo, absHi, c.t1, c.cmp, c.rhs);
+                if (c.pin != null) {
+                    if (Double.isNaN(absPin[c.t1])) absPin[c.t1] = c.pin;
+                    else if (Math.abs(Angles.wrap(absPin[c.t1] - c.pin)) > PIN_MATCH_TOL) return null;
+                }
             } else if (c.op == JumpConstraint.Op.MINUS && c.t2 == c.t1 - 1 && c.t1 >= 1) {
                 if (linkLo == null) {
                     linkLo = filled(n, Double.NEGATIVE_INFINITY);
@@ -199,17 +245,20 @@ public final class FacingPrefold {
             for (int t = 0; t < n; t++) {
                 if (absLo[t] == Double.NEGATIVE_INFINITY && absHi[t] == Double.POSITIVE_INFINITY) continue;
                 double width = absHi[t] - absLo[t];
-                if (!(width >= 0.0) || width > PIN_WIDTH_MAX) return null;
-                pin[t] = Angles.wrap(0.5 * (absLo[t] + absHi[t]));
+                double widthMax = Double.isNaN(absPin[t]) ? RANGE_PIN_WIDTH_MAX : PIN_WIDTH_MAX;
+                if (!(width >= 0.0) || width > widthMax) return null;
+                pin[t] = Angles.wrap(Double.isNaN(absPin[t]) ? 0.5 * (absLo[t] + absHi[t]) : absPin[t]);
             }
         }
         boolean[] link = new boolean[n];
         double[] linkOffset = new double[n];
+        boolean exactLinks = true;
         if (linkLo != null) {
             for (int t = 0; t < n; t++) {
                 if (linkLo[t] == Double.NEGATIVE_INFINITY && linkHi[t] == Double.POSITIVE_INFINITY) continue;
                 double width = linkHi[t] - linkLo[t];
-                if (!(width >= 0.0) || width > PIN_WIDTH_MAX) return null;
+                if (!(width >= 0.0) || width > RANGE_PIN_WIDTH_MAX) return null;
+                if (width > 0.0) exactLinks = false;
                 link[t] = true;
                 linkOffset[t] = 0.5 * (linkLo[t] + linkHi[t]);
             }
@@ -262,7 +311,9 @@ public final class FacingPrefold {
             mm[t] = lin.mMag(t);
             ba[t] = lin.baseArg(t);
         }
-        return new Parsed(n, group, offset, groupPin, mergeOk, mm, ba);
+        Parsed parsed = new Parsed(n, group, offset, groupPin, mergeOk, mm, ba);
+        parsed.exactLinks = exactLinks;
+        return parsed;
     }
 
     private static FacingPrefold assemble(Parsed p, double[] groupPin) {
@@ -290,7 +341,8 @@ public final class FacingPrefold {
             varOf[t] = v;
             if (p.mMag[rep[v]] <= 0.0 && p.mMag[t] > 0.0) rep[v] = t;
         }
-        return new FacingPrefold(n, false, vars, varOf, Arrays.copyOf(rep, vars), pinYaw, p.mMag, p.baseArg);
+        return new FacingPrefold(n, false, vars, varOf, Arrays.copyOf(rep, vars), pinYaw, p.mMag, p.baseArg,
+                p.exactLinks);
     }
 
     public Reduced reduce(double[] cx, double[] cz, double[] mMagAll, List<JumpLinearModel.Wall> walls) {

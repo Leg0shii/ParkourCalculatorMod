@@ -92,6 +92,11 @@ public final class SlpSolve {
         return optimize(exact, spec, feasTol, cancel, cfg.centerClearance, false, null, false, false, cfg, null);
     }
 
+    public static double[] optimizeCentered(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
+                                            double[] seedAbsWrapped, Config cfg) {
+        return optimize(exact, spec, feasTol, cancel, cfg.centerClearance, false, seedAbsWrapped, false, false, cfg, null);
+    }
+
     private static Config withCalls(int phase1Calls, int totalCalls) {
         Config cfg = new Config();
         cfg.phase1Calls = phase1Calls;

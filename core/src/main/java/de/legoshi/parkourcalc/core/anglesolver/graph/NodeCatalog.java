@@ -15,6 +15,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.ReportNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.RecedingHorizonNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.FacingStepNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.RouterNode;
+import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.SeedSweepNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.SetupPeelNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.TranslatedStartNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.WrapIlsNode;
@@ -66,7 +67,7 @@ public final class NodeCatalog {
                 .branch(Branch.preserves(Guarantee.AT_CAP))
                 .branch(Branch.preserves(Guarantee.FALSE))
                 .param(ParamSpec.bool("computeDualGap", "Compute dual gap", false))
-                .param(ParamSpec.bool("markSettled", "Mark settled at cap", false))
+                .param(ParamSpec.bool("markSettled", "Mark settled (skips later Cap certify)", false))
                 .param(ParamSpec.bool("skipIfSettled", "Skip when settled", false))
                 .fallback(Guarantee.FALSE)
                 .factory(CapCertifyNode::new)
@@ -93,7 +94,7 @@ public final class NodeCatalog {
                 .requires(InputRequirement.ANY)
                 .branch(Branch.feasible(Guarantee.FOUND))
                 .branch(Branch.preserves(Guarantee.NONE))
-                .param(ParamSpec.bool("keepBetter", "Keep better vs incumbent", false))
+                .param(ParamSpec.bool("keepBetter", "Suppress closed form miss label", false))
                 .param(ParamSpec.integer("budgetSec", "Max time (s)", 0, 600, 0))
                 .param(ParamSpec.integer("budgetMs", "Max time (ms)", 0, 600000, 0))
                 .param(ParamSpec.integer("slpPhase1Calls", "SLP phase-1 calls", 1, 10000, 40))
@@ -106,10 +107,21 @@ public final class NodeCatalog {
                         "0.0,1.0e-4,3.0e-4,6.0e-4,1.2e-3,2.5e-3,5.0e-3,1.0e-2"))
                 .param(ParamSpec.integer("cfMaxInertiaPasses", "Closed form inertia passes", 1, 16, 4))
                 .param(ParamSpec.integer("cfRungStallLimit", "Closed form rung stall limit", 1, 16, 2))
-                .param(ParamSpec.integer("warmSec", "Warm improve (s)", 0, 600, 0))
+                .param(ParamSpec.integer("warmSec", "Re-run when already feasible (0 = skip)", 0, 600, 0))
                 .budgetParam("budgetSec")
                 .fallback(Guarantee.NONE)
                 .factory(DualChainNode::new)
+                .build());
+        register(NodeType.builder("seedSweep", "Seed sweep", NodeCategory.SEED)
+                .requires(InputRequirement.ANY)
+                .branch(Branch.feasible(Guarantee.FOUND))
+                .branch(Branch.preserves(Guarantee.NONE))
+                .param(ParamSpec.integer("seeds", "Start seeds", 0, 1024, BuiltinGraphs.SWEEP_SEEDS))
+                .param(ParamSpec.integer("threads", "Threads (0 = all but one core)", 0, 256, 2))
+                .param(ParamSpec.integer("budgetSec", "Max time (s)", 0, 600, 15))
+                .budgetParam("budgetSec")
+                .fallback(Guarantee.NONE)
+                .factory(SeedSweepNode::new)
                 .build());
         register(NodeType.builder("recedingHorizon", "Receding horizon", NodeCategory.WINDOWING)
                 .requires(InputRequirement.NONE)
@@ -149,7 +161,7 @@ public final class NodeCatalog {
                 .param(ParamSpec.decimal("fsInvariantTol", "Invariant slack tolerance", 0.0, 1.0, 1.0e-6))
                 .param(ParamSpec.text("fsJointMargins", "Joint margin ladder",
                         "0.0,1.0e-4,3.0e-4,6.0e-4,1.2e-3,2.5e-3,5.0e-3,1.0e-2"))
-                .param(ParamSpec.integer("warmSec", "Warm improve (s)", 0, 600, 0))
+                .param(ParamSpec.integer("warmSec", "Re-run when already feasible (0 = skip)", 0, 600, 0))
                 .budgetParam("budgetSec")
                 .fallback(Guarantee.UNCHANGED)
                 .factory(FreeStartImproveNode::new)
@@ -206,7 +218,7 @@ public final class NodeCatalog {
                 .branch(Branch.preserves(Guarantee.UNCHANGED))
                 .branch(Branch.preserves(Guarantee.NONE))
                 .branch(Branch.unknown(Guarantee.TRUE))
-                .param(ParamSpec.integer("budgetSec", "Max time (s)", 0, 600, 20))
+                .param(ParamSpec.integer("budgetSec", "Sweep time (s, 0 = off)", 0, 600, 20))
                 .param(ParamSpec.decimal("windowDeg", "Sweep window (deg)", 0.0, 10.0, 0.1))
                 .param(ParamSpec.integer("maxBuckets", "Max buckets", 1, 100000, 400))
                 .budgetParam("budgetSec")

@@ -26,9 +26,14 @@ public class BuiltinGraphsTest {
             "translate", "emit");
 
     private static final List<String> OPTIMIZE_NODES = Arrays.asList(
-            "entry", "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
+            "entry", "seeds", "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
             "sweep", "ils2", "translate2", "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap",
             "translate", "snap", "emit");
+
+    private static final List<String> MULTI_START_NODES = Arrays.asList(
+            "entry", "seeds", "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove",
+            "sweep", "ils2", "translate2", "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap",
+            "translate", "emit");
 
     private static final String[][] FAST_PAIRS = {
             {"entry", "seed"}, {"seed", "horizon"}, {"horizon", "wrap0"}, {"wrap0", "cap1"},
@@ -36,8 +41,14 @@ public class BuiltinGraphsTest {
             {"ils2", "translate2"}, {"fold", "ladder"}, {"ladder", "cert"}, {"cert", "bnb"}, {"bnb", "ils"},
             {"ils", "cap2"}, {"cap2", "wrap"}, {"wrap", "translate"}, {"translate", "emit"}};
 
+    private static final String[][] MULTI_START_PAIRS = {
+            {"entry", "seeds"}, {"seeds", "seed"}, {"seed", "horizon"}, {"horizon", "wrap0"}, {"wrap0", "cap1"},
+            {"cap1", "freeRescue"}, {"freeRescue", "peel"}, {"peel", "freeImprove"}, {"freeImprove", "sweep"},
+            {"ils2", "translate2"}, {"fold", "ladder"}, {"ladder", "cert"}, {"cert", "bnb"}, {"bnb", "ils"},
+            {"ils", "cap2"}, {"cap2", "wrap"}, {"wrap", "translate"}, {"translate", "emit"}};
+
     private static final String[][] OPTIMIZE_PAIRS = {
-            {"entry", "horizon"}, {"horizon", "wrap0"}, {"wrap0", "seed"}, {"seed", "cap1"},
+            {"entry", "seeds"}, {"seeds", "horizon"}, {"horizon", "wrap0"}, {"wrap0", "seed"}, {"seed", "cap1"},
             {"cap1", "freeRescue"}, {"freeRescue", "peel"}, {"peel", "freeImprove"}, {"freeImprove", "sweep"},
             {"ils2", "translate2"}, {"fold", "ladder"}, {"ladder", "cert"}, {"cert", "bnb"}, {"bnb", "ils"},
             {"ils", "cap2"}, {"cap2", "wrap"}, {"wrap", "translate"}, {"translate", "snap"}, {"snap", "emit"}};
@@ -117,6 +128,22 @@ public class BuiltinGraphsTest {
         assertTrue(opt.node("sweep").params.getInt("budgetSec") > 0);
         assertEquals(0, fast.node("ils2").params.getInt("budgetSec"));
         assertTrue(opt.node("ils2").params.getInt("budgetSec") > 0);
+    }
+
+    @Test
+    public void multiStartIsFastWithASeedSweepInFront() {
+        SolverGraph multi = BuiltinGraphs.fastMultiStart();
+        assertFalse(GraphValidator.hasErrors(GraphValidator.validate(multi)));
+        assertEquals(MULTI_START_NODES, nodeIds(multi));
+        assertLinear(multi, MULTI_START_PAIRS);
+        assertLoopEdges(multi, false);
+        assertEquals(BuiltinGraphs.SWEEP_SEEDS, multi.node("seeds").params.getInt("seeds"));
+        assertEquals(BuiltinGraphs.MULTI_START_SWEEP_SEC, multi.node("seeds").params.getInt("budgetSec"));
+        assertNull("plain fast has no seed sweep", BuiltinGraphs.fast().node("seeds"));
+        assertNull("run-ticks fast has no seed sweep", BuiltinGraphs.fastRunTicks().node("seeds"));
+        assertTrue(BuiltinGraphs.optimize(60).node("seeds").params.getInt("budgetSec") > 0);
+        assertNull("a short optimize has no seed sweep", BuiltinGraphs.optimize(10).node("seeds"));
+        assertTrue(BuiltinGraphs.isBuiltinPreset(BuiltinGraphs.MULTI_START_PRESET));
     }
 
     @Test
