@@ -179,6 +179,50 @@ public final class ConstraintDeriver {
         return r[0] < r[1] - EPS && r[2] < r[3] - EPS;
     }
 
+    public static double[] clipMergedFootprint(double[] rect, double[] keep, double footY, double refX, double refZ,
+                                               List<AABB> obstacles) {
+        double xLo = rect[0], xHi = rect[1], zLo = rect[2], zHi = rect[3];
+        if (obstacles == null) return new double[] {xLo, xHi, zLo, zHi};
+        double bodyHi = footY + BODY_HEIGHT;
+        for (AABB o : obstacles) {
+            if (o == null) continue;
+            if (o.max.y <= footY + EPS) continue;
+            if (o.min.y >= bodyHi - EPS) continue;
+            boolean overlapsX = o.min.x - HALF < xHi - EPS && o.max.x + HALF > xLo + EPS;
+            boolean overlapsZ = o.min.z - HALF < zHi - EPS && o.max.z + HALF > zLo + EPS;
+            if (!overlapsX || !overlapsZ) continue;
+            double cutXLo = xLo, cutXHi = xHi;
+            boolean canCutX = false;
+            if (o.max.x <= refX + EPS) { cutXLo = Math.max(xLo, o.max.x + HALF); canCutX = true; }
+            else if (o.min.x >= refX - EPS) { cutXHi = Math.min(xHi, o.min.x - HALF); canCutX = true; }
+            double cutZLo = zLo, cutZHi = zHi;
+            boolean canCutZ = false;
+            if (o.max.z <= refZ + EPS) { cutZLo = Math.max(zLo, o.max.z + HALF); canCutZ = true; }
+            else if (o.min.z >= refZ - EPS) { cutZHi = Math.min(zHi, o.min.z - HALF); canCutZ = true; }
+            if (keep != null) {
+                if (canCutX && !contains(cutXLo, cutXHi, zLo, zHi, keep)) canCutX = false;
+                if (canCutZ && !contains(xLo, xHi, cutZLo, cutZHi, keep)) canCutZ = false;
+            }
+            boolean spansRefZ = o.min.z <= refZ + EPS && o.max.z >= refZ - EPS;
+            boolean spansRefX = o.min.x <= refX + EPS && o.max.x >= refX - EPS;
+            boolean cutX;
+            if (canCutX && (spansRefZ || !canCutZ)) cutX = true;
+            else if (canCutZ && (spansRefX || !canCutX)) cutX = false;
+            else if (canCutX && canCutZ) {
+                double areaX = Math.max(0.0, cutXHi - cutXLo) * Math.max(0.0, zHi - zLo);
+                double areaZ = Math.max(0.0, xHi - xLo) * Math.max(0.0, cutZHi - cutZLo);
+                cutX = areaX >= areaZ;
+            } else return null;
+            if (cutX) { xLo = cutXLo; xHi = cutXHi; }
+            else { zLo = cutZLo; zHi = cutZHi; }
+        }
+        return new double[] {xLo, xHi, zLo, zHi};
+    }
+
+    private static boolean contains(double xLo, double xHi, double zLo, double zHi, double[] inner) {
+        return xLo <= inner[0] + EPS && inner[1] <= xHi + EPS && zLo <= inner[2] + EPS && inner[3] <= zHi + EPS;
+    }
+
     public static double[] deriveCell(int bx, int bz, double footY, double refX, double refZ, List<AABB> obstacles) {
         return clipByObstacles(bx, bx + 1.0, bz, bz + 1.0, footY, refX, refZ, obstacles);
     }
