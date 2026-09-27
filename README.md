@@ -35,7 +35,7 @@ A TAS input planning mod for Minecraft. Simulate and visualize parkour movements
 - Experimental block capture: pick blocks from the world with their real collision shapes
 - Save and load input plans
 - Pin windows for quick access
-- Supports Fabric on the latest Minecraft (currently 26.2), Forge 1.8.9, and Forge 1.12.2
+- Supports Fabric on the latest Minecraft (currently 26.3), Forge 1.8.9, and Forge 1.12.2
 
 ## Multiplayer
 
@@ -95,7 +95,7 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the full workflow. Quick summary: f
 
 Releases ship one jar per loader. Grab the matching file from the [latest release](https://github.com/Leg0shii/ParkourCalculatorMod/releases/latest) and follow the section for your loader. `<version>` below is the release tag without the `v` prefix (e.g. `1.0.0`).
 
-### Fabric (latest Minecraft, currently 26.2)
+### Fabric (latest Minecraft, currently 26.3)
 
 1. Install the [Fabric Loader](https://fabricmc.net/use/installer/) for the Minecraft version named in the release notes.
 2. Install [Fabric API](https://modrinth.com/mod/fabric-api) into your `mods` folder.

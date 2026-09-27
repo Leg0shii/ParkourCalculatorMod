@@ -21,10 +21,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import org.lwjgl.glfw.GLFW;
+import com.mojang.blaze3d.platform.InputConstants;
+import org.lwjgl.sdl.SDLKeyboard;
+import org.lwjgl.sdl.SDLMouse;
 import org.lwjgl.system.MemoryStack;
 
-import java.nio.DoubleBuffer;
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -205,14 +207,12 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
 
     @Override
     public boolean isMousePressedLeft() {
-        long window = Minecraft.getInstance().getWindow().handle();
-        return GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_PRESS;
+        return (mouseButtonMask() & (1 << (InputConstants.MOUSE_BUTTON_LEFT - 1))) != 0;
     }
 
     @Override
     public boolean isMousePressedRight() {
-        long window = Minecraft.getInstance().getWindow().handle();
-        return GLFW.glfwGetMouseButton(window, GLFW.GLFW_MOUSE_BUTTON_RIGHT) == GLFW.GLFW_PRESS;
+        return (mouseButtonMask() & (1 << (InputConstants.MOUSE_BUTTON_RIGHT - 1))) != 0;
     }
 
     @Override
@@ -225,86 +225,79 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
         return cursorPos(false);
     }
 
+    private static int mouseButtonMask() {
+        return SDLMouse.SDL_GetMouseState(null, null);
+    }
+
     private static double cursorPos(boolean wantX) {
-        long window = Minecraft.getInstance().getWindow().handle();
         try (MemoryStack stack = MemoryStack.stackPush()) {
-            DoubleBuffer x = stack.mallocDouble(1);
-            DoubleBuffer y = stack.mallocDouble(1);
-            GLFW.glfwGetCursorPos(window, x, y);
+            FloatBuffer x = stack.mallocFloat(1);
+            FloatBuffer y = stack.mallocFloat(1);
+            SDLMouse.SDL_GetMouseState(x, y);
             return wantX ? x.get(0) : y.get(0);
         }
     }
 
     @Override
     public boolean isCtrlDown() {
-        long window = Minecraft.getInstance().getWindow().handle();
-        return GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS
-                || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_CONTROL) == GLFW.GLFW_PRESS;
+        return InputConstants.isKeyDown(InputConstants.KEY_LCONTROL) || InputConstants.isKeyDown(InputConstants.KEY_RCONTROL);
     }
 
     @Override
     public boolean isSaveChordDown() {
-        long window = Minecraft.getInstance().getWindow().handle();
-        return isCtrlDown() && GLFW.glfwGetKey(window, GLFW.GLFW_KEY_S) == GLFW.GLFW_PRESS;
+        return isCtrlDown() && InputConstants.isKeyDown(InputConstants.KEY_S);
     }
 
     @Override
     public boolean isAltDown() {
-        long window = Minecraft.getInstance().getWindow().handle();
-        return GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_ALT) == GLFW.GLFW_PRESS
-                || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_ALT) == GLFW.GLFW_PRESS;
+        return InputConstants.isKeyDown(InputConstants.KEY_LALT) || InputConstants.isKeyDown(InputConstants.KEY_RALT);
     }
 
-    private static int undoKey = GLFW.GLFW_KEY_UNKNOWN;
-    private static int redoKey = GLFW.GLFW_KEY_UNKNOWN;
+    private static final int UNRESOLVED_SCANCODE = 0;
+    private static int undoKey = UNRESOLVED_SCANCODE;
+    private static int redoKey = UNRESOLVED_SCANCODE;
 
     private static int keyTyping(char letter, int fallback) {
-        for (int key = GLFW.GLFW_KEY_A; key <= GLFW.GLFW_KEY_Z; key++) {
-            String name = GLFW.glfwGetKeyName(key, 0);
-            if (name != null && name.length() == 1 && Character.toLowerCase(name.charAt(0)) == letter) return key;
+        for (int scancode = InputConstants.KEY_A; scancode <= InputConstants.KEY_Z; scancode++) {
+            int keycode = SDLKeyboard.SDL_GetKeyFromScancode(scancode, (short) 0, false);
+            if (keycode == letter) return scancode;
         }
         return fallback;
     }
 
     private static void resolveEditKeys() {
-        if (undoKey != GLFW.GLFW_KEY_UNKNOWN) return;
-        undoKey = keyTyping('z', GLFW.GLFW_KEY_Z);
-        redoKey = keyTyping('y', GLFW.GLFW_KEY_Y);
+        if (undoKey != UNRESOLVED_SCANCODE) return;
+        undoKey = keyTyping('z', InputConstants.KEY_Z);
+        redoKey = keyTyping('y', InputConstants.KEY_Y);
     }
 
     @Override
     public boolean isUndoChordDown() {
         resolveEditKeys();
-        long window = Minecraft.getInstance().getWindow().handle();
-        return isCtrlDown() && !isShiftDown() && GLFW.glfwGetKey(window, undoKey) == GLFW.GLFW_PRESS;
+        return isCtrlDown() && !isShiftDown() && InputConstants.isKeyDown(undoKey);
     }
 
     @Override
     public boolean isRedoChordDown() {
         resolveEditKeys();
-        long window = Minecraft.getInstance().getWindow().handle();
         if (!isCtrlDown()) return false;
-        if (GLFW.glfwGetKey(window, redoKey) == GLFW.GLFW_PRESS) return true;
-        return isShiftDown() && GLFW.glfwGetKey(window, undoKey) == GLFW.GLFW_PRESS;
+        if (InputConstants.isKeyDown(redoKey)) return true;
+        return isShiftDown() && InputConstants.isKeyDown(undoKey);
     }
 
     @Override
     public boolean isCopyChordDown() {
-        long window = Minecraft.getInstance().getWindow().handle();
-        return isCtrlDown() && GLFW.glfwGetKey(window, GLFW.GLFW_KEY_C) == GLFW.GLFW_PRESS;
+        return isCtrlDown() && InputConstants.isKeyDown(InputConstants.KEY_C);
     }
 
     @Override
     public boolean isPasteChordDown() {
-        long window = Minecraft.getInstance().getWindow().handle();
-        return isCtrlDown() && GLFW.glfwGetKey(window, GLFW.GLFW_KEY_V) == GLFW.GLFW_PRESS;
+        return isCtrlDown() && InputConstants.isKeyDown(InputConstants.KEY_V);
     }
 
     @Override
     public boolean isShiftDown() {
-        long window = Minecraft.getInstance().getWindow().handle();
-        return GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS
-                || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS;
+        return InputConstants.isKeyDown(InputConstants.KEY_LSHIFT) || InputConstants.isKeyDown(InputConstants.KEY_RSHIFT);
     }
 
     @Override

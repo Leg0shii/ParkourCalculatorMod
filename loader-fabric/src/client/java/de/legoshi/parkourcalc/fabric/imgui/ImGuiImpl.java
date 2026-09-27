@@ -1,6 +1,6 @@
 package de.legoshi.parkourcalc.fabric.imgui;
 
-import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.ui.theme.Fonts;
@@ -13,16 +13,14 @@ import imgui.ImGui;
 import imgui.ImGuiIO;
 import imgui.extension.implot.ImPlot;
 import imgui.extension.implot.ImPlotContext;
-import imgui.flag.ImGuiConfigFlags;
 import imgui.gl3.ImGuiImplGl3;
-import imgui.glfw.ImGuiImplGlfw;
 import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.opengl.FrameBufferAttachment;
-import com.mojang.blaze3d.opengl.GlDevice;
-import com.mojang.blaze3d.opengl.GlTexture;
+import com.mojang.renderpearl.backend.opengl.FrameBufferAttachment;
+import com.mojang.renderpearl.backend.opengl.GlDevice;
+import com.mojang.renderpearl.frontend.FrontendGpuDevice;
+import com.mojang.renderpearl.backend.opengl.GlTexture;
 import org.apache.commons.io.IOUtils;
-import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL21C;
 import org.lwjgl.opengl.GL30;
@@ -46,7 +44,7 @@ public final class ImGuiImpl {
     private static final int BASE_FONT_SIZE = 18;
     private static final String INI_FILENAME = "parkourcalculator.ini";
 
-    private static final ImGuiImplGlfw imGuiGlfw = new ImGuiImplGlfw();
+    private static final ImGuiSdlPlatform platform = new ImGuiSdlPlatform();
     private static final ImGuiImplGl3 imGuiGl3 = new ImGuiImplGl3();
     private static ImPlotContext implotContext;
 
@@ -58,7 +56,7 @@ public final class ImGuiImpl {
 
     private ImGuiImpl() {}
 
-    public static void create(long windowHandle, Settings settingsRef, IntConsumer autoScaleResolverRef) {
+    public static void create(Settings settingsRef, IntConsumer autoScaleResolverRef) {
         settings = settingsRef;
         autoScaleResolver = autoScaleResolverRef;
 
@@ -71,7 +69,7 @@ public final class ImGuiImpl {
         configurePresetFonts();
         applyScale(settings.scaleIndex);
 
-        imGuiGlfw.init(windowHandle, false);
+        platform.init();
         // 1.86's ImGuiImplGl3 omits the GL_UNPACK_* reset that 1.90 does internally, so MC's
         // leftover pixel-store state scrambles the font atlas on upload (glyphs render as garbage).
         // Normalize to GL defaults before init() uploads the atlas.
@@ -88,9 +86,9 @@ public final class ImGuiImpl {
         applyPendingScale();
         bindMinecraftFramebuffer();
 
-        imGuiGlfw.newFrame();
+        platform.newFrame();
         ImGui.newFrame();
-        // imGuiGlfw feeds the polled cursor pos into ImGui during newFrame, so the
+        // the platform layer feeds the polled cursor pos into ImGui during newFrame, so the
         // off-screen override below has to run AFTER it to win.
         if (!FabricParkourCalculator.isUiFocused()) {
             ImGuiIO io = ImGui.getIO();
@@ -121,32 +119,30 @@ public final class ImGuiImpl {
         imGuiGl3.renderDrawData(ImGui.getDrawData());
 
         GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
-
-        handleViewports();
     }
 
     public static void dispose() {
         imGuiGl3.dispose();
-        imGuiGlfw.dispose();
+        platform.dispose();
 
         ImPlot.destroyContext(implotContext);
         ImGui.destroyContext();
     }
 
-    public static void keyCallback(long window, int key, int scancode, int action, int mods) {
-        imGuiGlfw.keyCallback(window, key, scancode, action, mods);
+    public static void keyCallback(int scancode, int action) {
+        platform.keyCallback(scancode, action);
     }
 
-    public static void charCallback(long window, int codepoint) {
-        imGuiGlfw.charCallback(window, codepoint);
+    public static void charCallback(int codepoint) {
+        platform.charCallback(codepoint);
     }
 
-    public static void mouseButtonCallback(long window, int button, int action, int mods) {
-        imGuiGlfw.mouseButtonCallback(window, button, action, mods);
+    public static void mouseButtonCallback(int button, int action) {
+        platform.mouseButtonCallback(button, action);
     }
 
-    public static void scrollCallback(long window, double xOffset, double yOffset) {
-        imGuiGlfw.scrollCallback(window, xOffset, yOffset);
+    public static void scrollCallback(double xOffset, double yOffset) {
+        platform.scrollCallback(xOffset, yOffset);
     }
 
     private static int currentFramebufferHeight() {
@@ -158,24 +154,13 @@ public final class ImGuiImpl {
 
     private static void bindMinecraftFramebuffer() {
         RenderTarget framebuffer = Minecraft.getInstance().gameRenderer.mainRenderTarget();
-        GlDevice glDevice = (GlDevice) RenderSystem.getDevice().backend;
+        GlDevice glDevice = (GlDevice) ((FrontendGpuDevice) RenderSystem.getDevice()).backend;
         FrameBufferAttachment color = (GlTexture) Objects.requireNonNull(framebuffer.getColorTexture());
         int framebufferId = glDevice.frameBufferCache()
                 .getFbo(glDevice.directStateAccess(), Collections.singletonList(color), null);
 
         GlStateManager._glBindFramebuffer(GL30C.GL_FRAMEBUFFER, framebufferId);
         GL11C.glViewport(0, 0, framebuffer.width, framebuffer.height);
-    }
-
-    private static void handleViewports() {
-        if (!ImGui.getIO().hasConfigFlags(ImGuiConfigFlags.ViewportsEnable)) {
-            return;
-        }
-
-        long currentContext = GLFW.glfwGetCurrentContext();
-        ImGui.updatePlatformWindows();
-        ImGui.renderPlatformWindowsDefault();
-        GLFW.glfwMakeContextCurrent(currentContext);
     }
 
     private static void configurePresetFonts() {

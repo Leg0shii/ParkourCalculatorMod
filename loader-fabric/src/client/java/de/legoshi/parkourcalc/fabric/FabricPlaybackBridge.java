@@ -177,8 +177,8 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
                 + " vCollB=" + sp.verticalCollisionBelow
                 + " spr=" + sp.isSprinting()
                 + " sneak=" + sp.isShiftKeyDown()
-                + " hurtMarked=" + sp.hurtMarked
-                + " invuln=" + sp.invulnerableTime
+                + " syncVelocity=" + sp.syncVelocity
+                + " invuln=" + sp.getInvulnerableTime()
                 + " hurtTime=" + sp.hurtTime
                 + " fire=" + sp.getRemainingFireTicks()
                 + " in=" + de.legoshi.parkourcalc.fabric.sim.paired.PairedServerSim.describeInput(sp.getLastClientInput())

@@ -48,6 +48,14 @@ dependencies {
 	include implementation("io.github.spair:imgui-java-natives-windows:${project.imgui_version}")
 	include implementation("io.github.spair:imgui-java-natives-linux:${project.imgui_version}")
 	include implementation("io.github.spair:imgui-java-natives-macos:${project.imgui_version}")
+
+	include implementation("org.lwjgl:lwjgl-tinyfd:${project.lwjgl_version}")
+	include runtimeOnly("org.lwjgl:lwjgl-tinyfd:${project.lwjgl_version}:natives-windows")
+	include runtimeOnly("org.lwjgl:lwjgl-tinyfd:${project.lwjgl_version}:natives-windows-arm64")
+	include runtimeOnly("org.lwjgl:lwjgl-tinyfd:${project.lwjgl_version}:natives-linux")
+	include runtimeOnly("org.lwjgl:lwjgl-tinyfd:${project.lwjgl_version}:natives-linux-arm64")
+	include runtimeOnly("org.lwjgl:lwjgl-tinyfd:${project.lwjgl_version}:natives-macos")
+	include runtimeOnly("org.lwjgl:lwjgl-tinyfd:${project.lwjgl_version}:natives-macos-arm64")
 }
 
 processClientResources {
