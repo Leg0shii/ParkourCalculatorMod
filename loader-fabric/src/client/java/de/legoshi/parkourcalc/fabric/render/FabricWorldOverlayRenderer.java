@@ -24,7 +24,7 @@ import org.joml.Matrix4f;
 import java.util.Set;
 import java.util.function.Supplier;
 
-/** Renders the cached path geometry into the world inside the solid-stage render pass; the yaw gizmo goes through the submit phase. */
+/** Builds the cached path geometry during submit collection and draws it inside the solid-stage render pass; the yaw gizmo goes through the submit phase. */
 public final class FabricWorldOverlayRenderer {
 
     private static final int MOMENTUM_OUTLINE = 0xFF36C957, MOMENTUM_FILL = 0x4036C957;
@@ -48,20 +48,26 @@ public final class FabricWorldOverlayRenderer {
         this.angleSolver = angleSolver;
     }
 
-    public void render(LevelRenderState levelState, RenderPass pass) {
+    public void prepare() {
         if (boxController.isEmpty()) {
             cached.close();
             return;
         }
-
-        long renderStart = Perf.now();
+        long buildStart = Perf.now();
         boxController.setBoxSize(BoxStyle.tickBoxSize(settings));
-
-        CameraRenderState camera = levelState.cameraRenderState;
-        Vec3 cameraPos = camera.pos;
-
         PathRenderPlan plan = PathRenderPlan.build(boxController, settings, selection);
         cached.ensureBuilt(boxController, plan);
+        Perf.stop("worldOverlayPrepare", buildStart);
+    }
+
+    public void draw(LevelRenderState levelState, RenderPass pass) {
+        if (boxController.isEmpty()) {
+            return;
+        }
+
+        long renderStart = Perf.now();
+        CameraRenderState camera = levelState.cameraRenderState;
+        Vec3 cameraPos = camera.pos;
 
         Matrix4f modelView = new Matrix4f(camera.viewRotationMatrix).translate(
                 (float) (cached.anchorX() - cameraPos.x),

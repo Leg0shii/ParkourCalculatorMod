@@ -546,34 +546,27 @@ public class FabricParkourCalculator implements ClientModInitializer {
      * only against opaque geometry and stay visible through water, lava, and stained/tinted glass.
      */
     public static void renderWorldOverlayBeforeTranslucent(LevelRenderState levelState, RenderPass pass) {
-        if (levelState != null && pass != null) {
-            onWorldRender(levelState, pass);
-        }
-    }
-
-    public static void onWorldRender(LevelRenderState levelState, RenderPass pass) {
-        application.tickDrag();
-        boolean showPath = application.getSettings().showPath;
-        if (application.isPlaybackRunning()) {
-            application.renderPlayback();
-            if (showPath && application.getSettings().keepBoxesDuringPlayback) {
-                worldRenderer.render(levelState, pass);
-            }
-            return;
-        }
-        if (showPath) {
-            worldRenderer.render(levelState, pass);
+        if (levelState == null || pass == null) return;
+        if (shouldDrawPath()) {
+            worldRenderer.draw(levelState, pass);
         }
     }
 
     private static void onCollectSubmits(LevelRenderContext context) {
-        if (!application.getSettings().showPath) {
+        application.tickDrag();
+        if (application.isPlaybackRunning()) {
+            application.renderPlayback();
+        }
+        if (!shouldDrawPath()) {
             return;
         }
-        if (application.isPlaybackRunning() && !application.getSettings().keepBoxesDuringPlayback) {
-            return;
-        }
+        worldRenderer.prepare();
         worldRenderer.submitGizmo(context);
+    }
+
+    private static boolean shouldDrawPath() {
+        if (!application.getSettings().showPath) return false;
+        return !application.isPlaybackRunning() || application.getSettings().keepBoxesDuringPlayback;
     }
 
     /** Called from InGameHudMixin to queue the MACRO badge into the GUI state. */
