@@ -26,6 +26,8 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.KeyMapping;
 import com.mojang.blaze3d.Blaze3D;
 import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.renderpearl.api.commands.RenderPass;
+import net.minecraft.client.renderer.state.level.LevelRenderState;
 import net.minecraft.resources.Identifier;
 
 import java.net.URI;
@@ -188,7 +190,6 @@ public class FabricParkourCalculator implements ClientModInitializer {
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> application.onWorldChange());
         ServerLifecycleEvents.SERVER_STOPPING.register(simulator::onServerStopping);
 
-        LevelRenderEvents.AFTER_SOLID_FEATURES.register(FabricParkourCalculator::renderWorldOverlayBeforeTranslucent);
         LevelRenderEvents.COLLECT_SUBMITS.register(FabricParkourCalculator::onCollectSubmits);
     }
 
@@ -544,24 +545,24 @@ public class FabricParkourCalculator implements ClientModInitializer {
      * Fires after solid features, before translucent terrain draws, so boxes depth-test
      * only against opaque geometry and stay visible through water, lava, and stained/tinted glass.
      */
-    public static void renderWorldOverlayBeforeTranslucent(LevelRenderContext context) {
-        if (context != null) {
-            onWorldRender(context);
+    public static void renderWorldOverlayBeforeTranslucent(LevelRenderState levelState, RenderPass pass) {
+        if (levelState != null && pass != null) {
+            onWorldRender(levelState, pass);
         }
     }
 
-    public static void onWorldRender(LevelRenderContext context) {
+    public static void onWorldRender(LevelRenderState levelState, RenderPass pass) {
         application.tickDrag();
         boolean showPath = application.getSettings().showPath;
         if (application.isPlaybackRunning()) {
             application.renderPlayback();
             if (showPath && application.getSettings().keepBoxesDuringPlayback) {
-                worldRenderer.render(context);
+                worldRenderer.render(levelState, pass);
             }
             return;
         }
         if (showPath) {
-            worldRenderer.render(context);
+            worldRenderer.render(levelState, pass);
         }
     }
 

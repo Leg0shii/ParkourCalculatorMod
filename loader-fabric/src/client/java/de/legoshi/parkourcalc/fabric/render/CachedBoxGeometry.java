@@ -6,7 +6,6 @@ import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.mojang.renderpearl.api.commands.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.renderpearl.api.textures.GpuTextureView;
 import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.ports.BoxRenderer;
 import de.legoshi.parkourcalc.core.render.PathRenderPlan;
@@ -16,8 +15,6 @@ import de.legoshi.parkourcalc.core.render.TailPatchGate;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
-import net.minecraft.client.Minecraft;
-import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
@@ -30,8 +27,6 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
-import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -297,31 +292,31 @@ public final class CachedBoxGeometry implements AutoCloseable {
         return remaining == 0;
     }
 
-    public void drawFaces(Matrix4f modelView, int[] runs) {
+    public void drawFaces(RenderPass pass, Matrix4f modelView, int[] runs) {
         RenderPipeline pipeline = FabricRenderLayers.translucentBoxPipeline();
         int constraintFaceBase = faceTotal - constraintFaceVerts;
         for (int k = 0; k + 1 < runs.length; k += 2) {
             int a = runs[k];
             int b = runs[k + 1];
-            drawRange(faceSegments, pipeline, PrimitiveTopology.TRIANGLES, modelView, PathVertexLayout.faceMainOffset(a), (b - a) * PathVertexLayout.FACE_VERTS_PER_BOX);
+            drawRange(pass, faceSegments, pipeline, PrimitiveTopology.TRIANGLES, modelView, PathVertexLayout.faceMainOffset(a), (b - a) * PathVertexLayout.FACE_VERTS_PER_BOX);
             if (hitboxEdges != 0) {
-                drawRange(faceSegments, pipeline, PrimitiveTopology.TRIANGLES, modelView,hitboxBase + hitboxStarts[a], hitboxStarts[b] - hitboxStarts[a]);
+                drawRange(pass, faceSegments, pipeline, PrimitiveTopology.TRIANGLES, modelView,hitboxBase + hitboxStarts[a], hitboxStarts[b] - hitboxStarts[a]);
             }
             if (arrowsPerBox > 0 && arrowBase < constraintFaceBase) {
                 int arrowStride = arrowsPerBox * PathVertexLayout.ARROW_VERTS_PER_BOX;
                 int arrowEnd = Math.min(b, boxCount - 1);
                 int arrowStart = Math.min(a, boxCount - 1);
                 if (arrowEnd > arrowStart) {
-                    drawRange(faceSegments, pipeline, PrimitiveTopology.TRIANGLES, modelView,arrowBase + arrowStart * arrowStride, (arrowEnd - arrowStart) * arrowStride);
+                    drawRange(pass, faceSegments, pipeline, PrimitiveTopology.TRIANGLES, modelView,arrowBase + arrowStart * arrowStride, (arrowEnd - arrowStart) * arrowStride);
                 }
             }
         }
         if (constraintFaceVerts > 0) {
-            drawRange(faceSegments, FabricRenderLayers.constraintFillPipeline(), PrimitiveTopology.TRIANGLES, modelView, constraintFaceBase, constraintFaceVerts);
+            drawRange(pass, faceSegments, FabricRenderLayers.constraintFillPipeline(), PrimitiveTopology.TRIANGLES, modelView, constraintFaceBase, constraintFaceVerts);
         }
     }
 
-    public void drawLines(Matrix4f modelView, int[] runs) {
+    public void drawLines(RenderPass pass, Matrix4f modelView, int[] runs) {
         RenderPipeline pipeline = FabricRenderLayers.thinLinesPipeline();
         int trailingLineVerts = constraintLineVerts + reachLineVerts;
         int trailingLineBase = lineTotal - trailingLineVerts;
@@ -329,13 +324,13 @@ public final class CachedBoxGeometry implements AutoCloseable {
         for (int k = 0; k + 1 < runs.length; k += 2) {
             int a = runs[k];
             int b = runs[k + 1];
-            drawRange(lineSegments, pipeline, PrimitiveTopology.DEBUG_LINES, modelView, PathVertexLayout.lineMainOffset(a), (b - a) * PathVertexLayout.LINE_VERTS_PER_BOX);
+            drawRange(pass, lineSegments, pipeline, PrimitiveTopology.DEBUG_LINES, modelView, PathVertexLayout.lineMainOffset(a), (b - a) * PathVertexLayout.LINE_VERTS_PER_BOX);
             if (hasSubtick) {
-                drawRange(lineSegments, pipeline, PrimitiveTopology.DEBUG_LINES, modelView,lineMainTotal + subtickStarts[a], subtickStarts[b] - subtickStarts[a]);
+                drawRange(pass, lineSegments, pipeline, PrimitiveTopology.DEBUG_LINES, modelView,lineMainTotal + subtickStarts[a], subtickStarts[b] - subtickStarts[a]);
             }
         }
         if (trailingLineVerts > 0) {
-            drawRange(lineSegments, pipeline, PrimitiveTopology.DEBUG_LINES, modelView, trailingLineBase, trailingLineVerts);
+            drawRange(pass, lineSegments, pipeline, PrimitiveTopology.DEBUG_LINES, modelView, trailingLineBase, trailingLineVerts);
         }
     }
 
@@ -351,7 +346,7 @@ public final class CachedBoxGeometry implements AutoCloseable {
         return anchorZ;
     }
 
-    private static void drawRange(List<Segment> segments, RenderPipeline pipeline, PrimitiveTopology drawMode, Matrix4f modelView, int globalVertexOffset, int count) {
+    private static void drawRange(RenderPass pass, List<Segment> segments, RenderPipeline pipeline, PrimitiveTopology drawMode, Matrix4f modelView, int globalVertexOffset, int count) {
         if (count <= 0) return;
         int cursor = globalVertexOffset;
         int remaining = count;
@@ -361,7 +356,7 @@ public final class CachedBoxGeometry implements AutoCloseable {
             if (remaining > 0 && cursor < segmentEnd) {
                 int localVertex = cursor - segmentStart;
                 int drawable = Math.min(remaining, segment.vertexCount() - localVertex);
-                drawSegment(pipeline, segment.buffer(), drawMode, modelView, localVertex, drawable);
+                drawSegment(pass, pipeline, segment.buffer(), drawMode, modelView, localVertex, drawable);
                 cursor += drawable;
                 remaining -= drawable;
             }
@@ -370,7 +365,7 @@ public final class CachedBoxGeometry implements AutoCloseable {
         }
     }
 
-    private static void drawSegment(RenderPipeline pipeline, GpuBuffer vbo, PrimitiveTopology drawMode, Matrix4f modelView, int firstVertex, int count) {
+    private static void drawSegment(RenderPass pass, RenderPipeline pipeline, GpuBuffer vbo, PrimitiveTopology drawMode, Matrix4f modelView, int firstVertex, int count) {
         GpuBufferSlice dynamicTransforms = RenderSystem.getDynamicUniforms().writeTransform(
                 modelView,
                 new Vector4f(1.0f, 1.0f, 1.0f, 1.0f),
@@ -381,18 +376,12 @@ public final class CachedBoxGeometry implements AutoCloseable {
         RenderSystem.AutoStorageIndexBuffer indexBuffer = RenderSystem.getSequentialBuffer(drawMode);
         GpuBuffer ibo = indexBuffer.getBuffer(firstVertex + count);
 
-        RenderTarget framebuffer = Minecraft.getInstance().gameRenderer.mainRenderTarget();
-        GpuTextureView color = framebuffer.getColorTextureView();
-        GpuTextureView depth = framebuffer.getDepthTextureView();
-
-        try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "parkourcalc cached", color, Optional.empty(), depth, OptionalDouble.empty())) {
-            pass.setPipeline(RenderSystem.getCompiledPipeline(pipeline));
-            RenderSystem.bindDefaultUniforms(pass);
-            pass.setUniform("DynamicTransforms", dynamicTransforms);
-            pass.setVertexBuffer(0, vbo.slice());
-            pass.setIndexBuffer(ibo, indexBuffer.type());
-            pass.drawIndexed(count, 1, firstVertex, 0, 0);
-        }
+        pass.setPipeline(RenderSystem.getCompiledPipeline(pipeline));
+        RenderSystem.bindDefaultUniforms(pass);
+        pass.setUniform("DynamicTransforms", dynamicTransforms);
+        pass.setVertexBuffer(0, vbo.slice());
+        pass.setIndexBuffer(ibo, indexBuffer.type());
+        pass.drawIndexed(count, 1, firstVertex, 0, 0);
     }
 
     private void releaseBuffers() {

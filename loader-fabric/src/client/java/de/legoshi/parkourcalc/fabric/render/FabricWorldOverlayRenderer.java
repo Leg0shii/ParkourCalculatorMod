@@ -13,16 +13,18 @@ import de.legoshi.parkourcalc.core.ui.BoxStyle;
 import de.legoshi.parkourcalc.core.ui.SelectionManager;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.ui.YawGizmoController;
+import com.mojang.renderpearl.api.commands.RenderPass;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.client.renderer.state.level.LevelRenderState;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 
 import java.util.Set;
 import java.util.function.Supplier;
 
-/** Renders the cached path geometry into the world from the AFTER_SOLID_FEATURES event; the yaw gizmo goes through the submit phase. */
+/** Renders the cached path geometry into the world inside the solid-stage render pass; the yaw gizmo goes through the submit phase. */
 public final class FabricWorldOverlayRenderer {
 
     private static final int MOMENTUM_OUTLINE = 0xFF36C957, MOMENTUM_FILL = 0x4036C957;
@@ -46,7 +48,7 @@ public final class FabricWorldOverlayRenderer {
         this.angleSolver = angleSolver;
     }
 
-    public void render(LevelRenderContext context) {
+    public void render(LevelRenderState levelState, RenderPass pass) {
         if (boxController.isEmpty()) {
             cached.close();
             return;
@@ -55,7 +57,7 @@ public final class FabricWorldOverlayRenderer {
         long renderStart = Perf.now();
         boxController.setBoxSize(BoxStyle.tickBoxSize(settings));
 
-        CameraRenderState camera = context.levelState().cameraRenderState;
+        CameraRenderState camera = levelState.cameraRenderState;
         Vec3 cameraPos = camera.pos;
 
         PathRenderPlan plan = PathRenderPlan.build(boxController, settings, selection);
@@ -67,8 +69,8 @@ public final class FabricWorldOverlayRenderer {
                 (float) (cached.anchorZ() - cameraPos.z)
         );
         int[] runs = boxController.inRangeRuns(cameraPos.x, cameraPos.y, cameraPos.z, BoxStyle.pathMaxDistanceSq(settings));
-        cached.drawLines(modelView, runs);
-        cached.drawFaces(modelView, runs);
+        cached.drawLines(pass, modelView, runs);
+        cached.drawFaces(pass, modelView, runs);
 
         Perf.stop("worldOverlay", renderStart);
         Perf.addBoxes(boxController.size());
