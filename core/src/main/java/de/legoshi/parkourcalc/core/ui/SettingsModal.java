@@ -53,6 +53,7 @@ public final class SettingsModal {
     private static final String TT_COL_PITCH = "Pitch angle column.";
     private static final String TT_COL_LMB = "Left click / attack column.";
     private static final String TT_COL_RMB = "Right click / use column.";
+    private static final String TT_COL_CLOSE_INVENTORY = "Adds a per-tick column that closes the open inventory or container screen on that tick during playback, like pressing Esc in it.";
     private static final String TT_YAW_TURN_RATE = "Caps how fast the macro rotates the camera during playback (deg per second).";
     private static final String TT_PATH_DIST = "Maximum world distance for the simulated path overlay.";
     private static final String TT_PATH_UNLIMITED = "Disables the distance cap. Heavy on long TASes.";
@@ -474,6 +475,7 @@ public final class SettingsModal {
             checkboxRow("Pitch", "##col_pitch", settings.showColPitch, TT_COL_PITCH, v -> settings.showColPitch = v);
             checkboxRow("Left click (LMB)", "##col_lmb", settings.showColLeftClick, TT_COL_LMB, v -> settings.showColLeftClick = v);
             checkboxRow("Right click (RMB)", "##col_rmb", settings.showColRightClick, TT_COL_RMB, v -> settings.showColRightClick = v);
+            checkboxRow("Close inventory", "##col_close_inv", settings.showColCloseInventory, TT_COL_CLOSE_INVENTORY, v -> settings.showColCloseInventory = v);
             checkboxRow("Speed", "##show_speed", settings.showColSpeed, TT_COL_SPEED_AMP, v -> settings.showColSpeed = v);
             checkboxRow("Jump Boost", "##show_jump_boost", settings.showColJumpBoost, TT_COL_JUMP_BOOST_AMP, v -> settings.showColJumpBoost = v);
             checkboxRow("Hotbar slot", "##show_hotbar", settings.showColHotbar, TT_COL_HOTBAR, v -> settings.showColHotbar = v);

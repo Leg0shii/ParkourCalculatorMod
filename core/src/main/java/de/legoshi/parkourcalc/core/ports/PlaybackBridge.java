@@ -51,6 +51,8 @@ public interface PlaybackBridge {
     /** Switch the held hotbar slot (0-8) so playback places from the right slot. No-op if unsupported. */
     default void setHotbarSlot(int slotZeroBased) {}
 
+    default void closeInventory() {}
+
     default void dumpPlayerState(int tickIndex) {}
 
     /** Park the server before the restart state is applied, so no ungated tick can advance it. */

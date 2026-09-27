@@ -606,7 +606,18 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
             case SPRINT: return o.keyBindSprint;
             case LEFT_CLICK: return o.keyBindAttack;
             case RIGHT_CLICK: return o.keyBindUseItem;
+            default: return null;
         }
-        return null;
+    }
+
+    @Override
+    public void closeInventory() {
+        if (ghostMode) return;
+        Minecraft mc = Minecraft.getMinecraft();
+        EntityPlayerSP p = mc.thePlayer;
+        if (p == null) return;
+        if (mc.currentScreen instanceof net.minecraft.client.gui.inventory.GuiContainer) {
+            p.closeScreen();
+        }
     }
 }

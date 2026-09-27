@@ -57,7 +57,7 @@ public final class InputOverlay {
             InputRow.Key.SPRINT, InputRow.Key.SNEAK, InputRow.Key.JUMP
     };
     private static final InputRow.Key[] MOUSE_KEYS = {
-            InputRow.Key.LEFT_CLICK, InputRow.Key.RIGHT_CLICK
+            InputRow.Key.LEFT_CLICK, InputRow.Key.RIGHT_CLICK, InputRow.Key.CLOSE_INVENTORY
     };
 
     private static final String ID_SPEED_SUFFIX = "##speed";
@@ -315,6 +315,7 @@ public final class InputOverlay {
             case JUMP: return settings.showColJump;
             case LEFT_CLICK: return settings.showColLeftClick;
             case RIGHT_CLICK: return settings.showColRightClick;
+            case CLOSE_INVENTORY: return settings.showColCloseInventory;
             default: return true;
         }
     }
@@ -718,6 +719,7 @@ public final class InputOverlay {
             case JUMP: return "Spc";
             case LEFT_CLICK: return "LMB";
             case RIGHT_CLICK: return "RMB";
+            case CLOSE_INVENTORY: return "Inv";
             default: return key.name();
         }
     }
@@ -733,6 +735,7 @@ public final class InputOverlay {
             case JUMP: return "Jump (Space)";
             case LEFT_CLICK: return "Left click / attack (hold)";
             case RIGHT_CLICK: return "Right click / use (hold)";
+            case CLOSE_INVENTORY: return "Close the open inventory / container screen on this tick (playback only)";
             default: return key.name();
         }
     }
