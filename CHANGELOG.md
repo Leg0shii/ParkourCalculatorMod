@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.13.1](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.13.0...v1.13.1) (2026-09-27)
+
+
+### Documentation
+
+* call Stratfinder results strats and note the early development state ([a6ade1f](https://github.com/Leg0shii/ParkourCalculatorMod/commit/a6ade1f9afc92f78a44e83c5cb46e3831236c754))
+* refresh the README for the current features, hotkeys and loaders ([#507](https://github.com/Leg0shii/ParkourCalculatorMod/issues/507)) ([f433403](https://github.com/Leg0shii/ParkourCalculatorMod/commit/f43340381f4fec587dccb74cadb4e66b84ee99a8))
+
 ## [1.13.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.12.0...v1.13.0) (2026-09-27)
 
 
