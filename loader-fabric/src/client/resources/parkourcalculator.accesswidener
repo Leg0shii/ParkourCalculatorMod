@@ -48,3 +48,9 @@ accessible field net/minecraft/server/MinecraftServer nextTickTimeNanos J
 accessible field net/minecraft/server/MinecraftServer delayedTasksMaxNextTickTimeNanos J
 accessible method net/minecraft/server/MinecraftServer pollTask ()Z
 accessible method net/minecraft/util/thread/BlockableEventLoop runAllTasks ()V
+
+accessible method net/minecraft/world/entity/Entity updateFluidInteraction ()Z
+accessible field net/minecraft/world/entity/Entity wasEyeInWater Z
+accessible method net/minecraft/world/entity/player/Player updateIsUnderwater ()Z
+accessible method net/minecraft/world/entity/player/Player updatePlayerPose ()V
+accessible method net/minecraft/client/player/LocalPlayer updateIsUnderwater ()Z

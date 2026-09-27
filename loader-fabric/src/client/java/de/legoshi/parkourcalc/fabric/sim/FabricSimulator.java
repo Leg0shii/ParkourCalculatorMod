@@ -274,6 +274,14 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
                 + " mvS=" + e.xxa
                 + " spdAmp=" + (spd == null ? -1 : spd.getAmplifier())
                 + " jmpAmp=" + (jmp == null ? -1 : jmp.getAmplifier())
+                + " pose=" + e.getPose()
+                + " inW=" + e.isInWater()
+                + " underW=" + e.isUnderWater()
+                + " swim=" + e.isSwimming()
+                + " crouch=" + e.isCrouching()
+                + " food=" + e.getFoodData().getFoodLevel()
+                + " fwd=" + e.input.hasForwardImpulse()
+                + " keys=" + de.legoshi.parkourcalc.fabric.sim.paired.PairedServerSim.describeInput(e.input.keyPresses)
                 + " mvSpeed=" + mvSp;
     }
 

@@ -15,6 +15,7 @@ import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.world.entity.player.Input;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec2;
@@ -478,6 +479,7 @@ public class SimulatorEntity extends Player {
         this.setPose(c.pose);
         this.refreshDimensions();
         this.setPos(c.pos);
+        settleFluidState();
         this.setDeltaMovement(c.velocity);
         this.setYRot(c.yaw);
         this.setXRot(c.pitch);
@@ -491,6 +493,14 @@ public class SimulatorEntity extends Player {
         this.noJumpDelay = c.jumpingCooldown;
         this.stuckSpeedMultiplier = c.movementMultiplier;
         this.fallDistance = c.fallDistance;
+    }
+
+    private void settleFluidState() {
+        this.updateFluidInteraction();
+        this.wasEyeInWater = this.isEyeInFluid(FluidTags.WATER);
+        this.updateIsUnderwater();
+        this.updateSwimming();
+        this.updatePlayerPose();
     }
 
     public void teleportRest(double x, double y, double z, double vx, double vy, double vz) {

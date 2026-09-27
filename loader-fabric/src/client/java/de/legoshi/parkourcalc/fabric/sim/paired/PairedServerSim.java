@@ -138,6 +138,7 @@ public final class PairedServerSim {
     private void resetServerSide(SimulatorEntity e) {
         ServerPlayer real = level.getServer().getPlayerList().getPlayer(e.getUUID());
         if (real != null) sp.getAttributes().assignBaseValues(real.getAttributes());
+        sp.setAirSupply(real != null ? real.getAirSupply() : sp.getMaxAirSupply());
         sp.absSnapTo(e.getX(), e.getY(), e.getZ(), e.getYRot(), 0.0F);
         sp.setDeltaMovement(e.getDeltaMovement());
         sp.fallDistance = 0.0;
@@ -482,6 +483,7 @@ public final class PairedServerSim {
         c.hurtTime = sp.hurtTime;
         c.syncVelocity = sp.syncVelocity;
         c.remainingFireTicks = sp.getRemainingFireTicks();
+        c.airSupply = sp.getAirSupply();
         c.shiftKeyDown = sp.isShiftKeyDown();
         c.sprinting = sp.isSprinting();
         c.awaitingPositionFromClient = handler.awaitingPositionFromClient;
@@ -537,6 +539,7 @@ public final class PairedServerSim {
         sp.hurtTime = c.hurtTime;
         sp.syncVelocity = c.syncVelocity;
         sp.setRemainingFireTicks(c.remainingFireTicks);
+        sp.setAirSupply(c.airSupply);
         sp.setShiftKeyDown(c.shiftKeyDown);
         sp.setSprinting(c.sprinting);
         handler.awaitingPositionFromClient = c.awaitingPositionFromClient;
@@ -594,6 +597,7 @@ public final class PairedServerSim {
         int hurtTime;
         boolean syncVelocity;
         int remainingFireTicks;
+        int airSupply;
         boolean shiftKeyDown;
         boolean sprinting;
         Vec3 awaitingPositionFromClient;

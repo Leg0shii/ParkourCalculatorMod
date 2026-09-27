@@ -63,6 +63,7 @@ public final class PairedCheckpoint implements Checkpoint {
         net.minecraft.world.phys.Vec3 beforeMotion = sp.getDeltaMovement();
         if (checkpoint instanceof PairedCheckpoint paired) {
             sp.setRemainingFireTicks(paired.server.remainingFireTicks);
+            sp.setAirSupply(paired.server.airSupply);
             sp.damageCooldownTime = paired.server.damageCooldownTime;
             sp.hurtTime = paired.server.hurtTime;
             sp.fallDistance = paired.server.fallDistance;
