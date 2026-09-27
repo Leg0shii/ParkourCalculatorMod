@@ -55,8 +55,9 @@ Every jar ships the same core: the input table, the simulation, the angle solver
 - **Live status**: the HUD shows solve progress and outcome while the UI is closed.
 
 ### Stratfinder
-- **No-turn lines**: a cold search over key schedules for byte-exact lines with one settable facing across the run-up and a single turn. Mark the no-turn ticks with dF = 0, set landing constraints, jump rows and a free-start box, and lines appear while the search runs.
-- **Rankings**: sort by easiest (fewest input changes) or furthest (largest landing offset), optimize every line for a time budget, and optionally solve human-friendly yaws that aim for clearance.
+- **No-turn strats**: a cold search over key schedules for byte-exact strats with one settable facing across the run-up and a single turn. Mark the no-turn ticks with dF = 0, set landing constraints, jump rows and a free-start box, and strats appear while the search runs.
+- **Rankings**: sort by easiest (fewest input changes) or furthest (largest landing offset), optimize every strat for a time budget, and optionally solve human-friendly yaws that aim for clearance.
+- **Early development**: this is a first version. It handles pure no-turns and single jump-angle strats on one jump with a free start and does not find complex strats yet (multi-jump routes, several turns, momentum chains).
 
 ### Velocity map
 - Sweep launch velocities against a jump and see which ones land it, as a 2D heatmap or an orbitable 3D surface. Apply a cell to the start state with one click.
