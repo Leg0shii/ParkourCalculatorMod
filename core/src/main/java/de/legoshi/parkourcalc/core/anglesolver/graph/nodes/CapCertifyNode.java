@@ -36,6 +36,7 @@ public final class CapCertifyNode implements NodeRuntime {
             return NodeOutcome.of(Guarantee.AT_CAP, in);
         }
         if (computeDualGap) {
+            ctx.requestDualGap();
             double bound = ctx.reachBound();
             if (!Double.isNaN(bound)) {
                 double gap = ctx.maximize() ? bound - achieved : achieved - bound;

@@ -18,6 +18,7 @@ public final class GraphFactory {
             case CUSTOM: {
                 String preset = state.getGraphPresetName();
                 if (BuiltinGraphs.FAST_PRESET.equals(preset)) return BuiltinGraphs.fast();
+                if (BuiltinGraphs.MULTI_START_PRESET.equals(preset)) return BuiltinGraphs.fastMultiStart();
                 if (BuiltinGraphs.OPTIMIZE_PRESET.equals(preset)) return BuiltinGraphs.optimize(state.getOptimizeSeconds());
                 SolverGraph user = state.getCustomGraph();
                 return user != null ? user : BuiltinGraphs.optimize(state.getOptimizeSeconds());

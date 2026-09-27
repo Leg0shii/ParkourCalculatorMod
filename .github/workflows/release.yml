@@ -63,7 +63,7 @@ jobs:
           version: ${{ steps.version.outputs.version }}
           version-type: ${{ contains(github.ref_name, '-') && 'beta' || 'release' }}
           loaders: fabric
-          game-versions: '26.2'
+          game-versions: '26.3'
           changelog-file: changelog.md
 
       - name: publish fabric 1.21.3 to modrinth

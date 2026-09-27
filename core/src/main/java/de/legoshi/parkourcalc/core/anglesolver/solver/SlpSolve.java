@@ -92,6 +92,11 @@ public final class SlpSolve {
         return optimize(exact, spec, feasTol, cancel, cfg.centerClearance, false, null, false, false, cfg, null);
     }
 
+    public static double[] optimizeCentered(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
+                                            double[] seedAbsWrapped, Config cfg) {
+        return optimize(exact, spec, feasTol, cancel, cfg.centerClearance, false, seedAbsWrapped, false, false, cfg, null);
+    }
+
     private static Config withCalls(int phase1Calls, int totalCalls) {
         Config cfg = new Config();
         cfg.phase1Calls = phase1Calls;
@@ -243,8 +248,8 @@ public final class SlpSolve {
 
                 for (int t = 0; t < n; t++) {
                     double phi = lin.baseArg(t) + theta[t] * RAD;
-                    ux[t] = lin.mMag(t) * Math.cos(phi);
-                    uz[t] = lin.mMag(t) * Math.sin(phi);
+                    ux[t] = lin.mMag(t) * StrictMath.cos(phi);
+                    uz[t] = lin.mMag(t) * StrictMath.sin(phi);
                 }
                 double[][] rows = new double[m][dims];
                 for (int j = 0; j < m; j++) {

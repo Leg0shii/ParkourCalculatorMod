@@ -24,10 +24,13 @@ import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.KeyMapping;
+import com.mojang.blaze3d.Blaze3D;
 import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.renderpearl.api.commands.RenderPass;
+import net.minecraft.client.renderer.state.level.LevelRenderState;
 import net.minecraft.resources.Identifier;
-import net.minecraft.util.Util;
-import org.lwjgl.glfw.GLFW;
+
+import java.net.URI;
 
 public class FabricParkourCalculator implements ClientModInitializer {
 
@@ -72,80 +75,80 @@ public class FabricParkourCalculator implements ClientModInitializer {
         KeyMapping.Category category = KeyMapping.Category.register(Identifier.fromNamespaceAndPath(MOD_ID, "general"));
         toggleKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.parkourcalculator.toggle_ui",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_G,
+                InputConstants.Type.KEYBOARD,
+                InputConstants.KEY_G,
                 category
         ));
         deselectKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.parkourcalculator.deselect_all",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_L,
+                InputConstants.Type.KEYBOARD,
+                InputConstants.KEY_L,
                 category
         ));
         playbackKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.parkourcalculator.toggle_playback",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_P,
+                InputConstants.Type.KEYBOARD,
+                InputConstants.KEY_P,
                 category
         ));
         landingConstraintsKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.parkourcalculator.add_landing_constraints",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_B,
+                InputConstants.Type.KEYBOARD,
+                InputConstants.KEY_B,
                 category
         ));
         removeConstraintsKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.parkourcalculator.remove_selected_constraints",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_X,
+                InputConstants.Type.KEYBOARD,
+                InputConstants.KEY_X,
                 category
         ));
         extendPathAndSolveKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.parkourcalculator.extend_path_and_solve_to_block",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_U,
+                InputConstants.Type.KEYBOARD,
+                InputConstants.KEY_U,
                 category
         ));
         applySurfaceStateKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.parkourcalculator.apply_surface_state",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_H,
+                InputConstants.Type.KEYBOARD,
+                InputConstants.KEY_H,
                 category
         ));
         solveKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.parkourcalculator.solve",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_V,
+                InputConstants.Type.KEYBOARD,
+                InputConstants.KEY_V,
                 category
         ));
         solverStartTickKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.parkourcalculator.set_solver_start",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_I,
+                InputConstants.Type.KEYBOARD,
+                InputConstants.KEY_I,
                 category
         ));
         solverEndTickKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.parkourcalculator.set_solver_end",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_O,
+                InputConstants.Type.KEYBOARD,
+                InputConstants.KEY_O,
                 category
         ));
         rerunSimulationKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.parkourcalculator.rerun_simulation",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_J,
+                InputConstants.Type.KEYBOARD,
+                InputConstants.KEY_J,
                 category
         ));
         togglePathKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.parkourcalculator.toggle_path",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_Y,
+                InputConstants.Type.KEYBOARD,
+                InputConstants.KEY_Y,
                 category
         ));
         copyTeleportKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.parkourcalculator.copy_teleport",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_K,
+                InputConstants.Type.KEYBOARD,
+                InputConstants.KEY_K,
                 category
         ));
 
@@ -155,19 +158,19 @@ public class FabricParkourCalculator implements ClientModInitializer {
         blockCaptureEnabled = application.getSettings().experimentalBlockCapture;
         if (blockCaptureEnabled) {
             captureMomentumBlockKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-                    "key.parkourcalculator.capture_momentum_block", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_M, category));
+                    "key.parkourcalculator.capture_momentum_block", InputConstants.Type.KEYBOARD, InputConstants.KEY_M, category));
             captureCollisionBlockKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-                    "key.parkourcalculator.capture_collision_block", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_N, category));
+                    "key.parkourcalculator.capture_collision_block", InputConstants.Type.KEYBOARD, InputConstants.KEY_N, category));
             captureLandBlockKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-                    "key.parkourcalculator.capture_land_block", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, category));
+                    "key.parkourcalculator.capture_land_block", InputConstants.Type.KEYBOARD, InputConstants.KEY_K, category));
             clearBlocksKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-                    "key.parkourcalculator.clear_blocks", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_DELETE, category));
+                    "key.parkourcalculator.clear_blocks", InputConstants.Type.KEYBOARD, InputConstants.KEY_DELETE, category));
         }
 
         application.setModVersion(modVersion());
         OsSystemBridge.setPlatformOpeners(
-                p -> Util.getPlatform().openPath(p),
-                u -> Util.getPlatform().openUri(u)
+                Blaze3D::openPath,
+                u -> Blaze3D.openUri(URI.create(u))
         );
         application.setFilePicker(new FabricFilePicker());
         application.setSaveStore(new FileSystemSaveStore(
@@ -187,7 +190,6 @@ public class FabricParkourCalculator implements ClientModInitializer {
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> application.onWorldChange());
         ServerLifecycleEvents.SERVER_STOPPING.register(simulator::onServerStopping);
 
-        LevelRenderEvents.AFTER_SOLID_FEATURES.register(FabricParkourCalculator::renderWorldOverlayBeforeTranslucent);
         LevelRenderEvents.COLLECT_SUBMITS.register(FabricParkourCalculator::onCollectSubmits);
     }
 
@@ -388,11 +390,8 @@ public class FabricParkourCalculator implements ClientModInitializer {
             togglePlayback();
         }
         if (landingConstraintsPressed && canDispatch) {
-            long window = client.getWindow().handle();
-            boolean enter = GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS
-                    || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS;
-            boolean remove = GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS
-                    || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_CONTROL) == GLFW.GLFW_PRESS;
+            boolean enter = isShiftHeld();
+            boolean remove = isCtrlHeld(client);
             application.onConstraintKey(enter, remove);
         }
         if (removeConstraintsPressed && chordFree) {
@@ -445,56 +444,53 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
     }
 
-    public static boolean dispatchOverlayHotkey(int glfwKey) {
+    public static boolean dispatchOverlayHotkey(int key) {
         Minecraft client = Minecraft.getInstance();
         if (client.getWindow() == null) return false;
-        if (isCtrlHeld(client) && glfwKey != boundKey(landingConstraintsKeyBinding)) return false;
-        if (glfwKey == boundKey(deselectKeyBinding)) {
+        if (isCtrlHeld(client) && key != boundKey(landingConstraintsKeyBinding)) return false;
+        if (key == boundKey(deselectKeyBinding)) {
             application.getSelection().clear();
             return true;
         }
-        if (glfwKey == boundKey(playbackKeyBinding)) {
+        if (key == boundKey(playbackKeyBinding)) {
             togglePlayback();
             return true;
         }
-        if (glfwKey == boundKey(landingConstraintsKeyBinding)) {
-            long window = client.getWindow().handle();
-            boolean enter = GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS
-                    || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS;
-            boolean remove = GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS
-                    || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_CONTROL) == GLFW.GLFW_PRESS;
+        if (key == boundKey(landingConstraintsKeyBinding)) {
+            boolean enter = isShiftHeld();
+            boolean remove = isCtrlHeld(client);
             application.onConstraintKey(enter, remove);
             return true;
         }
-        if (glfwKey == boundKey(removeConstraintsKeyBinding)) {
+        if (key == boundKey(removeConstraintsKeyBinding)) {
             application.removeSelectedConstraints();
             return true;
         }
-        if (glfwKey == boundKey(extendPathAndSolveKeyBinding)) {
+        if (key == boundKey(extendPathAndSolveKeyBinding)) {
             triggerExtendPathAndSolve(client);
             return true;
         }
-        if (glfwKey == boundKey(applySurfaceStateKeyBinding)) {
+        if (key == boundKey(applySurfaceStateKeyBinding)) {
             application.applyPathSurfaceState();
             return true;
         }
-        if (glfwKey == boundKey(solveKeyBinding)) {
+        if (key == boundKey(solveKeyBinding)) {
             application.solveAngleSolver();
             return true;
         }
-        if (glfwKey == boundKey(solverStartTickKeyBinding)) {
+        if (key == boundKey(solverStartTickKeyBinding)) {
             application.setSolverStartTickFromSelection();
             return true;
         }
-        if (glfwKey == boundKey(solverEndTickKeyBinding)) {
+        if (key == boundKey(solverEndTickKeyBinding)) {
             application.setSolverLandingTickFromSelection();
             return true;
         }
-        if (glfwKey == boundKey(togglePathKeyBinding)) {
+        if (key == boundKey(togglePathKeyBinding)) {
             application.toggleShowPath();
             return true;
         }
-        if (glfwKey == boundKey(copyTeleportKeyBinding)) {
+        if (key == boundKey(copyTeleportKeyBinding)) {
             application.copyTeleportCommand();
             return true;
         }
@@ -506,9 +502,11 @@ public class FabricParkourCalculator implements ClientModInitializer {
     }
 
     private static boolean isCtrlHeld(Minecraft client) {
-        long window = client.getWindow().handle();
-        return GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS
-                || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_CONTROL) == GLFW.GLFW_PRESS;
+        return InputConstants.isKeyDown(InputConstants.KEY_LCONTROL) || InputConstants.isKeyDown(InputConstants.KEY_RCONTROL);
+    }
+
+    private static boolean isShiftHeld() {
+        return InputConstants.isKeyDown(InputConstants.KEY_LSHIFT) || InputConstants.isKeyDown(InputConstants.KEY_RSHIFT);
     }
 
     public static void closeOverlay() {
@@ -547,35 +545,28 @@ public class FabricParkourCalculator implements ClientModInitializer {
      * Fires after solid features, before translucent terrain draws, so boxes depth-test
      * only against opaque geometry and stay visible through water, lava, and stained/tinted glass.
      */
-    public static void renderWorldOverlayBeforeTranslucent(LevelRenderContext context) {
-        if (context != null) {
-            onWorldRender(context);
-        }
-    }
-
-    public static void onWorldRender(LevelRenderContext context) {
-        application.tickDrag();
-        boolean showPath = application.getSettings().showPath;
-        if (application.isPlaybackRunning()) {
-            application.renderPlayback();
-            if (showPath && application.getSettings().keepBoxesDuringPlayback) {
-                worldRenderer.render(context);
-            }
-            return;
-        }
-        if (showPath) {
-            worldRenderer.render(context);
+    public static void renderWorldOverlayBeforeTranslucent(LevelRenderState levelState, RenderPass pass) {
+        if (levelState == null || pass == null) return;
+        if (shouldDrawPath()) {
+            worldRenderer.draw(levelState, pass);
         }
     }
 
     private static void onCollectSubmits(LevelRenderContext context) {
-        if (!application.getSettings().showPath) {
+        application.tickDrag();
+        if (application.isPlaybackRunning()) {
+            application.renderPlayback();
+        }
+        if (!shouldDrawPath()) {
             return;
         }
-        if (application.isPlaybackRunning() && !application.getSettings().keepBoxesDuringPlayback) {
-            return;
-        }
+        worldRenderer.prepare();
         worldRenderer.submitGizmo(context);
+    }
+
+    private static boolean shouldDrawPath() {
+        if (!application.getSettings().showPath) return false;
+        return !application.isPlaybackRunning() || application.getSettings().keepBoxesDuringPlayback;
     }
 
     /** Called from InGameHudMixin to queue the MACRO badge into the GUI state. */

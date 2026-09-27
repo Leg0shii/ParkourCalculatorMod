@@ -194,14 +194,14 @@ public final class FreeStartSolve {
         Config cfg = new Config();
         double bestD = 0.0;
         double bestRv = rv0;
-        certifyBar = 0.02;
+        double[] scan = {Double.POSITIVE_INFINITY, 0.02};
         for (double d = -45.0; d <= 45.0; d += 0.25) {
             if (cancel != null && cancel.get()) return null;
             if (past(deadlineNanos)) return null;
-            Result r = rotatedCertify(exact, spec, base, box, yaws, d, feasTol, cancel, cfg);
+            Result r = rotatedCertify(exact, spec, base, box, yaws, d, feasTol, cancel, cfg, scan);
             if (r != null && r.feasible) return r;
-            if (lastRotViol < bestRv) {
-                bestRv = lastRotViol;
+            if (scan[0] < bestRv) {
+                bestRv = scan[0];
                 bestD = d;
             }
         }
@@ -210,10 +210,10 @@ public final class FreeStartSolve {
             for (int k = -10; k <= 10; k++) {
                 if (cancel != null && cancel.get()) return null;
                 if (past(deadlineNanos)) return null;
-                Result r = rotatedCertify(exact, spec, base, box, yaws, center + k * refine, feasTol, cancel, cfg);
+                Result r = rotatedCertify(exact, spec, base, box, yaws, center + k * refine, feasTol, cancel, cfg, scan);
                 if (r != null && r.feasible) return r;
-                if (lastRotViol < bestRv) {
-                    bestRv = lastRotViol;
+                if (scan[0] < bestRv) {
+                    bestRv = scan[0];
                     bestD = center + k * refine;
                 }
             }
@@ -224,27 +224,24 @@ public final class FreeStartSolve {
         return null;
     }
 
-    private static double lastRotViol;
-    private static double certifyBar;
-
     private static Result rotatedCertify(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs base, StartBox box,
                                          double[] yaws, double d, double feasTol, AtomicBoolean cancel,
-                                         Config cfg) {
-        lastRotViol = Double.POSITIVE_INFINITY;
+                                         Config cfg, double[] scan) {
+        scan[0] = Double.POSITIVE_INFINITY;
         double[] y2 = new double[yaws.length];
         for (int t = 0; t < yaws.length; t++) y2[t] = yaws[t] + d;
         double[] rs = recoverStart(exact, spec, y2, cfg);
         if (rs == null) return null;
         double v = violationAt(exact, spec, y2, rs[0], rs[1]);
-        lastRotViol = v;
+        scan[0] = v;
         if (v <= feasTol) {
             if (SolverTrace.on()) {
                 SolverTrace.log("FREE", "joint rotation scan solved d=%.3f at (%.5f,%.5f)", d, rs[0], rs[1]);
             }
             return new Result(Angles.wrapAll(y2), rs[0], rs[1], true);
         }
-        if (v < certifyBar) {
-            certifyBar = v;
+        if (v < scan[1]) {
+            scan[1] = v;
             double[] cfYaws = ClosedFormSolve.optimize(exact, specAtStart(base, spec, rs[0], rs[1]), feasTol, cancel);
             if (cfYaws != null) {
                 if (SolverTrace.on()) {

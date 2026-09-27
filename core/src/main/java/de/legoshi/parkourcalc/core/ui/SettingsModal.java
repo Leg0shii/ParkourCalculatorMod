@@ -30,6 +30,7 @@ public final class SettingsModal {
     private static final String TT_ARROW_MODE = "Which facing arrow to draw: the flat yaw arrow, or one arrow combining yaw and pitch into the actual look direction.";
     private static final String TT_HIT_DISTANCE = "Draws a line from each tick's eye position along that tick's look direction, out to block reach (4.5). The line changes color when it hits a block within reach, showing where a click on that tick would land, e.g. on a button.";
     private static final String TT_HIT_DISTANCE_SELECTED = "Limits the hit distance line to the currently selected ticks. Selected-tick lines re-cast every frame, so they also track world edits instantly.";
+    private static final String TT_HIT_DISTANCE_GAME_REACH = "Uses the current game mode's block reach for the hit distance line (5.0 in creative) instead of the survival reach of 4.5.";
     private static final String TT_HITBOX = "Draws the player's hitbox at the currently selected tick.";
     private static final String TT_FULL_HITBOX = "Draws hitboxes for every tick in the TAS, not just the active one. Heavy on long TASes.";
     private static final String TT_SUBTICK = "Renders the interpolated path between adjacent ticks, exposing collision moments inside a tick.";
@@ -53,6 +54,7 @@ public final class SettingsModal {
     private static final String TT_COL_PITCH = "Pitch angle column.";
     private static final String TT_COL_LMB = "Left click / attack column.";
     private static final String TT_COL_RMB = "Right click / use column.";
+    private static final String TT_COL_CLOSE_INVENTORY = "Adds a per-tick column that closes the open inventory or container screen on that tick during playback, like pressing Esc in it.";
     private static final String TT_YAW_TURN_RATE = "Caps how fast the macro rotates the camera during playback (deg per second).";
     private static final String TT_PATH_DIST = "Maximum world distance for the simulated path overlay.";
     private static final String TT_PATH_UNLIMITED = "Disables the distance cap. Heavy on long TASes.";
@@ -389,6 +391,7 @@ public final class SettingsModal {
             });
             checkboxRow("Show hit distance lines", "##show_hit_distance", settings.showHitDistanceLines, TT_HIT_DISTANCE, v -> settings.showHitDistanceLines = v);
             checkboxRow("Hit distance for selected ticks only", "##hit_distance_selected", settings.hitDistanceSelectedOnly, TT_HIT_DISTANCE_SELECTED, v -> settings.hitDistanceSelectedOnly = v);
+            checkboxRow("Hit distance uses game mode reach", "##hit_distance_game_reach", settings.hitDistanceGameReach, TT_HIT_DISTANCE_GAME_REACH, v -> settings.hitDistanceGameReach = v);
             checkboxRow("Show hitbox", "##show_hitbox", settings.showHitbox, TT_HITBOX, v -> settings.showHitbox = v);
             checkboxRow("Show full hitbox", "##show_full_hitbox", settings.showFullHitbox, TT_FULL_HITBOX, v -> settings.showFullHitbox = v);
             checkboxRow("Subtick visualization", "##show_subtick", settings.showSubtick, TT_SUBTICK, v -> settings.showSubtick = v);
@@ -474,6 +477,7 @@ public final class SettingsModal {
             checkboxRow("Pitch", "##col_pitch", settings.showColPitch, TT_COL_PITCH, v -> settings.showColPitch = v);
             checkboxRow("Left click (LMB)", "##col_lmb", settings.showColLeftClick, TT_COL_LMB, v -> settings.showColLeftClick = v);
             checkboxRow("Right click (RMB)", "##col_rmb", settings.showColRightClick, TT_COL_RMB, v -> settings.showColRightClick = v);
+            checkboxRow("Close inventory", "##col_close_inv", settings.showColCloseInventory, TT_COL_CLOSE_INVENTORY, v -> settings.showColCloseInventory = v);
             checkboxRow("Speed", "##show_speed", settings.showColSpeed, TT_COL_SPEED_AMP, v -> settings.showColSpeed = v);
             checkboxRow("Jump Boost", "##show_jump_boost", settings.showColJumpBoost, TT_COL_JUMP_BOOST_AMP, v -> settings.showColJumpBoost = v);
             checkboxRow("Hotbar slot", "##show_hotbar", settings.showColHotbar, TT_COL_HOTBAR, v -> settings.showColHotbar = v);

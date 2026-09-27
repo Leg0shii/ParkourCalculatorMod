@@ -14,7 +14,8 @@ Shared guidance for AI coding agents and contributors. This is the canonical gui
 ```
 core/                  Java 8.  ImGui-only UI/data + the angle solver. No MC, Fabric, Forge, or LWJGL imports.
 forge-core/            Java 8.  Shared for both Forge loaders: lwjgl2/ ImGui bootstrap, sim/ sprint machine. No MC imports.
-loader-fabric/         Java 25. Fabric (Loom, LWJGL3), tracks the latest MC (currently 26.2). MC-touching sim/render/mixins/entry point. Source under src/client/java.
+loader-fabric/         Java 25. Fabric (Loom, LWJGL3), tracks the latest MC (currently 26.3). MC-touching sim/render/mixins/entry point. Source under src/client/java.
+loader-fabric-1.21.3/  Java 21. Fabric (Loom, LWJGL3) for MC 1.21.3. Same layout as loader-fabric, source under src/main/java; every loader-side port change lands here too.
 loader-forge-1.8.9/    Java 8.  Forge (Unimined FG2, LWJGL2). MC-touching code.
 loader-forge-1.12.2/   Java 8.  Forge (Unimined FG3, LWJGL2). MC-touching code.
 ```
@@ -41,8 +42,9 @@ The two Forge loaders are intentional duplicates: 1.8.9 and 1.12.2 have incompat
 | UI shell / theming | `core/.../ui/MainWindowOverlay.java`, `OverlayManager.java`, `ui/theme/ThemeManager.java` (Catppuccin Mocha), `Settings.java` |
 | Angle solver (core logic) | `core/.../anglesolver/AngleSolverEngine.java` (orchestrator), `AngleSolverState.java` |
 | Solver inner loop | `core/.../anglesolver/solver/ExactJumpModel.java` (byte-exact X/Z stepper), `McSineTable.java`, `Constants.java` |
-| Solver strategies | `solver/ClosedFormSolve.java` (fast convex), `SlpSolve.java` (linearized recovery), `LongRunSolver.java` (multi-jump) |
+| Solver strategies | `solver/ClosedFormSolve.java` (fast convex), `SlpSolve.java` (linearized recovery), `LongRunSolver.java` (multi-jump), `graph/nodes/SeedSweepNode.java` (best-of-N parallel Fast over the free start box: the `Fast (multi-start)` preset and the first Optimize stage; Optimize also adopts the previous successful solve as its incumbent, #486) |
 | Velocity finder | `core/.../anglesolver/velocity/VelocityFinder.java` (vx/vz sweep against a pad) |
+| No-turn cold solver (#424) | `core/.../anglesolver/noturn/`: `NoTurnProblem`/`NoTurnKeys`/`NoTurnModel`/`NoTurnCertifier` (structure + byte-exact oracle), `StructurePoolDriver` (enumeration front end, cracks j1150 cold), `WallHomotopyDriver` (wall-homotopy continuation), `BendersMaster`/`MinTvMaster`/`IisExtractor`/`NoGoodCut` (min-TV master, cracks j154 cold), `PoolCertifier` (the pool driver's certify pipeline and warm neighbour exploration), `UnitScreen` (the byte screen: one facing per unit over every tick, the main tied unit swept, the others descended), `NoTurnRanking` (the in-game list order: easiest by input changes, or furthest by offset past the goal wall) and `NoTurnOptimizePass` (the per-line Optimize-graph polish behind the Furthest ranking's time budget), `fastcheck/` (per-candidate certify cascade `CascadeCheck` = `ThetaSweepAirSlp`, `ScreenWitnessWarmStart`, search graph; `NoTurnJointFastCheck` + `LpFeas` is a bench-only rejection that is sound for the exact model (inertia clamp as a per-interval slack plus a first-firing case split) but rejects nothing on j1150's real pool; budgets are `solver/WorkDeadline` thread-CPU deadlines); design, performance and reproduction notes in `docs/noturn-global-solver-design.md` |
 | Run-ticks search | `core/.../RunTicksController.java` (drives the document + engine); `core/.../anglesolver/runticks/` (`RunTicksSettings`, `RunTicksSearch` tree, `RunTicksRows` for what counts as a run tick, `RunTicksFilter` for the RT constraint, `StepTimeouts`) |
 | Solver UI | `core/.../ui/anglesolver/AngleSolverWindow.java`, `AngleSolverTable.java`, `SolverWidgets.java` |
 | Constraint visualization | `core/.../render/ConstraintPlate.java`, `ConstraintShapes.java`; source `core/.../ui/anglesolver/AngleSolverConstraintSource.java` |
@@ -81,7 +83,10 @@ A heavier tier, `de.legoshi.parkourcalc.VerySlowSolverTests`, is excluded even u
 ./gradlew :core:test                          # fast suite; run after any change
 ./gradlew :core:test -PslowTests              # full suite; required when solver code changes
 ./gradlew :core:test -PslowTests -PverySlowTests  # + the very-slow engine-acceptance tier
+./gradlew :core:testJava8                     # the same suite on a Java 8 launcher (the Forge loaders' JVM); honors -PslowTests
 ```
+
+The solver's search path uses `StrictMath` (and `Angles.rad`/`Angles.deg` instead of `Math.toRadians`/`toDegrees`) so a solve is bit-identical on Java 8 and JDK 21; `CrossJvmDeterminismTest` pins golden hashes of the linear model and the closed form on one fixture, and CI runs `:core:testJava8` on every push so the shipping runtime is exercised. Keep `Math.*` trig out of `core/.../anglesolver/` (the byte-exact `ExactJumpModel` and `McSineTable` are the deliberate exceptions: they mirror MC's own calls).
 
 Run the full suite locally whenever the change touches solver code (`core/.../anglesolver/`, the model classes, velocity finder, graph) or the problem/capture resources; for anything else the fast suite is enough, CI covers the rest.
 
@@ -109,8 +114,8 @@ They appear under:
 ```
 .gradle/unimined/net/minecraft/minecraft/1.8.9/.../mcp-stable-22-1.8.9-searge-1.8.9/...-sources.jar
 .gradle/unimined/net/minecraft/minecraft/1.12.2/.../mcp-stable-39-1.12-searge-...-sources.jar
-.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-common-<hash>/26.2/...-26.2-sources.jar
-.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-clientOnly-<hash>/26.2/...-26.2-sources.jar
+.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-common-<hash>/26.3/...-26.3-sources.jar
+.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-clientOnly-<hash>/26.3/...-26.3-sources.jar
 ```
 
 Unzip the relevant `-sources.jar` and grep for a single file (e.g. `EntityPlayerSP.java`, `LocalPlayer.java`). IntelliJ resolves these automatically on Ctrl-Click in any loader module.

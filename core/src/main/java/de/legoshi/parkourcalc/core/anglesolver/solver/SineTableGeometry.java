@@ -150,14 +150,14 @@ public final class SineTableGeometry {
             for (int i = 0; i < SIZE; i++) {
                 for (int d = -1; d <= 1; d++) {
                     evalRaw(legacyFloat, sf, ff, sd, fd, i, d, u);
-                    double r = Math.hypot(u[0], u[1]);
+                    double r = StrictMath.hypot(u[0], u[1]);
                     if (r > rMax) rMax = r;
                     if (r < rMin) rMin = r;
                 }
             }
             if (rMax > 0.0) {
-                double near = rMin * Math.cos((SLOP_IDX + 2) * 2.0 * Math.PI / SIZE);
-                double far = rMax * Math.cos((FULL_WINDOW - SLOP_IDX) * 2.0 * Math.PI / SIZE);
+                double near = rMin * StrictMath.cos((SLOP_IDX + 2) * 2.0 * Math.PI / SIZE);
+                double far = rMax * StrictMath.cos((FULL_WINDOW - SLOP_IDX) * 2.0 * Math.PI / SIZE);
                 if (near <= far) throw new IllegalStateException("support window domination violated");
             }
             mm = new double[]{rMax, rMin};
@@ -221,7 +221,7 @@ public final class SineTableGeometry {
             double fD = forwardD(p);
             double a = gx * sD + gz * fD;
             double b = gz * sD - gx * fD;
-            double theta = Math.atan2(b, a);
+            double theta = StrictMath.atan2(b, a);
             int center = (int) Math.floor(theta / (2.0 * Math.PI) * SIZE);
             i0 = center - FULL_WINDOW;
             i1 = center + FULL_WINDOW;
@@ -297,7 +297,7 @@ public final class SineTableGeometry {
             mux += u[0];
             muz += u[1];
         }
-        double mNorm = Math.hypot(mux, muz);
+        double mNorm = StrictMath.hypot(mux, muz);
         boolean chordable = mNorm > 1.0e-12;
         double cax = chordable ? mux / mNorm : 0.0;
         double caz = chordable ? muz / mNorm : 0.0;

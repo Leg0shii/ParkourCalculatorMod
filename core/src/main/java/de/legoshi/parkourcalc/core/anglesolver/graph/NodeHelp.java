@@ -51,20 +51,19 @@ public final class NodeHelp {
                 + " A guard so very long jumps do not make the solve crawl.");
         shared("labelSuffix", "Optional text added to the solution's name when this stage succeeds, so you"
                 + " can spot its work. Cosmetic only.");
-        shared("warmSec", "Seconds to keep improving even after the jump already lands. 0 skips this stage"
-                + " once the jump works.");
+        shared("warmSec", "A switch, not a duration: 0 skips this stage once the jump already lands, any"
+                + " other value runs it anyway to improve the landing. The stage's time still comes from its"
+                + " budget. Free start improve ignores it while Joint rescue only is on.");
         shared("window", "How many ticks of a multi-jump route the solver tackles at once. Bigger looks"
-                + " further ahead but is slower.");
+                + " further ahead but is slower. Ignored when a window ladder is set.");
         shared("commit", "How many ticks it locks in per step while building a route. Bigger moves faster"
-                + " but leaves less room to undo a bad choice.");
+                + " but leaves less room to undo a bad choice. Ignored when a commit ladder is set.");
         shared("windowLadder", "Optional list of window sizes to try in order, comma separated. Leave blank"
                 + " to let the solver pick.");
         shared("commitLadder", "Optional list of commit sizes to try in order, comma separated. Leave blank"
                 + " to let the solver pick.");
         shared("ffSec", "Seconds allowed for the phase that is still trying to make the jump land. 0 turns"
                 + " that phase off. Only matters while the jump does not land yet.");
-        shared("optSec", "Seconds allowed for the phase that improves a jump that already lands. 0 turns"
-                + " that phase off. Only matters once the jump lands.");
 
         node("entry", "Where the solve begins. It hands the empty attempt to the first real stage."
                 + " You cannot delete or configure it.");
@@ -90,10 +89,10 @@ public final class NodeHelp {
 
         node("capCertify", "Checks whether the current landing is already as good as the jump physically"
                 + " allows. If so, it can mark the solve finished so later stages do not waste time.");
-        param("capCertify", "computeDualGap", "Also record how far the current landing is from the best"
-                + " possible, for the readout. Does not change the solution.");
+        param("capCertify", "computeDualGap", "Also record how far the final landing is from the best"
+                + " possible bound, for the readout. Does not change the solution.");
         param("capCertify", "markSettled", "When the landing is proven best possible, also freeze it so"
-                + " later stages skip it.");
+                + " later Cap certify stages skip their check. Other stages still run.");
         param("capCertify", "skipIfSettled", "If the solution was already frozen as settled, skip this"
                 + " check entirely.");
 
@@ -108,8 +107,8 @@ public final class NodeHelp {
 
         node("dualChain", "A from-scratch angle finder. It is the usual first attempt at making a jump"
                 + " land, and can also tighten an existing solution.");
-        param("dualChain", "keepBetter", "Keep this seed only when it beats the best solution so far, and"
-                + " skip the miss note when it does not. Cosmetic.");
+        param("dualChain", "keepBetter", "Skip the closed form miss note in the solution's name when this"
+                + " stage finds nothing. The seed is always kept only when it beats the best so far. Cosmetic.");
         param("dualChain", "slpPhase1Calls", "How hard the built-in angle solver tries just to find any"
                 + " landing. Higher digs deeper for a first solution but is slower.");
         param("dualChain", "slpTotalCalls", "Total solver passes, including the ones that refine the"
@@ -129,6 +128,14 @@ public final class NodeHelp {
         param("dualChain", "cfRungStallLimit", "How many no-progress steps the quick solver tolerates"
                 + " before giving up on that path.");
 
+        node("seedSweep", "Runs the whole Fast solve many times in parallel, each from a different spot inside"
+                + " the free start box, and keeps the best landing. Only does anything when the start"
+                + " position is free; a pinned start passes straight through.");
+        param("seedSweep", "seeds", "How many start positions to try. The box centre and corners come first,"
+                + " then an even spread. More finds better basins but takes longer.");
+        param("seedSweep", "threads", "How many solves run at once. The default of 2 keeps the game responsive;"
+                + " raise it for a faster sweep, or 0 to use all but one processor core.");
+
         node("recedingHorizon", "Builds a multi-jump route from scratch by solving a few ticks at a time and"
                 + " locking in the front of it as it goes. Only runs for routes longer than one jump.");
 
@@ -144,6 +151,8 @@ public final class NodeHelp {
         node("facingStep", "For jumps with a fixed-facing run-up before takeoff. It tries small changes to"
                 + " the run-up aim, one significant-angle step at a time, seeds each promising aim, then hands"
                 + " the best ones to the polish and translate stages in a loop, keeping the best landing.");
+        param("facingStep", "budgetSec", "Seconds the sweep may run. Unlike other stages, 0 turns the sweep"
+                + " off entirely instead of sharing the overall solve time.");
         param("facingStep", "windowDeg", "How far, in degrees, the run-up aim may wander either side of its"
                 + " current value. 0 tries only the current aim; larger explores more run-up angles.");
         param("facingStep", "maxBuckets", "The most distinct run-up aims to try. Caps the work when the"
@@ -168,29 +177,33 @@ public final class NodeHelp {
                 + " When the jump does not land yet it searches for one that does; when it already lands it"
                 + " tries to beat it.");
         param("certBnb", "ffNodeCap", "How many search branches the land-it phase may explore. 0 turns that"
-                + " phase off; higher searches deeper. Only matters while the jump does not land yet.");
-        param("certBnb", "optNodeCap", "How many search branches the improve phase may explore. 0 turns that"
-                + " phase off; higher searches deeper. Only matters once the jump lands.");
+                + " phase off; higher searches deeper. Only matters while the jump does not land yet; the"
+                + " improve phase uses a fixed safety cap instead.");
+        param("certBnb", "budgetSec", "Seconds this stage may run. On a foldable no-turn chain that does not"
+                + " land yet, the land-it phase may run longer than this, up to 30 s within the overall"
+                + " solve time.");
+        param("certBnb", "ffSec", "Seconds allowed for the land-it phase. Only matters while the jump does"
+                + " not land yet; on a foldable no-turn chain it can be raised up to 30 s within the"
+                + " overall solve time.");
 
         node("foldDriver", "Another angle solver that repeatedly replays and adjusts the jump. It can try"
                 + " several different starting guesses and finish with a fine nudge pass.");
         param("foldDriver", "objectiveRounds", "How many rounds it spends pushing for a better landing"
                 + " rather than just any landing. 0 means find a landing only. Higher optimizes more.");
         param("foldDriver", "multiStart", "How many different start guesses to try, 0 to 5. Only used when"
-                + " the start block is free. More casts a wider net.");
+                + " the start block is free, Objective rounds is above 0 and the jump is at most 120 ticks."
+                + " More casts a wider net.");
         param("foldDriver", "ascentMs", "Milliseconds for a final fine-nudge pass after the main solve."
-                + " 0 skips it.");
+                + " 0 skips it when Objective rounds is 0; otherwise the pass runs until the stage deadline.");
 
         node("homotopyLadder", "A rescue trick for jumps around walls. It loosens the walls, finds a"
                 + " solution, then tightens them back step by step until the real jump lands. Only runs"
                 + " while the jump does not land yet.");
         param("homotopyLadder", "cap", "If the jump takes more than this many ticks, skip this stage."
-                + " A guard against very slow runs on long jumps.");
+                + " A guard against very slow runs on long jumps. 0 means no cap.");
 
         node("ilsPolish", "Fine-tunes a jump that already lands: it repeatedly shakes up a few angles and"
                 + " keeps the change only if the result is better.");
-        param("ilsPolish", "roundCap", "Maximum shake-and-test rounds when no time limit is set. 0 turns"
-                + " this stage off. With a time budget it simply runs until time is up.");
         param("ilsPolish", "perturbTicksMin", "The fewest ticks a single shake disturbs. Larger makes"
                 + " coarser changes.");
         param("ilsPolish", "perturbTicksSpan", "Extra random ticks a shake may disturb on top of the"
@@ -202,11 +215,14 @@ public final class NodeHelp {
         node("wrapIls", "A polish pass that experiments with big multi-turn spins (wraps) to squeeze out a"
                 + " better result. Only kept if it stays landing and beats what you had.");
         param("wrapIls", "minRemainingSec", "Only run this stage if at least this many seconds of solve"
-                + " time remain, otherwise skip it. Stops it starting a job it cannot finish.");
+                + " time remain, otherwise skip it. Stops it starting a job it cannot finish. With no stage"
+                + " budget and no overall solve time the stage is always skipped.");
         param("wrapIls", "span", "How wide the first spin window it searches is. Larger starts broader.");
-        param("wrapIls", "maxSpan", "The widest the search window is allowed to grow to.");
+        param("wrapIls", "maxSpan", "The widest the search window is allowed to grow to. Only applies to"
+                + " ticks that already carry a spin and are not wall-critical.");
         param("wrapIls", "candHighTarget", "How many promising high-spin candidates it keeps each round."
-                + " More widens the search.");
+                + " More widens the search. Only applies to ticks that already carry a spin and are not"
+                + " wall-critical.");
         param("wrapIls", "kicks", "Allow random shake-ups to escape a rut. On by default.");
         param("wrapIls", "evalCap", "Cap on how many test replays it may run. 0 means no cap.");
         param("wrapIls", "roundCap", "Cap on how many rounds it may run. 0 means no cap.");

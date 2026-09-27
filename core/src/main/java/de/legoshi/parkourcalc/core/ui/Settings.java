@@ -52,6 +52,7 @@ public final class Settings {
     private static final int DEFAULT_ARROW_MODE = ARROW_MODE_YAW;
     private static final boolean DEFAULT_SHOW_HIT_DISTANCE_LINES = false;
     private static final boolean DEFAULT_HIT_DISTANCE_SELECTED_ONLY = false;
+    private static final boolean DEFAULT_HIT_DISTANCE_GAME_REACH = false;
     private static final boolean DEFAULT_SHOW_HITBOX = false;
     private static final boolean DEFAULT_SHOW_FULL_HITBOX = false;
     private static final boolean DEFAULT_SHOW_SUBTICK = false;
@@ -71,6 +72,7 @@ public final class Settings {
     private static final boolean DEFAULT_SHOW_COL_PITCH = false;
     private static final boolean DEFAULT_SHOW_COL_LEFT_CLICK = false;
     private static final boolean DEFAULT_SHOW_COL_RIGHT_CLICK = false;
+    private static final boolean DEFAULT_SHOW_COL_CLOSE_INVENTORY = false;
     private static final boolean DEFAULT_SHOW_COL_TELEPORT = false;
 
     private static final boolean DEFAULT_VIEW_TICK_INFO = true;
@@ -167,6 +169,7 @@ public final class Settings {
     public int arrowMode = DEFAULT_ARROW_MODE;
     public boolean showHitDistanceLines = DEFAULT_SHOW_HIT_DISTANCE_LINES;
     public boolean hitDistanceSelectedOnly = DEFAULT_HIT_DISTANCE_SELECTED_ONLY;
+    public boolean hitDistanceGameReach = DEFAULT_HIT_DISTANCE_GAME_REACH;
     public boolean showHitbox = DEFAULT_SHOW_HITBOX;
     public boolean showFullHitbox = DEFAULT_SHOW_FULL_HITBOX;
     public boolean showSubtick = DEFAULT_SHOW_SUBTICK;
@@ -186,6 +189,7 @@ public final class Settings {
     public boolean showColPitch = DEFAULT_SHOW_COL_PITCH;
     public boolean showColLeftClick = DEFAULT_SHOW_COL_LEFT_CLICK;
     public boolean showColRightClick = DEFAULT_SHOW_COL_RIGHT_CLICK;
+    public boolean showColCloseInventory = DEFAULT_SHOW_COL_CLOSE_INVENTORY;
     public boolean showColTeleport = DEFAULT_SHOW_COL_TELEPORT;
 
     public float yawFlickSpeed = DEFAULT_YAW_FLICK_SPEED;
@@ -284,6 +288,7 @@ public final class Settings {
         arrowMode = DEFAULT_ARROW_MODE;
         showHitDistanceLines = DEFAULT_SHOW_HIT_DISTANCE_LINES;
         hitDistanceSelectedOnly = DEFAULT_HIT_DISTANCE_SELECTED_ONLY;
+        hitDistanceGameReach = DEFAULT_HIT_DISTANCE_GAME_REACH;
         showHitbox = DEFAULT_SHOW_HITBOX;
         showFullHitbox = DEFAULT_SHOW_FULL_HITBOX;
         showSubtick = DEFAULT_SHOW_SUBTICK;
@@ -302,6 +307,7 @@ public final class Settings {
         showColPitch = DEFAULT_SHOW_COL_PITCH;
         showColLeftClick = DEFAULT_SHOW_COL_LEFT_CLICK;
         showColRightClick = DEFAULT_SHOW_COL_RIGHT_CLICK;
+        showColCloseInventory = DEFAULT_SHOW_COL_CLOSE_INVENTORY;
         showColTeleport = DEFAULT_SHOW_COL_TELEPORT;
         yawFlickSpeed = DEFAULT_YAW_FLICK_SPEED;
         pathRenderDistance = DEFAULT_PATH_RENDER_DISTANCE;

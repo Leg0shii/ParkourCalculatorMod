@@ -10,6 +10,7 @@ import de.legoshi.parkourcalc.fabric.sim.GhostPlayerEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.ClientInput;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.Options;
 import net.minecraft.client.KeyMapping;
@@ -177,8 +178,8 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
                 + " vCollB=" + sp.verticalCollisionBelow
                 + " spr=" + sp.isSprinting()
                 + " sneak=" + sp.isShiftKeyDown()
-                + " hurtMarked=" + sp.hurtMarked
-                + " invuln=" + sp.invulnerableTime
+                + " syncVelocity=" + sp.syncVelocity
+                + " cooldown=" + sp.damageCooldownTime
                 + " hurtTime=" + sp.hurtTime
                 + " fire=" + sp.getRemainingFireTicks()
                 + " in=" + de.legoshi.parkourcalc.fabric.sim.paired.PairedServerSim.describeInput(sp.getLastClientInput())
@@ -351,6 +352,7 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
             }
         });
         client.absSnapTo(pos.x, pos.y, pos.z, yaw, client.getXRot());
+        settleFluidState(client);
         client.setYBodyRot(yaw);
         client.yBodyRotO = yaw;
         client.setYHeadRot(yaw);
@@ -385,6 +387,14 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
                     + " clientFall=" + client.fallDistance + " clientOnGround=" + client.onGround()
                     + " clientFire=" + client.getRemainingFireTicks() + " sharedFlagFire=" + client.isOnFire());
         }
+    }
+
+    private static void settleFluidState(LocalPlayer client) {
+        client.updateFluidInteraction();
+        client.wasEyeInWater = client.isEyeInFluid(FluidTags.WATER);
+        client.updateIsUnderwater();
+        client.updateSwimming();
+        client.updatePlayerPose();
     }
 
     @Override
@@ -560,6 +570,14 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
                 + " mvS=" + p.xxa
                 + " spdAmp=" + (spd == null ? -1 : spd.getAmplifier())
                 + " jmpAmp=" + (jmp == null ? -1 : jmp.getAmplifier())
+                + " pose=" + p.getPose()
+                + " inW=" + p.isInWater()
+                + " underW=" + p.isUnderWater()
+                + " swim=" + p.isSwimming()
+                + " crouch=" + p.isCrouching()
+                + " food=" + p.getFoodData().getFoodLevel()
+                + " fwd=" + (p instanceof LocalPlayer lp ? String.valueOf(lp.input.hasForwardImpulse()) : "n/a")
+                + " keys=" + (p instanceof LocalPlayer lp2 ? de.legoshi.parkourcalc.fabric.sim.paired.PairedServerSim.describeInput(lp2.input.keyPresses) : "n/a")
                 + " mvSpeed=" + mvSp);
     }
 
@@ -575,6 +593,18 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
             case SPRINT -> o.keySprint;
             case LEFT_CLICK -> o.keyAttack;
             case RIGHT_CLICK -> o.keyUse;
+            case CLOSE_INVENTORY -> null;
         };
+    }
+
+    @Override
+    public void closeInventory() {
+        if (ghostMode) return;
+        Minecraft mc = Minecraft.getInstance();
+        LocalPlayer p = mc.player;
+        if (p == null) return;
+        if (mc.gui.screen() instanceof net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?>) {
+            p.closeContainer();
+        }
     }
 }

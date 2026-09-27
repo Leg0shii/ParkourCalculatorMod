@@ -82,6 +82,31 @@ public final class SolverWidgets {
         }
     }
 
+    public static void progressStrip(String id, float fraction, int fill, String text) {
+        float scale = s();
+        float h = ImGui.getFrameHeight();
+        float w = ImGui.getContentRegionAvail().x;
+        ImDrawList dl = ImGui.getWindowDrawList();
+        ImVec2 mn = ImGui.getCursorScreenPos();
+        ImGui.dummy(w, h);
+        float mxX = mn.x + w;
+        float mxY = mn.y + h;
+        float r = ROUND * scale;
+        dl.addRectFilled(mn.x, mn.y, mxX, mxY, ThemeManager.panelColor(), r);
+        float f = Math.max(0f, Math.min(1f, fraction));
+        if (f > 0f) {
+            float fx = mn.x + Math.max(2f * r, w * f);
+            dl.pushClipRect(mn.x, mn.y, Math.min(mxX, fx), mxY, true);
+            dl.addRectFilled(mn.x, mn.y, mxX, mxY, fill, r);
+            dl.popClipRect();
+        }
+        dl.addRect(mn.x, mn.y, mxX, mxY, ThemeManager.borderColor(), r, 0, 1f);
+        if (text != null && !text.isEmpty()) {
+            ImVec2 ts = ImGui.calcTextSize(text);
+            dl.addText(mn.x + (w - ts.x) * 0.5f, textY(mn.y, h), ThemeManager.textColor(), text);
+        }
+    }
+
     public static void rowLabel(String text, float minWidth) {
         float startX = ImGui.getCursorPosX();
         ImGui.alignTextToFramePadding();

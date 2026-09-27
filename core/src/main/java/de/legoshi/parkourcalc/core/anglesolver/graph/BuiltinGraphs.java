@@ -7,34 +7,43 @@ public final class BuiltinGraphs {
     public static final int FAST_SEED_CAP_MS = 500;
 
     public static final String FAST_PRESET = "Fast";
+    public static final String MULTI_START_PRESET = "Fast (multi-start)";
     public static final String OPTIMIZE_PRESET = "Optimize";
+
+    public static final int SWEEP_SEEDS = 64;
+    public static final int MULTI_START_SWEEP_SEC = 20;
+    public static final int MIN_SWEEP_SEC = 3;
 
     private BuiltinGraphs() {
     }
 
     public static boolean isBuiltinPreset(String name) {
-        return FAST_PRESET.equals(name) || OPTIMIZE_PRESET.equals(name);
+        return FAST_PRESET.equals(name) || MULTI_START_PRESET.equals(name) || OPTIMIZE_PRESET.equals(name);
     }
 
     public static SolverGraph fast() {
-        return build(FAST_PRESET, 10, 3, 0, true, false, FAST_SEED_CAP_MS);
+        return build(FAST_PRESET, 10, 3, 0, true, false, FAST_SEED_CAP_MS, 0);
+    }
+
+    public static SolverGraph fastMultiStart() {
+        return build(MULTI_START_PRESET, 10, 3, 0, true, false, FAST_SEED_CAP_MS, SWEEP_SEEDS);
     }
 
     public static SolverGraph fastRunTicks() {
-        return build("Fast (run ticks)", 10, 3, 0, true, false, 0);
+        return build("Fast (run ticks)", 10, 3, 0, true, false, 0, 0);
     }
 
     public static SolverGraph optimize(int optimizeSeconds) {
-        return build(OPTIMIZE_PRESET, 10, 3, optimizeSeconds > 0 ? optimizeSeconds : 120, false, true, 0);
+        return build(OPTIMIZE_PRESET, 10, 3, optimizeSeconds > 0 ? optimizeSeconds : 120, false, true, 0, SWEEP_SEEDS);
     }
 
     public static SolverGraph fromBudget(boolean stopOnFeasible, boolean ilsExhaustive,
                                          boolean useWindowSolver, int window, int commit, int timeBudgetSeconds) {
-        return build("Custom", window, commit, timeBudgetSeconds, false, true, 0);
+        return build("Custom", window, commit, timeBudgetSeconds, false, true, 0, SWEEP_SEEDS);
     }
 
     private static SolverGraph build(String name, int window, int commit, int t, boolean seedFirst,
-                                     boolean leafSnap, int seedCapMs) {
+                                     boolean leafSnap, int seedCapMs, int sweepSeeds) {
         boolean fastTier = t <= 0;
         int tp = fastTier ? 120 : t;
         long reserveNanos = fastTier ? 0L : GraphRunner.wrapReserveNanos(t * 1_000_000_000L);
@@ -45,6 +54,13 @@ public final class BuiltinGraphs {
 
         GraphBuilder g = new GraphBuilder(name, true);
         g.add("entry", "entry");
+        int sweepSec = fastTier ? MULTI_START_SWEEP_SEC : Math.min(20, stageSec / 4);
+        boolean sweep = sweepSeeds > 0 && sweepSec >= MIN_SWEEP_SEC;
+        if (sweep) {
+            g.add("seeds", "seedSweep")
+                    .set("seeds", "seeds", sweepSeeds)
+                    .set("seeds", "budgetSec", sweepSec);
+        }
         g.add("horizon", "recedingHorizon")
                 .set("horizon", "window", window)
                 .set("horizon", "commit", commit)
@@ -110,13 +126,15 @@ public final class BuiltinGraphs {
         }
         g.add("emit", "emit");
 
+        String first = sweep ? "seeds" : "entry";
+        if (sweep) chain(g, "entry", "seeds");
         if (seedFirst) {
-            chain(g, "entry", "seed");
+            chain(g, first, "seed");
             chain(g, "seed", "horizon");
             chain(g, "horizon", "wrap0");
             chain(g, "wrap0", "cap1");
         } else {
-            chain(g, "entry", "horizon");
+            chain(g, first, "horizon");
             chain(g, "horizon", "wrap0");
             chain(g, "wrap0", "seed");
             chain(g, "seed", "cap1");

@@ -13,19 +13,23 @@ public final class GraphRunner {
     }
 
     public static Candidate run(SolverGraph graph, GraphContext ctx) {
+        return run(graph, ctx, null);
+    }
+
+    public static Candidate run(SolverGraph graph, GraphContext ctx, Candidate initial) {
         try {
-            return walk(graph, ctx);
+            return walk(graph, ctx, initial);
         } finally {
             ctx.shutdown();
         }
     }
 
-    private static Candidate walk(SolverGraph graph, GraphContext ctx) {
+    private static Candidate walk(SolverGraph graph, GraphContext ctx, Candidate initial) {
         if (graph.entry == null || graph.emit == null) return null;
         Map<String, NodeRuntime> runtimes = new HashMap<>();
         Map<String, Integer> visits = new HashMap<>();
         GraphNode cur = graph.entry;
-        Candidate cand = null;
+        Candidate cand = initial;
         boolean wrapPending = false;
         for (GraphNode n : graph.nodes) {
             if ("wrapIls".equals(n.type.id)) wrapPending = true;
@@ -77,9 +81,19 @@ public final class GraphRunner {
             } finally {
                 ctx.endNode(cur, taken);
             }
+            if (TRACE) traceNode(ctx, cur, taken, cand);
             reportIncumbent(ctx, cand);
             cur = next(graph, cur, taken);
         }
+    }
+
+    public static final boolean TRACE = Boolean.getBoolean("pkc.graphTrace");
+
+    private static void traceNode(GraphContext ctx, GraphNode node, Guarantee taken, Candidate cand) {
+        NodeStatus st = ctx.runState.status(node.id);
+        double ms = st == null ? -1.0 : st.elapsedNanos / 1e6;
+        String v = cand == null || cand.yaws == null ? "-" : String.format(java.util.Locale.ROOT, "%.3g", ctx.violationOf(cand.yaws));
+        System.out.println(String.format(java.util.Locale.ROOT, "[graph] %-12s %-9s %8.1f ms viol=%s", node.id, taken, ms, v));
     }
 
     public static long wrapReserveNanos(long totalNanos) {

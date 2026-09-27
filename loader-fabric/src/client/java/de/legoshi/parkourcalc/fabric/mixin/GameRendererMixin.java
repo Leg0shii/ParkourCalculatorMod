@@ -3,7 +3,6 @@ package de.legoshi.parkourcalc.fabric.mixin;
 import de.legoshi.parkourcalc.fabric.FabricParkourCalculator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.DeltaTracker;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -21,7 +20,7 @@ public class GameRendererMixin {
                     shift = At.Shift.AFTER
             )
     )
-    private void onAfterGuiRendered(DeltaTracker deltaTracker, boolean advanceGameTime, CallbackInfo ci) {
+    private void onAfterGuiRendered(CallbackInfo ci) {
         if (Minecraft.getInstance().gui.screen() != null) return;
         FabricParkourCalculator.onGuiRendered();
     }
@@ -35,7 +34,7 @@ public class GameRendererMixin {
                     target = "Lnet/minecraft/client/gui/render/GuiRenderer;render()V"
             )
     )
-    private void onBeforeGuiRendered(DeltaTracker deltaTracker, boolean advanceGameTime, CallbackInfo ci) {
+    private void onBeforeGuiRendered(CallbackInfo ci) {
         if (Minecraft.getInstance().gui.screen() == null) return;
         FabricParkourCalculator.onGuiRendered();
     }

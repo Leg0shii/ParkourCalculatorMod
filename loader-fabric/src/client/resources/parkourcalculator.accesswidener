@@ -2,7 +2,7 @@ accessWidener v2 official
 
 # RenderPipelines.POSITION_COLOR_SNIPPET (private): needed to build our custom
 # translucent face + thin-line pipelines without redoing all the shader wiring.
-accessible field net/minecraft/client/renderer/RenderPipelines DEBUG_FILLED_SNIPPET Lcom/mojang/blaze3d/pipeline/RenderPipeline$Snippet;
+accessible field net/minecraft/client/renderer/RenderPipelines DEBUG_FILLED_SNIPPET Lcom/mojang/renderpearl/api/pipeline/RenderPipeline$Snippet;
 
 # RenderLayer.of (private 6-arg): lets us set translucent=true on the face
 # layer so the Immediate's draw order puts it in the translucent pass, after
@@ -15,11 +15,11 @@ accessible method net/minecraft/client/renderer/rendertype/RenderType create (Lj
 # jump tick can drop the jump on re-simulation.
 accessible field net/minecraft/world/entity/LivingEntity noJumpDelay I
 
-accessible class com/mojang/blaze3d/opengl/GlDevice
+accessible class com/mojang/renderpearl/backend/opengl/GlDevice
 
 # GpuDevice wraps the backend privately in 26.2; ImGui needs the GlDevice to
 # resolve the main render target's FBO id for direct GL drawing.
-accessible field com/mojang/blaze3d/systems/GpuDevice backend Lcom/mojang/blaze3d/systems/GpuDeviceBackend;
+accessible field com/mojang/renderpearl/frontend/FrontendGpuDevice backend Lcom/mojang/renderpearl/backend/api/GpuDeviceBackend;
 
 # Entity.stuckSpeedMultiplier (protected): the cobweb slowdown carries across ticks
 # (makeStuckInBlock sets it; move() consumes and resets it). Captured in
@@ -48,3 +48,9 @@ accessible field net/minecraft/server/MinecraftServer nextTickTimeNanos J
 accessible field net/minecraft/server/MinecraftServer delayedTasksMaxNextTickTimeNanos J
 accessible method net/minecraft/server/MinecraftServer pollTask ()Z
 accessible method net/minecraft/util/thread/BlockableEventLoop runAllTasks ()V
+
+accessible method net/minecraft/world/entity/Entity updateFluidInteraction ()Z
+accessible field net/minecraft/world/entity/Entity wasEyeInWater Z
+accessible method net/minecraft/world/entity/player/Player updateIsUnderwater ()Z
+accessible method net/minecraft/world/entity/player/Player updatePlayerPose ()V
+accessible method net/minecraft/client/player/LocalPlayer updateIsUnderwater ()Z

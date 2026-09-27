@@ -38,8 +38,13 @@ public final class JumpConstraint {
     public final Cmp cmp;
     public final double rhs;
     public final String name;
+    public final Double pin;
 
     public JumpConstraint(Mode mode, int t1, Integer t2, Op op, Cmp cmp, double rhs, String name) {
+        this(mode, t1, t2, op, cmp, rhs, name, null);
+    }
+
+    public JumpConstraint(Mode mode, int t1, Integer t2, Op op, Cmp cmp, double rhs, String name, Double pin) {
         this.mode = mode;
         this.t1 = t1;
         this.t2 = t2;
@@ -47,5 +52,6 @@ public final class JumpConstraint {
         this.cmp = cmp;
         this.rhs = rhs;
         this.name = name;
+        this.pin = pin;
     }
 }

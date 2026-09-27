@@ -52,7 +52,7 @@ public final class DegenerateTickAscent {
         double maxMag = 0.0;
         double[] mag = new double[rn];
         for (int v = 0; v < rn; v++) {
-            mag[v] = Math.sqrt(gx[v] * gx[v] + gz[v] * gz[v]);
+            mag[v] = StrictMath.sqrt(gx[v] * gx[v] + gz[v] * gz[v]);
             if (mag[v] > maxMag) maxMag = mag[v];
         }
         if (maxMag == 0.0) return new int[0];
