@@ -52,6 +52,7 @@ public final class Settings {
     private static final int DEFAULT_ARROW_MODE = ARROW_MODE_YAW;
     private static final boolean DEFAULT_SHOW_HIT_DISTANCE_LINES = false;
     private static final boolean DEFAULT_HIT_DISTANCE_SELECTED_ONLY = false;
+    private static final boolean DEFAULT_HIT_DISTANCE_GAME_REACH = false;
     private static final boolean DEFAULT_SHOW_HITBOX = false;
     private static final boolean DEFAULT_SHOW_FULL_HITBOX = false;
     private static final boolean DEFAULT_SHOW_SUBTICK = false;
@@ -167,6 +168,7 @@ public final class Settings {
     public int arrowMode = DEFAULT_ARROW_MODE;
     public boolean showHitDistanceLines = DEFAULT_SHOW_HIT_DISTANCE_LINES;
     public boolean hitDistanceSelectedOnly = DEFAULT_HIT_DISTANCE_SELECTED_ONLY;
+    public boolean hitDistanceGameReach = DEFAULT_HIT_DISTANCE_GAME_REACH;
     public boolean showHitbox = DEFAULT_SHOW_HITBOX;
     public boolean showFullHitbox = DEFAULT_SHOW_FULL_HITBOX;
     public boolean showSubtick = DEFAULT_SHOW_SUBTICK;
@@ -284,6 +286,7 @@ public final class Settings {
         arrowMode = DEFAULT_ARROW_MODE;
         showHitDistanceLines = DEFAULT_SHOW_HIT_DISTANCE_LINES;
         hitDistanceSelectedOnly = DEFAULT_HIT_DISTANCE_SELECTED_ONLY;
+        hitDistanceGameReach = DEFAULT_HIT_DISTANCE_GAME_REACH;
         showHitbox = DEFAULT_SHOW_HITBOX;
         showFullHitbox = DEFAULT_SHOW_FULL_HITBOX;
         showSubtick = DEFAULT_SHOW_SUBTICK;

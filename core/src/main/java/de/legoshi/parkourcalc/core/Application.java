@@ -261,7 +261,7 @@ public final class Application {
 
             @Override
             public double blockReach() {
-                return mc.getBlockReach();
+                return settings.hitDistanceGameReach ? mc.getBlockReach() : 4.5;
             }
 
             @Override
