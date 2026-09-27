@@ -47,7 +47,7 @@ public final class PairedCheckpoint implements Checkpoint {
                 + " spr=" + s.sprinting
                 + " sneak=" + s.shiftKeyDown
                 + " syncVelocity=" + s.syncVelocity
-                + " invuln=" + s.invulnerableTime
+                + " cooldown=" + s.damageCooldownTime
                 + " hurtTime=" + s.hurtTime
                 + " fire=" + s.remainingFireTicks
                 + " in=" + PairedServerSim.describeInput(s.serverLastClientInput)
@@ -63,7 +63,7 @@ public final class PairedCheckpoint implements Checkpoint {
         net.minecraft.world.phys.Vec3 beforeMotion = sp.getDeltaMovement();
         if (checkpoint instanceof PairedCheckpoint paired) {
             sp.setRemainingFireTicks(paired.server.remainingFireTicks);
-            sp.setInvulnerableTime(paired.server.invulnerableTime);
+            sp.damageCooldownTime = paired.server.damageCooldownTime;
             sp.hurtTime = paired.server.hurtTime;
             sp.fallDistance = paired.server.fallDistance;
             sp.setOnGround(paired.server.onGround);
@@ -76,13 +76,13 @@ public final class PairedCheckpoint implements Checkpoint {
             }
         } else {
             sp.clearFire();
-            sp.setInvulnerableTime(0);
+            sp.damageCooldownTime = 0;
             sp.hurtTime = 0;
             sp.fallDistance = 0.0;
         }
         if (de.legoshi.parkourcalc.core.DebugFlags.PAIRED_DIAGNOSTICS) {
             System.out.println("[PC-NET] restart state fire=" + sp.getRemainingFireTicks()
-                    + " invuln=" + sp.getInvulnerableTime()
+                    + " cooldown=" + sp.damageCooldownTime
                     + " fallDistance=" + sp.fallDistance
                     + " serverMotion=" + sp.getDeltaMovement()
                     + " wasServerMotion=" + beforeMotion

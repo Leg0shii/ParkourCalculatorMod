@@ -17,6 +17,7 @@ import net.minecraft.network.protocol.common.ServerboundKeepAlivePacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket;
+import net.minecraft.network.protocol.game.ServerboundClientTickEndPacket;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket;
@@ -142,7 +143,7 @@ public final class PairedServerSim {
         sp.fallDistance = 0.0;
         sp.setOnGround(false);
         sp.verticalCollisionBelow = false;
-        sp.setInvulnerableTime(0);
+        sp.damageCooldownTime = 0;
         sp.hurtTime = 0;
         sp.syncVelocity = false;
         sp.clearFire();
@@ -151,6 +152,7 @@ public final class PairedServerSim {
         handler.resetPosition();
         handler.handleMovePlayer(new ServerboundMovePlayerPacket.PosRot(
                 e.getX(), e.getY(), e.getZ(), e.getYRot(), e.getXRot(), false, false));
+        handler.handleClientTickEnd(ServerboundClientTickEndPacket.INSTANCE);
         for (int i = 0; i < WARMUP_SERVER_TICKS; i++) {
             sp.tick();
             tickHandler();
@@ -234,6 +236,7 @@ public final class PairedServerSim {
             synthesizeInputPacket(e);
             synthesizeSprintCommand(e);
             synthesizeMovePacket(e);
+            serverbound.add(ServerboundClientTickEndPacket.INSTANCE);
             drainServerbound();
             reportReplayMismatch(e);
             sp.tick();
@@ -475,7 +478,7 @@ public final class PairedServerSim {
         c.fallDistance = sp.fallDistance;
         c.onGround = sp.onGround();
         c.verticalCollisionBelow = sp.verticalCollisionBelow;
-        c.invulnerableTime = sp.getInvulnerableTime();
+        c.damageCooldownTime = sp.damageCooldownTime;
         c.hurtTime = sp.hurtTime;
         c.syncVelocity = sp.syncVelocity;
         c.remainingFireTicks = sp.getRemainingFireTicks();
@@ -530,7 +533,7 @@ public final class PairedServerSim {
         sp.fallDistance = c.fallDistance;
         sp.setOnGround(c.onGround);
         sp.verticalCollisionBelow = c.verticalCollisionBelow;
-        sp.setInvulnerableTime(c.invulnerableTime);
+        sp.damageCooldownTime = c.damageCooldownTime;
         sp.hurtTime = c.hurtTime;
         sp.syncVelocity = c.syncVelocity;
         sp.setRemainingFireTicks(c.remainingFireTicks);
@@ -587,7 +590,7 @@ public final class PairedServerSim {
         double fallDistance;
         boolean onGround;
         boolean verticalCollisionBelow;
-        int invulnerableTime;
+        int damageCooldownTime;
         int hurtTime;
         boolean syncVelocity;
         int remainingFireTicks;
