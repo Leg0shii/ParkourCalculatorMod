@@ -12,7 +12,7 @@ final class SpdCholesky {
                 for (int k = 0; k < j; k++) s -= l[i][k] * l[j][k];
                 if (i == j) {
                     if (s <= 0.0) return false;
-                    l[i][i] = Math.sqrt(s);
+                    l[i][i] = StrictMath.sqrt(s);
                 } else {
                     l[i][j] = s / l[j][j];
                 }

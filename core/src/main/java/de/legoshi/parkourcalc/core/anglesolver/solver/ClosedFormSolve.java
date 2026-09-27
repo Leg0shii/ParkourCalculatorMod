@@ -204,11 +204,11 @@ public final class ClosedFormSolve {
                     double m = scan.magnitude(t);
                     double phi = scan.phaseRad(t);
                     if (w.axis == 0) {
-                        a += k * m * Math.cos(phi);
-                        b -= k * m * Math.sin(phi);
+                        a += k * m * StrictMath.cos(phi);
+                        b -= k * m * StrictMath.sin(phi);
                     } else {
-                        a += k * m * Math.sin(phi);
-                        b += k * m * Math.cos(phi);
+                        a += k * m * StrictMath.sin(phi);
+                        b += k * m * StrictMath.cos(phi);
                     }
                 } else if (scan.pinnedMember(t)) {
                     c += k * scan.pinnedInput(t, w.axis);
@@ -238,8 +238,8 @@ public final class ClosedFormSolve {
             double prev = 0.0;
             for (double th = -180.0; th <= 180.0 + 1.0e-9; th += SCAN_ARC_STEP) {
                 double rad = th * Math.PI / 180.0;
-                double cos = Math.cos(rad);
-                double sin = Math.sin(rad);
+                double cos = StrictMath.cos(rad);
+                double sin = StrictMath.sin(rad);
                 double viol = 0.0;
                 for (double[] h : hard) {
                     double s = h[0] * cos + h[1] * sin + h[2];
@@ -367,7 +367,7 @@ public final class ClosedFormSolve {
         List<JumpLinearModel.Wall> walls = lin.compileWalls(spec.constraints, 0.0, trivialInfeasible, dominantSign);
         if (trivialInfeasible[0]) return null;
         double vBound = exact.perAxisInertia() ? exact.inertiaThreshold()
-                : exact.inertiaThreshold() / Math.sqrt(2.0);
+                : exact.inertiaThreshold() / StrictMath.sqrt(2.0);
         walls.addAll(lin.velocityWalls(vBound));
 
         FacingPrefold.Reduced red = pre.reduce(cx, cz, lin.mMagAll(), walls);
@@ -476,9 +476,9 @@ public final class ClosedFormSolve {
         // r.value bounds max c·u with c MAX-normalized; fold the constant part back in (MIN is negated).
         double constPos;
         if (spec.objective.isCustomAngle()) {
-            double rad = Math.toRadians(spec.objective.customYaw);
-            double dx = -Math.sin(rad);
-            double dz = Math.cos(rad);
+            double rad = Angles.rad(spec.objective.customYaw);
+            double dx = -StrictMath.sin(rad);
+            double dz = StrictMath.cos(rad);
             if (spec.objective.isMotion()) {
                 int t = spec.objective.tick;
                 double c0 = lin.constPos(t, 0) - (t > 0 ? lin.constPos(t - 1, 0) : 0.0);

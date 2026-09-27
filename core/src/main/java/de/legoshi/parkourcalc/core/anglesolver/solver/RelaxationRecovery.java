@@ -90,7 +90,7 @@ public final class RelaxationRecovery {
         double[] uz = new double[n];
         for (int t = 0; t < n; t++) {
             double gx = warm.gx[t], gz = warm.gz[t];
-            double nrm = Math.sqrt(gx * gx + gz * gz);
+            double nrm = StrictMath.sqrt(gx * gx + gz * gz);
             if (nrm > 1.0e-12) {
                 ux[t] = mMag[t] * gx / nrm;
                 uz[t] = mMag[t] * gz / nrm;
@@ -195,13 +195,13 @@ public final class RelaxationRecovery {
                     double[] gv = axis[j] == 0 ? gxv : gzv;
                     for (int t = 0; t < n; t++) gv[t] += mult * cj[t];
                 }
-                double tk1 = 0.5 * (1.0 + Math.sqrt(1.0 + 4.0 * tk * tk));
+                double tk1 = 0.5 * (1.0 + StrictMath.sqrt(1.0 + 4.0 * tk * tk));
                 double beta = (tk - 1.0) / tk1;
                 tk = tk1;
                 for (int t = 0; t < n; t++) {
                     double nx = yx[t] - step * gxv[t];
                     double nz = yz[t] - step * gzv[t];
-                    double nrm = Math.sqrt(nx * nx + nz * nz);
+                    double nrm = StrictMath.sqrt(nx * nx + nz * nz);
                     if (nrm > mMag[t]) {
                         double s = mMag[t] / nrm;
                         nx *= s;
@@ -266,8 +266,8 @@ public final class RelaxationRecovery {
         double[] vx = new double[n];
         double[] vz = new double[n];
         for (int t = 0; t < n; t++) {
-            vx[t] = 1.0 / Math.sqrt(2.0 * n);
-            vz[t] = 1.0 / Math.sqrt(2.0 * n);
+            vx[t] = 1.0 / StrictMath.sqrt(2.0 * n);
+            vz[t] = 1.0 / StrictMath.sqrt(2.0 * n);
         }
         double lam = 1.0;
         double[] wx = new double[n];
@@ -285,7 +285,7 @@ public final class RelaxationRecovery {
             }
             double nrm = 0.0;
             for (int t = 0; t < n; t++) nrm += wx[t] * wx[t] + wz[t] * wz[t];
-            nrm = Math.sqrt(nrm);
+            nrm = StrictMath.sqrt(nrm);
             if (nrm < 1.0e-30) return 1.0;
             lam = nrm;
             for (int t = 0; t < n; t++) {
@@ -308,14 +308,14 @@ public final class RelaxationRecovery {
             double m = lin.mMag(t);
             double tx = ux[t] - dvx;
             double tz = uz[t] - dvz;
-            double nrm = Math.sqrt(tx * tx + tz * tz);
+            double nrm = StrictMath.sqrt(tx * tx + tz * tz);
             double chX, chZ;
             if (nrm < 1.0e-12 || m < 1.0e-12) {
                 double gx, gz;
                 if (!Double.isNaN(prev)) {
                     double phi = lin.baseArg(t) + prev * Math.PI / 180.0;
-                    gx = Math.cos(phi);
-                    gz = Math.sin(phi);
+                    gx = StrictMath.cos(phi);
+                    gz = StrictMath.sin(phi);
                 } else {
                     gx = axisX ? (max ? 1.0 : -1.0) : 0.0;
                     gz = axisX ? 0.0 : (max ? 1.0 : -1.0);

@@ -617,8 +617,8 @@ public final class FoldReplayDriver {
             int t = e.getKey();
             double mu = e.getValue()[0];
             double delta = e.getValue()[1];
-            rows.add(new DiskSocpKernel.ChordRow(t, Math.cos(mu), Math.sin(mu),
-                    mMag[t] * Math.cos(delta), "chord@" + t));
+            rows.add(new DiskSocpKernel.ChordRow(t, StrictMath.cos(mu), StrictMath.sin(mu),
+                    mMag[t] * StrictMath.cos(delta), "chord@" + t));
         }
         return rows;
     }
@@ -647,7 +647,7 @@ public final class FoldReplayDriver {
             double[] ux = new double[n];
             double[] uz = new double[n];
             for (int t = 0; t < n; t++) {
-                double norm = Math.hypot(dr.gx[t], dr.gz[t]);
+                double norm = StrictMath.hypot(dr.gx[t], dr.gz[t]);
                 if (norm > 0.0) {
                     ux[t] = mMag[t] * dr.gx[t] / norm;
                     uz[t] = mMag[t] * dr.gz[t] / norm;
@@ -668,7 +668,7 @@ public final class FoldReplayDriver {
             for (int t = 0; t < n; t++) {
                 double mm = mMag[t];
                 if (mm <= 0.0) continue;
-                double slack = mm - Math.hypot(sol.ux[t], sol.uz[t]);
+                double slack = mm - StrictMath.hypot(sol.ux[t], sol.uz[t]);
                 if (slack > NARROW_TOL * Math.max(mm, 0.026) && (worst < 0 || slack > worstSlack)) {
                     worst = t;
                     worstSlack = slack;
@@ -680,10 +680,10 @@ public final class FoldReplayDriver {
             for (int t = 0; t < n; t++) {
                 double mm = mMag[t];
                 if (mm <= 0.0) continue;
-                double slack = mm - Math.hypot(sol.ux[t], sol.uz[t]);
+                double slack = mm - StrictMath.hypot(sol.ux[t], sol.uz[t]);
                 double frac = slack / Math.max(mm, 1.0e-12);
-                double dir = Math.hypot(sol.ux[t], sol.uz[t]) < 1.0e-12
-                        ? lin.baseArg(t) : Math.atan2(sol.uz[t], sol.ux[t]);
+                double dir = StrictMath.hypot(sol.ux[t], sol.uz[t]) < 1.0e-12
+                        ? lin.baseArg(t) : StrictMath.atan2(sol.uz[t], sol.ux[t]);
                 double[] cur = next.get(t);
                 if (cur != null) {
                     double nd = frac > NARROW_TOL ? cur[1] * NARROW_SHRINK : cur[1];
@@ -736,7 +736,7 @@ public final class FoldReplayDriver {
         double[] yaws = new double[n];
         double last = 0.0;
         for (int t = 0; t < n; t++) {
-            double norm = Math.hypot(ux[t], uz[t]);
+            double norm = StrictMath.hypot(ux[t], uz[t]);
             if (lin.mMag(t) <= 0.0 || norm < DEGENERATE_NORM) {
                 yaws[t] = prevYaws != null ? prevYaws[t] : last;
             } else {

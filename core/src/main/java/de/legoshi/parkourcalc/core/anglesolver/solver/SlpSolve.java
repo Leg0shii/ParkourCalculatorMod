@@ -248,8 +248,8 @@ public final class SlpSolve {
 
                 for (int t = 0; t < n; t++) {
                     double phi = lin.baseArg(t) + theta[t] * RAD;
-                    ux[t] = lin.mMag(t) * Math.cos(phi);
-                    uz[t] = lin.mMag(t) * Math.sin(phi);
+                    ux[t] = lin.mMag(t) * StrictMath.cos(phi);
+                    uz[t] = lin.mMag(t) * StrictMath.sin(phi);
                 }
                 double[][] rows = new double[m][dims];
                 for (int j = 0; j < m; j++) {
