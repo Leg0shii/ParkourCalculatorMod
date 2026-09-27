@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.13.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.12.0...v1.13.0) (2026-09-27)
+
+
+### Features
+
+* add an Inv column that closes the inventory during playback ([#450](https://github.com/Leg0shii/ParkourCalculatorMod/issues/450)) ([#498](https://github.com/Leg0shii/ParkourCalculatorMod/issues/498)) ([24882ea](https://github.com/Leg0shii/ParkourCalculatorMod/commit/24882eabd70137780d21cdad62ce3af42124f8a3))
+* **anglesolver:** compile facing EQ targets to their sine-table joint cell ([#409](https://github.com/Leg0shii/ParkourCalculatorMod/issues/409)) ([#504](https://github.com/Leg0shii/ParkourCalculatorMod/issues/504)) ([561ee0e](https://github.com/Leg0shii/ParkourCalculatorMod/commit/561ee0eed4464f1221a414ef1096d8553e267361))
+* **anglesolver:** in-game no-turn stratfinder spike ([#424](https://github.com/Leg0shii/ParkourCalculatorMod/issues/424)) ([#475](https://github.com/Leg0shii/ParkourCalculatorMod/issues/475)) ([824c665](https://github.com/Leg0shii/ParkourCalculatorMod/commit/824c66504251fbcaac4f27773cb7af85085f7345))
+* **fabric:** update the Fabric loader to Minecraft 26.3 ([#505](https://github.com/Leg0shii/ParkourCalculatorMod/issues/505)) ([78bfd0e](https://github.com/Leg0shii/ParkourCalculatorMod/commit/78bfd0ef906316afb82384621ab6df87c4fc9f18))
+
+
+### Bug Fixes
+
+* **anglesolver:** honor every node-graph param and correct their labels ([#429](https://github.com/Leg0shii/ParkourCalculatorMod/issues/429)) ([#503](https://github.com/Leg0shii/ParkourCalculatorMod/issues/503)) ([33b358c](https://github.com/Leg0shii/ParkourCalculatorMod/commit/33b358cd7de33eb62da63edc71d6f0bc45012b9f))
+* **anglesolver:** honor facing-cell pins in YawTies and pad run-up key arrays in the pool screen ([#506](https://github.com/Leg0shii/ParkourCalculatorMod/issues/506)) ([6e02512](https://github.com/Leg0shii/ParkourCalculatorMod/commit/6e02512b2de13ab77abd724637560eee99a58b9f))
+* **anglesolver:** keep the goal wall hard in legal mode on stop-on-feasible tiers ([#459](https://github.com/Leg0shii/ParkourCalculatorMod/issues/459)) ([#501](https://github.com/Leg0shii/ParkourCalculatorMod/issues/501)) ([5956e2a](https://github.com/Leg0shii/ParkourCalculatorMod/commit/5956e2a96437f7c47aefa9b4c608c1588541ece4))
+* **anglesolver:** report over-constrained no-turn chains plainly ([#454](https://github.com/Leg0shii/ParkourCalculatorMod/issues/454)) ([#502](https://github.com/Leg0shii/ParkourCalculatorMod/issues/502)) ([02ed84f](https://github.com/Leg0shii/ParkourCalculatorMod/commit/02ed84fec141486105caaa23631d22e39ade3302))
+* **anglesolver:** use StrictMath on the search path and add a Java 8 test tier ([#460](https://github.com/Leg0shii/ParkourCalculatorMod/issues/460)) ([#499](https://github.com/Leg0shii/ParkourCalculatorMod/issues/499)) ([2e64e99](https://github.com/Leg0shii/ParkourCalculatorMod/commit/2e64e994ea807d58101204cb0d4ab9551b5ff367))
+* clip the Alt+B merged footprint by the walls around the union ([#480](https://github.com/Leg0shii/ParkourCalculatorMod/issues/480)) ([#495](https://github.com/Leg0shii/ParkourCalculatorMod/issues/495)) ([73573f6](https://github.com/Leg0shii/ParkourCalculatorMod/commit/73573f64bffd31e677b6652994ec5c62ef302287))
+* make a hidden path inert to drag, gizmo, select and click suppression ([#478](https://github.com/Leg0shii/ParkourCalculatorMod/issues/478)) ([#496](https://github.com/Leg0shii/ParkourCalculatorMod/issues/496)) ([2a4f32c](https://github.com/Leg0shii/ParkourCalculatorMod/commit/2a4f32cb2439c1cfd41c56a296ae21ce674172cb))
+* pick the hit distance line with the game's look vector and block reach ([#476](https://github.com/Leg0shii/ParkourCalculatorMod/issues/476)) ([#497](https://github.com/Leg0shii/ParkourCalculatorMod/issues/497)) ([9726645](https://github.com/Leg0shii/ParkourCalculatorMod/commit/97266454fd1f2e3875370629859b7796716c0297))
+* **ui:** clamp the start/goal inset and teleport tint to the table viewport ([#483](https://github.com/Leg0shii/ParkourCalculatorMod/issues/483)) ([#494](https://github.com/Leg0shii/ParkourCalculatorMod/issues/494)) ([0a5bc40](https://github.com/Leg0shii/ParkourCalculatorMod/commit/0a5bc40c8f2d7fd6d4cb5a88abe2f1c43c031159))
+
+
+### Miscellaneous Chores
+
+* weekly release train ([9f2f16c](https://github.com/Leg0shii/ParkourCalculatorMod/commit/9f2f16c5a2617f230b555c805a4457b919059b8b))
+
 ## [1.12.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.11.0...v1.12.0) (2026-09-06)
 
 
