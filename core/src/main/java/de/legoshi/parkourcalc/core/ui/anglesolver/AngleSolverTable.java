@@ -65,6 +65,10 @@ public final class AngleSolverTable {
 
     private int selectedStateTick = -1;
     private DragKind selectedStateKind;
+    private float viewMinX = Float.NEGATIVE_INFINITY;
+    private float viewMinY = Float.NEGATIVE_INFINITY;
+    private float viewMaxX = Float.POSITIVE_INFINITY;
+    private float viewMaxY = Float.POSITIVE_INFINITY;
     private Potion selectedStatePotion;
 
     // Chip drag (manual): tracked across frames while a chip is held. A dragged chip is either a
@@ -241,6 +245,14 @@ public final class AngleSolverTable {
         stateCellRects.clear();
     }
 
+    public void beginRows(float viewMinX, float viewMinY, float viewMaxX, float viewMaxY) {
+        beginRows();
+        this.viewMinX = viewMinX;
+        this.viewMinY = viewMinY;
+        this.viewMaxX = viewMaxX;
+        this.viewMaxY = viewMaxY;
+    }
+
     public void endRows() {
         if (deferredAction != null) {
             deferredAction.run();
@@ -415,10 +427,15 @@ public final class AngleSolverTable {
         else return;
         float s = ThemeManager.uiScale();
         float barMaxX = minX + 3f * s;
+        float clipMinX = Math.max(minX, viewMinX);
+        float clipMinY = Math.max(minY, viewMinY);
+        float clipMaxX = Math.min(barMaxX, viewMaxX);
+        float clipMaxY = Math.min(maxY, viewMaxY);
+        if (clipMaxX <= clipMinX || clipMaxY <= clipMinY) return;
         // This draws after all columns, when the active clip rect is the last (narrow) column; on a scrollable
         // table that clip would cull this far-left bar. Scope the draw to its own rect so it always shows.
         ImDrawList dl = ImGui.getWindowDrawList();
-        dl.pushClipRect(minX, minY, barMaxX, maxY, false);
+        dl.pushClipRect(clipMinX, clipMinY, clipMaxX, clipMaxY, false);
         dl.addRectFilled(minX, minY, barMaxX, maxY, col);
         dl.popClipRect();
     }

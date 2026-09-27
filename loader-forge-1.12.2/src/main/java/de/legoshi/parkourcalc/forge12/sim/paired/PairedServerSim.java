@@ -360,7 +360,8 @@ public final class PairedServerSim {
         rightClickDelay = RIGHT_CLICK_DELAY_TICKS;
         Vec3d eye = new Vec3d(e.posX, e.posY + e.getEyeHeight(), e.posZ);
         Vec3d look = vectorForRotation(pitch, e.rotationYaw);
-        Vec3d end = eye.add(look.x * CLIENT_REACH, look.y * CLIENT_REACH, look.z * CLIENT_REACH);
+        double reach = clientBlockReach();
+        Vec3d end = eye.add(look.x * reach, look.y * reach, look.z * reach);
         RayTraceResult hit = level.rayTraceBlocks(eye, end, false, false, true);
         if (hit == null || hit.typeOfHit != RayTraceResult.Type.BLOCK) {
             addEvent(ServerSimEvent.Kind.INTERACTION_REJECTED, "no block in reach");
@@ -396,6 +397,11 @@ public final class PairedServerSim {
         if (journal.size() == sizeBefore) {
             addEvent(ServerSimEvent.Kind.INTERACTION_REJECTED, "use had no effect");
         }
+    }
+
+    private static double clientBlockReach() {
+        net.minecraft.client.multiplayer.PlayerControllerMP controller = net.minecraft.client.Minecraft.getMinecraft().playerController;
+        return controller != null ? controller.getBlockReachDistance() : CLIENT_REACH;
     }
 
     private static Vec3d vectorForRotation(float pitch, float yaw) {

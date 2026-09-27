@@ -29,7 +29,7 @@ public final class HomotopyLadderNode implements NodeRuntime {
     public NodeOutcome execute(GraphContext ctx, Candidate in, AtomicBoolean nodeToken, long deadlineNanos) {
         if (!ctx.exact() || ctx.stageLocked()) return NodeOutcome.of(Guarantee.NONE, in);
         if (in != null && in.feasible) return NodeOutcome.of(Guarantee.NONE, in);
-        if (ctx.scenario.numTicks > tickCap) return NodeOutcome.of(Guarantee.NONE, in);
+        if (tickCap > 0 && ctx.scenario.numTicks > tickCap) return NodeOutcome.of(Guarantee.NONE, in);
         if (JumpLinearModel.hasFacingWall(ctx.spec.constraints)) return NodeOutcome.of(Guarantee.NONE, in);
 
         JumpPhysicsInputs sc = ctx.scenario.copy();

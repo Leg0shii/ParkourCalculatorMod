@@ -86,9 +86,9 @@ public final class NoTurnScreen {
         ForwardPath probe = model.forward(sc, gf0);
         double px = probe.getPos(setupEnd + 1 < n ? setupEnd + 1 : n - 1, JumpPhysicsInputs.Axis.X);
         double pz = probe.getPos(setupEnd + 1 < n ? setupEnd + 1 : n - 1, JumpPhysicsInputs.Axis.Z);
-        double world = Math.atan2(targetZ - pz, targetX - px);
+        double world = StrictMath.atan2(targetZ - pz, targetX - px);
         for (int t = setupEnd + 1; t < n; t++) {
-            yaws[t] = Math.toDegrees(world) - Math.toDegrees(turnBaseArg[t]);
+            yaws[t] = Angles.deg(world) - Angles.deg(turnBaseArg[t]);
         }
         double[] gf = sc.toGameFacings(Angles.wrapAll(yaws));
         ForwardPath fp = model.forward(sc, gf);

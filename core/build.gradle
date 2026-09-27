@@ -64,6 +64,28 @@ tasks.named('test') {
 	}
 }
 
+tasks.register('testJava8', Test) {
+	group = 'verification'
+	description = 'Runs the core tests on a Java 8 runtime, the JVM the Forge loaders ship on.'
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
+	javaLauncher.set(javaToolchains.launcherFor {
+		languageVersion = JavaLanguageVersion.of(8)
+	})
+	systemProperties providers.systemPropertiesPrefixedBy('pkc.').get()
+	useJUnit {
+		if (!project.hasProperty('slowTests')) {
+			excludeCategories 'de.legoshi.parkourcalc.SlowSolverTests'
+		}
+		if (!project.hasProperty('verySlowTests')) {
+			excludeCategories 'de.legoshi.parkourcalc.VerySlowSolverTests'
+		}
+	}
+	if (project.hasProperty('testCpus')) {
+		jvmArgs "-XX:ActiveProcessorCount=${project.property('testCpus')}"
+	}
+}
+
 // Enforce the table-styling consolidation rules established in the Phase 1-5
 // refactor. Three checks, each a simple regex over the ImGui rendering tree.
 // See CONTRIBUTING.md "Table styling" for the contract; this task is the gate.

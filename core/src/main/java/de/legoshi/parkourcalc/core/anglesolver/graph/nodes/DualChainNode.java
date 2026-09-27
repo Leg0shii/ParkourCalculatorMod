@@ -18,16 +18,18 @@ public final class DualChainNode implements NodeRuntime {
     private final boolean keepBetter;
     private final int warmSec;
     private final int capMs;
-    private final ParamValues params;
+    private final SlpSolve.Config slpConfig;
+    private final ClosedFormSolve.Config cfConfig;
 
     public DualChainNode(ParamValues params) {
         this.keepBetter = params.getBool("keepBetter");
         this.warmSec = params.getInt("warmSec");
         this.capMs = params.getInt("budgetMs");
-        this.params = params;
+        this.slpConfig = slpConfig(params);
+        this.cfConfig = cfConfig(params);
     }
 
-    private SlpSolve.Config slpConfig() {
+    private static SlpSolve.Config slpConfig(ParamValues params) {
         SlpSolve.Config cfg = new SlpSolve.Config();
         cfg.phase1Calls = params.getInt("slpPhase1Calls");
         cfg.totalCalls = params.getInt("slpTotalCalls");
@@ -38,7 +40,7 @@ public final class DualChainNode implements NodeRuntime {
         return cfg;
     }
 
-    private ClosedFormSolve.Config cfConfig() {
+    private static ClosedFormSolve.Config cfConfig(ParamValues params) {
         ClosedFormSolve.Config cfg = new ClosedFormSolve.Config();
         cfg.margins = ParamParse.doubles(params.getString("cfMargins"), cfg.margins);
         cfg.maxInertiaPasses = params.getInt("cfMaxInertiaPasses");
@@ -55,7 +57,7 @@ public final class DualChainNode implements NodeRuntime {
         String[] chainName = new String[1];
         long ladderDeadline = capMs > 0 ? 0L : deadlineNanos;
         double[] chain = AngleSolverEngine.dualChain(ctx.exactModel, ctx.spec, ctx.scenario, nodeToken,
-                chainName, ladderDeadline, slpConfig(), cfConfig(), ctx.closestMiss());
+                chainName, ladderDeadline, slpConfig, cfConfig, ctx.closestMiss());
         if (chain == null) {
             if (!keepBetter) ctx.chainAppend("closed form");
             return NodeOutcome.of(Guarantee.NONE, in);

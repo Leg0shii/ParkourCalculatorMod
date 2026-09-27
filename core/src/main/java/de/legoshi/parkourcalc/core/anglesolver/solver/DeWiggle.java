@@ -219,8 +219,8 @@ public final class DeWiggle {
         double[] uz = new double[n];
         for (int t = 0; t < n; t++) {
             double phi = lin.baseArg(t) + gf[t] * rad;
-            ux[t] = lin.mMag(t) * Math.cos(phi);
-            uz[t] = lin.mMag(t) * Math.sin(phi);
+            ux[t] = lin.mMag(t) * StrictMath.cos(phi);
+            uz[t] = lin.mMag(t) * StrictMath.sin(phi);
         }
         List<double[]> rows = new ArrayList<>();
         for (int i = 0; i < cs.size(); i++) {

@@ -438,7 +438,7 @@ public final class CostateDualSolver {
             }
         }
         double d = 0.0;
-        for (int t = 0; t < n; t++) d += mMag[t] * Math.sqrt(outX[t] * outX[t] + outZ[t] * outZ[t] + EPS2);
+        for (int t = 0; t < n; t++) d += mMag[t] * StrictMath.sqrt(outX[t] * outX[t] + outZ[t] * outZ[t] + EPS2);
         for (int j = 0; j < m; j++) d += lam[j] * bPrime[j];
         if (freeP0 != null) d += supportOf(hAxis(lam, 0), 0) + supportOf(hAxis(lam, 1), 1);
         return d;
@@ -447,7 +447,7 @@ public final class CostateDualSolver {
     /** grad_j = b'_j − A_j·u*, with u*_t = m_t·g_t/‖g_t‖ (the recovered constraint slack, negated). */
     private void grad(double[] gX, double[] gZ, double[] out) {
         for (int t = 0; t < n; t++) {
-            double nrm = Math.sqrt(gX[t] * gX[t] + gZ[t] * gZ[t] + EPS2);
+            double nrm = StrictMath.sqrt(gX[t] * gX[t] + gZ[t] * gZ[t] + EPS2);
             double w = mMag[t] / nrm;
             ux[t] = w * gX[t];
             uz[t] = w * gZ[t];
@@ -489,7 +489,7 @@ public final class CostateDualSolver {
         }
         for (int t = 0; t < n; t++) {
             double gxx = gx[t], gzz = gz[t];
-            double nrm = Math.sqrt(gxx * gxx + gzz * gzz + EPS2);
+            double nrm = StrictMath.sqrt(gxx * gxx + gzz * gzz + EPS2);
             wOverNrm[t] = mMag[t] / nrm;
             gxHat[t] = gxx / nrm;
             gzHat[t] = gzz / nrm;

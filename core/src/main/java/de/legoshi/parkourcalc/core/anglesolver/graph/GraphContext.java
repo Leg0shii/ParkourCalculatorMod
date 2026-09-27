@@ -132,6 +132,16 @@ public final class GraphContext {
         this.stageLocked = locked;
     }
 
+    private volatile boolean dualGapRequested;
+
+    public boolean dualGapRequested() {
+        return dualGapRequested;
+    }
+
+    public void requestDualGap() {
+        dualGapRequested = true;
+    }
+
     public boolean settled() {
         return settled;
     }

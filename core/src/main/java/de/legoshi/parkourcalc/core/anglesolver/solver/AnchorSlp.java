@@ -228,7 +228,7 @@ public final class AnchorSlp {
                 } else {
                     double vx = path.velX[t];
                     double vz = path.velZ[t];
-                    double norm = Math.hypot(vx, vz);
+                    double norm = StrictMath.hypot(vx, vz);
                     if (norm < thr) {
                         rowList.add(bandRow(lin, 0, t, ux, uz, cols, 1.0, yawScale));
                         violList.add(BAND_SCALE * (vx - thr + BAND_INSET));
@@ -283,8 +283,8 @@ public final class AnchorSlp {
         for (int t = 0; t < lin.n; t++) {
             double mm = lin.mMag(t);
             double phi = lin.baseArg(t) + yaws[t] * RAD;
-            outUx[t] = mm * Math.cos(phi);
-            outUz[t] = mm * Math.sin(phi);
+            outUx[t] = mm * StrictMath.cos(phi);
+            outUz[t] = mm * StrictMath.sin(phi);
         }
     }
 

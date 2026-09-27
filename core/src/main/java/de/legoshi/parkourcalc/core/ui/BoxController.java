@@ -32,7 +32,6 @@ public final class BoxController {
 
     private static final int GIZMO_SEGMENTS = 48;
 
-    private static final double BLOCK_REACH = 4.5;
 
     private static final int SPAN = 0;
     private static final int INSET_LO = 1;
@@ -547,14 +546,13 @@ public final class BoxController {
         if (i < 0 || i + 1 >= states.size()) return;
         Vec3dCore p = positions.get(i);
         double eyeY = p.y + probe.eyeHeight(states.get(i).sneaking);
-        double yawRad = Math.toRadians(states.get(i + 1).yaw);
-        double pitchRad = Math.toRadians(getPitch(i + 1));
-        double cosP = Math.cos(pitchRad);
-        double dx = -Math.sin(yawRad) * cosP;
-        double dy = -Math.sin(pitchRad);
-        double dz = Math.cos(yawRad) * cosP;
-        double hit = probe.hitDistance(p.x, eyeY, p.z, dx, dy, dz, BLOCK_REACH);
-        double len = hit >= 0 ? hit : BLOCK_REACH;
+        double[] look = probe.lookDirection(states.get(i + 1).yaw, getPitch(i + 1));
+        double dx = look[0];
+        double dy = look[1];
+        double dz = look[2];
+        double reach = probe.blockReach();
+        double hit = probe.hitDistance(p.x, eyeY, p.z, dx, dy, dz, reach);
+        double len = hit >= 0 ? hit : reach;
         renderer.drawLine(p.x, eyeY, p.z,
                 p.x + dx * len, eyeY + dy * len, p.z + dz * len,
                 hit >= 0 ? hitArgb : missArgb);

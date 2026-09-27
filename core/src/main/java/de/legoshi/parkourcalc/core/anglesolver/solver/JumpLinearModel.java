@@ -150,7 +150,7 @@ public final class JumpLinearModel {
             double fm = strafe0 * strafe0 + forward0 * forward0;
             double fF = 0.0, sF = 0.0;
             if (fm >= 1.0e-4) {
-                double raw = Math.sqrt(fm);
+                double raw = StrictMath.sqrt(fm);
                 if (raw < 1.0) raw = 1.0;
                 double scale = accelSpeed / raw;
                 fF = forward0 * scale;
@@ -160,8 +160,8 @@ public final class JumpLinearModel {
             boost[t] = (isJump && sprint) ? 0.2 : 0.0;
             pConst[t] = fF + boost[t];
             qConst[t] = sF;
-            mMag[t] = Math.hypot(pConst[t], qConst[t]);
-            baseArg[t] = Math.atan2(pConst[t], qConst[t]);
+            mMag[t] = StrictMath.hypot(pConst[t], qConst[t]);
+            baseArg[t] = StrictMath.atan2(pConst[t], qConst[t]);
         }
         fPre[0] = 1.0;
         sPre[0] = 0.0;
@@ -233,9 +233,9 @@ public final class JumpLinearModel {
         double dx, dz;
         boolean max = obj.sense == Objective.Sense.MAX;
         if (obj.isCustomAngle()) {
-            double rad = Math.toRadians(obj.customYaw);
-            dx = (max ? 1.0 : -1.0) * -Math.sin(rad);
-            dz = (max ? 1.0 : -1.0) * Math.cos(rad);
+            double rad = Angles.rad(obj.customYaw);
+            dx = (max ? 1.0 : -1.0) * -StrictMath.sin(rad);
+            dz = (max ? 1.0 : -1.0) * StrictMath.cos(rad);
         } else if (obj.axis == JumpPhysicsInputs.Axis.X) {
             dx = max ? 1.0 : -1.0;
             dz = 0.0;
@@ -437,8 +437,8 @@ public final class JumpLinearModel {
             outZeroX[t] = zx;
             outZeroZ[t] = zz;
             double phi = baseArg[t] + yawsAbsWrapped[t] * RAD;
-            vx += mMag[t] * Math.cos(phi);
-            vz += mMag[t] * Math.sin(phi);
+            vx += mMag[t] * StrictMath.cos(phi);
+            vz += mMag[t] * StrictMath.sin(phi);
             vx *= f4[t];
             vz *= f4[t];
         }
@@ -455,7 +455,7 @@ public final class JumpLinearModel {
      *  the magnitude is fixed by the physics. A vanishing costate (undetermined direction) is left to the
      *  caller's default. */
     public double recoverYawDeg(int t, double gx, double gz) {
-        return Angles.wrap((Math.atan2(gz, gx) - baseArg[t]) * DEG);
+        return Angles.wrap((StrictMath.atan2(gz, gx) - baseArg[t]) * DEG);
     }
 
     public double[] recoverAlongCostate(Objective obj, double[] gx, double[] gz) {
@@ -467,9 +467,9 @@ public final class JumpLinearModel {
             double z = gz[t];
             if (x * x + z * z < 1.0e-18) {
                 if (obj.isCustomAngle()) {
-                    double rad = Math.toRadians(obj.customYaw);
-                    x = (max ? 1.0 : -1.0) * -Math.sin(rad);
-                    z = (max ? 1.0 : -1.0) * Math.cos(rad);
+                    double rad = Angles.rad(obj.customYaw);
+                    x = (max ? 1.0 : -1.0) * -StrictMath.sin(rad);
+                    z = (max ? 1.0 : -1.0) * StrictMath.cos(rad);
                 } else {
                     x = axisX ? (max ? 1.0 : -1.0) : 0.0;
                     z = axisX ? 0.0 : (max ? 1.0 : -1.0);

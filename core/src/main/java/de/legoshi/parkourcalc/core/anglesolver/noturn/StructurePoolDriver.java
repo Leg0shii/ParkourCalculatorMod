@@ -252,8 +252,8 @@ public final class StructurePoolDriver {
                     for (int sn = 0; sn < 2; sn++) {
                         nt.magArg(t, c, se == 1, sn == 1, ma);
                         int idx = (c << 2) | (se << 1) | sn;
-                        double cs = Math.cos(ma[1]);
-                        double sn2 = Math.sin(ma[1]);
+                        double cs = StrictMath.cos(ma[1]);
+                        double sn2 = StrictMath.sin(ma[1]);
                         gc[t][idx] = ma[0] * cs;
                         mag[t][idx] = ma[0];
                         gs[t][idx] = -ma[0] * sn2;
@@ -268,8 +268,8 @@ public final class StructurePoolDriver {
         this.sinG = new double[cfg.diskGrid];
         for (int g = 0; g < cfg.diskGrid; g++) {
             double th = -Math.PI + g * (2.0 * Math.PI / cfg.diskGrid);
-            cosG[g] = Math.cos(th);
-            sinG[g] = Math.sin(th);
+            cosG[g] = StrictMath.cos(th);
+            sinG[g] = StrictMath.sin(th);
         }
 
         int cap = 3 * cfg.diskGrid + 16;
@@ -431,7 +431,7 @@ public final class StructurePoolDriver {
         }
         if (feasFound) {
             diskScanObj = bestObj;
-            return Math.toDegrees(-Math.PI + bestG * step);
+            return Angles.deg(-Math.PI + bestG * step);
         }
         double minViol = Double.POSITIVE_INFINITY;
         int mg = -1;
@@ -443,7 +443,7 @@ public final class StructurePoolDriver {
         }
         if (minViol <= cfg.diskKeep && mg >= 0) {
             diskScanObj = Double.NaN;
-            return Math.toDegrees(-Math.PI + mg * step);
+            return Angles.deg(-Math.PI + mg * step);
         }
         diskScanObj = maximize ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY;
         return Double.NaN;

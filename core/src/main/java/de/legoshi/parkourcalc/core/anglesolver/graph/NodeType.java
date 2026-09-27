@@ -44,7 +44,11 @@ public final class NodeType {
     }
 
     public boolean budgetGuarded(ParamValues v) {
-        return budgetParam != null && v.getInt(budgetParam) > 0;
+        if (budgetParam != null && v.getInt(budgetParam) > 0) return true;
+        for (ParamSpec s : params) {
+            if ("budgetMs".equals(s.key) && v.getInt("budgetMs") > 0) return true;
+        }
+        return false;
     }
 
     public ParamValues defaultParams() {

@@ -29,7 +29,7 @@ public class InputRow {
 
     // LEFT_CLICK / RIGHT_CLICK appended last to keep existing ordinals stable for old saves.
     public enum Key {
-        W, A, S, D, SPRINT, SNEAK, JUMP, LEFT_CLICK, RIGHT_CLICK
+        W, A, S, D, SPRINT, SNEAK, JUMP, LEFT_CLICK, RIGHT_CLICK, CLOSE_INVENTORY
     }
 
     public InputRow() {
