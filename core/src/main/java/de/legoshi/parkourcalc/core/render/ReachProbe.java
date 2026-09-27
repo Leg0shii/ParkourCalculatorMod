@@ -19,4 +19,15 @@ public interface ReachProbe {
 
     double hitDistance(double originX, double originY, double originZ,
                        double dirX, double dirY, double dirZ, double maxDistance);
+
+    default double blockReach() {
+        return 4.5;
+    }
+
+    default double[] lookDirection(float yawDeg, float pitchDeg) {
+        double yawRad = Math.toRadians(yawDeg);
+        double pitchRad = Math.toRadians(pitchDeg);
+        double cosP = Math.cos(pitchRad);
+        return new double[] {-Math.sin(yawRad) * cosP, -Math.sin(pitchRad), Math.cos(yawRad) * cosP};
+    }
 }

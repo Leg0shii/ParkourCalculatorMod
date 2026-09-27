@@ -373,6 +373,7 @@ public final class PlaybackController {
             }
         }
         bridge.setYaw(currentTickYaw);
+        bridge.setHeadYaw(currentTickYaw);
         prevTickPitch = currentTickPitch;
         currentTickPitch = applyPitch(currentTickPitch, motion);
         bridge.setPitch(currentTickPitch);

@@ -309,7 +309,7 @@ public final class PairedServerSim {
         if (!fire) return;
         rightClickDelay = RIGHT_CLICK_DELAY_TICKS;
         Vec3 eye = new Vec3(e.getX(), e.getEyeY(), e.getZ());
-        Vec3 dir = Vec3.directionFromRotation(pitch, e.getYRot());
+        Vec3 dir = pickViewVector(pitch, e.getYRot());
         double range = e.blockInteractionRange();
         HitResult hit = level.clip(new ClipContext(eye, eye.add(dir.scale(range)),
                 ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, e));
@@ -323,6 +323,16 @@ public final class PairedServerSim {
         if (journal.size() == sizeBefore) {
             addEvent(ServerSimEvent.Kind.INTERACTION_REJECTED, "use had no effect");
         }
+    }
+
+    private static Vec3 pickViewVector(float pitch, float yaw) {
+        float f = pitch * ((float) Math.PI / 180F);
+        float f1 = -yaw * ((float) Math.PI / 180F);
+        float f2 = Mth.cos(f1);
+        float f3 = Mth.sin(f1);
+        float f4 = Mth.cos(f);
+        float f5 = Mth.sin(f);
+        return new Vec3(f3 * f4, -f5, f2 * f4);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})

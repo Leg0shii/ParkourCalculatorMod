@@ -58,6 +58,21 @@ public class PlaybackRangeTest {
     }
 
     @Test
+    public void tickSetsTheHeadYawToTheExactTickYawBeforeThePick() {
+        InputData data = rows(6);
+        data.getRows().get(3).setYaw(-56.058594f);
+        FakePlaybackBridge bridge = new FakePlaybackBridge();
+        PlaybackController pc = controller(bridge, new SimulationRunner(new FakeSimulator()), data);
+
+        pc.start(3, data.size(), new Vec3dCore(0, 64, 0), Vec3dCore.ZERO, 4504.192f);
+        pc.tick();
+
+        float expected = 4504.192f + -56.058594f;
+        assertEquals(expected, bridge.yaw, 0f);
+        assertEquals("the pick ray uses the head yaw, so it must carry the same float as the physics yaw", expected, bridge.headYaw, 0f);
+    }
+
+    @Test
     public void rangeStopsAfterItsLastTickAndNeverPlaysBeyondIt() throws Exception {
         InputData data = rows(8);
         FakePlaybackBridge bridge = new FakePlaybackBridge();

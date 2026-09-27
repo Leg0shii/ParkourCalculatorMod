@@ -15,6 +15,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.util.Mth;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.core.BlockPos;
@@ -146,6 +147,23 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
     @Override
     public double getEyeHeight(boolean sneaking) {
         return sneaking ? 1.27 : 1.62;
+    }
+
+    @Override
+    public double getBlockReach() {
+        LocalPlayer player = Minecraft.getInstance().player;
+        return player != null ? player.blockInteractionRange() : 4.5;
+    }
+
+    @Override
+    public Vec3dCore getLookVector(float yawDeg, float pitchDeg) {
+        float f = pitchDeg * ((float) Math.PI / 180F);
+        float f1 = -yawDeg * ((float) Math.PI / 180F);
+        float f2 = Mth.cos(f1);
+        float f3 = Mth.sin(f1);
+        float f4 = Mth.cos(f);
+        float f5 = Mth.sin(f);
+        return new Vec3dCore(f3 * f4, -f5, f2 * f4);
     }
 
     @Override
