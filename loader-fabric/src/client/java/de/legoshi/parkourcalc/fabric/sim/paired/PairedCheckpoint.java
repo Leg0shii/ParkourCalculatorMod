@@ -46,8 +46,8 @@ public final class PairedCheckpoint implements Checkpoint {
                 + " vCollB=" + s.verticalCollisionBelow
                 + " spr=" + s.sprinting
                 + " sneak=" + s.shiftKeyDown
-                + " hurtMarked=" + s.hurtMarked
-                + " invuln=" + s.invulnerableTime
+                + " syncVelocity=" + s.syncVelocity
+                + " cooldown=" + s.damageCooldownTime
                 + " hurtTime=" + s.hurtTime
                 + " fire=" + s.remainingFireTicks
                 + " in=" + PairedServerSim.describeInput(s.serverLastClientInput)
@@ -59,11 +59,12 @@ public final class PairedCheckpoint implements Checkpoint {
     }
 
     public static void applyRestartState(ServerPlayer sp, Checkpoint checkpoint) {
-        sp.hurtMarked = false;
+        sp.syncVelocity = false;
         net.minecraft.world.phys.Vec3 beforeMotion = sp.getDeltaMovement();
         if (checkpoint instanceof PairedCheckpoint paired) {
             sp.setRemainingFireTicks(paired.server.remainingFireTicks);
-            sp.invulnerableTime = paired.server.invulnerableTime;
+            sp.setAirSupply(paired.server.airSupply);
+            sp.damageCooldownTime = paired.server.damageCooldownTime;
             sp.hurtTime = paired.server.hurtTime;
             sp.fallDistance = paired.server.fallDistance;
             sp.setOnGround(paired.server.onGround);
@@ -76,13 +77,13 @@ public final class PairedCheckpoint implements Checkpoint {
             }
         } else {
             sp.clearFire();
-            sp.invulnerableTime = 0;
+            sp.damageCooldownTime = 0;
             sp.hurtTime = 0;
             sp.fallDistance = 0.0;
         }
         if (de.legoshi.parkourcalc.core.DebugFlags.PAIRED_DIAGNOSTICS) {
             System.out.println("[PC-NET] restart state fire=" + sp.getRemainingFireTicks()
-                    + " invuln=" + sp.invulnerableTime
+                    + " cooldown=" + sp.damageCooldownTime
                     + " fallDistance=" + sp.fallDistance
                     + " serverMotion=" + sp.getDeltaMovement()
                     + " wasServerMotion=" + beforeMotion

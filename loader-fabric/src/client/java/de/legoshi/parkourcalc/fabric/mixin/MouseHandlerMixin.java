@@ -45,7 +45,7 @@ public class MouseHandlerMixin {
             return;
         }
 
-        ImGuiImpl.mouseButtonCallback(window, button, action, input.modifiers());
+        ImGuiImpl.mouseButtonCallback(button, action);
         ci.cancel();
     }
 
@@ -55,7 +55,7 @@ public class MouseHandlerMixin {
             return;
         }
 
-        ImGuiImpl.scrollCallback(window, horizontal, vertical);
+        ImGuiImpl.scrollCallback(horizontal, vertical);
         ci.cancel();
     }
 }

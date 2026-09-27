@@ -107,7 +107,8 @@ public final class PairedServerPlayer extends ServerPlayer {
     }
 
     @Override
-    public void startSleeping(BlockPos bedPosition) {
+    public boolean startSleeping(BlockPos bedPosition) {
+        return false;
     }
 
     @Override

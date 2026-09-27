@@ -17,6 +17,7 @@ import net.minecraft.network.protocol.common.ServerboundKeepAlivePacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket;
+import net.minecraft.network.protocol.game.ServerboundClientTickEndPacket;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket;
@@ -137,25 +138,27 @@ public final class PairedServerSim {
     private void resetServerSide(SimulatorEntity e) {
         ServerPlayer real = level.getServer().getPlayerList().getPlayer(e.getUUID());
         if (real != null) sp.getAttributes().assignBaseValues(real.getAttributes());
+        sp.setAirSupply(real != null ? real.getAirSupply() : sp.getMaxAirSupply());
         sp.absSnapTo(e.getX(), e.getY(), e.getZ(), e.getYRot(), 0.0F);
         sp.setDeltaMovement(e.getDeltaMovement());
         sp.fallDistance = 0.0;
         sp.setOnGround(false);
         sp.verticalCollisionBelow = false;
-        sp.invulnerableTime = 0;
+        sp.damageCooldownTime = 0;
         sp.hurtTime = 0;
-        sp.hurtMarked = false;
+        sp.syncVelocity = false;
         sp.clearFire();
         sp.setShiftKeyDown(false);
         sp.setSprinting(false);
         handler.resetPosition();
         handler.handleMovePlayer(new ServerboundMovePlayerPacket.PosRot(
                 e.getX(), e.getY(), e.getZ(), e.getYRot(), e.getXRot(), false, false));
+        handler.handleClientTickEnd(ServerboundClientTickEndPacket.INSTANCE);
         for (int i = 0; i < WARMUP_SERVER_TICKS; i++) {
             sp.tick();
             tickHandler();
         }
-        sp.hurtMarked = false;
+        sp.syncVelocity = false;
         handler.resetPosition();
         handler.resetFlyingTicks();
         handler.awaitingPositionFromClient = null;
@@ -225,9 +228,8 @@ public final class PairedServerSim {
         if (DebugFlags.PAIRED_DIAGNOSTICS) {
             System.out.println("[PC-PAIR] T" + (tickIndex + 1) + " lagback applied to " + formatVec(next.position()));
         }
-        serverbound.add(new ServerboundAcceptTeleportationPacket(packet.id()));
-        serverbound.add(new ServerboundMovePlayerPacket.PosRot(
-                e.getX(), e.getY(), e.getZ(), e.getYRot(), e.getXRot(), false, false));
+        serverbound.add(new ServerboundAcceptTeleportationPacket(
+                packet.id(), e.getX(), e.getY(), e.getZ(), e.getYRot(), e.getXRot()));
     }
 
     public void afterClientTick(SimulatorEntity e) {
@@ -235,6 +237,7 @@ public final class PairedServerSim {
             synthesizeInputPacket(e);
             synthesizeSprintCommand(e);
             synthesizeMovePacket(e);
+            serverbound.add(ServerboundClientTickEndPacket.INSTANCE);
             drainServerbound();
             reportReplayMismatch(e);
             sp.tick();
@@ -382,8 +385,8 @@ public final class PairedServerSim {
     }
 
     private void flushHurtMarked() {
-        if (sp.hurtMarked) {
-            sp.hurtMarked = false;
+        if (sp.syncVelocity) {
+            sp.syncVelocity = false;
             pendingClientbound.add(new ClientboundSetEntityMotionPacket(sp));
             if (DebugFlags.PAIRED_DIAGNOSTICS) {
                 Vec3 raw = sp.getDeltaMovement();
@@ -486,10 +489,11 @@ public final class PairedServerSim {
         c.fallDistance = sp.fallDistance;
         c.onGround = sp.onGround();
         c.verticalCollisionBelow = sp.verticalCollisionBelow;
-        c.invulnerableTime = sp.invulnerableTime;
+        c.damageCooldownTime = sp.damageCooldownTime;
         c.hurtTime = sp.hurtTime;
-        c.hurtMarked = sp.hurtMarked;
+        c.syncVelocity = sp.syncVelocity;
         c.remainingFireTicks = sp.getRemainingFireTicks();
+        c.airSupply = sp.getAirSupply();
         c.shiftKeyDown = sp.isShiftKeyDown();
         c.sprinting = sp.isSprinting();
         c.awaitingPositionFromClient = handler.awaitingPositionFromClient;
@@ -541,10 +545,11 @@ public final class PairedServerSim {
         sp.fallDistance = c.fallDistance;
         sp.setOnGround(c.onGround);
         sp.verticalCollisionBelow = c.verticalCollisionBelow;
-        sp.invulnerableTime = c.invulnerableTime;
+        sp.damageCooldownTime = c.damageCooldownTime;
         sp.hurtTime = c.hurtTime;
-        sp.hurtMarked = c.hurtMarked;
+        sp.syncVelocity = c.syncVelocity;
         sp.setRemainingFireTicks(c.remainingFireTicks);
+        sp.setAirSupply(c.airSupply);
         sp.setShiftKeyDown(c.shiftKeyDown);
         sp.setSprinting(c.sprinting);
         handler.awaitingPositionFromClient = c.awaitingPositionFromClient;
@@ -598,10 +603,11 @@ public final class PairedServerSim {
         double fallDistance;
         boolean onGround;
         boolean verticalCollisionBelow;
-        int invulnerableTime;
+        int damageCooldownTime;
         int hurtTime;
-        boolean hurtMarked;
+        boolean syncVelocity;
         int remainingFireTicks;
+        int airSupply;
         boolean shiftKeyDown;
         boolean sprinting;
         Vec3 awaitingPositionFromClient;

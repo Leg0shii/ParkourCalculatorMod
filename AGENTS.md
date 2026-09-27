@@ -14,7 +14,7 @@ Shared guidance for AI coding agents and contributors. This is the canonical gui
 ```
 core/                  Java 8.  ImGui-only UI/data + the angle solver. No MC, Fabric, Forge, or LWJGL imports.
 forge-core/            Java 8.  Shared for both Forge loaders: lwjgl2/ ImGui bootstrap, sim/ sprint machine. No MC imports.
-loader-fabric/         Java 25. Fabric (Loom, LWJGL3), tracks the latest MC (currently 26.2). MC-touching sim/render/mixins/entry point. Source under src/client/java.
+loader-fabric/         Java 25. Fabric (Loom, LWJGL3), tracks the latest MC (currently 26.3). MC-touching sim/render/mixins/entry point. Source under src/client/java.
 loader-fabric-1.21.3/  Java 21. Fabric (Loom, LWJGL3) for MC 1.21.3. Same layout as loader-fabric, source under src/main/java; every loader-side port change lands here too.
 loader-forge-1.8.9/    Java 8.  Forge (Unimined FG2, LWJGL2). MC-touching code.
 loader-forge-1.12.2/   Java 8.  Forge (Unimined FG3, LWJGL2). MC-touching code.
@@ -114,8 +114,8 @@ They appear under:
 ```
 .gradle/unimined/net/minecraft/minecraft/1.8.9/.../mcp-stable-22-1.8.9-searge-1.8.9/...-sources.jar
 .gradle/unimined/net/minecraft/minecraft/1.12.2/.../mcp-stable-39-1.12-searge-...-sources.jar
-.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-common-<hash>/26.2/...-26.2-sources.jar
-.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-clientOnly-<hash>/26.2/...-26.2-sources.jar
+.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-common-<hash>/26.3/...-26.3-sources.jar
+.gradle/loom-cache/minecraftMaven/net/minecraft/minecraft-clientOnly-<hash>/26.3/...-26.3-sources.jar
 ```
 
 Unzip the relevant `-sources.jar` and grep for a single file (e.g. `EntityPlayerSP.java`, `LocalPlayer.java`). IntelliJ resolves these automatically on Ctrl-Click in any loader module.
