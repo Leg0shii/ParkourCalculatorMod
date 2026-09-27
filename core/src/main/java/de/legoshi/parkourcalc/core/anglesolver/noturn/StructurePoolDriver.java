@@ -108,6 +108,8 @@ public final class StructurePoolDriver {
     double[][] gcz;
     double[][] gsz;
     private final double[] abBuf = new double[2];
+    private int[] baseCombos;
+    private boolean[] baseSprint;
 
     private double[] cosG;
     private double[] sinG;
@@ -176,6 +178,8 @@ public final class StructurePoolDriver {
         this.problem = problem;
         this.nt = new NoTurnModel(problem);
         this.n = problem.n;
+        this.baseCombos = problem.baseCombos();
+        this.baseSprint = problem.baseSprint();
         Objective obj = problem.objective;
         this.maximize = obj.sense == Objective.Sense.MAX;
         this.objAxisX = obj.axis == JumpPhysicsInputs.Axis.X;
@@ -343,7 +347,7 @@ public final class StructurePoolDriver {
     }
 
     public double diskFeasibleTheta(int[] combos, boolean[] sprint, double[] outBestObj) {
-        computeGroupCoefs(combos, sprint);
+        computeGroupCoefs(fullCombos(combos), fullSprint(sprint));
         double bestTheta = scanGrid(curObjA, curObjB);
         if (outBestObj != null) outBestObj[0] = diskScanObj;
         return bestTheta;
@@ -487,6 +491,20 @@ public final class StructurePoolDriver {
         return viol;
     }
 
+    private int[] fullCombos(int[] combos) {
+        if (combos.length >= n) return combos;
+        int[] full = java.util.Arrays.copyOf(baseCombos, n);
+        System.arraycopy(combos, 0, full, 0, combos.length);
+        return full;
+    }
+
+    private boolean[] fullSprint(boolean[] sprint) {
+        if (sprint.length >= n) return sprint;
+        boolean[] full = java.util.Arrays.copyOf(baseSprint, n);
+        System.arraycopy(sprint, 0, full, 0, sprint.length);
+        return full;
+    }
+
     private void fillByteScenario(int[] combos, boolean[] sprint) {
         for (int t = 0; t < n; t++) {
             int combo = combos[t];
@@ -498,7 +516,7 @@ public final class StructurePoolDriver {
     }
 
     public double[] byteScreen(int[] combos, boolean[] sprint, double centerTheta) {
-        fillByteScenario(combos, sprint);
+        fillByteScenario(fullCombos(combos), fullSprint(sprint));
         return screen.screen(centerTheta);
     }
 

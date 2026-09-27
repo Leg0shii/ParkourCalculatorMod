@@ -65,6 +65,7 @@ public final class YawTies {
     public static YawTies of(List<JumpConstraint> constraints, int n) {
         double[] absLo = filled(n, Double.NEGATIVE_INFINITY);
         double[] absHi = filled(n, Double.POSITIVE_INFINITY);
+        double[] absPin = filled(n, Double.NaN);
         double[] linkLo = filled(n, Double.NEGATIVE_INFINITY);
         double[] linkHi = filled(n, Double.POSITIVE_INFINITY);
         int[] linkTo = new int[n];
@@ -76,6 +77,7 @@ public final class YawTies {
             anyF = true;
             if (c.t2 == null) {
                 tighten(absLo, absHi, c.t1, c.cmp, c.rhs);
+                if (c.pin != null && Double.isNaN(absPin[c.t1])) absPin[c.t1] = c.pin;
             } else if (c.op == JumpConstraint.Op.MINUS && c.t2 >= 0 && c.t2 < c.t1
                     && (linkTo[c.t1] < 0 || linkTo[c.t1] == c.t2)) {
                 tighten(linkLo, linkHi, c.t1, c.cmp, c.rhs);
@@ -88,7 +90,10 @@ public final class YawTies {
         for (int t = 0; t < n; t++) {
             if (absLo[t] == Double.NEGATIVE_INFINITY || absHi[t] == Double.POSITIVE_INFINITY) continue;
             double width = absHi[t] - absLo[t];
-            if (width >= 0.0 && width <= WIDTH_MAX) pin[t] = Angles.wrap(0.5 * (absLo[t] + absHi[t]));
+            double widthMax = Double.isNaN(absPin[t]) ? WIDTH_MAX : FacingPrefold.PIN_WIDTH_MAX;
+            if (width >= 0.0 && width <= widthMax) {
+                pin[t] = Angles.wrap(Double.isNaN(absPin[t]) ? 0.5 * (absLo[t] + absHi[t]) : absPin[t]);
+            }
         }
         boolean[] link = new boolean[n];
         double[] linkOffset = new double[n];
