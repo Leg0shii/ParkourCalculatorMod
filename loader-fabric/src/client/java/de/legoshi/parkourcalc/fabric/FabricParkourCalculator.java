@@ -49,7 +49,6 @@ public class FabricParkourCalculator implements ClientModInitializer {
     private static KeyMapping rerunSimulationKeyBinding;
     private static KeyMapping togglePathKeyBinding;
     private static KeyMapping copyTeleportKeyBinding;
-    private static KeyMapping recordKeyBinding;
     private static KeyMapping captureMomentumBlockKeyBinding;
     private static KeyMapping captureCollisionBlockKeyBinding;
     private static KeyMapping captureLandBlockKeyBinding;
@@ -150,12 +149,6 @@ public class FabricParkourCalculator implements ClientModInitializer {
                 "key.parkourcalculator.copy_teleport",
                 InputConstants.Type.KEYBOARD,
                 InputConstants.KEY_K,
-                category
-        ));
-        recordKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-                "key.parkourcalculator.toggle_recording",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_F9,
                 category
         ));
 
@@ -386,10 +379,6 @@ public class FabricParkourCalculator implements ClientModInitializer {
         while (solverEndTickKeyBinding.consumeClick()) {
             solverEndPressed = true;
         }
-        boolean recordPressed = false;
-        while (recordKeyBinding.consumeClick()) {
-            recordPressed = true;
-        }
         boolean rerunSimulationPressed = false;
         while (rerunSimulationKeyBinding.consumeClick()) {
             rerunSimulationPressed = true;
@@ -433,9 +422,6 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
         if (playbackPressed && chordFree) {
             togglePlayback();
-        }
-        if (recordPressed && chordFree) {
-            application.toggleRecording();
         }
         if (landingConstraintsPressed && canDispatch) {
             boolean enter = isShiftHeld();

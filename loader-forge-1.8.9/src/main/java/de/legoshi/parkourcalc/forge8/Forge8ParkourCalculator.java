@@ -91,7 +91,6 @@ public class Forge8ParkourCalculator {
     private KeyBinding rerunSimulationKeyBinding;
     private KeyBinding togglePathKeyBinding;
     private KeyBinding copyTeleportKeyBinding;
-    private KeyBinding recordKeyBinding;
     private KeyBinding captureMomentumBlockKeyBinding;
     private KeyBinding captureCollisionBlockKeyBinding;
     private KeyBinding captureLandBlockKeyBinding;
@@ -156,8 +155,6 @@ public class Forge8ParkourCalculator {
         ClientRegistry.registerKeyBinding(togglePathKeyBinding);
         copyTeleportKeyBinding = new KeyBinding("key.parkourcalculator.copy_teleport", Keyboard.KEY_K, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(copyTeleportKeyBinding);
-        recordKeyBinding = new KeyBinding("key.parkourcalculator.toggle_recording", Keyboard.KEY_F9, "key.categories.parkourcalculator");
-        ClientRegistry.registerKeyBinding(recordKeyBinding);
         if (blockCaptureEnabled) {
             captureMomentumBlockKeyBinding = new KeyBinding("key.parkourcalculator.capture_momentum_block", Keyboard.KEY_M, "key.categories.parkourcalculator");
             ClientRegistry.registerKeyBinding(captureMomentumBlockKeyBinding);
@@ -379,10 +376,6 @@ public class Forge8ParkourCalculator {
         while (solverEndTickKeyBinding.isPressed()) {
             solverEndPressed = true;
         }
-        boolean recordPressed = false;
-        while (recordKeyBinding.isPressed()) {
-            recordPressed = true;
-        }
         boolean rerunSimulationPressed = false;
         while (rerunSimulationKeyBinding.isPressed()) {
             rerunSimulationPressed = true;
@@ -423,9 +416,6 @@ public class Forge8ParkourCalculator {
             }
             if (playbackPressed && chordFree) {
                 togglePlayback();
-            }
-            if (recordPressed && chordFree) {
-                application.toggleRecording();
             }
             if (landingConstraintsPressed) {
                 boolean enter = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);

@@ -1,6 +1,5 @@
 package de.legoshi.parkourcalc.record;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import de.legoshi.parkourcalc.core.record.HumanRecorder;
@@ -12,6 +11,8 @@ import org.junit.rules.TemporaryFolder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -29,6 +30,14 @@ public class HumanRecorderTest {
         return new HumanRecorder(() -> store, () -> 0.5f);
     }
 
+    private static List<JsonObject> rows(Path file) throws Exception {
+        List<JsonObject> out = new ArrayList<>();
+        for (String line : Files.readAllLines(file, StandardCharsets.UTF_8)) {
+            if (!line.isEmpty()) out.add(new JsonParser().parse(line).getAsJsonObject());
+        }
+        return out;
+    }
+
     @Test
     public void ignoresEventsWhileNotRecording() {
         HumanRecorder r = recorder();
@@ -42,58 +51,72 @@ public class HumanRecorderTest {
     }
 
     @Test
-    public void writesTicksMouseAndKeysAsJson() throws Exception {
+    public void streamsRowsInOrderAsJsonLines() throws Exception {
         HumanRecorder r = recorder();
         assertTrue(r.start());
         assertFalse(r.start());
         r.tickStart(1.5, 64.0, -2.25, 90f, 10f, true);
         r.mouse(0L, 12, -3, 90f, 10f);
         r.mouse(0L, 0, 0, 90f, 10f);
-        r.key(0L, 32, true);
+        r.key(77L, 32, true);
         r.tickEnd(true, false, false, false, true, false, true, true);
         r.tickStart(1.7, 64.42, -2.25, 91.5f, 10f, false);
         Path file = r.stop();
         assertNotNull(file);
         assertTrue(Files.exists(file));
         assertEquals(tmp.getRoot().toPath().resolve(HumanRecorder.DIRECTORY), file.getParent());
-        JsonObject root = new JsonParser().parse(new String(Files.readAllBytes(file), StandardCharsets.UTF_8)).getAsJsonObject();
-        assertEquals(HumanRecorder.FORMAT, root.get("format").getAsString());
-        assertEquals("1.2.3", root.get("modVersion").getAsString());
-        assertEquals("1.8.9", root.get("mcVersion").getAsString());
-        assertEquals(0.5, root.get("sensitivity").getAsDouble(), 1e-9);
-        JsonArray ticks = root.getAsJsonArray("ticks");
-        assertEquals(2, ticks.size());
-        JsonObject t0 = ticks.get(0).getAsJsonObject();
+        assertTrue(file.getFileName().toString().endsWith(HumanRecorder.EXTENSION));
+        List<JsonObject> rows = rows(file);
+        assertEquals(7, rows.size());
+        JsonObject header = rows.get(0);
+        assertEquals("header", header.get("e").getAsString());
+        assertEquals(HumanRecorder.FORMAT, header.get("format").getAsString());
+        assertEquals("1.2.3", header.get("modVersion").getAsString());
+        assertEquals("1.8.9", header.get("mcVersion").getAsString());
+        assertEquals(0.5, header.get("sensitivity").getAsDouble(), 1e-9);
+        JsonObject t0 = rows.get(1);
+        assertEquals("tick", t0.get("e").getAsString());
         assertEquals(0, t0.get("t").getAsInt());
         assertEquals(1.5, t0.get("x").getAsDouble(), 0.0);
         assertEquals(90.0, t0.get("yaw").getAsDouble(), 0.0);
         assertTrue(t0.get("ground").getAsBoolean());
-        assertEquals("WJP", t0.get("keys").getAsString());
-        assertTrue(t0.get("sprinting").getAsBoolean());
-        assertTrue(t0.get("endUs").getAsLong() >= t0.get("us").getAsLong());
-        JsonObject t1 = ticks.get(1).getAsJsonObject();
-        assertEquals("", t1.get("keys").getAsString());
-        assertEquals(-1, t1.get("endUs").getAsLong());
-        JsonArray mouse = root.getAsJsonArray("mouse");
-        assertEquals(1, mouse.size());
-        assertEquals(12.0, mouse.get(0).getAsJsonObject().get("dx").getAsDouble(), 0.0);
-        assertEquals(-3.0, mouse.get(0).getAsJsonObject().get("dy").getAsDouble(), 0.0);
-        JsonArray keys = root.getAsJsonArray("keys");
-        assertEquals(1, keys.size());
-        assertEquals(32, keys.get(0).getAsJsonObject().get("code").getAsInt());
-        assertTrue(keys.get(0).getAsJsonObject().get("down").getAsBoolean());
+        JsonObject m = rows.get(2);
+        assertEquals("mouse", m.get("e").getAsString());
+        assertEquals(12.0, m.get("dx").getAsDouble(), 0.0);
+        assertEquals(-3.0, m.get("dy").getAsDouble(), 0.0);
+        assertFalse(m.has("eventNs"));
+        JsonObject k = rows.get(3);
+        assertEquals("key", k.get("e").getAsString());
+        assertEquals(32, k.get("code").getAsInt());
+        assertEquals(77L, k.get("eventNs").getAsLong());
+        assertTrue(k.get("down").getAsBoolean());
+        JsonObject te = rows.get(4);
+        assertEquals("tickEnd", te.get("e").getAsString());
+        assertEquals(0, te.get("t").getAsInt());
+        assertEquals("WJP", te.get("keys").getAsString());
+        assertTrue(te.get("sprinting").getAsBoolean());
+        assertEquals(1, rows.get(5).get("t").getAsInt());
+        JsonObject end = rows.get(6);
+        assertEquals("end", end.get("e").getAsString());
+        assertEquals(2, end.get("ticks").getAsInt());
+        assertEquals(1, end.get("mouse").getAsInt());
+        assertEquals(1, end.get("keys").getAsInt());
         assertEquals(file, r.lastFile());
         assertFalse(r.isRecording());
     }
 
     @Test
-    public void secondRecordingStartsEmpty() {
+    public void secondRecordingStartsFresh() throws Exception {
         HumanRecorder r = recorder();
         r.start();
         r.tickStart(0, 0, 0, 0f, 0f, true);
-        r.stop();
+        Path first = r.stop();
         r.start();
         assertEquals(0, r.tickCount());
-        r.stop();
+        r.tickEnd(true, false, false, false, false, false, false, false);
+        Path second = r.stop();
+        assertNotNull(second);
+        assertEquals(2, rows(second).size());
+        assertNotNull(first);
     }
 }

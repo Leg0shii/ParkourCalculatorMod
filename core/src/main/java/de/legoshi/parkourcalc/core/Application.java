@@ -340,8 +340,8 @@ public final class Application {
             pushHudMessage("Stop playback before recording", HudMessageStyle.COLOR_WARN);
             return;
         }
-        recorder.start();
-        pushHudMessage("Recording started");
+        if (recorder.start()) pushHudMessage("Recording started");
+        else pushHudMessage("Recording not started: " + recorder.lastError(), HudMessageStyle.COLOR_WARN);
     }
 
     public void setFilePicker(FilePickerPort filePicker) {

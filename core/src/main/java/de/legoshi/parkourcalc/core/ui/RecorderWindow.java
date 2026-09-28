@@ -59,15 +59,13 @@ public final class RecorderWindow implements RenderInterface {
             ImGui.sameLine();
             ImGui.text(String.format(Locale.ROOT, "%.1f s   %d ticks   %d mouse events   %d key events",
                     recorder.elapsedMs() / 1000.0, recorder.tickCount(), recorder.mouseCount(), recorder.keyCount()));
-            if (recorder.hitLimit()) ImGui.textDisabled("row limit reached, stop and start a new recording");
         } else {
             if (Controls.primaryButton("Start recording")) toggle.run();
-            ImGui.sameLine();
-            ImGui.textDisabled("or press the recording key while playing");
         }
         ImGui.spacing();
         ImGui.textWrapped("Records every game tick (position, yaw, pitch, keys) and every raw mouse and key event "
-                + "with timestamps. Close this UI, do the jump a number of times including the failed attempts, then stop.");
+                + "with timestamps, written to disk as you play. Start, close this UI, do the jump a couple of hundred times "
+                + "including the failed attempts, then open the UI again and stop.");
         ImGui.spacing();
         Path last = recorder.lastFile();
         String err = recorder.lastError();
