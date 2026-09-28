@@ -220,12 +220,12 @@ public final class Settings {
     public boolean viewTurnProfile = DEFAULT_VIEW_TURN_PROFILE;
     public int turnProfileInputsHitPct = DEFAULT_TURN_PROFILE_INPUTS_HIT_PCT;
     public int turnProfileAttempts = DEFAULT_TURN_PROFILE_ATTEMPTS;
-    public double turnProfileFlickRestPx = 1.5;
-    public double turnProfileFlickMovingPx = 4.0;
+    public double turnProfileFlickRestPct = 5.0;
+    public double turnProfileFlickMovingPct = 8.0;
     public double turnProfileSmoothPx = 1.0;
     public double turnProfileFlickThresholdDeg = 6.0;
     public double turnProfileFlickOnTickChance = 0.7;
-    public double turnProfilePhaseScale = 1.0;
+    public double turnProfilePhaseScale = 0.0;
 
     // When on, each Save also writes the full per-tick SimulatorEntity state to the file (debug only).
     public boolean saveDebugValues = DEFAULT_SAVE_DEBUG_VALUES;

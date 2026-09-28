@@ -2,22 +2,25 @@ package de.legoshi.parkourcalc.core.anglesolver.profile;
 
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardModel;
+import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class AttemptSampler {
 
     public static final class Scatter {
-        public double flickRestPx = 1.5;
-        public double flickMovingPx = 4.0;
+        public double flickRestPct = 5.0;
+        public double flickMovingPct = 8.0;
         public double smoothPx = 1.0;
         public double flickThresholdDeg = 6.0;
         public double flickOnTickChance = 0.7;
-        public double phaseScale = 1.0;
+        public double phaseScale = 0.0;
         public long seed = 1234L;
     }
 
@@ -59,9 +62,9 @@ public final class AttemptSampler {
                                double pixelDeg, Scatter scatter, int attempts, AtomicBoolean cancel) {
         JumpPhysicsInputs sc = spec.asScenario();
         int n = sc.numTicks;
-        JumpConstraintCompiler.Compiled comp = JumpConstraintCompiler.compile(spec);
+        JumpConstraintCompiler.Compiled comp = positionConstraints(spec);
         double[] intended = new double[n];
-        double prev = sc.startYaw;
+        double prev = n > 0 ? facing[0] : sc.startYaw;
         for (int t = 0; t < n; t++) {
             intended[t] = Angles.wrapDelta(facing[t] - prev);
             prev = facing[t];
@@ -105,19 +108,19 @@ public final class AttemptSampler {
             }
             double phase = rng.nextDouble() * scatter.phaseScale;
             State before = State.HELD;
-            double f = sc.startYaw;
+            double f = n > 0 ? facing[0] : sc.startYaw;
             for (int t = 0; t < n; t++) {
                 double e = 0.0;
                 double s = 0.0;
                 if (state[t] == State.FLICK) {
-                    s = before == State.HELD ? scatter.flickRestPx : scatter.flickMovingPx;
-                    e = Math.round(rng.nextGaussian() * s) * pixelDeg;
+                    s = Math.abs(dF[t]) * (before == State.HELD ? scatter.flickRestPct : scatter.flickMovingPct) / 100.0;
+                    e = Math.round(rng.nextGaussian() * s / pixelDeg) * pixelDeg;
                 } else if (state[t] == State.SMOOTH) {
-                    s = scatter.smoothPx;
-                    e = Math.round(rng.nextGaussian() * s) * pixelDeg - phase * dF[t];
+                    s = scatter.smoothPx * pixelDeg;
+                    e = Math.round(rng.nextGaussian() * scatter.smoothPx) * pixelDeg - phase * dF[t];
                 }
                 err[t] = e;
-                sigma[t] = s * pixelDeg;
+                sigma[t] = s;
                 f = Angles.wrap(f + dF[t] + e);
                 yaws[t] = f;
                 before = state[t];
@@ -156,6 +159,17 @@ public final class AttemptSampler {
         }
         return new Stats(done, landings, blame, flickTick, trim(landedPool, landedSeen), trim(failedPool, failedSeen),
                 landedLo, landedHi);
+    }
+
+    private static JumpConstraintCompiler.Compiled positionConstraints(JumpSpec spec) {
+        List<JumpConstraint> ineq = new ArrayList<>();
+        List<JumpConstraint> eq = new ArrayList<>();
+        for (JumpConstraint c : spec.constraints) {
+            if (c.mode == JumpConstraint.Mode.F) continue;
+            if (c.cmp == JumpConstraint.Cmp.EQ) eq.add(c);
+            else ineq.add(c);
+        }
+        return new JumpConstraintCompiler.Compiled(ineq, eq);
     }
 
     private static void reservoir(double[][] pool, int seen, double[] yaws, Random rng) {

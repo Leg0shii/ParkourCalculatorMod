@@ -61,8 +61,8 @@ public class AttemptSamplerTest {
     public void zeroScatterLandsEveryAttempt() {
         Loaded l = load();
         AttemptSampler.Scatter sc = new AttemptSampler.Scatter();
-        sc.flickRestPx = 0.0;
-        sc.flickMovingPx = 0.0;
+        sc.flickRestPct = 0.0;
+        sc.flickMovingPct = 0.0;
         sc.smoothPx = 0.0;
         sc.flickOnTickChance = 1.0;
         sc.flickThresholdDeg = 0.0;

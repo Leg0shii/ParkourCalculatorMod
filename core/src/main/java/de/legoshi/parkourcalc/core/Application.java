@@ -240,8 +240,8 @@ public final class Application {
                 mc::getMouseSensitivity, () -> {
                     de.legoshi.parkourcalc.core.anglesolver.profile.AttemptSampler.Scatter sc =
                             new de.legoshi.parkourcalc.core.anglesolver.profile.AttemptSampler.Scatter();
-                    sc.flickRestPx = settings.turnProfileFlickRestPx;
-                    sc.flickMovingPx = settings.turnProfileFlickMovingPx;
+                    sc.flickRestPct = settings.turnProfileFlickRestPct;
+                    sc.flickMovingPct = settings.turnProfileFlickMovingPct;
                     sc.smoothPx = settings.turnProfileSmoothPx;
                     sc.flickThresholdDeg = settings.turnProfileFlickThresholdDeg;
                     sc.flickOnTickChance = settings.turnProfileFlickOnTickChance;
