@@ -3,6 +3,7 @@ package de.legoshi.parkourcalc.core.ui.anglesolver;
 import de.legoshi.parkourcalc.core.TurnProfileController;
 import de.legoshi.parkourcalc.core.anglesolver.profile.AttemptSampler;
 import de.legoshi.parkourcalc.core.anglesolver.profile.TurnProfile;
+import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
@@ -33,6 +34,8 @@ public final class TurnProfileWindow implements RenderInterface {
     private static final float PAD_BOTTOM = 26f;
     private static final float DOT_RADIUS = 3.5f;
     private static final float LINE_WIDTH = 2f;
+    private static final float SAMPLE_SIZE = 1.5f;
+    private static final float SAMPLE_SPREAD = 0.3f;
     private static final double MIN_SPAN_DEG = 20.0;
     private static final double BLAME_HIGH = 0.4;
     private static final double BLAME_SOME = 0.1;
@@ -131,6 +134,7 @@ public final class TurnProfileWindow implements RenderInterface {
 
     private void draw(TurnProfileController.Current cur, float scale) {
         TurnProfile p = cur.profile;
+        AttemptSampler.Stats st = cur.attempts;
         ImVec2 avail = ImGui.getContentRegionAvail();
         float legendW = LEGEND_W * scale;
         float cw = Math.max(80f, avail.x - legendW);
@@ -148,8 +152,20 @@ public final class TurnProfileWindow implements RenderInterface {
         int n = p.n;
         double lo = Double.POSITIVE_INFINITY, hi = Double.NEGATIVE_INFINITY;
         for (int t = 0; t < n; t++) {
-            lo = Math.min(lo, p.facing[t] - p.below[t]);
-            hi = Math.max(hi, p.facing[t] + p.above[t]);
+            lo = Math.min(lo, p.facing[t]);
+            hi = Math.max(hi, p.facing[t]);
+        }
+        if (st != null) {
+            for (double[] a : st.landed) for (int t = 0; t < n; t++) {
+                double v = p.facing[t] + Angles.wrapDelta(a[t] - p.facing[t]);
+                lo = Math.min(lo, v);
+                hi = Math.max(hi, v);
+            }
+            for (double[] a : st.failed) for (int t = 0; t < n; t++) {
+                double v = p.facing[t] + Angles.wrapDelta(a[t] - p.facing[t]);
+                lo = Math.min(lo, v);
+                hi = Math.max(hi, v);
+            }
         }
         if (hi - lo < MIN_SPAN_DEG) {
             double mid = 0.5 * (hi + lo);
@@ -172,18 +188,27 @@ public final class TurnProfileWindow implements RenderInterface {
             dl.addText(plotX - 6f * scale - ImGui.calcTextSize(lbl).x, gy - ImGui.getTextLineHeight() * 0.5f, textCol, lbl);
         }
 
-        int bandFill = ThemeManager.okTintColor(0.22f);
-        int bandEdge = ThemeManager.okTintColor(0.8f);
-        for (int t = 0; t + 1 < n; t++) {
-            if (p.held[t] || p.held[t + 1]) continue;
-            float xa = plotX + t * dx, xb = plotX + (t + 1) * dx;
-            float ta = yOf(p.facing[t] + p.above[t], yLo, yHi, plotY, plotH);
-            float tb = yOf(p.facing[t + 1] + p.above[t + 1], yLo, yHi, plotY, plotH);
-            float ba = yOf(p.facing[t] - p.below[t], yLo, yHi, plotY, plotH);
-            float bb = yOf(p.facing[t + 1] - p.below[t + 1], yLo, yHi, plotY, plotH);
-            dl.addQuadFilled(xa, ta, xb, tb, xb, bb, xa, ba, bandFill);
-            dl.addLine(xa, ta, xb, tb, bandEdge, 1f);
-            dl.addLine(xa, ba, xb, bb, bandEdge, 1f);
+        if (st != null) {
+            int areaFill = ThemeManager.okTintColor(0.18f);
+            int areaEdge = ThemeManager.okTintColor(0.7f);
+            if (st.landings > 0) {
+                for (int t = 0; t + 1 < n; t++) {
+                    float xa = plotX + t * dx, xb = plotX + (t + 1) * dx;
+                    float ta = yOf(p.facing[t] + st.landedHi[t], yLo, yHi, plotY, plotH);
+                    float tb = yOf(p.facing[t + 1] + st.landedHi[t + 1], yLo, yHi, plotY, plotH);
+                    float ba = yOf(p.facing[t] + st.landedLo[t], yLo, yHi, plotY, plotH);
+                    float bb = yOf(p.facing[t + 1] + st.landedLo[t + 1], yLo, yHi, plotY, plotH);
+                    dl.addQuadFilled(xa, ta, xb, tb, xb, bb, xa, ba, areaFill);
+                    dl.addLine(xa, ta, xb, tb, areaEdge, 1f);
+                    dl.addLine(xa, ba, xb, bb, areaEdge, 1f);
+                }
+            }
+            float half = SAMPLE_SIZE * scale;
+            float spread = SAMPLE_SPREAD * dx;
+            int failCol = ThemeManager.dangerTintColor(0.35f);
+            int landCol = ThemeManager.okTintColor(0.85f);
+            scatter(dl, st.failed, p, n, plotX, dx, spread, half, yLo, yHi, plotY, plotH, failCol);
+            scatter(dl, st.landed, p, n, plotX, dx, spread, half, yLo, yHi, plotY, plotH, landCol);
         }
 
         int jumpCol = ThemeManager.peachTintColor(0.7f);
@@ -224,17 +249,26 @@ public final class TurnProfileWindow implements RenderInterface {
         drawLegend(dl, x0 + cw, y0, legendW, ch, scale, cur.pixelDeg);
     }
 
+    private static void scatter(ImDrawList dl, double[][] samples, TurnProfile p, int n, float plotX, float dx,
+                                float spread, float half, double yLo, double yHi, float plotY, float plotH, int col) {
+        for (int i = 0; i < samples.length; i++) {
+            double[] a = samples[i];
+            float jitter = ((i * 7919) % 1000 / 1000f - 0.5f) * 2f * spread;
+            for (int t = 0; t < n; t++) {
+                if (p.held[t]) continue;
+                double v = p.facing[t] + Angles.wrapDelta(a[t] - p.facing[t]);
+                float x = plotX + t * dx + jitter;
+                float y = yOf(v, yLo, yHi, plotY, plotH);
+                dl.addRectFilled(x - half, y - half, x + half, y + half, col, 0f);
+            }
+        }
+    }
+
     private int dotColor(TurnProfileController.Current cur, int t) {
         TurnProfile p = cur.profile;
         if (p.held[t]) return ThemeManager.textDimColor();
         AttemptSampler.Stats st = cur.attempts;
-        if (st == null) {
-            switch (p.classify(t, cur.pixelDeg)) {
-                case PINNED: return ThemeManager.dangerColor();
-                case SUB_PIXEL: return ThemeManager.warningColor();
-                default: return ThemeManager.accentColor();
-            }
-        }
+        if (st == null) return ThemeManager.accentColor();
         double b = st.blame[t];
         if (b >= BLAME_HIGH) return ThemeManager.dangerColor();
         if (b >= BLAME_SOME) return ThemeManager.warningColor();
@@ -243,27 +277,34 @@ public final class TurnProfileWindow implements RenderInterface {
 
     private void tooltip(TurnProfileController.Current cur, int t) {
         TurnProfile p = cur.profile;
+        AttemptSampler.Stats st = cur.attempts;
         ImGui.beginTooltip();
         ImGui.text(String.format(Locale.ROOT, "T%d  %.2f°", cur.startTick + t + 1, p.facing[t]));
         if (p.held[t]) {
             ImGui.textDisabled("held facing");
+        } else if (st == null) {
+            ImGui.textDisabled("not rated");
+        } else if (st.landings == 0) {
+            ImGui.textDisabled("no attempt landed");
         } else {
             ImGui.pushStyleColor(ImGuiCol.Text, dotColor(cur, t));
-            ImGui.text(String.format(Locale.ROOT, "-%.3f° %s   +%.3f° %s",
-                    p.below[t], bracket(p.below[t], cur.pixelDeg), p.above[t], bracket(p.above[t], cur.pixelDeg)));
+            ImGui.text(String.format(Locale.ROOT, "landed within %s %s   %s %s",
+                    signed(st.landedLo[t]), bracket(-st.landedLo[t], cur.pixelDeg),
+                    signed(st.landedHi[t]), bracket(st.landedHi[t], cur.pixelDeg)));
             ImGui.popStyleColor();
-            AttemptSampler.Stats st = cur.attempts;
-            if (st != null) {
-                ImGui.textDisabled(String.format(Locale.ROOT, "%s, %.0f%% of fails",
-                        st.flickTick[t] ? "flick" : "smooth", st.blame[t] * 100.0));
-            }
+            ImGui.textDisabled(String.format(Locale.ROOT, "%s, %.0f%% of fails",
+                    st.flickTick[t] ? "flick" : "smooth", st.blame[t] * 100.0));
         }
         ImGui.endTooltip();
     }
 
+    private static String signed(double deg) {
+        return String.format(Locale.ROOT, "%s%.3f°", deg < 0 ? "-" : "+", Math.abs(deg));
+    }
+
     private static String bracket(double deg, double pixelDeg) {
-        return String.format(Locale.ROOT, "(%d px, %d sig)", (int) Math.floor(deg / pixelDeg),
-                (int) Math.floor(deg / TurnProfile.SIG_ANGLE_DEG));
+        return String.format(Locale.ROOT, "(%d px, %d sig)", (int) Math.floor(Math.abs(deg) / pixelDeg),
+                (int) Math.floor(Math.abs(deg) / TurnProfile.SIG_ANGLE_DEG));
     }
 
     private void drawLegend(ImDrawList dl, float x, float y, float w, float h, float scale, double pixelDeg) {
@@ -277,12 +318,17 @@ public final class TurnProfileWindow implements RenderInterface {
         dl.addRectFilled(lx, ly + lh * 0.5f - 1.5f * scale, lx + 16f * scale, ly + lh * 0.5f + 1.5f * scale, ThemeManager.accentColor(), 0f);
         dl.addText(lx + 24f * scale, ly, text, "facing");
         ly += lh + gap;
-        dl.addRectFilled(lx, ly + 2f * scale, lx + 16f * scale, ly + lh - 2f * scale, ThemeManager.okTintColor(0.3f), 0f);
-        dl.addText(lx + 24f * scale, ly, text, "lands");
+        dl.addRectFilled(lx + 6f * scale, ly + lh * 0.5f - 1.5f * scale, lx + 9f * scale, ly + lh * 0.5f + 1.5f * scale, ThemeManager.okTintColor(0.85f), 0f);
+        dl.addText(lx + 24f * scale, ly, text, "landed");
+        ly += lh + gap;
+        dl.addRectFilled(lx + 6f * scale, ly + lh * 0.5f - 1.5f * scale, lx + 9f * scale, ly + lh * 0.5f + 1.5f * scale, ThemeManager.dangerTintColor(0.5f), 0f);
+        dl.addText(lx + 24f * scale, ly, text, "failed");
+        ly += lh + gap;
+        dl.addRectFilled(lx, ly + 2f * scale, lx + 16f * scale, ly + lh - 2f * scale, ThemeManager.okTintColor(0.25f), 0f);
+        dl.addText(lx + 24f * scale, ly, text, "landed range");
         ly += lh + gap;
         ly = legendDot(dl, lx, ly, lh, gap, scale, ThemeManager.dangerColor(), "most fails", text);
         ly = legendDot(dl, lx, ly, lh, gap, scale, ThemeManager.warningColor(), "some fails", text);
-        ly = legendDot(dl, lx, ly, lh, gap, scale, ThemeManager.accentColor(), "few fails", text);
         legendDot(dl, lx, ly, lh, gap, scale, ThemeManager.textDimColor(), "held", text);
 
         String sens = String.format(Locale.ROOT, "sens %d%%", Math.round(sensitivity.get() * 200f));

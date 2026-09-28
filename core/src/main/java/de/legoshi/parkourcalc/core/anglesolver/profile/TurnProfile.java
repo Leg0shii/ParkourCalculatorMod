@@ -55,6 +55,11 @@ public final class TurnProfile {
     }
 
     public static TurnProfile compute(ForwardModel model, JumpSpec spec, double[] yawsAbsWrapped, AtomicBoolean cancel) {
+        return compute(model, spec, yawsAbsWrapped, cancel, true);
+    }
+
+    public static TurnProfile compute(ForwardModel model, JumpSpec spec, double[] yawsAbsWrapped, AtomicBoolean cancel,
+                                      boolean sweep) {
         JumpPhysicsInputs sc = spec.asScenario();
         int n = sc.numTicks;
         double[] facing = Angles.wrapAll(yawsAbsWrapped.clone());
@@ -63,7 +68,7 @@ public final class TurnProfile {
         double[] below = new double[n];
         double[] above = new double[n];
         boolean lands = lands(model, sc, comp, facing);
-        if (!lands) return new TurnProfile(n, facing, below, above, held, false, true);
+        if (!lands || !sweep) return new TurnProfile(n, facing, below, above, held, lands, true);
         for (int t = 0; t < n; t++) {
             if (held[t]) continue;
             if (cancel != null && cancel.get()) return new TurnProfile(n, facing, below, above, held, true, false);

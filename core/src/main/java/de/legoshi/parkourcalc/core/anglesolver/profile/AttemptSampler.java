@@ -20,17 +20,28 @@ public final class AttemptSampler {
         public long seed = 1234L;
     }
 
+    public static final int RESERVOIR = 400;
+
     public static final class Stats {
         public final int attempts;
         public final int landings;
         public final double[] blame;
         public final boolean[] flickTick;
+        public final double[][] landed;
+        public final double[][] failed;
+        public final double[] landedLo;
+        public final double[] landedHi;
 
-        Stats(int attempts, int landings, double[] blame, boolean[] flickTick) {
+        Stats(int attempts, int landings, double[] blame, boolean[] flickTick, double[][] landed, double[][] failed,
+              double[] landedLo, double[] landedHi) {
             this.attempts = attempts;
             this.landings = landings;
             this.blame = blame;
             this.flickTick = flickTick;
+            this.landed = landed;
+            this.failed = failed;
+            this.landedLo = landedLo;
+            this.landedHi = landedHi;
         }
 
         public double rate() {
@@ -68,6 +79,13 @@ public final class AttemptSampler {
         double[] sigma = new double[n];
         double[] yaws = new double[n];
         double[] blameCount = new double[n];
+        double[][] landedPool = new double[RESERVOIR][];
+        double[][] failedPool = new double[RESERVOIR][];
+        int landedSeen = 0, failedSeen = 0;
+        double[] landedLo = new double[n];
+        double[] landedHi = new double[n];
+        java.util.Arrays.fill(landedLo, Double.POSITIVE_INFINITY);
+        java.util.Arrays.fill(landedHi, Double.NEGATIVE_INFINITY);
         int landings = 0;
         int done = 0;
         for (int a = 0; a < attempts; a++) {
@@ -107,8 +125,15 @@ public final class AttemptSampler {
             boolean lands = comp.maxViolation(gf, model.forward(sc, gf)) <= 0.0;
             if (lands) {
                 landings++;
+                for (int t = 0; t < n; t++) {
+                    double rel = Angles.wrapDelta(yaws[t] - facing[t]);
+                    if (rel < landedLo[t]) landedLo[t] = rel;
+                    if (rel > landedHi[t]) landedHi[t] = rel;
+                }
+                reservoir(landedPool, landedSeen++, yaws, rng);
                 continue;
             }
+            reservoir(failedPool, failedSeen++, yaws, rng);
             int worst = -1;
             double worstScore = 0.0;
             for (int t = 0; t < n; t++) {
@@ -124,6 +149,27 @@ public final class AttemptSampler {
         int fails = done - landings;
         double[] blame = new double[n];
         if (fails > 0) for (int t = 0; t < n; t++) blame[t] = blameCount[t] / fails;
-        return new Stats(done, landings, blame, flickTick);
+        if (landings == 0) {
+            java.util.Arrays.fill(landedLo, 0.0);
+            java.util.Arrays.fill(landedHi, 0.0);
+        }
+        return new Stats(done, landings, blame, flickTick, trim(landedPool, landedSeen), trim(failedPool, failedSeen),
+                landedLo, landedHi);
+    }
+
+    private static void reservoir(double[][] pool, int seen, double[] yaws, Random rng) {
+        if (seen < pool.length) {
+            pool[seen] = yaws.clone();
+            return;
+        }
+        int slot = rng.nextInt(seen + 1);
+        if (slot < pool.length) pool[slot] = yaws.clone();
+    }
+
+    private static double[][] trim(double[][] pool, int seen) {
+        int k = Math.min(seen, pool.length);
+        double[][] out = new double[k][];
+        System.arraycopy(pool, 0, out, 0, k);
+        return out;
     }
 }

@@ -70,6 +70,23 @@ public class AttemptSamplerTest {
                 TurnProfile.pixelDeg(0.5f), sc, 200, new AtomicBoolean(false));
         assertEquals(200, s.attempts);
         assertEquals(200, s.landings);
+        assertEquals(200, s.landed.length);
+        assertEquals(0, s.failed.length);
+        for (int t = 0; t < s.landedLo.length; t++) {
+            assertEquals(0.0, s.landedLo[t], 1e-9);
+            assertEquals(0.0, s.landedHi[t], 1e-9);
+        }
+    }
+
+    @Test
+    public void reservoirsStayBounded() {
+        Loaded l = load();
+        AttemptSampler.Stats s = AttemptSampler.sample(l.model, l.spec, l.recorded, l.held, l.edges,
+                TurnProfile.pixelDeg(0.5f), new AttemptSampler.Scatter(), 3000, new AtomicBoolean(false));
+        assertTrue(s.failed.length <= AttemptSampler.RESERVOIR);
+        assertTrue(s.landed.length <= AttemptSampler.RESERVOIR);
+        assertEquals(Math.min(s.landings, AttemptSampler.RESERVOIR), s.landed.length);
+        assertEquals(Math.min(s.attempts - s.landings, AttemptSampler.RESERVOIR), s.failed.length);
     }
 
     @Test

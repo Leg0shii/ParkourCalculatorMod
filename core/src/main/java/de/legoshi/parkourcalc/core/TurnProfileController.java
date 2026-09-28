@@ -89,7 +89,7 @@ public final class TurnProfileController {
         computing = true;
         rating = false;
         worker.submit(() -> {
-            TurnProfile p = TurnProfile.compute(model, snap.spec, snap.yaws, cancel);
+            TurnProfile p = TurnProfile.compute(model, snap.spec, snap.yaws, cancel, false);
             if (gen != generation.get() || cancel.get()) return;
             current = new Current(p, snap.startTick, jumps, null, pixelDeg, snap, edges);
             computing = false;
