@@ -91,6 +91,7 @@ public class Forge8ParkourCalculator {
     private KeyBinding rerunSimulationKeyBinding;
     private KeyBinding togglePathKeyBinding;
     private KeyBinding copyTeleportKeyBinding;
+    private KeyBinding recordKeyBinding;
     private KeyBinding captureMomentumBlockKeyBinding;
     private KeyBinding captureCollisionBlockKeyBinding;
     private KeyBinding captureLandBlockKeyBinding;
@@ -155,6 +156,8 @@ public class Forge8ParkourCalculator {
         ClientRegistry.registerKeyBinding(togglePathKeyBinding);
         copyTeleportKeyBinding = new KeyBinding("key.parkourcalculator.copy_teleport", Keyboard.KEY_K, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(copyTeleportKeyBinding);
+        recordKeyBinding = new KeyBinding("key.parkourcalculator.toggle_recording", Keyboard.KEY_F9, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(recordKeyBinding);
         if (blockCaptureEnabled) {
             captureMomentumBlockKeyBinding = new KeyBinding("key.parkourcalculator.capture_momentum_block", Keyboard.KEY_M, "key.categories.parkourcalculator");
             ClientRegistry.registerKeyBinding(captureMomentumBlockKeyBinding);
@@ -174,14 +177,52 @@ public class Forge8ParkourCalculator {
 
     private boolean wasPlaybackRunning = false;
 
+    private void recordTickStart() {
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (!r.isRecording()) return;
+        net.minecraft.client.entity.EntityPlayerSP p = Minecraft.getMinecraft().thePlayer;
+        if (p == null) return;
+        r.tickStart(p.posX, p.posY, p.posZ, p.rotationYaw, p.rotationPitch, p.onGround);
+    }
+
+    private void recordTickEnd() {
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (!r.isRecording()) return;
+        net.minecraft.client.entity.EntityPlayerSP p = Minecraft.getMinecraft().thePlayer;
+        if (p == null) return;
+        net.minecraft.util.MovementInput in = p.movementInput;
+        boolean sprintKey = Minecraft.getMinecraft().gameSettings.keyBindSprint.isKeyDown();
+        r.tickEnd(in.moveForward > 0.0F, in.moveStrafe > 0.0F, in.moveForward < 0.0F, in.moveStrafe < 0.0F,
+                in.jump, in.sneak, sprintKey, p.isSprinting());
+    }
+
+    private void recordMouse(long eventNs, int dx, int dy) {
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (!r.isRecording() || Minecraft.getMinecraft().currentScreen != null) return;
+        net.minecraft.client.entity.EntityPlayerSP p = Minecraft.getMinecraft().thePlayer;
+        if (p == null) return;
+        r.mouse(eventNs, dx, dy, p.rotationYaw, p.rotationPitch);
+    }
+
+    @SubscribeEvent
+    public void onKeyInput(net.minecraftforge.fml.common.gameevent.InputEvent.KeyInputEvent event) {
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (!r.isRecording()) return;
+        int key = Keyboard.getEventKey();
+        if (key == Keyboard.KEY_NONE) return;
+        r.key(Keyboard.getEventNanoseconds(), key, Keyboard.getEventKeyState());
+    }
+
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase == TickEvent.Phase.START) {
             ReplayLockstep.clientBarrierPreTick();
             manageInputLifecycle();
             application.tickPlayback();
+            recordTickStart();
         } else {
             application.postTickPlayback();
+            recordTickEnd();
             playbackBridge.syncFrozenPlayerToServer();
             ReplayLockstep.clientBarrierPostTick();
         }
@@ -338,6 +379,10 @@ public class Forge8ParkourCalculator {
         while (solverEndTickKeyBinding.isPressed()) {
             solverEndPressed = true;
         }
+        boolean recordPressed = false;
+        while (recordKeyBinding.isPressed()) {
+            recordPressed = true;
+        }
         boolean rerunSimulationPressed = false;
         while (rerunSimulationKeyBinding.isPressed()) {
             rerunSimulationPressed = true;
@@ -378,6 +423,9 @@ public class Forge8ParkourCalculator {
             }
             if (playbackPressed && chordFree) {
                 togglePlayback();
+            }
+            if (recordPressed && chordFree) {
+                application.toggleRecording();
             }
             if (landingConstraintsPressed) {
                 boolean enter = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
@@ -506,6 +554,7 @@ public class Forge8ParkourCalculator {
     // Mirror in Forge12ParkourCalculator; differs only in MouseEvent.button vs getButton().
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onMouseEvent(MouseEvent event) {
+        recordMouse(event.nanoseconds, event.dx, event.dy);
         if (!event.buttonstate) return;
         if (playbackBridge.ghostEntity() != null && event.button >= 0) {
             event.setCanceled(true);

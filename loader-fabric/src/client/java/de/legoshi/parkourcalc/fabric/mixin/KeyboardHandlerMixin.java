@@ -20,6 +20,7 @@ public class KeyboardHandlerMixin {
 
     @Inject(method = "keyPress", at = @At("HEAD"), cancellable = true)
     private void onKey(long window, int action, KeyEvent input, CallbackInfo ci) {
+        FabricParkourCalculator.recordKey(input.key(), action);
         if (!FabricParkourCalculator.isUiFocused()) {
             return;
         }

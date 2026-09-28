@@ -16,6 +16,8 @@ public class MouseHandlerMixin {
 
     @Inject(method = "turnPlayer", at = @At("HEAD"), cancellable = true)
     private void onUpdateMouse(CallbackInfo ci) {
+        MouseHandlerAccessor accumulated = (MouseHandlerAccessor) this;
+        FabricParkourCalculator.recordMouse(accumulated.pkc$accumulatedDX(), accumulated.pkc$accumulatedDY());
         if (FabricParkourCalculator.isUiFocused() || FabricParkourCalculator.isGhostPlaybackActive()) {
             ci.cancel();
         }

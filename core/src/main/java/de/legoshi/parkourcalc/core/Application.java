@@ -95,6 +95,7 @@ public final class Application {
     private AngleSolverState angleSolverState;
     private AngleSolverEngine solverEngine;
     private TurnProfileController turnProfile;
+    private final de.legoshi.parkourcalc.core.record.HumanRecorder recorder;
     private ConstraintKeyController constraintKeyController;
     private UndoController<de.legoshi.parkourcalc.core.save.SaveFile> undoController;
     private RunTicksController runTicks;
@@ -126,6 +127,7 @@ public final class Application {
         );
         this.playback = new PlaybackController(inputData, runner, settings);
         this.playback.setStartRangeResolver(this::resolvePlaybackStartRange);
+        this.recorder = new de.legoshi.parkourcalc.core.record.HumanRecorder(saveController::getSaveStore, mc::getMouseSensitivity);
     }
 
     private PlaybackController.StartRange resolvePlaybackStartRange() {
@@ -319,6 +321,27 @@ public final class Application {
         overlayManager.register(graphEditorWindow);
         overlayManager.register(stratfinderWindow);
         overlayManager.register(turnProfileWindow);
+        overlayManager.register(new de.legoshi.parkourcalc.core.ui.RecorderWindow(recorder, settings, this::toggleRecording,
+                this::saveSettings, systemBridge));
+    }
+
+    public de.legoshi.parkourcalc.core.record.HumanRecorder getRecorder() {
+        return recorder;
+    }
+
+    public void toggleRecording() {
+        if (recorder.isRecording()) {
+            java.nio.file.Path file = recorder.stop();
+            if (file != null) pushHudMessage("Recording saved: " + file.getFileName());
+            else pushHudMessage("Recording not saved: " + recorder.lastError(), HudMessageStyle.COLOR_WARN);
+            return;
+        }
+        if (isPlaybackRunning()) {
+            pushHudMessage("Stop playback before recording", HudMessageStyle.COLOR_WARN);
+            return;
+        }
+        recorder.start();
+        pushHudMessage("Recording started");
     }
 
     public void setFilePicker(FilePickerPort filePicker) {

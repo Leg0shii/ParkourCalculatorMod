@@ -353,6 +353,10 @@ public final class MainWindowOverlay implements RenderInterface {
             settings.viewTurnProfile = !settings.viewTurnProfile;
             onSettingsChanged.run();
         }
+        if (ImGui.menuItem("Recorder", null, settings.viewRecorder)) {
+            settings.viewRecorder = !settings.viewRecorder;
+            onSettingsChanged.run();
+        }
     }
 
     private void renderSettingsMenuItems() {

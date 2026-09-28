@@ -49,6 +49,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
     private static KeyMapping rerunSimulationKeyBinding;
     private static KeyMapping togglePathKeyBinding;
     private static KeyMapping copyTeleportKeyBinding;
+    private static KeyMapping recordKeyBinding;
     private static KeyMapping captureMomentumBlockKeyBinding;
     private static KeyMapping captureCollisionBlockKeyBinding;
     private static KeyMapping captureLandBlockKeyBinding;
@@ -151,6 +152,12 @@ public class FabricParkourCalculator implements ClientModInitializer {
                 InputConstants.KEY_K,
                 category
         ));
+        recordKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "key.parkourcalculator.toggle_recording",
+                InputConstants.Type.KEYSYM,
+                GLFW.GLFW_KEY_F9,
+                category
+        ));
 
         application.initSettingsStorage(
                 FabricLoader.getInstance().getConfigDir().resolve("parkourcalculator.json")
@@ -199,6 +206,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         ReplayLockstep.clientBarrierPreTick();
         manageInputLifecycle();
         application.tickPlayback();
+        recordTickStart(client);
     }
 
     private static void manageInputLifecycle() {
@@ -286,6 +294,39 @@ public class FabricParkourCalculator implements ClientModInitializer {
         // the snap value the physics tick used.
         application.postTickPlayback();
         ReplayLockstep.clientBarrierPostTick();
+        recordTickEnd(client);
+    }
+
+    private static void recordTickStart(Minecraft client) {
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (!r.isRecording()) return;
+        net.minecraft.client.player.LocalPlayer p = client.player;
+        if (p == null) return;
+        net.minecraft.world.phys.Vec3 pos = p.position();
+        r.tickStart(pos.x, pos.y, pos.z, p.getYRot(), p.getXRot(), p.onGround());
+    }
+
+    private static void recordTickEnd(Minecraft client) {
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (!r.isRecording()) return;
+        net.minecraft.client.player.LocalPlayer p = client.player;
+        if (p == null) return;
+        var k = p.input.keyPresses;
+        r.tickEnd(k.forward(), k.left(), k.backward(), k.right(), k.jump(), k.shift(), k.sprint(), p.isSprinting());
+    }
+
+    public static void recordMouse(double dx, double dy) {
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (!r.isRecording() || isUiFocused()) return;
+        net.minecraft.client.player.LocalPlayer p = Minecraft.getInstance().player;
+        if (p == null) return;
+        r.mouse(0L, dx, dy, p.getYRot(), p.getXRot());
+    }
+
+    public static void recordKey(int key, int action) {
+        if (action != GLFW.GLFW_PRESS && action != GLFW.GLFW_RELEASE) return;
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (r.isRecording() && !isUiFocused()) r.key(0L, key, action == GLFW.GLFW_PRESS);
     }
 
     public static void syncFrozenPlayerToServer() {
@@ -345,6 +386,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         while (solverEndTickKeyBinding.consumeClick()) {
             solverEndPressed = true;
         }
+        boolean recordPressed = false;
+        while (recordKeyBinding.consumeClick()) {
+            recordPressed = true;
+        }
         boolean rerunSimulationPressed = false;
         while (rerunSimulationKeyBinding.consumeClick()) {
             rerunSimulationPressed = true;
@@ -388,6 +433,9 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
         if (playbackPressed && chordFree) {
             togglePlayback();
+        }
+        if (recordPressed && chordFree) {
+            application.toggleRecording();
         }
         if (landingConstraintsPressed && canDispatch) {
             boolean enter = isShiftHeld();

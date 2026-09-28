@@ -81,6 +81,7 @@ public final class Settings {
     private static final boolean DEFAULT_VIEW_ANGLE_SOLVER = false;
     private static final boolean DEFAULT_VIEW_VELOCITY_MAP = false;
     private static final boolean DEFAULT_VIEW_TURN_PROFILE = false;
+    private static final boolean DEFAULT_VIEW_RECORDER = false;
     private static final int DEFAULT_TURN_PROFILE_INPUTS_HIT_PCT = 100;
     private static final int DEFAULT_TURN_PROFILE_ATTEMPTS = 100_000;
     private static final boolean DEFAULT_SAVE_DEBUG_VALUES = false;
@@ -218,6 +219,7 @@ public final class Settings {
     public boolean viewAngleSolver = DEFAULT_VIEW_ANGLE_SOLVER;
     public boolean viewVelocityMap = DEFAULT_VIEW_VELOCITY_MAP;
     public boolean viewTurnProfile = DEFAULT_VIEW_TURN_PROFILE;
+    public boolean viewRecorder = DEFAULT_VIEW_RECORDER;
     public int turnProfileInputsHitPct = DEFAULT_TURN_PROFILE_INPUTS_HIT_PCT;
     public int turnProfileAttempts = DEFAULT_TURN_PROFILE_ATTEMPTS;
     public double turnProfileFlickRestPct = 5.0;
@@ -340,6 +342,7 @@ public final class Settings {
         viewAngleSolver = DEFAULT_VIEW_ANGLE_SOLVER;
         viewVelocityMap = DEFAULT_VIEW_VELOCITY_MAP;
         viewTurnProfile = DEFAULT_VIEW_TURN_PROFILE;
+        viewRecorder = DEFAULT_VIEW_RECORDER;
         turnProfileInputsHitPct = DEFAULT_TURN_PROFILE_INPUTS_HIT_PCT;
         turnProfileAttempts = DEFAULT_TURN_PROFILE_ATTEMPTS;
         saveDebugValues = DEFAULT_SAVE_DEBUG_VALUES;
