@@ -23,13 +23,22 @@ public final class TurnProfileController {
         public final boolean[] jumpTicks;
         public final AttemptSampler.Stats attempts;
         public final double pixelDeg;
+        final AngleSolverEngine.PathSnapshot snapshot;
+        final boolean[] keyEdges;
 
-        Current(TurnProfile profile, int startTick, boolean[] jumpTicks, AttemptSampler.Stats attempts, double pixelDeg) {
+        Current(TurnProfile profile, int startTick, boolean[] jumpTicks, AttemptSampler.Stats attempts, double pixelDeg,
+                AngleSolverEngine.PathSnapshot snapshot, boolean[] keyEdges) {
             this.profile = profile;
             this.startTick = startTick;
             this.jumpTicks = jumpTicks;
             this.attempts = attempts;
             this.pixelDeg = pixelDeg;
+            this.snapshot = snapshot;
+            this.keyEdges = keyEdges;
+        }
+
+        Current withAttempts(AttemptSampler.Stats stats, double pixelDeg) {
+            return new Current(profile, startTick, jumpTicks, stats, pixelDeg, snapshot, keyEdges);
         }
     }
 
@@ -48,6 +57,7 @@ public final class TurnProfileController {
     private volatile AtomicBoolean cancelToken = new AtomicBoolean(false);
     private volatile Current current;
     private volatile boolean computing;
+    private volatile boolean rating;
 
     public TurnProfileController(AngleSolverEngine engine, InputData inputs, BooleanSupplier enabled,
                                  Supplier<Float> sensitivity, Supplier<AttemptSampler.Scatter> scatter,
@@ -71,24 +81,42 @@ public final class TurnProfileController {
         boolean[] jumps = jumpTicks(snap.startTick, snap.yaws.length);
         boolean[] edges = keyEdges(snap.startTick, snap.yaws.length);
         double pixelDeg = TurnProfile.pixelDeg(sensitivity.get());
-        AttemptSampler.Scatter sc = scatter.get();
-        int count = attemptCount.get();
         ForwardModel model = engine.forwardModel();
         cancelToken.set(true);
         AtomicBoolean cancel = new AtomicBoolean(false);
         cancelToken = cancel;
         int gen = generation.incrementAndGet();
         computing = true;
+        rating = false;
         worker.submit(() -> {
             TurnProfile p = TurnProfile.compute(model, snap.spec, snap.yaws, cancel);
             if (gen != generation.get() || cancel.get()) return;
-            AttemptSampler.Stats stats = p.lands
-                    ? AttemptSampler.sample(model, snap.spec, p.facing, p.held, edges, pixelDeg, sc, count, cancel)
-                    : null;
-            if (gen != generation.get() || cancel.get()) return;
-            current = new Current(p, snap.startTick, jumps, stats, pixelDeg);
+            current = new Current(p, snap.startTick, jumps, null, pixelDeg, snap, edges);
             computing = false;
         });
+    }
+
+    public void rate() {
+        Current cur = current;
+        if (cur == null || !cur.profile.lands || rating) return;
+        double pixelDeg = TurnProfile.pixelDeg(sensitivity.get());
+        AttemptSampler.Scatter sc = scatter.get();
+        int count = attemptCount.get();
+        ForwardModel model = engine.forwardModel();
+        AtomicBoolean cancel = cancelToken;
+        int gen = generation.get();
+        rating = true;
+        worker.submit(() -> {
+            AttemptSampler.Stats stats = AttemptSampler.sample(model, cur.snapshot.spec, cur.profile.facing,
+                    cur.profile.held, cur.keyEdges, pixelDeg, sc, count, cancel);
+            if (gen != generation.get() || cancel.get()) return;
+            current = cur.withAttempts(stats, pixelDeg);
+            rating = false;
+        });
+    }
+
+    public boolean isRating() {
+        return rating;
     }
 
     public Current current() {

@@ -80,17 +80,20 @@ public final class TurnProfileWindow implements RenderInterface {
 
     private void header(TurnProfileController.Current cur, float scale) {
         AttemptSampler.Stats st = cur.attempts;
-        String line;
+        if (controller.isRating()) {
+            Controls.disabledButton("Rating");
+        } else if (Controls.secondaryButton("Rate difficulty")) {
+            controller.rate();
+        }
+        ImGui.sameLine();
         if (st == null) {
-            line = controller.isComputing() ? "sampling attempts" : "no attempts sampled";
+            ImGui.textDisabled(controller.isRating() ? "sampling attempts" : "not rated for this path");
         } else {
             double turnRate = st.rate();
             double inputs = settings.turnProfileInputsHitPct / 100.0;
-            double total = turnRate * inputs;
-            line = String.format(Locale.ROOT, "lands %s of attempts  (turn %s, %s attempts)",
-                    oneIn(total), pct(turnRate), compact(st.attempts));
+            ImGui.text(String.format(Locale.ROOT, "lands %s of attempts  (turn %s, %s attempts)",
+                    oneIn(turnRate * inputs), pct(turnRate), compact(st.attempts)));
         }
-        ImGui.text(line);
         ImGui.sameLine();
         float w = 150f * scale;
         ImGui.setCursorPosX(ImGui.getWindowContentRegionMaxX() - w);
