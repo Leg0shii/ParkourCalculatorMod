@@ -32,6 +32,7 @@ public class MouseHandlerMixin {
 
     @Inject(method = "onButton", at = @At("HEAD"), cancellable = true)
     private void onMouseButton(long window, MouseButtonInfo input, int action, CallbackInfo ci) {
+        FabricParkourCalculator.recordButton(input.button(), action);
         if (FabricParkourCalculator.isGhostPlaybackActive()) {
             ci.cancel();
             return;

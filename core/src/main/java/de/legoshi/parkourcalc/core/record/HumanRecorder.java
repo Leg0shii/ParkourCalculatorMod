@@ -161,6 +161,13 @@ public final class HumanRecorder {
                 + ",\"code\":" + code + ",\"down\":" + down + "}");
     }
 
+    public synchronized void button(long eventNs, int button, boolean down) {
+        if (!recording) return;
+        keyCount++;
+        write("{\"e\":\"button\",\"us\":" + micros() + (eventNs != 0L ? ",\"eventNs\":" + eventNs : "")
+                + ",\"button\":" + button + ",\"down\":" + down + "}");
+    }
+
     private String header() {
         FileSystemSaveStore s = store.get();
         float sens = sensitivity.get();

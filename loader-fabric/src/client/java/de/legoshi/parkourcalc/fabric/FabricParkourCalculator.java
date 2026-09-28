@@ -316,6 +316,12 @@ public class FabricParkourCalculator implements ClientModInitializer {
         r.mouse(0L, dx, dy, p.getYRot(), p.getXRot());
     }
 
+    public static void recordButton(int button, int action) {
+        if (action != GLFW.GLFW_PRESS && action != GLFW.GLFW_RELEASE) return;
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (r.isRecording() && !isUiFocused()) r.button(0L, button, action == GLFW.GLFW_PRESS);
+    }
+
     public static void recordKey(int key, int action) {
         if (action != GLFW.GLFW_PRESS && action != GLFW.GLFW_RELEASE) return;
         de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();

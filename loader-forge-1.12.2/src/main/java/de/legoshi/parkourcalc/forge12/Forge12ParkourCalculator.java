@@ -196,6 +196,12 @@ public class Forge12ParkourCalculator {
         r.mouse(eventNs, dx, dy, p.rotationYaw, p.rotationPitch);
     }
 
+    private void recordButton(long eventNs, int button, boolean down) {
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (!r.isRecording() || Minecraft.getMinecraft().currentScreen != null) return;
+        r.button(eventNs, button, down);
+    }
+
     @SubscribeEvent
     public void onKeyInput(net.minecraftforge.fml.common.gameevent.InputEvent.KeyInputEvent event) {
         de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
@@ -539,6 +545,7 @@ public class Forge12ParkourCalculator {
     // Mirror in Forge8ParkourCalculator; differs only in MouseEvent.getButton() vs button.
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onMouseEvent(MouseEvent event) {
+        if (event.getButton() >= 0) recordButton(event.getNanoseconds(), event.getButton(), event.isButtonstate());
         recordMouse(event.getNanoseconds(), event.getDx(), event.getDy());
         if (!event.isButtonstate()) return;
         if (playbackBridge.ghostEntity() != null && event.getButton() >= 0) {

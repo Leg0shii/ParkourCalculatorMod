@@ -59,6 +59,7 @@ public class HumanRecorderTest {
         r.mouse(0L, 12, -3, 90f, 10f);
         r.mouse(0L, 0, 0, 90f, 10f);
         r.key(77L, 32, true);
+        r.button(0L, 1, true);
         r.tickEnd(true, false, false, false, true, false, true, true);
         r.tickStart(1.7, 64.42, -2.25, 91.5f, 10f, false);
         Path file = r.stop();
@@ -67,7 +68,7 @@ public class HumanRecorderTest {
         assertEquals(tmp.getRoot().toPath().resolve(HumanRecorder.DIRECTORY), file.getParent());
         assertTrue(file.getFileName().toString().endsWith(HumanRecorder.EXTENSION));
         List<JsonObject> rows = rows(file);
-        assertEquals(7, rows.size());
+        assertEquals(8, rows.size());
         JsonObject header = rows.get(0);
         assertEquals("header", header.get("e").getAsString());
         assertEquals(HumanRecorder.FORMAT, header.get("format").getAsString());
@@ -90,17 +91,21 @@ public class HumanRecorderTest {
         assertEquals(32, k.get("code").getAsInt());
         assertEquals(77L, k.get("eventNs").getAsLong());
         assertTrue(k.get("down").getAsBoolean());
-        JsonObject te = rows.get(4);
+        JsonObject b = rows.get(4);
+        assertEquals("button", b.get("e").getAsString());
+        assertEquals(1, b.get("button").getAsInt());
+        assertTrue(b.get("down").getAsBoolean());
+        JsonObject te = rows.get(5);
         assertEquals("tickEnd", te.get("e").getAsString());
         assertEquals(0, te.get("t").getAsInt());
         assertEquals("WJP", te.get("keys").getAsString());
         assertTrue(te.get("sprinting").getAsBoolean());
-        assertEquals(1, rows.get(5).get("t").getAsInt());
-        JsonObject end = rows.get(6);
+        assertEquals(1, rows.get(6).get("t").getAsInt());
+        JsonObject end = rows.get(7);
         assertEquals("end", end.get("e").getAsString());
         assertEquals(2, end.get("ticks").getAsInt());
         assertEquals(1, end.get("mouse").getAsInt());
-        assertEquals(1, end.get("keys").getAsInt());
+        assertEquals(2, end.get("keys").getAsInt());
         assertEquals(file, r.lastFile());
         assertFalse(r.isRecording());
     }
