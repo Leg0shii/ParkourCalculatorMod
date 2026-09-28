@@ -236,9 +236,20 @@ public final class Application {
                 angleSolverEngine, forwardModel, mc, this::onUserChange, this::pushHudMessage, runTicks::isRunning);
         de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow stratfinderWindow =
                 new de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow(noTurnSearch);
-        turnProfile = new TurnProfileController(angleSolverEngine, inputData, () -> settings.viewTurnProfile);
+        turnProfile = new TurnProfileController(angleSolverEngine, inputData, () -> settings.viewTurnProfile,
+                mc::getMouseSensitivity, () -> {
+                    de.legoshi.parkourcalc.core.anglesolver.profile.AttemptSampler.Scatter sc =
+                            new de.legoshi.parkourcalc.core.anglesolver.profile.AttemptSampler.Scatter();
+                    sc.flickRestPx = settings.turnProfileFlickRestPx;
+                    sc.flickMovingPx = settings.turnProfileFlickMovingPx;
+                    sc.smoothPx = settings.turnProfileSmoothPx;
+                    sc.flickThresholdDeg = settings.turnProfileFlickThresholdDeg;
+                    sc.flickOnTickChance = settings.turnProfileFlickOnTickChance;
+                    return sc;
+                }, () -> Math.max(1000, settings.turnProfileAttempts));
         de.legoshi.parkourcalc.core.ui.anglesolver.TurnProfileWindow turnProfileWindow =
-                new de.legoshi.parkourcalc.core.ui.anglesolver.TurnProfileWindow(turnProfile, settings, mc::getMouseSensitivity);
+                new de.legoshi.parkourcalc.core.ui.anglesolver.TurnProfileWindow(turnProfile, settings, mc::getMouseSensitivity,
+                        this::saveSettings);
 
         // In-world constraint visualization (gh-145): plates appear while the solver view is open.
         constraintSource = new de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverConstraintSource(

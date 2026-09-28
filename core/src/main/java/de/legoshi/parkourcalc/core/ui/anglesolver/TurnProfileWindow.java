@@ -1,9 +1,11 @@
 package de.legoshi.parkourcalc.core.ui.anglesolver;
 
 import de.legoshi.parkourcalc.core.TurnProfileController;
+import de.legoshi.parkourcalc.core.anglesolver.profile.AttemptSampler;
 import de.legoshi.parkourcalc.core.anglesolver.profile.TurnProfile;
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
 import de.legoshi.parkourcalc.core.ui.Settings;
+import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import imgui.ImDrawList;
 import imgui.ImGui;
@@ -21,9 +23,9 @@ public final class TurnProfileWindow implements RenderInterface {
 
     private static final String WINDOW_ID = "Turn Profile";
     private static final float WIN_W = 720f;
-    private static final float WIN_H = 360f;
+    private static final float WIN_H = 380f;
     private static final float MIN_W = 420f;
-    private static final float MIN_H = 220f;
+    private static final float MIN_H = 240f;
     private static final float LEGEND_W = 150f;
     private static final float PAD_LEFT = 44f;
     private static final float PAD_RIGHT = 14f;
@@ -32,17 +34,23 @@ public final class TurnProfileWindow implements RenderInterface {
     private static final float DOT_RADIUS = 3.5f;
     private static final float LINE_WIDTH = 2f;
     private static final double MIN_SPAN_DEG = 20.0;
+    private static final double BLAME_HIGH = 0.4;
+    private static final double BLAME_SOME = 0.1;
 
     private final TurnProfileController controller;
     private final Settings settings;
     private final Supplier<Float> sensitivity;
+    private final Runnable onInputsChanged;
     private final ImBoolean open = new ImBoolean(false);
+    private final int[] inputsPct = new int[1];
     private boolean wasOpen;
 
-    public TurnProfileWindow(TurnProfileController controller, Settings settings, Supplier<Float> sensitivity) {
+    public TurnProfileWindow(TurnProfileController controller, Settings settings, Supplier<Float> sensitivity,
+                             Runnable onInputsChanged) {
         this.controller = controller;
         this.settings = settings;
         this.sensitivity = sensitivity;
+        this.onInputsChanged = onInputsChanged;
     }
 
     @Override
@@ -62,6 +70,7 @@ public final class TurnProfileWindow implements RenderInterface {
             } else if (!cur.profile.lands) {
                 ImGui.textDisabled("The current path does not meet the constraints");
             } else {
+                header(cur, scale);
                 draw(cur, scale);
             }
         }
@@ -69,9 +78,56 @@ public final class TurnProfileWindow implements RenderInterface {
         settings.viewTurnProfile = open.get();
     }
 
+    private void header(TurnProfileController.Current cur, float scale) {
+        AttemptSampler.Stats st = cur.attempts;
+        String line;
+        if (st == null) {
+            line = controller.isComputing() ? "sampling attempts" : "no attempts sampled";
+        } else {
+            double turnRate = st.rate();
+            double inputs = settings.turnProfileInputsHitPct / 100.0;
+            double total = turnRate * inputs;
+            line = String.format(Locale.ROOT, "lands %s of attempts  (turn %s, %s attempts)",
+                    oneIn(total), pct(turnRate), compact(st.attempts));
+        }
+        ImGui.text(line);
+        ImGui.sameLine();
+        float w = 150f * scale;
+        ImGui.setCursorPosX(ImGui.getWindowContentRegionMaxX() - w);
+        ImGui.pushItemWidth(w);
+        inputsPct[0] = settings.turnProfileInputsHitPct;
+        if (Controls.sliderInt("##inputsHit", inputsPct, 1, 100, "inputs %d%%")) {
+            settings.turnProfileInputsHitPct = inputsPct[0];
+            onInputsChanged.run();
+        }
+        ImGui.popItemWidth();
+        if (ImGui.isItemHovered()) {
+            ImGui.beginTooltip();
+            ImGui.text("How often you hit the key inputs of this strat. Multiplied into the landing rate.");
+            ImGui.endTooltip();
+        }
+    }
+
+    private static String oneIn(double rate) {
+        if (rate <= 0.0) return "none";
+        if (rate >= 0.5) return String.format(Locale.ROOT, "%.0f%%", rate * 100.0);
+        return String.format(Locale.ROOT, "1 in %s", compact((long) Math.round(1.0 / rate)));
+    }
+
+    private static String pct(double rate) {
+        if (rate <= 0.0) return "0%";
+        if (rate < 0.001) return String.format(Locale.ROOT, "%.3f%%", rate * 100.0);
+        return String.format(Locale.ROOT, "%.1f%%", rate * 100.0);
+    }
+
+    private static String compact(long v) {
+        if (v >= 1_000_000L) return String.format(Locale.ROOT, "%.1fM", v / 1e6);
+        if (v >= 10_000L) return String.format(Locale.ROOT, "%dk", v / 1000L);
+        return Long.toString(v);
+    }
+
     private void draw(TurnProfileController.Current cur, float scale) {
         TurnProfile p = cur.profile;
-        double pixelDeg = TurnProfile.pixelDeg(sensitivity.get());
         ImVec2 avail = ImGui.getContentRegionAvail();
         float legendW = LEGEND_W * scale;
         float cw = Math.max(80f, avail.x - legendW);
@@ -142,7 +198,7 @@ public final class TurnProfileWindow implements RenderInterface {
         }
         for (int t = 0; t < n; t++) {
             dl.addCircleFilled(plotX + t * dx, yOf(p.facing[t], yLo, yHi, plotY, plotH), DOT_RADIUS * scale,
-                    classColor(p.classify(t, pixelDeg)), 12);
+                    dotColor(cur, t), 12);
         }
 
         int labelEvery = Math.max(1, (int) Math.ceil(ImGui.calcTextSize("000").x * 1.4f / Math.max(1f, dx)));
@@ -159,23 +215,45 @@ public final class TurnProfileWindow implements RenderInterface {
             t = Math.max(0, Math.min(n - 1, t));
             float hx = plotX + t * dx;
             dl.addLine(hx, plotY, hx, plotY + plotH, ThemeManager.textDimColor(), 1f);
-            tooltip(cur, t, pixelDeg);
+            tooltip(cur, t);
         }
 
-        drawLegend(dl, x0 + cw, y0, legendW, ch, scale, pixelDeg);
+        drawLegend(dl, x0 + cw, y0, legendW, ch, scale, cur.pixelDeg);
     }
 
-    private void tooltip(TurnProfileController.Current cur, int t, double pixelDeg) {
+    private int dotColor(TurnProfileController.Current cur, int t) {
+        TurnProfile p = cur.profile;
+        if (p.held[t]) return ThemeManager.textDimColor();
+        AttemptSampler.Stats st = cur.attempts;
+        if (st == null) {
+            switch (p.classify(t, cur.pixelDeg)) {
+                case PINNED: return ThemeManager.dangerColor();
+                case SUB_PIXEL: return ThemeManager.warningColor();
+                default: return ThemeManager.accentColor();
+            }
+        }
+        double b = st.blame[t];
+        if (b >= BLAME_HIGH) return ThemeManager.dangerColor();
+        if (b >= BLAME_SOME) return ThemeManager.warningColor();
+        return ThemeManager.accentColor();
+    }
+
+    private void tooltip(TurnProfileController.Current cur, int t) {
         TurnProfile p = cur.profile;
         ImGui.beginTooltip();
         ImGui.text(String.format(Locale.ROOT, "T%d  %.2f°", cur.startTick + t + 1, p.facing[t]));
         if (p.held[t]) {
             ImGui.textDisabled("held facing");
         } else {
-            ImGui.pushStyleColor(ImGuiCol.Text, classColor(p.classify(t, pixelDeg)));
+            ImGui.pushStyleColor(ImGuiCol.Text, dotColor(cur, t));
             ImGui.text(String.format(Locale.ROOT, "-%.3f° %s   +%.3f° %s",
-                    p.below[t], bracket(p.below[t], pixelDeg), p.above[t], bracket(p.above[t], pixelDeg)));
+                    p.below[t], bracket(p.below[t], cur.pixelDeg), p.above[t], bracket(p.above[t], cur.pixelDeg)));
             ImGui.popStyleColor();
+            AttemptSampler.Stats st = cur.attempts;
+            if (st != null) {
+                ImGui.textDisabled(String.format(Locale.ROOT, "%s, %.0f%% of fails",
+                        st.flickTick[t] ? "flick" : "smooth", st.blame[t] * 100.0));
+            }
         }
         ImGui.endTooltip();
     }
@@ -199,9 +277,9 @@ public final class TurnProfileWindow implements RenderInterface {
         dl.addRectFilled(lx, ly + 2f * scale, lx + 16f * scale, ly + lh - 2f * scale, ThemeManager.okTintColor(0.3f), 0f);
         dl.addText(lx + 24f * scale, ly, text, "lands");
         ly += lh + gap;
-        ly = legendDot(dl, lx, ly, lh, gap, scale, ThemeManager.dangerColor(), "pinned", text);
-        ly = legendDot(dl, lx, ly, lh, gap, scale, ThemeManager.warningColor(), "< 1 px", text);
-        ly = legendDot(dl, lx, ly, lh, gap, scale, ThemeManager.accentColor(), "free", text);
+        ly = legendDot(dl, lx, ly, lh, gap, scale, ThemeManager.dangerColor(), "most fails", text);
+        ly = legendDot(dl, lx, ly, lh, gap, scale, ThemeManager.warningColor(), "some fails", text);
+        ly = legendDot(dl, lx, ly, lh, gap, scale, ThemeManager.accentColor(), "few fails", text);
         legendDot(dl, lx, ly, lh, gap, scale, ThemeManager.textDimColor(), "held", text);
 
         String sens = String.format(Locale.ROOT, "sens %d%%", Math.round(sensitivity.get() * 200f));
@@ -214,15 +292,6 @@ public final class TurnProfileWindow implements RenderInterface {
         dl.addCircleFilled(lx + 8f * scale, ly + lh * 0.5f, DOT_RADIUS * scale, col, 12);
         dl.addText(lx + 24f * scale, ly, text, label);
         return ly + lh + gap;
-    }
-
-    private static int classColor(TurnProfile.TickClass c) {
-        switch (c) {
-            case PINNED: return ThemeManager.dangerColor();
-            case SUB_PIXEL: return ThemeManager.warningColor();
-            case HELD: return ThemeManager.textDimColor();
-            default: return ThemeManager.accentColor();
-        }
     }
 
     private static float yOf(double deg, double lo, double hi, float plotY, float plotH) {

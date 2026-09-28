@@ -81,6 +81,8 @@ public final class Settings {
     private static final boolean DEFAULT_VIEW_ANGLE_SOLVER = false;
     private static final boolean DEFAULT_VIEW_VELOCITY_MAP = false;
     private static final boolean DEFAULT_VIEW_TURN_PROFILE = false;
+    private static final int DEFAULT_TURN_PROFILE_INPUTS_HIT_PCT = 100;
+    private static final int DEFAULT_TURN_PROFILE_ATTEMPTS = 100_000;
     private static final boolean DEFAULT_SAVE_DEBUG_VALUES = false;
     private static final boolean DEFAULT_EXPERIMENTAL_BLOCK_CAPTURE = false;
 
@@ -216,6 +218,13 @@ public final class Settings {
     public boolean viewAngleSolver = DEFAULT_VIEW_ANGLE_SOLVER;
     public boolean viewVelocityMap = DEFAULT_VIEW_VELOCITY_MAP;
     public boolean viewTurnProfile = DEFAULT_VIEW_TURN_PROFILE;
+    public int turnProfileInputsHitPct = DEFAULT_TURN_PROFILE_INPUTS_HIT_PCT;
+    public int turnProfileAttempts = DEFAULT_TURN_PROFILE_ATTEMPTS;
+    public double turnProfileFlickRestPx = 1.5;
+    public double turnProfileFlickMovingPx = 4.0;
+    public double turnProfileSmoothPx = 1.0;
+    public double turnProfileFlickThresholdDeg = 6.0;
+    public double turnProfileFlickOnTickChance = 0.7;
 
     // When on, each Save also writes the full per-tick SimulatorEntity state to the file (debug only).
     public boolean saveDebugValues = DEFAULT_SAVE_DEBUG_VALUES;
@@ -328,6 +337,8 @@ public final class Settings {
         viewAngleSolver = DEFAULT_VIEW_ANGLE_SOLVER;
         viewVelocityMap = DEFAULT_VIEW_VELOCITY_MAP;
         viewTurnProfile = DEFAULT_VIEW_TURN_PROFILE;
+        turnProfileInputsHitPct = DEFAULT_TURN_PROFILE_INPUTS_HIT_PCT;
+        turnProfileAttempts = DEFAULT_TURN_PROFILE_ATTEMPTS;
         saveDebugValues = DEFAULT_SAVE_DEBUG_VALUES;
         experimentalBlockCapture = DEFAULT_EXPERIMENTAL_BLOCK_CAPTURE;
         keepInputTableOpen = DEFAULT_KEEP_INPUT_TABLE_OPEN;
