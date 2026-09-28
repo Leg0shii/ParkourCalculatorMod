@@ -225,6 +225,7 @@ public final class Settings {
     public double turnProfileSmoothPx = 1.0;
     public double turnProfileFlickThresholdDeg = 6.0;
     public double turnProfileFlickOnTickChance = 0.7;
+    public double turnProfilePhaseScale = 1.0;
 
     // When on, each Save also writes the full per-tick SimulatorEntity state to the file (debug only).
     public boolean saveDebugValues = DEFAULT_SAVE_DEBUG_VALUES;

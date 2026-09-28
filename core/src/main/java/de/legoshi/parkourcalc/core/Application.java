@@ -245,6 +245,7 @@ public final class Application {
                     sc.smoothPx = settings.turnProfileSmoothPx;
                     sc.flickThresholdDeg = settings.turnProfileFlickThresholdDeg;
                     sc.flickOnTickChance = settings.turnProfileFlickOnTickChance;
+                    sc.phaseScale = settings.turnProfilePhaseScale;
                     return sc;
                 }, () -> Math.max(1000, settings.turnProfileAttempts));
         de.legoshi.parkourcalc.core.ui.anglesolver.TurnProfileWindow turnProfileWindow =

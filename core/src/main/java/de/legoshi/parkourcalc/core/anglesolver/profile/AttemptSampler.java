@@ -17,6 +17,7 @@ public final class AttemptSampler {
         public double smoothPx = 1.0;
         public double flickThresholdDeg = 6.0;
         public double flickOnTickChance = 0.7;
+        public double phaseScale = 1.0;
         public long seed = 1234L;
     }
 
@@ -102,7 +103,7 @@ public final class AttemptSampler {
                 dF[to] += dF[t];
                 dF[t] = 0.0;
             }
-            double phase = rng.nextDouble();
+            double phase = rng.nextDouble() * scatter.phaseScale;
             State before = State.HELD;
             double f = sc.startYaw;
             for (int t = 0; t < n; t++) {
