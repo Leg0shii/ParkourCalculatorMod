@@ -19,7 +19,9 @@ public final class AttemptSampler {
         public double flickMovingPct = 8.0;
         public double smoothPx = 1.0;
         public double flickThresholdDeg = 6.0;
-        public double flickOnTickChance = 0.7;
+        public double flickMsMin = 20.0;
+        public double flickMsMax = 40.0;
+        public double flickStartJitterMs = 10.0;
         public double phaseScale = 0.0;
         public long seed = 1234L;
     }
@@ -58,7 +60,9 @@ public final class AttemptSampler {
     private AttemptSampler() {
     }
 
-    public static Stats sample(ForwardModel model, JumpSpec spec, double[] facing, boolean[] held, boolean[] keyEdge,
+    public static final double TICK_MS = 50.0;
+
+    public static Stats sample(ForwardModel model, JumpSpec spec, double[] facing, boolean[] held,
                                double pixelDeg, Scatter scatter, int attempts, AtomicBoolean cancel) {
         JumpPhysicsInputs sc = spec.asScenario();
         int n = sc.numTicks;
@@ -78,7 +82,7 @@ public final class AttemptSampler {
             flickTick[t] = state[t] == State.FLICK;
         }
         Random rng = new Random(scatter.seed);
-        double[] dF = new double[n];
+        double[] inc = new double[n];
         double[] err = new double[n];
         double[] sigma = new double[n];
         double[] yaws = new double[n];
@@ -95,35 +99,49 @@ public final class AttemptSampler {
         for (int a = 0; a < attempts; a++) {
             if (cancel != null && cancel.get()) break;
             done++;
-            System.arraycopy(intended, 0, dF, 0, n);
-            for (int t = 0; t < n; t++) {
-                if (state[t] != State.FLICK || keyEdge[t]) continue;
-                double u = rng.nextDouble();
-                if (u < scatter.flickOnTickChance) continue;
-                int shift = u < scatter.flickOnTickChance + (1.0 - scatter.flickOnTickChance) * 0.5 ? -1 : 1;
-                int to = t + shift;
-                if (to < 0 || to >= n) continue;
-                dF[to] += dF[t];
-                dF[t] = 0.0;
-            }
             double phase = rng.nextDouble() * scatter.phaseScale;
             State before = State.HELD;
-            double f = n > 0 ? facing[0] : sc.startYaw;
             for (int t = 0; t < n; t++) {
                 double e = 0.0;
                 double s = 0.0;
-                if (state[t] == State.FLICK) {
-                    s = Math.abs(dF[t]) * (before == State.HELD ? scatter.flickRestPct : scatter.flickMovingPct) / 100.0;
-                    e = Math.round(rng.nextGaussian() * s / pixelDeg) * pixelDeg;
-                } else if (state[t] == State.SMOOTH) {
+                inc[t] = state[t] == State.FLICK ? 0.0 : intended[t];
+                if (state[t] == State.SMOOTH) {
                     s = scatter.smoothPx * pixelDeg;
-                    e = Math.round(rng.nextGaussian() * scatter.smoothPx) * pixelDeg - phase * dF[t];
+                    e = Math.round(rng.nextGaussian() * scatter.smoothPx) * pixelDeg - phase * intended[t];
+                    inc[t] += e;
                 }
                 err[t] = e;
                 sigma[t] = s;
-                f = Angles.wrap(f + dF[t] + e);
-                yaws[t] = f;
                 before = state[t];
+            }
+            before = State.HELD;
+            for (int t = 0; t < n; t++) {
+                if (state[t] == State.FLICK) {
+                    double s = Math.abs(intended[t]) * (before == State.HELD ? scatter.flickRestPct : scatter.flickMovingPct) / 100.0;
+                    double amp = intended[t] + Math.round(rng.nextGaussian() * s / pixelDeg) * pixelDeg;
+                    double dur = scatter.flickMsMin + rng.nextDouble() * Math.max(0.0, scatter.flickMsMax - scatter.flickMsMin);
+                    double start = (TICK_MS - dur) * 0.5 + (rng.nextDouble() * 2.0 - 1.0) * scatter.flickStartJitterMs;
+                    double worst = Math.abs(amp - intended[t]);
+                    double prevFrac = 0.0;
+                    for (int k = (int) Math.floor(Math.min(0.0, start) / TICK_MS); ; k++) {
+                        int at = t - 1 + k;
+                        if (at >= n) break;
+                        double frac = Math.min(1.0, Math.max(0.0, (k * TICK_MS - start) / dur));
+                        if (at >= 0) inc[at] += amp * (frac - prevFrac);
+                        double planned = k >= 1 ? intended[t] : 0.0;
+                        worst = Math.max(worst, Math.abs(amp * frac - planned));
+                        prevFrac = frac;
+                        if (frac >= 1.0) break;
+                    }
+                    err[t] = worst;
+                    sigma[t] = s;
+                }
+                before = state[t];
+            }
+            double f = n > 0 ? facing[0] : sc.startYaw;
+            for (int t = 0; t < n; t++) {
+                f = Angles.wrap(f + inc[t]);
+                yaws[t] = f;
             }
             double[] gf = sc.toGameFacings(yaws);
             boolean lands = comp.maxViolation(gf, model.forward(sc, gf)) <= 0.0;

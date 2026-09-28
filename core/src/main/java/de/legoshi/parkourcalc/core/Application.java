@@ -244,7 +244,9 @@ public final class Application {
                     sc.flickMovingPct = settings.turnProfileFlickMovingPct;
                     sc.smoothPx = settings.turnProfileSmoothPx;
                     sc.flickThresholdDeg = settings.turnProfileFlickThresholdDeg;
-                    sc.flickOnTickChance = settings.turnProfileFlickOnTickChance;
+                    sc.flickMsMin = settings.turnProfileFlickMsMin;
+                    sc.flickMsMax = settings.turnProfileFlickMsMax;
+                    sc.flickStartJitterMs = settings.turnProfileFlickStartJitterMs;
                     sc.phaseScale = settings.turnProfilePhaseScale;
                     return sc;
                 }, () -> Math.max(1000, settings.turnProfileAttempts));

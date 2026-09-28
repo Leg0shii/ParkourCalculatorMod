@@ -24,21 +24,19 @@ public final class TurnProfileController {
         public final AttemptSampler.Stats attempts;
         public final double pixelDeg;
         final AngleSolverEngine.PathSnapshot snapshot;
-        final boolean[] keyEdges;
 
         Current(TurnProfile profile, int startTick, boolean[] jumpTicks, AttemptSampler.Stats attempts, double pixelDeg,
-                AngleSolverEngine.PathSnapshot snapshot, boolean[] keyEdges) {
+                AngleSolverEngine.PathSnapshot snapshot) {
             this.profile = profile;
             this.startTick = startTick;
             this.jumpTicks = jumpTicks;
             this.attempts = attempts;
             this.pixelDeg = pixelDeg;
             this.snapshot = snapshot;
-            this.keyEdges = keyEdges;
         }
 
         Current withAttempts(AttemptSampler.Stats stats, double pixelDeg) {
-            return new Current(profile, startTick, jumpTicks, stats, pixelDeg, snapshot, keyEdges);
+            return new Current(profile, startTick, jumpTicks, stats, pixelDeg, snapshot);
         }
     }
 
@@ -79,7 +77,6 @@ public final class TurnProfileController {
             return;
         }
         boolean[] jumps = jumpTicks(snap.startTick, snap.yaws.length);
-        boolean[] edges = keyEdges(snap.startTick, snap.yaws.length);
         double pixelDeg = TurnProfile.pixelDeg(sensitivity.get());
         ForwardModel model = engine.forwardModel();
         cancelToken.set(true);
@@ -91,7 +88,7 @@ public final class TurnProfileController {
         worker.submit(() -> {
             TurnProfile p = TurnProfile.compute(model, snap.spec, snap.yaws, cancel, false);
             if (gen != generation.get() || cancel.get()) return;
-            current = new Current(p, snap.startTick, jumps, null, pixelDeg, snap, edges);
+            current = new Current(p, snap.startTick, jumps, null, pixelDeg, snap);
             computing = false;
         });
     }
@@ -108,7 +105,7 @@ public final class TurnProfileController {
         rating = true;
         worker.submit(() -> {
             AttemptSampler.Stats stats = AttemptSampler.sample(model, cur.snapshot.spec, cur.profile.facing,
-                    cur.profile.held, cur.keyEdges, pixelDeg, sc, count, cancel);
+                    cur.profile.held, pixelDeg, sc, count, cancel);
             if (gen != generation.get() || cancel.get()) return;
             current = cur.withAttempts(stats, pixelDeg);
             rating = false;
@@ -125,20 +122,6 @@ public final class TurnProfileController {
 
     public boolean isComputing() {
         return computing;
-    }
-
-    private boolean[] keyEdges(int startTick, int n) {
-        boolean[] out = new boolean[n];
-        List<InputRow> rows = inputs.getRows();
-        for (int k = 0; k < n; k++) {
-            int t = startTick + k;
-            if (t <= 0 || t >= rows.size()) continue;
-            InputRow a = rows.get(t - 1), b = rows.get(t);
-            for (InputRow.Key key : InputRow.Key.values()) {
-                if (a.isKeyActive(key) != b.isKeyActive(key)) { out[k] = true; break; }
-            }
-        }
-        return out;
     }
 
     private boolean[] jumpTicks(int startTick, int n) {

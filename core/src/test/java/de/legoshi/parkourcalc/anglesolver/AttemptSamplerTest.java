@@ -28,14 +28,12 @@ public class AttemptSamplerTest {
         final JumpSpec spec;
         final double[] recorded;
         final boolean[] held;
-        final boolean[] edges;
 
-        Loaded(ExactJumpModel model, JumpSpec spec, double[] recorded, boolean[] held, boolean[] edges) {
+        Loaded(ExactJumpModel model, JumpSpec spec, double[] recorded, boolean[] held) {
             this.model = model;
             this.spec = spec;
             this.recorded = recorded;
             this.held = held;
-            this.edges = edges;
         }
     }
 
@@ -52,9 +50,7 @@ public class AttemptSamplerTest {
         int n = spec.asScenario().numTicks;
         double[] recorded = new double[n];
         for (int t = 0; t < n; t++) recorded[t] = Angles.wrap(file.debug.get(t + 1).yaw);
-        boolean[] edges = new boolean[n];
-        edges[10] = true;
-        return new Loaded(model, spec, recorded, TurnProfile.heldTicks(spec, n), edges);
+        return new Loaded(model, spec, recorded, TurnProfile.heldTicks(spec, n));
     }
 
     @Test
@@ -64,9 +60,11 @@ public class AttemptSamplerTest {
         sc.flickRestPct = 0.0;
         sc.flickMovingPct = 0.0;
         sc.smoothPx = 0.0;
-        sc.flickOnTickChance = 1.0;
+        sc.flickMsMin = 50.0;
+        sc.flickMsMax = 50.0;
+        sc.flickStartJitterMs = 0.0;
         sc.flickThresholdDeg = 0.0;
-        AttemptSampler.Stats s = AttemptSampler.sample(l.model, l.spec, l.recorded, l.held, l.edges,
+        AttemptSampler.Stats s = AttemptSampler.sample(l.model, l.spec, l.recorded, l.held,
                 TurnProfile.pixelDeg(0.5f), sc, 200, new AtomicBoolean(false));
         assertEquals(200, s.attempts);
         assertEquals(200, s.landings);
@@ -81,7 +79,7 @@ public class AttemptSamplerTest {
     @Test
     public void reservoirsStayBounded() {
         Loaded l = load();
-        AttemptSampler.Stats s = AttemptSampler.sample(l.model, l.spec, l.recorded, l.held, l.edges,
+        AttemptSampler.Stats s = AttemptSampler.sample(l.model, l.spec, l.recorded, l.held,
                 TurnProfile.pixelDeg(0.5f), new AttemptSampler.Scatter(), 3000, new AtomicBoolean(false));
         assertTrue(s.failed.length <= AttemptSampler.RESERVOIR);
         assertTrue(s.landed.length <= AttemptSampler.RESERVOIR);
@@ -92,7 +90,7 @@ public class AttemptSamplerTest {
     @Test
     public void thePinnedSolveAlmostNeverLandsWithHumanScatter() {
         Loaded l = load();
-        AttemptSampler.Stats s = AttemptSampler.sample(l.model, l.spec, l.recorded, l.held, l.edges,
+        AttemptSampler.Stats s = AttemptSampler.sample(l.model, l.spec, l.recorded, l.held,
                 TurnProfile.pixelDeg(0.5f), new AttemptSampler.Scatter(), 5000, new AtomicBoolean(false));
         assertEquals(5000, s.attempts);
         assertTrue("rate " + s.rate(), s.rate() < 0.01);
@@ -106,9 +104,9 @@ public class AttemptSamplerTest {
     public void sameSeedGivesSameCounts() {
         Loaded l = load();
         AttemptSampler.Scatter sc = new AttemptSampler.Scatter();
-        AttemptSampler.Stats a = AttemptSampler.sample(l.model, l.spec, l.recorded, l.held, l.edges,
+        AttemptSampler.Stats a = AttemptSampler.sample(l.model, l.spec, l.recorded, l.held,
                 TurnProfile.pixelDeg(0.5f), sc, 2000, new AtomicBoolean(false));
-        AttemptSampler.Stats b = AttemptSampler.sample(l.model, l.spec, l.recorded, l.held, l.edges,
+        AttemptSampler.Stats b = AttemptSampler.sample(l.model, l.spec, l.recorded, l.held,
                 TurnProfile.pixelDeg(0.5f), sc, 2000, new AtomicBoolean(false));
         assertEquals(a.landings, b.landings);
         for (int t = 0; t < a.blame.length; t++) assertEquals(a.blame[t], b.blame[t], 0.0);
@@ -118,7 +116,7 @@ public class AttemptSamplerTest {
     public void cancelStopsEarly() {
         Loaded l = load();
         AtomicBoolean cancel = new AtomicBoolean(true);
-        AttemptSampler.Stats s = AttemptSampler.sample(l.model, l.spec, l.recorded, l.held, l.edges,
+        AttemptSampler.Stats s = AttemptSampler.sample(l.model, l.spec, l.recorded, l.held,
                 TurnProfile.pixelDeg(0.5f), new AttemptSampler.Scatter(), 5000, cancel);
         assertEquals(0, s.attempts);
     }
@@ -126,7 +124,7 @@ public class AttemptSamplerTest {
     @Test
     public void flickTicksAreTheLargeTurns() {
         Loaded l = load();
-        AttemptSampler.Stats s = AttemptSampler.sample(l.model, l.spec, l.recorded, l.held, l.edges,
+        AttemptSampler.Stats s = AttemptSampler.sample(l.model, l.spec, l.recorded, l.held,
                 TurnProfile.pixelDeg(0.5f), new AttemptSampler.Scatter(), 10, new AtomicBoolean(false));
         assertTrue(s.flickTick[10]);
         assertTrue(s.flickTick[11]);
