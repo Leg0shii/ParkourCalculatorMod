@@ -133,36 +133,31 @@ public final class ClosedFormSolve {
             return null;
         }
         boolean max = spec.objective.sense == Objective.Sense.MAX;
-        Result bestFeas = null;
+        Result best = null;
         double bestScore = 0.0;
         double bestTheta = Double.NaN;
-        Result bestInfeas = null;
         for (double th : thetas) {
             if (cancel.get()) break;
             Result r = solveWithPrefold(exact, spec, sc, feasTol, cancel, margins, ascending, cfg, scan.at(th));
             if (r == null) continue;
-            if (!r.feasible) {
-                if (bestInfeas == null || r.violation < bestInfeas.violation) bestInfeas = r;
-                continue;
-            }
-            double score = scanScore(exact, spec, sc, r.yaws);
-            if (bestFeas == null || (max ? score > bestScore : score < bestScore)) {
-                bestFeas = r;
+            double score = r.feasible ? scanScore(exact, spec, sc, r.yaws) : 0.0;
+            if (scanBetter(r, score, best, bestScore, max)) {
+                best = r;
                 bestScore = score;
                 bestTheta = th;
             }
         }
-        if (bestFeas != null) {
+        if (best != null) {
             for (double step : SCAN_REFINE_STEPS) {
                 double center = bestTheta;
                 for (int i = -9; i <= 9 && !cancel.get(); i++) {
                     if (i == 0) continue;
                     double th = center + i * step;
                     Result r = solveWithPrefold(exact, spec, sc, feasTol, cancel, margins, ascending, cfg, scan.at(th));
-                    if (r == null || !r.feasible) continue;
-                    double score = scanScore(exact, spec, sc, r.yaws);
-                    if (max ? score > bestScore : score < bestScore) {
-                        bestFeas = r;
+                    if (r == null) continue;
+                    double score = r.feasible ? scanScore(exact, spec, sc, r.yaws) : 0.0;
+                    if (scanBetter(r, score, best, bestScore, max)) {
+                        best = r;
                         bestScore = score;
                         bestTheta = th;
                     }
@@ -171,11 +166,18 @@ public final class ClosedFormSolve {
         }
         if (SolverTrace.on()) {
             SolverTrace.log("CF", "chain scan %s theta=%s cands=%d ms=%.1f",
-                    bestFeas != null ? "solved" : "miss",
-                    bestFeas != null ? SolverTrace.fmt("%.4f", bestTheta) : "-",
+                    best != null && best.feasible ? "solved" : "miss",
+                    best != null ? SolverTrace.fmt("%.4f", bestTheta) : "-",
                     thetas.length, (System.nanoTime() - t0) / 1e6);
         }
-        return bestFeas != null ? bestFeas : bestInfeas;
+        return best;
+    }
+
+    private static boolean scanBetter(Result r, double score, Result best, double bestScore, boolean max) {
+        if (best == null) return true;
+        if (r.feasible != best.feasible) return r.feasible;
+        if (!r.feasible) return r.violation < best.violation;
+        return max ? score > bestScore : score < bestScore;
     }
 
     /** Candidate anchor yaws for the open chain. Walls whose every contributing tick is pinned or in the
