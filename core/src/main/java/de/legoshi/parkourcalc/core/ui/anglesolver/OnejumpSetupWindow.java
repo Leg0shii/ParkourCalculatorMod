@@ -41,7 +41,7 @@ import java.util.function.Supplier;
 public final class OnejumpSetupWindow implements RenderInterface {
 
     private static final String WINDOW_ID = "###onejumpSetup";
-    private static final String TITLE = "Onejump setup";
+    private static final String TITLE = "Onejump Setup";
     private static final String POPUP_CLEAR = "###onejumpClear";
     private static final String POPUP_NEW = "###onejumpNew";
     private static final String POPUP_DELETE = "###onejumpDelete";

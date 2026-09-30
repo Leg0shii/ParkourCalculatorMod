@@ -19,7 +19,7 @@ import imgui.type.ImBoolean;
 public final class OnejumpKeysWindow implements RenderInterface {
 
     private static final String WINDOW_ID = "###onejumpKeys";
-    private static final String TITLE = "Onejump keys";
+    private static final String TITLE = "Onejump Keys";
     private static final float WIN_W = 720f;
     private static final float WIN_H = 210f;
     private static final float MIN_W = 300f;

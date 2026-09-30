@@ -28,7 +28,7 @@ import java.util.function.Supplier;
 public final class TurnProfileWindow implements RenderInterface {
 
     private static final String WINDOW_ID = "###onejump";
-    private static final String TITLE = "Onejump";
+    private static final String TITLE = "Onejump Turn Profile";
     private static final float WIN_W = 720f;
     private static final float WIN_H = 380f;
     private static final float MIN_W = 420f;
@@ -108,7 +108,7 @@ public final class TurnProfileWindow implements RenderInterface {
         float graphH = Math.max(GRAPH_MIN_H * scale, ImGui.getContentRegionAvail().y);
         if (cur == null || cur.n == 0) {
             placeholder(graphH, controller.lastError() != null ? controller.lastError()
-                    : "No reference yet: set the onejump up in the Onejump setup window");
+                    : "No reference yet: set the onejump up in the Onejump Setup window");
             return;
         }
         graph(cur, scale, graphH, shownAttempt());
