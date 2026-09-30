@@ -141,7 +141,8 @@ public final class AttemptSampler {
             double f = n > 0 ? facing[0] : sc.startYaw;
             for (int t = 0; t < n; t++) {
                 f = Angles.wrap(f + inc[t]);
-                yaws[t] = f;
+                double off = Angles.wrapDelta(f - facing[t]);
+                yaws[t] = Angles.wrap(facing[t] + Math.round(off / pixelDeg) * pixelDeg);
             }
             double[] gf = sc.toGameFacings(yaws);
             boolean lands = comp.maxViolation(gf, model.forward(sc, gf)) <= 0.0;
@@ -179,7 +180,7 @@ public final class AttemptSampler {
                 landedLo, landedHi);
     }
 
-    private static JumpConstraintCompiler.Compiled positionConstraints(JumpSpec spec) {
+    public static JumpConstraintCompiler.Compiled positionConstraints(JumpSpec spec) {
         List<JumpConstraint> ineq = new ArrayList<>();
         List<JumpConstraint> eq = new ArrayList<>();
         for (JumpConstraint c : spec.constraints) {

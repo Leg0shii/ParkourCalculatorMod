@@ -18,9 +18,21 @@ public class MouseHandlerMixin {
     private void onUpdateMouse(CallbackInfo ci) {
         MouseHandlerAccessor accumulated = (MouseHandlerAccessor) this;
         FabricParkourCalculator.recordMouse(accumulated.pkc$accumulatedDX(), accumulated.pkc$accumulatedDY());
+        if (!FabricParkourCalculator.isUiFocused()
+                && FabricParkourCalculator.turnReplica(accumulated.pkc$accumulatedDX(), accumulated.pkc$accumulatedDY())) {
+            accumulated.pkc$setAccumulatedDX(0.0);
+            accumulated.pkc$setAccumulatedDY(0.0);
+            ci.cancel();
+            return;
+        }
         if (FabricParkourCalculator.isUiFocused() || FabricParkourCalculator.isGhostPlaybackActive()) {
             ci.cancel();
         }
+    }
+
+    @Inject(method = "turnPlayer", at = @At("RETURN"))
+    private void onMouseApplied(CallbackInfo ci) {
+        FabricParkourCalculator.recordFrame();
     }
 
     @Inject(method = "grabMouse", at = @At("HEAD"), cancellable = true)
@@ -32,8 +44,9 @@ public class MouseHandlerMixin {
 
     @Inject(method = "onButton", at = @At("HEAD"), cancellable = true)
     private void onMouseButton(long window, MouseButtonInfo input, int action, CallbackInfo ci) {
+        boolean replicaBefore = FabricParkourCalculator.hasReplica();
         FabricParkourCalculator.recordButton(input.button(), action);
-        if (FabricParkourCalculator.isGhostPlaybackActive()) {
+        if (replicaBefore || FabricParkourCalculator.hasReplica()) {
             ci.cancel();
             return;
         }

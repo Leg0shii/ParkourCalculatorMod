@@ -17,7 +17,7 @@ import java.util.function.Supplier;
 public final class HumanRecorder {
 
     public static final String FORMAT = "pkc-human-recording";
-    public static final int FORMAT_VERSION = 1;
+    public static final int FORMAT_VERSION = 2;
     public static final String DIRECTORY = "recordings";
     public static final String EXTENSION = ".jsonl";
 
@@ -33,6 +33,10 @@ public final class HumanRecorder {
     private int tickCount;
     private int mouseCount;
     private int keyCount;
+    private int frameCount;
+    private boolean frameSeen;
+    private float frameYaw;
+    private float framePitch;
     private Path lastFile;
     private String lastError;
 
@@ -55,6 +59,10 @@ public final class HumanRecorder {
 
     public synchronized int keyCount() {
         return keyCount;
+    }
+
+    public synchronized int frameCount() {
+        return frameCount;
     }
 
     public synchronized Path lastFile() {
@@ -89,6 +97,8 @@ public final class HumanRecorder {
         tickCount = 0;
         mouseCount = 0;
         keyCount = 0;
+        frameCount = 0;
+        frameSeen = false;
         try {
             Files.createDirectories(dir);
             String stamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.ROOT).format(new Date(startedAtEpochMs));
@@ -110,7 +120,7 @@ public final class HumanRecorder {
         recording = false;
         try {
             out.write("{\"e\":\"end\",\"us\":" + micros() + ",\"ticks\":" + tickCount + ",\"mouse\":" + mouseCount
-                    + ",\"keys\":" + keyCount + "}\n");
+                    + ",\"keys\":" + keyCount + ",\"frames\":" + frameCount + "}\n");
             out.close();
             out = null;
             lastFile = file;
@@ -154,6 +164,15 @@ public final class HumanRecorder {
                 + ",\"dx\":" + fmt(dx) + ",\"dy\":" + fmt(dy) + ",\"yaw\":" + fmt(yaw) + ",\"pitch\":" + fmt(pitch) + "}");
     }
 
+    public synchronized void frame(float yaw, float pitch) {
+        if (!recording || (frameSeen && yaw == frameYaw && pitch == framePitch)) return;
+        frameSeen = true;
+        frameYaw = yaw;
+        framePitch = pitch;
+        frameCount++;
+        write("{\"e\":\"frame\",\"us\":" + micros() + ",\"yaw\":" + fmt(yaw) + ",\"pitch\":" + fmt(pitch) + "}");
+    }
+
     public synchronized void key(long eventNs, int code, boolean down) {
         if (!recording) return;
         keyCount++;
@@ -176,7 +195,8 @@ public final class HumanRecorder {
                 + ",\"mcVersion\":" + quote(s == null ? null : s.getMcVersion())
                 + ",\"startedAtEpochMs\":" + startedAtEpochMs
                 + ",\"sensitivity\":" + fmt(sens) + ",\"pixelDeg\":" + fmt(TurnProfile.pixelDeg(sens))
-                + ",\"timeUnit\":\"us since start\"}";
+                + ",\"timeUnit\":\"us since start\""
+                + ",\"frameRows\":\"yaw and pitch after each frame's mouse update, written when changed\"}";
     }
 
     private void write(String row) {

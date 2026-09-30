@@ -89,6 +89,7 @@ public final class Settings {
 
     private static final boolean DEFAULT_KEEP_INPUT_TABLE_OPEN = false;
     private static final boolean DEFAULT_KEEP_TICK_INFO_OPEN = false;
+    private static final boolean DEFAULT_KEEP_TURN_PROFILE_OPEN = false;
     private static final boolean DEFAULT_UNDO_REDO_WITHOUT_UI = true;
 
     private static final float[] DEFAULT_HUD_MESSAGE_COLOR = {0.804f, 0.839f, 0.957f, 1.00f}; // text #cdd6f4
@@ -219,9 +220,16 @@ public final class Settings {
     public boolean viewAngleSolver = DEFAULT_VIEW_ANGLE_SOLVER;
     public boolean viewVelocityMap = DEFAULT_VIEW_VELOCITY_MAP;
     public boolean viewTurnProfile = DEFAULT_VIEW_TURN_PROFILE;
+    public boolean viewOnejumpSetup = false;
+    public boolean viewOnejumpKeys = false;
+    public String onejumpName = "";
+    public int onejumpMacroMode = 0;
+    public int onejumpMacroDelayMs = 1000;
     public boolean viewRecorder = DEFAULT_VIEW_RECORDER;
     public int turnProfileInputsHitPct = DEFAULT_TURN_PROFILE_INPUTS_HIT_PCT;
     public int turnProfileAttempts = DEFAULT_TURN_PROFILE_ATTEMPTS;
+    public boolean turnProfileShowAttempts = true;
+    public boolean turnProfileShowRating = true;
     public double turnProfileFlickRestPct = 5.0;
     public double turnProfileFlickMovingPct = 8.0;
     public double turnProfileSmoothPx = 1.0;
@@ -239,6 +247,7 @@ public final class Settings {
     // Keep these windows drawn (display-only) while the main UI is closed.
     public boolean keepInputTableOpen = DEFAULT_KEEP_INPUT_TABLE_OPEN;
     public boolean keepTickInfoOpen = DEFAULT_KEEP_TICK_INFO_OPEN;
+    public boolean keepTurnProfileOpen = DEFAULT_KEEP_TURN_PROFILE_OPEN;
 
     public boolean undoRedoWithoutUi = DEFAULT_UNDO_REDO_WITHOUT_UI;
 
@@ -342,13 +351,21 @@ public final class Settings {
         viewAngleSolver = DEFAULT_VIEW_ANGLE_SOLVER;
         viewVelocityMap = DEFAULT_VIEW_VELOCITY_MAP;
         viewTurnProfile = DEFAULT_VIEW_TURN_PROFILE;
+        viewOnejumpSetup = false;
+        viewOnejumpKeys = false;
+        onejumpName = "";
+        onejumpMacroMode = 0;
+        onejumpMacroDelayMs = 1000;
         viewRecorder = DEFAULT_VIEW_RECORDER;
         turnProfileInputsHitPct = DEFAULT_TURN_PROFILE_INPUTS_HIT_PCT;
         turnProfileAttempts = DEFAULT_TURN_PROFILE_ATTEMPTS;
+        turnProfileShowAttempts = true;
+        turnProfileShowRating = true;
         saveDebugValues = DEFAULT_SAVE_DEBUG_VALUES;
         experimentalBlockCapture = DEFAULT_EXPERIMENTAL_BLOCK_CAPTURE;
         keepInputTableOpen = DEFAULT_KEEP_INPUT_TABLE_OPEN;
         keepTickInfoOpen = DEFAULT_KEEP_TICK_INFO_OPEN;
+        keepTurnProfileOpen = DEFAULT_KEEP_TURN_PROFILE_OPEN;
         undoRedoWithoutUi = DEFAULT_UNDO_REDO_WITHOUT_UI;
         System.arraycopy(DEFAULT_HUD_MESSAGE_COLOR, 0, hudMessageColor, 0, 4);
         hudMessageCount = DEFAULT_HUD_MESSAGE_COUNT;

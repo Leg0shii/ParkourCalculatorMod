@@ -381,8 +381,11 @@ public final class AngleSolverEngine {
     }
 
     private Job buildJob(AngleSolverState.Effort effort, SolverGraph graphOverride, boolean publishFailure) {
-        int startTick = state.getStartTick();
-        int landingTick = state.getLandingTick();
+        return buildJob(effort, graphOverride, publishFailure, state.getStartTick(), state.getLandingTick());
+    }
+
+    private Job buildJob(AngleSolverState.Effort effort, SolverGraph graphOverride, boolean publishFailure,
+                         int startTick, int landingTick) {
         int total = segmentConstraintCount(startTick, landingTick);
 
         List<InputRow> rows = inputs.getRows();
@@ -1289,7 +1292,11 @@ public final class AngleSolverEngine {
     }
 
     public PathSnapshot snapshotCurrentPath() {
-        Job job = buildJob(state.getEffort(), null, false);
+        return snapshotPath(state.getStartTick(), state.getLandingTick());
+    }
+
+    public PathSnapshot snapshotPath(int startTick, int landingTick) {
+        Job job = buildJob(state.getEffort(), null, false, startTick, landingTick);
         if (job == null) return null;
         double[] yaws = currentRowYaws(job.startTick, job.numTicks);
         if (yaws == null) return null;

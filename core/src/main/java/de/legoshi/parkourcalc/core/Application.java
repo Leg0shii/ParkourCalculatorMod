@@ -95,6 +95,9 @@ public final class Application {
     private AngleSolverState angleSolverState;
     private AngleSolverEngine solverEngine;
     private TurnProfileController turnProfile;
+    private AttemptTracker attemptTracker;
+    private PracticeMacro practiceMacro;
+    private PlaybackBridge playbackBridge;
     private final de.legoshi.parkourcalc.core.record.HumanRecorder recorder;
     private ConstraintKeyController constraintKeyController;
     private UndoController<de.legoshi.parkourcalc.core.save.SaveFile> undoController;
@@ -187,6 +190,7 @@ public final class Application {
         inputOverlay = new InputOverlay(inputData, settings, selection, this::onUserChange,
                 this::setStartToPlayer, playback, mc, boxController, this::pushHudMessage
         );
+        inputOverlay.setShortcutsEnabled(() -> imgui.ImGui.isWindowFocused(imgui.flag.ImGuiFocusedFlags.RootAndChildWindows));
 
         angleSolverState = new AngleSolverState();
         FileSystemSaveStore saveStore = saveController.getSaveStore();
@@ -238,7 +242,7 @@ public final class Application {
                 angleSolverEngine, forwardModel, mc, this::onUserChange, this::pushHudMessage, runTicks::isRunning);
         de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow stratfinderWindow =
                 new de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow(noTurnSearch);
-        turnProfile = new TurnProfileController(angleSolverEngine, inputData, () -> settings.viewTurnProfile,
+        turnProfile = new TurnProfileController(angleSolverEngine, angleSolverState, inputData, () -> settings.viewTurnProfile,
                 mc::getMouseSensitivity, () -> {
                     de.legoshi.parkourcalc.core.anglesolver.profile.AttemptSampler.Scatter sc =
                             new de.legoshi.parkourcalc.core.anglesolver.profile.AttemptSampler.Scatter();
@@ -251,10 +255,25 @@ public final class Application {
                     sc.flickStartJitterMs = settings.turnProfileFlickStartJitterMs;
                     sc.phaseScale = settings.turnProfilePhaseScale;
                     return sc;
-                }, () -> Math.max(1000, settings.turnProfileAttempts));
+                }, () -> Math.max(1000, settings.turnProfileAttempts),
+                new TurnProfileStore(saveController::getSaveStore), () -> settings.onejumpName, name -> {
+                    settings.onejumpName = name == null ? "" : name;
+                    saveSettings();
+                });
+        attemptTracker = new AttemptTracker(turnProfile, () -> settings.viewTurnProfile || settings.viewOnejumpKeys
+                || settings.viewOnejumpSetup, this::isPlaybackRunning);
+        practiceMacro = new PracticeMacro(turnProfile, attemptTracker, settings);
+        practiceMacro.setBridge(playbackBridge);
+        attemptTracker.setResetListener(practiceMacro::onReset);
+        attemptTracker.setMacroMode(() -> settings.onejumpMacroMode);
         de.legoshi.parkourcalc.core.ui.anglesolver.TurnProfileWindow turnProfileWindow =
-                new de.legoshi.parkourcalc.core.ui.anglesolver.TurnProfileWindow(turnProfile, settings, mc::getMouseSensitivity,
-                        this::saveSettings);
+                new de.legoshi.parkourcalc.core.ui.anglesolver.TurnProfileWindow(turnProfile, attemptTracker, settings,
+                        mc::getMouseSensitivity);
+        de.legoshi.parkourcalc.core.ui.anglesolver.OnejumpKeysWindow onejumpKeysWindow =
+                new de.legoshi.parkourcalc.core.ui.anglesolver.OnejumpKeysWindow(turnProfile, attemptTracker, settings);
+        de.legoshi.parkourcalc.core.ui.anglesolver.OnejumpSetupWindow onejumpSetupWindow =
+                new de.legoshi.parkourcalc.core.ui.anglesolver.OnejumpSetupWindow(turnProfile, attemptTracker, settings,
+                        mc, mc::getMouseSensitivity, this::saveSettings, practiceMacro);
 
         // In-world constraint visualization (gh-145): plates appear while the solver view is open.
         constraintSource = new de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverConstraintSource(
@@ -321,12 +340,18 @@ public final class Application {
         overlayManager.register(graphEditorWindow);
         overlayManager.register(stratfinderWindow);
         overlayManager.register(turnProfileWindow);
+        overlayManager.register(onejumpKeysWindow);
+        overlayManager.register(onejumpSetupWindow);
         overlayManager.register(new de.legoshi.parkourcalc.core.ui.RecorderWindow(recorder, settings, this::toggleRecording,
                 this::saveSettings, systemBridge));
     }
 
     public de.legoshi.parkourcalc.core.record.HumanRecorder getRecorder() {
         return recorder;
+    }
+
+    public AttemptTracker getAttemptTracker() {
+        return attemptTracker;
     }
 
     public void toggleRecording() {
@@ -864,7 +889,13 @@ public final class Application {
     }
 
     public void setPlaybackBridge(PlaybackBridge bridge) {
+        playbackBridge = bridge;
         playback.setBridge(bridge);
+        if (practiceMacro != null) practiceMacro.setBridge(bridge);
+    }
+
+    public PracticeMacro getPracticeMacro() {
+        return practiceMacro;
     }
 
     public PlaybackController getPlayback() {
@@ -877,6 +908,7 @@ public final class Application {
 
     public void tickPlayback() {
         playback.tick();
+        if (practiceMacro != null && !playback.isRunning()) practiceMacro.tick();
     }
 
     public void postTickPlayback() {

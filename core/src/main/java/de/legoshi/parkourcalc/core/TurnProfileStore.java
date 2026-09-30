@@ -1,0 +1,268 @@
+package de.legoshi.parkourcalc.core;
+
+import com.google.gson.Gson;
+import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
+import de.legoshi.parkourcalc.core.ui.InputRow;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Supplier;
+
+public final class TurnProfileStore {
+
+    public static final String DIRECTORY = "parkourcalculator-onejump";
+    public static final String EXTENSION = ".jsonl";
+    private static final Gson GSON = new Gson();
+
+    static final class RowData {
+        String keys;
+        Double yaw;
+        boolean checkKeys;
+        boolean checkYaw;
+    }
+
+    static final class LandingData {
+        int tick;
+        Double xLo;
+        Double xHi;
+        Double zLo;
+        Double zHi;
+    }
+
+    static final class HeaderData {
+        int version = 2;
+        Integer tasFirstTick;
+        List<RowData> rows = new ArrayList<RowData>();
+        LandingData landing;
+    }
+
+    static final class AttemptData {
+        int number;
+        int firstTick;
+        double[] yaws;
+        int recorded;
+        boolean complete;
+        boolean landed;
+        boolean inputFailure;
+        String verdict;
+        Double margin;
+        int worstTick;
+        int failTick;
+        String failKeys;
+        String expectedKeys;
+        int macro;
+    }
+
+    private final Supplier<FileSystemSaveStore> store;
+    private volatile String lastError;
+
+    public TurnProfileStore(Supplier<FileSystemSaveStore> store) {
+        this.store = store;
+    }
+
+    public String lastError() {
+        return lastError;
+    }
+
+    public Path fileFor(String name) {
+        FileSystemSaveStore s = store.get();
+        if (s == null || name == null || name.isEmpty()) return null;
+        String safe = name.replaceAll("[\\\\/:*?\"<>|]", "_");
+        return s.getSaveDir().resolveSibling(DIRECTORY).resolve(safe + EXTENSION);
+    }
+
+    public List<String> names() {
+        List<String> out = new ArrayList<String>();
+        FileSystemSaveStore s = store.get();
+        if (s == null) return out;
+        Path dir = s.getSaveDir().resolveSibling(DIRECTORY);
+        if (!Files.isDirectory(dir)) return out;
+        try (java.nio.file.DirectoryStream<Path> ds = Files.newDirectoryStream(dir, "*" + EXTENSION)) {
+            for (Path p : ds) {
+                String f = p.getFileName().toString();
+                out.add(f.substring(0, f.length() - EXTENSION.length()));
+            }
+        } catch (Exception e) {
+            lastError = e.getMessage();
+        }
+        Collections.sort(out, String.CASE_INSENSITIVE_ORDER);
+        return out;
+    }
+
+    public boolean delete(String name) {
+        Path p = fileFor(name);
+        if (p == null) return false;
+        try {
+            return Files.deleteIfExists(p);
+        } catch (Exception e) {
+            lastError = e.getMessage();
+            return false;
+        }
+    }
+
+    public boolean load(String name, TurnProfileDocument doc) {
+        Path p = fileFor(name);
+        if (p == null || !Files.exists(p)) {
+            doc.reset();
+            return false;
+        }
+        try (BufferedReader in = Files.newBufferedReader(p, StandardCharsets.UTF_8)) {
+            TurnReference ref = null;
+            List<TurnAttempt> attempts = new ArrayList<TurnAttempt>();
+            String line;
+            while ((line = in.readLine()) != null) {
+                if (line.trim().isEmpty()) continue;
+                if (ref == null) {
+                    HeaderData h = GSON.fromJson(line, HeaderData.class);
+                    ref = toReference(h == null ? new HeaderData() : h);
+                    continue;
+                }
+                AttemptData d = GSON.fromJson(line, AttemptData.class);
+                TurnAttempt a = toAttempt(d);
+                if (a != null) attempts.add(a);
+            }
+            doc.load(ref == null ? new TurnReference() : ref, attempts);
+            lastError = null;
+            return true;
+        } catch (Exception e) {
+            lastError = e.getMessage();
+            doc.reset();
+            return false;
+        }
+    }
+
+    public boolean save(String name, TurnReference ref, List<TurnAttempt> attempts) {
+        Path p = fileFor(name);
+        if (p == null) return false;
+        try {
+            Files.createDirectories(p.getParent());
+            try (BufferedWriter out = Files.newBufferedWriter(p, StandardCharsets.UTF_8)) {
+                out.write(GSON.toJson(toHeader(ref)));
+                out.write('\n');
+                for (TurnAttempt a : attempts) {
+                    out.write(GSON.toJson(toData(a)));
+                    out.write('\n');
+                }
+            }
+            lastError = null;
+            return true;
+        } catch (Exception e) {
+            lastError = e.getMessage();
+            return false;
+        }
+    }
+
+    public boolean append(String name, List<TurnAttempt> attempts) {
+        Path p = fileFor(name);
+        if (p == null || !Files.exists(p)) return false;
+        try (BufferedWriter out = Files.newBufferedWriter(p, StandardCharsets.UTF_8, StandardOpenOption.APPEND)) {
+            for (TurnAttempt a : attempts) {
+                out.write(GSON.toJson(toData(a)));
+                out.write('\n');
+            }
+            lastError = null;
+            return true;
+        } catch (Exception e) {
+            lastError = e.getMessage();
+            return false;
+        }
+    }
+
+    static HeaderData toHeader(TurnReference ref) {
+        HeaderData h = new HeaderData();
+        h.tasFirstTick = ref.tasFirstTick() < 0 ? null : ref.tasFirstTick();
+        for (int i = 0; i < ref.size(); i++) {
+            InputRow r = ref.row(i);
+            RowData d = new RowData();
+            d.keys = TurnReference.keysText(TurnReference.mask(r));
+            d.yaw = r.getYaw() == null ? null : (double) r.getYaw();
+            d.checkKeys = ref.checkKeys(r);
+            d.checkYaw = ref.checkYaw(r);
+            h.rows.add(d);
+        }
+        TurnReference.Landing l = ref.landing();
+        if (l != null) {
+            h.landing = new LandingData();
+            h.landing.tick = l.tick;
+            h.landing.xLo = box(l.xLo);
+            h.landing.xHi = box(l.xHi);
+            h.landing.zLo = box(l.zLo);
+            h.landing.zHi = box(l.zHi);
+        }
+        return h;
+    }
+
+    static AttemptData toData(TurnAttempt a) {
+        AttemptData d = new AttemptData();
+        d.number = a.number;
+        d.firstTick = a.firstTick;
+        d.yaws = a.yaws;
+        d.recorded = a.recorded;
+        d.complete = a.complete;
+        d.landed = a.landed;
+        d.inputFailure = a.inputFailure;
+        d.verdict = a.verdict;
+        d.margin = a.hasMargin() ? a.margin : null;
+        d.worstTick = a.worstTick;
+        d.failTick = a.failTick;
+        d.failKeys = TurnReference.keysText(a.failKeys);
+        d.expectedKeys = TurnReference.keysText(a.expectedKeys);
+        d.macro = a.macro;
+        return d;
+    }
+
+    static TurnReference toReference(HeaderData h) {
+        TurnReference ref = new TurnReference();
+        List<InputRow> rows = new ArrayList<InputRow>();
+        List<Boolean> ck = new ArrayList<Boolean>();
+        List<Boolean> cy = new ArrayList<Boolean>();
+        if (h.rows != null) {
+            for (RowData d : h.rows) {
+                if (d == null) continue;
+                InputRow r = new InputRow();
+                TurnReference.applyKeys(r, TurnReference.parseKeys(d.keys == null ? "" : d.keys));
+                r.setYaw(d.yaw == null ? null : d.yaw.floatValue());
+                rows.add(r);
+                ck.add(d.checkKeys);
+                cy.add(d.checkYaw);
+            }
+        }
+        boolean[] checkKeys = new boolean[rows.size()];
+        boolean[] checkYaw = new boolean[rows.size()];
+        for (int i = 0; i < rows.size(); i++) {
+            checkKeys[i] = ck.get(i);
+            checkYaw[i] = cy.get(i);
+        }
+        ref.replace(rows, checkKeys, checkYaw);
+        ref.setTasFirstTick(h.tasFirstTick == null ? -1 : h.tasFirstTick);
+        if (h.landing != null) {
+            ref.setLanding(new TurnReference.Landing(h.landing.tick, unbox(h.landing.xLo), unbox(h.landing.xHi),
+                    unbox(h.landing.zLo), unbox(h.landing.zHi)));
+        }
+        return ref;
+    }
+
+    static TurnAttempt toAttempt(AttemptData d) {
+        if (d == null || d.yaws == null) return null;
+        return new TurnAttempt(d.number, d.firstTick, d.yaws, Math.min(d.recorded, d.yaws.length), d.complete,
+                d.landed, d.inputFailure, d.verdict == null ? "" : d.verdict,
+                d.margin == null ? Double.NaN : d.margin, d.worstTick, d.failTick,
+                TurnReference.parseKeys(d.failKeys == null ? "" : d.failKeys),
+                TurnReference.parseKeys(d.expectedKeys == null ? "" : d.expectedKeys), d.macro);
+    }
+
+    private static Double box(double v) {
+        return Double.isNaN(v) ? null : v;
+    }
+
+    private static double unbox(Double v) {
+        return v == null ? Double.NaN : v;
+    }
+}

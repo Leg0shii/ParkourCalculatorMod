@@ -12,4 +12,10 @@ public interface MouseHandlerAccessor {
 
     @Accessor("accumulatedDY")
     double pkc$accumulatedDY();
+
+    @Accessor("accumulatedDX")
+    void pkc$setAccumulatedDX(double value);
+
+    @Accessor("accumulatedDY")
+    void pkc$setAccumulatedDY(double value);
 }

@@ -111,6 +111,27 @@ public class HumanRecorderTest {
     }
 
     @Test
+    public void frameRowsOnlyWhenTheViewChanged() throws Exception {
+        HumanRecorder r = recorder();
+        r.frame(1f, 2f);
+        assertTrue(r.start());
+        r.frame(1f, 2f);
+        r.frame(1f, 2f);
+        r.frame(1.5f, 2f);
+        r.frame(1.5f, 2.25f);
+        Path file = r.stop();
+        List<JsonObject> rows = rows(file);
+        assertEquals(5, rows.size());
+        assertEquals(2, rows.get(0).get("version").getAsInt());
+        for (int i = 1; i <= 3; i++) assertEquals("frame", rows.get(i).get("e").getAsString());
+        assertEquals(1.0, rows.get(1).get("yaw").getAsDouble(), 0.0);
+        assertEquals(1.5, rows.get(2).get("yaw").getAsDouble(), 0.0);
+        assertEquals(2.25, rows.get(3).get("pitch").getAsDouble(), 0.0);
+        assertEquals(3, rows.get(4).get("frames").getAsInt());
+        assertEquals(3, r.frameCount());
+    }
+
+    @Test
     public void secondRecordingStartsFresh() throws Exception {
         HumanRecorder r = recorder();
         r.start();
