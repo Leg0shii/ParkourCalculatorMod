@@ -12,17 +12,19 @@ public final class TurnProfileDocument {
         public final int attempts;
         public final int landings;
         public final int inputFailures;
+        public final int turnFailures;
         public final double closest;
         public final int mouseAttempts;
         public final int mouseClears;
         public final int inputAttempts;
         public final int inputClears;
 
-        Stats(int attempts, int landings, int inputFailures, double closest, int mouseAttempts, int mouseClears,
-              int inputAttempts, int inputClears) {
+        Stats(int attempts, int landings, int inputFailures, int turnFailures, double closest, int mouseAttempts,
+              int mouseClears, int inputAttempts, int inputClears) {
             this.attempts = attempts;
             this.landings = landings;
             this.inputFailures = inputFailures;
+            this.turnFailures = turnFailures;
             this.closest = closest;
             this.mouseAttempts = mouseAttempts;
             this.mouseClears = mouseClears;
@@ -45,12 +47,13 @@ public final class TurnProfileDocument {
     private int real;
     private int landings;
     private int inputFailures;
+    private int turnFailures;
     private double closest = Double.NaN;
     private int mouseAttempts;
     private int mouseClears;
     private int inputAttempts;
     private int inputClears;
-    private volatile Stats stats = new Stats(0, 0, 0, Double.NaN, 0, 0, 0, 0);
+    private volatile Stats stats = new Stats(0, 0, 0, 0, Double.NaN, 0, 0, 0, 0);
     private volatile int version;
 
     public TurnReference reference() {
@@ -86,13 +89,15 @@ public final class TurnProfileDocument {
     }
 
     private Stats snapshot() {
-        return new Stats(real, landings, inputFailures, closest, mouseAttempts, mouseClears, inputAttempts, inputClears);
+        return new Stats(real, landings, inputFailures, turnFailures, closest, mouseAttempts, mouseClears, inputAttempts,
+                inputClears);
     }
 
     private void zero() {
         real = 0;
         landings = 0;
         inputFailures = 0;
+        turnFailures = 0;
         closest = Double.NaN;
         mouseAttempts = 0;
         mouseClears = 0;
@@ -166,6 +171,7 @@ public final class TurnProfileDocument {
         }
         real++;
         if (a.inputFailure) inputFailures++;
+        if (a.turnFailure) turnFailures++;
         if (a.landed) landings++;
         if (!a.hasMargin()) return;
         if (Double.isNaN(closest) || a.margin < closest) closest = a.margin;

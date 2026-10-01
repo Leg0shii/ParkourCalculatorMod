@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.anglesolver;
 
 import de.legoshi.parkourcalc.anglesolver.harness.Fixtures;
 import de.legoshi.parkourcalc.core.AttemptTracker;
+import de.legoshi.parkourcalc.core.LandingForecast;
 import de.legoshi.parkourcalc.core.TurnAttempt;
 import de.legoshi.parkourcalc.core.TurnProfileController;
 import de.legoshi.parkourcalc.core.TurnReference;
@@ -41,12 +42,19 @@ public class AttemptTrackerTest {
         JumpPhysicsInputs sc;
         int k0;
         int span;
+        long ns = 1_000_000_000L;
+        int framesFrom = Integer.MAX_VALUE;
+        int framesTo = Integer.MAX_VALUE;
 
         Rig() {
             this(0);
         }
 
         Rig(int lead) {
+            this(lead, false);
+        }
+
+        Rig(int lead, boolean timing) {
             SaveFile file = HpkStartBenchmark.loadCapture("d10", J335);
             model = ExactJumpModel.forMcVersion(file.mcVersion);
             inputs = new InputData();
@@ -60,8 +68,13 @@ public class AttemptTrackerTest {
             controller = new TurnProfileController(engine, state, inputs, () -> true, () -> 0.5f,
                     AttemptSampler.Scatter::new, () -> 1000, null, () -> null, n -> { });
             assertTrue(controller.lastError(), controller.importFromTas(solverStart - lead, state.getLandingTick() - 1));
-            tracker = new AttemptTracker(controller, () -> true, () -> false);
+            tracker = new AttemptTracker(controller, () -> true, () -> false, () -> timing);
             sync();
+        }
+
+        void framesIn(int from, int to) {
+            framesFrom = from;
+            framesTo = to;
         }
 
         void sync() {
@@ -106,7 +119,18 @@ public class AttemptTrackerTest {
         void tick(int t, double[] yaws, ForwardPath path, boolean teleport, boolean wrongKey, boolean fileKeys) {
             int pt = Math.min(t, path.posX.length - 1);
             int yt = Math.min(t, cur.n - 1);
-            tracker.tickStart(path.posX[pt] + (teleport ? 5.0 : 0.0), sc.startPos.y, path.posZ[pt], (float) yaws[yt], t <= k0);
+            long now = ns;
+            ns += 50_000_000L;
+            float yaw = (float) yaws[yt];
+            boolean ground = t < cur.n ? !Double.isNaN(sc.slipAt(t)) : t <= k0;
+            tracker.tickStart(path.posX[pt] + (teleport ? 5.0 : 0.0), sc.startPos.y, path.posZ[pt], path.velX[pt],
+                    path.velZ[pt], yaw, ground, now);
+            if (t >= framesFrom && t <= framesTo) {
+                tracker.frame(yaw, now + 10_000_000L);
+                tracker.frame(yaw + 1f, now + 20_000_000L);
+                tracker.frame(yaw + 2f, now + 30_000_000L);
+                tracker.frame(yaw + 2f, now + 40_000_000L);
+            }
             int mask = t < cur.n ? (fileKeys ? TurnReference.mask(inputs.getRows().get(tasFirst + t)) : cur.keys[t]) : 0;
             if (wrongKey) mask ^= TurnReference.KEY_W;
             keys(mask);
@@ -295,5 +319,179 @@ public class AttemptTrackerTest {
         assertTrue(a.verdict, a.landed);
         assertEquals(-0.5, a.margin, 1e-9);
         assertEquals(-0.5, rig.controller.stats().closest, 1e-9);
+    }
+
+    @Test
+    public void turnTimingMarksWhereTheMouseMovedInsideEachTick() {
+        Rig rig = new Rig(0, true);
+        rig.framesIn(0, Integer.MAX_VALUE);
+        rig.play(true, 0, 0.0, NONE, NONE);
+        TurnAttempt a = rig.tracker.last();
+        assertTrue(a.verdict, a.landed);
+        assertTrue(a.hasTiming());
+        assertEquals(rig.cur.n, a.turnStart.length);
+        assertEquals(rig.cur.n + 1, rig.span);
+        for (int t = 0; t < a.recorded; t++) {
+            assertEquals("tick " + t, 0.4f, a.turnStartAt(rig.cur.startTick + t), 1e-6f);
+            assertEquals("tick " + t, 0.6f, a.turnEndAt(rig.cur.startTick + t), 1e-6f);
+            float[] tr = a.traceAt(rig.cur.startTick + t);
+            assertNotNull("tick " + t, tr);
+            assertEquals(8, tr.length);
+            assertEquals(0.2f, tr[2], 1e-6f);
+            assertEquals(a.yaws[t] + 2.0, tr[7], 1e-3);
+        }
+        assertTrue(Float.isNaN(a.turnStartAt(rig.cur.startTick + a.recorded)));
+        TurnAttempt stored = rig.controller.document().attempts().get(0);
+        assertNull(stored.trace);
+        assertEquals(0.4f, stored.turnStartAt(rig.cur.startTick + rig.k0), 1e-6f);
+    }
+
+    @Test
+    public void runUpTicksBeforeTheJumpKeepTheirTimingAndStillTicksHaveNone() {
+        Rig rig = new Rig(0, true);
+        assertTrue(rig.k0 > 0);
+        rig.framesIn(0, 0);
+        rig.play(true, 0, 0.0, NONE, NONE);
+        TurnAttempt a = rig.tracker.last();
+        assertTrue(a.hasTiming());
+        assertEquals(0.4f, a.turnStartAt(rig.cur.startTick), 1e-6f);
+        assertNotNull(a.traceAt(rig.cur.startTick));
+        for (int t = 1; t < a.recorded; t++) {
+            assertTrue("tick " + t, Float.isNaN(a.turnStartAt(rig.cur.startTick + t)));
+            assertNull(a.traceAt(rig.cur.startTick + t));
+        }
+    }
+
+    @Test
+    public void timingOffLeavesTheAttemptUntimed() {
+        Rig rig = new Rig(0, false);
+        rig.framesIn(0, Integer.MAX_VALUE);
+        rig.play(true, 0, 0.0, NONE, NONE);
+        TurnAttempt a = rig.tracker.last();
+        assertTrue(a.verdict, a.landed);
+        assertFalse(a.hasTiming());
+        assertNull(a.trace);
+    }
+
+    @Test
+    public void aStillTickFailsOnASinglePixelPreturn() {
+        Rig rig = new Rig();
+        int at = rig.k0;
+        TurnReference ref = rig.controller.document().reference();
+        ref.setStill(ref.row(at), true);
+        rig.controller.referenceChanged();
+        rig.sync();
+        assertTrue(rig.cur.still[at]);
+        double px = rig.cur.pixelDeg;
+        rig.play(true, at, px, NONE, NONE);
+        TurnAttempt a = rig.tracker.last();
+        assertNotNull(a);
+        assertTrue(a.verdict, a.turnFailure);
+        assertFalse(a.inputFailure);
+        assertTrue(a.complete);
+        assertFalse(a.landed);
+        assertFalse(a.judged());
+        assertEquals(rig.cur.startTick + at, a.failTick);
+        assertEquals(px, a.failTurn, 1e-4);
+        assertTrue(a.verdict, a.verdict.startsWith("tick " + (at + 1) + ": turned +"));
+        assertTrue(a.verdict, a.verdict.endsWith("(1 px), expected still"));
+        assertEquals(at + 1, a.recorded);
+        assertNull(rig.tracker.live());
+        assertEquals(1, rig.controller.stats().turnFailures);
+        assertEquals(0, rig.controller.stats().inputFailures);
+        assertEquals(0, rig.controller.stats().landings);
+        assertTrue(rig.controller.document().attempts().get(0).turnFailure);
+    }
+
+    @Test
+    public void aStillTickPassesTheExactFacingAndATurnAfterIt() {
+        Rig rig = new Rig();
+        int at = rig.k0;
+        TurnReference ref = rig.controller.document().reference();
+        ref.setStill(ref.row(at), true);
+        rig.controller.referenceChanged();
+        rig.sync();
+        rig.play(true, 0, 0.0, NONE, NONE);
+        assertTrue(rig.tracker.last().verdict, rig.tracker.last().landed);
+        rig.play(true, at + 1, 0.2, NONE, NONE);
+        TurnAttempt a = rig.tracker.last();
+        assertFalse(a.verdict, a.turnFailure);
+        assertTrue(a.complete);
+        assertEquals(0, rig.controller.stats().turnFailures);
+        assertEquals(2, rig.controller.stats().attempts);
+    }
+
+    @Test
+    public void aStillRunUpTickIsCheckedFromTheRing() {
+        Rig rig = new Rig();
+        assertTrue(rig.k0 > 0);
+        TurnReference ref = rig.controller.document().reference();
+        ref.setStill(ref.row(0), true);
+        rig.controller.referenceChanged();
+        rig.sync();
+        rig.play(true, 0, 0.5, NONE, NONE);
+        TurnAttempt a = rig.tracker.last();
+        assertTrue(a.verdict, a.turnFailure);
+        assertEquals(rig.cur.startTick, a.failTick);
+        assertEquals(1, a.recorded);
+        assertNull(rig.tracker.live());
+    }
+
+    @Test
+    public void theForecastFollowsAnAttemptAndNamesTheLostTick() {
+        Rig rig = new Rig();
+        rig.play(true, 0, 0.0, NONE, NONE);
+        TurnAttempt a = rig.tracker.last();
+        assertTrue(a.verdict, a.landed);
+        assertTrue(a.hasForecast());
+        assertEquals(-1, a.lostTick());
+        assertEquals(rig.cur.startTick + rig.cur.n - 1, a.lastForecastTick());
+        for (int t = 0; t < rig.cur.n; t++) {
+            double held = a.heldMarginAt(rig.cur.startTick + t);
+            assertFalse("tick " + t, Double.isNaN(held));
+            assertTrue("tick " + t + " held " + held, Math.abs(held) < 1e-6);
+            assertTrue("tick " + t, a.bestMarginAt(rig.cur.startTick + t) <= held);
+            assertFalse("tick " + t, Double.isNaN(a.offsetLoAt(rig.cur.startTick + t)));
+            assertTrue("tick " + t, a.offsetLoAt(rig.cur.startTick + t) <= a.offsetHiAt(rig.cur.startTick + t));
+        }
+        assertTrue(Double.isNaN(a.heldMarginAt(rig.cur.startTick + rig.cur.n)));
+        TurnAttempt stored = rig.controller.document().attempts().get(0);
+        assertTrue(stored.hasForecast());
+        assertEquals(-1, stored.lostTick());
+
+        double sign = rig.pathFor(rig.yawsFor(rig.k0 + 1, 3.0)).posX[rig.cur.n]
+                < rig.pathFor(rig.yawsFor(rig.k0 + 1, -3.0)).posX[rig.cur.n] ? 3.0 : -3.0;
+        rig.play(true, rig.k0 + 1, sign, NONE, NONE);
+        a = rig.tracker.last();
+        assertFalse(a.verdict, a.landed);
+        assertTrue(a.lostTick() >= rig.cur.startTick + rig.k0 + 1);
+        assertTrue(a.lostTick() < rig.cur.startTick + rig.cur.n);
+        assertTrue(a.bestMarginAt(a.lostTick()) > 0.0);
+        assertTrue(Double.isNaN(a.offsetLoAt(a.lostTick())));
+        assertTrue(a.bestMarginAt(rig.cur.startTick + rig.k0) <= 0.0);
+    }
+
+    @Test
+    public void aDisabledForecastIsNotComputed() {
+        Rig rig = new Rig();
+        rig.tracker.setForecastEnabled(() -> false);
+        rig.play(true, 0, 0.0, NONE, NONE);
+        TurnAttempt a = rig.tracker.last();
+        assertTrue(a.verdict, a.landed);
+        assertFalse(a.hasForecast());
+        assertEquals(-1, a.lostTick());
+        assertNull(LandingForecast.lostSummary(rig.controller.document().attempts(), 100));
+    }
+
+    @Test
+    public void anAbortedAttemptKeepsItsTimingSoFar() {
+        Rig rig = new Rig(0, true);
+        rig.framesIn(0, Integer.MAX_VALUE);
+        int abortAt = rig.k0 + 3;
+        rig.play(true, 0, 0.0, abortAt, NONE);
+        TurnAttempt a = rig.tracker.last();
+        assertFalse(a.complete);
+        assertTrue(a.hasTiming());
+        assertEquals(0.4f, a.turnStartAt(rig.cur.startTick + abortAt - 2), 1e-6f);
     }
 }

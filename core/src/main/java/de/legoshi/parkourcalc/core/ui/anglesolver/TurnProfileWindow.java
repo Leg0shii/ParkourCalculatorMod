@@ -5,11 +5,13 @@ import de.legoshi.parkourcalc.core.TurnAttempt;
 import de.legoshi.parkourcalc.core.TurnProfileController;
 import de.legoshi.parkourcalc.core.TurnProfileDocument;
 import de.legoshi.parkourcalc.core.TurnReference;
+import de.legoshi.parkourcalc.core.TurnTiming;
 import de.legoshi.parkourcalc.core.anglesolver.profile.AttemptSampler;
 import de.legoshi.parkourcalc.core.anglesolver.profile.TurnProfile;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
 import de.legoshi.parkourcalc.core.ui.Settings;
+import de.legoshi.parkourcalc.core.ui.theme.Fonts;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import imgui.ImDrawList;
 import imgui.ImGui;
@@ -197,7 +199,9 @@ public final class TurnProfileWindow implements RenderInterface {
         ImDrawList dl = ImGui.getWindowDrawList();
         dl.addRectFilled(x0, y0, x0 + cw, y0 + ch, ThemeManager.bgDarkColor(), 0f);
 
-        float padL = PAD_LEFT * scale, padR = PAD_RIGHT * scale, padT = PAD_TOP * scale, padB = PAD_BOTTOM * scale;
+        float labelH = ImGui.getTextLineHeight() + 2f * scale;
+        float padL = PAD_LEFT * scale, padR = PAD_RIGHT * scale, padT = PAD_TOP * scale + labelH, padB = PAD_BOTTOM * scale;
+        float markY = y0 + 1f + labelH;
         float plotX = x0 + padL, plotW = cw - padL - padR;
         float plotY = y0 + padT, plotH = ch - padT - padB;
         int n = cur.n;
@@ -294,14 +298,32 @@ public final class TurnProfileWindow implements RenderInterface {
         for (int t = 0; t < n; t++) {
             if (!cur.jumpTicks[t] || Float.isNaN(xs[t])) continue;
             dl.addLine(xs[t], plotY, xs[t], plotY + plotH, jumpCol, 1f);
-            dl.addText(xs[t] - ImGui.calcTextSize("jump").x * 0.5f, y0 + 1f, jumpCol, "jump");
+            dl.addText(xs[t] - ImGui.calcTextSize("jump").x * 0.5f, markY, jumpCol, "jump");
         }
         if (cur.landing != null) {
             int lt = cur.landing.tick - cur.startTick;
             if (lt >= 0 && lt < n && !Float.isNaN(xs[lt])) {
                 int landCol = ThemeManager.okTintColor(0.6f);
                 dl.addLine(xs[lt], plotY, xs[lt], plotY + plotH, landCol, 1f);
-                dl.addText(xs[lt] - ImGui.calcTextSize("land").x * 0.5f, y0 + 1f, landCol, "land");
+                dl.addText(xs[lt] - ImGui.calcTextSize("land").x * 0.5f, markY, landCol, "land");
+            }
+        }
+        if (you != null && you.lostTick() >= 0) {
+            int lt = you.lostTick() - cur.startTick;
+            if (lt >= 0 && lt < n && !Float.isNaN(xs[lt])) {
+                int lostCol = ThemeManager.dangerTintColor(0.8f);
+                dl.addLine(xs[lt], plotY, xs[lt], plotY + plotH, lostCol, 1f);
+                dl.addText(xs[lt] - ImGui.calcTextSize("lost").x * 0.5f, plotY + 2f * scale, lostCol, "lost");
+            }
+        }
+        if (you != null && you.hasForecast() && settings.onejumpOffsetLive) {
+            String label = offsetLabel(you);
+            if (label != null) {
+                boolean lost = you.bestMarginAt(you.lastForecastTick()) > 0.0;
+                int col = lost ? ThemeManager.dangerColor() : ThemeManager.okColor();
+                Fonts.pushBold();
+                dl.addText(x0 + 6f * scale, y0 + 1f, col, label);
+                Fonts.popBold();
             }
         }
 
@@ -318,27 +340,61 @@ public final class TurnProfileWindow implements RenderInterface {
         for (int t = 0; t < n; t++) {
             if (Float.isNaN(xs[t])) continue;
             dl.addCircleFilled(xs[t], yOf(facing[t], yLo, yHi, plotY, plotH), DOT_RADIUS * scale, dotColor(cur, t), 12);
+            if (cur.still[t]) {
+                dl.addCircle(xs[t], yOf(facing[t], yLo, yHi, plotY, plotH), DOT_RADIUS * 1.8f * scale,
+                        ThemeManager.textMutedColor(), 16, 1f * scale);
+            }
         }
 
         swarm(dl, yourFailed, yourLanded, cur, xs, SWARM_SPREAD * dx, DOT_RADIUS * 0.6f * scale, yLo, yHi, plotY, plotH);
 
         if (you != null) {
             int youCol = youColor(you);
+            boolean timed = settings.onejumpTurnTiming && you.hasTiming();
+            float lineW = LINE_WIDTH * scale;
             float prevX = 0f, prevY = 0f;
             boolean havePrev = false;
             for (int t = 0; t < n; t++) {
-                if (Float.isNaN(xs[t])) continue;
+                boolean shown = !Float.isNaN(xs[t]);
+                float x = shown ? xs[t] : timed ? timeX(xs, t, 0f) : Float.NaN;
+                if (Float.isNaN(x)) continue;
                 double e = youError(cur, you, t);
                 if (Double.isNaN(e)) {
                     havePrev = false;
                     continue;
                 }
-                float x = xs[t], y = yOf(facing[t] + e, yLo, yHi, plotY, plotH);
-                if (havePrev) dl.addLine(prevX, prevY, x, y, youCol, LINE_WIDTH * scale);
-                dl.addCircleFilled(x, y, DOT_RADIUS * 0.7f * scale, youCol, 10);
+                float y = yOf(facing[t] + e, yLo, yHi, plotY, plotH);
+                if (havePrev) dl.addLine(prevX, prevY, x, y, youCol, lineW);
+                if (shown) dl.addCircleFilled(x, y, DOT_RADIUS * 0.7f * scale, youCol, 10);
                 prevX = x;
                 prevY = y;
                 havePrev = true;
+                if (!timed) continue;
+                int tick = cur.startTick + t;
+                float on = you.turnStartAt(tick);
+                if (Float.isNaN(on)) continue;
+                float[] tr = you.traceAt(tick);
+                if (tr != null) {
+                    for (int i = 0; i + 1 < tr.length; i += 2) {
+                        float px = timeX(xs, t, tr[i]);
+                        if (Float.isNaN(px)) continue;
+                        float py = yOf(facing[t] + Angles.wrapDelta(tr[i + 1] - facing[t]), yLo, yHi, plotY, plotH);
+                        dl.addLine(prevX, prevY, px, py, youCol, lineW);
+                        prevX = px;
+                        prevY = py;
+                    }
+                } else if (t + 1 < n && !Double.isNaN(youError(cur, you, t + 1))) {
+                    float ax = timeX(xs, t, on), bx = timeX(xs, t, you.turnEndAt(tick));
+                    if (!Float.isNaN(ax) && !Float.isNaN(bx)) {
+                        float ny = yOf(facing[t + 1] + youError(cur, you, t + 1), yLo, yHi, plotY, plotH);
+                        dl.addLine(prevX, prevY, ax, y, youCol, lineW);
+                        dl.addLine(ax, y, bx, ny, youCol, lineW);
+                        prevX = bx;
+                        prevY = ny;
+                    }
+                }
+                float ox = timeX(xs, t, on);
+                if (!Float.isNaN(ox)) dl.addCircle(ox, y, DOT_RADIUS * 0.9f * scale, youCol, 12, 1.5f * scale);
             }
         }
 
@@ -464,7 +520,7 @@ public final class TurnProfileWindow implements RenderInterface {
 
     private static int youColor(TurnAttempt you) {
         if (!you.complete) return ThemeManager.textColor();
-        if (you.inputFailure) return ThemeManager.warningColor();
+        if (you.failed()) return ThemeManager.warningColor();
         return you.landed ? ThemeManager.okColor() : ThemeManager.dangerColor();
     }
 
@@ -482,8 +538,13 @@ public final class TurnProfileWindow implements RenderInterface {
         AttemptSampler.Stats st = cur.attempts;
         double pixelDeg = TurnProfile.pixelDeg(sensitivity.get());
         ImGui.beginTooltip();
-        ImGui.text(String.format(Locale.ROOT, "tick %d  %.2f°  %s", cur.startTick + t + 1, cur.facing[t],
-                TurnReference.keysText(cur.keys[t])));
+        ImGui.text(String.format(Locale.ROOT, "tick %d  %.2f°  %s%s", cur.startTick + t + 1, cur.facing[t],
+                TurnReference.keysText(cur.keys[t]), cur.still[t] ? "   still" : ""));
+        if (you != null && you.turnFailure && you.failTick == cur.startTick + t) {
+            ImGui.pushStyleColor(ImGuiCol.Text, ThemeManager.dangerColor());
+            ImGui.text(you.verdict);
+            ImGui.popStyleColor();
+        }
         if (!cur.checkYaw[t]) {
             ImGui.textDisabled("facing not checked");
         } else if (st != null && st.landings > 0) {
@@ -503,7 +564,28 @@ public final class TurnProfileWindow implements RenderInterface {
                 ImGui.popStyleColor();
             }
         }
+        if (you != null && settings.onejumpTurnTiming && you.hasTiming()) {
+            float on = you.turnStartAt(cur.startTick + t);
+            if (!Float.isNaN(on)) {
+                ImGui.textDisabled(String.format(Locale.ROOT, "turn %s to %s into the tick", TurnTiming.ms(on),
+                        TurnTiming.ms(you.turnEndAt(cur.startTick + t))));
+            }
+        }
+        if (you != null && you.hasForecast() && settings.onejumpOffsetHover) {
+            double best = you.bestMarginAt(cur.startTick + t);
+            if (!Double.isNaN(best)) {
+                ImGui.pushStyleColor(ImGuiCol.Text, best <= 0.0 ? ThemeManager.okColor() : ThemeManager.dangerColor());
+                ImGui.text("offset " + TurnAttempt.signedMargin(best) + " still possible from here");
+                ImGui.popStyleColor();
+            }
+        }
         ImGui.endTooltip();
+    }
+
+    private static String offsetLabel(TurnAttempt you) {
+        int tick = you.lastForecastTick();
+        if (tick < 0) return null;
+        return "offset " + TurnAttempt.signedMargin(you.bestMarginAt(tick));
     }
 
     private static String signed(double deg) {
@@ -520,6 +602,22 @@ public final class TurnProfileWindow implements RenderInterface {
         double norm = raw / mag;
         double step = norm < 1.5 ? 1.0 : norm < 3.5 ? 2.0 : norm < 7.5 ? 5.0 : 10.0;
         return step * mag;
+    }
+
+    private static float timeX(float[] xs, int t, float phase) {
+        double tau = t + phase;
+        int a = -1, b = -1;
+        for (int i = 0; i < xs.length; i++) {
+            if (Float.isNaN(xs[i])) continue;
+            if (i <= tau) a = i;
+            if (i >= tau) {
+                b = i;
+                break;
+            }
+        }
+        if (a < 0 || b < 0) return Float.NaN;
+        if (a == b) return xs[a];
+        return (float) (xs[a] + (tau - a) / (b - a) * (xs[b] - xs[a]));
     }
 
     private static float yOf(double v, double lo, double hi, float plotY, float plotH) {

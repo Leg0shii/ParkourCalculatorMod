@@ -261,11 +261,12 @@ public final class Application {
                     saveSettings();
                 });
         attemptTracker = new AttemptTracker(turnProfile, () -> settings.viewTurnProfile || settings.viewOnejumpKeys
-                || settings.viewOnejumpSetup, this::isPlaybackRunning);
+                || settings.viewOnejumpSetup, this::isPlaybackRunning, () -> settings.onejumpTurnTiming);
         practiceMacro = new PracticeMacro(turnProfile, attemptTracker, settings);
         practiceMacro.setBridge(playbackBridge);
         attemptTracker.setResetListener(practiceMacro::onReset);
         attemptTracker.setMacroMode(() -> settings.onejumpMacroMode);
+        attemptTracker.setForecastEnabled(() -> settings.onejumpOffsetLive || settings.onejumpOffsetHover);
         de.legoshi.parkourcalc.core.ui.anglesolver.TurnProfileWindow turnProfileWindow =
                 new de.legoshi.parkourcalc.core.ui.anglesolver.TurnProfileWindow(turnProfile, attemptTracker, settings,
                         mc::getMouseSensitivity);

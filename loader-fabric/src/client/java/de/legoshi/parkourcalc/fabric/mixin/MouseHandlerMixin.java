@@ -22,6 +22,7 @@ public class MouseHandlerMixin {
                 && FabricParkourCalculator.turnReplica(accumulated.pkc$accumulatedDX(), accumulated.pkc$accumulatedDY())) {
             accumulated.pkc$setAccumulatedDX(0.0);
             accumulated.pkc$setAccumulatedDY(0.0);
+            FabricParkourCalculator.recordFrame();
             ci.cancel();
             return;
         }

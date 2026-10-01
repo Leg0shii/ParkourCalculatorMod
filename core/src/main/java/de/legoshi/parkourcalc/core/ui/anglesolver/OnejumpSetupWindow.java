@@ -1,11 +1,13 @@
 package de.legoshi.parkourcalc.core.ui.anglesolver;
 
 import de.legoshi.parkourcalc.core.AttemptTracker;
+import de.legoshi.parkourcalc.core.LandingForecast;
 import de.legoshi.parkourcalc.core.PracticeMacro;
 import de.legoshi.parkourcalc.core.TurnAttempt;
 import de.legoshi.parkourcalc.core.TurnProfileController;
 import de.legoshi.parkourcalc.core.TurnProfileDocument;
 import de.legoshi.parkourcalc.core.TurnReference;
+import de.legoshi.parkourcalc.core.TurnTiming;
 import de.legoshi.parkourcalc.core.anglesolver.profile.AttemptSampler;
 import de.legoshi.parkourcalc.core.anglesolver.profile.TurnProfile;
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
@@ -92,7 +94,10 @@ public final class OnejumpSetupWindow implements RenderInterface {
                 new InputOverlay.RowFlag("Keys", "Check the keys of this tick against the attempt.", ref::checkKeys,
                         r -> ref.setCheckKeys(r, !ref.checkKeys(r))),
                 new InputOverlay.RowFlag("Face", "Check the facing of this tick and show it in the Onejump graph.",
-                        ref::checkYaw, r -> ref.setCheckYaw(r, !ref.checkYaw(r))));
+                        ref::checkYaw, r -> ref.setCheckYaw(r, !ref.checkYaw(r))),
+                new InputOverlay.RowFlag("Still", "Fail the attempt if the facing at this tick differs from the"
+                        + " reference at all, not even by one pixel. Catches a preturn.",
+                        ref::still, r -> ref.setStill(r, !ref.still(r))));
         referenceTable.setShortcutsEnabled(() -> ImGui.isWindowFocused(ImGuiFocusedFlags.RootAndChildWindows));
     }
 
@@ -184,7 +189,8 @@ public final class OnejumpSetupWindow implements RenderInterface {
     }
 
     private static final String[] OVERVIEW_LABELS = {"Name", "Attempts", "Landed", "Input failures", "Closest",
-            "Mouse practice", "Input practice", "Top 10"};
+            "Preturns", "Lost at", "Mouse practice", "Input practice", "Turn onset", "Top 10"};
+    private static final int ONSET_LIMIT = 500;
 
     private void overview(TurnProfileDocument doc, float scale) {
         TurnProfileDocument.Stats st = doc.stats();
@@ -198,11 +204,22 @@ public final class OnejumpSetupWindow implements RenderInterface {
         overviewRow("Attempts", Integer.toString(st.attempts), labelW, false);
         overviewRow("Landed", Integer.toString(st.landings), labelW, false);
         overviewRow("Input failures", Integer.toString(st.inputFailures), labelW, false);
+        overviewRow("Preturns", Integer.toString(st.turnFailures), labelW, false);
+        String lost = LandingForecast.lostSummary(doc.attempts(), ONSET_LIMIT);
+        overviewRow("Lost at", lost == null ? "-" : lost, labelW, lost == null);
         overviewRow("Closest", st.hasClosest() ? TurnAttempt.signedMargin(st.closest) : "-", labelW, !st.hasClosest());
         overviewRow("Mouse practice", practiceText(st.mouseAttempts, st.mouseClears, PracticeMacro.LABEL_INPUTS), labelW,
                 st.mouseAttempts == 0);
         overviewRow("Input practice", practiceText(st.inputAttempts, st.inputClears, PracticeMacro.LABEL_TURN), labelW,
                 st.inputAttempts == 0);
+        if (settings.onejumpTurnTiming) {
+            TurnProfileController.Current cur = controller.current();
+            int main = cur == null || cur.n == 0 ? -1 : TurnTiming.mainTurnTick(cur);
+            TurnTiming.Onset onset = main < 0 ? null : TurnTiming.onset(doc.attempts(), cur.startTick + main, ONSET_LIMIT);
+            overviewRow("Turn onset", onset == null ? "-" : String.format(Locale.ROOT,
+                    "%s into tick %d  (%s to %s, %d attempts)", TurnTiming.ms(onset.median), cur.startTick + main + 1,
+                    TurnTiming.ms(onset.lo), TurnTiming.ms(onset.hi), onset.attempts), labelW, onset == null);
+        }
         ThemeManager.sectionSpacing();
         Fonts.pushBold();
         ImGui.text("Top " + TurnProfileDocument.TOP);
@@ -291,7 +308,7 @@ public final class OnejumpSetupWindow implements RenderInterface {
         if (ranked) ImGui.tableSetupColumn("#", fixed, ThemeManager.tableLeftmostColumnWidth("#", ImGui.calcTextSize("99").x));
         ImGui.tableSetupColumn("attempt", fixed, ranked ? ThemeManager.tableNumericColumnWidth("attempt", numW)
                 : ThemeManager.tableLeftmostColumnWidth("attempt", numW));
-        ImGui.tableSetupColumn("landing", fixed, ThemeManager.tableNumericColumnWidth("landing", landW));
+        ImGui.tableSetupColumn("offset", fixed, ThemeManager.tableNumericColumnWidth("offset", landW));
         ImGui.tableSetupColumn("keys", ImGuiTableColumnFlags.WidthStretch, 0f);
         ThemeManager.tableHeaderRow();
         ThemeManager.paintTableHeader();
@@ -303,7 +320,7 @@ public final class OnejumpSetupWindow implements RenderInterface {
         }
         ThemeManager.tableHeaderRight("attempt");
         ImGui.tableSetColumnIndex(1 + extra);
-        ThemeManager.tableHeaderRight("landing");
+        ThemeManager.tableHeaderRight("offset");
         ImGui.tableSetColumnIndex(2 + extra);
         ThemeManager.tableHeader("keys");
         ThemeManager.tableRightmostCellTrailingPad();
@@ -346,7 +363,8 @@ public final class OnejumpSetupWindow implements RenderInterface {
             }
             ImGui.tableSetColumnIndex(2 + extra);
             String cell = a.inputFailure ? (a.failTick + 1) + ": " + TurnReference.describe(a.failKeys) + ", expected "
-                    + TurnReference.describe(a.expectedKeys) : "";
+                    + TurnReference.describe(a.expectedKeys) : a.turnFailure ? a.verdict
+                    : a.judged() && !a.landed && a.lostTick() >= 0 ? "lost at tick " + (a.lostTick() + 1) : "";
             if (a.isMacro()) {
                 String tag = a.macro == 1 ? PracticeMacro.LABEL_INPUTS : PracticeMacro.LABEL_TURN;
                 ThemeManager.pushTextColor(ThemeManager.warningColor());
@@ -532,6 +550,25 @@ public final class OnejumpSetupWindow implements RenderInterface {
             settings.turnProfileShowRating = !settings.turnProfileShowRating;
             onSettingsChanged.run();
         }
+        if (Controls.checkbox("Turn timing", settings.onejumpTurnTiming)) {
+            settings.onejumpTurnTiming = !settings.onejumpTurnTiming;
+            onSettingsChanged.run();
+        }
+        TooltipUtil.onHover("Records where inside each tick your mouse started and stopped moving. Draws your attempt"
+                + " as the real trace in the Turn Profile, a timing strip under each tick in Onejump Keys and the"
+                + " Turn onset stat above.");
+        if (Controls.checkbox("Offset label", settings.onejumpOffsetLive)) {
+            settings.onejumpOffsetLive = !settings.onejumpOffsetLive;
+            onSettingsChanged.run();
+        }
+        TooltipUtil.onHover("Shows the best landing offset still reachable from the current tick above the Turn Profile,"
+                + " updated every tick of the attempt.");
+        if (Controls.checkbox("Offset on hover", settings.onejumpOffsetHover)) {
+            settings.onejumpOffsetHover = !settings.onejumpOffsetHover;
+            onSettingsChanged.run();
+        }
+        TooltipUtil.onHover("Shows the offset still reachable from a tick in the Turn Profile tooltip. The forecast"
+                + " is only computed while this or Offset label is on.");
         ImGui.pushItemWidth(150f * scale);
         inputsPct[0] = settings.turnProfileInputsHitPct;
         if (Controls.sliderInt("##inputsHit", inputsPct, 1, 100, "inputs %d%%")) {

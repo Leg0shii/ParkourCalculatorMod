@@ -141,10 +141,19 @@ public final class TurnReference {
         flagsOf(row)[1] = value;
     }
 
+    public boolean still(InputRow row) {
+        boolean[] f = flags.get(row.getId());
+        return f != null && f[2];
+    }
+
+    public void setStill(InputRow row, boolean value) {
+        flagsOf(row)[2] = value;
+    }
+
     private boolean[] flagsOf(InputRow row) {
         boolean[] f = flags.get(row.getId());
         if (f == null) {
-            f = new boolean[] {true, true};
+            f = new boolean[] {true, true, false};
             flags.put(row.getId(), f);
         }
         return f;
@@ -167,6 +176,10 @@ public final class TurnReference {
     }
 
     public void replace(List<InputRow> rows, boolean[] checkKeys, boolean[] checkYaw) {
+        replace(rows, checkKeys, checkYaw, null);
+    }
+
+    public void replace(List<InputRow> rows, boolean[] checkKeys, boolean[] checkYaw, boolean[] still) {
         data.clear();
         flags.clear();
         for (int i = 0; i < rows.size(); i++) {
@@ -175,6 +188,7 @@ public final class TurnReference {
             boolean[] f = flagsOf(r);
             f[0] = checkKeys == null || checkKeys[i];
             f[1] = checkYaw == null || checkYaw[i];
+            f[2] = still != null && still[i];
         }
     }
 
@@ -182,13 +196,15 @@ public final class TurnReference {
         List<InputRow> rows = new ArrayList<InputRow>();
         boolean[] ck = new boolean[other.size()];
         boolean[] cy = new boolean[other.size()];
+        boolean[] st = new boolean[other.size()];
         for (int i = 0; i < other.size(); i++) {
             InputRow r = other.row(i);
             rows.add(r);
             ck[i] = other.checkKeys(r);
             cy[i] = other.checkYaw(r);
+            st[i] = other.still(r);
         }
-        replace(rows, ck, cy);
+        replace(rows, ck, cy, st);
         landing = other.landing;
         tasFirstTick = other.tasFirstTick;
     }

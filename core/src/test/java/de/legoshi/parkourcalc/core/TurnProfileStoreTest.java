@@ -45,6 +45,58 @@ public class TurnProfileStoreTest {
     }
 
     @Test
+    public void theStillFlagAndAPreturnRoundTrip() throws Exception {
+        Path dir = Files.createTempDirectory("pkc-onejump-still");
+        TurnProfileStore store = store(dir);
+        TurnProfileDocument doc = sample();
+        TurnReference ref = doc.reference();
+        ref.setStill(ref.row(0), true);
+        assertTrue(ref.still(ref.row(0)));
+        assertFalse(ref.still(ref.row(1)));
+        doc.add(new TurnAttempt(3, 26, new double[] {-12.25, 0.0}, 1, true, false, false,
+                "tick 27: turned +0.150° (1 px), expected still", Double.NaN, -1, 26, 0, 0, 0, null, null, null, true, 0.15));
+        assertTrue(store.save("still", ref, doc.attempts()));
+        TurnProfileDocument back = new TurnProfileDocument();
+        assertTrue(store.load("still", back));
+        assertTrue(back.reference().still(back.reference().row(0)));
+        assertFalse(back.reference().still(back.reference().row(1)));
+        TurnAttempt a = back.attempts().get(2);
+        assertTrue(a.turnFailure);
+        assertFalse(a.inputFailure);
+        assertFalse(a.judged());
+        assertEquals(26, a.failTick);
+        assertEquals(0.15, a.failTurn, 0.0);
+        assertTrue(a.verdict.endsWith("expected still"));
+        assertFalse(back.attempts().get(0).turnFailure);
+        assertTrue(Double.isNaN(back.attempts().get(0).failTurn));
+        assertEquals(1, back.stats().turnFailures);
+        TurnReference copy = ref.copy();
+        assertTrue(copy.still(copy.row(0)));
+    }
+
+    @Test
+    public void turnTimingRoundTripsWithoutTheTrace() throws Exception {
+        Path dir = Files.createTempDirectory("pkc-onejump-timing");
+        TurnProfileStore store = store(dir);
+        TurnProfileDocument doc = sample();
+        doc.add(new TurnAttempt(3, 26, new double[] {-12.4, -20.0}, 2, true, true, false, "landed", -0.02, 27, -1, 0, 0, 0,
+                new float[] {0.4f, Float.NaN}, new float[] {0.6f, Float.NaN}, new float[][] {{0f, -12.4f}, null}));
+        assertTrue(store.save("timed", doc.reference(), doc.attempts()));
+        TurnProfileDocument back = new TurnProfileDocument();
+        assertTrue(store.load("timed", back));
+        assertEquals(3, back.attempts().size());
+        assertFalse(back.attempts().get(0).hasTiming());
+        TurnAttempt a = back.attempts().get(2);
+        assertTrue(a.hasTiming());
+        assertNull(a.trace);
+        assertEquals(0.4f, a.turnStartAt(26), 0f);
+        assertEquals(0.6f, a.turnEndAt(26), 0f);
+        assertTrue(Float.isNaN(a.turnStartAt(27)));
+        assertTrue(Float.isNaN(a.turnEndAt(27)));
+        assertTrue(Float.isNaN(a.turnStartAt(25)));
+    }
+
+    @Test
     public void aDocumentRoundTripsThroughOneFilePerOnejump() throws Exception {
         Path dir = Files.createTempDirectory("pkc-onejump");
         TurnProfileStore store = store(dir);

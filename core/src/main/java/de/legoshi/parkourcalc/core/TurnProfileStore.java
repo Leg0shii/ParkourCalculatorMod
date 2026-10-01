@@ -26,6 +26,7 @@ public final class TurnProfileStore {
         Double yaw;
         boolean checkKeys;
         boolean checkYaw;
+        boolean still;
     }
 
     static final class LandingData {
@@ -58,7 +59,23 @@ public final class TurnProfileStore {
         String failKeys;
         String expectedKeys;
         int macro;
+        float[] turnStart;
+        float[] turnEnd;
+        boolean turnFailure;
+        Double failTurn;
+        ForecastData forecast;
     }
+
+    static final class ForecastData {
+        Double[] held;
+        Double[] best;
+        Double[] bestOffset;
+        Double[] offsetLo;
+        Double[] offsetHi;
+        int lostTick = -1;
+    }
+
+    private static final float NO_TURN = -1f;
 
     private final Supplier<FileSystemSaveStore> store;
     private volatile String lastError;
@@ -185,6 +202,7 @@ public final class TurnProfileStore {
             d.yaw = r.getYaw() == null ? null : (double) r.getYaw();
             d.checkKeys = ref.checkKeys(r);
             d.checkYaw = ref.checkYaw(r);
+            d.still = ref.still(r);
             h.rows.add(d);
         }
         TurnReference.Landing l = ref.landing();
@@ -215,7 +233,55 @@ public final class TurnProfileStore {
         d.failKeys = TurnReference.keysText(a.failKeys);
         d.expectedKeys = TurnReference.keysText(a.expectedKeys);
         d.macro = a.macro;
+        d.turnStart = packPhases(a.turnStart);
+        d.turnEnd = packPhases(a.turnEnd);
+        d.turnFailure = a.turnFailure;
+        d.failTurn = Double.isNaN(a.failTurn) ? null : a.failTurn;
+        if (a.forecast != null) {
+            ForecastData f = new ForecastData();
+            f.held = boxAll(a.forecast.held);
+            f.best = boxAll(a.forecast.best);
+            f.bestOffset = boxAll(a.forecast.bestOffset);
+            f.offsetLo = boxAll(a.forecast.offsetLo);
+            f.offsetHi = boxAll(a.forecast.offsetHi);
+            f.lostTick = a.forecast.lostTick;
+            d.forecast = f;
+        }
         return d;
+    }
+
+    private static TurnAttempt.Forecast toForecast(ForecastData f, int n) {
+        if (f == null) return null;
+        return new TurnAttempt.Forecast(unboxAll(f.held, n), unboxAll(f.best, n), unboxAll(f.bestOffset, n),
+                unboxAll(f.offsetLo, n), unboxAll(f.offsetHi, n), f.lostTick);
+    }
+
+    private static Double[] boxAll(double[] v) {
+        if (v == null) return null;
+        Double[] out = new Double[v.length];
+        for (int i = 0; i < v.length; i++) out[i] = box(v[i]);
+        return out;
+    }
+
+    private static double[] unboxAll(Double[] v, int n) {
+        if (v == null) return null;
+        double[] out = new double[n];
+        for (int i = 0; i < n; i++) out[i] = i < v.length ? unbox(v[i]) : Double.NaN;
+        return out;
+    }
+
+    private static float[] packPhases(float[] phases) {
+        if (phases == null) return null;
+        float[] out = new float[phases.length];
+        for (int i = 0; i < phases.length; i++) out[i] = Float.isNaN(phases[i]) ? NO_TURN : phases[i];
+        return out;
+    }
+
+    private static float[] unpackPhases(float[] packed, int n) {
+        if (packed == null) return null;
+        float[] out = new float[n];
+        for (int i = 0; i < n; i++) out[i] = i < packed.length && packed[i] >= 0f ? packed[i] : Float.NaN;
+        return out;
     }
 
     static TurnReference toReference(HeaderData h) {
@@ -223,6 +289,7 @@ public final class TurnProfileStore {
         List<InputRow> rows = new ArrayList<InputRow>();
         List<Boolean> ck = new ArrayList<Boolean>();
         List<Boolean> cy = new ArrayList<Boolean>();
+        List<Boolean> st = new ArrayList<Boolean>();
         if (h.rows != null) {
             for (RowData d : h.rows) {
                 if (d == null) continue;
@@ -232,15 +299,18 @@ public final class TurnProfileStore {
                 rows.add(r);
                 ck.add(d.checkKeys);
                 cy.add(d.checkYaw);
+                st.add(d.still);
             }
         }
         boolean[] checkKeys = new boolean[rows.size()];
         boolean[] checkYaw = new boolean[rows.size()];
+        boolean[] still = new boolean[rows.size()];
         for (int i = 0; i < rows.size(); i++) {
             checkKeys[i] = ck.get(i);
             checkYaw[i] = cy.get(i);
+            still[i] = st.get(i);
         }
-        ref.replace(rows, checkKeys, checkYaw);
+        ref.replace(rows, checkKeys, checkYaw, still);
         ref.setTasFirstTick(h.tasFirstTick == null ? -1 : h.tasFirstTick);
         if (h.landing != null) {
             ref.setLanding(new TurnReference.Landing(h.landing.tick, unbox(h.landing.xLo), unbox(h.landing.xHi),
@@ -251,11 +321,15 @@ public final class TurnProfileStore {
 
     static TurnAttempt toAttempt(AttemptData d) {
         if (d == null || d.yaws == null) return null;
+        boolean timed = d.turnStart != null && d.turnEnd != null;
         return new TurnAttempt(d.number, d.firstTick, d.yaws, Math.min(d.recorded, d.yaws.length), d.complete,
                 d.landed, d.inputFailure, d.verdict == null ? "" : d.verdict,
                 d.margin == null ? Double.NaN : d.margin, d.worstTick, d.failTick,
                 TurnReference.parseKeys(d.failKeys == null ? "" : d.failKeys),
-                TurnReference.parseKeys(d.expectedKeys == null ? "" : d.expectedKeys), d.macro);
+                TurnReference.parseKeys(d.expectedKeys == null ? "" : d.expectedKeys), d.macro,
+                timed ? unpackPhases(d.turnStart, d.yaws.length) : null,
+                timed ? unpackPhases(d.turnEnd, d.yaws.length) : null, null, d.turnFailure,
+                d.failTurn == null ? Double.NaN : d.failTurn, toForecast(d.forecast, d.yaws.length));
     }
 
     private static Double box(double v) {

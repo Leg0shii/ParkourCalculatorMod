@@ -225,6 +225,9 @@ public final class Settings {
     public String onejumpName = "";
     public int onejumpMacroMode = 0;
     public int onejumpMacroDelayMs = 1000;
+    public boolean onejumpTurnTiming = true;
+    public boolean onejumpOffsetLive = true;
+    public boolean onejumpOffsetHover = true;
     public boolean viewRecorder = DEFAULT_VIEW_RECORDER;
     public int turnProfileInputsHitPct = DEFAULT_TURN_PROFILE_INPUTS_HIT_PCT;
     public int turnProfileAttempts = DEFAULT_TURN_PROFILE_ATTEMPTS;
@@ -356,6 +359,9 @@ public final class Settings {
         onejumpName = "";
         onejumpMacroMode = 0;
         onejumpMacroDelayMs = 1000;
+        onejumpTurnTiming = true;
+        onejumpOffsetLive = true;
+        onejumpOffsetHover = true;
         viewRecorder = DEFAULT_VIEW_RECORDER;
         turnProfileInputsHitPct = DEFAULT_TURN_PROFILE_INPUTS_HIT_PCT;
         turnProfileAttempts = DEFAULT_TURN_PROFILE_ATTEMPTS;

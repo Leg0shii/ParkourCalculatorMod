@@ -186,7 +186,8 @@ public class Forge8ParkourCalculator {
             net.minecraft.client.settings.KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
         }
         net.minecraft.entity.player.EntityPlayer g = playbackBridge.replicaActive() ? playbackBridge.ghostEntity() : p;
-        application.getAttemptTracker().tickStart(g.posX, g.posY, g.posZ, g.rotationYaw, g.onGround);
+        application.getAttemptTracker().tickStart(g.posX, g.posY, g.posZ, g.motionX, g.motionZ, g.rotationYaw, g.onGround,
+                System.nanoTime());
         de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
         if (!r.isRecording()) return;
         r.tickStart(p.posX, p.posY, p.posZ, p.rotationYaw, p.rotationPitch, p.onGround);
@@ -215,10 +216,13 @@ public class Forge8ParkourCalculator {
     }
 
     private void recordFrame(Minecraft mc) {
-        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
-        if (!r.isRecording() || mc.currentScreen != null) return;
+        if (mc.currentScreen != null) return;
         net.minecraft.client.entity.EntityPlayerSP p = mc.thePlayer;
         if (p == null) return;
+        net.minecraft.entity.player.EntityPlayer g = playbackBridge.replicaActive() ? playbackBridge.ghostEntity() : p;
+        application.getAttemptTracker().frame(g.rotationYaw, System.nanoTime());
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (!r.isRecording()) return;
         r.frame(p.rotationYaw, p.rotationPitch);
     }
 

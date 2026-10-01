@@ -4,6 +4,7 @@ import de.legoshi.parkourcalc.core.AttemptTracker;
 import de.legoshi.parkourcalc.core.TurnAttempt;
 import de.legoshi.parkourcalc.core.TurnProfileController;
 import de.legoshi.parkourcalc.core.TurnReference;
+import de.legoshi.parkourcalc.core.TurnTiming;
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
@@ -26,6 +27,8 @@ public final class OnejumpKeysWindow implements RenderInterface {
     private static final float MIN_H = 120f;
     private static final float PAD = 8f;
     private static final float CELL_GAP = 1.5f;
+    private static final float STRIP_H = 4f;
+    private static final float STRIP_GAP = 3f;
     private static final String[] LABELS = {"W", "A", "S", "D", "Spr", "Spc", "Snk"};
     private static final int[] BITS = {TurnReference.KEY_W, TurnReference.KEY_A, TurnReference.KEY_S,
             TurnReference.KEY_D, TurnReference.KEY_SPRINT, TurnReference.KEY_JUMP, TurnReference.KEY_SNEAK};
@@ -97,12 +100,16 @@ public final class OnejumpKeysWindow implements RenderInterface {
         float gridX = x0 + pad + labelW;
         float gridW = w - pad * 2f - labelW;
         float gridY = y0 + pad;
-        float gridH = h - pad * 2f - lineH;
+        boolean timing = settings.onejumpTurnTiming;
+        float stripH = timing ? STRIP_H * scale : 0f;
+        float stripGap = timing ? STRIP_GAP * scale : 0f;
+        float gridH = h - pad * 2f - lineH - stripH - stripGap;
         float cellW = gridW / n;
         float rowH = gridH / LABELS.length;
         float gap = CELL_GAP * scale;
         int failT = you != null && you.inputFailure ? you.failTick - cur.startTick : -1;
-        int reached = you == null ? -1 : you.inputFailure ? failT : you.recorded - 1;
+        int turnFailT = you != null && you.turnFailure ? you.failTick - cur.startTick : -1;
+        int reached = you == null ? -1 : you.inputFailure ? failT : you.turnFailure ? turnFailT - 1 : you.recorded - 1;
         int hoverT = -1;
         float mx = ImGui.getMousePosX();
         if (hovered && mx >= gridX && mx < gridX + gridW) hoverT = Math.min(n - 1, (int) ((mx - gridX) / cellW));
@@ -117,6 +124,7 @@ public final class OnejumpKeysWindow implements RenderInterface {
             float cx0 = gridX + t * cellW;
             boolean checked = cur.checkKeys[t];
             boolean matched = you != null && t <= reached && t != failT && checked;
+            if (t == turnFailT) dl.addRectFilled(cx0, gridY, cx0 + cellW, gridY + gridH, ThemeManager.dangerTintColor(0.2f), 0f);
             if (t == hoverT) dl.addRectFilled(cx0, gridY, cx0 + cellW, gridY + gridH, ThemeManager.selectedTintColor(0.15f), 0f);
             int expected = cur.keys[t];
             int pressed = t == failT ? you.failKeys : expected;
@@ -136,19 +144,39 @@ public final class OnejumpKeysWindow implements RenderInterface {
                 dl.addRectFilled(ax, ay, bx, by, col, 2f * scale);
             }
         }
+        if (timing) {
+            float sy = gridY + gridH + stripGap;
+            boolean timed = you != null && you.hasTiming();
+            for (int t = 0; t < n; t++) {
+                float ax = gridX + t * cellW + gap, bx = gridX + (t + 1) * cellW - gap;
+                dl.addRectFilled(ax, sy, bx, sy + stripH, ThemeManager.bgTintColor(0.9f), 1f * scale);
+                if (!timed) continue;
+                float on = you.turnStartAt(cur.startTick + t);
+                if (Float.isNaN(on)) continue;
+                float off = you.turnEndAt(cur.startTick + t);
+                float w0 = bx - ax;
+                dl.addRectFilled(ax + on * w0, sy, Math.max(ax + on * w0 + 1f * scale, ax + off * w0), sy + stripH,
+                        ThemeManager.accentTintColor(0.9f), 1f * scale);
+            }
+        }
         int labelEvery = Math.max(1, (int) Math.ceil(ImGui.calcTextSize("000").x * 1.4f / Math.max(1f, cellW)));
         for (int t = 0; t < n; t++) {
             if (t % labelEvery != 0 && t != n - 1) continue;
             String lbl = Integer.toString(cur.startTick + t + 1);
             float cx = gridX + (t + 0.5f) * cellW;
-            dl.addText(cx - ImGui.calcTextSize(lbl).x * 0.5f, gridY + gridH + 2f * scale,
+            dl.addText(cx - ImGui.calcTextSize(lbl).x * 0.5f, gridY + gridH + stripGap + stripH + 2f * scale,
                     cur.jumpTicks[t] ? ThemeManager.peachTintColor(0.9f) : dim, lbl);
         }
         if (hoverT >= 0) {
             int t = hoverT;
             ImGui.beginTooltip();
             ImGui.text("tick " + (cur.startTick + t + 1) + "  " + TurnReference.describe(cur.keys[t])
-                    + (cur.checkKeys[t] ? "" : "  (not checked)"));
+                    + (cur.checkKeys[t] ? "" : "  (not checked)") + (cur.still[t] ? "  still" : ""));
+            if (t == turnFailT) {
+                ImGui.pushStyleColor(ImGuiCol.Text, ThemeManager.dangerColor());
+                ImGui.text(you.verdict);
+                ImGui.popStyleColor();
+            }
             if (t == failT) {
                 ImGui.pushStyleColor(ImGuiCol.Text, ThemeManager.dangerColor());
                 ImGui.text("pressed " + TurnReference.describe(you.failKeys));
@@ -157,6 +185,11 @@ public final class OnejumpKeysWindow implements RenderInterface {
                 ImGui.pushStyleColor(ImGuiCol.Text, ThemeManager.okColor());
                 ImGui.text("matched");
                 ImGui.popStyleColor();
+            }
+            if (timing && you != null && you.hasTiming()) {
+                float on = you.turnStartAt(cur.startTick + t);
+                ImGui.textDisabled(Float.isNaN(on) ? "no turn in this tick" : "turn " + TurnTiming.ms(on) + " to "
+                        + TurnTiming.ms(you.turnEndAt(cur.startTick + t)) + " into the tick");
             }
             ImGui.endTooltip();
         }
