@@ -217,8 +217,6 @@ public final class PairedServerSim {
         PositionMoveRotation next = PositionMoveRotation.calculateAbsolute(current, packet.change(), packet.relatives());
         e.setPos(next.position());
         e.setDeltaMovement(next.deltaMovement());
-        e.setYRot(next.yRot());
-        e.setXRot(next.xRot());
         e.setOldPosAndRot();
         addEvent(ServerSimEvent.Kind.POSITION_CORRECTION, "to " + formatVec(next.position()));
         if (DebugFlags.PAIRED_DIAGNOSTICS) {
