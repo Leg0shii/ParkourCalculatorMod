@@ -21,7 +21,10 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.Assert.assertFalse;
@@ -48,9 +51,13 @@ public class ProblemsTest {
 
     @Parameters(name = "{0}/{1}")
     public static Collection<Object[]> problems() {
+        String only = System.getProperty("pkc.problems");
+        Set<String> keep = only == null ? null : new HashSet<>(Arrays.asList(only.split(",")));
         Collection<Object[]> out = new ArrayList<>();
         for (String category : ProblemCatalog.categories()) {
-            for (String name : ProblemCatalog.problemNames(category)) out.add(new Object[]{category, name});
+            for (String name : ProblemCatalog.problemNames(category)) {
+                if (keep == null || keep.contains(category + "/" + name)) out.add(new Object[]{category, name});
+            }
         }
         return out;
     }
