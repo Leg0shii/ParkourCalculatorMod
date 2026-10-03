@@ -1,7 +1,7 @@
-# Automatically build the project and run any configured tests for every push
-# and submitted pull request. This can help catch issues that only occur on
-# certain platforms or Java versions, and provides a first line of defence
-# against bad commits.
+# Builds the loader jars and runs the core test suite on every push to main/dev
+# and every pull request. The core suite is split into balanced shards that run
+# as parallel jobs (see core/build.gradle testShardPlan), one set per JDK, so
+# the wall-clock time is the longest shard, not the whole suite.
 
 name: build
 on:
@@ -12,16 +12,17 @@ on:
       - main
       - dev
 
+env:
+  SHARDS: 8
+
 jobs:
-  build:
+  loaders:
     runs-on: ubuntu-24.04
     steps:
       - name: checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: validate gradle wrapper
-        uses: gradle/actions/wrapper-validation@v4
       - name: setup jdks
         uses: actions/setup-java@v4
         with:
@@ -29,13 +30,22 @@ jobs:
           java-version: |
             8
             21
-      - name: make gradle wrapper executable
-        run: chmod +x ./gradlew
-      - name: build
-        run: |
-          EXTRA=""
-          if [ "${{ github.base_ref }}" = "main" ]; then EXTRA="-PverySlowTests"; fi
-          ./gradlew build :core:testJava8 -x tableStyleCheck -PslowTests $EXTRA -Dorg.gradle.java.home="$JAVA_HOME"
+      - name: setup gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          validate-wrappers: true
+          cache-read-only: ${{ github.ref != 'refs/heads/dev' && github.ref != 'refs/heads/main' }}
+      - name: cache minecraft toolchains
+        uses: actions/cache@v4
+        with:
+          path: |
+            .gradle/loom-cache
+            .gradle/unimined
+          key: mc-${{ runner.os }}-${{ hashFiles('loader-*/build.gradle', 'loader-*/gradle.properties', 'gradle.properties', 'settings.gradle') }}
+          restore-keys: |
+            mc-${{ runner.os }}-
+      - name: build loaders
+        run: ./gradlew build -x :core:test -x tableStyleCheck -Dorg.gradle.java.home="$JAVA_HOME"
       - name: capture build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -45,3 +55,41 @@ jobs:
             loader-fabric-1.21.3/build/libs/*.jar
             loader-forge-1.8.9/build/libs/*.jar
             loader-forge-1.12.2/build/libs/*.jar
+
+  core-tests:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        jdk: [21, 8]
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    name: core tests (jdk ${{ matrix.jdk }}, shard ${{ matrix.shard }})
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+      - name: setup jdks
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: |
+            8
+            21
+      - name: setup gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          validate-wrappers: true
+          cache-read-only: ${{ github.ref != 'refs/heads/dev' && github.ref != 'refs/heads/main' }}
+      - name: run shard
+        run: |
+          EXTRA=""
+          if [ "${{ github.base_ref }}" = "main" ]; then EXTRA="-PverySlowTests"; fi
+          TASK=test
+          if [ "${{ matrix.jdk }}" = "8" ]; then TASK=testJava8; fi
+          ./gradlew :core:$TASK -PslowTests $EXTRA -PpkcShard=${{ matrix.shard }}/$SHARDS \
+            -Dorg.gradle.configureondemand=true -Dorg.gradle.java.home="$JAVA_HOME"
+      - name: upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-jdk${{ matrix.jdk }}-shard${{ matrix.shard }}
+          path: core/build/test-results/**/*.xml
