@@ -1,5 +1,7 @@
 package de.legoshi.parkourcalc.forge12;
 
+import de.legoshi.parkourcalc.core.ui.InputRow;
+
 import de.legoshi.parkourcalc.core.Application;
 import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
@@ -169,14 +171,91 @@ public class Forge12ParkourCalculator {
 
     private boolean wasPlaybackRunning = false;
 
+    private void recordTickStart() {
+        net.minecraft.client.entity.EntityPlayerSP p = Minecraft.getMinecraft().player;
+        if (p == null) return;
+        if (playbackBridge.replicaActive()) {
+            Minecraft mc = Minecraft.getMinecraft();
+            mc.objectMouseOver = null;
+            net.minecraft.client.settings.KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
+            net.minecraft.client.settings.KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
+        }
+        net.minecraft.entity.player.EntityPlayer g = playbackBridge.replicaActive() ? playbackBridge.ghostEntity() : p;
+        application.getAttemptTracker().tickStart(g.posX, g.posY, g.posZ, g.motionX, g.motionZ, g.rotationYaw, g.onGround,
+                System.nanoTime());
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (!r.isRecording()) return;
+        r.tickStart(p.posX, p.posY, p.posZ, p.rotationYaw, p.rotationPitch, p.onGround);
+    }
+
+    private void recordTickEnd() {
+        net.minecraft.client.entity.EntityPlayerSP p = Minecraft.getMinecraft().player;
+        if (p == null) return;
+        net.minecraft.util.MovementInput in = p.movementInput;
+        boolean sprintKey = Minecraft.getMinecraft().gameSettings.keyBindSprint.isKeyDown();
+        if (playbackBridge.replicaActive()) {
+            InputRow r = playbackBridge.getCurrentRow();
+            application.getAttemptTracker().tickEnd(r.isKeyActive(InputRow.Key.W), r.isKeyActive(InputRow.Key.A),
+                    r.isKeyActive(InputRow.Key.S), r.isKeyActive(InputRow.Key.D), r.isKeyActive(InputRow.Key.JUMP),
+                    r.isKeyActive(InputRow.Key.SNEAK), r.isKeyActive(InputRow.Key.SPRINT));
+        } else {
+            net.minecraft.client.settings.GameSettings o = Minecraft.getMinecraft().gameSettings;
+            application.getAttemptTracker().tickEnd(o.keyBindForward.isKeyDown(), o.keyBindLeft.isKeyDown(),
+                    o.keyBindBack.isKeyDown(), o.keyBindRight.isKeyDown(), o.keyBindJump.isKeyDown(),
+                    o.keyBindSneak.isKeyDown(), sprintKey || p.isSprinting());
+        }
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (!r.isRecording()) return;
+        r.tickEnd(in.moveForward > 0.0F, in.moveStrafe > 0.0F, in.moveForward < 0.0F, in.moveStrafe < 0.0F,
+                in.jump, in.sneak, sprintKey, p.isSprinting());
+    }
+
+    private void recordFrame(Minecraft mc) {
+        if (mc.currentScreen != null) return;
+        net.minecraft.client.entity.EntityPlayerSP p = mc.player;
+        if (p == null) return;
+        net.minecraft.entity.player.EntityPlayer g = playbackBridge.replicaActive() ? playbackBridge.ghostEntity() : p;
+        application.getAttemptTracker().frame(g.rotationYaw, System.nanoTime());
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (!r.isRecording()) return;
+        r.frame(p.rotationYaw, p.rotationPitch);
+    }
+
+    private void recordMouse(long eventNs, int dx, int dy) {
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (!r.isRecording() || Minecraft.getMinecraft().currentScreen != null) return;
+        net.minecraft.client.entity.EntityPlayerSP p = Minecraft.getMinecraft().player;
+        if (p == null) return;
+        r.mouse(eventNs, dx, dy, p.rotationYaw, p.rotationPitch);
+    }
+
+    private void recordButton(long eventNs, int button, boolean down) {
+        if (Minecraft.getMinecraft().currentScreen != null) return;
+        application.getAttemptTracker().mouseButton(button, down);
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (!r.isRecording()) return;
+        r.button(eventNs, button, down);
+    }
+
+    @SubscribeEvent
+    public void onKeyInput(net.minecraftforge.fml.common.gameevent.InputEvent.KeyInputEvent event) {
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (!r.isRecording()) return;
+        int key = Keyboard.getEventKey();
+        if (key == Keyboard.KEY_NONE) return;
+        r.key(Keyboard.getEventNanoseconds(), key, Keyboard.getEventKeyState());
+    }
+
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase == TickEvent.Phase.START) {
             ReplayLockstep.clientBarrierPreTick();
             manageInputLifecycle();
             application.tickPlayback();
+            recordTickStart();
         } else {
             application.postTickPlayback();
+            recordTickEnd();
             playbackBridge.syncFrozenPlayerToServer();
             ReplayLockstep.clientBarrierPostTick();
         }
@@ -278,8 +357,11 @@ public class Forge12ParkourCalculator {
     public void onHudRender(RenderGameOverlayEvent.Post event) {
         if (event.getType() != RenderGameOverlayEvent.ElementType.TEXT) return;
         if (application.isPlaybackRunning()) {
-            hudRenderer.render(application.getPlayback().teleportNoticeAlpha());
+            hudRenderer.render(de.legoshi.parkourcalc.core.ui.theme.MacroBadgeStyle.LABEL, application.getPlayback().teleportNoticeAlpha());
+            return;
         }
+        String replay = application.getPracticeMacro() == null ? null : application.getPracticeMacro().label();
+        if (replay != null) hudRenderer.render(replay, 0f);
     }
 
     @SubscribeEvent
@@ -289,6 +371,7 @@ public class Forge12ParkourCalculator {
         Minecraft mc = Minecraft.getMinecraft();
         if (mc == null) return;
 
+        recordFrame(mc);
         application.renderPlayback();
 
         // Drain queued presses; only act when no MC screen owns input. Close path and
@@ -501,8 +584,11 @@ public class Forge12ParkourCalculator {
     // Mirror in Forge8ParkourCalculator; differs only in MouseEvent.getButton() vs button.
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onMouseEvent(MouseEvent event) {
+        boolean replicaBefore = playbackBridge.ghostEntity() != null;
+        if (event.getButton() >= 0) recordButton(event.getNanoseconds(), event.getButton(), event.isButtonstate());
+        recordMouse(event.getNanoseconds(), event.getDx(), event.getDy());
         if (!event.isButtonstate()) return;
-        if (playbackBridge.ghostEntity() != null && event.getButton() >= 0) {
+        if ((replicaBefore || playbackBridge.ghostEntity() != null) && event.getButton() >= 0) {
             event.setCanceled(true);
             return;
         }

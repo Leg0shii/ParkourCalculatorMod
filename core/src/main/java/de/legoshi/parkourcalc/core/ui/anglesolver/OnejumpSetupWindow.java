@@ -1,0 +1,388 @@
+package de.legoshi.parkourcalc.core.ui.anglesolver;
+
+import de.legoshi.parkourcalc.core.AttemptTracker;
+import de.legoshi.parkourcalc.core.LandingForecast;
+import de.legoshi.parkourcalc.core.PracticeMacro;
+import de.legoshi.parkourcalc.core.TurnAttempt;
+import de.legoshi.parkourcalc.core.TurnProfileController;
+import de.legoshi.parkourcalc.core.TurnProfileDocument;
+import de.legoshi.parkourcalc.core.TurnReference;
+import de.legoshi.parkourcalc.core.anglesolver.profile.AttemptSampler;
+import de.legoshi.parkourcalc.core.imgui.RenderInterface;
+import de.legoshi.parkourcalc.core.ui.Settings;
+import de.legoshi.parkourcalc.core.ui.theme.Controls;
+import de.legoshi.parkourcalc.core.ui.theme.Fonts;
+import de.legoshi.parkourcalc.core.ui.theme.Modal;
+import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
+import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
+import imgui.ImGui;
+import imgui.ImVec2;
+import imgui.ImGuiIO;
+import imgui.flag.ImGuiCond;
+import imgui.flag.ImGuiSelectableFlags;
+import imgui.flag.ImGuiTableColumnFlags;
+import imgui.flag.ImGuiWindowFlags;
+import imgui.type.ImBoolean;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
+public final class OnejumpSetupWindow implements RenderInterface {
+
+    private static final String WINDOW_ID = "###onejumpSetup";
+    private static final String TITLE = "Onejump Setup";
+    private static final String POPUP_CLEAR = "###onejumpClear";
+    private static final float WIN_W = 760f;
+    private static final float WIN_H = 680f;
+    private static final float MIN_W = 520f;
+    private static final float MIN_H = 300f;
+    private static final int MIN_TABLE_ROWS = 4;
+    private static final int PAGE_SIZE = 50;
+    private static final int LATEST = 5;
+    private static final String[] DOTS = {"", ".", "..", "..."};
+
+    private final TurnProfileController controller;
+    private final AttemptTracker tracker;
+    private final Settings settings;
+    private final Runnable onSettingsChanged;
+    private final ImBoolean open = new ImBoolean(false);
+    private boolean openClearModal;
+    private int attemptsPage;
+
+    public OnejumpSetupWindow(TurnProfileController controller, AttemptTracker tracker, Settings settings,
+                              Runnable onSettingsChanged) {
+        this.controller = controller;
+        this.tracker = tracker;
+        this.settings = settings;
+        this.onSettingsChanged = onSettingsChanged;
+    }
+
+    @Override
+    public void render(ImGuiIO io) {
+        open.set(settings.viewOnejumpSetup);
+        if (!open.get()) return;
+        float scale = ThemeManager.uiScale();
+        ImGui.setNextWindowSize(WIN_W * scale, WIN_H * scale, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowSizeConstraints(MIN_W * scale, MIN_H * scale, Float.MAX_VALUE, Float.MAX_VALUE);
+        ThemeManager.pushHeaderChrome();
+        boolean visible = ImGui.begin(WINDOW_ID, open, ImGuiWindowFlags.NoCollapse);
+        if (visible) ThemeManager.drawModalTitle(TITLE);
+        ThemeManager.popHeaderChrome();
+        if (visible) body(scale);
+        ImGui.end();
+        if (settings.viewOnejumpSetup != open.get()) {
+            settings.viewOnejumpSetup = open.get();
+            onSettingsChanged.run();
+        }
+    }
+
+    private void body(float scale) {
+        controller.sync();
+        controller.autoRate();
+        controller.requestDeepChecks();
+        TurnProfileController.Current cur = controller.current();
+        TurnProfileDocument doc = controller.document();
+        List<TurnAttempt> all = doc.attempts();
+        if (Controls.beginTabBar("##onejump_tabs")) {
+            if (Controls.beginTab("Overview")) {
+                ThemeManager.sectionSpacing();
+                overview(doc, cur, scale);
+                Controls.endTab();
+            }
+            if (Controls.beginTab("Favourites")) {
+                ThemeManager.sectionSpacing();
+                List<TurnAttempt> favourites = doc.favourites();
+                ImGui.textDisabled(favourites.size() + " favourites");
+                float tableH = Math.max(minTableH(scale), ImGui.getContentRegionAvail().y - ThemeManager.sectionSpacingHeight());
+                attemptsTable("##attemptsFav", favourites, tableH, false);
+                Controls.endTab();
+            }
+            if (Controls.beginTab("Attempts")) {
+                ThemeManager.sectionSpacing();
+                int pages = Math.max(1, (all.size() + PAGE_SIZE - 1) / PAGE_SIZE);
+                attemptsPage = Math.max(0, Math.min(attemptsPage, pages - 1));
+                int from = all.size() - attemptsPage * PAGE_SIZE;
+                List<TurnAttempt> page = new ArrayList<TurnAttempt>();
+                for (int i = from - 1; i >= 0 && i >= from - PAGE_SIZE; i--) page.add(all.get(i));
+                if (attemptsPage == 0) Controls.disabledButton("<");
+                else if (Controls.secondaryButton("<")) attemptsPage--;
+                ImGui.sameLine();
+                ImGui.alignTextToFramePadding();
+                ImGui.text("Page " + (attemptsPage + 1) + " of " + pages);
+                ImGui.sameLine();
+                if (attemptsPage >= pages - 1) Controls.disabledButton(">");
+                else if (Controls.secondaryButton(">")) attemptsPage++;
+                ImGui.sameLine();
+                ImGui.alignTextToFramePadding();
+                ImGui.textDisabled(all.size() + " attempts");
+                float tableH = Math.max(minTableH(scale), ImGui.getContentRegionAvail().y - ThemeManager.sectionSpacingHeight() * 2f
+                        - ImGui.getTextLineHeightWithSpacing() - Controls.buttonHeight());
+                attemptsTable("##attemptsAll", page, tableH, false);
+                dangerZone();
+                Controls.endTab();
+            }
+            Controls.endTabBar();
+        }
+        clearModal();
+    }
+
+    private static final String[] OVERVIEW_LABELS = {"TAS", "Landing", "Attempts", "Landed", "Input failures",
+            "Landing chance", "Closest", "Missed by", "Failed at", "Replay (inputs)", "Replay (turn)", "Top 10", "Latest"};
+
+    private void overview(TurnProfileDocument doc, TurnProfileController.Current cur, float scale) {
+        TurnProfileDocument.Stats st = doc.stats();
+        String name = controller.name();
+        float labelW = 0f;
+        Fonts.pushBold();
+        for (String l : OVERVIEW_LABELS) labelW = Math.max(labelW, ImGui.calcTextSize(l).x);
+        Fonts.popBold();
+        labelW += ThemeManager.SM * scale;
+        overviewRow("TAS", name != null ? name : "unsaved, attempts are not kept", labelW, name == null);
+        int tasFirst = doc.reference().tasFirstTick();
+        String err = controller.lastError();
+        TurnReference.Landing landing = cur == null ? null : cur.landing;
+        overviewRow("Landing", landing != null ? landing.label(tasFirst) : cur == null
+                ? (err != null ? err : "mark Keys and Face ticks in the input table")
+                : "no X or Z constraint after the reference, attempts are not judged", labelW, landing == null);
+        overviewRow("Attempts", Integer.toString(st.attempts), labelW, false);
+        overviewRow("Input failures", Integer.toString(st.inputFailures), labelW, false);
+        String failed = LandingForecast.failedSummary(doc.attempts(), Integer.MAX_VALUE);
+        overviewRow("Failed at", failed == null ? "-" : failed, labelW, failed == null);
+        int[] bands = st.missBands;
+        boolean anyBand = bands[0] + bands[1] + bands[2] + bands[3] > 0;
+        overviewRow("Missed by", String.format(Locale.ROOT, "e-2 %d   e-3 %d   e-4 %d   e-5 %d", bands[0], bands[1],
+                bands[2], bands[3]), labelW, !anyBand);
+        overviewRow("Closest", st.hasClosest() ? TurnAttempt.signedMargin(st.closest) : "-", labelW, !st.hasClosest());
+        overviewRow("Landed", Integer.toString(st.landings), labelW, false);
+        overviewRow("Landing chance", landingChance(cur), labelW, cur == null || cur.attempts == null);
+        if (st.mouseAttempts > 0) overviewRow(PracticeMacro.LABEL_INPUTS, practiceText(st.mouseAttempts, st.mouseClears), labelW, false);
+        if (st.inputAttempts > 0) overviewRow(PracticeMacro.LABEL_TURN, practiceText(st.inputAttempts, st.inputClears), labelW, false);
+        ThemeManager.sectionSpacing();
+        Fonts.pushBold();
+        ImGui.text("Top " + TurnProfileDocument.TOP);
+        Fonts.popBold();
+        List<TurnAttempt> top = doc.top();
+        attemptsTable("##attemptsTop", top, listHeight(top, scale), true);
+        ThemeManager.sectionSpacing();
+        Fonts.pushBold();
+        ImGui.text("Latest");
+        Fonts.popBold();
+        List<TurnAttempt> all = doc.attempts();
+        List<TurnAttempt> latest = new ArrayList<TurnAttempt>();
+        for (int i = all.size() - 1; i >= 0 && latest.size() < LATEST; i--) latest.add(all.get(i));
+        attemptsTable("##attemptsLatest", latest, listHeight(latest, scale), false);
+    }
+
+    private static float listHeight(List<TurnAttempt> list, float scale) {
+        return ThemeManager.tableHeaderRowHeight() + ThemeManager.tableRowHeight() * Math.max(1, list.size()) + 4f * scale;
+    }
+
+    private String landingChance(TurnProfileController.Current cur) {
+        if (cur == null) return "-";
+        if (!cur.canRate()) return cur.pathLands() ? "needs a landing box and a TAS path" : "the reference path does not meet the TAS constraints";
+        AttemptSampler.Stats rs = cur.attempts;
+        if (rs == null) return controller.isRating() ? "sampling" : "-";
+        int used = controller.ratedSpread();
+        if (used == 0) return "no attempts yet, the reference itself " + (rs.rate() > 0.0 ? "lands" : "misses");
+        return String.format(Locale.ROOT, "%s of tries  (%s, spread of your last %d attempts, %s samples)",
+                oneIn(rs.rate()), pct(rs.rate()), used, compact(rs.attempts));
+    }
+
+    private static String practiceText(int attempts, int clears) {
+        return String.format(Locale.ROOT, "%d   (%d landed)", attempts, clears);
+    }
+
+    private static void overviewRow(String label, String value, float labelW, boolean dim) {
+        float startX = ImGui.getCursorPosX();
+        Fonts.pushBold();
+        ImGui.text(label);
+        Fonts.popBold();
+        ImGui.sameLine();
+        ImGui.setCursorPosX(startX + labelW);
+        if (dim) ImGui.textDisabled(value);
+        else ImGui.text(value);
+    }
+
+    private static float minTableH(float scale) {
+        return ThemeManager.tableHeaderRowHeight() + ThemeManager.tableRowHeight() * MIN_TABLE_ROWS + 4f * scale;
+    }
+
+    private static String oneIn(double rate) {
+        if (rate <= 0.0) return "none";
+        if (rate >= 0.5) return String.format(Locale.ROOT, "%.0f%%", rate * 100.0);
+        return String.format(Locale.ROOT, "1 in %s", compact((long) Math.round(1.0 / rate)));
+    }
+
+    private static String pct(double rate) {
+        if (rate <= 0.0) return "0%";
+        if (rate < 0.001) return String.format(Locale.ROOT, "%.3f%%", rate * 100.0);
+        return String.format(Locale.ROOT, "%.1f%%", rate * 100.0);
+    }
+
+    private static String compact(long v) {
+        if (v >= 1_000_000L) return String.format(Locale.ROOT, "%.1fM", v / 1e6);
+        if (v >= 10_000L) return String.format(Locale.ROOT, "%dk", v / 1000L);
+        return Long.toString(v);
+    }
+
+    private void attemptsTable(String id, List<TurnAttempt> list, float h, boolean ranked) {
+        float rowH = ThemeManager.tableRowHeight();
+        int extra = ranked ? 1 : 0;
+        if (!ThemeManager.beginStandardClickableRowsTable(id, 4 + extra, 0, 0f, h)) return;
+        ImGui.tableSetupScrollFreeze(0, 1);
+        int fixed = ImGuiTableColumnFlags.WidthFixed;
+        float numW = ImGui.calcTextSize("999999").x;
+        float landW = ImGui.calcTextSize("-99.99999").x;
+        float starW = ImGui.calcTextSize("Fav").x;
+        if (ranked) ImGui.tableSetupColumn("#", fixed, ThemeManager.tableLeftmostColumnWidth("#", ImGui.calcTextSize("99").x));
+        ImGui.tableSetupColumn("Attempt", fixed, ranked ? ThemeManager.tableNumericColumnWidth("Attempt", numW)
+                : ThemeManager.tableLeftmostColumnWidth("Attempt", numW));
+        ImGui.tableSetupColumn("Fav", fixed, ThemeManager.tableNumericColumnWidth("Fav", starW));
+        ImGui.tableSetupColumn("Offset", fixed, ThemeManager.tableNumericColumnWidth("Offset", landW));
+        ImGui.tableSetupColumn("Info", ImGuiTableColumnFlags.WidthStretch, 0f);
+        ThemeManager.tableHeaderRow();
+        ThemeManager.paintTableHeader();
+        ImGui.tableSetColumnIndex(0);
+        ThemeManager.tableLeftmostCellPad();
+        if (ranked) {
+            ThemeManager.tableHeaderRight("#");
+            ImGui.tableSetColumnIndex(1);
+        }
+        ThemeManager.tableHeaderRight("Attempt");
+        ImGui.tableSetColumnIndex(1 + extra);
+        ThemeManager.tableHeaderCentered("Fav");
+        TooltipUtil.onHover("Click to keep an attempt in the Favourites list of the Overview.");
+        ImGui.tableSetColumnIndex(2 + extra);
+        ThemeManager.tableHeaderRight("Offset");
+        ImGui.tableSetColumnIndex(3 + extra);
+        ThemeManager.tableHeader("Info");
+        ThemeManager.tableRightmostCellTrailingPad();
+        if (list.isEmpty()) {
+            ImGui.tableNextRow(0, rowH);
+            ThemeManager.paintTableRowBg(0);
+            ImGui.tableSetColumnIndex(0);
+            ThemeManager.tableLeftmostCellPad();
+            ImGui.alignTextToFramePadding();
+            ImGui.textDisabled(ranked ? "no attempts yet" : "none");
+            ThemeManager.endStandardTable();
+            return;
+        }
+        int selectedNumber = controller.selectedNumber();
+        float hitH = rowH - ImGui.getStyle().getItemSpacing().y;
+        for (int i = 0; i < list.size(); i++) {
+            TurnAttempt a = list.get(i);
+            boolean selected = a.number == selectedNumber;
+            boolean macroRow = a.isMacro();
+            ImGui.tableNextRow(0, rowH);
+            ThemeManager.paintTableRowBg(i);
+            if (macroRow) ThemeManager.pushTextColor(ThemeManager.warningColor());
+            ImGui.tableSetColumnIndex(0);
+            ThemeManager.tableLeftmostCellPad();
+            ImGui.alignTextToFramePadding();
+            String first = ranked ? Integer.toString(i + 1) : Integer.toString(a.ordinal);
+            if (ThemeManager.rightAlignedSelectable(id + i, first, selected,
+                    ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowItemOverlap)) {
+                controller.select(selected ? -1 : a.number);
+            }
+            if (ranked) {
+                ImGui.tableSetColumnIndex(1);
+                ThemeManager.textRight(Integer.toString(a.ordinal));
+            }
+            ImGui.tableSetColumnIndex(1 + extra);
+            favouriteCell(id + "fav" + i, a, hitH, rowH);
+            ImGui.tableSetColumnIndex(2 + extra);
+            if (a.hasMargin()) {
+                if (!macroRow) ThemeManager.pushTextColor(a.landed ? ThemeManager.okColor() : ThemeManager.textMutedColor());
+                ThemeManager.textRight(TurnAttempt.signedMargin(a.margin));
+                if (!macroRow) ThemeManager.popTextColor();
+            } else {
+                if (!macroRow) ThemeManager.pushTextColor(ThemeManager.textDimColor());
+                ThemeManager.textRight("-");
+                if (!macroRow) ThemeManager.popTextColor();
+            }
+            ImGui.tableSetColumnIndex(3 + extra);
+            String cell = info(a);
+            if (!cell.isEmpty()) ThemeManager.textLeft(cell);
+            if (macroRow) {
+                ThemeManager.popTextColor();
+                if (!cell.isEmpty()) ImGui.sameLine();
+                else ImGui.alignTextToFramePadding();
+                ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+                ImGui.text("(?)");
+                ThemeManager.popTextColor();
+                TooltipUtil.onHover(a.macro == 1 ? PracticeMacro.LABEL_INPUTS : PracticeMacro.LABEL_TURN);
+            }
+        }
+        ThemeManager.endStandardTable();
+    }
+
+    private String info(TurnAttempt a) {
+        if (a.inputFailure) {
+            return "T" + (a.failTick + 1) + " Inputs: " + TurnReference.describe(a.failKeys) + ", expected "
+                    + TurnReference.describe(a.expectedKeys);
+        }
+        if (a.turnFailure) return "T" + (a.failTick + 1) + " Preturn: " + turn(a.failTurn);
+        if (controller.isDeepChecking(a)) return "solving" + DOTS[(int) (ImGui.getTime() * 3.0) % DOTS.length];
+        if (a.judged() && !a.landed && a.failedTick() >= 0) {
+            double off = a.bestOffsetAt(a.failedTick());
+            return "T" + (a.failedTick() + 1) + " Turn" + (Double.isNaN(off) || off == 0.0 ? "" : ": " + turn(off));
+        }
+        return "";
+    }
+
+    private String turn(double deg) {
+        TurnProfileController.Current cur = controller.current();
+        String text = String.format(Locale.ROOT, "%s%.2f°", deg < 0 ? "-" : "+", Math.abs(deg));
+        if (cur == null || cur.pixelDeg <= 0.0) return text;
+        return text + String.format(Locale.ROOT, " (%d px)", Math.round(Math.abs(deg) / cur.pixelDeg));
+    }
+
+    private void favouriteCell(String id, TurnAttempt a, float hitH, float rowH) {
+        ImVec2 origin = ImGui.getCursorScreenPos();
+        float cellW = ImGui.getContentRegionAvail().x;
+        ImGui.alignTextToFramePadding();
+        if (ImGui.selectable("##" + id, false, 0, 0f, hitH)) controller.document().setFavourite(a, !a.favourite);
+        TooltipUtil.onHover(a.favourite ? "Remove from favourites" : "Add to favourites");
+        String mark = "*";
+        ImVec2 size = ImGui.calcTextSize(mark);
+        float tx = origin.x + (cellW - size.x) * 0.5f;
+        float ty = origin.y + (rowH - 2f * ImGui.getStyle().getCellPadding().y - size.y) * 0.5f;
+        int col = a.favourite ? ThemeManager.warningColor() : ThemeManager.textDimColor();
+        ImGui.getWindowDrawList().addText(tx, ty, col, mark);
+    }
+
+    private void dangerZone() {
+        ThemeManager.sectionSpacing();
+        ImGui.textDisabled("Danger zone");
+        int count = controller.stats().attempts;
+        if (count == 0) {
+            Controls.disabledButton("Clear attempts");
+        } else if (Controls.dangerButton("Clear attempts")) {
+            openClearModal = true;
+        }
+        TooltipUtil.onHover("Deletes every attempt. The reference stays.");
+    }
+
+    private void clearModal() {
+        if (openClearModal) {
+            ImGui.openPopup(POPUP_CLEAR);
+            openClearModal = false;
+        }
+        if (!Modal.begin("Clear attempts", POPUP_CLEAR)) return;
+        int count = controller.stats().attempts;
+        String name = controller.name();
+        ImGui.text("Delete all " + count + " attempts of '" + (name != null ? name : "this TAS") + "'?");
+        ImGui.textDisabled("The reference stays.");
+        Modal.footerSeparator();
+        if (Controls.dangerButton("Delete")) {
+            controller.clearAttempts();
+            tracker.reset();
+            controller.select(-1);
+            ImGui.closeCurrentPopup();
+        }
+        ImGui.sameLine();
+        if (Modal.footerButton("Cancel")) ImGui.closeCurrentPopup();
+        Modal.end();
+    }
+}

@@ -61,6 +61,7 @@ public final class SettingsModal {
     private static final String TT_COLOR_GENERIC = "Color used for this overlay. Alpha applies in-world.";
     private static final String TT_KEEP_INPUT_TABLE = "Keeps the input table window drawn as a display-only overlay even when the main UI is closed. It cannot be edited while closed.";
     private static final String TT_KEEP_TICK_INFO = "Keeps the Tick Info window drawn even when the main UI is closed.";
+    private static final String TT_KEEP_TURN_PROFILE = "Keeps the Onejump window drawn even when the main UI is closed, so your attempts are tracked and plotted while you play.";
     private static final String TT_UNDO_REDO_WITHOUT_UI = "Ctrl+Z / Ctrl+Y (or Ctrl+Shift+Z) undo and redo TAS edits even while the main UI is closed. Disabled while a Minecraft screen such as chat or the inventory is open.";
     private static final String TT_HUD_MESSAGE_COUNT = "How many messages the notification stack shows at once. Older messages drop off the bottom.";
     private static final String TT_HUD_MESSAGE_SCALE = "Text size of the notification stack, as a multiplier of the UI font size. The window grows with the text.";
@@ -107,6 +108,21 @@ public final class SettingsModal {
     private final String[] scaleLabels;
 
     private boolean openRequested;
+    private Runnable onMacroModeChanged = () -> { };
+    private final ImInt macroModeBuf = new ImInt();
+    private final int[] macroDelayBuf = new int[1];
+    private final int[] spreadBuf = new int[1];
+    private final int[] samplesBuf = new int[1];
+    private static final String[] MACRO_MODES = {"Off", de.legoshi.parkourcalc.core.PracticeMacro.LABEL_INPUTS,
+            de.legoshi.parkourcalc.core.PracticeMacro.LABEL_TURN};
+    private static final String TT_MACRO_MODE = "A client-side replica runs the jump; your player stays put. Replay (inputs): the replica presses the keys, you turn. Replay (turn): the replica turns, you press the keys. Starts after the reset click plus the delay.";
+    private static final String TT_MACRO_DELAY = "Time between the reset click and the practice replay starting.";
+    private static final String TT_RATED_DOTS = "Draws the simulated tries of the landing chance as dots in the Turn Profile.";
+    private static final String TT_TURN_TIMING = "Records where inside each tick your mouse started and stopped moving. Draws your attempt as the real trace in the Turn Profile, a timing strip under each tick in Onejump Keys and the Turn onset stat in the Onejump Setup overview.";
+    private static final String TT_OFFSET_LIVE = "Shows the best landing offset still reachable from the current tick above the Turn Profile, updated every tick of the attempt.";
+    private static final String TT_OFFSET_HOVER = "Shows the offset still reachable from a tick in the Turn Profile tooltip. The forecast is only computed while this or the offset label is on.";
+    private static final String TT_SPREAD = "How many of your latest attempts feed the per-tick facing spread that the landing chance is sampled from.";
+    private static final String TT_SAMPLES = "How many tries are simulated for the landing chance after each attempt.";
 
     public SettingsModal(Settings settings, Runnable onChanged) {
         this.settings = settings;
@@ -123,6 +139,10 @@ public final class SettingsModal {
 
     public void open() {
         openRequested = true;
+    }
+
+    public void setOnejumpHook(Runnable onMacroModeChanged) {
+        this.onMacroModeChanged = onMacroModeChanged;
     }
 
     public void setPairedSimulationHook(boolean supported, Runnable onApplied) {
@@ -173,6 +193,10 @@ public final class SettingsModal {
             }
             if (Controls.beginTab("Playback")) {
                 renderPlayback();
+                Controls.endTab();
+            }
+            if (Controls.beginTab("Onejump")) {
+                renderOnejump();
                 Controls.endTab();
             }
             if (Controls.beginTab("Render Colors")) {
@@ -244,6 +268,7 @@ public final class SettingsModal {
         if (beginLayoutTable("##settings_panels")) {
             checkboxRow("Input table", "##keep_input_table", settings.keepInputTableOpen, TT_KEEP_INPUT_TABLE, v -> settings.keepInputTableOpen = v);
             checkboxRow("Tick Info", "##keep_tick_info", settings.keepTickInfoOpen, TT_KEEP_TICK_INFO, v -> settings.keepTickInfoOpen = v);
+            checkboxRow("Onejump", "##keep_turn_profile", settings.keepTurnProfileOpen, TT_KEEP_TURN_PROFILE, v -> settings.keepTurnProfileOpen = v);
             checkboxRow("Undo/redo hotkeys", "##undo_redo_without_ui", settings.undoRedoWithoutUi, TT_UNDO_REDO_WITHOUT_UI, v -> settings.undoRedoWithoutUi = v);
             ThemeManager.endStandardFormTable();
         }
@@ -341,6 +366,66 @@ public final class SettingsModal {
         sectionHeader("Experimental");
         if (beginLayoutTable("##settings_experimental")) {
             checkboxRow("Block capture (restart required)", "##experimental_block_capture", settings.experimentalBlockCapture, TT_EXPERIMENTAL_BLOCK_CAPTURE, v -> settings.experimentalBlockCapture = v);
+            ThemeManager.endStandardFormTable();
+        }
+    }
+
+    private void renderOnejump() {
+        ThemeManager.sectionSpacing();
+        sectionHeader("Practice replay");
+        if (beginLayoutTable("##settings_onejump_macro")) {
+            row("Mode", () -> {
+                macroModeBuf.set(Math.max(0, Math.min(2, settings.onejumpMacroMode)));
+                if (Controls.combo("##onejump_macro_mode", macroModeBuf, MACRO_MODES, ImGui.getContentRegionAvail().x)) {
+                    settings.onejumpMacroMode = macroModeBuf.get();
+                    onMacroModeChanged.run();
+                    onChanged.run();
+                }
+                tooltipForLastItem(TT_MACRO_MODE);
+            });
+            row("Delay", () -> {
+                macroDelayBuf[0] = settings.onejumpMacroDelayMs;
+                ImGui.setNextItemWidth(-1);
+                if (Controls.sliderInt("##onejump_macro_delay", macroDelayBuf, 0, 5000, "%d ms")) {
+                    settings.onejumpMacroDelayMs = macroDelayBuf[0];
+                }
+                if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
+                tooltipForLastItem(TT_MACRO_DELAY);
+            });
+            ThemeManager.endStandardFormTable();
+        }
+
+        ThemeManager.sectionSpacing();
+        sectionHeader("Turn Profile");
+        if (beginLayoutTable("##settings_onejump_profile")) {
+            checkboxRow("Rated tries as dots", "##onejump_rated_dots", settings.turnProfileShowRating, TT_RATED_DOTS, v -> settings.turnProfileShowRating = v);
+            checkboxRow("Turn timing", "##onejump_turn_timing", settings.onejumpTurnTiming, TT_TURN_TIMING, v -> settings.onejumpTurnTiming = v);
+            checkboxRow("Offset label", "##onejump_offset_live", settings.onejumpOffsetLive, TT_OFFSET_LIVE, v -> settings.onejumpOffsetLive = v);
+            checkboxRow("Offset on hover", "##onejump_offset_hover", settings.onejumpOffsetHover, TT_OFFSET_HOVER, v -> settings.onejumpOffsetHover = v);
+            ThemeManager.endStandardFormTable();
+        }
+
+        ThemeManager.sectionSpacing();
+        sectionHeader("Landing chance");
+        if (beginLayoutTable("##settings_onejump_chance")) {
+            row("Attempts used", () -> {
+                spreadBuf[0] = settings.onejumpSpreadAttempts;
+                ImGui.setNextItemWidth(-1);
+                if (Controls.sliderInt("##onejump_spread", spreadBuf, 50, 5000, "%d attempts")) {
+                    settings.onejumpSpreadAttempts = spreadBuf[0];
+                }
+                if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
+                tooltipForLastItem(TT_SPREAD);
+            });
+            row("Samples", () -> {
+                samplesBuf[0] = settings.turnProfileAttempts;
+                ImGui.setNextItemWidth(-1);
+                if (Controls.sliderInt("##onejump_samples", samplesBuf, 1000, 200000, "%d tries")) {
+                    settings.turnProfileAttempts = samplesBuf[0];
+                }
+                if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
+                tooltipForLastItem(TT_SAMPLES);
+            });
             ThemeManager.endStandardFormTable();
         }
     }

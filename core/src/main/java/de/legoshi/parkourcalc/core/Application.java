@@ -94,6 +94,11 @@ public final class Application {
     private BlockPicker blockPicker;
     private AngleSolverState angleSolverState;
     private AngleSolverEngine solverEngine;
+    private TurnProfileController turnProfile;
+    private AttemptTracker attemptTracker;
+    private PracticeMacro practiceMacro;
+    private PlaybackBridge playbackBridge;
+    private final de.legoshi.parkourcalc.core.record.HumanRecorder recorder;
     private ConstraintKeyController constraintKeyController;
     private UndoController<de.legoshi.parkourcalc.core.save.SaveFile> undoController;
     private RunTicksController runTicks;
@@ -125,6 +130,7 @@ public final class Application {
         );
         this.playback = new PlaybackController(inputData, runner, settings);
         this.playback.setStartRangeResolver(this::resolvePlaybackStartRange);
+        this.recorder = new de.legoshi.parkourcalc.core.record.HumanRecorder(saveController::getSaveStore, mc::getMouseSensitivity);
     }
 
     private PlaybackController.StartRange resolvePlaybackStartRange() {
@@ -184,6 +190,19 @@ public final class Application {
         inputOverlay = new InputOverlay(inputData, settings, selection, this::onUserChange,
                 this::setStartToPlayer, playback, mc, boxController, this::pushHudMessage
         );
+        inputOverlay.setShortcutsEnabled(() -> imgui.ImGui.isWindowFocused(imgui.flag.ImGuiFocusedFlags.RootAndChildWindows));
+        inputOverlay.setRowFlags(() -> settings.viewOnejumpSetup,
+                new InputOverlay.RowFlag("Keys", "Onejump: an attempt must press exactly these keys at this tick. Drag to paint."
+                        + " Shift click a key cell to make that key optional at that tick (hollow): it may be pressed or not.",
+                        InputRow::isOnejumpKeys, r -> r.setOnejumpKeys(!r.isOnejumpKeys())),
+                new InputOverlay.RowFlag("Face", "Onejump: the facing of this tick is checked and drawn in the Turn Profile."
+                        + " Right click: Still, the facing must not move at all at this tick (catches a preturn).",
+                        r -> r.getOnejumpFace() != InputRow.ONEJUMP_FACE_OFF,
+                        r -> r.setOnejumpFace(r.getOnejumpFace() != InputRow.ONEJUMP_FACE_OFF
+                                ? InputRow.ONEJUMP_FACE_OFF : InputRow.ONEJUMP_FACE_CHECK),
+                        "Still", r -> r.getOnejumpFace() == InputRow.ONEJUMP_FACE_STILL,
+                        r -> r.setOnejumpFace(r.getOnejumpFace() == InputRow.ONEJUMP_FACE_STILL
+                                ? InputRow.ONEJUMP_FACE_CHECK : InputRow.ONEJUMP_FACE_STILL)));
 
         angleSolverState = new AngleSolverState();
         FileSystemSaveStore saveStore = saveController.getSaveStore();
@@ -235,6 +254,25 @@ public final class Application {
                 angleSolverEngine, forwardModel, mc, this::onUserChange, this::pushHudMessage, runTicks::isRunning);
         de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow stratfinderWindow =
                 new de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow(noTurnSearch);
+        turnProfile = new TurnProfileController(angleSolverEngine, angleSolverState, inputData,
+                () -> settings.viewOnejumpSetup || settings.viewTurnProfile || settings.viewOnejumpKeys,
+                mc::getMouseSensitivity, () -> settings.turnProfileAttempts, () -> settings.onejumpSpreadAttempts,
+                new TurnProfileStore(saveController::getSaveStore), saveController::currentName);
+        attemptTracker = new AttemptTracker(turnProfile, () -> settings.viewTurnProfile || settings.viewOnejumpKeys
+                || settings.viewOnejumpSetup, this::isPlaybackRunning, () -> settings.onejumpTurnTiming);
+        practiceMacro = new PracticeMacro(turnProfile, attemptTracker, settings);
+        practiceMacro.setBridge(playbackBridge);
+        attemptTracker.setResetListener(practiceMacro::onReset);
+        attemptTracker.setMacroMode(() -> settings.onejumpMacroMode);
+        attemptTracker.setForecastEnabled(() -> settings.onejumpOffsetLive || settings.onejumpOffsetHover);
+        de.legoshi.parkourcalc.core.ui.anglesolver.TurnProfileWindow turnProfileWindow =
+                new de.legoshi.parkourcalc.core.ui.anglesolver.TurnProfileWindow(turnProfile, attemptTracker, settings,
+                        mc::getMouseSensitivity);
+        de.legoshi.parkourcalc.core.ui.anglesolver.OnejumpKeysWindow onejumpKeysWindow =
+                new de.legoshi.parkourcalc.core.ui.anglesolver.OnejumpKeysWindow(turnProfile, attemptTracker, settings);
+        de.legoshi.parkourcalc.core.ui.anglesolver.OnejumpSetupWindow onejumpSetupWindow =
+                new de.legoshi.parkourcalc.core.ui.anglesolver.OnejumpSetupWindow(turnProfile, attemptTracker, settings,
+                        this::saveSettings);
 
         // In-world constraint visualization (gh-145): plates appear while the solver view is open.
         constraintSource = new de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverConstraintSource(
@@ -278,6 +316,7 @@ public final class Application {
         inputOverlay.setSaveSelectionAsTasHandler(() -> promptSaveSelectionAsTas(fileMenu));
         SettingsModal settingsModal = new SettingsModal(settings, this::saveSettings);
         settingsModal.setPairedSimulationHook(simulator.supportsPairedSimulation(), this::applyPairedSimulationChange);
+        settingsModal.setOnejumpHook(practiceMacro::stop);
         HudMessagesPanel hudMessagesPanel = new HudMessagesPanel(hudMessages, settings);
         MainWindowOverlay mainWindow = new MainWindowOverlay(
                 inputOverlay, inputData, fileMenu, settings, this::saveSettings,tickInfoPanel, perfOverlay,
@@ -300,6 +339,34 @@ public final class Application {
         overlayManager.register(angleSolverWindow);
         overlayManager.register(graphEditorWindow);
         overlayManager.register(stratfinderWindow);
+        overlayManager.register(turnProfileWindow);
+        overlayManager.register(onejumpKeysWindow);
+        overlayManager.register(onejumpSetupWindow);
+        overlayManager.register(new de.legoshi.parkourcalc.core.ui.RecorderWindow(recorder, settings, this::toggleRecording,
+                this::saveSettings, systemBridge));
+    }
+
+    public de.legoshi.parkourcalc.core.record.HumanRecorder getRecorder() {
+        return recorder;
+    }
+
+    public AttemptTracker getAttemptTracker() {
+        return attemptTracker;
+    }
+
+    public void toggleRecording() {
+        if (recorder.isRecording()) {
+            java.nio.file.Path file = recorder.stop();
+            if (file != null) pushHudMessage("Recording saved: " + file.getFileName());
+            else pushHudMessage("Recording not saved: " + recorder.lastError(), HudMessageStyle.COLOR_WARN);
+            return;
+        }
+        if (isPlaybackRunning()) {
+            pushHudMessage("Stop playback before recording", HudMessageStyle.COLOR_WARN);
+            return;
+        }
+        if (recorder.start()) pushHudMessage("Recording started");
+        else pushHudMessage("Recording not started: " + recorder.lastError(), HudMessageStyle.COLOR_WARN);
     }
 
     public void setFilePicker(FilePickerPort filePicker) {
@@ -401,6 +468,7 @@ public final class Application {
         if (!startDragController.isDragActive()) {
             selection.retainBelow(boxController.size());
         }
+        if (turnProfile != null) turnProfile.refresh();
         Perf.stop("runSimulation", t0);
     }
 
@@ -821,7 +889,13 @@ public final class Application {
     }
 
     public void setPlaybackBridge(PlaybackBridge bridge) {
+        playbackBridge = bridge;
         playback.setBridge(bridge);
+        if (practiceMacro != null) practiceMacro.setBridge(bridge);
+    }
+
+    public PracticeMacro getPracticeMacro() {
+        return practiceMacro;
     }
 
     public PlaybackController getPlayback() {
@@ -834,6 +908,7 @@ public final class Application {
 
     public void tickPlayback() {
         playback.tick();
+        if (practiceMacro != null && !playback.isRunning()) practiceMacro.tick();
     }
 
     public void postTickPlayback() {

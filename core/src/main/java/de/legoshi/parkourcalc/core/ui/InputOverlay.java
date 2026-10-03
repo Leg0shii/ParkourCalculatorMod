@@ -29,8 +29,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.IntConsumer;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public final class InputOverlay {
@@ -251,6 +254,61 @@ public final class InputOverlay {
         this.onSaveSelectionAsTas = handler;
     }
 
+    public static final class RowFlag {
+        final String label;
+        final String tooltip;
+        final Predicate<InputRow> get;
+        final Consumer<InputRow> toggle;
+        final String altLabel;
+        final Predicate<InputRow> alt;
+        final Consumer<InputRow> altToggle;
+        final Function<InputRow, String> labelOf;
+
+        public RowFlag(String label, String tooltip, Predicate<InputRow> get, Consumer<InputRow> toggle) {
+            this(label, tooltip, get, toggle, null, null, null, null);
+        }
+
+        public RowFlag(String label, String tooltip, Predicate<InputRow> get, Consumer<InputRow> toggle,
+                       String altLabel, Predicate<InputRow> alt, Consumer<InputRow> altToggle) {
+            this(label, tooltip, get, toggle, altLabel, alt, altToggle, null);
+        }
+
+        public RowFlag(String label, String tooltip, Predicate<InputRow> get, Consumer<InputRow> toggle,
+                       String altLabel, Predicate<InputRow> alt, Consumer<InputRow> altToggle,
+                       Function<InputRow, String> labelOf) {
+            this.label = label;
+            this.tooltip = tooltip;
+            this.get = get;
+            this.toggle = toggle;
+            this.altLabel = altLabel;
+            this.alt = alt;
+            this.altToggle = altToggle;
+            this.labelOf = labelOf;
+        }
+    }
+
+    private static final RowFlag[] NO_FLAGS = new RowFlag[0];
+    private RowFlag[] rowFlags = NO_FLAGS;
+    private BooleanSupplier rowFlagsVisible = () -> true;
+    private BooleanSupplier shortcutsEnabled = () -> true;
+    private RowFlag flagDrag;
+    private int flagStartRow = -1;
+    private int flagCurrentRow = -1;
+    private boolean flagTarget;
+
+    public void setRowFlags(BooleanSupplier visible, RowFlag... flags) {
+        this.rowFlagsVisible = visible;
+        this.rowFlags = flags;
+    }
+
+    private RowFlag[] activeFlags() {
+        return rowFlagsVisible.getAsBoolean() ? rowFlags : NO_FLAGS;
+    }
+
+    public void setShortcutsEnabled(BooleanSupplier enabled) {
+        this.shortcutsEnabled = enabled;
+    }
+
     private void solverRowsInserted(int index, int count) {
         if (angleSolver != null) angleSolver.onRowsInserted(index, count);
     }
@@ -353,6 +411,7 @@ public final class InputOverlay {
         for (InputRow.Key key : MOVEMENT_KEYS) if (isKeyColumnVisible(key)) count++;
         for (InputRow.Key key : MODIFIER_KEYS) if (isKeyColumnVisible(key)) count++;
         for (InputRow.Key key : MOUSE_KEYS) if (isKeyColumnVisible(key)) count++;
+        count += activeFlags().length;
         if (isHotbarColumnVisible()) count++;
         if (isTeleportColumnVisible()) count++;
         if (isYawColumnVisible()) count++;
@@ -388,6 +447,7 @@ public final class InputOverlay {
         for (InputRow.Key key : MOUSE_KEYS) {
             if (isKeyColumnVisible(key)) columnSum += ThemeManager.tableColumnWidth(headerLabel(key), 0f);
         }
+        for (RowFlag f : activeFlags()) columnSum += ThemeManager.tableColumnWidth(f.label, 0f);
         if (isHotbarColumnVisible()) columnSum += ThemeManager.tableColumnWidth(COL_HOTBAR, HOTBAR_COLUMN_WIDTH * scale);
         if (isTeleportColumnVisible()) columnSum += ThemeManager.tableColumnWidth(COL_TELEPORT, TELEPORT_COLUMN_WIDTH * scale);
         boolean speed = isSpeedColumnVisible();
@@ -456,6 +516,24 @@ public final class InputOverlay {
         if (dragChangeStart >= 0) {
             notifyChange(dragChangeStart);
         }
+        updateFlagDrag();
+    }
+
+    private void updateFlagDrag() {
+        if (flagDrag == null) return;
+        if (ImGui.isMouseDown(0)) {
+            int at = keyDragSelect.rowAtY(ImGui.getMousePos().y);
+            if (at >= 0) flagCurrentRow = at;
+            return;
+        }
+        int lo = Math.min(flagStartRow, flagCurrentRow);
+        int hi = Math.max(flagStartRow, flagCurrentRow);
+        List<InputRow> rows = data.getRows();
+        for (int i = Math.max(0, lo); i <= hi && i < rows.size(); i++) {
+            if (flagDrag.get.test(rows.get(i)) != flagTarget) flagDrag.toggle.accept(rows.get(i));
+        }
+        flagDrag = null;
+        notifyChange(Math.max(0, lo));
     }
 
     private void renderEmptyTableHint() {
@@ -600,6 +678,9 @@ public final class InputOverlay {
         setupKeyColumns(MOVEMENT_KEYS);
         setupKeyColumns(MODIFIER_KEYS);
         setupKeyColumns(MOUSE_KEYS);
+        for (RowFlag f : activeFlags()) {
+            ImGui.tableSetupColumn(f.label, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableNumericColumnWidth(f.label, 0f));
+        }
         if (isHotbarColumnVisible()) {
             ImGui.tableSetupColumn(COL_HOTBAR, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableColumnWidth(COL_HOTBAR, HOTBAR_COLUMN_WIDTH * scale));
         }
@@ -642,6 +723,11 @@ public final class InputOverlay {
         col = renderKeyColumnHeaders(MOVEMENT_KEYS, col);
         col = renderKeyColumnHeaders(MODIFIER_KEYS, col);
         col = renderKeyColumnHeaders(MOUSE_KEYS, col);
+        for (RowFlag f : activeFlags()) {
+            ImGui.tableSetColumnIndex(col++);
+            ThemeManager.tableHeaderCentered(f.label);
+            TooltipUtil.onHover(f.tooltip);
+        }
         if (isHotbarColumnVisible()) {
             ImGui.tableSetColumnIndex(col++);
             ThemeManager.tableHeaderCentered(COL_HOTBAR);
@@ -1061,6 +1147,41 @@ public final class InputOverlay {
         renderKeyCells(row, rowIndex, rowH, MOVEMENT_KEYS);
         renderKeyCells(row, rowIndex, rowH, MODIFIER_KEYS);
         renderKeyCells(row, rowIndex, rowH, MOUSE_KEYS);
+        for (RowFlag f : activeFlags()) renderFlagCell(row, rowIndex, f, rowH);
+    }
+
+    private void renderFlagCell(InputRow row, int rowIndex, RowFlag flag, float rowH) {
+        ImGui.tableNextColumn();
+        boolean actual = flag.get.test(row);
+        boolean value = actual;
+        if (flagDrag == flag && rowIndex >= Math.min(flagStartRow, flagCurrentRow)
+                && rowIndex <= Math.max(flagStartRow, flagCurrentRow)) {
+            value = flagTarget;
+        }
+        ImVec2 cellOrigin = ImGui.getCursorScreenPos();
+        float cellW = ImGui.getContentRegionAvail().x;
+        float cellPadY = ImGui.getStyle().getCellPadding().y;
+        float hitH = rowH - ImGui.getStyle().getItemSpacing().y;
+        ImGui.alignTextToFramePadding();
+        ImGui.selectable("##flag" + flag.label, value, 0, 0f, hitH);
+        if (ImGui.isItemClicked(0)) {
+            flagDrag = flag;
+            flagStartRow = rowIndex;
+            flagCurrentRow = rowIndex;
+            flagTarget = !actual;
+        }
+        if (flag.altToggle != null && ImGui.isItemClicked(1)) {
+            flag.altToggle.accept(row);
+            notifyChange(rowIndex);
+        }
+        if (value) {
+            String text = flag.labelOf != null ? flag.labelOf.apply(row)
+                    : flag.alt != null && flag.alt.test(row) ? flag.altLabel : flag.label;
+            ImVec2 textSize = ImGui.calcTextSize(text);
+            float tx = cellOrigin.x + (cellW - textSize.x) * 0.5f;
+            float ty = cellOrigin.y + (rowH - 2f * cellPadY - textSize.y) * 0.5f;
+            ImGui.getWindowDrawList().addText(tx, ty, ThemeManager.textColor(), text);
+        }
     }
 
     private void renderKeyCells(InputRow row, int rowIndex, float rowH, InputRow.Key[] keys) {
@@ -1085,16 +1206,29 @@ public final class InputOverlay {
         float hitH = rowH - ImGui.getStyle().getItemSpacing().y;
         ImGui.alignTextToFramePadding();
         ImGui.selectable("##key" + key.name(), displayValue, 0, 0f, hitH);
+        boolean onejump = rowFlagsVisible.getAsBoolean() && rowFlags.length > 0;
         if (ImGui.isItemClicked(0)) {
-            keyDragSelect.startDrag(key, rowIndex, actualValue);
+            if (onejump && ImGui.getIO().getKeyShift()) {
+                row.setOnejumpOptional(key, !row.isOnejumpOptional(key));
+                notifyChange(rowIndex);
+            } else {
+                keyDragSelect.startDrag(key, rowIndex, actualValue);
+            }
         }
+        boolean optional = onejump && row.isOnejumpOptional(key);
 
-        if (displayValue) {
+        if (displayValue || optional) {
             String cellLabel = headerLabel(key);
             ImVec2 textSize = ImGui.calcTextSize(cellLabel);
             float tx = cellOrigin.x + (cellW - textSize.x) * 0.5f;
             float ty = cellOrigin.y + (rowH - 2f * cellPadY - textSize.y) * 0.5f;
-            ImGui.getWindowDrawList().addText(tx, ty, ThemeManager.textColor(), cellLabel);
+            if (optional) {
+                float pad = 2f * ThemeManager.uiScale();
+                ImGui.getWindowDrawList().addRect(tx - pad * 2f, ty - pad, tx + textSize.x + pad * 2f, ty + textSize.y + pad,
+                        ThemeManager.textDimColor(), 2f * ThemeManager.uiScale(), 0, 1f);
+            }
+            ImGui.getWindowDrawList().addText(tx, ty, displayValue && !optional ? ThemeManager.textColor()
+                    : ThemeManager.textDimColor(), cellLabel);
         }
     }
 
@@ -1787,7 +1921,7 @@ public final class InputOverlay {
     }
 
     private void handleKeyboardShortcuts() {
-        if (ImGui.getIO().getWantTextInput()) {
+        if (ImGui.getIO().getWantTextInput() || !shortcutsEnabled.getAsBoolean()) {
             return;
         }
         if (ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Delete)) && !selection.isEmpty()) {

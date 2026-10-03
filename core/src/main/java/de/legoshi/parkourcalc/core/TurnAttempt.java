@@ -1,0 +1,255 @@
+package de.legoshi.parkourcalc.core;
+
+import de.legoshi.parkourcalc.core.anglesolver.ConstraintText;
+
+public final class TurnAttempt {
+
+    public static final class Forecast {
+        public final double[] held;
+        public final double[] best;
+        public final double[] bestOffset;
+        public final double[] offsetLo;
+        public final double[] offsetHi;
+        public final int failedTick;
+        public final double[] x;
+        public final double[] z;
+        public final double[] vx;
+        public final double[] vz;
+        public final boolean[] ground;
+
+        public Forecast(double[] held, double[] best, double[] bestOffset, double[] offsetLo, double[] offsetHi,
+                        int failedTick) {
+            this(held, best, bestOffset, offsetLo, offsetHi, failedTick, null, null, null, null, null);
+        }
+
+        public Forecast(double[] held, double[] best, double[] bestOffset, double[] offsetLo, double[] offsetHi,
+                        int failedTick, double[] x, double[] z, double[] vx, double[] vz, boolean[] ground) {
+            this.held = held;
+            this.best = best;
+            this.bestOffset = bestOffset;
+            this.offsetLo = offsetLo;
+            this.offsetHi = offsetHi;
+            this.failedTick = failedTick;
+            this.x = x;
+            this.z = z;
+            this.vx = vx;
+            this.vz = vz;
+            this.ground = ground;
+        }
+
+        public boolean hasMargins() {
+            return held != null;
+        }
+
+        public boolean hasState() {
+            return x != null && z != null && vx != null && vz != null && ground != null;
+        }
+
+        double at(double[] v, int j) {
+            return v == null || j < 0 || j >= v.length ? Double.NaN : v[j];
+        }
+    }
+
+    public final int number;
+    public final int firstTick;
+    public final double[] yaws;
+    public final int recorded;
+    public final boolean complete;
+    public final boolean landed;
+    public final boolean inputFailure;
+    public final String verdict;
+    public final double margin;
+    public final int worstTick;
+    public final int failTick;
+    public final int failKeys;
+    public final int expectedKeys;
+    public final int macro;
+    public final float[] turnStart;
+    public final float[] turnEnd;
+    public final float[][] trace;
+    public final boolean turnFailure;
+    public final double failTurn;
+    public final Forecast forecast;
+    public int ordinal;
+    public boolean favourite;
+    public volatile double[] solvedOffset;
+
+    public TurnAttempt(int number, int firstTick, double[] yaws, int recorded, boolean complete, boolean landed,
+                       boolean inputFailure, String verdict, double margin, int worstTick, int failTick, int failKeys,
+                       int expectedKeys, int macro) {
+        this(number, firstTick, yaws, recorded, complete, landed, inputFailure, verdict, margin, worstTick, failTick,
+                failKeys, expectedKeys, macro, null, null, null);
+    }
+
+    public TurnAttempt(int number, int firstTick, double[] yaws, int recorded, boolean complete, boolean landed,
+                       boolean inputFailure, String verdict, double margin, int worstTick, int failTick, int failKeys,
+                       int expectedKeys, int macro, float[] turnStart, float[] turnEnd, float[][] trace) {
+        this(number, firstTick, yaws, recorded, complete, landed, inputFailure, verdict, margin, worstTick, failTick,
+                failKeys, expectedKeys, macro, turnStart, turnEnd, trace, false, Double.NaN);
+    }
+
+    public TurnAttempt(int number, int firstTick, double[] yaws, int recorded, boolean complete, boolean landed,
+                       boolean inputFailure, String verdict, double margin, int worstTick, int failTick, int failKeys,
+                       int expectedKeys, int macro, float[] turnStart, float[] turnEnd, float[][] trace,
+                       boolean turnFailure, double failTurn) {
+        this(number, firstTick, yaws, recorded, complete, landed, inputFailure, verdict, margin, worstTick, failTick,
+                failKeys, expectedKeys, macro, turnStart, turnEnd, trace, turnFailure, failTurn, null);
+    }
+
+    public TurnAttempt(int number, int firstTick, double[] yaws, int recorded, boolean complete, boolean landed,
+                       boolean inputFailure, String verdict, double margin, int worstTick, int failTick, int failKeys,
+                       int expectedKeys, int macro, float[] turnStart, float[] turnEnd, float[][] trace,
+                       boolean turnFailure, double failTurn, Forecast forecast) {
+        this.number = number;
+        this.firstTick = firstTick;
+        this.yaws = yaws;
+        this.recorded = recorded;
+        this.complete = complete;
+        this.landed = landed;
+        this.inputFailure = inputFailure;
+        this.verdict = verdict;
+        this.margin = margin;
+        this.worstTick = worstTick;
+        this.failTick = failTick;
+        this.failKeys = failKeys;
+        this.expectedKeys = expectedKeys;
+        this.macro = macro;
+        this.turnStart = turnStart;
+        this.turnEnd = turnEnd;
+        this.trace = trace;
+        this.turnFailure = turnFailure;
+        this.failTurn = failTurn;
+        this.forecast = forecast;
+    }
+
+    public TurnAttempt withoutTrace() {
+        if (trace == null) return this;
+        TurnAttempt a = new TurnAttempt(number, firstTick, yaws, recorded, complete, landed, inputFailure, verdict, margin,
+                worstTick, failTick, failKeys, expectedKeys, macro, turnStart, turnEnd, null, turnFailure, failTurn,
+                forecast);
+        a.ordinal = ordinal;
+        a.favourite = favourite;
+        a.solvedOffset = solvedOffset;
+        return a;
+    }
+
+    public int missBand() {
+        if (!judged() || landed || !hasMargin() || margin <= 0.0 || margin >= 0.1) return -1;
+        if (margin >= 0.01) return 0;
+        if (margin >= 0.001) return 1;
+        if (margin >= 0.0001) return 2;
+        return 3;
+    }
+
+    public boolean hasTiming() {
+        return turnStart != null && turnEnd != null;
+    }
+
+    public boolean hasForecast() {
+        return forecast != null && forecast.hasMargins();
+    }
+
+    public boolean hasState() {
+        return forecast != null && forecast.hasState();
+    }
+
+    public boolean solved() {
+        return solvedOffset != null;
+    }
+
+    public double solvedOffsetAt(int tick) {
+        double[] v = solvedOffset;
+        int j = tick - firstTick;
+        return v == null || j < 0 || j >= v.length ? Double.NaN : v[j];
+    }
+
+    public int solvedFailedTick() {
+        double[] v = solvedOffset;
+        if (v == null) return -1;
+        for (int j = 0; j < v.length; j++) if (!Double.isNaN(v[j]) && v[j] < 0.0) return firstTick + j;
+        return -1;
+    }
+
+    public boolean solvedAnywhere() {
+        double[] v = solvedOffset;
+        if (v == null) return false;
+        for (double d : v) if (!Double.isNaN(d)) return true;
+        return false;
+    }
+
+    public int failedTick() {
+        if (solved() && solvedAnywhere()) return solvedFailedTick();
+        return forecast == null ? -1 : forecast.failedTick;
+    }
+
+    public int forecastFailedTick() {
+        return forecast == null ? -1 : forecast.failedTick;
+    }
+
+    public float turnStartAt(int tick) {
+        int j = tick - firstTick;
+        return turnStart == null || j < 0 || j >= turnStart.length ? Float.NaN : turnStart[j];
+    }
+
+    public float turnEndAt(int tick) {
+        int j = tick - firstTick;
+        return turnEnd == null || j < 0 || j >= turnEnd.length ? Float.NaN : turnEnd[j];
+    }
+
+    public float[] traceAt(int tick) {
+        int j = tick - firstTick;
+        return trace == null || j < 0 || j >= trace.length ? null : trace[j];
+    }
+
+    public double heldMarginAt(int tick) {
+        return forecast == null ? Double.NaN : forecast.at(forecast.held, tick - firstTick);
+    }
+
+    public double bestMarginAt(int tick) {
+        double off = solvedOffsetAt(tick);
+        if (!Double.isNaN(off)) return Double.isInfinite(off) ? Double.POSITIVE_INFINITY : -off;
+        return forecast == null ? Double.NaN : forecast.at(forecast.best, tick - firstTick);
+    }
+
+    public double bestOffsetAt(int tick) {
+        return forecast == null ? Double.NaN : forecast.at(forecast.bestOffset, tick - firstTick);
+    }
+
+    public double offsetLoAt(int tick) {
+        return forecast == null ? Double.NaN : forecast.at(forecast.offsetLo, tick - firstTick);
+    }
+
+    public double offsetHiAt(int tick) {
+        return forecast == null ? Double.NaN : forecast.at(forecast.offsetHi, tick - firstTick);
+    }
+
+    public int lastForecastTick() {
+        if (forecast == null || forecast.held == null) return -1;
+        for (int j = Math.min(recorded, forecast.held.length) - 1; j >= 0; j--) {
+            if (!Double.isNaN(forecast.held[j])) return firstTick + j;
+        }
+        return -1;
+    }
+
+    public boolean isMacro() {
+        return macro != 0;
+    }
+
+    public boolean hasMargin() {
+        return !Double.isNaN(margin);
+    }
+
+    public boolean failed() {
+        return inputFailure || turnFailure;
+    }
+
+    public boolean judged() {
+        return complete && !failed();
+    }
+
+    public static String signedMargin(double margin) {
+        if (Double.isNaN(margin)) return "-";
+        double spare = -margin;
+        return (spare < 0.0 ? "-" : "+") + ConstraintText.fixedStat(Math.abs(spare));
+    }
+}
