@@ -41,11 +41,16 @@ public final class AttemptTracker {
     private float[][] traces;
     private LandingForecast forecast;
     private double[] heldMargin;
+    private double[] stX;
+    private double[] stZ;
+    private double[] stVx;
+    private double[] stVz;
+    private boolean[] stGround;
     private double[] bestMargin;
     private double[] bestOffset;
     private double[] offsetLo;
     private double[] offsetHi;
-    private int lostTick = -1;
+    private int failedTick = -1;
     private int recorded;
     private int tick;
     private int span;
@@ -229,6 +234,11 @@ public final class AttemptTracker {
             turnEnd = null;
             traces = null;
         }
+        stX = nans(c.n);
+        stZ = nans(c.n);
+        stVx = nans(c.n);
+        stVz = nans(c.n);
+        stGround = new boolean[c.n];
         forecast = forecastEnabled.getAsBoolean() ? LandingForecast.of(profile.forwardModel(), c) : null;
         if (forecast != null) {
             heldMargin = nans(c.n);
@@ -243,7 +253,7 @@ public final class AttemptTracker {
             offsetLo = null;
             offsetHi = null;
         }
-        lostTick = -1;
+        failedTick = -1;
         span = c.lastTick() - c.startTick + 1;
         recorded = 0;
         margin = Double.NaN;
@@ -268,6 +278,13 @@ public final class AttemptTracker {
             yaws[tick] = Angles.wrap(yaw);
             recorded = tick + 1;
         }
+        if (stX != null && tick < stX.length) {
+            stX[tick] = x;
+            stZ[tick] = z;
+            stVx[tick] = vx;
+            stVz[tick] = vz;
+            stGround[tick] = ground;
+        }
         if (cur.landing != null && cur.startTick + tick == cur.landing.tick) {
             margin = cur.landing.margin(x, z);
             missAxis = cur.landing.worstAxis(x, z);
@@ -288,7 +305,7 @@ public final class AttemptTracker {
                 bestOffset[tick] = r.bestOffsetDeg;
                 offsetLo[tick] = r.offsetLoDeg;
                 offsetHi[tick] = r.offsetHiDeg;
-                if (!r.landable() && lostTick < 0) lostTick = cur.startTick + tick;
+                if (!r.landable() && failedTick < 0) failedTick = cur.startTick + tick;
             }
         }
         live = new TurnAttempt(profile.document().nextNumber(), cur.startTick, yaws, recorded, false, false, false, "",
@@ -296,8 +313,9 @@ public final class AttemptTracker {
     }
 
     private TurnAttempt.Forecast forecastResult() {
-        if (heldMargin == null) return null;
-        return new TurnAttempt.Forecast(heldMargin, bestMargin, bestOffset, offsetLo, offsetHi, lostTick);
+        if (heldMargin == null && stX == null) return null;
+        return new TurnAttempt.Forecast(heldMargin, bestMargin, bestOffset, offsetLo, offsetHi, failedTick, stX, stZ,
+                stVx, stVz, stGround);
     }
 
     private static double[] nans(int n) {
@@ -331,6 +349,7 @@ public final class AttemptTracker {
         if (t >= cur.n || !cur.checkKeys[t]) return false;
         int relevant = ground ? ~0 : ~TurnReference.KEY_JUMP;
         if ((cur.keys[t] & TurnReference.KEY_W) == 0) relevant &= ~TurnReference.KEY_SPRINT;
+        relevant &= ~cur.optionalKeys[t];
         return ((cur.keys[t] ^ mask) & relevant) != 0;
     }
 
@@ -350,7 +369,7 @@ public final class AttemptTracker {
         bestOffset = null;
         offsetLo = null;
         offsetHi = null;
-        lostTick = -1;
+        failedTick = -1;
         cur = null;
         live = null;
     }

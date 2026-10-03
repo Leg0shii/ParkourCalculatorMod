@@ -1303,6 +1303,10 @@ public final class AngleSolverEngine {
         return new PathSnapshot(job.spec, yaws, job.startTick);
     }
 
+    public ExactJumpModel exactModel() {
+        return model instanceof ExactJumpModel ? (ExactJumpModel) model : null;
+    }
+
     public ForwardModel forwardModel() {
         return model;
     }

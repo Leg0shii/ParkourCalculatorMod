@@ -53,19 +53,18 @@ public class AttemptSamplerTest {
         return new Loaded(model, spec, recorded, TurnProfile.heldTicks(spec, n));
     }
 
+    private static double[][] spread(int n, double px, int from) {
+        double[][] e = new double[n][];
+        for (int t = 0; t < n; t++) e[t] = t < from ? new double[0] : new double[] {-px, -px / 2, 0.0, px / 2, px};
+        return e;
+    }
+
     @Test
-    public void zeroScatterLandsEveryAttempt() {
+    public void noSpreadLandsEveryAttempt() {
         Loaded l = load();
-        AttemptSampler.Scatter sc = new AttemptSampler.Scatter();
-        sc.flickRestPct = 0.0;
-        sc.flickMovingPct = 0.0;
-        sc.smoothPx = 0.0;
-        sc.flickMsMin = 50.0;
-        sc.flickMsMax = 50.0;
-        sc.flickStartJitterMs = 0.0;
-        sc.flickThresholdDeg = 0.0;
-        AttemptSampler.Stats s = AttemptSampler.sample(l.model, l.spec, l.recorded, l.held,
-                TurnProfile.pixelDeg(0.5f), sc, 200, new AtomicBoolean(false));
+        int n = l.recorded.length;
+        AttemptSampler.Stats s = AttemptSampler.sample(l.model, l.spec, l.recorded, spread(n, 0.0, 0), 200,
+                new AtomicBoolean(false));
         assertEquals(200, s.attempts);
         assertEquals(200, s.landings);
         assertEquals(200, s.landed.length);
@@ -79,8 +78,9 @@ public class AttemptSamplerTest {
     @Test
     public void reservoirsStayBounded() {
         Loaded l = load();
-        AttemptSampler.Stats s = AttemptSampler.sample(l.model, l.spec, l.recorded, l.held,
-                TurnProfile.pixelDeg(0.5f), new AttemptSampler.Scatter(), 3000, new AtomicBoolean(false));
+        int n = l.recorded.length;
+        AttemptSampler.Stats s = AttemptSampler.sample(l.model, l.spec, l.recorded, spread(n, 3.0, 10), 3000,
+                new AtomicBoolean(false));
         assertTrue(s.failed.length <= AttemptSampler.RESERVOIR);
         assertTrue(s.landed.length <= AttemptSampler.RESERVOIR);
         assertEquals(Math.min(s.landings, AttemptSampler.RESERVOIR), s.landed.length);
@@ -88,46 +88,40 @@ public class AttemptSamplerTest {
     }
 
     @Test
-    public void thePinnedSolveAlmostNeverLandsWithHumanScatter() {
+    public void aPixelSpreadOnTheTurnLandsOnlySomeTries() {
         Loaded l = load();
-        AttemptSampler.Stats s = AttemptSampler.sample(l.model, l.spec, l.recorded, l.held,
-                TurnProfile.pixelDeg(0.5f), new AttemptSampler.Scatter(), 5000, new AtomicBoolean(false));
-        assertEquals(5000, s.attempts);
-        assertTrue("rate " + s.rate(), s.rate() < 0.01);
-        double blameSum = 0.0;
-        for (double b : s.blame) blameSum += b;
-        assertEquals(1.0, blameSum, 1e-9);
-        for (int t = 0; t < 10; t++) assertEquals(0.0, s.blame[t], 0.0);
+        int n = l.recorded.length;
+        double px = TurnProfile.pixelDeg(0.5f);
+        AttemptSampler.Stats s = AttemptSampler.sample(l.model, l.spec, l.recorded, spread(n, 6.0 * px, 10), 2000,
+                new AtomicBoolean(false));
+        assertEquals(2000, s.attempts);
+        assertTrue("rate " + s.rate(), s.rate() < 1.0);
+        assertTrue("rate " + s.rate(), s.rate() > 0.0);
+        for (int t = 0; t < 10; t++) {
+            assertEquals(0.0, s.landedLo[t], 1e-9);
+            assertEquals(0.0, s.landedHi[t], 1e-9);
+        }
     }
 
     @Test
-    public void sameSeedGivesSameCounts() {
+    public void theSameSpreadGivesTheSameCounts() {
         Loaded l = load();
-        AttemptSampler.Scatter sc = new AttemptSampler.Scatter();
-        AttemptSampler.Stats a = AttemptSampler.sample(l.model, l.spec, l.recorded, l.held,
-                TurnProfile.pixelDeg(0.5f), sc, 2000, new AtomicBoolean(false));
-        AttemptSampler.Stats b = AttemptSampler.sample(l.model, l.spec, l.recorded, l.held,
-                TurnProfile.pixelDeg(0.5f), sc, 2000, new AtomicBoolean(false));
+        int n = l.recorded.length;
+        double px = TurnProfile.pixelDeg(0.5f);
+        AttemptSampler.Stats a = AttemptSampler.sample(l.model, l.spec, l.recorded, spread(n, 6.0 * px, 10), 1000,
+                new AtomicBoolean(false));
+        AttemptSampler.Stats b = AttemptSampler.sample(l.model, l.spec, l.recorded, spread(n, 6.0 * px, 10), 1000,
+                new AtomicBoolean(false));
         assertEquals(a.landings, b.landings);
-        for (int t = 0; t < a.blame.length; t++) assertEquals(a.blame[t], b.blame[t], 0.0);
+        for (int t = 0; t < n; t++) assertEquals(a.landedLo[t], b.landedLo[t], 0.0);
     }
 
     @Test
     public void cancelStopsEarly() {
         Loaded l = load();
         AtomicBoolean cancel = new AtomicBoolean(true);
-        AttemptSampler.Stats s = AttemptSampler.sample(l.model, l.spec, l.recorded, l.held,
-                TurnProfile.pixelDeg(0.5f), new AttemptSampler.Scatter(), 5000, cancel);
+        AttemptSampler.Stats s = AttemptSampler.sample(l.model, l.spec, l.recorded, spread(l.recorded.length, 1.0, 0),
+                5000, cancel);
         assertEquals(0, s.attempts);
-    }
-
-    @Test
-    public void flickTicksAreTheLargeTurns() {
-        Loaded l = load();
-        AttemptSampler.Stats s = AttemptSampler.sample(l.model, l.spec, l.recorded, l.held,
-                TurnProfile.pixelDeg(0.5f), new AttemptSampler.Scatter(), 10, new AtomicBoolean(false));
-        assertTrue(s.flickTick[10]);
-        assertTrue(s.flickTick[11]);
-        assertTrue(!s.flickTick[15]);
     }
 }

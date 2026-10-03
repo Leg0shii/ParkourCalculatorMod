@@ -7,13 +7,8 @@ import de.legoshi.parkourcalc.core.TurnAttempt;
 import de.legoshi.parkourcalc.core.TurnProfileController;
 import de.legoshi.parkourcalc.core.TurnProfileDocument;
 import de.legoshi.parkourcalc.core.TurnReference;
-import de.legoshi.parkourcalc.core.TurnTiming;
 import de.legoshi.parkourcalc.core.anglesolver.profile.AttemptSampler;
-import de.legoshi.parkourcalc.core.anglesolver.profile.TurnProfile;
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
-import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
-import de.legoshi.parkourcalc.core.ui.InputOverlay;
-import de.legoshi.parkourcalc.core.ui.SelectionManager;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.Fonts;
@@ -21,84 +16,46 @@ import de.legoshi.parkourcalc.core.ui.theme.Modal;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImGui;
+import imgui.ImVec2;
 import imgui.ImGuiIO;
 import imgui.flag.ImGuiCond;
-import imgui.flag.ImGuiFocusedFlags;
-import imgui.flag.ImGuiInputTextFlags;
 import imgui.flag.ImGuiSelectableFlags;
 import imgui.flag.ImGuiTableColumnFlags;
 import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImBoolean;
-import imgui.type.ImInt;
-import imgui.type.ImString;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 public final class OnejumpSetupWindow implements RenderInterface {
 
     private static final String WINDOW_ID = "###onejumpSetup";
     private static final String TITLE = "Onejump Setup";
     private static final String POPUP_CLEAR = "###onejumpClear";
-    private static final String POPUP_NEW = "###onejumpNew";
-    private static final String POPUP_DELETE = "###onejumpDelete";
-    private static final String[] FORM_LABELS = {"Onejump", "From TAS", "Landing", "X", "Z"};
     private static final float WIN_W = 760f;
     private static final float WIN_H = 680f;
     private static final float MIN_W = 520f;
     private static final float MIN_H = 300f;
     private static final int MIN_TABLE_ROWS = 4;
-    private static final int LIST_LIMIT = 200;
+    private static final int PAGE_SIZE = 50;
+    private static final int LATEST = 5;
+    private static final String[] DOTS = {"", ".", "..", "..."};
 
     private final TurnProfileController controller;
     private final AttemptTracker tracker;
     private final Settings settings;
-    private final Supplier<Float> sensitivity;
     private final Runnable onSettingsChanged;
-    private final PracticeMacro macro;
-    private final InputOverlay referenceTable;
-    private final ImInt macroPick = new ImInt(0);
-    private final int[] macroDelay = new int[1];
     private final ImBoolean open = new ImBoolean(false);
-    private final int[] inputsPct = new int[1];
-    private final ImInt importFrom = new ImInt(1);
-    private final ImInt importTo = new ImInt(1);
-    private final ImInt landingPick = new ImInt(0);
-    private final ImInt onejumpPick = new ImInt(0);
-    private final ImString newName = new ImString(64);
-    private final Map<String, ImString> buffers = new HashMap<String, ImString>();
-    private String activeId;
-    private boolean importInit;
     private boolean openClearModal;
-    private boolean openNewModal;
-    private boolean openDeleteModal;
+    private int attemptsPage;
 
     public OnejumpSetupWindow(TurnProfileController controller, AttemptTracker tracker, Settings settings,
-                              MinecraftAccess mc, Supplier<Float> sensitivity, Runnable onSettingsChanged,
-                              PracticeMacro macro) {
+                              Runnable onSettingsChanged) {
         this.controller = controller;
         this.tracker = tracker;
         this.settings = settings;
-        this.sensitivity = sensitivity;
         this.onSettingsChanged = onSettingsChanged;
-        this.macro = macro;
-        final TurnReference ref = controller.document().reference();
-        referenceTable = new InputOverlay(ref.data(), settings, new SelectionManager(mc), i -> controller.referenceChanged(),
-                () -> { }, null, null, null, null);
-        referenceTable.setRowFlags(
-                new InputOverlay.RowFlag("Keys", "Check the keys of this tick against the attempt.", ref::checkKeys,
-                        r -> ref.setCheckKeys(r, !ref.checkKeys(r))),
-                new InputOverlay.RowFlag("Face", "Check the facing of this tick and show it in the Onejump graph.",
-                        ref::checkYaw, r -> ref.setCheckYaw(r, !ref.checkYaw(r))),
-                new InputOverlay.RowFlag("Still", "Fail the attempt if the facing at this tick differs from the"
-                        + " reference at all, not even by one pixel. Catches a preturn.",
-                        ref::still, r -> ref.setStill(r, !ref.still(r))));
-        referenceTable.setShortcutsEnabled(() -> ImGui.isWindowFocused(ImGuiFocusedFlags.RootAndChildWindows));
     }
 
     @Override
@@ -120,79 +77,60 @@ public final class OnejumpSetupWindow implements RenderInterface {
         }
     }
 
-    private float labelColumnWidth(float scale) {
-        float max = 0f;
-        for (String l : FORM_LABELS) max = Math.max(max, ImGui.calcTextSize(l).x);
-        return max + ThemeManager.SM * scale;
-    }
-
     private void body(float scale) {
         controller.sync();
+        controller.autoRate();
+        controller.requestDeepChecks();
         TurnProfileController.Current cur = controller.current();
         TurnProfileDocument doc = controller.document();
         List<TurnAttempt> all = doc.attempts();
-        float labelW = labelColumnWidth(scale);
-        if (controller.name() == null) {
-            emptyState(scale);
-            newModal();
-            return;
-        }
-        float lineH = ImGui.getTextLineHeightWithSpacing();
         if (Controls.beginTabBar("##onejump_tabs")) {
             if (Controls.beginTab("Overview")) {
                 ThemeManager.sectionSpacing();
-                overview(doc, scale);
+                overview(doc, cur, scale);
                 Controls.endTab();
             }
-            if (Controls.beginTab("Jump")) {
+            if (Controls.beginTab("Favourites")) {
                 ThemeManager.sectionSpacing();
-                float tableH = Math.max(minTableH(scale), ImGui.getContentRegionAvail().y - lineH * 5f
-                        - ThemeManager.sectionSpacingHeight() * 2f);
-                reference(labelW, scale, tableH);
+                List<TurnAttempt> favourites = doc.favourites();
+                ImGui.textDisabled(favourites.size() + " favourites");
+                float tableH = Math.max(minTableH(scale), ImGui.getContentRegionAvail().y - ThemeManager.sectionSpacingHeight());
+                attemptsTable("##attemptsFav", favourites, tableH, false);
                 Controls.endTab();
             }
             if (Controls.beginTab("Attempts")) {
                 ThemeManager.sectionSpacing();
-                List<TurnAttempt> newest = new ArrayList<TurnAttempt>();
-                for (int i = all.size() - 1; i >= 0 && newest.size() < LIST_LIMIT; i--) newest.add(all.get(i));
-                ImGui.textDisabled(all.size() > LIST_LIMIT ? "latest " + LIST_LIMIT + " of " + all.size() : all.size() + " stored");
-                float tableH = Math.max(minTableH(scale), ImGui.getContentRegionAvail().y - ThemeManager.sectionSpacingHeight());
-                attemptsTable("##attemptsAll", newest, tableH, false);
-                Controls.endTab();
-            }
-            if (Controls.beginTab("Settings")) {
-                ThemeManager.sectionSpacing();
-                settingsSection(cur, scale);
+                int pages = Math.max(1, (all.size() + PAGE_SIZE - 1) / PAGE_SIZE);
+                attemptsPage = Math.max(0, Math.min(attemptsPage, pages - 1));
+                int from = all.size() - attemptsPage * PAGE_SIZE;
+                List<TurnAttempt> page = new ArrayList<TurnAttempt>();
+                for (int i = from - 1; i >= 0 && i >= from - PAGE_SIZE; i--) page.add(all.get(i));
+                if (attemptsPage == 0) Controls.disabledButton("<");
+                else if (Controls.secondaryButton("<")) attemptsPage--;
+                ImGui.sameLine();
+                ImGui.alignTextToFramePadding();
+                ImGui.text("Page " + (attemptsPage + 1) + " of " + pages);
+                ImGui.sameLine();
+                if (attemptsPage >= pages - 1) Controls.disabledButton(">");
+                else if (Controls.secondaryButton(">")) attemptsPage++;
+                ImGui.sameLine();
+                ImGui.alignTextToFramePadding();
+                ImGui.textDisabled(all.size() + " attempts");
+                float tableH = Math.max(minTableH(scale), ImGui.getContentRegionAvail().y - ThemeManager.sectionSpacingHeight() * 2f
+                        - ImGui.getTextLineHeightWithSpacing() - Controls.buttonHeight());
+                attemptsTable("##attemptsAll", page, tableH, false);
+                dangerZone();
                 Controls.endTab();
             }
             Controls.endTabBar();
         }
         clearModal();
-        newModal();
-        deleteModal();
     }
 
-    private void emptyState(float scale) {
-        String hint = "No onejump loaded";
-        float availH = ImGui.getContentRegionAvail().y;
-        float availW = ImGui.getContentRegionAvail().x;
-        float comboW = ImGui.calcTextSize("a rather long onejump name").x + ImGui.getFrameHeight() + 24f * scale;
-        float rowW = comboW + ImGui.getStyle().getItemSpacing().x + Controls.buttonWidth("New");
-        float blockH = ImGui.getTextLineHeight() + ThemeManager.sectionSpacingHeight() + Controls.buttonHeight();
-        ImGui.setCursorPosY(ImGui.getCursorPosY() + Math.max(0f, (availH - blockH) * 0.5f));
-        ThemeManager.pushTextColor(ThemeManager.textDimColor());
-        ThemeManager.textCenter(hint);
-        ThemeManager.popTextColor();
-        ThemeManager.sectionSpacing();
-        ImGui.setCursorPosX(ImGui.getCursorPosX() + Math.max(0f, (availW - rowW) * 0.5f));
-        pickerControls(comboW);
-    }
+    private static final String[] OVERVIEW_LABELS = {"TAS", "Landing", "Attempts", "Landed", "Input failures",
+            "Landing chance", "Closest", "Missed by", "Failed at", "Replay (inputs)", "Replay (turn)", "Top 10", "Latest"};
 
-    private static final String[] OVERVIEW_LABELS = {"Name", "Attempts", "Landed", "Input failures", "Closest",
-            "Preturns", "Lost at", "Mouse practice", "Input practice", "Turn onset", "Top 10"};
-    private static final int ONSET_LIMIT = 500;
-
-    private void overview(TurnProfileDocument doc, float scale) {
+    private void overview(TurnProfileDocument doc, TurnProfileController.Current cur, float scale) {
         TurnProfileDocument.Stats st = doc.stats();
         String name = controller.name();
         float labelW = 0f;
@@ -200,38 +138,59 @@ public final class OnejumpSetupWindow implements RenderInterface {
         for (String l : OVERVIEW_LABELS) labelW = Math.max(labelW, ImGui.calcTextSize(l).x);
         Fonts.popBold();
         labelW += ThemeManager.SM * scale;
-        overviewRow("Name", name != null ? name : "none", labelW, name == null);
+        overviewRow("TAS", name != null ? name : "unsaved, attempts are not kept", labelW, name == null);
+        int tasFirst = doc.reference().tasFirstTick();
+        String err = controller.lastError();
+        TurnReference.Landing landing = cur == null ? null : cur.landing;
+        overviewRow("Landing", landing != null ? landing.label(tasFirst) : cur == null
+                ? (err != null ? err : "mark Keys and Face ticks in the input table")
+                : "no X or Z constraint after the reference, attempts are not judged", labelW, landing == null);
         overviewRow("Attempts", Integer.toString(st.attempts), labelW, false);
-        overviewRow("Landed", Integer.toString(st.landings), labelW, false);
         overviewRow("Input failures", Integer.toString(st.inputFailures), labelW, false);
-        overviewRow("Preturns", Integer.toString(st.turnFailures), labelW, false);
-        String lost = LandingForecast.lostSummary(doc.attempts(), ONSET_LIMIT);
-        overviewRow("Lost at", lost == null ? "-" : lost, labelW, lost == null);
+        String failed = LandingForecast.failedSummary(doc.attempts(), Integer.MAX_VALUE);
+        overviewRow("Failed at", failed == null ? "-" : failed, labelW, failed == null);
+        int[] bands = st.missBands;
+        boolean anyBand = bands[0] + bands[1] + bands[2] + bands[3] > 0;
+        overviewRow("Missed by", String.format(Locale.ROOT, "e-2 %d   e-3 %d   e-4 %d   e-5 %d", bands[0], bands[1],
+                bands[2], bands[3]), labelW, !anyBand);
         overviewRow("Closest", st.hasClosest() ? TurnAttempt.signedMargin(st.closest) : "-", labelW, !st.hasClosest());
-        overviewRow("Mouse practice", practiceText(st.mouseAttempts, st.mouseClears, PracticeMacro.LABEL_INPUTS), labelW,
-                st.mouseAttempts == 0);
-        overviewRow("Input practice", practiceText(st.inputAttempts, st.inputClears, PracticeMacro.LABEL_TURN), labelW,
-                st.inputAttempts == 0);
-        if (settings.onejumpTurnTiming) {
-            TurnProfileController.Current cur = controller.current();
-            int main = cur == null || cur.n == 0 ? -1 : TurnTiming.mainTurnTick(cur);
-            TurnTiming.Onset onset = main < 0 ? null : TurnTiming.onset(doc.attempts(), cur.startTick + main, ONSET_LIMIT);
-            overviewRow("Turn onset", onset == null ? "-" : String.format(Locale.ROOT,
-                    "%s into tick %d  (%s to %s, %d attempts)", TurnTiming.ms(onset.median), cur.startTick + main + 1,
-                    TurnTiming.ms(onset.lo), TurnTiming.ms(onset.hi), onset.attempts), labelW, onset == null);
-        }
+        overviewRow("Landed", Integer.toString(st.landings), labelW, false);
+        overviewRow("Landing chance", landingChance(cur), labelW, cur == null || cur.attempts == null);
+        if (st.mouseAttempts > 0) overviewRow(PracticeMacro.LABEL_INPUTS, practiceText(st.mouseAttempts, st.mouseClears), labelW, false);
+        if (st.inputAttempts > 0) overviewRow(PracticeMacro.LABEL_TURN, practiceText(st.inputAttempts, st.inputClears), labelW, false);
         ThemeManager.sectionSpacing();
         Fonts.pushBold();
         ImGui.text("Top " + TurnProfileDocument.TOP);
         Fonts.popBold();
         List<TurnAttempt> top = doc.top();
-        float topH = ThemeManager.tableHeaderRowHeight() + ThemeManager.tableRowHeight() * Math.max(1, top.size()) + 4f * scale;
-        attemptsTable("##attemptsTop", top, topH, true);
+        attemptsTable("##attemptsTop", top, listHeight(top, scale), true);
+        ThemeManager.sectionSpacing();
+        Fonts.pushBold();
+        ImGui.text("Latest");
+        Fonts.popBold();
+        List<TurnAttempt> all = doc.attempts();
+        List<TurnAttempt> latest = new ArrayList<TurnAttempt>();
+        for (int i = all.size() - 1; i >= 0 && latest.size() < LATEST; i--) latest.add(all.get(i));
+        attemptsTable("##attemptsLatest", latest, listHeight(latest, scale), false);
     }
 
-    private static String practiceText(int attempts, int clears, String macro) {
-        if (attempts == 0) return "none  (" + macro + ")";
-        return String.format(Locale.ROOT, "%d attempts   %d clears  (%s)", attempts, clears, macro);
+    private static float listHeight(List<TurnAttempt> list, float scale) {
+        return ThemeManager.tableHeaderRowHeight() + ThemeManager.tableRowHeight() * Math.max(1, list.size()) + 4f * scale;
+    }
+
+    private String landingChance(TurnProfileController.Current cur) {
+        if (cur == null) return "-";
+        if (!cur.canRate()) return cur.pathLands() ? "needs a landing box and a TAS path" : "the reference path does not meet the TAS constraints";
+        AttemptSampler.Stats rs = cur.attempts;
+        if (rs == null) return controller.isRating() ? "sampling" : "-";
+        int used = controller.ratedSpread();
+        if (used == 0) return "no attempts yet, the reference itself " + (rs.rate() > 0.0 ? "lands" : "misses");
+        return String.format(Locale.ROOT, "%s of tries  (%s, spread of your last %d attempts, %s samples)",
+                oneIn(rs.rate()), pct(rs.rate()), used, compact(rs.attempts));
+    }
+
+    private static String practiceText(int attempts, int clears) {
+        return String.format(Locale.ROOT, "%d   (%d landed)", attempts, clears);
     }
 
     private static void overviewRow(String label, String value, float labelW, boolean dim) {
@@ -243,36 +202,6 @@ public final class OnejumpSetupWindow implements RenderInterface {
         ImGui.setCursorPosX(startX + labelW);
         if (dim) ImGui.textDisabled(value);
         else ImGui.text(value);
-    }
-
-    private void onejumpRow(float labelW, float scale) {
-        Controls.pushInputFrameHeight();
-        SolverWidgets.rowLabel("Onejump", labelW);
-        Controls.popInputFrameHeight();
-        pickerControls(ImGui.calcTextSize("a rather long onejump name").x + ImGui.getFrameHeight() + 24f * scale);
-    }
-
-    private void pickerControls(float comboW) {
-        List<String> names = controller.names();
-        String current = controller.name();
-        String[] items = new String[names.size() + 1];
-        items[0] = names.isEmpty() ? "none saved" : "choose";
-        int selected = 0;
-        for (int i = 0; i < names.size(); i++) {
-            items[i + 1] = names.get(i);
-            if (names.get(i).equals(current)) selected = i + 1;
-        }
-        onejumpPick.set(selected);
-        if (Controls.combo("##onejumpPick", onejumpPick, items, comboW) && onejumpPick.get() > 0) {
-            controller.open(names.get(onejumpPick.get() - 1));
-            importInit = false;
-        }
-        TooltipUtil.onHover("One file per onejump in parkourcalculator-onejump.");
-        ImGui.sameLine();
-        if (Controls.secondaryButton("New")) {
-            newName.set("");
-            openNewModal = true;
-        }
     }
 
     private static float minTableH(float scale) {
@@ -300,16 +229,18 @@ public final class OnejumpSetupWindow implements RenderInterface {
     private void attemptsTable(String id, List<TurnAttempt> list, float h, boolean ranked) {
         float rowH = ThemeManager.tableRowHeight();
         int extra = ranked ? 1 : 0;
-        if (!ThemeManager.beginStandardClickableRowsTable(id, 3 + extra, 0, 0f, h)) return;
+        if (!ThemeManager.beginStandardClickableRowsTable(id, 4 + extra, 0, 0f, h)) return;
         ImGui.tableSetupScrollFreeze(0, 1);
         int fixed = ImGuiTableColumnFlags.WidthFixed;
         float numW = ImGui.calcTextSize("999999").x;
         float landW = ImGui.calcTextSize("-99.99999").x;
+        float starW = ImGui.calcTextSize("Fav").x;
         if (ranked) ImGui.tableSetupColumn("#", fixed, ThemeManager.tableLeftmostColumnWidth("#", ImGui.calcTextSize("99").x));
-        ImGui.tableSetupColumn("attempt", fixed, ranked ? ThemeManager.tableNumericColumnWidth("attempt", numW)
-                : ThemeManager.tableLeftmostColumnWidth("attempt", numW));
-        ImGui.tableSetupColumn("offset", fixed, ThemeManager.tableNumericColumnWidth("offset", landW));
-        ImGui.tableSetupColumn("keys", ImGuiTableColumnFlags.WidthStretch, 0f);
+        ImGui.tableSetupColumn("Attempt", fixed, ranked ? ThemeManager.tableNumericColumnWidth("Attempt", numW)
+                : ThemeManager.tableLeftmostColumnWidth("Attempt", numW));
+        ImGui.tableSetupColumn("Fav", fixed, ThemeManager.tableNumericColumnWidth("Fav", starW));
+        ImGui.tableSetupColumn("Offset", fixed, ThemeManager.tableNumericColumnWidth("Offset", landW));
+        ImGui.tableSetupColumn("Info", ImGuiTableColumnFlags.WidthStretch, 0f);
         ThemeManager.tableHeaderRow();
         ThemeManager.paintTableHeader();
         ImGui.tableSetColumnIndex(0);
@@ -318,11 +249,14 @@ public final class OnejumpSetupWindow implements RenderInterface {
             ThemeManager.tableHeaderRight("#");
             ImGui.tableSetColumnIndex(1);
         }
-        ThemeManager.tableHeaderRight("attempt");
+        ThemeManager.tableHeaderRight("Attempt");
         ImGui.tableSetColumnIndex(1 + extra);
-        ThemeManager.tableHeaderRight("offset");
+        ThemeManager.tableHeaderCentered("Fav");
+        TooltipUtil.onHover("Click to keep an attempt in the Favourites list of the Overview.");
         ImGui.tableSetColumnIndex(2 + extra);
-        ThemeManager.tableHeader("keys");
+        ThemeManager.tableHeaderRight("Offset");
+        ImGui.tableSetColumnIndex(3 + extra);
+        ThemeManager.tableHeader("Info");
         ThemeManager.tableRightmostCellTrailingPad();
         if (list.isEmpty()) {
             ImGui.tableNextRow(0, rowH);
@@ -335,277 +269,87 @@ public final class OnejumpSetupWindow implements RenderInterface {
             return;
         }
         int selectedNumber = controller.selectedNumber();
+        float hitH = rowH - ImGui.getStyle().getItemSpacing().y;
         for (int i = 0; i < list.size(); i++) {
             TurnAttempt a = list.get(i);
             boolean selected = a.number == selectedNumber;
+            boolean macroRow = a.isMacro();
             ImGui.tableNextRow(0, rowH);
             ThemeManager.paintTableRowBg(i);
+            if (macroRow) ThemeManager.pushTextColor(ThemeManager.warningColor());
             ImGui.tableSetColumnIndex(0);
             ThemeManager.tableLeftmostCellPad();
             ImGui.alignTextToFramePadding();
-            String first = ranked ? Integer.toString(i + 1) : Integer.toString(a.number);
-            if (ThemeManager.rightAlignedSelectable(id + i, first, selected, ImGuiSelectableFlags.SpanAllColumns)) {
+            String first = ranked ? Integer.toString(i + 1) : Integer.toString(a.ordinal);
+            if (ThemeManager.rightAlignedSelectable(id + i, first, selected,
+                    ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowItemOverlap)) {
                 controller.select(selected ? -1 : a.number);
             }
             if (ranked) {
                 ImGui.tableSetColumnIndex(1);
-                ThemeManager.textRight(Integer.toString(a.number));
+                ThemeManager.textRight(Integer.toString(a.ordinal));
             }
             ImGui.tableSetColumnIndex(1 + extra);
-            if (a.hasMargin()) {
-                ThemeManager.pushTextColor(a.landed ? ThemeManager.okColor() : ThemeManager.textMutedColor());
-                ThemeManager.textRight(TurnAttempt.signedMargin(a.margin));
-                ThemeManager.popTextColor();
-            } else {
-                ThemeManager.pushTextColor(ThemeManager.textDimColor());
-                ThemeManager.textRight("-");
-                ThemeManager.popTextColor();
-            }
+            favouriteCell(id + "fav" + i, a, hitH, rowH);
             ImGui.tableSetColumnIndex(2 + extra);
-            String cell = a.inputFailure ? (a.failTick + 1) + ": " + TurnReference.describe(a.failKeys) + ", expected "
-                    + TurnReference.describe(a.expectedKeys) : a.turnFailure ? a.verdict
-                    : a.judged() && !a.landed && a.lostTick() >= 0 ? "lost at tick " + (a.lostTick() + 1) : "";
-            if (a.isMacro()) {
-                String tag = a.macro == 1 ? PracticeMacro.LABEL_INPUTS : PracticeMacro.LABEL_TURN;
-                ThemeManager.pushTextColor(ThemeManager.warningColor());
-                ThemeManager.textLeft(cell.isEmpty() ? tag : tag + "   " + cell);
+            if (a.hasMargin()) {
+                if (!macroRow) ThemeManager.pushTextColor(a.landed ? ThemeManager.okColor() : ThemeManager.textMutedColor());
+                ThemeManager.textRight(TurnAttempt.signedMargin(a.margin));
+                if (!macroRow) ThemeManager.popTextColor();
+            } else {
+                if (!macroRow) ThemeManager.pushTextColor(ThemeManager.textDimColor());
+                ThemeManager.textRight("-");
+                if (!macroRow) ThemeManager.popTextColor();
+            }
+            ImGui.tableSetColumnIndex(3 + extra);
+            String cell = info(a);
+            if (!cell.isEmpty()) ThemeManager.textLeft(cell);
+            if (macroRow) {
                 ThemeManager.popTextColor();
-            } else if (!cell.isEmpty()) {
-                ThemeManager.textLeft(cell);
+                if (!cell.isEmpty()) ImGui.sameLine();
+                else ImGui.alignTextToFramePadding();
+                ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+                ImGui.text("(?)");
+                ThemeManager.popTextColor();
+                TooltipUtil.onHover(a.macro == 1 ? PracticeMacro.LABEL_INPUTS : PracticeMacro.LABEL_TURN);
             }
         }
         ThemeManager.endStandardTable();
     }
 
-    private void reference(float labelW, float scale, float tableH) {
-        onejumpRow(labelW, scale);
-        TurnReference ref = controller.document().reference();
-        float tickW = ImGui.calcTextSize("99999").x + 14f * scale;
-        float numW = ImGui.calcTextSize("-99999.00000").x + 14f * scale;
-        if (!importInit && ref.tasFirstTick() >= 0 && !ref.isEmpty()) {
-            importFrom.set(ref.tasFirstTick() + 1);
-            importTo.set(ref.tasFirstTick() + ref.size());
-            importInit = true;
+    private String info(TurnAttempt a) {
+        if (a.inputFailure) {
+            return "T" + (a.failTick + 1) + " Inputs: " + TurnReference.describe(a.failKeys) + ", expected "
+                    + TurnReference.describe(a.expectedKeys);
         }
-        Controls.pushInputFrameHeight();
-        SolverWidgets.rowLabel("From TAS", labelW);
-        ImGui.text("tick");
-        Controls.popInputFrameHeight();
-        ImGui.sameLine();
-        textCell("importFrom", Integer.toString(importFrom.get()), tickW, s -> importFrom.set(parseInt(s, importFrom.get())));
-        word("to");
-        textCell("importTo", Integer.toString(importTo.get()), tickW, s -> importTo.set(parseInt(s, importTo.get())));
-        ImGui.sameLine();
-        if (Controls.secondaryButton("Import")) {
-            if (controller.importFromTas(importFrom.get() - 1, importTo.get() - 1)) importInit = true;
+        if (a.turnFailure) return "T" + (a.failTick + 1) + " Preturn: " + turn(a.failTurn);
+        if (controller.isDeepChecking(a)) return "solving" + DOTS[(int) (ImGui.getTime() * 3.0) % DOTS.length];
+        if (a.judged() && !a.landed && a.failedTick() >= 0) {
+            double off = a.bestOffsetAt(a.failedTick());
+            return "T" + (a.failedTick() + 1) + " Turn" + (Double.isNaN(off) || off == 0.0 ? "" : ": " + turn(off));
         }
-        TooltipUtil.onHover("Copies keys and facing of those ticks, and the solver's X and Z constraints as the landing.");
-        String err = controller.lastError();
-        if (err != null) {
-            ImGui.sameLine();
-            ThemeManager.pushTextColor(ThemeManager.dangerColor());
-            ImGui.alignTextToFramePadding();
-            ImGui.text(err);
-            ThemeManager.popTextColor();
-        }
-
-        TurnReference.Landing landing = ref.landing();
-        final int[] tick = {landing == null ? ref.size() + 1 : landing.tick + 1};
-        final double[] b = landing == null ? new double[] {Double.NaN, Double.NaN, Double.NaN, Double.NaN}
-                : new double[] {landing.xLo, landing.xHi, landing.zLo, landing.zHi};
-        Controls.pushInputFrameHeight();
-        SolverWidgets.rowLabel("Landing", labelW);
-        ImGui.text("tick");
-        Controls.popInputFrameHeight();
-        ImGui.sameLine();
-        boolean changed = textCell("landingTick", Integer.toString(tick[0]), tickW, s -> tick[0] = parseInt(s, tick[0]));
-        List<TurnReference.Landing> options = controller.solverLandings();
-        if (!options.isEmpty()) {
-            ImGui.sameLine();
-            String[] labels = new String[options.size() + 1];
-            labels[0] = "from solver";
-            for (int i = 0; i < options.size(); i++) labels[i + 1] = options.get(i).label();
-            landingPick.set(0);
-            float pickW = ImGui.calcTextSize("from solver").x + ImGui.getFrameHeight() + 24f * scale;
-            if (Controls.combo("##landingPick", landingPick, labels, pickW) && landingPick.get() > 0) {
-                controller.setLanding(options.get(landingPick.get() - 1));
-            }
-        }
-        if (landing == null || landing.isEmpty()) {
-            ImGui.sameLine();
-            ThemeManager.pushTextColor(ThemeManager.warningColor());
-            ImGui.alignTextToFramePadding();
-            ImGui.text("no landing box: attempts are not judged");
-            ThemeManager.popTextColor();
-        }
-        TooltipUtil.onHover("The tick whose position is checked against the box.");
-        Controls.pushInputFrameHeight();
-        SolverWidgets.rowLabel("X", labelW);
-        Controls.popInputFrameHeight();
-        changed |= textCell("landingXLo", bound(b[0]), numW, s -> b[0] = parseBound(s));
-        word("to");
-        changed |= textCell("landingXHi", bound(b[1]), numW, s -> b[1] = parseBound(s));
-        Controls.pushInputFrameHeight();
-        SolverWidgets.rowLabel("Z", labelW);
-        Controls.popInputFrameHeight();
-        changed |= textCell("landingZLo", bound(b[2]), numW, s -> b[2] = parseBound(s));
-        word("to");
-        changed |= textCell("landingZHi", bound(b[3]), numW, s -> b[3] = parseBound(s));
-        TooltipUtil.onHover("Empty = no limit.");
-        if (changed) controller.setLanding(new TurnReference.Landing(Math.max(0, tick[0] - 1), b[0], b[1], b[2], b[3]));
-
-        ThemeManager.sectionSpacing();
-        ImGui.beginChild("##referenceTable", 0f, tableH, false, ImGuiWindowFlags.NoScrollbar);
-        referenceTable.renderBody();
-        ImGui.endChild();
+        return "";
     }
 
-    private static void word(String text) {
-        ImGui.sameLine();
-        Controls.pushInputFrameHeight();
+    private String turn(double deg) {
+        TurnProfileController.Current cur = controller.current();
+        String text = String.format(Locale.ROOT, "%s%.2f°", deg < 0 ? "-" : "+", Math.abs(deg));
+        if (cur == null || cur.pixelDeg <= 0.0) return text;
+        return text + String.format(Locale.ROOT, " (%d px)", Math.round(Math.abs(deg) / cur.pixelDeg));
+    }
+
+    private void favouriteCell(String id, TurnAttempt a, float hitH, float rowH) {
+        ImVec2 origin = ImGui.getCursorScreenPos();
+        float cellW = ImGui.getContentRegionAvail().x;
         ImGui.alignTextToFramePadding();
-        ImGui.text(text);
-        Controls.popInputFrameHeight();
-        ImGui.sameLine();
-    }
-
-    private static String bound(double v) {
-        return Double.isNaN(v) ? "" : String.format(Locale.ROOT, "%.5f", v);
-    }
-
-    private static double parseBound(String s) {
-        return s.trim().isEmpty() ? Double.NaN : parseDouble(s, Double.NaN);
-    }
-
-    private static int parseInt(String s, int fallback) {
-        try {
-            return Integer.parseInt(s.trim());
-        } catch (NumberFormatException e) {
-            return fallback;
-        }
-    }
-
-    private boolean textCell(String id, String value, float width, Consumer<String> commit) {
-        ImString buf = buffers.get(id);
-        if (buf == null) {
-            buf = new ImString(64);
-            buffers.put(id, buf);
-        }
-        if (!id.equals(activeId)) buf.set(value);
-        Controls.pushInputFrameHeight();
-        Controls.tableInputText("##" + id, buf, width, ImGuiInputTextFlags.AutoSelectAll, null);
-        Controls.popInputFrameHeight();
-        boolean changed = false;
-        if (ImGui.isItemActive()) activeId = id;
-        if (ImGui.isItemDeactivatedAfterEdit()) {
-            commit.accept(buf.get().trim());
-            changed = true;
-        }
-        if (ImGui.isItemDeactivated() && id.equals(activeId)) activeId = null;
-        return changed;
-    }
-
-    private static double parseDouble(String s, double fallback) {
-        try {
-            return Double.parseDouble(s.trim().replace(',', '.'));
-        } catch (NumberFormatException e) {
-            return fallback;
-        }
-    }
-
-    private static final String[] MACRO_MODES = {"Off", PracticeMacro.LABEL_INPUTS, PracticeMacro.LABEL_TURN};
-
-    private void macroSection(float scale) {
-        Fonts.pushBold();
-        ImGui.text("Practice replay");
-        Fonts.popBold();
-        macroPick.set(Math.max(0, Math.min(2, settings.onejumpMacroMode)));
-        float w = ImGui.calcTextSize(MACRO_MODES[1]).x + ImGui.getFrameHeight() + 32f * scale;
-        if (Controls.combo("##macroMode", macroPick, MACRO_MODES, w)) {
-            settings.onejumpMacroMode = macroPick.get();
-            macro.stop();
-            onSettingsChanged.run();
-        }
-        TooltipUtil.onHover("A client-side replica runs the jump; your player stays put. Replay (inputs): the replica"
-                + " presses the keys, you turn. Replay (turn): the replica turns, you press the keys. Starts after the"
-                + " reset click plus the delay.");
-        ImGui.pushItemWidth(200f * scale);
-        macroDelay[0] = settings.onejumpMacroDelayMs;
-        if (Controls.sliderInt("##macroDelay", macroDelay, 0, 5000, "delay %d ms")) {
-            settings.onejumpMacroDelayMs = macroDelay[0];
-            onSettingsChanged.run();
-        }
-        ImGui.popItemWidth();
-        TooltipUtil.onHover("Time between the reset click and the macro starting.");
-    }
-
-    private void settingsSection(TurnProfileController.Current cur, float scale) {
-        macroSection(scale);
-        ThemeManager.sectionSpacing();
-        if (Controls.checkbox("My attempts as dots", settings.turnProfileShowAttempts)) {
-            settings.turnProfileShowAttempts = !settings.turnProfileShowAttempts;
-            onSettingsChanged.run();
-        }
-        if (Controls.checkbox("Rated tries as dots", settings.turnProfileShowRating)) {
-            settings.turnProfileShowRating = !settings.turnProfileShowRating;
-            onSettingsChanged.run();
-        }
-        if (Controls.checkbox("Turn timing", settings.onejumpTurnTiming)) {
-            settings.onejumpTurnTiming = !settings.onejumpTurnTiming;
-            onSettingsChanged.run();
-        }
-        TooltipUtil.onHover("Records where inside each tick your mouse started and stopped moving. Draws your attempt"
-                + " as the real trace in the Turn Profile, a timing strip under each tick in Onejump Keys and the"
-                + " Turn onset stat above.");
-        if (Controls.checkbox("Offset label", settings.onejumpOffsetLive)) {
-            settings.onejumpOffsetLive = !settings.onejumpOffsetLive;
-            onSettingsChanged.run();
-        }
-        TooltipUtil.onHover("Shows the best landing offset still reachable from the current tick above the Turn Profile,"
-                + " updated every tick of the attempt.");
-        if (Controls.checkbox("Offset on hover", settings.onejumpOffsetHover)) {
-            settings.onejumpOffsetHover = !settings.onejumpOffsetHover;
-            onSettingsChanged.run();
-        }
-        TooltipUtil.onHover("Shows the offset still reachable from a tick in the Turn Profile tooltip. The forecast"
-                + " is only computed while this or Offset label is on.");
-        ImGui.pushItemWidth(150f * scale);
-        inputsPct[0] = settings.turnProfileInputsHitPct;
-        if (Controls.sliderInt("##inputsHit", inputsPct, 1, 100, "inputs %d%%")) {
-            settings.turnProfileInputsHitPct = inputsPct[0];
-            onSettingsChanged.run();
-        }
-        ImGui.popItemWidth();
-        TooltipUtil.onHover("Assumed input hit rate, only used while no attempts are recorded.");
-        ImGui.sameLine();
-        float sens = sensitivity.get();
-        ImGui.textDisabled(String.format(Locale.ROOT, "sens %.0f%%   1 px = %.3f°", sens * 200.0, TurnProfile.pixelDeg(sens)));
-
-        boolean canRate = cur != null && cur.canRate();
-        if (controller.isRating()) {
-            Controls.disabledButton("Rating");
-        } else if (!canRate) {
-            Controls.disabledButton("Rate difficulty");
-            TooltipUtil.onHover("Needs a reference imported from the TAS that meets its constraints.");
-        } else if (Controls.secondaryButton("Rate difficulty")) {
-            controller.rate();
-        }
-        if (canRate) TooltipUtil.onHover("Simulates tries with pixel-sized facing errors at your sensitivity.");
-        ImGui.sameLine();
-        AttemptSampler.Stats rs = cur == null ? null : cur.attempts;
-        TurnProfileDocument.Stats st = controller.stats();
-        if (rs == null) {
-            ImGui.textDisabled(controller.isRating() ? "sampling" : cur != null && !cur.pathLands()
-                    ? "the reference path does not meet the TAS constraints" : "not rated");
-        } else {
-            double turnRate = rs.rate();
-            boolean measured = st.attempts > 0;
-            double inputs = measured ? 1.0 - st.inputFailures / (double) st.attempts : settings.turnProfileInputsHitPct / 100.0;
-            ImGui.text(String.format(Locale.ROOT, "lands %s of tries  (turn %s, inputs %.0f%% %s, %s samples)",
-                    oneIn(turnRate * inputs), pct(turnRate), inputs * 100.0, measured ? "from your attempts" : "assumed",
-                    compact(rs.attempts)));
-        }
-        dangerZone();
+        if (ImGui.selectable("##" + id, false, 0, 0f, hitH)) controller.document().setFavourite(a, !a.favourite);
+        TooltipUtil.onHover(a.favourite ? "Remove from favourites" : "Add to favourites");
+        String mark = "*";
+        ImVec2 size = ImGui.calcTextSize(mark);
+        float tx = origin.x + (cellW - size.x) * 0.5f;
+        float ty = origin.y + (rowH - 2f * ImGui.getStyle().getCellPadding().y - size.y) * 0.5f;
+        int col = a.favourite ? ThemeManager.warningColor() : ThemeManager.textDimColor();
+        ImGui.getWindowDrawList().addText(tx, ty, col, mark);
     }
 
     private void dangerZone() {
@@ -618,13 +362,6 @@ public final class OnejumpSetupWindow implements RenderInterface {
             openClearModal = true;
         }
         TooltipUtil.onHover("Deletes every attempt. The reference stays.");
-        ImGui.sameLine();
-        if (controller.name() == null) {
-            Controls.disabledButton("Delete onejump");
-        } else if (Controls.dangerButton("Delete onejump")) {
-            openDeleteModal = true;
-        }
-        TooltipUtil.onHover("Deletes the whole onejump file.");
     }
 
     private void clearModal() {
@@ -635,58 +372,11 @@ public final class OnejumpSetupWindow implements RenderInterface {
         if (!Modal.begin("Clear attempts", POPUP_CLEAR)) return;
         int count = controller.stats().attempts;
         String name = controller.name();
-        ImGui.text("Delete all " + count + " attempts of onejump '" + (name != null ? name : "?") + "'?");
+        ImGui.text("Delete all " + count + " attempts of '" + (name != null ? name : "this TAS") + "'?");
         ImGui.textDisabled("The reference stays.");
         Modal.footerSeparator();
         if (Controls.dangerButton("Delete")) {
             controller.clearAttempts();
-            tracker.reset();
-            controller.select(-1);
-            ImGui.closeCurrentPopup();
-        }
-        ImGui.sameLine();
-        if (Modal.footerButton("Cancel")) ImGui.closeCurrentPopup();
-        Modal.end();
-    }
-
-    private void newModal() {
-        if (openNewModal) {
-            ImGui.openPopup(POPUP_NEW);
-            openNewModal = false;
-        }
-        if (!Modal.begin("New onejump", POPUP_NEW)) return;
-        ImGui.text("Name");
-        ImGui.sameLine();
-        Controls.pushInputFrameHeight();
-        boolean enter = ImGui.inputText("##onejumpNewName", newName, ImGuiInputTextFlags.EnterReturnsTrue);
-        Controls.popInputFrameHeight();
-        ImGui.textDisabled("Starts empty.");
-        Modal.footerSeparator();
-        String name = newName.get().trim();
-        boolean ok = !name.isEmpty();
-        if (!ok) Controls.disabledButton("Create");
-        else if (Controls.primaryButton("Create") || enter) {
-            controller.create(name);
-            importInit = false;
-            ImGui.closeCurrentPopup();
-        }
-        ImGui.sameLine();
-        if (Modal.footerButton("Cancel")) ImGui.closeCurrentPopup();
-        Modal.end();
-    }
-
-    private void deleteModal() {
-        if (openDeleteModal) {
-            ImGui.openPopup(POPUP_DELETE);
-            openDeleteModal = false;
-        }
-        if (!Modal.begin("Delete onejump", POPUP_DELETE)) return;
-        String name = controller.name();
-        ImGui.text("Delete onejump '" + (name != null ? name : "?") + "' with all its attempts?");
-        ImGui.textDisabled("The file is removed from disk.");
-        Modal.footerSeparator();
-        if (Controls.dangerButton("Delete")) {
-            controller.delete();
             tracker.reset();
             controller.select(-1);
             ImGui.closeCurrentPopup();

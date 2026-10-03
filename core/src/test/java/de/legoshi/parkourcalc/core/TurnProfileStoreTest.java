@@ -51,14 +51,18 @@ public class TurnProfileStoreTest {
         TurnProfileDocument doc = sample();
         TurnReference ref = doc.reference();
         ref.setStill(ref.row(0), true);
+        ref.setOptionalKeys(ref.row(1), TurnReference.KEY_JUMP | TurnReference.KEY_SPRINT);
         assertTrue(ref.still(ref.row(0)));
         assertFalse(ref.still(ref.row(1)));
+        assertEquals(TurnReference.KEY_JUMP | TurnReference.KEY_SPRINT, ref.optionalKeys(ref.row(1)));
         doc.add(new TurnAttempt(3, 26, new double[] {-12.25, 0.0}, 1, true, false, false,
                 "tick 27: turned +0.150° (1 px), expected still", Double.NaN, -1, 26, 0, 0, 0, null, null, null, true, 0.15));
         assertTrue(store.save("still", ref, doc.attempts()));
         TurnProfileDocument back = new TurnProfileDocument();
         assertTrue(store.load("still", back));
         assertTrue(back.reference().still(back.reference().row(0)));
+        assertEquals(TurnReference.KEY_JUMP | TurnReference.KEY_SPRINT, back.reference().optionalKeys(back.reference().row(1)));
+        assertEquals(0, back.reference().optionalKeys(back.reference().row(0)));
         assertFalse(back.reference().still(back.reference().row(1)));
         TurnAttempt a = back.attempts().get(2);
         assertTrue(a.turnFailure);
@@ -105,7 +109,7 @@ public class TurnProfileStoreTest {
         assertTrue(doc.hasPending());
         assertTrue(store.save("d10/j335", doc.reference(), doc.attempts()));
         doc.markClean();
-        Path file = dir.resolveSibling(TurnProfileStore.DIRECTORY).resolve("d10_j335" + TurnProfileStore.EXTENSION);
+        Path file = dir.resolve(TurnProfileStore.DIRECTORY).resolve("d10").resolve("j335" + TurnProfileStore.EXTENSION);
         assertTrue(Files.exists(file));
         assertEquals(3, Files.readAllLines(file).size());
 
@@ -165,7 +169,7 @@ public class TurnProfileStoreTest {
         assertEquals(1, pending.size());
         assertFalse(doc.hasPending());
         assertTrue(store.append("j1", pending));
-        Path file = dir.resolveSibling(TurnProfileStore.DIRECTORY).resolve("j1" + TurnProfileStore.EXTENSION);
+        Path file = dir.resolve(TurnProfileStore.DIRECTORY).resolve("j1" + TurnProfileStore.EXTENSION);
         assertEquals(4, Files.readAllLines(file).size());
         TurnProfileDocument back = new TurnProfileDocument();
         assertTrue(store.load("j1", back));
@@ -213,5 +217,99 @@ public class TurnProfileStoreTest {
         assertTrue(doc.attempts().isEmpty());
         assertNull(store.fileFor(null));
         assertEquals(Collections.emptyList(), doc.top());
+    }
+
+    @Test
+    public void theFailedTickLoadsFromTheOldLostTickKey() throws Exception {
+        Path dir = Files.createTempDirectory("pkc-onejump-lost");
+        TurnProfileStore store = store(dir);
+        TurnProfileDocument doc = sample();
+        TurnAttempt.Forecast fc = new TurnAttempt.Forecast(new double[] {0.1, 0.2}, new double[] {0.05, 0.1},
+                new double[] {0.0, 0.0}, new double[] {Double.NaN, Double.NaN}, new double[] {Double.NaN, Double.NaN}, 27);
+        doc.add(new TurnAttempt(3, 26, new double[] {-12.0, -20.5}, 2, true, false, false, "short", 0.031, 27, -1, 0, 0, 0,
+                null, null, null, false, Double.NaN, fc));
+        assertTrue(store.save("old", doc.reference(), doc.attempts()));
+        Path file = store.fileFor("old");
+        List<String> lines = Files.readAllLines(file);
+        assertTrue(lines.get(3).contains("\"failedTick\":27"));
+        assertFalse(lines.get(3).contains("lostTick"));
+        lines.set(3, lines.get(3).replace("\"failedTick\":27", "\"lostTick\":27"));
+        Files.write(file, lines);
+        TurnProfileDocument back = new TurnProfileDocument();
+        assertTrue(store.load("old", back));
+        assertEquals(27, back.attempts().get(2).failedTick());
+    }
+
+    @Test
+    public void ordinalsCountPerKindAndMissBandsAndFavouritesPersist() throws Exception {
+        Path dir = Files.createTempDirectory("pkc-onejump-fav");
+        TurnProfileStore store = store(dir);
+        TurnProfileDocument doc = sample();
+        doc.add(new TurnAttempt(3, 26, new double[] {-12.0, -20.5}, 2, true, false, false, "short", 0.031, 27, -1, 0, 0, 1));
+        doc.add(new TurnAttempt(4, 26, new double[] {-12.0, -20.5}, 2, true, false, false, "short", 0.0004, 27, -1, 0, 0, 0));
+        doc.add(new TurnAttempt(5, 26, new double[] {-12.0, -20.5}, 2, true, false, false, "short", 0.00002, 27, -1, 0, 0, 2));
+        doc.add(new TurnAttempt(6, 26, new double[] {-12.0, -20.5}, 2, true, false, false, "short", 0.05, 27, -1, 0, 0, 1));
+        List<TurnAttempt> all = doc.attempts();
+        assertEquals(1, all.get(0).ordinal);
+        assertEquals(2, all.get(1).ordinal);
+        assertEquals(1, all.get(2).ordinal);
+        assertEquals(3, all.get(3).ordinal);
+        assertEquals(1, all.get(4).ordinal);
+        assertEquals(2, all.get(5).ordinal);
+        TurnProfileDocument.Stats st = doc.stats();
+        assertEquals(3, st.attempts);
+        assertEquals(0, st.missBands[0]);
+        assertEquals(0, st.missBands[1]);
+        assertEquals(1, st.missBands[2]);
+        assertEquals(0, st.missBands[3]);
+        assertTrue(store.save("fav", doc.reference(), all));
+        doc.markClean();
+        doc.setFavourite(all.get(3), true);
+        doc.setFavourite(all.get(0), true);
+        assertEquals(2, doc.favourites().size());
+        assertEquals(1, doc.favourites().get(0).number);
+        assertEquals(4, doc.favourites().get(1).number);
+        assertTrue(doc.isReferenceDirty());
+        assertTrue(store.save("fav", doc.reference(), all));
+        TurnProfileDocument back = new TurnProfileDocument();
+        assertTrue(store.load("fav", back));
+        assertEquals(2, back.favourites().size());
+        assertTrue(back.attempts().get(3).favourite);
+        assertFalse(back.attempts().get(1).favourite);
+        assertEquals(3, back.attempts().get(3).ordinal);
+        back.setFavourite(back.attempts().get(3), false);
+        assertEquals(1, back.favourites().size());
+    }
+
+    @Test
+    public void theAttemptStateAndTheSolvedTickRoundTrip() throws Exception {
+        Path dir = Files.createTempDirectory("pkc-onejump-state");
+        TurnProfileStore store = store(dir);
+        TurnProfileDocument doc = sample();
+        TurnAttempt.Forecast fc = new TurnAttempt.Forecast(null, null, null, null, null, -1,
+                new double[] {1.5, 2.5}, new double[] {3.5, 4.5}, new double[] {0.1, 0.2}, new double[] {0.3, 0.4},
+                new boolean[] {true, false});
+        TurnAttempt a = new TurnAttempt(3, 26, new double[] {-12.0, -20.5}, 2, true, false, false, "short", 0.031, 27, -1, 0, 0, 0,
+                null, null, null, false, Double.NaN, fc);
+        a.solvedOffset = new double[] {0.02, -0.01};
+        doc.add(a);
+        assertTrue(a.hasState());
+        assertFalse(a.hasForecast());
+        assertEquals(27, a.failedTick());
+        assertTrue(store.save("state", doc.reference(), doc.attempts()));
+        TurnProfileDocument back = new TurnProfileDocument();
+        assertTrue(store.load("state", back));
+        TurnAttempt b = back.attempts().get(2);
+        assertTrue(b.hasState());
+        assertEquals(2.5, b.forecast.x[1], 0.0);
+        assertEquals(0.4, b.forecast.vz[1], 0.0);
+        assertTrue(b.forecast.ground[0]);
+        assertFalse(b.forecast.ground[1]);
+        assertTrue(b.solved());
+        assertEquals(0.02, b.solvedOffsetAt(26), 0.0);
+        assertEquals(-0.01, b.solvedOffsetAt(27), 0.0);
+        assertEquals(27, b.failedTick());
+        assertFalse(back.attempts().get(0).solved());
+        assertEquals(-1, back.attempts().get(0).failedTick());
     }
 }

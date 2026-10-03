@@ -7,6 +7,7 @@ import java.util.List;
 public final class TurnProfileDocument {
 
     public static final int TOP = 10;
+    public static final int MISS_BANDS = 4;
 
     public static final class Stats {
         public final int attempts;
@@ -18,9 +19,11 @@ public final class TurnProfileDocument {
         public final int mouseClears;
         public final int inputAttempts;
         public final int inputClears;
+        public final int[] missBands;
 
         Stats(int attempts, int landings, int inputFailures, int turnFailures, double closest, int mouseAttempts,
-              int mouseClears, int inputAttempts, int inputClears) {
+              int mouseClears, int inputAttempts, int inputClears, int[] missBands) {
+            this.missBands = missBands;
             this.attempts = attempts;
             this.landings = landings;
             this.inputFailures = inputFailures;
@@ -42,6 +45,9 @@ public final class TurnProfileDocument {
     private final List<TurnAttempt> view = Collections.unmodifiableList(attempts);
     private final List<TurnAttempt> top = new ArrayList<>();
     private final List<TurnAttempt> topView = Collections.unmodifiableList(top);
+    private final List<TurnAttempt> favourites = new ArrayList<>();
+    private final List<TurnAttempt> favouritesView = Collections.unmodifiableList(favourites);
+    private final int[] missBands = new int[MISS_BANDS];
     private final List<TurnAttempt> pending = new ArrayList<>();
     private boolean referenceDirty;
     private int real;
@@ -53,7 +59,7 @@ public final class TurnProfileDocument {
     private int mouseClears;
     private int inputAttempts;
     private int inputClears;
-    private volatile Stats stats = new Stats(0, 0, 0, 0, Double.NaN, 0, 0, 0, 0);
+    private volatile Stats stats = new Stats(0, 0, 0, 0, Double.NaN, 0, 0, 0, 0, new int[MISS_BANDS]);
     private volatile int version;
 
     public TurnReference reference() {
@@ -66,6 +72,24 @@ public final class TurnProfileDocument {
 
     public List<TurnAttempt> top() {
         return topView;
+    }
+
+    public List<TurnAttempt> favourites() {
+        return favouritesView;
+    }
+
+    public void setFavourite(TurnAttempt a, boolean favourite) {
+        if (a.favourite == favourite) return;
+        a.favourite = favourite;
+        if (favourite) {
+            int at = favourites.size();
+            while (at > 0 && favourites.get(at - 1).number > a.number) at--;
+            favourites.add(at, a);
+        } else {
+            favourites.remove(a);
+        }
+        referenceDirty = true;
+        version++;
     }
 
     public Stats stats() {
@@ -90,7 +114,7 @@ public final class TurnProfileDocument {
 
     private Stats snapshot() {
         return new Stats(real, landings, inputFailures, turnFailures, closest, mouseAttempts, mouseClears, inputAttempts,
-                inputClears);
+                inputClears, missBands.clone());
     }
 
     private void zero() {
@@ -103,12 +127,14 @@ public final class TurnProfileDocument {
         mouseClears = 0;
         inputAttempts = 0;
         inputClears = 0;
+        java.util.Arrays.fill(missBands, 0);
     }
 
     public void clearAttempts() {
         attempts.clear();
         pending.clear();
         top.clear();
+        favourites.clear();
         zero();
         stats = snapshot();
         referenceDirty = true;
@@ -148,6 +174,7 @@ public final class TurnProfileDocument {
         attempts.clear();
         pending.clear();
         top.clear();
+        favourites.clear();
         zero();
         for (TurnAttempt a : list) {
             attempts.add(a);
@@ -159,17 +186,20 @@ public final class TurnProfileDocument {
     }
 
     private void account(TurnAttempt a) {
+        if (a.favourite) favourites.add(a);
         if (a.macro == 1) {
-            mouseAttempts++;
+            a.ordinal = ++mouseAttempts;
             if (a.landed) mouseClears++;
             return;
         }
         if (a.macro == 2) {
-            inputAttempts++;
+            a.ordinal = ++inputAttempts;
             if (a.landed) inputClears++;
             return;
         }
-        real++;
+        a.ordinal = ++real;
+        int band = a.missBand();
+        if (band >= 0) missBands[band]++;
         if (a.inputFailure) inputFailures++;
         if (a.turnFailure) turnFailures++;
         if (a.landed) landings++;

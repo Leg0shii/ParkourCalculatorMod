@@ -3,7 +3,6 @@ package de.legoshi.parkourcalc.core.ui.anglesolver;
 import de.legoshi.parkourcalc.core.AttemptTracker;
 import de.legoshi.parkourcalc.core.TurnAttempt;
 import de.legoshi.parkourcalc.core.TurnProfileController;
-import de.legoshi.parkourcalc.core.TurnProfileDocument;
 import de.legoshi.parkourcalc.core.TurnReference;
 import de.legoshi.parkourcalc.core.TurnTiming;
 import de.legoshi.parkourcalc.core.anglesolver.profile.AttemptSampler;
@@ -22,8 +21,6 @@ import imgui.flag.ImGuiCond;
 import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImBoolean;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 import java.util.function.Supplier;
 
@@ -44,23 +41,15 @@ public final class TurnProfileWindow implements RenderInterface {
     private static final float LINE_WIDTH = 2f;
     private static final float SAMPLE_SIZE = 1.5f;
     private static final float SAMPLE_SPREAD = 0.3f;
-    private static final float SWARM_SPREAD = 0.2f;
     private static final float DENSITY_REACH = 3f;
     private static final float DENSITY_ALPHA_MIN = 0.22f;
     private static final double MIN_SPAN_DEG = 20.0;
-    private static final double BLAME_HIGH = 0.4;
-    private static final double BLAME_SOME = 0.1;
-    private static final int DOT_LIMIT = 500;
 
     private final TurnProfileController controller;
     private final AttemptTracker tracker;
     private final Settings settings;
     private final Supplier<Float> sensitivity;
     private final ImBoolean open = new ImBoolean(false);
-    private int dotsVersion = -1;
-    private TurnProfileController.Current dotsCur;
-    private double[][] dotsLanded = new double[0][];
-    private double[][] dotsFailed = new double[0][];
     private boolean wasOpen;
 
     public TurnProfileWindow(TurnProfileController controller, AttemptTracker tracker, Settings settings,
@@ -139,34 +128,6 @@ public final class TurnProfileWindow implements RenderInterface {
         return Angles.wrapDelta(you.yaws[j] - cur.facing[t]);
     }
 
-    private static double[] aligned(TurnProfileController.Current cur, TurnAttempt a) {
-        double[] v = new double[cur.n];
-        for (int t = 0; t < cur.n; t++) {
-            int j = t + cur.startTick - a.firstTick;
-            v[t] = j < 0 || j >= a.recorded ? Double.NaN : a.yaws[j];
-        }
-        return v;
-    }
-
-    private void refreshDots(TurnProfileController.Current cur) {
-        TurnProfileDocument doc = controller.document();
-        if (dotsCur == cur && dotsVersion == doc.version()) return;
-        dotsCur = cur;
-        dotsVersion = doc.version();
-        List<TurnAttempt> all = doc.attempts();
-        List<double[]> landed = new ArrayList<double[]>();
-        List<double[]> failed = new ArrayList<double[]>();
-        int taken = 0;
-        for (int i = all.size() - 1; i >= 0 && taken < DOT_LIMIT; i--) {
-            TurnAttempt a = all.get(i);
-            if (!a.judged()) continue;
-            taken++;
-            (a.landed ? landed : failed).add(aligned(cur, a));
-        }
-        dotsLanded = landed.toArray(new double[0][]);
-        dotsFailed = failed.toArray(new double[0][]);
-    }
-
     private static float[] tickX(TurnProfileController.Current cur, float plotX, float plotW, float[] dxOut) {
         int n = cur.n;
         int m = 0;
@@ -233,21 +194,6 @@ public final class TurnProfileWindow implements RenderInterface {
                 hi = Math.max(hi, facing[t] + e);
             }
         }
-        double[][] yourLanded = new double[0][];
-        double[][] yourFailed = new double[0][];
-        if (settings.turnProfileShowAttempts) {
-            refreshDots(cur);
-            yourLanded = dotsLanded;
-            yourFailed = dotsFailed;
-        }
-        for (double[][] set : new double[][][]{yourLanded, yourFailed}) {
-            for (double[] a : set) for (int t = 0; t < n; t++) {
-                if (Float.isNaN(xs[t]) || !cur.checkYaw[t] || Double.isNaN(a[t])) continue;
-                double v = facing[t] + Angles.wrapDelta(a[t] - facing[t]);
-                lo = Math.min(lo, v);
-                hi = Math.max(hi, v);
-            }
-        }
         if (hi - lo < MIN_SPAN_DEG) {
             double mid = 0.5 * (hi + lo);
             lo = mid - MIN_SPAN_DEG / 2;
@@ -308,19 +254,19 @@ public final class TurnProfileWindow implements RenderInterface {
                 dl.addText(xs[lt] - ImGui.calcTextSize("land").x * 0.5f, markY, landCol, "land");
             }
         }
-        if (you != null && you.lostTick() >= 0) {
-            int lt = you.lostTick() - cur.startTick;
+        if (you != null && you.failedTick() >= 0) {
+            int lt = you.failedTick() - cur.startTick;
             if (lt >= 0 && lt < n && !Float.isNaN(xs[lt])) {
-                int lostCol = ThemeManager.dangerTintColor(0.8f);
-                dl.addLine(xs[lt], plotY, xs[lt], plotY + plotH, lostCol, 1f);
-                dl.addText(xs[lt] - ImGui.calcTextSize("lost").x * 0.5f, plotY + 2f * scale, lostCol, "lost");
+                int failedCol = ThemeManager.dangerTintColor(0.8f);
+                dl.addLine(xs[lt], plotY, xs[lt], plotY + plotH, failedCol, 1f);
+                dl.addText(xs[lt] - ImGui.calcTextSize("failed").x * 0.5f, plotY + 2f * scale, failedCol, "failed");
             }
         }
         if (you != null && you.hasForecast() && settings.onejumpOffsetLive) {
             String label = offsetLabel(you);
             if (label != null) {
-                boolean lost = you.bestMarginAt(you.lastForecastTick()) > 0.0;
-                int col = lost ? ThemeManager.dangerColor() : ThemeManager.okColor();
+                boolean failed = you.bestMarginAt(you.lastForecastTick()) > 0.0;
+                int col = failed ? ThemeManager.dangerColor() : ThemeManager.okColor();
                 Fonts.pushBold();
                 dl.addText(x0 + 6f * scale, y0 + 1f, col, label);
                 Fonts.popBold();
@@ -345,8 +291,6 @@ public final class TurnProfileWindow implements RenderInterface {
                         ThemeManager.textMutedColor(), 16, 1f * scale);
             }
         }
-
-        swarm(dl, yourFailed, yourLanded, cur, xs, SWARM_SPREAD * dx, DOT_RADIUS * 0.6f * scale, yLo, yHi, plotY, plotH);
 
         if (you != null) {
             int youCol = youColor(you);
@@ -458,66 +402,6 @@ public final class TurnProfileWindow implements RenderInterface {
         return v;
     }
 
-    private static void swarm(ImDrawList dl, double[][] failed, double[][] landed, TurnProfileController.Current cur,
-                              float[] xs, float maxSpread, float r, double yLo, double yHi, float plotY, float plotH) {
-        int k = failed.length + landed.length;
-        if (k == 0) return;
-        boolean[] isLanded = new boolean[k];
-        Integer[] order = new Integer[k];
-        float[] ys = new float[k];
-        float[] pxs = new float[k];
-        int[] density = new int[k];
-        float step = r * 2.1f;
-        float reach = step * DENSITY_REACH;
-        for (int t = 0; t < cur.n; t++) {
-            if (!cur.checkYaw[t] || Float.isNaN(xs[t])) continue;
-            double[] v = tickValues(failed, landed, cur.facing, t, isLanded);
-            int m = 0;
-            for (int i = 0; i < k; i++) if (!Double.isNaN(v[i])) order[m++] = i;
-            if (m == 0) continue;
-            final double[] vv = v;
-            java.util.Arrays.sort(order, 0, m, (a, b) -> Double.compare(vv[a], vv[b]));
-            int maxDensity = 1;
-            for (int j = 0; j < m; j++) ys[order[j]] = yOf(v[order[j]], yLo, yHi, plotY, plotH);
-            for (int j = 0; j < m; j++) {
-                int c = 0;
-                for (int q = j - 1; q >= 0 && ys[order[q]] - ys[order[j]] < reach; q--) c++;
-                for (int q = j + 1; q < m && ys[order[j]] - ys[order[q]] < reach; q++) c++;
-                density[order[j]] = c;
-                maxDensity = Math.max(maxDensity, c);
-            }
-            for (int j = 0; j < m; j++) {
-                int i = order[j];
-                float y = ys[i];
-                float x = 0f;
-                for (int slot = 0; ; slot++) {
-                    float cand = slot == 0 ? 0f : (slot % 2 == 1 ? 1 : -1) * ((slot + 1) / 2) * step;
-                    if (Math.abs(cand) > maxSpread) {
-                        x = cand > 0 ? maxSpread : -maxSpread;
-                        break;
-                    }
-                    boolean free = true;
-                    for (int q = j - 1; q >= 0; q--) {
-                        int o = order[q];
-                        if (ys[o] - y > step) break;
-                        if (Math.abs(pxs[o] - cand) < step && Math.abs(ys[o] - y) < step) {
-                            free = false;
-                            break;
-                        }
-                    }
-                    if (free) {
-                        x = cand;
-                        break;
-                    }
-                }
-                pxs[i] = x;
-                float alpha = DENSITY_ALPHA_MIN + (1f - DENSITY_ALPHA_MIN) * density[i] / (float) maxDensity;
-                int col = isLanded[i] ? ThemeManager.okTintColor(alpha) : ThemeManager.dangerTintColor(alpha);
-                dl.addCircleFilled(xs[t] + x, y, r, col, 8);
-            }
-        }
-    }
-
     private static int youColor(TurnAttempt you) {
         if (!you.complete) return ThemeManager.textColor();
         if (you.failed()) return ThemeManager.warningColor();
@@ -525,61 +409,57 @@ public final class TurnProfileWindow implements RenderInterface {
     }
 
     private static int dotColor(TurnProfileController.Current cur, int t) {
-        if (!cur.checkYaw[t]) return ThemeManager.textDimColor();
-        AttemptSampler.Stats st = cur.attempts;
-        if (st == null) return ThemeManager.accentColor();
-        double b = st.blame[t];
-        if (b >= BLAME_HIGH) return ThemeManager.dangerColor();
-        if (b >= BLAME_SOME) return ThemeManager.warningColor();
-        return ThemeManager.accentColor();
+        return cur.checkYaw[t] ? ThemeManager.accentColor() : ThemeManager.textDimColor();
     }
 
     private void tooltip(TurnProfileController.Current cur, int t, TurnAttempt you) {
         AttemptSampler.Stats st = cur.attempts;
         double pixelDeg = TurnProfile.pixelDeg(sensitivity.get());
+        int abs = cur.startTick + t;
         ImGui.beginTooltip();
-        ImGui.text(String.format(Locale.ROOT, "tick %d  %.2f°  %s%s", cur.startTick + t + 1, cur.facing[t],
-                TurnReference.keysText(cur.keys[t]), cur.still[t] ? "   still" : ""));
-        if (you != null && you.turnFailure && you.failTick == cur.startTick + t) {
-            ImGui.pushStyleColor(ImGuiCol.Text, ThemeManager.dangerColor());
-            ImGui.text(you.verdict);
-            ImGui.popStyleColor();
-        }
-        if (!cur.checkYaw[t]) {
-            ImGui.textDisabled("facing not checked");
-        } else if (st != null && st.landings > 0) {
-            ImGui.pushStyleColor(ImGuiCol.Text, dotColor(cur, t));
-            ImGui.text(String.format(Locale.ROOT, "landed within %s %s   %s %s",
-                    signed(st.landedLo[t]), bracket(-st.landedLo[t], pixelDeg),
-                    signed(st.landedHi[t]), bracket(st.landedHi[t], pixelDeg)));
-            ImGui.popStyleColor();
-            ImGui.textDisabled(String.format(Locale.ROOT, "%s, %.0f%% of fails",
-                    st.flickTick[t] ? "flick" : "smooth", st.blame[t] * 100.0));
-        }
-        if (you != null && cur.checkYaw[t]) {
-            double e = youError(cur, you, t);
-            if (!Double.isNaN(e)) {
-                ImGui.pushStyleColor(ImGuiCol.Text, youColor(you));
-                ImGui.text(String.format(Locale.ROOT, "you %.2f°   %s %s", cur.facing[t] + e, signed(e), bracket(e, pixelDeg)));
-                ImGui.popStyleColor();
+        Fonts.pushBold();
+        ImGui.text(String.format(Locale.ROOT, "T%d   %.2f°%s", abs + 1, cur.facing[t], cur.still[t] ? "   still" : ""));
+        Fonts.popBold();
+        float labelW = ImGui.calcTextSize("Window").x + ImGui.getStyle().getItemSpacing().x * 3f;
+        if (cur.checkYaw[t]) {
+            if (you != null) {
+                double e = youError(cur, you, t);
+                if (!Double.isNaN(e)) {
+                    tooltipRow("You", String.format(Locale.ROOT, "%.2f°   %s %s", cur.facing[t] + e, signed(e),
+                            bracket(e, pixelDeg)), youColor(you), labelW);
+                }
+            }
+            if (st != null && st.landings > 0) {
+                tooltipRow("Window", signed(st.landedLo[t]) + " " + bracket(st.landedLo[t], pixelDeg) + " to "
+                        + signed(st.landedHi[t]) + " " + bracket(st.landedHi[t], pixelDeg), ThemeManager.textColor(), labelW);
+            }
+            if (you != null && you.hasForecast() && settings.onejumpOffsetHover) {
+                double best = you.bestMarginAt(abs);
+                if (!Double.isNaN(best)) {
+                    tooltipRow("Offset", Double.isInfinite(best) ? "none" : TurnAttempt.signedMargin(best),
+                            best <= 0.0 ? ThemeManager.okColor() : ThemeManager.dangerColor(), labelW);
+                }
             }
         }
-        if (you != null && settings.onejumpTurnTiming && you.hasTiming()) {
-            float on = you.turnStartAt(cur.startTick + t);
-            if (!Float.isNaN(on)) {
-                ImGui.textDisabled(String.format(Locale.ROOT, "turn %s to %s into the tick", TurnTiming.ms(on),
-                        TurnTiming.ms(you.turnEndAt(cur.startTick + t))));
-            }
-        }
-        if (you != null && you.hasForecast() && settings.onejumpOffsetHover) {
-            double best = you.bestMarginAt(cur.startTick + t);
-            if (!Double.isNaN(best)) {
-                ImGui.pushStyleColor(ImGuiCol.Text, best <= 0.0 ? ThemeManager.okColor() : ThemeManager.dangerColor());
-                ImGui.text("offset " + TurnAttempt.signedMargin(best) + " still possible from here");
-                ImGui.popStyleColor();
+        if (you != null && you.failTick == abs) {
+            if (you.turnFailure) {
+                tooltipRow("Preturn", signed(you.failTurn) + " " + bracket(you.failTurn, pixelDeg), ThemeManager.dangerColor(), labelW);
+            } else if (you.inputFailure) {
+                tooltipRow("Inputs", TurnReference.describe(you.failKeys) + ", expected " + TurnReference.describe(you.expectedKeys),
+                        ThemeManager.dangerColor(), labelW);
             }
         }
         ImGui.endTooltip();
+    }
+
+    private static void tooltipRow(String label, String value, int color, float labelW) {
+        float x = ImGui.getCursorPosX();
+        ImGui.textDisabled(label);
+        ImGui.sameLine();
+        ImGui.setCursorPosX(x + labelW);
+        ImGui.pushStyleColor(ImGuiCol.Text, color);
+        ImGui.text(value);
+        ImGui.popStyleColor();
     }
 
     private static String offsetLabel(TurnAttempt you) {
@@ -589,7 +469,7 @@ public final class TurnProfileWindow implements RenderInterface {
     }
 
     private static String signed(double deg) {
-        return String.format(Locale.ROOT, "%s%.3f°", deg < 0 ? "-" : "+", Math.abs(deg));
+        return String.format(Locale.ROOT, "%s%.2f°", deg < 0 ? "-" : "+", Math.abs(deg));
     }
 
     private static String bracket(double deg, double pixelDeg) {

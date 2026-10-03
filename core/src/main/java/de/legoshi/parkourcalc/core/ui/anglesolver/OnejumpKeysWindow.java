@@ -133,6 +133,10 @@ public final class OnejumpKeysWindow implements RenderInterface {
                 float ax = cx0 + gap, bx = cx0 + cellW - gap, ay = ry + gap, by = ry + rowH - gap;
                 boolean exp = (expected & BITS[k]) != 0;
                 boolean got = (pressed & BITS[k]) != 0;
+                if (checked && (cur.optionalKeys[t] & BITS[k]) != 0) {
+                    dl.addRect(ax, ay, bx, by, ThemeManager.textDimColor(), 2f * scale, 0, 1f * scale);
+                    continue;
+                }
                 if (t == failT && exp != got) {
                     if (got) dl.addRectFilled(ax, ay, bx, by, ThemeManager.dangerColor(), 2f * scale);
                     else dl.addRect(ax, ay, bx, by, ThemeManager.dangerColor(), 2f * scale, 0, 1.5f * scale);
@@ -171,7 +175,8 @@ public final class OnejumpKeysWindow implements RenderInterface {
             int t = hoverT;
             ImGui.beginTooltip();
             ImGui.text("tick " + (cur.startTick + t + 1) + "  " + TurnReference.describe(cur.keys[t])
-                    + (cur.checkKeys[t] ? "" : "  (not checked)") + (cur.still[t] ? "  still" : ""));
+                    + (cur.checkKeys[t] ? "" : "  (not checked)") + (cur.still[t] ? "  still" : "")
+                    + (cur.checkKeys[t] && cur.optionalKeys[t] != 0 ? "  optional " + TurnReference.describe(cur.optionalKeys[t]) : ""));
             if (t == turnFailT) {
                 ImGui.pushStyleColor(ImGuiCol.Text, ThemeManager.dangerColor());
                 ImGui.text(you.verdict);

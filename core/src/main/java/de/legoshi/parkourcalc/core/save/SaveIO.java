@@ -486,6 +486,13 @@ public final class SaveIO {
         r.teleportX = row.getTeleportX();
         r.teleportY = row.getTeleportY();
         r.teleportZ = row.getTeleportZ();
+        r.onejumpKeys = row.isOnejumpKeys();
+        r.onejumpFace = row.getOnejumpFace();
+        if (row.hasOnejumpOptional()) {
+            List<String> optional = new ArrayList<String>();
+            for (InputRow.Key k : InputRow.Key.values()) if (row.isOnejumpOptional(k)) optional.add(k.name());
+            r.onejumpOptional = optional;
+        }
         return r;
     }
 
@@ -505,7 +512,18 @@ public final class SaveIO {
                 && r.teleport == row.isTeleportEnabled()
                 && r.teleportX == row.getTeleportX()
                 && r.teleportY == row.getTeleportY()
-                && r.teleportZ == row.getTeleportZ();
+                && r.teleportZ == row.getTeleportZ()
+                && r.onejumpKeys == row.isOnejumpKeys()
+                && r.onejumpFace == row.getOnejumpFace()
+                && optionalMatches(r, row);
+    }
+
+    private static boolean optionalMatches(SaveFile.Row r, InputRow row) {
+        for (InputRow.Key k : InputRow.Key.values()) {
+            boolean saved = r.onejumpOptional != null && r.onejumpOptional.contains(k.name());
+            if (saved != row.isOnejumpOptional(k)) return false;
+        }
+        return true;
     }
 
     private static InputRow toInputRow(SaveFile.Row r) {
@@ -528,6 +546,16 @@ public final class SaveIO {
             row.setHotbarSlot(r.hotbarSlot);
             row.setTeleportDestination(r.teleportX, r.teleportY, r.teleportZ);
             row.setTeleportEnabled(r.teleport);
+            row.setOnejumpKeys(r.onejumpKeys);
+            row.setOnejumpFace(r.onejumpFace);
+            if (r.onejumpOptional != null) {
+                for (String name : r.onejumpOptional) {
+                    try {
+                        row.setOnejumpOptional(InputRow.Key.valueOf(name), true);
+                    } catch (IllegalArgumentException ignored) {
+                    }
+                }
+            }
         }
         return row;
     }

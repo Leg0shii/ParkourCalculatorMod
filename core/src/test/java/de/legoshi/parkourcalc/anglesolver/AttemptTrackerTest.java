@@ -5,6 +5,7 @@ import de.legoshi.parkourcalc.core.AttemptTracker;
 import de.legoshi.parkourcalc.core.LandingForecast;
 import de.legoshi.parkourcalc.core.TurnAttempt;
 import de.legoshi.parkourcalc.core.TurnProfileController;
+import de.legoshi.parkourcalc.core.TurnProfileStore;
 import de.legoshi.parkourcalc.core.TurnReference;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
@@ -15,6 +16,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.ui.InputData;
+import de.legoshi.parkourcalc.core.ui.InputRow;
 import org.junit.Test;
 
 
@@ -34,6 +36,7 @@ public class AttemptTrackerTest {
         final AttemptTracker tracker;
         final ExactJumpModel model;
         final AngleSolverEngine engine;
+        final AngleSolverState state;
         final InputData inputs;
         final int solverStart;
         final int solverTicks;
@@ -45,6 +48,7 @@ public class AttemptTrackerTest {
         long ns = 1_000_000_000L;
         int framesFrom = Integer.MAX_VALUE;
         int framesTo = Integer.MAX_VALUE;
+        int[] maskOverride;
 
         Rig() {
             this(0);
@@ -65,9 +69,12 @@ public class AttemptTrackerTest {
             state.setStartTick(solverStart);
             solverTicks = state.getLandingTick() - solverStart;
             engine = new AngleSolverEngine(state, Fixtures.buildBoxes(file), inputs, t -> { }, model);
+            this.state = state;
             controller = new TurnProfileController(engine, state, inputs, () -> true, () -> 0.5f,
-                    AttemptSampler.Scatter::new, () -> 1000, null, () -> null, n -> { });
-            assertTrue(controller.lastError(), controller.importFromTas(solverStart - lead, state.getLandingTick() - 1));
+                    () -> 1000, () -> 1000, null, () -> null);
+            OnejumpRigs.flag(inputs, solverStart - lead, state.getLandingTick() - 1);
+            controller.refresh();
+            assertNull(controller.lastError(), controller.lastError());
             tracker = new AttemptTracker(controller, () -> true, () -> false, () -> timing);
             sync();
         }
@@ -89,10 +96,19 @@ public class AttemptTrackerTest {
             span = cur.lastTick() - cur.startTick + 1;
             if (cur.landing == null) {
                 ForwardPath p = model.forward(sc, sc.toGameFacings(cur.facing.clone()));
-                controller.setLanding(new TurnReference.Landing(cur.n, p.posX[cur.n], Double.NaN, Double.NaN, Double.NaN));
-                cur = controller.current();
+                landing(new TurnReference.Landing(cur.n, p.posX[cur.n], Double.NaN, Double.NaN, Double.NaN));
                 span = cur.lastTick() - cur.startTick + 1;
             }
+        }
+
+        void landing(TurnReference.Landing l) {
+            OnejumpRigs.landing(state, tasFirst, l);
+            controller.refresh();
+            cur = controller.current();
+        }
+
+        InputRow tasRow(int k) {
+            return inputs.getRows().get(tasFirst + k);
         }
 
         void reset() {
@@ -133,6 +149,7 @@ public class AttemptTrackerTest {
             }
             int mask = t < cur.n ? (fileKeys ? TurnReference.mask(inputs.getRows().get(tasFirst + t)) : cur.keys[t]) : 0;
             if (wrongKey) mask ^= TurnReference.KEY_W;
+            if (maskOverride != null && t < maskOverride.length && maskOverride[t] >= 0) mask = maskOverride[t];
             keys(mask);
         }
 
@@ -178,7 +195,7 @@ public class AttemptTrackerTest {
         Rig rig = new Rig();
         int landTick = rig.cur.n;
         ForwardPath perfect = rig.pathFor(rig.cur.facing);
-        rig.controller.setLanding(new TurnReference.Landing(landTick, perfect.posX[rig.cur.n], Double.NaN, Double.NaN,
+        rig.landing(new TurnReference.Landing(landTick, perfect.posX[rig.cur.n], Double.NaN, Double.NaN,
                 Double.NaN));
         rig.sync();
         double sign = rig.pathFor(rig.yawsFor(rig.k0 + 1, 3.0)).posX[rig.cur.n]
@@ -274,8 +291,7 @@ public class AttemptTrackerTest {
     public void anUncheckedKeysRowIgnoresAWrongKey() {
         Rig rig = new Rig();
         int at = rig.k0 + 2;
-        TurnReference ref = rig.controller.document().reference();
-        ref.setCheckKeys(ref.row(at), false);
+        rig.tasRow(at).setOnejumpKeys(false);
         rig.controller.referenceChanged();
         rig.sync();
         rig.play(true, 0, 0.0, NONE, at);
@@ -283,18 +299,17 @@ public class AttemptTrackerTest {
     }
 
     @Test
-    public void handSetKeysAreWhatTheCheckerExpects() {
+    public void theCheckerExpectsTheTasKeys() {
         Rig rig = new Rig();
         int at = rig.k0 + 2;
-        TurnReference ref = rig.controller.document().reference();
-        TurnReference.applyKeys(ref.row(at), TurnReference.KEY_S);
-        rig.controller.referenceChanged();
-        rig.sync();
         rig.play(true, 0, 0.0, NONE, NONE, true);
+        assertTrue(rig.tracker.last().verdict, rig.tracker.last().landed);
+        rig.play(true, 0, 0.0, NONE, at, true);
         TurnAttempt a = rig.tracker.last();
         assertTrue(a.verdict, a.inputFailure);
         assertEquals(rig.cur.startTick + at, a.failTick);
-        assertEquals(TurnReference.KEY_S, a.expectedKeys);
+        assertEquals(TurnReference.mask(rig.tasRow(at)), a.expectedKeys);
+        assertEquals(TurnReference.mask(rig.tasRow(at)) ^ TurnReference.KEY_W, a.failKeys);
     }
 
     @Test
@@ -302,18 +317,16 @@ public class AttemptTrackerTest {
         Rig rig = new Rig();
         ForwardPath p = rig.pathFor(rig.cur.facing);
         int landTick = rig.cur.n;
-        rig.controller.setLanding(new TurnReference.Landing(landTick, p.posX[rig.cur.n] + 0.5, Double.NaN, Double.NaN,
+        rig.landing(new TurnReference.Landing(landTick, p.posX[rig.cur.n] + 0.5, Double.NaN, Double.NaN,
                 Double.NaN));
-        rig.sync();
         rig.play(true, 0, 0.0, NONE, NONE);
         TurnAttempt a = rig.tracker.last();
         assertFalse(a.verdict, a.landed);
         assertEquals(0.5, a.margin, 1e-9);
         assertTrue(a.verdict, a.verdict.startsWith("-0.5"));
         assertTrue(a.verdict, a.verdict.endsWith(" X"));
-        rig.controller.setLanding(new TurnReference.Landing(landTick, Double.NaN, p.posX[rig.cur.n] + 0.5,
+        rig.landing(new TurnReference.Landing(landTick, Double.NaN, p.posX[rig.cur.n] + 0.5,
                 p.posZ[rig.cur.n] - 1.0, p.posZ[rig.cur.n] + 1.0));
-        rig.sync();
         rig.play(true, 0, 0.0, NONE, NONE);
         a = rig.tracker.last();
         assertTrue(a.verdict, a.landed);
@@ -377,8 +390,7 @@ public class AttemptTrackerTest {
     public void aStillTickFailsOnASinglePixelPreturn() {
         Rig rig = new Rig();
         int at = rig.k0;
-        TurnReference ref = rig.controller.document().reference();
-        ref.setStill(ref.row(at), true);
+        rig.tasRow(at).setOnejumpFace(InputRow.ONEJUMP_FACE_STILL);
         rig.controller.referenceChanged();
         rig.sync();
         assertTrue(rig.cur.still[at]);
@@ -407,8 +419,7 @@ public class AttemptTrackerTest {
     public void aStillTickPassesTheExactFacingAndATurnAfterIt() {
         Rig rig = new Rig();
         int at = rig.k0;
-        TurnReference ref = rig.controller.document().reference();
-        ref.setStill(ref.row(at), true);
+        rig.tasRow(at).setOnejumpFace(InputRow.ONEJUMP_FACE_STILL);
         rig.controller.referenceChanged();
         rig.sync();
         rig.play(true, 0, 0.0, NONE, NONE);
@@ -425,8 +436,7 @@ public class AttemptTrackerTest {
     public void aStillRunUpTickIsCheckedFromTheRing() {
         Rig rig = new Rig();
         assertTrue(rig.k0 > 0);
-        TurnReference ref = rig.controller.document().reference();
-        ref.setStill(ref.row(0), true);
+        rig.tasRow(0).setOnejumpFace(InputRow.ONEJUMP_FACE_STILL);
         rig.controller.referenceChanged();
         rig.sync();
         rig.play(true, 0, 0.5, NONE, NONE);
@@ -438,13 +448,13 @@ public class AttemptTrackerTest {
     }
 
     @Test
-    public void theForecastFollowsAnAttemptAndNamesTheLostTick() {
+    public void theForecastFollowsAnAttemptAndNamesTheFailedTick() {
         Rig rig = new Rig();
         rig.play(true, 0, 0.0, NONE, NONE);
         TurnAttempt a = rig.tracker.last();
         assertTrue(a.verdict, a.landed);
         assertTrue(a.hasForecast());
-        assertEquals(-1, a.lostTick());
+        assertEquals(-1, a.failedTick());
         assertEquals(rig.cur.startTick + rig.cur.n - 1, a.lastForecastTick());
         for (int t = 0; t < rig.cur.n; t++) {
             double held = a.heldMarginAt(rig.cur.startTick + t);
@@ -457,17 +467,17 @@ public class AttemptTrackerTest {
         assertTrue(Double.isNaN(a.heldMarginAt(rig.cur.startTick + rig.cur.n)));
         TurnAttempt stored = rig.controller.document().attempts().get(0);
         assertTrue(stored.hasForecast());
-        assertEquals(-1, stored.lostTick());
+        assertEquals(-1, stored.failedTick());
 
         double sign = rig.pathFor(rig.yawsFor(rig.k0 + 1, 3.0)).posX[rig.cur.n]
                 < rig.pathFor(rig.yawsFor(rig.k0 + 1, -3.0)).posX[rig.cur.n] ? 3.0 : -3.0;
         rig.play(true, rig.k0 + 1, sign, NONE, NONE);
         a = rig.tracker.last();
         assertFalse(a.verdict, a.landed);
-        assertTrue(a.lostTick() >= rig.cur.startTick + rig.k0 + 1);
-        assertTrue(a.lostTick() < rig.cur.startTick + rig.cur.n);
-        assertTrue(a.bestMarginAt(a.lostTick()) > 0.0);
-        assertTrue(Double.isNaN(a.offsetLoAt(a.lostTick())));
+        assertTrue(a.failedTick() >= rig.cur.startTick + rig.k0 + 1);
+        assertTrue(a.failedTick() < rig.cur.startTick + rig.cur.n);
+        assertTrue(a.bestMarginAt(a.failedTick()) > 0.0);
+        assertTrue(Double.isNaN(a.offsetLoAt(a.failedTick())));
         assertTrue(a.bestMarginAt(rig.cur.startTick + rig.k0) <= 0.0);
     }
 
@@ -479,8 +489,8 @@ public class AttemptTrackerTest {
         TurnAttempt a = rig.tracker.last();
         assertTrue(a.verdict, a.landed);
         assertFalse(a.hasForecast());
-        assertEquals(-1, a.lostTick());
-        assertNull(LandingForecast.lostSummary(rig.controller.document().attempts(), 100));
+        assertEquals(-1, a.failedTick());
+        assertNull(LandingForecast.failedSummary(rig.controller.document().attempts(), 100));
     }
 
     @Test
@@ -493,5 +503,96 @@ public class AttemptTrackerTest {
         assertFalse(a.complete);
         assertTrue(a.hasTiming());
         assertEquals(0.4f, a.turnStartAt(rig.cur.startTick + abortAt - 2), 1e-6f);
+    }
+
+    @Test
+    public void aStoredReferenceFlagsAnUnflaggedTasOnce() throws Exception {
+        Rig rig = new Rig();
+        java.nio.file.Path dir = java.nio.file.Files.createTempDirectory("pkc-onejump-adopt");
+        de.legoshi.parkourcalc.core.save.FileSystemSaveStore fs =
+                new de.legoshi.parkourcalc.core.save.FileSystemSaveStore(dir, "test", "1.8.9", () -> null);
+        TurnProfileStore store = new TurnProfileStore(() -> fs);
+        java.util.List<TurnAttempt> none = new java.util.ArrayList<TurnAttempt>();
+        assertTrue(store.save("d10/j335", rig.controller.document().reference(), none));
+        for (InputRow r : rig.inputs.getRows()) {
+            r.setOnejumpKeys(false);
+            r.setOnejumpFace(InputRow.ONEJUMP_FACE_OFF);
+        }
+        TurnProfileController second = new TurnProfileController(rig.engine, rig.state, rig.inputs, () -> true,
+                () -> 0.5f, () -> 1000, () -> 1000, store, () -> "d10/j335");
+        second.refresh();
+        TurnProfileController.Current cur = second.current();
+        assertNotNull(second.lastError(), cur);
+        assertEquals(rig.cur.n, cur.n);
+        assertEquals(rig.tasFirst, second.document().reference().tasFirstTick());
+        assertTrue(rig.tasRow(0).isOnejumpKeys());
+        for (InputRow r : rig.inputs.getRows()) {
+            r.setOnejumpKeys(false);
+            r.setOnejumpFace(InputRow.ONEJUMP_FACE_OFF);
+        }
+        second.refresh();
+        assertNull(second.current());
+        assertFalse(rig.tasRow(0).isOnejumpKeys());
+    }
+
+    @Test
+    public void theLandingChanceComesFromTheMeasuredSpread() {
+        Rig rig = new Rig();
+        de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec spec =
+                rig.engine.snapshotPath(rig.tasFirst, rig.tasFirst + rig.cur.n).spec;
+        double[][] none = new double[rig.cur.n][];
+        for (int t = 0; t < none.length; t++) none[t] = new double[0];
+        AttemptSampler.Stats exact = AttemptSampler.sample(rig.model, spec, rig.cur.facing, none, 20, null);
+        assertEquals(20, exact.attempts);
+        assertEquals(1.0, exact.rate(), 0.0);
+        double[][] wide = new double[rig.cur.n][];
+        double px = rig.cur.pixelDeg;
+        for (int t = 0; t < wide.length; t++) {
+            wide[t] = t >= rig.k0 + 1 && t <= rig.k0 + 3 ? new double[] {-3.0 * px, 0.0, 3.0 * px} : new double[0];
+        }
+        AttemptSampler.Stats spread = AttemptSampler.sample(rig.model, spec, rig.cur.facing, wide, 200, null);
+        assertEquals(200, spread.attempts);
+        assertTrue("rate " + spread.rate(), spread.rate() < 1.0);
+        rig.play(true, 0, 0.0, NONE, NONE);
+        rig.play(true, rig.k0 + 2, 40.0, NONE, NONE);
+        rig.controller.rate();
+        long until = System.currentTimeMillis() + 20_000L;
+        while (rig.controller.isRating() && System.currentTimeMillis() < until) Thread.yield();
+        TurnProfileController.Current cur = rig.controller.current();
+        assertNotNull(cur.attempts);
+        assertEquals(2, rig.controller.ratedSpread());
+        assertTrue("rate " + cur.attempts.rate(), cur.attempts.rate() < 1.0);
+        TurnAttempt a = rig.tracker.last();
+        assertTrue(a.hasState());
+        assertFalse(a.solved());
+        assertEquals(a.forecastFailedTick(), a.failedTick());
+    }
+
+    @Test
+    public void anOptionalKeyMayBePressedOrNot() {
+        Rig rig = new Rig();
+        int at = -1;
+        for (int t = rig.k0 + 1; t < rig.cur.n && at < 0; t++) {
+            if (rig.cur.checkKeys[t] && (rig.cur.keys[t] & TurnReference.KEY_W) != 0) at = t;
+        }
+        assertTrue(at > 0);
+        rig.maskOverride = new int[rig.cur.n];
+        java.util.Arrays.fill(rig.maskOverride, -1);
+        rig.maskOverride[at] = rig.cur.keys[at] ^ TurnReference.KEY_S;
+        rig.play(true, 0, 0.0, NONE, NONE);
+        TurnAttempt a = rig.tracker.last();
+        assertTrue(a.verdict, a.inputFailure);
+        assertEquals(rig.cur.startTick + at, a.failTick);
+        rig.tasRow(at).setOnejumpOptional(InputRow.Key.S, true);
+        rig.controller.referenceChanged();
+        rig.sync();
+        assertEquals(TurnReference.KEY_S, rig.cur.optionalKeys[at]);
+        rig.play(true, 0, 0.0, NONE, NONE);
+        a = rig.tracker.last();
+        assertFalse(a.verdict, a.inputFailure);
+        assertTrue(a.verdict, a.landed);
+        rig.maskOverride[at] = rig.cur.keys[at] ^ TurnReference.KEY_S ^ TurnReference.KEY_W;
+        rig.play(true, 0, 0.0, NONE, NONE);
+        assertTrue(rig.tracker.last().verdict, rig.tracker.last().inputFailure);
     }
 }

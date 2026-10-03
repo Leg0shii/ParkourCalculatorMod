@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.core;
 
 import com.google.gson.Gson;
+import com.google.gson.annotations.SerializedName;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 
@@ -11,13 +12,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
 public final class TurnProfileStore {
 
-    public static final String DIRECTORY = "parkourcalculator-onejump";
+    public static final String DIRECTORY = ".onejump";
+    public static final String LEGACY_DIRECTORY = "parkourcalculator-onejump";
     public static final String EXTENSION = ".jsonl";
     private static final Gson GSON = new Gson();
 
@@ -27,6 +28,7 @@ public final class TurnProfileStore {
         boolean checkKeys;
         boolean checkYaw;
         boolean still;
+        String optional;
     }
 
     static final class LandingData {
@@ -64,6 +66,8 @@ public final class TurnProfileStore {
         boolean turnFailure;
         Double failTurn;
         ForecastData forecast;
+        boolean favourite;
+        Double[] solvedOffset;
     }
 
     static final class ForecastData {
@@ -72,7 +76,13 @@ public final class TurnProfileStore {
         Double[] bestOffset;
         Double[] offsetLo;
         Double[] offsetHi;
-        int lostTick = -1;
+        @SerializedName(value = "failedTick", alternate = "lostTick")
+        int failedTick = -1;
+        Double[] x;
+        Double[] z;
+        Double[] vx;
+        Double[] vz;
+        boolean[] ground;
     }
 
     private static final float NO_TURN = -1f;
@@ -91,36 +101,23 @@ public final class TurnProfileStore {
     public Path fileFor(String name) {
         FileSystemSaveStore s = store.get();
         if (s == null || name == null || name.isEmpty()) return null;
-        String safe = name.replaceAll("[\\\\/:*?\"<>|]", "_");
-        return s.getSaveDir().resolveSibling(DIRECTORY).resolve(safe + EXTENSION);
+        Path dir = s.getSaveDir().toAbsolutePath().normalize().resolve(DIRECTORY);
+        Path p = dir.resolve(name.replace('\\', '/') + EXTENSION).normalize();
+        return p.startsWith(dir) ? p : null;
     }
 
-    public List<String> names() {
-        List<String> out = new ArrayList<String>();
+    public void migrateLegacyFolder() {
         FileSystemSaveStore s = store.get();
-        if (s == null) return out;
-        Path dir = s.getSaveDir().resolveSibling(DIRECTORY);
-        if (!Files.isDirectory(dir)) return out;
-        try (java.nio.file.DirectoryStream<Path> ds = Files.newDirectoryStream(dir, "*" + EXTENSION)) {
-            for (Path p : ds) {
-                String f = p.getFileName().toString();
-                out.add(f.substring(0, f.length() - EXTENSION.length()));
-            }
-        } catch (Exception e) {
-            lastError = e.getMessage();
-        }
-        Collections.sort(out, String.CASE_INSENSITIVE_ORDER);
-        return out;
-    }
-
-    public boolean delete(String name) {
-        Path p = fileFor(name);
-        if (p == null) return false;
+        if (s == null) return;
+        Path saveDir = s.getSaveDir().toAbsolutePath().normalize();
+        Path legacy = saveDir.resolveSibling(LEGACY_DIRECTORY);
+        Path target = saveDir.resolve(DIRECTORY);
+        if (!Files.isDirectory(legacy) || Files.exists(target)) return;
         try {
-            return Files.deleteIfExists(p);
+            Files.createDirectories(saveDir);
+            Files.move(legacy, target);
         } catch (Exception e) {
             lastError = e.getMessage();
-            return false;
         }
     }
 
@@ -203,6 +200,8 @@ public final class TurnProfileStore {
             d.checkKeys = ref.checkKeys(r);
             d.checkYaw = ref.checkYaw(r);
             d.still = ref.still(r);
+            int optional = ref.optionalKeys(r);
+            d.optional = optional == 0 ? null : TurnReference.keysText(optional);
             h.rows.add(d);
         }
         TurnReference.Landing l = ref.landing();
@@ -237,6 +236,8 @@ public final class TurnProfileStore {
         d.turnEnd = packPhases(a.turnEnd);
         d.turnFailure = a.turnFailure;
         d.failTurn = Double.isNaN(a.failTurn) ? null : a.failTurn;
+        d.favourite = a.favourite;
+        d.solvedOffset = boxAll(a.solvedOffset);
         if (a.forecast != null) {
             ForecastData f = new ForecastData();
             f.held = boxAll(a.forecast.held);
@@ -244,7 +245,12 @@ public final class TurnProfileStore {
             f.bestOffset = boxAll(a.forecast.bestOffset);
             f.offsetLo = boxAll(a.forecast.offsetLo);
             f.offsetHi = boxAll(a.forecast.offsetHi);
-            f.lostTick = a.forecast.lostTick;
+            f.failedTick = a.forecast.failedTick;
+            f.x = boxAll(a.forecast.x);
+            f.z = boxAll(a.forecast.z);
+            f.vx = boxAll(a.forecast.vx);
+            f.vz = boxAll(a.forecast.vz);
+            f.ground = a.forecast.ground;
             d.forecast = f;
         }
         return d;
@@ -253,7 +259,8 @@ public final class TurnProfileStore {
     private static TurnAttempt.Forecast toForecast(ForecastData f, int n) {
         if (f == null) return null;
         return new TurnAttempt.Forecast(unboxAll(f.held, n), unboxAll(f.best, n), unboxAll(f.bestOffset, n),
-                unboxAll(f.offsetLo, n), unboxAll(f.offsetHi, n), f.lostTick);
+                unboxAll(f.offsetLo, n), unboxAll(f.offsetHi, n), f.failedTick, unboxAll(f.x, n), unboxAll(f.z, n),
+                unboxAll(f.vx, n), unboxAll(f.vz, n), f.ground);
     }
 
     private static Double[] boxAll(double[] v) {
@@ -296,6 +303,7 @@ public final class TurnProfileStore {
                 InputRow r = new InputRow();
                 TurnReference.applyKeys(r, TurnReference.parseKeys(d.keys == null ? "" : d.keys));
                 r.setYaw(d.yaw == null ? null : d.yaw.floatValue());
+                if (d.optional != null) TurnReference.applyOptional(r, TurnReference.parseKeys(d.optional));
                 rows.add(r);
                 ck.add(d.checkKeys);
                 cy.add(d.checkYaw);
@@ -322,7 +330,7 @@ public final class TurnProfileStore {
     static TurnAttempt toAttempt(AttemptData d) {
         if (d == null || d.yaws == null) return null;
         boolean timed = d.turnStart != null && d.turnEnd != null;
-        return new TurnAttempt(d.number, d.firstTick, d.yaws, Math.min(d.recorded, d.yaws.length), d.complete,
+        TurnAttempt a = new TurnAttempt(d.number, d.firstTick, d.yaws, Math.min(d.recorded, d.yaws.length), d.complete,
                 d.landed, d.inputFailure, d.verdict == null ? "" : d.verdict,
                 d.margin == null ? Double.NaN : d.margin, d.worstTick, d.failTick,
                 TurnReference.parseKeys(d.failKeys == null ? "" : d.failKeys),
@@ -330,6 +338,9 @@ public final class TurnProfileStore {
                 timed ? unpackPhases(d.turnStart, d.yaws.length) : null,
                 timed ? unpackPhases(d.turnEnd, d.yaws.length) : null, null, d.turnFailure,
                 d.failTurn == null ? Double.NaN : d.failTurn, toForecast(d.forecast, d.yaws.length));
+        a.favourite = d.favourite;
+        a.solvedOffset = unboxAll(d.solvedOffset, d.yaws.length);
+        return a;
     }
 
     private static Double box(double v) {

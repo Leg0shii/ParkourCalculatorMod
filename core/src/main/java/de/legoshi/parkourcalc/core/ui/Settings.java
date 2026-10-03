@@ -82,8 +82,8 @@ public final class Settings {
     private static final boolean DEFAULT_VIEW_VELOCITY_MAP = false;
     private static final boolean DEFAULT_VIEW_TURN_PROFILE = false;
     private static final boolean DEFAULT_VIEW_RECORDER = false;
-    private static final int DEFAULT_TURN_PROFILE_INPUTS_HIT_PCT = 100;
-    private static final int DEFAULT_TURN_PROFILE_ATTEMPTS = 100_000;
+    private static final int DEFAULT_TURN_PROFILE_ATTEMPTS = 20_000;
+    private static final int DEFAULT_ONEJUMP_SPREAD_ATTEMPTS = 1000;
     private static final boolean DEFAULT_SAVE_DEBUG_VALUES = false;
     private static final boolean DEFAULT_EXPERIMENTAL_BLOCK_CAPTURE = false;
 
@@ -222,25 +222,15 @@ public final class Settings {
     public boolean viewTurnProfile = DEFAULT_VIEW_TURN_PROFILE;
     public boolean viewOnejumpSetup = false;
     public boolean viewOnejumpKeys = false;
-    public String onejumpName = "";
     public int onejumpMacroMode = 0;
     public int onejumpMacroDelayMs = 1000;
     public boolean onejumpTurnTiming = true;
     public boolean onejumpOffsetLive = true;
     public boolean onejumpOffsetHover = true;
     public boolean viewRecorder = DEFAULT_VIEW_RECORDER;
-    public int turnProfileInputsHitPct = DEFAULT_TURN_PROFILE_INPUTS_HIT_PCT;
     public int turnProfileAttempts = DEFAULT_TURN_PROFILE_ATTEMPTS;
-    public boolean turnProfileShowAttempts = true;
+    public int onejumpSpreadAttempts = DEFAULT_ONEJUMP_SPREAD_ATTEMPTS;
     public boolean turnProfileShowRating = true;
-    public double turnProfileFlickRestPct = 5.0;
-    public double turnProfileFlickMovingPct = 8.0;
-    public double turnProfileSmoothPx = 1.0;
-    public double turnProfileFlickThresholdDeg = 6.0;
-    public double turnProfileFlickMsMin = 20.0;
-    public double turnProfileFlickMsMax = 40.0;
-    public double turnProfileFlickStartJitterMs = 10.0;
-    public double turnProfilePhaseScale = 0.0;
 
     // When on, each Save also writes the full per-tick SimulatorEntity state to the file (debug only).
     public boolean saveDebugValues = DEFAULT_SAVE_DEBUG_VALUES;
@@ -356,16 +346,14 @@ public final class Settings {
         viewTurnProfile = DEFAULT_VIEW_TURN_PROFILE;
         viewOnejumpSetup = false;
         viewOnejumpKeys = false;
-        onejumpName = "";
         onejumpMacroMode = 0;
         onejumpMacroDelayMs = 1000;
         onejumpTurnTiming = true;
         onejumpOffsetLive = true;
         onejumpOffsetHover = true;
         viewRecorder = DEFAULT_VIEW_RECORDER;
-        turnProfileInputsHitPct = DEFAULT_TURN_PROFILE_INPUTS_HIT_PCT;
         turnProfileAttempts = DEFAULT_TURN_PROFILE_ATTEMPTS;
-        turnProfileShowAttempts = true;
+        onejumpSpreadAttempts = DEFAULT_ONEJUMP_SPREAD_ATTEMPTS;
         turnProfileShowRating = true;
         saveDebugValues = DEFAULT_SAVE_DEBUG_VALUES;
         experimentalBlockCapture = DEFAULT_EXPERIMENTAL_BLOCK_CAPTURE;

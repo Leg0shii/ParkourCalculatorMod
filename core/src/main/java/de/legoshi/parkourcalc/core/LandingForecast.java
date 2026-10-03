@@ -213,21 +213,21 @@ public final class LandingForecast {
         return c;
     }
 
-    public static String lostSummary(List<TurnAttempt> attempts, int limit) {
+    public static String failedSummary(List<TurnAttempt> attempts, int limit) {
         int[] count = new int[0];
-        int lost = 0;
+        int failed = 0;
         int taken = 0;
         for (int i = attempts.size() - 1; i >= 0 && taken < limit; i--) {
             TurnAttempt a = attempts.get(i);
             if (!a.judged() || a.landed) continue;
             taken++;
-            int lt = a.lostTick();
+            int lt = a.failedTick();
             if (lt < 0) continue;
             if (lt >= count.length) count = java.util.Arrays.copyOf(count, lt + 1);
             count[lt]++;
-            lost++;
+            failed++;
         }
-        if (lost == 0) return null;
+        if (failed == 0) return null;
         List<Integer> order = new ArrayList<Integer>();
         for (int t = 0; t < count.length; t++) if (count[t] > 0) order.add(t);
         final int[] c = count;
@@ -236,9 +236,9 @@ public final class LandingForecast {
         for (int i = 0; i < order.size() && i < 3; i++) {
             int t = order.get(i);
             if (i > 0) sb.append(", ");
-            sb.append(String.format(Locale.ROOT, "tick %d (%.0f%%)", t + 1, 100.0 * count[t] / lost));
+            sb.append(String.format(Locale.ROOT, "tick %d (%.0f%%)", t + 1, 100.0 * count[t] / failed));
         }
-        sb.append(String.format(Locale.ROOT, "  of %d lost", lost));
+        sb.append(String.format(Locale.ROOT, "  of %d failed", failed));
         return sb.toString();
     }
 }

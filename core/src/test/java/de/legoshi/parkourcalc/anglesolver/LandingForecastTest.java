@@ -7,7 +7,6 @@ import de.legoshi.parkourcalc.core.TurnProfileController;
 import de.legoshi.parkourcalc.core.TurnReference;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
-import de.legoshi.parkourcalc.core.anglesolver.profile.AttemptSampler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
@@ -34,8 +33,11 @@ public class LandingForecastTest {
 
     private static final class Rig {
         final ExactJumpModel model;
+        final AngleSolverState state;
         final TurnProfileController controller;
-        final JumpSpec spec;
+        final int tasFirst;
+        final AngleSolverEngine engine;
+        JumpSpec spec;
         final JumpPhysicsInputs sc;
         final double[] game;
         final ForwardPath full;
@@ -49,14 +51,16 @@ public class LandingForecastTest {
             SaveIO.applyRowsTo(file, inputs);
             AngleSolverState state = new AngleSolverState();
             SaveIO.applyAngleSolverTo(file, state);
-            AngleSolverEngine engine = new AngleSolverEngine(state, Fixtures.buildBoxes(file), inputs, t -> { }, model);
+            engine = new AngleSolverEngine(state, Fixtures.buildBoxes(file), inputs, t -> { }, model);
+            this.state = state;
             controller = new TurnProfileController(engine, state, inputs, () -> true, () -> 0.5f,
-                    AttemptSampler.Scatter::new, () -> 1000, null, () -> null, x -> { });
-            assertTrue(controller.lastError(), controller.importFromTas(state.getStartTick(), state.getLandingTick() - 1));
+                    () -> 1000, () -> 1000, null, () -> null);
+            OnejumpRigs.flag(inputs, state.getStartTick(), state.getLandingTick() - 1);
+            controller.refresh();
             cur = controller.current();
-            assertNotNull(cur);
+            assertNotNull(controller.lastError(), cur);
             n = cur.n;
-            int tasFirst = controller.document().reference().tasFirstTick();
+            tasFirst = controller.document().reference().tasFirstTick();
             spec = engine.snapshotPath(tasFirst, tasFirst + n).spec;
             sc = spec.asScenario();
             assertEquals(n, sc.numTicks);
@@ -65,13 +69,19 @@ public class LandingForecastTest {
             assertNotNull(full.velX);
         }
 
+        void landing(TurnReference.Landing l) {
+            OnejumpRigs.landing(state, tasFirst, l);
+            controller.refresh();
+            cur = controller.current();
+            spec = engine.snapshotPath(tasFirst, tasFirst + n).spec;
+        }
+
         boolean ground(int t) {
             return !Double.isNaN(sc.slipAt(t));
         }
 
         LandingForecast forecastWithSpare(double spare) {
-            controller.setLanding(new TurnReference.Landing(n, full.posX[n] - spare, Double.NaN, Double.NaN, Double.NaN));
-            cur = controller.current();
+            landing(new TurnReference.Landing(n, full.posX[n] - spare, Double.NaN, Double.NaN, Double.NaN));
             LandingForecast f = LandingForecast.of(model, cur);
             assertNotNull(f);
             return f;
@@ -163,10 +173,10 @@ public class LandingForecastTest {
     @Test
     public void theOffsetWindowRespectsEveryConstraintOfTheJump() {
         Rig rig = new Rig();
+        LandingForecast f = rig.forecastWithSpare(0.0);
         JumpConstraintCompiler.Compiled comp = JumpConstraintCompiler.compile(LandingForecast.positional(rig.spec));
         assertTrue(comp.maxViolation(rig.game, rig.full) <= 0.0);
         assertTrue(LandingForecast.positional(rig.spec).constraints.size() < rig.spec.constraints.size());
-        LandingForecast f = rig.forecastWithSpare(0.0);
         int checked = 0;
         for (int t = 0; t + 1 < rig.n; t++) {
             LandingForecast.Result r = f.at(t, rig.full.posX[t], rig.full.posZ[t], rig.full.velX[t], rig.full.velZ[t],
@@ -188,24 +198,25 @@ public class LandingForecastTest {
     @Test
     public void theForecastNeedsATasScenarioAndALandingBox() {
         Rig rig = new Rig();
-        rig.controller.setLanding(new TurnReference.Landing(rig.n + 1, rig.full.posX[rig.n], Double.NaN, Double.NaN,
-                Double.NaN));
+        OnejumpRigs.clearLandings(rig.state, rig.tasFirst, rig.tasFirst + rig.n);
+        rig.controller.refresh();
+        assertNull(rig.controller.current().landing);
         assertNull(LandingForecast.of(rig.model, rig.controller.current()));
         assertNull(LandingForecast.of(null, rig.cur));
     }
 
     @Test
-    public void lostTicksSummariseTheLatestFailedAttempts() {
+    public void failedTicksSummariseTheLatestFailedAttempts() {
         List<TurnAttempt> list = new ArrayList<TurnAttempt>();
-        int[] lost = {8, 8, 8, 7, 9, -1};
-        for (int i = 0; i < lost.length; i++) {
+        int[] failed = {8, 8, 8, 7, 9, -1};
+        for (int i = 0; i < failed.length; i++) {
             list.add(new TurnAttempt(i + 1, 0, new double[] {0}, 1, true, false, false, "", 0.1, -1, -1, 0, 0, 0, null, null,
-                    null, false, Double.NaN, new TurnAttempt.Forecast(null, null, null, null, null, lost[i])));
+                    null, false, Double.NaN, new TurnAttempt.Forecast(null, null, null, null, null, failed[i])));
         }
         list.add(new TurnAttempt(9, 0, new double[] {0}, 1, true, true, false, "", -0.1, -1, -1, 0, 0, 0, null, null, null,
                 false, Double.NaN, new TurnAttempt.Forecast(null, null, null, null, null, 3)));
-        String s = LandingForecast.lostSummary(list, 100);
-        assertEquals("tick 9 (60%), tick 8 (20%), tick 10 (20%)  of 5 lost", s);
-        assertNull(LandingForecast.lostSummary(list.subList(5, 7), 100));
+        String s = LandingForecast.failedSummary(list, 100);
+        assertEquals("tick 9 (60%), tick 8 (20%), tick 10 (20%)  of 5 failed", s);
+        assertNull(LandingForecast.failedSummary(list.subList(5, 7), 100));
     }
 }
