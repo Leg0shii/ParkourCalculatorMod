@@ -183,4 +183,34 @@ public class InputRowSaveRoundTripTest {
         assertEquals(1, out.size());
         assertTrue(out.get(0).isKeyActive(InputRow.Key.W));
     }
+
+    @Test
+    public void onejumpFlagsRoundTrip() throws Exception {
+        FileSystemSaveStore store = store(Files.createTempDirectory("pkc-rt-onejump"));
+        InputData in = new InputData();
+        InputRow r0 = new InputRow();
+        r0.setOnejumpKeys(true);
+        r0.setOnejumpFace(InputRow.ONEJUMP_FACE_STILL);
+        in.getRows().add(r0);
+        InputRow r1 = new InputRow();
+        r1.setOnejumpFace(InputRow.ONEJUMP_FACE_CHECK);
+        r1.setOnejumpOptional(InputRow.Key.JUMP, true);
+        r1.setOnejumpOptional(InputRow.Key.A, true);
+        in.getRows().add(r1);
+        in.getRows().add(new InputRow());
+
+        InputData out = saveAndReload(store, in);
+        assertEquals(3, out.size());
+        assertTrue(out.get(0).isOnejumpKeys());
+        assertEquals(InputRow.ONEJUMP_FACE_STILL, out.get(0).getOnejumpFace());
+        assertFalse(out.get(1).isOnejumpKeys());
+        assertEquals(InputRow.ONEJUMP_FACE_CHECK, out.get(1).getOnejumpFace());
+        assertTrue(out.get(1).isOnejumpOptional(InputRow.Key.JUMP));
+        assertTrue(out.get(1).isOnejumpOptional(InputRow.Key.A));
+        assertFalse(out.get(1).isOnejumpOptional(InputRow.Key.W));
+        assertFalse(out.get(0).hasOnejumpOptional());
+        assertTrue(out.get(1).copy().isOnejumpOptional(InputRow.Key.A));
+        assertFalse(out.get(2).isOnejumpFlagged());
+        assertTrue(out.get(0).copy().isOnejumpFlagged());
+    }
 }

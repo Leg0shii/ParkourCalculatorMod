@@ -80,11 +80,16 @@ public final class Settings {
     private static final boolean DEFAULT_VIEW_PERF_INFO = false;
     private static final boolean DEFAULT_VIEW_ANGLE_SOLVER = false;
     private static final boolean DEFAULT_VIEW_VELOCITY_MAP = false;
+    private static final boolean DEFAULT_VIEW_TURN_PROFILE = false;
+    private static final boolean DEFAULT_VIEW_RECORDER = false;
+    private static final int DEFAULT_TURN_PROFILE_ATTEMPTS = 20_000;
+    private static final int DEFAULT_ONEJUMP_SPREAD_ATTEMPTS = 1000;
     private static final boolean DEFAULT_SAVE_DEBUG_VALUES = false;
     private static final boolean DEFAULT_EXPERIMENTAL_BLOCK_CAPTURE = false;
 
     private static final boolean DEFAULT_KEEP_INPUT_TABLE_OPEN = false;
     private static final boolean DEFAULT_KEEP_TICK_INFO_OPEN = false;
+    private static final boolean DEFAULT_KEEP_TURN_PROFILE_OPEN = false;
     private static final boolean DEFAULT_UNDO_REDO_WITHOUT_UI = true;
 
     private static final float[] DEFAULT_HUD_MESSAGE_COLOR = {0.804f, 0.839f, 0.957f, 1.00f}; // text #cdd6f4
@@ -214,6 +219,18 @@ public final class Settings {
     public boolean viewPerf = DEFAULT_VIEW_PERF_INFO;
     public boolean viewAngleSolver = DEFAULT_VIEW_ANGLE_SOLVER;
     public boolean viewVelocityMap = DEFAULT_VIEW_VELOCITY_MAP;
+    public boolean viewTurnProfile = DEFAULT_VIEW_TURN_PROFILE;
+    public boolean viewOnejumpSetup = false;
+    public boolean viewOnejumpKeys = false;
+    public int onejumpMacroMode = 0;
+    public int onejumpMacroDelayMs = 1000;
+    public boolean onejumpTurnTiming = true;
+    public boolean onejumpOffsetLive = true;
+    public boolean onejumpOffsetHover = true;
+    public boolean viewRecorder = DEFAULT_VIEW_RECORDER;
+    public int turnProfileAttempts = DEFAULT_TURN_PROFILE_ATTEMPTS;
+    public int onejumpSpreadAttempts = DEFAULT_ONEJUMP_SPREAD_ATTEMPTS;
+    public boolean turnProfileShowRating = true;
 
     // When on, each Save also writes the full per-tick SimulatorEntity state to the file (debug only).
     public boolean saveDebugValues = DEFAULT_SAVE_DEBUG_VALUES;
@@ -223,6 +240,7 @@ public final class Settings {
     // Keep these windows drawn (display-only) while the main UI is closed.
     public boolean keepInputTableOpen = DEFAULT_KEEP_INPUT_TABLE_OPEN;
     public boolean keepTickInfoOpen = DEFAULT_KEEP_TICK_INFO_OPEN;
+    public boolean keepTurnProfileOpen = DEFAULT_KEEP_TURN_PROFILE_OPEN;
 
     public boolean undoRedoWithoutUi = DEFAULT_UNDO_REDO_WITHOUT_UI;
 
@@ -325,10 +343,23 @@ public final class Settings {
         viewPerf = DEFAULT_VIEW_PERF_INFO;
         viewAngleSolver = DEFAULT_VIEW_ANGLE_SOLVER;
         viewVelocityMap = DEFAULT_VIEW_VELOCITY_MAP;
+        viewTurnProfile = DEFAULT_VIEW_TURN_PROFILE;
+        viewOnejumpSetup = false;
+        viewOnejumpKeys = false;
+        onejumpMacroMode = 0;
+        onejumpMacroDelayMs = 1000;
+        onejumpTurnTiming = true;
+        onejumpOffsetLive = true;
+        onejumpOffsetHover = true;
+        viewRecorder = DEFAULT_VIEW_RECORDER;
+        turnProfileAttempts = DEFAULT_TURN_PROFILE_ATTEMPTS;
+        onejumpSpreadAttempts = DEFAULT_ONEJUMP_SPREAD_ATTEMPTS;
+        turnProfileShowRating = true;
         saveDebugValues = DEFAULT_SAVE_DEBUG_VALUES;
         experimentalBlockCapture = DEFAULT_EXPERIMENTAL_BLOCK_CAPTURE;
         keepInputTableOpen = DEFAULT_KEEP_INPUT_TABLE_OPEN;
         keepTickInfoOpen = DEFAULT_KEEP_TICK_INFO_OPEN;
+        keepTurnProfileOpen = DEFAULT_KEEP_TURN_PROFILE_OPEN;
         undoRedoWithoutUi = DEFAULT_UNDO_REDO_WITHOUT_UI;
         System.arraycopy(DEFAULT_HUD_MESSAGE_COLOR, 0, hudMessageColor, 0, 4);
         hudMessageCount = DEFAULT_HUD_MESSAGE_COUNT;

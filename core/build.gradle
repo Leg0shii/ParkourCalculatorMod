@@ -46,8 +46,119 @@ dependencies {
 	testImplementation 'io.github.spair:imgui-java-binding:1.86.12'
 }
 
+def problemCases() {
+	def out = []
+	file('src/test/resources/problems').listFiles().findAll { it.directory }.sort { it.name }.each { d ->
+		def names = new TreeSet<String>()
+		d.listFiles().each { f ->
+			if (f.name.endsWith('.expect.json')) names << f.name[0..-13]
+			else if (f.name.endsWith('.json')) names << f.name[0..-6]
+		}
+		names.each { out << d.name + '/' + it }
+	}
+	out
+}
+
+def testShardPlan(int shardCount) {
+	def slow = project.hasProperty('slowTests')
+	def verySlow = project.hasProperty('verySlowTests')
+	def weights = [:]
+	def weightsFile = file('test-weights.properties')
+	if (weightsFile.exists()) {
+		weightsFile.eachLine { line ->
+			def s = line.trim()
+			if (s.isEmpty() || s.startsWith('#')) return
+			def i = s.lastIndexOf('=')
+			weights[s.substring(0, i)] = s.substring(i + 1).toDouble()
+		}
+	}
+	def items = []
+	def srcRoot = file('src/test/java')
+	fileTree(srcRoot).matching { include '**/*.java' }.each { f ->
+		def text = f.text
+		if (!text.contains('@Test')) return
+		if (!verySlow && text.contains('VerySlowSolverTests.class')) return
+		if (!slow && (text =~ /(?<!Very)SlowSolverTests\.class/).find()) return
+		def cls = srcRoot.toPath().relativize(f.toPath()).toString().replace(File.separatorChar, '.' as char)
+		cls = cls[0..-6]
+		def unmeasured = text.contains('VerySlowSolverTests.class') ? 600.0d : 1.0d
+		if (cls.endsWith('.ProblemsTest')) {
+			problemCases().each { items << [name: cls + '#' + it, weight: weights.get(cls + '#' + it, 1.0d)] }
+		} else {
+			items << [name: cls, weight: weights.get(cls, unmeasured)]
+		}
+	}
+	items.sort { a, b -> b.weight <=> a.weight ?: a.name <=> b.name }
+	def shards = (0..<shardCount).collect { [items: [], weight: 0.0d] }
+	items.each { item ->
+		def target = shards.min { it.weight }
+		target.items << item
+		target.weight += item.weight
+	}
+	shards
+}
+
+def configureTestShard(Test t) {
+	def spec = project.findProperty('pkcShard')
+	if (spec == null) return
+	def parts = spec.toString().split('/')
+	def shard = testShardPlan(parts[1] as int)[parts[0] as int]
+	def classes = new HashSet<String>()
+	def problems = []
+	shard.items.each {
+		def hash = it.name.indexOf('#')
+		if (hash < 0) {
+			classes << it.name
+		} else {
+			classes << it.name.substring(0, hash)
+			problems << it.name.substring(hash + 1)
+		}
+	}
+	t.include { FileTreeElement e ->
+		e.directory || classes.contains(e.path.replace('/', '.').replaceAll(/\.class$/, '').replaceAll(/\$.*/, ''))
+	}
+	if (!problems.isEmpty()) t.systemProperty 'pkc.problems', problems.join(',')
+}
+
+tasks.register('testShardPlan') {
+	group = 'verification'
+	description = 'Prints how -PpkcShard=i/n splits the core tests across CI jobs (weights from test-weights.properties).'
+	doLast {
+		def spec = (project.findProperty('pkcShard') ?: '0/8').toString()
+		def count = spec.split('/')[1] as int
+		testShardPlan(count).eachWithIndex { s, i ->
+			println "shard ${i}/${count}: ${Math.round(s.weight)} s, ${s.items.size()} items"
+			s.items.findAll { it.weight >= 5 }.each { println "    ${Math.round(it.weight)} s  ${it.name}" }
+		}
+	}
+}
+
+tasks.register('testWeights') {
+	group = 'verification'
+	description = 'Rewrites test-weights.properties from the latest build/test-results/test run.'
+	doLast {
+		def rows = [:]
+		fileTree('build/test-results/test').matching { include '*.xml' }.each { f ->
+			def suite = new groovy.xml.XmlSlurper().parse(f)
+			def name = suite.@name.text()
+			if (name.endsWith('.ProblemsTest')) {
+				suite.testcase.each { c ->
+					def t = c.@time.text().toDouble()
+					if (t >= 0.5) rows[name + '#' + c.@name.text()[6..-2]] = t
+				}
+			} else {
+				def t = suite.@time.text().toDouble()
+				if (t >= 0.5) rows[name] = t
+			}
+		}
+		def sorted = rows.sort { a, b -> b.value <=> a.value ?: a.key <=> b.key }
+		file('test-weights.properties').text = sorted.collect { k, v -> "${k}=${Math.round(v)}" }.join('\n') + '\n'
+	}
+}
+
 tasks.named('test') {
 	systemProperties providers.systemPropertiesPrefixedBy('pkc.').get()
+	configureTestShard(it)
 	useJUnit {
 		if (!project.hasProperty('slowTests')) {
 			excludeCategories 'de.legoshi.parkourcalc.SlowSolverTests'
@@ -72,6 +183,7 @@ tasks.register('testJava8', Test) {
 	javaLauncher.set(javaToolchains.launcherFor {
 		languageVersion = JavaLanguageVersion.of(8)
 	})
+	configureTestShard(it)
 	systemProperties providers.systemPropertiesPrefixedBy('pkc.').get()
 	useJUnit {
 		if (!project.hasProperty('slowTests')) {

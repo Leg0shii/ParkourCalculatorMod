@@ -49,6 +49,7 @@ public final class PlaybackController {
     private int lastJumpBoostAmplifier;
 
     private Supplier<StartRange> startRangeResolver;
+    private Runnable onStart = () -> { };
     private boolean firstTickOnGround;
 
     // currentTickYaw is the physics yaw, kept bit-identical to the simulator's rotationYaw:
@@ -161,9 +162,14 @@ public final class PlaybackController {
         start(startIndex, stopExclusive, pos, vel, yaw, null);
     }
 
+    public void setOnStart(Runnable onStart) {
+        this.onStart = onStart;
+    }
+
     public void start(int startIndex, int stopExclusive, Vec3dCore pos, Vec3dCore vel, float yaw, Checkpoint carry) {
         if (running) return;
         if (!canStart()) return;
+        onStart.run();
 
         int size = inputData.size();
         int from = clamp(startIndex, 0, size - 1);
