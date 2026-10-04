@@ -377,15 +377,22 @@ public final class AngleSolverEngine {
     }
 
     private Job buildJob(AngleSolverState.Effort effort, SolverGraph graphOverride) {
-        int startTick = state.getStartTick();
-        int landingTick = state.getLandingTick();
+        return buildJob(effort, graphOverride, true);
+    }
+
+    private Job buildJob(AngleSolverState.Effort effort, SolverGraph graphOverride, boolean publishFailure) {
+        return buildJob(effort, graphOverride, publishFailure, state.getStartTick(), state.getLandingTick());
+    }
+
+    private Job buildJob(AngleSolverState.Effort effort, SolverGraph graphOverride, boolean publishFailure,
+                         int startTick, int landingTick) {
         int total = segmentConstraintCount(startTick, landingTick);
 
         List<InputRow> rows = inputs.getRows();
         int numTicks = landingTick - startTick;
         if (numTicks <= 0 || startTick < 0 || startTick >= boxes.size()
                 || landingTick > rows.size() || startTick >= rows.size()) {
-            state.setResult(new SolveResult(false, 0, total, startTick + 1, landingTick + 1));
+            if (publishFailure) state.setResult(new SolveResult(false, 0, total, startTick + 1, landingTick + 1));
             return null;
         }
 
@@ -420,10 +427,12 @@ public final class AngleSolverEngine {
             String[] whyNot = new String[1];
             legalGoal = selectLegalGoalWall(constraints, objective, whyNot);
             if (legalGoal == null) {
-                SolveResult r = new SolveResult(false, 0, total, startTick + 1, landingTick + 1);
-                r.setSolver("legal mode");
-                r.addDetail("Legal mode", whyNot[0]);
-                state.setResult(r);
+                if (publishFailure) {
+                    SolveResult r = new SolveResult(false, 0, total, startTick + 1, landingTick + 1);
+                    r.setSolver("legal mode");
+                    r.addDetail("Legal mode", whyNot[0]);
+                    state.setResult(r);
+                }
                 return null;
             }
         }
@@ -1268,6 +1277,38 @@ public final class AngleSolverEngine {
             r.addDetail("Worst violation", ConstraintText.fixedStat(violation));
         }
         return r;
+    }
+
+    public static final class PathSnapshot {
+        public final JumpSpec spec;
+        public final double[] yaws;
+
+        PathSnapshot(JumpSpec spec, double[] yaws) {
+            this.spec = spec;
+            this.yaws = yaws;
+        }
+    }
+
+    public PathSnapshot snapshotPath(int startTick, int landingTick) {
+        Job job = buildJob(state.getEffort(), null, false, startTick, landingTick);
+        if (job == null) return null;
+        double[] yaws = currentRowYaws(job.startTick, job.numTicks);
+        if (yaws == null) return null;
+        JumpSpec spec = job.spec;
+        if (job.legalGoal != null && !spec.constraints.contains(job.legalGoal)) {
+            List<JumpConstraint> judged = new ArrayList<>(spec.constraints);
+            judged.add(job.legalGoal);
+            spec = new JumpSpec(spec.asScenario(), judged, spec.objective);
+        }
+        return new PathSnapshot(spec, yaws);
+    }
+
+    public ExactJumpModel exactModel() {
+        return model instanceof ExactJumpModel ? (ExactJumpModel) model : null;
+    }
+
+    public ForwardModel forwardModel() {
+        return model;
     }
 
     public SolveResult diagnoseCurrentPath() {

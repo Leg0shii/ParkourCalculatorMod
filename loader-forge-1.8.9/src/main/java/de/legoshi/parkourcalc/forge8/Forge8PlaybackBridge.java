@@ -227,7 +227,7 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
     void endGhostPlayback() {
         Minecraft mc = Minecraft.getMinecraft();
         if (originalMouseHelper != null) {
-            if (mc.mouseHelper instanceof FrozenMouseHelper) {
+            if (mc.mouseHelper instanceof FrozenMouseHelper || mc.mouseHelper instanceof ReplicaMouseHelper) {
                 mc.mouseHelper = originalMouseHelper;
             }
             originalMouseHelper = null;
@@ -592,6 +592,54 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
                 + " spdAmp=" + (spd == null ? -1 : spd.getAmplifier())
                 + " jmpAmp=" + (jmp == null ? -1 : jmp.getAmplifier())
                 + " mvSpeed=" + mvSp);
+    }
+
+
+    private boolean replica;
+
+    @Override
+    public boolean beginReplica(boolean freezeMouse) {
+        Minecraft mc = Minecraft.getMinecraft();
+        EntityPlayerSP client = Minecraft.getMinecraft().thePlayer;
+        if (client == null || Minecraft.getMinecraft().theWorld == null) return false;
+        if (replica) endReplica();
+        for (InputRow.Key k : InputRow.Key.values()) currentRow.setKeyActive(k, false);
+        beginGhostPlayback(new Vec3dCore(client.posX, client.posY, client.posZ), Vec3dCore.ZERO, client.rotationYaw, null);
+        if (ghost == null) {
+            ghostMode = false;
+            return false;
+        }
+        ghost.rotationPitch = client.rotationPitch;
+        ghost.prevRotationPitch = client.rotationPitch;
+        installPlaybackInput(client);
+        if (!freezeMouse) mc.mouseHelper = new ReplicaMouseHelper(this);
+        replica = true;
+        return true;
+    }
+
+    @Override
+    public void endReplica() {
+        if (!replica) return;
+        replica = false;
+        Minecraft mc = Minecraft.getMinecraft();
+        EntityPlayerSP client = mc.thePlayer;
+        if (client != null) restorePlaybackInput(client);
+        else resetInputOverride();
+        endGhostPlayback();
+        mc.objectMouseOver = null;
+    }
+
+    @Override
+    public boolean replicaActive() {
+        return replica && ghost != null;
+    }
+
+    @Override
+    public int playerKeyMask() {
+        GameSettings o = Minecraft.getMinecraft().gameSettings;
+        return de.legoshi.parkourcalc.core.TurnReference.mask(o.keyBindForward.isKeyDown(), o.keyBindLeft.isKeyDown(),
+                o.keyBindBack.isKeyDown(), o.keyBindRight.isKeyDown(), o.keyBindJump.isKeyDown(),
+                o.keyBindSneak.isKeyDown(), o.keyBindSprint.isKeyDown());
     }
 
     private static KeyBinding bindFor(InputRow.Key key) {

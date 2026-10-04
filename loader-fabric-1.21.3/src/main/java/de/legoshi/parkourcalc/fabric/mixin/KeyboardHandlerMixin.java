@@ -17,6 +17,7 @@ public class KeyboardHandlerMixin {
 
     @Inject(method = "keyPress", at = @At("HEAD"), cancellable = true)
     private void onKey(long window, int glfwKey, int scancode, int action, int modifiers, CallbackInfo ci) {
+        FabricParkourCalculator.recordKey(glfwKey, action);
         if (!FabricParkourCalculator.isUiFocused()) {
             return;
         }

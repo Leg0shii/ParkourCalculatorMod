@@ -42,7 +42,16 @@ public final class SaveController {
     private final InputData inputData;
     private final SimulationRunner runner;
     private final MinecraftAccess mc;
+    public interface DocumentListener {
+        void saved(String name);
+
+        void replaced();
+
+        void deleted(String name);
+    }
+
     private final Runnable retriggerSimulation;
+    private DocumentListener documentListener;
     private IntConsumer retriggerFrom;
 
     private FileSystemSaveStore store;
@@ -105,6 +114,10 @@ public final class SaveController {
     void markDirty() {
         if (!sessionActive) return;
         this.dirty = true;
+    }
+
+    public void setDocumentListener(DocumentListener listener) {
+        documentListener = listener;
     }
 
     public boolean isSessionActive() {
@@ -229,6 +242,7 @@ public final class SaveController {
         sessionActive = true;
         if (undo != null) undo.bindJournal(journalFor(currentName));
         writeLastOpen(currentName);
+        if (documentListener != null) documentListener.saved(sanitized);
         return Result.success(sanitized);
     }
 
@@ -293,6 +307,7 @@ public final class SaveController {
         clearTempTrajectory();
         if (undo != null) undo.onDocumentReplaced(journalFor(name));
         writeLastOpen(name);
+        if (documentListener != null) documentListener.replaced();
         return result;
     }
 
@@ -369,6 +384,7 @@ public final class SaveController {
             }
             clearLastOpenIf(name);
             if (name.equals(currentName)) currentName = null;
+            if (documentListener != null) documentListener.deleted(name);
         }
         return ok;
     }
@@ -394,6 +410,7 @@ public final class SaveController {
         currentName = null;
         dirty = false;
         clearTempTrajectory();
+        if (documentListener != null) documentListener.replaced();
     }
 
     public List<SaveInfo> list() {

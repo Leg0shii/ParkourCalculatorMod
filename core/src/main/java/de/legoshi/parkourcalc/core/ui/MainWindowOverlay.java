@@ -349,6 +349,25 @@ public final class MainWindowOverlay implements RenderInterface {
             settings.viewVelocityMap = !settings.viewVelocityMap;
             onSettingsChanged.run();
         }
+        if (ImGui.beginMenu("Onejump")) {
+            if (ImGui.menuItem("Turn Profile", null, settings.viewTurnProfile)) {
+                settings.viewTurnProfile = !settings.viewTurnProfile;
+                onSettingsChanged.run();
+            }
+            if (ImGui.menuItem("Keys", null, settings.viewOnejumpKeys)) {
+                settings.viewOnejumpKeys = !settings.viewOnejumpKeys;
+                onSettingsChanged.run();
+            }
+            if (ImGui.menuItem("Setup", null, settings.viewOnejumpSetup)) {
+                settings.viewOnejumpSetup = !settings.viewOnejumpSetup;
+                onSettingsChanged.run();
+            }
+            ImGui.endMenu();
+        }
+        if (ImGui.menuItem("Recorder", null, settings.viewRecorder)) {
+            settings.viewRecorder = !settings.viewRecorder;
+            onSettingsChanged.run();
+        }
     }
 
     private void renderSettingsMenuItems() {

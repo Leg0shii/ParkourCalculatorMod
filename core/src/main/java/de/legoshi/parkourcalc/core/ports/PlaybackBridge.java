@@ -66,4 +66,18 @@ public interface PlaybackBridge {
     default void capturePlaybackSample(int tickIndex) {}
 
     default void finishPlaybackCapture() {}
+
+    default boolean beginReplica(boolean freezeMouse) {
+        return false;
+    }
+
+    default void endReplica() {}
+
+    default boolean replicaActive() {
+        return false;
+    }
+
+    default int playerKeyMask() {
+        return 0;
+    }
 }

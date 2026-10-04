@@ -12,6 +12,10 @@ public class InputRow {
 
     public static final int MAX_HOTBAR_SLOT = 9;
 
+    public static final int ONEJUMP_FACE_OFF = 0;
+    public static final int ONEJUMP_FACE_CHECK = 1;
+    public static final int ONEJUMP_FACE_STILL = 2;
+
     private final int id;
     private final Set<Key> activeKeys = EnumSet.noneOf(Key.class);
     private Float yaw;
@@ -25,6 +29,9 @@ public class InputRow {
     private double teleportX;
     private double teleportY;
     private double teleportZ;
+    private boolean onejumpKeys;
+    private int onejumpFace;
+    private final Set<Key> onejumpOptional = EnumSet.noneOf(Key.class);
     private int modCount;
 
     // LEFT_CLICK / RIGHT_CLICK appended last to keep existing ordinals stable for old saves.
@@ -154,6 +161,42 @@ public class InputRow {
         this.teleportZ = z;
     }
 
+    public boolean isOnejumpKeys() {
+        return onejumpKeys;
+    }
+
+    public void setOnejumpKeys(boolean check) {
+        if (this.onejumpKeys != check) modCount++;
+        this.onejumpKeys = check;
+    }
+
+    public int getOnejumpFace() {
+        return onejumpFace;
+    }
+
+    public void setOnejumpFace(int face) {
+        int clamped = face < 0 ? 0 : face > ONEJUMP_FACE_STILL ? ONEJUMP_FACE_STILL : face;
+        if (this.onejumpFace != clamped) modCount++;
+        this.onejumpFace = clamped;
+    }
+
+    public boolean isOnejumpOptional(Key key) {
+        return onejumpOptional.contains(key);
+    }
+
+    public void setOnejumpOptional(Key key, boolean optional) {
+        boolean changed = optional ? onejumpOptional.add(key) : onejumpOptional.remove(key);
+        if (changed) modCount++;
+    }
+
+    public boolean hasOnejumpOptional() {
+        return !onejumpOptional.isEmpty();
+    }
+
+    public boolean isOnejumpFlagged() {
+        return onejumpKeys || onejumpFace != ONEJUMP_FACE_OFF;
+    }
+
     private static int clampAmplifier(int amplifier) {
         if (amplifier < 0) return 0;
         if (amplifier > MAX_AMPLIFIER) return MAX_AMPLIFIER;
@@ -180,6 +223,9 @@ public class InputRow {
         copy.teleportX = this.teleportX;
         copy.teleportY = this.teleportY;
         copy.teleportZ = this.teleportZ;
+        copy.onejumpKeys = this.onejumpKeys;
+        copy.onejumpFace = this.onejumpFace;
+        copy.onejumpOptional.addAll(this.onejumpOptional);
         return copy;
     }
 }

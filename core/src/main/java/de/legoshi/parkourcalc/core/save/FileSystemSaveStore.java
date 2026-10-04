@@ -29,7 +29,7 @@ public final class FileSystemSaveStore {
     }
 
     private static final String EXTENSION = ".json";
-    private static final String TRASH_DIR = ".trash";
+    public static final String TRASH_DIR = ".trash";
     private static final String TMP_SUFFIX = ".tmp";
     private static final Charset CHARSET = StandardCharsets.UTF_8;
 

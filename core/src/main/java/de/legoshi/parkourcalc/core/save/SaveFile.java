@@ -57,6 +57,9 @@ public final class SaveFile {
         public double teleportX;
         public double teleportY;
         public double teleportZ;
+        public boolean onejumpKeys;
+        public int onejumpFace;
+        public List<String> onejumpOptional;
     }
 
     /** Angle Solver problem: defaults, per-tick constraints/overrides, and last solve result. */

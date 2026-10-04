@@ -127,6 +127,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
                 FabricWorldDescriptors::current
         ));
         application.setPlaybackBridge(playbackBridge);
+        application.getRecorder().setKeyCodes("glfw");
         application.setBlockPicker(new FabricBlockPicker());
         application.setupUi();
         Minecraft client = Minecraft.getInstance();
@@ -141,6 +142,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         ReplayLockstep.clientBarrierPreTick();
         manageInputLifecycle();
         application.tickPlayback();
+        recordTickStart(Minecraft.getInstance());
     }
 
     private static void manageInputLifecycle() {
@@ -181,7 +183,15 @@ public class FabricParkourCalculator implements ClientModInitializer {
     }
 
     public static boolean isGhostPlaybackActive() {
-        return playbackBridge.ghostEntity() != null;
+        return playbackBridge.ghostEntity() != null && !playbackBridge.replicaMouseFree();
+    }
+
+    public static boolean hasReplica() {
+        return playbackBridge != null && playbackBridge.ghostEntity() != null;
+    }
+
+    public static boolean turnReplica(double accumulatedDX, double accumulatedDY) {
+        return playbackBridge != null && playbackBridge.turnReplica(accumulatedDX, accumulatedDY);
     }
 
     public static boolean shouldForceGroundOnTick0(net.minecraft.client.player.LocalPlayer self) {
@@ -236,6 +246,75 @@ public class FabricParkourCalculator implements ClientModInitializer {
     public static void onEndTick() {
         application.postTickPlayback();
         ReplayLockstep.clientBarrierPostTick();
+        recordTickEnd(Minecraft.getInstance());
+    }
+
+    private static void recordTickStart(Minecraft client) {
+        net.minecraft.client.player.LocalPlayer p = client.player;
+        if (p == null) return;
+        if (playbackBridge.replicaActive()) {
+            client.hitResult = null;
+            client.options.keyAttack.setDown(false);
+            client.options.keyUse.setDown(false);
+        }
+        net.minecraft.world.entity.player.Player g = playbackBridge.replicaActive() ? playbackBridge.ghostEntity() : p;
+        Vec3 pos = g.position();
+        Vec3 vel = g.getDeltaMovement();
+        application.getAttemptTracker().tickStart(pos.x, pos.y, pos.z, vel.x, vel.z, g.getYRot(), g.onGround(),
+                System.nanoTime());
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (!r.isRecording()) return;
+        Vec3 own = p.position();
+        r.tickStart(own.x, own.y, own.z, p.getYRot(), p.getXRot(), p.onGround());
+    }
+
+    private static void recordTickEnd(Minecraft client) {
+        net.minecraft.client.player.LocalPlayer p = client.player;
+        if (p == null) return;
+        var k = p.input.keyPresses;
+        if (playbackBridge.replicaActive()) {
+            application.getAttemptTracker().tickEnd(playbackBridge.getCurrentRow());
+        } else {
+            application.getAttemptTracker().tickEnd(k.forward(), k.left(), k.backward(), k.right(), k.jump(), k.shift(),
+                    k.sprint() || p.isSprinting());
+        }
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (!r.isRecording()) return;
+        r.tickEnd(k.forward(), k.left(), k.backward(), k.right(), k.jump(), k.shift(), k.sprint(), p.isSprinting());
+    }
+
+    public static void recordMouse(double dx, double dy) {
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (!r.isRecording() || isUiFocused()) return;
+        net.minecraft.client.player.LocalPlayer p = Minecraft.getInstance().player;
+        if (p == null) return;
+        r.mouse(0L, dx, dy, p.getYRot(), p.getXRot());
+    }
+
+    public static void recordFrame() {
+        if (isUiFocused()) return;
+        net.minecraft.client.player.LocalPlayer p = Minecraft.getInstance().player;
+        if (p == null) return;
+        net.minecraft.world.entity.player.Player g = playbackBridge.replicaActive() ? playbackBridge.ghostEntity() : p;
+        application.getAttemptTracker().frame(g.getYRot(), System.nanoTime());
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (!r.isRecording()) return;
+        r.frame(p.getYRot(), p.getXRot());
+    }
+
+    public static void recordButton(int button, int action) {
+        if (action != InputConstants.PRESS && action != InputConstants.RELEASE) return;
+        if (isUiFocused() || Minecraft.getInstance().screen != null) return;
+        application.getAttemptTracker().mouseButton(button, action == InputConstants.PRESS);
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (r.isRecording()) r.button(0L, button, action == InputConstants.PRESS);
+    }
+
+    public static void recordKey(int key, int action) {
+        if (action != InputConstants.PRESS && action != InputConstants.RELEASE) return;
+        if (isUiFocused() || Minecraft.getInstance().screen != null) return;
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (r.isRecording()) r.key(0L, key, action == InputConstants.PRESS);
     }
 
     public static void syncFrozenPlayerToServer() {
@@ -498,9 +577,8 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     public static void onHudRender(GuiGraphics context) {
         if (!application.isReady()) return;
-        if (application.isPlaybackRunning()) {
-            hudRenderer.render(context, application.getPlayback().teleportNoticeAlpha());
-        }
+        String label = application.hudBadgeLabel();
+        if (label != null) hudRenderer.render(context, label, application.hudBadgeAlpha());
     }
 
     public static void onGuiRendered() {

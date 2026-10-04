@@ -434,6 +434,67 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
                 + " mvSpeed=" + mvSp);
     }
 
+    private boolean replica;
+    private boolean replicaMouseFree;
+
+    @Override
+    public boolean beginReplica(boolean freezeMouse) {
+        Minecraft mc = Minecraft.getInstance();
+        LocalPlayer client = mc.player;
+        if (client == null || mc.level == null) return false;
+        if (replica) endReplica();
+        for (InputRow.Key k : InputRow.Key.values()) currentRow.setKeyActive(k, false);
+        beginGhostPlayback(new Vec3dCore(client.getX(), client.getY(), client.getZ()), Vec3dCore.ZERO, client.getYRot(), null);
+        if (ghost == null) {
+            ghostMode = false;
+            return false;
+        }
+        installPlaybackInput(client);
+        replica = true;
+        replicaMouseFree = !freezeMouse;
+        return true;
+    }
+
+    @Override
+    public void endReplica() {
+        if (!replica) return;
+        replica = false;
+        replicaMouseFree = false;
+        Minecraft mc = Minecraft.getInstance();
+        LocalPlayer client = mc.player;
+        if (client != null) restorePlaybackInput(client);
+        else resetInputOverride();
+        endGhostPlayback();
+        mc.hitResult = null;
+    }
+
+    @Override
+    public boolean replicaActive() {
+        return replica && ghost != null;
+    }
+
+    boolean replicaMouseFree() {
+        return replica && replicaMouseFree;
+    }
+
+    @Override
+    public int playerKeyMask() {
+        Options o = Minecraft.getInstance().options;
+        return de.legoshi.parkourcalc.core.TurnReference.mask(o.keyUp.isDown(), o.keyLeft.isDown(), o.keyDown.isDown(),
+                o.keyRight.isDown(), o.keyJump.isDown(), o.keyShift.isDown(), o.keySprint.isDown());
+    }
+
+    boolean turnReplica(double accumulatedDX, double accumulatedDY) {
+        if (!replicaMouseFree() || ghost == null) return false;
+        Options o = Minecraft.getInstance().options;
+        double ss = o.sensitivity().get() * 0.6F + 0.2F;
+        double sens = ss * ss * ss * 8.0;
+        double xo = accumulatedDX * sens;
+        double yo = accumulatedDY * sens;
+        ghost.turn(xo, o.invertYMouse().get() ? -yo : yo);
+        return true;
+    }
+
     private static KeyMapping bindFor(InputRow.Key key) {
         Options o = Minecraft.getInstance().options;
         return switch (key) {
