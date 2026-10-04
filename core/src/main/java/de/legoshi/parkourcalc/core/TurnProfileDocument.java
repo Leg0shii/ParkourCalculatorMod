@@ -89,7 +89,6 @@ public final class TurnProfileDocument {
             favourites.remove(a);
         }
         referenceDirty = true;
-        version++;
     }
 
     public Stats stats() {
@@ -144,6 +143,10 @@ public final class TurnProfileDocument {
     public void touch() {
         referenceDirty = true;
         version++;
+    }
+
+    public void markDirty() {
+        referenceDirty = true;
     }
 
     public boolean isReferenceDirty() {

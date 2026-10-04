@@ -321,11 +321,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         if (p == null) return;
         var k = p.input.keyPresses;
         if (playbackBridge.replicaActive()) {
-            de.legoshi.parkourcalc.core.ui.InputRow r = playbackBridge.getCurrentRow();
-            application.getAttemptTracker().tickEnd(r.isKeyActive(de.legoshi.parkourcalc.core.ui.InputRow.Key.W),
-                    r.isKeyActive(de.legoshi.parkourcalc.core.ui.InputRow.Key.A), r.isKeyActive(de.legoshi.parkourcalc.core.ui.InputRow.Key.S),
-                    r.isKeyActive(de.legoshi.parkourcalc.core.ui.InputRow.Key.D), r.isKeyActive(de.legoshi.parkourcalc.core.ui.InputRow.Key.JUMP),
-                    r.isKeyActive(de.legoshi.parkourcalc.core.ui.InputRow.Key.SNEAK), r.isKeyActive(de.legoshi.parkourcalc.core.ui.InputRow.Key.SPRINT));
+            application.getAttemptTracker().tickEnd(playbackBridge.getCurrentRow());
         } else {
             application.getAttemptTracker().tickEnd(k.forward(), k.left(), k.backward(), k.right(), k.jump(), k.shift(),
                     k.sprint() || p.isSprinting());
@@ -652,14 +648,8 @@ public class FabricParkourCalculator implements ClientModInitializer {
     /** Called from InGameHudMixin to queue the MACRO badge into the GUI state. */
     public static void onHudRender(GuiGraphicsExtractor context) {
         if (!application.isReady()) return;
-        if (application.isPlaybackRunning()) {
-            hudRenderer.render(context, de.legoshi.parkourcalc.core.ui.theme.MacroBadgeStyle.LABEL, application.getPlayback().teleportNoticeAlpha());
-            return;
-        }
-        String replay = application.getPracticeMacro() == null ? null : application.getPracticeMacro().label();
-        if (replay != null) {
-            hudRenderer.render(context, replay, 0f);
-        }
+        String label = application.hudBadgeLabel();
+        if (label != null) hudRenderer.render(context, label, application.hudBadgeAlpha());
     }
 
     /** Called by GameRendererMixin after guiRenderer.render(); ImGui draws above the rasterized HUD. */

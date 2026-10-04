@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.core;
 
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
+import de.legoshi.parkourcalc.core.ui.InputRow;
 
 import java.util.Arrays;
 import java.util.Locale;
@@ -140,14 +141,21 @@ public final class AttemptTracker {
     }
 
     public void tickEnd(boolean w, boolean a, boolean s, boolean d, boolean jump, boolean sneak, boolean sprint) {
+        tickEnd(TurnReference.mask(w, a, s, d, jump, sneak, sprint));
+    }
+
+    public void tickEnd(InputRow row) {
+        tickEnd(TurnReference.mask(row));
+    }
+
+    private void tickEnd(int mask) {
         if (filled == 0) return;
-        int mask = TurnReference.mask(w, a, s, d, jump, sneak, sprint);
         ringKeys[head] = mask;
         if (yaws == null) {
             if (!armed || mask == 0) return;
             TurnProfileController.Current c = profile.current();
             if (c == null || c.n == 0) return;
-            int k0 = firstJumpRow(c);
+            int k0 = c.firstJumpRow();
             if (k0 < 0) {
                 armed = false;
                 open(c, head, 1);
@@ -199,11 +207,6 @@ public final class AttemptTracker {
         turnStart[j] = on;
         turnEnd[j] = off;
         traces[j] = pts;
-    }
-
-    private static int firstJumpRow(TurnProfileController.Current c) {
-        for (int t = 0; t < c.n; t++) if (c.jumpTicks[t]) return t;
-        return -1;
     }
 
     private boolean jumpPress(int mask) {
@@ -308,8 +311,24 @@ public final class AttemptTracker {
                 if (!r.landable() && failedTick < 0) failedTick = cur.startTick + tick;
             }
         }
-        live = new TurnAttempt(profile.document().nextNumber(), cur.startTick, yaws, recorded, false, false, false, "",
-                margin, -1, -1, 0, 0, macro, turnStart, turnEnd, traces, false, Double.NaN, forecastResult());
+        live = attempt(recorded, false, false, false, "", margin, -1, -1, 0, 0, false, Double.NaN);
+    }
+
+    private TurnAttempt attempt(int n, boolean complete, boolean landed, boolean inputFailure, String verdict,
+                                double margin, int worstTick, int failTick, int failKeys, int expectedKeys,
+                                boolean turnFailure, double failTurn) {
+        TurnAttempt a = new TurnAttempt(profile.document().nextNumber(), cur.startTick, yaws, n, complete, landed,
+                inputFailure, verdict, margin, worstTick, failTick, failKeys, expectedKeys, macro, turnStart, turnEnd,
+                traces, turnFailure, failTurn, forecastResult());
+        a.tasFirstTick = cur.tasFirstTick;
+        return a;
+    }
+
+    private void publish(TurnAttempt a) {
+        close();
+        profile.document().add(a.withoutTrace());
+        profile.select(-1);
+        last = a;
     }
 
     private TurnAttempt.Forecast forecastResult() {
@@ -325,24 +344,11 @@ public final class AttemptTracker {
     }
 
     private void turnFailure(int k, double turned) {
-        TurnProfileController.Current c = cur;
-        double[] y = yaws;
-        float[] on = turnStart;
-        float[] off = turnEnd;
-        float[][] tr = traces;
-        TurnAttempt.Forecast fc = forecastResult();
-        int n = Math.min(recorded, k + 1);
-        int failTick = c.startTick + k;
-        long px = Math.round(Math.abs(turned) / Math.max(c.pixelDeg, 1e-9));
-        close();
-        int number = profile.document().nextNumber();
-        String verdict = String.format(Locale.ROOT, "tick %d: turned %s%.3f° (%d px), expected still", failTick + 1,
-                turned < 0 ? "-" : "+", Math.abs(turned), px);
-        TurnAttempt a = new TurnAttempt(number, c.startTick, y, n, true, false, false, verdict, Double.NaN, -1, failTick,
-                0, 0, macro, on, off, tr, true, turned, fc);
-        profile.document().add(a.withoutTrace());
-        profile.select(-1);
-        last = a;
+        int failTick = cur.startTick + k;
+        String verdict = "tick " + (failTick + 1) + ": turned " + TurnAttempt.turnText(turned, cur.pixelDeg)
+                + ", expected still";
+        publish(attempt(Math.min(recorded, k + 1), true, false, false, verdict, Double.NaN, -1, failTick, 0, 0, true,
+                turned));
     }
 
     private boolean mismatch(int t, int mask, boolean ground) {
@@ -375,56 +381,35 @@ public final class AttemptTracker {
     }
 
     private void inputFailure(int k, int mask) {
-        TurnProfileController.Current c = cur;
-        double[] y = yaws;
-        float[] on = turnStart;
-        float[] off = turnEnd;
-        float[][] tr = traces;
-        TurnAttempt.Forecast fc = forecastResult();
-        int n = Math.min(recorded, k + 1);
-        int expected = c.keys[k];
-        int failTick = c.startTick + k;
-        close();
-        int number = profile.document().nextNumber();
+        int expected = cur.keys[k];
+        int failTick = cur.startTick + k;
         String verdict = String.format(Locale.ROOT, "tick %d: %s, expected %s", failTick + 1,
                 TurnReference.describe(mask), TurnReference.describe(expected));
-        TurnAttempt a = new TurnAttempt(number, c.startTick, y, n, true, false, true, verdict, Double.NaN, -1, failTick,
-                mask, expected, macro, on, off, tr, false, Double.NaN, fc);
-        profile.document().add(a.withoutTrace());
-        profile.select(-1);
-        last = a;
+        publish(attempt(Math.min(recorded, k + 1), true, false, true, verdict, Double.NaN, -1, failTick, mask,
+                expected, false, Double.NaN));
     }
 
     private void finish(boolean complete) {
-        TurnProfileController.Current c = cur;
-        double[] y = yaws;
-        float[] on = turnStart;
-        float[] off = turnEnd;
-        float[][] tr = traces;
-        TurnAttempt.Forecast fc = forecastResult();
-        int n = recorded;
-        double m = margin;
-        int ticks = tick;
-        close();
-        int number = profile.document().nextNumber();
         if (!complete) {
-            last = new TurnAttempt(number, c.startTick, y, n, false, false, false, "aborted after " + ticks + " ticks",
-                    Double.NaN, -1, -1, 0, 0, macro, on, off, tr, false, Double.NaN, fc);
+            last = attempt(recorded, false, false, false, "aborted after " + tick + " ticks", Double.NaN, -1, -1, 0, 0,
+                    false, Double.NaN);
+            close();
             return;
         }
         int worst = -1;
         double worstErr = 0.0;
-        for (int t = 0; t < n; t++) {
-            if (!c.checkYaw[t]) continue;
-            double e = Math.abs(Angles.wrapDelta(y[t] - c.facing[t]));
+        for (int t = 0; t < recorded; t++) {
+            if (!cur.checkYaw[t]) continue;
+            double e = Math.abs(Angles.wrapDelta(yaws[t] - cur.facing[t]));
             if (worst < 0 || e > worstErr) {
                 worst = t;
                 worstErr = e;
             }
         }
+        double m = margin;
         boolean landed = !Double.isNaN(m) && m <= 0.0;
         String verdict;
-        if (c.landing == null || c.landing.isEmpty()) {
+        if (cur.landing == null || cur.landing.isEmpty()) {
             verdict = "no landing box set";
         } else if (Double.isNaN(m)) {
             verdict = "landing tick not reached";
@@ -433,11 +418,8 @@ public final class AttemptTracker {
         } else {
             verdict = TurnAttempt.signedMargin(m) + " " + missAxis;
         }
-        TurnAttempt a = new TurnAttempt(number, c.startTick, y, n, true, landed, false, verdict, m,
-                worst < 0 ? -1 : c.startTick + worst, -1, 0, 0, macro, on, off, tr, false, Double.NaN, fc);
-        profile.document().add(a.withoutTrace());
-        profile.select(-1);
-        last = a;
+        publish(attempt(recorded, true, landed, false, verdict, m, worst < 0 ? -1 : cur.startTick + worst, -1, 0, 0,
+                false, Double.NaN));
     }
 
     private static double distance(double x0, double y0, double z0, double x1, double y1, double z1) {

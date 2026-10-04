@@ -227,11 +227,6 @@ public final class TurnReference {
         return true;
     }
 
-    private static boolean sameLanding(Landing a, Landing b) {
-        if (a == null || b == null) return a == b;
-        return a.tick == b.tick && same(a.xLo, b.xLo) && same(a.xHi, b.xHi) && same(a.zLo, b.zLo) && same(a.zHi, b.zHi);
-    }
-
     private static boolean same(double a, double b) {
         return Double.isNaN(a) ? Double.isNaN(b) : a == b;
     }
@@ -242,17 +237,20 @@ public final class TurnReference {
         tasFirstTick = -1;
     }
 
+    static final InputRow.Key[] KEYS = {InputRow.Key.W, InputRow.Key.A, InputRow.Key.S, InputRow.Key.D,
+            InputRow.Key.JUMP, InputRow.Key.SNEAK, InputRow.Key.SPRINT};
+    static final int[] BITS = {KEY_W, KEY_A, KEY_S, KEY_D, KEY_JUMP, KEY_SNEAK, KEY_SPRINT};
+
     public static int mask(InputRow row) {
-        return mask(row.isKeyActive(InputRow.Key.W), row.isKeyActive(InputRow.Key.A), row.isKeyActive(InputRow.Key.S),
-                row.isKeyActive(InputRow.Key.D), row.isKeyActive(InputRow.Key.JUMP), row.isKeyActive(InputRow.Key.SNEAK),
-                row.isKeyActive(InputRow.Key.SPRINT));
+        int mask = 0;
+        for (int i = 0; i < KEYS.length; i++) if (row.isKeyActive(KEYS[i])) mask |= BITS[i];
+        return mask;
     }
 
     public static int optionalMask(InputRow row) {
-        return mask(row.isOnejumpOptional(InputRow.Key.W), row.isOnejumpOptional(InputRow.Key.A),
-                row.isOnejumpOptional(InputRow.Key.S), row.isOnejumpOptional(InputRow.Key.D),
-                row.isOnejumpOptional(InputRow.Key.JUMP), row.isOnejumpOptional(InputRow.Key.SNEAK),
-                row.isOnejumpOptional(InputRow.Key.SPRINT));
+        int mask = 0;
+        for (int i = 0; i < KEYS.length; i++) if (row.isOnejumpOptional(KEYS[i])) mask |= BITS[i];
+        return mask;
     }
 
     public static int mask(boolean w, boolean a, boolean s, boolean d, boolean jump, boolean sneak, boolean sprint) {
@@ -261,23 +259,16 @@ public final class TurnReference {
     }
 
     public static void applyOptional(InputRow row, int mask) {
-        row.setOnejumpOptional(InputRow.Key.W, (mask & KEY_W) != 0);
-        row.setOnejumpOptional(InputRow.Key.A, (mask & KEY_A) != 0);
-        row.setOnejumpOptional(InputRow.Key.S, (mask & KEY_S) != 0);
-        row.setOnejumpOptional(InputRow.Key.D, (mask & KEY_D) != 0);
-        row.setOnejumpOptional(InputRow.Key.JUMP, (mask & KEY_JUMP) != 0);
-        row.setOnejumpOptional(InputRow.Key.SNEAK, (mask & KEY_SNEAK) != 0);
-        row.setOnejumpOptional(InputRow.Key.SPRINT, (mask & KEY_SPRINT) != 0);
+        for (int i = 0; i < KEYS.length; i++) row.setOnejumpOptional(KEYS[i], (mask & BITS[i]) != 0);
     }
 
     public static void applyKeys(InputRow row, int mask) {
-        row.setKeyActive(InputRow.Key.W, (mask & KEY_W) != 0);
-        row.setKeyActive(InputRow.Key.A, (mask & KEY_A) != 0);
-        row.setKeyActive(InputRow.Key.S, (mask & KEY_S) != 0);
-        row.setKeyActive(InputRow.Key.D, (mask & KEY_D) != 0);
-        row.setKeyActive(InputRow.Key.JUMP, (mask & KEY_JUMP) != 0);
-        row.setKeyActive(InputRow.Key.SNEAK, (mask & KEY_SNEAK) != 0);
-        row.setKeyActive(InputRow.Key.SPRINT, (mask & KEY_SPRINT) != 0);
+        for (int i = 0; i < KEYS.length; i++) row.setKeyActive(KEYS[i], (mask & BITS[i]) != 0);
+    }
+
+    static boolean sameLanding(Landing a, Landing b) {
+        if (a == null || b == null) return a == b;
+        return a.tick == b.tick && same(a.xLo, b.xLo) && same(a.xHi, b.xHi) && same(a.zLo, b.zLo) && same(a.zHi, b.zHi);
     }
 
     public static String describe(int mask) {

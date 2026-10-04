@@ -1,6 +1,5 @@
 package de.legoshi.parkourcalc.forge12;
 
-import de.legoshi.parkourcalc.core.ui.InputRow;
 
 import de.legoshi.parkourcalc.core.Application;
 import de.legoshi.parkourcalc.core.PlaybackController;
@@ -194,10 +193,7 @@ public class Forge12ParkourCalculator {
         net.minecraft.util.MovementInput in = p.movementInput;
         boolean sprintKey = Minecraft.getMinecraft().gameSettings.keyBindSprint.isKeyDown();
         if (playbackBridge.replicaActive()) {
-            InputRow r = playbackBridge.getCurrentRow();
-            application.getAttemptTracker().tickEnd(r.isKeyActive(InputRow.Key.W), r.isKeyActive(InputRow.Key.A),
-                    r.isKeyActive(InputRow.Key.S), r.isKeyActive(InputRow.Key.D), r.isKeyActive(InputRow.Key.JUMP),
-                    r.isKeyActive(InputRow.Key.SNEAK), r.isKeyActive(InputRow.Key.SPRINT));
+            application.getAttemptTracker().tickEnd(playbackBridge.getCurrentRow());
         } else {
             net.minecraft.client.settings.GameSettings o = Minecraft.getMinecraft().gameSettings;
             application.getAttemptTracker().tickEnd(o.keyBindForward.isKeyDown(), o.keyBindLeft.isKeyDown(),
@@ -356,12 +352,8 @@ public class Forge12ParkourCalculator {
     @SubscribeEvent
     public void onHudRender(RenderGameOverlayEvent.Post event) {
         if (event.getType() != RenderGameOverlayEvent.ElementType.TEXT) return;
-        if (application.isPlaybackRunning()) {
-            hudRenderer.render(de.legoshi.parkourcalc.core.ui.theme.MacroBadgeStyle.LABEL, application.getPlayback().teleportNoticeAlpha());
-            return;
-        }
-        String replay = application.getPracticeMacro() == null ? null : application.getPracticeMacro().label();
-        if (replay != null) hudRenderer.render(replay, 0f);
+        String label = application.hudBadgeLabel();
+        if (label != null) hudRenderer.render(label, application.hudBadgeAlpha());
     }
 
     @SubscribeEvent

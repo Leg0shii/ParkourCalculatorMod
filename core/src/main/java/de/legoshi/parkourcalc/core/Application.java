@@ -262,14 +262,16 @@ public final class Application {
                 || settings.viewOnejumpSetup, this::isPlaybackRunning, () -> settings.onejumpTurnTiming);
         practiceMacro = new PracticeMacro(turnProfile, attemptTracker, settings);
         practiceMacro.setBridge(playbackBridge);
+        playback.setOnStart(practiceMacro::stop);
         attemptTracker.setResetListener(practiceMacro::onReset);
         attemptTracker.setMacroMode(() -> settings.onejumpMacroMode);
         attemptTracker.setForecastEnabled(() -> settings.onejumpOffsetLive || settings.onejumpOffsetHover);
         de.legoshi.parkourcalc.core.ui.anglesolver.TurnProfileWindow turnProfileWindow =
                 new de.legoshi.parkourcalc.core.ui.anglesolver.TurnProfileWindow(turnProfile, attemptTracker, settings,
-                        mc::getMouseSensitivity);
+                        this::saveSettings);
         de.legoshi.parkourcalc.core.ui.anglesolver.OnejumpKeysWindow onejumpKeysWindow =
-                new de.legoshi.parkourcalc.core.ui.anglesolver.OnejumpKeysWindow(turnProfile, attemptTracker, settings);
+                new de.legoshi.parkourcalc.core.ui.anglesolver.OnejumpKeysWindow(turnProfile, attemptTracker, settings,
+                        this::saveSettings);
         de.legoshi.parkourcalc.core.ui.anglesolver.OnejumpSetupWindow onejumpSetupWindow =
                 new de.legoshi.parkourcalc.core.ui.anglesolver.OnejumpSetupWindow(turnProfile, attemptTracker, settings,
                         this::saveSettings);
@@ -494,6 +496,8 @@ public final class Application {
         if (undoController != null) undoController.onDocumentReplaced(null);
         if (runTicks != null) runTicks.reset();
         if (angleSolverState != null) angleSolverState.clearResult();
+        if (practiceMacro != null) practiceMacro.stop();
+        if (attemptTracker != null) attemptTracker.reset();
         hudMessages.clearStatus();
         startInitialized = false;
     }
@@ -909,6 +913,16 @@ public final class Application {
     public void tickPlayback() {
         playback.tick();
         if (practiceMacro != null && !playback.isRunning()) practiceMacro.tick();
+        if (turnProfile != null) turnProfile.tick();
+    }
+
+    public String hudBadgeLabel() {
+        if (playback.isRunning()) return de.legoshi.parkourcalc.core.ui.theme.MacroBadgeStyle.LABEL;
+        return practiceMacro == null ? null : practiceMacro.label();
+    }
+
+    public float hudBadgeAlpha() {
+        return playback.isRunning() ? playback.teleportNoticeAlpha() : 0f;
     }
 
     public void postTickPlayback() {

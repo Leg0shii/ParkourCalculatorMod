@@ -98,7 +98,7 @@ public class HumanRecorderTest {
         JsonObject te = rows.get(5);
         assertEquals("tickEnd", te.get("e").getAsString());
         assertEquals(0, te.get("t").getAsInt());
-        assertEquals("WJP", te.get("keys").getAsString());
+        assertEquals("WJR", te.get("keys").getAsString());
         assertTrue(te.get("sprinting").getAsBoolean());
         assertEquals(1, rows.get(6).get("t").getAsInt());
         JsonObject end = rows.get(7);
@@ -122,7 +122,7 @@ public class HumanRecorderTest {
         Path file = r.stop();
         List<JsonObject> rows = rows(file);
         assertEquals(5, rows.size());
-        assertEquals(2, rows.get(0).get("version").getAsInt());
+        assertEquals(3, rows.get(0).get("version").getAsInt());
         for (int i = 1; i <= 3; i++) assertEquals("frame", rows.get(i).get("e").getAsString());
         assertEquals(1.0, rows.get(1).get("yaw").getAsDouble(), 0.0);
         assertEquals(1.5, rows.get(2).get("yaw").getAsDouble(), 0.0);

@@ -84,15 +84,8 @@ public class KeyDragSelect {
     }
 
     private void updateCurrentRow() {
-        float mouseY = ImGui.getMousePos().y;
-        for (Map.Entry<Integer, Float> entry : rowMinY.entrySet()) {
-            int rowIndex = entry.getKey();
-            Float maxY = rowMaxY.get(rowIndex);
-            if (maxY != null && mouseY >= entry.getValue() && mouseY <= maxY) {
-                currentRow = rowIndex;
-                break;
-            }
-        }
+        int row = rowAtY(ImGui.getMousePos().y);
+        if (row >= 0) currentRow = row;
     }
 
     /**

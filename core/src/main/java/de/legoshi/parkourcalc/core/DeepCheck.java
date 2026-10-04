@@ -62,13 +62,6 @@ public final class DeepCheck {
         return offsets;
     }
 
-    public static double offsetAt(ExactJumpModel exact, TurnProfileController.Current cur, TurnAttempt a, int t,
-                                  long nanos) {
-        JumpSpec full = cur.snapshot.spec;
-        return offsetAt(exact, full, full.asScenario(), cur.facing, cur.landing.tick - cur.startTick, cur.pixelDeg, a, t,
-                nanos, null);
-    }
-
     private static double offsetAt(ExactJumpModel exact, JumpSpec full, JumpPhysicsInputs sc, double[] facing,
                                    int landingTick, double pixelDeg, TurnAttempt a, int t, long nanos,
                                    AtomicBoolean cancel) {
@@ -87,7 +80,9 @@ public final class DeepCheck {
         Objective objective = new Objective(o.axis, o.sense, objTick, 0.0, null, o.type);
         JumpConstraint goal = AngleSolverEngine.selectLegalGoalWall(shifted, objective, new String[1]);
         if (goal == null) return Double.NaN;
-        shifted.remove(goal);
+        JumpSpec withWall = new JumpSpec(slice, shifted, objective);
+        List<JumpConstraint> others = new ArrayList<JumpConstraint>(shifted);
+        others.remove(goal);
         long end = System.nanoTime() + nanos;
         int m = slice.numTicks;
         double[] seed = new double[m];
@@ -95,9 +90,6 @@ public final class DeepCheck {
         seed[0] = Angles.wrap(facing[t]);
         for (int k = 1; k < m; k++) seed[k] = Angles.wrap(facing[t + k] + shift);
         boolean max = o.sense == Objective.Sense.MAX;
-        JumpSpec withWall = new JumpSpec(slice, new ArrayList<JumpConstraint>(shifted), objective);
-        List<JumpConstraint> others = new ArrayList<JumpConstraint>(shifted);
-        others.remove(goal);
         Grid grid = new Grid(exact, slice, others, objective, goal, max, pixelDeg);
         double best = grid.search(seed, end);
         if (a.yaws.length >= t + m) {

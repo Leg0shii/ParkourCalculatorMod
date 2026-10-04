@@ -1,7 +1,6 @@
 package de.legoshi.parkourcalc.core;
 
 import de.legoshi.parkourcalc.core.ports.PlaybackBridge;
-import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.core.ui.Settings;
 
 public final class PracticeMacro {
@@ -105,7 +104,7 @@ public final class PracticeMacro {
                 stop();
                 return;
             }
-            t = firstJumpRow(cur);
+            t = Math.max(0, cur.firstJumpRow());
         } else {
             stop();
             return;
@@ -116,18 +115,9 @@ public final class PracticeMacro {
     }
 
     private void applyKeys(int keys) {
-        bridge.setKey(InputRow.Key.W, (keys & TurnReference.KEY_W) != 0);
-        bridge.setKey(InputRow.Key.A, (keys & TurnReference.KEY_A) != 0);
-        bridge.setKey(InputRow.Key.S, (keys & TurnReference.KEY_S) != 0);
-        bridge.setKey(InputRow.Key.D, (keys & TurnReference.KEY_D) != 0);
-        bridge.setKey(InputRow.Key.JUMP, (keys & TurnReference.KEY_JUMP) != 0);
-        bridge.setKey(InputRow.Key.SNEAK, (keys & TurnReference.KEY_SNEAK) != 0);
-        bridge.setKey(InputRow.Key.SPRINT, (keys & TurnReference.KEY_SPRINT) != 0);
-    }
-
-    private static int firstJumpRow(TurnProfileController.Current cur) {
-        for (int t = 0; t < cur.n; t++) if (cur.jumpTicks[t]) return t;
-        return 0;
+        for (int i = 0; i < TurnReference.KEYS.length; i++) {
+            bridge.setKey(TurnReference.KEYS[i], (keys & TurnReference.BITS[i]) != 0);
+        }
     }
 
     public void stop() {

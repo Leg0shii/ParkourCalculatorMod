@@ -18,6 +18,7 @@
     "LockstepPongMixin",
     "LockstepServerMixin",
     "MinecraftMixin",
+    "MouseHandlerAccessor",
     "MouseHandlerMixin",
     "OptionsAccessor",
     "PairedChunkTrackingMixin",

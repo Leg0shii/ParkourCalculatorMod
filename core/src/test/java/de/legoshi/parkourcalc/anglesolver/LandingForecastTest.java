@@ -9,6 +9,7 @@ import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
+import de.legoshi.parkourcalc.core.anglesolver.profile.AttemptSampler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
@@ -174,9 +175,9 @@ public class LandingForecastTest {
     public void theOffsetWindowRespectsEveryConstraintOfTheJump() {
         Rig rig = new Rig();
         LandingForecast f = rig.forecastWithSpare(0.0);
-        JumpConstraintCompiler.Compiled comp = JumpConstraintCompiler.compile(LandingForecast.positional(rig.spec));
+        JumpConstraintCompiler.Compiled comp = AttemptSampler.positionConstraints(rig.spec);
         assertTrue(comp.maxViolation(rig.game, rig.full) <= 0.0);
-        assertTrue(LandingForecast.positional(rig.spec).constraints.size() < rig.spec.constraints.size());
+        assertTrue(comp.ineq.size() + comp.eq.size() < rig.spec.constraints.size());
         int checked = 0;
         for (int t = 0; t + 1 < rig.n; t++) {
             LandingForecast.Result r = f.at(t, rig.full.posX[t], rig.full.posZ[t], rig.full.velX[t], rig.full.velZ[t],

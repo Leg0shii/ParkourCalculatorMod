@@ -36,12 +36,15 @@ public final class OnejumpKeysWindow implements RenderInterface {
     private final TurnProfileController controller;
     private final AttemptTracker tracker;
     private final Settings settings;
+    private final Runnable onSettingsChanged;
     private final ImBoolean open = new ImBoolean(false);
 
-    public OnejumpKeysWindow(TurnProfileController controller, AttemptTracker tracker, Settings settings) {
+    public OnejumpKeysWindow(TurnProfileController controller, AttemptTracker tracker, Settings settings,
+                             Runnable onSettingsChanged) {
         this.controller = controller;
         this.tracker = tracker;
         this.settings = settings;
+        this.onSettingsChanged = onSettingsChanged;
     }
 
     @Override
@@ -72,7 +75,10 @@ public final class OnejumpKeysWindow implements RenderInterface {
         }
         if (visible) body(scale);
         ImGui.end();
-        settings.viewOnejumpKeys = open.get();
+        if (settings.viewOnejumpKeys != open.get()) {
+            settings.viewOnejumpKeys = open.get();
+            onSettingsChanged.run();
+        }
     }
 
     private void body(float scale) {

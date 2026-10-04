@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.core;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
@@ -9,7 +10,9 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +23,7 @@ public final class TurnProfileStore {
     public static final String DIRECTORY = ".onejump";
     public static final String LEGACY_DIRECTORY = "parkourcalculator-onejump";
     public static final String EXTENSION = ".jsonl";
-    private static final Gson GSON = new Gson();
+    private static final Gson GSON = new GsonBuilder().serializeSpecialFloatingPointValues().create();
 
     static final class RowData {
         String keys;
@@ -67,6 +70,7 @@ public final class TurnProfileStore {
         Double failTurn;
         ForecastData forecast;
         boolean favourite;
+        Integer tasFirstTick;
         Double[] solvedOffset;
     }
 
@@ -89,6 +93,7 @@ public final class TurnProfileStore {
 
     private final Supplier<FileSystemSaveStore> store;
     private volatile String lastError;
+    private int skippedLines;
 
     public TurnProfileStore(Supplier<FileSystemSaveStore> store) {
         this.store = store;
@@ -96,6 +101,10 @@ public final class TurnProfileStore {
 
     public String lastError() {
         return lastError;
+    }
+
+    public int skippedLines() {
+        return skippedLines;
     }
 
     public Path fileFor(String name) {
@@ -123,6 +132,8 @@ public final class TurnProfileStore {
 
     public boolean load(String name, TurnProfileDocument doc) {
         Path p = fileFor(name);
+        skippedLines = 0;
+        lastError = null;
         if (p == null || !Files.exists(p)) {
             doc.reset();
             return false;
@@ -138,12 +149,16 @@ public final class TurnProfileStore {
                     ref = toReference(h == null ? new HeaderData() : h);
                     continue;
                 }
-                AttemptData d = GSON.fromJson(line, AttemptData.class);
-                TurnAttempt a = toAttempt(d);
+                TurnAttempt a;
+                try {
+                    a = toAttempt(GSON.fromJson(line, AttemptData.class), ref.tasFirstTick());
+                } catch (RuntimeException e) {
+                    a = null;
+                }
                 if (a != null) attempts.add(a);
+                else skippedLines++;
             }
             doc.load(ref == null ? new TurnReference() : ref, attempts);
-            lastError = null;
             return true;
         } catch (Exception e) {
             lastError = e.getMessage();
@@ -155,15 +170,21 @@ public final class TurnProfileStore {
     public boolean save(String name, TurnReference ref, List<TurnAttempt> attempts) {
         Path p = fileFor(name);
         if (p == null) return false;
+        Path tmp = p.resolveSibling(p.getFileName() + ".tmp");
         try {
             Files.createDirectories(p.getParent());
-            try (BufferedWriter out = Files.newBufferedWriter(p, StandardCharsets.UTF_8)) {
+            try (BufferedWriter out = Files.newBufferedWriter(tmp, StandardCharsets.UTF_8)) {
                 out.write(GSON.toJson(toHeader(ref)));
                 out.write('\n');
                 for (TurnAttempt a : attempts) {
                     out.write(GSON.toJson(toData(a)));
                     out.write('\n');
                 }
+            }
+            try {
+                Files.move(tmp, p, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException e) {
+                Files.move(tmp, p, StandardCopyOption.REPLACE_EXISTING);
             }
             lastError = null;
             return true;
@@ -237,6 +258,7 @@ public final class TurnProfileStore {
         d.turnFailure = a.turnFailure;
         d.failTurn = Double.isNaN(a.failTurn) ? null : a.failTurn;
         d.favourite = a.favourite;
+        d.tasFirstTick = a.tasFirstTick < 0 ? null : a.tasFirstTick;
         d.solvedOffset = boxAll(a.solvedOffset);
         if (a.forecast != null) {
             ForecastData f = new ForecastData();
@@ -327,7 +349,7 @@ public final class TurnProfileStore {
         return ref;
     }
 
-    static TurnAttempt toAttempt(AttemptData d) {
+    static TurnAttempt toAttempt(AttemptData d, int headerFirstTick) {
         if (d == null || d.yaws == null) return null;
         boolean timed = d.turnStart != null && d.turnEnd != null;
         TurnAttempt a = new TurnAttempt(d.number, d.firstTick, d.yaws, Math.min(d.recorded, d.yaws.length), d.complete,
@@ -339,6 +361,7 @@ public final class TurnProfileStore {
                 timed ? unpackPhases(d.turnEnd, d.yaws.length) : null, null, d.turnFailure,
                 d.failTurn == null ? Double.NaN : d.failTurn, toForecast(d.forecast, d.yaws.length));
         a.favourite = d.favourite;
+        a.tasFirstTick = d.tasFirstTick == null ? headerFirstTick : d.tasFirstTick;
         a.solvedOffset = unboxAll(d.solvedOffset, d.yaws.length);
         return a;
     }

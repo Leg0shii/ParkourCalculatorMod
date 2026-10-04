@@ -6,7 +6,6 @@ import de.legoshi.parkourcalc.core.TurnProfileController;
 import de.legoshi.parkourcalc.core.TurnReference;
 import de.legoshi.parkourcalc.core.TurnTiming;
 import de.legoshi.parkourcalc.core.anglesolver.profile.AttemptSampler;
-import de.legoshi.parkourcalc.core.anglesolver.profile.TurnProfile;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
 import de.legoshi.parkourcalc.core.ui.Settings;
@@ -22,7 +21,6 @@ import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImBoolean;
 
 import java.util.Locale;
-import java.util.function.Supplier;
 
 public final class TurnProfileWindow implements RenderInterface {
 
@@ -48,16 +46,16 @@ public final class TurnProfileWindow implements RenderInterface {
     private final TurnProfileController controller;
     private final AttemptTracker tracker;
     private final Settings settings;
-    private final Supplier<Float> sensitivity;
+    private final Runnable onSettingsChanged;
     private final ImBoolean open = new ImBoolean(false);
     private boolean wasOpen;
 
     public TurnProfileWindow(TurnProfileController controller, AttemptTracker tracker, Settings settings,
-                             Supplier<Float> sensitivity) {
+                             Runnable onSettingsChanged) {
         this.controller = controller;
         this.tracker = tracker;
         this.settings = settings;
-        this.sensitivity = sensitivity;
+        this.onSettingsChanged = onSettingsChanged;
     }
 
     @Override
@@ -90,11 +88,13 @@ public final class TurnProfileWindow implements RenderInterface {
         }
         if (visible) body(scale);
         ImGui.end();
-        settings.viewTurnProfile = open.get();
+        if (settings.viewTurnProfile != open.get()) {
+            settings.viewTurnProfile = open.get();
+            onSettingsChanged.run();
+        }
     }
 
     private void body(float scale) {
-        controller.sync();
         TurnProfileController.Current cur = controller.current();
         float graphH = Math.max(GRAPH_MIN_H * scale, ImGui.getContentRegionAvail().y);
         if (cur == null || cur.n == 0) {
@@ -123,9 +123,7 @@ public final class TurnProfileWindow implements RenderInterface {
     }
 
     private static double youError(TurnProfileController.Current cur, TurnAttempt you, int t) {
-        int j = t + cur.startTick - you.firstTick;
-        if (j < 0 || j >= you.recorded) return Double.NaN;
-        return Angles.wrapDelta(you.yaws[j] - cur.facing[t]);
+        return you.errorAt(cur, cur.startTick + t);
     }
 
     private static float[] tickX(TurnProfileController.Current cur, float plotX, float plotW, float[] dxOut) {
@@ -385,23 +383,6 @@ public final class TurnProfileWindow implements RenderInterface {
         }
     }
 
-    private static double[] tickValues(double[][] failed, double[][] landed, double[] facing, int t, boolean[] landedFlag) {
-        int k = failed.length + landed.length;
-        double[] v = new double[k];
-        int i = 0;
-        for (double[] a : failed) {
-            v[i] = Double.isNaN(a[t]) ? Double.NaN : facing[t] + Angles.wrapDelta(a[t] - facing[t]);
-            landedFlag[i] = false;
-            i++;
-        }
-        for (double[] a : landed) {
-            v[i] = Double.isNaN(a[t]) ? Double.NaN : facing[t] + Angles.wrapDelta(a[t] - facing[t]);
-            landedFlag[i] = true;
-            i++;
-        }
-        return v;
-    }
-
     private static int youColor(TurnAttempt you) {
         if (!you.complete) return ThemeManager.textColor();
         if (you.failed()) return ThemeManager.warningColor();
@@ -414,7 +395,7 @@ public final class TurnProfileWindow implements RenderInterface {
 
     private void tooltip(TurnProfileController.Current cur, int t, TurnAttempt you) {
         AttemptSampler.Stats st = cur.attempts;
-        double pixelDeg = TurnProfile.pixelDeg(sensitivity.get());
+        double pixelDeg = cur.pixelDeg;
         int abs = cur.startTick + t;
         ImGui.beginTooltip();
         Fonts.pushBold();
@@ -425,13 +406,13 @@ public final class TurnProfileWindow implements RenderInterface {
             if (you != null) {
                 double e = youError(cur, you, t);
                 if (!Double.isNaN(e)) {
-                    tooltipRow("You", String.format(Locale.ROOT, "%.2f°   %s %s", cur.facing[t] + e, signed(e),
-                            bracket(e, pixelDeg)), youColor(you), labelW);
+                    tooltipRow("You", String.format(Locale.ROOT, "%.2f°   %s", cur.facing[t] + e,
+                            TurnAttempt.turnText(e, pixelDeg)), youColor(you), labelW);
                 }
             }
             if (st != null && st.landings > 0) {
-                tooltipRow("Window", signed(st.landedLo[t]) + " " + bracket(st.landedLo[t], pixelDeg) + " to "
-                        + signed(st.landedHi[t]) + " " + bracket(st.landedHi[t], pixelDeg), ThemeManager.textColor(), labelW);
+                tooltipRow("Window", TurnAttempt.turnText(st.landedLo[t], pixelDeg) + " to "
+                        + TurnAttempt.turnText(st.landedHi[t], pixelDeg), ThemeManager.textColor(), labelW);
             }
             if (you != null && you.hasForecast() && settings.onejumpOffsetHover) {
                 double best = you.bestMarginAt(abs);
@@ -443,7 +424,7 @@ public final class TurnProfileWindow implements RenderInterface {
         }
         if (you != null && you.failTick == abs) {
             if (you.turnFailure) {
-                tooltipRow("Preturn", signed(you.failTurn) + " " + bracket(you.failTurn, pixelDeg), ThemeManager.dangerColor(), labelW);
+                tooltipRow("Preturn", TurnAttempt.turnText(you.failTurn, pixelDeg), ThemeManager.dangerColor(), labelW);
             } else if (you.inputFailure) {
                 tooltipRow("Inputs", TurnReference.describe(you.failKeys) + ", expected " + TurnReference.describe(you.expectedKeys),
                         ThemeManager.dangerColor(), labelW);
@@ -465,15 +446,8 @@ public final class TurnProfileWindow implements RenderInterface {
     private static String offsetLabel(TurnAttempt you) {
         int tick = you.lastForecastTick();
         if (tick < 0) return null;
-        return "offset " + TurnAttempt.signedMargin(you.bestMarginAt(tick));
-    }
-
-    private static String signed(double deg) {
-        return String.format(Locale.ROOT, "%s%.2f°", deg < 0 ? "-" : "+", Math.abs(deg));
-    }
-
-    private static String bracket(double deg, double pixelDeg) {
-        return String.format(Locale.ROOT, "(%d px)", Math.round(Math.abs(deg) / pixelDeg));
+        double best = you.bestMarginAt(tick);
+        return "offset " + (Double.isInfinite(best) ? "none" : TurnAttempt.signedMargin(best));
     }
 
     private static double gridStep(double span) {

@@ -78,9 +78,6 @@ public final class OnejumpSetupWindow implements RenderInterface {
     }
 
     private void body(float scale) {
-        controller.sync();
-        controller.autoRate();
-        controller.requestDeepChecks();
         TurnProfileController.Current cur = controller.current();
         TurnProfileDocument doc = controller.document();
         List<TurnAttempt> all = doc.attempts();
@@ -138,7 +135,10 @@ public final class OnejumpSetupWindow implements RenderInterface {
         for (String l : OVERVIEW_LABELS) labelW = Math.max(labelW, ImGui.calcTextSize(l).x);
         Fonts.popBold();
         labelW += ThemeManager.SM * scale;
-        overviewRow("TAS", name != null ? name : "unsaved, attempts are not kept", labelW, name == null);
+        String storeError = controller.storeError();
+        overviewRow("TAS", name == null ? "unsaved, attempts are not kept" : storeError == null ? name
+                : name + "  (attempts file unreadable, nothing is written: " + storeError + ")", labelW,
+                name == null || storeError != null);
         int tasFirst = doc.reference().tasFirstTick();
         String err = controller.lastError();
         TurnReference.Landing landing = cur == null ? null : cur.landing;
@@ -325,17 +325,17 @@ public final class OnejumpSetupWindow implements RenderInterface {
         if (a.turnFailure) return "T" + (a.failTick + 1) + " Preturn: " + turn(a.failTurn);
         if (controller.isDeepChecking(a)) return "solving" + DOTS[(int) (ImGui.getTime() * 3.0) % DOTS.length];
         if (a.judged() && !a.landed && a.failedTick() >= 0) {
-            double off = a.bestOffsetAt(a.failedTick());
-            return "T" + (a.failedTick() + 1) + " Turn" + (Double.isNaN(off) || off == 0.0 ? "" : ": " + turn(off));
+            int t = a.failedTick();
+            TurnProfileController.Current cur = controller.current();
+            double err = cur == null ? Double.NaN : a.errorAt(cur, t);
+            return "T" + (t + 1) + " Turn" + (Double.isNaN(err) ? "" : ": " + turn(err));
         }
         return "";
     }
 
     private String turn(double deg) {
         TurnProfileController.Current cur = controller.current();
-        String text = String.format(Locale.ROOT, "%s%.2f°", deg < 0 ? "-" : "+", Math.abs(deg));
-        if (cur == null || cur.pixelDeg <= 0.0) return text;
-        return text + String.format(Locale.ROOT, " (%d px)", Math.round(Math.abs(deg) / cur.pixelDeg));
+        return TurnAttempt.turnText(deg, cur == null ? 0.0 : cur.pixelDeg);
     }
 
     private void favouriteCell(String id, TurnAttempt a, float hitH, float rowH) {

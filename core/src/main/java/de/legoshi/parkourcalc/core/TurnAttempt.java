@@ -1,6 +1,9 @@
 package de.legoshi.parkourcalc.core;
 
 import de.legoshi.parkourcalc.core.anglesolver.ConstraintText;
+import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
+
+import java.util.Locale;
 
 public final class TurnAttempt {
 
@@ -72,6 +75,7 @@ public final class TurnAttempt {
     public final Forecast forecast;
     public int ordinal;
     public boolean favourite;
+    public int tasFirstTick = -1;
     public volatile double[] solvedOffset;
 
     public TurnAttempt(int number, int firstTick, double[] yaws, int recorded, boolean complete, boolean landed,
@@ -129,8 +133,26 @@ public final class TurnAttempt {
                 forecast);
         a.ordinal = ordinal;
         a.favourite = favourite;
+        a.tasFirstTick = tasFirstTick;
         a.solvedOffset = solvedOffset;
         return a;
+    }
+
+    public boolean alignedTo(TurnProfileController.Current cur) {
+        return tasFirstTick < 0 || cur.tasFirstTick < 0 || tasFirstTick == cur.tasFirstTick;
+    }
+
+    public double errorAt(TurnProfileController.Current cur, int tick) {
+        int j = tick - firstTick;
+        int k = tick - cur.startTick;
+        if (!alignedTo(cur) || j < 0 || j >= recorded || k < 0 || k >= cur.n) return Double.NaN;
+        return Angles.wrapDelta(yaws[j] - cur.facing[k]);
+    }
+
+    public static String turnText(double deg, double pixelDeg) {
+        String text = String.format(Locale.ROOT, "%s%.2f°", deg < 0 ? "-" : "+", Math.abs(deg));
+        if (!(pixelDeg > 0.0)) return text;
+        return text + String.format(Locale.ROOT, " (%d px)", Math.round(Math.abs(deg) / pixelDeg));
     }
 
     public int missBand() {

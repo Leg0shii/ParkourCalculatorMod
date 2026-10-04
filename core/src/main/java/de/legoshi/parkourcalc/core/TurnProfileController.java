@@ -29,6 +29,7 @@ public final class TurnProfileController {
 
     public static final class Current {
         public final int startTick;
+        public final int tasFirstTick;
         public final int n;
         public final double[] facing;
         public final int[] keys;
@@ -43,10 +44,12 @@ public final class TurnProfileController {
         public final double pixelDeg;
         final AngleSolverEngine.PathSnapshot snapshot;
 
-        Current(int startTick, double[] facing, int[] keys, boolean[] checkKeys, int[] optionalKeys, boolean[] checkYaw,
-                boolean[] still, boolean[] jumpTicks, TurnReference.Landing landing, TurnProfile profile,
-                AttemptSampler.Stats attempts, double pixelDeg, AngleSolverEngine.PathSnapshot snapshot) {
+        Current(int startTick, int tasFirstTick, double[] facing, int[] keys, boolean[] checkKeys, int[] optionalKeys,
+                boolean[] checkYaw, boolean[] still, boolean[] jumpTicks, TurnReference.Landing landing,
+                TurnProfile profile, AttemptSampler.Stats attempts, double pixelDeg,
+                AngleSolverEngine.PathSnapshot snapshot) {
             this.startTick = startTick;
+            this.tasFirstTick = tasFirstTick;
             this.n = facing.length;
             this.facing = facing;
             this.keys = keys;
@@ -63,8 +66,8 @@ public final class TurnProfileController {
         }
 
         Current withAttempts(AttemptSampler.Stats stats, double pixelDeg) {
-            return new Current(startTick, facing, keys, checkKeys, optionalKeys, checkYaw, still, jumpTicks, landing,
-                    profile, stats, pixelDeg, snapshot);
+            return new Current(startTick, tasFirstTick, facing, keys, checkKeys, optionalKeys, checkYaw, still,
+                    jumpTicks, landing, profile, stats, pixelDeg, snapshot);
         }
 
         public boolean canRate() {
@@ -78,6 +81,16 @@ public final class TurnProfileController {
         public int lastTick() {
             return Math.max(startTick + n - 1, landing == null ? -1 : landing.tick);
         }
+
+        public int firstJumpRow() {
+            for (int t = 0; t < n; t++) if (jumpTicks[t]) return t;
+            return -1;
+        }
+    }
+
+    private static final class Built {
+        final TurnReference ref = new TurnReference();
+        AngleSolverEngine.PathSnapshot snapshot;
     }
 
     private final AngleSolverEngine engine;
@@ -106,6 +119,7 @@ public final class TurnProfileController {
         return t;
     });
     private final Set<TurnAttempt> deepQueue = java.util.Collections.newSetFromMap(new ConcurrentHashMap<TurnAttempt, Boolean>());
+    private final Set<TurnAttempt> deepDone = java.util.Collections.newSetFromMap(new ConcurrentHashMap<TurnAttempt, Boolean>());
     private volatile boolean deepDirty;
     private final AtomicInteger generation = new AtomicInteger();
     private volatile AtomicBoolean cancelToken = new AtomicBoolean(false);
@@ -121,6 +135,7 @@ public final class TurnProfileController {
     private boolean adopted;
     private String loadedName;
     private String lastError;
+    private String storeError;
     private volatile int selectedNumber = -1;
 
     public TurnProfileController(AngleSolverEngine engine, AngleSolverState state, InputData inputs,
@@ -151,17 +166,28 @@ public final class TurnProfileController {
         return lastError;
     }
 
+    public String storeError() {
+        return storeError;
+    }
+
     public TurnProfileDocument.Stats stats() {
         return document.stats();
+    }
+
+    public void tick() {
+        if (!enabled.getAsBoolean() && !document.hasPending() && !document.isReferenceDirty() && !deepDirty) return;
+        sync();
+        autoRate();
+        requestDeepChecks();
     }
 
     public void sync() {
         ensureLoaded();
         if (deepDirty && deepQueue.isEmpty()) {
             deepDirty = false;
-            document.touch();
+            document.markDirty();
         }
-        if (store == null || loadedName == null) return;
+        if (store == null || loadedName == null || storeError != null) return;
         final String name = loadedName;
         if (document.isReferenceDirty()) {
             final TurnReference ref = document.reference().copy();
@@ -170,8 +196,10 @@ public final class TurnProfileController {
             io.submit(() -> store.save(name, ref, all));
         } else if (document.hasPending()) {
             final List<TurnAttempt> added = document.drainPending();
+            final TurnReference ref = document.reference().copy();
+            final List<TurnAttempt> all = new ArrayList<TurnAttempt>(document.attempts());
             io.submit(() -> {
-                if (!store.append(name, added)) store.save(name, document.reference().copy(), new ArrayList<TurnAttempt>(document.attempts()));
+                if (!store.append(name, added)) store.save(name, ref, all);
             });
         }
     }
@@ -192,11 +220,15 @@ public final class TurnProfileController {
         loaded = true;
         adopted = false;
         loadedName = name;
+        storeError = null;
+        deepDone.clear();
         if (carry) {
             document.touch();
         } else if (store != null && name != null) {
             store.migrateLegacyFolder();
-            store.load(name, document);
+            boolean ok = store.load(name, document);
+            if (!ok && store.lastError() != null) storeError = store.lastError();
+            else if (ok && store.skippedLines() > 0) document.markDirty();
         } else {
             document.reset();
         }
@@ -216,9 +248,15 @@ public final class TurnProfileController {
             adopted = true;
             if (!ref.isEmpty() && ref.tasFirstTick() >= 0 && !anyFlagged()) adoptFlags(ref);
         }
-        TurnReference built = buildReference();
-        if (!ref.sameAs(built)) {
-            ref.copyFrom(built);
+        Built built = buildReference();
+        if (!ref.sameAs(built.ref)) {
+            boolean spanMoved = !ref.isEmpty() && (ref.tasFirstTick() != built.ref.tasFirstTick()
+                    || !TurnReference.sameLanding(ref.landing(), built.ref.landing()));
+            ref.copyFrom(built.ref);
+            if (spanMoved) {
+                for (TurnAttempt a : document.attempts()) a.solvedOffset = null;
+                deepDone.clear();
+            }
             document.touch();
         }
         if (ref.isEmpty()) {
@@ -242,16 +280,14 @@ public final class TurnProfileController {
             still[k] = ref.still(r);
             jumps[k] = (keys[k] & TurnReference.KEY_JUMP) != 0;
         }
-        int tasFirst = ref.tasFirstTick();
-        AngleSolverEngine.PathSnapshot snap = tasFirst >= 0 ? engine.snapshotPath(tasFirst, tasFirst + n) : null;
-        if (snap != null && snap.yaws.length != n) snap = null;
+        AngleSolverEngine.PathSnapshot snap = built.snapshot;
         TurnProfile profile = null;
         if (snap != null) {
             ForwardModel model = engine.forwardModel();
             profile = TurnProfile.compute(model, snap.spec, facing, null, false);
         }
-        current = new Current(0, facing, keys, checkKeys, optional, checkYaw, still, jumps, ref.landing(), profile, null,
-                TurnProfile.pixelDeg(sensitivity.get()), snap);
+        current = new Current(0, ref.tasFirstTick(), facing, keys, checkKeys, optional, checkYaw, still, jumps,
+                ref.landing(), profile, null, TurnProfile.pixelDeg(sensitivity.get()), snap);
     }
 
     private boolean anyFlagged() {
@@ -272,8 +308,9 @@ public final class TurnProfileController {
         }
     }
 
-    private TurnReference buildReference() {
-        TurnReference ref = new TurnReference();
+    private Built buildReference() {
+        Built built = new Built();
+        TurnReference ref = built.ref;
         List<InputRow> rows = inputs.getRows();
         int first = -1;
         int last = -1;
@@ -284,13 +321,14 @@ public final class TurnProfileController {
         }
         if (first < 0) {
             lastError = null;
-            return ref;
+            return built;
         }
         AngleSolverEngine.PathSnapshot snap = engine.snapshotPath(first, last + 1);
         if (snap == null || snap.yaws.length != last - first + 1) {
             lastError = "no path for ticks " + (first + 1) + " to " + (last + 1) + " in the TAS";
-            return ref;
+            return built;
         }
+        built.snapshot = snap;
         int n = last - first + 1;
         List<InputRow> next = new ArrayList<InputRow>();
         boolean[] checkKeys = new boolean[n];
@@ -311,7 +349,7 @@ public final class TurnProfileController {
         List<TurnReference.Landing> options = solverLandings(first, last + 1, first);
         if (!options.isEmpty()) ref.setLanding(options.get(options.size() - 1));
         lastError = null;
-        return ref;
+        return built;
     }
 
     private List<TurnReference.Landing> solverLandings(int from, int to, int base) {
@@ -354,6 +392,7 @@ public final class TurnProfileController {
 
     public void clearAttempts() {
         document.clearAttempts();
+        deepDone.clear();
     }
 
     public void rate() {
@@ -403,7 +442,7 @@ public final class TurnProfileController {
         int used = 0;
         for (int i = all.size() - 1; i >= 0 && used < limit; i--) {
             TurnAttempt a = all.get(i);
-            if (a.isMacro() || a.recorded <= 0 || a.yaws == null) continue;
+            if (a.isMacro() || a.recorded <= 0 || a.yaws == null || !a.alignedTo(cur)) continue;
             used++;
             int m = Math.min(n, Math.min(a.recorded, a.yaws.length));
             for (int t = 0; t < m; t++) {
@@ -432,12 +471,16 @@ public final class TurnProfileController {
         List<TurnAttempt> candidates = new ArrayList<TurnAttempt>(document.top());
         candidates.addAll(document.favourites());
         for (TurnAttempt a : candidates) {
-            if (a.solved() || !a.hasState() || !deepQueue.add(a)) continue;
+            if (a.solved() || !a.hasState() || !a.alignedTo(cur) || deepDone.contains(a) || !deepQueue.add(a)) continue;
             deep.submit(() -> {
                 double[] result = DeepCheck.solve(exact, cur, a, DeepCheck.BUDGET_NANOS, null);
-                if (result != null) a.solvedOffset = result;
+                if (result != null) {
+                    a.solvedOffset = result;
+                    deepDirty = true;
+                } else {
+                    deepDone.add(a);
+                }
                 deepQueue.remove(a);
-                deepDirty = true;
             });
         }
     }

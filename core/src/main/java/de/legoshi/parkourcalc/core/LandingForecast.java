@@ -1,12 +1,11 @@
 package de.legoshi.parkourcalc.core;
 
+import de.legoshi.parkourcalc.core.anglesolver.profile.AttemptSampler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
-import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
-import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SurfaceKind;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
@@ -73,13 +72,7 @@ public final class LandingForecast {
         JumpPhysicsInputs sc = cur.snapshot.spec.asScenario();
         if (sc == null || sc.numTicks != cur.n || cur.landing.tick - cur.startTick > cur.n) return null;
         return new LandingForecast(model, sc, cur.facing, cur.landing, cur.pixelDeg, TurnTiming.mainTurnTick(cur),
-                JumpConstraintCompiler.compile(positional(cur.snapshot.spec)));
-    }
-
-    public static JumpSpec positional(JumpSpec spec) {
-        List<JumpConstraint> keep = new ArrayList<JumpConstraint>();
-        for (JumpConstraint c : spec.constraints) if (c.mode != JumpConstraint.Mode.F) keep.add(c);
-        return new JumpSpec(spec.asScenario(), keep, spec.objective);
+                AttemptSampler.positionConstraints(cur.snapshot.spec));
     }
 
     public int landingIndex() {

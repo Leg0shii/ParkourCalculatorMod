@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.record;
 
+import de.legoshi.parkourcalc.core.TurnReference;
 import de.legoshi.parkourcalc.core.anglesolver.profile.TurnProfile;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 
@@ -17,7 +18,7 @@ import java.util.function.Supplier;
 public final class HumanRecorder {
 
     public static final String FORMAT = "pkc-human-recording";
-    public static final int FORMAT_VERSION = 2;
+    public static final int FORMAT_VERSION = 3;
     public static final String DIRECTORY = "recordings";
     public static final String EXTENSION = ".jsonl";
 
@@ -146,14 +147,8 @@ public final class HumanRecorder {
                                      boolean sprintKey, boolean sprinting) {
         if (!recording || !tickOpen) return;
         tickOpen = false;
-        StringBuilder k = new StringBuilder();
-        if (w) k.append('W');
-        if (a) k.append('A');
-        if (s) k.append('S');
-        if (d) k.append('D');
-        if (jump) k.append('J');
-        if (sneak) k.append('N');
-        if (sprintKey) k.append('P');
+        int mask = TurnReference.mask(w, a, s, d, jump, sneak, sprintKey);
+        String k = mask == 0 ? "" : TurnReference.keysText(mask);
         write("{\"e\":\"tickEnd\",\"t\":" + tick + ",\"us\":" + micros() + ",\"keys\":\"" + k + "\",\"sprinting\":" + sprinting + "}");
     }
 

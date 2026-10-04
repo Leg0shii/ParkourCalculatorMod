@@ -312,4 +312,61 @@ public class TurnProfileStoreTest {
         assertFalse(back.attempts().get(0).solved());
         assertEquals(-1, back.attempts().get(0).failedTick());
     }
+    @Test
+    public void anInfiniteSolvedOffsetRoundTrips() throws Exception {
+        Path dir = Files.createTempDirectory("pkc-onejump-inf");
+        TurnProfileStore store = store(dir);
+        TurnProfileDocument doc = sample();
+        TurnAttempt a = new TurnAttempt(3, 26, new double[] {-12.0, -20.5}, 2, true, false, false, "short", 0.031, 27, -1, 0, 0, 0);
+        a.solvedOffset = new double[] {0.02, Double.NEGATIVE_INFINITY};
+        a.tasFirstTick = 26;
+        doc.add(a);
+        assertTrue(store.lastError(), store.save("inf", doc.reference(), doc.attempts()));
+        TurnProfileDocument back = new TurnProfileDocument();
+        assertTrue(store.load("inf", back));
+        TurnAttempt b = back.attempts().get(2);
+        assertEquals(0.02, b.solvedOffsetAt(26), 0.0);
+        assertEquals(Double.NEGATIVE_INFINITY, b.solvedOffsetAt(27), 0.0);
+        assertEquals(27, b.failedTick());
+        assertEquals(26, b.tasFirstTick);
+        assertEquals(26, back.attempts().get(0).tasFirstTick);
+        assertFalse(Files.exists(store.fileFor("inf").resolveSibling("inf.jsonl.tmp")));
+    }
+
+    @Test
+    public void aBrokenAttemptLineIsSkippedAndTheRestLoads() throws Exception {
+        Path dir = Files.createTempDirectory("pkc-onejump-broken");
+        TurnProfileStore store = store(dir);
+        TurnProfileDocument doc = sample();
+        doc.add(new TurnAttempt(3, 26, new double[] {-12.0, -20.5}, 2, true, false, false, "short", 0.031, 27, -1, 0, 0, 0));
+        assertTrue(store.save("broken", doc.reference(), doc.attempts()));
+        Path file = store.fileFor("broken");
+        List<String> lines = Files.readAllLines(file);
+        lines.set(2, lines.get(2).substring(0, 20));
+        Files.write(file, lines);
+        TurnProfileDocument back = new TurnProfileDocument();
+        assertTrue(store.load("broken", back));
+        assertNull(store.lastError());
+        assertEquals(1, store.skippedLines());
+        assertEquals(2, back.attempts().size());
+        assertEquals(1, back.attempts().get(0).number);
+        assertEquals(3, back.attempts().get(1).number);
+        assertEquals(26, back.reference().tasFirstTick());
+    }
+
+    @Test
+    public void aBrokenHeaderFailsTheLoadWithAnError() throws Exception {
+        Path dir = Files.createTempDirectory("pkc-onejump-header");
+        TurnProfileStore store = store(dir);
+        TurnProfileDocument doc = sample();
+        assertTrue(store.save("header", doc.reference(), doc.attempts()));
+        Path file = store.fileFor("header");
+        List<String> lines = Files.readAllLines(file);
+        lines.set(0, "{\"version\":2,\"rows\":[");
+        Files.write(file, lines);
+        TurnProfileDocument back = sample();
+        assertFalse(store.load("header", back));
+        assertNotNull(store.lastError());
+        assertTrue(back.attempts().isEmpty());
+    }
 }
