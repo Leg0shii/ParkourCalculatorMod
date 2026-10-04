@@ -11,8 +11,6 @@ public final class TurnAttempt {
         public final double[] held;
         public final double[] best;
         public final double[] bestOffset;
-        public final double[] offsetLo;
-        public final double[] offsetHi;
         public final int failedTick;
         public final double[] x;
         public final double[] z;
@@ -20,18 +18,11 @@ public final class TurnAttempt {
         public final double[] vz;
         public final boolean[] ground;
 
-        public Forecast(double[] held, double[] best, double[] bestOffset, double[] offsetLo, double[] offsetHi,
-                        int failedTick) {
-            this(held, best, bestOffset, offsetLo, offsetHi, failedTick, null, null, null, null, null);
-        }
-
-        public Forecast(double[] held, double[] best, double[] bestOffset, double[] offsetLo, double[] offsetHi,
-                        int failedTick, double[] x, double[] z, double[] vx, double[] vz, boolean[] ground) {
+        public Forecast(double[] held, double[] best, double[] bestOffset, int failedTick, double[] x, double[] z,
+                        double[] vx, double[] vz, boolean[] ground) {
             this.held = held;
             this.best = best;
             this.bestOffset = bestOffset;
-            this.offsetLo = offsetLo;
-            this.offsetHi = offsetHi;
             this.failedTick = failedTick;
             this.x = x;
             this.z = z;
@@ -69,7 +60,7 @@ public final class TurnAttempt {
     public final int macro;
     public final float[] turnStart;
     public final float[] turnEnd;
-    public final float[][] trace;
+    public float[][] trace;
     public final boolean turnFailure;
     public final double failTurn;
     public final Forecast forecast;
@@ -77,28 +68,6 @@ public final class TurnAttempt {
     public boolean favourite;
     public int tasFirstTick = -1;
     public volatile double[] solvedOffset;
-
-    public TurnAttempt(int number, int firstTick, double[] yaws, int recorded, boolean complete, boolean landed,
-                       boolean inputFailure, String verdict, double margin, int worstTick, int failTick, int failKeys,
-                       int expectedKeys, int macro) {
-        this(number, firstTick, yaws, recorded, complete, landed, inputFailure, verdict, margin, worstTick, failTick,
-                failKeys, expectedKeys, macro, null, null, null);
-    }
-
-    public TurnAttempt(int number, int firstTick, double[] yaws, int recorded, boolean complete, boolean landed,
-                       boolean inputFailure, String verdict, double margin, int worstTick, int failTick, int failKeys,
-                       int expectedKeys, int macro, float[] turnStart, float[] turnEnd, float[][] trace) {
-        this(number, firstTick, yaws, recorded, complete, landed, inputFailure, verdict, margin, worstTick, failTick,
-                failKeys, expectedKeys, macro, turnStart, turnEnd, trace, false, Double.NaN);
-    }
-
-    public TurnAttempt(int number, int firstTick, double[] yaws, int recorded, boolean complete, boolean landed,
-                       boolean inputFailure, String verdict, double margin, int worstTick, int failTick, int failKeys,
-                       int expectedKeys, int macro, float[] turnStart, float[] turnEnd, float[][] trace,
-                       boolean turnFailure, double failTurn) {
-        this(number, firstTick, yaws, recorded, complete, landed, inputFailure, verdict, margin, worstTick, failTick,
-                failKeys, expectedKeys, macro, turnStart, turnEnd, trace, turnFailure, failTurn, null);
-    }
 
     public TurnAttempt(int number, int firstTick, double[] yaws, int recorded, boolean complete, boolean landed,
                        boolean inputFailure, String verdict, double margin, int worstTick, int failTick, int failKeys,
@@ -126,16 +95,8 @@ public final class TurnAttempt {
         this.forecast = forecast;
     }
 
-    public TurnAttempt withoutTrace() {
-        if (trace == null) return this;
-        TurnAttempt a = new TurnAttempt(number, firstTick, yaws, recorded, complete, landed, inputFailure, verdict, margin,
-                worstTick, failTick, failKeys, expectedKeys, macro, turnStart, turnEnd, null, turnFailure, failTurn,
-                forecast);
-        a.ordinal = ordinal;
-        a.favourite = favourite;
-        a.tasFirstTick = tasFirstTick;
-        a.solvedOffset = solvedOffset;
-        return a;
+    public void dropTrace() {
+        trace = null;
     }
 
     public boolean alignedTo(TurnProfileController.Current cur) {
@@ -204,10 +165,6 @@ public final class TurnAttempt {
         return forecast == null ? -1 : forecast.failedTick;
     }
 
-    public int forecastFailedTick() {
-        return forecast == null ? -1 : forecast.failedTick;
-    }
-
     public float turnStartAt(int tick) {
         int j = tick - firstTick;
         return turnStart == null || j < 0 || j >= turnStart.length ? Float.NaN : turnStart[j];
@@ -223,26 +180,10 @@ public final class TurnAttempt {
         return trace == null || j < 0 || j >= trace.length ? null : trace[j];
     }
 
-    public double heldMarginAt(int tick) {
-        return forecast == null ? Double.NaN : forecast.at(forecast.held, tick - firstTick);
-    }
-
     public double bestMarginAt(int tick) {
         double off = solvedOffsetAt(tick);
-        if (!Double.isNaN(off)) return Double.isInfinite(off) ? Double.POSITIVE_INFINITY : -off;
+        if (!Double.isNaN(off)) return -off;
         return forecast == null ? Double.NaN : forecast.at(forecast.best, tick - firstTick);
-    }
-
-    public double bestOffsetAt(int tick) {
-        return forecast == null ? Double.NaN : forecast.at(forecast.bestOffset, tick - firstTick);
-    }
-
-    public double offsetLoAt(int tick) {
-        return forecast == null ? Double.NaN : forecast.at(forecast.offsetLo, tick - firstTick);
-    }
-
-    public double offsetHiAt(int tick) {
-        return forecast == null ? Double.NaN : forecast.at(forecast.offsetHi, tick - firstTick);
     }
 
     public int lastForecastTick() {

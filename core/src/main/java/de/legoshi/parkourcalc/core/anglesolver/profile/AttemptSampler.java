@@ -42,11 +42,6 @@ public final class AttemptSampler {
     private AttemptSampler() {
     }
 
-    public static Stats sample(ForwardModel model, JumpSpec spec, double[] facing, double[][] errors, int attempts,
-                               AtomicBoolean cancel) {
-        return sample(model, spec, facing, errors, attempts, SEED, cancel);
-    }
-
     public static Stats merge(Stats total, Stats chunk) {
         if (total == null) return chunk;
         int n = chunk.landedLo.length;

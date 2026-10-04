@@ -78,8 +78,6 @@ public final class TurnProfileStore {
         Double[] held;
         Double[] best;
         Double[] bestOffset;
-        Double[] offsetLo;
-        Double[] offsetHi;
         @SerializedName(value = "failedTick", alternate = "lostTick")
         int failedTick = -1;
         Double[] x;
@@ -127,6 +125,21 @@ public final class TurnProfileStore {
             Files.move(legacy, target);
         } catch (Exception e) {
             lastError = e.getMessage();
+        }
+    }
+
+    public boolean moveToTrash(String name) {
+        Path p = fileFor(name);
+        if (p == null || !Files.exists(p)) return false;
+        Path trash = store.get().getSaveDir().toAbsolutePath().normalize().resolve(FileSystemSaveStore.TRASH_DIR);
+        String flat = name.replace('/', '_').replace('\\', '_');
+        try {
+            Files.createDirectories(trash);
+            Files.move(p, trash.resolve("onejump_" + flat + "_" + System.currentTimeMillis() + EXTENSION));
+            return true;
+        } catch (Exception e) {
+            lastError = e.getMessage();
+            return false;
         }
     }
 
@@ -217,7 +230,7 @@ public final class TurnProfileStore {
             InputRow r = ref.row(i);
             RowData d = new RowData();
             d.keys = TurnReference.keysText(TurnReference.mask(r));
-            d.yaw = r.getYaw() == null ? null : (double) r.getYaw();
+            d.yaw = box(ref.facing(i));
             d.checkKeys = ref.checkKeys(r);
             d.checkYaw = ref.checkYaw(r);
             d.still = ref.still(r);
@@ -265,8 +278,6 @@ public final class TurnProfileStore {
             f.held = boxAll(a.forecast.held);
             f.best = boxAll(a.forecast.best);
             f.bestOffset = boxAll(a.forecast.bestOffset);
-            f.offsetLo = boxAll(a.forecast.offsetLo);
-            f.offsetHi = boxAll(a.forecast.offsetHi);
             f.failedTick = a.forecast.failedTick;
             f.x = boxAll(a.forecast.x);
             f.z = boxAll(a.forecast.z);
@@ -281,8 +292,7 @@ public final class TurnProfileStore {
     private static TurnAttempt.Forecast toForecast(ForecastData f, int n) {
         if (f == null) return null;
         return new TurnAttempt.Forecast(unboxAll(f.held, n), unboxAll(f.best, n), unboxAll(f.bestOffset, n),
-                unboxAll(f.offsetLo, n), unboxAll(f.offsetHi, n), f.failedTick, unboxAll(f.x, n), unboxAll(f.z, n),
-                unboxAll(f.vx, n), unboxAll(f.vz, n), f.ground);
+                f.failedTick, unboxAll(f.x, n), unboxAll(f.z, n), unboxAll(f.vx, n), unboxAll(f.vz, n), f.ground);
     }
 
     private static Double[] boxAll(double[] v) {
@@ -316,31 +326,23 @@ public final class TurnProfileStore {
     static TurnReference toReference(HeaderData h) {
         TurnReference ref = new TurnReference();
         List<InputRow> rows = new ArrayList<InputRow>();
-        List<Boolean> ck = new ArrayList<Boolean>();
-        List<Boolean> cy = new ArrayList<Boolean>();
-        List<Boolean> st = new ArrayList<Boolean>();
+        List<Double> yaws = new ArrayList<Double>();
         if (h.rows != null) {
             for (RowData d : h.rows) {
                 if (d == null) continue;
                 InputRow r = new InputRow();
                 TurnReference.applyKeys(r, TurnReference.parseKeys(d.keys == null ? "" : d.keys));
-                r.setYaw(d.yaw == null ? null : d.yaw.floatValue());
                 if (d.optional != null) TurnReference.applyOptional(r, TurnReference.parseKeys(d.optional));
+                r.setOnejumpKeys(d.checkKeys);
+                r.setOnejumpFace(d.still ? InputRow.ONEJUMP_FACE_STILL
+                        : d.checkYaw ? InputRow.ONEJUMP_FACE_CHECK : InputRow.ONEJUMP_FACE_OFF);
                 rows.add(r);
-                ck.add(d.checkKeys);
-                cy.add(d.checkYaw);
-                st.add(d.still);
+                yaws.add(d.yaw);
             }
         }
-        boolean[] checkKeys = new boolean[rows.size()];
-        boolean[] checkYaw = new boolean[rows.size()];
-        boolean[] still = new boolean[rows.size()];
-        for (int i = 0; i < rows.size(); i++) {
-            checkKeys[i] = ck.get(i);
-            checkYaw[i] = cy.get(i);
-            still[i] = st.get(i);
-        }
-        ref.replace(rows, checkKeys, checkYaw, still);
+        double[] facings = new double[rows.size()];
+        for (int i = 0; i < rows.size(); i++) facings[i] = unbox(yaws.get(i));
+        ref.replace(rows, facings);
         ref.setTasFirstTick(h.tasFirstTick == null ? -1 : h.tasFirstTick);
         if (h.landing != null) {
             ref.setLanding(new TurnReference.Landing(h.landing.tick, unbox(h.landing.xLo), unbox(h.landing.xHi),

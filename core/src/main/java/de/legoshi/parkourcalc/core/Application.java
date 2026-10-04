@@ -264,7 +264,24 @@ public final class Application {
         practiceMacro.setBridge(playbackBridge);
         playback.setOnStart(practiceMacro::stop);
         attemptTracker.setResetListener(practiceMacro::onReset);
-        attemptTracker.setMacroMode(() -> settings.onejumpMacroMode);
+        attemptTracker.setMacroMode(practiceMacro::activeMode);
+        saveController.setDocumentListener(new SaveController.DocumentListener() {
+            @Override
+            public void saved(String name) {
+                turnProfile.onTasSaved(name);
+            }
+
+            @Override
+            public void replaced() {
+                turnProfile.onTasReplaced();
+                practiceMacro.stop();
+            }
+
+            @Override
+            public void deleted(String name) {
+                turnProfile.onTasDeleted(name);
+            }
+        });
         attemptTracker.setForecastEnabled(() -> settings.onejumpOffsetLive || settings.onejumpOffsetHover);
         de.legoshi.parkourcalc.core.ui.anglesolver.TurnProfileWindow turnProfileWindow =
                 new de.legoshi.parkourcalc.core.ui.anglesolver.TurnProfileWindow(turnProfile, attemptTracker, settings,
@@ -498,6 +515,7 @@ public final class Application {
         if (angleSolverState != null) angleSolverState.clearResult();
         if (practiceMacro != null) practiceMacro.stop();
         if (attemptTracker != null) attemptTracker.reset();
+        if (recorder.isRecording()) recorder.stop();
         hudMessages.clearStatus();
         startInitialized = false;
     }
@@ -896,10 +914,6 @@ public final class Application {
         playbackBridge = bridge;
         playback.setBridge(bridge);
         if (practiceMacro != null) practiceMacro.setBridge(bridge);
-    }
-
-    public PracticeMacro getPracticeMacro() {
-        return practiceMacro;
     }
 
     public PlaybackController getPlayback() {

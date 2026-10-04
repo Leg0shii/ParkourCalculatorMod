@@ -10,6 +10,7 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -40,6 +41,7 @@ public final class HumanRecorder {
     private float framePitch;
     private Path lastFile;
     private String lastError;
+    private String keyCodes = "unknown";
 
     public HumanRecorder(Supplier<FileSystemSaveStore> store, Supplier<Float> sensitivity) {
         this.store = store;
@@ -48,6 +50,10 @@ public final class HumanRecorder {
 
     public boolean isRecording() {
         return recording;
+    }
+
+    public void setKeyCodes(String keyCodes) {
+        this.keyCodes = keyCodes;
     }
 
     public synchronized int tickCount() {
@@ -104,7 +110,9 @@ public final class HumanRecorder {
             Files.createDirectories(dir);
             String stamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.ROOT).format(new Date(startedAtEpochMs));
             file = dir.resolve("recording_" + stamp + EXTENSION);
-            out = new BufferedWriter(Files.newBufferedWriter(file, StandardCharsets.UTF_8), 1 << 16);
+            for (int i = 2; Files.exists(file); i++) file = dir.resolve("recording_" + stamp + "_" + i + EXTENSION);
+            out = new BufferedWriter(Files.newBufferedWriter(file, StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW,
+                    StandardOpenOption.WRITE), 1 << 16);
             out.write(header());
             out.write('\n');
         } catch (IOException e) {
@@ -150,6 +158,7 @@ public final class HumanRecorder {
         int mask = TurnReference.mask(w, a, s, d, jump, sneak, sprintKey);
         String k = mask == 0 ? "" : TurnReference.keysText(mask);
         write("{\"e\":\"tickEnd\",\"t\":" + tick + ",\"us\":" + micros() + ",\"keys\":\"" + k + "\",\"sprinting\":" + sprinting + "}");
+        flush();
     }
 
     public synchronized void mouse(long eventNs, double dx, double dy, float yaw, float pitch) {
@@ -190,6 +199,7 @@ public final class HumanRecorder {
                 + ",\"mcVersion\":" + quote(s == null ? null : s.getMcVersion())
                 + ",\"startedAtEpochMs\":" + startedAtEpochMs
                 + ",\"sensitivity\":" + fmt(sens) + ",\"pixelDeg\":" + fmt(TurnProfile.pixelDeg(sens))
+                + ",\"keyCodes\":" + quote(keyCodes)
                 + ",\"timeUnit\":\"us since start\""
                 + ",\"frameRows\":\"yaw and pitch after each frame's mouse update, written when changed\"}";
     }
@@ -198,6 +208,17 @@ public final class HumanRecorder {
         try {
             out.write(row);
             out.write('\n');
+        } catch (IOException e) {
+            lastError = e.getMessage();
+            recording = false;
+            closeQuietly();
+        }
+    }
+
+    private void flush() {
+        if (out == null) return;
+        try {
+            out.flush();
         } catch (IOException e) {
             lastError = e.getMessage();
             recording = false;

@@ -29,9 +29,6 @@ public final class OnejumpKeysWindow implements RenderInterface {
     private static final float CELL_GAP = 1.5f;
     private static final float STRIP_H = 4f;
     private static final float STRIP_GAP = 3f;
-    private static final String[] LABELS = {"W", "A", "S", "D", "Spr", "Spc", "Snk"};
-    private static final int[] BITS = {TurnReference.KEY_W, TurnReference.KEY_A, TurnReference.KEY_S,
-            TurnReference.KEY_D, TurnReference.KEY_SPRINT, TurnReference.KEY_JUMP, TurnReference.KEY_SNEAK};
 
     private final TurnProfileController controller;
     private final AttemptTracker tracker;
@@ -97,8 +94,7 @@ public final class OnejumpKeysWindow implements RenderInterface {
             dl.addText(x0 + (w - ts.x) * 0.5f, y0 + (h - ts.y) * 0.5f, ThemeManager.textDimColor(), text);
             return;
         }
-        TurnAttempt live = tracker.live();
-        TurnAttempt you = live != null ? live : controller.selectedAttempt() != null ? controller.selectedAttempt() : tracker.last();
+        TurnAttempt you = tracker.shownAttempt();
         int n = cur.n;
         float pad = PAD * scale;
         float lineH = ImGui.getTextLineHeight();
@@ -111,20 +107,21 @@ public final class OnejumpKeysWindow implements RenderInterface {
         float stripGap = timing ? STRIP_GAP * scale : 0f;
         float gridH = h - pad * 2f - lineH - stripH - stripGap;
         float cellW = gridW / n;
-        float rowH = gridH / LABELS.length;
+        float rowH = gridH / TurnReference.LABELS.length;
         float gap = CELL_GAP * scale;
         int failT = you != null && you.inputFailure ? you.failTick - cur.startTick : -1;
         int turnFailT = you != null && you.turnFailure ? you.failTick - cur.startTick : -1;
-        int reached = you == null ? -1 : you.inputFailure ? failT : you.turnFailure ? turnFailT - 1 : you.recorded - 1;
+        int reached = you == null ? -1 : you.inputFailure ? failT : you.turnFailure ? turnFailT - 1
+                : you == tracker.live() ? you.recorded - 2 : you.recorded - 1;
         int hoverT = -1;
         float mx = ImGui.getMousePosX();
         if (hovered && mx >= gridX && mx < gridX + gridW) hoverT = Math.min(n - 1, (int) ((mx - gridX) / cellW));
 
         int muted = ThemeManager.textMutedColor();
         int dim = ThemeManager.textDimColor();
-        for (int k = 0; k < LABELS.length; k++) {
+        for (int k = 0; k < TurnReference.LABELS.length; k++) {
             float ry = gridY + k * rowH;
-            dl.addText(x0 + pad, ry + (rowH - lineH) * 0.5f, muted, LABELS[k]);
+            dl.addText(x0 + pad, ry + (rowH - lineH) * 0.5f, muted, TurnReference.LABELS[k]);
         }
         for (int t = 0; t < n; t++) {
             float cx0 = gridX + t * cellW;
@@ -134,12 +131,12 @@ public final class OnejumpKeysWindow implements RenderInterface {
             if (t == hoverT) dl.addRectFilled(cx0, gridY, cx0 + cellW, gridY + gridH, ThemeManager.selectedTintColor(0.15f), 0f);
             int expected = cur.keys[t];
             int pressed = t == failT ? you.failKeys : expected;
-            for (int k = 0; k < LABELS.length; k++) {
+            for (int k = 0; k < TurnReference.LABELS.length; k++) {
                 float ry = gridY + k * rowH;
                 float ax = cx0 + gap, bx = cx0 + cellW - gap, ay = ry + gap, by = ry + rowH - gap;
-                boolean exp = (expected & BITS[k]) != 0;
-                boolean got = (pressed & BITS[k]) != 0;
-                if (checked && (cur.optionalKeys[t] & BITS[k]) != 0) {
+                boolean exp = (expected & TurnReference.LABEL_BITS[k]) != 0;
+                boolean got = (pressed & TurnReference.LABEL_BITS[k]) != 0;
+                if (checked && (cur.optionalKeys[t] & TurnReference.LABEL_BITS[k]) != 0) {
                     dl.addRect(ax, ay, bx, by, ThemeManager.textDimColor(), 2f * scale, 0, 1f * scale);
                     continue;
                 }

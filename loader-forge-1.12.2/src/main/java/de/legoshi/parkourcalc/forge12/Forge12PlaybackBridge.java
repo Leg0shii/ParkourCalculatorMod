@@ -509,6 +509,7 @@ public final class Forge12PlaybackBridge implements PlaybackBridge {
         Minecraft mc = Minecraft.getMinecraft();
         EntityPlayerSP client = mc.player;
         if (client != null) restorePlaybackInput(client);
+        else resetInputOverride();
         endGhostPlayback();
         mc.objectMouseOver = null;
     }

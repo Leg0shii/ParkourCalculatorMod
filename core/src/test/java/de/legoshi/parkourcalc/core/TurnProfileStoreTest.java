@@ -27,15 +27,19 @@ public class TurnProfileStoreTest {
         InputRow r1 = new InputRow();
         TurnReference.applyKeys(r1, TurnReference.KEY_W | TurnReference.KEY_A);
         r1.setYaw(-20.25f);
+        r0.setOnejumpKeys(true);
+        r0.setOnejumpFace(InputRow.ONEJUMP_FACE_CHECK);
+        r1.setOnejumpKeys(false);
+        r1.setOnejumpFace(InputRow.ONEJUMP_FACE_CHECK);
         rows.add(r0);
         rows.add(r1);
-        doc.reference().replace(rows, new boolean[] {true, false}, new boolean[] {true, true});
+        doc.reference().replace(rows, null);
         doc.reference().setTasFirstTick(26);
         doc.reference().setLanding(new TurnReference.Landing(35, 186.32, Double.NaN, Double.NaN, 873.05));
         doc.touch();
-        doc.add(new TurnAttempt(1, 26, new double[] {-12.4, -20.0}, 2, true, true, false, "landed", -0.012, 27, -1, 0, 0, 0));
+        doc.add(new TurnAttempt(1, 26, new double[] {-12.4, -20.0}, 2, true, true, false, "landed", -0.012, 27, -1, 0, 0, 0, null, null, null, false, Double.NaN, null));
         doc.add(new TurnAttempt(2, 26, new double[] {-12.4, 0.0}, 1, true, false, true, "input failure", Double.NaN, -1, 27,
-                TurnReference.KEY_W, TurnReference.KEY_W | TurnReference.KEY_A, 0));
+                TurnReference.KEY_W, TurnReference.KEY_W | TurnReference.KEY_A, 0, null, null, null, false, Double.NaN, null));
         return doc;
     }
 
@@ -50,13 +54,13 @@ public class TurnProfileStoreTest {
         TurnProfileStore store = store(dir);
         TurnProfileDocument doc = sample();
         TurnReference ref = doc.reference();
-        ref.setStill(ref.row(0), true);
-        ref.setOptionalKeys(ref.row(1), TurnReference.KEY_JUMP | TurnReference.KEY_SPRINT);
+        ref.row(0).setOnejumpFace(InputRow.ONEJUMP_FACE_STILL);
+        TurnReference.applyOptional(ref.row(1), TurnReference.KEY_JUMP | TurnReference.KEY_SPRINT);
         assertTrue(ref.still(ref.row(0)));
         assertFalse(ref.still(ref.row(1)));
         assertEquals(TurnReference.KEY_JUMP | TurnReference.KEY_SPRINT, ref.optionalKeys(ref.row(1)));
         doc.add(new TurnAttempt(3, 26, new double[] {-12.25, 0.0}, 1, true, false, false,
-                "tick 27: turned +0.150° (1 px), expected still", Double.NaN, -1, 26, 0, 0, 0, null, null, null, true, 0.15));
+                "tick 27: turned +0.150° (1 px), expected still", Double.NaN, -1, 26, 0, 0, 0, null, null, null, true, 0.15, null));
         assertTrue(store.save("still", ref, doc.attempts()));
         TurnProfileDocument back = new TurnProfileDocument();
         assertTrue(store.load("still", back));
@@ -84,7 +88,7 @@ public class TurnProfileStoreTest {
         TurnProfileStore store = store(dir);
         TurnProfileDocument doc = sample();
         doc.add(new TurnAttempt(3, 26, new double[] {-12.4, -20.0}, 2, true, true, false, "landed", -0.02, 27, -1, 0, 0, 0,
-                new float[] {0.4f, Float.NaN}, new float[] {0.6f, Float.NaN}, new float[][] {{0f, -12.4f}, null}));
+                new float[] {0.4f, Float.NaN}, new float[] {0.6f, Float.NaN}, new float[][] {{0f, -12.4f}, null}, false, Double.NaN, null));
         assertTrue(store.save("timed", doc.reference(), doc.attempts()));
         TurnProfileDocument back = new TurnProfileDocument();
         assertTrue(store.load("timed", back));
@@ -161,7 +165,7 @@ public class TurnProfileStoreTest {
         TurnProfileDocument doc = sample();
         assertTrue(store.save("j1", doc.reference(), doc.attempts()));
         doc.markClean();
-        TurnAttempt a3 = new TurnAttempt(3, 26, new double[] {-12.0, -20.5}, 2, true, false, false, "short", 0.031, 27, -1, 0, 0, 0);
+        TurnAttempt a3 = new TurnAttempt(3, 26, new double[] {-12.0, -20.5}, 2, true, false, false, "short", 0.031, 27, -1, 0, 0, 0, null, null, null, false, Double.NaN, null);
         doc.add(a3);
         assertTrue(doc.hasPending());
         assertFalse(doc.isReferenceDirty());
@@ -186,11 +190,11 @@ public class TurnProfileStoreTest {
         TurnProfileDocument doc = new TurnProfileDocument();
         for (int i = 0; i < 100; i++) {
             double margin = (i * 37) % 100 / 100.0 - 0.3;
-            doc.add(new TurnAttempt(i + 1, 0, new double[] {0.0}, 1, true, margin <= 0.0, false, "", margin, -1, -1, 0, 0, 0));
+            doc.add(new TurnAttempt(i + 1, 0, new double[] {0.0}, 1, true, margin <= 0.0, false, "", margin, -1, -1, 0, 0, 0, null, null, null, false, Double.NaN, null));
         }
         assertEquals(TurnProfileDocument.TOP, doc.top().size());
-        doc.add(new TurnAttempt(101, 0, new double[] {0.0}, 1, true, true, false, "", -1.0, -1, -1, 0, 0, 1));
-        doc.add(new TurnAttempt(102, 0, new double[] {0.0}, 1, true, false, false, "", 0.2, -1, -1, 0, 0, 2));
+        doc.add(new TurnAttempt(101, 0, new double[] {0.0}, 1, true, true, false, "", -1.0, -1, -1, 0, 0, 1, null, null, null, false, Double.NaN, null));
+        doc.add(new TurnAttempt(102, 0, new double[] {0.0}, 1, true, false, false, "", 0.2, -1, -1, 0, 0, 2, null, null, null, false, Double.NaN, null));
         assertEquals(100, doc.stats().attempts);
         assertEquals(1, doc.stats().mouseAttempts);
         assertEquals(1, doc.stats().mouseClears);
@@ -225,7 +229,7 @@ public class TurnProfileStoreTest {
         TurnProfileStore store = store(dir);
         TurnProfileDocument doc = sample();
         TurnAttempt.Forecast fc = new TurnAttempt.Forecast(new double[] {0.1, 0.2}, new double[] {0.05, 0.1},
-                new double[] {0.0, 0.0}, new double[] {Double.NaN, Double.NaN}, new double[] {Double.NaN, Double.NaN}, 27);
+                new double[] {0.0, 0.0}, 27, null, null, null, null, null);
         doc.add(new TurnAttempt(3, 26, new double[] {-12.0, -20.5}, 2, true, false, false, "short", 0.031, 27, -1, 0, 0, 0,
                 null, null, null, false, Double.NaN, fc));
         assertTrue(store.save("old", doc.reference(), doc.attempts()));
@@ -245,10 +249,10 @@ public class TurnProfileStoreTest {
         Path dir = Files.createTempDirectory("pkc-onejump-fav");
         TurnProfileStore store = store(dir);
         TurnProfileDocument doc = sample();
-        doc.add(new TurnAttempt(3, 26, new double[] {-12.0, -20.5}, 2, true, false, false, "short", 0.031, 27, -1, 0, 0, 1));
-        doc.add(new TurnAttempt(4, 26, new double[] {-12.0, -20.5}, 2, true, false, false, "short", 0.0004, 27, -1, 0, 0, 0));
-        doc.add(new TurnAttempt(5, 26, new double[] {-12.0, -20.5}, 2, true, false, false, "short", 0.00002, 27, -1, 0, 0, 2));
-        doc.add(new TurnAttempt(6, 26, new double[] {-12.0, -20.5}, 2, true, false, false, "short", 0.05, 27, -1, 0, 0, 1));
+        doc.add(new TurnAttempt(3, 26, new double[] {-12.0, -20.5}, 2, true, false, false, "short", 0.031, 27, -1, 0, 0, 1, null, null, null, false, Double.NaN, null));
+        doc.add(new TurnAttempt(4, 26, new double[] {-12.0, -20.5}, 2, true, false, false, "short", 0.0004, 27, -1, 0, 0, 0, null, null, null, false, Double.NaN, null));
+        doc.add(new TurnAttempt(5, 26, new double[] {-12.0, -20.5}, 2, true, false, false, "short", 0.00002, 27, -1, 0, 0, 2, null, null, null, false, Double.NaN, null));
+        doc.add(new TurnAttempt(6, 26, new double[] {-12.0, -20.5}, 2, true, false, false, "short", 0.05, 27, -1, 0, 0, 1, null, null, null, false, Double.NaN, null));
         List<TurnAttempt> all = doc.attempts();
         assertEquals(1, all.get(0).ordinal);
         assertEquals(2, all.get(1).ordinal);
@@ -286,7 +290,7 @@ public class TurnProfileStoreTest {
         Path dir = Files.createTempDirectory("pkc-onejump-state");
         TurnProfileStore store = store(dir);
         TurnProfileDocument doc = sample();
-        TurnAttempt.Forecast fc = new TurnAttempt.Forecast(null, null, null, null, null, -1,
+        TurnAttempt.Forecast fc = new TurnAttempt.Forecast(null, null, null, -1,
                 new double[] {1.5, 2.5}, new double[] {3.5, 4.5}, new double[] {0.1, 0.2}, new double[] {0.3, 0.4},
                 new boolean[] {true, false});
         TurnAttempt a = new TurnAttempt(3, 26, new double[] {-12.0, -20.5}, 2, true, false, false, "short", 0.031, 27, -1, 0, 0, 0,
@@ -313,32 +317,11 @@ public class TurnProfileStoreTest {
         assertEquals(-1, back.attempts().get(0).failedTick());
     }
     @Test
-    public void anInfiniteSolvedOffsetRoundTrips() throws Exception {
-        Path dir = Files.createTempDirectory("pkc-onejump-inf");
-        TurnProfileStore store = store(dir);
-        TurnProfileDocument doc = sample();
-        TurnAttempt a = new TurnAttempt(3, 26, new double[] {-12.0, -20.5}, 2, true, false, false, "short", 0.031, 27, -1, 0, 0, 0);
-        a.solvedOffset = new double[] {0.02, Double.NEGATIVE_INFINITY};
-        a.tasFirstTick = 26;
-        doc.add(a);
-        assertTrue(store.lastError(), store.save("inf", doc.reference(), doc.attempts()));
-        TurnProfileDocument back = new TurnProfileDocument();
-        assertTrue(store.load("inf", back));
-        TurnAttempt b = back.attempts().get(2);
-        assertEquals(0.02, b.solvedOffsetAt(26), 0.0);
-        assertEquals(Double.NEGATIVE_INFINITY, b.solvedOffsetAt(27), 0.0);
-        assertEquals(27, b.failedTick());
-        assertEquals(26, b.tasFirstTick);
-        assertEquals(26, back.attempts().get(0).tasFirstTick);
-        assertFalse(Files.exists(store.fileFor("inf").resolveSibling("inf.jsonl.tmp")));
-    }
-
-    @Test
     public void aBrokenAttemptLineIsSkippedAndTheRestLoads() throws Exception {
         Path dir = Files.createTempDirectory("pkc-onejump-broken");
         TurnProfileStore store = store(dir);
         TurnProfileDocument doc = sample();
-        doc.add(new TurnAttempt(3, 26, new double[] {-12.0, -20.5}, 2, true, false, false, "short", 0.031, 27, -1, 0, 0, 0));
+        doc.add(new TurnAttempt(3, 26, new double[] {-12.0, -20.5}, 2, true, false, false, "short", 0.031, 27, -1, 0, 0, 0, null, null, null, false, Double.NaN, null));
         assertTrue(store.save("broken", doc.reference(), doc.attempts()));
         Path file = store.fileFor("broken");
         List<String> lines = Files.readAllLines(file);
@@ -351,7 +334,32 @@ public class TurnProfileStoreTest {
         assertEquals(2, back.attempts().size());
         assertEquals(1, back.attempts().get(0).number);
         assertEquals(3, back.attempts().get(1).number);
+        assertEquals(4, back.nextNumber());
         assertEquals(26, back.reference().tasFirstTick());
+    }
+
+    @Test
+    public void theReferenceFacingsKeepTheirDoublePrecision() throws Exception {
+        Path dir = Files.createTempDirectory("pkc-onejump-facing");
+        TurnProfileStore store = store(dir);
+        TurnProfileDocument doc = sample();
+        double exact = -12.123456789012345;
+        List<InputRow> rows = new ArrayList<>();
+        rows.add(doc.reference().row(0));
+        rows.add(doc.reference().row(1));
+        doc.reference().replace(rows, new double[] {exact, Double.NaN});
+        assertEquals(exact, doc.reference().facings()[0], 0.0);
+        assertEquals(exact, doc.reference().facings()[1], 0.0);
+        assertEquals((float) exact, doc.reference().row(0).getYaw(), 0f);
+        assertNull(doc.reference().row(1).getYaw());
+        assertTrue(store.save("facing", doc.reference(), doc.attempts()));
+        TurnProfileDocument back = new TurnProfileDocument();
+        assertTrue(store.load("facing", back));
+        assertEquals(exact, back.reference().facings()[0], 0.0);
+        assertTrue(back.reference().sameAs(doc.reference()));
+        TurnReference copy = back.reference().copy();
+        assertEquals(exact, copy.facing(0), 0.0);
+        assertTrue(Double.isNaN(copy.facing(1)));
     }
 
     @Test

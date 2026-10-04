@@ -49,8 +49,6 @@ public final class AttemptTracker {
     private boolean[] stGround;
     private double[] bestMargin;
     private double[] bestOffset;
-    private double[] offsetLo;
-    private double[] offsetHi;
     private int failedTick = -1;
     private int recorded;
     private int tick;
@@ -63,10 +61,6 @@ public final class AttemptTracker {
     private java.util.function.IntSupplier macroMode = () -> 0;
     private BooleanSupplier forecastEnabled = () -> true;
     private int macro;
-
-    public AttemptTracker(TurnProfileController profile, BooleanSupplier enabled, BooleanSupplier suspended) {
-        this(profile, enabled, suspended, () -> false);
-    }
 
     public AttemptTracker(TurnProfileController profile, BooleanSupplier enabled, BooleanSupplier suspended,
                           BooleanSupplier timing) {
@@ -94,14 +88,6 @@ public final class AttemptTracker {
         if (yaws != null) finish(false);
         armed = true;
         onReset.run();
-    }
-
-    public void tickStart(double x, double y, double z, float yaw, boolean ground) {
-        tickStart(x, y, z, yaw, ground, System.nanoTime());
-    }
-
-    public void tickStart(double x, double y, double z, float yaw, boolean ground, long nowNs) {
-        tickStart(x, y, z, Double.NaN, Double.NaN, yaw, ground, nowNs);
     }
 
     public void tickStart(double x, double y, double z, double vx, double vz, float yaw, boolean ground, long nowNs) {
@@ -161,7 +147,10 @@ public final class AttemptTracker {
                 open(c, head, 1);
             } else {
                 if (!jumpPress(mask)) return;
-                if (filled < k0 + 1) return;
+                if (filled < k0 + 1) {
+                    earlyPress(c, k0);
+                    return;
+                }
                 armed = false;
                 open(c, ((head - k0) % RING + RING) % RING, k0 + 1);
             }
@@ -191,6 +180,12 @@ public final class AttemptTracker {
         return last;
     }
 
+    public TurnAttempt shownAttempt() {
+        if (live != null) return live;
+        TurnAttempt selected = profile.selectedAttempt();
+        return selected != null ? selected : last;
+    }
+
     private void closeTick(long nowNs) {
         if (!trace.active()) return;
         float on = trace.onset(nowNs);
@@ -207,6 +202,16 @@ public final class AttemptTracker {
         turnStart[j] = on;
         turnEnd[j] = off;
         traces[j] = pts;
+    }
+
+    private void earlyPress(TurnProfileController.Current c, int k0) {
+        armed = false;
+        String verdict = "jumped " + (filled - 1) + " ticks after the reset, the run-up needs " + k0;
+        TurnAttempt a = new TurnAttempt(profile.document().nextNumber(), c.startTick, new double[0], 0, false, false,
+                false, verdict, Double.NaN, -1, -1, 0, 0, macroMode.getAsInt(), null, null, null, false, Double.NaN, null);
+        a.tasFirstTick = c.tasFirstTick;
+        if (last != null) last.dropTrace();
+        last = a;
     }
 
     private boolean jumpPress(int mask) {
@@ -247,14 +252,10 @@ public final class AttemptTracker {
             heldMargin = nans(c.n);
             bestMargin = nans(c.n);
             bestOffset = nans(c.n);
-            offsetLo = nans(c.n);
-            offsetHi = nans(c.n);
         } else {
             heldMargin = null;
             bestMargin = null;
             bestOffset = null;
-            offsetLo = null;
-            offsetHi = null;
         }
         failedTick = -1;
         span = c.lastTick() - c.startTick + 1;
@@ -306,8 +307,6 @@ public final class AttemptTracker {
                 heldMargin[tick] = r.held;
                 bestMargin[tick] = r.best;
                 bestOffset[tick] = r.bestOffsetDeg;
-                offsetLo[tick] = r.offsetLoDeg;
-                offsetHi[tick] = r.offsetHiDeg;
                 if (!r.landable() && failedTick < 0) failedTick = cur.startTick + tick;
             }
         }
@@ -326,15 +325,15 @@ public final class AttemptTracker {
 
     private void publish(TurnAttempt a) {
         close();
-        profile.document().add(a.withoutTrace());
+        profile.document().add(a);
         profile.select(-1);
+        if (last != null) last.dropTrace();
         last = a;
     }
 
     private TurnAttempt.Forecast forecastResult() {
         if (heldMargin == null && stX == null) return null;
-        return new TurnAttempt.Forecast(heldMargin, bestMargin, bestOffset, offsetLo, offsetHi, failedTick, stX, stZ,
-                stVx, stVz, stGround);
+        return new TurnAttempt.Forecast(heldMargin, bestMargin, bestOffset, failedTick, stX, stZ, stVx, stVz, stGround);
     }
 
     private static double[] nans(int n) {
@@ -373,8 +372,6 @@ public final class AttemptTracker {
         heldMargin = null;
         bestMargin = null;
         bestOffset = null;
-        offsetLo = null;
-        offsetHi = null;
         failedTick = -1;
         cur = null;
         live = null;

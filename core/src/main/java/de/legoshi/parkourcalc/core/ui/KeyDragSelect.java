@@ -5,13 +5,15 @@ import imgui.ImGui;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 /**
  * Handles drag-selection for toggling keys across multiple rows.
  */
 public class KeyDragSelect {
 
-    private InputRow.Key activeColumn = null;
+    private Object activeColumn = null;
+    private BiConsumer<InputRow, Boolean> setter;
     private int startRow = -1;
     private int currentRow = -1;
     private boolean targetValue = true;
@@ -30,7 +32,12 @@ public class KeyDragSelect {
     }
 
     public void startDrag(InputRow.Key column, int rowIndex, boolean currentValue) {
+        startDrag(column, rowIndex, currentValue, (row, value) -> row.setKeyActive(column, value));
+    }
+
+    public void startDrag(Object column, int rowIndex, boolean currentValue, BiConsumer<InputRow, Boolean> setter) {
         activeColumn = column;
+        this.setter = setter;
         startRow = rowIndex;
         currentRow = rowIndex;
         targetValue = !currentValue;
@@ -40,7 +47,7 @@ public class KeyDragSelect {
         return activeColumn != null;
     }
 
-    public boolean isInDragRange(InputRow.Key key, int rowIndex) {
+    public boolean isInDragRange(Object key, int rowIndex) {
         if (activeColumn != key || startRow == -1) {
             return false;
         }
@@ -53,7 +60,7 @@ public class KeyDragSelect {
     /**
      * Returns the display value for a key cell, accounting for drag preview.
      */
-    public boolean getDisplayValue(InputRow.Key key, int rowIndex, boolean actualValue) {
+    public boolean getDisplayValue(Object key, int rowIndex, boolean actualValue) {
         if (isInDragRange(key, rowIndex)) {
             return targetValue;
         }
@@ -75,7 +82,7 @@ public class KeyDragSelect {
         }
     }
 
-    public int rowAtY(float y) {
+    private int rowAtY(float y) {
         for (Map.Entry<Integer, Float> entry : rowMinY.entrySet()) {
             Float maxY = rowMaxY.get(entry.getKey());
             if (maxY != null && y >= entry.getValue() && y <= maxY) return entry.getKey();
@@ -102,7 +109,7 @@ public class KeyDragSelect {
 
         for (int i = minRow; i <= maxRow; i++) {
             if (i >= 0 && i < rows.size()) {
-                rows.get(i).setKeyActive(activeColumn, targetValue);
+                setter.accept(rows.get(i), targetValue);
             }
         }
 
@@ -112,6 +119,7 @@ public class KeyDragSelect {
 
     private void reset() {
         activeColumn = null;
+        setter = null;
         startRow = -1;
         currentRow = -1;
     }

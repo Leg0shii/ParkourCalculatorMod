@@ -463,6 +463,7 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer client = mc.player;
         if (client != null) restorePlaybackInput(client);
+        else resetInputOverride();
         endGhostPlayback();
         mc.hitResult = null;
     }

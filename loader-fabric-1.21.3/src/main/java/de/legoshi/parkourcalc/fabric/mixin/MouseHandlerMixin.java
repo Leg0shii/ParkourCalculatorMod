@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.fabric.mixin;
 
 import de.legoshi.parkourcalc.fabric.FabricParkourCalculator;
 import de.legoshi.parkourcalc.fabric.imgui.ImGuiImpl;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.MouseHandler;
 import com.mojang.blaze3d.platform.InputConstants;
 import org.spongepowered.asm.mixin.Mixin;
@@ -45,7 +46,8 @@ public class MouseHandlerMixin {
     private void onMouseButton(long window, int button, int action, int mods, CallbackInfo ci) {
         boolean replicaBefore = FabricParkourCalculator.hasReplica();
         FabricParkourCalculator.recordButton(button, action);
-        if (replicaBefore || FabricParkourCalculator.hasReplica()) {
+        if ((replicaBefore || FabricParkourCalculator.hasReplica()) && Minecraft.getInstance().screen == null
+                && !FabricParkourCalculator.isUiFocused()) {
             ci.cancel();
             return;
         }

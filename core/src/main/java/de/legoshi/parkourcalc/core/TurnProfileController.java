@@ -9,10 +9,10 @@ import de.legoshi.parkourcalc.core.anglesolver.profile.TurnProfile;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardModel;
+import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -22,6 +22,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
@@ -38,6 +39,8 @@ public final class TurnProfileController {
         public final boolean[] checkYaw;
         public final boolean[] still;
         public final boolean[] jumpTicks;
+        public final int[] speedAmp;
+        public final int[] jumpAmp;
         public final TurnReference.Landing landing;
         public final TurnProfile profile;
         public final AttemptSampler.Stats attempts;
@@ -45,8 +48,8 @@ public final class TurnProfileController {
         final AngleSolverEngine.PathSnapshot snapshot;
 
         Current(int startTick, int tasFirstTick, double[] facing, int[] keys, boolean[] checkKeys, int[] optionalKeys,
-                boolean[] checkYaw, boolean[] still, boolean[] jumpTicks, TurnReference.Landing landing,
-                TurnProfile profile, AttemptSampler.Stats attempts, double pixelDeg,
+                boolean[] checkYaw, boolean[] still, boolean[] jumpTicks, int[] speedAmp, int[] jumpAmp,
+                TurnReference.Landing landing, TurnProfile profile, AttemptSampler.Stats attempts, double pixelDeg,
                 AngleSolverEngine.PathSnapshot snapshot) {
             this.startTick = startTick;
             this.tasFirstTick = tasFirstTick;
@@ -58,6 +61,8 @@ public final class TurnProfileController {
             this.checkYaw = checkYaw;
             this.still = still;
             this.jumpTicks = jumpTicks;
+            this.speedAmp = speedAmp;
+            this.jumpAmp = jumpAmp;
             this.landing = landing;
             this.profile = profile;
             this.attempts = attempts;
@@ -67,7 +72,7 @@ public final class TurnProfileController {
 
         Current withAttempts(AttemptSampler.Stats stats, double pixelDeg) {
             return new Current(startTick, tasFirstTick, facing, keys, checkKeys, optionalKeys, checkYaw, still,
-                    jumpTicks, landing, profile, stats, pixelDeg, snapshot);
+                    jumpTicks, speedAmp, jumpAmp, landing, profile, stats, pixelDeg, snapshot);
         }
 
         public boolean canRate() {
@@ -122,10 +127,14 @@ public final class TurnProfileController {
     private final Set<TurnAttempt> deepDone = java.util.Collections.newSetFromMap(new ConcurrentHashMap<TurnAttempt, Boolean>());
     private volatile boolean deepDirty;
     private final AtomicInteger generation = new AtomicInteger();
+    private final AtomicInteger deepGeneration = new AtomicInteger();
     private volatile AtomicBoolean cancelToken = new AtomicBoolean(false);
-    private volatile Current current;
+    private final AtomicReference<Current> current = new AtomicReference<Current>();
+    private final Object rateLock = new Object();
     private volatile boolean rating;
     private int ratedVersion = -1;
+    private int ratedSpreadSetting = -1;
+    private int ratedChunkSetting = -1;
     private volatile int ratedSpread;
     private volatile double[][] ratePool;
     private volatile boolean rateMore;
@@ -133,9 +142,11 @@ public final class TurnProfileController {
     private static final long RATE_MAX_SAMPLES = 5_000_000L;
     private boolean loaded;
     private boolean adopted;
+    private boolean carryAllowed;
+    private boolean wasEnabled;
     private String loadedName;
     private String lastError;
-    private String storeError;
+    private volatile String storeError;
     private volatile int selectedNumber = -1;
 
     public TurnProfileController(AngleSolverEngine engine, AngleSolverState state, InputData inputs,
@@ -175,16 +186,20 @@ public final class TurnProfileController {
     }
 
     public void tick() {
-        if (!enabled.getAsBoolean() && !document.hasPending() && !document.isReferenceDirty() && !deepDirty) return;
+        boolean on = enabled.getAsBoolean();
+        if (on && !wasEnabled) refresh();
+        wasEnabled = on;
+        if (!on && !document.hasPending() && !document.isReferenceDirty() && !deepDirty) return;
         sync();
         autoRate();
         requestDeepChecks();
     }
 
-    public void sync() {
+    private void sync() {
         ensureLoaded();
         if (deepDirty && deepQueue.isEmpty()) {
             deepDirty = false;
+            document.recountFailed();
             document.markDirty();
         }
         if (store == null || loadedName == null || storeError != null) return;
@@ -193,35 +208,53 @@ public final class TurnProfileController {
             final TurnReference ref = document.reference().copy();
             final List<TurnAttempt> all = new ArrayList<TurnAttempt>(document.attempts());
             document.markClean();
-            io.submit(() -> store.save(name, ref, all));
+            io.submit(() -> {
+                if (!store.save(name, ref, all)) storeError = writeError();
+            });
         } else if (document.hasPending()) {
             final List<TurnAttempt> added = document.drainPending();
             final TurnReference ref = document.reference().copy();
             final List<TurnAttempt> all = new ArrayList<TurnAttempt>(document.attempts());
             io.submit(() -> {
-                if (!store.append(name, added)) store.save(name, ref, all);
+                if (!store.append(name, added) && !store.save(name, ref, all)) storeError = writeError();
             });
         }
     }
 
-    public void flush() {
-        try {
-            io.submit(() -> { }).get();
-        } catch (Exception ignored) {
-        }
+    private String writeError() {
+        String e = store.lastError();
+        return e == null ? "write failed" : e;
+    }
+
+    public void onTasSaved(String name) {
+        carryAllowed = name != null && !name.isEmpty() && !Objects.equals(name, loadedName);
+    }
+
+    public void onTasReplaced() {
+        carryAllowed = false;
+        adopted = false;
+        loaded = false;
+        selectedNumber = -1;
+    }
+
+    public void onTasDeleted(String name) {
+        if (store != null) store.moveToTrash(name);
+        if (Objects.equals(name, loadedName)) onTasReplaced();
     }
 
     private void ensureLoaded() {
         String name = tasName.get();
         if (name != null && name.isEmpty()) name = null;
         if (loaded && Objects.equals(name, loadedName)) return;
-        boolean carry = loaded && loadedName == null && name != null && store != null
-                && !document.attempts().isEmpty() && !Files.exists(store.fileFor(name));
+        boolean carry = carryAllowed && loaded && name != null && store != null && !Objects.equals(name, loadedName);
+        carryAllowed = false;
         loaded = true;
         adopted = false;
         loadedName = name;
         storeError = null;
-        deepDone.clear();
+        deepDirty = false;
+        selectedNumber = -1;
+        invalidateDeepChecks();
         if (carry) {
             document.touch();
         } else if (store != null && name != null) {
@@ -249,18 +282,27 @@ public final class TurnProfileController {
             if (!ref.isEmpty() && ref.tasFirstTick() >= 0 && !anyFlagged()) adoptFlags(ref);
         }
         Built built = buildReference();
+        if (built.ref.isEmpty() && !ref.isEmpty()) {
+            if (lastError == null) {
+                lastError = ref.tasFirstTick() < 0
+                        ? "the onejump file predates tick alignment, flag the Keys and Face ticks again"
+                        : "no Keys or Face ticks flagged, the stored onejump is kept";
+            }
+            current.set(null);
+            return;
+        }
         if (!ref.sameAs(built.ref)) {
             boolean spanMoved = !ref.isEmpty() && (ref.tasFirstTick() != built.ref.tasFirstTick()
                     || !TurnReference.sameLanding(ref.landing(), built.ref.landing()));
             ref.copyFrom(built.ref);
             if (spanMoved) {
                 for (TurnAttempt a : document.attempts()) a.solvedOffset = null;
-                deepDone.clear();
+                invalidateDeepChecks();
             }
             document.touch();
         }
         if (ref.isEmpty()) {
-            current = null;
+            current.set(null);
             return;
         }
         int n = ref.size();
@@ -271,6 +313,10 @@ public final class TurnProfileController {
         boolean[] checkYaw = new boolean[n];
         boolean[] still = new boolean[n];
         boolean[] jumps = new boolean[n];
+        int[] speedAmp = new int[n];
+        int[] jumpAmp = new int[n];
+        AngleSolverEngine.PathSnapshot snap = built.snapshot;
+        JumpPhysicsInputs sc = snap == null ? null : snap.spec.asScenario();
         for (int k = 0; k < n; k++) {
             InputRow r = ref.row(k);
             keys[k] = TurnReference.mask(r);
@@ -278,16 +324,22 @@ public final class TurnProfileController {
             optional[k] = ref.optionalKeys(r);
             checkYaw[k] = ref.checkYaw(r);
             still[k] = ref.still(r);
-            jumps[k] = (keys[k] & TurnReference.KEY_JUMP) != 0;
+            jumps[k] = (keys[k] & TurnReference.KEY_JUMP) != 0 && (sc == null || !Double.isNaN(sc.slipAt(k)));
+            speedAmp[k] = r.getSpeedAmplifier();
+            jumpAmp[k] = r.getJumpBoostAmplifier();
         }
-        AngleSolverEngine.PathSnapshot snap = built.snapshot;
         TurnProfile profile = null;
         if (snap != null) {
             ForwardModel model = engine.forwardModel();
             profile = TurnProfile.compute(model, snap.spec, facing, null, false);
         }
-        current = new Current(0, ref.tasFirstTick(), facing, keys, checkKeys, optional, checkYaw, still, jumps,
-                ref.landing(), profile, null, TurnProfile.pixelDeg(sensitivity.get()), snap);
+        current.set(new Current(0, ref.tasFirstTick(), facing, keys, checkKeys, optional, checkYaw, still, jumps,
+                speedAmp, jumpAmp, ref.landing(), profile, null, TurnProfile.pixelDeg(sensitivity.get()), snap));
+    }
+
+    private void invalidateDeepChecks() {
+        deepGeneration.incrementAndGet();
+        deepDone.clear();
     }
 
     private boolean anyFlagged() {
@@ -331,20 +383,14 @@ public final class TurnProfileController {
         built.snapshot = snap;
         int n = last - first + 1;
         List<InputRow> next = new ArrayList<InputRow>();
-        boolean[] checkKeys = new boolean[n];
-        boolean[] checkYaw = new boolean[n];
-        boolean[] still = new boolean[n];
+        double[] facings = new double[n];
         for (int k = 0; k < n; k++) {
-            InputRow src = rows.get(first + k);
-            InputRow r = src.copy();
-            r.setYaw((float) Angles.wrap(snap.yaws[k]));
+            InputRow r = rows.get(first + k).copy();
             r.setYawLocked(false);
             next.add(r);
-            checkKeys[k] = src.isOnejumpKeys();
-            checkYaw[k] = src.getOnejumpFace() != InputRow.ONEJUMP_FACE_OFF;
-            still[k] = src.getOnejumpFace() == InputRow.ONEJUMP_FACE_STILL;
+            facings[k] = Angles.wrap(snap.yaws[k]);
         }
-        ref.replace(next, checkKeys, checkYaw, still);
+        ref.replace(next, facings);
         ref.setTasFirstTick(first);
         List<TurnReference.Landing> options = solverLandings(first, last + 1, first);
         if (!options.isEmpty()) ref.setLanding(options.get(options.size() - 1));
@@ -373,11 +419,11 @@ public final class TurnProfileController {
                     default: continue;
                 }
                 if (x) {
-                    if (!Double.isNaN(lo)) xLo = lo;
-                    if (!Double.isNaN(hi)) xHi = hi;
+                    if (!Double.isNaN(lo)) xLo = Double.isNaN(xLo) ? lo : Math.max(xLo, lo);
+                    if (!Double.isNaN(hi)) xHi = Double.isNaN(xHi) ? hi : Math.min(xHi, hi);
                 } else {
-                    if (!Double.isNaN(lo)) zLo = lo;
-                    if (!Double.isNaN(hi)) zHi = hi;
+                    if (!Double.isNaN(lo)) zLo = Double.isNaN(zLo) ? lo : Math.max(zLo, lo);
+                    if (!Double.isNaN(hi)) zHi = Double.isNaN(zHi) ? hi : Math.min(zHi, hi);
                 }
             }
             TurnReference.Landing l = new TurnReference.Landing(tick - base, xLo, xHi, zLo, zHi);
@@ -386,51 +432,71 @@ public final class TurnProfileController {
         return out;
     }
 
-    public void referenceChanged() {
-        refresh();
-    }
-
     public void clearAttempts() {
         document.clearAttempts();
-        deepDone.clear();
+        invalidateDeepChecks();
     }
 
     public void rate() {
-        Current cur = current;
+        Current cur = current.get();
         if (cur == null || !cur.canRate()) return;
-        ratePool = spread(cur, Math.max(1, spreadAttempts.get()));
+        int spreadLimit = spreadLimit();
+        int chunk = chunkSize();
+        ratePool = spread(cur, spreadLimit);
         ratedVersion = document.version();
-        if (rating) {
-            rateMore = true;
-            return;
+        ratedSpreadSetting = spreadLimit;
+        ratedChunkSetting = chunk;
+        synchronized (rateLock) {
+            if (rating) {
+                rateMore = true;
+                return;
+            }
+            rating = true;
+            rateMore = false;
         }
         double pixelDeg = TurnProfile.pixelDeg(sensitivity.get());
-        int chunk = Math.max(1000, sampleCount.get());
         ForwardModel model = engine.forwardModel();
         AtomicBoolean cancel = cancelToken;
         int gen = generation.get();
-        rating = true;
-        rateMore = false;
         worker.submit(() -> {
             AttemptSampler.Stats total = cur.attempts;
             long seed = AttemptSampler.SEED + (total == null ? 0L : total.attempts);
+            Current published = cur;
             while (!cancel.get() && gen == generation.get()) {
                 rateMore = false;
                 AttemptSampler.Stats part = AttemptSampler.sample(model, cur.snapshot.spec, cur.facing, ratePool, chunk, seed, cancel);
                 if (cancel.get() || gen != generation.get()) return;
                 seed += part.attempts;
                 total = AttemptSampler.merge(total, part);
-                current = cur.withAttempts(total, pixelDeg);
+                Current next = cur.withAttempts(total, pixelDeg);
+                if (!current.compareAndSet(published, next)) return;
+                published = next;
                 boolean enough = total.landings >= RATE_TARGET_LANDINGS || total.attempts >= RATE_MAX_SAMPLES;
-                if (enough && !rateMore) break;
+                if (!enough) continue;
+                synchronized (rateLock) {
+                    if (rateMore) continue;
+                    rating = false;
+                    return;
+                }
             }
-            rating = false;
+            synchronized (rateLock) {
+                if (gen == generation.get()) rating = false;
+            }
         });
     }
 
+    private int spreadLimit() {
+        return Math.max(1, spreadAttempts.get());
+    }
+
+    private int chunkSize() {
+        return Math.max(1000, sampleCount.get());
+    }
+
     public void autoRate() {
-        Current cur = current;
-        if (rating || cur == null || !cur.canRate() || ratedVersion == document.version()) return;
+        Current cur = current.get();
+        if (rating || cur == null || !cur.canRate()) return;
+        if (ratedVersion == document.version() && ratedSpreadSetting == spreadLimit() && ratedChunkSetting == chunkSize()) return;
         rate();
     }
 
@@ -444,10 +510,9 @@ public final class TurnProfileController {
             TurnAttempt a = all.get(i);
             if (a.isMacro() || a.recorded <= 0 || a.yaws == null || !a.alignedTo(cur)) continue;
             used++;
-            int m = Math.min(n, Math.min(a.recorded, a.yaws.length));
-            for (int t = 0; t < m; t++) {
-                if (Double.isNaN(a.yaws[t])) continue;
-                per.get(t).add(Angles.wrapDelta(a.yaws[t] - cur.facing[t]));
+            for (int t = 0; t < n; t++) {
+                double err = a.errorAt(cur, cur.startTick + t);
+                if (!Double.isNaN(err)) per.get(t).add(err);
             }
         }
         ratedSpread = used;
@@ -465,22 +530,29 @@ public final class TurnProfileController {
     }
 
     public void requestDeepChecks() {
-        Current cur = current;
+        Current cur = current.get();
         ExactJumpModel exact = engine.exactModel();
         if (cur == null || cur.snapshot == null || exact == null) return;
         List<TurnAttempt> candidates = new ArrayList<TurnAttempt>(document.top());
         candidates.addAll(document.favourites());
+        int gen = deepGeneration.get();
         for (TurnAttempt a : candidates) {
             if (a.solved() || !a.hasState() || !a.alignedTo(cur) || deepDone.contains(a) || !deepQueue.add(a)) continue;
             deep.submit(() -> {
-                double[] result = DeepCheck.solve(exact, cur, a, DeepCheck.BUDGET_NANOS, null);
-                if (result != null) {
-                    a.solvedOffset = result;
-                    deepDirty = true;
-                } else {
+                try {
+                    double[] result = DeepCheck.solve(exact, cur, a, DeepCheck.BUDGET_NANOS, null);
+                    if (gen != deepGeneration.get()) return;
+                    if (result != null) {
+                        a.solvedOffset = result;
+                        deepDirty = true;
+                    } else {
+                        deepDone.add(a);
+                    }
+                } catch (RuntimeException e) {
                     deepDone.add(a);
+                } finally {
+                    deepQueue.remove(a);
                 }
-                deepQueue.remove(a);
             });
         }
     }
@@ -503,7 +575,7 @@ public final class TurnProfileController {
 
     public TurnAttempt selectedAttempt() {
         int number = selectedNumber;
-        if (number < 0) return null;
+        if (number <= 0) return null;
         List<TurnAttempt> all = document.attempts();
         if (number <= all.size() && all.get(number - 1).number == number) return all.get(number - 1);
         for (TurnAttempt a : all) if (a.number == number) return a;
@@ -515,6 +587,6 @@ public final class TurnProfileController {
     }
 
     public Current current() {
-        return current;
+        return current.get();
     }
 }

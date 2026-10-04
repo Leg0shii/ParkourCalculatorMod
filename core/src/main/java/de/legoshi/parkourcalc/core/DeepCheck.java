@@ -66,8 +66,7 @@ public final class DeepCheck {
                                    int landingTick, double pixelDeg, TurnAttempt a, int t, long nanos,
                                    AtomicBoolean cancel) {
         TurnAttempt.Forecast f = a.forecast;
-        JumpPhysicsInputs slice = LandingForecast.slice(sc, t, f.x[t], sc.startPos.y, f.z[t], f.vx[t], 0.0, f.vz[t],
-                (float) a.yaws[t]);
+        JumpPhysicsInputs slice = sc.slice(t, f.x[t], sc.startPos.y, f.z[t], f.vx[t], 0.0, f.vz[t], (float) a.yaws[t]);
         List<JumpConstraint> shifted = new ArrayList<JumpConstraint>();
         for (JumpConstraint c : full.constraints) {
             if (c.mode == JumpConstraint.Mode.F) continue;
@@ -105,11 +104,9 @@ public final class DeepCheck {
         if (best >= 0.0) return best;
         JumpSpec legal = new JumpSpec(slice, others, objective);
         r = run(exact, legal, CertifiedBnb.Mode.OPTIMIZE, seed, slice, end, cancel);
-        if (r.declined) return Double.isNaN(best) ? Double.NaN : best;
+        if (r.declined) return best;
         if (r.feasible && r.yawsDeg != null) best = Math.max(best, grid.search(r.yawsDeg, end));
-        if (!Double.isNaN(best)) return best;
-        boolean stopped = System.nanoTime() >= end || r.nodes >= NODE_CAP || (cancel != null && cancel.get());
-        return stopped ? Double.NaN : Double.NEGATIVE_INFINITY;
+        return best;
     }
 
     private static final class Grid {

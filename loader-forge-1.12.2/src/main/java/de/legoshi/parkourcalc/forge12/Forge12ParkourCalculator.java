@@ -118,6 +118,7 @@ public class Forge12ParkourCalculator {
                 Forge12WorldDescriptors::current
         ));
         application.setPlaybackBridge(playbackBridge);
+        application.getRecorder().setKeyCodes("lwjgl2");
         application.setBlockPicker(new Forge12BlockPicker());
         application.initSettingsStorage(configPath);
         blockCaptureEnabled = application.getSettings().experimentalBlockCapture;

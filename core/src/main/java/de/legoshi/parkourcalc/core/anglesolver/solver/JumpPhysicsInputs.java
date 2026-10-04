@@ -108,6 +108,57 @@ public final class JumpPhysicsInputs {
         return c;
     }
 
+    public JumpPhysicsInputs slice(int from, double x, double y, double z, double vx, double vy, double vz, float yaw) {
+        int m = numTicks - from;
+        JumpPhysicsInputs c = new JumpPhysicsInputs(m);
+        c.startPos = new Vec3dCore(x, y, z);
+        c.startYaw = yaw;
+        c.initialVelocity = new Vec3dCore(vx, vy, vz);
+        c.startBox = null;
+        c.jumpTick = jumpTick < from ? -1 : jumpTick - from;
+        c.strafeSign = strafeSign;
+        c.liveAirSprintFactor = liveAirSprintFactor;
+        c.incomingSprint = from == 0 ? incomingSprint : Boolean.valueOf(sprintAt(from - 1));
+        c.incomingAmp = from == 0 ? incomingAmp : Integer.valueOf(speedAmplifierAt(from - 1));
+        boolean[] jump = new boolean[m];
+        boolean[] strafe = new boolean[m];
+        int[] amp = new int[m];
+        double[] slip = new double[m];
+        SurfaceKind[] surface = new SurfaceKind[m];
+        int[] soulsand = new int[m];
+        boolean[] sneak = new boolean[m];
+        boolean[] locked = new boolean[m];
+        boolean[] sprint = new boolean[m];
+        float[] fwd = new float[m];
+        float[] str = new float[m];
+        for (int k = 0; k < m; k++) {
+            int i = from + k;
+            jump[k] = jumpAt(i);
+            strafe[k] = strafeAt(i);
+            amp[k] = speedAmplifierAt(i);
+            slip[k] = slipAt(i);
+            surface[k] = surfaceAt(i);
+            soulsand[k] = soulsandCellsAt(i);
+            sneak[k] = sneakAt(i);
+            locked[k] = yawLockedPerTick != null && i < yawLockedPerTick.length && yawLockedPerTick[i];
+            sprint[k] = sprintAt(i);
+            fwd[k] = forwardAt(i);
+            str[k] = strafeInputAt(i);
+        }
+        c.jumpPerTick = jump;
+        c.strafePerTick = strafe;
+        c.speedAmplifier = amp;
+        c.slipPerTick = slip;
+        c.surfacePerTick = surface;
+        c.soulsandCellsPerTick = soulsand;
+        c.sneakPerTick = sneak;
+        c.yawLockedPerTick = locked;
+        c.sprintPerTick = sprint;
+        c.forwardInputPerTick = fwd;
+        c.strafeInputPerTick = str;
+        return c;
+    }
+
     public int speedAmplifierAt(int tick) {
         if (speedAmplifier == null || tick < 0 || tick >= speedAmplifier.length) return 0;
         return speedAmplifier[tick];

@@ -81,7 +81,7 @@ public class DeepCheckTest {
                 ground[t] = !Double.isNaN(sc.slipAt(t));
             }
             double margin = cur.landing.margin(p.posX[n], p.posZ[n]);
-            TurnAttempt.Forecast fc = new TurnAttempt.Forecast(null, null, null, null, null, -1, x, z, vx, vz, ground);
+            TurnAttempt.Forecast fc = new TurnAttempt.Forecast(null, null, null, -1, x, z, vx, vz, ground);
             return new TurnAttempt(1, 0, yaws, n, true, margin <= 0.0, false, "", margin, -1, -1, 0, 0, 0, null, null,
                     null, false, Double.NaN, fc);
         }
@@ -128,7 +128,7 @@ public class DeepCheckTest {
     @Test
     public void anAttemptWithoutStateIsNotSolved() {
         Rig rig = new Rig();
-        TurnAttempt a = new TurnAttempt(1, 0, rig.cur.facing.clone(), rig.n, true, true, false, "", -0.1, -1, -1, 0, 0, 0);
+        TurnAttempt a = new TurnAttempt(1, 0, rig.cur.facing.clone(), rig.n, true, true, false, "", -0.1, -1, -1, 0, 0, 0, null, null, null, false, Double.NaN, null);
         assertNull(DeepCheck.solve(rig.model, rig.cur, a, DeepCheck.BUDGET_NANOS, null));
         assertNull(a.forecast);
     }

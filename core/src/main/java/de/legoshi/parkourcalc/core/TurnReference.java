@@ -71,10 +71,6 @@ public final class TurnReference {
             return Math.max(below, above);
         }
 
-        public String label() {
-            return label(0);
-        }
-
         public String label(int base) {
             StringBuilder sb = new StringBuilder("tick ").append(base + tick + 1);
             if (hasX()) sb.append("  X ").append(bounds(xLo, xHi));
@@ -90,12 +86,9 @@ public final class TurnReference {
     }
 
     private final InputData data = new InputData();
+    private double[] facing = new double[0];
     private Landing landing;
     private int tasFirstTick = -1;
-
-    public InputData data() {
-        return data;
-    }
 
     public int size() {
         return data.size();
@@ -109,16 +102,15 @@ public final class TurnReference {
         return data.get(i);
     }
 
-    public int keys(int i) {
-        return mask(data.get(i));
+    public double facing(int i) {
+        return facing[i];
     }
 
     public double[] facings() {
-        double[] out = new double[data.size()];
+        double[] out = new double[facing.length];
         double prev = 0.0;
         for (int i = 0; i < out.length; i++) {
-            Float yaw = data.get(i).getYaw();
-            if (yaw != null) prev = yaw;
+            if (!Double.isNaN(facing[i])) prev = facing[i];
             out[i] = prev;
         }
         return out;
@@ -132,29 +124,12 @@ public final class TurnReference {
         return row.getOnejumpFace() != InputRow.ONEJUMP_FACE_OFF;
     }
 
-    public void setCheckKeys(InputRow row, boolean value) {
-        row.setOnejumpKeys(value);
-    }
-
-    public void setCheckYaw(InputRow row, boolean value) {
-        row.setOnejumpFace(value ? InputRow.ONEJUMP_FACE_CHECK : InputRow.ONEJUMP_FACE_OFF);
-    }
-
     public int optionalKeys(InputRow row) {
         return optionalMask(row);
     }
 
-    public void setOptionalKeys(InputRow row, int mask) {
-        applyOptional(row, mask);
-    }
-
     public boolean still(InputRow row) {
         return row.getOnejumpFace() == InputRow.ONEJUMP_FACE_STILL;
-    }
-
-    public void setStill(InputRow row, boolean value) {
-        if (value) row.setOnejumpFace(InputRow.ONEJUMP_FACE_STILL);
-        else if (still(row)) row.setOnejumpFace(InputRow.ONEJUMP_FACE_CHECK);
     }
 
     public Landing landing() {
@@ -173,35 +148,26 @@ public final class TurnReference {
         tasFirstTick = tick;
     }
 
-    public void replace(List<InputRow> rows, boolean[] checkKeys, boolean[] checkYaw) {
-        replace(rows, checkKeys, checkYaw, null);
-    }
-
-    public void replace(List<InputRow> rows, boolean[] checkKeys, boolean[] checkYaw, boolean[] still) {
+    public void replace(List<InputRow> rows, double[] facings) {
         data.clear();
+        facing = new double[rows.size()];
         for (int i = 0; i < rows.size(); i++) {
             InputRow r = rows.get(i).copy();
+            if (facings != null) {
+                facing[i] = facings[i];
+                r.setYaw(Double.isNaN(facings[i]) ? null : Float.valueOf((float) facings[i]));
+            } else {
+                Float yaw = r.getYaw();
+                facing[i] = yaw == null ? Double.NaN : yaw;
+            }
             data.insertRow(i, r);
-            r.setOnejumpKeys(checkKeys == null || checkKeys[i]);
-            boolean face = checkYaw == null || checkYaw[i];
-            boolean quiet = still != null && still[i];
-            r.setOnejumpFace(quiet ? InputRow.ONEJUMP_FACE_STILL : face ? InputRow.ONEJUMP_FACE_CHECK : InputRow.ONEJUMP_FACE_OFF);
         }
     }
 
     public void copyFrom(TurnReference other) {
         List<InputRow> rows = new ArrayList<InputRow>();
-        boolean[] ck = new boolean[other.size()];
-        boolean[] cy = new boolean[other.size()];
-        boolean[] st = new boolean[other.size()];
-        for (int i = 0; i < other.size(); i++) {
-            InputRow r = other.row(i);
-            rows.add(r);
-            ck[i] = other.checkKeys(r);
-            cy[i] = other.checkYaw(r);
-            st[i] = other.still(r);
-        }
-        replace(rows, ck, cy, st);
+        for (int i = 0; i < other.size(); i++) rows.add(other.row(i));
+        replace(rows, other.facing);
         landing = other.landing;
         tasFirstTick = other.tasFirstTick;
     }
@@ -219,10 +185,7 @@ public final class TurnReference {
             InputRow a = row(i);
             InputRow b = other.row(i);
             if (mask(a) != mask(b) || a.isOnejumpKeys() != b.isOnejumpKeys() || a.getOnejumpFace() != b.getOnejumpFace()
-                    || optionalMask(a) != optionalMask(b)) return false;
-            Float ya = a.getYaw();
-            Float yb = b.getYaw();
-            if (ya == null ? yb != null : !ya.equals(yb)) return false;
+                    || optionalMask(a) != optionalMask(b) || !same(facing[i], other.facing[i])) return false;
         }
         return true;
     }
@@ -231,15 +194,11 @@ public final class TurnReference {
         return Double.isNaN(a) ? Double.isNaN(b) : a == b;
     }
 
-    public void clear() {
-        data.clear();
-        landing = null;
-        tasFirstTick = -1;
-    }
-
     static final InputRow.Key[] KEYS = {InputRow.Key.W, InputRow.Key.A, InputRow.Key.S, InputRow.Key.D,
             InputRow.Key.JUMP, InputRow.Key.SNEAK, InputRow.Key.SPRINT};
     static final int[] BITS = {KEY_W, KEY_A, KEY_S, KEY_D, KEY_JUMP, KEY_SNEAK, KEY_SPRINT};
+    public static final String[] LABELS = {"W", "A", "S", "D", "Spr", "Spc", "Snk"};
+    public static final int[] LABEL_BITS = {KEY_W, KEY_A, KEY_S, KEY_D, KEY_SPRINT, KEY_JUMP, KEY_SNEAK};
 
     public static int mask(InputRow row) {
         int mask = 0;
@@ -273,12 +232,10 @@ public final class TurnReference {
 
     public static String describe(int mask) {
         StringBuilder sb = new StringBuilder();
-        String[] labels = {"W", "A", "S", "D", "Spr", "Spc", "Snk"};
-        int[] bits = {KEY_W, KEY_A, KEY_S, KEY_D, KEY_SPRINT, KEY_JUMP, KEY_SNEAK};
-        for (int i = 0; i < bits.length; i++) {
-            if ((mask & bits[i]) == 0) continue;
+        for (int i = 0; i < LABEL_BITS.length; i++) {
+            if ((mask & LABEL_BITS[i]) == 0) continue;
             if (sb.length() > 0) sb.append(' ');
-            sb.append(labels[i]);
+            sb.append(LABELS[i]);
         }
         return sb.length() == 0 ? "-" : sb.toString();
     }

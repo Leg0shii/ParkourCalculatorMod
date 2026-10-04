@@ -20,10 +20,14 @@ public final class TurnProfileDocument {
         public final int inputAttempts;
         public final int inputClears;
         public final int[] missBands;
+        public final int[] failedAt;
+        public final int failedTotal;
 
         Stats(int attempts, int landings, int inputFailures, int turnFailures, double closest, int mouseAttempts,
-              int mouseClears, int inputAttempts, int inputClears, int[] missBands) {
+              int mouseClears, int inputAttempts, int inputClears, int[] missBands, int[] failedAt, int failedTotal) {
             this.missBands = missBands;
+            this.failedAt = failedAt;
+            this.failedTotal = failedTotal;
             this.attempts = attempts;
             this.landings = landings;
             this.inputFailures = inputFailures;
@@ -59,8 +63,11 @@ public final class TurnProfileDocument {
     private int mouseClears;
     private int inputAttempts;
     private int inputClears;
-    private volatile Stats stats = new Stats(0, 0, 0, 0, Double.NaN, 0, 0, 0, 0, new int[MISS_BANDS]);
+    private int[] failedAt = new int[0];
+    private int failedTotal;
+    private volatile Stats stats = new Stats(0, 0, 0, 0, Double.NaN, 0, 0, 0, 0, new int[MISS_BANDS], new int[0], 0);
     private volatile int version;
+    private int maxNumber;
 
     public TurnReference reference() {
         return reference;
@@ -100,7 +107,7 @@ public final class TurnProfileDocument {
     }
 
     public int nextNumber() {
-        return attempts.size() + 1;
+        return maxNumber + 1;
     }
 
     public void add(TurnAttempt attempt) {
@@ -113,7 +120,23 @@ public final class TurnProfileDocument {
 
     private Stats snapshot() {
         return new Stats(real, landings, inputFailures, turnFailures, closest, mouseAttempts, mouseClears, inputAttempts,
-                inputClears, missBands.clone());
+                inputClears, missBands.clone(), failedAt.clone(), failedTotal);
+    }
+
+    private void accountFailed(TurnAttempt a) {
+        if (!a.judged() || a.landed) return;
+        int lt = a.failedTick();
+        if (lt < 0) return;
+        if (lt >= failedAt.length) failedAt = java.util.Arrays.copyOf(failedAt, lt + 1);
+        failedAt[lt]++;
+        failedTotal++;
+    }
+
+    public void recountFailed() {
+        failedAt = new int[0];
+        failedTotal = 0;
+        for (TurnAttempt a : attempts) if (!a.isMacro()) accountFailed(a);
+        stats = snapshot();
     }
 
     private void zero() {
@@ -126,7 +149,10 @@ public final class TurnProfileDocument {
         mouseClears = 0;
         inputAttempts = 0;
         inputClears = 0;
+        maxNumber = 0;
         java.util.Arrays.fill(missBands, 0);
+        failedAt = new int[0];
+        failedTotal = 0;
     }
 
     public void clearAttempts() {
@@ -189,18 +215,20 @@ public final class TurnProfileDocument {
     }
 
     private void account(TurnAttempt a) {
+        maxNumber = Math.max(maxNumber, a.number);
         if (a.favourite) favourites.add(a);
-        if (a.macro == 1) {
+        if (a.macro == PracticeMacro.INPUTS) {
             a.ordinal = ++mouseAttempts;
             if (a.landed) mouseClears++;
             return;
         }
-        if (a.macro == 2) {
+        if (a.macro == PracticeMacro.TURN) {
             a.ordinal = ++inputAttempts;
             if (a.landed) inputClears++;
             return;
         }
         a.ordinal = ++real;
+        accountFailed(a);
         int band = a.missBand();
         if (band >= 0) missBands[band]++;
         if (a.inputFailure) inputFailures++;

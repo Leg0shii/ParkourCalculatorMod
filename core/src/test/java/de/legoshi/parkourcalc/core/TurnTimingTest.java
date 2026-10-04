@@ -78,17 +78,15 @@ public class TurnTimingTest {
         float[] phases = {0.1f, 0.5f, 0.3f, 0.9f, 0.7f};
         for (int i = 0; i < phases.length; i++) {
             list.add(new TurnAttempt(i + 1, 4, new double[] {0, 0, 0}, 3, true, true, false, "", -0.1, -1, -1, 0, 0, 0,
-                    new float[] {Float.NaN, phases[i], Float.NaN}, new float[] {Float.NaN, 1f, Float.NaN}, null));
+                    new float[] {Float.NaN, phases[i], Float.NaN}, new float[] {Float.NaN, 1f, Float.NaN}, null, false, Double.NaN, null));
         }
         list.add(new TurnAttempt(9, 4, new double[] {0, 0, 0}, 3, true, false, true, "", Double.NaN, -1, 5, 0, 0, 0,
-                new float[] {0f, 0f, 0f}, new float[] {1f, 1f, 1f}, null));
-        list.add(new TurnAttempt(10, 4, new double[] {0, 0, 0}, 3, true, true, false, "", -0.1, -1, -1, 0, 0, 0));
+                new float[] {0f, 0f, 0f}, new float[] {1f, 1f, 1f}, null, false, Double.NaN, null));
+        list.add(new TurnAttempt(10, 4, new double[] {0, 0, 0}, 3, true, true, false, "", -0.1, -1, -1, 0, 0, 0, null, null, null, false, Double.NaN, null));
         TurnTiming.Onset o = TurnTiming.onset(list, 5, 100);
         assertNotNull(o);
         assertEquals(5, o.attempts);
         assertEquals(0.5, o.median, 1e-6);
-        assertEquals(0.18, o.lo, 1e-6);
-        assertEquals(0.82, o.hi, 1e-6);
         assertNull(TurnTiming.onset(list, 4, 100));
         assertEquals(2, TurnTiming.onset(list, 5, 2).attempts);
         assertEquals("25 ms", TurnTiming.ms(0.5));
@@ -99,7 +97,8 @@ public class TurnTimingTest {
         double[] facing = {0.0, 1.0, 40.0, 42.0, -178.0};
         int n = facing.length;
         TurnProfileController.Current cur = new TurnProfileController.Current(3, -1, facing, new int[n], new boolean[n],
-                new int[n], new boolean[n], new boolean[n], new boolean[n], null, null, null, 0.1, null);
+                new int[n], new boolean[n], new boolean[n], new boolean[n], new int[n], new int[n], null, null, null, 0.1,
+                null);
         assertEquals(3, TurnTiming.mainTurnTick(cur));
     }
 }

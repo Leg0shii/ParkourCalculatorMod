@@ -7,6 +7,7 @@ import de.legoshi.parkourcalc.core.TurnAttempt;
 import de.legoshi.parkourcalc.core.TurnProfileController;
 import de.legoshi.parkourcalc.core.TurnProfileDocument;
 import de.legoshi.parkourcalc.core.TurnReference;
+import de.legoshi.parkourcalc.core.TurnTiming;
 import de.legoshi.parkourcalc.core.anglesolver.profile.AttemptSampler;
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
 import de.legoshi.parkourcalc.core.ui.Settings;
@@ -49,6 +50,10 @@ public final class OnejumpSetupWindow implements RenderInterface {
     private final ImBoolean open = new ImBoolean(false);
     private boolean openClearModal;
     private int attemptsPage;
+    private TurnTiming.Onset onsetCache;
+    private int onsetVersion = -1;
+    private int onsetTick = -1;
+    private int onsetLimit = -1;
 
     public OnejumpSetupWindow(TurnProfileController controller, AttemptTracker tracker, Settings settings,
                               Runnable onSettingsChanged) {
@@ -125,7 +130,8 @@ public final class OnejumpSetupWindow implements RenderInterface {
     }
 
     private static final String[] OVERVIEW_LABELS = {"TAS", "Landing", "Attempts", "Landed", "Input failures",
-            "Landing chance", "Closest", "Missed by", "Failed at", "Replay (inputs)", "Replay (turn)", "Top 10", "Latest"};
+            "Landing chance", "Closest", "Missed by", "Failed at", "Turn onset", "Replay (inputs)", "Replay (turn)", "Top 10",
+            "Latest"};
 
     private void overview(TurnProfileDocument doc, TurnProfileController.Current cur, float scale) {
         TurnProfileDocument.Stats st = doc.stats();
@@ -139,15 +145,14 @@ public final class OnejumpSetupWindow implements RenderInterface {
         overviewRow("TAS", name == null ? "unsaved, attempts are not kept" : storeError == null ? name
                 : name + "  (attempts file unreadable, nothing is written: " + storeError + ")", labelW,
                 name == null || storeError != null);
-        int tasFirst = doc.reference().tasFirstTick();
         String err = controller.lastError();
         TurnReference.Landing landing = cur == null ? null : cur.landing;
-        overviewRow("Landing", landing != null ? landing.label(tasFirst) : cur == null
+        overviewRow("Landing", landing != null ? landing.label(0) : cur == null
                 ? (err != null ? err : "mark Keys and Face ticks in the input table")
                 : "no X or Z constraint after the reference, attempts are not judged", labelW, landing == null);
         overviewRow("Attempts", Integer.toString(st.attempts), labelW, false);
         overviewRow("Input failures", Integer.toString(st.inputFailures), labelW, false);
-        String failed = LandingForecast.failedSummary(doc.attempts(), Integer.MAX_VALUE);
+        String failed = LandingForecast.failedSummary(st.failedAt, st.failedTotal);
         overviewRow("Failed at", failed == null ? "-" : failed, labelW, failed == null);
         int[] bands = st.missBands;
         boolean anyBand = bands[0] + bands[1] + bands[2] + bands[3] > 0;
@@ -156,6 +161,13 @@ public final class OnejumpSetupWindow implements RenderInterface {
         overviewRow("Closest", st.hasClosest() ? TurnAttempt.signedMargin(st.closest) : "-", labelW, !st.hasClosest());
         overviewRow("Landed", Integer.toString(st.landings), labelW, false);
         overviewRow("Landing chance", landingChance(cur), labelW, cur == null || cur.attempts == null);
+        if (settings.onejumpTurnTiming && cur != null) {
+            int mainTurn = TurnTiming.mainTurnTick(cur);
+            TurnTiming.Onset onset = mainTurn < 0 ? null
+                    : onset(doc, cur.startTick + mainTurn, Math.max(1, settings.onejumpSpreadAttempts));
+            overviewRow("Turn onset", onset == null ? "-" : String.format(Locale.ROOT, "%s into tick %d  (%d attempts)",
+                    TurnTiming.ms(onset.median), mainTurn + 1, onset.attempts), labelW, onset == null);
+        }
         if (st.mouseAttempts > 0) overviewRow(PracticeMacro.LABEL_INPUTS, practiceText(st.mouseAttempts, st.mouseClears), labelW, false);
         if (st.inputAttempts > 0) overviewRow(PracticeMacro.LABEL_TURN, practiceText(st.inputAttempts, st.inputClears), labelW, false);
         ThemeManager.sectionSpacing();
@@ -172,6 +184,17 @@ public final class OnejumpSetupWindow implements RenderInterface {
         List<TurnAttempt> latest = new ArrayList<TurnAttempt>();
         for (int i = all.size() - 1; i >= 0 && latest.size() < LATEST; i--) latest.add(all.get(i));
         attemptsTable("##attemptsLatest", latest, listHeight(latest, scale), false);
+    }
+
+    private TurnTiming.Onset onset(TurnProfileDocument doc, int tick, int limit) {
+        int version = doc.version();
+        if (version != onsetVersion || tick != onsetTick || limit != onsetLimit) {
+            onsetCache = TurnTiming.onset(doc.attempts(), tick, limit);
+            onsetVersion = version;
+            onsetTick = tick;
+            onsetLimit = limit;
+        }
+        return onsetCache;
     }
 
     private static float listHeight(List<TurnAttempt> list, float scale) {
@@ -311,7 +334,7 @@ public final class OnejumpSetupWindow implements RenderInterface {
                 ThemeManager.pushTextColor(ThemeManager.textMutedColor());
                 ImGui.text("(?)");
                 ThemeManager.popTextColor();
-                TooltipUtil.onHover(a.macro == 1 ? PracticeMacro.LABEL_INPUTS : PracticeMacro.LABEL_TURN);
+                TooltipUtil.onHover(a.macro == PracticeMacro.INPUTS ? PracticeMacro.LABEL_INPUTS : PracticeMacro.LABEL_TURN);
             }
         }
         ThemeManager.endStandardTable();
@@ -355,7 +378,7 @@ public final class OnejumpSetupWindow implements RenderInterface {
     private void dangerZone() {
         ThemeManager.sectionSpacing();
         ImGui.textDisabled("Danger zone");
-        int count = controller.stats().attempts;
+        int count = controller.document().attempts().size();
         if (count == 0) {
             Controls.disabledButton("Clear attempts");
         } else if (Controls.dangerButton("Clear attempts")) {
@@ -370,7 +393,7 @@ public final class OnejumpSetupWindow implements RenderInterface {
             openClearModal = false;
         }
         if (!Modal.begin("Clear attempts", POPUP_CLEAR)) return;
-        int count = controller.stats().attempts;
+        int count = controller.document().attempts().size();
         String name = controller.name();
         ImGui.text("Delete all " + count + " attempts of '" + (name != null ? name : "this TAS") + "'?");
         ImGui.textDisabled("The reference stays.");

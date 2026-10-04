@@ -63,7 +63,7 @@ public class AttemptSamplerTest {
     public void noSpreadLandsEveryAttempt() {
         Loaded l = load();
         int n = l.recorded.length;
-        AttemptSampler.Stats s = AttemptSampler.sample(l.model, l.spec, l.recorded, spread(n, 0.0, 0), 200,
+        AttemptSampler.Stats s = AttemptSampler.sample(l.model, l.spec, l.recorded, spread(n, 0.0, 0), 200, AttemptSampler.SEED,
                 new AtomicBoolean(false));
         assertEquals(200, s.attempts);
         assertEquals(200, s.landings);
@@ -79,7 +79,7 @@ public class AttemptSamplerTest {
     public void reservoirsStayBounded() {
         Loaded l = load();
         int n = l.recorded.length;
-        AttemptSampler.Stats s = AttemptSampler.sample(l.model, l.spec, l.recorded, spread(n, 3.0, 10), 3000,
+        AttemptSampler.Stats s = AttemptSampler.sample(l.model, l.spec, l.recorded, spread(n, 3.0, 10), 3000, AttemptSampler.SEED,
                 new AtomicBoolean(false));
         assertTrue(s.failed.length <= AttemptSampler.RESERVOIR);
         assertTrue(s.landed.length <= AttemptSampler.RESERVOIR);
@@ -92,7 +92,7 @@ public class AttemptSamplerTest {
         Loaded l = load();
         int n = l.recorded.length;
         double px = TurnProfile.pixelDeg(0.5f);
-        AttemptSampler.Stats s = AttemptSampler.sample(l.model, l.spec, l.recorded, spread(n, 6.0 * px, 10), 2000,
+        AttemptSampler.Stats s = AttemptSampler.sample(l.model, l.spec, l.recorded, spread(n, 6.0 * px, 10), 2000, AttemptSampler.SEED,
                 new AtomicBoolean(false));
         assertEquals(2000, s.attempts);
         assertTrue("rate " + s.rate(), s.rate() < 1.0);
@@ -108,9 +108,9 @@ public class AttemptSamplerTest {
         Loaded l = load();
         int n = l.recorded.length;
         double px = TurnProfile.pixelDeg(0.5f);
-        AttemptSampler.Stats a = AttemptSampler.sample(l.model, l.spec, l.recorded, spread(n, 6.0 * px, 10), 1000,
+        AttemptSampler.Stats a = AttemptSampler.sample(l.model, l.spec, l.recorded, spread(n, 6.0 * px, 10), 1000, AttemptSampler.SEED,
                 new AtomicBoolean(false));
-        AttemptSampler.Stats b = AttemptSampler.sample(l.model, l.spec, l.recorded, spread(n, 6.0 * px, 10), 1000,
+        AttemptSampler.Stats b = AttemptSampler.sample(l.model, l.spec, l.recorded, spread(n, 6.0 * px, 10), 1000, AttemptSampler.SEED,
                 new AtomicBoolean(false));
         assertEquals(a.landings, b.landings);
         for (int t = 0; t < n; t++) assertEquals(a.landedLo[t], b.landedLo[t], 0.0);
@@ -121,7 +121,7 @@ public class AttemptSamplerTest {
         Loaded l = load();
         AtomicBoolean cancel = new AtomicBoolean(true);
         AttemptSampler.Stats s = AttemptSampler.sample(l.model, l.spec, l.recorded, spread(l.recorded.length, 1.0, 0),
-                5000, cancel);
+                5000, AttemptSampler.SEED, cancel);
         assertEquals(0, s.attempts);
     }
 }

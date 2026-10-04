@@ -93,7 +93,7 @@ public class LandingForecastTest {
     public void aSliceReproducesTheFullPathByteExactly() {
         Rig rig = new Rig();
         for (int t0 = 1; t0 < rig.n; t0++) {
-            JumpPhysicsInputs slice = LandingForecast.slice(rig.sc, t0, rig.full.posX[t0], rig.full.posY[t0],
+            JumpPhysicsInputs slice = rig.sc.slice(t0, rig.full.posX[t0], rig.full.posY[t0],
                     rig.full.posZ[t0], rig.full.velX[t0], rig.full.velY[t0], rig.full.velZ[t0], (float) rig.game[t0]);
             assertEquals(rig.n - t0, slice.numTicks);
             ForwardPath tail = rig.model.forward(slice, Arrays.copyOfRange(rig.game, t0, rig.n));
@@ -110,7 +110,7 @@ public class LandingForecastTest {
     public void theVerticalStateDoesNotTouchTheHorizontalPath() {
         Rig rig = new Rig();
         for (int t0 = 1; t0 < rig.n; t0++) {
-            JumpPhysicsInputs slice = LandingForecast.slice(rig.sc, t0, rig.full.posX[t0], rig.sc.startPos.y,
+            JumpPhysicsInputs slice = rig.sc.slice(t0, rig.full.posX[t0], rig.sc.startPos.y,
                     rig.full.posZ[t0], rig.full.velX[t0], 0.0, rig.full.velZ[t0], (float) rig.game[t0]);
             ForwardPath tail = rig.model.forward(slice, Arrays.copyOfRange(rig.game, t0, rig.n));
             assertEquals(rig.full.posX[rig.n], tail.posX[rig.n - t0], 0.0);
@@ -122,7 +122,7 @@ public class LandingForecastTest {
     public void holdingThePlanFromTheTruePathPredictsTheRealLanding() {
         Rig rig = new Rig();
         LandingForecast f = rig.forecastWithSpare(0.5);
-        assertEquals(rig.n, f.landingIndex());
+        assertTrue(f.covers(rig.n - 1));
         assertFalse(f.covers(rig.n));
         for (int t = 0; t < rig.n; t++) {
             assertTrue(f.covers(t));
@@ -133,8 +133,6 @@ public class LandingForecastTest {
             assertEquals("tick " + t, -0.5, r.held, 0.0);
             assertTrue("tick " + t, r.best <= r.held);
             assertTrue("tick " + t, r.landable());
-            assertTrue("tick " + t, r.hasWindow());
-            assertTrue("tick " + t, r.offsetLoDeg <= 0.0 && r.offsetHiDeg >= 0.0);
         }
         assertNull(f.at(rig.n, 0, 0, 0, 0, 0f, true));
     }
@@ -183,7 +181,7 @@ public class LandingForecastTest {
             LandingForecast.Result r = f.at(t, rig.full.posX[t], rig.full.posZ[t], rig.full.velX[t], rig.full.velZ[t],
                     (float) rig.game[t], rig.ground(t));
             assertTrue("tick " + t, r.landable());
-            for (double off : new double[] {r.offsetLoDeg, r.offsetHiDeg}) {
+            for (double off : new double[] {0.0, r.bestOffsetDeg}) {
                 double[] abs = rig.cur.facing.clone();
                 for (int k = t + 1; k < rig.n; k++) abs[k] += off;
                 double[] game = rig.sc.toGameFacings(abs);
@@ -212,10 +210,10 @@ public class LandingForecastTest {
         int[] failed = {8, 8, 8, 7, 9, -1};
         for (int i = 0; i < failed.length; i++) {
             list.add(new TurnAttempt(i + 1, 0, new double[] {0}, 1, true, false, false, "", 0.1, -1, -1, 0, 0, 0, null, null,
-                    null, false, Double.NaN, new TurnAttempt.Forecast(null, null, null, null, null, failed[i])));
+                    null, false, Double.NaN, new TurnAttempt.Forecast(null, null, null, failed[i], null, null, null, null, null)));
         }
         list.add(new TurnAttempt(9, 0, new double[] {0}, 1, true, true, false, "", -0.1, -1, -1, 0, 0, 0, null, null, null,
-                false, Double.NaN, new TurnAttempt.Forecast(null, null, null, null, null, 3)));
+                false, Double.NaN, new TurnAttempt.Forecast(null, null, null, 3, null, null, null, null, null)));
         String s = LandingForecast.failedSummary(list, 100);
         assertEquals("tick 9 (60%), tick 8 (20%), tick 10 (20%)  of 5 failed", s);
         assertNull(LandingForecast.failedSummary(list.subList(5, 7), 100));

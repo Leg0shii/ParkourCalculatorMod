@@ -624,6 +624,7 @@ public final class Forge8PlaybackBridge implements PlaybackBridge {
         Minecraft mc = Minecraft.getMinecraft();
         EntityPlayerSP client = mc.thePlayer;
         if (client != null) restorePlaybackInput(client);
+        else resetInputOverride();
         endGhostPlayback();
         mc.objectMouseOver = null;
     }

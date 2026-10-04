@@ -31,7 +31,6 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.IntConsumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -262,20 +261,13 @@ public final class InputOverlay {
         final String altLabel;
         final Predicate<InputRow> alt;
         final Consumer<InputRow> altToggle;
-        final Function<InputRow, String> labelOf;
 
         public RowFlag(String label, String tooltip, Predicate<InputRow> get, Consumer<InputRow> toggle) {
-            this(label, tooltip, get, toggle, null, null, null, null);
+            this(label, tooltip, get, toggle, null, null, null);
         }
 
         public RowFlag(String label, String tooltip, Predicate<InputRow> get, Consumer<InputRow> toggle,
                        String altLabel, Predicate<InputRow> alt, Consumer<InputRow> altToggle) {
-            this(label, tooltip, get, toggle, altLabel, alt, altToggle, null);
-        }
-
-        public RowFlag(String label, String tooltip, Predicate<InputRow> get, Consumer<InputRow> toggle,
-                       String altLabel, Predicate<InputRow> alt, Consumer<InputRow> altToggle,
-                       Function<InputRow, String> labelOf) {
             this.label = label;
             this.tooltip = tooltip;
             this.get = get;
@@ -283,7 +275,10 @@ public final class InputOverlay {
             this.altLabel = altLabel;
             this.alt = alt;
             this.altToggle = altToggle;
-            this.labelOf = labelOf;
+        }
+
+        void set(InputRow row, boolean value) {
+            if (get.test(row) != value) toggle.accept(row);
         }
     }
 
@@ -291,10 +286,7 @@ public final class InputOverlay {
     private RowFlag[] rowFlags = NO_FLAGS;
     private BooleanSupplier rowFlagsVisible = () -> true;
     private BooleanSupplier shortcutsEnabled = () -> true;
-    private RowFlag flagDrag;
-    private int flagStartRow = -1;
-    private int flagCurrentRow = -1;
-    private boolean flagTarget;
+    private boolean flagMenuHovered;
 
     public void setRowFlags(BooleanSupplier visible, RowFlag... flags) {
         this.rowFlagsVisible = visible;
@@ -516,24 +508,6 @@ public final class InputOverlay {
         if (dragChangeStart >= 0) {
             notifyChange(dragChangeStart);
         }
-        updateFlagDrag();
-    }
-
-    private void updateFlagDrag() {
-        if (flagDrag == null) return;
-        if (ImGui.isMouseDown(0)) {
-            int at = keyDragSelect.rowAtY(ImGui.getMousePos().y);
-            if (at >= 0) flagCurrentRow = at;
-            return;
-        }
-        int lo = Math.min(flagStartRow, flagCurrentRow);
-        int hi = Math.max(flagStartRow, flagCurrentRow);
-        List<InputRow> rows = data.getRows();
-        for (int i = Math.max(0, lo); i <= hi && i < rows.size(); i++) {
-            if (flagDrag.get.test(rows.get(i)) != flagTarget) flagDrag.toggle.accept(rows.get(i));
-        }
-        flagDrag = null;
-        notifyChange(Math.max(0, lo));
     }
 
     private void renderEmptyTableHint() {
@@ -564,6 +538,7 @@ public final class InputOverlay {
 
         keyDragSelect.clearRowBounds();
         hoveredRow = -1;
+        flagMenuHovered = false;
         teleportDropRow = -1;
         if (solverActive) angleSolver.beginRows(clipMin.x, clipMin.y, clipMin.x + clipSize.x, clipMin.y + clipSize.y);
 
@@ -1153,30 +1128,23 @@ public final class InputOverlay {
     private void renderFlagCell(InputRow row, int rowIndex, RowFlag flag, float rowH) {
         ImGui.tableNextColumn();
         boolean actual = flag.get.test(row);
-        boolean value = actual;
-        if (flagDrag == flag && rowIndex >= Math.min(flagStartRow, flagCurrentRow)
-                && rowIndex <= Math.max(flagStartRow, flagCurrentRow)) {
-            value = flagTarget;
-        }
+        boolean value = keyDragSelect.getDisplayValue(flag, rowIndex, actual);
         ImVec2 cellOrigin = ImGui.getCursorScreenPos();
         float cellW = ImGui.getContentRegionAvail().x;
         float cellPadY = ImGui.getStyle().getCellPadding().y;
         float hitH = rowH - ImGui.getStyle().getItemSpacing().y;
         ImGui.alignTextToFramePadding();
         ImGui.selectable("##flag" + flag.label, value, 0, 0f, hitH);
-        if (ImGui.isItemClicked(0)) {
-            flagDrag = flag;
-            flagStartRow = rowIndex;
-            flagCurrentRow = rowIndex;
-            flagTarget = !actual;
-        }
-        if (flag.altToggle != null && ImGui.isItemClicked(1)) {
-            flag.altToggle.accept(row);
-            notifyChange(rowIndex);
+        if (ImGui.isItemClicked(0)) keyDragSelect.startDrag(flag, rowIndex, actual, flag::set);
+        if (flag.altToggle != null && ImGui.isItemHovered()) {
+            flagMenuHovered = true;
+            if (ImGui.isItemClicked(1)) {
+                flag.altToggle.accept(row);
+                notifyChange(rowIndex);
+            }
         }
         if (value) {
-            String text = flag.labelOf != null ? flag.labelOf.apply(row)
-                    : flag.alt != null && flag.alt.test(row) ? flag.altLabel : flag.label;
+            String text = flag.alt != null && flag.alt.test(row) ? flag.altLabel : flag.label;
             ImVec2 textSize = ImGui.calcTextSize(text);
             float tx = cellOrigin.x + (cellW - textSize.x) * 0.5f;
             float ty = cellOrigin.y + (rowH - 2f * cellPadY - textSize.y) * 0.5f;
@@ -1542,7 +1510,7 @@ public final class InputOverlay {
     private void renderContextMenu() {
 
         boolean blockedByOtherPopup = ImGui.isPopupOpen("", ImGuiPopupFlags.AnyPopup) && !ImGui.isPopupOpen(ID_CONTEXT_MENU);
-        if (!blockedByOtherPopup && ImGui.isMouseReleased(1) && ImGui.isWindowHovered(ImGuiHoveredFlags.ChildWindows | ImGuiHoveredFlags.AllowWhenBlockedByPopup)) {
+        if (!blockedByOtherPopup && !flagMenuHovered && ImGui.isMouseReleased(1) && ImGui.isWindowHovered(ImGuiHoveredFlags.ChildWindows | ImGuiHoveredFlags.AllowWhenBlockedByPopup)) {
             if (hoveredRow >= 0 && !selection.isSelected(hoveredRow)) {
                 selection.selectOnly(hoveredRow);
             }

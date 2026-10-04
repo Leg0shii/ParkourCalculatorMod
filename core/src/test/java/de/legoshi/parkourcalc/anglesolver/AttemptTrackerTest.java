@@ -23,6 +23,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -292,7 +293,7 @@ public class AttemptTrackerTest {
         Rig rig = new Rig();
         int at = rig.k0 + 2;
         rig.tasRow(at).setOnejumpKeys(false);
-        rig.controller.referenceChanged();
+        rig.controller.refresh();
         rig.sync();
         rig.play(true, 0, 0.0, NONE, at);
         assertTrue(rig.tracker.last().verdict, rig.tracker.last().landed);
@@ -355,7 +356,11 @@ public class AttemptTrackerTest {
         }
         assertTrue(Float.isNaN(a.turnStartAt(rig.cur.startTick + a.recorded)));
         TurnAttempt stored = rig.controller.document().attempts().get(0);
+        assertSame(a, stored);
+        assertEquals(0.4f, stored.turnStartAt(rig.cur.startTick + rig.k0), 1e-6f);
+        rig.play(true, 0, 0.0, NONE, NONE);
         assertNull(stored.trace);
+        assertNotNull(rig.tracker.last().trace);
         assertEquals(0.4f, stored.turnStartAt(rig.cur.startTick + rig.k0), 1e-6f);
     }
 
@@ -391,7 +396,7 @@ public class AttemptTrackerTest {
         Rig rig = new Rig();
         int at = rig.k0;
         rig.tasRow(at).setOnejumpFace(InputRow.ONEJUMP_FACE_STILL);
-        rig.controller.referenceChanged();
+        rig.controller.refresh();
         rig.sync();
         assertTrue(rig.cur.still[at]);
         double px = rig.cur.pixelDeg;
@@ -420,7 +425,7 @@ public class AttemptTrackerTest {
         Rig rig = new Rig();
         int at = rig.k0;
         rig.tasRow(at).setOnejumpFace(InputRow.ONEJUMP_FACE_STILL);
-        rig.controller.referenceChanged();
+        rig.controller.refresh();
         rig.sync();
         rig.play(true, 0, 0.0, NONE, NONE);
         assertTrue(rig.tracker.last().verdict, rig.tracker.last().landed);
@@ -437,7 +442,7 @@ public class AttemptTrackerTest {
         Rig rig = new Rig();
         assertTrue(rig.k0 > 0);
         rig.tasRow(0).setOnejumpFace(InputRow.ONEJUMP_FACE_STILL);
-        rig.controller.referenceChanged();
+        rig.controller.refresh();
         rig.sync();
         rig.play(true, 0, 0.5, NONE, NONE);
         TurnAttempt a = rig.tracker.last();
@@ -457,14 +462,12 @@ public class AttemptTrackerTest {
         assertEquals(-1, a.failedTick());
         assertEquals(rig.cur.startTick + rig.cur.n - 1, a.lastForecastTick());
         for (int t = 0; t < rig.cur.n; t++) {
-            double held = a.heldMarginAt(rig.cur.startTick + t);
+            double held = a.forecast.held[t];
             assertFalse("tick " + t, Double.isNaN(held));
             assertTrue("tick " + t + " held " + held, Math.abs(held) < 1e-6);
             assertTrue("tick " + t, a.bestMarginAt(rig.cur.startTick + t) <= held);
-            assertFalse("tick " + t, Double.isNaN(a.offsetLoAt(rig.cur.startTick + t)));
-            assertTrue("tick " + t, a.offsetLoAt(rig.cur.startTick + t) <= a.offsetHiAt(rig.cur.startTick + t));
         }
-        assertTrue(Double.isNaN(a.heldMarginAt(rig.cur.startTick + rig.cur.n)));
+        assertEquals(rig.cur.n, a.forecast.held.length);
         TurnAttempt stored = rig.controller.document().attempts().get(0);
         assertTrue(stored.hasForecast());
         assertEquals(-1, stored.failedTick());
@@ -477,7 +480,6 @@ public class AttemptTrackerTest {
         assertTrue(a.failedTick() >= rig.cur.startTick + rig.k0 + 1);
         assertTrue(a.failedTick() < rig.cur.startTick + rig.cur.n);
         assertTrue(a.bestMarginAt(a.failedTick()) > 0.0);
-        assertTrue(Double.isNaN(a.offsetLoAt(a.failedTick())));
         assertTrue(a.bestMarginAt(rig.cur.startTick + rig.k0) <= 0.0);
     }
 
@@ -542,7 +544,7 @@ public class AttemptTrackerTest {
                 rig.engine.snapshotPath(rig.tasFirst, rig.tasFirst + rig.cur.n).spec;
         double[][] none = new double[rig.cur.n][];
         for (int t = 0; t < none.length; t++) none[t] = new double[0];
-        AttemptSampler.Stats exact = AttemptSampler.sample(rig.model, spec, rig.cur.facing, none, 20, null);
+        AttemptSampler.Stats exact = AttemptSampler.sample(rig.model, spec, rig.cur.facing, none, 20, AttemptSampler.SEED, null);
         assertEquals(20, exact.attempts);
         assertEquals(1.0, exact.rate(), 0.0);
         double[][] wide = new double[rig.cur.n][];
@@ -550,7 +552,7 @@ public class AttemptTrackerTest {
         for (int t = 0; t < wide.length; t++) {
             wide[t] = t >= rig.k0 + 1 && t <= rig.k0 + 3 ? new double[] {-3.0 * px, 0.0, 3.0 * px} : new double[0];
         }
-        AttemptSampler.Stats spread = AttemptSampler.sample(rig.model, spec, rig.cur.facing, wide, 200, null);
+        AttemptSampler.Stats spread = AttemptSampler.sample(rig.model, spec, rig.cur.facing, wide, 200, AttemptSampler.SEED, null);
         assertEquals(200, spread.attempts);
         assertTrue("rate " + spread.rate(), spread.rate() < 1.0);
         rig.play(true, 0, 0.0, NONE, NONE);
@@ -565,7 +567,7 @@ public class AttemptTrackerTest {
         TurnAttempt a = rig.tracker.last();
         assertTrue(a.hasState());
         assertFalse(a.solved());
-        assertEquals(a.forecastFailedTick(), a.failedTick());
+        assertEquals(a.forecast.failedTick, a.failedTick());
     }
 
     @Test
@@ -584,7 +586,7 @@ public class AttemptTrackerTest {
         assertTrue(a.verdict, a.inputFailure);
         assertEquals(rig.cur.startTick + at, a.failTick);
         rig.tasRow(at).setOnejumpOptional(InputRow.Key.S, true);
-        rig.controller.referenceChanged();
+        rig.controller.refresh();
         rig.sync();
         assertEquals(TurnReference.KEY_S, rig.cur.optionalKeys[at]);
         rig.play(true, 0, 0.0, NONE, NONE);
@@ -594,5 +596,83 @@ public class AttemptTrackerTest {
         rig.maskOverride[at] = rig.cur.keys[at] ^ TurnReference.KEY_S ^ TurnReference.KEY_W;
         rig.play(true, 0, 0.0, NONE, NONE);
         assertTrue(rig.tracker.last().verdict, rig.tracker.last().inputFailure);
+    }
+
+    @Test
+    public void aJumpRowMustBeOnTheGround() {
+        Rig rig = new Rig();
+        int air = rig.k0 + 1;
+        assertTrue(Double.isNaN(rig.sc.slipAt(air)));
+        for (int t = 0; t <= rig.k0; t++) {
+            rig.tasRow(t).setOnejumpKeys(false);
+            rig.tasRow(t).setOnejumpFace(InputRow.ONEJUMP_FACE_OFF);
+        }
+        rig.tasRow(air).setKeyActive(InputRow.Key.JUMP, true);
+        rig.controller.refresh();
+        TurnProfileController.Current cur = rig.controller.current();
+        assertNotNull(rig.controller.lastError(), cur);
+        assertTrue((cur.keys[0] & TurnReference.KEY_JUMP) != 0);
+        assertFalse(cur.jumpTicks[0]);
+        int first = cur.firstJumpRow();
+        assertTrue("first jump row " + first, first != 0);
+        if (first > 0) {
+            JumpPhysicsInputs sc = rig.engine.snapshotPath(rig.tasFirst + air, rig.tasFirst + air + cur.n).spec.asScenario();
+            assertFalse(Double.isNaN(sc.slipAt(first)));
+        }
+    }
+
+    @Test
+    public void aJumpPressBeforeTheRunUpIsCompleteDisarmsWithAVerdict() {
+        Rig rig = new Rig();
+        assertTrue(rig.k0 > 0);
+        rig.reset();
+        double[] yaws = rig.cur.facing.clone();
+        ForwardPath path = rig.pathFor(yaws);
+        rig.tick(0, yaws, path, true, false, false);
+        rig.keys(rig.cur.keys[rig.k0]);
+        assertFalse(rig.tracker.isArmed());
+        assertNull(rig.tracker.live());
+        TurnAttempt a = rig.tracker.last();
+        assertNotNull(a);
+        assertFalse(a.complete);
+        assertTrue(a.verdict, a.verdict.startsWith("jumped 0 ticks after the reset, the run-up needs " + rig.k0));
+        assertEquals(0, rig.controller.document().attempts().size());
+    }
+
+    @Test
+    public void removingEveryFlagKeepsTheStoredReference() {
+        Rig rig = new Rig();
+        int n = rig.cur.n;
+        for (InputRow r : rig.inputs.getRows()) {
+            r.setOnejumpKeys(false);
+            r.setOnejumpFace(InputRow.ONEJUMP_FACE_OFF);
+        }
+        rig.controller.refresh();
+        assertNull(rig.controller.current());
+        assertEquals(n, rig.controller.document().reference().size());
+        assertTrue(rig.controller.lastError(), rig.controller.lastError().contains("kept"));
+    }
+
+    @Test
+    public void replacingTheTasDropsTheUnsavedAttemptsAndTheSelection() {
+        Rig rig = new Rig();
+        rig.play(true, 0, 0.0, NONE, NONE);
+        assertEquals(1, rig.controller.document().attempts().size());
+        rig.controller.select(1);
+        rig.controller.onTasReplaced();
+        assertEquals(-1, rig.controller.selectedNumber());
+        assertEquals(0, rig.controller.document().attempts().size());
+        assertNotNull(rig.controller.current());
+    }
+
+    @Test
+    public void theSnapshotKeepsTheGoalWallInLegalMode() {
+        Rig rig = new Rig();
+        int plain = rig.engine.snapshotPath(rig.tasFirst, rig.tasFirst + rig.cur.n).spec.constraints.size();
+        rig.state.setLegalMode(true);
+        rig.state.setEffort(AngleSolverState.Effort.THOROUGH);
+        AngleSolverEngine.PathSnapshot legal = rig.engine.snapshotPath(rig.tasFirst, rig.tasFirst + rig.cur.n);
+        assertNotNull(legal);
+        assertEquals(plain, legal.spec.constraints.size());
     }
 }

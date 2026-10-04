@@ -48,7 +48,6 @@ public final class TurnProfileWindow implements RenderInterface {
     private final Settings settings;
     private final Runnable onSettingsChanged;
     private final ImBoolean open = new ImBoolean(false);
-    private boolean wasOpen;
 
     public TurnProfileWindow(TurnProfileController controller, AttemptTracker tracker, Settings settings,
                              Runnable onSettingsChanged) {
@@ -70,8 +69,6 @@ public final class TurnProfileWindow implements RenderInterface {
 
     private void render(ImGuiIO io, boolean graphOnly) {
         open.set(settings.viewTurnProfile);
-        if (open.get() && !wasOpen) controller.refresh();
-        wasOpen = open.get();
         if (!open.get()) return;
         float scale = ThemeManager.uiScale();
         ImGui.setNextWindowSize(WIN_W * scale, WIN_H * scale, ImGuiCond.FirstUseEver);
@@ -102,7 +99,7 @@ public final class TurnProfileWindow implements RenderInterface {
                     : "No reference yet: set the onejump up in the Onejump Setup window");
             return;
         }
-        graph(cur, scale, graphH, shownAttempt());
+        graph(cur, scale, graphH, tracker.shownAttempt());
     }
 
     private void placeholder(float h, String text) {
@@ -113,13 +110,6 @@ public final class TurnProfileWindow implements RenderInterface {
         dl.addRectFilled(origin.x, origin.y, origin.x + w, origin.y + h, ThemeManager.bgDarkColor(), 0f);
         ImVec2 ts = ImGui.calcTextSize(text);
         dl.addText(origin.x + (w - ts.x) * 0.5f, origin.y + (h - ts.y) * 0.5f, ThemeManager.textDimColor(), text);
-    }
-
-    private TurnAttempt shownAttempt() {
-        TurnAttempt live = tracker.live();
-        if (live != null) return live;
-        TurnAttempt selected = controller.selectedAttempt();
-        return selected != null ? selected : tracker.last();
     }
 
     private static double youError(TurnProfileController.Current cur, TurnAttempt you, int t) {
@@ -147,8 +137,16 @@ public final class TurnProfileWindow implements RenderInterface {
         return xs;
     }
 
+    private static double[] unwrapped(double[] facing) {
+        double[] out = new double[facing.length];
+        for (int t = 0; t < facing.length; t++) {
+            out[t] = t == 0 ? facing[0] : out[t - 1] + Angles.wrapDelta(facing[t] - facing[t - 1]);
+        }
+        return out;
+    }
+
     private void graph(TurnProfileController.Current cur, float scale, float ch, TurnAttempt you) {
-        double[] facing = cur.facing;
+        double[] facing = unwrapped(cur.facing);
         AttemptSampler.Stats st = settings.turnProfileShowRating ? cur.attempts : null;
         float cw = Math.max(80f, ImGui.getContentRegionAvail().x);
         ImVec2 origin = ImGui.getCursorScreenPos();
@@ -208,7 +206,7 @@ public final class TurnProfileWindow implements RenderInterface {
         for (double g = Math.ceil(yLo / step) * step; g <= yHi; g += step) {
             float gy = yOf(g, yLo, yHi, plotY, plotH);
             dl.addLine(plotX, gy, plotX + plotW, gy, gridCol, 1f);
-            String lbl = String.format(Locale.ROOT, "%.0f", g);
+            String lbl = String.format(Locale.ROOT, "%.0f", Angles.wrap(g));
             dl.addText(plotX - 6f * scale - ImGui.calcTextSize(lbl).x, gy - ImGui.getTextLineHeight() * 0.5f, textCol, lbl);
         }
 
@@ -234,8 +232,8 @@ public final class TurnProfileWindow implements RenderInterface {
             }
             float half = SAMPLE_SIZE * scale;
             float spread = SAMPLE_SPREAD * dx;
-            scatter(dl, st.failed, cur, xs, spread, half, yLo, yHi, plotY, plotH, ThemeManager.dangerTintColor(0.35f));
-            scatter(dl, st.landed, cur, xs, spread, half, yLo, yHi, plotY, plotH, ThemeManager.okTintColor(0.85f));
+            scatter(dl, st.failed, cur, facing, xs, spread, half, yLo, yHi, plotY, plotH, ThemeManager.dangerTintColor(0.35f));
+            scatter(dl, st.landed, cur, facing, xs, spread, half, yLo, yHi, plotY, plotH, ThemeManager.okTintColor(0.85f));
         }
 
         int jumpCol = ThemeManager.peachTintColor(0.7f);
@@ -368,14 +366,15 @@ public final class TurnProfileWindow implements RenderInterface {
         }
     }
 
-    private static void scatter(ImDrawList dl, double[][] samples, TurnProfileController.Current cur, float[] xs,
-                                float spread, float half, double yLo, double yHi, float plotY, float plotH, int col) {
+    private static void scatter(ImDrawList dl, double[][] samples, TurnProfileController.Current cur, double[] facing,
+                                float[] xs, float spread, float half, double yLo, double yHi, float plotY, float plotH,
+                                int col) {
         for (int i = 0; i < samples.length; i++) {
             double[] a = samples[i];
             float jitter = ((i * 7919) % 1000 / 1000f - 0.5f) * 2f * spread;
             for (int t = 0; t < cur.n; t++) {
                 if (!cur.checkYaw[t] || Float.isNaN(xs[t])) continue;
-                double v = cur.facing[t] + Angles.wrapDelta(a[t] - cur.facing[t]);
+                double v = facing[t] + Angles.wrapDelta(a[t] - facing[t]);
                 float x = xs[t] + jitter;
                 float y = yOf(v, yLo, yHi, plotY, plotH);
                 dl.addRectFilled(x - half, y - half, x + half, y + half, col, 0f);
@@ -417,7 +416,7 @@ public final class TurnProfileWindow implements RenderInterface {
             if (you != null && you.hasForecast() && settings.onejumpOffsetHover) {
                 double best = you.bestMarginAt(abs);
                 if (!Double.isNaN(best)) {
-                    tooltipRow("Offset", Double.isInfinite(best) ? "none" : TurnAttempt.signedMargin(best),
+                    tooltipRow("Offset", TurnAttempt.signedMargin(best),
                             best <= 0.0 ? ThemeManager.okColor() : ThemeManager.dangerColor(), labelW);
                 }
             }
@@ -447,7 +446,7 @@ public final class TurnProfileWindow implements RenderInterface {
         int tick = you.lastForecastTick();
         if (tick < 0) return null;
         double best = you.bestMarginAt(tick);
-        return "offset " + (Double.isInfinite(best) ? "none" : TurnAttempt.signedMargin(best));
+        return "offset " + TurnAttempt.signedMargin(best);
     }
 
     private static double gridStep(double span) {

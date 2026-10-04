@@ -1282,17 +1282,11 @@ public final class AngleSolverEngine {
     public static final class PathSnapshot {
         public final JumpSpec spec;
         public final double[] yaws;
-        public final int startTick;
 
-        PathSnapshot(JumpSpec spec, double[] yaws, int startTick) {
+        PathSnapshot(JumpSpec spec, double[] yaws) {
             this.spec = spec;
             this.yaws = yaws;
-            this.startTick = startTick;
         }
-    }
-
-    public PathSnapshot snapshotCurrentPath() {
-        return snapshotPath(state.getStartTick(), state.getLandingTick());
     }
 
     public PathSnapshot snapshotPath(int startTick, int landingTick) {
@@ -1300,7 +1294,13 @@ public final class AngleSolverEngine {
         if (job == null) return null;
         double[] yaws = currentRowYaws(job.startTick, job.numTicks);
         if (yaws == null) return null;
-        return new PathSnapshot(job.spec, yaws, job.startTick);
+        JumpSpec spec = job.spec;
+        if (job.legalGoal != null && !spec.constraints.contains(job.legalGoal)) {
+            List<JumpConstraint> judged = new ArrayList<>(spec.constraints);
+            judged.add(job.legalGoal);
+            spec = new JumpSpec(spec.asScenario(), judged, spec.objective);
+        }
+        return new PathSnapshot(spec, yaws);
     }
 
     public ExactJumpModel exactModel() {

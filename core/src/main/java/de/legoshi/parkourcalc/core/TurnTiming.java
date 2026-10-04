@@ -14,14 +14,10 @@ public final class TurnTiming {
     public static final class Onset {
         public final int attempts;
         public final double median;
-        public final double lo;
-        public final double hi;
 
-        Onset(int attempts, double median, double lo, double hi) {
+        Onset(int attempts, double median) {
             this.attempts = attempts;
             this.median = median;
-            this.lo = lo;
-            this.hi = hi;
         }
     }
 
@@ -137,19 +133,16 @@ public final class TurnTiming {
         float[] v = new float[phases.size()];
         for (int i = 0; i < v.length; i++) v[i] = phases.get(i);
         Arrays.sort(v);
-        return new Onset(v.length, quantile(v, 0.5), quantile(v, 0.1), quantile(v, 0.9));
+        return new Onset(v.length, median(v));
     }
 
     public static String ms(double phase) {
         return String.format(Locale.ROOT, "%.0f ms", phase * TICK_MS);
     }
 
-    private static double quantile(float[] sorted, double q) {
-        if (sorted.length == 1) return sorted[0];
-        double pos = q * (sorted.length - 1);
-        int i = (int) Math.floor(pos);
-        double f = pos - i;
-        if (i + 1 >= sorted.length) return sorted[sorted.length - 1];
-        return sorted[i] + (sorted[i + 1] - sorted[i]) * f;
+    private static double median(float[] sorted) {
+        int n = sorted.length;
+        if (n % 2 == 1) return sorted[n / 2];
+        return 0.5 * (sorted[n / 2 - 1] + sorted[n / 2]);
     }
 }

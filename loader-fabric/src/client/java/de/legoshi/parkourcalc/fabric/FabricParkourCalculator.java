@@ -180,6 +180,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
                 FabricWorldDescriptors::current
         ));
         application.setPlaybackBridge(playbackBridge);
+        application.getRecorder().setKeyCodes("glfw");
         application.setBlockPicker(new FabricBlockPicker());
         application.setupUi();
 
@@ -313,7 +314,8 @@ public class FabricParkourCalculator implements ClientModInitializer {
                 System.nanoTime());
         de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
         if (!r.isRecording()) return;
-        r.tickStart(pos.x, pos.y, pos.z, p.getYRot(), p.getXRot(), p.onGround());
+        net.minecraft.world.phys.Vec3 own = p.position();
+        r.tickStart(own.x, own.y, own.z, p.getYRot(), p.getXRot(), p.onGround());
     }
 
     private static void recordTickEnd(Minecraft client) {
@@ -360,8 +362,9 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     public static void recordKey(int key, int action) {
         if (action != InputConstants.PRESS && action != InputConstants.RELEASE) return;
+        if (isUiFocused() || Minecraft.getInstance().gui.screen() != null) return;
         de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
-        if (r.isRecording() && !isUiFocused()) r.key(0L, key, action == InputConstants.PRESS);
+        if (r.isRecording()) r.key(0L, key, action == InputConstants.PRESS);
     }
 
     public static void syncFrozenPlayerToServer() {
