@@ -219,10 +219,13 @@ public final class PairedServerSim {
     private void applyPositionCorrection(SimulatorEntity e, ClientboundPlayerPositionPacket packet) {
         PositionMoveRotation current = PositionMoveRotation.of(e);
         PositionMoveRotation next = PositionMoveRotation.calculateAbsolute(current, packet.change(), packet.relatives());
+        if (DebugFlags.PAIRED_DIAGNOSTICS) {
+            System.out.println("[PC-PAIR] T" + (tickIndex + 1) + " lagback from " + formatVec(current.position())
+                    + " vel " + formatVec(current.deltaMovement()) + " onGround=" + e.onGround()
+                    + " sneaking=" + e.isShiftKeyDown() + " sprinting=" + e.isSprinting());
+        }
         e.setPos(next.position());
         e.setDeltaMovement(next.deltaMovement());
-        e.setYRot(next.yRot());
-        e.setXRot(next.xRot());
         e.setOldPosAndRot();
         addEvent(ServerSimEvent.Kind.POSITION_CORRECTION, "to " + formatVec(next.position()));
         if (DebugFlags.PAIRED_DIAGNOSTICS) {

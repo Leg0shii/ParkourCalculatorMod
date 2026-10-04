@@ -231,8 +231,6 @@ public final class PairedServerSim {
         double x = packet.getX();
         double y = packet.getY();
         double z = packet.getZ();
-        float yaw = packet.getYaw();
-        float pit = packet.getPitch();
         Set<S08PacketPlayerPosLook.EnumFlags> flags = packet.func_179834_f();
         if (flags.contains(S08PacketPlayerPosLook.EnumFlags.X)) {
             x += e.posX;
@@ -249,13 +247,7 @@ public final class PairedServerSim {
         } else {
             e.motionZ = 0.0;
         }
-        if (flags.contains(S08PacketPlayerPosLook.EnumFlags.X_ROT)) {
-            pit += e.rotationPitch;
-        }
-        if (flags.contains(S08PacketPlayerPosLook.EnumFlags.Y_ROT)) {
-            yaw += e.rotationYaw;
-        }
-        e.setPositionAndRotation(x, y, z, yaw, pit);
+        e.setPositionAndRotation(x, y, z, e.rotationYaw, e.rotationPitch);
         addEvent(ServerSimEvent.Kind.POSITION_CORRECTION, "to " + formatVec(e.posX, e.posY, e.posZ));
         if (DebugFlags.PAIRED_DIAGNOSTICS) {
             System.out.println("[PC-PAIR] T" + (tickIndex + 1) + " lagback applied to "

@@ -25,8 +25,12 @@ public abstract class PacketDiagnosticsMixin {
     @Inject(method = "handleMovePlayer", at = @At("RETURN"))
     private void pkc$logMovePlayer(ClientboundPlayerPositionPacket packet, CallbackInfo ci) {
         if (!DebugFlags.PAIRED_DIAGNOSTICS) return;
+        Minecraft mc = Minecraft.getInstance();
+        String player = mc.player == null ? "" : " player now pos=" + mc.player.position()
+                + " vel=" + mc.player.getDeltaMovement() + " onGround=" + mc.player.onGround()
+                + " sneaking=" + mc.player.isShiftKeyDown() + " sprinting=" + mc.player.isSprinting();
         System.out.println("[PC-NET] PlayerPosition pos=" + packet.change().position()
                 + " vel=" + packet.change().deltaMovement()
-                + " relatives=" + packet.relatives());
+                + " relatives=" + packet.relatives() + player);
     }
 }
