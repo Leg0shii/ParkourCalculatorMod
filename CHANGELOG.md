@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.14.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.13.0...v1.14.0) (2026-10-04)
+
+
+### Features
+
+* **anglesolver:** onejump practice with live attempt tracking, turn timing and a landing forecast ([#511](https://github.com/Leg0shii/ParkourCalculatorMod/issues/511)) ([183afa6](https://github.com/Leg0shii/ParkourCalculatorMod/commit/183afa6e08eaec870f360ce3dc5c7b3b74df996a))
+
+
+### Bug Fixes
+
+* **sim:** keep the sim entity rotation on a server position correction ([#512](https://github.com/Leg0shii/ParkourCalculatorMod/issues/512)) ([10ef9f2](https://github.com/Leg0shii/ParkourCalculatorMod/commit/10ef9f2bdf88c1ccb6dd7eb97289cd59cd523b74))
+
+
+### Documentation
+
+* call Stratfinder results strats and note the early development state ([a6ade1f](https://github.com/Leg0shii/ParkourCalculatorMod/commit/a6ade1f9afc92f78a44e83c5cb46e3831236c754))
+* refresh the README for the current features, hotkeys and loaders ([#507](https://github.com/Leg0shii/ParkourCalculatorMod/issues/507)) ([f433403](https://github.com/Leg0shii/ParkourCalculatorMod/commit/f43340381f4fec587dccb74cadb4e66b84ee99a8))
+
+
+### Continuous Integration
+
+* shard the core test suite across parallel jobs per JDK ([#513](https://github.com/Leg0shii/ParkourCalculatorMod/issues/513)) ([aa2d4a1](https://github.com/Leg0shii/ParkourCalculatorMod/commit/aa2d4a1bd9703ef6db195ddb88a27a83a38f274e))
+
+
+### Miscellaneous Chores
+
+* weekly release train ([0208763](https://github.com/Leg0shii/ParkourCalculatorMod/commit/0208763fe9e3162c0fc44259f6e7af0f9ea6523d))
+
 ## [1.13.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.12.0...v1.13.0) (2026-09-27)
 
 
