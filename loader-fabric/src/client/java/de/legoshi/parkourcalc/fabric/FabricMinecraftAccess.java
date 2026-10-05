@@ -289,6 +289,12 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
         redoKey = keyTyping('y', InputConstants.KEY_Y);
     }
 
+    public static boolean isEditChordPress(int key) {
+        resolveEditKeys();
+        if (key != undoKey && key != redoKey) return false;
+        return InputConstants.isKeyDown(InputConstants.KEY_LCONTROL) || InputConstants.isKeyDown(InputConstants.KEY_RCONTROL);
+    }
+
     @Override
     public boolean isUndoChordDown() {
         resolveEditKeys();
