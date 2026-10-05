@@ -1270,7 +1270,7 @@ public final class AngleSolverTable {
         List<Potion> out = new ArrayList<>();
         for (Potion p : Potion.values()) {
             if (p == current) { out.add(p); continue; }
-            if (state.hasDefaultPotion(p) || ov.hasAdded(p)) continue;
+            if (ov.hasAdded(p)) continue;
             out.add(p);
         }
         return out;
@@ -1278,7 +1278,7 @@ public final class AngleSolverTable {
 
     private Potion nextOverridePotion(StateOverride ov) {
         for (Potion p : Potion.values()) {
-            if (!state.hasDefaultPotion(p) && !ov.hasAdded(p)) return p;
+            if (!ov.hasAdded(p)) return p;
         }
         return null;
     }

@@ -133,10 +133,10 @@ public final class SolverWidgets {
         float scale = s();
         float h = ImGui.getFrameHeight();
         ImDrawList dl = ImGui.getWindowDrawList();
-        int onBg = ThemeManager.accentColor();
+        int onBg = ThemeManager.accentTintColor(0.30f);
         int offBg = ThemeManager.hoverColor();
         int border = ThemeManager.borderColor();
-        int onText = ThemeManager.bgDarkColor();
+        int onText = ThemeManager.textColor();
         int offText = ThemeManager.textMutedColor();
 
         int clicked = -1;
@@ -156,7 +156,7 @@ public final class SolverWidgets {
             if (hover && tooltips != null && i < tooltips.length && tooltips[i] != null) {
                 ImGui.setTooltip(tooltips[i]);
             }
-            int fill = on ? onBg : (hover ? ThemeManager.accentTintColor(0.18f) : offBg);
+            int fill = on ? onBg : (hover ? ThemeManager.accentTintColor(0.12f) : offBg);
             dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, fill, 0f);
             if (i > 0) dl.addLine(mn.x, mn.y, mn.x, mx.y, border, 1f);
             ImVec2 ts = ImGui.calcTextSize(labels[i]);

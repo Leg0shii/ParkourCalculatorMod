@@ -75,13 +75,13 @@ public final class SaveFile {
         public Boolean stopOnFeasible;                   // absent in old files -> false
         public Boolean legalMode;                        // absent in old files -> false
         public Integer optimizeSeconds;                  // absent in old files -> default
+        public Integer budgetMs;                         // absent in old files -> from optimizeSeconds
         public Double smoothLambda;
         public SolveBudget customBudget;
         public String graphPreset;
         public String defaultInputs;
         public String defaultSprint;                     // absent in old files -> ALWAYS
         public String defaultSlipperiness;
-        public List<Dose> defaultPotions = new ArrayList<Dose>();
         public List<Tick> ticks = new ArrayList<Tick>();
         public List<BlockSel> selectedBlocks = new ArrayList<BlockSel>();
         public Start seed;                               // launch state (pos/vel/yaw) at startTick; what a solve begins from

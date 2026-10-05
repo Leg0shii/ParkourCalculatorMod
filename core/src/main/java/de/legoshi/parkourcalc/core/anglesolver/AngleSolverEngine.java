@@ -72,12 +72,11 @@ public final class AngleSolverEngine {
 
     static long deadlineNanosFor(AngleSolverState state, AngleSolverState.Effort effort) {
         switch (effort) {
-            case THOROUGH: return state.getOptimizeSeconds() * 1_000_000_000L;
+            case THOROUGH: return state.getBudgetMs() * 1_000_000L;
             case CUSTOM: {
                 String preset = state.getGraphPresetName();
                 if (BuiltinGraphs.FAST_PRESET.equals(preset) || BuiltinGraphs.MULTI_START_PRESET.equals(preset)) return 0L;
-                int optSecs = state.getOptimizeSeconds();
-                return optSecs > 0 ? optSecs * 1_000_000_000L : 0L;
+                return state.getBudgetMs() * 1_000_000L;
             }
             default: return 0L;
         }
@@ -695,7 +694,7 @@ public final class AngleSolverEngine {
                 }
             }
             yawLocked[k] = row.isYawLocked();
-            speedAmp[k] = effSpeedLevel(t);
+            speedAmp[k] = effSpeedLevel(t, rows);
         }
         if (deriveAny) healWallHitSprint(startTick, numTicks, sprintArr, forwardIn);
         JumpPhysicsInputs phys = new JumpPhysicsInputs(numTicks);
@@ -720,7 +719,7 @@ public final class AngleSolverEngine {
         phys.incomingSprint = effSprint(startTick) == AngleSolverState.SprintMode.DERIVE
                 ? (seed.hasMovementSample() ? seed.sprinting : Boolean.TRUE)
                 : Boolean.TRUE;
-        phys.incomingAmp = startTick > 0 ? effSpeedLevel(startTick - 1) : effSpeedLevel(startTick);
+        phys.incomingAmp = startTick > 0 ? effSpeedLevel(startTick - 1, rows) : effSpeedLevel(startTick, rows);
         return new Phys(phys, strafeMask, force45Mask, jumpTickRel);
     }
 
@@ -1501,18 +1500,15 @@ public final class AngleSolverEngine {
         return 1;
     }
 
-    /** Effective Speed amplifier at a tick: override added/removed over the default potions. */
-    private int effSpeedLevel(int tick) {
+    /** Effective Speed amplifier at a tick: override added/removed over the TAS row's own amplifier. */
+    private int effSpeedLevel(int tick, List<InputRow> rows) {
         StateOverride ov = overrideAt(tick);
         if (ov != null) {
             PotionDose added = ov.findAdded(Potion.SPEED);
             if (added != null) return added.level;
             if (ov.getRemoved().contains(Potion.SPEED)) return 0;
         }
-        for (PotionDose d : state.getDefaultPotions()) {
-            if (d.potion == Potion.SPEED) return d.level;
-        }
-        return 0;
+        return tick >= 0 && tick < rows.size() ? rows.get(tick).getSpeedAmplifier() : 0;
     }
 
     private StateOverride overrideAt(int tick) {
