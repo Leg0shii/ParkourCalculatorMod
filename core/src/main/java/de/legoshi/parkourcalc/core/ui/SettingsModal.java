@@ -185,8 +185,16 @@ public final class SettingsModal {
                 renderOverlays();
                 Controls.endTab();
             }
-            if (Controls.beginTab("Table and Stats")) {
-                renderTableAndStats();
+            if (Controls.beginTab("Constraints")) {
+                renderConstraints();
+                Controls.endTab();
+            }
+            if (Controls.beginTab("Input Table")) {
+                renderInputTable();
+                Controls.endTab();
+            }
+            if (Controls.beginTab("Stats")) {
+                renderStats();
                 Controls.endTab();
             }
             if (Controls.beginTab("Colors")) {
@@ -506,9 +514,11 @@ public final class SettingsModal {
             checkboxRow("Unlimited path render distance", "##unlimited_path", settings.unlimitedPathRender, TT_PATH_UNLIMITED, v -> settings.unlimitedPathRender = v);
             ThemeManager.endStandardFormTable();
         }
+    }
 
+    private void renderConstraints() {
         ThemeManager.sectionSpacing();
-        sectionHeader("Constraints");
+        sectionHeader("Shape");
         if (beginLayoutTable("##settings_constraint_shape")) {
             checkboxRow("Show constraints", "##show_constraints", settings.showConstraints, TT_CONSTRAINTS, v -> settings.showConstraints = v);
             checkboxRow("Expand by player hitbox", "##c_expand", settings.constraintExpandByHitbox, TT_C_EXPAND, v -> settings.constraintExpandByHitbox = v);
@@ -517,7 +527,7 @@ public final class SettingsModal {
         }
 
         ThemeManager.sectionSpacing();
-        sectionHeader("Constraint plates (front on the constraint, back is the fade tail)");
+        sectionHeader("Plates (front on the constraint, back is the fade tail)");
         if (beginLayoutTable("##settings_constraint_plates")) {
             constraintDimRow("Front width", "##c_fw", settings.constraintFrontWidth, Settings.CONSTRAINT_MAX_WIDTH, v -> settings.constraintFrontWidth = v);
             constraintDimRow("Front height", "##c_fh", settings.constraintFrontHeight, Settings.CONSTRAINT_MAX_HEIGHT, v -> settings.constraintFrontHeight = v);
@@ -527,6 +537,14 @@ public final class SettingsModal {
             constraintDimRow("Back length", "##c_bl", settings.constraintBackLength, Settings.CONSTRAINT_MAX_BACK_LENGTH, v -> settings.constraintBackLength = v);
             ThemeManager.endStandardFormTable();
         }
+
+        ThemeManager.sectionSpacing();
+        sectionHeader("Colors");
+        int flags = ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoDragDrop;
+        renderColor("front", settings.constraintFill, flags);
+        renderColor("satisfied outline", settings.constraintOutline, flags);
+        renderColor("selected highlight", settings.constraintHighlight, flags);
+        renderColor("back", settings.constraintBack, flags);
     }
 
     private void constraintDimRow(String label, String id, float value, float max, Consumer<Float> setter) {
@@ -541,9 +559,9 @@ public final class SettingsModal {
         });
     }
 
-    private void renderTableAndStats() {
+    private void renderInputTable() {
         ThemeManager.sectionSpacing();
-        sectionHeader("Input table");
+        sectionHeader("Columns and rows");
         if (beginLayoutTable("##settings_columns")) {
             disabledCheckboxRow("Forward (W)", "##col_w", true, TT_COL_W);
             checkboxRow("Strafe left (A)", "##col_a", settings.showColA, TT_COL_A, v -> settings.showColA = v);
@@ -564,7 +582,9 @@ public final class SettingsModal {
             checkboxRow("Highlight on-ground ticks", "##highlight_on_ground", settings.highlightOnGroundRows, TT_GROUND_HIGHLIGHT, v -> settings.highlightOnGroundRows = v);
             ThemeManager.endStandardFormTable();
         }
+    }
 
+    private void renderStats() {
         ThemeManager.sectionSpacing();
         sectionHeader("Stats");
         if (beginLayoutTable("##settings_stats")) {
@@ -616,13 +636,6 @@ public final class SettingsModal {
         sectionHeader("Hitbox");
         renderColor("hitbox default", settings.hitboxDefault, flags);
         renderColor("hitbox selected", settings.hitboxSelected, flags);
-
-        ThemeManager.sectionSpacing();
-        sectionHeader("Constraints");
-        renderColor("constraint front", settings.constraintFill, flags);
-        renderColor("constraint satisfied outline", settings.constraintOutline, flags);
-        renderColor("constraint selected highlight", settings.constraintHighlight, flags);
-        renderColor("constraint back", settings.constraintBack, flags);
     }
 
     private void renderColor(String label, float[] color, int flags) {
