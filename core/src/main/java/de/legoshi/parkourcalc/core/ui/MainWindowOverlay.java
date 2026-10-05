@@ -283,7 +283,6 @@ public final class MainWindowOverlay implements RenderInterface {
         menu("File", fileMenu::renderMenuItems);
         menu("Edit", this::renderEditMenuItems);
         menu("View", this::renderViewMenuItems);
-        menu("Settings", this::renderSettingsMenuItems);
         menu("Help", this::renderHelpMenuItems);
 
         ImGui.endMenuBar();
@@ -325,6 +324,8 @@ public final class MainWindowOverlay implements RenderInterface {
     private void renderEditMenuItems() {
         if (ImGui.menuItem("Undo", "Ctrl+Z") && onUndo != null) onUndo.run();
         if (ImGui.menuItem("Redo", "Ctrl+Y") && onRedo != null) onRedo.run();
+        ThemeManager.paddedSeparator();
+        if (ImGui.menuItem("Preferences...")) settingsModal.open();
     }
 
     private void renderViewMenuItems() {
@@ -368,10 +369,6 @@ public final class MainWindowOverlay implements RenderInterface {
             settings.viewRecorder = !settings.viewRecorder;
             onSettingsChanged.run();
         }
-    }
-
-    private void renderSettingsMenuItems() {
-        if (ImGui.menuItem("Preferences...")) settingsModal.open();
     }
 
     private void renderHelpMenuItems() {
