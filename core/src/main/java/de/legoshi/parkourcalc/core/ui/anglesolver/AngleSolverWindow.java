@@ -228,17 +228,16 @@ public final class AngleSolverWindow implements RenderInterface {
         else budgetRow(labelW, scale);
 
         ThemeManager.sectionSpacing();
+        renderActions();
+
+        ThemeManager.sectionSpacing();
         moreExpanded = sectionToggle("More options", "more", moreExpanded, scale);
         if (moreExpanded) renderMoreOptions(scale);
-
-        ThemeManager.paddedSeparator();
-
-        renderActions();
 
         SolveResult panel = engine.isSolving() ? engine.liveBestResult() : state.getResult();
         trackObjectiveImprovement(panel);
         if (panel != null) {
-            ThemeManager.sectionSpacing();
+            ThemeManager.paddedSeparator();
             renderResultPanel(io, panel, scale);
         }
     }
@@ -861,8 +860,10 @@ public final class AngleSolverWindow implements RenderInterface {
         boolean diverged = r.isSuccess() && deviation != null;
         int accent = !r.isSuccess() ? ThemeManager.dangerColor()
                 : diverged ? ThemeManager.warningColor() : ThemeManager.okColor();
-        int bg = !r.isSuccess() ? ThemeManager.dangerTintColor(0.07f)
-                : diverged ? ThemeManager.warningTintColor(0.07f) : ThemeManager.okTintColor(0.07f);
+        int bg = !r.isSuccess() ? ThemeManager.dangerTintColor(0.10f)
+                : diverged ? ThemeManager.warningTintColor(0.10f) : ThemeManager.okTintColor(0.10f);
+        int border = !r.isSuccess() ? ThemeManager.dangerTintColor(0.45f)
+                : diverged ? ThemeManager.warningTintColor(0.45f) : ThemeManager.okTintColor(0.45f);
 
         float lineH = ImGui.getTextLineHeightWithSpacing();
         float pad = ThemeManager.SM * scale;
@@ -883,8 +884,9 @@ public final class AngleSolverWindow implements RenderInterface {
         float h = Math.min(fullH, io.getDisplaySizeY() * 0.4f); // cap so the pane scrolls instead of growing off-screen
 
         ImGui.pushStyleColor(ImGuiCol.ChildBg, bg);
+        ImGui.pushStyleColor(ImGuiCol.Border, border);
         ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, pad, pad);
-        ImGui.beginChild("##solve_result", ImGui.getContentRegionAvail().x, h, false);
+        ImGui.beginChild("##solve_result", ImGui.getContentRegionAvail().x, h, true);
 
         ThemeManager.pushTextColor(accent);
         Fonts.pushBold();
@@ -912,7 +914,7 @@ public final class AngleSolverWindow implements RenderInterface {
 
         ImGui.endChild();
         ImGui.popStyleVar();
-        ImGui.popStyleColor();
+        ImGui.popStyleColor(2);
     }
 
     private static final String WALL_TIP =
