@@ -163,6 +163,7 @@ public final class SaveFile {
         public String finishedAt;                        // formatted clock time, null if unset
         public String solver;                            // algorithm label, null = legacy save
         public String notice;
+        public String noticeLabel;
         public double objectiveValue;
         public boolean hasObjective;
         public List<Outcome> outcomes = new ArrayList<Outcome>();
