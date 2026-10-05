@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.core.ui.anglesolver;
 
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
+import de.legoshi.parkourcalc.core.anglesolver.Constraint;
 import de.legoshi.parkourcalc.core.anglesolver.ConstraintText;
 import de.legoshi.parkourcalc.core.anglesolver.Potion;
 import de.legoshi.parkourcalc.core.anglesolver.PotionDose;
@@ -438,7 +439,7 @@ public final class AngleSolverWindow implements RenderInterface {
         float inner = 0f;
         if (outcomesExpanded) {
             float[] col = new float[5];
-            for (SolveResult.Outcome o : r.getOutcomes()) {
+            for (SolveResult.Outcome o : visibleOutcomes(r)) {
                 col[0] = Math.max(col[0], ImGui.calcTextSize(o.field).x);
                 col[1] = Math.max(col[1], ImGui.calcTextSize("@ " + o.tick).x);
                 col[2] = Math.max(col[2], ImGui.calcTextSize(o.relation).x);
@@ -984,7 +985,8 @@ public final class AngleSolverWindow implements RenderInterface {
         int solverLines = steps.isEmpty() ? 0 : 1 + (solverExpanded ? steps.size() : 0);
         int detailLines = details.isEmpty() && steps.isEmpty() ? 0
                 : 1 + (detailsExpanded ? details.size() + solverLines : 0);
-        int outcomeLines = r.getOutcomes().isEmpty() ? 0 : 1 + (outcomesExpanded ? r.getOutcomes().size() : 0);
+        List<SolveResult.Outcome> outcomes = visibleOutcomes(r);
+        int outcomeLines = outcomes.isEmpty() ? 0 : 1 + (outcomesExpanded ? outcomes.size() : 0);
         int rows = 2 + detailLines + devLines + noticeLines + outcomeLines + 1 + (yawsExpanded ? r.getYaws().size() : 0);
         float fullH = rows * lineH + 2f * pad;
         float h = Math.min(fullH, io.getDisplaySizeY() * 0.4f); // cap so the pane scrolls instead of growing off-screen
@@ -1014,7 +1016,7 @@ public final class AngleSolverWindow implements RenderInterface {
             ThemeManager.popTextColor();
             if (AngleSolverEngine.DF_DIRECTION_NOTICE.equals(notice)) TooltipUtil.onHover(DIRECTION_TIP);
         }
-        renderOutcomes(r, scale);
+        renderOutcomes(outcomes, scale);
         renderDetails(details, steps, scale);
         renderYawList(r, scale);
 
@@ -1177,16 +1179,30 @@ public final class AngleSolverWindow implements RenderInterface {
         return "+" + ConstraintText.fixedStat(delta);
     }
 
-    private void renderOutcomes(SolveResult r, float scale) {
-        if (r.getOutcomes().isEmpty()) return;
-        outcomesExpanded = resultToggle("outcomestoggle", "Solved values (" + r.getOutcomes().size() + ")",
+    private static final String HELD_FACING_RELATION = Constraint.Op.EQ.glyph + " " + ConstraintText.num(0.0);
+
+    private static boolean isHeldFacing(SolveResult.Outcome o) {
+        return o.met && Constraint.Field.DF.label.equals(o.field) && HELD_FACING_RELATION.equals(o.relation);
+    }
+
+    private static List<SolveResult.Outcome> visibleOutcomes(SolveResult r) {
+        List<SolveResult.Outcome> shown = new ArrayList<>(r.getOutcomes().size());
+        for (SolveResult.Outcome o : r.getOutcomes()) {
+            if (!isHeldFacing(o)) shown.add(o);
+        }
+        return shown;
+    }
+
+    private void renderOutcomes(List<SolveResult.Outcome> outcomes, float scale) {
+        if (outcomes.isEmpty()) return;
+        outcomesExpanded = resultToggle("outcomestoggle", "Solved values (" + outcomes.size() + ")",
                 outcomesExpanded, scale);
         if (!outcomesExpanded) return;
         ImGui.indent(DETAIL_INDENT * scale);
         // field | @ tick | relation | found (right) | margin (right, green): own columns so every part aligns vertically.
         if (ThemeManager.beginStandardFormTable("##sv_outcomes", 5)) {
             int idx = 0;
-            for (SolveResult.Outcome o : r.getOutcomes()) {
+            for (SolveResult.Outcome o : outcomes) {
                 ImGui.tableNextRow();
                 ThemeManager.pushTextColor(ThemeManager.textMutedColor());
                 ImGui.tableNextColumn();
