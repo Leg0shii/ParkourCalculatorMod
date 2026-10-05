@@ -1612,6 +1612,11 @@ public final class InputOverlay {
             syncTeleportInputs(row);
             ImGui.openPopup(popupId);
         }
+        if (hover && ImGui.isMouseClicked(2)) {
+            teleportPressRow = -1;
+            row.setTeleportEnabled(false);
+            notifyChange(rowIndex);
+        }
     }
 
     private void renderTeleportAddChip(InputRow row, int rowIndex, String popupId) {
