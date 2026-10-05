@@ -360,6 +360,11 @@ public class FabricParkourCalculator implements ClientModInitializer {
         if (r.isRecording()) r.button(0L, button, action == InputConstants.PRESS);
     }
 
+    public static boolean swallowsEditChord(int key) {
+        return Minecraft.getInstance().gui.screen() == null && getSettings().undoRedoWithoutUi
+                && FabricMinecraftAccess.isEditChordPress(key);
+    }
+
     public static void recordKey(int key, int action) {
         if (action != InputConstants.PRESS && action != InputConstants.RELEASE) return;
         if (isUiFocused() || Minecraft.getInstance().gui.screen() != null) return;

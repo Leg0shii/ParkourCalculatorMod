@@ -19,6 +19,7 @@ public class KeyboardHandlerMixin {
     private void onKey(long window, int glfwKey, int scancode, int action, int modifiers, CallbackInfo ci) {
         FabricParkourCalculator.recordKey(glfwKey, action);
         if (!FabricParkourCalculator.isUiFocused()) {
+            if (action == GLFW.GLFW_PRESS && FabricParkourCalculator.swallowsEditChord(glfwKey)) ci.cancel();
             return;
         }
 

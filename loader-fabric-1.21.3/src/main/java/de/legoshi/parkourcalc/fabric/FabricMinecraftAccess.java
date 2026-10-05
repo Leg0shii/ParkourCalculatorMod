@@ -290,6 +290,14 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
         redoKey = keyTyping('y', GLFW.GLFW_KEY_Y);
     }
 
+    public static boolean isEditChordPress(int key) {
+        resolveEditKeys();
+        if (key != undoKey && key != redoKey) return false;
+        long window = Minecraft.getInstance().getWindow().getWindow();
+        return GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_CONTROL) == GLFW.GLFW_PRESS
+                || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_CONTROL) == GLFW.GLFW_PRESS;
+    }
+
     @Override
     public boolean isUndoChordDown() {
         resolveEditKeys();
