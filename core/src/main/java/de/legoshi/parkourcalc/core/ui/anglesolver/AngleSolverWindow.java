@@ -129,6 +129,7 @@ public final class AngleSolverWindow implements RenderInterface {
     private boolean detailsExpanded;
     private boolean solverExpanded;
     private boolean outcomesExpanded = true;
+    private boolean generalExpanded = true;
     private boolean moreExpanded;
     private RunTicksControls runTicks = RunTicksControls.NONE;
     private java.util.function.DoubleSupplier playerYawSupplier = () -> 0.0;
@@ -210,6 +211,25 @@ public final class AngleSolverWindow implements RenderInterface {
     private void renderBody(ImGuiIO io, int rowCount, float scale) {
         float labelW = labelColumnWidth(scale);
 
+        generalExpanded = sectionToggle("General", "general", generalExpanded, scale);
+        if (generalExpanded) renderGeneral(rowCount, labelW, scale);
+
+        ThemeManager.sectionSpacing();
+        renderActions();
+
+        ThemeManager.sectionSpacing();
+        moreExpanded = sectionToggle("More options", "more", moreExpanded, scale);
+        if (moreExpanded) renderMoreOptions(scale);
+
+        SolveResult panel = engine.isSolving() ? engine.liveBestResult() : state.getResult();
+        trackObjectiveImprovement(panel);
+        if (panel != null) {
+            ThemeManager.paddedSeparator();
+            renderResultPanel(io, panel, scale);
+        }
+    }
+
+    private void renderGeneral(int rowCount, float labelW, float scale) {
         ticksRow(rowCount, labelW, scale);
         int span = state.getLandingTick() - state.getStartTick();
         if (span > LONG_SPAN_WARN_TICKS) longSpanWarning(span, scale);
@@ -226,20 +246,6 @@ public final class AngleSolverWindow implements RenderInterface {
 
         if (state.isCustomBudget()) presetRow(labelW, scale);
         else budgetRow(labelW, scale);
-
-        ThemeManager.sectionSpacing();
-        renderActions();
-
-        ThemeManager.sectionSpacing();
-        moreExpanded = sectionToggle("More options", "more", moreExpanded, scale);
-        if (moreExpanded) renderMoreOptions(scale);
-
-        SolveResult panel = engine.isSolving() ? engine.liveBestResult() : state.getResult();
-        trackObjectiveImprovement(panel);
-        if (panel != null) {
-            ThemeManager.paddedSeparator();
-            renderResultPanel(io, panel, scale);
-        }
     }
 
     private void longSpanWarning(int span, float scale) {
