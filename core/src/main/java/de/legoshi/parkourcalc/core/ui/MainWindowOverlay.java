@@ -17,6 +17,7 @@ import imgui.flag.ImGuiWindowFlags;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public final class MainWindowOverlay implements RenderInterface {
 
@@ -371,7 +372,20 @@ public final class MainWindowOverlay implements RenderInterface {
     }
 
     private void renderSettingsMenuItems() {
+        if (ImGui.menuItem("Show path", null, settings.showPath)) toggleSetting(settings.showPath, v -> settings.showPath = v);
+        if (ImGui.menuItem("Show constraints", null, settings.showConstraints)) toggleSetting(settings.showConstraints, v -> settings.showConstraints = v);
+        if (ImGui.menuItem("Show hitbox", null, settings.showHitbox)) toggleSetting(settings.showHitbox, v -> settings.showHitbox = v);
+        if (ImGui.menuItem("Show facing arrows", null, settings.showYawArrows)) toggleSetting(settings.showYawArrows, v -> settings.showYawArrows = v);
+        if (ImGui.menuItem("Show hit distance lines", null, settings.showHitDistanceLines)) toggleSetting(settings.showHitDistanceLines, v -> settings.showHitDistanceLines = v);
+        if (ImGui.menuItem("Subtick visualization", null, settings.showSubtick)) toggleSetting(settings.showSubtick, v -> settings.showSubtick = v);
+        if (ImGui.menuItem("Keep tick boxes during replay", null, settings.keepBoxesDuringPlayback)) toggleSetting(settings.keepBoxesDuringPlayback, v -> settings.keepBoxesDuringPlayback = v);
+        ThemeManager.paddedSeparator();
         if (ImGui.menuItem("Preferences...")) settingsModal.open();
+    }
+
+    private void toggleSetting(boolean current, Consumer<Boolean> setter) {
+        setter.accept(!current);
+        onSettingsChanged.run();
     }
 
     private void renderHelpMenuItems() {
