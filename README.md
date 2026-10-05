@@ -48,7 +48,7 @@ Every jar ships the same core: the input table, the simulation, the angle solver
 - **Block-derived constraints**: look at a block and press `B` to add its landing footprint or wall as a constraint. Modifiers cover entering walls, unions of several blocks, pressure plates, ladders, vines, slime and ice.
 - **Free start position**: the solver picks the best takeoff spot inside the start block's footprint.
 - **Objectives**: maximize or minimize X or Z, or distance or motion along a custom facing angle; optional Smooth (TAS) scoring for human-playable turn shapes.
-- **Effort levels**: Fast (first feasible), Optimize (anytime, keeps improving until the budget runs out) and Custom, where you pick or edit a solver graph in the node editor with per-node help and per-stage budgets. Built-in presets include Fast, Optimize, Fast (multi-start) and Fast (run ticks).
+- **Time budget**: one slider. 0 s returns the first feasible path, anything above keeps improving the result until the budget runs out (milliseconds work too: `250ms`), and Custom budget lets you pick or edit a solver graph in the node editor with per-node help and per-stage budgets. Built-in presets include Fast, Optimize, Fast (multi-start) and Fast (run ticks).
 - **Run-ticks search**: let the solver insert run-up ticks before each jump instead of fixing the tick count by hand.
 - **Byte-exact results**: the solver's own model is a bit-exact replica of the X/Z stepper, and every applied solve is re-verified through the real entity; a divergence is reported instead of hidden.
 - **Failed-solve diagnostics**: a failed solve reports which constraints it missed and by how much.

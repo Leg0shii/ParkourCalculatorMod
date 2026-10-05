@@ -25,6 +25,11 @@ public final class BuiltinGraphs {
         return build(FAST_PRESET, 10, 3, 0, true, false, FAST_SEED_CAP_MS, 0);
     }
 
+    public static SolverGraph fast(int budgetMs) {
+        int seedCapMs = budgetMs > 0 && budgetMs < 1000 ? budgetMs : FAST_SEED_CAP_MS;
+        return build(FAST_PRESET, 10, 3, 0, true, false, seedCapMs, 0);
+    }
+
     public static SolverGraph fastMultiStart() {
         return build(MULTI_START_PRESET, 10, 3, 0, true, false, FAST_SEED_CAP_MS, SWEEP_SEEDS);
     }

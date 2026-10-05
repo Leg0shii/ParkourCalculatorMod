@@ -191,23 +191,18 @@ public final class SaveIO {
         state.setCustomAngle(a.customAngle != null && a.customAngle);
         if (a.customAngleDeg != null) state.setCustomAngleDeg(a.customAngleDeg);
         state.setCustomAngleType(parseEnum(AngleSolverState.CustomAngleType.class, a.customAngleType, AngleSolverState.CustomAngleType.POSITION));
-        state.setEffort(parseEnum(AngleSolverState.Effort.class, a.effort, AngleSolverState.Effort.FAST));
+        AngleSolverState.Effort effort = parseEnum(AngleSolverState.Effort.class, a.effort, AngleSolverState.Effort.FAST);
+        state.setEffort(effort);
         state.setStopOnFeasible(a.stopOnFeasible != null && a.stopOnFeasible);
         state.setLegalMode(a.legalMode != null && a.legalMode);
-        if (a.optimizeSeconds != null) state.setOptimizeSeconds(a.optimizeSeconds);
+        if (a.budgetMs != null) state.setBudgetMs(a.budgetMs);
+        else if (a.optimizeSeconds != null && effort != AngleSolverState.Effort.FAST) state.setOptimizeSeconds(a.optimizeSeconds);
         state.setSmoothLambda(a.smoothLambda != null ? a.smoothLambda : 0.0);
         applyCustomBudget(a.customBudget, state.getSolveBudget());
         state.setGraphPresetName(a.graphPreset);
         state.setDefaultInputs(parseEnum(AngleSolverState.InputMode.class, a.defaultInputs, AngleSolverState.InputMode.FORCE_45));
         state.setDefaultSprint(parseEnum(AngleSolverState.SprintMode.class, a.defaultSprint, AngleSolverState.SprintMode.ALWAYS));
         state.setDefaultSlipperiness(parseEnum(Slipperiness.class, a.defaultSlipperiness, Slipperiness.AIR));
-
-        if (a.defaultPotions != null) {
-            for (SaveFile.Dose d : a.defaultPotions) {
-                PotionDose dose = toDose(d);
-                if (dose != null) state.getDefaultPotions().add(dose);
-            }
-        }
 
         if (rowCount > 0) state.clampTicks(rowCount);
 
@@ -574,15 +569,13 @@ public final class SaveIO {
         a.stopOnFeasible = s.isStopOnFeasible();
         a.legalMode = s.isLegalMode();
         a.optimizeSeconds = s.getOptimizeSeconds();
+        a.budgetMs = s.getBudgetMs();
         a.smoothLambda = s.getSmoothLambda() > 0.0 ? s.getSmoothLambda() : null;
         a.customBudget = toSaveCustomBudget(s.getSolveBudget());
         a.graphPreset = s.getGraphPresetName();
         a.defaultInputs = s.getDefaultInputs().name();
         a.defaultSprint = s.getDefaultSprint().name();
         a.defaultSlipperiness = s.getDefaultSlipperiness().name();
-        for (PotionDose d : s.getDefaultPotions()) {
-            a.defaultPotions.add(toSaveDose(d));
-        }
         for (Integer tick : s.populatedTicks()) {
             TickConstraints tc = s.tickConstraintsOrNull(tick);
             if (tc == null) continue;
