@@ -21,7 +21,8 @@ anglesolver/
                            a pinned start passes through the sweep instantly (gh398-optimize-2jump)
   OverConstrainedChainTest.java  gh-454 (SlowSolverTests): a segment whose dF = 0 constraints tie every
                            tick to one heading (gh454-p2s-overconstrained capture, THOROUGH) fails
-                           within 20 s and carries the "1 free angle ... misses by" notice
+                           within 20 s and carries the "Overconstrained" notice label with the
+                           "one heading ... misses by" explanation behind it
   GraphPathObjectiveGateTest.java  objective gates that solve THROUGH the full Optimize graph (not dualChain),
                            asserting the ENGINE's shipped objective (getObjectiveValue), which is computed with the
                            post-solve scenario and so honors yaw-lock. j021-rinav1-01 must reach the deterministic

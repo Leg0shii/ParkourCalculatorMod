@@ -42,7 +42,9 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.TrendFilterSmooth;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
@@ -400,6 +402,14 @@ public final class AngleSolverEngine {
         lastForce45MaskDebug = ph.force45Mask;
         lastStrafeMaskDebug = ph.strafeMask;
         List<ConstraintAt> uiCons = collectUiConstraints(startTick, numTicks);
+        String conflict = firstConflict(uiCons);
+        if (conflict != null) {
+            SolveResult r = new SolveResult(false, 0, total, startTick + 1, landingTick + 1);
+            r.setNoticeLabel(INFEASIBLE_LABEL);
+            r.setNotice(conflict);
+            state.setResult(r);
+            return null;
+        }
 
         Set<Constraint> consumed = new HashSet<>();
         if (startTick == 0 && model instanceof ExactJumpModel) {
@@ -1022,8 +1032,11 @@ public final class AngleSolverEngine {
             SolveResult fail = failureResult(job, sc, ctx, System.nanoTime() - solveStart);
             if (ctx.chain() != null) fail.setSolver(ctx.chain());
             if (hasUnsupportedDf(job)) fail.setNotice(DF_UNSUPPORTED_NOTICE);
-            else if (pinnedYaws != null) fail.setNotice(pinnedChainNotice(sc, ctx.violationOf(pinnedYaws), freeBox != null));
-            else if (singleHeading) {
+            else if (pinnedYaws != null) {
+                fail.setNoticeLabel(OVERCONSTRAINED_LABEL);
+                fail.setNotice(pinnedChainNotice(sc, ctx.violationOf(pinnedYaws), freeBox != null));
+            } else if (singleHeading) {
+                fail.setNoticeLabel(OVERCONSTRAINED_LABEL);
                 fail.setNotice(singleHeadingNotice(sc, ctx.closestMiss().violation(), freeBox != null));
             }
             return new Outcome(fail, null);
@@ -1075,6 +1088,7 @@ public final class AngleSolverEngine {
         double finalObjective = spec.objective.evaluate(path);
         double finalViolation = JumpConstraintCompiler.compile(spec).maxViolation(gameFacings, path);
         if (finalViolation <= FEAS_TOL && JumpLinearModel.hasFacingWall(spec.constraints)) {
+            result.setNoticeLabel(DF_DIRECTION_LABEL);
             result.setNotice(DF_DIRECTION_NOTICE);
         }
         finishRecord(rec, SolveRunRecord.STATUS_SOLVED, finalObjective, finalViolation,
@@ -1098,6 +1112,18 @@ public final class AngleSolverEngine {
     private static final long SMOOTH_BUDGET_NANOS = 400_000_000L;
     private static final long MAX_SMOOTH_BUDGET_NANOS = 6_000_000_000L;
 
+    private static String firstConflict(List<ConstraintAt> uiCons) {
+        Map<Integer, List<Constraint>> byTick = new TreeMap<>();
+        for (ConstraintAt ca : uiCons) {
+            byTick.computeIfAbsent(ca.absTick, k -> new ArrayList<>()).add(ca.c);
+        }
+        for (Map.Entry<Integer, List<Constraint>> e : byTick.entrySet()) {
+            String why = ConstraintConflict.describe(e.getKey(), e.getValue());
+            if (why != null) return why;
+        }
+        return null;
+    }
+
     private static boolean hasUnsupportedDf(Job job) {
         for (ConstraintAt ca : job.uiConstraints) if (ca.c.isUnsupportedDf()) return true;
         return false;
@@ -1117,27 +1143,28 @@ public final class AngleSolverEngine {
         return scan != null && scan.singleHeading();
     }
 
+    public static final String OVERCONSTRAINED_LABEL = "Overconstrained";
+    public static final String INFEASIBLE_LABEL = "Infeasible constraints";
+
     private static String singleHeadingNotice(JumpPhysicsInputs sc, double violation, boolean freeStart) {
-        String head = "1 free angle: the no-turn (dF = 0) constraints tie all " + sc.numTicks + " ticks in the"
-                + " segment to a single heading, so the solver could only sweep that one angle.";
+        String head = "dF = 0 on every tick ties all " + sc.numTicks + " ticks to one heading, so only that"
+                + " one angle could be searched.";
         String miss = Double.isNaN(violation) || Double.isInfinite(violation) ? ""
-                : " The best heading misses by " + ConstraintText.fixedStat(violation) + ".";
+                : " Best heading misses by " + ConstraintText.fixedStat(violation) + ".";
         String tail = freeStart
-                ? " The start position was free too, and no start inside its box makes a single heading land."
-                : " Free a turn by clearing a dF = 0 on the tick where the turn should happen, or start the"
-                + " segment before the turn so it is inside the solve.";
+                ? " No start inside the free start box helps."
+                : " Clear the dF = 0 on the tick where the turn should happen.";
         return head + miss + tail;
     }
 
     private static String pinnedChainNotice(JumpPhysicsInputs sc, double violation, boolean freeStart) {
-        String head = "0 free angles: every one of the " + sc.numTicks + " ticks in the segment is pinned by its"
-                + " facing and no-turn (dF = 0) constraints, so there is nothing for the solver to search.";
+        String head = "Facing and dF = 0 constraints pin every one of the " + sc.numTicks + " ticks, so there"
+                + " is nothing left to search.";
         String miss = Double.isNaN(violation) || Double.isInfinite(violation) ? ""
-                : " The trajectory those constraints determine misses by " + ConstraintText.fixedStat(violation) + ".";
+                : " That path misses by " + ConstraintText.fixedStat(violation) + ".";
         String tail = freeStart
-                ? " Only the start position was free; no start inside its box makes that path land."
-                : " Free a turn by clearing a dF = 0 on the tick where the turn should happen, or start the"
-                + " segment before the turn so it is inside the solve.";
+                ? " No start inside the free start box helps."
+                : " Clear the dF = 0 on the tick where the turn should happen.";
         return head + miss + tail;
     }
 
@@ -1148,11 +1175,14 @@ public final class AngleSolverEngine {
             + " present. Re-select the dF field on that constraint to reset it to dF = 0, or delete"
             + " the constraint.";
 
+    public static final String DF_DIRECTION_LABEL = "Direction unverified";
+
     public static final String DF_DIRECTION_NOTICE =
             "This jump has a delta-facing (dF) constraint. Landing does not depend on the Solve For"
             + " direction, but optimizing toward it is not guaranteed here: the deterministic"
             + " direction-optimizer only runs without dF constraints, so this result comes from the"
-            + " general search and may not be the exact directional optimum.";
+            + " general search and may not be the exact directional optimum. Ordinary keep-out walls"
+            + " are position constraints and are not affected.";
 
     /** The byte-exact objective value the given facings realize (for comparing two feasible candidates). */
     private double exactObjective(JumpPhysicsInputs sc, JumpSpec spec, double[] yawsAbsWrapped) {

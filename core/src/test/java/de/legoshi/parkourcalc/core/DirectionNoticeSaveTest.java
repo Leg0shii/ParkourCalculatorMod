@@ -30,6 +30,7 @@ public class DirectionNoticeSaveTest {
         AngleSolverState in = new AngleSolverState();
         SolveResult r = new SolveResult(true, 3, 3, 1, 10);
         r.setNotice(NOTICE);
+        r.setNoticeLabel(AngleSolverEngine.OVERCONSTRAINED_LABEL);
         in.setResult(r);
 
         Result<String> saved = SaveIO.save(store, "run", new InputData(), Vec3dCore.ZERO, Vec3dCore.ZERO,
@@ -42,6 +43,7 @@ public class DirectionNoticeSaveTest {
         SaveIO.applyAngleSolverTo(loaded.value, out);
         assertNotNull(out.getResult());
         assertEquals(NOTICE, out.getResult().getNotice());
+        assertEquals(AngleSolverEngine.OVERCONSTRAINED_LABEL, out.getResult().getNoticeLabel());
     }
 
     @Test
@@ -53,5 +55,6 @@ public class DirectionNoticeSaveTest {
         SaveIO.applyAngleSolverTo(f, state);
         assertNotNull(state.getResult());
         assertNull(state.getResult().getNotice());
+        assertNull(state.getResult().getNoticeLabel());
     }
 }

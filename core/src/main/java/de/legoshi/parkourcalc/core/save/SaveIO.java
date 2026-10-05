@@ -832,6 +832,7 @@ public final class SaveIO {
         out.finishedAt = r.getFinishedAt();
         out.solver = r.getSolver();
         out.notice = r.getNotice();
+        out.noticeLabel = r.getNoticeLabel();
         out.objectiveValue = r.getObjectiveValue();
         out.hasObjective = r.hasObjective();
         for (SolveResult.Outcome o : r.getOutcomes()) {
@@ -868,6 +869,7 @@ public final class SaveIO {
         r.setFinishedAt(rd.finishedAt);
         r.setSolver(rd.solver);
         r.setNotice(rd.notice);
+        r.setNoticeLabel(rd.noticeLabel);
         if (rd.hasObjective) r.setObjective(rd.objectiveValue);
         if (rd.outcomes != null) {
             for (SaveFile.Outcome o : rd.outcomes) {
