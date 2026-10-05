@@ -25,6 +25,8 @@ public final class SettingsModal {
 
     private static final String TT_UI_SCALE = "Multiplier applied to all ImGui widgets and fonts. 1.5x is the default for 1080p.";
     private static final String TT_SCROLLBAR_SIZE = "Thickness of scrollbars: the width of vertical bars and the height of horizontal ones. Scales with UI Scale.";
+    private static final String TT_POP_OUT_WINDOWS = "Lets a window be dragged out of the game window into its own window, for example onto a second screen. Drag it back in to merge it again. Exclusive fullscreen keeps every window inside the game.";
+    private static final String TT_POP_OUT_WINDOWS_UNSUPPORTED = "Pop-out windows are not available on this loader.";
     private static final String TT_SCROLLBAR_GRAB = "Minimum length of the draggable scrollbar grab. Also applies to slider grab handles. Scales with UI Scale.";
     private static final String TT_YAW_ARROWS = "Draws an arrow at each tick's position showing the facing angle that frame.";
     private static final String TT_ARROW_MODE = "Which facing arrow to draw: the flat yaw arrow, or one arrow combining yaw and pitch into the actual look direction.";
@@ -87,6 +89,7 @@ public final class SettingsModal {
     private final TickInfoStatsEditor tickInfoStatsEditor;
 
     private boolean pairedSimulationSupported;
+    private boolean popOutWindowsSupported;
     private Runnable onPairedSimulationApplied;
     private boolean openPairedConfirm;
     private boolean pairedConfirmTarget;
@@ -145,6 +148,10 @@ public final class SettingsModal {
 
     public void setOnejumpHook(Runnable onMacroModeChanged) {
         this.onMacroModeChanged = onMacroModeChanged;
+    }
+
+    public void setPopOutWindowsSupported(boolean supported) {
+        this.popOutWindowsSupported = supported;
     }
 
     public void setPairedSimulationHook(boolean supported, Runnable onApplied) {
@@ -262,6 +269,11 @@ public final class SettingsModal {
                 if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
                 tooltipForLastItem(TT_SCROLLBAR_GRAB);
             });
+            if (popOutWindowsSupported) {
+                checkboxRow("Pop-out windows", "##pop_out_windows", settings.popOutWindows, TT_POP_OUT_WINDOWS, v -> settings.popOutWindows = v);
+            } else {
+                disabledCheckboxRow("Pop-out windows", "##pop_out_windows", settings.popOutWindows, TT_POP_OUT_WINDOWS_UNSUPPORTED);
+            }
             ThemeManager.endStandardFormTable();
         }
 

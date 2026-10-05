@@ -144,6 +144,10 @@ public interface MinecraftAccess {
     /** True when the client owns the integrated server (singleplayer or LAN host). */
     boolean isSinglePlayer();
 
+    default boolean supportsPopOutWindows() {
+        return false;
+    }
+
     /** SP: runs the task on the server's main thread and blocks for the result.
      *  MP: runs inline. Lets the simulator tick against ServerWorld natively. */
     <T> T runOnServerThread(Supplier<T> task);

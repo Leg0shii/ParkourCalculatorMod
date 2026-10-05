@@ -136,7 +136,7 @@ public final class StratfinderWindow implements RenderInterface {
         if (!open) return;
         float scale = ThemeManager.uiScale();
         ImGui.setNextWindowSize(WIN_W * scale, WIN_H * scale, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowPos(io.getDisplaySizeX() * 0.5f - WIN_W * 0.5f * scale, 120f, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowPos(ImGui.getMainViewport().getPosX() + io.getDisplaySizeX() * 0.5f - WIN_W * 0.5f * scale, ImGui.getMainViewport().getPosY() + 120f, ImGuiCond.FirstUseEver);
         ImGui.setNextWindowSizeConstraints(MIN_W * scale, MIN_H * scale, Float.MAX_VALUE, Float.MAX_VALUE);
         int flags = ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
         ThemeManager.pushHeaderChrome();

@@ -335,6 +335,7 @@ public final class Application {
         inputOverlay.setSaveSelectionAsTasHandler(() -> promptSaveSelectionAsTas(fileMenu));
         SettingsModal settingsModal = new SettingsModal(settings, this::saveSettings);
         settingsModal.setPairedSimulationHook(simulator.supportsPairedSimulation(), this::applyPairedSimulationChange);
+        settingsModal.setPopOutWindowsSupported(mc.supportsPopOutWindows());
         settingsModal.setOnejumpHook(practiceMacro::stop);
         HudMessagesPanel hudMessagesPanel = new HudMessagesPanel(hudMessages, settings);
         MainWindowOverlay mainWindow = new MainWindowOverlay(

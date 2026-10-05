@@ -333,6 +333,11 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
     }
 
     @Override
+    public boolean supportsPopOutWindows() {
+        return true;
+    }
+
+    @Override
     public boolean isSinglePlayer() {
         return Minecraft.getInstance().getSingleplayerServer() != null;
     }

@@ -188,7 +188,7 @@ public final class MainWindowOverlay implements RenderInterface {
         float cap = displayW > 0f ? MAX_DISPLAY_WIDTH_FRACTION * displayW : Float.MAX_VALUE;
         float target = Math.min(Math.max(desired, minW), Math.max(minW, cap));
         ImGui.setNextWindowSize(target, 640, ImGuiCond.FirstUseEver);
-        ImGui.setNextWindowPos(16, 16, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowPos(ImGui.getMainViewport().getPosX() + 16, ImGui.getMainViewport().getPosY() + 16, ImGuiCond.FirstUseEver);
         ImGui.setNextWindowSizeConstraints(minW, 420, Float.MAX_VALUE, Float.MAX_VALUE);
 
         ThemeManager.pushHeaderChrome();

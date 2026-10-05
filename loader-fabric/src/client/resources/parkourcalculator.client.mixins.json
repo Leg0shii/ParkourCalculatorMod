@@ -24,6 +24,7 @@
     "PairedSimSuppressMixin",
     "PlayerAccessor",
     "RestartSettleMixin",
+    "WindowFocusMixin",
     "WorldJournalMixin"
   ],
   "injectors": {

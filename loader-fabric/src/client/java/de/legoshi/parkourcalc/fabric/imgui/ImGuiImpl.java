@@ -13,6 +13,7 @@ import imgui.ImGui;
 import imgui.ImGuiIO;
 import imgui.extension.implot.ImPlot;
 import imgui.extension.implot.ImPlotContext;
+import imgui.flag.ImGuiConfigFlags;
 import imgui.gl3.ImGuiImplGl3;
 import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.pipeline.RenderTarget;
@@ -21,6 +22,7 @@ import com.mojang.renderpearl.backend.opengl.GlDevice;
 import com.mojang.renderpearl.frontend.FrontendGpuDevice;
 import com.mojang.renderpearl.backend.opengl.GlTexture;
 import org.apache.commons.io.IOUtils;
+import org.lwjgl.sdl.SDL_Event;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL21C;
 import org.lwjgl.opengl.GL30;
@@ -65,6 +67,8 @@ public final class ImGuiImpl {
 
         ImGuiIO io = ImGui.getIO();
         io.setIniFilename(INI_FILENAME);
+        io.addConfigFlags(ImGuiConfigFlags.ViewportsEnable);
+        io.setConfigViewportsNoTaskBarIcon(true);
 
         configurePresetFonts();
         applyScale(settings.scaleIndex);
@@ -84,6 +88,7 @@ public final class ImGuiImpl {
     public static void beginImGuiRendering() {
         autoScaleResolver.accept(currentFramebufferHeight());
         applyPendingScale();
+        applyPopOutSetting();
         bindMinecraftFramebuffer();
 
         platform.newFrame();
@@ -97,6 +102,23 @@ public final class ImGuiImpl {
                 io.setMouseDown(i, false);
             }
         }
+    }
+
+    private static void applyPopOutSetting() {
+        ImGuiIO io = ImGui.getIO();
+        if (settings.popOutWindows) {
+            io.addConfigFlags(ImGuiConfigFlags.ViewportsEnable);
+        } else {
+            io.removeConfigFlags(ImGuiConfigFlags.ViewportsEnable);
+        }
+    }
+
+    public static boolean isPopOutWindowFocused() {
+        return platform.isPopOutWindowFocused();
+    }
+
+    public static boolean consumeWindowEvent(SDL_Event event) {
+        return platform.consumeWindowEvent(event);
     }
 
     private static void applyPendingScale() {
@@ -119,6 +141,8 @@ public final class ImGuiImpl {
         imGuiGl3.renderDrawData(ImGui.getDrawData());
 
         GlStateManager._glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0);
+
+        platform.renderViewports();
     }
 
     public static void dispose() {

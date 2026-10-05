@@ -212,6 +212,7 @@ public final class Settings {
     public TickInfoConfig tickInfoStats = TickInfoConfig.defaultConfig(DEFAULT_TICK_INFO_PRECISION);
 
     public int scaleIndex = AUTO_SCALE_INDEX; // resolved from display on first run; concrete once chosen
+    public boolean popOutWindows = false;
 
     public String[] recentFiles = new String[0];
     public boolean viewTickInfo = DEFAULT_VIEW_TICK_INFO;
@@ -337,6 +338,7 @@ public final class Settings {
         solverStatsPrecision = DEFAULT_SOLVER_STATS_PRECISION;
         tickInfoStats = TickInfoConfig.defaultConfig(DEFAULT_TICK_INFO_PRECISION);
         scaleIndex = DEFAULT_SCALE_INDEX;
+        popOutWindows = false;
         recentFiles = new String[0];
         viewTickInfo = DEFAULT_VIEW_TICK_INFO;
         viewServerEvents = DEFAULT_VIEW_SERVER_EVENTS;

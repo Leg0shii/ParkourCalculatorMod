@@ -182,7 +182,7 @@ public final class AngleSolverWindow implements RenderInterface {
         float w = windowWidth(sizingResult, scale);
         float px = Math.max(40f, io.getDisplaySizeX() - w - 40f);
         float maxH = Math.max(200f * scale, io.getDisplaySizeY() - 90f - 40f * scale);
-        ImGui.setNextWindowPos(px, 90f, ImGuiCond.FirstUseEver);
+        ImGui.setNextWindowPos(ImGui.getMainViewport().getPosX() + px, ImGui.getMainViewport().getPosY() + 90f, ImGuiCond.FirstUseEver);
         ImGui.setNextWindowSizeConstraints(w, 0f, w, maxH);
 
         int flags = ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.AlwaysAutoResize;

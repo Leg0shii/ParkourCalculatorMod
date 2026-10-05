@@ -40,7 +40,7 @@ public final class HudMessagesPanel {
         if (upwards && !draggedLastFrame && !Float.isNaN(anchorBottomY)) {
             ImGui.setNextWindowPos(anchorX, anchorBottomY, ImGuiCond.Always, 0f, 1f);
         } else {
-            ImGui.setNextWindowPos(io.getDisplaySizeX() * 0.5f - 80f, 48f, ImGuiCond.FirstUseEver);
+            ImGui.setNextWindowPos(ImGui.getMainViewport().getPosX() + io.getDisplaySizeX() * 0.5f - 80f, ImGui.getMainViewport().getPosY() + 48f, ImGuiCond.FirstUseEver);
         }
         if (ImGui.begin(WINDOW_ID, WINDOW_FLAGS)) {
             if (imguiInstanceCalls == null) imguiInstanceCalls = new ImGui();

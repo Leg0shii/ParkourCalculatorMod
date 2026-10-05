@@ -10,6 +10,7 @@ import imgui.ImFontConfig;
 import imgui.ImFontGlyphRangesBuilder;
 import imgui.ImGui;
 import imgui.ImGuiIO;
+import imgui.ImGuiPlatformIO;
 import imgui.extension.implot.ImPlot;
 import imgui.extension.implot.ImPlotContext;
 import imgui.flag.ImGuiConfigFlags;
@@ -19,6 +20,7 @@ import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import org.apache.commons.io.IOUtils;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.glfw.GLFWMonitorCallback;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL21C;
 import org.lwjgl.opengl.GL30;
@@ -50,6 +52,9 @@ public final class ImGuiImpl {
     private static ImFont[] presetFonts;
     private static ImFont[] boldPresetFonts;
     private static int appliedScaleIndex = -1;
+    private static long mainWindow;
+    private static GLFWMonitorCallback minecraftMonitorCallback;
+    private static GLFWMonitorCallback chainedMonitorCallback;
 
     private ImGuiImpl() {}
 
@@ -62,11 +67,19 @@ public final class ImGuiImpl {
 
         ImGuiIO io = ImGui.getIO();
         io.setIniFilename(INI_FILENAME);
+        io.addConfigFlags(ImGuiConfigFlags.ViewportsEnable);
+        io.setConfigViewportsNoTaskBarIcon(true);
 
         configurePresetFonts();
         applyScale(settings.scaleIndex);
 
+        minecraftMonitorCallback = GLFW.glfwSetMonitorCallback(null);
         imGuiGlfw.init(windowHandle, false);
+        chainedMonitorCallback = GLFWMonitorCallback.create((monitor, event) -> {
+            imGuiGlfw.monitorCallback(monitor, event);
+            if (minecraftMonitorCallback != null) minecraftMonitorCallback.invoke(monitor, event);
+        });
+        GLFW.glfwSetMonitorCallback(chainedMonitorCallback);
         // 1.86's ImGuiImplGl3 omits the GL_UNPACK_* reset that 1.90 does internally, so MC's
         // leftover pixel-store state scrambles the font atlas on upload (glyphs render as garbage).
         // Normalize to GL defaults before init() uploads the atlas.
@@ -76,11 +89,13 @@ public final class ImGuiImpl {
         GL11C.glPixelStorei(GL11C.GL_UNPACK_SKIP_PIXELS, 0);
         GL21C.glBindBuffer(GL21C.GL_PIXEL_UNPACK_BUFFER, 0);
         imGuiGl3.init("#version 150");
+        mainWindow = windowHandle;
     }
 
     public static void beginImGuiRendering() {
         autoScaleResolver.accept(currentFramebufferHeight());
         applyPendingScale();
+        applyPopOutSetting();
         bindMinecraftFramebuffer();
 
         imGuiGlfw.newFrame();
@@ -94,6 +109,27 @@ public final class ImGuiImpl {
                 io.setMouseDown(i, false);
             }
         }
+    }
+
+    private static void applyPopOutSetting() {
+        ImGuiIO io = ImGui.getIO();
+        if (settings.popOutWindows) {
+            io.addConfigFlags(ImGuiConfigFlags.ViewportsEnable);
+        } else {
+            io.removeConfigFlags(ImGuiConfigFlags.ViewportsEnable);
+        }
+    }
+
+    public static boolean isPopOutWindowFocused() {
+        if (mainWindow == 0L || !ImGui.getIO().hasConfigFlags(ImGuiConfigFlags.ViewportsEnable)) return false;
+        ImGuiPlatformIO platformIO = ImGui.getPlatformIO();
+        int count = platformIO.getViewportsSize();
+        for (int i = 0; i < count; i++) {
+            long handle = platformIO.getViewports(i).getPlatformHandle();
+            if (handle == 0L || handle == mainWindow) continue;
+            if (GLFW.glfwGetWindowAttrib(handle, GLFW.GLFW_FOCUSED) == GLFW.GLFW_TRUE) return true;
+        }
+        return false;
     }
 
     private static void applyPendingScale() {
@@ -121,8 +157,11 @@ public final class ImGuiImpl {
     }
 
     public static void dispose() {
+        mainWindow = 0L;
         imGuiGl3.dispose();
         imGuiGlfw.dispose();
+        GLFW.glfwSetMonitorCallback(minecraftMonitorCallback);
+        if (chainedMonitorCallback != null) chainedMonitorCallback.free();
 
         ImPlot.destroyContext(implotContext);
         ImGui.destroyContext();
@@ -158,10 +197,6 @@ public final class ImGuiImpl {
     }
 
     private static void handleViewports() {
-        if (!ImGui.getIO().hasConfigFlags(ImGuiConfigFlags.ViewportsEnable)) {
-            return;
-        }
-
         long currentContext = GLFW.glfwGetCurrentContext();
         ImGui.updatePlatformWindows();
         ImGui.renderPlatformWindowsDefault();
