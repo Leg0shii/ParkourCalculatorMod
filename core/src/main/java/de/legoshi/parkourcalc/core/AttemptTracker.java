@@ -327,7 +327,7 @@ public final class AttemptTracker {
     }
 
     private void stopOnKeys(int k, int mask) {
-        String verdict = "tick " + (cur.startTick + k + 1) + ": " + TurnReference.describe(mask) + ", expected "
+        String verdict = "tick " + (cur.tasTick(k) + 1) + ": " + TurnReference.describe(mask) + ", expected "
                 + TurnReference.describe(cur.keys[k]);
         publish(attempt(Math.min(recorded, k + 1), true, false, verdict, Double.NaN, -1, false, Double.NaN));
     }
@@ -353,7 +353,7 @@ public final class AttemptTracker {
 
     private void turnFailure(int k, double turned) {
         int failTick = cur.startTick + k;
-        String verdict = "tick " + (failTick + 1) + ": turned " + TurnAttempt.turnText(turned, cur.pixelDeg)
+        String verdict = "tick " + (cur.tasTick(k) + 1) + ": turned " + TurnAttempt.turnText(turned, cur.pixelDeg)
                 + ", expected still";
         publish(attempt(k + 1, true, false, verdict, Double.NaN, -1, true, turned));
     }

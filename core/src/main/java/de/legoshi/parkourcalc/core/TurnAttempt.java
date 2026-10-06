@@ -71,6 +71,10 @@ public final class TurnAttempt {
     public int[] pressedKeys;
     public boolean[] keysFailed;
 
+    public int tasTick(int tick) {
+        return (tasFirstTick < 0 ? 0 : tasFirstTick) + tick - firstTick;
+    }
+
     public boolean keysRecordedAt(int tick) {
         int j = tick - firstTick;
         if (pressedKeys == null) return j >= 0 && j < recorded;

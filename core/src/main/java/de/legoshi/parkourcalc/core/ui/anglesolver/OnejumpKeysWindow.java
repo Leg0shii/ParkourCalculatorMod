@@ -205,24 +205,24 @@ public final class OnejumpKeysWindow implements RenderInterface {
             }
         }
         int labelEvery = Math.max(1, (int) Math.ceil(ImGui.calcTextSize("000").x * 1.4f / Math.max(1f, cellW)));
-        for (int t = 0; t < n; t++) {
-            if (t % labelEvery != 0 && t != n - 1) continue;
-            String lbl = Integer.toString(cur.startTick + t + 1);
+        for (int t = -lead; t < n; t++) {
+            if ((t + lead) % labelEvery != 0 && t != n - 1) continue;
+            String lbl = Integer.toString(cur.tasTick(t) + 1);
             float cx = gridX + (t + lead + 0.5f) * cellW;
             dl.addText(cx - ImGui.calcTextSize(lbl).x * 0.5f, gridY + gridH + stripGap + stripH + 2f * scale,
-                    cur.jumpTicks[t] ? ThemeManager.peachTintColor(0.9f) : dim, lbl);
+                    t >= 0 && cur.jumpTicks[t] ? ThemeManager.peachTintColor(0.9f) : dim, lbl);
         }
         if (hoverT != Integer.MIN_VALUE && hoverT < 0) {
             ImGui.beginTooltip();
-            ImGui.text((-hoverT) + (hoverT == -1 ? " tick" : " ticks") + " before the reference  "
-                    + TurnReference.describe(cur.leadKeys[hoverT + lead]) + "  (not checked)");
+            ImGui.text("tick " + (cur.tasTick(hoverT) + 1) + "  " + TurnReference.describe(cur.leadKeys[hoverT + lead])
+                    + "  (before the reference, not checked)");
             if (leadPassed) ImGui.textDisabled("passed");
             ImGui.endTooltip();
         }
         if (hoverT >= 0) {
             int t = hoverT;
             ImGui.beginTooltip();
-            ImGui.text("tick " + (cur.startTick + t + 1) + "  " + TurnReference.describe(cur.keys[t])
+            ImGui.text("tick " + (cur.tasTick(t) + 1) + "  " + TurnReference.describe(cur.keys[t])
                     + (cur.checkKeys[t] ? "" : "  (not checked)") + (cur.still[t] ? "  still" : "")
                     + (cur.checkKeys[t] && cur.optionalKeys[t] != 0 ? "  optional " + TurnReference.describe(cur.optionalKeys[t]) : ""));
             if (t == turnFailT) {

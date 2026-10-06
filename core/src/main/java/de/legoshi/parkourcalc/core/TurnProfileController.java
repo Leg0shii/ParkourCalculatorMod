@@ -88,6 +88,10 @@ public final class TurnProfileController {
         public int lastTick() {
             return Math.max(startTick + n - 1, landing == null ? -1 : landing.tick);
         }
+
+        public int tasTick(int t) {
+            return (tasFirstTick < 0 ? startTick : tasFirstTick) + t;
+        }
     }
 
     private static final class Built {

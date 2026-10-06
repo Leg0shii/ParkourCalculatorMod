@@ -347,7 +347,7 @@ public final class TurnProfileWindow implements RenderInterface {
             boolean label = shownIdx % labelEvery == 0 || t == lastShown;
             shownIdx++;
             if (!label) continue;
-            String lbl = Integer.toString(cur.startTick + t + 1);
+            String lbl = Integer.toString(cur.tasTick(t) + 1);
             dl.addText(xs[t] - ImGui.calcTextSize(lbl).x * 0.5f, plotY + plotH + 4f * scale,
                     cur.jumpTicks[t] ? jumpCol : textCol, lbl);
         }
