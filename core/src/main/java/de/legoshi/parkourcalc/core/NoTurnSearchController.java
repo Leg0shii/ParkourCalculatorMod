@@ -10,6 +10,7 @@ import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnOptimizePass;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnProblem;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnRanking;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnResult;
+import de.legoshi.parkourcalc.core.anglesolver.noturn.SenseFinder;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.StructurePoolDriver;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
@@ -419,6 +420,7 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
 
     private void onFound(NoTurnResult r) {
         if (r == null) return;
+        measureWindow(r);
         synchronized (results) {
             int same = -1;
             for (int i = 0; i < results.size(); i++) {
@@ -442,6 +444,7 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
     }
 
     private void onOptimized(NoTurnResult before, NoTurnResult after) {
+        if (after != null && after != before) measureWindow(after);
         synchronized (results) {
             int at = -1;
             for (int i = 0; i < results.size(); i++) {
@@ -460,6 +463,14 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
             }
             rerankLocked();
         }
+    }
+
+    private void measureWindow(NoTurnResult r) {
+        NoTurnProblem p = problem;
+        if (p == null || r.yaws == null) return;
+        JumpSpec spec = p.buildSpec(r.combos, r.sprint, r.turnCombo, r.ja);
+        SenseFinder.Turn turn = SenseFinder.turnOf(model, spec, r.yaws, r.startX, r.startZ);
+        r.window = SenseFinder.windowWidth(turn, turn.yaws, 0);
     }
 
     private void rerankLocked() {

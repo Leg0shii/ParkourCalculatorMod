@@ -22,7 +22,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class SenseFinder {
 
     public enum Mode {
-        HITS("Hits", "Most hittable mouse pixels on the first angles first"),
+        SENSE("Sense", "Highest sense first"),
+        MARGIN("Margin", "Listed pixel count furthest inside its facing window first"),
         FURTHEST("Furthest", "Largest landing offset first");
 
         public final String label;
@@ -83,18 +84,24 @@ public final class SenseFinder {
         public final float sensHi;
         public final double pixelDeg;
         public final int[] pixels;
-        public final int[] hits;
+        public final double[] below;
+        public final double[] above;
+        public final JumpConstraint[] belowBy;
+        public final JumpConstraint[] aboveBy;
         public final double offset;
         public final double[] yaws;
 
-        Candidate(float sens, float sensLo, float sensHi, double pixelDeg, int[] pixels, int[] hits, double offset,
-                  double[] yaws) {
+        Candidate(float sens, float sensLo, float sensHi, double pixelDeg, int[] pixels, double[] below, double[] above,
+                  JumpConstraint[] belowBy, JumpConstraint[] aboveBy, double offset, double[] yaws) {
             this.sens = sens;
             this.sensLo = sensLo;
             this.sensHi = sensHi;
             this.pixelDeg = pixelDeg;
             this.pixels = pixels;
-            this.hits = hits;
+            this.below = below;
+            this.above = above;
+            this.belowBy = belowBy;
+            this.aboveBy = aboveBy;
             this.offset = offset;
             this.yaws = yaws;
         }
@@ -102,11 +109,22 @@ public final class SenseFinder {
         public double percent() {
             return SenseFinder.percent(sens);
         }
+
+        public double margin(int angle) {
+            return Math.min(below[angle], above[angle]);
+        }
+
+        public double window(int angle) {
+            return below[angle] + above[angle];
+        }
     }
 
-    public static final double TURN_EPS_DEG = 1.0e-6;
-    public static final int HITS_MAX = 50;
+    public static final double TURN_EPS_DEG = Angles.REVERSAL_FLOOR_DEG;
+    public static final double WINDOW_CAP_DEG = 10.0;
+    private static final double WINDOW_FIRST_STEP_DEG = 1.0e-3;
+    private static final double WINDOW_RESOLUTION_DEG = 1.0e-5;
     private static final double OFFSET_TIE = 1.0e-6;
+    private static final double MARGIN_TIE = 2.0e-5;
     private static final double MISS_PENALTY = 1.0e6;
 
     private SenseFinder() {
@@ -275,62 +293,107 @@ public final class SenseFinder {
         double fine = (to - from) / (double) steps;
         float landLo = Float.NaN;
         float landHi = Float.NaN;
-        double bestOffset = Double.NaN;
-        List<Float> plateau = new ArrayList<>();
+        List<Float> landing = new ArrayList<>();
         for (int i = 0; i <= steps; i++) {
             float s = (float) (from + i * fine);
-            double sc = score(turn, b.pixels, TurnProfile.pixelDeg(s));
-            if (!lands(sc)) continue;
+            if (!lands(score(turn, b.pixels, TurnProfile.pixelDeg(s)))) continue;
             if (Float.isNaN(landLo)) landLo = s;
             landHi = s;
-            if (Double.isNaN(bestOffset) || sc > bestOffset + OFFSET_TIE) {
-                bestOffset = sc;
-                plateau.clear();
-                plateau.add(s);
-            } else if (sc >= bestOffset - OFFSET_TIE) {
-                plateau.add(s);
-            }
+            landing.add(s);
         }
-        if (Double.isNaN(bestOffset)) return null;
+        if (landing.isEmpty()) return null;
         float center = (landLo + landHi) * 0.5f;
-        float sens = plateau.get(0);
-        for (float s : plateau) if (Math.abs(s - center) < Math.abs(sens - center)) sens = s;
+        float sens = landing.get(0);
+        for (float s : landing) if (Math.abs(s - center) < Math.abs(sens - center)) sens = s;
         double p = TurnProfile.pixelDeg(sens);
         double offset = score(turn, b.pixels, p);
         if (!lands(offset)) return null;
-        int[] hits = hits(turn, b.pixels, p);
-        return new Candidate(sens, landLo, landHi, p, b.pixels.clone(), hits, offset, quantizedYaws(turn, b.pixels, p));
-    }
-
-    private static int[] hits(Turn turn, int[] pixels, double pixelDeg) {
-        int[] hits = new int[pixels.length];
-        int[] trial = pixels.clone();
-        for (int k = 0; k < pixels.length; k++) {
-            int count = 1;
-            for (int dir = -1; dir <= 1 && count < HITS_MAX; dir += 2) {
-                for (int d = 1; count < HITS_MAX; d++) {
-                    trial[k] = pixels[k] + dir * d;
-                    if (!lands(score(turn, trial, pixelDeg))) break;
-                    count++;
-                }
-            }
-            trial[k] = pixels[k];
-            hits[k] = count;
+        double[] yaws = quantizedYaws(turn, b.pixels, p);
+        int n = turn.angles();
+        double[] below = new double[n];
+        double[] above = new double[n];
+        JumpConstraint[] belowBy = new JumpConstraint[n];
+        JumpConstraint[] aboveBy = new JumpConstraint[n];
+        for (int k = 0; k < n; k++) {
+            int tick = turn.turnTicks[k];
+            below[k] = windowEdge(turn, yaws, tick, -1);
+            above[k] = windowEdge(turn, yaws, tick, 1);
+            belowBy[k] = binding(turn, shifted(yaws, tick, -(below[k] + 2.0 * WINDOW_RESOLUTION_DEG)));
+            aboveBy[k] = binding(turn, shifted(yaws, tick, above[k] + 2.0 * WINDOW_RESOLUTION_DEG));
         }
-        return hits;
+        return new Candidate(sens, landLo, landHi, p, b.pixels.clone(), below, above, belowBy, aboveBy, offset, yaws);
     }
 
-    public static String hitsText(int hits) {
-        return hits >= HITS_MAX ? HITS_MAX + "+" : Integer.toString(hits);
+    public static JumpConstraint binding(Turn turn, double[] yawsAbs) {
+        double[] gf = turn.scenario.toGameFacings(Angles.wrapAll(yawsAbs));
+        ForwardPath fp = turn.model.forward(turn.scenario, gf);
+        JumpConstraint worst = null;
+        double most = 0.0;
+        for (JumpConstraint c : turn.compiled.ineq) {
+            double v = JumpConstraintCompiler.slack(c, gf, fp);
+            if (v > most) {
+                most = v;
+                worst = c;
+            }
+        }
+        for (JumpConstraint c : turn.compiled.eq) {
+            double v = JumpConstraintCompiler.slack(c, gf, fp);
+            if (v > most) {
+                most = v;
+                worst = c;
+            }
+        }
+        return worst;
+    }
+
+    public static double windowEdge(Turn turn, double[] yawsAbs, int fromTick, int sign) {
+        if (Double.isNaN(offsetOf(turn, yawsAbs))) return Double.NaN;
+        double in = 0.0;
+        double out = WINDOW_FIRST_STEP_DEG;
+        while (out <= WINDOW_CAP_DEG && !Double.isNaN(offsetOf(turn, shifted(yawsAbs, fromTick, sign * out)))) {
+            in = out;
+            out *= 2.0;
+        }
+        if (out > WINDOW_CAP_DEG) return WINDOW_CAP_DEG;
+        while (out - in > WINDOW_RESOLUTION_DEG) {
+            double mid = 0.5 * (in + out);
+            if (Double.isNaN(offsetOf(turn, shifted(yawsAbs, fromTick, sign * mid)))) out = mid;
+            else in = mid;
+        }
+        return in;
+    }
+
+    public static double windowWidth(Turn turn, double[] yawsAbs, int angle) {
+        if (angle < 0 || angle >= turn.angles()) return Double.NaN;
+        int tick = turn.turnTicks[angle];
+        return windowEdge(turn, yawsAbs, tick, -1) + windowEdge(turn, yawsAbs, tick, 1);
+    }
+
+    private static double[] shifted(double[] yawsAbs, int fromTick, double delta) {
+        double[] out = yawsAbs.clone();
+        for (int t = fromTick; t < out.length; t++) out[t] = Angles.wrap(out[t] + delta);
+        return out;
     }
 
     public static Comparator<Candidate> by(Mode mode) {
-        return mode == Mode.FURTHEST ? furthest() : hits();
+        if (mode == Mode.FURTHEST) return furthest();
+        if (mode == Mode.MARGIN) return margin();
+        return sense();
     }
 
-    public static Comparator<Candidate> hits() {
+    public static Comparator<Candidate> sense() {
         return (a, b) -> {
-            int c = compareHits(a, b);
+            int c = Float.compare(b.sens, a.sens);
+            if (c != 0) return c;
+            c = compareMargin(a, b);
+            if (c != 0) return c;
+            return compareOffset(a, b);
+        };
+    }
+
+    public static Comparator<Candidate> margin() {
+        return (a, b) -> {
+            int c = compareMargin(a, b);
             if (c != 0) return c;
             c = compareOffset(a, b);
             if (c != 0) return c;
@@ -342,18 +405,20 @@ public final class SenseFinder {
         return (a, b) -> {
             int c = compareOffset(a, b);
             if (c != 0) return c;
-            c = compareHits(a, b);
+            c = compareMargin(a, b);
             if (c != 0) return c;
             return Float.compare(b.sens, a.sens);
         };
     }
 
-    private static int compareHits(Candidate a, Candidate b) {
-        int n = Math.min(a.hits.length, b.hits.length);
+    private static int compareMargin(Candidate a, Candidate b) {
+        int n = Math.min(a.pixels.length, b.pixels.length);
         for (int k = 0; k < n; k++) {
-            if (a.hits[k] != b.hits[k]) return Integer.compare(b.hits[k], a.hits[k]);
+            double ma = a.margin(k);
+            double mb = b.margin(k);
+            if (Math.abs(ma - mb) > MARGIN_TIE) return ma > mb ? -1 : 1;
         }
-        return Integer.compare(b.hits.length, a.hits.length);
+        return Integer.compare(b.pixels.length, a.pixels.length);
     }
 
     private static int compareOffset(Candidate a, Candidate b) {

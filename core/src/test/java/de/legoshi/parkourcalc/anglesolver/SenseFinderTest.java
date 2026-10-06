@@ -88,25 +88,33 @@ public class SenseFinderTest {
         assertFalse("some sense must make the quantized turn land", found.isEmpty());
         for (SenseFinder.Candidate c : found) {
             assertEquals(turn.angles(), c.pixels.length);
-            assertEquals(turn.angles(), c.hits.length);
+            assertEquals(turn.angles(), c.below.length);
+            assertEquals(turn.angles(), c.above.length);
             double again = SenseFinder.offsetOf(turn, c.yaws);
             assertFalse("candidate must land when re-forwarded", Double.isNaN(again));
             assertEquals(c.offset, again, 1.0e-12);
             assertTrue(c.sens >= 0.5f && c.sens <= MAX_SENS);
             assertTrue(c.sensLo <= c.sens && c.sens <= c.sensHi);
-            for (int h : c.hits) assertTrue(h >= 1);
+            for (int k = 0; k < turn.angles(); k++) {
+                assertTrue(c.below[k] >= 0.0 && c.above[k] >= 0.0);
+                assertTrue(c.window(k) <= 2.0 * SenseFinder.WINDOW_CAP_DEG);
+            }
             assertEquals(turn.deltas[0], c.pixels[0] * c.pixelDeg, c.pixelDeg);
         }
-        List<SenseFinder.Candidate> byHits = new ArrayList<>(found);
-        byHits.sort(SenseFinder.by(SenseFinder.Mode.HITS));
+        List<SenseFinder.Candidate> bySense = new ArrayList<>(found);
+        bySense.sort(SenseFinder.by(SenseFinder.Mode.SENSE));
+        List<SenseFinder.Candidate> byMargin = new ArrayList<>(found);
+        byMargin.sort(SenseFinder.by(SenseFinder.Mode.MARGIN));
         List<SenseFinder.Candidate> byOffset = new ArrayList<>(found);
         byOffset.sort(SenseFinder.by(SenseFinder.Mode.FURTHEST));
-        for (int i = 1; i < byHits.size(); i++) assertTrue(byHits.get(i - 1).hits[0] >= byHits.get(i).hits[0]);
+        for (int i = 1; i < bySense.size(); i++) assertTrue(bySense.get(i - 1).sens >= bySense.get(i).sens);
+        for (int i = 1; i < byMargin.size(); i++) assertTrue(byMargin.get(i - 1).margin(0) >= byMargin.get(i).margin(0) - 2.0e-5);
         for (int i = 1; i < byOffset.size(); i++) assertTrue(byOffset.get(i - 1).offset >= byOffset.get(i).offset - 1.0e-6);
         System.out.println(String.format(Locale.ROOT, "j703 sense search: %d candidates in %.2f s, reference offset %.6f",
                 found.size(), sec, turn.referenceOffset()));
-        print("by hits", byHits, 12);
-        print("by offset", byOffset, 12);
+        print("by sense", bySense, 12);
+        print("by margin", byMargin, 8);
+        print("by offset", byOffset, 8);
     }
 
     private static void print(String title, List<SenseFinder.Candidate> list, int limit) {
@@ -114,17 +122,17 @@ public class SenseFinderTest {
         for (int i = 0; i < Math.min(limit, list.size()); i++) {
             SenseFinder.Candidate c = list.get(i);
             StringBuilder px = new StringBuilder();
-            StringBuilder hits = new StringBuilder();
+            StringBuilder win = new StringBuilder();
             for (int k = 0; k < c.pixels.length; k++) {
                 if (k > 0) {
                     px.append(' ');
-                    hits.append(' ');
+                    win.append("  ");
                 }
                 px.append(c.pixels[k]);
-                hits.append(c.hits[k]);
+                win.append(String.format(Locale.ROOT, "-%.4f/+%.4f", c.below[k], c.above[k]));
             }
-            System.out.println(String.format(Locale.ROOT, "  %10.6f%% [%.6f..%.6f] px/deg %.5f offset %+.6f hits %s pixels %s",
-                    c.percent(), SenseFinder.percent(c.sensLo), SenseFinder.percent(c.sensHi), c.pixelDeg, c.offset, hits, px));
+            System.out.println(String.format(Locale.ROOT, "  %10.6f%% [%.6f..%.6f] px/deg %.5f offset %+.6f margin0 %.4f pixels %s windows %s",
+                    c.percent(), SenseFinder.percent(c.sensLo), SenseFinder.percent(c.sensHi), c.pixelDeg, c.offset, c.margin(0), px, win));
         }
     }
     @Test
@@ -135,21 +143,31 @@ public class SenseFinderTest {
         double width = window(turn, ref, -1) + window(turn, ref, 1);
         System.out.println(String.format(Locale.ROOT, "j703 jump facing window %.4f deg", width));
         assertTrue(width < TurnProfile.pixelDeg(0.5f));
+        assertEquals(width, SenseFinder.windowWidth(turn, ref, 0), 2.0e-3);
         List<SenseFinder.Candidate> found = SenseFinder.run(turn, config(), new AtomicBoolean(false), (s, f) -> { });
-        for (SenseFinder.Candidate c : found) assertEquals(1, c.hits[0]);
+        for (SenseFinder.Candidate c : found) {
+            assertTrue(c.window(0) < TurnProfile.pixelDeg(0.5f));
+            assertTrue(c.margin(0) <= 0.5 * c.window(0) + 2.0e-5);
+        }
+        StringBuilder sb = new StringBuilder("j703 reference windows per angle:");
+        for (int k = 0; k < turn.angles(); k++) {
+            int tick = turn.turnTicks[k];
+            double lo = SenseFinder.windowEdge(turn, ref, tick, -1);
+            double hi = SenseFinder.windowEdge(turn, ref, tick, 1);
+            double[] under = ref.clone();
+            double[] over = ref.clone();
+            for (int t = tick; t < ref.length; t++) {
+                under[t] = ref[t] - lo - 2.0e-5;
+                over[t] = ref[t] + hi + 2.0e-5;
+            }
+            sb.append(String.format(Locale.ROOT, "%n  T%d %+.2f: -%.4f (%s) .. +%.4f (%s)", tick + 1, turn.deltas[k],
+                    lo, name(SenseFinder.binding(turn, under)), hi, name(SenseFinder.binding(turn, over))));
+        }
+        System.out.println(sb);
     }
 
-    @Test
-    public void j703LowSenseGivesTheJumpAngleMoreThanOneHittablePixel() throws Exception {
-        Loaded l = load("hpk_human/d10/j703");
-        SenseFinder.Config cfg = config();
-        cfg.minSens = 0.26f;
-        cfg.maxSens = 0.30f;
-        cfg.coarseSteps = 800;
-        List<SenseFinder.Candidate> found = SenseFinder.run(l.turn, cfg, new AtomicBoolean(false), (s, f) -> { });
-        int best = 0;
-        for (SenseFinder.Candidate c : found) best = Math.max(best, c.hits[0]);
-        assertTrue("expected a 2+ pixel jump angle below 60%, got " + best, best >= 2);
+    private static String name(de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint c) {
+        return c == null ? "cap" : c.mode + " " + c.cmp + " " + c.rhs + " @" + (c.t1 + 1);
     }
 
     private static double window(SenseFinder.Turn turn, double[] ref, int sign) {

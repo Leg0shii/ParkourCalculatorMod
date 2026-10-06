@@ -20,9 +20,8 @@ anglesolver/
                            incumbent (solver chain starts with "incumbent") and never ends worse than it;
                            a pinned start passes through the sweep instantly (gh398-optimize-2jump)
   SenseFinderTest.java     Sensefinder on captures/hpk_human/d10/j703 (fast): every listed sense re-forwards to a
-                           landing path with the same offset, the rankings are ordered, the jump angle's facing window
-                           is below one mouse pixel from 100% up (one hittable pixel count at every sense) and a sense
-                           under 60% gives it two
+                           landing path with the same offset, the three rankings are ordered, the jump angle's facing
+                           window (0.0655 deg) is below one mouse pixel from 100% up and every listed count sits inside it
   OverConstrainedChainTest.java  gh-454 (SlowSolverTests): a segment whose dF = 0 constraints tie every
                            tick to one heading (gh454-p2s-overconstrained capture, THOROUGH) fails
                            within 20 s and carries the "Overconstrained" notice label with the
