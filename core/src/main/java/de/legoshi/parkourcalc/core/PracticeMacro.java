@@ -108,7 +108,7 @@ public final class PracticeMacro {
     private int referenceTick(TurnProfileController.Current cur) {
         TurnAttempt live = tracker.live();
         if (live != null) return Math.min(live.recorded, cur.n - 1);
-        if (tracker.isArmed() && tick <= WAIT_TIMEOUT_TICKS) return Math.max(0, cur.firstJumpRow());
+        if (tracker.isArmed() && tick <= WAIT_TIMEOUT_TICKS) return 0;
         return -1;
     }
 

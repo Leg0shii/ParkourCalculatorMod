@@ -438,7 +438,7 @@ public class AttemptTrackerTest {
     }
 
     @Test
-    public void aStillRunUpTickIsCheckedFromTheRing() {
+    public void aStillRunUpTickIsChecked() {
         Rig rig = new Rig();
         assertTrue(rig.k0 > 0);
         rig.tasRow(0).setOnejumpFace(InputRow.ONEJUMP_FACE_STILL);
@@ -613,30 +613,57 @@ public class AttemptTrackerTest {
         assertNotNull(rig.controller.lastError(), cur);
         assertTrue((cur.keys[0] & TurnReference.KEY_JUMP) != 0);
         assertFalse(cur.jumpTicks[0]);
-        int first = cur.firstJumpRow();
-        assertTrue("first jump row " + first, first != 0);
-        if (first > 0) {
-            JumpPhysicsInputs sc = rig.engine.snapshotPath(rig.tasFirst + air, rig.tasFirst + air + cur.n).spec.asScenario();
-            assertFalse(Double.isNaN(sc.slipAt(first)));
-        }
     }
 
     @Test
-    public void aJumpPressBeforeTheRunUpIsCompleteDisarmsWithAVerdict() {
+    public void theFirstKeyAfterTheResetOpensTheAttemptAtTheFirstReferenceTick() {
         Rig rig = new Rig();
         assertTrue(rig.k0 > 0);
         rig.reset();
         double[] yaws = rig.cur.facing.clone();
         ForwardPath path = rig.pathFor(yaws);
-        rig.tick(0, yaws, path, true, false, false);
-        rig.keys(rig.cur.keys[rig.k0]);
+        rig.tick(0, yaws, path, false, false, false);
         assertFalse(rig.tracker.isArmed());
+        TurnAttempt live = rig.tracker.live();
+        assertNotNull(live);
+        assertEquals(1, live.recorded);
+        assertEquals(rig.cur.facing[0], live.yaws[0], 1e-4);
+        for (int t = 1; t < rig.span; t++) rig.tick(t, yaws, path, false, false, false);
+        assertTrue(rig.tracker.last().verdict, rig.tracker.last().landed);
+    }
+
+    @Test
+    public void idleTicksAfterTheResetDoNotOpenTheAttempt() {
+        Rig rig = new Rig();
+        rig.reset();
+        double[] yaws = rig.cur.facing.clone();
+        ForwardPath path = rig.pathFor(yaws);
+        rig.maskOverride = new int[] {0};
+        for (int i = 0; i < 3; i++) rig.tick(0, yaws, path, false, false, false);
+        assertTrue(rig.tracker.isArmed());
         assertNull(rig.tracker.live());
+        assertNull(rig.tracker.last());
+        rig.maskOverride = null;
+        rig.play(false, 0, 0.0, NONE, NONE);
+        assertTrue(rig.tracker.last().verdict, rig.tracker.last().landed);
+        assertEquals(1, rig.controller.document().attempts().size());
+    }
+
+    @Test
+    public void aJumpPressedAtTheStartOfARunUpIsAnInputFailureOnTheFirstTick() {
+        Rig rig = new Rig();
+        assertTrue(rig.k0 > 0);
+        assertTrue(rig.cur.checkKeys[0]);
+        rig.maskOverride = new int[] {rig.cur.keys[rig.k0]};
+        rig.play(true, 0, 0.0, NONE, NONE);
         TurnAttempt a = rig.tracker.last();
         assertNotNull(a);
-        assertFalse(a.complete);
-        assertTrue(a.verdict, a.verdict.startsWith("jumped 0 ticks after the reset, the run-up needs " + rig.k0));
-        assertEquals(0, rig.controller.document().attempts().size());
+        assertTrue(a.verdict, a.inputFailure);
+        assertEquals(rig.cur.startTick, a.failTick);
+        assertEquals(rig.cur.keys[0], a.expectedKeys);
+        assertEquals(rig.cur.keys[rig.k0], a.failKeys);
+        assertEquals(1, a.recorded);
+        assertEquals(1, rig.controller.stats().inputFailures);
     }
 
     @Test

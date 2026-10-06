@@ -86,11 +86,6 @@ public final class TurnProfileController {
         public int lastTick() {
             return Math.max(startTick + n - 1, landing == null ? -1 : landing.tick);
         }
-
-        public int firstJumpRow() {
-            for (int t = 0; t < n; t++) if (jumpTicks[t]) return t;
-            return -1;
-        }
     }
 
     private static final class Built {
