@@ -126,7 +126,7 @@ public final class AttemptTracker {
     private void tickEnd(int mask) {
         if (!haveTick) return;
         if (yaws == null) {
-            if (!armed || mask == 0) return;
+            if (!armed || (mask & ~TurnReference.KEY_SPRINT) == 0) return;
             TurnProfileController.Current c = profile.current();
             if (c == null || c.n == 0) return;
             armed = false;

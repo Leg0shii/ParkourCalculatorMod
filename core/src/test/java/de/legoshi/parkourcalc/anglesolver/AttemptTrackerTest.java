@@ -650,6 +650,21 @@ public class AttemptTrackerTest {
     }
 
     @Test
+    public void aHeldSprintKeyAloneDoesNotOpenTheAttempt() {
+        Rig rig = new Rig();
+        rig.reset();
+        double[] yaws = rig.cur.facing.clone();
+        ForwardPath path = rig.pathFor(yaws);
+        rig.maskOverride = new int[] {TurnReference.KEY_SPRINT};
+        for (int i = 0; i < 3; i++) rig.tick(0, yaws, path, false, false, false);
+        assertTrue(rig.tracker.isArmed());
+        assertNull(rig.tracker.live());
+        rig.maskOverride = null;
+        rig.play(false, 0, 0.0, NONE, NONE);
+        assertTrue(rig.tracker.last().verdict, rig.tracker.last().landed);
+    }
+
+    @Test
     public void aJumpPressedAtTheStartOfARunUpIsAnInputFailureOnTheFirstTick() {
         Rig rig = new Rig();
         assertTrue(rig.k0 > 0);
