@@ -42,8 +42,6 @@ public final class TurnProfileController {
         public final int[] speedAmp;
         public final int[] jumpAmp;
         public final int[] leadKeys;
-        public final int anchorRow;
-        public final int anchorKeys;
         public final TurnReference.Landing landing;
         public final TurnProfile profile;
         public final AttemptSampler.Stats attempts;
@@ -52,8 +50,8 @@ public final class TurnProfileController {
 
         Current(int startTick, int tasFirstTick, double[] facing, int[] keys, boolean[] checkKeys, int[] optionalKeys,
                 boolean[] checkYaw, boolean[] still, boolean[] jumpTicks, int[] speedAmp, int[] jumpAmp,
-                int[] leadKeys, int anchorRow, int anchorKeys, TurnReference.Landing landing, TurnProfile profile,
-                AttemptSampler.Stats attempts, double pixelDeg, AngleSolverEngine.PathSnapshot snapshot) {
+                int[] leadKeys, TurnReference.Landing landing, TurnProfile profile, AttemptSampler.Stats attempts,
+                double pixelDeg, AngleSolverEngine.PathSnapshot snapshot) {
             this.startTick = startTick;
             this.tasFirstTick = tasFirstTick;
             this.n = facing.length;
@@ -67,8 +65,6 @@ public final class TurnProfileController {
             this.speedAmp = speedAmp;
             this.jumpAmp = jumpAmp;
             this.leadKeys = leadKeys;
-            this.anchorRow = anchorRow;
-            this.anchorKeys = anchorKeys;
             this.landing = landing;
             this.profile = profile;
             this.attempts = attempts;
@@ -78,8 +74,7 @@ public final class TurnProfileController {
 
         Current withAttempts(AttemptSampler.Stats stats, double pixelDeg) {
             return new Current(startTick, tasFirstTick, facing, keys, checkKeys, optionalKeys, checkYaw, still,
-                    jumpTicks, speedAmp, jumpAmp, leadKeys, anchorRow, anchorKeys, landing, profile, stats, pixelDeg,
-                    snapshot);
+                    jumpTicks, speedAmp, jumpAmp, leadKeys, landing, profile, stats, pixelDeg, snapshot);
         }
 
         public boolean canRate() {
@@ -335,22 +330,8 @@ public final class TurnProfileController {
             ForwardModel model = engine.forwardModel();
             profile = TurnProfile.compute(model, snap.spec, facing, null, false);
         }
-        int[] lead = leadKeys(ref.tasFirstTick());
-        int prev = lead.length > 0 ? lead[lead.length - 1] : 0;
-        int anchorRow = -lead.length;
-        int anchorKeys = 0;
-        for (int k = 0; k < n; k++) {
-            int edge = keys[k] & ~prev & ~TurnReference.KEY_SPRINT;
-            if (jumps[k]) edge |= TurnReference.KEY_JUMP;
-            if (checkKeys[k] && edge != 0) {
-                anchorRow = k;
-                anchorKeys = edge;
-                break;
-            }
-            prev = keys[k];
-        }
         current.set(new Current(0, ref.tasFirstTick(), facing, keys, checkKeys, optional, checkYaw, still, jumps,
-                speedAmp, jumpAmp, lead, anchorRow, anchorKeys, ref.landing(), profile, null,
+                speedAmp, jumpAmp, leadKeys(ref.tasFirstTick()), ref.landing(), profile, null,
                 TurnProfile.pixelDeg(sensitivity.get()), snap));
     }
 

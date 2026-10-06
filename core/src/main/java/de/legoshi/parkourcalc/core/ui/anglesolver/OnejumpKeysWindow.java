@@ -122,16 +122,11 @@ public final class OnejumpKeysWindow implements RenderInterface {
         int unchecked = ThemeManager.textDimTintColor(0.45f);
         int uncheckedPassed = ThemeManager.textDimTintColor(0.75f);
         int pending = tracker.live() == null ? tracker.pendingTicks() : -1;
-        int anchorCol = cur.anchorRow >= 0 ? lead + cur.anchorRow : -1;
-        int pendingCols = pending < 0 ? 0 : Math.min(pending + 1, anchorCol >= 0 ? anchorCol : cols);
+        int pendingCols = pending < 0 ? 0 : Math.min(pending + 1, cols);
         for (int c = 0; c < pendingCols; c++) {
             float cx0 = gridX + c * cellW;
             dl.addRectFilled(cx0 + gap, gridY + gridH - gap, cx0 + cellW - gap, gridY + gridH,
                     ThemeManager.textDimTintColor(0.9f), 0f);
-        }
-        if (pending >= 0 && anchorCol >= 0) {
-            float cx0 = gridX + anchorCol * cellW;
-            dl.addRectFilled(cx0, gridY, cx0 + cellW, gridY + gridH, ThemeManager.accentTintColor(0.12f), 0f);
         }
 
         int muted = ThemeManager.textMutedColor();
