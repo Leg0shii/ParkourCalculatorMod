@@ -96,6 +96,8 @@ public final class OnejumpKeysWindow implements RenderInterface {
         }
         TurnAttempt you = tracker.shownAttempt();
         int n = cur.n;
+        int lead = cur.leadKeys.length;
+        int cols = lead + n;
         float pad = PAD * scale;
         float lineH = ImGui.getTextLineHeight();
         float labelW = ImGui.calcTextSize("Snk").x + pad;
@@ -106,16 +108,19 @@ public final class OnejumpKeysWindow implements RenderInterface {
         float stripH = timing ? STRIP_H * scale : 0f;
         float stripGap = timing ? STRIP_GAP * scale : 0f;
         float gridH = h - pad * 2f - lineH - stripH - stripGap;
-        float cellW = gridW / n;
+        float cellW = gridW / cols;
         float rowH = gridH / TurnReference.LABELS.length;
         float gap = CELL_GAP * scale;
         int failT = you != null && you.inputFailure ? you.failTick - cur.startTick : -1;
         int turnFailT = you != null && you.turnFailure ? you.failTick - cur.startTick : -1;
         int reached = you == null ? -1 : you.inputFailure ? failT : you.turnFailure ? turnFailT - 1
                 : you == tracker.live() ? you.recorded - 2 : you.recorded - 1;
-        int hoverT = -1;
+        int hoverT = Integer.MIN_VALUE;
         float mx = ImGui.getMousePosX();
-        if (hovered && mx >= gridX && mx < gridX + gridW) hoverT = Math.min(n - 1, (int) ((mx - gridX) / cellW));
+        if (hovered && mx >= gridX && mx < gridX + gridW) hoverT = Math.min(cols - 1, (int) ((mx - gridX) / cellW)) - lead;
+        boolean leadPassed = you != null && reached >= 0;
+        int unchecked = ThemeManager.textDimTintColor(0.45f);
+        int uncheckedPassed = ThemeManager.textDimTintColor(0.75f);
 
         int muted = ThemeManager.textMutedColor();
         int dim = ThemeManager.textDimColor();
@@ -123,8 +128,27 @@ public final class OnejumpKeysWindow implements RenderInterface {
             float ry = gridY + k * rowH;
             dl.addText(x0 + pad, ry + (rowH - lineH) * 0.5f, muted, TurnReference.LABELS[k]);
         }
+        for (int t = -lead; t < 0; t++) {
+            float cx0 = gridX + (t + lead) * cellW;
+            if (t == hoverT) dl.addRectFilled(cx0, gridY, cx0 + cellW, gridY + gridH, ThemeManager.selectedTintColor(0.15f), 0f);
+            if (leadPassed) {
+                dl.addRectFilled(cx0 + gap, gridY + gridH - gap, cx0 + cellW - gap, gridY + gridH,
+                        ThemeManager.okTintColor(0.7f), 0f);
+            }
+            int expected = cur.leadKeys[t + lead];
+            for (int k = 0; k < TurnReference.LABELS.length; k++) {
+                if ((expected & TurnReference.LABEL_BITS[k]) == 0) continue;
+                float ry = gridY + k * rowH;
+                dl.addRectFilled(cx0 + gap, ry + gap, cx0 + cellW - gap, ry + rowH - gap,
+                        leadPassed ? uncheckedPassed : unchecked, 2f * scale);
+            }
+        }
+        if (lead > 0) {
+            float bx = gridX + lead * cellW;
+            dl.addLine(bx, gridY, bx, gridY + gridH, ThemeManager.textDimColor(), 1f * scale);
+        }
         for (int t = 0; t < n; t++) {
-            float cx0 = gridX + t * cellW;
+            float cx0 = gridX + (t + lead) * cellW;
             boolean checked = cur.checkKeys[t];
             boolean passed = you != null && t <= reached && t != failT;
             boolean matched = passed && checked;
@@ -151,7 +175,7 @@ public final class OnejumpKeysWindow implements RenderInterface {
                     continue;
                 }
                 if (!exp) continue;
-                int col = !checked ? ThemeManager.bgTintColor(0.9f) : matched ? ThemeManager.okTintColor(0.85f)
+                int col = !checked ? (passed ? uncheckedPassed : unchecked) : matched ? ThemeManager.okTintColor(0.85f)
                         : t == failT ? ThemeManager.textDimColor() : ThemeManager.accentTintColor(0.55f);
                 dl.addRectFilled(ax, ay, bx, by, col, 2f * scale);
             }
@@ -159,10 +183,10 @@ public final class OnejumpKeysWindow implements RenderInterface {
         if (timing) {
             float sy = gridY + gridH + stripGap;
             boolean timed = you != null && you.hasTiming();
-            for (int t = 0; t < n; t++) {
-                float ax = gridX + t * cellW + gap, bx = gridX + (t + 1) * cellW - gap;
+            for (int t = -lead; t < n; t++) {
+                float ax = gridX + (t + lead) * cellW + gap, bx = gridX + (t + lead + 1) * cellW - gap;
                 dl.addRectFilled(ax, sy, bx, sy + stripH, ThemeManager.bgTintColor(0.9f), 1f * scale);
-                if (!timed) continue;
+                if (!timed || t < 0) continue;
                 float on = you.turnStartAt(cur.startTick + t);
                 if (Float.isNaN(on)) continue;
                 float off = you.turnEndAt(cur.startTick + t);
@@ -175,9 +199,16 @@ public final class OnejumpKeysWindow implements RenderInterface {
         for (int t = 0; t < n; t++) {
             if (t % labelEvery != 0 && t != n - 1) continue;
             String lbl = Integer.toString(cur.startTick + t + 1);
-            float cx = gridX + (t + 0.5f) * cellW;
+            float cx = gridX + (t + lead + 0.5f) * cellW;
             dl.addText(cx - ImGui.calcTextSize(lbl).x * 0.5f, gridY + gridH + stripGap + stripH + 2f * scale,
                     cur.jumpTicks[t] ? ThemeManager.peachTintColor(0.9f) : dim, lbl);
+        }
+        if (hoverT != Integer.MIN_VALUE && hoverT < 0) {
+            ImGui.beginTooltip();
+            ImGui.text((-hoverT) + (hoverT == -1 ? " tick" : " ticks") + " before the reference  "
+                    + TurnReference.describe(cur.leadKeys[hoverT + lead]) + "  (not checked)");
+            if (leadPassed) ImGui.textDisabled("passed");
+            ImGui.endTooltip();
         }
         if (hoverT >= 0) {
             int t = hoverT;

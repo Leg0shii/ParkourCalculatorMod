@@ -756,6 +756,10 @@ public final class ThemeManager {
         return ImGui.colorConvertFloat4ToU32(BG[0], BG[1], BG[2], alpha);
     }
 
+    public static int textDimTintColor(float alpha) {
+        return ImGui.colorConvertFloat4ToU32(TEXT_DIM[0], TEXT_DIM[1], TEXT_DIM[2], alpha);
+    }
+
     public static int okTintColor(float alpha) {
         return ImGui.colorConvertFloat4ToU32(OK[0], OK[1], OK[2], alpha);
     }
