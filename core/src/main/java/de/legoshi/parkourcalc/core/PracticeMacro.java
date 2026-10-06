@@ -78,19 +78,24 @@ public final class PracticeMacro {
             stop();
             return;
         }
-        applyEffects(cur, mode == INPUTS ? tick : referenceTick(cur));
+        applyEffects(cur, mode == INPUTS ? tick - cur.leadKeys.length : referenceTick(cur));
         if (mode == INPUTS) tickInputs(cur);
         else tickTurn(cur);
         tick++;
     }
 
     private void tickInputs(TurnProfileController.Current cur) {
-        if (tick < cur.n) {
-            applyKeys(cur.keys[tick]);
+        int lead = cur.leadKeys.length;
+        if (tick < lead) {
+            applyKeys(cur.leadKeys[tick]);
+            return;
+        }
+        if (tick < lead + cur.n) {
+            applyKeys(cur.keys[tick - lead]);
             return;
         }
         bridge.releaseAllKeys();
-        if (tracker.live() == null || tick > cur.n + TAIL_TIMEOUT_TICKS) stop();
+        if (tracker.live() == null || tick > lead + cur.n + TAIL_TIMEOUT_TICKS) stop();
     }
 
     private void tickTurn(TurnProfileController.Current cur) {

@@ -41,6 +41,7 @@ public final class TurnProfileController {
         public final boolean[] jumpTicks;
         public final int[] speedAmp;
         public final int[] jumpAmp;
+        public final int[] leadKeys;
         public final TurnReference.Landing landing;
         public final TurnProfile profile;
         public final AttemptSampler.Stats attempts;
@@ -49,8 +50,8 @@ public final class TurnProfileController {
 
         Current(int startTick, int tasFirstTick, double[] facing, int[] keys, boolean[] checkKeys, int[] optionalKeys,
                 boolean[] checkYaw, boolean[] still, boolean[] jumpTicks, int[] speedAmp, int[] jumpAmp,
-                TurnReference.Landing landing, TurnProfile profile, AttemptSampler.Stats attempts, double pixelDeg,
-                AngleSolverEngine.PathSnapshot snapshot) {
+                int[] leadKeys, TurnReference.Landing landing, TurnProfile profile, AttemptSampler.Stats attempts,
+                double pixelDeg, AngleSolverEngine.PathSnapshot snapshot) {
             this.startTick = startTick;
             this.tasFirstTick = tasFirstTick;
             this.n = facing.length;
@@ -63,6 +64,7 @@ public final class TurnProfileController {
             this.jumpTicks = jumpTicks;
             this.speedAmp = speedAmp;
             this.jumpAmp = jumpAmp;
+            this.leadKeys = leadKeys;
             this.landing = landing;
             this.profile = profile;
             this.attempts = attempts;
@@ -72,7 +74,7 @@ public final class TurnProfileController {
 
         Current withAttempts(AttemptSampler.Stats stats, double pixelDeg) {
             return new Current(startTick, tasFirstTick, facing, keys, checkKeys, optionalKeys, checkYaw, still,
-                    jumpTicks, speedAmp, jumpAmp, landing, profile, stats, pixelDeg, snapshot);
+                    jumpTicks, speedAmp, jumpAmp, leadKeys, landing, profile, stats, pixelDeg, snapshot);
         }
 
         public boolean canRate() {
@@ -329,7 +331,22 @@ public final class TurnProfileController {
             profile = TurnProfile.compute(model, snap.spec, facing, null, false);
         }
         current.set(new Current(0, ref.tasFirstTick(), facing, keys, checkKeys, optional, checkYaw, still, jumps,
-                speedAmp, jumpAmp, ref.landing(), profile, null, TurnProfile.pixelDeg(sensitivity.get()), snap));
+                speedAmp, jumpAmp, leadKeys(ref.tasFirstTick()), ref.landing(), profile, null,
+                TurnProfile.pixelDeg(sensitivity.get()), snap));
+    }
+
+    private int[] leadKeys(int first) {
+        List<InputRow> rows = inputs.getRows();
+        int firstKeyed = -1;
+        for (int t = 0; t < first && t < rows.size(); t++) {
+            if ((TurnReference.mask(rows.get(t)) & ~TurnReference.KEY_SPRINT) != 0) {
+                firstKeyed = t;
+                break;
+            }
+        }
+        int[] lead = new int[firstKeyed < 0 ? 0 : first - firstKeyed];
+        for (int i = 0; i < lead.length; i++) lead[i] = TurnReference.mask(rows.get(firstKeyed + i));
+        return lead;
     }
 
     private void invalidateDeepChecks() {

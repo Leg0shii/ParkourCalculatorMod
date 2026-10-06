@@ -28,6 +28,7 @@ public final class AttemptTracker {
     private float tickYaw;
     private boolean tickGround;
     private volatile boolean armed;
+    private int wait;
 
     private TurnProfileController.Current cur;
     private double[] yaws;
@@ -81,6 +82,7 @@ public final class AttemptTracker {
         if (!enabled.getAsBoolean() || suspended.getAsBoolean()) return;
         if (yaws != null) finish(false);
         armed = true;
+        wait = 0;
         onReset.run();
     }
 
@@ -102,7 +104,10 @@ public final class AttemptTracker {
         tickGround = ground;
         if (timing.getAsBoolean()) trace.begin(nowNs, yaw);
         else trace.clear();
-        if (yaws == null) return;
+        if (yaws == null) {
+            if (teleport) wait = 0;
+            return;
+        }
         if (teleport) {
             finish(false);
             return;
@@ -126,9 +131,16 @@ public final class AttemptTracker {
     private void tickEnd(int mask) {
         if (!haveTick) return;
         if (yaws == null) {
-            if (!armed || (mask & ~TurnReference.KEY_SPRINT) == 0) return;
+            if (!armed) return;
             TurnProfileController.Current c = profile.current();
             if (c == null || c.n == 0) return;
+            if (wait > 0) {
+                wait--;
+            } else {
+                if ((mask & ~TurnReference.KEY_SPRINT) == 0) return;
+                wait = c.leadKeys.length;
+            }
+            if (wait > 0) return;
             armed = false;
             open(c);
             if (yaws == null) return;
@@ -300,6 +312,7 @@ public final class AttemptTracker {
 
     private void abort() {
         armed = false;
+        wait = 0;
         if (yaws != null) finish(false);
     }
 

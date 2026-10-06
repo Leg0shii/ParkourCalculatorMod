@@ -665,6 +665,38 @@ public class AttemptTrackerTest {
     }
 
     @Test
+    public void unflaggedRunUpRowsStillCountBeforeTheReference() {
+        Rig rig = new Rig();
+        int lead = rig.k0;
+        assertTrue(lead > 0);
+        for (int t = 0; t < lead; t++) {
+            rig.tasRow(t).setOnejumpKeys(false);
+            rig.tasRow(t).setOnejumpFace(InputRow.ONEJUMP_FACE_OFF);
+        }
+        rig.controller.refresh();
+        rig.sync();
+        assertEquals(lead, rig.tasFirst);
+        assertEquals(lead, rig.cur.leadKeys.length);
+        assertEquals(TurnReference.mask(rig.inputs.getRows().get(0)), rig.cur.leadKeys[0]);
+        rig.reset();
+        double[] yaws = rig.cur.facing.clone();
+        ForwardPath path = rig.pathFor(yaws);
+        for (int t = 0; t < lead; t++) {
+            rig.tracker.tickStart(path.posX[0], rig.sc.startPos.y, path.posZ[0], 0.0, 0.0, (float) yaws[0], true, rig.ns);
+            rig.ns += 50_000_000L;
+            rig.keys(TurnReference.mask(rig.inputs.getRows().get(t)));
+            assertNull("lead tick " + t, rig.tracker.live());
+            assertTrue("lead tick " + t, rig.tracker.isArmed());
+        }
+        for (int t = 0; t < rig.span; t++) rig.tick(t, yaws, path, false, false, false);
+        TurnAttempt a = rig.tracker.last();
+        assertNotNull(a);
+        assertTrue(a.verdict, a.landed);
+        assertEquals(rig.cur.n, a.recorded);
+        assertEquals(lead, a.tasFirstTick);
+    }
+
+    @Test
     public void aJumpPressedAtTheStartOfARunUpIsAnInputFailureOnTheFirstTick() {
         Rig rig = new Rig();
         assertTrue(rig.k0 > 0);
