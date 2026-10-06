@@ -158,7 +158,9 @@ public final class AttemptTracker {
                 pending++;
                 wait--;
             } else {
-                if ((mask & ~TurnReference.KEY_SPRINT) == 0) return;
+                int start = mask & ~TurnReference.KEY_SPRINT;
+                if (!tickGround) start &= ~TurnReference.KEY_JUMP;
+                if (start == 0) return;
                 pending = 0;
                 wait = c.leadKeys.length;
             }

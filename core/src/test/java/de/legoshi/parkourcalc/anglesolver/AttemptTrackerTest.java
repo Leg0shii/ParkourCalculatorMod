@@ -697,6 +697,30 @@ public class AttemptTrackerTest {
     }
 
     @Test
+    public void aSpaceHeldInTheAirDoesNotStartTheAttemptUntilTheGroundTick() {
+        Rig rig = new Rig();
+        rig.reset();
+        double[] yaws = rig.cur.facing.clone();
+        ForwardPath path = rig.pathFor(yaws);
+        int air = TurnReference.KEY_JUMP | TurnReference.KEY_SPRINT;
+        for (int i = 0; i < 3; i++) {
+            rig.tracker.tickStart(path.posX[0], rig.sc.startPos.y + 0.1, path.posZ[0], 0.0, 0.0, (float) yaws[0], false, rig.ns);
+            rig.ns += 50_000_000L;
+            rig.keys(air);
+            assertNull("air tick " + i, rig.tracker.live());
+            assertTrue("air tick " + i, rig.tracker.isArmed());
+            assertEquals("air tick " + i, -1, rig.tracker.pendingTicks());
+        }
+        rig.maskOverride = new int[] {air};
+        rig.tick(0, yaws, path, false, false, false);
+        rig.maskOverride = null;
+        TurnAttempt live = rig.tracker.live();
+        assertNotNull(live);
+        assertEquals(1, live.recorded);
+        assertEquals(rig.cur.facing[0], live.yaws[0], 1e-4);
+    }
+
+    @Test
     public void idleTicksAfterTheResetDoNotOpenTheAttempt() {
         Rig rig = new Rig();
         rig.reset();
