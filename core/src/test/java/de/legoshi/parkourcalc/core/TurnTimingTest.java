@@ -80,8 +80,8 @@ public class TurnTimingTest {
             list.add(new TurnAttempt(i + 1, 4, new double[] {0, 0, 0}, 3, true, true, false, "", -0.1, -1, -1, 0, 0, 0,
                     new float[] {Float.NaN, phases[i], Float.NaN}, new float[] {Float.NaN, 1f, Float.NaN}, null, false, Double.NaN, null));
         }
-        list.add(new TurnAttempt(9, 4, new double[] {0, 0, 0}, 3, true, false, true, "", Double.NaN, -1, 5, 0, 0, 0,
-                new float[] {0f, 0f, 0f}, new float[] {1f, 1f, 1f}, null, false, Double.NaN, null));
+        list.add(new TurnAttempt(9, 4, new double[] {0, 0, 0}, 3, true, false, false, "", Double.NaN, -1, 5, 0, 0, 0,
+                new float[] {0f, 0f, 0f}, new float[] {1f, 1f, 1f}, null, true, 1.0, null));
         list.add(new TurnAttempt(10, 4, new double[] {0, 0, 0}, 3, true, true, false, "", -0.1, -1, -1, 0, 0, 0, null, null, null, false, Double.NaN, null));
         TurnTiming.Onset o = TurnTiming.onset(list, 5, 100);
         assertNotNull(o);

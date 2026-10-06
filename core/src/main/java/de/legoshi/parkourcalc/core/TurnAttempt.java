@@ -207,7 +207,7 @@ public final class TurnAttempt {
     }
 
     public boolean judged() {
-        return complete && !failed();
+        return complete && !turnFailure;
     }
 
     public static String signedMargin(double margin) {

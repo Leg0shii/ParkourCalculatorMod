@@ -113,7 +113,7 @@ public final class OnejumpKeysWindow implements RenderInterface {
         float gap = CELL_GAP * scale;
         int failT = you != null && you.inputFailure ? you.failTick - cur.startTick : -1;
         int turnFailT = you != null && you.turnFailure ? you.failTick - cur.startTick : -1;
-        int reached = you == null ? -1 : you.inputFailure ? failT : you.turnFailure ? turnFailT - 1
+        int reached = you == null ? -1 : you.turnFailure ? turnFailT - 1
                 : you == tracker.live() ? you.recorded - 2 : you.recorded - 1;
         int hoverT = Integer.MIN_VALUE;
         float mx = ImGui.getMousePosX();

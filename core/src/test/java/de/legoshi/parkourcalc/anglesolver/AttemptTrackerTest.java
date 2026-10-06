@@ -229,7 +229,7 @@ public class AttemptTrackerTest {
     }
 
     @Test
-    public void aWrongKeyIsAnInputFailure() {
+    public void aWrongKeyIsAnInputFailureButTheAttemptRunsOn() {
         Rig rig = new Rig();
         int at = rig.k0 + 2;
         rig.play(true, 0, 0.0, NONE, at);
@@ -237,16 +237,31 @@ public class AttemptTrackerTest {
         assertNotNull(a);
         assertTrue(a.complete);
         assertTrue(a.inputFailure);
-        assertFalse(a.landed);
-        assertFalse(a.hasMargin());
+        assertTrue(a.verdict, a.landed);
+        assertTrue(a.hasMargin());
+        assertTrue(a.judged());
         assertEquals(rig.cur.startTick + at, a.failTick);
-        assertEquals(at + 1, a.recorded);
+        assertEquals(rig.cur.n, a.recorded);
         assertEquals(rig.cur.keys[at], a.expectedKeys);
         assertEquals(rig.cur.keys[at] ^ TurnReference.KEY_W, a.failKeys);
-        assertTrue(a.verdict, a.verdict.startsWith("tick " + (at + 1) + ": "));
         assertEquals(1, rig.controller.stats().inputFailures);
-        assertEquals(0, rig.controller.stats().landings);
+        assertEquals(1, rig.controller.stats().landings);
         assertNull(rig.tracker.live());
+    }
+
+    @Test
+    public void onlyTheFirstWrongKeyIsKept() {
+        Rig rig = new Rig();
+        int first = rig.k0 + 1;
+        rig.maskOverride = new int[rig.cur.n];
+        java.util.Arrays.fill(rig.maskOverride, -1);
+        rig.maskOverride[first] = rig.cur.keys[first] ^ TurnReference.KEY_W;
+        rig.maskOverride[first + 2] = rig.cur.keys[first + 2] ^ TurnReference.KEY_W;
+        rig.play(true, 0, 0.0, NONE, NONE);
+        TurnAttempt a = rig.tracker.last();
+        assertTrue(a.inputFailure);
+        assertEquals(rig.cur.startTick + first, a.failTick);
+        assertEquals(rig.cur.n, a.recorded);
     }
 
     @Test
@@ -733,7 +748,7 @@ public class AttemptTrackerTest {
         assertEquals(rig.cur.startTick, a.failTick);
         assertEquals(rig.cur.keys[0], a.expectedKeys);
         assertEquals(rig.cur.keys[0] | TurnReference.KEY_A, a.failKeys);
-        assertEquals(1, a.recorded);
+        assertEquals(rig.cur.n, a.recorded);
         assertEquals(1, rig.controller.stats().inputFailures);
     }
 
@@ -750,7 +765,7 @@ public class AttemptTrackerTest {
         assertEquals(rig.cur.startTick, a.failTick);
         assertEquals(rig.cur.keys[0], a.expectedKeys);
         assertEquals(rig.cur.keys[rig.k0], a.failKeys);
-        assertEquals(1, a.recorded);
+        assertEquals(rig.cur.n, a.recorded);
         assertEquals(1, rig.controller.stats().inputFailures);
     }
 
@@ -771,7 +786,7 @@ public class AttemptTrackerTest {
         assertNotNull(a);
         assertTrue(a.verdict, a.inputFailure);
         assertEquals(rig.cur.startTick + k0 + 2, a.failTick);
-        assertEquals(k0 + 3, a.recorded);
+        assertEquals(rig.cur.n, a.recorded);
     }
 
     @Test
