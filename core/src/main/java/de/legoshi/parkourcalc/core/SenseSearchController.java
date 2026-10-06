@@ -45,7 +45,7 @@ public final class SenseSearchController implements SensefinderTab.Host {
     private volatile List<SenseFinder.Candidate> found = Collections.emptyList();
     private volatile List<SenseFinder.Candidate> ranked = Collections.emptyList();
     private volatile SenseFinder.Candidate selected;
-    private volatile SenseFinder.Mode rankMode = SenseFinder.Mode.HITS;
+    private volatile SenseFinder.Mode rankMode = SenseFinder.Mode.SENSE;
     private volatile int fromPercent = DEFAULT_FROM_PERCENT;
     private volatile NoTurnResult source;
     private volatile int sourceIndex;

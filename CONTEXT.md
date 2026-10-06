@@ -89,7 +89,10 @@ A distance unit that accounts for the player's 0.6-wide bounding box, so it refl
 The mouse sensitivity, shown by the options screen as a percent from 0% to 200% (`mouseSensitivity` 0.0 to 1.0 in `options.txt`, percent = value x 200; any float in between is legal, 198.753623% included). It sets the size of a mouse pixel and nothing else.
 
 **Mouse pixel**:
-The facing change of one count of mouse movement, `0.15 * 8 * (0.6 * s + 0.2)^3` degrees for sensitivity `s`: 0.6144 degrees at 200%, 0.15 degrees at 100%. A human can only turn by whole mouse pixels, so an angle is hittable at a sense when some whole pixel count lands it; the "hits" of an angle are how many whole pixel counts do. Distinct from the distance pixel above.
+The facing change of one count of mouse movement, `0.15 * 8 * (0.6 * s + 0.2)^3` degrees for sensitivity `s`: 0.6144 degrees at 200%, 0.15 degrees at 100%. A human can only turn by whole mouse pixels, so an angle is hittable at a sense when some whole pixel count lands inside its facing window. Distinct from the distance pixel above.
+
+**Facing window**:
+The range of facings at one turn tick that still lands the jump when every later facing is carried along by the same shift, in degrees. The margin is how far the chosen facing (a whole pixel count at the player's sense) sits inside it. Measured human flick error is a few degrees whatever the sense, so a coarser pixel grid (higher sense) snaps more attempts onto the one landing count; a lower sense only makes a pixel smaller.
 
 ## Velocity and speed
 

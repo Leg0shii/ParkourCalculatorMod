@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.core.ui.anglesolver;
 
 import de.legoshi.parkourcalc.core.anglesolver.ConstraintText;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.SenseFinder;
+import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow.Ending;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.Fonts;
@@ -63,11 +64,10 @@ public final class SensefinderTab {
     private static final String TABLE_ID = "##sensefinder_senses";
     private static final String COL_RANK = "#";
     private static final String COL_SENSE = "Sense";
-    private static final String COL_HITS = "Hits";
+    private static final String COL_MARGIN = "Margin";
     private static final String COL_OFFSET = "Offset";
     private static final String COL_PIXELS = "Pixels";
-    private static final int HITS_SHOWN = 3;
-    private static final int DETAIL_ROWS = 5;
+    private static final int DETAIL_ROWS = 6;
     private static final int TURN_LINES = 3;
     private static final String SEARCH_TIP = "Sweep the mouse sensitivity from the slider value up to 200% for the"
             + " selected line. Every angle of its turn is rounded to whole mouse pixels at that sense and the rounded"
@@ -75,16 +75,18 @@ public final class SensefinderTab {
             + " its pixel-exact facings into the TAS.";
     private static final String CANCEL_TIP = "Stop now. Nothing is listed until the sweep finishes.";
     private static final String FROM_TIP = "Lowest sense to sweep. The sweep always ends at 200%.";
-    private static final String HITS_TIP = "Whole mouse pixel counts that still land, one number per angle of the"
-            + " turn in tick order (first three shown, the detail row has all). 1 means exactly one pixel count"
-            + " lands that angle; 3 means the pixel before and after land too. The other angles stay at their"
-            + " listed pixels.\n\nClick to sort: most hits on the first angle first, then the second, and so on;"
-            + " offset breaks ties.";
+    private static final String MARGIN_TIP = "How far the first angle's listed pixel count sits inside its facing"
+            + " window, in degrees: the smaller of the room below and above before the line misses, with every later"
+            + " facing carried along. A sense changes only where its pixel grid falls in that window, so this is the"
+            + " robustness the sense buys against anything that is not a whole pixel. The detail row has every"
+            + " angle.\n\nClick to sort: largest first-angle margin first, then the second angle, and so on; offset"
+            + " breaks ties.";
     private static final String OFFSET_TIP = "Landing offset past the goal wall on the objective axis, in blocks,"
             + " with every angle at its listed pixels.\n\nClick to sort furthest first; ties fall back to the"
-            + " hits order.";
+            + " sense order.";
     private static final String SENSE_TIP = "Mouse sensitivity as the options screen shows it. The sweep lists the"
-            + " value with the best offset inside the range where these pixel counts land.";
+            + " value with the best offset inside the range where these pixel counts land.\n\nClick to sort highest"
+            + " first: a coarser pixel grid snaps more of a human's attempts onto the one count that lands.";
     private static final String PIXELS_TIP = "Mouse pixels to move per angle of the turn, in tick order, signed"
             + " like the facing change.";
     private static final String ROW_TIP = "Click to write this sense's pixel-exact facings into the TAS.";
@@ -129,12 +131,12 @@ public final class SensefinderTab {
         int fixed = ImGuiTableColumnFlags.WidthFixed;
         float rankW = ImGui.calcTextSize("999").x;
         float senseW = ImGui.calcTextSize("199.9999%").x;
-        float hitsW = ImGui.calcTextSize("50+ 50+ 50+").x;
+        float marginW = ImGui.calcTextSize("10.0000\u00b0").x;
         float offW = ImGui.calcTextSize("+" + ConstraintText.fixedStat(99.0)).x;
         float mark = ImGui.getFontSize() * 0.7f;
         ImGui.tableSetupColumn(COL_RANK, fixed, ThemeManager.tableLeftmostColumnWidth(COL_RANK, rankW));
         ImGui.tableSetupColumn(COL_SENSE, fixed, ThemeManager.tableNumericColumnWidth(COL_SENSE, senseW));
-        ImGui.tableSetupColumn(COL_HITS, fixed, ThemeManager.tableColumnWidth(COL_HITS, hitsW) + mark);
+        ImGui.tableSetupColumn(COL_MARGIN, fixed, ThemeManager.tableNumericColumnWidth(COL_MARGIN, marginW) + mark);
         ImGui.tableSetupColumn(COL_OFFSET, fixed, ThemeManager.tableNumericColumnWidth(COL_OFFSET, offW) + mark);
         ImGui.tableSetupColumn(COL_PIXELS, ImGuiTableColumnFlags.WidthStretch, 0f);
         renderHeader();
@@ -153,7 +155,7 @@ public final class SensefinderTab {
             ImGui.tableSetColumnIndex(1);
             ThemeManager.textRight(percentText(c.sens));
             ImGui.tableSetColumnIndex(2);
-            ThemeManager.textLeft(hitsText(c.hits, HITS_SHOWN));
+            ThemeManager.textRight(StratfinderWindow.degreesText(c.margin(0)));
             ImGui.tableSetColumnIndex(3);
             ThemeManager.textRight(offsetText(c.offset));
             ImGui.tableSetColumnIndex(4);
@@ -170,13 +172,15 @@ public final class SensefinderTab {
         ThemeManager.tableLeftmostCellPad();
         ThemeManager.tableHeader(COL_RANK);
         ImGui.tableSetColumnIndex(1);
-        ThemeManager.tableHeader(COL_SENSE, ThemeManager.HAlign.RIGHT);
+        if (ThemeManager.tableSortHeader(COL_SENSE, ThemeManager.HAlign.RIGHT, mode == SenseFinder.Mode.SENSE)) {
+            host.setRankMode(SenseFinder.Mode.SENSE);
+        }
         TooltipUtil.onHover(SENSE_TIP);
         ImGui.tableSetColumnIndex(2);
-        if (ThemeManager.tableSortHeader(COL_HITS, ThemeManager.HAlign.LEFT, mode == SenseFinder.Mode.HITS)) {
-            host.setRankMode(SenseFinder.Mode.HITS);
+        if (ThemeManager.tableSortHeader(COL_MARGIN, ThemeManager.HAlign.RIGHT, mode == SenseFinder.Mode.MARGIN)) {
+            host.setRankMode(SenseFinder.Mode.MARGIN);
         }
-        TooltipUtil.onHover(HITS_TIP);
+        TooltipUtil.onHover(MARGIN_TIP);
         ImGui.tableSetColumnIndex(3);
         if (ThemeManager.tableSortHeader(COL_OFFSET, ThemeManager.HAlign.RIGHT, mode == SenseFinder.Mode.FURTHEST)) {
             host.setRankMode(SenseFinder.Mode.FURTHEST);
@@ -206,6 +210,7 @@ public final class SensefinderTab {
             ImGui.tableSetupColumn("##sense_detail_value", ImGuiTableColumnFlags.WidthStretch, 0f);
             senseRow(c.sens);
             detailRow("Pixel", pixel);
+            detailRow("Window", windowText(c, 0, host.startTick()));
             detailRow("Turn", turnText(turn, c, host.startTick()));
             detailRow("Offset", offset);
             detailRow("Range", range);
@@ -322,15 +327,6 @@ public final class SensefinderTab {
         return (offset >= 0 ? "+" : "") + ConstraintText.fixedStat(offset);
     }
 
-    static String hitsText(int[] hits, int limit) {
-        StringBuilder sb = new StringBuilder();
-        for (int k = 0; k < Math.min(limit, hits.length); k++) {
-            if (k > 0) sb.append(' ');
-            sb.append(SenseFinder.hitsText(hits[k]));
-        }
-        return sb.toString();
-    }
-
     static String pixelsText(int[] pixels) {
         StringBuilder sb = new StringBuilder();
         for (int k = 0; k < pixels.length; k++) {
@@ -340,6 +336,19 @@ public final class SensefinderTab {
         return sb.toString();
     }
 
+    static String windowText(SenseFinder.Candidate c, int angle, int startTick) {
+        return String.format(Locale.ROOT, "-%.4f\u00b0 (%s) .. +%.4f\u00b0 (%s)", c.below[angle],
+                constraintText(c.belowBy[angle], startTick), c.above[angle], constraintText(c.aboveBy[angle], startTick));
+    }
+
+    static String constraintText(JumpConstraint c, int startTick) {
+        if (c == null) return "cap";
+        String tick = "T" + (startTick + c.t1 + 1) + (c.t2 != null ? "-T" + (startTick + c.t2 + 1) : "");
+        if (c.t2 != null) return c.mode + " " + tick;
+        String cmp = c.cmp == JumpConstraint.Cmp.GE ? " >= " : c.cmp == JumpConstraint.Cmp.LE ? " <= " : " = ";
+        return c.mode + cmp + ConstraintText.fixedStat(c.rhs) + " " + tick;
+    }
+
     static String turnText(SenseFinder.Turn turn, SenseFinder.Candidate c, int startTick) {
         StringBuilder sb = new StringBuilder();
         for (int k = 0; k < turn.angles(); k++) {
@@ -347,7 +356,7 @@ public final class SensefinderTab {
             sb.append('T').append(startTick + turn.turnTicks[k] + 1).append(' ')
                     .append(String.format(Locale.ROOT, "%+.2f°", turn.deltas[k]))
                     .append(" = ").append(c.pixels[k]).append(" px")
-                    .append(" (").append(SenseFinder.hitsText(c.hits[k])).append(')');
+                    .append(String.format(Locale.ROOT, " (-%.4f .. +%.4f\u00b0)", c.below[k], c.above[k]));
         }
         return sb.toString();
     }
