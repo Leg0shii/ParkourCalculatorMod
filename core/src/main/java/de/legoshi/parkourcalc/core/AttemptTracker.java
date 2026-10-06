@@ -35,6 +35,7 @@ public final class AttemptTracker {
     private int filled;
     private volatile boolean armed;
     private int wait;
+    private volatile int pending = -1;
 
     private TurnProfileController.Current cur;
     private double[] yaws;
@@ -89,6 +90,7 @@ public final class AttemptTracker {
         if (yaws != null) finish(false);
         armed = true;
         wait = 0;
+        pending = -1;
         onReset.run();
     }
 
@@ -116,7 +118,10 @@ public final class AttemptTracker {
         if (timing.getAsBoolean()) trace.begin(nowNs, yaw);
         else trace.clear();
         if (yaws == null) {
-            if (teleport) wait = 0;
+            if (teleport) {
+                wait = 0;
+                pending = -1;
+            }
             return;
         }
         if (teleport) {
@@ -146,11 +151,12 @@ public final class AttemptTracker {
             if (!armed) return;
             TurnProfileController.Current c = profile.current();
             if (c == null || c.n == 0) return;
+            if (pending >= 0) pending++;
+            else if ((mask & ~TurnReference.KEY_SPRINT) != 0) pending = 0;
             if (wait > 0) {
                 wait--;
                 if (wait > 0) return;
-                armed = false;
-                open(c, head, 1);
+                open(c, head, 0, 1);
             } else {
                 if (!anchorPress(c, mask)) return;
                 int r = c.anchorRow;
@@ -158,12 +164,8 @@ public final class AttemptTracker {
                     wait = -r;
                     return;
                 }
-                if (filled < r + 1) {
-                    earlyPress(c, r);
-                    return;
-                }
-                armed = false;
-                open(c, ((head - r) % RING + RING) % RING, r + 1);
+                int have = Math.min(filled, r + 1);
+                open(c, ((head - have + 1) % RING + RING) % RING, r + 1 - have, have);
             }
             if (yaws == null) return;
         } else if (mismatch(tick, mask, ringGround[head])) {
@@ -176,6 +178,10 @@ public final class AttemptTracker {
 
     public boolean isArmed() {
         return armed;
+    }
+
+    public int pendingTicks() {
+        return armed && yaws == null ? pending : -1;
     }
 
     public void reset() {
@@ -228,28 +234,20 @@ public final class AttemptTracker {
         return held != edge;
     }
 
-    private void earlyPress(TurnProfileController.Current c, int r) {
+    private void open(TurnProfileController.Current c, int idx, int first, int have) {
         armed = false;
-        String verdict = "keys pressed " + (filled - 1) + " ticks after the reset, the reference needs " + r;
-        TurnAttempt a = new TurnAttempt(profile.document().nextNumber(), c.startTick, new double[0], 0, false, false,
-                false, verdict, Double.NaN, -1, -1, 0, 0, macroMode.getAsInt(), null, null, null, false, Double.NaN, null);
-        a.tasFirstTick = c.tasFirstTick;
-        if (last != null) last.dropTrace();
-        last = a;
-    }
-
-    private void open(TurnProfileController.Current c, int idx, int have) {
+        pending = -1;
         cur = c;
         macro = macroMode.getAsInt();
-        yaws = new double[c.n];
+        yaws = nans(c.n);
         if (timing.getAsBoolean()) {
             turnStart = new float[c.n];
             turnEnd = new float[c.n];
             traces = new float[c.n][];
             Arrays.fill(turnStart, Float.NaN);
             Arrays.fill(turnEnd, Float.NaN);
-            for (int t = 0; t < have && t < c.n; t++) {
-                int i = (idx + t) % RING;
+            for (int t = first; t < first + have && t < c.n; t++) {
+                int i = (idx + t - first) % RING;
                 turnStart[t] = ringOnset[i];
                 turnEnd[t] = ringEnd[i];
                 traces[t] = ringTrace[i];
@@ -279,14 +277,14 @@ public final class AttemptTracker {
         recorded = 0;
         margin = Double.NaN;
         missAxis = null;
-        for (int t = 0; t < have; t++) {
-            int i = (idx + t) % RING;
+        for (int t = first; t < first + have; t++) {
+            int i = (idx + t - first) % RING;
             tick = t;
             record(ringX[i], ringZ[i], ringVx[i], ringVz[i], ringYaw[i], ringGround[i]);
             if (yaws == null) return;
         }
-        for (int t = 0; t < have; t++) {
-            int i = (idx + t) % RING;
+        for (int t = first; t < first + have; t++) {
+            int i = (idx + t - first) % RING;
             if (mismatch(t, ringKeys[i], ringGround[i])) {
                 inputFailure(t, ringKeys[i]);
                 return;
@@ -378,6 +376,7 @@ public final class AttemptTracker {
     private void abort() {
         armed = false;
         wait = 0;
+        pending = -1;
         if (yaws != null) finish(false);
     }
 
@@ -414,7 +413,7 @@ public final class AttemptTracker {
         int worst = -1;
         double worstErr = 0.0;
         for (int t = 0; t < recorded; t++) {
-            if (!cur.checkYaw[t]) continue;
+            if (!cur.checkYaw[t] || Double.isNaN(yaws[t])) continue;
             double e = Math.abs(Angles.wrapDelta(yaws[t] - cur.facing[t]));
             if (worst < 0 || e > worstErr) {
                 worst = t;

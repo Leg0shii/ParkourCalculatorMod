@@ -722,7 +722,7 @@ public class AttemptTrackerTest {
     }
 
     @Test
-    public void anAnchorPressBeforeEnoughHistoryGivesAVerdictWithoutCounting() {
+    public void anAnchorPressWithTooLittleHistoryLeavesTheEarlyRowsUnobserved() {
         Rig rig = new Rig();
         int k0 = rig.k0;
         assertTrue(k0 > 0);
@@ -732,15 +732,52 @@ public class AttemptTrackerTest {
         rig.reset();
         double[] yaws = rig.cur.facing.clone();
         ForwardPath path = rig.pathFor(yaws);
-        rig.tick(0, yaws, path, true, false, false);
-        rig.keys(rig.cur.keys[k0]);
-        assertFalse(rig.tracker.isArmed());
-        assertNull(rig.tracker.live());
+        for (int t = k0; t < rig.span; t++) {
+            rig.tick(t, yaws, path, false, false, false);
+            if (t == k0) {
+                assertFalse(rig.tracker.isArmed());
+                assertNotNull(rig.tracker.live());
+                assertEquals(k0 + 1, rig.tracker.live().recorded);
+            }
+        }
         TurnAttempt a = rig.tracker.last();
         assertNotNull(a);
-        assertFalse(a.complete);
-        assertTrue(a.verdict, a.verdict.startsWith("keys pressed 0 ticks after the reset, the reference needs " + k0));
-        assertEquals(0, rig.controller.document().attempts().size());
+        assertTrue(a.verdict, a.complete);
+        assertTrue(a.verdict, a.landed);
+        assertEquals(rig.cur.n, a.recorded);
+        for (int t = 0; t < k0; t++) assertTrue("row " + t, Double.isNaN(a.yaws[t]));
+        for (int t = k0; t < rig.cur.n; t++) assertEquals("row " + t, rig.cur.facing[t], a.yaws[t], 1e-4);
+        assertEquals(1, rig.controller.document().attempts().size());
+        assertEquals(1, rig.controller.stats().landings);
+    }
+
+    @Test
+    public void keysBeforeTheAnchorPressShowAsPendingTicks() {
+        Rig rig = new Rig();
+        int k0 = rig.k0;
+        assertTrue(k0 > 0);
+        for (int t = 0; t < k0; t++) rig.tasRow(t).setOnejumpKeys(false);
+        rig.controller.refresh();
+        rig.sync();
+        assertEquals(-1, rig.tracker.pendingTicks());
+        rig.reset();
+        assertEquals(-1, rig.tracker.pendingTicks());
+        double[] yaws = rig.cur.facing.clone();
+        ForwardPath path = rig.pathFor(yaws);
+        rig.maskOverride = new int[k0];
+        java.util.Arrays.fill(rig.maskOverride, -1);
+        rig.maskOverride[0] = 0;
+        rig.tick(0, yaws, path, false, false, false);
+        assertEquals(-1, rig.tracker.pendingTicks());
+        for (int t = 1; t < k0; t++) {
+            rig.tick(t, yaws, path, false, false, false);
+            assertEquals(t - 1, rig.tracker.pendingTicks());
+            assertNull(rig.tracker.live());
+        }
+        rig.maskOverride = null;
+        for (int t = k0; t < rig.span; t++) rig.tick(t, yaws, path, false, false, false);
+        assertEquals(-1, rig.tracker.pendingTicks());
+        assertTrue(rig.tracker.last().verdict, rig.tracker.last().landed);
     }
 
     @Test
