@@ -10,6 +10,7 @@ import java.util.function.BooleanSupplier;
 public final class AttemptTracker {
 
     public static final int RESET_BUTTON = 1;
+    public static final int RING = 128;
     public static final double TELEPORT_DISTANCE = 1.0;
     public static final double STILL_TOLERANCE_PX = 0.25;
 
@@ -18,15 +19,20 @@ public final class AttemptTracker {
     private final BooleanSupplier suspended;
     private final BooleanSupplier timing;
 
+    private final double[] ringX = new double[RING];
+    private final double[] ringY = new double[RING];
+    private final double[] ringZ = new double[RING];
+    private final double[] ringVx = new double[RING];
+    private final double[] ringVz = new double[RING];
+    private final float[] ringYaw = new float[RING];
+    private final boolean[] ringGround = new boolean[RING];
+    private final int[] ringKeys = new int[RING];
+    private final float[] ringOnset = new float[RING];
+    private final float[] ringEnd = new float[RING];
+    private final float[][] ringTrace = new float[RING][];
     private final TurnTiming.TickTrace trace = new TurnTiming.TickTrace();
-    private boolean haveTick;
-    private double tickX;
-    private double tickY;
-    private double tickZ;
-    private double tickVx;
-    private double tickVz;
-    private float tickYaw;
-    private boolean tickGround;
+    private int head = -1;
+    private int filled;
     private volatile boolean armed;
     private int wait;
 
@@ -93,15 +99,20 @@ public final class AttemptTracker {
             return;
         }
         closeTick(nowNs);
-        boolean teleport = haveTick && distance(tickX, tickY, tickZ, x, y, z) > TELEPORT_DISTANCE;
-        haveTick = true;
-        tickX = x;
-        tickY = y;
-        tickZ = z;
-        tickVx = vx;
-        tickVz = vz;
-        tickYaw = yaw;
-        tickGround = ground;
+        boolean teleport = filled > 0 && distance(ringX[head], ringY[head], ringZ[head], x, y, z) > TELEPORT_DISTANCE;
+        head = (head + 1) % RING;
+        ringX[head] = x;
+        ringY[head] = y;
+        ringZ[head] = z;
+        ringVx[head] = vx;
+        ringVz[head] = vz;
+        ringYaw[head] = yaw;
+        ringGround[head] = ground;
+        ringKeys[head] = 0;
+        ringOnset[head] = Float.NaN;
+        ringEnd[head] = Float.NaN;
+        ringTrace[head] = null;
+        filled = teleport ? 1 : Math.min(RING, filled + 1);
         if (timing.getAsBoolean()) trace.begin(nowNs, yaw);
         else trace.clear();
         if (yaws == null) {
@@ -129,23 +140,33 @@ public final class AttemptTracker {
     }
 
     private void tickEnd(int mask) {
-        if (!haveTick) return;
+        if (filled == 0) return;
+        ringKeys[head] = mask;
         if (yaws == null) {
             if (!armed) return;
             TurnProfileController.Current c = profile.current();
             if (c == null || c.n == 0) return;
             if (wait > 0) {
                 wait--;
+                if (wait > 0) return;
+                armed = false;
+                open(c, head, 1);
             } else {
-                if ((mask & ~TurnReference.KEY_SPRINT) == 0) return;
-                wait = c.leadKeys.length;
+                if (!anchorPress(c, mask)) return;
+                int r = c.anchorRow;
+                if (r < 0) {
+                    wait = -r;
+                    return;
+                }
+                if (filled < r + 1) {
+                    earlyPress(c, r);
+                    return;
+                }
+                armed = false;
+                open(c, ((head - r) % RING + RING) % RING, r + 1);
             }
-            if (wait > 0) return;
-            armed = false;
-            open(c);
             if (yaws == null) return;
-        }
-        if (mismatch(tick, mask, tickGround)) {
+        } else if (mismatch(tick, mask, ringGround[head])) {
             inputFailure(tick, mask);
             return;
         }
@@ -182,6 +203,10 @@ public final class AttemptTracker {
         float off = trace.end(nowNs);
         float[] pts = trace.points(nowNs);
         trace.clear();
+        if (filled == 0) return;
+        ringOnset[head] = on;
+        ringEnd[head] = off;
+        ringTrace[head] = pts;
         if (turnStart == null) return;
         int j = tick - 1;
         if (j < 0 || j >= turnStart.length) return;
@@ -190,7 +215,30 @@ public final class AttemptTracker {
         traces[j] = pts;
     }
 
-    private void open(TurnProfileController.Current c) {
+    private boolean anchorPress(TurnProfileController.Current c, int mask) {
+        int edge = c.anchorKeys;
+        if (edge == 0) return (mask & ~TurnReference.KEY_SPRINT) != 0;
+        if ((mask & edge) != edge) return false;
+        boolean jump = (edge & TurnReference.KEY_JUMP) != 0;
+        if (jump && !ringGround[head]) return false;
+        if (filled < 2) return true;
+        int prev = (head - 1 + RING) % RING;
+        int held = ringKeys[prev] & edge;
+        if (jump && !ringGround[prev]) held &= ~TurnReference.KEY_JUMP;
+        return held != edge;
+    }
+
+    private void earlyPress(TurnProfileController.Current c, int r) {
+        armed = false;
+        String verdict = "keys pressed " + (filled - 1) + " ticks after the reset, the reference needs " + r;
+        TurnAttempt a = new TurnAttempt(profile.document().nextNumber(), c.startTick, new double[0], 0, false, false,
+                false, verdict, Double.NaN, -1, -1, 0, 0, macroMode.getAsInt(), null, null, null, false, Double.NaN, null);
+        a.tasFirstTick = c.tasFirstTick;
+        if (last != null) last.dropTrace();
+        last = a;
+    }
+
+    private void open(TurnProfileController.Current c, int idx, int have) {
         cur = c;
         macro = macroMode.getAsInt();
         yaws = new double[c.n];
@@ -200,6 +248,12 @@ public final class AttemptTracker {
             traces = new float[c.n][];
             Arrays.fill(turnStart, Float.NaN);
             Arrays.fill(turnEnd, Float.NaN);
+            for (int t = 0; t < have && t < c.n; t++) {
+                int i = (idx + t) % RING;
+                turnStart[t] = ringOnset[i];
+                turnEnd[t] = ringEnd[i];
+                traces[t] = ringTrace[i];
+            }
         } else {
             turnStart = null;
             turnEnd = null;
@@ -225,8 +279,19 @@ public final class AttemptTracker {
         recorded = 0;
         margin = Double.NaN;
         missAxis = null;
-        tick = 0;
-        record(tickX, tickZ, tickVx, tickVz, tickYaw, tickGround);
+        for (int t = 0; t < have; t++) {
+            int i = (idx + t) % RING;
+            tick = t;
+            record(ringX[i], ringZ[i], ringVx[i], ringVz[i], ringYaw[i], ringGround[i]);
+            if (yaws == null) return;
+        }
+        for (int t = 0; t < have; t++) {
+            int i = (idx + t) % RING;
+            if (mismatch(t, ringKeys[i], ringGround[i])) {
+                inputFailure(t, ringKeys[i]);
+                return;
+            }
+        }
     }
 
     private void record(double x, double z, double vx, double vz, float yaw, boolean ground) {
