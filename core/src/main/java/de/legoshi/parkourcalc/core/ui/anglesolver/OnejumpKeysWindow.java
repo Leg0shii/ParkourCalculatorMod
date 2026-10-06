@@ -157,8 +157,10 @@ public final class OnejumpKeysWindow implements RenderInterface {
         for (int t = 0; t < n; t++) {
             float cx0 = gridX + (t + lead) * cellW;
             boolean checked = cur.checkKeys[t];
-            boolean passed = you != null && t <= reached && t != failT;
-            boolean matched = passed && checked;
+            int abs = cur.startTick + t;
+            boolean bad = you != null && t <= reached && you.keysFailedAt(abs);
+            boolean passed = you != null && t <= reached && !bad;
+            boolean matched = passed && checked && you.keysRecordedAt(abs);
             if (passed && !checked) {
                 dl.addRectFilled(cx0 + gap, gridY + gridH - gap, cx0 + cellW - gap, gridY + gridH,
                         ThemeManager.okTintColor(0.7f), 0f);
@@ -166,7 +168,7 @@ public final class OnejumpKeysWindow implements RenderInterface {
             if (t == turnFailT) dl.addRectFilled(cx0, gridY, cx0 + cellW, gridY + gridH, ThemeManager.dangerTintColor(0.2f), 0f);
             if (t == hoverT) dl.addRectFilled(cx0, gridY, cx0 + cellW, gridY + gridH, ThemeManager.selectedTintColor(0.15f), 0f);
             int expected = cur.keys[t];
-            int pressed = t == failT ? you.failKeys : expected;
+            int pressed = bad ? you.pressedKeysAt(abs) : expected;
             for (int k = 0; k < TurnReference.LABELS.length; k++) {
                 float ry = gridY + k * rowH;
                 float ax = cx0 + gap, bx = cx0 + cellW - gap, ay = ry + gap, by = ry + rowH - gap;
@@ -176,14 +178,14 @@ public final class OnejumpKeysWindow implements RenderInterface {
                     dl.addRect(ax, ay, bx, by, ThemeManager.textDimColor(), 2f * scale, 0, 1f * scale);
                     continue;
                 }
-                if (t == failT && exp != got) {
+                if (bad && exp != got) {
                     if (got) dl.addRectFilled(ax, ay, bx, by, ThemeManager.dangerColor(), 2f * scale);
                     else dl.addRect(ax, ay, bx, by, ThemeManager.dangerColor(), 2f * scale, 0, 1.5f * scale);
                     continue;
                 }
                 if (!exp) continue;
                 int col = !checked ? (passed ? uncheckedPassed : unchecked) : matched ? ThemeManager.okTintColor(0.85f)
-                        : t == failT ? ThemeManager.textDimColor() : ThemeManager.accentTintColor(0.55f);
+                        : bad ? ThemeManager.textDimColor() : passed ? uncheckedPassed : ThemeManager.accentTintColor(0.55f);
                 dl.addRectFilled(ax, ay, bx, by, col, 2f * scale);
             }
         }
@@ -228,16 +230,16 @@ public final class OnejumpKeysWindow implements RenderInterface {
                 ImGui.text(you.verdict);
                 ImGui.popStyleColor();
             }
-            if (t == failT) {
+            if (you != null && t <= reached && you.keysFailedAt(cur.startTick + t)) {
                 ImGui.pushStyleColor(ImGuiCol.Text, ThemeManager.dangerColor());
-                ImGui.text("pressed " + TurnReference.describe(you.failKeys));
+                ImGui.text("pressed " + TurnReference.describe(you.pressedKeysAt(cur.startTick + t)));
                 ImGui.popStyleColor();
-            } else if (you != null && t <= reached && cur.checkKeys[t]) {
+            } else if (you != null && t <= reached && cur.checkKeys[t] && you.keysRecordedAt(cur.startTick + t)) {
                 ImGui.pushStyleColor(ImGuiCol.Text, ThemeManager.okColor());
                 ImGui.text("matched");
                 ImGui.popStyleColor();
             } else if (you != null && t <= reached) {
-                ImGui.textDisabled("passed");
+                ImGui.textDisabled(cur.checkKeys[t] ? "passed, keys not checked" : "passed");
             }
             if (timing && you != null && you.hasTiming()) {
                 float on = you.turnStartAt(cur.startTick + t);

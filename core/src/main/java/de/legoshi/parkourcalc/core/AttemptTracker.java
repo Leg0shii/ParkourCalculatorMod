@@ -58,7 +58,12 @@ public final class AttemptTracker {
     private Runnable onReset = () -> { };
     private java.util.function.IntSupplier macroMode = () -> 0;
     private BooleanSupplier forecastEnabled = () -> true;
+    private BooleanSupplier stopKeysOnFail = () -> false;
+    private BooleanSupplier stopTurnOnFail = () -> false;
     private int macro;
+    private int[] pressed;
+    private boolean[] keysFailed;
+    private boolean keysStopped;
 
     public AttemptTracker(TurnProfileController profile, BooleanSupplier enabled, BooleanSupplier suspended,
                           BooleanSupplier timing) {
@@ -78,6 +83,14 @@ public final class AttemptTracker {
 
     public void setForecastEnabled(BooleanSupplier enabled) {
         forecastEnabled = enabled;
+    }
+
+    public void setStopKeysOnFail(BooleanSupplier stop) {
+        stopKeysOnFail = stop;
+    }
+
+    public void setStopTurnOnFail(BooleanSupplier stop) {
+        stopTurnOnFail = stop;
     }
 
     public void mouseButton(int button, boolean down) {
@@ -153,10 +166,22 @@ public final class AttemptTracker {
             open(c);
             if (yaws == null) return;
         }
-        if (inFailTick < 0 && mismatch(tick, mask, tickGround)) {
-            inFailTick = cur.startTick + tick;
-            inFailKeys = mask;
-            inFailExpected = cur.keys[tick];
+        if (!keysStopped && tick < cur.n) {
+            pressed[tick] = mask;
+            boolean bad = mismatch(tick, mask, tickGround);
+            keysFailed[tick] = bad;
+            if (bad) {
+                if (inFailTick < 0) {
+                    inFailTick = cur.startTick + tick;
+                    inFailKeys = mask;
+                    inFailExpected = cur.keys[tick];
+                }
+                if (stopTurnOnFail.getAsBoolean()) {
+                    stopOnKeys(tick, mask);
+                    return;
+                }
+                if (stopKeysOnFail.getAsBoolean()) keysStopped = true;
+            }
         }
         if (tick == span - 1) finish(true);
         else tick++;
@@ -239,6 +264,10 @@ public final class AttemptTracker {
         inFailTick = -1;
         inFailKeys = 0;
         inFailExpected = 0;
+        pressed = new int[c.n];
+        Arrays.fill(pressed, -1);
+        keysFailed = new boolean[c.n];
+        keysStopped = false;
         span = c.lastTick() - c.startTick + 1;
         recorded = 0;
         margin = Double.NaN;
@@ -292,7 +321,15 @@ public final class AttemptTracker {
                 inputFailure ? inFailExpected : 0, macro, turnStart, turnEnd, traces, turnFailure, failTurn,
                 forecastResult());
         a.tasFirstTick = cur.tasFirstTick;
+        a.pressedKeys = pressed.clone();
+        a.keysFailed = keysFailed.clone();
         return a;
+    }
+
+    private void stopOnKeys(int k, int mask) {
+        String verdict = "tick " + (cur.startTick + k + 1) + ": " + TurnReference.describe(mask) + ", expected "
+                + TurnReference.describe(cur.keys[k]);
+        publish(attempt(Math.min(recorded, k + 1), true, false, verdict, Double.NaN, -1, false, Double.NaN));
     }
 
     private void publish(TurnAttempt a) {

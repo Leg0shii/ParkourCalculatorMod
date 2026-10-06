@@ -265,6 +265,8 @@ public final class Application {
         playback.setOnStart(practiceMacro::stop);
         attemptTracker.setResetListener(practiceMacro::onReset);
         attemptTracker.setMacroMode(practiceMacro::activeMode);
+        attemptTracker.setStopKeysOnFail(() -> settings.onejumpStopKeysOnFail);
+        attemptTracker.setStopTurnOnFail(() -> settings.onejumpStopTurnOnFail);
         saveController.setDocumentListener(new SaveController.DocumentListener() {
             @Override
             public void saved(String name) {

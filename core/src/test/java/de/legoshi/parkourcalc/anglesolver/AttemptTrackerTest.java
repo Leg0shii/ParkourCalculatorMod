@@ -262,6 +262,55 @@ public class AttemptTrackerTest {
         assertTrue(a.inputFailure);
         assertEquals(rig.cur.startTick + first, a.failTick);
         assertEquals(rig.cur.n, a.recorded);
+        assertTrue(a.keysFailedAt(rig.cur.startTick + first));
+        assertTrue(a.keysFailedAt(rig.cur.startTick + first + 2));
+        assertFalse(a.keysFailedAt(rig.cur.startTick + first + 1));
+        assertEquals(rig.cur.keys[first] ^ TurnReference.KEY_W, a.pressedKeysAt(rig.cur.startTick + first));
+        for (int t = 0; t < rig.cur.n; t++) assertTrue("tick " + t, a.keysRecordedAt(rig.cur.startTick + t));
+    }
+
+    @Test
+    public void stopCheckingKeysOnFailRecordsNothingAfterTheFirstWrongKey() {
+        Rig rig = new Rig();
+        rig.tracker.setStopKeysOnFail(() -> true);
+        int first = rig.k0 + 1;
+        rig.maskOverride = new int[rig.cur.n];
+        java.util.Arrays.fill(rig.maskOverride, -1);
+        rig.maskOverride[first] = rig.cur.keys[first] ^ TurnReference.KEY_W;
+        rig.maskOverride[first + 2] = rig.cur.keys[first + 2] ^ TurnReference.KEY_W;
+        rig.play(true, 0, 0.0, NONE, NONE);
+        TurnAttempt a = rig.tracker.last();
+        assertTrue(a.verdict, a.landed);
+        assertTrue(a.inputFailure);
+        assertEquals(rig.cur.startTick + first, a.failTick);
+        assertEquals(rig.cur.n, a.recorded);
+        assertTrue(a.keysFailedAt(rig.cur.startTick + first));
+        assertFalse(a.keysFailedAt(rig.cur.startTick + first + 2));
+        assertTrue(a.keysRecordedAt(rig.cur.startTick + first));
+        assertFalse(a.keysRecordedAt(rig.cur.startTick + first + 1));
+        assertFalse(a.keysRecordedAt(rig.cur.startTick + first + 2));
+    }
+
+    @Test
+    public void stopTheAttemptOnFailEndsItWithAKeysVerdict() {
+        Rig rig = new Rig();
+        rig.tracker.setStopTurnOnFail(() -> true);
+        int at = rig.k0 + 2;
+        rig.play(true, 0, 0.0, NONE, at);
+        TurnAttempt a = rig.tracker.last();
+        assertNotNull(a);
+        assertTrue(a.complete);
+        assertTrue(a.inputFailure);
+        assertFalse(a.landed);
+        assertFalse(a.hasMargin());
+        assertEquals(rig.cur.startTick + at, a.failTick);
+        assertEquals(at + 1, a.recorded);
+        assertEquals(rig.cur.keys[at], a.expectedKeys);
+        assertEquals(rig.cur.keys[at] ^ TurnReference.KEY_W, a.failKeys);
+        assertTrue(a.verdict, a.verdict.startsWith("tick " + (at + 1) + ": "));
+        assertEquals(1, rig.controller.stats().inputFailures);
+        assertEquals(0, rig.controller.stats().landings);
+        assertNull(rig.tracker.live());
     }
 
     @Test

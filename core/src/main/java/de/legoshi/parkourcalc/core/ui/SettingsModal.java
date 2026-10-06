@@ -118,6 +118,8 @@ public final class SettingsModal {
             de.legoshi.parkourcalc.core.PracticeMacro.LABEL_TURN};
     private static final String TT_MACRO_MODE = "A client-side replica runs the jump; your player stays put. Replay (inputs): the replica presses the keys, you turn. Replay (turn): the replica turns, you press the keys. Starts after the reset click plus the delay.";
     private static final String TT_MACRO_DELAY = "Time between the reset click and the practice replay starting.";
+    private static final String TT_STOP_KEYS_ON_FAIL = "After the first wrong key the keys are no longer checked or recorded. The attempt still runs to the landing tick and is judged on it.";
+    private static final String TT_STOP_TURN_ON_FAIL = "The first wrong key ends the attempt with a keys verdict. Nothing after it is tracked or judged.";
     private static final String TT_RATED_DOTS = "Draws the simulated tries of the landing chance as dots in the Turn Profile.";
     private static final String TT_TURN_TIMING = "Records where inside each tick your mouse started and stopped moving. Draws your attempt as the real trace in the Turn Profile, a timing strip under each tick in Onejump Keys and the Turn onset stat in the Onejump Setup overview.";
     private static final String TT_OFFSET_LIVE = "Shows the best landing offset still reachable from the current tick above the Turn Profile, updated every tick of the attempt.";
@@ -405,6 +407,14 @@ public final class SettingsModal {
                 if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
                 tooltipForLastItem(TT_MACRO_DELAY);
             });
+            ThemeManager.endStandardFormTable();
+        }
+
+        ThemeManager.sectionSpacing();
+        sectionHeader("On a wrong key");
+        if (beginLayoutTable("##settings_onejump_fail")) {
+            checkboxRow("Stop checking keys", "##onejump_stop_keys", settings.onejumpStopKeysOnFail, TT_STOP_KEYS_ON_FAIL, v -> settings.onejumpStopKeysOnFail = v);
+            checkboxRow("Stop the attempt", "##onejump_stop_turn", settings.onejumpStopTurnOnFail, TT_STOP_TURN_ON_FAIL, v -> settings.onejumpStopTurnOnFail = v);
             ThemeManager.endStandardFormTable();
         }
 
