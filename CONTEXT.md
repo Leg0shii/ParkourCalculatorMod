@@ -85,6 +85,12 @@ The standard unit of distance in Minecraft (visual block count). 1 block = 16 pi
 **Meter** (m):
 A distance unit that accounts for the player's 0.6-wide bounding box, so it reflects the physical gap rather than the visual block count. A "4 block" jump is ~3.4 meters of actual air travel.
 
+**Sense** (sensitivity):
+The mouse sensitivity, shown by the options screen as a percent from 0% to 200% (`mouseSensitivity` 0.0 to 1.0 in `options.txt`, percent = value x 200; any float in between is legal, 198.753623% included). It sets the size of a mouse pixel and nothing else.
+
+**Mouse pixel**:
+The facing change of one count of mouse movement, `0.15 * 8 * (0.6 * s + 0.2)^3` degrees for sensitivity `s`: 0.6144 degrees at 200%, 0.15 degrees at 100%. A human can only turn by whole mouse pixels, so an angle is hittable at a sense when some whole pixel count lands it; the "hits" of an angle are how many whole pixel counts do. Distinct from the distance pixel above.
+
 ## Velocity and speed
 
 The project's own precise taxonomy. The one true quantity is velocity; speed and direction are its polar components.
