@@ -89,7 +89,6 @@ public final class Settings {
 
     private static final boolean DEFAULT_KEEP_INPUT_TABLE_OPEN = false;
     private static final boolean DEFAULT_KEEP_TICK_INFO_OPEN = false;
-    private static final boolean DEFAULT_KEEP_TURN_PROFILE_OPEN = false;
     private static final boolean DEFAULT_UNDO_REDO_WITHOUT_UI = true;
 
     private static final float[] DEFAULT_HUD_MESSAGE_COLOR = {0.804f, 0.839f, 0.957f, 1.00f}; // text #cdd6f4
@@ -240,7 +239,6 @@ public final class Settings {
     // Keep these windows drawn (display-only) while the main UI is closed.
     public boolean keepInputTableOpen = DEFAULT_KEEP_INPUT_TABLE_OPEN;
     public boolean keepTickInfoOpen = DEFAULT_KEEP_TICK_INFO_OPEN;
-    public boolean keepTurnProfileOpen = DEFAULT_KEEP_TURN_PROFILE_OPEN;
 
     public boolean undoRedoWithoutUi = DEFAULT_UNDO_REDO_WITHOUT_UI;
 
@@ -359,7 +357,6 @@ public final class Settings {
         experimentalBlockCapture = DEFAULT_EXPERIMENTAL_BLOCK_CAPTURE;
         keepInputTableOpen = DEFAULT_KEEP_INPUT_TABLE_OPEN;
         keepTickInfoOpen = DEFAULT_KEEP_TICK_INFO_OPEN;
-        keepTurnProfileOpen = DEFAULT_KEEP_TURN_PROFILE_OPEN;
         undoRedoWithoutUi = DEFAULT_UNDO_REDO_WITHOUT_UI;
         System.arraycopy(DEFAULT_HUD_MESSAGE_COLOR, 0, hudMessageColor, 0, 4);
         hudMessageCount = DEFAULT_HUD_MESSAGE_COUNT;

@@ -63,7 +63,6 @@ public final class SettingsModal {
     private static final String TT_COLOR_GENERIC = "Color used for this overlay. Alpha applies in-world.";
     private static final String TT_KEEP_INPUT_TABLE = "Keeps the input table window drawn as a display-only overlay even when the main UI is closed. It cannot be edited while closed.";
     private static final String TT_KEEP_TICK_INFO = "Keeps the Tick Info window drawn even when the main UI is closed.";
-    private static final String TT_KEEP_TURN_PROFILE = "Keeps the Onejump window drawn even when the main UI is closed, so your attempts are tracked and plotted while you play.";
     private static final String TT_UNDO_REDO_WITHOUT_UI = "Ctrl+Z / Ctrl+Y (or Ctrl+Shift+Z) undo and redo TAS edits even while the main UI is closed. Disabled while a Minecraft screen such as chat or the inventory is open.";
     private static final String TT_HUD_MESSAGE_COUNT = "How many messages the notification stack shows at once. Older messages drop off the bottom.";
     private static final String TT_HUD_MESSAGE_SCALE = "Text size of the notification stack, as a multiplier of the UI font size. The window grows with the text.";
@@ -270,7 +269,6 @@ public final class SettingsModal {
         if (beginLayoutTable("##settings_panels")) {
             checkboxRow("Input table", "##keep_input_table", settings.keepInputTableOpen, TT_KEEP_INPUT_TABLE, v -> settings.keepInputTableOpen = v);
             checkboxRow("Tick Info", "##keep_tick_info", settings.keepTickInfoOpen, TT_KEEP_TICK_INFO, v -> settings.keepTickInfoOpen = v);
-            checkboxRow("Onejump", "##keep_turn_profile", settings.keepTurnProfileOpen, TT_KEEP_TURN_PROFILE, v -> settings.keepTurnProfileOpen = v);
             checkboxRow("Undo/redo hotkeys", "##undo_redo_without_ui", settings.undoRedoWithoutUi, TT_UNDO_REDO_WITHOUT_UI, v -> settings.undoRedoWithoutUi = v);
             ThemeManager.endStandardFormTable();
         }

@@ -64,7 +64,7 @@ public final class TurnProfileWindow implements RenderInterface {
 
     @Override
     public void renderDetached(ImGuiIO io) {
-        if (settings.keepTurnProfileOpen) render(io, true);
+        render(io, true);
     }
 
     private void render(ImGuiIO io, boolean graphOnly) {
