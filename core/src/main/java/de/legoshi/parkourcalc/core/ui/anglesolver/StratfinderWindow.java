@@ -83,7 +83,6 @@ public final class StratfinderWindow implements RenderInterface {
     private static final String COL_INPUTS = "Inputs";
     private static final String COL_SPRINT = "Sprint";
     private static final String COL_OFFSET = "Offset";
-    private static final String COL_WINDOW = "Window";
     private static final String COL_KEYS = "Keys";
     private static final String SEARCH_TIP = "Cold search over key schedules for a byte-exact no-turn line: one"
             + " settable facing across the run-up, then the turn. Mark the no-turn ticks with dF = 0, set the landing"
@@ -106,11 +105,7 @@ public final class StratfinderWindow implements RenderInterface {
     private static final String OFFSET_TIP = "Landing offset past the goal wall on the objective axis, in blocks."
             + " Bright once the line has been optimized for the budget; muted while it is only certified.\n\nClick"
             + " to sort furthest first; ties fall back to the easiest order.";
-    private static final String WINDOW_TIP = "Facing window of the first turn angle, in degrees: how far that turn"
-            + " may be off before the line misses, with every later facing carried along by the same amount. Wider is"
-            + " easier for a human; the Sensefinder tab shows where each sense's pixel count sits inside it.\n\nClick to"
-            + " sort widest first; ties fall back to the easiest order.";
-    private static final float WIN_W = 680f;
+    private static final float WIN_W = 640f;
     private static final float WIN_H = 540f;
     private static final float MIN_W = 480f;
     private static final float MIN_H = 420f;
@@ -267,20 +262,18 @@ public final class StratfinderWindow implements RenderInterface {
 
         float reserve = selectedHeight(selected != null) + footerHeight();
         float tableH = Math.max(ImGui.getTextLineHeightWithSpacing() * 4f, ImGui.getContentRegionAvail().y - reserve);
-        if (!ThemeManager.beginStandardClickableRowsTable(TABLE_ID, 6, 0, 0f, tableH)) return;
+        if (!ThemeManager.beginStandardClickableRowsTable(TABLE_ID, 5, 0, 0f, tableH)) return;
         ImGui.tableSetupScrollFreeze(0, 1);
         int fixed = ImGuiTableColumnFlags.WidthFixed;
         float rankW = ImGui.calcTextSize("999").x;
         float numW = ImGui.calcTextSize("99").x;
         float tickW = ImGui.calcTextSize("T999").x;
         float offW = ImGui.calcTextSize("+" + ConstraintText.fixedStat(99.0)).x;
-        float winW = ImGui.calcTextSize("10.0000\u00b0").x;
         float mark = ImGui.getFontSize() * 0.7f;
         ImGui.tableSetupColumn(COL_RANK, fixed, ThemeManager.tableLeftmostColumnWidth(COL_RANK, rankW));
         ImGui.tableSetupColumn(COL_INPUTS, fixed, ThemeManager.tableNumericColumnWidth(COL_INPUTS, numW) + mark);
         ImGui.tableSetupColumn(COL_SPRINT, fixed, ThemeManager.tableColumnWidth(COL_SPRINT, tickW));
         ImGui.tableSetupColumn(COL_OFFSET, fixed, ThemeManager.tableNumericColumnWidth(COL_OFFSET, offW) + mark);
-        ImGui.tableSetupColumn(COL_WINDOW, fixed, ThemeManager.tableNumericColumnWidth(COL_WINDOW, winW) + mark);
         ImGui.tableSetupColumn(COL_KEYS, ImGuiTableColumnFlags.WidthStretch, 0f);
         renderHeader();
         float rowH = ThemeManager.tableRowHeight();
@@ -306,8 +299,6 @@ public final class StratfinderWindow implements RenderInterface {
             ThemeManager.textRight(offsetText(host.offsetOf(r)));
             ThemeManager.popTextColor();
             ImGui.tableSetColumnIndex(4);
-            ThemeManager.textRight(degreesText(r.window));
-            ImGui.tableSetColumnIndex(5);
             ThemeManager.textLeft(NoTurnKeys.describe(r.combos) + (r.warm ? "  (current)" : ""));
         }
         ThemeManager.endStandardTable();
@@ -334,11 +325,6 @@ public final class StratfinderWindow implements RenderInterface {
         }
         TooltipUtil.onHover(OFFSET_TIP);
         ImGui.tableSetColumnIndex(4);
-        if (ThemeManager.tableSortHeader(COL_WINDOW, ThemeManager.HAlign.RIGHT, mode == NoTurnRanking.Mode.WIDEST)) {
-            host.setRankMode(NoTurnRanking.Mode.WIDEST);
-        }
-        TooltipUtil.onHover(WINDOW_TIP);
-        ImGui.tableSetColumnIndex(5);
         ThemeManager.tableHeader(COL_KEYS);
         TooltipUtil.onHover("Run-up key schedule, one token per held combination; x N is the tick count.");
     }
@@ -364,7 +350,6 @@ public final class StratfinderWindow implements RenderInterface {
             detailRow("Facing", facingSummary(r.yaws, startTick));
             detailRow("Start", start);
             detailRow("Offset", offset);
-            detailRow("Window", degreesText(r.window));
             detailRow("Inputs", inputs);
             ThemeManager.endStandardFormTable();
         }
@@ -384,7 +369,7 @@ public final class StratfinderWindow implements RenderInterface {
         float spacing = ImGui.getStyle().getItemSpacingY();
         if (!hasSelection) return ImGui.getFrameHeight() + spacing;
         float cellPadY = ImGui.getStyle().getCellPadding().y;
-        return 6f * (ImGui.getTextLineHeightWithSpacing() + 2f * cellPadY) + spacing;
+        return 5f * (ImGui.getTextLineHeightWithSpacing() + 2f * cellPadY) + spacing;
     }
 
     private static float footerHeight() {
@@ -398,11 +383,6 @@ public final class StratfinderWindow implements RenderInterface {
     private static String countText(int count, boolean busy) {
         if (count == 0) return busy ? "none yet" : "none";
         return count + (busy ? " so far" : "");
-    }
-
-    static String degreesText(double deg) {
-        if (Double.isNaN(deg)) return "-";
-        return String.format(Locale.ROOT, "%.4f\u00b0", deg);
     }
 
     private static String offsetText(double offset) {

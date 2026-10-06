@@ -12,8 +12,7 @@ public final class NoTurnRanking {
 
     public enum Mode {
         EASIEST("Easiest", "Fewest input changes first"),
-        FURTHEST("Furthest", "Largest landing offset first"),
-        WIDEST("Widest", "Widest facing window on the first turn angle first");
+        FURTHEST("Furthest", "Largest landing offset first");
 
         public final String label;
         public final String hint;
@@ -25,7 +24,6 @@ public final class NoTurnRanking {
     }
 
     private static final double OFFSET_TIE = 1.0e-6;
-    private static final double WINDOW_TIE = 2.0e-5;
 
     private NoTurnRanking() {
     }
@@ -89,28 +87,8 @@ public final class NoTurnRanking {
         };
     }
 
-    public static Comparator<NoTurnResult> widest(JumpConstraint goalWall, Objective objective) {
-        return (a, b) -> {
-            int c = compareWindow(a, b);
-            if (c != 0) return c;
-            c = compareEasiness(a, b);
-            if (c != 0) return c;
-            return compareOffset(a, b, goalWall, objective);
-        };
-    }
-
     public static Comparator<NoTurnResult> by(Mode mode, JumpConstraint goalWall, Objective objective) {
-        if (mode == Mode.FURTHEST) return furthest(goalWall, objective);
-        if (mode == Mode.WIDEST) return widest(goalWall, objective);
-        return easiest(goalWall, objective);
-    }
-
-    private static int compareWindow(NoTurnResult a, NoTurnResult b) {
-        double wa = a.window;
-        double wb = b.window;
-        if (Double.isNaN(wa) || Double.isNaN(wb)) return Boolean.compare(Double.isNaN(wa), Double.isNaN(wb));
-        if (Math.abs(wa - wb) <= WINDOW_TIE) return 0;
-        return wa > wb ? -1 : 1;
+        return mode == Mode.FURTHEST ? furthest(goalWall, objective) : easiest(goalWall, objective);
     }
 
     private static int compareEasiness(NoTurnResult a, NoTurnResult b) {

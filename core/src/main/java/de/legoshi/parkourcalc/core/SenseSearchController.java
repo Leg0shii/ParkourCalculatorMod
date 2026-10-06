@@ -25,6 +25,7 @@ public final class SenseSearchController implements SensefinderTab.Host {
     public static final int MIN_PERCENT = 1;
     public static final int MAX_PERCENT = 200;
     public static final int DEFAULT_FROM_PERCENT = 100;
+    private static final long WINDOW_PROBE_NANOS = 1_500_000_000L;
 
     private final NoTurnSearchController noTurn;
     private final InputData inputData;
@@ -50,6 +51,7 @@ public final class SenseSearchController implements SensefinderTab.Host {
     private volatile NoTurnResult source;
     private volatile int sourceIndex;
     private volatile SenseFinder.Turn turn;
+    private volatile SenseFinder.Window window;
     private long startNanos;
     private long endNanos;
     private int startTick;
@@ -112,6 +114,11 @@ public final class SenseSearchController implements SensefinderTab.Host {
     @Override
     public SenseFinder.Turn turn() {
         return turn;
+    }
+
+    @Override
+    public SenseFinder.Window window() {
+        return window;
     }
 
     @Override
@@ -184,6 +191,7 @@ public final class SenseSearchController implements SensefinderTab.Host {
         startTick = noTurn.startTick();
         freeStartYaw = noTurn.freeStartYaw();
         turn = t;
+        window = null;
         found = Collections.emptyList();
         ranked = Collections.emptyList();
         selected = null;
@@ -206,10 +214,13 @@ public final class SenseSearchController implements SensefinderTab.Host {
         endNanos = startNanos;
         thread = new Thread(() -> {
             try {
-                List<SenseFinder.Candidate> list = SenseFinder.run(t, cfg, cancel, (s, f) -> {
+                SenseFinder.Progress progress = (s, f) -> {
                     stage = s;
                     fraction = Math.max(0.0, Math.min(1.0, f));
-                });
+                };
+                SenseFinder.Window w = SenseFinder.solvedWindow(t, WINDOW_PROBE_NANOS, cancel, progress);
+                window = w;
+                List<SenseFinder.Candidate> list = SenseFinder.run(t, cfg, w, cancel, progress);
                 found = Collections.unmodifiableList(new ArrayList<>(list));
                 rerank();
             } catch (Throwable ex) {
@@ -257,7 +268,7 @@ public final class SenseSearchController implements SensefinderTab.Host {
         }
         if (list.isEmpty()) {
             ending = Ending.EMPTY;
-            outcome = "no sense lands the turn";
+            outcome = window == null ? "the line does not land" : "no sense lands the turn";
             pushMessage.accept("Sensefinder: none found", HudMessageStyle.COLOR_DANGER);
             return;
         }

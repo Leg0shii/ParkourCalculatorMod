@@ -15,24 +15,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class SenseFinderTest {
 
-    private static final float MAX_SENS = 1.0f;
-
-    private static final class Loaded {
-        final SenseFinder.Turn turn;
-        final JumpSpec spec;
-
-        Loaded(SenseFinder.Turn turn, JumpSpec spec) {
-            this.turn = turn;
-            this.spec = spec;
-        }
-    }
-
-    private static Loaded load(String capture) throws Exception {
-        NoTurnCapture cap = NoTurnCapture.load(capture);
+    static SenseFinder.Turn loadJ703() throws Exception {
+        NoTurnCapture cap = NoTurnCapture.load("hpk_human/d10/j703");
         JumpSpec spec = cap.buildSpec();
         JumpPhysicsInputs sc = spec.asScenario();
         int start = cap.state.getStartTick();
@@ -45,13 +34,13 @@ public class SenseFinderTest {
             cur = row.isYawLocked() && d != null ? d : cur + (d == null ? 0.0 : d);
             yaws[k] = cur;
         }
-        return new Loaded(SenseFinder.turnOf(cap.model, spec, yaws, sc.startPos.x, sc.startPos.z), spec);
+        return SenseFinder.turnOf(cap.model, spec, yaws, sc.startPos.x, sc.startPos.z);
     }
 
     private static SenseFinder.Config config() {
         SenseFinder.Config cfg = new SenseFinder.Config();
         cfg.minSens = 0.5f;
-        cfg.maxSens = MAX_SENS;
+        cfg.maxSens = 1.0f;
         cfg.coarseSteps = 4000;
         return cfg;
     }
@@ -68,37 +57,45 @@ public class SenseFinderTest {
 
     @Test
     public void j703TurnIsTheJumpFlickAndTheAirTicks() throws Exception {
-        Loaded l = load("hpk_human/d10/j703");
-        SenseFinder.Turn turn = l.turn;
+        SenseFinder.Turn turn = loadJ703();
         assertEquals(12, turn.angles());
-        assertEquals(27, turn.turnTicks[0]);
+        assertEquals(27, turn.jumpTick());
         assertEquals(-30.218939, turn.deltas[0], 1.0e-5);
+        assertEquals(1.7811, turn.jumpFacing(), 1.0e-3);
         double reference = turn.referenceOffset();
         assertFalse("the TAS itself must land", Double.isNaN(reference));
         assertTrue(reference >= 0.0);
     }
 
     @Test
+    public void j703CarriedWindowSitsOnTheLowerEdgeAndIsBelowOnePixel() throws Exception {
+        SenseFinder.Turn turn = loadJ703();
+        SenseFinder.Window w = SenseFinder.carriedWindow(turn);
+        assertNotNull(w);
+        assertFalse(w.solved);
+        assertEquals(turn.jumpFacing(), w.lo, 1.0e-3);
+        assertEquals(0.0655, w.width(), 2.0e-3);
+        assertTrue(w.width() < TurnProfile.pixelDeg(0.5f));
+        assertTrue(w.contains(turn.jumpFacing()));
+    }
+
+    @Test
     public void j703CandidatesLandAndAreRanked() throws Exception {
-        Loaded l = load("hpk_human/d10/j703");
-        SenseFinder.Turn turn = l.turn;
+        SenseFinder.Turn turn = loadJ703();
+        SenseFinder.Window w = SenseFinder.carriedWindow(turn);
         long t0 = System.nanoTime();
-        List<SenseFinder.Candidate> found = SenseFinder.run(turn, config(), new AtomicBoolean(false), (s, f) -> { });
+        List<SenseFinder.Candidate> found = SenseFinder.run(turn, config(), w, new AtomicBoolean(false), (s, f) -> { });
         double sec = (System.nanoTime() - t0) / 1e9;
-        assertFalse("some sense must make the quantized turn land", found.isEmpty());
+        assertFalse("some sense must make the rounded turn land", found.isEmpty());
         for (SenseFinder.Candidate c : found) {
             assertEquals(turn.angles(), c.pixels.length);
-            assertEquals(turn.angles(), c.below.length);
-            assertEquals(turn.angles(), c.above.length);
             double again = SenseFinder.offsetOf(turn, c.yaws);
             assertFalse("candidate must land when re-forwarded", Double.isNaN(again));
             assertEquals(c.offset, again, 1.0e-12);
-            assertTrue(c.sens >= 0.5f && c.sens <= MAX_SENS);
+            assertTrue(c.sens >= 0.5f && c.sens <= 1.0f);
             assertTrue(c.sensLo <= c.sens && c.sens <= c.sensHi);
-            for (int k = 0; k < turn.angles(); k++) {
-                assertTrue(c.below[k] >= 0.0 && c.above[k] >= 0.0);
-                assertTrue(c.window(k) <= 2.0 * SenseFinder.WINDOW_CAP_DEG);
-            }
+            assertTrue(c.below >= 0.0 && c.above >= 0.0);
+            assertTrue(c.below + c.above >= w.width() - 1.0e-9);
             assertEquals(turn.deltas[0], c.pixels[0] * c.pixelDeg, c.pixelDeg);
         }
         List<SenseFinder.Candidate> bySense = new ArrayList<>(found);
@@ -108,74 +105,27 @@ public class SenseFinderTest {
         List<SenseFinder.Candidate> byOffset = new ArrayList<>(found);
         byOffset.sort(SenseFinder.by(SenseFinder.Mode.FURTHEST));
         for (int i = 1; i < bySense.size(); i++) assertTrue(bySense.get(i - 1).sens >= bySense.get(i).sens);
-        for (int i = 1; i < byMargin.size(); i++) assertTrue(byMargin.get(i - 1).margin(0) >= byMargin.get(i).margin(0) - 2.0e-5);
+        for (int i = 1; i < byMargin.size(); i++) assertTrue(byMargin.get(i - 1).margin() >= byMargin.get(i).margin() - 2.0e-5);
         for (int i = 1; i < byOffset.size(); i++) assertTrue(byOffset.get(i - 1).offset >= byOffset.get(i).offset - 1.0e-6);
         System.out.println(String.format(Locale.ROOT, "j703 sense search: %d candidates in %.2f s, reference offset %.6f",
                 found.size(), sec, turn.referenceOffset()));
-        print("by sense", bySense, 12);
-        print("by margin", byMargin, 8);
-        print("by offset", byOffset, 8);
+        print("by sense", bySense, 6);
+        print("by margin", byMargin, 6);
     }
 
-    private static void print(String title, List<SenseFinder.Candidate> list, int limit) {
+    static void print(String title, List<SenseFinder.Candidate> list, int limit) {
         System.out.println(title);
         for (int i = 0; i < Math.min(limit, list.size()); i++) {
             SenseFinder.Candidate c = list.get(i);
             StringBuilder px = new StringBuilder();
-            StringBuilder win = new StringBuilder();
             for (int k = 0; k < c.pixels.length; k++) {
-                if (k > 0) {
-                    px.append(' ');
-                    win.append("  ");
-                }
+                if (k > 0) px.append(' ');
                 px.append(c.pixels[k]);
-                win.append(String.format(Locale.ROOT, "-%.4f/+%.4f", c.below[k], c.above[k]));
             }
-            System.out.println(String.format(Locale.ROOT, "  %10.6f%% [%.6f..%.6f] px/deg %.5f offset %+.6f margin0 %.4f pixels %s windows %s",
-                    c.percent(), SenseFinder.percent(c.sensLo), SenseFinder.percent(c.sensHi), c.pixelDeg, c.offset, c.margin(0), px, win));
+            System.out.println(String.format(Locale.ROOT,
+                    "  %10.6f%% [%.6f..%.6f] px/deg %.5f jump %.4f (-%.4f/+%.4f) offset %+.6f pixels %s",
+                    c.percent(), SenseFinder.percent(c.sensLo), SenseFinder.percent(c.sensHi), c.pixelDeg, c.jumpFacing,
+                    c.below, c.above, c.offset, px));
         }
-    }
-    @Test
-    public void j703JumpAngleWindowIsBelowOnePixelFromHundredPercentUp() throws Exception {
-        Loaded l = load("hpk_human/d10/j703");
-        SenseFinder.Turn turn = l.turn;
-        double[] ref = turn.yaws;
-        double width = window(turn, ref, -1) + window(turn, ref, 1);
-        System.out.println(String.format(Locale.ROOT, "j703 jump facing window %.4f deg", width));
-        assertTrue(width < TurnProfile.pixelDeg(0.5f));
-        assertEquals(width, SenseFinder.windowWidth(turn, ref, 0), 2.0e-3);
-        List<SenseFinder.Candidate> found = SenseFinder.run(turn, config(), new AtomicBoolean(false), (s, f) -> { });
-        for (SenseFinder.Candidate c : found) {
-            assertTrue(c.window(0) < TurnProfile.pixelDeg(0.5f));
-            assertTrue(c.margin(0) <= 0.5 * c.window(0) + 2.0e-5);
-        }
-        StringBuilder sb = new StringBuilder("j703 reference windows per angle:");
-        for (int k = 0; k < turn.angles(); k++) {
-            int tick = turn.turnTicks[k];
-            double lo = SenseFinder.windowEdge(turn, ref, tick, -1);
-            double hi = SenseFinder.windowEdge(turn, ref, tick, 1);
-            double[] under = ref.clone();
-            double[] over = ref.clone();
-            for (int t = tick; t < ref.length; t++) {
-                under[t] = ref[t] - lo - 2.0e-5;
-                over[t] = ref[t] + hi + 2.0e-5;
-            }
-            sb.append(String.format(Locale.ROOT, "%n  T%d %+.2f: -%.4f (%s) .. +%.4f (%s)", tick + 1, turn.deltas[k],
-                    lo, name(SenseFinder.binding(turn, under)), hi, name(SenseFinder.binding(turn, over))));
-        }
-        System.out.println(sb);
-    }
-
-    private static String name(de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint c) {
-        return c == null ? "cap" : c.mode + " " + c.cmp + " " + c.rhs + " @" + (c.t1 + 1);
-    }
-
-    private static double window(SenseFinder.Turn turn, double[] ref, int sign) {
-        for (double d = 0; d < 2.0; d += 0.0005) {
-            double[] y = ref.clone();
-            for (int t = turn.turnTicks[0]; t < y.length; t++) y[t] = ref[t] + sign * d;
-            if (Double.isNaN(SenseFinder.offsetOf(turn, y))) return d;
-        }
-        return 2.0;
     }
 }
