@@ -126,7 +126,12 @@ public final class OnejumpKeysWindow implements RenderInterface {
         for (int t = 0; t < n; t++) {
             float cx0 = gridX + t * cellW;
             boolean checked = cur.checkKeys[t];
-            boolean matched = you != null && t <= reached && t != failT && checked;
+            boolean passed = you != null && t <= reached && t != failT;
+            boolean matched = passed && checked;
+            if (passed && !checked) {
+                dl.addRectFilled(cx0 + gap, gridY + gridH - gap, cx0 + cellW - gap, gridY + gridH,
+                        ThemeManager.okTintColor(0.7f), 0f);
+            }
             if (t == turnFailT) dl.addRectFilled(cx0, gridY, cx0 + cellW, gridY + gridH, ThemeManager.dangerTintColor(0.2f), 0f);
             if (t == hoverT) dl.addRectFilled(cx0, gridY, cx0 + cellW, gridY + gridH, ThemeManager.selectedTintColor(0.15f), 0f);
             int expected = cur.keys[t];
@@ -193,6 +198,8 @@ public final class OnejumpKeysWindow implements RenderInterface {
                 ImGui.pushStyleColor(ImGuiCol.Text, ThemeManager.okColor());
                 ImGui.text("matched");
                 ImGui.popStyleColor();
+            } else if (you != null && t <= reached) {
+                ImGui.textDisabled("passed");
             }
             if (timing && you != null && you.hasTiming()) {
                 float on = you.turnStartAt(cur.startTick + t);
