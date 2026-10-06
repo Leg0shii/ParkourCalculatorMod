@@ -17,7 +17,6 @@ public final class NoTurnResult {
     public boolean jaAll = false;
     public int pressCount = -1;
     public volatile boolean optimized = false;
-    public volatile double window = Double.NaN;
 
     public NoTurnResult(int[] combos, boolean[] sprint, int turnCombo, boolean ja, int edges, int sprintEngage,
                         double objective, double violation, double startX, double startZ, double[] yaws) {
@@ -46,7 +45,6 @@ public final class NoTurnResult {
         out.jaAll = jaAll;
         out.pressCount = pressCount;
         out.optimized = optimized;
-        out.window = window;
         return out;
     }
 
