@@ -28,6 +28,8 @@ public final class AttemptTracker {
     private boolean tickGround;
     private volatile boolean armed;
     private int wait;
+    private int lastMask;
+    private int heldAtArm;
     private volatile int pending = -1;
 
     private TurnProfileController.Current cur;
@@ -100,6 +102,7 @@ public final class AttemptTracker {
         armed = true;
         wait = 0;
         pending = -1;
+        heldAtArm = lastMask;
         onReset.run();
     }
 
@@ -125,6 +128,7 @@ public final class AttemptTracker {
             if (teleport) {
                 wait = 0;
                 pending = -1;
+                heldAtArm = 0;
             }
             return;
         }
@@ -150,6 +154,7 @@ public final class AttemptTracker {
 
     private void tickEnd(int mask) {
         if (!haveTick) return;
+        lastMask = mask;
         if (yaws == null) {
             if (!armed) return;
             TurnProfileController.Current c = profile.current();
@@ -158,7 +163,8 @@ public final class AttemptTracker {
                 pending++;
                 wait--;
             } else {
-                int start = mask & ~TurnReference.KEY_SPRINT;
+                heldAtArm &= mask;
+                int start = mask & ~heldAtArm & ~TurnReference.KEY_SPRINT;
                 if (!tickGround) start &= ~TurnReference.KEY_JUMP;
                 if (start == 0) return;
                 pending = 0;
@@ -372,6 +378,7 @@ public final class AttemptTracker {
         armed = false;
         wait = 0;
         pending = -1;
+        heldAtArm = 0;
         if (yaws != null) finish(false);
     }
 

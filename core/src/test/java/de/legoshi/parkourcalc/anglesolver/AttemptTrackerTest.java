@@ -335,9 +335,48 @@ public class AttemptTrackerTest {
         assertTrue(rig.tracker.isArmed());
         assertFalse(rig.tracker.last().complete);
         assertEquals(0, rig.controller.stats().attempts);
+        rig.keys(0);
         rig.play(false, 0, 0.0, NONE, NONE);
         assertTrue(rig.tracker.last().landed);
         assertEquals(1, rig.controller.stats().attempts);
+    }
+
+    @Test
+    public void keysHeldThroughTheResetClickStartNothingUntilReleased() {
+        Rig rig = new Rig();
+        double[] yaws = rig.yawsFor(0, 0.0);
+        ForwardPath path = rig.pathFor(yaws);
+        rig.reset();
+        for (int t = 0; t <= rig.k0 + 1; t++) rig.tick(t, yaws, path, false, false, false);
+        int held = rig.cur.keys[rig.k0 + 1];
+        rig.reset();
+        rig.maskOverride = new int[]{held, held, 0};
+        rig.tick(0, yaws, path, false, false, false);
+        rig.tick(1, yaws, path, false, false, false);
+        assertNull(rig.tracker.live());
+        assertTrue(rig.tracker.isArmed());
+        rig.tick(2, yaws, path, false, false, false);
+        rig.maskOverride = null;
+        rig.play(false, 0, 0.0, NONE, NONE);
+        assertTrue(rig.tracker.last().landed);
+        assertEquals(1, rig.controller.stats().attempts);
+    }
+
+    @Test
+    public void aTeleportAfterTheResetClickLetsHeldKeysStartTheAttempt() {
+        Rig rig = new Rig();
+        double[] yaws = rig.yawsFor(0, 0.0);
+        ForwardPath path = rig.pathFor(yaws);
+        rig.reset();
+        for (int t = 0; t <= rig.k0 + 1; t++) rig.tick(t, yaws, path, false, false, false);
+        int held = rig.cur.keys[rig.k0 + 1];
+        rig.reset();
+        rig.maskOverride = new int[]{held};
+        rig.tick(0, yaws, path, false, false, false);
+        assertNull(rig.tracker.live());
+        rig.maskOverride = null;
+        rig.tick(0, yaws, path, true, false, false);
+        assertNotNull(rig.tracker.live());
     }
 
     @Test
