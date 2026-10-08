@@ -152,7 +152,7 @@ public final class OnejumpSetupWindow implements RenderInterface {
                 : "no X or Z constraint after the reference, attempts are not judged", labelW, landing == null);
         overviewRow("Attempts", Integer.toString(st.attempts), labelW, false);
         overviewRow("Input failures", Integer.toString(st.inputFailures), labelW, false);
-        String failed = LandingForecast.failedSummary(st.failedAt, st.failedTotal);
+        String failed = LandingForecast.failedSummary(st.failedAt, st.failedTotal, cur == null ? 0 : cur.tasTick(0));
         overviewRow("Failed at", failed == null ? "-" : failed, labelW, failed == null);
         int[] bands = st.missBands;
         boolean anyBand = bands[0] + bands[1] + bands[2] + bands[3] > 0;
@@ -342,16 +342,16 @@ public final class OnejumpSetupWindow implements RenderInterface {
 
     private String info(TurnAttempt a) {
         if (a.inputFailure) {
-            return "T" + (a.failTick + 1) + " Inputs: " + TurnReference.describe(a.failKeys) + ", expected "
+            return "T" + (a.tasTick(a.failTick) + 1) + " Inputs: " + TurnReference.describe(a.failKeys) + ", expected "
                     + TurnReference.describe(a.expectedKeys);
         }
-        if (a.turnFailure) return "T" + (a.failTick + 1) + " Preturn: " + turn(a.failTurn);
+        if (a.turnFailure) return "T" + (a.tasTick(a.failTick) + 1) + " Preturn: " + turn(a.failTurn);
         if (controller.isDeepChecking(a)) return "solving" + DOTS[(int) (ImGui.getTime() * 3.0) % DOTS.length];
         if (a.judged() && !a.landed && a.failedTick() >= 0) {
             int t = a.failedTick();
             TurnProfileController.Current cur = controller.current();
             double err = cur == null ? Double.NaN : a.errorAt(cur, t);
-            return "T" + (t + 1) + " Turn" + (Double.isNaN(err) ? "" : ": " + turn(err));
+            return "T" + (a.tasTick(t) + 1) + " Turn" + (Double.isNaN(err) ? "" : ": " + turn(err));
         }
         return "";
     }

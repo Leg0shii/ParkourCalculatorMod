@@ -4,13 +4,11 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 
 import java.util.Arrays;
-import java.util.Locale;
 import java.util.function.BooleanSupplier;
 
 public final class AttemptTracker {
 
     public static final int RESET_BUTTON = 1;
-    public static final int RING = 128;
     public static final double TELEPORT_DISTANCE = 1.0;
     public static final double STILL_TOLERANCE_PX = 0.25;
 
@@ -19,21 +17,20 @@ public final class AttemptTracker {
     private final BooleanSupplier suspended;
     private final BooleanSupplier timing;
 
-    private final double[] ringX = new double[RING];
-    private final double[] ringY = new double[RING];
-    private final double[] ringZ = new double[RING];
-    private final double[] ringVx = new double[RING];
-    private final double[] ringVz = new double[RING];
-    private final float[] ringYaw = new float[RING];
-    private final boolean[] ringGround = new boolean[RING];
-    private final int[] ringKeys = new int[RING];
-    private final float[] ringOnset = new float[RING];
-    private final float[] ringEnd = new float[RING];
-    private final float[][] ringTrace = new float[RING][];
     private final TurnTiming.TickTrace trace = new TurnTiming.TickTrace();
-    private int head = -1;
-    private int filled;
+    private boolean haveTick;
+    private double tickX;
+    private double tickY;
+    private double tickZ;
+    private double tickVx;
+    private double tickVz;
+    private float tickYaw;
+    private boolean tickGround;
     private volatile boolean armed;
+    private int wait;
+    private int lastMask;
+    private int heldAtArm;
+    private volatile int pending = -1;
 
     private TurnProfileController.Current cur;
     private double[] yaws;
@@ -50,6 +47,9 @@ public final class AttemptTracker {
     private double[] bestMargin;
     private double[] bestOffset;
     private int failedTick = -1;
+    private int inFailTick = -1;
+    private int inFailKeys;
+    private int inFailExpected;
     private int recorded;
     private int tick;
     private int span;
@@ -60,7 +60,12 @@ public final class AttemptTracker {
     private Runnable onReset = () -> { };
     private java.util.function.IntSupplier macroMode = () -> 0;
     private BooleanSupplier forecastEnabled = () -> true;
+    private BooleanSupplier stopKeysOnFail = () -> false;
+    private BooleanSupplier stopTurnOnFail = () -> false;
     private int macro;
+    private int[] pressed;
+    private boolean[] keysFailed;
+    private boolean keysStopped;
 
     public AttemptTracker(TurnProfileController profile, BooleanSupplier enabled, BooleanSupplier suspended,
                           BooleanSupplier timing) {
@@ -82,11 +87,22 @@ public final class AttemptTracker {
         forecastEnabled = enabled;
     }
 
+    public void setStopKeysOnFail(BooleanSupplier stop) {
+        stopKeysOnFail = stop;
+    }
+
+    public void setStopTurnOnFail(BooleanSupplier stop) {
+        stopTurnOnFail = stop;
+    }
+
     public void mouseButton(int button, boolean down) {
         if (button != RESET_BUTTON || !down) return;
         if (!enabled.getAsBoolean() || suspended.getAsBoolean()) return;
         if (yaws != null) finish(false);
         armed = true;
+        wait = 0;
+        pending = -1;
+        heldAtArm = lastMask;
         onReset.run();
     }
 
@@ -97,23 +113,25 @@ public final class AttemptTracker {
             return;
         }
         closeTick(nowNs);
-        boolean teleport = filled > 0 && distance(ringX[head], ringY[head], ringZ[head], x, y, z) > TELEPORT_DISTANCE;
-        head = (head + 1) % RING;
-        ringX[head] = x;
-        ringY[head] = y;
-        ringZ[head] = z;
-        ringVx[head] = vx;
-        ringVz[head] = vz;
-        ringYaw[head] = yaw;
-        ringGround[head] = ground;
-        ringKeys[head] = 0;
-        ringOnset[head] = Float.NaN;
-        ringEnd[head] = Float.NaN;
-        ringTrace[head] = null;
-        filled = teleport ? 1 : Math.min(RING, filled + 1);
+        boolean teleport = haveTick && distance(tickX, tickY, tickZ, x, y, z) > TELEPORT_DISTANCE;
+        haveTick = true;
+        tickX = x;
+        tickY = y;
+        tickZ = z;
+        tickVx = vx;
+        tickVz = vz;
+        tickYaw = yaw;
+        tickGround = ground;
         if (timing.getAsBoolean()) trace.begin(nowNs, yaw);
         else trace.clear();
-        if (yaws == null) return;
+        if (yaws == null) {
+            if (teleport) {
+                wait = 0;
+                pending = -1;
+                heldAtArm = 0;
+            }
+            return;
+        }
         if (teleport) {
             finish(false);
             return;
@@ -135,29 +153,43 @@ public final class AttemptTracker {
     }
 
     private void tickEnd(int mask) {
-        if (filled == 0) return;
-        ringKeys[head] = mask;
+        if (!haveTick) return;
+        lastMask = mask;
         if (yaws == null) {
-            if (!armed || mask == 0) return;
+            if (!armed) return;
             TurnProfileController.Current c = profile.current();
             if (c == null || c.n == 0) return;
-            int k0 = c.firstJumpRow();
-            if (k0 < 0) {
-                armed = false;
-                open(c, head, 1);
+            if (wait > 0) {
+                pending++;
+                wait--;
             } else {
-                if (!jumpPress(mask)) return;
-                if (filled < k0 + 1) {
-                    earlyPress(c, k0);
+                heldAtArm &= mask;
+                int start = mask & ~heldAtArm & ~TurnReference.KEY_SPRINT;
+                if (!tickGround) start &= ~TurnReference.KEY_JUMP;
+                if (start == 0) return;
+                pending = 0;
+                wait = c.leadKeys.length;
+            }
+            if (wait > 0) return;
+            open(c);
+            if (yaws == null) return;
+        }
+        if (!keysStopped && tick < cur.n) {
+            pressed[tick] = mask;
+            boolean bad = mismatch(tick, mask, tickGround);
+            keysFailed[tick] = bad;
+            if (bad) {
+                if (inFailTick < 0) {
+                    inFailTick = cur.startTick + tick;
+                    inFailKeys = mask;
+                    inFailExpected = cur.keys[tick];
+                }
+                if (stopTurnOnFail.getAsBoolean()) {
+                    stopOnKeys(tick, mask);
                     return;
                 }
-                armed = false;
-                open(c, ((head - k0) % RING + RING) % RING, k0 + 1);
+                if (stopKeysOnFail.getAsBoolean()) keysStopped = true;
             }
-            if (yaws == null) return;
-        } else if (mismatch(tick, mask, ringGround[head])) {
-            inputFailure(tick, mask);
-            return;
         }
         if (tick == span - 1) finish(true);
         else tick++;
@@ -165,6 +197,10 @@ public final class AttemptTracker {
 
     public boolean isArmed() {
         return armed;
+    }
+
+    public int pendingTicks() {
+        return armed && yaws == null ? pending : -1;
     }
 
     public void reset() {
@@ -192,10 +228,6 @@ public final class AttemptTracker {
         float off = trace.end(nowNs);
         float[] pts = trace.points(nowNs);
         trace.clear();
-        if (filled == 0) return;
-        ringOnset[head] = on;
-        ringEnd[head] = off;
-        ringTrace[head] = pts;
         if (turnStart == null) return;
         int j = tick - 1;
         if (j < 0 || j >= turnStart.length) return;
@@ -204,39 +236,18 @@ public final class AttemptTracker {
         traces[j] = pts;
     }
 
-    private void earlyPress(TurnProfileController.Current c, int k0) {
+    private void open(TurnProfileController.Current c) {
         armed = false;
-        String verdict = "jumped " + (filled - 1) + " ticks after the reset, the run-up needs " + k0;
-        TurnAttempt a = new TurnAttempt(profile.document().nextNumber(), c.startTick, new double[0], 0, false, false,
-                false, verdict, Double.NaN, -1, -1, 0, 0, macroMode.getAsInt(), null, null, null, false, Double.NaN, null);
-        a.tasFirstTick = c.tasFirstTick;
-        if (last != null) last.dropTrace();
-        last = a;
-    }
-
-    private boolean jumpPress(int mask) {
-        if ((mask & TurnReference.KEY_JUMP) == 0 || !ringGround[head]) return false;
-        if (filled < 2) return true;
-        int prev = (head - 1 + RING) % RING;
-        return (ringKeys[prev] & TurnReference.KEY_JUMP) == 0 || !ringGround[prev];
-    }
-
-    private void open(TurnProfileController.Current c, int idx, int have) {
+        pending = -1;
         cur = c;
         macro = macroMode.getAsInt();
-        yaws = new double[c.n];
+        yaws = nans(c.n);
         if (timing.getAsBoolean()) {
             turnStart = new float[c.n];
             turnEnd = new float[c.n];
             traces = new float[c.n][];
             Arrays.fill(turnStart, Float.NaN);
             Arrays.fill(turnEnd, Float.NaN);
-            for (int t = 0; t < have && t < c.n; t++) {
-                int i = (idx + t) % RING;
-                turnStart[t] = ringOnset[i];
-                turnEnd[t] = ringEnd[i];
-                traces[t] = ringTrace[i];
-            }
         } else {
             turnStart = null;
             turnEnd = null;
@@ -258,23 +269,19 @@ public final class AttemptTracker {
             bestOffset = null;
         }
         failedTick = -1;
+        inFailTick = -1;
+        inFailKeys = 0;
+        inFailExpected = 0;
+        pressed = new int[c.n];
+        Arrays.fill(pressed, -1);
+        keysFailed = new boolean[c.n];
+        keysStopped = false;
         span = c.lastTick() - c.startTick + 1;
         recorded = 0;
         margin = Double.NaN;
         missAxis = null;
-        for (int t = 0; t < have; t++) {
-            int i = (idx + t) % RING;
-            tick = t;
-            record(ringX[i], ringZ[i], ringVx[i], ringVz[i], ringYaw[i], ringGround[i]);
-            if (yaws == null) return;
-        }
-        for (int t = 0; t < have; t++) {
-            int i = (idx + t) % RING;
-            if (mismatch(t, ringKeys[i], ringGround[i])) {
-                inputFailure(t, ringKeys[i]);
-                return;
-            }
-        }
+        tick = 0;
+        record(tickX, tickZ, tickVx, tickVz, tickYaw, tickGround);
     }
 
     private void record(double x, double z, double vx, double vz, float yaw, boolean ground) {
@@ -310,17 +317,27 @@ public final class AttemptTracker {
                 if (!r.landable() && failedTick < 0) failedTick = cur.startTick + tick;
             }
         }
-        live = attempt(recorded, false, false, false, "", margin, -1, -1, 0, 0, false, Double.NaN);
+        live = attempt(recorded, false, false, "", margin, -1, false, Double.NaN);
     }
 
-    private TurnAttempt attempt(int n, boolean complete, boolean landed, boolean inputFailure, String verdict,
-                                double margin, int worstTick, int failTick, int failKeys, int expectedKeys,
+    private TurnAttempt attempt(int n, boolean complete, boolean landed, String verdict, double margin, int worstTick,
                                 boolean turnFailure, double failTurn) {
+        boolean inputFailure = !turnFailure && inFailTick >= 0;
+        int failTick = turnFailure ? cur.startTick + Math.max(0, n - 1) : inFailTick;
         TurnAttempt a = new TurnAttempt(profile.document().nextNumber(), cur.startTick, yaws, n, complete, landed,
-                inputFailure, verdict, margin, worstTick, failTick, failKeys, expectedKeys, macro, turnStart, turnEnd,
-                traces, turnFailure, failTurn, forecastResult());
+                inputFailure, verdict, margin, worstTick, failTick, inputFailure ? inFailKeys : 0,
+                inputFailure ? inFailExpected : 0, macro, turnStart, turnEnd, traces, turnFailure, failTurn,
+                forecastResult());
         a.tasFirstTick = cur.tasFirstTick;
+        a.pressedKeys = pressed.clone();
+        a.keysFailed = keysFailed.clone();
         return a;
+    }
+
+    private void stopOnKeys(int k, int mask) {
+        String verdict = "tick " + (cur.tasTick(k) + 1) + ": " + TurnReference.describe(mask) + ", expected "
+                + TurnReference.describe(cur.keys[k]);
+        publish(attempt(Math.min(recorded, k + 1), true, false, verdict, Double.NaN, -1, false, Double.NaN));
     }
 
     private void publish(TurnAttempt a) {
@@ -344,10 +361,9 @@ public final class AttemptTracker {
 
     private void turnFailure(int k, double turned) {
         int failTick = cur.startTick + k;
-        String verdict = "tick " + (failTick + 1) + ": turned " + TurnAttempt.turnText(turned, cur.pixelDeg)
+        String verdict = "tick " + (cur.tasTick(k) + 1) + ": turned " + TurnAttempt.turnText(turned, cur.pixelDeg)
                 + ", expected still";
-        publish(attempt(Math.min(recorded, k + 1), true, false, false, verdict, Double.NaN, -1, failTick, 0, 0, true,
-                turned));
+        publish(attempt(k + 1, true, false, verdict, Double.NaN, -1, true, turned));
     }
 
     private boolean mismatch(int t, int mask, boolean ground) {
@@ -360,6 +376,9 @@ public final class AttemptTracker {
 
     private void abort() {
         armed = false;
+        wait = 0;
+        pending = -1;
+        heldAtArm = 0;
         if (yaws != null) finish(false);
     }
 
@@ -377,26 +396,16 @@ public final class AttemptTracker {
         live = null;
     }
 
-    private void inputFailure(int k, int mask) {
-        int expected = cur.keys[k];
-        int failTick = cur.startTick + k;
-        String verdict = String.format(Locale.ROOT, "tick %d: %s, expected %s", failTick + 1,
-                TurnReference.describe(mask), TurnReference.describe(expected));
-        publish(attempt(Math.min(recorded, k + 1), true, false, true, verdict, Double.NaN, -1, failTick, mask,
-                expected, false, Double.NaN));
-    }
-
     private void finish(boolean complete) {
         if (!complete) {
-            last = attempt(recorded, false, false, false, "aborted after " + tick + " ticks", Double.NaN, -1, -1, 0, 0,
-                    false, Double.NaN);
+            last = attempt(recorded, false, false, "aborted after " + tick + " ticks", Double.NaN, -1, false, Double.NaN);
             close();
             return;
         }
         int worst = -1;
         double worstErr = 0.0;
         for (int t = 0; t < recorded; t++) {
-            if (!cur.checkYaw[t]) continue;
+            if (!cur.checkYaw[t] || Double.isNaN(yaws[t])) continue;
             double e = Math.abs(Angles.wrapDelta(yaws[t] - cur.facing[t]));
             if (worst < 0 || e > worstErr) {
                 worst = t;
@@ -415,8 +424,7 @@ public final class AttemptTracker {
         } else {
             verdict = TurnAttempt.signedMargin(m) + " " + missAxis;
         }
-        publish(attempt(recorded, true, landed, false, verdict, m, worst < 0 ? -1 : cur.startTick + worst, -1, 0, 0,
-                false, Double.NaN));
+        publish(attempt(recorded, true, landed, verdict, m, worst < 0 ? -1 : cur.startTick + worst, false, Double.NaN));
     }
 
     private static double distance(double x0, double y0, double z0, double x1, double y1, double z1) {

@@ -229,8 +229,72 @@ public class AttemptTrackerTest {
     }
 
     @Test
-    public void aWrongKeyIsAnInputFailure() {
+    public void aWrongKeyIsAnInputFailureButTheAttemptRunsOn() {
         Rig rig = new Rig();
+        int at = rig.k0 + 2;
+        rig.play(true, 0, 0.0, NONE, at);
+        TurnAttempt a = rig.tracker.last();
+        assertNotNull(a);
+        assertTrue(a.complete);
+        assertTrue(a.inputFailure);
+        assertTrue(a.verdict, a.landed);
+        assertTrue(a.hasMargin());
+        assertTrue(a.judged());
+        assertEquals(rig.cur.startTick + at, a.failTick);
+        assertEquals(rig.cur.n, a.recorded);
+        assertEquals(rig.cur.keys[at], a.expectedKeys);
+        assertEquals(rig.cur.keys[at] ^ TurnReference.KEY_W, a.failKeys);
+        assertEquals(1, rig.controller.stats().inputFailures);
+        assertEquals(1, rig.controller.stats().landings);
+        assertNull(rig.tracker.live());
+    }
+
+    @Test
+    public void onlyTheFirstWrongKeyIsKept() {
+        Rig rig = new Rig();
+        int first = rig.k0 + 1;
+        rig.maskOverride = new int[rig.cur.n];
+        java.util.Arrays.fill(rig.maskOverride, -1);
+        rig.maskOverride[first] = rig.cur.keys[first] ^ TurnReference.KEY_W;
+        rig.maskOverride[first + 2] = rig.cur.keys[first + 2] ^ TurnReference.KEY_W;
+        rig.play(true, 0, 0.0, NONE, NONE);
+        TurnAttempt a = rig.tracker.last();
+        assertTrue(a.inputFailure);
+        assertEquals(rig.cur.startTick + first, a.failTick);
+        assertEquals(rig.cur.n, a.recorded);
+        assertTrue(a.keysFailedAt(rig.cur.startTick + first));
+        assertTrue(a.keysFailedAt(rig.cur.startTick + first + 2));
+        assertFalse(a.keysFailedAt(rig.cur.startTick + first + 1));
+        assertEquals(rig.cur.keys[first] ^ TurnReference.KEY_W, a.pressedKeysAt(rig.cur.startTick + first));
+        for (int t = 0; t < rig.cur.n; t++) assertTrue("tick " + t, a.keysRecordedAt(rig.cur.startTick + t));
+    }
+
+    @Test
+    public void stopCheckingKeysOnFailRecordsNothingAfterTheFirstWrongKey() {
+        Rig rig = new Rig();
+        rig.tracker.setStopKeysOnFail(() -> true);
+        int first = rig.k0 + 1;
+        rig.maskOverride = new int[rig.cur.n];
+        java.util.Arrays.fill(rig.maskOverride, -1);
+        rig.maskOverride[first] = rig.cur.keys[first] ^ TurnReference.KEY_W;
+        rig.maskOverride[first + 2] = rig.cur.keys[first + 2] ^ TurnReference.KEY_W;
+        rig.play(true, 0, 0.0, NONE, NONE);
+        TurnAttempt a = rig.tracker.last();
+        assertTrue(a.verdict, a.landed);
+        assertTrue(a.inputFailure);
+        assertEquals(rig.cur.startTick + first, a.failTick);
+        assertEquals(rig.cur.n, a.recorded);
+        assertTrue(a.keysFailedAt(rig.cur.startTick + first));
+        assertFalse(a.keysFailedAt(rig.cur.startTick + first + 2));
+        assertTrue(a.keysRecordedAt(rig.cur.startTick + first));
+        assertFalse(a.keysRecordedAt(rig.cur.startTick + first + 1));
+        assertFalse(a.keysRecordedAt(rig.cur.startTick + first + 2));
+    }
+
+    @Test
+    public void stopTheAttemptOnFailEndsItWithAKeysVerdict() {
+        Rig rig = new Rig();
+        rig.tracker.setStopTurnOnFail(() -> true);
         int at = rig.k0 + 2;
         rig.play(true, 0, 0.0, NONE, at);
         TurnAttempt a = rig.tracker.last();
@@ -271,9 +335,48 @@ public class AttemptTrackerTest {
         assertTrue(rig.tracker.isArmed());
         assertFalse(rig.tracker.last().complete);
         assertEquals(0, rig.controller.stats().attempts);
+        rig.keys(0);
         rig.play(false, 0, 0.0, NONE, NONE);
         assertTrue(rig.tracker.last().landed);
         assertEquals(1, rig.controller.stats().attempts);
+    }
+
+    @Test
+    public void keysHeldThroughTheResetClickStartNothingUntilReleased() {
+        Rig rig = new Rig();
+        double[] yaws = rig.yawsFor(0, 0.0);
+        ForwardPath path = rig.pathFor(yaws);
+        rig.reset();
+        for (int t = 0; t <= rig.k0 + 1; t++) rig.tick(t, yaws, path, false, false, false);
+        int held = rig.cur.keys[rig.k0 + 1];
+        rig.reset();
+        rig.maskOverride = new int[]{held, held, 0};
+        rig.tick(0, yaws, path, false, false, false);
+        rig.tick(1, yaws, path, false, false, false);
+        assertNull(rig.tracker.live());
+        assertTrue(rig.tracker.isArmed());
+        rig.tick(2, yaws, path, false, false, false);
+        rig.maskOverride = null;
+        rig.play(false, 0, 0.0, NONE, NONE);
+        assertTrue(rig.tracker.last().landed);
+        assertEquals(1, rig.controller.stats().attempts);
+    }
+
+    @Test
+    public void aTeleportAfterTheResetClickLetsHeldKeysStartTheAttempt() {
+        Rig rig = new Rig();
+        double[] yaws = rig.yawsFor(0, 0.0);
+        ForwardPath path = rig.pathFor(yaws);
+        rig.reset();
+        for (int t = 0; t <= rig.k0 + 1; t++) rig.tick(t, yaws, path, false, false, false);
+        int held = rig.cur.keys[rig.k0 + 1];
+        rig.reset();
+        rig.maskOverride = new int[]{held};
+        rig.tick(0, yaws, path, false, false, false);
+        assertNull(rig.tracker.live());
+        rig.maskOverride = null;
+        rig.tick(0, yaws, path, true, false, false);
+        assertNotNull(rig.tracker.live());
     }
 
     @Test
@@ -438,7 +541,7 @@ public class AttemptTrackerTest {
     }
 
     @Test
-    public void aStillRunUpTickIsCheckedFromTheRing() {
+    public void aStillRunUpTickIsChecked() {
         Rig rig = new Rig();
         assertTrue(rig.k0 > 0);
         rig.tasRow(0).setOnejumpFace(InputRow.ONEJUMP_FACE_STILL);
@@ -613,30 +716,189 @@ public class AttemptTrackerTest {
         assertNotNull(rig.controller.lastError(), cur);
         assertTrue((cur.keys[0] & TurnReference.KEY_JUMP) != 0);
         assertFalse(cur.jumpTicks[0]);
-        int first = cur.firstJumpRow();
-        assertTrue("first jump row " + first, first != 0);
-        if (first > 0) {
-            JumpPhysicsInputs sc = rig.engine.snapshotPath(rig.tasFirst + air, rig.tasFirst + air + cur.n).spec.asScenario();
-            assertFalse(Double.isNaN(sc.slipAt(first)));
-        }
     }
 
     @Test
-    public void aJumpPressBeforeTheRunUpIsCompleteDisarmsWithAVerdict() {
+    public void theFirstKeyAfterTheResetOpensTheAttemptAtTheFirstReferenceTick() {
         Rig rig = new Rig();
         assertTrue(rig.k0 > 0);
         rig.reset();
         double[] yaws = rig.cur.facing.clone();
         ForwardPath path = rig.pathFor(yaws);
-        rig.tick(0, yaws, path, true, false, false);
-        rig.keys(rig.cur.keys[rig.k0]);
+        rig.tick(0, yaws, path, false, false, false);
         assertFalse(rig.tracker.isArmed());
+        TurnAttempt live = rig.tracker.live();
+        assertNotNull(live);
+        assertEquals(1, live.recorded);
+        assertEquals(rig.cur.facing[0], live.yaws[0], 1e-4);
+        for (int t = 1; t < rig.span; t++) rig.tick(t, yaws, path, false, false, false);
+        assertTrue(rig.tracker.last().verdict, rig.tracker.last().landed);
+    }
+
+    @Test
+    public void aSpaceHeldInTheAirDoesNotStartTheAttemptUntilTheGroundTick() {
+        Rig rig = new Rig();
+        rig.reset();
+        double[] yaws = rig.cur.facing.clone();
+        ForwardPath path = rig.pathFor(yaws);
+        int air = TurnReference.KEY_JUMP | TurnReference.KEY_SPRINT;
+        for (int i = 0; i < 3; i++) {
+            rig.tracker.tickStart(path.posX[0], rig.sc.startPos.y + 0.1, path.posZ[0], 0.0, 0.0, (float) yaws[0], false, rig.ns);
+            rig.ns += 50_000_000L;
+            rig.keys(air);
+            assertNull("air tick " + i, rig.tracker.live());
+            assertTrue("air tick " + i, rig.tracker.isArmed());
+            assertEquals("air tick " + i, -1, rig.tracker.pendingTicks());
+        }
+        rig.maskOverride = new int[] {air};
+        rig.tick(0, yaws, path, false, false, false);
+        rig.maskOverride = null;
+        TurnAttempt live = rig.tracker.live();
+        assertNotNull(live);
+        assertEquals(1, live.recorded);
+        assertEquals(rig.cur.facing[0], live.yaws[0], 1e-4);
+    }
+
+    @Test
+    public void idleTicksAfterTheResetDoNotOpenTheAttempt() {
+        Rig rig = new Rig();
+        rig.reset();
+        double[] yaws = rig.cur.facing.clone();
+        ForwardPath path = rig.pathFor(yaws);
+        rig.maskOverride = new int[] {0};
+        for (int i = 0; i < 3; i++) rig.tick(0, yaws, path, false, false, false);
+        assertTrue(rig.tracker.isArmed());
         assertNull(rig.tracker.live());
+        assertNull(rig.tracker.last());
+        rig.maskOverride = null;
+        rig.play(false, 0, 0.0, NONE, NONE);
+        assertTrue(rig.tracker.last().verdict, rig.tracker.last().landed);
+        assertEquals(1, rig.controller.document().attempts().size());
+    }
+
+    @Test
+    public void aHeldSprintKeyAloneDoesNotOpenTheAttempt() {
+        Rig rig = new Rig();
+        rig.reset();
+        double[] yaws = rig.cur.facing.clone();
+        ForwardPath path = rig.pathFor(yaws);
+        rig.maskOverride = new int[] {TurnReference.KEY_SPRINT};
+        for (int i = 0; i < 3; i++) rig.tick(0, yaws, path, false, false, false);
+        assertTrue(rig.tracker.isArmed());
+        assertNull(rig.tracker.live());
+        rig.maskOverride = null;
+        rig.play(false, 0, 0.0, NONE, NONE);
+        assertTrue(rig.tracker.last().verdict, rig.tracker.last().landed);
+    }
+
+    @Test
+    public void unflaggedRunUpRowsStillCountBeforeTheReference() {
+        Rig rig = new Rig();
+        int lead = rig.k0;
+        assertTrue(lead > 0);
+        for (int t = 0; t < lead; t++) {
+            rig.tasRow(t).setOnejumpKeys(false);
+            rig.tasRow(t).setOnejumpFace(InputRow.ONEJUMP_FACE_OFF);
+        }
+        rig.controller.refresh();
+        rig.sync();
+        assertEquals(lead, rig.tasFirst);
+        assertEquals(lead, rig.cur.leadKeys.length);
+        assertEquals(TurnReference.mask(rig.inputs.getRows().get(0)), rig.cur.leadKeys[0]);
+        rig.reset();
+        assertEquals(-1, rig.tracker.pendingTicks());
+        double[] yaws = rig.cur.facing.clone();
+        ForwardPath path = rig.pathFor(yaws);
+        for (int t = 0; t < lead; t++) {
+            rig.tracker.tickStart(path.posX[0], rig.sc.startPos.y, path.posZ[0], 0.0, 0.0, (float) yaws[0], true, rig.ns);
+            rig.ns += 50_000_000L;
+            rig.keys(TurnReference.mask(rig.inputs.getRows().get(t)));
+            assertNull("lead tick " + t, rig.tracker.live());
+            assertTrue("lead tick " + t, rig.tracker.isArmed());
+            assertEquals("lead tick " + t, t, rig.tracker.pendingTicks());
+        }
+        for (int t = 0; t < rig.span; t++) rig.tick(t, yaws, path, false, false, false);
         TurnAttempt a = rig.tracker.last();
         assertNotNull(a);
-        assertFalse(a.complete);
-        assertTrue(a.verdict, a.verdict.startsWith("jumped 0 ticks after the reset, the run-up needs " + rig.k0));
-        assertEquals(0, rig.controller.document().attempts().size());
+        assertTrue(a.verdict, a.landed);
+        assertEquals(rig.cur.n, a.recorded);
+        assertEquals(lead, a.tasFirstTick);
+    }
+
+    @Test
+    public void uncheckedRowsPlayButAreNotJudged() {
+        Rig rig = new Rig();
+        int k0 = rig.k0;
+        assertTrue(k0 > 0);
+        for (int t = 0; t < k0; t++) rig.tasRow(t).setOnejumpKeys(false);
+        rig.controller.refresh();
+        rig.sync();
+        assertEquals(0, rig.tasFirst);
+        assertEquals(0, rig.cur.leadKeys.length);
+        rig.maskOverride = new int[k0];
+        java.util.Arrays.fill(rig.maskOverride, TurnReference.KEY_W | TurnReference.KEY_A);
+        rig.play(true, 0, 0.0, NONE, NONE);
+        TurnAttempt a = rig.tracker.last();
+        assertNotNull(a);
+        assertTrue(a.verdict, a.landed);
+        assertEquals(rig.cur.n, a.recorded);
+        for (int t = 0; t < rig.cur.n; t++) assertEquals("tick " + t, rig.cur.facing[t], a.yaws[t], 1e-4);
+        assertTrue(a.hasForecast());
+        assertFalse(Double.isNaN(a.forecast.held[0]));
+    }
+
+    @Test
+    public void aWrongFirstKeyIsAnInputFailureOnTheFirstTick() {
+        Rig rig = new Rig();
+        assertTrue(rig.k0 > 0);
+        assertTrue(rig.cur.checkKeys[0]);
+        rig.maskOverride = new int[] {rig.cur.keys[0] | TurnReference.KEY_A};
+        rig.play(true, 0, 0.0, NONE, NONE);
+        TurnAttempt a = rig.tracker.last();
+        assertNotNull(a);
+        assertTrue(a.verdict, a.inputFailure);
+        assertEquals(rig.cur.startTick, a.failTick);
+        assertEquals(rig.cur.keys[0], a.expectedKeys);
+        assertEquals(rig.cur.keys[0] | TurnReference.KEY_A, a.failKeys);
+        assertEquals(rig.cur.n, a.recorded);
+        assertEquals(1, rig.controller.stats().inputFailures);
+    }
+
+    @Test
+    public void aJumpPressedAtTheStartOfARunUpIsAnInputFailureOnTheFirstTick() {
+        Rig rig = new Rig();
+        assertTrue(rig.k0 > 0);
+        assertTrue(rig.cur.checkKeys[0]);
+        rig.maskOverride = new int[] {rig.cur.keys[rig.k0]};
+        rig.play(true, 0, 0.0, NONE, NONE);
+        TurnAttempt a = rig.tracker.last();
+        assertNotNull(a);
+        assertTrue(a.verdict, a.inputFailure);
+        assertEquals(rig.cur.startTick, a.failTick);
+        assertEquals(rig.cur.keys[0], a.expectedKeys);
+        assertEquals(rig.cur.keys[rig.k0], a.failKeys);
+        assertEquals(rig.cur.n, a.recorded);
+        assertEquals(1, rig.controller.stats().inputFailures);
+    }
+
+    @Test
+    public void aWrongKeyOnAnUncheckedRowDoesNotStopTheAttemptButALaterOneDoes() {
+        Rig rig = new Rig();
+        int k0 = rig.k0;
+        assertTrue(k0 > 0);
+        for (int t = 0; t < k0; t++) rig.tasRow(t).setOnejumpKeys(false);
+        rig.controller.refresh();
+        rig.sync();
+        rig.maskOverride = new int[k0 + 3];
+        java.util.Arrays.fill(rig.maskOverride, -1);
+        rig.maskOverride[0] = TurnReference.KEY_W;
+        rig.maskOverride[k0 + 2] = rig.cur.keys[k0 + 2] ^ TurnReference.KEY_W;
+        rig.play(true, 0, 0.0, NONE, NONE);
+        TurnAttempt a = rig.tracker.last();
+        assertNotNull(a);
+        assertTrue(a.verdict, a.inputFailure);
+        assertEquals(rig.cur.startTick + k0 + 2, a.failTick);
+        assertEquals(rig.cur.n, a.recorded);
     }
 
     @Test

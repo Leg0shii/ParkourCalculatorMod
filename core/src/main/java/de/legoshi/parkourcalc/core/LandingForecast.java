@@ -152,6 +152,10 @@ public final class LandingForecast {
     }
 
     public static String failedSummary(int[] count, int failed) {
+        return failedSummary(count, failed, 0);
+    }
+
+    public static String failedSummary(int[] count, int failed, int firstTasTick) {
         if (failed == 0) return null;
         List<Integer> order = new ArrayList<Integer>();
         for (int t = 0; t < count.length; t++) if (count[t] > 0) order.add(t);
@@ -161,7 +165,7 @@ public final class LandingForecast {
         for (int i = 0; i < order.size() && i < 3; i++) {
             int t = order.get(i);
             if (i > 0) sb.append(", ");
-            sb.append(String.format(Locale.ROOT, "tick %d (%.0f%%)", t + 1, 100.0 * count[t] / failed));
+            sb.append(String.format(Locale.ROOT, "tick %d (%.0f%%)", firstTasTick + t + 1, 100.0 * count[t] / failed));
         }
         sb.append(String.format(Locale.ROOT, "  of %d failed", failed));
         return sb.toString();

@@ -64,7 +64,7 @@ public final class TurnProfileWindow implements RenderInterface {
 
     @Override
     public void renderDetached(ImGuiIO io) {
-        if (settings.keepTurnProfileOpen) render(io, true);
+        render(io, true);
     }
 
     private void render(ImGuiIO io, boolean graphOnly) {
@@ -347,7 +347,7 @@ public final class TurnProfileWindow implements RenderInterface {
             boolean label = shownIdx % labelEvery == 0 || t == lastShown;
             shownIdx++;
             if (!label) continue;
-            String lbl = Integer.toString(cur.startTick + t + 1);
+            String lbl = Integer.toString(cur.tasTick(t) + 1);
             dl.addText(xs[t] - ImGui.calcTextSize(lbl).x * 0.5f, plotY + plotH + 4f * scale,
                     cur.jumpTicks[t] ? jumpCol : textCol, lbl);
         }
@@ -398,15 +398,16 @@ public final class TurnProfileWindow implements RenderInterface {
         int abs = cur.startTick + t;
         ImGui.beginTooltip();
         Fonts.pushBold();
-        ImGui.text(String.format(Locale.ROOT, "T%d   %.2f°%s", abs + 1, cur.facing[t], cur.still[t] ? "   still" : ""));
+        ImGui.text(String.format(Locale.ROOT, "T%d%s", abs + 1, cur.still[t] ? "   still" : ""));
         Fonts.popBold();
         float labelW = ImGui.calcTextSize("Window").x + ImGui.getStyle().getItemSpacing().x * 3f;
+        tooltipRow("Ref", String.format(Locale.ROOT, "%.2f°", cur.facing[t]), ThemeManager.textColor(), labelW);
         if (cur.checkYaw[t]) {
             if (you != null) {
                 double e = youError(cur, you, t);
                 if (!Double.isNaN(e)) {
-                    tooltipRow("You", String.format(Locale.ROOT, "%.2f°   %s", cur.facing[t] + e,
-                            TurnAttempt.turnText(e, pixelDeg)), youColor(you), labelW);
+                    tooltipRow("You", String.format(Locale.ROOT, "%.2f°", cur.facing[t] + e), ThemeManager.textColor(), labelW);
+                    tooltipRow("Error", TurnAttempt.turnText(e, pixelDeg), youColor(you), labelW);
                 }
             }
             if (st != null && st.landings > 0) {
