@@ -8,6 +8,7 @@ import de.legoshi.parkourcalc.core.TurnProfileController;
 import de.legoshi.parkourcalc.core.TurnProfileDocument;
 import de.legoshi.parkourcalc.core.TurnReference;
 import de.legoshi.parkourcalc.core.TurnTiming;
+import de.legoshi.parkourcalc.core.anglesolver.ConstraintText;
 import de.legoshi.parkourcalc.core.anglesolver.profile.AttemptSampler;
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
 import de.legoshi.parkourcalc.core.ui.Settings;
@@ -24,6 +25,7 @@ import imgui.flag.ImGuiSelectableFlags;
 import imgui.flag.ImGuiTableColumnFlags;
 import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImBoolean;
+import imgui.type.ImInt;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +50,7 @@ public final class OnejumpSetupWindow implements RenderInterface {
     private final Settings settings;
     private final Runnable onSettingsChanged;
     private final ImBoolean open = new ImBoolean(false);
+    private final ImInt axisBuf = new ImInt(0);
     private boolean openClearModal;
     private int attemptsPage;
     private TurnTiming.Onset onsetCache;
@@ -129,9 +132,10 @@ public final class OnejumpSetupWindow implements RenderInterface {
         clearModal();
     }
 
-    private static final String[] OVERVIEW_LABELS = {"TAS", "Landing", "Attempts", "Landed", "Input failures",
-            "Landing chance", "Closest", "Missed by", "Failed at", "Turn onset", "Replay (inputs)", "Replay (turn)", "Top 10",
-            "Latest"};
+    private static final String[] OVERVIEW_LABELS = {"TAS", "Setup", "Landing", "Offset", "Attempts", "Landed",
+            "Input failures", "Landing chance", "Closest", "Missed by", "Failed at", "Turn onset", "Replay (inputs)",
+            "Replay (turn)", "Top 10", "Latest"};
+    private static final String SETUP_HINT = "set an X or Z constraint on the landing tick, or mark Keys and Face ticks";
 
     private void overview(TurnProfileDocument doc, TurnProfileController.Current cur, float scale) {
         TurnProfileDocument.Stats st = doc.stats();
@@ -145,23 +149,25 @@ public final class OnejumpSetupWindow implements RenderInterface {
         overviewRow("TAS", name == null ? "unsaved, attempts are not kept" : storeError == null ? name
                 : name + "  (attempts file unreadable, nothing is written: " + storeError + ")", labelW,
                 name == null || storeError != null);
-        String err = controller.lastError();
+        boolean fast = cur != null && cur.isFast();
+        setupRow(cur, labelW);
         TurnReference.Landing landing = cur == null ? null : cur.landing;
-        overviewRow("Landing", landing != null ? landing.label(0) : cur == null
-                ? (err != null ? err : "mark Keys and Face ticks in the input table")
-                : "no X or Z constraint after the reference, attempts are not judged", labelW, landing == null);
+        overviewRow("Landing", landing != null ? landing.label(cur.tasFirstTick) : "-", labelW, landing == null);
+        offsetRow(landing, labelW);
         overviewRow("Attempts", Integer.toString(st.attempts), labelW, false);
-        overviewRow("Input failures", Integer.toString(st.inputFailures), labelW, false);
-        String failed = LandingForecast.failedSummary(st.failedAt, st.failedTotal, cur == null ? 0 : cur.tasTick(0));
-        overviewRow("Failed at", failed == null ? "-" : failed, labelW, failed == null);
+        if (!fast) overviewRow("Input failures", Integer.toString(st.inputFailures), labelW, false);
+        if (!fast) {
+            String failed = LandingForecast.failedSummary(st.failedAt, st.failedTotal, cur == null ? 0 : cur.tasTick(0));
+            overviewRow("Failed at", failed == null ? "-" : failed, labelW, failed == null);
+        }
         int[] bands = st.missBands;
         boolean anyBand = bands[0] + bands[1] + bands[2] + bands[3] > 0;
         overviewRow("Missed by", String.format(Locale.ROOT, "e-2 %d   e-3 %d   e-4 %d   e-5 %d", bands[0], bands[1],
                 bands[2], bands[3]), labelW, !anyBand);
         overviewRow("Closest", st.hasClosest() ? TurnAttempt.signedMargin(st.closest) : "-", labelW, !st.hasClosest());
         overviewRow("Landed", Integer.toString(st.landings), labelW, false);
-        overviewRow("Landing chance", landingChance(cur), labelW, cur == null || cur.attempts == null);
-        if (settings.onejumpTurnTiming && cur != null) {
+        if (!fast) overviewRow("Landing chance", landingChance(cur), labelW, cur == null || cur.attempts == null);
+        if (settings.onejumpTurnTiming && cur != null && !fast) {
             int mainTurn = TurnTiming.mainTurnTick(cur);
             TurnTiming.Onset onset = mainTurn < 0 ? null
                     : onset(doc, cur.startTick + mainTurn, Math.max(1, settings.onejumpSpreadAttempts));
@@ -184,6 +190,69 @@ public final class OnejumpSetupWindow implements RenderInterface {
         List<TurnAttempt> latest = new ArrayList<TurnAttempt>();
         for (int i = all.size() - 1; i >= 0 && latest.size() < LATEST; i--) latest.add(all.get(i));
         attemptsTable("##attemptsLatest", latest, listHeight(latest, scale), false);
+    }
+
+    private void setupRow(TurnProfileController.Current cur, float labelW) {
+        boolean ok = false;
+        String text;
+        String err = controller.lastError();
+        if (cur == null) {
+            text = err != null ? err : SETUP_HINT;
+        } else if (cur.isFast()) {
+            String where = "fast, judged at tick " + (cur.tasFirstTick + 1);
+            if (!cur.landing.hasY()) text = where + ": no simulated position at that tick";
+            else if (!cur.tasGrounded) text = where + ": the TAS is in the air at that tick";
+            else if (!cur.tasLands()) text = where + ": the TAS misses its own landing box by "
+                    + ConstraintText.fixedStat(cur.tasMiss);
+            else {
+                ok = true;
+                text = where + ", ready";
+            }
+        } else {
+            String where = "in-depth, ticks " + (cur.tasTick(0) + 1) + " to " + (cur.tasTick(cur.n - 1) + 1);
+            if (!cur.hasLanding()) text = where + ": no X or Z constraint after the reference";
+            else if (cur.profile == null) text = where + ": no TAS path for the reference ticks";
+            else if (!cur.profile.lands) text = where + ": the TAS path misses its own constraints";
+            else if (cur.tasMiss > 0.0) text = where + ": the simulation misses the landing box by "
+                    + ConstraintText.fixedStat(cur.tasMiss);
+            else {
+                ok = true;
+                text = where + ", ready";
+            }
+        }
+        float startX = ImGui.getCursorPosX();
+        Fonts.pushBold();
+        ImGui.text("Setup");
+        Fonts.popBold();
+        ImGui.sameLine();
+        ImGui.setCursorPosX(startX + labelW);
+        ThemeManager.pushTextColor(ok ? ThemeManager.okColor() : ThemeManager.warningColor());
+        ImGui.text(text);
+        ThemeManager.popTextColor();
+    }
+
+    private void offsetRow(TurnReference.Landing landing, float labelW) {
+        if (landing == null) {
+            overviewRow("Offset", "-", labelW, true);
+            return;
+        }
+        if (!landing.hasX() || !landing.hasZ()) {
+            overviewRow("Offset", landing.hasX() ? "X" : "Z", labelW, false);
+            return;
+        }
+        float startX = ImGui.getCursorPosX();
+        ImGui.alignTextToFramePadding();
+        Fonts.pushBold();
+        ImGui.text("Offset");
+        Fonts.popBold();
+        ImGui.sameLine();
+        ImGui.setCursorPosX(startX + labelW);
+        TurnReference ref = controller.document().reference();
+        axisBuf.set(ref.axis());
+        if (Controls.combo("##onejumpAxis", axisBuf, TurnReference.AXIS_LABELS, ImGui.calcTextSize("Both").x * 3f)) {
+            controller.setAxis(axisBuf.get());
+        }
+        TooltipUtil.onHover("The axis whose offset the attempts report. Landing still needs both.");
     }
 
     private TurnTiming.Onset onset(TurnProfileDocument doc, int tick, int limit) {

@@ -636,7 +636,7 @@ public class AttemptTrackerTest {
             r.setOnejumpFace(InputRow.ONEJUMP_FACE_OFF);
         }
         second.refresh();
-        assertNull(second.current());
+        assertTrue(second.current().isFast());
         assertFalse(rig.tasRow(0).isOnejumpKeys());
     }
 
@@ -902,16 +902,23 @@ public class AttemptTrackerTest {
     }
 
     @Test
-    public void removingEveryFlagKeepsTheStoredReference() {
+    public void removingEveryFlagSwitchesToTheLandingOnlyReference() {
         Rig rig = new Rig();
-        int n = rig.cur.n;
+        int landTick = rig.tasFirst + rig.cur.landing.tick;
         for (InputRow r : rig.inputs.getRows()) {
             r.setOnejumpKeys(false);
             r.setOnejumpFace(InputRow.ONEJUMP_FACE_OFF);
         }
         rig.controller.refresh();
+        TurnProfileController.Current cur = rig.controller.current();
+        assertNotNull(cur);
+        assertTrue(cur.isFast());
+        assertEquals(landTick, cur.tasFirstTick);
+        assertTrue(rig.controller.document().reference().isLandingOnly());
+        OnejumpRigs.clearLandings(rig.state, 0, rig.inputs.getRows().size());
+        rig.controller.refresh();
         assertNull(rig.controller.current());
-        assertEquals(n, rig.controller.document().reference().size());
+        assertTrue(rig.controller.document().reference().isLandingOnly());
         assertTrue(rig.controller.lastError(), rig.controller.lastError().contains("kept"));
     }
 

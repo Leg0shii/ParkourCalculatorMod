@@ -11,6 +11,8 @@ public final class AttemptTracker {
     public static final int RESET_BUTTON = 1;
     public static final double TELEPORT_DISTANCE = 1.0;
     public static final double STILL_TOLERANCE_PX = 0.25;
+    public static final double FAST_NEAR = 0.3;
+    public static final double LANDING_EPS = 1e-6;
 
     private final TurnProfileController profile;
     private final BooleanSupplier enabled;
@@ -26,6 +28,8 @@ public final class AttemptTracker {
     private double tickVz;
     private float tickYaw;
     private boolean tickGround;
+    private double prevY = Double.NaN;
+    private boolean havePrev;
     private volatile boolean armed;
     private int wait;
     private int lastMask;
@@ -54,6 +58,9 @@ public final class AttemptTracker {
     private int tick;
     private int span;
     private double margin;
+    private double marginX;
+    private double marginZ;
+    private double fullMargin;
     private String missAxis;
     private volatile TurnAttempt live;
     private volatile TurnAttempt last;
@@ -98,6 +105,8 @@ public final class AttemptTracker {
     public void mouseButton(int button, boolean down) {
         if (button != RESET_BUTTON || !down) return;
         if (!enabled.getAsBoolean() || suspended.getAsBoolean()) return;
+        TurnProfileController.Current c = profile.current();
+        if (c != null && c.isFast()) return;
         if (yaws != null) finish(false);
         armed = true;
         wait = 0;
@@ -114,6 +123,10 @@ public final class AttemptTracker {
         }
         closeTick(nowNs);
         boolean teleport = haveTick && distance(tickX, tickY, tickZ, x, y, z) > TELEPORT_DISTANCE;
+        boolean hadPrev = havePrev && !teleport;
+        double before = prevY;
+        prevY = y;
+        havePrev = true;
         haveTick = true;
         tickX = x;
         tickY = y;
@@ -130,6 +143,7 @@ public final class AttemptTracker {
                 pending = -1;
                 heldAtArm = 0;
             }
+            if (hadPrev) fastTick(x, y, z, before);
             return;
         }
         if (teleport) {
@@ -137,6 +151,27 @@ public final class AttemptTracker {
             return;
         }
         record(x, z, vx, vz, yaw, ground);
+    }
+
+    private void fastTick(double x, double y, double z, double before) {
+        TurnProfileController.Current c = profile.current();
+        if (c == null || !c.isFast() || !c.landing.hasY()) return;
+        TurnReference.Landing l = c.landing;
+        if (!crossed(before, y, l.y) || !l.near(x, z, FAST_NEAR)) return;
+        double mx = l.hasX() ? l.marginX(x) : Double.NaN;
+        double mz = l.hasZ() ? l.marginZ(z) : Double.NaN;
+        boolean landed = l.margin(x, z) <= 0.0;
+        double m = TurnAttempt.selectMargin(mx, mz, c.axis);
+        TurnAttempt a = new TurnAttempt(profile.document().nextNumber(), c.startTick, new double[0], 0, true, landed,
+                false, TurnAttempt.landingVerdict(m, landed, TurnAttempt.worstAxis(mx, mz)), m, -1, -1, 0, 0, 0,
+                null, null, null, false, Double.NaN, null);
+        a.tasFirstTick = c.tasFirstTick;
+        a.setAxisMargins(mx, mz);
+        publish(a);
+    }
+
+    public static boolean crossed(double before, double y, double landingY) {
+        return before > landingY + LANDING_EPS && y <= landingY + LANDING_EPS;
     }
 
     public void frame(float yaw, long nowNs) {
@@ -279,6 +314,9 @@ public final class AttemptTracker {
         span = c.lastTick() - c.startTick + 1;
         recorded = 0;
         margin = Double.NaN;
+        marginX = Double.NaN;
+        marginZ = Double.NaN;
+        fullMargin = Double.NaN;
         missAxis = null;
         tick = 0;
         record(tickX, tickZ, tickVx, tickVz, tickYaw, tickGround);
@@ -297,8 +335,11 @@ public final class AttemptTracker {
             stGround[tick] = ground;
         }
         if (cur.landing != null && cur.startTick + tick == cur.landing.tick) {
-            margin = cur.landing.margin(x, z);
-            missAxis = cur.landing.worstAxis(x, z);
+            marginX = cur.landing.hasX() ? cur.landing.marginX(x) : Double.NaN;
+            marginZ = cur.landing.hasZ() ? cur.landing.marginZ(z) : Double.NaN;
+            fullMargin = cur.landing.margin(x, z);
+            margin = TurnAttempt.selectMargin(marginX, marginZ, cur.axis);
+            missAxis = TurnAttempt.worstAxis(marginX, marginZ);
         }
         if (tick < cur.n && cur.still[tick]) {
             double turned = Angles.wrapDelta(yaws[tick] - cur.facing[tick]);
@@ -329,6 +370,7 @@ public final class AttemptTracker {
                 inputFailure ? inFailExpected : 0, macro, turnStart, turnEnd, traces, turnFailure, failTurn,
                 forecastResult());
         a.tasFirstTick = cur.tasFirstTick;
+        a.setAxisMargins(marginX, marginZ);
         a.pressedKeys = pressed.clone();
         a.keysFailed = keysFailed.clone();
         return a;
@@ -413,17 +455,9 @@ public final class AttemptTracker {
             }
         }
         double m = margin;
-        boolean landed = !Double.isNaN(m) && m <= 0.0;
-        String verdict;
-        if (cur.landing == null || cur.landing.isEmpty()) {
-            verdict = "no landing box set";
-        } else if (Double.isNaN(m)) {
-            verdict = "landing tick not reached";
-        } else if (landed) {
-            verdict = TurnAttempt.signedMargin(m);
-        } else {
-            verdict = TurnAttempt.signedMargin(m) + " " + missAxis;
-        }
+        boolean landed = !Double.isNaN(fullMargin) && fullMargin <= 0.0;
+        String verdict = cur.landing == null || cur.landing.isEmpty() ? "no landing box set"
+                : TurnAttempt.landingVerdict(m, landed, missAxis);
         publish(attempt(recorded, true, landed, verdict, m, worst < 0 ? -1 : cur.startTick + worst, false, Double.NaN));
     }
 

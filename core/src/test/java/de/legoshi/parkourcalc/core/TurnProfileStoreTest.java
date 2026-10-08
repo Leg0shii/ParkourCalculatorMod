@@ -211,6 +211,48 @@ public class TurnProfileStoreTest {
     }
 
     @Test
+    public void aLandingOnlyReferenceWithAxisHeightAndAxisMarginsRoundTrips() throws Exception {
+        Path dir = Files.createTempDirectory("pkc-onejump-fast");
+        TurnProfileStore store = store(dir);
+        TurnProfileDocument doc = new TurnProfileDocument();
+        TurnReference ref = doc.reference();
+        ref.setTasFirstTick(40);
+        ref.setLanding(new TurnReference.Landing(0, 186.32, Double.NaN, 870.0, 873.05, 65.0));
+        ref.setAxis(TurnReference.AXIS_Z);
+        assertTrue(ref.isLandingOnly());
+        assertFalse(ref.isEmpty());
+        TurnAttempt a = new TurnAttempt(1, 0, new double[0], 0, true, false, false, "-0.02 X", 0.02, -1, -1, 0, 0, 0,
+                null, null, null, false, Double.NaN, null);
+        a.setAxisMargins(0.02, -0.4);
+        a.tasFirstTick = 40;
+        doc.add(a);
+        assertTrue(store.save("fast", ref, doc.attempts()));
+        TurnProfileDocument back = new TurnProfileDocument();
+        assertTrue(store.load("fast", back));
+        TurnReference r = back.reference();
+        assertTrue(r.isLandingOnly());
+        assertEquals(40, r.tasFirstTick());
+        assertEquals(TurnReference.AXIS_Z, r.axis());
+        assertEquals(65.0, r.landing().y, 0.0);
+        assertTrue(r.landing().hasY());
+        assertEquals(870.0, r.landing().zLo, 0.0);
+        TurnAttempt b = back.attempts().get(0);
+        assertEquals(0.02, b.marginX, 0.0);
+        assertEquals(-0.4, b.marginZ, 0.0);
+        assertEquals(0.02, b.margin, 0.0);
+        assertEquals(0, b.recorded);
+        assertFalse(b.landed);
+        back.rejudge(TurnReference.AXIS_Z);
+        assertEquals(-0.4, b.margin, 0.0);
+        assertTrue(b.verdict, b.verdict.startsWith("+0.4") && b.verdict.endsWith(" X"));
+        assertEquals(-0.4, back.stats().closest, 0.0);
+        assertTrue(back.isReferenceDirty());
+        TurnReference legacy = TurnProfileStore.toReference(new TurnProfileStore.HeaderData());
+        assertEquals(TurnReference.AXIS_BOTH, legacy.axis());
+        assertTrue(legacy.isEmpty());
+    }
+
+    @Test
     public void aMissingFileLoadsAnEmptyDocument() throws Exception {
         Path dir = Files.createTempDirectory("pkc-onejump");
         TurnProfileStore store = store(dir);

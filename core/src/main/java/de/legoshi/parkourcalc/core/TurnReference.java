@@ -18,19 +18,42 @@ public final class TurnReference {
     public static final int KEY_SNEAK = 32;
     public static final int KEY_SPRINT = 64;
 
+    public static final int AXIS_BOTH = 0;
+    public static final int AXIS_X = 1;
+    public static final int AXIS_Z = 2;
+    public static final String[] AXIS_LABELS = {"Both", "X", "Z"};
+
     public static final class Landing {
         public final int tick;
         public final double xLo;
         public final double xHi;
         public final double zLo;
         public final double zHi;
+        public final double y;
 
         public Landing(int tick, double xLo, double xHi, double zLo, double zHi) {
+            this(tick, xLo, xHi, zLo, zHi, Double.NaN);
+        }
+
+        public Landing(int tick, double xLo, double xHi, double zLo, double zHi, double y) {
             this.tick = tick;
             this.xLo = xLo;
             this.xHi = xHi;
             this.zLo = zLo;
             this.zHi = zHi;
+            this.y = y;
+        }
+
+        public boolean hasY() {
+            return !Double.isNaN(y);
+        }
+
+        public Landing withY(double y) {
+            return new Landing(tick, xLo, xHi, zLo, zHi, y);
+        }
+
+        public Landing withTick(int tick) {
+            return new Landing(tick, xLo, xHi, zLo, zHi, y);
         }
 
         public boolean hasX() {
@@ -57,6 +80,16 @@ public final class TurnReference {
             double mx = hasX() ? marginX(x) : Double.NEGATIVE_INFINITY;
             double mz = hasZ() ? marginZ(z) : Double.NEGATIVE_INFINITY;
             return Math.max(mx, mz);
+        }
+
+        public double margin(double x, double z, int axis) {
+            if (axis == AXIS_X && hasX()) return marginX(x);
+            if (axis == AXIS_Z && hasZ()) return marginZ(z);
+            return margin(x, z);
+        }
+
+        public boolean near(double x, double z, double tolerance) {
+            return margin(x, z) <= tolerance;
         }
 
         public String worstAxis(double x, double z) {
@@ -89,13 +122,30 @@ public final class TurnReference {
     private double[] facing = new double[0];
     private Landing landing;
     private int tasFirstTick = -1;
+    private int axis = AXIS_BOTH;
 
     public int size() {
         return data.size();
     }
 
     public boolean isEmpty() {
-        return data.size() == 0;
+        return data.size() == 0 && landing == null;
+    }
+
+    public boolean hasRows() {
+        return data.size() > 0;
+    }
+
+    public boolean isLandingOnly() {
+        return data.size() == 0 && landing != null;
+    }
+
+    public int axis() {
+        return axis;
+    }
+
+    public void setAxis(int axis) {
+        this.axis = axis == AXIS_X || axis == AXIS_Z ? axis : AXIS_BOTH;
     }
 
     public InputRow row(int i) {
@@ -170,6 +220,7 @@ public final class TurnReference {
         replace(rows, other.facing);
         landing = other.landing;
         tasFirstTick = other.tasFirstTick;
+        axis = other.axis;
     }
 
     public TurnReference copy() {
@@ -179,7 +230,7 @@ public final class TurnReference {
     }
 
     public boolean sameAs(TurnReference other) {
-        if (other == null || other.size() != size() || other.tasFirstTick != tasFirstTick) return false;
+        if (other == null || other.size() != size() || other.tasFirstTick != tasFirstTick || other.axis != axis) return false;
         if (!sameLanding(landing, other.landing)) return false;
         for (int i = 0; i < size(); i++) {
             InputRow a = row(i);
@@ -227,7 +278,8 @@ public final class TurnReference {
 
     static boolean sameLanding(Landing a, Landing b) {
         if (a == null || b == null) return a == b;
-        return a.tick == b.tick && same(a.xLo, b.xLo) && same(a.xHi, b.xHi) && same(a.zLo, b.zLo) && same(a.zHi, b.zHi);
+        return a.tick == b.tick && same(a.xLo, b.xLo) && same(a.xHi, b.xHi) && same(a.zLo, b.zLo) && same(a.zHi, b.zHi)
+                && same(a.y, b.y);
     }
 
     public static String describe(int mask) {

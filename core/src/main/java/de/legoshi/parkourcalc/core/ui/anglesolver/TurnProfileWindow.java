@@ -95,7 +95,8 @@ public final class TurnProfileWindow implements RenderInterface {
         TurnProfileController.Current cur = controller.current();
         float graphH = Math.max(GRAPH_MIN_H * scale, ImGui.getContentRegionAvail().y);
         if (cur == null || cur.n == 0) {
-            placeholder(graphH, controller.lastError() != null ? controller.lastError()
+            placeholder(graphH, cur != null && cur.isFast() ? "Fast onejump: mark Keys and Face ticks in the input table for a turn profile"
+                    : controller.lastError() != null ? controller.lastError()
                     : "No reference yet: set the onejump up in the Onejump Setup window");
             return;
         }

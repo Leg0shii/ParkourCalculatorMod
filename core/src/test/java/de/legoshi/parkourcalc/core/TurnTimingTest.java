@@ -98,7 +98,7 @@ public class TurnTimingTest {
         int n = facing.length;
         TurnProfileController.Current cur = new TurnProfileController.Current(3, -1, facing, new int[n], new boolean[n],
                 new int[n], new boolean[n], new boolean[n], new boolean[n], new int[n], new int[n], new int[0], null, null,
-                null, 0.1, null);
+                null, 0.1, null, 0, false, Double.NaN);
         assertEquals(3, TurnTiming.mainTurnTick(cur));
     }
 }

@@ -51,8 +51,10 @@ public final class TurnAttempt {
     public final boolean complete;
     public final boolean landed;
     public final boolean inputFailure;
-    public final String verdict;
-    public final double margin;
+    public String verdict;
+    public double margin;
+    public double marginX = Double.NaN;
+    public double marginZ = Double.NaN;
     public final int worstTick;
     public final int failTick;
     public final int failKeys;
@@ -240,5 +242,39 @@ public final class TurnAttempt {
         if (Double.isNaN(margin)) return "-";
         double spare = -margin;
         return (spare < 0.0 ? "-" : "+") + ConstraintText.fixedStat(Math.abs(spare));
+    }
+
+    public boolean hasAxisMargins() {
+        return !Double.isNaN(marginX) || !Double.isNaN(marginZ);
+    }
+
+    public void setAxisMargins(double marginX, double marginZ) {
+        this.marginX = marginX;
+        this.marginZ = marginZ;
+    }
+
+    public void rejudge(int axis) {
+        if (!judged() || !hasAxisMargins()) return;
+        margin = selectMargin(marginX, marginZ, axis);
+        verdict = landingVerdict(margin, landed, worstAxis(marginX, marginZ));
+    }
+
+    public static double selectMargin(double marginX, double marginZ, int axis) {
+        if (axis == TurnReference.AXIS_X && !Double.isNaN(marginX)) return marginX;
+        if (axis == TurnReference.AXIS_Z && !Double.isNaN(marginZ)) return marginZ;
+        if (Double.isNaN(marginX)) return marginZ;
+        if (Double.isNaN(marginZ)) return marginX;
+        return Math.max(marginX, marginZ);
+    }
+
+    public static String worstAxis(double marginX, double marginZ) {
+        if (Double.isNaN(marginX)) return "Z";
+        if (Double.isNaN(marginZ)) return "X";
+        return marginX >= marginZ ? "X" : "Z";
+    }
+
+    public static String landingVerdict(double margin, boolean landed, String missAxis) {
+        if (Double.isNaN(margin)) return "landing tick not reached";
+        return landed ? signedMargin(margin) : signedMargin(margin) + " " + missAxis;
     }
 }

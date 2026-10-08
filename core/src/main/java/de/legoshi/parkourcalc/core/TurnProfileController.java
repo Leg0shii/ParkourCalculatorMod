@@ -10,6 +10,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
+import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 
@@ -24,6 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
+import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 public final class TurnProfileController {
@@ -46,12 +48,18 @@ public final class TurnProfileController {
         public final TurnProfile profile;
         public final AttemptSampler.Stats attempts;
         public final double pixelDeg;
+        public final int axis;
+        public final boolean tasGrounded;
+        public final double tasMiss;
         final AngleSolverEngine.PathSnapshot snapshot;
 
         Current(int startTick, int tasFirstTick, double[] facing, int[] keys, boolean[] checkKeys, int[] optionalKeys,
                 boolean[] checkYaw, boolean[] still, boolean[] jumpTicks, int[] speedAmp, int[] jumpAmp,
                 int[] leadKeys, TurnReference.Landing landing, TurnProfile profile, AttemptSampler.Stats attempts,
-                double pixelDeg, AngleSolverEngine.PathSnapshot snapshot) {
+                double pixelDeg, AngleSolverEngine.PathSnapshot snapshot, int axis, boolean tasGrounded, double tasMiss) {
+            this.axis = axis;
+            this.tasGrounded = tasGrounded;
+            this.tasMiss = tasMiss;
             this.startTick = startTick;
             this.tasFirstTick = tasFirstTick;
             this.n = facing.length;
@@ -74,7 +82,20 @@ public final class TurnProfileController {
 
         Current withAttempts(AttemptSampler.Stats stats, double pixelDeg) {
             return new Current(startTick, tasFirstTick, facing, keys, checkKeys, optionalKeys, checkYaw, still,
-                    jumpTicks, speedAmp, jumpAmp, leadKeys, landing, profile, stats, pixelDeg, snapshot);
+                    jumpTicks, speedAmp, jumpAmp, leadKeys, landing, profile, stats, pixelDeg, snapshot, axis,
+                    tasGrounded, tasMiss);
+        }
+
+        public boolean isFast() {
+            return n == 0 && landing != null;
+        }
+
+        public boolean hasLanding() {
+            return landing != null && !landing.isEmpty();
+        }
+
+        public boolean tasLands() {
+            return !Double.isNaN(tasMiss) && tasMiss <= 0.0;
         }
 
         public boolean canRate() {
@@ -97,6 +118,8 @@ public final class TurnProfileController {
     private static final class Built {
         final TurnReference ref = new TurnReference();
         AngleSolverEngine.PathSnapshot snapshot;
+        boolean tasGrounded;
+        double tasMiss = Double.NaN;
     }
 
     private final AngleSolverEngine engine;
@@ -108,6 +131,7 @@ public final class TurnProfileController {
     private final Supplier<Integer> spreadAttempts;
     private final TurnProfileStore store;
     private final Supplier<String> tasName;
+    private final IntFunction<TickState> tickState;
     private final TurnProfileDocument document = new TurnProfileDocument();
     private final ExecutorService worker = Executors.newSingleThreadExecutor(r -> {
         Thread t = new Thread(r, "pkc-turn-profile");
@@ -154,6 +178,14 @@ public final class TurnProfileController {
                                  BooleanSupplier enabled, Supplier<Float> sensitivity,
                                  Supplier<Integer> sampleCount, Supplier<Integer> spreadAttempts,
                                  TurnProfileStore store, Supplier<String> tasName) {
+        this(engine, state, inputs, enabled, sensitivity, sampleCount, spreadAttempts, store, tasName, t -> null);
+    }
+
+    public TurnProfileController(AngleSolverEngine engine, AngleSolverState state, InputData inputs,
+                                 BooleanSupplier enabled, Supplier<Float> sensitivity,
+                                 Supplier<Integer> sampleCount, Supplier<Integer> spreadAttempts,
+                                 TurnProfileStore store, Supplier<String> tasName, IntFunction<TickState> tickState) {
+        this.tickState = tickState;
         this.engine = engine;
         this.state = state;
         this.inputs = inputs;
@@ -287,11 +319,13 @@ public final class TurnProfileController {
             if (lastError == null) {
                 lastError = ref.tasFirstTick() < 0
                         ? "the onejump file predates tick alignment, flag the Keys and Face ticks again"
+                        : ref.isLandingOnly() ? "no X or Z constraint in the TAS, the stored onejump is kept"
                         : "no Keys or Face ticks flagged, the stored onejump is kept";
             }
             current.set(null);
             return;
         }
+        built.ref.setAxis(ref.axis());
         if (!ref.sameAs(built.ref)) {
             boolean spanMoved = !ref.isEmpty() && (ref.tasFirstTick() != built.ref.tasFirstTick()
                     || !TurnReference.sameLanding(ref.landing(), built.ref.landing()));
@@ -304,6 +338,13 @@ public final class TurnProfileController {
         }
         if (ref.isEmpty()) {
             current.set(null);
+            return;
+        }
+        if (ref.isLandingOnly()) {
+            current.set(new Current(0, ref.tasFirstTick(), new double[0], new int[0], new boolean[0], new int[0],
+                    new boolean[0], new boolean[0], new boolean[0], new int[0], new int[0], new int[0], ref.landing(),
+                    null, null, TurnProfile.pixelDeg(sensitivity.get()), null, ref.axis(), built.tasGrounded,
+                    built.tasMiss));
             return;
         }
         int n = ref.size();
@@ -336,7 +377,20 @@ public final class TurnProfileController {
         }
         current.set(new Current(0, ref.tasFirstTick(), facing, keys, checkKeys, optional, checkYaw, still, jumps,
                 speedAmp, jumpAmp, leadKeys(ref.tasFirstTick()), ref.landing(), profile, null,
-                TurnProfile.pixelDeg(sensitivity.get()), snap));
+                TurnProfile.pixelDeg(sensitivity.get()), snap, ref.axis(), built.tasGrounded, built.tasMiss));
+    }
+
+    public void setAxis(int axis) {
+        TurnReference ref = document.reference();
+        if (ref.axis() == axis) return;
+        ref.setAxis(axis);
+        document.rejudge(axis);
+        Current c = current.get();
+        if (c != null) {
+            current.set(new Current(c.startTick, c.tasFirstTick, c.facing, c.keys, c.checkKeys, c.optionalKeys,
+                    c.checkYaw, c.still, c.jumpTicks, c.speedAmp, c.jumpAmp, c.leadKeys, c.landing, c.profile,
+                    c.attempts, c.pixelDeg, c.snapshot, axis, c.tasGrounded, c.tasMiss));
+        }
     }
 
     private int[] leadKeys(int first) {
@@ -389,6 +443,7 @@ public final class TurnProfileController {
         }
         if (first < 0) {
             lastError = null;
+            buildLandingOnly(built, rows.size());
             return built;
         }
         AngleSolverEngine.PathSnapshot snap = engine.snapshotPath(first, last + 1);
@@ -409,9 +464,32 @@ public final class TurnProfileController {
         ref.replace(next, facings);
         ref.setTasFirstTick(first);
         List<TurnReference.Landing> options = solverLandings(first, last + 1, first);
-        if (!options.isEmpty()) ref.setLanding(options.get(options.size() - 1));
+        if (!options.isEmpty()) {
+            TurnReference.Landing landing = options.get(options.size() - 1);
+            ref.setLanding(landing);
+            judgeTas(built, landing, first + landing.tick);
+        }
         lastError = null;
         return built;
+    }
+
+    private void buildLandingOnly(Built built, int rowCount) {
+        List<TurnReference.Landing> options = solverLandings(0, rowCount, 0);
+        if (options.isEmpty()) return;
+        TurnReference.Landing landing = options.get(options.size() - 1);
+        int tick = landing.tick;
+        TickState st = tickState.apply(tick);
+        if (st != null) landing = landing.withY(st.position.y);
+        built.ref.setLanding(landing.withTick(0));
+        built.ref.setTasFirstTick(tick);
+        judgeTas(built, landing, tick);
+    }
+
+    private void judgeTas(Built built, TurnReference.Landing landing, int tick) {
+        TickState st = tickState.apply(tick);
+        if (st == null) return;
+        built.tasGrounded = st.onGround;
+        built.tasMiss = landing.margin(st.position.x, st.position.z);
     }
 
     private List<TurnReference.Landing> solverLandings(int from, int to, int base) {

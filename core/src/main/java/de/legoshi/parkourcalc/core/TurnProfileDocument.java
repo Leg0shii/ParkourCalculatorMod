@@ -171,6 +171,22 @@ public final class TurnProfileDocument {
         version++;
     }
 
+    public void rejudge(int axis) {
+        List<TurnAttempt> list = new ArrayList<>(attempts);
+        attempts.clear();
+        top.clear();
+        favourites.clear();
+        zero();
+        for (TurnAttempt a : list) {
+            a.rejudge(axis);
+            attempts.add(a);
+            account(a);
+        }
+        stats = snapshot();
+        referenceDirty = true;
+        version++;
+    }
+
     public void markDirty() {
         referenceDirty = true;
     }
