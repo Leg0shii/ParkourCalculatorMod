@@ -100,6 +100,11 @@ public final class OnejumpSetupWindow implements RenderInterface {
                 attemptsTable("##attemptsFav", favourites, tableH, false);
                 Controls.endTab();
             }
+            if (Controls.beginTab("Help")) {
+                ThemeManager.sectionSpacing();
+                help();
+                Controls.endTab();
+            }
             if (Controls.beginTab("Attempts")) {
                 ThemeManager.sectionSpacing();
                 int pages = Math.max(1, (all.size() + PAGE_SIZE - 1) / PAGE_SIZE);
@@ -129,7 +134,7 @@ public final class OnejumpSetupWindow implements RenderInterface {
         clearModal();
     }
 
-    private static final String[] OVERVIEW_LABELS = {"TAS", "Landing", "Attempts", "Landed", "Input failures",
+    private static final String[] OVERVIEW_LABELS = {"TAS", "Landing", "Live offset", "Attempts", "Landed", "Input failures",
             "Landing chance", "Closest", "Missed by", "Failed at", "Turn onset", "Replay (inputs)", "Replay (turn)", "Top 10",
             "Latest"};
 
@@ -150,6 +155,7 @@ public final class OnejumpSetupWindow implements RenderInterface {
         overviewRow("Landing", landing != null ? landing.label(0) : cur == null
                 ? (err != null ? err : "mark Keys and Face ticks in the input table")
                 : "no X or Z constraint after the reference, attempts are not judged", labelW, landing == null);
+        checkRows(labelW);
         overviewRow("Attempts", Integer.toString(st.attempts), labelW, false);
         overviewRow("Input failures", Integer.toString(st.inputFailures), labelW, false);
         String failed = LandingForecast.failedSummary(st.failedAt, st.failedTotal, cur == null ? 0 : cur.tasTick(0));
@@ -186,6 +192,98 @@ public final class OnejumpSetupWindow implements RenderInterface {
         attemptsTable("##attemptsLatest", latest, listHeight(latest, scale), false);
     }
 
+    private void checkRows(float labelW) {
+        boolean checked = controller.isChecked();
+        TurnProfileController.SetupCheck check = controller.lastCheck();
+        float startX = ImGui.getCursorPosX();
+        Fonts.pushBold();
+        ImGui.alignTextToFramePadding();
+        ImGui.text("Live offset");
+        Fonts.popBold();
+        ImGui.sameLine();
+        ImGui.setCursorPosX(startX + labelW);
+        if (Controls.primaryButton("Check TAS")) controller.check();
+        TooltipUtil.onHover("Checks that the TAS is complete and lands. The live offset, the landing chance and the solved offsets run only on a checked TAS, and any edit needs a new check.");
+        ImGui.sameLine();
+        ImGui.alignTextToFramePadding();
+        if (checked) {
+            ThemeManager.pushTextColor(ThemeManager.okColor());
+            ImGui.text("on, the TAS is checked");
+            ThemeManager.popTextColor();
+        } else if (check == null) {
+            ImGui.textDisabled("off until the TAS is checked");
+        } else if (check.ok) {
+            ThemeManager.pushTextColor(ThemeManager.warningColor());
+            ImGui.text("off, the TAS changed since the check");
+            ThemeManager.popTextColor();
+        } else {
+            ThemeManager.pushTextColor(ThemeManager.warningColor());
+            ImGui.text("off, the check failed");
+            ThemeManager.popTextColor();
+        }
+        if (check == null) return;
+        for (TurnProfileController.SetupCheck.Item item : check.items) {
+            ImGui.setCursorPosX(startX + labelW);
+            ThemeManager.pushTextColor(item.ok ? ThemeManager.okColor() : ThemeManager.dangerColor());
+            ImGui.text(item.ok ? "[ok]" : "[!!]");
+            ThemeManager.popTextColor();
+            ImGui.sameLine();
+            ImGui.text(item.label);
+            ImGui.sameLine();
+            ImGui.textDisabled(item.detail);
+        }
+    }
+
+    private static final String[][] HELP = {
+            {"What the onejump does",
+             "The onejump practises one jump against a TAS. Every attempt is judged on the landing tick of that TAS: "
+             + "the offset is the distance of your position to the landing box, plus is spare, minus is short. "
+             + "With the TAS checked it also forecasts, at every tick of an attempt, how much offset is still reachable."},
+            {"1  Build the full TAS",
+             "The TAS needs the start position (K copies yours), every row's keys from the first run-up tick to the "
+             + "landing tick, and the facings. Not only the angle: the run-up, the jump tick and the air keys must be "
+             + "the ones you will press, because the attempt is compared row by row from the first key."},
+            {"2  Landing box and obstacles",
+             "Select the landing tick in the table, look at the landing block and press B: that is the landing box. "
+             + "Walls you must clear get a constraint too: select the tick where you pass them, look at the face and press B. "
+             + "The solver only knows constraints, never blocks."},
+            {"3  Facings",
+             "Open the Angle Solver window and solve, Fast or Optimize, or type the facings yourself. The reference "
+             + "turn is whatever the TAS contains after this step."},
+            {"4  Flag the ticks",
+             "In the input table, mark Keys on every tick whose keys are checked and Face on the turn ticks. "
+             + "Right click on Face gives Still, a preturn check that fails the attempt as soon as you turn on that tick. "
+             + "Shift click on a key cell makes that key optional on that tick. The reference spans the first to the last flagged tick."},
+            {"5  Check TAS",
+             "Press Check TAS in the Overview. Every line must be green: the ticks are flagged, the reference is built, "
+             + "a landing box follows it, the simulation reaches it and meets every constraint, the solver model lands on "
+             + "the same path, and the reference starts on the ground. Any edit of the TAS needs a new check. Only a "
+             + "checked TAS gets the live offset, the landing chance and the solved offsets."},
+            {"6  Practice",
+             "Right click resets. The first key after the reset starts the attempt on the first keyed row of the TAS, "
+             + "then the rows play tick by tick. A wrong key on a flagged tick is recorded, the attempt runs on and is "
+             + "judged on the landing. The Turn Profile shows your facing against the reference, the Keys window your keys "
+             + "per tick, the attempts table the offset and what failed."},
+            {"7  Preferences",
+             "Preferences > Onejump: the practice replay, the rated dots, turn timing, the offset label and hover, "
+             + "what happens on a wrong key, and how many attempts feed the landing chance."},
+    };
+
+    private void help() {
+        ImGui.beginChild("##onejumpHelp", 0f, 0f, false);
+        float wrap = ImGui.getContentRegionAvail().x;
+        for (String[] section : HELP) {
+            Fonts.pushBold();
+            ImGui.text(section[0]);
+            Fonts.popBold();
+            ImGui.pushTextWrapPos(ImGui.getCursorPosX() + wrap);
+            ImGui.textUnformatted(section[1]);
+            ImGui.popTextWrapPos();
+            ThemeManager.sectionSpacing();
+        }
+        ImGui.endChild();
+    }
+
     private TurnTiming.Onset onset(TurnProfileDocument doc, int tick, int limit) {
         int version = doc.version();
         if (version != onsetVersion || tick != onsetTick || limit != onsetLimit) {
@@ -203,6 +301,7 @@ public final class OnejumpSetupWindow implements RenderInterface {
 
     private String landingChance(TurnProfileController.Current cur) {
         if (cur == null) return "-";
+        if (!controller.isChecked()) return "press Check TAS";
         if (!cur.canRate()) return cur.pathLands() ? "needs a landing box and a TAS path" : "the reference path does not meet the TAS constraints";
         AttemptSampler.Stats rs = cur.attempts;
         if (rs == null) return controller.isRating() ? "sampling" : "-";

@@ -257,7 +257,10 @@ public final class Application {
         turnProfile = new TurnProfileController(angleSolverEngine, angleSolverState, inputData,
                 () -> settings.viewOnejumpSetup || settings.viewTurnProfile || settings.viewOnejumpKeys,
                 mc::getMouseSensitivity, () -> settings.turnProfileAttempts, () -> settings.onejumpSpreadAttempts,
-                new TurnProfileStore(saveController::getSaveStore), saveController::currentName);
+                new TurnProfileStore(saveController::getSaveStore), saveController::currentName,
+                t -> boxController.getState(t),
+                () -> SaveIO.undoSignature(inputData, runner.getStartPosition(), runner.getStartVelocity(),
+                        runner.getStartYaw(), runner.getStartPitch(), runner.getStartResumeState(), angleSolverState));
         attemptTracker = new AttemptTracker(turnProfile, () -> settings.viewTurnProfile || settings.viewOnejumpKeys
                 || settings.viewOnejumpSetup, this::isPlaybackRunning, () -> settings.onejumpTurnTiming);
         practiceMacro = new PracticeMacro(turnProfile, attemptTracker, settings);
@@ -284,7 +287,8 @@ public final class Application {
                 turnProfile.onTasDeleted(name);
             }
         });
-        attemptTracker.setForecastEnabled(() -> settings.onejumpOffsetLive || settings.onejumpOffsetHover);
+        attemptTracker.setForecastEnabled(() -> (settings.onejumpOffsetLive || settings.onejumpOffsetHover)
+                && turnProfile.isChecked());
         de.legoshi.parkourcalc.core.ui.anglesolver.TurnProfileWindow turnProfileWindow =
                 new de.legoshi.parkourcalc.core.ui.anglesolver.TurnProfileWindow(turnProfile, attemptTracker, settings,
                         this::saveSettings);
