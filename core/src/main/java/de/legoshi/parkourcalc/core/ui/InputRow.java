@@ -31,6 +31,7 @@ public class InputRow {
     private double teleportZ;
     private boolean onejumpKeys;
     private int onejumpFace;
+    private boolean onejumpLand;
     private final Set<Key> onejumpOptional = EnumSet.noneOf(Key.class);
     private int modCount;
 
@@ -180,6 +181,15 @@ public class InputRow {
         this.onejumpFace = clamped;
     }
 
+    public boolean isOnejumpLand() {
+        return onejumpLand;
+    }
+
+    public void setOnejumpLand(boolean land) {
+        if (this.onejumpLand != land) modCount++;
+        this.onejumpLand = land;
+    }
+
     public boolean isOnejumpOptional(Key key) {
         return onejumpOptional.contains(key);
     }
@@ -225,6 +235,7 @@ public class InputRow {
         copy.teleportZ = this.teleportZ;
         copy.onejumpKeys = this.onejumpKeys;
         copy.onejumpFace = this.onejumpFace;
+        copy.onejumpLand = this.onejumpLand;
         copy.onejumpOptional.addAll(this.onejumpOptional);
         return copy;
     }

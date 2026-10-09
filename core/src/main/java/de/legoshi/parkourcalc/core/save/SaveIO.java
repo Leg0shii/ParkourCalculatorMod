@@ -483,6 +483,7 @@ public final class SaveIO {
         r.teleportZ = row.getTeleportZ();
         r.onejumpKeys = row.isOnejumpKeys();
         r.onejumpFace = row.getOnejumpFace();
+        r.onejumpLand = row.isOnejumpLand();
         if (row.hasOnejumpOptional()) {
             List<String> optional = new ArrayList<String>();
             for (InputRow.Key k : InputRow.Key.values()) if (row.isOnejumpOptional(k)) optional.add(k.name());
@@ -510,6 +511,7 @@ public final class SaveIO {
                 && r.teleportZ == row.getTeleportZ()
                 && r.onejumpKeys == row.isOnejumpKeys()
                 && r.onejumpFace == row.getOnejumpFace()
+                && r.onejumpLand == row.isOnejumpLand()
                 && optionalMatches(r, row);
     }
 
@@ -543,6 +545,7 @@ public final class SaveIO {
             row.setTeleportEnabled(r.teleport);
             row.setOnejumpKeys(r.onejumpKeys);
             row.setOnejumpFace(r.onejumpFace);
+            row.setOnejumpLand(r.onejumpLand);
             if (r.onejumpOptional != null) {
                 for (String name : r.onejumpOptional) {
                     try {

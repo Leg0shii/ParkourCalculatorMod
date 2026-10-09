@@ -389,13 +389,16 @@ public final class TurnProfileController {
         items.add(new SetupCheck.Item("Keys and Face ticks are flagged", flagged,
                 flagged ? "ticks " + (first + 1) + " to " + (last + 1) : "flag them in the Keys and Face columns of the input table"));
         Current cur = current.get();
-        boolean built = flagged && cur != null && cur.n == last - first + 1 && cur.tasFirstTick == first;
+        boolean built = flagged && cur != null && cur.n >= last - first + 1 && cur.tasFirstTick == first;
         items.add(new SetupCheck.Item("The TAS path covers the flagged ticks", built,
                 built ? cur.n + " ticks" : lastError != null ? lastError : "the rows from the first to the last flagged tick could not be read as a path"));
         TurnReference.Landing landing = built ? ref.landing() : null;
         int landingTick = landing == null ? -1 : ref.tasFirstTick() + landing.tick;
-        items.add(new SetupCheck.Item("A landing constraint follows the flagged ticks", landing != null,
-                landing != null ? landing.label(ref.tasFirstTick()) : "select the landing tick, look at the landing block and press B"));
+        int lb = landRow();
+        items.add(new SetupCheck.Item("A landing constraint is set", landing != null,
+                landing != null ? landing.label(ref.tasFirstTick()) + (lb >= 0 ? " (LB)" : "")
+                        : lb >= 0 ? "tick " + (lb + 1) + " is marked LB but has no X or Z constraint, look at the landing block and press B"
+                        : "mark LB on the landing tick, look at the landing block and press B"));
         TickState landState = landingTick >= 0 ? tickState.apply(landingTick) : null;
         items.add(new SetupCheck.Item("The rows reach the landing tick", landState != null,
                 landState != null ? "tick " + (landingTick + 1) : landingTick < 0 ? "no landing tick"
@@ -649,13 +652,21 @@ public final class TurnProfileController {
             lastError = null;
             return built;
         }
-        AngleSolverEngine.PathSnapshot snap = engine.snapshotPath(first, last + 1);
-        if (snap == null || snap.yaws.length != last - first + 1) {
-            lastError = "no path for ticks " + (first + 1) + " to " + (last + 1) + " in the TAS";
+        int lb = landRow();
+        TurnReference.Landing landing = landingFor(first);
+        int landingTick = lb >= 0 ? lb : landing == null ? -1 : landing.tick;
+        int end = Math.max(last + 1, landingTick);
+        if (end > rows.size()) {
+            lastError = "add rows up to tick " + end;
+            return built;
+        }
+        AngleSolverEngine.PathSnapshot snap = engine.snapshotPath(first, end);
+        if (snap == null || snap.yaws.length != end - first) {
+            lastError = "no path for ticks " + (first + 1) + " to " + end + " in the TAS";
             return built;
         }
         built.snapshot = snap;
-        int n = last - first + 1;
+        int n = end - first;
         List<InputRow> next = new ArrayList<InputRow>();
         double[] facings = new double[n];
         for (int k = 0; k < n; k++) {
@@ -666,15 +677,34 @@ public final class TurnProfileController {
         }
         ref.replace(next, facings);
         ref.setTasFirstTick(first);
-        List<TurnReference.Landing> options = solverLandings(first, last + 1, first);
-        if (!options.isEmpty()) ref.setLanding(options.get(options.size() - 1));
+        if (landing != null) {
+            ref.setLanding(new TurnReference.Landing(landing.tick - first, landing.xLo, landing.xHi, landing.zLo, landing.zHi));
+        }
         lastError = null;
         return built;
     }
 
+    public int landRow() {
+        List<InputRow> rows = inputs.getRows();
+        for (int t = 0; t < rows.size(); t++) if (rows.get(t).isOnejumpLand()) return t;
+        return -1;
+    }
+
     public TurnReference.Landing tasLanding() {
-        List<TurnReference.Landing> options = solverLandings(0, inputs.getRows().size(), 0);
-        return options.isEmpty() ? null : options.get(options.size() - 1);
+        List<InputRow> rows = inputs.getRows();
+        int first = -1;
+        for (int t = 0; t < rows.size() && first < 0; t++) if (rows.get(t).isOnejumpFlagged()) first = t;
+        return landingFor(Math.max(0, first));
+    }
+
+    private TurnReference.Landing landingFor(int first) {
+        int lb = landRow();
+        if (lb >= 0) {
+            List<TurnReference.Landing> at = solverLandings(lb, lb, 0);
+            return at.isEmpty() ? null : at.get(0);
+        }
+        List<TurnReference.Landing> all = solverLandings(first, inputs.getRows().size(), 0);
+        return all.isEmpty() ? null : all.get(all.size() - 1);
     }
 
     private List<TurnReference.Landing> solverLandings(int from, int to, int base) {

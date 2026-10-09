@@ -140,6 +140,50 @@ public class OnejumpCheckTest {
     }
 
     @Test
+    public void theLbRowChoosesTheLandingEvenWhenTheFlagsEndEarlier() {
+        Rig rig = new Rig();
+        for (int t = rig.first + 4; t < rig.landingTick; t++) {
+            InputRow r = rig.inputs.getRows().get(t);
+            r.setOnejumpKeys(false);
+            r.setOnejumpFace(InputRow.ONEJUMP_FACE_OFF);
+        }
+        rig.inputs.getRows().get(rig.landingTick).setOnejumpLand(true);
+        rig.controller.refresh();
+        TurnProfileController.Current cur = rig.controller.current();
+        assertNotNull(rig.controller.lastError(), cur);
+        assertEquals(rig.landingTick - rig.first, cur.n);
+        assertNotNull(cur.landing);
+        assertEquals(cur.n, cur.landing.tick);
+        assertEquals(rig.landingTick, rig.controller.landRow());
+        boolean ok = rig.controller.check().ok;
+        assertTrue(rig.failing(), ok);
+    }
+
+    @Test
+    public void anLbRowWithoutAConstraintFailsTheLandingCheck() {
+        Rig rig = new Rig();
+        rig.inputs.getRows().get(rig.landingTick - 1).setOnejumpLand(true);
+        rig.controller.refresh();
+        TurnProfileController.SetupCheck check = rig.controller.check();
+        assertFalse(check.ok);
+        assertFalse(check.items.get(2).ok);
+        assertTrue(check.items.get(2).detail, check.items.get(2).detail.contains("marked LB"));
+    }
+
+    @Test
+    public void theLbFlagRoundTripsThroughTheSaveFile() {
+        Rig rig = new Rig();
+        rig.inputs.getRows().get(rig.landingTick).setOnejumpLand(true);
+        SaveFile file = SaveIO.buildUndoSnapshot(rig.inputs, Vec3dCore.ZERO, Vec3dCore.ZERO, 0f, 0f, null, rig.state);
+        SaveFile back = SaveIO.parseSafe(SaveIO.undoJson(file));
+        InputData copy = new InputData();
+        SaveIO.applyRowsTo(back, copy);
+        assertTrue(copy.getRows().get(rig.landingTick).isOnejumpLand());
+        assertFalse(copy.getRows().get(rig.landingTick - 1).isOnejumpLand());
+        assertTrue(rig.inputs.getRows().get(rig.landingTick).copy().isOnejumpLand());
+    }
+
+    @Test
     public void aMissingLandingBoxFailsTheCheck() {
         Rig rig = new Rig();
         OnejumpRigs.clearLandings(rig.state, rig.first, rig.landingTick + 1);

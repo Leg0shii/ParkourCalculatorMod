@@ -153,7 +153,10 @@ public final class OnejumpSetupWindow implements RenderInterface {
                 name == null || storeError != null);
         String err = controller.lastError();
         TurnReference.Landing tasLanding = controller.tasLanding();
-        overviewRow("Landing", tasLanding != null ? tasLanding.label(0) : "no landing constraint", labelW,
+        int lb = controller.landRow();
+        overviewRow("Landing", tasLanding != null ? tasLanding.label(0) + (lb >= 0 ? "  (LB)" : "  (last constraint, no LB marked)")
+                : lb >= 0 ? "tick " + (lb + 1) + " is marked LB but has no X or Z constraint"
+                : "no landing constraint, mark LB on the landing tick and press B on the block", labelW,
                 tasLanding == null);
         TurnReference.Landing landing = cur == null ? null : cur.landing;
         String reference = cur != null
@@ -259,12 +262,13 @@ public final class OnejumpSetupWindow implements RenderInterface {
              + "the landing tick, with the keys you will press. The landing tick is the first tick before the player is on "
              + "the ground again; it carries the landing constraint. The attempt starts on the first keyed row of the TAS."},
             {"2  Landing constraint and walls",
-             "Select the landing tick in the input table, look at the landing block and press B. A wall you have to clear "
-             + "gets a constraint the same way: select the tick where you pass it, look at its face, press B."},
+             "Mark LB on the landing tick in the input table, the first tick before the player is on the ground again. "
+             + "With that row selected, look at the landing block and press B. A wall you have to clear gets a "
+             + "constraint the same way: select the tick where you pass it, look at its face, press B."},
             {"3  Facings",
              "Solve them in the Angle Solver window, Fast or Optimize, or type the yaw of each row yourself."},
             {"4  Flag the ticks",
-             "In the input table, mark Keys on the ticks whose keys are checked and Face on the turn ticks. Right click "
+             "In the input table, mark Keys on the ticks whose keys are checked, Face on the turn ticks and LB on the landing tick. Right click "
              + "on Face sets Still: the attempt fails as soon as you turn on that tick. Shift click on a key cell makes that "
              + "key optional on that tick."},
             {"5  Check TAS",

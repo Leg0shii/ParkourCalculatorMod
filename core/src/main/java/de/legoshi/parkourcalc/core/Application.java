@@ -202,7 +202,11 @@ public final class Application {
                                 ? InputRow.ONEJUMP_FACE_OFF : InputRow.ONEJUMP_FACE_CHECK),
                         "Still", r -> r.getOnejumpFace() == InputRow.ONEJUMP_FACE_STILL,
                         r -> r.setOnejumpFace(r.getOnejumpFace() == InputRow.ONEJUMP_FACE_STILL
-                                ? InputRow.ONEJUMP_FACE_CHECK : InputRow.ONEJUMP_FACE_STILL)));
+                                ? InputRow.ONEJUMP_FACE_CHECK : InputRow.ONEJUMP_FACE_STILL)),
+                new InputOverlay.RowFlag("LB", "Onejump: the land block tick, the first tick before the player is on the"
+                        + " ground again. Its X or Z constraint is the landing constraint and the attempt is judged here."
+                        + " One row only; it also sets the solver's goal tick.",
+                        InputRow::isOnejumpLand, this::toggleLandRow));
 
         angleSolverState = new AngleSolverState();
         FileSystemSaveStore saveStore = saveController.getSaveStore();
@@ -795,6 +799,16 @@ public final class Application {
     private int firstSelectedRow() {
         Set<Integer> rows = selection.getSelectedRows();
         return rows.isEmpty() ? -1 : rows.iterator().next();
+    }
+
+    private void toggleLandRow(InputRow row) {
+        boolean on = !row.isOnejumpLand();
+        for (InputRow other : inputData.getRows()) other.setOnejumpLand(false);
+        row.setOnejumpLand(on);
+        if (on && angleSolverState != null) {
+            int tick = inputData.getRows().indexOf(row);
+            if (tick >= 0) angleSolverState.setLandingTick(tick);
+        }
     }
 
     public void applyPathSurfaceState() {
