@@ -32,7 +32,7 @@ import java.util.Locale;
 public final class OnejumpSetupWindow implements RenderInterface {
 
     private static final String WINDOW_ID = "###onejumpSetup";
-    private static final String TITLE = "Onejump Setup";
+    private static final String TITLE = "Onejump Overview";
     private static final String POPUP_CLEAR = "###onejumpClear";
     private static final float WIN_W = 760f;
     private static final float WIN_H = 680f;

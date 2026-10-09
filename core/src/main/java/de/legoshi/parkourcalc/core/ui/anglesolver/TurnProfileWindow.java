@@ -20,6 +20,9 @@ import imgui.flag.ImGuiCond;
 import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImBoolean;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 
 public final class TurnProfileWindow implements RenderInterface {
@@ -95,8 +98,7 @@ public final class TurnProfileWindow implements RenderInterface {
         TurnProfileController.Current cur = controller.current();
         float graphH = Math.max(GRAPH_MIN_H * scale, ImGui.getContentRegionAvail().y);
         if (cur == null || cur.n == 0) {
-            placeholder(graphH, controller.lastError() != null ? controller.lastError() + "
-" + HOW_TO : HOW_TO);
+            placeholder(graphH, controller.lastError());
             return;
         }
         ImVec2 origin = ImGui.getCursorScreenPos();
@@ -110,24 +112,23 @@ public final class TurnProfileWindow implements RenderInterface {
         }
     }
 
-    private static final String HOW_TO = "No turn to compare yet
-"
-            + "Mark Face on the turn ticks in the input table: those ticks' facings are checked and drawn here.
-"
-            + "Right click on Face sets Still: the attempt fails as soon as you turn on that tick.
-"
-            + "The facings come from the yaw column of the TAS, solved or typed.";
+    private static final String[] HOW_TO = {
+            "No turn to compare yet",
+            "Mark Face on the turn ticks in the input table: those ticks' facings are checked and drawn here.",
+            "Right click on Face sets Still: the attempt fails as soon as you turn on that tick.",
+            "The facings come from the yaw column of the TAS, solved or typed."};
 
-    private void placeholder(float h, String text) {
+    private void placeholder(float h, String error) {
         ImVec2 origin = ImGui.getCursorScreenPos();
         float w = ImGui.getContentRegionAvail().x;
         ImGui.invisibleButton("##onejumpEmpty", Math.max(1f, w), h);
         ImDrawList dl = ImGui.getWindowDrawList();
         dl.addRectFilled(origin.x, origin.y, origin.x + w, origin.y + h, ThemeManager.bgDarkColor(), 0f);
-        String[] lines = text.split("
-");
+        List<String> lines = new ArrayList<String>();
+        if (error != null) lines.add(error);
+        lines.addAll(Arrays.asList(HOW_TO));
         float lineH = ImGui.getTextLineHeightWithSpacing();
-        float y = origin.y + (h - lineH * lines.length) * 0.5f;
+        float y = origin.y + (h - lineH * lines.size()) * 0.5f;
         for (String line : lines) {
             ImVec2 ts = ImGui.calcTextSize(line);
             dl.addText(origin.x + (w - ts.x) * 0.5f, y, ThemeManager.textDimColor(), line);
