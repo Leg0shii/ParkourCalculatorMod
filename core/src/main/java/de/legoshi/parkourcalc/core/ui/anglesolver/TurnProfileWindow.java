@@ -111,8 +111,8 @@ public final class TurnProfileWindow implements RenderInterface {
     }
 
     private static final String[] HOW_TO = {
-            "No turn to compare. Mark \"Face\" in the input table for those ticks whose turn you want checked.",
-            "Hint: right click on Face for Still, turning on that tick fails the attempt."};
+            "No turn to compare. Mark \"Turn\" in the input table for those ticks whose turn you want checked.",
+            "Hint: right click on Turn for Still, turning on that tick fails the attempt."};
 
     private void placeholder(float h, String error) {
         ImVec2 origin = ImGui.getCursorScreenPos();
@@ -140,7 +140,7 @@ public final class TurnProfileWindow implements RenderInterface {
         int n = cur.n;
         int m = 0;
         for (int t = 0; t < n; t++) if (cur.checkYaw[t]) m++;
-        boolean all = m < 2;
+        boolean all = m == 0;
         int count = all ? n : m;
         float dx = count > 1 ? plotW / (count - 1) : 0f;
         float[] xs = new float[n];

@@ -267,8 +267,8 @@ public final class OnejumpSetupWindow implements RenderInterface {
             {"3  Facings",
              "Solve them in the Angle Solver window, Fast or Optimize, or type the yaw of each row yourself."},
             {"4  Flag the ticks",
-             "In the input table, mark Keys on the ticks whose keys are checked, Face on the turn ticks and LB on the landing tick. Right click "
-             + "on Face sets Still: the attempt fails as soon as you turn on that tick. Shift click on a key cell makes that "
+             "In the input table, mark Keys on the ticks whose keys are checked, Turn on the turn ticks and LB on the landing tick. Right click "
+             + "on Turn sets Still: the attempt fails as soon as you turn on that tick. Shift click on a key cell makes that "
              + "key optional on that tick."},
             {"5  Check TAS",
              "Press Check TAS in the Overview. It first applies the state of every flagged tick from the simulation, "

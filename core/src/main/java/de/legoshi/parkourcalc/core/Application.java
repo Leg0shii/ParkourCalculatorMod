@@ -191,22 +191,24 @@ public final class Application {
                 this::setStartToPlayer, playback, mc, boxController, this::pushHudMessage
         );
         inputOverlay.setShortcutsEnabled(() -> imgui.ImGui.isWindowFocused(imgui.flag.ImGuiFocusedFlags.RootAndChildWindows));
-        inputOverlay.setRowFlags(() -> settings.viewOnejumpSetup,
+        inputOverlay.setRowFlags(() -> settings.viewOnejumpSetup || settings.viewOnejumpKeys || settings.viewTurnProfile,
                 new InputOverlay.RowFlag("Keys", "Onejump: an attempt must press exactly these keys at this tick. Drag to paint."
                         + " Shift click a key cell to make that key optional at that tick (hollow): it may be pressed or not.",
-                        InputRow::isOnejumpKeys, r -> r.setOnejumpKeys(!r.isOnejumpKeys())),
-                new InputOverlay.RowFlag("Face", "Onejump: the facing of this tick is checked and drawn in the Turn Profile."
+                        InputRow::isOnejumpKeys, r -> r.setOnejumpKeys(!r.isOnejumpKeys()))
+                        .visibleWhen(() -> settings.viewOnejumpKeys),
+                new InputOverlay.RowFlag("Turn", "Onejump: the facing of this tick is checked and drawn in the Turn Profile."
                         + " Right click: Still, the facing must not move at all at this tick (catches a preturn).",
                         r -> r.getOnejumpFace() != InputRow.ONEJUMP_FACE_OFF,
                         r -> r.setOnejumpFace(r.getOnejumpFace() != InputRow.ONEJUMP_FACE_OFF
                                 ? InputRow.ONEJUMP_FACE_OFF : InputRow.ONEJUMP_FACE_CHECK),
                         "Still", r -> r.getOnejumpFace() == InputRow.ONEJUMP_FACE_STILL,
                         r -> r.setOnejumpFace(r.getOnejumpFace() == InputRow.ONEJUMP_FACE_STILL
-                                ? InputRow.ONEJUMP_FACE_CHECK : InputRow.ONEJUMP_FACE_STILL)),
+                                ? InputRow.ONEJUMP_FACE_CHECK : InputRow.ONEJUMP_FACE_STILL))
+                        .visibleWhen(() -> settings.viewTurnProfile),
                 new InputOverlay.RowFlag("LB", "Onejump: the land block tick, the first tick before the player is on the"
                         + " ground again. Its X or Z constraint is the landing constraint and the attempt is judged here."
                         + " One row only; it also sets the solver's goal tick.",
-                        InputRow::isOnejumpLand, this::toggleLandRow));
+                        InputRow::isOnejumpLand, this::toggleLandRow).visibleWhen(() -> settings.viewOnejumpSetup));
 
         angleSolverState = new AngleSolverState();
         FileSystemSaveStore saveStore = saveController.getSaveStore();

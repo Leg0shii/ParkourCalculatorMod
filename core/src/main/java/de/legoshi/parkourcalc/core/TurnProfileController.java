@@ -386,8 +386,8 @@ public final class TurnProfileController {
         }
         currentSignature = tasSignature.get();
         List<SetupCheck.Item> items = new ArrayList<SetupCheck.Item>();
-        items.add(new SetupCheck.Item("Keys and Face ticks are flagged", flagged,
-                flagged ? "ticks " + (first + 1) + " to " + (last + 1) : "flag them in the Keys and Face columns of the input table"));
+        items.add(new SetupCheck.Item("Keys and Turn ticks are flagged", flagged,
+                flagged ? "ticks " + (first + 1) + " to " + (last + 1) : "flag them in the Keys and Turn columns of the input table"));
         Current cur = current.get();
         boolean built = flagged && cur != null && cur.n >= last - first + 1 && cur.tasFirstTick == first;
         items.add(new SetupCheck.Item("The TAS path covers the flagged ticks", built,
@@ -547,8 +547,8 @@ public final class TurnProfileController {
         if (built.ref.isEmpty() && !ref.isEmpty()) {
             if (lastError == null) {
                 lastError = ref.tasFirstTick() < 0
-                        ? "the onejump file predates tick alignment, flag the Keys and Face ticks again"
-                        : "no Keys or Face ticks flagged, the stored onejump is kept";
+                        ? "the onejump file predates tick alignment, flag the Keys and Turn ticks again"
+                        : "no Keys or Turn ticks flagged, the stored onejump is kept";
             }
             current.set(null);
             return;
