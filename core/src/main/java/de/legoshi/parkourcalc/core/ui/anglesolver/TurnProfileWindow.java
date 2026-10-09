@@ -101,6 +101,12 @@ public final class TurnProfileWindow implements RenderInterface {
             placeholder(graphH, controller.lastError());
             return;
         }
+        boolean anyFace = false;
+        for (int t = 0; t < cur.n; t++) anyFace |= cur.checkYaw[t];
+        if (!anyFace) {
+            placeholder(graphH, null);
+            return;
+        }
         graph(cur, scale, graphH, tracker.shownAttempt());
     }
 
