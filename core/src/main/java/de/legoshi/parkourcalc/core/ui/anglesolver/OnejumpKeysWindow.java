@@ -92,7 +92,9 @@ public final class OnejumpKeysWindow implements RenderInterface {
         boolean hovered = ImGui.isItemHovered();
         ImDrawList dl = ImGui.getWindowDrawList();
         dl.addRectFilled(x0, y0, x0 + w, y0 + h, ThemeManager.bgDarkColor(), 0f);
-        if (cur == null || cur.n == 0) {
+        boolean anyKeys = false;
+        if (cur != null) for (int t = 0; t < cur.n; t++) anyKeys |= cur.checkKeys[t];
+        if (cur == null || cur.n == 0 || !anyKeys) {
             float lineH = ImGui.getTextLineHeightWithSpacing();
             float y = y0 + (h - lineH * HOW_TO.length) * 0.5f;
             for (String line : HOW_TO) {
