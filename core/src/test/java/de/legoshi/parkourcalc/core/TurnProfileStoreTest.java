@@ -283,7 +283,8 @@ public class TurnProfileStoreTest {
         Files.write(file, lines);
         TurnProfileDocument back = new TurnProfileDocument();
         assertTrue(store.load("old", back));
-        assertEquals(27, back.attempts().get(2).failedTick());
+        assertEquals(27, back.attempts().get(2).forecast.failedTick);
+        assertEquals(-1, back.attempts().get(2).failedTick());
     }
 
     @Test

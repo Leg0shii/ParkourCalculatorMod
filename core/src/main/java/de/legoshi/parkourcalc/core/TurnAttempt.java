@@ -189,8 +189,7 @@ public final class TurnAttempt {
     }
 
     public int failedTick() {
-        if (solved() && solvedAnywhere()) return solvedFailedTick();
-        return forecast == null ? -1 : forecast.failedTick;
+        return solved() && solvedAnywhere() ? solvedFailedTick() : -1;
     }
 
     public float turnStartAt(int tick) {

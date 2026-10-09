@@ -121,6 +121,7 @@ public final class SaveFile {
         public int tick;                                 // 0-based index into the route
         public List<Constraint> constraints = new ArrayList<Constraint>();
         public Override override;
+        public Double landingY;
     }
 
     public static final class Constraint {

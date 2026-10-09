@@ -471,12 +471,18 @@ public final class AngleSolverState {
     public static final double HITBOX_HALF_WIDTH = ConstraintDeriver.HALF;
 
     public void setFootprint(int tick, double xLo, double xHi, double zLo, double zHi) {
+        setFootprint(tick, xLo, xHi, zLo, zHi, Double.NaN);
+    }
+
+    public void setFootprint(int tick, double xLo, double xHi, double zLo, double zHi, double top) {
         if (tick < 0) return;
-        List<Constraint> list = tickConstraints(tick).getConstraints();
+        TickConstraints tc = tickConstraints(tick);
+        List<Constraint> list = tc.getConstraints();
         list.removeIf(c -> c.isRange() && !c.isRelative()
                 && (c.getField() == Constraint.Field.X || c.getField() == Constraint.Field.Z));
         list.add(Constraint.range(Constraint.Field.X, xLo, xHi, true, true));
         list.add(Constraint.range(Constraint.Field.Z, zLo, zHi, true, true));
+        tc.setLandingY(top);
     }
 
     public double[] footprintOrNull(int tick) {
@@ -503,6 +509,7 @@ public final class AngleSolverState {
         if (tc == null) return;
         tc.getConstraints().removeIf(c -> c.isRange() && !c.isRelative()
                 && (c.getField() == Constraint.Field.X || c.getField() == Constraint.Field.Z));
+        tc.setLandingY(Double.NaN);
     }
 
     public void putScalarReplacingDirection(int tick, Constraint wall) {

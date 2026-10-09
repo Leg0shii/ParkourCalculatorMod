@@ -478,12 +478,20 @@ public final class TurnProfileController {
         if (options.isEmpty()) return;
         TurnReference.Landing landing = options.get(options.size() - 1);
         int tick = landing.tick;
-        TickState st = tickState.apply(tick);
-        if (st != null) landing = landing.withY(st.position.y);
+        TickConstraints tc = state.tickConstraintsOrNull(tick);
+        if (tc != null && tc.hasLandingY()) {
+            landing = landing.withY(tc.getLandingY());
+        } else {
+            TickState st = tickState.apply(tick);
+            if (st != null && st.onGround && landing.margin(st.position.x, st.position.z) <= 0.0) {
+                landing = landing.withY(st.position.y);
+            }
+        }
         built.ref.setLanding(landing.withTick(0));
         built.ref.setTasFirstTick(tick);
         judgeTas(built, landing, tick);
     }
+
 
     private void judgeTas(Built built, TurnReference.Landing landing, int tick) {
         TickState st = tickState.apply(tick);

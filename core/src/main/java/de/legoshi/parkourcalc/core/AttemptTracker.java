@@ -11,7 +11,8 @@ public final class AttemptTracker {
     public static final int RESET_BUTTON = 1;
     public static final double TELEPORT_DISTANCE = 1.0;
     public static final double STILL_TOLERANCE_PX = 0.25;
-    public static final double FAST_NEAR = 0.3;
+    public static final double HITBOX_HALF_WIDTH = 0.3;
+    public static final double FAST_NEAR = 0.3 + HITBOX_HALF_WIDTH;
     public static final double LANDING_EPS = 1e-6;
 
     private final TurnProfileController profile;
@@ -28,7 +29,9 @@ public final class AttemptTracker {
     private double tickVz;
     private float tickYaw;
     private boolean tickGround;
+    private double prevX = Double.NaN;
     private double prevY = Double.NaN;
+    private double prevZ = Double.NaN;
     private boolean havePrev;
     private volatile boolean armed;
     private int wait;
@@ -124,8 +127,12 @@ public final class AttemptTracker {
         closeTick(nowNs);
         boolean teleport = haveTick && distance(tickX, tickY, tickZ, x, y, z) > TELEPORT_DISTANCE;
         boolean hadPrev = havePrev && !teleport;
-        double before = prevY;
+        double beforeX = prevX;
+        double beforeY = prevY;
+        double beforeZ = prevZ;
+        prevX = x;
         prevY = y;
+        prevZ = z;
         havePrev = true;
         haveTick = true;
         tickX = x;
@@ -143,7 +150,7 @@ public final class AttemptTracker {
                 pending = -1;
                 heldAtArm = 0;
             }
-            if (hadPrev) fastTick(x, y, z, before);
+            fastTick(x, y, z, ground, hadPrev, beforeX, beforeY, beforeZ);
             return;
         }
         if (teleport) {
@@ -153,14 +160,18 @@ public final class AttemptTracker {
         record(x, z, vx, vz, yaw, ground);
     }
 
-    private void fastTick(double x, double y, double z, double before) {
+    private void fastTick(double x, double y, double z, boolean ground, boolean hadPrev, double beforeX,
+                          double beforeY, double beforeZ) {
         TurnProfileController.Current c = profile.current();
-        if (c == null || !c.isFast() || !c.landing.hasY()) return;
+        if (c == null || !c.isFast()) return;
         TurnReference.Landing l = c.landing;
-        if (!crossed(before, y, l.y) || !l.near(x, z, FAST_NEAR)) return;
-        double mx = l.hasX() ? l.marginX(x) : Double.NaN;
-        double mz = l.hasZ() ? l.marginZ(z) : Double.NaN;
-        boolean landed = l.margin(x, z) <= 0.0;
+        if (!l.hasY() || !hadPrev || !crossed(beforeY, y, l.y)) return;
+        boolean landed = ground && Math.abs(y - l.y) <= LANDING_EPS && l.margin(x, z) <= 0.0;
+        double jx = landed ? x : beforeX;
+        double jz = landed ? z : beforeZ;
+        if (!l.near(jx, jz, FAST_NEAR)) return;
+        double mx = l.hasX() ? l.marginX(jx) : Double.NaN;
+        double mz = l.hasZ() ? l.marginZ(jz) : Double.NaN;
         double m = TurnAttempt.selectMargin(mx, mz, c.axis);
         TurnAttempt a = new TurnAttempt(profile.document().nextNumber(), c.startTick, new double[0], 0, true, landed,
                 false, TurnAttempt.landingVerdict(m, landed, TurnAttempt.worstAxis(mx, mz)), m, -1, -1, 0, 0, 0,

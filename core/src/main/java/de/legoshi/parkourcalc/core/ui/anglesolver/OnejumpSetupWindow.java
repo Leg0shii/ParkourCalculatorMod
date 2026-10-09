@@ -199,14 +199,10 @@ public final class OnejumpSetupWindow implements RenderInterface {
         if (cur == null) {
             text = err != null ? err : SETUP_HINT;
         } else if (cur.isFast()) {
-            String where = "fast, judged at tick " + (cur.tasFirstTick + 1);
-            if (!cur.landing.hasY()) text = where + ": no simulated position at that tick";
-            else if (!cur.tasGrounded) text = where + ": the TAS is in the air at that tick";
-            else if (!cur.tasLands()) text = where + ": the TAS misses its own landing box by "
-                    + ConstraintText.fixedStat(cur.tasMiss);
+            if (!cur.landing.hasY()) text = "fast: press B on the landing block, a typed constraint has no height";
             else {
                 ok = true;
-                text = where + ", ready";
+                text = "fast, ready";
             }
         } else {
             String where = "in-depth, ticks " + (cur.tasTick(0) + 1) + " to " + (cur.tasTick(cur.n - 1) + 1);

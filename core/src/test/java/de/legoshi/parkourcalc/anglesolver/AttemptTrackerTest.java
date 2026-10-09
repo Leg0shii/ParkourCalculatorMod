@@ -580,10 +580,12 @@ public class AttemptTrackerTest {
         rig.play(true, rig.k0 + 1, sign, NONE, NONE);
         a = rig.tracker.last();
         assertFalse(a.verdict, a.landed);
-        assertTrue(a.failedTick() >= rig.cur.startTick + rig.k0 + 1);
-        assertTrue(a.failedTick() < rig.cur.startTick + rig.cur.n);
-        assertTrue(a.bestMarginAt(a.failedTick()) > 0.0);
+        int sweepFailed = a.forecast.failedTick;
+        assertTrue(sweepFailed >= rig.cur.startTick + rig.k0 + 1);
+        assertTrue(sweepFailed < rig.cur.startTick + rig.cur.n);
+        assertTrue(a.bestMarginAt(sweepFailed) > 0.0);
         assertTrue(a.bestMarginAt(rig.cur.startTick + rig.k0) <= 0.0);
+        assertEquals(-1, a.failedTick());
     }
 
     @Test
@@ -670,7 +672,8 @@ public class AttemptTrackerTest {
         TurnAttempt a = rig.tracker.last();
         assertTrue(a.hasState());
         assertFalse(a.solved());
-        assertEquals(a.forecast.failedTick, a.failedTick());
+        assertTrue(a.forecast.failedTick >= 0);
+        assertEquals(-1, a.failedTick());
     }
 
     @Test
