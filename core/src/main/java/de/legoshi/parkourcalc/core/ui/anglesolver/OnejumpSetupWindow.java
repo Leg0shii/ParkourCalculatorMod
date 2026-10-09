@@ -146,7 +146,6 @@ public final class OnejumpSetupWindow implements RenderInterface {
         for (String l : OVERVIEW_LABELS) labelW = Math.max(labelW, ImGui.calcTextSize(l).x);
         Fonts.popBold();
         labelW += ThemeManager.SM * scale;
-        checkButton();
         String storeError = controller.storeError();
         overviewRow("TAS", name == null ? "unsaved, attempts are not kept" : storeError == null ? name
                 : name + "  (attempts file unreadable, nothing is written: " + storeError + ")", labelW,
@@ -174,7 +173,7 @@ public final class OnejumpSetupWindow implements RenderInterface {
                 bands[2], bands[3]), labelW, !anyBand);
         overviewRow("Closest", st.hasClosest() ? TurnAttempt.signedMargin(st.closest) : "-", labelW, !st.hasClosest());
         overviewRow("Landed", Integer.toString(st.landings), labelW, false);
-        overviewRow("Landing chance", landingChance(cur), labelW, cur == null || cur.attempts == null);
+        landingChanceRow(cur, labelW);
         if (settings.onejumpTurnTiming && cur != null) {
             int mainTurn = TurnTiming.mainTurnTick(cur);
             TurnTiming.Onset onset = mainTurn < 0 ? null
@@ -185,6 +184,7 @@ public final class OnejumpSetupWindow implements RenderInterface {
         if (st.mouseAttempts > 0) overviewRow(PracticeMacro.LABEL_INPUTS, practiceText(st.mouseAttempts, st.mouseClears), labelW, false);
         if (st.inputAttempts > 0) overviewRow(PracticeMacro.LABEL_TURN, practiceText(st.inputAttempts, st.inputClears), labelW, false);
         ThemeManager.sectionSpacing();
+        checkButton();
         Fonts.pushBold();
         ImGui.text("Top " + TurnProfileDocument.TOP);
         Fonts.popBold();
@@ -201,54 +201,100 @@ public final class OnejumpSetupWindow implements RenderInterface {
     }
 
     private void checkButton() {
-        if (Controls.secondaryButton("Check TAS")) controller.check();
-        TooltipUtil.onHover("Checks that the TAS is complete and lands. The live offset, the landing chance and the solved offsets run only on a checked TAS, and any edit needs a new check.");
+        if (Controls.secondaryButton("Validate Jump")) controller.check();
+        TooltipUtil.onHover("Checks that the TAS is complete and lands. The live offset, the landing chance and the solved offsets run only on a validated jump, and any edit of the TAS needs a new validation.");
         ThemeManager.sectionSpacing();
     }
 
     private void checkRows(float labelW) {
         boolean checked = controller.isChecked();
         TurnProfileController.SetupCheck check = controller.lastCheck();
+        boolean current = controller.lastCheckCurrent();
         float startX = ImGui.getCursorPosX();
         Fonts.pushBold();
         ImGui.text("Live offset");
         Fonts.popBold();
         ImGui.sameLine();
         ImGui.setCursorPosX(startX + labelW);
-        boolean current = controller.lastCheckCurrent();
         if (checked) {
             ThemeManager.pushTextColor(ThemeManager.okColor());
             ImGui.text("on");
             ThemeManager.popTextColor();
-        } else if (check == null || !current) {
-            ImGui.textDisabled(check == null ? "off, press Check TAS" : "off, the TAS changed since the check");
-        } else {
-            TurnProfileController.SetupCheck.Item firstFailed = null;
-            for (TurnProfileController.SetupCheck.Item item : check.items) {
-                if (!item.ok) {
-                    firstFailed = item;
-                    break;
-                }
-            }
-            ThemeManager.pushTextColor(ThemeManager.warningColor());
-            ImGui.text("off: " + (firstFailed == null ? "the check failed" : firstFailed.label.toLowerCase(Locale.ROOT)));
-            ThemeManager.popTextColor();
+            return;
         }
-        if (check != null && current && ImGui.isItemHovered()) checkTooltip(check);
-    }
-
-    private static void checkTooltip(TurnProfileController.SetupCheck check) {
+        ImGui.textDisabled("off");
+        ImGui.sameLine();
+        helpMarker();
+        if (!ImGui.isItemHovered()) return;
         ImGui.beginTooltip();
-        for (TurnProfileController.SetupCheck.Item item : check.items) {
-            ThemeManager.pushTextColor(item.ok ? ThemeManager.okColor() : ThemeManager.dangerColor());
-            ImGui.text(item.ok ? "ok" : "!!");
-            ThemeManager.popTextColor();
-            ImGui.sameLine();
-            ImGui.text(item.label);
-            ImGui.sameLine();
-            ImGui.textDisabled(item.detail);
+        if (check == null) {
+            ImGui.text("Press Validate Jump. The live offset, the landing chance and the solved offsets run only on a validated jump.");
+        } else if (!current) {
+            ImGui.text("The TAS changed since the validation. Press Validate Jump again.");
+        } else {
+            for (TurnProfileController.SetupCheck.Item item : check.items) {
+                ThemeManager.pushTextColor(item.ok ? ThemeManager.okColor() : ThemeManager.dangerColor());
+                ImGui.text(item.ok ? "ok" : "!!");
+                ThemeManager.popTextColor();
+                ImGui.sameLine();
+                ImGui.text(item.label);
+                ImGui.sameLine();
+                ImGui.textDisabled(item.detail);
+            }
         }
         ImGui.endTooltip();
+    }
+
+    private static void helpMarker() {
+        ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+        ImGui.text("(?)");
+        ThemeManager.popTextColor();
+    }
+
+    private void landingChanceRow(TurnProfileController.Current cur, float labelW) {
+        String value;
+        String help;
+        boolean dim;
+        AttemptSampler.Stats rs = cur == null ? null : cur.attempts;
+        if (cur == null) {
+            value = "-";
+            help = null;
+            dim = true;
+        } else if (!controller.isChecked()) {
+            value = "-";
+            help = "Press Validate Jump, the landing chance is sampled only on a validated jump.";
+            dim = true;
+        } else if (!cur.canRate()) {
+            value = "-";
+            help = cur.pathLands() ? "The TAS needs a landing constraint and a path." : "The TAS path does not meet its own constraints.";
+            dim = true;
+        } else if (rs == null) {
+            value = controller.isRating() ? "sampling" : "-";
+            help = null;
+            dim = true;
+        } else if (controller.ratedSpread() == 0) {
+            value = "-";
+            help = "No attempts yet. The chance is sampled from the facing spread of your own attempts; the TAS itself "
+                    + (rs.rate() > 0.0 ? "lands." : "misses.");
+            dim = true;
+        } else {
+            value = String.format(Locale.ROOT, "%s of tries  (%s)", oneIn(rs.rate()), pct(rs.rate()));
+            help = String.format(Locale.ROOT, "Sampled from the facing spread of your last %d attempts, %s tries simulated.",
+                    controller.ratedSpread(), compact(rs.attempts));
+            dim = false;
+        }
+        float startX = ImGui.getCursorPosX();
+        Fonts.pushBold();
+        ImGui.text("Landing chance");
+        Fonts.popBold();
+        ImGui.sameLine();
+        ImGui.setCursorPosX(startX + labelW);
+        if (dim) ImGui.textDisabled(value);
+        else ImGui.text(value);
+        if (help == null) return;
+        ImGui.sameLine();
+        helpMarker();
+        TooltipUtil.onHover(help);
     }
 
     private static final String[][] HELP = {
@@ -277,12 +323,12 @@ public final class OnejumpSetupWindow implements RenderInterface {
              + "Still: the attempt fails as soon as the yaw changes on that tick. Shift click a key cell to make that key "
              + "optional on that tick. The Keys column shows while the Onejump Keys window is open, Turn while the Turn "
              + "Profile is open, LB while this window is open."},
-            {"5  Check TAS",
-             "Press Check TAS at the top of the Overview tab. It first applies the ground and air state of every tick "
+            {"5  Validate Jump",
+             "Press Validate Jump under the stats of the Overview tab. It first applies the ground and air state of every tick "
              + "from the simulation, like Apply state in the Angle Solver, then checks that Keys or Turn ticks are "
              + "marked, the ticks form a path, the LB tick has a landing constraint, the simulation reaches the LB tick and "
              + "meets every constraint, and the Angle Solver's own physics replays the ticks, meets the landing "
-             + "constraint and matches the simulation's positions. The Live offset line shows the result, hover it for "
+             + "constraint and matches the simulation's positions. The Live offset line shows on or off, hover its (?) for "
              + "every check. The live offset, the landing chance and the solved offsets run only while the check holds. "
              + "Any edit of the TAS needs a new check."},
             {"6  Practice",
@@ -324,18 +370,6 @@ public final class OnejumpSetupWindow implements RenderInterface {
 
     private static float listHeight(List<TurnAttempt> list, float scale) {
         return ThemeManager.tableHeaderRowHeight() + ThemeManager.tableRowHeight() * Math.max(1, list.size()) + 4f * scale;
-    }
-
-    private String landingChance(TurnProfileController.Current cur) {
-        if (cur == null) return "-";
-        if (!controller.isChecked()) return "press Check TAS";
-        if (!cur.canRate()) return cur.pathLands() ? "needs a landing constraint and a TAS path" : "the reference path does not meet the TAS constraints";
-        AttemptSampler.Stats rs = cur.attempts;
-        if (rs == null) return controller.isRating() ? "sampling" : "-";
-        int used = controller.ratedSpread();
-        if (used == 0) return "no attempts yet, the reference itself " + (rs.rate() > 0.0 ? "lands" : "misses");
-        return String.format(Locale.ROOT, "%s of tries  (%s, spread of your last %d attempts, %s samples)",
-                oneIn(rs.rate()), pct(rs.rate()), used, compact(rs.attempts));
     }
 
     private static String practiceText(int attempts, int clears) {

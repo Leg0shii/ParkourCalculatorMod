@@ -279,7 +279,7 @@ public final class TurnProfileWindow implements RenderInterface {
             }
         }
         if (settings.onejumpOffsetLive && !controller.isChecked() && you != null && !you.complete) {
-            dl.addText(x0 + 6f * scale, y0 + 1f, ThemeManager.textDimColor(), "press Check TAS for the live offset");
+            dl.addText(x0 + 6f * scale, y0 + 1f, ThemeManager.textDimColor(), "validate the jump for the live offset");
         }
         if (you != null && settings.onejumpOffsetLive && (you.hasForecast() || (you.complete && you.hasMargin()))) {
             String label = offsetLabel(you);
