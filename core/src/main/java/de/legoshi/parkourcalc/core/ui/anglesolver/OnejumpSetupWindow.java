@@ -254,42 +254,42 @@ public final class OnejumpSetupWindow implements RenderInterface {
     private static final String[][] HELP = {
             {"What it is",
              "The onejump tracks your attempts on one jump. The jump is the TAS open in the input table. An attempt is "
-             + "compared row by row to that table and judged on the row marked LB: the offset is the distance between "
-             + "your position at that row and the landing constraint."},
+             + "compared tick by tick to that table and judged on the tick marked LB: the offset is the distance between "
+             + "your position at that tick and the landing constraint."},
             {"1  The TAS",
-             "Build the complete TAS of the jump, by hand or with the Angle Solver: one row per tick from the first row "
-             + "with a key pressed up to the row marked LB, with the keys you will press and the yaw of every row. "
-             + "Sprint alone does not count as a key. The attempt starts on the first row with a key pressed, so the "
-             + "rows before the jump belong in the TAS too."},
+             "Build the complete TAS of the jump, by hand or with the Angle Solver: every tick from the first tick "
+             + "with a key pressed up to the tick marked LB, with the keys you will press and the yaw of every tick. "
+             + "Sprint alone does not count as a key. The attempt starts on the first tick with a key pressed, so the "
+             + "ticks before the jump belong in the TAS too."},
             {"2  Landing constraint and walls",
-             "Mark LB on the landing row, the first row where the player stands on the landing block again. Select that "
-             + "row, look at the TOP face of the landing block and press B: that creates the landing constraint, the X "
+             "Mark LB on the landing tick, the first tick where the player stands on the landing block again. Select that "
+             + "tick, look at the TOP face of the landing block and press B: that creates the landing constraint, the X "
              + "and Z ranges in the Constraints column. Looking at a side face creates a wall constraint instead, which "
-             + "the path has to stay out of. Use that for a block you must clear: select the row where you pass it, "
+             + "the path has to stay out of. Use that for a block you must clear: select the tick where you pass it, "
              + "look at its side face, press B."},
             {"3  Yaw",
-             "Open the Angle Solver window. Ticks: from the first row of the jump to the LB row. Goal: the direction you "
+             "Open the Angle Solver window. Ticks: from the first tick of the jump to the LB tick. Goal: the direction you "
              + "land in, +X, -X, +Z or -Z. To find it, stand facing the landing block, press F3 and read the Facing "
              + "line: Towards positive X is +X, Towards negative Z is -Z. Budget: 10 s gives a decent offset. Press "
-             + "Solve. Or type the yaw of every row in the Yaw column yourself."},
-            {"4  Mark the checked rows",
-             "Keys on the rows whose keys are checked, Turn on the rows whose yaw is checked. Right click on Turn sets "
-             + "Still: the attempt fails as soon as the yaw changes on that row. Shift click a key cell to make that key "
-             + "optional on that row. The Keys column shows while the Onejump Keys window is open, Turn while the Turn "
+             + "Solve. Or type the yaw of every tick in the Yaw column yourself."},
+            {"4  Mark the checked ticks",
+             "Keys on the ticks whose keys are checked, Turn on the ticks whose yaw is checked. Right click on Turn sets "
+             + "Still: the attempt fails as soon as the yaw changes on that tick. Shift click a key cell to make that key "
+             + "optional on that tick. The Keys column shows while the Onejump Keys window is open, Turn while the Turn "
              + "Profile is open, LB while this window is open."},
             {"5  Check TAS",
-             "Press Check TAS at the top of the Overview tab. It first applies the ground and air state of every row "
-             + "from the simulation, like Apply state in the Angle Solver, then checks that Keys or Turn rows are "
-             + "marked, the rows form a path, the LB row has a landing constraint, the simulation reaches the LB row and "
-             + "meets every constraint, and the Angle Solver's own physics replays the rows, meets the landing "
-             + "constraint and matches the simulation's positions. The Live offset row shows the result, hover it for "
-             + "every line. The live offset, the landing chance and the solved offsets run only while the check holds. "
+             "Press Check TAS at the top of the Overview tab. It first applies the ground and air state of every tick "
+             + "from the simulation, like Apply state in the Angle Solver, then checks that Keys or Turn ticks are "
+             + "marked, the ticks form a path, the LB tick has a landing constraint, the simulation reaches the LB tick and "
+             + "meets every constraint, and the Angle Solver's own physics replays the ticks, meets the landing "
+             + "constraint and matches the simulation's positions. The Live offset line shows the result, hover it for "
+             + "every check. The live offset, the landing chance and the solved offsets run only while the check holds. "
              + "Any edit of the TAS needs a new check."},
             {"6  Practice",
-             "Right click resets. The first key you press after the reset starts the attempt on the first row with a "
-             + "key pressed, then every tick is compared to the next row. A wrong key on a Keys row is recorded, the "
-             + "attempt runs on and is judged on the LB row. The Attempts tab shows the offset and what failed, the Turn "
-             + "Profile your yaw against the rows marked Turn, the Onejump Keys window your keys against the rows "
+             "Right click resets. The first key you press after the reset starts the attempt on the first tick with a "
+             + "key pressed, then every tick is compared to the next one. A wrong key on a Keys tick is recorded, the "
+             + "attempt runs on and is judged on the LB tick. The Attempts tab shows the offset and what failed, the Turn "
+             + "Profile your yaw against the ticks marked Turn, the Onejump Keys window your keys against the ticks "
              + "marked Keys."},
             {"7  Preferences",
              "Preferences > Onejump: practice replay, rated dots, turn timing, offset label and hover, what happens on a "
