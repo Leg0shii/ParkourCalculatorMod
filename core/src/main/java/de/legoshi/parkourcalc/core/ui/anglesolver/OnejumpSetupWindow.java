@@ -34,6 +34,7 @@ public final class OnejumpSetupWindow implements RenderInterface {
     private static final String WINDOW_ID = "###onejumpSetup";
     private static final String TITLE = "Onejump Setup";
     private static final String POPUP_CLEAR = "###onejumpClear";
+    private static final String POPUP_CHECK = "###onejumpCheck";
     private static final float WIN_W = 760f;
     private static final float WIN_H = 680f;
     private static final float MIN_W = 520f;
@@ -49,6 +50,7 @@ public final class OnejumpSetupWindow implements RenderInterface {
     private final Runnable onSettingsChanged;
     private final ImBoolean open = new ImBoolean(false);
     private boolean openClearModal;
+    private boolean openCheckModal;
     private int attemptsPage;
     private TurnTiming.Onset onsetCache;
     private int onsetVersion = -1;
@@ -132,6 +134,7 @@ public final class OnejumpSetupWindow implements RenderInterface {
             Controls.endTabBar();
         }
         clearModal();
+        checkModal();
     }
 
     private static final String[] OVERVIEW_LABELS = {"TAS", "Landing", "Live offset", "Attempts", "Landed", "Input failures",
@@ -202,67 +205,93 @@ public final class OnejumpSetupWindow implements RenderInterface {
         Fonts.popBold();
         ImGui.sameLine();
         ImGui.setCursorPosX(startX + labelW);
-        if (Controls.primaryButton("Check TAS")) controller.check();
+        if (Controls.primaryButton("Check TAS")) {
+            controller.check();
+            openCheckModal = true;
+        }
         TooltipUtil.onHover("Checks that the TAS is complete and lands. The live offset, the landing chance and the solved offsets run only on a checked TAS, and any edit needs a new check.");
         ImGui.sameLine();
         ImGui.alignTextToFramePadding();
         boolean current = controller.lastCheckCurrent();
         if (checked) {
             ThemeManager.pushTextColor(ThemeManager.okColor());
-            ImGui.text("on, the TAS is checked");
+            ImGui.text("on");
             ThemeManager.popTextColor();
         } else if (check == null || !current) {
-            ImGui.textDisabled(check == null ? "off until the TAS is checked" : "off, the TAS changed since the check");
+            ImGui.textDisabled(check == null ? "off" : "off, the TAS changed since the check");
         } else {
+            int failed = 0;
+            for (TurnProfileController.SetupCheck.Item item : check.items) if (!item.ok) failed++;
             ThemeManager.pushTextColor(ThemeManager.warningColor());
-            ImGui.text("off, the check failed");
+            ImGui.text("off, " + failed + (failed == 1 ? " check failed" : " checks failed"));
             ThemeManager.popTextColor();
-        }
-        if (check == null || check.ok || !current) return;
-        for (TurnProfileController.SetupCheck.Item item : check.items) {
-            if (item.ok) continue;
-            ImGui.setCursorPosX(startX + labelW);
-            ThemeManager.pushTextColor(ThemeManager.dangerColor());
-            ImGui.text(item.label);
-            ThemeManager.popTextColor();
-            ImGui.sameLine();
-            ImGui.textDisabled(item.detail);
         }
     }
 
+    private void checkModal() {
+        if (openCheckModal) {
+            ImGui.openPopup(POPUP_CHECK);
+            openCheckModal = false;
+        }
+        if (!Modal.begin("Check TAS", POPUP_CHECK)) return;
+        TurnProfileController.SetupCheck check = controller.lastCheck();
+        if (check == null) {
+            ImGui.textDisabled("no check yet");
+        } else {
+            for (TurnProfileController.SetupCheck.Item item : check.items) {
+                ThemeManager.pushTextColor(item.ok ? ThemeManager.okColor() : ThemeManager.dangerColor());
+                ImGui.text(item.ok ? "ok" : "!!");
+                ThemeManager.popTextColor();
+                ImGui.sameLine();
+                ImGui.text(item.label);
+                ImGui.sameLine();
+                ImGui.textDisabled(item.detail);
+            }
+            ThemeManager.sectionSpacing();
+            if (check.ok) {
+                ThemeManager.pushTextColor(ThemeManager.okColor());
+                ImGui.text("The live offset is on until the TAS changes.");
+                ThemeManager.popTextColor();
+            } else {
+                ThemeManager.pushTextColor(ThemeManager.warningColor());
+                ImGui.text("Fix the red lines and check again.");
+                ThemeManager.popTextColor();
+            }
+        }
+        Modal.footerSeparator();
+        if (Modal.footerButton("Close")) ImGui.closeCurrentPopup();
+        Modal.end();
+    }
+
     private static final String[][] HELP = {
-            {"What the onejump does",
-             "The onejump practises one jump against a TAS. Every attempt is judged on the landing tick of that TAS: "
-             + "the offset is the distance of your position to the landing box, plus is spare, minus is short. "
-             + "With the TAS checked it also forecasts, at every tick of an attempt, how much offset is still reachable."},
-            {"1  Build the full TAS",
-             "The TAS needs the start position (K copies yours), every row's keys from the first run-up tick to the "
-             + "landing tick, and the facings. Not only the angle: the run-up, the jump tick and the air keys must be "
-             + "the ones you will press, because the attempt is compared row by row from the first key."},
-            {"2  Landing box and obstacles",
-             "Select the landing tick in the table, look at the landing block and press B: that is the landing box. "
-             + "Walls you must clear get a constraint too: select the tick where you pass them, look at the face and press B. "
-             + "The solver only knows constraints, never blocks."},
+            {"What it is",
+             "The onejump tracks your attempts on one jump. The TAS of that jump is the reference: every attempt is "
+             + "compared to its rows from the first key on and judged on the landing tick, where the offset is measured. "
+             + "With a checked TAS the Turn Profile also shows a live offset during the attempt."},
+            {"1  The TAS",
+             "Build the complete TAS of the jump, by hand or with the solver: every row from the first key of the run-up "
+             + "to the landing, with the keys you will press. The run-up belongs in the TAS, the attempt starts on its first keyed row."},
+            {"2  Landing box and walls",
+             "Select the landing tick in the input table, look at the landing block and press B. A wall you have to clear "
+             + "gets a constraint the same way: select the tick where you pass it, look at its face, press B."},
             {"3  Facings",
-             "Open the Angle Solver window and solve, Fast or Optimize, or type the facings yourself. The reference "
-             + "turn is whatever the TAS contains after this step."},
+             "Solve them in the Angle Solver window, Fast or Optimize, or type the yaw of each row yourself."},
             {"4  Flag the ticks",
-             "In the input table, mark Keys on every tick whose keys are checked and Face on the turn ticks. "
-             + "Right click on Face gives Still, a preturn check that fails the attempt as soon as you turn on that tick. "
-             + "Shift click on a key cell makes that key optional on that tick. The reference spans the first to the last flagged tick."},
+             "In the input table, mark Keys on the ticks whose keys are checked and Face on the turn ticks. Right click "
+             + "on Face sets Still: the attempt fails as soon as you turn on that tick. Shift click on a key cell makes that "
+             + "key optional on that tick."},
             {"5  Check TAS",
-             "Press Check TAS in the Overview. Every line must be green: the ticks are flagged, the reference is built, "
-             + "a landing box follows it, the simulation reaches it and meets every constraint, the solver model lands on "
-             + "the same path, and the reference starts on the ground. Any edit of the TAS needs a new check. Only a "
-             + "checked TAS gets the live offset, the landing chance and the solved offsets."},
+             "Press Check TAS in the Overview. It checks that the ticks are flagged, a landing box follows them, the "
+             + "simulation reaches it and meets every constraint, the solver model lands on the same path and the "
+             + "reference starts on the ground. The live offset, the landing chance and the solved offsets run only while "
+             + "the check holds. Any edit of the TAS needs a new check."},
             {"6  Practice",
-             "Right click resets. The first key after the reset starts the attempt on the first keyed row of the TAS, "
-             + "then the rows play tick by tick. A wrong key on a flagged tick is recorded, the attempt runs on and is "
-             + "judged on the landing. The Turn Profile shows your facing against the reference, the Keys window your keys "
-             + "per tick, the attempts table the offset and what failed."},
+             "Right click resets. The first key after the reset starts the attempt, the rows play tick by tick, the "
+             + "landing tick judges it. The attempts table shows the offset and what failed, the Turn Profile your facing "
+             + "against the reference, the Keys window your keys per tick."},
             {"7  Preferences",
-             "Preferences > Onejump: the practice replay, the rated dots, turn timing, the offset label and hover, "
-             + "what happens on a wrong key, and how many attempts feed the landing chance."},
+             "Preferences > Onejump: practice replay, rated dots, turn timing, offset label and hover, what happens on a "
+             + "wrong key, and how many attempts feed the landing chance."},
     };
 
     private void help() {

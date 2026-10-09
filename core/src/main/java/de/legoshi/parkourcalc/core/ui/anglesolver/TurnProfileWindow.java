@@ -258,10 +258,10 @@ public final class TurnProfileWindow implements RenderInterface {
                 dl.addText(xs[lt] - ImGui.calcTextSize("failed").x * 0.5f, plotY + 2f * scale, failedCol, "failed");
             }
         }
-        if (settings.onejumpOffsetLive && !controller.isChecked()) {
+        if (settings.onejumpOffsetLive && !controller.isChecked() && you != null && !you.complete) {
             dl.addText(x0 + 6f * scale, y0 + 1f, ThemeManager.textDimColor(), "press Check TAS for the live offset");
         }
-        if (you != null && you.hasForecast() && settings.onejumpOffsetLive) {
+        if (you != null && settings.onejumpOffsetLive && (you.hasForecast() || (you.complete && you.hasMargin()))) {
             String label = offsetLabel(you);
             if (label != null) {
                 boolean failed = you.complete && you.hasMargin() ? !you.landed
