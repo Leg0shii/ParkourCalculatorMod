@@ -151,7 +151,6 @@ public final class OnejumpSetupWindow implements RenderInterface {
         overviewRow("TAS", name == null ? "unsaved, attempts are not kept" : storeError == null ? name
                 : name + "  (attempts file unreadable, nothing is written: " + storeError + ")", labelW,
                 name == null || storeError != null);
-        String err = controller.lastError();
         TurnReference.Landing tasLanding = controller.tasLanding();
         int lb = controller.landRow();
         overviewRow("Landing", tasLanding != null ? tasLanding.label(0) + (lb >= 0 ? "  (LB)" : "  (last constraint, no LB marked)")
@@ -161,8 +160,8 @@ public final class OnejumpSetupWindow implements RenderInterface {
         TurnReference.Landing landing = cur == null ? null : cur.landing;
         String reference = cur != null
                 ? "ticks " + (cur.tasTick(0) + 1) + " to " + (cur.tasTick(cur.n - 1) + 1)
-                        + (landing == null ? ", no landing constraint after it" : "")
-                : err != null ? err : "no Keys or Face ticks flagged";
+                        + (landing == null ? ", no landing constraint" : "")
+                : "none";
         overviewRow("Reference", reference, labelW, cur == null || landing == null);
         checkRows(labelW);
         overviewRow("Attempts", Integer.toString(st.attempts), labelW, false);

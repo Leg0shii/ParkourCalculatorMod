@@ -98,7 +98,7 @@ public final class TurnProfileWindow implements RenderInterface {
         TurnProfileController.Current cur = controller.current();
         float graphH = Math.max(GRAPH_MIN_H * scale, ImGui.getContentRegionAvail().y);
         if (cur == null || cur.n == 0) {
-            placeholder(graphH, controller.lastError());
+            placeholder(graphH, null);
             return;
         }
         boolean anyFace = false;
