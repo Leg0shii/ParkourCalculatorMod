@@ -414,11 +414,6 @@ public final class TurnProfileController {
         String disagree = built && cur.snapshot != null ? modelDisagreement(cur) : "the solver could not replay the rows";
         items.add(new SetupCheck.Item("The solver's replay matches the simulation", disagree == null,
                 disagree == null ? "same position on every flagged tick" : disagree));
-        TickState startState = flagged ? tickState.apply(first) : null;
-        boolean grounded = startState != null && startState.onGround;
-        items.add(new SetupCheck.Item("The first flagged tick is on the ground", grounded,
-                grounded ? "tick " + (first + 1) : startState == null ? "no simulated state at the first flagged tick"
-                        : "the first flagged tick is in the air, flag from a tick on the ground"));
         SetupCheck result = new SetupCheck(items);
         lastCheck = result;
         lastCheckSignature = currentSignature;

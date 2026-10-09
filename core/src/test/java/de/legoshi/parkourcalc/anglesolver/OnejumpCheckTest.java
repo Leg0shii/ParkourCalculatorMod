@@ -74,7 +74,7 @@ public class OnejumpCheckTest {
         assertFalse(rig.controller.isChecked());
         TurnProfileController.SetupCheck check = rig.controller.check();
         assertTrue(rig.failing(), check.ok);
-        assertEquals(8, check.items.size());
+        assertEquals(7, check.items.size());
         assertTrue(rig.controller.isChecked());
         rig.controller.tick();
         assertTrue(rig.controller.isChecked());

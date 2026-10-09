@@ -274,8 +274,7 @@ public final class OnejumpSetupWindow implements RenderInterface {
              "Press Check TAS in the Overview. It first applies the state of every flagged tick from the simulation, "
              + "like Apply state in the Angle Solver. Then it checks that the ticks are flagged, a landing constraint "
              + "follows them, the rows reach it, the simulation meets every constraint, the solver replays the rows and "
-             + "meets the landing constraint with the same positions as the simulation, and the first flagged tick is "
-             + "on the ground. The live offset, the landing chance and the solved offsets run only while the check "
+             + "meets the landing constraint with the same positions as the simulation. The live offset, the landing chance and the solved offsets run only while the check "
              + "holds. Any edit of the TAS needs a new check."},
             {"6  Practice",
              "Right click resets. The first key after the reset starts the attempt, the rows play tick by tick, the "
