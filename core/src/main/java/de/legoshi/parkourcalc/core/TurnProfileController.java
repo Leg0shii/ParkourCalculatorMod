@@ -130,6 +130,7 @@ public final class TurnProfileController {
     }
 
     public static final double MODEL_AGREEMENT = 1e-6;
+    public static final int BACKFILL_LIMIT = 500;
 
     private final AngleSolverEngine engine;
     private final AngleSolverState state;
@@ -419,7 +420,50 @@ public final class TurnProfileController {
         lastCheck = result;
         lastCheckSignature = currentSignature;
         checkedSignature = result.ok ? currentSignature : null;
+        if (result.ok) worker.submit(this::backfillForecasts);
         return result;
+    }
+
+    public int backfillForecasts() {
+        Current cur = current.get();
+        if (cur == null || cur.snapshot == null || cur.landing == null) return 0;
+        LandingForecast forecast = LandingForecast.of(engine.forwardModel(), cur);
+        if (forecast == null) return 0;
+        int done = 0;
+        List<TurnAttempt> all = new ArrayList<TurnAttempt>(document.attempts());
+        for (int i = all.size() - 1; i >= 0 && done < BACKFILL_LIMIT; i--) {
+            TurnAttempt a = all.get(i);
+            if (a.isMacro() || a.hasForecast() || !a.hasState() || !a.alignedTo(cur) || a.firstTick != cur.startTick) continue;
+            TurnAttempt.Forecast f = a.forecast;
+            int n = Math.min(cur.n, Math.min(a.recorded, f.x.length));
+            double[] held = nans(cur.n);
+            double[] best = nans(cur.n);
+            double[] offset = nans(cur.n);
+            int failed = -1;
+            for (int t = 0; t < n; t++) {
+                if (!forecast.covers(t) || Double.isNaN(f.x[t]) || Double.isNaN(f.vx[t]) || t >= a.yaws.length
+                        || Double.isNaN(a.yaws[t])) continue;
+                LandingForecast.Result r = forecast.at(t, f.x[t], f.z[t], f.vx[t], f.vz[t], (float) a.yaws[t], f.ground[t]);
+                if (r == null || r.offStructure) continue;
+                held[t] = r.held;
+                best[t] = r.best;
+                offset[t] = r.bestOffsetDeg;
+                if (!r.landable() && failed < 0) failed = cur.startTick + t;
+            }
+            a.forecast = new TurnAttempt.Forecast(held, best, offset, failed, f.x, f.z, f.vx, f.vz, f.ground);
+            done++;
+        }
+        if (done > 0) {
+            deepDirty = true;
+            document.markDirty();
+        }
+        return done;
+    }
+
+    private static double[] nans(int n) {
+        double[] v = new double[n];
+        java.util.Arrays.fill(v, Double.NaN);
+        return v;
     }
 
     private String simulationViolation(int from, int to) {

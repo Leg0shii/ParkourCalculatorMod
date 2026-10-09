@@ -101,15 +101,7 @@ public final class TurnProfileWindow implements RenderInterface {
             placeholder(graphH, controller.lastError());
             return;
         }
-        ImVec2 origin = ImGui.getCursorScreenPos();
         graph(cur, scale, graphH, tracker.shownAttempt());
-        int faceTicks = 0;
-        for (int t = 0; t < cur.n; t++) if (cur.checkYaw[t]) faceTicks++;
-        if (faceTicks < 2) {
-            String hint = "mark Face on the turn ticks in the input table to show only the turn";
-            ImGui.getWindowDrawList().addText(origin.x + 6f * scale, origin.y + graphH - ImGui.getTextLineHeight() - 4f * scale,
-                    ThemeManager.textDimColor(), hint);
-        }
     }
 
     private static final String[] HOW_TO = {
@@ -442,12 +434,12 @@ public final class TurnProfileWindow implements RenderInterface {
                 tooltipRow("Window", TurnAttempt.turnText(st.landedLo[t], pixelDeg) + " to "
                         + TurnAttempt.turnText(st.landedHi[t], pixelDeg), ThemeManager.textColor(), labelW);
             }
-            if (you != null && you.hasForecast() && settings.onejumpOffsetHover) {
-                double best = you.bestMarginAt(abs);
-                if (!Double.isNaN(best)) {
-                    tooltipRow("Offset", TurnAttempt.signedMargin(best),
-                            best <= 0.0 ? ThemeManager.okColor() : ThemeManager.dangerColor(), labelW);
-                }
+        }
+        if (you != null && you.hasForecast() && settings.onejumpOffsetHover) {
+            double best = you.bestMarginAt(abs);
+            if (!Double.isNaN(best)) {
+                tooltipRow("Offset", TurnAttempt.signedMargin(best),
+                        best <= 0.0 ? ThemeManager.okColor() : ThemeManager.dangerColor(), labelW);
             }
         }
         if (you != null && you.failTick == abs) {
