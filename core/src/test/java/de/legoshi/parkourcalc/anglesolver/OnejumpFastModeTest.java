@@ -294,6 +294,24 @@ public class OnejumpFastModeTest {
     }
 
     @Test
+    public void aConstraintPressedAfterOpeningBuildsTheReferenceOnTheNextTick() {
+        Rig rig = new Rig(0.01, Double.NaN);
+        OnejumpRigs.clearLandings(rig.state, 0, rig.inputs.getRows().size());
+        rig.controller.refresh();
+        assertNull(rig.controller.current());
+        rig.controller.tick();
+        assertNull(rig.controller.current());
+        rig.state.setFootprint(rig.landTick, rig.landX - 0.01, rig.landX + 1.0, rig.landZ - 1.0, rig.landZ + 1.0, BLOCK_TOP);
+        rig.controller.tick();
+        TurnProfileController.Current cur = rig.cur();
+        assertTrue(cur.isFast());
+        assertEquals(BLOCK_TOP, cur.landing.y, 0.0);
+        rig.state.clearFootprint(rig.landTick);
+        rig.controller.tick();
+        assertNull(rig.controller.current());
+    }
+
+    @Test
     public void theCrossingNeedsADescentOntoTheLandingHeight() {
         assertTrue(AttemptTracker.crossed(70.5, 70.0, 70.0));
         assertTrue(AttemptTracker.crossed(70.5, 69.2, 70.0));

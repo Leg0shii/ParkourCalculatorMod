@@ -169,6 +169,7 @@ public final class TurnProfileController {
     private boolean adopted;
     private boolean carryAllowed;
     private boolean wasEnabled;
+    private long constraintSignature = Long.MIN_VALUE;
     private String loadedName;
     private String lastError;
     private volatile String storeError;
@@ -220,7 +221,7 @@ public final class TurnProfileController {
 
     public void tick() {
         boolean on = enabled.getAsBoolean();
-        if (on && !wasEnabled) refresh();
+        if (on && (!wasEnabled || constraintSignature() != constraintSignature)) refresh();
         wasEnabled = on;
         if (!on && !document.hasPending() && !document.isReferenceDirty() && !deepDirty) return;
         sync();
@@ -301,8 +302,29 @@ public final class TurnProfileController {
         refresh();
     }
 
+    private long constraintSignature() {
+        long h = 17;
+        List<Integer> ticks = new ArrayList<Integer>(state.populatedTicks());
+        java.util.Collections.sort(ticks);
+        for (int tick : ticks) {
+            TickConstraints tc = state.tickConstraintsOrNull(tick);
+            if (tc == null) continue;
+            h = h * 31 + tick;
+            h = h * 31 + Double.doubleToLongBits(tc.getLandingY());
+            for (Constraint c : tc.getConstraints()) {
+                h = h * 31 + c.getField().ordinal();
+                h = h * 31 + c.getOp().ordinal();
+                h = h * 31 + (c.isEnabled() ? 1 : 0);
+                h = h * 31 + Double.doubleToLongBits(c.isRange() ? c.getLo() : c.getValue());
+                h = h * 31 + Double.doubleToLongBits(c.isRange() ? c.getHi() : 0.0);
+            }
+        }
+        return h;
+    }
+
     public void refresh() {
         if (!enabled.getAsBoolean()) return;
+        constraintSignature = constraintSignature();
         ensureLoaded();
         cancelToken.set(true);
         cancelToken = new AtomicBoolean(false);
