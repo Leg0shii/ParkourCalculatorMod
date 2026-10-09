@@ -350,13 +350,29 @@ public final class MainWindowOverlay implements RenderInterface {
             settings.viewVelocityMap = !settings.viewVelocityMap;
             onSettingsChanged.run();
         }
-        boolean onejumpOpen = settings.viewOnejumpSetup || settings.viewTurnProfile || settings.viewOnejumpKeys;
-        if (ImGui.menuItem("Onejump", null, onejumpOpen)) {
-            boolean open = !onejumpOpen;
-            settings.viewOnejumpSetup = open;
-            settings.viewTurnProfile = open;
-            settings.viewOnejumpKeys = open;
-            onSettingsChanged.run();
+        if (ImGui.beginMenu("Onejump")) {
+            boolean allOpen = settings.viewOnejumpSetup && settings.viewTurnProfile && settings.viewOnejumpKeys;
+            if (ImGui.menuItem("All", null, allOpen)) {
+                boolean open = !allOpen;
+                settings.viewOnejumpSetup = open;
+                settings.viewTurnProfile = open;
+                settings.viewOnejumpKeys = open;
+                onSettingsChanged.run();
+            }
+            ImGui.separator();
+            if (ImGui.menuItem("Overview", null, settings.viewOnejumpSetup)) {
+                settings.viewOnejumpSetup = !settings.viewOnejumpSetup;
+                onSettingsChanged.run();
+            }
+            if (ImGui.menuItem("Turn Profile", null, settings.viewTurnProfile)) {
+                settings.viewTurnProfile = !settings.viewTurnProfile;
+                onSettingsChanged.run();
+            }
+            if (ImGui.menuItem("Keys", null, settings.viewOnejumpKeys)) {
+                settings.viewOnejumpKeys = !settings.viewOnejumpKeys;
+                onSettingsChanged.run();
+            }
+            ImGui.endMenu();
         }
         if (ImGui.menuItem("Recorder", null, settings.viewRecorder)) {
             settings.viewRecorder = !settings.viewRecorder;
