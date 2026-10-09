@@ -672,6 +672,11 @@ public final class TurnProfileController {
         return built;
     }
 
+    public TurnReference.Landing tasLanding() {
+        List<TurnReference.Landing> options = solverLandings(0, inputs.getRows().size(), 0);
+        return options.isEmpty() ? null : options.get(options.size() - 1);
+    }
+
     private List<TurnReference.Landing> solverLandings(int from, int to, int base) {
         List<TurnReference.Landing> out = new ArrayList<TurnReference.Landing>();
         List<Integer> ticks = new ArrayList<Integer>(state.populatedTicks());

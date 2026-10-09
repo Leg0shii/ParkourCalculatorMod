@@ -134,7 +134,7 @@ public final class OnejumpSetupWindow implements RenderInterface {
         clearModal();
     }
 
-    private static final String[] OVERVIEW_LABELS = {"TAS", "Landing", "Live offset", "Attempts", "Landed", "Input failures",
+    private static final String[] OVERVIEW_LABELS = {"TAS", "Landing", "Reference", "Live offset", "Attempts", "Landed", "Input failures",
             "Landing chance", "Closest", "Missed by", "Failed at", "Turn onset", "Replay (inputs)", "Replay (turn)", "Top 10",
             "Latest"};
 
@@ -152,10 +152,15 @@ public final class OnejumpSetupWindow implements RenderInterface {
                 : name + "  (attempts file unreadable, nothing is written: " + storeError + ")", labelW,
                 name == null || storeError != null);
         String err = controller.lastError();
+        TurnReference.Landing tasLanding = controller.tasLanding();
+        overviewRow("Landing", tasLanding != null ? tasLanding.label(0) : "no landing constraint", labelW,
+                tasLanding == null);
         TurnReference.Landing landing = cur == null ? null : cur.landing;
-        overviewRow("Landing", landing != null ? landing.label(0) : cur == null
-                ? (err != null ? err : "mark Keys and Face ticks in the input table")
-                : "no X or Z constraint after the reference, attempts are not judged", labelW, landing == null);
+        String reference = cur != null
+                ? "ticks " + (cur.tasTick(0) + 1) + " to " + (cur.tasTick(cur.n - 1) + 1)
+                        + (landing == null ? ", no landing constraint after it" : "")
+                : err != null ? err : "no Keys or Face ticks flagged";
+        overviewRow("Reference", reference, labelW, cur == null || landing == null);
         checkRows(labelW);
         overviewRow("Attempts", Integer.toString(st.attempts), labelW, false);
         overviewRow("Input failures", Integer.toString(st.inputFailures), labelW, false);
