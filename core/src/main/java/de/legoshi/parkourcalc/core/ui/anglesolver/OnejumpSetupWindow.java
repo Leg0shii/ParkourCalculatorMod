@@ -34,7 +34,6 @@ public final class OnejumpSetupWindow implements RenderInterface {
     private static final String WINDOW_ID = "###onejumpSetup";
     private static final String TITLE = "Onejump Setup";
     private static final String POPUP_CLEAR = "###onejumpClear";
-    private static final String POPUP_CHECK = "###onejumpCheck";
     private static final float WIN_W = 760f;
     private static final float WIN_H = 680f;
     private static final float MIN_W = 520f;
@@ -50,7 +49,6 @@ public final class OnejumpSetupWindow implements RenderInterface {
     private final Runnable onSettingsChanged;
     private final ImBoolean open = new ImBoolean(false);
     private boolean openClearModal;
-    private boolean openCheckModal;
     private int attemptsPage;
     private TurnTiming.Onset onsetCache;
     private int onsetVersion = -1;
@@ -134,7 +132,6 @@ public final class OnejumpSetupWindow implements RenderInterface {
             Controls.endTabBar();
         }
         clearModal();
-        checkModal();
     }
 
     private static final String[] OVERVIEW_LABELS = {"TAS", "Landing", "Live offset", "Attempts", "Landed", "Input failures",
@@ -205,10 +202,7 @@ public final class OnejumpSetupWindow implements RenderInterface {
         Fonts.popBold();
         ImGui.sameLine();
         ImGui.setCursorPosX(startX + labelW);
-        if (Controls.primaryButton("Check TAS")) {
-            controller.check();
-            openCheckModal = true;
-        }
+        if (Controls.primaryButton("Check TAS")) controller.check();
         TooltipUtil.onHover("Checks that the TAS is complete and lands. The live offset, the landing chance and the solved offsets run only on a checked TAS, and any edit needs a new check.");
         ImGui.sameLine();
         ImGui.alignTextToFramePadding();
@@ -220,47 +214,32 @@ public final class OnejumpSetupWindow implements RenderInterface {
         } else if (check == null || !current) {
             ImGui.textDisabled(check == null ? "off" : "off, the TAS changed since the check");
         } else {
-            int failed = 0;
-            for (TurnProfileController.SetupCheck.Item item : check.items) if (!item.ok) failed++;
+            TurnProfileController.SetupCheck.Item firstFailed = null;
+            for (TurnProfileController.SetupCheck.Item item : check.items) {
+                if (!item.ok) {
+                    firstFailed = item;
+                    break;
+                }
+            }
             ThemeManager.pushTextColor(ThemeManager.warningColor());
-            ImGui.text("off, " + failed + (failed == 1 ? " check failed" : " checks failed"));
+            ImGui.text("off: " + (firstFailed == null ? "the check failed" : firstFailed.label.toLowerCase(Locale.ROOT)));
             ThemeManager.popTextColor();
         }
+        if (check != null && current && ImGui.isItemHovered()) checkTooltip(check);
     }
 
-    private void checkModal() {
-        if (openCheckModal) {
-            ImGui.openPopup(POPUP_CHECK);
-            openCheckModal = false;
+    private static void checkTooltip(TurnProfileController.SetupCheck check) {
+        ImGui.beginTooltip();
+        for (TurnProfileController.SetupCheck.Item item : check.items) {
+            ThemeManager.pushTextColor(item.ok ? ThemeManager.okColor() : ThemeManager.dangerColor());
+            ImGui.text(item.ok ? "ok" : "!!");
+            ThemeManager.popTextColor();
+            ImGui.sameLine();
+            ImGui.text(item.label);
+            ImGui.sameLine();
+            ImGui.textDisabled(item.detail);
         }
-        if (!Modal.begin("Check TAS", POPUP_CHECK)) return;
-        TurnProfileController.SetupCheck check = controller.lastCheck();
-        if (check == null) {
-            ImGui.textDisabled("no check yet");
-        } else {
-            for (TurnProfileController.SetupCheck.Item item : check.items) {
-                ThemeManager.pushTextColor(item.ok ? ThemeManager.okColor() : ThemeManager.dangerColor());
-                ImGui.text(item.ok ? "ok" : "!!");
-                ThemeManager.popTextColor();
-                ImGui.sameLine();
-                ImGui.text(item.label);
-                ImGui.sameLine();
-                ImGui.textDisabled(item.detail);
-            }
-            ThemeManager.sectionSpacing();
-            if (check.ok) {
-                ThemeManager.pushTextColor(ThemeManager.okColor());
-                ImGui.text("The live offset is on until the TAS changes.");
-                ThemeManager.popTextColor();
-            } else {
-                ThemeManager.pushTextColor(ThemeManager.warningColor());
-                ImGui.text("Fix the red lines and check again.");
-                ThemeManager.popTextColor();
-            }
-        }
-        Modal.footerSeparator();
-        if (Modal.footerButton("Close")) ImGui.closeCurrentPopup();
-        Modal.end();
+        ImGui.endTooltip();
     }
 
     private static final String[][] HELP = {
