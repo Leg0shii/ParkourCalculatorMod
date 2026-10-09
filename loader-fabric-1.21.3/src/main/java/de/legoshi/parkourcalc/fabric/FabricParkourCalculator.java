@@ -583,7 +583,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
     public static void onHudRender(GuiGraphics context) {
         if (!application.isReady()) return;
         String label = application.hudBadgeLabel();
-        if (label != null) hudRenderer.render(context, label, application.hudBadgeColorArgb(), application.hudBadgeAlpha());
+        if (label != null) hudRenderer.render(context, label, application.hudBadgeAlpha());
     }
 
     public static void onGuiRendered() {

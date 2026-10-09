@@ -123,7 +123,7 @@ public final class SettingsModal {
     private static final String TT_RATED_DOTS = "Draws the simulated tries of the landing chance as dots in the Turn Profile.";
     private static final String TT_TURN_TIMING = "Records where inside each tick your mouse started and stopped moving. Draws your attempt as the real trace in the Turn Profile, a timing strip under each tick in Onejump Keys and the Turn onset stat in the Onejump Setup overview.";
     private static final String TT_OFFSET_LIVE = "Shows the best landing offset still reachable from the current tick above the Turn Profile, updated every tick of the attempt.";
-    private static final String TT_HUD_FLASH = "Shows the result of every attempt in the top-right HUD badge for two seconds: the offset, or the wrong key or turn that failed it.";
+    private static final String TT_HUD_FLASH = "Shows the result of every attempt as a HUD message: the offset, or the wrong key or turn that failed it.";
     private static final String TT_OFFSET_HOVER = "Shows the offset still reachable from a tick in the Turn Profile tooltip. The forecast is only computed while this or the offset label is on.";
     private static final String TT_SPREAD = "How many of your latest attempts feed the per-tick facing spread that the landing chance is sampled from.";
     private static final String TT_SAMPLES = "How many tries are simulated for the landing chance after each attempt.";

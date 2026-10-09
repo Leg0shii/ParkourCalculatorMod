@@ -8,11 +8,11 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 /** Top-right MACRO badge shown while playback drives the real player. */
 public final class FabricHudOverlayRenderer {
 
-    public void render(GuiGraphicsExtractor context, String label, int color, float teleportAlpha) {
+    public void render(GuiGraphicsExtractor context, String label, float teleportAlpha) {
         Minecraft client = Minecraft.getInstance();
         Font tr = client.font;
         int x = context.guiWidth() - tr.width(label) - 4;
-        context.text(tr, label, x, 4, color, true);
+        context.text(tr, label, x, 4, MacroBadgeStyle.COLOR_ARGB, true);
 
         int noticeColor = MacroBadgeStyle.teleportColorArgb(teleportAlpha);
         if ((noticeColor >>> 24) < 4) return;

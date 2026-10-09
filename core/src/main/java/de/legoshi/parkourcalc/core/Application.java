@@ -100,6 +100,7 @@ public final class Application {
     private TurnProfileController turnProfile;
     private AttemptTracker attemptTracker;
     private PracticeMacro practiceMacro;
+    private long flashedNs;
     private PlaybackBridge playbackBridge;
     private final de.legoshi.parkourcalc.core.record.HumanRecorder recorder;
     private ConstraintKeyController constraintKeyController;
@@ -935,54 +936,31 @@ public final class Application {
         playback.tick();
         if (practiceMacro != null && !playback.isRunning()) practiceMacro.tick();
         if (turnProfile != null) turnProfile.tick();
+        flashAttemptResult();
     }
 
     public String hudBadgeLabel() {
         if (playback.isRunning()) return de.legoshi.parkourcalc.core.ui.theme.MacroBadgeStyle.LABEL;
-        String macro = practiceMacro == null ? null : practiceMacro.label();
-        return macro != null ? macro : onejumpBadge();
+        return practiceMacro == null ? null : practiceMacro.label();
     }
-
-    public int hudBadgeColorArgb() {
-        if (playback.isRunning() || (practiceMacro != null && practiceMacro.label() != null)) {
-            return de.legoshi.parkourcalc.core.ui.theme.MacroBadgeStyle.COLOR_ARGB;
-        }
-        TurnAttempt flash = flashAttempt();
-        if (flash == null) return de.legoshi.parkourcalc.core.ui.theme.MacroBadgeStyle.ONEJUMP_COLOR_ARGB;
-        return flash.landed ? de.legoshi.parkourcalc.core.ui.theme.MacroBadgeStyle.ONEJUMP_LANDED_COLOR_ARGB
-                : de.legoshi.parkourcalc.core.ui.theme.MacroBadgeStyle.ONEJUMP_FAILED_COLOR_ARGB;
-    }
-
-    private static final long FLASH_NANOS = 2_000_000_000L;
 
     private boolean onejumpOpen() {
         return settings.viewOnejumpSetup || settings.viewTurnProfile || settings.viewOnejumpKeys;
     }
 
-    private TurnAttempt flashAttempt() {
-        if (attemptTracker == null || !settings.onejumpHudFlash || !onejumpOpen()) return null;
-        TurnAttempt last = attemptTracker.last();
-        if (last == null || System.nanoTime() - attemptTracker.lastPublishedNs() > FLASH_NANOS) return null;
-        return last;
-    }
-
-    private String onejumpBadge() {
-        if (turnProfile == null || !onejumpOpen()) return null;
-        TurnAttempt flash = flashAttempt();
-        if (flash != null) return flashText(flash);
-        String name = turnProfile.name();
-        String head = "Onejump " + (name == null ? "(unsaved)" : name);
-        TurnProfileController.Current cur = turnProfile.current();
-        if (cur == null || cur.landing == null) return head + ": pick the landing block (B)";
-        if (cur.isFast() && !cur.landing.hasY()) return head + ": press B on the landing block";
-        int n = turnProfile.stats().attempts;
-        return head + ": " + n + (n == 1 ? " attempt" : " attempts");
+    private void flashAttemptResult() {
+        if (attemptTracker == null || !settings.onejumpHudFlash || !onejumpOpen()) return;
+        long at = attemptTracker.lastPublishedNs();
+        if (at == 0L || at == flashedNs) return;
+        flashedNs = at;
+        TurnAttempt a = attemptTracker.last();
+        if (a == null) return;
+        pushHudMessage(flashText(a), a.landed ? HudMessageStyle.COLOR_OK : HudMessageStyle.COLOR_WARN);
     }
 
     private String flashText(TurnAttempt a) {
         if (a.inputFailure) return "wrong key tick " + (a.tasTick(a.failTick) + 1);
         if (a.turnFailure) return "turn tick " + (a.tasTick(a.failTick) + 1) + ": " + TurnAttempt.turnText(a.failTurn, pixelDeg());
-        if (!a.complete) return a.verdict;
         return a.verdict;
     }
 
