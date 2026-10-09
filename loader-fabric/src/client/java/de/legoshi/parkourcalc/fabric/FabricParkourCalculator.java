@@ -657,7 +657,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
     public static void onHudRender(GuiGraphicsExtractor context) {
         if (!application.isReady()) return;
         String label = application.hudBadgeLabel();
-        if (label != null) hudRenderer.render(context, label, application.hudBadgeAlpha());
+        if (label != null) hudRenderer.render(context, label, application.hudBadgeColorArgb(), application.hudBadgeAlpha());
     }
 
     /** Called by GameRendererMixin after guiRenderer.render(); ImGui draws above the rasterized HUD. */

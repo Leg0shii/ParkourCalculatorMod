@@ -21,21 +21,31 @@ import imgui.ImGui;
 import imgui.ImVec2;
 import imgui.ImGuiIO;
 import imgui.flag.ImGuiCond;
+import imgui.flag.ImGuiKey;
 import imgui.flag.ImGuiSelectableFlags;
 import imgui.flag.ImGuiTableColumnFlags;
 import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImBoolean;
 import imgui.type.ImInt;
+import imgui.type.ImString;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public final class OnejumpSetupWindow implements RenderInterface {
 
     private static final String WINDOW_ID = "###onejumpSetup";
     private static final String TITLE = "Onejump Setup";
     private static final String POPUP_CLEAR = "###onejumpClear";
+    private static final String POPUP_NEW = "###onejumpNew";
+    private static final String[] STEP_LABELS = {"1  Landing block", "2  Attempts", "3  Strat"};
+    private static final String HOW_FAST = "jump, every try counts, no reset click needed";
+    private static final String HOW_DEPTH = "right click to reset, then jump";
+    private static final String SET_TURN = "set the turn: type the facing on the turn ticks in the table and mark them Face";
     private static final float WIN_W = 760f;
     private static final float WIN_H = 680f;
     private static final float MIN_W = 520f;
@@ -49,8 +59,15 @@ public final class OnejumpSetupWindow implements RenderInterface {
     private final AttemptTracker tracker;
     private final Settings settings;
     private final Runnable onSettingsChanged;
+    private final Function<String, String> newOnejump;
+    private final Consumer<TurnAttempt> useKeys;
+    private final BooleanSupplier tasDirty;
     private final ImBoolean open = new ImBoolean(false);
     private final ImInt axisBuf = new ImInt(0);
+    private final ImString newName = new ImString(64);
+    private String newError;
+    private boolean openNewModal;
+    private boolean newModalJustOpened;
     private boolean openClearModal;
     private int attemptsPage;
     private TurnTiming.Onset onsetCache;
@@ -59,11 +76,15 @@ public final class OnejumpSetupWindow implements RenderInterface {
     private int onsetLimit = -1;
 
     public OnejumpSetupWindow(TurnProfileController controller, AttemptTracker tracker, Settings settings,
-                              Runnable onSettingsChanged) {
+                              Runnable onSettingsChanged, Function<String, String> newOnejump,
+                              Consumer<TurnAttempt> useKeys, BooleanSupplier tasDirty) {
         this.controller = controller;
         this.tracker = tracker;
         this.settings = settings;
         this.onSettingsChanged = onSettingsChanged;
+        this.newOnejump = newOnejump;
+        this.useKeys = useKeys;
+        this.tasDirty = tasDirty;
     }
 
     @Override
@@ -130,31 +151,23 @@ public final class OnejumpSetupWindow implements RenderInterface {
             Controls.endTabBar();
         }
         clearModal();
+        newModal();
     }
 
-    private static final String[] OVERVIEW_LABELS = {"TAS", "Setup", "Landing", "Offset", "Attempts", "Landed",
-            "Input failures", "Landing chance", "Closest", "Missed by", "Failed at", "Turn onset", "Replay (inputs)",
-            "Replay (turn)", "Top 10", "Latest"};
-    private static final String SETUP_HINT = "set an X or Z constraint on the landing tick, or mark Keys and Face ticks";
+    private static final String[] OVERVIEW_LABELS = {"Landed", "Input failures", "Landing chance", "Closest",
+            "Missed by", "Failed at", "Turn onset", "Replay (inputs)", "Replay (turn)", "Top 10", "Latest"};
 
     private void overview(TurnProfileDocument doc, TurnProfileController.Current cur, float scale) {
         TurnProfileDocument.Stats st = doc.stats();
-        String name = controller.name();
         float labelW = 0f;
         Fonts.pushBold();
         for (String l : OVERVIEW_LABELS) labelW = Math.max(labelW, ImGui.calcTextSize(l).x);
+        for (String l : STEP_LABELS) labelW = Math.max(labelW, ImGui.calcTextSize(l).x);
         Fonts.popBold();
         labelW += ThemeManager.SM * scale;
-        String storeError = controller.storeError();
-        overviewRow("TAS", name == null ? "unsaved, attempts are not kept" : storeError == null ? name
-                : name + "  (attempts file unreadable, nothing is written: " + storeError + ")", labelW,
-                name == null || storeError != null);
         boolean fast = cur != null && cur.isFast();
-        setupRow(cur, labelW);
-        TurnReference.Landing landing = cur == null ? null : cur.landing;
-        overviewRow("Landing", landing != null ? landing.label(cur.tasFirstTick) : "-", labelW, landing == null);
-        offsetRow(landing, labelW);
-        overviewRow("Attempts", Integer.toString(st.attempts), labelW, false);
+        strip(doc, cur, st, labelW);
+        ThemeManager.sectionSpacing();
         if (!fast) overviewRow("Input failures", Integer.toString(st.inputFailures), labelW, false);
         if (!fast) {
             String failed = LandingForecast.failedSummary(st.failedAt, st.failedTotal, cur == null ? 0 : cur.tasTick(0));
@@ -192,63 +205,154 @@ public final class OnejumpSetupWindow implements RenderInterface {
         attemptsTable("##attemptsLatest", latest, listHeight(latest, scale), false);
     }
 
-    private void setupRow(TurnProfileController.Current cur, float labelW) {
-        boolean ok = false;
-        String text;
-        String err = controller.lastError();
-        if (cur == null) {
-            text = err != null ? err : SETUP_HINT;
-        } else if (cur.isFast()) {
-            if (!cur.landing.hasY()) text = "fast: press B on the landing block, a typed constraint has no height";
-            else {
-                ok = true;
-                text = "fast, ready";
-            }
+    private void strip(TurnProfileDocument doc, TurnProfileController.Current cur, TurnProfileDocument.Stats st,
+                       float labelW) {
+        if (Controls.secondaryButton("New onejump")) {
+            openNewModal = true;
+            newName.set("");
+            newError = null;
+        }
+        TooltipUtil.onHover("Starts an empty TAS under a new name. Attempts are kept from the first jump.");
+        ImGui.sameLine();
+        ImGui.alignTextToFramePadding();
+        String name = controller.name();
+        String storeError = controller.storeError();
+        if (name == null) ImGui.textDisabled("unsaved TAS, attempts are not kept until you save it");
+        else if (storeError != null) stepText(name + "  (attempts file unreadable, nothing is written: " + storeError + ")", 2);
+        else ImGui.text(name);
+        ThemeManager.sectionSpacing();
+
+        boolean fast = cur != null && cur.isFast();
+        TurnReference.Landing landing = cur == null ? null : cur.landing;
+        boolean landingReady = landing != null && (!fast || landing.hasY());
+        stepLabel(STEP_LABELS[0], labelW);
+        if (landing == null) {
+            String err = controller.lastError();
+            stepText(err != null ? err : "look at the landing block and press B", 2);
+        } else if (!landingReady) {
+            stepText("press B on the landing block, a typed constraint has no height", 2);
         } else {
-            String where = "in-depth, ticks " + (cur.tasTick(0) + 1) + " to " + (cur.tasTick(cur.n - 1) + 1);
-            if (!cur.hasLanding()) text = where + ": no X or Z constraint after the reference";
-            else if (cur.profile == null) text = where + ": no TAS path for the reference ticks";
-            else if (!cur.profile.lands) text = where + ": the TAS path misses its own constraints";
-            else if (cur.tasMiss > 0.0) text = where + ": the simulation misses the landing box by "
-                    + ConstraintText.fixedStat(cur.tasMiss);
-            else {
-                ok = true;
-                text = where + ", ready";
+            stepText(landing.label(cur.tasFirstTick), 1);
+            if (landing.hasX() && landing.hasZ()) {
+                ImGui.sameLine();
+                TurnReference ref = doc.reference();
+                axisBuf.set(ref.axis());
+                if (Controls.combo("##onejumpAxis", axisBuf, TurnReference.AXIS_LABELS, ImGui.calcTextSize("Both").x * 3f)) {
+                    controller.setAxis(axisBuf.get());
+                }
+                TooltipUtil.onHover("The axis whose offset the attempts report. Landing still needs both.");
             }
         }
-        float startX = ImGui.getCursorPosX();
+
+        stepLabel(STEP_LABELS[1], labelW);
+        String how = fast || cur == null ? HOW_FAST : HOW_DEPTH;
+        List<TurnAttempt> all = doc.attempts();
+        if (!landingReady) stepText(how, 3);
+        else if (st.attempts == 0) stepText(how, 0);
+        else {
+            TurnAttempt latest = all.get(all.size() - 1);
+            stepText(st.attempts + " attempts, last " + TurnAttempt.signedMargin(latest.margin) + ", best "
+                    + TurnAttempt.signedMargin(st.closest), 1);
+        }
+
+        stepLabel(STEP_LABELS[2], labelW);
+        if (cur != null && !fast) {
+            int keys = 0;
+            int turn = 0;
+            for (int t = 0; t < cur.n; t++) {
+                if (cur.checkKeys[t]) keys++;
+                if (cur.checkYaw[t]) turn++;
+            }
+            String base = "keys on " + keys + " ticks, turn on " + turn + " ticks, ticks " + (cur.tasTick(0) + 1)
+                    + " to " + (cur.tasTick(cur.n - 1) + 1);
+            if (turn == 0) stepText(base + "; " + SET_TURN, 2);
+            else if (!cur.hasLanding()) stepText(base + "; no X or Z constraint after the reference", 2);
+            else if (cur.profile == null) stepText(base + "; no TAS path for the reference ticks", 2);
+            else if (!cur.profile.lands) stepText(base + "; the TAS path misses its own constraints", 2);
+            else if (cur.tasMiss > 0.0) stepText(base + "; the simulation misses the landing box by "
+                    + ConstraintText.fixedStat(cur.tasMiss), 2);
+            else stepText(base, 1);
+        } else {
+            TurnAttempt cand = keysCandidate(all);
+            if (cand == null) Controls.disabledButton("Use my keys");
+            else if (Controls.secondaryButton("Use my keys")) useKeys.accept(cand);
+            TooltipUtil.onHover("Takes the keys and the start position of that attempt as the input rows, so every later attempt is checked against them.");
+            ImGui.sameLine();
+            ImGui.alignTextToFramePadding();
+            if (!landingReady) ImGui.textDisabled("optional, after the landing block");
+            else if (cand == null) ImGui.textDisabled("optional: jump once, then take the keys of that attempt");
+            else ImGui.text("attempt " + cand.ordinal + ", then " + SET_TURN);
+        }
+    }
+
+    private TurnAttempt keysCandidate(List<TurnAttempt> all) {
+        TurnAttempt selected = controller.selectedAttempt();
+        if (selected != null && selected.hasKeysToUse()) return selected;
+        for (int i = all.size() - 1; i >= 0; i--) if (all.get(i).hasKeysToUse() && !all.get(i).isMacro()) return all.get(i);
+        return null;
+    }
+
+    private static void stepLabel(String label, float labelW) {
+        ImGui.alignTextToFramePadding();
         Fonts.pushBold();
-        ImGui.text("Setup");
+        ImGui.text(label);
         Fonts.popBold();
         ImGui.sameLine();
-        ImGui.setCursorPosX(startX + labelW);
-        ThemeManager.pushTextColor(ok ? ThemeManager.okColor() : ThemeManager.warningColor());
+        ImGui.setCursorPosX(ImGui.getCursorStartPos().x + labelW);
+    }
+
+    private static void stepText(String text, int tone) {
+        ImGui.alignTextToFramePadding();
+        if (tone == 3) {
+            ImGui.textDisabled(text);
+            return;
+        }
+        if (tone == 0) {
+            ImGui.text(text);
+            return;
+        }
+        ThemeManager.pushTextColor(tone == 1 ? ThemeManager.okColor() : ThemeManager.warningColor());
         ImGui.text(text);
         ThemeManager.popTextColor();
     }
 
-    private void offsetRow(TurnReference.Landing landing, float labelW) {
-        if (landing == null) {
-            overviewRow("Offset", "-", labelW, true);
-            return;
+    private void newModal() {
+        if (openNewModal) {
+            ImGui.openPopup(POPUP_NEW);
+            openNewModal = false;
+            newModalJustOpened = true;
         }
-        if (!landing.hasX() || !landing.hasZ()) {
-            overviewRow("Offset", landing.hasX() ? "X" : "Z", labelW, false);
-            return;
+        if (!Modal.begin("New onejump", POPUP_NEW)) return;
+        if (newModalJustOpened) ImGui.setKeyboardFocusHere();
+        Controls.inputTextHint("Name", "e.g. j703", newName, 320);
+        boolean enter = !newModalJustOpened && ImGui.isItemFocused()
+                && ImGui.isKeyPressed(ImGui.getKeyIndex(ImGuiKey.Enter), false);
+        newModalJustOpened = false;
+        ImGui.textDisabled("An empty TAS is saved under this name. Then press B on the landing block.");
+        if (tasDirty.getAsBoolean()) {
+            ThemeManager.pushTextColor(ThemeManager.warningColor());
+            ImGui.text("The open TAS has unsaved changes, they are discarded.");
+            ThemeManager.popTextColor();
         }
-        float startX = ImGui.getCursorPosX();
-        ImGui.alignTextToFramePadding();
-        Fonts.pushBold();
-        ImGui.text("Offset");
-        Fonts.popBold();
+        if (newError != null) {
+            ThemeManager.pushTextColor(ThemeManager.dangerColor());
+            ImGui.text(newError);
+            ThemeManager.popTextColor();
+        }
+        Modal.footerSeparator();
+        boolean create = enter || Controls.primaryButton("Create");
+        if (create) {
+            String err = newOnejump.apply(newName.get());
+            if (err == null) {
+                tracker.reset();
+                ImGui.closeCurrentPopup();
+            } else {
+                newError = err;
+            }
+        }
         ImGui.sameLine();
-        ImGui.setCursorPosX(startX + labelW);
-        TurnReference ref = controller.document().reference();
-        axisBuf.set(ref.axis());
-        if (Controls.combo("##onejumpAxis", axisBuf, TurnReference.AXIS_LABELS, ImGui.calcTextSize("Both").x * 3f)) {
-            controller.setAxis(axisBuf.get());
-        }
-        TooltipUtil.onHover("The axis whose offset the attempts report. Landing still needs both.");
+        if (Modal.footerButton("Cancel")) ImGui.closeCurrentPopup();
+        Modal.end();
     }
 
     private TurnTiming.Onset onset(TurnProfileDocument doc, int tick, int limit) {

@@ -14,6 +14,10 @@ public final class AttemptTracker {
     public static final double HITBOX_HALF_WIDTH = 0.3;
     public static final double FAST_NEAR = 0.3 + HITBOX_HALF_WIDTH;
     public static final double LANDING_EPS = 1e-6;
+    public static final int AUTO_ARM_TICKS = 10;
+    public static final int MAX_FAST_TICKS = 400;
+    private static final int MOVE_KEYS = TurnReference.KEY_W | TurnReference.KEY_A | TurnReference.KEY_S
+            | TurnReference.KEY_D | TurnReference.KEY_JUMP;
 
     private final TurnProfileController profile;
     private final BooleanSupplier enabled;
@@ -33,6 +37,13 @@ public final class AttemptTracker {
     private double prevY = Double.NaN;
     private double prevZ = Double.NaN;
     private boolean havePrev;
+    private int stillTicks;
+    private boolean fastRec;
+    private final double[] fastYaws = new double[MAX_FAST_TICKS];
+    private final int[] fastKeys = new int[MAX_FAST_TICKS];
+    private int fastN;
+    private double[] fastStart;
+    private volatile long lastPublishedNs;
     private volatile boolean armed;
     private int wait;
     private int lastMask;
@@ -149,6 +160,11 @@ public final class AttemptTracker {
                 wait = 0;
                 pending = -1;
                 heldAtArm = 0;
+                fastRec = false;
+            }
+            if (fastRec) {
+                if (fastN >= MAX_FAST_TICKS) fastRec = false;
+                else fastYaws[fastN] = Angles.wrap(yaw);
             }
             fastTick(x, y, z, ground, hadPrev, beforeX, beforeY, beforeZ);
             return;
@@ -169,16 +185,67 @@ public final class AttemptTracker {
         boolean landed = ground && Math.abs(y - l.y) <= LANDING_EPS && l.margin(x, z) <= 0.0;
         double jx = landed ? x : beforeX;
         double jz = landed ? z : beforeZ;
-        if (!l.near(jx, jz, FAST_NEAR)) return;
+        if (!l.near(jx, jz, FAST_NEAR)) {
+            fastRec = false;
+            return;
+        }
         double mx = l.hasX() ? l.marginX(jx) : Double.NaN;
         double mz = l.hasZ() ? l.marginZ(jz) : Double.NaN;
         double m = TurnAttempt.selectMargin(mx, mz, c.axis);
-        TurnAttempt a = new TurnAttempt(profile.document().nextNumber(), c.startTick, new double[0], 0, true, landed,
-                false, TurnAttempt.landingVerdict(m, landed, TurnAttempt.worstAxis(mx, mz)), m, -1, -1, 0, 0, 0,
-                null, null, null, false, Double.NaN, null);
+        int n = fastRec ? fastN : 0;
+        TurnAttempt a = new TurnAttempt(profile.document().nextNumber(), c.startTick, Arrays.copyOf(fastYaws, n), n,
+                true, landed, false, TurnAttempt.landingVerdict(m, landed, TurnAttempt.worstAxis(mx, mz)), m, -1, -1,
+                0, 0, 0, null, null, null, false, Double.NaN, null);
         a.tasFirstTick = c.tasFirstTick;
         a.setAxisMargins(mx, mz);
+        if (fastRec) {
+            a.pressedKeys = Arrays.copyOf(fastKeys, n);
+            a.start = fastStart;
+        }
+        fastRec = false;
         publish(a);
+    }
+
+    private void autoArm(int mask) {
+        if (armed || fastRec) {
+            stillTicks = 0;
+            return;
+        }
+        boolean still = (mask & MOVE_KEYS) == 0 && tickGround;
+        stillTicks = still ? stillTicks + 1 : 0;
+        if (stillTicks < AUTO_ARM_TICKS) return;
+        stillTicks = 0;
+        armed = true;
+        wait = 0;
+        pending = -1;
+        heldAtArm = mask;
+    }
+
+    private void fastKeys(int mask) {
+        if (fastRec) {
+            if (fastN < MAX_FAST_TICKS) fastKeys[fastN++] = mask;
+            else fastRec = false;
+            return;
+        }
+        if (!armed) return;
+        heldAtArm &= mask;
+        int start = mask & ~heldAtArm & ~TurnReference.KEY_SPRINT;
+        if (!tickGround) start &= ~TurnReference.KEY_JUMP;
+        if (start == 0) return;
+        armed = false;
+        fastRec = true;
+        fastStart = new double[] {tickX, tickY, tickZ, tickVx, tickVz, Angles.wrap(tickYaw)};
+        fastYaws[0] = Angles.wrap(tickYaw);
+        fastKeys[0] = mask;
+        fastN = 1;
+    }
+
+    public long lastPublishedNs() {
+        return lastPublishedNs;
+    }
+
+    public boolean isRecording() {
+        return fastRec;
     }
 
     public static boolean crossed(double before, double y, double landingY) {
@@ -202,9 +269,14 @@ public final class AttemptTracker {
         if (!haveTick) return;
         lastMask = mask;
         if (yaws == null) {
-            if (!armed) return;
             TurnProfileController.Current c = profile.current();
-            if (c == null || c.n == 0) return;
+            if (c == null) return;
+            if (c.isFast()) {
+                autoArm(mask);
+                fastKeys(mask);
+                return;
+            }
+            if (!armed || c.n == 0) return;
             if (wait > 0) {
                 pending++;
                 wait--;
@@ -395,6 +467,7 @@ public final class AttemptTracker {
 
     private void publish(TurnAttempt a) {
         close();
+        lastPublishedNs = System.nanoTime();
         profile.document().add(a);
         profile.select(-1);
         if (last != null) last.dropTrace();
@@ -432,6 +505,8 @@ public final class AttemptTracker {
         wait = 0;
         pending = -1;
         heldAtArm = 0;
+        fastRec = false;
+        stillTicks = 0;
         if (yaws != null) finish(false);
     }
 

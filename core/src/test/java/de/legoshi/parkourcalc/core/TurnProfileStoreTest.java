@@ -225,6 +225,8 @@ public class TurnProfileStoreTest {
                 null, null, null, false, Double.NaN, null);
         a.setAxisMargins(0.02, -0.4);
         a.tasFirstTick = 40;
+        a.start = new double[] {186.0, 65.0, 870.5, 0.1, -0.2, 45.5};
+        a.pressedKeys = new int[0];
         doc.add(a);
         assertTrue(store.save("fast", ref, doc.attempts()));
         TurnProfileDocument back = new TurnProfileDocument();
@@ -242,6 +244,9 @@ public class TurnProfileStoreTest {
         assertEquals(0.02, b.margin, 0.0);
         assertEquals(0, b.recorded);
         assertFalse(b.landed);
+        assertEquals(45.5, b.start[5], 0.0);
+        assertEquals(6, b.start.length);
+        assertFalse(b.hasKeysToUse());
         back.rejudge(TurnReference.AXIS_Z);
         assertEquals(-0.4, b.margin, 0.0);
         assertTrue(b.verdict, b.verdict.startsWith("+0.4") && b.verdict.endsWith(" X"));

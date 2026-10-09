@@ -78,6 +78,7 @@ public final class TurnProfileStore {
         Double[] solvedOffset;
         int[] pressed;
         boolean[] keysFailed;
+        double[] start;
     }
 
     static final class ForecastData {
@@ -285,6 +286,7 @@ public final class TurnProfileStore {
         d.solvedOffset = boxAll(a.solvedOffset);
         d.pressed = a.pressedKeys;
         d.keysFailed = a.keysFailed;
+        d.start = a.start;
         if (a.forecast != null) {
             ForecastData f = new ForecastData();
             f.held = boxAll(a.forecast.held);
@@ -381,6 +383,7 @@ public final class TurnProfileStore {
         a.solvedOffset = unboxAll(d.solvedOffset, d.yaws.length);
         a.pressedKeys = d.pressed;
         a.keysFailed = d.keysFailed;
+        a.start = d.start;
         return a;
     }
 

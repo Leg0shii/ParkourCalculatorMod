@@ -10,13 +10,13 @@ import net.minecraft.client.renderer.GlStateManager;
 @SuppressWarnings("DuplicatedCode")
 public final class Forge8HudOverlayRenderer {
 
-    public void render(String label, float teleportAlpha) {
+    public void render(String label, int color, float teleportAlpha) {
         Minecraft mc = Minecraft.getMinecraft();
         FontRenderer fr = mc.fontRendererObj;
         if (fr == null) return;
         ScaledResolution sr = new ScaledResolution(mc);
         int x = sr.getScaledWidth() - fr.getStringWidth(label) - 4;
-        fr.drawStringWithShadow(label, x, 4, MacroBadgeStyle.COLOR_ARGB);
+        fr.drawStringWithShadow(label, x, 4, color);
         int noticeColor = MacroBadgeStyle.teleportColorArgb(teleportAlpha);
         if ((noticeColor >>> 24) >= 4) {
             String notice = MacroBadgeStyle.TELEPORT_LABEL;

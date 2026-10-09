@@ -7,11 +7,11 @@ import net.minecraft.client.gui.GuiGraphics;
 
 public final class FabricHudOverlayRenderer {
 
-    public void render(GuiGraphics context, String label, float teleportAlpha) {
+    public void render(GuiGraphics context, String label, int color, float teleportAlpha) {
         Minecraft client = Minecraft.getInstance();
         Font tr = client.font;
         int x = context.guiWidth() - tr.width(label) - 4;
-        context.drawString(tr, label, x, 4, MacroBadgeStyle.COLOR_ARGB, true);
+        context.drawString(tr, label, x, 4, color, true);
 
         int noticeColor = MacroBadgeStyle.teleportColorArgb(teleportAlpha);
         if ((noticeColor >>> 24) < 4) return;

@@ -375,7 +375,7 @@ public class Forge8ParkourCalculator {
     public void onHudRender(RenderGameOverlayEvent.Post event) {
         if (event.type != RenderGameOverlayEvent.ElementType.TEXT) return;
         String label = application.hudBadgeLabel();
-        if (label != null) hudRenderer.render(label, application.hudBadgeAlpha());
+        if (label != null) hudRenderer.render(label, application.hudBadgeColorArgb(), application.hudBadgeAlpha());
     }
 
     @SubscribeEvent

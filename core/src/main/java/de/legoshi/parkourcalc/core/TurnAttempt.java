@@ -72,6 +72,11 @@ public final class TurnAttempt {
     public volatile double[] solvedOffset;
     public int[] pressedKeys;
     public boolean[] keysFailed;
+    public double[] start;
+
+    public boolean hasKeysToUse() {
+        return start != null && start.length >= 6 && pressedKeys != null && recorded > 0 && pressedKeys.length >= recorded;
+    }
 
     public int tasTick(int tick) {
         return (tasFirstTick < 0 ? 0 : tasFirstTick) + tick - firstTick;

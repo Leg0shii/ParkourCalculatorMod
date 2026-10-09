@@ -91,10 +91,21 @@ public class OnejumpFastModeTest {
         }
 
         void tick(double x, double y, double z, boolean ground) {
+            tick(x, y, z, ground, TurnReference.KEY_W | TurnReference.KEY_SPRINT, 0f);
+        }
+
+        void tick(double x, double y, double z, boolean ground, int mask, float yaw) {
             long now = ns;
             ns += 50_000_000L;
-            tracker.tickStart(x, y, z, 0.0, 0.0, 0f, ground, now);
-            tracker.tickEnd(true, false, false, false, false, false, true);
+            tracker.tickStart(x, y, z, 0.0, 0.0, yaw, ground, now);
+            tracker.tickEnd((mask & TurnReference.KEY_W) != 0, (mask & TurnReference.KEY_A) != 0,
+                    (mask & TurnReference.KEY_S) != 0, (mask & TurnReference.KEY_D) != 0,
+                    (mask & TurnReference.KEY_JUMP) != 0, (mask & TurnReference.KEY_SNEAK) != 0,
+                    (mask & TurnReference.KEY_SPRINT) != 0);
+        }
+
+        void standStill(int ticks) {
+            for (int i = 0; i < ticks; i++) tick(landX - 2.0, BLOCK_TOP, landZ, true, 0, 10f);
         }
 
         void jump(double dx, double dz, boolean lands) {
@@ -233,6 +244,53 @@ public class OnejumpFastModeTest {
         rig.controller.setAxis(TurnReference.AXIS_X);
         assertEquals(-0.01, a.margin, 1e-9);
         assertEquals(-0.01, rig.tracker.last().margin, 1e-9);
+    }
+
+    @Test
+    public void standingStillThenMovingRecordsTheKeysAndTheStartOfTheAttempt() {
+        Rig rig = new Rig(0.01, Double.NaN);
+        rig.standStill(AttemptTracker.AUTO_ARM_TICKS);
+        assertTrue(rig.tracker.isArmed());
+        int w = TurnReference.KEY_W | TurnReference.KEY_SPRINT;
+        rig.tick(rig.landX - 1.0, BLOCK_TOP, rig.landZ, true, w, 10f);
+        assertTrue(rig.tracker.isRecording());
+        assertFalse(rig.tracker.isArmed());
+        rig.tick(rig.landX - 0.7, BLOCK_TOP, rig.landZ, true, w | TurnReference.KEY_JUMP, 12f);
+        rig.tick(rig.landX - 0.4, BLOCK_TOP + 0.4, rig.landZ, false, w | TurnReference.KEY_A, 20f);
+        rig.tick(rig.landX - 0.2, BLOCK_TOP + 0.5, rig.landZ, false, w, 25f);
+        rig.tick(rig.landX, BLOCK_TOP, rig.landZ, true, w, 25f);
+        TurnAttempt a = rig.tracker.last();
+        assertNotNull(a);
+        assertTrue(a.landed);
+        assertTrue(a.hasKeysToUse());
+        assertEquals(4, a.recorded);
+        assertEquals(4, a.pressedKeys.length);
+        assertEquals(w, a.pressedKeys[0]);
+        assertEquals(w | TurnReference.KEY_JUMP, a.pressedKeys[1]);
+        assertEquals(w | TurnReference.KEY_A, a.pressedKeys[2]);
+        assertEquals(10.0, a.yaws[0], 1e-6);
+        assertEquals(12.0, a.yaws[1], 1e-6);
+        assertEquals(25.0, a.yaws[3], 1e-6);
+        assertEquals(rig.landX - 1.0, a.start[0], 0.0);
+        assertEquals(BLOCK_TOP, a.start[1], 0.0);
+        assertEquals(10.0, a.start[5], 1e-6);
+        assertFalse(rig.tracker.isRecording());
+        rig.jump(0.0, 0.0, true);
+        TurnAttempt b = rig.tracker.last();
+        assertFalse(b.hasKeysToUse());
+        assertEquals(0, b.recorded);
+    }
+
+    @Test
+    public void aRecordingThatCrossesFarFromTheBoxIsDropped() {
+        Rig rig = new Rig(0.01, Double.NaN);
+        rig.standStill(AttemptTracker.AUTO_ARM_TICKS);
+        rig.tick(rig.landX - 1.0, BLOCK_TOP, rig.landZ, true, TurnReference.KEY_W, 0f);
+        assertTrue(rig.tracker.isRecording());
+        rig.tick(rig.landX - 3.0, BLOCK_TOP + 0.5, rig.landZ, false, TurnReference.KEY_W, 0f);
+        rig.tick(rig.landX - 3.2, BLOCK_TOP - 0.5, rig.landZ, false, TurnReference.KEY_W, 0f);
+        assertFalse(rig.tracker.isRecording());
+        assertEquals(0, rig.attempts());
     }
 
     @Test
