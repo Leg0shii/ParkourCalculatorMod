@@ -78,6 +78,12 @@ public final class OnejumpKeysWindow implements RenderInterface {
         }
     }
 
+    private static final String[] HOW_TO = {
+            "No keys to check yet",
+            "Mark Keys on the ticks in the input table whose keys should be checked.",
+            "Shift click a key cell to make that key optional on its tick.",
+            "Green: your attempt pressed the expected keys, red: it did not."};
+
     private void body(float scale) {
         TurnProfileController.Current cur = controller.current();
         float w = Math.max(80f, ImGui.getContentRegionAvail().x);
@@ -89,10 +95,20 @@ public final class OnejumpKeysWindow implements RenderInterface {
         ImDrawList dl = ImGui.getWindowDrawList();
         dl.addRectFilled(x0, y0, x0 + w, y0 + h, ThemeManager.bgDarkColor(), 0f);
         if (cur == null || cur.n == 0) {
-            String text = "No reference yet";
-            ImVec2 ts = ImGui.calcTextSize(text);
-            dl.addText(x0 + (w - ts.x) * 0.5f, y0 + (h - ts.y) * 0.5f, ThemeManager.textDimColor(), text);
+            float lineH = ImGui.getTextLineHeightWithSpacing();
+            float y = y0 + (h - lineH * HOW_TO.length) * 0.5f;
+            for (String line : HOW_TO) {
+                ImVec2 ts = ImGui.calcTextSize(line);
+                dl.addText(x0 + (w - ts.x) * 0.5f, y, ThemeManager.textDimColor(), line);
+                y += lineH;
+            }
             return;
+        }
+        boolean anyChecked = false;
+        for (int t = 0; t < cur.n; t++) anyChecked |= cur.checkKeys[t];
+        if (!anyChecked) {
+            dl.addText(x0 + 6f * scale, y0 + h - ImGui.getTextLineHeight() - 4f * scale, ThemeManager.textDimColor(),
+                    "no Keys ticks marked, nothing is checked: mark Keys in the input table");
         }
         TurnAttempt you = tracker.shownAttempt();
         int n = cur.n;

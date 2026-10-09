@@ -95,12 +95,28 @@ public final class TurnProfileWindow implements RenderInterface {
         TurnProfileController.Current cur = controller.current();
         float graphH = Math.max(GRAPH_MIN_H * scale, ImGui.getContentRegionAvail().y);
         if (cur == null || cur.n == 0) {
-            placeholder(graphH, controller.lastError() != null ? controller.lastError()
-                    : "No reference yet: set the onejump up in the Onejump Setup window");
+            placeholder(graphH, controller.lastError() != null ? controller.lastError() + "
+" + HOW_TO : HOW_TO);
             return;
         }
+        ImVec2 origin = ImGui.getCursorScreenPos();
         graph(cur, scale, graphH, tracker.shownAttempt());
+        int faceTicks = 0;
+        for (int t = 0; t < cur.n; t++) if (cur.checkYaw[t]) faceTicks++;
+        if (faceTicks < 2) {
+            String hint = "mark Face on the turn ticks in the input table to show only the turn";
+            ImGui.getWindowDrawList().addText(origin.x + 6f * scale, origin.y + graphH - ImGui.getTextLineHeight() - 4f * scale,
+                    ThemeManager.textDimColor(), hint);
+        }
     }
+
+    private static final String HOW_TO = "No turn to compare yet
+"
+            + "Mark Face on the turn ticks in the input table: those ticks' facings are checked and drawn here.
+"
+            + "Right click on Face sets Still: the attempt fails as soon as you turn on that tick.
+"
+            + "The facings come from the yaw column of the TAS, solved or typed.";
 
     private void placeholder(float h, String text) {
         ImVec2 origin = ImGui.getCursorScreenPos();
@@ -108,8 +124,15 @@ public final class TurnProfileWindow implements RenderInterface {
         ImGui.invisibleButton("##onejumpEmpty", Math.max(1f, w), h);
         ImDrawList dl = ImGui.getWindowDrawList();
         dl.addRectFilled(origin.x, origin.y, origin.x + w, origin.y + h, ThemeManager.bgDarkColor(), 0f);
-        ImVec2 ts = ImGui.calcTextSize(text);
-        dl.addText(origin.x + (w - ts.x) * 0.5f, origin.y + (h - ts.y) * 0.5f, ThemeManager.textDimColor(), text);
+        String[] lines = text.split("
+");
+        float lineH = ImGui.getTextLineHeightWithSpacing();
+        float y = origin.y + (h - lineH * lines.length) * 0.5f;
+        for (String line : lines) {
+            ImVec2 ts = ImGui.calcTextSize(line);
+            dl.addText(origin.x + (w - ts.x) * 0.5f, y, ThemeManager.textDimColor(), line);
+            y += lineH;
+        }
     }
 
     private static double youError(TurnProfileController.Current cur, TurnAttempt you, int t) {
