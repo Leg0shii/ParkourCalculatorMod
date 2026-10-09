@@ -1318,8 +1318,16 @@ public final class AngleSolverEngine {
         }
     }
 
+    private boolean rowsAsTyped;
+
     public PathSnapshot snapshotPath(int startTick, int landingTick) {
-        Job job = buildJob(state.getEffort(), null, false, startTick, landingTick);
+        Job job;
+        rowsAsTyped = true;
+        try {
+            job = buildJob(state.getEffort(), null, false, startTick, landingTick);
+        } finally {
+            rowsAsTyped = false;
+        }
         if (job == null) return null;
         double[] yaws = currentRowYaws(job.startTick, job.numTicks);
         if (yaws == null) return null;
@@ -1501,12 +1509,14 @@ public final class AngleSolverEngine {
     // ---- effective per-tick state (main thread, during snapshot) --------------
 
     private AngleSolverState.InputMode effInputs(int tick) {
+        if (rowsAsTyped) return AngleSolverState.InputMode.KEEP;
         StateOverride ov = overrideAt(tick);
         if (ov != null && ov.overridesInputs()) return ov.getInputs();
         return state.getDefaultInputs();
     }
 
     private AngleSolverState.SprintMode effSprint(int tick) {
+        if (rowsAsTyped) return AngleSolverState.SprintMode.DERIVE;
         StateOverride ov = overrideAt(tick);
         if (ov != null && ov.overridesSprint()) return ov.getSprint();
         return state.getDefaultSprint();

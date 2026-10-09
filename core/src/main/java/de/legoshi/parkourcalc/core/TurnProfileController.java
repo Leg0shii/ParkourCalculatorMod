@@ -453,7 +453,7 @@ public final class TurnProfileController {
         }
         if (worst <= MODEL_AGREEMENT) return null;
         return "they differ by " + ConstraintText.fixedStat(worst) + " at tick " + (worstTick + 1)
-                + ", check the start state and OptiFine Fast Math";
+                + ": the rows' ground state (Slip column), the start state or OptiFine Fast Math";
     }
 
     public void refresh() {

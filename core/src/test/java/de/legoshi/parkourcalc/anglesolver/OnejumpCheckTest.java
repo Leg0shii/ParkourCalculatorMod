@@ -81,6 +81,18 @@ public class OnejumpCheckTest {
     }
 
     @Test
+    public void theCheckFollowsTheRowsAsTypedNotTheSolverInputOverrides() {
+        Rig rig = new Rig();
+        rig.state.setDefaultInputs(AngleSolverState.InputMode.FORCE_45);
+        rig.state.setDefaultSprint(AngleSolverState.SprintMode.ALWAYS);
+        rig.controller.tick();
+        rig.controller.refresh();
+        boolean ok = rig.controller.check().ok;
+        assertTrue(rig.failing(), ok);
+        assertTrue(rig.controller.isChecked());
+    }
+
+    @Test
     public void anEditAfterTheCheckTurnsTheLiveOffsetOffUntilTheNextCheck() {
         Rig rig = new Rig();
         boolean ok = rig.controller.check().ok;
