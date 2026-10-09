@@ -111,9 +111,8 @@ public final class TurnProfileWindow implements RenderInterface {
     }
 
     private static final String[] HOW_TO = {
-            "No turn to compare",
-            "Mark Face on the turn ticks of the input table.",
-            "Right click on Face for Still: turning on that tick fails the attempt."};
+            "No turn to compare. Mark \"Face\" in the input table for those ticks whose turn you want checked.",
+            "Hint: right click on Face for Still, turning on that tick fails the attempt."};
 
     private void placeholder(float h, String error) {
         ImVec2 origin = ImGui.getCursorScreenPos();

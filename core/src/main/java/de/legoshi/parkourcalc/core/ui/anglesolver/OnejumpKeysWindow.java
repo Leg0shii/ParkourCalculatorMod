@@ -79,9 +79,8 @@ public final class OnejumpKeysWindow implements RenderInterface {
     }
 
     private static final String[] HOW_TO = {
-            "No keys to check",
-            "Mark Keys on the ticks of the input table whose keys you want checked.",
-            "Shift click a key to make it optional on that tick."};
+            "No keys to check. Mark \"Keys\" in the input table for those keys you want checked.",
+            "Hint: Shift click a key to make it optional on that tick."};
 
     private void body(float scale) {
         TurnProfileController.Current cur = controller.current();
