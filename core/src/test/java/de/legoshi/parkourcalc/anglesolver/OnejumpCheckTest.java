@@ -109,6 +109,23 @@ public class OnejumpCheckTest {
     }
 
     @Test
+    public void aYawEditOrANewTasDropsTheCheck() {
+        Rig rig = new Rig();
+        assertTrue(rig.controller.check().ok);
+        assertTrue(rig.controller.lastCheckCurrent());
+        InputRow row = rig.inputs.getRows().get(rig.first + 2);
+        Float yaw = row.getYaw();
+        row.setYaw(yaw == null ? 1.0f : yaw + 0.5f);
+        rig.controller.tick();
+        assertFalse(rig.controller.isChecked());
+        assertFalse(rig.controller.lastCheckCurrent());
+        rig.controller.onTasReplaced();
+        assertNull(rig.controller.lastCheck());
+        rig.controller.tick();
+        assertFalse(rig.controller.isChecked());
+    }
+
+    @Test
     public void aMissingLandingBoxFailsTheCheck() {
         Rig rig = new Rig();
         OnejumpRigs.clearLandings(rig.state, rig.first, rig.landingTick + 1);

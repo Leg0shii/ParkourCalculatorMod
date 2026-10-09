@@ -264,7 +264,8 @@ public final class TurnProfileWindow implements RenderInterface {
         if (you != null && you.hasForecast() && settings.onejumpOffsetLive) {
             String label = offsetLabel(you);
             if (label != null) {
-                boolean failed = you.bestMarginAt(you.lastForecastTick()) > 0.0;
+                boolean failed = you.complete && you.hasMargin() ? !you.landed
+                        : you.bestMarginAt(you.lastForecastTick()) > 0.0;
                 int col = failed ? ThemeManager.dangerColor() : ThemeManager.okColor();
                 Fonts.pushBold();
                 dl.addText(x0 + 6f * scale, y0 + 1f, col, label);
@@ -447,6 +448,7 @@ public final class TurnProfileWindow implements RenderInterface {
     }
 
     private static String offsetLabel(TurnAttempt you) {
+        if (you.complete && you.hasMargin()) return "offset " + TurnAttempt.signedMargin(you.margin);
         int tick = you.lastForecastTick();
         if (tick < 0) return null;
         double best = you.bestMarginAt(tick);

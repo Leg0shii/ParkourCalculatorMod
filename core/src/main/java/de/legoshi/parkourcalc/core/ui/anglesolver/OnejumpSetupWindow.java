@@ -100,11 +100,6 @@ public final class OnejumpSetupWindow implements RenderInterface {
                 attemptsTable("##attemptsFav", favourites, tableH, false);
                 Controls.endTab();
             }
-            if (Controls.beginTab("Help")) {
-                ThemeManager.sectionSpacing();
-                help();
-                Controls.endTab();
-            }
             if (Controls.beginTab("Attempts")) {
                 ThemeManager.sectionSpacing();
                 int pages = Math.max(1, (all.size() + PAGE_SIZE - 1) / PAGE_SIZE);
@@ -127,6 +122,11 @@ public final class OnejumpSetupWindow implements RenderInterface {
                         - ImGui.getTextLineHeightWithSpacing() - Controls.buttonHeight());
                 attemptsTable("##attemptsAll", page, tableH, false);
                 dangerZone();
+                Controls.endTab();
+            }
+            if (Controls.beginTab("Help")) {
+                ThemeManager.sectionSpacing();
+                help();
                 Controls.endTab();
             }
             Controls.endTabBar();
@@ -206,29 +206,25 @@ public final class OnejumpSetupWindow implements RenderInterface {
         TooltipUtil.onHover("Checks that the TAS is complete and lands. The live offset, the landing chance and the solved offsets run only on a checked TAS, and any edit needs a new check.");
         ImGui.sameLine();
         ImGui.alignTextToFramePadding();
+        boolean current = controller.lastCheckCurrent();
         if (checked) {
             ThemeManager.pushTextColor(ThemeManager.okColor());
             ImGui.text("on, the TAS is checked");
             ThemeManager.popTextColor();
-        } else if (check == null) {
-            ImGui.textDisabled("off until the TAS is checked");
-        } else if (check.ok) {
-            ThemeManager.pushTextColor(ThemeManager.warningColor());
-            ImGui.text("off, the TAS changed since the check");
-            ThemeManager.popTextColor();
+        } else if (check == null || !current) {
+            ImGui.textDisabled(check == null ? "off until the TAS is checked" : "off, the TAS changed since the check");
         } else {
             ThemeManager.pushTextColor(ThemeManager.warningColor());
             ImGui.text("off, the check failed");
             ThemeManager.popTextColor();
         }
-        if (check == null) return;
+        if (check == null || check.ok || !current) return;
         for (TurnProfileController.SetupCheck.Item item : check.items) {
+            if (item.ok) continue;
             ImGui.setCursorPosX(startX + labelW);
-            ThemeManager.pushTextColor(item.ok ? ThemeManager.okColor() : ThemeManager.dangerColor());
-            ImGui.text(item.ok ? "[ok]" : "[!!]");
-            ThemeManager.popTextColor();
-            ImGui.sameLine();
+            ThemeManager.pushTextColor(ThemeManager.dangerColor());
             ImGui.text(item.label);
+            ThemeManager.popTextColor();
             ImGui.sameLine();
             ImGui.textDisabled(item.detail);
         }

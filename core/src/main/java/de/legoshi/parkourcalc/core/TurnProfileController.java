@@ -143,6 +143,7 @@ public final class TurnProfileController {
     private final IntFunction<TickState> tickState;
     private final Supplier<String> tasSignature;
     private volatile SetupCheck lastCheck;
+    private volatile String lastCheckSignature;
     private volatile String checkedSignature;
     private volatile String currentSignature;
     private long constraintSignature = Long.MIN_VALUE;
@@ -286,6 +287,18 @@ public final class TurnProfileController {
         adopted = false;
         loaded = false;
         selectedNumber = -1;
+        clearCheck();
+    }
+
+    private void clearCheck() {
+        lastCheck = null;
+        lastCheckSignature = null;
+        checkedSignature = null;
+    }
+
+    public boolean lastCheckCurrent() {
+        String at = lastCheckSignature;
+        return lastCheck != null && at != null && at.equals(currentSignature);
     }
 
     public void onTasDeleted(String name) {
@@ -303,6 +316,7 @@ public final class TurnProfileController {
         adopted = false;
         loadedName = name;
         storeError = null;
+        clearCheck();
         deepDirty = false;
         selectedNumber = -1;
         invalidateDeepChecks();
@@ -392,6 +406,7 @@ public final class TurnProfileController {
                         : "the first flagged tick is in the air"));
         SetupCheck result = new SetupCheck(items);
         lastCheck = result;
+        lastCheckSignature = currentSignature;
         checkedSignature = result.ok ? currentSignature : null;
         return result;
     }
