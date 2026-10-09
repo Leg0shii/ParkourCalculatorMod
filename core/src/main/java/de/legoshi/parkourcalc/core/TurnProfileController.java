@@ -393,7 +393,7 @@ public final class TurnProfileController {
                 built ? cur.n + " ticks" : lastError != null ? lastError : "the rows from the first to the last flagged tick could not be read as a path"));
         TurnReference.Landing landing = built ? ref.landing() : null;
         int landingTick = landing == null ? -1 : ref.tasFirstTick() + landing.tick;
-        items.add(new SetupCheck.Item("A landing box follows the flagged ticks", landing != null,
+        items.add(new SetupCheck.Item("A landing constraint follows the flagged ticks", landing != null,
                 landing != null ? landing.label(ref.tasFirstTick()) : "select the landing tick, look at the landing block and press B"));
         TickState landState = landingTick >= 0 ? tickState.apply(landingTick) : null;
         items.add(new SetupCheck.Item("The rows reach the landing tick", landState != null,
@@ -404,9 +404,9 @@ public final class TurnProfileController {
                 violated == null ? "every constraint from tick " + (first + 2) + " to tick " + (landingTick + 1) : violated));
         boolean modelLands = built && cur.profile != null && cur.profile.lands;
         items.add(new SetupCheck.Item("The solver lands the TAS too", modelLands,
-                modelLands ? "the solver replays the rows with its own physics and lands in the box"
+                modelLands ? "the solver replays the rows with its own physics and meets the landing constraint"
                         : !built || cur.profile == null ? "the solver could not replay the rows"
-                        : "the solver replays the rows with its own physics and misses the box, solve the facings again or fix the Slip column"));
+                        : "the solver replays the rows with its own physics and misses the landing constraint, check the path and solve again"));
         String disagree = built && cur.snapshot != null ? modelDisagreement(cur) : "the solver could not replay the rows";
         items.add(new SetupCheck.Item("The solver's replay matches the simulation", disagree == null,
                 disagree == null ? "same position on every flagged tick" : disagree));
@@ -479,7 +479,7 @@ public final class TurnProfileController {
         }
         if (worst <= MODEL_AGREEMENT) return null;
         return "they differ by " + ConstraintText.fixedStat(worst) + " at tick " + (worstTick + 1)
-                + ": the Slip column (ground or air per tick) or the start state does not match the simulation";
+                + ", check the path";
     }
 
     public void refresh() {

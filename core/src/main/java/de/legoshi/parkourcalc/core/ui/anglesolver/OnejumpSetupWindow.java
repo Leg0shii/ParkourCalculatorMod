@@ -271,8 +271,8 @@ public final class OnejumpSetupWindow implements RenderInterface {
             {"1  The TAS",
              "Build the complete TAS of the jump, by hand or with the solver: every row from the first key you press to "
              + "the landing tick, with the keys you will press. The landing tick is the first tick before the player is on "
-             + "the ground again; it carries the landing box. The attempt starts on the first keyed row of the TAS."},
-            {"2  Landing box and walls",
+             + "the ground again; it carries the landing constraint. The attempt starts on the first keyed row of the TAS."},
+            {"2  Landing constraint and walls",
              "Select the landing tick in the input table, look at the landing block and press B. A wall you have to clear "
              + "gets a constraint the same way: select the tick where you pass it, look at its face, press B."},
             {"3  Facings",
@@ -282,11 +282,11 @@ public final class OnejumpSetupWindow implements RenderInterface {
              + "on Face sets Still: the attempt fails as soon as you turn on that tick. Shift click on a key cell makes that "
              + "key optional on that tick."},
             {"5  Check TAS",
-             "Press Check TAS in the Overview. It first takes the ground or air state of every flagged tick from the "
-             + "simulation into the Slip column, like Apply state in the Angle Solver. Then it checks that the ticks are "
-             + "flagged, a landing box follows them, the rows reach it, the simulation meets every constraint, the solver "
-             + "replays the rows and lands in the box with the same positions as the simulation, and the first flagged "
-             + "tick is on the ground. The live offset, the landing chance and the solved offsets run only while the check "
+             "Press Check TAS in the Overview. It first applies the state of every flagged tick from the simulation, "
+             + "like Apply state in the Angle Solver. Then it checks that the ticks are flagged, a landing constraint "
+             + "follows them, the rows reach it, the simulation meets every constraint, the solver replays the rows and "
+             + "meets the landing constraint with the same positions as the simulation, and the first flagged tick is "
+             + "on the ground. The live offset, the landing chance and the solved offsets run only while the check "
              + "holds. Any edit of the TAS needs a new check."},
             {"6  Practice",
              "Right click resets. The first key after the reset starts the attempt, the rows play tick by tick, the "
@@ -330,7 +330,7 @@ public final class OnejumpSetupWindow implements RenderInterface {
     private String landingChance(TurnProfileController.Current cur) {
         if (cur == null) return "-";
         if (!controller.isChecked()) return "press Check TAS";
-        if (!cur.canRate()) return cur.pathLands() ? "needs a landing box and a TAS path" : "the reference path does not meet the TAS constraints";
+        if (!cur.canRate()) return cur.pathLands() ? "needs a landing constraint and a TAS path" : "the reference path does not meet the TAS constraints";
         AttemptSampler.Stats rs = cur.attempts;
         if (rs == null) return controller.isRating() ? "sampling" : "-";
         int used = controller.ratedSpread();
