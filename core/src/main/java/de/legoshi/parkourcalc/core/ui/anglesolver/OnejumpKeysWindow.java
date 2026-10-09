@@ -103,12 +103,6 @@ public final class OnejumpKeysWindow implements RenderInterface {
             }
             return;
         }
-        boolean anyChecked = false;
-        for (int t = 0; t < cur.n; t++) anyChecked |= cur.checkKeys[t];
-        if (!anyChecked) {
-            dl.addText(x0 + 6f * scale, y0 + h - ImGui.getTextLineHeight() - 4f * scale, ThemeManager.textDimColor(),
-                    "no Keys ticks marked, nothing is checked");
-        }
         TurnAttempt you = tracker.shownAttempt();
         int n = cur.n;
         int lead = cur.leadKeys.length;
