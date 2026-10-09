@@ -146,6 +146,7 @@ public final class OnejumpSetupWindow implements RenderInterface {
         for (String l : OVERVIEW_LABELS) labelW = Math.max(labelW, ImGui.calcTextSize(l).x);
         Fonts.popBold();
         labelW += ThemeManager.SM * scale;
+        checkButton();
         String storeError = controller.storeError();
         overviewRow("TAS", name == null ? "unsaved, attempts are not kept" : storeError == null ? name
                 : name + "  (attempts file unreadable, nothing is written: " + storeError + ")", labelW,
@@ -192,27 +193,28 @@ public final class OnejumpSetupWindow implements RenderInterface {
         attemptsTable("##attemptsLatest", latest, listHeight(latest, scale), false);
     }
 
+    private void checkButton() {
+        if (Controls.secondaryButton("Check TAS")) controller.check();
+        TooltipUtil.onHover("Checks that the TAS is complete and lands. The live offset, the landing chance and the solved offsets run only on a checked TAS, and any edit needs a new check.");
+        ThemeManager.sectionSpacing();
+    }
+
     private void checkRows(float labelW) {
         boolean checked = controller.isChecked();
         TurnProfileController.SetupCheck check = controller.lastCheck();
         float startX = ImGui.getCursorPosX();
         Fonts.pushBold();
-        ImGui.alignTextToFramePadding();
         ImGui.text("Live offset");
         Fonts.popBold();
         ImGui.sameLine();
         ImGui.setCursorPosX(startX + labelW);
-        if (Controls.primaryButton("Check TAS")) controller.check();
-        TooltipUtil.onHover("Checks that the TAS is complete and lands. The live offset, the landing chance and the solved offsets run only on a checked TAS, and any edit needs a new check.");
-        ImGui.sameLine();
-        ImGui.alignTextToFramePadding();
         boolean current = controller.lastCheckCurrent();
         if (checked) {
             ThemeManager.pushTextColor(ThemeManager.okColor());
             ImGui.text("on");
             ThemeManager.popTextColor();
         } else if (check == null || !current) {
-            ImGui.textDisabled(check == null ? "off" : "off, the TAS changed since the check");
+            ImGui.textDisabled(check == null ? "off, press Check TAS" : "off, the TAS changed since the check");
         } else {
             TurnProfileController.SetupCheck.Item firstFailed = null;
             for (TurnProfileController.SetupCheck.Item item : check.items) {
