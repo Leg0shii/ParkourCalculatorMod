@@ -47,10 +47,7 @@ import de.legoshi.parkourcalc.core.anglesolver.Medium;
 import de.legoshi.parkourcalc.core.anglesolver.Slipperiness;
 import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
 import de.legoshi.parkourcalc.core.anglesolver.StateOverride;
-import de.legoshi.parkourcalc.core.anglesolver.Constraint;
 import de.legoshi.parkourcalc.core.anglesolver.TickConstraints;
-import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
-import de.legoshi.parkourcalc.core.save.Result;
 import de.legoshi.parkourcalc.core.ui.ConstraintKeyController;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverTable;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverWindow;
@@ -100,7 +97,6 @@ public final class Application {
     private TurnProfileController turnProfile;
     private AttemptTracker attemptTracker;
     private PracticeMacro practiceMacro;
-    private long flashedNs;
     private PlaybackBridge playbackBridge;
     private final de.legoshi.parkourcalc.core.record.HumanRecorder recorder;
     private ConstraintKeyController constraintKeyController;
@@ -261,8 +257,7 @@ public final class Application {
         turnProfile = new TurnProfileController(angleSolverEngine, angleSolverState, inputData,
                 () -> settings.viewOnejumpSetup || settings.viewTurnProfile || settings.viewOnejumpKeys,
                 mc::getMouseSensitivity, () -> settings.turnProfileAttempts, () -> settings.onejumpSpreadAttempts,
-                new TurnProfileStore(saveController::getSaveStore), saveController::currentName,
-                t -> boxController.getState(t));
+                new TurnProfileStore(saveController::getSaveStore), saveController::currentName);
         attemptTracker = new AttemptTracker(turnProfile, () -> settings.viewTurnProfile || settings.viewOnejumpKeys
                 || settings.viewOnejumpSetup, this::isPlaybackRunning, () -> settings.onejumpTurnTiming);
         practiceMacro = new PracticeMacro(turnProfile, attemptTracker, settings);
@@ -298,12 +293,11 @@ public final class Application {
                         this::saveSettings);
         de.legoshi.parkourcalc.core.ui.anglesolver.OnejumpSetupWindow onejumpSetupWindow =
                 new de.legoshi.parkourcalc.core.ui.anglesolver.OnejumpSetupWindow(turnProfile, attemptTracker, settings,
-                        this::saveSettings, this::newOnejump, this::useAttemptKeys, saveController::isDirty);
+                        this::saveSettings);
 
         // In-world constraint visualization (gh-145): plates appear while the solver view is open.
         constraintSource = new de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverConstraintSource(
-                angleSolverState, boxController, () -> settings.viewAngleSolver || onejumpOpen(), settings, selection,
-                constraintSelection);
+                angleSolverState, boxController, () -> settings.viewAngleSolver, settings, selection, constraintSelection);
         de.legoshi.parkourcalc.core.render.PathRenderPlan.setConstraintSource(constraintSource);
         de.legoshi.parkourcalc.core.render.PathRenderPlan.setDeviationTickSource(angleSolverState::getApplyDeviationTick);
         de.legoshi.parkourcalc.core.render.PathRenderPlan.setSolverStartTickSource(angleSolverState::getStartTick);
@@ -936,96 +930,11 @@ public final class Application {
         playback.tick();
         if (practiceMacro != null && !playback.isRunning()) practiceMacro.tick();
         if (turnProfile != null) turnProfile.tick();
-        flashAttemptResult();
     }
 
     public String hudBadgeLabel() {
         if (playback.isRunning()) return de.legoshi.parkourcalc.core.ui.theme.MacroBadgeStyle.LABEL;
         return practiceMacro == null ? null : practiceMacro.label();
-    }
-
-    private boolean onejumpOpen() {
-        return settings.viewOnejumpSetup || settings.viewTurnProfile || settings.viewOnejumpKeys;
-    }
-
-    private void flashAttemptResult() {
-        if (attemptTracker == null || !settings.onejumpHudFlash || !onejumpOpen()) return;
-        long at = attemptTracker.lastPublishedNs();
-        if (at == 0L || at == flashedNs) return;
-        flashedNs = at;
-        TurnAttempt a = attemptTracker.last();
-        if (a == null) return;
-        pushHudMessage(flashText(a), a.landed ? HudMessageStyle.COLOR_OK : HudMessageStyle.COLOR_WARN);
-    }
-
-    private String flashText(TurnAttempt a) {
-        if (a.inputFailure) return "wrong key tick " + (a.tasTick(a.failTick) + 1);
-        if (a.turnFailure) return "turn tick " + (a.tasTick(a.failTick) + 1) + ": " + TurnAttempt.turnText(a.failTurn, pixelDeg());
-        return a.verdict;
-    }
-
-    private double pixelDeg() {
-        TurnProfileController.Current cur = turnProfile.current();
-        return cur == null ? 0.0 : cur.pixelDeg;
-    }
-
-    public String newOnejump(String rawName) {
-        String name = rawName == null ? "" : rawName.trim();
-        if (name.isEmpty()) return "Name cannot be empty.";
-        if (saveController.exists(name)) return "A TAS with that name exists.";
-        saveController.newSession();
-        inputData.addRowAt(0);
-        runSimulation();
-        Result<String> r = saveController.save(name);
-        if (!r.ok) return r.error;
-        selection.selectOnly(0);
-        return null;
-    }
-
-    public void useAttemptKeys(TurnAttempt a) {
-        if (a == null || !a.hasKeysToUse()) return;
-        int n = a.recorded;
-        TurnReference ref = turnProfile.document().reference();
-        int landingTick = ref.landing() == null ? -1 : ref.tasFirstTick() + ref.landing().tick;
-        moveLandingBox(landingTick, n);
-        inputData.clear();
-        double prevYaw = a.start[5];
-        for (int i = 0; i < n; i++) {
-            InputRow r = new InputRow();
-            TurnReference.applyKeys(r, Math.max(0, a.pressedKeys[i]));
-            double yaw = i < a.yaws.length && !Double.isNaN(a.yaws[i]) ? a.yaws[i] : prevYaw;
-            r.setYaw((float) Angles.wrapDelta(yaw - prevYaw));
-            prevYaw = yaw;
-            r.setOnejumpKeys(true);
-            inputData.insertRow(i, r);
-        }
-        inputData.insertRow(n, new InputRow());
-        runner.invalidate();
-        runner.setStartPosition(new Vec3dCore(a.start[0], a.start[1], a.start[2]));
-        runner.setStartVelocity(new Vec3dCore(a.start[3], Vec3dCore.GROUND_REST_VELOCITY.y, a.start[4]));
-        runner.setStartYaw((float) a.start[5]);
-        angleSolverState.setStartTick(0);
-        angleSolverState.setLandingTick(n);
-        if (solverEngine != null) solverEngine.onProblemReplaced();
-        onUserChange(-1);
-    }
-
-    private void moveLandingBox(int from, int to) {
-        if (from < 0 || from == to) return;
-        TickConstraints src = angleSolverState.tickConstraintsOrNull(from);
-        if (src == null) return;
-        List<Constraint> moved = new ArrayList<>();
-        for (Constraint c : src.getConstraints()) {
-            if (c.getField() == Constraint.Field.X || c.getField() == Constraint.Field.Z) moved.add(c.copy());
-        }
-        if (moved.isEmpty()) return;
-        src.getConstraints().removeIf(c -> c.getField() == Constraint.Field.X || c.getField() == Constraint.Field.Z);
-        double top = src.getLandingY();
-        src.setLandingY(Double.NaN);
-        TickConstraints dst = angleSolverState.tickConstraints(to);
-        dst.getConstraints().removeIf(c -> c.getField() == Constraint.Field.X || c.getField() == Constraint.Field.Z);
-        dst.getConstraints().addAll(moved);
-        dst.setLandingY(top);
     }
 
     public float hudBadgeAlpha() {

@@ -209,13 +209,8 @@ public class LandingForecastTest {
         List<TurnAttempt> list = new ArrayList<TurnAttempt>();
         int[] failed = {8, 8, 8, 7, 9, -1};
         for (int i = 0; i < failed.length; i++) {
-            TurnAttempt a = new TurnAttempt(i + 1, 0, new double[] {0}, 1, true, false, false, "", 0.1, -1, -1, 0, 0, 0, null, null,
-                    null, false, Double.NaN, new TurnAttempt.Forecast(null, null, null, failed[i], null, null, null, null, null));
-            double[] solved = new double[12];
-            java.util.Arrays.fill(solved, 0.5);
-            if (failed[i] >= 0) solved[failed[i]] = -0.5;
-            a.solvedOffset = solved;
-            list.add(a);
+            list.add(new TurnAttempt(i + 1, 0, new double[] {0}, 1, true, false, false, "", 0.1, -1, -1, 0, 0, 0, null, null,
+                    null, false, Double.NaN, new TurnAttempt.Forecast(null, null, null, failed[i], null, null, null, null, null)));
         }
         list.add(new TurnAttempt(9, 0, new double[] {0}, 1, true, true, false, "", -0.1, -1, -1, 0, 0, 0, null, null, null,
                 false, Double.NaN, new TurnAttempt.Forecast(null, null, null, 3, null, null, null, null, null)));

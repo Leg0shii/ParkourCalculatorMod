@@ -218,7 +218,6 @@ public final class SaveIO {
                     }
                 }
                 applyOverride(t.override, tc.getOverride());
-                if (t.landingY != null) tc.setLandingY(t.landingY);
             }
         }
 
@@ -588,7 +587,6 @@ public final class SaveIO {
             }
             StateOverride ov = tc.getOverride();
             if (!ov.isEmpty()) t.override = toSaveOverride(ov);
-            if (tc.hasLandingY()) t.landingY = tc.getLandingY();
             a.ticks.add(t);
         }
         for (BlockSelection b : s.getMomentumBlocks()) a.selectedBlocks.add(toSaveBlock(b));

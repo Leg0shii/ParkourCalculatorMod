@@ -228,7 +228,6 @@ public final class Settings {
     public boolean onejumpOffsetHover = true;
     public boolean onejumpStopKeysOnFail = false;
     public boolean onejumpStopTurnOnFail = false;
-    public boolean onejumpHudFlash = true;
     public boolean viewRecorder = DEFAULT_VIEW_RECORDER;
     public int turnProfileAttempts = DEFAULT_TURN_PROFILE_ATTEMPTS;
     public int onejumpSpreadAttempts = DEFAULT_ONEJUMP_SPREAD_ATTEMPTS;
@@ -354,7 +353,6 @@ public final class Settings {
         onejumpOffsetHover = true;
         onejumpStopKeysOnFail = false;
         onejumpStopTurnOnFail = false;
-        onejumpHudFlash = true;
         viewRecorder = DEFAULT_VIEW_RECORDER;
         turnProfileAttempts = DEFAULT_TURN_PROFILE_ATTEMPTS;
         onejumpSpreadAttempts = DEFAULT_ONEJUMP_SPREAD_ATTEMPTS;

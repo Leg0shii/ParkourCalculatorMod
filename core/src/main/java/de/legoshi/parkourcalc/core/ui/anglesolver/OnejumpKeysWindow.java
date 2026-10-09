@@ -89,7 +89,7 @@ public final class OnejumpKeysWindow implements RenderInterface {
         ImDrawList dl = ImGui.getWindowDrawList();
         dl.addRectFilled(x0, y0, x0 + w, y0 + h, ThemeManager.bgDarkColor(), 0f);
         if (cur == null || cur.n == 0) {
-            String text = cur != null && cur.isFast() ? "Fast onejump: no keys are checked" : "No reference yet";
+            String text = "No reference yet";
             ImVec2 ts = ImGui.calcTextSize(text);
             dl.addText(x0 + (w - ts.x) * 0.5f, y0 + (h - ts.y) * 0.5f, ThemeManager.textDimColor(), text);
             return;

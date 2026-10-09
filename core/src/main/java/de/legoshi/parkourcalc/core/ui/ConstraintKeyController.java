@@ -59,7 +59,7 @@ public final class ConstraintKeyController {
             double[] plate = mc.getPressurePlateFootprint(bx, by, bz);
             if (plate != null) {
                 double[] r = pressurePlateFootprint(bx, bz, plate);
-                state.setFootprint(tick, r[0], r[1], r[2], r[3], by);
+                state.setFootprint(tick, r[0], r[1], r[2], r[3]);
                 onChanged.run();
                 return;
             }
@@ -68,7 +68,7 @@ public final class ConstraintKeyController {
         if (remove && mc.isClimbable(bx, by, bz)) {
             List<AABB> obstacles = mc.getCollisionBoxes(bx - 1, by, bz - 1, bx + 1, by + 1, bz + 1);
             double[] r = ConstraintDeriver.deriveCell(bx, bz, by, bx + 0.5, bz + 0.5, obstacles);
-            state.setFootprint(tick, r[0], r[1], r[2], r[3], by);
+            state.setFootprint(tick, r[0], r[1], r[2], r[3]);
             onChanged.run();
             return;
         }
@@ -77,7 +77,7 @@ public final class ConstraintKeyController {
             if (hit == null) return;
             List<AABB> obstacles = mc.getCollisionBoxes(bx - 1, by + 1, bz - 1, bx + 1, by + 2, bz + 1);
             double[] r = ConstraintDeriver.deriveCell(bx, bz, by + 1.0, hit.x, hit.z, obstacles);
-            state.setFootprint(tick, r[0], r[1], r[2], r[3], by + 1.0);
+            state.setFootprint(tick, r[0], r[1], r[2], r[3]);
             onChanged.run();
             return;
         }
@@ -94,9 +94,9 @@ public final class ConstraintKeyController {
                         mc.getPlayerYaw());
                 if (merge) {
                     double[] merged = mergedFootprint(tick, r, support.max.y, hit);
-                    state.setFootprint(tick, merged[0], merged[1], merged[2], merged[3], support.max.y);
+                    state.setFootprint(tick, merged[0], merged[1], merged[2], merged[3]);
                 } else {
-                    state.setFootprint(tick, r[0], r[1], r[2], r[3], support.max.y);
+                    state.setFootprint(tick, r[0], r[1], r[2], r[3]);
                 }
             }
         } else if (ConstraintDeriver.isSide(face)) {

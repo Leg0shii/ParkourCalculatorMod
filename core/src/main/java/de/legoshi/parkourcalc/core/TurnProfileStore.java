@@ -40,13 +40,11 @@ public final class TurnProfileStore {
         Double xHi;
         Double zLo;
         Double zHi;
-        Double y;
     }
 
     static final class HeaderData {
         int version = 2;
         Integer tasFirstTick;
-        Integer axis;
         List<RowData> rows = new ArrayList<RowData>();
         LandingData landing;
     }
@@ -61,8 +59,6 @@ public final class TurnProfileStore {
         boolean inputFailure;
         String verdict;
         Double margin;
-        Double marginX;
-        Double marginZ;
         int worstTick;
         int failTick;
         String failKeys;
@@ -78,7 +74,6 @@ public final class TurnProfileStore {
         Double[] solvedOffset;
         int[] pressed;
         boolean[] keysFailed;
-        double[] start;
     }
 
     static final class ForecastData {
@@ -233,7 +228,6 @@ public final class TurnProfileStore {
     static HeaderData toHeader(TurnReference ref) {
         HeaderData h = new HeaderData();
         h.tasFirstTick = ref.tasFirstTick() < 0 ? null : ref.tasFirstTick();
-        h.axis = ref.axis() == TurnReference.AXIS_BOTH ? null : ref.axis();
         for (int i = 0; i < ref.size(); i++) {
             InputRow r = ref.row(i);
             RowData d = new RowData();
@@ -254,7 +248,6 @@ public final class TurnProfileStore {
             h.landing.xHi = box(l.xHi);
             h.landing.zLo = box(l.zLo);
             h.landing.zHi = box(l.zHi);
-            h.landing.y = box(l.y);
         }
         return h;
     }
@@ -270,8 +263,6 @@ public final class TurnProfileStore {
         d.inputFailure = a.inputFailure;
         d.verdict = a.verdict;
         d.margin = a.hasMargin() ? a.margin : null;
-        d.marginX = box(a.marginX);
-        d.marginZ = box(a.marginZ);
         d.worstTick = a.worstTick;
         d.failTick = a.failTick;
         d.failKeys = TurnReference.keysText(a.failKeys);
@@ -286,7 +277,6 @@ public final class TurnProfileStore {
         d.solvedOffset = boxAll(a.solvedOffset);
         d.pressed = a.pressedKeys;
         d.keysFailed = a.keysFailed;
-        d.start = a.start;
         if (a.forecast != null) {
             ForecastData f = new ForecastData();
             f.held = boxAll(a.forecast.held);
@@ -358,10 +348,9 @@ public final class TurnProfileStore {
         for (int i = 0; i < rows.size(); i++) facings[i] = unbox(yaws.get(i));
         ref.replace(rows, facings);
         ref.setTasFirstTick(h.tasFirstTick == null ? -1 : h.tasFirstTick);
-        ref.setAxis(h.axis == null ? TurnReference.AXIS_BOTH : h.axis);
         if (h.landing != null) {
             ref.setLanding(new TurnReference.Landing(h.landing.tick, unbox(h.landing.xLo), unbox(h.landing.xHi),
-                    unbox(h.landing.zLo), unbox(h.landing.zHi), unbox(h.landing.y)));
+                    unbox(h.landing.zLo), unbox(h.landing.zHi)));
         }
         return ref;
     }
@@ -378,12 +367,10 @@ public final class TurnProfileStore {
                 timed ? unpackPhases(d.turnEnd, d.yaws.length) : null, null, d.turnFailure,
                 d.failTurn == null ? Double.NaN : d.failTurn, toForecast(d.forecast, d.yaws.length));
         a.favourite = d.favourite;
-        a.setAxisMargins(unbox(d.marginX), unbox(d.marginZ));
         a.tasFirstTick = d.tasFirstTick == null ? headerFirstTick : d.tasFirstTick;
         a.solvedOffset = unboxAll(d.solvedOffset, d.yaws.length);
         a.pressedKeys = d.pressed;
         a.keysFailed = d.keysFailed;
-        a.start = d.start;
         return a;
     }
 

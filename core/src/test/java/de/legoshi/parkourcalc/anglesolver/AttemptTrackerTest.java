@@ -580,12 +580,10 @@ public class AttemptTrackerTest {
         rig.play(true, rig.k0 + 1, sign, NONE, NONE);
         a = rig.tracker.last();
         assertFalse(a.verdict, a.landed);
-        int sweepFailed = a.forecast.failedTick;
-        assertTrue(sweepFailed >= rig.cur.startTick + rig.k0 + 1);
-        assertTrue(sweepFailed < rig.cur.startTick + rig.cur.n);
-        assertTrue(a.bestMarginAt(sweepFailed) > 0.0);
+        assertTrue(a.failedTick() >= rig.cur.startTick + rig.k0 + 1);
+        assertTrue(a.failedTick() < rig.cur.startTick + rig.cur.n);
+        assertTrue(a.bestMarginAt(a.failedTick()) > 0.0);
         assertTrue(a.bestMarginAt(rig.cur.startTick + rig.k0) <= 0.0);
-        assertEquals(-1, a.failedTick());
     }
 
     @Test
@@ -638,7 +636,7 @@ public class AttemptTrackerTest {
             r.setOnejumpFace(InputRow.ONEJUMP_FACE_OFF);
         }
         second.refresh();
-        assertTrue(second.current().isFast());
+        assertNull(second.current());
         assertFalse(rig.tasRow(0).isOnejumpKeys());
     }
 
@@ -672,8 +670,7 @@ public class AttemptTrackerTest {
         TurnAttempt a = rig.tracker.last();
         assertTrue(a.hasState());
         assertFalse(a.solved());
-        assertTrue(a.forecast.failedTick >= 0);
-        assertEquals(-1, a.failedTick());
+        assertEquals(a.forecast.failedTick, a.failedTick());
     }
 
     @Test
@@ -905,23 +902,16 @@ public class AttemptTrackerTest {
     }
 
     @Test
-    public void removingEveryFlagSwitchesToTheLandingOnlyReference() {
+    public void removingEveryFlagKeepsTheStoredReference() {
         Rig rig = new Rig();
-        int landTick = rig.tasFirst + rig.cur.landing.tick;
+        int n = rig.cur.n;
         for (InputRow r : rig.inputs.getRows()) {
             r.setOnejumpKeys(false);
             r.setOnejumpFace(InputRow.ONEJUMP_FACE_OFF);
         }
         rig.controller.refresh();
-        TurnProfileController.Current cur = rig.controller.current();
-        assertNotNull(cur);
-        assertTrue(cur.isFast());
-        assertEquals(landTick, cur.tasFirstTick);
-        assertTrue(rig.controller.document().reference().isLandingOnly());
-        OnejumpRigs.clearLandings(rig.state, 0, rig.inputs.getRows().size());
-        rig.controller.refresh();
         assertNull(rig.controller.current());
-        assertTrue(rig.controller.document().reference().isLandingOnly());
+        assertEquals(n, rig.controller.document().reference().size());
         assertTrue(rig.controller.lastError(), rig.controller.lastError().contains("kept"));
     }
 
