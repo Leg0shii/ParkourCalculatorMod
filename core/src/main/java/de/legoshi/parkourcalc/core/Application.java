@@ -221,7 +221,8 @@ public final class Application {
         saveController.setDebugSource(boxController, settings);
         AngleSolverTable angleSolverTable = new AngleSolverTable(angleSolverState, settings, selection, constraintSelection, inputData::size);
         inputOverlay.setAngleSolver(angleSolverTable);
-        StartStateTable startStateTable = new StartStateTable(runner, () -> onUserChange(-1), this::copyStartTeleportCommand);
+        StartStateTable startStateTable = new StartStateTable(runner, () -> onUserChange(-1), this::copyStartTeleportCommand,
+                this::setStartToPlayer);
         inputOverlay.setStartState(startStateTable);
         FileSystemSaveStore graphStore = saveStore == null ? null : new FileSystemSaveStore(
                 saveStore.getSaveDir().resolve("graphs"), saveStore.getModVersion(), saveStore.getMcVersion(),

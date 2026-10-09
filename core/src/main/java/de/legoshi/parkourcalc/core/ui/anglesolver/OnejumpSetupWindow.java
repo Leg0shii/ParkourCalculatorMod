@@ -49,6 +49,7 @@ public final class OnejumpSetupWindow implements RenderInterface {
     private final Runnable onSettingsChanged;
     private final ImBoolean open = new ImBoolean(false);
     private boolean openClearModal;
+    private boolean showChecks;
     private int attemptsPage;
     private TurnTiming.Onset onsetCache;
     private int onsetVersion = -1;
@@ -201,7 +202,7 @@ public final class OnejumpSetupWindow implements RenderInterface {
     }
 
     private void checkButton() {
-        if (Controls.secondaryButton("Validate Jump")) controller.check();
+        if (Controls.secondaryButton("Validate Jump")) showChecks = !controller.check().ok;
         TooltipUtil.onHover("Checks that the TAS is complete and lands. The live offset, the landing chance and the solved offsets run only on a validated jump, and any edit of the TAS needs a new validation.");
         ThemeManager.sectionSpacing();
     }
@@ -224,30 +225,47 @@ public final class OnejumpSetupWindow implements RenderInterface {
         }
         ImGui.textDisabled("off");
         ImGui.sameLine();
-        helpMarker();
-        if (!ImGui.isItemHovered()) return;
-        ImGui.beginTooltip();
-        if (check == null) {
-            ImGui.text("Press Validate Jump. The live offset, the landing chance and the solved offsets run only on a validated jump.");
-        } else if (!current) {
-            ImGui.text("The TAS changed since the validation. Press Validate Jump again.");
-        } else {
-            for (TurnProfileController.SetupCheck.Item item : check.items) {
-                ThemeManager.pushTextColor(item.ok ? ThemeManager.okColor() : ThemeManager.dangerColor());
-                ImGui.text(item.ok ? "ok" : "!!");
-                ThemeManager.popTextColor();
-                ImGui.sameLine();
-                ImGui.text(item.label);
-                ImGui.sameLine();
-                ImGui.textDisabled(item.detail);
+        boolean listable = check != null && current && !check.ok;
+        boolean expanded = listable && showChecks;
+        helpMarker(expanded ? "(hide)" : "(?)");
+        if (listable && ImGui.isItemClicked(0)) showChecks = !showChecks;
+        if (ImGui.isItemHovered() && !expanded) {
+            ImGui.beginTooltip();
+            if (check == null) {
+                ImGui.text("Press Validate Jump. The live offset, the landing chance and the solved offsets run only on a validated jump.");
+            } else if (!current) {
+                ImGui.text("The TAS changed since the validation. Press Validate Jump again.");
+            } else {
+                checkLines(check);
             }
+            ImGui.endTooltip();
         }
-        ImGui.endTooltip();
+        if (expanded) {
+            ImGui.indent(labelW);
+            checkLines(check);
+            ImGui.unindent(labelW);
+        }
+    }
+
+    private static void checkLines(TurnProfileController.SetupCheck check) {
+        for (TurnProfileController.SetupCheck.Item item : check.items) {
+            ThemeManager.pushTextColor(item.ok ? ThemeManager.okColor() : ThemeManager.dangerColor());
+            ImGui.text(item.ok ? "ok" : "!!");
+            ThemeManager.popTextColor();
+            ImGui.sameLine();
+            ImGui.text(item.label);
+            ImGui.sameLine();
+            ImGui.textDisabled(item.detail);
+        }
     }
 
     private static void helpMarker() {
+        helpMarker("(?)");
+    }
+
+    private static void helpMarker(String text) {
         ThemeManager.pushTextColor(ThemeManager.textMutedColor());
-        ImGui.text("(?)");
+        ImGui.text(text);
         ThemeManager.popTextColor();
     }
 
@@ -303,12 +321,11 @@ public final class OnejumpSetupWindow implements RenderInterface {
              + "compared tick by tick to that table and judged on the tick marked LB: the offset is the distance between "
              + "your position at that tick and the landing constraint."},
             {"1  The TAS",
-             "Build the complete TAS of the jump, by hand or with the Angle Solver: every tick from the first tick "
-             + "with a key pressed up to the tick marked LB, with the keys you will press and the yaw of every tick. "
-             + "Sprint alone does not count as a key. The attempt starts on the first tick with a key pressed, so the "
-             + "ticks before the jump belong in the TAS too."},
+             "Stand where the jump begins. Expand Start at the top of the input table and press Set to player. "
+             + "Then enter the jump tick by tick: on every tick the keys you press, from the first key to the landing. "
+             + "The yaw per tick comes from the Angle Solver (step 3) or you type it. Sprint alone does not count as a key."},
             {"2  Landing constraint and walls",
-             "Mark LB on the landing tick, the first tick where the player stands on the landing block again. Select that "
+             "Mark LB on the landing tick, the tick before the player stands on the landing block. Select that "
              + "tick, look at the TOP face of the landing block and press B: that creates the landing constraint, the X "
              + "and Z ranges in the Constraints column. Looking at a side face creates a wall constraint instead, which "
              + "the path has to stay out of. Use that for a block you must clear: select the tick where you pass it, "
@@ -328,8 +345,8 @@ public final class OnejumpSetupWindow implements RenderInterface {
              + "from the simulation, like Apply state in the Angle Solver, then checks that Keys or Turn ticks are "
              + "marked, the ticks form a path, the LB tick has a landing constraint, the simulation reaches the LB tick and "
              + "meets every constraint, and the Angle Solver's own physics replays the ticks, meets the landing "
-             + "constraint and matches the simulation's positions. The Live offset line shows on or off, hover its (?) for "
-             + "every check. The live offset, the landing chance and the solved offsets run only while the check holds. "
+             + "constraint and matches the simulation's positions. The Live offset line shows on or off. After a failed validation the "
+             + "checks are listed under it, the (?) next to off hides or shows them. The live offset, the landing chance and the solved offsets run only while the check holds. "
              + "Any edit of the TAS needs a new check."},
             {"6  Practice",
              "Right click resets. The first key you press after the reset starts the attempt on the first tick with a "
