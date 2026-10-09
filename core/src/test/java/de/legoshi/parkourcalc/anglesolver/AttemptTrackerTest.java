@@ -599,6 +599,22 @@ public class AttemptTrackerTest {
     }
 
     @Test
+    public void attemptsRecordedWithoutAForecastGetOneBackfilledAfterTheCheck() {
+        Rig rig = new Rig();
+        rig.tracker.setForecastEnabled(() -> false);
+        rig.play(true, 0, 0.0, NONE, NONE);
+        TurnAttempt a = rig.tracker.last();
+        assertTrue(a.hasState());
+        assertFalse(a.hasForecast());
+        assertEquals(1, rig.controller.backfillForecasts());
+        assertTrue(a.hasForecast());
+        assertEquals(rig.cur.n, a.forecast.held.length);
+        assertFalse(Double.isNaN(a.forecast.held[0]));
+        assertEquals(-1, a.failedTick());
+        assertEquals(0, rig.controller.backfillForecasts());
+    }
+
+    @Test
     public void anAbortedAttemptKeepsItsTimingSoFar() {
         Rig rig = new Rig(0, true);
         rig.framesIn(0, Integer.MAX_VALUE);

@@ -191,18 +191,24 @@ public final class Application {
                 this::setStartToPlayer, playback, mc, boxController, this::pushHudMessage
         );
         inputOverlay.setShortcutsEnabled(() -> imgui.ImGui.isWindowFocused(imgui.flag.ImGuiFocusedFlags.RootAndChildWindows));
-        inputOverlay.setRowFlags(() -> settings.viewOnejumpSetup,
+        inputOverlay.setRowFlags(() -> settings.viewOnejumpSetup || settings.viewOnejumpKeys || settings.viewTurnProfile,
                 new InputOverlay.RowFlag("Keys", "Onejump: an attempt must press exactly these keys at this tick. Drag to paint."
                         + " Shift click a key cell to make that key optional at that tick (hollow): it may be pressed or not.",
-                        InputRow::isOnejumpKeys, r -> r.setOnejumpKeys(!r.isOnejumpKeys())),
-                new InputOverlay.RowFlag("Face", "Onejump: the facing of this tick is checked and drawn in the Turn Profile."
+                        InputRow::isOnejumpKeys, r -> r.setOnejumpKeys(!r.isOnejumpKeys()))
+                        .visibleWhen(() -> settings.viewOnejumpKeys),
+                new InputOverlay.RowFlag("Turn", "Onejump: the facing of this tick is checked and drawn in the Turn Profile."
                         + " Right click: Still, the facing must not move at all at this tick (catches a preturn).",
                         r -> r.getOnejumpFace() != InputRow.ONEJUMP_FACE_OFF,
                         r -> r.setOnejumpFace(r.getOnejumpFace() != InputRow.ONEJUMP_FACE_OFF
                                 ? InputRow.ONEJUMP_FACE_OFF : InputRow.ONEJUMP_FACE_CHECK),
                         "Still", r -> r.getOnejumpFace() == InputRow.ONEJUMP_FACE_STILL,
                         r -> r.setOnejumpFace(r.getOnejumpFace() == InputRow.ONEJUMP_FACE_STILL
-                                ? InputRow.ONEJUMP_FACE_CHECK : InputRow.ONEJUMP_FACE_STILL)));
+                                ? InputRow.ONEJUMP_FACE_CHECK : InputRow.ONEJUMP_FACE_STILL))
+                        .visibleWhen(() -> settings.viewTurnProfile),
+                new InputOverlay.RowFlag("LB", "Onejump: the land block tick, the first tick before the player is on the"
+                        + " ground again. Its X or Z constraint is the landing constraint and the attempt is judged here."
+                        + " One row only; it also sets the solver's goal tick.",
+                        InputRow::isOnejumpLand, this::toggleLandRow).visibleWhen(() -> settings.viewOnejumpSetup));
 
         angleSolverState = new AngleSolverState();
         FileSystemSaveStore saveStore = saveController.getSaveStore();
@@ -215,7 +221,8 @@ public final class Application {
         saveController.setDebugSource(boxController, settings);
         AngleSolverTable angleSolverTable = new AngleSolverTable(angleSolverState, settings, selection, constraintSelection, inputData::size);
         inputOverlay.setAngleSolver(angleSolverTable);
-        StartStateTable startStateTable = new StartStateTable(runner, () -> onUserChange(-1), this::copyStartTeleportCommand);
+        StartStateTable startStateTable = new StartStateTable(runner, () -> onUserChange(-1), this::copyStartTeleportCommand,
+                this::setStartToPlayer);
         inputOverlay.setStartState(startStateTable);
         FileSystemSaveStore graphStore = saveStore == null ? null : new FileSystemSaveStore(
                 saveStore.getSaveDir().resolve("graphs"), saveStore.getModVersion(), saveStore.getMcVersion(),
@@ -257,7 +264,10 @@ public final class Application {
         turnProfile = new TurnProfileController(angleSolverEngine, angleSolverState, inputData,
                 () -> settings.viewOnejumpSetup || settings.viewTurnProfile || settings.viewOnejumpKeys,
                 mc::getMouseSensitivity, () -> settings.turnProfileAttempts, () -> settings.onejumpSpreadAttempts,
-                new TurnProfileStore(saveController::getSaveStore), saveController::currentName);
+                new TurnProfileStore(saveController::getSaveStore), saveController::currentName,
+                t -> boxController.getState(t),
+                () -> SaveIO.undoSignature(inputData, runner.getStartPosition(), runner.getStartVelocity(),
+                        runner.getStartYaw(), runner.getStartPitch(), runner.getStartResumeState(), angleSolverState));
         attemptTracker = new AttemptTracker(turnProfile, () -> settings.viewTurnProfile || settings.viewOnejumpKeys
                 || settings.viewOnejumpSetup, this::isPlaybackRunning, () -> settings.onejumpTurnTiming);
         practiceMacro = new PracticeMacro(turnProfile, attemptTracker, settings);
@@ -284,7 +294,9 @@ public final class Application {
                 turnProfile.onTasDeleted(name);
             }
         });
-        attemptTracker.setForecastEnabled(() -> settings.onejumpOffsetLive || settings.onejumpOffsetHover);
+        attemptTracker.setForecastEnabled(() -> (settings.onejumpOffsetLive || settings.onejumpOffsetHover)
+                && turnProfile.isChecked());
+        turnProfile.setSurfaceApplier((from, to) -> applyPathSurfaceState(from, to, false));
         de.legoshi.parkourcalc.core.ui.anglesolver.TurnProfileWindow turnProfileWindow =
                 new de.legoshi.parkourcalc.core.ui.anglesolver.TurnProfileWindow(turnProfile, attemptTracker, settings,
                         this::saveSettings);
@@ -792,12 +804,27 @@ public final class Application {
         return rows.isEmpty() ? -1 : rows.iterator().next();
     }
 
+    private void toggleLandRow(InputRow row) {
+        boolean on = !row.isOnejumpLand();
+        for (InputRow other : inputData.getRows()) other.setOnejumpLand(false);
+        row.setOnejumpLand(on);
+        if (on && angleSolverState != null) {
+            int tick = inputData.getRows().indexOf(row);
+            if (tick >= 0) angleSolverState.setLandingTick(tick);
+        }
+    }
+
     public void applyPathSurfaceState() {
         if (angleSolverState == null) return;
-        int start = Math.max(0, angleSolverState.getStartTick());
-        int end = Math.min(Math.min(inputData.size(), boxController.size() - 1), angleSolverState.getLandingTick());
+        applyPathSurfaceState(angleSolverState.getStartTick(), angleSolverState.getLandingTick(), true);
+    }
+
+    public void applyPathSurfaceState(int from, int to, boolean notify) {
+        if (angleSolverState == null) return;
+        int start = Math.max(0, from);
+        int end = Math.min(Math.min(inputData.size(), boxController.size() - 1), to);
         if (end <= start) {
-            pushHudMessage("Solver range invalid", HudMessageStyle.COLOR_WARN);
+            if (notify) pushHudMessage("Solver range invalid", HudMessageStyle.COLOR_WARN);
             return;
         }
         boolean changed = false;
@@ -823,7 +850,7 @@ public final class Application {
             changed = true;
         }
         if (changed) saveController.markDirty();
-        pushHudMessage("Surface state applied · T" + (start + 1) + "-T" + end);
+        if (notify) pushHudMessage("Surface state applied · T" + (start + 1) + "-T" + end);
     }
 
     private boolean isWalledSide(int neighborX, int blockY, int neighborZ) {
