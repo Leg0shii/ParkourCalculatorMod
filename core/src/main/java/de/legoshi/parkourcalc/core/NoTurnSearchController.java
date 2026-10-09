@@ -148,6 +148,14 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
         return startTick;
     }
 
+    public NoTurnProblem problem() {
+        return problem;
+    }
+
+    public boolean freeStartYaw() {
+        return freeStartYaw;
+    }
+
     @Override
     public NoTurnRanking.Mode rankMode() {
         return rankMode;

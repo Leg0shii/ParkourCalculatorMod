@@ -108,6 +108,7 @@ public final class Application {
     private de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel forwardModel;
     private de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverWindow angleSolverWindow;
     private NoTurnSearchController noTurnSearch;
+    private SenseSearchController senseSearch;
 
     public Application(Simulator simulator, MinecraftAccess mc) {
         this.mc = mc;
@@ -252,8 +253,10 @@ public final class Application {
         angleSolverWindow.setRunTicksControls(runTicks);
         noTurnSearch = new NoTurnSearchController(inputData, runner, boxController, saveController, angleSolverState,
                 angleSolverEngine, forwardModel, mc, this::onUserChange, this::pushHudMessage, runTicks::isRunning);
+        senseSearch = new SenseSearchController(noTurnSearch, inputData, saveController, angleSolverEngine,
+                forwardModel, this::onUserChange, this::pushHudMessage);
         de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow stratfinderWindow =
-                new de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow(noTurnSearch);
+                new de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow(noTurnSearch, senseSearch);
         turnProfile = new TurnProfileController(angleSolverEngine, angleSolverState, inputData,
                 () -> settings.viewOnejumpSetup || settings.viewTurnProfile || settings.viewOnejumpKeys,
                 mc::getMouseSensitivity, () -> settings.turnProfileAttempts, () -> settings.onejumpSpreadAttempts,
@@ -651,6 +654,7 @@ public final class Application {
         }
         pollSolver();
         if (noTurnSearch != null) noTurnSearch.poll();
+        if (senseSearch != null) senseSearch.poll();
         boolean pathInert = isControlPanelOpen() || !settings.showPath;
         dragController.tick(
                 mc.getEyePosition(),

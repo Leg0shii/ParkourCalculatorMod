@@ -19,6 +19,13 @@ anglesolver/
                            motivated the ticket; Optimize adopts the previous successful solve as its
                            incumbent (solver chain starts with "incumbent") and never ends worse than it;
                            a pinned start passes through the sweep instantly (gh398-optimize-2jump)
+  SenseFinderTest.java     Sensefinder on captures/hpk_human/d10/j703 (fast): every listed sense re-forwards to a
+                           landing path with the same offset, the three rankings are ordered, the carried-along jump
+                           window (0.0655 deg, TAS on its lower edge) is below one mouse pixel from 100% up and every
+                           listed jump facing sits inside the window it was given
+  SenseFinderSolvedWindowTest.java  (SlowSolverTests) the SOLVED jump window of j703, each probe re-solving the rest of
+                           the jump with CertifiedBnb, holds the human landing at 1.93 deg and the TAS facing and is
+                           wider than 0.2 deg; every sense row's jump facing sits inside it
   OverConstrainedChainTest.java  gh-454 (SlowSolverTests): a segment whose dF = 0 constraints tie every
                            tick to one heading (gh454-p2s-overconstrained capture, THOROUGH) fails
                            within 20 s and carries the "Overconstrained" notice label with the
