@@ -142,6 +142,7 @@ public final class TurnProfileController {
     private final Supplier<String> tasName;
     private final IntFunction<TickState> tickState;
     private final Supplier<String> tasSignature;
+    private java.util.function.BiConsumer<Integer, Integer> surfaceApplier = (from, to) -> { };
     private volatile SetupCheck lastCheck;
     private volatile String lastCheckSignature;
     private volatile String checkedSignature;
@@ -361,10 +362,12 @@ public final class TurnProfileController {
         return lastCheck;
     }
 
+    public void setSurfaceApplier(java.util.function.BiConsumer<Integer, Integer> applier) {
+        surfaceApplier = applier != null ? applier : (from, to) -> { };
+    }
+
     public SetupCheck check() {
         refresh();
-        currentSignature = tasSignature.get();
-        List<SetupCheck.Item> items = new ArrayList<SetupCheck.Item>();
         List<InputRow> rows = inputs.getRows();
         int first = -1;
         int last = -1;
@@ -374,36 +377,44 @@ public final class TurnProfileController {
             last = t;
         }
         boolean flagged = first >= 0;
-        items.add(new SetupCheck.Item("Keys and Face ticks flagged", flagged,
-                flagged ? "ticks " + (first + 1) + " to " + (last + 1) : "flag them in the Keys and Face columns of the input table"));
         TurnReference ref = document.reference();
+        TurnReference.Landing stored = flagged ? ref.landing() : null;
+        if (stored != null) {
+            surfaceApplier.accept(first, ref.tasFirstTick() + stored.tick);
+            refresh();
+        }
+        currentSignature = tasSignature.get();
+        List<SetupCheck.Item> items = new ArrayList<SetupCheck.Item>();
+        items.add(new SetupCheck.Item("Keys and Face ticks are flagged", flagged,
+                flagged ? "ticks " + (first + 1) + " to " + (last + 1) : "flag them in the Keys and Face columns of the input table"));
         Current cur = current.get();
         boolean built = flagged && cur != null && cur.n == last - first + 1 && cur.tasFirstTick == first;
-        items.add(new SetupCheck.Item("Reference built from the TAS", built,
-                built ? cur.n + " ticks" : lastError != null ? lastError : "no path for the flagged ticks"));
+        items.add(new SetupCheck.Item("The TAS path covers the flagged ticks", built,
+                built ? cur.n + " ticks" : lastError != null ? lastError : "the rows from the first to the last flagged tick could not be read as a path"));
         TurnReference.Landing landing = built ? ref.landing() : null;
         int landingTick = landing == null ? -1 : ref.tasFirstTick() + landing.tick;
-        items.add(new SetupCheck.Item("Landing box after the reference", landing != null,
-                landing != null ? landing.label(ref.tasFirstTick()) : "put an X or Z constraint on the landing tick with B"));
+        items.add(new SetupCheck.Item("A landing box follows the flagged ticks", landing != null,
+                landing != null ? landing.label(ref.tasFirstTick()) : "select the landing tick, look at the landing block and press B"));
         TickState landState = landingTick >= 0 ? tickState.apply(landingTick) : null;
-        items.add(new SetupCheck.Item("Simulation reaches the landing tick", landState != null,
+        items.add(new SetupCheck.Item("The rows reach the landing tick", landState != null,
                 landState != null ? "tick " + (landingTick + 1) : landingTick < 0 ? "no landing tick"
-                        : "add input rows up to tick " + (landingTick + 1)));
-        String violated = built && landingTick >= 0 ? simulationViolation(first, landingTick) : "no reference";
-        items.add(new SetupCheck.Item("Simulation meets every constraint", violated == null,
-                violated == null ? "every constraint after tick " + (first + 1) + " up to tick " + (landingTick + 1) : violated));
+                        : "add rows up to tick " + (landingTick + 1)));
+        String violated = built && landingTick >= 0 ? simulationViolation(first, landingTick) : "no path";
+        items.add(new SetupCheck.Item("The simulation meets every constraint", violated == null,
+                violated == null ? "every constraint from tick " + (first + 2) + " to tick " + (landingTick + 1) : violated));
         boolean modelLands = built && cur.profile != null && cur.profile.lands;
-        items.add(new SetupCheck.Item("Solver model lands on the path", modelLands,
-                modelLands ? "the byte-exact model meets the constraints" : !built || cur.profile == null ? "no solver path"
-                        : "the path misses its constraints in the solver model, solve it or fix the facings"));
-        String disagree = built && cur.snapshot != null ? modelDisagreement(cur) : "no solver path";
-        items.add(new SetupCheck.Item("Simulation and solver model agree", disagree == null,
-                disagree == null ? "same position on every reference tick" : disagree));
+        items.add(new SetupCheck.Item("The solver lands the TAS too", modelLands,
+                modelLands ? "the solver replays the rows with its own physics and lands in the box"
+                        : !built || cur.profile == null ? "the solver could not replay the rows"
+                        : "the solver replays the rows with its own physics and misses the box, solve the facings again or fix the Slip column"));
+        String disagree = built && cur.snapshot != null ? modelDisagreement(cur) : "the solver could not replay the rows";
+        items.add(new SetupCheck.Item("The solver's replay matches the simulation", disagree == null,
+                disagree == null ? "same position on every flagged tick" : disagree));
         TickState startState = flagged ? tickState.apply(first) : null;
         boolean grounded = startState != null && startState.onGround;
-        items.add(new SetupCheck.Item("Reference starts on the ground", grounded,
+        items.add(new SetupCheck.Item("The first flagged tick is on the ground", grounded,
                 grounded ? "tick " + (first + 1) : startState == null ? "no simulated state at the first flagged tick"
-                        : "the first flagged tick is in the air"));
+                        : "the first flagged tick is in the air, flag from a tick on the ground"));
         SetupCheck result = new SetupCheck(items);
         lastCheck = result;
         lastCheckSignature = currentSignature;
@@ -468,7 +479,7 @@ public final class TurnProfileController {
         }
         if (worst <= MODEL_AGREEMENT) return null;
         return "they differ by " + ConstraintText.fixedStat(worst) + " at tick " + (worstTick + 1)
-                + ": the rows' ground state (Slip column), the start state or OptiFine Fast Math";
+                + ": the Slip column (ground or air per tick) or the start state does not match the simulation";
     }
 
     public void refresh() {

@@ -289,6 +289,7 @@ public final class Application {
         });
         attemptTracker.setForecastEnabled(() -> (settings.onejumpOffsetLive || settings.onejumpOffsetHover)
                 && turnProfile.isChecked());
+        turnProfile.setSurfaceApplier((from, to) -> applyPathSurfaceState(from, to, false));
         de.legoshi.parkourcalc.core.ui.anglesolver.TurnProfileWindow turnProfileWindow =
                 new de.legoshi.parkourcalc.core.ui.anglesolver.TurnProfileWindow(turnProfile, attemptTracker, settings,
                         this::saveSettings);
@@ -798,10 +799,15 @@ public final class Application {
 
     public void applyPathSurfaceState() {
         if (angleSolverState == null) return;
-        int start = Math.max(0, angleSolverState.getStartTick());
-        int end = Math.min(Math.min(inputData.size(), boxController.size() - 1), angleSolverState.getLandingTick());
+        applyPathSurfaceState(angleSolverState.getStartTick(), angleSolverState.getLandingTick(), true);
+    }
+
+    public void applyPathSurfaceState(int from, int to, boolean notify) {
+        if (angleSolverState == null) return;
+        int start = Math.max(0, from);
+        int end = Math.min(Math.min(inputData.size(), boxController.size() - 1), to);
         if (end <= start) {
-            pushHudMessage("Solver range invalid", HudMessageStyle.COLOR_WARN);
+            if (notify) pushHudMessage("Solver range invalid", HudMessageStyle.COLOR_WARN);
             return;
         }
         boolean changed = false;
@@ -827,7 +833,7 @@ public final class Application {
             changed = true;
         }
         if (changed) saveController.markDirty();
-        pushHudMessage("Surface state applied · T" + (start + 1) + "-T" + end);
+        if (notify) pushHudMessage("Surface state applied · T" + (start + 1) + "-T" + end);
     }
 
     private boolean isWalledSide(int neighborX, int blockY, int neighborZ) {

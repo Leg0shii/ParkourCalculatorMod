@@ -126,6 +126,20 @@ public class OnejumpCheckTest {
     }
 
     @Test
+    public void theCheckAppliesTheSurfaceStateOverTheFlaggedTicksFirst() {
+        Rig rig = new Rig();
+        int[] span = new int[2];
+        rig.controller.setSurfaceApplier((from, to) -> {
+            span[0] = from;
+            span[1] = to;
+        });
+        boolean ok = rig.controller.check().ok;
+        assertTrue(rig.failing(), ok);
+        assertEquals(rig.first, span[0]);
+        assertEquals(rig.landingTick, span[1]);
+    }
+
+    @Test
     public void aMissingLandingBoxFailsTheCheck() {
         Rig rig = new Rig();
         OnejumpRigs.clearLandings(rig.state, rig.first, rig.landingTick + 1);
@@ -134,7 +148,7 @@ public class OnejumpCheckTest {
         assertFalse(check.ok);
         assertFalse(rig.controller.isChecked());
         assertFalse(check.items.get(2).ok);
-        assertTrue(check.items.get(2).detail, check.items.get(2).detail.contains("with B"));
+        assertTrue(check.items.get(2).detail, check.items.get(2).detail.contains("press B"));
     }
 
     @Test

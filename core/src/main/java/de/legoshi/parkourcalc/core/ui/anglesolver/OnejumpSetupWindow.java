@@ -269,8 +269,9 @@ public final class OnejumpSetupWindow implements RenderInterface {
              + "compared to its rows from the first key on and judged on the landing tick, where the offset is measured. "
              + "With a checked TAS the Turn Profile also shows a live offset during the attempt."},
             {"1  The TAS",
-             "Build the complete TAS of the jump, by hand or with the solver: every row from the first key of the run-up "
-             + "to the landing, with the keys you will press. The run-up belongs in the TAS, the attempt starts on its first keyed row."},
+             "Build the complete TAS of the jump, by hand or with the solver: every row from the first key you press to "
+             + "the landing tick, with the keys you will press. The landing tick is the first tick before the player is on "
+             + "the ground again; it carries the landing box. The attempt starts on the first keyed row of the TAS."},
             {"2  Landing box and walls",
              "Select the landing tick in the input table, look at the landing block and press B. A wall you have to clear "
              + "gets a constraint the same way: select the tick where you pass it, look at its face, press B."},
@@ -281,10 +282,12 @@ public final class OnejumpSetupWindow implements RenderInterface {
              + "on Face sets Still: the attempt fails as soon as you turn on that tick. Shift click on a key cell makes that "
              + "key optional on that tick."},
             {"5  Check TAS",
-             "Press Check TAS in the Overview. It checks that the ticks are flagged, a landing box follows them, the "
-             + "simulation reaches it and meets every constraint, the solver model lands on the same path and the "
-             + "reference starts on the ground. The live offset, the landing chance and the solved offsets run only while "
-             + "the check holds. Any edit of the TAS needs a new check."},
+             "Press Check TAS in the Overview. It first takes the ground or air state of every flagged tick from the "
+             + "simulation into the Slip column, like Apply state in the Angle Solver. Then it checks that the ticks are "
+             + "flagged, a landing box follows them, the rows reach it, the simulation meets every constraint, the solver "
+             + "replays the rows and lands in the box with the same positions as the simulation, and the first flagged "
+             + "tick is on the ground. The live offset, the landing chance and the solved offsets run only while the check "
+             + "holds. Any edit of the TAS needs a new check."},
             {"6  Practice",
              "Right click resets. The first key after the reset starts the attempt, the rows play tick by tick, the "
              + "landing tick judges it. The attempts table shows the offset and what failed, the Turn Profile your facing "
