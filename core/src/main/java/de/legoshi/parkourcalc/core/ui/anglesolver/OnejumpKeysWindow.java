@@ -79,10 +79,9 @@ public final class OnejumpKeysWindow implements RenderInterface {
     }
 
     private static final String[] HOW_TO = {
-            "No keys to check yet",
-            "Mark Keys on the ticks in the input table whose keys should be checked.",
-            "Shift click a key cell to make that key optional on its tick.",
-            "Green: your attempt pressed the expected keys, red: it did not."};
+            "No keys to check",
+            "Mark Keys on the ticks of the input table whose keys you want checked.",
+            "Shift click a key to make it optional on that tick."};
 
     private void body(float scale) {
         TurnProfileController.Current cur = controller.current();
@@ -108,7 +107,7 @@ public final class OnejumpKeysWindow implements RenderInterface {
         for (int t = 0; t < cur.n; t++) anyChecked |= cur.checkKeys[t];
         if (!anyChecked) {
             dl.addText(x0 + 6f * scale, y0 + h - ImGui.getTextLineHeight() - 4f * scale, ThemeManager.textDimColor(),
-                    "no Keys ticks marked, nothing is checked: mark Keys in the input table");
+                    "no Keys ticks marked, nothing is checked");
         }
         TurnAttempt you = tracker.shownAttempt();
         int n = cur.n;
