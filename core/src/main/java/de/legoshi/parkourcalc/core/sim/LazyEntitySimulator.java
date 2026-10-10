@@ -226,10 +226,20 @@ public abstract class LazyEntitySimulator<E> implements Simulator {
     }
 
     private E ensureEntity() {
+        if (entity != null && isEntityStale(entity)) {
+            pendingStart = getStart(entity);
+            pendingVelocity = getStartVel(entity);
+            pendingYaw = getStartYawValue(entity);
+            entity = null;
+        }
         if (entity == null) {
             entity = createEntity(pendingStart, pendingVelocity, pendingYaw);
         }
         return entity;
+    }
+
+    protected boolean isEntityStale(E entity) {
+        return false;
     }
 
     /** Any of pendingStart/pendingVelocity/pendingYaw may be null; subclass falls back to defaults. */

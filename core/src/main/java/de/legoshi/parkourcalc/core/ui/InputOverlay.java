@@ -117,6 +117,8 @@ public final class InputOverlay {
 
     private static final String WARN_MULTIPLAYER =
             "Multiplayer: simulator only sees blocks inside your render distance.";
+    private static final String WARN_UNLOADED_CHUNKS =
+            "Path ran through unloaded chunks. Go there and press %s to re-simulate.";
 
     private static final String EMPTY_HINT = "Right-click to add ticks";
 
@@ -128,6 +130,7 @@ public final class InputOverlay {
     private final MinecraftAccess mc;
     private final BoxController boxController;
     private final Consumer<String> hudMessage;
+    private BooleanSupplier unloadedChunkWarning = () -> false;
 
     private final SelectionManager selection;
     private final KeyDragSelect keyDragSelect = new KeyDragSelect();
@@ -654,7 +657,15 @@ public final class InputOverlay {
         if (mc == null || !mc.isReady() || mc.isSinglePlayer()) return;
         ThemeManager.pushTextColor(ThemeManager.warningColor());
         ImGui.textWrapped(WARN_MULTIPLAYER);
+        if (unloadedChunkWarning.getAsBoolean()) {
+            String key = mc.getRerunSimulationKeyName();
+            ImGui.textWrapped(String.format(WARN_UNLOADED_CHUNKS, key == null ? "the Rerun simulation key" : key));
+        }
         ThemeManager.popTextColor();
+    }
+
+    public void setUnloadedChunkWarning(BooleanSupplier warning) {
+        this.unloadedChunkWarning = warning;
     }
 
     private void setupColumns(boolean solverActive, boolean renderHeaders, boolean scrollFreeze) {

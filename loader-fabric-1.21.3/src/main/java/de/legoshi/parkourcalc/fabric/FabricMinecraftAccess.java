@@ -338,6 +338,17 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
     }
 
     @Override
+    public boolean isChunkLoaded(int chunkX, int chunkZ) {
+        ClientLevel level = Minecraft.getInstance().level;
+        return level != null && level.hasChunk(chunkX, chunkZ);
+    }
+
+    @Override
+    public String getRerunSimulationKeyName() {
+        return FabricParkourCalculator.rerunSimulationKeyName();
+    }
+
+    @Override
     public <T> T runOnServerThread(Supplier<T> task) {
         MinecraftServer server = Minecraft.getInstance().getSingleplayerServer();
         if (server == null) return task.get();

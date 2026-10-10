@@ -144,6 +144,14 @@ public interface MinecraftAccess {
     /** True when the client owns the integrated server (singleplayer or LAN host). */
     boolean isSinglePlayer();
 
+    default boolean isChunkLoaded(int chunkX, int chunkZ) {
+        return true;
+    }
+
+    default String getRerunSimulationKeyName() {
+        return null;
+    }
+
     /** SP: runs the task on the server's main thread and blocks for the result.
      *  MP: runs inline. Lets the simulator tick against ServerWorld natively. */
     <T> T runOnServerThread(Supplier<T> task);

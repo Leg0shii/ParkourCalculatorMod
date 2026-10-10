@@ -12,6 +12,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.PlayerControllerMP;
+import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.server.integrated.IntegratedServer;
@@ -302,6 +303,17 @@ public final class Forge8MinecraftAccess implements MinecraftAccess {
     @Override
     public boolean isSinglePlayer() {
         return Minecraft.getMinecraft().getIntegratedServer() != null;
+    }
+
+    @Override
+    public boolean isChunkLoaded(int chunkX, int chunkZ) {
+        WorldClient world = Minecraft.getMinecraft().theWorld;
+        return world != null && !world.getChunkFromChunkCoords(chunkX, chunkZ).isEmpty();
+    }
+
+    @Override
+    public String getRerunSimulationKeyName() {
+        return Forge8ParkourCalculator.rerunSimulationKeyName();
     }
 
     @Override

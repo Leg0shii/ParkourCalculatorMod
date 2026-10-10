@@ -138,6 +138,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     private static boolean wasPlaybackRunning = false;
 
+    public static String rerunSimulationKeyName() {
+        return rerunSimulationKeyBinding == null ? null : rerunSimulationKeyBinding.getTranslatedKeyMessage().getString();
+    }
+
     public static void onStartTick() {
         ReplayLockstep.clientBarrierPreTick();
         manageInputLifecycle();

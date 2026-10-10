@@ -176,6 +176,15 @@ public final class Forge8Simulator extends LazyEntitySimulator<SimulatorEntity> 
         return new SimulatorEntity(simWorld, player.getGameProfile(), start, vel, yaw);
     }
 
+    @Override
+    protected boolean isEntityStale(SimulatorEntity e) {
+        Minecraft mc = Minecraft.getMinecraft();
+        WorldClient clientWorld = mc.theWorld;
+        if (clientWorld == null || e.worldObj == clientWorld) return false;
+        IntegratedServer server = mc.getIntegratedServer();
+        return server == null || e.worldObj != server.worldServerForDimension(clientWorld.provider.getDimensionId());
+    }
+
     @Override protected void resetEntity(SimulatorEntity e, StartResumeState resume) {
         ensurePair(e);
         if (pair != null) {
