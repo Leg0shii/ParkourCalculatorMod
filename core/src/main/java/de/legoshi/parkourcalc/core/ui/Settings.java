@@ -25,6 +25,7 @@ public final class Settings {
     private static final float[] DEFAULT_HITBOX_DEFAULT = {0.804f, 0.839f, 0.957f, 0.80f};      // text       #cdd6f4
     private static final float[] DEFAULT_HITBOX_SELECTED = {0.651f, 0.890f, 0.631f, 0.80f};     // green      #a6e3a1
     private static final float[] DEFAULT_TICK_GROUND_HIGHLIGHT = {0.541f, 0.576f, 0.941f, 0.22f}; // periwinkle #8a93f0
+    private static final float[] DEFAULT_TICK_SELECTED_HIGHLIGHT = {0.537f, 0.706f, 0.980f, 0.38f};
     private static final float[] DEFAULT_CONSTRAINT_OUTLINE = {0.322f, 0.000f, 0.298f, 1.000f};   // #52004cff
     private static final float[] DEFAULT_CONSTRAINT_FILL = {0.329f, 0.000f, 0.255f, 0.451f};      // #54004173
     private static final float[] DEFAULT_CONSTRAINT_BACK = {0.627f, 0.008f, 0.627f, 0.118f};
@@ -155,6 +156,7 @@ public final class Settings {
     public final float[] hitboxDefault = DEFAULT_HITBOX_DEFAULT.clone();
     public final float[] hitboxSelected = DEFAULT_HITBOX_SELECTED.clone();
     public final float[] tickGroundHighlight = DEFAULT_TICK_GROUND_HIGHLIGHT.clone();
+    public final float[] tickSelectedHighlight = DEFAULT_TICK_SELECTED_HIGHLIGHT.clone();
     public final float[] constraintOutline = DEFAULT_CONSTRAINT_OUTLINE.clone();
     public final float[] constraintFill = DEFAULT_CONSTRAINT_FILL.clone();
     public final float[] constraintBack = DEFAULT_CONSTRAINT_BACK.clone();
@@ -290,6 +292,7 @@ public final class Settings {
         System.arraycopy(DEFAULT_HITBOX_DEFAULT, 0, hitboxDefault, 0, 4);
         System.arraycopy(DEFAULT_HITBOX_SELECTED, 0, hitboxSelected, 0, 4);
         System.arraycopy(DEFAULT_TICK_GROUND_HIGHLIGHT, 0, tickGroundHighlight, 0, 4);
+        System.arraycopy(DEFAULT_TICK_SELECTED_HIGHLIGHT, 0, tickSelectedHighlight, 0, 4);
         System.arraycopy(DEFAULT_CONSTRAINT_OUTLINE, 0, constraintOutline, 0, 4);
         System.arraycopy(DEFAULT_CONSTRAINT_FILL, 0, constraintFill, 0, 4);
         System.arraycopy(DEFAULT_CONSTRAINT_BACK, 0, constraintBack, 0, 4);
