@@ -941,6 +941,11 @@ public final class AngleSolverEngine {
         return c == null ? Double.POSITIVE_INFINITY : c.closestMiss().violation();
     }
 
+    public long liveOverallDeadlineNanos() {
+        GraphContext c = currentGraphContext;
+        return c == null ? 0L : c.overallDeadline();
+    }
+
     public SolveProgress liveProgress() {
         return currentProgress;
     }
