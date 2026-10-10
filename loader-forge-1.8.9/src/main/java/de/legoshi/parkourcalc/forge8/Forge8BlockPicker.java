@@ -32,7 +32,7 @@ public final class Forge8BlockPicker implements BlockPicker {
         Vec3 look = view.getLook(1.0F);
         Vec3 end = eye.addVector(look.xCoord * REACH, look.yCoord * REACH, look.zCoord * REACH);
 
-        MovingObjectPosition hit = world.rayTraceBlocks(eye, end);
+        MovingObjectPosition hit = Forge8RayTrace.trace(world, eye, end);
         if (hit == null || hit.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) return null;
         BlockPos pos = hit.getBlockPos();
         if (pos == null) return null;

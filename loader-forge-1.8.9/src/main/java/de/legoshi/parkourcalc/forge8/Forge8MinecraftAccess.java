@@ -43,7 +43,7 @@ public final class Forge8MinecraftAccess implements MinecraftAccess {
         Vec3 eye = view.getPositionEyes(1.0F);
         Vec3 look = view.getLook(1.0F);
         Vec3 end = eye.addVector(look.xCoord * PICK_REACH, look.yCoord * PICK_REACH, look.zCoord * PICK_REACH);
-        MovingObjectPosition hit = world.rayTraceBlocks(eye, end);
+        MovingObjectPosition hit = Forge8RayTrace.trace(world, eye, end);
         if (hit == null || hit.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) return null;
         return hit;
     }
@@ -179,7 +179,7 @@ public final class Forge8MinecraftAccess implements MinecraftAccess {
                 origin.x + direction.x * maxDistance,
                 origin.y + direction.y * maxDistance,
                 origin.z + direction.z * maxDistance);
-        MovingObjectPosition hit = world.rayTraceBlocks(start, end);
+        MovingObjectPosition hit = Forge8RayTrace.trace(world, start, end);
         if (hit == null || hit.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK || hit.hitVec == null) return -1.0;
         return hit.hitVec.distanceTo(start);
     }
