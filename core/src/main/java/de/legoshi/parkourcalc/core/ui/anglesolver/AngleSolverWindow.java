@@ -91,6 +91,7 @@ public final class AngleSolverWindow implements RenderInterface {
     private static final float OPTION_INDENT = 26f;
 
     private static final int LONG_SPAN_WARN_TICKS = 100;
+    private static final String SOLVING_NO_CANDIDATE = "Solving · no candidate yet";
 
     private static final String LONG_SPAN_TIP =
             "A long span is solved a window of ~10 jumps at a time: each window is solved exactly, its"
@@ -228,6 +229,9 @@ public final class AngleSolverWindow implements RenderInterface {
         if (panel != null) {
             ThemeManager.paddedSeparator();
             renderResultPanel(io, panel, scale);
+        } else if (engine.isSolving()) {
+            ThemeManager.paddedSeparator();
+            renderSolvingPanel(io, scale);
         }
     }
 
@@ -860,46 +864,66 @@ public final class AngleSolverWindow implements RenderInterface {
             else engine.stopAndUseBest();
         }
         if (ImGui.isItemHovered()) ImGui.setTooltip("Stop the search and keep the best solution found so far.");
-        if (engine.isSolving()) renderSolveProgress(scale);
     }
-
-    private static final String STAGE_TIP =
-            "The solver stage running right now, with the time spent in it against its budget."
-            + " Stages hand over to each other as the solve advances.";
 
     private static final String CLOSEST_MISS_TIP =
             "The smallest worst-constraint violation any stage has reached so far, in blocks."
             + " A value that keeps shrinking means the search is converging; one that sits still means it is not.";
 
-    private void renderSolveProgress(float scale) {
-        String stage = "starting";
-        String time = "";
-        GraphRunState rs = engine.isGraphSolving() ? engine.graphRunState() : null;
-        if (rs != null) {
-            String active = rs.activeNodeId();
-            NodeStatus st = active != null ? rs.status(active) : null;
-            if (st != null) {
-                stage = st.label;
-                time = String.format(Locale.ROOT, "%.1fs", (System.nanoTime() - st.startNanos) / 1.0e9);
-                if (st.budgetNanos > 0) {
-                    time += " / " + BudgetText.format((int) Math.min(Integer.MAX_VALUE, st.budgetNanos / 1_000_000L));
-                }
-            } else if (!rs.steps().isEmpty()) {
-                stage = "between stages";
-            }
+    private static final class StageRows {
+        final List<GraphRunState.Step> steps;
+        final NodeStatus running;
+
+        StageRows(List<GraphRunState.Step> steps, NodeStatus running) {
+            this.steps = steps;
+            this.running = running;
         }
+    }
+
+    private StageRows liveStages() {
+        GraphRunState rs = engine.isGraphSolving() ? engine.graphRunState() : null;
+        if (rs == null) return new StageRows(Collections.<GraphRunState.Step>emptyList(), null);
+        String active = rs.activeNodeId();
+        return new StageRows(rs.steps(), active != null ? rs.status(active) : null);
+    }
+
+    private void renderSolvingPanel(ImGuiIO io, float scale) {
+        StageRows stages = liveStages();
         double miss = engine.liveClosestMissViolation();
-        ImGui.indent(DETAIL_INDENT * scale);
-        if (ThemeManager.beginStandardFormTable("##solve_progress", 2)) {
-            ImGui.tableNextRow();
-            ImGui.tableNextColumn();
+        boolean hasMiss = !Double.isInfinite(miss) && !Double.isNaN(miss);
+        float lineH = ImGui.getTextLineHeightWithSpacing();
+        float pad = ThemeManager.SM * scale;
+        int rows = 2 + Math.max(1, stages.steps.size()) + (hasMiss ? 2 : 0);
+        float fullH = rows * lineH + 2f * pad;
+        float h = Math.min(fullH, io.getDisplaySizeY() * 0.4f);
+
+        ImGui.pushStyleColor(ImGuiCol.ChildBg, ThemeManager.accentTintColor(0.10f));
+        ImGui.pushStyleColor(ImGuiCol.Border, ThemeManager.accentTintColor(0.45f));
+        ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, pad, pad);
+        ImGui.beginChild("##solve_result", ImGui.getContentRegionAvail().x, h, true);
+
+        ThemeManager.pushTextColor(ThemeManager.accentColor());
+        Fonts.pushBold();
+        ImGui.text(SOLVING_NO_CANDIDATE);
+        Fonts.popBold();
+        ThemeManager.popTextColor();
+        ThemeManager.bottomPaddedSeparator();
+
+        if (stages.steps.isEmpty()) {
             ThemeManager.pushTextColor(ThemeManager.textMutedColor());
-            ImGui.text("Stage");
+            ImGui.text("starting");
             ThemeManager.popTextColor();
-            TooltipUtil.onHover(STAGE_TIP);
-            ImGui.tableNextColumn();
-            textRightInCell(time.isEmpty() ? stage : stage + " · " + time);
-            if (!Double.isInfinite(miss) && !Double.isNaN(miss)) {
+        } else if (ThemeManager.beginStandardFormTable("##sv_stages", 2)) {
+            for (int i = 0; i < stages.steps.size(); i++) {
+                GraphRunState.Step s = stages.steps.get(i);
+                boolean running = i == stages.steps.size() - 1 && s.taken == null && stages.running != null;
+                stageRow(i + 1, s.label, running ? stages.running : null, scale);
+            }
+            ThemeManager.endStandardFormTable();
+        }
+        if (hasMiss) {
+            ImGui.dummy(0f, lineH * 0.5f);
+            if (ThemeManager.beginStandardFormTable("##sv_miss", 2)) {
                 ImGui.tableNextRow();
                 ImGui.tableNextColumn();
                 ThemeManager.pushTextColor(ThemeManager.textMutedColor());
@@ -908,10 +932,67 @@ public final class AngleSolverWindow implements RenderInterface {
                 TooltipUtil.onHover(CLOSEST_MISS_TIP);
                 ImGui.tableNextColumn();
                 textRightInCell(ConstraintText.fixedStat(miss));
+                ThemeManager.endStandardFormTable();
             }
+        }
+
+        ImGui.endChild();
+        ImGui.popStyleVar();
+        ImGui.popStyleColor(2);
+    }
+
+    private void renderRunningStageLine(StageRows stages, float scale) {
+        if (stages.running == null || stages.steps.isEmpty()) return;
+        if (ThemeManager.beginStandardFormTable("##sv_stage_live", 2)) {
+            stageRow(stages.steps.size(), stages.running.label, stages.running, scale);
             ThemeManager.endStandardFormTable();
         }
-        ImGui.unindent(DETAIL_INDENT * scale);
+    }
+
+    private void stageRow(int number, String label, NodeStatus running, float scale) {
+        ImGui.tableNextRow();
+        ImGui.tableNextColumn();
+        ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+        ImGui.text(number + ".");
+        ThemeManager.popTextColor();
+        ImGui.tableNextColumn();
+        if (running == null) {
+            ImGui.text(label);
+            return;
+        }
+        ImVec2 origin = ImGui.getCursorScreenPos();
+        float cellW = ImGui.getContentRegionAvail().x;
+        long elapsed = System.nanoTime() - running.startNanos;
+        String time = seconds(elapsed) + (running.budgetNanos > 0 ? " / " + seconds(running.budgetNanos) : "");
+        ThemeManager.pushTextColor(ThemeManager.accentColor());
+        ImGui.text(label);
+        ThemeManager.popTextColor();
+        ImGui.sameLine();
+        textRightInCell(time);
+        if (running.budgetNanos > 0) {
+            float frac = (float) Math.min(1.0, elapsed / (double) running.budgetNanos);
+            float y = origin.y + ImGui.getTextLineHeight() + 1f * scale;
+            ImDrawList dl = ImGui.getWindowDrawList();
+            dl.addRectFilled(origin.x, y, origin.x + cellW, y + 2f * scale, ThemeManager.accentTintColor(0.25f));
+            dl.addRectFilled(origin.x, y, origin.x + cellW * frac, y + 2f * scale, ThemeManager.accentColor());
+        }
+        if (ImGui.isMouseHoveringRect(origin.x, origin.y, origin.x + cellW, origin.y + ImGui.getTextLineHeight())) {
+            ImGui.setTooltip(stageTooltip(running));
+        }
+    }
+
+    private static String stageTooltip(NodeStatus st) {
+        StringBuilder b = new StringBuilder(st.nodeId);
+        if (st.visits > 1) b.append("\nvisit ").append(st.visits);
+        if (st.evals > 0) b.append("\nevals ").append(st.evals);
+        if (st.budgetNanos <= 0) b.append("\nno budget");
+        return b.toString();
+    }
+
+    private static String seconds(long nanos) {
+        double s = nanos / 1.0e9;
+        if (s == Math.rint(s)) return String.format(Locale.ROOT, "%.0fs", s);
+        return String.format(Locale.ROOT, "%.1fs", s);
     }
 
     private void renderResultPanel(ImGuiIO io, SolveResult r, float scale) {
@@ -944,7 +1025,10 @@ public final class AngleSolverWindow implements RenderInterface {
                 : 1 + (detailsExpanded ? details.size() + solverLines : 0);
         List<SolveResult.Outcome> outcomes = visibleOutcomes(r);
         int outcomeLines = outcomes.isEmpty() ? 0 : 1 + (outcomesExpanded ? outcomes.size() : 0);
-        int rows = 2 + detailLines + devLines + noticeLines + outcomeLines + 1 + (yawsExpanded ? r.getYaws().size() : 0);
+        StageRows liveStage = engine.isSolving() ? liveStages() : null;
+        if (liveStage != null && (liveStage.running == null || liveStage.steps.isEmpty())) liveStage = null;
+        int rows = 2 + (liveStage != null ? 1 : 0) + detailLines + devLines + noticeLines + outcomeLines + 1
+                + (yawsExpanded ? r.getYaws().size() : 0);
         float fullH = rows * lineH + 2f * pad;
         float h = Math.min(fullH, io.getDisplaySizeY() * 0.4f); // cap so the pane scrolls instead of growing off-screen
 
@@ -958,6 +1042,7 @@ public final class AngleSolverWindow implements RenderInterface {
         ImGui.text(resultHeader(r));
         Fonts.popBold();
         ThemeManager.popTextColor();
+        if (liveStage != null) renderRunningStageLine(liveStage, scale);
         ThemeManager.bottomPaddedSeparator();
 
         if (deviation != null) {
