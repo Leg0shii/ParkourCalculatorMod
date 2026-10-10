@@ -629,6 +629,7 @@ public final class SettingsModal {
         renderColor("tick box solver goal", settings.tickSolverGoal, flags);
         renderColor("tick box desync", settings.tickDeviation, flags);
         renderColor("on-ground row tint", settings.tickGroundHighlight, flags);
+        renderColor("selected row tint", settings.tickSelectedHighlight, flags);
 
         ThemeManager.sectionSpacing();
         sectionHeader("Path and gizmos");

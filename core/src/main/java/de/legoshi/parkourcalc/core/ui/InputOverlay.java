@@ -912,7 +912,7 @@ public final class InputOverlay {
             ThemeManager.paintTableRowBg(0);
         }
         if (selection.isSelected(0)) {
-            ThemeManager.paintTableRowTint(ThemeManager.selectedTintColor(0.38f));
+            ThemeManager.paintTableRowTint(ThemeManager.rgbaTintColor(settings.tickSelectedHighlight));
         } else if (settings.highlightOnGroundRows && isOnGroundAtTick(0)) {
             ThemeManager.paintTableRowTint(ThemeManager.rgbaTintColor(settings.tickGroundHighlight));
         }
@@ -1038,11 +1038,10 @@ public final class InputOverlay {
         }
         int tint = 0;
         // A light selection fill, so it doesn't clash with chips drawn over solver rows.
-        float selAlpha = 0.38f;
         if (selection.isSelected(rowIndex + 1)) {
-            tint = ThemeManager.selectedTintColor(selAlpha);
+            tint = ThemeManager.rgbaTintColor(settings.tickSelectedHighlight);
         } else if (draggingRowIndex == rowIndex) {
-            tint = ThemeManager.selectedTintColor(selAlpha);
+            tint = ThemeManager.rgbaTintColor(settings.tickSelectedHighlight);
         } else if (playback != null && playback.currentTick() == rowIndex) {
             tint = ThemeManager.warningTintColor(0.25f);
         } else if (settings.highlightOnGroundRows && isOnGroundAtTick(rowIndex)) {
@@ -1228,7 +1227,7 @@ public final class InputOverlay {
         boolean selectedRow = selection.isSelected(rowIndex + 1);
         boolean populated = yaw != null;
         boolean locked = row.isYawLocked();
-        if (selectedRow) ThemeManager.pushSelectedFrameBg();
+        if (selectedRow) ThemeManager.pushSelectedFrameBg(settings.tickSelectedHighlight);
         if (populated) ThemeManager.pushPopulatedFrameBorder();
         float inputW = yawInputWidth();
         float lockStripX = ImGui.getCursorScreenPos().x;
@@ -1295,7 +1294,7 @@ public final class InputOverlay {
         boolean selectedRow = selection.isSelected(rowIndex + 1);
         boolean populated = pitch != null;
         boolean locked = row.isPitchLocked();
-        if (selectedRow) ThemeManager.pushSelectedFrameBg();
+        if (selectedRow) ThemeManager.pushSelectedFrameBg(settings.tickSelectedHighlight);
         if (populated) ThemeManager.pushPopulatedFrameBorder();
         float inputW = yawInputWidth();
         float lockStripX = ImGui.getCursorScreenPos().x;
