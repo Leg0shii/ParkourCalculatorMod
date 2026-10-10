@@ -936,6 +936,11 @@ public final class AngleSolverEngine {
         return currentGraphContext != null;
     }
 
+    public double liveClosestMissViolation() {
+        GraphContext c = currentGraphContext;
+        return c == null ? Double.POSITIVE_INFINITY : c.closestMiss().violation();
+    }
+
     public SolveProgress liveProgress() {
         return currentProgress;
     }

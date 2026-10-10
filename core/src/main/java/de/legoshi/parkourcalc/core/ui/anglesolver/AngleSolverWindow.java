@@ -10,6 +10,8 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphFactory;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphPresetFile;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphPresetIO;
+import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunState;
+import de.legoshi.parkourcalc.core.anglesolver.graph.NodeStatus;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.runticks.RunTicksControls;
 import de.legoshi.parkourcalc.core.anglesolver.runticks.RunTicksSettings;
@@ -858,6 +860,58 @@ public final class AngleSolverWindow implements RenderInterface {
             else engine.stopAndUseBest();
         }
         if (ImGui.isItemHovered()) ImGui.setTooltip("Stop the search and keep the best solution found so far.");
+        if (engine.isSolving()) renderSolveProgress(scale);
+    }
+
+    private static final String STAGE_TIP =
+            "The solver stage running right now, with the time spent in it against its budget."
+            + " Stages hand over to each other as the solve advances.";
+
+    private static final String CLOSEST_MISS_TIP =
+            "The smallest worst-constraint violation any stage has reached so far, in blocks."
+            + " A value that keeps shrinking means the search is converging; one that sits still means it is not.";
+
+    private void renderSolveProgress(float scale) {
+        String stage = "starting";
+        String time = "";
+        GraphRunState rs = engine.isGraphSolving() ? engine.graphRunState() : null;
+        if (rs != null) {
+            String active = rs.activeNodeId();
+            NodeStatus st = active != null ? rs.status(active) : null;
+            if (st != null) {
+                stage = st.label;
+                time = String.format(Locale.ROOT, "%.1fs", (System.nanoTime() - st.startNanos) / 1.0e9);
+                if (st.budgetNanos > 0) {
+                    time += " / " + BudgetText.format((int) Math.min(Integer.MAX_VALUE, st.budgetNanos / 1_000_000L));
+                }
+            } else if (!rs.steps().isEmpty()) {
+                stage = "between stages";
+            }
+        }
+        double miss = engine.liveClosestMissViolation();
+        ImGui.indent(DETAIL_INDENT * scale);
+        if (ThemeManager.beginStandardFormTable("##solve_progress", 2)) {
+            ImGui.tableNextRow();
+            ImGui.tableNextColumn();
+            ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+            ImGui.text("Stage");
+            ThemeManager.popTextColor();
+            TooltipUtil.onHover(STAGE_TIP);
+            ImGui.tableNextColumn();
+            textRightInCell(time.isEmpty() ? stage : stage + " · " + time);
+            if (!Double.isInfinite(miss) && !Double.isNaN(miss)) {
+                ImGui.tableNextRow();
+                ImGui.tableNextColumn();
+                ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+                ImGui.text("Closest miss");
+                ThemeManager.popTextColor();
+                TooltipUtil.onHover(CLOSEST_MISS_TIP);
+                ImGui.tableNextColumn();
+                textRightInCell(ConstraintText.fixedStat(miss));
+            }
+            ThemeManager.endStandardFormTable();
+        }
+        ImGui.unindent(DETAIL_INDENT * scale);
     }
 
     private void renderResultPanel(ImGuiIO io, SolveResult r, float scale) {
