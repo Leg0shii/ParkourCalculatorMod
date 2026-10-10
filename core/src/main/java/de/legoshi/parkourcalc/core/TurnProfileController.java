@@ -3,13 +3,18 @@ package de.legoshi.parkourcalc.core;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.Constraint;
+import de.legoshi.parkourcalc.core.anglesolver.ConstraintText;
 import de.legoshi.parkourcalc.core.anglesolver.TickConstraints;
 import de.legoshi.parkourcalc.core.anglesolver.profile.AttemptSampler;
 import de.legoshi.parkourcalc.core.anglesolver.profile.TurnProfile;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardModel;
+import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
+import de.legoshi.parkourcalc.core.render.ConstraintShapes;
+import de.legoshi.parkourcalc.core.sim.TickState;
+import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 
@@ -24,6 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
+import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 public final class TurnProfileController {
@@ -99,6 +105,33 @@ public final class TurnProfileController {
         AngleSolverEngine.PathSnapshot snapshot;
     }
 
+    public static final class SetupCheck {
+        public static final class Item {
+            public final String label;
+            public final boolean ok;
+            public final String detail;
+
+            Item(String label, boolean ok, String detail) {
+                this.label = label;
+                this.ok = ok;
+                this.detail = detail;
+            }
+        }
+
+        public final List<Item> items;
+        public final boolean ok;
+
+        SetupCheck(List<Item> items) {
+            this.items = java.util.Collections.unmodifiableList(items);
+            boolean all = true;
+            for (Item i : items) all &= i.ok;
+            this.ok = all;
+        }
+    }
+
+    public static final double MODEL_AGREEMENT = 1e-6;
+    public static final int BACKFILL_LIMIT = 500;
+
     private final AngleSolverEngine engine;
     private final AngleSolverState state;
     private final InputData inputs;
@@ -108,6 +141,14 @@ public final class TurnProfileController {
     private final Supplier<Integer> spreadAttempts;
     private final TurnProfileStore store;
     private final Supplier<String> tasName;
+    private final IntFunction<TickState> tickState;
+    private final Supplier<String> tasSignature;
+    private java.util.function.BiConsumer<Integer, Integer> surfaceApplier = (from, to) -> { };
+    private volatile SetupCheck lastCheck;
+    private volatile String lastCheckSignature;
+    private volatile String checkedSignature;
+    private volatile String currentSignature;
+    private long constraintSignature = Long.MIN_VALUE;
     private final TurnProfileDocument document = new TurnProfileDocument();
     private final ExecutorService worker = Executors.newSingleThreadExecutor(r -> {
         Thread t = new Thread(r, "pkc-turn-profile");
@@ -154,6 +195,17 @@ public final class TurnProfileController {
                                  BooleanSupplier enabled, Supplier<Float> sensitivity,
                                  Supplier<Integer> sampleCount, Supplier<Integer> spreadAttempts,
                                  TurnProfileStore store, Supplier<String> tasName) {
+        this(engine, state, inputs, enabled, sensitivity, sampleCount, spreadAttempts, store, tasName, t -> null,
+                () -> "");
+    }
+
+    public TurnProfileController(AngleSolverEngine engine, AngleSolverState state, InputData inputs,
+                                 BooleanSupplier enabled, Supplier<Float> sensitivity,
+                                 Supplier<Integer> sampleCount, Supplier<Integer> spreadAttempts,
+                                 TurnProfileStore store, Supplier<String> tasName, IntFunction<TickState> tickState,
+                                 Supplier<String> tasSignature) {
+        this.tickState = tickState;
+        this.tasSignature = tasSignature;
         this.engine = engine;
         this.state = state;
         this.inputs = inputs;
@@ -188,7 +240,8 @@ public final class TurnProfileController {
 
     public void tick() {
         boolean on = enabled.getAsBoolean();
-        if (on && !wasEnabled) refresh();
+        if (on) currentSignature = tasSignature.get();
+        if (on && (!wasEnabled || constraintSignature() != constraintSignature)) refresh();
         wasEnabled = on;
         if (!on && !document.hasPending() && !document.isReferenceDirty() && !deepDirty) return;
         sync();
@@ -236,6 +289,18 @@ public final class TurnProfileController {
         adopted = false;
         loaded = false;
         selectedNumber = -1;
+        clearCheck();
+    }
+
+    private void clearCheck() {
+        lastCheck = null;
+        lastCheckSignature = null;
+        checkedSignature = null;
+    }
+
+    public boolean lastCheckCurrent() {
+        String at = lastCheckSignature;
+        return lastCheck != null && at != null && at.equals(currentSignature);
     }
 
     public void onTasDeleted(String name) {
@@ -253,6 +318,7 @@ public final class TurnProfileController {
         adopted = false;
         loadedName = name;
         storeError = null;
+        clearCheck();
         deepDirty = false;
         selectedNumber = -1;
         invalidateDeepChecks();
@@ -269,8 +335,198 @@ public final class TurnProfileController {
         refresh();
     }
 
+    private long constraintSignature() {
+        long h = 17;
+        List<Integer> ticks = new ArrayList<Integer>(state.populatedTicks());
+        java.util.Collections.sort(ticks);
+        for (int tick : ticks) {
+            TickConstraints tc = state.tickConstraintsOrNull(tick);
+            if (tc == null) continue;
+            h = h * 31 + tick;
+            for (Constraint c : tc.getConstraints()) {
+                h = h * 31 + c.getField().ordinal();
+                h = h * 31 + c.getOp().ordinal();
+                h = h * 31 + (c.isEnabled() ? 1 : 0);
+                h = h * 31 + Double.doubleToLongBits(c.isRange() ? c.getLo() : c.getValue());
+                h = h * 31 + Double.doubleToLongBits(c.isRange() ? c.getHi() : 0.0);
+            }
+        }
+        return h;
+    }
+
+    public boolean isChecked() {
+        String checked = checkedSignature;
+        return checked != null && checked.equals(currentSignature);
+    }
+
+    public SetupCheck lastCheck() {
+        return lastCheck;
+    }
+
+    public void setSurfaceApplier(java.util.function.BiConsumer<Integer, Integer> applier) {
+        surfaceApplier = applier != null ? applier : (from, to) -> { };
+    }
+
+    public SetupCheck check() {
+        refresh();
+        List<InputRow> rows = inputs.getRows();
+        int first = -1;
+        int last = -1;
+        for (int t = 0; t < rows.size(); t++) {
+            if (!rows.get(t).isOnejumpFlagged()) continue;
+            if (first < 0) first = t;
+            last = t;
+        }
+        boolean flagged = first >= 0;
+        TurnReference ref = document.reference();
+        TurnReference.Landing stored = flagged ? ref.landing() : null;
+        if (stored != null) {
+            surfaceApplier.accept(first, ref.tasFirstTick() + stored.tick);
+            refresh();
+        }
+        currentSignature = tasSignature.get();
+        List<SetupCheck.Item> items = new ArrayList<SetupCheck.Item>();
+        items.add(new SetupCheck.Item("Keys and Turn ticks are flagged", flagged,
+                flagged ? "ticks " + (first + 1) + " to " + (last + 1) : "flag them in the Keys and Turn columns of the input table"));
+        Current cur = current.get();
+        boolean built = flagged && cur != null && cur.n >= last - first + 1 && cur.tasFirstTick == first;
+        items.add(new SetupCheck.Item("The TAS path covers the flagged ticks", built,
+                built ? cur.n + " ticks" : lastError != null ? lastError : "the rows from the first to the last flagged tick could not be read as a path"));
+        TurnReference.Landing landing = built ? ref.landing() : null;
+        int landingTick = landing == null ? -1 : ref.tasFirstTick() + landing.tick;
+        int lb = landRow();
+        items.add(new SetupCheck.Item("A landing constraint is set", landing != null,
+                landing != null ? landing.label(ref.tasFirstTick()) + (lb >= 0 ? " (LB)" : "")
+                        : lb >= 0 ? "tick " + (lb + 1) + " is marked LB but has no X or Z constraint, look at the landing block and press B"
+                        : "mark LB on the landing tick, look at the landing block and press B"));
+        TickState landState = landingTick >= 0 ? tickState.apply(landingTick) : null;
+        items.add(new SetupCheck.Item("The rows reach the landing tick", landState != null,
+                landState != null ? "tick " + (landingTick + 1) : landingTick < 0 ? "no landing tick"
+                        : "add rows up to tick " + (landingTick + 1)));
+        String violated = built && landingTick >= 0 ? simulationViolation(first, landingTick) : "no path";
+        items.add(new SetupCheck.Item("The simulation meets every constraint", violated == null,
+                violated == null ? "every constraint from tick " + (first + 2) + " to tick " + (landingTick + 1) : violated));
+        boolean modelLands = built && cur.profile != null && cur.profile.lands;
+        items.add(new SetupCheck.Item("The solver lands the TAS too", modelLands,
+                modelLands ? "the solver replays the rows with its own physics and meets the landing constraint"
+                        : !built || cur.profile == null ? "the solver could not replay the rows"
+                        : "the solver replays the rows with its own physics and misses the landing constraint, check the path and solve again"));
+        String disagree = built && cur.snapshot != null ? modelDisagreement(cur) : "the solver could not replay the rows";
+        items.add(new SetupCheck.Item("The solver's replay matches the simulation", disagree == null,
+                disagree == null ? "same position on every flagged tick" : disagree));
+        SetupCheck result = new SetupCheck(items);
+        lastCheck = result;
+        lastCheckSignature = currentSignature;
+        checkedSignature = result.ok ? currentSignature : null;
+        if (result.ok) worker.submit(this::backfillForecasts);
+        return result;
+    }
+
+    public int backfillForecasts() {
+        Current cur = current.get();
+        if (cur == null || cur.snapshot == null || cur.landing == null) return 0;
+        LandingForecast forecast = LandingForecast.of(engine.forwardModel(), cur);
+        if (forecast == null) return 0;
+        int done = 0;
+        List<TurnAttempt> all = new ArrayList<TurnAttempt>(document.attempts());
+        for (int i = all.size() - 1; i >= 0 && done < BACKFILL_LIMIT; i--) {
+            TurnAttempt a = all.get(i);
+            if (a.isMacro() || a.hasForecast() || !a.hasState() || !a.alignedTo(cur) || a.firstTick != cur.startTick) continue;
+            TurnAttempt.Forecast f = a.forecast;
+            int n = Math.min(cur.n, Math.min(a.recorded, f.x.length));
+            double[] held = nans(cur.n);
+            double[] best = nans(cur.n);
+            double[] offset = nans(cur.n);
+            int failed = -1;
+            for (int t = 0; t < n; t++) {
+                if (!forecast.covers(t) || Double.isNaN(f.x[t]) || Double.isNaN(f.vx[t]) || t >= a.yaws.length
+                        || Double.isNaN(a.yaws[t])) continue;
+                LandingForecast.Result r = forecast.at(t, f.x[t], f.z[t], f.vx[t], f.vz[t], (float) a.yaws[t], f.ground[t]);
+                if (r == null || r.offStructure) continue;
+                held[t] = r.held;
+                best[t] = r.best;
+                offset[t] = r.bestOffsetDeg;
+                if (!r.landable() && failed < 0) failed = cur.startTick + t;
+            }
+            a.forecast = new TurnAttempt.Forecast(held, best, offset, failed, f.x, f.z, f.vx, f.vz, f.ground);
+            done++;
+        }
+        if (done > 0) {
+            deepDirty = true;
+            document.markDirty();
+        }
+        return done;
+    }
+
+    private static double[] nans(int n) {
+        double[] v = new double[n];
+        java.util.Arrays.fill(v, Double.NaN);
+        return v;
+    }
+
+    private String simulationViolation(int from, int to) {
+        List<Integer> ticks = new ArrayList<Integer>(state.populatedTicks());
+        java.util.Collections.sort(ticks);
+        for (int tick : ticks) {
+            if (tick <= from || tick > to) continue;
+            TickConstraints tc = state.tickConstraintsOrNull(tick);
+            if (tc == null) continue;
+            TickState st = tickState.apply(tick);
+            if (st == null) return "no simulated state at tick " + (tick + 1);
+            for (Constraint c : tc.getConstraints()) {
+                if (!c.isEnabled()) continue;
+                if (c.getField() != Constraint.Field.X && c.getField() != Constraint.Field.Z) continue;
+                Constraint r = c;
+                if (c.isRelative()) {
+                    TickState refState = tickState.apply(c.getRefTick());
+                    if (refState == null) return "tick " + (tick + 1) + ": relative constraint without a simulated reference tick";
+                    double baseValue = c.getField() == Constraint.Field.X ? refState.position.x : refState.position.z;
+                    r = c.copy();
+                    r.setRefTick(null);
+                    r.setValue(r.getValue() + baseValue);
+                    double lo = r.getLo() + baseValue;
+                    double hi = r.getHi() + baseValue;
+                    r.setLo(lo);
+                    r.setHi(hi);
+                }
+                if (!ConstraintShapes.satisfied(r, st.position)) {
+                    double v = c.getField() == Constraint.Field.X ? st.position.x : st.position.z;
+                    return "tick " + (tick + 1) + ": " + c.getField().label + " is " + ConstraintText.fixedStat(v)
+                            + ", wanted " + bounds(r);
+                }
+            }
+        }
+        return null;
+    }
+
+    private static String bounds(Constraint c) {
+        if (c.isRange()) return ConstraintText.fixedStat(c.getLo()) + " to " + ConstraintText.fixedStat(c.getHi());
+        return c.getOp().name() + " " + ConstraintText.fixedStat(c.getValue());
+    }
+
+    private String modelDisagreement(Current cur) {
+        JumpPhysicsInputs sc = cur.snapshot.spec.asScenario();
+        ForwardPath p = engine.forwardModel().forward(sc, sc.toGameFacings(cur.facing.clone()));
+        double worst = 0.0;
+        int worstTick = -1;
+        for (int k = 0; k < p.posX.length; k++) {
+            int tick = cur.tasFirstTick + k;
+            TickState st = tickState.apply(tick);
+            if (st == null) return "no simulated state at tick " + (tick + 1);
+            double d = Math.max(Math.abs(p.posX[k] - st.position.x), Math.abs(p.posZ[k] - st.position.z));
+            if (d > worst) {
+                worst = d;
+                worstTick = tick;
+            }
+        }
+        if (worst <= MODEL_AGREEMENT) return null;
+        return "they differ by " + ConstraintText.fixedStat(worst) + " at tick " + (worstTick + 1)
+                + ", check the path";
+    }
+
     public void refresh() {
         if (!enabled.getAsBoolean()) return;
+        constraintSignature = constraintSignature();
         ensureLoaded();
         cancelToken.set(true);
         cancelToken = new AtomicBoolean(false);
@@ -286,8 +542,8 @@ public final class TurnProfileController {
         if (built.ref.isEmpty() && !ref.isEmpty()) {
             if (lastError == null) {
                 lastError = ref.tasFirstTick() < 0
-                        ? "the onejump file predates tick alignment, flag the Keys and Face ticks again"
-                        : "no Keys or Face ticks flagged, the stored onejump is kept";
+                        ? "the onejump file predates tick alignment, flag the Keys and Turn ticks again"
+                        : "no Keys or Turn ticks flagged, the stored onejump is kept";
             }
             current.set(null);
             return;
@@ -391,13 +647,21 @@ public final class TurnProfileController {
             lastError = null;
             return built;
         }
-        AngleSolverEngine.PathSnapshot snap = engine.snapshotPath(first, last + 1);
-        if (snap == null || snap.yaws.length != last - first + 1) {
-            lastError = "no path for ticks " + (first + 1) + " to " + (last + 1) + " in the TAS";
+        int lb = landRow();
+        TurnReference.Landing landing = landingFor(first);
+        int landingTick = lb >= 0 ? lb : landing == null ? -1 : landing.tick;
+        int end = Math.max(last + 1, landingTick);
+        if (end > rows.size()) {
+            lastError = "add rows up to tick " + end;
+            return built;
+        }
+        AngleSolverEngine.PathSnapshot snap = engine.snapshotPath(first, end);
+        if (snap == null || snap.yaws.length != end - first) {
+            lastError = "no path for ticks " + (first + 1) + " to " + end + " in the TAS";
             return built;
         }
         built.snapshot = snap;
-        int n = last - first + 1;
+        int n = end - first;
         List<InputRow> next = new ArrayList<InputRow>();
         double[] facings = new double[n];
         for (int k = 0; k < n; k++) {
@@ -408,10 +672,34 @@ public final class TurnProfileController {
         }
         ref.replace(next, facings);
         ref.setTasFirstTick(first);
-        List<TurnReference.Landing> options = solverLandings(first, last + 1, first);
-        if (!options.isEmpty()) ref.setLanding(options.get(options.size() - 1));
+        if (landing != null) {
+            ref.setLanding(new TurnReference.Landing(landing.tick - first, landing.xLo, landing.xHi, landing.zLo, landing.zHi));
+        }
         lastError = null;
         return built;
+    }
+
+    public int landRow() {
+        List<InputRow> rows = inputs.getRows();
+        for (int t = 0; t < rows.size(); t++) if (rows.get(t).isOnejumpLand()) return t;
+        return -1;
+    }
+
+    public TurnReference.Landing tasLanding() {
+        List<InputRow> rows = inputs.getRows();
+        int first = -1;
+        for (int t = 0; t < rows.size() && first < 0; t++) if (rows.get(t).isOnejumpFlagged()) first = t;
+        return landingFor(Math.max(0, first));
+    }
+
+    private TurnReference.Landing landingFor(int first) {
+        int lb = landRow();
+        if (lb >= 0) {
+            List<TurnReference.Landing> at = solverLandings(lb, lb, 0);
+            return at.isEmpty() ? null : at.get(0);
+        }
+        List<TurnReference.Landing> all = solverLandings(first, inputs.getRows().size(), 0);
+        return all.isEmpty() ? null : all.get(all.size() - 1);
     }
 
     private List<TurnReference.Landing> solverLandings(int from, int to, int base) {
@@ -511,7 +799,7 @@ public final class TurnProfileController {
 
     public void autoRate() {
         Current cur = current.get();
-        if (rating || cur == null || !cur.canRate()) return;
+        if (rating || cur == null || !cur.canRate() || !isChecked()) return;
         if (ratedVersion == document.version() && ratedSpreadSetting == spreadLimit() && ratedChunkSetting == chunkSize()) return;
         rate();
     }
@@ -548,7 +836,7 @@ public final class TurnProfileController {
     public void requestDeepChecks() {
         Current cur = current.get();
         ExactJumpModel exact = engine.exactModel();
-        if (cur == null || cur.snapshot == null || exact == null) return;
+        if (cur == null || cur.snapshot == null || exact == null || !isChecked()) return;
         List<TurnAttempt> candidates = new ArrayList<TurnAttempt>(document.top());
         candidates.addAll(document.favourites());
         int gen = deepGeneration.get();

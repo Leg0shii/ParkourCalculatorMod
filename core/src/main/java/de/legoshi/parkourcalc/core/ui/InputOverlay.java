@@ -261,6 +261,12 @@ public final class InputOverlay {
         final String altLabel;
         final Predicate<InputRow> alt;
         final Consumer<InputRow> altToggle;
+        BooleanSupplier visible = () -> true;
+
+        public RowFlag visibleWhen(BooleanSupplier visible) {
+            this.visible = visible != null ? visible : () -> true;
+            return this;
+        }
 
         public RowFlag(String label, String tooltip, Predicate<InputRow> get, Consumer<InputRow> toggle) {
             this(label, tooltip, get, toggle, null, null, null);
@@ -294,7 +300,14 @@ public final class InputOverlay {
     }
 
     private RowFlag[] activeFlags() {
-        return rowFlagsVisible.getAsBoolean() ? rowFlags : NO_FLAGS;
+        if (!rowFlagsVisible.getAsBoolean()) return NO_FLAGS;
+        int n = 0;
+        for (RowFlag f : rowFlags) if (f.visible.getAsBoolean()) n++;
+        if (n == rowFlags.length) return rowFlags;
+        RowFlag[] out = new RowFlag[n];
+        int i = 0;
+        for (RowFlag f : rowFlags) if (f.visible.getAsBoolean()) out[i++] = f;
+        return out;
     }
 
     public void setShortcutsEnabled(BooleanSupplier enabled) {

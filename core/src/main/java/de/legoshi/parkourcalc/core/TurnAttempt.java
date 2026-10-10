@@ -63,7 +63,7 @@ public final class TurnAttempt {
     public float[][] trace;
     public final boolean turnFailure;
     public final double failTurn;
-    public final Forecast forecast;
+    public volatile Forecast forecast;
     public int ordinal;
     public boolean favourite;
     public int tasFirstTick = -1;

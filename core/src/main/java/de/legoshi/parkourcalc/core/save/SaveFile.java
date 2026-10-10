@@ -59,6 +59,7 @@ public final class SaveFile {
         public double teleportZ;
         public boolean onejumpKeys;
         public int onejumpFace;
+        public boolean onejumpLand;
         public List<String> onejumpOptional;
     }
 
