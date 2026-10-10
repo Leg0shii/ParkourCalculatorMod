@@ -134,6 +134,7 @@ public final class InputOverlay {
 
     private final SelectionManager selection;
     private final KeyDragSelect keyDragSelect = new KeyDragSelect();
+    private final RowDragSelect rowDragSelect = new RowDragSelect();
     private final ImString yawInput = new ImString(32);
     private final ImString pitchInput = new ImString(32);
     private final ImString teleportXInput = new ImString(32);
@@ -553,6 +554,7 @@ public final class InputOverlay {
         ImVec2 clipSize = ImGui.getWindowSize();
 
         keyDragSelect.clearRowBounds();
+        rowDragSelect.clearRowBounds();
         hoveredRow = -1;
         flagMenuHovered = false;
         teleportDropRow = -1;
@@ -610,6 +612,7 @@ public final class InputOverlay {
         }
         renderDropIndicator(ImGui.getWindowDrawList(), dragDrop);
         applyDragDrop(dragDrop);
+        rowDragSelect.update(selection, viewTop, viewBot, ThemeManager.tableRowHeight());
         applyTeleportDrag();
         if (solverActive) angleSolver.endRows();
         ImGui.endChild();
@@ -992,10 +995,10 @@ public final class InputOverlay {
             ImVec2 rowMin = ImGui.getItemRectMin();
             ImVec2 rowMax = ImGui.getItemRectMax();
             rMinX = rowMin.x; rMinY = rowMin.y; rMaxX = rowMax.x; rMaxY = rowMax.y;
-            handleRowDragDrop(index, rMinX, rMinY, rMaxX, rMaxY, dragDrop);
         }
 
         keyDragSelect.recordRowBounds(index, rMinY, rMaxY);
+        rowDragSelect.recordRowBounds(index, rMinY, rMaxY);
         if (ImGui.isMouseHoveringRect(rMinX, rMinY, rMaxX, rMaxY)) {
             hoveredRow = index + 1;
         }
@@ -1070,7 +1073,7 @@ public final class InputOverlay {
 
     private void renderRowNumber(int rowIndex, boolean solverActive, float rowH, DragDropState dragDrop) {
         if (solverActive) {
-            angleSolver.renderGutter(rowIndex, rowH, () -> handleRowDragDrop(rowIndex,
+            angleSolver.renderGutter(rowIndex, rowH, () -> rowSelectableItem(rowIndex,
                     angleSolver.gutterMinX(), angleSolver.gutterMinY(),
                     angleSolver.gutterMaxX(), angleSolver.gutterMaxY(), dragDrop));
             return;
@@ -1078,9 +1081,22 @@ public final class InputOverlay {
         ThemeManager.tableLeftmostCellPad();
         boolean isSelected = selection.isSelected(rowIndex + 1);
         int flags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowItemOverlap;
-        if (ThemeManager.rightAlignedSelectable("row" + rowIndex, String.valueOf(rowIndex + 1), isSelected, flags)) {
+        boolean clicked = ThemeManager.rightAlignedSelectable("row" + rowIndex, String.valueOf(rowIndex + 1), isSelected, flags);
+        ImVec2 rowMin = ImGui.getItemRectMin();
+        ImVec2 rowMax = ImGui.getItemRectMax();
+        boolean clickConsumed = rowSelectableItem(rowIndex, rowMin.x, rowMin.y, rowMax.x, rowMax.y, dragDrop);
+        if (clicked && !clickConsumed) {
             selection.handleClick(rowIndex + 1);
         }
+    }
+
+    private boolean rowSelectableItem(int index, float rowMinX, float rowMinY, float rowMaxX, float rowMaxY, DragDropState dragDrop) {
+        if (ImGui.isItemActive() && ImGui.isMouseClicked(0)) {
+            Set<Integer> keep = selection.isCtrlHeld() ? selection.getSelected() : Collections.<Integer>emptySet();
+            rowDragSelect.press(index, selection.isSelected(index + 1), keep);
+        }
+        handleRowDragDrop(index, rowMinX, rowMinY, rowMaxX, rowMaxY, dragDrop);
+        return rowDragSelect.isActive();
     }
 
     private void handleRowDragDrop(int index, float rowMinX, float rowMinY, float rowMaxX, float rowMaxY, DragDropState state) {
@@ -1088,7 +1104,7 @@ public final class InputOverlay {
             return; // Don't allow drag when multiple rows selected
         }
 
-        if (ImGui.beginDragDropSource(ImGuiDragDropFlags.SourceNoPreviewTooltip)) {
+        if (rowDragSelect.movesRow(index) && ImGui.beginDragDropSource(ImGuiDragDropFlags.SourceNoPreviewTooltip)) {
             draggingRowIndex = index;
             // The payload is never read back: imgui-java only weak-references the Java object, so a
             // GC mid-drag silently drops it. The move is resolved from draggingRowIndex instead.

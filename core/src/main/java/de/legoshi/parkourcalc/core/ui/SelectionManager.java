@@ -110,6 +110,16 @@ public class SelectionManager {
         selectSingle(rowIndex);
     }
 
+    public void select(Collection<Integer> pathIndices, int lastClickedPath) {
+        selectedRows.clear();
+        selectedRows.addAll(pathIndices);
+        lastClickedRow = lastClickedPath;
+    }
+
+    public boolean isCtrlHeld() {
+        return mc.isCtrlDown();
+    }
+
     public void selectRows(int firstRow, int count) {
         selectedRows.clear();
         if (count <= 0 || firstRow < 0) {
