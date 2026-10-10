@@ -4,16 +4,10 @@ import de.legoshi.parkourcalc.core.ports.BlockPicker;
 import de.legoshi.parkourcalc.core.ports.PickedBlock;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
-import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
-import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 import java.util.ArrayList;
@@ -21,25 +15,11 @@ import java.util.List;
 
 public final class FabricBlockPicker implements BlockPicker {
 
-    private static final double REACH = 64.0;
-
     @Override
-    public PickedBlock pickLookedAtBlock() {
-        Minecraft mc = Minecraft.getInstance();
-        LocalPlayer player = mc.player;
-        ClientLevel world = mc.level;
-        if (player == null || world == null) return null;
-
-        Camera camera = mc.gameRenderer.getMainCamera();
-        Vec3 eye = camera.getPosition();
-        Vec3 look = Vec3.directionFromRotation(camera.getXRot(), camera.getYRot());
-        Vec3 end = eye.add(look.scale(REACH));
-
-        BlockHitResult hit = world.clip(new ClipContext(
-                eye, end, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, player));
-        if (hit == null || hit.getType() != HitResult.Type.BLOCK) return null;
-        BlockPos pos = hit.getBlockPos();
-        if (pos == null) return null;
+    public PickedBlock pickBlock(int x, int y, int z) {
+        ClientLevel world = Minecraft.getInstance().level;
+        if (world == null) return null;
+        BlockPos pos = new BlockPos(x, y, z);
 
         BlockState state = world.getBlockState(pos);
 

@@ -2,7 +2,6 @@ package de.legoshi.parkourcalc.fabric;
 
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.sim.AABB;
-import de.legoshi.parkourcalc.core.sim.Face;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Camera;
@@ -19,7 +18,6 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.lwjgl.glfw.GLFW;
@@ -32,23 +30,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 public final class FabricMinecraftAccess implements MinecraftAccess {
-
-    private static final double PICK_REACH = 64.0;
-
-    private static BlockHitResult clipLookRay() {
-        Minecraft mc = Minecraft.getInstance();
-        LocalPlayer player = mc.player;
-        ClientLevel world = mc.level;
-        if (player == null || world == null) return null;
-        Camera camera = mc.gameRenderer.getMainCamera();
-        Vec3 eye = camera.getPosition();
-        Vec3 look = Vec3.directionFromRotation(camera.getXRot(), camera.getYRot());
-        Vec3 end = eye.add(look.scale(PICK_REACH));
-        BlockHitResult hit = world.clip(new ClipContext(
-                eye, end, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, player));
-        if (hit == null || hit.getType() != HitResult.Type.BLOCK) return null;
-        return hit;
-    }
 
     @Override
     public Vec3dCore getPlayerPosition() {
@@ -84,15 +65,6 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
         Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
         Vec3 d = Vec3.directionFromRotation(camera.getXRot(), camera.getYRot());
         return new Vec3dCore(d.x, d.y, d.z);
-    }
-
-    @Override
-    public int[] getLookedAtBlock() {
-        BlockHitResult hit = clipLookRay();
-        if (hit == null) return null;
-        BlockPos pos = hit.getBlockPos();
-        if (pos == null) return null;
-        return new int[] {pos.getX(), pos.getY(), pos.getZ()};
     }
 
     @Override
@@ -133,22 +105,6 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
         if (!(world.getBlockState(new BlockPos(x, y, z)).getBlock() instanceof BasePressurePlateBlock)) return null;
         double inset = 0.0625;
         return new double[] {x + inset, x + 1.0 - inset, z + inset, z + 1.0 - inset};
-    }
-
-    @Override
-    public Face getLookedAtFace() {
-        BlockHitResult hit = clipLookRay();
-        if (hit == null) return null;
-        return toFace(hit.getDirection());
-    }
-
-    @Override
-    public Vec3dCore getLookedAtHitVec() {
-        BlockHitResult hit = clipLookRay();
-        if (hit == null) return null;
-        Vec3 p = hit.getLocation();
-        if (p == null) return null;
-        return new Vec3dCore(p.x, p.y, p.z);
     }
 
     @Override
@@ -213,19 +169,6 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
                     new Vec3dCore(x + bb.maxX, y + bb.maxY, z + bb.maxZ)));
         }
         return out;
-    }
-
-    private static Face toFace(Direction side) {
-        if (side == null) return null;
-        switch (side) {
-            case DOWN: return Face.NEG_Y;
-            case UP: return Face.POS_Y;
-            case NORTH: return Face.NEG_Z;
-            case SOUTH: return Face.POS_Z;
-            case WEST: return Face.NEG_X;
-            case EAST: return Face.POS_X;
-            default: return null;
-        }
     }
 
     @Override

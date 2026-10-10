@@ -7,11 +7,8 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.Entity;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 import java.util.ArrayList;
@@ -19,23 +16,11 @@ import java.util.List;
 
 public final class Forge12BlockPicker implements BlockPicker {
 
-    private static final double REACH = 64.0;
-
     @Override
-    public PickedBlock pickLookedAtBlock() {
-        Minecraft mc = Minecraft.getMinecraft();
-        Entity view = mc.getRenderViewEntity();
-        World world = mc.world;
-        if (view == null || world == null) return null;
-
-        Vec3d eye = view.getPositionEyes(1.0F);
-        Vec3d look = view.getLook(1.0F);
-        Vec3d end = new Vec3d(eye.x + look.x * REACH, eye.y + look.y * REACH, eye.z + look.z * REACH);
-
-        RayTraceResult hit = world.rayTraceBlocks(eye, end);
-        if (hit == null || hit.typeOfHit != RayTraceResult.Type.BLOCK) return null;
-        BlockPos pos = hit.getBlockPos();
-        if (pos == null) return null;
+    public PickedBlock pickBlock(int x, int y, int z) {
+        World world = Minecraft.getMinecraft().world;
+        if (world == null) return null;
+        BlockPos pos = new BlockPos(x, y, z);
 
         IBlockState state = world.getBlockState(pos);
         Block block = state.getBlock();
