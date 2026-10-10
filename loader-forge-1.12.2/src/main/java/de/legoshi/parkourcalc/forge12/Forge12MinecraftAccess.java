@@ -2,7 +2,6 @@ package de.legoshi.parkourcalc.forge12;
 
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.sim.AABB;
-import de.legoshi.parkourcalc.core.sim.Face;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2InputState;
 import de.legoshi.parkourcalc.forge12.sim.Forge12Simulator;
@@ -15,7 +14,6 @@ import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.server.integrated.IntegratedServer;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.BlockPos;
@@ -31,21 +29,6 @@ import java.util.function.Supplier;
 
 @SuppressWarnings("DuplicatedCode")
 public final class Forge12MinecraftAccess implements MinecraftAccess {
-
-    private static final double PICK_REACH = 64.0;
-
-    private static RayTraceResult clipLookRay() {
-        Minecraft mc = Minecraft.getMinecraft();
-        Entity view = mc.getRenderViewEntity();
-        World world = mc.world;
-        if (view == null || world == null) return null;
-        Vec3d eye = view.getPositionEyes(1.0F);
-        Vec3d look = view.getLook(1.0F);
-        Vec3d end = new Vec3d(eye.x + look.x * PICK_REACH, eye.y + look.y * PICK_REACH, eye.z + look.z * PICK_REACH);
-        RayTraceResult hit = world.rayTraceBlocks(eye, end);
-        if (hit == null || hit.typeOfHit != RayTraceResult.Type.BLOCK) return null;
-        return hit;
-    }
 
     @Override
     public Vec3dCore getPlayerPosition() {
@@ -82,15 +65,6 @@ public final class Forge12MinecraftAccess implements MinecraftAccess {
         if (view == null) return Vec3dCore.ZERO;
         Vec3d d = view.getLook(1.0F);
         return new Vec3dCore(d.x, d.y, d.z);
-    }
-
-    @Override
-    public int[] getLookedAtBlock() {
-        RayTraceResult hit = clipLookRay();
-        if (hit == null) return null;
-        BlockPos pos = hit.getBlockPos();
-        if (pos == null) return null;
-        return new int[] {pos.getX(), pos.getY(), pos.getZ()};
     }
 
     @Override
@@ -132,20 +106,6 @@ public final class Forge12MinecraftAccess implements MinecraftAccess {
         if (!(block instanceof BlockBasePressurePlate)) return null;
         double inset = 0.125;
         return new double[] {x + inset, x + 1.0 - inset, z + inset, z + 1.0 - inset};
-    }
-
-    @Override
-    public Face getLookedAtFace() {
-        RayTraceResult hit = clipLookRay();
-        if (hit == null) return null;
-        return toFace(hit.sideHit);
-    }
-
-    @Override
-    public Vec3dCore getLookedAtHitVec() {
-        RayTraceResult hit = clipLookRay();
-        if (hit == null || hit.hitVec == null) return null;
-        return new Vec3dCore(hit.hitVec.x, hit.hitVec.y, hit.hitVec.z);
     }
 
     @Override
@@ -207,19 +167,6 @@ public final class Forge12MinecraftAccess implements MinecraftAccess {
             out.add(new AABB(new Vec3dCore(bb.minX, bb.minY, bb.minZ), new Vec3dCore(bb.maxX, bb.maxY, bb.maxZ)));
         }
         return out;
-    }
-
-    private static Face toFace(EnumFacing side) {
-        if (side == null) return null;
-        switch (side) {
-            case DOWN: return Face.NEG_Y;
-            case UP: return Face.POS_Y;
-            case NORTH: return Face.NEG_Z;
-            case SOUTH: return Face.POS_Z;
-            case WEST: return Face.NEG_X;
-            case EAST: return Face.POS_X;
-            default: return null;
-        }
     }
 
     @Override

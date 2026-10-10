@@ -2,5 +2,5 @@ package de.legoshi.parkourcalc.core.ports;
 
 public interface BlockPicker {
 
-    PickedBlock pickLookedAtBlock();
+    PickedBlock pickBlock(int x, int y, int z);
 }

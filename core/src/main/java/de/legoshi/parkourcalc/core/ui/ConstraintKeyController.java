@@ -6,6 +6,7 @@ import de.legoshi.parkourcalc.core.anglesolver.ConstraintDeriver;
 import de.legoshi.parkourcalc.core.anglesolver.TickConstraints;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.sim.AABB;
+import de.legoshi.parkourcalc.core.sim.BlockHit;
 import de.legoshi.parkourcalc.core.sim.Face;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
@@ -44,13 +45,13 @@ public final class ConstraintKeyController {
 
     public void onKey(boolean enter, boolean remove) {
         if (!mc.isReady()) return;
-        Face face = mc.getLookedAtFace();
-        if (face == null) return;
-        int[] block = mc.getLookedAtBlock();
-        if (block == null || block.length < 3) return;
+        BlockHit look = mc.getLookedAtHit();
+        if (look == null || look.face == null) return;
+        Face face = look.face;
+        Vec3dCore hit = look.hitVec;
         int tick = selectedTick();
         if (tick < 0) return;
-        int bx = block[0], by = block[1], bz = block[2];
+        int bx = look.x, by = look.y, bz = look.z;
 
         boolean merge = mc.isAltDown();
         if (merge) remove = false;
@@ -73,7 +74,6 @@ public final class ConstraintKeyController {
             return;
         }
         if (remove && face == Face.POS_Y && (mc.isSlimeBlock(bx, by, bz) || mc.isIce(bx, by, bz))) {
-            Vec3dCore hit = mc.getLookedAtHitVec();
             if (hit == null) return;
             List<AABB> obstacles = mc.getCollisionBoxes(bx - 1, by + 1, bz - 1, bx + 1, by + 2, bz + 1);
             double[] r = ConstraintDeriver.deriveCell(bx, bz, by + 1.0, hit.x, hit.z, obstacles);
@@ -86,7 +86,6 @@ public final class ConstraintKeyController {
             if (remove) {
                 state.clearFootprint(tick);
             } else {
-                Vec3dCore hit = mc.getLookedAtHitVec();
                 if (hit == null) return;
                 AABB support = supportBox(bx, by, bz, hit);
                 List<AABB> obstacles = mc.getCollisionBoxes(bx - 1, by, bz - 1, bx + 1, by + 2, bz + 1);
@@ -103,7 +102,6 @@ public final class ConstraintKeyController {
             if (remove) {
                 state.clearWall(tick, ConstraintDeriver.axisOf(face), ConstraintDeriver.wallIsLowerBound(face, enter));
             } else {
-                Vec3dCore hit = mc.getLookedAtHitVec();
                 if (hit == null) return;
                 List<AABB> boxes = mc.getBlockCollisionBoxes(bx, by, bz);
                 Constraint wall = ConstraintDeriver.deriveWall(face, boxes, hit, enter);

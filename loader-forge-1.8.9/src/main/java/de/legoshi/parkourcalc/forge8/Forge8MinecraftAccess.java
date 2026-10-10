@@ -2,7 +2,6 @@ package de.legoshi.parkourcalc.forge8;
 
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.sim.AABB;
-import de.legoshi.parkourcalc.core.sim.Face;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2InputState;
 import de.legoshi.parkourcalc.forge8.sim.Forge8Simulator;
@@ -18,7 +17,6 @@ import net.minecraft.init.Blocks;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
@@ -32,21 +30,6 @@ import java.util.function.Supplier;
 
 @SuppressWarnings("DuplicatedCode")
 public final class Forge8MinecraftAccess implements MinecraftAccess {
-
-    private static final double PICK_REACH = 64.0;
-
-    private static MovingObjectPosition clipLookRay() {
-        Minecraft mc = Minecraft.getMinecraft();
-        Entity view = mc.getRenderViewEntity();
-        World world = mc.theWorld;
-        if (view == null || world == null) return null;
-        Vec3 eye = view.getPositionEyes(1.0F);
-        Vec3 look = view.getLook(1.0F);
-        Vec3 end = eye.addVector(look.xCoord * PICK_REACH, look.yCoord * PICK_REACH, look.zCoord * PICK_REACH);
-        MovingObjectPosition hit = Forge8RayTrace.trace(world, eye, end);
-        if (hit == null || hit.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) return null;
-        return hit;
-    }
 
     @Override
     public Vec3dCore getPlayerPosition() {
@@ -83,15 +66,6 @@ public final class Forge8MinecraftAccess implements MinecraftAccess {
         if (view == null) return Vec3dCore.ZERO;
         Vec3 d = view.getLook(1.0F);
         return new Vec3dCore(d.xCoord, d.yCoord, d.zCoord);
-    }
-
-    @Override
-    public int[] getLookedAtBlock() {
-        MovingObjectPosition hit = clipLookRay();
-        if (hit == null) return null;
-        BlockPos pos = hit.getBlockPos();
-        if (pos == null) return null;
-        return new int[] {pos.getX(), pos.getY(), pos.getZ()};
     }
 
     @Override
@@ -137,20 +111,6 @@ public final class Forge8MinecraftAccess implements MinecraftAccess {
     }
 
     @Override
-    public Face getLookedAtFace() {
-        MovingObjectPosition hit = clipLookRay();
-        if (hit == null) return null;
-        return toFace(hit.sideHit);
-    }
-
-    @Override
-    public Vec3dCore getLookedAtHitVec() {
-        MovingObjectPosition hit = clipLookRay();
-        if (hit == null || hit.hitVec == null) return null;
-        return new Vec3dCore(hit.hitVec.xCoord, hit.hitVec.yCoord, hit.hitVec.zCoord);
-    }
-
-    @Override
     public double getEyeHeight(boolean sneaking) {
         return sneaking ? 1.54 : 1.62;
     }
@@ -179,7 +139,7 @@ public final class Forge8MinecraftAccess implements MinecraftAccess {
                 origin.x + direction.x * maxDistance,
                 origin.y + direction.y * maxDistance,
                 origin.z + direction.z * maxDistance);
-        MovingObjectPosition hit = Forge8RayTrace.trace(world, start, end);
+        MovingObjectPosition hit = world.rayTraceBlocks(start, end);
         if (hit == null || hit.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK || hit.hitVec == null) return -1.0;
         return hit.hitVec.distanceTo(start);
     }
@@ -220,19 +180,6 @@ public final class Forge8MinecraftAccess implements MinecraftAccess {
             out.add(new AABB(new Vec3dCore(bb.minX, bb.minY, bb.minZ), new Vec3dCore(bb.maxX, bb.maxY, bb.maxZ)));
         }
         return out;
-    }
-
-    private static Face toFace(EnumFacing side) {
-        if (side == null) return null;
-        switch (side) {
-            case DOWN: return Face.NEG_Y;
-            case UP: return Face.POS_Y;
-            case NORTH: return Face.NEG_Z;
-            case SOUTH: return Face.POS_Z;
-            case WEST: return Face.NEG_X;
-            case EAST: return Face.POS_X;
-            default: return null;
-        }
     }
 
     @Override

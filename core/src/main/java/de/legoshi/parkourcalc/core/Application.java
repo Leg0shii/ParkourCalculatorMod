@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.core;
 
 import de.legoshi.parkourcalc.core.ports.BlockPicker;
+import de.legoshi.parkourcalc.core.sim.BlockHit;
 import de.legoshi.parkourcalc.core.ports.FilePickerPort;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.ports.PickedBlock;
@@ -707,7 +708,9 @@ public final class Application {
 
     public void captureAngleSolverBlock(BlockSelection.Kind kind) {
         if (blockPicker == null || angleSolverState == null || kind == null) return;
-        PickedBlock hit = blockPicker.pickLookedAtBlock();
+        BlockHit look = mc.getLookedAtHit();
+        if (look == null) return;
+        PickedBlock hit = blockPicker.pickBlock(look.x, look.y, look.z);
         if (hit == null) return;
         angleSolverState.toggleBlock(new BlockSelection(kind, hit.x, hit.y, hit.z, hit.box, hit.boxes));
     }
