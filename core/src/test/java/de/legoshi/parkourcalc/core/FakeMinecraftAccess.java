@@ -20,6 +20,7 @@ public class FakeMinecraftAccess implements MinecraftAccess {
     public Face lookedAtFace;
     public Vec3dCore lookedAtHitVec;
     public float playerYaw;
+    public float playerPitch;
     public boolean ready = true;
     public double[] pressurePlateFootprint;
 
@@ -31,6 +32,7 @@ public class FakeMinecraftAccess implements MinecraftAccess {
 
     @Override public Vec3dCore getPlayerPosition() { return Vec3dCore.ZERO; }
     @Override public float getPlayerYaw() { return playerYaw; }
+    @Override public float getPlayerPitch() { return playerPitch; }
     @Override public Vec3dCore getEyePosition() { return Vec3dCore.ZERO; }
     @Override public Vec3dCore getLookDirection() { return Vec3dCore.ZERO; }
     @Override public int[] getLookedAtBlock() { return lookedAtBlock; }

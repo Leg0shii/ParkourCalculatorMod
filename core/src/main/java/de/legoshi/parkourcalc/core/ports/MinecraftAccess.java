@@ -22,6 +22,8 @@ public interface MinecraftAccess {
     /** Current facing yaw of the local player, in MC degrees. */
     float getPlayerYaw();
 
+    float getPlayerPitch();
+
     /** Eye / camera position for picking and ray-casts. */
     Vec3dCore getEyePosition();
 
