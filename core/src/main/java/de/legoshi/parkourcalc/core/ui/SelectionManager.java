@@ -105,7 +105,7 @@ public class SelectionManager {
         }
     }
 
-    /** Replace the selection with exactly one row, ignoring Ctrl/Shift (used by right-click targeting). */
+    /** Replace the selection with exactly one row, ignoring Ctrl/Shift (used by right-click targeting and in-world taps). */
     public void selectOnly(int rowIndex) {
         selectSingle(rowIndex);
     }

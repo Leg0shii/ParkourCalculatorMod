@@ -589,21 +589,21 @@ public final class Application {
         if (pick == null) return;
         if (pick.kind == WorldPick.Kind.CONSTRAINT) {
             if (pick.index >= boxController.size() - 1) return;
-            selection.handleClick(pick.index + 1);
+            selection.selectOnly(pick.index + 1);
             selection.requestScrollIntoView();
             constraintSelection.focus(pick.index, pick.constraintIndices);
             return;
         }
         if (pick.index <= 0) return;
         if (pick.index >= boxController.size() - 1) return;
-        selection.handleClick(pick.index + 1);
+        selection.selectOnly(pick.index + 1);
         selection.requestScrollIntoView();
         constraintSelection.clear();
     }
 
     private void commitStartTap() {
         if (boxController.size() == 0) return;
-        selection.handleClick(boxController.size() >= 2 ? 1 : 0);
+        selection.selectOnly(boxController.size() >= 2 ? 1 : 0);
         selection.requestScrollIntoView();
     }
 
