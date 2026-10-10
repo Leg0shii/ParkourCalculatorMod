@@ -61,6 +61,7 @@ public final class CollisionRayTrace {
         }
         double bestT = maxDistance;
         Face bestFace = null;
+        AABB bestBox = null;
         for (AABB box : boxes) {
             double tNear = Double.NEGATIVE_INFINITY;
             double tFar = Double.POSITIVE_INFINITY;
@@ -89,9 +90,13 @@ public final class CollisionRayTrace {
             if (miss || entering == null || tNear < 0.0 || tNear >= bestT) continue;
             bestT = tNear;
             bestFace = entering;
+            bestBox = box;
         }
         if (bestFace == null) return null;
         Vec3dCore hitVec = new Vec3dCore(o.x + d.x * bestT, o.y + d.y * bestT, o.z + d.z * bestT);
+        if (bestFace != Face.POS_Y && bestFace != Face.NEG_Y && hitVec.y > y + 1.0) {
+            return new BlockHit(x, y, z, Face.POS_Y, new Vec3dCore(hitVec.x, bestBox.max.y, hitVec.z));
+        }
         return new BlockHit(x, y, z, bestFace, hitVec);
     }
 

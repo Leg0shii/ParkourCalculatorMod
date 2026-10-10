@@ -126,6 +126,28 @@ public class CollisionRayTraceTest {
     }
 
     @Test
+    public void aimingAtTheVisibleTopOfAFenceHitsItsCollisionTop() {
+        FakeWorld world = new FakeWorld();
+        world.block(5, 64, 8, box(5.375, 64, 8.375, 5.625, 65.5, 8.625));
+        BlockHit hit = trace(world, new Vec3dCore(8.5, 65.62, 8.5), new Vec3dCore(5.5, 65.0, 8.5));
+        assertNotNull(hit);
+        assertEquals(5, hit.x);
+        assertEquals(Face.POS_Y, hit.face);
+        assertEquals(65.5, hit.hitVec.y, EPS);
+        assertEquals(5.625, hit.hitVec.x, EPS);
+    }
+
+    @Test
+    public void aimingAtTheVisibleSideOfAFenceStaysASideHit() {
+        FakeWorld world = new FakeWorld();
+        world.block(5, 64, 8, box(5.375, 64, 8.375, 5.625, 65.5, 8.625));
+        BlockHit hit = trace(world, new Vec3dCore(8.5, 64.9, 8.5), new Vec3dCore(5.5, 64.5, 8.5));
+        assertNotNull(hit);
+        assertEquals(Face.POS_X, hit.face);
+        assertEquals(5.625, hit.hitVec.x, EPS);
+    }
+
+    @Test
     public void nothingInReachReturnsNull() {
         FakeWorld world = new FakeWorld();
         world.fullBlock(100, 64, 0);
