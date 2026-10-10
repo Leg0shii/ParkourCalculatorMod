@@ -13,6 +13,7 @@ import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.TickState;
+import de.legoshi.parkourcalc.core.sim.UnloadedChunkWatch;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.BoxDragController;
@@ -69,6 +70,7 @@ import java.util.Set;
 public final class Application {
 
     private final MinecraftAccess mc;
+    private final UnloadedChunkWatch chunkWatch;
     private final Simulator simulator;
 
     private final InputData inputData = new InputData();
@@ -111,6 +113,7 @@ public final class Application {
 
     public Application(Simulator simulator, MinecraftAccess mc) {
         this.mc = mc;
+        this.chunkWatch = new UnloadedChunkWatch(mc);
         this.simulator = simulator;
         this.selection = new SelectionManager(mc);
         this.runner = new SimulationRunner(simulator);
@@ -498,6 +501,7 @@ public final class Application {
             }
         }
         boxController.setPitches(foldPitches(path.size()));
+        chunkWatch.arm(boxController.getStates());
         if (!startDragController.isDragActive()) {
             selection.retainBelow(boxController.size());
         }
@@ -530,6 +534,7 @@ public final class Application {
         if (practiceMacro != null) practiceMacro.stop();
         if (attemptTracker != null) attemptTracker.reset();
         if (recorder.isRecording()) recorder.stop();
+        chunkWatch.clear();
         hudMessages.clearStatus();
         startInitialized = false;
     }
@@ -954,6 +959,10 @@ public final class Application {
     }
 
     public void tickPlayback() {
+        if (chunkWatch.pendingChunksLoaded()) {
+            runSimulation();
+            pushHudMessage("Chunks loaded, TAS re-simulated");
+        }
         playback.tick();
         if (practiceMacro != null && !playback.isRunning()) practiceMacro.tick();
         if (turnProfile != null) turnProfile.tick();

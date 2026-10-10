@@ -11,6 +11,7 @@ import net.minecraft.block.BlockBasePressurePlate;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.PlayerControllerMP;
+import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.server.integrated.IntegratedServer;
@@ -289,6 +290,12 @@ public final class Forge12MinecraftAccess implements MinecraftAccess {
     @Override
     public boolean isSinglePlayer() {
         return Minecraft.getMinecraft().getIntegratedServer() != null;
+    }
+
+    @Override
+    public boolean isChunkLoaded(int chunkX, int chunkZ) {
+        WorldClient world = Minecraft.getMinecraft().world;
+        return world != null && !world.getChunk(chunkX, chunkZ).isEmpty();
     }
 
     @Override
