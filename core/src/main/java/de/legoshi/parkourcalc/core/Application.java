@@ -13,7 +13,7 @@ import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.sim.SimulationRunner;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.TickState;
-import de.legoshi.parkourcalc.core.sim.UnloadedChunkWatch;
+import de.legoshi.parkourcalc.core.sim.UnloadedChunks;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.BoxDragController;
@@ -70,7 +70,7 @@ import java.util.Set;
 public final class Application {
 
     private final MinecraftAccess mc;
-    private final UnloadedChunkWatch chunkWatch;
+    private boolean simulatedInUnloadedChunks;
     private final Simulator simulator;
 
     private final InputData inputData = new InputData();
@@ -113,7 +113,6 @@ public final class Application {
 
     public Application(Simulator simulator, MinecraftAccess mc) {
         this.mc = mc;
-        this.chunkWatch = new UnloadedChunkWatch(mc);
         this.simulator = simulator;
         this.selection = new SelectionManager(mc);
         this.runner = new SimulationRunner(simulator);
@@ -194,6 +193,7 @@ public final class Application {
                 this::setStartToPlayer, playback, mc, boxController, this::pushHudMessage
         );
         inputOverlay.setShortcutsEnabled(() -> imgui.ImGui.isWindowFocused(imgui.flag.ImGuiFocusedFlags.RootAndChildWindows));
+        inputOverlay.setUnloadedChunkWarning(() -> simulatedInUnloadedChunks);
         inputOverlay.setRowFlags(() -> settings.viewOnejumpSetup || settings.viewOnejumpKeys || settings.viewTurnProfile,
                 new InputOverlay.RowFlag("Keys", "Onejump: an attempt must press exactly these keys at this tick. Drag to paint."
                         + " Shift click a key cell to make that key optional at that tick (hollow): it may be pressed or not.",
@@ -501,7 +501,7 @@ public final class Application {
             }
         }
         boxController.setPitches(foldPitches(path.size()));
-        chunkWatch.arm(boxController.getStates());
+        simulatedInUnloadedChunks = UnloadedChunks.touched(mc, boxController.getStates());
         if (!startDragController.isDragActive()) {
             selection.retainBelow(boxController.size());
         }
@@ -534,7 +534,7 @@ public final class Application {
         if (practiceMacro != null) practiceMacro.stop();
         if (attemptTracker != null) attemptTracker.reset();
         if (recorder.isRecording()) recorder.stop();
-        chunkWatch.clear();
+        simulatedInUnloadedChunks = false;
         hudMessages.clearStatus();
         startInitialized = false;
     }
@@ -959,13 +959,6 @@ public final class Application {
     }
 
     public void tickPlayback() {
-        UnloadedChunkWatch.Rerun rerun = chunkWatch.poll();
-        if (rerun != UnloadedChunkWatch.Rerun.NONE) {
-            runSimulation();
-            pushHudMessage(rerun == UnloadedChunkWatch.Rerun.WORLD_CHANGED
-                    ? "World changed, TAS re-simulated"
-                    : "Chunks loaded, TAS re-simulated");
-        }
         playback.tick();
         if (practiceMacro != null && !playback.isRunning()) practiceMacro.tick();
         if (turnProfile != null) turnProfile.tick();

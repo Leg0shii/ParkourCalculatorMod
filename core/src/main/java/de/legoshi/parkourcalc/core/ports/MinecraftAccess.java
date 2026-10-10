@@ -148,7 +148,7 @@ public interface MinecraftAccess {
         return true;
     }
 
-    default Object getWorldToken() {
+    default String getRerunSimulationKeyName() {
         return null;
     }
 

@@ -196,6 +196,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     private static boolean wasPlaybackRunning = false;
 
+    public static String rerunSimulationKeyName() {
+        return rerunSimulationKeyBinding == null ? null : rerunSimulationKeyBinding.getTranslatedKeyMessage().getString();
+    }
+
     private static void onStartTick(Minecraft client) {
         ReplayLockstep.clientBarrierPreTick();
         manageInputLifecycle();

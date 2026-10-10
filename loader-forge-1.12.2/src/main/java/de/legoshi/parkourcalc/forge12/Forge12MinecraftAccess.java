@@ -299,8 +299,8 @@ public final class Forge12MinecraftAccess implements MinecraftAccess {
     }
 
     @Override
-    public Object getWorldToken() {
-        return Minecraft.getMinecraft().world;
+    public String getRerunSimulationKeyName() {
+        return Forge12ParkourCalculator.rerunSimulationKeyName();
     }
 
     @Override

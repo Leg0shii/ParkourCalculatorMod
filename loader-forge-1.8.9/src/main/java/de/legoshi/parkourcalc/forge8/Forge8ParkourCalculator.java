@@ -12,6 +12,7 @@ import de.legoshi.parkourcalc.forge8.render.Forge8HudOverlayRenderer;
 import de.legoshi.parkourcalc.forge8.render.Forge8WorldOverlayRenderer;
 import de.legoshi.parkourcalc.forge8.sim.Forge8Simulator;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -90,7 +91,7 @@ public class Forge8ParkourCalculator {
     private KeyBinding solveKeyBinding;
     private KeyBinding solverStartTickKeyBinding;
     private KeyBinding solverEndTickKeyBinding;
-    private KeyBinding rerunSimulationKeyBinding;
+    private static KeyBinding rerunSimulationKeyBinding;
     private KeyBinding togglePathKeyBinding;
     private KeyBinding copyTeleportKeyBinding;
     private KeyBinding captureMomentumBlockKeyBinding;
@@ -612,6 +613,11 @@ public class Forge8ParkourCalculator {
         if (event.button == 1 && application.shouldSuppressRightClick()) {
             event.setCanceled(true);
         }
+    }
+
+    public static String rerunSimulationKeyName() {
+        if (rerunSimulationKeyBinding == null) return null;
+        return GameSettings.getKeyDisplayString(rerunSimulationKeyBinding.getKeyCode());
     }
 
     @SubscribeEvent

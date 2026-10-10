@@ -85,7 +85,7 @@ public class Forge12ParkourCalculator {
     private KeyBinding solveKeyBinding;
     private KeyBinding solverStartTickKeyBinding;
     private KeyBinding solverEndTickKeyBinding;
-    private KeyBinding rerunSimulationKeyBinding;
+    private static KeyBinding rerunSimulationKeyBinding;
     private KeyBinding togglePathKeyBinding;
     private KeyBinding copyTeleportKeyBinding;
     private KeyBinding captureMomentumBlockKeyBinding;
@@ -607,6 +607,10 @@ public class Forge12ParkourCalculator {
         if (event.getButton() == 1 && application.shouldSuppressRightClick()) {
             event.setCanceled(true);
         }
+    }
+
+    public static String rerunSimulationKeyName() {
+        return rerunSimulationKeyBinding == null ? null : rerunSimulationKeyBinding.getDisplayName();
     }
 
     @SubscribeEvent

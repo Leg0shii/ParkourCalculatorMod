@@ -347,8 +347,8 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
     }
 
     @Override
-    public Object getWorldToken() {
-        return Minecraft.getInstance().level;
+    public String getRerunSimulationKeyName() {
+        return FabricParkourCalculator.rerunSimulationKeyName();
     }
 
     @Override
