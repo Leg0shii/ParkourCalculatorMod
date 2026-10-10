@@ -91,7 +91,7 @@ public final class AngleSolverWindow implements RenderInterface {
     private static final float OPTION_INDENT = 26f;
 
     private static final int LONG_SPAN_WARN_TICKS = 100;
-    private static final String SOLVING_NO_CANDIDATE = "Solving · no candidate yet";
+    private static final String RUNNING = "Running...";
 
     private static final String LONG_SPAN_TIP =
             "A long span is solved a window of ~10 jumps at a time: each window is solved exactly, its"
@@ -904,7 +904,7 @@ public final class AngleSolverWindow implements RenderInterface {
 
         ThemeManager.pushTextColor(ThemeManager.accentColor());
         Fonts.pushBold();
-        ImGui.text(SOLVING_NO_CANDIDATE);
+        ImGui.text(RUNNING);
         Fonts.popBold();
         ThemeManager.popTextColor();
         ThemeManager.bottomPaddedSeparator();
@@ -964,9 +964,7 @@ public final class AngleSolverWindow implements RenderInterface {
         float cellW = ImGui.getContentRegionAvail().x;
         long elapsed = System.nanoTime() - running.startNanos;
         String time = seconds(elapsed) + (running.budgetNanos > 0 ? " / " + seconds(running.budgetNanos) : "");
-        ThemeManager.pushTextColor(ThemeManager.accentColor());
         ImGui.text(label);
-        ThemeManager.popTextColor();
         ImGui.sameLine();
         textRightInCell(time);
         if (running.budgetNanos > 0) {
@@ -999,11 +997,15 @@ public final class AngleSolverWindow implements RenderInterface {
         String deviation = state.getApplyDeviation();
         // A diverged apply is not a clean solve: the whole panel goes warning, not yellow-on-green.
         boolean diverged = r.isSuccess() && deviation != null;
-        int accent = !r.isSuccess() ? ThemeManager.dangerColor()
+        boolean running = engine.isSolving();
+        int accent = running ? ThemeManager.accentColor()
+                : !r.isSuccess() ? ThemeManager.dangerColor()
                 : diverged ? ThemeManager.warningColor() : ThemeManager.okColor();
-        int bg = !r.isSuccess() ? ThemeManager.dangerTintColor(0.10f)
+        int bg = running ? ThemeManager.accentTintColor(0.10f)
+                : !r.isSuccess() ? ThemeManager.dangerTintColor(0.10f)
                 : diverged ? ThemeManager.warningTintColor(0.10f) : ThemeManager.okTintColor(0.10f);
-        int border = !r.isSuccess() ? ThemeManager.dangerTintColor(0.45f)
+        int border = running ? ThemeManager.accentTintColor(0.45f)
+                : !r.isSuccess() ? ThemeManager.dangerTintColor(0.45f)
                 : diverged ? ThemeManager.warningTintColor(0.45f) : ThemeManager.okTintColor(0.45f);
 
         float lineH = ImGui.getTextLineHeightWithSpacing();
@@ -1096,7 +1098,7 @@ public final class AngleSolverWindow implements RenderInterface {
     }
 
     private String resultHeader(SolveResult r) {
-        if (engine.isSolving()) return "Solving · " + r.getMet() + "/" + r.getTotal() + " constraints met";
+        if (engine.isSolving()) return RUNNING + " · " + r.getMet() + "/" + r.getTotal() + " constraints met";
         if (!r.isSuccess()) return "No solution · " + r.getMet() + "/" + r.getTotal() + " constraints met";
         if (state.getApplyDeviation() != null) return "Solved · sim diverged";
         return "Solved · " + r.getMet() + "/" + r.getTotal() + " constraints met";
