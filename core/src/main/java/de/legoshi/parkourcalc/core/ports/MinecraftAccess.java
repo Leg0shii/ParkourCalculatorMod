@@ -148,6 +148,10 @@ public interface MinecraftAccess {
         return true;
     }
 
+    default Object getWorldToken() {
+        return null;
+    }
+
     /** SP: runs the task on the server's main thread and blocks for the result.
      *  MP: runs inline. Lets the simulator tick against ServerWorld natively. */
     <T> T runOnServerThread(Supplier<T> task);

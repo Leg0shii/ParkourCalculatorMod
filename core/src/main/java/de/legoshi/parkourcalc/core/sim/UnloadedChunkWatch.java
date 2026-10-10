@@ -8,8 +8,12 @@ import java.util.Set;
 
 public final class UnloadedChunkWatch {
 
+    public enum Rerun { NONE, CHUNKS_LOADED, WORLD_CHANGED }
+
     private final MinecraftAccess mc;
     private final Set<Long> pending = new LinkedHashSet<>();
+    private boolean watchingWorld;
+    private Object worldToken;
 
     public UnloadedChunkWatch(MinecraftAccess mc) {
         this.mc = mc;
@@ -17,6 +21,8 @@ public final class UnloadedChunkWatch {
 
     public void arm(List<TickState> path) {
         pending.clear();
+        watchingWorld = true;
+        worldToken = mc.getWorldToken();
         if (mc.isSinglePlayer()) return;
         for (TickState s : path) {
             int[] r = ChunkRange.around(s.position.x, s.position.z);
@@ -32,17 +38,23 @@ public final class UnloadedChunkWatch {
         return !pending.isEmpty();
     }
 
-    public boolean pendingChunksLoaded() {
-        if (pending.isEmpty()) return false;
+    public Rerun poll() {
+        if (watchingWorld && mc.isReady() && worldToken != mc.getWorldToken()) {
+            clear();
+            return Rerun.WORLD_CHANGED;
+        }
+        if (pending.isEmpty()) return Rerun.NONE;
         for (long k : pending) {
-            if (!mc.isChunkLoaded((int) (k >> 32), (int) k)) return false;
+            if (!mc.isChunkLoaded((int) (k >> 32), (int) k)) return Rerun.NONE;
         }
         pending.clear();
-        return true;
+        return Rerun.CHUNKS_LOADED;
     }
 
     public void clear() {
         pending.clear();
+        watchingWorld = false;
+        worldToken = null;
     }
 
     private static long key(int cx, int cz) {

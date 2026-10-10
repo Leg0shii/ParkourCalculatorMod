@@ -312,6 +312,11 @@ public final class Forge8MinecraftAccess implements MinecraftAccess {
     }
 
     @Override
+    public Object getWorldToken() {
+        return Minecraft.getMinecraft().theWorld;
+    }
+
+    @Override
     public <T> T runOnServerThread(final Supplier<T> task) {
         // 1.8.9 MinecraftServer.callFromMainThread waits up to one server tick (~50ms) before
         // running, which capped drag at 20fps. ChunkProviderServer has no synchronized or

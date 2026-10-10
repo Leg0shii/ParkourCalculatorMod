@@ -959,9 +959,12 @@ public final class Application {
     }
 
     public void tickPlayback() {
-        if (chunkWatch.pendingChunksLoaded()) {
+        UnloadedChunkWatch.Rerun rerun = chunkWatch.poll();
+        if (rerun != UnloadedChunkWatch.Rerun.NONE) {
             runSimulation();
-            pushHudMessage("Chunks loaded, TAS re-simulated");
+            pushHudMessage(rerun == UnloadedChunkWatch.Rerun.WORLD_CHANGED
+                    ? "World changed, TAS re-simulated"
+                    : "Chunks loaded, TAS re-simulated");
         }
         playback.tick();
         if (practiceMacro != null && !playback.isRunning()) practiceMacro.tick();

@@ -344,6 +344,11 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
     }
 
     @Override
+    public Object getWorldToken() {
+        return Minecraft.getInstance().level;
+    }
+
+    @Override
     public <T> T runOnServerThread(Supplier<T> task) {
         MinecraftServer server = Minecraft.getInstance().getSingleplayerServer();
         if (server == null) return task.get();
