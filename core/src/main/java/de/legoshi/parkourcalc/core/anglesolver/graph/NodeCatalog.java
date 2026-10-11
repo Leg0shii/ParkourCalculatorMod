@@ -17,6 +17,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.FacingStepNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.RouterNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.SeedSweepNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.SetupPeelNode;
+import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.SmoothNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.TranslatedStartNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.WrapIlsNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.nodes.WrapYawsNode;
@@ -262,6 +263,10 @@ public final class NodeCatalog {
                 .param(ParamSpec.integer("roundCap", "Round cap", 0, 100000, 0))
                 .param(ParamSpec.bool("gateFlipMoves", "Gate flip moves", false))
                 .param(ParamSpec.integer("maxAbsGf", "Max |facing| (deg)", 360, 100000, 12000))
+                .param(ParamSpec.decimal(GraphRunner.RESERVE_FRACTION_PARAM, "Reserved share of the solve time", 0.0, 1.0,
+                        BuiltinGraphs.WRAP_RESERVE_FRACTION))
+                .param(ParamSpec.integer(GraphRunner.RESERVE_CAP_PARAM, "Reserve cap (s, 0 = none)", 0, 600,
+                        BuiltinGraphs.WRAP_RESERVE_CAP_SEC))
                 .budgetParam("budgetSec")
                 .fallback(Guarantee.REJECTED)
                 .factory(WrapIlsNode::new)
@@ -273,6 +278,17 @@ public final class NodeCatalog {
                 .param(ParamSpec.integer("pairPass", "Pair pass", 0, 1, 0))
                 .fallback(Guarantee.REJECTED)
                 .factory(LeafSnapNode::new)
+                .build());
+        register(NodeType.builder("smooth", "Smoothing", NodeCategory.POLISH)
+                .requires(InputRequirement.ANY)
+                .branch(Branch.feasible(Guarantee.IMPROVED))
+                .branch(Branch.preserves(Guarantee.UNCHANGED))
+                .param(ParamSpec.decimal(GraphRunner.RESERVE_FRACTION_PARAM, "Reserved share of the solve time", 0.0, 1.0,
+                        BuiltinGraphs.SMOOTH_RESERVE_FRACTION))
+                .param(ParamSpec.integer(GraphRunner.RESERVE_CAP_PARAM, "Reserve cap (s, 0 = none)", 0, 600,
+                        BuiltinGraphs.SMOOTH_RESERVE_CAP_SEC))
+                .fallback(Guarantee.UNCHANGED)
+                .factory(SmoothNode::new)
                 .build());
         register(NodeType.builder("translatedStart", "Translated start", NodeCategory.RECOVERY)
                 .requires(InputRequirement.ANY)
