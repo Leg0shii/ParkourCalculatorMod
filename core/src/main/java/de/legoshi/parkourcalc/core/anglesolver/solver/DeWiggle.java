@@ -100,7 +100,7 @@ public final class DeWiggle {
         return c;
     }
 
-    private static double[] repair(ForwardModel model, JumpPhysicsInputs sc, JumpConstraintCompiler.Compiled compiled,
+    static double[] repair(ForwardModel model, JumpPhysicsInputs sc, JumpConstraintCompiler.Compiled compiled,
                                    JumpSpec spec, List<JumpConstraint> cs, double[] start, int lo, int hi,
                                    boolean[] held, AtomicBoolean cancel) {
         int n = start.length;
@@ -171,7 +171,7 @@ public final class DeWiggle {
         return best <= FEAS_TOL ? y : null;
     }
 
-    private static boolean[] heldByFacing(int n, JumpSpec spec) {
+    static boolean[] heldByFacing(int n, JumpSpec spec) {
         boolean[] held = new boolean[n];
         for (JumpConstraint c : spec.constraints) {
             if (c.mode != JumpConstraint.Mode.F) continue;
@@ -181,7 +181,7 @@ public final class DeWiggle {
         return held;
     }
 
-    private static List<JumpConstraint> usable(JumpPhysicsInputs sc, JumpSpec spec) {
+    static List<JumpConstraint> usable(JumpPhysicsInputs sc, JumpSpec spec) {
         JumpLinearModel lin = new JumpLinearModel(sc);
         List<JumpConstraint> out = new ArrayList<>();
         for (JumpConstraint c : spec.constraints) {
@@ -314,13 +314,13 @@ public final class DeWiggle {
         return x;
     }
 
-    private static double violation(ForwardModel model, JumpPhysicsInputs sc,
+    static double violation(ForwardModel model, JumpPhysicsInputs sc,
                                     JumpConstraintCompiler.Compiled compiled, double[] y) {
         double[] gf = sc.toGameFacings(Angles.wrapAll(y));
         return compiled.maxViolation(gf, model.forward(sc, gf));
     }
 
-    private static double objAt(ForwardModel model, JumpPhysicsInputs sc, Objective obj, double[] y) {
+    static double objAt(ForwardModel model, JumpPhysicsInputs sc, Objective obj, double[] y) {
         return obj.evaluate(model.forward(sc, sc.toGameFacings(Angles.wrapAll(y))));
     }
 
