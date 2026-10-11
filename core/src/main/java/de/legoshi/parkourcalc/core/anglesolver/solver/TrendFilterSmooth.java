@@ -38,6 +38,11 @@ public final class TrendFilterSmooth {
         SmoothFaceRecovery.Config cfg = new SmoothFaceRecovery.Config();
         cfg.deadlineNanos = deadlineNanos;
         cfg.frozen = frozen;
+        cfg.repairSpec = guarded;
+        cfg.repairRows = DeWiggle.usable(sc, guarded);
+        boolean[] held = DeWiggle.heldByFacing(sc.numTicks, spec);
+        if (frozen != null) for (int t = 0; t < held.length; t++) held[t] |= frozen[t];
+        cfg.repairHeld = held;
 
         double[] best = seed;
         TurnShape bestShape = TurnShape.of(anchor, best);
@@ -70,9 +75,14 @@ public final class TrendFilterSmooth {
             if (cancel != null && cancel.get()) break;
             if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) break;
             boolean improved = false;
-            for (double[] target : targets(anchor, best)) {
+            List<double[]> targets = targets(anchor, best);
+            for (int ti = 0; ti < targets.size(); ti++) {
+                double[] target = targets.get(ti);
                 if (cancel != null && cancel.get()) break;
-                if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) break;
+                long now = System.nanoTime();
+                if (deadlineNanos != 0L && now >= deadlineNanos) break;
+                long share = deadlineNanos == 0L ? 0L : (deadlineNanos - now) / Math.max(1, targets.size() - ti);
+                cfg.deadlineNanos = deadlineNanos == 0L ? 0L : now + Math.max(share, 50_000_000L);
                 double[] cand = SmoothFaceRecovery.smoothToward(exact, guarded, guardedComp, best, target, FEAS_TOL, cancel, cfg);
                 if (cand == null) continue;
                 double[] cgf = sc.toGameFacings(cand);
@@ -101,13 +111,13 @@ public final class TrendFilterSmooth {
     static List<double[]> targets(double anchor, double[] best) {
         double[] rate = turnRate(anchor, best);
         List<double[]> out = new ArrayList<>();
-        out.add(null);
         RateFilter l1 = TrendFilterSmooth::trendL1;
         RateFilter l2 = (r, lambda) -> whittaker(r, lambda, null);
         RateFilter tv = TrendFilterSmooth::condatTV;
         for (double lambda : SHAPE_LAMBDAS) out.add(reconstruct(anchor, perRun(rate, lambda, l1)));
         for (double lambda : SHAPE_LAMBDAS) out.add(reconstruct(anchor, perRun(rate, lambda, l2)));
         for (double lambda : LAMBDAS) out.add(reconstruct(anchor, perRun(rate, lambda, tv)));
+        out.add(null);
         return out;
     }
 
@@ -123,7 +133,7 @@ public final class TrendFilterSmooth {
                 double[] seg = new double[t - start];
                 System.arraycopy(rate, start, seg, 0, seg.length);
                 double[] f = filter.apply(seg, lambda);
-                System.arraycopy(f, 0, out, start, seg.length);
+                for (int k = 0; k < f.length; k++) out[start + k] = sign > 0 ? Math.max(0.0, f[k]) : Math.min(0.0, f[k]);
             }
             sign = s;
             start = t;

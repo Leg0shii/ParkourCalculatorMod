@@ -5,7 +5,8 @@ import java.util.Locale;
 public final class TurnShape {
 
     public static final double FLOOR_DEG = 0.01;
-    public static final double ACCEL_FLOOR_DEG = 0.05;
+    public static final double ACCEL_FLOOR_DEG = 0.5;
+    public static final double MIN_RUN_DEG = 0.5;
     private static final double TOL = 1.0e-9;
 
     public final int reversals;
@@ -38,6 +39,8 @@ public final class TurnShape {
         int reversals = 0;
         int flips = 0;
         int runSign = 0;
+        int lastSignificantSign = 0;
+        double runMass = 0.0;
         int accelSign = 0;
         double prevMag = 0.0;
         boolean prevInRun = false;
@@ -48,8 +51,13 @@ public final class TurnShape {
             }
             int sign = v > 0.0 ? 1 : -1;
             if (runSign != 0 && sign != runSign) {
-                reversals++;
+                if (Math.abs(runMass) >= MIN_RUN_DEG) {
+                    if (lastSignificantSign != 0 && runSign != lastSignificantSign) reversals++;
+                    lastSignificantSign = runSign;
+                }
+                runMass = 0.0;
                 prevInRun = false;
+                accelSign = 0;
             }
             if (prevInRun) {
                 double a = Math.abs(v) - prevMag;
@@ -58,12 +66,14 @@ public final class TurnShape {
                     if (accelSign != 0 && as != accelSign) flips++;
                     accelSign = as;
                 }
-            } else {
-                accelSign = 0;
             }
             runSign = sign;
+            runMass += v;
             prevMag = Math.abs(v);
             prevInRun = true;
+        }
+        if (runSign != 0 && Math.abs(runMass) >= MIN_RUN_DEG && lastSignificantSign != 0 && runSign != lastSignificantSign) {
+            reversals++;
         }
         double jerk = 0.0;
         double snap = 0.0;
