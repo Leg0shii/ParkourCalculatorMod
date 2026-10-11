@@ -3,6 +3,7 @@ package de.legoshi.parkourcalc.anglesolver.graph;
 import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphEdge;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphNode;
+import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunner;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphValidator;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
@@ -154,6 +155,28 @@ public class BuiltinGraphsTest {
         assertLinear(rt, FAST_PAIRS);
         assertLoopEdges(rt, false);
         assertEquals(0, rt.node("seed").params.getInt("budgetMs"));
+    }
+
+    @Test
+    public void smoothIsTheSmoothStageAloneWithTheWholeBudget() {
+        SolverGraph g = BuiltinGraphs.smooth(0.4);
+        assertFalse(GraphValidator.hasErrors(GraphValidator.validate(g)));
+        assertEquals(Arrays.asList("entry", "smooth", "emit"), nodeIds(g));
+        assertLinear(g, new String[][] {{"entry", "smooth"}, {"smooth", "emit"}});
+        assertEquals(0.4, g.node("smooth").params.getDouble("giveBack"), 0.0);
+        assertEquals(1.0, g.node("smooth").params.getDouble(GraphRunner.RESERVE_FRACTION_PARAM), 0.0);
+        assertEquals(0, g.node("smooth").params.getInt(GraphRunner.RESERVE_CAP_PARAM));
+        assertEquals(30_000_000_000L, GraphRunner.reserveNanos(g.node("smooth"), 30_000_000_000L));
+        assertFalse("the smooth graph is not a selectable preset", BuiltinGraphs.isBuiltinPreset(BuiltinGraphs.SMOOTH_PRESET));
+        assertNull("builtin tiers do not smooth on their own", BuiltinGraphs.optimize(45).node("smooth"));
+    }
+
+    @Test
+    public void wrapReserveIsDeclaredOnTheNode() {
+        SolverGraph opt = BuiltinGraphs.optimize(45);
+        assertEquals(3_000_000_000L, GraphRunner.reserveNanos(opt.node("wrap"), 45_000_000_000L));
+        assertEquals(2_000_000_000L, GraphRunner.reserveNanos(opt.node("wrap"), 8_000_000_000L));
+        assertEquals(0L, GraphRunner.reserveNanos(BuiltinGraphs.fast().node("wrap"), 0L));
     }
 
     @Test

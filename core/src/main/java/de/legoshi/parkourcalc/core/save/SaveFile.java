@@ -77,7 +77,7 @@ public final class SaveFile {
         public Boolean legalMode;                        // absent in old files -> false
         public Integer optimizeSeconds;                  // absent in old files -> default
         public Integer budgetMs;                         // absent in old files -> from optimizeSeconds
-        public Double smoothLambda;
+        public Double smoothGiveBack;
         public SolveBudget customBudget;
         public String graphPreset;
         public String defaultInputs;

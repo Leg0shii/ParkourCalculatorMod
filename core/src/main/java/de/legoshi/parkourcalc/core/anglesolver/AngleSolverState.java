@@ -142,9 +142,8 @@ public final class AngleSolverState {
     private boolean stopOnFeasible = true;
     private boolean legalMode;
     private int budgetMs = DEFAULT_BUDGET_MS;
-    public static final double TASER_SMOOTH_LAMBDA = 1.0e-2;
-
     private double smoothLambda;
+    private double smoothGiveBack = 1.0;
     private final SolveBudget solveBudget = new SolveBudget();
     private final RunTicksSettings runTicks = new RunTicksSettings();
     private String graphPresetName;
@@ -285,6 +284,14 @@ public final class AngleSolverState {
 
     public void setSmoothLambda(double v) {
         smoothLambda = Math.max(0.0, v);
+    }
+
+    public double getSmoothGiveBack() {
+        return smoothGiveBack;
+    }
+
+    public void setSmoothGiveBack(double v) {
+        smoothGiveBack = Double.isNaN(v) ? 1.0 : Math.max(0.0, Math.min(1.0, v));
     }
 
     public SolveBudget getSolveBudget() {

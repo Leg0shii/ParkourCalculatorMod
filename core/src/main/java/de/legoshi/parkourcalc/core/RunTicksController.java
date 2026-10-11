@@ -218,7 +218,7 @@ public final class RunTicksController implements RunTicksControls {
         applyStep(node);
         runSimulation.run();
         stepStartMs = now();
-        engine.solve(AngleSolverState.Effort.FAST, false, FAST_GRAPH);
+        engine.solve(AngleSolverState.Effort.FAST, FAST_GRAPH);
         phase = Phase.STEP;
     }
 
@@ -237,7 +237,7 @@ public final class RunTicksController implements RunTicksControls {
             }
             stepTimeoutMs = Math.max(settings().getTimeoutMs(), timeouts.forDepth(search.jumpCount()));
             stepStartMs = now();
-            engine.solve(AngleSolverState.Effort.FAST, true, FAST_GRAPH);
+            engine.solve(AngleSolverState.Effort.FAST, FAST_GRAPH);
             phase = Phase.FINAL;
             return;
         }

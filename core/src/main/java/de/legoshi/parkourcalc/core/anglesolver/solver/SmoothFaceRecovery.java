@@ -6,19 +6,90 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 final class SmoothFaceRecovery {
 
     private static final double RAD = Math.PI / 180.0;
     private static final double FLOOR_DEG = 0.01;
-    private static final double W_EPS = 5.0e-3;
-    private static final double EQ_TOL = 1.0e-9;
 
     static final class Config {
         double restoreMargin = 5.0e-3;
         long deadlineNanos = 0L;
         boolean[] frozen = null;
+        List<JumpConstraint> repairRows = null;
+        boolean[] repairHeld = null;
+        JumpSpec repairSpec = null;
+        ExecutorService pool = null;
+        int parallelism = 1;
+
+        Config copy() {
+            Config c = new Config();
+            c.restoreMargin = restoreMargin;
+            c.deadlineNanos = deadlineNanos;
+            c.frozen = frozen;
+            c.repairRows = repairRows;
+            c.repairHeld = repairHeld;
+            c.repairSpec = repairSpec;
+            c.pool = pool;
+            c.parallelism = parallelism;
+            return c;
+        }
+    }
+
+    private static final class Step {
+        final double[] pdir;
+        final double frac;
+
+        Step(double[] pdir, double frac) {
+            this.pdir = pdir;
+            this.frac = frac;
+        }
+    }
+
+    private static double[] tryStep(ExactJumpModel exact, JumpPhysicsInputs sc, JumpConstraintCompiler.Compiled compiled,
+                                    Rows R, double[] y, double anchor, Step st, TurnShape cur, Config cfg) {
+        int n = y.length;
+        double[] c = y.clone();
+        for (int t = 0; t < n; t++) c[t] += st.frac * st.pdir[t];
+        holdFrozen(c, y, cfg.frozen);
+        if (!restoreExact(R, exact, sc, compiled, c, cfg.restoreMargin, cfg.frozen, cfg)) return null;
+        return TurnShape.of(anchor, c).betterThan(cur) ? c : null;
+    }
+
+    private static double[] firstBetter(ExactJumpModel exact, JumpPhysicsInputs sc, JumpConstraintCompiler.Compiled compiled,
+                                        Rows R, double[] y, double anchor, List<Step> steps, TurnShape cur, Config cfg,
+                                        AtomicBoolean cancel) {
+        int par = cfg.pool == null ? 1 : Math.max(1, cfg.parallelism);
+        for (int from = 0; from < steps.size(); from += par) {
+            if (cancel.get() || expired(cfg)) return null;
+            int to = Math.min(steps.size(), from + par);
+            if (par == 1 || to - from == 1) {
+                for (int i = from; i < to; i++) {
+                    double[] c = tryStep(exact, sc, compiled, R, y, anchor, steps.get(i), cur, cfg);
+                    if (c != null) return c;
+                }
+                continue;
+            }
+            List<Future<double[]>> futures = new ArrayList<Future<double[]>>();
+            for (int i = from; i < to; i++) {
+                final Step st = steps.get(i);
+                futures.add(cfg.pool.submit(() -> tryStep(exact, sc, compiled, R, y, anchor, st, cur, cfg)));
+            }
+            double[] found = null;
+            for (Future<double[]> f : futures) {
+                try {
+                    double[] c = f.get();
+                    if (found == null && c != null) found = c;
+                } catch (Exception e) {
+                    throw new IllegalStateException(e);
+                }
+            }
+            if (found != null) return found;
+        }
+        return null;
     }
 
     private static void holdFrozen(double[] cand, double[] base, boolean[] frozen) {
@@ -134,15 +205,6 @@ final class SmoothFaceRecovery {
         }
     }
 
-    private static double linWorst(Rows R, double[] gf) {
-        double worst = Double.NEGATIVE_INFINITY;
-        for (Row r : R.rows) {
-            double v = rowValue(R, r, gf) - r.nb;
-            worst = Math.max(worst, r.eq ? Math.abs(v) : v);
-        }
-        return worst;
-    }
-
     static double[] smoothToward(ExactJumpModel exact, JumpSpec spec, JumpConstraintCompiler.Compiled compiled,
                                  double[] seedYaws, double[] target, double feasTol, AtomicBoolean cancel, Config cfg) {
         if (seedYaws == null) return null;
@@ -150,12 +212,19 @@ final class SmoothFaceRecovery {
         double anchor = sc.startYaw;
         double[] y = seedYaws.clone();
         if (exactViol(exact, sc, compiled, y) > feasTol) return null;
-        if (target != null) globalToward(exact, sc, spec, compiled, y, anchor, target, cfg, cancel);
-        faceWalk(exact, sc, spec, compiled, y, anchor, cfg, cancel);
+        if (target != null) {
+            long tG = System.nanoTime();
+            globalToward(exact, sc, spec, compiled, y, anchor, target, cfg, cancel);
+            SmoothProfile.add("sfr.globalToward", tG);
+        } else {
+            long tF = System.nanoTime();
+            faceWalk(exact, sc, spec, compiled, y, anchor, cfg, cancel);
+            SmoothProfile.add("sfr.faceWalk", tF);
+        }
         return exactViol(exact, sc, compiled, y) <= feasTol ? Angles.wrapAll(y) : null;
     }
 
-    private static final int GLOBAL_ITERS = 8;
+    private static final int GLOBAL_ITERS = 32;
 
     private static void globalToward(ExactJumpModel exact, JumpPhysicsInputs sc, JumpSpec spec,
                                      JumpConstraintCompiler.Compiled compiled, double[] y, double anchor,
@@ -163,30 +232,20 @@ final class SmoothFaceRecovery {
         int n = sc.numTicks;
         for (int iter = 0; iter < GLOBAL_ITERS; iter++) {
             if (cancel.get() || expired(cfg)) break;
-            int curRev = reversals(anchor, y);
-            double curJerk = jerkOf(anchor, y);
+            TurnShape cur = TurnShape.of(anchor, y);
             Rows R = build(sc, spec, patternOf(sc, exact, y));
-            double[][] P = tangentProjector(R, sc.toGameFacings(y), cfg.restoreMargin, n);
+            double[] gfNow = sc.toGameFacings(y);
             double[] dir = new double[n];
             for (int t = 0; t < n; t++) dir[t] = Angles.wrapDelta(target[t] - y[t]);
-            double[] pdir = apply(P, dir);
+            double[] pdir = projectInward(R, gfNow, cfg.restoreMargin, dir);
             double pn = 0.0;
             for (double v : pdir) pn = Math.max(pn, Math.abs(v));
             if (pn < 1.0e-12) break;
-            boolean stepped = false;
-            for (double frac = 1.0; frac >= 1.0 / 64.0 && !stepped; frac *= 0.5) {
-                double[] c = y.clone();
-                for (int t = 0; t < n; t++) c[t] += frac * pdir[t];
-                holdFrozen(c, y, cfg.frozen);
-                if (!restoreExact(R, exact, sc, compiled, c, cfg.restoreMargin, cfg.frozen)) continue;
-                int rv = reversals(anchor, c);
-                double jk = jerkOf(anchor, c);
-                if (rv > curRev) continue;
-                if (rv == curRev && jk >= curJerk - 1.0e-9) continue;
-                System.arraycopy(c, 0, y, 0, n);
-                stepped = true;
-            }
-            if (!stepped) break;
+            List<Step> steps = new ArrayList<Step>();
+            for (double frac = 1.0; frac >= 1.0 / 64.0; frac *= 0.5) steps.add(new Step(pdir, frac));
+            double[] c = firstBetter(exact, sc, compiled, R, y, anchor, steps, cur, cfg, cancel);
+            if (c == null) break;
+            System.arraycopy(c, 0, y, 0, n);
         }
     }
 
@@ -199,8 +258,7 @@ final class SmoothFaceRecovery {
         int guard = 0;
         while (guard++ < 4 * n + 40) {
             if (cancel.get() || expired(cfg)) break;
-            int curRev = reversals(anchor, y);
-            double curJerk = jerkOf(anchor, y);
+            TurnShape cur = TurnShape.of(anchor, y);
             double[] dd = deltas(anchor, y);
             List<int[]> rs = runSpans(anchor, y);
             int[] pick = null;
@@ -224,33 +282,28 @@ final class SmoothFaceRecovery {
             touched.put(key, nSeen + 1);
 
             Rows R = build(sc, spec, patternOf(sc, exact, y));
-            double[][] P = tangentProjector(R, sc.toGameFacings(y), cfg.restoreMargin, n);
-            boolean done = false;
-            for (int grow = 0; grow <= 16 && !done; grow++) {
+            double[] gfNow = sc.toGameFacings(y);
+            List<Step> steps = new ArrayList<Step>();
+            for (int grow = 0; grow <= 16; grow++) {
                 int lo = Math.max(0, pick[0] - grow);
                 int hi = Math.min(n - 1, pick[1] + grow);
                 double[] target = flattenYaw(anchor, y, lo, hi);
                 double[] dir = new double[n];
                 for (int t = 0; t < n; t++) dir[t] = Angles.wrapDelta(target[t] - y[t]);
-                double[] pdir = apply(P, dir);
+                double[] pdir = projectInward(R, gfNow, cfg.restoreMargin, dir);
                 double pn = 0.0;
                 for (double v : pdir) pn = Math.max(pn, Math.abs(v));
                 if (pn < 1.0e-12) continue;
-                for (double frac = 1.0; frac >= 1.0 / 64.0 && !done; frac *= 0.5) {
-                    double[] c = y.clone();
-                    for (int t = 0; t < n; t++) c[t] += frac * pdir[t];
-                    holdFrozen(c, y, cfg.frozen);
-                    if (!restoreExact(R, exact, sc, compiled, c, cfg.restoreMargin, cfg.frozen)) continue;
-                    int rv = reversals(anchor, c);
-                    double jk = jerkOf(anchor, c);
-                    if (rv > curRev) continue;
-                    if (rv == curRev && jk >= curJerk - 1.0e-9) continue;
-                    System.arraycopy(c, 0, y, 0, n);
-                    done = true;
-                    if (rv < curRev) touched.clear();
-                }
+                for (double frac = 1.0; frac >= 1.0 / 64.0; frac *= 0.5) steps.add(new Step(pdir, frac));
             }
-            if (!done) stuck.add(key);
+            double[] c = firstBetter(exact, sc, compiled, R, y, anchor, steps, cur, cfg, cancel);
+            if (c == null) {
+                stuck.add(key);
+                continue;
+            }
+            TurnShape next = TurnShape.of(anchor, c);
+            System.arraycopy(c, 0, y, 0, n);
+            if (next.reversals < cur.reversals) touched.clear();
         }
     }
 
@@ -263,77 +316,20 @@ final class SmoothFaceRecovery {
         return new boolean[][]{zx, zz};
     }
 
-    private static boolean restore(Rows R, double[] y, double margin, ExactJumpModel exact,
-                                   JumpPhysicsInputs sc, JumpConstraintCompiler.Compiled comp, boolean[] frozen) {
-        int n = R.n;
-        double[][] W = smoothMetric(n);
-        double[] grad = new double[n];
-        for (int it = 0; it < 200; it++) {
-            double[] gf = sc.toGameFacings(y);
-            List<Row> bad = new ArrayList<Row>();
-            for (Row r : R.rows) {
-                double v = rowValue(R, r, gf) - r.nb;
-                if (r.eq ? Math.abs(v) > EQ_TOL : v > -margin) bad.add(r);
-            }
-            if (bad.isEmpty()) return true;
-            int m = bad.size();
-            double[][] J = new double[m][n];
-            double[] res = new double[m];
-            for (int i = 0; i < m; i++) {
-                Row r = bad.get(i);
-                rowGrad(R, r, gf, grad);
-                System.arraycopy(grad, 0, J[i], 0, n);
-                double target = r.eq ? r.nb : r.nb - margin;
-                res[i] = target - rowValue(R, r, gf);
-            }
-            double[][] JW = new double[m][n];
-            for (int a = 0; a < m; a++) {
-                for (int x = 0; x < n; x++) {
-                    double s = 0.0;
-                    for (int z = 0; z < n; z++) s += J[a][z] * W[z][x];
-                    JW[a][x] = s;
-                }
-            }
-            double[][] jjt = new double[m][m];
-            for (int a = 0; a < m; a++) {
-                for (int b = 0; b < m; b++) {
-                    double s = 0.0;
-                    for (int x = 0; x < n; x++) s += JW[a][x] * J[b][x];
-                    jjt[a][b] = s;
-                }
-            }
-            double scale = 0.0;
-            for (int a = 0; a < m; a++) scale = Math.max(scale, Math.abs(jjt[a][a]));
-            double[] lam = solveSym(jjt, res, scale * 1.0e-10 + 1.0e-20);
-            double best = linWorst(R, gf);
-            boolean moved = false;
-            for (double damp = 1.0; damp >= 1.0 / 512.0; damp *= 0.5) {
-                double[] c = y.clone();
-                for (int a = 0; a < m; a++) {
-                    if (lam[a] == 0.0) continue;
-                    for (int t = 0; t < n; t++) c[t] += damp * lam[a] * JW[a][t];
-                }
-                holdFrozen(c, y, frozen);
-                double v = linWorst(R, sc.toGameFacings(c));
-                if (v >= best - 1.0e-15) continue;
-                System.arraycopy(c, 0, y, 0, n);
-                moved = true;
-                break;
-            }
-            if (!moved) return linWorst(R, sc.toGameFacings(y)) <= -margin * 0.5;
-        }
-        return linWorst(R, sc.toGameFacings(y)) <= 0.0;
+    private static boolean restoreExact(Rows R, ExactJumpModel exact, JumpPhysicsInputs sc,
+                                        JumpConstraintCompiler.Compiled comp, double[] y, double margin,
+                                        boolean[] frozen) {
+        return restoreExact(R, exact, sc, comp, y, margin, frozen, null);
     }
 
     private static boolean restoreExact(Rows R, ExactJumpModel exact, JumpPhysicsInputs sc,
                                         JumpConstraintCompiler.Compiled comp, double[] y, double margin,
-                                        boolean[] frozen) {
+                                        boolean[] frozen, Config cfg) {
         if (exactViol(exact, sc, comp, y) <= 0.0) return true;
-        for (double m = margin; m <= margin * 16.0; m *= 2.0) {
-            double[] c = y.clone();
-            restore(R, c, m, exact, sc, comp, frozen);
-            if (exactViol(exact, sc, comp, c) <= 0.0) {
-                System.arraycopy(c, 0, y, 0, y.length);
+        if (cfg != null && cfg.repairRows != null) {
+            double[] r = DeWiggle.repair(exact, sc, comp, cfg.repairSpec, cfg.repairRows, y, -1, -1, cfg.repairHeld, null);
+            if (r != null && exactViol(exact, sc, comp, r) <= 0.0) {
+                System.arraycopy(r, 0, y, 0, y.length);
                 return true;
             }
         }
@@ -354,25 +350,6 @@ final class SmoothFaceRecovery {
             prev = y[i];
         }
         return d;
-    }
-
-    private static int reversals(double anchor, double[] y) {
-        int c = 0;
-        int last = 0;
-        for (double v : deltas(anchor, y)) {
-            if (Math.abs(v) <= FLOOR_DEG) continue;
-            int s = v > 0 ? 1 : -1;
-            if (last != 0 && s != last) c++;
-            last = s;
-        }
-        return c;
-    }
-
-    private static double jerkOf(double anchor, double[] y) {
-        double[] d = deltas(anchor, y);
-        double s = 0.0;
-        for (int i = 1; i < d.length; i++) s += Math.abs(d[i] - d[i - 1]);
-        return s;
     }
 
     private static List<int[]> runSpans(double anchor, double[] y) {
@@ -409,136 +386,43 @@ final class SmoothFaceRecovery {
         return c;
     }
 
-    private static final ThreadLocal<double[][]> METRIC_CACHE = new ThreadLocal<>();
-    private static final ThreadLocal<Integer> METRIC_N = ThreadLocal.withInitial(() -> -1);
+    private static final int INWARD_SWEEPS = 6;
 
-    private static double[][] smoothMetric(int n) {
-        if (METRIC_N.get() == n && METRIC_CACHE.get() != null) return METRIC_CACHE.get();
-        double[][] a = new double[n][n];
-        double[] cf = {1.0, -2.0, 1.0};
-        for (int t = 1; t < n - 1; t++) {
-            int[] idx = {t - 1, t, t + 1};
-            for (int i = 0; i < 3; i++) {
-                for (int k = 0; k < 3; k++) a[idx[i]][idx[k]] += cf[i] * cf[k];
-            }
-        }
-        for (int i = 0; i < n; i++) a[i][i] += W_EPS;
-        double[][] inv = invert(a);
-        METRIC_CACHE.set(inv);
-        METRIC_N.set(n);
-        return inv;
-    }
-
-    private static double[] solveSym(double[][] a, double[] b, double reg) {
-        int m = b.length;
-        double[][] w = new double[m][m + 1];
-        for (int i = 0; i < m; i++) {
-            System.arraycopy(a[i], 0, w[i], 0, m);
-            w[i][i] += reg;
-            w[i][m] = b[i];
-        }
-        for (int c = 0; c < m; c++) {
-            int piv = c;
-            for (int r = c + 1; r < m; r++) if (Math.abs(w[r][c]) > Math.abs(w[piv][c])) piv = r;
-            double[] tmp = w[c];
-            w[c] = w[piv];
-            w[piv] = tmp;
-            if (Math.abs(w[c][c]) < 1.0e-16) continue;
-            for (int r = 0; r < m; r++) {
-                if (r == c) continue;
-                double f = w[r][c] / w[c][c];
-                if (f == 0.0) continue;
-                for (int k = c; k <= m; k++) w[r][k] -= f * w[c][k];
-            }
-        }
-        double[] x = new double[m];
-        for (int i = 0; i < m; i++) x[i] = Math.abs(w[i][i]) < 1.0e-16 ? 0.0 : w[i][m] / w[i][i];
-        return x;
-    }
-
-    private static double[][] invert(double[][] a) {
-        int n = a.length;
-        double[][] w = new double[n][2 * n];
-        for (int i = 0; i < n; i++) {
-            System.arraycopy(a[i], 0, w[i], 0, n);
-            w[i][n + i] = 1.0;
-        }
-        for (int c = 0; c < n; c++) {
-            int piv = c;
-            for (int r = c + 1; r < n; r++) if (Math.abs(w[r][c]) > Math.abs(w[piv][c])) piv = r;
-            double[] tmp = w[c];
-            w[c] = w[piv];
-            w[piv] = tmp;
-            double d = w[c][c];
-            if (Math.abs(d) < 1.0e-16) d = d >= 0 ? 1.0e-16 : -1.0e-16;
-            for (int k = 0; k < 2 * n; k++) w[c][k] /= d;
-            for (int r = 0; r < n; r++) {
-                if (r == c) continue;
-                double f = w[r][c];
-                if (f == 0.0) continue;
-                for (int k = 0; k < 2 * n; k++) w[r][k] -= f * w[c][k];
-            }
-        }
-        double[][] out = new double[n][n];
-        for (int i = 0; i < n; i++) System.arraycopy(w[i], n, out[i], 0, n);
-        return out;
-    }
-
-    private static double[][] tangentProjector(Rows R, double[] gf, double margin, int n) {
+    private static double[] projectInward(Rows R, double[] gf, double margin, double[] dir) {
+        int n = dir.length;
         List<Row> act = new ArrayList<Row>();
         for (Row r : R.rows) {
             double v = rowValue(R, r, gf) - r.nb;
             if (r.eq || v > -margin * 6.0) act.add(r);
         }
-        double[][] P = new double[n][n];
-        for (int i = 0; i < n; i++) P[i][i] = 1.0;
-        if (act.isEmpty()) return P;
+        double[] d = dir.clone();
+        if (act.isEmpty()) return d;
         int m = act.size();
         double[][] J = new double[m][n];
+        double[] gg = new double[m];
         double[] grad = new double[n];
         for (int i = 0; i < m; i++) {
             rowGrad(R, act.get(i), gf, grad);
             System.arraycopy(grad, 0, J[i], 0, n);
-        }
-        double[][] jjt = new double[m][m];
-        for (int a = 0; a < m; a++) {
-            for (int b = 0; b < m; b++) {
-                double s = 0.0;
-                for (int t = 0; t < n; t++) s += J[a][t] * J[b][t];
-                jjt[a][b] = s;
-            }
-        }
-        double scale = 0.0;
-        for (int a = 0; a < m; a++) scale = Math.max(scale, Math.abs(jjt[a][a]));
-        double[][] inv = invert(addReg(jjt, scale * 1.0e-10 + 1.0e-20));
-        for (int r = 0; r < n; r++) {
-            for (int c = 0; c < n; c++) {
-                double s = 0.0;
-                for (int a = 0; a < m; a++) {
-                    for (int b = 0; b < m; b++) s += J[a][r] * inv[a][b] * J[b][c];
-                }
-                P[r][c] -= s;
-            }
-        }
-        return P;
-    }
-
-    private static double[][] addReg(double[][] a, double reg) {
-        double[][] o = new double[a.length][a.length];
-        for (int i = 0; i < a.length; i++) {
-            System.arraycopy(a[i], 0, o[i], 0, a.length);
-            o[i][i] += reg;
-        }
-        return o;
-    }
-
-    private static double[] apply(double[][] P, double[] v) {
-        double[] o = new double[v.length];
-        for (int i = 0; i < v.length; i++) {
             double s = 0.0;
-            for (int k = 0; k < v.length; k++) s += P[i][k] * v[k];
-            o[i] = s;
+            for (int t = 0; t < n; t++) s += grad[t] * grad[t];
+            gg[i] = s;
         }
-        return o;
+        for (int sweep = 0; sweep < INWARD_SWEEPS; sweep++) {
+            boolean changed = false;
+            for (int i = 0; i < m; i++) {
+                if (gg[i] < 1.0e-20) continue;
+                double s = 0.0;
+                for (int t = 0; t < n; t++) s += J[i][t] * d[t];
+                if (!act.get(i).eq && s <= 0.0) continue;
+                if (Math.abs(s) < 1.0e-15) continue;
+                double f = s / gg[i];
+                for (int t = 0; t < n; t++) d[t] -= f * J[i][t];
+                changed = true;
+            }
+            if (!changed) break;
+        }
+        return d;
     }
+
 }

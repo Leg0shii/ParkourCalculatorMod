@@ -231,6 +231,21 @@ public final class NodeHelp {
         param("wrapIls", "maxAbsGf", "The largest total spin, in degrees, the search may use. Caps how many"
                 + " full turns it will pile on.");
 
+        param("wrapIls", "reserveFraction", "The share of the whole solve time held back for this stage, so"
+                + " the stages before it stop early enough to leave it room. 0 reserves nothing.");
+        param("wrapIls", "reserveCapSec", "The most seconds the reserve may hold back. 0 means no cap.");
+
+        node("smooth", "Smooths the turn of a jump that already lands: fewer direction changes, then a"
+                + " turn rate that accelerates and decelerates steadily instead of shaking. The jump keeps"
+                + " landing; it may give back part of the offset past the goal wall for a smoother turn."
+                + " Returns the path unchanged when nothing improves.");
+        param("smooth", "giveBack", "How much of the offset past the goal wall the smoothing may trade,"
+                + " 0 to 1. 1 lets it land anywhere past the wall, 0 keeps the objective where it is."
+                + " Without a goal wall on the objective axis the hard constraints alone bound it.");
+        param("smooth", "reserveFraction", "The share of the whole solve time held back for the smoothing,"
+                + " which is also how long it may run. With no overall solve time it gets a fixed 0.4 s.");
+        param("smooth", "reserveCapSec", "The most seconds the smoothing may take. 0 means no cap.");
+
         node("leafSnap", "Snaps each aim angle onto the nearest exact value the game can actually use,"
                 + " keeping the snap only if the jump still lands.");
         param("leafSnap", "pairPass", "Turn on a second, more thorough snapping pass that adjusts angles in"

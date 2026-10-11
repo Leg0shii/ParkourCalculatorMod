@@ -37,7 +37,6 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.SolveProgress;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SurfaceKind;
-import de.legoshi.parkourcalc.core.anglesolver.solver.TrendFilterSmooth;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -178,7 +177,6 @@ public final class AngleSolverEngine {
     }
 
     private volatile boolean solving;
-    private volatile boolean smoothFinalResult = true;
     private volatile long startNanos;
     private volatile Outcome pending;
     private volatile AtomicBoolean cancel;
@@ -489,7 +487,16 @@ public final class AngleSolverEngine {
         return goal != null ? goal.name : null;
     }
 
+    public static JumpConstraint tightestGoalWall(List<JumpConstraint> constraints, Objective objective) {
+        return selectLegalGoalWall(constraints, objective, new String[1], true);
+    }
+
     public static JumpConstraint selectLegalGoalWall(List<JumpConstraint> constraints, Objective objective, String[] whyNot) {
+        return selectLegalGoalWall(constraints, objective, whyNot, false);
+    }
+
+    private static JumpConstraint selectLegalGoalWall(List<JumpConstraint> constraints, Objective objective,
+                                                      String[] whyNot, boolean allowTies) {
         boolean max = objective.sense == Objective.Sense.MAX;
         JumpConstraint.Cmp want = max ? JumpConstraint.Cmp.GE : JumpConstraint.Cmp.LE;
         JumpConstraint.Mode wantMode = objective.axis == JumpPhysicsInputs.Axis.X
@@ -515,7 +522,7 @@ public final class AngleSolverEngine {
         for (JumpConstraint c : cands) {
             if (c.rhs == tight.rhs) ties++;
         }
-        if (ties != 1) {
+        if (ties != 1 && !allowTies) {
             whyNot[0] = "ambiguous goal wall: " + ties + " walls tie at " + tight.rhs;
             return null;
         }
@@ -538,20 +545,44 @@ public final class AngleSolverEngine {
     }
 
     public void solve(AngleSolverState.Effort effort) {
-        solve(effort, true);
+        solve(effort, null);
     }
 
-    public void solve(AngleSolverState.Effort effort, boolean smoothFinal) {
-        solve(effort, smoothFinal, null);
-    }
-
-    public void solve(AngleSolverState.Effort effort, boolean smoothFinal, SolverGraph graphOverride) {
+    public void solve(AngleSolverState.Effort effort, SolverGraph graphOverride) {
         if (solving) return;
-        this.smoothFinalResult = smoothFinal;
         Job job = buildJob(effort, graphOverride);
         if (job == null) return; // invalid range: buildJob already published the failure result
-        offerIncumbent(job, effort);
+        offerIncumbent(job, effort, false);
+        start(job, effort);
+    }
 
+    public boolean canSmooth() {
+        Plan prev = lastPlan;
+        SolveResult prevResult = state.getResult();
+        if (solving || !(model instanceof ExactJumpModel)) return false;
+        if (prev == null || prevResult == null || !prevResult.isSuccess() || prev.lockYaws) return false;
+        return prev.startTick == state.getStartTick()
+                && prev.yaws.length == state.getLandingTick() - state.getStartTick();
+    }
+
+    public void smooth() {
+        if (!canSmooth()) return;
+        AngleSolverState.Effort effort = state.getEffort();
+        Job job = buildJob(effort, BuiltinGraphs.smooth(state.getSmoothGiveBack()));
+        if (job == null) return;
+        if (job.deadlineNanos <= 0) job = job.withDeadline(SMOOTH_BUTTON_BUDGET_NANOS);
+        offerIncumbent(job, effort, true);
+        start(job, effort);
+    }
+
+    public long smoothBudgetNanos() {
+        long budget = deadlineNanosFor(state);
+        return budget > 0 ? budget : SMOOTH_BUTTON_BUDGET_NANOS;
+    }
+
+    private static final long SMOOTH_BUTTON_BUDGET_NANOS = 6_000_000_000L;
+
+    private void start(Job job, AngleSolverState.Effort effort) {
         long t0 = System.nanoTime();
         // Show the spinner instead of a stale result.
         state.clearResult();
@@ -598,8 +629,8 @@ public final class AngleSolverEngine {
         worker.start();
     }
 
-    private void offerIncumbent(Job job, AngleSolverState.Effort effort) {
-        if (effort == AngleSolverState.Effort.FAST || BuiltinGraphs.FAST_PRESET.equals(job.graph.name)) return;
+    private void offerIncumbent(Job job, AngleSolverState.Effort effort, boolean always) {
+        if (!always && (effort == AngleSolverState.Effort.FAST || BuiltinGraphs.FAST_PRESET.equals(job.graph.name))) return;
         Plan prev = lastPlan;
         SolveResult prevResult = state.getResult();
         if (prev == null || prevResult == null || !prevResult.isSuccess() || prev.lockYaws) return;
@@ -1071,18 +1102,6 @@ public final class AngleSolverEngine {
         if (job.legalGoal != null) {
             solverName = solverName == null ? "legal mode" : solverName + " (legal)";
         }
-        boolean smoothRequested = spec.objective.smoothLambda > 0.0;
-        if (smoothRequested && smoothFinalResult && model instanceof ExactJumpModel && !cancel.get()) {
-            long smoothBudget = job.deadlineNanos > 0
-                    ? Math.min(job.deadlineNanos / 8, MAX_SMOOTH_BUDGET_NANOS) : SMOOTH_BUDGET_NANOS;
-            try {
-                double[] smoothed = smoothFacing((ExactJumpModel) model, spec, sc, yaws, cancel, smoothBudget);
-                if (smoothed != null) yaws = smoothed;
-            } catch (RuntimeException e) {
-                if (SolverTrace.on()) SolverTrace.log("ENGINE", "final facing smoothing failed: %s", String.valueOf(e));
-            }
-            solveNanos = System.nanoTime() - solveStart;
-        }
         double[] gameFacings = sc.toGameFacings(yaws);
         ForwardPath path = model.forward(sc, gameFacings);
         SolveResult result = assembleResult(job, yaws, gameFacings, path, solverName, solveNanos, dualGap);
@@ -1110,16 +1129,6 @@ public final class AngleSolverEngine {
                 job.freeStartYaw);
     }
 
-    private double[] smoothFacing(ExactJumpModel em, JumpSpec spec, JumpPhysicsInputs sc, double[] yaws,
-                                  AtomicBoolean cancel, long budgetNanos) {
-        double[] gf = sc.toGameFacings(yaws);
-        JumpConstraintCompiler.Compiled comp = JumpConstraintCompiler.compile(spec);
-        if (comp.maxViolation(gf, em.forward(sc, gf)) > FEAS_TOL) return null;
-        return TrendFilterSmooth.smooth(em, spec, yaws, System.nanoTime() + budgetNanos, cancel);
-    }
-
-    private static final long SMOOTH_BUDGET_NANOS = 400_000_000L;
-    private static final long MAX_SMOOTH_BUDGET_NANOS = 6_000_000_000L;
 
     private static String firstConflict(List<ConstraintAt> uiCons) {
         Map<Integer, List<Constraint>> byTick = new TreeMap<>();
