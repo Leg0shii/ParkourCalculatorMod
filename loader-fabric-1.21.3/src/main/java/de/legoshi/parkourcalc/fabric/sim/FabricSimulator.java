@@ -140,6 +140,15 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
         return new SimulatorEntity(simWorld, player.getGameProfile(), start, vel, yaw);
     }
 
+    @Override
+    protected boolean isEntityStale(SimulatorEntity e) {
+        Minecraft client = Minecraft.getInstance();
+        ClientLevel clientWorld = client.level;
+        if (clientWorld == null || e.level() == clientWorld) return false;
+        MinecraftServer server = client.getSingleplayerServer();
+        return server == null || e.level() != server.getLevel(clientWorld.dimension());
+    }
+
     @Override protected void resetEntity(SimulatorEntity e, StartResumeState resume) {
         Player player = Minecraft.getInstance().player;
         if (player != null) e.getAttributes().assignBaseValues(player.getAttributes());

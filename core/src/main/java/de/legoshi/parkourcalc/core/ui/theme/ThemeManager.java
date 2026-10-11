@@ -610,10 +610,10 @@ public final class ThemeManager {
         if (tint != 0) ImGui.tableSetBgColor(ImGuiTableBgTarget.RowBg1, tint);
     }
 
-    public static void pushSelectedFrameBg() {
-        ImGui.pushStyleColor(ImGuiCol.FrameBg, SELECTED[0], SELECTED[1], SELECTED[2], 0.70f);
-        ImGui.pushStyleColor(ImGuiCol.FrameBgHovered, SELECTED[0], SELECTED[1], SELECTED[2], 0.80f);
-        ImGui.pushStyleColor(ImGuiCol.FrameBgActive, SELECTED[0], SELECTED[1], SELECTED[2], 0.80f);
+    public static void pushSelectedFrameBg(float[] rgba) {
+        ImGui.pushStyleColor(ImGuiCol.FrameBg, rgba[0], rgba[1], rgba[2], 0.70f);
+        ImGui.pushStyleColor(ImGuiCol.FrameBgHovered, rgba[0], rgba[1], rgba[2], 0.80f);
+        ImGui.pushStyleColor(ImGuiCol.FrameBgActive, rgba[0], rgba[1], rgba[2], 0.80f);
         ImGui.pushStyleColor(ImGuiCol.Text, BG[0], BG[1], BG[2], BG[3]);
     }
 
@@ -754,6 +754,10 @@ public final class ThemeManager {
 
     public static int bgTintColor(float alpha) {
         return ImGui.colorConvertFloat4ToU32(BG[0], BG[1], BG[2], alpha);
+    }
+
+    public static int textDimTintColor(float alpha) {
+        return ImGui.colorConvertFloat4ToU32(TEXT_DIM[0], TEXT_DIM[1], TEXT_DIM[2], alpha);
     }
 
     public static int okTintColor(float alpha) {

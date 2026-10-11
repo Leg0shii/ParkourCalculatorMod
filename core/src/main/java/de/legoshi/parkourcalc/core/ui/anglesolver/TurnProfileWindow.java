@@ -20,6 +20,9 @@ import imgui.flag.ImGuiCond;
 import imgui.flag.ImGuiWindowFlags;
 import imgui.type.ImBoolean;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 
 public final class TurnProfileWindow implements RenderInterface {
@@ -64,7 +67,7 @@ public final class TurnProfileWindow implements RenderInterface {
 
     @Override
     public void renderDetached(ImGuiIO io) {
-        if (settings.keepTurnProfileOpen) render(io, true);
+        render(io, true);
     }
 
     private void render(ImGuiIO io, boolean graphOnly) {
@@ -95,21 +98,38 @@ public final class TurnProfileWindow implements RenderInterface {
         TurnProfileController.Current cur = controller.current();
         float graphH = Math.max(GRAPH_MIN_H * scale, ImGui.getContentRegionAvail().y);
         if (cur == null || cur.n == 0) {
-            placeholder(graphH, controller.lastError() != null ? controller.lastError()
-                    : "No reference yet: set the onejump up in the Onejump Setup window");
+            placeholder(graphH, null);
+            return;
+        }
+        boolean anyFace = false;
+        for (int t = 0; t < cur.n; t++) anyFace |= cur.checkYaw[t];
+        if (!anyFace) {
+            placeholder(graphH, null);
             return;
         }
         graph(cur, scale, graphH, tracker.shownAttempt());
     }
 
-    private void placeholder(float h, String text) {
+    private static final String[] HOW_TO = {
+            "No turn to compare. Mark \"Turn\" in the input table for those ticks whose turn you want checked.",
+            "Hint: right click on Turn for Still, turning on that tick fails the attempt."};
+
+    private void placeholder(float h, String error) {
         ImVec2 origin = ImGui.getCursorScreenPos();
         float w = ImGui.getContentRegionAvail().x;
         ImGui.invisibleButton("##onejumpEmpty", Math.max(1f, w), h);
         ImDrawList dl = ImGui.getWindowDrawList();
         dl.addRectFilled(origin.x, origin.y, origin.x + w, origin.y + h, ThemeManager.bgDarkColor(), 0f);
-        ImVec2 ts = ImGui.calcTextSize(text);
-        dl.addText(origin.x + (w - ts.x) * 0.5f, origin.y + (h - ts.y) * 0.5f, ThemeManager.textDimColor(), text);
+        List<String> lines = new ArrayList<String>();
+        if (error != null) lines.add(error);
+        lines.addAll(Arrays.asList(HOW_TO));
+        float lineH = ImGui.getTextLineHeightWithSpacing();
+        float y = origin.y + (h - lineH * lines.size()) * 0.5f;
+        for (String line : lines) {
+            ImVec2 ts = ImGui.calcTextSize(line);
+            dl.addText(origin.x + (w - ts.x) * 0.5f, y, ThemeManager.textDimColor(), line);
+            y += lineH;
+        }
     }
 
     private static double youError(TurnProfileController.Current cur, TurnAttempt you, int t) {
@@ -120,7 +140,7 @@ public final class TurnProfileWindow implements RenderInterface {
         int n = cur.n;
         int m = 0;
         for (int t = 0; t < n; t++) if (cur.checkYaw[t]) m++;
-        boolean all = m < 2;
+        boolean all = m == 0;
         int count = all ? n : m;
         float dx = count > 1 ? plotW / (count - 1) : 0f;
         float[] xs = new float[n];
@@ -258,10 +278,14 @@ public final class TurnProfileWindow implements RenderInterface {
                 dl.addText(xs[lt] - ImGui.calcTextSize("failed").x * 0.5f, plotY + 2f * scale, failedCol, "failed");
             }
         }
-        if (you != null && you.hasForecast() && settings.onejumpOffsetLive) {
+        if (settings.onejumpOffsetLive && !controller.isChecked() && you != null && !you.complete) {
+            dl.addText(x0 + 6f * scale, y0 + 1f, ThemeManager.textDimColor(), "validate the jump for the live offset");
+        }
+        if (you != null && settings.onejumpOffsetLive && (you.hasForecast() || (you.complete && you.hasMargin()))) {
             String label = offsetLabel(you);
             if (label != null) {
-                boolean failed = you.bestMarginAt(you.lastForecastTick()) > 0.0;
+                boolean failed = you.complete && you.hasMargin() ? !you.landed
+                        : you.bestMarginAt(you.lastForecastTick()) > 0.0;
                 int col = failed ? ThemeManager.dangerColor() : ThemeManager.okColor();
                 Fonts.pushBold();
                 dl.addText(x0 + 6f * scale, y0 + 1f, col, label);
@@ -347,7 +371,7 @@ public final class TurnProfileWindow implements RenderInterface {
             boolean label = shownIdx % labelEvery == 0 || t == lastShown;
             shownIdx++;
             if (!label) continue;
-            String lbl = Integer.toString(cur.startTick + t + 1);
+            String lbl = Integer.toString(cur.tasTick(t) + 1);
             dl.addText(xs[t] - ImGui.calcTextSize(lbl).x * 0.5f, plotY + plotH + 4f * scale,
                     cur.jumpTicks[t] ? jumpCol : textCol, lbl);
         }
@@ -398,27 +422,28 @@ public final class TurnProfileWindow implements RenderInterface {
         int abs = cur.startTick + t;
         ImGui.beginTooltip();
         Fonts.pushBold();
-        ImGui.text(String.format(Locale.ROOT, "T%d   %.2f°%s", abs + 1, cur.facing[t], cur.still[t] ? "   still" : ""));
+        ImGui.text(String.format(Locale.ROOT, "T%d%s", abs + 1, cur.still[t] ? "   still" : ""));
         Fonts.popBold();
         float labelW = ImGui.calcTextSize("Window").x + ImGui.getStyle().getItemSpacing().x * 3f;
+        tooltipRow("Ref", String.format(Locale.ROOT, "%.2f°", cur.facing[t]), ThemeManager.textColor(), labelW);
         if (cur.checkYaw[t]) {
             if (you != null) {
                 double e = youError(cur, you, t);
                 if (!Double.isNaN(e)) {
-                    tooltipRow("You", String.format(Locale.ROOT, "%.2f°   %s", cur.facing[t] + e,
-                            TurnAttempt.turnText(e, pixelDeg)), youColor(you), labelW);
+                    tooltipRow("You", String.format(Locale.ROOT, "%.2f°", cur.facing[t] + e), ThemeManager.textColor(), labelW);
+                    tooltipRow("Error", TurnAttempt.turnText(e, pixelDeg), youColor(you), labelW);
                 }
             }
             if (st != null && st.landings > 0) {
                 tooltipRow("Window", TurnAttempt.turnText(st.landedLo[t], pixelDeg) + " to "
                         + TurnAttempt.turnText(st.landedHi[t], pixelDeg), ThemeManager.textColor(), labelW);
             }
-            if (you != null && you.hasForecast() && settings.onejumpOffsetHover) {
-                double best = you.bestMarginAt(abs);
-                if (!Double.isNaN(best)) {
-                    tooltipRow("Offset", TurnAttempt.signedMargin(best),
-                            best <= 0.0 ? ThemeManager.okColor() : ThemeManager.dangerColor(), labelW);
-                }
+        }
+        if (you != null && you.hasForecast() && settings.onejumpOffsetHover) {
+            double best = you.bestMarginAt(abs);
+            if (!Double.isNaN(best)) {
+                tooltipRow("Offset", TurnAttempt.signedMargin(best),
+                        best <= 0.0 ? ThemeManager.okColor() : ThemeManager.dangerColor(), labelW);
             }
         }
         if (you != null && you.failTick == abs) {
@@ -443,6 +468,7 @@ public final class TurnProfileWindow implements RenderInterface {
     }
 
     private static String offsetLabel(TurnAttempt you) {
+        if (you.complete && you.hasMargin()) return "offset " + TurnAttempt.signedMargin(you.margin);
         int tick = you.lastForecastTick();
         if (tick < 0) return null;
         double best = you.bestMarginAt(tick);

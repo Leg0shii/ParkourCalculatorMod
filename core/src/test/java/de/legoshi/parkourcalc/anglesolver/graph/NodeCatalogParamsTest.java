@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.anglesolver.graph;
 
+import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunner;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeCatalog;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeHelp;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeType;
@@ -24,6 +25,7 @@ public class NodeCatalogParamsTest {
             Set<String> read = values.readKeys();
             for (ParamSpec spec : type.params) {
                 if (spec.key.equals(type.budgetParam) || "budgetMs".equals(spec.key)) continue;
+                if (GraphRunner.RESERVE_FRACTION_PARAM.equals(spec.key) || GraphRunner.RESERVE_CAP_PARAM.equals(spec.key)) continue;
                 if (!read.contains(spec.key)) unread.add(type.id + "." + spec.key);
             }
         }

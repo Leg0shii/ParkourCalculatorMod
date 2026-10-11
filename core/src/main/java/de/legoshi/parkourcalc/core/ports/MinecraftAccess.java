@@ -1,7 +1,8 @@
 package de.legoshi.parkourcalc.core.ports;
 
 import de.legoshi.parkourcalc.core.sim.AABB;
-import de.legoshi.parkourcalc.core.sim.Face;
+import de.legoshi.parkourcalc.core.sim.BlockHit;
+import de.legoshi.parkourcalc.core.sim.CollisionRayTrace;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
 import java.util.Collections;
@@ -16,23 +17,21 @@ import java.util.function.Supplier;
  */
 public interface MinecraftAccess {
 
+    double PICK_REACH = 64.0;
+
     /** Feet position of the local player. */
     Vec3dCore getPlayerPosition();
 
     /** Current facing yaw of the local player, in MC degrees. */
     float getPlayerYaw();
 
+    float getPlayerPitch();
+
     /** Eye / camera position for picking and ray-casts. */
     Vec3dCore getEyePosition();
 
     /** Unit vector along the camera's look direction. */
     Vec3dCore getLookDirection();
-
-    /** Integer coords {@code [x, y, z]} of the looked-at block, or {@code null} when nothing is targeted.
-     *  Default returns null so a loader without a raycast makes the keybind a no-op instead of failing to build. */
-    default int[] getLookedAtBlock() {
-        return null;
-    }
 
     default boolean isBlockSolid(int x, int y, int z) {
         return false;
@@ -54,12 +53,19 @@ public interface MinecraftAccess {
         return null;
     }
 
-    default Face getLookedAtFace() {
-        return null;
-    }
+    default BlockHit getLookedAtHit() {
+        CollisionRayTrace.World world = new CollisionRayTrace.World() {
+            @Override
+            public List<AABB> collisionBoxes(int x, int y, int z) {
+                return getBlockCollisionBoxes(x, y, z);
+            }
 
-    default Vec3dCore getLookedAtHitVec() {
-        return null;
+            @Override
+            public boolean pickWithoutCollision(int x, int y, int z) {
+                return getPressurePlateFootprint(x, y, z) != null || isClimbable(x, y, z);
+            }
+        };
+        return CollisionRayTrace.trace(world, getEyePosition(), getLookDirection(), PICK_REACH);
     }
 
     default List<AABB> getCollisionBoxes(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
@@ -143,6 +149,14 @@ public interface MinecraftAccess {
 
     /** True when the client owns the integrated server (singleplayer or LAN host). */
     boolean isSinglePlayer();
+
+    default boolean isChunkLoaded(int chunkX, int chunkZ) {
+        return true;
+    }
+
+    default String getRerunSimulationKeyName() {
+        return null;
+    }
 
     /** SP: runs the task on the server's main thread and blocks for the result.
      *  MP: runs inline. Lets the simulator tick against ServerWorld natively. */

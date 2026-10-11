@@ -63,11 +63,37 @@ public final class TurnAttempt {
     public float[][] trace;
     public final boolean turnFailure;
     public final double failTurn;
-    public final Forecast forecast;
+    public volatile Forecast forecast;
     public int ordinal;
     public boolean favourite;
     public int tasFirstTick = -1;
     public volatile double[] solvedOffset;
+    public int[] pressedKeys;
+    public boolean[] keysFailed;
+
+    public int tasTick(int tick) {
+        return (tasFirstTick < 0 ? 0 : tasFirstTick) + tick - firstTick;
+    }
+
+    public boolean keysRecordedAt(int tick) {
+        int j = tick - firstTick;
+        if (pressedKeys == null) return j >= 0 && j < recorded;
+        return j >= 0 && j < pressedKeys.length && pressedKeys[j] >= 0;
+    }
+
+    public boolean keysFailedAt(int tick) {
+        int j = tick - firstTick;
+        if (keysFailed == null) return inputFailure && tick == failTick;
+        return j >= 0 && j < keysFailed.length && keysFailed[j];
+    }
+
+    public int pressedKeysAt(int tick) {
+        int j = tick - firstTick;
+        if (pressedKeys == null || j < 0 || j >= pressedKeys.length || pressedKeys[j] < 0) {
+            return inputFailure && tick == failTick ? failKeys : -1;
+        }
+        return pressedKeys[j];
+    }
 
     public TurnAttempt(int number, int firstTick, double[] yaws, int recorded, boolean complete, boolean landed,
                        boolean inputFailure, String verdict, double margin, int worstTick, int failTick, int failKeys,
@@ -207,7 +233,7 @@ public final class TurnAttempt {
     }
 
     public boolean judged() {
-        return complete && !failed();
+        return complete && !turnFailure;
     }
 
     public static String signedMargin(double margin) {

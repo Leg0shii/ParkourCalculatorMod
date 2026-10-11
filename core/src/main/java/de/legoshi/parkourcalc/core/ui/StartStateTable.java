@@ -23,10 +23,12 @@ public final class StartStateTable {
 
     private static final int PRECISION = 5;
     private static final String COPY_TELEPORT_LABEL = "Copy teleport command";
+    private static final String SET_TO_PLAYER_LABEL = "Set to player";
 
     private final SimulationRunner runner;
     private final Runnable reSimulate;
     private final Runnable copyTeleport;
+    private final Runnable setToPlayer;
 
     private boolean expanded;
     private float measuredContentH = -1f;
@@ -37,9 +39,14 @@ public final class StartStateTable {
     private ImDrawList drawerDrawList;
 
     public StartStateTable(SimulationRunner runner, Runnable reSimulate, Runnable copyTeleport) {
+        this(runner, reSimulate, copyTeleport, null);
+    }
+
+    public StartStateTable(SimulationRunner runner, Runnable reSimulate, Runnable copyTeleport, Runnable setToPlayer) {
         this.runner = runner;
         this.reSimulate = reSimulate;
         this.copyTeleport = copyTeleport;
+        this.setToPlayer = setToPlayer;
     }
 
     public boolean isExpanded() {
@@ -87,6 +94,11 @@ public final class StartStateTable {
         ImGui.pushStyleColor(ImGuiCol.ChildBg, 0f, 0f, 0f, 0f);
         ImGui.beginChild("##start_drawer_body", width - 2f * pad, h - 2f * pad, false, ImGuiWindowFlags.NoScrollbar);
 
+        if (setToPlayer != null) {
+            if (Controls.secondaryButton(SET_TO_PLAYER_LABEL, ImGui.getContentRegionAvail().x)) setToPlayer.run();
+            if (ImGui.isItemHovered()) ImGui.setTooltip("Takes your current position and yaw as the start. Stand where the jump begins.");
+            ThemeManager.sectionSpacing();
+        }
         Vec3dCore pos = runner.getStartPosition();
         sectionHeader("Position");
         vectorEditor("pos", pos, (x, y, z) -> {

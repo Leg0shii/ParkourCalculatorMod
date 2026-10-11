@@ -8,6 +8,7 @@ import org.junit.Test;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -17,10 +18,11 @@ public class SessionActivationTest {
         final InputData data = new InputData();
         final SaveController controller;
         final FileSystemSaveStore store;
+        final SimulationRunner runner = new SimulationRunner(new FakeSimulator());
+        final FakeMinecraftAccess mc = new FakeMinecraftAccess();
 
         Rig(Path dir) {
-            SimulationRunner runner = new SimulationRunner(new FakeSimulator());
-            controller = new SaveController(data, runner, new FakeMinecraftAccess(), () -> { });
+            controller = new SaveController(data, runner, mc, () -> { });
             store = new FileSystemSaveStore(dir, "test", "1.8.9", () -> null);
             controller.setSaveStore(store);
         }
@@ -46,6 +48,21 @@ public class SessionActivationTest {
         assertFalse(rig.controller.isDirty());
         rig.controller.markDirty();
         assertFalse(rig.controller.isDirty());
+    }
+
+    @Test
+    public void newSessionTakesThePlayersFacing() throws Exception {
+        Rig rig = new Rig(Files.createTempDirectory("pkc-session-facing"));
+        rig.mc.playerYaw = -137.5f;
+        rig.mc.playerPitch = 12.25f;
+        rig.controller.newSession();
+        assertEquals(-137.5f, rig.runner.getStartYaw(), 0f);
+        assertEquals(12.25f, rig.runner.getStartPitch(), 0f);
+
+        rig.mc.ready = false;
+        rig.controller.newSession();
+        assertEquals(0f, rig.runner.getStartYaw(), 0f);
+        assertEquals(PlaybackController.DEFAULT_PITCH, rig.runner.getStartPitch(), 0f);
     }
 
     @Test

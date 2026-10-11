@@ -70,6 +70,7 @@ public final class SolveResult {
     private String finishedAt;     // formatted clock time when the solve finished, null if unset
     private String solver;         // algorithm that produced the yaws, null if unset / legacy save
     private String notice;
+    private String noticeLabel;
     private double objectiveValue;
     private boolean hasObjective;
 
@@ -163,6 +164,14 @@ public final class SolveResult {
 
     public void setNotice(String notice) {
         this.notice = notice;
+    }
+
+    public String getNoticeLabel() {
+        return noticeLabel;
+    }
+
+    public void setNoticeLabel(String noticeLabel) {
+        this.noticeLabel = noticeLabel;
     }
 
     public double getObjectiveValue() {

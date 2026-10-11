@@ -105,9 +105,19 @@ public class SelectionManager {
         }
     }
 
-    /** Replace the selection with exactly one row, ignoring Ctrl/Shift (used by right-click targeting). */
+    /** Replace the selection with exactly one row, ignoring Ctrl/Shift (used by right-click targeting and in-world taps). */
     public void selectOnly(int rowIndex) {
         selectSingle(rowIndex);
+    }
+
+    public void select(Collection<Integer> pathIndices, int lastClickedPath) {
+        selectedRows.clear();
+        selectedRows.addAll(pathIndices);
+        lastClickedRow = lastClickedPath;
+    }
+
+    public boolean isCtrlHeld() {
+        return mc.isCtrlDown();
     }
 
     public void selectRows(int firstRow, int count) {

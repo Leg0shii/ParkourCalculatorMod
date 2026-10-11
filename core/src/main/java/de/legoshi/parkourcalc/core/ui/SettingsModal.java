@@ -42,7 +42,7 @@ public final class SettingsModal {
     private static final String TT_C_EXPAND = "Grow each plate outward by the player hitbox half-width (0.3) so the plate covers your hitbox: your hitbox fits inside the plate exactly when the tick is valid.";
     private static final String TT_PRESSURE_PLATE_FULL = "When adding a pressure plate constraint (Ctrl+B while looking at a pressure plate), use the full block footprint from .0 to 1.0 on X and Z instead of the version's inset interaction hitbox. Legacy versions inset the interaction box by 0.125, modern by 0.0625.";
     private static final String TT_C_DIM = "Size in blocks. Width is across the constraint, height is vertical, length is along the plate (front depth from the boundary / back reach behind it).";
-    private static final String TT_GROUND_HIGHLIGHT = "Tints input rows whose simulated tick ended on the ground. Color is editable in Render Colors.";
+    private static final String TT_GROUND_HIGHLIGHT = "Tints input rows whose simulated tick ended on the ground. Color is editable in Colors.";
     private static final String TT_COL_W = "W (forward) is always shown and can't be hidden.";
     private static final String TT_COL_A = "Strafe-left (A) column.";
     private static final String TT_COL_S = "Backward (S) column.";
@@ -58,10 +58,11 @@ public final class SettingsModal {
     private static final String TT_YAW_TURN_RATE = "Caps how fast the macro rotates the camera during playback (deg per second).";
     private static final String TT_PATH_DIST = "Maximum world distance for the simulated path overlay.";
     private static final String TT_PATH_UNLIMITED = "Disables the distance cap. Heavy on long TASes.";
+    private static final String TT_SHOW_PATH = "Draws the simulated path (tick boxes, gizmos and constraints) in-world. Also toggled by the Toggle Path hotkey.";
+    private static final String TT_SAVE_DEBUG_VALUES = "Writes the per-tick simulation state (position, velocity, ground and collision flags) into the TAS file on every save.";
     private static final String TT_COLOR_GENERIC = "Color used for this overlay. Alpha applies in-world.";
     private static final String TT_KEEP_INPUT_TABLE = "Keeps the input table window drawn as a display-only overlay even when the main UI is closed. It cannot be edited while closed.";
     private static final String TT_KEEP_TICK_INFO = "Keeps the Tick Info window drawn even when the main UI is closed.";
-    private static final String TT_KEEP_TURN_PROFILE = "Keeps the Onejump window drawn even when the main UI is closed, so your attempts are tracked and plotted while you play.";
     private static final String TT_UNDO_REDO_WITHOUT_UI = "Ctrl+Z / Ctrl+Y (or Ctrl+Shift+Z) undo and redo TAS edits even while the main UI is closed. Disabled while a Minecraft screen such as chat or the inventory is open.";
     private static final String TT_HUD_MESSAGE_COUNT = "How many messages the notification stack shows at once. Older messages drop off the bottom.";
     private static final String TT_HUD_MESSAGE_SCALE = "Text size of the notification stack, as a multiplier of the UI font size. The window grows with the text.";
@@ -117,8 +118,10 @@ public final class SettingsModal {
             de.legoshi.parkourcalc.core.PracticeMacro.LABEL_TURN};
     private static final String TT_MACRO_MODE = "A client-side replica runs the jump; your player stays put. Replay (inputs): the replica presses the keys, you turn. Replay (turn): the replica turns, you press the keys. Starts after the reset click plus the delay.";
     private static final String TT_MACRO_DELAY = "Time between the reset click and the practice replay starting.";
+    private static final String TT_STOP_KEYS_ON_FAIL = "After the first wrong key the keys are no longer checked or recorded. The attempt still runs to the landing tick and is judged on it.";
+    private static final String TT_STOP_TURN_ON_FAIL = "The first wrong key ends the attempt with a keys verdict. Nothing after it is tracked or judged.";
     private static final String TT_RATED_DOTS = "Draws the simulated tries of the landing chance as dots in the Turn Profile.";
-    private static final String TT_TURN_TIMING = "Records where inside each tick your mouse started and stopped moving. Draws your attempt as the real trace in the Turn Profile, a timing strip under each tick in Onejump Keys and the Turn onset stat in the Onejump Setup overview.";
+    private static final String TT_TURN_TIMING = "Records where inside each tick your mouse started and stopped moving. Draws your attempt as the real trace in the Turn Profile, a timing strip under each tick in Onejump Keys and the Turn onset stat in the Onejump Overview.";
     private static final String TT_OFFSET_LIVE = "Shows the best landing offset still reachable from the current tick above the Turn Profile, updated every tick of the attempt.";
     private static final String TT_OFFSET_HOVER = "Shows the offset still reachable from a tick in the Turn Profile tooltip. The forecast is only computed while this or the offset label is on.";
     private static final String TT_SPREAD = "How many of your latest attempts feed the per-tick facing spread that the landing chance is sampled from.";
@@ -175,8 +178,12 @@ public final class SettingsModal {
                 renderGeneral();
                 Controls.endTab();
             }
-            if (Controls.beginTab("Visualization")) {
-                renderVisualization();
+            if (Controls.beginTab("Simulation")) {
+                renderSimulation();
+                Controls.endTab();
+            }
+            if (Controls.beginTab("Overlays")) {
+                renderOverlays();
                 Controls.endTab();
             }
             if (Controls.beginTab("Constraints")) {
@@ -187,20 +194,16 @@ public final class SettingsModal {
                 renderInputTable();
                 Controls.endTab();
             }
-            if (Controls.beginTab("Tick Info")) {
-                renderTickInfo();
+            if (Controls.beginTab("Stats")) {
+                renderStats();
                 Controls.endTab();
             }
-            if (Controls.beginTab("Playback")) {
-                renderPlayback();
+            if (Controls.beginTab("Colors")) {
+                renderColors();
                 Controls.endTab();
             }
             if (Controls.beginTab("Onejump")) {
                 renderOnejump();
-                Controls.endTab();
-            }
-            if (Controls.beginTab("Render Colors")) {
-                renderColors();
                 Controls.endTab();
             }
             Controls.endTabBar();
@@ -264,11 +267,10 @@ public final class SettingsModal {
         }
 
         ThemeManager.sectionSpacing();
-        sectionHeader("Keep open when UI is closed");
+        sectionHeader("Outside the UI");
         if (beginLayoutTable("##settings_panels")) {
             checkboxRow("Input table", "##keep_input_table", settings.keepInputTableOpen, TT_KEEP_INPUT_TABLE, v -> settings.keepInputTableOpen = v);
             checkboxRow("Tick Info", "##keep_tick_info", settings.keepTickInfoOpen, TT_KEEP_TICK_INFO, v -> settings.keepTickInfoOpen = v);
-            checkboxRow("Onejump", "##keep_turn_profile", settings.keepTurnProfileOpen, TT_KEEP_TURN_PROFILE, v -> settings.keepTurnProfileOpen = v);
             checkboxRow("Undo/redo hotkeys", "##undo_redo_without_ui", settings.undoRedoWithoutUi, TT_UNDO_REDO_WITHOUT_UI, v -> settings.undoRedoWithoutUi = v);
             ThemeManager.endStandardFormTable();
         }
@@ -315,22 +317,15 @@ public final class SettingsModal {
         }
 
         ThemeManager.sectionSpacing();
-        sectionHeader("Angle Solver");
-        if (beginLayoutTable("##settings_angle_solver")) {
-            row("Stats decimal places", () -> {
-                solverPrecisionBuf[0] = settings.solverStatsPrecision;
-                ImGui.setNextItemWidth(-1);
-                if (Controls.sliderInt("##solver_stats_precision", solverPrecisionBuf,
-                        Settings.MIN_STAT_PRECISION, Settings.MAX_STAT_PRECISION, "%d decimals")) {
-                    settings.solverStatsPrecision = solverPrecisionBuf[0];
-                    ConstraintText.statsPrecision = solverPrecisionBuf[0];
-                }
-                if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
-                tooltipForLastItem(TT_SOLVER_PRECISION);
-            });
+        sectionHeader("Advanced");
+        if (beginLayoutTable("##settings_advanced")) {
+            checkboxRow("Save debug values", "##save_debug_values", settings.saveDebugValues, TT_SAVE_DEBUG_VALUES, v -> settings.saveDebugValues = v);
+            checkboxRow("Block capture (restart required)", "##experimental_block_capture", settings.experimentalBlockCapture, TT_EXPERIMENTAL_BLOCK_CAPTURE, v -> settings.experimentalBlockCapture = v);
             ThemeManager.endStandardFormTable();
         }
+    }
 
+    private void renderSimulation() {
         ThemeManager.sectionSpacing();
         sectionHeader("Simulation");
         if (beginLayoutTable("##settings_simulation")) {
@@ -363,9 +358,29 @@ public final class SettingsModal {
         }
 
         ThemeManager.sectionSpacing();
-        sectionHeader("Experimental");
-        if (beginLayoutTable("##settings_experimental")) {
-            checkboxRow("Block capture (restart required)", "##experimental_block_capture", settings.experimentalBlockCapture, TT_EXPERIMENTAL_BLOCK_CAPTURE, v -> settings.experimentalBlockCapture = v);
+        sectionHeader("Replay");
+        if (beginLayoutTable("##settings_replay")) {
+            row("Max yaw turn rate", () -> {
+                yawTurnCapBuf[0] = settings.yawFlickSpeed;
+                ImGui.setNextItemWidth(-1);
+                if (Controls.sliderFloat("##yaw_turn_cap", yawTurnCapBuf, Settings.MIN_YAW_FLICK_SPEED, Settings.MAX_YAW_FLICK_SPEED, "%.0f deg/s")) {
+                    settings.yawFlickSpeed = yawTurnCapBuf[0];
+                }
+                if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
+                tooltipForLastItem(TT_YAW_TURN_RATE);
+            });
+            row("Delay before replay", () -> {
+                replayStartDelayBuf[0] = settings.replayStartDelayTicks;
+                ImGui.setNextItemWidth(-1);
+                if (Controls.sliderInt("##replay_start_delay", replayStartDelayBuf, Settings.MIN_REPLAY_START_DELAY_TICKS, Settings.MAX_REPLAY_START_DELAY_TICKS, "%d ticks")) {
+                    settings.replayStartDelayTicks = replayStartDelayBuf[0];
+                }
+                if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
+                tooltipForLastItem(TT_REPLAY_START_DELAY);
+            });
+            checkboxRow("Lockstep replay", "##lockstep_replay", settings.lockstepReplay, TT_LOCKSTEP_REPLAY, v -> settings.lockstepReplay = v);
+            checkboxRow("Disable creative flight", "##disable_flight_playback", settings.disableFlightDuringPlayback, TT_DISABLE_FLIGHT_PLAYBACK, v -> settings.disableFlightDuringPlayback = v);
+            checkboxRow("Keep tick boxes shown", "##keep_boxes_playback", settings.keepBoxesDuringPlayback, TT_KEEP_BOXES_PLAYBACK, v -> settings.keepBoxesDuringPlayback = v);
             ThemeManager.endStandardFormTable();
         }
     }
@@ -396,7 +411,15 @@ public final class SettingsModal {
         }
 
         ThemeManager.sectionSpacing();
-        sectionHeader("Turn Profile");
+        sectionHeader("On a wrong key");
+        if (beginLayoutTable("##settings_onejump_fail")) {
+            checkboxRow("Stop checking keys", "##onejump_stop_keys", settings.onejumpStopKeysOnFail, TT_STOP_KEYS_ON_FAIL, v -> settings.onejumpStopKeysOnFail = v);
+            checkboxRow("Stop the attempt", "##onejump_stop_turn", settings.onejumpStopTurnOnFail, TT_STOP_TURN_ON_FAIL, v -> settings.onejumpStopTurnOnFail = v);
+            ThemeManager.endStandardFormTable();
+        }
+
+        ThemeManager.sectionSpacing();
+        sectionHeader("Attempt display");
         if (beginLayoutTable("##settings_onejump_profile")) {
             checkboxRow("Rated tries as dots", "##onejump_rated_dots", settings.turnProfileShowRating, TT_RATED_DOTS, v -> settings.turnProfileShowRating = v);
             checkboxRow("Turn timing", "##onejump_turn_timing", settings.onejumpTurnTiming, TT_TURN_TIMING, v -> settings.onejumpTurnTiming = v);
@@ -460,10 +483,11 @@ public final class SettingsModal {
         Modal.end();
     }
 
-    private void renderVisualization() {
+    private void renderOverlays() {
         ThemeManager.sectionSpacing();
         sectionHeader("In-world overlays");
         if (beginLayoutTable("##settings_overlays")) {
+            checkboxRow("Show path", "##show_path", settings.showPath, TT_SHOW_PATH, v -> settings.showPath = v);
             checkboxRow("Show facing arrows", "##show_yaw_arrows", settings.showYawArrows, TT_YAW_ARROWS, v -> settings.showYawArrows = v);
             arrowModeBuf.set(settings.arrowMode);
             row("Arrow type", () -> {
@@ -501,8 +525,6 @@ public final class SettingsModal {
     }
 
     private void renderConstraints() {
-        int colorFlags = ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoDragDrop;
-
         ThemeManager.sectionSpacing();
         sectionHeader("Shape");
         if (beginLayoutTable("##settings_constraint_shape")) {
@@ -513,26 +535,24 @@ public final class SettingsModal {
         }
 
         ThemeManager.sectionSpacing();
-        sectionHeader("Front (plate on the constraint)");
-        if (beginLayoutTable("##settings_constraint_front")) {
-            constraintDimRow("Width", "##c_fw", settings.constraintFrontWidth, Settings.CONSTRAINT_MAX_WIDTH, v -> settings.constraintFrontWidth = v);
-            constraintDimRow("Height", "##c_fh", settings.constraintFrontHeight, Settings.CONSTRAINT_MAX_HEIGHT, v -> settings.constraintFrontHeight = v);
-            constraintDimRow("Length", "##c_fl", settings.constraintFrontLength, Settings.CONSTRAINT_MAX_FRONT_LENGTH, v -> settings.constraintFrontLength = v);
+        sectionHeader("Plates (front on the constraint, back is the fade tail)");
+        if (beginLayoutTable("##settings_constraint_plates")) {
+            constraintDimRow("Front width", "##c_fw", settings.constraintFrontWidth, Settings.CONSTRAINT_MAX_WIDTH, v -> settings.constraintFrontWidth = v);
+            constraintDimRow("Front height", "##c_fh", settings.constraintFrontHeight, Settings.CONSTRAINT_MAX_HEIGHT, v -> settings.constraintFrontHeight = v);
+            constraintDimRow("Front length", "##c_fl", settings.constraintFrontLength, Settings.CONSTRAINT_MAX_FRONT_LENGTH, v -> settings.constraintFrontLength = v);
+            constraintDimRow("Back width", "##c_bw", settings.constraintBackWidth, Settings.CONSTRAINT_MAX_WIDTH, v -> settings.constraintBackWidth = v);
+            constraintDimRow("Back height", "##c_bh", settings.constraintBackHeight, Settings.CONSTRAINT_MAX_HEIGHT, v -> settings.constraintBackHeight = v);
+            constraintDimRow("Back length", "##c_bl", settings.constraintBackLength, Settings.CONSTRAINT_MAX_BACK_LENGTH, v -> settings.constraintBackLength = v);
             ThemeManager.endStandardFormTable();
         }
-        renderColor("front color", settings.constraintFill, colorFlags);
-        renderColor("satisfied outline", settings.constraintOutline, colorFlags);
-        renderColor("selected highlight", settings.constraintHighlight, colorFlags);
 
         ThemeManager.sectionSpacing();
-        sectionHeader("Back (fade tail)");
-        if (beginLayoutTable("##settings_constraint_back")) {
-            constraintDimRow("Width", "##c_bw", settings.constraintBackWidth, Settings.CONSTRAINT_MAX_WIDTH, v -> settings.constraintBackWidth = v);
-            constraintDimRow("Height", "##c_bh", settings.constraintBackHeight, Settings.CONSTRAINT_MAX_HEIGHT, v -> settings.constraintBackHeight = v);
-            constraintDimRow("Length", "##c_bl", settings.constraintBackLength, Settings.CONSTRAINT_MAX_BACK_LENGTH, v -> settings.constraintBackLength = v);
-            ThemeManager.endStandardFormTable();
-        }
-        renderColor("back color", settings.constraintBack, colorFlags);
+        sectionHeader("Colors");
+        int flags = ImGuiColorEditFlags.NoInputs | ImGuiColorEditFlags.NoDragDrop;
+        renderColor("front", settings.constraintFill, flags);
+        renderColor("satisfied outline", settings.constraintOutline, flags);
+        renderColor("selected highlight", settings.constraintHighlight, flags);
+        renderColor("back", settings.constraintBack, flags);
     }
 
     private void constraintDimRow(String label, String id, float value, float max, Consumer<Float> setter) {
@@ -549,7 +569,7 @@ public final class SettingsModal {
 
     private void renderInputTable() {
         ThemeManager.sectionSpacing();
-        sectionHeader("Visible columns");
+        sectionHeader("Columns and rows");
         if (beginLayoutTable("##settings_columns")) {
             disabledCheckboxRow("Forward (W)", "##col_w", true, TT_COL_W);
             checkboxRow("Strafe left (A)", "##col_a", settings.showColA, TT_COL_A, v -> settings.showColA = v);
@@ -567,70 +587,32 @@ public final class SettingsModal {
             checkboxRow("Jump Boost", "##show_jump_boost", settings.showColJumpBoost, TT_COL_JUMP_BOOST_AMP, v -> settings.showColJumpBoost = v);
             checkboxRow("Hotbar slot", "##show_hotbar", settings.showColHotbar, TT_COL_HOTBAR, v -> settings.showColHotbar = v);
             checkboxRow("Teleport", "##show_teleport", settings.showColTeleport, TT_COL_TELEPORT, v -> settings.showColTeleport = v);
-            ThemeManager.endStandardFormTable();
-        }
-
-        ThemeManager.sectionSpacing();
-        sectionHeader("Row highlighting");
-        if (beginLayoutTable("##settings_row_highlight")) {
             checkboxRow("Highlight on-ground ticks", "##highlight_on_ground", settings.highlightOnGroundRows, TT_GROUND_HIGHLIGHT, v -> settings.highlightOnGroundRows = v);
             ThemeManager.endStandardFormTable();
         }
     }
 
-    private void renderTickInfo() {
+    private void renderStats() {
         ThemeManager.sectionSpacing();
         sectionHeader("Stats");
-        ImGui.textDisabled("Toggle, set decimals, and drag to reorder.");
+        if (beginLayoutTable("##settings_stats")) {
+            row("Angle Solver decimal places", () -> {
+                solverPrecisionBuf[0] = settings.solverStatsPrecision;
+                ImGui.setNextItemWidth(-1);
+                if (Controls.sliderInt("##solver_stats_precision", solverPrecisionBuf,
+                        Settings.MIN_STAT_PRECISION, Settings.MAX_STAT_PRECISION, "%d decimals")) {
+                    settings.solverStatsPrecision = solverPrecisionBuf[0];
+                    ConstraintText.statsPrecision = solverPrecisionBuf[0];
+                }
+                if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
+                tooltipForLastItem(TT_SOLVER_PRECISION);
+            });
+            ThemeManager.endStandardFormTable();
+        }
+        ThemeManager.sectionSpacing();
+        ImGui.textDisabled("Tick Info stats: toggle, set decimals, and drag to reorder.");
         ThemeManager.sectionSpacing();
         tickInfoStatsEditor.render();
-    }
-
-    private void renderPlayback() {
-        ThemeManager.sectionSpacing();
-        sectionHeader("Camera and turning");
-        if (beginLayoutTable("##settings_playback")) {
-            row("Max yaw turn rate", () -> {
-                yawTurnCapBuf[0] = settings.yawFlickSpeed;
-                ImGui.setNextItemWidth(-1);
-                if (Controls.sliderFloat("##yaw_turn_cap", yawTurnCapBuf, Settings.MIN_YAW_FLICK_SPEED, Settings.MAX_YAW_FLICK_SPEED, "%.0f deg/s")) {
-                    settings.yawFlickSpeed = yawTurnCapBuf[0];
-                }
-                if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
-                tooltipForLastItem(TT_YAW_TURN_RATE);
-            });
-            ThemeManager.endStandardFormTable();
-        }
-
-        ThemeManager.sectionSpacing();
-        sectionHeader("Overlays");
-        if (beginLayoutTable("##settings_playback_overlays")) {
-            checkboxRow("Keep tick boxes shown", "##keep_boxes_playback", settings.keepBoxesDuringPlayback, TT_KEEP_BOXES_PLAYBACK, v -> settings.keepBoxesDuringPlayback = v);
-            ThemeManager.endStandardFormTable();
-        }
-
-        ThemeManager.sectionSpacing();
-        sectionHeader("Player");
-        if (beginLayoutTable("##settings_playback_player")) {
-            checkboxRow("Disable creative flight", "##disable_flight_playback", settings.disableFlightDuringPlayback, TT_DISABLE_FLIGHT_PLAYBACK, v -> settings.disableFlightDuringPlayback = v);
-            checkboxRow("Lockstep replay", "##lockstep_replay", settings.lockstepReplay, TT_LOCKSTEP_REPLAY, v -> settings.lockstepReplay = v);
-            ThemeManager.endStandardFormTable();
-        }
-
-        ThemeManager.sectionSpacing();
-        sectionHeader("Start delay");
-        if (beginLayoutTable("##settings_playback_start_delay")) {
-            row("Delay before replay", () -> {
-                replayStartDelayBuf[0] = settings.replayStartDelayTicks;
-                ImGui.setNextItemWidth(-1);
-                if (Controls.sliderInt("##replay_start_delay", replayStartDelayBuf, Settings.MIN_REPLAY_START_DELAY_TICKS, Settings.MAX_REPLAY_START_DELAY_TICKS, "%d ticks")) {
-                    settings.replayStartDelayTicks = replayStartDelayBuf[0];
-                }
-                if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
-                tooltipForLastItem(TT_REPLAY_START_DELAY);
-            });
-            ThemeManager.endStandardFormTable();
-        }
     }
 
     private void renderColors() {
@@ -647,6 +629,7 @@ public final class SettingsModal {
         renderColor("tick box solver goal", settings.tickSolverGoal, flags);
         renderColor("tick box desync", settings.tickDeviation, flags);
         renderColor("on-ground row tint", settings.tickGroundHighlight, flags);
+        renderColor("selected row tint", settings.tickSelectedHighlight, flags);
 
         ThemeManager.sectionSpacing();
         sectionHeader("Path and gizmos");

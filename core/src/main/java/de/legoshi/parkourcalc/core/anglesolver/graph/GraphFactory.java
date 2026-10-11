@@ -24,7 +24,7 @@ public final class GraphFactory {
                 return user != null ? user : BuiltinGraphs.optimize(state.getOptimizeSeconds());
             }
             default:
-                return BuiltinGraphs.fast();
+                return BuiltinGraphs.fast(state.getBudgetMs());
         }
     }
 }

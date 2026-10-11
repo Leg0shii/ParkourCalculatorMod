@@ -117,6 +117,8 @@ public final class InputOverlay {
 
     private static final String WARN_MULTIPLAYER =
             "Multiplayer: simulator only sees blocks inside your render distance.";
+    private static final String WARN_UNLOADED_CHUNKS =
+            "Path ran through unloaded chunks. Go there and press %s to re-simulate.";
 
     private static final String EMPTY_HINT = "Right-click to add ticks";
 
@@ -128,9 +130,11 @@ public final class InputOverlay {
     private final MinecraftAccess mc;
     private final BoxController boxController;
     private final Consumer<String> hudMessage;
+    private BooleanSupplier unloadedChunkWarning = () -> false;
 
     private final SelectionManager selection;
     private final KeyDragSelect keyDragSelect = new KeyDragSelect();
+    private final RowDragSelect rowDragSelect = new RowDragSelect();
     private final ImString yawInput = new ImString(32);
     private final ImString pitchInput = new ImString(32);
     private final ImString teleportXInput = new ImString(32);
@@ -261,6 +265,12 @@ public final class InputOverlay {
         final String altLabel;
         final Predicate<InputRow> alt;
         final Consumer<InputRow> altToggle;
+        BooleanSupplier visible = () -> true;
+
+        public RowFlag visibleWhen(BooleanSupplier visible) {
+            this.visible = visible != null ? visible : () -> true;
+            return this;
+        }
 
         public RowFlag(String label, String tooltip, Predicate<InputRow> get, Consumer<InputRow> toggle) {
             this(label, tooltip, get, toggle, null, null, null);
@@ -294,7 +304,14 @@ public final class InputOverlay {
     }
 
     private RowFlag[] activeFlags() {
-        return rowFlagsVisible.getAsBoolean() ? rowFlags : NO_FLAGS;
+        if (!rowFlagsVisible.getAsBoolean()) return NO_FLAGS;
+        int n = 0;
+        for (RowFlag f : rowFlags) if (f.visible.getAsBoolean()) n++;
+        if (n == rowFlags.length) return rowFlags;
+        RowFlag[] out = new RowFlag[n];
+        int i = 0;
+        for (RowFlag f : rowFlags) if (f.visible.getAsBoolean()) out[i++] = f;
+        return out;
     }
 
     public void setShortcutsEnabled(BooleanSupplier enabled) {
@@ -537,6 +554,7 @@ public final class InputOverlay {
         ImVec2 clipSize = ImGui.getWindowSize();
 
         keyDragSelect.clearRowBounds();
+        rowDragSelect.clearRowBounds();
         hoveredRow = -1;
         flagMenuHovered = false;
         teleportDropRow = -1;
@@ -594,6 +612,7 @@ public final class InputOverlay {
         }
         renderDropIndicator(ImGui.getWindowDrawList(), dragDrop);
         applyDragDrop(dragDrop);
+        rowDragSelect.update(selection, viewTop, viewBot, ThemeManager.tableRowHeight());
         applyTeleportDrag();
         if (solverActive) angleSolver.endRows();
         ImGui.endChild();
@@ -641,7 +660,15 @@ public final class InputOverlay {
         if (mc == null || !mc.isReady() || mc.isSinglePlayer()) return;
         ThemeManager.pushTextColor(ThemeManager.warningColor());
         ImGui.textWrapped(WARN_MULTIPLAYER);
+        if (unloadedChunkWarning.getAsBoolean()) {
+            String key = mc.getRerunSimulationKeyName();
+            ImGui.textWrapped(String.format(WARN_UNLOADED_CHUNKS, key == null ? "the Rerun simulation key" : key));
+        }
         ThemeManager.popTextColor();
+    }
+
+    public void setUnloadedChunkWarning(BooleanSupplier warning) {
+        this.unloadedChunkWarning = warning;
     }
 
     private void setupColumns(boolean solverActive, boolean renderHeaders, boolean scrollFreeze) {
@@ -899,7 +926,7 @@ public final class InputOverlay {
             ThemeManager.paintTableRowBg(0);
         }
         if (selection.isSelected(0)) {
-            ThemeManager.paintTableRowTint(ThemeManager.selectedTintColor(0.38f));
+            ThemeManager.paintTableRowTint(ThemeManager.rgbaTintColor(settings.tickSelectedHighlight));
         } else if (settings.highlightOnGroundRows && isOnGroundAtTick(0)) {
             ThemeManager.paintTableRowTint(ThemeManager.rgbaTintColor(settings.tickGroundHighlight));
         }
@@ -968,10 +995,10 @@ public final class InputOverlay {
             ImVec2 rowMin = ImGui.getItemRectMin();
             ImVec2 rowMax = ImGui.getItemRectMax();
             rMinX = rowMin.x; rMinY = rowMin.y; rMaxX = rowMax.x; rMaxY = rowMax.y;
-            handleRowDragDrop(index, rMinX, rMinY, rMaxX, rMaxY, dragDrop);
         }
 
         keyDragSelect.recordRowBounds(index, rMinY, rMaxY);
+        rowDragSelect.recordRowBounds(index, rMinY, rMaxY);
         if (ImGui.isMouseHoveringRect(rMinX, rMinY, rMaxX, rMaxY)) {
             hoveredRow = index + 1;
         }
@@ -1025,11 +1052,10 @@ public final class InputOverlay {
         }
         int tint = 0;
         // A light selection fill, so it doesn't clash with chips drawn over solver rows.
-        float selAlpha = 0.38f;
         if (selection.isSelected(rowIndex + 1)) {
-            tint = ThemeManager.selectedTintColor(selAlpha);
+            tint = ThemeManager.rgbaTintColor(settings.tickSelectedHighlight);
         } else if (draggingRowIndex == rowIndex) {
-            tint = ThemeManager.selectedTintColor(selAlpha);
+            tint = ThemeManager.rgbaTintColor(settings.tickSelectedHighlight);
         } else if (playback != null && playback.currentTick() == rowIndex) {
             tint = ThemeManager.warningTintColor(0.25f);
         } else if (settings.highlightOnGroundRows && isOnGroundAtTick(rowIndex)) {
@@ -1047,7 +1073,7 @@ public final class InputOverlay {
 
     private void renderRowNumber(int rowIndex, boolean solverActive, float rowH, DragDropState dragDrop) {
         if (solverActive) {
-            angleSolver.renderGutter(rowIndex, rowH, () -> handleRowDragDrop(rowIndex,
+            angleSolver.renderGutter(rowIndex, rowH, () -> rowSelectableItem(rowIndex,
                     angleSolver.gutterMinX(), angleSolver.gutterMinY(),
                     angleSolver.gutterMaxX(), angleSolver.gutterMaxY(), dragDrop));
             return;
@@ -1055,9 +1081,22 @@ public final class InputOverlay {
         ThemeManager.tableLeftmostCellPad();
         boolean isSelected = selection.isSelected(rowIndex + 1);
         int flags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowItemOverlap;
-        if (ThemeManager.rightAlignedSelectable("row" + rowIndex, String.valueOf(rowIndex + 1), isSelected, flags)) {
+        boolean clicked = ThemeManager.rightAlignedSelectable("row" + rowIndex, String.valueOf(rowIndex + 1), isSelected, flags);
+        ImVec2 rowMin = ImGui.getItemRectMin();
+        ImVec2 rowMax = ImGui.getItemRectMax();
+        boolean clickConsumed = rowSelectableItem(rowIndex, rowMin.x, rowMin.y, rowMax.x, rowMax.y, dragDrop);
+        if (clicked && !clickConsumed) {
             selection.handleClick(rowIndex + 1);
         }
+    }
+
+    private boolean rowSelectableItem(int index, float rowMinX, float rowMinY, float rowMaxX, float rowMaxY, DragDropState dragDrop) {
+        if (ImGui.isItemActive() && ImGui.isMouseClicked(0)) {
+            Set<Integer> keep = selection.isCtrlHeld() ? selection.getSelected() : Collections.<Integer>emptySet();
+            rowDragSelect.press(index, selection.isSelected(index + 1), keep);
+        }
+        handleRowDragDrop(index, rowMinX, rowMinY, rowMaxX, rowMaxY, dragDrop);
+        return rowDragSelect.isActive();
     }
 
     private void handleRowDragDrop(int index, float rowMinX, float rowMinY, float rowMaxX, float rowMaxY, DragDropState state) {
@@ -1065,7 +1104,7 @@ public final class InputOverlay {
             return; // Don't allow drag when multiple rows selected
         }
 
-        if (ImGui.beginDragDropSource(ImGuiDragDropFlags.SourceNoPreviewTooltip)) {
+        if (rowDragSelect.movesRow(index) && ImGui.beginDragDropSource(ImGuiDragDropFlags.SourceNoPreviewTooltip)) {
             draggingRowIndex = index;
             // The payload is never read back: imgui-java only weak-references the Java object, so a
             // GC mid-drag silently drops it. The move is resolved from draggingRowIndex instead.
@@ -1215,7 +1254,7 @@ public final class InputOverlay {
         boolean selectedRow = selection.isSelected(rowIndex + 1);
         boolean populated = yaw != null;
         boolean locked = row.isYawLocked();
-        if (selectedRow) ThemeManager.pushSelectedFrameBg();
+        if (selectedRow) ThemeManager.pushSelectedFrameBg(settings.tickSelectedHighlight);
         if (populated) ThemeManager.pushPopulatedFrameBorder();
         float inputW = yawInputWidth();
         float lockStripX = ImGui.getCursorScreenPos().x;
@@ -1282,7 +1321,7 @@ public final class InputOverlay {
         boolean selectedRow = selection.isSelected(rowIndex + 1);
         boolean populated = pitch != null;
         boolean locked = row.isPitchLocked();
-        if (selectedRow) ThemeManager.pushSelectedFrameBg();
+        if (selectedRow) ThemeManager.pushSelectedFrameBg(settings.tickSelectedHighlight);
         if (populated) ThemeManager.pushPopulatedFrameBorder();
         float inputW = yawInputWidth();
         float lockStripX = ImGui.getCursorScreenPos().x;
@@ -1611,6 +1650,11 @@ public final class InputOverlay {
             teleportPressRow = -1;
             syncTeleportInputs(row);
             ImGui.openPopup(popupId);
+        }
+        if (hover && ImGui.isMouseClicked(2)) {
+            teleportPressRow = -1;
+            row.setTeleportEnabled(false);
+            notifyChange(rowIndex);
         }
     }
 

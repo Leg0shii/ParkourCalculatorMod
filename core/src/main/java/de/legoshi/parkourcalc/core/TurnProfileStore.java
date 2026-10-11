@@ -72,6 +72,8 @@ public final class TurnProfileStore {
         boolean favourite;
         Integer tasFirstTick;
         Double[] solvedOffset;
+        int[] pressed;
+        boolean[] keysFailed;
     }
 
     static final class ForecastData {
@@ -273,6 +275,8 @@ public final class TurnProfileStore {
         d.favourite = a.favourite;
         d.tasFirstTick = a.tasFirstTick < 0 ? null : a.tasFirstTick;
         d.solvedOffset = boxAll(a.solvedOffset);
+        d.pressed = a.pressedKeys;
+        d.keysFailed = a.keysFailed;
         if (a.forecast != null) {
             ForecastData f = new ForecastData();
             f.held = boxAll(a.forecast.held);
@@ -365,6 +369,8 @@ public final class TurnProfileStore {
         a.favourite = d.favourite;
         a.tasFirstTick = d.tasFirstTick == null ? headerFirstTick : d.tasFirstTick;
         a.solvedOffset = unboxAll(d.solvedOffset, d.yaws.length);
+        a.pressedKeys = d.pressed;
+        a.keysFailed = d.keysFailed;
         return a;
     }
 

@@ -7,10 +7,12 @@ import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.forge.core.io.OsFilePicker;
 import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2ImGuiHost;
+import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2InputState;
 import de.legoshi.parkourcalc.forge8.render.Forge8HudOverlayRenderer;
 import de.legoshi.parkourcalc.forge8.render.Forge8WorldOverlayRenderer;
 import de.legoshi.parkourcalc.forge8.sim.Forge8Simulator;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -89,7 +91,7 @@ public class Forge8ParkourCalculator {
     private KeyBinding solveKeyBinding;
     private KeyBinding solverStartTickKeyBinding;
     private KeyBinding solverEndTickKeyBinding;
-    private KeyBinding rerunSimulationKeyBinding;
+    private static KeyBinding rerunSimulationKeyBinding;
     private KeyBinding togglePathKeyBinding;
     private KeyBinding copyTeleportKeyBinding;
     private KeyBinding captureMomentumBlockKeyBinding;
@@ -241,11 +243,26 @@ public class Forge8ParkourCalculator {
 
     @SubscribeEvent
     public void onKeyInput(net.minecraftforge.fml.common.gameevent.InputEvent.KeyInputEvent event) {
-        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
-        if (!r.isRecording()) return;
         int key = Keyboard.getEventKey();
         if (key == Keyboard.KEY_NONE) return;
-        r.key(Keyboard.getEventNanoseconds(), key, Keyboard.getEventKeyState());
+        boolean down = Keyboard.getEventKeyState();
+        if (down && Minecraft.getMinecraft().currentScreen == null && application.getSettings().undoRedoWithoutUi
+                && Lwjgl2InputState.isEditChordPress(key)) {
+            swallowChatOpen(key);
+        }
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (r.isRecording()) r.key(Keyboard.getEventNanoseconds(), key, down);
+    }
+
+    private static void swallowChatOpen(int key) {
+        drainPresses(Minecraft.getMinecraft().gameSettings.keyBindChat, key);
+        drainPresses(Minecraft.getMinecraft().gameSettings.keyBindCommand, key);
+    }
+
+    private static void drainPresses(KeyBinding binding, int key) {
+        if (binding.getKeyCode() != key) return;
+        while (binding.isPressed()) {
+        }
     }
 
     @SubscribeEvent
@@ -596,6 +613,11 @@ public class Forge8ParkourCalculator {
         if (event.button == 1 && application.shouldSuppressRightClick()) {
             event.setCanceled(true);
         }
+    }
+
+    public static String rerunSimulationKeyName() {
+        if (rerunSimulationKeyBinding == null) return null;
+        return GameSettings.getKeyDisplayString(rerunSimulationKeyBinding.getKeyCode());
     }
 
     @SubscribeEvent

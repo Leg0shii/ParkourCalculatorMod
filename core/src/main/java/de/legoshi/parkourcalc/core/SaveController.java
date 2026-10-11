@@ -396,12 +396,15 @@ public final class SaveController {
         if (angleSolver != null) angleSolver.reset();
         discardCurrent();
         runner.invalidate();
+        runner.setStartVelocity(Vec3dCore.GROUND_REST_VELOCITY);
         if (mc.isReady()) {
             runner.setStartPosition(mc.getPlayerPosition());
+            runner.setStartYaw(mc.getPlayerYaw());
+            runner.setStartPitch(mc.getPlayerPitch());
+        } else {
+            runner.setStartYaw(0.0F);
+            runner.setStartPitch(PlaybackController.DEFAULT_PITCH);
         }
-        runner.setStartVelocity(Vec3dCore.GROUND_REST_VELOCITY);
-        runner.setStartYaw(0.0F);
-        runner.setStartPitch(PlaybackController.DEFAULT_PITCH);
         retriggerSimulation.run();
         if (undo != null) undo.onDocumentReplaced(null);
     }

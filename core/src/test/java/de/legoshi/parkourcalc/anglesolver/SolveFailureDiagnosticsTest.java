@@ -120,6 +120,28 @@ public class SolveFailureDiagnosticsTest {
     }
 
     @Test
+    public void contradictingConstraintsAreRejectedBeforeSolving() {
+        int[] at = new int[1];
+        Ctx ctx = build(state -> {
+            at[0] = state.getStartTick() + 2;
+            state.tickConstraints(at[0]).getConstraints().clear();
+            state.tickConstraints(at[0]).getConstraints()
+                    .add(Constraint.scalar(Constraint.Field.X, Constraint.Op.LE, 1.0));
+            state.tickConstraints(at[0]).getConstraints()
+                    .add(Constraint.scalar(Constraint.Field.X, Constraint.Op.GE, 2.0));
+        });
+        SolveResult r = solve(ctx);
+
+        assertNotNull("engine returned no result", r);
+        assertFalse("contradicting walls must not solve", r.isSuccess());
+        assertEquals(AngleSolverEngine.INFEASIBLE_LABEL, r.getNoticeLabel());
+        assertNotNull(r.getNotice());
+        assertTrue("notice must name the tick: " + r.getNotice(), r.getNotice().startsWith("T" + (at[0] + 1) + ": "));
+        assertTrue("notice must name both walls: " + r.getNotice(),
+                r.getNotice().contains("X <= 1") && r.getNotice().contains("X >= 2"));
+    }
+
+    @Test
     public void successfulSolveIsUnaffected() {
         SolveResult r = solve(build(state -> { }));
         assertNotNull("engine returned no result", r);

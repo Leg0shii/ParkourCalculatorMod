@@ -196,6 +196,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     private static boolean wasPlaybackRunning = false;
 
+    public static String rerunSimulationKeyName() {
+        return rerunSimulationKeyBinding == null ? null : rerunSimulationKeyBinding.getTranslatedKeyMessage().getString();
+    }
+
     private static void onStartTick(Minecraft client) {
         ReplayLockstep.clientBarrierPreTick();
         manageInputLifecycle();
@@ -358,6 +362,11 @@ public class FabricParkourCalculator implements ClientModInitializer {
         application.getAttemptTracker().mouseButton(button, action == InputConstants.PRESS);
         de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
         if (r.isRecording()) r.button(0L, button, action == InputConstants.PRESS);
+    }
+
+    public static boolean swallowsEditChord(int key) {
+        return Minecraft.getInstance().gui.screen() == null && getSettings().undoRedoWithoutUi
+                && FabricMinecraftAccess.isEditChordPress(key);
     }
 
     public static void recordKey(int key, int action) {

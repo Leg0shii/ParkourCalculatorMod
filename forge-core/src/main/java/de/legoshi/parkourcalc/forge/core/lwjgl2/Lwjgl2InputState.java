@@ -38,6 +38,10 @@ public final class Lwjgl2InputState {
         return isShiftDown() && Keyboard.isKeyDown(Keyboard.KEY_Z);
     }
 
+    public static boolean isEditChordPress(int key) {
+        return isCtrlDown() && (key == Keyboard.KEY_Z || key == Keyboard.KEY_Y);
+    }
+
     public static boolean isCopyChordDown() {
         return isCtrlDown() && Keyboard.isKeyDown(Keyboard.KEY_C);
     }

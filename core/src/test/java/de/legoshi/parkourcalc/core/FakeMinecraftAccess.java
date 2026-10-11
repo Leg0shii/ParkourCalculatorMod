@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.core;
 
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.sim.AABB;
+import de.legoshi.parkourcalc.core.sim.BlockHit;
 import de.legoshi.parkourcalc.core.sim.Face;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
@@ -20,6 +21,7 @@ public class FakeMinecraftAccess implements MinecraftAccess {
     public Face lookedAtFace;
     public Vec3dCore lookedAtHitVec;
     public float playerYaw;
+    public float playerPitch;
     public boolean ready = true;
     public double[] pressurePlateFootprint;
 
@@ -31,11 +33,13 @@ public class FakeMinecraftAccess implements MinecraftAccess {
 
     @Override public Vec3dCore getPlayerPosition() { return Vec3dCore.ZERO; }
     @Override public float getPlayerYaw() { return playerYaw; }
+    @Override public float getPlayerPitch() { return playerPitch; }
     @Override public Vec3dCore getEyePosition() { return Vec3dCore.ZERO; }
     @Override public Vec3dCore getLookDirection() { return Vec3dCore.ZERO; }
-    @Override public int[] getLookedAtBlock() { return lookedAtBlock; }
-    @Override public Face getLookedAtFace() { return lookedAtFace; }
-    @Override public Vec3dCore getLookedAtHitVec() { return lookedAtHitVec; }
+    @Override public BlockHit getLookedAtHit() {
+        if (lookedAtBlock == null || lookedAtFace == null) return null;
+        return new BlockHit(lookedAtBlock[0], lookedAtBlock[1], lookedAtBlock[2], lookedAtFace, lookedAtHitVec);
+    }
     @Override public double[] getPressurePlateFootprint(int x, int y, int z) { return pressurePlateFootprint; }
 
     @Override

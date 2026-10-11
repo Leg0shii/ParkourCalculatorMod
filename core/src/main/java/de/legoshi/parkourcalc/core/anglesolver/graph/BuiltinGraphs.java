@@ -9,6 +9,12 @@ public final class BuiltinGraphs {
     public static final String FAST_PRESET = "Fast";
     public static final String MULTI_START_PRESET = "Fast (multi-start)";
     public static final String OPTIMIZE_PRESET = "Optimize";
+    public static final String SMOOTH_PRESET = "Smooth";
+
+    public static final double WRAP_RESERVE_FRACTION = 0.25;
+    public static final int WRAP_RESERVE_CAP_SEC = 3;
+    public static final double SMOOTH_RESERVE_FRACTION = 0.125;
+    public static final int SMOOTH_RESERVE_CAP_SEC = 6;
 
     public static final int SWEEP_SEEDS = 64;
     public static final int MULTI_START_SWEEP_SEC = 20;
@@ -21,8 +27,26 @@ public final class BuiltinGraphs {
         return FAST_PRESET.equals(name) || MULTI_START_PRESET.equals(name) || OPTIMIZE_PRESET.equals(name);
     }
 
+    public static SolverGraph smooth(double giveBack) {
+        GraphBuilder g = new GraphBuilder(SMOOTH_PRESET, true);
+        g.add("entry", "entry");
+        g.add("smooth", "smooth")
+                .set("smooth", "giveBack", giveBack)
+                .set("smooth", GraphRunner.RESERVE_FRACTION_PARAM, 1.0)
+                .set("smooth", GraphRunner.RESERVE_CAP_PARAM, 0);
+        g.add("emit", "emit");
+        chain(g, "entry", "smooth");
+        chain(g, "smooth", "emit");
+        return g.build();
+    }
+
     public static SolverGraph fast() {
         return build(FAST_PRESET, 10, 3, 0, true, false, FAST_SEED_CAP_MS, 0);
+    }
+
+    public static SolverGraph fast(int budgetMs) {
+        int seedCapMs = budgetMs > 0 && budgetMs < 1000 ? budgetMs : FAST_SEED_CAP_MS;
+        return build(FAST_PRESET, 10, 3, 0, true, false, seedCapMs, 0);
     }
 
     public static SolverGraph fastMultiStart() {
@@ -46,7 +70,8 @@ public final class BuiltinGraphs {
                                      boolean leafSnap, int seedCapMs, int sweepSeeds) {
         boolean fastTier = t <= 0;
         int tp = fastTier ? 120 : t;
-        long reserveNanos = fastTier ? 0L : GraphRunner.wrapReserveNanos(t * 1_000_000_000L);
+        long reserveNanos = fastTier ? 0L
+                : GraphRunner.reserveNanos(WRAP_RESERVE_FRACTION, WRAP_RESERVE_CAP_SEC, t * 1_000_000_000L);
         int stageSec = Math.max(1, tp - (int) ((reserveNanos + 999_999_999L) / 1_000_000_000L));
         int improveSec = Math.max(1, Math.min(60, stageSec / 3));
         int ffSec = fastTier ? 3 : Math.max(1, Math.min(30, stageSec / 2));

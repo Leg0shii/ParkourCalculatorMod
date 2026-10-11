@@ -283,7 +283,6 @@ public final class MainWindowOverlay implements RenderInterface {
         menu("File", fileMenu::renderMenuItems);
         menu("Edit", this::renderEditMenuItems);
         menu("View", this::renderViewMenuItems);
-        menu("Settings", this::renderSettingsMenuItems);
         menu("Help", this::renderHelpMenuItems);
 
         ImGui.endMenuBar();
@@ -325,6 +324,8 @@ public final class MainWindowOverlay implements RenderInterface {
     private void renderEditMenuItems() {
         if (ImGui.menuItem("Undo", "Ctrl+Z") && onUndo != null) onUndo.run();
         if (ImGui.menuItem("Redo", "Ctrl+Y") && onRedo != null) onRedo.run();
+        ThemeManager.paddedSeparator();
+        if (ImGui.menuItem("Preferences...")) settingsModal.open();
     }
 
     private void renderViewMenuItems() {
@@ -350,6 +351,19 @@ public final class MainWindowOverlay implements RenderInterface {
             onSettingsChanged.run();
         }
         if (ImGui.beginMenu("Onejump")) {
+            boolean allOpen = settings.viewOnejumpSetup && settings.viewTurnProfile && settings.viewOnejumpKeys;
+            if (ImGui.menuItem("All", null, allOpen)) {
+                boolean open = !allOpen;
+                settings.viewOnejumpSetup = open;
+                settings.viewTurnProfile = open;
+                settings.viewOnejumpKeys = open;
+                onSettingsChanged.run();
+            }
+            ImGui.separator();
+            if (ImGui.menuItem("Overview", null, settings.viewOnejumpSetup)) {
+                settings.viewOnejumpSetup = !settings.viewOnejumpSetup;
+                onSettingsChanged.run();
+            }
             if (ImGui.menuItem("Turn Profile", null, settings.viewTurnProfile)) {
                 settings.viewTurnProfile = !settings.viewTurnProfile;
                 onSettingsChanged.run();
@@ -358,20 +372,12 @@ public final class MainWindowOverlay implements RenderInterface {
                 settings.viewOnejumpKeys = !settings.viewOnejumpKeys;
                 onSettingsChanged.run();
             }
-            if (ImGui.menuItem("Setup", null, settings.viewOnejumpSetup)) {
-                settings.viewOnejumpSetup = !settings.viewOnejumpSetup;
-                onSettingsChanged.run();
-            }
             ImGui.endMenu();
         }
         if (ImGui.menuItem("Recorder", null, settings.viewRecorder)) {
             settings.viewRecorder = !settings.viewRecorder;
             onSettingsChanged.run();
         }
-    }
-
-    private void renderSettingsMenuItems() {
-        if (ImGui.menuItem("Preferences...")) settingsModal.open();
     }
 
     private void renderHelpMenuItems() {

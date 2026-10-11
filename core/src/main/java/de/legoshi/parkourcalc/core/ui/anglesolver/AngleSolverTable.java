@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleConsumer;
 import java.util.function.IntSupplier;
 
@@ -360,7 +361,7 @@ public final class AngleSolverTable {
 
     // ---- gutter (chevron + flag + number + selection) --------------------------
 
-    public void renderGutter(int rowIndex, float rowH, Runnable dragDropHook) {
+    public void renderGutter(int rowIndex, float rowH, BooleanSupplier selectableHook) {
         ThemeManager.tableLeftmostCellPad();
         ImVec2 origin = ImGui.getCursorScreenPos();
         float s = ThemeManager.uiScale();
@@ -372,10 +373,7 @@ public final class AngleSolverTable {
 
         boolean sel = selection.isSelected(rowIndex + 1);
         int flags = ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowItemOverlap;
-        if (ThemeManager.rightAlignedSelectable("row" + rowIndex, "", sel, flags, 0f, gutterItemH)) {
-            selection.handleClick(rowIndex + 1);
-            constraintSelection.clear();
-        }
+        boolean clicked = ThemeManager.rightAlignedSelectable("row" + rowIndex, "", sel, flags, 0f, gutterItemH);
         ImVec2 selMin = ImGui.getItemRectMin();
         ImVec2 selMax = ImGui.getItemRectMax();
         float cellPadY = ImGui.getStyle().getCellPadding().y;
@@ -387,7 +385,11 @@ public final class AngleSolverTable {
         gMaxY = gMinY + rowH;
         // Row drag-drop must attach to the selectable (ImGui targets the last item), so the hook
         // runs here, before the chevron becomes the last item (gh-119).
-        if (dragDropHook != null) dragDropHook.run();
+        boolean clickConsumed = selectableHook != null && selectableHook.getAsBoolean();
+        if (clicked && !clickConsumed) {
+            selection.handleClick(rowIndex + 1);
+            constraintSelection.clear();
+        }
 
         ImDrawList dl = ImGui.getWindowDrawList();
         float chevW = 12f * s;
@@ -1270,7 +1272,7 @@ public final class AngleSolverTable {
         List<Potion> out = new ArrayList<>();
         for (Potion p : Potion.values()) {
             if (p == current) { out.add(p); continue; }
-            if (state.hasDefaultPotion(p) || ov.hasAdded(p)) continue;
+            if (ov.hasAdded(p)) continue;
             out.add(p);
         }
         return out;
@@ -1278,7 +1280,7 @@ public final class AngleSolverTable {
 
     private Potion nextOverridePotion(StateOverride ov) {
         for (Potion p : Potion.values()) {
-            if (!state.hasDefaultPotion(p) && !ov.hasAdded(p)) return p;
+            if (!ov.hasAdded(p)) return p;
         }
         return null;
     }

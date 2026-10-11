@@ -14,6 +14,7 @@ import org.junit.experimental.categories.Category;
 
 import java.util.Locale;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -73,8 +74,10 @@ public class OverConstrainedChainTest {
         assertNotNull("no result within " + POLL_TIMEOUT_MS + " ms", result);
         assertFalse("the single-heading chain is infeasible, the solve must not succeed", result.isSuccess());
         assertNotNull("failure carries no notice", result.getNotice());
-        assertTrue("notice does not start with the over-constrained diagnostic: " + result.getNotice(),
-                result.getNotice().startsWith("1 free angle"));
+        assertEquals("failure is not labelled as over-constrained",
+                AngleSolverEngine.OVERCONSTRAINED_LABEL, result.getNoticeLabel());
+        assertTrue("notice does not name the single heading: " + result.getNotice(),
+                result.getNotice().contains("one heading"));
         assertTrue("notice does not report the miss distance: " + result.getNotice(),
                 result.getNotice().contains("misses by"));
         assertTrue("over-constrained solve took " + elapsedMs + " ms, expected under " + MAX_RUNTIME_MS,

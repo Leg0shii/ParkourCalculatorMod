@@ -59,6 +59,7 @@ public final class SaveFile {
         public double teleportZ;
         public boolean onejumpKeys;
         public int onejumpFace;
+        public boolean onejumpLand;
         public List<String> onejumpOptional;
     }
 
@@ -75,13 +76,13 @@ public final class SaveFile {
         public Boolean stopOnFeasible;                   // absent in old files -> false
         public Boolean legalMode;                        // absent in old files -> false
         public Integer optimizeSeconds;                  // absent in old files -> default
-        public Double smoothLambda;
+        public Integer budgetMs;                         // absent in old files -> from optimizeSeconds
+        public Double smoothGiveBack;
         public SolveBudget customBudget;
         public String graphPreset;
         public String defaultInputs;
         public String defaultSprint;                     // absent in old files -> ALWAYS
         public String defaultSlipperiness;
-        public List<Dose> defaultPotions = new ArrayList<Dose>();
         public List<Tick> ticks = new ArrayList<Tick>();
         public List<BlockSel> selectedBlocks = new ArrayList<BlockSel>();
         public Start seed;                               // launch state (pos/vel/yaw) at startTick; what a solve begins from
@@ -163,6 +164,7 @@ public final class SaveFile {
         public String finishedAt;                        // formatted clock time, null if unset
         public String solver;                            // algorithm label, null = legacy save
         public String notice;
+        public String noticeLabel;
         public double objectiveValue;
         public boolean hasObjective;
         public List<Outcome> outcomes = new ArrayList<Outcome>();

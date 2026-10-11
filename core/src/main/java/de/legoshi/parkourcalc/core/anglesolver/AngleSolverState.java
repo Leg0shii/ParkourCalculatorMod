@@ -70,9 +70,12 @@ public final class AngleSolverState {
     public static final int MIN_TIME_BUDGET = 0;
     public static final int MAX_TIME_BUDGET = 600;
     public static final int DEFAULT_TIME_BUDGET = 0;
-    public static final int MIN_OPTIMIZE_SECONDS = 1;
-    public static final int MAX_OPTIMIZE_SECONDS = 600;
-    public static final int DEFAULT_OPTIMIZE_SECONDS = 10;
+    public static final int MAX_BUDGET_MS = 600_000;
+    public static final int DEFAULT_BUDGET_MS = 0;
+    public static final int SLIDER_BUDGET_MS = 10_000;
+    public static final int OPTIMIZE_TIER_MS = 1_000;
+    public static final int OPTIMIZE_FALLBACK_MS = 10_000;
+    public static final int DEFAULT_OPTIMIZE_SECONDS = DEFAULT_BUDGET_MS / 1000;
     public static final int MIN_WINDOW = 6;
     public static final int MAX_WINDOW = 14;
     public static final int DEFAULT_WINDOW = 10;
@@ -138,10 +141,9 @@ public final class AngleSolverState {
     private Effort effort = Effort.FAST;
     private boolean stopOnFeasible = true;
     private boolean legalMode;
-    private int optimizeSeconds = DEFAULT_OPTIMIZE_SECONDS;
-    public static final double TASER_SMOOTH_LAMBDA = 1.0e-2;
-
+    private int budgetMs = DEFAULT_BUDGET_MS;
     private double smoothLambda;
+    private double smoothGiveBack = 1.0;
     private final SolveBudget solveBudget = new SolveBudget();
     private final RunTicksSettings runTicks = new RunTicksSettings();
     private String graphPresetName;
@@ -150,7 +152,6 @@ public final class AngleSolverState {
     private InputMode defaultInputs = InputMode.FORCE_45;
     private SprintMode defaultSprint = SprintMode.ALWAYS;
     private Slipperiness defaultSlipperiness = Slipperiness.AIR;
-    private final List<PotionDose> defaultPotions = new ArrayList<>();
 
     private final Map<Integer, TickConstraints> ticks = new LinkedHashMap<>();
 
@@ -228,6 +229,29 @@ public final class AngleSolverState {
 
     public void setEffort(Effort effort) {
         this.effort = effort;
+        if (effort == Effort.FAST && budgetMs >= OPTIMIZE_TIER_MS) budgetMs = 0;
+        if (effort == Effort.THOROUGH && budgetMs < OPTIMIZE_TIER_MS) budgetMs = OPTIMIZE_FALLBACK_MS;
+    }
+
+    public boolean isCustomBudget() {
+        return effort == Effort.CUSTOM;
+    }
+
+    public void setCustomBudget(boolean custom) {
+        effort = custom ? Effort.CUSTOM : tierFor(budgetMs);
+    }
+
+    public int getBudgetMs() {
+        return budgetMs;
+    }
+
+    public void setBudgetMs(int ms) {
+        budgetMs = clampInt(ms, 0, MAX_BUDGET_MS);
+        if (effort != Effort.CUSTOM) effort = tierFor(budgetMs);
+    }
+
+    private static Effort tierFor(int ms) {
+        return ms >= OPTIMIZE_TIER_MS ? Effort.THOROUGH : Effort.FAST;
     }
 
     public boolean isStopOnFeasible() {
@@ -247,11 +271,11 @@ public final class AngleSolverState {
     }
 
     public int getOptimizeSeconds() {
-        return optimizeSeconds;
+        return budgetMs / 1000;
     }
 
     public void setOptimizeSeconds(int v) {
-        optimizeSeconds = clampInt(v, MIN_OPTIMIZE_SECONDS, MAX_OPTIMIZE_SECONDS);
+        budgetMs = clampInt(v, 0, MAX_BUDGET_MS / 1000) * 1000;
     }
 
     public double getSmoothLambda() {
@@ -260,6 +284,14 @@ public final class AngleSolverState {
 
     public void setSmoothLambda(double v) {
         smoothLambda = Math.max(0.0, v);
+    }
+
+    public double getSmoothGiveBack() {
+        return smoothGiveBack;
+    }
+
+    public void setSmoothGiveBack(double v) {
+        smoothGiveBack = Double.isNaN(v) ? 1.0 : Math.max(0.0, Math.min(1.0, v));
     }
 
     public SolveBudget getSolveBudget() {
@@ -331,42 +363,6 @@ public final class AngleSolverState {
         this.defaultSlipperiness = slip;
     }
 
-    public List<PotionDose> getDefaultPotions() {
-        return defaultPotions;
-    }
-
-    public boolean hasDefaultPotion(Potion p) {
-        for (PotionDose d : defaultPotions) if (d.potion == p) return true;
-        return false;
-    }
-
-    public Potion nextUnusedDefaultPotion() {
-        for (Potion p : Potion.values()) if (!hasDefaultPotion(p)) return p;
-        return null;
-    }
-
-    public void addNextDefaultPotion() {
-        Potion next = nextUnusedDefaultPotion();
-        if (next != null) defaultPotions.add(new PotionDose(next, 1));
-    }
-
-    public void removeDefaultPotion(int index) {
-        if (index >= 0 && index < defaultPotions.size()) defaultPotions.remove(index);
-    }
-
-    /** Potions selectable in row {@code index}: those not already used by another row (the row's own current effect stays available). */
-    public List<Potion> availableDefaultPotions(int index) {
-        List<Potion> out = new ArrayList<>();
-        for (Potion p : Potion.values()) {
-            boolean usedByOther = false;
-            for (int i = 0; i < defaultPotions.size(); i++) {
-                if (i != index && defaultPotions.get(i).potion == p) { usedByOther = true; break; }
-            }
-            if (!usedByOther) out.add(p);
-        }
-        return out;
-    }
-
     /** Clears any per-tick override facet that now matches the default state, so changing a default drops the overrides it makes redundant. */
     public void pruneRedundantOverrides() {
         for (TickConstraints tc : ticks.values()) {
@@ -375,16 +371,7 @@ public final class AngleSolverState {
             if (ov.overridesSprint() && ov.getSprint() == defaultSprint) ov.clearSprint();
             if (ov.overridesSlipperiness() && ov.getSlipperiness() == defaultSlipperiness) ov.clearSlipperiness();
             if (ov.overridesMedium() && ov.getMedium() == Medium.NONE) ov.clearMedium();
-            ov.getAdded().removeIf(this::isDefaultDose);
-            ov.getRemoved().removeIf(p -> !hasDefaultPotion(p));
         }
-    }
-
-    private boolean isDefaultDose(PotionDose d) {
-        for (PotionDose def : defaultPotions) {
-            if (def.potion == d.potion && def.level == d.level) return true;
-        }
-        return false;
     }
 
     // ---- row edits: tick-anchored data follows its rows (gh-89) ----------------
@@ -727,14 +714,13 @@ public final class AngleSolverState {
         effort = Effort.FAST;
         stopOnFeasible = true;
         legalMode = false;
-        optimizeSeconds = DEFAULT_OPTIMIZE_SECONDS;
+        budgetMs = DEFAULT_BUDGET_MS;
         solveBudget.resetToDefaults();
         graphPresetName = null;
         customGraph = null;
         defaultInputs = InputMode.FORCE_45;
         defaultSprint = SprintMode.ALWAYS;
         defaultSlipperiness = Slipperiness.AIR;
-        defaultPotions.clear();
         ticks.clear();
         clearBlocks();
         result = null;
