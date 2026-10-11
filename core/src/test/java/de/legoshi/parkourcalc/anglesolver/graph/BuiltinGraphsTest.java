@@ -159,11 +159,12 @@ public class BuiltinGraphsTest {
 
     @Test
     public void smoothIsTheSmoothStageAloneWithTheWholeBudget() {
-        SolverGraph g = BuiltinGraphs.smooth(0.4);
+        SolverGraph g = BuiltinGraphs.smooth(0.4, 25.0);
         assertFalse(GraphValidator.hasErrors(GraphValidator.validate(g)));
         assertEquals(Arrays.asList("entry", "smooth", "emit"), nodeIds(g));
         assertLinear(g, new String[][] {{"entry", "smooth"}, {"smooth", "emit"}});
         assertEquals(0.4, g.node("smooth").params.getDouble("giveBack"), 0.0);
+        assertEquals(25.0, g.node("smooth").params.getDouble("turnCap"), 0.0);
         assertEquals(1.0, g.node("smooth").params.getDouble(GraphRunner.RESERVE_FRACTION_PARAM), 0.0);
         assertEquals(0, g.node("smooth").params.getInt(GraphRunner.RESERVE_CAP_PARAM));
         assertEquals(30_000_000_000L, GraphRunner.reserveNanos(g.node("smooth"), 30_000_000_000L));

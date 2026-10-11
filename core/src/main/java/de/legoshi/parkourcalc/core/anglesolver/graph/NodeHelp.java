@@ -235,9 +235,13 @@ public final class NodeHelp {
                 + " the stages before it stop early enough to leave it room. 0 reserves nothing.");
         param("wrapIls", "reserveCapSec", "The most seconds the reserve may hold back. 0 means no cap.");
 
-        node("smooth", "Smooths the turn of a jump that already lands: fewer direction changes and a"
-                + " steadier turn rate. The jump keeps landing; it may give back part of the offset past"
-                + " the goal wall for a smoother turn. Returns the path unchanged when nothing improves.");
+        node("smooth", "Smooths the turn of a jump that already lands: fewer direction changes, then a"
+                + " turn rate that accelerates and decelerates steadily instead of shaking. The jump keeps"
+                + " landing; it may give back part of the offset past the goal wall for a smoother turn."
+                + " Returns the path unchanged when nothing improves.");
+        param("smooth", "turnCap", "The largest turn one tick may make, in degrees. Ticks over the cap are"
+                + " what the smoothing works on first; it gets as many under the cap as the constraints"
+                + " allow. 0 means no cap.");
         param("smooth", "giveBack", "How much of the offset past the goal wall the smoothing may trade,"
                 + " 0 to 1. 1 lets it land anywhere past the wall, 0 keeps the objective where it is."
                 + " Without a goal wall on the objective axis the hard constraints alone bound it.");

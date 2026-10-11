@@ -19,6 +19,7 @@ final class SmoothFaceRecovery {
         double restoreMargin = 5.0e-3;
         long deadlineNanos = 0L;
         boolean[] frozen = null;
+        double turnCapDeg = 0.0;
     }
 
     private static void holdFrozen(double[] cand, double[] base, boolean[] frozen) {
@@ -155,7 +156,7 @@ final class SmoothFaceRecovery {
         return exactViol(exact, sc, compiled, y) <= feasTol ? Angles.wrapAll(y) : null;
     }
 
-    private static final int GLOBAL_ITERS = 8;
+    private static final int GLOBAL_ITERS = 32;
 
     private static void globalToward(ExactJumpModel exact, JumpPhysicsInputs sc, JumpSpec spec,
                                      JumpConstraintCompiler.Compiled compiled, double[] y, double anchor,
@@ -163,8 +164,7 @@ final class SmoothFaceRecovery {
         int n = sc.numTicks;
         for (int iter = 0; iter < GLOBAL_ITERS; iter++) {
             if (cancel.get() || expired(cfg)) break;
-            int curRev = reversals(anchor, y);
-            double curJerk = jerkOf(anchor, y);
+            TurnShape cur = TurnShape.of(anchor, y, cfg.turnCapDeg);
             Rows R = build(sc, spec, patternOf(sc, exact, y));
             double[][] P = tangentProjector(R, sc.toGameFacings(y), cfg.restoreMargin, n);
             double[] dir = new double[n];
@@ -179,10 +179,7 @@ final class SmoothFaceRecovery {
                 for (int t = 0; t < n; t++) c[t] += frac * pdir[t];
                 holdFrozen(c, y, cfg.frozen);
                 if (!restoreExact(R, exact, sc, compiled, c, cfg.restoreMargin, cfg.frozen)) continue;
-                int rv = reversals(anchor, c);
-                double jk = jerkOf(anchor, c);
-                if (rv > curRev) continue;
-                if (rv == curRev && jk >= curJerk - 1.0e-9) continue;
+                if (!TurnShape.of(anchor, c, cfg.turnCapDeg).betterThan(cur)) continue;
                 System.arraycopy(c, 0, y, 0, n);
                 stepped = true;
             }
@@ -199,8 +196,7 @@ final class SmoothFaceRecovery {
         int guard = 0;
         while (guard++ < 4 * n + 40) {
             if (cancel.get() || expired(cfg)) break;
-            int curRev = reversals(anchor, y);
-            double curJerk = jerkOf(anchor, y);
+            TurnShape cur = TurnShape.of(anchor, y, cfg.turnCapDeg);
             double[] dd = deltas(anchor, y);
             List<int[]> rs = runSpans(anchor, y);
             int[] pick = null;
@@ -241,13 +237,11 @@ final class SmoothFaceRecovery {
                     for (int t = 0; t < n; t++) c[t] += frac * pdir[t];
                     holdFrozen(c, y, cfg.frozen);
                     if (!restoreExact(R, exact, sc, compiled, c, cfg.restoreMargin, cfg.frozen)) continue;
-                    int rv = reversals(anchor, c);
-                    double jk = jerkOf(anchor, c);
-                    if (rv > curRev) continue;
-                    if (rv == curRev && jk >= curJerk - 1.0e-9) continue;
+                    TurnShape next = TurnShape.of(anchor, c, cfg.turnCapDeg);
+                    if (!next.betterThan(cur)) continue;
                     System.arraycopy(c, 0, y, 0, n);
                     done = true;
-                    if (rv < curRev) touched.clear();
+                    if (next.reversals < cur.reversals || next.capTicks < cur.capTicks) touched.clear();
                 }
             }
             if (!done) stuck.add(key);
@@ -354,25 +348,6 @@ final class SmoothFaceRecovery {
             prev = y[i];
         }
         return d;
-    }
-
-    private static int reversals(double anchor, double[] y) {
-        int c = 0;
-        int last = 0;
-        for (double v : deltas(anchor, y)) {
-            if (Math.abs(v) <= FLOOR_DEG) continue;
-            int s = v > 0 ? 1 : -1;
-            if (last != 0 && s != last) c++;
-            last = s;
-        }
-        return c;
-    }
-
-    private static double jerkOf(double anchor, double[] y) {
-        double[] d = deltas(anchor, y);
-        double s = 0.0;
-        for (int i = 1; i < d.length; i++) s += Math.abs(d[i] - d[i - 1]);
-        return s;
     }
 
     private static List<int[]> runSpans(double anchor, double[] y) {

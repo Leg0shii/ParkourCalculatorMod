@@ -16,11 +16,16 @@ public final class TrendFilterSmooth {
 
     public static double[] smooth(ExactJumpModel exact, JumpSpec spec, double[] seedAbsWrapped,
                                   long deadlineNanos, AtomicBoolean cancel) {
-        return smooth(exact, spec, seedAbsWrapped, MAX_GIVE_BACK, deadlineNanos, cancel);
+        return smooth(exact, spec, seedAbsWrapped, MAX_GIVE_BACK, 0.0, deadlineNanos, cancel);
     }
 
     public static double[] smooth(ExactJumpModel exact, JumpSpec spec, double[] seedAbsWrapped, double giveBack,
                                   long deadlineNanos, AtomicBoolean cancel) {
+        return smooth(exact, spec, seedAbsWrapped, giveBack, 0.0, deadlineNanos, cancel);
+    }
+
+    public static double[] smooth(ExactJumpModel exact, JumpSpec spec, double[] seedAbsWrapped, double giveBack,
+                                  double turnCapDeg, long deadlineNanos, AtomicBoolean cancel) {
         if (seedAbsWrapped == null || seedAbsWrapped.length < 2) return seedAbsWrapped;
         JumpPhysicsInputs sc = spec.asScenario();
         double anchor = sc.startYaw;
@@ -38,21 +43,19 @@ public final class TrendFilterSmooth {
         SmoothFaceRecovery.Config cfg = new SmoothFaceRecovery.Config();
         cfg.deadlineNanos = deadlineNanos;
         cfg.frozen = frozen;
+        cfg.turnCapDeg = turnCapDeg;
 
         double[] best = seed;
-        int bestRev = Angles.reversals(anchor, best, Angles.REVERSAL_FLOOR_DEG);
-        double bestJerk = jerk(anchor, best);
+        TurnShape bestShape = TurnShape.of(anchor, best, turnCapDeg);
 
         double[] deWiggled = DeWiggle.run(exact, spec, seed, cancel, giveBack);
         if (deWiggled != null && deWiggled != seed) {
             double[] dgf = sc.toGameFacings(Angles.wrapAll(deWiggled));
             if (comp.maxViolation(dgf, exact.forward(sc, dgf)) <= FEAS_TOL) {
-                int dRev = Angles.reversals(anchor, deWiggled, Angles.REVERSAL_FLOOR_DEG);
-                double dJerk = jerk(anchor, deWiggled);
-                if (dRev < bestRev || (dRev == bestRev && dJerk < bestJerk - 1.0e-9)) {
+                TurnShape shape = TurnShape.of(anchor, deWiggled, turnCapDeg);
+                if (shape.betterThan(bestShape)) {
                     best = Angles.wrapAll(deWiggled);
-                    bestRev = dRev;
-                    bestJerk = dJerk;
+                    bestShape = shape;
                 }
             }
         }
@@ -61,23 +64,19 @@ public final class TrendFilterSmooth {
             if (cancel != null && cancel.get()) break;
             if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) break;
             boolean improved = false;
-            double[] rate = turnRate(anchor, best);
-            for (int li = 0; li <= LAMBDAS.length; li++) {
+            for (double[] target : targets(anchor, best, turnCapDeg)) {
                 if (cancel != null && cancel.get()) break;
                 if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) break;
-                double[] target = li == LAMBDAS.length ? null : reconstruct(anchor, condatTV(rate, LAMBDAS[li]));
                 double[] cand = SmoothFaceRecovery.smoothToward(exact, guarded, guardedComp, best, target, FEAS_TOL, cancel, cfg);
                 if (cand == null) continue;
                 double[] cgf = sc.toGameFacings(cand);
                 if (comp.maxViolation(cgf, exact.forward(sc, cgf)) > FEAS_TOL) continue;
                 double obj = spec.objective.evaluate(exact.forward(sc, cgf));
                 if (max ? obj < reference - giveBack : obj > reference + giveBack) continue;
-                int rev = Angles.reversals(anchor, cand, Angles.REVERSAL_FLOOR_DEG);
-                double jk = jerk(anchor, cand);
-                if (rev < bestRev || (rev == bestRev && jk < bestJerk - 1.0e-9)) {
+                TurnShape shape = TurnShape.of(anchor, cand, turnCapDeg);
+                if (shape.betterThan(bestShape)) {
                     best = cand;
-                    bestRev = rev;
-                    bestJerk = jk;
+                    bestShape = shape;
                     improved = true;
                 }
             }
@@ -87,6 +86,109 @@ public final class TrendFilterSmooth {
     }
 
     private static final int MAX_PASSES = 6;
+    private static final double[] SHAPE_LAMBDAS = {1.0, 4.0, 16.0, 64.0};
+
+    private interface RateFilter {
+        double[] apply(double[] rate, double lambda);
+    }
+
+    static List<double[]> targets(double anchor, double[] best, double turnCapDeg) {
+        double[] rate = turnRate(anchor, best);
+        List<double[]> out = new ArrayList<>();
+        out.add(null);
+        if (turnCapDeg > 0.0) out.add(reconstruct(anchor, clip(rate, turnCapDeg)));
+        RateFilter l1 = TrendFilterSmooth::trendL1;
+        RateFilter l2 = (r, lambda) -> whittaker(r, lambda, null);
+        RateFilter tv = TrendFilterSmooth::condatTV;
+        for (double lambda : SHAPE_LAMBDAS) out.add(reconstruct(anchor, clip(perRun(rate, lambda, l1), turnCapDeg)));
+        for (double lambda : SHAPE_LAMBDAS) out.add(reconstruct(anchor, clip(perRun(rate, lambda, l2), turnCapDeg)));
+        for (double lambda : LAMBDAS) out.add(reconstruct(anchor, clip(perRun(rate, lambda, tv), turnCapDeg)));
+        return out;
+    }
+
+    private static double[] perRun(double[] rate, double lambda, RateFilter filter) {
+        double[] out = rate.clone();
+        int n = rate.length;
+        int start = -1;
+        int sign = 0;
+        for (int t = 0; t <= n; t++) {
+            int s = t < n && Math.abs(rate[t]) > TurnShape.FLOOR_DEG ? (rate[t] > 0.0 ? 1 : -1) : 0;
+            if (s != 0 && s == sign) continue;
+            if (sign != 0 && t - start >= 3) {
+                double[] seg = new double[t - start];
+                System.arraycopy(rate, start, seg, 0, seg.length);
+                double[] f = filter.apply(seg, lambda);
+                System.arraycopy(f, 0, out, start, seg.length);
+            }
+            sign = s;
+            start = t;
+        }
+        return out;
+    }
+
+    private static double[] clip(double[] rate, double capDeg) {
+        if (capDeg <= 0.0) return rate;
+        double[] out = rate.clone();
+        for (int i = 0; i < out.length; i++) out[i] = Math.max(-capDeg, Math.min(capDeg, out[i]));
+        return out;
+    }
+
+    static double[] whittaker(double[] r, double lambda, double[] weights) {
+        int n = r.length;
+        if (n < 3) return r.clone();
+        double[][] a = new double[n][n + 1];
+        for (int i = 0; i < n; i++) {
+            a[i][i] = 1.0;
+            a[i][n] = r[i];
+        }
+        double[] cf = {1.0, -2.0, 1.0};
+        for (int t = 1; t < n - 1; t++) {
+            double w = lambda * (weights == null ? 1.0 : weights[t]);
+            int[] idx = {t - 1, t, t + 1};
+            for (int i = 0; i < 3; i++) {
+                for (int k = 0; k < 3; k++) a[idx[i]][idx[k]] += w * cf[i] * cf[k];
+            }
+        }
+        for (int c = 0; c < n; c++) {
+            int piv = c;
+            for (int row = c + 1; row < n; row++) if (Math.abs(a[row][c]) > Math.abs(a[piv][c])) piv = row;
+            double[] tmp = a[c];
+            a[c] = a[piv];
+            a[piv] = tmp;
+            double d = a[c][c];
+            for (int row = c + 1; row < n; row++) {
+                double f = a[row][c] / d;
+                if (f == 0.0) continue;
+                for (int k = c; k <= n; k++) a[row][k] -= f * a[c][k];
+            }
+        }
+        double[] x = new double[n];
+        for (int i = n - 1; i >= 0; i--) {
+            double sum = a[i][n];
+            for (int k = i + 1; k < n; k++) sum -= a[i][k] * x[k];
+            x[i] = sum / a[i][i];
+        }
+        return x;
+    }
+
+    private static final int L1_ITERS = 12;
+    private static final double L1_EPS = 1.0e-2;
+
+    static double[] trendL1(double[] r, double lambda) {
+        int n = r.length;
+        if (n < 3) return r.clone();
+        double[] w = new double[n];
+        java.util.Arrays.fill(w, 1.0);
+        double[] x = r.clone();
+        for (int it = 0; it < L1_ITERS; it++) {
+            x = whittaker(r, lambda, w);
+            for (int t = 1; t < n - 1; t++) {
+                double d2 = Math.abs(x[t - 1] - 2.0 * x[t] + x[t + 1]);
+                w[t] = 1.0 / Math.max(d2, L1_EPS);
+            }
+        }
+        return x;
+    }
 
     private static JumpSpec guard(JumpPhysicsInputs sc, JumpSpec spec, boolean max, double reference, double giveBack) {
         if (spec.objective.isCustomAngle() || Double.isInfinite(giveBack)) return spec;
@@ -127,13 +229,6 @@ public final class TrendFilterSmooth {
             out[t] = Angles.wrap(running);
         }
         return out;
-    }
-
-    private static double jerk(double anchor, double[] absWrapped) {
-        double[] d = turnRate(anchor, absWrapped);
-        double s = 0.0;
-        for (int i = 1; i < d.length; i++) s += Math.abs(d[i] - d[i - 1]);
-        return s;
     }
 
     static double[] condatTV(double[] input, double lambda) {

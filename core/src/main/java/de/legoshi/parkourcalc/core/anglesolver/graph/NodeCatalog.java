@@ -284,6 +284,7 @@ public final class NodeCatalog {
                 .branch(Branch.feasible(Guarantee.IMPROVED))
                 .branch(Branch.preserves(Guarantee.UNCHANGED))
                 .param(ParamSpec.decimal("giveBack", "Give-back share of the offset", 0.0, 1.0, 1.0))
+                .param(ParamSpec.decimal("turnCap", "Turn cap (deg per tick, 0 = off)", 0.0, 360.0, 0.0))
                 .param(ParamSpec.decimal(GraphRunner.RESERVE_FRACTION_PARAM, "Reserved share of the solve time", 0.0, 1.0,
                         BuiltinGraphs.SMOOTH_RESERVE_FRACTION))
                 .param(ParamSpec.integer(GraphRunner.RESERVE_CAP_PARAM, "Reserve cap (s, 0 = none)", 0, 600,

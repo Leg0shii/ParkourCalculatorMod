@@ -144,6 +144,7 @@ public final class AngleSolverState {
     private int budgetMs = DEFAULT_BUDGET_MS;
     private double smoothLambda;
     private double smoothGiveBack = 1.0;
+    private double smoothTurnCap;
     private final SolveBudget solveBudget = new SolveBudget();
     private final RunTicksSettings runTicks = new RunTicksSettings();
     private String graphPresetName;
@@ -292,6 +293,14 @@ public final class AngleSolverState {
 
     public void setSmoothGiveBack(double v) {
         smoothGiveBack = Double.isNaN(v) ? 1.0 : Math.max(0.0, Math.min(1.0, v));
+    }
+
+    public double getSmoothTurnCap() {
+        return smoothTurnCap;
+    }
+
+    public void setSmoothTurnCap(double degPerTick) {
+        smoothTurnCap = Double.isNaN(degPerTick) ? 0.0 : Math.max(0.0, Math.min(360.0, degPerTick));
     }
 
     public SolveBudget getSolveBudget() {

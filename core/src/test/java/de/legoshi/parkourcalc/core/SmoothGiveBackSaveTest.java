@@ -32,4 +32,16 @@ public class SmoothGiveBackSaveTest {
         state.setSmoothGiveBack(-1.0);
         assertEquals(0.0, state.getSmoothGiveBack(), 0.0);
     }
+
+    @Test
+    public void turnCapLoadsAndDefaultsToOff() {
+        SaveFile f = SaveIO.parseSafe("{\"version\":1,\"angleSolver\":{\"smoothTurnCap\":30.0}}");
+        assertNotNull(f);
+        AngleSolverState state = new AngleSolverState();
+        SaveIO.applyAngleSolverTo(f, state);
+        assertEquals(30.0, state.getSmoothTurnCap(), 0.0);
+        SaveFile g = SaveIO.parseSafe("{\"version\":1,\"angleSolver\":{}}");
+        SaveIO.applyAngleSolverTo(g, state);
+        assertEquals(0.0, state.getSmoothTurnCap(), 0.0);
+    }
 }
