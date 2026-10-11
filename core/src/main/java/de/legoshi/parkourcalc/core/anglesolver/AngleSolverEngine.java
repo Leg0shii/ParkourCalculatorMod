@@ -1003,7 +1003,10 @@ public final class AngleSolverEngine {
         }
         GraphContext ctx = new GraphContext(spec, model, freeBox, job.legalFallback != null ? null : job.legalGoal,
                 FEAS_TOL, cancel, progress, sequentialSolve, job.longRun);
-        if (job.deadlineNanos > 0) ctx.setOverallDeadline(System.nanoTime() + job.deadlineNanos);
+        boolean smoothRequested = spec.objective.smoothLambda > 0.0 && smoothFinalResult && model instanceof ExactJumpModel;
+        long smoothBudget = !smoothRequested ? 0L
+                : job.deadlineNanos > 0 ? Math.min(job.deadlineNanos / 8, MAX_SMOOTH_BUDGET_NANOS) : SMOOTH_BUDGET_NANOS;
+        if (job.deadlineNanos > 0) ctx.setOverallDeadline(System.nanoTime() + job.deadlineNanos - smoothBudget);
         if (rec != null) rec.ctx = ctx;
         lastRunState = ctx.runState;
         currentGraphContext = ctx;
@@ -1061,10 +1064,7 @@ public final class AngleSolverEngine {
         if (job.legalGoal != null) {
             solverName = solverName == null ? "legal mode" : solverName + " (legal)";
         }
-        boolean smoothRequested = spec.objective.smoothLambda > 0.0;
-        if (smoothRequested && smoothFinalResult && model instanceof ExactJumpModel && !cancel.get()) {
-            long smoothBudget = job.deadlineNanos > 0
-                    ? Math.min(job.deadlineNanos / 8, MAX_SMOOTH_BUDGET_NANOS) : SMOOTH_BUDGET_NANOS;
+        if (smoothRequested && !cancel.get()) {
             try {
                 double[] smoothed = smoothFacing((ExactJumpModel) model, spec, sc, yaws, cancel, smoothBudget);
                 if (smoothed != null) yaws = smoothed;
