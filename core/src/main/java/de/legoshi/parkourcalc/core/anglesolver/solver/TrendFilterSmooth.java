@@ -59,13 +59,25 @@ public final class TrendFilterSmooth {
             }
         }
 
-        double[] merged = FlickMerge.run(exact, spec, best, cancel, giveBack, deadlineNanos);
+        double[] merged = FlickMerge.run(exact, guarded, best, cancel, giveBack, deadlineNanos);
         if (merged != null && merged != best) {
             double[] mgf = sc.toGameFacings(merged);
             if (comp.maxViolation(mgf, exact.forward(sc, mgf)) <= FEAS_TOL) {
                 TurnShape shape = TurnShape.of(anchor, merged);
                 if (shape.betterThan(bestShape)) {
                     best = merged;
+                    bestShape = shape;
+                }
+            }
+        }
+        long reshapeDeadline = deadlineNanos == 0L ? 0L : System.nanoTime() + (deadlineNanos - System.nanoTime()) / 3;
+        double[] reshaped = WindowReshape.run(exact, guarded, best, cancel, giveBack, reshapeDeadline);
+        if (reshaped != null && reshaped != best) {
+            double[] rgf = sc.toGameFacings(reshaped);
+            if (comp.maxViolation(rgf, exact.forward(sc, rgf)) <= FEAS_TOL) {
+                TurnShape shape = TurnShape.of(anchor, reshaped);
+                if (shape.betterThan(bestShape)) {
+                    best = reshaped;
                     bestShape = shape;
                 }
             }
