@@ -943,8 +943,10 @@ public final class AngleSolverWindow implements RenderInterface {
         float lineH = ImGui.getTextLineHeight();
         float headerH = pad + lineH + pad * 0.5f;
         if (!Float.isNaN(fill) && fill > 0f && fillAlpha > 0f) {
+            dl.pushClipRect(win.x, win.y, win.x + winW, win.y + headerH, false);
             dl.addRectFilled(win.x, win.y, win.x + winW * Math.min(1f, fill), win.y + headerH,
                     ThemeManager.accentTintColor(fillAlpha));
+            dl.popClipRect();
         }
         ImVec2 origin = ImGui.getCursorScreenPos();
         float rowW = ImGui.getContentRegionAvail().x;
