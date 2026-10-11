@@ -20,7 +20,6 @@ public final class GraphFactory {
                 if (BuiltinGraphs.FAST_PRESET.equals(preset)) return BuiltinGraphs.fast();
                 if (BuiltinGraphs.MULTI_START_PRESET.equals(preset)) return BuiltinGraphs.fastMultiStart();
                 if (BuiltinGraphs.OPTIMIZE_PRESET.equals(preset)) return BuiltinGraphs.optimize(state.getOptimizeSeconds());
-                if (BuiltinGraphs.SMOOTH_PRESET.equals(preset)) return BuiltinGraphs.smooth();
                 SolverGraph user = state.getCustomGraph();
                 return user != null ? user : BuiltinGraphs.optimize(state.getOptimizeSeconds());
             }

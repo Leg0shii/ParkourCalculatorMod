@@ -197,7 +197,7 @@ public final class SaveIO {
         state.setLegalMode(a.legalMode != null && a.legalMode);
         if (a.budgetMs != null) state.setBudgetMs(a.budgetMs);
         else if (a.optimizeSeconds != null && effort != AngleSolverState.Effort.FAST) state.setOptimizeSeconds(a.optimizeSeconds);
-        state.setSmoothLambda(a.smoothLambda != null ? a.smoothLambda : 0.0);
+        state.setSmoothGiveBack(a.smoothGiveBack != null ? a.smoothGiveBack : 1.0);
         applyCustomBudget(a.customBudget, state.getSolveBudget());
         state.setGraphPresetName(a.graphPreset);
         state.setDefaultInputs(parseEnum(AngleSolverState.InputMode.class, a.defaultInputs, AngleSolverState.InputMode.FORCE_45));
@@ -573,7 +573,7 @@ public final class SaveIO {
         a.legalMode = s.isLegalMode();
         a.optimizeSeconds = s.getOptimizeSeconds();
         a.budgetMs = s.getBudgetMs();
-        a.smoothLambda = s.getSmoothLambda() > 0.0 ? s.getSmoothLambda() : null;
+        a.smoothGiveBack = s.getSmoothGiveBack() < 1.0 ? s.getSmoothGiveBack() : null;
         a.customBudget = toSaveCustomBudget(s.getSolveBudget());
         a.graphPreset = s.getGraphPresetName();
         a.defaultInputs = s.getDefaultInputs().name();

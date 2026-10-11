@@ -48,7 +48,6 @@ public final class GraphContext {
     private boolean headroomBoundSet;
     private double headroomBound = Double.NaN;
     private volatile long overallDeadlineNanos;
-    private volatile boolean smoothFinal = true;
 
     public GraphContext(JumpSpec spec, ForwardModel model, StartBox freeBox, JumpConstraint legalGoal,
                         double feasTol, AtomicBoolean cancel, SolveProgress progress, boolean sequential,
@@ -83,14 +82,6 @@ public final class GraphContext {
 
     public long overallDeadline() {
         return overallDeadlineNanos;
-    }
-
-    public boolean smoothFinal() {
-        return smoothFinal;
-    }
-
-    public void setSmoothFinal(boolean smoothFinal) {
-        this.smoothFinal = smoothFinal;
     }
 
     public boolean maximize() {

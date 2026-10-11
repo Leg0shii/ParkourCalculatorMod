@@ -49,7 +49,7 @@ public class SeedSweepTest {
         }
 
         SolveResult solve(AngleSolverState.Effort effort, SolverGraph graph, long timeoutMs) {
-            engine.solve(effort, false, graph);
+            engine.solve(effort, graph);
             long deadline = System.currentTimeMillis() + timeoutMs;
             while (state.getResult() == null && System.currentTimeMillis() < deadline) {
                 engine.poll();

@@ -101,7 +101,7 @@ public class LegalModeGh459Test {
         state.clearResult();
         AngleSolverEngine engine = new AngleSolverEngine(state, Fixtures.buildBoxes(file), inputs, t -> { },
                 ExactJumpModel.forMcVersion(file.mcVersion));
-        if (graph != null) engine.solve(AngleSolverState.Effort.FAST, true, graph);
+        if (graph != null) engine.solve(AngleSolverState.Effort.FAST, graph);
         else engine.solve();
         long deadline = System.currentTimeMillis() + TIMEOUT_MS;
         while (engine.isSolving() && System.currentTimeMillis() < deadline) {

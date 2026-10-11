@@ -31,11 +31,11 @@ public class PipelineShapeTest {
 
     private static final List<String> FAST_PIPELINE = Arrays.asList(
             "seed", "horizon", "wrap0", "cap1", "freeRescue", "peel", "freeImprove", "sweep",
-            "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap", "translate", "smooth");
+            "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap", "translate");
 
     private static final List<String> THOROUGH_PIPELINE = Arrays.asList(
             "horizon", "wrap0", "seed", "cap1", "freeRescue", "peel", "freeImprove", "sweep",
-            "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap", "translate", "snap", "smooth");
+            "fold", "ladder", "cert", "bnb", "ils", "cap2", "wrap", "translate", "snap");
 
     private static final long TIMEOUT_MS = 4000;
 

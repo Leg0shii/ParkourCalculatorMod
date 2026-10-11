@@ -32,6 +32,7 @@ import imgui.ImGuiIO;
 import imgui.ImVec2;
 import imgui.flag.ImGuiCol;
 import imgui.flag.ImGuiCond;
+import imgui.flag.ImGuiHoveredFlags;
 import imgui.flag.ImGuiInputTextFlags;
 import imgui.flag.ImGuiStyleVar;
 import imgui.flag.ImGuiWindowFlags;
@@ -80,12 +81,11 @@ public final class AngleSolverWindow implements RenderInterface {
     private static final String FAST_PRESET_ITEM = BuiltinGraphs.FAST_PRESET;
     private static final String OPTIMIZE_PRESET_ITEM = BuiltinGraphs.OPTIMIZE_PRESET;
     private static final String MULTI_START_PRESET_ITEM = BuiltinGraphs.MULTI_START_PRESET;
-    private static final String SMOOTH_PRESET_ITEM = BuiltinGraphs.SMOOTH_PRESET;
-    private static final int BUILTIN_PRESET_COUNT = 4;
+    private static final int BUILTIN_PRESET_COUNT = 3;
 
     private static final String[] FORM_LABELS = {"Ticks", "Goal", "Angle", "Inputs", "Sprint", "Budget"};
     private static final String[] RUN_TICKS_LABELS =
-            {"Max ticks", "Step timeout", "Step growth", "Safety factor", "Safety margin"};
+            {"Max ticks", "Step timeout", "Step growth", "Safety factor", "Safety margin", "Smooth give-back"};
 
     /** Unscaled; lines the details table up under the toggle title and sets it off from the solved values. */
     private static final float DETAIL_INDENT = 13f;
@@ -124,6 +124,7 @@ public final class AngleSolverWindow implements RenderInterface {
     private final ImInt runTicksGrowthBuf = new ImInt();
     private final ImFloat runTicksSafetyMultBuf = new ImFloat();
     private final ImInt runTicksSafetyMarginBuf = new ImInt();
+    private final ImInt smoothGiveBackBuf = new ImInt();
     private final float[] budgetSliderBuf = new float[1];
     private final ImString budgetInput = new ImString(16);
     private int lastSyncedBudgetMs = -1;
@@ -548,12 +549,18 @@ public final class AngleSolverWindow implements RenderInterface {
         Controls.popInputFrameHeight();
     }
 
-    private static final String SMOOTH_TAS_TIP =
-            "Prefers smooth yaw paths among equally feasible solutions: search scoring trades a little"
-            + " objective margin for steadier turn rates (less yaw jerk), including the turn out of the"
-            + " tick before the solve. Feasibility is never traded; whether the jump lands is decided"
-            + " exactly as without this. Best combined with a time budget when crafting a TAS; leave"
-            + " off to purely verify or maximize a jump.";
+    private static final String SMOOTH_TIP =
+            "Smooths the turn of the solved path: fewer direction changes and a steadier turn rate. The jump"
+            + " keeps landing; the smoothing may give back the share of the offset past the goal wall set"
+            + " under More options. Stops early once nothing improves.";
+
+    private static final String SMOOTH_DISABLED_TIP =
+            "Smooths the turn of the solved path. Solve the range first.";
+
+    private static final String SMOOTH_GIVE_BACK_TIP =
+            "How much of the landing offset the Smooth button may trade for a smoother turn. The offset is"
+            + " the margin past the goal wall at the goal tick, the + value in the result table. 100 %"
+            + " lets it land anywhere past the wall, 0 % keeps the objective where it is.";
 
     private static final String LEGAL_MODE_TIP =
             "Record hunting: drops the single tightest goal wall on the objective axis at the goal tick and"
@@ -590,11 +597,6 @@ public final class AngleSolverWindow implements RenderInterface {
             + " so for a thorough search turn Auto off and set a generous fixed timeout.";
 
     private void renderMoreOptions(float scale) {
-        if (Controls.checkbox("Smooth (TAS)", state.getSmoothLambda() > 0.0)) {
-            state.setSmoothLambda(state.getSmoothLambda() > 0.0 ? 0.0 : AngleSolverState.TASER_SMOOTH_LAMBDA);
-        }
-        TooltipUtil.onHover(SMOOTH_TAS_TIP);
-
         String legalWall = engine.legalGoalWallLabel();
         if (legalWall != null || state.isLegalMode()) {
             if (Controls.checkbox("Legal record mode", state.isLegalMode())) {
@@ -617,6 +619,16 @@ public final class AngleSolverWindow implements RenderInterface {
             renderRunTicksRows(cfg, runTicksLabelWidth(scale), scale);
             ImGui.unindent(OPTION_INDENT * scale);
         }
+
+        Controls.pushInputFrameHeight();
+        SolverWidgets.rowLabel("Smooth give-back", runTicksLabelWidth(scale));
+        smoothGiveBackBuf.set((int) Math.round(state.getSmoothGiveBack() * 100.0));
+        ImGui.setNextItemWidth(Math.max(40f * scale, ImGui.getContentRegionAvail().x));
+        if (ImGui.inputInt("##smoothGiveBack", smoothGiveBackBuf, 5, 25)) {
+            state.setSmoothGiveBack(Math.max(0, Math.min(100, smoothGiveBackBuf.get())) / 100.0);
+        }
+        Controls.popInputFrameHeight();
+        TooltipUtil.onHover(SMOOTH_GIVE_BACK_TIP);
     }
 
     private void renderRunTicksRows(RunTicksSettings cfg, float labelW, float scale) {
@@ -709,21 +721,18 @@ public final class AngleSolverWindow implements RenderInterface {
         int diskIdx = indexOfPreset(current);
         boolean builtinOptimize = OPTIMIZE_PRESET_ITEM.equals(current);
         boolean builtinMulti = MULTI_START_PRESET_ITEM.equals(current);
-        boolean builtinSmooth = SMOOTH_PRESET_ITEM.equals(current);
         boolean missing = current != null && !FAST_PRESET_ITEM.equals(current) && !builtinOptimize
-                && !builtinMulti && !builtinSmooth && diskIdx < 0;
+                && !builtinMulti && diskIdx < 0;
         String[] items = new String[BUILTIN_PRESET_COUNT + presetNames.length + (missing ? 1 : 0)];
         items[0] = FAST_PRESET_ITEM;
         items[1] = OPTIMIZE_PRESET_ITEM;
         items[2] = MULTI_START_PRESET_ITEM;
-        items[3] = SMOOTH_PRESET_ITEM;
         System.arraycopy(presetNames, 0, items, BUILTIN_PRESET_COUNT, presetNames.length);
         int missingIdx = items.length - 1;
         if (missing) items[missingIdx] = current + " (missing)";
         int selected;
         if (builtinOptimize) selected = 1;
         else if (builtinMulti) selected = 2;
-        else if (builtinSmooth) selected = 3;
         else if (diskIdx >= 0) selected = BUILTIN_PRESET_COUNT + diskIdx;
         else if (missing) selected = missingIdx;
         else selected = 0;
@@ -737,7 +746,6 @@ public final class AngleSolverWindow implements RenderInterface {
             if (pick == 0) selectBuiltinPreset(FAST_PRESET_ITEM);
             else if (pick == 1) selectBuiltinPreset(OPTIMIZE_PRESET_ITEM);
             else if (pick == 2) selectBuiltinPreset(MULTI_START_PRESET_ITEM);
-            else if (pick == 3) selectBuiltinPreset(SMOOTH_PRESET_ITEM);
             else if (pick < BUILTIN_PRESET_COUNT + presetNames.length) selectPreset(presetNames[pick - BUILTIN_PRESET_COUNT]);
         }
         if (ImGui.isItemClicked()) refreshPresets();
@@ -842,6 +850,15 @@ public final class AngleSolverWindow implements RenderInterface {
             Controls.disabledButton("Solve");
         } else if (Controls.primaryButton("Solve")) {
             runTicks.start();
+        }
+        ImGui.sameLine();
+        if (!busy && engine.canSmooth()) {
+            if (Controls.primaryButton("Smooth")) engine.smooth();
+            TooltipUtil.onHover(SMOOTH_TIP + " Runs for up to " + seconds(engine.smoothBudgetNanos())
+                    + " at " + Math.round(state.getSmoothGiveBack() * 100.0) + " % give-back.");
+        } else {
+            Controls.disabledButton("Smooth");
+            if (ImGui.isItemHovered(ImGuiHoveredFlags.AllowWhenDisabled)) TooltipUtil.wrappedTooltip(SMOOTH_DISABLED_TIP);
         }
         ImGui.sameLine();
         if (Controls.secondaryButton("Apply state")) {

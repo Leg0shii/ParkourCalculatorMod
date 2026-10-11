@@ -89,7 +89,7 @@ public final class TrendFilterSmooth {
     private static final int MAX_PASSES = 6;
 
     private static JumpSpec guard(JumpPhysicsInputs sc, JumpSpec spec, boolean max, double reference, double giveBack) {
-        if (spec.objective.isCustomAngle()) return spec;
+        if (spec.objective.isCustomAngle() || Double.isInfinite(giveBack)) return spec;
         JumpConstraint.Mode axisMode = spec.objective.axis == JumpPhysicsInputs.Axis.X ? JumpConstraint.Mode.X
                 : spec.objective.axis == JumpPhysicsInputs.Axis.Z ? JumpConstraint.Mode.Z : null;
         if (axisMode == null) return spec;

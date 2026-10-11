@@ -24,14 +24,14 @@ public final class BuiltinGraphs {
     }
 
     public static boolean isBuiltinPreset(String name) {
-        return FAST_PRESET.equals(name) || MULTI_START_PRESET.equals(name) || OPTIMIZE_PRESET.equals(name)
-                || SMOOTH_PRESET.equals(name);
+        return FAST_PRESET.equals(name) || MULTI_START_PRESET.equals(name) || OPTIMIZE_PRESET.equals(name);
     }
 
-    public static SolverGraph smooth() {
+    public static SolverGraph smooth(double giveBack) {
         GraphBuilder g = new GraphBuilder(SMOOTH_PRESET, true);
         g.add("entry", "entry");
         g.add("smooth", "smooth")
+                .set("smooth", "giveBack", giveBack)
                 .set("smooth", GraphRunner.RESERVE_FRACTION_PARAM, 1.0)
                 .set("smooth", GraphRunner.RESERVE_CAP_PARAM, 0);
         g.add("emit", "emit");
@@ -149,7 +149,6 @@ public final class BuiltinGraphs {
             g.add("snap", "leafSnap")
                     .set("snap", "pairPass", fastTier ? 0 : 1);
         }
-        g.add("smooth", "smooth");
         g.add("emit", "emit");
 
         String first = sweep ? "seeds" : "entry";
@@ -189,11 +188,10 @@ public final class BuiltinGraphs {
         chain(g, "wrap", "translate");
         if (leafSnap) {
             chain(g, "translate", "snap");
-            chain(g, "snap", "smooth");
+            chain(g, "snap", "emit");
         } else {
-            chain(g, "translate", "smooth");
+            chain(g, "translate", "emit");
         }
-        chain(g, "smooth", "emit");
         return g.build();
     }
 
