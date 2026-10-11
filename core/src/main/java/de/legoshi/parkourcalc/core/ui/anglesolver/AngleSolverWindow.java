@@ -10,6 +10,8 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphFactory;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphPresetFile;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphPresetIO;
+import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunState;
+import de.legoshi.parkourcalc.core.anglesolver.graph.NodeStatus;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.runticks.RunTicksControls;
 import de.legoshi.parkourcalc.core.anglesolver.runticks.RunTicksSettings;
@@ -89,6 +91,13 @@ public final class AngleSolverWindow implements RenderInterface {
     private static final float OPTION_INDENT = 26f;
 
     private static final int LONG_SPAN_WARN_TICKS = 100;
+    private static final String RUNNING = "Running";
+    private static final double FINISH_FILL_SECS = 0.25;
+    private static final double FINISH_FADE_SECS = 0.45;
+    private boolean finishArmed;
+    private double finishStart = -1e9;
+    private String lastStage = "";
+    private float lastFill = Float.NaN;
 
     private static final String LONG_SPAN_TIP =
             "A long span is solved a window of ~10 jumps at a time: each window is solved exactly, its"
@@ -221,11 +230,21 @@ public final class AngleSolverWindow implements RenderInterface {
         moreExpanded = sectionToggle("More options", "more", moreExpanded, scale);
         if (moreExpanded) renderMoreOptions(scale);
 
-        SolveResult panel = engine.isSolving() ? engine.liveBestResult() : state.getResult();
+        boolean solving = engine.isSolving();
+        SolveResult panel = solving ? engine.liveBestResult() : state.getResult();
         trackObjectiveImprovement(panel);
+        if (solving) {
+            finishArmed = true;
+        } else if (finishArmed && panel != null) {
+            finishArmed = false;
+            finishStart = ImGui.getTime();
+        }
         if (panel != null) {
             ThemeManager.paddedSeparator();
             renderResultPanel(io, panel, scale);
+        } else if (solving) {
+            ThemeManager.paddedSeparator();
+            renderRunningPanel(io, scale);
         }
     }
 
@@ -806,12 +825,15 @@ public final class AngleSolverWindow implements RenderInterface {
     }
 
     private void renderActions() {
-        if (engine.isSolving() || runTicks.isRunning()) {
-            renderSolvingIndicator();
-            return;
-        }
-        boolean teleportBlocked = solveRangeCrossesTeleport();
-        if (teleportBlocked) {
+        boolean busy = engine.isSolving() || runTicks.isRunning();
+        boolean teleportBlocked = !busy && solveRangeCrossesTeleport();
+        if (busy) {
+            if (Controls.secondaryButton("Stop")) {
+                if (runTicks.isRunning()) runTicks.cancel();
+                else engine.stopAndUseBest();
+            }
+            if (ImGui.isItemHovered()) ImGui.setTooltip("Stop the search and keep the best solution found so far.");
+        } else if (teleportBlocked) {
             Controls.disabledButton("Solve");
         } else if (Controls.primaryButton("Solve")) {
             runTicks.start();
@@ -839,39 +861,209 @@ public final class AngleSolverWindow implements RenderInterface {
         return false;
     }
 
-    private void renderSolvingIndicator() {
-        float scale = ThemeManager.uiScale();
-        float h = ImGui.getFrameHeight();
-        ImVec2 p = ImGui.getCursorScreenPos();
-        SolverWidgets.spinner(ImGui.getWindowDrawList(), p.x + h * 0.5f, p.y + h * 0.5f, h * 0.30f,
-                1.8f * scale, ThemeManager.accentColor(), engine.elapsedSeconds());
-        ImGui.dummy(h, h);
-        ImGui.sameLine();
-        ImGui.alignTextToFramePadding();
-        ThemeManager.pushTextColor(ThemeManager.textMutedColor());
-        ImGui.text(String.format(Locale.ROOT, "Solving... %.1fs", engine.elapsedSeconds()));
-        ThemeManager.popTextColor();
-        ImGui.sameLine();
-        Controls.cursorToRightAlignedButton("Cancel");
-        if (Controls.secondaryButton("Cancel")) {
-            if (runTicks.isRunning()) runTicks.cancel();
-            else engine.stopAndUseBest();
+    private static final String CLOSEST_MISS_TIP =
+            "The smallest worst-constraint violation any stage has reached so far, in blocks."
+            + " A value that keeps shrinking means the search is converging; one that sits still means it is not.";
+
+    private static final float BAR_ALPHA = 0.28f;
+
+    private static final class RunView {
+        final String stage;
+        final float fill;
+        final String clock;
+        final String chain;
+
+        RunView(String stage, float fill, String clock, String chain) {
+            this.stage = stage;
+            this.fill = fill;
+            this.clock = clock;
+            this.chain = chain;
         }
-        if (ImGui.isItemHovered()) ImGui.setTooltip("Stop the search and keep the best solution found so far.");
+    }
+
+    private RunView runView() {
+        GraphRunState rs = engine.isGraphSolving() ? engine.graphRunState() : null;
+        long now = System.nanoTime();
+        String stage = "starting";
+        float fill = Float.NaN;
+        StringBuilder chain = new StringBuilder();
+        if (rs != null) {
+            List<GraphRunState.Step> steps = rs.steps();
+            String active = rs.activeNodeId();
+            NodeStatus running = active != null ? rs.status(active) : null;
+            if (running != null) {
+                stage = running.label;
+                if (running.budgetNanos > 0) {
+                    fill = (float) Math.min(1.0, (now - running.startNanos) / (double) running.budgetNanos);
+                }
+            }
+            for (int i = 0; i < steps.size(); i++) {
+                GraphRunState.Step s = steps.get(i);
+                NodeStatus st = rs.status(s.nodeId);
+                boolean live = i == steps.size() - 1 && s.taken == null && running != null;
+                long nanos = live ? now - running.startNanos : st != null ? st.elapsedNanos : 0L;
+                if (i > 0) chain.append('\n');
+                chain.append(i + 1).append(". ").append(s.label).append("  ").append(seconds(nanos));
+                if (live && running.budgetNanos > 0) chain.append(" / ").append(seconds(running.budgetNanos));
+                if (live && running.visits > 1) chain.append("  visit ").append(running.visits);
+                if (live && running.evals > 0) chain.append("  evals ").append(running.evals);
+            }
+        }
+        double elapsed = engine.elapsedSeconds();
+        String clock = seconds((long) (elapsed * 1.0e9));
+        long overall = engine.liveOverallDeadlineNanos();
+        if (overall > 0) {
+            double total = elapsed + Math.max(0L, overall - now) / 1.0e9;
+            clock += String.format(Locale.ROOT, " / %.0fs", total);
+        }
+        return new RunView(stage, fill, clock, chain.length() == 0 ? "starting" : chain.toString());
+    }
+
+    private void beginResultChild(ImGuiIO io, int bg, int border, int rows, float pad) {
+        float lineH = ImGui.getTextLineHeightWithSpacing();
+        float fullH = rows * lineH + 2f * pad;
+        float h = Math.min(fullH, io.getDisplaySizeY() * 0.4f);
+        ImGui.pushStyleColor(ImGuiCol.ChildBg, bg);
+        ImGui.pushStyleColor(ImGuiCol.Border, border);
+        ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, pad, pad);
+        ImGui.beginChild("##solve_result", ImGui.getContentRegionAvail().x, h, true);
+    }
+
+    private static void endResultChild() {
+        ImGui.endChild();
+        ImGui.popStyleVar();
+        ImGui.popStyleColor(2);
+    }
+
+    private void drawPanelHeader(String text, int textColor, float fill, float fillAlpha, boolean spinner,
+                                 String clock, String tooltip, float pad, float scale) {
+        ImDrawList dl = ImGui.getWindowDrawList();
+        ImVec2 win = ImGui.getWindowPos();
+        float winW = ImGui.getWindowSizeX();
+        float lineH = ImGui.getTextLineHeight();
+        float headerH = pad + lineH + pad * 0.5f;
+        if (!Float.isNaN(fill) && fill > 0f && fillAlpha > 0f) {
+            dl.pushClipRect(win.x, win.y, win.x + winW, win.y + headerH, false);
+            dl.addRectFilled(win.x, win.y, win.x + winW * Math.min(1f, fill), win.y + headerH,
+                    ThemeManager.accentTintColor(fillAlpha));
+            dl.popClipRect();
+        }
+        ImVec2 origin = ImGui.getCursorScreenPos();
+        float rowW = ImGui.getContentRegionAvail().x;
+        if (spinner) {
+            float r = lineH * 0.30f;
+            SolverWidgets.spinner(dl, origin.x + r, origin.y + lineH * 0.5f, r, 1.8f * scale, textColor,
+                    ImGui.getTime());
+            ImGui.dummy(lineH * 0.75f, lineH);
+            ImGui.sameLine();
+        }
+        ThemeManager.pushTextColor(textColor);
+        Fonts.pushBold();
+        ImGui.text(text);
+        Fonts.popBold();
+        if (clock != null) {
+            ImGui.sameLine();
+            textRightInCell(clock);
+        }
+        ThemeManager.popTextColor();
+        if (tooltip != null && ImGui.isMouseHoveringRect(origin.x, origin.y, origin.x + rowW, origin.y + lineH)) {
+            ImGui.setTooltip(tooltip);
+        }
+        ThemeManager.bottomPaddedSeparator();
+    }
+
+    private void renderRunningPanel(ImGuiIO io, float scale) {
+        RunView rv = runView();
+        lastStage = rv.stage;
+        lastFill = rv.fill;
+        double miss = engine.liveClosestMissViolation();
+        boolean hasMiss = !Double.isInfinite(miss) && !Double.isNaN(miss);
+        float pad = ThemeManager.SM * scale;
+        beginResultChild(io, ThemeManager.accentTintColor(0.10f), ThemeManager.accentTintColor(0.45f),
+                2 + (hasMiss ? 1 : 0), pad);
+        drawPanelHeader(RUNNING + " · " + rv.stage, ThemeManager.textColor(), rv.fill, BAR_ALPHA, true,
+                rv.clock, rv.chain, pad, scale);
+        if (hasMiss && ThemeManager.beginStandardFormTable("##sv_miss", 2)) {
+            ImGui.tableNextRow();
+            ImGui.tableNextColumn();
+            ThemeManager.pushTextColor(ThemeManager.textMutedColor());
+            ImGui.text("Closest miss");
+            ThemeManager.popTextColor();
+            TooltipUtil.onHover(CLOSEST_MISS_TIP);
+            ImGui.tableNextColumn();
+            textRightInCell(ConstraintText.fixedStat(miss));
+            ThemeManager.endStandardFormTable();
+        }
+        endResultChild();
+    }
+
+    private static int lerpColor(int a, int b, float t) {
+        int out = 0;
+        for (int shift = 0; shift < 32; shift += 8) {
+            int ca = (a >>> shift) & 0xFF;
+            int cb = (b >>> shift) & 0xFF;
+            int c = Math.round(ca + (cb - ca) * t);
+            out |= (c & 0xFF) << shift;
+        }
+        return out;
+    }
+
+    private static float smoothstep(float t) {
+        t = Math.max(0f, Math.min(1f, t));
+        return t * t * (3f - 2f * t);
+    }
+
+    private static String seconds(long nanos) {
+        double s = nanos / 1.0e9;
+        if (s == Math.rint(s)) return String.format(Locale.ROOT, "%.0fs", s);
+        return String.format(Locale.ROOT, "%.1fs", s);
     }
 
     private void renderResultPanel(ImGuiIO io, SolveResult r, float scale) {
         String deviation = state.getApplyDeviation();
         // A diverged apply is not a clean solve: the whole panel goes warning, not yellow-on-green.
         boolean diverged = r.isSuccess() && deviation != null;
-        int accent = !r.isSuccess() ? ThemeManager.dangerColor()
+        boolean running = engine.isSolving();
+        int finalAccent = !r.isSuccess() ? ThemeManager.dangerColor()
                 : diverged ? ThemeManager.warningColor() : ThemeManager.okColor();
-        int bg = !r.isSuccess() ? ThemeManager.dangerTintColor(0.10f)
+        int finalBg = !r.isSuccess() ? ThemeManager.dangerTintColor(0.10f)
                 : diverged ? ThemeManager.warningTintColor(0.10f) : ThemeManager.okTintColor(0.10f);
-        int border = !r.isSuccess() ? ThemeManager.dangerTintColor(0.45f)
+        int finalBorder = !r.isSuccess() ? ThemeManager.dangerTintColor(0.45f)
                 : diverged ? ThemeManager.warningTintColor(0.45f) : ThemeManager.okTintColor(0.45f);
 
-        float lineH = ImGui.getTextLineHeightWithSpacing();
+        RunView rv = running ? runView() : null;
+        if (rv != null) {
+            lastStage = rv.stage;
+            lastFill = rv.fill;
+        }
+        double ft = ImGui.getTime() - finishStart;
+        boolean filling = !running && ft < FINISH_FILL_SECS;
+        boolean fading = !running && !filling && ft < FINISH_FILL_SECS + FINISH_FADE_SECS;
+        float mix = fading ? smoothstep((float) ((ft - FINISH_FILL_SECS) / FINISH_FADE_SECS)) : 1f;
+        boolean runningLook = running || filling;
+        int accent = runningLook ? ThemeManager.textColor() : lerpColor(ThemeManager.textColor(), finalAccent, mix);
+        int bg = runningLook ? ThemeManager.accentTintColor(0.10f)
+                : lerpColor(ThemeManager.accentTintColor(0.10f), finalBg, mix);
+        int border = runningLook ? ThemeManager.accentTintColor(0.45f)
+                : lerpColor(ThemeManager.accentTintColor(0.45f), finalBorder, mix);
+        float fill;
+        float fillAlpha;
+        if (running) {
+            fill = rv.fill;
+            fillAlpha = BAR_ALPHA;
+        } else if (filling) {
+            float from = Float.isNaN(lastFill) ? 0f : lastFill;
+            float u = (float) (ft / FINISH_FILL_SECS);
+            fill = from + (1f - from) * (1f - (1f - u) * (1f - u));
+            fillAlpha = BAR_ALPHA;
+        } else {
+            fill = 1f;
+            fillAlpha = BAR_ALPHA * (1f - mix);
+        }
+        String header = runningLook ? RUNNING + " · " + lastStage : resultHeader(r);
+        String clock = running ? rv.clock : null;
+        String headerTip = running ? rv.chain : null;
+
         float pad = ThemeManager.SM * scale;
         int devLines = deviation == null ? 0
                 : wrappedLineEstimate(deviation, ImGui.getContentRegionAvail().x - 2f * pad);
@@ -890,21 +1082,11 @@ public final class AngleSolverWindow implements RenderInterface {
                 : 1 + (detailsExpanded ? details.size() + solverLines : 0);
         List<SolveResult.Outcome> outcomes = visibleOutcomes(r);
         int outcomeLines = outcomes.isEmpty() ? 0 : 1 + (outcomesExpanded ? outcomes.size() : 0);
-        int rows = 2 + detailLines + devLines + noticeLines + outcomeLines + 1 + (yawsExpanded ? r.getYaws().size() : 0);
-        float fullH = rows * lineH + 2f * pad;
-        float h = Math.min(fullH, io.getDisplaySizeY() * 0.4f); // cap so the pane scrolls instead of growing off-screen
-
-        ImGui.pushStyleColor(ImGuiCol.ChildBg, bg);
-        ImGui.pushStyleColor(ImGuiCol.Border, border);
-        ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, pad, pad);
-        ImGui.beginChild("##solve_result", ImGui.getContentRegionAvail().x, h, true);
-
-        ThemeManager.pushTextColor(accent);
-        Fonts.pushBold();
-        ImGui.text(resultHeader(r));
-        Fonts.popBold();
-        ThemeManager.popTextColor();
-        ThemeManager.bottomPaddedSeparator();
+        int rows = 2 + (running ? 1 : 0) + detailLines + devLines + noticeLines + outcomeLines + 1
+                + (yawsExpanded ? r.getYaws().size() : 0);
+        beginResultChild(io, bg, border, rows, pad);
+        drawPanelHeader(header, accent, fill, fillAlpha, runningLook, clock, headerTip, pad, scale);
+        if (running) ImGui.text(r.getMet() + "/" + r.getTotal() + " constraints met");
 
         if (deviation != null) {
             ThemeManager.pushTextColor(ThemeManager.warningColor());
@@ -930,10 +1112,7 @@ public final class AngleSolverWindow implements RenderInterface {
         renderOutcomes(outcomes, scale);
         renderDetails(details, steps, scale);
         renderYawList(r, scale);
-
-        ImGui.endChild();
-        ImGui.popStyleVar();
-        ImGui.popStyleColor(2);
+        endResultChild();
     }
 
     private static final String WALL_TIP =
@@ -957,7 +1136,6 @@ public final class AngleSolverWindow implements RenderInterface {
     }
 
     private String resultHeader(SolveResult r) {
-        if (engine.isSolving()) return "Solving · " + r.getMet() + "/" + r.getTotal() + " constraints met";
         if (!r.isSuccess()) return "No solution · " + r.getMet() + "/" + r.getTotal() + " constraints met";
         if (state.getApplyDeviation() != null) return "Solved · sim diverged";
         return "Solved · " + r.getMet() + "/" + r.getTotal() + " constraints met";
