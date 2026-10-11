@@ -568,7 +568,7 @@ public final class AngleSolverEngine {
     public void smooth() {
         if (!canSmooth()) return;
         AngleSolverState.Effort effort = state.getEffort();
-        Job job = buildJob(effort, BuiltinGraphs.smooth(state.getSmoothGiveBack(), state.getSmoothTurnCap()));
+        Job job = buildJob(effort, BuiltinGraphs.smooth(state.getSmoothGiveBack()));
         if (job == null) return;
         if (job.deadlineNanos <= 0) job = job.withDeadline(SMOOTH_BUTTON_BUDGET_NANOS);
         offerIncumbent(job, effort, true);

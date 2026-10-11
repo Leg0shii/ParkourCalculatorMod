@@ -27,12 +27,11 @@ public final class BuiltinGraphs {
         return FAST_PRESET.equals(name) || MULTI_START_PRESET.equals(name) || OPTIMIZE_PRESET.equals(name);
     }
 
-    public static SolverGraph smooth(double giveBack, double turnCapDeg) {
+    public static SolverGraph smooth(double giveBack) {
         GraphBuilder g = new GraphBuilder(SMOOTH_PRESET, true);
         g.add("entry", "entry");
         g.add("smooth", "smooth")
                 .set("smooth", "giveBack", giveBack)
-                .set("smooth", "turnCap", turnCapDeg)
                 .set("smooth", GraphRunner.RESERVE_FRACTION_PARAM, 1.0)
                 .set("smooth", GraphRunner.RESERVE_CAP_PARAM, 0);
         g.add("emit", "emit");

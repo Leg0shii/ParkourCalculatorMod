@@ -16,16 +16,11 @@ public final class TrendFilterSmooth {
 
     public static double[] smooth(ExactJumpModel exact, JumpSpec spec, double[] seedAbsWrapped,
                                   long deadlineNanos, AtomicBoolean cancel) {
-        return smooth(exact, spec, seedAbsWrapped, MAX_GIVE_BACK, 0.0, deadlineNanos, cancel);
+        return smooth(exact, spec, seedAbsWrapped, MAX_GIVE_BACK, deadlineNanos, cancel);
     }
 
     public static double[] smooth(ExactJumpModel exact, JumpSpec spec, double[] seedAbsWrapped, double giveBack,
                                   long deadlineNanos, AtomicBoolean cancel) {
-        return smooth(exact, spec, seedAbsWrapped, giveBack, 0.0, deadlineNanos, cancel);
-    }
-
-    public static double[] smooth(ExactJumpModel exact, JumpSpec spec, double[] seedAbsWrapped, double giveBack,
-                                  double turnCapDeg, long deadlineNanos, AtomicBoolean cancel) {
         if (seedAbsWrapped == null || seedAbsWrapped.length < 2) return seedAbsWrapped;
         JumpPhysicsInputs sc = spec.asScenario();
         double anchor = sc.startYaw;
@@ -43,16 +38,15 @@ public final class TrendFilterSmooth {
         SmoothFaceRecovery.Config cfg = new SmoothFaceRecovery.Config();
         cfg.deadlineNanos = deadlineNanos;
         cfg.frozen = frozen;
-        cfg.turnCapDeg = turnCapDeg;
 
         double[] best = seed;
-        TurnShape bestShape = TurnShape.of(anchor, best, turnCapDeg);
+        TurnShape bestShape = TurnShape.of(anchor, best);
 
         double[] deWiggled = DeWiggle.run(exact, spec, seed, cancel, giveBack);
         if (deWiggled != null && deWiggled != seed) {
             double[] dgf = sc.toGameFacings(Angles.wrapAll(deWiggled));
             if (comp.maxViolation(dgf, exact.forward(sc, dgf)) <= FEAS_TOL) {
-                TurnShape shape = TurnShape.of(anchor, deWiggled, turnCapDeg);
+                TurnShape shape = TurnShape.of(anchor, deWiggled);
                 if (shape.betterThan(bestShape)) {
                     best = Angles.wrapAll(deWiggled);
                     bestShape = shape;
@@ -64,7 +58,7 @@ public final class TrendFilterSmooth {
             if (cancel != null && cancel.get()) break;
             if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) break;
             boolean improved = false;
-            for (double[] target : targets(anchor, best, turnCapDeg)) {
+            for (double[] target : targets(anchor, best)) {
                 if (cancel != null && cancel.get()) break;
                 if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) break;
                 double[] cand = SmoothFaceRecovery.smoothToward(exact, guarded, guardedComp, best, target, FEAS_TOL, cancel, cfg);
@@ -73,7 +67,7 @@ public final class TrendFilterSmooth {
                 if (comp.maxViolation(cgf, exact.forward(sc, cgf)) > FEAS_TOL) continue;
                 double obj = spec.objective.evaluate(exact.forward(sc, cgf));
                 if (max ? obj < reference - giveBack : obj > reference + giveBack) continue;
-                TurnShape shape = TurnShape.of(anchor, cand, turnCapDeg);
+                TurnShape shape = TurnShape.of(anchor, cand);
                 if (shape.betterThan(bestShape)) {
                     best = cand;
                     bestShape = shape;
@@ -92,17 +86,16 @@ public final class TrendFilterSmooth {
         double[] apply(double[] rate, double lambda);
     }
 
-    static List<double[]> targets(double anchor, double[] best, double turnCapDeg) {
+    static List<double[]> targets(double anchor, double[] best) {
         double[] rate = turnRate(anchor, best);
         List<double[]> out = new ArrayList<>();
         out.add(null);
-        if (turnCapDeg > 0.0) out.add(reconstruct(anchor, clip(rate, turnCapDeg)));
         RateFilter l1 = TrendFilterSmooth::trendL1;
         RateFilter l2 = (r, lambda) -> whittaker(r, lambda, null);
         RateFilter tv = TrendFilterSmooth::condatTV;
-        for (double lambda : SHAPE_LAMBDAS) out.add(reconstruct(anchor, clip(perRun(rate, lambda, l1), turnCapDeg)));
-        for (double lambda : SHAPE_LAMBDAS) out.add(reconstruct(anchor, clip(perRun(rate, lambda, l2), turnCapDeg)));
-        for (double lambda : LAMBDAS) out.add(reconstruct(anchor, clip(perRun(rate, lambda, tv), turnCapDeg)));
+        for (double lambda : SHAPE_LAMBDAS) out.add(reconstruct(anchor, perRun(rate, lambda, l1)));
+        for (double lambda : SHAPE_LAMBDAS) out.add(reconstruct(anchor, perRun(rate, lambda, l2)));
+        for (double lambda : LAMBDAS) out.add(reconstruct(anchor, perRun(rate, lambda, tv)));
         return out;
     }
 
@@ -123,13 +116,6 @@ public final class TrendFilterSmooth {
             sign = s;
             start = t;
         }
-        return out;
-    }
-
-    private static double[] clip(double[] rate, double capDeg) {
-        if (capDeg <= 0.0) return rate;
-        double[] out = rate.clone();
-        for (int i = 0; i < out.length; i++) out[i] = Math.max(-capDeg, Math.min(capDeg, out[i]));
         return out;
     }
 

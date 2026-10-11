@@ -19,7 +19,6 @@ final class SmoothFaceRecovery {
         double restoreMargin = 5.0e-3;
         long deadlineNanos = 0L;
         boolean[] frozen = null;
-        double turnCapDeg = 0.0;
     }
 
     private static void holdFrozen(double[] cand, double[] base, boolean[] frozen) {
@@ -164,7 +163,7 @@ final class SmoothFaceRecovery {
         int n = sc.numTicks;
         for (int iter = 0; iter < GLOBAL_ITERS; iter++) {
             if (cancel.get() || expired(cfg)) break;
-            TurnShape cur = TurnShape.of(anchor, y, cfg.turnCapDeg);
+            TurnShape cur = TurnShape.of(anchor, y);
             Rows R = build(sc, spec, patternOf(sc, exact, y));
             double[][] P = tangentProjector(R, sc.toGameFacings(y), cfg.restoreMargin, n);
             double[] dir = new double[n];
@@ -179,7 +178,7 @@ final class SmoothFaceRecovery {
                 for (int t = 0; t < n; t++) c[t] += frac * pdir[t];
                 holdFrozen(c, y, cfg.frozen);
                 if (!restoreExact(R, exact, sc, compiled, c, cfg.restoreMargin, cfg.frozen)) continue;
-                if (!TurnShape.of(anchor, c, cfg.turnCapDeg).betterThan(cur)) continue;
+                if (!TurnShape.of(anchor, c).betterThan(cur)) continue;
                 System.arraycopy(c, 0, y, 0, n);
                 stepped = true;
             }
@@ -196,7 +195,7 @@ final class SmoothFaceRecovery {
         int guard = 0;
         while (guard++ < 4 * n + 40) {
             if (cancel.get() || expired(cfg)) break;
-            TurnShape cur = TurnShape.of(anchor, y, cfg.turnCapDeg);
+            TurnShape cur = TurnShape.of(anchor, y);
             double[] dd = deltas(anchor, y);
             List<int[]> rs = runSpans(anchor, y);
             int[] pick = null;
@@ -237,11 +236,11 @@ final class SmoothFaceRecovery {
                     for (int t = 0; t < n; t++) c[t] += frac * pdir[t];
                     holdFrozen(c, y, cfg.frozen);
                     if (!restoreExact(R, exact, sc, compiled, c, cfg.restoreMargin, cfg.frozen)) continue;
-                    TurnShape next = TurnShape.of(anchor, c, cfg.turnCapDeg);
+                    TurnShape next = TurnShape.of(anchor, c);
                     if (!next.betterThan(cur)) continue;
                     System.arraycopy(c, 0, y, 0, n);
                     done = true;
-                    if (next.reversals < cur.reversals || next.capTicks < cur.capTicks) touched.clear();
+                    if (next.reversals < cur.reversals) touched.clear();
                 }
             }
             if (!done) stuck.add(key);

@@ -78,7 +78,6 @@ public final class SaveFile {
         public Integer optimizeSeconds;                  // absent in old files -> default
         public Integer budgetMs;                         // absent in old files -> from optimizeSeconds
         public Double smoothGiveBack;
-        public Double smoothTurnCap;
         public SolveBudget customBudget;
         public String graphPreset;
         public String defaultInputs;

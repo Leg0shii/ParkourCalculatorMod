@@ -23,11 +23,9 @@ public final class SmoothNode implements NodeRuntime {
     public static final long FAST_BUDGET_NANOS = 400_000_000L;
 
     private final double giveBackRatio;
-    private final double turnCapDeg;
 
     public SmoothNode(ParamValues params) {
         this.giveBackRatio = params.getDouble("giveBack");
-        this.turnCapDeg = params.getDouble("turnCap");
     }
 
     @Override
@@ -41,10 +39,10 @@ public final class SmoothNode implements NodeRuntime {
         double giveBack = giveBackBlocks(ctx, path);
         long deadline = deadlineNanos > 0 ? deadlineNanos : System.nanoTime() + FAST_BUDGET_NANOS;
         if (ctx.progress != null) ctx.progress.setStage(ctx.chainWith("smooth"));
-        if (SolverTrace.on()) SolverTrace.log("ENGINE", "smooth start giveBack=%.6f blocks cap=%.2f", giveBack, turnCapDeg);
+        if (SolverTrace.on()) SolverTrace.log("ENGINE", "smooth start giveBack=%.6f blocks", giveBack);
         double[] smoothed;
         try {
-            smoothed = TrendFilterSmooth.smooth(ctx.exactModel, ctx.spec, in.yaws, giveBack, turnCapDeg, deadline, nodeToken);
+            smoothed = TrendFilterSmooth.smooth(ctx.exactModel, ctx.spec, in.yaws, giveBack, deadline, nodeToken);
         } catch (RuntimeException e) {
             if (SolverTrace.on()) SolverTrace.log("ENGINE", "final facing smoothing failed: %s", String.valueOf(e));
             return NodeOutcome.of(Guarantee.UNCHANGED, in);

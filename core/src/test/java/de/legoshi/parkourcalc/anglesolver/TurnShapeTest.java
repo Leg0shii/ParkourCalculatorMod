@@ -11,9 +11,9 @@ public class TurnShapeTest {
 
     @Test
     public void shakyRampHasFlipsAndTheSteadyRampHasNone() {
-        TurnShape shaky = TurnShape.ofDeltas(new double[] {27, 16, 24, 24, 26}, 0.0);
-        TurnShape steady = TurnShape.ofDeltas(new double[] {14, 16, 18, 20, 22}, 0.0);
-        TurnShape bell = TurnShape.ofDeltas(new double[] {5, 10, 15, 10, 5}, 0.0);
+        TurnShape shaky = TurnShape.ofDeltas(new double[] {27, 16, 24, 24, 26});
+        TurnShape steady = TurnShape.ofDeltas(new double[] {14, 16, 18, 20, 22});
+        TurnShape bell = TurnShape.ofDeltas(new double[] {5, 10, 15, 10, 5});
         assertEquals(0, shaky.reversals);
         assertEquals(1, shaky.accelFlips);
         assertEquals(0, steady.accelFlips);
@@ -25,24 +25,17 @@ public class TurnShapeTest {
     }
 
     @Test
-    public void reversalsOutrankFlipsAndTheCapOutranksEverything() {
-        TurnShape reversing = TurnShape.ofDeltas(new double[] {10, -5, 10, 12, 14}, 0.0);
-        TurnShape shaky = TurnShape.ofDeltas(new double[] {30, 2, 6, 6, 3}, 0.0);
+    public void reversalsOutrankFlips() {
+        TurnShape reversing = TurnShape.ofDeltas(new double[] {10, -5, 10, 12, 14});
+        TurnShape shaky = TurnShape.ofDeltas(new double[] {30, 2, 6, 6, 3});
         assertEquals(2, reversing.reversals);
         assertEquals(2, shaky.accelFlips);
         assertTrue(shaky.betterThan(reversing));
-        TurnShape capped = TurnShape.ofDeltas(new double[] {30, 2, 6, 6, 3}, 25.0);
-        TurnShape under = TurnShape.ofDeltas(new double[] {10, -5, 10, 12, 14}, 25.0);
-        assertEquals(1, capped.capTicks);
-        assertEquals(5.0, capped.capExcessDeg, 1.0e-12);
-        assertTrue(under.betterThan(capped));
-        TurnShape lessExcess = TurnShape.ofDeltas(new double[] {29.9, -2, 6, 6, 3}, 25.0);
-        assertFalse("a hair less excess never buys a reversal", lessExcess.betterThan(capped));
     }
 
     @Test
     public void tinyWobblesBelowTheFloorsAreIgnored() {
-        TurnShape s = TurnShape.ofDeltas(new double[] {10.00, 10.02, 9.99, 10.01, 0.005, -0.004}, 0.0);
+        TurnShape s = TurnShape.ofDeltas(new double[] {10.00, 10.02, 9.99, 10.01, 0.005, -0.004});
         assertEquals(0, s.reversals);
         assertEquals(0, s.accelFlips);
     }

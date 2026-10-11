@@ -8,16 +8,12 @@ public final class TurnShape {
     public static final double ACCEL_FLOOR_DEG = 0.05;
     private static final double TOL = 1.0e-9;
 
-    public final int capTicks;
-    public final double capExcessDeg;
     public final int reversals;
     public final int accelFlips;
     public final double snapDeg;
     public final double jerkDeg;
 
-    private TurnShape(int capTicks, double capExcessDeg, int reversals, int accelFlips, double snapDeg, double jerkDeg) {
-        this.capTicks = capTicks;
-        this.capExcessDeg = capExcessDeg;
+    private TurnShape(int reversals, int accelFlips, double snapDeg, double jerkDeg) {
         this.reversals = reversals;
         this.accelFlips = accelFlips;
         this.snapDeg = snapDeg;
@@ -34,22 +30,11 @@ public final class TurnShape {
         return d;
     }
 
-    public static TurnShape of(double anchorYaw, double[] absWrapped, double capDeg) {
-        return ofDeltas(deltas(anchorYaw, absWrapped), capDeg);
+    public static TurnShape of(double anchorYaw, double[] absWrapped) {
+        return ofDeltas(deltas(anchorYaw, absWrapped));
     }
 
-    public static TurnShape ofDeltas(double[] d, double capDeg) {
-        int capTicks = 0;
-        double capExcess = 0.0;
-        if (capDeg > 0.0) {
-            for (double v : d) {
-                double over = Math.abs(v) - capDeg;
-                if (over > TOL) {
-                    capTicks++;
-                    capExcess += over;
-                }
-            }
-        }
+    public static TurnShape ofDeltas(double[] d) {
         int reversals = 0;
         int flips = 0;
         int runSign = 0;
@@ -87,21 +72,18 @@ public final class TurnShape {
             jerk += Math.abs(a);
             if (i >= 2) snap += Math.abs(a - (d[i - 1] - d[i - 2]));
         }
-        return new TurnShape(capTicks, capExcess, reversals, flips, snap, jerk);
+        return new TurnShape(reversals, flips, snap, jerk);
     }
 
     public boolean betterThan(TurnShape o) {
-        if (capTicks != o.capTicks) return capTicks < o.capTicks;
         if (reversals != o.reversals) return reversals < o.reversals;
         if (accelFlips != o.accelFlips) return accelFlips < o.accelFlips;
-        if (Math.abs(capExcessDeg - o.capExcessDeg) > TOL) return capExcessDeg < o.capExcessDeg;
         if (Math.abs(snapDeg - o.snapDeg) > TOL) return snapDeg < o.snapDeg;
         return jerkDeg < o.jerkDeg - TOL;
     }
 
     @Override
     public String toString() {
-        return String.format(Locale.ROOT, "cap=%d/%.2f rev=%d flips=%d snap=%.2f jerk=%.2f",
-                capTicks, capExcessDeg, reversals, accelFlips, snapDeg, jerkDeg);
+        return String.format(Locale.ROOT, "rev=%d flips=%d snap=%.2f jerk=%.2f", reversals, accelFlips, snapDeg, jerkDeg);
     }
 }

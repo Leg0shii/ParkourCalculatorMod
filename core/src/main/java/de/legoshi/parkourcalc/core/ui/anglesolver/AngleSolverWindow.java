@@ -85,7 +85,7 @@ public final class AngleSolverWindow implements RenderInterface {
 
     private static final String[] FORM_LABELS = {"Ticks", "Goal", "Angle", "Inputs", "Sprint", "Budget"};
     private static final String[] RUN_TICKS_LABELS =
-            {"Max ticks", "Step timeout", "Step growth", "Safety factor", "Safety margin", "Smooth give-back", "Turn cap"};
+            {"Max ticks", "Step timeout", "Step growth", "Safety factor", "Safety margin", "Smooth give-back"};
 
     /** Unscaled; lines the details table up under the toggle title and sets it off from the solved values. */
     private static final float DETAIL_INDENT = 13f;
@@ -125,7 +125,6 @@ public final class AngleSolverWindow implements RenderInterface {
     private final ImFloat runTicksSafetyMultBuf = new ImFloat();
     private final ImInt runTicksSafetyMarginBuf = new ImInt();
     private final ImInt smoothGiveBackBuf = new ImInt();
-    private final ImFloat smoothTurnCapBuf = new ImFloat();
     private final float[] budgetSliderBuf = new float[1];
     private final ImString budgetInput = new ImString(16);
     private int lastSyncedBudgetMs = -1;
@@ -558,11 +557,6 @@ public final class AngleSolverWindow implements RenderInterface {
     private static final String SMOOTH_DISABLED_TIP =
             "Smooths the turn of the solved path. Solve the range first.";
 
-    private static final String SMOOTH_TURN_CAP_TIP =
-            "The largest turn one tick may make, in degrees, for the Smooth button. Ticks over the cap are"
-            + " what the smoothing works on first; it brings as many under the cap as the constraints and"
-            + " the give-back allow and reports the rest in the Yaw rows. 0 means no cap.";
-
     private static final String SMOOTH_GIVE_BACK_TIP =
             "How much of the landing offset the Smooth button may trade for a smoother turn. The offset is"
             + " the margin past the goal wall at the goal tick, the + value in the result table. 100 %"
@@ -635,16 +629,6 @@ public final class AngleSolverWindow implements RenderInterface {
         }
         Controls.popInputFrameHeight();
         TooltipUtil.onHover(SMOOTH_GIVE_BACK_TIP);
-
-        Controls.pushInputFrameHeight();
-        SolverWidgets.rowLabel("Turn cap", runTicksLabelWidth(scale));
-        smoothTurnCapBuf.set((float) state.getSmoothTurnCap());
-        ImGui.setNextItemWidth(Math.max(40f * scale, ImGui.getContentRegionAvail().x));
-        if (ImGui.inputFloat("##smoothTurnCap", smoothTurnCapBuf, 1f, 5f, "%.1f")) {
-            state.setSmoothTurnCap(Math.round(smoothTurnCapBuf.get() * 10f) / 10.0);
-        }
-        Controls.popInputFrameHeight();
-        TooltipUtil.onHover(SMOOTH_TURN_CAP_TIP);
     }
 
     private void renderRunTicksRows(RunTicksSettings cfg, float labelW, float scale) {
@@ -871,8 +855,7 @@ public final class AngleSolverWindow implements RenderInterface {
         if (!busy && engine.canSmooth()) {
             if (Controls.primaryButton("Smooth")) engine.smooth();
             TooltipUtil.onHover(SMOOTH_TIP + " Runs for up to " + seconds(engine.smoothBudgetNanos())
-                    + " at " + Math.round(state.getSmoothGiveBack() * 100.0) + " % give-back"
-                    + (state.getSmoothTurnCap() > 0.0 ? String.format(Locale.ROOT, ", turn cap %.1f deg per tick.", state.getSmoothTurnCap()) : "."));
+                    + " at " + Math.round(state.getSmoothGiveBack() * 100.0) + " % give-back.");
         } else {
             Controls.disabledButton("Smooth");
             if (ImGui.isItemHovered(ImGuiHoveredFlags.AllowWhenDisabled)) TooltipUtil.wrappedTooltip(SMOOTH_DISABLED_TIP);
