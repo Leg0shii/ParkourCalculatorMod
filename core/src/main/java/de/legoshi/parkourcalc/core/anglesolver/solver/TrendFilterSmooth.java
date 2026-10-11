@@ -2,6 +2,9 @@ package de.legoshi.parkourcalc.core.anglesolver.solver;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class TrendFilterSmooth {
@@ -22,6 +25,8 @@ public final class TrendFilterSmooth {
     public static double[] smooth(ExactJumpModel exact, JumpSpec spec, double[] seedAbsWrapped, double giveBack,
                                   long deadlineNanos, AtomicBoolean cancel) {
         if (seedAbsWrapped == null || seedAbsWrapped.length < 2) return seedAbsWrapped;
+        long tAll = System.nanoTime();
+        SmoothProfile.reset();
         JumpPhysicsInputs sc = spec.asScenario();
         double anchor = sc.startYaw;
         JumpConstraintCompiler.Compiled comp = JumpConstraintCompiler.compile(spec);
@@ -38,10 +43,42 @@ public final class TrendFilterSmooth {
         SmoothFaceRecovery.Config cfg = new SmoothFaceRecovery.Config();
         cfg.deadlineNanos = deadlineNanos;
         cfg.frozen = frozen;
+        int par = threads();
+        ExecutorService pool = par > 1 ? Executors.newFixedThreadPool(par, r -> {
+            Thread th = new Thread(r, "smoother");
+            th.setDaemon(true);
+            return th;
+        }) : null;
+        cfg.pool = pool;
+        cfg.parallelism = par;
+        try {
+            return smoothWith(exact, spec, comp, guarded, guardedComp, sc, anchor, seed, giveBack, deadlineNanos, cancel, cfg, tAll);
+        } finally {
+            if (pool != null) pool.shutdownNow();
+        }
+    }
+
+    private static volatile int threadOverride;
+
+    public static void setThreads(int n) {
+        threadOverride = n;
+    }
+
+    private static int threads() {
+        if (threadOverride > 0) return threadOverride;
+        return Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
+    }
+
+    private static double[] smoothWith(ExactJumpModel exact, JumpSpec spec, JumpConstraintCompiler.Compiled comp,
+                                       JumpSpec guarded, JumpConstraintCompiler.Compiled guardedComp, JumpPhysicsInputs sc,
+                                       double anchor, double[] seed, double giveBack, long deadlineNanos,
+                                       AtomicBoolean cancel, SmoothFaceRecovery.Config cfg, long tAll) {
+        boolean max = spec.objective.sense == Objective.Sense.MAX;
+        double reference = spec.objective.evaluate(exact.forward(sc, sc.toGameFacings(seed)));
         cfg.repairSpec = guarded;
         cfg.repairRows = DeWiggle.usable(sc, guarded);
         boolean[] held = DeWiggle.heldByFacing(sc.numTicks, spec);
-        if (frozen != null) for (int t = 0; t < held.length; t++) held[t] |= frozen[t];
+        if (cfg.frozen != null) for (int t = 0; t < held.length; t++) held[t] |= cfg.frozen[t];
         cfg.repairHeld = held;
 
         double[] best = seed;
@@ -59,7 +96,9 @@ public final class TrendFilterSmooth {
             }
         }
 
+        long tFm = System.nanoTime();
         double[] merged = FlickMerge.run(exact, guarded, best, cancel, giveBack, deadlineNanos);
+        SmoothProfile.add("flickmerge", tFm);
         if (merged != null && merged != best) {
             double[] mgf = sc.toGameFacings(merged);
             if (comp.maxViolation(mgf, exact.forward(sc, mgf)) <= FEAS_TOL) {
@@ -71,7 +110,9 @@ public final class TrendFilterSmooth {
             }
         }
         long reshapeDeadline = deadlineNanos == 0L ? 0L : System.nanoTime() + (deadlineNanos - System.nanoTime()) / 3;
+        long tWr = System.nanoTime();
         double[] reshaped = WindowReshape.run(exact, guarded, best, cancel, giveBack, reshapeDeadline);
+        SmoothProfile.add("reshape", tWr);
         if (reshaped != null && reshaped != best) {
             double[] rgf = sc.toGameFacings(reshaped);
             if (comp.maxViolation(rgf, exact.forward(sc, rgf)) <= FEAS_TOL) {
@@ -88,14 +129,13 @@ public final class TrendFilterSmooth {
             if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) break;
             boolean improved = false;
             List<double[]> targets = targets(anchor, best);
-            for (int ti = 0; ti < targets.size(); ti++) {
-                double[] target = targets.get(ti);
-                if (cancel != null && cancel.get()) break;
-                long now = System.nanoTime();
-                if (deadlineNanos != 0L && now >= deadlineNanos) break;
-                long share = deadlineNanos == 0L ? 0L : (deadlineNanos - now) / Math.max(1, targets.size() - ti);
-                cfg.deadlineNanos = deadlineNanos == 0L ? 0L : now + Math.max(share, 50_000_000L);
-                double[] cand = SmoothFaceRecovery.smoothToward(exact, guarded, guardedComp, best, target, FEAS_TOL, cancel, cfg);
+            List<double[]> shapeTargets = targets.subList(0, targets.size() - 1);
+            long now = System.nanoTime();
+            long passRemaining = deadlineNanos == 0L ? 0L : deadlineNanos - now;
+            long shapeDeadline = deadlineNanos == 0L ? 0L : now + Math.max(passRemaining / 2, 50_000_000L);
+            List<double[]> cands = runShapeTargets(exact, guarded, guardedComp, best, shapeTargets, cancel, cfg, shapeDeadline);
+            for (int ti = 0; ti < cands.size(); ti++) {
+                double[] cand = cands.get(ti);
                 if (cand == null) continue;
                 double[] cgf = sc.toGameFacings(cand);
                 if (comp.maxViolation(cgf, exact.forward(sc, cgf)) > FEAS_TOL) continue;
@@ -103,17 +143,79 @@ public final class TrendFilterSmooth {
                 if (max ? obj < reference - giveBack : obj > reference + giveBack) continue;
                 TurnShape shape = TurnShape.of(anchor, cand);
                 if (shape.betterThan(bestShape)) {
+                    SmoothProfile.count("accept." + (ti < 4 ? "l1" : ti < 8 ? "l2" : "tv"));
                     best = cand;
                     bestShape = shape;
                     improved = true;
                 }
             }
+            if (cancel != null && cancel.get()) break;
+            now = System.nanoTime();
+            if (deadlineNanos == 0L || now < deadlineNanos) {
+                cfg.deadlineNanos = deadlineNanos;
+                long tT = System.nanoTime();
+                double[] cand = SmoothFaceRecovery.smoothToward(exact, guarded, guardedComp, best, null, FEAS_TOL, cancel, cfg);
+                SmoothProfile.add("target.facewalk", tT);
+                if (cand != null) {
+                    double[] cgf = sc.toGameFacings(cand);
+                    double obj = spec.objective.evaluate(exact.forward(sc, cgf));
+                    boolean inBudget = !(max ? obj < reference - giveBack : obj > reference + giveBack);
+                    if (comp.maxViolation(cgf, exact.forward(sc, cgf)) <= FEAS_TOL && inBudget) {
+                        TurnShape shape = TurnShape.of(anchor, cand);
+                        if (shape.betterThan(bestShape)) {
+                            SmoothProfile.count("accept.facewalk");
+                            best = cand;
+                            bestShape = shape;
+                            improved = true;
+                        }
+                    }
+                }
+            }
+            SmoothProfile.count("pass");
             if (!improved) break;
         }
+        SmoothProfile.report(System.nanoTime() - tAll);
         return best;
     }
 
     private static final int MAX_PASSES = 6;
+
+    private static List<double[]> runShapeTargets(ExactJumpModel exact, JumpSpec guarded, JumpConstraintCompiler.Compiled guardedComp,
+                                                  double[] best, List<double[]> targets, AtomicBoolean cancel,
+                                                  SmoothFaceRecovery.Config cfg, long deadline) {
+        List<double[]> out = new ArrayList<>();
+        if (cfg.pool == null) {
+            for (double[] target : targets) {
+                SmoothFaceRecovery.Config c = cfg.copy();
+                c.deadlineNanos = deadline;
+                c.pool = null;
+                long tT = System.nanoTime();
+                out.add(SmoothFaceRecovery.smoothToward(exact, guarded, guardedComp, best, target, FEAS_TOL, cancel, c));
+                SmoothProfile.add("target.shape", tT);
+            }
+            return out;
+        }
+        List<Future<double[]>> futures = new ArrayList<>();
+        for (double[] target : targets) {
+            SmoothFaceRecovery.Config c = cfg.copy();
+            c.deadlineNanos = deadline;
+            c.pool = null;
+            futures.add(cfg.pool.submit(() -> {
+                long tT = System.nanoTime();
+                double[] r = SmoothFaceRecovery.smoothToward(exact, guarded, guardedComp, best.clone(), target, FEAS_TOL, cancel, c);
+                SmoothProfile.add("target.shape", tT);
+                return r;
+            }));
+        }
+        for (Future<double[]> f : futures) {
+            try {
+                out.add(f.get());
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
+        }
+        return out;
+    }
     private static final double[] SHAPE_LAMBDAS = {1.0, 4.0, 16.0, 64.0};
 
     private interface RateFilter {

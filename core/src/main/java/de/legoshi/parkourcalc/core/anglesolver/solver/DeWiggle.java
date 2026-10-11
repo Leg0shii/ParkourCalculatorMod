@@ -21,6 +21,7 @@ public final class DeWiggle {
     private static final double METRIC_EPS = 5.0e-3;
     private static final double MARGIN = 2.0e-4;
     private static final int NEWTON_ITERS = 40;
+    private static final int STUCK_ITERS = 8;
     private static final double FEAS_TOL = 0.0;
 
     private DeWiggle() {
@@ -34,6 +35,14 @@ public final class DeWiggle {
 
     public static double[] run(ForwardModel model, JumpSpec spec, double[] yawsAbsWrapped, AtomicBoolean cancel,
                                double giveBack) {
+        long t0 = System.nanoTime();
+        double[] r = run0(model, spec, yawsAbsWrapped, cancel, giveBack);
+        SmoothProfile.add("dewiggle", t0);
+        return r;
+    }
+
+    private static double[] run0(ForwardModel model, JumpSpec spec, double[] yawsAbsWrapped, AtomicBoolean cancel,
+                                 double giveBack) {
         if (yawsAbsWrapped == null || yawsAbsWrapped.length < 3) return yawsAbsWrapped;
         JumpPhysicsInputs sc = spec.asScenario();
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
@@ -101,8 +110,18 @@ public final class DeWiggle {
     }
 
     static double[] repair(ForwardModel model, JumpPhysicsInputs sc, JumpConstraintCompiler.Compiled compiled,
-                                   JumpSpec spec, List<JumpConstraint> cs, double[] start, int lo, int hi,
-                                   boolean[] held, AtomicBoolean cancel) {
+                           JumpSpec spec, List<JumpConstraint> cs, double[] start, int lo, int hi,
+                           boolean[] held, AtomicBoolean cancel) {
+        long t0 = System.nanoTime();
+        double[] r = repair0(model, sc, compiled, spec, cs, start, lo, hi, held, cancel);
+        SmoothProfile.add("dw.repair", t0);
+        if (r != null) SmoothProfile.count("dw.repair.ok");
+        return r;
+    }
+
+    private static double[] repair0(ForwardModel model, JumpPhysicsInputs sc, JumpConstraintCompiler.Compiled compiled,
+                                    JumpSpec spec, List<JumpConstraint> cs, double[] start, int lo, int hi,
+                                    boolean[] held, AtomicBoolean cancel) {
         int n = start.length;
         double[] y = start.clone();
         double best = violation(model, sc, compiled, y);
@@ -114,8 +133,10 @@ public final class DeWiggle {
         for (int t = 0; t < n; t++) if ((t < lo || t > hi) && !held[t]) free[fi++] = t;
         double[][] wmat = smoothMetric(free, n);
 
+        double v0 = best;
         for (int it = 0; it < NEWTON_ITERS && best > FEAS_TOL; it++) {
             if (cancel != null && cancel.get()) return null;
+            if (it >= STUCK_ITERS && best > v0 * 0.5) break;
             double[] r = residuals(model, sc, spec, cs, y);
             boolean[] keep = new boolean[r.length];
             int m = 0;
@@ -236,7 +257,16 @@ public final class DeWiggle {
         return rows.toArray(new double[0][]);
     }
 
+    private static final java.util.concurrent.ConcurrentHashMap<String, double[][]> METRIC_CACHE =
+            new java.util.concurrent.ConcurrentHashMap<>();
+
     private static double[][] smoothMetric(int[] free, int n) {
+        StringBuilder key = new StringBuilder().append(n).append(':');
+        for (int f : free) key.append(f).append(',');
+        return METRIC_CACHE.computeIfAbsent(key.toString(), k -> smoothMetric0(free, n));
+    }
+
+    private static double[][] smoothMetric0(int[] free, int n) {
         int f = free.length;
         double[][] a = new double[f][f];
         int[] pos = new int[n];
