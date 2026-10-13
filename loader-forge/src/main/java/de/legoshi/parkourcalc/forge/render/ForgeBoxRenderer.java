@@ -6,8 +6,7 @@ import de.legoshi.parkourcalc.core.render.BoxGeometry;
 import de.legoshi.parkourcalc.core.sim.AABB;
 //? if >=1.12 {
 import net.minecraft.client.renderer.BufferBuilder;
-//?}
-//? if <1.12 {
+//?} else {
 /*import net.minecraft.client.renderer.WorldRenderer;
 *///?}
 

@@ -13,13 +13,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(Gui.class)
 public class HudMixin {
 
-    //? if >=1.21 {
     @Inject(method = "render", at = @At("RETURN"))
+    //? if >=1.21 {
     private void onRenderHud(GuiGraphics graphics, DeltaTracker deltaTracker, CallbackInfo ci) {
     //?} else {
-    @Inject(method = "render", at = @At("RETURN"))
-    private void onRenderHud(GuiGraphics graphics, float partialTick, CallbackInfo ci) {
-    //?}
+    /*private void onRenderHud(GuiGraphics graphics, float partialTick, CallbackInfo ci) {
+    *///?}
         FabricParkourCalculator.onHudRender(graphics);
     }
 }

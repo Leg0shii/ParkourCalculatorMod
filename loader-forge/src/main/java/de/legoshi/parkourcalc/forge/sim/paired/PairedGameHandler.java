@@ -8,8 +8,7 @@ import net.minecraft.network.Packet;
 import net.minecraft.server.MinecraftServer;
 //? if >=1.12 {
 import net.minecraft.util.text.ITextComponent;
-//?}
-//? if <1.12 {
+//?} else {
 /*import net.minecraft.util.IChatComponent;
 *///?}
 

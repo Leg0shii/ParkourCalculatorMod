@@ -1,17 +1,20 @@
 package de.legoshi.parkourcalc.fabric.mixin;
 
+//? if <26.1
+//import com.mojang.blaze3d.platform.Window;
 import de.legoshi.parkourcalc.fabric.FabricParkourCalculator;
 import de.legoshi.parkourcalc.fabric.imgui.ImGuiImpl;
-//? if <26.1 {
-/*import net.minecraft.client.KeyMapping;
-import net.minecraft.client.Options;
-import com.mojang.blaze3d.platform.Window;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Shadow;
-*///?}
+//? if <26.1
+//import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+//? if <26.1
+//import net.minecraft.client.Options;
 import net.minecraft.client.main.GameConfig;
+//? if <26.1
+//import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+//? if <26.1
+//import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;

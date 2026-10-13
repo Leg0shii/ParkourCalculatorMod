@@ -3,9 +3,8 @@ package de.legoshi.parkourcalc.forge.sim;
 import com.mojang.authlib.GameProfile;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.forge.core.sim.PlayerSprintMachine;
-//? if >=1.12 {
+//? if >=1.12
 import net.minecraft.client.Minecraft;
-//?}
 import net.minecraft.client.entity.AbstractClientPlayer;
 //? if >=1.12 {
 import net.minecraft.entity.player.EnumPlayerModelParts;
@@ -17,13 +16,11 @@ import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 
 import java.util.ArrayList;
+//? if <1.12
+//import java.util.Collection;
 import java.util.List;
-//? if >=1.12 {
+//? if >=1.12
 import java.util.Map;
-//?}
-//? if <1.12 {
-/*import java.util.Collection;
-*///?}
 
 @SuppressWarnings("DuplicatedCode")
 public class GhostPlayerEntity extends AbstractClientPlayer {

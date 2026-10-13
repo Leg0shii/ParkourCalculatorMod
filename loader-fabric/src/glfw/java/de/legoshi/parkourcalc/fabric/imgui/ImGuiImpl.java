@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.fabric.imgui;
 
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.GlStateManager;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.ui.theme.Fonts;
@@ -16,13 +17,11 @@ import imgui.flag.ImGuiConfigFlags;
 import imgui.gl3.ImGuiImplGl3;
 import imgui.glfw.ImGuiImplGlfw;
 import net.minecraft.client.Minecraft;
-import com.mojang.blaze3d.pipeline.RenderTarget;
 import org.apache.commons.io.IOUtils;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL21C;
 import org.lwjgl.opengl.GL30;
-import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GL33C;
 
 import java.io.IOException;

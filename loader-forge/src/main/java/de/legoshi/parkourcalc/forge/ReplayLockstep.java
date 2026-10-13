@@ -10,15 +10,14 @@ import net.minecraft.network.NetworkManager;
 //? if >=1.12 {
 import net.minecraft.network.play.client.CPacketKeepAlive;
 import net.minecraft.network.play.server.SPacketKeepAlive;
-//?}
+//?} else {
+/*import net.minecraft.network.play.client.C00PacketKeepAlive;
+import net.minecraft.network.play.server.S00PacketKeepAlive;
+*///?}
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Util;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-//? if <1.12 {
-/*import net.minecraft.network.play.client.C00PacketKeepAlive;
-import net.minecraft.network.play.server.S00PacketKeepAlive;
-*///?}
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;

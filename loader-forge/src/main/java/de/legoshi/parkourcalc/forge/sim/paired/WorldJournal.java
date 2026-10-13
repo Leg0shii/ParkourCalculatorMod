@@ -4,12 +4,11 @@ import net.minecraft.block.state.IBlockState;
 //? if >=1.12 {
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IWorldEventListener;
-//?}
-import net.minecraft.world.WorldServer;
-//? if <1.12 {
+//?} else {
 /*import net.minecraft.util.BlockPos;
 import net.minecraft.world.IWorldAccess;
 *///?}
+import net.minecraft.world.WorldServer;
 
 import java.util.ArrayList;
 import java.util.HashMap;

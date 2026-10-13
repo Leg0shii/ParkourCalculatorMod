@@ -61,31 +61,25 @@ public final class PairedServerPlayer extends ServerPlayer {
         super.checkFallDamage(ya, onGround, onState, pos);
     }
 
-    //? if >=1.21.2 {
     @Override
+    //? if >=1.21.2 {
     public boolean hurtServer(ServerLevel level, DamageSource source, float amount) {
-        if (!damageGate.getAsBoolean()) {
-            return false;
-        }
-        boolean applied = super.hurtServer(level, source, amount);
-        if (applied && damageSink != null) {
-            damageSink.onDamageRuled(source, amount);
-        }
-        return applied;
-    }
     //?} else {
-    /*@Override
-    public boolean hurt(DamageSource source, float amount) {
+    /*public boolean hurt(DamageSource source, float amount) {
+    *///?}
         if (!damageGate.getAsBoolean()) {
             return false;
         }
-        boolean applied = super.hurt(source, amount);
+        //? if >=1.21.2 {
+        boolean applied = super.hurtServer(level, source, amount);
+        //?} else {
+        /*boolean applied = super.hurt(source, amount);
+        *///?}
         if (applied && damageSink != null) {
             damageSink.onDamageRuled(source, amount);
         }
         return applied;
     }
-    *///?}
 
     @Override
     public void setHealth(float health) {

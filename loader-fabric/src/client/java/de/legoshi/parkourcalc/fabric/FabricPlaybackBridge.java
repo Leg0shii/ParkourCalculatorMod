@@ -3,31 +3,32 @@ package de.legoshi.parkourcalc.fabric;
 import de.legoshi.parkourcalc.core.ports.PlaybackBridge;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
-import de.legoshi.parkourcalc.fabric.mixin.LocalPlayerAccessor;
 import de.legoshi.parkourcalc.fabric.mixin.KeyMappingAccessor;
+import de.legoshi.parkourcalc.fabric.mixin.LocalPlayerAccessor;
 import de.legoshi.parkourcalc.fabric.mixin.PlayerAccessor;
 import de.legoshi.parkourcalc.fabric.sim.GhostPlayerEntity;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientLevel;
-//? if >=1.21.2 {
-import net.minecraft.client.player.ClientInput;
-import net.minecraft.world.entity.PositionMoveRotation;
-//?}
-import net.minecraft.tags.FluidTags;
-import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.Options;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.Options;
+import net.minecraft.client.multiplayer.ClientLevel;
+//? if >=1.21.2
+import net.minecraft.client.player.ClientInput;
+import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.player.Abilities;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.client.server.IntegratedServer;
-import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+//? if >=1.21.2
+import net.minecraft.world.entity.PositionMoveRotation;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Abilities;
 import net.minecraft.world.phys.Vec3;
 
+//? if >=1.21.2
 import java.util.Collections;
 import java.util.UUID;
 

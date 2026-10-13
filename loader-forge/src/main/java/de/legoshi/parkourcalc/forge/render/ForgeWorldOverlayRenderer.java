@@ -14,17 +14,15 @@ import de.legoshi.parkourcalc.core.ui.SelectionManager;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.ui.YawGizmoController;
 import net.minecraft.client.Minecraft;
-//? if >=1.12 {
+//? if >=1.12
 import net.minecraft.client.renderer.BufferBuilder;
-//?}
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
+//? if <1.12
+//import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.Entity;
 import org.lwjgl.opengl.GL11;
-//? if <1.12 {
-/*import net.minecraft.client.renderer.WorldRenderer;
-*///?}
 
 import java.util.Set;
 import java.util.function.Supplier;

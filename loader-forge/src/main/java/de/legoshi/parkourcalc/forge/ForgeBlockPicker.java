@@ -6,16 +6,14 @@ import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.Minecraft;
 //? if >=1.12 {
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-//?}
-import net.minecraft.world.World;
-//? if <1.12 {
+//?} else {
 /*import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 *///?}
+import net.minecraft.world.World;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -19,19 +19,7 @@ import net.minecraft.network.play.client.CPacketPlayerTryUseItemOnBlock;
 import net.minecraft.network.play.server.SPacketEntityVelocity;
 import net.minecraft.network.play.server.SPacketKeepAlive;
 import net.minecraft.network.play.server.SPacketPlayerPosLook;
-//?}
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.DamageSource;
-//? if >=1.12 {
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.math.Vec3d;
-//?}
-import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
-//? if <1.12 {
+//?} else {
 /*import net.minecraft.network.play.client.C00PacketKeepAlive;
 import net.minecraft.network.play.client.C03PacketPlayer;
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement;
@@ -39,11 +27,24 @@ import net.minecraft.network.play.client.C0BPacketEntityAction;
 import net.minecraft.network.play.server.S00PacketKeepAlive;
 import net.minecraft.network.play.server.S08PacketPlayerPosLook;
 import net.minecraft.network.play.server.S12PacketEntityVelocity;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.MathHelper;
+*///?}
+import net.minecraft.server.MinecraftServer;
+//? if <1.12
+//import net.minecraft.util.BlockPos;
+import net.minecraft.util.DamageSource;
+//? if >=1.12 {
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.Vec3d;
+//?} else {
+/*import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 *///?}
+import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;

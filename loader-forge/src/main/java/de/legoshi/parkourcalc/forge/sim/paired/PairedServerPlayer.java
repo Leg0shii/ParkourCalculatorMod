@@ -7,29 +7,32 @@ import net.minecraft.block.BlockFenceGate;
 import net.minecraft.block.BlockWall;
 //? if >=1.12 {
 import net.minecraft.block.state.IBlockState;
-//?}
+//?} else {
+/*import net.minecraft.block.material.Material;
+*///?}
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 //? if >=1.12 {
 import net.minecraft.server.management.PlayerInteractionManager;
-//?}
+//?} else {
+/*import net.minecraft.server.management.ItemInWorldManager;
+*///?}
 import net.minecraft.stats.StatBase;
+//? if <1.12
+//import net.minecraft.util.BlockPos;
 import net.minecraft.util.DamageSource;
 //? if >=1.12 {
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.GameType;
-//?}
-import net.minecraft.world.WorldServer;
-//? if <1.12 {
-/*import net.minecraft.block.material.Material;
-import net.minecraft.server.management.ItemInWorldManager;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.MathHelper;
-import net.minecraft.world.WorldSettings;
+//?} else {
+/*import net.minecraft.util.MathHelper;
 *///?}
+import net.minecraft.world.WorldServer;
+//? if <1.12
+//import net.minecraft.world.WorldSettings;
 
 public final class PairedServerPlayer extends EntityPlayerMP {
 

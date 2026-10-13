@@ -2,45 +2,43 @@ package de.legoshi.parkourcalc.forge.sim;
 
 import com.mojang.authlib.GameProfile;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
-import de.legoshi.parkourcalc.forge.core.sim.PlayerSprintMachine;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.SubtickPath;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
-//? if >=1.12 {
+import de.legoshi.parkourcalc.forge.core.sim.PlayerSprintMachine;
+//? if >=1.12
 import net.minecraft.block.state.IBlockState;
-//?}
 import net.minecraft.entity.EntityLivingBase;
-//? if >=1.12 {
+//? if >=1.12
 import net.minecraft.entity.MoverType;
-//?}
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
-//? if >=1.12 {
+//? if >=1.12
 import net.minecraft.init.MobEffects;
-//?}
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
+//? if <1.12 {
+/*import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.BlockPos;
+*///?}
 import net.minecraft.util.DamageSource;
 //? if >=1.12 {
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-//?}
+//?} else {
+/*import net.minecraft.util.MathHelper;
+import net.minecraft.util.Vec3;
+*///?}
 import net.minecraft.world.World;
 
 import java.util.ArrayList;
+//? if <1.12
+//import java.util.Collection;
 import java.util.List;
-//? if >=1.12 {
+//? if >=1.12
 import java.util.Map;
-//?}
-//? if <1.12 {
-/*import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.MathHelper;
-import net.minecraft.util.Vec3;
-import java.util.Collection;
-*///?}
 
 @SuppressWarnings("DuplicatedCode")
 public class SimulatorEntity extends EntityPlayer {

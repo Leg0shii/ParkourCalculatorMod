@@ -1,8 +1,8 @@
 package de.legoshi.parkourcalc.forge.sim.paired;
 
+import de.legoshi.parkourcalc.core.DebugFlags;
 import de.legoshi.parkourcalc.core.sim.Checkpoint;
 import de.legoshi.parkourcalc.forge.sim.SimulatorEntity;
-import de.legoshi.parkourcalc.core.DebugFlags;
 import net.minecraft.entity.player.EntityPlayerMP;
 //? if >=1.12 {
 import net.minecraft.network.play.server.SPacketEntityVelocity;

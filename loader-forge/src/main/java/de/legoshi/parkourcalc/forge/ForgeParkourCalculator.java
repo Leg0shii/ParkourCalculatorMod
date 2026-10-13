@@ -1,6 +1,5 @@
 package de.legoshi.parkourcalc.forge;
 
-
 import de.legoshi.parkourcalc.core.Application;
 import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
@@ -12,6 +11,8 @@ import de.legoshi.parkourcalc.forge.render.ForgeHudOverlayRenderer;
 import de.legoshi.parkourcalc.forge.render.ForgeWorldOverlayRenderer;
 import de.legoshi.parkourcalc.forge.sim.ForgeSimulator;
 import net.minecraft.client.Minecraft;
+//? if <1.12
+//import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
@@ -19,7 +20,6 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
-import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.ModContainer;
@@ -28,12 +28,10 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.common.network.FMLNetworkEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.input.Keyboard;
-//? if <1.12 {
-/*import net.minecraft.client.settings.GameSettings;
-*///?}
 
 import java.io.File;
 import java.nio.file.Path;

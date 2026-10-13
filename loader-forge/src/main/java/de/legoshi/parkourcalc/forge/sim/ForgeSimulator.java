@@ -2,35 +2,35 @@ package de.legoshi.parkourcalc.forge.sim;
 
 import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
-import de.legoshi.parkourcalc.core.sim.ChunkRange;
 import de.legoshi.parkourcalc.core.sim.Checkpoint;
+import de.legoshi.parkourcalc.core.sim.ChunkRange;
 import de.legoshi.parkourcalc.core.sim.LazyEntitySimulator;
 import de.legoshi.parkourcalc.core.sim.ServerSimEvent;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
+import de.legoshi.parkourcalc.forge.McClient;
 import de.legoshi.parkourcalc.forge.sim.paired.PairedCheckpoint;
 import de.legoshi.parkourcalc.forge.sim.paired.PairedServerSim;
-import de.legoshi.parkourcalc.forge.McClient;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.WorldClient;
 //? if >=1.12 {
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.init.MobEffects;
-//?}
+//?} else {
+/*import net.minecraft.potion.Potion;
+*///?}
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.integrated.IntegratedServer;
 //? if >=1.12 {
 import net.minecraft.util.math.Vec3d;
-//?}
+//?} else {
+/*import net.minecraft.util.Vec3;
+*///?}
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
-//? if <1.12 {
-/*import net.minecraft.potion.Potion;
-import net.minecraft.util.Vec3;
-*///?}
 
 import java.util.List;
 
@@ -191,12 +191,14 @@ public final class ForgeSimulator extends LazyEntitySimulator<SimulatorEntity> {
         Vec3d start = pendingStart != null
                 ? new Vec3d(pendingStart.x, pendingStart.y, pendingStart.z)
                 : new Vec3d(player.posX, player.posY, player.posZ);
-        Vec3dCore vel0 = pendingVelocity != null ? pendingVelocity : Vec3dCore.GROUND_REST_VELOCITY;
-        Vec3d vel = new Vec3d(vel0.x, vel0.y, vel0.z);
         //?} else {
         /*Vec3 start = pendingStart != null ? new Vec3(pendingStart.x, pendingStart.y, pendingStart.z) : new Vec3(player.posX, player.posY, player.posZ);
+        *///?}
         Vec3dCore vel0 = pendingVelocity != null ? pendingVelocity : Vec3dCore.GROUND_REST_VELOCITY;
-        Vec3 vel = new Vec3(vel0.x, vel0.y, vel0.z);
+        //? if >=1.12 {
+        Vec3d vel = new Vec3d(vel0.x, vel0.y, vel0.z);
+        //?} else {
+        /*Vec3 vel = new Vec3(vel0.x, vel0.y, vel0.z);
         *///?}
         float yaw = pendingYaw != null ? pendingYaw : 0.0F;
         return new SimulatorEntity(simWorld, player.getGameProfile(), start, vel, yaw);
@@ -208,12 +210,14 @@ public final class ForgeSimulator extends LazyEntitySimulator<SimulatorEntity> {
         WorldClient clientWorld = McClient.world();
         //? if >=1.12 {
         if (clientWorld == null || e.world == clientWorld) return false;
-        IntegratedServer server = mc.getIntegratedServer();
-        return server == null || e.world != server.getWorld(clientWorld.provider.getDimension());
         //?} else {
         /*if (clientWorld == null || e.worldObj == clientWorld) return false;
+        *///?}
         IntegratedServer server = mc.getIntegratedServer();
-        return server == null || e.worldObj != server.worldServerForDimension(clientWorld.provider.getDimensionId());
+        //? if >=1.12 {
+        return server == null || e.world != server.getWorld(clientWorld.provider.getDimension());
+        //?} else {
+        /*return server == null || e.worldObj != server.worldServerForDimension(clientWorld.provider.getDimensionId());
         *///?}
     }
 

@@ -1,17 +1,19 @@
 package de.legoshi.parkourcalc.fabric.sim.paired;
 
 import com.mojang.authlib.GameProfile;
-//? if >=26.1 {
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-//?}
 import de.legoshi.parkourcalc.core.DebugFlags;
 import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.sim.ServerSimEvent;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.fabric.sim.FabricSimulator;
+//? if <1.21.2
+//import de.legoshi.parkourcalc.fabric.sim.Input;
 import de.legoshi.parkourcalc.fabric.sim.SimulatorEntity;
+//? if >=26.1 {
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+//?}
 import net.minecraft.core.BlockPos;
 //? if >=26.1
 import net.minecraft.network.LpVec3;
@@ -21,20 +23,14 @@ import net.minecraft.network.protocol.common.ServerboundKeepAlivePacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerPositionPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket;
-//? if >=1.21.2 {
+//? if >=1.21.2
 import net.minecraft.network.protocol.game.ServerboundClientTickEndPacket;
-import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket;
-import net.minecraft.world.entity.PositionMoveRotation;
-import net.minecraft.world.entity.player.Input;
-//?} else {
-/*import de.legoshi.parkourcalc.fabric.sim.Input;
-import net.minecraft.world.entity.RelativeMovement;
-import java.util.Set;
-*///?}
-//? if >=1.21.4
-import net.minecraft.network.protocol.game.ServerboundPlayerLoadedPacket;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+//? if >=1.21.2
+import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket;
+//? if >=1.21.4
+import net.minecraft.network.protocol.game.ServerboundPlayerLoadedPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -42,6 +38,12 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
+//? if >=1.21.2 {
+import net.minecraft.world.entity.PositionMoveRotation;
+import net.minecraft.world.entity.player.Input;
+//?} else {
+/*import net.minecraft.world.entity.RelativeMovement;
+*///?}
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
@@ -53,6 +55,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+//? if <1.21.2
+//import java.util.Set;
 import java.util.UUID;
 
 public final class PairedServerSim {
@@ -172,13 +176,12 @@ public final class PairedServerSim {
         sp.setShiftKeyDown(false);
         sp.setSprinting(false);
         handler.resetPosition();
-        //? if >=1.21.2 {
         handler.handleMovePlayer(new ServerboundMovePlayerPacket.PosRot(
+        //? if >=1.21.2 {
                 e.getX(), e.getY(), e.getZ(), e.getYRot(), e.getXRot(), false, false));
         handler.handleClientTickEnd(ServerboundClientTickEndPacket.INSTANCE);
         //?} else {
-        /*handler.handleMovePlayer(new ServerboundMovePlayerPacket.PosRot(
-                e.getX(), e.getY(), e.getZ(), e.getYRot(), e.getXRot(), false));
+                /*e.getX(), e.getY(), e.getZ(), e.getYRot(), e.getXRot(), false));
         *///?}
         for (int i = 0; i < WARMUP_SERVER_TICKS; i++) {
             sp.tick();
@@ -387,9 +390,9 @@ public final class PairedServerSim {
         boolean rot = dYRot != 0.0 || dXRot != 0.0;
         boolean onGround = e.onGround();
         boolean horizontalCollision = e.horizontalCollision;
-        //? if >=26.1 {
         if (move && rot) {
             serverbound.add(new ServerboundMovePlayerPacket.PosRot(
+        //? if >=26.1 {
                     e.position(), e.getYRot(), e.getXRot(), onGround, horizontalCollision));
         } else if (move) {
             serverbound.add(new ServerboundMovePlayerPacket.Pos(e.position(), onGround, horizontalCollision));
@@ -400,9 +403,7 @@ public final class PairedServerSim {
             serverbound.add(new ServerboundMovePlayerPacket.StatusOnly(onGround, horizontalCollision));
         }
         //?} elif >=1.21.2 {
-        /*if (move && rot) {
-            serverbound.add(new ServerboundMovePlayerPacket.PosRot(
-                    e.getX(), e.getY(), e.getZ(), e.getYRot(), e.getXRot(), onGround, horizontalCollision));
+                    /*e.getX(), e.getY(), e.getZ(), e.getYRot(), e.getXRot(), onGround, horizontalCollision));
         } else if (move) {
             serverbound.add(new ServerboundMovePlayerPacket.Pos(
                     e.getX(), e.getY(), e.getZ(), onGround, horizontalCollision));
@@ -413,9 +414,7 @@ public final class PairedServerSim {
             serverbound.add(new ServerboundMovePlayerPacket.StatusOnly(onGround, horizontalCollision));
         }
         *///?} else {
-        /*if (move && rot) {
-            serverbound.add(new ServerboundMovePlayerPacket.PosRot(
-                    e.getX(), e.getY(), e.getZ(), e.getYRot(), e.getXRot(), onGround));
+                    /*e.getX(), e.getY(), e.getZ(), e.getYRot(), e.getXRot(), onGround));
         } else if (move) {
             serverbound.add(new ServerboundMovePlayerPacket.Pos(e.getX(), e.getY(), e.getZ(), onGround));
         } else if (rot) {

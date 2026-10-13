@@ -73,8 +73,8 @@ public final class FabricBoxRenderer implements BoxRenderer {
         //? if >=1.21 {
         c.addVertex(m, x, y, z).setColor(r, g, b, a);
         //?} else {
-        c.vertex(m, x, y, z).color(r, g, b, a).endVertex();
-        //?}
+        /*c.vertex(m, x, y, z).color(r, g, b, a).endVertex();
+        *///?}
     }
 
     private static void emitEdges(VertexConsumer c, Matrix4f m, AABB b, int argb) {
@@ -119,7 +119,7 @@ public final class FabricBoxRenderer implements BoxRenderer {
         //? if >=1.21 {
         c.addVertex(m, x, y, z).setColor(r, g, b, a).setNormal(nx, ny, nz);
         //?} else {
-        c.vertex(m, x, y, z).color(r, g, b, a).normal(nx, ny, nz).endVertex();
-        //?}
+        /*c.vertex(m, x, y, z).color(r, g, b, a).normal(nx, ny, nz).endVertex();
+        *///?}
     }
 }

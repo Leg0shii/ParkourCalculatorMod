@@ -1,5 +1,7 @@
 package de.legoshi.parkourcalc.fabric;
 
+//? if <26.1
+//import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 //? if >=1.20.5 {
@@ -8,11 +10,8 @@ import net.minecraft.network.protocol.ping.ServerboundPingRequestPacket;
 /*import net.minecraft.network.protocol.status.ServerboundPingRequestPacket;
 *///?}
 import net.minecraft.server.MinecraftServer;
-//? if >=26.1 {
+//? if >=26.1
 import net.minecraft.util.Util;
-//?} else {
-/*import net.minecraft.Util;
-*///?}
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;

@@ -10,17 +10,15 @@ import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.forge.core.render.CountingBoxRenderer;
-//? if >=1.12 {
+//? if >=1.12
 import net.minecraft.client.renderer.BufferBuilder;
-//?}
 import net.minecraft.client.renderer.GlStateManager;
+//? if <1.12
+//import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.renderer.vertex.VertexBuffer;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL15;
-//? if <1.12 {
-/*import net.minecraft.client.renderer.WorldRenderer;
-*///?}
 
 import java.nio.ByteBuffer;
 import java.util.HashSet;

@@ -2,8 +2,8 @@ package de.legoshi.parkourcalc.fabric.sim;
 
 import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.anglesolver.Medium;
-import de.legoshi.parkourcalc.core.sim.ChunkRange;
 import de.legoshi.parkourcalc.core.sim.Checkpoint;
+import de.legoshi.parkourcalc.core.sim.ChunkRange;
 import de.legoshi.parkourcalc.core.sim.LazyEntitySimulator;
 import de.legoshi.parkourcalc.core.sim.ServerSimEvent;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
@@ -11,29 +11,30 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.fabric.sim.paired.PairedCheckpoint;
 import de.legoshi.parkourcalc.fabric.sim.paired.PairedServerSim;
-//? if >=1.21.2 {
-import net.minecraft.world.entity.player.Input;
-//?} else {
-/*import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+//? if <1.21.2
+//import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+//? if <1.21.2 {
+/*import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 *///?}
 import net.minecraft.world.entity.ai.attributes.AttributeMap;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
+//? if >=1.21.2
+import net.minecraft.world.entity.player.Input;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.Level;
 //? if >=1.21 {
 import net.minecraft.world.level.chunk.status.ChunkStatus;
 //?} else {
 /*import net.minecraft.world.level.chunk.ChunkStatus;
 *///?}
+import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
 

@@ -7,6 +7,8 @@ import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2InputState;
 import de.legoshi.parkourcalc.forge.sim.ForgeSimulator;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBasePressurePlate;
+//? if <1.12
+//import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.PlayerControllerMP;
@@ -16,20 +18,18 @@ import net.minecraft.init.Blocks;
 import net.minecraft.server.integrated.IntegratedServer;
 //? if >=1.12 {
 import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
-//?}
-import net.minecraft.world.World;
-//? if <1.12 {
-/*import net.minecraft.block.state.IBlockState;
-import net.minecraft.util.AxisAlignedBB;
+//?} else {
+/*import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 *///?}
+import net.minecraft.world.World;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -306,7 +306,6 @@ public final class ForgeMinecraftAccess implements MinecraftAccess {
 
     @Override
     public boolean isReady() {
-        Minecraft mc = Minecraft.getMinecraft();
         return McClient.player() != null && McClient.world() != null;
     }
 

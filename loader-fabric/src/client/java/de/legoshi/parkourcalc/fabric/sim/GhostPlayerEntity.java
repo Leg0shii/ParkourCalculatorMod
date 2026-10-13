@@ -6,24 +6,27 @@ import de.legoshi.parkourcalc.fabric.FabricParkourCalculator;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.Pose;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
-//? if <1.21.2 {
-/*import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
-*///?}
+//? if <1.21.2
+//import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Pose;
+//? if >=1.21.2
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
+//? if <1.21.2
+//import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.GameType;
 //? if >=26.1
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
+//? if <1.21.2
+//import java.util.ArrayList;
 import java.util.Collection;
+//? if >=1.21.2
 import java.util.HashMap;
 import java.util.Map;
 
@@ -75,21 +78,18 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
         return true;
     }
 
-    //? if >=26.1 {
-    @Override
-    public @Nullable GameType gameMode() {
-        return GameType.DEFAULT_MODE;
-    }
-    //?} else {
+    //? if <26.1 {
     /*@Override
     public boolean isEffectiveAi() {
         return true;
     }
 
+    *///?}
+    //? if >=26.1
+    @Override
     public @Nullable GameType gameMode() {
         return GameType.DEFAULT_MODE;
     }
-    *///?}
 
     @Override
     public void causeFoodExhaustion(float amount) {
@@ -103,9 +103,9 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
     protected void onBelowWorld() {
     }
 
-    //? if >=1.21.2 {
     @Override
     public boolean removeAllEffects() {
+        //? if >=1.21.2 {
         Map<net.minecraft.core.Holder<MobEffect>, MobEffectInstance> active = this.getActiveEffectsMap();
         if (active.isEmpty()) return false;
         Map<net.minecraft.core.Holder<MobEffect>, MobEffectInstance> copy = new HashMap<>(active);
@@ -134,10 +134,8 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
             e.getEffect().value().removeAttributeModifiers(this.getAttributes());
         }
     }
-    //?} else {
-    /*@Override
-    public boolean removeAllEffects() {
-        Map<MobEffect, MobEffectInstance> active = this.getActiveEffectsMap();
+        //?} else {
+        /*Map<MobEffect, MobEffectInstance> active = this.getActiveEffectsMap();
         if (active.isEmpty()) return false;
         Collection<MobEffectInstance> copy = new ArrayList<>(active.values());
         active.clear();

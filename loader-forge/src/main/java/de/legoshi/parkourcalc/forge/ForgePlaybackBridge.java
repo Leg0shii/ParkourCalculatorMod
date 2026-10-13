@@ -9,22 +9,20 @@ import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.client.settings.KeyBinding;
-//? if >=1.12 {
+//? if >=1.12
 import net.minecraft.entity.SharedMonsterAttributes;
-//?}
 import net.minecraft.entity.player.EntityPlayerMP;
 //? if >=1.12 {
 import net.minecraft.init.MobEffects;
 import net.minecraft.network.play.client.CPacketPlayer;
-//?}
+//?} else {
+/*import net.minecraft.network.play.client.C03PacketPlayer;
+import net.minecraft.potion.Potion;
+*///?}
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.MouseHelper;
 import net.minecraft.util.MovementInput;
-//? if <1.12 {
-/*import net.minecraft.network.play.client.C03PacketPlayer;
-import net.minecraft.potion.Potion;
-*///?}
 
 import java.util.UUID;
 
@@ -82,7 +80,6 @@ public final class ForgePlaybackBridge implements PlaybackBridge {
 
     @Override
     public boolean supportsMultiplayerPlayback() {
-        Minecraft mc = Minecraft.getMinecraft();
         return McClient.player() != null && McClient.world() != null;
     }
 

@@ -8,32 +8,35 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 //? if <26.1
 //import net.minecraft.core.BlockPos;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.Pose;
-import net.minecraft.world.entity.MoverType;
-import net.minecraft.world.entity.ai.attributes.Attributes;
+//? if >=1.21.2
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.entity.player.Player;
+//? if <1.21.2
+//import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.entity.Pose;
 //? if >=1.21.2 {
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Input;
-//?} else {
-/*import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
-*///?}
-import net.minecraft.tags.FluidTags;
-import net.minecraft.util.Mth;
+//?}
+import net.minecraft.world.entity.player.Player;
+//? if <1.21.2
+//import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.Level;
 //? if >=26.1
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.level.GameType;
-import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
+//? if >=1.21.2
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -187,17 +190,14 @@ public class SimulatorEntity extends Player {
         return tickSoulsandCells;
     }
 
-    //? if >=1.21.2 {
     @Override
+    //? if >=1.21.2 {
     public boolean hurtServer(ServerLevel world, DamageSource source, float amount) {
-        return false;
-    }
     //?} else {
-    /*@Override
-    public boolean hurt(DamageSource source, float amount) {
+    /*public boolean hurt(DamageSource source, float amount) {
+    *///?}
         return false;
     }
-    *///?}
 
     @Override
     public void causeFoodExhaustion(float amount) {
@@ -217,11 +217,6 @@ public class SimulatorEntity extends Player {
     public boolean isClientAuthoritative() {
         return false;
     }
-
-    @Override
-    public @Nullable GameType gameMode() {
-        return GameType.DEFAULT_MODE;
-    }
     //?} else {
     /*@Override
     public boolean isEffectiveAi() {
@@ -237,11 +232,13 @@ public class SimulatorEntity extends Player {
     public boolean isSpectator() {
         return false;
     }
+    *///?}
 
+    //? if >=26.1
+    @Override
     public @Nullable GameType gameMode() {
         return GameType.DEFAULT_MODE;
     }
-    *///?}
 
     /** No-op so the simulator doesn't spawn particles in the real world. */
     @Override
@@ -269,9 +266,9 @@ public class SimulatorEntity extends Player {
     // which would make every effect call a no-op in the client level. Reimplement
     // without the gate so attribute modifiers actually attach and detach.
 
-    //? if >=1.21.2 {
     @Override
     public boolean removeAllEffects() {
+    //? if >=1.21.2 {
         Map<net.minecraft.core.Holder<MobEffect>, MobEffectInstance> active = this.getActiveEffectsMap();
         if (active.isEmpty()) return false;
         Map<net.minecraft.core.Holder<MobEffect>, MobEffectInstance> copy = new HashMap<>(active);
@@ -301,9 +298,7 @@ public class SimulatorEntity extends Player {
         }
     }
     //?} else {
-    /*@Override
-    public boolean removeAllEffects() {
-        Map<MobEffect, MobEffectInstance> active = this.getActiveEffectsMap();
+        /*Map<MobEffect, MobEffectInstance> active = this.getActiveEffectsMap();
         if (active.isEmpty()) return false;
         Collection<MobEffectInstance> copy = new ArrayList<>(active.values());
         active.clear();
@@ -412,9 +407,6 @@ public class SimulatorEntity extends Player {
                     this.setSprinting(false);
                 }
             } else if (this.shouldStopRunSprinting()) {
-                this.setSprinting(false);
-            }
-        }
         //?} else {
         /*if (this.isUsingItem() && !this.isPassenger()) {
             this.input.leftImpulse *= 0.2F;
@@ -462,10 +454,10 @@ public class SimulatorEntity extends Player {
                     this.setSprinting(false);
                 }
             } else if (stopRunning) {
+        *///?}
                 this.setSprinting(false);
             }
         }
-        *///?}
 
         super.aiStep();
     }
