@@ -51,8 +51,8 @@ Each loader tree is a [Stonecutter](https://stonecutter.kikugie.dev/) project: `
 | Playback (TAS replay) | `core/.../PlaybackController.java`; loader `FabricPlaybackBridge` and Forge equivalents |
 | Ports (core interfaces) | `core/.../ports/`: `MinecraftAccess`, `Simulator`, `BoxRenderer`, `PlaybackBridge`, `FilePickerPort` |
 | Simulation (Fabric) | `loader-fabric/.../sim/SimulatorEntity.java`, `FabricSimulator.java`, `SimulatorInput.java` |
-| Rendering (Fabric) | `loader-fabric/.../render/FabricWorldOverlayRenderer.java`, `FabricHudOverlayRenderer.java`; ImGui `imgui/ImGuiImpl.java` |
-| Mixins (Fabric) | `loader-fabric/.../fabric/mixin/`; registered in `parkourcalculator.client.mixins.json` (Forge uses the FML event bus, no mixins) |
+| Rendering (Fabric) | `loader-fabric/src/renderpearl/.../render/` (26.x) and `loader-fabric/src/blaze3d/.../render/` (1.21.3, 1.20.4): `FabricWorldOverlayRenderer.java`, `FabricHudOverlayRenderer.java`, `FabricBoxRenderer.java`; ImGui `imgui/ImGuiImpl.java` in `src/sdl` (26.3) and `src/glfw` (older) |
+| Mixins (Fabric) | `loader-fabric/src/client/.../fabric/mixin/` (shared), the render mixins in `src/renderpearl` / `src/blaze3d`, the input mixins in `src/sdl` / `src/glfw`; the `mixins` list in `loader-fabric/build.gradle` is expanded into `parkourcalculator.client.mixins.json` at build time (Forge uses the FML event bus, no mixins) |
 
 **Tick indexing:** `posX[t]` = position at the *start* of tick `t` (before that tick's inputs); box `k` shows pre-tick state. A constraint on tick `n` affects `posX[n]`; to constrain what tick `n`'s input *produces*, place the constraint on tick `n+1`.
 
@@ -126,8 +126,8 @@ Unzip the relevant `-sources.jar` and grep for a single file (e.g. `EntityPlayer
 - **Simulation is the single source of truth.** The loader's `SimulatorEntity` reproduces real MC movement; never approximate it. Divergence from MC is a bug, not an optimization. (The solver's `ExactJumpModel` is a separate byte-exact X/Z replica for the search inner loop, which cannot afford the MC-coupled entity; the entity is used for cheap post-Apply verify.)
 - **Core stays Minecraft-free.** No `net.minecraft.*`, `net.fabricmc.*`, `net.minecraftforge.*`, or `org.lwjgl.*` in `core/`. If core needs world data, define a port in `core/.../ports/` and implement it loader-side (see `docs/CODING_GUIDE.md` § Ports).
 - **Static wiring.** `Application` and the loader entry points use static fields/methods deliberately; the mod is a singleton and statics avoid passing refs across mixin/event boundaries.
-- **Fabric ImGui input routing.** When the overlay is open, `KeyboardMixin` / `MouseMixin` route events to ImGui; an `isUiFocused()` check gates pass-through, and box dragging is disabled while the UI is focused.
-- **Fabric mixin lifecycle.** MC hooks go through mixins, not Fabric events (except `ClientTickEvents` for input polling). A new mixin must be added to `parkourcalculator.client.mixins.json` or it silently won't apply. Forge loaders use the FML event bus + `ClientRegistry` keybinds instead.
+- **Fabric ImGui input routing.** When the overlay is open, `KeyboardHandlerMixin` / `MouseHandlerMixin` (one pair per input variant, `src/sdl` and `src/glfw`) route events to ImGui; an `isUiFocused()` check gates pass-through, and box dragging is disabled while the UI is focused.
+- **Fabric mixin lifecycle.** MC hooks go through mixins, not Fabric events (except `ClientTickEvents` for input polling). A new mixin must be added to the `mixins` list in `loader-fabric/build.gradle` (which generates `parkourcalculator.client.mixins.json` per target) or it silently won't apply. Forge loaders use the FML event bus + `ClientRegistry` keybinds instead.
 - **imgui-java is pinned to 1.86.12** everywhere (`core/` compileOnly; loaders `include`/`shade`). The LWJGL2 ImGui shim was built against 1.86.11, whose native method surface is a strict subset of 1.86.12 (the only addition is the unused `ImGuiKnobs` extension), so the shim stays satisfied. 1.86.12 is the floor: it is the first release whose macOS native is a universal binary (x86_64 + arm64); 1.86.11 was x86_64-only and crashed Apple Silicon with an `UnsatisfiedLinkError`. Do not bump higher (e.g. 1.90.0 throws `NoSuchMethodError` against the shim).
 
 

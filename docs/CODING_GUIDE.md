@@ -49,7 +49,7 @@ If none fit, you probably do not need the file. Re-check.
 - Source lives under `src/client/java` (not `src/main`).
 - **All MC-touching code lives here:** `SimulatorEntity`, `FabricSimulator` (implements the `Simulator` port), the world/HUD overlay renderers (implement `BoxRenderer`), `FabricPlaybackBridge`, `ImGuiImpl`, every Mixin, and the `FabricParkourCalculator` entry point. (`BoxController` is core, not here.)
 - **Bundles imgui-java 1.86.12** (binding + LWJGL 3 backend + natives) via Loom `include`. Only loader on LWJGL 3.
-- **Mixins** are declared in `parkourcalculator.client.mixins.json`. A new mixin must be added there or it silently will not apply.
+- **Mixins** are listed in the `mixins` array of `loader-fabric/build.gradle`, which expands them into `parkourcalculator.client.mixins.json` for each target (the render and input mixins only for the targets whose variant set holds them). A new mixin must be added to that list or it silently will not apply.
 
 ### `loader-forge/`
 
