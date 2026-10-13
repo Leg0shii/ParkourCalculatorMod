@@ -43,16 +43,6 @@ base {
 	archivesName = "${project.archives_base_name}-${mc}"
 }
 
-repositories {
-	maven {
-		name = "Modrinth"
-		url = "https://api.modrinth.com/maven"
-		content {
-			includeGroup "maven.modrinth"
-		}
-	}
-}
-
 sourceSets {
 	create(renderSet)
 	create(inputSet)
