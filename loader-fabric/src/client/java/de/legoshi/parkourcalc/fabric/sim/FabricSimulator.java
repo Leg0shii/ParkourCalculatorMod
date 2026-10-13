@@ -11,7 +11,14 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.fabric.sim.paired.PairedCheckpoint;
 import de.legoshi.parkourcalc.fabric.sim.paired.PairedServerSim;
+//? if >=1.21.2 {
 import net.minecraft.world.entity.player.Input;
+//?} else {
+/*import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+*///?}
+import net.minecraft.world.entity.ai.attributes.AttributeMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -22,7 +29,11 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.Level;
+//? if >=1.21 {
 import net.minecraft.world.level.chunk.status.ChunkStatus;
+//?} else {
+/*import net.minecraft.world.level.chunk.ChunkStatus;
+*///?}
 
 import java.util.List;
 
@@ -151,7 +162,7 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
 
     @Override protected void resetEntity(SimulatorEntity e, StartResumeState resume) {
         Player player = Minecraft.getInstance().player;
-        if (player != null) e.getAttributes().assignBaseValues(player.getAttributes());
+        if (player != null) copyBaseAttributes(e.getAttributes(), player.getAttributes());
         ensurePair(e);
         if (pair != null) {
             pair.resetForFullRun(e, resume);
@@ -217,10 +228,10 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
     protected void applyTickEffects(SimulatorEntity e, int speedAmplifier, int jumpBoostAmplifier) {
         e.removeAllEffects();
         if (speedAmplifier > 0) {
-            e.addEffect(new MobEffectInstance(MobEffects.SPEED, 2, speedAmplifier - 1));
+            e.addEffect(new MobEffectInstance(speedEffect(), 2, speedAmplifier - 1));
         }
         if (jumpBoostAmplifier > 0) {
-            e.addEffect(new MobEffectInstance(MobEffects.JUMP_BOOST, 2, jumpBoostAmplifier - 1));
+            e.addEffect(new MobEffectInstance(jumpBoostEffect(), 2, jumpBoostAmplifier - 1));
         }
     }
 
@@ -266,8 +277,8 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
 
     @Override
     protected String formatDebugState(SimulatorEntity e, int tickIndex) {
-        MobEffectInstance spd = e.getEffect(MobEffects.SPEED);
-        MobEffectInstance jmp = e.getEffect(MobEffects.JUMP_BOOST);
+        MobEffectInstance spd = e.getEffect(speedEffect());
+        MobEffectInstance jmp = e.getEffect(jumpBoostEffect());
         double mvSp = e.getAttributeValue(Attributes.MOVEMENT_SPEED);
         Vec3 pos = e.position();
         Vec3 vel = e.getDeltaMovement();
@@ -420,4 +431,42 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
             e.restoreCheckpoint(client);
         }
     }
+
+    public static void copyBaseAttributes(AttributeMap to, AttributeMap from) {
+        //? if >=1.21 {
+        to.assignBaseValues(from);
+        //?} else {
+        /*for (Attribute attribute : BuiltInRegistries.ATTRIBUTE) {
+            if (!from.hasAttribute(attribute)) continue;
+            AttributeInstance target = to.getInstance(attribute);
+            if (target != null) target.setBaseValue(from.getBaseValue(attribute));
+        }
+        *///?}
+    }
+
+    //? if >=26.1 {
+    private static net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> speedEffect() {
+        return MobEffects.SPEED;
+    }
+
+    private static net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> jumpBoostEffect() {
+        return MobEffects.JUMP_BOOST;
+    }
+    //?} elif >=1.20.5 {
+    /*private static net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> speedEffect() {
+        return MobEffects.MOVEMENT_SPEED;
+    }
+
+    private static net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> jumpBoostEffect() {
+        return MobEffects.JUMP;
+    }
+    *///?} else {
+    /*private static net.minecraft.world.effect.MobEffect speedEffect() {
+        return MobEffects.MOVEMENT_SPEED;
+    }
+
+    private static net.minecraft.world.effect.MobEffect jumpBoostEffect() {
+        return MobEffects.JUMP;
+    }
+    *///?}
 }

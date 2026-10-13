@@ -31,7 +31,9 @@ public interface LocalPlayerAccessor {
 
     @Accessor("lastOnGround") void pkc$setLastOnGround(boolean v);
 
+    //? if >=1.21.2 {
     @Accessor("lastHorizontalCollision") boolean pkc$getLastHorizontalCollision();
 
     @Accessor("lastHorizontalCollision") void pkc$setLastHorizontalCollision(boolean v);
+    //?}
 }

@@ -9,8 +9,11 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  build:
     runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      targets: ${{ steps.targets.outputs.targets }}
     steps:
       - name: checkout repository
         uses: actions/checkout@v4
@@ -35,72 +38,65 @@ jobs:
         id: version
         run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
+      - name: list loader targets
+        id: targets
+        run: |
+          targets=$(for dir in loader-*/versions/*/; do
+            tree=${dir%%/*}
+            printf '{"loader":"%s","mc":"%s"}\n' "${tree#loader-}" "$(basename "$dir")"
+          done | jq -cs '{include: .}')
+          echo "targets=$targets" >> "$GITHUB_OUTPUT"
+
       - name: build
         run: ./gradlew build -x tableStyleCheck -PslowTests -PreleaseVersion=${{ steps.version.outputs.version }} -Dorg.gradle.java.home="$JAVA_HOME"
+
+      - name: collect jars
+        run: |
+          mkdir -p release-jars
+          cp loader-*/versions/*/build/libs/pkc-*-${{ steps.version.outputs.version }}.jar release-jars/
+          ls -l release-jars
+
+      - name: upload jars
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-jars
+          path: release-jars/*.jar
 
       - name: create github release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            loader-fabric/build/libs/pkc-fabric-${{ steps.version.outputs.version }}.jar
-            loader-fabric-1.21.3/build/libs/pkc-fabric-1.21.3-${{ steps.version.outputs.version }}.jar
-            loader-forge-1.8.9/build/libs/pkc-forge-1.8.9-${{ steps.version.outputs.version }}.jar
-            loader-forge-1.12.2/build/libs/pkc-forge-1.12.2-${{ steps.version.outputs.version }}.jar
+          files: release-jars/*.jar
           prerelease: ${{ contains(github.ref_name, '-') }}
+
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.build.outputs.targets) }}
+    name: publish ${{ matrix.loader }} ${{ matrix.mc }} to modrinth
+    steps:
+      - name: download jars
+        uses: actions/download-artifact@v4
+        with:
+          name: release-jars
+          path: release-jars
 
       - name: fetch release changelog
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: gh release view "$GITHUB_REF_NAME" --json body --jq .body > changelog.md
 
-      - name: publish fabric to modrinth
+      - name: publish to modrinth
         uses: Kir-Antipov/mc-publish@v3.3
         with:
           modrinth-id: Lxy4H4lS
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-          files: loader-fabric/build/libs/pkc-fabric-${{ steps.version.outputs.version }}.jar
-          name: ${{ steps.version.outputs.version }} (Fabric)
-          version: ${{ steps.version.outputs.version }}
+          files: release-jars/pkc-${{ matrix.loader }}-${{ matrix.mc }}-${{ needs.build.outputs.version }}.jar
+          name: ${{ needs.build.outputs.version }} (${{ matrix.loader == 'fabric' && 'Fabric' || 'Forge' }} ${{ matrix.mc }})
+          version: ${{ needs.build.outputs.version }}
           version-type: ${{ contains(github.ref_name, '-') && 'beta' || 'release' }}
-          loaders: fabric
-          game-versions: '26.3'
-          changelog-file: changelog.md
-
-      - name: publish fabric 1.21.3 to modrinth
-        uses: Kir-Antipov/mc-publish@v3.3
-        with:
-          modrinth-id: Lxy4H4lS
-          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-          files: loader-fabric-1.21.3/build/libs/pkc-fabric-1.21.3-${{ steps.version.outputs.version }}.jar
-          name: ${{ steps.version.outputs.version }} (Fabric 1.21.3)
-          version: ${{ steps.version.outputs.version }}
-          version-type: ${{ contains(github.ref_name, '-') && 'beta' || 'release' }}
-          loaders: fabric
-          game-versions: '1.21.3'
-          changelog-file: changelog.md
-
-      - name: publish forge 1.8.9 to modrinth
-        uses: Kir-Antipov/mc-publish@v3.3
-        with:
-          modrinth-id: Lxy4H4lS
-          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-          files: loader-forge-1.8.9/build/libs/pkc-forge-1.8.9-${{ steps.version.outputs.version }}.jar
-          name: ${{ steps.version.outputs.version }} (Forge 1.8.9)
-          version: ${{ steps.version.outputs.version }}
-          version-type: ${{ contains(github.ref_name, '-') && 'beta' || 'release' }}
-          loaders: forge
-          game-versions: '1.8.9'
-          changelog-file: changelog.md
-
-      - name: publish forge 1.12.2 to modrinth
-        uses: Kir-Antipov/mc-publish@v3.3
-        with:
-          modrinth-id: Lxy4H4lS
-          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-          files: loader-forge-1.12.2/build/libs/pkc-forge-1.12.2-${{ steps.version.outputs.version }}.jar
-          name: ${{ steps.version.outputs.version }} (Forge 1.12.2)
-          version: ${{ steps.version.outputs.version }}
-          version-type: ${{ contains(github.ref_name, '-') && 'beta' || 'release' }}
-          loaders: forge
-          game-versions: '1.12.2'
+          loaders: ${{ matrix.loader }}
+          game-versions: ${{ matrix.mc }}
           changelog-file: changelog.md

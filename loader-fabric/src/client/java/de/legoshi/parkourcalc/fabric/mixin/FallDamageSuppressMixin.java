@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.fabric.mixin;
 
 import de.legoshi.parkourcalc.fabric.FabricParkourCalculator;
+//? if >=1.21.2
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.damagesource.DamageSource;
@@ -12,15 +13,25 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(LivingEntity.class)
 public abstract class FallDamageSuppressMixin {
 
+    //? if >=26.1 {
     @Inject(method = "causeFallDamage", at = @At("HEAD"), cancellable = true)
     private void pkc$suppressFallDamageDuringPlayback(double fallDistance, float damagePerDistance, DamageSource damageSource, CallbackInfoReturnable<Boolean> cir) {
+    //?} else {
+    /*@Inject(method = "causeFallDamage", at = @At("HEAD"), cancellable = true)
+    private void pkc$suppressFallDamageDuringPlayback(float fallDistance, float damagePerDistance, DamageSource damageSource, CallbackInfoReturnable<Boolean> cir) {
+    *///?}
         if (FabricParkourCalculator.shouldSuppressFallDamage((LivingEntity) (Object) this)) {
             cir.setReturnValue(false);
         }
     }
 
+    //? if >=1.21.2 {
     @Inject(method = "hurtServer", at = @At("HEAD"), cancellable = true)
     private void pkc$suppressDamageDuringPlayback(ServerLevel level, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+    //?} else {
+    /*@Inject(method = "hurt", at = @At("HEAD"), cancellable = true)
+    private void pkc$suppressDamageDuringPlayback(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+    *///?}
         if (FabricParkourCalculator.shouldSuppressDamageDuringPlayback((LivingEntity) (Object) this)) {
             cir.setReturnValue(false);
         }

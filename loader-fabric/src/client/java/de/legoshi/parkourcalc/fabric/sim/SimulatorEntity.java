@@ -6,6 +6,8 @@ import de.legoshi.parkourcalc.core.sim.StartResumeState;
 import de.legoshi.parkourcalc.core.sim.SubtickPath;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
+//? if <26.1
+//import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.MoverType;
@@ -14,10 +16,16 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.player.Player;
+//? if >=1.21.2 {
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.tags.FluidTags;
 import net.minecraft.world.entity.player.Input;
+//?} else {
+/*import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+*///?}
+import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
+//? if >=26.1
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.GameType;
@@ -87,7 +95,11 @@ public class SimulatorEntity extends Player {
     }
 
     public SimulatorEntity(Level world, GameProfile profile, Vec3 startPosition, Vec3 startVelocity, float startYaw) {
+        //? if >=26.1 {
         super(world, profile);
+        //?} else {
+        /*super(world, BlockPos.containing(startPosition.x, startPosition.y, startPosition.z), startYaw, profile);
+        *///?}
         this.startPosition = startPosition;
         this.startVelocity = startVelocity;
         this.startYaw = startYaw;
@@ -145,7 +157,13 @@ public class SimulatorEntity extends Player {
     @Override
     public void travel(Vec3 input) {
         boolean web = this.stuckSpeedMultiplier.lengthSqr() > 1.0E-7;
+        //? if >=26.1 {
         boolean fluid = this.shouldTravelInFluid(this.level().getFluidState(this.blockPosition()));
+        //?} else {
+        /*boolean fluid = (this.isInWater() || this.isInLava())
+                && this.isAffectedByFluids()
+                && !this.canStandOnFluid(this.level().getFluidState(this.blockPosition()));
+        *///?}
         boolean water = fluid && this.isInWater();
         boolean lava = fluid && !water && this.isInLava();
         boolean ladder = this.onClimbable();
@@ -169,10 +187,17 @@ public class SimulatorEntity extends Player {
         return tickSoulsandCells;
     }
 
+    //? if >=1.21.2 {
     @Override
     public boolean hurtServer(ServerLevel world, DamageSource source, float amount) {
         return false;
     }
+    //?} else {
+    /*@Override
+    public boolean hurt(DamageSource source, float amount) {
+        return false;
+    }
+    *///?}
 
     @Override
     public void causeFoodExhaustion(float amount) {
@@ -185,6 +210,7 @@ public class SimulatorEntity extends Player {
         return true;
     }
 
+    //? if >=26.1 {
     /** Lets the entity tick on ServerWorld: Entity.isLocalInstanceAuthoritative is final
      *  and returns !isControlledByPlayer() there, and PlayerEntity defaults that to true. */
     @Override
@@ -196,6 +222,26 @@ public class SimulatorEntity extends Player {
     public @Nullable GameType gameMode() {
         return GameType.DEFAULT_MODE;
     }
+    //?} else {
+    /*@Override
+    public boolean isEffectiveAi() {
+        return true;
+    }
+
+    @Override
+    public boolean isCreative() {
+        return false;
+    }
+
+    @Override
+    public boolean isSpectator() {
+        return false;
+    }
+
+    public @Nullable GameType gameMode() {
+        return GameType.DEFAULT_MODE;
+    }
+    *///?}
 
     /** No-op so the simulator doesn't spawn particles in the real world. */
     @Override
@@ -223,6 +269,7 @@ public class SimulatorEntity extends Player {
     // which would make every effect call a no-op in the client level. Reimplement
     // without the gate so attribute modifiers actually attach and detach.
 
+    //? if >=1.21.2 {
     @Override
     public boolean removeAllEffects() {
         Map<net.minecraft.core.Holder<MobEffect>, MobEffectInstance> active = this.getActiveEffectsMap();
@@ -253,6 +300,38 @@ public class SimulatorEntity extends Player {
             e.getEffect().value().removeAttributeModifiers(this.getAttributes());
         }
     }
+    //?} else {
+    /*@Override
+    public boolean removeAllEffects() {
+        Map<MobEffect, MobEffectInstance> active = this.getActiveEffectsMap();
+        if (active.isEmpty()) return false;
+        Collection<MobEffectInstance> copy = new ArrayList<>(active.values());
+        active.clear();
+        for (MobEffectInstance e : copy) {
+            this.onEffectRemoved(e);
+        }
+        return true;
+    }
+
+    @Override
+    protected void onEffectAdded(MobEffectInstance effect, @Nullable Entity source) {
+        effect.getEffect().addAttributeModifiers(this, this.getAttributes(), effect.getAmplifier());
+    }
+
+    @Override
+    protected void onEffectUpdated(MobEffectInstance effect, boolean reapplyEffect, @Nullable Entity source) {
+        if (reapplyEffect) {
+            MobEffect type = effect.getEffect();
+            type.removeAttributeModifiers(this, this.getAttributes(), effect.getAmplifier());
+            type.addAttributeModifiers(this, this.getAttributes(), effect.getAmplifier());
+        }
+    }
+
+    @Override
+    protected void onEffectRemoved(MobEffectInstance effect) {
+        effect.getEffect().removeAttributeModifiers(this, this.getAttributes(), effect.getAmplifier());
+    }
+    *///?}
 
     /** No-op so the simulator can't shove the real player or other world entities. */
     @Override
@@ -286,7 +365,11 @@ public class SimulatorEntity extends Player {
 
         // Capture pre-input.tick() so wasShiftKeyDown/hasForwardImpulse hold the previous tick's state.
         boolean wasShiftKeyDown = this.input.keyPresses.shift();
+        //? if >=1.21.2 {
         boolean hasForwardImpulse = this.input.hasForwardImpulse();
+        //?} else {
+        /*boolean hadEnoughImpulse = this.hasEnoughImpulseToStartSprinting();
+        *///?}
 
         // Mirrors LocalPlayer 1:1; the !canPlayerFitWithinBlocksAndEntitiesWhen(STANDING) term is vanilla's
         // forced crouch under a low ceiling, which keeps the slowdown after sneak is released.
@@ -296,8 +379,15 @@ public class SimulatorEntity extends Player {
                 && this.canPlayerFitWithinBlocksAndEntitiesWhen(Pose.CROUCHING)
                 && (this.isShiftKeyDown() || !this.isSleeping() && !this.canPlayerFitWithinBlocksAndEntitiesWhen(Pose.STANDING));
 
+        //? if >=26.1 {
         this.input.tick();
+        //?} elif >=1.21.2 {
+        /*this.input.tick(this.isMovingSlowly(), (float) this.getAttributeValue(Attributes.SNEAKING_SPEED));
+        *///?} else {
+        /*this.input.tick(this.isMovingSlowly(), Mth.clamp(0.3F + EnchantmentHelper.getSneakingSpeedBonus(this), 0.0F, 1.0F));
+        *///?}
 
+        //? if >=1.21.2 {
         if (wasShiftKeyDown || this.isUsingItem() && !this.isPassenger() || this.input.keyPresses.backward()) {
             this.sprintTriggerTime = 0;
         }
@@ -325,6 +415,57 @@ public class SimulatorEntity extends Player {
                 this.setSprinting(false);
             }
         }
+        //?} else {
+        /*if (this.isUsingItem() && !this.isPassenger()) {
+            this.input.leftImpulse *= 0.2F;
+            this.input.forwardImpulse *= 0.2F;
+            this.sprintTriggerTime = 0;
+        }
+
+        if (wasShiftKeyDown) {
+            this.sprintTriggerTime = 0;
+        }
+
+        boolean enoughFood = this.getFoodData().getFoodLevel() > 6.0F || this.getAbilities().mayfly;
+        if ((this.onGround() || this.isUnderWater())
+                && !wasShiftKeyDown
+                && !hadEnoughImpulse
+                && this.hasEnoughImpulseToStartSprinting()
+                && !this.isSprinting()
+                && enoughFood
+                && !this.isUsingItem()
+                && !this.hasEffect(MobEffects.BLINDNESS)) {
+            if (this.sprintTriggerTime <= 0 && !this.input.keyPresses.sprint()) {
+                this.sprintTriggerTime = 7;
+            } else {
+                this.setSprinting(true);
+            }
+        }
+
+        if (!this.isSprinting()
+                && (!this.isInWater() || this.isUnderWater())
+                && this.hasEnoughImpulseToStartSprinting()
+                && enoughFood
+                && !this.isUsingItem()
+                && !this.hasEffect(MobEffects.BLINDNESS)
+                && this.input.keyPresses.sprint()) {
+            this.setSprinting(true);
+        }
+
+        if (this.isSprinting()) {
+            boolean lostImpulse = !this.input.hasForwardImpulse() || !enoughFood;
+            boolean stopRunning = lostImpulse
+                    || this.horizontalCollision && !this.minorHorizontalCollision
+                    || this.isInWater() && !this.isUnderWater();
+            if (this.isSwimming()) {
+                if (!this.onGround() && !this.input.keyPresses.shift() && lostImpulse || !this.isInWater()) {
+                    this.setSprinting(false);
+                }
+            } else if (stopRunning) {
+                this.setSprinting(false);
+            }
+        }
+        *///?}
 
         super.aiStep();
     }
@@ -343,6 +484,7 @@ public class SimulatorEntity extends Player {
 
     // Helpers copied 1-to-1 from LocalEntity (private there).
 
+    //? if >=1.21.2 {
     private boolean canStartSprinting() {
         return !this.isSprinting()
                 && this.input.hasForwardImpulse()
@@ -365,19 +507,38 @@ public class SimulatorEntity extends Player {
     }
 
     private boolean isSprintingPossible(boolean allowedInShallowWater) {
+        //? if >=26.1 {
         return !this.isMobilityRestricted()
                 && this.hasEnoughFoodToSprint()
                 && (!this.isPassenger() || this.vehicleCanSprint(this.getVehicle()))
                 && (allowedInShallowWater || !this.isInShallowWater());
+        //?} else {
+        /*return !this.isImmobile()
+                && this.hasEnoughFoodToSprint()
+                && (!this.isPassenger() || this.vehicleCanSprint(this.getVehicle()))
+                && (allowedInShallowWater || !(this.isInWater() && !this.isUnderWater()));
+        *///?}
     }
 
     private boolean vehicleCanSprint(Entity vehicle) {
+        //? if >=26.1 {
         return vehicle.canSprint() && vehicle.isLocalInstanceAuthoritative();
+        //?} else {
+        /*return vehicle.canSprint() && vehicle.isControlledByLocalInstance();
+        *///?}
     }
 
     private boolean hasEnoughFoodToSprint() {
         return this.isPassenger() || this.getFoodData().getFoodLevel() > 6.0F || this.getAbilities().mayfly;
     }
+    //?} else {
+    /*private boolean hasEnoughImpulseToStartSprinting() {
+        if (this.isUnderWater()) {
+            return this.input.hasForwardImpulse();
+        }
+        return (double) this.input.forwardImpulse >= 0.8;
+    }
+    *///?}
 
     /** Lives on LocalPlayer in MC, not Player, so we redeclare it. */
     public boolean isMovingSlowly() {
@@ -410,6 +571,7 @@ public class SimulatorEntity extends Player {
         return Math.toDegrees(Math.acos(dotProduct / Math.sqrt(aLengthSquared * movementLengthSquared)));
     }
 
+    //? if >=26.1 {
     @Override
     public void applyInput() {
         Vec2 movement = modifyInput(this.input.getMoveVector());
@@ -449,6 +611,15 @@ public class SimulatorEntity extends Player {
         float tan = directionY > directionX ? directionX / directionY : directionY / directionX;
         return Mth.sqrt(1.0F + Mth.square(tan));
     }
+    //?} else {
+    /*@Override
+    public void serverAiStep() {
+        super.serverAiStep();
+        this.xxa = this.input.leftImpulse;
+        this.zza = this.input.forwardImpulse;
+        this.jumping = this.input.keyPresses.jump();
+    }
+    *///?}
 
     public Checkpoint saveCheckpoint() {
         Checkpoint c = new Checkpoint();
@@ -496,7 +667,11 @@ public class SimulatorEntity extends Player {
     }
 
     private void settleFluidState() {
+        //? if >=26.1 {
         this.updateFluidInteraction();
+        //?} else {
+        /*this.updateInWaterStateAndDoFluidPushing();
+        *///?}
         this.wasEyeInWater = this.isEyeInFluid(FluidTags.WATER);
         this.updateIsUnderwater();
         this.updateSwimming();
@@ -550,6 +725,10 @@ public class SimulatorEntity extends Player {
         Vec3 movementMultiplier;
         Pose pose;
         boolean crouching;
+        //? if >=26.1 {
         double fallDistance;
+        //?} else {
+        /*float fallDistance;
+        *///?}
     }
 }

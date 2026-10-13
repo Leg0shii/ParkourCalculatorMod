@@ -9,7 +9,10 @@ import de.legoshi.parkourcalc.fabric.mixin.PlayerAccessor;
 import de.legoshi.parkourcalc.fabric.sim.GhostPlayerEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+//? if >=1.21.2 {
 import net.minecraft.client.player.ClientInput;
+import net.minecraft.world.entity.PositionMoveRotation;
+//?}
 import net.minecraft.tags.FluidTags;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.Options;
@@ -17,7 +20,6 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.PositionMoveRotation;
 import net.minecraft.world.entity.player.Abilities;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -40,7 +42,11 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
     private static final int GHOST_ENTITY_ID = -2100000000;
 
     private final InputRow currentRow = new InputRow();
+    //? if >=1.21.2 {
     private ClientInput originalInput;
+    //?} else {
+    /*private net.minecraft.client.player.Input originalInput;
+    *///?}
     private boolean ghostMode;
     private GhostPlayerEntity ghost;
     private final java.util.List<ReplaySample> replaySamples = new java.util.ArrayList<>();
@@ -75,6 +81,14 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         originalInput = null;
     }
 
+    static void snapTo(Entity entity, double x, double y, double z, float yaw, float pitch) {
+        //? if >=26.1 {
+        entity.absSnapTo(x, y, z, yaw, pitch);
+        //?} else {
+        /*entity.absMoveTo(x, y, z, yaw, pitch);
+        *///?}
+    }
+
     @Override
     public boolean isSingleplayer() {
         Minecraft mc = Minecraft.getInstance();
@@ -100,7 +114,7 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         GhostPlayerEntity g = new GhostPlayerEntity(level, client.getGameProfile());
         g.setId(GHOST_ENTITY_ID);
         g.setInput(currentRow);
-        g.absSnapTo(pos.x, pos.y, pos.z, yaw, client.getXRot());
+        snapTo(g, pos.x, pos.y, pos.z, yaw, client.getXRot());
         g.setYBodyRot(yaw);
         g.yBodyRotO = yaw;
         g.setYHeadRot(yaw);
@@ -110,10 +124,10 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
             g.applyCarry(carry);
         } else {
             g.setOnGround(true);
-            g.fallDistance = 0.0;
+            g.fallDistance = 0.0F;
         }
         if (!FabricParkourCalculator.getSettings().pairedSimulation) {
-            g.fallDistance = 0.0;
+            g.fallDistance = 0.0F;
         }
         g.setOldPosAndRot();
         g.copyModelCustomisationFrom(client);
@@ -178,11 +192,18 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
                 + " vCollB=" + sp.verticalCollisionBelow
                 + " spr=" + sp.isSprinting()
                 + " sneak=" + sp.isShiftKeyDown()
+                //? if >=26.1 {
                 + " syncVelocity=" + sp.syncVelocity
                 + " cooldown=" + sp.damageCooldownTime
+                //?} else {
+                /*+ " syncVelocity=" + sp.hurtMarked
+                + " cooldown=" + sp.invulnerableTime
+                *///?}
                 + " hurtTime=" + sp.hurtTime
                 + " fire=" + sp.getRemainingFireTicks()
+                //? if >=1.21.2 {
                 + " in=" + de.legoshi.parkourcalc.fabric.sim.paired.PairedServerSim.describeInput(sp.getLastClientInput())
+                //?}
                 + " tp=" + (conn.awaitingPositionFromClient != null)
                 + " tpId=" + conn.awaitingTeleport
                 + " recv=" + conn.receivedMovePacketCount + "/" + conn.knownMovePacketCount
@@ -283,16 +304,29 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         acc.pkc$setPositionReminder(acc.pkc$getPositionReminder() + 1);
         boolean moved = Mth.lengthSquared(dx, dy, dz) > Mth.square(2.0E-4) || acc.pkc$getPositionReminder() >= 20;
         if (moved) {
+            //? if >=26.1 {
             p.connection.send(new ServerboundMovePlayerPacket.Pos(p.position(), p.onGround(), p.horizontalCollision));
+            //?} elif >=1.21.2 {
+            /*p.connection.send(new ServerboundMovePlayerPacket.Pos(p.getX(), p.getY(), p.getZ(), p.onGround(), p.horizontalCollision));
+            *///?} else {
+            /*p.connection.send(new ServerboundMovePlayerPacket.Pos(p.getX(), p.getY(), p.getZ(), p.onGround()));
+            *///?}
             acc.pkc$setXLast(p.getX());
             acc.pkc$setYLast(p.getY());
             acc.pkc$setZLast(p.getZ());
             acc.pkc$setPositionReminder(0);
+        //? if >=1.21.2 {
         } else if (acc.pkc$getLastOnGround() != p.onGround() || acc.pkc$getLastHorizontalCollision() != p.horizontalCollision) {
             p.connection.send(new ServerboundMovePlayerPacket.StatusOnly(p.onGround(), p.horizontalCollision));
         }
         acc.pkc$setLastOnGround(p.onGround());
         acc.pkc$setLastHorizontalCollision(p.horizontalCollision);
+        //?} else {
+        /*} else if (acc.pkc$getLastOnGround() != p.onGround()) {
+            p.connection.send(new ServerboundMovePlayerPacket.StatusOnly(p.onGround()));
+        }
+        acc.pkc$setLastOnGround(p.onGround());
+        *///?}
     }
 
     void endGhostPlayback() {
@@ -312,6 +346,23 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         if (level != null && g.level() == level) {
             level.removeEntity(GHOST_ENTITY_ID, Entity.RemovalReason.DISCARDED);
         }
+    }
+
+    private static void moveServerPlayer(ServerPlayer sp, Vec3 pos, Vec3 vel, float yaw) {
+        //? if >=1.21.2 {
+        // EntityPosition overload carries velocity in the teleport packet itself.
+        // The 5-arg overload zeroes velocity and the followup setVelocity+velocityModified
+        // path fires a SetEntityMotion packet that arrives ~1 tick late and stomps the
+        // player mid-playback.
+        sp.connection.teleport(
+            new PositionMoveRotation(pos, vel, yaw, sp.getXRot()),
+            Collections.emptySet()
+        );
+        //?} else {
+        /*sp.absMoveTo(pos.x, pos.y, pos.z, yaw, sp.getXRot());
+        sp.setDeltaMovement(vel);
+        sp.connection.resetPosition();
+        *///?}
     }
 
     @Override
@@ -335,14 +386,7 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
             try {
                 ServerPlayer sp = server.getPlayerList().getPlayer(uuid);
                 if (sp == null) return;
-                // EntityPosition overload carries velocity in the teleport packet itself.
-                // The 5-arg overload zeroes velocity and the followup setVelocity+velocityModified
-                // path fires a SetEntityMotion packet that arrives ~1 tick late and stomps the
-                // player mid-playback.
-                sp.connection.teleport(
-                    new PositionMoveRotation(new Vec3(pos.x, pos.y, pos.z), startVel, yaw, sp.getXRot()),
-                    Collections.emptySet()
-                );
+                moveServerPlayer(sp, new Vec3(pos.x, pos.y, pos.z), startVel, yaw);
                 de.legoshi.parkourcalc.fabric.sim.paired.PairedCheckpoint.applyRestartState(sp, carry);
                 if (carry instanceof de.legoshi.parkourcalc.fabric.sim.paired.PairedCheckpoint) {
                     de.legoshi.parkourcalc.fabric.sim.paired.RestartSettle.arm(uuid, carry);
@@ -351,7 +395,7 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
                 ReplayLockstep.onRestartHopComplete();
             }
         });
-        client.absSnapTo(pos.x, pos.y, pos.z, yaw, client.getXRot());
+        snapTo(client, pos.x, pos.y, pos.z, yaw, client.getXRot());
         settleFluidState(client);
         client.setYBodyRot(yaw);
         client.yBodyRotO = yaw;
@@ -362,10 +406,10 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
             de.legoshi.parkourcalc.fabric.sim.SimulatorEntity.applyCheckpoint(client, carry);
         } else {
             client.setOnGround(true);
-            client.fallDistance = 0.0;
+            client.fallDistance = 0.0F;
         }
         if (!FabricParkourCalculator.getSettings().pairedSimulation) {
-            client.fallDistance = 0.0;
+            client.fallDistance = 0.0F;
         }
         // Suppress the player tick's position packet until the server's requestTeleport
         // arms its teleport-pending state, otherwise the client races and trips moved-wrongly.
@@ -390,7 +434,11 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
     }
 
     private static void settleFluidState(LocalPlayer client) {
+        //? if >=26.1 {
         client.updateFluidInteraction();
+        //?} else {
+        /*client.updateInWaterStateAndDoFluidPushing();
+        *///?}
         client.wasEyeInWater = client.isEyeInFluid(FluidTags.WATER);
         client.updateIsUnderwater();
         client.updateSwimming();
@@ -413,10 +461,7 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         server.execute(() -> {
             ServerPlayer sp = server.getPlayerList().getPlayer(uuid);
             if (sp == null) return;
-            sp.connection.teleport(
-                new PositionMoveRotation(new Vec3(pos.x, pos.y, pos.z), startVel, yaw, sp.getXRot()),
-                Collections.emptySet()
-            );
+            moveServerPlayer(sp, new Vec3(pos.x, pos.y, pos.z), startVel, yaw);
             sp.setOnGround(true);
             sp.setSprinting(false);
             sp.fallDistance = 0;
@@ -515,10 +560,10 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
             if (ghost == null) return;
             ghost.removeAllEffects();
             if (speedAmplifier > 0) {
-                ghost.addEffect(new MobEffectInstance(MobEffects.SPEED, EFFECT_DURATION_TICKS, speedAmplifier - 1, false, false, true));
+                ghost.addEffect(new MobEffectInstance(speedEffect(), EFFECT_DURATION_TICKS, speedAmplifier - 1, false, false, true));
             }
             if (jumpBoostAmplifier > 0) {
-                ghost.addEffect(new MobEffectInstance(MobEffects.JUMP_BOOST, EFFECT_DURATION_TICKS, jumpBoostAmplifier - 1, false, false, true));
+                ghost.addEffect(new MobEffectInstance(jumpBoostEffect(), EFFECT_DURATION_TICKS, jumpBoostAmplifier - 1, false, false, true));
             }
             return;
         }
@@ -531,16 +576,42 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         server.execute(() -> {
             ServerPlayer sp = server.getPlayerList().getPlayer(uuid);
             if (sp == null) return;
-            sp.removeEffect(MobEffects.SPEED);
-            sp.removeEffect(MobEffects.JUMP_BOOST);
+            sp.removeEffect(speedEffect());
+            sp.removeEffect(jumpBoostEffect());
             if (speedAmplifier > 0) {
-                sp.addEffect(new MobEffectInstance(MobEffects.SPEED, EFFECT_DURATION_TICKS, speedAmplifier - 1, false, false, true));
+                sp.addEffect(new MobEffectInstance(speedEffect(), EFFECT_DURATION_TICKS, speedAmplifier - 1, false, false, true));
             }
             if (jumpBoostAmplifier > 0) {
-                sp.addEffect(new MobEffectInstance(MobEffects.JUMP_BOOST, EFFECT_DURATION_TICKS, jumpBoostAmplifier - 1, false, false, true));
+                sp.addEffect(new MobEffectInstance(jumpBoostEffect(), EFFECT_DURATION_TICKS, jumpBoostAmplifier - 1, false, false, true));
             }
         });
     }
+
+    //? if >=26.1 {
+    private static net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> speedEffect() {
+        return MobEffects.SPEED;
+    }
+
+    private static net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> jumpBoostEffect() {
+        return MobEffects.JUMP_BOOST;
+    }
+    //?} elif >=1.20.5 {
+    /*private static net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> speedEffect() {
+        return MobEffects.MOVEMENT_SPEED;
+    }
+
+    private static net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> jumpBoostEffect() {
+        return MobEffects.JUMP;
+    }
+    *///?} else {
+    /*private static net.minecraft.world.effect.MobEffect speedEffect() {
+        return MobEffects.MOVEMENT_SPEED;
+    }
+
+    private static net.minecraft.world.effect.MobEffect jumpBoostEffect() {
+        return MobEffects.JUMP;
+    }
+    *///?}
 
     @Override
     public void setHotbarSlot(int slotZeroBased) {
@@ -548,15 +619,19 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         if (slotZeroBased < 0 || slotZeroBased > 8) return;
         LocalPlayer p = Minecraft.getInstance().player;
         if (p == null) return;
+        //? if >=1.21.5 {
         p.getInventory().setSelectedSlot(slotZeroBased);
+        //?} else {
+        /*p.getInventory().selected = slotZeroBased;
+        *///?}
     }
 
     @Override
     public void dumpPlayerState(int tickIndex) {
         net.minecraft.world.entity.player.Player p = ghost != null ? ghost : Minecraft.getInstance().player;
         if (p == null) return;
-        MobEffectInstance spd = p.getEffect(MobEffects.SPEED);
-        MobEffectInstance jmp = p.getEffect(MobEffects.JUMP_BOOST);
+        MobEffectInstance spd = p.getEffect(speedEffect());
+        MobEffectInstance jmp = p.getEffect(jumpBoostEffect());
         double mvSp = p.getAttributeValue(Attributes.MOVEMENT_SPEED);
         System.out.println("[PC-STATE play] t=" + tickIndex
                 + " pos=" + p.getX() + "," + p.getY() + "," + p.getZ()
@@ -577,7 +652,9 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
                 + " crouch=" + p.isCrouching()
                 + " food=" + p.getFoodData().getFoodLevel()
                 + " fwd=" + (p instanceof LocalPlayer lp ? String.valueOf(lp.input.hasForwardImpulse()) : "n/a")
+                //? if >=1.21.2 {
                 + " keys=" + (p instanceof LocalPlayer lp2 ? de.legoshi.parkourcalc.fabric.sim.paired.PairedServerSim.describeInput(lp2.input.keyPresses) : "n/a")
+                //?}
                 + " mvSpeed=" + mvSp);
     }
 
@@ -638,7 +715,11 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         double sens = ss * ss * ss * 8.0;
         double xo = accumulatedDX * sens;
         double yo = accumulatedDY * sens;
+        //? if >=26.1 {
         ghost.turn(o.invertMouseX().get() ? -xo : xo, o.invertMouseY().get() ? -yo : yo);
+        //?} else {
+        /*ghost.turn(xo, o.invertYMouse().get() ? -yo : yo);
+        *///?}
         return true;
     }
 
@@ -664,7 +745,12 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer p = mc.player;
         if (p == null) return;
-        if (mc.gui.screen() instanceof net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?>) {
+        //? if >=26.1 {
+        net.minecraft.client.gui.screens.Screen screen = mc.gui.screen();
+        //?} else {
+        /*net.minecraft.client.gui.screens.Screen screen = mc.screen;
+        *///?}
+        if (screen instanceof net.minecraft.client.gui.screens.inventory.AbstractContainerScreen<?>) {
             p.closeContainer();
         }
     }

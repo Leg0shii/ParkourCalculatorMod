@@ -9,12 +9,12 @@ How code is split across modules and how to decide where a new file goes. `CLAUD
 core/                  Java 8. ImGui-only UI, input data, the angle solver, value types, ports.
                        No Minecraft, Fabric, Forge, or LWJGL imports.
 forge-core/            Java 8. Shared by both Forge loaders. No Minecraft or Forge imports.
-loader-fabric/         Java 25. Fabric (Loom, LWJGL 3), tracks the latest MC. MC-touching code. Source under src/client/java.
-loader-forge-1.8.9/    Java 8.  Forge (Unimined, LWJGL 2). MC-touching code.
-loader-forge-1.12.2/   Java 8.  Forge (Unimined, LWJGL 2). MC-touching code.
+loader-fabric/         Stonecutter tree for every Fabric target (26.3 on Java 25, 1.21.3 on Java 21, 1.20.4 on Java 17).
+                       Loom, LWJGL 3. MC-touching code. Shared source under src/client/java, variants under src/<variant>/java.
+loader-forge/          Stonecutter tree for both Forge targets (1.12.2, 1.8.9). Java 8, Unimined, LWJGL 2. MC-touching code.
 ```
 
-One root Gradle build covers all five subprojects; each pins its own toolchain. Build tasks and JDK requirements are in `CLAUDE.md` § Build & Run.
+One root Gradle build covers `core`, `forge-core`, and one Gradle subproject per loader target (`:loader-fabric:26.3`, `:loader-fabric:1.21.3`, `:loader-fabric:1.20.4`, `:loader-forge:1.12.2`, `:loader-forge:1.8.9`); each target pins its own toolchain in `loader-<x>/versions/<mc>/gradle.properties`. Build tasks and JDK requirements are in `CLAUDE.md` § Build & Run.
 
 
 ## Where does X go?
@@ -43,14 +43,17 @@ If none fit, you probably do not need the file. Re-check.
 
 ### `loader-fabric/`
 
-- **Java 25** (auto-provisioned toolchain). Use modern features where they help. Source lives under `src/client/java` (not `src/main`).
+- **One source set, three targets.** The raw source is the active version (26.3); 1.21.3 and 1.20.4 compile Stonecutter's processed copy. Put an MC API difference in a `//? if` region right where it occurs; keep the surrounding code shared. Version regions use the MC version that introduced the change (`>=26.1`, `>=1.21.2`, `>=1.20.5`, `>=1.21`), not a loader name.
+- **Variant source sets for subsystems that differ by more than about a third:** `src/renderpearl` (26.x render pipeline and its mixins) vs `src/blaze3d` (1.21.3 and 1.20.4), and `src/sdl` (26.3 input) vs `src/glfw` (older). The central `build.gradle` picks one of each per target and folds it into the client source set. A class name must exist in exactly one variant of a pair so the shared code can reference it.
+- **Java language level is the lowest target's** for shared code: 1.20.4 compiles with `--release 17`, so no features newer than Java 17 in `src/client` or `src/blaze3d`/`src/glfw`; `src/renderpearl` and `src/sdl` may use Java 25.
+- Source lives under `src/client/java` (not `src/main`).
 - **All MC-touching code lives here:** `SimulatorEntity`, `FabricSimulator` (implements the `Simulator` port), the world/HUD overlay renderers (implement `BoxRenderer`), `FabricPlaybackBridge`, `ImGuiImpl`, every Mixin, and the `FabricParkourCalculator` entry point. (`BoxController` is core, not here.)
 - **Bundles imgui-java 1.86.12** (binding + LWJGL 3 backend + natives) via Loom `include`. Only loader on LWJGL 3.
 - **Mixins** are declared in `parkourcalculator.client.mixins.json`. A new mixin must be added there or it silently will not apply.
 
-### `loader-forge-1.8.9/` and `loader-forge-1.12.2/`
+### `loader-forge/`
 
-The two are intentional duplicates: 1.8.9 and 1.12.2 have incompatible MC APIs. Only MC-free code is shared, in `forge-core/`.
+One Stonecutter tree for 1.12.2 (active, the raw source) and 1.8.9 (processed copy). The MC APIs differ (`Vec3d` vs `Vec3`, `world` vs `worldObj`, `move` vs `moveEntity`, packet class names), so those lines sit in `//? if >=1.12 {` ... `//?} else {` ... `//?}` regions; everything else is shared once. `McClient.player()` / `McClient.world()` hide the `player`/`thePlayer` and `world`/`theWorld` renames. MC-free code shared with other loaders lives in `forge-core/`. Each target has its own access transformer (`META-INF/parkourcalculator_<mc>_at.cfg`); `processResources` renames the matching one to `parkourcalculator_at.cfg`.
 
 - **Java 8**, required by the MC runtime.
 - **Log4j 2 for logging** (`org.apache.logging.log4j`), not SLF4J.

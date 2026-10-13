@@ -10,15 +10,27 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(MinecraftServer.class)
 public abstract class LockstepServerMixin {
 
+    //? if >=26.1 {
     @Inject(method = "processPacketsAndTick(Z)V", at = @At("HEAD"))
-    private void pkc$lockstepGate(boolean sprinting, CallbackInfo ci) {
+    private void pkc$lockstepGate(CallbackInfo ci) {
         ReplayLockstep.serverGate((MinecraftServer) (Object) this);
     }
 
     @Inject(method = "processPacketsAndTick(Z)V", at = @At("RETURN"))
-    private void pkc$lockstepTickDone(boolean sprinting, CallbackInfo ci) {
+    private void pkc$lockstepTickDone(CallbackInfo ci) {
         ReplayLockstep.onServerTickCompleted((MinecraftServer) (Object) this);
     }
+    //?} else {
+    /*@Inject(method = "tickServer(Ljava/util/function/BooleanSupplier;)V", at = @At("HEAD"))
+    private void pkc$lockstepGate(CallbackInfo ci) {
+        ReplayLockstep.serverGate((MinecraftServer) (Object) this);
+    }
+
+    @Inject(method = "tickServer(Ljava/util/function/BooleanSupplier;)V", at = @At("RETURN"))
+    private void pkc$lockstepTickDone(CallbackInfo ci) {
+        ReplayLockstep.onServerTickCompleted((MinecraftServer) (Object) this);
+    }
+    *///?}
 
     @Inject(method = "waitUntilNextTick()V", at = @At("HEAD"))
     private void pkc$lockstepSkipTickWait(CallbackInfo ci) {
