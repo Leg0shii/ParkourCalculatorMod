@@ -33,7 +33,7 @@ Two consequences of the defaults. A player who installs BPKMod and changes nothi
 
 The tool's whole value is certification at 1e-4 margins, which only a byte-exact model gives (`docs/VISION.md`, "Simulation accuracy is non-negotiable"). Three targets exist, with very different reach:
 
-- **Real Bedrock Edition.** A C++ engine with its own float arithmetic, tick order, input pipeline (analog, with the joystick rules) and block registry. No public source, no community byte-exact port, no recorder on the Bedrock side the tool could compare against. Out of reach; building it would be exactly the "custom physics math" the project forbids.
+- **Real Bedrock Edition.** A C++ engine with its own float arithmetic, tick order, input pipeline (analog, with the joystick rules) and block registry. No source, but the modding community has symbol-named disassembly (Mojang shipped the dedicated server's PDB until 1.21.20; LeviLamina carries per-build runtime data and about 17,000 reconstructed headers forward to 26.51, movement systems included) and the Bedrock parkour community has written the rules down ([MCBE_Parkour_wiki](https://github.com/Acce5sDenied/MCBE_Parkour_wiki), current for 26.5x: no inertia, no strafe boost, 32-bit float positions, plain sin and cos, step height 0.5625, the 5e-5 sprint-cancel rule, the sneak edge algorithm, the two-phase slime bounce). Per-tick float-exact recordings are possible through the official Script API (`player.inputInfo`, location, velocity). A byte-exact replica would still be a float32 pipeline with platform-specific trig, a new model rather than a flag on the current one, and it would be the "custom physics math" the project forbids. Out of scope.
 - **Java plus BPKMod.** Real Java code paths with a handful of constants and branches changed. Byte-exact certification is possible in the same way it is today, against the modded client. Margins certified here transfer to real Bedrock only as far as BPKMod is right; for block sizes that is a lookup, for strafe, inertia and sprint it is unverified by anyone.
 - **The current tool, unaware of BPKMod.** The state today: the simulator half-follows the mod (section 3) and the solver ignores it, so a user running both gets silently wrong paths.
 
@@ -100,7 +100,24 @@ Not recommended and not reachable: no source, no ground truth recorder, no commu
 4. Independent of Bedrock and worth doing now: a one-line startup warning in the Fabric and Forge 1.12.2 entry points when BPKMod is loaded (the simulator does not follow BPKMod's sprint and strafe rules), so divergence is not reported as a simulator bug. Small enough to ride any next loader PR; it needs the usual in-game pass.
 
 
-## 6. Draft answer for the issue
+## 6. Implemented 2026-10-13: Tier A on the Fabric loader (branch `feature/bedrock-assessment`)
+
+The maintainer's call after this record: the requester only needs the calculator to be right with BPKMod installed, so Tier A was built, plus the cheap part of Tier B.
+
+- `loader-fabric/.../sim/BpkModBridge.java` reads BPKMod's live config by reflection (`cn.xiaozi0721.bpk.config.ConfigHandler.generalConfig`: `strafeAccelerateAllowed`, `beCollisionStopsSprint`, `sprintBackward`, `oldCollisionOrder`, `oldInertiaThreshold`, `inertiaThreshold`). No compile dependency; a missing mod or a renamed field falls back to vanilla rules and a HUD line says so.
+- `SimulatorEntity` and `GhostPlayerEntity` refresh the rules every tick and mirror the three `LocalPlayer` injections: the square mapping is skipped when the strafe boost is off; the sprint-stop rule becomes BPKMod's (the intended move of the last `move` call and its float displacement are recorded in `move`, checkpointed, cleared on reset and teleport; sprint stops only when the dominant intended axis displaced under 5e-5, `horizontalCollision` is not consulted); sprint backward follows the four sites BPKMod touches. Under the fixed collision order the sub-tick corners are drawn X first. On playback the real player's BPKMod fields (`prevDelta`, `deltaX`, `deltaZ`) are seeded from the checkpoint by reflection, best effort.
+- Core: `PhysicsVariant` (inertia threshold, axis rule, strafe boost, source label), `ExactJumpModel.forMcVersion(version, variant)` and `withVariant`, the raw diagonal input (`1/sqrt 2` as float times 0.98) on Force 45 ticks and on typed W+A rows (both components exactly 0.98F, the signature of an input authored from keys without the game's normalisation; sampled inputs are never touched), the same rule in `SineTableGeometry` (certified bounds) and `JumpLinearModel` (linearisation), `JumpPhysicsInputs.strafeBoost` copied by every scenario builder. `Application.setPhysicsVariant` is called by the Fabric entry point before `setupUi`, so the solver follows BPKMod's config as it was at launch; the HUD line on world join reports a config that changed since.
+- Tests: `PhysicsVariantTest` (fast suite). The vanilla path is byte-identical (default flags), which the existing golden-hash and problem suites guard.
+
+Not done, in order of importance:
+
+1. **In-game verification.** No Minecraft client here, and BPKMod 2.x still targets 26.2 while the loader is on 26.3. The byte-exact check is the one from Tier A: build a W+A run-up, a wall graze and a chest edge under BPKMod, replay them and compare per tick.
+2. **Resume state.** A TAS that starts mid-motion from the real player's state seeds the BPKMod sprint-rule state as zero (no pending stop); `StartResumeState` and the TAS file do not carry it. A start from rest is exact.
+3. **Inertia threshold 0.** The solver's gate machinery (gate folds, zeroing patterns, the #397 pattern branching, `velocityWalls`) was not audited for an absent band; BPKMod's default 0.0001 keeps the gates and is covered by the model change alone.
+4. **Forge 1.12.2** with BPKMod 1.5.7: the same four mirrors against the `forge-core` sprint machine; not started.
+5. **Sprint-sneak and crawl** (issue item 3): BPKMod 2.x does not model it, so neither does the calculator.
+
+## 7. Draft answer for the issue
 
 > Thanks for the pointer to BPKMod, that settles the "no Bedrock account" part. I read its source (2.1.0 on Fabric 26.2 and 1.5.7 on Forge 1.12.2). What the calculator could realistically support is "Java + BPKMod", byte-exact against the modded Java client, not real Bedrock: nobody has Bedrock's movement code, and BPKMod itself approximates (its inertia option lowers the threshold rather than removing the rule, and its defaults keep Java's 45 strafe and inertia).
 >
