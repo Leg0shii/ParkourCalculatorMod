@@ -12,7 +12,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 //import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Pose;
-//? if >=1.21.2
+//? if >=1.21
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 //? if <1.21.2
@@ -186,7 +186,7 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
 
         //? if >=26.1 {
         this.input.tick();
-        //?} elif >=1.21.2 {
+        //?} elif >=1.21 {
         /*this.input.tick(this.isMovingSlowly(), (float) this.getAttributeValue(Attributes.SNEAKING_SPEED));
         *///?} else {
         /*this.input.tick(this.isMovingSlowly(), Mth.clamp(0.3F + EnchantmentHelper.getSneakingSpeedBonus(this), 0.0F, 1.0F));

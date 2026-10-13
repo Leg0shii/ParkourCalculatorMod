@@ -101,17 +101,10 @@ public class MinecraftMixin {
         FabricParkourCalculator.onWorldChange();
     }
 
-    //? if >=1.20.5 {
     @Inject(method = "disconnect()V", at = @At("HEAD"))
     private void pkc$onDisconnect(CallbackInfo ci) {
         FabricParkourCalculator.onWorldChange();
     }
-    //?} else {
-    /^@Inject(method = "clearLevel()V", at = @At("HEAD"))
-    private void pkc$onDisconnect(CallbackInfo ci) {
-        FabricParkourCalculator.onWorldChange();
-    }
-    ^///?}
     *///?}
 
     @Inject(method = "close", at = @At("HEAD"))

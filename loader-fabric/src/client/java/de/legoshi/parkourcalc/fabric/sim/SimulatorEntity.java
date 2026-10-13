@@ -20,10 +20,10 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.Pose;
-//? if >=1.21.2 {
+//? if >=1.21
 import net.minecraft.world.entity.ai.attributes.Attributes;
+//? if >=1.21.2
 import net.minecraft.world.entity.player.Input;
-//?}
 import net.minecraft.world.entity.player.Player;
 //? if <1.21.2
 //import net.minecraft.world.item.enchantment.EnchantmentHelper;
@@ -376,7 +376,7 @@ public class SimulatorEntity extends Player {
 
         //? if >=26.1 {
         this.input.tick();
-        //?} elif >=1.21.2 {
+        //?} elif >=1.21 {
         /*this.input.tick(this.isMovingSlowly(), (float) this.getAttributeValue(Attributes.SNEAKING_SPEED));
         *///?} else {
         /*this.input.tick(this.isMovingSlowly(), Mth.clamp(0.3F + EnchantmentHelper.getSneakingSpeedBonus(this), 0.0F, 1.0F));
