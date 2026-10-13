@@ -76,6 +76,7 @@ afterEvaluate {
 		def variant = sourceSets.getByName(name)
 		sourceSets.client.java.srcDirs(variant.java.srcDirs)
 		tasks.named('compileClientJava') { dependsOn "stonecutterGenerate${name.capitalize()}" }
+		tasks.named('sourcesJar') { dependsOn "stonecutterGenerate${name.capitalize()}" }
 		tasks.named(variant.compileJavaTaskName) { enabled = false }
 		tasks.named(variant.processResourcesTaskName) { enabled = false }
 		tasks.named(variant.classesTaskName) { enabled = false }
