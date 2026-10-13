@@ -232,11 +232,7 @@ public final class ForgeSimulator extends LazyEntitySimulator<SimulatorEntity> {
         if (c == null) return null;
         StartResumeState r = new StartResumeState();
         r.onGround = c.onGround;
-        //? if >=1.12 {
         r.wallContact = c.collidedHorizontally;
-        //?} else {
-        /*r.wallContact = c.isCollidedHorizontally;
-        *///?}
         r.sprinting = c.sprinting;
         r.jumpCooldown = c.jumpTicks;
         r.airSprintFactor = c.jumpMovementFactor;
