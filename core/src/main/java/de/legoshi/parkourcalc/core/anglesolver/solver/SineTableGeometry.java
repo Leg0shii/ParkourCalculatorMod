@@ -79,7 +79,11 @@ public final class SineTableGeometry {
         float forward = sc.forwardAt(t);
         float strafe;
         if (sc.strafeAt(t) && !isJump) {
-            if (sine262) {
+            if (!exact.strafeBoost()) {
+                float raw = ExactJumpModel.rawDiagonalInput();
+                forward = Math.signum(forward) * raw;
+                strafe = sc.strafeSign * raw;
+            } else if (sine262) {
                 float sq = squareDiagInput();
                 forward = Math.signum(forward) * sq;
                 strafe = sc.strafeSign * sq;
@@ -88,6 +92,11 @@ public final class SineTableGeometry {
             }
         } else {
             strafe = sc.strafeInputAt(t);
+            if (!exact.strafeBoost() && ExactJumpModel.isTypedDiagonal(forward, strafe)) {
+                float raw = ExactJumpModel.rawDiagonalInput();
+                forward = Math.signum(forward) * raw;
+                strafe = Math.signum(strafe) * raw;
+            }
         }
         if (modern) {
             double sw = (double) strafe;

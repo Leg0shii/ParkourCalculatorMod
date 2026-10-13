@@ -134,6 +134,8 @@ Releases ship one jar per loader, on [Modrinth](https://modrinth.com/mod/parkour
 3. Drop `pkc-fabric-<version>.jar` into the same `mods` folder.
 4. Launch the Fabric profile for that Minecraft version.
 
+Runs next to [BPKMod](https://github.com/xiaozi233/BPKMod) (Bedrock-style movement on Java): the simulation follows BPKMod's config live, the angle solver reads it at launch, and a HUD line on world join says which rules it saw. Restart the game after changing BPKMod's config so the solver follows.
+
 ### Fabric 1.21.3
 
 1. Install the [Fabric Loader](https://fabricmc.net/use/installer/) for 1.21.3 (no additional APIs required).

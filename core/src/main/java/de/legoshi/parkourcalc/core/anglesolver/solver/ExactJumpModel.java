@@ -37,6 +37,13 @@ public final class ExactJumpModel implements ForwardModel {
     private static final double COLLIDE_EPSILON = 1.0E-7;
 
     private static final float SQUARE_DIAG_INPUT = squareDiagInput();
+    private static final float RAW_DIAG_INPUT = rawDiagInput();
+
+    private static float rawDiagInput() {
+        float dist = (float) Math.sqrt(2.0F);
+        float n = 1.0F / dist;
+        return n * 0.98F;
+    }
 
     private static float squareDiagInput() {
         float dist = (float) Math.sqrt(2.0F);
@@ -60,6 +67,7 @@ public final class ExactJumpModel implements ForwardModel {
     private final boolean foldedInputRad;
     private final boolean floatSprintBoost;
     private final boolean byteAmplifier;
+    private final boolean strafeBoost;
 
     public ExactJumpModel(double inertiaThreshold, boolean perAxisInertia, boolean modern) {
         this(inertiaThreshold, perAxisInertia, modern, false);
@@ -81,6 +89,12 @@ public final class ExactJumpModel implements ForwardModel {
 
     public ExactJumpModel(double inertiaThreshold, boolean perAxisInertia, boolean modern, boolean sine262,
                           boolean foldedInputRad, boolean floatSprintBoost, boolean byteAmplifier) {
+        this(inertiaThreshold, perAxisInertia, modern, sine262, foldedInputRad, floatSprintBoost, byteAmplifier, true);
+    }
+
+    public ExactJumpModel(double inertiaThreshold, boolean perAxisInertia, boolean modern, boolean sine262,
+                          boolean foldedInputRad, boolean floatSprintBoost, boolean byteAmplifier,
+                          boolean strafeBoost) {
         this.inertiaThreshold = inertiaThreshold;
         this.perAxisInertia = perAxisInertia;
         this.modern = modern;
@@ -88,15 +102,24 @@ public final class ExactJumpModel implements ForwardModel {
         this.foldedInputRad = foldedInputRad;
         this.floatSprintBoost = floatSprintBoost;
         this.byteAmplifier = byteAmplifier;
+        this.strafeBoost = strafeBoost;
     }
 
     public ExactJumpModel withByteAmplifier(boolean byteAmplifier) {
         return new ExactJumpModel(inertiaThreshold, perAxisInertia, modern, sine262, foldedInputRad, floatSprintBoost,
-                byteAmplifier);
+                byteAmplifier, strafeBoost);
     }
 
     public boolean byteAmplifier() {
         return byteAmplifier;
+    }
+
+    public ExactJumpModel withVariant(PhysicsVariant variant) {
+        if (variant == null || variant.isVanilla()) return this;
+        double thr = variant.inertiaThreshold != null ? variant.inertiaThreshold : inertiaThreshold;
+        boolean perAxis = variant.perAxisInertia != null ? variant.perAxisInertia : perAxisInertia;
+        return new ExactJumpModel(thr, perAxis, modern, sine262, foldedInputRad, floatSprintBoost, byteAmplifier,
+                variant.strafeBoost);
     }
 
     private float tableSin(float rad) {
@@ -144,6 +167,18 @@ public final class ExactJumpModel implements ForwardModel {
         return floatSprintBoost;
     }
 
+    public boolean strafeBoost() {
+        return strafeBoost;
+    }
+
+    public static float rawDiagonalInput() {
+        return RAW_DIAG_INPUT;
+    }
+
+    public static boolean isTypedDiagonal(float forward, float strafe) {
+        return Math.abs(forward) == 0.98F && Math.abs(strafe) == 0.98F;
+    }
+
     /** Inertia rule for a loader's MC version. 1.8.x: per-axis 0.005, legacy float chain.
      *  1.12.x: per-axis 0.003, legacy float chain. 1.9 to 1.21.4: per-axis 0.003 on the modern
      *  double pipeline (1.21.5 is where the player switched to the combined-XZ gate); up to 1.20.4
@@ -186,6 +221,10 @@ public final class ExactJumpModel implements ForwardModel {
         int end = 0;
         while (end < parts[index].length() && Character.isDigit(parts[index].charAt(end))) end++;
         return end == 0 ? 0 : Integer.parseInt(parts[index].substring(0, end));
+    }
+
+    public static ExactJumpModel forMcVersion(String mcVersion, PhysicsVariant variant) {
+        return forMcVersion(mcVersion).withVariant(variant);
     }
 
     @Override
@@ -306,7 +345,10 @@ public final class ExactJumpModel implements ForwardModel {
             float forward = scenario.forwardAt(t);
             float strafe;
             if (scenario.strafeAt(t) && !isJumpTick) {
-                if (sine262) {
+                if (!strafeBoost) {
+                    forward = Math.signum(forward) * RAW_DIAG_INPUT;
+                    strafe = scenario.strafeSign * RAW_DIAG_INPUT;
+                } else if (sine262) {
                     forward = Math.signum(forward) * SQUARE_DIAG_INPUT;
                     strafe = scenario.strafeSign * SQUARE_DIAG_INPUT;
                 } else {
@@ -314,6 +356,10 @@ public final class ExactJumpModel implements ForwardModel {
                 }
             } else {
                 strafe = scenario.strafeInputAt(t);
+                if (!strafeBoost && isTypedDiagonal(forward, strafe)) {
+                    forward = Math.signum(forward) * RAW_DIAG_INPUT;
+                    strafe = Math.signum(strafe) * RAW_DIAG_INPUT;
+                }
             }
             if (modern) {
                 // Entity.movementInputToVelocity: double pipeline, double 1e-7 gate, Vec3d.normalize only

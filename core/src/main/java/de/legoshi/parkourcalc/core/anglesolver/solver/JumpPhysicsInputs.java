@@ -69,6 +69,8 @@ public final class JumpPhysicsInputs {
 
     public boolean liveMovementFactor = false;
 
+    public boolean strafeBoost = true;
+
     /** Speed-effect amplifier in force on the tick before this window's first tick. The ground attribute
      *  (getAIMoveSpeed = the movementSpeed snapshot) carries both the sprint and the speed-effect modifier,
      *  so the speed amplifier lags by the same one tick as sprint (see {@link #factorAmpAt}). Air is
@@ -113,6 +115,7 @@ public final class JumpPhysicsInputs {
         c.sprintPerTick = sprintPerTick;
         c.incomingSprint = incomingSprint;
         c.liveMovementFactor = liveMovementFactor;
+        c.strafeBoost = strafeBoost;
         c.incomingAmp = incomingAmp;
         c.incomingSlowness = incomingSlowness;
         c.forwardInputPerTick = forwardInputPerTick;
@@ -130,6 +133,7 @@ public final class JumpPhysicsInputs {
         c.jumpTick = jumpTick < from ? -1 : jumpTick - from;
         c.strafeSign = strafeSign;
         c.liveMovementFactor = liveMovementFactor;
+        c.strafeBoost = strafeBoost;
         c.incomingSprint = from == 0 ? incomingSprint : Boolean.valueOf(sprintAt(from - 1));
         c.incomingAmp = from == 0 ? incomingAmp : Integer.valueOf(speedAmplifierAt(from - 1));
         c.incomingSlowness = from == 0 ? incomingSlowness : Integer.valueOf(slownessAmplifierAt(from - 1));

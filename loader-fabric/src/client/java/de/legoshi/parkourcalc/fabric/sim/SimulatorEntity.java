@@ -59,6 +59,10 @@ public class SimulatorEntity extends Player {
 
     private double lastCollisionAngleDegrees = Double.NaN;
     private boolean collisionAngleComputedThisTick = false;
+    private BpkModBridge.Rules bpk = BpkModBridge.Rules.VANILLA;
+    private Vec3 bpkMoveInput = Vec3.ZERO;
+    private float bpkMovedX;
+    private float bpkMovedZ;
     private Medium tickMedium;
     private double tickGroundFriction = Double.NaN;
     private int tickSoulsandCells;
@@ -82,19 +86,21 @@ public class SimulatorEntity extends Player {
     /** Axis order mirrors Direction.axisStepOrder (Y first, X/Z by |component|). */
     @Override
     public void move(MoverType type, Vec3 motion) {
-        if (!capturing) {
-            super.move(type, motion);
-            return;
-        }
         Vec3 before = this.position();
+        this.bpkMoveInput = motion;
         super.move(type, motion);
         Vec3 after = this.position();
+        this.bpkMovedX = (float) (after.x - before.x);
+        this.bpkMovedZ = (float) (after.z - before.z);
+        if (!capturing) {
+            return;
+        }
 
         double cx = after.x - before.x;
         double cy = after.y - before.y;
         double cz = after.z - before.z;
         SubtickPath.appendMove(subtickBuf, before.x, before.y, before.z, cx, cy, cz,
-                Math.abs(motion.x) >= Math.abs(motion.z));
+                bpk.fixedCollisionOrder || Math.abs(motion.x) >= Math.abs(motion.z));
     }
 
     public SimulatorEntity(Level world, GameProfile profile, Vec3 startPosition, Vec3 startVelocity, float startYaw) {
@@ -129,6 +135,7 @@ public class SimulatorEntity extends Player {
 
         this.setPos(startPosition);
         this.setDeltaMovement(startVelocity);
+        this.clearBpkMoveState();
         this.tickMedium = null;
         this.tickGroundFriction = Double.NaN;
         this.tickSoulsandCells = 0;
@@ -354,6 +361,7 @@ public class SimulatorEntity extends Player {
     public void aiStep() {
         this.lastCollisionAngleDegrees = Double.NaN;
         this.collisionAngleComputedThisTick = false;
+        this.bpk = BpkModBridge.rules();
 
         if (this.sprintTriggerTime > 0) {
             this.sprintTriggerTime--;
@@ -362,7 +370,7 @@ public class SimulatorEntity extends Player {
         // Capture pre-input.tick() so wasShiftKeyDown/hasForwardImpulse hold the previous tick's state.
         boolean wasShiftKeyDown = this.input.keyPresses.shift();
         //? if >=26.1 {
-        boolean hasForwardImpulse = this.input.hasForwardImpulse();
+        boolean hasForwardImpulse = this.input.hasForwardImpulse() || this.isSprintBackward();
         //?} else {
         /*boolean hadEnoughImpulse = this.hasEnoughImpulseToStartSprinting();
         *///?}
@@ -384,7 +392,8 @@ public class SimulatorEntity extends Player {
         *///?}
 
         //? if >=26.1 {
-        if (wasShiftKeyDown || this.isUsingItem() && !this.isPassenger() || this.input.keyPresses.backward()) {
+        if (wasShiftKeyDown || this.isUsingItem() && !this.isPassenger()
+                || this.input.keyPresses.backward() && !this.bpk.sprintBackward) {
             this.sprintTriggerTime = 0;
         }
 
@@ -480,7 +489,7 @@ public class SimulatorEntity extends Player {
     //? if >=26.1 {
     private boolean canStartSprinting() {
         return !this.isSprinting()
-                && this.input.hasForwardImpulse()
+                && (this.input.hasForwardImpulse() || this.isSprintBackward())
                 && this.isSprintingPossible(this.getAbilities().flying)
                 && !this.isUsingItem()
                 && (!this.isFallFlying() || this.isUnderWater())
@@ -488,9 +497,19 @@ public class SimulatorEntity extends Player {
     }
 
     private boolean shouldStopRunSprinting() {
+        if (this.bpk.collisionStopsSprint) {
+            return !this.isSprintingPossible(this.getAbilities().flying)
+                    || !this.input.hasForwardImpulse()
+                    || Math.abs(this.bpkMoveInput.z) > Math.abs(this.bpkMoveInput.x) && Math.abs(this.bpkMovedZ) < 5e-5
+                    || Math.abs(this.bpkMoveInput.x) > Math.abs(this.bpkMoveInput.z) && Math.abs(this.bpkMovedX) < 5e-5;
+        }
         return !this.isSprintingPossible(this.getAbilities().flying)
-                || !this.input.hasForwardImpulse()
+                || !(this.input.hasForwardImpulse() || this.isSprintBackward())
                 || this.horizontalCollision && !this.minorHorizontalCollision;
+    }
+
+    private boolean isSprintBackward() {
+        return this.bpk.sprintBackward && this.input.getMoveVector().y < -1.0E-5F;
     }
 
     private boolean shouldStopSwimSprinting() {
@@ -532,6 +551,12 @@ public class SimulatorEntity extends Player {
         return (double) this.input.forwardImpulse >= 0.8;
     }
     *///?}
+
+    private void clearBpkMoveState() {
+        this.bpkMoveInput = Vec3.ZERO;
+        this.bpkMovedX = 0.0F;
+        this.bpkMovedZ = 0.0F;
+    }
 
     /** Lives on LocalPlayer in MC, not Player, so we redeclare it. */
     public boolean isMovingSlowly() {
@@ -584,7 +609,7 @@ public class SimulatorEntity extends Player {
             float sneakingMovementFactor = (float) this.getAttributeValue(Attributes.SNEAKING_SPEED);
             newInput = newInput.scale(sneakingMovementFactor);
         }
-        return modifyInputSpeedForSquareMovement(newInput);
+        return this.bpk.strafeBoost ? modifyInputSpeedForSquareMovement(newInput) : newInput;
     }
 
     private static Vec2 modifyInputSpeedForSquareMovement(Vec2 input) {
@@ -632,6 +657,9 @@ public class SimulatorEntity extends Player {
         c.pose = this.getPose();
         c.crouching = this.crouching;
         c.fallDistance = this.fallDistance;
+        c.bpkMoveInput = this.bpkMoveInput;
+        c.bpkMovedX = this.bpkMovedX;
+        c.bpkMovedZ = this.bpkMovedZ;
         return c;
     }
 
@@ -657,6 +685,9 @@ public class SimulatorEntity extends Player {
         this.noJumpDelay = c.jumpingCooldown;
         this.stuckSpeedMultiplier = c.movementMultiplier;
         this.fallDistance = c.fallDistance;
+        this.bpkMoveInput = c.bpkMoveInput == null ? Vec3.ZERO : c.bpkMoveInput;
+        this.bpkMovedX = c.bpkMovedX;
+        this.bpkMovedZ = c.bpkMovedZ;
     }
 
     private void settleFluidState() {
@@ -688,6 +719,7 @@ public class SimulatorEntity extends Player {
         this.crouching = false;
         this.setPose(Pose.STANDING);
         this.refreshDimensions();
+        this.clearBpkMoveState();
     }
 
     public static void applyCheckpoint(net.minecraft.client.player.LocalPlayer p, de.legoshi.parkourcalc.core.sim.Checkpoint state) {
@@ -700,6 +732,7 @@ public class SimulatorEntity extends Player {
         p.noJumpDelay = c.jumpingCooldown;
         p.stuckSpeedMultiplier = c.movementMultiplier;
         p.fallDistance = c.fallDistance;
+        BpkModBridge.applyMoveState(p, c.bpkMoveInput, c.bpkMovedX, c.bpkMovedZ);
     }
 
     public static final class Checkpoint implements de.legoshi.parkourcalc.core.sim.Checkpoint {
@@ -723,5 +756,8 @@ public class SimulatorEntity extends Player {
         //?} else {
         /*float fallDistance;
         *///?}
+        Vec3 bpkMoveInput;
+        float bpkMovedX;
+        float bpkMovedZ;
     }
 }
