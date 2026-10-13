@@ -24,7 +24,6 @@ import net.minecraft.network.protocol.game.ServerboundAcceptTeleportationPacket;
 //? if >=1.21.2 {
 import net.minecraft.network.protocol.game.ServerboundClientTickEndPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerInputPacket;
-import net.minecraft.network.protocol.game.ServerboundPlayerLoadedPacket;
 import net.minecraft.world.entity.PositionMoveRotation;
 import net.minecraft.world.entity.player.Input;
 //?} else {
@@ -32,6 +31,8 @@ import net.minecraft.world.entity.player.Input;
 import net.minecraft.world.entity.RelativeMovement;
 import java.util.Set;
 *///?}
+//? if >=1.21.4
+import net.minecraft.network.protocol.game.ServerboundPlayerLoadedPacket;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import net.minecraft.network.protocol.game.ServerboundUseItemOnPacket;
@@ -112,7 +113,7 @@ public final class PairedServerSim {
         sp.setDamageSink(sim::onDamageRuled);
         sp.setFallRulingSink(sim::onLandingRuled);
         sp.setDamageGate(sim::isDamageEnabled);
-        //? if >=1.21.2
+        //? if >=1.21.4
         handler.handleAcceptPlayerLoad(new ServerboundPlayerLoadedPacket());
         return sim;
     }

@@ -149,21 +149,21 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
 
     @Override
     protected void onEffectAdded(MobEffectInstance effect, @Nullable Entity source) {
-        effect.getEffect().addAttributeModifiers(this, this.getAttributes(), effect.getAmplifier());
+        effect.getEffect().addAttributeModifiers(this.getAttributes(), effect.getAmplifier());
     }
 
     @Override
     protected void onEffectUpdated(MobEffectInstance effect, boolean reapplyEffect, @Nullable Entity source) {
         if (reapplyEffect) {
             MobEffect type = effect.getEffect();
-            type.removeAttributeModifiers(this, this.getAttributes(), effect.getAmplifier());
-            type.addAttributeModifiers(this, this.getAttributes(), effect.getAmplifier());
+            type.removeAttributeModifiers(this.getAttributes());
+            type.addAttributeModifiers(this.getAttributes(), effect.getAmplifier());
         }
     }
 
     @Override
     protected void onEffectRemoved(MobEffectInstance effect) {
-        effect.getEffect().removeAttributeModifiers(this, this.getAttributes(), effect.getAmplifier());
+        effect.getEffect().removeAttributeModifiers(this.getAttributes());
     }
     *///?}
 
