@@ -824,6 +824,7 @@ public final class AngleSolverEngine {
         phys.serverJumpPerTick = anyServerJumpFlag ? serverJump : null;
         phys.packetYPerTick = anyServerJumpFlag ? packetY : null;
         phys.liveMovementFactor = modernCollision;
+        phys.strafeBoost = model.strafeBoost();
         phys.incomingSprint = effSprint(startTick) == AngleSolverState.SprintMode.DERIVE
                 ? (seed.hasMovementSample() ? seed.sprinting : Boolean.TRUE)
                 : Boolean.TRUE;
