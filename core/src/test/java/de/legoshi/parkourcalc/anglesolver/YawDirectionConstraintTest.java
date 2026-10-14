@@ -7,6 +7,7 @@ import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.CertifiedBnb;
+import de.legoshi.parkourcalc.core.anglesolver.solver.ClosedFormSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
@@ -215,6 +216,32 @@ public class YawDirectionConstraintTest {
                 wrong, run.from, run.to, res.declined, res.feasible, res.nodes, res.bestInfeasViol);
         assertFalse(res.declined);
         if (res.feasible) assertOneWay(res.yawsDeg, run.from, run.to, wrong, spec);
+    }
+
+    @Test
+    public void closedFormCarriesAOneWayRange() {
+        ProblemFixture pf = ProblemFixture.load("solve", FIXTURE);
+        Run run = longestOneWayRun(pf);
+        JumpSpec along = withRange(run.base, run.from, run.to, run.cmp);
+        long t0 = System.nanoTime();
+        double[] yaws = ClosedFormSolve.optimize(pf.model, along, 0.0, new AtomicBoolean(false));
+        System.out.printf("CF along %s..%s %s -> %s in %.1f ms%n", run.from, run.to, run.cmp,
+                yaws == null ? "miss" : "solved", (System.nanoTime() - t0) / 1e6);
+        assertNotNull("the closed form must carry a one-way range along the base path's own turn", yaws);
+        assertOneWay(yaws, run.from, run.to, run.cmp, along);
+
+        JumpConstraint.Cmp against = run.cmp == JumpConstraint.Cmp.GE ? JumpConstraint.Cmp.LE : JumpConstraint.Cmp.GE;
+        JumpSpec opposite = withRange(run.base, run.from, run.to, against);
+        t0 = System.nanoTime();
+        double[] merged = ClosedFormSolve.optimize(pf.model, opposite, 0.0, new AtomicBoolean(false));
+        System.out.printf("CF against %s..%s %s -> %s in %.1f ms%n", run.from, run.to, against,
+                merged == null ? "miss" : "solved", (System.nanoTime() - t0) / 1e6);
+        if (merged != null) assertOneWay(merged, run.from, run.to, against, opposite);
+
+        JumpSpec full = pf.specFor(AngleSolverState.Axis.X, AngleSolverState.Goal.MAX);
+        t0 = System.nanoTime();
+        double[] cf = ClosedFormSolve.optimize(pf.model, full, 0.0, new AtomicBoolean(false));
+        System.out.printf("CF j121 full spec -> %s in %.1f ms%n", cf == null ? "miss" : "solved", (System.nanoTime() - t0) / 1e6);
     }
 
     @Test

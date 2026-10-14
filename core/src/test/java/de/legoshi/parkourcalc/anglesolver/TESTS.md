@@ -23,9 +23,10 @@ anglesolver/
                            yaw may only turn one way, no turn-out). YawOrder carries consecutive-tick F
                            inequalities and one-sided absolute F walls that the YawTies fold does not
                            absorb; the SLP solves them as exact yaw rows, the certified B&B propagates
-                           them between the per-tick arcs and splits overlapping pairs in order. Pins
-                           the carry rules, the projection, an SLP and a B&B solve of a one-way range on
-                           j121, the wrong-way range staying rejected, and the j121 neo engine solve.
+                           them between the per-tick arcs and splits overlapping pairs in order, the
+                           closed form runs the tie cascade (YawOrderDp). Pins the carry rules, the
+                           projection, an SLP, a closed-form and a B&B solve of a one-way range on j121,
+                           the wrong-way range staying rejected, and the j121 neo engine solve.
   OverConstrainedChainTest.java  gh-454 (SlowSolverTests): a segment whose dF = 0 constraints tie every
                            tick to one heading (gh454-p2s-overconstrained capture, THOROUGH) fails
                            within 20 s and carries the "Overconstrained" notice label with the
