@@ -44,6 +44,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
     private static KeyMapping solveKeyBinding;
     private static KeyMapping solverStartTickKeyBinding;
     private static KeyMapping solverEndTickKeyBinding;
+    private static KeyMapping solverGoalFromLookKeyBinding;
     private static KeyMapping rerunSimulationKeyBinding;
     private static KeyMapping togglePathKeyBinding;
     private static KeyMapping copyTeleportKeyBinding;
@@ -90,6 +91,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         solveKeyBinding = key("key.parkourcalculator.solve", GLFW.GLFW_KEY_V);
         solverStartTickKeyBinding = key("key.parkourcalculator.set_solver_start", GLFW.GLFW_KEY_I);
         solverEndTickKeyBinding = key("key.parkourcalculator.set_solver_end", GLFW.GLFW_KEY_O);
+        solverGoalFromLookKeyBinding = key("key.parkourcalculator.set_solver_goal_from_look", GLFW.GLFW_KEY_Z);
         rerunSimulationKeyBinding = key("key.parkourcalculator.rerun_simulation", GLFW.GLFW_KEY_J);
         togglePathKeyBinding = key("key.parkourcalculator.toggle_path", GLFW.GLFW_KEY_Y);
         copyTeleportKeyBinding = key("key.parkourcalculator.copy_teleport", GLFW.GLFW_KEY_K);
@@ -374,6 +376,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         while (solverEndTickKeyBinding.consumeClick()) {
             solverEndPressed = true;
         }
+        boolean solverGoalFromLookPressed = false;
+        while (solverGoalFromLookKeyBinding.consumeClick()) {
+            solverGoalFromLookPressed = true;
+        }
         boolean rerunSimulationPressed = false;
         while (rerunSimulationKeyBinding.consumeClick()) {
             rerunSimulationPressed = true;
@@ -442,6 +448,12 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
         if (solverEndPressed && canDispatch) {
             application.setSolverLandingTickFromSelection();
+        }
+        if (solverGoalFromLookPressed && canDispatch) {
+            long window = client.getWindow().getWindow();
+            boolean angle = GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS
+                    || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS;
+            application.setSolverGoalFromLook(angle);
         }
         if (rerunSimulationPressed && canDispatch) {
             application.runSimulation();
@@ -517,6 +529,13 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
         if (glfwKey == boundKey(solverEndTickKeyBinding)) {
             application.setSolverLandingTickFromSelection();
+            return true;
+        }
+        if (glfwKey == boundKey(solverGoalFromLookKeyBinding)) {
+            long window = client.getWindow().getWindow();
+            boolean angle = GLFW.glfwGetKey(window, GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS
+                    || GLFW.glfwGetKey(window, GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS;
+            application.setSolverGoalFromLook(angle);
             return true;
         }
         if (glfwKey == boundKey(rerunSimulationKeyBinding)) {

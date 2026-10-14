@@ -107,6 +107,8 @@ Click and drag the first box in the world. Hold Shift to move the whole path rig
 | `X` | Remove the selected constraints |
 | `V` | Solve and apply (Angle Solver) |
 | `I` / `O` | Set the solver start / goal tick to the selected tick |
+| `Z` | Set the solver goal to the axis you are looking along (+X, -X, +Z or -Z) |
+| `Shift+Z` | Set the solver goal to a custom angle equal to your current facing |
 | `U` | Extend the path to the targeted block and solve |
 | `H` | Fill per-tick slipperiness and medium from the recorded path |
 | `J` | Rerun the simulation |
