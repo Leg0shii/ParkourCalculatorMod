@@ -75,6 +75,14 @@ public class SmoothButtonTest {
         assertEquals("only the smooth stage ran", 1, rec.nodes.size());
         assertEquals("smooth", rec.nodes.get(0).id);
         assertTrue("smoothable again afterwards", engine.canSmooth());
+        assertTrue("the result says that it was smoothed", smoothed.isSmoothed());
+        assertNotNull("the result says why the smoothing stopped", smoothed.getSmoothStop());
+        assertTrue("a Smooth button run has no reason to be cancelled: " + smoothed.getSmoothStop(),
+                !"cancelled".equals(smoothed.getSmoothStop()));
+        boolean detail = false;
+        for (SolveResult.Detail d : smoothed.getDetails()) detail |= "Smoothing".equals(d.label);
+        assertTrue("the details carry the smoothing row", detail);
+        assertFalse("a plain solve is not reported as smoothed", solved.isSmoothed());
 
         state.setLandingTick(state.getLandingTick() - 1);
         assertFalse("a changed range has no solved path", engine.canSmooth());

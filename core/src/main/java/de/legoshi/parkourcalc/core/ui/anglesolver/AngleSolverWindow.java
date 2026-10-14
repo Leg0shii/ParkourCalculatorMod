@@ -1084,7 +1084,7 @@ public final class AngleSolverWindow implements RenderInterface {
         }
         String header = runningLook ? RUNNING + " · " + lastStage : resultHeader(r);
         String clock = running ? rv.clock : null;
-        String headerTip = running ? rv.chain : null;
+        String headerTip = running ? rv.chain : smoothStopTip(r);
 
         float pad = ThemeManager.SM * scale;
         int devLines = deviation == null ? 0
@@ -1159,8 +1159,26 @@ public final class AngleSolverWindow implements RenderInterface {
 
     private String resultHeader(SolveResult r) {
         if (!r.isSuccess()) return "No solution · " + r.getMet() + "/" + r.getTotal() + " constraints met";
-        if (state.getApplyDeviation() != null) return "Solved · sim diverged";
-        return "Solved · " + r.getMet() + "/" + r.getTotal() + " constraints met";
+        String verb = r.isSmoothed() ? "Smoothed" : "Solved";
+        if (state.getApplyDeviation() != null) return verb + " · sim diverged";
+        if (r.isSmoothed()) return verb + " · " + smoothSeconds(r.getSmoothNanos()) + " · " + r.getSmoothStop();
+        return verb + " · " + r.getMet() + "/" + r.getTotal() + " constraints met";
+    }
+
+    private static String smoothSeconds(long nanos) {
+        double s = nanos / 1.0e9;
+        if (s < 0.05) return "<0.1 s";
+        return String.format(Locale.ROOT, "%.1f s", s);
+    }
+
+    private static String smoothStopTip(SolveResult r) {
+        if (r == null || !r.isSmoothed()) return null;
+        String stop = r.getSmoothStop();
+        if ("converged".equals(stop)) return "The smoothing stopped on its own: a full pass found nothing left to improve.";
+        if ("budget".equals(stop)) return "The smoothing stopped because its time budget ran out; more time might smooth further.";
+        if ("pass limit".equals(stop)) return "The smoothing stopped at its pass limit while a pass was still improving the turn.";
+        if ("cancelled".equals(stop)) return "The smoothing was stopped by hand and kept the best turn found so far.";
+        return null;
     }
 
     /** Engine-filled details, or rows synthesized from the flat stats fields for results from older saves.

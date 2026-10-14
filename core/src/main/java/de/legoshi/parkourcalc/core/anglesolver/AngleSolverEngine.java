@@ -13,6 +13,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunState;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunner;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunLog;
+import de.legoshi.parkourcalc.core.anglesolver.graph.SmoothOutcome;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunRecord;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
@@ -1105,6 +1106,7 @@ public final class AngleSolverEngine {
         double[] gameFacings = sc.toGameFacings(yaws);
         ForwardPath path = model.forward(sc, gameFacings);
         SolveResult result = assembleResult(job, yaws, gameFacings, path, solverName, solveNanos, dualGap);
+        addSmoothingDetails(result, job, ctx.smoothOutcome());
         if (job.legalGoal != null) {
             double achieved = path.getPos(spec.objective.tick, spec.objective.axis);
             double shortfall = spec.objective.sense == Objective.Sense.MAX
@@ -1122,6 +1124,24 @@ public final class AngleSolverEngine {
         finishRecord(rec, SolveRunRecord.STATUS_SOLVED, finalObjective, finalViolation,
                 finalViolation <= FEAS_TOL, solverName, yaws);
         return new Outcome(result, planOf(job, yaws, path, sc, stageLocked));
+    }
+
+    private static void addSmoothingDetails(SolveResult result, Job job, SmoothOutcome smooth) {
+        if (smooth == null) return;
+        String stop = smooth.stop.label;
+        result.addDetail("Smoothing", ConstraintText.duration(smooth.nanos) + " · " + stop
+                + (smooth.changed() ? "" : " · nothing to improve"));
+        if (smooth.changed()) {
+            SolveRunRecord.Outcome before = new SolveRunRecord.Outcome();
+            SolveRunRecord.smoothnessOf(before, smooth.before);
+            if (before.yawTravelDeg != null) {
+                result.addDetail("Yaw travel before", Math.round(before.yawTravelDeg) + " deg");
+                result.addDetail("Yaw reversals before", Integer.toString(before.yawDirChanges));
+            }
+        }
+        if (job.graph != null && BuiltinGraphs.SMOOTH_PRESET.equals(job.graph.name)) {
+            result.setSmoothing(stop, smooth.nanos);
+        }
     }
 
     private static Plan planOf(Job job, double[] yaws, ForwardPath path, JumpPhysicsInputs sc, boolean lockYaws) {
