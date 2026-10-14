@@ -28,6 +28,7 @@ import imgui.type.ImInt;
 import imgui.type.ImString;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -137,12 +138,29 @@ public final class AngleSolverTable {
         return String.format(java.util.Locale.ROOT, "%.4g !", c.getValue());
     }
 
+    private static final String[] DF_OP_ITEMS = {"=", ">=", "<="};
+    private static final Constraint.Op[] DF_OPS = {Constraint.Op.EQ, Constraint.Op.GE, Constraint.Op.LE};
+
+    private static int dfOpItemIndex(Constraint c) {
+        for (int i = 0; i < DF_OPS.length; i++) if (DF_OPS[i] == c.getOp()) return i;
+        return 0;
+    }
+
     private static String dfTooltip(Constraint c) {
-        return c.isUnsupportedDf()
-                ? "Unsupported dF shape from an older save; solves containing it will fail."
-                        + " Re-select the dF field to reset it to dF = 0, or delete it."
-                : "dF is supported as dF = 0 only (hold the facing of the previous tick;"
-                        + " on Tick 1 the start facing is solved for and Apply moves it)";
+        if (c.isUnsupportedDf()) {
+            return "Unsupported dF shape from an older save; solves containing it will fail."
+                    + " Re-select the dF field to reset it to dF = 0, or delete it.";
+        }
+        if (c.isDirectionalDf()) {
+            return (c.getOp() == Constraint.Op.GE
+                    ? "dF >= v: the facing turns the increasing way (right) by at least v degrees on this tick,"
+                    : "dF <= v: the facing turns the decreasing way (left) by at least -v degrees on this tick,")
+                    + " never back. 0 forbids any turn the other way; put one on every tick of a"
+                    + " section to forbid a turn-out there (the row context menu does that for the selection)."
+                    + " On Tick 1 it is measured from the start facing.";
+        }
+        return "dF = 0 holds the facing of the previous tick (on Tick 1 the start facing is solved for"
+                + " and Apply moves it). Pick >= or <= to only allow a turn one way.";
     }
 
     public AngleSolverTable(AngleSolverState state, Settings settings, SelectionManager selection,
@@ -156,6 +174,25 @@ public final class AngleSolverTable {
 
     public boolean isActive() {
         return settings.viewAngleSolver;
+    }
+
+    public void setYawDirection(Collection<Integer> rows, Constraint.Op op) {
+        for (int tick : rows) {
+            if (tick < 0 || tick >= rowCount.getAsInt()) continue;
+            List<Constraint> list = state.tickConstraints(tick).getConstraints();
+            list.removeIf(c -> c.getField() == Constraint.Field.DF);
+            if (op != null) list.add(Constraint.scalar(Constraint.Field.DF, op, 0.0));
+        }
+        clearConstraintSelection();
+    }
+
+    public boolean anyYawDirection(Collection<Integer> rows) {
+        for (int tick : rows) {
+            TickConstraints tc = state.tickConstraintsOrNull(tick);
+            if (tc == null) continue;
+            for (Constraint c : tc.getConstraints()) if (c.getField() == Constraint.Field.DF) return true;
+        }
+        return false;
     }
 
     // ---- row-edit forwarding (gh-89): InputOverlay reports row edits so the per-tick solver data
@@ -967,8 +1004,14 @@ public final class AngleSolverTable {
                     c.setField(Constraint.Field.values()[fieldCombo.get()]);
                 }
                 ImGui.tableNextColumn();
-                if (c.getField() == Constraint.Field.DF) {
-                    ImGui.textDisabled(c.isUnsupportedDf() ? dfOpGlyph(c) : "=");
+                if (c.getField() == Constraint.Field.DF && c.isUnsupportedDf()) {
+                    ImGui.textDisabled(dfOpGlyph(c));
+                    if (ImGui.isItemHovered()) ImGui.setTooltip(dfTooltip(c));
+                } else if (c.getField() == Constraint.Field.DF) {
+                    opCombo.set(dfOpItemIndex(c));
+                    if (Controls.combo("##dfop", opCombo, DF_OP_ITEMS, ImGui.getContentRegionAvail().x)) {
+                        c.setOp(DF_OPS[opCombo.get()]);
+                    }
                     if (ImGui.isItemHovered()) ImGui.setTooltip(dfTooltip(c));
                 } else {
                     opCombo.set(opItemIndex(c));
@@ -984,7 +1027,7 @@ public final class AngleSolverTable {
                     }
                 }
                 ImGui.tableNextColumn();
-                if (c.getField() == Constraint.Field.DF) {
+                if (c.getField() == Constraint.Field.DF && !c.isDirectionalDf()) {
                     ImGui.textDisabled(c.isUnsupportedDf() ? dfValueLabel(c) : "0");
                     if (ImGui.isItemHovered()) ImGui.setTooltip(dfTooltip(c));
                 } else {
