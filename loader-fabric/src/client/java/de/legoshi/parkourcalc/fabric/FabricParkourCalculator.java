@@ -46,6 +46,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
     private static KeyMapping solveKeyBinding;
     private static KeyMapping solverStartTickKeyBinding;
     private static KeyMapping solverEndTickKeyBinding;
+    private static KeyMapping solverGoalFromLookKeyBinding;
     private static KeyMapping rerunSimulationKeyBinding;
     private static KeyMapping togglePathKeyBinding;
     private static KeyMapping copyTeleportKeyBinding;
@@ -131,6 +132,12 @@ public class FabricParkourCalculator implements ClientModInitializer {
                 "key.parkourcalculator.set_solver_end",
                 InputConstants.Type.KEYBOARD,
                 InputConstants.KEY_O,
+                category
+        ));
+        solverGoalFromLookKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "key.parkourcalculator.set_solver_goal_from_look",
+                InputConstants.Type.KEYBOARD,
+                InputConstants.KEY_Z,
                 category
         ));
         rerunSimulationKeyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
@@ -433,6 +440,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         while (solverEndTickKeyBinding.consumeClick()) {
             solverEndPressed = true;
         }
+        boolean solverGoalFromLookPressed = false;
+        while (solverGoalFromLookKeyBinding.consumeClick()) {
+            solverGoalFromLookPressed = true;
+        }
         boolean rerunSimulationPressed = false;
         while (rerunSimulationKeyBinding.consumeClick()) {
             rerunSimulationPressed = true;
@@ -499,6 +510,9 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
         if (solverEndPressed && chordFree) {
             application.setSolverLandingTickFromSelection();
+        }
+        if (solverGoalFromLookPressed && chordFree) {
+            application.setSolverGoalFromLook(isShiftHeld());
         }
         if (rerunSimulationPressed && chordFree) {
             application.runSimulation();
@@ -572,6 +586,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
         if (key == boundKey(solverEndTickKeyBinding)) {
             application.setSolverLandingTickFromSelection();
+            return true;
+        }
+        if (key == boundKey(solverGoalFromLookKeyBinding)) {
+            application.setSolverGoalFromLook(isShiftHeld());
             return true;
         }
         if (key == boundKey(togglePathKeyBinding)) {

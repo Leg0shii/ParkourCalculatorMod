@@ -57,6 +57,7 @@ import de.legoshi.parkourcalc.core.ui.anglesolver.GraphEditorWindow;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphPresetIO;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolveRunLog;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
+import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.undo.UndoController;
 import imgui.ImGui;
 
@@ -805,6 +806,23 @@ public final class Application {
         angleSolverState.setLandingTick(tick);
         saveController.markDirty();
         pushHudMessage("Solver goal · T" + (tick + 1));
+    }
+
+    public void setSolverGoalFromLook(boolean customAngle) {
+        if (angleSolverState == null) return;
+        if (!mc.isReady()) {
+            pushHudMessage("No player", HudMessageStyle.COLOR_WARN);
+            return;
+        }
+        double yaw = Angles.wrap(mc.getPlayerYaw());
+        if (customAngle) {
+            angleSolverState.setCustomAngle(true);
+            angleSolverState.setCustomAngleDeg(yaw);
+        } else {
+            angleSolverState.setGoalFromYaw(yaw);
+        }
+        saveController.markDirty();
+        pushHudMessage("Solver goal · " + angleSolverState.goalLabel());
     }
 
     private int firstSelectedRow() {
