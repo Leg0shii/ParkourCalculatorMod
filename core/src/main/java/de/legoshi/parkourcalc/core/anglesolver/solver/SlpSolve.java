@@ -149,14 +149,26 @@ public final class SlpSolve {
 
         boolean[] trivialInfeasible = {false};
         List<JumpConstraint> ineq = new ArrayList<>();
+        List<Integer> halves = new ArrayList<>();
         List<JumpLinearModel.Wall> walls = new ArrayList<>();
+        List<JumpLinearModel.Wall> plainWalls = new ArrayList<>();
         for (JumpConstraint c : constraints) {
             if (c.mode == JumpConstraint.Mode.F) continue;
+            if (JumpLinearModel.isCrossAxis(c) && c.t2 != null) {
+                for (int half = -1; half <= 1; half += 2) {
+                    ineq.add(c);
+                    halves.add(half);
+                    walls.add(null);
+                }
+                continue;
+            }
             JumpLinearModel.Wall w = lin.compileWall(c, 0.0, trivialInfeasible);
             if (trivialInfeasible[0]) return null; // a violated constant is unfixable
-            if (w != null) { ineq.add(c); walls.add(w); }
+            if (w != null) { ineq.add(c); halves.add(0); walls.add(w); plainWalls.add(w); }
         }
         int m = walls.size();
+        int[] halfSign = new int[m];
+        for (int j = 0; j < m; j++) halfSign[j] = halves.get(j);
         if (m == 0) return null; // nothing to restore; the closed form already handles the unconstrained case
 
         double[] cx = new double[n];
@@ -168,7 +180,8 @@ public final class SlpSolve {
             theta = seedAbsWrapped.clone();
         } else {
             // Seed: the dual recovery at margin 0; infeasible here, but globally informed.
-            CostateDualSolver dual = new CostateDualSolver(n, cx, cz, lin.mMagAll(), walls);
+            if (plainWalls.isEmpty()) return null;
+            CostateDualSolver dual = new CostateDualSolver(n, cx, cz, lin.mMagAll(), plainWalls);
             CostateDualSolver.Result r = dual.solve(0.0, null);
             if (r == null) return null; // dual unbounded = continuous-infeasible certificate
             theta = lin.recoverAlongCostate(spec.objective, r.gx, r.gz);
@@ -203,6 +216,7 @@ public final class SlpSolve {
         boolean[] lastZeroX = null;
         boolean[] lastZeroZ = null;
         List<JumpLinearModel.Wall> lpWalls = walls;
+        JumpLinearModel lpLin = lin;
         double[] lpCx = cx;
         double[] lpCz = cz;
 
@@ -215,7 +229,7 @@ public final class SlpSolve {
                 }
                 double[] gf = sc.toGameFacings(Angles.wrapAll(theta));
                 ForwardPath path = exact.forward(sc, gf);
-                double maxViol = exactSlacks(ineq, gf, path, viol);
+                double maxViol = exactSlacks(ineq, halfSign, gf, path, viol);
                 double objNorm = normObjective(path, spec.objective, max);
                 if (phase == 1 && maxViol <= -targetClearance) break;
 
@@ -225,13 +239,18 @@ public final class SlpSolve {
                     if (anySet(zeroX) || anySet(zeroZ)) {
                         JumpLinearModel patterned = new JumpLinearModel(sc, zeroX.clone(), zeroZ.clone());
                         rebuilt = new ArrayList<>(m);
-                        for (JumpConstraint c : ineq) {
-                            JumpLinearModel.Wall w = patterned.compileWall(c, 0.0, null);
+                        for (int j = 0; j < m; j++) {
+                            if (halfSign[j] != 0) {
+                                rebuilt.add(null);
+                                continue;
+                            }
+                            JumpLinearModel.Wall w = patterned.compileWall(ineq.get(j), 0.0, null);
                             if (w == null) { rebuilt = null; break; }
                             rebuilt.add(w);
                         }
                         if (rebuilt != null) {
                             lpWalls = rebuilt;
+                            lpLin = patterned;
                             lpCx = new double[n];
                             lpCz = new double[n];
                             patterned.objectiveVectors(spec.objective, lpCx, lpCz);
@@ -239,6 +258,7 @@ public final class SlpSolve {
                     }
                     if (rebuilt == null) {
                         lpWalls = walls;
+                        lpLin = lin;
                         lpCx = cx;
                         lpCz = cz;
                     }
@@ -246,6 +266,11 @@ public final class SlpSolve {
                     lastZeroZ = zeroZ.clone();
                 }
 
+                for (int j = 0; j < m; j++) {
+                    if (halfSign[j] == 0) continue;
+                    JumpConstraint c = ineq.get(j);
+                    lpWalls.set(j, lpLin.crossAxisHalfWall(c, JumpLinearModel.dominantSignOnPath(c, path), halfSign[j], 0.0));
+                }
                 for (int t = 0; t < n; t++) {
                     double phi = lin.baseArg(t) + theta[t] * RAD;
                     ux[t] = lin.mMag(t) * StrictMath.cos(phi);
@@ -293,7 +318,7 @@ public final class SlpSolve {
                 for (int v = 0; v < dims; v++) step = Math.max(step, Math.abs(d[v]));
                 double[] cgf = sc.toGameFacings(Angles.wrapAll(cand));
                 ForwardPath cpath = exact.forward(sc, cgf);
-                double cViol = exactSlacks(ineq, cgf, cpath, candViol);
+                double cViol = exactSlacks(ineq, halfSign, cgf, cpath, candViol);
                 double cObj = normObjective(cpath, spec.objective, max);
                 // Phase 2 accepts any strictly feasible improvement; demanding extra clearance would
                 // forbid hugging the very wall the objective optimizes into.
@@ -315,7 +340,7 @@ public final class SlpSolve {
             }
             if (phase == 1) {
                 double[] gf = sc.toGameFacings(Angles.wrapAll(theta));
-                double endViol = exactSlacks(ineq, gf, exact.forward(sc, gf), viol);
+                double endViol = exactSlacks(ineq, halfSign, gf, exact.forward(sc, gf), viol);
                 // A hugging solve keeps any strictly feasible point (a tight corridor's best clearance can
                 // be shallower than CLEARANCE); a centered solve keeps the demand, its result seeds windows.
                 double phase1Gate = hugObjective ? feasTol : -CLEARANCE;
@@ -374,12 +399,17 @@ public final class SlpSolve {
     }
 
     /** Signed byte-exact slack per wall into {@code out} (&lt;= 0 = feasible, by that clearance); returns the max. */
-    private static double exactSlacks(List<JumpConstraint> ineq, double[] gf, ForwardPath path, double[] out) {
+    private static double exactSlacks(List<JumpConstraint> ineq, int[] halfSign, double[] gf, ForwardPath path, double[] out) {
         double mx = Double.NEGATIVE_INFINITY;
         for (int j = 0; j < ineq.size(); j++) {
             JumpConstraint c = ineq.get(j);
-            double e = JumpConstraintCompiler.evaluate(c, gf, path);
-            double v = c.cmp == JumpConstraint.Cmp.GE ? -e : e;
+            double v;
+            if (halfSign[j] != 0) {
+                v = JumpLinearModel.crossAxisHalfSlack(c, halfSign[j], path);
+            } else {
+                double e = JumpConstraintCompiler.evaluate(c, gf, path);
+                v = c.cmp == JumpConstraint.Cmp.GE ? -e : e;
+            }
             out[j] = v;
             if (v > mx) mx = v;
         }

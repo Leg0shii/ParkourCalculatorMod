@@ -96,6 +96,12 @@ anglesolver/
                            spec; velocity/EQ/cap/off-tick/off-axis never selected; ties refuse);
                            deterministic legal solve on the synth-legal-shortfall fixture with the
                            reported shortfall and every hard wall met
+  CrossAxisSignTest.java   dX vs dZ constraints (mcc11-cross-axis-sign capture, 1.21.3): the recorded
+                           path is feasible and needs opposite dominant signs on its two cross-axis
+                           constraints; the closed form enumerates the per-constraint sign branches (all +1,
+                           all -1, then the rest) and solves; SLP keeps the two half-walls per constraint
+                           with the sign of the current iterate and solves from its dual seed; the two
+                           half-wall slacks reproduce the exact |dX| - |dZ| slack
   LegalModeGh459Test.java  gh-459 (SlowSolverTests): legal mode on a landable jump (gh459-legal-mode
                            capture, FAST) lands 15/15 at the goal wall with a non-positive shortfall,
                            both on the plain Fast graph and with the seed stage starved to 1 ms (the
