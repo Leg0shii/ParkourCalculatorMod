@@ -53,6 +53,7 @@ public final class ExactJumpModel implements ForwardModel {
     /** 26.x Mth.sin/cos: double-indexed lookup into the regenerated table (see McSineTable.sinStep262). */
     private final boolean sine262;
     private final boolean foldedInputRad;
+    private final boolean floatSprintBoost;
 
     public ExactJumpModel(double inertiaThreshold, boolean perAxisInertia, boolean modern) {
         this(inertiaThreshold, perAxisInertia, modern, false);
@@ -64,11 +65,17 @@ public final class ExactJumpModel implements ForwardModel {
 
     public ExactJumpModel(double inertiaThreshold, boolean perAxisInertia, boolean modern, boolean sine262,
                           boolean foldedInputRad) {
+        this(inertiaThreshold, perAxisInertia, modern, sine262, foldedInputRad, !modern);
+    }
+
+    public ExactJumpModel(double inertiaThreshold, boolean perAxisInertia, boolean modern, boolean sine262,
+                          boolean foldedInputRad, boolean floatSprintBoost) {
         this.inertiaThreshold = inertiaThreshold;
         this.perAxisInertia = perAxisInertia;
         this.modern = modern;
         this.sine262 = sine262;
         this.foldedInputRad = foldedInputRad;
+        this.floatSprintBoost = floatSprintBoost;
     }
 
     private float tableSin(float rad) {
@@ -112,15 +119,22 @@ public final class ExactJumpModel implements ForwardModel {
         return sine262;
     }
 
+    public boolean floatSprintBoost() {
+        return floatSprintBoost;
+    }
+
     /** Inertia rule for a loader's MC version. 1.8.x: per-axis 0.005, legacy float chain.
      *  1.12.x: per-axis 0.003, legacy float chain. 1.9 to 1.21.4: per-axis 0.003 on the modern
-     *  double pipeline (1.21.5 is where the player switched to the combined-XZ gate). 1.21.5+
+     *  double pipeline (1.21.5 is where the player switched to the combined-XZ gate); up to 1.20.4
+     *  the sprint-jump boost is still the float product sin * 0.2F. 1.21.5+
      *  players (the modern default here): combined-XZ |v|^2 &lt; 9.0E-6. Year-versioned MC (26.x
      *  onward) additionally runs the rewritten double-indexed sine lookup. */
     public static ExactJumpModel forMcVersion(String mcVersion) {
         if (mcVersion != null && mcVersion.startsWith("1.8")) return new ExactJumpModel(0.005, true, false);
         if (mcVersion != null && mcVersion.startsWith("1.12")) return new ExactJumpModel(0.003, true, false, false, true);
-        if (isPerAxisModernEra(mcVersion)) return new ExactJumpModel(0.003, true, true, false);
+        if (isPerAxisModernEra(mcVersion)) {
+            return new ExactJumpModel(0.003, true, true, false, false, isFloatSprintBoostEra(mcVersion));
+        }
         boolean sine262 = mcVersion != null && !mcVersion.startsWith("1.");
         return new ExactJumpModel(0.003, false, true, sine262);
     }
@@ -132,6 +146,14 @@ public final class ExactJumpModel implements ForwardModel {
         int patch = parseVersionPart(parts, 2);
         if (minor < 9) return false;
         return minor < 21 || (minor == 21 && patch <= 4);
+    }
+
+    static boolean isFloatSprintBoostEra(String mcVersion) {
+        if (mcVersion == null || !mcVersion.startsWith("1.")) return false;
+        String[] parts = mcVersion.split("\\.");
+        int minor = parseVersionPart(parts, 1);
+        int patch = parseVersionPart(parts, 2);
+        return minor < 20 || (minor == 20 && patch <= 4);
     }
 
     private static int parseVersionPart(String[] parts, int index) {
@@ -214,12 +236,18 @@ public final class ExactJumpModel implements ForwardModel {
             }
             if (isJumpTick) {
                 if (modern) {
-                    // jump(): Math.max'd impulse; the sprint boost stays double (float sin widened, * 0.2).
+                    // jump(): Math.max'd impulse; the sprint boost is double (float sin widened, * 0.2)
+                    // from 1.20.5 on and the float product sin * 0.2F (then widened) up to 1.20.4.
                     vy = Math.max((double) Constants.JUMP_VEL_F, vy);
                     if (sprint) {
                         float fj = yawF * (float) (Math.PI / 180.0);
-                        vx += -tableSin(fj) * 0.2;
-                        vz += tableCos(fj) * 0.2;
+                        if (floatSprintBoost) {
+                            vx -= tableSin(fj) * 0.2F;
+                            vz += tableCos(fj) * 0.2F;
+                        } else {
+                            vx += -tableSin(fj) * 0.2;
+                            vz += tableCos(fj) * 0.2;
+                        }
                     }
                 } else {
                     vy = (double) Constants.JUMP_VEL_F;

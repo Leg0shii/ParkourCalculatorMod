@@ -31,15 +31,33 @@ public class ForMcVersionModelTest {
         assertTrue(m.perAxisInertia());
         assertEquals(0.003, m.inertiaThreshold(), 0.0);
         assertTrue(m.modern());
+        assertFalse(m.floatSprintBoost());
     }
 
     @Test
-    public void mc1204IsModernPerAxis003() {
+    public void mc1204IsModernPerAxis003WithFloatSprintBoost() {
         ExactJumpModel m = ExactJumpModel.forMcVersion("1.20.4");
         assertTrue(m.perAxisInertia());
         assertEquals(0.003, m.inertiaThreshold(), 0.0);
         assertTrue(m.modern());
         assertFalse(m.sine262());
+        assertTrue(m.floatSprintBoost());
+    }
+
+    @Test
+    public void legacyErasKeepTheFloatSprintBoost() {
+        assertTrue(ExactJumpModel.forMcVersion("1.8.9").floatSprintBoost());
+        assertTrue(ExactJumpModel.forMcVersion("1.12.2").floatSprintBoost());
+    }
+
+    @Test
+    public void floatSprintBoostEndsAt1204() {
+        for (String version : new String[]{"1.9", "1.16.5", "1.19.2", "1.20", "1.20.1", "1.20.4"}) {
+            assertTrue(version, ExactJumpModel.forMcVersion(version).floatSprintBoost());
+        }
+        for (String version : new String[]{"1.20.5", "1.20.6", "1.21", "1.21.1", "1.21.4", "1.21.5", "26.3"}) {
+            assertFalse(version, ExactJumpModel.forMcVersion(version).floatSprintBoost());
+        }
     }
 
     @Test
