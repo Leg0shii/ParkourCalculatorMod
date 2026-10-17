@@ -17,7 +17,6 @@ import com.mojang.renderpearl.api.commands.RenderPass;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
-import net.minecraft.client.renderer.state.level.LevelRenderState;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 
@@ -48,7 +47,7 @@ public final class FabricWorldOverlayRenderer {
         this.angleSolver = angleSolver;
     }
 
-    public void prepare() {
+    public void prepare(LevelRenderContext context) {
         if (boxController.isEmpty()) {
             cached.close();
             return;
@@ -57,26 +56,28 @@ public final class FabricWorldOverlayRenderer {
         boxController.setBoxSize(BoxStyle.tickBoxSize(settings));
         PathRenderPlan plan = PathRenderPlan.build(boxController, settings, selection);
         cached.ensureBuilt(boxController, plan);
-        Perf.stop("worldOverlayPrepare", buildStart);
-    }
 
-    public void draw(LevelRenderState levelState, RenderPass pass) {
-        if (boxController.isEmpty()) {
-            return;
-        }
-
-        long renderStart = Perf.now();
-        CameraRenderState camera = levelState.cameraRenderState;
+        CameraRenderState camera = context.levelState().cameraRenderState;
         Vec3 cameraPos = camera.pos;
-
         Matrix4f modelView = new Matrix4f(camera.viewRotationMatrix).translate(
                 (float) (cached.anchorX() - cameraPos.x),
                 (float) (cached.anchorY() - cameraPos.y),
                 (float) (cached.anchorZ() - cameraPos.z)
         );
         int[] runs = boxController.inRangeRuns(cameraPos.x, cameraPos.y, cameraPos.z, BoxStyle.pathMaxDistanceSq(settings));
-        cached.drawLines(pass, modelView, runs);
-        cached.drawFaces(pass, modelView, runs);
+        cached.prepareFrame(modelView, runs);
+        Perf.stop("worldOverlayPrepare", buildStart);
+    }
+
+    public void draw(RenderPass pass) {
+        if (!cached.frameReady()) {
+            return;
+        }
+
+        long renderStart = Perf.now();
+        cached.drawLines(pass);
+        cached.drawFaces(pass);
+        cached.finishFrame();
 
         Perf.stop("worldOverlay", renderStart);
         Perf.addBoxes(boxController.size());

@@ -45,7 +45,6 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 *///?}
 import net.minecraft.client.gui.screens.Screen;
 //? if >=26.1 {
-import net.minecraft.client.renderer.state.level.LevelRenderState;
 import net.minecraft.resources.Identifier;
 //?} else {
 /*import net.minecraft.client.renderer.MultiBufferSource;
@@ -682,13 +681,14 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     //? if >=26.1 {
     /**
-     * Fires after solid features, before translucent terrain draws, so boxes depth-test
-     * only against opaque geometry and stay visible through water, lava, and stained/tinted glass.
+     * Fires after opaque terrain and before the solid features draw, while vanilla still needs the
+     * pass itself, so boxes depth-test only against opaque geometry and stay visible through water,
+     * lava, and stained/tinted glass.
      */
-    public static void renderWorldOverlayBeforeTranslucent(LevelRenderState levelState, RenderPass pass) {
-        if (levelState == null || pass == null) return;
+    public static void renderWorldOverlayBeforeTranslucent(RenderPass pass) {
+        if (pass == null) return;
         if (shouldDrawPath()) {
-            worldRenderer.draw(levelState, pass);
+            worldRenderer.draw(pass);
         }
     }
 
@@ -700,7 +700,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         if (!shouldDrawPath()) {
             return;
         }
-        worldRenderer.prepare();
+        worldRenderer.prepare(context);
         worldRenderer.submitGizmo(context);
     }
     //?} else {
