@@ -73,6 +73,8 @@ public final class SolveResult {
     private String noticeLabel;
     private double objectiveValue;
     private boolean hasObjective;
+    private String smoothStop;
+    private long smoothNanos;
 
     public SolveResult(boolean success, int met, int total, int startTick, int landingTick) {
         this.success = success;
@@ -172,6 +174,23 @@ public final class SolveResult {
 
     public void setNoticeLabel(String noticeLabel) {
         this.noticeLabel = noticeLabel;
+    }
+
+    public String getSmoothStop() {
+        return smoothStop;
+    }
+
+    public long getSmoothNanos() {
+        return smoothNanos;
+    }
+
+    public boolean isSmoothed() {
+        return smoothStop != null;
+    }
+
+    public void setSmoothing(String stop, long nanos) {
+        this.smoothStop = stop;
+        this.smoothNanos = nanos;
     }
 
     public double getObjectiveValue() {

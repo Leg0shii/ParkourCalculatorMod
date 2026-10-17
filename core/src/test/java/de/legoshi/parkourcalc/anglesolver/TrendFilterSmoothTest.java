@@ -90,6 +90,30 @@ public class TrendFilterSmoothTest {
     }
 
     @Test
+    public void reportNamesWhyTheSmoothingStopped() {
+        JumpPhysicsInputs sc = airScenario();
+        JumpSpec spec = new JumpSpec(sc, new ArrayList<JumpConstraint>(),
+                new Objective(JumpPhysicsInputs.Axis.Z, Objective.Sense.MIN, N));
+        double[] start = zigzag(120.0);
+
+        TrendFilterSmooth.Report spent = TrendFilterSmooth.smoothReport(MODEL, spec, start.clone(),
+                TrendFilterSmooth.MAX_GIVE_BACK, System.nanoTime() - 1L, new AtomicBoolean(false));
+        assertEquals("a deadline that has already passed stops on the budget",
+                TrendFilterSmooth.Stop.BUDGET, spent.stop);
+        assertTrue("the report keeps a usable path", spent.yaws != null && spent.yaws.length == N);
+
+        TrendFilterSmooth.Report cancelled = TrendFilterSmooth.smoothReport(MODEL, spec, start.clone(),
+                TrendFilterSmooth.MAX_GIVE_BACK, 0L, new AtomicBoolean(true));
+        assertEquals(TrendFilterSmooth.Stop.CANCELLED, cancelled.stop);
+
+        TrendFilterSmooth.Report free = TrendFilterSmooth.smoothReport(MODEL, spec, start.clone(),
+                TrendFilterSmooth.MAX_GIVE_BACK, 0L, new AtomicBoolean(false));
+        assertTrue("without a deadline the smoothing ends on convergence or the pass limit: " + free.stop,
+                free.stop == TrendFilterSmooth.Stop.CONVERGED || free.stop == TrendFilterSmooth.Stop.PASS_LIMIT);
+        assertTrue("the run time is measured", free.nanos > 0L);
+    }
+
+    @Test
     public void infeasibleStartIsLeftUntouched() {
         JumpPhysicsInputs sc = airScenario();
         List<JumpConstraint> cons = new ArrayList<JumpConstraint>();

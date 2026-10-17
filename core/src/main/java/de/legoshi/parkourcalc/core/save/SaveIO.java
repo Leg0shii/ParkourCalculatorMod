@@ -831,6 +831,8 @@ public final class SaveIO {
         out.noticeLabel = r.getNoticeLabel();
         out.objectiveValue = r.getObjectiveValue();
         out.hasObjective = r.hasObjective();
+        out.smoothStop = r.getSmoothStop();
+        out.smoothNanos = r.getSmoothNanos();
         for (SolveResult.Outcome o : r.getOutcomes()) {
             SaveFile.Outcome so = new SaveFile.Outcome();
             so.field = o.field;
@@ -867,6 +869,7 @@ public final class SaveIO {
         r.setNotice(rd.notice);
         r.setNoticeLabel(rd.noticeLabel);
         if (rd.hasObjective) r.setObjective(rd.objectiveValue);
+        if (rd.smoothStop != null) r.setSmoothing(rd.smoothStop, rd.smoothNanos);
         if (rd.outcomes != null) {
             for (SaveFile.Outcome o : rd.outcomes) {
                 r.getOutcomes().add(new SolveResult.Outcome(o.field, o.tick, o.relation, o.found, o.margin, o.met == null || o.met));
