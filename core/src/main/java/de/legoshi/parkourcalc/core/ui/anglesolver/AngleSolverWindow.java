@@ -552,15 +552,18 @@ public final class AngleSolverWindow implements RenderInterface {
     private static final String SMOOTH_TIP =
             "Smooths the turn of the solved path: fewer direction changes and a steadier turn rate. The jump"
             + " keeps landing; the smoothing may give back the share of the offset past the goal wall set"
-            + " under More options. Stops early once nothing improves.";
+            + " under More options. Every press starts again from the unsmoothed solve, so the share always"
+            + " refers to the solve's offset and pressing again only changes the result when the give-back"
+            + " changed. Stops early once nothing improves.";
 
     private static final String SMOOTH_DISABLED_TIP =
             "Smooths the turn of the solved path. Solve the range first.";
 
     private static final String SMOOTH_GIVE_BACK_TIP =
             "How much of the landing offset the Smooth button may trade for a smoother turn. The offset is"
-            + " the margin past the goal wall at the goal tick, the + value in the result table. 100 %"
-            + " lets it land anywhere past the wall, 0 % keeps the objective where it is.";
+            + " the margin past the goal wall at the goal tick, the + value in the result table of the"
+            + " unsmoothed solve. 100 % lets it land anywhere past the wall, 0 % keeps the objective where"
+            + " it is.";
 
     private static final String LEGAL_MODE_TIP =
             "Record hunting: drops the single tightest goal wall on the objective axis at the goal tick and"
