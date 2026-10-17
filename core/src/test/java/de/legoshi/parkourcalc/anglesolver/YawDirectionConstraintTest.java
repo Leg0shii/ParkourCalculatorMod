@@ -6,6 +6,7 @@ import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
+import de.legoshi.parkourcalc.core.anglesolver.solver.BoundPrunedRecovery;
 import de.legoshi.parkourcalc.core.anglesolver.solver.CertifiedBnb;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ClosedFormSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
@@ -242,6 +243,24 @@ public class YawDirectionConstraintTest {
         t0 = System.nanoTime();
         double[] cf = ClosedFormSolve.optimize(pf.model, full, 0.0, new AtomicBoolean(false));
         System.out.printf("CF j121 full spec -> %s in %.1f ms%n", cf == null ? "miss" : "solved", (System.nanoTime() - t0) / 1e6);
+    }
+
+    @Test
+    public void patternBnbCarriesAOneWayRange() {
+        ProblemFixture pf = ProblemFixture.load("solve", "gh553-j345-dfneo");
+        JumpSpec spec = pf.specFor(null, null);
+        assertTrue(CertifiedBnb.carriesOrder(spec));
+        assertTrue("the pattern B&B must accept a one-way dF range", BoundPrunedRecovery.accepts(spec));
+        long t0 = System.nanoTime();
+        double[] yaws = BoundPrunedRecovery.solve(pf.model, spec, 0.0, new AtomicBoolean(false), 20_000_000_000L);
+        System.out.printf("BNB gh553-j345-dfneo -> %s in %.1f ms%n", yaws == null ? "miss" : "solved",
+                (System.nanoTime() - t0) / 1e6);
+        assertNotNull("the pattern B&B must land j345 with dF <= 0 through the neo", yaws);
+        double[] gf = spec.asScenario().toGameFacings(Angles.wrapAll(yaws));
+        assertEquals(0.0, JumpConstraintCompiler.compile(spec).maxViolation(gf, pf.model.forward(spec.asScenario(), gf)), 0.0);
+        YawOrder order = YawOrder.carry(spec.constraints, YawTies.of(spec.constraints, spec.asScenario().numTicks),
+                spec.asScenario().numTicks);
+        assertTrue(order.satisfied(gf, 0.0));
     }
 
     @Test

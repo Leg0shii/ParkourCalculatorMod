@@ -128,6 +128,12 @@ anglesolver/
                            ruling in issue 372 (dF = 0 only), carried again since issue 553: the
                            SLP holds the walls as exact yaw rows and the certified B&B as ordered
                            sine-table arcs, so it solves on FAST through the certified B&B)
+                           (solve/gh553-j345-dfneo: gh-553; hpk j345 3jmm neo with dF <= 0 on
+                           T39..T43 and T46, X MAX against a knife-edge X wall on T41 (the human
+                           path clears it by 9e-6). The certified B&B exhausts its FAST budget
+                           without an incumbent; the pattern B&B lands it in ms on the zx1@6
+                           pattern, so this pins that the pattern B&B accepts an order spec and
+                           that its per-pattern closed form runs the ordered tie cascade)
                            (solve/nix-full-t1: long multi-jump free start; accepted as not solving
                            after the CMA-ES removal (issue 374) until the multi-jump seam work lands)
                            (solve/gh283-j925-farseed: gh-283; hpk j925 momentum+neo with the start

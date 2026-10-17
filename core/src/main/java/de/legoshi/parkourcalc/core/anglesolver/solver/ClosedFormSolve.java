@@ -82,6 +82,15 @@ public final class ClosedFormSolve {
                                                AtomicBoolean cancel, boolean[] zeroX, boolean[] zeroZ) {
         Config cfg = new Config();
         JumpPhysicsInputs sc = spec.asScenario();
+        YawOrder order = carriedOrder(spec, sc);
+        Result r = order != null
+                ? solveOrdered(exact, spec, sc, feasTol, cancel, cfg.margins, true, cfg, order, zeroX, zeroZ)
+                : solvePatterned(exact, spec, sc, feasTol, cancel, cfg, zeroX, zeroZ);
+        return r != null && r.feasible ? r.yaws : null;
+    }
+
+    private static Result solvePatterned(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, double feasTol,
+                                         AtomicBoolean cancel, Config cfg, boolean[] zeroX, boolean[] zeroZ) {
         FacingPrefold pre = FacingPrefold.analyze(spec.constraints, new JumpLinearModel(sc));
         if (pre == null) return null;
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
@@ -92,7 +101,7 @@ public final class ClosedFormSolve {
                     System.nanoTime(), cfg, pre, -1);
             if (r2 != null && r2.feasible) r = r2;
         }
-        return r != null && r.feasible ? r.yaws : null;
+        return r;
     }
 
     /** Like {@link #optimize}, but prefers clearance over objective: the result keeps the largest
@@ -121,7 +130,7 @@ public final class ClosedFormSolve {
                                             double[] margins, boolean ascending, Config cfg) {
         JumpPhysicsInputs sc = spec.asScenario();
         YawOrder order = carriedOrder(spec, sc);
-        if (order != null) return solveOrdered(exact, spec, sc, feasTol, cancel, margins, ascending, cfg, order);
+        if (order != null) return solveOrdered(exact, spec, sc, feasTol, cancel, margins, ascending, cfg, order, null, null);
         return solveStripped(exact, spec, sc, feasTol, cancel, margins, ascending, cfg);
     }
 
@@ -133,7 +142,7 @@ public final class ClosedFormSolve {
 
     private static Result solveOrdered(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, double feasTol,
                                        AtomicBoolean cancel, double[] margins, boolean ascending, Config cfg,
-                                       YawOrder order) {
+                                       YawOrder order, boolean[] zeroX, boolean[] zeroZ) {
         long t0 = System.nanoTime();
         JumpConstraintCompiler.Compiled full = JumpConstraintCompiler.compile(spec);
         List<JumpConstraint> base = new ArrayList<JumpConstraint>(spec.constraints.size());
@@ -163,7 +172,9 @@ public final class ClosedFormSolve {
             List<JumpConstraint> active = new ArrayList<JumpConstraint>(base);
             addTies(active, order, tie, pinLo, pinHi);
             JumpSpec work = new JumpSpec(sc, active, spec.objective);
-            Result r = solveStripped(exact, work, sc, feasTol, cancel, margins, ascending, cfg);
+            Result r = zeroX == null
+                    ? solveStripped(exact, work, sc, feasTol, cancel, margins, ascending, cfg)
+                    : solvePatterned(exact, work, sc, feasTol, cancel, cfg, zeroX, zeroZ);
             if (r == null) break;
             double viol = violOnExact(exact, sc, full, r.yaws);
             if (least == null || viol < least.violation) least = new Result(r.yaws, viol, false);

@@ -9,7 +9,6 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.ParamValues;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.BoundPrunedRecovery;
-import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -49,11 +48,7 @@ public final class BnbNode implements NodeRuntime {
         }
         if (!ctx.exact() || ctx.stageLocked()) return NodeOutcome.of(miss, in);
         if (tickCap > 0 && ctx.scenario.numTicks > tickCap) return NodeOutcome.of(miss, in);
-        if (JumpLinearModel.hasFacingWall(ctx.spec.constraints)
-                && de.legoshi.parkourcalc.core.anglesolver.solver.FacingPrefold.analyze(
-                        ctx.spec.constraints, new JumpLinearModel(ctx.scenario)) == null) {
-            return NodeOutcome.of(miss, in);
-        }
+        if (!BoundPrunedRecovery.accepts(ctx.spec)) return NodeOutcome.of(miss, in);
         boolean max = ctx.maximize();
         if (ctx.progress != null) ctx.progress.setStage(ctx.chainWith("pattern B&B"));
         if (SolverTrace.on()) {
