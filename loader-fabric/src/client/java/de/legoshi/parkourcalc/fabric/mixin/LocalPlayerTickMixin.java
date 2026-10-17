@@ -15,7 +15,7 @@ public abstract class LocalPlayerTickMixin {
         LocalPlayer self = (LocalPlayer) (Object) this;
         if (FabricParkourCalculator.shouldForceGroundOnTick0(self)) {
             self.setOnGround(FabricParkourCalculator.firstTickOnGround());
-            self.fallDistance = 0.0;
+            self.fallDistance = 0.0F;
         }
     }
 }

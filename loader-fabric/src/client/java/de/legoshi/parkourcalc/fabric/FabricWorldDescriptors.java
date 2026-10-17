@@ -2,11 +2,14 @@ package de.legoshi.parkourcalc.fabric;
 
 import de.legoshi.parkourcalc.core.save.WorldDescriptor;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.resources.ResourceKey;
+import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.server.IntegratedServer;
+//? if >=26.1
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+//? if <26.1
+//import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 
 /**
@@ -34,7 +37,11 @@ final class FabricWorldDescriptors {
 
     private static String dimensionId(ClientLevel world) {
         ResourceKey<Level> key = world.dimension();
+        //? if >=26.1 {
         Identifier id = key.identifier();
+        //?} else {
+        /*ResourceLocation id = key.location();
+        *///?}
         return id.toString();
     }
 }

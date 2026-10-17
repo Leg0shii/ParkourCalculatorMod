@@ -41,20 +41,18 @@ jobs:
           path: |
             .gradle/loom-cache
             .gradle/unimined
-          key: mc-${{ runner.os }}-${{ hashFiles('loader-*/build.gradle', 'loader-*/gradle.properties', 'gradle.properties', 'settings.gradle') }}
+          key: mc-${{ runner.os }}-${{ hashFiles('loader-*/build.gradle', 'loader-*/stonecutter.gradle', 'loader-*/gradle.properties', 'loader-*/versions/*/gradle.properties', 'gradle.properties', 'settings.gradle') }}
           restore-keys: |
             mc-${{ runner.os }}-
       - name: build loaders
-        run: ./gradlew build -x :core:test -x tableStyleCheck -Dorg.gradle.java.home="$JAVA_HOME"
+        run: ./gradlew chiseledBuild -x :core:test -x tableStyleCheck -Dorg.gradle.java.home="$JAVA_HOME"
       - name: capture build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: Artifacts
           path: |
-            loader-fabric/build/libs/*.jar
-            loader-fabric-1.21.3/build/libs/*.jar
-            loader-forge-1.8.9/build/libs/*.jar
-            loader-forge-1.12.2/build/libs/*.jar
+            loader-fabric/versions/*/build/libs/*.jar
+            loader-forge/versions/*/build/libs/*.jar
 
   core-tests:
     runs-on: ubuntu-24.04

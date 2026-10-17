@@ -27,8 +27,7 @@ body:
         - label: core
         - label: forge-core
         - label: loader-fabric
-        - label: loader-forge-1.8.9
-        - label: loader-forge-1.12.2
+        - label: loader-forge
 
   - type: textarea
     id: context
