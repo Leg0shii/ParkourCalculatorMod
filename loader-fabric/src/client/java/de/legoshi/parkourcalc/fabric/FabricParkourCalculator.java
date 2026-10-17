@@ -204,6 +204,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         application.setPlaybackBridge(playbackBridge);
         application.getRecorder().setKeyCodes("glfw");
         application.setBlockPicker(new FabricBlockPicker());
+        application.setPhysicsVariant(de.legoshi.parkourcalc.fabric.sim.BpkModBridge.physicsVariant());
         application.setupUi();
 
         //? if >=26.1 {
@@ -211,7 +212,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         ClientTickEvents.START_CLIENT_TICK.register(client -> onStartTick());
         ClientTickEvents.END_CLIENT_TICK.register(client -> onEndTick());
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> onWorldChange());
-        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> onWorldChange());
+        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
+            onWorldChange();
+            announceBpkMod();
+        });
         ServerLifecycleEvents.SERVER_STOPPING.register(simulator::onServerStopping);
 
         LevelRenderEvents.COLLECT_SUBMITS.register(FabricParkourCalculator::onCollectSubmits);
@@ -224,6 +228,19 @@ public class FabricParkourCalculator implements ClientModInitializer {
     }
 
     private static boolean wasPlaybackRunning = false;
+
+    private static void announceBpkMod() {
+        if (!de.legoshi.parkourcalc.fabric.sim.BpkModBridge.present()) return;
+        if (de.legoshi.parkourcalc.fabric.sim.BpkModBridge.broken()) {
+            application.pushHudMessage("BPKMod found but its config could not be read: the simulation follows vanilla sprint and strafe rules");
+            return;
+        }
+        de.legoshi.parkourcalc.fabric.sim.BpkModBridge.Rules rules = de.legoshi.parkourcalc.fabric.sim.BpkModBridge.rules();
+        application.pushHudMessage("BPKMod: " + rules.describe());
+        if (!rules.physicsVariant().equals(application.getPhysicsVariant())) {
+            application.pushHudMessage("BPKMod config changed since launch: restart the game so the solver follows it");
+        }
+    }
 
     public static String rerunSimulationKeyName() {
         return rerunSimulationKeyBinding == null ? null : rerunSimulationKeyBinding.getTranslatedKeyMessage().getString();
