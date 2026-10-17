@@ -194,9 +194,13 @@ public class DeltaFacingConstraintTest {
     }
 
     @Test
-    public void onlyZeroEqualityCountsAsSupportedDf() {
+    public void zeroEqualityAndOneWayShapesCountAsSupportedDf() {
         assertFalse(Constraint.scalar(Constraint.Field.DF, Constraint.Op.EQ, 0.0).isUnsupportedDf());
-        assertTrue(Constraint.scalar(Constraint.Field.DF, Constraint.Op.LE, 0.0).isUnsupportedDf());
+        assertFalse(Constraint.scalar(Constraint.Field.DF, Constraint.Op.LE, 0.0).isUnsupportedDf());
+        assertFalse(Constraint.scalar(Constraint.Field.DF, Constraint.Op.GE, 0.5).isUnsupportedDf());
+        assertTrue(Constraint.scalar(Constraint.Field.DF, Constraint.Op.GE, 0.5).isDirectionalDf());
+        assertEquals(Constraint.Op.GE, Constraint.scalar(Constraint.Field.DF, Constraint.Op.GT, 0.0).getOp());
+        assertEquals(Constraint.Op.LE, Constraint.scalar(Constraint.Field.DF, Constraint.Op.LT, 0.0).getOp());
         assertTrue(Constraint.scalar(Constraint.Field.DF, Constraint.Op.EQ, 1.0).isUnsupportedDf());
         assertTrue(Constraint.range(Constraint.Field.DF, -1.0, 1.0, true, true).isUnsupportedDf());
         assertFalse(Constraint.scalar(Constraint.Field.X, Constraint.Op.LE, 3.0).isUnsupportedDf());
@@ -204,14 +208,26 @@ public class DeltaFacingConstraintTest {
     }
 
     @Test
-    public void unsupportedDfWallFailsWithTheExplanatoryNotice() {
-        Ctx ctx = build(state ->
-                addScalar(state, state.getStartTick() + 2, Constraint.Op.LE, 0.0));
+    public void oneWayDfSolvesAndReports() {
+        SolveResult plain = solve(build(state -> { }));
+        assertNotNull("baseline solve returned no result", plain);
+        assertTrue("baseline j004 must solve", plain.isSuccess());
+        double turn = Angles.wrap(plain.getYaws().get(2).yaw - plain.getYaws().get(1).yaw);
+        Constraint.Op op = turn >= 0.0 ? Constraint.Op.GE : Constraint.Op.LE;
+
+        Ctx ctx = build(state -> addScalar(state, state.getStartTick() + 2, op, 0.0));
         SolveResult r = solve(ctx);
         assertNotNull("engine returned no result", r);
-        assertFalse("a dF inequality is retired and must not solve", r.isSuccess());
-        assertEquals("failed solve must name the unsupported dF as the cause",
+        assertTrue("j004 must solve with the baseline's own turn direction on tick 3", r.isSuccess());
+        assertNotEquals("a one-way dF is supported and must not be reported as unsupported",
                 AngleSolverEngine.DF_UNSUPPORTED_NOTICE, r.getNotice());
+        SolveResult.Outcome df = null;
+        for (SolveResult.Outcome o : r.getOutcomes()) if ("dF".equals(o.field)) df = o;
+        assertNotNull("dF outcome row missing from the result panel", df);
+        assertTrue("the one-way dF must report met", df.met);
+        assertTrue("the result panel shows the inequality: " + df.relation, df.relation.startsWith(op.glyph));
+        double solvedTurn = Angles.wrap(r.getYaws().get(2).yaw - r.getYaws().get(1).yaw);
+        assertTrue("solved turn " + solvedTurn + " must follow " + op, op == Constraint.Op.GE ? solvedTurn >= 0.0 : solvedTurn <= 0.0);
     }
 
     @Test

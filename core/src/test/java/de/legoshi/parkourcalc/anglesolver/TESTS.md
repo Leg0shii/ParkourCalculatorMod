@@ -19,6 +19,14 @@ anglesolver/
                            motivated the ticket; Optimize adopts the previous successful solve as its
                            incumbent (solver chain starts with "incumbent") and never ends worse than it;
                            a pinned start passes through the sweep instantly (gh398-optimize-2jump)
+  YawDirectionConstraintTest.java gh-553 (SlowSolverTests): dF >= 0 / dF <= 0 over a tick range (the
+                           yaw may only turn one way, no turn-out). YawOrder carries consecutive-tick F
+                           inequalities and one-sided absolute F walls that the YawTies fold does not
+                           absorb; the SLP solves them as exact yaw rows, the certified B&B propagates
+                           them between the per-tick arcs and splits overlapping pairs in order, the
+                           closed form runs the tie cascade (YawOrderDp). Pins the carry rules, the
+                           projection, an SLP, a closed-form and a B&B solve of a one-way range on j121,
+                           the wrong-way range staying rejected, and the j121 neo engine solve.
   OverConstrainedChainTest.java  gh-454 (SlowSolverTests): a segment whose dF = 0 constraints tie every
                            tick to one heading (gh454-p2s-overconstrained capture, THOROUGH) fails
                            within 20 s and carries the "Overconstrained" notice label with the
@@ -115,9 +123,11 @@ anglesolver/
                            THOROUGH 45 s)
                            (solve/loopmm-tight-t39-fast: the SAME capture under FAST effort,
                            same keep-alive pin on the shorter chain, budget 90 s)
-                           (solve/gh313-j121-dfneo: gh-313; hpk j121 neo with dF <= 0 walls. The
-                           dF inequality class is retired by ruling (issue 372, dF = 0 only) and
-                           CMA-ES is removed (issue 374), so shouldSolve is false by design)
+                           (solve/gh313-j121-dfneo: gh-313 / gh-553; hpk j121 neo with dF <= 0
+                           on T39..T46, the yaw may only decrease through the neo. Retired by
+                           ruling in issue 372 (dF = 0 only), carried again since issue 553: the
+                           SLP holds the walls as exact yaw rows and the certified B&B as ordered
+                           sine-table arcs, so it solves on FAST through the certified B&B)
                            (solve/nix-full-t1: long multi-jump free start; accepted as not solving
                            after the CMA-ES removal (issue 374) until the multi-jump seam work lands)
                            (solve/gh283-j925-farseed: gh-283; hpk j925 momentum+neo with the start

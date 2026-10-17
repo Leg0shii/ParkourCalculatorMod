@@ -28,6 +28,8 @@ public final class CertifiedBnb {
     private static final byte SECTOR_ZN = 5;
     private static final byte OPEN_ANY = 6;
     private static final int FULL = Integer.MIN_VALUE;
+    private static final int HALF_TURN_IDX = McSineTable.SIZE / 2;
+    private static final int ORDER_PASSES = 4;
 
     private CertifiedBnb() {
     }
@@ -101,8 +103,8 @@ public final class CertifiedBnb {
 
     private static final class Node {
         final long id;
-        final int[] iLo;
-        final int[] iHi;
+        int[] iLo;
+        int[] iHi;
         final byte[] gx;
         final byte[] gz;
         final int depth;
@@ -141,6 +143,7 @@ public final class CertifiedBnb {
         final CostateDualSolver.FreeP0 freeP0;
         final double[] f4;
         final YawTies ties;
+        final YawOrder order;
         long nextId = 1L;
         int nodes;
         int kernelSolves;
@@ -158,10 +161,11 @@ public final class CertifiedBnb {
         long incVersion;
         long sweptVersion = -1L;
 
-        Search(ExactJumpModel exact, JumpSpec spec, Config cfg, YawTies ties) {
+        Search(ExactJumpModel exact, JumpSpec spec, Config cfg, YawTies ties, YawOrder order) {
             this.exact = exact;
             this.spec = spec;
             this.ties = ties;
+            this.order = order;
             this.sc = spec.asScenario();
             this.compiled = JumpConstraintCompiler.compile(spec);
             this.geom = new SineTableGeometry(exact, sc);
@@ -188,39 +192,43 @@ public final class CertifiedBnb {
     }
 
     public static boolean foldable(JumpSpec spec) {
-        return JumpLinearModel.hasFacingWall(spec.constraints)
-                && foldTies(spec.constraints, spec.asScenario().numTicks) != null;
+        if (!JumpLinearModel.hasFacingWall(spec.constraints)) return false;
+        int n = spec.asScenario().numTicks;
+        YawTies ties = YawTies.of(spec.constraints, n);
+        return ties != null && YawOrder.accepts(spec.constraints, ties, n);
     }
 
-    private static YawTies foldTies(List<JumpConstraint> constraints, int n) {
-        YawTies ties = YawTies.of(constraints, n);
-        if (ties == null) return null;
-        for (JumpConstraint c : constraints) {
-            if (c.mode != JumpConstraint.Mode.F) continue;
-            boolean absorbed = c.t2 != null
-                    ? c.op == JumpConstraint.Op.MINUS && c.t2 >= 0 && c.t2 < c.t1
-                            && ties.groupOf(c.t1) == ties.groupOf(c.t2)
-                    : ties.varOf(c.t1) < 0;
-            if (!absorbed) return null;
-        }
-        return ties;
+    public static boolean accepts(JumpSpec spec) {
+        if (!JumpLinearModel.hasFacingWall(spec.constraints)) return true;
+        int n = spec.asScenario().numTicks;
+        return YawOrder.accepts(spec.constraints, YawTies.of(spec.constraints, n), n);
+    }
+
+    public static boolean carriesOrder(JumpSpec spec) {
+        if (!JumpLinearModel.hasFacingWall(spec.constraints)) return false;
+        int n = spec.asScenario().numTicks;
+        YawOrder order = YawOrder.carry(spec.constraints, YawTies.of(spec.constraints, n), n);
+        return order != null && !order.isEmpty();
     }
 
     public static Result solve(ExactJumpModel exact, JumpSpec spec, Config cfg) {
         JumpPhysicsInputs sc = spec.asScenario();
         YawTies ties = null;
+        YawOrder order = null;
         if (JumpLinearModel.hasFacingWall(spec.constraints)) {
-            ties = foldTies(spec.constraints, sc.numTicks);
-            if (ties == null) {
+            ties = YawTies.of(spec.constraints, sc.numTicks);
+            order = YawOrder.carry(spec.constraints, ties, sc.numTicks);
+            if (order == null) {
                 return new Result(true, null, 0, 0, Double.NaN, false, Double.NaN, Double.NaN, false,
                         0, 0, 0L, null, Double.POSITIVE_INFINITY);
             }
+            if (order.isEmpty()) order = null;
         }
         if (!SineTableGeometry.supported(sc)) {
             return new Result(true, null, 0, 0, Double.NaN, false, Double.NaN, Double.NaN, false,
                     0, 0, 0L, null, Double.POSITIVE_INFINITY);
         }
-        Search s = new Search(exact, spec, cfg, ties);
+        Search s = new Search(exact, spec, cfg, ties, order);
         if (cfg.seedYaws != null && cfg.seedYaws.length == s.n) {
             double px = cfg.seedPx != null ? cfg.seedPx : s.refPx;
             double pz = cfg.seedPz != null ? cfg.seedPz : s.refPz;
@@ -275,6 +283,12 @@ public final class CertifiedBnb {
         int[] hi = new int[s.n];
         Arrays.fill(lo, FULL);
         Arrays.fill(hi, FULL);
+        if (s.order != null) {
+            for (YawOrder.Bound b : s.order.bounds()) {
+                if (b.tick >= s.n) continue;
+                assignArc(s, lo, hi, b.tick, SineTableGeometry.idxOf(b.loDeg), SineTableGeometry.idxOf(b.hiDeg));
+            }
+        }
         open.add(new Node(s.nextId++, lo, hi, new byte[s.n], s.perAxis ? new byte[s.n] : null,
                 0, Double.POSITIVE_INFINITY, null));
 
@@ -511,6 +525,7 @@ public final class CertifiedBnb {
     }
 
     private static List<Node> evaluate(Search s, Node nd, PriorityQueue<Node> open) {
+        if (s.order != null && !propagateOrder(s, nd)) return null;
         SineTableGeometry.RangeInfo[] ri = new SineTableGeometry.RangeInfo[s.n];
         for (int t = 0; t < s.n; t++) ri[t] = s.geom.rangeInfo(t, loDeg(nd, t), hiDeg(nd, t));
         Intervals iv = propagate(s, nd, ri);
@@ -783,10 +798,13 @@ public final class CertifiedBnb {
             last = y;
         }
         if (s.ties != null) {
-            return s.ties.expand(s.ties.reduce(yaws));
+            double[] folded = s.ties.expand(s.ties.reduce(yaws));
+            return s.order != null ? s.order.project(folded) : folded;
         }
+        if (s.order != null) yaws = s.order.project(yaws);
         double[] snapped = latticeSnap(s, yaws, ux, uz);
-        return snapped != null ? snapped : yaws;
+        double[] out = snapped != null ? snapped : yaws;
+        return s.order != null ? s.order.project(out) : out;
     }
 
     private static double[] latticeSnap(Search s, double[] yaws, double[] ux, double[] uz) {
@@ -937,6 +955,8 @@ public final class CertifiedBnb {
     private static final double LEAF_REARRANGE = 1.0e-10;
 
     private static final class LeafState {
+        float[][] cands;
+        YawOrder yawOrder;
         double[][] scores;
         double[][] uxs;
         double[][] uzs;
@@ -954,8 +974,10 @@ public final class CertifiedBnb {
     private static boolean leafClose(Search s, Node nd, JumpLinearModel lin, double[] cx, double[] cz,
                                      List<JumpLinearModel.Wall> rows, double px, double pz, boolean closeBound) {
         LeafState st = new LeafState();
+        st.yawOrder = s.order;
         int n = s.n;
         float[][] cands = new float[n][];
+        st.cands = cands;
         st.scores = new double[n][];
         st.uxs = new double[n][];
         st.uzs = new double[n][];
@@ -1139,6 +1161,7 @@ public final class CertifiedBnb {
         int[] order = st.order[t];
         for (int oi = 0; oi < order.length; oi++) {
             int i = order[oi];
+            if (st.yawOrder != null && !leafOrderOk(st, t, i)) continue;
             st.pick[t] = i;
             for (int j = 0; j < st.walls.length; j++) {
                 double c = t < st.walls[j].coef.length ? st.walls[j].coef[t] : 0.0;
@@ -1204,6 +1227,10 @@ public final class CertifiedBnb {
                     gateTick = t;
                 }
             }
+        }
+        if (gateTick < 0 && s.order != null) {
+            List<Node> ordered = orderSplit(s, nd);
+            if (ordered != null) return ordered;
         }
         int arcTick = -1;
         double arcImpact = 0.0;
@@ -1310,6 +1337,11 @@ public final class CertifiedBnb {
     private static Node childArc(Search s, Node nd, int t, int iLo, int iHi) {
         int[] nlo = nd.iLo.clone();
         int[] nhi = nd.iHi.clone();
+        assignArc(s, nlo, nhi, t, iLo, iHi);
+        return new Node(s.nextId++, nlo, nhi, nd.gx, nd.gz, nd.depth + 1, nd.score, nd.warm);
+    }
+
+    private static void assignArc(Search s, int[] nlo, int[] nhi, int t, int iLo, int iHi) {
         int v = s.ties != null ? s.ties.varOf(t) : -1;
         if (v >= 0) {
             double loDeg = degCenter(iLo);
@@ -1325,7 +1357,153 @@ public final class CertifiedBnb {
             nlo[t] = iLo;
             nhi[t] = iHi;
         }
+    }
+
+    private static boolean pinnedTick(Search s, int t) {
+        return s.ties != null && s.ties.varOf(t) < 0;
+    }
+
+    private static long[] orderArc(Search s, int[] lo, int[] hi, int t) {
+        if (pinnedTick(s, t)) {
+            int i = SineTableGeometry.idxOf(s.ties.pinOf(t));
+            return new long[]{i, i};
+        }
+        if (lo[t] == FULL) return null;
+        return new long[]{lo[t], hi[t]};
+    }
+
+    private static long alignShift(long[] a, long[] b) {
+        double centerDiff = 0.5 * ((a[0] + a[1]) - (b[0] + b[1]));
+        return Math.round(centerDiff / McSineTable.SIZE) * (long) McSineTable.SIZE;
+    }
+
+    private static boolean wrapIdentity(long[] a, long[] bShifted) {
+        long dMin = bShifted[0] - a[1];
+        long dMax = bShifted[1] - a[0];
+        return dMin > -HALF_TURN_IDX && dMax < HALF_TURN_IDX;
+    }
+
+    private static int minTurnIdx(YawOrder.Link l) {
+        return (int) Math.floor(l.minTurnDeg * SineTableGeometry.IDX_PER_DEG);
+    }
+
+    private static boolean propagateOrder(Search s, Node nd) {
+        int[] lo = nd.iLo;
+        int[] hi = nd.iHi;
+        boolean cloned = false;
+        for (int pass = 0; pass < ORDER_PASSES; pass++) {
+            boolean changed = false;
+            for (YawOrder.Link l : s.order.links()) {
+                if (l.loTick >= s.n || l.hiTick >= s.n) continue;
+                long[] a = orderArc(s, lo, hi, l.loTick);
+                long[] b = orderArc(s, lo, hi, l.hiTick);
+                if (a == null || b == null) continue;
+                long shift = alignShift(a, b);
+                long[] bs = {b[0] + shift, b[1] + shift};
+                if (!wrapIdentity(a, bs)) continue;
+                int k = minTurnIdx(l);
+                long nbLo = Math.max(bs[0], a[0] + k);
+                long naHi = Math.min(a[1], bs[1] - k);
+                if (nbLo > bs[1] || naHi < a[0]) return false;
+                if (nbLo != bs[0]) {
+                    if (pinnedTick(s, l.hiTick)) return false;
+                    if (!cloned) {
+                        lo = lo.clone();
+                        hi = hi.clone();
+                        cloned = true;
+                    }
+                    assignArc(s, lo, hi, l.hiTick, (int) (nbLo - shift), (int) (bs[1] - shift));
+                    changed = true;
+                }
+                if (naHi != a[1]) {
+                    if (pinnedTick(s, l.loTick)) return false;
+                    if (!cloned) {
+                        lo = lo.clone();
+                        hi = hi.clone();
+                        cloned = true;
+                    }
+                    assignArc(s, lo, hi, l.loTick, (int) a[0], (int) naHi);
+                    changed = true;
+                }
+            }
+            if (!changed) break;
+        }
+        if (cloned) {
+            nd.iLo = lo;
+            nd.iHi = hi;
+        }
+        return true;
+    }
+
+    private static List<Node> orderSplit(Search s, Node nd) {
+        YawOrder.Link best = null;
+        long bestWidth = 0L;
+        long bestShift = 0L;
+        long[] bestA = null;
+        long[] bestB = null;
+        for (YawOrder.Link l : s.order.links()) {
+            if (l.loTick >= s.n || l.hiTick >= s.n) continue;
+            if (pinnedTick(s, l.loTick) || pinnedTick(s, l.hiTick)) continue;
+            int k = minTurnIdx(l);
+            if (k < 0) continue;
+            long[] a = orderArc(s, nd.iLo, nd.iHi, l.loTick);
+            long[] b = orderArc(s, nd.iLo, nd.iHi, l.hiTick);
+            if (a == null || b == null) continue;
+            long shift = alignShift(a, b);
+            long[] bs = {b[0] + shift, b[1] + shift};
+            if (!wrapIdentity(a, bs)) continue;
+            long aLo = Math.max(a[0], bs[0] - k + 1);
+            long width = a[1] - aLo + 1;
+            if (width <= 2L * SineTableGeometry.SLOP_IDX + 2L) continue;
+            if (width > bestWidth) {
+                bestWidth = width;
+                best = l;
+                bestShift = shift;
+                bestA = a;
+                bestB = bs;
+            }
+        }
+        if (best == null) return null;
+        int k = minTurnIdx(best);
+        long aLo = Math.max(bestA[0], bestB[0] - k + 1);
+        long m = (aLo + bestA[1]) >> 1;
+        List<Node> out = new ArrayList<Node>();
+        out.add(orderChild(s, nd, best, bestA[0], m, m + k, bestB[1], bestShift));
+        out.add(orderChild(s, nd, best, bestA[0], m, bestB[0], m + k - 1, bestShift));
+        if (m + 1 <= bestA[1]) out.add(orderChild(s, nd, best, m + 1, bestA[1], m + k, bestB[1], bestShift));
+        if (SolverTrace.on()) {
+            SolverTrace.log("CERT", "order split node=%d pair=%d>%d width=%d children=%d", nd.id,
+                    best.hiTick, best.loTick, bestWidth, out.size());
+        }
+        return out;
+    }
+
+    private static Node orderChild(Search s, Node nd, YawOrder.Link l, long aLo, long aHi, long bLo, long bHi,
+                                   long shift) {
+        int[] nlo = nd.iLo.clone();
+        int[] nhi = nd.iHi.clone();
+        assignArc(s, nlo, nhi, l.loTick, (int) aLo, (int) aHi);
+        assignArc(s, nlo, nhi, l.hiTick, (int) (bLo - shift), (int) (bHi - shift));
         return new Node(s.nextId++, nlo, nhi, nd.gx, nd.gz, nd.depth + 1, nd.score, nd.warm);
+    }
+
+    private static boolean leafOrderOk(LeafState st, int t, int i) {
+        double cand = st.cands[t][i];
+        for (YawOrder.Bound b : st.yawOrder.bounds()) {
+            if (b.tick != t) continue;
+            double mid = 0.5 * (b.loDeg + b.hiDeg);
+            double rel = mid + Angles.wrapDelta(cand - mid);
+            if (rel < b.loDeg || rel > b.hiDeg) return false;
+        }
+        for (YawOrder.Link l : st.yawOrder.links()) {
+            if (l.laterTick() != t) continue;
+            int other = l.hiTick == t ? l.loTick : l.hiTick;
+            if (other >= st.cands.length) continue;
+            double o = st.cands[other][st.pick[other]];
+            double turn = l.hiTick == t ? Angles.wrap(cand - o - l.minTurnDeg) : Angles.wrap(o - cand - l.minTurnDeg);
+            if (turn < 0.0) return false;
+        }
+        return true;
     }
 
     private static CostateDualSolver.FreeP0 freeStartTerm(StartBox box, Objective obj) {
