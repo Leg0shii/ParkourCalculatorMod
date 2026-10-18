@@ -91,10 +91,10 @@ public final class NoTurnProblem {
             end = Math.max(maxTied, lastJump);
         } else if (lastJump >= 0) {
             end = lastJump;
-            for (int t = 1; t <= end; t++) markTied(t);
+            for (int t = 0; t <= end; t++) markTied(t);
         } else {
             end = n - 2;
-            for (int t = 1; t <= end; t++) markTied(t);
+            for (int t = 0; t <= end; t++) markTied(t);
         }
         this.setupEnd = Math.min(Math.max(end, 0), n - 1);
         if (jaAll) {
