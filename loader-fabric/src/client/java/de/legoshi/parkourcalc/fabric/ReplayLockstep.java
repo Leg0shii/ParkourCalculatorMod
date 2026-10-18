@@ -1,9 +1,16 @@
 package de.legoshi.parkourcalc.fabric;
 
+//? if <26.1
+//import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
+//? if >=1.20.5 {
 import net.minecraft.network.protocol.ping.ServerboundPingRequestPacket;
+//?} else {
+/*import net.minecraft.network.protocol.status.ServerboundPingRequestPacket;
+*///?}
 import net.minecraft.server.MinecraftServer;
+//? if >=26.1
 import net.minecraft.util.Util;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -139,6 +146,7 @@ public final class ReplayLockstep {
         }
         if (!awaitCompletion(pendingTarget)) return;
         if (!awaitPong(connection)) return;
+        //? if >=26.1
         mc.packetProcessor().processQueuedPackets();
         mc.runAllTasks();
         pendingTarget = -1L;
@@ -153,6 +161,7 @@ public final class ReplayLockstep {
         }
         if (!awaitRestartHop()) return;
         if (!awaitPong(connection)) return;
+        //? if >=26.1
         mc.packetProcessor().processQueuedPackets();
         mc.runAllTasks();
     }

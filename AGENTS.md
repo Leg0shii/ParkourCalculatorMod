@@ -14,13 +14,11 @@ Shared guidance for AI coding agents and contributors. This is the canonical gui
 ```
 core/                  Java 8.  ImGui-only UI/data + the angle solver. No MC, Fabric, Forge, or LWJGL imports.
 forge-core/            Java 8.  Shared for both Forge loaders: lwjgl2/ ImGui bootstrap, sim/ sprint machine. No MC imports.
-loader-fabric/         Java 25. Fabric (Loom, LWJGL3), tracks the latest MC (currently 26.3). MC-touching sim/render/mixins/entry point. Source under src/client/java.
-loader-fabric-1.21.3/  Java 21. Fabric (Loom, LWJGL3) for MC 1.21.3. Same layout as loader-fabric, source under src/main/java; every loader-side port change lands here too.
-loader-forge-1.8.9/    Java 8.  Forge (Unimined FG2, LWJGL2). MC-touching code.
-loader-forge-1.12.2/   Java 8.  Forge (Unimined FG3, LWJGL2). MC-touching code.
+loader-fabric/         Stonecutter tree, one source set for every Fabric target: 26.3 (Java 25, active), 1.21.3 (Java 21), 1.20.4 (Java 17). Loom, LWJGL3. MC-touching sim/render/mixins/entry point. Shared source under src/client/java; per-subsystem variants under src/renderpearl (26.x) vs src/blaze3d (1.21.3, 1.20.4) and src/sdl (26.3) vs src/glfw (older).
+loader-forge/          Stonecutter tree, one source set for both Forge targets: 1.12.2 (active) and 1.8.9. Java 8, Unimined, LWJGL2. MC-touching code under src/main/java.
 ```
 
-The two Forge loaders are intentional duplicates: 1.8.9 and 1.12.2 have incompatible MC APIs (`Vec3` vs `Vec3d`, `theWorld/thePlayer` vs `world/player`, `moveEntity` vs `move`, etc.). `forge-core` holds only the MC-free shared parts.
+Each loader tree is a [Stonecutter](https://stonecutter.kikugie.dev/) project: `loader-<x>/stonecutter.gradle` is the controller, `loader-<x>/build.gradle` is the central build script applied to every version, `loader-<x>/versions/<mc>/gradle.properties` holds the per-target versions (MC, loader, Java), and `settings.gradle` lists the targets. MC API differences live in `//? if <cond> {` ... `//?} else {` ... `//?}` regions in the shared source (`//? if >=26.1`, `//? if >=1.21.2`, `//? if <1.12`, etc.); the raw file is the active version's code and the inactive branches are kept commented out by Stonecutter. Subsystems that differ by more than about a third of their lines get a version source set instead (the Fabric render and input variants above). A file never exists twice: a feature lands once in the shared source and ships in every target. Switch the active version with `./gradlew ":loader-fabric:Set active project to 1.20.4"` (and `Reset active project` before committing); `Refresh active project` re-comments regions after editing the inactive branches raw. `forge-core` holds the MC-free parts shared by the Forge targets.
 
 
 ## Core flow
@@ -36,7 +34,7 @@ The two Forge loaders are intentional duplicates: 1.8.9 and 1.12.2 have incompat
 
 | Task | Look here |
 | --- | --- |
-| Orchestration / wiring | `core/.../Application.java` (read first); loader entry points `FabricParkourCalculator`, `Forge8ParkourCalculator`, `Forge12ParkourCalculator` |
+| Orchestration / wiring | `core/.../Application.java` (read first); loader entry points `FabricParkourCalculator`, `ForgeParkourCalculator` |
 | Input model & editing | `core/.../ui/InputData.java`, `InputRow.java`, `InputOverlay.java` |
 | Save / load (JSON) | `core/.../save/SaveIO.java` (schema + parse), `SaveFile.java`, `FileSystemSaveStore.java`; mediator `core/.../SaveController.java` |
 | UI shell / theming | `core/.../ui/MainWindowOverlay.java`, `OverlayManager.java`, `ui/theme/ThemeManager.java` (Catppuccin Mocha), `Settings.java` |
@@ -54,8 +52,8 @@ The two Forge loaders are intentional duplicates: 1.8.9 and 1.12.2 have incompat
 | Playback (TAS replay) | `core/.../PlaybackController.java`; loader `FabricPlaybackBridge` and Forge equivalents |
 | Ports (core interfaces) | `core/.../ports/`: `MinecraftAccess`, `Simulator`, `BoxRenderer`, `PlaybackBridge`, `FilePickerPort` |
 | Simulation (Fabric) | `loader-fabric/.../sim/SimulatorEntity.java`, `FabricSimulator.java`, `SimulatorInput.java` |
-| Rendering (Fabric) | `loader-fabric/.../render/FabricWorldOverlayRenderer.java`, `FabricHudOverlayRenderer.java`; ImGui `imgui/ImGuiImpl.java` |
-| Mixins (Fabric) | `loader-fabric/.../fabric/mixin/`; registered in `parkourcalculator.client.mixins.json` (Forge uses the FML event bus, no mixins) |
+| Rendering (Fabric) | `loader-fabric/src/renderpearl/.../render/` (26.x) and `loader-fabric/src/blaze3d/.../render/` (1.21.3, 1.20.4): `FabricWorldOverlayRenderer.java`, `FabricHudOverlayRenderer.java`, `FabricBoxRenderer.java`; ImGui `imgui/ImGuiImpl.java` in `src/sdl` (26.3) and `src/glfw` (older) |
+| Mixins (Fabric) | `loader-fabric/src/client/.../fabric/mixin/` (shared), the render mixins in `src/renderpearl` / `src/blaze3d`, the input mixins in `src/sdl` / `src/glfw`; the `mixins` list in `loader-fabric/build.gradle` is expanded into `parkourcalculator.client.mixins.json` at build time (Forge uses the FML event bus, no mixins) |
 
 **Tick indexing:** `posX[t]` = position at the *start* of tick `t` (before that tick's inputs); box `k` shows pre-tick state. A constraint on tick `n` affects `posX[n]`; to constrain what tick `n`'s input *produces*, place the constraint on tick `n+1`.
 
@@ -63,15 +61,15 @@ The two Forge loaders are intentional duplicates: 1.8.9 and 1.12.2 have incompat
 ## Build & Run
 
 ```bash
-./gradlew build                                # everything; output jars to <module>/build/libs/
+./gradlew chiseledBuild                        # every jar: loader-<x>/versions/<mc>/build/libs/pkc-<x>-<mc>-VERSION.jar
 ./gradlew :core:build                          # shared core lib (runs tableStyleCheck)
 ./gradlew :forge-core:build
-./gradlew :loader-fabric:build                 # / :runClient   -> pkc-fabric-VERSION.jar
-./gradlew :loader-forge-1.8.9:build            # / :runClient   -> pkc-forge-1.8.9-VERSION.jar
-./gradlew :loader-forge-1.12.2:build           # / :runClient   -> pkc-forge-1.12.2-VERSION.jar
+./gradlew :loader-fabric:chiseledBuild         # pkc-fabric-26.3, pkc-fabric-1.21.3, pkc-fabric-1.20.4
+./gradlew :loader-forge:chiseledBuild          # pkc-forge-1.12.2, pkc-forge-1.8.9
+./gradlew :loader-fabric:26.3:build            # one target; / :runClient (same for :loader-fabric:1.21.3, :loader-fabric:1.20.4, :loader-forge:1.12.2, :loader-forge:1.8.9)
 ```
 
-JDK 21 runs the Gradle daemon. `:runClient` auto-switches toolchain: Fabric uses JDK 25 (auto-provisioned via foojay), the Forge loaders need a local JDK 8 (Adoptium). Do not run `:runClient` while MC is already open (shared `run/` file + world locks deadlock). Per-module toolchain rules: `docs/CODING_GUIDE.md` § Rules per module.
+JDK 21 runs the Gradle daemon. `:runClient` auto-switches toolchain: Fabric uses JDK 25/21/17 per target (auto-provisioned via foojay), the Forge targets need a local JDK 8 (Adoptium). Only the active version of a tree compiles the raw shared source; the other targets compile Stonecutter's processed copy under `versions/<mc>/build/generated/stonecutter/`. Do not run `:runClient` while MC is already open (shared `run/` file + world locks deadlock). Per-module toolchain rules: `docs/CODING_GUIDE.md` § Rules per module.
 
 
 ## Tests
@@ -109,7 +107,7 @@ To check an MC API surface, decompiled body, or local-var name, read the project
 Generate once:
 
 ```bash
-./gradlew :loader-fabric:genSources :loader-forge-1.8.9:genSources :loader-forge-1.12.2:genSources
+./gradlew :loader-fabric:26.3:genSources :loader-fabric:1.21.3:genSources :loader-fabric:1.20.4:genSources :loader-forge:1.8.9:genSources :loader-forge:1.12.2:genSources
 ```
 
 They appear under:
@@ -129,14 +127,14 @@ Unzip the relevant `-sources.jar` and grep for a single file (e.g. `EntityPlayer
 - **Simulation is the single source of truth.** The loader's `SimulatorEntity` reproduces real MC movement; never approximate it. Divergence from MC is a bug, not an optimization. (The solver's `ExactJumpModel` is a separate byte-exact X/Z replica for the search inner loop, which cannot afford the MC-coupled entity; the entity is used for cheap post-Apply verify.)
 - **Core stays Minecraft-free.** No `net.minecraft.*`, `net.fabricmc.*`, `net.minecraftforge.*`, or `org.lwjgl.*` in `core/`. If core needs world data, define a port in `core/.../ports/` and implement it loader-side (see `docs/CODING_GUIDE.md` § Ports).
 - **Static wiring.** `Application` and the loader entry points use static fields/methods deliberately; the mod is a singleton and statics avoid passing refs across mixin/event boundaries.
-- **Fabric ImGui input routing.** When the overlay is open, `KeyboardMixin` / `MouseMixin` route events to ImGui; an `isUiFocused()` check gates pass-through, and box dragging is disabled while the UI is focused.
-- **Fabric mixin lifecycle.** MC hooks go through mixins, not Fabric events (except `ClientTickEvents` for input polling). A new mixin must be added to `parkourcalculator.client.mixins.json` or it silently won't apply. Forge loaders use the FML event bus + `ClientRegistry` keybinds instead.
+- **Fabric ImGui input routing.** When the overlay is open, `KeyboardHandlerMixin` / `MouseHandlerMixin` (one pair per input variant, `src/sdl` and `src/glfw`) route events to ImGui; an `isUiFocused()` check gates pass-through, and box dragging is disabled while the UI is focused.
+- **Fabric mixin lifecycle.** MC hooks go through mixins, not Fabric events (except `ClientTickEvents` for input polling). A new mixin must be added to the `mixins` list in `loader-fabric/build.gradle` (which generates `parkourcalculator.client.mixins.json` per target) or it silently won't apply. Forge loaders use the FML event bus + `ClientRegistry` keybinds instead.
 - **imgui-java is pinned to 1.86.12** everywhere (`core/` compileOnly; loaders `include`/`shade`). The LWJGL2 ImGui shim was built against 1.86.11, whose native method surface is a strict subset of 1.86.12 (the only addition is the unused `ImGuiKnobs` extension), so the shim stays satisfied. 1.86.12 is the floor: it is the first release whose macOS native is a universal binary (x86_64 + arm64); 1.86.11 was x86_64-only and crashed Apple Silicon with an `UnsatisfiedLinkError`. Do not bump higher (e.g. 1.90.0 throws `NoSuchMethodError` against the shim).
 
 
 ## Branches & releases
 
-`main` = released code only; `dev` = integration branch. Features branch off `dev` and require a quick in-game QA pass on the touched loaders before merging (core-only change: one loader suffices), so `dev` is always releasable. Fixes for released bugs branch off `main` and release immediately; merge `main` back into `dev` right after. A weekly cron opens the `dev` to `main` train PR; it must merge as a true merge commit, never squash. Full flow: `CONTRIBUTING.md`.
+`main` = released code only; `dev` = integration branch. Features branch off `dev` and require a quick in-game QA pass on every shipped jar whose code changed before merging (a shared-source change touches every target of that tree; core-only change: one jar suffices), so `dev` is always releasable. Fixes for released bugs branch off `main` and release immediately; merge `main` back into `dev` right after. A weekly cron opens the `dev` to `main` train PR; it must merge as a true merge commit, never squash. Full flow: `CONTRIBUTING.md`.
 
 
 ## Don't

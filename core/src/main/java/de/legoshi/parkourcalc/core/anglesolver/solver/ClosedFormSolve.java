@@ -48,6 +48,8 @@ public final class ClosedFormSolve {
         public int rungStallLimit = 2;
     }
 
+    static final int CROSS_SIGN_CAP = 4;
+
     public static final class Result {
         public final double[] yaws;
         public final double violation;
@@ -94,14 +96,13 @@ public final class ClosedFormSolve {
         FacingPrefold pre = FacingPrefold.analyze(spec.constraints, new JumpLinearModel(sc));
         if (pre == null) return null;
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
-        Result r = runLadder(exact, spec, sc, compiled, feasTol, cancel, cfg.margins, true, zeroX, zeroZ,
-                System.nanoTime(), cfg, pre, 1);
-        if ((r == null || !r.feasible) && JumpLinearModel.hasCrossAxis(spec.constraints)) {
-            Result r2 = runLadder(exact, spec, sc, compiled, feasTol, cancel, cfg.margins, true, zeroX, zeroZ,
-                    System.nanoTime(), cfg, pre, -1);
-            if (r2 != null && r2.feasible) r = r2;
+        for (int[] signs : crossSignCombos(spec.constraints)) {
+            Result rs = runLadder(exact, spec, sc, compiled, feasTol, cancel, cfg.margins, true, zeroX, zeroZ,
+                    System.nanoTime(), cfg, pre, signs);
+            if (rs != null && rs.feasible) return rs;
+            if (cancel.get()) break;
         }
-        return r;
+        return null;
     }
 
     /** Like {@link #optimize}, but prefers clearance over objective: the result keeps the largest
@@ -411,10 +412,11 @@ public final class ClosedFormSolve {
                         pass, SolverTrace.patternLabel(zeroX, zeroZ), n, spec.constraints.size(),
                         ascending ? "ascending" : "robust");
             }
-            Result r = runLadder(exact, spec, sc, compiled, feasTol, cancel, margins, ascending, zeroX, zeroZ, t0, cfg, pre, 1);
-            if ((r == null || !r.feasible) && JumpLinearModel.hasCrossAxis(spec.constraints)) {
-                Result r2 = runLadder(exact, spec, sc, compiled, feasTol, cancel, margins, ascending, zeroX, zeroZ, t0, cfg, pre, -1);
-                if (r2 != null && (r == null || r2.feasible || r2.violation < r.violation)) r = r2;
+            Result r = null;
+            for (int[] signs : crossSignCombos(spec.constraints)) {
+                Result rs = runLadder(exact, spec, sc, compiled, feasTol, cancel, margins, ascending, zeroX, zeroZ, t0, cfg, pre, signs);
+                if (rs != null && (r == null || rs.feasible || rs.violation < r.violation)) r = rs;
+                if ((r != null && r.feasible) || cancel.get()) break;
             }
             if (r == null) {
                 if (SolverTrace.on()) SolverTrace.log("CF", "pass=%d ladder empty (trivial/unbounded/cancel)", pass);
@@ -449,6 +451,27 @@ public final class ClosedFormSolve {
         return best;
     }
 
+    public static List<int[]> crossSignCombos(List<JumpConstraint> constraints) {
+        int k = JumpLinearModel.crossAxisCount(constraints);
+        List<int[]> out = new ArrayList<>();
+        if (k == 0) {
+            out.add(new int[0]);
+            return out;
+        }
+        int enumerated = Math.min(k, CROSS_SIGN_CAP);
+        int combos = 1 << enumerated;
+        List<Integer> order = new ArrayList<>();
+        order.add(0);
+        order.add(combos - 1);
+        for (int i = 1; i < combos - 1; i++) order.add(i);
+        for (int i : order) {
+            int[] signs = JumpLinearModel.crossSignsAll(constraints, 1);
+            for (int j = 0; j < enumerated; j++) if (((i >> j) & 1) != 0) signs[j] = -1;
+            out.add(signs);
+        }
+        return out;
+    }
+
     private static boolean patternEffective(JumpPhysicsInputs sc, boolean[] zeroX, boolean[] zeroZ) {
         for (int t = 0; t < zeroX.length; t++) {
             if (zeroX[t] && (t > 0 || sc.initialVelocity.x != 0.0)) return true;
@@ -460,14 +483,14 @@ public final class ClosedFormSolve {
     private static Result runLadder(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc,
                                     JumpConstraintCompiler.Compiled compiled, double feasTol, AtomicBoolean cancel,
                                     double[] margins, boolean ascending, boolean[] zeroX, boolean[] zeroZ, long t0,
-                                    Config cfg, FacingPrefold pre, int dominantSign) {
+                                    Config cfg, FacingPrefold pre, int[] crossSigns) {
         JumpLinearModel lin = new JumpLinearModel(sc, zeroX, zeroZ);
         double[] cx = new double[lin.n];
         double[] cz = new double[lin.n];
         lin.objectiveVectors(spec.objective, cx, cz);
 
         boolean[] trivialInfeasible = {false};
-        List<JumpLinearModel.Wall> walls = lin.compileWalls(spec.constraints, 0.0, trivialInfeasible, dominantSign);
+        List<JumpLinearModel.Wall> walls = lin.compileWalls(spec.constraints, 0.0, trivialInfeasible, crossSigns);
         if (trivialInfeasible[0]) return null;
         double vBound = exact.perAxisInertia() ? exact.inertiaThreshold()
                 : exact.inertiaThreshold() / StrictMath.sqrt(2.0);

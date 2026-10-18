@@ -1,0 +1,11 @@
+plugins {
+	id 'dev.kikugie.stonecutter'
+	id 'xyz.wagyourtail.unimined' version "${unimined_version}" apply false
+}
+stonecutter.active '1.12.2'
+
+tasks.register('chiseledBuild') {
+	group = 'project'
+	description = 'Builds every Forge target jar.'
+	dependsOn subprojects.collect { it.path + ':build' }
+}
