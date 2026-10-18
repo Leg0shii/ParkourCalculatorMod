@@ -33,7 +33,7 @@ final class PoolCertifier {
     private final int threads;
     private final long deadline;
     private final boolean maximize;
-    private final int maxCertify;
+    private int maxCertify;
     private final long nearBudgetNanos;
 
     private final Set<String> found = new HashSet<>();
@@ -72,6 +72,11 @@ final class PoolCertifier {
         certs = 0;
     }
 
+    void liftCertifyCap() {
+        certs = 0;
+        maxCertify = Integer.MAX_VALUE;
+    }
+
     boolean variationsOver() {
         return best != null && (extraCerts >= cfg.extraCertify || System.nanoTime() > extraDeadline);
     }
@@ -85,7 +90,7 @@ final class PoolCertifier {
     }
 
     private double fraction() {
-        if (best == null) return 0.4 + 0.55 * certs / Math.max(1, maxCertify);
+        if (best == null) return Math.min(0.95, 0.4 + 0.55 * certs / Math.max(1.0, Math.min(maxCertify, cfg.maxCertify)));
         double window = Math.max(1L, cfg.extraCertifyNanos);
         double elapsed = (System.nanoTime() - (extraDeadline - cfg.extraCertifyNanos)) / window;
         return 0.4 + 0.59 * Math.max(0.0, Math.min(1.0, elapsed));

@@ -150,6 +150,7 @@ public final class StructurePoolDriver {
     double witnessHiZ;
 
     private final List<Candidate> pool = new ArrayList<>();
+    private int goodInPool;
     private long scored;
     private long byteScreened;
     private int scoreLevel = -1;
@@ -742,7 +743,8 @@ public final class StructurePoolDriver {
         }
         int remaining = n - start;
         boolean anchor = freeTick(problem, start);
-        int dwell = anchor ? 1 : Math.min(cfg.minDwell, remaining);
+        boolean shortHold = anchor || start == 0 || (start + 1 < n && problem.jump[start + 1]);
+        int dwell = shortHold ? 1 : Math.min(cfg.minDwell, remaining);
         for (int c : cfg.alphabet) {
             if (c == lastLabel) continue;
             int ne = (lastLabel >= 0 && !(anchor && freeChange(problem, start, c))) ? edges + 1 : edges;
@@ -969,6 +971,7 @@ public final class StructurePoolDriver {
         double diskTheta = scanGrid(objA, objB);
         scored++;
         if (Double.isNaN(diskTheta)) return;
+        if (lastMinViol > cfg.byteFeasible && goodInPool >= cfg.poolCap) return;
         int engageTick = NoTurnKeys.firstSprint(sprint);
         double[] bs = byteScreen(combos, sprint, diskTheta);
         byteScreened++;
@@ -976,14 +979,18 @@ public final class StructurePoolDriver {
             System.out.println("FALSE PRUNE keys=" + NoTurnKeys.describe(combos) + " engage=" + engageTick
                     + " diskTheta=" + diskTheta + " viol=" + bs[0]);
         }
-        pool.add(new Candidate(combos.clone(), sprint.clone(), engageTick, countEdges(combos), countPresses(combos),
-                diskTheta, bs[1], bs[0], bs[2]));
+        Candidate c = new Candidate(combos.clone(), sprint.clone(), engageTick, countEdges(combos), countPresses(combos),
+                diskTheta, bs[1], bs[0], bs[2]);
+        pool.add(c);
+        if (certifyTier(cfg, c) < SCREEN_MISS_TIER) goodInPool++;
         if (pool.size() > cfg.poolCap * 4) trimPool();
     }
 
     private void trimPool() {
         pool.sort(rankPool());
         while (pool.size() > cfg.poolCap) pool.remove(pool.size() - 1);
+        goodInPool = 0;
+        for (Candidate c : pool) if (certifyTier(cfg, c) < SCREEN_MISS_TIER) goodInPool++;
     }
 
     private Comparator<Candidate> rankPool() {
@@ -1106,6 +1113,7 @@ public final class StructurePoolDriver {
                 ranked.sort(rankPool());
                 if (ranked.size() > cfg.poolCap) ranked.subList(cfg.poolCap, ranked.size()).clear();
                 certifier.offer(ranked);
+                certifier.resetCertifyCount();
                 progress.update("certify edges=" + level + " (" + ranked.size() + " kept, " + scored + " scored)", 0.4);
                 while (!cancelled() && !certifier.variationsOver()) {
                     if (!certifier.certifyNext(false, true)) {
@@ -1119,6 +1127,7 @@ public final class StructurePoolDriver {
                 current = awaitLevel(nextF);
                 if (stopEnum.get()) break;
             }
+            certifier.liftCertifyCap();
             while (!cancelled() && !certifier.variationsOver() && certifier.certifyNext(false, true)) {
             }
 
@@ -1267,10 +1276,9 @@ public final class StructurePoolDriver {
             w.enumSeg(new int[n], 0, -1, 0);
             return new LevelResult(w.pool, w.scored, w.byteScreened, w.pruned);
         }
-        int dwell = problem.jump[0] ? 1 : Math.min(cfg.minDwell, n);
         final List<int[]> heads = new ArrayList<>();
         for (int c : cfg.alphabet) {
-            for (int len = dwell; len <= n; len++) heads.add(new int[]{c, len});
+            for (int len = 1; len <= n; len++) heads.add(new int[]{c, len});
         }
         final java.util.concurrent.atomic.AtomicInteger next = new java.util.concurrent.atomic.AtomicInteger();
         List<StructurePoolDriver> workers = new ArrayList<>();

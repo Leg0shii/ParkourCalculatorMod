@@ -22,6 +22,8 @@ final class UnitScreen {
     private static final int POLISH_MAX_TRIALS = 40;
     private static final int RESTART_EVERY = 6;
     private static final int WINDOW_CELLS = 2;
+    private static final int WINDOW_CELLS_MULTI = 4;
+    private static final int SWEEP_PASSES = 3;
     private static final double[] RESTART_OFFSETS = {0.0, 0.5 * Math.PI, -0.5 * Math.PI, Math.PI};
     private static final double[] STEP_COS = new double[UNIT_STEPS];
     private static final double[] STEP_SIN = new double[UNIT_STEPS];
@@ -74,6 +76,8 @@ final class UnitScreen {
     private final boolean[] skip = new boolean[REF + 1];
     private final boolean[] done = new boolean[REF + 1];
     private final double[] bestFacing;
+    private final int[] freeGroups;
+    private final double[] shiftJoint;
     private final double[] ab = new double[2];
     private double objBase;
     private double bestObj;
@@ -163,6 +167,12 @@ final class UnitScreen {
         this.coarseSin = new double[REF + 1][groups];
         this.coarseViol = new double[REF + 1];
         this.bestFacing = new double[groups];
+        int free = 0;
+        for (int g = 0; g < groups; g++) if (g != mainGroup) free++;
+        this.freeGroups = new int[free];
+        free = 0;
+        for (int g = 0; g < groups; g++) if (g != mainGroup) freeGroups[free++] = g;
+        this.shiftJoint = new double[walls];
         this.shiftBase = new double[walls];
         this.shiftAcc = new double[walls];
         this.shiftNoU = new double[walls];
@@ -216,13 +226,14 @@ final class UnitScreen {
         linearize();
 
         int count;
-        if (Double.isNaN(centerTheta) || groups > 2) {
+        if (Double.isNaN(centerTheta)) {
             count = REF;
             for (int k = 0; k < REF; k++) thetas[k] = -Math.PI + k * coarse;
         } else {
+            int cells = groups > 2 ? WINDOW_CELLS_MULTI : WINDOW_CELLS;
             count = 0;
             thetas[count++] = refRad;
-            for (int w = 1; w <= WINDOW_CELLS; w++) {
+            for (int w = 1; w <= cells; w++) {
                 thetas[count++] = refRad - w * coarse;
                 thetas[count++] = refRad + w * coarse;
             }
@@ -451,6 +462,55 @@ final class UnitScreen {
     }
 
     private void sweepGroups(boolean global, int levels) {
+        boolean joint = global && freeGroups.length == 2;
+        if (joint) jointCoarse();
+        for (int pass = 0; pass < SWEEP_PASSES; pass++) {
+            if (!sweepOnce(global && !joint, levels)) break;
+        }
+    }
+
+    private void jointCoarse() {
+        int g1 = freeGroups[0];
+        int g2 = freeGroups[1];
+        double[] a1 = runA[g1];
+        double[] b1 = runB[g1];
+        double[] a2 = runA[g2];
+        double[] b2 = runB[g2];
+        double bc1 = baseCos[g1], bs1 = baseSin[g1], bc2 = baseCos[g2], bs2 = baseSin[g2];
+        int walls = d.byteWalls.size();
+        for (int wi = 0; wi < walls; wi++) {
+            shiftNoU[wi] = shiftAcc[wi] + a1[wi] * (unitCos[g1] - bc1) + b1[wi] * (unitSin[g1] - bs1)
+                    + a2[wi] * (unitCos[g2] - bc2) + b2[wi] * (unitSin[g2] - bs2);
+        }
+        double bestV = descentViol(shiftAcc, null, null, 0.0, 0.0, false);
+        int bi = -1;
+        int bj = -1;
+        for (int i = 0; i < UNIT_STEPS; i++) {
+            double dc1 = STEP_COS[i] - bc1;
+            double ds1 = STEP_SIN[i] - bs1;
+            for (int wi = 0; wi < walls; wi++) shiftJoint[wi] = shiftNoU[wi] - a1[wi] * dc1 - b1[wi] * ds1;
+            for (int j = 0; j < UNIT_STEPS; j++) {
+                double v = descentViol(shiftJoint, a2, b2, STEP_COS[j] - bc2, STEP_SIN[j] - bs2, false);
+                if (v < bestV) {
+                    bestV = v;
+                    bi = i;
+                    bj = j;
+                }
+            }
+        }
+        if (bi < 0) return;
+        unitCos[g1] = STEP_COS[bi];
+        unitSin[g1] = STEP_SIN[bi];
+        unitCos[g2] = STEP_COS[bj];
+        unitSin[g2] = STEP_SIN[bj];
+        for (int wi = 0; wi < walls; wi++) {
+            shiftAcc[wi] = shiftNoU[wi] - a1[wi] * (unitCos[g1] - bc1) - b1[wi] * (unitSin[g1] - bs1)
+                    - a2[wi] * (unitCos[g2] - bc2) - b2[wi] * (unitSin[g2] - bs2);
+        }
+    }
+
+    private boolean sweepOnce(boolean global, int levels) {
+        boolean moved = false;
         int walls = d.byteWalls.size();
         for (int g = 0; g < groups; g++) {
             if (g == mainGroup) continue;
@@ -498,12 +558,14 @@ final class UnitScreen {
                     }
                 }
             }
+            if (bestC != cc || bestS != cs) moved = true;
             unitCos[g] = bestC;
             unitSin[g] = bestS;
             for (int wi = 0; wi < walls; wi++) {
                 shiftAcc[wi] = shiftNoU[wi] - ua[wi] * (bestC - bc) - ub[wi] * (bestS - bs);
             }
         }
+        return moved;
     }
 
     private void baseNeeds(int g) {
