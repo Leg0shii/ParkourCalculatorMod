@@ -6,6 +6,10 @@ import java.util.List;
 
 public final class YawOrder {
 
+    public static final double PIN_HALF_WIDTH = 1.0e-4;
+    public static final double FLOAT_MARGIN_DEG = 3.0e-5;
+    public static final double TIE_TOL = 1.5 * YawOrderDp.H;
+
     public static final class Link {
         public final int hiTick;
         public final int loTick;
@@ -102,6 +106,72 @@ public final class YawOrder {
         return carry(constraints, ties, n) != null;
     }
 
+    public static double[] carryFreeTicks(JumpLinearModel lin, double startYaw, double[] yawsAbs) {
+        double[] y = yawsAbs.clone();
+        double prev = Angles.wrap(startYaw);
+        for (int t = 0; t < y.length && t < lin.n; t++) {
+            if (lin.mMag(t) <= 0.0) y[t] = prev;
+            prev = y[t];
+        }
+        return y;
+    }
+
+    public List<JumpConstraint> stripped(List<JumpConstraint> constraints) {
+        List<JumpConstraint> base = new ArrayList<JumpConstraint>(constraints.size());
+        for (JumpConstraint c : constraints) {
+            boolean isCarried = false;
+            for (JumpConstraint k : carried) {
+                if (k == c) {
+                    isCarried = true;
+                    break;
+                }
+            }
+            if (!isCarried) base.add(c);
+        }
+        return base;
+    }
+
+    public List<JumpConstraint> withTies(List<JumpConstraint> base, boolean[] tie, boolean[] pinLo, boolean[] pinHi) {
+        List<JumpConstraint> active = new ArrayList<JumpConstraint>(base);
+        for (int l = 0; l < tie.length; l++) {
+            if (!tie[l]) continue;
+            JumpConstraint s = links.get(l).source;
+            double at = s.rhs == 0.0 ? 0.0
+                    : s.rhs + (s.cmp == JumpConstraint.Cmp.GE ? PIN_HALF_WIDTH : -PIN_HALF_WIDTH);
+            active.add(new JumpConstraint(JumpConstraint.Mode.F, s.t1, s.t2, JumpConstraint.Op.MINUS,
+                    JumpConstraint.Cmp.GE, at - PIN_HALF_WIDTH, s.name + "eqLo"));
+            active.add(new JumpConstraint(JumpConstraint.Mode.F, s.t1, s.t2, JumpConstraint.Op.MINUS,
+                    JumpConstraint.Cmp.LE, at + PIN_HALF_WIDTH, s.name + "eqHi"));
+        }
+        for (int b = 0; b < pinLo.length; b++) {
+            if (!pinLo[b] && !pinHi[b]) continue;
+            Bound bd = bounds.get(b);
+            double edge = pinLo[b] ? bd.loDeg + PIN_HALF_WIDTH : bd.hiDeg - PIN_HALF_WIDTH;
+            active.add(new JumpConstraint(JumpConstraint.Mode.F, bd.tick, null, JumpConstraint.Op.PLUS,
+                    JumpConstraint.Cmp.GE, edge - PIN_HALF_WIDTH, bd.source.name + "eqLo"));
+            active.add(new JumpConstraint(JumpConstraint.Mode.F, bd.tick, null, JumpConstraint.Op.PLUS,
+                    JumpConstraint.Cmp.LE, edge + PIN_HALF_WIDTH, bd.source.name + "eqHi"));
+        }
+        return active;
+    }
+
+    public void structureOf(double[] yaws, boolean[] tie, boolean[] pinLo, boolean[] pinHi) {
+        for (int l = 0; l < tie.length; l++) {
+            Link link = links.get(l);
+            if (link.laterTick() >= yaws.length) continue;
+            double turn = Angles.wrapDelta(yaws[link.hiTick] - yaws[link.loTick]);
+            tie[l] = turn <= link.minTurnDeg + TIE_TOL || turn >= 180.0 - TIE_TOL;
+        }
+        for (int b = 0; b < pinLo.length; b++) {
+            Bound bd = bounds.get(b);
+            if (bd.tick >= yaws.length) continue;
+            double mid = 0.5 * (bd.loDeg + bd.hiDeg);
+            double rel = mid + Angles.wrapDelta(yaws[bd.tick] - mid);
+            pinLo[b] = rel <= bd.loDeg + TIE_TOL;
+            pinHi[b] = !pinLo[b] && rel >= bd.hiDeg - TIE_TOL;
+        }
+    }
+
     public double[] project(double[] yawsAbs) {
         double[] y = yawsAbs.clone();
         for (Bound b : bounds) {
@@ -116,9 +186,10 @@ public final class YawOrder {
             for (Link l : links) {
                 if (l.laterTick() != t) continue;
                 double turn = Angles.wrapDelta(y[l.hiTick] - y[l.loTick]);
-                if (turn >= l.minTurnDeg) continue;
-                if (l.hiTick == t) y[t] = Angles.wrap(y[l.loTick] + l.minTurnDeg);
-                else y[t] = Angles.wrap(y[l.hiTick] - l.minTurnDeg);
+                double need = l.minTurnDeg == 0.0 ? 0.0 : l.minTurnDeg + FLOAT_MARGIN_DEG;
+                if (turn >= need) continue;
+                if (l.hiTick == t) y[t] = Angles.wrap(y[l.loTick] + need);
+                else y[t] = Angles.wrap(y[l.hiTick] - need);
             }
         }
         return y;

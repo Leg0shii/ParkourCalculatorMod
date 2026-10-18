@@ -29,7 +29,7 @@ public final class RelaxationRecovery {
 
     public static double[] solve(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
                                  Config cfg) {
-        if (JumpLinearModel.hasFacingWall(spec.constraints)) return null;
+        if (JumpLinearModel.hasFacingWall(spec.constraints) && !CertifiedBnb.carriesOrder(spec)) return null;
         for (JumpConstraint c : spec.constraints) {
             if (c.cmp == JumpConstraint.Cmp.EQ) return null;
         }

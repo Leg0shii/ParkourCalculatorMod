@@ -26,7 +26,21 @@ anglesolver/
                            them between the per-tick arcs and splits overlapping pairs in order, the
                            closed form runs the tie cascade (YawOrderDp). Pins the carry rules, the
                            projection, an SLP, a closed-form and a B&B solve of a one-way range on j121,
-                           the wrong-way range staying rejected, and the j121 neo engine solve.
+                           the wrong-way range staying rejected, and the j121 neo engine solve; the
+                           pattern B&B accepting an order spec and landing j345 (gh553-j345-dfneo).
+  YawDirectionCrossCheckTest.java  gh-553 (SlowSolverTests, one case per FAST solve/ capture under a 60 s
+                           budget): re-solves the capture with one-way dF rows its own solved path
+                           already satisfies, so a solution exists by construction and a miss is a
+                           regression: three random turning ticks (twice), every turning tick, the
+                           longest one-way run, the first (seam) and last tick, zero-turn ticks held
+                           >= 0 and <= 0, a minimum turn 0.01 and 1e-3 deg under the real one, a
+                           dF = 0 next to one-way rows, and the random rows on a 3 s Optimize (up to
+                           60 ticks). Found the free-start gap (df-openchain-free-start, j925, j335)
+                           and the relaxation-recovery gate (j022 min turn) on 2026-10-18. The
+                           Optimize budget is three times the FAST time of the same rows, at least
+                           6 s: the dual chain only runs its relaxation recovery with 3 s left
+                           (RecoveryLadder.RELAX_MIN_REMAINING_NANOS), so a 3 s Optimize skipped
+                           the stage that lands j022 and j024 in milliseconds on FAST.
   OverConstrainedChainTest.java  gh-454 (SlowSolverTests): a segment whose dF = 0 constraints tie every
                            tick to one heading (gh454-p2s-overconstrained capture, THOROUGH) fails
                            within 20 s and carries the "Overconstrained" notice label with the
@@ -134,6 +148,20 @@ anglesolver/
                            without an incumbent; the pattern B&B lands it in ms on the zx1@6
                            pattern, so this pins that the pattern B&B accepts an order spec and
                            that its per-pattern closed form runs the ordered tie cascade)
+                           (solve/gh553-j925-dfle: gh-553; the gh283-j925-farseed free-start capture
+                           with dF <= 0 on T15..T17, which its own cold solve already satisfied; the
+                           free-start joint solve declined every order spec, now it runs the tie
+                           cascade around the unordered joint solve, 0.3 s)
+                           (solve/gh553-j335-dfle: gh-553; the gh386-j335-lowx free-start run with
+                           dF <= 0 on T5, T11 and T13 from its own solve. The unordered joint solve
+                           flips tick 4 by 180 deg, so the cascade must tie a link that sits on the
+                           wrap, and the landing comes from the free rescue's centre chain through
+                           the relaxation recovery, which declined every F row before; 5 s)
+                           (solve/gh553-j022-minturn: gh-553; j022-1bmhbfly with a minimum turn
+                           0.01 deg under the solved turn on T34 (the seam), T36 and T37 against
+                           its knife-edge X@44 wall. The SLP stalls at 1e-8 on a sine-table bucket
+                           there, so the closed form's seed must land through the relaxation
+                           recovery; pins that stage carrying the order, 70 ms)
                            (solve/nix-full-t1: long multi-jump free start; accepted as not solving
                            after the CMA-ES removal (issue 374) until the multi-jump seam work lands)
                            (solve/gh283-j925-farseed: gh-283; hpk j925 momentum+neo with the start

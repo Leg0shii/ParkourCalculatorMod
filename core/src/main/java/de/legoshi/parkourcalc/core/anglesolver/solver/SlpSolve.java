@@ -170,6 +170,7 @@ public final class SlpSolve {
         }
 
         if (ties != null) theta = ties.expand(ties.reduce(theta));
+        if (ties == null && !yawIneq.isEmpty()) theta = YawOrder.carryFreeTicks(lin, sc.startYaw, theta);
 
         long t0 = System.nanoTime();
         if (SolverTrace.on()) {
@@ -213,6 +214,9 @@ public final class SlpSolve {
                 double maxViol = exactSlacks(ineq, gf, path, viol);
                 double objNorm = normObjective(path, spec.objective, max);
                 if (phase == 1 && maxViol <= -targetClearance) break;
+                for (int j = mPos; j < m; j++) {
+                    if (ineq.get(j).rhs != 0.0) viol[j] += YawOrder.FLOAT_MARGIN_DEG;
+                }
 
                 if (inertiaAware) lin.zeroingPattern(theta, exact.inertiaThreshold(), exact.perAxisInertia(), zeroX, zeroZ);
                 if (inertiaAware && (!patternEquals(lastZeroX, zeroX) || !patternEquals(lastZeroZ, zeroZ))) {

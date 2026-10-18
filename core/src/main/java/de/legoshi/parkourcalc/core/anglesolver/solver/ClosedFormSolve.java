@@ -122,8 +122,6 @@ public final class ClosedFormSolve {
     private static final double SCAN_ARC_TOL = 2.0e-3;
     private static final int SCAN_MAX_CANDIDATES = 240;
 
-    private static final double ORDER_PIN_HALF_WIDTH = 1.0e-4;
-    private static final double ORDER_TIE_TOL = 1.5 * YawOrderDp.H;
     private static final int ORDER_ROUNDS = 16;
 
     private static Result optimizeReturning(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
@@ -145,18 +143,9 @@ public final class ClosedFormSolve {
                                        YawOrder order, boolean[] zeroX, boolean[] zeroZ) {
         long t0 = System.nanoTime();
         JumpConstraintCompiler.Compiled full = JumpConstraintCompiler.compile(spec);
-        List<JumpConstraint> base = new ArrayList<JumpConstraint>(spec.constraints.size());
-        for (JumpConstraint c : spec.constraints) {
-            boolean carried = false;
-            for (JumpConstraint k : order.carried()) {
-                if (k == c) {
-                    carried = true;
-                    break;
-                }
-            }
-            if (!carried) base.add(c);
-        }
+        List<JumpConstraint> base = order.stripped(spec.constraints);
         int n = sc.numTicks;
+        JumpLinearModel lin = new JumpLinearModel(sc);
         int links = order.links().size();
         int bounds = order.bounds().size();
         boolean[] tie = new boolean[links];
@@ -176,6 +165,7 @@ public final class ClosedFormSolve {
                     ? solveStripped(exact, work, sc, feasTol, cancel, margins, ascending, cfg)
                     : solvePatterned(exact, work, sc, feasTol, cancel, cfg, zeroX, zeroZ);
             if (r == null) break;
+            r = new Result(YawOrder.carryFreeTicks(lin, sc.startYaw, r.yaws), r.violation, r.feasible, r.amp, r.phase);
             double viol = violOnExact(exact, sc, full, r.yaws);
             if (least == null || viol < least.violation) least = new Result(r.yaws, viol, false);
             boolean feasible = viol <= feasTol;
@@ -249,42 +239,13 @@ public final class ClosedFormSolve {
 
     private static void addTies(List<JumpConstraint> active, YawOrder order, boolean[] tie, boolean[] pinLo,
                                 boolean[] pinHi) {
-        for (int l = 0; l < tie.length; l++) {
-            if (!tie[l]) continue;
-            JumpConstraint s = order.links().get(l).source;
-            double at = s.rhs == 0.0 ? 0.0
-                    : s.rhs + (s.cmp == JumpConstraint.Cmp.GE ? ORDER_PIN_HALF_WIDTH : -ORDER_PIN_HALF_WIDTH);
-            active.add(new JumpConstraint(JumpConstraint.Mode.F, s.t1, s.t2, JumpConstraint.Op.MINUS,
-                    JumpConstraint.Cmp.GE, at - ORDER_PIN_HALF_WIDTH, s.name + "eqLo"));
-            active.add(new JumpConstraint(JumpConstraint.Mode.F, s.t1, s.t2, JumpConstraint.Op.MINUS,
-                    JumpConstraint.Cmp.LE, at + ORDER_PIN_HALF_WIDTH, s.name + "eqHi"));
-        }
-        for (int b = 0; b < pinLo.length; b++) {
-            if (!pinLo[b] && !pinHi[b]) continue;
-            YawOrder.Bound bd = order.bounds().get(b);
-            double edge = pinLo[b] ? bd.loDeg + ORDER_PIN_HALF_WIDTH : bd.hiDeg - ORDER_PIN_HALF_WIDTH;
-            active.add(new JumpConstraint(JumpConstraint.Mode.F, bd.tick, null, JumpConstraint.Op.PLUS,
-                    JumpConstraint.Cmp.GE, edge - ORDER_PIN_HALF_WIDTH, bd.source.name + "eqLo"));
-            active.add(new JumpConstraint(JumpConstraint.Mode.F, bd.tick, null, JumpConstraint.Op.PLUS,
-                    JumpConstraint.Cmp.LE, edge + ORDER_PIN_HALF_WIDTH, bd.source.name + "eqHi"));
-        }
+        List<JumpConstraint> base = new ArrayList<JumpConstraint>(active);
+        active.clear();
+        active.addAll(order.withTies(base, tie, pinLo, pinHi));
     }
 
     private static void structureOf(YawOrder order, double[] yaws, boolean[] tie, boolean[] pinLo, boolean[] pinHi) {
-        for (int l = 0; l < tie.length; l++) {
-            YawOrder.Link link = order.links().get(l);
-            if (link.laterTick() >= yaws.length) continue;
-            double turn = Angles.wrapDelta(yaws[link.hiTick] - yaws[link.loTick]);
-            tie[l] = turn <= link.minTurnDeg + ORDER_TIE_TOL;
-        }
-        for (int b = 0; b < pinLo.length; b++) {
-            YawOrder.Bound bd = order.bounds().get(b);
-            if (bd.tick >= yaws.length) continue;
-            double mid = 0.5 * (bd.loDeg + bd.hiDeg);
-            double rel = mid + Angles.wrapDelta(yaws[bd.tick] - mid);
-            pinLo[b] = rel <= bd.loDeg + ORDER_TIE_TOL;
-            pinHi[b] = !pinLo[b] && rel >= bd.hiDeg - ORDER_TIE_TOL;
-        }
+        order.structureOf(yaws, tie, pinLo, pinHi);
     }
 
     private static double objectiveOf(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, double[] yaws) {
