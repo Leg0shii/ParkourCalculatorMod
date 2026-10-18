@@ -46,6 +46,8 @@ final class PoolCertifier {
     private int extraCerts;
     private long extraDeadline = Long.MAX_VALUE;
 
+    private final Set<String> tried = new HashSet<>();
+
     PoolCertifier(ExactJumpModel model, StructurePoolDriver.Config cfg, AtomicBoolean cancel,
                   StructurePoolDriver.Progress progress, NoTurnProblem problem, long deadline, boolean multi) {
         this.cfg = cfg;
@@ -119,7 +121,8 @@ final class PoolCertifier {
             if (tier < 0) tier = t;
             else if (t != tier) break;
             if (firstTaken < 0) firstTaken = i;
-            if (!found.contains(scheduleKey(c.combos, c.engage, ja))) batch.add(c);
+            String key = scheduleKey(c.combos, c.engage, ja);
+            if (!found.contains(key) && !tried.contains(key)) batch.add(c);
             i++;
         }
         if (firstTaken >= 0) queue.subList(firstTaken, i).clear();
@@ -146,6 +149,7 @@ final class PoolCertifier {
             return rr;
         });
         certs += batch.size();
+        for (Candidate c : batch) tried.add(scheduleKey(c.combos, c.engage, ja));
         if (best != null) extraCerts += batch.size();
         boolean hadBest = best != null;
         List<NoTurnResult> hits = new ArrayList<>();

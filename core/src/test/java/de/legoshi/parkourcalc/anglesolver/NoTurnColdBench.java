@@ -173,7 +173,8 @@ public class NoTurnColdBench {
             spec = insertTicks(spec, insertAt, insertK);
             line("inserted " + insertK + " ground tick(s) before tick " + insertAt + " (n now " + spec.asScenario().numTicks + ")");
         }
-        NoTurnProblem p = NoTurnProblem.from(spec, model, Boolean.getBoolean("pkc.bench.jaAll"));
+        NoTurnProblem p = Boolean.getBoolean("pkc.bench.jaLast") ? NoTurnProblem.fromJaLast(spec, model)
+                : NoTurnProblem.from(spec, model, Boolean.getBoolean("pkc.bench.jaAll"));
         int tiedCount = 0;
         for (boolean b : p.tied) if (b) tiedCount++;
         line("problem: n=" + p.n + " setupEnd=" + p.setupEnd + " jumpTicks=" + Arrays.toString(p.jumpTicks)

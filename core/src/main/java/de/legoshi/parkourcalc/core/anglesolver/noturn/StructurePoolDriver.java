@@ -28,8 +28,8 @@ public final class StructurePoolDriver {
         public int maxEdges = 3;
         public int minDwell = 3;
         public int[] alphabet = {NoTurnKeys.NONE, NoTurnKeys.W, NoTurnKeys.WA, NoTurnKeys.WD,
-                NoTurnKeys.SA, NoTurnKeys.SD, NoTurnKeys.S};
-        public int[] takeoffCombos = {NoTurnKeys.W, NoTurnKeys.WA, NoTurnKeys.WD};
+                NoTurnKeys.SA, NoTurnKeys.SD, NoTurnKeys.S, NoTurnKeys.A, NoTurnKeys.D};
+        public int[] takeoffCombos = {NoTurnKeys.W, NoTurnKeys.WA, NoTurnKeys.WD, NoTurnKeys.NONE};
         public int diskGrid = 480;
         public int diskCoarseStride = 24;
         public int diskMidStride = 6;
@@ -45,11 +45,12 @@ public final class StructurePoolDriver {
         public long extraCertifyNanos = 8_000_000_000L;
         public long certifyBudgetNanos = 9_000_000_000L;
         public long searchBudgetNanos = 2_000_000_000L;
-        public long nearSearchBudgetNanos = 1_000_000_000L;
+        public long nearSearchBudgetNanos = 500_000_000L;
         public long totalBudgetNanos = 240_000_000_000L;
         public int turnCombo = NoTurnKeys.WA;
         public boolean allowJa = false;
         public boolean jaAllPass = false;
+        public int minLevel = 0;
         public boolean playable = false;
         public int threads = 0;
     }
@@ -732,7 +733,7 @@ public final class StructurePoolDriver {
         int active = checkedGroups;
         while (active < groups.length && groups[active].tick <= start) active++;
         boolean prunedHere = false;
-        boolean worthChecking = edges < effMaxEdges() && n - start > cfg.minDwell;
+        boolean worthChecking = n - start > cfg.minDwell && (edges < effMaxEdges() || anchorAhead(start));
         if (worthChecking && active > checkedGroups && active > 0 && prefixInfeasible(combos, start, active)) {
             pruned++;
             if (!VERIFY_PRUNE) return;
@@ -740,11 +741,11 @@ public final class StructurePoolDriver {
             inPrunedSubtree = true;
         }
         int remaining = n - start;
-        boolean onJump = problem.jump[start];
-        int dwell = onJump ? 1 : Math.min(cfg.minDwell, remaining);
+        boolean anchor = freeTick(problem, start);
+        int dwell = anchor ? 1 : Math.min(cfg.minDwell, remaining);
         for (int c : cfg.alphabet) {
             if (c == lastLabel) continue;
-            int ne = (lastLabel >= 0 && !(onJump && freeChange(c))) ? edges + 1 : edges;
+            int ne = (lastLabel >= 0 && !(anchor && freeChange(problem, start, c))) ? edges + 1 : edges;
             if (ne > effMaxEdges()) continue;
             for (int len = dwell; len <= remaining; len++) {
                 for (int t = start; t < start + len; t++) combos[t] = c;
@@ -882,11 +883,29 @@ public final class StructurePoolDriver {
         return countPresses(cfg, problem, combos);
     }
 
+    static boolean freeTick(NoTurnProblem problem, int t) {
+        return t < problem.n && (problem.jump[t] || (t > 0 && problem.jump[t - 1]));
+    }
+
+    private boolean anchorAhead(int start) {
+        for (int t = start + 1; t < n - cfg.minDwell; t++) if (freeTick(problem, t)) return true;
+        return false;
+    }
+
+    private boolean freeChange(NoTurnProblem problem, int t, int combo) {
+        return freeChange(cfg, problem, t, combo);
+    }
+
+    private static boolean freeChange(Config cfg, NoTurnProblem problem, int t, int combo) {
+        if (combo == NoTurnKeys.NONE) return problem.jump[t];
+        return freeChange(cfg, combo);
+    }
+
     static int countEdges(Config cfg, NoTurnProblem problem, int[] combos) {
         int edges = 0;
         for (int t = 1; t < combos.length; t++) {
             if (combos[t] == combos[t - 1]) continue;
-            if (problem.jump[t] && freeChange(cfg, combos[t])) continue;
+            if (freeTick(problem, t) && freeChange(cfg, problem, t, combos[t])) continue;
             edges++;
         }
         return edges;
@@ -1061,27 +1080,19 @@ public final class StructurePoolDriver {
 
         final boolean multi = problem.multiTied();
         final int enumThreads = Math.max(1, NoTurnParallel.resolveThreads(cfg.threads));
-        final boolean jaAllLater = cfg.jaAllPass && !problem.explicitTies && !problem.jaAll && !problem.jaLast
+        final boolean structureRounds = cfg.jaAllPass && !problem.explicitTies && !problem.jaAll && !problem.jaLast
                 && problem.jumpTicks.length > 0;
-        final long totalDeadline = start + cfg.totalBudgetNanos;
-        final long deadline = jaAllLater ? start + (long) (cfg.totalBudgetNanos * PURE_SHARE) : totalDeadline;
+        if (structureRounds) return runRounds(problem, graph, start);
+        final long deadline = start + cfg.totalBudgetNanos;
         final boolean jaOk = cfg.allowJa && problem.jaAllowed();
         final AtomicBoolean stopEnum = new AtomicBoolean(false);
-        NoTurnResult quickAll = null;
-        if (jaAllLater && !cancelled()) {
-            long quickBudget = Math.min((long) (cfg.totalBudgetNanos * QUICK_ALL_SHARE), QUICK_ALL_CAP_NANOS);
-            progress.update("quick pass: jump angle on the last jump, one key change at most", 0.05);
-            quickAll = runNested(problem, graph, quickBudget, 1, false);
-            progress.update("quick pass: jump angle on every jump, one key change at most", 0.1);
-            NoTurnResult q2 = runNested(problem, graph, quickBudget, 1, true);
-            if (quickAll == null || (q2 != null && betterResult(maximize, q2, quickAll))) quickAll = q2;
-        }
         deadlineNanos = deadline;
         PoolCertifier certifier = new PoolCertifier(model, cfg, cancel, progress, problem, deadline, multi);
         ExecutorService pipeExec = Executors.newSingleThreadExecutor();
         try {
-            LevelResult current = enumerateLevel(problem, enumThreads, 0, stopEnum);
-            for (int level = 0; level <= cfg.maxEdges; level++) {
+            int firstLevel = Math.max(0, Math.min(cfg.minLevel, cfg.maxEdges));
+            LevelResult current = enumerateLevel(problem, enumThreads, firstLevel, stopEnum);
+            for (int level = firstLevel; level <= cfg.maxEdges; level++) {
                 final int nextLevel = level + 1;
                 java.util.concurrent.Future<LevelResult> nextF = null;
                 if (nextLevel <= cfg.maxEdges && !cancelled()) {
@@ -1097,7 +1108,10 @@ public final class StructurePoolDriver {
                 certifier.offer(ranked);
                 progress.update("certify edges=" + level + " (" + ranked.size() + " kept, " + scored + " scored)", 0.4);
                 while (!cancelled() && !certifier.variationsOver()) {
-                    if (!certifier.certifyNext(false, true)) break;
+                    if (!certifier.certifyNext(false, true)) {
+                        if (nextF == null || nextF.isDone()) break;
+                        if (!certifier.certifyNext(false, false)) break;
+                    }
                     if (nextF != null && nextF.isDone()) break;
                 }
                 if (nextF == null) break;
@@ -1131,25 +1145,6 @@ public final class StructurePoolDriver {
         }
 
         NoTurnResult best = certifier.best();
-        if (best == null && jaAllLater && !(cancel != null && cancel.get())) {
-            long lastDeadline = start + (long) (cfg.totalBudgetNanos * LAST_SHARE);
-            long remaining = lastDeadline - System.nanoTime();
-            if (remaining > 1_000_000_000L) {
-                progress.update("no single-facing line; searching with a jump angle on the last jump", 0.4);
-                NoTurnResult nb = runNested(problem, graph, remaining, cfg.maxEdges, false);
-                if (nb != null) best = nb;
-            }
-        }
-        if (best == null && jaAllLater && !(cancel != null && cancel.get())) {
-            long remaining = totalDeadline - System.nanoTime();
-            if (remaining > 1_000_000_000L) {
-                progress.update("no single-facing line; searching with a jump angle on every jump", 0.4);
-                NoTurnResult nb = runNested(problem, graph, remaining, cfg.maxEdges, true);
-                if (nb != null) best = nb;
-            }
-        }
-        if (best == null) best = quickAll;
-        else if (quickAll != null && betterResult(maximize, quickAll, best)) best = quickAll;
         progress.update(best == null ? "no byte-exact no-turn found" : "found " + best.describe(), 1.0);
         if (best != null && cfg.certifyBudgetNanos > 0) {
             progress.update("polishing " + best.describe(), 0.97);
@@ -1163,26 +1158,63 @@ public final class StructurePoolDriver {
         return best;
     }
 
-    private static final double PURE_SHARE = 0.5;
-    private static final double LAST_SHARE = 0.75;
-    private static final double QUICK_ALL_SHARE = 0.06;
-    private static final long QUICK_ALL_CAP_NANOS = 10_000_000_000L;
+    private static final String[] STRUCTURE_NAMES = {"single facing", "jump angle on the last jump",
+            "jump angle on every jump"};
 
-    private NoTurnResult runNested(NoTurnProblem problem, SolverGraph graph, long budgetNanos, int maxEdges, boolean allJumps) {
-        Config cfg2 = copyConfig(cfg);
-        cfg2.totalBudgetNanos = budgetNanos;
-        cfg2.maxEdges = Math.min(cfg.maxEdges, maxEdges);
-        cfg2.allowJa = false;
-        cfg2.jaAllPass = false;
-        cfg2.certifyBudgetNanos = 0L;
-        NoTurnProblem all = allJumps ? NoTurnProblem.from(problem.baseSpec, model, true)
-                : NoTurnProblem.fromJaLast(problem.baseSpec, model);
-        StructurePoolDriver nested = new StructurePoolDriver(model, cfg2, cancel, progress);
-        NoTurnResult nb = nested.run(all, graph);
-        scored += nested.scored;
-        byteScreened += nested.byteScreened;
-        pruned += nested.pruned;
-        return nb;
+    private NoTurnResult runRounds(NoTurnProblem problem, SolverGraph graph, long start) {
+        prepare(problem);
+        NoTurnProblem[] structures = {problem, NoTurnProblem.fromJaLast(problem.baseSpec, model),
+                NoTurnProblem.from(problem.baseSpec, model, true)};
+        int threads = Math.max(1, NoTurnParallel.resolveThreads(cfg.threads));
+        int per = Math.max(1, threads / structures.length);
+        List<StructurePoolDriver> drivers = new ArrayList<>();
+        for (int si = 0; si < structures.length; si++) {
+            Config cfg2 = copyConfig(cfg);
+            cfg2.threads = per;
+            cfg2.allowJa = false;
+            cfg2.jaAllPass = false;
+            cfg2.certifyBudgetNanos = 0L;
+            final String name = STRUCTURE_NAMES[si];
+            Progress tagged = new Progress() {
+                @Override
+                public void update(String stage, double fraction) {
+                    progress.update(name + ": " + stage, fraction);
+                }
+
+                @Override
+                public void found(NoTurnResult result) {
+                    progress.found(result);
+                }
+            };
+            drivers.add(new StructurePoolDriver(model, cfg2, cancel, tagged));
+        }
+        ExecutorService exec = Executors.newFixedThreadPool(structures.length);
+        List<java.util.concurrent.Future<NoTurnResult>> futures = new ArrayList<>();
+        try {
+            for (int si = 0; si < structures.length; si++) {
+                final StructurePoolDriver d = drivers.get(si);
+                final NoTurnProblem p = structures[si];
+                futures.add(exec.submit(() -> d.run(p, graph)));
+            }
+            NoTurnResult best = null;
+            for (int si = 0; si < futures.size(); si++) {
+                NoTurnResult r;
+                try {
+                    r = futures.get(si).get();
+                } catch (InterruptedException | java.util.concurrent.ExecutionException e) {
+                    throw new IllegalStateException(e);
+                }
+                StructurePoolDriver d = drivers.get(si);
+                scored += d.scored;
+                byteScreened += d.byteScreened;
+                pruned += d.pruned;
+                if (r != null && (best == null || betterResult(maximize, r, best))) best = r;
+            }
+            progress.update(best == null ? "no byte-exact no-turn found" : "found " + best.describe(), 1.0);
+            return best;
+        } finally {
+            exec.shutdownNow();
+        }
     }
 
     private static Config copyConfig(Config c) {
@@ -1211,6 +1243,7 @@ public final class StructurePoolDriver {
         o.turnCombo = c.turnCombo;
         o.allowJa = c.allowJa;
         o.jaAllPass = c.jaAllPass;
+        o.minLevel = c.minLevel;
         o.playable = c.playable;
         o.threads = c.threads;
         return o;

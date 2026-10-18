@@ -216,7 +216,7 @@ final class UnitScreen {
         linearize();
 
         int count;
-        if (Double.isNaN(centerTheta)) {
+        if (Double.isNaN(centerTheta) || groups > 2) {
             count = REF;
             for (int k = 0; k < REF; k++) thetas[k] = -Math.PI + k * coarse;
         } else {
