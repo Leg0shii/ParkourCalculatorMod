@@ -28,6 +28,7 @@ public final class NoTurnProblem {
     public final boolean[] tied;
     public final boolean explicitTies;
     public final boolean jaAll;
+    public final boolean jaLast;
     public final int[] segment;
     public final int[] unit;
     public final int unitCount;
@@ -43,11 +44,12 @@ public final class NoTurnProblem {
     private static final int DEFAULT_AIR_COMBO = NoTurnKeys.WA;
 
     private NoTurnProblem(JumpSpec baseSpec, ExactJumpModel model) {
-        this(baseSpec, model, false);
+        this(baseSpec, model, false, false);
     }
 
-    private NoTurnProblem(JumpSpec baseSpec, ExactJumpModel model, boolean jaAll) {
+    private NoTurnProblem(JumpSpec baseSpec, ExactJumpModel model, boolean jaAll, boolean jaLast) {
         this.jaAll = jaAll;
+        this.jaLast = jaLast && !jaAll;
         this.baseSpec = baseSpec;
         this.model = model;
         this.base = baseSpec.asScenario();
@@ -99,6 +101,8 @@ public final class NoTurnProblem {
         this.setupEnd = Math.min(Math.max(end, 0), n - 1);
         if (jaAll) {
             for (int jtk : jumpTicks) if (jtk <= setupEnd) tied[jtk] = false;
+        } else if (this.jaLast && maxTied < 0 && lastJump >= 0 && lastJump <= setupEnd) {
+            tied[lastJump] = false;
         }
         this.unit = new int[n];
         int[] unitOfRoot = new int[n];
@@ -107,7 +111,7 @@ public final class NoTurnProblem {
         int main = -1;
         int tiedRoots = 0;
         for (int t = 0; t < n; t++) {
-            boolean shared = explicitTies ? tied[t] : t <= setupEnd && !(jaAll && jump[t]);
+            boolean shared = tied[t];
             if (!shared) {
                 unit[t] = count++;
                 continue;
@@ -212,13 +216,21 @@ public final class NoTurnProblem {
     }
 
     public static NoTurnProblem from(JumpSpec baseSpec, ExactJumpModel model, boolean jaAll) {
+        return from(baseSpec, model, jaAll, false);
+    }
+
+    public static NoTurnProblem fromJaLast(JumpSpec baseSpec, ExactJumpModel model) {
+        return from(baseSpec, model, false, true);
+    }
+
+    private static NoTurnProblem from(JumpSpec baseSpec, ExactJumpModel model, boolean jaAll, boolean jaLast) {
         if (baseSpec == null) {
             NoTurnProblem p = new NoTurnProblem(new JumpSpec(new JumpPhysicsInputs(1), new ArrayList<>(),
                     new Objective(JumpPhysicsInputs.Axis.X, Objective.Sense.MAX, 0)), model);
             p.issue = "no solver problem is set up (start tick, landing tick, objective)";
             return p;
         }
-        NoTurnProblem p = new NoTurnProblem(baseSpec, model, jaAll);
+        NoTurnProblem p = new NoTurnProblem(baseSpec, model, jaAll, jaLast);
         if (p.setupEnd < 1) p.issue = "the run-up is too short to search (need at least one setup tick)";
         if (p.walls.isEmpty()) p.issue = "no landing constraints found; add X/Z landing walls first";
         return p;
@@ -235,7 +247,7 @@ public final class NoTurnProblem {
     public boolean freeDirection(int t) {
         if (t < 0 || t >= n) return false;
         if (explicitTies) return !tied[t] || segment[t] != mainSegment();
-        return jaAll && jump[t];
+        return t <= setupEnd && !tied[t];
     }
 
     public boolean assignsCombo(int t) {
@@ -285,7 +297,7 @@ public final class NoTurnProblem {
         int prev = -1;
         for (int t = 0; t <= setupEnd; t++) {
             if (!tied[t] || (jaFree && t == setupEnd)) {
-                if (!(jaAll && jump[t])) prev = -1;
+                if (!((jaAll || jaLast) && jump[t])) prev = -1;
                 continue;
             }
             if (prev >= 0) {

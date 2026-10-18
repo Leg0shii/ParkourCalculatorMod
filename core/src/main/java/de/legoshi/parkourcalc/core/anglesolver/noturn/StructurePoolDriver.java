@@ -1061,7 +1061,8 @@ public final class StructurePoolDriver {
 
         final boolean multi = problem.multiTied();
         final int enumThreads = Math.max(1, NoTurnParallel.resolveThreads(cfg.threads));
-        final boolean jaAllLater = cfg.jaAllPass && !problem.explicitTies && !problem.jaAll && problem.jumpTicks.length > 0;
+        final boolean jaAllLater = cfg.jaAllPass && !problem.explicitTies && !problem.jaAll && !problem.jaLast
+                && problem.jumpTicks.length > 0;
         final long totalDeadline = start + cfg.totalBudgetNanos;
         final long deadline = jaAllLater ? start + (long) (cfg.totalBudgetNanos * PURE_SHARE) : totalDeadline;
         final boolean jaOk = cfg.allowJa && problem.jaAllowed();
@@ -1069,8 +1070,11 @@ public final class StructurePoolDriver {
         NoTurnResult quickAll = null;
         if (jaAllLater && !cancelled()) {
             long quickBudget = Math.min((long) (cfg.totalBudgetNanos * QUICK_ALL_SHARE), QUICK_ALL_CAP_NANOS);
+            progress.update("quick pass: jump angle on the last jump, one key change at most", 0.05);
+            quickAll = runNested(problem, graph, quickBudget, 1, false);
             progress.update("quick pass: jump angle on every jump, one key change at most", 0.1);
-            quickAll = runNested(problem, graph, quickBudget, 1);
+            NoTurnResult q2 = runNested(problem, graph, quickBudget, 1, true);
+            if (quickAll == null || (q2 != null && betterResult(maximize, q2, quickAll))) quickAll = q2;
         }
         deadlineNanos = deadline;
         PoolCertifier certifier = new PoolCertifier(model, cfg, cancel, progress, problem, deadline, multi);
@@ -1128,10 +1132,19 @@ public final class StructurePoolDriver {
 
         NoTurnResult best = certifier.best();
         if (best == null && jaAllLater && !(cancel != null && cancel.get())) {
+            long lastDeadline = start + (long) (cfg.totalBudgetNanos * LAST_SHARE);
+            long remaining = lastDeadline - System.nanoTime();
+            if (remaining > 1_000_000_000L) {
+                progress.update("no single-facing line; searching with a jump angle on the last jump", 0.4);
+                NoTurnResult nb = runNested(problem, graph, remaining, cfg.maxEdges, false);
+                if (nb != null) best = nb;
+            }
+        }
+        if (best == null && jaAllLater && !(cancel != null && cancel.get())) {
             long remaining = totalDeadline - System.nanoTime();
             if (remaining > 1_000_000_000L) {
                 progress.update("no single-facing line; searching with a jump angle on every jump", 0.4);
-                NoTurnResult nb = runNested(problem, graph, remaining, cfg.maxEdges);
+                NoTurnResult nb = runNested(problem, graph, remaining, cfg.maxEdges, true);
                 if (nb != null) best = nb;
             }
         }
@@ -1150,18 +1163,20 @@ public final class StructurePoolDriver {
         return best;
     }
 
-    private static final double PURE_SHARE = 0.6;
-    private static final double QUICK_ALL_SHARE = 0.1;
-    private static final long QUICK_ALL_CAP_NANOS = 15_000_000_000L;
+    private static final double PURE_SHARE = 0.5;
+    private static final double LAST_SHARE = 0.75;
+    private static final double QUICK_ALL_SHARE = 0.06;
+    private static final long QUICK_ALL_CAP_NANOS = 10_000_000_000L;
 
-    private NoTurnResult runNested(NoTurnProblem problem, SolverGraph graph, long budgetNanos, int maxEdges) {
+    private NoTurnResult runNested(NoTurnProblem problem, SolverGraph graph, long budgetNanos, int maxEdges, boolean allJumps) {
         Config cfg2 = copyConfig(cfg);
         cfg2.totalBudgetNanos = budgetNanos;
         cfg2.maxEdges = Math.min(cfg.maxEdges, maxEdges);
         cfg2.allowJa = false;
         cfg2.jaAllPass = false;
         cfg2.certifyBudgetNanos = 0L;
-        NoTurnProblem all = NoTurnProblem.from(problem.baseSpec, model, true);
+        NoTurnProblem all = allJumps ? NoTurnProblem.from(problem.baseSpec, model, true)
+                : NoTurnProblem.fromJaLast(problem.baseSpec, model);
         StructurePoolDriver nested = new StructurePoolDriver(model, cfg2, cancel, progress);
         NoTurnResult nb = nested.run(all, graph);
         scored += nested.scored;

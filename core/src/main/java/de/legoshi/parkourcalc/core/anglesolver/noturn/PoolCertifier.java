@@ -173,7 +173,7 @@ final class PoolCertifier {
     }
 
     private NoTurnResult bind(int[] combos, boolean[] sprint, int engage, boolean ja, NoTurnCertifier.Result cr) {
-        NoTurnResult out = new NoTurnResult(combos.clone(), sprint.clone(), cfg.turnCombo, ja,
+        NoTurnResult out = new NoTurnResult(combos.clone(), sprint.clone(), cfg.turnCombo, ja || problem.jaLast,
                 StructurePoolDriver.countEdges(cfg, problem, combos), engage, cr.objective, cr.violation, cr.startX,
                 cr.startZ, cr.yaws);
         out.pressCount = StructurePoolDriver.countPresses(cfg, problem, combos);
