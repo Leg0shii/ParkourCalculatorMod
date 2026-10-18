@@ -270,7 +270,7 @@ resources/
 |-----------------|-------------------------------|
 | `solve/`        | still solves through the live engine (optionally for every Solve-For direction), within a time budget |
 | `closedform/`   | closed-form-solves byte-exact feasible, on objective, and fast |
-| `dualrecovery/` | is byte-exact-solved by the deterministic dual chain (closed form, SLP, reseeded SLP, relaxation recovery), no CMA-ES, no warm start; a sidecar `bnbSeconds` adds a bounded blind pattern-B&B feasibility fallback on chain miss; the hpk capture library (gh-204) is wired here, with `shouldSolve: false` marking the known frontier misses |
+| `dualrecovery/` | is byte-exact-solved by the deterministic dual chain (closed form, SLP, reseeded SLP, relaxation recovery), no CMA-ES, no warm start; a sidecar `bnbSeconds` adds a bounded blind pattern-B&B feasibility fallback on chain miss; the hpk capture library (gh-204) is wired here, with `shouldSolve: false` marking the known frontier misses; since 2026-10-18 the hpk captures are the hand-corrected human strats (human inputs, real start box and dF=0 over the run-up on the start tick, corrected constraints), which the chain misses on 13 of them (j147, j153, j298, j318, j320, j335, j344, j345, j346, j347, j424, j703, j718) |
 
 ## How to add a capture
 
