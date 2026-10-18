@@ -1,5 +1,5 @@
 {
   "capture": "hpk/d9/j320_1bm_Gapped_Head_Butterfly_Neo",
-  "shouldSolve": true,
+  "shouldSolve": false,
   "bnbSeconds": 10
 }
