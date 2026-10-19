@@ -1,0 +1,131 @@
+def mc = stonecutter.current.version
+def atFileName = 'parkourcalculator_at.cfg'
+def versionedAtFileName = "parkourcalculator_${mc}_at.cfg"
+
+apply plugin: 'xyz.wagyourtail.unimined'
+apply plugin: 'java'
+
+// Forge has no equivalent of Loom's `include`. Without bundling, the published jar
+// only carries this loader's classes and `core` / `forge-core` / imgui-java are
+// absent at runtime, so MinecraftAccess fails to resolve under FML. The `shade`
+// configuration is folded into `jar` below so Unimined's `remapJar` then operates
+// on a fat input.
+configurations {
+	shade {
+		exclude group: 'org.lwjgl.lwjgl'
+		exclude group: 'net.java.jinput'
+		exclude group: 'net.java.jutils'
+	}
+	implementation.extendsFrom shade
+}
+
+group = 'de.legoshi.parkourcalc.forge'
+
+base {
+	archivesName = "${project.archives_base_name}-${mc}"
+}
+
+java {
+	toolchain.languageVersion = JavaLanguageVersion.of(8)
+}
+
+// Run Minecraft (and any other JavaExec from this subproject) on JDK 8.
+// Without this the root build's JDK-21 daemon would launch the client and crash.
+tasks.withType(JavaExec).configureEach {
+	javaLauncher.set(javaToolchains.launcherFor(java.toolchain))
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = 'UTF-8'
+}
+
+unimined.useGlobalCache = false
+
+unimined.minecraft {
+	version mc
+
+	mappings {
+		searge()
+		mcp(project.mcp_channel, project.mcp_version)
+	}
+
+	minecraftForge {
+		loader project.forge_version
+		accessTransformer file("../../src/main/resources/META-INF/${versionedAtFileName}")
+	}
+
+	minecraftRemapper.config {
+		ignoreConflicts(true)
+	}
+}
+
+repositories {
+	mavenCentral()
+	maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+	// Shared Forge / LWJGL 2 / ImGui bootstrap. Transitively pulls in :core and the
+	// koxx12-dev shim. This loader only contributes Forge wiring on top.
+	shade project(':forge-core')
+
+	// imgui-java natives: must be bundled per-loader since the shared module can't
+	// commit to a runtime LWJGL flavor. Binding API is brought in transitively.
+	shade "io.github.spair:imgui-java-binding:${imgui_version}"
+	shade "io.github.spair:imgui-java-natives-windows:${imgui_version}"
+	shade "io.github.spair:imgui-java-natives-linux:${imgui_version}"
+	shade "io.github.spair:imgui-java-natives-macos:${imgui_version}"
+}
+
+jar {
+	dependsOn configurations.shade
+	// Unimined remaps and bundles the AT but does not emit the FMLAT manifest entry FML needs to apply it at runtime.
+	manifest {
+		attributes 'FMLAT': atFileName
+	}
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA', 'module-info.class'
+	from {
+		configurations.shade.collect { it.isDirectory() ? it : zipTree(it) }
+	}
+}
+
+// No Forge test covers runtime AT application, so fail the build if the shade/remap
+// pipeline drops the AT file or its FMLAT manifest entry from the final jar.
+tasks.register('verifyAccessTransformer') {
+	dependsOn 'remapJar'
+	def jarProvider = tasks.named('remapJar').flatMap { it.archiveFile }
+	inputs.file(jarProvider)
+	doLast {
+		def jarFile = jarProvider.get().asFile
+		def zf = new java.util.zip.ZipFile(jarFile)
+		try {
+			if (zf.getEntry("META-INF/${atFileName}") == null) {
+				throw new GradleException("Access transformer META-INF/${atFileName} missing from ${jarFile.name}")
+			}
+			def mfEntry = zf.getEntry('META-INF/MANIFEST.MF')
+			def manifest = new java.util.jar.Manifest(zf.getInputStream(mfEntry))
+			def fmlat = manifest.mainAttributes.getValue('FMLAT')
+			if (fmlat != atFileName) {
+				throw new GradleException("FMLAT manifest entry in ${jarFile.name} is '${fmlat}', expected '${atFileName}'")
+			}
+		} finally {
+			zf.close()
+		}
+	}
+}
+tasks.named('check') { dependsOn 'verifyAccessTransformer' }
+
+processResources {
+	inputs.property 'version', project.version
+	inputs.property 'mcversion', mc
+
+	filesMatching('mcmod.info') {
+		expand 'version': project.version, 'mcversion': mc
+	}
+	exclude { it.name.endsWith('_at.cfg') && it.name != versionedAtFileName }
+	rename java.util.regex.Pattern.quote(versionedAtFileName), atFileName
+	if (stonecutter.eval(mc, '<1.9')) {
+		rename 'en_us.lang', 'en_US.lang'
+	}
+}

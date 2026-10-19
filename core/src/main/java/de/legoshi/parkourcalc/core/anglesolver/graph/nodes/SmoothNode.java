@@ -7,6 +7,7 @@ import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeOutcome;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeRuntime;
 import de.legoshi.parkourcalc.core.anglesolver.graph.ParamValues;
+import de.legoshi.parkourcalc.core.anglesolver.graph.SmoothOutcome;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
@@ -40,13 +41,16 @@ public final class SmoothNode implements NodeRuntime {
         long deadline = deadlineNanos > 0 ? deadlineNanos : System.nanoTime() + FAST_BUDGET_NANOS;
         if (ctx.progress != null) ctx.progress.setStage(ctx.chainWith("smooth"));
         if (SolverTrace.on()) SolverTrace.log("ENGINE", "smooth start giveBack=%.6f blocks", giveBack);
-        double[] smoothed;
+        TrendFilterSmooth.Report report;
         try {
-            smoothed = TrendFilterSmooth.smooth(ctx.exactModel, ctx.spec, in.yaws, giveBack, deadline, nodeToken);
+            report = TrendFilterSmooth.smoothReport(ctx.exactModel, ctx.spec, in.yaws, giveBack, deadline, nodeToken);
         } catch (RuntimeException e) {
             if (SolverTrace.on()) SolverTrace.log("ENGINE", "final facing smoothing failed: %s", String.valueOf(e));
             return NodeOutcome.of(Guarantee.UNCHANGED, in);
         }
+        double[] smoothed = report.yaws;
+        ctx.setSmoothOutcome(new SmoothOutcome(in.yaws, smoothed, report.stop, report.nanos));
+        if (SolverTrace.on()) SolverTrace.log("ENGINE", "smooth stop=%s ms=%d", report.stop.label, report.nanos / 1_000_000L);
         if (smoothed == null || Arrays.equals(smoothed, in.yaws)) return NodeOutcome.of(Guarantee.UNCHANGED, in);
         ctx.chainAppend("smooth");
         return NodeOutcome.of(Guarantee.IMPROVED, Candidate.of(ctx, smoothed));

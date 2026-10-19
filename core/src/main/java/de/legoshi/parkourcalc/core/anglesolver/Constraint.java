@@ -60,7 +60,13 @@ public final class Constraint {
     }
 
     public static Constraint scalar(Field field, Op op, double value) {
-        return new Constraint(field, op, value);
+        return new Constraint(field, field == Field.DF ? dfOp(op) : op, value);
+    }
+
+    private static Op dfOp(Op op) {
+        if (op == Op.GT) return Op.GE;
+        if (op == Op.LT) return Op.LE;
+        return op;
     }
 
     public static Constraint range(Field field, double lo, double hi, boolean loInclusive, boolean hiInclusive) {
@@ -119,6 +125,10 @@ public final class Constraint {
     }
 
     public void setOp(Op op) {
+        if (field == Field.DF) {
+            op = dfOp(op);
+            if (op == Op.EQ) value = 0.0;
+        }
         if (op == Op.IN && this.op != Op.IN) {
             lo = value;
             hi = value;
@@ -172,7 +182,11 @@ public final class Constraint {
     }
 
     public boolean isUnsupportedDf() {
-        return field == Field.DF && (isRange() || op != Op.EQ || value != 0.0);
+        return field == Field.DF && (isRange() || (op == Op.EQ && value != 0.0));
+    }
+
+    public boolean isDirectionalDf() {
+        return field == Field.DF && !isRange() && (op == Op.GE || op == Op.LE);
     }
 
     public boolean isEnabled() {

@@ -6,18 +6,27 @@ import de.legoshi.parkourcalc.fabric.FabricParkourCalculator;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.util.Mth;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.Pose;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
+//? if <1.21.2
+//import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Pose;
+//? if >=1.21
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
+//? if <1.21.2
+//import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.GameType;
+//? if >=26.1
 import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
+//? if <1.21.2
+//import java.util.ArrayList;
 import java.util.Collection;
+//? if >=1.21.2
 import java.util.HashMap;
 import java.util.Map;
 
@@ -59,7 +68,7 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
     public void tick() {
         if (FabricParkourCalculator.shouldForceGroundOnGhostTick0(this)) {
             this.setOnGround(FabricParkourCalculator.firstTickOnGround());
-            this.fallDistance = 0.0;
+            this.fallDistance = 0;
         }
         super.tick();
     }
@@ -69,6 +78,14 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
         return true;
     }
 
+    //? if <26.1 {
+    /*@Override
+    public boolean isEffectiveAi() {
+        return true;
+    }
+
+    *///?}
+    //? if >=26.1
     @Override
     public @Nullable GameType gameMode() {
         return GameType.DEFAULT_MODE;
@@ -88,6 +105,7 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
 
     @Override
     public boolean removeAllEffects() {
+        //? if >=1.21.2 {
         Map<net.minecraft.core.Holder<MobEffect>, MobEffectInstance> active = this.getActiveEffectsMap();
         if (active.isEmpty()) return false;
         Map<net.minecraft.core.Holder<MobEffect>, MobEffectInstance> copy = new HashMap<>(active);
@@ -116,6 +134,36 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
             e.getEffect().value().removeAttributeModifiers(this.getAttributes());
         }
     }
+        //?} else {
+        /*Map<MobEffect, MobEffectInstance> active = this.getActiveEffectsMap();
+        if (active.isEmpty()) return false;
+        Collection<MobEffectInstance> copy = new ArrayList<>(active.values());
+        active.clear();
+        for (MobEffectInstance e : copy) {
+            this.onEffectRemoved(e);
+        }
+        return true;
+    }
+
+    @Override
+    protected void onEffectAdded(MobEffectInstance effect, @Nullable Entity source) {
+        effect.getEffect().addAttributeModifiers(this.getAttributes(), effect.getAmplifier());
+    }
+
+    @Override
+    protected void onEffectUpdated(MobEffectInstance effect, boolean reapplyEffect, @Nullable Entity source) {
+        if (reapplyEffect) {
+            MobEffect type = effect.getEffect();
+            type.removeAttributeModifiers(this.getAttributes());
+            type.addAttributeModifiers(this.getAttributes(), effect.getAmplifier());
+        }
+    }
+
+    @Override
+    protected void onEffectRemoved(MobEffectInstance effect) {
+        effect.getEffect().removeAttributeModifiers(this.getAttributes());
+    }
+    *///?}
 
     @Override
     public void aiStep() {
@@ -124,7 +172,11 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
         }
 
         boolean wasShiftKeyDown = this.input.keyPresses.shift();
+        //? if >=1.21.2 {
         boolean hasForwardImpulse = this.input.hasForwardImpulse();
+        //?} else {
+        /*boolean hadEnoughImpulse = this.hasEnoughImpulseToStartSprinting();
+        *///?}
 
         this.crouching = !this.getAbilities().flying
                 && !this.isSwimming()
@@ -132,8 +184,15 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
                 && this.canPlayerFitWithinBlocksAndEntitiesWhen(Pose.CROUCHING)
                 && (this.isShiftKeyDown() || !this.isSleeping() && !this.canPlayerFitWithinBlocksAndEntitiesWhen(Pose.STANDING));
 
+        //? if >=26.1 {
         this.input.tick();
+        //?} elif >=1.21 {
+        /*this.input.tick(this.isMovingSlowly(), (float) this.getAttributeValue(Attributes.SNEAKING_SPEED));
+        *///?} else {
+        /*this.input.tick(this.isMovingSlowly(), Mth.clamp(0.3F + EnchantmentHelper.getSneakingSpeedBonus(this), 0.0F, 1.0F));
+        *///?}
 
+        //? if >=1.21.2 {
         if (wasShiftKeyDown || this.isUsingItem() && !this.isPassenger() || this.input.keyPresses.backward()) {
             this.sprintTriggerTime = 0;
         }
@@ -161,6 +220,57 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
                 this.setSprinting(false);
             }
         }
+        //?} else {
+        /*if (this.isUsingItem() && !this.isPassenger()) {
+            this.input.leftImpulse *= 0.2F;
+            this.input.forwardImpulse *= 0.2F;
+            this.sprintTriggerTime = 0;
+        }
+
+        if (wasShiftKeyDown) {
+            this.sprintTriggerTime = 0;
+        }
+
+        boolean enoughFood = this.getFoodData().getFoodLevel() > 6.0F || this.getAbilities().mayfly;
+        if ((this.onGround() || this.isUnderWater())
+                && !wasShiftKeyDown
+                && !hadEnoughImpulse
+                && this.hasEnoughImpulseToStartSprinting()
+                && !this.isSprinting()
+                && enoughFood
+                && !this.isUsingItem()
+                && !this.hasEffect(MobEffects.BLINDNESS)) {
+            if (this.sprintTriggerTime <= 0 && !this.input.keyPresses.sprint()) {
+                this.sprintTriggerTime = 7;
+            } else {
+                this.setSprinting(true);
+            }
+        }
+
+        if (!this.isSprinting()
+                && (!this.isInWater() || this.isUnderWater())
+                && this.hasEnoughImpulseToStartSprinting()
+                && enoughFood
+                && !this.isUsingItem()
+                && !this.hasEffect(MobEffects.BLINDNESS)
+                && this.input.keyPresses.sprint()) {
+            this.setSprinting(true);
+        }
+
+        if (this.isSprinting()) {
+            boolean lostImpulse = !this.input.hasForwardImpulse() || !enoughFood;
+            boolean stopRunning = lostImpulse
+                    || this.horizontalCollision && !this.minorHorizontalCollision
+                    || this.isInWater() && !this.isUnderWater();
+            if (this.isSwimming()) {
+                if (!this.onGround() && !this.input.keyPresses.shift() && lostImpulse || !this.isInWater()) {
+                    this.setSprinting(false);
+                }
+            } else if (stopRunning) {
+                this.setSprinting(false);
+            }
+        }
+        *///?}
 
         super.aiStep();
     }
@@ -175,6 +285,7 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
         return this.crouching;
     }
 
+    //? if >=1.21.2 {
     private boolean canStartSprinting() {
         return !this.isSprinting()
                 && this.input.hasForwardImpulse()
@@ -197,19 +308,38 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
     }
 
     private boolean isSprintingPossible(boolean allowedInShallowWater) {
+        //? if >=26.1 {
         return !this.isMobilityRestricted()
                 && this.hasEnoughFoodToSprint()
                 && (!this.isPassenger() || this.vehicleCanSprint(this.getVehicle()))
                 && (allowedInShallowWater || !this.isInShallowWater());
+        //?} else {
+        /*return !this.isImmobile()
+                && this.hasEnoughFoodToSprint()
+                && (!this.isPassenger() || this.vehicleCanSprint(this.getVehicle()))
+                && (allowedInShallowWater || !(this.isInWater() && !this.isUnderWater()));
+        *///?}
     }
 
     private boolean vehicleCanSprint(Entity vehicle) {
+        //? if >=26.1 {
         return vehicle.canSprint() && vehicle.isLocalInstanceAuthoritative();
+        //?} else {
+        /*return vehicle.canSprint() && vehicle.isControlledByLocalInstance();
+        *///?}
     }
 
     private boolean hasEnoughFoodToSprint() {
         return this.isPassenger() || this.getFoodData().getFoodLevel() > 6.0F || this.getAbilities().mayfly;
     }
+    //?} else {
+    /*private boolean hasEnoughImpulseToStartSprinting() {
+        if (this.isUnderWater()) {
+            return this.input.hasForwardImpulse();
+        }
+        return (double) this.input.forwardImpulse >= 0.8;
+    }
+    *///?}
 
     public boolean isMovingSlowly() {
         return this.isCrouching() || this.isVisuallyCrawling();
@@ -231,6 +361,7 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
         return Math.acos(dotProduct / Math.sqrt(aLengthSquared * movementLengthSquared)) < 0.13962634F;
     }
 
+    //? if >=26.1 {
     @Override
     public void applyInput() {
         Vec2 movement = modifyInput(this.input.getMoveVector());
@@ -268,4 +399,13 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
         float tan = directionY > directionX ? directionX / directionY : directionY / directionX;
         return Mth.sqrt(1.0F + Mth.square(tan));
     }
+    //?} else {
+    /*@Override
+    public void serverAiStep() {
+        super.serverAiStep();
+        this.xxa = this.input.leftImpulse;
+        this.zza = this.input.forwardImpulse;
+        this.jumping = this.input.keyPresses.jump();
+    }
+    *///?}
 }

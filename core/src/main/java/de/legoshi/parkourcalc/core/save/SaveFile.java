@@ -167,6 +167,8 @@ public final class SaveFile {
         public String noticeLabel;
         public double objectiveValue;
         public boolean hasObjective;
+        public String smoothStop;
+        public long smoothNanos;
         public List<Outcome> outcomes = new ArrayList<Outcome>();
         public List<Yaw> yaws = new ArrayList<Yaw>();
         public List<Detail> details = new ArrayList<Detail>();

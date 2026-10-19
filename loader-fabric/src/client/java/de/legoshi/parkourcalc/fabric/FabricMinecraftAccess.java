@@ -3,6 +3,7 @@ package de.legoshi.parkourcalc.fabric;
 import de.legoshi.parkourcalc.core.ports.MinecraftAccess;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
+import de.legoshi.parkourcalc.fabric.input.FabricInput;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -21,11 +22,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import com.mojang.blaze3d.platform.InputConstants;
-import org.lwjgl.sdl.SDLKeyboard;
-import org.lwjgl.sdl.SDLMouse;
-import org.lwjgl.system.MemoryStack;
 
-import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -57,15 +54,25 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
 
     @Override
     public Vec3dCore getEyePosition() {
+        //? if >=26.1 {
         Camera camera = Minecraft.getInstance().gameRenderer.mainCamera();
         Vec3 p = camera.position();
+        //?} else {
+        /*Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
+        Vec3 p = camera.getPosition();
+        *///?}
         return new Vec3dCore(p.x, p.y, p.z);
     }
 
     @Override
     public Vec3dCore getLookDirection() {
+        //? if >=26.1 {
         Camera camera = Minecraft.getInstance().gameRenderer.mainCamera();
         Vec3 d = Vec3.directionFromRotation(camera.xRot(), camera.yRot());
+        //?} else {
+        /*Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
+        Vec3 d = Vec3.directionFromRotation(camera.getXRot(), camera.getYRot());
+        *///?}
         return new Vec3dCore(d.x, d.y, d.z);
     }
 
@@ -116,8 +123,13 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
 
     @Override
     public double getBlockReach() {
+        //? if >=1.20.5 {
         LocalPlayer player = Minecraft.getInstance().player;
         return player != null ? player.blockInteractionRange() : 4.5;
+        //?} else {
+        /*net.minecraft.client.multiplayer.MultiPlayerGameMode gameMode = Minecraft.getInstance().gameMode;
+        return gameMode != null ? gameMode.getPickRange() : 4.5;
+        *///?}
     }
 
     @Override
@@ -175,103 +187,81 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
 
     @Override
     public boolean isMousePressedLeft() {
-        return (mouseButtonMask() & (1 << (InputConstants.MOUSE_BUTTON_LEFT - 1))) != 0;
+        return FabricInput.isMouseDown(InputConstants.MOUSE_BUTTON_LEFT);
     }
 
     @Override
     public boolean isMousePressedRight() {
-        return (mouseButtonMask() & (1 << (InputConstants.MOUSE_BUTTON_RIGHT - 1))) != 0;
+        return FabricInput.isMouseDown(InputConstants.MOUSE_BUTTON_RIGHT);
     }
 
     @Override
     public double getCursorScreenX() {
-        return cursorPos(true);
+        return FabricInput.cursorX();
     }
 
     @Override
     public double getCursorScreenY() {
-        return cursorPos(false);
-    }
-
-    private static int mouseButtonMask() {
-        return SDLMouse.SDL_GetMouseState(null, null);
-    }
-
-    private static double cursorPos(boolean wantX) {
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            FloatBuffer x = stack.mallocFloat(1);
-            FloatBuffer y = stack.mallocFloat(1);
-            SDLMouse.SDL_GetMouseState(x, y);
-            return wantX ? x.get(0) : y.get(0);
-        }
+        return FabricInput.cursorY();
     }
 
     @Override
     public boolean isCtrlDown() {
-        return InputConstants.isKeyDown(InputConstants.KEY_LCONTROL) || InputConstants.isKeyDown(InputConstants.KEY_RCONTROL);
+        return FabricInput.isCtrlDown();
     }
 
     @Override
     public boolean isSaveChordDown() {
-        return isCtrlDown() && InputConstants.isKeyDown(InputConstants.KEY_S);
+        return isCtrlDown() && FabricInput.isKeyDown(InputConstants.KEY_S);
     }
 
     @Override
     public boolean isAltDown() {
-        return InputConstants.isKeyDown(InputConstants.KEY_LALT) || InputConstants.isKeyDown(InputConstants.KEY_RALT);
+        return FabricInput.isAltDown();
     }
 
-    private static final int UNRESOLVED_SCANCODE = 0;
-    private static int undoKey = UNRESOLVED_SCANCODE;
-    private static int redoKey = UNRESOLVED_SCANCODE;
-
-    private static int keyTyping(char letter, int fallback) {
-        for (int scancode = InputConstants.KEY_A; scancode <= InputConstants.KEY_Z; scancode++) {
-            int keycode = SDLKeyboard.SDL_GetKeyFromScancode(scancode, (short) 0, false);
-            if (keycode == letter) return scancode;
-        }
-        return fallback;
-    }
+    private static int undoKey = FabricInput.UNRESOLVED_KEY;
+    private static int redoKey = FabricInput.UNRESOLVED_KEY;
 
     private static void resolveEditKeys() {
-        if (undoKey != UNRESOLVED_SCANCODE) return;
-        undoKey = keyTyping('z', InputConstants.KEY_Z);
-        redoKey = keyTyping('y', InputConstants.KEY_Y);
+        if (undoKey != FabricInput.UNRESOLVED_KEY) return;
+        undoKey = FabricInput.keyTyping('z', InputConstants.KEY_Z);
+        redoKey = FabricInput.keyTyping('y', InputConstants.KEY_Y);
     }
 
     public static boolean isEditChordPress(int key) {
         resolveEditKeys();
         if (key != undoKey && key != redoKey) return false;
-        return InputConstants.isKeyDown(InputConstants.KEY_LCONTROL) || InputConstants.isKeyDown(InputConstants.KEY_RCONTROL);
+        return FabricInput.isCtrlDown();
     }
 
     @Override
     public boolean isUndoChordDown() {
         resolveEditKeys();
-        return isCtrlDown() && !isShiftDown() && InputConstants.isKeyDown(undoKey);
+        return isCtrlDown() && !isShiftDown() && FabricInput.isKeyDown(undoKey);
     }
 
     @Override
     public boolean isRedoChordDown() {
         resolveEditKeys();
         if (!isCtrlDown()) return false;
-        if (InputConstants.isKeyDown(redoKey)) return true;
-        return isShiftDown() && InputConstants.isKeyDown(undoKey);
+        if (FabricInput.isKeyDown(redoKey)) return true;
+        return isShiftDown() && FabricInput.isKeyDown(undoKey);
     }
 
     @Override
     public boolean isCopyChordDown() {
-        return isCtrlDown() && InputConstants.isKeyDown(InputConstants.KEY_C);
+        return isCtrlDown() && FabricInput.isKeyDown(InputConstants.KEY_C);
     }
 
     @Override
     public boolean isPasteChordDown() {
-        return isCtrlDown() && InputConstants.isKeyDown(InputConstants.KEY_V);
+        return isCtrlDown() && FabricInput.isKeyDown(InputConstants.KEY_V);
     }
 
     @Override
     public boolean isShiftDown() {
-        return InputConstants.isKeyDown(InputConstants.KEY_LSHIFT) || InputConstants.isKeyDown(InputConstants.KEY_RSHIFT);
+        return FabricInput.isShiftDown();
     }
 
     @Override

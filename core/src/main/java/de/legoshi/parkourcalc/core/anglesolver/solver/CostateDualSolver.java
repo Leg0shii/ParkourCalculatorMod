@@ -128,6 +128,10 @@ public final class CostateDualSolver {
             int last = -1;
             int lim = Math.min(w.coef.length, n);
             for (int t = 0; t < lim; t++) if (w.coef[t] != 0.0) last = t;
+            if (w.axis == 2 && w.coefX != null && w.coefZ != null) {
+                int limZ = Math.min(w.coefZ.length, n);
+                for (int t = 0; t < limZ; t++) if (w.coefZ[t] != 0.0 && t > last) last = t;
+            }
             lastCoupled[j] = last;
         }
         this.gx = new double[n];

@@ -9,7 +9,11 @@ public interface LocalPlayerAccessor {
 
     @Accessor("xLast") void pkc$setXLast(double v);
 
+    //? if >=1.21.2 {
     @Accessor("yLast") void pkc$setYLast(double v);
+    //?} else {
+    /*@Accessor("yLast1") void pkc$setYLast(double v);
+    *///?}
 
     @Accessor("zLast") void pkc$setZLast(double v);
 
@@ -21,7 +25,11 @@ public interface LocalPlayerAccessor {
 
     @Accessor("xLast") double pkc$getXLast();
 
+    //? if >=1.21.2 {
     @Accessor("yLast") double pkc$getYLast();
+    //?} else {
+    /*@Accessor("yLast1") double pkc$getYLast();
+    *///?}
 
     @Accessor("zLast") double pkc$getZLast();
 
@@ -31,7 +39,9 @@ public interface LocalPlayerAccessor {
 
     @Accessor("lastOnGround") void pkc$setLastOnGround(boolean v);
 
+    //? if >=1.21.2 {
     @Accessor("lastHorizontalCollision") boolean pkc$getLastHorizontalCollision();
 
     @Accessor("lastHorizontalCollision") void pkc$setLastHorizontalCollision(boolean v);
+    //?}
 }

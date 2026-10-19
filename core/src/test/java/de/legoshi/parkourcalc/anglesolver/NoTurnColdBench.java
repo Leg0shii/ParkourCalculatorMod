@@ -152,6 +152,15 @@ public class NoTurnColdBench {
             spec = new JumpSpec(sc1, spec.constraints, spec.objective);
             line("standing start: initial horizontal velocity zeroed, incoming sprint off");
         }
+        if (Boolean.getBoolean("pkc.bench.wipe")) {
+            JumpPhysicsInputs sc1 = spec.asScenario().copy();
+            sc1.forwardInputPerTick = new float[sc1.numTicks];
+            sc1.strafeInputPerTick = new float[sc1.numTicks];
+            sc1.sprintPerTick = new boolean[sc1.numTicks];
+            sc1.strafePerTick = null;
+            spec = new JumpSpec(sc1, spec.constraints, spec.objective);
+            line("wiped inputs: forward, strafe and sprint zeroed on every tick, jumps and contact kept");
+        }
         int deleteAt = Integer.getInteger("pkc.bench.deleteAt", -1);
         int deleteK = Integer.getInteger("pkc.bench.deleteK", 0);
         if (deleteAt >= 0 && deleteK > 0) {
@@ -164,7 +173,8 @@ public class NoTurnColdBench {
             spec = insertTicks(spec, insertAt, insertK);
             line("inserted " + insertK + " ground tick(s) before tick " + insertAt + " (n now " + spec.asScenario().numTicks + ")");
         }
-        NoTurnProblem p = NoTurnProblem.from(spec, model, Boolean.getBoolean("pkc.bench.jaAll"));
+        NoTurnProblem p = Boolean.getBoolean("pkc.bench.jaLast") ? NoTurnProblem.fromJaLast(spec, model)
+                : NoTurnProblem.from(spec, model, Boolean.getBoolean("pkc.bench.jaAll"));
         int tiedCount = 0;
         for (boolean b : p.tied) if (b) tiedCount++;
         line("problem: n=" + p.n + " setupEnd=" + p.setupEnd + " jumpTicks=" + Arrays.toString(p.jumpTicks)
@@ -180,6 +190,12 @@ public class NoTurnColdBench {
             }
         }
         line(fc.toString());
+        StringBuilder wl = new StringBuilder("walls:");
+        for (de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint c : p.flatWalls) {
+            wl.append(' ').append(c.mode).append('@').append(c.t1).append(c.cmp == de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint.Cmp.LE ? "<=" : ">=")
+                    .append(String.format(Locale.ROOT, "%.4f", c.rhs));
+        }
+        line(wl.toString());
         StringBuilder tb = new StringBuilder("tied:");
         if (Boolean.getBoolean("pkc.bench.dumpBase")) {
             de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs b = p.base;
@@ -230,7 +246,10 @@ public class NoTurnColdBench {
             if (Boolean.getBoolean("pkc.bench.screenExact")) {
                 StructurePoolDriver sdrv = new StructurePoolDriver(model, new StructurePoolDriver.Config(), cancel, null);
                 sdrv.prepare(p);
-                double[] se = sdrv.screenExact(combos, sprint, sdrv.diskFeasibleTheta(combos, sprint, null));
+                double center = sdrv.diskFeasibleTheta(combos, sprint, null);
+                String thetaOverride = System.getProperty("pkc.bench.screenTheta");
+                if (thetaOverride != null) center = Double.parseDouble(thetaOverride);
+                double[] se = sdrv.screenExact(combos, sprint, center);
                 line(String.format(Locale.ROOT, "screenExact: screenViol=%.6f exactViol=%.6f theta=%.4f phi=%.4f dx=%.4f dz=%.4f"
                         + " window x[%.4f,%.4f] z[%.4f,%.4f] worst=%s objExact=%.6f",
                         se[5], se[0], se[1], se[2], se[3], se[4], se[8], se[9], se[10], se[11], sdrv.wallLabel((int) se[6]), se[7]));
@@ -239,6 +258,17 @@ public class NoTurnColdBench {
             for (int i = 0; i < repeat; i++) {
                 found = certifyHuman(p, model, graph, combos, sprint, budget, cancel, ja);
             }
+            describe("keys", found, humanCombos);
+            if (found != null && found.yaws != null && Boolean.getBoolean("pkc.bench.screenExact")) {
+                StructurePoolDriver sdrv = new StructurePoolDriver(model, new StructurePoolDriver.Config(), cancel, null);
+                sdrv.prepare(p);
+                double cdx = found.startX - p.refStart().x;
+                double cdz = found.startZ - p.refStart().z;
+                double[] sa = sdrv.screenAt(combos, sprint, found.yaws, cdx, cdz);
+                line(String.format(Locale.ROOT, "screenAtCertified: viol=%.6f window x[%.4f,%.4f] z[%.4f,%.4f] groups=%d certifiedShift=%.4f,%.4f byteViolAtCertified=%.6f worst=%s certifierViol=%.6f",
+                        sa[0], sa[1], sa[2], sa[3], sa[4], (int) sa[5], cdx, cdz, sa[6], sdrv.wallLabel((int) sa[7]),
+                        NoTurnCertifier.maxViolation(model, p.buildSpec(combos, sprint, NoTurnKeys.WA, false), found.yaws, found.startX, found.startZ)));
+            }
         }
         if (driver.equals("pool") || driver.equals("all") || driver.equals("ingame")) {
             StructurePoolDriver.Config cfg = new StructurePoolDriver.Config();
@@ -246,11 +276,13 @@ public class NoTurnColdBench {
             if (totalSec > 0) cfg.totalBudgetNanos = totalSec * 1_000_000_000L;
             if (maxCertify > 0) cfg.maxCertify = maxCertify;
             cfg.allowJa = ja || Boolean.getBoolean("pkc.bench.allowJa");
+            cfg.jaAllPass = driver.equals("ingame") ? !Boolean.getBoolean("pkc.bench.noJaAllPass") : Boolean.getBoolean("pkc.bench.jaAllPass");
             if (Integer.getInteger("pkc.bench.poolCap", -1) > 0) cfg.poolCap = Integer.getInteger("pkc.bench.poolCap");
             if (Integer.getInteger("pkc.bench.maxEdges", -1) > 0) cfg.maxEdges = Integer.getInteger("pkc.bench.maxEdges");
             if (Integer.getInteger("pkc.bench.minDwell", -1) > 0) cfg.minDwell = Integer.getInteger("pkc.bench.minDwell");
             if (Integer.getInteger("pkc.bench.perEdgeCertify", -1) > 0) cfg.perEdgeCertify = Integer.getInteger("pkc.bench.perEdgeCertify");
             cfg.playable = Boolean.getBoolean("pkc.bench.playable");
+            if (System.getProperty("pkc.bench.diskKeep") != null) cfg.diskKeep = Double.parseDouble(System.getProperty("pkc.bench.diskKeep"));
             if (Boolean.getBoolean("pkc.bench.fullAlphabet")) {
                 cfg.alphabet = new int[]{NoTurnKeys.NONE, NoTurnKeys.W, NoTurnKeys.WA, NoTurnKeys.WD, NoTurnKeys.A,
                         NoTurnKeys.D, NoTurnKeys.S, NoTurnKeys.SA, NoTurnKeys.SD};
@@ -284,9 +316,9 @@ public class NoTurnColdBench {
             long a = System.nanoTime();
             NoTurnResult r = drv.run(p, graph);
             closeCertify("[pool]");
-            line(String.format(Locale.ROOT, "pool: wall=%.1fs scored=%d byteScreened=%d pool=%d found=%s",
-                    (System.nanoTime() - a) / 1e9, drv.scoredCount(), drv.byteScreenedCount(), drv.pool().size(),
-                    r != null));
+            line(String.format(Locale.ROOT, "pool: wall=%.1fs scored=%d byteScreened=%d pruned=%d pool=%d found=%s",
+                    (System.nanoTime() - a) / 1e9, drv.scoredCount(), drv.byteScreenedCount(), drv.prunedCount(),
+                    drv.pool().size(), r != null));
             certifyStats("pool");
             if (Boolean.getBoolean("pkc.bench.dumpPool")) dumpPool(drv);
             describe("pool", r, humanCombos);

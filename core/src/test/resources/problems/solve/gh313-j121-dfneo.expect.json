@@ -1,1 +1,1 @@
-﻿{ "effort": "FAST", "shouldSolve": false }
+{ "effort": "FAST", "shouldSolve": true, "maxSolveMs": 30000 }

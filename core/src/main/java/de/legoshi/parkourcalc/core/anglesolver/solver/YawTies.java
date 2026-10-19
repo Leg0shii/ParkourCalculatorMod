@@ -42,6 +42,10 @@ public final class YawTies {
         return offset[t];
     }
 
+    public double pinOf(int t) {
+        return pinYaw[t];
+    }
+
     public int fullLength() {
         return n;
     }
