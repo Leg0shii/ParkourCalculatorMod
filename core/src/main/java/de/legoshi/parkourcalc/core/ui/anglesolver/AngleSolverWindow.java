@@ -1176,7 +1176,7 @@ public final class AngleSolverWindow implements RenderInterface {
         String stop = r.getSmoothStop();
         if ("converged".equals(stop)) return "The smoothing stopped on its own: a full pass found nothing left to improve.";
         if ("budget".equals(stop)) return "The smoothing stopped because its time budget ran out; more time might smooth further.";
-        if ("pass limit".equals(stop)) return "The smoothing stopped at its pass limit while a pass was still improving the turn.";
+        if ("pass limit".equals(stop)) return "The smoothing ran without a time budget and stopped at its pass limit while a pass was still improving the turn.";
         if ("cancelled".equals(stop)) return "The smoothing was stopped by hand and kept the best turn found so far.";
         return null;
     }

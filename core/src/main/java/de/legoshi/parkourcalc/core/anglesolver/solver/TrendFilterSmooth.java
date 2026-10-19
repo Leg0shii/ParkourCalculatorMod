@@ -157,7 +157,7 @@ public final class TrendFilterSmooth {
         }
 
         Stop stop = Stop.PASS_LIMIT;
-        for (int pass = 0; pass < MAX_PASSES; pass++) {
+        for (int pass = 0; deadlineNanos != 0L || pass < MAX_PASSES; pass++) {
             if (cancel != null && cancel.get()) {
                 stop = Stop.CANCELLED;
                 break;
