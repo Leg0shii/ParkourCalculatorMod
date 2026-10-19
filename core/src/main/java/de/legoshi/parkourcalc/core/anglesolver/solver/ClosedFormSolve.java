@@ -130,7 +130,7 @@ public final class ClosedFormSolve {
         JumpPhysicsInputs sc = spec.asScenario();
         YawOrder order = carriedOrder(spec, sc);
         if (order != null) return solveOrdered(exact, spec, sc, feasTol, cancel, margins, ascending, cfg, order, null, null);
-        return solveStripped(exact, spec, sc, feasTol, cancel, margins, ascending, cfg);
+        return solveStripped(exact, spec, sc, feasTol, cancel, margins, ascending, cfg, true);
     }
 
     private static YawOrder carriedOrder(JumpSpec spec, JumpPhysicsInputs sc) {
@@ -163,7 +163,7 @@ public final class ClosedFormSolve {
             addTies(active, order, tie, pinLo, pinHi);
             JumpSpec work = new JumpSpec(sc, active, spec.objective);
             Result r = zeroX == null
-                    ? solveStripped(exact, work, sc, feasTol, cancel, margins, ascending, cfg)
+                    ? solveStripped(exact, work, sc, feasTol, cancel, margins, ascending, cfg, false)
                     : solvePatterned(exact, work, sc, feasTol, cancel, cfg, zeroX, zeroZ);
             if (r == null) break;
             r = new Result(YawOrder.carryFreeTicks(lin, sc.startYaw, r.yaws), r.violation, r.feasible, r.amp, r.phase);
@@ -278,7 +278,8 @@ public final class ClosedFormSolve {
     }
 
     private static Result solveStripped(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, double feasTol,
-                                        AtomicBoolean cancel, double[] margins, boolean ascending, Config cfg) {
+                                        AtomicBoolean cancel, double[] margins, boolean ascending, Config cfg,
+                                        boolean scanOnMiss) {
         // The linear model represents only position (X/Z) walls. Facing pins and dF chains prefold into
         // it (eliminated constants / merged direction variables); when the folded ladder lands infeasible
         // on a chain the merge cannot take (key-combo changes or turn offsets), the chain's anchor yaw is
@@ -287,7 +288,7 @@ public final class ClosedFormSolve {
         FacingPrefold pre = FacingPrefold.analyze(spec.constraints, linA);
         if (pre == null) return null;
         Result folded = solveWithPrefold(exact, spec, sc, feasTol, cancel, margins, ascending, cfg, pre);
-        if ((folded != null && folded.feasible) || cancel.get()) return folded;
+        if (!scanOnMiss || (folded != null && folded.feasible) || cancel.get()) return folded;
         FacingPrefold.ChainScan scan = FacingPrefold.scannable(spec.constraints, linA);
         if (scan == null) return folded;
         Result scanned = scanChain(exact, spec, sc, feasTol, cancel, margins, ascending, cfg, scan);
