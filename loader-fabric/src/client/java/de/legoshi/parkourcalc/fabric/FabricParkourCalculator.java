@@ -9,6 +9,8 @@ import com.mojang.renderpearl.api.commands.RenderPass;
 /*import com.mojang.blaze3d.vertex.PoseStack;
 *///?}
 import de.legoshi.parkourcalc.core.Application;
+import de.legoshi.parkourcalc.core.anglesolver.noturn.PoolScreenAccelerator;
+import de.legoshi.parkourcalc.gpu.OpenClPoolScreen;
 import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.io.OsSystemBridge;
@@ -167,6 +169,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         copyTeleportKeyBinding = register("key.parkourcalculator.copy_teleport", InputConstants.KEY_K, category);
         //?}
 
+        PoolScreenAccelerator.register(new OpenClPoolScreen.Factory());
         application.initSettingsStorage(
                 FabricLoader.getInstance().getConfigDir().resolve("parkourcalculator.json")
         );

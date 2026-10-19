@@ -68,6 +68,7 @@ dependencies {
 	// Shared Forge / LWJGL 2 / ImGui bootstrap. Transitively pulls in :core and the
 	// koxx12-dev shim. This loader only contributes Forge wiring on top.
 	shade project(':forge-core')
+	shade project(':gpu')
 
 	// imgui-java natives: must be bundled per-loader since the shared module can't
 	// commit to a runtime LWJGL flavor. Binding API is brought in transitively.

@@ -185,6 +185,22 @@ final class UnitScreen {
         }
     }
 
+    int groupCount() {
+        return groups;
+    }
+
+    int mainGroup() {
+        return mainGroup;
+    }
+
+    int[] groupOf() {
+        return groupOf;
+    }
+
+    int[] freeGroups() {
+        return freeGroups;
+    }
+
     private static int[] toArray(List<Integer> list) {
         int[] out = new int[list.size()];
         for (int i = 0; i < out.length; i++) out[i] = list.get(i);

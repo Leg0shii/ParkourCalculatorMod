@@ -4,6 +4,7 @@ import de.legoshi.parkourcalc.core.anglesolver.ConstraintText;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnKeys;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnRanking;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnResult;
+import de.legoshi.parkourcalc.core.anglesolver.noturn.PoolScreenAccelerator;
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.Fonts;
@@ -234,6 +235,8 @@ public final class StratfinderWindow implements RenderInterface {
         String stage = host.stage();
         ThemeManager.pushTextColor(ThemeManager.textDimColor());
         ImGui.textWrapped(busy && stage != null && !stage.isEmpty() ? stage : " ");
+        String gpu = PoolScreenAccelerator.status();
+        if (gpu != null) ImGui.textWrapped("GPU screen: " + gpu);
         ThemeManager.popTextColor();
     }
 
