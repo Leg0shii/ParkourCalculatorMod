@@ -131,7 +131,7 @@ public final class ClosedFormSolve {
         JumpPhysicsInputs sc = spec.asScenario();
         YawOrder order = carriedOrder(spec, sc);
         if (order != null) return solveOrdered(exact, spec, sc, feasTol, cancel, margins, ascending, cfg, order, null, null);
-        return solveStripped(exact, spec, sc, feasTol, cancel, margins, ascending, cfg);
+        return solveStripped(exact, spec, sc, feasTol, cancel, margins, ascending, cfg, true);
     }
 
     private static YawOrder carriedOrder(JumpSpec spec, JumpPhysicsInputs sc) {
@@ -164,7 +164,7 @@ public final class ClosedFormSolve {
             addTies(active, order, tie, pinLo, pinHi);
             JumpSpec work = new JumpSpec(sc, active, spec.objective);
             Result r = zeroX == null
-                    ? solveStripped(exact, work, sc, feasTol, cancel, margins, ascending, cfg)
+                    ? solveStripped(exact, work, sc, feasTol, cancel, margins, ascending, cfg, false)
                     : solvePatterned(exact, work, sc, feasTol, cancel, cfg, zeroX, zeroZ);
             if (r == null) break;
             r = new Result(YawOrder.carryFreeTicks(lin, sc.startYaw, r.yaws), r.violation, r.feasible, r.amp, r.phase);
@@ -279,19 +279,23 @@ public final class ClosedFormSolve {
     }
 
     private static Result solveStripped(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, double feasTol,
-                                        AtomicBoolean cancel, double[] margins, boolean ascending, Config cfg) {
+                                        AtomicBoolean cancel, double[] margins, boolean ascending, Config cfg,
+                                        boolean scanOnMiss) {
         // The linear model represents only position (X/Z) walls. Facing pins and dF chains prefold into
-        // it (eliminated constants / merged direction variables); any other facing wall bails.
+        // it (eliminated constants / merged direction variables); when the folded ladder lands infeasible
+        // on a chain the merge cannot take (key-combo changes or turn offsets), the chain's anchor yaw is
+        // scanned instead; any other facing wall bails.
         JumpLinearModel linA = new JumpLinearModel(sc);
         FacingPrefold pre = FacingPrefold.analyze(spec.constraints, linA);
-        Result r = pre == null ? null : solveWithPrefold(exact, spec, sc, feasTol, cancel, margins, ascending, cfg, pre);
-        if ((r != null && r.feasible) || cancel.get()) return r;
+        if (pre == null) return null;
+        Result folded = solveWithPrefold(exact, spec, sc, feasTol, cancel, margins, ascending, cfg, pre);
+        if (!scanOnMiss || (folded != null && folded.feasible) || cancel.get()) return folded;
         FacingPrefold.ChainScan scan = FacingPrefold.scannable(spec.constraints, linA);
-        if (scan == null) return r;
+        if (scan == null) return folded;
         Result scanned = scanChain(exact, spec, sc, feasTol, cancel, margins, ascending, cfg, scan);
-        if (scanned == null) return r;
-        if (r == null || scanned.feasible || scanned.violation < r.violation) return scanned;
-        return r;
+        if (scanned == null) return folded;
+        if (folded == null || scanned.feasible || scanned.violation < folded.violation) return scanned;
+        return folded;
     }
 
     private static Result scanChain(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, double feasTol,
