@@ -14,6 +14,31 @@ public final class TrendFilterSmooth {
     private static final double FEAS_TOL = 0.0;
     private static final double[] LAMBDAS = {0.5, 2.0, 8.0, 32.0};
 
+    public enum Stop {
+        CONVERGED("converged"),
+        PASS_LIMIT("pass limit"),
+        BUDGET("budget"),
+        CANCELLED("cancelled");
+
+        public final String label;
+
+        Stop(String label) {
+            this.label = label;
+        }
+    }
+
+    public static final class Report {
+        public final double[] yaws;
+        public final Stop stop;
+        public final long nanos;
+
+        public Report(double[] yaws, Stop stop, long nanos) {
+            this.yaws = yaws;
+            this.stop = stop;
+            this.nanos = nanos;
+        }
+    }
+
     private TrendFilterSmooth() {
     }
 
@@ -24,7 +49,12 @@ public final class TrendFilterSmooth {
 
     public static double[] smooth(ExactJumpModel exact, JumpSpec spec, double[] seedAbsWrapped, double giveBack,
                                   long deadlineNanos, AtomicBoolean cancel) {
-        if (seedAbsWrapped == null || seedAbsWrapped.length < 2) return seedAbsWrapped;
+        return smoothReport(exact, spec, seedAbsWrapped, giveBack, deadlineNanos, cancel).yaws;
+    }
+
+    public static Report smoothReport(ExactJumpModel exact, JumpSpec spec, double[] seedAbsWrapped, double giveBack,
+                                      long deadlineNanos, AtomicBoolean cancel) {
+        if (seedAbsWrapped == null || seedAbsWrapped.length < 2) return new Report(seedAbsWrapped, Stop.CONVERGED, 0L);
         long tAll = System.nanoTime();
         SmoothProfile.reset();
         JumpPhysicsInputs sc = spec.asScenario();
@@ -32,7 +62,9 @@ public final class TrendFilterSmooth {
         JumpConstraintCompiler.Compiled comp = JumpConstraintCompiler.compile(spec);
         double[] seed = Angles.wrapAll(seedAbsWrapped.clone());
         double[] seedGf = sc.toGameFacings(seed);
-        if (comp.maxViolation(seedGf, exact.forward(sc, seedGf)) > FEAS_TOL) return seedAbsWrapped;
+        if (comp.maxViolation(seedGf, exact.forward(sc, seedGf)) > FEAS_TOL) {
+            return new Report(seedAbsWrapped, Stop.CONVERGED, System.nanoTime() - tAll);
+        }
 
         boolean max = spec.objective.sense == Objective.Sense.MAX;
         double reference = spec.objective.evaluate(exact.forward(sc, seedGf));
@@ -69,7 +101,7 @@ public final class TrendFilterSmooth {
         return Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
     }
 
-    private static double[] smoothWith(ExactJumpModel exact, JumpSpec spec, JumpConstraintCompiler.Compiled comp,
+    private static Report smoothWith(ExactJumpModel exact, JumpSpec spec, JumpConstraintCompiler.Compiled comp,
                                        JumpSpec guarded, JumpConstraintCompiler.Compiled guardedComp, JumpPhysicsInputs sc,
                                        double anchor, double[] seed, double giveBack, long deadlineNanos,
                                        AtomicBoolean cancel, SmoothFaceRecovery.Config cfg, long tAll) {
@@ -124,9 +156,16 @@ public final class TrendFilterSmooth {
             }
         }
 
-        for (int pass = 0; pass < MAX_PASSES; pass++) {
-            if (cancel != null && cancel.get()) break;
-            if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) break;
+        Stop stop = Stop.PASS_LIMIT;
+        for (int pass = 0; deadlineNanos != 0L || pass < MAX_PASSES; pass++) {
+            if (cancel != null && cancel.get()) {
+                stop = Stop.CANCELLED;
+                break;
+            }
+            if (deadlineNanos != 0L && System.nanoTime() >= deadlineNanos) {
+                stop = Stop.BUDGET;
+                break;
+            }
             boolean improved = false;
             List<double[]> targets = targets(anchor, best);
             List<double[]> shapeTargets = targets.subList(0, targets.size() - 1);
@@ -149,33 +188,42 @@ public final class TrendFilterSmooth {
                     improved = true;
                 }
             }
-            if (cancel != null && cancel.get()) break;
+            if (cancel != null && cancel.get()) {
+                stop = Stop.CANCELLED;
+                break;
+            }
             now = System.nanoTime();
-            if (deadlineNanos == 0L || now < deadlineNanos) {
-                cfg.deadlineNanos = deadlineNanos;
-                long tT = System.nanoTime();
-                double[] cand = SmoothFaceRecovery.smoothToward(exact, guarded, guardedComp, best, null, FEAS_TOL, cancel, cfg);
-                SmoothProfile.add("target.facewalk", tT);
-                if (cand != null) {
-                    double[] cgf = sc.toGameFacings(cand);
-                    double obj = spec.objective.evaluate(exact.forward(sc, cgf));
-                    boolean inBudget = !(max ? obj < reference - giveBack : obj > reference + giveBack);
-                    if (comp.maxViolation(cgf, exact.forward(sc, cgf)) <= FEAS_TOL && inBudget) {
-                        TurnShape shape = TurnShape.of(anchor, cand);
-                        if (shape.betterThan(bestShape)) {
-                            SmoothProfile.count("accept.facewalk");
-                            best = cand;
-                            bestShape = shape;
-                            improved = true;
-                        }
+            if (deadlineNanos != 0L && now >= deadlineNanos) {
+                stop = Stop.BUDGET;
+                break;
+            }
+            cfg.deadlineNanos = deadlineNanos;
+            long tT = System.nanoTime();
+            double[] cand = SmoothFaceRecovery.smoothToward(exact, guarded, guardedComp, best, null, FEAS_TOL, cancel, cfg);
+            SmoothProfile.add("target.facewalk", tT);
+            if (cand != null) {
+                double[] cgf = sc.toGameFacings(cand);
+                double obj = spec.objective.evaluate(exact.forward(sc, cgf));
+                boolean inBudget = !(max ? obj < reference - giveBack : obj > reference + giveBack);
+                if (comp.maxViolation(cgf, exact.forward(sc, cgf)) <= FEAS_TOL && inBudget) {
+                    TurnShape shape = TurnShape.of(anchor, cand);
+                    if (shape.betterThan(bestShape)) {
+                        SmoothProfile.count("accept.facewalk");
+                        best = cand;
+                        bestShape = shape;
+                        improved = true;
                     }
                 }
             }
             SmoothProfile.count("pass");
-            if (!improved) break;
+            if (!improved) {
+                stop = Stop.CONVERGED;
+                break;
+            }
         }
-        SmoothProfile.report(System.nanoTime() - tAll);
-        return best;
+        long nanos = System.nanoTime() - tAll;
+        SmoothProfile.report(nanos);
+        return new Report(best, stop, nanos);
     }
 
     private static final int MAX_PASSES = 6;
