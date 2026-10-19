@@ -98,4 +98,14 @@ public final class NoTurnKeys {
         }
         return edges;
     }
+
+    public static int countPresses(int[] combos) {
+        return countEdges(combos) + (combos.length > 0 && combos[0] != NONE ? 1 : 0);
+    }
+
+    public static int countBackward(int[] combos) {
+        int n = 0;
+        for (int c : combos) if (FORWARD_SIGN[c] < 0) n++;
+        return n;
+    }
 }

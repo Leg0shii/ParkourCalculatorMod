@@ -17,6 +17,8 @@ import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class WallHomotopyDriver {
@@ -45,6 +47,7 @@ public final class WallHomotopyDriver {
         public int repairKeep = 6;
         public int repairKeepPerTick = 3;
         public boolean excludeJumpTicksFromRepair = true;
+        public int repairFromTick = 1;
         public boolean repairAllowPairs = true;
         public int repairPairCap = 32;
         public boolean finalBroadRepair = true;
@@ -62,10 +65,12 @@ public final class WallHomotopyDriver {
         public long rungCertifyNanos = 9_000_000_000L;
         public long repairCertifyNanos = 9_000_000_000L;
         public long finalCertifyNanos = 45_000_000_000L;
+        public long searchBudgetNanos = 3_000_000_000L;
         public long totalBudgetNanos = 900_000_000_000L;
         public int seedOptimizeSec = 4;
         public int rungOptimizeSec = 5;
         public int finalOptimizeSec = 8;
+        public int threads = 0;
     }
 
     public static final class Incumbent {
@@ -104,6 +109,8 @@ public final class WallHomotopyDriver {
     private final Trace trace = new Trace();
     private final Set<String> specTried = new LinkedHashSet<>();
     private long deadline;
+    private SolverGraph searchGraph;
+    private ExecutorService exec;
 
     public WallHomotopyDriver(ExactJumpModel model, Config cfg, AtomicBoolean cancel, Progress progress) {
         this.model = model;
@@ -123,6 +130,7 @@ public final class WallHomotopyDriver {
         }
         long start = System.nanoTime();
         deadline = start + cfg.totalBudgetNanos;
+        beginSearch();
 
         double seedDelta = cfg.ladder[0];
         NoTurnProblem seedWp = widened(problem, seedDelta);
@@ -131,9 +139,9 @@ public final class WallHomotopyDriver {
         for (Incumbent i : beam) log("  seed " + describe(i));
         if (beam.isEmpty()) {
             progress.update("wall-homotopy: no seed at fat walls", 1.0);
-            return null;
+            return finishSearch(problem, finalGraph, null);
         }
-        return continuation(problem, finalGraph, beam);
+        return finishSearch(problem, finalGraph, continuation(problem, finalGraph, beam));
     }
 
     public NoTurnResult runFromSeeds(NoTurnProblem problem, SolverGraph finalGraph, List<int[]> seedCombos) {
@@ -143,6 +151,7 @@ public final class WallHomotopyDriver {
         }
         long start = System.nanoTime();
         deadline = start + cfg.totalBudgetNanos;
+        beginSearch();
         double seedDelta = cfg.ladder[0];
         NoTurnProblem seedWp = widened(problem, seedDelta);
         SolverGraph graph = de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs.optimize(cfg.seedOptimizeSec);
@@ -160,9 +169,9 @@ public final class WallHomotopyDriver {
         beam = dedup(beam);
         if (beam.isEmpty()) {
             progress.update("wall-homotopy: injected seeds infeasible at fat walls", 1.0);
-            return null;
+            return finishSearch(problem, finalGraph, null);
         }
-        return continuation(problem, finalGraph, beam);
+        return finishSearch(problem, finalGraph, continuation(problem, finalGraph, beam));
     }
 
     private NoTurnResult continuation(NoTurnProblem problem, SolverGraph finalGraph, List<Incumbent> beam) {
@@ -301,26 +310,50 @@ public final class WallHomotopyDriver {
         log("seed: enumerated " + fams.size() + " families across " + byBasin.size() + " first-key basins");
 
         SolverGraph graph = de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs.optimize(cfg.seedOptimizeSec);
+        final NoTurnProblem fwp = wp;
         List<Incumbent> beam = new ArrayList<>();
         for (java.util.Map.Entry<Integer, List<Integer>> e : byBasin.entrySet()) {
             int fk = e.getKey();
-            int feas = 0;
-            int certs = 0;
+            if (cancelled() || System.nanoTime() > deadline) break;
+            final List<int[]> cands = new ArrayList<>();
             for (int gi : e.getValue()) {
-                if (cancelled() || System.nanoTime() > deadline) break;
-                if (feas >= cfg.seedPerFirstKey || certs >= cfg.seedBasinCertifyCap) break;
-                int[] combos = fams.get(gi);
-                boolean[] sprint = NoTurnKeys.latchSprint(combos, 0);
-                NoTurnCertifier.Result res = certify(wp, combos, sprint, graph, cfg.seedCertifyNanos);
-                certs++;
-                if (res != null && res.feasible) {
-                    log("  seed feasible basin=" + NoTurnKeys.label(fk) + " (" + certs + " certs) "
-                            + NoTurnKeys.describe(combos) + " obj=" + fmt(res.objective));
-                    feas++;
-                    beam.add(bind(combos, sprint, delta, res));
-                }
+                if (cands.size() >= cfg.seedBasinCertifyCap) break;
+                cands.add(fams.get(gi));
             }
-            if (feas == 0) log("  seed basin=" + NoTurnKeys.label(fk) + " infeasible in " + certs + " certs");
+            if (cfg.seedPerFirstKey <= 1) {
+                Incumbent win = NoTurnParallel.firstNonNull(exec, cands.size(), cancel, (ci, tc) -> {
+                    if (cancelled() || System.nanoTime() > deadline) return null;
+                    int[] combos = cands.get(ci);
+                    boolean[] sprint = NoTurnKeys.latchSprint(combos, 0);
+                    NoTurnCertifier.Result res = certify(fwp, combos, sprint, tc);
+                    if (res == null || !res.feasible) return null;
+                    return bind(combos, sprint, delta, res);
+                });
+                if (win != null) {
+                    log("  seed feasible basin=" + NoTurnKeys.label(fk) + " " + NoTurnKeys.describe(win.combos)
+                            + " obj=" + fmt(win.objective));
+                    beam.add(win);
+                } else {
+                    log("  seed basin=" + NoTurnKeys.label(fk) + " infeasible in " + cands.size() + " certs");
+                }
+            } else {
+                int feas = 0;
+                int certs = 0;
+                for (int[] combos : cands) {
+                    if (cancelled() || System.nanoTime() > deadline) break;
+                    if (feas >= cfg.seedPerFirstKey) break;
+                    boolean[] sprint = NoTurnKeys.latchSprint(combos, 0);
+                    NoTurnCertifier.Result res = certify(fwp, combos, sprint, graph, cfg.seedCertifyNanos);
+                    certs++;
+                    if (res != null && res.feasible) {
+                        log("  seed feasible basin=" + NoTurnKeys.label(fk) + " (" + certs + " certs) "
+                                + NoTurnKeys.describe(combos) + " obj=" + fmt(res.objective));
+                        feas++;
+                        beam.add(bind(combos, sprint, delta, res));
+                    }
+                }
+                if (feas == 0) log("  seed basin=" + NoTurnKeys.label(fk) + " infeasible in " + certs + " certs");
+            }
         }
         return dedup(beam);
     }
@@ -334,22 +367,26 @@ public final class WallHomotopyDriver {
         for (int radius = cfg.repairWindowRadius; radius <= cfg.repairWindowRadiusMax; radius += 1) {
             if (totalFound > 0) break;
             if (cancelled() || System.nanoTime() > deadline) break;
-            List<int[]> muts = singleFlips(wp, inc.combos, radius);
-            List<int[]> ranked = rankMutations(inc.combos, muts);
-            int certs = 0;
+            List<int[]> ranked = rankMutations(inc.combos, singleFlips(wp, inc.combos, radius));
+            final List<int[]> batch = new ArrayList<>();
             for (int[] m : ranked) {
-                if (cancelled() || System.nanoTime() > deadline) break;
-                if (certs >= cfg.repairCertifyCap) break;
+                if (batch.size() >= cfg.repairCertifyCap) break;
                 if (!tried.add(key(m))) continue;
-                boolean[] sprint = NoTurnKeys.latchSprint(m, 0);
-                NoTurnCertifier.Result r = certify(wp, m, sprint, graph, budget);
-                certs++;
-                if ((certs % 8) == 0) log("    ...flip r=" + radius + " tried " + certs);
+                batch.add(m);
+            }
+            final NoTurnProblem fwp = wp;
+            List<NoTurnCertifier.Result> results = NoTurnParallel.collectAll(exec, batch.size(), cancel, (idx, tc) -> {
+                if (cancelled() || System.nanoTime() > deadline) return null;
+                int[] m = batch.get(idx);
+                return certify(fwp, m, NoTurnKeys.latchSprint(m, 0), tc);
+            });
+            for (int i = 0; i < batch.size(); i++) {
+                NoTurnCertifier.Result r = results.get(i);
                 if (r != null && r.feasible) {
+                    int[] m = batch.get(i);
                     int ct = changeTick(inc.combos, m);
-                    log("  repair(flip,r=" + radius + ") ok @tick" + ct + " after " + certs
-                            + " certs: " + NoTurnKeys.describe(m));
-                    byTick.computeIfAbsent(ct, kk -> new ArrayList<>()).add(bind(m, sprint, delta, r));
+                    log("  repair(flip,r=" + radius + ") ok @tick" + ct + ": " + NoTurnKeys.describe(m));
+                    byTick.computeIfAbsent(ct, kk -> new ArrayList<>()).add(bind(m, NoTurnKeys.latchSprint(m, 0), delta, r));
                     totalFound++;
                 }
             }
@@ -429,7 +466,7 @@ public final class WallHomotopyDriver {
     private List<int[]> singleFlips(NoTurnProblem wp, int[] combos, int radius, boolean skipFirstJump) {
         boolean[] inWindow = window(wp, radius, skipFirstJump);
         List<int[]> out = new ArrayList<>();
-        for (int t = 1; t <= wp.setupEnd; t++) {
+        for (int t = cfg.repairFromTick; t <= wp.setupEnd; t++) {
             if (t == wp.setupEnd && wp.jump[wp.setupEnd]) continue;
             if (!inWindow[t]) continue;
             for (int c : cfg.alphabet) {
@@ -445,7 +482,7 @@ public final class WallHomotopyDriver {
     private List<int[]> pairFlips(NoTurnProblem wp, int[] combos, int radius) {
         boolean[] inWindow = window(wp, radius);
         List<Integer> ticks = new ArrayList<>();
-        for (int t = 1; t <= wp.setupEnd; t++) {
+        for (int t = cfg.repairFromTick; t <= wp.setupEnd; t++) {
             if (t == wp.setupEnd && wp.jump[wp.setupEnd]) continue;
             if (inWindow[t]) ticks.add(t);
         }
@@ -479,7 +516,7 @@ public final class WallHomotopyDriver {
         for (int j = start; j < jumps.length; j++) {
             int jt = jumps[j];
             for (int t = jt - radius; t <= jt + radius; t++) {
-                if (t >= 1 && t <= wp.setupEnd) w[t] = true;
+                if (t >= cfg.repairFromTick && t <= wp.setupEnd) w[t] = true;
             }
         }
         if (cfg.excludeJumpTicksFromRepair) {
@@ -537,9 +574,38 @@ public final class WallHomotopyDriver {
 
     private NoTurnCertifier.Result certify(NoTurnProblem wp, int[] combos, boolean[] sprint,
                                            SolverGraph graph, long budget) {
-        trace.certifies++;
+        return certify(wp, combos, sprint, cancel);
+    }
+
+    private NoTurnCertifier.Result certify(NoTurnProblem wp, int[] combos, boolean[] sprint, AtomicBoolean cancelTok) {
+        synchronized (trace) {
+            trace.certifies++;
+        }
         JumpSpec spec = wp.buildSpec(combos, sprint, cfg.turnCombo, cfg.jaFree);
-        return new NoTurnCertifier(model).certify(spec, graph, budget, cancel);
+        long t0 = System.nanoTime();
+        NoTurnCertifier.Result r = new NoTurnCertifier(model).certifySearch(spec, cfg.searchBudgetNanos, cancelTok);
+        if (TRACE_CERT) {
+            System.out.println(String.format(java.util.Locale.ROOT, "[whd] certify ms=%.1f feasible=%s edges=%d keys=%s",
+                    (System.nanoTime() - t0) / 1e6, r != null && r.feasible, NoTurnKeys.countEdges(combos),
+                    NoTurnKeys.describe(combos)));
+        }
+        return r;
+    }
+
+    private static final boolean TRACE_CERT = Boolean.getBoolean("pkc.graphTrace");
+
+    private void beginSearch() {
+        searchGraph = NoTurnCertifier.searchGraph(cfg.searchBudgetNanos);
+        exec = Executors.newFixedThreadPool(NoTurnParallel.resolveThreads(cfg.threads));
+    }
+
+    private NoTurnResult finishSearch(NoTurnProblem problem, SolverGraph finalGraph, NoTurnResult res) {
+        if (exec != null) {
+            exec.shutdownNow();
+            exec = null;
+        }
+        if (res == null) return null;
+        return new NoTurnCertifier(model).polish(problem, res, finalGraph, cfg.finalCertifyNanos, cancel);
     }
 
     private Incumbent bind(int[] combos, boolean[] sprint, double delta, NoTurnCertifier.Result r) {

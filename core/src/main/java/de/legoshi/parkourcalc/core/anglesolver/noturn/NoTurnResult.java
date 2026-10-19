@@ -14,6 +14,9 @@ public final class NoTurnResult {
     public final double startZ;
     public final double[] yaws;
     public boolean warm = false;
+    public int pressCount = -1;
+    public int airCombo = -1;
+    public int boundary = 0;
 
     public NoTurnResult(int[] combos, boolean[] sprint, int turnCombo, boolean ja, int edges, int sprintEngage,
                         double objective, double violation, double startX, double startZ, double[] yaws) {

@@ -409,11 +409,11 @@ final class SmoothFaceRecovery {
         return c;
     }
 
-    private static double[][] metricCache;
-    private static int metricN = -1;
+    private static final ThreadLocal<double[][]> METRIC_CACHE = new ThreadLocal<>();
+    private static final ThreadLocal<Integer> METRIC_N = ThreadLocal.withInitial(() -> -1);
 
     private static double[][] smoothMetric(int n) {
-        if (metricN == n && metricCache != null) return metricCache;
+        if (METRIC_N.get() == n && METRIC_CACHE.get() != null) return METRIC_CACHE.get();
         double[][] a = new double[n][n];
         double[] cf = {1.0, -2.0, 1.0};
         for (int t = 1; t < n - 1; t++) {
@@ -423,9 +423,10 @@ final class SmoothFaceRecovery {
             }
         }
         for (int i = 0; i < n; i++) a[i][i] += W_EPS;
-        metricCache = invert(a);
-        metricN = n;
-        return metricCache;
+        double[][] inv = invert(a);
+        METRIC_CACHE.set(inv);
+        METRIC_N.set(n);
+        return inv;
     }
 
     private static double[] solveSym(double[][] a, double[] b, double reg) {

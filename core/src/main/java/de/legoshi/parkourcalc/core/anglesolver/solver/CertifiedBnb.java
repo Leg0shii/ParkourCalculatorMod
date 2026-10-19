@@ -198,8 +198,8 @@ public final class CertifiedBnb {
         for (JumpConstraint c : constraints) {
             if (c.mode != JumpConstraint.Mode.F) continue;
             boolean absorbed = c.t2 != null
-                    ? c.op == JumpConstraint.Op.MINUS && c.t2 == c.t1 - 1 && c.t1 >= 1
-                            && ties.groupOf(c.t1) == ties.groupOf(c.t1 - 1)
+                    ? c.op == JumpConstraint.Op.MINUS && c.t2 >= 0 && c.t2 < c.t1
+                            && ties.groupOf(c.t1) == ties.groupOf(c.t2)
                     : ties.varOf(c.t1) < 0;
             if (!absorbed) return null;
         }

@@ -66,6 +66,12 @@ public final class GateFoldFinder {
 
     public static Result solve(ExactJumpModel exact, JumpSpec spec, YawTies ties,
                                AtomicBoolean cancel, long deadlineNanos, boolean stopOnFeasible, boolean homotopy) {
+        return solve(exact, spec, ties, cancel, deadlineNanos, stopOnFeasible, homotopy, null);
+    }
+
+    public static Result solve(ExactJumpModel exact, JumpSpec spec, YawTies ties,
+                               AtomicBoolean cancel, long deadlineNanos, boolean stopOnFeasible, boolean homotopy,
+                               double[] warmSeed) {
         JumpPhysicsInputs sc = spec.asScenario();
         int n = sc.numTicks;
         if (ties == null || !JumpLinearModel.hasFacingWall(spec.constraints)) return null;
@@ -77,7 +83,8 @@ public final class GateFoldFinder {
         double thr = exact.inertiaThreshold();
         boolean perAxis = exact.perAxisInertia();
 
-        double[] baseline = SlpSolve.optimizeBestEffort(exact, spec, 0.0, cancel, null, 120, 200, true);
+        double[] slpSeed = (warmSeed != null && warmSeed.length == n) ? Angles.wrapAll(warmSeed) : null;
+        double[] baseline = SlpSolve.optimizeBestEffort(exact, spec, 0.0, cancel, slpSeed, 120, 200, true);
         if (baseline == null) baseline = seedFromDual(exact, spec, sc, ties);
         if (baseline == null) return null;
 
