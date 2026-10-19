@@ -11,6 +11,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SlpSolve;
+import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
@@ -25,6 +26,16 @@ public final class ThetaSweepAirSlp implements FastCheck {
     private static final int MAX_THETAS = 20;
     private static final double DEDUP_DEG = 3.0;
     private static final long PER_THETA_NANOS = 100_000_000L;
+
+    private final boolean playable;
+
+    public ThetaSweepAirSlp() {
+        this(false);
+    }
+
+    public ThetaSweepAirSlp(boolean playable) {
+        this.playable = playable;
+    }
 
     @Override
     public FastCheckVerdict check(NoTurnProblem problem, JumpSpec spec, ExactJumpModel model, long budgetNanos,
@@ -94,7 +105,13 @@ public final class ThetaSweepAirSlp implements FastCheck {
             double theta = c[0];
             for (int t = 0; t < n; t++) singleAim[t] = theta;
             double[] seed = Angles.wrapAll(singleAim);
-            double[] yaws = SlpSolve.optimize(model, runSpec, 0.0, cancel, seed, cfg);
+            double[] yaws = playable ? SlpSolve.optimizeCentered(model, runSpec, 0.0, cancel, seed, cfg) : null;
+            boolean centered = yaws != null;
+            if (yaws == null) yaws = SlpSolve.optimize(model, runSpec, 0.0, cancel, seed, cfg);
+            if (SolverTrace.on()) {
+                SolverTrace.log("NOTURN", "thetaSweep theta=%.2f playable=%s centered=%s solved=%s",
+                        theta, playable, centered, yaws != null);
+            }
             tried++;
             if (yaws == null) continue;
             double[] wrapped = Angles.wrapAll(yaws);

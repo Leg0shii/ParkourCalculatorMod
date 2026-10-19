@@ -35,6 +35,10 @@ public final class StratfinderWindow implements RenderInterface {
 
         int startTick();
 
+        boolean playable();
+
+        void setPlayable(boolean value);
+
         void start();
 
         void cancel();
@@ -52,6 +56,9 @@ public final class StratfinderWindow implements RenderInterface {
     private static final String COL_OBJ = "Objective";
     private static final String COL_KEYS = "Keys";
     private static final String SEARCH_TIP = "Search key schedules (cold) for a byte-exact NO-TURN: a single settable facing across the run-up, then the turn. Mark the no-turn ticks with dF = 0, set the landing constraints, the jump rows, and a free-start box.";
+    private static final String HUMAN_YAWS_TIP = "Solve the air yaws for a human: aim for clearance instead of the last"
+            + " fraction of distance, then straighten the turn so it never flicks out and back. Lines stay byte-exact and"
+            + " still land; results with fewer turn reversals rank first. Off: hug the objective like the angle solver.";
 
     private final Host host;
     private boolean open;
@@ -92,6 +99,9 @@ public final class StratfinderWindow implements RenderInterface {
             if (Controls.primaryButton("Search")) host.start();
             TooltipUtil.onHover(SEARCH_TIP);
         }
+        ImGui.sameLine();
+        if (Controls.checkbox("Human yaws", host.playable())) host.setPlayable(!host.playable());
+        TooltipUtil.onHover(HUMAN_YAWS_TIP);
         ImGui.sameLine();
         Controls.cursorToRightAlignedButton("Close");
         if (Controls.secondaryButton("Close")) open = false;

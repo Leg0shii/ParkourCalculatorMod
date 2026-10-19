@@ -39,6 +39,7 @@ public final class DeWiggle {
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
         List<JumpConstraint> cs = usable(sc, spec);
         if (cs.isEmpty()) return yawsAbsWrapped;
+        boolean[] held = heldByFacing(sc.numTicks, spec);
         double anchor = sc.startYaw;
         double[] y = Angles.wrapAll(yawsAbsWrapped.clone());
         if (violation(model, sc, compiled, y) > FEAS_TOL) return yawsAbsWrapped;
@@ -74,7 +75,7 @@ public final class DeWiggle {
                     if (runs(anchor, c).size() >= arcs) continue;
                     double viol = violation(model, sc, compiled, c);
                     if (viol > FEAS_TOL) {
-                        c = repair(model, sc, compiled, spec, cs, c, lo, hi, cancel);
+                        c = repair(model, sc, compiled, spec, cs, c, lo, hi, held, cancel);
                         if (c == null) continue;
                         if (runs(anchor, c).size() >= arcs) continue;
                     }
@@ -101,16 +102,16 @@ public final class DeWiggle {
 
     private static double[] repair(ForwardModel model, JumpPhysicsInputs sc, JumpConstraintCompiler.Compiled compiled,
                                    JumpSpec spec, List<JumpConstraint> cs, double[] start, int lo, int hi,
-                                   AtomicBoolean cancel) {
+                                   boolean[] held, AtomicBoolean cancel) {
         int n = start.length;
         double[] y = start.clone();
         double best = violation(model, sc, compiled, y);
         int nf = 0;
-        for (int t = 0; t < n; t++) if (t < lo || t > hi) nf++;
+        for (int t = 0; t < n; t++) if ((t < lo || t > hi) && !held[t]) nf++;
         if (nf == 0) return null;
         int[] free = new int[nf];
         int fi = 0;
-        for (int t = 0; t < n; t++) if (t < lo || t > hi) free[fi++] = t;
+        for (int t = 0; t < n; t++) if ((t < lo || t > hi) && !held[t]) free[fi++] = t;
         double[][] wmat = smoothMetric(free, n);
 
         for (int it = 0; it < NEWTON_ITERS && best > FEAS_TOL; it++) {
@@ -168,6 +169,16 @@ public final class DeWiggle {
             if (!stepped) break;
         }
         return best <= FEAS_TOL ? y : null;
+    }
+
+    private static boolean[] heldByFacing(int n, JumpSpec spec) {
+        boolean[] held = new boolean[n];
+        for (JumpConstraint c : spec.constraints) {
+            if (c.mode != JumpConstraint.Mode.F) continue;
+            if (c.t1 >= 0 && c.t1 < n) held[c.t1] = true;
+            if (c.t2 != null && c.t2 >= 0 && c.t2 < n) held[c.t2] = true;
+        }
+        return held;
     }
 
     private static List<JumpConstraint> usable(JumpPhysicsInputs sc, JumpSpec spec) {

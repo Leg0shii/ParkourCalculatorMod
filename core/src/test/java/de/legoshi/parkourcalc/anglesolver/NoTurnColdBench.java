@@ -268,6 +268,7 @@ public class NoTurnColdBench {
             if (totalSec > 0) cfg.totalBudgetNanos = totalSec * 1_000_000_000L;
             if (maxCertify > 0) cfg.maxCertify = maxCertify;
             cfg.allowJa = ja || Boolean.getBoolean("pkc.bench.allowJa");
+            cfg.playable = Boolean.getBoolean("pkc.bench.playable");
             if (Integer.getInteger("pkc.bench.poolCap", -1) > 0) cfg.poolCap = Integer.getInteger("pkc.bench.poolCap");
             cfg.jaOnly = Boolean.getBoolean("pkc.bench.jaOnly");
             if (Integer.getInteger("pkc.bench.edgeLevel", -1) >= 0) cfg.onlyEdgeLevel = Integer.getInteger("pkc.bench.edgeLevel");
@@ -289,7 +290,7 @@ public class NoTurnColdBench {
                     + " byteSweepSteps=" + cfg.byteSweepSteps + " poolCap=" + cfg.poolCap
                     + " perEdgeCertify=" + cfg.perEdgeCertify + " maxCertify=" + cfg.maxCertify
                     + " certifyBudget=" + cfg.certifyBudgetNanos / 1e9 + "s total=" + cfg.totalBudgetNanos / 1e9
-                    + "s allowJa=" + cfg.allowJa);
+                    + "s allowJa=" + cfg.allowJa + " playable=" + cfg.playable);
             if (Integer.getInteger("pkc.bench.extraCertify", -1) >= 0) cfg.extraCertify = Integer.getInteger("pkc.bench.extraCertify");
             if (Long.getLong("pkc.bench.extraSec", -1L) >= 0) cfg.extraCertifyNanos = Long.getLong("pkc.bench.extraSec") * 1_000_000_000L;
             StructurePoolDriver drv = new StructurePoolDriver(model, cfg, cancel, new StructurePoolDriver.Progress() {
@@ -315,6 +316,7 @@ public class NoTurnColdBench {
             if (r != null) found = r;
             if (r == null && driver.equals("ingame")) {
                 NoTurnFinder.Config bcfg = new NoTurnFinder.Config();
+                bcfg.playable = Boolean.getBoolean("pkc.bench.playable");
                 if (certifySec > 0) bcfg.certifyBudgetNanos = certifySec * 1_000_000_000L;
                 if (totalSec > 0) bcfg.totalCertifyBudgetNanos = totalSec * 1_000_000_000L;
                 NoTurnFinder finder = new NoTurnFinder(model, bcfg, cancel, (s, f) -> progress("[beam]", s));
@@ -329,6 +331,7 @@ public class NoTurnColdBench {
         }
         if (driver.equals("beam")) {
             NoTurnFinder.Config bcfg = new NoTurnFinder.Config();
+            bcfg.playable = Boolean.getBoolean("pkc.bench.playable");
             if (certifySec > 0) bcfg.certifyBudgetNanos = certifySec * 1_000_000_000L;
             if (totalSec > 0) bcfg.totalCertifyBudgetNanos = totalSec * 1_000_000_000L;
             NoTurnFinder finder = new NoTurnFinder(model, bcfg, cancel, (s, f) -> progress("[beam]", s));

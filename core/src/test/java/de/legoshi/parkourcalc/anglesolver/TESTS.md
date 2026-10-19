@@ -202,11 +202,17 @@ anglesolver/
                            (viol 0, obj near the -2805.2990 pure-no-turn optimum); finderReturnsAByteExactNoTurn
                            runs the full cold beam + full-jump screen + certify ladder and asserts a
                            byte-exact no-turn comes back (cold, or the warm seed of the current inputs)
+  NoTurnPlayableTest.java  Human yaws mode of the no-turn certifier (slow): certifies the j1150 pure and
+                           j154 jump-angle structures plain and playable through the search cascade and the
+                           Optimize graph, prints objective, reversals, max turn and the air yaw deltas, and
+                           asserts the playable line stays byte-exact with no more turn reversals
+  NoTurnPlayableUnitTest.java  reversal count, the reversal key in StructurePoolDriver.betterResult, and
+                           NoTurnCertifier.landingGiveBack (margin above the near landing wall)
   NoTurnColdBench.java     no-turn stratfinder timing harness (skipped unless -Dpkc.bench.capture is
                            set): certifies the recorded keys as a no-turn structure (driver=human), a
                            given schedule (driver=keys), or runs the pool / in-game / beam / benders
                            drivers with per-certify timings; pkc.bench.{driver,graph,freeBox,startTick,
-                           allowJa,threads,searchSec,certifySec,totalSec,maxCertify,dumpPool,out};
+                           allowJa,playable,threads,searchSec,certifySec,totalSec,maxCertify,dumpPool,out};
                            pair with -Dpkc.graphTrace=true (per-node ms), -Dpkc.solver.trace=<tag>,
                            -PpkcJfr=<file.jfr>; a ';' list of captures runs them in one JVM
   NoTurnFastCheckBench.java  FastCheck heuristic benchmark (skipped unless -Dpkc.fc.cases=<jsonl> is

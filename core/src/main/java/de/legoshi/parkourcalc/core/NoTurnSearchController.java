@@ -61,6 +61,7 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
     private long endNanos;
     private int startTick;
     private boolean maximize;
+    private volatile boolean playable = true;
 
     public NoTurnSearchController(InputData inputData, SimulationRunner runner, BoxController boxController,
                                   SaveController saveController, AngleSolverState state, AngleSolverEngine engine,
@@ -122,6 +123,16 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
     }
 
     @Override
+    public boolean playable() {
+        return playable;
+    }
+
+    @Override
+    public void setPlayable(boolean value) {
+        playable = value;
+    }
+
+    @Override
     public void start() {
         if (thread != null) return;
         if (engine.isSolving() || otherSolveRunning.getAsBoolean()) {
@@ -158,6 +169,9 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
         poolCfg.certifyBudgetNanos = 4_000_000_000L;
         poolCfg.extraCertify = 200;
         poolCfg.extraCertifyNanos = 45_000_000_000L;
+        poolCfg.playable = playable;
+        NoTurnFinder.Config finderCfg = new NoTurnFinder.Config();
+        finderCfg.playable = playable;
         StructurePoolDriver driver = new StructurePoolDriver(model, poolCfg, cancel, new StructurePoolDriver.Progress() {
             @Override
             public void update(String s, double f) {
@@ -169,7 +183,7 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
                 onFound(r);
             }
         });
-        NoTurnFinder finder = new NoTurnFinder(model, new NoTurnFinder.Config(), cancel, new NoTurnFinder.Progress() {
+        NoTurnFinder finder = new NoTurnFinder(model, finderCfg, cancel, new NoTurnFinder.Progress() {
             @Override
             public void update(String s, double f) {
                 stage = "beam: " + s;

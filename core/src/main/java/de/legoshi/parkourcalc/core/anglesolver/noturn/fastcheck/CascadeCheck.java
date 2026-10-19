@@ -15,9 +15,17 @@ public final class CascadeCheck implements FastCheck {
     public static final long WARM_CAP_NANOS = 300_000_000L;
     public static final long MIN_SEARCH_NANOS = 200_000_000L;
 
-    private final ThetaSweepAirSlp sweep = new ThetaSweepAirSlp();
+    private final ThetaSweepAirSlp sweep;
     private final SlpWarmStartDiskTheta warm = new SlpWarmStartDiskTheta();
     private final SearchGraphCheck search = new SearchGraphCheck();
+
+    public CascadeCheck() {
+        this(false);
+    }
+
+    public CascadeCheck(boolean playable) {
+        this.sweep = new ThetaSweepAirSlp(playable);
+    }
 
     @Override
     public void prepare(NoTurnProblem problem) {

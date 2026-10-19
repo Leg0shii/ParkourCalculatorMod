@@ -34,6 +34,7 @@ public final class NoTurnFinder {
         public int turnCombo = NoTurnKeys.WA;
         public boolean allowJa = true;
         public boolean warmSeedFallback = true;
+        public boolean playable = false;
         public int[] jumpCombos = {NoTurnKeys.W, NoTurnKeys.WA, NoTurnKeys.WD};
         public int threads = 0;
         public int[] alphabet = {NoTurnKeys.NONE, NoTurnKeys.W, NoTurnKeys.WA, NoTurnKeys.WD,
@@ -174,7 +175,7 @@ public final class NoTurnFinder {
         feasible.sort(rankResults(problem.objective));
         NoTurnResult top = best();
         if (top != null) {
-            NoTurnResult polished = new NoTurnCertifier(model).polish(problem, top, graph, cfg.certifyBudgetNanos, cancel);
+            NoTurnResult polished = new NoTurnCertifier(model, cfg.playable).polish(problem, top, graph, cfg.certifyBudgetNanos, cancel);
             if (polished != null) {
                 feasible.set(0, polished);
                 progress.found(polished);
@@ -222,7 +223,7 @@ public final class NoTurnFinder {
     private NoTurnResult certifyCombos(NoTurnProblem problem, SolverGraph graph, int[] combos, boolean[] sprint,
                                        boolean ja, long budgetNanos, AtomicBoolean cancelTok) {
         JumpSpec spec = problem.buildSpec(combos, sprint, cfg.turnCombo, ja);
-        NoTurnCertifier.Result cr = new NoTurnCertifier(model).certifySearch(spec, budgetNanos, cancelTok);
+        NoTurnCertifier.Result cr = new NoTurnCertifier(model, cfg.playable).certifySearch(spec, budgetNanos, cancelTok);
         if (cr == null || !cr.feasible) return null;
         int engage = -1;
         for (int t = 0; t < sprint.length; t++) {
@@ -256,7 +257,7 @@ public final class NoTurnFinder {
 
     private NoTurnResult certifyBaseSeed(NoTurnProblem problem, SolverGraph graph, boolean ja, long budgetNanos) {
         JumpSpec spec = problem.baseSpecWithDf(ja);
-        NoTurnCertifier.Result cr = new NoTurnCertifier(model).certify(spec, graph, budgetNanos, cancel);
+        NoTurnCertifier.Result cr = new NoTurnCertifier(model, cfg.playable).certify(spec, graph, budgetNanos, cancel);
         if (cr == null || !cr.feasible) return null;
         int[] combos = problem.baseCombos();
         boolean[] sprint = problem.baseSprint();
