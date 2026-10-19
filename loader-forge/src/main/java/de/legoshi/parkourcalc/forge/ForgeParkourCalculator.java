@@ -90,6 +90,7 @@ public class ForgeParkourCalculator {
     private KeyBinding solveKeyBinding;
     private KeyBinding solverStartTickKeyBinding;
     private KeyBinding solverEndTickKeyBinding;
+    private KeyBinding solverGoalFromLookKeyBinding;
     private static KeyBinding rerunSimulationKeyBinding;
     private KeyBinding togglePathKeyBinding;
     private KeyBinding copyTeleportKeyBinding;
@@ -156,6 +157,8 @@ public class ForgeParkourCalculator {
         ClientRegistry.registerKeyBinding(solverStartTickKeyBinding);
         solverEndTickKeyBinding = new KeyBinding("key.parkourcalculator.set_solver_end", Keyboard.KEY_O, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(solverEndTickKeyBinding);
+        solverGoalFromLookKeyBinding = new KeyBinding("key.parkourcalculator.set_solver_goal_from_look", Keyboard.KEY_Z, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(solverGoalFromLookKeyBinding);
         rerunSimulationKeyBinding = new KeyBinding("key.parkourcalculator.rerun_simulation", Keyboard.KEY_J, "key.categories.parkourcalculator");
         ClientRegistry.registerKeyBinding(rerunSimulationKeyBinding);
         togglePathKeyBinding = new KeyBinding("key.parkourcalculator.toggle_path", Keyboard.KEY_Y, "key.categories.parkourcalculator");
@@ -449,6 +452,10 @@ public class ForgeParkourCalculator {
         while (solverEndTickKeyBinding.isPressed()) {
             solverEndPressed = true;
         }
+        boolean solverGoalFromLookPressed = false;
+        while (solverGoalFromLookKeyBinding.isPressed()) {
+            solverGoalFromLookPressed = true;
+        }
         boolean rerunSimulationPressed = false;
         while (rerunSimulationKeyBinding.isPressed()) {
             rerunSimulationPressed = true;
@@ -512,6 +519,10 @@ public class ForgeParkourCalculator {
             }
             if (solverEndPressed && chordFree) {
                 application.setSolverLandingTickFromSelection();
+            }
+            if (solverGoalFromLookPressed && chordFree) {
+                boolean angle = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
+                application.setSolverGoalFromLook(angle);
             }
             if (rerunSimulationPressed && chordFree) {
                 application.runSimulation();
@@ -589,6 +600,11 @@ public class ForgeParkourCalculator {
         }
         if (keyCode == solverEndTickKeyBinding.getKeyCode()) {
             application.setSolverLandingTickFromSelection();
+            return true;
+        }
+        if (keyCode == solverGoalFromLookKeyBinding.getKeyCode()) {
+            boolean angle = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
+            application.setSolverGoalFromLook(angle);
             return true;
         }
         if (keyCode == rerunSimulationKeyBinding.getKeyCode()) {

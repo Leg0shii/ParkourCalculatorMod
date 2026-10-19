@@ -199,6 +199,29 @@ public final class AngleSolverState {
         this.goal = goal;
     }
 
+    public void setGoalFromYaw(double yaw) {
+        double facing = Angles.wrap(yaw);
+        customAngle = false;
+        if (facing > -45.0 && facing <= 45.0) {
+            axis = Axis.Z;
+            goal = Goal.MAX;
+        } else if (facing > 45.0 && facing <= 135.0) {
+            axis = Axis.X;
+            goal = Goal.MIN;
+        } else if (facing > -135.0 && facing <= -45.0) {
+            axis = Axis.X;
+            goal = Goal.MAX;
+        } else {
+            axis = Axis.Z;
+            goal = Goal.MIN;
+        }
+    }
+
+    public String goalLabel() {
+        if (customAngle) return String.format(java.util.Locale.ROOT, "angle %.2f", customAngleDeg);
+        return (goal == Goal.MAX ? "+" : "-") + axis.name();
+    }
+
     public boolean isCustomAngle() {
         return customAngle;
     }

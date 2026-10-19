@@ -75,6 +75,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
     private static KeyMapping solveKeyBinding;
     private static KeyMapping solverStartTickKeyBinding;
     private static KeyMapping solverEndTickKeyBinding;
+    private static KeyMapping solverGoalFromLookKeyBinding;
     private static KeyMapping rerunSimulationKeyBinding;
     private static KeyMapping togglePathKeyBinding;
     private static KeyMapping copyTeleportKeyBinding;
@@ -128,6 +129,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         solveKeyBinding = key("key.parkourcalculator.solve", InputConstants.KEY_V);
         solverStartTickKeyBinding = key("key.parkourcalculator.set_solver_start", InputConstants.KEY_I);
         solverEndTickKeyBinding = key("key.parkourcalculator.set_solver_end", InputConstants.KEY_O);
+        solverGoalFromLookKeyBinding = key("key.parkourcalculator.set_solver_goal_from_look", InputConstants.KEY_Z);
         rerunSimulationKeyBinding = key("key.parkourcalculator.rerun_simulation", InputConstants.KEY_J);
         togglePathKeyBinding = key("key.parkourcalculator.toggle_path", InputConstants.KEY_Y);
         copyTeleportKeyBinding = key("key.parkourcalculator.copy_teleport", InputConstants.KEY_K);
@@ -159,6 +161,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
         solveKeyBinding = register("key.parkourcalculator.solve", InputConstants.KEY_V, category);
         solverStartTickKeyBinding = register("key.parkourcalculator.set_solver_start", InputConstants.KEY_I, category);
         solverEndTickKeyBinding = register("key.parkourcalculator.set_solver_end", InputConstants.KEY_O, category);
+        solverGoalFromLookKeyBinding = register("key.parkourcalculator.set_solver_goal_from_look", InputConstants.KEY_Z, category);
         rerunSimulationKeyBinding = register("key.parkourcalculator.rerun_simulation", InputConstants.KEY_J, category);
         togglePathKeyBinding = register("key.parkourcalculator.toggle_path", InputConstants.KEY_Y, category);
         copyTeleportKeyBinding = register("key.parkourcalculator.copy_teleport", InputConstants.KEY_K, category);
@@ -487,6 +490,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         while (solverEndTickKeyBinding.consumeClick()) {
             solverEndPressed = true;
         }
+        boolean solverGoalFromLookPressed = false;
+        while (solverGoalFromLookKeyBinding.consumeClick()) {
+            solverGoalFromLookPressed = true;
+        }
         boolean rerunSimulationPressed = false;
         while (rerunSimulationKeyBinding.consumeClick()) {
             rerunSimulationPressed = true;
@@ -553,6 +560,9 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
         if (solverEndPressed && chordFree) {
             application.setSolverLandingTickFromSelection();
+        }
+        if (solverGoalFromLookPressed && chordFree) {
+            application.setSolverGoalFromLook(FabricInput.isShiftDown());
         }
         if (rerunSimulationPressed && chordFree) {
             application.runSimulation();
@@ -626,6 +636,10 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
         if (key == boundKey(solverEndTickKeyBinding)) {
             application.setSolverLandingTickFromSelection();
+            return true;
+        }
+        if (key == boundKey(solverGoalFromLookKeyBinding)) {
+            application.setSolverGoalFromLook(FabricInput.isShiftDown());
             return true;
         }
         if (key == boundKey(togglePathKeyBinding)) {
