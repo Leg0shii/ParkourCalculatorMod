@@ -87,7 +87,7 @@ public class FirstTickDeltaFacingTest {
     }
 
     @Test
-    public void unsupportedShapeOnTickOneKeepsTheSeamWall() {
+    public void oneWayShapeOnTickOneKeepsTheSeamWall() {
         addDf(0, Constraint.Op.LE);
         JumpSpec spec = engine.debugBuildSpec();
         assertNotNull(spec);

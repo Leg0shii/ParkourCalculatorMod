@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.core.anglesolver.solver;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -53,11 +54,19 @@ public final class ClosedFormSolve {
         public final double[] yaws;
         public final double violation;
         public final boolean feasible;
+        final double[] amp;
+        final double[] phase;
 
         Result(double[] yaws, double violation, boolean feasible) {
+            this(yaws, violation, feasible, null, null);
+        }
+
+        Result(double[] yaws, double violation, boolean feasible, double[] amp, double[] phase) {
             this.yaws = yaws;
             this.violation = violation;
             this.feasible = feasible;
+            this.amp = amp;
+            this.phase = phase;
         }
     }
 
@@ -75,13 +84,22 @@ public final class ClosedFormSolve {
                                                AtomicBoolean cancel, boolean[] zeroX, boolean[] zeroZ) {
         Config cfg = new Config();
         JumpPhysicsInputs sc = spec.asScenario();
+        YawOrder order = carriedOrder(spec, sc);
+        Result r = order != null
+                ? solveOrdered(exact, spec, sc, feasTol, cancel, cfg.margins, true, cfg, order, zeroX, zeroZ)
+                : solvePatterned(exact, spec, sc, feasTol, cancel, cfg, zeroX, zeroZ);
+        return r != null && r.feasible ? r.yaws : null;
+    }
+
+    private static Result solvePatterned(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, double feasTol,
+                                         AtomicBoolean cancel, Config cfg, boolean[] zeroX, boolean[] zeroZ) {
         FacingPrefold pre = FacingPrefold.analyze(spec.constraints, new JumpLinearModel(sc));
         if (pre == null) return null;
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
         for (int[] signs : crossSignCombos(spec.constraints)) {
             Result rs = runLadder(exact, spec, sc, compiled, feasTol, cancel, cfg.margins, true, zeroX, zeroZ,
                     System.nanoTime(), cfg, pre, signs);
-            if (rs != null && rs.feasible) return rs.yaws;
+            if (rs != null && rs.feasible) return rs;
             if (cancel.get()) break;
         }
         return null;
@@ -101,82 +119,172 @@ public final class ClosedFormSolve {
     }
 
     private static final double SCAN_COARSE_STEP = 1.0;
-    private static final double[] SCAN_REFINE_STEPS = {0.1, 0.01, 0.001};
     private static final double SCAN_ARC_STEP = 0.01;
     private static final double SCAN_ARC_TOL = 2.0e-3;
     private static final int SCAN_MAX_CANDIDATES = 240;
 
+    private static final int ORDER_ROUNDS = 16;
+
     private static Result optimizeReturning(ExactJumpModel exact, JumpSpec spec, double feasTol, AtomicBoolean cancel,
                                             double[] margins, boolean ascending, Config cfg) {
         JumpPhysicsInputs sc = spec.asScenario();
-
-        // The linear model represents only position (X/Z) walls. Facing pins and dF chains prefold into
-        // it (eliminated constants / merged direction variables); a single free chain the merge cannot
-        // take (key-combo changes or turn offsets) is scanned over its anchor yaw instead; any other
-        // facing wall bails.
-        JumpLinearModel linA = new JumpLinearModel(sc);
-        FacingPrefold pre = FacingPrefold.analyze(spec.constraints, linA);
-        if (pre == null) {
-            FacingPrefold.ChainScan scan = FacingPrefold.scannable(spec.constraints, linA);
-            if (scan == null) return null;
-            return scanChain(exact, spec, sc, feasTol, cancel, margins, ascending, cfg, scan);
-        }
-        return solveWithPrefold(exact, spec, sc, feasTol, cancel, margins, ascending, cfg, pre);
+        YawOrder order = carriedOrder(spec, sc);
+        if (order != null) return solveOrdered(exact, spec, sc, feasTol, cancel, margins, ascending, cfg, order, null, null);
+        return solveStripped(exact, spec, sc, feasTol, cancel, margins, ascending, cfg);
     }
 
-    private static Result scanChain(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, double feasTol,
-                                    AtomicBoolean cancel, double[] margins, boolean ascending, Config cfg,
-                                    FacingPrefold.ChainScan scan) {
+    private static YawOrder carriedOrder(JumpSpec spec, JumpPhysicsInputs sc) {
+        if (!JumpLinearModel.hasFacingWall(spec.constraints)) return null;
+        YawOrder order = YawOrder.carry(spec.constraints, YawTies.of(spec.constraints, sc.numTicks), sc.numTicks);
+        return order == null || order.isEmpty() ? null : order;
+    }
+
+    private static Result solveOrdered(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, double feasTol,
+                                       AtomicBoolean cancel, double[] margins, boolean ascending, Config cfg,
+                                       YawOrder order, boolean[] zeroX, boolean[] zeroZ) {
         long t0 = System.nanoTime();
-        double[] thetas = candidateThetas(spec, new JumpLinearModel(sc), scan, null);
-        if (thetas == null) {
-            if (SolverTrace.on()) SolverTrace.log("CF", "chain scan trivially infeasible");
-            return null;
-        }
-        boolean max = spec.objective.sense == Objective.Sense.MAX;
-        Result bestFeas = null;
-        double bestScore = 0.0;
-        double bestTheta = Double.NaN;
-        Result bestInfeas = null;
-        for (double th : thetas) {
+        JumpConstraintCompiler.Compiled full = JumpConstraintCompiler.compile(spec);
+        List<JumpConstraint> base = order.stripped(spec.constraints);
+        int n = sc.numTicks;
+        JumpLinearModel lin = new JumpLinearModel(sc);
+        int links = order.links().size();
+        int bounds = order.bounds().size();
+        boolean[] tie = new boolean[links];
+        boolean[] pinLo = new boolean[bounds];
+        boolean[] pinHi = new boolean[bounds];
+        Result best = null;
+        double bestObj = 0.0;
+        Result least = null;
+        int rounds = 0;
+        for (int round = 0; round < ORDER_ROUNDS; round++) {
             if (cancel.get()) break;
-            Result r = solveWithPrefold(exact, spec, sc, feasTol, cancel, margins, ascending, cfg, scan.at(th));
-            if (r == null) continue;
-            if (!r.feasible) {
-                if (bestInfeas == null || r.violation < bestInfeas.violation) bestInfeas = r;
-                continue;
-            }
-            double score = scanScore(exact, spec, sc, r.yaws);
-            if (bestFeas == null || (max ? score > bestScore : score < bestScore)) {
-                bestFeas = r;
-                bestScore = score;
-                bestTheta = th;
-            }
-        }
-        if (bestFeas != null) {
-            for (double step : SCAN_REFINE_STEPS) {
-                double center = bestTheta;
-                for (int i = -9; i <= 9 && !cancel.get(); i++) {
-                    if (i == 0) continue;
-                    double th = center + i * step;
-                    Result r = solveWithPrefold(exact, spec, sc, feasTol, cancel, margins, ascending, cfg, scan.at(th));
-                    if (r == null || !r.feasible) continue;
-                    double score = scanScore(exact, spec, sc, r.yaws);
-                    if (max ? score > bestScore : score < bestScore) {
-                        bestFeas = r;
-                        bestScore = score;
-                        bestTheta = th;
-                    }
+            rounds++;
+            List<JumpConstraint> active = new ArrayList<JumpConstraint>(base);
+            addTies(active, order, tie, pinLo, pinHi);
+            JumpSpec work = new JumpSpec(sc, active, spec.objective);
+            Result r = zeroX == null
+                    ? solveStripped(exact, work, sc, feasTol, cancel, margins, ascending, cfg)
+                    : solvePatterned(exact, work, sc, feasTol, cancel, cfg, zeroX, zeroZ);
+            if (r == null) break;
+            r = new Result(YawOrder.carryFreeTicks(lin, sc.startYaw, r.yaws), r.violation, r.feasible, r.amp, r.phase);
+            double viol = violOnExact(exact, sc, full, r.yaws);
+            if (least == null || viol < least.violation) least = new Result(r.yaws, viol, false);
+            boolean feasible = viol <= feasTol;
+            boolean[] nextTie = tie.clone();
+            boolean[] nextLo = pinLo.clone();
+            boolean[] nextHi = pinHi.clone();
+            boolean fixedPoint = false;
+            if (feasible) {
+                double o = objectiveOf(exact, spec, sc, r.yaws);
+                if (best == null || (spec.objective.sense == Objective.Sense.MAX ? o > bestObj : o < bestObj)) {
+                    best = new Result(r.yaws, viol, true);
+                    bestObj = o;
                 }
             }
+            if (r.amp != null) {
+                YawTies ties = JumpLinearModel.hasFacingWall(active) ? YawTies.of(active, n) : null;
+                double[] ordered = YawOrderDp.orderedYaws(order, ties, n, r.amp, r.phase);
+                if (ordered == null) {
+                    if (SolverTrace.on()) SolverTrace.log("CF", "ordered round=%d dp declined", round);
+                    break;
+                }
+                structureOf(order, ordered, nextTie, nextLo, nextHi);
+                fixedPoint = Arrays.equals(nextTie, tie) && Arrays.equals(nextLo, pinLo) && Arrays.equals(nextHi, pinHi);
+            } else {
+                fixedPoint = true;
+            }
+            if (SolverTrace.on()) {
+                SolverTrace.log("CF", "ordered round=%d ties=%s viol=%.3e feasible=%s next=%s fixed=%s dp=%s fold=%s",
+                        round, flags(tie), viol, feasible, flags(nextTie), fixedPoint,
+                        r.amp == null ? "-" : turns(order, YawOrderDp.orderedYaws(order,
+                                JumpLinearModel.hasFacingWall(active) ? YawTies.of(active, n) : null, n, r.amp, r.phase)),
+                        turns(order, r.yaws));
+            }
+            if (fixedPoint && feasible) break;
+            if (fixedPoint) {
+                structureOf(order, r.yaws, nextTie, nextLo, nextHi);
+                for (int l = 0; l < links; l++) nextTie[l] |= tie[l];
+                for (int b = 0; b < bounds; b++) {
+                    nextLo[b] |= pinLo[b];
+                    nextHi[b] |= pinHi[b];
+                }
+                if (Arrays.equals(nextTie, tie) && Arrays.equals(nextLo, pinLo) && Arrays.equals(nextHi, pinHi)) break;
+            }
+            tie = nextTie;
+            pinLo = nextLo;
+            pinHi = nextHi;
         }
         if (SolverTrace.on()) {
-            SolverTrace.log("CF", "chain scan %s theta=%s cands=%d ms=%.1f",
-                    bestFeas != null ? "solved" : "miss",
-                    bestFeas != null ? SolverTrace.fmt("%.4f", bestTheta) : "-",
-                    thetas.length, (System.nanoTime() - t0) / 1e6);
+            SolverTrace.log("CF", "ordered %s rounds=%d viol=%s us=%.1f",
+                    best != null ? "solved" : "miss", rounds,
+                    least == null ? "none" : SolverTrace.fmt("%.3e", least.violation), (System.nanoTime() - t0) / 1e3);
         }
-        return bestFeas != null ? bestFeas : bestInfeas;
+        return best != null ? best : least;
+    }
+
+    private static String flags(boolean[] f) {
+        StringBuilder sb = new StringBuilder();
+        for (boolean b : f) sb.append(b ? '1' : '0');
+        return sb.toString();
+    }
+
+    private static String turns(YawOrder order, double[] yaws) {
+        if (yaws == null) return "null";
+        StringBuilder sb = new StringBuilder();
+        for (YawOrder.Link l : order.links()) {
+            if (l.laterTick() >= yaws.length) continue;
+            sb.append(SolverTrace.fmt("%.3f", Angles.wrapDelta(yaws[l.hiTick] - yaws[l.loTick]))).append(' ');
+        }
+        return sb.toString().trim();
+    }
+
+    private static void addTies(List<JumpConstraint> active, YawOrder order, boolean[] tie, boolean[] pinLo,
+                                boolean[] pinHi) {
+        List<JumpConstraint> base = new ArrayList<JumpConstraint>(active);
+        active.clear();
+        active.addAll(order.withTies(base, tie, pinLo, pinHi));
+    }
+
+    private static void structureOf(YawOrder order, double[] yaws, boolean[] tie, boolean[] pinLo, boolean[] pinHi) {
+        order.structureOf(yaws, tie, pinLo, pinHi);
+    }
+
+    private static double objectiveOf(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, double[] yaws) {
+        return spec.objective.evaluate(exact.forward(sc, sc.toGameFacings(yaws)));
+    }
+
+    private static void costates(JumpLinearModel lin, double[] cx, double[] cz, List<JumpLinearModel.Wall> walls,
+                                 double[] lambda, double[] amp, double[] phase) {
+        int n = lin.n;
+        double[] gx = cx.clone();
+        double[] gz = cz.clone();
+        for (int j = 0; j < walls.size(); j++) {
+            double lj = lambda[j];
+            if (lj == 0.0) continue;
+            JumpLinearModel.Wall w = walls.get(j);
+            if (w.axis == 0) {
+                for (int t = 0; t < n; t++) gx[t] -= lj * w.coef[t];
+            } else if (w.axis == 1) {
+                for (int t = 0; t < n; t++) gz[t] -= lj * w.coef[t];
+            } else {
+                if (w.coefX != null) for (int t = 0; t < n; t++) gx[t] -= lj * w.coefX[t];
+                if (w.coefZ != null) for (int t = 0; t < n; t++) gz[t] -= lj * w.coefZ[t];
+            }
+        }
+        for (int t = 0; t < n; t++) {
+            amp[t] = lin.mMag(t) * StrictMath.sqrt(gx[t] * gx[t] + gz[t] * gz[t]);
+            phase[t] = lin.recoverYawDeg(t, gx[t], gz[t]);
+        }
+    }
+
+    private static Result solveStripped(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, double feasTol,
+                                        AtomicBoolean cancel, double[] margins, boolean ascending, Config cfg) {
+        // The linear model represents only position (X/Z) walls. Facing pins and dF chains prefold into
+        // it (eliminated constants / merged direction variables); any other facing wall bails.
+        JumpLinearModel linA = new JumpLinearModel(sc);
+        FacingPrefold pre = FacingPrefold.analyze(spec.constraints, linA);
+        if (pre == null) return null;
+        return solveWithPrefold(exact, spec, sc, feasTol, cancel, margins, ascending, cfg, pre);
     }
 
     /** Candidate anchor yaws for the open chain. Walls whose every contributing tick is pinned or in the
@@ -286,11 +394,6 @@ public final class ClosedFormSolve {
         for (int i = 0; i < samples; i++) {
             cands.add(from + span * i / (samples - 1));
         }
-    }
-
-    private static double scanScore(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, double[] yaws) {
-        double o = spec.objective.evaluate(exact.forward(sc, sc.toGameFacings(yaws)));
-        return spec.objective.scored(o, sc.startYaw, yaws);
     }
 
     private static Result solveWithPrefold(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, double feasTol,
@@ -403,6 +506,7 @@ public final class ClosedFormSolve {
         // than a single solve.
         double bestViol = Double.POSITIVE_INFINITY;
         double[] bestYaws = null;
+        double[] bestLambda = null;
         double[] warm = null;
         int rungStall = 0;
         for (double margin : margins) {
@@ -433,13 +537,14 @@ public final class ClosedFormSolve {
             if (viol < bestViol) {
                 bestViol = viol;
                 bestYaws = yaws;
+                bestLambda = r.lambda;
                 rungStall = 0;
             } else {
                 rungStall++;
             }
             if (viol <= feasTol) {
                 if (DEBUG) System.out.printf("  CLOSED -> %.2fus (margin=%.1e)%n", (System.nanoTime() - t0) / 1e3, margin);
-                return new Result(yaws, viol, true);
+                return withCostates(new Result(yaws, viol, true), lin, cx, cz, walls, r.lambda);
             }
             if (ascending && rungStall >= cfg.rungStallLimit) {
                 if (SolverTrace.on()) SolverTrace.log("CF", "ladder stalled after margin=%.2e (bestViol=%.3e)", margin, bestViol);
@@ -449,7 +554,15 @@ public final class ClosedFormSolve {
         if (DEBUG) System.out.printf("  CLOSED FALLBACK %.2fus bestViol=%.2e%n",
                 (System.nanoTime() - t0) / 1e3, bestViol);
         if (bestYaws == null) return null;
-        return new Result(bestYaws, bestViol, false);
+        return withCostates(new Result(bestYaws, bestViol, false), lin, cx, cz, walls, bestLambda);
+    }
+
+    private static Result withCostates(Result r, JumpLinearModel lin, double[] cx, double[] cz,
+                                       List<JumpLinearModel.Wall> walls, double[] lambda) {
+        double[] amp = new double[lin.n];
+        double[] phase = new double[lin.n];
+        costates(lin, cx, cz, walls, lambda, amp, phase);
+        return new Result(r.yaws, r.violation, r.feasible, amp, phase);
     }
 
     private static boolean patternEquals(boolean[] a, boolean[] b) {

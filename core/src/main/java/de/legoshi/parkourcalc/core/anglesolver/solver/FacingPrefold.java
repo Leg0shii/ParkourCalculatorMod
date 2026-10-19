@@ -105,15 +105,16 @@ public final class FacingPrefold {
     private final double[] pinYaw;
     private final double[] mMag;
     private final double[] baseArg;
+    private final double[] offset;
     private final boolean exactLinks;
 
     private FacingPrefold(int n, boolean identity, int vars, int[] varOf, int[] repOf, double[] pinYaw,
                           double[] mMag, double[] baseArg) {
-        this(n, identity, vars, varOf, repOf, pinYaw, mMag, baseArg, true);
+        this(n, identity, vars, varOf, repOf, pinYaw, mMag, baseArg, null, true);
     }
 
     private FacingPrefold(int n, boolean identity, int vars, int[] varOf, int[] repOf, double[] pinYaw,
-                          double[] mMag, double[] baseArg, boolean exactLinks) {
+                          double[] mMag, double[] baseArg, double[] offset, boolean exactLinks) {
         this.n = n;
         this.identity = identity;
         this.vars = vars;
@@ -122,6 +123,7 @@ public final class FacingPrefold {
         this.pinYaw = pinYaw;
         this.mMag = mMag;
         this.baseArg = baseArg;
+        this.offset = offset;
         this.exactLinks = exactLinks;
     }
 
@@ -194,10 +196,6 @@ public final class FacingPrefold {
         }
         Parsed p = parse(constraints, lin);
         if (p == null) return null;
-        int groups = p.mergeOk.length;
-        for (int g = 0; g < groups; g++) {
-            if (Double.isNaN(p.groupPin[g]) && !p.mergeOk[g]) return null;
-        }
         return assemble(p, p.groupPin);
     }
 
@@ -356,11 +354,25 @@ public final class FacingPrefold {
             if (p.mMag[rep[v]] <= 0.0 && p.mMag[t] > 0.0) rep[v] = t;
         }
         return new FacingPrefold(n, false, vars, varOf, Arrays.copyOf(rep, vars), pinYaw, p.mMag, p.baseArg,
-                p.exactLinks);
+                p.offset, p.exactLinks);
+    }
+
+    private double frameDelta(int t) {
+        int rep = repOf[varOf[t]];
+        return (baseArg[t] - baseArg[rep]) + (offset[t] - offset[rep]) * RAD;
+    }
+
+    private boolean rotated() {
+        for (int t = 0; t < n; t++) {
+            if (varOf[t] < 0 || mMag[t] <= 0.0) continue;
+            if (Math.abs(frameDelta(t)) > OFFSET_ZERO_TOL) return true;
+        }
+        return false;
     }
 
     public Reduced reduce(double[] cx, double[] cz, double[] mMagAll, List<JumpLinearModel.Wall> walls) {
         if (identity) return new Reduced(n, cx, cz, mMagAll, walls);
+        if (rotated()) return reduceRotated(cx, cz, walls);
         double[] rcx = new double[vars];
         double[] rcz = new double[vars];
         for (int t = 0; t < n; t++) {
@@ -381,6 +393,49 @@ public final class FacingPrefold {
                 else rc[v] += mMag[t] * k;
             }
             reduced.add(new JumpLinearModel.Wall(w.axis, rc, b, w.eq, w.name, w.p0coef));
+        }
+        double[] ones = new double[vars];
+        Arrays.fill(ones, 1.0);
+        return new Reduced(vars, rcx, rcz, ones, reduced);
+    }
+
+    private Reduced reduceRotated(double[] cx, double[] cz, List<JumpLinearModel.Wall> walls) {
+        double[] cos = new double[n];
+        double[] sin = new double[n];
+        for (int t = 0; t < n; t++) {
+            if (varOf[t] < 0) continue;
+            double d = frameDelta(t);
+            cos[t] = StrictMath.cos(d);
+            sin[t] = StrictMath.sin(d);
+        }
+        double[] rcx = new double[vars];
+        double[] rcz = new double[vars];
+        for (int t = 0; t < n; t++) {
+            int v = varOf[t];
+            if (v < 0) continue;
+            rcx[v] += mMag[t] * (cx[t] * cos[t] + cz[t] * sin[t]);
+            rcz[v] += mMag[t] * (cz[t] * cos[t] - cx[t] * sin[t]);
+        }
+        List<JumpLinearModel.Wall> reduced = new ArrayList<JumpLinearModel.Wall>(walls.size());
+        for (JumpLinearModel.Wall w : walls) {
+            double[] rX = new double[vars];
+            double[] rZ = new double[vars];
+            double b = w.bPrime;
+            for (int t = 0; t < n; t++) {
+                double kx = w.axis == 0 ? w.coef[t] : (w.axis == 2 && w.coefX != null ? w.coefX[t] : 0.0);
+                double kz = w.axis == 1 ? w.coef[t] : (w.axis == 2 && w.coefZ != null ? w.coefZ[t] : 0.0);
+                if (kx == 0.0 && kz == 0.0) continue;
+                int v = varOf[t];
+                if (v < 0) {
+                    b -= kx * pinnedInput(t, 0) + kz * pinnedInput(t, 1);
+                    continue;
+                }
+                rX[v] += mMag[t] * (kx * cos[t] + kz * sin[t]);
+                rZ[v] += mMag[t] * (kz * cos[t] - kx * sin[t]);
+            }
+            double p0X = w.axis == 0 ? w.p0coef : (w.axis == 2 ? w.p0coefX : 0.0);
+            double p0Z = w.axis == 1 ? w.p0coef : (w.axis == 2 ? w.p0coefZ : 0.0);
+            reduced.add(new JumpLinearModel.Wall(rX, rZ, b, w.eq, w.name, p0X, p0Z));
         }
         double[] ones = new double[vars];
         Arrays.fill(ones, 1.0);
@@ -416,6 +471,10 @@ public final class FacingPrefold {
                 }
             }
             yaws[t] = lin.recoverYawDeg(identity ? t : repOf[v], gx, gz);
+            if (!identity) {
+                double off = offset[t] - offset[repOf[v]];
+                if (off != 0.0) yaws[t] = Angles.wrap(yaws[t] + off);
+            }
         }
         return yaws;
     }

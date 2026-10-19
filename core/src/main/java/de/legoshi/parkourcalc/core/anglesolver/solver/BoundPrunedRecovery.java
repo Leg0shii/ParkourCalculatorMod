@@ -63,10 +63,7 @@ public final class BoundPrunedRecovery {
                                  AtomicBoolean cancel, long budgetNanos, double stopAtObjective, Config cfg,
                                  ClosestMiss miss, double[] warmIncumbent) {
         if (spec == null) return null;
-        if (JumpLinearModel.hasFacingWall(spec.constraints)
-                && FacingPrefold.analyze(spec.constraints, new JumpLinearModel(spec.asScenario())) == null) {
-            return null;
-        }
+        if (!accepts(spec)) return null;
         long start = System.nanoTime();
         debugEpoch = start;
         long searchDeadline = start + (long) (budgetNanos * cfg.searchShare);
@@ -266,6 +263,12 @@ public final class BoundPrunedRecovery {
             finished.set(true);
             watchdog.interrupt();
         }
+    }
+
+    public static boolean accepts(JumpSpec spec) {
+        if (!JumpLinearModel.hasFacingWall(spec.constraints)) return true;
+        if (FacingPrefold.analyze(spec.constraints, new JumpLinearModel(spec.asScenario())) != null) return true;
+        return CertifiedBnb.accepts(spec);
     }
 
     private static boolean isTargetWall(JumpConstraint c, JumpSpec spec, boolean max) {

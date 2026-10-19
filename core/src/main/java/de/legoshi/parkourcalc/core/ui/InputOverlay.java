@@ -8,6 +8,7 @@ import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverTable;
 import de.legoshi.parkourcalc.core.ui.anglesolver.SolverWidgets;
+import de.legoshi.parkourcalc.core.anglesolver.Constraint;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import de.legoshi.parkourcalc.core.ui.util.TeleportCommand;
@@ -101,6 +102,9 @@ public final class InputOverlay {
     private static final String MENU_SAVE_AS_NEW_TAS = "Save selected as new TAS";
 
     private static final String MENU_LOCK_YAW = "Lock yaw value";
+    private static final String MENU_YAW_INCREASING = "Yaw may only increase on %d row(s) (dF >= 0)";
+    private static final String MENU_YAW_DECREASING = "Yaw may only decrease on %d row(s) (dF <= 0)";
+    private static final String MENU_YAW_ANY = "Remove dF on %d row(s)";
     private static final String MENU_UNLOCK_YAW = "Unlock yaw value";
 
     private static final String MENU_LOCK_PITCH = "Lock pitch value";
@@ -1576,6 +1580,7 @@ public final class InputOverlay {
         renderApplyPotionOptions();
         renderYawLockOption();
         renderPitchLockOption();
+        renderYawDirectionOption();
 
         // Segment 3: destructive action, kept at the very bottom.
         renderDeleteOption();
@@ -1783,6 +1788,22 @@ public final class InputOverlay {
             return Double.parseDouble(buf.get().trim());
         } catch (NumberFormatException e) {
             return fallback;
+        }
+    }
+
+    private void renderYawDirectionOption() {
+        if (!isSolverActive() || selection.isEmpty()) return;
+        Set<Integer> rows = selection.getSelectedRows();
+        int n = rows.size();
+        ThemeManager.paddedSeparator();
+        if (contextButton(String.format(MENU_YAW_INCREASING, n))) {
+            angleSolver.setYawDirection(rows, Constraint.Op.GE);
+        }
+        if (contextButton(String.format(MENU_YAW_DECREASING, n))) {
+            angleSolver.setYawDirection(rows, Constraint.Op.LE);
+        }
+        if (angleSolver.anyYawDirection(rows) && contextButton(String.format(MENU_YAW_ANY, n))) {
+            angleSolver.setYawDirection(rows, null);
         }
     }
 

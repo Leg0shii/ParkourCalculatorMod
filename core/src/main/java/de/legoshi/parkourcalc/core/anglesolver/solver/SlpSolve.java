@@ -125,19 +125,12 @@ public final class SlpSolve {
         List<JumpConstraint> constraints = spec.constraints;
         JumpPhysicsInputs sc = spec.asScenario();
         YawTies ties = null;
+        List<JumpConstraint> yawIneq = new ArrayList<>();
         if (JumpLinearModel.hasFacingWall(constraints)) {
             ties = YawTies.of(constraints, sc.numTicks);
-            if (ties == null) return null; // not position-linear
-            for (JumpConstraint c : constraints) {
-                if (c.mode != JumpConstraint.Mode.F) continue;
-                if (c.t1 < 0 || c.t1 >= sc.numTicks) continue;
-                boolean delta = c.t2 != null;
-                boolean absorbed = delta
-                        ? c.op == JumpConstraint.Op.MINUS && c.t2 == c.t1 - 1 && c.t1 >= 1
-                                && ties.groupOf(c.t1) == ties.groupOf(c.t1 - 1)
-                        : ties.varOf(c.t1) < 0;
-                if (!absorbed) return null; // not position-linear
-            }
+            YawOrder order = YawOrder.carry(constraints, ties, sc.numTicks);
+            if (order == null) return null;
+            yawIneq.addAll(order.carried());
         }
         for (JumpConstraint c : constraints) {
             if (c.mode == JumpConstraint.Mode.F) continue;
@@ -166,9 +159,11 @@ public final class SlpSolve {
             if (trivialInfeasible[0]) return null; // a violated constant is unfixable
             if (w != null) { ineq.add(c); halves.add(0); walls.add(w); plainWalls.add(w); }
         }
-        int m = walls.size();
+        int mPos = walls.size();
+        ineq.addAll(yawIneq);
+        int m = ineq.size();
         int[] halfSign = new int[m];
-        for (int j = 0; j < m; j++) halfSign[j] = halves.get(j);
+        for (int j = 0; j < mPos; j++) halfSign[j] = halves.get(j);
         if (m == 0) return null; // nothing to restore; the closed form already handles the unconstrained case
 
         double[] cx = new double[n];
@@ -188,6 +183,7 @@ public final class SlpSolve {
         }
 
         if (ties != null) theta = ties.expand(ties.reduce(theta));
+        if (ties == null && !yawIneq.isEmpty()) theta = YawOrder.carryFreeTicks(lin, sc.startYaw, theta);
 
         long t0 = System.nanoTime();
         if (SolverTrace.on()) {
@@ -232,14 +228,17 @@ public final class SlpSolve {
                 double maxViol = exactSlacks(ineq, halfSign, gf, path, viol);
                 double objNorm = normObjective(path, spec.objective, max);
                 if (phase == 1 && maxViol <= -targetClearance) break;
+                for (int j = mPos; j < m; j++) {
+                    if (ineq.get(j).rhs != 0.0) viol[j] += YawOrder.FLOAT_MARGIN_DEG;
+                }
 
                 if (inertiaAware) lin.zeroingPattern(theta, exact.inertiaThreshold(), exact.perAxisInertia(), zeroX, zeroZ);
                 if (inertiaAware && (!patternEquals(lastZeroX, zeroX) || !patternEquals(lastZeroZ, zeroZ))) {
                     List<JumpLinearModel.Wall> rebuilt = null;
                     if (anySet(zeroX) || anySet(zeroZ)) {
                         JumpLinearModel patterned = new JumpLinearModel(sc, zeroX.clone(), zeroZ.clone());
-                        rebuilt = new ArrayList<>(m);
-                        for (int j = 0; j < m; j++) {
+                        rebuilt = new ArrayList<>(mPos);
+                        for (int j = 0; j < mPos; j++) {
                             if (halfSign[j] != 0) {
                                 rebuilt.add(null);
                                 continue;
@@ -277,7 +276,17 @@ public final class SlpSolve {
                     uz[t] = lin.mMag(t) * StrictMath.sin(phi);
                 }
                 double[][] rows = new double[m][dims];
-                for (int j = 0; j < m; j++) {
+                for (int j = mPos; j < m; j++) {
+                    JumpConstraint c = ineq.get(j);
+                    double sgn = c.cmp == JumpConstraint.Cmp.GE ? -1.0 : 1.0;
+                    int v1 = col[c.t1];
+                    if (v1 >= 0) rows[j][v1] += sgn;
+                    if (c.t2 != null) {
+                        int v2 = col[c.t2];
+                        if (v2 >= 0) rows[j][v2] -= sgn;
+                    }
+                }
+                for (int j = 0; j < mPos; j++) {
                     JumpLinearModel.Wall wall = lpWalls.get(j);
                     double[] row = rows[j];
                     double[] cxj = wall.coefX;

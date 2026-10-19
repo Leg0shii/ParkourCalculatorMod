@@ -218,7 +218,7 @@ public final class LongRunSolver {
                 boolean last = (we == jumps);
                 int a = bounds[i], c = bounds[we];
                 JumpPhysicsInputs win = sliceScenario(sc, a, c, seedPos, seedVel, seedYaw);
-                List<JumpConstraint> cons = sliceConstraints(spec, a, c);
+                List<JumpConstraint> cons = sliceConstraints(spec, a, c, seedYaw);
                 Objective obj = last
                         ? new Objective(spec.objective.axis, spec.objective.sense, c - a)   // last window: real objective
                         : new Objective(JumpPhysicsInputs.Axis.Z, Objective.Sense.MAX, c - a); // lead-in: any feasible
@@ -254,8 +254,10 @@ public final class LongRunSolver {
                                 freeBox.pxLo, freeBox.pxHi, freeBox.pzLo, freeBox.pzHi,
                                 seedVel.x, seedVel.x, seedVel.z, seedVel.z);
                         List<JumpConstraint> upTo = new ArrayList<>();
+                        int hiTick = c;
                         for (JumpConstraint jc : spec.constraints) {
-                            if (jc.t1 <= c && (jc.t2 == null || jc.t2 <= c)) upTo.add(jc);
+                            int lim = jc.mode == JumpConstraint.Mode.F ? hiTick - 1 : hiTick;
+                            if (jc.t1 <= lim && (jc.t2 == null || jc.t2 <= lim)) upTo.add(jc);
                         }
                         Objective freeObj = last ? spec.objective
                                 : new Objective(JumpPhysicsInputs.Axis.Z, Objective.Sense.MAX, c);
@@ -405,7 +407,7 @@ public final class LongRunSolver {
         JumpPhysicsInputs win = sliceScenario(sc, from, sc.numTicks, pos, vel, yaw);
         win.incomingSprint = from == 0 ? sc.incomingSprint : sc.sprintAt(from - 1);
         win.incomingAmp = from == 0 ? sc.incomingAmp : sc.speedAmplifierAt(from - 1);
-        List<JumpConstraint> cons = sliceConstraints(full, from, sc.numTicks);
+        List<JumpConstraint> cons = sliceConstraints(full, from, sc.numTicks, yaw);
         Objective obj = new Objective(full.objective.axis, full.objective.sense, full.objective.tick - from);
         return new JumpSpec(win, cons, obj);
     }
@@ -436,12 +438,18 @@ public final class LongRunSolver {
     }
 
     /** The full spec's constraints that fall entirely within [a, c], remapped to window-local ticks. */
-    private static List<JumpConstraint> sliceConstraints(JumpSpec full, int a, int c) {
+    private static List<JumpConstraint> sliceConstraints(JumpSpec full, int a, int c, float seedYaw) {
         List<JumpConstraint> out = new ArrayList<>();
         for (JumpConstraint jc : full.constraints) {
             int hi = jc.mode == JumpConstraint.Mode.F ? c - 1 : c;
             boolean in1 = jc.t1 >= a && jc.t1 <= hi;
             boolean in2 = jc.t2 == null || (jc.t2 >= a && jc.t2 <= hi);
+            if (a > 0 && jc.mode == JumpConstraint.Mode.F && jc.op == JumpConstraint.Op.MINUS && jc.t2 != null
+                    && jc.t1 == a && jc.t2 == a - 1) {
+                out.add(new JumpConstraint(JumpConstraint.Mode.F, 0, null, JumpConstraint.Op.PLUS, jc.cmp,
+                        Angles.wrap(seedYaw + jc.rhs), jc.name));
+                continue;
+            }
             if (in1 && in2) {
                 Integer t2 = jc.t2 == null ? null : (jc.t2 - a);
                 out.add(new JumpConstraint(jc.mode, jc.t1 - a, t2, jc.op, jc.cmp, jc.rhs, jc.name));
