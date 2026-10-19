@@ -49,8 +49,6 @@ public class NoTurnWallHomotopyCrackTest {
         cfg.beamPerEdge = 2;
         cfg.repairKeepPerTick = 7;
         cfg.repairWindowRadiusMax = 1;
-        cfg.rungOptimizeSec = 3;
-        cfg.rungCertifyNanos = 4_500_000_000L;
         cfg.repairCertifyCap = 40;
         cfg.repairAllowPairs = false;
         cfg.speculativeCount = 8;

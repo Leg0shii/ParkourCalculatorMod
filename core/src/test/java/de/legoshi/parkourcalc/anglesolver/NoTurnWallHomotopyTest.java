@@ -50,8 +50,6 @@ public class NoTurnWallHomotopyTest {
         cfg.ladder = new double[]{0.30, 0.12, 0.08, 0.05, 0.03};
         cfg.repairKeepPerTick = 3;
         cfg.repairWindowRadiusMax = 1;
-        cfg.rungOptimizeSec = 3;
-        cfg.rungCertifyNanos = 4_500_000_000L;
         cfg.repairCertifyCap = 24;
         cfg.repairAllowPairs = false;
         cfg.speculativeClose = false;
