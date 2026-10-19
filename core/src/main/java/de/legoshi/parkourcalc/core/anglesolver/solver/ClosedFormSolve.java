@@ -119,6 +119,7 @@ public final class ClosedFormSolve {
     }
 
     private static final double SCAN_COARSE_STEP = 1.0;
+    private static final double[] SCAN_REFINE_STEPS = {0.1, 0.01, 0.001};
     private static final double SCAN_ARC_STEP = 0.01;
     private static final double SCAN_ARC_TOL = 2.0e-3;
     private static final int SCAN_MAX_CANDIDATES = 240;
@@ -283,8 +284,74 @@ public final class ClosedFormSolve {
         // it (eliminated constants / merged direction variables); any other facing wall bails.
         JumpLinearModel linA = new JumpLinearModel(sc);
         FacingPrefold pre = FacingPrefold.analyze(spec.constraints, linA);
-        if (pre == null) return null;
-        return solveWithPrefold(exact, spec, sc, feasTol, cancel, margins, ascending, cfg, pre);
+        Result r = pre == null ? null : solveWithPrefold(exact, spec, sc, feasTol, cancel, margins, ascending, cfg, pre);
+        if ((r != null && r.feasible) || cancel.get()) return r;
+        FacingPrefold.ChainScan scan = FacingPrefold.scannable(spec.constraints, linA);
+        if (scan == null) return r;
+        Result scanned = scanChain(exact, spec, sc, feasTol, cancel, margins, ascending, cfg, scan);
+        if (scanned == null) return r;
+        if (r == null || scanned.feasible || scanned.violation < r.violation) return scanned;
+        return r;
+    }
+
+    private static Result scanChain(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, double feasTol,
+                                    AtomicBoolean cancel, double[] margins, boolean ascending, Config cfg,
+                                    FacingPrefold.ChainScan scan) {
+        long t0 = System.nanoTime();
+        double[] thetas = candidateThetas(spec, new JumpLinearModel(sc), scan, null);
+        if (thetas == null) {
+            if (SolverTrace.on()) SolverTrace.log("CF", "chain scan trivially infeasible");
+            return null;
+        }
+        boolean max = spec.objective.sense == Objective.Sense.MAX;
+        Result bestFeas = null;
+        double bestScore = 0.0;
+        double bestTheta = Double.NaN;
+        Result bestInfeas = null;
+        for (double th : thetas) {
+            if (cancel.get()) break;
+            Result r = solveWithPrefold(exact, spec, sc, feasTol, cancel, margins, ascending, cfg, scan.at(th));
+            if (r == null) continue;
+            if (!r.feasible) {
+                if (bestInfeas == null || r.violation < bestInfeas.violation) bestInfeas = r;
+                continue;
+            }
+            double score = scanScore(exact, spec, sc, r.yaws);
+            if (bestFeas == null || (max ? score > bestScore : score < bestScore)) {
+                bestFeas = r;
+                bestScore = score;
+                bestTheta = th;
+            }
+        }
+        if (bestFeas != null) {
+            for (double step : SCAN_REFINE_STEPS) {
+                double center = bestTheta;
+                for (int i = -9; i <= 9 && !cancel.get(); i++) {
+                    if (i == 0) continue;
+                    double th = center + i * step;
+                    Result r = solveWithPrefold(exact, spec, sc, feasTol, cancel, margins, ascending, cfg, scan.at(th));
+                    if (r == null || !r.feasible) continue;
+                    double score = scanScore(exact, spec, sc, r.yaws);
+                    if (max ? score > bestScore : score < bestScore) {
+                        bestFeas = r;
+                        bestScore = score;
+                        bestTheta = th;
+                    }
+                }
+            }
+        }
+        if (SolverTrace.on()) {
+            SolverTrace.log("CF", "chain scan %s theta=%s cands=%d ms=%.1f",
+                    bestFeas != null ? "solved" : "miss",
+                    bestFeas != null ? SolverTrace.fmt("%.4f", bestTheta) : "-",
+                    thetas.length, (System.nanoTime() - t0) / 1e6);
+        }
+        return bestFeas != null ? bestFeas : bestInfeas;
+    }
+
+    private static double scanScore(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, double[] yaws) {
+        double o = spec.objective.evaluate(exact.forward(sc, sc.toGameFacings(yaws)));
+        return spec.objective.scored(o, sc.startYaw, yaws);
     }
 
     /** Candidate anchor yaws for the open chain. Walls whose every contributing tick is pinned or in the
