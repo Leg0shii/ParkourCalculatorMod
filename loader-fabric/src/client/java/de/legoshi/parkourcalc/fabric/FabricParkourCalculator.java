@@ -562,7 +562,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
             application.setSolverLandingTickFromSelection();
         }
         if (solverGoalFromLookPressed && chordFree) {
-            application.setSolverGoalFromLook(isShiftHeld());
+            application.setSolverGoalFromLook(FabricInput.isShiftDown());
         }
         if (rerunSimulationPressed && chordFree) {
             application.runSimulation();
@@ -639,7 +639,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
             return true;
         }
         if (key == boundKey(solverGoalFromLookKeyBinding)) {
-            application.setSolverGoalFromLook(isShiftHeld());
+            application.setSolverGoalFromLook(FabricInput.isShiftDown());
             return true;
         }
         if (key == boundKey(togglePathKeyBinding)) {
