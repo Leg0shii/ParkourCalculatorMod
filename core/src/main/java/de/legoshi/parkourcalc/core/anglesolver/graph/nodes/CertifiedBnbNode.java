@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class CertifiedBnbNode implements NodeRuntime {
 
     private static final int OPT_SAFETY_NODE_CAP = 500_000;
+    private static final int ORDER_FF_NODE_CAP = 2048;
     private static final long FOLD_FF_NANOS = 30_000_000_000L;
     private static final long FOLD_TAIL_NANOS = 1_500_000_000L;
 
@@ -68,6 +69,7 @@ public final class CertifiedBnbNode implements NodeRuntime {
         if (tickCap > 0 && ctx.scenario.numTicks > tickCap) return NodeOutcome.of(miss, in);
         ExactJumpModel exact = ctx.exactModel;
         JumpSpec dspec = bnbSpec(ctx);
+        if (!optimize && CertifiedBnb.carriesOrder(dspec)) cap = Math.max(cap, ORDER_FF_NODE_CAP);
 
         CertifiedBnb.Config cfg = new CertifiedBnb.Config();
         cfg.mode = optimize ? CertifiedBnb.Mode.OPTIMIZE : CertifiedBnb.Mode.FIRST_FEASIBLE;

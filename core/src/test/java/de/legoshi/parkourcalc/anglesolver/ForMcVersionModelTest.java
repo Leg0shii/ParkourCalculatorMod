@@ -31,6 +31,62 @@ public class ForMcVersionModelTest {
         assertTrue(m.perAxisInertia());
         assertEquals(0.003, m.inertiaThreshold(), 0.0);
         assertTrue(m.modern());
+        assertFalse(m.floatSprintBoost());
+    }
+
+    @Test
+    public void mc1204IsModernPerAxis003WithFloatSprintBoost() {
+        ExactJumpModel m = ExactJumpModel.forMcVersion("1.20.4");
+        assertTrue(m.perAxisInertia());
+        assertEquals(0.003, m.inertiaThreshold(), 0.0);
+        assertTrue(m.modern());
+        assertFalse(m.sine262());
+        assertTrue(m.floatSprintBoost());
+    }
+
+    @Test
+    public void legacyErasKeepTheFloatSprintBoost() {
+        assertTrue(ExactJumpModel.forMcVersion("1.8.9").floatSprintBoost());
+        assertTrue(ExactJumpModel.forMcVersion("1.12.2").floatSprintBoost());
+    }
+
+    @Test
+    public void floatSprintBoostEndsAt1204() {
+        for (String version : new String[]{"1.9", "1.16.5", "1.19.2", "1.20", "1.20.1", "1.20.4"}) {
+            assertTrue(version, ExactJumpModel.forMcVersion(version).floatSprintBoost());
+        }
+        for (String version : new String[]{"1.20.5", "1.20.6", "1.21", "1.21.1", "1.21.4", "1.21.5", "26.3"}) {
+            assertFalse(version, ExactJumpModel.forMcVersion(version).floatSprintBoost());
+        }
+    }
+
+    @Test
+    public void mc19ToMc1214SharePerAxisModernRule() {
+        for (String version : new String[]{"1.9", "1.9.4", "1.16.5", "1.19.2", "1.21", "1.21.1", "1.21.4"}) {
+            ExactJumpModel m = ExactJumpModel.forMcVersion(version);
+            assertTrue(version, m.perAxisInertia());
+            assertEquals(version, 0.003, m.inertiaThreshold(), 0.0);
+            assertTrue(version, m.modern());
+            assertFalse(version, m.sine262());
+        }
+    }
+
+    @Test
+    public void mc1215OnwardIsCombinedOldSine() {
+        for (String version : new String[]{"1.21.5", "1.21.8", "1.22"}) {
+            ExactJumpModel m = ExactJumpModel.forMcVersion(version);
+            assertFalse(version, m.perAxisInertia());
+            assertTrue(version, m.modern());
+            assertFalse(version, m.sine262());
+        }
+    }
+
+    @Test
+    public void yearVersionedUsesDoubleIndexedSine() {
+        ExactJumpModel m = ExactJumpModel.forMcVersion("26.3");
+        assertFalse(m.perAxisInertia());
+        assertTrue(m.modern());
+        assertTrue(m.sine262());
     }
 
     @Test

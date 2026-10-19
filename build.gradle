@@ -14,3 +14,9 @@ allprojects {
 		}
 	}()
 }
+
+tasks.register('chiseledBuild') {
+	group = 'project'
+	description = 'Builds core, forge-core and every Fabric and Forge target jar.'
+	dependsOn ':core:build', ':forge-core:build', ':loader-fabric:chiseledBuild', ':loader-forge:chiseledBuild'
+}

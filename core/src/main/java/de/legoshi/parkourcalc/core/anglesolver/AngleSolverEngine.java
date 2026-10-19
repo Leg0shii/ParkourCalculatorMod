@@ -786,7 +786,8 @@ public final class AngleSolverEngine {
     private static boolean consumeFirstTickZeroTurn(List<ConstraintAt> uiCons, Set<Constraint> consumed) {
         boolean any = false;
         for (ConstraintAt ca : uiCons) {
-            if (ca.absTick != 0 || ca.c.getField() != Constraint.Field.DF || ca.c.isUnsupportedDf()) continue;
+            if (ca.absTick != 0 || ca.c.getField() != Constraint.Field.DF || ca.c.isUnsupportedDf()
+                    || ca.c.getOp() != Constraint.Op.EQ) continue;
             consumed.add(ca.c);
             any = true;
         }
@@ -1187,11 +1188,11 @@ public final class AngleSolverEngine {
     }
 
     public static final String DF_UNSUPPORTED_NOTICE =
-            "This jump carries a delta-facing (dF) constraint that is not dF = 0. Only dF = 0 is"
-            + " supported: the inequality and band shapes were retired, so every solver stage"
-            + " declines the problem before searching and the solve cannot succeed while one is"
-            + " present. Re-select the dF field on that constraint to reset it to dF = 0, or delete"
-            + " the constraint.";
+            "This jump carries a delta-facing (dF) band constraint. dF supports = 0 (hold the facing),"
+            + " >= (turn one way, at least the given degrees per tick) and <= (the other way); a band"
+            + " is not supported, so every solver stage declines the problem before searching and the"
+            + " solve cannot succeed while one is present. Re-select the dF field on that constraint"
+            + " to reset it to dF = 0, or delete the constraint.";
 
     public static final String DF_DIRECTION_LABEL = "Direction unverified";
 
@@ -1199,8 +1200,9 @@ public final class AngleSolverEngine {
             "This jump has a delta-facing (dF) constraint. Landing does not depend on the Solve For"
             + " direction, but optimizing toward it is not guaranteed here: the deterministic"
             + " direction-optimizer only runs without dF constraints, so this result comes from the"
-            + " general search and may not be the exact directional optimum. Ordinary keep-out walls"
-            + " are position constraints and are not affected.";
+            + " general search (the SLP and the certified B&B carry dF >= and dF <= exactly) and may"
+            + " not be the exact directional optimum. Ordinary keep-out walls are position"
+            + " constraints and are not affected.";
 
     /** The byte-exact objective value the given facings realize (for comparing two feasible candidates). */
     private double exactObjective(JumpPhysicsInputs sc, JumpSpec spec, double[] yawsAbsWrapped) {

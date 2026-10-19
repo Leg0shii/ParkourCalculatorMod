@@ -155,18 +155,16 @@ After launch, open the in-game **Mods** menu to confirm Parkour Calculator is li
 
 ## Building from source
 
-The Gradle daemon runs on JDK 21. The Fabric 26.3 module uses a JDK 25 toolchain and the 1.21.3 module a JDK 21 toolchain, both auto-provisioned; the two Forge modules need a local JDK 8.
+The Gradle daemon runs on JDK 21. The Fabric targets use auto-provisioned JDK 25 (26.3), JDK 21 (1.21.3) and JDK 17 (1.20.4) toolchains; the Forge targets need a local JDK 8.
 
 ```bash
 ./gradlew :core:test                      # fast test suite (no Minecraft needed)
-./gradlew :loader-fabric:build            # -> loader-fabric/build/libs/pkc-fabric-<version>.jar
-./gradlew :loader-fabric-1.21.3:build     # -> pkc-fabric-1.21.3-<version>.jar
-./gradlew :loader-forge-1.8.9:build       # -> pkc-forge-1.8.9-<version>.jar
-./gradlew :loader-forge-1.12.2:build      # -> pkc-forge-1.12.2-<version>.jar
-./gradlew build                           # everything
+./gradlew chiseledBuild                   # every jar -> loader-<x>/versions/<mc>/build/libs/pkc-<x>-<mc>-<version>.jar
+./gradlew :loader-fabric:26.3:build       # one target (also :loader-fabric:1.21.3, :loader-fabric:1.20.4)
+./gradlew :loader-forge:1.12.2:build      # one target (also :loader-forge:1.8.9)
 ```
 
-Modules: `core/` is the Minecraft-free UI, data and solver code (Java 8), `forge-core/` holds the parts shared by both Forge loaders, and each `loader-*/` module contains the Minecraft-touching simulation, rendering and entry point for one version. See [`AGENTS.md`](AGENTS.md) for the architecture and [`CONTEXT.md`](CONTEXT.md) for the parkour and movement vocabulary.
+Modules: `core/` is the Minecraft-free UI, data and solver code (Java 8), `forge-core/` holds the parts shared by the Forge targets, and the two `loader-*/` Stonecutter trees contain the Minecraft-touching simulation, rendering and entry point, written once per loader with version regions for the API differences between targets. See [`AGENTS.md`](AGENTS.md) for the architecture and [`CONTEXT.md`](CONTEXT.md) for the parkour and movement vocabulary.
 
 ## Contributing
 

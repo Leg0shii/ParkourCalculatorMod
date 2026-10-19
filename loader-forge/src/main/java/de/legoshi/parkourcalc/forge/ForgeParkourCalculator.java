@@ -1,0 +1,734 @@
+package de.legoshi.parkourcalc.forge;
+
+import de.legoshi.parkourcalc.core.Application;
+import de.legoshi.parkourcalc.core.PlaybackController;
+import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
+import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
+import de.legoshi.parkourcalc.forge.core.io.OsFilePicker;
+import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2ImGuiHost;
+import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2InputState;
+import de.legoshi.parkourcalc.forge.render.ForgeHudOverlayRenderer;
+import de.legoshi.parkourcalc.forge.render.ForgeWorldOverlayRenderer;
+import de.legoshi.parkourcalc.forge.sim.ForgeSimulator;
+import net.minecraft.client.Minecraft;
+//? if <1.12
+//import net.minecraft.client.settings.GameSettings;
+import net.minecraft.client.settings.KeyBinding;
+import net.minecraftforge.client.event.MouseEvent;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.ModContainer;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.eventhandler.EventPriority;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.common.network.FMLNetworkEvent;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.lwjgl.input.Keyboard;
+
+import java.io.File;
+import java.nio.file.Path;
+
+@Mod(modid = ForgeParkourCalculator.MODID, clientSideOnly = true, acceptableRemoteVersions = "*")
+@SuppressWarnings("DuplicatedCode")
+public class ForgeParkourCalculator {
+
+    public static final String MODID = "parkourcalculator";
+
+    private static final Logger LOG = LogManager.getLogger("ParkourCalculator");
+
+    private static Application APP;
+
+    private final ForgeSimulator simulator = new ForgeSimulator();
+    private final Application application = new Application(
+            simulator,
+            new ForgeMinecraftAccess()
+    );
+
+    static de.legoshi.parkourcalc.core.ui.Settings settings() {
+        return APP != null ? APP.getSettings() : null;
+    }
+
+    static java.util.List<de.legoshi.parkourcalc.core.sim.TickState> simStates() {
+        return APP != null
+                ? APP.getBoxController().getStates()
+                : java.util.Collections.<de.legoshi.parkourcalc.core.sim.TickState>emptyList();
+    }
+
+    static de.legoshi.parkourcalc.core.sim.Checkpoint simCheckpoint(int index) {
+        return APP != null ? APP.getCheckpoint(index) : null;
+    }
+
+    private final Lwjgl2ImGuiHost imguiHost = new Lwjgl2ImGuiHost(
+            application.getOverlayManager(),
+            application.getSettings(),
+            application::resolveAutoScaleIfNeeded,
+            () -> Minecraft.getMinecraft().currentScreen instanceof ParkourCalcGuiScreen);
+    private final ForgeWorldOverlayRenderer worldRenderer = new ForgeWorldOverlayRenderer(
+            application.getBoxController(),
+            application.getSettings(),
+            application.getSelection(),
+            application.getYawGizmo(),
+            application::getAngleSolverState);
+    private final ForgeHudOverlayRenderer hudRenderer = new ForgeHudOverlayRenderer();
+    private final ForgePlaybackBridge playbackBridge = new ForgePlaybackBridge();
+
+    private KeyBinding toggleKeyBinding;
+    private KeyBinding deselectKeyBinding;
+    private KeyBinding playbackKeyBinding;
+    private KeyBinding landingConstraintsKeyBinding;
+    private KeyBinding removeConstraintsKeyBinding;
+    private KeyBinding extendPathAndSolveKeyBinding;
+    private KeyBinding applySurfaceStateKeyBinding;
+    private KeyBinding solveKeyBinding;
+    private KeyBinding solverStartTickKeyBinding;
+    private KeyBinding solverEndTickKeyBinding;
+    private KeyBinding solverGoalFromLookKeyBinding;
+    private static KeyBinding rerunSimulationKeyBinding;
+    private KeyBinding togglePathKeyBinding;
+    private KeyBinding copyTeleportKeyBinding;
+    private KeyBinding captureMomentumBlockKeyBinding;
+    private KeyBinding captureCollisionBlockKeyBinding;
+    private KeyBinding captureLandBlockKeyBinding;
+    private KeyBinding clearBlocksKeyBinding;
+    private boolean blockCaptureEnabled;
+    private Path configPath;
+    private Path saveDir;
+
+    @Mod.EventHandler
+    public void preInit(FMLPreInitializationEvent event) {
+        APP = application;
+        configPath = new File(event.getModConfigurationDirectory(), "parkourcalculator.json").toPath();
+        //? if >=1.12 {
+        saveDir = new File(Minecraft.getMinecraft().gameDir, "parkourcalculator").toPath();
+        //?} else {
+        /*saveDir = new File(Minecraft.getMinecraft().mcDataDir, "parkourcalculator").toPath();
+        *///?}
+    }
+
+    @Mod.EventHandler
+    public void onServerStopping(net.minecraftforge.fml.common.event.FMLServerStoppingEvent event) {
+        simulator.onServerStopping(net.minecraftforge.fml.common.FMLCommonHandler.instance().getMinecraftServerInstance());
+    }
+
+    @Mod.EventHandler
+    public void init(FMLInitializationEvent event) {
+        application.setModVersion(modVersion());
+        application.setFilePicker(new OsFilePicker());
+        application.setSaveStore(new FileSystemSaveStore(
+                saveDir,
+                modVersion(),
+                MinecraftForge.MC_VERSION,
+                ForgeWorldDescriptors::current
+        ));
+        application.setPlaybackBridge(playbackBridge);
+        application.getRecorder().setKeyCodes("lwjgl2");
+        application.setBlockPicker(new ForgeBlockPicker());
+        application.initSettingsStorage(configPath);
+        blockCaptureEnabled = application.getSettings().experimentalBlockCapture;
+        application.setupUi();
+        imguiHost.setEditingYawSupplier(application::isEditingYaw);
+        imguiHost.setAllowDetachedSupplier(() -> Minecraft.getMinecraft().currentScreen == null);
+
+        toggleKeyBinding = new KeyBinding("key.parkourcalculator.toggle_ui", Keyboard.KEY_G, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(toggleKeyBinding);
+        deselectKeyBinding = new KeyBinding("key.parkourcalculator.deselect_all", Keyboard.KEY_L, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(deselectKeyBinding);
+        playbackKeyBinding = new KeyBinding("key.parkourcalculator.toggle_playback", Keyboard.KEY_P, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(playbackKeyBinding);
+        landingConstraintsKeyBinding = new KeyBinding("key.parkourcalculator.add_landing_constraints", Keyboard.KEY_B, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(landingConstraintsKeyBinding);
+        removeConstraintsKeyBinding = new KeyBinding("key.parkourcalculator.remove_selected_constraints", Keyboard.KEY_X, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(removeConstraintsKeyBinding);
+        extendPathAndSolveKeyBinding = new KeyBinding("key.parkourcalculator.extend_path_and_solve_to_block", Keyboard.KEY_U, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(extendPathAndSolveKeyBinding);
+        applySurfaceStateKeyBinding = new KeyBinding("key.parkourcalculator.apply_surface_state", Keyboard.KEY_H, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(applySurfaceStateKeyBinding);
+        solveKeyBinding = new KeyBinding("key.parkourcalculator.solve", Keyboard.KEY_V, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(solveKeyBinding);
+        solverStartTickKeyBinding = new KeyBinding("key.parkourcalculator.set_solver_start", Keyboard.KEY_I, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(solverStartTickKeyBinding);
+        solverEndTickKeyBinding = new KeyBinding("key.parkourcalculator.set_solver_end", Keyboard.KEY_O, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(solverEndTickKeyBinding);
+        solverGoalFromLookKeyBinding = new KeyBinding("key.parkourcalculator.set_solver_goal_from_look", Keyboard.KEY_Z, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(solverGoalFromLookKeyBinding);
+        rerunSimulationKeyBinding = new KeyBinding("key.parkourcalculator.rerun_simulation", Keyboard.KEY_J, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(rerunSimulationKeyBinding);
+        togglePathKeyBinding = new KeyBinding("key.parkourcalculator.toggle_path", Keyboard.KEY_Y, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(togglePathKeyBinding);
+        copyTeleportKeyBinding = new KeyBinding("key.parkourcalculator.copy_teleport", Keyboard.KEY_K, "key.categories.parkourcalculator");
+        ClientRegistry.registerKeyBinding(copyTeleportKeyBinding);
+        if (blockCaptureEnabled) {
+            captureMomentumBlockKeyBinding = new KeyBinding("key.parkourcalculator.capture_momentum_block", Keyboard.KEY_M, "key.categories.parkourcalculator");
+            ClientRegistry.registerKeyBinding(captureMomentumBlockKeyBinding);
+            captureCollisionBlockKeyBinding = new KeyBinding("key.parkourcalculator.capture_collision_block", Keyboard.KEY_N, "key.categories.parkourcalculator");
+            ClientRegistry.registerKeyBinding(captureCollisionBlockKeyBinding);
+            captureLandBlockKeyBinding = new KeyBinding("key.parkourcalculator.capture_land_block", Keyboard.KEY_K, "key.categories.parkourcalculator");
+            ClientRegistry.registerKeyBinding(captureLandBlockKeyBinding);
+            clearBlocksKeyBinding = new KeyBinding("key.parkourcalculator.clear_blocks", Keyboard.KEY_DELETE, "key.categories.parkourcalculator");
+            ClientRegistry.registerKeyBinding(clearBlocksKeyBinding);
+        }
+
+        MinecraftForge.EVENT_BUS.register(this);
+        LOG.info("ParkourCalculator init complete. G toggle, L deselect, P playback, B landing constraints, X remove constraints,"
+                + " H surface state, V solve, I/O solver start/goal tick."
+                + (blockCaptureEnabled ? " Block capture ON: M/N/K capture momentum/collision/land block, Delete clear blocks." : ""));
+    }
+
+    private boolean wasPlaybackRunning = false;
+
+    private void recordTickStart() {
+        net.minecraft.client.entity.EntityPlayerSP p = McClient.player();
+        if (p == null) return;
+        if (playbackBridge.replicaActive()) {
+            Minecraft mc = Minecraft.getMinecraft();
+            mc.objectMouseOver = null;
+            net.minecraft.client.settings.KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
+            net.minecraft.client.settings.KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
+        }
+        net.minecraft.entity.player.EntityPlayer g = playbackBridge.replicaActive() ? playbackBridge.ghostEntity() : p;
+        application.getAttemptTracker().tickStart(g.posX, g.posY, g.posZ, g.motionX, g.motionZ, g.rotationYaw, g.onGround,
+                System.nanoTime());
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (!r.isRecording()) return;
+        r.tickStart(p.posX, p.posY, p.posZ, p.rotationYaw, p.rotationPitch, p.onGround);
+    }
+
+    private void recordTickEnd() {
+        net.minecraft.client.entity.EntityPlayerSP p = McClient.player();
+        if (p == null) return;
+        net.minecraft.util.MovementInput in = p.movementInput;
+        boolean sprintKey = Minecraft.getMinecraft().gameSettings.keyBindSprint.isKeyDown();
+        if (playbackBridge.replicaActive()) {
+            application.getAttemptTracker().tickEnd(playbackBridge.getCurrentRow());
+        } else {
+            net.minecraft.client.settings.GameSettings o = Minecraft.getMinecraft().gameSettings;
+            application.getAttemptTracker().tickEnd(o.keyBindForward.isKeyDown(), o.keyBindLeft.isKeyDown(),
+                    o.keyBindBack.isKeyDown(), o.keyBindRight.isKeyDown(), o.keyBindJump.isKeyDown(),
+                    o.keyBindSneak.isKeyDown(), sprintKey || p.isSprinting());
+        }
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (!r.isRecording()) return;
+        r.tickEnd(in.moveForward > 0.0F, in.moveStrafe > 0.0F, in.moveForward < 0.0F, in.moveStrafe < 0.0F,
+                in.jump, in.sneak, sprintKey, p.isSprinting());
+    }
+
+    private void recordFrame(Minecraft mc) {
+        if (mc.currentScreen != null) return;
+        net.minecraft.client.entity.EntityPlayerSP p = McClient.player();
+        if (p == null) return;
+        net.minecraft.entity.player.EntityPlayer g = playbackBridge.replicaActive() ? playbackBridge.ghostEntity() : p;
+        application.getAttemptTracker().frame(g.rotationYaw, System.nanoTime());
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (!r.isRecording()) return;
+        r.frame(p.rotationYaw, p.rotationPitch);
+    }
+
+    private void recordMouse(long eventNs, int dx, int dy) {
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (!r.isRecording() || Minecraft.getMinecraft().currentScreen != null) return;
+        net.minecraft.client.entity.EntityPlayerSP p = McClient.player();
+        if (p == null) return;
+        r.mouse(eventNs, dx, dy, p.rotationYaw, p.rotationPitch);
+    }
+
+    private void recordButton(long eventNs, int button, boolean down) {
+        if (Minecraft.getMinecraft().currentScreen != null) return;
+        application.getAttemptTracker().mouseButton(button, down);
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (!r.isRecording()) return;
+        r.button(eventNs, button, down);
+    }
+
+    @SubscribeEvent
+    public void onKeyInput(net.minecraftforge.fml.common.gameevent.InputEvent.KeyInputEvent event) {
+        int key = Keyboard.getEventKey();
+        if (key == Keyboard.KEY_NONE) return;
+        boolean down = Keyboard.getEventKeyState();
+        if (down && Minecraft.getMinecraft().currentScreen == null && application.getSettings().undoRedoWithoutUi
+                && Lwjgl2InputState.isEditChordPress(key)) {
+            swallowChatOpen(key);
+        }
+        de.legoshi.parkourcalc.core.record.HumanRecorder r = application.getRecorder();
+        if (r.isRecording()) r.key(Keyboard.getEventNanoseconds(), key, down);
+    }
+
+    private static void swallowChatOpen(int key) {
+        drainPresses(Minecraft.getMinecraft().gameSettings.keyBindChat, key);
+        drainPresses(Minecraft.getMinecraft().gameSettings.keyBindCommand, key);
+    }
+
+    private static void drainPresses(KeyBinding binding, int key) {
+        if (binding.getKeyCode() != key) return;
+        while (binding.isPressed()) {
+        }
+    }
+
+    @SubscribeEvent
+    public void onClientTick(TickEvent.ClientTickEvent event) {
+        if (event.phase == TickEvent.Phase.START) {
+            ReplayLockstep.clientBarrierPreTick();
+            manageInputLifecycle();
+            application.tickPlayback();
+            recordTickStart();
+        } else {
+            application.postTickPlayback();
+            recordTickEnd();
+            playbackBridge.syncFrozenPlayerToServer();
+            ReplayLockstep.clientBarrierPostTick();
+        }
+    }
+
+    @SubscribeEvent
+    public void onServerTick(TickEvent.ServerTickEvent event) {
+        if (event.phase == TickEvent.Phase.START) {
+            ReplayLockstep.serverTickStart();
+            ServerTaskPump.serverTickStart();
+        } else {
+            ReplayLockstep.serverTickEnd();
+        }
+    }
+
+    private void manageInputLifecycle() {
+        net.minecraft.client.entity.EntityPlayerSP p = McClient.player();
+        if (p == null) {
+            if (wasPlaybackRunning) {
+                application.getPlayback().stop();
+                playbackBridge.resetInputOverride();
+                playbackBridge.endGhostPlayback();
+                ReplayLockstep.disengage();
+                wasPlaybackRunning = false;
+            }
+            return;
+        }
+        boolean isRunning = application.isPlaybackRunning();
+        if (isRunning && !wasPlaybackRunning) {
+            playbackBridge.installPlaybackInput(p);
+            if (application.getSettings().lockstepReplay && playbackBridge.isSingleplayer()) {
+                ReplayLockstep.engage();
+            }
+        } else if (!isRunning && wasPlaybackRunning) {
+            playbackBridge.restorePlaybackInput(p);
+            playbackBridge.endGhostPlayback();
+            ReplayLockstep.disengage();
+        }
+        wasPlaybackRunning = isRunning;
+    }
+
+    @SubscribeEvent
+    public void onPlayerTick(TickEvent.PlayerTickEvent event) {
+        if (event.phase != TickEvent.Phase.START) return;
+        if (!application.isPlaybackRunning()) return;
+        net.minecraft.entity.player.EntityPlayer p = event.player;
+        net.minecraft.entity.player.EntityPlayer target = playbackBridge.ghostEntity();
+        if (target == null) target = McClient.player();
+        if (p != target) return;
+        if (application.getPlayback().currentTick() == 0) {
+            p.onGround = application.getPlayback().firstTickOnGround();
+            p.fallDistance = 0.0F;
+        }
+    }
+
+    @SubscribeEvent
+    public void onLivingAttack(net.minecraftforge.event.entity.living.LivingAttackEvent event) {
+        if (!application.isPlaybackRunning()) return;
+        //? if >=1.12 {
+        if (!(event.getEntityLiving() instanceof net.minecraft.entity.player.EntityPlayer)) return;
+        //?} else {
+        /*if (!(event.entityLiving instanceof net.minecraft.entity.player.EntityPlayer)) return;
+        *///?}
+        de.legoshi.parkourcalc.core.ui.Settings s = application.getSettings();
+        if (s.pairedSimulation && s.pairedDamage) return;
+        event.setCanceled(true);
+    }
+
+    @SubscribeEvent
+    public void onLivingHurt(net.minecraftforge.event.entity.living.LivingHurtEvent event) {
+        if (!application.isPlaybackRunning()) return;
+        if (!application.getSettings().pairedSimulation) return;
+        //? if >=1.12 {
+        if (!(event.getEntityLiving() instanceof net.minecraft.entity.player.EntityPlayerMP)) return;
+        if (event.getEntityLiving() instanceof de.legoshi.parkourcalc.forge.sim.paired.PairedServerPlayer) return;
+        net.minecraft.client.entity.EntityPlayerSP local = McClient.player();
+        if (local == null || !event.getEntityLiving().getUniqueID().equals(local.getUniqueID())) return;
+        //?} else {
+        /*if (!(event.entityLiving instanceof net.minecraft.entity.player.EntityPlayerMP)) return;
+        if (event.entityLiving instanceof de.legoshi.parkourcalc.forge.sim.paired.PairedServerPlayer) return;
+        net.minecraft.client.entity.EntityPlayerSP local = McClient.player();
+        if (local == null || !event.entityLiving.getUniqueID().equals(local.getUniqueID())) return;
+        *///?}
+        event.setCanceled(true);
+    }
+
+    @SubscribeEvent
+    public void onServerPlayerTickEnd(TickEvent.PlayerTickEvent event) {
+        // Must run AFTER EntityPlayer.onUpdate resets noClip=isSpectator() and BEFORE
+        // networkSystem.networkTick where the in-memory channel dispatches C03 inline.
+        if (event.phase != TickEvent.Phase.END) return;
+        if (!(event.player instanceof net.minecraft.entity.player.EntityPlayerMP)) return;
+        if (event.player instanceof de.legoshi.parkourcalc.forge.sim.paired.PairedServerPlayer) return;
+        if (!application.isPlaybackRunning()) return;
+        if (!playbackBridge.isSingleplayer()) return;
+        if (application.getSettings().pairedSimulation) return;
+        event.player.noClip = true;
+    }
+
+    private void togglePlayback() {
+        PlaybackController pc = application.getPlayback();
+        if (pc.isRunning()) {
+            pc.stop();
+        } else if (pc.canStart()) {
+            pc.start();
+        }
+    }
+
+    @SubscribeEvent
+    public void onHudRender(RenderGameOverlayEvent.Post event) {
+        //? if >=1.12 {
+        if (event.getType() != RenderGameOverlayEvent.ElementType.TEXT) return;
+        //?} else {
+        /*if (event.type != RenderGameOverlayEvent.ElementType.TEXT) return;
+        *///?}
+        String label = application.hudBadgeLabel();
+        if (label != null) hudRenderer.render(label, application.hudBadgeAlpha());
+    }
+
+    @SubscribeEvent
+    public void onRenderTick(TickEvent.RenderTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
+
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc == null) return;
+
+        recordFrame(mc);
+        application.renderPlayback();
+
+        // Drain queued presses; only act when no MC screen owns input. Close path and
+        // in-UI handling live in the GuiScreen.
+        boolean toggled = false;
+        while (toggleKeyBinding.isPressed()) {
+            toggled = true;
+        }
+        boolean deselectPressed = false;
+        while (deselectKeyBinding.isPressed()) {
+            deselectPressed = true;
+        }
+        boolean playbackPressed = false;
+        while (playbackKeyBinding.isPressed()) {
+            playbackPressed = true;
+        }
+        boolean landingConstraintsPressed = false;
+        while (landingConstraintsKeyBinding.isPressed()) {
+            landingConstraintsPressed = true;
+        }
+        boolean removeConstraintsPressed = false;
+        while (removeConstraintsKeyBinding.isPressed()) {
+            removeConstraintsPressed = true;
+        }
+        boolean extendPathAndSolvePressed = false;
+        while (extendPathAndSolveKeyBinding.isPressed()) {
+            extendPathAndSolvePressed = true;
+        }
+        boolean applySurfaceStatePressed = false;
+        while (applySurfaceStateKeyBinding.isPressed()) {
+            applySurfaceStatePressed = true;
+        }
+        boolean solvePressed = false;
+        while (solveKeyBinding.isPressed()) {
+            solvePressed = true;
+        }
+        boolean solverStartPressed = false;
+        while (solverStartTickKeyBinding.isPressed()) {
+            solverStartPressed = true;
+        }
+        boolean solverEndPressed = false;
+        while (solverEndTickKeyBinding.isPressed()) {
+            solverEndPressed = true;
+        }
+        boolean solverGoalFromLookPressed = false;
+        while (solverGoalFromLookKeyBinding.isPressed()) {
+            solverGoalFromLookPressed = true;
+        }
+        boolean rerunSimulationPressed = false;
+        while (rerunSimulationKeyBinding.isPressed()) {
+            rerunSimulationPressed = true;
+        }
+        boolean togglePathPressed = false;
+        while (togglePathKeyBinding.isPressed()) {
+            togglePathPressed = true;
+        }
+        boolean copyTeleportPressed = false;
+        while (copyTeleportKeyBinding.isPressed()) {
+            copyTeleportPressed = true;
+        }
+        boolean captureMomentum = false;
+        boolean captureCollision = false;
+        boolean captureLand = false;
+        boolean clearBlocks = false;
+        if (blockCaptureEnabled) {
+            while (captureMomentumBlockKeyBinding.isPressed()) {
+                captureMomentum = true;
+            }
+            while (captureCollisionBlockKeyBinding.isPressed()) {
+                captureCollision = true;
+            }
+            while (captureLandBlockKeyBinding.isPressed()) {
+                captureLand = true;
+            }
+            while (clearBlocksKeyBinding.isPressed()) {
+                clearBlocks = true;
+            }
+        }
+        if (mc.currentScreen == null) {
+            boolean chordFree = !isCtrlHeld();
+            if (toggled && chordFree) {
+                openOverlay(mc);
+            }
+            if (deselectPressed && chordFree) {
+                application.getSelection().clear();
+            }
+            if (playbackPressed && chordFree) {
+                togglePlayback();
+            }
+            if (landingConstraintsPressed) {
+                boolean enter = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
+                boolean remove = Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL);
+                application.onConstraintKey(enter, remove);
+            }
+            if (removeConstraintsPressed && chordFree) {
+                application.removeSelectedConstraints();
+            }
+            if (extendPathAndSolvePressed && chordFree) {
+                triggerExtendPathAndSolve(mc);
+            }
+            if (applySurfaceStatePressed && chordFree) {
+                application.applyPathSurfaceState();
+            }
+            if (solvePressed && chordFree) {
+                application.solveAngleSolver();
+            }
+            if (solverStartPressed && chordFree) {
+                application.setSolverStartTickFromSelection();
+            }
+            if (solverEndPressed && chordFree) {
+                application.setSolverLandingTickFromSelection();
+            }
+            if (solverGoalFromLookPressed && chordFree) {
+                boolean angle = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
+                application.setSolverGoalFromLook(angle);
+            }
+            if (rerunSimulationPressed && chordFree) {
+                application.runSimulation();
+            }
+            if (togglePathPressed && chordFree) {
+                application.toggleShowPath();
+            }
+            if (copyTeleportPressed && chordFree) {
+                application.copyTeleportCommand();
+            }
+            if (captureMomentum && chordFree) {
+                application.captureAngleSolverBlock(BlockSelection.Kind.MOMENTUM);
+            }
+            if (captureCollision && chordFree) {
+                application.captureAngleSolverBlock(BlockSelection.Kind.COLLISION);
+            }
+            if (captureLand && chordFree) {
+                application.captureAngleSolverBlock(BlockSelection.Kind.LAND);
+            }
+            if (clearBlocks && chordFree) {
+                application.clearAngleSolverBlocks();
+            }
+        }
+        if (application.isReady()) {
+            imguiHost.renderFrame(mc.displayWidth, mc.displayHeight);
+        }
+    }
+
+    private void openOverlay(Minecraft mc) {
+        application.setControlPanelOpen(true);
+        mc.displayGuiScreen(new ParkourCalcGuiScreen(
+                toggleKeyBinding.getKeyCode(),
+                deselectKeyBinding.getKeyCode(),
+                playbackKeyBinding.getKeyCode(),
+                imguiHost,
+                application.getSelection(),
+                application,
+                this::togglePlayback,
+                this::dispatchHotkey,
+                () -> application.setControlPanelOpen(false)
+        ));
+    }
+
+    private static boolean isCtrlHeld() {
+        return Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL);
+    }
+
+    private boolean dispatchHotkey(int keyCode) {
+        if (isCtrlHeld() && keyCode != landingConstraintsKeyBinding.getKeyCode()) return false;
+        if (keyCode == landingConstraintsKeyBinding.getKeyCode()) {
+            boolean enter = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
+            boolean remove = Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL);
+            application.onConstraintKey(enter, remove);
+            return true;
+        }
+        if (keyCode == removeConstraintsKeyBinding.getKeyCode()) {
+            application.removeSelectedConstraints();
+            return true;
+        }
+        if (keyCode == extendPathAndSolveKeyBinding.getKeyCode()) {
+            triggerExtendPathAndSolve(Minecraft.getMinecraft());
+            return true;
+        }
+        if (keyCode == applySurfaceStateKeyBinding.getKeyCode()) {
+            application.applyPathSurfaceState();
+            return true;
+        }
+        if (keyCode == solveKeyBinding.getKeyCode()) {
+            application.solveAngleSolver();
+            return true;
+        }
+        if (keyCode == solverStartTickKeyBinding.getKeyCode()) {
+            application.setSolverStartTickFromSelection();
+            return true;
+        }
+        if (keyCode == solverEndTickKeyBinding.getKeyCode()) {
+            application.setSolverLandingTickFromSelection();
+            return true;
+        }
+        if (keyCode == solverGoalFromLookKeyBinding.getKeyCode()) {
+            boolean angle = Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
+            application.setSolverGoalFromLook(angle);
+            return true;
+        }
+        if (keyCode == rerunSimulationKeyBinding.getKeyCode()) {
+            application.runSimulation();
+            return true;
+        }
+        if (keyCode == togglePathKeyBinding.getKeyCode()) {
+            application.toggleShowPath();
+            return true;
+        }
+        if (keyCode == copyTeleportKeyBinding.getKeyCode()) {
+            application.copyTeleportCommand();
+            return true;
+        }
+        return false;
+    }
+
+    @SubscribeEvent
+    public void onWorldRender(RenderWorldLastEvent event) {
+        application.tickDrag();
+        if (!application.getSettings().showPath) return;
+        if (application.isPlaybackRunning() && !application.getSettings().keepBoxesDuringPlayback) return;
+        //? if >=1.12 {
+        worldRenderer.render(event.getPartialTicks());
+        //?} else {
+        /*worldRenderer.render(event.partialTicks);
+        *///?}
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public void onMouseEvent(MouseEvent event) {
+        boolean replicaBefore = playbackBridge.ghostEntity() != null;
+        //? if >=1.12 {
+        if (event.getButton() >= 0) recordButton(event.getNanoseconds(), event.getButton(), event.isButtonstate());
+        recordMouse(event.getNanoseconds(), event.getDx(), event.getDy());
+        if (!event.isButtonstate()) return;
+        if ((replicaBefore || playbackBridge.ghostEntity() != null) && event.getButton() >= 0) {
+        //?} else {
+        /*if (event.button >= 0) recordButton(event.nanoseconds, event.button, event.buttonstate);
+        recordMouse(event.nanoseconds, event.dx, event.dy);
+        if (!event.buttonstate) return;
+        if ((replicaBefore || playbackBridge.ghostEntity() != null) && event.button >= 0) {
+        *///?}
+            event.setCanceled(true);
+            return;
+        }
+        //? if >=1.12 {
+        if (event.getButton() == 0 && application.shouldSuppressLeftClick()) {
+            event.setCanceled(true);
+        }
+        if (event.getButton() == 1 && application.shouldSuppressRightClick()) {
+        //?} else {
+        /*if (event.button == 0 && application.shouldSuppressLeftClick()) {
+            event.setCanceled(true);
+        }
+        if (event.button == 1 && application.shouldSuppressRightClick()) {
+        *///?}
+            event.setCanceled(true);
+        }
+    }
+
+    public static String rerunSimulationKeyName() {
+        //? if >=1.12 {
+        return rerunSimulationKeyBinding == null ? null : rerunSimulationKeyBinding.getDisplayName();
+        //?} else {
+        /*if (rerunSimulationKeyBinding == null) return null;
+        return GameSettings.getKeyDisplayString(rerunSimulationKeyBinding.getKeyCode());
+        *///?}
+    }
+
+    @SubscribeEvent
+    public void onClientDisconnect(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
+        ReplayLockstep.disengage();
+        application.onWorldChange();
+    }
+
+    @SubscribeEvent
+    public void onClientConnect(FMLNetworkEvent.ClientConnectedToServerEvent event) {
+        application.onWorldChange();
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        if (!event.isCancelable()) return;
+        if (application.shouldSuppressLeftClick() || application.shouldSuppressRightClick()) {
+            event.setCanceled(true);
+        }
+    }
+
+    private void triggerExtendPathAndSolve(Minecraft mc) {
+        //? if >=1.12 {
+        if (mc.objectMouseOver != null && mc.objectMouseOver.typeOfHit == net.minecraft.util.math.RayTraceResult.Type.BLOCK) {
+            net.minecraft.util.math.BlockPos pos = mc.objectMouseOver.getBlockPos();
+        //?} else {
+        /*if (mc.objectMouseOver != null && mc.objectMouseOver.typeOfHit == net.minecraft.util.MovingObjectPosition.MovingObjectType.BLOCK) {
+            net.minecraft.util.BlockPos pos = mc.objectMouseOver.getBlockPos();
+        *///?}
+            double targetX = pos.getX() + 0.5;
+            double targetY = pos.getY() + 1.0;
+            if (McClient.world() != null) {
+                net.minecraft.block.state.IBlockState state = McClient.world().getBlockState(pos);
+                //? if >=1.12 {
+                net.minecraft.util.math.AxisAlignedBB aabb = state.getCollisionBoundingBox(McClient.world(), pos);
+                if (aabb != null && aabb != net.minecraft.block.Block.NULL_AABB) {
+                    targetY = pos.getY() + aabb.maxY;
+                } else {
+                    targetY = pos.getY() + state.getBlock().getBoundingBox(state, McClient.world(), pos).maxY;
+                //?} else {
+                /*net.minecraft.block.Block block = state.getBlock();
+                net.minecraft.util.AxisAlignedBB aabb = block.getCollisionBoundingBox(McClient.world(), pos, state);
+                if (aabb != null) {
+                    targetY = aabb.maxY;
+                } else {
+                    targetY = pos.getY() + block.getBlockBoundsMaxY();
+                *///?}
+                }
+            }
+            double targetZ = pos.getZ() + 0.5;
+            application.extendPathAndSolveToBlock(targetX, targetY, targetZ);
+        }
+    }
+
+    private static String modVersion() {
+        ModContainer container = Loader.instance().getIndexedModList().get(MODID);
+        return container != null ? container.getVersion() : "unknown";
+    }
+}

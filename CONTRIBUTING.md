@@ -1,6 +1,6 @@
 # Contributing
 
-The mod uses [Conventional Commits](https://www.conventionalcommits.org/) and [release-please](https://github.com/googleapis/release-please). Get the commit prefix right and versioning, tagging, the CHANGELOG, and the three loader release jars all happen automatically.
+The mod uses [Conventional Commits](https://www.conventionalcommits.org/) and [release-please](https://github.com/googleapis/release-please). Get the commit prefix right and versioning, tagging, the CHANGELOG, and the release jar for every loader target all happen automatically.
 
 ## Workflow
 
@@ -10,7 +10,7 @@ Features:
 1. Branch from `dev` (`feature/<slug>`).
 2. Commit freely. Branch commits are discarded on squash, so `wip` messages are fine.
 3. Open a PR against `dev` with a **Conventional Commit title** (e.g. `feat: add 1.20.4 loader`). The squash commit takes the PR title as its subject, so the prefix is what drives the version bump. For a breaking change, add `BREAKING CHANGE: <migration note>` to the PR description.
-4. QA before merging: a quick in-game pass on each loader whose code changed (core-only change: one loader is enough). A feature that fails QA does not merge; everything on `dev` is always releasable.
+4. QA before merging: a quick in-game pass on each shipped jar whose code changed; a change to a loader tree's shared source touches every target of that tree, so each of them gets the pass (core-only change: one jar is enough). A feature that fails QA does not merge; everything on `dev` is always releasable.
 5. Squash-merge; the branch auto-deletes.
 
 Fixes:
@@ -19,7 +19,7 @@ Fixes:
 
 The weekly train: `weekly-train.yml` opens a `dev` to `main` PR on Sundays when `dev` is ahead. Merge it with a **merge commit, never squash**; the changelog is built from the individual commits it carries. A `dev` ruleset blocks the auto-delete-on-merge from removing the branch.
 
-Shipping is automated: every `feat:` / `fix:` / `feat!:` commit reaching `main` updates a rolling `chore(main): release X.Y.Z` PR. Merge that PR to release; release-please tags `vX.Y.Z` and cuts the GitHub Release as a draft. Publishing the draft (after a changelog glance) triggers `release.yml`, which builds and attaches the three loader jars and publishes the three Modrinth versions.
+Shipping is automated: every `feat:` / `fix:` / `feat!:` commit reaching `main` updates a rolling `chore(main): release X.Y.Z` PR. Merge that PR to release; release-please tags `vX.Y.Z` and cuts the GitHub Release as a draft. Publishing the draft (after a changelog glance) triggers `release.yml`, which runs the chiseled build, attaches every target jar (one per `loader-<x>/versions/<mc>`), and publishes one Modrinth version per target.
 
 ## Commit types
 
