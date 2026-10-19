@@ -119,6 +119,7 @@ public final class ClosedFormSolve {
     }
 
     private static final double SCAN_COARSE_STEP = 1.0;
+    private static final double[] SCAN_REFINE_STEPS = {0.1, 0.01, 0.001};
     private static final double SCAN_ARC_STEP = 0.01;
     private static final double SCAN_ARC_TOL = 2.0e-3;
     private static final int SCAN_MAX_CANDIDATES = 240;
@@ -296,8 +297,6 @@ public final class ClosedFormSolve {
         if (folded == null || scanned.feasible || scanned.violation < folded.violation) return scanned;
         return folded;
     }
-
-    private static final double[] SCAN_REFINE_STEPS = {0.1, 0.01, 0.001};
 
     private static Result scanChain(ExactJumpModel exact, JumpSpec spec, JumpPhysicsInputs sc, double feasTol,
                                     AtomicBoolean cancel, double[] margins, boolean ascending, Config cfg,
