@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.16.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.15.0...v1.16.0) (2026-10-19)
+
+
+### Features
+
+* **anglesolver:** dF &gt;= 0 / dF &lt;= 0 yaw direction constraint over a tick range ([#555](https://github.com/Leg0shii/ParkourCalculatorMod/issues/555)) ([26d39d6](https://github.com/Leg0shii/ParkourCalculatorMod/commit/26d39d63575a2040c8d3e36dde6e18400fdb9cd8))
+* **anglesolver:** say in the result header how long the smoothing ran and why it stopped ([#565](https://github.com/Leg0shii/ParkourCalculatorMod/issues/565)) ([87e67b8](https://github.com/Leg0shii/ParkourCalculatorMod/commit/87e67b84d995b78a5fd7f85961a6f35cb05ceac4))
+* **build:** one Stonecutter tree per loader for every Fabric and Forge target ([#544](https://github.com/Leg0shii/ParkourCalculatorMod/issues/544)) ([3861e2d](https://github.com/Leg0shii/ParkourCalculatorMod/commit/3861e2d9d140101f18d2ea81306ae2d0822d9ed3))
+* **hotkeys:** set the solver goal from the look direction ([#564](https://github.com/Leg0shii/ParkourCalculatorMod/issues/564)) ([d9f603e](https://github.com/Leg0shii/ParkourCalculatorMod/commit/d9f603ef77ce8ee29dbeea604900eca3de9e1e68))
+* **stratfinder:** find no-turn lines cold on the wiped human recordings faster and in more structures ([#558](https://github.com/Leg0shii/ParkourCalculatorMod/issues/558)) ([3085f01](https://github.com/Leg0shii/ParkourCalculatorMod/commit/3085f011ae78e618ddcb0f980e43917aa516424b))
+
+
+### Bug Fixes
+
+* **anglesolver:** pick the dX vs dZ dominant sign per constraint ([#556](https://github.com/Leg0shii/ParkourCalculatorMod/issues/556)) ([5e2a164](https://github.com/Leg0shii/ParkourCalculatorMod/commit/5e2a1645daba6bf8849ca883a4dc5c0ca16ed809))
+* **anglesolver:** scan the chain anchor again when the exact fold lands infeasible ([#561](https://github.com/Leg0shii/ParkourCalculatorMod/issues/561)) ([ef2c8e9](https://github.com/Leg0shii/ParkourCalculatorMod/commit/ef2c8e90469bd7864ce65d318ecc28757bb1e336))
+* **anglesolver:** the closed form sweeps an open facing chain again when the fold's descent misses ([#562](https://github.com/Leg0shii/ParkourCalculatorMod/issues/562)) ([1765ac1](https://github.com/Leg0shii/ParkourCalculatorMod/commit/1765ac11e0d744b5a49b09d8500b635d23e284bc))
+* **fabric:** draw the path before the solid features, while vanilla still owns the pass ([#557](https://github.com/Leg0shii/ParkourCalculatorMod/issues/557)) ([ff9b909](https://github.com/Leg0shii/ParkourCalculatorMod/commit/ff9b909203f15bf302041d466f02db039ab20421))
+
+
+### Miscellaneous Chores
+
+* weekly release train ([09e3f52](https://github.com/Leg0shii/ParkourCalculatorMod/commit/09e3f5224e4006d896548d9b0836f6384043cf63))
+
 ## [1.15.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.14.0...v1.15.0) (2026-10-11)
 
 
