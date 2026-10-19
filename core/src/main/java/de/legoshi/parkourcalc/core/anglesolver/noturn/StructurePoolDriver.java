@@ -192,10 +192,6 @@ public final class StructurePoolDriver {
         return gpuScreened;
     }
 
-    public boolean usesGpu() {
-        return gpu != null;
-    }
-
     private static final class Group {
         int axis;
         int tick;

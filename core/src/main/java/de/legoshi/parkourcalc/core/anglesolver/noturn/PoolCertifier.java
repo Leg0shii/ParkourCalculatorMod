@@ -20,6 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 final class PoolCertifier {
 
     private static final int CERTIFY_THREAD_CAP = 8;
+    private static final int GPU_CERTIFY_THREAD_CAP = Integer.getInteger("pkc.pool.gpuCertifyThreads", 16);
     private static final long WARM_BUDGET_NANOS = 300_000_000L;
     private static final int MULTI_MAX_CERTIFY = 6000;
     private static final long MULTI_NEAR_SEARCH_NANOS = 300_000_000L;
@@ -55,7 +56,8 @@ final class PoolCertifier {
         this.progress = progress;
         this.problem = problem;
         this.cert = new NoTurnCertifier(model, cfg.playable);
-        this.threads = Math.min(CERTIFY_THREAD_CAP, NoTurnParallel.resolveThreads(cfg.threads));
+        int cap = PoolScreenAccelerator.get() != null ? GPU_CERTIFY_THREAD_CAP : CERTIFY_THREAD_CAP;
+        this.threads = Math.min(cap, NoTurnParallel.resolveThreads(cfg.threads));
         this.exec = Executors.newFixedThreadPool(threads);
         this.deadline = deadline;
         this.maximize = problem.objective.sense == Objective.Sense.MAX;
