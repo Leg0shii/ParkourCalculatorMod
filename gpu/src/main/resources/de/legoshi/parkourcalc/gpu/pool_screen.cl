@@ -432,7 +432,8 @@ __kernel void screen(const int m, __global const int* idx, __global const uchar*
             }
         }
         if (from < 0) {
-            for (int o = 0; o < 4; o++) {
+            int restarts = FREE == 2 ? 1 : 4;
+            for (int o = 0; o < restarts; o++) {
                 float off = RESTART_OFF[o];
                 float vv = solveFrom(&st, theta, cos(theta + off), sin(theta + off), 0, 0, 1, 0);
                 if (vv < best) {
