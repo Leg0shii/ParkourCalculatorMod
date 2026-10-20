@@ -12,6 +12,27 @@ public final class PlayerSprintMachine {
 
     private PlayerSprintMachine() {}
 
+    public static final class Rules {
+        public static final Rules VANILLA = new Rules(false, 0.8F, 0.8F, false, false, false);
+
+        public final boolean normalizeInputs;
+        public final float impulseThreshold;
+        public final float startThreshold;
+        public final boolean sneakPoseGates;
+        public final boolean ignoreWallStop;
+        public final boolean sprintBackward;
+
+        public Rules(boolean normalizeInputs, float impulseThreshold, float startThreshold, boolean sneakPoseGates,
+                     boolean ignoreWallStop, boolean sprintBackward) {
+            this.normalizeInputs = normalizeInputs;
+            this.impulseThreshold = impulseThreshold;
+            this.startThreshold = startThreshold;
+            this.sneakPoseGates = sneakPoseGates;
+            this.ignoreWallStop = ignoreWallStop;
+            this.sprintBackward = sprintBackward;
+        }
+    }
+
     public static final class Inputs {
         public final boolean fwd, back, left, right, jump, sneak, sprintKey;
         public final boolean onGround;
@@ -88,6 +109,10 @@ public final class PlayerSprintMachine {
     }
 
     public static Outputs tick(Inputs in, State prev) {
+        return tick(in, prev, Rules.VANILLA);
+    }
+
+    public static Outputs tick(Inputs in, State prev, Rules rules) {
         int sprintToggleTimer = prev.sprintToggleTimer > 0 ? prev.sprintToggleTimer - 1 : 0;
         int sprintingTicksLeft = prev.sprintingTicksLeft;
         boolean isSprinting = prev.isSprinting;
@@ -100,11 +125,18 @@ public final class PlayerSprintMachine {
         }
 
         boolean flag1 = prev.prevSneak;
-        float f = 0.8F;
-        boolean flag2 = prev.prevMoveForward >= f;
+        boolean flag2 = prev.prevMoveForward >= rules.impulseThreshold;
+        boolean sneakPose = rules.sneakPoseGates && prev.prevSneak;
 
         float moveForward = axis(in.fwd, in.back);
         float moveStrafe = axis(in.left, in.right);
+        if (rules.normalizeInputs) {
+            float len = (float) Math.sqrt(moveForward * moveForward + moveStrafe * moveStrafe);
+            if (len >= 1.0E-4F) {
+                moveForward /= len;
+                moveStrafe /= len;
+            }
+        }
         if (in.sneak) {
             moveForward *= 0.3F;
             moveStrafe *= 0.3F;
@@ -121,7 +153,7 @@ public final class PlayerSprintMachine {
         if (in.onGround
                 && !flag1
                 && !flag2
-                && moveForward >= f
+                && moveForward >= rules.startThreshold
                 && !isSprinting
                 && flag3
                 && !in.usingItem
@@ -136,17 +168,20 @@ public final class PlayerSprintMachine {
         }
 
         if (!isSprinting
-                && moveForward >= f
+                && moveForward >= rules.startThreshold
                 && flag3
                 && !in.usingItem
                 && !in.hasBlindness
                 && in.sprintKey
+                && !sneakPose
         ) {
             isSprinting = true;
             sprintingTicksLeft = 600;
         }
 
-        if (isSprinting && (moveForward < f || in.horizontalCollision || !flag3)) {
+        float stopForward = rules.sprintBackward && !in.sneak && moveForward != 0.0F ? 1.0F : moveForward;
+        boolean wallStop = !rules.ignoreWallStop && in.horizontalCollision;
+        if (isSprinting && (stopForward < rules.impulseThreshold || wallStop || sneakPose || !flag3)) {
             isSprinting = false;
             sprintingTicksLeft = 0;
         }

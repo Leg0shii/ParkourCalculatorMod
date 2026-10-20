@@ -114,7 +114,7 @@ Not done, in order of importance:
 1. **In-game verification.** No Minecraft client here, and BPKMod 2.x still targets 26.2 while the loader is on 26.3. The byte-exact check is the one from Tier A: build a W+A run-up, a wall graze and a chest edge under BPKMod, replay them and compare per tick.
 2. **Resume state.** A TAS that starts mid-motion from the real player's state seeds the BPKMod sprint-rule state as zero (no pending stop); `StartResumeState` and the TAS file do not carry it. A start from rest is exact.
 3. **Inertia threshold 0.** The solver's gate machinery (gate folds, zeroing patterns, the #397 pattern branching, `velocityWalls`) was not audited for an absent band; BPKMod's default 0.0001 keeps the gates and is covered by the model change alone.
-4. **Forge 1.12.2** with BPKMod 1.5.7: the same four mirrors against the `forge-core` sprint machine; not started.
+4. **Forge 1.12.2** with BPKMod 1.5.7: done 2026-10-20, section 8.
 5. **Sprint-sneak and crawl** (issue item 3): BPKMod 2.x does not model it, so neither does the calculator.
 
 ## 7. Draft answer for the issue
@@ -124,3 +124,30 @@ Not done, in order of importance:
 > Where it stands: because the simulator is a real `Player`, BPKMod's block boxes, inertia threshold, collision order, honey, soul sand, ladder, slime and sneak changes already apply to it. Three things do not: the 45-strafe cancel, the "walls don't cancel sprint" rule and sprint backward, because those live in `LocalPlayer`, which the simulator re-implements. The angle solver does not know BPKMod at all. Mirroring the three rules in the loader is a few days of work; teaching the solver a BPKMod profile is weeks.
 >
 > Two things I need before starting any of it: (1) BPKMod on 26.3 (the Fabric loader moved there in 1.13.0), or testers on the 1.12.2 line; (2) a sense of how many people would use it and with which BPKMod config, since "Bedrock physics" in BPKMod is a config, not the default. If there is a group that plays BPKMod parkour, point them here.
+
+## 8. Implemented 2026-10-20: Forge 1.12.2 with BPKMod 1.5.7
+
+Trigger: the maintainer runs the 1.12.2 line with BPKMod 1.5.7 (mod id `bpk`, Forge annotation config in `config/bpk.cfg`, static fields on `cn.xiaozi0721.bpk.config.ConfigHandler$GeneralConfig`) and a Force 45 solve desynced at T3. The cause was `isNewTouch`: the simulator inherited the rotation through `moveRelative` while the solver model still assumed the 45 degree diagonal, so the first W+A tick after the W-only jump tick (tick 2, position T3) diverged. Read from the 1.5.7 jar with `javap`; the three mixin-order questions below were settled against the MixinBooter 11.18 bytecode that ships next to it.
+
+What the simulator inherits, because `SimulatorEntity extends EntityPlayer`:
+
+- `MixinEntityLivingBase.setInertiaThreshold` replaces the 0.003 literal in `onLivingUpdate` on all three axes with `inertiaThreshold` (always on, default 0.0001).
+- `MixinEntityLivingBase.newTouchMovement` runs in `moveRelative` for every `EntityPlayer`, after the friction scaling: when the scaled strafe times forward is at least 1e-4 in magnitude, the pair is rotated by sign times (pi/4 minus arccos 0.98) with `MathHelper.sin` / `cos` (the 1.12 sine table), so a W+A input lands 11.48 degrees off forward at full magnitude. With `byPitch` the angle is the absolute pitch instead and a pitch under 11.48 degrees scales the input by 0.98 and rotates by 45 degrees; not modelled.
+- `MixinEntityPlayer.sprintDelayInAir`: with the delay off, `jumpMovementFactor` is set from the live sprint state right before `travel`, which removes the one-tick air factor lag.
+- `MixinEntity` (Bedrock sneak box, `isBESneak`) and the ladder and trapdoor rules; the solver does not see ladders as a free variable, nothing to do.
+
+What does not reach the simulator, because `forge-core` `PlayerSprintMachine` re-implements `EntityPlayerSP.onLivingUpdate` and `MovementInputFromOptions.updatePlayerMoveState`:
+
+- `MixinMovementInputFromOptions.strafe`: with `strafeAccelerateAllowed` off the key vector is divided by its length (when at least 1e-4) before the sneak scaling.
+- `MixinEntityPlayerSP.hasForwardImpulse`: every 0.8 constant of the sprint block (the slice from constant ordinal 1 to 5, both ends inclusive, `InsnListSlice.size() = end - start + 1`) returns 1e-5 unconditionally, so merely installing the mod changes the sprint thresholds. `cannotSprintWhenStrafe` raises the two start thresholds (ordinals 3 and 4) to 1.0 under `nonSprintingStrafe`; Mixin applies one mixin's injectors in declaration order and MixinExtras inserts each handler right after the value instruction, so the later-declared `hasForwardImpulse` runs first and the strafe rule gets the final say.
+- `setSprintTrueConsiderSneak`: the sprint key does not start a sprint while the height equals the sneak height, which is last tick's sneak (updateSize runs before the input update). `setSprintFalseConsiderSneak` and `ignoreCollidedHorizontally` chain on the stop condition's collision read to `(!ignoreCollidedHorizontally && collided) || sneakPose`.
+- `sprintBackward`: field access ordinal 5 of `moveForward` (the write in `*= 0.2F` counts) is the stop condition's read, replaced by 1.0 while not sneaking, so a sprint survives a reversal but cannot start backward.
+- `sprintDelayOnGround` removes the sprint speed modifier on the start tick and nothing re-adds it until the next `setSprinting(true)`; its real effect was not measured and it is not modelled.
+
+Built:
+
+- `loader-forge/.../sim/BpkModBridge.java`: presence via `Loader.isModLoaded("bpk")`, the static config fields by reflection, `Rules.sprintRules()` for the machine and `Rules.physicsVariant()` for the solver, `describe()` for the HUD and `unsupported()` for the warning lines (`byPitch`, `isBESneak`, `sprintDelayOnGround`). The entry point sets the variant before `setupUi` and announces on world join, with the restart line when the config changed since launch.
+- `forge-core` `PlayerSprintMachine.Rules` (normalise inputs, impulse threshold, start threshold, sneak-pose gates, ignored wall stop, sprint backward) with `Rules.VANILLA`; `tick(in, prev)` delegates to `tick(in, prev, Rules.VANILLA)` so the vanilla arithmetic is untouched. `SimulatorEntity` and `GhostPlayerEntity` pass `BpkModBridge.sprintRules()` every tick. `PlayerSprintMachineTest` (forge-core's first test source set) pins the vanilla equivalence and each mirror.
+- Core: `PhysicsVariant` gains `newTouch` and `liveAirSprintFactor`; `JumpPhysicsInputs.variant` (one reference, `PhysicsVariant.VANILLA` by default) replaces the bare `strafeBoost` boolean in every scenario copy; `solver/BpkNewTouch.java` holds the rotation with the four sine-table constants; `ExactJumpModel`, `SineTableGeometry` and `JumpLinearModel` each gain one guarded call after the legacy input scaling; the legacy air factor honours `liveAirSprintFactor`, which the engine sets from the variant. `PhysicsVariantTest` checks the 11.48 degree heading on W+A, W+D and a Force 45 tick at unchanged magnitude, the sneak-in-air case below the 1e-4 gate, and the air factor without the lag.
+
+Not done: the in-game pass (a Force 45 solve syncing at T3, a W+A tick with the strafe cancel on, a wall graze keeping sprint, a sneak tick mid-sprint), and the three options listed above.

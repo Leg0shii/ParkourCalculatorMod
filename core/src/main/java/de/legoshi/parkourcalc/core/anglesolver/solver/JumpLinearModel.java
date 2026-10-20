@@ -149,14 +149,14 @@ public final class JumpLinearModel {
             double strafe0;
             if (sc.strafeAt(t) && !isJump) {
                 strafe0 = sc.strafeSign * 0.98;
-                if (!sc.strafeBoost) {
+                if (!sc.variant.strafeBoost) {
                     double raw = ExactJumpModel.rawDiagonalInput();
                     forward0 = Math.signum(forward0) * raw;
                     strafe0 = sc.strafeSign * raw;
                 }
             } else {
                 strafe0 = sc.strafeInputAt(t);
-                if (!sc.strafeBoost && ExactJumpModel.isTypedDiagonal((float) forward0, (float) strafe0)) {
+                if (!sc.variant.strafeBoost && ExactJumpModel.isTypedDiagonal((float) forward0, (float) strafe0)) {
                     double raw = ExactJumpModel.rawDiagonalInput();
                     forward0 = Math.signum(forward0) * raw;
                     strafe0 = Math.signum(strafe0) * raw;
@@ -170,6 +170,12 @@ public final class JumpLinearModel {
                 double scale = accelSpeed / raw;
                 fF = forward0 * scale;
                 sF = strafe0 * scale;
+                if (sc.variant.newTouch && BpkNewTouch.applies((float) sF, (float) fF)) {
+                    float s = (float) sF;
+                    float f = (float) fF;
+                    sF = BpkNewTouch.strafeAfter(s, f);
+                    fF = BpkNewTouch.forwardAfter(s, f);
+                }
             }
             fwd[t] = fF;
             boost[t] = (isJump && sprint) ? 0.2 : 0.0;

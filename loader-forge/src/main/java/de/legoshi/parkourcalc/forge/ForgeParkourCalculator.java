@@ -11,6 +11,7 @@ import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2ImGuiHost;
 import de.legoshi.parkourcalc.forge.core.lwjgl2.Lwjgl2InputState;
 import de.legoshi.parkourcalc.forge.render.ForgeHudOverlayRenderer;
 import de.legoshi.parkourcalc.forge.render.ForgeWorldOverlayRenderer;
+import de.legoshi.parkourcalc.forge.sim.BpkModBridge;
 import de.legoshi.parkourcalc.forge.sim.ForgeSimulator;
 import net.minecraft.client.Minecraft;
 //? if <1.12
@@ -136,6 +137,7 @@ public class ForgeParkourCalculator {
         PoolScreenAccelerator.register(new OpenClPoolScreen.Factory());
         application.initSettingsStorage(configPath);
         blockCaptureEnabled = application.getSettings().experimentalBlockCapture;
+        application.setPhysicsVariant(BpkModBridge.physicsVariant());
         application.setupUi();
         imguiHost.setEditingYawSupplier(application::isEditingYaw);
         imguiHost.setAllowDetachedSupplier(() -> Minecraft.getMinecraft().currentScreen == null);
@@ -687,6 +689,23 @@ public class ForgeParkourCalculator {
     @SubscribeEvent
     public void onClientConnect(FMLNetworkEvent.ClientConnectedToServerEvent event) {
         application.onWorldChange();
+        announceBpkMod();
+    }
+
+    private void announceBpkMod() {
+        if (!BpkModBridge.present()) return;
+        if (BpkModBridge.broken()) {
+            application.pushHudMessage("BPKMod found but its config could not be read: the simulation follows vanilla sprint and strafe rules");
+            return;
+        }
+        BpkModBridge.Rules rules = BpkModBridge.rules();
+        application.pushHudMessage("BPKMod: " + rules.describe());
+        for (String option : rules.unsupported()) {
+            application.pushHudMessage("BPKMod " + option + " is not modelled: the solver ignores it");
+        }
+        if (!rules.physicsVariant().equals(application.getPhysicsVariant())) {
+            application.pushHudMessage("BPKMod config changed since launch: restart the game so the solver follows it");
+        }
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
