@@ -12,9 +12,7 @@ import org.jocl.cl_program;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 public final class OpenClPoolScreen implements SchedulePoolScreen {
@@ -26,9 +24,38 @@ public final class OpenClPoolScreen implements SchedulePoolScreen {
         }
 
         @Override
+        public void warmUp() {
+            Thread t = new Thread(() -> {
+                warming = true;
+                warmDone = 0;
+                try {
+                    for (int g : GROUP_BUCKETS) {
+                        for (int w : WALL_BUCKETS) {
+                            synchronized (LOCK) {
+                                if (context == null) context = new OpenClContext();
+                                program(w, g);
+                            }
+                            warmDone++;
+                        }
+                    }
+                } catch (RuntimeException | LinkageError ignored) {
+                } finally {
+                    warming = false;
+                }
+            }, "pkc-gpu-warmup");
+            t.setDaemon(true);
+            t.start();
+        }
+
+        @Override
         public String describe() {
             OpenClContext c = context;
-            return c != null ? c.deviceName() + " (OpenCL)" : "OpenCL, starts with the next search";
+            if (c == null) return "OpenCL, starts with the next search";
+            String name = c.deviceName() + " (OpenCL)";
+            if (warming) {
+                name += ", compiling the kernels " + warmDone + " of " + (WALL_BUCKETS.length * GROUP_BUCKETS.length);
+            }
+            return name;
         }
 
         @Override
@@ -44,7 +71,13 @@ public final class OpenClPoolScreen implements SchedulePoolScreen {
     private static final int UNIT_REFINE = 4;
     private static final int UNIT_LEVELS_FINE = 4;
     private static OpenClContext context;
-    private static final Map<String, cl_program> PROGRAMS = new HashMap<>();
+    private static final java.util.Map<Integer, cl_program> PROGRAMS = new java.util.HashMap<>();
+    private static final int[] WALL_BUCKETS = {12, 24, 36};
+    private static final int[] GROUP_BUCKETS = {6, 12};
+    private static volatile int warmDone;
+    private static volatile boolean warming;
+    public static final int MAX_W = 36;
+    public static final int MAX_G = 12;
     private static String template;
     private static final AtomicLong batches = new AtomicLong();
     private static final AtomicLong schedules = new AtomicLong();
@@ -52,10 +85,13 @@ public final class OpenClPoolScreen implements SchedulePoolScreen {
     private static final AtomicLong diskNanos = new AtomicLong();
     private static final AtomicLong screenNanos = new AtomicLong();
     private static final AtomicLong hostNanos = new AtomicLong();
+    private static final AtomicLong builds = new AtomicLong();
+    private static final AtomicLong buildNanos = new AtomicLong();
 
     private final PoolScreenTables t;
     private final cl_kernel diskKernel;
     private final cl_kernel screenKernel;
+    private final cl_mem shapeBuf;
     private final cl_mem tabBuf;
     private final cl_mem coefBuf;
     private final cl_mem shiftBuf;
@@ -83,22 +119,56 @@ public final class OpenClPoolScreen implements SchedulePoolScreen {
     private boolean closed;
 
     public static String stats() {
-        return String.format(Locale.ROOT, "gpu batches=%d schedules=%d screened=%d disk=%.2fs screen=%.2fs host=%.2fs",
+        return String.format(Locale.ROOT, "gpu batches=%d schedules=%d screened=%d disk=%.2fs screen=%.2fs host=%.2fs builds=%d build=%.2fs",
                 batches.get(), schedules.get(), screened.get(), diskNanos.get() / 1e9, screenNanos.get() / 1e9,
-                hostNanos.get() / 1e9);
+                hostNanos.get() / 1e9, builds.get(), buildNanos.get() / 1e9);
+    }
+
+    private static int bucket(int[] buckets, int value) {
+        for (int b : buckets) if (value <= b) return b;
+        return buckets[buckets.length - 1];
+    }
+
+    private static cl_program program(int maxW, int maxG) {
+        int key = (maxW << 8) | maxG;
+        cl_program program = PROGRAMS.get(key);
+        if (program == null) {
+            long b0 = System.nanoTime();
+            program = context.buildProgram(source(maxW, maxG), "-cl-fast-relaxed-math");
+            builds.incrementAndGet();
+            buildNanos.addAndGet(System.nanoTime() - b0);
+            PROGRAMS.put(key, program);
+        }
+        return program;
     }
 
     private OpenClPoolScreen(PoolScreenTables tables) {
         this.t = tables;
+        if (tables.walls > MAX_W || tables.groups > MAX_G || tables.freeGroups.length > MAX_G) {
+            throw new IllegalArgumentException("problem too wide for the GPU screen: walls=" + tables.walls
+                    + " groups=" + tables.groups + " (limits " + MAX_W + " and " + MAX_G + ")");
+        }
         synchronized (LOCK) {
             if (context == null) context = new OpenClContext();
-            cl_program program = PROGRAMS.get(tables.programKey());
-            if (program == null) {
-                program = context.buildProgram(source(tables), "-cl-fast-relaxed-math");
-                PROGRAMS.put(tables.programKey(), program);
-            }
+            cl_program program = program(bucket(WALL_BUCKETS, tables.walls),
+                    bucket(GROUP_BUCKETS, Math.max(tables.groups, tables.freeGroups.length)));
             diskKernel = CL.clCreateKernel(program, "disk", null);
             screenKernel = CL.clCreateKernel(program, "screen", null);
+            int[] shape = new int[12 + MAX_G];
+            shape[0] = tables.n;
+            shape[1] = tables.walls;
+            shape[2] = tables.groups;
+            shape[3] = tables.mainGroup;
+            shape[4] = tables.freeGroups.length;
+            shape[5] = tables.freeGroups.length > 0 ? tables.freeGroups[0] : -1;
+            shape[6] = tables.freeGroups.length > 1 ? tables.freeGroups[1] : -1;
+            shape[7] = tables.objAxisX ? 1 : 0;
+            shape[8] = tables.maximize ? 1 : 0;
+            shape[9] = tables.diskGrid;
+            shape[10] = Math.max(1, tables.diskCoarseStride);
+            shape[11] = Math.max(1, tables.diskMidStride);
+            for (int i = 0; i < tables.freeGroups.length; i++) shape[12 + i] = tables.freeGroups[i];
+            shapeBuf = ints(shape);
             tabBuf = floats(tables.tab);
             coefBuf = floats(tables.coefW);
             shiftBuf = floats(tables.shift0);
@@ -145,24 +215,10 @@ public final class OpenClPoolScreen implements SchedulePoolScreen {
         }
     }
 
-    static String source(PoolScreenTables t) {
+    static String source(int maxW, int maxG) {
         StringBuilder sb = new StringBuilder();
-        sb.append("#define N ").append(t.n).append('\n');
-        sb.append("#define W ").append(t.walls).append('\n');
-        sb.append("#define G ").append(t.groups).append('\n');
-        sb.append("#define MAINGROUP ").append(t.mainGroup).append('\n');
-        sb.append("#define FREE ").append(t.freeGroups.length).append('\n');
-        sb.append("#define FREE_G0 ").append(t.freeGroups.length > 0 ? t.freeGroups[0] : -1).append('\n');
-        sb.append("#define FREE_G1 ").append(t.freeGroups.length > 1 ? t.freeGroups[1] : -1).append('\n');
-        sb.append("#define OBJ_AXIS_X ").append(t.objAxisX ? 1 : 0).append('\n');
-        sb.append("#define MAXIMIZE ").append(t.maximize ? 1 : 0).append('\n');
-        sb.append("#define DISKGRID ").append(t.diskGrid).append('\n');
-        sb.append("#define CSTRIDE ").append(Math.max(1, t.diskCoarseStride)).append('\n');
-        sb.append("#define MSTRIDE ").append(Math.max(1, t.diskMidStride)).append('\n');
-        sb.append("__constant int FREE_LIST[").append(Math.max(1, t.freeGroups.length)).append("] = {");
-        if (t.freeGroups.length == 0) sb.append("-1");
-        for (int i = 0; i < t.freeGroups.length; i++) sb.append(i > 0 ? "," : "").append(t.freeGroups[i]);
-        sb.append("};\n");
+        sb.append("#define MAX_W ").append(maxW).append('\n');
+        sb.append("#define MAX_G ").append(maxG).append('\n');
         float[] sc = new float[UNIT_STEPS];
         float[] ss = new float[UNIT_STEPS];
         for (int k = 0; k < UNIT_STEPS; k++) {
@@ -186,6 +242,12 @@ public final class OpenClPoolScreen implements SchedulePoolScreen {
         constant(sb, "REFINE_COS", rc);
         constant(sb, "REFINE_SIN", rs);
         constant(sb, "RESTART_OFF", new float[]{0.0f, (float) (0.5 * Math.PI), (float) (-0.5 * Math.PI), (float) Math.PI});
+        for (String key : System.getProperties().stringPropertyNames()) {
+            if (key.startsWith("pkc.gpu.def.")) {
+                sb.append("#define ").append(key.substring("pkc.gpu.def.".length())).append(' ')
+                        .append(System.getProperty(key)).append('\n');
+            }
+        }
         sb.append(loadTemplate());
         return sb.toString();
     }
@@ -237,6 +299,7 @@ public final class OpenClPoolScreen implements SchedulePoolScreen {
             CL.clEnqueueWriteBuffer(context.queue(), combosBuf, CL.CL_TRUE, 0, (long) count * t.n, Pointer.to(combos), 0, null, null);
             int a = 0;
             CL.clSetKernelArg(diskKernel, a++, Sizeof.cl_int, Pointer.to(new int[]{count}));
+            CL.clSetKernelArg(diskKernel, a++, Sizeof.cl_mem, Pointer.to(shapeBuf));
             CL.clSetKernelArg(diskKernel, a++, Sizeof.cl_mem, Pointer.to(combosBuf));
             CL.clSetKernelArg(diskKernel, a++, Sizeof.cl_mem, Pointer.to(tabBuf));
             CL.clSetKernelArg(diskKernel, a++, Sizeof.cl_mem, Pointer.to(coefBuf));
@@ -262,6 +325,7 @@ public final class OpenClPoolScreen implements SchedulePoolScreen {
                 CL.clEnqueueWriteBuffer(context.queue(), idxBuf, CL.CL_TRUE, 0, (long) m * Sizeof.cl_int, Pointer.to(idx), 0, null, null);
                 a = 0;
                 CL.clSetKernelArg(screenKernel, a++, Sizeof.cl_int, Pointer.to(new int[]{m}));
+                CL.clSetKernelArg(screenKernel, a++, Sizeof.cl_mem, Pointer.to(shapeBuf));
                 CL.clSetKernelArg(screenKernel, a++, Sizeof.cl_mem, Pointer.to(idxBuf));
                 CL.clSetKernelArg(screenKernel, a++, Sizeof.cl_mem, Pointer.to(combosBuf));
                 CL.clSetKernelArg(screenKernel, a++, Sizeof.cl_mem, Pointer.to(tabBuf));
@@ -325,7 +389,7 @@ public final class OpenClPoolScreen implements SchedulePoolScreen {
         closed = true;
         synchronized (LOCK) {
             releaseBatchBuffers();
-            cl_mem[] bufs = {tabBuf, coefBuf, shiftBuf, axisBuf, kindBuf, groupBuf, objBuf, paramBuf, cosBuf, sinBuf};
+            cl_mem[] bufs = {shapeBuf, tabBuf, coefBuf, shiftBuf, axisBuf, kindBuf, groupBuf, objBuf, paramBuf, cosBuf, sinBuf};
             for (cl_mem b : bufs) CL.clReleaseMemObject(b);
             CL.clReleaseKernel(diskKernel);
             CL.clReleaseKernel(screenKernel);

@@ -81,9 +81,4 @@ public final class PoolScreenTables {
     public String key() {
         return key;
     }
-
-    public String programKey() {
-        return "n" + n + "w" + walls + "g" + groups + "m" + mainGroup + "f" + Arrays.toString(freeGroups)
-                + "d" + diskGrid + "/" + diskCoarseStride + "/" + diskMidStride;
-    }
 }

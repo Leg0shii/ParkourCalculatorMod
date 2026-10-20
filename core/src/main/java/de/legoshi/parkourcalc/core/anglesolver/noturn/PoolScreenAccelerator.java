@@ -8,6 +8,9 @@ public final class PoolScreenAccelerator {
         default String describe() {
             return "GPU";
         }
+
+        default void warmUp() {
+        }
     }
 
     private static volatile Factory factory;
@@ -19,11 +22,17 @@ public final class PoolScreenAccelerator {
 
     public static void register(Factory f) {
         factory = f;
+        if (enabled && f != null) f.warmUp();
     }
 
     public static void setEnabled(boolean on) {
         enabled = on;
-        if (!on) lastError = null;
+        if (!on) {
+            lastError = null;
+            return;
+        }
+        Factory f = factory;
+        if (f != null) f.warmUp();
     }
 
     public static boolean isEnabled() {
