@@ -134,12 +134,15 @@ final class PoolCertifier {
         int tier = -1;
         int i = 0;
         int firstTaken = -1;
+        boolean flash = false;
         while (i < from.size() && batch.size() < room) {
             Candidate c = from.get(i);
             int t = StructurePoolDriver.certifyTier(cfg, c);
             if (goodOnly && t >= StructurePoolDriver.SCREEN_MISS_TIER) break;
-            if (tier < 0) tier = t;
-            else if (t != tier) break;
+            if (tier < 0) {
+                tier = t;
+                flash = c.flash && !longPass && cfg.repairFlashNanos > 0;
+            } else if (t != tier || (c.flash && !longPass && cfg.repairFlashNanos > 0) != flash) break;
             if (firstTaken < 0) firstTaken = i;
             String key = scheduleKey(c.combos, c.engage, ja);
             if (!found.contains(key) && !tried.contains(key)) batch.add(c);
@@ -148,11 +151,12 @@ final class PoolCertifier {
         if (firstTaken >= 0) from.subList(firstTaken, i).clear();
         if (batch.isEmpty()) return i > 0;
         boolean exact = tier == StructurePoolDriver.SCREEN_EXACT_TIER;
-        boolean shortPass = exact && !longPass && SHORT_PASS_NANOS < cfg.searchBudgetNanos;
-        long budget = exact ? (shortPass ? SHORT_PASS_NANOS : cfg.searchBudgetNanos) : nearBudgetNanos;
+        boolean shortPass = flash || (exact && !longPass && SHORT_PASS_NANOS < cfg.searchBudgetNanos);
+        long budget = flash ? cfg.repairFlashNanos
+                : exact ? (shortPass ? SHORT_PASS_NANOS : cfg.searchBudgetNanos) : nearBudgetNanos;
         String label = (tier >= StructurePoolDriver.SCREEN_MISS_TIER ? "screen-miss"
                 : exact ? (shortPass ? "screen-exact short" : longPass ? "screen-exact retry" : "screen-exact")
-                : "screen-near") + (ja ? "+ja" : "");
+                : "screen-near") + (flash ? " flash" : "") + (ja ? "+ja" : "");
         certifyBatch(batch, ja, budget, label, from.size() + batch.size(), shortPass);
         return true;
     }

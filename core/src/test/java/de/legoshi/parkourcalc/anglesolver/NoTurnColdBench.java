@@ -293,6 +293,12 @@ public class NoTurnColdBench {
             if (Integer.getInteger("pkc.bench.perEdgeCertify", -1) > 0) cfg.perEdgeCertify = Integer.getInteger("pkc.bench.perEdgeCertify");
             cfg.playable = Boolean.getBoolean("pkc.bench.playable");
             if (System.getProperty("pkc.bench.taps") != null) cfg.tapsStage = Boolean.parseBoolean(System.getProperty("pkc.bench.taps"));
+            if (System.getProperty("pkc.bench.repair") != null) cfg.repairStage = Boolean.parseBoolean(System.getProperty("pkc.bench.repair"));
+            if (Integer.getInteger("pkc.bench.repairWidth", -1) >= 0) cfg.repairWidth = Integer.getInteger("pkc.bench.repairWidth");
+            if (Integer.getInteger("pkc.bench.repairPairs", -1) >= 0) cfg.repairPairs = Integer.getInteger("pkc.bench.repairPairs");
+            if (Integer.getInteger("pkc.bench.repairRounds", -1) >= 0) cfg.repairRounds = Integer.getInteger("pkc.bench.repairRounds");
+            if (Integer.getInteger("pkc.bench.repairAfter", -1) >= 0) cfg.repairAfterLevel = Integer.getInteger("pkc.bench.repairAfter");
+            if (Long.getLong("pkc.bench.repairSec", -1L) >= 0) cfg.repairBudgetNanos = Long.getLong("pkc.bench.repairSec") * 1_000_000_000L;
             if (System.getProperty("pkc.bench.diskKeep") != null) cfg.diskKeep = Double.parseDouble(System.getProperty("pkc.bench.diskKeep"));
             if (Boolean.getBoolean("pkc.bench.fullAlphabet")) {
                 cfg.alphabet = new int[]{NoTurnKeys.NONE, NoTurnKeys.W, NoTurnKeys.WA, NoTurnKeys.WD, NoTurnKeys.A,
@@ -306,7 +312,10 @@ public class NoTurnColdBench {
             if (benchNearSearchMs > 0) cfg.nearSearchBudgetNanos = benchNearSearchMs * 1_000_000L;
             line("pool search: threads=" + cfg.threads + " (0=auto=" + NoTurnColdBench.autoThreads()
                     + ") searchBudget=" + cfg.searchBudgetNanos / 1e9 + "s nearSearchBudget=" + cfg.nearSearchBudgetNanos / 1e9 + "s polishBudget=" + cfg.certifyBudgetNanos / 1e9 + "s");
-            line("pool cfg: maxEdges=" + cfg.maxEdges + " minDwell=" + cfg.minDwell + " taps=" + cfg.tapsStage + " diskGrid=" + cfg.diskGrid
+            line("pool cfg: maxEdges=" + cfg.maxEdges + " minDwell=" + cfg.minDwell + " taps=" + cfg.tapsStage
+                    + " repair=" + cfg.repairStage + " repairWidth=" + cfg.repairWidth + " repairPairs=" + cfg.repairPairs
+                    + " repairRounds=" + cfg.repairRounds + " repairAfter=" + cfg.repairAfterLevel
+                    + " repairBudget=" + cfg.repairBudgetNanos / 1e9 + "s diskGrid=" + cfg.diskGrid
                     + " playable=" + cfg.playable + " poolCap=" + cfg.poolCap
                     + " perEdgeCertify=" + cfg.perEdgeCertify + " maxCertify=" + cfg.maxCertify
                     + " certifyBudget=" + cfg.certifyBudgetNanos / 1e9 + "s total=" + cfg.totalBudgetNanos / 1e9
