@@ -40,20 +40,42 @@ jobs:
 
       - name: list loader targets
         id: targets
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
-          targets=$(for dir in loader-*/versions/*/; do
+          all=$(for dir in loader-*/versions/*/; do
             tree=${dir%%/*}
-            printf '{"loader":"%s","mc":"%s"}\n' "${tree#loader-}" "$(basename "$dir")"
-          done | jq -cs '{include: .}')
-          echo "targets=$targets" >> "$GITHUB_OUTPUT"
+            echo "${tree#loader-}/$(basename "$dir")"
+          done)
+          only=''
+          if [ -f .github/release-targets.json ] && [ "$(jq -r .version .github/release-targets.json)" = "$VERSION" ]; then
+            only=$(jq -r '.targets[]' .github/release-targets.json)
+            echo "release-targets.json restricts $VERSION to:" $only
+          fi
+          targets=$(echo "$all" | while read -r t; do
+            if [ -z "$only" ] || echo "$only" | grep -qx "$t"; then echo "$t"; fi
+          done)
+          [ -n "$targets" ] || { echo "no loader target left to release"; exit 1; }
+          echo "$targets"
+          echo "targets=$(echo "$targets" | jq -R '{loader: split("/")[0], mc: split("/")[1]}' | jq -cs '{include: .}')" >> "$GITHUB_OUTPUT"
+          if [ -z "$only" ]; then
+            echo "tasks=build" >> "$GITHUB_OUTPUT"
+          else
+            echo "tasks=:core:build $(echo "$targets" | sed 's#^#:loader-#; s#/#:#; s#$#:build#' | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: build
-        run: ./gradlew build -x tableStyleCheck -PslowTests -PreleaseVersion=${{ steps.version.outputs.version }} -Dorg.gradle.java.home="$JAVA_HOME"
+        run: ./gradlew ${{ steps.targets.outputs.tasks }} -x tableStyleCheck -PslowTests -PreleaseVersion=${{ steps.version.outputs.version }} -Dorg.gradle.java.home="$JAVA_HOME"
 
       - name: collect jars
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          TARGETS: ${{ steps.targets.outputs.targets }}
         run: |
           mkdir -p release-jars
-          cp loader-*/versions/*/build/libs/pkc-*-${{ steps.version.outputs.version }}.jar release-jars/
+          echo "$TARGETS" | jq -r '.include[] | "loader-\(.loader)/versions/\(.mc)/build/libs/pkc-\(.loader)-\(.mc)-'"$VERSION"'.jar"' | while read -r jar; do
+            cp "$jar" release-jars/
+          done
           ls -l release-jars
 
       - name: upload jars
