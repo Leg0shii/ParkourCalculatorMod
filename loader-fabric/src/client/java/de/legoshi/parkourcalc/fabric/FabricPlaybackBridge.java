@@ -465,6 +465,7 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
             moveServerPlayer(sp, new Vec3(pos.x, pos.y, pos.z), startVel, yaw);
             sp.setOnGround(true);
             sp.setSprinting(false);
+            de.legoshi.parkourcalc.fabric.sim.paired.PairedCheckpoint.syncClientSentState(false, null);
             sp.fallDistance = 0;
         });
     }

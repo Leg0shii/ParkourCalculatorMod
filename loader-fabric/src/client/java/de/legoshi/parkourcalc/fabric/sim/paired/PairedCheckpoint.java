@@ -1,7 +1,10 @@
 package de.legoshi.parkourcalc.fabric.sim.paired;
 
 import de.legoshi.parkourcalc.core.sim.Checkpoint;
+import de.legoshi.parkourcalc.fabric.mixin.LocalPlayerAccessor;
 import de.legoshi.parkourcalc.fabric.sim.SimulatorEntity;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.server.level.ServerPlayer;
 
 public final class PairedCheckpoint implements Checkpoint {
@@ -85,6 +88,7 @@ public final class PairedCheckpoint implements Checkpoint {
             sp.setDeltaMovement(paired.server.velX, paired.server.velY, paired.server.velZ);
             sp.setSprinting(paired.server.sprinting);
             sp.setShiftKeyDown(paired.server.shiftKeyDown);
+            syncClientSentState(paired.server.sprinting, paired.server.shiftKeyDown);
             //? if >=1.21.2 {
             if (paired.server.serverLastClientInput != null) {
                 sp.setLastClientInput(paired.server.serverLastClientInput);
@@ -112,5 +116,17 @@ public final class PairedCheckpoint implements Checkpoint {
                     + " wasServerMotion=" + beforeMotion
                     + " paired=" + (checkpoint instanceof PairedCheckpoint));
         }
+    }
+
+    public static void syncClientSentState(boolean sprinting, Boolean shiftKeyDown) {
+        Minecraft mc = Minecraft.getInstance();
+        mc.execute(() -> {
+            LocalPlayer p = mc.player;
+            if (p == null) return;
+            LocalPlayerAccessor acc = (LocalPlayerAccessor) p;
+            acc.pkc$setWasSprinting(sprinting);
+            //? if <26.1
+            //if (shiftKeyDown != null) acc.pkc$setWasShiftKeyDown(shiftKeyDown);
+        });
     }
 }
