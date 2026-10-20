@@ -39,6 +39,11 @@ public interface LocalPlayerAccessor {
 
     @Accessor("lastOnGround") void pkc$setLastOnGround(boolean v);
 
+    @Accessor("wasSprinting") void pkc$setWasSprinting(boolean v);
+
+    //? if <26.1
+    //@Accessor("wasShiftKeyDown") void pkc$setWasShiftKeyDown(boolean v);
+
     //? if >=1.21.2 {
     @Accessor("lastHorizontalCollision") boolean pkc$getLastHorizontalCollision();
 

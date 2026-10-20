@@ -21,6 +21,8 @@ The weekly train: `weekly-train.yml` opens a `dev` to `main` PR on Sundays when 
 
 Shipping is automated: every `feat:` / `fix:` / `feat!:` commit reaching `main` updates a rolling `chore(main): release X.Y.Z` PR. Merge that PR to release; release-please tags `vX.Y.Z` and cuts the GitHub Release as a draft. Publishing the draft (after a changelog glance) triggers `release.yml`, which runs the chiseled build, attaches every target jar (one per `loader-<x>/versions/<mc>`), and publishes one Modrinth version per target.
 
+To release only some targets (a hotfix that touches one loader), commit `.github/release-targets.json` on `main` before the release PR merges, for example `{"version": "1.16.1", "targets": ["fabric/1.20.4"]}`. `release.yml` honours the file only when its `version` equals the tag being released, so a stale file never narrows a later release; it builds just the listed targets (plus the core test suite) and attaches and publishes only their jars.
+
 ## Commit types
 
 | Prefix | Version bump | Example |

@@ -389,9 +389,11 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
                 if (sp == null) return;
                 moveServerPlayer(sp, new Vec3(pos.x, pos.y, pos.z), startVel, yaw);
                 de.legoshi.parkourcalc.fabric.sim.paired.PairedCheckpoint.applyRestartState(sp, carry);
+                //? if >=1.21.2 {
                 if (carry instanceof de.legoshi.parkourcalc.fabric.sim.paired.PairedCheckpoint) {
                     de.legoshi.parkourcalc.fabric.sim.paired.RestartSettle.arm(uuid, carry);
                 }
+                //?}
             } finally {
                 ReplayLockstep.onRestartHopComplete();
             }
@@ -465,6 +467,7 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
             moveServerPlayer(sp, new Vec3(pos.x, pos.y, pos.z), startVel, yaw);
             sp.setOnGround(true);
             sp.setSprinting(false);
+            de.legoshi.parkourcalc.fabric.sim.paired.PairedCheckpoint.syncClientSentState(false, null);
             sp.fallDistance = 0;
         });
     }

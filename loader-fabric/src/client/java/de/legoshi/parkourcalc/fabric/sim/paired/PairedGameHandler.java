@@ -5,6 +5,8 @@ import io.netty.channel.ChannelFutureListener;
 import net.minecraft.network.Connection;
 //? if >=1.21
 import net.minecraft.network.DisconnectionDetails;
+//? if <1.20.5
+//import net.minecraft.network.PacketListener;
 //? if <26.1
 //import net.minecraft.network.PacketSendListener;
 //? if <1.21
@@ -67,7 +69,13 @@ public final class PairedGameHandler extends ServerGamePacketListenerImpl {
 
     private static final class NullConnection extends Connection {
         NullConnection() {
-            super(PacketFlow.CLIENTBOUND);
+            super(PacketFlow.SERVERBOUND);
         }
+
+        //? if <1.20.5 {
+        /*@Override
+        public void setListener(PacketListener listener) {
+        }
+        *///?}
     }
 }

@@ -273,8 +273,10 @@ public final class PairedServerSim {
     static Vec3 motionVelocity(ClientboundSetEntityMotionPacket motion) {
         //? if >=26.1 {
         return quantizeVelocity(motion.movement());
-        //?} else {
+        //?} elif >=1.21 {
         /*return new Vec3(motion.getXa(), motion.getYa(), motion.getZa());
+        *///?} else {
+        /*return new Vec3(motion.getXa() / 8000.0, motion.getYa() / 8000.0, motion.getZa() / 8000.0);
         *///?}
     }
 
