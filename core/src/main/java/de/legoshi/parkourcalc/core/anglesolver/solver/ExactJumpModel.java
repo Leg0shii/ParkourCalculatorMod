@@ -68,7 +68,7 @@ public final class ExactJumpModel implements ForwardModel {
     private final boolean floatSprintBoost;
     private final boolean byteAmplifier;
     private final VelocityPacketCodec velocityCodec;
-    private final boolean strafeBoost;
+    private final PhysicsVariant variant;
 
     public ExactJumpModel(double inertiaThreshold, boolean perAxisInertia, boolean modern) {
         this(inertiaThreshold, perAxisInertia, modern, false);
@@ -98,12 +98,12 @@ public final class ExactJumpModel implements ForwardModel {
                           boolean foldedInputRad, boolean floatSprintBoost, boolean byteAmplifier,
                           VelocityPacketCodec velocityCodec) {
         this(inertiaThreshold, perAxisInertia, modern, sine262, foldedInputRad, floatSprintBoost, byteAmplifier,
-                velocityCodec, true);
+                velocityCodec, PhysicsVariant.VANILLA);
     }
 
     public ExactJumpModel(double inertiaThreshold, boolean perAxisInertia, boolean modern, boolean sine262,
                           boolean foldedInputRad, boolean floatSprintBoost, boolean byteAmplifier,
-                          VelocityPacketCodec velocityCodec, boolean strafeBoost) {
+                          VelocityPacketCodec velocityCodec, PhysicsVariant variant) {
         this.inertiaThreshold = inertiaThreshold;
         this.perAxisInertia = perAxisInertia;
         this.modern = modern;
@@ -112,17 +112,17 @@ public final class ExactJumpModel implements ForwardModel {
         this.floatSprintBoost = floatSprintBoost;
         this.byteAmplifier = byteAmplifier;
         this.velocityCodec = velocityCodec == null ? VelocityPacketCodec.FIXED_POINT : velocityCodec;
-        this.strafeBoost = strafeBoost;
+        this.variant = variant;
     }
 
     public ExactJumpModel withByteAmplifier(boolean byteAmplifier) {
         return new ExactJumpModel(inertiaThreshold, perAxisInertia, modern, sine262, foldedInputRad, floatSprintBoost,
-                byteAmplifier, velocityCodec, strafeBoost);
+                byteAmplifier, velocityCodec, variant);
     }
 
     public ExactJumpModel withVelocityCodec(VelocityPacketCodec codec) {
         return new ExactJumpModel(inertiaThreshold, perAxisInertia, modern, sine262, foldedInputRad, floatSprintBoost,
-                byteAmplifier, codec, strafeBoost);
+                byteAmplifier, codec, variant);
     }
 
     public boolean byteAmplifier() {
@@ -138,7 +138,7 @@ public final class ExactJumpModel implements ForwardModel {
         double thr = variant.inertiaThreshold != null ? variant.inertiaThreshold : inertiaThreshold;
         boolean perAxis = variant.perAxisInertia != null ? variant.perAxisInertia : perAxisInertia;
         return new ExactJumpModel(thr, perAxis, modern, sine262, foldedInputRad, floatSprintBoost, byteAmplifier,
-                velocityCodec, variant.strafeBoost);
+                velocityCodec, variant);
     }
 
     private float tableSin(float rad) {
@@ -187,7 +187,12 @@ public final class ExactJumpModel implements ForwardModel {
     }
 
     public boolean strafeBoost() {
-        return strafeBoost;
+        return variant.strafeBoost;
+    }
+
+    @Override
+    public PhysicsVariant variant() {
+        return variant;
     }
 
     public static float rawDiagonalInput() {
@@ -314,7 +319,7 @@ public final class ExactJumpModel implements ForwardModel {
             boolean fluidGroundJump = modern && fluid && contact && scenario.jumpAt(t);
             boolean isJumpTick = fluidGroundJump || (!fluid && scenario.jumpAt(t) && contact);
             boolean sprint = scenario.sprintAt(t);
-            boolean airSprint = modern ? sprint : scenario.factorSprintAt(t);
+            boolean airSprint = modern || scenario.variant.liveAirSprintFactor ? sprint : scenario.factorSprintAt(t);
             if (modern && water && scenario.sneakAt(t)) {
                 vy -= FLUID_JUMP_BOOST;
             }
@@ -367,7 +372,7 @@ public final class ExactJumpModel implements ForwardModel {
             float forward = scenario.forwardAt(t);
             float strafe;
             if (scenario.strafeAt(t) && !isJumpTick) {
-                if (!strafeBoost) {
+                if (!variant.strafeBoost) {
                     forward = Math.signum(forward) * RAW_DIAG_INPUT;
                     strafe = scenario.strafeSignAt(t) * RAW_DIAG_INPUT;
                 } else if (sine262) {
@@ -378,7 +383,7 @@ public final class ExactJumpModel implements ForwardModel {
                 }
             } else {
                 strafe = scenario.strafeInputAt(t);
-                if (!strafeBoost && isTypedDiagonal(forward, strafe)) {
+                if (!variant.strafeBoost && isTypedDiagonal(forward, strafe)) {
                     forward = Math.signum(forward) * RAW_DIAG_INPUT;
                     strafe = Math.signum(strafe) * RAW_DIAG_INPUT;
                 }
@@ -413,6 +418,11 @@ public final class ExactJumpModel implements ForwardModel {
                     fm = accelSpeed / fm;
                     strafe *= fm;
                     forward *= fm;
+                    if (variant.newTouch && BpkNewTouch.applies(strafe, forward)) {
+                        float s = strafe;
+                        strafe = BpkNewTouch.strafeAfter(s, forward);
+                        forward = BpkNewTouch.forwardAfter(s, forward);
+                    }
                     float rad = foldedInputRad ? yawF * (float) (Math.PI / 180.0) : yawF * (float) Math.PI / 180.0F;
                     float sinD = tableSin(rad);
                     float cosD = tableCos(rad);

@@ -76,7 +76,7 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
         );
 
         PlayerSprintMachine.State seed = sprintState.withIsSprinting(this.isSprinting());
-        PlayerSprintMachine.Outputs out = PlayerSprintMachine.tick(in, seed);
+        PlayerSprintMachine.Outputs out = PlayerSprintMachine.tick(in, seed, BpkModBridge.sprintRules());
         sprintState = out.next;
 
         this.setSprinting(out.next.isSprinting);
