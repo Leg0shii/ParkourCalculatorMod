@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.16.1](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.16.0...v1.16.1) (2026-10-20)
+
+
+### Bug Fixes
+
+* **fabric:** paired simulation on 1.20.4 crashed when enabled, launched the player on fall damage and lost the sprint jump on replay ([1bcdc5c](https://github.com/Leg0shii/ParkourCalculatorMod/commit/1bcdc5caf0ffc3af6f40af5a41c7e896278fa716))
+
 ## [1.16.0](https://github.com/Leg0shii/ParkourCalculatorMod/compare/v1.15.0...v1.16.0) (2026-10-19)
 
 
