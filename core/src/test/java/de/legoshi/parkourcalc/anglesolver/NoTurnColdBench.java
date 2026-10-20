@@ -288,6 +288,7 @@ public class NoTurnColdBench {
             cfg.jaAllPass = driver.equals("ingame") ? !Boolean.getBoolean("pkc.bench.noJaAllPass") : Boolean.getBoolean("pkc.bench.jaAllPass");
             if (Integer.getInteger("pkc.bench.poolCap", -1) > 0) cfg.poolCap = Integer.getInteger("pkc.bench.poolCap");
             if (Integer.getInteger("pkc.bench.maxEdges", -1) >= 0) cfg.maxEdges = Integer.getInteger("pkc.bench.maxEdges");
+            if (Integer.getInteger("pkc.bench.minLevel", -1) >= 0) cfg.minLevel = Integer.getInteger("pkc.bench.minLevel");
             if (Integer.getInteger("pkc.bench.minDwell", -1) > 0) cfg.minDwell = Integer.getInteger("pkc.bench.minDwell");
             if (Integer.getInteger("pkc.bench.perEdgeCertify", -1) > 0) cfg.perEdgeCertify = Integer.getInteger("pkc.bench.perEdgeCertify");
             cfg.playable = Boolean.getBoolean("pkc.bench.playable");
