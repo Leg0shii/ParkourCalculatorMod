@@ -51,6 +51,10 @@ public final class PoolScreenAccelerator {
         return f.describe();
     }
 
+    static void fail(Throwable e) {
+        lastError = e.toString();
+    }
+
     static SchedulePoolScreen tryOpen(PoolScreenTables tables) {
         Factory f = get();
         if (f == null || tables == null) return null;

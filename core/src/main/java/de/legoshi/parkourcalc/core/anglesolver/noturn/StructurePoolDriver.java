@@ -408,9 +408,25 @@ public final class StructurePoolDriver {
         if (gpu == null || gpuBatchCount == 0) return;
         int count = gpuBatchCount;
         gpuBatchCount = 0;
-        float[] r = gpu.evaluate(gpuBatch, count);
-        int per = SchedulePoolScreen.FLOATS_PER_VARIANT;
         int[] combos = new int[n];
+        float[] r;
+        try {
+            r = gpu.evaluate(gpuBatch, count);
+        } catch (RuntimeException | LinkageError e) {
+            PoolScreenAccelerator.fail(e);
+            try {
+                gpu.close();
+            } catch (RuntimeException | LinkageError ignored) {
+            }
+            gpu = null;
+            for (int i = 0; i < count; i++) {
+                for (int t = 0; t < n; t++) combos[t] = gpuBatch[i * n + t];
+                evalCpu(combos);
+            }
+            gpuBatch = null;
+            return;
+        }
+        int per = SchedulePoolScreen.FLOATS_PER_VARIANT;
         boolean[] sprint = new boolean[n];
         for (int i = 0; i < count; i++) {
             int firstRun = -1;
@@ -1054,6 +1070,10 @@ public final class StructurePoolDriver {
             gpuAppend(combos);
             return;
         }
+        evalCpu(combos);
+    }
+
+    private void evalCpu(int[] combos) {
         int firstRun = -1;
         for (int t = 0; t < n; t++) {
             if (NoTurnKeys.isRun(combos[t])) {
