@@ -30,6 +30,7 @@ public final class StructurePoolDriver {
         public int[] alphabet = {NoTurnKeys.NONE, NoTurnKeys.W, NoTurnKeys.WA, NoTurnKeys.WD,
                 NoTurnKeys.SA, NoTurnKeys.SD, NoTurnKeys.S, NoTurnKeys.A, NoTurnKeys.D};
         public int[] takeoffCombos = {NoTurnKeys.W, NoTurnKeys.WA, NoTurnKeys.WD, NoTurnKeys.NONE};
+        public boolean tapsStage = true;
         public int diskGrid = 480;
         public int diskCoarseStride = 24;
         public int diskMidStride = 6;
@@ -162,6 +163,7 @@ public final class StructurePoolDriver {
     private long scored;
     private long byteScreened;
     private int scoreLevel = -1;
+    private boolean tapsStage;
     private AtomicBoolean stop;
     private long deadlineNanos = Long.MAX_VALUE;
 
@@ -880,7 +882,7 @@ public final class StructurePoolDriver {
         int active = checkedGroups;
         while (active < groups.length && groups[active].tick <= start) active++;
         boolean prunedHere = false;
-        boolean worthChecking = n - start > cfg.minDwell && (edges < effMaxEdges() || anchorAhead(start));
+        boolean worthChecking = n - start > Math.max(3, cfg.minDwell) && (edges < effMaxEdges() || anchorAhead(start));
         if (worthChecking && active > checkedGroups && active > 0 && prefixInfeasible(combos, start, active)) {
             pruned++;
             if (!VERIFY_PRUNE) return;
@@ -889,7 +891,7 @@ public final class StructurePoolDriver {
         }
         int remaining = n - start;
         boolean anchor = freeTick(problem, start);
-        boolean shortHold = anchor || start == 0 || (start + 1 < n && problem.jump[start + 1]);
+        boolean shortHold = tapsStage || anchor || start == 0 || (start + 1 < n && problem.jump[start + 1]);
         int dwell = shortHold ? 1 : Math.min(cfg.minDwell, remaining);
         for (int c : cfg.alphabet) {
             if (c == lastLabel) continue;
@@ -1064,8 +1066,22 @@ public final class StructurePoolDriver {
         return countEdges(cfg, problem, combos) + (first ? 1 : 0);
     }
 
+    private boolean hasTap(int[] combos) {
+        int start = 0;
+        while (start < n) {
+            int end = start + 1;
+            while (end < n && combos[end] == combos[start]) end++;
+            boolean shortHold = freeTick(problem, start) || start == 0 || (start + 1 < n && problem.jump[start + 1]);
+            if (!shortHold && end - start < Math.min(cfg.minDwell, n - start)) return true;
+            start = end;
+        }
+        return false;
+    }
+
     private void evalComplete(int[] combos) {
-        if (scoreLevel >= 0 && countEdges(combos) != scoreLevel) return;
+        if (tapsStage) {
+            if (countEdges(combos) > scoreLevel || !hasTap(combos)) return;
+        } else if (scoreLevel >= 0 && countEdges(combos) != scoreLevel) return;
         if (gpuWanted()) {
             gpuAppend(combos);
             return;
@@ -1251,12 +1267,13 @@ public final class StructurePoolDriver {
         PoolCertifier certifier = new PoolCertifier(model, cfg, cancel, progress, problem, deadline, multi);
         ExecutorService pipeExec = Executors.newSingleThreadExecutor();
         try {
+            int lastStage = cfg.maxEdges + (cfg.tapsStage && cfg.minDwell > 1 ? 1 : 0);
             int firstLevel = Math.max(0, Math.min(cfg.minLevel, cfg.maxEdges));
             LevelResult current = enumerateLevel(problem, enumThreads, firstLevel, stopEnum);
-            for (int level = firstLevel; level <= cfg.maxEdges; level++) {
+            for (int level = firstLevel; level <= lastStage; level++) {
                 final int nextLevel = level + 1;
                 java.util.concurrent.Future<LevelResult> nextF = null;
-                if (nextLevel <= cfg.maxEdges && !cancelled()) {
+                if (nextLevel <= lastStage && !cancelled()) {
                     nextF = pipeExec.submit(() -> enumerateLevel(problem, enumThreads, nextLevel, stopEnum));
                 }
                 pool.addAll(current.pool);
@@ -1268,7 +1285,8 @@ public final class StructurePoolDriver {
                 if (ranked.size() > cfg.poolCap) ranked.subList(cfg.poolCap, ranked.size()).clear();
                 certifier.offer(ranked);
                 certifier.resetCertifyCount();
-                progress.update("certify edges=" + level + " (" + ranked.size() + " kept, " + scored + " scored)", 0.4);
+                progress.update("certify edges=" + Math.min(level, cfg.maxEdges) + (level > cfg.maxEdges ? " taps" : "")
+                        + " (" + ranked.size() + " kept, " + scored + " scored)", 0.4);
                 while (!cancelled() && !certifier.variationsOver()) {
                     if (!certifier.certifyNext(false, true)) {
                         if (nextF == null || nextF.isDone()) break;
@@ -1386,6 +1404,7 @@ public final class StructurePoolDriver {
         o.minDwell = c.minDwell;
         o.alphabet = c.alphabet;
         o.takeoffCombos = c.takeoffCombos;
+        o.tapsStage = c.tapsStage;
         o.diskGrid = c.diskGrid;
         o.diskCoarseStride = c.diskCoarseStride;
         o.diskMidStride = c.diskMidStride;
@@ -1426,7 +1445,8 @@ public final class StructurePoolDriver {
             w.stop = stopFlag;
             w.deadlineNanos = deadlineNanos;
             w.prepare(problem);
-            w.scoreLevel = level;
+            w.scoreLevel = Math.min(level, cfg.maxEdges);
+            w.tapsStage = level > cfg.maxEdges;
             w.enumSeg(new int[n], 0, -1, 0);
             boolean usedGpu = w.gpuUsed;
             w.closeGpu();
@@ -1450,7 +1470,8 @@ public final class StructurePoolDriver {
             w.stop = stopFlag;
             w.deadlineNanos = deadlineNanos;
             w.prepare(problem);
-            w.scoreLevel = level;
+            w.scoreLevel = Math.min(level, cfg.maxEdges);
+            w.tapsStage = level > cfg.maxEdges;
             workers.add(w);
         }
         ExecutorService exec = Executors.newFixedThreadPool(Math.max(1, workerCount));

@@ -292,6 +292,7 @@ public class NoTurnColdBench {
             if (Integer.getInteger("pkc.bench.minDwell", -1) > 0) cfg.minDwell = Integer.getInteger("pkc.bench.minDwell");
             if (Integer.getInteger("pkc.bench.perEdgeCertify", -1) > 0) cfg.perEdgeCertify = Integer.getInteger("pkc.bench.perEdgeCertify");
             cfg.playable = Boolean.getBoolean("pkc.bench.playable");
+            if (System.getProperty("pkc.bench.taps") != null) cfg.tapsStage = Boolean.parseBoolean(System.getProperty("pkc.bench.taps"));
             if (System.getProperty("pkc.bench.diskKeep") != null) cfg.diskKeep = Double.parseDouble(System.getProperty("pkc.bench.diskKeep"));
             if (Boolean.getBoolean("pkc.bench.fullAlphabet")) {
                 cfg.alphabet = new int[]{NoTurnKeys.NONE, NoTurnKeys.W, NoTurnKeys.WA, NoTurnKeys.WD, NoTurnKeys.A,
@@ -305,7 +306,7 @@ public class NoTurnColdBench {
             if (benchNearSearchMs > 0) cfg.nearSearchBudgetNanos = benchNearSearchMs * 1_000_000L;
             line("pool search: threads=" + cfg.threads + " (0=auto=" + NoTurnColdBench.autoThreads()
                     + ") searchBudget=" + cfg.searchBudgetNanos / 1e9 + "s nearSearchBudget=" + cfg.nearSearchBudgetNanos / 1e9 + "s polishBudget=" + cfg.certifyBudgetNanos / 1e9 + "s");
-            line("pool cfg: maxEdges=" + cfg.maxEdges + " minDwell=" + cfg.minDwell + " diskGrid=" + cfg.diskGrid
+            line("pool cfg: maxEdges=" + cfg.maxEdges + " minDwell=" + cfg.minDwell + " taps=" + cfg.tapsStage + " diskGrid=" + cfg.diskGrid
                     + " playable=" + cfg.playable + " poolCap=" + cfg.poolCap
                     + " perEdgeCertify=" + cfg.perEdgeCertify + " maxCertify=" + cfg.maxCertify
                     + " certifyBudget=" + cfg.certifyBudgetNanos / 1e9 + "s total=" + cfg.totalBudgetNanos / 1e9

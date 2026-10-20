@@ -231,7 +231,7 @@ public final class NoTurnProblem {
             return p;
         }
         NoTurnProblem p = new NoTurnProblem(baseSpec, model, jaAll, jaLast);
-        if (p.setupEnd < 1) p.issue = "the run-up is too short to search (need at least one setup tick)";
+        if (p.setupEnd < 1 && !(p.setupEnd == 0 && p.jump[0])) p.issue = "the run-up is too short to search (need at least one setup tick)";
         if (p.walls.isEmpty()) p.issue = "no landing constraints found; add X/Z landing walls first";
         return p;
     }
