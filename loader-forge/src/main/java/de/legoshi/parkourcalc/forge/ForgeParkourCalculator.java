@@ -132,6 +132,7 @@ public class ForgeParkourCalculator {
         application.setBlockPicker(new ForgeBlockPicker());
         application.initSettingsStorage(configPath);
         blockCaptureEnabled = application.getSettings().experimentalBlockCapture;
+        application.setPhysicsVariant(de.legoshi.parkourcalc.forge.sim.BpkModBridge.physicsVariant());
         application.setupUi();
         imguiHost.setEditingYawSupplier(application::isEditingYaw);
         imguiHost.setAllowDetachedSupplier(() -> Minecraft.getMinecraft().currentScreen == null);
@@ -668,6 +669,23 @@ public class ForgeParkourCalculator {
     @SubscribeEvent
     public void onClientConnect(FMLNetworkEvent.ClientConnectedToServerEvent event) {
         application.onWorldChange();
+        announceBpkMod();
+    }
+
+    private void announceBpkMod() {
+        if (!de.legoshi.parkourcalc.forge.sim.BpkModBridge.present()) return;
+        if (de.legoshi.parkourcalc.forge.sim.BpkModBridge.broken()) {
+            application.pushHudMessage("BPKMod found but its config could not be read: the simulation follows vanilla sprint and strafe rules");
+            return;
+        }
+        de.legoshi.parkourcalc.forge.sim.BpkModBridge.Rules rules = de.legoshi.parkourcalc.forge.sim.BpkModBridge.rules();
+        application.pushHudMessage("BPKMod: " + rules.describe());
+        if (!rules.physicsVariant().equals(application.getPhysicsVariant())) {
+            application.pushHudMessage("BPKMod config changed since launch: restart the game so the solver follows it");
+        }
+        for (String warning : rules.solverWarnings()) {
+            application.pushHudMessage(warning);
+        }
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)

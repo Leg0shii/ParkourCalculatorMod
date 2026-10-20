@@ -45,7 +45,7 @@ jobs:
           restore-keys: |
             mc-${{ runner.os }}-
       - name: build loaders
-        run: ./gradlew chiseledBuild -x :core:test -x tableStyleCheck -Dorg.gradle.java.home="$JAVA_HOME"
+        run: ./gradlew chiseledBuild :forge-core:test -x :core:test -x tableStyleCheck -Dorg.gradle.java.home="$JAVA_HOME"
       - name: capture build artifacts
         uses: actions/upload-artifact@v4
         with:

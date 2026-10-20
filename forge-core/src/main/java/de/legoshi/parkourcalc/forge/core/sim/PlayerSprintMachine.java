@@ -12,6 +12,44 @@ public final class PlayerSprintMachine {
 
     private PlayerSprintMachine() {}
 
+    public static final float VANILLA_IMPULSE = 0.8F;
+    public static final float BPK_IMPULSE = 1.0E-5F;
+    public static final float BPK_PURE_FORWARD = 1.0F;
+
+    public static final class Rules {
+        public static final Rules VANILLA = new Rules(false, false, false, false, false, false, false, Float.NaN);
+
+        public final boolean active;
+        public final boolean normaliseInput;
+        public final boolean nonSprintingStrafe;
+        public final boolean sprintBackward;
+        public final boolean ignoreWallCollision;
+        public final boolean sprintDelayOnGround;
+        public final boolean bedrockSneak;
+        public final float sneakHeight;
+
+        public Rules(boolean active, boolean normaliseInput, boolean nonSprintingStrafe, boolean sprintBackward,
+                     boolean ignoreWallCollision, boolean sprintDelayOnGround, boolean bedrockSneak, float sneakHeight) {
+            this.active = active;
+            this.normaliseInput = normaliseInput;
+            this.nonSprintingStrafe = nonSprintingStrafe;
+            this.sprintBackward = sprintBackward;
+            this.ignoreWallCollision = ignoreWallCollision;
+            this.sprintDelayOnGround = sprintDelayOnGround;
+            this.bedrockSneak = bedrockSneak;
+            this.sneakHeight = sneakHeight;
+        }
+
+        public float impulse() {
+            return active ? BPK_IMPULSE : VANILLA_IMPULSE;
+        }
+
+        public float startThreshold() {
+            if (!active) return VANILLA_IMPULSE;
+            return nonSprintingStrafe ? BPK_PURE_FORWARD : BPK_IMPULSE;
+        }
+    }
+
     public static final class Inputs {
         public final boolean fwd, back, left, right, jump, sneak, sprintKey;
         public final boolean onGround;
@@ -25,12 +63,26 @@ public final class PlayerSprintMachine {
         /** capabilities.allowFlying. */
         public final boolean canFly;
         public final float foodLevel;
+        public final float height;
+        public final boolean flying;
+        public final boolean sneakForced;
 
         public Inputs(boolean fwd, boolean back, boolean left, boolean right,
                       boolean jump, boolean sneak, boolean sprintKey,
                       boolean onGround, boolean usingItem, boolean riding,
                       boolean horizontalCollision, boolean hasBlindness,
                       boolean canFly, float foodLevel
+        ) {
+            this(fwd, back, left, right, jump, sneak, sprintKey, onGround, usingItem, riding,
+                    horizontalCollision, hasBlindness, canFly, foodLevel, 1.8F, false, false);
+        }
+
+        public Inputs(boolean fwd, boolean back, boolean left, boolean right,
+                      boolean jump, boolean sneak, boolean sprintKey,
+                      boolean onGround, boolean usingItem, boolean riding,
+                      boolean horizontalCollision, boolean hasBlindness,
+                      boolean canFly, float foodLevel,
+                      float height, boolean flying, boolean sneakForced
         ) {
             this.fwd = fwd;
             this.back = back;
@@ -46,6 +98,9 @@ public final class PlayerSprintMachine {
             this.hasBlindness = hasBlindness;
             this.canFly = canFly;
             this.foodLevel = foodLevel;
+            this.height = height;
+            this.flying = flying;
+            this.sneakForced = sneakForced;
         }
     }
 
@@ -77,17 +132,31 @@ public final class PlayerSprintMachine {
         public final float moveForward;
         public final float moveStrafe;
         public final boolean isJumping;
+        public final boolean sneaking;
+        public final boolean dropSprintBoost;
         public final State next;
 
         public Outputs(float moveForward, float moveStrafe, boolean isJumping, State next) {
+            this(moveForward, moveStrafe, isJumping, false, false, next);
+        }
+
+        public Outputs(float moveForward, float moveStrafe, boolean isJumping, boolean sneaking,
+                       boolean dropSprintBoost, State next) {
             this.moveForward = moveForward;
             this.moveStrafe = moveStrafe;
             this.isJumping = isJumping;
+            this.sneaking = sneaking;
+            this.dropSprintBoost = dropSprintBoost;
             this.next = next;
         }
     }
 
     public static Outputs tick(Inputs in, State prev) {
+        return tick(in, prev, Rules.VANILLA);
+    }
+
+    public static Outputs tick(Inputs in, State prev, Rules rules) {
+        Rules r = rules == null ? Rules.VANILLA : rules;
         int sprintToggleTimer = prev.sprintToggleTimer > 0 ? prev.sprintToggleTimer - 1 : 0;
         int sprintingTicksLeft = prev.sprintingTicksLeft;
         boolean isSprinting = prev.isSprinting;
@@ -100,14 +169,29 @@ public final class PlayerSprintMachine {
         }
 
         boolean flag1 = prev.prevSneak;
-        float f = 0.8F;
-        boolean flag2 = prev.prevMoveForward >= f;
+        float impulse = r.impulse();
+        float start = r.startThreshold();
+        boolean flag2 = prev.prevMoveForward >= impulse;
 
         float moveForward = axis(in.fwd, in.back);
         float moveStrafe = axis(in.left, in.right);
+        if (r.active && r.normaliseInput) {
+            float distance = (float) Math.sqrt((double) (moveForward * moveForward + moveStrafe * moveStrafe));
+            if (distance >= 1.0E-4F) {
+                moveForward /= distance;
+                moveStrafe /= distance;
+            }
+        }
         if (in.sneak) {
-            moveForward *= 0.3F;
+            moveForward = (float) ((double) moveForward * 0.3D);
+            moveStrafe = (float) ((double) moveStrafe * 0.3D);
+        }
+
+        boolean sneakPose = r.active && in.height == r.sneakHeight;
+        boolean sneaking = in.sneak || (r.active && r.bedrockSneak && in.sneakForced);
+        if (r.active && r.bedrockSneak && !in.sneak && sneakPose && !in.flying) {
             moveStrafe *= 0.3F;
+            moveForward *= 0.3F;
         }
 
         if (in.usingItem && !in.riding) {
@@ -117,11 +201,12 @@ public final class PlayerSprintMachine {
         }
 
         boolean flag3 = in.foodLevel > 6.0F || in.canFly;
+        boolean prevSprinting = isSprinting;
 
         if (in.onGround
                 && !flag1
                 && !flag2
-                && moveForward >= f
+                && moveForward >= start
                 && !isSprinting
                 && flag3
                 && !in.usingItem
@@ -136,23 +221,48 @@ public final class PlayerSprintMachine {
         }
 
         if (!isSprinting
-                && moveForward >= f
+                && moveForward >= start
                 && flag3
                 && !in.usingItem
                 && !in.hasBlindness
                 && in.sprintKey
+                && !sneakPose
         ) {
             isSprinting = true;
             sprintingTicksLeft = 600;
         }
 
-        if (isSprinting && (moveForward < f || in.horizontalCollision || !flag3)) {
+        float stopForward = r.active && r.sprintBackward && !sneaking && moveForward != 0.0F
+                ? BPK_PURE_FORWARD
+                : moveForward;
+        boolean wall = r.active
+                ? (!r.ignoreWallCollision && in.horizontalCollision) || sneakPose
+                : in.horizontalCollision;
+        if (isSprinting && (stopForward < impulse || wall || !flag3)) {
             isSprinting = false;
             sprintingTicksLeft = 0;
         }
 
+        boolean dropSprintBoost = r.active && r.sprintDelayOnGround && !prevSprinting && isSprinting;
+
         State next = new State(in.sneak, moveForward, sprintToggleTimer, sprintingTicksLeft, isSprinting);
-        return new Outputs(moveForward, moveStrafe, in.jump, next);
+        return new Outputs(moveForward, moveStrafe, in.jump, sneaking, dropSprintBoost, next);
+    }
+
+    public static float heldForward(boolean fwd, boolean back, boolean left, boolean right, boolean sneak, Rules rules) {
+        Rules r = rules == null ? Rules.VANILLA : rules;
+        float moveForward = axis(fwd, back);
+        float moveStrafe = axis(left, right);
+        if (r.active && r.normaliseInput) {
+            float distance = (float) Math.sqrt((double) (moveForward * moveForward + moveStrafe * moveStrafe));
+            if (distance >= 1.0E-4F) {
+                moveForward /= distance;
+            }
+        }
+        if (sneak) {
+            moveForward = (float) ((double) moveForward * 0.3D);
+        }
+        return moveForward;
     }
 
     private static float axis(boolean positive, boolean negative) {

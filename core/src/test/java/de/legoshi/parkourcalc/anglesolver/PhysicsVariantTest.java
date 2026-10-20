@@ -62,6 +62,26 @@ public class PhysicsVariantTest {
     }
 
     @Test
+    public void legacyFloatChainLosesTheBoostTheSameWay() {
+        PhysicsVariant bpk157 = new PhysicsVariant(1.0E-4, true, false, "BPKMod");
+        ExactJumpModel vanilla = ExactJumpModel.forMcVersion("1.12.2");
+        ExactJumpModel noBoost = ExactJumpModel.forMcVersion("1.12.2", bpk157);
+        assertFalse(vanilla.modern());
+        assertFalse(noBoost.modern());
+        assertFalse(noBoost.strafeBoost());
+        assertEquals(0.003, vanilla.inertiaThreshold(), 0.0);
+        assertEquals(1.0E-4, noBoost.inertiaThreshold(), 0.0);
+        assertTrue(noBoost.perAxisInertia());
+        double forwardOnly = speed(vanilla, groundTick(0.98F, 0.0F, false));
+        assertEquals(forwardOnly, speed(noBoost, groundTick(0.98F, 0.0F, false)), 0.0);
+        assertEquals(forwardOnly / 0.98, speed(vanilla, groundTick(0.98F, 0.98F, false)), forwardOnly * 1e-6);
+        assertEquals(forwardOnly, speed(noBoost, groundTick(0.98F, 0.98F, false)), forwardOnly * 1e-6);
+        assertEquals(forwardOnly, speed(noBoost, groundTick(0.98F, 0.0F, true)), forwardOnly * 1e-6);
+        float raw = ExactJumpModel.rawDiagonalInput();
+        assertEquals(speed(noBoost, groundTick(0.98F, 0.98F, false)), speed(noBoost, groundTick(raw, raw, false)), 0.0);
+    }
+
+    @Test
     public void forced45TickLosesTheBoostToo() {
         ExactJumpModel vanilla = ExactJumpModel.forMcVersion("26.3");
         ExactJumpModel noBoost = ExactJumpModel.forMcVersion("26.3", NO_BOOST);

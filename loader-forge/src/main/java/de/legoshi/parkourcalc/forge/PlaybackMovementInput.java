@@ -15,7 +15,7 @@ final class PlaybackMovementInput extends MovementInput {
 
     @Override
     public void updatePlayerMoveState() {
-        state.update(bridge.getCurrentRow());
+        state.update(bridge.getCurrentRow(), de.legoshi.parkourcalc.forge.sim.BpkModBridge.rules().normaliseInput());
         this.moveStrafe = state.moveStrafe;
         this.moveForward = state.moveForward;
         this.jump = state.jump;

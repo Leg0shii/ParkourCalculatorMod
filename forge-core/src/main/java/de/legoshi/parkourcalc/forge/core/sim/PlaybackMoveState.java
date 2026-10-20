@@ -11,6 +11,10 @@ public final class PlaybackMoveState {
     public boolean sneak;
 
     public void update(InputRow row) {
+        update(row, false);
+    }
+
+    public void update(InputRow row, boolean normaliseInput) {
         moveStrafe = 0.0F;
         moveForward = 0.0F;
         jump = false;
@@ -20,11 +24,18 @@ public final class PlaybackMoveState {
         if (row.isKeyActive(InputRow.Key.S)) moveForward -= 1.0F;
         if (row.isKeyActive(InputRow.Key.A)) moveStrafe += 1.0F;
         if (row.isKeyActive(InputRow.Key.D)) moveStrafe -= 1.0F;
+        if (normaliseInput) {
+            float distance = (float) Math.sqrt((double) (moveForward * moveForward + moveStrafe * moveStrafe));
+            if (distance >= 1.0E-4F) {
+                moveForward /= distance;
+                moveStrafe /= distance;
+            }
+        }
         jump = row.isKeyActive(InputRow.Key.JUMP);
         sneak = row.isKeyActive(InputRow.Key.SNEAK);
         if (sneak) {
-            moveStrafe *= 0.3F;
-            moveForward *= 0.3F;
+            moveStrafe = (float) ((double) moveStrafe * 0.3D);
+            moveForward = (float) ((double) moveForward * 0.3D);
         }
     }
 }

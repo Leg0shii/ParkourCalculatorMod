@@ -173,11 +173,13 @@ public class SimulatorEntity extends EntityPlayer {
                 ? resume.airSprintFactor
                 : (resume.sprinting ? 0.026F : 0.02F);
         boolean prevSneak = resume.heldLastTick.contains(InputRow.Key.SNEAK);
-        float prevForward = (resume.heldLastTick.contains(InputRow.Key.W) ? 1.0F : 0.0F)
-                - (resume.heldLastTick.contains(InputRow.Key.S) ? 1.0F : 0.0F);
-        if (prevSneak) {
-            prevForward *= 0.3F;
-        }
+        float prevForward = PlayerSprintMachine.heldForward(
+                resume.heldLastTick.contains(InputRow.Key.W),
+                resume.heldLastTick.contains(InputRow.Key.S),
+                resume.heldLastTick.contains(InputRow.Key.A),
+                resume.heldLastTick.contains(InputRow.Key.D),
+                prevSneak,
+                BpkModBridge.rules().sprintRules());
         this.sprintState = new PlayerSprintMachine.State(prevSneak, prevForward,
                 resume.sprintWindow, resume.sprintTicksLeft, resume.sprinting);
     }
@@ -268,6 +270,7 @@ public class SimulatorEntity extends EntityPlayer {
     }
 
     private void applyMovementInput() {
+        BpkModBridge.Rules bpk = BpkModBridge.rules();
         PlayerSprintMachine.Inputs in = new PlayerSprintMachine.Inputs(
                 currentInput.isKeyActive(InputRow.Key.W),
                 currentInput.isKeyActive(InputRow.Key.S),
@@ -289,15 +292,19 @@ public class SimulatorEntity extends EntityPlayer {
                 this.isPotionActive(Potion.blindness),
                 *///?}
                 this.capabilities.allowFlying,
-                (float) this.getFoodStats().getFoodLevel()
+                (float) this.getFoodStats().getFoodLevel(),
+                this.height,
+                this.capabilities.isFlying,
+                BpkModBridge.sneakForced(this, bpk)
         );
 
         PlayerSprintMachine.State seed = sprintState.withIsSprinting(this.isSprinting());
-        PlayerSprintMachine.Outputs out = PlayerSprintMachine.tick(in, seed);
+        PlayerSprintMachine.Outputs out = PlayerSprintMachine.tick(in, seed, bpk.sprintRules());
         sprintState = out.next;
 
         this.setSprinting(out.next.isSprinting);
-        this.setSneaking(in.sneak);
+        if (out.dropSprintBoost) BpkModBridge.dropSprintBoost(this);
+        this.setSneaking(out.sneaking);
         this.moveForward = out.moveForward;
         //? if >=1.12 {
         this.moveVertical = 0.0F;

@@ -151,6 +151,8 @@ Runs next to [BPKMod](https://github.com/xiaozi233/BPKMod) (Bedrock-style moveme
 2. Drop `pkc-forge-1.12.2-<version>.jar` into your `mods` folder.
 3. Launch the 1.12.2 Forge profile.
 
+Runs next to [BPKMod 1.5.7](https://github.com/xiaozi233/BPKMod/releases/tag/1.5.7) (the Forge 1.12.2 line of BPKMod, needs MixinBooter): the simulation follows BPKMod's config live, the angle solver reads it at launch, and a HUD line on world join says which rules it saw. Restart the game after changing BPKMod's config so the solver follows. BPKMod's new touch (the 11.48 degree strafe) is simulated but not solved.
+
 After launch, open the in-game **Mods** menu to confirm Parkour Calculator is listed.
 
 ## Building from source
