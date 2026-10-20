@@ -66,7 +66,7 @@ public final class SineTableGeometry {
         boolean contact = !Double.isNaN(slipOv);
         boolean isJump = sc.jumpAt(t) && contact;
         boolean sprint = sc.sprintAt(t);
-        boolean airSprint = modern ? sprint : sc.factorSprintAt(t);
+        boolean airSprint = modern || sc.liveAirSprintFactor ? sprint : sc.factorSprintAt(t);
         float slipF = contact ? (float) slipOv : Constants.SLIP_F;
         float accelSpeed;
         if (contact) {
@@ -79,7 +79,7 @@ public final class SineTableGeometry {
         float forward = sc.forwardAt(t);
         float strafe;
         if (sc.strafeAt(t) && !isJump) {
-            if (!exact.strafeBoost()) {
+            if (!exact.variant().strafeBoost) {
                 float raw = ExactJumpModel.rawDiagonalInput();
                 forward = Math.signum(forward) * raw;
                 strafe = sc.strafeSign * raw;
@@ -92,7 +92,7 @@ public final class SineTableGeometry {
             }
         } else {
             strafe = sc.strafeInputAt(t);
-            if (!exact.strafeBoost() && ExactJumpModel.isTypedDiagonal(forward, strafe)) {
+            if (!exact.variant().strafeBoost && ExactJumpModel.isTypedDiagonal(forward, strafe)) {
                 float raw = ExactJumpModel.rawDiagonalInput();
                 forward = Math.signum(forward) * raw;
                 strafe = Math.signum(strafe) * raw;
@@ -120,6 +120,11 @@ public final class SineTableGeometry {
                 fm = accelSpeed / fm;
                 strafe *= fm;
                 forward *= fm;
+                if (exact.variant().newTouch && BpkNewTouch.applies(strafe, forward)) {
+                    float s = strafe;
+                    strafe = BpkNewTouch.strafeAfter(s, forward);
+                    forward = BpkNewTouch.forwardAfter(s, forward);
+                }
                 fly[t] = part(true, strafe, forward, 0.0, 0.0);
             }
         }

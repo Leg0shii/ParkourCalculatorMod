@@ -121,7 +121,7 @@ public final class Scoring {
         a.incomingSprint = b.incomingSprint;
         a.incomingAmp = b.incomingAmp;
         a.liveAirSprintFactor = b.liveAirSprintFactor;
-        a.strafeBoost = b.strafeBoost;
+        a.variant = b.variant;
         a.forwardInputPerTick = b.forwardInputPerTick;
         a.strafeInputPerTick = b.strafeInputPerTick;
         return a;

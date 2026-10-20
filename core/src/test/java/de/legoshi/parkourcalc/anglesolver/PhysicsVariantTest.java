@@ -15,6 +15,7 @@ import static org.junit.Assert.assertTrue;
 public class PhysicsVariantTest {
 
     private static final PhysicsVariant NO_BOOST = new PhysicsVariant(null, null, false, "test");
+    private static final PhysicsVariant NEW_TOUCH = new PhysicsVariant(null, null, true, true, false, "test");
 
     private static JumpPhysicsInputs groundTick(float forward, float strafe, boolean force45) {
         JumpPhysicsInputs sc = new JumpPhysicsInputs(1);
@@ -36,6 +37,13 @@ public class PhysicsVariantTest {
         double dx = p.posX[1] - p.posX[0];
         double dz = p.posZ[1] - p.posZ[0];
         return Math.sqrt(dx * dx + dz * dz);
+    }
+
+    private static double headingOffForward(ExactJumpModel model, JumpPhysicsInputs sc) {
+        ForwardPath p = model.forward(sc, new double[] {0.0});
+        double dx = p.posX[1] - p.posX[0];
+        double dz = p.posZ[1] - p.posZ[0];
+        return Math.toDegrees(Math.atan2(Math.abs(dx), dz));
     }
 
     @Test
@@ -104,10 +112,10 @@ public class PhysicsVariantTest {
     @Test
     public void scenarioCopiesCarryTheFlag() {
         JumpPhysicsInputs sc = groundTick(0.98F, 0.0F, false);
-        sc.strafeBoost = false;
-        assertFalse(sc.copy().strafeBoost);
-        assertFalse(sc.slice(0, 0.0, 64.0, 0.0, 0.0, 0.0, 0.0, 0.0F).strafeBoost);
-        assertTrue(groundTick(0.98F, 0.0F, false).strafeBoost);
+        sc.variant = NO_BOOST;
+        assertSame(NO_BOOST, sc.copy().variant);
+        assertSame(NO_BOOST, sc.slice(0, 0.0, 64.0, 0.0, 0.0, 0.0, 0.0, 0.0F).variant);
+        assertSame(PhysicsVariant.VANILLA, groundTick(0.98F, 0.0F, false).variant);
     }
 
     @Test
@@ -117,5 +125,42 @@ public class PhysicsVariantTest {
                 new PhysicsVariant(0.0, true, false, "BPKMod").describe());
         assertEquals("BPKMod: inertia threshold 1.0E-4 per axis, 45 strafe on",
                 new PhysicsVariant(1.0E-4, true, true, "BPKMod").describe());
+        assertEquals("BPKMod: inertia threshold 1.0E-4 per axis, 45 strafe on, new touch, air sprint live",
+                new PhysicsVariant(1.0E-4, true, true, true, true, "BPKMod").describe());
+        assertFalse(NEW_TOUCH.isVanilla());
+    }
+
+    @Test
+    public void newTouchTurnsTheDiagonalToElevenDegrees() {
+        ExactJumpModel vanilla = ExactJumpModel.forMcVersion("1.12.2");
+        ExactJumpModel newTouch = ExactJumpModel.forMcVersion("1.12.2", NEW_TOUCH);
+        double bedrock = Math.toDegrees(Math.acos(0.98));
+        assertEquals(45.0, headingOffForward(vanilla, groundTick(0.98F, 0.98F, false)), 1e-3);
+        assertEquals(bedrock, headingOffForward(newTouch, groundTick(0.98F, 0.98F, false)), 1e-2);
+        assertEquals(bedrock, headingOffForward(newTouch, groundTick(0.98F, -0.98F, false)), 1e-2);
+        assertEquals(bedrock, headingOffForward(newTouch, groundTick(0.98F, 0.0F, true)), 1e-2);
+        double diagonal = speed(vanilla, groundTick(0.98F, 0.98F, false));
+        assertEquals(diagonal, speed(newTouch, groundTick(0.98F, 0.98F, false)), diagonal * 1e-5);
+        assertEquals(speed(vanilla, groundTick(0.98F, 0.0F, false)), speed(newTouch, groundTick(0.98F, 0.0F, false)), 0.0);
+    }
+
+    @Test
+    public void sneakingInTheAirStaysBelowTheNewTouchGate() {
+        ExactJumpModel newTouch = ExactJumpModel.forMcVersion("1.12.2", NEW_TOUCH);
+        JumpPhysicsInputs sc = groundTick(0.98F * 0.3F, 0.98F * 0.3F, false);
+        sc.slipPerTick = new double[] {Double.NaN};
+        sc.sprintPerTick = new boolean[] {false};
+        assertEquals(45.0, headingOffForward(newTouch, sc), 1e-3);
+    }
+
+    @Test
+    public void liveAirSprintFactorDropsTheLegacyLag() {
+        JumpPhysicsInputs lagged = groundTick(0.98F, 0.0F, false);
+        lagged.slipPerTick = new double[] {Double.NaN};
+        lagged.incomingSprint = Boolean.FALSE;
+        JumpPhysicsInputs live = lagged.copy();
+        live.liveAirSprintFactor = true;
+        ExactJumpModel model = ExactJumpModel.forMcVersion("1.12.2");
+        assertEquals(1.3, speed(model, live) / speed(model, lagged), 1e-5);
     }
 }

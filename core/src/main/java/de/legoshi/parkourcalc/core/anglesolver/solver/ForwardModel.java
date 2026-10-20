@@ -4,8 +4,8 @@ public interface ForwardModel {
 
     ForwardPath forward(JumpPhysicsInputs scenario, double[] yawAbsDeg);
 
-    default boolean strafeBoost() {
-        return true;
+    default PhysicsVariant variant() {
+        return PhysicsVariant.VANILLA;
     }
 
     default void stepRange(JumpPhysicsInputs scenario, double[] yawAbsDeg, int from, ForwardPath into) {
