@@ -52,6 +52,7 @@ public final class SaveFile {
         public boolean pitchLocked;
         public int speedAmplifier;
         public int jumpBoostAmplifier;
+        public int slownessAmplifier;
         public int hotbarSlot;
         public boolean teleport;
         public double teleportX;

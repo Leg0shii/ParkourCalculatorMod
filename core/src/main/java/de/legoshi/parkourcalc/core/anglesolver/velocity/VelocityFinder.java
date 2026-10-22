@@ -411,6 +411,7 @@ public final class VelocityFinder {
         c.strafeSign = s.strafeSign;
         c.strafePerTick = s.strafePerTick;
         c.speedAmplifier = s.speedAmplifier;
+        c.slownessAmplifier = s.slownessAmplifier;
         c.slipPerTick = s.slipPerTick;
         c.surfacePerTick = s.surfacePerTick;
         c.soulsandCellsPerTick = s.soulsandCellsPerTick;

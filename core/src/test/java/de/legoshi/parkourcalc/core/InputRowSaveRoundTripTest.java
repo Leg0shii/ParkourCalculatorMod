@@ -145,6 +145,30 @@ public class InputRowSaveRoundTripTest {
     }
 
     @Test
+    public void slownessAmplifierRoundTripsAndDefaultsToZero() throws Exception {
+        FileSystemSaveStore store = store(Files.createTempDirectory("pkc-rt-slowness"));
+        InputData in = new InputData();
+        InputRow r0 = new InputRow();
+        r0.setSlownessAmplifier(5);
+        in.getRows().add(r0);
+        InputData out = saveAndReload(store, in);
+        assertEquals(5, out.get(0).getSlownessAmplifier());
+
+        String json = "{\n" +
+                "  \"version\": 1,\n" +
+                "  \"start\": { \"pos\": [0.0, 0.0, 0.0], \"vel\": [0.0, 0.0, 0.0], \"yaw\": 0.0 },\n" +
+                "  \"rows\": [\n" +
+                "    { \"keys\": [\"W\"], \"speedAmplifier\": 1, \"jumpBoostAmplifier\": 0 }\n" +
+                "  ]\n" +
+                "}";
+        SaveFile file = SaveIO.parseSafe(json);
+        assertNotNull(file);
+        InputData old = new InputData();
+        SaveIO.applyRowsTo(file, old);
+        assertEquals("a save without the field loads as no slowness", 0, old.get(0).getSlownessAmplifier());
+    }
+
+    @Test
     public void oldFormatRowWithoutPitchOrMouseLoadsWithDefaults() {
         String json = "{\n" +
                 "  \"version\": 1,\n" +

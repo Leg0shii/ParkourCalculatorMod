@@ -905,6 +905,7 @@ public final class FreeStartSolve {
         a.strafeSign = b.strafeSign;
         a.strafePerTick = b.strafePerTick;
         a.speedAmplifier = b.speedAmplifier;
+        a.slownessAmplifier = b.slownessAmplifier;
         a.slipPerTick = b.slipPerTick;
         a.surfacePerTick = b.surfacePerTick;
         a.soulsandCellsPerTick = b.soulsandCellsPerTick;
@@ -913,6 +914,7 @@ public final class FreeStartSolve {
         a.sprintPerTick = b.sprintPerTick;
         a.incomingSprint = b.incomingSprint;
         a.incomingAmp = b.incomingAmp;
+        a.incomingSlowness = b.incomingSlowness;
         a.liveAirSprintFactor = b.liveAirSprintFactor;
         a.forwardInputPerTick = b.forwardInputPerTick;
         a.strafeInputPerTick = b.strafeInputPerTick;

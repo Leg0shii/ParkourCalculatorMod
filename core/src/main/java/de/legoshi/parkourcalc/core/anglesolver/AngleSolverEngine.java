@@ -688,6 +688,7 @@ public final class AngleSolverEngine {
         boolean[] jumpMask = new boolean[numTicks];
         boolean[] yawLocked = new boolean[numTicks];
         int[] speedAmp = new int[numTicks];
+        int[] slowAmp = new int[numTicks];
         double[] slipPerTick = new double[numTicks];
         SurfaceKind[] surfacePerTick = new SurfaceKind[numTicks];
         int[] soulsandCellsPerTick = new int[numTicks];
@@ -737,6 +738,7 @@ public final class AngleSolverEngine {
             }
             yawLocked[k] = row.isYawLocked();
             speedAmp[k] = effSpeedLevel(t, rows);
+            slowAmp[k] = effSlownessLevel(t, rows);
         }
         if (deriveAny) healWallHitSprint(startTick, numTicks, sprintArr, forwardIn);
         JumpPhysicsInputs phys = new JumpPhysicsInputs(numTicks);
@@ -749,6 +751,7 @@ public final class AngleSolverEngine {
         phys.jumpPerTick = jumpMask;
         phys.strafePerTick = strafeMask;
         phys.speedAmplifier = speedAmp;
+        phys.slownessAmplifier = slowAmp;
         phys.slipPerTick = slipPerTick;
         phys.surfacePerTick = surfacePerTick;
         phys.soulsandCellsPerTick = soulsandCellsPerTick;
@@ -762,6 +765,7 @@ public final class AngleSolverEngine {
                 ? (seed.hasMovementSample() ? seed.sprinting : Boolean.TRUE)
                 : Boolean.TRUE;
         phys.incomingAmp = startTick > 0 ? effSpeedLevel(startTick - 1, rows) : effSpeedLevel(startTick, rows);
+        phys.incomingSlowness = startTick > 0 ? effSlownessLevel(startTick - 1, rows) : effSlownessLevel(startTick, rows);
         return new Phys(phys, strafeMask, force45Mask, jumpTickRel);
     }
 
@@ -1583,13 +1587,21 @@ public final class AngleSolverEngine {
 
     /** Effective Speed amplifier at a tick: override added/removed over the TAS row's own amplifier. */
     private int effSpeedLevel(int tick, List<InputRow> rows) {
+        return effPotionLevel(tick, Potion.SPEED, tick >= 0 && tick < rows.size() ? rows.get(tick).getSpeedAmplifier() : 0);
+    }
+
+    private int effSlownessLevel(int tick, List<InputRow> rows) {
+        return effPotionLevel(tick, Potion.SLOWNESS, tick >= 0 && tick < rows.size() ? rows.get(tick).getSlownessAmplifier() : 0);
+    }
+
+    private int effPotionLevel(int tick, Potion potion, int rowLevel) {
         StateOverride ov = overrideAt(tick);
         if (ov != null) {
-            PotionDose added = ov.findAdded(Potion.SPEED);
+            PotionDose added = ov.findAdded(potion);
             if (added != null) return added.level;
-            if (ov.getRemoved().contains(Potion.SPEED)) return 0;
+            if (ov.getRemoved().contains(potion)) return 0;
         }
-        return tick >= 0 && tick < rows.size() ? rows.get(tick).getSpeedAmplifier() : 0;
+        return rowLevel;
     }
 
     private StateOverride overrideAt(int tick) {

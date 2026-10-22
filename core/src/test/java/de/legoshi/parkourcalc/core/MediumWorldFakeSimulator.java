@@ -404,7 +404,7 @@ public class MediumWorldFakeSimulator extends LazyEntitySimulator<MediumWorldFak
 
     @Override protected void setYawAbsolute(FakeEntity e, float yaw) { e.yaw = yaw; }
 
-    @Override protected void applyTickEffects(FakeEntity e, int speedAmplifier, int jumpBoostAmplifier) { }
+    @Override protected void applyTickEffects(FakeEntity e, int speedAmplifier, int jumpBoostAmplifier, int slownessAmplifier) { }
 
     @Override protected void tickEntity(FakeEntity e) { e.tick(); }
 

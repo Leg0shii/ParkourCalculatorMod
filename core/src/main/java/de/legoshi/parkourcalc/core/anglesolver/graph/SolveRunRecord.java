@@ -279,7 +279,7 @@ public final class SolveRunRecord {
                     .append(',').append(bits(box.vzLo)).append(',').append(bits(box.vzHi)).append('\n');
         }
         sb.append("jumpTick:").append(sc.jumpTick).append('\n');
-        sb.append("incoming:").append(sc.incomingSprint).append(',').append(sc.incomingAmp).append('\n');
+        sb.append("incoming:").append(sc.incomingSprint).append(',').append(sc.incomingAmp).append(',').append(sc.incomingSlowness).append('\n');
         for (int t = 0; t < sc.numTicks; t++) {
             sb.append("t").append(t).append(':')
                     .append(sc.jumpAt(t) ? 1 : 0)
@@ -287,6 +287,7 @@ public final class SolveRunRecord {
                     .append(sc.sprintAt(t) ? 1 : 0)
                     .append(sc.yawLockedPerTick != null && t < sc.yawLockedPerTick.length && sc.yawLockedPerTick[t] ? 1 : 0)
                     .append(',').append(sc.speedAmplifierAt(t))
+                    .append(',').append(sc.slownessAmplifierAt(t))
                     .append(',').append(bits(sc.slipAt(t)))
                     .append(',').append(Float.floatToIntBits(sc.forwardAt(t)))
                     .append(',').append(Float.floatToIntBits(sc.strafeInputAt(t)))

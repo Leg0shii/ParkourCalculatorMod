@@ -72,7 +72,7 @@ public final class SineTableGeometry {
         if (contact) {
             float f4 = slipF * 0.91F;
             float ground = modern ? 0.21600002F / (slipF * slipF * slipF) : 0.16277136F / (f4 * f4 * f4);
-            accelSpeed = Constants.attrValueF(sc.factorAmpAt(t), sprint) * ground;
+            accelSpeed = Constants.attrValueF(sc.factorAmpAt(t), sc.factorSlownessAt(t), sprint) * ground;
         } else {
             accelSpeed = airSprint ? Constants.AIR_SPEED_F : Constants.AIR_SPEED_NO_SPRINT_F;
         }

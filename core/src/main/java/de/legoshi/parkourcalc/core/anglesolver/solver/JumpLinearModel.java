@@ -139,7 +139,7 @@ public final class JumpLinearModel {
             double accelSpeed;
             if (contact) {
                 f4[t] = floatFriction ? (double) ((float) slipOv * 0.91F) : slip * 0.91;
-                accelSpeed = Constants.attrValueF(sc.factorAmpAt(t), sprint) * (0.16277136 / (f4[t] * f4[t] * f4[t]));
+                accelSpeed = Constants.attrValueF(sc.factorAmpAt(t), sc.factorSlownessAt(t), sprint) * (0.16277136 / (f4[t] * f4[t] * f4[t]));
             } else {
                 f4[t] = floatFriction ? (double) 0.91F : 0.91;
                 accelSpeed = sc.airFactorSprintAt(t) ? Constants.AIR_SPEED_F : Constants.AIR_SPEED_NO_SPRINT_F;

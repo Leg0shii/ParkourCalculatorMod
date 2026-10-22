@@ -476,6 +476,7 @@ public final class SaveIO {
         r.pitchLocked = row.isPitchLocked();
         r.speedAmplifier = row.getSpeedAmplifier();
         r.jumpBoostAmplifier = row.getJumpBoostAmplifier();
+        r.slownessAmplifier = row.getSlownessAmplifier();
         r.hotbarSlot = row.getHotbarSlot();
         r.teleport = row.isTeleportEnabled();
         r.teleportX = row.getTeleportX();
@@ -504,6 +505,7 @@ public final class SaveIO {
                 && r.pitchLocked == row.isPitchLocked()
                 && r.speedAmplifier == row.getSpeedAmplifier()
                 && r.jumpBoostAmplifier == row.getJumpBoostAmplifier()
+                && r.slownessAmplifier == row.getSlownessAmplifier()
                 && r.hotbarSlot == row.getHotbarSlot()
                 && r.teleport == row.isTeleportEnabled()
                 && r.teleportX == row.getTeleportX()
@@ -540,6 +542,7 @@ public final class SaveIO {
         if (r != null) {
             row.setSpeedAmplifier(r.speedAmplifier);
             row.setJumpBoostAmplifier(r.jumpBoostAmplifier);
+            row.setSlownessAmplifier(r.slownessAmplifier);
             row.setHotbarSlot(r.hotbarSlot);
             row.setTeleportDestination(r.teleportX, r.teleportY, r.teleportZ);
             row.setTeleportEnabled(r.teleport);

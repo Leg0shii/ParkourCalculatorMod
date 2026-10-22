@@ -559,7 +559,7 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
     }
 
     @Override
-    public void applyEffects(int speedAmplifier, int jumpBoostAmplifier) {
+    public void applyEffects(int speedAmplifier, int jumpBoostAmplifier, int slownessAmplifier) {
         if (ghostMode) {
             if (ghost == null) return;
             ghost.removeAllEffects();
@@ -568,6 +568,9 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
             }
             if (jumpBoostAmplifier > 0) {
                 ghost.addEffect(new MobEffectInstance(jumpBoostEffect(), EFFECT_DURATION_TICKS, jumpBoostAmplifier - 1, false, false, true));
+            }
+            if (slownessAmplifier > 0) {
+                ghost.addEffect(new MobEffectInstance(slownessEffect(), EFFECT_DURATION_TICKS, slownessAmplifier - 1, false, false, true));
             }
             return;
         }
@@ -582,11 +585,15 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
             if (sp == null) return;
             sp.removeEffect(speedEffect());
             sp.removeEffect(jumpBoostEffect());
+            sp.removeEffect(slownessEffect());
             if (speedAmplifier > 0) {
                 sp.addEffect(new MobEffectInstance(speedEffect(), EFFECT_DURATION_TICKS, speedAmplifier - 1, false, false, true));
             }
             if (jumpBoostAmplifier > 0) {
                 sp.addEffect(new MobEffectInstance(jumpBoostEffect(), EFFECT_DURATION_TICKS, jumpBoostAmplifier - 1, false, false, true));
+            }
+            if (slownessAmplifier > 0) {
+                sp.addEffect(new MobEffectInstance(slownessEffect(), EFFECT_DURATION_TICKS, slownessAmplifier - 1, false, false, true));
             }
         });
     }
@@ -599,6 +606,10 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
     private static net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> jumpBoostEffect() {
         return MobEffects.JUMP_BOOST;
     }
+
+    private static net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> slownessEffect() {
+        return MobEffects.SLOWNESS;
+    }
     //?} elif >=1.20.5 {
     /*private static net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> speedEffect() {
         return MobEffects.MOVEMENT_SPEED;
@@ -607,6 +618,10 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
     private static net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> jumpBoostEffect() {
         return MobEffects.JUMP;
     }
+
+    private static net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> slownessEffect() {
+        return MobEffects.MOVEMENT_SLOWDOWN;
+    }
     *///?} else {
     /*private static net.minecraft.world.effect.MobEffect speedEffect() {
         return MobEffects.MOVEMENT_SPEED;
@@ -614,6 +629,10 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
 
     private static net.minecraft.world.effect.MobEffect jumpBoostEffect() {
         return MobEffects.JUMP;
+    }
+
+    private static net.minecraft.world.effect.MobEffect slownessEffect() {
+        return MobEffects.MOVEMENT_SLOWDOWN;
     }
     *///?}
 

@@ -54,5 +54,5 @@ public class FakePlaybackBridge implements PlaybackBridge {
     @Override public void releaseAllKeys() { releaseAllCalls++; keys.clear(); }
     @Override public void suppressFlight() { suppressFlightCalls++; }
     @Override public void closeUI() { }
-    @Override public void applyEffects(int speedAmplifier, int jumpBoostAmplifier) { }
+    @Override public void applyEffects(int speedAmplifier, int jumpBoostAmplifier, int slownessAmplifier) { }
 }

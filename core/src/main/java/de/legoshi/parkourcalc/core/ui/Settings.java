@@ -59,6 +59,7 @@ public final class Settings {
     private static final boolean DEFAULT_SHOW_SUBTICK = false;
     private static final boolean DEFAULT_SHOW_COL_SPEED = false;
     private static final boolean DEFAULT_SHOW_COL_JUMP_BOOST = false;
+    private static final boolean DEFAULT_SHOW_COL_SLOWNESS = false;
     private static final boolean DEFAULT_SHOW_COL_HOTBAR = false;
     private static final boolean DEFAULT_SHOW_CONSTRAINTS = true;
     private static final boolean DEFAULT_HIGHLIGHT_ON_GROUND_ROWS = true;
@@ -181,6 +182,7 @@ public final class Settings {
     public boolean showSubtick = DEFAULT_SHOW_SUBTICK;
     public boolean showColSpeed = DEFAULT_SHOW_COL_SPEED;
     public boolean showColJumpBoost = DEFAULT_SHOW_COL_JUMP_BOOST;
+    public boolean showColSlowness = DEFAULT_SHOW_COL_SLOWNESS;
     public boolean showColHotbar = DEFAULT_SHOW_COL_HOTBAR;
     public boolean showConstraints = DEFAULT_SHOW_CONSTRAINTS;
     public boolean highlightOnGroundRows = DEFAULT_HIGHLIGHT_ON_GROUND_ROWS;
@@ -316,6 +318,7 @@ public final class Settings {
         showSubtick = DEFAULT_SHOW_SUBTICK;
         showColSpeed = DEFAULT_SHOW_COL_SPEED;
         showColJumpBoost = DEFAULT_SHOW_COL_JUMP_BOOST;
+        showColSlowness = DEFAULT_SHOW_COL_SLOWNESS;
         showColHotbar = DEFAULT_SHOW_COL_HOTBAR;
         showConstraints = DEFAULT_SHOW_CONSTRAINTS;
         highlightOnGroundRows = DEFAULT_HIGHLIGHT_ON_GROUND_ROWS;

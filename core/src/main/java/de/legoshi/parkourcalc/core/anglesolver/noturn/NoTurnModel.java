@@ -59,11 +59,12 @@ public final class NoTurnModel {
             contact[t] = c;
             isJump[t] = problem.base.jumpAt(t) && c;
             int amp = problem.base.factorAmpAt(t);
+            int slow = problem.base.factorSlownessAt(t);
             if (c) {
                 double f = slipOv * 0.91;
                 f4[t] = f;
-                accelSprint[t] = Constants.attrValueF(amp, true) * (0.16277136 / (f * f * f));
-                accelNoSprint[t] = Constants.attrValueF(amp, false) * (0.16277136 / (f * f * f));
+                accelSprint[t] = Constants.attrValueF(amp, slow, true) * (0.16277136 / (f * f * f));
+                accelNoSprint[t] = Constants.attrValueF(amp, slow, false) * (0.16277136 / (f * f * f));
             } else {
                 f4[t] = 0.91;
                 accelSprint[t] = Constants.AIR_SPEED_F;
