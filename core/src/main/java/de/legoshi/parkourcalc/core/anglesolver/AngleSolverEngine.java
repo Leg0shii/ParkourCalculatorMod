@@ -150,6 +150,7 @@ public final class AngleSolverEngine {
     private final boolean modernCollision;
 
     private Plan lastPlan;
+    private Plan smoothBase;
 
     // Background-solve handoff. `pending` is the single volatile publish point: the worker fully
     // builds the Outcome, then assigns it here; poll() reads it on the main thread.
@@ -553,27 +554,32 @@ public final class AngleSolverEngine {
         if (solving) return;
         Job job = buildJob(effort, graphOverride);
         if (job == null) return; // invalid range: buildJob already published the failure result
-        offerIncumbent(job, effort, false);
+        offerIncumbent(job, effort);
         start(job, effort);
     }
 
     public boolean canSmooth() {
-        Plan prev = lastPlan;
-        SolveResult prevResult = state.getResult();
+        Plan base = smoothBase;
         if (solving || !(model instanceof ExactJumpModel)) return false;
-        if (prev == null || prevResult == null || !prevResult.isSuccess() || prev.lockYaws) return false;
-        return prev.startTick == state.getStartTick()
-                && prev.yaws.length == state.getLandingTick() - state.getStartTick();
+        if (base == null || base.lockYaws) return false;
+        return base.startTick == state.getStartTick()
+                && base.yaws.length == state.getLandingTick() - state.getStartTick();
     }
 
     public void smooth() {
         if (!canSmooth()) return;
+        Plan base = smoothBase;
         AngleSolverState.Effort effort = state.getEffort();
         Job job = buildJob(effort, BuiltinGraphs.smooth(state.getSmoothGiveBack()));
         if (job == null) return;
         if (job.deadlineNanos <= 0) job = job.withDeadline(SMOOTH_BUTTON_BUDGET_NANOS);
-        offerIncumbent(job, effort, true);
+        job.incumbentYaws = base.yaws.clone();
+        job.incumbentStart = base.start;
         start(job, effort);
+    }
+
+    private static boolean isSmoothJob(Job job) {
+        return job != null && job.graph != null && BuiltinGraphs.SMOOTH_PRESET.equals(job.graph.name);
     }
 
     public long smoothBudgetNanos() {
@@ -588,6 +594,7 @@ public final class AngleSolverEngine {
         // Show the spinner instead of a stale result.
         state.clearResult();
         lastPlan = null;
+        if (!isSmoothJob(job)) smoothBase = null;
         pending = null;
         startNanos = t0;
         AtomicBoolean token = new AtomicBoolean(false);
@@ -630,8 +637,8 @@ public final class AngleSolverEngine {
         worker.start();
     }
 
-    private void offerIncumbent(Job job, AngleSolverState.Effort effort, boolean always) {
-        if (!always && (effort == AngleSolverState.Effort.FAST || BuiltinGraphs.FAST_PRESET.equals(job.graph.name))) return;
+    private void offerIncumbent(Job job, AngleSolverState.Effort effort) {
+        if (effort == AngleSolverState.Effort.FAST || BuiltinGraphs.FAST_PRESET.equals(job.graph.name)) return;
         Plan prev = lastPlan;
         SolveResult prevResult = state.getResult();
         if (prev == null || prevResult == null || !prevResult.isSuccess() || prev.lockYaws) return;
@@ -933,6 +940,7 @@ public final class AngleSolverEngine {
     public void onProblemReplaced() {
         cancel();
         lastPlan = null;
+        smoothBase = null;
     }
 
     /** Publish a finished background solve. Call every frame on the main thread. */
@@ -942,6 +950,7 @@ public final class AngleSolverEngine {
         pending = null;
         state.setResult(o.result);
         lastPlan = o.plan;
+        if (!isSmoothJob(currentJob) && o.plan != null && o.result.isSuccess()) smoothBase = o.plan;
         solving = false;
         currentProgress = null;
         currentJob = null;
