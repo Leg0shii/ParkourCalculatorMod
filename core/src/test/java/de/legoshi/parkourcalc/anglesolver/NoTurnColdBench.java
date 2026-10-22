@@ -100,6 +100,15 @@ public class NoTurnColdBench {
 
     private void runOne(String capture) throws Exception {
         String driver = System.getProperty("pkc.bench.driver", "pool");
+        String gpuClass = System.getProperty("pkc.pool.gpu", "");
+        if (!gpuClass.isEmpty()) {
+            if (gpuClass.equals("true")) gpuClass = "de.legoshi.parkourcalc.gpu.OpenClPoolScreen$Factory";
+            de.legoshi.parkourcalc.core.anglesolver.noturn.PoolScreenAccelerator.register(
+                    (de.legoshi.parkourcalc.core.anglesolver.noturn.PoolScreenAccelerator.Factory)
+                            Class.forName(gpuClass).getDeclaredConstructor().newInstance());
+            de.legoshi.parkourcalc.core.anglesolver.noturn.PoolScreenAccelerator.setEnabled(true);
+            line("gpu factory " + gpuClass);
+        }
         double freeHalf = Double.parseDouble(System.getProperty("pkc.bench.freeBox", "0"));
         int optimizeSec = Integer.getInteger("pkc.bench.optimizeSec", 6);
         long certifySec = Long.getLong("pkc.bench.certifySec", -1L);
@@ -278,10 +287,18 @@ public class NoTurnColdBench {
             cfg.allowJa = ja || Boolean.getBoolean("pkc.bench.allowJa");
             cfg.jaAllPass = driver.equals("ingame") ? !Boolean.getBoolean("pkc.bench.noJaAllPass") : Boolean.getBoolean("pkc.bench.jaAllPass");
             if (Integer.getInteger("pkc.bench.poolCap", -1) > 0) cfg.poolCap = Integer.getInteger("pkc.bench.poolCap");
-            if (Integer.getInteger("pkc.bench.maxEdges", -1) > 0) cfg.maxEdges = Integer.getInteger("pkc.bench.maxEdges");
+            if (Integer.getInteger("pkc.bench.maxEdges", -1) >= 0) cfg.maxEdges = Integer.getInteger("pkc.bench.maxEdges");
+            if (Integer.getInteger("pkc.bench.minLevel", -1) >= 0) cfg.minLevel = Integer.getInteger("pkc.bench.minLevel");
             if (Integer.getInteger("pkc.bench.minDwell", -1) > 0) cfg.minDwell = Integer.getInteger("pkc.bench.minDwell");
             if (Integer.getInteger("pkc.bench.perEdgeCertify", -1) > 0) cfg.perEdgeCertify = Integer.getInteger("pkc.bench.perEdgeCertify");
             cfg.playable = Boolean.getBoolean("pkc.bench.playable");
+            if (System.getProperty("pkc.bench.taps") != null) cfg.tapsStage = Boolean.parseBoolean(System.getProperty("pkc.bench.taps"));
+            if (System.getProperty("pkc.bench.repair") != null) cfg.repairStage = Boolean.parseBoolean(System.getProperty("pkc.bench.repair"));
+            if (Integer.getInteger("pkc.bench.repairWidth", -1) >= 0) cfg.repairWidth = Integer.getInteger("pkc.bench.repairWidth");
+            if (Integer.getInteger("pkc.bench.repairPairs", -1) >= 0) cfg.repairPairs = Integer.getInteger("pkc.bench.repairPairs");
+            if (Integer.getInteger("pkc.bench.repairRounds", -1) >= 0) cfg.repairRounds = Integer.getInteger("pkc.bench.repairRounds");
+            if (Integer.getInteger("pkc.bench.repairAfter", -1) >= 0) cfg.repairAfterLevel = Integer.getInteger("pkc.bench.repairAfter");
+            if (Long.getLong("pkc.bench.repairSec", -1L) >= 0) cfg.repairBudgetNanos = Long.getLong("pkc.bench.repairSec") * 1_000_000_000L;
             if (System.getProperty("pkc.bench.diskKeep") != null) cfg.diskKeep = Double.parseDouble(System.getProperty("pkc.bench.diskKeep"));
             if (Boolean.getBoolean("pkc.bench.fullAlphabet")) {
                 cfg.alphabet = new int[]{NoTurnKeys.NONE, NoTurnKeys.W, NoTurnKeys.WA, NoTurnKeys.WD, NoTurnKeys.A,
@@ -295,7 +312,10 @@ public class NoTurnColdBench {
             if (benchNearSearchMs > 0) cfg.nearSearchBudgetNanos = benchNearSearchMs * 1_000_000L;
             line("pool search: threads=" + cfg.threads + " (0=auto=" + NoTurnColdBench.autoThreads()
                     + ") searchBudget=" + cfg.searchBudgetNanos / 1e9 + "s nearSearchBudget=" + cfg.nearSearchBudgetNanos / 1e9 + "s polishBudget=" + cfg.certifyBudgetNanos / 1e9 + "s");
-            line("pool cfg: maxEdges=" + cfg.maxEdges + " minDwell=" + cfg.minDwell + " diskGrid=" + cfg.diskGrid
+            line("pool cfg: maxEdges=" + cfg.maxEdges + " minDwell=" + cfg.minDwell + " taps=" + cfg.tapsStage
+                    + " repair=" + cfg.repairStage + " repairWidth=" + cfg.repairWidth + " repairPairs=" + cfg.repairPairs
+                    + " repairRounds=" + cfg.repairRounds + " repairAfter=" + cfg.repairAfterLevel
+                    + " repairBudget=" + cfg.repairBudgetNanos / 1e9 + "s diskGrid=" + cfg.diskGrid
                     + " playable=" + cfg.playable + " poolCap=" + cfg.poolCap
                     + " perEdgeCertify=" + cfg.perEdgeCertify + " maxCertify=" + cfg.maxCertify
                     + " certifyBudget=" + cfg.certifyBudgetNanos / 1e9 + "s total=" + cfg.totalBudgetNanos / 1e9
@@ -316,6 +336,11 @@ public class NoTurnColdBench {
             long a = System.nanoTime();
             NoTurnResult r = drv.run(p, graph);
             closeCertify("[pool]");
+            if (de.legoshi.parkourcalc.core.anglesolver.noturn.PoolScreenAccelerator.get() != null) {
+                line("pool gpu: " + de.legoshi.parkourcalc.core.anglesolver.noturn.PoolScreenAccelerator.get()
+                        + " gpuScreened=" + drv.gpuScreenedCount() + " lastError="
+                        + de.legoshi.parkourcalc.core.anglesolver.noturn.PoolScreenAccelerator.lastError());
+            }
             line(String.format(Locale.ROOT, "pool: wall=%.1fs scored=%d byteScreened=%d pruned=%d pool=%d found=%s",
                     (System.nanoTime() - a) / 1e9, drv.scoredCount(), drv.byteScreenedCount(), drv.prunedCount(),
                     drv.pool().size(), r != null));
@@ -346,7 +371,7 @@ public class NoTurnColdBench {
             if (maxCertify > 0) cfg.maxCertifies = maxCertify;
             if (Integer.getInteger("pkc.bench.contCap", -1) > 0) cfg.continuationCap = Integer.getInteger("pkc.bench.contCap");
             if (Integer.getInteger("pkc.bench.contLead", -1) > 0) cfg.continuationLead = Integer.getInteger("pkc.bench.contLead");
-            if (Integer.getInteger("pkc.bench.maxEdges", -1) > 0) cfg.maxEdges = Integer.getInteger("pkc.bench.maxEdges");
+            if (Integer.getInteger("pkc.bench.maxEdges", -1) >= 0) cfg.maxEdges = Integer.getInteger("pkc.bench.maxEdges");
             if (Integer.getInteger("pkc.bench.minDwell", -1) > 0) cfg.minDwell = Integer.getInteger("pkc.bench.minDwell");
             if (Long.getLong("pkc.bench.contSec", -1L) > 0) cfg.continuationBudgetNanos = Long.getLong("pkc.bench.contSec") * 1_000_000_000L;
             if (System.getProperty("pkc.bench.parCont") != null) cfg.parallelContinuations = Boolean.parseBoolean(System.getProperty("pkc.bench.parCont"));

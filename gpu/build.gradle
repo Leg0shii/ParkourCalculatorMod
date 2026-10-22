@@ -1,0 +1,38 @@
+plugins {
+	id 'java'
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_1_8
+	targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.release = 8
+	options.encoding = 'UTF-8'
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation project(':core')
+	implementation 'org.jocl:jocl:2.0.5'
+	testImplementation 'junit:junit:4.13.2'
+}
+
+tasks.register('printClasspath') {
+	doLast {
+		println sourceSets.main.runtimeClasspath.asPath
+	}
+}
+
+tasks.register('probe', JavaExec) {
+	group = 'verification'
+	description = 'Lists the OpenCL devices and runs a vector add on the first GPU.'
+	classpath = sourceSets.main.runtimeClasspath
+	mainClass = 'de.legoshi.parkourcalc.gpu.OpenClProbe'
+	maxHeapSize = '2g'
+	systemProperties providers.systemPropertiesPrefixedBy('pkc.').get()
+}

@@ -422,6 +422,7 @@ public final class Application {
     public void initSettingsStorage(Path path) {
         this.settingsPath = path;
         SettingsIO.load(path, settings);
+        de.legoshi.parkourcalc.core.anglesolver.noturn.PoolScreenAccelerator.setEnabled(settings.stratfinderGpu);
         ConstraintText.statsPrecision = settings.solverStatsPrecision;
         if (!simulator.supportsPairedSimulation()) {
             settings.pairedSimulation = false;

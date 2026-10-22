@@ -1,6 +1,8 @@
 package de.legoshi.parkourcalc.forge;
 
 import de.legoshi.parkourcalc.core.Application;
+import de.legoshi.parkourcalc.core.anglesolver.noturn.PoolScreenAccelerator;
+import de.legoshi.parkourcalc.gpu.OpenClPoolScreen;
 import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
@@ -131,6 +133,7 @@ public class ForgeParkourCalculator {
         application.setPlaybackBridge(playbackBridge);
         application.getRecorder().setKeyCodes("lwjgl2");
         application.setBlockPicker(new ForgeBlockPicker());
+        PoolScreenAccelerator.register(new OpenClPoolScreen.Factory());
         application.initSettingsStorage(configPath);
         blockCaptureEnabled = application.getSettings().experimentalBlockCapture;
         application.setupUi();

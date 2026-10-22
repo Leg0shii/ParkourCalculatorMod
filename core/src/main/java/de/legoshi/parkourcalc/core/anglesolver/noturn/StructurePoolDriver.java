@@ -30,6 +30,15 @@ public final class StructurePoolDriver {
         public int[] alphabet = {NoTurnKeys.NONE, NoTurnKeys.W, NoTurnKeys.WA, NoTurnKeys.WD,
                 NoTurnKeys.SA, NoTurnKeys.SD, NoTurnKeys.S, NoTurnKeys.A, NoTurnKeys.D};
         public int[] takeoffCombos = {NoTurnKeys.W, NoTurnKeys.WA, NoTurnKeys.WD, NoTurnKeys.NONE};
+        public boolean tapsStage = true;
+        public boolean repairStage = true;
+        public int repairAfterLevel = 1;
+        public int repairWidth = 20000;
+        public int repairPairs = 1500;
+        public int repairRounds = 2;
+        public long repairBudgetNanos = 60_000_000_000L;
+        public int repairPoolCap = 80000;
+        public long repairFlashNanos = 15_000_000L;
         public int diskGrid = 480;
         public int diskCoarseStride = 24;
         public int diskMidStride = 6;
@@ -66,6 +75,7 @@ public final class StructurePoolDriver {
         public final double byteTheta;
         public final double byteViol;
         public final double byteObjective;
+        boolean flash;
 
         Candidate(int[] combos, boolean[] sprint, int engage, int edges, int presses, double diskTheta,
                   double byteTheta, double byteViol, double byteObjective) {
@@ -149,11 +159,22 @@ public final class StructurePoolDriver {
     double witnessLoZ;
     double witnessHiZ;
 
+    private static final int GPU_BATCH = Integer.getInteger("pkc.pool.gpuBatch", 65536);
+    private PoolScreenTables gpuTables;
+    private SchedulePoolScreen gpu;
+    private boolean gpuTried;
+    private boolean gpuUsed;
+    private byte[] gpuBatch;
+    private int gpuBatchCount;
+    private long gpuScreened;
     private final List<Candidate> pool = new ArrayList<>();
+    private BeamHeap beamHeap;
+    private List<Candidate> beam = new ArrayList<>();
     private int goodInPool;
     private long scored;
     private long byteScreened;
     private int scoreLevel = -1;
+    private boolean tapsStage;
     private AtomicBoolean stop;
     private long deadlineNanos = Long.MAX_VALUE;
 
@@ -178,6 +199,10 @@ public final class StructurePoolDriver {
 
     public long prunedCount() {
         return pruned;
+    }
+
+    public long gpuScreenedCount() {
+        return gpuScreened;
     }
 
     private static final class Group {
@@ -337,6 +362,152 @@ public final class StructurePoolDriver {
 
         this.bf = new ByteForward(model, problem.base);
         this.screen = new UnitScreen(this, lm);
+        prepareWatch();
+        this.gpuTables = PoolScreenAccelerator.get() != null ? buildTables(lm) : null;
+    }
+
+    private PoolScreenTables buildTables(JumpLinearModel lm) {
+        if (screen.mainGroup() < 0) return null;
+        int walls = byteWalls.size();
+        int slots = PoolScreenTables.SLOTS;
+        float[] tab = new float[n * slots * 3];
+        for (int t = 0; t < n; t++) {
+            for (int slot = 0; slot < slots; slot++) {
+                int o = (t * slots + slot) * 3;
+                tab[o] = (float) gc[t][slot];
+                tab[o + 1] = (float) gs[t][slot];
+                tab[o + 2] = (float) mag[t][slot];
+            }
+        }
+        float[] coefW = new float[walls * n];
+        float[] shift0 = new float[walls];
+        int[] axisX = new int[walls];
+        int[] kind = new int[walls];
+        for (int wi = 0; wi < walls; wi++) {
+            JumpConstraint w = byteWalls.get(wi);
+            boolean ax = w.mode == JumpConstraint.Mode.X;
+            axisX[wi] = ax ? 1 : 0;
+            kind[wi] = w.cmp == JumpConstraint.Cmp.LE ? 0 : w.cmp == JumpConstraint.Cmp.GE ? 1 : 2;
+            for (int s = 0; s < n; s++) coefW[wi * n + s] = (float) lm.coef(s, w.t1);
+            shift0[wi] = (float) (w.rhs - lm.constPos(w.t1, ax ? 0 : 1));
+        }
+        float[] objCoef = new float[n];
+        for (int s = 0; s < n; s++) objCoef[s] = (float) lm.coef(s, objTick);
+        return new PoolScreenTables(n, walls, screen.groupCount(), screen.mainGroup(), screen.freeGroups().clone(),
+                screen.groupOf().clone(), tab, coefW, shift0, axisX, kind, objCoef, (float) objConst, objAxisX, maximize,
+                (float) loShiftX, (float) hiShiftX, (float) loShiftZ, (float) hiShiftZ, cfg.diskGrid, cfg.diskCoarseStride,
+                cfg.diskMidStride, (float) cfg.diskEarlyOutViol, (float) cfg.diskKeep);
+    }
+
+    private boolean gpuWanted() {
+        if (!gpuTried) {
+            gpuTried = true;
+            gpu = PoolScreenAccelerator.tryOpen(gpuTables);
+            if (gpu != null) {
+                gpuUsed = true;
+                gpuBatch = new byte[GPU_BATCH * n];
+            }
+        }
+        return gpu != null;
+    }
+
+    private void gpuAppend(int[] combos) {
+        int o = gpuBatchCount * n;
+        for (int t = 0; t < n; t++) gpuBatch[o + t] = (byte) combos[t];
+        gpuBatchCount++;
+        if (gpuBatchCount >= GPU_BATCH) flushGpu();
+    }
+
+    void flushGpu() {
+        if (gpu == null || gpuBatchCount == 0) return;
+        int count = gpuBatchCount;
+        gpuBatchCount = 0;
+        int[] combos = new int[n];
+        float[] r;
+        try {
+            r = gpu.evaluate(gpuBatch, count);
+        } catch (RuntimeException | LinkageError e) {
+            PoolScreenAccelerator.fail(e);
+            try {
+                gpu.close();
+            } catch (RuntimeException | LinkageError ignored) {
+            }
+            gpu = null;
+            for (int i = 0; i < count; i++) {
+                for (int t = 0; t < n; t++) combos[t] = gpuBatch[i * n + t];
+                evalCpu(combos);
+            }
+            gpuBatch = null;
+            return;
+        }
+        int per = SchedulePoolScreen.FLOATS_PER_VARIANT;
+        boolean[] sprint = new boolean[n];
+        for (int i = 0; i < count; i++) {
+            int firstRun = -1;
+            for (int t = 0; t < n; t++) {
+                combos[t] = gpuBatch[i * n + t];
+                if (firstRun < 0 && NoTurnKeys.isRun(combos[t])) firstRun = t;
+            }
+            for (int v = 0; v < SchedulePoolScreen.VARIANTS; v++) {
+                int base = (i * SchedulePoolScreen.VARIANTS + v) * per;
+                float diskViol = r[base];
+                if (Float.isInfinite(diskViol) || Float.isNaN(diskViol)) continue;
+                scored++;
+                float sViol = r[base + 2];
+                if (Float.isInfinite(sViol) || Float.isNaN(sViol)) continue;
+                gpuScreened++;
+                if (sViol > cfg.byteFeasible && goodInPool >= cfg.poolCap
+                        && (beamHeap == null || !beamHeap.wants(sViol))) {
+                    if (watchHash != null && watched(combos) >= 0) System.out.println("[watch] gpu scored v=" + v + " sViol=" + sViol + " DROPPED (pool full) keys=" + NoTurnKeys.describe(combos));
+                    continue;
+                }
+                for (int t = 0; t < n; t++) {
+                    boolean run = NoTurnKeys.isRun(combos[t]);
+                    if (v == 1 && t == firstRun) run = false;
+                    if (v == 2 && t < firstRun + 2) run = false;
+                    sprint[t] = run;
+                }
+                double diskTheta = r[base + 1];
+                int engageTick = NoTurnKeys.firstSprint(sprint);
+                Candidate c = new Candidate(combos.clone(), sprint.clone(), engageTick, countEdges(combos),
+                        countPresses(combos), diskTheta, r[base + 3], sViol, r[base + 4]);
+                if (watchHash != null && watched(combos) >= 0) System.out.println("[watch] gpu scored v=" + v + " diskViol=" + diskViol
+                        + " sViol=" + sViol + " engage=" + engageTick + " beamWants=" + (beamHeap != null && beamHeap.wants(sViol)) + " keys=" + NoTurnKeys.describe(combos));
+                if (beamHeap != null) beamHeap.offer(c);
+                pool.add(c);
+                if (certifyTier(cfg, c) < SCREEN_MISS_TIER) goodInPool++;
+                if (pool.size() > cfg.poolCap * 4) trimPool();
+            }
+        }
+    }
+
+    private Candidate rescreen(Candidate c) {
+        double[] bs = byteScreen(c.combos, c.sprint, c.diskTheta);
+        byteScreened++;
+        return new Candidate(c.combos, c.sprint, c.engage, c.edges, c.presses, c.diskTheta, bs[1], bs[0], bs[2]);
+    }
+
+    private static void rescreenRange(StructurePoolDriver w, List<Candidate> list, int from, int to) {
+        for (int i = from; i < to; i++) list.set(i, w.rescreen(list.get(i)));
+    }
+
+    private static List<Candidate> keptForRescreen(Config cfg, List<Candidate> merged) {
+        return keptForRescreen(cfg, merged, cfg.poolCap);
+    }
+
+    private static List<Candidate> keptForRescreen(Config cfg, List<Candidate> merged, int cap) {
+        List<Candidate> out = new ArrayList<>(merged);
+        out.sort(rankOrder(cfg));
+        if (out.size() > cap) out.subList(cap, out.size()).clear();
+        return out;
+    }
+
+    void closeGpu() {
+        if (gpu == null) return;
+        flushGpu();
+        gpu.close();
+        gpu = null;
+        gpuBatch = null;
     }
 
     private void fillPrefix(double[][] pa, double[][] pb, double[][] ps, double[][] tabA, double[][] tabB,
@@ -734,7 +905,7 @@ public final class StructurePoolDriver {
         int active = checkedGroups;
         while (active < groups.length && groups[active].tick <= start) active++;
         boolean prunedHere = false;
-        boolean worthChecking = n - start > cfg.minDwell && (edges < effMaxEdges() || anchorAhead(start));
+        boolean worthChecking = n - start > Math.max(3, cfg.minDwell) && (edges < effMaxEdges() || anchorAhead(start));
         if (worthChecking && active > checkedGroups && active > 0 && prefixInfeasible(combos, start, active)) {
             pruned++;
             if (!VERIFY_PRUNE) return;
@@ -743,7 +914,7 @@ public final class StructurePoolDriver {
         }
         int remaining = n - start;
         boolean anchor = freeTick(problem, start);
-        boolean shortHold = anchor || start == 0 || (start + 1 < n && problem.jump[start + 1]);
+        boolean shortHold = tapsStage || anchor || start == 0 || (start + 1 < n && problem.jump[start + 1]);
         int dwell = shortHold ? 1 : Math.min(cfg.minDwell, remaining);
         for (int c : cfg.alphabet) {
             if (c == lastLabel) continue;
@@ -918,8 +1089,30 @@ public final class StructurePoolDriver {
         return countEdges(cfg, problem, combos) + (first ? 1 : 0);
     }
 
+    private boolean hasTap(int[] combos) {
+        int start = 0;
+        while (start < n) {
+            int end = start + 1;
+            while (end < n && combos[end] == combos[start]) end++;
+            boolean shortHold = freeTick(problem, start) || start == 0 || (start + 1 < n && problem.jump[start + 1]);
+            if (!shortHold && end - start < Math.min(cfg.minDwell, n - start)) return true;
+            start = end;
+        }
+        return false;
+    }
+
     private void evalComplete(int[] combos) {
-        if (scoreLevel >= 0 && countEdges(combos) != scoreLevel) return;
+        if (tapsStage) {
+            if (countEdges(combos) > scoreLevel || !hasTap(combos)) return;
+        } else if (scoreLevel >= 0 && countEdges(combos) != scoreLevel) return;
+        if (gpuWanted()) {
+            gpuAppend(combos);
+            return;
+        }
+        evalCpu(combos);
+    }
+
+    private void evalCpu(int[] combos) {
         int firstRun = -1;
         for (int t = 0; t < n; t++) {
             if (NoTurnKeys.isRun(combos[t])) {
@@ -971,7 +1164,8 @@ public final class StructurePoolDriver {
         double diskTheta = scanGrid(objA, objB);
         scored++;
         if (Double.isNaN(diskTheta)) return;
-        if (lastMinViol > cfg.byteFeasible && goodInPool >= cfg.poolCap) return;
+        if (lastMinViol > cfg.byteFeasible && goodInPool >= cfg.poolCap
+                && (beamHeap == null || !beamHeap.wants(lastMinViol))) return;
         int engageTick = NoTurnKeys.firstSprint(sprint);
         double[] bs = byteScreen(combos, sprint, diskTheta);
         byteScreened++;
@@ -981,6 +1175,7 @@ public final class StructurePoolDriver {
         }
         Candidate c = new Candidate(combos.clone(), sprint.clone(), engageTick, countEdges(combos), countPresses(combos),
                 diskTheta, bs[1], bs[0], bs[2]);
+        if (beamHeap != null) beamHeap.offer(c);
         pool.add(c);
         if (certifyTier(cfg, c) < SCREEN_MISS_TIER) goodInPool++;
         if (pool.size() > cfg.poolCap * 4) trimPool();
@@ -1062,13 +1257,399 @@ public final class StructurePoolDriver {
         final long scored;
         final long byteScreened;
         final long pruned;
+        final List<Candidate> beam;
 
-        LevelResult(List<Candidate> pool, long scored, long byteScreened, long pruned) {
+        LevelResult(List<Candidate> pool, long scored, long byteScreened, long pruned, List<Candidate> beam) {
             this.pool = pool;
             this.scored = scored;
             this.byteScreened = byteScreened;
             this.pruned = pruned;
+            this.beam = beam;
         }
+    }
+
+    static final class BeamHeap {
+        private final int cap;
+        private final float[] key;
+        private final Candidate[] item;
+        private int size;
+
+        BeamHeap(int cap) {
+            this.cap = Math.max(1, cap);
+            this.key = new float[this.cap];
+            this.item = new Candidate[this.cap];
+        }
+
+        boolean wants(double viol) {
+            return size < cap || viol < key[0];
+        }
+
+        void offer(Candidate c) {
+            float v = (float) c.byteViol;
+            if (size < cap) {
+                int i = size++;
+                while (i > 0) {
+                    int parent = (i - 1) >> 1;
+                    if (key[parent] >= v) break;
+                    key[i] = key[parent];
+                    item[i] = item[parent];
+                    i = parent;
+                }
+                key[i] = v;
+                item[i] = c;
+                return;
+            }
+            if (v >= key[0]) return;
+            int i = 0;
+            while (true) {
+                int l = 2 * i + 1;
+                if (l >= size) break;
+                int r = l + 1;
+                int big = (r < size && key[r] > key[l]) ? r : l;
+                if (key[big] <= v) break;
+                key[i] = key[big];
+                item[i] = item[big];
+                i = big;
+            }
+            key[i] = v;
+            item[i] = c;
+        }
+
+        List<Candidate> drain() {
+            List<Candidate> out = new ArrayList<>(size);
+            for (int i = 0; i < size; i++) out.add(item[i]);
+            size = 0;
+            return out;
+        }
+    }
+
+    static final class LongHashSet {
+        private final long[] table;
+        private final int mask;
+        private int size;
+        private final int limit;
+
+        LongHashSet(int capacityPow2) {
+            this.table = new long[capacityPow2];
+            this.mask = capacityPow2 - 1;
+            this.limit = (int) (capacityPow2 * 0.7);
+        }
+
+        boolean add(long h) {
+            if (h == 0) h = 1;
+            if (size >= limit) return true;
+            int i = (int) (h ^ (h >>> 32)) & mask;
+            while (true) {
+                long cur = table[i];
+                if (cur == 0) {
+                    table[i] = h;
+                    size++;
+                    return true;
+                }
+                if (cur == h) return false;
+                i = (i + 1) & mask;
+            }
+        }
+
+        void clear() {
+            java.util.Arrays.fill(table, 0L);
+            size = 0;
+        }
+    }
+
+    static long scheduleHash(int[] combos, int n) {
+        long h = 0x9E3779B97F4A7C15L;
+        for (int t = 0; t < n; t++) {
+            h = (h + combos[t] + 1) * 0xBF58476D1CE4E5B9L;
+            h ^= h >>> 29;
+        }
+        return h;
+    }
+
+    private static void mergeInto(java.util.HashMap<String, Candidate> best, List<Candidate> list) {
+        if (list == null) return;
+        for (Candidate c : list) {
+            String k = NoTurnKeys.key(c.combos);
+            Candidate old = best.get(k);
+            if (old == null || c.byteViol < old.byteViol) best.put(k, c);
+        }
+    }
+
+    private static List<Candidate> mergeBeam(List<Candidate> a, List<Candidate> b, int width) {
+        java.util.HashMap<String, Candidate> best = new java.util.HashMap<>();
+        mergeInto(best, a);
+        mergeInto(best, b);
+        List<Candidate> out = new ArrayList<>(best.values());
+        out.sort((x, y) -> Double.compare(x.byteViol, y.byteViol));
+        if (out.size() > width) out.subList(width, out.size()).clear();
+        return out;
+    }
+
+    static final int REPAIR_STAGE = -1;
+
+    private static final String WATCH = System.getProperty("pkc.pool.watch", "");
+    private long[] watchHash;
+    private String[] watchKeys;
+
+    private void prepareWatch() {
+        if (WATCH.isEmpty()) return;
+        String[] parts = WATCH.split(";");
+        watchHash = new long[parts.length];
+        watchKeys = new String[parts.length];
+        for (int i = 0; i < parts.length; i++) {
+            int[] c = NoTurnKeys.parse(parts[i], n);
+            watchHash[i] = scheduleHash(c, n);
+            watchKeys[i] = NoTurnKeys.key(c);
+        }
+    }
+
+    private int watched(int[] combos) {
+        if (watchHash == null) return -1;
+        long h = scheduleHash(combos, n);
+        for (int i = 0; i < watchHash.length; i++) if (watchHash[i] == h) return i;
+        return -1;
+    }
+
+    private void watchRank(String where, List<Candidate> list) {
+        if (watchHash == null) return;
+        for (int i = 0; i < list.size(); i++) {
+            Candidate c = list.get(i);
+            int w = watched(c.combos);
+            if (w >= 0) System.out.println("[watch] " + where + " rank " + i + " of " + list.size() + " viol=" + c.byteViol
+                    + " tier=" + certifyTier(cfg, c) + " presses=" + c.presses + " engage=" + c.engage + " keys=" + NoTurnKeys.describe(c.combos));
+        }
+    }
+
+    private LongHashSet repairSeen;
+    private long repairDeadline;
+
+    private void repairChild(int[] child) {
+        if (!repairSeen.add(scheduleHash(child, n))) return;
+        if (watchHash != null && watched(child) >= 0) System.out.println("[watch] repair child generated keys=" + NoTurnKeys.describe(child));
+        if (gpuWanted()) {
+            gpuAppend(child);
+            return;
+        }
+        evalCpu(child);
+    }
+
+    private int[] hopStarts() {
+        List<Integer> starts = new ArrayList<>();
+        starts.add(0);
+        for (int J : problem.jumpTicks) if (J > 0 && J < n) starts.add(J);
+        int[] out = new int[starts.size()];
+        for (int i = 0; i < out.length; i++) out[i] = starts.get(i);
+        return out;
+    }
+
+    private void repairSingles(int[] parent, int[] child) {
+        int[] hops = hopStarts();
+        for (int J : problem.jumpTicks) {
+            if (J >= n) continue;
+            for (int c : cfg.alphabet) {
+                if (c != parent[J]) {
+                    System.arraycopy(parent, 0, child, 0, n);
+                    child[J] = c;
+                    repairChild(child);
+                }
+                if (J + 1 < n && c != parent[J + 1]) {
+                    System.arraycopy(parent, 0, child, 0, n);
+                    child[J + 1] = c;
+                    repairChild(child);
+                    if (J + 2 < n) {
+                        child[J + 2] = c;
+                        repairChild(child);
+                    }
+                }
+                if (J >= 1 && c != parent[J - 1]) {
+                    System.arraycopy(parent, 0, child, 0, n);
+                    child[J - 1] = c;
+                    repairChild(child);
+                }
+            }
+        }
+        for (int hi = 0; hi < hops.length; hi++) {
+            int a = hops[hi];
+            int b = hi + 1 < hops.length ? hops[hi + 1] : n;
+            int from = a == 0 ? 1 : a + 2;
+            for (int m = from; m < b; m++) {
+                for (int c : cfg.alphabet) {
+                    if (c == parent[m]) continue;
+                    System.arraycopy(parent, 0, child, 0, n);
+                    for (int t = m; t < b; t++) child[t] = c;
+                    repairChild(child);
+                }
+            }
+        }
+        int s = 0;
+        while (s < n) {
+            int e = s + 1;
+            while (e < n && parent[e] == parent[s]) e++;
+            for (int c : cfg.alphabet) {
+                if (c == parent[s]) continue;
+                System.arraycopy(parent, 0, child, 0, n);
+                for (int t = s; t < e; t++) child[t] = c;
+                repairChild(child);
+            }
+            if (s > 0) {
+                System.arraycopy(parent, 0, child, 0, n);
+                child[s] = parent[s - 1];
+                repairChild(child);
+                System.arraycopy(parent, 0, child, 0, n);
+                child[s - 1] = parent[s];
+                repairChild(child);
+            }
+            s = e;
+        }
+        for (int t = 1; t < n; t++) {
+            for (int c : cfg.alphabet) {
+                if (c == parent[t]) continue;
+                System.arraycopy(parent, 0, child, 0, n);
+                child[t] = c;
+                repairChild(child);
+            }
+        }
+    }
+
+    private void repairPairs(int[] parent, int[] child) {
+        List<int[]> singles = new ArrayList<>();
+        for (int J : problem.jumpTicks) {
+            if (J >= n) continue;
+            for (int c : cfg.alphabet) {
+                if (c != parent[J]) singles.add(new int[]{J, c});
+                if (J + 1 < n && c != parent[J + 1]) singles.add(new int[]{J + 1, c});
+                if (J >= 1 && c != parent[J - 1]) singles.add(new int[]{J - 1, c});
+            }
+        }
+        for (int i = 0; i < singles.size(); i++) {
+            int[] x = singles.get(i);
+            for (int j = i + 1; j < singles.size(); j++) {
+                int[] y = singles.get(j);
+                if (x[0] == y[0]) continue;
+                System.arraycopy(parent, 0, child, 0, n);
+                child[x[0]] = x[1];
+                child[y[0]] = y[1];
+                repairChild(child);
+            }
+            if (cancelled() || System.nanoTime() > repairDeadline) return;
+        }
+    }
+
+    private void repairExpand(List<Candidate> parents, int from, int to, int pairsUpTo) {
+        int[] child = new int[n];
+        for (int i = from; i < to; i++) {
+            if (cancelled() || System.nanoTime() > repairDeadline) break;
+            int[] parent = parents.get(i).combos;
+            repairSingles(parent, child);
+            if (i < pairsUpTo) repairPairs(parent, child);
+        }
+    }
+
+    private LevelResult repairStage(NoTurnProblem problem, int threads) {
+        long stageStart = System.nanoTime();
+        long stageDeadline = Math.min(deadlineNanos, stageStart + cfg.repairBudgetNanos);
+        boolean gpuAvailable = PoolScreenAccelerator.get() != null && gpuTables != null && PoolScreenAccelerator.isEnabled();
+        int width = gpuAvailable ? cfg.repairWidth : Math.min(cfg.repairWidth, 800);
+        int pairs = gpuAvailable ? cfg.repairPairs : Math.min(cfg.repairPairs, 40);
+        int workerCount = Math.max(1, threads);
+        List<StructurePoolDriver> workers = new ArrayList<>();
+        for (int i = 0; i < workerCount; i++) {
+            StructurePoolDriver w = new StructurePoolDriver(model, cfg, cancel, null);
+            w.stop = stop;
+            w.deadlineNanos = deadlineNanos;
+            w.prepare(problem);
+            w.repairDeadline = stageDeadline;
+            w.repairSeen = new LongHashSet(gpuAvailable ? 1 << 20 : 1 << 16);
+            workers.add(w);
+        }
+        java.util.HashSet<String> expanded = new java.util.HashSet<>();
+        List<Candidate> frontier = new ArrayList<>(beam);
+        List<Candidate> out = new ArrayList<>();
+        long sc = 0, bs = 0;
+        boolean usedGpu = false;
+        for (int round = 0; round < cfg.repairRounds; round++) {
+            if (cancelled() || System.nanoTime() > stageDeadline) break;
+            int roundWidth = round == 0 ? width : Math.max(1, width / 4);
+            List<Candidate> parents = new ArrayList<>();
+            for (Candidate c : frontier) {
+                if (parents.size() >= roundWidth) break;
+                if (expanded.add(NoTurnKeys.key(c.combos))) parents.add(c);
+            }
+            if (parents.isEmpty()) break;
+            final int pairsUpTo = round == 0 ? Math.min(pairs, parents.size()) : 0;
+            ExecutorService exec = Executors.newFixedThreadPool(workerCount);
+            List<java.util.concurrent.Future<?>> futures = new ArrayList<>();
+            int chunk = (parents.size() + workerCount - 1) / workerCount;
+            try {
+                for (int i = 0; i < workerCount; i++) {
+                    final StructurePoolDriver w = workers.get(i);
+                    final int from = Math.min(parents.size(), i * chunk);
+                    final int to = Math.min(parents.size(), from + chunk);
+                    if (from >= to) continue;
+                    w.beamHeap = new BeamHeap(Math.max(1, width / 4));
+                    w.repairSeen.clear();
+                    futures.add(exec.submit(() -> {
+                        w.repairExpand(parents, from, to, pairsUpTo);
+                        w.closeGpu();
+                    }));
+                }
+                for (java.util.concurrent.Future<?> f : futures) {
+                    try {
+                        f.get();
+                    } catch (InterruptedException | java.util.concurrent.ExecutionException e) {
+                        throw new IllegalStateException(e);
+                    }
+                }
+            } finally {
+                exec.shutdownNow();
+            }
+            List<Candidate> roundBeam = null;
+            for (StructurePoolDriver w : workers) {
+                usedGpu |= w.gpuUsed;
+                w.closeGpu();
+                out.addAll(w.pool);
+                w.pool.clear();
+                w.goodInPool = 0;
+                gpuScreened += w.gpuScreened;
+                w.gpuScreened = 0;
+                sc += w.scored;
+                bs += w.byteScreened;
+                w.scored = 0;
+                w.byteScreened = 0;
+                if (w.beamHeap != null) {
+                    roundBeam = mergeBeam(roundBeam, w.beamHeap.drain(), Math.max(1, width / 4));
+                    w.beamHeap = null;
+                }
+            }
+            frontier = roundBeam == null ? new ArrayList<>() : roundBeam;
+        }
+        watchRank("repair raw pool", out);
+        List<Candidate> kept = keptForRescreen(cfg, out, gpuAvailable ? Math.max(cfg.poolCap, cfg.repairPoolCap) : cfg.poolCap);
+        if (usedGpu && !cancelled() && !kept.isEmpty()) {
+            ExecutorService rescreenExec = Executors.newFixedThreadPool(workerCount);
+            List<java.util.concurrent.Future<?>> rf = new ArrayList<>();
+            int chunk = (kept.size() + workerCount - 1) / workerCount;
+            try {
+                for (int i = 0; i < workerCount; i++) {
+                    final StructurePoolDriver w = workers.get(i);
+                    final int from = Math.min(kept.size(), i * chunk);
+                    final int to = Math.min(kept.size(), from + chunk);
+                    if (from >= to) continue;
+                    rf.add(rescreenExec.submit(() -> rescreenRange(w, kept, from, to)));
+                }
+                for (java.util.concurrent.Future<?> f : rf) {
+                    try {
+                        f.get();
+                    } catch (InterruptedException | java.util.concurrent.ExecutionException e) {
+                        throw new IllegalStateException(e);
+                    }
+                }
+            } finally {
+                rescreenExec.shutdownNow();
+            }
+        }
+        if (cfg.repairFlashNanos > 0) for (Candidate c : kept) c.flash = true;
+        return new LevelResult(kept, sc, bs, 0, null);
     }
 
     public NoTurnResult run(NoTurnProblem problem, SolverGraph graph) {
@@ -1097,12 +1678,24 @@ public final class StructurePoolDriver {
         PoolCertifier certifier = new PoolCertifier(model, cfg, cancel, progress, problem, deadline, multi);
         ExecutorService pipeExec = Executors.newSingleThreadExecutor();
         try {
+            int lastStage = cfg.maxEdges + (cfg.tapsStage && cfg.minDwell > 1 ? 1 : 0);
             int firstLevel = Math.max(0, Math.min(cfg.minLevel, cfg.maxEdges));
-            LevelResult current = enumerateLevel(problem, enumThreads, firstLevel, stopEnum);
-            for (int level = firstLevel; level <= cfg.maxEdges; level++) {
-                final int nextLevel = level + 1;
+            List<Integer> stages = new ArrayList<>();
+            for (int level = firstLevel; level <= lastStage; level++) {
+                stages.add(level);
+                if (cfg.repairStage && cfg.repairWidth > 0 && level == cfg.repairAfterLevel) stages.add(REPAIR_STAGE);
+            }
+            beam = new ArrayList<>();
+            LevelResult current = enumerateLevel(problem, enumThreads, stages.get(0), stopEnum);
+            for (int si = 0; si < stages.size(); si++) {
+                final int level = stages.get(si);
+                if (current.beam != null) {
+                    beam = mergeBeam(beam, current.beam, cfg.repairWidth);
+                    watchRank("beam after stage " + level, beam);
+                }
                 java.util.concurrent.Future<LevelResult> nextF = null;
-                if (nextLevel <= cfg.maxEdges && !cancelled()) {
+                if (si + 1 < stages.size() && !cancelled()) {
+                    final int nextLevel = stages.get(si + 1);
                     nextF = pipeExec.submit(() -> enumerateLevel(problem, enumThreads, nextLevel, stopEnum));
                 }
                 pool.addAll(current.pool);
@@ -1111,10 +1704,15 @@ public final class StructurePoolDriver {
                 pruned += current.pruned;
                 List<Candidate> ranked = new ArrayList<>(current.pool);
                 ranked.sort(rankPool());
-                if (ranked.size() > cfg.poolCap) ranked.subList(cfg.poolCap, ranked.size()).clear();
+                int cap = level == REPAIR_STAGE ? Integer.MAX_VALUE : cfg.poolCap;
+                if (ranked.size() > cap) ranked.subList(cap, ranked.size()).clear();
+                watchRank("offer stage " + level, ranked);
                 certifier.offer(ranked);
                 certifier.resetCertifyCount();
-                progress.update("certify edges=" + level + " (" + ranked.size() + " kept, " + scored + " scored)", 0.4);
+                if (level == REPAIR_STAGE) certifier.liftCertifyCap();
+                String label = level == REPAIR_STAGE ? "certify repair"
+                        : "certify edges=" + Math.min(level, cfg.maxEdges) + (level > cfg.maxEdges ? " taps" : "");
+                progress.update(label + " (" + ranked.size() + " kept, " + scored + " scored)", 0.4);
                 while (!cancelled() && !certifier.variationsOver()) {
                     if (!certifier.certifyNext(false, true)) {
                         if (nextF == null || nextF.isDone()) break;
@@ -1232,6 +1830,15 @@ public final class StructurePoolDriver {
         o.minDwell = c.minDwell;
         o.alphabet = c.alphabet;
         o.takeoffCombos = c.takeoffCombos;
+        o.tapsStage = c.tapsStage;
+        o.repairStage = c.repairStage;
+        o.repairAfterLevel = c.repairAfterLevel;
+        o.repairWidth = c.repairWidth;
+        o.repairPairs = c.repairPairs;
+        o.repairRounds = c.repairRounds;
+        o.repairBudgetNanos = c.repairBudgetNanos;
+        o.repairPoolCap = c.repairPoolCap;
+        o.repairFlashNanos = c.repairFlashNanos;
         o.diskGrid = c.diskGrid;
         o.diskCoarseStride = c.diskCoarseStride;
         o.diskMidStride = c.diskMidStride;
@@ -1267,14 +1874,30 @@ public final class StructurePoolDriver {
     }
 
     private LevelResult enumerateLevel(NoTurnProblem problem, int threads, int level, AtomicBoolean stopFlag) {
+        if (level == REPAIR_STAGE) {
+            stop = stopFlag;
+            return repairStage(problem, threads);
+        }
+        final boolean collectBeam = cfg.repairStage && cfg.repairWidth > 0 && level <= cfg.repairAfterLevel;
         if (threads <= 1) {
             StructurePoolDriver w = new StructurePoolDriver(model, cfg, cancel, null);
             w.stop = stopFlag;
             w.deadlineNanos = deadlineNanos;
             w.prepare(problem);
-            w.scoreLevel = level;
+            w.scoreLevel = Math.min(level, cfg.maxEdges);
+            w.tapsStage = level > cfg.maxEdges;
+            if (collectBeam) w.beamHeap = new BeamHeap(cfg.repairWidth);
             w.enumSeg(new int[n], 0, -1, 0);
-            return new LevelResult(w.pool, w.scored, w.byteScreened, w.pruned);
+            boolean usedGpu = w.gpuUsed;
+            w.closeGpu();
+            gpuScreened += w.gpuScreened;
+            List<Candidate> kept = w.pool;
+            if (usedGpu) {
+                kept = keptForRescreen(cfg, w.pool);
+                rescreenRange(w, kept, 0, kept.size());
+            }
+            return new LevelResult(kept, w.scored, w.byteScreened, w.pruned,
+                    collectBeam ? mergeBeam(null, w.beamHeap.drain(), cfg.repairWidth) : null);
         }
         final List<int[]> heads = new ArrayList<>();
         for (int c : cfg.alphabet) {
@@ -1288,7 +1911,9 @@ public final class StructurePoolDriver {
             w.stop = stopFlag;
             w.deadlineNanos = deadlineNanos;
             w.prepare(problem);
-            w.scoreLevel = level;
+            w.scoreLevel = Math.min(level, cfg.maxEdges);
+            w.tapsStage = level > cfg.maxEdges;
+            if (collectBeam) w.beamHeap = new BeamHeap(Math.max(1, cfg.repairWidth / Math.max(1, workerCount) * 2));
             workers.add(w);
         }
         ExecutorService exec = Executors.newFixedThreadPool(Math.max(1, workerCount));
@@ -1305,6 +1930,7 @@ public final class StructurePoolDriver {
                         for (int t = 0; t < len; t++) combos[t] = c;
                         w.enumSeg(combos, len, c, 0);
                     }
+                    w.closeGpu();
                 }));
             }
             for (java.util.concurrent.Future<?> f : futures) {
@@ -1318,16 +1944,49 @@ public final class StructurePoolDriver {
             exec.shutdownNow();
         }
         List<Candidate> out = new ArrayList<>();
+        boolean usedGpu = false;
+        List<Candidate> levelBeam = null;
+        for (StructurePoolDriver w : workers) {
+            usedGpu |= w.gpuUsed;
+            w.closeGpu();
+            out.addAll(w.pool);
+            gpuScreened += w.gpuScreened;
+            if (collectBeam) levelBeam = mergeBeam(levelBeam, w.beamHeap.drain(), cfg.repairWidth);
+        }
+        if (usedGpu && !cancelled()) {
+            final List<Candidate> kept = keptForRescreen(cfg, out);
+            ExecutorService rescreenExec = Executors.newFixedThreadPool(Math.max(1, workerCount));
+            List<java.util.concurrent.Future<?>> rf = new ArrayList<>();
+            int chunk = (kept.size() + workerCount - 1) / workerCount;
+            try {
+                for (int i = 0; i < workerCount; i++) {
+                    final StructurePoolDriver w = workers.get(i);
+                    final int from = Math.min(kept.size(), i * chunk);
+                    final int to = Math.min(kept.size(), from + chunk);
+                    if (from >= to) continue;
+                    rf.add(rescreenExec.submit(() -> rescreenRange(w, kept, from, to)));
+                }
+                for (java.util.concurrent.Future<?> f : rf) {
+                    try {
+                        f.get();
+                    } catch (InterruptedException | java.util.concurrent.ExecutionException e) {
+                        throw new IllegalStateException(e);
+                    }
+                }
+            } finally {
+                rescreenExec.shutdownNow();
+            }
+            out = kept;
+        }
         long sc = 0;
         long bs = 0;
         long pr = 0;
         for (StructurePoolDriver w : workers) {
-            out.addAll(w.pool);
             sc += w.scored;
             bs += w.byteScreened;
             pr += w.pruned;
         }
-        return new LevelResult(out, sc, bs, pr);
+        return new LevelResult(out, sc, bs, pr, levelBeam);
     }
 
     static double maxTurnDeg(double[] yaws) {

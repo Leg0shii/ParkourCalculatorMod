@@ -164,7 +164,7 @@ The Gradle daemon runs on JDK 21. The Fabric targets use auto-provisioned JDK 25
 ./gradlew :loader-forge:1.12.2:build      # one target (also :loader-forge:1.8.9)
 ```
 
-Modules: `core/` is the Minecraft-free UI, data and solver code (Java 8), `forge-core/` holds the parts shared by the Forge targets, and the two `loader-*/` Stonecutter trees contain the Minecraft-touching simulation, rendering and entry point, written once per loader with version regions for the API differences between targets. See [`AGENTS.md`](AGENTS.md) for the architecture and [`CONTEXT.md`](CONTEXT.md) for the parkour and movement vocabulary.
+Modules: `core/` is the Minecraft-free UI, data and solver code (Java 8), `forge-core/` holds the parts shared by the Forge targets, `gpu/` is the OpenCL implementation of the stratfinder's schedule screen that every loader bundles, and the two `loader-*/` Stonecutter trees contain the Minecraft-touching simulation, rendering and entry point, written once per loader with version regions for the API differences between targets. See [`AGENTS.md`](AGENTS.md) for the architecture and [`CONTEXT.md`](CONTEXT.md) for the parkour and movement vocabulary.
 
 ## Contributing
 

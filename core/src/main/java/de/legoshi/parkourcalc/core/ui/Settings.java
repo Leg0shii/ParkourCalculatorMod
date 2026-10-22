@@ -226,6 +226,7 @@ public final class Settings {
     public int onejumpMacroMode = 0;
     public int onejumpMacroDelayMs = 1000;
     public boolean onejumpTurnTiming = true;
+    public boolean stratfinderGpu = false;
     public boolean onejumpOffsetLive = true;
     public boolean onejumpOffsetHover = true;
     public boolean onejumpStopKeysOnFail = false;
@@ -352,6 +353,7 @@ public final class Settings {
         onejumpMacroMode = 0;
         onejumpMacroDelayMs = 1000;
         onejumpTurnTiming = true;
+        stratfinderGpu = false;
         onejumpOffsetLive = true;
         onejumpOffsetHover = true;
         onejumpStopKeysOnFail = false;
