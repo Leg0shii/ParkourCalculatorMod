@@ -36,4 +36,9 @@ dependencies {
     compileOnly "io.github.spair:imgui-java-binding:${imguiVersion}"
     // LWJGL 2 input polling (Keyboard, Mouse). Loaders bring the runtime via MC's deps.
     compileOnly 'org.lwjgl.lwjgl:lwjgl:2.9.4-nightly-20150209'
+    testImplementation 'junit:junit:4.13.2'
+}
+
+tasks.named('test') {
+    useJUnit()
 }

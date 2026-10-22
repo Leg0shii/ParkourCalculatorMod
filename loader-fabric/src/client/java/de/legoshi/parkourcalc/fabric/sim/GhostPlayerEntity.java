@@ -11,6 +11,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 //? if <1.21.2
 //import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.Pose;
 //? if >=1.21
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -37,9 +38,23 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
 
     private int sprintTriggerTime = 0;
     private boolean crouching;
+    private BpkModBridge.Rules bpk = BpkModBridge.Rules.VANILLA;
+    private Vec3 bpkMoveInput = Vec3.ZERO;
+    private float bpkMovedX;
+    private float bpkMovedZ;
 
     public GhostPlayerEntity(ClientLevel level, GameProfile profile) {
         super(level, profile);
+    }
+
+    @Override
+    public void move(MoverType type, Vec3 motion) {
+        Vec3 before = this.position();
+        this.bpkMoveInput = motion;
+        super.move(type, motion);
+        Vec3 after = this.position();
+        this.bpkMovedX = (float) (after.x - before.x);
+        this.bpkMovedZ = (float) (after.z - before.z);
     }
 
     public void setInput(InputRow row) {
@@ -62,6 +77,9 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
         this.noJumpDelay = c.jumpingCooldown;
         this.stuckSpeedMultiplier = c.movementMultiplier;
         this.fallDistance = c.fallDistance;
+        this.bpkMoveInput = c.bpkMoveInput == null ? Vec3.ZERO : c.bpkMoveInput;
+        this.bpkMovedX = c.bpkMovedX;
+        this.bpkMovedZ = c.bpkMovedZ;
     }
 
     @Override
@@ -167,13 +185,14 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
 
     @Override
     public void aiStep() {
+        this.bpk = BpkModBridge.rules();
         if (this.sprintTriggerTime > 0) {
             this.sprintTriggerTime--;
         }
 
         boolean wasShiftKeyDown = this.input.keyPresses.shift();
         //? if >=1.21.2 {
-        boolean hasForwardImpulse = this.input.hasForwardImpulse();
+        boolean hasForwardImpulse = this.input.hasForwardImpulse() || this.isSprintBackward();
         //?} else {
         /*boolean hadEnoughImpulse = this.hasEnoughImpulseToStartSprinting();
         *///?}
@@ -193,7 +212,8 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
         *///?}
 
         //? if >=1.21.2 {
-        if (wasShiftKeyDown || this.isUsingItem() && !this.isPassenger() || this.input.keyPresses.backward()) {
+        if (wasShiftKeyDown || this.isUsingItem() && !this.isPassenger()
+                || this.input.keyPresses.backward() && !this.bpk.sprintBackward) {
             this.sprintTriggerTime = 0;
         }
 
@@ -288,7 +308,7 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
     //? if >=1.21.2 {
     private boolean canStartSprinting() {
         return !this.isSprinting()
-                && this.input.hasForwardImpulse()
+                && (this.input.hasForwardImpulse() || this.isSprintBackward())
                 && this.isSprintingPossible(this.getAbilities().flying)
                 && !this.isUsingItem()
                 && (!this.isFallFlying() || this.isUnderWater())
@@ -296,9 +316,19 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
     }
 
     private boolean shouldStopRunSprinting() {
+        if (this.bpk.collisionStopsSprint) {
+            return !this.isSprintingPossible(this.getAbilities().flying)
+                    || !this.input.hasForwardImpulse()
+                    || Math.abs(this.bpkMoveInput.z) > Math.abs(this.bpkMoveInput.x) && Math.abs(this.bpkMovedZ) < 5e-5
+                    || Math.abs(this.bpkMoveInput.x) > Math.abs(this.bpkMoveInput.z) && Math.abs(this.bpkMovedX) < 5e-5;
+        }
         return !this.isSprintingPossible(this.getAbilities().flying)
-                || !this.input.hasForwardImpulse()
+                || !(this.input.hasForwardImpulse() || this.isSprintBackward())
                 || this.horizontalCollision && !this.minorHorizontalCollision;
+    }
+
+    private boolean isSprintBackward() {
+        return this.bpk.sprintBackward && this.input.getMoveVector().y < -1.0E-5F;
     }
 
     private boolean shouldStopSwimSprinting() {
@@ -379,7 +409,7 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
             float sneakingMovementFactor = (float) this.getAttributeValue(Attributes.SNEAKING_SPEED);
             newInput = newInput.scale(sneakingMovementFactor);
         }
-        return modifyInputSpeedForSquareMovement(newInput);
+        return this.bpk.strafeBoost ? modifyInputSpeedForSquareMovement(newInput) : newInput;
     }
 
     private static Vec2 modifyInputSpeedForSquareMovement(Vec2 input) {

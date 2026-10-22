@@ -419,6 +419,7 @@ public final class VelocityFinder {
         c.yawLockedPerTick = s.yawLockedPerTick;
         c.sprintPerTick = s.sprintPerTick;
         c.liveAirSprintFactor = s.liveAirSprintFactor;
+        c.variant = s.variant;
         c.forwardInputPerTick = s.forwardInputPerTick;
         c.strafeInputPerTick = s.strafeInputPerTick;
         return c;
