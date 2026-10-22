@@ -46,7 +46,7 @@ public interface PlaybackBridge {
     /** Close any open mod UI (control panel / GuiScreen) the same way the toggle key would. */
     void closeUI();
 
-    void applyEffects(int speedAmplifier, int jumpBoostAmplifier);
+    void applyEffects(int speedAmplifier, int jumpBoostAmplifier, int slownessAmplifier);
 
     /** Switch the held hotbar slot (0-8) so playback places from the right slot. No-op if unsupported. */
     default void setHotbarSlot(int slotZeroBased) {}

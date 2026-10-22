@@ -263,7 +263,7 @@ public final class ForgeSimulator extends LazyEntitySimulator<SimulatorEntity> {
     @Override protected void setYawAbsolute(SimulatorEntity e, float yaw) { e.rotationYaw = yaw; }
 
     @Override
-    protected void applyTickEffects(SimulatorEntity e, int speedAmplifier, int jumpBoostAmplifier) {
+    protected void applyTickEffects(SimulatorEntity e, int speedAmplifier, int jumpBoostAmplifier, int slownessAmplifier) {
         e.clearActivePotions();
         if (speedAmplifier > 0) {
             //? if >=1.12 {
@@ -277,6 +277,13 @@ public final class ForgeSimulator extends LazyEntitySimulator<SimulatorEntity> {
             e.addPotionEffect(new PotionEffect(MobEffects.JUMP_BOOST, 2, clientAmplifier(jumpBoostAmplifier)));
             //?} else {
             /*e.addPotionEffect(new PotionEffect(Potion.jump.id, 2, clientAmplifier(jumpBoostAmplifier)));
+            *///?}
+        }
+        if (slownessAmplifier > 0) {
+            //? if >=1.12 {
+            e.addPotionEffect(new PotionEffect(MobEffects.SLOWNESS, 2, clientAmplifier(slownessAmplifier)));
+            //?} else {
+            /*e.addPotionEffect(new PotionEffect(Potion.moveSlowdown.id, 2, clientAmplifier(slownessAmplifier)));
             *///?}
         }
     }

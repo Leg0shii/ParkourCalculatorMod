@@ -407,6 +407,7 @@ public final class LongRunSolver {
         JumpPhysicsInputs win = sliceScenario(sc, from, sc.numTicks, pos, vel, yaw);
         win.incomingSprint = from == 0 ? sc.incomingSprint : sc.sprintAt(from - 1);
         win.incomingAmp = from == 0 ? sc.incomingAmp : sc.speedAmplifierAt(from - 1);
+        win.incomingSlowness = from == 0 ? sc.incomingSlowness : Integer.valueOf(sc.slownessAmplifierAt(from - 1));
         List<JumpConstraint> cons = sliceConstraints(full, from, sc.numTicks, yaw);
         Objective obj = new Objective(full.objective.axis, full.objective.sense, full.objective.tick - from);
         return new JumpSpec(win, cons, obj);
@@ -425,6 +426,7 @@ public final class LongRunSolver {
         p.strafePerTick = sliceBool(sc.strafePerTick, a, len);
         p.yawLockedPerTick = sliceBool(sc.yawLockedPerTick, a, len);
         p.speedAmplifier = sliceInt(sc.speedAmplifier, a, len);
+        p.slownessAmplifier = sliceInt(sc.slownessAmplifier, a, len);
         p.slipPerTick = sliceDouble(sc.slipPerTick, a, len);
         p.surfacePerTick = sliceKind(sc.surfacePerTick, a, len);
         p.soulsandCellsPerTick = sliceInt(sc.soulsandCellsPerTick, a, len);

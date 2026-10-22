@@ -35,6 +35,8 @@ public final class JumpPhysicsInputs {
      *  scales GROUND ticks. null or absent index = 0 (vanilla). */
     public int[] speedAmplifier = null;
 
+    public int[] slownessAmplifier = null;
+
     /** Per-tick slipperiness factor for ground-contact ticks (0.6 normal, 0.8 slime, 0.98 ice, ...).
      *  A value &lt; 1.0 forces that tick to be a ground-contact tick at that slip; 1.0 (air) keeps the
      *  default ground/air split. null = all default. */
@@ -69,6 +71,8 @@ public final class JumpPhysicsInputs {
      *  unaffected by speed effects. null = no seed: tick 0 falls back to its own amplifier. */
     public Integer incomingAmp = null;
 
+    public Integer incomingSlowness = null;
+
     /** Per-tick moveFlying inputs read from the user's rows (gh-102), already at the game's 0.98
      *  scale: forward from W/S, strafe from A/D (positive = A, matching {@link #strafeSign}). Null =
      *  the legacy sprint-jump assumption (W always held, no user strafe). On force-45 ticks the
@@ -94,6 +98,7 @@ public final class JumpPhysicsInputs {
         c.strafeSign = strafeSign;
         c.strafePerTick = strafePerTick;
         c.speedAmplifier = speedAmplifier;
+        c.slownessAmplifier = slownessAmplifier;
         c.slipPerTick = slipPerTick;
         c.surfacePerTick = surfacePerTick;
         c.soulsandCellsPerTick = soulsandCellsPerTick;
@@ -103,6 +108,7 @@ public final class JumpPhysicsInputs {
         c.incomingSprint = incomingSprint;
         c.liveAirSprintFactor = liveAirSprintFactor;
         c.incomingAmp = incomingAmp;
+        c.incomingSlowness = incomingSlowness;
         c.forwardInputPerTick = forwardInputPerTick;
         c.strafeInputPerTick = strafeInputPerTick;
         return c;
@@ -120,9 +126,11 @@ public final class JumpPhysicsInputs {
         c.liveAirSprintFactor = liveAirSprintFactor;
         c.incomingSprint = from == 0 ? incomingSprint : Boolean.valueOf(sprintAt(from - 1));
         c.incomingAmp = from == 0 ? incomingAmp : Integer.valueOf(speedAmplifierAt(from - 1));
+        c.incomingSlowness = from == 0 ? incomingSlowness : Integer.valueOf(slownessAmplifierAt(from - 1));
         boolean[] jump = new boolean[m];
         boolean[] strafe = new boolean[m];
         int[] amp = new int[m];
+        int[] slow = new int[m];
         double[] slip = new double[m];
         SurfaceKind[] surface = new SurfaceKind[m];
         int[] soulsand = new int[m];
@@ -136,6 +144,7 @@ public final class JumpPhysicsInputs {
             jump[k] = jumpAt(i);
             strafe[k] = strafeAt(i);
             amp[k] = speedAmplifierAt(i);
+            slow[k] = slownessAmplifierAt(i);
             slip[k] = slipAt(i);
             surface[k] = surfaceAt(i);
             soulsand[k] = soulsandCellsAt(i);
@@ -148,6 +157,7 @@ public final class JumpPhysicsInputs {
         c.jumpPerTick = jump;
         c.strafePerTick = strafe;
         c.speedAmplifier = amp;
+        c.slownessAmplifier = slow;
         c.slipPerTick = slip;
         c.surfacePerTick = surface;
         c.soulsandCellsPerTick = soulsand;
@@ -162,6 +172,16 @@ public final class JumpPhysicsInputs {
     public int speedAmplifierAt(int tick) {
         if (speedAmplifier == null || tick < 0 || tick >= speedAmplifier.length) return 0;
         return speedAmplifier[tick];
+    }
+
+    public int slownessAmplifierAt(int tick) {
+        if (slownessAmplifier == null || tick < 0 || tick >= slownessAmplifier.length) return 0;
+        return slownessAmplifier[tick];
+    }
+
+    public int factorSlownessAt(int tick) {
+        if (tick == 0) return incomingSlowness != null ? incomingSlowness : slownessAmplifierAt(0);
+        return slownessAmplifierAt(tick - 1);
     }
 
     public boolean strafeAt(int tick) {

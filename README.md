@@ -34,7 +34,7 @@ Every jar ships the same core: the input table, the simulation, the angle solver
 ## Features
 
 ### Planning and simulation
-- **Tick-by-tick inputs**: W/A/S/D, jump, sneak, sprint, left/right click, close inventory, hotbar slot, yaw and pitch per tick, plus Speed and Jump Boost amplifiers (up to 255) and per-tick teleport destinations. Hide the columns you do not use.
+- **Tick-by-tick inputs**: W/A/S/D, jump, sneak, sprint, left/right click, close inventory, hotbar slot, yaw and pitch per tick, plus Speed, Jump Boost and Slowness amplifiers (up to 255) and per-tick teleport destinations. Hide the columns you do not use.
 - **Real Minecraft physics**: the path is produced by a real player entity running the game's own movement code, so what you see is what the game does. No approximation, no drift.
 - **Live path in the world**: every tick is a box; edit an input and the path updates immediately. Yaw arrows, hitboxes, sub-tick positions, hit distance lines and constraint plates can each be toggled and recolored.
 - **In-world editing**: drag the start box to move the setup, Shift+drag to move it rigidly along collision-free ground, right-drag a box to set that tick's yaw, Ctrl+right-drag to set its pitch. Tapping a box selects the tick.

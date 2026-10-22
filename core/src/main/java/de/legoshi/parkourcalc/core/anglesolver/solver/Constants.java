@@ -20,12 +20,22 @@ public final class Constants {
      *  sprint x1.3 (also multiplied-total, absent when not sprinting), all in MC's double chain with
      *  one trailing float cast. amp 0 sprinting == the vanilla attribute value (byte-identical). */
     public static float attrValueF(int speedAmplifier, boolean sprinting) {
+        return attrValueF(speedAmplifier, 0, sprinting);
+    }
+
+    public static float attrValueF(int speedAmplifier, int slownessAmplifier, boolean sprinting) {
         double e = (double) 0.1F;
         if (sprinting) {
             e = e * (1.0 + (double) 0.3F);
         }
         if (speedAmplifier > 0) {
             e = e * (1.0 + (double) 0.2F * speedAmplifier);
+        }
+        if (slownessAmplifier > 0) {
+            e = e * (1.0 + (double) -0.15F * slownessAmplifier);
+        }
+        if (e < 0.0) {
+            e = 0.0;
         }
         return (float) e;
     }

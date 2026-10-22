@@ -24,6 +24,7 @@ public class InputRow {
     private boolean pitchLocked;
     private int speedAmplifier;
     private int jumpBoostAmplifier;
+    private int slownessAmplifier;
     private int hotbarSlot;
     private boolean teleportEnabled;
     private double teleportX;
@@ -122,6 +123,16 @@ public class InputRow {
         int clamped = clampAmplifier(amplifier);
         if (this.jumpBoostAmplifier != clamped) modCount++;
         this.jumpBoostAmplifier = clamped;
+    }
+
+    public int getSlownessAmplifier() {
+        return slownessAmplifier;
+    }
+
+    public void setSlownessAmplifier(int amplifier) {
+        int clamped = clampAmplifier(amplifier);
+        if (this.slownessAmplifier != clamped) modCount++;
+        this.slownessAmplifier = clamped;
     }
 
     public int getHotbarSlot() {
@@ -228,6 +239,7 @@ public class InputRow {
         copy.pitchLocked = this.pitchLocked;
         copy.speedAmplifier = this.speedAmplifier;
         copy.jumpBoostAmplifier = this.jumpBoostAmplifier;
+        copy.slownessAmplifier = this.slownessAmplifier;
         copy.hotbarSlot = this.hotbarSlot;
         copy.teleportEnabled = this.teleportEnabled;
         copy.teleportX = this.teleportX;

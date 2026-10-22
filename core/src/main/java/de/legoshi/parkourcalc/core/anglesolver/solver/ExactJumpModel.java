@@ -218,6 +218,7 @@ public final class ExactJumpModel implements ForwardModel {
             // (2) ground/air + jump, authored per tick (see class doc). jump() uses (float)(Math.PI/180.0)
             // for its rad cast (distinct from moveFlying's in step (4)).
             int amp = scenario.factorAmpAt(t);
+            int slow = scenario.factorSlownessAt(t);
             double slipOv = scenario.slipAt(t);
             boolean contact = !Double.isNaN(slipOv);
             SurfaceKind kind = scenario.surfaceAt(t);
@@ -269,7 +270,7 @@ public final class ExactJumpModel implements ForwardModel {
             } else if (contact) {
                 f4 = slipF * 0.91F;
                 float ground = modern ? 0.21600002F / (slipF * slipF * slipF) : 0.16277136F / (f4 * f4 * f4);
-                accelSpeed = Constants.attrValueF(amp, sprint) * ground;
+                accelSpeed = Constants.attrValueF(amp, slow, sprint) * ground;
             } else {
                 f4 = 0.91F;
                 accelSpeed = airSprint ? Constants.AIR_SPEED_F : Constants.AIR_SPEED_NO_SPRINT_F;

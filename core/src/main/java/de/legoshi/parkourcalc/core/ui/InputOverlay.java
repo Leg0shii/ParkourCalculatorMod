@@ -33,6 +33,7 @@ import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
+import java.util.function.ObjIntConsumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -48,6 +49,7 @@ public final class InputOverlay {
     private static final String COL_PITCH = "Pit";
     private static final String COL_SPEED = "Speed";
     private static final String COL_JUMP_BOOST = "Jump";
+    private static final String COL_SLOWNESS = "Slow";
     private static final String COL_HOTBAR = "Slot";
     private static final float INDEX_DIGIT_WIDTH = 32f;
     private static final float INDEX_DIGIT_SLACK = 6f;
@@ -65,11 +67,13 @@ public final class InputOverlay {
 
     private static final String ID_SPEED_SUFFIX = "##speed";
     private static final String ID_JUMP_SUFFIX = "##jump";
+    private static final String ID_SLOWNESS_SUFFIX = "##slowness";
     private static final String ID_HOTBAR_SUFFIX = "##hotbar";
     private static final String ID_PITCH_INPUT = "##pitch";
 
     private static final String MENU_APPLY_SPEED_TO_ALL = "Apply tick 1 Speed to all rows";
     private static final String MENU_APPLY_JUMP_TO_ALL = "Apply tick 1 Jump to all rows";
+    private static final String MENU_APPLY_SLOWNESS_TO_ALL = "Apply tick 1 Slow to all rows";
 
     private static final float AMP_CELL_WIDTH = 110;
     private static final float AMP_COLUMN_WIDTH = 120;
@@ -407,6 +411,25 @@ public final class InputOverlay {
         return settings.showColJumpBoost;
     }
 
+    private boolean isSlownessColumnVisible() {
+        return settings.showColSlowness;
+    }
+
+    private String[] visiblePotionColumns() {
+        List<String> out = new ArrayList<>(3);
+        if (isSpeedColumnVisible()) out.add(COL_SPEED);
+        if (isJumpBoostColumnVisible()) out.add(COL_JUMP_BOOST);
+        if (isSlownessColumnVisible()) out.add(COL_SLOWNESS);
+        return out.toArray(new String[0]);
+    }
+
+    private float potionColumnWidth(String label, boolean last) {
+        float scale = uiScale();
+        return last
+                ? ThemeManager.tableRightmostColumnWidth(label, AMP_COLUMN_WIDTH * scale, ThemeManager.tableScrollbarSlack())
+                : ThemeManager.tableColumnWidth(label, AMP_COLUMN_WIDTH * scale);
+    }
+
     private boolean isHotbarColumnVisible() {
         return settings.showColHotbar;
     }
@@ -416,7 +439,7 @@ public final class InputOverlay {
     }
 
     private int potionColumnCount() {
-        return (isSpeedColumnVisible() ? 1 : 0) + (isJumpBoostColumnVisible() ? 1 : 0);
+        return visiblePotionColumns().length;
     }
 
     private int baseColumnCount() {
@@ -463,16 +486,8 @@ public final class InputOverlay {
         for (RowFlag f : activeFlags()) columnSum += ThemeManager.tableColumnWidth(f.label, 0f);
         if (isHotbarColumnVisible()) columnSum += ThemeManager.tableColumnWidth(COL_HOTBAR, HOTBAR_COLUMN_WIDTH * scale);
         if (isTeleportColumnVisible()) columnSum += ThemeManager.tableColumnWidth(COL_TELEPORT, TELEPORT_COLUMN_WIDTH * scale);
-        boolean speed = isSpeedColumnVisible();
-        boolean jump = isJumpBoostColumnVisible();
-        if (speed) {
-            columnSum += jump
-                    ? ThemeManager.tableColumnWidth(COL_SPEED, AMP_COLUMN_WIDTH * scale)
-                    : ThemeManager.tableRightmostColumnWidth(COL_SPEED, AMP_COLUMN_WIDTH * scale, ThemeManager.tableScrollbarSlack());
-        }
-        if (jump) {
-            columnSum += ThemeManager.tableRightmostColumnWidth(COL_JUMP_BOOST, AMP_COLUMN_WIDTH * scale, ThemeManager.tableScrollbarSlack());
-        }
+        String[] potions = visiblePotionColumns();
+        for (int i = 0; i < potions.length; i++) columnSum += potionColumnWidth(potions[i], i == potions.length - 1);
         if (solver) {
             columnSum += angleSolver.minConstraintsColumnWidth() + angleSolver.minStateColumnWidth();
         }
@@ -696,16 +711,9 @@ public final class InputOverlay {
         if (isPitchColumnVisible()) {
             ImGui.tableSetupColumn(COL_PITCH, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableColumnWidth(COL_PITCH, yawColumnWidth()));
         }
-        boolean speed = isSpeedColumnVisible();
-        boolean jump = isJumpBoostColumnVisible();
-        if (speed) {
-            float speedW = jump
-                    ? ThemeManager.tableColumnWidth(COL_SPEED, AMP_COLUMN_WIDTH * scale)
-                    : ThemeManager.tableRightmostColumnWidth(COL_SPEED, AMP_COLUMN_WIDTH * scale, ThemeManager.tableScrollbarSlack());
-            ImGui.tableSetupColumn(COL_SPEED, ImGuiTableColumnFlags.WidthFixed, speedW);
-        }
-        if (jump) {
-            ImGui.tableSetupColumn(COL_JUMP_BOOST, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableRightmostColumnWidth(COL_JUMP_BOOST, AMP_COLUMN_WIDTH * scale, ThemeManager.tableScrollbarSlack()));
+        String[] potions = visiblePotionColumns();
+        for (int i = 0; i < potions.length; i++) {
+            ImGui.tableSetupColumn(potions[i], ImGuiTableColumnFlags.WidthFixed, potionColumnWidth(potions[i], i == potions.length - 1));
         }
         if (solverActive) {
             ImGui.tableSetupColumn(angleSolver.constraintsColumnHeaderLabel(), ImGuiTableColumnFlags.WidthStretch, 1.0f);
@@ -749,15 +757,10 @@ public final class InputOverlay {
             ThemeManager.tableHeaderCentered(COL_PITCH);
             TooltipUtil.onHover(headerColTooltip(COL_PITCH));
         }
-        if (isSpeedColumnVisible()) {
+        for (String label : visiblePotionColumns()) {
             ImGui.tableSetColumnIndex(col++);
-            ThemeManager.tableHeaderCentered(COL_SPEED);
-            TooltipUtil.onHover(headerColTooltip(COL_SPEED));
-        }
-        if (isJumpBoostColumnVisible()) {
-            ImGui.tableSetColumnIndex(col++);
-            ThemeManager.tableHeaderCentered(COL_JUMP_BOOST);
-            TooltipUtil.onHover(headerColTooltip(COL_JUMP_BOOST));
+            ThemeManager.tableHeaderCentered(label);
+            TooltipUtil.onHover(headerColTooltip(label));
         }
         if (solverActive) {
             ImGui.tableSetColumnIndex(col++);
@@ -798,6 +801,7 @@ public final class InputOverlay {
             case COL_PITCH: return "Pitch turn per tick; press F to lock a cell to an absolute pitch (-90 up to 90 down). Empty = inherit previous tick's pitch.";
             case COL_SPEED: return "Speed potion amplifier, 0 to 255 (0 = no effect).";
             case COL_JUMP_BOOST: return "Jump Boost potion amplifier, 0 to 255 (0 = no effect).";
+            case COL_SLOWNESS: return "Slowness potion amplifier, 0 to 255 (0 = no effect, 7 and above stops the player on the ground).";
             case COL_HOTBAR: return "Held hotbar slot (1-9) to switch to during playback. Empty = keep the previous slot.";
             case COL_TELEPORT: return "Teleport the player to X/Y/Z at the start of this tick, before its inputs. Applies to both the simulation and the replay.";
             default: return col;
@@ -1441,32 +1445,38 @@ public final class InputOverlay {
                 notifyChange(rowIndex);
             }
         }
+        if (isSlownessColumnVisible()) {
+            ImGui.tableNextColumn();
+            ampBuf.set(row.getSlownessAmplifier());
+            ThemeManager.centerNextItem(ampW);
+            ImGui.setNextItemWidth(ampW);
+            if (ImGui.inputInt(ID_SLOWNESS_SUFFIX, ampBuf, 0, 0)) {
+                row.setSlownessAmplifier(ampBuf.get());
+                notifyChange(rowIndex);
+            }
+        }
     }
 
     private void renderApplyPotionOptions() {
-        boolean speed = isSpeedColumnVisible();
-        boolean jump = isJumpBoostColumnVisible();
-        if ((!speed && !jump) || data.getRows().isEmpty()) return;
+        if (potionColumnCount() == 0 || data.getRows().isEmpty()) return;
 
         InputRow first = data.get(0);
-        if (speed && contextButton(MENU_APPLY_SPEED_TO_ALL)) {
-            applyAmplifierToAll(true, first.getSpeedAmplifier());
+        if (isSpeedColumnVisible() && contextButton(MENU_APPLY_SPEED_TO_ALL)) {
+            applyAmplifierToAll(InputRow::setSpeedAmplifier, first.getSpeedAmplifier());
             notifyFullResim();
         }
-        if (jump && contextButton(MENU_APPLY_JUMP_TO_ALL)) {
-            applyAmplifierToAll(false, first.getJumpBoostAmplifier());
+        if (isJumpBoostColumnVisible() && contextButton(MENU_APPLY_JUMP_TO_ALL)) {
+            applyAmplifierToAll(InputRow::setJumpBoostAmplifier, first.getJumpBoostAmplifier());
+            notifyFullResim();
+        }
+        if (isSlownessColumnVisible() && contextButton(MENU_APPLY_SLOWNESS_TO_ALL)) {
+            applyAmplifierToAll(InputRow::setSlownessAmplifier, first.getSlownessAmplifier());
             notifyFullResim();
         }
     }
 
-    private void applyAmplifierToAll(boolean speed, int amplifier) {
-        for (InputRow row : data.getRows()) {
-            if (speed) {
-                row.setSpeedAmplifier(amplifier);
-            } else {
-                row.setJumpBoostAmplifier(amplifier);
-            }
-        }
+    private void applyAmplifierToAll(ObjIntConsumer<InputRow> setter, int amplifier) {
+        for (InputRow row : data.getRows()) setter.accept(row, amplifier);
     }
 
     private void parseAndSetYaw(InputRow row) {

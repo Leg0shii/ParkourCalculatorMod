@@ -289,6 +289,54 @@ public class SprintSneakTest {
     }
 
     @Test
+    public void groundSlownessAmplifierLagsByOneTickAndOnlySlowsTheGround() {
+        ExactJumpModel model = ExactJumpModel.forMcVersion("1.8.9");
+        double[] yaws = {0.0, 0.0};
+
+        JumpPhysicsInputs onset = groundSprinting(2);
+        onset.slownessAmplifier = new int[]{0, 2};
+        onset.incomingSlowness = 0;
+
+        JumpPhysicsInputs never = groundSprinting(2);
+        never.slownessAmplifier = new int[]{0, 0};
+        never.incomingSlowness = 0;
+
+        ForwardPath on = model.forward(onset, onset.toGameFacings(yaws));
+        ForwardPath nv = model.forward(never, never.toGameFacings(yaws));
+        for (int t = 0; t <= 2; t++) {
+            assertEquals("tick 1's own slowness must not move tick 1 (the ground factor lags)", on.posZ[t], nv.posZ[t], 0.0);
+        }
+
+        JumpPhysicsInputs prior = groundSprinting(2);
+        prior.slownessAmplifier = new int[]{2, 0};
+        prior.incomingSlowness = 0;
+        ForwardPath pr = model.forward(prior, prior.toGameFacings(yaws));
+        assertEquals("tick 0 shares the seeded (level 0) slowness", on.posZ[1], pr.posZ[1], 0.0);
+        assertTrue("tick 0's slowness is what slows tick 1's ground accel", pr.posZ[2] < on.posZ[2]);
+
+        JumpPhysicsInputs air = scenario(1, Double.NaN, false);
+        JumpPhysicsInputs slowAir = scenario(1, Double.NaN, false);
+        slowAir.slownessAmplifier = new int[]{3};
+        slowAir.incomingSlowness = 3;
+        ForwardPath a = model.forward(air, air.toGameFacings(new double[]{0.0}));
+        ForwardPath s = model.forward(slowAir, slowAir.toGameFacings(new double[]{0.0}));
+        assertEquals("slowness never touches the air accel", a.posZ[1], s.posZ[1], 0.0);
+    }
+
+    @Test
+    public void sliceCarriesSlownessIntoTheWindowSeed() {
+        JumpPhysicsInputs sc = groundSprinting(3);
+        sc.slownessAmplifier = new int[]{1, 2, 3};
+        sc.incomingSlowness = 4;
+        JumpPhysicsInputs win = sc.slice(1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0f);
+        assertEquals(1, win.factorSlownessAt(0));
+        assertEquals(2, win.factorSlownessAt(1));
+        assertEquals(3, win.slownessAmplifierAt(1));
+        assertEquals(4, sc.factorSlownessAt(0));
+        assertEquals(4, sc.copy().factorSlownessAt(0));
+    }
+
+    @Test
     public void modernAirSprintFactorEngagesSameTick() {
         double[] yaws = {0.0};
 

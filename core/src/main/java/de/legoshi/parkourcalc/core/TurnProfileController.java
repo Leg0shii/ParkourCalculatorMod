@@ -47,6 +47,7 @@ public final class TurnProfileController {
         public final boolean[] jumpTicks;
         public final int[] speedAmp;
         public final int[] jumpAmp;
+        public final int[] slowAmp;
         public final int[] leadKeys;
         public final TurnReference.Landing landing;
         public final TurnProfile profile;
@@ -55,7 +56,7 @@ public final class TurnProfileController {
         final AngleSolverEngine.PathSnapshot snapshot;
 
         Current(int startTick, int tasFirstTick, double[] facing, int[] keys, boolean[] checkKeys, int[] optionalKeys,
-                boolean[] checkYaw, boolean[] still, boolean[] jumpTicks, int[] speedAmp, int[] jumpAmp,
+                boolean[] checkYaw, boolean[] still, boolean[] jumpTicks, int[] speedAmp, int[] jumpAmp, int[] slowAmp,
                 int[] leadKeys, TurnReference.Landing landing, TurnProfile profile, AttemptSampler.Stats attempts,
                 double pixelDeg, AngleSolverEngine.PathSnapshot snapshot) {
             this.startTick = startTick;
@@ -70,6 +71,7 @@ public final class TurnProfileController {
             this.jumpTicks = jumpTicks;
             this.speedAmp = speedAmp;
             this.jumpAmp = jumpAmp;
+            this.slowAmp = slowAmp;
             this.leadKeys = leadKeys;
             this.landing = landing;
             this.profile = profile;
@@ -80,7 +82,7 @@ public final class TurnProfileController {
 
         Current withAttempts(AttemptSampler.Stats stats, double pixelDeg) {
             return new Current(startTick, tasFirstTick, facing, keys, checkKeys, optionalKeys, checkYaw, still,
-                    jumpTicks, speedAmp, jumpAmp, leadKeys, landing, profile, stats, pixelDeg, snapshot);
+                    jumpTicks, speedAmp, jumpAmp, slowAmp, leadKeys, landing, profile, stats, pixelDeg, snapshot);
         }
 
         public boolean canRate() {
@@ -572,6 +574,7 @@ public final class TurnProfileController {
         boolean[] jumps = new boolean[n];
         int[] speedAmp = new int[n];
         int[] jumpAmp = new int[n];
+        int[] slowAmp = new int[n];
         AngleSolverEngine.PathSnapshot snap = built.snapshot;
         JumpPhysicsInputs sc = snap == null ? null : snap.spec.asScenario();
         for (int k = 0; k < n; k++) {
@@ -584,6 +587,7 @@ public final class TurnProfileController {
             jumps[k] = (keys[k] & TurnReference.KEY_JUMP) != 0 && (sc == null || !Double.isNaN(sc.slipAt(k)));
             speedAmp[k] = r.getSpeedAmplifier();
             jumpAmp[k] = r.getJumpBoostAmplifier();
+            slowAmp[k] = r.getSlownessAmplifier();
         }
         TurnProfile profile = null;
         if (snap != null) {
@@ -591,7 +595,7 @@ public final class TurnProfileController {
             profile = TurnProfile.compute(model, snap.spec, facing, null, false);
         }
         current.set(new Current(0, ref.tasFirstTick(), facing, keys, checkKeys, optional, checkYaw, still, jumps,
-                speedAmp, jumpAmp, leadKeys(ref.tasFirstTick()), ref.landing(), profile, null,
+                speedAmp, jumpAmp, slowAmp, leadKeys(ref.tasFirstTick()), ref.landing(), profile, null,
                 TurnProfile.pixelDeg(sensitivity.get()), snap));
     }
 

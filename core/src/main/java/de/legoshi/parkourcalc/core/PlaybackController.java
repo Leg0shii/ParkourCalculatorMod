@@ -47,6 +47,7 @@ public final class PlaybackController {
     private int lastCapturedTick = -1;
     private int lastSpeedAmplifier;
     private int lastJumpBoostAmplifier;
+    private int lastSlownessAmplifier;
 
     private Supplier<StartRange> startRangeResolver;
     private Runnable onStart = () -> { };
@@ -217,9 +218,11 @@ public final class PlaybackController {
         InputRow firstRow = inputData.get(from);
         int firstSpeedAmp = firstRow.getSpeedAmplifier();
         int firstJumpAmp = firstRow.getJumpBoostAmplifier();
-        bridge.applyEffects(firstSpeedAmp, firstJumpAmp);
+        int firstSlowAmp = firstRow.getSlownessAmplifier();
+        bridge.applyEffects(firstSpeedAmp, firstJumpAmp, firstSlowAmp);
         lastSpeedAmplifier = firstSpeedAmp;
         lastJumpBoostAmplifier = firstJumpAmp;
+        lastSlownessAmplifier = firstSlowAmp;
         if (DebugFlags.PAIRED_DIAGNOSTICS) {
             lastCapturedTick = -1;
             bridge.beginPlaybackCapture();
@@ -247,7 +250,7 @@ public final class PlaybackController {
         pausedAtNanos = 0L;
         if (bridge != null) {
             bridge.releaseAllKeys();
-            bridge.applyEffects(0, 0);
+            bridge.applyEffects(0, 0, 0);
             if (DebugFlags.PAIRED_DIAGNOSTICS) {
                 bridge.finishPlaybackCapture();
             }
@@ -257,6 +260,7 @@ public final class PlaybackController {
         }
         lastSpeedAmplifier = 0;
         lastJumpBoostAmplifier = 0;
+        lastSlownessAmplifier = 0;
     }
 
     public float teleportNoticeAlpha() {
@@ -356,10 +360,12 @@ public final class PlaybackController {
         }
         int speedAmp = row.getSpeedAmplifier();
         int jumpAmp = row.getJumpBoostAmplifier();
-        if (speedAmp != lastSpeedAmplifier || jumpAmp != lastJumpBoostAmplifier) {
-            bridge.applyEffects(speedAmp, jumpAmp);
+        int slowAmp = row.getSlownessAmplifier();
+        if (speedAmp != lastSpeedAmplifier || jumpAmp != lastJumpBoostAmplifier || slowAmp != lastSlownessAmplifier) {
+            bridge.applyEffects(speedAmp, jumpAmp, slowAmp);
             lastSpeedAmplifier = speedAmp;
             lastJumpBoostAmplifier = jumpAmp;
+            lastSlownessAmplifier = slowAmp;
         }
         int hotbarSlot = row.getHotbarSlot();
         if (hotbarSlot >= 1) {

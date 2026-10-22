@@ -226,13 +226,16 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
     }
 
     @Override
-    protected void applyTickEffects(SimulatorEntity e, int speedAmplifier, int jumpBoostAmplifier) {
+    protected void applyTickEffects(SimulatorEntity e, int speedAmplifier, int jumpBoostAmplifier, int slownessAmplifier) {
         e.removeAllEffects();
         if (speedAmplifier > 0) {
             e.addEffect(new MobEffectInstance(speedEffect(), 2, speedAmplifier - 1));
         }
         if (jumpBoostAmplifier > 0) {
             e.addEffect(new MobEffectInstance(jumpBoostEffect(), 2, jumpBoostAmplifier - 1));
+        }
+        if (slownessAmplifier > 0) {
+            e.addEffect(new MobEffectInstance(slownessEffect(), 2, slownessAmplifier - 1));
         }
     }
 
@@ -453,6 +456,10 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
     private static net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> jumpBoostEffect() {
         return MobEffects.JUMP_BOOST;
     }
+
+    private static net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> slownessEffect() {
+        return MobEffects.SLOWNESS;
+    }
     //?} elif >=1.20.5 {
     /*private static net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> speedEffect() {
         return MobEffects.MOVEMENT_SPEED;
@@ -461,6 +468,10 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
     private static net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> jumpBoostEffect() {
         return MobEffects.JUMP;
     }
+
+    private static net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> slownessEffect() {
+        return MobEffects.MOVEMENT_SLOWDOWN;
+    }
     *///?} else {
     /*private static net.minecraft.world.effect.MobEffect speedEffect() {
         return MobEffects.MOVEMENT_SPEED;
@@ -468,6 +479,10 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
 
     private static net.minecraft.world.effect.MobEffect jumpBoostEffect() {
         return MobEffects.JUMP;
+    }
+
+    private static net.minecraft.world.effect.MobEffect slownessEffect() {
+        return MobEffects.MOVEMENT_SLOWDOWN;
     }
     *///?}
 }

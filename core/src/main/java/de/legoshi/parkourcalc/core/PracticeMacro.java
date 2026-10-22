@@ -23,6 +23,7 @@ public final class PracticeMacro {
     private int mode;
     private int speedAmp = -1;
     private int jumpAmp = -1;
+    private int slowAmp = -1;
 
     public PracticeMacro(TurnProfileController profile, AttemptTracker tracker, Settings settings) {
         this.profile = profile;
@@ -121,10 +122,12 @@ public final class PracticeMacro {
         int k = Math.max(0, Math.min(cur.n - 1, t));
         int speed = cur.speedAmp[k];
         int jump = cur.jumpAmp[k];
-        if (speed == speedAmp && jump == jumpAmp) return;
+        int slow = cur.slowAmp[k];
+        if (speed == speedAmp && jump == jumpAmp && slow == slowAmp) return;
         speedAmp = speed;
         jumpAmp = jump;
-        bridge.applyEffects(speed, jump);
+        slowAmp = slow;
+        bridge.applyEffects(speed, jump, slow);
     }
 
     private void applyKeys(int keys) {
@@ -139,9 +142,10 @@ public final class PracticeMacro {
         active = false;
         if (bridge == null) return;
         bridge.releaseAllKeys();
-        if (speedAmp > 0 || jumpAmp > 0) bridge.applyEffects(0, 0);
+        if (speedAmp > 0 || jumpAmp > 0 || slowAmp > 0) bridge.applyEffects(0, 0, 0);
         speedAmp = -1;
         jumpAmp = -1;
+        slowAmp = -1;
         bridge.endReplica();
     }
 }
