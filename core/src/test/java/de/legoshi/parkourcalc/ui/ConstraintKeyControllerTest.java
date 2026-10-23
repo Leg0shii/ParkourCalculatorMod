@@ -136,6 +136,70 @@ public class ConstraintKeyControllerTest {
         assertEquals("wall sits on the inset collision face, not the outline hit", 5.9375 + HALF, wall.getValue(), EPS);
     }
 
+    private Constraint wall(Constraint.Field field) {
+        for (Constraint c : constraints()) {
+            if (!c.isRange() && c.getField() == field) return c;
+        }
+        throw new AssertionError("no wall constraint for " + field);
+    }
+
+    @Test
+    public void wallOnACobwebSideSitsOnTheContactBoxInsetByTheVersionEpsilon() {
+        mc.cobwebs.add(java.util.Arrays.asList(5, 64, 5));
+        mc.insideBlockInset = 1.0E-7;
+        mc.lookedAtBlock = new int[] {5, 64, 5};
+        mc.lookedAtFace = Face.NEG_X;
+        mc.lookedAtHitVec = new Vec3dCore(5.0 + 1.0E-7, 64.5, 5.5);
+
+        controller.onKey(false, false);
+
+        Constraint wall = wall(Constraint.Field.X);
+        assertEquals(Constraint.Op.LE, wall.getOp());
+        assertEquals("the player box only touches the web once it reaches past the inset", 5.0 + 1.0E-7 - HALF,
+                wall.getValue(), EPS);
+    }
+
+    @Test
+    public void enteringACobwebSideFlipsTheWall() {
+        mc.cobwebs.add(java.util.Arrays.asList(5, 64, 5));
+        mc.insideBlockInset = 0.001;
+        mc.lookedAtBlock = new int[] {5, 64, 5};
+        mc.lookedAtFace = Face.POS_Z;
+        mc.lookedAtHitVec = new Vec3dCore(5.5, 64.5, 5.999);
+
+        controller.onKey(true, false);
+
+        Constraint wall = wall(Constraint.Field.Z);
+        assertEquals(Constraint.Op.LE, wall.getOp());
+        assertEquals(5.999 + HALF, wall.getValue(), EPS);
+    }
+
+    @Test
+    public void cobwebTopFaceAddsNothing() {
+        mc.cobwebs.add(java.util.Arrays.asList(5, 64, 5));
+        mc.lookedAtBlock = new int[] {5, 64, 5};
+        mc.lookedAtFace = Face.POS_Y;
+        mc.lookedAtHitVec = new Vec3dCore(5.5, 64.999, 5.5);
+
+        controller.onKey(false, false);
+
+        assertNull(state.tickConstraintsOrNull(TICK));
+    }
+
+    @Test
+    public void thePickReachesACobwebOnItsContactBox() {
+        mc.cobwebs.add(java.util.Arrays.asList(5, 64, 5));
+        mc.insideBlockInset = 0.001;
+        mc.eyePosition = new Vec3dCore(3.5, 64.5, 5.5);
+        mc.lookDirection = new Vec3dCore(1.0, 0.0, 0.0);
+
+        controller.onKey(false, false);
+
+        Constraint wall = wall(Constraint.Field.X);
+        assertEquals(Constraint.Op.LE, wall.getOp());
+        assertEquals(5.001 - HALF, wall.getValue(), EPS);
+    }
+
     @Test
     public void staleLandingTickPastTheLastRowClampsToTheLastRow() {
         state.setLandingTick(9);

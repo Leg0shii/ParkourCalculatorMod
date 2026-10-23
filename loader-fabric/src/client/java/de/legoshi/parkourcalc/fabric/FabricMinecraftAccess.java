@@ -108,6 +108,22 @@ public final class FabricMinecraftAccess implements MinecraftAccess {
     }
 
     @Override
+    public boolean isCobweb(int x, int y, int z) {
+        ClientLevel world = Minecraft.getInstance().level;
+        if (world == null) return false;
+        return world.getBlockState(new BlockPos(x, y, z)).is(Blocks.COBWEB);
+    }
+
+    @Override
+    public double getInsideBlockInset() {
+        //? if >=1.21.2 {
+        return 1.0E-5F;
+        //?} else {
+        /*return 1.0E-7;
+        *///?}
+    }
+
+    @Override
     public double[] getPressurePlateFootprint(int x, int y, int z) {
         ClientLevel world = Minecraft.getInstance().level;
         if (world == null) return null;

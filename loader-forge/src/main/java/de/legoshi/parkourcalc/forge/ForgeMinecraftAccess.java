@@ -136,6 +136,22 @@ public final class ForgeMinecraftAccess implements MinecraftAccess {
     }
 
     @Override
+    public boolean isCobweb(int x, int y, int z) {
+        World world = McClient.world();
+        if (world == null) return false;
+        //? if >=1.12 {
+        return world.getBlockState(new BlockPos(x, y, z)).getBlock() == Blocks.WEB;
+        //?} else {
+        /*return world.getBlockState(new BlockPos(x, y, z)).getBlock() == Blocks.web;
+        *///?}
+    }
+
+    @Override
+    public double getInsideBlockInset() {
+        return 0.001;
+    }
+
+    @Override
     public double[] getPressurePlateFootprint(int x, int y, int z) {
         World world = McClient.world();
         if (world == null) return null;
