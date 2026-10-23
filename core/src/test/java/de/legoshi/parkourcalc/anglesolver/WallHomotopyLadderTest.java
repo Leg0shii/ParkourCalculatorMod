@@ -7,9 +7,11 @@ import de.legoshi.parkourcalc.SlowSolverTests;
 import de.legoshi.parkourcalc.anglesolver.harness.Fixtures;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
+import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Scoring;
 import de.legoshi.parkourcalc.core.anglesolver.solver.Angles;
 import de.legoshi.parkourcalc.core.anglesolver.solver.AnchorSlp;
+import de.legoshi.parkourcalc.core.anglesolver.solver.BucketWalk;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.FoldReplayDriver;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ForwardPath;
@@ -17,6 +19,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
+import de.legoshi.parkourcalc.core.anglesolver.solver.Objective;
 import de.legoshi.parkourcalc.core.anglesolver.solver.WallHomotopyLadder;
 import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
@@ -24,6 +27,8 @@ import de.legoshi.parkourcalc.core.ui.InputData;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -64,6 +69,73 @@ public class WallHomotopyLadderTest {
         assertPolishLands(J1150, J1150_WITNESS, 5);
         assertPolishLands(J154, J154_WITNESS, 2);
         assertPolishLands(J154, J154_WITNESS, 5);
+    }
+
+    @Test
+    public void perturbedWitnessFullLadderLandsAndFindsDeepBasin() {
+        FoldReplayDriver.Result a = polishPerturbed(J154, J154_WITNESS, 2);
+        assertNotNull(a.best);
+        assertEquals("j154 perturb 2 must land byte-exact", 0.0, a.best.maxViolation, 0.0);
+        FoldReplayDriver.Result b = polishPerturbed(J154, J154_WITNESS, 50);
+        assertNotNull(b.best);
+        assertEquals("j154 perturb 50 must land byte-exact", 0.0, b.best.maxViolation, 0.0);
+        assertTrue("j154 perturb 50 must reach the deep basin, got " + b.best.objective,
+                b.best.objective <= -1599.70033);
+        FoldReplayDriver.Result c = polishPerturbed(J1150, J1150_WITNESS, 2);
+        assertNotNull(c.best);
+        assertEquals("j1150 perturb 2 must land byte-exact", 0.0, c.best.maxViolation, 0.0);
+    }
+
+    @Test
+    public void polishFromAnchorIsBitDeterministic() {
+        FoldReplayDriver.Result a = polishPerturbed(J154, J154_WITNESS, 2);
+        FoldReplayDriver.Result b = polishPerturbed(J154, J154_WITNESS, 2);
+        assertNotNull(a.best);
+        assertNotNull(b.best);
+        assertEquals(Double.doubleToRawLongBits(a.best.objective),
+                Double.doubleToRawLongBits(b.best.objective));
+        assertEquals(Double.doubleToRawLongBits(a.best.px), Double.doubleToRawLongBits(b.best.px));
+        assertEquals(Double.doubleToRawLongBits(a.best.pz), Double.doubleToRawLongBits(b.best.pz));
+        assertEquals(a.rounds.size(), b.rounds.size());
+        for (int t = 0; t < a.best.yawsDeg.length; t++) {
+            assertEquals(Double.doubleToRawLongBits(a.best.yawsDeg[t]),
+                    Double.doubleToRawLongBits(b.best.yawsDeg[t]));
+        }
+    }
+
+    @Test
+    public void enginePolishBeatsJ154WitnessByteExact() {
+        Loaded l = load(J154);
+        double[] seed = engineYaws(l);
+        FoldReplayDriver.Result pr = FoldReplayDriver.polishFromAnchor(l.model, l.spec, seed, null, null, null);
+        assertNotNull(pr.best);
+        assertEquals("engine-seeded polish must stay byte-exact", 0.0, pr.best.maxViolation, 0.0);
+        assertTrue("engine-seeded polish must beat the F3 witness under the t34 plate, got "
+                + pr.best.objective, pr.best.objective <= J154_OBJ);
+    }
+
+    @Test
+    public void enginePolishHoldsJ1150FeasibleAtEngineLevel() {
+        Loaded l = load(J1150);
+        double[] seed = engineYaws(l);
+        FoldReplayDriver.Result pr = FoldReplayDriver.polishFromAnchor(l.model, l.spec, seed, null, null, null);
+        assertNotNull(pr.best);
+        assertEquals("engine-seeded polish must stay byte-exact", 0.0, pr.best.maxViolation, 0.0);
+    }
+
+    @Test
+    public void bucketCenterAdjustIsSubHalfBucketAcrossErasAndSigns() {
+        float[] samples = {0.37F, 20.53F, -76.61F, 179.9F, -179.9F, 90.0F, -0.01F, 45.0F};
+        double half = 0.5 * BucketWalk.BUCKET_DEG * 1.02;
+        for (float g : samples) {
+            for (int era = 0; era < 3; era++) {
+                boolean modern = era > 0;
+                boolean s262 = era == 2;
+                double adj = BucketWalk.centerAdjustDeg(g, modern, s262);
+                assertTrue("adjust must stay under half a bucket, got " + adj + " at " + g
+                        + " era " + era, Math.abs(adj) <= half);
+            }
+        }
     }
 
     @Test
@@ -124,22 +196,43 @@ public class WallHomotopyLadderTest {
                 Double.doubleToRawLongBits(again.best.maxViolation));
     }
 
+    private static final class Witness {
+        final double[] yaws;
+        final double px;
+        final double pz;
+
+        Witness(double[] yaws, double px, double pz) {
+            this.yaws = yaws;
+            this.px = px;
+            this.pz = pz;
+        }
+    }
+
+    private static Witness witness(String witness, int n, int perturbBuckets) {
+        JsonObject dec = new JsonParser().parse(Fixtures.rawPool(witness)).getAsJsonObject();
+        JsonArray ya = dec.get("yawsDeg").getAsJsonArray();
+        assertEquals("witness yaw count must match the spec", n, ya.size());
+        double[] yaws = new double[n];
+        for (int i = 0; i < n; i++) {
+            yaws[i] = ya.get(i).getAsDouble()
+                    + ((i % 2 == 0) ? perturbBuckets : -perturbBuckets) * BucketWalk.BUCKET_DEG;
+        }
+        return new Witness(Angles.wrapAll(yaws), dec.get("px").getAsDouble(), dec.get("pz").getAsDouble());
+    }
+
+    private static FoldReplayDriver.Result polishPerturbed(String capture, String witness, int buckets) {
+        Loaded l = load(capture);
+        Witness w = witness(witness, l.spec.asScenario().numTicks, buckets);
+        return FoldReplayDriver.polishFromAnchor(l.model, l.spec, w.yaws, w.px, w.pz, null);
+    }
+
     private static void assertPolishLands(String capture, String witness, int perturbBuckets) {
         Loaded l = load(capture);
         JumpPhysicsInputs sc = l.spec.asScenario();
         int n = sc.numTicks;
-        JsonObject dec = new JsonParser().parse(Fixtures.rawPool(witness)).getAsJsonObject();
-        JsonArray ya = dec.get("yawsDeg").getAsJsonArray();
-        double bucketDeg = 360.0 / 65536.0;
-        double[] pert = new double[n];
-        for (int i = 0; i < n; i++) {
-            pert[i] = ya.get(i).getAsDouble() + ((i % 2 == 0) ? perturbBuckets : -perturbBuckets) * bucketDeg;
-        }
-        pert = Angles.wrapAll(pert);
-        double px = dec.get("px").getAsDouble();
-        double pz = dec.get("pz").getAsDouble();
-        JumpPhysicsInputs sc2 = Scoring.pinnedScenario(sc, px, pz);
-        double[] pgf = sc2.toGameFacings(pert);
+        Witness w = witness(witness, n, perturbBuckets);
+        JumpPhysicsInputs sc2 = Scoring.pinnedScenario(sc, w.px, w.pz);
+        double[] pgf = sc2.toGameFacings(w.yaws);
         ForwardPath pfp = l.model.forward(sc2, pgf);
         JumpConstraintCompiler.Compiled comp = JumpConstraintCompiler.compile(l.spec);
         double pviol = comp.maxViolation(pgf, pfp);
@@ -148,9 +241,9 @@ public class WallHomotopyLadderTest {
         boolean[] zz = new boolean[n];
         FoldReplayDriver.extractPattern(l.model, pfp, n, zx, zz);
         JumpLinearModel lin = new JumpLinearModel(sc2, zx, zz);
-        java.util.List<FoldReplayDriver.Round> sink = new java.util.ArrayList<>();
-        AnchorSlp.Outcome oc = AnchorSlp.polish(l.model, l.spec, comp, sc, lin, pert, pgf, pfp,
-                px, pz, pviol, sink, l.spec.objective.sense == de.legoshi.parkourcalc.core.anglesolver.solver.Objective.Sense.MAX);
+        List<FoldReplayDriver.Round> sink = new ArrayList<>();
+        AnchorSlp.Outcome oc = AnchorSlp.polish(l.model, l.spec, comp, sc, lin, w.yaws, pgf, pfp,
+                w.px, w.pz, pviol, sink, l.spec.objective.sense == Objective.Sense.MAX);
         assertNotNull(capture + " perturb " + perturbBuckets
                 + ": margins+SLP must land byte-exact from the perturbed witness anchor, best viol "
                 + oc.viol + " after " + sink.size() + " steps", oc.landed);
@@ -161,21 +254,15 @@ public class WallHomotopyLadderTest {
         Loaded l = load(capture);
         JumpPhysicsInputs sc = l.spec.asScenario();
         int n = sc.numTicks;
-        JsonObject dec = new JsonParser().parse(Fixtures.rawPool(witness)).getAsJsonObject();
-        JsonArray ya = dec.get("yawsDeg").getAsJsonArray();
-        double[] yaws = new double[n];
-        for (int i = 0; i < n; i++) yaws[i] = ya.get(i).getAsDouble();
-        yaws = Angles.wrapAll(yaws);
-        double px = dec.get("px").getAsDouble();
-        double pz = dec.get("pz").getAsDouble();
-        JumpPhysicsInputs sc2 = Scoring.pinnedScenario(sc, px, pz);
-        double[] gf = sc2.toGameFacings(yaws);
+        Witness w = witness(witness, n, 0);
+        JumpPhysicsInputs sc2 = Scoring.pinnedScenario(sc, w.px, w.pz);
+        double[] gf = sc2.toGameFacings(w.yaws);
         ForwardPath fp = l.model.forward(sc2, gf);
         boolean[] zx = new boolean[n];
         boolean[] zz = new boolean[n];
         FoldReplayDriver.extractPattern(l.model, fp, n, zx, zz);
         JumpLinearModel lin = new JumpLinearModel(sc2, zx, zz);
-        Map<String, Double> mg = AnchorSlp.margins(lin, l.spec.constraints, yaws, sc.startBox, px, pz, gf, fp);
+        Map<String, Double> mg = AnchorSlp.margins(lin, l.spec.constraints, w.yaws, sc.startBox, w.px, w.pz, gf, fp);
         assertFalse("margins must cover the spec walls", mg.isEmpty());
         double mx = 0.0;
         for (Double v : mg.values()) mx = Math.max(mx, Math.abs(v));
@@ -186,16 +273,9 @@ public class WallHomotopyLadderTest {
     private static void assertWitness(String capture, String witness, double expectObj) {
         Loaded l = load(capture);
         JumpPhysicsInputs sc = l.spec.asScenario();
-        int n = sc.numTicks;
-        JsonObject dec = new JsonParser().parse(Fixtures.rawPool(witness)).getAsJsonObject();
-        JsonArray ya = dec.get("yawsDeg").getAsJsonArray();
-        assertEquals("witness yaw count must match the spec", n, ya.size());
-        double[] yaws = new double[n];
-        for (int i = 0; i < n; i++) yaws[i] = ya.get(i).getAsDouble();
-        double px = dec.get("px").getAsDouble();
-        double pz = dec.get("pz").getAsDouble();
-        JumpPhysicsInputs sc2 = Scoring.pinnedScenario(sc, px, pz);
-        double[] gf = sc2.toGameFacings(Angles.wrapAll(yaws));
+        Witness w = witness(witness, sc.numTicks, 0);
+        JumpPhysicsInputs sc2 = Scoring.pinnedScenario(sc, w.px, w.pz);
+        double[] gf = sc2.toGameFacings(w.yaws);
         ForwardPath fp = l.model.forward(sc2, gf);
         double obj = fp.getPos(l.spec.objective.tick, l.spec.objective.axis);
         double viol = JumpConstraintCompiler.compile(l.spec).maxViolation(gf, fp);
@@ -203,13 +283,42 @@ public class WallHomotopyLadderTest {
         assertEquals("witness replay must be clean", 0.0, viol, 0.0);
     }
 
+    private static double[] engineYaws(Loaded l) {
+        l.engine.solve(AngleSolverState.Effort.FAST);
+        long deadline = System.currentTimeMillis() + 30000L;
+        while (l.engine.isSolving() && System.currentTimeMillis() < deadline) {
+            l.engine.poll();
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+        l.engine.poll();
+        SolveResult res = l.state.getResult();
+        assertNotNull("engine must produce a result", res);
+        int n = l.spec.asScenario().numTicks;
+        assertNotNull(res.getYaws());
+        assertEquals("engine must produce a full yaw chain", n, res.getYaws().size());
+        List<SolveResult.YawEntry> ye = new ArrayList<>(res.getYaws());
+        ye.sort((a, b) -> Integer.compare(a.tick, b.tick));
+        double[] seed = new double[n];
+        for (int k = 0; k < n; k++) seed[k] = ye.get(k).yaw;
+        return seed;
+    }
+
     private static final class Loaded {
         final ExactJumpModel model;
         final JumpSpec spec;
+        final AngleSolverEngine engine;
+        final AngleSolverState state;
 
-        Loaded(ExactJumpModel model, JumpSpec spec) {
+        Loaded(ExactJumpModel model, JumpSpec spec, AngleSolverEngine engine, AngleSolverState state) {
             this.model = model;
             this.spec = spec;
+            this.engine = engine;
+            this.state = state;
         }
     }
 
@@ -225,6 +334,6 @@ public class WallHomotopyLadderTest {
         AngleSolverEngine engine = new AngleSolverEngine(state, Fixtures.buildBoxes(file), inputs, t -> { }, model);
         JumpSpec spec = engine.debugBuildSpec();
         assertNotNull("capture must build a spec", spec);
-        return new Loaded(model, spec);
+        return new Loaded(model, spec, engine, state);
     }
 }
