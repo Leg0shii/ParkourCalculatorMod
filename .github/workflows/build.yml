@@ -63,7 +63,7 @@ jobs:
       matrix:
         jdk: ${{ fromJSON(github.base_ref == 'main' && '[21, 8]' || '[21]') }}
         shard: [problems-1, problems-2, problems-3, engine-acceptance-1, engine-acceptance-2, yaw-order-1, yaw-order-2, no-turn-1, no-turn-2, onejump, physics, app, solver]
-        exclude: ${{ fromJSON(github.base_ref == 'main' && '[]' || '[{"shard": "engine-acceptance-1"}, {"shard": "engine-acceptance-2"}]') }}
+        exclude: ${{ fromJSON(github.base_ref == 'main' && '[]' || '[{"shard":"engine-acceptance-1"},{"shard":"engine-acceptance-2"}]') }}
     name: core tests (jdk ${{ matrix.jdk }}, ${{ matrix.shard }})
     steps:
       - name: checkout repository
