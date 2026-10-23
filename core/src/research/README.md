@@ -67,9 +67,6 @@ anglesolver/
                            (engine path via setSmoothLambda), and a bare entry with no params
                            reuses the static preset of that exact id
                            (parse coverage: RunMatrixSweepTest)
-  MatrixAnalysisScreen.java  per-preset aggregates + SBS/VBS feasibility and objective-regret gap over
-                           a matrix runs.jsonl; PKC_MATRIX_ANALYZE=1 + PKC_MATRIX_TAG; writes
-                           build/reports/matrix-<tag>/analysis.md
   RazorColdT1.java         THE HEADLINE GATE: cold 5.4375 from t1 (razor-proof-t1 capture, free
                            start, no yaw seeds) through the live engine; PKC_RAZORT1=1 +
                            PKC_RAZORT1_TAG to run; PASS = success + fresh-reparse viol <= 0;
@@ -117,19 +114,6 @@ anglesolver/
                            -Dpkc.bench.gate fails the run when a jump misses its reference by more
                            than -Dpkc.bench.tol (default 1e-5); not env-gated, it runs whenever selected
   SmoothFileScreen.java    smoothing pass on a saved solve; PKC_SOLVE_FILE=<save.json>
-  CaptureDriftScreen.java  solves a save, then steps its recorded debug states through ExactJumpModel
-                           and prints every tick whose position or velocity drifts; PKC_DRIFT_FILE=<save.json>
-  CoefDump.java            prints the per-tick friction, mMag and baseArg of a save's linear model;
-                           PKC_CD_FILE=<save.json>
-                           (nix campaign, docs/research/nix-solver-handoff.md)
-  ReachGapScreen.java      single-takeoff reach gap per capture; PKC_SCREENS=1
-  CellSetDump.java         razor rung 5.375 gate-flip cell-set dumps and verify; PKC_CELLSET_DUMP=1,
-                           PKC_CELLSET_VERIFY=1 and siblings (docs/research/next-session-lever2-2026-07-10.md)
-  Roc2CellSetDump.java     the same cell-set dump for roc2; PKC_ROC2_CELLSET=1
-                           (docs/research/roc2-reach-handoff-2026-08-18.md)
-  MiqcpDump.java           MIQCP export of the razor proof for the external solver; PKC_MIQCP_DUMP=1
-  NormCellProbe.java       razor norm-cell probe; PKC_NCP=1
-  StructureVariantDump.java  razor structure variant dump; PKC_SVAR=1 + PKC_SVAR_SPEC
   render/GizmoDragConstraintBench.java  gizmo drag constraint timing; PKC_BENCH=1
   render/PathRebuildBenchmark.java      path rebuild timing; PKC_BENCH=1
 ```
