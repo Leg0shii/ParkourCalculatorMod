@@ -143,7 +143,7 @@ My earlier plan was "rebuild as a joint start+yaw search + escalation, because t
 - `core/.../solver/CmaesJumpHarness.java` (translated fitness - EXPERIMENTAL, drop/rebuild; the anchored path is byte-identical when `!free`).
 - `core/.../anglesolver/AngleSolverEngine.java`: `buildJob` split (keep), `pinFreeStart`/`adoptFreeStart`/`freeStartRescue`/`freeStartImprove` history (current = `freeStartImprove` two-stage, EXPERIMENTAL), `pinnedScenario` helper, `Plan.start` + `apply()` start-move via `onStartMoved` (keep - the apply/sim-retrigger path is still UNVERIFIED in-game), `FREE_START_*` constants.
 - `core/.../Application.java`: `setOnStartMoved(runner::setStartPosition)` (keep).
-- Tests: `FreeStartSolveTest`, `EngineFreeStartTest` (keep), `EngineFileScreen` (temporary DIAG/pre-solve prints added - keep for the next session's repro loop).
+- Tests: `FreeStartSolveTest`, `problems/freestart/` in `ProblemsTest` (keep), `EngineFileScreen` (temporary DIAG/pre-solve prints added - keep for the next session's repro loop).
 
 Nothing is committed; it is all in the working tree, gated, gate-green. Memory: `project_free_start_position`. Related: `project_jump_solver_status` (1.21.10 vs 1.8.9 exact model), `feedback_movement_model` (collision-free model; walls are constraints), `project_wolfram_j021_result` (CMA-ES restart counts).
 
