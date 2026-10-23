@@ -67,7 +67,7 @@ One Stonecutter tree for 1.12.2 (active, the raw source) and 1.8.9 (processed co
 Shared by both Forge loaders, **no Minecraft or Forge imports** (it only knows ImGui, the shim, and core's `OverlayManager` / `Settings`). Packages:
 
 - `lwjgl2/`: the ImGui-on-LWJGL 2 host (`Lwjgl2ImGuiHost`, `ImGuiGl3Compat`, `Lwjgl2InputState`); exposes a per-frame `renderFrame(...)` and applies `Settings.SCALE` at init.
-- `sim/`: `PlayerSprintMachine` (the pure-Java sprint state machine both Forge `SimulatorEntity`s share) and `PlaybackMoveState`. Lives here, not in `core/`, because its input field set is shaped after `EntityPlayerSP`'s 1.8/1.12 read set.
+- `sim/`: `PlayerSprintMachine` (the pure-Java sprint state machine both Forge `SimulatorEntity`s share) and `PlaybackMoveState`. Lives here, not in `core/`, because its input field set is shaped after `EntityPlayerSP`'s 1.8/1.12 read set. Tested under `forge-core/src/test/` (`:forge-core:test`), including `SprintMachineCaptureParityTest`, which replays the Forge captures' recorded sprint and move state through the machine.
 - `render/`: `CountingBoxRenderer` (shared box-draw counting).
 - `io/`: `OsFilePicker` (the `FilePickerPort` impl both Forge loaders use).
 - **Java 8 toolchain, no `--release`.** JDK 8's javac has no `--release`, so this module uses an actual JDK 8 toolchain. Core can use `--release 8` only because it builds on the JDK 21 daemon.
