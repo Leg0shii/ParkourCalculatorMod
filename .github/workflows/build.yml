@@ -85,8 +85,23 @@ jobs:
           if [ "${{ matrix.jdk }}" = "8" ]; then TASK=testJava8; fi
           ./gradlew :core:$TASK -PslowTests $EXTRA -PpkcShard=${{ matrix.shard }}/$SHARDS \
             -Dorg.gradle.configureondemand=true -Dorg.gradle.java.home="$JAVA_HOME"
+      - name: report test times
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import glob
+          import xml.etree.ElementTree as ET
+          for f in sorted(glob.glob('core/build/test-results/**/*.xml', recursive=True)):
+              suite = ET.parse(f).getroot()
+              name = suite.get('name')
+              if name.endswith('.ProblemsTest'):
+                  for c in suite.iter('testcase'):
+                      print('test-time %s#%s=%.1f' % (name, c.get('name')[6:-1], float(c.get('time'))))
+              else:
+                  print('test-time %s=%.1f' % (name, float(suite.get('time'))))
+          PY
       - name: upload test results
-        if: failure()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results-jdk${{ matrix.jdk }}-shard${{ matrix.shard }}

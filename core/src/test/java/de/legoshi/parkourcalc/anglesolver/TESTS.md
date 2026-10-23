@@ -352,9 +352,6 @@ PRECISE-spec knife-edge fixtures under `resources/captures/hpk_precise/`, each a
 Some captures in `resources/captures/` are committed as data for upcoming work and are not yet wired to a
 check (no sidecar, so `ProblemsTest` does not run them):
 
-- `loopmm-3jump-solver-misses.json`: the failing half of the #186 reach-failure witness pair. Its landing
-  half, `loopmm-3jump-lands.json`, IS wired: a `dualrecovery` sidecar with `refObjective: -279.3` asserts
-  the pattern-B&B lands the pad blind (docs/research/angle-solver.md sections 10.3 and 11).
 - `deserthard-sine262.json` / `deserthard-planrealization.json`: two recorded runs of the same 26.2
   desert-hard solve; near-duplicates in content, but each pins what the other cannot.
   `deserthard-sine262` contains the one jump (t=243, yaw 93.587) where the pre-26 and 26.x sine

@@ -59,9 +59,7 @@ def problemCases() {
 	out
 }
 
-def testShardPlan(int shardCount) {
-	def slow = project.hasProperty('slowTests')
-	def verySlow = project.hasProperty('verySlowTests')
+def loadTestWeights() {
 	def weights = [:]
 	def weightsFile = file('test-weights.properties')
 	if (weightsFile.exists()) {
@@ -72,20 +70,34 @@ def testShardPlan(int shardCount) {
 			weights[s.substring(0, i)] = s.substring(i + 1).toDouble()
 		}
 	}
-	def items = []
+	weights
+}
+
+def testClasses() {
+	def out = []
 	def srcRoot = file('src/test/java')
 	fileTree(srcRoot).matching { include '**/*.java' }.each { f ->
 		def text = f.text
 		if (!text.contains('@Test')) return
-		if (!verySlow && text.contains('VerySlowSolverTests.class')) return
-		if (!slow && (text =~ /(?<!Very)SlowSolverTests\.class/).find()) return
 		def cls = srcRoot.toPath().relativize(f.toPath()).toString().replace(File.separatorChar, '.' as char)
-		cls = cls[0..-6]
-		def unmeasured = text.contains('VerySlowSolverTests.class') ? 600.0d : 1.0d
-		if (cls.endsWith('.ProblemsTest')) {
-			problemCases().each { items << [name: cls + '#' + it, weight: weights.get(cls + '#' + it, 1.0d)] }
+		out << [name: cls[0..-6], verySlow: text.contains('VerySlowSolverTests.class'), slow: (text =~ /(?<!Very)SlowSolverTests\.class/).find()]
+	}
+	out
+}
+
+def testShardPlan(int shardCount) {
+	def slow = project.hasProperty('slowTests')
+	def verySlow = project.hasProperty('verySlowTests')
+	def weights = loadTestWeights()
+	def items = []
+	testClasses().each { c ->
+		if (!verySlow && c.verySlow) return
+		if (!slow && c.slow) return
+		def unmeasured = c.verySlow ? 600.0d : 1.0d
+		if (c.name.endsWith('.ProblemsTest')) {
+			problemCases().each { items << [name: c.name + '#' + it, weight: weights.get(c.name + '#' + it, 1.0d)] }
 		} else {
-			items << [name: cls, weight: weights.get(cls, unmeasured)]
+			items << [name: c.name, weight: weights.get(c.name, unmeasured)]
 		}
 	}
 	items.sort { a, b -> b.weight <=> a.weight ?: a.name <=> b.name }
@@ -135,20 +147,39 @@ tasks.register('testShardPlan') {
 
 tasks.register('testWeights') {
 	group = 'verification'
-	description = 'Rewrites test-weights.properties from the latest build/test-results/test run.'
+	description = 'Updates test-weights.properties from the test results under -PpkcResults (default build/test-results/test); entries the run did not measure are kept, entries for removed tests are dropped.'
 	doLast {
-		def rows = [:]
-		fileTree('build/test-results/test').matching { include '*.xml' }.each { f ->
+		def known = new HashSet<String>()
+		def verySlowClasses = new HashSet<String>()
+		testClasses().each { c ->
+			if (c.verySlow) verySlowClasses << c.name
+			if (c.name.endsWith('.ProblemsTest')) {
+				problemCases().each { known << c.name + '#' + it }
+			} else {
+				known << c.name
+			}
+		}
+		def rows = loadTestWeights().findAll { k, v -> known.contains(k) }
+		def measured = { String key, double t, boolean keepShort ->
+			if (!known.contains(key)) return
+			if (keepShort) {
+				rows[key] = Math.max(t, 1.0d)
+			} else if (t >= 0.5) {
+				rows[key] = t
+			} else {
+				rows.remove(key)
+			}
+		}
+		def results = project.findProperty('pkcResults') ?: 'build/test-results/test'
+		fileTree(results).matching { include '**/*.xml' }.each { f ->
 			def suite = new groovy.xml.XmlSlurper().parse(f)
 			def name = suite.@name.text()
 			if (name.endsWith('.ProblemsTest')) {
 				suite.testcase.each { c ->
-					def t = c.@time.text().toDouble()
-					if (t >= 0.5) rows[name + '#' + c.@name.text()[6..-2]] = t
+					measured(name + '#' + c.@name.text()[6..-2], c.@time.text().toDouble(), false)
 				}
 			} else {
-				def t = suite.@time.text().toDouble()
-				if (t >= 0.5) rows[name] = t
+				measured(name, suite.@time.text().toDouble(), verySlowClasses.contains(name))
 			}
 		}
 		def sorted = rows.sort { a, b -> b.value <=> a.value ?: a.key <=> b.key }
