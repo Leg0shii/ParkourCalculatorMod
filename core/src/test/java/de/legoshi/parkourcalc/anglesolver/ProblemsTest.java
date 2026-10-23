@@ -37,7 +37,7 @@ public class ProblemsTest {
         Collection<Object[]> out = new ArrayList<Object[]>();
         for (String category : ProblemCatalog.categories()) {
             for (String name : ProblemCatalog.problemNames(category)) {
-                if (keep == null || keep.contains(category + "/" + name)) out.add(new Object[]{category, name});
+                if (keep == null || keep.contains(category + "/" + name) || keep.contains(category + "/*")) out.add(new Object[]{category, name});
             }
         }
         return out;

@@ -1,7 +1,9 @@
 # Builds the loader jars and runs the core test suite on every push to main/dev
 # and every pull request. The core suite is split into balanced shards that run
-# as parallel jobs (see core/build.gradle testShardPlan), one set per JDK, so
-# the wall-clock time is the longest shard, not the whole suite.
+# as parallel jobs (see core/build.gradle testShardPlan), so the wall-clock time
+# is the longest shard, not the whole suite. The full suite runs on JDK 21
+# everywhere and again on Java 8 only for pull requests to main; every other run
+# gets the java8-smoke job (fast suite plus the closedform/ cases on Java 8).
 
 name: build
 on:
@@ -59,7 +61,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        jdk: [21, 8]
+        jdk: ${{ fromJSON(github.base_ref == 'main' && '[21, 8]' || '[21]') }}
         shard: [0, 1, 2, 3, 4, 5, 6, 7]
     name: core tests (jdk ${{ matrix.jdk }}, shard ${{ matrix.shard }})
     steps:
@@ -106,3 +108,28 @@ jobs:
         with:
           name: test-results-jdk${{ matrix.jdk }}-shard${{ matrix.shard }}
           path: core/build/test-results/**/*.xml
+
+  java8-smoke:
+    if: github.base_ref != 'main'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+      - name: setup jdks
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: |
+            8
+            21
+      - name: setup gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          validate-wrappers: true
+          cache-read-only: ${{ github.ref != 'refs/heads/dev' && github.ref != 'refs/heads/main' }}
+      - name: fast suite on java 8
+        run: ./gradlew :core:testJava8 -Dorg.gradle.configureondemand=true -Dorg.gradle.java.home="$JAVA_HOME"
+      - name: closedform cases on java 8
+        run: |
+          ./gradlew :core:testJava8 -PslowTests --tests 'de.legoshi.parkourcalc.anglesolver.ProblemsTest' \
+            -Dpkc.problems='closedform/*' -Dorg.gradle.configureondemand=true -Dorg.gradle.java.home="$JAVA_HOME"
