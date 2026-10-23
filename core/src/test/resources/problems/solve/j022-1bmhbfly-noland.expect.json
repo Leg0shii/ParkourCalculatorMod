@@ -1,6 +1,1 @@
-{
-  "shouldSolve": true,
-  "effort": "THOROUGH",
-  "refObjective": -531.7001446,
-  "maxObjectiveGap": 5.0e-4
-}
+{"shouldSolve": true, "effort": "THOROUGH", "refObjective": -531.7001446, "maxObjectiveGap": 0.0005}
