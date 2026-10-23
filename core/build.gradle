@@ -101,7 +101,34 @@ def splitClasses() {
 	['de.legoshi.parkourcalc.anglesolver.YawDirectionCrossCheckTest': 8]
 }
 
-def testShardPlan(int shardCount) {
+def testGroups() {
+	[
+		'problems': [parts: 3, match: /\.ProblemsTest$/],
+		'engine-acceptance': [parts: 2, match: null],
+		'yaw-order': [parts: 2, match: /\.(YawDirectionCrossCheck|YawOrder|DeltaFacingConstraint|FirstTickDeltaFacing)Test$/],
+		'no-turn': [parts: 2, match: /\.(NoTurn\w*|WallHomotopy\w*|Fold\w*Driver\w*)Test$/],
+		'onejump': [parts: 1, match: /\.(AttemptTracker|AttemptSampler|TurnProfile\w*|TurnTiming|LandingForecast|DeepCheck|OnejumpCheck|HumanRecorder)Test$/],
+		'physics': [parts: 1, match: /\.(sim\.\w+|AirborneStartJump|MovementMultiplier|SprintJumpBoostEra|SprintSneak|SlipperinessFallback|SurfaceRegime|WallHitSprintHeal|CrossJvmDeterminism|TeleportTickSim|TickTeleport|SliceResimulationByteIdentity|SimulatorPitch|SupportOverlap|SpeedAmplifierRange|ForMcVersionModel|UnloadedChunks|SurfaceCapture|DuplicateTickState)Test$/],
+		'app': [parts: 1, match: /\.(ConstraintShapes|ConstraintVisualization|LivePathVisualization|PlaybackPause|RowEditShift)Test$/],
+		'solver': [parts: 1, match: /\.anglesolver\./],
+	]
+}
+
+def testGroupOf(String className) {
+	def entry = testGroups().find { k, v -> v.match != null && className =~ v.match }
+	entry == null ? 'app' : entry.key
+}
+
+def testShardIds() {
+	def ids = []
+	testGroups().each { name, g ->
+		if (g.parts == 1) ids << name
+		else (1..g.parts).each { ids << name + '-' + it }
+	}
+	ids
+}
+
+def testItems() {
 	def slow = project.hasProperty('slowTests')
 	def verySlow = project.hasProperty('verySlowTests')
 	def weights = loadTestWeights()
@@ -111,18 +138,23 @@ def testShardPlan(int shardCount) {
 		if (!verySlow && c.verySlow) return
 		if (!slow && c.slow) return
 		def unmeasured = c.verySlow ? 600.0d : 1.0d
+		def group = c.verySlow ? 'engine-acceptance' : testGroupOf(c.name)
 		if (c.name.endsWith('.ProblemsTest')) {
-			problemCases().each { items << [name: c.name + '#' + it, weight: weights.get(c.name + '#' + it, 1.0d)] }
+			problemCases().each { items << [name: c.name + '#' + it, group: group, weight: weights.get(c.name + '#' + it, 1.0d)] }
 		} else if (split.containsKey(c.name)) {
 			int parts = split[c.name]
-			(0..<parts).each { items << [name: c.name + '@' + it, weight: weights.get(c.name, unmeasured) / parts] }
+			(0..<parts).each { items << [name: c.name + '@' + it, group: group, weight: weights.get(c.name, unmeasured) / parts] }
 		} else {
-			items << [name: c.name, weight: weights.get(c.name, unmeasured)]
+			items << [name: c.name, group: group, weight: weights.get(c.name, unmeasured)]
 		}
 	}
 	items.sort { a, b -> b.weight <=> a.weight ?: a.name <=> b.name }
-	def shards = (0..<shardCount).collect { [items: [], weight: 0.0d] }
-	items.each { item ->
+}
+
+def testShardPlan(String group) {
+	int count = testGroups()[group].parts
+	def shards = (0..<count).collect { [items: [], weight: 0.0d] }
+	testItems().findAll { it.group == group }.each { item ->
 		def target = shards.min { it.weight }
 		target.items << item
 		target.weight += item.weight
@@ -130,15 +162,42 @@ def testShardPlan(int shardCount) {
 	shards
 }
 
+def selectTestShard(String spec) {
+	def m = spec =~ /^(.+?)(?:-(\d+))?$/
+	m.find()
+	def group = m.group(1)
+	def groups = testGroups()
+	if (!groups.containsKey(group)) {
+		throw new GradleException("Unknown test shard '${spec}', expected one of ${testShardIds()} or a group name ${groups.keySet()}")
+	}
+	def plan = testShardPlan(group)
+	if (m.group(2) == null) return plan.collectMany { it.items }
+	int part = m.group(2) as int
+	if (part < 1 || part > plan.size()) throw new GradleException("Test shard '${spec}' is out of range, ${group} has ${plan.size()} parts")
+	plan[part - 1].items
+}
+
+def checkWorkflowShards() {
+	def workflow = rootProject.file('.github/workflows/build.yml')
+	if (!workflow.exists()) return
+	def line = workflow.readLines().find { it.trim().startsWith('shard: [') }
+	if (line == null) throw new GradleException("${workflow} has no 'shard: [' matrix line")
+	def listed = line.substring(line.indexOf('[') + 1, line.lastIndexOf(']')).split(',').collect { it.trim() }.findAll { !it.isEmpty() } as Set
+	def expected = testShardIds() as Set
+	if (listed != expected) {
+		throw new GradleException("The core-tests shard matrix in ${workflow} must list exactly ${testShardIds()}; missing ${expected - listed}, unknown ${listed - expected}")
+	}
+}
+
 def configureTestShard(Test t) {
 	def spec = project.findProperty('pkcShard')
 	if (spec == null) return
-	def parts = spec.toString().split('/')
-	def shard = testShardPlan(parts[1] as int)[parts[0] as int]
+	checkWorkflowShards()
+	def items = selectTestShard(spec.toString())
 	def classes = new HashSet<String>()
 	def problems = []
 	def splitParts = [:]
-	shard.items.each {
+	items.each {
 		def hash = it.name.indexOf('#')
 		def at = it.name.indexOf('@')
 		if (at >= 0) {
@@ -165,13 +224,16 @@ def configureTestShard(Test t) {
 
 tasks.register('testShardPlan') {
 	group = 'verification'
-	description = 'Prints how -PpkcShard=i/n splits the core tests across CI jobs (weights from test-weights.properties).'
+	description = 'Prints the named CI test shards (-PpkcShard=<group> or <group>-<part>) and what each runs (weights from test-weights.properties).'
 	doLast {
-		def spec = (project.findProperty('pkcShard') ?: '0/8').toString()
-		def count = spec.split('/')[1] as int
-		testShardPlan(count).eachWithIndex { s, i ->
-			println "shard ${i}/${count}: ${Math.round(s.weight)} s, ${s.items.size()} items"
-			s.items.findAll { it.weight >= 5 }.each { println "    ${Math.round(it.weight)} s  ${it.name}" }
+		checkWorkflowShards()
+		testGroups().each { name, g ->
+			def plan = testShardPlan(name)
+			plan.eachWithIndex { s, i ->
+				def id = plan.size() == 1 ? name : name + '-' + (i + 1)
+				println "${id}: ${Math.round(s.weight)} s, ${s.items.size()} items"
+				s.items.findAll { it.weight >= 5 }.each { println "    ${Math.round(it.weight)} s  ${it.name}" }
+			}
 		}
 	}
 }

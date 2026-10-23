@@ -1,7 +1,10 @@
 # Builds the loader jars and runs the core test suite on every push to main/dev
-# and every pull request. The core suite is split into balanced shards that run
-# as parallel jobs (see core/build.gradle testShardPlan), so the wall-clock time
-# is the longest shard, not the whole suite. The full suite runs on JDK 21
+# and every pull request. The core suite is split into named shards by topic
+# (core/build.gradle testGroups), a big topic into balanced numbered parts, that
+# run as parallel jobs (testShardPlan prints them), so the wall-clock time is the
+# longest shard, not the whole suite, and a red job's name says what broke. The
+# engine-acceptance shards only run with the very slow tier on pull requests to
+# main. The full suite runs on JDK 21
 # everywhere and again on Java 8 only for pull requests to main; every other run
 # gets the java8-smoke job (fast suite plus the closedform/ cases on Java 8).
 
@@ -13,9 +16,6 @@ on:
     branches:
       - main
       - dev
-
-env:
-  SHARDS: 8
 
 jobs:
   loaders:
@@ -62,8 +62,9 @@ jobs:
       fail-fast: false
       matrix:
         jdk: ${{ fromJSON(github.base_ref == 'main' && '[21, 8]' || '[21]') }}
-        shard: [0, 1, 2, 3, 4, 5, 6, 7]
-    name: core tests (jdk ${{ matrix.jdk }}, shard ${{ matrix.shard }})
+        shard: [problems-1, problems-2, problems-3, engine-acceptance-1, engine-acceptance-2, yaw-order-1, yaw-order-2, no-turn-1, no-turn-2, onejump, physics, app, solver]
+        exclude: ${{ fromJSON(github.base_ref == 'main' && '[]' || '[{"shard": "engine-acceptance-1"}, {"shard": "engine-acceptance-2"}]') }}
+    name: core tests (jdk ${{ matrix.jdk }}, ${{ matrix.shard }})
     steps:
       - name: checkout repository
         uses: actions/checkout@v4
@@ -85,7 +86,7 @@ jobs:
           if [ "${{ github.base_ref }}" = "main" ]; then EXTRA="-PverySlowTests"; fi
           TASK=test
           if [ "${{ matrix.jdk }}" = "8" ]; then TASK=testJava8; fi
-          ./gradlew :core:$TASK -PslowTests $EXTRA -PpkcShard=${{ matrix.shard }}/$SHARDS \
+          ./gradlew :core:$TASK -PslowTests $EXTRA -PpkcShard=${{ matrix.shard }} \
             -Dorg.gradle.configureondemand=true -Dorg.gradle.java.home="$JAVA_HOME"
       - name: report test times
         if: always()
@@ -106,7 +107,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results-jdk${{ matrix.jdk }}-shard${{ matrix.shard }}
+          name: test-results-jdk${{ matrix.jdk }}-${{ matrix.shard }}
           path: core/build/test-results/**/*.xml
 
   java8-smoke:
