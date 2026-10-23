@@ -176,6 +176,20 @@ public final class AngleSolverTable {
         return settings.viewAngleSolver;
     }
 
+    public boolean offersObjectiveTick() {
+        return isActive() && state.isCustomAngle();
+    }
+
+    public boolean isObjectiveTick(int tick) {
+        return state.hasObjectiveTick() && state.getObjectiveTick() == tick;
+    }
+
+    public void setObjectiveTick(int tick) {
+        if (tick >= rowCount.getAsInt()) return;
+        if (tick < 0 || tick == state.getLandingTick()) state.clearObjectiveTick();
+        else state.setObjectiveTick(tick);
+    }
+
     public void setYawDirection(Collection<Integer> rows, Constraint.Op op) {
         for (int tick : rows) {
             if (tick < 0 || tick >= rowCount.getAsInt()) continue;

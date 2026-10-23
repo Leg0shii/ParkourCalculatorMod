@@ -95,6 +95,7 @@ public final class VelocityMapController {
      *  has one. Returns {value, absoluteTick}; value is NaN when the user set no such constraint. The offset
      *  is read at this constraint's own tick, not at the landing. */
     private double[] objectiveEdge() {
+        if (angleSolverState.isCustomAngle()) return new double[]{Double.NaN, Integer.MIN_VALUE};
         boolean axisX = angleSolverState.getAxis() == AngleSolverState.Axis.X;
         boolean max = angleSolverState.getGoal() == AngleSolverState.Goal.MAX;
         Constraint.Field field = axisX ? Constraint.Field.X : Constraint.Field.Z;

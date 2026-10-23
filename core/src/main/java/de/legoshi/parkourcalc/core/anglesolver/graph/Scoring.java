@@ -66,10 +66,9 @@ public final class Scoring {
         double[] gf = sc.toGameFacings(yaws);
         ForwardPath p = model.forward(sc, gf);
         double[] d = translationDomain(sc, freeBox);
-        boolean objX = spec.objective.axis == JumpPhysicsInputs.Axis.X;
         PathTranslation.Trans tr = PathTranslation.bestTranslationObj(JumpConstraintCompiler.compile(spec), gf, p,
-                d[0], d[1], d[2], d[3], objX ? 0 : 1, spec.objective.sense == Objective.Sense.MAX);
-        return spec.objective.scored(p.getPos(spec.objective.tick, spec.objective.axis) + (objX ? tr.tx : tr.tz), sc.startYaw, yaws);
+                d[0], d[1], d[2], d[3], spec.objective);
+        return spec.objective.scored(spec.objective.evaluate(p, tr.tx, tr.tz), sc.startYaw, yaws);
     }
 
     public static boolean reachHeadroom(ForwardModel model, JumpPhysicsInputs sc, JumpSpec spec,
@@ -152,10 +151,9 @@ public final class Scoring {
         double curViol = compiled.maxViolation(gf, p);
         double curObj = spec.objective.evaluate(p);
         double[] d = translationDomain(sc, freeBox);
-        boolean objX = spec.objective.axis == JumpPhysicsInputs.Axis.X;
         boolean objMax = spec.objective.sense == Objective.Sense.MAX;
         PathTranslation.Trans trObj = PathTranslation.bestTranslationObj(compiled, gf, p,
-                d[0], d[1], d[2], d[3], objX ? 0 : 1, objMax);
+                d[0], d[1], d[2], d[3], spec.objective);
         PathTranslation.Trans trMin = PathTranslation.bestTranslation(compiled, gf, p, d[0], d[1], d[2], d[3]);
         if (tryAdoptTranslation(model, sc, spec, yaws, trObj, curViol, curObj, objMax, feasTol)) return true;
         return tryAdoptTranslation(model, sc, spec, yaws, trMin, curViol, curObj, objMax, feasTol);
@@ -166,10 +164,9 @@ public final class Scoring {
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
         ForwardPath p0 = model.forward(sc, gf);
         double[] d = freeBox != null ? translationDomain(sc, freeBox) : new double[] {0.0, 0.0, 0.0, 0.0};
-        boolean objX = spec.objective.axis == JumpPhysicsInputs.Axis.X;
         boolean objMax = spec.objective.sense == Objective.Sense.MAX;
         PathTranslation.Trans trObj = PathTranslation.bestTranslationObj(compiled, gf, p0,
-                d[0], d[1], d[2], d[3], objX ? 0 : 1, objMax);
+                d[0], d[1], d[2], d[3], spec.objective);
         PathTranslation.Trans trMin = PathTranslation.bestTranslation(compiled, gf, p0, d[0], d[1], d[2], d[3]);
         PathTranslation.Trans[] cands = {trObj, trMin, new PathTranslation.Trans(0.0, 0.0, 0.0)};
         for (PathTranslation.Trans tr : cands) {

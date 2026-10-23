@@ -418,12 +418,13 @@ public final class AngleSolverEngine {
         if (freeStartYaw) ph.inputs.yawLockedPerTick[0] = true;
 
         List<JumpConstraint> constraints = new ArrayList<>();
+        int objectiveTick = objectiveSegTick(startTick, numTicks);
         Objective objective = state.isCustomAngle()
                 ? new Objective(state.getCustomAngleDeg(),
                 state.getCustomAngleType() == AngleSolverState.CustomAngleType.MOTION
                         ? Objective.Type.MOTION : Objective.Type.POSITION,
-                numTicks, state.getSmoothLambda())
-                : new Objective(axis(state.getAxis()), sense(state.getGoal()), numTicks,
+                objectiveTick, state.getSmoothLambda())
+                : new Objective(axis(state.getAxis()), sense(state.getGoal()), objectiveTick,
                 state.getSmoothLambda());
         for (ConstraintAt ca : uiCons) {
             if (consumed.contains(ca.c)) continue;
@@ -468,6 +469,7 @@ public final class AngleSolverEngine {
     }
 
     public String legalGoalWallLabel() {
+        if (state.isCustomAngle()) return null;
         int startTick = state.getStartTick();
         int landingTick = state.getLandingTick();
         int numTicks = landingTick - startTick;
@@ -482,10 +484,16 @@ public final class AngleSolverEngine {
             if (consumed.contains(ca.c)) continue;
             addMapped(constraints, ca.c, ca.absTick, ca.segTick, numTicks, seamSeedYaw, null);
         }
-        Objective objective = new Objective(axis(state.getAxis()), sense(state.getGoal()), numTicks);
+        Objective objective = new Objective(axis(state.getAxis()), sense(state.getGoal()),
+                objectiveSegTick(startTick, numTicks));
         String[] whyNot = new String[1];
         JumpConstraint goal = selectLegalGoalWall(constraints, objective, whyNot);
         return goal != null ? goal.name : null;
+    }
+
+    private int objectiveSegTick(int startTick, int numTicks) {
+        int seg = state.effectiveObjectiveTick() - startTick;
+        return Math.max(1, Math.min(numTicks, seg));
     }
 
     public static JumpConstraint tightestGoalWall(List<JumpConstraint> constraints, Objective objective) {
@@ -498,6 +506,10 @@ public final class AngleSolverEngine {
 
     private static JumpConstraint selectLegalGoalWall(List<JumpConstraint> constraints, Objective objective,
                                                       String[] whyNot, boolean allowTies) {
+        if (objective.isCustomAngle()) {
+            whyNot[0] = "the Angle goal has no goal wall on an axis";
+            return null;
+        }
         boolean max = objective.sense == Objective.Sense.MAX;
         JumpConstraint.Cmp want = max ? JumpConstraint.Cmp.GE : JumpConstraint.Cmp.LE;
         JumpConstraint.Mode wantMode = objective.axis == JumpPhysicsInputs.Axis.X
@@ -1113,7 +1125,7 @@ public final class AngleSolverEngine {
         SolveResult result = assembleResult(job, yaws, gameFacings, path, solverName, solveNanos, dualGap);
         addSmoothingDetails(result, job, ctx.smoothOutcome());
         if (job.legalGoal != null) {
-            double achieved = path.getPos(spec.objective.tick, spec.objective.axis);
+            double achieved = spec.objective.evaluate(path);
             double shortfall = spec.objective.sense == Objective.Sense.MAX
                     ? job.legalGoal.rhs - achieved : achieved - job.legalGoal.rhs;
             result.addDetail("Legal shortfall", String.format(java.util.Locale.ROOT,
@@ -1318,7 +1330,7 @@ public final class AngleSolverEngine {
             String field = o.isMotion() ? "dAngle" : "Angle";
             return new SolveResult.Outcome(field, "T" + (startTick + o.tick + 1),
                     String.format(java.util.Locale.ROOT, "%.1f°", o.customYaw),
-                    ConstraintText.fixedStat(r.getObjectiveValue()), "");
+                    ConstraintText.fixedStat(r.getObjectiveValue()), o.isMotion() ? "b/t" : "");
         }
         String field = o.axis == JumpPhysicsInputs.Axis.X ? "X" : "Z";
         String sense = o.sense == Objective.Sense.MAX ? "max" : "min";

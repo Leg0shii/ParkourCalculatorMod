@@ -36,7 +36,7 @@ final class ClosedFormCheck implements ProblemCheck {
         double viol = compiled.maxViolation(gf, path);
         assertTrue(name + ": not byte-exact feasible (viol=" + viol + ")", viol <= 0.0);
 
-        double obj = path.getPos(spec.objective.tick, spec.objective.axis);
+        double obj = spec.objective.evaluate(path);
         boolean max = spec.objective.sense == Objective.Sense.MAX;
         double objGap = max ? refObj - obj : obj - refObj;
         assertTrue(name + ": objective regressed vs reference by " + objGap, objGap <= pf.expect.maxObjectiveGap());

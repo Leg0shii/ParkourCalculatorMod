@@ -681,23 +681,7 @@ public final class ClosedFormSolve {
             value = r.value;
         }
         // r.value bounds max c·u with c MAX-normalized; fold the constant part back in (MIN is negated).
-        double constPos;
-        if (spec.objective.isCustomAngle()) {
-            double rad = Angles.rad(spec.objective.customYaw);
-            double dx = -StrictMath.sin(rad);
-            double dz = StrictMath.cos(rad);
-            if (spec.objective.isMotion()) {
-                int t = spec.objective.tick;
-                double c0 = lin.constPos(t, 0) - (t > 0 ? lin.constPos(t - 1, 0) : 0.0);
-                double c1 = lin.constPos(t, 1) - (t > 0 ? lin.constPos(t - 1, 1) : 0.0);
-                constPos = dx * c0 + dz * c1;
-            } else {
-                constPos = dx * lin.constPos(spec.objective.tick, 0) + dz * lin.constPos(spec.objective.tick, 1);
-            }
-        } else {
-            int axis = spec.objective.axis == JumpPhysicsInputs.Axis.X ? 0 : 1;
-            constPos = lin.constPos(spec.objective.tick, axis);
-        }
+        double constPos = lin.objectiveConst(spec.objective);
         return spec.objective.sense == Objective.Sense.MAX ? constPos + value : constPos - value;
     }
 

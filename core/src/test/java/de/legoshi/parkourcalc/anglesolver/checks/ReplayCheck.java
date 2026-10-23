@@ -44,7 +44,7 @@ final class ReplayCheck implements ProblemCheck {
         ForwardPath path = pf.model.forward(sc, gf);
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(spec);
         double viol = compiled.maxViolation(gf, path);
-        double obj = path.getPos(spec.objective.tick, spec.objective.axis);
+        double obj = spec.objective.evaluate(path);
 
         if (e.flag(e.debugPositions, false)) {
             double posDiff = debugPositionDiff(pf.file, rig.state.getStartTick(), path, n);

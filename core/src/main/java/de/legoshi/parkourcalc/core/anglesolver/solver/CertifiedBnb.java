@@ -133,7 +133,6 @@ public final class CertifiedBnb {
         final Config cfg;
         final int n;
         final boolean max;
-        final int axisIdx;
         final boolean perAxis;
         final double thr;
         final StartBox box;
@@ -172,7 +171,6 @@ public final class CertifiedBnb {
             this.cfg = cfg;
             this.n = sc.numTicks;
             this.max = spec.objective.sense == Objective.Sense.MAX;
-            this.axisIdx = spec.objective.axis == JumpPhysicsInputs.Axis.X ? 0 : 1;
             this.perAxis = exact.perAxisInertia();
             this.thr = exact.inertiaThreshold();
             this.box = sc.startBox;
@@ -638,7 +636,7 @@ public final class CertifiedBnb {
             if (iv.freeX[t]) val += iv.injX[t] * Math.abs(cx[t]);
             if (iv.freeZ[t]) val += iv.injZ[t] * Math.abs(cz[t]);
         }
-        double cp = lin.constPos(s.spec.objective.tick, s.axisIdx);
+        double cp = lin.objectiveConst(s.spec.objective);
         double score = val + (s.max ? cp : -cp);
         if (score > nd.score) score = nd.score;
         nd.score = score;
@@ -855,7 +853,7 @@ public final class CertifiedBnb {
         double[] gf = scRep.toGameFacings(yaws);
         ForwardPath path = s.exact.forward(scRep, gf);
         double viol = s.compiled.maxViolation(gf, path);
-        double obj = path.getPos(s.spec.objective.tick, s.spec.objective.axis);
+        double obj = s.spec.objective.evaluate(path);
         if (viol == 0.0) {
             acceptIncumbent(s, yaws, px, pz, obj);
         } else if (viol < s.bestInfeasViol) {
@@ -902,7 +900,7 @@ public final class CertifiedBnb {
         JumpPhysicsInputs scRep = FoldReplayDriver.pinnedCopy(s.sc, s.incPx, s.incPz);
         double[] gf = scRep.toGameFacings(yaws);
         ForwardPath path = s.exact.forward(scRep, gf);
-        double bestObj = path.getPos(s.spec.objective.tick, s.spec.objective.axis);
+        double bestObj = s.spec.objective.evaluate(path);
         double sense = s.max ? 1.0 : -1.0;
         boolean any = false;
         for (int pass = 0; pass < 3 && !s.stopped(); pass++) {
@@ -925,7 +923,7 @@ public final class CertifiedBnb {
                     scRep.toGameFacingsInto(yaws, t, s.n, gf, seedEnt, seedPrev);
                     s.exact.stepRange(scRep, gf, t, path);
                     double v = s.compiled.maxViolation(gf, path);
-                    double o = path.getPos(s.spec.objective.tick, s.spec.objective.axis);
+                    double o = s.spec.objective.evaluate(path);
                     if (v == 0.0 && sense * (o - tickBest) > 0.0) {
                         tickBest = o;
                         bestCand = cand;
@@ -1052,7 +1050,7 @@ public final class CertifiedBnb {
         }
         leafDfs(s, st, 0, 0.0, new double[n + 1][mw]);
         if (st.steps >= LEAF_DFS_CAP) return false;
-        double cp = lin.constPos(s.spec.objective.tick, s.axisIdx);
+        double cp = lin.objectiveConst(s.spec.objective);
         double latticeBound = st.bestVal + (s.max ? cp : -cp) + LEAF_REARRANGE;
         if (st.bestVal > Double.NEGATIVE_INFINITY) {
             double[] yaws = realizeCombo(s, cands, st.bestPick);
@@ -1061,9 +1059,9 @@ public final class CertifiedBnb {
                 double[] gf = scRep.toGameFacings(yaws);
                 ForwardPath rp = s.exact.forward(scRep, gf);
                 double rv = s.compiled.maxViolation(gf, rp);
-                double ro = rp.getPos(s.spec.objective.tick, s.spec.objective.axis);
+                double ro = s.spec.objective.evaluate(rp);
                 if (SolverTrace.on()) {
-                    double cpv = lin.constPos(s.spec.objective.tick, s.axisIdx);
+                    double cpv = lin.objectiveConst(s.spec.objective);
                     SolverTrace.log("CERT", "leaf argmax lin=%.12f replayObj=%.12f viol=%.3e",
                             st.bestVal + (s.max ? cpv : -cpv), ro, rv);
                 }

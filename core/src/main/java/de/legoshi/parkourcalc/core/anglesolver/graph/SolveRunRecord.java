@@ -62,6 +62,8 @@ public final class SolveRunRecord {
         public String axis;
         public String sense;
         public int objectiveTick;
+        public Double customYaw;
+        public String objectiveType;
         public boolean freeStart;
     }
 
@@ -174,6 +176,8 @@ public final class SolveRunRecord {
         p.axis = spec.objective.axis.name();
         p.sense = spec.objective.sense.name();
         p.objectiveTick = spec.objective.tick;
+        p.customYaw = spec.objective.customYaw;
+        p.objectiveType = spec.objective.type.name();
         p.freeStart = sc.startBox != null && sc.startBox.startFree();
         return p;
     }
@@ -267,6 +271,10 @@ public final class SolveRunRecord {
         StringBuilder sb = new StringBuilder();
         sb.append("obj:").append(spec.objective.axis.name()).append(':')
                 .append(spec.objective.sense.name()).append(':').append(spec.objective.tick).append('\n');
+        if (spec.objective.isCustomAngle()) {
+            sb.append("objAngle:").append(bits(spec.objective.customYaw)).append(':')
+                    .append(spec.objective.type.name()).append('\n');
+        }
         sb.append("n:").append(sc.numTicks).append('\n');
         sb.append("start:").append(bits(sc.startPos.x)).append(',').append(bits(sc.startPos.z))
                 .append(',').append(Float.floatToIntBits(sc.startYaw))

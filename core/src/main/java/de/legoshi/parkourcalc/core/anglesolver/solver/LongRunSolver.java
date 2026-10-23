@@ -219,10 +219,12 @@ public final class LongRunSolver {
                 int a = bounds[i], c = bounds[we];
                 JumpPhysicsInputs win = sliceScenario(sc, a, c, seedPos, seedVel, seedYaw);
                 List<JumpConstraint> cons = sliceConstraints(spec, a, c, seedYaw);
-                Objective obj = last
-                        ? new Objective(spec.objective.axis, spec.objective.sense, c - a)   // last window: real objective
-                        : new Objective(JumpPhysicsInputs.Axis.Z, Objective.Sense.MAX, c - a); // lead-in: any feasible
-                String winKey = windowKey(a, c, last, seedPos, seedVel, seedYaw);
+                int objTick = spec.objective.tick;
+                boolean objectiveWindow = objTick > a && objTick <= c;
+                Objective obj = objectiveWindow
+                        ? spec.objective.withTick(objTick - a)
+                        : new Objective(JumpPhysicsInputs.Axis.Z, Objective.Sense.MAX, c - a);
+                String winKey = windowKey(a, c, objectiveWindow, seedPos, seedVel, seedYaw);
                 double[] cachedWin = windows.map.get(winKey);
                 double[] yaws;
                 if (cachedWin != null) {
@@ -233,7 +235,7 @@ public final class LongRunSolver {
                     }
                 } else {
                     long winT0 = SolverTrace.on() ? System.nanoTime() : 0L;
-                    yaws = solveWindow(exact, win, cons, obj, last, cancel, deadlineNanos);
+                    yaws = solveWindow(exact, win, cons, obj, objectiveWindow, cancel, deadlineNanos);
                     if (cancel == null || !cancel.get()) {
                         windows.map.put(winKey, yaws == null ? WINDOW_MISS : yaws.clone());
                     }
@@ -259,7 +261,7 @@ public final class LongRunSolver {
                             int lim = jc.mode == JumpConstraint.Mode.F ? hiTick - 1 : hiTick;
                             if (jc.t1 <= lim && (jc.t2 == null || jc.t2 <= lim)) upTo.add(jc);
                         }
-                        Objective freeObj = last ? spec.objective
+                        Objective freeObj = spec.objective.tick <= c ? spec.objective
                                 : new Objective(JumpPhysicsInputs.Axis.Z, Objective.Sense.MAX, c);
                         fr = FreeStartSolve.solveJoint(exact, new JumpSpec(freeSc, upTo, freeObj), 0.0, cancel,
                                 deadlineNanos);
@@ -366,7 +368,7 @@ public final class LongRunSolver {
         double[] gf = win.toGameFacings(yaws);
         ForwardPath path = exact.forward(win, gf);
         if (compiled.maxViolation(gf, path) > 0.0) return Double.NaN;
-        return path.getPos(first.tick, first.axis);
+        return first.evaluate(path);
     }
 
     private static List<Objective> alternates(Objective first, int len) {
@@ -409,7 +411,9 @@ public final class LongRunSolver {
         win.incomingAmp = from == 0 ? sc.incomingAmp : sc.speedAmplifierAt(from - 1);
         win.incomingSlowness = from == 0 ? sc.incomingSlowness : Integer.valueOf(sc.slownessAmplifierAt(from - 1));
         List<JumpConstraint> cons = sliceConstraints(full, from, sc.numTicks, yaw);
-        Objective obj = new Objective(full.objective.axis, full.objective.sense, full.objective.tick - from);
+        Objective obj = full.objective.tick > from
+                ? full.objective.withTick(full.objective.tick - from)
+                : new Objective(JumpPhysicsInputs.Axis.Z, Objective.Sense.MAX, win.numTicks);
         return new JumpSpec(win, cons, obj);
     }
 

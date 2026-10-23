@@ -340,7 +340,7 @@ public final class AnchorSlp {
             double[] cgf = scRep.toGameFacings(cand);
             ForwardPath cpath = exact.forward(scRep, cgf);
             double cViol = compiled.maxViolation(cgf, cpath);
-            double cObj = cpath.getPos(spec.objective.tick, spec.objective.axis);
+            double cObj = spec.objective.evaluate(cpath);
             boolean[] zx = new boolean[n];
             boolean[] zz = new boolean[n];
             FoldReplayDriver.extractPattern(exact, cpath, n, zx, zz);

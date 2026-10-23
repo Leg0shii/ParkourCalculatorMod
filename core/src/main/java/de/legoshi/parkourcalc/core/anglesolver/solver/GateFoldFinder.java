@@ -793,7 +793,7 @@ public final class GateFoldFinder {
                                 double[] theta, double px, double pz) {
         JumpPhysicsInputs rep = pinned(sc, px, pz);
         double[] gf = rep.toGameFacings(Angles.wrapAll(theta));
-        return exact.forward(rep, gf).getPos(spec.objective.tick, spec.objective.axis);
+        return spec.objective.evaluate(exact.forward(rep, gf));
     }
 
     private static Result evalAbsolute(ExactJumpModel exact, JumpPhysicsInputs sc,

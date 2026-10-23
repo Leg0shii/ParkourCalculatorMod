@@ -460,7 +460,7 @@ public final class BucketWalk {
             double[] cgf = scRep.toGameFacings(cand);
             ForwardPath cpath = exact.forward(scRep, cgf);
             double cViol = compiled.maxViolation(cgf, cpath);
-            double cObj = cpath.getPos(spec.objective.tick, spec.objective.axis);
+            double cObj = spec.objective.evaluate(cpath);
             recordRound(roundsSink, spec, cpath, cViol, cand, npx, npz, exact, n);
             double gain = sense * (cObj - best.objective);
             if (FoldReplayDriver.DEBUG) {
@@ -499,7 +499,7 @@ public final class BucketWalk {
         double[] gf = scRep.toGameFacings(yaws);
         ForwardPath path = exact.forward(scRep, gf);
         double viol = compiled.maxViolation(gf, path);
-        double obj = path.getPos(spec.objective.tick, spec.objective.axis);
+        double obj = spec.objective.evaluate(path);
         double sense = max ? 1.0 : -1.0;
 
         double actEps = Math.max(1.0e-3, 2.0 * viol);
@@ -548,7 +548,7 @@ public final class BucketWalk {
                     ForwardPath p2 = copyPath(path);
                     exact.stepRange(scRep, gf2, t, p2);
                     double v2 = compiled.maxViolation(gf2, p2);
-                    double o2 = p2.getPos(spec.objective.tick, spec.objective.axis);
+                    double o2 = spec.objective.evaluate(p2);
                     boolean better = v2 < bestViol
                             || (v2 == bestViol && v2 == 0.0 && sense * (o2 - bestObj) > 0.0);
                     if (better) {
@@ -562,7 +562,7 @@ public final class BucketWalk {
                     gf = scRep.toGameFacings(yaws);
                     path = exact.forward(scRep, gf);
                     viol = compiled.maxViolation(gf, path);
-                    obj = path.getPos(spec.objective.tick, spec.objective.axis);
+                    obj = spec.objective.evaluate(path);
                     improved = true;
                     anyAdopt = true;
                 }
@@ -639,7 +639,7 @@ public final class BucketWalk {
         boolean[] zx = new boolean[n];
         boolean[] zz = new boolean[n];
         FoldReplayDriver.extractPattern(exact, path, n, zx, zz);
-        double obj = path.getPos(spec.objective.tick, spec.objective.axis);
+        double obj = spec.objective.evaluate(path);
         sink.add(new FoldReplayDriver.Round(sink.size(), Double.NaN, obj, viol, yaws.clone(),
                 px, pz, zx, zz, FoldReplayDriver.countEvents(zx, zz), true));
     }

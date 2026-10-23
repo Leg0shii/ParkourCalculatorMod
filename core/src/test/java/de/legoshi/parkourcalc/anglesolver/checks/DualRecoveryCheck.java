@@ -58,7 +58,7 @@ final class DualRecoveryCheck implements ProblemCheck {
             double viol = compiled.maxViolation(gf, path);
             assertTrue(name + ": chain result not byte-exact feasible (viol=" + viol + ")", viol <= 0.0);
             solved = true;
-            obj = path.getPos(spec.objective.tick, spec.objective.axis);
+            obj = spec.objective.evaluate(path);
         }
         System.out.printf("DUAL %-44s solved=%-5s via=%-32s %4d ms%s%n",
                 name, solved, solved ? chain[0] : "-", ms, solved ? String.format("  obj=%.6f", obj) : "");

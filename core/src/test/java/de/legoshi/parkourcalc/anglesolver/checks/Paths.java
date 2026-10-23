@@ -20,7 +20,7 @@ final class Paths {
     }
 
     static double objective(ExactJumpModel model, JumpPhysicsInputs sc, JumpSpec spec, double[] yawsAbs) {
-        return model.forward(sc, gameFacings(sc, yawsAbs)).getPos(spec.objective.tick, spec.objective.axis);
+        return spec.objective.evaluate(model.forward(sc, gameFacings(sc, yawsAbs)));
     }
 
     static double violation(ExactJumpModel model, JumpPhysicsInputs sc, JumpSpec spec, double[] yawsAbs) {
