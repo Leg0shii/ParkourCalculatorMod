@@ -110,5 +110,4 @@ public final class FabricBoxRenderer implements BoxRenderer {
         vertex(c, m, ax, ay, az, r, g, b, a);
         vertex(c, m, bx, by, bz, r, g, b, a);
     }
-    }
 }
