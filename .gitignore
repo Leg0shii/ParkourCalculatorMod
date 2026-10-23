@@ -59,6 +59,7 @@ __pycache__/
 research/copt/data/
 
 research/
+!core/src/research/
 docs/research/solver-rework-2026-08/benchmark/*.tsv
 docs/research/global-solver-2026-08/
 docs/research/solver-rework-2026-08/

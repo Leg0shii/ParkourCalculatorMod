@@ -1,6 +1,5 @@
 package de.legoshi.parkourcalc.anglesolver;
 
-import de.legoshi.parkourcalc.VerySlowSolverTests;
 import de.legoshi.parkourcalc.anglesolver.harness.Fixtures;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
@@ -15,7 +14,6 @@ import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -26,7 +24,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-@Category(VerySlowSolverTests.class)
 public class HpkStartBenchmark {
 
     static final class Ref {
@@ -100,7 +97,7 @@ public class HpkStartBenchmark {
             if (only != null && !ref.resource.contains(only)) continue;
             if (skip != null && ref.resource.contains(skip)) continue;
 
-            SaveFile file = loadCapture(ref.dir, ref.resource);
+            SaveFile file = Fixtures.hpkHuman(ref.dir, ref.resource);
             long t0 = System.nanoTime();
             SolveResult r = solveCold(file, effort, optSec, timeoutMs, graph);
             long ms = (System.nanoTime() - t0) / 1_000_000L;
@@ -155,22 +152,6 @@ public class HpkStartBenchmark {
         String s = cut > 0 ? res.substring(0, cut) : res;
         if (s.length() > 40) s = s.substring(0, 40);
         return s;
-    }
-
-    static SaveFile loadCapture(String dir, String resource) {
-        String path = "/hpk_human/" + dir + "/" + resource + ".json";
-        try (InputStream in = HpkStartBenchmark.class.getResourceAsStream(path)) {
-            if (in == null) throw new IllegalStateException("missing resource " + path);
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            byte[] buf = new byte[8192];
-            int n;
-            while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
-            SaveFile file = SaveIO.parseSafe(out.toString("UTF-8"));
-            if (file == null) throw new IllegalStateException("parse failed: " + path);
-            return file;
-        } catch (Exception e) {
-            throw new RuntimeException("load failed: " + path, e);
-        }
     }
 
     static SolveResult solveCold(SaveFile file, AngleSolverState.Effort effort, int optSec, long timeoutMs) {

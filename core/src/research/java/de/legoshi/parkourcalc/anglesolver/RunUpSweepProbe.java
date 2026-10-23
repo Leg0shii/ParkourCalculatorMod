@@ -1,6 +1,5 @@
 package de.legoshi.parkourcalc.anglesolver;
 
-import de.legoshi.parkourcalc.VerySlowSolverTests;
 import de.legoshi.parkourcalc.anglesolver.harness.Fixtures;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
@@ -24,7 +23,6 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
@@ -36,7 +34,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-@Category(VerySlowSolverTests.class)
 public class RunUpSweepProbe {
 
     private static final int TAKEOFF = 31;

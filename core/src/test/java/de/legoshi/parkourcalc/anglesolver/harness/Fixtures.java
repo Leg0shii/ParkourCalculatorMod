@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.anglesolver.harness;
 
 import de.legoshi.parkourcalc.core.save.SaveFile;
+import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
@@ -79,6 +80,22 @@ public final class Fixtures {
             return out.toString("UTF-8");
         } catch (Exception e) {
             throw new RuntimeException("failed to read pool fixture " + name, e);
+        }
+    }
+
+    public static SaveFile hpkHuman(String dir, String resource) {
+        String path = "/hpk_human/" + dir + "/" + resource + ".json";
+        try (InputStream in = Fixtures.class.getResourceAsStream(path)) {
+            if (in == null) throw new IllegalStateException("missing resource " + path);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
+            SaveFile file = SaveIO.parseSafe(out.toString("UTF-8"));
+            if (file == null) throw new IllegalStateException("parse failed: " + path);
+            return file;
+        } catch (Exception e) {
+            throw new RuntimeException("load failed: " + path, e);
         }
     }
 

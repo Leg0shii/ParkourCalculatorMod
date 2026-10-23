@@ -38,7 +38,7 @@ public class AttemptSamplerTest {
     }
 
     private static Loaded load() {
-        SaveFile file = HpkStartBenchmark.loadCapture("d10", J335);
+        SaveFile file = Fixtures.hpkHuman("d10", J335);
         ExactJumpModel model = ExactJumpModel.forMcVersion(file.mcVersion);
         InputData inputs = new InputData();
         SaveIO.applyRowsTo(file, inputs);

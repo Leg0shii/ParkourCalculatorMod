@@ -100,6 +100,8 @@ When a new test class drives the solver engine on real captures, tag it `@Catego
 
 - Folder-driven problem checks: `core/src/test/.../anglesolver/ProblemsTest.java` (parameterized over every folder under `problems/`: `solve/`, `closedform/` and `dualrecovery/`, sharing captures in `core/src/test/resources/captures/`; `problems/README.md` lists what each folder checks and the sidecar fields). Every fixture JSON under `captures/`, `problems/` and `hpk_human/` is one line with no BOM and no trailing newline. Map in `anglesolver/TESTS.md`.
 
+Env-gated research tools (probes, dumps, screens, benches that skip unless a `PKC_*` env or `-Dpkc.*` property selects them) are not tests: they live in the `research` source set under `core/src/research/` (map and run commands in its README), run with `./gradlew :core:research --tests '*<Name>'`, and never join `:core:test` or the CI shards. `:core:check` compiles them. A new tool goes there, not under `src/test`.
+
 There is **no** Fabric/Forge test task; the old per-loader test paths are gone. `tableStyleCheck` runs on `:core:check`/`build` (CI skips it with `-x tableStyleCheck`); it has a known false positive on `SolverWidgets`.
 
 

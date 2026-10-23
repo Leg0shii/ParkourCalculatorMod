@@ -46,6 +46,18 @@ dependencies {
 	testImplementation 'io.github.spair:imgui-java-binding:1.86.12'
 }
 
+sourceSets {
+	research {
+		compileClasspath += sourceSets.main.output + sourceSets.test.output
+		runtimeClasspath += sourceSets.main.output + sourceSets.test.output
+	}
+}
+
+configurations {
+	researchImplementation.extendsFrom testImplementation
+	researchRuntimeOnly.extendsFrom testRuntimeOnly
+}
+
 def problemCases() {
 	def out = []
 	file('src/test/resources/problems').listFiles().findAll { it.directory }.sort { it.name }.each { d ->
@@ -229,6 +241,31 @@ tasks.register('testJava8', Test) {
 	}
 }
 
+tasks.register('research', Test) {
+	group = 'verification'
+	description = 'Runs the env-gated research tools (probes, dumps, screens, benches) from src/research; pick one with --tests.'
+	testClassesDirs = sourceSets.research.output.classesDirs
+	classpath = sourceSets.research.runtimeClasspath
+	systemProperties providers.systemPropertiesPrefixedBy('pkc.').get()
+	useJUnit()
+	outputs.upToDateWhen { false }
+	if (project.hasProperty('testCpus')) {
+		jvmArgs "-XX:ActiveProcessorCount=${project.property('testCpus')}"
+	}
+	if (project.hasProperty('pkcJfr')) {
+		jvmArgs "-XX:StartFlightRecording=filename=${project.property('pkcJfr')},settings=profile,dumponexit=true", "-XX:FlightRecorderOptions=stackdepth=512"
+	}
+}
+
+tasks.register('printResearchClasspath') {
+	group = 'help'
+	description = 'Prints the research runtime classpath for a direct java -cp run.'
+	dependsOn 'researchClasses'
+	doLast {
+		println sourceSets.research.runtimeClasspath.asPath
+	}
+}
+
 // Enforce the table-styling consolidation rules established in the Phase 1-5
 // refactor. Three checks, each a simple regex over the ImGui rendering tree.
 // See CONTRIBUTING.md "Table styling" for the contract; this task is the gate.
@@ -292,4 +329,4 @@ tasks.register('tableStyleCheck') {
 	}
 }
 
-tasks.named('check') { dependsOn 'tableStyleCheck' }
+tasks.named('check') { dependsOn 'tableStyleCheck', 'researchClasses' }

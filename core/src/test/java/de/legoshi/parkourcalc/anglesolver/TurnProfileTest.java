@@ -36,7 +36,7 @@ public class TurnProfileTest {
     }
 
     private static Loaded load(String dir, String res) {
-        SaveFile file = HpkStartBenchmark.loadCapture(dir, res);
+        SaveFile file = Fixtures.hpkHuman(dir, res);
         ExactJumpModel model = ExactJumpModel.forMcVersion(file.mcVersion);
         InputData inputs = new InputData();
         SaveIO.applyRowsTo(file, inputs);
