@@ -21,6 +21,7 @@ import org.joml.Matrix4f;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -29,6 +30,8 @@ public final class CachedBoxGeometry {
 
     private static final int CHUNK = 256;
     private static final double CHUNK_MARGIN = 1.5;
+    private static final double ANCHOR_RANGE = 1024.0;
+    private static final long FRAME_BUDGET_NANOS = 3_000_000L;
     private static final int INITIAL_BYTES = 1 << 20;
     private static final Matrix4f IDENTITY = new Matrix4f();
 
@@ -45,18 +48,21 @@ public final class CachedBoxGeometry {
     private double anchorX;
     private double anchorY;
     private double anchorZ;
-    private int boxCount;
     private long bakedGeometryRev = -1;
-    private int bakedPathHash;
+    private int bakedChunkHash;
     private int bakedStructuralHash;
     private Set<Integer> bakedSelection = new HashSet<>();
     private boolean built;
+    private int pendingFrom = -1;
+    private boolean pendingTail;
+    private final Set<Integer> pendingSelection = new HashSet<>();
 
     private static final class Chunk {
         VertexBuffer faces;
         VertexBuffer lines;
         boolean hasFaces;
         boolean hasLines;
+        boolean ready;
         double minX;
         double minY;
         double minZ;
@@ -75,6 +81,7 @@ public final class CachedBoxGeometry {
             }
             hasFaces = false;
             hasLines = false;
+            ready = false;
         }
 
         double distanceSq(double x, double y, double z) {
@@ -93,23 +100,26 @@ public final class CachedBoxGeometry {
         }
         long rev = boxController.getGeometryRev();
         int from;
-        if (!built || plan.pathHash != bakedPathHash) {
+        if (!built || plan.chunkHash != bakedChunkHash) {
             from = 0;
+            boxController.takeDirtyFrom(rev);
         } else if (rev != bakedGeometryRev) {
             from = Math.max(0, boxController.takeDirtyFrom(bakedGeometryRev) - 1);
         } else {
             from = -1;
         }
-        long buildStart = Perf.now();
-        int firstChunk = Integer.MAX_VALUE;
         if (from >= 0) {
+            boolean geometryChanged = rev != bakedGeometryRev;
             if (from == 0) {
                 Vec3dCore first = boxController.getPosition(0);
-                anchorX = first.x;
-                anchorY = first.y;
-                anchorZ = first.z;
+                if (!built || Math.abs(first.x - anchorX) > ANCHOR_RANGE || Math.abs(first.y - anchorY) > ANCHOR_RANGE
+                        || Math.abs(first.z - anchorZ) > ANCHOR_RANGE) {
+                    anchorX = first.x;
+                    anchorY = first.y;
+                    anchorZ = first.z;
+                    geometryChanged = true;
+                }
             }
-            firstChunk = from / CHUNK;
             int chunkCount = (n + CHUNK - 1) / CHUNK;
             while (chunks.size() > chunkCount) {
                 chunks.remove(chunks.size() - 1).close();
@@ -117,30 +127,63 @@ public final class CachedBoxGeometry {
             while (chunks.size() < chunkCount) {
                 chunks.add(new Chunk());
             }
-            for (int k = firstChunk; k < chunkCount; k++) {
-                bakeChunk(boxController, plan, settings, k);
+            int firstChunk = from / CHUNK;
+            if (geometryChanged) {
+                for (int k = firstChunk; k < chunkCount; k++) {
+                    chunks.get(k).ready = false;
+                }
+                tail.ready = false;
             }
-            bakeTail(boxController, plan, settings);
-            boxController.takeDirtyFrom(rev);
+            pendingFrom = pendingFrom < 0 ? firstChunk : Math.min(pendingFrom, firstChunk);
+            pendingTail = true;
         } else if (plan.structuralHash != bakedStructuralHash) {
-            bakeTail(boxController, plan, settings);
+            pendingTail = true;
         }
         if (!plan.selection.equals(bakedSelection)) {
-            for (int k : changedChunks(plan.selection, n)) {
-                if (k < firstChunk) {
-                    bakeChunk(boxController, plan, settings, k);
-                }
+            pendingSelection.addAll(changedChunks(plan.selection, n));
+            bakedSelection = new HashSet<>(plan.selection);
+        }
+        bakedGeometryRev = rev;
+        bakedChunkHash = plan.chunkHash;
+        bakedStructuralHash = plan.structuralHash;
+        built = true;
+        work(boxController, plan, settings);
+    }
+
+    private void work(BoxController boxController, PathRenderPlan plan, Settings settings) {
+        if (pendingFrom < 0 && !pendingTail && pendingSelection.isEmpty()) {
+            return;
+        }
+        long start = Perf.now();
+        long deadline = System.nanoTime() + FRAME_BUDGET_NANOS;
+        if (pendingTail) {
+            bakeTail(boxController, plan, settings);
+            pendingTail = false;
+        }
+        Iterator<Integer> selected = pendingSelection.iterator();
+        while (selected.hasNext()) {
+            int k = selected.next();
+            if (k >= chunks.size() || (pendingFrom >= 0 && k >= pendingFrom)) {
+                selected.remove();
+                continue;
+            }
+            if (System.nanoTime() >= deadline) {
+                break;
+            }
+            bakeChunk(boxController, plan, settings, k);
+            selected.remove();
+        }
+        while (pendingFrom >= 0 && pendingFrom < chunks.size()) {
+            bakeChunk(boxController, plan, settings, pendingFrom);
+            pendingFrom++;
+            if (System.nanoTime() >= deadline) {
+                break;
             }
         }
-        if (from >= 0 || plan.structuralHash != bakedStructuralHash || !plan.selection.equals(bakedSelection)) {
-            Perf.stop("geomRebuild", buildStart);
+        if (pendingFrom >= chunks.size()) {
+            pendingFrom = -1;
         }
-        boxCount = n;
-        bakedGeometryRev = rev;
-        bakedPathHash = plan.pathHash;
-        bakedStructuralHash = plan.structuralHash;
-        bakedSelection = new HashSet<>(plan.selection);
-        built = true;
+        Perf.stop("geomRebuild", start);
     }
 
     private Set<Integer> changedChunks(Set<Integer> selection, int n) {
@@ -205,6 +248,7 @@ public final class CachedBoxGeometry {
             }
         };
         bakeInto(chunk, faces, lines);
+        chunk.ready = true;
     }
 
     private void bakeTail(BoxController boxController, PathRenderPlan plan, Settings settings) {
@@ -224,6 +268,7 @@ public final class CachedBoxGeometry {
         tail.maxX = Double.POSITIVE_INFINITY;
         tail.maxY = Double.POSITIVE_INFINITY;
         tail.maxZ = Double.POSITIVE_INFINITY;
+        tail.ready = true;
     }
 
     private void bakeInto(Chunk chunk, Consumer<BoxRenderer> faces, Consumer<BoxRenderer> lines) {
@@ -287,11 +332,13 @@ public final class CachedBoxGeometry {
         );
         List<Chunk> visible = new ArrayList<>(chunks.size() + 1);
         for (Chunk chunk : chunks) {
-            if (maxDistanceSq == Double.POSITIVE_INFINITY || chunk.distanceSq(camX, camY, camZ) <= maxDistanceSq) {
+            if (chunk.ready && (maxDistanceSq == Double.POSITIVE_INFINITY || chunk.distanceSq(camX, camY, camZ) <= maxDistanceSq)) {
                 visible.add(chunk);
             }
         }
-        visible.add(tail);
+        if (tail.ready) {
+            visible.add(tail);
+        }
         drawPass(FabricRenderLayers.TRANSLUCENT_FACES, true, model, visible);
         drawPass(FabricRenderLayers.LINES, false, model, visible);
     }
@@ -325,8 +372,10 @@ public final class CachedBoxGeometry {
         }
         chunks.clear();
         tail.close();
-        boxCount = 0;
         bakedGeometryRev = -1;
+        pendingFrom = -1;
+        pendingTail = false;
+        pendingSelection.clear();
         built = false;
     }
 }

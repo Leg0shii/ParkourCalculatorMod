@@ -88,7 +88,7 @@ public final class PathRenderPlan {
     private static int countedLineVerts;
 
     public final int structuralHash;
-    public final int pathHash;
+    public final int chunkHash;
     public final Set<Integer> selection;
     public final Consumer<BoxRenderer> faceEmitter;
     public final Consumer<BoxRenderer> lineEmitter;
@@ -99,11 +99,11 @@ public final class PathRenderPlan {
     public final int constraintLineVerts;
     public final int reachLineVerts;
 
-    private PathRenderPlan(int structuralHash, int pathHash, Set<Integer> selection, Consumer<BoxRenderer> faceEmitter, Consumer<BoxRenderer> lineEmitter,
+    private PathRenderPlan(int structuralHash, int chunkHash, Set<Integer> selection, Consumer<BoxRenderer> faceEmitter, Consumer<BoxRenderer> lineEmitter,
                            Consumer<BoxRenderer> constraintFaceEmitter, Consumer<BoxRenderer> constraintLineEmitter,
                            SelectionPatchSpec patch, int constraintFaceVerts, int constraintLineVerts, int reachLineVerts) {
         this.structuralHash = structuralHash;
-        this.pathHash = pathHash;
+        this.chunkHash = chunkHash;
         this.selection = selection;
         this.faceEmitter = faceEmitter;
         this.lineEmitter = lineEmitter;
@@ -221,7 +221,7 @@ public final class PathRenderPlan {
             constraintLineVerts = countedLineVerts;
         }
         return new PathRenderPlan(structuralHash(settings, constraintRevision, liveRevision, deviationTick, solverStartTick, solverGoalTick),
-                structuralHash(settings, 0L, 0L, deviationTick, solverStartTick, solverGoalTick),
+                chunkHash(settings, deviationTick, solverStartTick, solverGoalTick),
                 selectedBoxes, faceEmitter, lineEmitter, constraintFaceEmitter, constraintLineEmitter, patch,
                 constraintFaceVerts, constraintLineVerts, reachLineVerts);
     }
@@ -229,6 +229,33 @@ public final class PathRenderPlan {
     /** Colors and overlay toggles, but NOT selection (which is patched in place). The constraint
      *  revision is mixed in so editing constraints (which leaves path positions untouched) still
      *  invalidates the cached buffers. */
+    private static int chunkHash(Settings settings, int deviationTick, int solverStartTick, int solverGoalTick) {
+        int h = 1;
+        h = 31 * h + Arrays.hashCode(settings.tickDefault);
+        h = 31 * h + Arrays.hashCode(settings.tickSelected);
+        h = 31 * h + Arrays.hashCode(settings.tickSoftCollision);
+        h = 31 * h + Arrays.hashCode(settings.tickWall);
+        h = 31 * h + Arrays.hashCode(settings.tickAir);
+        h = 31 * h + Arrays.hashCode(settings.tickSneak);
+        h = 31 * h + Arrays.hashCode(settings.tickSolverStart);
+        h = 31 * h + Arrays.hashCode(settings.tickSolverGoal);
+        h = 31 * h + Arrays.hashCode(settings.tickDeviation);
+        h = 31 * h + Arrays.hashCode(settings.hitboxDefault);
+        h = 31 * h + Arrays.hashCode(settings.hitboxSelected);
+        h = 31 * h + Arrays.hashCode(settings.yawArrow);
+        h = 31 * h + Arrays.hashCode(settings.pitchArrow);
+        h = 31 * h + Arrays.hashCode(settings.subtickPath);
+        h = 31 * h + (settings.showHitbox ? 1 : 0);
+        h = 31 * h + (settings.showFullHitbox ? 2 : 0);
+        h = 31 * h + (settings.showYawArrows ? 4 : 0);
+        h = 31 * h + settings.arrowMode;
+        h = 31 * h + (settings.showSubtick ? 8 : 0);
+        h = 31 * h + deviationTick;
+        h = 31 * h + solverStartTick;
+        h = 31 * h + solverGoalTick;
+        return h;
+    }
+
     private static int structuralHash(Settings settings, long constraintRevision, long liveRevision, int deviationTick, int solverStartTick, int solverGoalTick) {
         int h = 1;
         h = 31 * h + Arrays.hashCode(settings.tickDefault);
