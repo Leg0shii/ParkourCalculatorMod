@@ -107,7 +107,27 @@ public final class FabricBoxRenderer implements BoxRenderer {
 
     private static void edge(VertexConsumer c, Matrix4f m, float ax, float ay, float az, float bx, float by, float bz, int argb) {
         float r = ArgbColor.red(argb), g = ArgbColor.green(argb), b = ArgbColor.blue(argb), a = ArgbColor.alpha(argb);
-        vertex(c, m, ax, ay, az, r, g, b, a);
-        vertex(c, m, bx, by, bz, r, g, b, a);
+        float nx = bx - ax, ny = by - ay, nz = bz - az;
+        float len = (float) Math.sqrt(nx * nx + ny * ny + nz * nz);
+        if (len > 1.0e-6F) {
+            nx /= len;
+            ny /= len;
+            nz /= len;
+        } else {
+            nx = 0.0F;
+            ny = 1.0F;
+            nz = 0.0F;
+        }
+        lineVertex(c, m, ax, ay, az, r, g, b, a, nx, ny, nz);
+        lineVertex(c, m, bx, by, bz, r, g, b, a, nx, ny, nz);
+    }
+
+    private static void lineVertex(VertexConsumer c, Matrix4f m, float x, float y, float z,
+                                   float r, float g, float b, float a, float nx, float ny, float nz) {
+        //? if >=1.21 {
+        c.addVertex(m, x, y, z).setColor(r, g, b, a).setNormal(nx, ny, nz);
+        //?} else {
+        /*c.vertex(m, x, y, z).color(r, g, b, a).normal(nx, ny, nz).endVertex();
+        *///?}
     }
 }

@@ -15,11 +15,11 @@ public final class FabricRenderLayers {
 
     public static final RenderType LINES = RenderType.create(
             "parkourcalc_thin_lines",
-            DefaultVertexFormat.POSITION_COLOR,
-            VertexFormat.Mode.DEBUG_LINES,
+            DefaultVertexFormat.POSITION_COLOR_NORMAL,
+            VertexFormat.Mode.LINES,
             RenderType.SMALL_BUFFER_SIZE,
             RenderType.CompositeState.builder()
-                    .setShaderState(RenderStateShard.POSITION_COLOR_SHADER)
+                    .setShaderState(RenderStateShard.RENDERTYPE_LINES_SHADER)
                     .setLineState(new RenderStateShard.LineStateShard(OptionalDouble.of(BoxStyle.LINE_WIDTH)))
                     .setLayeringState(RenderStateShard.VIEW_OFFSET_Z_LAYERING)
                     .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
