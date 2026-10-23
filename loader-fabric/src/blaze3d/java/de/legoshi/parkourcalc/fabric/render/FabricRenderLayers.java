@@ -34,6 +34,7 @@ public final class FabricRenderLayers {
             RenderType.SMALL_BUFFER_SIZE,
             RenderType.CompositeState.builder()
                     .setShaderState(RenderStateShard.POSITION_COLOR_SHADER)
+                    .setLayeringState(RenderStateShard.POLYGON_OFFSET_LAYERING)
                     .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
                     .setDepthTestState(RenderStateShard.LEQUAL_DEPTH_TEST)
                     .setWriteMaskState(RenderStateShard.COLOR_WRITE)
