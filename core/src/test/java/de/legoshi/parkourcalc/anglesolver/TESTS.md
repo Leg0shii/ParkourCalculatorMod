@@ -22,7 +22,7 @@ anglesolver/
                            motivated the ticket; Optimize adopts the previous successful solve as its
                            incumbent (solver chain starts with "incumbent") and never ends worse than it;
                            a pinned start passes through the sweep instantly (gh398-optimize-2jump)
-  YawDirectionConstraintTest.java gh-553 (SlowSolverTests): dF >= 0 / dF <= 0 over a tick range (the
+  YawOrderTest.java        gh-553 (SlowSolverTests): dF >= 0 / dF <= 0 over a tick range (the
                            yaw may only turn one way, no turn-out). YawOrder carries consecutive-tick F
                            inequalities and one-sided absolute F walls that the YawTies fold does not
                            absorb; the SLP solves them as exact yaw rows, the certified B&B propagates
@@ -30,7 +30,9 @@ anglesolver/
                            closed form runs the tie cascade (YawOrderDp). Pins the carry rules, the
                            projection, an SLP, a closed-form and a B&B solve of a one-way range on j121,
                            the wrong-way range staying rejected, and the j121 neo engine solve; the
-                           pattern B&B accepting an order spec and landing j345 (gh553-j345-dfneo).
+                           pattern B&B accepting an order spec and landing j345 (gh553-j345-dfneo);
+                           also the dF gate: LevelSetAscent skips a spec with a facing wall, which is
+                           what the dF direction notice is shown for
   YawDirectionCrossCheckTest.java  gh-553 (SlowSolverTests, one case per FAST solve/ capture under a 60 s
                            budget): re-solves the capture with one-way dF rows its own solved path
                            already satisfies, so a solution exists by construction and a miss is a
@@ -159,28 +161,28 @@ anglesolver/
                            j008-bfneo Z/MIN, taser-80t X/MIN), the goal-wall bisection strictly beats
                            the plain SLP hug the reseeded path produces and reaches near the dual
                            bound (j003 X/MIN: -27 hug -> -31.3 optimum). The dF gate (facing wall =>
-                           skip + info notice) is unit-tested fast in
-                           core/anglesolver/DfDirectionGateTest
+                           skip + info notice) is pinned in YawOrderTest
   FoldReplayDriverTest.java  #422 M1 fold driver: thousand-1-dup2 warm replay bit-exact
                            (6523.307720901059, viol 0.0), cold driver byte-exact >= 6523.30 and
                            bit-identical across 5 in-process runs, loopmm fold lands byte-exact,
                            j003 chord-narrowed FAST/objective-rounds gates
   WallHomotopyLadderTest.java  #422 M1 wall-homotopy ladder (rungs 0.05/0.01/0.002/0, warm-chained,
-                           true-spec scoring): hpk_precise witness replays bit-exact, j154 cold
-                           ladder lands byte-exact at or beyond the in-game F3 witness, collision
-                           wall classification, ladder determinism
-  BucketWalkTest.java      #422 M1 era-aware bucket machinery: gate-banded integer walk + objective
-                           walk + window-scan leaf + free-start ulp nudge; perturbed-witness anchors
-                           land byte-exact on both hpk_precise fixtures; polishFromAnchor
-                           bit-identical; center snapping sub-half-bucket across eras
+                           true-spec scoring) and the era-aware bucket machinery behind its anchor
+                           polish: hpk_precise witness replays bit-exact, j154 cold ladder lands
+                           byte-exact at or beyond the in-game F3 witness, collision wall
+                           classification, ladder determinism; perturbed-witness anchors land
+                           byte-exact on both hpk_precise fixtures through the anchor SLP and the
+                           full polishFromAnchor ladder (perturb 50 reaches the deep basin), the
+                           engine-seeded polish beats the j154 witness and holds j1150 feasible,
+                           polishFromAnchor bit-identical, center snapping sub-half-bucket across eras
   DiskSocpKernelChordTest.java  fast-suite kernel coverage: two-axis ChordRow solves, the hardened
                            IPM jitter ladder, and the weak-duality infeasibility certificate
                            (FAIL_UNBOUNDED) that replaced the old fake-convergence
   FoldDriverEngineTest.java  #422 M1 engine-level gates through engine.solve() (driver wired as
-                           primary recovery): j003 FAST + THOROUGH-10s
-                           in-deadline, j1150-noturn-inner THOROUGH beats the p2 witness,
-                           j154-noturn-ja-inner FAST solves (feasibility only, FAST has no
-                           objective bar), FAST re-solve determinism
+                           primary recovery): j003 THOROUGH-10s in-deadline, j1150-noturn-inner
+                           FAST solves (feasibility only, FAST has no objective bar), j154 FAST
+                           re-solve determinism; the j154 FAST and j1150 THOROUGH gates live in
+                           problems/solve
   CertifiedBnbTest.java    #422 M2a certified B&B fast units: SineTableGeometry containment (realized
                            inputs inside boxes/chords/supports across all four eras incl. the legacy
                            jump-tick double cast), a tiny 2-tick instance certifying at the enumerated
@@ -188,19 +190,22 @@ anglesolver/
   CertifiedBnbEngineTest.java  #422 M2a certified-search gates (VerySlowSolverTests, -PverySlowTests; PRs to main only): all 5 small
                            captures reach certified gap <= 1.5e-4 with dominating bounds and
                            feasible incumbents (per-capture numbers printed; the 1e-9 plateau
-                           mechanism is in ARCH2-M2A-CERTIFIED-BNB.md), dF specs decline cleanly,
-                           j1150-noturn-inner and j154-noturn-ja-inner solve under FAST
-                           (feasibility only, FAST has no objective bar)
+                           mechanism is in ARCH2-M2A-CERTIFIED-BNB.md), foldable dF chains are
+                           handled, not declined
   PipelineShapeTest.java   #422 M2b G3 enforcement (VerySlowSolverTests, -PverySlowTests; PRs to main only):
                            every corpus capture visits the one linear
                            pipeline stage sequence at BOTH built-in tiers (THOROUGH probed at 1 s);
                            deadline-truncated runs must be a prefix of it
-  NoTurnFinderTest.java    #424 outer no-turn stratfinder spike (core/.../anglesolver/noturn):
-                           machineryCertifiesAByteExactNoTurn drives the inner engine as the byte-exact
-                           oracle on the j1150 structure with a dF=0 chain and asserts a clean no-turn
-                           (viol 0, obj near the -2805.2990 pure-no-turn optimum); finderReturnsAByteExactNoTurn
-                           runs the full cold beam + full-jump screen + certify ladder and asserts a
-                           byte-exact no-turn comes back (cold, or the warm seed of the current inputs)
+  NoTurnDriversTest.java   #424 the no-turn drivers on the two hpk_precise structures (slow):
+                           the certifier drives the inner engine as the byte-exact oracle on j1150
+                           with a dF=0 chain and lands a clean no-turn (viol 0, obj near the
+                           -2805.2990 pure-no-turn optimum); NoTurnFinder's cold beam + full-jump
+                           screen + certify ladder returns a byte-exact no-turn (cold, or the warm
+                           seed of the current inputs); StructurePoolDriver cracks j1150 cold at
+                           min edges with an interior free start; Human yaws mode certifies the j1150
+                           pure and j154 jump-angle structures plain and playable through the search
+                           cascade and the Optimize graph and the playable line stays byte-exact with
+                           no more turn reversals
   NoTurnRankingTest.java   stratfinder list order (core/.../anglesolver/noturn/NoTurnRanking): Easiest =
                            no jump-angle flick first, then fewest input changes (key edges incl. the first
                            press and the air hold, plus sprint toggles; a key change landing on a jump
@@ -208,10 +213,6 @@ anglesolver/
                            offset as the tie-break; Furthest = largest offset past the goal wall on the
                            objective axis, easiest order as the tie-break; goal-wall pick and the
                            MIN-sense offset sign; fast, no capture
-  NoTurnPlayableTest.java  Human yaws mode of the no-turn certifier (slow): certifies the j1150 pure and
-                           j154 jump-angle structures plain and playable through the search cascade and the
-                           Optimize graph, prints objective, reversals, max turn and the air yaw deltas, and
-                           asserts the playable line stays byte-exact with no more turn reversals
   NoTurnPlayableUnitTest.java  reversal count, the reversal key in StructurePoolDriver.betterResult, and
                            NoTurnCertifier.landingGiveBack (margin above the near landing wall); fast
   harness/                 shared plumbing; no test lives here (NoTurnCapture loads a capture by path or

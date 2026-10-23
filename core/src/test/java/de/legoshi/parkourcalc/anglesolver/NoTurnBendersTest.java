@@ -1,18 +1,12 @@
 package de.legoshi.parkourcalc.anglesolver;
 
 import de.legoshi.parkourcalc.VerySlowSolverTests;
-import de.legoshi.parkourcalc.anglesolver.harness.Fixtures;
-import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
-import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
+import de.legoshi.parkourcalc.anglesolver.harness.NoTurnCapture;
 import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.BendersMaster;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnKeys;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnProblem;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnResult;
-import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
-import de.legoshi.parkourcalc.core.save.SaveFile;
-import de.legoshi.parkourcalc.core.save.SaveIO;
-import de.legoshi.parkourcalc.core.ui.InputData;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -24,18 +18,6 @@ import static org.junit.Assert.assertTrue;
 @Category(VerySlowSolverTests.class)
 public class NoTurnBendersTest {
 
-    private NoTurnProblem load(String capture) throws Exception {
-        String raw = Fixtures.rawPool(capture);
-        SaveFile file = SaveIO.parseSafe(raw);
-        ExactJumpModel model = ExactJumpModel.forMcVersion(file.mcVersion);
-        InputData inputs = new InputData();
-        SaveIO.applyRowsTo(file, inputs);
-        AngleSolverState state = new AngleSolverState();
-        SaveIO.applyAngleSolverTo(file, state);
-        AngleSolverEngine engine = new AngleSolverEngine(state, Fixtures.buildBoxes(file), inputs, t -> { }, model);
-        return NoTurnProblem.from(engine.debugBuildSpec(), model);
-    }
-
     private boolean interior(NoTurnProblem p, NoTurnResult r) {
         if (r == null || p.freeBox == null) return false;
         return r.startX > p.freeBox.pxLo + 1e-6 && r.startX < p.freeBox.pxHi - 1e-6
@@ -44,7 +26,7 @@ public class NoTurnBendersTest {
 
     @Test
     public void j1150ColdCracksThroughMaster() throws Exception {
-        NoTurnProblem p = load("hpk_precise/j1150-noturn-inner");
+        NoTurnProblem p = NoTurnCapture.problem("hpk_precise/j1150-noturn-inner");
 
         BendersMaster.Config cfg = new BendersMaster.Config();
         cfg.alphabet = new int[]{NoTurnKeys.SA, NoTurnKeys.WD, NoTurnKeys.W, NoTurnKeys.NONE,
@@ -91,7 +73,7 @@ public class NoTurnBendersTest {
         org.junit.Assume.assumeTrue(
                 "full j154 cold discovery runs about 55 minutes; opt in with -Dpkc.j154ColdCrack=true",
                 Boolean.getBoolean("pkc.j154ColdCrack"));
-        NoTurnProblem p = load("hpk_precise/j154-noturn-ja-inner");
+        NoTurnProblem p = NoTurnCapture.problem("hpk_precise/j154-noturn-ja-inner");
 
         BendersMaster.Config cfg = new BendersMaster.Config();
         cfg.alphabet = new int[]{NoTurnKeys.SD, NoTurnKeys.S, NoTurnKeys.WA, NoTurnKeys.W,

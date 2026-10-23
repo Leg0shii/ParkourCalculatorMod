@@ -11,7 +11,9 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.CertifiedBnb;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ClosedFormSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
+import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
+import de.legoshi.parkourcalc.core.anglesolver.solver.LevelSetAscent;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SlpSolve;
 import de.legoshi.parkourcalc.core.anglesolver.solver.YawOrder;
 import de.legoshi.parkourcalc.core.anglesolver.solver.YawTies;
@@ -29,7 +31,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 @Category(SlowSolverTests.class)
-public class YawDirectionConstraintTest {
+public class YawOrderTest {
 
     private static final String FIXTURE = "gh313-j121-dfneo";
 
@@ -272,5 +274,34 @@ public class YawDirectionConstraintTest {
                 r.isSuccess(), r.getMet(), r.getTotal(), run.elapsedMs, r.getSolver());
         assertTrue("j121 with dF <= 0 on T39..T46 must solve (met " + r.getMet() + "/" + r.getTotal() + ")",
                 r.isSuccess());
+    }
+
+    @Test
+    public void positionWallSpecHasNoFacingWallSoLadderApplies() {
+        JumpSpec spec = ProblemFixture.load("solve", "j024-bfly-goal-direction")
+                .specFor(AngleSolverState.Axis.X, AngleSolverState.Goal.MAX);
+        assertFalse("bfly uses position keep-out walls, not facing walls",
+                JumpLinearModel.hasFacingWall(spec.constraints));
+    }
+
+    @Test
+    public void deltaFacingConstraintSkipsTheLadder() {
+        ProblemFixture pf = ProblemFixture.load("solve", "j024-bfly-goal-direction");
+        JumpSpec spec = pf.specFor(AngleSolverState.Axis.X, AngleSolverState.Goal.MAX);
+        List<JumpConstraint> withDf = new ArrayList<>(spec.constraints);
+        withDf.add(new JumpConstraint(JumpConstraint.Mode.F, 1, 0, JumpConstraint.Op.MINUS,
+                JumpConstraint.Cmp.GE, 0.0, "df"));
+        JumpSpec dfSpec = new JumpSpec(spec.asScenario(), withDf, spec.objective);
+        assertTrue(JumpLinearModel.hasFacingWall(dfSpec.constraints));
+
+        double[] witness = new double[spec.asScenario().numTicks];
+        assertNull("dF constraint => no dual bound => ladder must not run",
+                LevelSetAscent.improve(pf.model, dfSpec, witness, 0.0, new AtomicBoolean(false)));
+    }
+
+    @Test
+    public void noticeConstantNamesDeltaFacing() {
+        assertNotNull(AngleSolverEngine.DF_DIRECTION_NOTICE);
+        assertTrue(AngleSolverEngine.DF_DIRECTION_NOTICE.contains("dF"));
     }
 }

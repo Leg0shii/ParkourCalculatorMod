@@ -1,18 +1,12 @@
 package de.legoshi.parkourcalc.anglesolver;
 
-import de.legoshi.parkourcalc.anglesolver.harness.Fixtures;
-import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
-import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
+import de.legoshi.parkourcalc.anglesolver.harness.NoTurnCapture;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.IisExtractor;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.MinTvMaster;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.NoGoodCut;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnKeys;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnProblem;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.StructurePoolDriver;
-import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
-import de.legoshi.parkourcalc.core.save.SaveFile;
-import de.legoshi.parkourcalc.core.save.SaveIO;
-import de.legoshi.parkourcalc.core.ui.InputData;
 import org.junit.Test;
 
 import java.util.List;
@@ -23,18 +17,6 @@ import static org.junit.Assert.assertTrue;
 
 public class NoTurnBendersUnitTest {
 
-    private NoTurnProblem load(String capture) throws Exception {
-        String raw = Fixtures.rawPool(capture);
-        SaveFile file = SaveIO.parseSafe(raw);
-        ExactJumpModel model = ExactJumpModel.forMcVersion(file.mcVersion);
-        InputData inputs = new InputData();
-        SaveIO.applyRowsTo(file, inputs);
-        AngleSolverState state = new AngleSolverState();
-        SaveIO.applyAngleSolverTo(file, state);
-        AngleSolverEngine engine = new AngleSolverEngine(state, Fixtures.buildBoxes(file), inputs, t -> { }, model);
-        return NoTurnProblem.from(engine.debugBuildSpec(), model);
-    }
-
     private boolean contains(int[] a, int v) {
         for (int x : a) if (x == v) return true;
         return false;
@@ -42,7 +24,7 @@ public class NoTurnBendersUnitTest {
 
     @Test
     public void iisExtractorFlagsJumpPhaseRegion() throws Exception {
-        NoTurnProblem p = load("hpk_precise/j154-noturn-ja-inner");
+        NoTurnProblem p = NoTurnCapture.problem("hpk_precise/j154-noturn-ja-inner");
         int[] anc = new int[29];
         for (int t = 0; t <= 5; t++) anc[t] = NoTurnKeys.SD;
         for (int t = 6; t <= 14; t++) anc[t] = NoTurnKeys.S;
