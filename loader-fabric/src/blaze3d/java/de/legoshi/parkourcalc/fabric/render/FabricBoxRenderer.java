@@ -79,9 +79,17 @@ public final class FabricBoxRenderer implements BoxRenderer {
 
     private static void vertex(VertexConsumer c, Matrix4f m, float x, float y, float z, float r, float g, float b, float a) {
         //? if >=1.21 {
-        c.addVertex(m, x, y, z).setColor(r, g, b, a);
+        if (m == null) {
+            c.addVertex(x, y, z).setColor(r, g, b, a);
+        } else {
+            c.addVertex(m, x, y, z).setColor(r, g, b, a);
+        }
         //?} else {
-        /*c.vertex(m, x, y, z).color(r, g, b, a).endVertex();
+        /*if (m == null) {
+            c.vertex(x, y, z).color(r, g, b, a).endVertex();
+        } else {
+            c.vertex(m, x, y, z).color(r, g, b, a).endVertex();
+        }
         *///?}
     }
 
@@ -125,9 +133,17 @@ public final class FabricBoxRenderer implements BoxRenderer {
     private static void lineVertex(VertexConsumer c, Matrix4f m, float x, float y, float z,
                                    float r, float g, float b, float a, float nx, float ny, float nz) {
         //? if >=1.21 {
-        c.addVertex(m, x, y, z).setColor(r, g, b, a).setNormal(nx, ny, nz);
+        if (m == null) {
+            c.addVertex(x, y, z).setColor(r, g, b, a).setNormal(nx, ny, nz);
+        } else {
+            c.addVertex(m, x, y, z).setColor(r, g, b, a).setNormal(nx, ny, nz);
+        }
         //?} else {
-        /*c.vertex(m, x, y, z).color(r, g, b, a).normal(nx, ny, nz).endVertex();
+        /*if (m == null) {
+            c.vertex(x, y, z).color(r, g, b, a).normal(nx, ny, nz).endVertex();
+        } else {
+            c.vertex(m, x, y, z).color(r, g, b, a).normal(nx, ny, nz).endVertex();
+        }
         *///?}
     }
 }

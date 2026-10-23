@@ -8,6 +8,9 @@ import com.mojang.blaze3d.vertex.MeshData;
 //?}
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.VertexBuffer;
+//? if >=1.21 {
+import net.minecraft.client.renderer.FogParameters;
+//?}
 import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.ports.BoxRenderer;
 import de.legoshi.parkourcalc.core.render.PathRenderPlan;
@@ -33,7 +36,6 @@ public final class CachedBoxGeometry {
     private static final double ANCHOR_RANGE = 1024.0;
     private static final long FRAME_BUDGET_NANOS = 3_000_000L;
     private static final int INITIAL_BYTES = 1 << 20;
-    private static final Matrix4f IDENTITY = new Matrix4f();
 
     //? if >=1.21 {
     private final ByteBufferBuilder faceBytes = new ByteBufferBuilder(INITIAL_BYTES);
@@ -292,7 +294,7 @@ public final class CachedBoxGeometry {
 
     private boolean bake(VertexBuffer buffer, ByteBufferBuilder bytes, RenderType type, BoxRenderer.Mode mode, Consumer<BoxRenderer> emitter) {
         BufferBuilder builder = new BufferBuilder(bytes, type.mode(), type.format());
-        emitter.accept(new FabricBoxRenderer(IDENTITY, builder, mode, anchorX, anchorY, anchorZ));
+        emitter.accept(new FabricBoxRenderer(null, builder, mode, anchorX, anchorY, anchorZ));
         MeshData mesh = builder.build();
         if (mesh == null) {
             return false;
@@ -309,7 +311,7 @@ public final class CachedBoxGeometry {
 
     private boolean bake(VertexBuffer buffer, BufferBuilder builder, RenderType type, BoxRenderer.Mode mode, Consumer<BoxRenderer> emitter) {
         builder.begin(type.mode(), type.format());
-        emitter.accept(new FabricBoxRenderer(IDENTITY, builder, mode, anchorX, anchorY, anchorZ));
+        emitter.accept(new FabricBoxRenderer(null, builder, mode, anchorX, anchorY, anchorZ));
         BufferBuilder.RenderedBuffer rendered = builder.endOrDiscardIfEmpty();
         if (rendered == null) {
             return false;
@@ -345,6 +347,17 @@ public final class CachedBoxGeometry {
 
     private static void drawPass(RenderType type, boolean faces, Matrix4f model, List<Chunk> visible) {
         type.setupRenderState();
+        //? if >=1.21 {
+        FogParameters fog = RenderSystem.getShaderFog();
+        if (!faces) {
+            RenderSystem.setShaderFog(FogParameters.NO_FOG);
+        }
+        //?} else {
+        /*float fogStart = RenderSystem.getShaderFogStart();
+        if (!faces) {
+            RenderSystem.setShaderFogStart(Float.MAX_VALUE);
+        }
+        *///?}
         var shader = RenderSystem.getShader();
         if (shader != null) {
             Matrix4f modelView = new Matrix4f(RenderSystem.getModelViewMatrix()).mul(model);
@@ -363,6 +376,11 @@ public final class CachedBoxGeometry {
                 VertexBuffer.unbind();
             }
         }
+        //? if >=1.21 {
+        RenderSystem.setShaderFog(fog);
+        //?} else {
+        /*RenderSystem.setShaderFogStart(fogStart);
+        *///?}
         type.clearRenderState();
     }
 
