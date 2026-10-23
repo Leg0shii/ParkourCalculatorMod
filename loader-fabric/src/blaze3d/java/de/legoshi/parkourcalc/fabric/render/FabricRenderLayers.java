@@ -2,8 +2,11 @@ package de.legoshi.parkourcalc.fabric.render;
 
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import de.legoshi.parkourcalc.core.ui.BoxStyle;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
+
+import java.util.OptionalDouble;
 
 public final class FabricRenderLayers {
 
@@ -12,11 +15,12 @@ public final class FabricRenderLayers {
 
     public static final RenderType LINES = RenderType.create(
             "parkourcalc_thin_lines",
-            DefaultVertexFormat.POSITION_COLOR_NORMAL,
-            VertexFormat.Mode.LINES,
+            DefaultVertexFormat.POSITION_COLOR,
+            VertexFormat.Mode.DEBUG_LINES,
             RenderType.SMALL_BUFFER_SIZE,
             RenderType.CompositeState.builder()
-                    .setShaderState(RenderStateShard.RENDERTYPE_LINES_SHADER)
+                    .setShaderState(RenderStateShard.POSITION_COLOR_SHADER)
+                    .setLineState(new RenderStateShard.LineStateShard(OptionalDouble.of(BoxStyle.LINE_WIDTH)))
                     .setLayeringState(RenderStateShard.VIEW_OFFSET_Z_LAYERING)
                     .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
                     .setCullState(RenderStateShard.NO_CULL)
