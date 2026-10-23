@@ -36,7 +36,7 @@ public class DeepCheckTest {
         final int n;
 
         Rig() {
-            SaveFile file = HpkStartBenchmark.loadCapture("d10", J335);
+            SaveFile file = Fixtures.hpkHuman("d10", J335);
             model = ExactJumpModel.forMcVersion(file.mcVersion);
             InputData inputs = new InputData();
             SaveIO.applyRowsTo(file, inputs);

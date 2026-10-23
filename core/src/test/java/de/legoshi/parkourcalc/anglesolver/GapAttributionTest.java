@@ -43,7 +43,7 @@ public class GapAttributionTest {
     }
 
     private void assertReportedGapIsHonest(String dir, String resource, boolean maximize, double referenceObjective) {
-        SaveFile file = HpkStartBenchmark.loadCapture(dir, resource);
+        SaveFile file = Fixtures.hpkHuman(dir, resource);
         Solved solved = solveColdKeepingEngine(file);
         SolveResult result = solved.result;
         assertNotNull(resource + ": engine returned no result", result);
