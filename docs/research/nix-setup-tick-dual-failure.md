@@ -331,13 +331,13 @@ A copy currently exists at
 ```
 # F3 full engine, t25 CUSTOM (as saved). Read core/build/.../TEST-...EngineFileScreen.xml afterward.
 export PKC_SOLVE_TIMEOUT_MS=120000
-./gradlew :core:test --tests "de.legoshi.parkourcalc.anglesolver.EngineFileScreen" -x tableStyleCheck --console=plain --rerun-tasks
+./gradlew :core:research --tests "de.legoshi.parkourcalc.anglesolver.EngineFileScreen" -x tableStyleCheck --console=plain --rerun-tasks
 
 # F3 t26 (feasible in ~144 ms): point PKC_SOLVE_FILE at runB.json instead.
 
 # F5 trace: set the tag, then read core/build/reports/solver-trace-nixt25.txt
 export PKC_SOLVER_TRACE=nixt25
-./gradlew :core:test --tests "de.legoshi.parkourcalc.anglesolver.EngineFileScreen" -x tableStyleCheck --console=plain --rerun-tasks
+./gradlew :core:research --tests "de.legoshi.parkourcalc.anglesolver.EngineFileScreen" -x tableStyleCheck --console=plain --rerun-tasks
 # key greps: "ENGINE", "receding horizon", "certified", "fallback bestViol", "race start warm="
 
 # F6 dual residual

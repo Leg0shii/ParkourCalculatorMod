@@ -83,7 +83,7 @@ This is the important part: do not repeat these.
 9. **Engine dispatch restructured twice.** First to "rescue only when the seed fails" (WRONG: the user wants improvement, not just rescue). Then to keep-better (`freeStartImprove`): run the pinned anchored solve for the seed, then a free-start pass, adopt only if feasible AND better (or the seed failed). This is the correct *shape*, but `freeStartImprove` currently contains the failed two-stage search, and it runs the free pass *sequentially after* the anchored pass so under Custom it is budget-starved (`FREE_START_BUDGET_NANOS = 20s`, capped by the effort deadline).
 
 ### Debug tooling that exists (use it)
-- `PKC_SOLVE_FILE=<save.json> ./gradlew :core:test --tests '*EngineFileScreen' --rerun-tasks` drives the live engine on any save. It prints `preSolve` (model/startTick/box/cons), a `DIAG` line (recovery of the saved yaws), `success/met/obj/solver`, and `finalStart`. Optional `PKC_SOLVE_EFFORT=FAST|THOROUGH`, `PKC_SOLVE_TIMEOUT_MS`. **This is the fastest repro loop; extend it, do not re-derive it.** (Note: it currently has temporary debug prints and a `DIAG` block added this session; keep them.)
+- `PKC_SOLVE_FILE=<save.json> ./gradlew :core:research --tests '*EngineFileScreen' --rerun-tasks` drives the live engine on any save. It prints `preSolve` (model/startTick/box/cons), a `DIAG` line (recovery of the saved yaws), `success/met/obj/solver`, and `finalStart`. Optional `PKC_SOLVE_EFFORT=FAST|THOROUGH`, `PKC_SOLVE_TIMEOUT_MS`. **This is the fastest repro loop; extend it, do not re-derive it.** (Note: it currently has temporary debug prints and a `DIAG` block added this session; keep them.)
 - `SolverTrace` via `PKC_SOLVER_TRACE=<tag>` writes `build/reports/solver-trace-<tag>.txt` with `ENGINE`/`FREE` lines. CAVEAT: in the test worker the file did not appear where expected (worker cwd differs); the trace was effectively unavailable this session. Fix the path or print to stdout instead.
 - Gate: `./gradlew :core:test`. Anchored-regression check: the `HpkDualRecoveryScreen` column diff (drop cols 4=`m`, 9/11/13=ms).
 
@@ -143,7 +143,7 @@ My earlier plan was "rebuild as a joint start+yaw search + escalation, because t
 - `core/.../solver/CmaesJumpHarness.java` (translated fitness - EXPERIMENTAL, drop/rebuild; the anchored path is byte-identical when `!free`).
 - `core/.../anglesolver/AngleSolverEngine.java`: `buildJob` split (keep), `pinFreeStart`/`adoptFreeStart`/`freeStartRescue`/`freeStartImprove` history (current = `freeStartImprove` two-stage, EXPERIMENTAL), `pinnedScenario` helper, `Plan.start` + `apply()` start-move via `onStartMoved` (keep - the apply/sim-retrigger path is still UNVERIFIED in-game), `FREE_START_*` constants.
 - `core/.../Application.java`: `setOnStartMoved(runner::setStartPosition)` (keep).
-- Tests: `FreeStartSolveTest`, `EngineFreeStartTest` (keep), `EngineFileScreen` (temporary DIAG/pre-solve prints added - keep for the next session's repro loop).
+- Tests: `FreeStartSolveTest`, `problems/freestart/` in `ProblemsTest` (keep), `EngineFileScreen` (temporary DIAG/pre-solve prints added - keep for the next session's repro loop).
 
 Nothing is committed; it is all in the working tree, gated, gate-green. Memory: `project_free_start_position`. Related: `project_jump_solver_status` (1.21.10 vs 1.8.9 exact model), `feedback_movement_model` (collision-free model; walls are constraints), `project_wolfram_j021_result` (CMA-ES restart counts).
 

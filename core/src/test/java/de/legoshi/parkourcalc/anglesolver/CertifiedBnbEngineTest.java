@@ -5,7 +5,6 @@ import de.legoshi.parkourcalc.anglesolver.harness.Fixtures;
 import de.legoshi.parkourcalc.anglesolver.harness.ProblemFixture;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
-import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
 import de.legoshi.parkourcalc.core.anglesolver.solver.CertifiedBnb;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
@@ -82,54 +81,5 @@ public class CertifiedBnbEngineTest {
         assertTrue("inertia-1tick-neo must be a foldable dF chain", CertifiedBnb.foldable(spec));
         CertifiedBnb.Result res = certify(fx.model, spec, 10000);
         assertFalse("a foldable dF chain must no longer decline; the certified fold path owns it", res.declined);
-    }
-
-    private static SolveResult solveTier(String pool, boolean thorough, int optSec, long timeoutMs) {
-        SaveFile file = SaveIO.parseSafe(Fixtures.rawPool(pool));
-        assertNotNull(pool + ": capture must parse", file);
-        ExactJumpModel model = ExactJumpModel.forMcVersion(file.mcVersion);
-        InputData inputs = new InputData();
-        SaveIO.applyRowsTo(file, inputs);
-        AngleSolverState state = new AngleSolverState();
-        SaveIO.applyAngleSolverTo(file, state);
-        if (thorough) {
-            state.setEffort(AngleSolverState.Effort.THOROUGH);
-            state.setOptimizeSeconds(optSec);
-        } else {
-            state.setEffort(AngleSolverState.Effort.FAST);
-        }
-        state.clearResult();
-        AngleSolverEngine engine = new AngleSolverEngine(state, Fixtures.buildBoxes(file), inputs, t -> { }, model);
-        engine.solve();
-        long deadline = System.currentTimeMillis() + timeoutMs;
-        while (engine.isSolving() && System.currentTimeMillis() < deadline) {
-            engine.poll();
-            try {
-                Thread.sleep(1);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
-            }
-        }
-        engine.poll();
-        SolveResult r = state.getResult();
-        assertNotNull(pool + ": solve must publish a result inside " + timeoutMs + " ms", r);
-        return r;
-    }
-
-    @Test
-    public void j1150InnerSolvesUnderFast() {
-        SolveResult r = solveTier("hpk_precise/j1150-noturn-inner", false, 0, 40000);
-        assertTrue("j1150 inner FAST must solve", r.isSuccess());
-        System.out.printf(java.util.Locale.ROOT,
-                "j1150-noturn-inner FAST objective %.12f%n", r.getObjectiveValue());
-    }
-
-    @Test
-    public void j154InnerSolvesUnderFast() {
-        SolveResult r = solveTier("hpk_precise/j154-noturn-ja-inner", false, 0, 40000);
-        assertTrue("j154 inner FAST must solve", r.isSuccess());
-        System.out.printf(java.util.Locale.ROOT,
-                "j154-noturn-ja-inner FAST objective %.12f%n", r.getObjectiveValue());
     }
 }
