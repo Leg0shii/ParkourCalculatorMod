@@ -3,9 +3,10 @@
 A saved jump (capture) lives in a check folder, and `ProblemsTest` validates it for that check. To add
 coverage you drop a capture (or a tiny sidecar) into a folder. No Java change, no capture name in any test.
 
-`ProblemsTest` and the other engine-driving suites are tagged `@Category(SlowSolverTests.class)` and
-excluded from the default `:core:test` run; pass `-PslowTests` to run them (CI always does). See
-AGENTS.md "Tests" for the full slow list and when a full run is required.
+`ProblemsTest` and the engine-driving suites that take about 4 s or more are tagged
+`@Category(SlowSolverTests.class)` and excluded from the default `:core:test` run; pass `-PslowTests` to
+run them (CI always does). Quicker engine tests stay in the fast suite. See AGENTS.md "Tests" for the full
+slow list, the shard split and when a full run is required.
 
 The env-gated probes, dumps, screens and benches are not tests and live in their own source set,
 `core/src/research/` (map and run commands in its README).
@@ -14,7 +15,7 @@ The env-gated probes, dumps, screens and benches are not tests and live in their
 anglesolver/
   ProblemsTest.java        every capture under resources/problems/<check>/ is validated for that check; the check
                            classes live in checks/ (one per folder, Checks maps the folder name to the class)
-  YawOrderTest.java        gh-553 (SlowSolverTests): dF >= 0 / dF <= 0 over a tick range (the
+  YawOrderTest.java        gh-553: dF >= 0 / dF <= 0 over a tick range (the
                            yaw may only turn one way, no turn-out). YawOrder carries consecutive-tick F
                            inequalities and one-sided absolute F walls that the YawTies fold does not
                            absorb; the SLP solves them as exact yaw rows, the certified B&B propagates
@@ -26,7 +27,7 @@ anglesolver/
                            also the dF gate: LevelSetAscent skips a spec with a facing wall, which is
                            what the dF direction notice is shown for
   YawDirectionCrossCheckTest.java  gh-553 (SlowSolverTests, one case per FAST solve/ capture under a 60 s
-                           budget): re-solves the capture with one-way dF rows its own solved path
+                           budget; CI cuts it into 8 shard parts, ShardParts): re-solves the capture with one-way dF rows its own solved path
                            already satisfies, so a solution exists by construction and a miss is a
                            regression: three random turning ticks (twice), every turning tick, the
                            longest one-way run, the first (seam) and last tick, zero-turn ticks held

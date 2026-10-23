@@ -97,10 +97,15 @@ def testClasses() {
 	out
 }
 
+def splitClasses() {
+	['de.legoshi.parkourcalc.anglesolver.YawDirectionCrossCheckTest': 8]
+}
+
 def testShardPlan(int shardCount) {
 	def slow = project.hasProperty('slowTests')
 	def verySlow = project.hasProperty('verySlowTests')
 	def weights = loadTestWeights()
+	def split = splitClasses()
 	def items = []
 	testClasses().each { c ->
 		if (!verySlow && c.verySlow) return
@@ -108,6 +113,9 @@ def testShardPlan(int shardCount) {
 		def unmeasured = c.verySlow ? 600.0d : 1.0d
 		if (c.name.endsWith('.ProblemsTest')) {
 			problemCases().each { items << [name: c.name + '#' + it, weight: weights.get(c.name + '#' + it, 1.0d)] }
+		} else if (split.containsKey(c.name)) {
+			int parts = split[c.name]
+			(0..<parts).each { items << [name: c.name + '@' + it, weight: weights.get(c.name, unmeasured) / parts] }
 		} else {
 			items << [name: c.name, weight: weights.get(c.name, unmeasured)]
 		}
@@ -129,9 +137,16 @@ def configureTestShard(Test t) {
 	def shard = testShardPlan(parts[1] as int)[parts[0] as int]
 	def classes = new HashSet<String>()
 	def problems = []
+	def splitParts = [:]
 	shard.items.each {
 		def hash = it.name.indexOf('#')
-		if (hash < 0) {
+		def at = it.name.indexOf('@')
+		if (at >= 0) {
+			def cls = it.name.substring(0, at)
+			classes << cls
+			if (!splitParts.containsKey(cls)) splitParts[cls] = []
+			splitParts[cls] << it.name.substring(at + 1)
+		} else if (hash < 0) {
 			classes << it.name
 		} else {
 			classes << it.name.substring(0, hash)
@@ -142,6 +157,10 @@ def configureTestShard(Test t) {
 		e.directory || classes.contains(e.path.replace('/', '.').replaceAll(/\.class$/, '').replaceAll(/\$.*/, ''))
 	}
 	if (!problems.isEmpty()) t.systemProperty 'pkc.problems', problems.join(',')
+	def split = splitClasses()
+	splitParts.each { cls, list ->
+		t.systemProperty 'pkc.parts.' + cls.substring(cls.lastIndexOf('.') + 1), list.join(',') + '/' + split[cls]
+	}
 }
 
 tasks.register('testShardPlan') {
@@ -172,6 +191,8 @@ tasks.register('testWeights') {
 			}
 		}
 		def rows = loadTestWeights().findAll { k, v -> known.contains(k) }
+		def split = splitClasses()
+		def splitTimes = [:]
 		def measured = { String key, double t, boolean keepShort ->
 			if (!known.contains(key)) return
 			if (keepShort) {
@@ -190,10 +211,13 @@ tasks.register('testWeights') {
 				suite.testcase.each { c ->
 					measured(name + '#' + c.@name.text()[6..-2], c.@time.text().toDouble(), false)
 				}
+			} else if (split.containsKey(name)) {
+				splitTimes[name] = (splitTimes[name] ?: 0.0d) + suite.@time.text().toDouble()
 			} else {
 				measured(name, suite.@time.text().toDouble(), verySlowClasses.contains(name))
 			}
 		}
+		splitTimes.each { name, t -> measured(name, t, verySlowClasses.contains(name)) }
 		def sorted = rows.sort { a, b -> b.value <=> a.value ?: a.key <=> b.key }
 		file('test-weights.properties').text = sorted.collect { k, v -> "${k}=${Math.round(v)}" }.join('\n') + '\n'
 	}
