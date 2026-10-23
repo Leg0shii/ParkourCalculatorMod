@@ -11,6 +11,7 @@ import de.legoshi.parkourcalc.core.sim.Face;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -52,6 +53,8 @@ public final class ConstraintKeyController {
         int tick = selectedTick();
         if (tick < 0) return;
         int bx = look.x, by = look.y, bz = look.z;
+        AABB cobweb = mc.getCobwebContactBox(bx, by, bz);
+        if (cobweb != null && !ConstraintDeriver.isSide(face)) return;
 
         boolean merge = mc.isAltDown();
         if (merge) remove = false;
@@ -103,7 +106,9 @@ public final class ConstraintKeyController {
                 state.clearWall(tick, ConstraintDeriver.axisOf(face), ConstraintDeriver.wallIsLowerBound(face, enter));
             } else {
                 if (hit == null) return;
-                List<AABB> boxes = mc.getBlockCollisionBoxes(bx, by, bz);
+                List<AABB> boxes = cobweb != null
+                        ? Collections.singletonList(cobweb)
+                        : mc.getBlockCollisionBoxes(bx, by, bz);
                 Constraint wall = ConstraintDeriver.deriveWall(face, boxes, hit, enter);
                 if (merge) {
                     state.mergeWall(tick, wall);

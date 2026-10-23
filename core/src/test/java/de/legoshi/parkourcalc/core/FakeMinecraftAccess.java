@@ -9,8 +9,10 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 
 public class FakeMinecraftAccess implements MinecraftAccess {
@@ -24,6 +26,10 @@ public class FakeMinecraftAccess implements MinecraftAccess {
     public float playerPitch;
     public boolean ready = true;
     public double[] pressurePlateFootprint;
+    public final Set<List<Integer>> cobwebs = new HashSet<>();
+    public double insideBlockInset = 0.001;
+    public Vec3dCore eyePosition = Vec3dCore.ZERO;
+    public Vec3dCore lookDirection = Vec3dCore.ZERO;
 
     public void addBlock(int x, int y, int z, AABB... boxes) {
         List<AABB> own = new ArrayList<>(Arrays.asList(boxes));
@@ -34,13 +40,15 @@ public class FakeMinecraftAccess implements MinecraftAccess {
     @Override public Vec3dCore getPlayerPosition() { return Vec3dCore.ZERO; }
     @Override public float getPlayerYaw() { return playerYaw; }
     @Override public float getPlayerPitch() { return playerPitch; }
-    @Override public Vec3dCore getEyePosition() { return Vec3dCore.ZERO; }
-    @Override public Vec3dCore getLookDirection() { return Vec3dCore.ZERO; }
+    @Override public Vec3dCore getEyePosition() { return eyePosition; }
+    @Override public Vec3dCore getLookDirection() { return lookDirection; }
     @Override public BlockHit getLookedAtHit() {
-        if (lookedAtBlock == null || lookedAtFace == null) return null;
+        if (lookedAtBlock == null || lookedAtFace == null) return MinecraftAccess.super.getLookedAtHit();
         return new BlockHit(lookedAtBlock[0], lookedAtBlock[1], lookedAtBlock[2], lookedAtFace, lookedAtHitVec);
     }
     @Override public double[] getPressurePlateFootprint(int x, int y, int z) { return pressurePlateFootprint; }
+    @Override public boolean isCobweb(int x, int y, int z) { return cobwebs.contains(Arrays.asList(x, y, z)); }
+    @Override public double getInsideBlockInset() { return insideBlockInset; }
 
     @Override
     public List<AABB> getCollisionBoxes(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {

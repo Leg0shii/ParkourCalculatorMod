@@ -101,6 +101,7 @@ Click and drag the first box in the world. Hold Shift to move the whole path rig
 | `G` | Toggle UI |
 | `P` | Start/stop playback |
 | `B` | Add the targeted block's footprint (top face) or wall (side face) as a constraint on the selected tick |
+| `B` on a cobweb | Wall constraint on the web's contact box, which sits inside the block by the game version's epsilon (0.001 on 1.8.9 and 1.12.2, 1e-7 on 1.20.4, 1e-5 from 1.21.2) |
 | `Shift+B` | Wall constraint for entering the block's side instead of stopping at it |
 | `Alt+B` | Merge the new footprint or wall with the existing constraint |
 | `Ctrl+B` | Remove that constraint; on a pressure plate, ladder, vine, slime or ice block it adds the cell constraint instead |
