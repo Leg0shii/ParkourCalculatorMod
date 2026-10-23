@@ -133,3 +133,14 @@ jobs:
         run: |
           ./gradlew :core:testJava8 -PslowTests --tests 'de.legoshi.parkourcalc.anglesolver.ProblemsTest' \
             -Dpkc.problems='closedform/*' -Dorg.gradle.configureondemand=true -Dorg.gradle.java.home="$JAVA_HOME"
+      - name: check the closedform cases ran
+        run: |
+          python3 - <<'PY'
+          import glob
+          import xml.etree.ElementTree as ET
+          n = 0
+          for f in glob.glob('core/build/test-results/testJava8/*ProblemsTest.xml'):
+              n += sum(1 for c in ET.parse(f).getroot().iter('testcase') if c.find('skipped') is None)
+          print('closedform cases run on java 8: %d' % n)
+          assert n > 0
+          PY
