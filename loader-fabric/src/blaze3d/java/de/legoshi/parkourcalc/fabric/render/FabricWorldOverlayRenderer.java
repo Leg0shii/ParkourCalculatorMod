@@ -51,8 +51,8 @@ public final class FabricWorldOverlayRenderer {
             cached.close();
         } else {
             boxController.setBoxSize(BoxStyle.tickBoxSize(settings));
-            cached.ensureBuilt(boxController, PathRenderPlan.build(boxController, settings, selection));
-            cached.draw(poseStack.last().pose(), camPos.x, camPos.y, camPos.z);
+            cached.ensureBuilt(boxController, PathRenderPlan.build(boxController, settings, selection), settings);
+            cached.draw(poseStack.last().pose(), camPos.x, camPos.y, camPos.z, BoxStyle.pathMaxDistanceSq(settings));
             Perf.addBoxes(boxController.size());
         }
 

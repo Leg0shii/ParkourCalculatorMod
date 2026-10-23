@@ -88,6 +88,7 @@ public final class PathRenderPlan {
     private static int countedLineVerts;
 
     public final int structuralHash;
+    public final int pathHash;
     public final Set<Integer> selection;
     public final Consumer<BoxRenderer> faceEmitter;
     public final Consumer<BoxRenderer> lineEmitter;
@@ -98,10 +99,11 @@ public final class PathRenderPlan {
     public final int constraintLineVerts;
     public final int reachLineVerts;
 
-    private PathRenderPlan(int structuralHash, Set<Integer> selection, Consumer<BoxRenderer> faceEmitter, Consumer<BoxRenderer> lineEmitter,
+    private PathRenderPlan(int structuralHash, int pathHash, Set<Integer> selection, Consumer<BoxRenderer> faceEmitter, Consumer<BoxRenderer> lineEmitter,
                            Consumer<BoxRenderer> constraintFaceEmitter, Consumer<BoxRenderer> constraintLineEmitter,
                            SelectionPatchSpec patch, int constraintFaceVerts, int constraintLineVerts, int reachLineVerts) {
         this.structuralHash = structuralHash;
+        this.pathHash = pathHash;
         this.selection = selection;
         this.faceEmitter = faceEmitter;
         this.lineEmitter = lineEmitter;
@@ -219,6 +221,7 @@ public final class PathRenderPlan {
             constraintLineVerts = countedLineVerts;
         }
         return new PathRenderPlan(structuralHash(settings, constraintRevision, liveRevision, deviationTick, solverStartTick, solverGoalTick),
+                structuralHash(settings, 0L, 0L, deviationTick, solverStartTick, solverGoalTick),
                 selectedBoxes, faceEmitter, lineEmitter, constraintFaceEmitter, constraintLineEmitter, patch,
                 constraintFaceVerts, constraintLineVerts, reachLineVerts);
     }
