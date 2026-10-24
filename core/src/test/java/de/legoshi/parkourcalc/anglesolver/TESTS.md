@@ -15,6 +15,16 @@ The env-gated probes, dumps, screens and benches are not tests and live in their
 anglesolver/
   ProblemsTest.java        every capture under resources/problems/<check>/ is validated for that check; the check
                            classes live in checks/ (one per folder, Checks maps the folder name to the class)
+  StrafeSideRealizationTest.java  gh-338 strafe side pass on a synthetic 1.8.9 sprint jump: a flick over
+                           45 deg puts the tail on W+D at yaw - 90 (the same input vector, the camera turn
+                           90 deg smaller), smooth arcs, flat paths and no-strafe windows are no-ops, a
+                           facing-constrained tick is never flipped, a free start yaw ties and keeps the
+                           solved side, base side D flips onto A with + 90, the DP matches brute force on
+                           random paths with the fewer-flips tie-break; the game truncates the sine index
+                           toward zero, so a flipped facing that changes sign lands one table step off
+                           (refused when the objective must hold, dropped by the repair loop under a tight
+                           wall while the sign-keeping flips stay byte-exact), the refused first attempt is
+                           reported; fast, no capture. The capture gates are problems/strafeside/
   YawOrderTest.java        gh-553: dF >= 0 / dF <= 0 over a tick range (the
                            yaw may only turn one way, no turn-out). YawOrder carries consecutive-tick F
                            inequalities and one-sided absolute F walls that the YawTies fold does not
@@ -143,6 +153,7 @@ resources/
 | `ils/`            | the ILS polish stays byte-exact feasible and never regresses from the closed-form seed, and returns an infeasible seed untouched |
 | `translation/`    | translation-aware free-start scoring: the zero-width translated score byte-equals the pinned score, and with `cap` the closed-form best translation matches a brute-force grid |
 | `gapattribution/` | a cold Optimize's reported dual-bound gap is honest: credited yaws re-simulate to the reported objective, the gap never prints negative and is never tighter than the true shortfall to a byte-exact-attainable `refObjective` (the hpk_human j1150 and j155 strats) |
+| `strafeside/`     | a Force 45 flick capture solves FAST, the strafe side pass puts at least `minFlipped` ticks on the other A/D side with less anchored yaw jerk than the solved facings, the realized path is feasible byte-exact with the shipped objective, and Apply writes the chosen key and the shifted yaw per tick (gh-338) |
 
 ## Notes on individual solve/ cases
 

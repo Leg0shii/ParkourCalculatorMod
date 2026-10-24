@@ -50,6 +50,7 @@ public final class Expect {
     public List<Integer> feasibleTicks;
 
     public Integer minCompared;
+    public Integer minFlipped;
     public Integer minJumps;
     public Double groundSlip;
 
