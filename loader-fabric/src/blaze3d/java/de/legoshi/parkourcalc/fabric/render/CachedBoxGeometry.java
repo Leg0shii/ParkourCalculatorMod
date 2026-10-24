@@ -14,6 +14,7 @@ import net.minecraft.client.renderer.FogParameters;
 import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.ports.BoxRenderer;
 import de.legoshi.parkourcalc.core.render.PathRenderPlan;
+import de.legoshi.parkourcalc.core.render.PlateSpan;
 import de.legoshi.parkourcalc.core.render.SelectionPatchSpec;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
@@ -47,6 +48,8 @@ public final class CachedBoxGeometry {
 
     private final List<Chunk> chunks = new ArrayList<>();
     private final Chunk tail = new Chunk();
+    private final List<Chunk> plateChunks = new ArrayList<>();
+    private final List<PlateSpan> plateSpans = new ArrayList<>();
     private double anchorX;
     private double anchorY;
     private double anchorZ;
@@ -263,7 +266,8 @@ public final class CachedBoxGeometry {
             }
             plan.constraintLineEmitter.accept(r);
         };
-        bakeInto(tail, plan.constraintFaceEmitter, lines);
+        bakeInto(tail, r -> { }, lines);
+        bakePlates(plan);
         tail.minX = Double.NEGATIVE_INFINITY;
         tail.minY = Double.NEGATIVE_INFINITY;
         tail.minZ = Double.NEGATIVE_INFINITY;
@@ -271,6 +275,23 @@ public final class CachedBoxGeometry {
         tail.maxY = Double.POSITIVE_INFINITY;
         tail.maxZ = Double.POSITIVE_INFINITY;
         tail.ready = true;
+    }
+
+    private void bakePlates(PathRenderPlan plan) {
+        List<PlateSpan> spans = PlateSpan.drawSpans(plan.constraintFaceSpans, plan.constraintFaceVerts);
+        while (plateChunks.size() > spans.size()) {
+            plateChunks.remove(plateChunks.size() - 1).close();
+        }
+        while (plateChunks.size() < spans.size()) {
+            plateChunks.add(new Chunk());
+        }
+        plateSpans.clear();
+        plateSpans.addAll(spans);
+        for (int k = 0; k < spans.size(); k++) {
+            Chunk chunk = plateChunks.get(k);
+            bakeInto(chunk, spans.get(k).slice(plan.constraintFaceEmitter), r -> { });
+            chunk.ready = true;
+        }
     }
 
     private void bakeInto(Chunk chunk, Consumer<BoxRenderer> faces, Consumer<BoxRenderer> lines) {
@@ -333,16 +354,29 @@ public final class CachedBoxGeometry {
                 (float) (anchorZ - camZ)
         );
         List<Chunk> visible = new ArrayList<>(chunks.size() + 1);
-        if (tail.ready) {
-            visible.add(tail);
-        }
         for (Chunk chunk : chunks) {
             if (chunk.ready && (maxDistanceSq == Double.POSITIVE_INFINITY || chunk.distanceSq(camX, camY, camZ) <= maxDistanceSq)) {
                 visible.add(chunk);
             }
         }
-        drawPass(FabricRenderLayers.TRANSLUCENT_FACES, true, model, visible);
+        List<Chunk> faces = new ArrayList<>(visible.size() + plateChunks.size());
+        addPlates(faces, camY, true);
+        faces.addAll(visible);
+        addPlates(faces, camY, false);
+        drawPass(FabricRenderLayers.TRANSLUCENT_FACES, true, model, faces);
+        if (tail.ready) {
+            visible.add(tail);
+        }
         drawPass(FabricRenderLayers.LINES, false, model, visible);
+    }
+
+    private void addPlates(List<Chunk> out, double camY, boolean beforePath) {
+        for (int k = 0; k < plateChunks.size() && k < plateSpans.size(); k++) {
+            Chunk chunk = plateChunks.get(k);
+            if (chunk.ready && plateSpans.get(k).drawBeforePath(camY) == beforePath) {
+                out.add(chunk);
+            }
+        }
     }
 
     private static void drawPass(RenderType type, boolean faces, Matrix4f model, List<Chunk> visible) {
@@ -390,6 +424,11 @@ public final class CachedBoxGeometry {
         }
         chunks.clear();
         tail.close();
+        for (Chunk chunk : plateChunks) {
+            chunk.close();
+        }
+        plateChunks.clear();
+        plateSpans.clear();
         bakedGeometryRev = -1;
         pendingFrom = -1;
         pendingTail = false;

@@ -7,7 +7,10 @@ import de.legoshi.parkourcalc.core.ui.BoxStyle;
 import de.legoshi.parkourcalc.core.ui.SelectionManager;
 import de.legoshi.parkourcalc.core.ui.Settings;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.IntSupplier;
@@ -86,6 +89,7 @@ public final class PathRenderPlan {
     private static long countedGeometryRev = Long.MIN_VALUE;
     private static int countedFaceVerts;
     private static int countedLineVerts;
+    private static List<PlateSpan> countedSpans = Collections.emptyList();
 
     public final int structuralHash;
     public final int chunkHash;
@@ -96,12 +100,14 @@ public final class PathRenderPlan {
     public final Consumer<BoxRenderer> constraintLineEmitter;
     public final SelectionPatchSpec patch;
     public final int constraintFaceVerts;
+    public final List<PlateSpan> constraintFaceSpans;
     public final int constraintLineVerts;
     public final int reachLineVerts;
 
     private PathRenderPlan(int structuralHash, int chunkHash, Set<Integer> selection, Consumer<BoxRenderer> faceEmitter, Consumer<BoxRenderer> lineEmitter,
                            Consumer<BoxRenderer> constraintFaceEmitter, Consumer<BoxRenderer> constraintLineEmitter,
-                           SelectionPatchSpec patch, int constraintFaceVerts, int constraintLineVerts, int reachLineVerts) {
+                           SelectionPatchSpec patch, int constraintFaceVerts, List<PlateSpan> constraintFaceSpans,
+                           int constraintLineVerts, int reachLineVerts) {
         this.structuralHash = structuralHash;
         this.chunkHash = chunkHash;
         this.selection = selection;
@@ -111,6 +117,7 @@ public final class PathRenderPlan {
         this.constraintLineEmitter = constraintLineEmitter;
         this.patch = patch;
         this.constraintFaceVerts = constraintFaceVerts;
+        this.constraintFaceSpans = constraintFaceSpans;
         this.constraintLineVerts = constraintLineVerts;
         this.reachLineVerts = reachLineVerts;
     }
@@ -196,6 +203,7 @@ public final class PathRenderPlan {
         long liveRevision = drawLive ? live.revision() : 0L;
         int constraintFaceVerts = 0;
         int constraintLineVerts = 0;
+        List<PlateSpan> constraintFaceSpans = Collections.emptyList();
         if (drawConstraints || drawLive) {
             long geometryRev = boxController.getGeometryRev();
             if (countKeySource != countedSource || countKeyLive != countedLiveSource
@@ -203,14 +211,16 @@ public final class PathRenderPlan {
                     || geometryRev != countedGeometryRev) {
                 countedFaceVerts = 0;
                 countedLineVerts = 0;
+                List<PlateSpan> spans = new ArrayList<>();
                 if (drawConstraints) {
-                    countedFaceVerts += boxController.constraintFaceVertexCount(source, palette);
+                    countedFaceVerts += boxController.constraintFaceSpans(source, countedFaceVerts, spans);
                     countedLineVerts += boxController.constraintLineVertexCount(source, palette);
                 }
                 if (drawLive) {
-                    countedFaceVerts += boxController.constraintFaceVertexCount(live, palette);
+                    countedFaceVerts += boxController.constraintFaceSpans(live, countedFaceVerts, spans);
                     countedLineVerts += boxController.constraintLineVertexCount(live, palette);
                 }
+                countedSpans = spans;
                 countedSource = countKeySource;
                 countedLiveSource = countKeyLive;
                 countedRevision = constraintRevision;
@@ -219,11 +229,12 @@ public final class PathRenderPlan {
             }
             constraintFaceVerts = countedFaceVerts;
             constraintLineVerts = countedLineVerts;
+            constraintFaceSpans = countedSpans;
         }
         return new PathRenderPlan(structuralHash(settings, constraintRevision, liveRevision, deviationTick, solverStartTick, solverGoalTick),
                 chunkHash(settings, deviationTick, solverStartTick, solverGoalTick),
                 selectedBoxes, faceEmitter, lineEmitter, constraintFaceEmitter, constraintLineEmitter, patch,
-                constraintFaceVerts, constraintLineVerts, reachLineVerts);
+                constraintFaceVerts, constraintFaceSpans, constraintLineVerts, reachLineVerts);
     }
 
     /** Colors and overlay toggles, but NOT selection (which is patched in place). The constraint
