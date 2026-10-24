@@ -75,6 +75,7 @@ public final class FabricWorldOverlayRenderer {
         }
 
         long renderStart = Perf.now();
+        cached.drawConstraintFill(pass);
         cached.drawLines(pass);
         cached.drawFaces(pass);
         cached.finishFrame();

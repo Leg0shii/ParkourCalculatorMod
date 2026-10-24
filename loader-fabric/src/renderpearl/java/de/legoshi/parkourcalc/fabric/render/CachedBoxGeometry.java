@@ -357,8 +357,11 @@ public final class CachedBoxGeometry implements AutoCloseable {
                 }
             }
         }
+    }
+
+    public void drawConstraintFill(RenderPass pass) {
         if (constraintFaceVerts > 0) {
-            drawRange(pass, faceSegments, FabricRenderLayers.constraintFillPipeline(), PrimitiveTopology.TRIANGLES, constraintFaceBase, constraintFaceVerts);
+            drawRange(pass, faceSegments, FabricRenderLayers.constraintFillPipeline(), PrimitiveTopology.TRIANGLES, faceTotal - constraintFaceVerts, constraintFaceVerts);
         }
     }
 

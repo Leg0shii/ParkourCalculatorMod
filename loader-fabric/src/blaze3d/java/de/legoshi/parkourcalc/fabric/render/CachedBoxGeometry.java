@@ -333,13 +333,13 @@ public final class CachedBoxGeometry {
                 (float) (anchorZ - camZ)
         );
         List<Chunk> visible = new ArrayList<>(chunks.size() + 1);
+        if (tail.ready) {
+            visible.add(tail);
+        }
         for (Chunk chunk : chunks) {
             if (chunk.ready && (maxDistanceSq == Double.POSITIVE_INFINITY || chunk.distanceSq(camX, camY, camZ) <= maxDistanceSq)) {
                 visible.add(chunk);
             }
-        }
-        if (tail.ready) {
-            visible.add(tail);
         }
         drawPass(FabricRenderLayers.TRANSLUCENT_FACES, true, model, visible);
         drawPass(FabricRenderLayers.LINES, false, model, visible);
