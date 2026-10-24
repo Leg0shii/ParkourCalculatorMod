@@ -130,15 +130,6 @@ public final class SolverWidgets {
 
     /** Segmented control with an optional per-segment hover tooltip; null array or null entries show none. */
     public static int segmented(String id, String[] labels, String[] tooltips, int selected, float fillWidth) {
-        return segmented(id, labels, tooltips, null, selected, fillWidth, false);
-    }
-
-    public static int dangerSegmented(String id, String[] labels, boolean[] enabled, float fillWidth) {
-        return segmented(id, labels, null, enabled, -1, fillWidth, true);
-    }
-
-    private static int segmented(String id, String[] labels, String[] tooltips, boolean[] enabled, int selected,
-                                 float fillWidth, boolean danger) {
         float scale = s();
         float h = ImGui.getFrameHeight();
         ImDrawList dl = ImGui.getWindowDrawList();
@@ -155,27 +146,24 @@ public final class SolverWidgets {
         for (int i = 0; i < labels.length; i++) {
             float w = segW > 0f ? segW : ImGui.calcTextSize(labels[i]).x + 2f * SEG_PAD_X * scale;
             if (i > 0) ImGui.sameLine(0, 0);
-            boolean live = enabled == null || i >= enabled.length || enabled[i];
-            if (ImGui.invisibleButton("seg" + i, w, h) && live) clicked = i;
+            if (ImGui.invisibleButton("seg" + i, w, h)) clicked = i;
             ImVec2 mn = ImGui.getItemRectMin();
             ImVec2 mx = ImGui.getItemRectMax();
             if (i == 0) { left = mn.x; top = mn.y; bottom = mx.y; }
             right = mx.x;
             boolean on = i == selected;
-            boolean hover = live && ImGui.isItemHovered();
+            boolean hover = ImGui.isItemHovered();
             if (hover && tooltips != null && i < tooltips.length && tooltips[i] != null) {
                 ImGui.setTooltip(tooltips[i]);
             }
-            int hoverFill = danger ? ThemeManager.dangerTintColor(0.18f) : ThemeManager.accentTintColor(0.18f);
-            int fill = on ? onBg : (hover ? hoverFill : offBg);
+            int fill = on ? onBg : (hover ? ThemeManager.accentTintColor(0.18f) : offBg);
             dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, fill, 0f);
             if (i > 0) dl.addLine(mn.x, mn.y, mn.x, mx.y, border, 1f);
             ImVec2 ts = ImGui.calcTextSize(labels[i]);
             float tx = mn.x + (mx.x - mn.x - ts.x) * 0.5f;
             float ty = textY(mn.y, h);
             if (on) Fonts.pushBold();
-            int text = on ? onText : !live ? ThemeManager.textDimColor() : danger ? ThemeManager.dangerColor() : offText;
-            dl.addText(tx, ty, text, labels[i]);
+            dl.addText(tx, ty, on ? onText : offText, labels[i]);
             if (on) Fonts.popBold();
         }
         dl.addRect(left, top, right, bottom, border, ROUND * scale, 0, 1f);
