@@ -2,8 +2,11 @@ package de.legoshi.parkourcalc.core;
 
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
+import de.legoshi.parkourcalc.core.anglesolver.Potion;
+import de.legoshi.parkourcalc.core.anglesolver.PotionDose;
 import de.legoshi.parkourcalc.core.anglesolver.Slipperiness;
 import de.legoshi.parkourcalc.core.anglesolver.SolveResult;
+import de.legoshi.parkourcalc.core.anglesolver.StateOverride;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.ConstraintSelection;
@@ -15,6 +18,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class RunTicksRollbackTest {
@@ -86,6 +90,36 @@ public class RunTicksRollbackTest {
         assertFalse("a partial route is not a solution", result.isSuccess());
         assertTrue("the run must say the path was restored", detail(result, "Run ticks").contains("restored"));
         assertEquals("nothing changed, so nothing to save", 0, dirtyMarks);
+    }
+
+    @Test
+    public void overridesAfterTheJumpStayOnTheirTickAcrossTheSearch() {
+        buildPath();
+        state.getRunTicks().setMaxTicks(3);
+        StateOverride after = state.tickConstraints(3).getOverride();
+        after.setInputs(AngleSolverState.InputMode.KEEP);
+        after.setSprint(AngleSolverState.SprintMode.DERIVE);
+        after.getAdded().add(new PotionDose(Potion.SPEED, 2));
+        after.getRemoved().add(Potion.JUMP_BOOST);
+        RunTicksController runTicks = controller();
+
+        runTicks.start();
+        for (int i = 0; i < 64 && runTicks.isRunning(); i++) runTicks.poll();
+
+        assertFalse("the search must finish, not stall", runTicks.isRunning());
+        int shift = inputs.size() - 4;
+        StateOverride moved = state.tickConstraints(3 + shift).getOverride();
+        assertEquals(AngleSolverState.InputMode.KEEP, moved.getInputs());
+        assertEquals(AngleSolverState.SprintMode.DERIVE, moved.getSprint());
+        assertTrue(moved.hasAdded(Potion.SPEED));
+        assertTrue(moved.getRemoved().contains(Potion.JUMP_BOOST));
+        for (Integer tick : state.populatedTicks()) {
+            if (tick == 3 + shift) continue;
+            StateOverride other = state.tickConstraints(tick).getOverride();
+            assertNull("tick " + tick + " must not pick up the input override", other.getInputs());
+            assertNull("tick " + tick + " must not pick up the sprint override", other.getSprint());
+            assertFalse("tick " + tick + " must not pick up the potion override", other.overridesPotion());
+        }
     }
 
     private static String detail(SolveResult result, String label) {
