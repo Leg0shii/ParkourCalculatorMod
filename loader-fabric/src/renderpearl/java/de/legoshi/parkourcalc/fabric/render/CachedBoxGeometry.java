@@ -15,10 +15,14 @@ import de.legoshi.parkourcalc.core.render.TailPatchGate;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
+import de.legoshi.parkourcalc.core.ui.BoxStyle;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.MeshData;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
+import com.mojang.renderpearl.api.vertex.VertexFormat;
+import net.minecraft.client.renderer.fog.FogRenderer;
+import org.lwjgl.system.MemoryStack;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -36,7 +40,8 @@ public final class CachedBoxGeometry implements AutoCloseable {
     private static final int STRIDE = 16; // POSITION_COLOR
     private static final int MAX_SEGMENT_VERTICES = 12_000_000; // < 2^24-1, divisible by 6
     private static final int FACE_BYTES_PER_BOX = 36 * STRIDE;
-    private static final int LINE_BYTES_PER_BOX = 24 * STRIDE;
+    private static final int LINE_STRIDE = DefaultVertexFormat.POSITION_COLOR_NORMAL_LINE_WIDTH.getVertexSize();
+    private static final int LINE_BYTES_PER_BOX = 48 * LINE_STRIDE;
 
     private List<Segment> faceSegments = new ArrayList<>();
     private List<Segment> lineSegments = new ArrayList<>();
@@ -64,6 +69,7 @@ public final class CachedBoxGeometry implements AutoCloseable {
     private int constraintLineVerts;
     private int reachLineVerts;
     private Set<Integer> bakedSelection = new HashSet<>();
+    private GpuBuffer noFogBuffer;
     private GpuBufferSlice frameTransforms;
     private int[] frameRuns = new int[0];
     private boolean frameReady;
@@ -113,7 +119,7 @@ public final class CachedBoxGeometry implements AutoCloseable {
                     BoxRenderer.Mode.FACES, plan.constraintFaceEmitter);
         }
         if (ok && constraintLineVerts > 0) {
-            ok = writeVerts(lineSegments, lineTotal - constraintLineVerts, PrimitiveTopology.DEBUG_LINES,
+            ok = writeVerts(lineSegments, lineTotal - constraintLineVerts, PrimitiveTopology.LINES,
                     BoxRenderer.Mode.LINES, plan.constraintLineEmitter);
         }
         if (!ok) close();
@@ -156,7 +162,7 @@ public final class CachedBoxGeometry implements AutoCloseable {
             ok = writeVerts(
                     lineSegments,
                     PathVertexLayout.lineMainOffset(from),
-                    PrimitiveTopology.DEBUG_LINES,
+                    PrimitiveTopology.LINES,
                     BoxRenderer.Mode.LINES,
                     r -> boxController.render(r, patch.linePicker, from, n)
             );
@@ -179,13 +185,13 @@ public final class CachedBoxGeometry implements AutoCloseable {
         hitboxStarts = PathVertexLayout.hitboxVertexStarts(boxController, hitboxEdges, useSubtick);
 
         faceSegments = bake(BoxRenderer.Mode.FACES, PrimitiveTopology.TRIANGLES, boxCount * FACE_BYTES_PER_BOX, "parkourcalc cached faces", faceEmitter);
-        lineSegments = bake(BoxRenderer.Mode.LINES, PrimitiveTopology.DEBUG_LINES, boxCount * LINE_BYTES_PER_BOX, "parkourcalc cached lines", lineEmitter);
+        lineSegments = bake(BoxRenderer.Mode.LINES, PrimitiveTopology.LINES, boxCount * LINE_BYTES_PER_BOX, "parkourcalc cached lines", lineEmitter);
 
         hitboxBase = PathVertexLayout.hitboxRegionBase(boxCount);
         arrowBase = hitboxBase + hitboxStarts[boxCount];
         faceTotal = totalVertices(faceSegments);
         lineMainTotal = boxCount * PathVertexLayout.LINE_VERTS_PER_BOX;
-        lineTotal = totalVertices(lineSegments);
+        lineTotal = totalVertices(lineSegments) / 2;
         subtickStarts = useSubtick ? boxController.subtickVertexStarts() : new int[]{0};
     }
 
@@ -201,7 +207,7 @@ public final class CachedBoxGeometry implements AutoCloseable {
                 new Matrix4f()
         );
         frameRuns = runs;
-        RenderSystem.getCompiledPipeline(FabricRenderLayers.thinLinesPipeline());
+        RenderSystem.getCompiledPipeline(FabricRenderLayers.wideLinesPipeline());
         RenderSystem.getCompiledPipeline(FabricRenderLayers.lineDepthPipeline());
         RenderSystem.getCompiledPipeline(FabricRenderLayers.translucentBoxPipeline());
         RenderSystem.getCompiledPipeline(FabricRenderLayers.boxDepthPipeline());
@@ -220,7 +226,7 @@ public final class CachedBoxGeometry implements AutoCloseable {
 
     private void reserveIndexBuffers() {
         reserveIndexBuffer(PrimitiveTopology.TRIANGLES, faceSegments);
-        reserveIndexBuffer(PrimitiveTopology.DEBUG_LINES, lineSegments);
+        reserveIndexBuffer(PrimitiveTopology.LINES, lineSegments);
     }
 
     private static void reserveIndexBuffer(PrimitiveTopology drawMode, List<Segment> segments) {
@@ -229,7 +235,7 @@ public final class CachedBoxGeometry implements AutoCloseable {
             largest = Math.max(largest, segment.vertexCount());
         }
         if (largest > 0) {
-            RenderSystem.getSequentialBuffer(drawMode).getBuffer(largest);
+            RenderSystem.getSequentialBuffer(drawMode).getBuffer(drawMode.indexCount(largest));
         }
     }
 
@@ -297,7 +303,7 @@ public final class CachedBoxGeometry implements AutoCloseable {
         return writeVerts(
                 lineSegments,
                 PathVertexLayout.lineMainOffset(i),
-                PrimitiveTopology.DEBUG_LINES,
+                PrimitiveTopology.LINES,
                 BoxRenderer.Mode.LINES,
                 r -> r.drawBox(boxController.getTickAabb(i), lineArgb)
         );
@@ -306,18 +312,31 @@ public final class CachedBoxGeometry implements AutoCloseable {
     private boolean writeVerts(List<Segment> segments, int globalVertexOffset, PrimitiveTopology drawMode,
                                BoxRenderer.Mode mode, Consumer<BoxRenderer> emit) {
         try (ByteBufferBuilder allocator = new ByteBufferBuilder(8192)) {
-            BufferBuilder builder = new BufferBuilder(allocator, drawMode, DefaultVertexFormat.POSITION_COLOR);
-            emit.accept(new BakingBoxRenderer(new DirectSink(builder), mode, anchorX, anchorY, anchorZ));
+            BufferBuilder builder = new BufferBuilder(allocator, drawMode, formatFor(drawMode));
+            emit.accept(new BakingBoxRenderer(new DirectSink(new VertexWriter(builder, drawMode)), mode, anchorX, anchorY, anchorZ));
             MeshData builtBuffer = builder.build();
             try (builtBuffer) {
                 if (builtBuffer == null) return true;
                 int vertexCount = builtBuffer.drawState().vertexCount();
-                return writeBytesAcrossSegments(segments, globalVertexOffset, vertexCount, builtBuffer.vertexBuffer());
+                return writeBytesAcrossSegments(segments, globalVertexOffset * verticesPerLogical(drawMode), vertexCount,
+                        builtBuffer.vertexBuffer(), strideFor(drawMode));
             }
         }
     }
 
-    private static boolean writeBytesAcrossSegments(List<Segment> segments, int globalVertexOffset, int vertexCount, ByteBuffer source) {
+    private static VertexFormat formatFor(PrimitiveTopology drawMode) {
+        return drawMode == PrimitiveTopology.LINES ? DefaultVertexFormat.POSITION_COLOR_NORMAL_LINE_WIDTH : DefaultVertexFormat.POSITION_COLOR;
+    }
+
+    private static int strideFor(PrimitiveTopology drawMode) {
+        return drawMode == PrimitiveTopology.LINES ? LINE_STRIDE : STRIDE;
+    }
+
+    private static int verticesPerLogical(PrimitiveTopology drawMode) {
+        return drawMode == PrimitiveTopology.LINES ? 2 : 1;
+    }
+
+    private static boolean writeBytesAcrossSegments(List<Segment> segments, int globalVertexOffset, int vertexCount, ByteBuffer source, int stride) {
         int cursorVertex = globalVertexOffset;
         int sourceVertex = 0;
         int remaining = vertexCount;
@@ -327,8 +346,8 @@ public final class CachedBoxGeometry implements AutoCloseable {
             if (remaining > 0 && cursorVertex < segmentEnd) {
                 int localVertex = cursorVertex - segmentStart;
                 int writable = Math.min(remaining, segment.vertexCount() - localVertex);
-                ByteBuffer slice = source.slice(sourceVertex * STRIDE, writable * STRIDE);
-                GpuBufferSlice destination = segment.buffer().slice(localVertex * STRIDE, writable * STRIDE);
+                ByteBuffer slice = source.slice(sourceVertex * stride, writable * stride);
+                GpuBufferSlice destination = segment.buffer().slice(localVertex * stride, writable * stride);
                 RenderSystem.getDevice().createCommandEncoder().writeToBuffer(destination, slice);
                 cursorVertex += writable;
                 sourceVertex += writable;
@@ -384,7 +403,7 @@ public final class CachedBoxGeometry implements AutoCloseable {
     }
 
     public void drawPathLines(RenderPass pass) {
-        drawPathLines(pass, FabricRenderLayers.thinLinesPipeline());
+        drawPathLines(pass, FabricRenderLayers.wideLinesPipeline());
     }
 
     public void drawLineDepth(RenderPass pass) {
@@ -398,16 +417,16 @@ public final class CachedBoxGeometry implements AutoCloseable {
         for (int k = 0; k + 1 < runs.length; k += 2) {
             int a = runs[k];
             int b = runs[k + 1];
-            drawRange(pass, lineSegments, pipeline, PrimitiveTopology.DEBUG_LINES, PathVertexLayout.lineMainOffset(a), (b - a) * PathVertexLayout.LINE_VERTS_PER_BOX);
+            drawRange(pass, lineSegments, pipeline, PrimitiveTopology.LINES, PathVertexLayout.lineMainOffset(a), (b - a) * PathVertexLayout.LINE_VERTS_PER_BOX);
             if (hasSubtick) {
-                drawRange(pass, lineSegments, pipeline, PrimitiveTopology.DEBUG_LINES, lineMainTotal + subtickStarts[a], subtickStarts[b] - subtickStarts[a]);
+                drawRange(pass, lineSegments, pipeline, PrimitiveTopology.LINES, lineMainTotal + subtickStarts[a], subtickStarts[b] - subtickStarts[a]);
             }
         }
-        drawRange(pass, lineSegments, pipeline, PrimitiveTopology.DEBUG_LINES, trailingLineBase, reachLineVerts);
+        drawRange(pass, lineSegments, pipeline, PrimitiveTopology.LINES, trailingLineBase, reachLineVerts);
     }
 
     public void drawConstraintLines(RenderPass pass) {
-        drawRange(pass, lineSegments, FabricRenderLayers.thinLinesPipeline(), PrimitiveTopology.DEBUG_LINES, lineTotal - constraintLineVerts, constraintLineVerts);
+        drawRange(pass, lineSegments, FabricRenderLayers.wideLinesPipeline(), PrimitiveTopology.LINES, lineTotal - constraintLineVerts, constraintLineVerts);
     }
 
     public double anchorX() {
@@ -424,8 +443,8 @@ public final class CachedBoxGeometry implements AutoCloseable {
 
     private void drawRange(RenderPass pass, List<Segment> segments, RenderPipeline pipeline, PrimitiveTopology drawMode, int globalVertexOffset, int count) {
         if (count <= 0) return;
-        int cursor = globalVertexOffset;
-        int remaining = count;
+        int cursor = globalVertexOffset * verticesPerLogical(drawMode);
+        int remaining = count * verticesPerLogical(drawMode);
         int segmentStart = 0;
         for (Segment segment : segments) {
             int segmentEnd = segmentStart + segment.vertexCount();
@@ -443,17 +462,41 @@ public final class CachedBoxGeometry implements AutoCloseable {
 
     private void drawSegment(RenderPass pass, RenderPipeline pipeline, GpuBuffer vbo, PrimitiveTopology drawMode, int firstVertex, int count) {
         RenderSystem.AutoStorageIndexBuffer indexBuffer = RenderSystem.getSequentialBuffer(drawMode);
-        GpuBuffer ibo = indexBuffer.getBuffer(firstVertex + count);
+        GpuBuffer ibo = indexBuffer.getBuffer(drawMode.indexCount(firstVertex + count));
 
         pass.setPipeline(RenderSystem.getCompiledPipeline(pipeline));
         RenderSystem.bindDefaultUniforms(pass);
+        if (drawMode == PrimitiveTopology.LINES) {
+            pass.setUniform("Fog", noFog());
+        }
         pass.setUniform("DynamicTransforms", frameTransforms);
         pass.setVertexBuffer(0, vbo.slice());
         pass.setIndexBuffer(ibo, indexBuffer.type());
-        pass.drawIndexed(count, 1, firstVertex, 0, 0);
+        pass.drawIndexed(drawMode.indexCount(count), 1, drawMode.indexCount(firstVertex), 0, 0);
+    }
+
+    private GpuBufferSlice noFog() {
+        if (noFogBuffer == null) {
+            try (MemoryStack stack = MemoryStack.stackPush()) {
+                ByteBuffer data = stack.malloc(FogRenderer.FOG_UBO_SIZE);
+                for (int i = 0; i < 4; i++) {
+                    data.putFloat(0.0f);
+                }
+                while (data.remaining() >= 4) {
+                    data.putFloat(Float.MAX_VALUE);
+                }
+                data.flip();
+                noFogBuffer = RenderSystem.getDevice().createBuffer(() -> "parkourcalc no fog", GpuBuffer.USAGE_UNIFORM, data);
+            }
+        }
+        return noFogBuffer.slice(0L, FogRenderer.FOG_UBO_SIZE);
     }
 
     private void releaseBuffers() {
+        if (noFogBuffer != null) {
+            noFogBuffer.close();
+            noFogBuffer = null;
+        }
         for (Segment segment : faceSegments) {
             segment.buffer().close();
         }
@@ -475,21 +518,85 @@ public final class CachedBoxGeometry implements AutoCloseable {
     /**
      * Writes vertices straight into one pre-sized BufferBuilder; used for the small per-box patch re-emit.
      */
-        private record DirectSink(BufferBuilder builder) implements BakingBoxRenderer.VertexSink {
+    private record DirectSink(VertexWriter writer) implements BakingBoxRenderer.VertexSink {
 
         @Override
-            public void beginPrimitive(int vertexCount) {
-            }
-
-            @Override
-            public void vertex(float x, float y, float z, int argb) {
-                float a = ((argb >>> 24) & 0xFF) / 255.0f;
-                float r = ((argb >>> 16) & 0xFF) / 255.0f;
-                float g = ((argb >>> 8) & 0xFF) / 255.0f;
-                float b = (argb & 0xFF) / 255.0f;
-                builder.addVertex(x, y, z).setColor(r, g, b, a);
-            }
+        public void beginPrimitive(int vertexCount) {
         }
+
+        @Override
+        public void vertex(float x, float y, float z, int argb) {
+            writer.vertex(x, y, z, argb);
+        }
+    }
+
+    private static final class VertexWriter {
+
+        private final BufferBuilder builder;
+        private final boolean lines;
+        private boolean pending;
+        private float px;
+        private float py;
+        private float pz;
+        private int pargb;
+
+        VertexWriter(BufferBuilder builder, PrimitiveTopology drawMode) {
+            this.builder = builder;
+            this.lines = drawMode == PrimitiveTopology.LINES;
+        }
+
+        void vertex(float x, float y, float z, int argb) {
+            if (!lines) {
+                builder.addVertex(x, y, z).setColor(red(argb), green(argb), blue(argb), alpha(argb));
+                return;
+            }
+            if (!pending) {
+                px = x;
+                py = y;
+                pz = z;
+                pargb = argb;
+                pending = true;
+                return;
+            }
+            pending = false;
+            float dx = x - px;
+            float dy = y - py;
+            float dz = z - pz;
+            float length = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
+            if (length > 0.0f) {
+                dx /= length;
+                dy /= length;
+                dz /= length;
+            } else {
+                dy = 1.0f;
+            }
+            lineVertex(px, py, pz, pargb, dx, dy, dz);
+            lineVertex(x, y, z, argb, dx, dy, dz);
+        }
+
+        private void lineVertex(float x, float y, float z, int argb, float nx, float ny, float nz) {
+            builder.addVertex(x, y, z)
+                    .setColor(red(argb), green(argb), blue(argb), alpha(argb))
+                    .setNormal(nx, ny, nz)
+                    .setLineWidth(BoxStyle.LINE_WIDTH);
+        }
+
+        private static float alpha(int argb) {
+            return ((argb >>> 24) & 0xFF) / 255.0f;
+        }
+
+        private static float red(int argb) {
+            return ((argb >>> 16) & 0xFF) / 255.0f;
+        }
+
+        private static float green(int argb) {
+            return ((argb >>> 8) & 0xFF) / 255.0f;
+        }
+
+        private static float blue(int argb) {
+            return (argb & 0xFF) / 255.0f;
+        }
+    }
 
     /** Accumulates baked vertices, rolling to a new GpuBuffer before a BufferBuilder would overflow. */
     private static final class SegmentedSink implements BakingBoxRenderer.VertexSink {
@@ -501,6 +608,7 @@ public final class CachedBoxGeometry implements AutoCloseable {
 
         private ByteBufferBuilder allocator;
         private BufferBuilder builder;
+        private VertexWriter writer;
         private int currentVertices;
 
         SegmentedSink(PrimitiveTopology drawMode, String label, int estBytes) {
@@ -511,24 +619,22 @@ public final class CachedBoxGeometry implements AutoCloseable {
 
         @Override
         public void beginPrimitive(int vertexCount) {
-            if (builder != null && currentVertices + vertexCount > MAX_SEGMENT_VERTICES) {
+            int physical = vertexCount * verticesPerLogical(drawMode);
+            if (builder != null && currentVertices + physical > MAX_SEGMENT_VERTICES) {
                 flush();
             }
             if (builder == null) {
                 allocator = new ByteBufferBuilder(estBytes);
-                builder = new BufferBuilder(allocator, drawMode, DefaultVertexFormat.POSITION_COLOR);
+                builder = new BufferBuilder(allocator, drawMode, formatFor(drawMode));
+                writer = new VertexWriter(builder, drawMode);
                 currentVertices = 0;
             }
         }
 
         @Override
         public void vertex(float x, float y, float z, int argb) {
-            float a = ((argb >>> 24) & 0xFF) / 255.0f;
-            float r = ((argb >>> 16) & 0xFF) / 255.0f;
-            float g = ((argb >>> 8) & 0xFF) / 255.0f;
-            float b = (argb & 0xFF) / 255.0f;
-            builder.addVertex(x, y, z).setColor(r, g, b, a);
-            currentVertices++;
+            writer.vertex(x, y, z, argb);
+            currentVertices += verticesPerLogical(drawMode);
         }
 
         private void flush() {
@@ -550,6 +656,7 @@ public final class CachedBoxGeometry implements AutoCloseable {
                 allocator.close();
                 allocator = null;
                 builder = null;
+                writer = null;
                 currentVertices = 0;
             }
         }

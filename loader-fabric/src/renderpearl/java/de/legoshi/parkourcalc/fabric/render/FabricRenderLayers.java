@@ -54,11 +54,16 @@ public final class FabricRenderLayers {
                     .withDepthStencilState(new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))
                     .build();
 
+    private static final RenderPipeline WIDE_LINES_PIPELINE =
+            RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
+                    .withLocation("pipeline/parkourcalc_wide_lines")
+                    .withColorTargetState(new ColorTargetState(BlendFunction.TRANSLUCENT))
+                    .withDepthStencilState(new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))
+                    .build();
+
     private static final RenderPipeline LINE_DEPTH_PIPELINE =
-            RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
+            RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
                     .withLocation("pipeline/parkourcalc_line_depth")
-                    .withPrimitiveTopology(PrimitiveTopology.DEBUG_LINES)
-                    .withCull(false)
                     .withColorTargetState(new ColorTargetState(Optional.of(BlendFunction.TRANSLUCENT), GpuFormat.RGBA8_UNORM, ColorTargetState.WRITE_NONE))
                     .withDepthStencilState(new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, true))
                     .build();
@@ -85,6 +90,10 @@ public final class FabricRenderLayers {
 
     public static RenderPipeline thinLinesPipeline() {
         return THIN_LINES_PIPELINE;
+    }
+
+    public static RenderPipeline wideLinesPipeline() {
+        return WIDE_LINES_PIPELINE;
     }
 
     public static RenderPipeline lineDepthPipeline() {
