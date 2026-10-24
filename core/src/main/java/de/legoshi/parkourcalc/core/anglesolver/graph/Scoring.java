@@ -124,6 +124,7 @@ public final class Scoring {
         a.incomingAmp = b.incomingAmp;
         a.incomingSlowness = b.incomingSlowness;
         a.liveMovementFactor = b.liveMovementFactor;
+        a.variant = b.variant;
         a.forwardInputPerTick = b.forwardInputPerTick;
         a.strafeInputPerTick = b.strafeInputPerTick;
         return a;

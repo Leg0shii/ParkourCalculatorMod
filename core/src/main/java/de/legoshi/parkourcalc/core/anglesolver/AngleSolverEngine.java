@@ -780,6 +780,7 @@ public final class AngleSolverEngine {
         phys.strafeInputPerTick = strafeIn;
         phys.sprintPerTick = sprintArr;
         phys.liveMovementFactor = modernCollision;
+        phys.variant = model.variant();
         phys.incomingSprint = effSprint(startTick) == AngleSolverState.SprintMode.DERIVE
                 ? (seed.hasMovementSample() ? seed.sprinting : Boolean.TRUE)
                 : Boolean.TRUE;
