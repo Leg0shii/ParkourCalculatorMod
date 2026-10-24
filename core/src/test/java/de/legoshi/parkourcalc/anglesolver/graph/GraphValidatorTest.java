@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.anglesolver.graph;
 
 import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphBuilder;
+import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunner;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphValidator;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
@@ -118,6 +119,21 @@ public class GraphValidatorTest {
         g.edge("b", Guarantee.TRUE, "a");
         List<ValidationIssue> issues = GraphValidator.validate(g.build());
         assertTrue(hasError(issues, "unguarded loop"));
+    }
+
+    @Test
+    public void shareGuardedCycleIsAccepted() {
+        GraphBuilder g = new GraphBuilder("t", false);
+        g.add("entry", "entry").add("emit", "emit");
+        g.add("a", "router");
+        g.add("p", "foldDriver");
+        g.set("p", "budgetSec", 0);
+        g.set("p", GraphRunner.BUDGET_SHARE_PARAM, 0.5);
+        g.edge("entry", Guarantee.DONE, "a");
+        g.edge("a", Guarantee.TRUE, "p");
+        g.edge("p", Guarantee.IMPROVED, "a");
+        List<ValidationIssue> issues = GraphValidator.validate(g.build());
+        assertFalse(issues.toString(), hasError(issues, "unguarded loop"));
     }
 
     @Test

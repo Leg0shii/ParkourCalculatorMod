@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.core.anglesolver.graph.nodes;
 
 import de.legoshi.parkourcalc.core.anglesolver.graph.Candidate;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
+import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunner;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeOutcome;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeRuntime;
@@ -36,6 +37,7 @@ public final class FacingStepNode implements NodeRuntime {
     private static final int SEED_OBJECTIVE_ROUNDS = 32;
 
     private final int budgetSec;
+    private final double budgetShare;
     private final double windowDeg;
     private final int maxBuckets;
 
@@ -43,6 +45,7 @@ public final class FacingStepNode implements NodeRuntime {
 
     public FacingStepNode(ParamValues params) {
         this.budgetSec = params.getInt("budgetSec");
+        this.budgetShare = params.getDouble(GraphRunner.BUDGET_SHARE_PARAM);
         this.windowDeg = params.getDouble("windowDeg");
         this.maxBuckets = params.getInt("maxBuckets");
     }
@@ -52,7 +55,7 @@ public final class FacingStepNode implements NodeRuntime {
         Guarantee miss = in != null && in.yaws != null ? Guarantee.UNCHANGED : Guarantee.NONE;
         if (state == null || state.ctx != ctx) state = new State(ctx);
         if (state.disabled) return NodeOutcome.of(miss, in);
-        if (!ctx.exact() || budgetSec <= 0) {
+        if (!ctx.exact() || (budgetSec <= 0 && budgetShare <= 0.0)) {
             state.disabled = true;
             return NodeOutcome.of(miss, in);
         }
@@ -68,7 +71,8 @@ public final class FacingStepNode implements NodeRuntime {
                 return NodeOutcome.of(miss, in);
             }
             state.max = ctx.maximize();
-            state.loopDeadline = System.nanoTime() + budgetSec * 1_000_000_000L;
+            state.loopDeadline = budgetSec > 0 ? System.nanoTime() + budgetSec * 1_000_000_000L
+                    : (deadlineNanos > 0 ? deadlineNanos : System.nanoTime());
             state.originalStart = new Vec3dCore(sc.startPos.x, sc.startPos.y, sc.startPos.z);
             boolean incumbentFeasible = in != null && in.yaws != null && in.feasible;
             state.incumbentFeasible = incumbentFeasible;

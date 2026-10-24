@@ -26,6 +26,7 @@ public class NodeCatalogParamsTest {
             for (ParamSpec spec : type.params) {
                 if (spec.key.equals(type.budgetParam) || "budgetMs".equals(spec.key)) continue;
                 if (GraphRunner.RESERVE_FRACTION_PARAM.equals(spec.key) || GraphRunner.RESERVE_CAP_PARAM.equals(spec.key)) continue;
+                if (GraphRunner.BUDGET_SHARE_PARAM.equals(spec.key)) continue;
                 if (!read.contains(spec.key)) unread.add(type.id + "." + spec.key);
             }
         }

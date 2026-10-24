@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.anglesolver;
 
 import de.legoshi.parkourcalc.core.anglesolver.graph.Candidate;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
+import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunner;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeCatalog;
 import de.legoshi.parkourcalc.core.anglesolver.graph.NodeOutcome;
@@ -88,6 +89,52 @@ public class FacingStepNodeTest {
         NodeOutcome out = node.execute(ctx, in, new AtomicBoolean(false),
                 System.nanoTime() + 3_000_000_000L);
         assertEquals(Guarantee.UNCHANGED, out.branch);
+    }
+
+    @Test
+    public void shareAloneRunsTheSweepToTheResolvedDeadline() {
+        int n = 12;
+        int lead = 4;
+        JumpPhysicsInputs sc = phys(n, lead);
+        JumpSpec spec = new JumpSpec(sc, dfChain(lead),
+                new Objective(JumpPhysicsInputs.Axis.X, Objective.Sense.MAX, n));
+        double h = 1.0e-3;
+        StartBox freeBox = new StartBox(sc.startPos.x, sc.startPos.z, 0.0, 0.0,
+                sc.startPos.x - h, sc.startPos.x + h, sc.startPos.z - h, sc.startPos.z + h,
+                0.0, 0.0, 0.0, 0.0);
+        ExactJumpModel model = ExactJumpModel.forMcVersion("1.8.9");
+        GraphContext ctx = new GraphContext(spec, model, freeBox, null, 1.0e-9,
+                new AtomicBoolean(false), null, true, null);
+        FacingStepNode node = new FacingStepNode(NodeCatalog.byId("facingStep").defaultParams()
+                .set("windowDeg", 0.0).set("maxBuckets", 1)
+                .set("budgetSec", 0).set(GraphRunner.BUDGET_SHARE_PARAM, 0.5));
+        Candidate in = Candidate.of(ctx, new double[n]);
+        assertTrue("zero yaws satisfy the dF chain", in.feasible);
+        NodeOutcome first = node.execute(ctx, in, new AtomicBoolean(false), System.nanoTime() + 3_000_000_000L);
+        assertEquals("a share lets the sweep run with a Sweep time of 0", Guarantee.TRUE, first.branch);
+        for (int i = 0; i < 64; i++) {
+            NodeOutcome out = node.execute(ctx, in, new AtomicBoolean(false), System.nanoTime() - 1L);
+            assertNotEquals("the sweep must honour the expired deadline", Guarantee.TRUE, out.branch);
+        }
+    }
+
+    @Test
+    public void shareWithoutAPoolSkipsTheSweep() {
+        int n = 12;
+        int lead = 4;
+        JumpPhysicsInputs sc = phys(n, lead);
+        JumpSpec spec = new JumpSpec(sc, dfChain(lead),
+                new Objective(JumpPhysicsInputs.Axis.X, Objective.Sense.MAX, n));
+        ExactJumpModel model = ExactJumpModel.forMcVersion("1.8.9");
+        GraphContext ctx = new GraphContext(spec, model, null, null, 1.0e-9,
+                new AtomicBoolean(false), null, true, null);
+        FacingStepNode node = new FacingStepNode(NodeCatalog.byId("facingStep").defaultParams()
+                .set("budgetSec", 0).set(GraphRunner.BUDGET_SHARE_PARAM, 0.5));
+        Candidate in = Candidate.of(ctx, new double[n]);
+        for (int i = 0; i < 5; i++) {
+            NodeOutcome out = node.execute(ctx, in, new AtomicBoolean(false), System.nanoTime());
+            assertNotEquals("a zero budget never enters the loop", Guarantee.TRUE, out.branch);
+        }
     }
 
     @Test

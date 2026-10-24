@@ -180,6 +180,18 @@ public class BuiltinGraphsTest {
     }
 
     @Test
+    public void builtinsRunOnSecondsNotShares() {
+        for (SolverGraph g : new SolverGraph[] {
+                BuiltinGraphs.fast(), BuiltinGraphs.fastMultiStart(), BuiltinGraphs.fastRunTicks(),
+                BuiltinGraphs.optimize(10), BuiltinGraphs.optimize(120),
+                BuiltinGraphs.fromBudget(true, true, true, 10, 3, 60), BuiltinGraphs.smooth(0.4)}) {
+            for (GraphNode n : g.nodes) {
+                assertEquals(g.name + "/" + n.id, 0.0, GraphRunner.budgetShare(n.type, n.params), 0.0);
+            }
+        }
+    }
+
+    @Test
     public void customFollowsTheOptimizeShape() {
         SolverGraph g = BuiltinGraphs.fromBudget(true, true, true, 10, 3, 60);
         assertFalse(GraphValidator.hasErrors(GraphValidator.validate(g)));

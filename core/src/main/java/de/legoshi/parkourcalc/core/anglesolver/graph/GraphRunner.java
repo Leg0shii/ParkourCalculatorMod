@@ -9,6 +9,8 @@ public final class GraphRunner {
     public static final int MAX_NODE_VISITS = 1024;
     public static final String RESERVE_FRACTION_PARAM = "reserveFraction";
     public static final String RESERVE_CAP_PARAM = "reserveCapSec";
+    public static final String BUDGET_SHARE_PARAM = "budgetShare";
+    private static final long UNCAPPED = -1L;
 
     private GraphRunner() {
     }
@@ -55,18 +57,19 @@ public final class GraphRunner {
                 rt = cur.type.factory.create(cur.params);
                 runtimes.put(cur.id, rt);
             }
-            long budgetNanos = budgetNanos(cur, totalNanos);
             long now = System.nanoTime();
-            long deadline = budgetNanos > 0 ? now + budgetNanos : 0L;
+            long pendingReserve = overall > 0 && !reserves.isEmpty() ? pendingReserve(graph, cur, reserves, visits) : 0L;
+            long poolNanos = overall > 0 ? Math.max(0L, overall - pendingReserve - now) : UNCAPPED;
+            long budgetNanos = budgetNanos(cur, totalNanos, poolNanos);
+            long deadline = budgetNanos >= 0 ? now + budgetNanos : 0L;
             if (overall > 0 && (deadline == 0L || overall < deadline)) deadline = overall;
             if (overall > 0 && now >= overall) deadline = now;
-            long pendingReserve = overall > 0 && !reserves.isEmpty() ? pendingReserve(graph, cur, reserves, visits) : 0L;
             if (pendingReserve > 0) {
                 long reserved = overall - pendingReserve;
                 if (reserved < now) reserved = now;
                 if (deadline == 0L || reserved < deadline) deadline = reserved;
             }
-            AtomicBoolean token = ctx.beginNode(cur, deadline, budgetNanos);
+            AtomicBoolean token = ctx.beginNode(cur, deadline, Math.max(0L, budgetNanos));
             Guarantee taken = null;
             try {
                 NodeOutcome outcome = rt.execute(ctx, cand, token, deadline);
@@ -120,15 +123,37 @@ public final class GraphRunner {
         ctx.progress.report(cand.yaws, ctx.exactObjective(cand.yaws), violation, violation <= ctx.feasTol);
     }
 
-    private static long budgetNanos(GraphNode n, long totalNanos) {
+    private static long budgetNanos(GraphNode n, long totalNanos, long poolNanos) {
         long ms = budgetMillis(n);
         if (ms > 0) return ms * 1_000_000L;
-        String p = n.type.budgetParam;
-        if (p != null) {
-            int secs = n.params.getInt(p);
-            if (secs > 0) return secs * 1_000_000_000L;
+        long fixed = fixedNanos(n);
+        double share = budgetShare(n.type, n.params);
+        if (share > 0.0) {
+            if (poolNanos < 0) return fixed > 0 ? fixed : 0L;
+            long shared = (long) (poolNanos * share);
+            return fixed > 0 ? Math.min(fixed, shared) : shared;
         }
-        return reserveNanos(n, totalNanos);
+        if (fixed > 0) return fixed;
+        long reserve = reserveNanos(n, totalNanos);
+        return reserve > 0 ? reserve : UNCAPPED;
+    }
+
+    private static long fixedNanos(GraphNode n) {
+        String p = n.type.budgetParam;
+        if (p == null) return 0L;
+        int secs = n.params.getInt(p);
+        return secs > 0 ? secs * 1_000_000_000L : 0L;
+    }
+
+    public static boolean sharing(NodeType type) {
+        for (ParamSpec p : type.params) {
+            if (BUDGET_SHARE_PARAM.equals(p.key)) return true;
+        }
+        return false;
+    }
+
+    public static double budgetShare(NodeType type, ParamValues params) {
+        return sharing(type) ? params.getDouble(BUDGET_SHARE_PARAM) : 0.0;
     }
 
     private static long budgetMillis(GraphNode n) {

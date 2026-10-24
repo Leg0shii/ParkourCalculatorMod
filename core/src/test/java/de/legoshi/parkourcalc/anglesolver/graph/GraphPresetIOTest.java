@@ -1,8 +1,10 @@
 package de.legoshi.parkourcalc.anglesolver.graph;
 
 import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
+import de.legoshi.parkourcalc.core.anglesolver.graph.GraphNode;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphPresetFile;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphPresetIO;
+import de.legoshi.parkourcalc.core.anglesolver.graph.GraphRunner;
 import de.legoshi.parkourcalc.core.anglesolver.graph.SolverGraph;
 import de.legoshi.parkourcalc.core.save.FileSystemSaveStore;
 import de.legoshi.parkourcalc.core.save.Result;
@@ -48,6 +50,33 @@ public class GraphPresetIOTest {
         String before = GraphPresetIO.toJson(GraphPresetIO.fromGraph(BuiltinGraphs.optimize(45)));
         String after = GraphPresetIO.toJson(GraphPresetIO.fromGraph(rt(BuiltinGraphs.optimize(45))));
         assertEquals(before, after);
+    }
+
+    @Test
+    public void budgetShareRoundTrips() {
+        SolverGraph g = BuiltinGraphs.optimize(45);
+        g.node("cert").params.set(GraphRunner.BUDGET_SHARE_PARAM, 0.25);
+        SolverGraph back = rt(g);
+        assertEquals(0.25, back.node("cert").params.getDouble(GraphRunner.BUDGET_SHARE_PARAM), 0.0);
+        assertEquals(0.0, back.node("ils").params.getDouble(GraphRunner.BUDGET_SHARE_PARAM), 0.0);
+    }
+
+    @Test
+    public void presetSavedBeforeBudgetSharesLoadsWithTheShareOff() {
+        GraphPresetFile f = GraphPresetIO.fromGraph(BuiltinGraphs.optimize(45));
+        for (GraphPresetFile.Node n : f.nodes) {
+            for (Iterator<GraphPresetFile.Param> it = n.params.iterator(); it.hasNext(); ) {
+                if (GraphRunner.BUDGET_SHARE_PARAM.equals(it.next().key)) it.remove();
+            }
+        }
+        Result<SolverGraph> r = GraphPresetIO.materialize(f);
+        assertTrue(r.error, r.ok);
+        for (GraphNode n : r.value.nodes) {
+            if (!GraphRunner.sharing(n.type)) continue;
+            assertEquals(n.id, 0.0, n.params.getDouble(GraphRunner.BUDGET_SHARE_PARAM), 0.0);
+        }
+        assertEquals(BuiltinGraphs.optimize(45).node("cert").params.getInt("budgetSec"),
+                r.value.node("cert").params.getInt("budgetSec"));
     }
 
     @Test

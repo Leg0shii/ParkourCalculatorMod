@@ -116,3 +116,35 @@ The node-param editor is spec-driven (`GraphEditorWindow` iterates `type.params`
 the three optimize-cap params removes their fields automatically and the label changes flow
 through with no UI code. Old JSON presets that still carry the removed keys load fine:
 `GraphPresetIO.applyParam` silently ignores unknown keys, and re-saving drops them.
+
+## Addendum 2026-10-25: shares of the remaining solve time (issue #449)
+
+Issue #449 (opened two days after this record, carrying the pooled-budget variant of #222)
+asked for the one-knob allocation that Direction B wanted, and it is now built, in the shape
+that keeps the two objections above intact:
+
+- Every node with a `budgetSec` ceiling also carries `budgetShare` (0 to 1, default 0, key
+  `GraphRunner.BUDGET_SHARE_PARAM`). A share is a cap, not a partition: the node's budget is
+  `share * (overall deadline - now - reserves pending downstream)`, resolved in
+  `GraphRunner` when the node starts. The pool is the wall clock to the overall deadline, so
+  a node's consumption is debited the moment it ends and an early finisher hands its time on
+  to the nodes after it (decision 2 of #449, option b, the `POOL_SHARE` semantics of #222).
+  Shares therefore never need to sum to anything; `budgetShare = 1` on the last stage is
+  "whatever is left".
+- No global timer comes back. There is no budget-source node and no runtime apportionment
+  table: the overall deadline the effort tier already sets is the only pool, and the
+  per-node resolution stays a local `min` of the caps the node declares (`budgetMs`, then
+  the smaller of `budgetSec` and the share). A node that sets both seconds and a share runs
+  for the smaller one.
+- Without an overall deadline a share has no pool: the node falls back to its `budgetSec`
+  when that is set, otherwise it gets a zero budget and passes through (the "pool exhaustion
+  yields a zero-budget execution rather than a hang" case of #222). Because of that fallback
+  a share-bearing node guards a cycle unconditionally (`NodeType.budgetGuarded`), so the
+  validator needs no knowledge of the run budget.
+- `facingStep`, whose sweep deadline spans its revisits, takes the resolved share deadline
+  of its first visit as the loop deadline when `budgetSec` is 0.
+- Migration is additive: presets saved without the key load with the share off, the
+  built-in Fast, Fast (multi-start), Optimize and Smooth graphs keep their seconds and stay
+  byte-identical in behaviour (`BuiltinGraphsTest.builtinsRunOnSecondsNotShares`). Moving
+  the Optimize tier's static fractions onto shares is still the measured follow-up that #222
+  left out of scope.

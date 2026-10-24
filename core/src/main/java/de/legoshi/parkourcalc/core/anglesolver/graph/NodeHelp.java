@@ -47,6 +47,13 @@ public final class NodeHelp {
                 + " shares the overall solve time. Higher lets it search longer.");
         shared("budgetMs", "A finer millisecond cap on this stage, used to bail out fast when it is only"
                 + " a first attempt. 0 means no millisecond cap, so the second-based limit applies.");
+        shared("budgetShare", "The share of the solve time still left when this stage starts that it may"
+                + " use, 0 to 1. 0.5 takes half of what remains, so a stage that finishes early hands its"
+                + " time on to the ones after it, and changing the Budget of the solver window scales every"
+                + " share with it. 0 turns the share off and the seconds limit alone applies; with both set"
+                + " the smaller wins. Time held back for a later stage's reserve is not part of the pool."
+                + " Without a solve time budget the share is empty and the stage is skipped, unless it has a"
+                + " seconds limit.");
         shared("tickCap", "If the jump takes more than this many ticks, skip this stage entirely."
                 + " A guard so very long jumps do not make the solve crawl.");
         shared("labelSuffix", "Optional text added to the solution's name when this stage succeeds, so you"
@@ -153,6 +160,10 @@ public final class NodeHelp {
                 + " the best ones to the polish and translate stages in a loop, keeping the best landing.");
         param("facingStep", "budgetSec", "Seconds the sweep may run. Unlike other stages, 0 turns the sweep"
                 + " off entirely instead of sharing the overall solve time.");
+        param("facingStep", "budgetShare", "Like Sweep time, but as a share of the solve time left when the"
+                + " sweep first runs, 0 to 1; the sweep keeps that deadline across its revisits. Lets the"
+                + " sweep run with a Sweep time of 0. With both set the smaller wins. Without a solve time"
+                + " budget the sweep is skipped unless it has a Sweep time.");
         param("facingStep", "windowDeg", "How far, in degrees, the run-up aim may wander either side of its"
                 + " current value. 0 tries only the current aim; larger explores more run-up angles.");
         param("facingStep", "maxBuckets", "The most distinct run-up aims to try. Caps the work when the"
