@@ -81,6 +81,7 @@ public final class Settings {
     private static final boolean DEFAULT_VIEW_ANGLE_SOLVER = false;
     private static final boolean DEFAULT_VIEW_VELOCITY_MAP = false;
     private static final boolean DEFAULT_VIEW_TURN_PROFILE = false;
+    private static final boolean DEFAULT_VIEW_SENSE_FINDER = false;
     private static final boolean DEFAULT_VIEW_RECORDER = false;
     private static final int DEFAULT_TURN_PROFILE_ATTEMPTS = 20_000;
     private static final int DEFAULT_ONEJUMP_SPREAD_ATTEMPTS = 1000;
@@ -219,6 +220,7 @@ public final class Settings {
     public boolean viewAngleSolver = DEFAULT_VIEW_ANGLE_SOLVER;
     public boolean viewVelocityMap = DEFAULT_VIEW_VELOCITY_MAP;
     public boolean viewTurnProfile = DEFAULT_VIEW_TURN_PROFILE;
+    public boolean viewSenseFinder = DEFAULT_VIEW_SENSE_FINDER;
     public boolean viewOnejumpSetup = false;
     public boolean viewOnejumpKeys = false;
     public int onejumpMacroMode = 0;
@@ -345,6 +347,7 @@ public final class Settings {
         viewAngleSolver = DEFAULT_VIEW_ANGLE_SOLVER;
         viewVelocityMap = DEFAULT_VIEW_VELOCITY_MAP;
         viewTurnProfile = DEFAULT_VIEW_TURN_PROFILE;
+        viewSenseFinder = DEFAULT_VIEW_SENSE_FINDER;
         viewOnejumpSetup = false;
         viewOnejumpKeys = false;
         onejumpMacroMode = 0;

@@ -268,10 +268,10 @@ public final class Application {
         angleSolverWindow.setRunTicksControls(runTicks);
         noTurnSearch = new NoTurnSearchController(inputData, runner, boxController, saveController, angleSolverState,
                 angleSolverEngine, forwardModel, mc, this::onUserChange, this::pushHudMessage, runTicks::isRunning);
-        senseSearch = new SenseSearchController(noTurnSearch, inputData, saveController, angleSolverEngine,
-                forwardModel, this::onUserChange, this::pushHudMessage);
+        senseSearch = new SenseSearchController(inputData, saveController, angleSolverState, angleSolverEngine,
+                forwardModel, this::onUserChange, mc::getMouseSensitivity);
         de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow stratfinderWindow =
-                new de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow(noTurnSearch, senseSearch);
+                new de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow(noTurnSearch);
         turnProfile = new TurnProfileController(angleSolverEngine, angleSolverState, inputData,
                 () -> settings.viewOnejumpSetup || settings.viewTurnProfile || settings.viewOnejumpKeys,
                 mc::getMouseSensitivity, () -> settings.turnProfileAttempts, () -> settings.onejumpSpreadAttempts,
@@ -384,6 +384,8 @@ public final class Application {
         overlayManager.register(graphEditorWindow);
         overlayManager.register(stratfinderWindow);
         overlayManager.register(turnProfileWindow);
+        overlayManager.register(new de.legoshi.parkourcalc.core.ui.anglesolver.SenseFinderWindow(senseSearch, settings,
+                this::saveSettings));
         overlayManager.register(onejumpKeysWindow);
         overlayManager.register(onejumpSetupWindow);
         overlayManager.register(new de.legoshi.parkourcalc.core.ui.RecorderWindow(recorder, settings, this::toggleRecording,

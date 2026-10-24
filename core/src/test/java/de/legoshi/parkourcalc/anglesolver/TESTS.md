@@ -116,6 +116,12 @@ anglesolver/
                            MIN-sense offset sign; fast, no capture
   NoTurnPlayableUnitTest.java  reversal count, the reversal key in StructurePoolDriver.betterResult, and
                            NoTurnCertifier.landingGiveBack (margin above the near landing wall); fast
+  SenseFinderTest.java     Sense Finder on hpk_human/d10/j703 built from the plain Angle Solver setup (fast):
+                           the turn, the carried jump window, every row over 0 to 200% re-forwards to its
+                           offset, the three sort orders, later-tick margins never below the carried edge
+  SenseFinderSolvedWindowTest.java  (SlowSolverTests) the solved jump window of j703 holds the human 1.93,
+                           the rest re-solved per jump angle lists a 1.95 row (about +0.00177) and a 1.78
+                           row (about +0.00205) with their turn shapes and per-tick margins
   harness/                 shared plumbing; no test lives here (NoTurnCapture loads a capture by path or
                            pool key into model + inputs + state, builds the engine spec, and adds the
                            synthetic free-start box the no-turn benches share)

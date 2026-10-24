@@ -113,13 +113,11 @@ public final class StratfinderWindow implements RenderInterface {
     private static final int MAX_FACING_SEGMENTS = 4;
 
     private final Host host;
-    private final SensefinderTab senseTab;
     private final int[] budgetBuf = new int[1];
     private boolean open;
 
-    public StratfinderWindow(Host host, SensefinderTab.Host senseHost) {
+    public StratfinderWindow(Host host) {
         this.host = host;
-        this.senseTab = new SensefinderTab(senseHost, this::close);
     }
 
     public void open() {
@@ -163,20 +161,11 @@ public final class StratfinderWindow implements RenderInterface {
     }
 
     private void renderBody() {
-        if (!Controls.beginTabBar("##stratfinder_tabs")) return;
-        if (Controls.beginTab("Lines")) {
-            renderLines();
-            renderSelected();
-            ThemeManager.sectionSpacing();
-            renderProgress();
-            renderActions();
-            Controls.endTab();
-        }
-        if (Controls.beginTab("Sensefinder")) {
-            senseTab.render();
-            Controls.endTab();
-        }
-        Controls.endTabBar();
+        renderLines();
+        renderSelected();
+        ThemeManager.sectionSpacing();
+        renderProgress();
+        renderActions();
     }
 
     private void renderActions() {

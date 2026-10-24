@@ -1,82 +1,115 @@
 package de.legoshi.parkourcalc.core;
 
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverEngine;
-import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnKeys;
-import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnProblem;
-import de.legoshi.parkourcalc.core.anglesolver.noturn.NoTurnResult;
+import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.noturn.SenseFinder;
 import de.legoshi.parkourcalc.core.anglesolver.solver.ExactJumpModel;
-import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
-import de.legoshi.parkourcalc.core.ui.HudMessages;
 import de.legoshi.parkourcalc.core.ui.InputData;
-import de.legoshi.parkourcalc.core.ui.anglesolver.SensefinderTab;
-import de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow.Ending;
-import de.legoshi.parkourcalc.core.ui.theme.HudMessageStyle;
+import de.legoshi.parkourcalc.core.ui.anglesolver.SenseFinderWindow;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.DoubleSupplier;
 import java.util.function.IntConsumer;
-import java.util.function.ObjIntConsumer;
 
-public final class SenseSearchController implements SensefinderTab.Host {
+public final class SenseSearchController implements SenseFinderWindow.Host {
 
-    public static final int MIN_PERCENT = 1;
-    public static final int MAX_PERCENT = 200;
-    public static final int DEFAULT_FROM_PERCENT = 100;
     private static final long WINDOW_PROBE_NANOS = 1_500_000_000L;
+    private static final long ANCHOR_NANOS = 1_500_000_000L;
+    private static final long MARGIN_PROBE_NANOS = 300_000_000L;
+    private static final long RERANK_NANOS = 250_000_000L;
+    private static final long REFRESH_NANOS = 500_000_000L;
 
-    private final NoTurnSearchController noTurn;
     private final InputData inputData;
     private final SaveController saveController;
+    private final AngleSolverState state;
     private final AngleSolverEngine engine;
     private final ExactJumpModel model;
     private final IntConsumer onUserChange;
-    private final ObjIntConsumer<String> pushMessage;
+    private final DoubleSupplier gameSense;
 
     private final AtomicBoolean cancel = new AtomicBoolean(false);
 
     private Thread thread;
     private volatile boolean done;
-    private volatile Ending ending = Ending.NONE;
     private volatile String stage = "";
     private volatile double fraction;
     private volatile String outcome = "";
     private volatile List<SenseFinder.Candidate> found = Collections.emptyList();
     private volatile List<SenseFinder.Candidate> ranked = Collections.emptyList();
+    private volatile SenseFinder.Candidate gameRow;
+    private volatile float gameRowSens = Float.NaN;
     private volatile SenseFinder.Candidate selected;
-    private volatile SenseFinder.Mode rankMode = SenseFinder.Mode.SENSE;
-    private volatile int fromPercent = DEFAULT_FROM_PERCENT;
-    private volatile NoTurnResult source;
-    private volatile int sourceIndex;
-    private volatile SenseFinder.Turn turn;
+    private volatile SenseFinder.Mode rankMode = SenseFinder.Mode.WEAKEST;
     private volatile SenseFinder.Window window;
+    private volatile SenseFinder.Turn searched;
+    private volatile String applied = "";
+    private float minPercent = 0f;
+    private float maxPercent = 200f;
+    private int firstTick;
+    private int lastTick;
+    private SenseFinder.Turn current;
+    private int currentStartTick;
+    private boolean currentFreeStartYaw;
+    private boolean stale = true;
+    private long refreshedNanos;
+    private int searchedStartTick;
+    private boolean searchedFreeStartYaw;
     private long startNanos;
     private long endNanos;
-    private int startTick;
-    private boolean freeStartYaw;
+    private long lastRerank;
 
-    public SenseSearchController(NoTurnSearchController noTurn, InputData inputData, SaveController saveController,
+    public SenseSearchController(InputData inputData, SaveController saveController, AngleSolverState state,
                                  AngleSolverEngine engine, ExactJumpModel model, IntConsumer onUserChange,
-                                 ObjIntConsumer<String> pushMessage) {
-        this.noTurn = noTurn;
+                                 DoubleSupplier gameSense) {
         this.inputData = inputData;
         this.saveController = saveController;
+        this.state = state;
         this.engine = engine;
         this.model = model;
         this.onUserChange = onUserChange;
-        this.pushMessage = pushMessage;
+        this.gameSense = gameSense;
+    }
+
+    @Override
+    public SenseFinder.Turn turn() {
+        long now = System.nanoTime();
+        if ((stale || now - refreshedNanos > REFRESH_NANOS) && !engine.isSolving()) {
+            stale = false;
+            refreshedNanos = now;
+            current = null;
+            AngleSolverEngine.PathSnapshot snap = model == null ? null
+                    : engine.snapshotPath(state.getStartTick(), state.getLandingTick());
+            if (snap != null) {
+                SenseFinder.Turn t = SenseFinder.turnOf(model, snap);
+                if (t.angles() > 0 && !Double.isNaN(t.referenceOffset())) {
+                    current = t;
+                    currentStartTick = snap.startTick;
+                    currentFreeStartYaw = snap.freeStartYaw;
+                }
+            }
+        }
+        return current;
+    }
+
+    @Override
+    public int startTick() {
+        return currentStartTick;
+    }
+
+    @Override
+    public float gameSense() {
+        return (float) gameSense.getAsDouble();
     }
 
     @Override
     public boolean isBusy() {
         return thread != null;
-    }
-
-    @Override
-    public Ending ending() {
-        return ending;
     }
 
     @Override
@@ -102,8 +135,23 @@ public final class SenseSearchController implements SensefinderTab.Host {
     }
 
     @Override
+    public String applied() {
+        return applied;
+    }
+
+    @Override
     public List<SenseFinder.Candidate> results() {
         return ranked;
+    }
+
+    @Override
+    public SenseFinder.Candidate gameRow() {
+        return gameRow;
+    }
+
+    @Override
+    public boolean searchedGameSense() {
+        return !Float.isNaN(gameRowSens);
     }
 
     @Override
@@ -112,41 +160,13 @@ public final class SenseSearchController implements SensefinderTab.Host {
     }
 
     @Override
-    public SenseFinder.Turn turn() {
-        return turn;
+    public SenseFinder.Turn searchedTurn() {
+        return searched;
     }
 
     @Override
     public SenseFinder.Window window() {
         return window;
-    }
-
-    @Override
-    public int startTick() {
-        return startTick;
-    }
-
-    @Override
-    public boolean hasLine() {
-        return noTurn.selected() != null && noTurn.problem() != null;
-    }
-
-    @Override
-    public String lineText() {
-        NoTurnResult r = source;
-        if (r == null) return null;
-        return "line " + sourceIndex + "  " + NoTurnKeys.describe(r.combos);
-    }
-
-    @Override
-    public boolean lineStale() {
-        NoTurnResult r = source;
-        return r != null && r != noTurn.selected();
-    }
-
-    @Override
-    public String goalWallLabel() {
-        return noTurn.goalWallLabel();
     }
 
     @Override
@@ -162,51 +182,61 @@ public final class SenseSearchController implements SensefinderTab.Host {
     }
 
     @Override
-    public int fromPercent() {
-        return fromPercent;
+    public float minPercent() {
+        return minPercent;
     }
 
     @Override
-    public void setFromPercent(int percent) {
-        fromPercent = Math.max(MIN_PERCENT, Math.min(MAX_PERCENT, percent));
+    public float maxPercent() {
+        return maxPercent;
+    }
+
+    @Override
+    public void setRange(float min, float max) {
+        minPercent = Math.max(0f, Math.min(200f, min));
+        maxPercent = Math.max(0f, Math.min(200f, max));
+    }
+
+    @Override
+    public int firstTick() {
+        return firstTick;
+    }
+
+    @Override
+    public int lastTick() {
+        return lastTick;
+    }
+
+    @Override
+    public void setTicks(int first, int last) {
+        firstTick = Math.max(0, first);
+        lastTick = Math.max(0, last);
     }
 
     @Override
     public void start() {
-        if (thread != null) return;
-        NoTurnResult r = noTurn.selected();
-        NoTurnProblem p = noTurn.problem();
-        if (r == null || p == null || r.yaws == null) {
-            pushMessage.accept("Sensefinder: select a line first", HudMessageStyle.COLOR_WARN);
-            return;
-        }
-        if (noTurn.isBusy() || engine.isSolving()) {
-            pushMessage.accept("Finish the current solve first", HudMessageStyle.COLOR_WARN);
-            return;
-        }
-        JumpSpec spec = p.buildSpec(r.combos, r.sprint, r.turnCombo, r.ja);
-        SenseFinder.Turn t = SenseFinder.turnOf(model, spec, r.yaws, r.startX, r.startZ);
-        source = r;
-        sourceIndex = noTurn.results().indexOf(r) + 1;
-        startTick = noTurn.startTick();
-        freeStartYaw = noTurn.freeStartYaw();
-        turn = t;
+        if (thread != null || engine.isSolving()) return;
+        stale = true;
+        SenseFinder.Turn t = turn();
+        if (t == null) return;
+        SenseFinder.Config cfg = new SenseFinder.Config();
+        cfg.minSens = Math.min(minPercent, maxPercent) / 200f;
+        cfg.maxSens = Math.max(minPercent, maxPercent) / 200f;
+        cfg.scopeFirst = firstTick > 0 ? firstTick - 1 - currentStartTick : -1;
+        cfg.scopeLast = lastTick > 0 ? lastTick - 1 - currentStartTick : -1;
+        float game = gameSense();
+        searched = t;
+        searchedStartTick = currentStartTick;
+        searchedFreeStartYaw = currentFreeStartYaw;
         window = null;
         found = Collections.emptyList();
         ranked = Collections.emptyList();
+        gameRow = null;
+        gameRowSens = Float.NaN;
         selected = null;
-        if (t.angles() == 0) {
-            ending = Ending.EMPTY;
-            outcome = "the line has no turn";
-            pushMessage.accept("Sensefinder: the line has no turn", HudMessageStyle.COLOR_WARN);
-            return;
-        }
-        SenseFinder.Config cfg = new SenseFinder.Config();
-        cfg.minSens = fromPercent / 200f;
-        cfg.maxSens = 1f;
+        applied = "";
         cancel.set(false);
         done = false;
-        ending = Ending.NONE;
         outcome = "";
         stage = "starting";
         fraction = 0.0;
@@ -214,15 +244,7 @@ public final class SenseSearchController implements SensefinderTab.Host {
         endNanos = startNanos;
         thread = new Thread(() -> {
             try {
-                SenseFinder.Progress progress = (s, f) -> {
-                    stage = s;
-                    fraction = Math.max(0.0, Math.min(1.0, f));
-                };
-                SenseFinder.Window w = SenseFinder.solvedWindow(t, WINDOW_PROBE_NANOS, cancel, progress);
-                window = w;
-                List<SenseFinder.Candidate> list = SenseFinder.run(t, cfg, w, cancel, progress);
-                found = Collections.unmodifiableList(new ArrayList<>(list));
-                rerank();
+                search(t, cfg, game);
             } catch (Throwable ex) {
                 ex.printStackTrace();
                 stage = "error: " + ex;
@@ -232,7 +254,58 @@ public final class SenseSearchController implements SensefinderTab.Host {
         }, "sense-finder");
         thread.setDaemon(true);
         thread.start();
-        pushMessage.accept("Sense search started", HudMessages.COLOR_DEFAULT);
+    }
+
+    private void search(SenseFinder.Turn t, SenseFinder.Config cfg, float game) throws Exception {
+        int threads = Math.max(1, Math.min(4, Runtime.getRuntime().availableProcessors() - 1));
+        SenseFinder.Window w = SenseFinder.solvedWindow(t, WINDOW_PROBE_NANOS, cancel, (s, f) -> stage = s);
+        window = w;
+        if (w == null || cancel.get()) return;
+        List<SenseFinder.Anchor> anchors = SenseFinder.anchors(t, w, cfg.anchorStepDeg, ANCHOR_NANOS, threads, cancel,
+                (s, f) -> {
+                    stage = s;
+                    fraction = 0.3 * f;
+                });
+        if (cancel.get()) return;
+        List<SenseFinder.Candidate> list = SenseFinder.run(t, cfg, w, anchors, cancel, (s, f) -> {
+            stage = s;
+            fraction = 0.3 + 0.2 * f;
+        });
+        SenseFinder.Candidate g = game >= 0f && game <= 1f ? SenseFinder.at(t, game, w, anchors, cfg) : null;
+        gameRow = g;
+        gameRowSens = game;
+        found = Collections.unmodifiableList(new ArrayList<>(list));
+        rerank();
+        if (cancel.get()) return;
+        List<SenseFinder.Candidate> order = SenseFinder.ranked(list, SenseFinder.Mode.WEAKEST);
+        List<SenseFinder.Candidate> work = new ArrayList<>();
+        if (g != null) work.add(g);
+        work.addAll(order);
+        int total = work.size();
+        int[] finished = new int[1];
+        ExecutorService pool = Executors.newFixedThreadPool(threads, r -> {
+            Thread th = new Thread(r, "sense-finder-margins");
+            th.setDaemon(true);
+            return th;
+        });
+        try {
+            List<Future<?>> futures = new ArrayList<>();
+            for (SenseFinder.Candidate c : work) {
+                futures.add(pool.submit(() -> {
+                    if (cancel.get()) return;
+                    SenseFinder.fillMargins(t, c, MARGIN_PROBE_NANOS, cancel);
+                    synchronized (finished) {
+                        finished[0]++;
+                        stage = "margins " + finished[0] + " of " + total;
+                        fraction = 0.5 + 0.5 * finished[0] / Math.max(1, total);
+                    }
+                }));
+            }
+            for (Future<?> f : futures) f.get();
+        } finally {
+            pool.shutdownNow();
+        }
+        rerank();
     }
 
     @Override
@@ -240,49 +313,43 @@ public final class SenseSearchController implements SensefinderTab.Host {
         if (thread == null) return;
         cancel.set(true);
         stage = "cancelling";
-        pushMessage.accept("Sense search cancelled", HudMessageStyle.COLOR_WARN);
     }
 
     @Override
     public void select(SenseFinder.Candidate c) {
-        if (c == null) return;
-        NoTurnResult r = source;
-        if (r == null) return;
+        SenseFinder.Turn t = searched;
+        if (c == null || t == null || engine.isSolving()) return;
         selected = c;
-        if (r != noTurn.selected()) noTurn.select(r);
-        engine.writeYaws(inputData.getRows(), startTick, c.yaws, freeStartYaw);
+        engine.writeYaws(inputData.getRows(), searchedStartTick, c.yaws, searchedFreeStartYaw);
         saveController.markDirty();
-        onUserChange.accept(startTick);
+        onUserChange.accept(searchedStartTick);
+        applied = String.format(java.util.Locale.ROOT, "Applied %.2f%%, lands %+.5fb", c.percent(), c.offset);
     }
 
     public void poll() {
-        if (thread == null || !done) return;
+        if (thread == null) return;
+        long now = System.nanoTime();
+        if (now - lastRerank > RERANK_NANOS) {
+            lastRerank = now;
+            rerank();
+        }
+        if (!done) return;
         thread = null;
-        endNanos = System.nanoTime();
+        endNanos = now;
         fraction = 1.0;
-        List<SenseFinder.Candidate> list = ranked;
-        if (cancel.get()) {
-            ending = list.isEmpty() ? Ending.EMPTY : Ending.CANCELLED;
-            outcome = list.isEmpty() ? "cancelled, nothing found" : "cancelled, " + countText(list.size()) + " kept";
-            return;
-        }
-        if (list.isEmpty()) {
-            ending = Ending.EMPTY;
-            outcome = window == null ? "the line does not land" : "no sense lands the turn";
-            pushMessage.accept("Sensefinder: none found", HudMessageStyle.COLOR_DANGER);
-            return;
-        }
-        ending = Ending.FOUND;
-        outcome = countText(list.size()) + " found";
+        rerank();
+        int n = ranked.size();
+        if (cancel.get()) outcome = n == 0 ? "cancelled" : "cancelled, " + countText(n);
+        else if (window == null) outcome = "the solved path does not land";
+        else outcome = n == 0 ? "no sense lands the turn" : countText(n);
+        stage = "";
     }
 
     private void rerank() {
-        List<SenseFinder.Candidate> copy = new ArrayList<>(found);
-        copy.sort(SenseFinder.by(rankMode));
-        ranked = Collections.unmodifiableList(copy);
+        ranked = SenseFinder.ranked(found, rankMode);
     }
 
     private static String countText(int n) {
-        return n + (n == 1 ? " sense" : " senses");
+        return n + (n == 1 ? " row" : " rows");
     }
 }

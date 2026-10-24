@@ -1375,10 +1375,14 @@ public final class AngleSolverEngine {
     public static final class PathSnapshot {
         public final JumpSpec spec;
         public final double[] yaws;
+        public final int startTick;
+        public final boolean freeStartYaw;
 
-        PathSnapshot(JumpSpec spec, double[] yaws) {
+        PathSnapshot(JumpSpec spec, double[] yaws, int startTick, boolean freeStartYaw) {
             this.spec = spec;
             this.yaws = yaws;
+            this.startTick = startTick;
+            this.freeStartYaw = freeStartYaw;
         }
     }
 
@@ -1401,7 +1405,7 @@ public final class AngleSolverEngine {
             judged.add(job.legalGoal);
             spec = new JumpSpec(spec.asScenario(), judged, spec.objective);
         }
-        return new PathSnapshot(spec, yaws);
+        return new PathSnapshot(spec, yaws, job.startTick, job.freeStartYaw);
     }
 
     public ExactJumpModel exactModel() {
