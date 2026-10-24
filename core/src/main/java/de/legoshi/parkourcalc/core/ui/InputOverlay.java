@@ -80,12 +80,10 @@ public final class InputOverlay {
     private static final String EFFECTS_TO_SELECTED = "Selected";
     private static final String EFFECTS_TO_ALL = "All";
     private static final String EFFECTS_ADD = "+ add";
-    private static final String EFFECTS_COPY_FOLLOWING = "Copy to following ticks";
-    private static final String EFFECTS_COPY_SELECTED = "Copy to selected ticks";
-    private static final String EFFECTS_COPY_ALL = "Copy to all ticks";
-    private static final String EFFECTS_CLEAR_TICK = "Clear this tick";
-    private static final String EFFECTS_CLEAR_SELECTED = "Clear selected ticks";
-    private static final String EFFECTS_CLEAR_ALL = "Clear all ticks";
+    private static final String EFFECTS_COPY_LABEL = "Copy to";
+    private static final String EFFECTS_CLEAR_LABEL = "Clear";
+    private static final String EFFECTS_CLEAR_TICK = "This tick";
+    private static final String EFFECTS_CLEAR_ALL = "All ticks";
     private static final String EFFECTS_ADD_CHIP = "+";
     private static final float EFFECTS_COLUMN_WIDTH = 150;
     private static final float EFFECTS_CONTROL_WIDTH = 190;
@@ -1596,13 +1594,15 @@ public final class InputOverlay {
     }
 
     private float effectsLabelWidth() {
-        return ImGui.calcTextSize(EFFECTS_LABEL).x + ThemeManager.SM * uiScale();
+        float w = Math.max(ImGui.calcTextSize(EFFECTS_LABEL).x, ImGui.calcTextSize(EFFECTS_COPY_LABEL).x);
+        w = Math.max(w, ImGui.calcTextSize(EFFECTS_CLEAR_LABEL).x);
+        return w + ThemeManager.SM * uiScale();
     }
 
     private boolean beginEffectsForm(String id) {
         if (!ThemeManager.beginStandardFormTable(id, 3)) return false;
         ImGui.tableSetupColumn("l", ImGuiTableColumnFlags.WidthFixed, effectsLabelWidth());
-        ImGui.tableSetupColumn("c", ImGuiTableColumnFlags.WidthFixed, EFFECTS_CONTROL_WIDTH * uiScale());
+        ImGui.tableSetupColumn("c", ImGuiTableColumnFlags.WidthFixed, effectsControlWidth());
         ImGui.tableSetupColumn("t", ImGuiTableColumnFlags.WidthFixed, SolverWidgets.deleteXWidth());
         return true;
     }
@@ -1610,7 +1610,7 @@ public final class InputOverlay {
     private void renderEffectsPopup(InputRow row, int rowIndex) {
         if (!ImGui.beginPopup(ID_EFFECTS_POPUP)) return;
         float s = uiScale();
-        float controlW = EFFECTS_CONTROL_WIDTH * uiScale();
+        float controlW = effectsControlWidth();
         Fonts.pushBold();
         Controls.labelCell(EFFECTS_TITLE);
         Fonts.popBold();
@@ -1697,39 +1697,80 @@ public final class InputOverlay {
         boolean selected = selectionHasOtherRow(rowIndex);
         boolean all = data.size() > 1;
         boolean clearTick = row.hasEffects();
-        boolean clearAny = anyRowHasEffects();
         boolean copy = clearTick && (following || selected || all);
-        if (copy) {
-            effectsSeparator();
-            if (following && Controls.secondaryButton(EFFECTS_COPY_FOLLOWING, ImGui.getContentRegionAvail().x)) {
-                copyEffects(row, rowIndex, EFFECTS_TO_FOLLOWING);
-            }
-            if (selected && Controls.secondaryButton(EFFECTS_COPY_SELECTED, ImGui.getContentRegionAvail().x)) {
-                copyEffects(row, rowIndex, EFFECTS_TO_SELECTED);
-            }
-            if (all && Controls.secondaryButton(EFFECTS_COPY_ALL, ImGui.getContentRegionAvail().x)) {
-                copyEffects(row, rowIndex, EFFECTS_TO_ALL);
-            }
-        }
-        if (!clearAny) return;
+        boolean clear = anyRowHasEffects();
+        if (!copy && !clear) return;
         effectsSeparator();
-        if (clearTick && Controls.dangerButton(EFFECTS_CLEAR_TICK, ImGui.getContentRegionAvail().x)) {
-            row.clearEffects();
-            notifyChange(rowIndex);
-        }
-        if (selected && Controls.dangerButton(EFFECTS_CLEAR_SELECTED, ImGui.getContentRegionAvail().x)) {
-            int first = rowIndex;
-            for (int i : selection.getSelectedRows()) {
-                if (i < 0 || i >= data.size()) continue;
-                data.get(i).clearEffects();
-                first = Math.min(first, i);
+        if (!beginEffectsForm("##fx_actions")) return;
+        Controls.pushInputFrameHeight();
+        float controlW = effectsControlWidth();
+        float gap = ImGui.getStyle().getItemSpacing().x;
+        float w = (controlW - 2f * gap) / 3f;
+        if (copy) {
+            ImGui.tableNextRow();
+            ImGui.tableNextColumn();
+            Controls.labelCell(EFFECTS_COPY_LABEL);
+            ImGui.tableNextColumn();
+            boolean first = true;
+            if (following) {
+                first = false;
+                if (Controls.secondaryButton(EFFECTS_TO_FOLLOWING, w)) copyEffects(row, rowIndex, EFFECTS_TO_FOLLOWING);
             }
-            notifyChange(first);
+            if (selected) {
+                if (!first) ImGui.sameLine(0, gap);
+                first = false;
+                if (Controls.secondaryButton(EFFECTS_TO_SELECTED, w)) copyEffects(row, rowIndex, EFFECTS_TO_SELECTED);
+            }
+            if (all) {
+                if (!first) ImGui.sameLine(0, gap);
+                if (Controls.secondaryButton(EFFECTS_TO_ALL, w)) copyEffects(row, rowIndex, EFFECTS_TO_ALL);
+            }
+            ImGui.tableNextColumn();
         }
-        if (Controls.dangerButton(EFFECTS_CLEAR_ALL, ImGui.getContentRegionAvail().x)) {
-            for (InputRow other : data.getRows()) other.clearEffects();
-            notifyFullResim();
+        if (clear) {
+            ImGui.tableNextRow();
+            ImGui.tableNextColumn();
+            Controls.labelCell(EFFECTS_CLEAR_LABEL);
+            ImGui.tableNextColumn();
+            boolean first = true;
+            if (clearTick) {
+                first = false;
+                if (Controls.dangerButton(EFFECTS_CLEAR_TICK, w)) {
+                    row.clearEffects();
+                    notifyChange(rowIndex);
+                }
+            }
+            if (selected) {
+                if (!first) ImGui.sameLine(0, gap);
+                first = false;
+                if (Controls.dangerButton(EFFECTS_TO_SELECTED, w)) {
+                    int firstRow = rowIndex;
+                    for (int i : selection.getSelectedRows()) {
+                        if (i < 0 || i >= data.size()) continue;
+                        data.get(i).clearEffects();
+                        firstRow = Math.min(firstRow, i);
+                    }
+                    notifyChange(firstRow);
+                }
+            }
+            if (!first) ImGui.sameLine(0, gap);
+            if (Controls.dangerButton(EFFECTS_CLEAR_ALL, w)) {
+                for (InputRow other : data.getRows()) other.clearEffects();
+                notifyFullResim();
+            }
+            ImGui.tableNextColumn();
         }
+        Controls.popInputFrameHeight();
+        ThemeManager.endStandardFormTable();
+    }
+
+    private float effectsControlWidth() {
+        float button = 0f;
+        for (String label : new String[]{EFFECTS_TO_FOLLOWING, EFFECTS_TO_SELECTED, EFFECTS_TO_ALL, EFFECTS_CLEAR_TICK, EFFECTS_CLEAR_ALL}) {
+            button = Math.max(button, Controls.buttonWidth(label));
+        }
+        float row = 3f * button + 2f * ImGui.getStyle().getItemSpacing().x;
+        return Math.max(EFFECTS_CONTROL_WIDTH * uiScale(), row);
     }
 
     private boolean selectionHasOtherRow(int rowIndex) {
@@ -1748,7 +1789,7 @@ public final class InputOverlay {
 
     private float effectsFormWidth() {
         float cellPadX = ImGui.getStyle().getCellPadding().x;
-        return effectsLabelWidth() + EFFECTS_CONTROL_WIDTH * uiScale() + SolverWidgets.deleteXWidth() + 6f * cellPadX;
+        return effectsLabelWidth() + effectsControlWidth() + SolverWidgets.deleteXWidth() + 6f * cellPadX;
     }
 
 
