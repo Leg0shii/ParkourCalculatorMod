@@ -54,16 +54,18 @@ public final class SenseFinder {
         public int coarseSteps = 8000;
         public int refineSteps = 64;
         public int ascentSweeps = 2;
-        public double anchorStepDeg = 0.025;
+        public double anchorStepDeg = SIGNIFICANT_ANGLE_DEG;
         public double bandPercent = 10.0;
         public int scopeFirst = -1;
         public int scopeLast = -1;
 
         boolean[] scope(Turn turn) {
             boolean[] out = new boolean[turn.angles()];
+            int first = scopeFirst >= 0 ? scopeFirst : turn.angles() == 0 ? 0 : turn.jumpTick();
+            int last = scopeLast >= 0 ? scopeLast : turn.lastMainTurnTick();
             for (int k = 0; k < out.length; k++) {
                 int t = turn.turnTicks[k];
-                out[k] = (scopeFirst < 0 || t >= scopeFirst) && (scopeLast < 0 || t <= scopeLast);
+                out[k] = t >= first && t <= last;
             }
             return out;
         }
@@ -77,12 +79,13 @@ public final class SenseFinder {
         public final Objective objective;
         public final JumpConstraint goalWall;
         public final double[] yaws;
+        public final double startYaw;
         public final int[] turnTicks;
         public final double[] deltas;
 
         Turn(ExactJumpModel model, JumpPhysicsInputs scenario, List<JumpConstraint> constraints,
              JumpConstraintCompiler.Compiled compiled, Objective objective, JumpConstraint goalWall, double[] yaws,
-             int[] turnTicks, double[] deltas) {
+             double startYaw, int[] turnTicks, double[] deltas) {
             this.model = model;
             this.scenario = scenario;
             this.constraints = constraints;
@@ -90,6 +93,7 @@ public final class SenseFinder {
             this.objective = objective;
             this.goalWall = goalWall;
             this.yaws = yaws;
+            this.startYaw = startYaw;
             this.turnTicks = turnTicks;
             this.deltas = deltas;
         }
@@ -104,6 +108,16 @@ public final class SenseFinder {
 
         public double jumpFacing() {
             return yaws[turnTicks[0]];
+        }
+
+        public double before(int tick) {
+            return facingBefore(yaws, startYaw, tick);
+        }
+
+        public int lastMainTurnTick() {
+            int last = angles() == 0 ? 0 : jumpTick();
+            for (int k = 0; k < angles(); k++) if (Math.abs(deltas[k]) >= MAIN_TURN_DEG) last = turnTicks[k];
+            return last;
         }
 
         public double referenceOffset() {
@@ -156,6 +170,7 @@ public final class SenseFinder {
         public final int[] pixels;
         public final double offset;
         public final double[] yaws;
+        public final double startYaw;
         public final int anchor;
         public final int[] ticks;
         public final boolean[] scoped;
@@ -163,7 +178,7 @@ public final class SenseFinder {
         public final double[] above;
 
         Candidate(float sens, float sensLo, float sensHi, double pixelDeg, int[] pixels, double offset, double[] yaws,
-                  int anchor, int[] ticks, boolean[] scoped, double jumpBelow, double jumpAbove) {
+                  double startYaw, int anchor, int[] ticks, boolean[] scoped, double jumpBelow, double jumpAbove) {
             this.sens = sens;
             this.sensLo = sensLo;
             this.sensHi = sensHi;
@@ -171,6 +186,7 @@ public final class SenseFinder {
             this.pixels = pixels;
             this.offset = offset;
             this.yaws = yaws;
+            this.startYaw = startYaw;
             this.anchor = anchor;
             this.ticks = ticks;
             this.scoped = scoped;
@@ -202,7 +218,7 @@ public final class SenseFinder {
 
         public int landingPixels(int k) {
             int tick = ticks[k];
-            double before = yaws[tick - 1];
+            double before = facingBefore(yaws, startYaw, tick);
             double facing = before + Angles.wrapDelta(yaws[tick] - before);
             double lo = facing - below[k] - before;
             double hi = facing + above[k] - before;
@@ -241,7 +257,9 @@ public final class SenseFinder {
     public static final double TURN_EPS_DEG = Angles.REVERSAL_FLOOR_DEG;
     public static final double WINDOW_CAP_DEG = 10.0;
     public static final double MARGIN_CAP_DEG = 2.0;
-    public static final double SOLVED_RESOLUTION_DEG = 5.0e-3;
+    public static final double SIGNIFICANT_ANGLE_DEG = 360.0 / 65536.0;
+    public static final double SOLVED_RESOLUTION_DEG = SIGNIFICANT_ANGLE_DEG;
+    public static final double MAIN_TURN_DEG = 0.5;
     private static final double WINDOW_FIRST_STEP_DEG = 1.0e-3;
     private static final double WINDOW_RESOLUTION_DEG = 1.0e-5;
     private static final double SOLVED_FIRST_STEP_DEG = 2.0e-2;
@@ -264,20 +282,26 @@ public final class SenseFinder {
 
     public static Turn turnOf(ExactJumpModel model, AngleSolverEngine.PathSnapshot snapshot) {
         JumpPhysicsInputs sc = snapshot.spec.asScenario();
-        return turnOf(model, snapshot.spec, snapshot.yaws, sc.startPos.x, sc.startPos.z);
+        return turnOf(model, snapshot.spec, snapshot.yaws, sc.startPos.x, sc.startPos.z, !snapshot.freeStartYaw);
     }
 
     public static Turn turnOf(ExactJumpModel model, JumpSpec spec, double[] yawsAbs, double px, double pz) {
+        return turnOf(model, spec, yawsAbs, px, pz, true);
+    }
+
+    public static Turn turnOf(ExactJumpModel model, JumpSpec spec, double[] yawsAbs, double px, double pz,
+                              boolean turnsOnFirstTick) {
         JumpPhysicsInputs sc = Scoring.pinnedScenario(spec.asScenario(), px, pz);
         List<JumpConstraint> kept = new ArrayList<>();
         for (JumpConstraint c : spec.constraints) if (c.mode != JumpConstraint.Mode.F) kept.add(c);
         JumpConstraintCompiler.Compiled compiled = JumpConstraintCompiler.compile(new JumpSpec(sc, kept, spec.objective));
         JumpConstraint wall = NoTurnRanking.goalWall(spec.constraints, spec.objective);
         double[] yaws = Angles.wrapAll(yawsAbs);
+        double startYaw = turnsOnFirstTick ? Angles.wrap(sc.startYaw) : Double.NaN;
         List<Integer> ticks = new ArrayList<>();
         List<Double> deltas = new ArrayList<>();
-        for (int t = 1; t < yaws.length; t++) {
-            double d = Angles.wrapDelta(yaws[t] - yaws[t - 1]);
+        for (int t = turnsOnFirstTick ? 0 : 1; t < yaws.length; t++) {
+            double d = Angles.wrapDelta(yaws[t] - facingBefore(yaws, startYaw, t));
             if (Math.abs(d) < TURN_EPS_DEG) continue;
             ticks.add(t);
             deltas.add(d);
@@ -288,7 +312,12 @@ public final class SenseFinder {
             tt[i] = ticks.get(i);
             dd[i] = deltas.get(i);
         }
-        return new Turn(model, sc, kept, compiled, spec.objective, wall, yaws, tt, dd);
+        return new Turn(model, sc, kept, compiled, spec.objective, wall, yaws, startYaw, tt, dd);
+    }
+
+    static double facingBefore(double[] yaws, double startYaw, int tick) {
+        if (tick > 0) return yaws[tick - 1];
+        return Double.isNaN(startYaw) ? yaws[0] : startYaw;
     }
 
     public static double[] quantizedYaws(Turn turn, int[] pixels, double pixelDeg) {
@@ -297,8 +326,8 @@ public final class SenseFinder {
         double cur = turn.yaws[0];
         int k = 0;
         for (int t = 0; t < n; t++) {
-            if (t > 0 && k < turn.turnTicks.length && turn.turnTicks[k] == t) {
-                cur = Angles.wrap(cur + pixels[k] * pixelDeg);
+            if (k < turn.turnTicks.length && turn.turnTicks[k] == t) {
+                cur = Angles.wrap((t == 0 ? turn.before(0) : cur) + pixels[k] * pixelDeg);
                 k++;
             }
             out[t] = cur;
@@ -329,7 +358,7 @@ public final class SenseFinder {
     private static int[] pixelsToward(Turn turn, Anchor anchor, int jumpPixels, double pixelDeg) {
         int[] px = new int[turn.angles()];
         px[0] = jumpPixels;
-        double cur = turn.yaws[turn.jumpTick() - 1] + jumpPixels * pixelDeg;
+        double cur = turn.before(turn.jumpTick()) + jumpPixels * pixelDeg;
         double shift = Angles.wrapDelta(cur - anchor.jumpFacing);
         for (int k = 1; k < px.length; k++) {
             double target = anchor.yaws[turn.turnTicks[k]] + shift;
@@ -524,6 +553,7 @@ public final class SenseFinder {
         ExecutorService pool = Executors.newFixedThreadPool(Math.max(1, Math.min(threads, total)), r -> {
             Thread t = new Thread(r, "sense-finder-anchor");
             t.setDaemon(true);
+            t.setPriority(Thread.MIN_PRIORITY);
             return t;
         });
         try {
@@ -589,7 +619,11 @@ public final class SenseFinder {
         float hi = Math.min(1f, Math.max(cfg.minSens, cfg.maxSens));
         double step = (hi - lo) / (double) steps;
         Map<String, Bracket> brackets = new LinkedHashMap<>();
-        int[][] warm = new int[anchors.size()][];
+        Map<Integer, int[]> warm = new java.util.HashMap<>();
+        double before = turn.before(turn.jumpTick());
+        double center = unwrapNear(window.center(), before);
+        double wlo = center - 0.5 * window.width();
+        double whi = center + 0.5 * window.width();
         for (int i = 0; i <= steps; i++) {
             if (cancel != null && cancel.get()) return out;
             if (progress != null && (i & 63) == 0) {
@@ -598,12 +632,14 @@ public final class SenseFinder {
             }
             float s = (float) (lo + i * step);
             double p = TurnProfile.pixelDeg(s);
-            int lastJump = Integer.MIN_VALUE;
-            for (int a = 0; a < anchors.size(); a++) {
-                int[] pixels = best(turn, anchors.get(a), p, warm[a], cfg.ascentSweeps, lastJump);
+            long nFirst = (long) Math.ceil((wlo - before) / p - 1.0e-9);
+            long nLast = (long) Math.floor((whi - before) / p + 1.0e-9);
+            for (long nn = nFirst; nn <= nLast; nn++) {
+                int n = (int) nn;
+                int a = nearestAnchor(anchors, before + n * p);
+                int[] pixels = best(turn, anchors.get(a), n, p, warm.get(n), cfg.ascentSweeps);
                 if (pixels == null) continue;
-                lastJump = pixels[0];
-                warm[a] = pixels;
+                warm.put(n, pixels);
                 String key = Arrays.toString(pixels);
                 Bracket b = brackets.get(key);
                 if (b == null) brackets.put(key, new Bracket(pixels.clone(), a, s));
@@ -625,17 +661,42 @@ public final class SenseFinder {
             done++;
             Candidate c = refine(turn, b, (float) step, lo, hi, cfg, window, scope);
             if (c == null) continue;
-            String key = (int) Math.floor(c.percent() / cfg.bandPercent) + ":" + b.anchor;
+            String key = (int) Math.floor(c.percent() / cfg.bandPercent) + ":" + c.pixels[0];
             Candidate prev = bands.get(key);
             if (prev == null || c.offset > prev.offset) bands.put(key, c);
         }
-        out.addAll(bands.values());
+        Map<Integer, List<Candidate>> byBand = new LinkedHashMap<>();
+        for (Candidate c : bands.values()) {
+            byBand.computeIfAbsent((int) Math.floor(c.percent() / cfg.bandPercent), k -> new ArrayList<>()).add(c);
+        }
+        for (List<Candidate> band : byBand.values()) {
+            band.sort(furthest());
+            double kept = -1.0;
+            for (Candidate c : band) {
+                double jump = c.margin(0);
+                if (Double.isNaN(jump) || jump > kept + MARGIN_TIE) {
+                    out.add(c);
+                    if (!Double.isNaN(jump)) kept = jump;
+                }
+            }
+        }
         return out;
     }
 
-    private static int[] best(Turn turn, Anchor anchor, double p, int[] warm, int sweeps, int skipJump) {
-        int n = (int) Math.round(Angles.wrapDelta(anchor.jumpFacing - turn.yaws[turn.jumpTick() - 1]) / p);
-        if (n == skipJump) return null;
+    private static int nearestAnchor(List<Anchor> anchors, double facing) {
+        int best = 0;
+        double bestGap = Double.POSITIVE_INFINITY;
+        for (int a = 0; a < anchors.size(); a++) {
+            double gap = Math.abs(Angles.wrapDelta(anchors.get(a).jumpFacing - facing));
+            if (gap < bestGap) {
+                bestGap = gap;
+                best = a;
+            }
+        }
+        return best;
+    }
+
+    private static int[] best(Turn turn, Anchor anchor, int n, double p, int[] warm, int sweeps) {
         int[] pixels = pixelsToward(turn, anchor, n, p);
         double score = score(turn, pixels, p);
         if (warm != null && warm[0] == n && !Arrays.equals(warm, pixels)) {
@@ -653,8 +714,14 @@ public final class SenseFinder {
         if (turn.angles() == 0 || window == null || anchors.isEmpty()) return null;
         double p = TurnProfile.pixelDeg(sens);
         Candidate best = null;
-        for (int a = 0; a < anchors.size(); a++) {
-            int[] pixels = best(turn, anchors.get(a), p, null, cfg.ascentSweeps, Integer.MIN_VALUE);
+        double before = turn.before(turn.jumpTick());
+        double center = unwrapNear(window.center(), before);
+        long nFirst = (long) Math.ceil((center - 0.5 * window.width() - before) / p - 1.0e-9);
+        long nLast = (long) Math.floor((center + 0.5 * window.width() - before) / p + 1.0e-9);
+        for (long nn = nFirst; nn <= nLast; nn++) {
+            int n = (int) nn;
+            int a = nearestAnchor(anchors, before + n * p);
+            int[] pixels = best(turn, anchors.get(a), n, p, null, cfg.ascentSweeps);
             if (pixels == null) continue;
             Candidate c = candidate(turn, sens, sens, sens, pixels, a, window, cfg.scope(turn));
             if (c != null && (best == null || c.offset > best.offset)) best = c;
@@ -700,8 +767,8 @@ public final class SenseFinder {
         double facing = unwrapNear(yaws[turn.jumpTick()], window.center());
         double below = Math.max(0.0, facing - window.lo);
         double above = Math.max(0.0, window.hi - facing);
-        return new Candidate(sens, landLo, landHi, p, pixels.clone(), offset, yaws, anchor, turn.turnTicks, scope,
-                below, above);
+        return new Candidate(sens, landLo, landHi, p, pixels.clone(), offset, yaws, turn.startYaw, anchor,
+                turn.turnTicks, scope, below, above);
     }
 
     public static void fillMargins(Turn turn, Candidate c, long probeNanos, AtomicBoolean cancel) {
@@ -709,12 +776,44 @@ public final class SenseFinder {
             if (!c.scoped[k] || c.hasMargin(k)) continue;
             if (cancel != null && cancel.get()) return;
             int tick = turn.turnTicks[k];
-            Window w = tickWindow(turn, c.yaws, tick, MARGIN_CAP_DEG, probeNanos, cancel, null);
+            int below = pixelReach(turn, c.yaws, tick, -c.pixelDeg, probeNanos, cancel);
+            int above = pixelReach(turn, c.yaws, tick, c.pixelDeg, probeNanos, cancel);
             if (cancel != null && cancel.get()) return;
-            double f = c.yaws[tick];
-            c.below[k] = w == null ? 0.0 : Math.max(0.0, f - w.lo);
-            c.above[k] = w == null ? 0.0 : Math.max(0.0, w.hi - f);
+            c.below[k] = below * c.pixelDeg;
+            c.above[k] = above * c.pixelDeg;
         }
+    }
+
+    private static int pixelReach(Turn turn, double[] yaws, int tick, double pixel, long probeNanos,
+                                  AtomicBoolean cancel) {
+        int cap = Math.max(1, (int) Math.floor(MARGIN_CAP_DEG / Math.abs(pixel)));
+        int in = 0;
+        int out = 1;
+        while (out <= cap && shiftLands(turn, yaws, tick, out * pixel, probeNanos, cancel)) {
+            in = out;
+            out *= 2;
+            if (cancel != null && cancel.get()) return in;
+        }
+        if (out > cap) {
+            if (in == cap || shiftLands(turn, yaws, tick, cap * pixel, probeNanos, cancel)) return cap;
+            out = cap;
+        }
+        while (out - in > 1) {
+            if (cancel != null && cancel.get()) return in;
+            int mid = (in + out) >>> 1;
+            if (shiftLands(turn, yaws, tick, mid * pixel, probeNanos, cancel)) in = mid;
+            else out = mid;
+        }
+        return in;
+    }
+
+    private static boolean shiftLands(Turn turn, double[] yaws, int tick, double delta, long probeNanos,
+                                      AtomicBoolean cancel) {
+        int from = tick + 1;
+        if (from >= turn.scenario.numTicks || turn.objective.tick <= from || turn.objective.isCustomAngle()) {
+            return !Double.isNaN(offsetOf(turn, shifted(yaws, tick, delta)));
+        }
+        return remainderLands(turn, yaws, from, delta, probeNanos, cancel);
     }
 
     public static Comparator<Candidate> by(Mode mode) {

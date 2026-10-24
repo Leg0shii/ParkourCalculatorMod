@@ -45,6 +45,24 @@ public class SenseFinderTest {
     }
 
     @Test
+    public void aSpanStartingOnTheJumpTickRoundsTheJumpFromTheFacingBefore() throws Exception {
+        NoTurnCapture cap = NoTurnCapture.load("hpk_human/d10/j703");
+        cap.state.setStartTick(27);
+        AngleSolverEngine.PathSnapshot snap = cap.snapshot();
+        assertNotNull(snap);
+        assertFalse(snap.freeStartYaw);
+        SenseFinder.Turn turn = SenseFinder.turnOf(cap.model, snap);
+        assertEquals(0, turn.jumpTick());
+        assertEquals(-30.218939, turn.deltas[0], 1.0e-5);
+        double p = TurnProfile.pixelDeg(1.0f);
+        int[] pixels = new int[turn.angles()];
+        pixels[0] = -49;
+        double[] yaws = SenseFinder.quantizedYaws(turn, pixels, p);
+        assertEquals(turn.before(0) - 49 * p, yaws[0], 1.0e-9);
+        assertEquals(1.894, yaws[0], 1.0e-3);
+    }
+
+    @Test
     public void j703CarriedWindowSitsOnTheLowerEdgeAndIsBelowOnePixel() throws Exception {
         SenseFinder.Turn turn = loadJ703();
         SenseFinder.Window w = SenseFinder.carriedWindow(turn);
@@ -95,16 +113,24 @@ public class SenseFinderTest {
         SenseFinder.Turn turn = loadJ703();
         SenseFinder.Window w = SenseFinder.carriedWindow(turn);
         List<SenseFinder.Anchor> anchors = SenseFinder.anchors(turn, w, 0.025, 0L, 1, null, null);
-        SenseFinder.Candidate c = SenseFinder.at(turn, 0.5f, w, anchors, new SenseFinder.Config());
-        if (c == null) return;
+        SenseFinder.Config cfg = new SenseFinder.Config();
+        cfg.coarseSteps = 200;
+        cfg.minSens = 0.3f;
+        List<SenseFinder.Candidate> found = SenseFinder.run(turn, cfg, w, anchors, new AtomicBoolean(false), null);
+        assertFalse(found.isEmpty());
+        SenseFinder.Candidate c = found.get(0);
         SenseFinder.fillMargins(turn, c, 300_000_000L, new AtomicBoolean(false));
         assertTrue(c.marginsComplete());
+        assertTrue(c.scoped[0]);
+        assertFalse(c.scoped[c.pixels.length - 1]);
         for (int k = 1; k < c.pixels.length; k++) {
+            if (!c.scoped[k]) continue;
             int tick = turn.turnTicks[k];
             double below = Math.min(SenseFinder.carriedEdge(turn, c.yaws, tick, -1), SenseFinder.MARGIN_CAP_DEG);
             double above = Math.min(SenseFinder.carriedEdge(turn, c.yaws, tick, 1), SenseFinder.MARGIN_CAP_DEG);
-            assertTrue(c.below[k] >= below - 1.0e-4);
-            assertTrue(c.above[k] >= above - 1.0e-4);
+            assertTrue(c.below[k] >= Math.floor(below / c.pixelDeg + 1.0e-9) * c.pixelDeg - 1.0e-9);
+            assertTrue(c.above[k] >= Math.floor(above / c.pixelDeg + 1.0e-9) * c.pixelDeg - 1.0e-9);
+            assertEquals(0.0, Math.IEEEremainder(c.below[k], c.pixelDeg), 1.0e-9);
             assertTrue(c.below[k] <= SenseFinder.MARGIN_CAP_DEG && c.above[k] <= SenseFinder.MARGIN_CAP_DEG);
         }
     }

@@ -481,6 +481,7 @@ public final class Application {
     }
 
     private void runSimulation(int dirtyTick) {
+        if (senseSearch != null) senseSearch.invalidate();
         if (!mc.isReady()) return;
         if (!saveController.isSessionActive()) return;
         long t0 = Perf.now();

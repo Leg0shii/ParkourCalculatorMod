@@ -19,11 +19,10 @@ import java.util.function.IntConsumer;
 
 public final class SenseSearchController implements SenseFinderWindow.Host {
 
-    private static final long WINDOW_PROBE_NANOS = 1_500_000_000L;
-    private static final long ANCHOR_NANOS = 1_500_000_000L;
-    private static final long MARGIN_PROBE_NANOS = 300_000_000L;
+    private static final long WINDOW_PROBE_NANOS = 750_000_000L;
+    private static final long ANCHOR_NANOS = 750_000_000L;
+    private static final long MARGIN_PROBE_NANOS = 120_000_000L;
     private static final long RERANK_NANOS = 250_000_000L;
-    private static final long REFRESH_NANOS = 500_000_000L;
 
     private final InputData inputData;
     private final SaveController saveController;
@@ -56,8 +55,9 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
     private SenseFinder.Turn current;
     private int currentStartTick;
     private boolean currentFreeStartYaw;
-    private boolean stale = true;
-    private long refreshedNanos;
+    private volatile boolean stale = true;
+    private int seenStartTick = -1;
+    private int seenLandingTick = -1;
     private int searchedStartTick;
     private boolean searchedFreeStartYaw;
     private long startNanos;
@@ -78,10 +78,13 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
 
     @Override
     public SenseFinder.Turn turn() {
-        long now = System.nanoTime();
-        if ((stale || now - refreshedNanos > REFRESH_NANOS) && !engine.isSolving()) {
+        if (state.getStartTick() != seenStartTick || state.getLandingTick() != seenLandingTick) {
+            seenStartTick = state.getStartTick();
+            seenLandingTick = state.getLandingTick();
+            stale = true;
+        }
+        if (stale && !engine.isSolving()) {
             stale = false;
-            refreshedNanos = now;
             current = null;
             AngleSolverEngine.PathSnapshot snap = model == null ? null
                     : engine.snapshotPath(state.getStartTick(), state.getLandingTick());
@@ -95,6 +98,10 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
             }
         }
         return current;
+    }
+
+    public void invalidate() {
+        stale = true;
     }
 
     @Override
@@ -253,11 +260,12 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
             }
         }, "sense-finder");
         thread.setDaemon(true);
+        thread.setPriority(Thread.MIN_PRIORITY);
         thread.start();
     }
 
     private void search(SenseFinder.Turn t, SenseFinder.Config cfg, float game) throws Exception {
-        int threads = Math.max(1, Math.min(4, Runtime.getRuntime().availableProcessors() - 1));
+        int threads = Math.max(1, Math.min(6, Runtime.getRuntime().availableProcessors() - 2));
         SenseFinder.Window w = SenseFinder.solvedWindow(t, WINDOW_PROBE_NANOS, cancel, (s, f) -> stage = s);
         window = w;
         if (w == null || cancel.get()) return;
@@ -286,6 +294,7 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
         ExecutorService pool = Executors.newFixedThreadPool(threads, r -> {
             Thread th = new Thread(r, "sense-finder-margins");
             th.setDaemon(true);
+            th.setPriority(Thread.MIN_PRIORITY);
             return th;
         });
         try {
@@ -323,7 +332,7 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
         engine.writeYaws(inputData.getRows(), searchedStartTick, c.yaws, searchedFreeStartYaw);
         saveController.markDirty();
         onUserChange.accept(searchedStartTick);
-        applied = String.format(java.util.Locale.ROOT, "Applied %.2f%%, lands %+.5fb", c.percent(), c.offset);
+        applied = String.format(java.util.Locale.ROOT, "Applied %.2f%%, lands %+.5f", c.percent(), c.offset);
     }
 
     public void poll() {
