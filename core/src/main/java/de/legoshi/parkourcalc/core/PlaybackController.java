@@ -66,6 +66,7 @@ public final class PlaybackController {
     // displayedYaw is the camera yaw; it equals the ideal lerp value when the
     // recording's angular speed is under the cap, otherwise lags at the cap rate.
     private float displayedYaw;
+    private float shownHeadYaw;
     private long lastFrameNanos;
 
     private float currentTickPitch;
@@ -209,6 +210,7 @@ public final class PlaybackController {
         currentTickYaw = yaw;
         displayTargetYaw = yaw;
         displayedYaw = yaw;
+        shownHeadYaw = yaw;
         currentTickPitch = runner.getStartPitch();
         prevTickPitch = runner.getStartPitch();
         displayedPitch = runner.getStartPitch();
@@ -426,7 +428,8 @@ public final class PlaybackController {
     public void postTick() {
         if (!running || bridge == null) return;
         bridge.setYaw(displayedYaw);
-        bridge.setHeadYaw(displayedYaw);
+        bridge.settleHeadYaw(shownHeadYaw, displayedYaw);
+        shownHeadYaw = displayedYaw;
         if (pitchEngaged) bridge.setPitch(displayedPitch);
         if (restorePending) return;
         if (DebugFlags.DUMP_TICK_STATE) {

@@ -37,6 +37,10 @@ public interface PlaybackBridge {
 
     default void setHeadYaw(float absoluteYaw) {}
 
+    default void settleHeadYaw(float previousYaw, float absoluteYaw) {
+        setHeadYaw(absoluteYaw);
+    }
+
     default void setPitch(float absolutePitch) {}
 
     void releaseAllKeys();

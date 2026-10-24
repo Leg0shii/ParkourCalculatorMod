@@ -495,16 +495,12 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
             if (ghost == null) return;
             ghost.setYRot(absoluteYaw);
             ghost.yRotO = absoluteYaw;
-            ghost.setYHeadRot(absoluteYaw);
-            ghost.yHeadRotO = absoluteYaw;
             return;
         }
         LocalPlayer p = Minecraft.getInstance().player;
         if (p == null) return;
         p.setYRot(absoluteYaw);
         p.yRotO = absoluteYaw;
-        p.setYHeadRot(absoluteYaw);
-        p.yHeadRotO = absoluteYaw;
         p.yBob = absoluteYaw;
         p.yBobO = absoluteYaw;
     }
@@ -519,6 +515,14 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         LocalPlayer p = Minecraft.getInstance().player;
         if (p == null) return;
         p.setYHeadRot(absoluteYaw);
+    }
+
+    @Override
+    public void settleHeadYaw(float previousYaw, float absoluteYaw) {
+        net.minecraft.world.entity.player.Player p = ghostMode ? ghost : Minecraft.getInstance().player;
+        if (p == null) return;
+        p.setYHeadRot(absoluteYaw);
+        p.yHeadRotO = previousYaw;
     }
 
     @Override
