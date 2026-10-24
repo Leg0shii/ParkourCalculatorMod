@@ -377,9 +377,27 @@ public class SprintSneakTest {
         sc.incomingSprint = Boolean.FALSE;
         assertFalse(sc.airFactorSprintAt(0));
         assertTrue(sc.airFactorSprintAt(1));
-        sc.liveAirSprintFactor = true;
+        sc.liveMovementFactor = true;
         assertTrue(sc.airFactorSprintAt(0));
         assertFalse(sc.airFactorSprintAt(1));
+    }
+
+    @Test
+    public void speedAndSlownessFactorsFollowTheLiveFlag() {
+        JumpPhysicsInputs sc = scenario(2, Double.NaN, false);
+        sc.speedAmplifier = new int[]{0, 16};
+        sc.slownessAmplifier = new int[]{0, 3};
+        sc.incomingAmp = 5;
+        sc.incomingSlowness = 2;
+        assertEquals(5, sc.factorAmpAt(0));
+        assertEquals(0, sc.factorAmpAt(1));
+        assertEquals(2, sc.factorSlownessAt(0));
+        assertEquals(0, sc.factorSlownessAt(1));
+        sc.liveMovementFactor = true;
+        assertEquals(0, sc.factorAmpAt(0));
+        assertEquals(16, sc.factorAmpAt(1));
+        assertEquals(0, sc.factorSlownessAt(0));
+        assertEquals(3, sc.factorSlownessAt(1));
     }
 
     @Test
@@ -389,7 +407,7 @@ public class SprintSneakTest {
         boxes.add(sampled(false, 0.0F, 0.0F));
         boxes.add(sampled(true, F, 0.0F));
         JumpPhysicsInputs mc = compile(inputs, boxes, 1, deriving(), "26.2");
-        assertTrue("a modern engine authors the live air factor", mc.liveAirSprintFactor);
+        assertTrue("a modern engine authors the live air factor", mc.liveMovementFactor);
         assertTrue(mc.sprintAt(0));
         assertEquals(Boolean.FALSE, mc.incomingSprint);
         ForwardPath p = ExactJumpModel.forMcVersion("26.2").forward(mc, mc.toGameFacings(new double[]{0.0}));
@@ -401,7 +419,7 @@ public class SprintSneakTest {
         legacyBoxes.add(sampled(false, 0.0F, 0.0F));
         legacyBoxes.add(sampled(true, F, 0.0F));
         JumpPhysicsInputs lc = compile(legacyInputs, legacyBoxes, 1, deriving(), "1.8.9");
-        assertFalse("a legacy engine keeps the lagged air factor", lc.liveAirSprintFactor);
+        assertFalse("a legacy engine keeps the lagged air factor", lc.liveMovementFactor);
     }
 
     @Test

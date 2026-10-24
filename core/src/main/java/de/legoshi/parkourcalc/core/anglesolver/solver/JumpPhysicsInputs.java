@@ -67,7 +67,7 @@ public final class JumpPhysicsInputs {
      *  single-tick model callers' behavior. */
     public Boolean incomingSprint = null;
 
-    public boolean liveAirSprintFactor = false;
+    public boolean liveMovementFactor = false;
 
     /** Speed-effect amplifier in force on the tick before this window's first tick. The ground attribute
      *  (getAIMoveSpeed = the movementSpeed snapshot) carries both the sprint and the speed-effect modifier,
@@ -112,7 +112,7 @@ public final class JumpPhysicsInputs {
         c.yawLockedPerTick = yawLockedPerTick;
         c.sprintPerTick = sprintPerTick;
         c.incomingSprint = incomingSprint;
-        c.liveAirSprintFactor = liveAirSprintFactor;
+        c.liveMovementFactor = liveMovementFactor;
         c.incomingAmp = incomingAmp;
         c.incomingSlowness = incomingSlowness;
         c.forwardInputPerTick = forwardInputPerTick;
@@ -129,7 +129,7 @@ public final class JumpPhysicsInputs {
         c.startBox = null;
         c.jumpTick = jumpTick < from ? -1 : jumpTick - from;
         c.strafeSign = strafeSign;
-        c.liveAirSprintFactor = liveAirSprintFactor;
+        c.liveMovementFactor = liveMovementFactor;
         c.incomingSprint = from == 0 ? incomingSprint : Boolean.valueOf(sprintAt(from - 1));
         c.incomingAmp = from == 0 ? incomingAmp : Integer.valueOf(speedAmplifierAt(from - 1));
         c.incomingSlowness = from == 0 ? incomingSlowness : Integer.valueOf(slownessAmplifierAt(from - 1));
@@ -192,6 +192,7 @@ public final class JumpPhysicsInputs {
     }
 
     public int factorSlownessAt(int tick) {
+        if (liveMovementFactor) return slownessAmplifierAt(tick);
         if (tick == 0) return incomingSlowness != null ? incomingSlowness : slownessAmplifierAt(0);
         return slownessAmplifierAt(tick - 1);
     }
@@ -228,13 +229,14 @@ public final class JumpPhysicsInputs {
     }
 
     public boolean airFactorSprintAt(int tick) {
-        return liveAirSprintFactor ? sprintAt(tick) : factorSprintAt(tick);
+        return liveMovementFactor ? sprintAt(tick) : factorSprintAt(tick);
     }
 
     /** Speed amplifier that drives this tick's ground movement factor, lagged one tick like the sprint
      *  factor (same snapshotted attribute). {@link #incomingAmp} seeds the pre-window tick; a null seed
      *  falls back to this tick's own amplifier. */
     public int factorAmpAt(int tick) {
+        if (liveMovementFactor) return speedAmplifierAt(tick);
         if (tick == 0) return incomingAmp != null ? incomingAmp : speedAmplifierAt(0);
         return speedAmplifierAt(tick - 1);
     }
