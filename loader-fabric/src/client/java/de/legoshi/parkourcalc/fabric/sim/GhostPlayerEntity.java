@@ -134,6 +134,11 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
     }
 
     @Override
+    public float getViewYRot(float partialTick) {
+        return this.getYRot();
+    }
+
+    @Override
     protected void onBelowWorld() {
     }
 
