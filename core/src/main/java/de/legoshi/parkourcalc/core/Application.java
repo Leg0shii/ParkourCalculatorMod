@@ -269,7 +269,7 @@ public final class Application {
         noTurnSearch = new NoTurnSearchController(inputData, runner, boxController, saveController, angleSolverState,
                 angleSolverEngine, forwardModel, mc, this::onUserChange, this::pushHudMessage, runTicks::isRunning);
         senseSearch = new SenseSearchController(inputData, saveController, angleSolverState, angleSolverEngine,
-                forwardModel, this::onUserChange, mc::getMouseSensitivity);
+                forwardModel, this::onUserChange, mc::getMouseSensitivity, mc::setMouseSensitivity);
         de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow stratfinderWindow =
                 new de.legoshi.parkourcalc.core.ui.anglesolver.StratfinderWindow(noTurnSearch);
         turnProfile = new TurnProfileController(angleSolverEngine, angleSolverState, inputData,

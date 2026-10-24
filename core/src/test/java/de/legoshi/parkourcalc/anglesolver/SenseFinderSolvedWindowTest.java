@@ -64,7 +64,7 @@ public class SenseFinderSolvedWindowTest {
                 (System.nanoTime() - t3) / 1e9));
         for (SenseFinder.Candidate c : found) assertFalse(Double.isNaN(SenseFinder.offsetOf(turn, c.yaws)));
         SenseFinderTest.print("1.95 and 1.78", turn, java.util.Arrays.asList(high, low), 2);
-        SenseFinderTest.print("by weakest margin", turn, SenseFinder.ranked(found, SenseFinder.Mode.WEAKEST), 8);
+        SenseFinderTest.print("by margin", turn, SenseFinder.ranked(found, SenseFinder.Mode.MARGIN), 8);
     }
 
     private static SenseFinder.Candidate best(SenseFinder.Turn turn, List<SenseFinder.Candidate> found, double jump) {

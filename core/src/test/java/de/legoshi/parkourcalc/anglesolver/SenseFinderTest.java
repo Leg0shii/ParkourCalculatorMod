@@ -101,7 +101,7 @@ public class SenseFinderTest {
                 SenseFinder.Candidate a = ranked.get(i - 1);
                 SenseFinder.Candidate b = ranked.get(i);
                 if (mode == SenseFinder.Mode.SENSE) assertTrue(a.sens >= b.sens);
-                if (mode == SenseFinder.Mode.WEAKEST) assertTrue(a.weakest() >= b.weakest() - 2.0e-5);
+                if (mode == SenseFinder.Mode.MARGIN) assertTrue(a.totalTarget() >= b.totalTarget() - 2.0e-5);
                 if (mode == SenseFinder.Mode.FURTHEST) assertTrue(a.offset >= b.offset - 1.0e-6);
             }
         }
@@ -163,8 +163,8 @@ public class SenseFinderTest {
                 px.append(String.format(Locale.ROOT, " %d(%.2f|%s)", c.pixels[k], c.turnDeg(k),
                         c.hasMargin(k) ? String.format(Locale.ROOT, "%.3f", c.margin(k)) : "?"));
             }
-            System.out.println(String.format(Locale.ROOT, "  %8.4f%% jump %.4f offset %+.6f weakest %.4f%s",
-                    c.percent(), c.jumpFacing(turn), c.offset, c.weakest(), px));
+            System.out.println(String.format(Locale.ROOT, "  %8.4f%% jump %.4f offset %+.6f margin %.4f%s",
+                    c.percent(), c.jumpFacing(turn), c.offset, c.totalTarget(), px));
         }
     }
 }

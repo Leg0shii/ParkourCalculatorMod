@@ -79,6 +79,10 @@ public final class SenseFinderWindow implements RenderInterface {
         void cancel();
 
         void select(SenseFinder.Candidate c);
+
+        boolean canApplySense();
+
+        void applySense();
     }
 
     private static final String WINDOW_ID = "###sensefinder";
@@ -90,8 +94,10 @@ public final class SenseFinderWindow implements RenderInterface {
     private static final float MIN_H = 300f;
     private static final String SEARCH_TIP = "Round the solved turn to whole mouse pixels at every sense in the range"
             + " and list the pixel counts that still land.";
-    private static final String TICKS_TIP = "Turn ticks whose landing target is measured. The Margin column is the"
-            + " smallest target in this range; leave out the last ticks when they are nearly free.";
+    private static final String TICKS_TIP = "Turn ticks whose landing target is measured. The Margin column sums"
+            + " their targets; leave out the last ticks when they are nearly free.";
+    private static final String APPLY = "Apply";
+    private static final String APPLY_TIP = "Set your game sense to the selected row's sense.";
     private static final String COL_SENSE = "Sense";
     private static final String COL_OFFSET = "Offset";
     private static final String COL_MARGIN = "Margin";
@@ -157,12 +163,21 @@ public final class SenseFinderWindow implements RenderInterface {
             ThemeManager.popTextColor();
         }
         if (host.searchedTurn() == null || host.results().isEmpty()) return;
-        float footer = ImGui.getTextLineHeightWithSpacing();
+        float footer = ImGui.getFrameHeightWithSpacing();
         rows(host.searchedTurn(), Math.max(ImGui.getTextLineHeight() * 6f, ImGui.getContentRegionAvail().y - footer));
         String applied = host.applied();
+        ImGui.alignTextToFramePadding();
         ThemeManager.pushTextColor(applied.isEmpty() ? ThemeManager.textDimColor() : ThemeManager.okColor());
         ImGui.text(applied.isEmpty() ? (outcome == null ? "" : outcome) : applied);
         ThemeManager.popTextColor();
+        ImGui.sameLine();
+        Controls.cursorToRightAlignedButton(APPLY);
+        if (host.canApplySense()) {
+            if (Controls.primaryButton(APPLY)) host.applySense();
+            TooltipUtil.onHover(APPLY_TIP);
+        } else {
+            Controls.disabledButton(APPLY);
+        }
     }
 
     private void summary(SenseFinder.Turn turn) {
@@ -252,7 +267,7 @@ public final class SenseFinderWindow implements RenderInterface {
         float rankW = ImGui.calcTextSize("999").x;
         float senseW = ImGui.calcTextSize("199.99%").x;
         float offW = ImGui.calcTextSize("+" + ConstraintText.fixedStat(9.0)).x;
-        float marginW = ImGui.calcTextSize("9.999°").x;
+        float marginW = ImGui.calcTextSize("99.999°").x;
         float tickW = ImGui.calcTextSize("-9999 px").x + 2f * ImGui.getStyle().getCellPaddingX();
         float mark = ImGui.getFontSize() * 0.7f;
         ImGui.tableSetupColumn("#", fixed, ThemeManager.tableLeftmostColumnWidth("#", rankW));
@@ -298,10 +313,10 @@ public final class SenseFinderWindow implements RenderInterface {
         }
         TooltipUtil.onHover(SenseFinder.Mode.FURTHEST.hint);
         ImGui.tableSetColumnIndex(3);
-        if (ThemeManager.tableSortHeader(COL_MARGIN, ThemeManager.HAlign.RIGHT, mode == SenseFinder.Mode.WEAKEST)) {
-            host.setRankMode(SenseFinder.Mode.WEAKEST);
+        if (ThemeManager.tableSortHeader(COL_MARGIN, ThemeManager.HAlign.RIGHT, mode == SenseFinder.Mode.MARGIN)) {
+            host.setRankMode(SenseFinder.Mode.MARGIN);
         }
-        TooltipUtil.onHover(SenseFinder.Mode.WEAKEST.hint);
+        TooltipUtil.onHover(SenseFinder.Mode.MARGIN.hint);
         for (int k = 0; k < ticks; k++) {
             ImGui.tableSetColumnIndex(4 + k);
             ThemeManager.tableHeader(ImGui.tableGetColumnName(4 + k));
@@ -325,10 +340,11 @@ public final class SenseFinderWindow implements RenderInterface {
     private void row(SenseFinder.Turn turn, SenseFinder.Candidate c, String rank, int index, float rowH, boolean game) {
         ImGui.tableNextRow();
         if (index >= 0) ThemeManager.paintTableRowBg(index);
+        if (c == host.selected()) ThemeManager.paintTableRowTint(ThemeManager.selectedRowBg());
         ImGui.tableSetColumnIndex(0);
         ThemeManager.tableLeftmostCellPad();
         if (game) ThemeManager.pushTextColor(ThemeManager.textMutedColor());
-        if (ImGui.selectable(rank + "##sense" + rank, c == host.selected(),
+        if (ImGui.selectable(rank + "##sense" + rank, false,
                 ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowItemOverlap, 0f, rowH)) {
             host.select(c);
         }
@@ -338,7 +354,7 @@ public final class SenseFinderWindow implements RenderInterface {
         ImGui.tableSetColumnIndex(2);
         ThemeManager.textRight(offsetText(c.offset));
         ImGui.tableSetColumnIndex(3);
-        ThemeManager.textRight(c.weakestTick() < 0 ? "-" : c.marginsComplete() ? marginText(c.weakest()) : "...");
+        ThemeManager.textRight(c.weakestTick() < 0 ? "-" : c.marginsComplete() ? marginText(c.totalTarget()) : "...");
         if (game) ThemeManager.popTextColor();
         int weakest = c.weakestTick();
         for (int k = 0; k < c.pixels.length; k++) {

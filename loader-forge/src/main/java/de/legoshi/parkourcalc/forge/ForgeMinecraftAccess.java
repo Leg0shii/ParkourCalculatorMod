@@ -321,6 +321,12 @@ public final class ForgeMinecraftAccess implements MinecraftAccess {
     }
 
     @Override
+    public void setMouseSensitivity(float sensitivity) {
+        Minecraft.getMinecraft().gameSettings.mouseSensitivity = sensitivity;
+        Minecraft.getMinecraft().gameSettings.saveOptions();
+    }
+
+    @Override
     public boolean isReady() {
         return McClient.player() != null && McClient.world() != null;
     }

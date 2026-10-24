@@ -14,6 +14,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
 import java.util.function.IntConsumer;
 
@@ -31,6 +32,7 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
     private final ExactJumpModel model;
     private final IntConsumer onUserChange;
     private final DoubleSupplier gameSense;
+    private final Consumer<Float> setGameSense;
 
     private final AtomicBoolean cancel = new AtomicBoolean(false);
 
@@ -44,7 +46,7 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
     private volatile SenseFinder.Candidate gameRow;
     private volatile float gameRowSens = Float.NaN;
     private volatile SenseFinder.Candidate selected;
-    private volatile SenseFinder.Mode rankMode = SenseFinder.Mode.WEAKEST;
+    private volatile SenseFinder.Mode rankMode = SenseFinder.Mode.MARGIN;
     private volatile SenseFinder.Window window;
     private volatile SenseFinder.Turn searched;
     private volatile String applied = "";
@@ -66,7 +68,7 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
 
     public SenseSearchController(InputData inputData, SaveController saveController, AngleSolverState state,
                                  AngleSolverEngine engine, ExactJumpModel model, IntConsumer onUserChange,
-                                 DoubleSupplier gameSense) {
+                                 DoubleSupplier gameSense, Consumer<Float> setGameSense) {
         this.inputData = inputData;
         this.saveController = saveController;
         this.state = state;
@@ -74,6 +76,7 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
         this.model = model;
         this.onUserChange = onUserChange;
         this.gameSense = gameSense;
+        this.setGameSense = setGameSense;
     }
 
     @Override
@@ -286,7 +289,7 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
         found = Collections.unmodifiableList(new ArrayList<>(list));
         rerank();
         if (cancel.get()) return;
-        List<SenseFinder.Candidate> order = SenseFinder.ranked(list, SenseFinder.Mode.WEAKEST);
+        List<SenseFinder.Candidate> order = SenseFinder.ranked(list, SenseFinder.Mode.MARGIN);
         List<SenseFinder.Candidate> work = new ArrayList<>();
         if (g != null) work.add(g);
         work.addAll(order);
@@ -333,7 +336,21 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
         engine.writeYaws(inputData.getRows(), searchedStartTick, c.yaws, searchedFreeStartYaw);
         saveController.markDirty();
         onUserChange.accept(searchedStartTick);
-        applied = String.format(java.util.Locale.ROOT, "Applied %.2f%%, lands %+.5f", c.percent(), c.offset);
+        applied = String.format(java.util.Locale.ROOT, "Wrote the %.2f%% row into the TAS, lands %+.5f", c.percent(), c.offset);
+    }
+
+    @Override
+    public boolean canApplySense() {
+        SenseFinder.Candidate c = selected;
+        return c != null && c.sens != gameSense();
+    }
+
+    @Override
+    public void applySense() {
+        SenseFinder.Candidate c = selected;
+        if (c == null) return;
+        setGameSense.accept(c.sens);
+        applied = String.format(java.util.Locale.ROOT, "Game sense set to %.2f%%", c.percent());
     }
 
     public void poll() {

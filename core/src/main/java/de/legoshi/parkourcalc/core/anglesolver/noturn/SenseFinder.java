@@ -30,8 +30,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class SenseFinder {
 
     public enum Mode {
-        WEAKEST("Margin", "Width of the row's smallest landing target in degrees (landing pixel counts times the pixel"
-                + " size), widest first"),
+        MARGIN("Margin", "Sum of the row's landing targets over the tick range in degrees (landing pixel counts times"
+                + " the pixel size), widest first"),
         SENSE("Sense", "Highest sense first"),
         FURTHEST("Offset", "Largest landing offset first");
 
@@ -57,6 +57,8 @@ public final class SenseFinder {
         public double anchorStepDeg = SIGNIFICANT_ANGLE_DEG;
         public double bandPercent = 10.0;
         public int threads = 1;
+        public int rowsPerBand = 16;
+        public double angleBucketDeg = 0.05;
         public int scopeFirst = -1;
         public int scopeLast = -1;
 
@@ -249,9 +251,10 @@ public final class SenseFinder {
             return best;
         }
 
-        public double weakest() {
-            int k = weakestTick();
-            return k < 0 ? 0.0 : target(k);
+        public double totalTarget() {
+            double sum = 0.0;
+            for (int k = 0; k < pixels.length; k++) if (hasMargin(k)) sum += target(k);
+            return sum;
         }
     }
 
@@ -495,6 +498,7 @@ public final class SenseFinder {
                                           AtomicBoolean cancel) {
         double[] yaws = shifted(base, from - 1, delta);
         if (!Double.isNaN(offsetOf(turn, yaws))) return true;
+        if (probeNanos <= 0L) return false;
         return solveRest(turn, yaws, from, CertifiedBnb.Mode.FIRST_FEASIBLE, probeNanos, cancel) != null;
     }
 
@@ -697,21 +701,30 @@ public final class SenseFinder {
             Candidate prev = bands.get(key);
             if (prev == null || c.offset > prev.offset) bands.put(key, c);
         }
-        Map<Integer, List<Candidate>> byBand = new LinkedHashMap<>();
-        for (Candidate c : bands.values()) {
-            byBand.computeIfAbsent((int) Math.floor(c.percent() / cfg.bandPercent), k -> new ArrayList<>()).add(c);
+        List<Candidate> all = new ArrayList<>(bands.values());
+        double[] carried = new double[all.size()];
+        parallel(cfg.threads, all.size(), i -> {
+            if (cancel != null && cancel.get()) return;
+            carried[i] = carriedTarget(turn, all.get(i));
+        });
+        Map<Integer, List<Integer>> byBand = new LinkedHashMap<>();
+        for (int i = 0; i < all.size(); i++) {
+            byBand.computeIfAbsent((int) Math.floor(all.get(i).percent() / cfg.bandPercent), k -> new ArrayList<>()).add(i);
         }
-        for (List<Candidate> band : byBand.values()) {
-            band.sort(furthest());
-            double kept = -1.0;
-            for (Candidate c : band) {
-                double jump = c.margin(0);
-                if (Double.isNaN(jump) || jump > kept + MARGIN_TIE) {
-                    out.add(c);
-                    if (!Double.isNaN(jump)) kept = jump;
-                }
-            }
+        for (List<Integer> band : byBand.values()) {
+            band.sort((x, y) -> {
+                int c = compareMargin(carried[x], carried[y]);
+                return c != 0 ? c : compareOffset(all.get(x), all.get(y));
+            });
+            for (int j = 0; j < Math.min(cfg.rowsPerBand, band.size()); j++) out.add(all.get(band.get(j)));
         }
+        Map<Long, Candidate> furthestPerAngle = new LinkedHashMap<>();
+        for (Candidate c : all) {
+            long bucket = (long) Math.floor(unwrapNear(c.jumpFacing(turn), center) / cfg.angleBucketDeg);
+            Candidate prev = furthestPerAngle.get(bucket);
+            if (prev == null || c.offset > prev.offset) furthestPerAngle.put(bucket, c);
+        }
+        for (Candidate c : furthestPerAngle.values()) if (!out.contains(c)) out.add(c);
         return out;
     }
 
@@ -839,6 +852,22 @@ public final class SenseFinder {
                 turn.turnTicks, scope, below, above);
     }
 
+    static double carriedTarget(Turn turn, Candidate c) {
+        double sum = 0.0;
+        for (int k = 0; k < c.pixels.length; k++) {
+            if (!c.scoped[k]) continue;
+            if (c.hasMargin(k)) {
+                sum += c.target(k);
+                continue;
+            }
+            int tick = turn.turnTicks[k];
+            int below = pixelReach(turn, c.yaws, tick, -c.pixelDeg, 0L, null);
+            int above = pixelReach(turn, c.yaws, tick, c.pixelDeg, 0L, null);
+            sum += (1 + below + above) * c.pixelDeg;
+        }
+        return sum;
+    }
+
     public static void fillMargins(Turn turn, Candidate c, long probeNanos, AtomicBoolean cancel) {
         for (int k = 0; k < c.pixels.length; k++) {
             if (!c.scoped[k] || c.hasMargin(k)) continue;
@@ -887,22 +916,22 @@ public final class SenseFinder {
     public static Comparator<Candidate> by(Mode mode) {
         if (mode == Mode.FURTHEST) return furthest();
         if (mode == Mode.SENSE) return sense();
-        return weakest();
+        return margin();
     }
 
     public static Comparator<Candidate> sense() {
         return (a, b) -> {
             int c = Float.compare(b.sens, a.sens);
             if (c != 0) return c;
-            c = compareMargin(a.weakest(), b.weakest());
+            c = compareMargin(a.totalTarget(), b.totalTarget());
             if (c != 0) return c;
             return compareOffset(a, b);
         };
     }
 
-    public static Comparator<Candidate> weakest() {
+    public static Comparator<Candidate> margin() {
         return (a, b) -> {
-            int c = compareMargin(a.weakest(), b.weakest());
+            int c = compareMargin(a.totalTarget(), b.totalTarget());
             if (c != 0) return c;
             c = compareOffset(a, b);
             if (c != 0) return c;
@@ -914,7 +943,7 @@ public final class SenseFinder {
         return (a, b) -> {
             int c = compareOffset(a, b);
             if (c != 0) return c;
-            c = compareMargin(a.weakest(), b.weakest());
+            c = compareMargin(a.totalTarget(), b.totalTarget());
             if (c != 0) return c;
             return Float.compare(b.sens, a.sens);
         };
