@@ -82,8 +82,6 @@ public final class InputOverlay {
     private static final String EFFECTS_ADD = "+ add";
     private static final String EFFECTS_COPY_LABEL = "Copy to";
     private static final String EFFECTS_CLEAR_LABEL = "Clear";
-    private static final String EFFECTS_CLEAR_TICK = "This tick";
-    private static final String EFFECTS_CLEAR_ALL = "All ticks";
     private static final String EFFECTS_ADD_CHIP = "+";
     private static final float EFFECTS_COLUMN_WIDTH = 150;
     private static final float EFFECTS_CONTROL_WIDTH = 190;
@@ -1696,8 +1694,8 @@ public final class InputOverlay {
         boolean following = rowIndex + 1 < data.size();
         boolean selected = selectionHasOtherRow(rowIndex);
         boolean all = data.size() > 1;
-        boolean clearTick = row.hasEffects();
-        boolean copy = clearTick && (following || selected || all);
+        boolean ownEffects = row.hasEffects();
+        boolean copy = ownEffects && (following || selected || all);
         boolean clear = anyRowHasEffects();
         if (!copy && !clear) return;
         effectsSeparator();
@@ -1711,22 +1709,11 @@ public final class InputOverlay {
             ImGui.tableNextColumn();
             Controls.labelCell(EFFECTS_COPY_LABEL);
             ImGui.tableNextColumn();
-            boolean first = true;
-            if (following) {
-                first = false;
-                if (Controls.secondaryButton(EFFECTS_TO_FOLLOWING, w)) copyEffects(row, rowIndex, EFFECTS_TO_FOLLOWING);
-            }
-            if (!first) ImGui.sameLine(0, gap);
-            first = false;
-            if (!selected) {
-                Controls.disabledButton(EFFECTS_TO_SELECTED, w);
-            } else if (Controls.secondaryButton(EFFECTS_TO_SELECTED, w)) {
-                copyEffects(row, rowIndex, EFFECTS_TO_SELECTED);
-            }
-            if (all) {
-                if (!first) ImGui.sameLine(0, gap);
-                if (Controls.secondaryButton(EFFECTS_TO_ALL, w)) copyEffects(row, rowIndex, EFFECTS_TO_ALL);
-            }
+            copyButton(row, rowIndex, EFFECTS_TO_FOLLOWING, following, w);
+            ImGui.sameLine(0, gap);
+            copyButton(row, rowIndex, EFFECTS_TO_SELECTED, selected, w);
+            ImGui.sameLine(0, gap);
+            copyButton(row, rowIndex, EFFECTS_TO_ALL, all, w);
             ImGui.tableNextColumn();
         }
         if (clear) {
@@ -1735,15 +1722,13 @@ public final class InputOverlay {
             ImGui.tableNextColumn();
             Controls.labelCell(EFFECTS_CLEAR_LABEL);
             ImGui.tableNextColumn();
-            boolean first = true;
-            if (clearTick) {
-                first = false;
-                if (Controls.dangerButton(EFFECTS_CLEAR_TICK, w)) {
-                    row.clearEffects();
-                    notifyChange(rowIndex);
-                }
+            if (!anyRowHasEffects(rowIndex)) {
+                Controls.disabledDangerButton(EFFECTS_TO_FOLLOWING, w);
+            } else if (Controls.dangerButton(EFFECTS_TO_FOLLOWING, w)) {
+                for (int i = rowIndex; i < data.size(); i++) data.get(i).clearEffects();
+                notifyChange(rowIndex);
             }
-            if (!first) ImGui.sameLine(0, gap);
+            ImGui.sameLine(0, gap);
             if (!selected) {
                 Controls.disabledDangerButton(EFFECTS_TO_SELECTED, w);
             } else if (Controls.dangerButton(EFFECTS_TO_SELECTED, w)) {
@@ -1756,7 +1741,7 @@ public final class InputOverlay {
                 notifyChange(firstRow);
             }
             ImGui.sameLine(0, gap);
-            if (Controls.dangerButton(EFFECTS_CLEAR_ALL, w)) {
+            if (Controls.dangerButton(EFFECTS_TO_ALL, w)) {
                 for (InputRow other : data.getRows()) other.clearEffects();
                 notifyFullResim();
             }
@@ -1767,9 +1752,17 @@ public final class InputOverlay {
         ThemeManager.endStandardFormTable();
     }
 
+    private void copyButton(InputRow row, int rowIndex, String target, boolean enabled, float width) {
+        if (!enabled) {
+            Controls.disabledButton(target, width);
+        } else if (Controls.secondaryButton(target, width)) {
+            copyEffects(row, rowIndex, target);
+        }
+    }
+
     private float effectsControlWidth() {
         float button = 0f;
-        for (String label : new String[]{EFFECTS_TO_FOLLOWING, EFFECTS_TO_SELECTED, EFFECTS_TO_ALL, EFFECTS_CLEAR_TICK, EFFECTS_CLEAR_ALL}) {
+        for (String label : new String[]{EFFECTS_TO_FOLLOWING, EFFECTS_TO_SELECTED, EFFECTS_TO_ALL}) {
             button = Math.max(button, Controls.buttonWidth(label));
         }
         float row = 3f * button + 2f * ImGui.getStyle().getItemSpacing().x;
@@ -1784,8 +1777,12 @@ public final class InputOverlay {
     }
 
     private boolean anyRowHasEffects() {
-        for (InputRow other : data.getRows()) {
-            if (other.hasEffects()) return true;
+        return anyRowHasEffects(0);
+    }
+
+    private boolean anyRowHasEffects(int from) {
+        for (int i = Math.max(0, from); i < data.size(); i++) {
+            if (data.get(i).hasEffects()) return true;
         }
         return false;
     }
