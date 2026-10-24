@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core;
 
+import de.legoshi.parkourcalc.core.ui.MovementEffect;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -97,7 +98,7 @@ public class TurnTimingTest {
         double[] facing = {0.0, 1.0, 40.0, 42.0, -178.0};
         int n = facing.length;
         TurnProfileController.Current cur = new TurnProfileController.Current(3, -1, facing, new int[n], new boolean[n],
-                new int[n], new boolean[n], new boolean[n], new boolean[n], new int[n], new int[n], new int[n], new int[0], null, null,
+                new int[n], new boolean[n], new boolean[n], new boolean[n], new int[n][MovementEffect.count()], new int[0], null, null,
                 null, 0.1, null);
         assertEquals(3, TurnTiming.mainTurnTick(cur));
     }

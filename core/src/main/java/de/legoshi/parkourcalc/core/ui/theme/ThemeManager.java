@@ -35,6 +35,7 @@ public final class ThemeManager {
     private static final float[] OK           = rgb(0xa6, 0xe3, 0xa1, 1.00f);
     private static final float[] FOCUS        = rgb(0xb4, 0xbe, 0xfe, 1.00f);
     private static final float[] TELEPORT     = rgb(0x94, 0xe2, 0xd5, 1.00f);
+    private static final float[] EFFECT       = rgb(0xcb, 0xa6, 0xf7, 1.00f);
     private static final float[] STATUS_BG    = rgb(0x18, 0x18, 0x25, 1.00f);
 
     // Button state fills, lifted byte-exact from kit.css .btn--primary / .btn--danger swatches.
@@ -44,6 +45,9 @@ public final class ThemeManager {
     private static final float[] DANGER_HOVER  = rgb(0xff, 0xa3, 0xbd, 1.00f);
     private static final float[] DANGER_ACTIVE = rgb(0xd0, 0x76, 0x8f, 1.00f);
     private static final float[] DANGER_BORDER = rgb(0xe0, 0x6a, 0x8c, 1.00f);
+    private static final float[] DANGER_DISABLED        = rgb(0x4a, 0x2f, 0x3c, 1.00f);
+    private static final float[] DANGER_DISABLED_BORDER = rgb(0x6e, 0x40, 0x52, 1.00f);
+    private static final float[] DANGER_DISABLED_TEXT   = rgb(0xa8, 0x6f, 0x82, 1.00f);
 
     // Table tokens that restate a chrome value are aliases, not second literals (design system 4.2 / 6 C2).
     private static final float[] TABLE_ROW_BASE         = PANEL;
@@ -708,6 +712,10 @@ public final class ThemeManager {
         return u32(TELEPORT);
     }
 
+    public static int effectColor() {
+        return u32(EFFECT);
+    }
+
     public static int panelColor() {
         return u32(PANEL);
     }
@@ -750,6 +758,10 @@ public final class ThemeManager {
 
     public static int teleportTintColor(float alpha) {
         return ImGui.colorConvertFloat4ToU32(TELEPORT[0], TELEPORT[1], TELEPORT[2], alpha);
+    }
+
+    public static int effectTintColor(float alpha) {
+        return ImGui.colorConvertFloat4ToU32(EFFECT[0], EFFECT[1], EFFECT[2], alpha);
     }
 
     public static int bgTintColor(float alpha) {
@@ -806,6 +818,19 @@ public final class ThemeManager {
     }
 
     public static void popDisabledButton() {
+        ImGui.popStyleColor(5);
+    }
+
+    public static void pushDisabledDangerButton() {
+        float[] f = DANGER_DISABLED;
+        ImGui.pushStyleColor(ImGuiCol.Button, f[0], f[1], f[2], f[3]);
+        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, f[0], f[1], f[2], f[3]);
+        ImGui.pushStyleColor(ImGuiCol.ButtonActive, f[0], f[1], f[2], f[3]);
+        ImGui.pushStyleColor(ImGuiCol.Border, DANGER_DISABLED_BORDER[0], DANGER_DISABLED_BORDER[1], DANGER_DISABLED_BORDER[2], DANGER_DISABLED_BORDER[3]);
+        ImGui.pushStyleColor(ImGuiCol.Text, DANGER_DISABLED_TEXT[0], DANGER_DISABLED_TEXT[1], DANGER_DISABLED_TEXT[2], DANGER_DISABLED_TEXT[3]);
+    }
+
+    public static void popDisabledDangerButton() {
         ImGui.popStyleColor(5);
     }
 
