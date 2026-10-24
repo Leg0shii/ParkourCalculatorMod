@@ -202,9 +202,11 @@ public final class CachedBoxGeometry implements AutoCloseable {
         );
         frameRuns = runs;
         RenderSystem.getCompiledPipeline(FabricRenderLayers.thinLinesPipeline());
+        RenderSystem.getCompiledPipeline(FabricRenderLayers.lineDepthPipeline());
         RenderSystem.getCompiledPipeline(FabricRenderLayers.translucentBoxPipeline());
         RenderSystem.getCompiledPipeline(FabricRenderLayers.boxDepthPipeline());
         RenderSystem.getCompiledPipeline(FabricRenderLayers.constraintFillPipeline());
+        RenderSystem.getCompiledPipeline(FabricRenderLayers.constraintDepthPipeline());
         frameReady = true;
     }
 
@@ -368,16 +370,30 @@ public final class CachedBoxGeometry implements AutoCloseable {
     }
 
     public void drawConstraintFill(RenderPass pass) {
+        drawConstraintFaces(pass, FabricRenderLayers.constraintFillPipeline());
+    }
+
+    public void drawConstraintDepth(RenderPass pass) {
+        drawConstraintFaces(pass, FabricRenderLayers.constraintDepthPipeline());
+    }
+
+    private void drawConstraintFaces(RenderPass pass, RenderPipeline pipeline) {
         if (constraintFaceVerts > 0) {
-            drawRange(pass, faceSegments, FabricRenderLayers.constraintFillPipeline(), PrimitiveTopology.TRIANGLES, faceTotal - constraintFaceVerts, constraintFaceVerts);
+            drawRange(pass, faceSegments, pipeline, PrimitiveTopology.TRIANGLES, faceTotal - constraintFaceVerts, constraintFaceVerts);
         }
     }
 
-    public void drawLines(RenderPass pass) {
+    public void drawPathLines(RenderPass pass) {
+        drawPathLines(pass, FabricRenderLayers.thinLinesPipeline());
+    }
+
+    public void drawLineDepth(RenderPass pass) {
+        drawPathLines(pass, FabricRenderLayers.lineDepthPipeline());
+    }
+
+    private void drawPathLines(RenderPass pass, RenderPipeline pipeline) {
         int[] runs = frameRuns;
-        RenderPipeline pipeline = FabricRenderLayers.thinLinesPipeline();
-        int trailingLineVerts = constraintLineVerts + reachLineVerts;
-        int trailingLineBase = lineTotal - trailingLineVerts;
+        int trailingLineBase = lineTotal - constraintLineVerts - reachLineVerts;
         boolean hasSubtick = lineMainTotal < trailingLineBase;
         for (int k = 0; k + 1 < runs.length; k += 2) {
             int a = runs[k];
@@ -387,9 +403,11 @@ public final class CachedBoxGeometry implements AutoCloseable {
                 drawRange(pass, lineSegments, pipeline, PrimitiveTopology.DEBUG_LINES, lineMainTotal + subtickStarts[a], subtickStarts[b] - subtickStarts[a]);
             }
         }
-        if (trailingLineVerts > 0) {
-            drawRange(pass, lineSegments, pipeline, PrimitiveTopology.DEBUG_LINES, trailingLineBase, trailingLineVerts);
-        }
+        drawRange(pass, lineSegments, pipeline, PrimitiveTopology.DEBUG_LINES, trailingLineBase, reachLineVerts);
+    }
+
+    public void drawConstraintLines(RenderPass pass) {
+        drawRange(pass, lineSegments, FabricRenderLayers.thinLinesPipeline(), PrimitiveTopology.DEBUG_LINES, lineTotal - constraintLineVerts, constraintLineVerts);
     }
 
     public double anchorX() {

@@ -338,15 +338,15 @@ public final class CachedBoxGeometry {
                 visible.add(chunk);
             }
         }
-        List<Chunk> withTail = new ArrayList<>(visible);
-        if (tail.ready) {
-            withTail.add(tail);
-        }
-        drawPass(FabricRenderLayers.LINES, false, model, withTail);
+        drawPass(FabricRenderLayers.LINES, false, model, visible);
         drawPass(FabricRenderLayers.TRANSLUCENT_FACES, true, model, visible);
         drawPass(FabricRenderLayers.FACE_DEPTH, true, model, visible);
+        drawPass(FabricRenderLayers.LINE_DEPTH, false, model, visible);
         if (tail.ready) {
-            drawPass(FabricRenderLayers.CONSTRAINT_FILL, true, model, List.of(tail));
+            List<Chunk> tailOnly = List.of(tail);
+            drawPass(FabricRenderLayers.TRANSLUCENT_FACES, true, model, tailOnly);
+            drawPass(FabricRenderLayers.LINES, false, model, tailOnly);
+            drawPass(FabricRenderLayers.FACE_DEPTH, true, model, tailOnly);
         }
     }
 

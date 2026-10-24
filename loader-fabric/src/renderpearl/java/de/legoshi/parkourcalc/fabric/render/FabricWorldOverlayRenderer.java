@@ -75,10 +75,13 @@ public final class FabricWorldOverlayRenderer {
         }
 
         long renderStart = Perf.now();
-        cached.drawLines(pass);
+        cached.drawPathLines(pass);
         cached.drawFaces(pass);
         cached.drawFaceDepth(pass);
+        cached.drawLineDepth(pass);
         cached.drawConstraintFill(pass);
+        cached.drawConstraintLines(pass);
+        cached.drawConstraintDepth(pass);
         cached.finishFrame();
 
         Perf.stop("worldOverlay", renderStart);

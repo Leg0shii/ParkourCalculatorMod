@@ -27,6 +27,21 @@ public final class FabricRenderLayers {
                     .createCompositeState(false)
     );
 
+    public static final RenderType LINE_DEPTH = RenderType.create(
+            "parkourcalc_line_depth",
+            DefaultVertexFormat.POSITION_COLOR_NORMAL,
+            VertexFormat.Mode.LINES,
+            RenderType.SMALL_BUFFER_SIZE,
+            RenderType.CompositeState.builder()
+                    .setShaderState(RenderStateShard.RENDERTYPE_LINES_SHADER)
+                    .setLineState(new RenderStateShard.LineStateShard(OptionalDouble.of(BoxStyle.LINE_WIDTH)))
+                    .setLayeringState(RenderStateShard.VIEW_OFFSET_Z_LAYERING)
+                    .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
+                    .setWriteMaskState(new RenderStateShard.WriteMaskStateShard(false, true))
+                    .setCullState(RenderStateShard.NO_CULL)
+                    .createCompositeState(false)
+    );
+
     public static final RenderType TRANSLUCENT_FACES = RenderType.create(
             "parkourcalc_translucent_faces",
             DefaultVertexFormat.POSITION_COLOR,
@@ -57,18 +72,4 @@ public final class FabricRenderLayers {
                     .createCompositeState(false)
     );
 
-    public static final RenderType CONSTRAINT_FILL = RenderType.create(
-            "parkourcalc_constraint_fill",
-            DefaultVertexFormat.POSITION_COLOR,
-            VertexFormat.Mode.QUADS,
-            RenderType.SMALL_BUFFER_SIZE,
-            RenderType.CompositeState.builder()
-                    .setShaderState(RenderStateShard.POSITION_COLOR_SHADER)
-                    .setLayeringState(RenderStateShard.POLYGON_OFFSET_LAYERING)
-                    .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
-                    .setDepthTestState(RenderStateShard.LEQUAL_DEPTH_TEST)
-                    .setWriteMaskState(new RenderStateShard.WriteMaskStateShard(true, true))
-                    .setCullState(RenderStateShard.NO_CULL)
-                    .createCompositeState(false)
-    );
 }
