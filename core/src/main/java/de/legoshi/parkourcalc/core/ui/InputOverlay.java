@@ -1745,7 +1745,7 @@ public final class InputOverlay {
             }
             if (!first) ImGui.sameLine(0, gap);
             if (!selected) {
-                Controls.disabledButton(EFFECTS_TO_SELECTED, w);
+                Controls.disabledDangerButton(EFFECTS_TO_SELECTED, w);
             } else if (Controls.dangerButton(EFFECTS_TO_SELECTED, w)) {
                 int firstRow = rowIndex;
                 for (int i : selection.getSelectedRows()) {

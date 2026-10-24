@@ -150,13 +150,23 @@ public final class Controls {
 
     public static void disabledButton(String label, float width) {
         ThemeManager.pushDisabledButton();
+        inertButton(label, width);
+        ThemeManager.popDisabledButton();
+    }
+
+    public static void disabledDangerButton(String label, float width) {
+        ThemeManager.pushDisabledDangerButton();
+        inertButton(label, width);
+        ThemeManager.popDisabledDangerButton();
+    }
+
+    private static void inertButton(String label, float width) {
         ImGui.beginDisabled(true);
         ImGui.pushStyleVar(ImGuiStyleVar.Alpha, 1.0f);
         ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, BUTTON_PAD_X * ThemeManager.uiScale(), BUTTON_PAD_Y * ThemeManager.uiScale());
         ImGui.button(label, width, 0f);
         ImGui.popStyleVar(2);
         ImGui.endDisabled();
-        ThemeManager.popDisabledButton();
     }
 
     /** On-screen width of a styled button for this label, including the shared BUTTON_PAD_X padding (which the default FramePadding underestimates). */
