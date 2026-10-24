@@ -219,6 +219,7 @@ public final class Application {
         FileSystemSaveStore saveStore = saveController.getSaveStore();
         String mcVersion = saveStore != null ? saveStore.getMcVersion() : null;
         forwardModel = ExactJumpModel.forMcVersion(mcVersion);
+        inputOverlay.setMcVersion(mcVersion);
         constraintKeyController = new ConstraintKeyController(
                 mc, angleSolverState, selection, constraintSelection, saveController::markDirty,
                 forwardModel.modern(), inputData::size, settings, this::pushHudMessage);

@@ -36,7 +36,7 @@ Each loader tree is a [Stonecutter](https://stonecutter.kikugie.dev/) project: `
 | Task | Look here |
 | --- | --- |
 | Orchestration / wiring | `core/.../Application.java` (read first); loader entry points `FabricParkourCalculator`, `ForgeParkourCalculator` |
-| Input model & editing | `core/.../ui/InputData.java`, `InputRow.java`, `InputOverlay.java` |
+| Input model & editing | `core/.../ui/InputData.java`, `InputRow.java`, `InputOverlay.java`; per-tick movement effects in `ui/MovementEffect.java` (which effects each MC version has, the pre-1.20.5 byte amplifier wrap), applied loader-side by `sim/MovementEffects.java` in each loader tree and edited in the Effects column |
 | Save / load (JSON) | `core/.../save/SaveIO.java` (schema + parse), `SaveFile.java`, `FileSystemSaveStore.java`; mediator `core/.../SaveController.java` |
 | UI shell / theming | `core/.../ui/MainWindowOverlay.java`, `OverlayManager.java`, `ui/theme/ThemeManager.java` (Catppuccin Mocha), `Settings.java` |
 | Angle solver (core logic) | `core/.../anglesolver/AngleSolverEngine.java` (orchestrator), `AngleSolverState.java` |

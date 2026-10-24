@@ -4,6 +4,7 @@ import de.legoshi.parkourcalc.core.ports.PlaybackBridge;
 import de.legoshi.parkourcalc.core.sim.Checkpoint;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
+import de.legoshi.parkourcalc.core.ui.MovementEffect;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -29,6 +30,7 @@ public class FakePlaybackBridge implements PlaybackBridge {
     public int speedAmplifier;
     public int jumpBoostAmplifier;
     public int slownessAmplifier;
+    public int[] effectLevels;
     public int applyEffectsCalls;
     public boolean replicaAllowed = true;
     public boolean replicaActive;
@@ -65,10 +67,11 @@ public class FakePlaybackBridge implements PlaybackBridge {
     @Override public void suppressFlight() { suppressFlightCalls++; }
     @Override public void closeUI() { }
     @Override
-    public void applyEffects(int speedAmplifier, int jumpBoostAmplifier, int slownessAmplifier) {
-        this.speedAmplifier = speedAmplifier;
-        this.jumpBoostAmplifier = jumpBoostAmplifier;
-        this.slownessAmplifier = slownessAmplifier;
+    public void applyEffects(int[] effectLevels) {
+        this.effectLevels = effectLevels.clone();
+        this.speedAmplifier = effectLevels[MovementEffect.SPEED.ordinal()];
+        this.jumpBoostAmplifier = effectLevels[MovementEffect.JUMP_BOOST.ordinal()];
+        this.slownessAmplifier = effectLevels[MovementEffect.SLOWNESS.ordinal()];
         applyEffectsCalls++;
     }
 

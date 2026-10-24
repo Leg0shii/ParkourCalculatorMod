@@ -2,6 +2,7 @@ package de.legoshi.parkourcalc.core.save;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public final class SaveFile {
 
@@ -53,6 +54,7 @@ public final class SaveFile {
         public int speedAmplifier;
         public int jumpBoostAmplifier;
         public int slownessAmplifier;
+        public Map<String, Integer> effects;
         public int hotbarSlot;
         public boolean teleport;
         public double teleportX;

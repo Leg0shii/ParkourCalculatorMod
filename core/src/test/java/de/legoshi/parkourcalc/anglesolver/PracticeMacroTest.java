@@ -16,6 +16,7 @@ import de.legoshi.parkourcalc.core.save.SaveFile;
 import de.legoshi.parkourcalc.core.save.SaveIO;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
+import de.legoshi.parkourcalc.core.ui.MovementEffect;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import org.junit.Test;
 
@@ -137,8 +138,8 @@ public class PracticeMacroTest {
             int expected = t < lead ? rig.cur.leadKeys[t] : rig.cur.keys[t - lead];
             assertEquals("tick " + t, expected, rig.bridge.keyMask());
             int k = Math.max(0, t - lead);
-            assertEquals("tick " + t, rig.cur.speedAmp[k], rig.bridge.speedAmplifier);
-            assertEquals("tick " + t, rig.cur.jumpAmp[k], rig.bridge.jumpBoostAmplifier);
+            assertEquals("tick " + t, rig.cur.effects[k][MovementEffect.SPEED.ordinal()], rig.bridge.speedAmplifier);
+            assertEquals("tick " + t, rig.cur.effects[k][MovementEffect.JUMP_BOOST.ordinal()], rig.bridge.jumpBoostAmplifier);
         }
         assertEquals(1, rig.bridge.beginReplicaCalls);
         assertEquals(0, rig.bridge.endReplicaCalls);
@@ -210,7 +211,7 @@ public class PracticeMacroTest {
             if (live == null) break;
             int k = Math.min(live.recorded, rig.cur.n - 1);
             assertEquals("tick " + t, (float) rig.cur.facing[k], rig.bridge.yaw, 0f);
-            assertEquals("tick " + t, rig.cur.speedAmp[k], rig.bridge.speedAmplifier);
+            assertEquals("tick " + t, rig.cur.effects[k][MovementEffect.SPEED.ordinal()], rig.bridge.speedAmplifier);
         }
         while (rig.tracker.live() != null) rig.playerTick();
         assertEquals(PracticeMacro.TURN, rig.tracker.last().macro);

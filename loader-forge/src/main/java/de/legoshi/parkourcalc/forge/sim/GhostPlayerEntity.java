@@ -94,6 +94,11 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
     }
 
     @Override
+    public boolean canBePushed() {
+        return false;
+    }
+
+    @Override
     public void addExhaustion(float amount) {
     }
 

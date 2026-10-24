@@ -15,7 +15,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
-//? if <1.21.2
+//? if <26.1
 //import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MoverType;
@@ -335,6 +335,7 @@ public class SimulatorEntity extends Player {
 
     @Override
     public void tick() {
+        this.setOldPosAndRot();
         Vec3 before = this.position();
         super.tick();
         if (!this.collisionAngleComputedThisTick) {
@@ -360,7 +361,7 @@ public class SimulatorEntity extends Player {
 
         // Capture pre-input.tick() so wasShiftKeyDown/hasForwardImpulse hold the previous tick's state.
         boolean wasShiftKeyDown = this.input.keyPresses.shift();
-        //? if >=1.21.2 {
+        //? if >=26.1 {
         boolean hasForwardImpulse = this.input.hasForwardImpulse();
         //?} else {
         /*boolean hadEnoughImpulse = this.hasEnoughImpulseToStartSprinting();
@@ -382,7 +383,7 @@ public class SimulatorEntity extends Player {
         /*this.input.tick(this.isMovingSlowly(), Mth.clamp(0.3F + EnchantmentHelper.getSneakingSpeedBonus(this), 0.0F, 1.0F));
         *///?}
 
-        //? if >=1.21.2 {
+        //? if >=26.1 {
         if (wasShiftKeyDown || this.isUsingItem() && !this.isPassenger() || this.input.keyPresses.backward()) {
             this.sprintTriggerTime = 0;
         }
@@ -476,7 +477,7 @@ public class SimulatorEntity extends Player {
 
     // Helpers copied 1-to-1 from LocalEntity (private there).
 
-    //? if >=1.21.2 {
+    //? if >=26.1 {
     private boolean canStartSprinting() {
         return !this.isSprinting()
                 && this.input.hasForwardImpulse()

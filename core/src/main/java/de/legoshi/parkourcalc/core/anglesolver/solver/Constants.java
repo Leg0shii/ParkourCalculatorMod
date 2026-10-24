@@ -28,10 +28,10 @@ public final class Constants {
         if (sprinting) {
             e = e * (1.0 + (double) 0.3F);
         }
-        if (speedAmplifier > 0) {
+        if (speedAmplifier != 0) {
             e = e * (1.0 + (double) 0.2F * speedAmplifier);
         }
-        if (slownessAmplifier > 0) {
+        if (slownessAmplifier != 0) {
             e = e * (1.0 + (double) -0.15F * slownessAmplifier);
         }
         if (e < 0.0) {

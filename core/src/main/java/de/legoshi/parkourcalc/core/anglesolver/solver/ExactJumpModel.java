@@ -1,6 +1,7 @@
 package de.legoshi.parkourcalc.core.anglesolver.solver;
 
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
+import de.legoshi.parkourcalc.core.ui.MovementEffect;
 
 /** Byte-exact MC sprint-jump forward: a direct port of the real movement float chain (hard
  *  thresholds + exact MathHelper sine table + per-axis momentum cancellation). Reproduces the live
@@ -30,6 +31,10 @@ public final class ExactJumpModel implements ForwardModel {
     private static final double WATER_SPRINT_DRAG = (double) 0.9F;
     private static final double MODERN_FLUID_GRAVITY = Constants.GRAVITY / 16.0;
     private static final double WEB_Y_SCALE = (double) 0.05F;
+    private static final double WEAVING_WEB_XZ_SCALE = 0.5;
+    private static final double WEAVING_WEB_Y_SCALE = 0.25;
+    private static final double DOLPHINS_GRACE_DRAG = (double) 0.96F;
+    private static final double COLLIDE_EPSILON = 1.0E-7;
 
     private static final float SQUARE_DIAG_INPUT = squareDiagInput();
 
@@ -54,6 +59,7 @@ public final class ExactJumpModel implements ForwardModel {
     private final boolean sine262;
     private final boolean foldedInputRad;
     private final boolean floatSprintBoost;
+    private final boolean byteAmplifier;
 
     public ExactJumpModel(double inertiaThreshold, boolean perAxisInertia, boolean modern) {
         this(inertiaThreshold, perAxisInertia, modern, false);
@@ -70,12 +76,27 @@ public final class ExactJumpModel implements ForwardModel {
 
     public ExactJumpModel(double inertiaThreshold, boolean perAxisInertia, boolean modern, boolean sine262,
                           boolean foldedInputRad, boolean floatSprintBoost) {
+        this(inertiaThreshold, perAxisInertia, modern, sine262, foldedInputRad, floatSprintBoost, false);
+    }
+
+    public ExactJumpModel(double inertiaThreshold, boolean perAxisInertia, boolean modern, boolean sine262,
+                          boolean foldedInputRad, boolean floatSprintBoost, boolean byteAmplifier) {
         this.inertiaThreshold = inertiaThreshold;
         this.perAxisInertia = perAxisInertia;
         this.modern = modern;
         this.sine262 = sine262;
         this.foldedInputRad = foldedInputRad;
         this.floatSprintBoost = floatSprintBoost;
+        this.byteAmplifier = byteAmplifier;
+    }
+
+    public ExactJumpModel withByteAmplifier(boolean byteAmplifier) {
+        return new ExactJumpModel(inertiaThreshold, perAxisInertia, modern, sine262, foldedInputRad, floatSprintBoost,
+                byteAmplifier);
+    }
+
+    public boolean byteAmplifier() {
+        return byteAmplifier;
     }
 
     private float tableSin(float rad) {
@@ -130,6 +151,10 @@ public final class ExactJumpModel implements ForwardModel {
      *  players (the modern default here): combined-XZ |v|^2 &lt; 9.0E-6. Year-versioned MC (26.x
      *  onward) additionally runs the rewritten double-indexed sine lookup. */
     public static ExactJumpModel forMcVersion(String mcVersion) {
+        return eraModel(mcVersion).withByteAmplifier(MovementEffect.wrapsAmplifier(mcVersion));
+    }
+
+    private static ExactJumpModel eraModel(String mcVersion) {
         if (mcVersion != null && mcVersion.startsWith("1.8")) return new ExactJumpModel(0.005, true, false);
         if (mcVersion != null && mcVersion.startsWith("1.12")) return new ExactJumpModel(0.003, true, false, false, true);
         if (isPerAxisModernEra(mcVersion)) {
@@ -340,16 +365,19 @@ public final class ExactJumpModel implements ForwardModel {
 
             // (5) move (collision-free): position uses pre-gravity velocity.
             if (kind == SurfaceKind.COBWEB) {
-                posX[t + 1] = posX[t] + vx * 0.25;
-                posY[t + 1] = posY[t] + vy * WEB_Y_SCALE;
-                posZ[t + 1] = posZ[t] + vz * 0.25;
+                boolean weaving = scenario.weavingAt(t);
+                double webXz = weaving ? WEAVING_WEB_XZ_SCALE : 0.25;
+                posX[t + 1] = posX[t] + vx * webXz;
+                posY[t + 1] = posY[t] + vy * (weaving ? WEAVING_WEB_Y_SCALE : WEB_Y_SCALE);
+                posZ[t + 1] = posZ[t] + vz * webXz;
                 vx = 0.0;
                 vy = 0.0;
                 vz = 0.0;
             } else {
-                posX[t + 1] = posX[t] + vx;
+                boolean shapesBelow = modern && contact && !fluid && !isJumpTick;
+                posX[t + 1] = posX[t] + (shapesBelow && Math.abs(vx) < COLLIDE_EPSILON ? 0.0 : vx);
                 posY[t + 1] = posY[t] + vy;
-                posZ[t + 1] = posZ[t] + vz;
+                posZ[t + 1] = posZ[t] + (shapesBelow && Math.abs(vz) < COLLIDE_EPSILON ? 0.0 : vz);
             }
 
             if (modern && kind == SurfaceKind.LADDER && scenario.jumpAt(t)) {
@@ -378,7 +406,7 @@ public final class ExactJumpModel implements ForwardModel {
                     velZ[t + 1] = vz * fluidDrag;
                     velY[t + 1] = vy * fluidDrag - 0.02;
                 } else if (water) {
-                    double hDrag = sprint ? WATER_SPRINT_DRAG : WATER_DRAG;
+                    double hDrag = scenario.dolphinsGraceAt(t) ? DOLPHINS_GRACE_DRAG : sprint ? WATER_SPRINT_DRAG : WATER_DRAG;
                     double yd = vy * WATER_DRAG;
                     if (!sprint) {
                         yd -= MODERN_FLUID_GRAVITY;

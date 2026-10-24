@@ -7,9 +7,11 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.DebugFlags;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
+import de.legoshi.parkourcalc.core.ui.MovementEffect;
 import de.legoshi.parkourcalc.core.ui.Settings;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -45,9 +47,7 @@ public final class PlaybackController {
     private float startYaw;
     private Checkpoint startCarry;
     private int lastCapturedTick = -1;
-    private int lastSpeedAmplifier;
-    private int lastJumpBoostAmplifier;
-    private int lastSlownessAmplifier;
+    private int[] lastEffectLevels = new int[MovementEffect.count()];
 
     private Supplier<StartRange> startRangeResolver;
     private Runnable onStart = () -> { };
@@ -66,6 +66,7 @@ public final class PlaybackController {
     // displayedYaw is the camera yaw; it equals the ideal lerp value when the
     // recording's angular speed is under the cap, otherwise lags at the cap rate.
     private float displayedYaw;
+    private float shownHeadYaw;
     private long lastFrameNanos;
 
     private float currentTickPitch;
@@ -209,6 +210,7 @@ public final class PlaybackController {
         currentTickYaw = yaw;
         displayTargetYaw = yaw;
         displayedYaw = yaw;
+        shownHeadYaw = yaw;
         currentTickPitch = runner.getStartPitch();
         prevTickPitch = runner.getStartPitch();
         displayedPitch = runner.getStartPitch();
@@ -216,13 +218,8 @@ public final class PlaybackController {
         tickEndNanos = 0L;
         lastFrameNanos = 0L;
         InputRow firstRow = inputData.get(from);
-        int firstSpeedAmp = firstRow.getSpeedAmplifier();
-        int firstJumpAmp = firstRow.getJumpBoostAmplifier();
-        int firstSlowAmp = firstRow.getSlownessAmplifier();
-        bridge.applyEffects(firstSpeedAmp, firstJumpAmp, firstSlowAmp);
-        lastSpeedAmplifier = firstSpeedAmp;
-        lastJumpBoostAmplifier = firstJumpAmp;
-        lastSlownessAmplifier = firstSlowAmp;
+        lastEffectLevels = firstRow.getEffectLevels();
+        bridge.applyEffects(lastEffectLevels);
         if (DebugFlags.PAIRED_DIAGNOSTICS) {
             lastCapturedTick = -1;
             bridge.beginPlaybackCapture();
@@ -250,7 +247,7 @@ public final class PlaybackController {
         pausedAtNanos = 0L;
         if (bridge != null) {
             bridge.releaseAllKeys();
-            bridge.applyEffects(0, 0, 0);
+            bridge.applyEffects(new int[MovementEffect.count()]);
             if (DebugFlags.PAIRED_DIAGNOSTICS) {
                 bridge.finishPlaybackCapture();
             }
@@ -258,9 +255,7 @@ public final class PlaybackController {
                 runner.onReplayEnd();
             }
         }
-        lastSpeedAmplifier = 0;
-        lastJumpBoostAmplifier = 0;
-        lastSlownessAmplifier = 0;
+        lastEffectLevels = new int[MovementEffect.count()];
     }
 
     public float teleportNoticeAlpha() {
@@ -358,14 +353,10 @@ public final class PlaybackController {
         if (motion.isKeyActive(InputRow.Key.CLOSE_INVENTORY)) {
             bridge.closeInventory();
         }
-        int speedAmp = row.getSpeedAmplifier();
-        int jumpAmp = row.getJumpBoostAmplifier();
-        int slowAmp = row.getSlownessAmplifier();
-        if (speedAmp != lastSpeedAmplifier || jumpAmp != lastJumpBoostAmplifier || slowAmp != lastSlownessAmplifier) {
-            bridge.applyEffects(speedAmp, jumpAmp, slowAmp);
-            lastSpeedAmplifier = speedAmp;
-            lastJumpBoostAmplifier = jumpAmp;
-            lastSlownessAmplifier = slowAmp;
+        int[] effectLevels = row.getEffectLevels();
+        if (!Arrays.equals(effectLevels, lastEffectLevels)) {
+            bridge.applyEffects(effectLevels);
+            lastEffectLevels = effectLevels;
         }
         int hotbarSlot = row.getHotbarSlot();
         if (hotbarSlot >= 1) {
@@ -426,7 +417,8 @@ public final class PlaybackController {
     public void postTick() {
         if (!running || bridge == null) return;
         bridge.setYaw(displayedYaw);
-        bridge.setHeadYaw(displayedYaw);
+        bridge.settleHeadYaw(shownHeadYaw, displayedYaw);
+        shownHeadYaw = displayedYaw;
         if (pitchEngaged) bridge.setPitch(displayedPitch);
         if (restorePending) return;
         if (DebugFlags.DUMP_TICK_STATE) {
