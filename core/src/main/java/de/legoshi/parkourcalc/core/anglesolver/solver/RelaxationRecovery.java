@@ -300,8 +300,6 @@ public final class RelaxationRecovery {
         int n = lin.n;
         double[] yaws = new double[n];
         double prev = Double.NaN;
-        boolean max = obj.sense == Objective.Sense.MAX;
-        boolean axisX = obj.axis == JumpPhysicsInputs.Axis.X;
         double dvx = 0.0;
         double dvz = 0.0;
         for (int t = 0; t < n; t++) {
@@ -317,8 +315,8 @@ public final class RelaxationRecovery {
                     gx = StrictMath.cos(phi);
                     gz = StrictMath.sin(phi);
                 } else {
-                    gx = axisX ? (max ? 1.0 : -1.0) : 0.0;
-                    gz = axisX ? 0.0 : (max ? 1.0 : -1.0);
+                    gx = obj.gradX();
+                    gz = obj.gradZ();
                 }
                 chX = m * gx;
                 chZ = m * gz;
@@ -345,8 +343,6 @@ public final class RelaxationRecovery {
         int n = lin.n;
         double[] yaws = new double[n];
         double prev = Double.NaN;
-        boolean max = obj.sense == Objective.Sense.MAX;
-        boolean axisX = obj.axis == JumpPhysicsInputs.Axis.X;
         for (int t = 0; t < n; t++) {
             double gx = ux[t], gz = uz[t];
             if (gx * gx + gz * gz < 1.0e-16) {
@@ -354,8 +350,8 @@ public final class RelaxationRecovery {
                     yaws[t] = prev;
                     continue;
                 }
-                gx = axisX ? (max ? 1.0 : -1.0) : 0.0;
-                gz = axisX ? 0.0 : (max ? 1.0 : -1.0);
+                gx = obj.gradX();
+                gz = obj.gradZ();
             }
             yaws[t] = lin.recoverYawDeg(t, gx, gz);
             prev = yaws[t];

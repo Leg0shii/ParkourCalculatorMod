@@ -117,6 +117,8 @@ public final class InputOverlay {
     private static final String MENU_DUPLICATE = "Duplicate selected";
     private static final String MENU_SAVE_AS_NEW_TAS = "Save selected as new TAS";
 
+    private static final String MENU_SET_OBJECTIVE_TICK = "Set solver objective tick";
+    private static final String MENU_RESET_OBJECTIVE_TICK = "Objective tick back to the goal tick";
     private static final String MENU_LOCK_YAW = "Lock yaw value";
     private static final String MENU_YAW_INCREASING = "Yaw may only increase on %d row(s) (dF >= 0)";
     private static final String MENU_YAW_DECREASING = "Yaw may only decrease on %d row(s) (dF <= 0)";
@@ -2046,6 +2048,7 @@ public final class InputOverlay {
         renderYawLockOption();
         renderPitchLockOption();
         renderYawDirectionOption();
+        renderObjectiveTickOption();
 
         // Segment 3: destructive action, kept at the very bottom.
         renderDeleteOption();
@@ -2269,6 +2272,17 @@ public final class InputOverlay {
         }
         if (angleSolver.anyYawDirection(rows) && contextButton(String.format(MENU_YAW_ANY, n))) {
             angleSolver.setYawDirection(rows, null);
+        }
+    }
+
+    private void renderObjectiveTickOption() {
+        if (angleSolver == null || !angleSolver.offersObjectiveTick()) return;
+        int row = selection.singleSelectedRow();
+        if (row < 0) return;
+        if (angleSolver.isObjectiveTick(row)) {
+            if (contextButton(MENU_RESET_OBJECTIVE_TICK)) angleSolver.setObjectiveTick(-1);
+        } else if (contextButton(MENU_SET_OBJECTIVE_TICK)) {
+            angleSolver.setObjectiveTick(row);
         }
     }
 

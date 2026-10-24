@@ -226,6 +226,17 @@ public final class JumpLinearModel {
         return p0 + v0 * sPre[end];
     }
 
+    public double objectiveConst(Objective obj) {
+        int t = obj.tick;
+        double c0 = constPos(t, 0);
+        double c1 = constPos(t, 1);
+        if (obj.isMotion() && t > 0) {
+            c0 -= constPos(t - 1, 0);
+            c1 -= constPos(t - 1, 1);
+        }
+        return obj.dirX() * c0 + obj.dirZ() * c1;
+    }
+
     /** Per-tick objective gradient {@code c_t}: the 2D vector whose dot with {@code u_t} is the tick's
      *  contribution to {@code objDir·pos_objTick}. objDir is the direction to MAXIMIZE (MIN is negated). */
     public void objectiveVectors(Objective obj, double[] cx, double[] cz) {

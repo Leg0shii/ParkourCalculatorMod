@@ -29,7 +29,7 @@ public final class LeafSnap {
         ForwardPath path = exact.forward(sc, gf);
         double baseViol = compiled.maxViolation(gf, path);
         if (baseViol > feasTol) return null;
-        double baseObj = path.getPos(spec.objective.tick, spec.objective.axis);
+        double baseObj = spec.objective.evaluate(path);
 
         int[] enumTicks = enumerationTicks(spec, sc, gf);
         if (enumTicks.length == 0) return null;
@@ -101,7 +101,7 @@ public final class LeafSnap {
         double[] out = sc0.commit();
         ForwardPath check = exact.forward(sc, out);
         if (compiled.maxViolation(out, check) > feasTol) return null;
-        double outObj = check.getPos(spec.objective.tick, spec.objective.axis);
+        double outObj = spec.objective.evaluate(check);
         if (!better(outObj, baseObj, max)) return null;
         return out;
     }
@@ -141,8 +141,7 @@ public final class LeafSnap {
         private final ExactJumpModel exact;
         private final JumpPhysicsInputs sc;
         private final JumpConstraintCompiler.Compiled compiled;
-        private final int objTick;
-        private final JumpPhysicsInputs.Axis axis;
+        private final Objective objective;
         private final double[] gf;
         private final ForwardPath path;
 
@@ -151,8 +150,7 @@ public final class LeafSnap {
             this.exact = exact;
             this.sc = sc;
             this.compiled = compiled;
-            this.objTick = spec.objective.tick;
-            this.axis = spec.objective.axis;
+            this.objective = spec.objective;
             this.gf = gf;
             this.path = path;
         }
@@ -169,7 +167,7 @@ public final class LeafSnap {
         }
 
         double obj() {
-            return path.getPos(objTick, axis);
+            return objective.evaluate(path);
         }
 
         double viol() {

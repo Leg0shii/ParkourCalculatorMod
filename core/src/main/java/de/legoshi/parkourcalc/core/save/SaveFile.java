@@ -70,6 +70,7 @@ public final class SaveFile {
     public static final class AngleSolver {
         public int startTick;
         public int landingTick;
+        public Integer objectiveTick;
         public String axis;
         public String goal;
         public Boolean customAngle;

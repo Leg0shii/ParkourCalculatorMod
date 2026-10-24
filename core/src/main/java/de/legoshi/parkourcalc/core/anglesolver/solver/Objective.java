@@ -50,11 +50,40 @@ public final class Objective {
         return type == Type.MOTION;
     }
 
+    public Objective withTick(int newTick) {
+        return new Objective(axis, sense, newTick, smoothLambda, customYaw, type);
+    }
+
+    public double dirX() {
+        if (customYaw != null) return -StrictMath.sin(Angles.rad(customYaw));
+        return axis == JumpPhysicsInputs.Axis.X ? 1.0 : 0.0;
+    }
+
+    public double dirZ() {
+        if (customYaw != null) return StrictMath.cos(Angles.rad(customYaw));
+        return axis == JumpPhysicsInputs.Axis.Z ? 1.0 : 0.0;
+    }
+
+    public double gradX() {
+        return sense == Sense.MAX ? dirX() : -dirX();
+    }
+
+    public double gradZ() {
+        return sense == Sense.MAX ? dirZ() : -dirZ();
+    }
+
+    public double translationGradX() {
+        return type == Type.MOTION ? 0.0 : gradX();
+    }
+
+    public double translationGradZ() {
+        return type == Type.MOTION ? 0.0 : gradZ();
+    }
+
     public double evaluate(ForwardPath path) {
         if (customYaw != null) {
-            double rad = Angles.rad(customYaw);
-            double dx = -StrictMath.sin(rad);
-            double dz = StrictMath.cos(rad);
+            double dx = dirX();
+            double dz = dirZ();
             if (type == Type.MOTION) {
                 double vx = tick > 0 ? path.posX[tick] - path.posX[tick - 1] : path.posX[tick];
                 double vz = tick > 0 ? path.posZ[tick] - path.posZ[tick - 1] : path.posZ[tick];
@@ -64,6 +93,19 @@ public final class Objective {
             }
         }
         return path.getPos(tick, axis);
+    }
+
+    public double evaluate(ForwardPath path, double tx, double tz) {
+        if (type == Type.MOTION) return evaluate(path);
+        return evaluate(path) + dirX() * tx + dirZ() * tz;
+    }
+
+    public double better(double a, double b) {
+        return sense == Sense.MAX ? Math.max(a, b) : Math.min(a, b);
+    }
+
+    public boolean isBetter(double candidate, double incumbent) {
+        return sense == Sense.MAX ? candidate > incumbent : candidate < incumbent;
     }
 
     public double smoothPenalty(double anchorYaw, double[] yawsAbs) {

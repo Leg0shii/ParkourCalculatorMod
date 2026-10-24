@@ -49,6 +49,14 @@ anglesolver/
                            off-tick and off-axis walls are never selected, the tightest reach wall wins, ties and
                            an empty set refuse (the capture-backed legal gates are problems/legal/ and the
                            goalWall fields of problems/replay/)
+  MotionObjectiveTest.java gh-551 Angle goal objective: Mot is the velocity along the angle at the objective
+                           tick (gh551-motion-angle, a 2-jump capture with Angle/Mot), Pos the position,
+                           translation leaves Mot alone, withTick keeps angle and type, the Angle goal has no
+                           legal goal wall; the objective tick (gh551-motion-jumptick, objectiveTick 14 in a
+                           span to 21) lands inside the span while the constraints still run to the goal tick,
+                           survives the save file and follows its row on insert and remove. The live FAST
+                           solve and the cold Optimize of both captures are problems/solve/ and
+                           problems/optimize/ sidecars
   CrossAxisSignTest.java   dX vs dZ constraints (mcc11-cross-axis-sign capture, 1.21.3): the recorded
                            path is feasible and needs opposite dominant signs on its two cross-axis
                            constraints; the closed form enumerates the per-constraint sign branches (all +1,

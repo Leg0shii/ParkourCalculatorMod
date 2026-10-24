@@ -177,7 +177,7 @@ public final class NoTurnCertifier {
         ForwardPath fp = forwardAt(model, scFree, yaws, px, pz, gf);
         double viol = JumpConstraintCompiler.compile(spec).maxViolation(gf, fp);
         Objective obj = spec.objective;
-        return new Result(viol <= 0.0, fp.getPos(obj.tick, obj.axis), viol, yaws, px, pz);
+        return new Result(viol <= 0.0, obj.evaluate(fp), viol, yaws, px, pz);
     }
 
     private double[] playableLine(JumpSpec spec, JumpPhysicsInputs scPin, double[] yaws, AtomicBoolean cancel) {

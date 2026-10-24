@@ -72,7 +72,7 @@ final class SolveCheck implements ProblemCheck {
             JumpPhysicsInputs sc = spec.asScenario();
             double[] gf = Paths.gameFacings(sc, Paths.resultYaws(r));
             ForwardPath path = pf.model.forward(sc, gf);
-            double recompute = path.getPos(spec.objective.tick, spec.objective.axis);
+            double recompute = spec.objective.evaluate(path);
             double div = Math.abs(r.getObjectiveValue() - recompute);
             System.out.printf("SOLVE %-22s recompute=%.9f div=%.2e%n", name, recompute, div);
             assertTrue(name + ": shipped objective " + r.getObjectiveValue() + " diverges from the re-simulated "

@@ -277,7 +277,7 @@ public class WallHomotopyLadderTest {
         JumpPhysicsInputs sc2 = Scoring.pinnedScenario(sc, w.px, w.pz);
         double[] gf = sc2.toGameFacings(w.yaws);
         ForwardPath fp = l.model.forward(sc2, gf);
-        double obj = fp.getPos(l.spec.objective.tick, l.spec.objective.axis);
+        double obj = l.spec.objective.evaluate(fp);
         double viol = JumpConstraintCompiler.compile(l.spec).maxViolation(gf, fp);
         assertEquals("witness objective must reproduce bit-exactly", expectObj, obj, 0.0);
         assertEquals("witness replay must be clean", 0.0, viol, 0.0);

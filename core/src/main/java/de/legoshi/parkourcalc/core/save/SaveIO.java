@@ -188,6 +188,7 @@ public final class SaveIO {
 
         state.setStartTick(a.startTick);
         state.setLandingTick(a.landingTick);
+        if (a.objectiveTick != null) state.setObjectiveTick(a.objectiveTick);
         state.setAxis(parseEnum(AngleSolverState.Axis.class, a.axis, AngleSolverState.Axis.X));
         state.setGoal(parseEnum(AngleSolverState.Goal.class, a.goal, AngleSolverState.Goal.MAX));
         state.setCustomAngle(a.customAngle != null && a.customAngle);
@@ -274,6 +275,8 @@ public final class SaveIO {
         Integer landing = remap.get(a.landingTick);
         a.startTick = start != null ? start : 0;
         a.landingTick = start != null && landing != null ? landing : 0;
+        Integer objective = a.objectiveTick != null ? remap.get(a.objectiveTick) : null;
+        a.objectiveTick = start != null && objective != null ? objective : null;
         a.result = null;
         a.deviation = null;
         a.deviationKind = null;
@@ -593,6 +596,7 @@ public final class SaveIO {
         SaveFile.AngleSolver a = new SaveFile.AngleSolver();
         a.startTick = s.getStartTick();
         a.landingTick = s.getLandingTick();
+        a.objectiveTick = s.hasObjectiveTick() ? s.getObjectiveTick() : null;
         a.axis = s.getAxis().name();
         a.goal = s.getGoal().name();
         a.customAngle = s.isCustomAngle();
