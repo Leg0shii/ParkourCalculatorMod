@@ -1727,16 +1727,30 @@ public final class InputOverlay {
         ImGui.tableNextColumn();
         Controls.labelCell(EFFECTS_CLEAR);
         ImGui.tableNextColumn();
+        boolean withSelected = selection.size() > 1 && selection.isSelected(rowIndex + 1);
+        int count = withSelected ? 3 : 2;
         float gap = ImGui.getStyle().getItemSpacing().x;
-        float half = (controlW - gap) * 0.5f;
+        float w = (controlW - (count - 1) * gap) / count;
         if (!row.hasEffects()) {
-            Controls.disabledButton(EFFECTS_CLEAR_TICK, half);
-        } else if (Controls.dangerButton(EFFECTS_CLEAR_TICK, half)) {
+            Controls.disabledButton(EFFECTS_CLEAR_TICK, w);
+        } else if (Controls.dangerButton(EFFECTS_CLEAR_TICK, w)) {
             row.clearEffects();
             notifyChange(rowIndex);
         }
+        if (withSelected) {
+            ImGui.sameLine(0, gap);
+            if (Controls.dangerButton(EFFECTS_TO_SELECTED, w)) {
+                int first = rowIndex;
+                for (int i : selection.getSelectedRows()) {
+                    if (i < 0 || i >= data.size()) continue;
+                    data.get(i).clearEffects();
+                    first = Math.min(first, i);
+                }
+                notifyChange(first);
+            }
+        }
         ImGui.sameLine(0, gap);
-        if (Controls.dangerButton(EFFECTS_CLEAR_ALL, half)) {
+        if (Controls.dangerButton(EFFECTS_CLEAR_ALL, w)) {
             for (InputRow other : data.getRows()) other.clearEffects();
             notifyFullResim();
         }
@@ -1757,7 +1771,11 @@ public final class InputOverlay {
 
     private float effectsControlWidth() {
         String[] targets = {EFFECTS_TO_FOLLOWING, EFFECTS_TO_SELECTED, EFFECTS_TO_ALL};
-        return Math.max(EFFECTS_CONTROL_WIDTH * uiScale(), SolverWidgets.segmentedMinWidth(targets));
+        float clearButton = Math.max(Controls.buttonWidth(EFFECTS_CLEAR_TICK),
+                Math.max(Controls.buttonWidth(EFFECTS_TO_SELECTED), Controls.buttonWidth(EFFECTS_CLEAR_ALL)));
+        float clearRow = 3f * clearButton + 2f * ImGui.getStyle().getItemSpacing().x;
+        float w = Math.max(EFFECTS_CONTROL_WIDTH * uiScale(), SolverWidgets.segmentedMinWidth(targets));
+        return Math.max(w, clearRow);
     }
 
     private void effectsSeparator() {
