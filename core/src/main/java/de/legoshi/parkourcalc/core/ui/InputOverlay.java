@@ -73,7 +73,7 @@ public final class InputOverlay {
 
     private static final String EFFECTS_TITLE = "Effects";
     private static final String EFFECTS_TICK = "tick %d";
-    private static final String EFFECTS_EMPTY = "No effects on this tick";
+    private static final String EFFECTS_EMPTY = "Add an effect";
     private static final String EFFECTS_LABEL = "Effect";
     private static final String EFFECTS_COPY_LABEL = "Copy to";
     private static final String EFFECTS_TO_FOLLOWING = "Following";
@@ -1614,24 +1614,19 @@ public final class InputOverlay {
         ThemeManager.pushTextColor(ThemeManager.textDimColor());
         Controls.labelCell(String.format(EFFECTS_TICK, rowIndex + 1));
         ThemeManager.popTextColor();
-        ThemeManager.paddedSeparator();
+        effectsSeparator();
 
         List<MovementEffect> active = activeEffects(row);
+        if (active.isEmpty()) {
+            renderEffectPicker(row, rowIndex);
+            ImGui.endPopup();
+            return;
+        }
         MovementEffect removed = null;
         MovementEffect replacedFrom = null;
         MovementEffect replacedTo = null;
         if (beginEffectsForm("##fx_edit")) {
             Controls.pushInputFrameHeight();
-            if (active.isEmpty()) {
-                ImGui.tableNextRow();
-                ImGui.tableNextColumn();
-                Controls.labelCell(EFFECTS_LABEL);
-                ImGui.tableNextColumn();
-                ThemeManager.pushTextColor(ThemeManager.textDimColor());
-                Controls.labelCell(EFFECTS_EMPTY);
-                ThemeManager.popTextColor();
-                ImGui.tableNextColumn();
-            }
             for (int i = 0; i < active.size(); i++) {
                 MovementEffect effect = active.get(i);
                 ImGui.pushID(effect.id);
@@ -1694,7 +1689,7 @@ public final class InputOverlay {
         if (data.size() > 1) targets.add(EFFECTS_TO_ALL);
         boolean canClear = row.hasEffects();
         if (!targets.isEmpty() || canClear) {
-            ThemeManager.paddedSeparator();
+            effectsSeparator();
             if (beginEffectsForm("##fx_actions")) {
                 Controls.pushInputFrameHeight();
                 if (!targets.isEmpty()) {
@@ -1722,6 +1717,76 @@ public final class InputOverlay {
             }
         }
         ImGui.endPopup();
+    }
+
+    private float effectsFormWidth() {
+        float cellPadX = ImGui.getStyle().getCellPadding().x;
+        return effectsLabelWidth() + EFFECTS_CONTROL_WIDTH * uiScale() + SolverWidgets.deleteXWidth() + 6f * cellPadX;
+    }
+
+    private void effectsSeparator() {
+        ThemeManager.sectionSpacing();
+        ImVec2 pos = ImGui.getCursorScreenPos();
+        float left = ImGui.getWindowPos().x + ImGui.getStyle().getWindowPadding().x;
+        float right = ImGui.getWindowPos().x + ImGui.getWindowWidth() - ImGui.getStyle().getWindowPadding().x;
+        ImGui.getWindowDrawList().addLine(left, pos.y, right, pos.y, ImGui.getColorU32(ImGuiCol.Separator), 1f);
+        ImGui.dummy(0f, 1f);
+        ThemeManager.sectionSpacing();
+    }
+
+    private void renderEffectPicker(InputRow row, int rowIndex) {
+        float s = uiScale();
+        float formW = effectsFormWidth();
+        ThemeManager.pushTextColor(ThemeManager.textDimColor());
+        Controls.labelCell(EFFECTS_EMPTY);
+        ThemeManager.popTextColor();
+        float startX = ImGui.getCursorScreenPos().x;
+        float gap = ChipFlow.CHIP_SPACING * s;
+        float usedX = 0f;
+        boolean first = true;
+        MovementEffect picked = null;
+        for (MovementEffect effect : MovementEffect.all()) {
+            if (!effect.availableIn(mcVersion)) continue;
+            float w = effectPickChipWidth(effect);
+            if (!first && usedX + gap + w <= formW) {
+                ImGui.sameLine(0, gap);
+                usedX += gap + w;
+            } else {
+                if (!first) ImGui.setCursorScreenPos(startX, ImGui.getCursorScreenPos().y);
+                usedX = w;
+            }
+            first = false;
+            if (renderEffectPickChip(effect, w)) picked = effect;
+        }
+        ImGui.dummy(formW, 0f);
+        if (picked != null) {
+            row.setEffectLevel(picked, 1);
+            notifyChange(rowIndex);
+        }
+    }
+
+    private float effectPickChipWidth(MovementEffect effect) {
+        return 2f * ChipFlow.CHIP_PAD * uiScale() + ImGui.calcTextSize(EFFECTS_ADD_CHIP + " " + effect.label).x;
+    }
+
+    private boolean renderEffectPickChip(MovementEffect effect, float w) {
+        float s = uiScale();
+        float h = ImGui.getFrameHeight();
+        float pad = ChipFlow.CHIP_PAD * s;
+        float rounding = ChipFlow.CHIP_ROUNDING * s;
+        ImDrawList dl = ImGui.getWindowDrawList();
+        boolean clicked = ImGui.invisibleButton("fxpick" + effect.id, w, h);
+        ImVec2 mn = ImGui.getItemRectMin();
+        ImVec2 mx = ImGui.getItemRectMax();
+        boolean hover = ImGui.isItemHovered();
+        dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.panelColor(), rounding);
+        dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.effectTintColor(hover ? 0.22f : 0.12f), rounding);
+        dl.addRect(mn.x, mn.y, mx.x, mx.y, hover ? ThemeManager.effectColor() : ThemeManager.effectTintColor(0.55f), rounding, 0, 1f);
+        float ty = mn.y + (h - ImGui.getFontSize()) * 0.5f;
+        String plus = EFFECTS_ADD_CHIP + " ";
+        dl.addText(mn.x + pad, ty, ThemeManager.textDimColor(), plus);
+        dl.addText(mn.x + pad + ImGui.calcTextSize(plus).x, ty, ThemeManager.effectColor(), effect.label);
+        return clicked;
     }
 
     private void copyEffects(InputRow row, int rowIndex, String target) {
