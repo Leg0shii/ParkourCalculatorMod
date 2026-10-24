@@ -1598,7 +1598,7 @@ public final class InputOverlay {
     private boolean beginEffectsForm(String id) {
         if (!ThemeManager.beginStandardFormTable(id, 3)) return false;
         ImGui.tableSetupColumn("l", ImGuiTableColumnFlags.WidthFixed, effectsLabelWidth());
-        ImGui.tableSetupColumn("c", ImGuiTableColumnFlags.WidthFixed, EFFECTS_CONTROL_WIDTH * uiScale());
+        ImGui.tableSetupColumn("c", ImGuiTableColumnFlags.WidthFixed, effectsControlWidth());
         ImGui.tableSetupColumn("t", ImGuiTableColumnFlags.WidthFixed, SolverWidgets.deleteXWidth());
         return true;
     }
@@ -1606,7 +1606,7 @@ public final class InputOverlay {
     private void renderEffectsPopup(InputRow row, int rowIndex) {
         if (!ImGui.beginPopup(ID_EFFECTS_POPUP)) return;
         float s = uiScale();
-        float controlW = EFFECTS_CONTROL_WIDTH * s;
+        float controlW = effectsControlWidth();
         Fonts.pushBold();
         Controls.labelCell(EFFECTS_TITLE);
         Fonts.popBold();
@@ -1721,7 +1721,12 @@ public final class InputOverlay {
 
     private float effectsFormWidth() {
         float cellPadX = ImGui.getStyle().getCellPadding().x;
-        return effectsLabelWidth() + EFFECTS_CONTROL_WIDTH * uiScale() + SolverWidgets.deleteXWidth() + 6f * cellPadX;
+        return effectsLabelWidth() + effectsControlWidth() + SolverWidgets.deleteXWidth() + 6f * cellPadX;
+    }
+
+    private float effectsControlWidth() {
+        String[] targets = {EFFECTS_TO_FOLLOWING, EFFECTS_TO_SELECTED, EFFECTS_TO_ALL};
+        return Math.max(EFFECTS_CONTROL_WIDTH * uiScale(), SolverWidgets.segmentedMinWidth(targets));
     }
 
     private void effectsSeparator() {
