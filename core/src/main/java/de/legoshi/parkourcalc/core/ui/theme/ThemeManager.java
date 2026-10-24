@@ -35,6 +35,7 @@ public final class ThemeManager {
     private static final float[] OK           = rgb(0xa6, 0xe3, 0xa1, 1.00f);
     private static final float[] FOCUS        = rgb(0xb4, 0xbe, 0xfe, 1.00f);
     private static final float[] TELEPORT     = rgb(0x94, 0xe2, 0xd5, 1.00f);
+    private static final float[] EFFECT       = rgb(0xcb, 0xa6, 0xf7, 1.00f);
     private static final float[] STATUS_BG    = rgb(0x18, 0x18, 0x25, 1.00f);
 
     // Button state fills, lifted byte-exact from kit.css .btn--primary / .btn--danger swatches.
@@ -708,6 +709,10 @@ public final class ThemeManager {
         return u32(TELEPORT);
     }
 
+    public static int effectColor() {
+        return u32(EFFECT);
+    }
+
     public static int panelColor() {
         return u32(PANEL);
     }
@@ -750,6 +755,10 @@ public final class ThemeManager {
 
     public static int teleportTintColor(float alpha) {
         return ImGui.colorConvertFloat4ToU32(TELEPORT[0], TELEPORT[1], TELEPORT[2], alpha);
+    }
+
+    public static int effectTintColor(float alpha) {
+        return ImGui.colorConvertFloat4ToU32(EFFECT[0], EFFECT[1], EFFECT[2], alpha);
     }
 
     public static int bgTintColor(float alpha) {

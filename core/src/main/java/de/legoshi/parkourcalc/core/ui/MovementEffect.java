@@ -1,9 +1,9 @@
 package de.legoshi.parkourcalc.core.ui;
 
 public enum MovementEffect {
-    SPEED("Speed", "Spd", "speed", true, 8, 0),
-    SLOWNESS("Slowness", "Slw", "slowness", true, 8, 0),
-    JUMP_BOOST("Jump Boost", "Jmp", "jump_boost", true, 8, 0),
+    SPEED("Speed", "Speed", "speed", true, 8, 0),
+    SLOWNESS("Slowness", "Slow", "slowness", true, 8, 0),
+    JUMP_BOOST("Jump Boost", "Jump", "jump_boost", true, 8, 0),
     LEVITATION("Levitation", "Lev", "levitation", true, 9, 0),
     SLOW_FALLING("Slow Falling", "SlowFall", "slow_falling", false, 13, 0),
     DOLPHINS_GRACE("Dolphin's Grace", "Dolphin", "dolphins_grace", false, 13, 0),

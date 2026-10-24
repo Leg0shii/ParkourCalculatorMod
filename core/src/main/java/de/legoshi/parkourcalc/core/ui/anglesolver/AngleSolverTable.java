@@ -12,6 +12,7 @@ import de.legoshi.parkourcalc.core.anglesolver.TickConstraints;
 import de.legoshi.parkourcalc.core.ui.ConstraintSelection;
 import de.legoshi.parkourcalc.core.ui.SelectionManager;
 import de.legoshi.parkourcalc.core.ui.Settings;
+import de.legoshi.parkourcalc.core.ui.theme.ChipFlow;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
 import de.legoshi.parkourcalc.core.ui.theme.Fonts;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
@@ -500,7 +501,7 @@ public final class AngleSolverTable {
         int n = list.size();
         float[] chipW = new float[n];
         for (int i = 0; i < n; i++) chipW[i] = constraintChipWidth(list.get(i));
-        ChipLayout layout = computeChipLayout(cellW, baseRowH, chipW);
+        ChipFlow.Layout layout = computeChipLayout(cellW, baseRowH, chipW);
 
         constraintCellRects.put(rowIndex, cellRect(origin, cellW, grownRowH));
         rowContentH.put(rowIndex, layout.cellH);
@@ -526,7 +527,7 @@ public final class AngleSolverTable {
         int n = specs.size();
         float[] chipW = new float[n];
         for (int i = 0; i < n; i++) chipW[i] = stateChipWidth(specs.get(i).key, specs.get(i).value);
-        ChipLayout layout = computeChipLayout(cellW, baseRowH, chipW);
+        ChipFlow.Layout layout = computeChipLayout(cellW, baseRowH, chipW);
 
         stateCellRects.put(rowIndex, cellRect(origin, cellW, grownRowH));
         mergeRowContentHeight(rowIndex, layout.cellH);
@@ -570,62 +571,12 @@ public final class AngleSolverTable {
         void render(int index);
     }
 
-    private static final class ChipLayout {
-        int[] lineOf;
-        float[] lineW;
-        float cellH;
-        int lines;
+    private ChipFlow.Layout computeChipLayout(float cellW, float rowH, float[] chipW) {
+        return ChipFlow.compute(cellW, rowH, chipW);
     }
 
-    private ChipLayout computeChipLayout(float cellW, float rowH, float[] chipW) {
-        float s = ThemeManager.uiScale();
-        float gap = 5f * s;
-        float lineH = ImGui.getFrameHeight();
-        float spacingY = ImGui.getStyle().getItemSpacing().y;
-        float cellPadY = ImGui.getStyle().getCellPadding().y;
-        int n = chipW.length;
-
-        ChipLayout layout = new ChipLayout();
-        layout.lineOf = new int[n];
-        layout.lineW = new float[Math.max(1, n)];
-        int lines = 1;
-        float usedX = 0f;
-        for (int i = 0; i < n; i++) {
-            if (i == 0) usedX = chipW[i];
-            else if (usedX + gap + chipW[i] <= cellW) usedX += gap + chipW[i];
-            else { lines++; usedX = chipW[i]; }
-            layout.lineOf[i] = lines - 1;
-            layout.lineW[lines - 1] = usedX;
-        }
-        layout.lines = lines;
-        // Row height = the chip block plus the cell's top+bottom padding, matching baseRowH (frameHeight + 2*cellPadY).
-        // Without the padding term, multi-line rows render 2*cellPadY taller than rowH and the accent falls short.
-        layout.cellH = Math.max(rowH, lines * lineH + (lines - 1) * spacingY + 2f * cellPadY);
-        return layout;
-    }
-
-    private void placeChips(ImVec2 origin, float cellW, float grownRowH, ChipLayout layout, ChipRenderer renderer) {
-        float s = ThemeManager.uiScale();
-        float gap = 5f * s;
-        float lineH = ImGui.getFrameHeight();
-        float spacingY = ImGui.getStyle().getItemSpacing().y;
-        // Center this cell's chip block within the (possibly taller) row, so a short column doesn't cling to the top.
-        float blockH = layout.lines * lineH + (layout.lines - 1) * spacingY;
-        float cellPadY = ImGui.getStyle().getCellPadding().y;
-        float yOff = Math.max(0f, (grownRowH - 2f * cellPadY - blockH) * 0.5f);
-        int curLine = -1;
-        for (int i = 0; i < layout.lineOf.length; i++) {
-            int line = layout.lineOf[i];
-            if (line != curLine) {
-                curLine = line;
-                float lx = origin.x + Math.max(0f, (cellW - layout.lineW[line]) * 0.5f);
-                float ly = origin.y + yOff + line * (lineH + spacingY);
-                ImGui.setCursorScreenPos(lx, ly);
-            } else {
-                ImGui.sameLine(0, gap);
-            }
-            renderer.render(i);
-        }
+    private void placeChips(ImVec2 origin, float cellW, float grownRowH, ChipFlow.Layout layout, ChipRenderer renderer) {
+        ChipFlow.place(origin, cellW, grownRowH, layout, renderer::render);
     }
 
     private float constraintChipWidth(Constraint c) {
@@ -645,10 +596,7 @@ public final class AngleSolverTable {
     }
 
     private void chipDropShadow(ImDrawList dl, ImVec2 mn, ImVec2 mx, float s) {
-        for (int k = 1; k <= 3; k++) {
-            float o = k * s;
-            dl.addRectFilled(mn.x + o, mn.y + o, mx.x + o, mx.y + o, ThemeManager.shadowColor(0.10f), 3f * s + o);
-        }
+        ChipFlow.dropShadow(dl, mn, mx);
     }
 
     private void renderConstraintChip(int tick, int index, Constraint c) {

@@ -58,7 +58,7 @@ public class MovementEffectTest {
 
     @Test
     public void describeAndLookup() {
-        assertEquals("Spd 2", MovementEffect.SPEED.describe(2));
+        assertEquals("Speed 2", MovementEffect.SPEED.describe(2));
         assertEquals("SlowFall", MovementEffect.SLOW_FALLING.describe(1));
         assertEquals("", MovementEffect.SPEED.describe(0));
         assertSame(MovementEffect.DOLPHINS_GRACE, MovementEffect.byId("dolphins_grace"));

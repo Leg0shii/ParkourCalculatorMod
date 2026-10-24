@@ -67,19 +67,12 @@ public class ColumnVisibilitySettingsTest {
     }
 
     @Test
-    public void legacyPotionColumnTurnsOnTheEffectsColumn() throws Exception {
+    public void effectsColumnStaysOffForLegacyPotionColumns() throws Exception {
         Path file = Files.createTempDirectory("pkc-colvis-effects").resolve("settings.json");
         Files.write(file, "{\"showColJumpBoost\": true}".getBytes("UTF-8"));
         Settings loaded = new Settings();
         SettingsIO.load(file, loaded);
-        assertTrue(loaded.showColEffects);
-
-        Files.write(file, "{\"showColJumpBoost\": true, \"showColEffects\": false}".getBytes("UTF-8"));
-        Settings explicit = new Settings();
-        SettingsIO.load(file, explicit);
-        assertFalse(explicit.showColEffects);
-
-        Settings fresh = new Settings();
-        assertFalse(fresh.showColEffects);
+        assertFalse(loaded.showColEffects);
+        assertFalse(new Settings().showColEffects);
     }
 }
