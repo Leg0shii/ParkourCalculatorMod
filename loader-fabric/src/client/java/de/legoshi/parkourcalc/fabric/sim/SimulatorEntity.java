@@ -335,6 +335,7 @@ public class SimulatorEntity extends Player {
 
     @Override
     public void tick() {
+        this.setOldPosAndRot();
         Vec3 before = this.position();
         super.tick();
         if (!this.collisionAngleComputedThisTick) {
