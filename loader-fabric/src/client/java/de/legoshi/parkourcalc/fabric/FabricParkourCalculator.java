@@ -277,7 +277,7 @@ public class FabricParkourCalculator implements ClientModInitializer {
 
     private static void maybeEngageLockstep() {
         if (!application.getSettings().lockstepReplay) return;
-        if (!playbackBridge.isSingleplayer()) return;
+        if (!playbackBridge.isSingleplayer() || playbackBridge.ghostPlayback()) return;
         net.minecraft.server.MinecraftServer server = Minecraft.getInstance().getSingleplayerServer();
         if (server != null) {
             ReplayLockstep.engage(server);

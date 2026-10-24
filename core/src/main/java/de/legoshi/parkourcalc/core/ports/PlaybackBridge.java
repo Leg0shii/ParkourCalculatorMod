@@ -25,6 +25,8 @@ public interface PlaybackBridge {
         return false;
     }
 
+    default void setClientSidedReplay(boolean clientSided) {}
+
     void teleport(Vec3dCore pos, Vec3dCore vel, float yaw, Checkpoint carry);
 
     default void teleportInPlace(Vec3dCore pos, Vec3dCore vel, float yaw) {

@@ -41,6 +41,7 @@ public final class ForgePlaybackBridge implements PlaybackBridge {
     private final InputRow currentRow = new InputRow();
     private MovementInput originalInput;
     private boolean ghostMode;
+    private boolean clientSidedReplay;
     private GhostPlayerEntity ghost;
     private MouseHelper originalMouseHelper;
 
@@ -85,10 +86,23 @@ public final class ForgePlaybackBridge implements PlaybackBridge {
     }
 
     @Override
+    public void setClientSidedReplay(boolean clientSided) {
+        clientSidedReplay = clientSided;
+    }
+
+    boolean ghostPlayback() {
+        return ghostMode;
+    }
+
+    private boolean replaysClientSided() {
+        return clientSidedReplay || !isSingleplayer();
+    }
+
+    @Override
     public void beginReplayLockstep() {
         de.legoshi.parkourcalc.core.ui.Settings s = ForgeParkourCalculator.settings();
         if (s == null || !s.lockstepReplay) return;
-        if (!isSingleplayer()) return;
+        if (replaysClientSided()) return;
         ReplayLockstep.engageForStart();
     }
 
@@ -201,7 +215,7 @@ public final class ForgePlaybackBridge implements PlaybackBridge {
 
     @Override
     public void teleport(Vec3dCore pos, Vec3dCore vel, float yaw, de.legoshi.parkourcalc.core.sim.Checkpoint carry) {
-        if (!isSingleplayer()) {
+        if (replaysClientSided()) {
             beginGhostPlayback(pos, vel, yaw, carry);
             return;
         }

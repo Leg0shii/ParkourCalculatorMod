@@ -71,6 +71,8 @@ public final class SettingsModal {
     private static final String TT_KEEP_BOXES_PLAYBACK = "Keeps the tick-box path overlay drawn in-world while playback is running, instead of hiding it.";
     private static final String TT_DISABLE_FLIGHT_PLAYBACK = "Prevents double-tapping jump from starting creative flight while playback is running (singleplayer). Flight behaves normally again once playback ends.";
     private static final String TT_LOCKSTEP_REPLAY = "Ticks the integrated server in lockstep with the client while playback runs (singleplayer only): each client tick releases exactly one server tick and waits for its packets, so server effects like damage boosts and lagbacks land on the same tick every replay instead of occasionally arriving a tick late and desyncing the run.";
+    private static final String TT_LOCKSTEP_REPLAY_DISABLED = "Does not apply while client-sided replay in singleplayer is on: the replay runs on the client only, so no server tick has to be paced.";
+    private static final String TT_CLIENT_SIDED_REPLAY_SINGLEPLAYER = "Replays the TAS in singleplayer the same way as in multiplayer: a client-sided replica runs the inputs and the camera follows it, while your player stays where it is. The replay is visual-only and never goes through the integrated server, so it cannot desync from the server ticking on its own thread. Server effects like damage boosts and lagbacks are not part of it.";
     private static final String TT_SOLVER_PRECISION = "Decimal places for Angle Solver stats: solved yaws, objective values, constraint chips, and the constraint value editor.";
     private static final String TT_EXPERIMENTAL_BLOCK_CAPTURE = "Enables in-world block capture: tag blocks by role with hotkeys (M momentum, N collision, K land, Delete clears). The hotkeys are registered at startup, so turning this on or off only takes effect after a game restart.";
     private static final String TT_PAIRED_SIMULATION = "Runs the simulation as a lockstep client-server pair (singleplayer only): a server-side player processes the simulated movement through the real server code, so server rulings like fall damage, velocity packets, rubber-banding and block interactions show up in the simulated path and in the server event log.";
@@ -388,7 +390,12 @@ public final class SettingsModal {
                 if (ImGui.isItemDeactivatedAfterEdit()) onChanged.run();
                 tooltipForLastItem(TT_REPLAY_START_DELAY);
             });
-            checkboxRow("Lockstep replay", "##lockstep_replay", settings.lockstepReplay, TT_LOCKSTEP_REPLAY, v -> settings.lockstepReplay = v);
+            checkboxRow("Client-sided replay in singleplayer", "##client_sided_replay_sp", settings.clientSidedReplayInSingleplayer, TT_CLIENT_SIDED_REPLAY_SINGLEPLAYER, v -> settings.clientSidedReplayInSingleplayer = v);
+            if (settings.clientSidedReplayInSingleplayer) {
+                disabledCheckboxRow("Lockstep replay", "##lockstep_replay", settings.lockstepReplay, TT_LOCKSTEP_REPLAY_DISABLED);
+            } else {
+                checkboxRow("Lockstep replay", "##lockstep_replay", settings.lockstepReplay, TT_LOCKSTEP_REPLAY, v -> settings.lockstepReplay = v);
+            }
             checkboxRow("Disable creative flight", "##disable_flight_playback", settings.disableFlightDuringPlayback, TT_DISABLE_FLIGHT_PLAYBACK, v -> settings.disableFlightDuringPlayback = v);
             checkboxRow("Keep tick boxes shown", "##keep_boxes_playback", settings.keepBoxesDuringPlayback, TT_KEEP_BOXES_PLAYBACK, v -> settings.keepBoxesDuringPlayback = v);
             ThemeManager.endStandardFormTable();

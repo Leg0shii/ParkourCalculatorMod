@@ -191,6 +191,7 @@ public final class PlaybackController {
             }
         }
         firstTickOnGround = runner.firstTickOnGround();
+        bridge.setClientSidedReplay(settings.clientSidedReplayInSingleplayer);
         bridge.beginReplayLockstep();
         bridge.teleport(pos, vel, yaw, carry);
         // Drop any user-held key so the warmup runs with an empty InputRow like the simulator does.
@@ -254,6 +255,7 @@ public final class PlaybackController {
             if (settings.pairedSimulation) {
                 runner.onReplayEnd();
             }
+            bridge.setClientSidedReplay(false);
         }
         lastEffectLevels = new int[MovementEffect.count()];
     }

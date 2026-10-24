@@ -108,6 +108,7 @@ public final class Settings {
     private static final boolean DEFAULT_PAIRED_SIMULATION = false;
     private static final boolean DEFAULT_PAIRED_DAMAGE = true;
     private static final boolean DEFAULT_LOCKSTEP_REPLAY = false;
+    private static final boolean DEFAULT_CLIENT_SIDED_REPLAY_IN_SINGLEPLAYER = false;
 
     private static final float DEFAULT_YAW_FLICK_SPEED = 7200.0f;
     public static final float MIN_YAW_FLICK_SPEED = 30.0f;
@@ -257,6 +258,7 @@ public final class Settings {
     public boolean pairedSimulation = DEFAULT_PAIRED_SIMULATION;
     public boolean pairedDamage = DEFAULT_PAIRED_DAMAGE;
     public boolean lockstepReplay = DEFAULT_LOCKSTEP_REPLAY;
+    public boolean clientSidedReplayInSingleplayer = DEFAULT_CLIENT_SIDED_REPLAY_IN_SINGLEPLAYER;
     public int replayStartDelayTicks = DEFAULT_REPLAY_START_DELAY_TICKS;
 
     public static int defaultTickInfoPrecision() {
@@ -373,6 +375,7 @@ public final class Settings {
         pairedSimulation = DEFAULT_PAIRED_SIMULATION;
         pairedDamage = DEFAULT_PAIRED_DAMAGE;
         lockstepReplay = DEFAULT_LOCKSTEP_REPLAY;
+        clientSidedReplayInSingleplayer = DEFAULT_CLIENT_SIDED_REPLAY_IN_SINGLEPLAYER;
         replayStartDelayTicks = DEFAULT_REPLAY_START_DELAY_TICKS;
     }
 }

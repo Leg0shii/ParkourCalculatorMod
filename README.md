@@ -65,6 +65,7 @@ Every jar ships the same core: the input table, the simulation, the angle solver
 ### Playback
 - **Singleplayer replay**: play your inputs from the start, from a selected tick or over a range, with a configurable start delay and optional lockstep with the server. The replay freezes while the game is paused, the input table follows the active tick, and the path can stay visible during the replay.
 - **Client-sided multiplayer replay**: on a server a ghost player replays the TAS for you alone. Your own player never moves and nothing is sent to the server.
+- **Client-sided replay in singleplayer** (optional, off by default): the singleplayer replay can run client-sided too, the same way as on a server, so it never desyncs from the integrated server ticking on its own thread. Server effects like damage boosts and lagbacks are not part of it.
 
 ### Files
 - **Save and load** plans as JSON, browse them in folders with a name filter, reopen recent files, import a file someone sent you, and open the save folder from the Help menu. Saves remember the world they were made in.

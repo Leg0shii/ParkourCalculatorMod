@@ -50,6 +50,7 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
     /*private net.minecraft.client.player.Input originalInput;
     *///?}
     private boolean ghostMode;
+    private boolean clientSidedReplay;
     private GhostPlayerEntity ghost;
     private final java.util.List<ReplaySample> replaySamples = new java.util.ArrayList<>();
 
@@ -106,6 +107,19 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         return mc.player != null && mc.level != null;
     }
 
+    @Override
+    public void setClientSidedReplay(boolean clientSided) {
+        clientSidedReplay = clientSided;
+    }
+
+    boolean ghostPlayback() {
+        return ghostMode;
+    }
+
+    private boolean replaysClientSided() {
+        return clientSidedReplay || !isSingleplayer();
+    }
+
     private void beginGhostPlayback(Vec3dCore pos, Vec3dCore vel, float yaw, de.legoshi.parkourcalc.core.sim.Checkpoint carry) {
         ghostMode = true;
         Minecraft mc = Minecraft.getInstance();
@@ -153,7 +167,7 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
     @Override
     public void beginReplayLockstep() {
         if (!FabricParkourCalculator.getSettings().lockstepReplay) return;
-        if (!isSingleplayer()) return;
+        if (replaysClientSided()) return;
         IntegratedServer server = Minecraft.getInstance().getSingleplayerServer();
         if (server == null) return;
         ReplayLockstep.engageForStart(server);
@@ -369,7 +383,7 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
 
     @Override
     public void teleport(Vec3dCore pos, Vec3dCore vel, float yaw, de.legoshi.parkourcalc.core.sim.Checkpoint carry) {
-        if (!isSingleplayer()) {
+        if (replaysClientSided()) {
             beginGhostPlayback(pos, vel, yaw, carry);
             return;
         }
@@ -451,7 +465,7 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
 
     @Override
     public void teleportInPlace(Vec3dCore pos, Vec3dCore vel, float yaw) {
-        if (!isSingleplayer()) {
+        if (replaysClientSided()) {
             teleport(pos, vel, yaw, null);
             return;
         }

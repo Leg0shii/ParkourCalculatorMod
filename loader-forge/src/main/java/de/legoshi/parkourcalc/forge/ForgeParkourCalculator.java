@@ -314,7 +314,7 @@ public class ForgeParkourCalculator {
         boolean isRunning = application.isPlaybackRunning();
         if (isRunning && !wasPlaybackRunning) {
             playbackBridge.installPlaybackInput(p);
-            if (application.getSettings().lockstepReplay && playbackBridge.isSingleplayer()) {
+            if (application.getSettings().lockstepReplay && playbackBridge.isSingleplayer() && !playbackBridge.ghostPlayback()) {
                 ReplayLockstep.engage();
             }
         } else if (!isRunning && wasPlaybackRunning) {
@@ -378,7 +378,7 @@ public class ForgeParkourCalculator {
         if (!(event.player instanceof net.minecraft.entity.player.EntityPlayerMP)) return;
         if (event.player instanceof de.legoshi.parkourcalc.forge.sim.paired.PairedServerPlayer) return;
         if (!application.isPlaybackRunning()) return;
-        if (!playbackBridge.isSingleplayer()) return;
+        if (!playbackBridge.isSingleplayer() || playbackBridge.ghostPlayback()) return;
         if (application.getSettings().pairedSimulation) return;
         event.player.noClip = true;
     }

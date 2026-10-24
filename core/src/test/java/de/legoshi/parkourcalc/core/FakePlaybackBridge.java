@@ -38,9 +38,12 @@ public class FakePlaybackBridge implements PlaybackBridge {
     public int beginReplicaCalls;
     public int endReplicaCalls;
     public int playerKeyMask;
+    public boolean clientSidedReplay;
+    public boolean clientSidedAtFirstTeleport;
 
     @Override public boolean isSingleplayer() { return true; }
     @Override public boolean isGamePaused() { return paused; }
+    @Override public void setClientSidedReplay(boolean clientSided) { clientSidedReplay = clientSided; }
 
     @Override
     public void teleport(Vec3dCore pos, Vec3dCore vel, float yaw, Checkpoint carry) {
@@ -48,6 +51,7 @@ public class FakePlaybackBridge implements PlaybackBridge {
         teleportVel = vel;
         teleportYaw = yaw;
         teleportCarry = carry;
+        if (teleportCalls == 0) clientSidedAtFirstTeleport = clientSidedReplay;
         teleportCalls++;
     }
 
