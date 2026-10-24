@@ -153,6 +153,10 @@ public class InputRow {
         return Arrays.equals(effectLevels, other.effectLevels);
     }
 
+    public void clearEffects() {
+        for (MovementEffect e : MovementEffect.all()) setEffectLevel(e, 0);
+    }
+
     public void copyEffectsFrom(InputRow other) {
         for (MovementEffect e : MovementEffect.all()) setEffectLevel(e, other.getEffectLevel(e));
     }

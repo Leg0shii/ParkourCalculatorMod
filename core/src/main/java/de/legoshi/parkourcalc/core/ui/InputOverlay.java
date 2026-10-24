@@ -81,6 +81,8 @@ public final class InputOverlay {
     private static final String EFFECTS_TO_ALL = "All";
     private static final String EFFECTS_ADD = "+ add";
     private static final String EFFECTS_CLEAR = "Clear";
+    private static final String EFFECTS_CLEAR_TICK = "This tick";
+    private static final String EFFECTS_CLEAR_ALL = "All ticks";
     private static final String EFFECTS_ADD_CHIP = "+";
     private static final float EFFECTS_COLUMN_WIDTH = 150;
     private static final float EFFECTS_CONTROL_WIDTH = 190;
@@ -1592,6 +1594,7 @@ public final class InputOverlay {
 
     private float effectsLabelWidth() {
         float w = Math.max(ImGui.calcTextSize(EFFECTS_LABEL).x, ImGui.calcTextSize(EFFECTS_COPY_LABEL).x);
+        w = Math.max(w, ImGui.calcTextSize(EFFECTS_CLEAR).x);
         return w + ThemeManager.SM * uiScale();
     }
 
@@ -1619,6 +1622,15 @@ public final class InputOverlay {
         List<MovementEffect> active = activeEffects(row);
         if (active.isEmpty()) {
             renderEffectPicker(row, rowIndex);
+            if (anyRowHasEffects()) {
+                effectsSeparator();
+                if (beginEffectsForm("##fx_clear")) {
+                    Controls.pushInputFrameHeight();
+                    renderEffectsClearRow(row, rowIndex, controlW);
+                    Controls.popInputFrameHeight();
+                    ThemeManager.endStandardFormTable();
+                }
+            }
             ImGui.endPopup();
             return;
         }
@@ -1687,7 +1699,7 @@ public final class InputOverlay {
         if (rowIndex + 1 < data.size()) targets.add(EFFECTS_TO_FOLLOWING);
         if (selection.size() > 1 && selection.isSelected(rowIndex + 1)) targets.add(EFFECTS_TO_SELECTED);
         if (data.size() > 1) targets.add(EFFECTS_TO_ALL);
-        boolean canClear = row.hasEffects();
+        boolean canClear = anyRowHasEffects();
         if (!targets.isEmpty() || canClear) {
             effectsSeparator();
             if (beginEffectsForm("##fx_actions")) {
@@ -1702,21 +1714,40 @@ public final class InputOverlay {
                     if (pick >= 0) copyEffects(row, rowIndex, labels[pick]);
                     ImGui.tableNextColumn();
                 }
-                if (canClear) {
-                    ImGui.tableNextRow();
-                    ImGui.tableNextColumn();
-                    ImGui.tableNextColumn();
-                    if (Controls.dangerButton(EFFECTS_CLEAR, controlW)) {
-                        for (MovementEffect effect : MovementEffect.all()) row.setEffectLevel(effect, 0);
-                        notifyChange(rowIndex);
-                    }
-                    ImGui.tableNextColumn();
-                }
+                if (canClear) renderEffectsClearRow(row, rowIndex, controlW);
                 Controls.popInputFrameHeight();
                 ThemeManager.endStandardFormTable();
             }
         }
         ImGui.endPopup();
+    }
+
+    private void renderEffectsClearRow(InputRow row, int rowIndex, float controlW) {
+        ImGui.tableNextRow();
+        ImGui.tableNextColumn();
+        Controls.labelCell(EFFECTS_CLEAR);
+        ImGui.tableNextColumn();
+        float gap = ImGui.getStyle().getItemSpacing().x;
+        float half = (controlW - gap) * 0.5f;
+        if (!row.hasEffects()) {
+            Controls.disabledButton(EFFECTS_CLEAR_TICK, half);
+        } else if (Controls.dangerButton(EFFECTS_CLEAR_TICK, half)) {
+            row.clearEffects();
+            notifyChange(rowIndex);
+        }
+        ImGui.sameLine(0, gap);
+        if (Controls.dangerButton(EFFECTS_CLEAR_ALL, half)) {
+            for (InputRow other : data.getRows()) other.clearEffects();
+            notifyFullResim();
+        }
+        ImGui.tableNextColumn();
+    }
+
+    private boolean anyRowHasEffects() {
+        for (InputRow other : data.getRows()) {
+            if (other.hasEffects()) return true;
+        }
+        return false;
     }
 
     private float effectsFormWidth() {

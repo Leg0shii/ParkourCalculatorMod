@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core;
 
+import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.core.ui.MovementEffect;
 import org.junit.Test;
 
@@ -63,5 +64,15 @@ public class MovementEffectTest {
         assertEquals("", MovementEffect.SPEED.describe(0));
         assertSame(MovementEffect.DOLPHINS_GRACE, MovementEffect.byId("dolphins_grace"));
         assertNull(MovementEffect.byId("night_vision"));
+    }
+
+    @Test
+    public void clearEffectsDropsEveryLevel() {
+        InputRow row = new InputRow();
+        row.setEffectLevel(MovementEffect.SPEED, 2);
+        row.setEffectLevel(MovementEffect.LEVITATION, 1);
+        row.clearEffects();
+        assertFalse(row.hasEffects());
+        assertEquals(0, row.getEffectLevel(MovementEffect.LEVITATION));
     }
 }
