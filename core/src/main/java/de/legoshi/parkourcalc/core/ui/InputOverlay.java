@@ -9,7 +9,9 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverTable;
 import de.legoshi.parkourcalc.core.ui.anglesolver.SolverWidgets;
 import de.legoshi.parkourcalc.core.anglesolver.Constraint;
+import de.legoshi.parkourcalc.core.ui.theme.ChipFlow;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
+import de.legoshi.parkourcalc.core.ui.theme.Fonts;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import de.legoshi.parkourcalc.core.ui.util.TeleportCommand;
 import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
@@ -26,14 +28,17 @@ import imgui.type.ImInt;
 import imgui.type.ImString;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Locale;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
-import java.util.function.ObjIntConsumer;
+import java.util.function.IntSupplier;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -47,9 +52,7 @@ public final class InputOverlay {
     private static final String START_LABEL = "Start";
     private static final String COL_YAW = "Yaw";
     private static final String COL_PITCH = "Pit";
-    private static final String COL_SPEED = "Speed";
-    private static final String COL_JUMP_BOOST = "Jump";
-    private static final String COL_SLOWNESS = "Slow";
+    private static final String COL_EFFECTS = "Effects";
     private static final String COL_HOTBAR = "Slot";
     private static final float INDEX_DIGIT_WIDTH = 32f;
     private static final float INDEX_DIGIT_SLACK = 6f;
@@ -65,18 +68,25 @@ public final class InputOverlay {
             InputRow.Key.LEFT_CLICK, InputRow.Key.RIGHT_CLICK, InputRow.Key.CLOSE_INVENTORY
     };
 
-    private static final String ID_SPEED_SUFFIX = "##speed";
-    private static final String ID_JUMP_SUFFIX = "##jump";
-    private static final String ID_SLOWNESS_SUFFIX = "##slowness";
+    private static final String ID_EFFECTS_SUFFIX = "effects";
+    private static final String ID_EFFECTS_POPUP = "effects_popup";
     private static final String ID_HOTBAR_SUFFIX = "##hotbar";
     private static final String ID_PITCH_INPUT = "##pitch";
 
-    private static final String MENU_APPLY_SPEED_TO_ALL = "Apply tick 1 Speed to all rows";
-    private static final String MENU_APPLY_JUMP_TO_ALL = "Apply tick 1 Jump to all rows";
-    private static final String MENU_APPLY_SLOWNESS_TO_ALL = "Apply tick 1 Slow to all rows";
-
-    private static final float AMP_CELL_WIDTH = 110;
-    private static final float AMP_COLUMN_WIDTH = 120;
+    private static final String EFFECTS_TITLE = "Effects";
+    private static final String EFFECTS_TICK = "tick %d";
+    private static final String EFFECTS_EMPTY = "Add an effect";
+    private static final String EFFECTS_LABEL = "Effect";
+    private static final String EFFECTS_TO_FOLLOWING = "Following";
+    private static final String EFFECTS_TO_SELECTED = "Selected";
+    private static final String EFFECTS_TO_ALL = "All";
+    private static final String EFFECTS_ADD = "+ add";
+    private static final String EFFECTS_COPY_LABEL = "Copy to";
+    private static final String EFFECTS_CLEAR_LABEL = "Clear";
+    private static final String EFFECTS_ADD_CHIP = "+";
+    private static final float EFFECTS_COLUMN_WIDTH = 150;
+    private static final float EFFECTS_CONTROL_WIDTH = 190;
+    private static final float EFFECTS_LEVEL_WIDTH = 56;
 
     private static final String[] HOTBAR_LABELS = {
             "-", "1", "2", "3", "4", "5", "6", "7", "8", "9"
@@ -101,6 +111,8 @@ public final class InputOverlay {
     private static final String MENU_ADD_BELOW = "Add %d row(s) below";
     private static final String MENU_DELETE = "Delete %d row(s)";
     private static final String MENU_DELETE_SHORTCUT = "Del";
+    private static final String MENU_DELETE_CONSTRAINTS = "Delete %d constraint(s)";
+    private static final String MENU_DELETE_CONSTRAINTS_SHORTCUT = "X";
 
     private static final String MENU_DUPLICATE = "Duplicate selected";
     private static final String MENU_SAVE_AS_NEW_TAS = "Save selected as new TAS";
@@ -138,6 +150,16 @@ public final class InputOverlay {
     private final Runnable onSetPlayerPosition;
     private final PlaybackController playback;
     private final MinecraftAccess mc;
+    private String mcVersion;
+    private final Map<Integer, Float> effectsRowH = new HashMap<>();
+    private final ImInt effectCombo = new ImInt();
+    private int effectPressRow = -1;
+    private MovementEffect effectPressEffect;
+    private int draggingEffectRow = -1;
+    private MovementEffect draggingEffect;
+    private int effectDropRow = -1;
+    private float fxCellMinX;
+    private float fxCellMaxX;
     private final BoxController boxController;
     private final Consumer<String> hudMessage;
     private BooleanSupplier unloadedChunkWarning = () -> false;
@@ -157,6 +179,8 @@ public final class InputOverlay {
     private final List<InputRow> clipboard = new ArrayList<>();
     private final List<TickConstraints> clipboardTicks = new ArrayList<>();
     private Runnable onSaveSelectionAsTas;
+    private IntSupplier countSelectedConstraints;
+    private Runnable deleteSelectedConstraints;
 
     private int draggingRowIndex = -1;
     private int draggingTeleportRow = -1;
@@ -265,6 +289,11 @@ public final class InputOverlay {
 
     public void setSaveSelectionAsTasHandler(Runnable handler) {
         this.onSaveSelectionAsTas = handler;
+    }
+
+    public void setConstraintDeleteHandlers(IntSupplier count, Runnable delete) {
+        this.countSelectedConstraints = count;
+        this.deleteSelectedConstraints = delete;
     }
 
     public static final class RowFlag {
@@ -405,31 +434,12 @@ public final class InputOverlay {
         return settings.showColPitch;
     }
 
-    private boolean isSpeedColumnVisible() {
-        return settings.showColSpeed;
+    private boolean isEffectsColumnVisible() {
+        return settings.showColEffects;
     }
 
-    private boolean isJumpBoostColumnVisible() {
-        return settings.showColJumpBoost;
-    }
-
-    private boolean isSlownessColumnVisible() {
-        return settings.showColSlowness;
-    }
-
-    private String[] visiblePotionColumns() {
-        List<String> out = new ArrayList<>(3);
-        if (isSpeedColumnVisible()) out.add(COL_SPEED);
-        if (isJumpBoostColumnVisible()) out.add(COL_JUMP_BOOST);
-        if (isSlownessColumnVisible()) out.add(COL_SLOWNESS);
-        return out.toArray(new String[0]);
-    }
-
-    private float potionColumnWidth(String label, boolean last) {
-        float scale = uiScale();
-        return last
-                ? ThemeManager.tableRightmostColumnWidth(label, AMP_COLUMN_WIDTH * scale, ThemeManager.tableScrollbarSlack())
-                : ThemeManager.tableColumnWidth(label, AMP_COLUMN_WIDTH * scale);
+    private float effectsColumnWidth() {
+        return ThemeManager.tableColumnWidth(COL_EFFECTS, EFFECTS_COLUMN_WIDTH * uiScale());
     }
 
     private boolean isHotbarColumnVisible() {
@@ -438,10 +448,6 @@ public final class InputOverlay {
 
     private boolean isTeleportColumnVisible() {
         return settings.showColTeleport;
-    }
-
-    private int potionColumnCount() {
-        return visiblePotionColumns().length;
     }
 
     private int baseColumnCount() {
@@ -459,7 +465,7 @@ public final class InputOverlay {
 
     private int totalColumnCount(boolean solverActive) {
         return baseColumnCount()
-                + potionColumnCount()
+                + (isEffectsColumnVisible() ? 1 : 0)
                 + (solverActive ? SOLVER_COLUMN_COUNT : 0);
     }
 
@@ -488,8 +494,7 @@ public final class InputOverlay {
         for (RowFlag f : activeFlags()) columnSum += ThemeManager.tableColumnWidth(f.label, 0f);
         if (isHotbarColumnVisible()) columnSum += ThemeManager.tableColumnWidth(COL_HOTBAR, HOTBAR_COLUMN_WIDTH * scale);
         if (isTeleportColumnVisible()) columnSum += ThemeManager.tableColumnWidth(COL_TELEPORT, TELEPORT_COLUMN_WIDTH * scale);
-        String[] potions = visiblePotionColumns();
-        for (int i = 0; i < potions.length; i++) columnSum += potionColumnWidth(potions[i], i == potions.length - 1);
+        if (isEffectsColumnVisible()) columnSum += effectsColumnWidth();
         if (solver) {
             columnSum += angleSolver.minConstraintsColumnWidth() + angleSolver.minStateColumnWidth();
         }
@@ -579,6 +584,7 @@ public final class InputOverlay {
         hoveredRow = -1;
         flagMenuHovered = false;
         teleportDropRow = -1;
+        effectDropRow = -1;
         if (solverActive) angleSolver.beginRows(clipMin.x, clipMin.y, clipMin.x + clipSize.x, clipMin.y + clipSize.y);
 
         handleAutoScroll();
@@ -635,6 +641,7 @@ public final class InputOverlay {
         applyDragDrop(dragDrop);
         rowDragSelect.update(selection, viewTop, viewBot, ThemeManager.tableRowHeight());
         applyTeleportDrag();
+        applyEffectDrag();
         if (solverActive) angleSolver.endRows();
         ImGui.endChild();
     }
@@ -688,6 +695,10 @@ public final class InputOverlay {
         ThemeManager.popTextColor();
     }
 
+    public void setMcVersion(String mcVersion) {
+        this.mcVersion = mcVersion;
+    }
+
     public void setUnloadedChunkWarning(BooleanSupplier warning) {
         this.unloadedChunkWarning = warning;
     }
@@ -713,9 +724,8 @@ public final class InputOverlay {
         if (isPitchColumnVisible()) {
             ImGui.tableSetupColumn(COL_PITCH, ImGuiTableColumnFlags.WidthFixed, ThemeManager.tableColumnWidth(COL_PITCH, yawColumnWidth()));
         }
-        String[] potions = visiblePotionColumns();
-        for (int i = 0; i < potions.length; i++) {
-            ImGui.tableSetupColumn(potions[i], ImGuiTableColumnFlags.WidthFixed, potionColumnWidth(potions[i], i == potions.length - 1));
+        if (isEffectsColumnVisible()) {
+            ImGui.tableSetupColumn(COL_EFFECTS, ImGuiTableColumnFlags.WidthFixed, effectsColumnWidth());
         }
         if (solverActive) {
             ImGui.tableSetupColumn(angleSolver.constraintsColumnHeaderLabel(), ImGuiTableColumnFlags.WidthStretch, 1.0f);
@@ -759,10 +769,10 @@ public final class InputOverlay {
             ThemeManager.tableHeaderCentered(COL_PITCH);
             TooltipUtil.onHover(headerColTooltip(COL_PITCH));
         }
-        for (String label : visiblePotionColumns()) {
+        if (isEffectsColumnVisible()) {
             ImGui.tableSetColumnIndex(col++);
-            ThemeManager.tableHeaderCentered(label);
-            TooltipUtil.onHover(headerColTooltip(label));
+            ThemeManager.tableHeaderCentered(COL_EFFECTS);
+            TooltipUtil.onHover(headerColTooltip(COL_EFFECTS));
         }
         if (solverActive) {
             ImGui.tableSetColumnIndex(col++);
@@ -801,9 +811,7 @@ public final class InputOverlay {
             case COL_INDEX: return "Tick number (1-based). Each row is one game tick.";
             case COL_YAW: return "Yaw in degrees (-180 to 180). Empty = inherit previous tick's yaw.";
             case COL_PITCH: return "Pitch turn per tick; press F to lock a cell to an absolute pitch (-90 up to 90 down). Empty = inherit previous tick's pitch.";
-            case COL_SPEED: return "Speed potion amplifier, 0 to 255 (0 = no effect).";
-            case COL_JUMP_BOOST: return "Jump Boost potion amplifier, 0 to 255 (0 = no effect).";
-            case COL_SLOWNESS: return "Slowness potion amplifier, 0 to 255 (0 = no effect, 7 and above stops the player on the ground).";
+            case COL_EFFECTS: return "Movement effects active on this tick. Click a cell to edit it; only the effects this Minecraft version has are listed.";
             case COL_HOTBAR: return "Held hotbar slot (1-9) to switch to during playback. Empty = keep the previous slot.";
             case COL_TELEPORT: return "Teleport the player to X/Y/Z at the start of this tick, before its inputs. Applies to both the simulation and the replay.";
             default: return col;
@@ -846,20 +854,21 @@ public final class InputOverlay {
         int i = from;
         float lead = 0f;
         while (i < to) {
-            float h = solverActive ? angleSolver.rowHeight(i, baseRowH) : baseRowH;
+            float h = rowHeight(i, baseRowH, solverActive);
             if (y + h <= viewTop) { lead += h; y += h; i++; } else break;
         }
         if (lead > 0f) ImGui.tableNextRow(0, lead);
 
         while (i < to && y <= viewBot) {
             renderRow(i, rows.get(i), dragDrop, solverActive);
-            y += solverActive ? angleSolver.rowHeight(i, baseRowH) : baseRowH;
+            y += rowHeight(i, baseRowH, solverActive);
             i++;
         }
 
         float trail = 0f;
         while (i < to) {
-            trail += solverActive ? angleSolver.rowHeight(i, baseRowH) : baseRowH; i++;
+            trail += rowHeight(i, baseRowH, solverActive);
+            i++;
         }
         if (trail > 0f) ImGui.tableNextRow(0, trail);
     }
@@ -899,12 +908,9 @@ public final class InputOverlay {
             y += baseRowH;
             if (startState != null && startState.isExpanded()) y += lastStartDrawerH;
         }
-        if (isSolverActive()) {
-            for (int i = 0; i < rowIndex; i++) {
-                y += angleSolver.rowHeight(i, baseRowH);
-            }
-        } else {
-            y += rowIndex * baseRowH;
+        boolean solverActive = isSolverActive();
+        for (int i = 0; i < rowIndex; i++) {
+            y += rowHeight(i, baseRowH, solverActive);
         }
         int drawerRow = clampedExpandedRow();
         if (drawerRow >= 0 && drawerRow < rowIndex) y += lastSolverDrawerH;
@@ -912,8 +918,14 @@ public final class InputOverlay {
     }
 
     private float rowHeightAt(int rowIndex) {
-        float baseRowH = ThemeManager.tableRowHeight();
-        return isSolverActive() ? angleSolver.rowHeight(rowIndex, baseRowH) : baseRowH;
+        return rowHeight(rowIndex, ThemeManager.tableRowHeight(), isSolverActive());
+    }
+
+    private float rowHeight(int rowIndex, float baseRowH, boolean solverActive) {
+        float h = solverActive ? angleSolver.rowHeight(rowIndex, baseRowH) : baseRowH;
+        if (!isEffectsColumnVisible()) return h;
+        Float fx = effectsRowH.get(rowIndex);
+        return fx == null ? h : Math.max(h, fx);
     }
 
     private boolean hasStartRow() {
@@ -988,7 +1000,7 @@ public final class InputOverlay {
         float baseRowH = ThemeManager.tableRowHeight();
         // Wrapping constraint/state chips grow the row; size it to last frame's content so single-line
         // cells can be centered within the taller row instead of clinging to the top.
-        float rowH = solverActive ? angleSolver.rowHeight(index, baseRowH) : baseRowH;
+        float rowH = rowHeight(index, baseRowH, solverActive);
         float centerY = (rowH - baseRowH) * 0.5f;
         ImGui.tableNextRow(0, rowH);
 
@@ -1017,7 +1029,7 @@ public final class InputOverlay {
         if (isHotbarColumnVisible()) renderHotbarColumn(row, index);
         if (isYawColumnVisible()) renderYawColumn(row, index, centerY);
         if (isPitchColumnVisible()) renderPitchColumn(row, index, centerY);
-        renderPotionColumns(row, index);
+        if (isEffectsColumnVisible()) renderEffectsColumn(row, index, rowH);
         if (solverActive) {
             ImGui.tableNextColumn();
             angleSolver.renderConstraintsCell(index, rowH);
@@ -1039,6 +1051,15 @@ public final class InputOverlay {
                 dl.pushClipRect(rMinX, tintMinY, tpCellMinX, tintMaxY, false);
                 dl.addRectFilled(rMinX, rMinY, tpCellMinX, rMaxY, ThemeManager.bgTintColor(0.66f));
                 dl.popClipRect();
+            }
+        }
+
+        if (draggingEffectRow >= 0 && draggingEffectRow != index && isEffectsColumnVisible()) {
+            float my = ImGui.getMousePos().y;
+            if (my >= rMinY && my < rMaxY) {
+                effectDropRow = index;
+                ImGui.getWindowDrawList().addRect(fxCellMinX, rMinY, fxCellMaxX, rMaxY,
+                        ThemeManager.effectColor(), ChipFlow.CHIP_ROUNDING * uiScale(), 0, 2f);
             }
         }
 
@@ -1425,60 +1446,495 @@ public final class InputOverlay {
         }
     }
 
-    private void renderPotionColumns(InputRow row, int rowIndex) {
-        float ampW = AMP_CELL_WIDTH * uiScale();
-        if (isSpeedColumnVisible()) {
-            ImGui.tableNextColumn();
-            ampBuf.set(row.getSpeedAmplifier());
-            ThemeManager.centerNextItem(ampW);
-            ImGui.setNextItemWidth(ampW);
-            if (ImGui.inputInt(ID_SPEED_SUFFIX, ampBuf, 0, 0)) {
-                row.setSpeedAmplifier(ampBuf.get());
-                notifyChange(rowIndex);
-            }
+    private void renderEffectsColumn(InputRow row, int rowIndex, float grownRowH) {
+        ImGui.tableNextColumn();
+        ImVec2 origin = ImGui.getCursorScreenPos();
+        float cellW = ImGui.getContentRegionAvail().x;
+        fxCellMinX = origin.x;
+        fxCellMaxX = origin.x + cellW;
+        float baseRowH = ThemeManager.tableRowHeight();
+        final List<MovementEffect> shown = activeEffects(row);
+        if (shown.isEmpty()) {
+            effectsRowH.remove(rowIndex);
+            ChipFlow.Layout layout = ChipFlow.compute(cellW, baseRowH, new float[] { effectAddChipWidth() });
+            ChipFlow.place(origin, cellW, grownRowH, layout, i -> renderEffectAddChip());
+        } else {
+            float[] widths = new float[shown.size()];
+            for (int i = 0; i < widths.length; i++) widths[i] = effectChipWidth(shown.get(i), row.getEffectLevel(shown.get(i)));
+            ChipFlow.Layout layout = ChipFlow.compute(cellW, baseRowH, widths);
+            effectsRowH.put(rowIndex, layout.cellH);
+            ChipFlow.place(origin, cellW, grownRowH, layout, i -> renderEffectChip(row, rowIndex, shown.get(i)));
         }
-        if (isJumpBoostColumnVisible()) {
-            ImGui.tableNextColumn();
-            ampBuf.set(row.getJumpBoostAmplifier());
-            ThemeManager.centerNextItem(ampW);
-            ImGui.setNextItemWidth(ampW);
-            if (ImGui.inputInt(ID_JUMP_SUFFIX, ampBuf, 0, 0)) {
-                row.setJumpBoostAmplifier(ampBuf.get());
-                notifyChange(rowIndex);
-            }
+        renderEffectsPopup(row, rowIndex);
+    }
+
+    private static List<MovementEffect> activeEffects(InputRow row) {
+        List<MovementEffect> out = new ArrayList<>();
+        for (MovementEffect effect : MovementEffect.all()) {
+            if (row.getEffectLevel(effect) > 0) out.add(effect);
         }
-        if (isSlownessColumnVisible()) {
-            ImGui.tableNextColumn();
-            ampBuf.set(row.getSlownessAmplifier());
-            ThemeManager.centerNextItem(ampW);
-            ImGui.setNextItemWidth(ampW);
-            if (ImGui.inputInt(ID_SLOWNESS_SUFFIX, ampBuf, 0, 0)) {
-                row.setSlownessAmplifier(ampBuf.get());
-                notifyChange(rowIndex);
-            }
+        return out;
+    }
+
+    private static String effectChipKey(MovementEffect effect) {
+        return effect.leveled ? effect.tag : "";
+    }
+
+    private static String effectChipValue(MovementEffect effect, int level) {
+        return effect.leveled ? String.valueOf(level) : effect.tag;
+    }
+
+    private float effectChipWidth(MovementEffect effect, int level) {
+        float s = uiScale();
+        float pad = ChipFlow.CHIP_PAD * s;
+        float gap = ChipFlow.CHIP_GAP * s;
+        String key = effectChipKey(effect);
+        float keyW = key.isEmpty() ? 0f : ImGui.calcTextSize(key).x + gap;
+        Fonts.pushBold();
+        float valueW = ImGui.calcTextSize(effectChipValue(effect, level)).x;
+        Fonts.popBold();
+        return pad + SolverWidgets.gripWidth() + gap + keyW + valueW + pad;
+    }
+
+    private float effectAddChipWidth() {
+        return 2f * ChipFlow.CHIP_PAD * uiScale() + ImGui.calcTextSize(EFFECTS_ADD_CHIP).x;
+    }
+
+    private void renderEffectChip(InputRow row, int rowIndex, MovementEffect effect) {
+        float s = uiScale();
+        float h = ImGui.getFrameHeight();
+        float pad = ChipFlow.CHIP_PAD * s;
+        float gap = ChipFlow.CHIP_GAP * s;
+        float rounding = ChipFlow.CHIP_ROUNDING * s;
+        float grip = SolverWidgets.gripWidth();
+        ImDrawList dl = ImGui.getWindowDrawList();
+        int level = row.getEffectLevel(effect);
+        boolean available = effect.availableIn(mcVersion);
+        String key = effectChipKey(effect);
+        String value = effectChipValue(effect, level);
+
+        ImGui.invisibleButton("fxchip" + effect.id, effectChipWidth(effect, level), h);
+        ImVec2 mn = ImGui.getItemRectMin();
+        ImVec2 mx = ImGui.getItemRectMax();
+        boolean hover = ImGui.isItemHovered();
+        if (hover && ImGui.isMouseClicked(0)) {
+            effectPressRow = rowIndex;
+            effectPressEffect = effect;
+        }
+        boolean pressed = effectPressRow == rowIndex && effectPressEffect == effect;
+        if (pressed && draggingEffectRow < 0 && ImGui.isMouseDragging(0)) {
+            draggingEffectRow = rowIndex;
+            draggingEffect = effect;
+        }
+        boolean dragSource = draggingEffectRow == rowIndex && draggingEffect == effect;
+
+        ChipFlow.dropShadow(dl, mn, mx);
+        dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.panelColor(), rounding);
+        dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.effectTintColor(hover || dragSource ? 0.22f : 0.12f), rounding);
+        dl.addRect(mn.x, mn.y, mx.x, mx.y, hover || dragSource ? ThemeManager.effectColor() : ThemeManager.effectTintColor(0.55f), rounding, 0, 1f);
+
+        float cy = mn.y + h * 0.5f;
+        float ty = mn.y + (h - ImGui.getFontSize()) * 0.5f;
+        float x = mn.x + pad;
+        SolverWidgets.gripDots(dl, x + s, cy, ThemeManager.textDimColor());
+        x += grip + gap;
+        float textStart = x;
+        if (!key.isEmpty()) {
+            dl.addText(x, ty, available ? ThemeManager.textMutedColor() : ThemeManager.textDimColor(), key);
+            x += ImGui.calcTextSize(key).x + gap;
+        }
+        Fonts.pushBold();
+        dl.addText(x, ty, available ? ThemeManager.effectColor() : ThemeManager.textDimColor(), value);
+        x += ImGui.calcTextSize(value).x;
+        Fonts.popBold();
+        if (!available) dl.addLine(textStart, cy, x, cy, ThemeManager.textDimColor(), 1f);
+        if (dragSource) dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.bgTintColor(0.6f), rounding);
+
+        if (hover && draggingEffectRow < 0) TooltipUtil.onHover(effectChipTooltip(effect, level, available));
+        if (pressed && draggingEffectRow < 0 && hover && ImGui.isMouseReleased(0)) {
+            effectPressRow = -1;
+            ImGui.openPopup(ID_EFFECTS_POPUP);
+        }
+        if (hover && ImGui.isMouseClicked(2)) {
+            effectPressRow = -1;
+            row.setEffectLevel(effect, 0);
+            notifyChange(rowIndex);
         }
     }
 
-    private void renderApplyPotionOptions() {
-        if (potionColumnCount() == 0 || data.getRows().isEmpty()) return;
+    private String effectChipTooltip(MovementEffect effect, int level, boolean available) {
+        String name = effect.leveled ? effect.label + " " + level : effect.label;
+        if (!available) name += ", not in " + mcVersion + ", ignored";
+        return name + "\nClick to edit, drag to move (Alt copies), middle click removes.";
+    }
 
-        InputRow first = data.get(0);
-        if (isSpeedColumnVisible() && contextButton(MENU_APPLY_SPEED_TO_ALL)) {
-            applyAmplifierToAll(InputRow::setSpeedAmplifier, first.getSpeedAmplifier());
-            notifyFullResim();
+    private void renderEffectAddChip() {
+        float s = uiScale();
+        float h = ImGui.getFrameHeight();
+        float textW = ImGui.calcTextSize(EFFECTS_ADD_CHIP).x;
+        ImDrawList dl = ImGui.getWindowDrawList();
+        ImGui.invisibleButton("fxadd", effectAddChipWidth(), h);
+        ImVec2 mn = ImGui.getItemRectMin();
+        ImVec2 mx = ImGui.getItemRectMax();
+        boolean hover = ImGui.isItemHovered();
+        int tint = hover ? ThemeManager.effectColor() : ThemeManager.textDimColor();
+        dl.addRect(mn.x, mn.y, mx.x, mx.y, tint, ChipFlow.CHIP_ROUNDING * s, 0, 1f);
+        dl.addText(mn.x + (mx.x - mn.x - textW) * 0.5f, mn.y + (h - ImGui.getFontSize()) * 0.5f, tint, EFFECTS_ADD_CHIP);
+        if (hover) TooltipUtil.onHover("Add movement effects to this tick");
+        if (ImGui.isItemClicked(0)) ImGui.openPopup(ID_EFFECTS_POPUP);
+    }
+
+    private List<MovementEffect> effectOptions(InputRow row, MovementEffect current) {
+        List<MovementEffect> out = new ArrayList<>();
+        for (MovementEffect effect : MovementEffect.all()) {
+            if (effect == current) {
+                out.add(effect);
+            } else if (effect.availableIn(mcVersion) && row.getEffectLevel(effect) <= 0) {
+                out.add(effect);
+            }
         }
-        if (isJumpBoostColumnVisible() && contextButton(MENU_APPLY_JUMP_TO_ALL)) {
-            applyAmplifierToAll(InputRow::setJumpBoostAmplifier, first.getJumpBoostAmplifier());
-            notifyFullResim();
+        return out;
+    }
+
+    private MovementEffect nextFreeEffect(InputRow row) {
+        for (MovementEffect effect : MovementEffect.all()) {
+            if (effect.availableIn(mcVersion) && row.getEffectLevel(effect) <= 0) return effect;
         }
-        if (isSlownessColumnVisible() && contextButton(MENU_APPLY_SLOWNESS_TO_ALL)) {
-            applyAmplifierToAll(InputRow::setSlownessAmplifier, first.getSlownessAmplifier());
+        return null;
+    }
+
+    private float effectsLabelWidth() {
+        float w = Math.max(ImGui.calcTextSize(EFFECTS_LABEL).x, ImGui.calcTextSize(EFFECTS_COPY_LABEL).x);
+        w = Math.max(w, ImGui.calcTextSize(EFFECTS_CLEAR_LABEL).x);
+        return w + ThemeManager.SM * uiScale();
+    }
+
+    private boolean beginEffectsForm(String id) {
+        if (!ThemeManager.beginStandardFormTable(id, 3)) return false;
+        ImGui.tableSetupColumn("l", ImGuiTableColumnFlags.WidthFixed, effectsLabelWidth());
+        ImGui.tableSetupColumn("c", ImGuiTableColumnFlags.WidthFixed, effectsControlWidth());
+        ImGui.tableSetupColumn("t", ImGuiTableColumnFlags.WidthFixed, SolverWidgets.deleteXWidth());
+        return true;
+    }
+
+    private void renderEffectsPopup(InputRow row, int rowIndex) {
+        if (!ImGui.beginPopup(ID_EFFECTS_POPUP)) return;
+        float s = uiScale();
+        float controlW = effectsControlWidth();
+        Fonts.pushBold();
+        Controls.labelCell(EFFECTS_TITLE);
+        Fonts.popBold();
+        ImGui.sameLine();
+        ThemeManager.pushTextColor(ThemeManager.textDimColor());
+        Controls.labelCell(String.format(EFFECTS_TICK, rowIndex + 1));
+        ThemeManager.popTextColor();
+        effectsSeparator();
+
+        List<MovementEffect> active = activeEffects(row);
+        if (active.isEmpty()) {
+            renderEffectPicker(row, rowIndex);
+            renderEffectsActions(row, rowIndex);
+            ImGui.endPopup();
+            return;
+        }
+        MovementEffect removed = null;
+        MovementEffect replacedFrom = null;
+        MovementEffect replacedTo = null;
+        if (beginEffectsForm("##fx_edit")) {
+            Controls.pushInputFrameHeight();
+            for (int i = 0; i < active.size(); i++) {
+                MovementEffect effect = active.get(i);
+                ImGui.pushID(effect.id);
+                ImGui.tableNextRow();
+                ImGui.tableNextColumn();
+                if (i == 0) Controls.labelCell(EFFECTS_LABEL);
+                ImGui.tableNextColumn();
+                List<MovementEffect> options = effectOptions(row, effect);
+                String[] items = new String[options.size()];
+                for (int k = 0; k < items.length; k++) items[k] = options.get(k).label;
+                effectCombo.set(Math.max(0, options.indexOf(effect)));
+                float levelW = EFFECTS_LEVEL_WIDTH * s;
+                float gap = ImGui.getStyle().getItemSpacing().x;
+                float comboW = effect.leveled ? controlW - levelW - gap : controlW;
+                if (Controls.combo("##fxtype", effectCombo, items, comboW)) {
+                    replacedFrom = effect;
+                    replacedTo = options.get(effectCombo.get());
+                }
+                if (effect.leveled) {
+                    ImGui.sameLine();
+                    ampBuf.set(row.getEffectLevel(effect));
+                    ImGui.setNextItemWidth(levelW);
+                    if (ImGui.inputInt("##fxlevel", ampBuf, 0, 0)) {
+                        row.setEffectLevel(effect, Math.max(1, ampBuf.get()));
+                        notifyChange(rowIndex);
+                    }
+                }
+                ImGui.tableNextColumn();
+                if (SolverWidgets.deleteX("fxremove")) removed = effect;
+                ImGui.popID();
+            }
+            ImGui.tableNextRow();
+            ImGui.tableNextColumn();
+            ImGui.tableNextColumn();
+            MovementEffect next = nextFreeEffect(row);
+            if (next == null) {
+                Controls.disabledButton(EFFECTS_ADD);
+            } else if (Controls.secondaryButton(EFFECTS_ADD)) {
+                row.setEffectLevel(next, 1);
+                notifyChange(rowIndex);
+            }
+            ImGui.tableNextColumn();
+            Controls.popInputFrameHeight();
+            ThemeManager.endStandardFormTable();
+        }
+        if (removed != null) {
+            row.setEffectLevel(removed, 0);
+            notifyChange(rowIndex);
+        }
+        if (replacedFrom != null && replacedTo != null && replacedTo != replacedFrom) {
+            int level = row.getEffectLevel(replacedFrom);
+            row.setEffectLevel(replacedFrom, 0);
+            row.setEffectLevel(replacedTo, Math.max(1, replacedTo.clampLevel(level)));
+            notifyChange(rowIndex);
+        }
+
+        renderEffectsActions(row, rowIndex);
+        ImGui.endPopup();
+    }
+
+    private void renderEffectsActions(InputRow row, int rowIndex) {
+        boolean following = rowIndex + 1 < data.size();
+        boolean selected = selectionHasOtherRow(rowIndex);
+        boolean all = data.size() > 1;
+        boolean ownEffects = row.hasEffects();
+        boolean copy = ownEffects && (following || selected || all);
+        boolean clear = anyRowHasEffects();
+        if (!copy && !clear) return;
+        effectsSeparator();
+        if (!beginEffectsForm("##fx_actions")) return;
+        Controls.pushInputFrameHeight();
+        float controlW = effectsControlWidth();
+        float gap = ImGui.getStyle().getItemSpacing().x;
+        float w = (controlW - 2f * gap) / 3f;
+        if (copy) {
+            ImGui.tableNextRow();
+            ImGui.tableNextColumn();
+            Controls.labelCell(EFFECTS_COPY_LABEL);
+            ImGui.tableNextColumn();
+            copyButton(row, rowIndex, EFFECTS_TO_FOLLOWING, following, w);
+            ImGui.sameLine(0, gap);
+            copyButton(row, rowIndex, EFFECTS_TO_SELECTED, selected, w);
+            ImGui.sameLine(0, gap);
+            copyButton(row, rowIndex, EFFECTS_TO_ALL, all, w);
+            ImGui.tableNextColumn();
+        }
+        if (clear) {
+            ImGui.pushID("fxclear");
+            ImGui.tableNextRow();
+            ImGui.tableNextColumn();
+            Controls.labelCell(EFFECTS_CLEAR_LABEL);
+            ImGui.tableNextColumn();
+            if (!anyRowHasEffects(rowIndex)) {
+                Controls.disabledDangerButton(EFFECTS_TO_FOLLOWING, w);
+            } else if (Controls.dangerButton(EFFECTS_TO_FOLLOWING, w)) {
+                for (int i = rowIndex; i < data.size(); i++) data.get(i).clearEffects();
+                notifyChange(rowIndex);
+            }
+            ImGui.sameLine(0, gap);
+            if (!selected) {
+                Controls.disabledDangerButton(EFFECTS_TO_SELECTED, w);
+            } else if (Controls.dangerButton(EFFECTS_TO_SELECTED, w)) {
+                int firstRow = rowIndex;
+                for (int i : selection.getSelectedRows()) {
+                    if (i < 0 || i >= data.size()) continue;
+                    data.get(i).clearEffects();
+                    firstRow = Math.min(firstRow, i);
+                }
+                notifyChange(firstRow);
+            }
+            ImGui.sameLine(0, gap);
+            if (Controls.dangerButton(EFFECTS_TO_ALL, w)) {
+                for (InputRow other : data.getRows()) other.clearEffects();
+                notifyFullResim();
+            }
+            ImGui.tableNextColumn();
+            ImGui.popID();
+        }
+        Controls.popInputFrameHeight();
+        ThemeManager.endStandardFormTable();
+    }
+
+    private void copyButton(InputRow row, int rowIndex, String target, boolean enabled, float width) {
+        if (!enabled) {
+            Controls.disabledButton(target, width);
+        } else if (Controls.secondaryButton(target, width)) {
+            copyEffects(row, rowIndex, target);
+        }
+    }
+
+    private float effectsControlWidth() {
+        float button = 0f;
+        for (String label : new String[]{EFFECTS_TO_FOLLOWING, EFFECTS_TO_SELECTED, EFFECTS_TO_ALL}) {
+            button = Math.max(button, Controls.buttonWidth(label));
+        }
+        float row = 3f * button + 2f * ImGui.getStyle().getItemSpacing().x;
+        return Math.max(EFFECTS_CONTROL_WIDTH * uiScale(), row);
+    }
+
+    private boolean selectionHasOtherRow(int rowIndex) {
+        for (int i : selection.getSelectedRows()) {
+            if (i != rowIndex && i < data.size()) return true;
+        }
+        return false;
+    }
+
+    private boolean anyRowHasEffects() {
+        return anyRowHasEffects(0);
+    }
+
+    private boolean anyRowHasEffects(int from) {
+        for (int i = Math.max(0, from); i < data.size(); i++) {
+            if (data.get(i).hasEffects()) return true;
+        }
+        return false;
+    }
+
+    private float effectsFormWidth() {
+        float cellPadX = ImGui.getStyle().getCellPadding().x;
+        return effectsLabelWidth() + effectsControlWidth() + SolverWidgets.deleteXWidth() + 6f * cellPadX;
+    }
+
+
+    private void effectsSeparator() {
+        ThemeManager.sectionSpacing();
+        ImVec2 pos = ImGui.getCursorScreenPos();
+        float left = ImGui.getWindowPos().x + ImGui.getStyle().getWindowPadding().x;
+        float right = ImGui.getWindowPos().x + ImGui.getWindowWidth() - ImGui.getStyle().getWindowPadding().x;
+        ImGui.getWindowDrawList().addLine(left, pos.y, right, pos.y, ImGui.getColorU32(ImGuiCol.Separator), 1f);
+        ImGui.dummy(0f, 1f);
+        ThemeManager.sectionSpacing();
+    }
+
+    private void renderEffectPicker(InputRow row, int rowIndex) {
+        float s = uiScale();
+        float formW = effectsFormWidth();
+        ThemeManager.pushTextColor(ThemeManager.textDimColor());
+        Controls.labelCell(EFFECTS_EMPTY);
+        ThemeManager.popTextColor();
+        float startX = ImGui.getCursorScreenPos().x;
+        float gap = ChipFlow.CHIP_SPACING * s;
+        float usedX = 0f;
+        boolean first = true;
+        MovementEffect picked = null;
+        for (MovementEffect effect : MovementEffect.all()) {
+            if (!effect.availableIn(mcVersion)) continue;
+            float w = effectPickChipWidth(effect);
+            if (!first && usedX + gap + w <= formW) {
+                ImGui.sameLine(0, gap);
+                usedX += gap + w;
+            } else {
+                if (!first) ImGui.setCursorScreenPos(startX, ImGui.getCursorScreenPos().y);
+                usedX = w;
+            }
+            first = false;
+            if (renderEffectPickChip(effect, w)) picked = effect;
+        }
+        ImGui.dummy(formW, 0f);
+        if (picked != null) {
+            row.setEffectLevel(picked, 1);
+            notifyChange(rowIndex);
+        }
+    }
+
+    private float effectPickChipWidth(MovementEffect effect) {
+        return 2f * ChipFlow.CHIP_PAD * uiScale() + ImGui.calcTextSize(EFFECTS_ADD_CHIP + " " + effect.label).x;
+    }
+
+    private boolean renderEffectPickChip(MovementEffect effect, float w) {
+        float s = uiScale();
+        float h = ImGui.getFrameHeight();
+        float pad = ChipFlow.CHIP_PAD * s;
+        float rounding = ChipFlow.CHIP_ROUNDING * s;
+        ImDrawList dl = ImGui.getWindowDrawList();
+        boolean clicked = ImGui.invisibleButton("fxpick" + effect.id, w, h);
+        ImVec2 mn = ImGui.getItemRectMin();
+        ImVec2 mx = ImGui.getItemRectMax();
+        boolean hover = ImGui.isItemHovered();
+        dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.panelColor(), rounding);
+        dl.addRectFilled(mn.x, mn.y, mx.x, mx.y, ThemeManager.effectTintColor(hover ? 0.22f : 0.12f), rounding);
+        dl.addRect(mn.x, mn.y, mx.x, mx.y, hover ? ThemeManager.effectColor() : ThemeManager.effectTintColor(0.55f), rounding, 0, 1f);
+        float ty = mn.y + (h - ImGui.getFontSize()) * 0.5f;
+        String plus = EFFECTS_ADD_CHIP + " ";
+        dl.addText(mn.x + pad, ty, ThemeManager.textDimColor(), plus);
+        dl.addText(mn.x + pad + ImGui.calcTextSize(plus).x, ty, ThemeManager.effectColor(), effect.label);
+        return clicked;
+    }
+
+    private void copyEffects(InputRow row, int rowIndex, String target) {
+        if (EFFECTS_TO_FOLLOWING.equals(target)) {
+            for (int i = rowIndex + 1; i < data.size(); i++) data.get(i).copyEffectsFrom(row);
+            notifyChange(rowIndex + 1);
+        } else if (EFFECTS_TO_SELECTED.equals(target)) {
+            int first = rowIndex;
+            for (int i : selection.getSelectedRows()) {
+                if (i < 0 || i >= data.size() || i == rowIndex) continue;
+                data.get(i).copyEffectsFrom(row);
+                first = Math.min(first, i);
+            }
+            notifyChange(first);
+        } else {
+            for (InputRow other : data.getRows()) {
+                if (other != row) other.copyEffectsFrom(row);
+            }
             notifyFullResim();
         }
     }
 
-    private void applyAmplifierToAll(ObjIntConsumer<InputRow> setter, int amplifier) {
-        for (InputRow row : data.getRows()) setter.accept(row, amplifier);
+    private void applyEffectDrag() {
+        if (draggingEffectRow >= 0 && draggingEffectRow < data.size() && draggingEffect != null) {
+            InputRow src = data.get(draggingEffectRow);
+            int level = src.getEffectLevel(draggingEffect);
+            String label = draggingEffect.leveled ? draggingEffect.tag + " " + level : draggingEffect.tag;
+            boolean copy = ImGui.getIO().getKeyAlt();
+            String tail = effectDropRow >= 0 && effectDropRow != draggingEffectRow
+                    ? (copy ? "  copy to T" : "  -> T") + (effectDropRow + 1) : "";
+            float s = uiScale();
+            float pad = ChipFlow.CHIP_PAD * s;
+            float h = ImGui.getFrameHeight();
+            float labelW = ImGui.calcTextSize(label).x;
+            float tailW = ImGui.calcTextSize(tail).x;
+            ImVec2 m = ImGui.getMousePos();
+            float x = m.x + 12f * s;
+            float y = m.y + 4f * s;
+            float w = pad + labelW + tailW + pad;
+            float rounding = ChipFlow.CHIP_ROUNDING * s;
+            ImDrawList dl = ImGui.getForegroundDrawList();
+            dl.addRectFilled(x, y, x + w, y + h, ThemeManager.panelColor(), rounding);
+            dl.addRect(x, y, x + w, y + h, ThemeManager.effectColor(), rounding, 0, 1f);
+            float ty = y + (h - ImGui.getFontSize()) * 0.5f;
+            dl.addText(x + pad, ty, ThemeManager.effectColor(), label);
+            dl.addText(x + pad + labelW, ty, ThemeManager.okColor(), tail);
+        }
+        if (!ImGui.isMouseDown(0)) {
+            if (draggingEffectRow >= 0 && ImGui.isMouseReleased(0)) {
+                moveEffect(draggingEffectRow, effectDropRow, draggingEffect, ImGui.getIO().getKeyAlt());
+            }
+            draggingEffectRow = -1;
+            draggingEffect = null;
+            effectDropRow = -1;
+            effectPressRow = -1;
+            effectPressEffect = null;
+        }
+    }
+
+    private void moveEffect(int from, int to, MovementEffect effect, boolean copy) {
+        if (effect == null || from == to || from < 0 || from >= data.size() || to < 0 || to >= data.size()) return;
+        InputRow src = data.get(from);
+        int level = src.getEffectLevel(effect);
+        if (level <= 0) return;
+        data.get(to).setEffectLevel(effect, level);
+        if (!copy) src.setEffectLevel(effect, 0);
+        notifyChange(Math.min(from, to));
     }
 
     private void parseAndSetYaw(InputRow row) {
@@ -1589,7 +2045,6 @@ public final class InputOverlay {
         }
         renderTeleportToTickOption();
         renderCopyAsTeleportOption();
-        renderApplyPotionOptions();
         renderYawLockOption();
         renderPitchLockOption();
         renderYawDirectionOption();
@@ -1948,9 +2403,24 @@ public final class InputOverlay {
         }
 
         ThemeManager.paddedSeparator();
+        renderDeleteConstraintsOption();
         String label = String.format(MENU_DELETE, selection.size()) + " (" + MENU_DELETE_SHORTCUT + ")";
         if (contextDangerButton(label)) {
             deleteSelectedRows();
+        }
+    }
+
+    private void renderDeleteConstraintsOption() {
+        if (!isSolverActive() || countSelectedConstraints == null || deleteSelectedConstraints == null) {
+            return;
+        }
+        int count = countSelectedConstraints.getAsInt();
+        if (count <= 0) {
+            return;
+        }
+        String label = String.format(MENU_DELETE_CONSTRAINTS, count) + " (" + MENU_DELETE_CONSTRAINTS_SHORTCUT + ")";
+        if (contextDangerButton(label)) {
+            deleteSelectedConstraints.run();
         }
     }
 

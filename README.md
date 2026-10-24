@@ -105,7 +105,7 @@ Click and drag the first box in the world. Hold Shift to move the whole path rig
 | `Shift+B` | Wall constraint for entering the block's side instead of stopping at it |
 | `Alt+B` | Merge the new footprint or wall with the existing constraint |
 | `Ctrl+B` | Remove that constraint; on a pressure plate, ladder, vine, slime or ice block it adds the cell constraint instead |
-| `X` | Remove the selected constraints |
+| `X` | Remove the selected constraints (also `Delete constraints` in the tick right-click menu while the Angle Solver is open) |
 | `V` | Solve and apply (Angle Solver) |
 | `I` / `O` | Set the solver start / goal tick to the selected tick |
 | `Z` | Set the solver goal to the axis you are looking along (+X, -X, +Z or -Z) |

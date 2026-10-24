@@ -9,6 +9,7 @@ import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
+import de.legoshi.parkourcalc.core.ui.MovementEffect;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.BlockSelection;
 import de.legoshi.parkourcalc.core.anglesolver.Constraint;
@@ -26,6 +27,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -480,6 +482,7 @@ public final class SaveIO {
         r.speedAmplifier = row.getSpeedAmplifier();
         r.jumpBoostAmplifier = row.getJumpBoostAmplifier();
         r.slownessAmplifier = row.getSlownessAmplifier();
+        r.effects = extraEffects(row);
         r.hotbarSlot = row.getHotbarSlot();
         r.teleport = row.isTeleportEnabled();
         r.teleportX = row.getTeleportX();
@@ -496,6 +499,21 @@ public final class SaveIO {
         return r;
     }
 
+    private static Map<String, Integer> extraEffects(InputRow row) {
+        Map<String, Integer> out = null;
+        for (MovementEffect effect : MovementEffect.all()) {
+            int level = row.getEffectLevel(effect);
+            if (isLegacyEffect(effect) || level <= 0) continue;
+            if (out == null) out = new LinkedHashMap<String, Integer>();
+            out.put(effect.id, level);
+        }
+        return out;
+    }
+
+    private static boolean isLegacyEffect(MovementEffect effect) {
+        return effect == MovementEffect.SPEED || effect == MovementEffect.JUMP_BOOST || effect == MovementEffect.SLOWNESS;
+    }
+
     public static boolean rowMatches(SaveFile.Row r, InputRow row) {
         if (r == null) return false;
         for (InputRow.Key k : InputRow.Key.values()) {
@@ -509,6 +527,7 @@ public final class SaveIO {
                 && r.speedAmplifier == row.getSpeedAmplifier()
                 && r.jumpBoostAmplifier == row.getJumpBoostAmplifier()
                 && r.slownessAmplifier == row.getSlownessAmplifier()
+                && Objects.equals(r.effects, extraEffects(row))
                 && r.hotbarSlot == row.getHotbarSlot()
                 && r.teleport == row.isTeleportEnabled()
                 && r.teleportX == row.getTeleportX()
@@ -546,6 +565,14 @@ public final class SaveIO {
             row.setSpeedAmplifier(r.speedAmplifier);
             row.setJumpBoostAmplifier(r.jumpBoostAmplifier);
             row.setSlownessAmplifier(r.slownessAmplifier);
+            if (r.effects != null) {
+                for (Map.Entry<String, Integer> entry : r.effects.entrySet()) {
+                    MovementEffect effect = MovementEffect.byId(entry.getKey());
+                    if (effect != null && !isLegacyEffect(effect) && entry.getValue() != null) {
+                        row.setEffectLevel(effect, entry.getValue());
+                    }
+                }
+            }
             row.setHotbarSlot(r.hotbarSlot);
             row.setTeleportDestination(r.teleportX, r.teleportY, r.teleportZ);
             row.setTeleportEnabled(r.teleport);

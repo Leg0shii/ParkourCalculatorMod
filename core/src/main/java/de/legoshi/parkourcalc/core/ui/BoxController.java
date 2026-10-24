@@ -695,6 +695,30 @@ public final class BoxController {
         return starts;
     }
 
+    public void renderPath(BoxRenderer renderer, int argb, int from, int to) {
+        if (states.size() < 2) return;
+        double half = boxSize * 0.5;
+        Vec3dCore prev = from > 0 ? lastPathPoint(from - 1) : null;
+        for (int i = from; i < to; i++) {
+            List<Vec3dCore> path = states.get(i).subtickPath;
+            List<Vec3dCore> points = (path == null || path.isEmpty()) ? Collections.singletonList(positions.get(i)) : path;
+            for (Vec3dCore cur : points) {
+                if (prev != null && !prev.equals(cur)) {
+                    renderer.drawLine(
+                            prev.x, prev.y + half, prev.z,
+                            cur.x, cur.y + half, cur.z,
+                            argb);
+                }
+                prev = cur;
+            }
+        }
+    }
+
+    private Vec3dCore lastPathPoint(int i) {
+        List<Vec3dCore> path = states.get(i).subtickPath;
+        return (path == null || path.isEmpty()) ? positions.get(i) : path.get(path.size() - 1);
+    }
+
     public void renderPath(BoxRenderer renderer, int argb, double camX, double camY, double camZ, double maxDistanceSq) {
         if (states.size() < 2) return;
         double half = boxSize * 0.5;

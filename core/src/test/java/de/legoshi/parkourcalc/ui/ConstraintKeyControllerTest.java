@@ -4,6 +4,7 @@ import de.legoshi.parkourcalc.core.FakeMinecraftAccess;
 import de.legoshi.parkourcalc.core.anglesolver.AngleSolverState;
 import de.legoshi.parkourcalc.core.anglesolver.Constraint;
 import de.legoshi.parkourcalc.core.anglesolver.ConstraintDeriver;
+import de.legoshi.parkourcalc.core.anglesolver.Slipperiness;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.Face;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
@@ -17,8 +18,11 @@ import org.junit.Test;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 public class ConstraintKeyControllerTest {
 
@@ -277,5 +281,60 @@ public class ConstraintKeyControllerTest {
         controller.onKey(false, true);
 
         assertNull("Ctrl on a plain top face clears rather than adds", state.tickConstraintsOrNull(TICK));
+    }
+
+    private void addConstraints(AngleSolverState target, int tick, int count) {
+        for (int i = 0; i < count; i++) {
+            target.tickConstraints(tick).getConstraints().add(Constraint.scalar(Constraint.Field.X, Constraint.Op.GE, tick + i));
+        }
+    }
+
+    @Test
+    public void selectedRowsCountAndDeleteEveryConstraintOnThemAndKeepTheOverrides() {
+        AngleSolverState multi = new AngleSolverState();
+        addConstraints(multi, 1, 1);
+        addConstraints(multi, 2, 2);
+        addConstraints(multi, 3, 3);
+        multi.tickConstraints(2).getOverride().setSlipperiness(Slipperiness.ICE);
+        SelectionManager selection = new SelectionManager(mc);
+        selection.selectRows(2, 2);
+        int[] changes = {0};
+        ConstraintKeyController multiController = new ConstraintKeyController(
+                mc, multi, selection, new ConstraintSelection(), () -> changes[0]++, false, () -> 5, settings, s -> { });
+
+        assertEquals(5, multiController.countSelected());
+        multiController.removeSelected();
+
+        assertEquals(1, changes[0]);
+        assertEquals(1, multi.tickConstraintsOrNull(1).getConstraints().size());
+        assertTrue(multi.tickConstraintsOrNull(2).getConstraints().isEmpty());
+        assertTrue(multi.tickConstraintsOrNull(3).getConstraints().isEmpty());
+        assertSame(Slipperiness.ICE, multi.tickConstraintsOrNull(2).getOverride().getSlipperiness());
+        assertEquals(0, multiController.countSelected());
+    }
+
+    @Test
+    public void aFocusedChipInsideTheSelectionLimitsTheCountAndTheDeleteToThatChip() {
+        AngleSolverState multi = new AngleSolverState();
+        addConstraints(multi, 2, 2);
+        addConstraints(multi, 3, 3);
+        SelectionManager selection = new SelectionManager(mc);
+        selection.selectRows(2, 2);
+        ConstraintSelection chips = new ConstraintSelection();
+        chips.focusOne(3, 1);
+        ConstraintKeyController multiController = new ConstraintKeyController(
+                mc, multi, selection, chips, () -> { }, false, () -> 5, settings, s -> { });
+        Constraint kept0 = multi.tickConstraintsOrNull(3).getConstraints().get(0);
+        Constraint gone = multi.tickConstraintsOrNull(3).getConstraints().get(1);
+
+        assertEquals(1, multiController.countSelected());
+        multiController.removeSelected();
+
+        assertEquals(2, multi.tickConstraintsOrNull(2).getConstraints().size());
+        List<Constraint> left = multi.tickConstraintsOrNull(3).getConstraints();
+        assertEquals(2, left.size());
+        assertSame(kept0, left.get(0));
+        assertFalse(left.contains(gone));
+        assertFalse(chips.isFocused(3, 1));
     }
 }
