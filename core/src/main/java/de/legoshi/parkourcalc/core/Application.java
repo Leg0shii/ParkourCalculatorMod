@@ -352,6 +352,7 @@ public final class Application {
         PerfOverlay perfOverlay = new PerfOverlay();
         FileMenu fileMenu = new FileMenu(saveController, filePicker, settings, this::saveSettings);
         inputOverlay.setSaveSelectionAsTasHandler(() -> promptSaveSelectionAsTas(fileMenu));
+        inputOverlay.setConstraintDeleteHandlers(this::countSelectedConstraints, this::removeSelectedConstraints);
         SettingsModal settingsModal = new SettingsModal(settings, this::saveSettings);
         settingsModal.setPairedSimulationHook(simulator.supportsPairedSimulation(), this::applyPairedSimulationChange);
         settingsModal.setOnejumpHook(practiceMacro::stop);
@@ -706,6 +707,10 @@ public final class Application {
 
     public void removeSelectedConstraints() {
         if (constraintKeyController != null) constraintKeyController.removeSelected();
+    }
+
+    public int countSelectedConstraints() {
+        return constraintKeyController != null ? constraintKeyController.countSelected() : 0;
     }
 
     public void captureAngleSolverBlock(BlockSelection.Kind kind) {
