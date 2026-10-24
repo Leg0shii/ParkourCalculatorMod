@@ -584,6 +584,7 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
                 sp.addEffect(instance);
             }
         });
+        MovementEffects.applyClient(client, levels, EFFECT_DURATION_TICKS);
     }
 
     @Override
@@ -616,6 +617,7 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
                 + " mvS=" + p.xxa
                 + " spdAmp=" + MovementEffects.amplifier(p, MovementEffect.SPEED)
                 + " jmpAmp=" + MovementEffects.amplifier(p, MovementEffect.JUMP_BOOST)
+                + " fx=" + MovementEffects.describe(p)
                 + " pose=" + p.getPose()
                 + " inW=" + p.isInWater()
                 + " underW=" + p.isUnderWater()

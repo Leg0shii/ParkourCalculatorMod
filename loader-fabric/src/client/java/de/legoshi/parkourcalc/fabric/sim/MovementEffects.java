@@ -36,6 +36,25 @@ public final class MovementEffects {
         }
     }
 
+    public static void applyClient(LivingEntity entity, int[] levels, int duration) {
+        removeAll(entity);
+        for (MobEffectInstance instance : instances(levels, duration, true)) {
+            entity.addEffect(instance);
+        }
+    }
+
+    public static String describe(LivingEntity entity) {
+        StringBuilder out = new StringBuilder();
+        for (MovementEffect effect : MovementEffect.all()) {
+            if (!available(effect)) continue;
+            MobEffectInstance instance = entity.getEffect(type(effect));
+            if (instance == null) continue;
+            if (out.length() > 0) out.append(',');
+            out.append(effect.tag).append(instance.getAmplifier()).append('/').append(instance.getDuration());
+        }
+        return out.length() == 0 ? "-" : out.toString();
+    }
+
     public static int amplifier(LivingEntity entity, MovementEffect effect) {
         if (!available(effect)) return -1;
         MobEffectInstance instance = entity.getEffect(type(effect));

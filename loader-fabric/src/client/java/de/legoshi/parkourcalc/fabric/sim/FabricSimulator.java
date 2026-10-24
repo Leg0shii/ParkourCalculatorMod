@@ -290,6 +290,7 @@ public final class FabricSimulator extends LazyEntitySimulator<SimulatorEntity> 
                 + " mvS=" + e.xxa
                 + " spdAmp=" + MovementEffects.amplifier(e, MovementEffect.SPEED)
                 + " jmpAmp=" + MovementEffects.amplifier(e, MovementEffect.JUMP_BOOST)
+                + " fx=" + MovementEffects.describe(e)
                 + " pose=" + e.getPose()
                 + " inW=" + e.isInWater()
                 + " underW=" + e.isUnderWater()
