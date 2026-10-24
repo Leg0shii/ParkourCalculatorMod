@@ -346,7 +346,6 @@ public final class CachedBoxGeometry {
             List<Chunk> tailOnly = List.of(tail);
             drawPass(FabricRenderLayers.TRANSLUCENT_FACES, true, model, tailOnly);
             drawPass(FabricRenderLayers.LINES, false, model, tailOnly);
-            drawPass(FabricRenderLayers.FACE_DEPTH, true, model, tailOnly);
         }
     }
 

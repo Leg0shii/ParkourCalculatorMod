@@ -71,6 +71,7 @@ public final class CachedBoxGeometry implements AutoCloseable {
     private Set<Integer> bakedSelection = new HashSet<>();
     private GpuBuffer noFogBuffer;
     private GpuBufferSlice frameTransforms;
+    private GpuBufferSlice plateTransforms;
     private int[] frameRuns = new int[0];
     private boolean frameReady;
 
@@ -195,7 +196,7 @@ public final class CachedBoxGeometry implements AutoCloseable {
         subtickStarts = useSubtick ? boxController.subtickVertexStarts() : new int[]{0};
     }
 
-    public void prepareFrame(Matrix4f modelView, int[] runs) {
+    public void prepareFrame(Matrix4f modelView, int[] runs, float plateAlphaScale) {
         if (!built) {
             frameReady = false;
             return;
@@ -203,6 +204,12 @@ public final class CachedBoxGeometry implements AutoCloseable {
         frameTransforms = RenderSystem.getDynamicUniforms().writeTransform(
                 modelView,
                 new Vector4f(1.0f, 1.0f, 1.0f, 1.0f),
+                new Vector3f(),
+                new Matrix4f()
+        );
+        plateTransforms = RenderSystem.getDynamicUniforms().writeTransform(
+                modelView,
+                new Vector4f(1.0f, 1.0f, 1.0f, plateAlphaScale),
                 new Vector3f(),
                 new Matrix4f()
         );
@@ -469,7 +476,7 @@ public final class CachedBoxGeometry implements AutoCloseable {
         if (drawMode == PrimitiveTopology.LINES) {
             pass.setUniform("Fog", noFog());
         }
-        pass.setUniform("DynamicTransforms", frameTransforms);
+        pass.setUniform("DynamicTransforms", pipeline == FabricRenderLayers.constraintFillPipeline() ? plateTransforms : frameTransforms);
         pass.setVertexBuffer(0, vbo.slice());
         pass.setIndexBuffer(ibo, indexBuffer.type());
         pass.drawIndexed(drawMode.indexCount(count), 1, drawMode.indexCount(firstVertex), 0, 0);

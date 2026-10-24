@@ -709,6 +709,13 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
     }
 
+    public static void renderWorldOverlayAfterTranslucent(RenderPass pass) {
+        if (pass == null) return;
+        if (shouldDrawPath()) {
+            worldRenderer.drawAfterTranslucent(pass);
+        }
+    }
+
     private static void onCollectSubmits(LevelRenderContext context) {
         application.tickDrag();
         if (application.isPlaybackRunning()) {
