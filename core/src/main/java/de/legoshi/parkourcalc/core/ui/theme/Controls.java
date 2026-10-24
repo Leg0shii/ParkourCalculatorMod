@@ -145,11 +145,15 @@ public final class Controls {
 
     /** Non-interactive button styled as a muted frame; the blanket disabled-alpha is locally cancelled so the frame stays readable. */
     public static void disabledButton(String label) {
+        disabledButton(label, 0f);
+    }
+
+    public static void disabledButton(String label, float width) {
         ThemeManager.pushDisabledButton();
         ImGui.beginDisabled(true);
         ImGui.pushStyleVar(ImGuiStyleVar.Alpha, 1.0f);
         ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, BUTTON_PAD_X * ThemeManager.uiScale(), BUTTON_PAD_Y * ThemeManager.uiScale());
-        ImGui.button(label);
+        ImGui.button(label, width, 0f);
         ImGui.popStyleVar(2);
         ImGui.endDisabled();
         ThemeManager.popDisabledButton();

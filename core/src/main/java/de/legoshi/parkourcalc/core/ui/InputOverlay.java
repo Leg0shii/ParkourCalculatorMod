@@ -1716,10 +1716,12 @@ public final class InputOverlay {
                 first = false;
                 if (Controls.secondaryButton(EFFECTS_TO_FOLLOWING, w)) copyEffects(row, rowIndex, EFFECTS_TO_FOLLOWING);
             }
-            if (selected) {
-                if (!first) ImGui.sameLine(0, gap);
-                first = false;
-                if (Controls.secondaryButton(EFFECTS_TO_SELECTED, w)) copyEffects(row, rowIndex, EFFECTS_TO_SELECTED);
+            if (!first) ImGui.sameLine(0, gap);
+            first = false;
+            if (!selected) {
+                Controls.disabledButton(EFFECTS_TO_SELECTED, w);
+            } else if (Controls.secondaryButton(EFFECTS_TO_SELECTED, w)) {
+                copyEffects(row, rowIndex, EFFECTS_TO_SELECTED);
             }
             if (all) {
                 if (!first) ImGui.sameLine(0, gap);
@@ -1728,6 +1730,7 @@ public final class InputOverlay {
             ImGui.tableNextColumn();
         }
         if (clear) {
+            ImGui.pushID("fxclear");
             ImGui.tableNextRow();
             ImGui.tableNextColumn();
             Controls.labelCell(EFFECTS_CLEAR_LABEL);
@@ -1740,25 +1743,25 @@ public final class InputOverlay {
                     notifyChange(rowIndex);
                 }
             }
-            if (selected) {
-                if (!first) ImGui.sameLine(0, gap);
-                first = false;
-                if (Controls.dangerButton(EFFECTS_TO_SELECTED, w)) {
-                    int firstRow = rowIndex;
-                    for (int i : selection.getSelectedRows()) {
-                        if (i < 0 || i >= data.size()) continue;
-                        data.get(i).clearEffects();
-                        firstRow = Math.min(firstRow, i);
-                    }
-                    notifyChange(firstRow);
-                }
-            }
             if (!first) ImGui.sameLine(0, gap);
+            if (!selected) {
+                Controls.disabledButton(EFFECTS_TO_SELECTED, w);
+            } else if (Controls.dangerButton(EFFECTS_TO_SELECTED, w)) {
+                int firstRow = rowIndex;
+                for (int i : selection.getSelectedRows()) {
+                    if (i < 0 || i >= data.size()) continue;
+                    data.get(i).clearEffects();
+                    firstRow = Math.min(firstRow, i);
+                }
+                notifyChange(firstRow);
+            }
+            ImGui.sameLine(0, gap);
             if (Controls.dangerButton(EFFECTS_CLEAR_ALL, w)) {
                 for (InputRow other : data.getRows()) other.clearEffects();
                 notifyFullResim();
             }
             ImGui.tableNextColumn();
+            ImGui.popID();
         }
         Controls.popInputFrameHeight();
         ThemeManager.endStandardFormTable();
