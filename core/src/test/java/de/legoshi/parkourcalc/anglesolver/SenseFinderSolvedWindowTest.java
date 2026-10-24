@@ -33,6 +33,7 @@ public class SenseFinderSolvedWindowTest {
         double anchorSec = (System.nanoTime() - t1) / 1e9;
         long t2 = System.nanoTime();
         SenseFinder.Config cfg = new SenseFinder.Config();
+        cfg.threads = 4;
         List<SenseFinder.Candidate> found = SenseFinder.run(turn, cfg, w, anchors, cancel, null);
         double sweepSec = (System.nanoTime() - t2) / 1e9;
         System.out.println(String.format(Locale.ROOT,

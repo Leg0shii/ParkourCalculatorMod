@@ -56,6 +56,7 @@ public final class SenseFinder {
         public int ascentSweeps = 2;
         public double anchorStepDeg = SIGNIFICANT_ANGLE_DEG;
         public double bandPercent = 10.0;
+        public int threads = 1;
         public int scopeFirst = -1;
         public int scopeLast = -1;
 
@@ -267,6 +268,7 @@ public final class SenseFinder {
     private static final double MARGIN_TIE = 2.0e-5;
     private static final double MISS_PENALTY = 1.0e6;
     private static final int SOLVE_NODE_CAP = 1 << 20;
+    private static final int SWEEP_CHUNKS = 64;
 
     private SenseFinder() {
     }
@@ -446,13 +448,18 @@ public final class SenseFinder {
         Window carried = new Window(f - carriedBelow, f + carriedAbove, false);
         int from = tick + 1;
         if (from >= turn.scenario.numTicks || turn.objective.tick <= from || turn.objective.isCustomAngle()) return carried;
-        double below = carriedBelow >= cap ? -cap
-                : solvedEdge(turn, yaws, from, -carriedBelow, -1, cap, probeNanos, cancel, progress, "below");
+        double[] edges = new double[2];
+        parallel(2, 2, side -> {
+            if (side == 0) {
+                edges[0] = carriedBelow >= cap ? -cap
+                        : solvedEdge(turn, yaws, from, -carriedBelow, -1, cap, probeNanos, cancel, progress, "below");
+            } else {
+                edges[1] = carriedAbove >= cap ? cap
+                        : solvedEdge(turn, yaws, from, carriedAbove, 1, cap, probeNanos, cancel, progress, "above");
+            }
+        });
         if (cancel != null && cancel.get()) return carried;
-        double above = carriedAbove >= cap ? cap
-                : solvedEdge(turn, yaws, from, carriedAbove, 1, cap, probeNanos, cancel, progress, "above");
-        if (cancel != null && cancel.get()) return carried;
-        return new Window(f + below, f + above, true);
+        return new Window(f + edges[0], f + edges[1], true);
     }
 
     private static double solvedEdge(Turn turn, double[] yaws, int from, double carried, int sign, double cap,
@@ -618,48 +625,73 @@ public final class SenseFinder {
         float lo = Math.max(0f, Math.min(cfg.minSens, cfg.maxSens));
         float hi = Math.min(1f, Math.max(cfg.minSens, cfg.maxSens));
         double step = (hi - lo) / (double) steps;
-        Map<String, Bracket> brackets = new LinkedHashMap<>();
-        Map<Integer, int[]> warm = new java.util.HashMap<>();
         double before = turn.before(turn.jumpTick());
         double center = unwrapNear(window.center(), before);
         double wlo = center - 0.5 * window.width();
         double whi = center + 0.5 * window.width();
-        for (int i = 0; i <= steps; i++) {
-            if (cancel != null && cancel.get()) return out;
-            if (progress != null && (i & 63) == 0) {
-                progress.update(String.format(Locale.ROOT, "sweeping sense %.2f%%", percent((float) (lo + i * step))),
-                        0.8 * i / steps);
+        int chunks = Math.min(SWEEP_CHUNKS, steps + 1);
+        List<Map<String, Bracket>> parts = new ArrayList<>();
+        for (int c = 0; c < chunks; c++) parts.add(new LinkedHashMap<>());
+        AtomicInteger swept = new AtomicInteger();
+        parallel(cfg.threads, chunks, chunk -> {
+            int from = (int) ((long) (steps + 1) * chunk / chunks);
+            int to = (int) ((long) (steps + 1) * (chunk + 1) / chunks);
+            Map<String, Bracket> brackets = parts.get(chunk);
+            Map<Integer, int[]> warm = new java.util.HashMap<>();
+            for (int i = from; i < to; i++) {
+                if (cancel != null && cancel.get()) return;
+                int n0 = swept.incrementAndGet();
+                if (progress != null && (n0 & 63) == 0) {
+                    progress.update(String.format(Locale.ROOT, "sweeping sense, %d of %d steps", n0, steps + 1),
+                            0.8 * n0 / (steps + 1));
+                }
+                float s = (float) (lo + i * step);
+                double p = TurnProfile.pixelDeg(s);
+                long nFirst = (long) Math.ceil((wlo - before) / p - 1.0e-9);
+                long nLast = (long) Math.floor((whi - before) / p + 1.0e-9);
+                for (long nn = nFirst; nn <= nLast; nn++) {
+                    int n = (int) nn;
+                    int a = nearestAnchor(anchors, before + n * p);
+                    int[] pixels = best(turn, anchors.get(a), n, p, warm.get(n), cfg.ascentSweeps);
+                    if (pixels == null) continue;
+                    warm.put(n, pixels);
+                    String key = Arrays.toString(pixels);
+                    Bracket b = brackets.get(key);
+                    if (b == null) brackets.put(key, new Bracket(pixels.clone(), a, s));
+                    else {
+                        b.lo = Math.min(b.lo, s);
+                        b.hi = Math.max(b.hi, s);
+                    }
+                }
             }
-            float s = (float) (lo + i * step);
-            double p = TurnProfile.pixelDeg(s);
-            long nFirst = (long) Math.ceil((wlo - before) / p - 1.0e-9);
-            long nLast = (long) Math.floor((whi - before) / p + 1.0e-9);
-            for (long nn = nFirst; nn <= nLast; nn++) {
-                int n = (int) nn;
-                int a = nearestAnchor(anchors, before + n * p);
-                int[] pixels = best(turn, anchors.get(a), n, p, warm.get(n), cfg.ascentSweeps);
-                if (pixels == null) continue;
-                warm.put(n, pixels);
-                String key = Arrays.toString(pixels);
-                Bracket b = brackets.get(key);
-                if (b == null) brackets.put(key, new Bracket(pixels.clone(), a, s));
+        });
+        if (cancel != null && cancel.get()) return out;
+        Map<String, Bracket> merged = new LinkedHashMap<>();
+        for (Map<String, Bracket> part : parts) {
+            for (Map.Entry<String, Bracket> e : part.entrySet()) {
+                Bracket b = merged.get(e.getKey());
+                if (b == null) merged.put(e.getKey(), e.getValue());
                 else {
-                    b.lo = Math.min(b.lo, s);
-                    b.hi = Math.max(b.hi, s);
+                    b.lo = Math.min(b.lo, e.getValue().lo);
+                    b.hi = Math.max(b.hi, e.getValue().hi);
                 }
             }
         }
-        Map<String, Candidate> bands = new LinkedHashMap<>();
+        List<Bracket> brackets = new ArrayList<>(merged.values());
         boolean[] scope = cfg.scope(turn);
-        int done = 0;
         int total = brackets.size();
-        for (Bracket b : brackets.values()) {
-            if (cancel != null && cancel.get()) break;
-            if (progress != null && (done & 15) == 0) {
-                progress.update("refining " + (done + 1) + " of " + total, 0.8 + 0.2 * done / Math.max(1, total));
+        Candidate[] refined = new Candidate[total];
+        AtomicInteger refinedCount = new AtomicInteger();
+        parallel(cfg.threads, total, i -> {
+            if (cancel != null && cancel.get()) return;
+            int n0 = refinedCount.incrementAndGet();
+            if (progress != null && (n0 & 15) == 0) {
+                progress.update("refining " + n0 + " of " + total, 0.8 + 0.2 * n0 / Math.max(1, total));
             }
-            done++;
-            Candidate c = refine(turn, b, (float) step, lo, hi, cfg, window, scope);
+            refined[i] = refine(turn, brackets.get(i), (float) step, lo, hi, cfg, window, scope);
+        });
+        Map<String, Candidate> bands = new LinkedHashMap<>();
+        for (Candidate c : refined) {
             if (c == null) continue;
             String key = (int) Math.floor(c.percent() / cfg.bandPercent) + ":" + c.pixels[0];
             Candidate prev = bands.get(key);
@@ -683,15 +715,51 @@ public final class SenseFinder {
         return out;
     }
 
-    private static int nearestAnchor(List<Anchor> anchors, double facing) {
-        int best = 0;
-        double bestGap = Double.POSITIVE_INFINITY;
-        for (int a = 0; a < anchors.size(); a++) {
-            double gap = Math.abs(Angles.wrapDelta(anchors.get(a).jumpFacing - facing));
-            if (gap < bestGap) {
-                bestGap = gap;
-                best = a;
+    public static void parallel(int threads, int tasks, java.util.function.IntConsumer task) {
+        if (tasks <= 0) return;
+        int n = Math.max(1, Math.min(threads, tasks));
+        if (n == 1) {
+            for (int i = 0; i < tasks; i++) task.accept(i);
+            return;
+        }
+        ExecutorService pool = Executors.newFixedThreadPool(n, r -> {
+            Thread t = new Thread(r, "sense-finder-worker");
+            t.setDaemon(true);
+            t.setPriority(Thread.MIN_PRIORITY);
+            return t;
+        });
+        try {
+            List<Future<?>> futures = new ArrayList<>();
+            for (int i = 0; i < tasks; i++) {
+                int index = i;
+                futures.add(pool.submit(() -> task.accept(index)));
             }
+            for (Future<?> f : futures) f.get();
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(ex);
+        } catch (java.util.concurrent.ExecutionException ex) {
+            throw new IllegalStateException(ex.getCause());
+        } finally {
+            pool.shutdownNow();
+        }
+    }
+
+    private static int nearestAnchor(List<Anchor> anchors, double facing) {
+        double origin = anchors.get(0).jumpFacing;
+        double target = origin + Angles.wrapDelta(facing - origin);
+        int lo = 0;
+        int hi = anchors.size() - 1;
+        while (lo < hi) {
+            int mid = (lo + hi) >>> 1;
+            if (origin + Angles.wrapDelta(anchors.get(mid).jumpFacing - origin) < target) lo = mid + 1;
+            else hi = mid;
+        }
+        int best = lo;
+        if (lo > 0) {
+            double gapLo = Math.abs(Angles.wrapDelta(anchors.get(lo - 1).jumpFacing - facing));
+            double gapHi = Math.abs(Angles.wrapDelta(anchors.get(lo).jumpFacing - facing));
+            if (gapLo <= gapHi) best = lo - 1;
         }
         return best;
     }

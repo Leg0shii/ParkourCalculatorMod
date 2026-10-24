@@ -265,7 +265,8 @@ public final class SenseSearchController implements SenseFinderWindow.Host {
     }
 
     private void search(SenseFinder.Turn t, SenseFinder.Config cfg, float game) throws Exception {
-        int threads = Math.max(1, Math.min(6, Runtime.getRuntime().availableProcessors() - 2));
+        int threads = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
+        cfg.threads = threads;
         SenseFinder.Window w = SenseFinder.solvedWindow(t, WINDOW_PROBE_NANOS, cancel, (s, f) -> stage = s);
         window = w;
         if (w == null || cancel.get()) return;

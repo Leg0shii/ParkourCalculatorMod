@@ -109,6 +109,25 @@ public class SenseFinderTest {
     }
 
     @Test
+    public void theParallelSweepFindsTheSameRowsAsOneThread() throws Exception {
+        SenseFinder.Turn turn = loadJ703();
+        SenseFinder.Window w = SenseFinder.carriedWindow(turn);
+        List<SenseFinder.Anchor> anchors = SenseFinder.anchors(turn, w, 0.025, 0L, 1, null, null);
+        SenseFinder.Config one = new SenseFinder.Config();
+        one.coarseSteps = 1000;
+        SenseFinder.Config many = new SenseFinder.Config();
+        many.coarseSteps = 1000;
+        many.threads = 4;
+        List<SenseFinder.Candidate> a = SenseFinder.run(turn, one, w, anchors, new AtomicBoolean(false), null);
+        List<SenseFinder.Candidate> b = SenseFinder.run(turn, many, w, anchors, new AtomicBoolean(false), null);
+        assertEquals(a.size(), b.size());
+        for (int i = 0; i < a.size(); i++) {
+            assertEquals(a.get(i).sens, b.get(i).sens, 0f);
+            assertTrue(java.util.Arrays.equals(a.get(i).pixels, b.get(i).pixels));
+        }
+    }
+
+    @Test
     public void laterTickMarginsAreMeasuredAroundTheRoundedPath() throws Exception {
         SenseFinder.Turn turn = loadJ703();
         SenseFinder.Window w = SenseFinder.carriedWindow(turn);
