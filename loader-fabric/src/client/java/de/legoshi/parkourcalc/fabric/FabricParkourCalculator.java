@@ -709,6 +709,13 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
     }
 
+    public static void renderWorldOverlayAfterTranslucent(RenderPass pass) {
+        if (pass == null) return;
+        if (shouldDrawPath()) {
+            worldRenderer.drawAfterTranslucent(pass);
+        }
+    }
+
     private static void onCollectSubmits(LevelRenderContext context) {
         application.tickDrag();
         if (application.isPlaybackRunning()) {
@@ -729,6 +736,12 @@ public class FabricParkourCalculator implements ClientModInitializer {
         }
         if (shouldDrawPath()) {
             worldRenderer.render(poseStack, buffers, camPos);
+        }
+    }
+
+    public static void onTranslucentTerrainDrawn() {
+        if (shouldDrawPath()) {
+            worldRenderer.drawAfterTranslucent();
         }
     }
     *///?}

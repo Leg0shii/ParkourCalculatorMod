@@ -55,6 +55,10 @@ public final class CachedBoxGeometry {
     private int bakedStructuralHash;
     private Set<Integer> bakedSelection = new HashSet<>();
     private boolean built;
+    private boolean lateReady;
+    private float latePlateAlphaScale = 1.0f;
+    private Matrix4f lateModelView;
+    private Matrix4f lateProjection;
     private int pendingFrom = -1;
     private boolean pendingTail;
     private final Set<Integer> pendingSelection = new HashSet<>();
@@ -323,7 +327,9 @@ public final class CachedBoxGeometry {
     }
     *///?}
 
-    public void draw(Matrix4f cameraPose, double camX, double camY, double camZ, double maxDistanceSq) {
+    public void draw(Matrix4f cameraPose, double camX, double camY, double camZ, double maxDistanceSq,
+                     boolean platesAfterTranslucent, float plateAlphaScale) {
+        lateReady = false;
         if (!built) {
             return;
         }
@@ -338,14 +344,39 @@ public final class CachedBoxGeometry {
                 visible.add(chunk);
             }
         }
+        Matrix4f modelView = new Matrix4f(RenderSystem.getModelViewMatrix()).mul(model);
+        Matrix4f projection = new Matrix4f(RenderSystem.getProjectionMatrix());
+        drawPass(FabricRenderLayers.LINES, false, modelView, projection, visible);
+        drawPass(FabricRenderLayers.TRANSLUCENT_FACES, true, modelView, projection, visible);
+        drawPass(FabricRenderLayers.FACE_DEPTH, true, modelView, projection, visible);
+        drawPass(FabricRenderLayers.LINE_DEPTH, false, modelView, projection, visible);
         if (tail.ready) {
-            visible.add(tail);
+            List<Chunk> tailOnly = List.of(tail);
+            drawPlateFill(modelView, projection, plateAlphaScale);
+            drawPass(FabricRenderLayers.LINES, false, modelView, projection, tailOnly);
+            lateReady = platesAfterTranslucent;
+            latePlateAlphaScale = plateAlphaScale;
+            lateModelView = modelView;
+            lateProjection = projection;
         }
-        drawPass(FabricRenderLayers.TRANSLUCENT_FACES, true, model, visible);
-        drawPass(FabricRenderLayers.LINES, false, model, visible);
     }
 
-    private static void drawPass(RenderType type, boolean faces, Matrix4f model, List<Chunk> visible) {
+    public void drawAfterTranslucent() {
+        if (!lateReady || !tail.ready) {
+            return;
+        }
+        lateReady = false;
+        drawPlateFill(lateModelView, lateProjection, latePlateAlphaScale);
+        drawPass(FabricRenderLayers.FACE_DEPTH, true, lateModelView, lateProjection, List.of(tail));
+    }
+
+    private void drawPlateFill(Matrix4f modelView, Matrix4f projection, float alphaScale) {
+        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, alphaScale);
+        drawPass(FabricRenderLayers.TRANSLUCENT_FACES, true, modelView, projection, List.of(tail));
+        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+    }
+
+    private static void drawPass(RenderType type, boolean faces, Matrix4f modelView, Matrix4f projection, List<Chunk> visible) {
         type.setupRenderState();
         //? if >=1.21 {
         FogParameters fog = RenderSystem.getShaderFog();
@@ -360,8 +391,6 @@ public final class CachedBoxGeometry {
         *///?}
         var shader = RenderSystem.getShader();
         if (shader != null) {
-            Matrix4f modelView = new Matrix4f(RenderSystem.getModelViewMatrix()).mul(model);
-            Matrix4f projection = RenderSystem.getProjectionMatrix();
             boolean bound = false;
             for (Chunk chunk : visible) {
                 VertexBuffer buffer = faces ? chunk.faces : chunk.lines;
@@ -390,6 +419,7 @@ public final class CachedBoxGeometry {
         }
         chunks.clear();
         tail.close();
+        lateReady = false;
         bakedGeometryRev = -1;
         pendingFrom = -1;
         pendingTail = false;

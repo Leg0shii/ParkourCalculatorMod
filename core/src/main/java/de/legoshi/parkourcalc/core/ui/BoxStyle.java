@@ -86,6 +86,17 @@ public final class BoxStyle {
         return toArgb(c[0], c[1], c[2], c[3]);
     }
 
+    public static float constraintFillLayerAlphaScale(Settings settings) {
+        return splitLayerAlphaScale(settings.constraintFill[3]);
+    }
+
+    public static float splitLayerAlphaScale(float alpha) {
+        if (alpha <= 0.0f || alpha >= 1.0f) {
+            return 1.0f;
+        }
+        return (float) ((1.0 - Math.sqrt(1.0 - alpha)) / alpha);
+    }
+
     public static int constraintBackArgb(Settings settings) {
         float[] c = settings.constraintBack;
         return toArgb(c[0], c[1], c[2], c[3]);

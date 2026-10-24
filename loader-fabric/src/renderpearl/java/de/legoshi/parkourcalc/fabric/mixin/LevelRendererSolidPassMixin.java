@@ -20,4 +20,13 @@ public class LevelRendererSolidPassMixin {
                                                            RenderPass renderPass, CallbackInfo ci) {
         FabricParkourCalculator.renderWorldOverlayBeforeTranslucent(renderPass);
     }
+
+    @Inject(method = "executeClassicTransparency", require = 1, at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/client/renderer/feature/FeatureRenderDispatcher$PreparedFrame;executeTranslucentAfterTerrain(Lcom/mojang/renderpearl/api/commands/RenderPass;)V",
+            shift = At.Shift.AFTER))
+    private void pkc$renderPlatesAfterTranslucentTerrain(ChunkSectionsToRender chunkSectionsToRender,
+                                                         FeatureRenderDispatcher.PreparedFrame featureFrame,
+                                                         RenderPass renderPass, CallbackInfo ci) {
+        FabricParkourCalculator.renderWorldOverlayAfterTranslucent(renderPass);
+    }
 }

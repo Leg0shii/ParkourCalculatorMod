@@ -27,7 +27,7 @@ def mixins = [
 		'RestartSettleMixin',
 		'WorldJournalMixin',
 ]
-mixins += (modern ? ['LevelRendererSolidPassMixin'] : ['ClientLanguageMixin', 'LevelRendererMixin', 'OptionsAccessor', 'ServerStoppingMixin'])
+mixins += (modern ? ['LevelRendererSolidPassMixin'] : ['ClientLanguageMixin', 'LevelRendererMixin', 'LevelRendererTranslucentMixin', 'OptionsAccessor', 'ServerStoppingMixin'])
 mixins.sort()
 def depends = [
 		"\"fabricloader\": \">=${project.loader_version}\"",
