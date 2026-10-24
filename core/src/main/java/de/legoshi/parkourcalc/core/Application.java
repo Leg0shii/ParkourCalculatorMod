@@ -226,6 +226,8 @@ public final class Application {
         saveController.setDebugSource(boxController, settings);
         AngleSolverTable angleSolverTable = new AngleSolverTable(angleSolverState, settings, selection, constraintSelection, inputData::size);
         inputOverlay.setAngleSolver(angleSolverTable);
+        inputOverlay.setConstraintDeleteHandlers(this::countSelectedConstraints, this::removeSelectedConstraints);
+        angleSolverTable.setConstraintDeleteHandlers(this::countSelectedConstraints, this::removeSelectedConstraints);
         StartStateTable startStateTable = new StartStateTable(runner, () -> onUserChange(-1), this::copyStartTeleportCommand,
                 this::setStartToPlayer);
         inputOverlay.setStartState(startStateTable);
@@ -352,7 +354,6 @@ public final class Application {
         PerfOverlay perfOverlay = new PerfOverlay();
         FileMenu fileMenu = new FileMenu(saveController, filePicker, settings, this::saveSettings);
         inputOverlay.setSaveSelectionAsTasHandler(() -> promptSaveSelectionAsTas(fileMenu));
-        inputOverlay.setConstraintDeleteHandlers(this::countSelectedConstraints, this::removeSelectedConstraints);
         SettingsModal settingsModal = new SettingsModal(settings, this::saveSettings);
         settingsModal.setPairedSimulationHook(simulator.supportsPairedSimulation(), this::applyPairedSimulationChange);
         settingsModal.setOnejumpHook(practiceMacro::stop);

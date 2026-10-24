@@ -58,6 +58,8 @@ public final class AngleSolverTable {
     private final SelectionManager selection;
     private final ConstraintSelection constraintSelection;
     private final IntSupplier rowCount;
+    private IntSupplier countSelectedConstraints;
+    private Runnable deleteSelectedConstraints;
 
     private int expandedRow = -1;
 
@@ -174,6 +176,11 @@ public final class AngleSolverTable {
 
     public boolean isActive() {
         return settings.viewAngleSolver;
+    }
+
+    public void setConstraintDeleteHandlers(IntSupplier count, Runnable delete) {
+        this.countSelectedConstraints = count;
+        this.deleteSelectedConstraints = delete;
     }
 
     public void setYawDirection(Collection<Integer> rows, Constraint.Op op) {
@@ -746,14 +753,25 @@ public final class AngleSolverTable {
             ImGui.closeCurrentPopup();
         }
         ThemeManager.paddedSeparator();
+        int bulk = selectedConstraintCountIncluding(tick, index);
         ThemeManager.pushTextColor(ThemeManager.dangerColor());
-        boolean del = ImGui.menuItem("Delete");
+        boolean del = ImGui.menuItem(bulk > 1 ? "Delete " + bulk + " constraints (X)" : "Delete");
         ThemeManager.popTextColor();
         if (del) {
-            state.deleteConstraint(tick, index);
+            if (bulk > 1) {
+                deleteSelectedConstraints.run();
+            } else {
+                state.deleteConstraint(tick, index);
+            }
             clearConstraintSelection();
             ImGui.closeCurrentPopup();
         }
+    }
+
+    private int selectedConstraintCountIncluding(int tick, int index) {
+        if (countSelectedConstraints == null || deleteSelectedConstraints == null) return 0;
+        if (!constraintSelection.highlights(tick, index, selection)) return 0;
+        return countSelectedConstraints.getAsInt();
     }
 
     private static final class StateChipSpec {
