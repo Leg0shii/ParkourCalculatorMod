@@ -25,8 +25,10 @@ accessible field net/minecraft/client/renderer/RenderStateShard TRANSLUCENT_TRAN
 accessible field net/minecraft/client/renderer/RenderStateShard LEQUAL_DEPTH_TEST Lnet/minecraft/client/renderer/RenderStateShard$DepthTestStateShard;
 accessible field net/minecraft/client/renderer/RenderStateShard COLOR_WRITE Lnet/minecraft/client/renderer/RenderStateShard$WriteMaskStateShard;
 accessible field net/minecraft/client/renderer/RenderStateShard NO_CULL Lnet/minecraft/client/renderer/RenderStateShard$CullStateShard;
+accessible class net/minecraft/client/renderer/RenderStateShard$LineStateShard
 accessible field net/minecraft/client/renderer/RenderStateShard RENDERTYPE_LINES_SHADER Lnet/minecraft/client/renderer/RenderStateShard$ShaderStateShard;
 accessible field net/minecraft/client/renderer/RenderStateShard VIEW_OFFSET_Z_LAYERING Lnet/minecraft/client/renderer/RenderStateShard$LayeringStateShard;
+accessible field net/minecraft/client/renderer/RenderStateShard POLYGON_OFFSET_LAYERING Lnet/minecraft/client/renderer/RenderStateShard$LayeringStateShard;
 accessible class net/minecraft/client/renderer/RenderStateShard$LayeringStateShard
 
 accessible field net/minecraft/server/network/ServerGamePacketListenerImpl tickCount I
