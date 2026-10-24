@@ -38,9 +38,27 @@ public final class MovementEffects {
 
     public static void applyClient(LivingEntity entity, int[] levels, int duration) {
         removeAll(entity);
+        for (MovementEffect effect : MovementEffect.all()) {
+            if (available(effect)) attributeEffect(effect).removeAttributeModifiers(entity.getAttributes());
+        }
         for (MobEffectInstance instance : instances(levels, duration, true)) {
             entity.addEffect(instance);
         }
+        for (MobEffectInstance instance : instances(levels, duration, false)) {
+            //? if >=1.20.5 {
+            instance.getEffect().value().addAttributeModifiers(entity.getAttributes(), instance.getAmplifier());
+            //?} else {
+            /*instance.getEffect().addAttributeModifiers(entity.getAttributes(), instance.getAmplifier());
+            *///?}
+        }
+    }
+
+    private static net.minecraft.world.effect.MobEffect attributeEffect(MovementEffect effect) {
+        //? if >=1.20.5 {
+        return type(effect).value();
+        //?} else {
+        /*return type(effect);
+        *///?}
     }
 
     public static String describe(LivingEntity entity) {
