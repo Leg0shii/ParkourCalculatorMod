@@ -495,6 +495,8 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
             if (ghost == null) return;
             ghost.setYRot(absoluteYaw);
             ghost.yRotO = absoluteYaw;
+            ghost.setYHeadRot(absoluteYaw);
+            ghost.yHeadRotO = absoluteYaw;
             return;
         }
         LocalPlayer p = Minecraft.getInstance().player;
