@@ -5,6 +5,7 @@ import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.BoxController;
 import de.legoshi.parkourcalc.core.ui.InputData;
 import de.legoshi.parkourcalc.core.ui.InputRow;
+import de.legoshi.parkourcalc.core.ui.MovementEffect;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Candidate;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
 import de.legoshi.parkourcalc.core.anglesolver.graph.BuiltinGraphs;
@@ -693,6 +694,8 @@ public final class AngleSolverEngine {
         SurfaceKind[] surfacePerTick = new SurfaceKind[numTicks];
         int[] soulsandCellsPerTick = new int[numTicks];
         boolean[] sneakPerTick = new boolean[numTicks];
+        boolean[] dolphinsGrace = new boolean[numTicks];
+        boolean[] weaving = new boolean[numTicks];
         float[] forwardIn = new float[numTicks];
         float[] strafeIn = new float[numTicks];
         boolean[] sprintArr = new boolean[numTicks];
@@ -711,6 +714,8 @@ public final class AngleSolverEngine {
             surfacePerTick[k] = effMedium(t).kind;
             soulsandCellsPerTick[k] = effSoulsandCells(t);
             sneakPerTick[k] = row.isKeyActive(InputRow.Key.SNEAK);
+            dolphinsGrace[k] = row.getEffectLevel(MovementEffect.DOLPHINS_GRACE) > 0;
+            weaving[k] = row.getEffectLevel(MovementEffect.WEAVING) > 0;
             jumpMask[k] = jumpRow;
             force45Mask[k] = effInputs(t) == AngleSolverState.InputMode.FORCE_45;
             // W-only only on a real (grounded) jump, so the 0.2 sprintjump boost stays aligned with travel.
@@ -756,6 +761,8 @@ public final class AngleSolverEngine {
         phys.surfacePerTick = surfacePerTick;
         phys.soulsandCellsPerTick = soulsandCellsPerTick;
         phys.sneakPerTick = sneakPerTick;
+        phys.dolphinsGracePerTick = dolphinsGrace;
+        phys.weavingPerTick = weaving;
         phys.yawLockedPerTick = yawLocked;
         phys.forwardInputPerTick = forwardIn;
         phys.strafeInputPerTick = strafeIn;
@@ -1587,11 +1594,16 @@ public final class AngleSolverEngine {
 
     /** Effective Speed amplifier at a tick: override added/removed over the TAS row's own amplifier. */
     private int effSpeedLevel(int tick, List<InputRow> rows) {
-        return effPotionLevel(tick, Potion.SPEED, tick >= 0 && tick < rows.size() ? rows.get(tick).getSpeedAmplifier() : 0);
+        return clientLevel(effPotionLevel(tick, Potion.SPEED, tick >= 0 && tick < rows.size() ? rows.get(tick).getSpeedAmplifier() : 0));
     }
 
     private int effSlownessLevel(int tick, List<InputRow> rows) {
-        return effPotionLevel(tick, Potion.SLOWNESS, tick >= 0 && tick < rows.size() ? rows.get(tick).getSlownessAmplifier() : 0);
+        return clientLevel(effPotionLevel(tick, Potion.SLOWNESS, tick >= 0 && tick < rows.size() ? rows.get(tick).getSlownessAmplifier() : 0));
+    }
+
+    private int clientLevel(int level) {
+        ExactJumpModel exact = exactModel();
+        return MovementEffect.clientLevel(level, exact != null && exact.byteAmplifier());
     }
 
     private int effPotionLevel(int tick, Potion potion, int rowLevel) {

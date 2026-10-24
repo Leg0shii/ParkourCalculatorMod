@@ -1,7 +1,10 @@
 package de.legoshi.parkourcalc.core;
 
 import de.legoshi.parkourcalc.core.ports.PlaybackBridge;
+import de.legoshi.parkourcalc.core.ui.MovementEffect;
 import de.legoshi.parkourcalc.core.ui.Settings;
+
+import java.util.Arrays;
 
 public final class PracticeMacro {
 
@@ -21,9 +24,7 @@ public final class PracticeMacro {
     private boolean active;
     private int tick;
     private int mode;
-    private int speedAmp = -1;
-    private int jumpAmp = -1;
-    private int slowAmp = -1;
+    private int[] effectLevels;
 
     public PracticeMacro(TurnProfileController profile, AttemptTracker tracker, Settings settings) {
         this.profile = profile;
@@ -120,14 +121,17 @@ public final class PracticeMacro {
 
     private void applyEffects(TurnProfileController.Current cur, int t) {
         int k = Math.max(0, Math.min(cur.n - 1, t));
-        int speed = cur.speedAmp[k];
-        int jump = cur.jumpAmp[k];
-        int slow = cur.slowAmp[k];
-        if (speed == speedAmp && jump == jumpAmp && slow == slowAmp) return;
-        speedAmp = speed;
-        jumpAmp = jump;
-        slowAmp = slow;
-        bridge.applyEffects(speed, jump, slow);
+        int[] levels = cur.effects[k];
+        if (Arrays.equals(levels, effectLevels)) return;
+        effectLevels = levels.clone();
+        bridge.applyEffects(levels.clone());
+    }
+
+    private static boolean hasAny(int[] levels) {
+        for (int level : levels) {
+            if (level > 0) return true;
+        }
+        return false;
     }
 
     private void applyKeys(int keys) {
@@ -142,10 +146,8 @@ public final class PracticeMacro {
         active = false;
         if (bridge == null) return;
         bridge.releaseAllKeys();
-        if (speedAmp > 0 || jumpAmp > 0 || slowAmp > 0) bridge.applyEffects(0, 0, 0);
-        speedAmp = -1;
-        jumpAmp = -1;
-        slowAmp = -1;
+        if (effectLevels != null && hasAny(effectLevels)) bridge.applyEffects(new int[MovementEffect.count()]);
+        effectLevels = null;
         bridge.endReplica();
     }
 }

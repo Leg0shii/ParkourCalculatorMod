@@ -48,6 +48,10 @@ public final class JumpPhysicsInputs {
 
     public boolean[] sneakPerTick = null;
 
+    public boolean[] dolphinsGracePerTick = null;
+
+    public boolean[] weavingPerTick = null;
+
     /** Per-tick yaw lock state (unlocked = float delta the game accumulates; locked = absolute facing). */
     public boolean[] yawLockedPerTick = null;
 
@@ -103,6 +107,8 @@ public final class JumpPhysicsInputs {
         c.surfacePerTick = surfacePerTick;
         c.soulsandCellsPerTick = soulsandCellsPerTick;
         c.sneakPerTick = sneakPerTick;
+        c.dolphinsGracePerTick = dolphinsGracePerTick;
+        c.weavingPerTick = weavingPerTick;
         c.yawLockedPerTick = yawLockedPerTick;
         c.sprintPerTick = sprintPerTick;
         c.incomingSprint = incomingSprint;
@@ -135,6 +141,8 @@ public final class JumpPhysicsInputs {
         SurfaceKind[] surface = new SurfaceKind[m];
         int[] soulsand = new int[m];
         boolean[] sneak = new boolean[m];
+        boolean[] dolphin = new boolean[m];
+        boolean[] weaving = new boolean[m];
         boolean[] locked = new boolean[m];
         boolean[] sprint = new boolean[m];
         float[] fwd = new float[m];
@@ -149,6 +157,8 @@ public final class JumpPhysicsInputs {
             surface[k] = surfaceAt(i);
             soulsand[k] = soulsandCellsAt(i);
             sneak[k] = sneakAt(i);
+            dolphin[k] = dolphinsGraceAt(i);
+            weaving[k] = weavingAt(i);
             locked[k] = yawLockedPerTick != null && i < yawLockedPerTick.length && yawLockedPerTick[i];
             sprint[k] = sprintAt(i);
             fwd[k] = forwardAt(i);
@@ -162,6 +172,8 @@ public final class JumpPhysicsInputs {
         c.surfacePerTick = surface;
         c.soulsandCellsPerTick = soulsand;
         c.sneakPerTick = sneak;
+        c.dolphinsGracePerTick = dolphin;
+        c.weavingPerTick = weaving;
         c.yawLockedPerTick = locked;
         c.sprintPerTick = sprint;
         c.forwardInputPerTick = fwd;
@@ -253,6 +265,14 @@ public final class JumpPhysicsInputs {
 
     public boolean sneakAt(int tick) {
         return sneakPerTick != null && tick >= 0 && tick < sneakPerTick.length && sneakPerTick[tick];
+    }
+
+    public boolean dolphinsGraceAt(int tick) {
+        return dolphinsGracePerTick != null && tick >= 0 && tick < dolphinsGracePerTick.length && dolphinsGracePerTick[tick];
+    }
+
+    public boolean weavingAt(int tick) {
+        return weavingPerTick != null && tick >= 0 && tick < weavingPerTick.length && weavingPerTick[tick];
     }
 
     /** Exact float32 facings the game runs: mirrors Apply's float deltas + the sim's float accumulation,

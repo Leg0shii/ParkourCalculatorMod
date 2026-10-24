@@ -910,6 +910,8 @@ public final class FreeStartSolve {
         a.surfacePerTick = b.surfacePerTick;
         a.soulsandCellsPerTick = b.soulsandCellsPerTick;
         a.sneakPerTick = b.sneakPerTick;
+        a.dolphinsGracePerTick = b.dolphinsGracePerTick;
+        a.weavingPerTick = b.weavingPerTick;
         a.yawLockedPerTick = b.yawLockedPerTick;
         a.sprintPerTick = b.sprintPerTick;
         a.incomingSprint = b.incomingSprint;

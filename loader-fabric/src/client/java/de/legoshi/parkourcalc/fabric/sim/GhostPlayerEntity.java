@@ -8,7 +8,7 @@ import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
-//? if <1.21.2
+//? if <26.1
 //import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Pose;
@@ -172,7 +172,7 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
         }
 
         boolean wasShiftKeyDown = this.input.keyPresses.shift();
-        //? if >=1.21.2 {
+        //? if >=26.1 {
         boolean hasForwardImpulse = this.input.hasForwardImpulse();
         //?} else {
         /*boolean hadEnoughImpulse = this.hasEnoughImpulseToStartSprinting();
@@ -192,7 +192,7 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
         /*this.input.tick(this.isMovingSlowly(), Mth.clamp(0.3F + EnchantmentHelper.getSneakingSpeedBonus(this), 0.0F, 1.0F));
         *///?}
 
-        //? if >=1.21.2 {
+        //? if >=26.1 {
         if (wasShiftKeyDown || this.isUsingItem() && !this.isPassenger() || this.input.keyPresses.backward()) {
             this.sprintTriggerTime = 0;
         }
@@ -285,7 +285,7 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
         return this.crouching;
     }
 
-    //? if >=1.21.2 {
+    //? if >=26.1 {
     private boolean canStartSprinting() {
         return !this.isSprinting()
                 && this.input.hasForwardImpulse()

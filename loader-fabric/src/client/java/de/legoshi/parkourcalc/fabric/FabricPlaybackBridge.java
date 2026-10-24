@@ -3,10 +3,12 @@ package de.legoshi.parkourcalc.fabric;
 import de.legoshi.parkourcalc.core.ports.PlaybackBridge;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
+import de.legoshi.parkourcalc.core.ui.MovementEffect;
 import de.legoshi.parkourcalc.fabric.mixin.KeyMappingAccessor;
 import de.legoshi.parkourcalc.fabric.mixin.LocalPlayerAccessor;
 import de.legoshi.parkourcalc.fabric.mixin.PlayerAccessor;
 import de.legoshi.parkourcalc.fabric.sim.GhostPlayerEntity;
+import de.legoshi.parkourcalc.fabric.sim.MovementEffects;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
@@ -20,7 +22,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 //? if >=1.21.2
 import net.minecraft.world.entity.PositionMoveRotation;
@@ -559,18 +560,12 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
     }
 
     @Override
-    public void applyEffects(int speedAmplifier, int jumpBoostAmplifier, int slownessAmplifier) {
+    public void applyEffects(int[] effectLevels) {
         if (ghostMode) {
             if (ghost == null) return;
             ghost.removeAllEffects();
-            if (speedAmplifier > 0) {
-                ghost.addEffect(new MobEffectInstance(speedEffect(), EFFECT_DURATION_TICKS, speedAmplifier - 1, false, false, true));
-            }
-            if (jumpBoostAmplifier > 0) {
-                ghost.addEffect(new MobEffectInstance(jumpBoostEffect(), EFFECT_DURATION_TICKS, jumpBoostAmplifier - 1, false, false, true));
-            }
-            if (slownessAmplifier > 0) {
-                ghost.addEffect(new MobEffectInstance(slownessEffect(), EFFECT_DURATION_TICKS, slownessAmplifier - 1, false, false, true));
+            for (MobEffectInstance instance : MovementEffects.instances(effectLevels, EFFECT_DURATION_TICKS, true)) {
+                ghost.addEffect(instance);
             }
             return;
         }
@@ -580,61 +575,16 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         IntegratedServer server = mc.getSingleplayerServer();
         if (server == null) return;
         UUID uuid = client.getUUID();
+        int[] levels = effectLevels.clone();
         server.execute(() -> {
             ServerPlayer sp = server.getPlayerList().getPlayer(uuid);
             if (sp == null) return;
-            sp.removeEffect(speedEffect());
-            sp.removeEffect(jumpBoostEffect());
-            sp.removeEffect(slownessEffect());
-            if (speedAmplifier > 0) {
-                sp.addEffect(new MobEffectInstance(speedEffect(), EFFECT_DURATION_TICKS, speedAmplifier - 1, false, false, true));
-            }
-            if (jumpBoostAmplifier > 0) {
-                sp.addEffect(new MobEffectInstance(jumpBoostEffect(), EFFECT_DURATION_TICKS, jumpBoostAmplifier - 1, false, false, true));
-            }
-            if (slownessAmplifier > 0) {
-                sp.addEffect(new MobEffectInstance(slownessEffect(), EFFECT_DURATION_TICKS, slownessAmplifier - 1, false, false, true));
+            MovementEffects.removeAll(sp);
+            for (MobEffectInstance instance : MovementEffects.instances(levels, EFFECT_DURATION_TICKS, false)) {
+                sp.addEffect(instance);
             }
         });
     }
-
-    //? if >=26.1 {
-    private static net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> speedEffect() {
-        return MobEffects.SPEED;
-    }
-
-    private static net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> jumpBoostEffect() {
-        return MobEffects.JUMP_BOOST;
-    }
-
-    private static net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> slownessEffect() {
-        return MobEffects.SLOWNESS;
-    }
-    //?} elif >=1.20.5 {
-    /*private static net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> speedEffect() {
-        return MobEffects.MOVEMENT_SPEED;
-    }
-
-    private static net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> jumpBoostEffect() {
-        return MobEffects.JUMP;
-    }
-
-    private static net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> slownessEffect() {
-        return MobEffects.MOVEMENT_SLOWDOWN;
-    }
-    *///?} else {
-    /*private static net.minecraft.world.effect.MobEffect speedEffect() {
-        return MobEffects.MOVEMENT_SPEED;
-    }
-
-    private static net.minecraft.world.effect.MobEffect jumpBoostEffect() {
-        return MobEffects.JUMP;
-    }
-
-    private static net.minecraft.world.effect.MobEffect slownessEffect() {
-        return MobEffects.MOVEMENT_SLOWDOWN;
-    }
-    *///?}
 
     @Override
     public void setHotbarSlot(int slotZeroBased) {
@@ -653,8 +603,6 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
     public void dumpPlayerState(int tickIndex) {
         net.minecraft.world.entity.player.Player p = ghost != null ? ghost : Minecraft.getInstance().player;
         if (p == null) return;
-        MobEffectInstance spd = p.getEffect(speedEffect());
-        MobEffectInstance jmp = p.getEffect(jumpBoostEffect());
         double mvSp = p.getAttributeValue(Attributes.MOVEMENT_SPEED);
         System.out.println("[PC-STATE play] t=" + tickIndex
                 + " pos=" + p.getX() + "," + p.getY() + "," + p.getZ()
@@ -666,8 +614,8 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
                 + " colH=" + p.horizontalCollision
                 + " mvF=" + p.zza
                 + " mvS=" + p.xxa
-                + " spdAmp=" + (spd == null ? -1 : spd.getAmplifier())
-                + " jmpAmp=" + (jmp == null ? -1 : jmp.getAmplifier())
+                + " spdAmp=" + MovementEffects.amplifier(p, MovementEffect.SPEED)
+                + " jmpAmp=" + MovementEffects.amplifier(p, MovementEffect.JUMP_BOOST)
                 + " pose=" + p.getPose()
                 + " inW=" + p.isInWater()
                 + " underW=" + p.isUnderWater()

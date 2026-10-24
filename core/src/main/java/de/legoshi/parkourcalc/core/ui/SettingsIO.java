@@ -50,6 +50,7 @@ public final class SettingsIO {
             }
         }
 
+        migrateEffectsColumn(json, settings);
         clampScaleIndex(settings);
         clampArrowMode(settings);
         clampReplayStartDelay(settings);
@@ -88,6 +89,17 @@ public final class SettingsIO {
             }
         } else {
             field.set(settings, gson.fromJson(element, type));
+        }
+    }
+
+    private static void migrateEffectsColumn(JsonObject json, Settings settings) {
+        if (json.has("showColEffects")) return;
+        for (String legacy : new String[] { "showColSpeed", "showColJumpBoost", "showColSlowness" }) {
+            JsonElement element = json.get(legacy);
+            if (element != null && element.isJsonPrimitive() && element.getAsJsonPrimitive().isBoolean() && element.getAsBoolean()) {
+                settings.showColEffects = true;
+                return;
+            }
         }
     }
 

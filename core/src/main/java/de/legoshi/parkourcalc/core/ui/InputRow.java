@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.ui;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Set;
@@ -8,7 +9,7 @@ public class InputRow {
 
     private static int nextId = 0;
 
-    public static final int MAX_AMPLIFIER = 255;
+    public static final int MAX_AMPLIFIER = MovementEffect.MAX_LEVEL;
 
     public static final int MAX_HOTBAR_SLOT = 9;
 
@@ -22,9 +23,7 @@ public class InputRow {
     private boolean yawLocked;
     private Float pitch;
     private boolean pitchLocked;
-    private int speedAmplifier;
-    private int jumpBoostAmplifier;
-    private int slownessAmplifier;
+    private final int[] effectLevels = new int[MovementEffect.count()];
     private int hotbarSlot;
     private boolean teleportEnabled;
     private double teleportX;
@@ -106,33 +105,56 @@ public class InputRow {
     }
 
     public int getSpeedAmplifier() {
-        return speedAmplifier;
+        return getEffectLevel(MovementEffect.SPEED);
     }
 
     public void setSpeedAmplifier(int amplifier) {
-        int clamped = clampAmplifier(amplifier);
-        if (this.speedAmplifier != clamped) modCount++;
-        this.speedAmplifier = clamped;
+        setEffectLevel(MovementEffect.SPEED, amplifier);
     }
 
     public int getJumpBoostAmplifier() {
-        return jumpBoostAmplifier;
+        return getEffectLevel(MovementEffect.JUMP_BOOST);
     }
 
     public void setJumpBoostAmplifier(int amplifier) {
-        int clamped = clampAmplifier(amplifier);
-        if (this.jumpBoostAmplifier != clamped) modCount++;
-        this.jumpBoostAmplifier = clamped;
+        setEffectLevel(MovementEffect.JUMP_BOOST, amplifier);
     }
 
     public int getSlownessAmplifier() {
-        return slownessAmplifier;
+        return getEffectLevel(MovementEffect.SLOWNESS);
     }
 
     public void setSlownessAmplifier(int amplifier) {
-        int clamped = clampAmplifier(amplifier);
-        if (this.slownessAmplifier != clamped) modCount++;
-        this.slownessAmplifier = clamped;
+        setEffectLevel(MovementEffect.SLOWNESS, amplifier);
+    }
+
+    public int getEffectLevel(MovementEffect effect) {
+        return effectLevels[effect.ordinal()];
+    }
+
+    public void setEffectLevel(MovementEffect effect, int level) {
+        int clamped = effect.clampLevel(level);
+        if (effectLevels[effect.ordinal()] != clamped) modCount++;
+        effectLevels[effect.ordinal()] = clamped;
+    }
+
+    public int[] getEffectLevels() {
+        return effectLevels.clone();
+    }
+
+    public boolean hasEffects() {
+        for (int level : effectLevels) {
+            if (level > 0) return true;
+        }
+        return false;
+    }
+
+    public boolean sameEffects(InputRow other) {
+        return Arrays.equals(effectLevels, other.effectLevels);
+    }
+
+    public void copyEffectsFrom(InputRow other) {
+        for (MovementEffect e : MovementEffect.all()) setEffectLevel(e, other.getEffectLevel(e));
     }
 
     public int getHotbarSlot() {
@@ -218,12 +240,6 @@ public class InputRow {
         return onejumpKeys || onejumpFace != ONEJUMP_FACE_OFF;
     }
 
-    private static int clampAmplifier(int amplifier) {
-        if (amplifier < 0) return 0;
-        if (amplifier > MAX_AMPLIFIER) return MAX_AMPLIFIER;
-        return amplifier;
-    }
-
     private static int clampHotbarSlot(int slot) {
         if (slot < 0) return 0;
         if (slot > MAX_HOTBAR_SLOT) return MAX_HOTBAR_SLOT;
@@ -237,9 +253,7 @@ public class InputRow {
         copy.yawLocked = this.yawLocked;
         copy.pitch = this.pitch;
         copy.pitchLocked = this.pitchLocked;
-        copy.speedAmplifier = this.speedAmplifier;
-        copy.jumpBoostAmplifier = this.jumpBoostAmplifier;
-        copy.slownessAmplifier = this.slownessAmplifier;
+        System.arraycopy(this.effectLevels, 0, copy.effectLevels, 0, this.effectLevels.length);
         copy.hotbarSlot = this.hotbarSlot;
         copy.teleportEnabled = this.teleportEnabled;
         copy.teleportX = this.teleportX;
