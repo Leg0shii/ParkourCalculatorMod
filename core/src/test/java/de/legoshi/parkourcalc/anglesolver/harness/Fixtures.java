@@ -44,6 +44,7 @@ public final class Fixtures {
             boolean sprinting = false;
             float moveForward = Float.NaN;
             float moveStrafe = Float.NaN;
+            Vec3dCore serverVel = null;
             SaveFile.DebugTick d = debug != null && i < debug.size() ? debug.get(i) : null;
             if (d != null) {
                 if (d.pos != null && d.pos.length >= 3) pos = new Vec3dCore(d.pos[0], d.pos[1], d.pos[2]);
@@ -57,6 +58,7 @@ public final class Fixtures {
                 sprinting = d.sprinting;
                 moveForward = d.moveForward != null ? d.moveForward : Float.NaN;
                 moveStrafe = d.moveStrafe != null ? d.moveStrafe : Float.NaN;
+                if (d.serverVel != null && d.serverVel.length >= 3) serverVel = new Vec3dCore(d.serverVel[0], d.serverVel[1], d.serverVel[2]);
             }
             if (i == seedTick) {
                 if (seed.pos != null && seed.pos.length >= 3) pos = new Vec3dCore(seed.pos[0], seed.pos[1], seed.pos[2]);
@@ -65,7 +67,7 @@ public final class Fixtures {
             }
             boxes.add(new TickState(pos, onGround, sneaking, wallCollision, yaw,
                     Collections.<Vec3dCore>emptyList(), vel, softCollision, collisionAngle,
-                    sprinting, moveForward, moveStrafe));
+                    sprinting, moveForward, moveStrafe, null, Double.NaN, 0, serverVel));
         }
         return boxes;
     }

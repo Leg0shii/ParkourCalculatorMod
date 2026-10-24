@@ -19,6 +19,7 @@ public final class StateOverride {
     private Slipperiness slipperiness;
     private Medium medium;
     private int soulsandCells = 1;
+    private boolean damage;
     private final List<PotionDose> added = new ArrayList<>();
     private final Set<Potion> removed = EnumSet.noneOf(Potion.class);
 
@@ -92,6 +93,22 @@ public final class StateOverride {
         return soulsandCells;
     }
 
+    public boolean isDamage() {
+        return damage;
+    }
+
+    public void setDamage(boolean damage) {
+        this.damage = damage;
+    }
+
+    public boolean overridesDamage() {
+        return damage;
+    }
+
+    public void clearDamage() {
+        damage = false;
+    }
+
     public void setSoulsandCells(int cells) {
         soulsandCells = Math.max(1, Math.min(MAX_SOULSAND_CELLS, cells));
     }
@@ -124,7 +141,8 @@ public final class StateOverride {
     }
 
     public boolean isEmpty() {
-        return !overridesInputs() && !overridesSprint() && !overridesSlipperiness() && !overridesMedium() && !overridesPotion();
+        return !overridesInputs() && !overridesSprint() && !overridesSlipperiness() && !overridesMedium() && !overridesPotion()
+                && !overridesDamage();
     }
 
     /** Make this override an independent copy of {@code other} (doses deep-copied: they are mutable). */
@@ -134,6 +152,7 @@ public final class StateOverride {
         slipperiness = other.slipperiness;
         medium = other.medium;
         soulsandCells = other.soulsandCells;
+        damage = other.damage;
         added.clear();
         for (PotionDose d : other.added) added.add(new PotionDose(d.potion, d.level));
         removed.clear();

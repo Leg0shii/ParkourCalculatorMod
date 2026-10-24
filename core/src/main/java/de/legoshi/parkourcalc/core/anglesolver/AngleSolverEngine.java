@@ -711,10 +711,14 @@ public final class AngleSolverEngine {
         float[] forwardIn = new float[numTicks];
         float[] strafeIn = new float[numTicks];
         boolean[] sprintArr = new boolean[numTicks];
+        boolean[] damage = new boolean[numTicks];
+        boolean anyDamage = false;
         boolean deriveAny = false;
         for (int k = 0; k < numTicks; k++) {
             int t = startTick + k;
             InputRow row = rows.get(t);
+            damage[k] = effDamage(t);
+            anyDamage |= damage[k];
             boolean deriveSprint = effSprint(t) == AngleSolverState.SprintMode.DERIVE;
             deriveAny |= deriveSprint;
             boolean jumpRow = row.isKeyActive(InputRow.Key.JUMP);
@@ -779,6 +783,8 @@ public final class AngleSolverEngine {
         phys.forwardInputPerTick = forwardIn;
         phys.strafeInputPerTick = strafeIn;
         phys.sprintPerTick = sprintArr;
+        phys.damagePerTick = anyDamage ? damage : null;
+        phys.incomingServerVelocity = seed.serverVelocity;
         phys.liveMovementFactor = modernCollision;
         phys.incomingSprint = effSprint(startTick) == AngleSolverState.SprintMode.DERIVE
                 ? (seed.hasMovementSample() ? seed.sprinting : Boolean.TRUE)
@@ -1596,6 +1602,11 @@ public final class AngleSolverEngine {
         StateOverride ov = overrideAt(tick);
         if (ov != null && ov.overridesMedium()) return ov.getMedium();
         return Medium.NONE;
+    }
+
+    private boolean effDamage(int tick) {
+        StateOverride ov = overrideAt(tick);
+        return ov != null && ov.isDamage();
     }
 
     private int effSoulsandCells(int tick) {

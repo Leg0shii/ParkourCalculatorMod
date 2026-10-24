@@ -478,6 +478,7 @@ public final class RunTicksController implements RunTicksControls {
                 if (tc == null) continue;
                 tc.getOverride().clearSlipperiness();
                 tc.getOverride().clearMedium();
+                tc.getOverride().clearDamage();
             }
             for (Map.Entry<Integer, TickConstraints> e : ticks.entrySet()) {
                 TickConstraints target = state.tickConstraints(e.getKey());
@@ -488,6 +489,7 @@ public final class RunTicksController implements RunTicksControls {
                     target.getOverride().setMedium(source.getMedium());
                     target.getOverride().setSoulsandCells(source.getSoulsandCells());
                 }
+                if (source.overridesDamage()) target.getOverride().setDamage(true);
             }
             state.setStartTick(startTick);
             state.setLandingTick(landingTick);

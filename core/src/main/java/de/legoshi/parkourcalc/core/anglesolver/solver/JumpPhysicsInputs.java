@@ -85,6 +85,10 @@ public final class JumpPhysicsInputs {
     public float[] forwardInputPerTick = null;
     public float[] strafeInputPerTick = null;
 
+    public boolean[] damagePerTick = null;
+
+    public Vec3dCore incomingServerVelocity = null;
+
     public final int numTicks;
 
     public JumpPhysicsInputs(int numTicks) {
@@ -117,6 +121,8 @@ public final class JumpPhysicsInputs {
         c.incomingSlowness = incomingSlowness;
         c.forwardInputPerTick = forwardInputPerTick;
         c.strafeInputPerTick = strafeInputPerTick;
+        c.damagePerTick = damagePerTick;
+        c.incomingServerVelocity = incomingServerVelocity;
         return c;
     }
 
@@ -133,6 +139,7 @@ public final class JumpPhysicsInputs {
         c.incomingSprint = from == 0 ? incomingSprint : Boolean.valueOf(sprintAt(from - 1));
         c.incomingAmp = from == 0 ? incomingAmp : Integer.valueOf(speedAmplifierAt(from - 1));
         c.incomingSlowness = from == 0 ? incomingSlowness : Integer.valueOf(slownessAmplifierAt(from - 1));
+        c.incomingServerVelocity = from == 0 ? incomingServerVelocity : null;
         boolean[] jump = new boolean[m];
         boolean[] strafe = new boolean[m];
         int[] amp = new int[m];
@@ -147,6 +154,7 @@ public final class JumpPhysicsInputs {
         boolean[] sprint = new boolean[m];
         float[] fwd = new float[m];
         float[] str = new float[m];
+        boolean[] damage = damagePerTick == null ? null : new boolean[m];
         for (int k = 0; k < m; k++) {
             int i = from + k;
             jump[k] = jumpAt(i);
@@ -163,6 +171,7 @@ public final class JumpPhysicsInputs {
             sprint[k] = sprintAt(i);
             fwd[k] = forwardAt(i);
             str[k] = strafeInputAt(i);
+            if (damage != null) damage[k] = damageAt(i);
         }
         c.jumpPerTick = jump;
         c.strafePerTick = strafe;
@@ -178,7 +187,42 @@ public final class JumpPhysicsInputs {
         c.sprintPerTick = sprint;
         c.forwardInputPerTick = fwd;
         c.strafeInputPerTick = str;
+        c.damagePerTick = damage;
         return c;
+    }
+
+    public boolean damageAt(int tick) {
+        return damagePerTick != null && tick >= 0 && tick < damagePerTick.length && damagePerTick[tick];
+    }
+
+    public int lastDamageTick() {
+        if (damagePerTick == null) return -1;
+        for (int t = Math.min(damagePerTick.length, numTicks) - 1; t >= 0; t--) {
+            if (damagePerTick[t]) return t;
+        }
+        return -1;
+    }
+
+    public boolean contactAt(int tick) {
+        return !Double.isNaN(slipAt(tick));
+    }
+
+    public boolean serverBoostAt(int tick) {
+        if (!jumpAt(tick) || !contactAt(tick) || contactAt(tick + 1) || !sprintAt(tick)) return false;
+        SurfaceKind kind = surfaceAt(tick);
+        return kind != SurfaceKind.WATER && kind != SurfaceKind.LAVA;
+    }
+
+    public float serverFrictionAt(int tick) {
+        return contactAt(tick + 1) ? (float) slipAt(tick + 1) * 0.91F : 0.91F;
+    }
+
+    public double incomingServerX() {
+        return incomingServerVelocity == null ? 0.0 : incomingServerVelocity.x;
+    }
+
+    public double incomingServerZ() {
+        return incomingServerVelocity == null ? 0.0 : incomingServerVelocity.z;
     }
 
     public int speedAmplifierAt(int tick) {

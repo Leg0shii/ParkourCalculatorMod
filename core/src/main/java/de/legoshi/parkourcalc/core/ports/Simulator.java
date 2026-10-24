@@ -54,6 +54,10 @@ public interface Simulator {
         return 0;
     }
 
+    default Vec3dCore getCurrentServerVelocity() {
+        return null;
+    }
+
     float getCurrentYaw();
 
     List<Vec3dCore> getCurrentSubtickPath();

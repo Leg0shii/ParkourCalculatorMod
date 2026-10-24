@@ -5,6 +5,7 @@ import de.legoshi.parkourcalc.core.DebugFlags;
 import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.sim.ServerSimEvent;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
+import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.forge.sim.SimulatorEntity;
 import net.minecraft.block.Block;
@@ -619,6 +620,10 @@ public final class PairedServerSim {
 
     private void addEvent(ServerSimEvent.Kind kind, String detail) {
         events.add(new ServerSimEvent(tickIndex, kind, detail));
+    }
+
+    public Vec3dCore serverVelocity() {
+        return new Vec3dCore(sp.motionX, sp.motionY, sp.motionZ);
     }
 
     public List<ServerSimEvent> drainEvents() {

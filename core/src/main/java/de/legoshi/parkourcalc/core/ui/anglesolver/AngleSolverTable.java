@@ -78,7 +78,10 @@ public final class AngleSolverTable {
 
     // Chip drag (manual): tracked across frames while a chip is held. A dragged chip is either a
     // constraint (dragIndex into the tick's list) or one facet of the tick's state override.
-    private enum DragKind { CONSTRAINT, STATE_INPUTS, STATE_SPRINT, STATE_SLIP, STATE_MEDIUM, STATE_ADD, STATE_REMOVE }
+    private enum DragKind { CONSTRAINT, STATE_INPUTS, STATE_SPRINT, STATE_SLIP, STATE_MEDIUM, STATE_DAMAGE, STATE_ADD, STATE_REMOVE }
+
+    private static final String DAMAGE_TIP = "Fall damage is ruled on this tick's landing: the server's velocity packet"
+            + " replaces the motion of the next tick in the solver model. Apply state fills this from the paired simulation.";
 
     private boolean dragging;
     private DragKind dragKind = DragKind.CONSTRAINT;
@@ -368,6 +371,10 @@ public final class AngleSolverTable {
                 dst.setMedium(src.getMedium());
                 dst.setSoulsandCells(src.getSoulsandCells());
                 if (!dragAlt) src.clearMedium();
+                break;
+            case STATE_DAMAGE:
+                dst.setDamage(true);
+                if (!dragAlt) src.clearDamage();
                 break;
             case STATE_ADD: {
                 PotionDose srcDose = src.findAdded(dragPotion);
@@ -771,6 +778,9 @@ public final class AngleSolverTable {
                     : ov.getMedium().label;
             specs.add(new StateChipSpec(DragKind.STATE_MEDIUM, null, "Medium", mediumLabel, false));
         }
+        if (ov.overridesDamage()) {
+            specs.add(new StateChipSpec(DragKind.STATE_DAMAGE, null, "Damage", "fall", false));
+        }
         for (PotionDose d : ov.getAdded()) {
             specs.add(new StateChipSpec(DragKind.STATE_ADD, d.potion, "Potion", "+" + d.potion.label + amp(d.level), false));
         }
@@ -859,6 +869,7 @@ public final class AngleSolverTable {
                         case STATE_SPRINT: ov.clearSprint(); break;
                         case STATE_SLIP: ov.clearSlipperiness(); break;
                         case STATE_MEDIUM: ov.clearMedium(); break;
+                        case STATE_DAMAGE: ov.clearDamage(); break;
                         case STATE_ADD: ov.removeAdded(potion); break;
                         case STATE_REMOVE: ov.getRemoved().remove(potion); break;
                         default: break;
@@ -896,7 +907,7 @@ public final class AngleSolverTable {
         int potions = tc == null ? 0 : tc.getOverride().getAdded().size();
         int sandRow = tc != null && tc.getOverride().getMedium() == Medium.SOULSAND ? 1 : 0;
         float pad = 2f * ThemeManager.LG * s; // child top + bottom window padding
-        float stateRows = (4f + sandRow + potions + 1f) * inputRow;  // Inputs, Sprint, Slipperiness, Medium, doses, + add
+        float stateRows = (5f + sandRow + potions + 1f) * inputRow;  // Inputs, Sprint, Slipperiness, Medium, Damage, doses, + add
         float constraintRows = (cn + 1f) * inputRow;        // constraint rows + add button
         return pad
                 + sectionHead + stateRows
@@ -1205,6 +1216,16 @@ public final class AngleSolverTable {
             }
             ImGui.tableNextColumn();
         }
+
+        ovRowStart("Damage", isStateSelected(tick, DragKind.STATE_DAMAGE, null));
+        if (Controls.checkbox("##ovdamage", ov.isDamage())) {
+            ov.setDamage(!ov.isDamage());
+        }
+        if (ImGui.isItemHovered()) {
+            ImGui.setTooltip(DAMAGE_TIP);
+        }
+        ImGui.tableNextColumn();
+        overrideTrailing(ov.overridesDamage(), "inherits default (none)", "ovdmr", ov::clearDamage);
 
         renderPotionRows(tick, ov);
 

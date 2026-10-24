@@ -5,6 +5,7 @@ import de.legoshi.parkourcalc.core.DebugFlags;
 import de.legoshi.parkourcalc.core.PlaybackController;
 import de.legoshi.parkourcalc.core.sim.ServerSimEvent;
 import de.legoshi.parkourcalc.core.sim.StartResumeState;
+import de.legoshi.parkourcalc.core.sim.Vec3dCore;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.fabric.sim.FabricSimulator;
 //? if <1.21.2
@@ -542,7 +543,7 @@ public final class PairedServerSim {
         }
     }
 
-    static Vec3 quantizeVelocity(Vec3 velocity) {
+    public static Vec3 quantizeVelocity(Vec3 velocity) {
         //? if >=26.1 {
         ByteBuf buf = Unpooled.buffer();
         try {
@@ -599,6 +600,11 @@ public final class PairedServerSim {
 
     private void addEvent(ServerSimEvent.Kind kind, String detail) {
         events.add(new ServerSimEvent(tickIndex, kind, detail));
+    }
+
+    public Vec3dCore serverVelocity() {
+        Vec3 v = sp.getDeltaMovement();
+        return new Vec3dCore(v.x, v.y, v.z);
     }
 
     public List<ServerSimEvent> drainEvents() {

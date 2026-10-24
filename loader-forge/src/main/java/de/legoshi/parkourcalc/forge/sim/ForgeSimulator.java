@@ -92,6 +92,11 @@ public final class ForgeSimulator extends LazyEntitySimulator<SimulatorEntity> {
     }
 
     @Override
+    public Vec3dCore getCurrentServerVelocity() {
+        return pair == null ? null : pair.serverVelocity();
+    }
+
+    @Override
     public void onPassEnd() {
         if (pair != null) pair.endPass();
     }

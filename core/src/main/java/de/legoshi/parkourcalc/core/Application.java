@@ -64,6 +64,7 @@ import imgui.ImGui;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -218,7 +219,7 @@ public final class Application {
         angleSolverState = new AngleSolverState();
         FileSystemSaveStore saveStore = saveController.getSaveStore();
         String mcVersion = saveStore != null ? saveStore.getMcVersion() : null;
-        forwardModel = ExactJumpModel.forMcVersion(mcVersion);
+        forwardModel = ExactJumpModel.forMcVersion(mcVersion).withVelocityCodec(mc.velocityPacketCodec());
         inputOverlay.setMcVersion(mcVersion);
         constraintKeyController = new ConstraintKeyController(
                 mc, angleSolverState, selection, constraintSelection, saveController::markDirty,
@@ -862,6 +863,10 @@ public final class Application {
             return;
         }
         boolean changed = false;
+        Set<Integer> damageTicks = new HashSet<>();
+        for (de.legoshi.parkourcalc.core.sim.ServerSimEvent ev : runner.getServerEvents()) {
+            if (ev.kind == de.legoshi.parkourcalc.core.sim.ServerSimEvent.Kind.DAMAGE_RULED) damageTicks.add(ev.tick);
+        }
         for (int t = start; t < end; t++) {
             TickState s = boxController.getState(t + 1);
             if (s == null || !s.hasSurfaceSample()) continue;
@@ -870,9 +875,11 @@ public final class Application {
             Medium medium = s.medium;
             boolean slipDefault = slip == angleSolverState.getDefaultSlipperiness();
             boolean mediumNone = medium == Medium.NONE;
+            boolean damage = damageTicks.contains(t);
             TickConstraints tc = angleSolverState.tickConstraintsOrNull(t);
-            if (tc == null && slipDefault && mediumNone) continue;
+            if (tc == null && slipDefault && mediumNone && !damage) continue;
             StateOverride ov = angleSolverState.tickConstraints(t).getOverride();
+            ov.setDamage(damage);
             if (slipDefault) ov.clearSlipperiness();
             else ov.setSlipperiness(slip);
             if (mediumNone) {
