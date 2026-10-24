@@ -303,12 +303,16 @@ public final class ForgePlaybackBridge implements PlaybackBridge {
             if (ghost == null) return;
             ghost.rotationYaw = absoluteYaw;
             ghost.prevRotationYaw = absoluteYaw;
+            ghost.rotationYawHead = absoluteYaw;
+            ghost.prevRotationYawHead = absoluteYaw;
             return;
         }
         EntityPlayerSP p = McClient.player();
         if (p == null) return;
         p.rotationYaw = absoluteYaw;
         p.prevRotationYaw = absoluteYaw;
+        p.rotationYawHead = absoluteYaw;
+        p.prevRotationYawHead = absoluteYaw;
         p.renderArmYaw = absoluteYaw;
         p.prevRenderArmYaw = absoluteYaw;
     }

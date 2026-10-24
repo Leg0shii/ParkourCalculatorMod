@@ -503,6 +503,8 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
         if (p == null) return;
         p.setYRot(absoluteYaw);
         p.yRotO = absoluteYaw;
+        p.setYHeadRot(absoluteYaw);
+        p.yHeadRotO = absoluteYaw;
         p.yBob = absoluteYaw;
         p.yBobO = absoluteYaw;
     }
