@@ -185,6 +185,10 @@ public final class NodeHelp {
         param("certBnb", "ffSec", "Seconds allowed for the land-it phase. Only matters while the jump does"
                 + " not land yet; on a foldable no-turn chain it can be raised up to 30 s within the"
                 + " overall solve time.");
+        param("certBnb", "exhaust", "Run the land-it phase without a branch cap for the whole stage budget"
+                + " while the jump does not land yet, so the search can rule a landing out for certain."
+                + " Does nothing once a landing exists or without a time budget. Meant for a stage at the"
+                + " end of the pipeline, after every other stage has had its turn.");
 
         node("foldDriver", "Another angle solver that repeatedly replays and adjusts the jump. It can try"
                 + " several different starting guesses and finish with a fine nudge pass.");

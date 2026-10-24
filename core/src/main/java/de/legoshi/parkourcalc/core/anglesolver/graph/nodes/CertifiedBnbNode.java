@@ -30,12 +30,14 @@ public final class CertifiedBnbNode implements NodeRuntime {
     private final int ffSec;
     private final int ffNodeCap;
     private final int tickCap;
+    private final boolean exhaust;
     private final String labelSuffix;
 
     public CertifiedBnbNode(ParamValues params) {
         this.ffSec = params.getInt("ffSec");
         this.ffNodeCap = params.getInt("ffNodeCap");
         this.tickCap = params.getInt("tickCap");
+        this.exhaust = params.getBool("exhaust");
         this.labelSuffix = params.getString("labelSuffix");
     }
 
@@ -47,13 +49,17 @@ public final class CertifiedBnbNode implements NodeRuntime {
         int cap;
         long solveDeadline;
         AtomicBoolean cancelToken = nodeToken;
-        if (optimize) {
+        if (exhaust) {
+            if (optimize || deadlineNanos <= 0 || now >= deadlineNanos) return NodeOutcome.of(miss, in);
+            cap = OPT_SAFETY_NODE_CAP;
+            solveDeadline = deadlineNanos;
+        } else if (optimize) {
             if (deadlineNanos <= 0 || now >= deadlineNanos) return NodeOutcome.of(miss, in);
             cap = OPT_SAFETY_NODE_CAP;
             solveDeadline = deadlineNanos;
         } else {
             if (ffNodeCap <= 0) return NodeOutcome.of(miss, in);
-            cap = deadlineNanos > 0 ? OPT_SAFETY_NODE_CAP : ffNodeCap;
+            cap = ffNodeCap;
             long sub = ffSec > 0 ? now + ffSec * 1_000_000_000L : 0L;
             solveDeadline = deadlineNanos > 0 && sub > 0 ? Math.min(deadlineNanos, sub)
                     : (deadlineNanos > 0 ? deadlineNanos : sub);
