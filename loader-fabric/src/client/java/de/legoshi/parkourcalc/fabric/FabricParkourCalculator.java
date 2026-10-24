@@ -738,6 +738,12 @@ public class FabricParkourCalculator implements ClientModInitializer {
             worldRenderer.render(poseStack, buffers, camPos);
         }
     }
+
+    public static void onTranslucentTerrainDrawn() {
+        if (shouldDrawPath()) {
+            worldRenderer.drawAfterTranslucent();
+        }
+    }
     *///?}
 
     private static boolean shouldDrawPath() {
