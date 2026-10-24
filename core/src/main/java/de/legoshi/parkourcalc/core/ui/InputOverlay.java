@@ -38,6 +38,7 @@ import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
+import java.util.function.IntSupplier;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -110,6 +111,8 @@ public final class InputOverlay {
     private static final String MENU_ADD_BELOW = "Add %d row(s) below";
     private static final String MENU_DELETE = "Delete %d row(s)";
     private static final String MENU_DELETE_SHORTCUT = "Del";
+    private static final String MENU_DELETE_CONSTRAINTS = "Delete %d constraint(s)";
+    private static final String MENU_DELETE_CONSTRAINTS_SHORTCUT = "X";
 
     private static final String MENU_DUPLICATE = "Duplicate selected";
     private static final String MENU_SAVE_AS_NEW_TAS = "Save selected as new TAS";
@@ -174,6 +177,8 @@ public final class InputOverlay {
     private final List<InputRow> clipboard = new ArrayList<>();
     private final List<TickConstraints> clipboardTicks = new ArrayList<>();
     private Runnable onSaveSelectionAsTas;
+    private IntSupplier countSelectedConstraints;
+    private Runnable deleteSelectedConstraints;
 
     private int draggingRowIndex = -1;
     private int draggingTeleportRow = -1;
@@ -282,6 +287,11 @@ public final class InputOverlay {
 
     public void setSaveSelectionAsTasHandler(Runnable handler) {
         this.onSaveSelectionAsTas = handler;
+    }
+
+    public void setConstraintDeleteHandlers(IntSupplier count, Runnable delete) {
+        this.countSelectedConstraints = count;
+        this.deleteSelectedConstraints = delete;
     }
 
     public static final class RowFlag {
@@ -2379,9 +2389,24 @@ public final class InputOverlay {
         }
 
         ThemeManager.paddedSeparator();
+        renderDeleteConstraintsOption();
         String label = String.format(MENU_DELETE, selection.size()) + " (" + MENU_DELETE_SHORTCUT + ")";
         if (contextDangerButton(label)) {
             deleteSelectedRows();
+        }
+    }
+
+    private void renderDeleteConstraintsOption() {
+        if (!isSolverActive() || countSelectedConstraints == null || deleteSelectedConstraints == null) {
+            return;
+        }
+        int count = countSelectedConstraints.getAsInt();
+        if (count <= 0) {
+            return;
+        }
+        String label = String.format(MENU_DELETE_CONSTRAINTS, count) + " (" + MENU_DELETE_CONSTRAINTS_SHORTCUT + ")";
+        if (contextDangerButton(label)) {
+            deleteSelectedConstraints.run();
         }
     }
 

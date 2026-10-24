@@ -59,6 +59,8 @@ public final class AngleSolverTable {
     private final SelectionManager selection;
     private final ConstraintSelection constraintSelection;
     private final IntSupplier rowCount;
+    private IntSupplier countSelectedConstraints;
+    private Runnable deleteSelectedConstraints;
 
     private int expandedRow = -1;
 
@@ -175,6 +177,11 @@ public final class AngleSolverTable {
 
     public boolean isActive() {
         return settings.viewAngleSolver;
+    }
+
+    public void setConstraintDeleteHandlers(IntSupplier count, Runnable delete) {
+        this.countSelectedConstraints = count;
+        this.deleteSelectedConstraints = delete;
     }
 
     public void setYawDirection(Collection<Integer> rows, Constraint.Op op) {
@@ -684,24 +691,37 @@ public final class AngleSolverTable {
 
     private void renderChipMenu(int tick, int index) {
         Constraint c = state.tickConstraints(tick).getConstraints().get(index);
-        if (ImGui.menuItem(c.isEnabled() ? "Disable" : "Enable")) {
+        int bulk = selectedConstraintCountIncluding(tick, index);
+        String toggleLabel = c.isEnabled() ? "Disable" : "Enable";
+        String duplicateLabel = "Duplicate here";
+        String deleteLabel = bulk > 1 ? "Delete " + bulk + " constraints (X)" : "Delete";
+        float width = Math.max(Controls.buttonWidth(toggleLabel),
+                Math.max(Controls.buttonWidth(duplicateLabel), Controls.buttonWidth(deleteLabel)));
+        width = Math.max(width, ImGui.getContentRegionAvail().x);
+        if (Controls.secondaryButton(toggleLabel, width)) {
             c.setEnabled(!c.isEnabled());
             ImGui.closeCurrentPopup();
         }
-        ThemeManager.paddedSeparator();
-        if (ImGui.menuItem("Duplicate here")) {
+        if (Controls.secondaryButton(duplicateLabel, width)) {
             state.duplicateConstraint(tick, index);
             ImGui.closeCurrentPopup();
         }
         ThemeManager.paddedSeparator();
-        ThemeManager.pushTextColor(ThemeManager.dangerColor());
-        boolean del = ImGui.menuItem("Delete");
-        ThemeManager.popTextColor();
-        if (del) {
-            state.deleteConstraint(tick, index);
+        if (Controls.dangerButton(deleteLabel, width)) {
+            if (bulk > 1) {
+                deleteSelectedConstraints.run();
+            } else {
+                state.deleteConstraint(tick, index);
+            }
             clearConstraintSelection();
             ImGui.closeCurrentPopup();
         }
+    }
+
+    private int selectedConstraintCountIncluding(int tick, int index) {
+        if (countSelectedConstraints == null || deleteSelectedConstraints == null) return 0;
+        if (!constraintSelection.highlights(tick, index, selection)) return 0;
+        return countSelectedConstraints.getAsInt();
     }
 
     private static final class StateChipSpec {

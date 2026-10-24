@@ -122,21 +122,30 @@ public final class ConstraintKeyController {
         onChanged.run();
     }
 
+    public int countSelected() {
+        return selectedConstraints().size();
+    }
+
     public void removeSelected() {
-        List<int[]> toDelete = new ArrayList<>();
-        for (int tick : state.populatedTicks()) {
-            TickConstraints tc = state.tickConstraintsOrNull(tick);
-            if (tc == null) continue;
-            List<Constraint> list = tc.getConstraints();
-            for (int i = 0; i < list.size(); i++) {
-                if (constraintSelection.highlights(tick, i, selection)) toDelete.add(new int[] {tick, i});
-            }
-        }
+        List<int[]> toDelete = selectedConstraints();
         if (toDelete.isEmpty()) return;
         toDelete.sort((a, b) -> a[0] != b[0] ? Integer.compare(a[0], b[0]) : Integer.compare(b[1], a[1]));
         for (int[] ti : toDelete) state.deleteConstraint(ti[0], ti[1]);
         constraintSelection.clear();
         onChanged.run();
+    }
+
+    private List<int[]> selectedConstraints() {
+        List<int[]> selected = new ArrayList<>();
+        for (int tick : state.populatedTicks()) {
+            TickConstraints tc = state.tickConstraintsOrNull(tick);
+            if (tc == null) continue;
+            List<Constraint> list = tc.getConstraints();
+            for (int i = 0; i < list.size(); i++) {
+                if (constraintSelection.highlights(tick, i, selection)) selected.add(new int[] {tick, i});
+            }
+        }
+        return selected;
     }
 
     private double[] mergedFootprint(int tick, double[] fresh, double footY, Vec3dCore hit) {

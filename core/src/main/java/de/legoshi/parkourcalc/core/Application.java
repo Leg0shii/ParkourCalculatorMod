@@ -227,6 +227,8 @@ public final class Application {
         saveController.setDebugSource(boxController, settings);
         AngleSolverTable angleSolverTable = new AngleSolverTable(angleSolverState, settings, selection, constraintSelection, inputData::size);
         inputOverlay.setAngleSolver(angleSolverTable);
+        inputOverlay.setConstraintDeleteHandlers(this::countSelectedConstraints, this::removeSelectedConstraints);
+        angleSolverTable.setConstraintDeleteHandlers(this::countSelectedConstraints, this::removeSelectedConstraints);
         StartStateTable startStateTable = new StartStateTable(runner, () -> onUserChange(-1), this::copyStartTeleportCommand,
                 this::setStartToPlayer);
         inputOverlay.setStartState(startStateTable);
@@ -707,6 +709,10 @@ public final class Application {
 
     public void removeSelectedConstraints() {
         if (constraintKeyController != null) constraintKeyController.removeSelected();
+    }
+
+    public int countSelectedConstraints() {
+        return constraintKeyController != null ? constraintKeyController.countSelected() : 0;
     }
 
     public void captureAngleSolverBlock(BlockSelection.Kind kind) {
