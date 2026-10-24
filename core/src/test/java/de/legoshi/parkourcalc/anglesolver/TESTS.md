@@ -49,6 +49,9 @@ anglesolver/
                            off-tick and off-axis walls are never selected, the tightest reach wall wins, ties and
                            an empty set refuse (the capture-backed legal gates are problems/legal/ and the
                            goalWall fields of problems/replay/)
+  RangeMetTest.java        gh-485: the result panel gates a range constraint's ends strictly like the walls, so a
+                           1e-7 wide range missed by 9e-7 (the 2paradise_1135 Z @T1134 range) is not counted as met
+                           and N/N can never sit next to No solution
   MotionObjectiveTest.java gh-551 Angle goal objective: Mot is the velocity along the angle at the objective
                            tick (gh551-motion-angle, a 2-jump capture with Angle/Mot), Pos the position,
                            translation leaves Mot alone, withTick keeps angle and type, the Angle goal has no
@@ -128,7 +131,7 @@ resources/
 
 | Folder            | Validates that the capture... |
 |-------------------|-------------------------------|
-| `solve/`          | still solves through the live engine (optionally for every Solve-For direction), within a time budget; sidecar extras pin the failure notice of a capture that must not solve (`noticeLabel`, `noticeContains`), bound the re-simulation divergence of the shipped objective (`maxRecomputeDivergence`), solve twice (`reproducibleWithin`) or re-solve from six seed placements inside the start box (`boxSeeds`) |
+| `solve/`          | still solves through the live engine (optionally for every Solve-For direction), within a time budget, and a result that counts every constraint met is a success; sidecar extras pin the failure notice of a capture that must not solve (`noticeLabel`, `noticeContains`), bound the re-simulation divergence of the shipped objective (`maxRecomputeDivergence`), solve twice (`reproducibleWithin`) or re-solve from six seed placements inside the start box (`boxSeeds`) |
 | `closedform/`     | closed-form-solves byte-exact feasible, on objective, and fast |
 | `dualrecovery/`   | is byte-exact-solved by the deterministic dual chain (closed form, SLP, reseeded SLP, relaxation recovery), no CMA-ES, no warm start; a sidecar `bnbSeconds` adds a bounded blind pattern-B&B feasibility fallback on chain miss; the hpk capture library (gh-204) is wired here, with `shouldSolve: false` marking the known frontier misses; since 2026-10-18 the hpk captures are the hand-corrected human strats (human inputs, real start box and dF=0 over the run-up on the start tick, corrected constraints), which the chain misses on 13 of them (j147, j153, j298, j318, j320, j335, j344, j345, j346, j347, j424, j703, j718) |
 | `replay/`         | replays its saved rows byte-exact through the solver model: the rows' float yaw chain forwarded from the launch state matches the recorded debug positions, is feasible (or violates by a pinned amount), hits its recorded objective, names the expected legal goal wall and, with `legal`, keeps every hard wall and lands at the recorded shortfall (the razor rung legal attempts, the razor proof and weirdpane pins, the proof under the rung 5.375 walls) |
