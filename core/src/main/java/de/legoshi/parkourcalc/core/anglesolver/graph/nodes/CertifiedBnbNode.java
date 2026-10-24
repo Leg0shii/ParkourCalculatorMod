@@ -1,5 +1,6 @@
 package de.legoshi.parkourcalc.core.anglesolver.graph.nodes;
 
+import de.legoshi.parkourcalc.core.anglesolver.ConstraintText;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Candidate;
 import de.legoshi.parkourcalc.core.anglesolver.graph.GraphContext;
 import de.legoshi.parkourcalc.core.anglesolver.graph.Guarantee;
@@ -52,7 +53,7 @@ public final class CertifiedBnbNode implements NodeRuntime {
             solveDeadline = deadlineNanos;
         } else {
             if (ffNodeCap <= 0) return NodeOutcome.of(miss, in);
-            cap = ffNodeCap;
+            cap = deadlineNanos > 0 ? OPT_SAFETY_NODE_CAP : ffNodeCap;
             long sub = ffSec > 0 ? now + ffSec * 1_000_000_000L : 0L;
             solveDeadline = deadlineNanos > 0 && sub > 0 ? Math.min(deadlineNanos, sub)
                     : (deadlineNanos > 0 ? deadlineNanos : sub);
@@ -83,19 +84,23 @@ public final class CertifiedBnbNode implements NodeRuntime {
             cfg.seedPx = ctx.scenario.startPos.x;
             cfg.seedPz = ctx.scenario.startPos.z;
         }
+        long solveStart = System.nanoTime();
         CertifiedBnb.Result res = CertifiedBnb.solve(exact, dspec, cfg);
+        long solveNanos = System.nanoTime() - solveStart;
         if (SolverTrace.on()) {
-            SolverTrace.log("CERT", "done declined=%s feasible=%s obj=%s bound=%s gap=%s certified=%s nodes=%d kernelMs=%d",
+            SolverTrace.log("CERT", "done declined=%s feasible=%s obj=%s bound=%s gap=%s certified=%s"
+                            + " infeasible=%s unresolved=%d nodes=%d kernelMs=%d",
                     res.declined, res.feasible,
                     res.feasible ? String.format(java.util.Locale.ROOT, "%.9f", res.objective) : "-",
                     Double.isNaN(res.boundObjective) ? "-"
                             : String.format(java.util.Locale.ROOT, "%.9f", res.boundObjective),
                     Double.isNaN(res.gap) ? "-" : String.format(java.util.Locale.ROOT, "%.3e", res.gap),
-                    res.certified, res.nodes, res.kernelNanos / 1_000_000L);
+                    res.certified, res.certifiedInfeasible, res.unresolved, res.nodes, res.kernelNanos / 1_000_000L);
         }
         if (res.declined) return NodeOutcome.of(miss, in);
         if (!res.feasible) {
             if (res.bestInfeasYaws != null) ctx.closestMiss().offer(res.bestInfeasYaws, res.bestInfeasViol);
+            if (res.certifiedInfeasible) ctx.certifyInfeasible(proofOf(dspec, res, solveNanos));
             return NodeOutcome.of(miss, in);
         }
         double obj = Scoring.verifiedObjectiveAt(ctx.model, ctx.scenario, ctx.spec, res.yawsDeg, res.px, res.pz,
@@ -112,6 +117,16 @@ public final class CertifiedBnbNode implements NodeRuntime {
         Candidate out = Candidate.of(ctx, res.yawsDeg);
         if (optimize && !Double.isNaN(res.gap)) out = out.withDualGap(res.gap);
         return NodeOutcome.of(optimize ? Guarantee.IMPROVED : Guarantee.FOUND, out);
+    }
+
+    private static String proofOf(JumpSpec spec, CertifiedBnb.Result res, long solveNanos) {
+        JumpPhysicsInputs sc = spec.asScenario();
+        boolean free = sc.startBox != null && sc.startBox.startFree();
+        return "The certified search exhausted the whole facing lattice of these " + sc.numTicks + " ticks"
+                + (free ? " from every start in the box" : "") + " in " + res.nodes
+                + (res.nodes == 1 ? " node" : " nodes") + " (" + ConstraintText.duration(solveNanos)
+                + ") and found no path that meets every constraint, so none exists. Loosen or remove a"
+                + " constraint, or change the inputs.";
     }
 
     private JumpSpec bnbSpec(GraphContext ctx) {

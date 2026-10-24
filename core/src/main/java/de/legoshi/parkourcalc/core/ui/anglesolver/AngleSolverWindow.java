@@ -612,7 +612,7 @@ public final class AngleSolverWindow implements RenderInterface {
             + " uses the fewest run ticks instead of the best objective.";
 
     private static final String RUN_TICKS_TIMEOUT_TIP =
-            "How long one combination may be solved before it is written off as infeasible.";
+            "How long one combination may be solved before it is written off as not found.";
 
     private static final String RUN_TICKS_AUTO_TIP =
             "Derive the step timeout from measured solve times instead of the fixed value. Intended for"
@@ -1069,12 +1069,14 @@ public final class AngleSolverWindow implements RenderInterface {
         // A diverged apply is not a clean solve: the whole panel goes warning, not yellow-on-green.
         boolean diverged = r.isSuccess() && deviation != null;
         boolean running = engine.isSolving();
-        int finalAccent = !r.isSuccess() ? ThemeManager.dangerColor()
-                : diverged ? ThemeManager.warningColor() : ThemeManager.okColor();
-        int finalBg = !r.isSuccess() ? ThemeManager.dangerTintColor(0.10f)
-                : diverged ? ThemeManager.warningTintColor(0.10f) : ThemeManager.okTintColor(0.10f);
-        int finalBorder = !r.isSuccess() ? ThemeManager.dangerTintColor(0.45f)
-                : diverged ? ThemeManager.warningTintColor(0.45f) : ThemeManager.okTintColor(0.45f);
+        boolean undetermined = !r.isSuccess() && !r.isCertifiedInfeasible();
+        boolean warn = diverged || undetermined;
+        int finalAccent = warn ? ThemeManager.warningColor()
+                : r.isSuccess() ? ThemeManager.okColor() : ThemeManager.dangerColor();
+        int finalBg = warn ? ThemeManager.warningTintColor(0.10f)
+                : r.isSuccess() ? ThemeManager.okTintColor(0.10f) : ThemeManager.dangerTintColor(0.10f);
+        int finalBorder = warn ? ThemeManager.warningTintColor(0.45f)
+                : r.isSuccess() ? ThemeManager.okTintColor(0.45f) : ThemeManager.dangerTintColor(0.45f);
 
         RunView rv = running ? runView() : null;
         if (rv != null) {
@@ -1181,7 +1183,7 @@ public final class AngleSolverWindow implements RenderInterface {
     }
 
     private String resultHeader(SolveResult r) {
-        if (!r.isSuccess()) return "No solution · " + r.getMet() + "/" + r.getTotal() + " constraints met";
+        if (!r.isSuccess()) return r.headline() + " · " + r.getMet() + "/" + r.getTotal() + " constraints met";
         String verb = r.isSmoothed() ? "Smoothed" : "Solved";
         if (state.getApplyDeviation() != null) return verb + " · sim diverged";
         if (r.isSmoothed()) return verb + " · " + smoothSeconds(r.getSmoothNanos()) + " · " + r.getSmoothStop();

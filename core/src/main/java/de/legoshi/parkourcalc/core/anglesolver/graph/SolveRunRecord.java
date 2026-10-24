@@ -24,6 +24,7 @@ public final class SolveRunRecord {
     public static final String STATUS_STOPPED_BEST = "STOPPED_BEST";
     public static final String STATUS_CANCELLED = "CANCELLED";
     public static final String STATUS_FAILED = "FAILED";
+    public static final String STATUS_INFEASIBLE = "INFEASIBLE";
 
     public static final class Metric {
         public String type;

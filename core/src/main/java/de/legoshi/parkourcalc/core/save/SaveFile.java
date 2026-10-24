@@ -169,6 +169,7 @@ public final class SaveFile {
         public String solver;                            // algorithm label, null = legacy save
         public String notice;
         public String noticeLabel;
+        public String verdict;
         public double objectiveValue;
         public boolean hasObjective;
         public String smoothStop;

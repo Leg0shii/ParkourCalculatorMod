@@ -404,6 +404,7 @@ public final class AngleSolverEngine {
         String conflict = firstConflict(uiCons);
         if (conflict != null) {
             SolveResult r = new SolveResult(false, 0, total, startTick + 1, landingTick + 1);
+            r.markCertifiedInfeasible();
             r.setNoticeLabel(INFEASIBLE_LABEL);
             r.setNotice(conflict);
             state.setResult(r);
@@ -1092,17 +1093,31 @@ public final class AngleSolverEngine {
             currentGraphContext = null;
         }
         if (cancel.get()) return null;
-        if (cand == null || cand.yaws == null) {
-            finishRecord(rec, SolveRunRecord.STATUS_FAILED, null, null, null, ctx.chain(), null);
+        String proof = ctx.infeasibilityProof();
+        if (proof != null && cand != null && cand.yaws != null && cand.feasible) {
+            if (SolverTrace.on()) SolverTrace.log("ENGINE", "byte-exact witness overrules the certificate: %s", proof);
+            proof = null;
+        }
+        if (cand == null || cand.yaws == null || proof != null) {
+            finishRecord(rec, proof != null ? SolveRunRecord.STATUS_INFEASIBLE : SolveRunRecord.STATUS_FAILED,
+                    null, null, null, ctx.chain(), null);
             SolveResult fail = failureResult(job, sc, ctx, System.nanoTime() - solveStart);
             if (ctx.chain() != null) fail.setSolver(ctx.chain());
-            if (hasUnsupportedDf(job)) fail.setNotice(DF_UNSUPPORTED_NOTICE);
-            else if (pinnedYaws != null) {
+            if (proof != null) {
+                fail.markCertifiedInfeasible();
+                fail.setNoticeLabel(CERTIFIED_INFEASIBLE_LABEL);
+                fail.setNotice(proof);
+            } else if (hasUnsupportedDf(job)) {
+                fail.setNotice(DF_UNSUPPORTED_NOTICE);
+            } else if (pinnedYaws != null) {
                 fail.setNoticeLabel(OVERCONSTRAINED_LABEL);
                 fail.setNotice(pinnedChainNotice(sc, ctx.violationOf(pinnedYaws), freeBox != null));
             } else if (singleHeading) {
                 fail.setNoticeLabel(OVERCONSTRAINED_LABEL);
                 fail.setNotice(singleHeadingNotice(sc, ctx.closestMiss().violation(), freeBox != null));
+            } else {
+                fail.setNoticeLabel(UNDETERMINED_LABEL);
+                fail.setNotice(UNDETERMINED_NOTICE);
             }
             return new Outcome(fail, null);
         }
@@ -1207,6 +1222,12 @@ public final class AngleSolverEngine {
 
     public static final String OVERCONSTRAINED_LABEL = "Overconstrained";
     public static final String INFEASIBLE_LABEL = "Infeasible constraints";
+    public static final String CERTIFIED_INFEASIBLE_LABEL = "Certified infeasible";
+    public static final String UNDETERMINED_LABEL = "Undetermined";
+    public static final String UNDETERMINED_NOTICE =
+            "The search ran out of budget before it could decide: no path was found, but none was ruled out"
+            + " either. More time (Optimize with a larger time budget) may still find one; only a certified"
+            + " search that exhausts the whole span can rule one out.";
 
     private static String singleHeadingNotice(JumpPhysicsInputs sc, double violation, boolean freeStart) {
         String head = "dF = 0 on every tick ties all " + sc.numTicks + " ticks to one heading, so only that"

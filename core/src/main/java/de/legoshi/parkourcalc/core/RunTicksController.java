@@ -253,12 +253,12 @@ public final class RunTicksController implements RunTicksControls {
         }
         failed.setSolver(cancelRequested ? "Run ticks (cancelled)" : "Run ticks");
         failed.addDetail("Run ticks", cancelRequested
-                ? "Cancelled, path restored" : "No solution, path restored");
+                ? "Cancelled, path restored" : "Not found, path restored");
         failed.addDetail("Jumps solved", furthestDepth + "/" + search.jumpCount());
         addSearchDetails(failed);
         state.setResult(failed);
-        pushMessage.accept((cancelRequested ? "Cancelled · " : "No solution · ")
-                + "path restored", HudMessageStyle.COLOR_DANGER);
+        pushMessage.accept((cancelRequested ? "Cancelled · " : "Not found · ")
+                + "path restored", HudMessageStyle.COLOR_WARN);
     }
 
     private void pollFinalSolve() {

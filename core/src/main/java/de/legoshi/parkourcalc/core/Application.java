@@ -757,8 +757,8 @@ public final class Application {
                 pushHudMessage("Solved · applied", HudMessageStyle.COLOR_OK);
             }
         } else {
-            pushHudMessage("No solution · " + done.getMet() + "/" + done.getTotal() + " constraints met",
-                    HudMessageStyle.COLOR_DANGER);
+            pushHudMessage(done.headline() + " · " + done.getMet() + "/" + done.getTotal() + " constraints met",
+                    done.isCertifiedInfeasible() ? HudMessageStyle.COLOR_DANGER : HudMessageStyle.COLOR_WARN);
         }
     }
 
