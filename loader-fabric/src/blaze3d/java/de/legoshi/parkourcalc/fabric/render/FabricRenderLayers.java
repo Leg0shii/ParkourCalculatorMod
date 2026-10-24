@@ -41,4 +41,34 @@ public final class FabricRenderLayers {
                     .setCullState(RenderStateShard.NO_CULL)
                     .createCompositeState(false)
     );
+
+    public static final RenderType FACE_DEPTH = RenderType.create(
+            "parkourcalc_face_depth",
+            DefaultVertexFormat.POSITION_COLOR,
+            VertexFormat.Mode.QUADS,
+            RenderType.SMALL_BUFFER_SIZE,
+            RenderType.CompositeState.builder()
+                    .setShaderState(RenderStateShard.POSITION_COLOR_SHADER)
+                    .setLayeringState(RenderStateShard.POLYGON_OFFSET_LAYERING)
+                    .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
+                    .setDepthTestState(RenderStateShard.LEQUAL_DEPTH_TEST)
+                    .setWriteMaskState(new RenderStateShard.WriteMaskStateShard(false, true))
+                    .setCullState(RenderStateShard.NO_CULL)
+                    .createCompositeState(false)
+    );
+
+    public static final RenderType CONSTRAINT_FILL = RenderType.create(
+            "parkourcalc_constraint_fill",
+            DefaultVertexFormat.POSITION_COLOR,
+            VertexFormat.Mode.QUADS,
+            RenderType.SMALL_BUFFER_SIZE,
+            RenderType.CompositeState.builder()
+                    .setShaderState(RenderStateShard.POSITION_COLOR_SHADER)
+                    .setLayeringState(RenderStateShard.POLYGON_OFFSET_LAYERING)
+                    .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
+                    .setDepthTestState(RenderStateShard.LEQUAL_DEPTH_TEST)
+                    .setWriteMaskState(new RenderStateShard.WriteMaskStateShard(true, true))
+                    .setCullState(RenderStateShard.NO_CULL)
+                    .createCompositeState(false)
+    );
 }

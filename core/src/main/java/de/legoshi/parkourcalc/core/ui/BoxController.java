@@ -6,7 +6,6 @@ import de.legoshi.parkourcalc.core.render.ConstraintPalette;
 import de.legoshi.parkourcalc.core.render.ConstraintPlate;
 import de.legoshi.parkourcalc.core.render.CountingBoxRenderer;
 import de.legoshi.parkourcalc.core.render.PathVertexLayout;
-import de.legoshi.parkourcalc.core.render.PlateSpan;
 import de.legoshi.parkourcalc.core.render.ReachProbe;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.TickState;
@@ -323,21 +322,6 @@ public final class BoxController {
         CountingBoxRenderer counter = new CountingBoxRenderer(BoxRenderer.Mode.FACES);
         renderConstraints(counter, source, palette, false, 0, 0, 0, Double.POSITIVE_INFINITY);
         return (int) counter.vertexCount();
-    }
-
-    public int constraintFaceSpans(ConstraintBoxSource source, int firstVertex, List<PlateSpan> out) {
-        int vertex = firstVertex;
-        for (int i = 0; i < positions.size(); i++) {
-            for (ConstraintPlate plate : source.platesAt(i)) {
-                double top = Double.NEGATIVE_INFINITY;
-                for (AABB box : plate.front) top = Math.max(top, box.max.y);
-                for (AABB box : plate.back) top = Math.max(top, box.max.y);
-                int count = (plate.front.size() + plate.back.size()) * PathVertexLayout.FACE_VERTS_PER_BOX;
-                if (count > 0) out.add(new PlateSpan(vertex, count, top));
-                vertex += count;
-            }
-        }
-        return vertex - firstVertex;
     }
 
     public int constraintLineVertexCount(ConstraintBoxSource source, ConstraintPalette palette) {

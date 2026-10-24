@@ -10,7 +10,6 @@ import de.legoshi.parkourcalc.core.perf.Perf;
 import de.legoshi.parkourcalc.core.ports.BoxRenderer;
 import de.legoshi.parkourcalc.core.render.PathRenderPlan;
 import de.legoshi.parkourcalc.core.render.PathVertexLayout;
-import de.legoshi.parkourcalc.core.render.PlateSpan;
 import de.legoshi.parkourcalc.core.render.SelectionPatchSpec;
 import de.legoshi.parkourcalc.core.render.TailPatchGate;
 import de.legoshi.parkourcalc.core.sim.TickState;
@@ -26,7 +25,6 @@ import org.joml.Vector4f;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -68,8 +66,6 @@ public final class CachedBoxGeometry implements AutoCloseable {
     private Set<Integer> bakedSelection = new HashSet<>();
     private GpuBufferSlice frameTransforms;
     private int[] frameRuns = new int[0];
-    private double frameCamY;
-    private List<PlateSpan> constraintSpans = Collections.emptyList();
     private boolean frameReady;
 
     private record Segment(GpuBuffer buffer, int vertexCount) {
@@ -77,7 +73,6 @@ public final class CachedBoxGeometry implements AutoCloseable {
 
     public void ensureBuilt(BoxController boxController, PathRenderPlan plan) {
         long rev = boxController.getGeometryRev();
-        constraintSpans = plan.constraintFaceSpans;
         if (built && rev == lastGeometryRev && plan.structuralHash == lastStructuralHash) {
             if (!plan.selection.equals(bakedSelection)) {
                 patchSelection(boxController, plan.selection, plan.patch);
@@ -194,7 +189,7 @@ public final class CachedBoxGeometry implements AutoCloseable {
         subtickStarts = useSubtick ? boxController.subtickVertexStarts() : new int[]{0};
     }
 
-    public void prepareFrame(Matrix4f modelView, int[] runs, double camY) {
+    public void prepareFrame(Matrix4f modelView, int[] runs) {
         if (!built) {
             frameReady = false;
             return;
@@ -206,9 +201,9 @@ public final class CachedBoxGeometry implements AutoCloseable {
                 new Matrix4f()
         );
         frameRuns = runs;
-        frameCamY = camY;
         RenderSystem.getCompiledPipeline(FabricRenderLayers.thinLinesPipeline());
         RenderSystem.getCompiledPipeline(FabricRenderLayers.translucentBoxPipeline());
+        RenderSystem.getCompiledPipeline(FabricRenderLayers.boxDepthPipeline());
         RenderSystem.getCompiledPipeline(FabricRenderLayers.constraintFillPipeline());
         frameReady = true;
     }
@@ -344,8 +339,15 @@ public final class CachedBoxGeometry implements AutoCloseable {
     }
 
     public void drawFaces(RenderPass pass) {
+        drawFaces(pass, FabricRenderLayers.translucentBoxPipeline());
+    }
+
+    public void drawFaceDepth(RenderPass pass) {
+        drawFaces(pass, FabricRenderLayers.boxDepthPipeline());
+    }
+
+    private void drawFaces(RenderPass pass, RenderPipeline pipeline) {
         int[] runs = frameRuns;
-        RenderPipeline pipeline = FabricRenderLayers.translucentBoxPipeline();
         int constraintFaceBase = faceTotal - constraintFaceVerts;
         for (int k = 0; k + 1 < runs.length; k += 2) {
             int a = runs[k];
@@ -365,10 +367,10 @@ public final class CachedBoxGeometry implements AutoCloseable {
         }
     }
 
-    public void drawConstraintFill(RenderPass pass, boolean beforePath) {
-        int base = faceTotal - constraintFaceVerts;
-        PlateSpan.select(constraintSpans, constraintFaceVerts, frameCamY, beforePath, (first, count) ->
-                drawRange(pass, faceSegments, FabricRenderLayers.constraintFillPipeline(), PrimitiveTopology.TRIANGLES, base + first, count));
+    public void drawConstraintFill(RenderPass pass) {
+        if (constraintFaceVerts > 0) {
+            drawRange(pass, faceSegments, FabricRenderLayers.constraintFillPipeline(), PrimitiveTopology.TRIANGLES, faceTotal - constraintFaceVerts, constraintFaceVerts);
+        }
     }
 
     public void drawLines(RenderPass pass) {

@@ -4,9 +4,14 @@ import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
 import com.mojang.renderpearl.api.pipeline.DepthStencilState;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import com.mojang.renderpearl.api.pipeline.CompareOp;
+import com.mojang.renderpearl.api.pipeline.BlendFunction;
+import com.mojang.renderpearl.api.pipeline.ColorTargetState;
+import com.mojang.renderpearl.api.GpuFormat;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.rendertype.RenderSetup;
 import net.minecraft.client.renderer.rendertype.RenderType;
+
+import java.util.Optional;
 
 /**
  * Custom render pipelines for ParkourCalculator's path-box visualization.
@@ -30,6 +35,15 @@ public final class FabricRenderLayers {
                     .withPrimitiveTopology(PrimitiveTopology.TRIANGLES)
                     .withCull(false)
                     .withDepthStencilState(new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false, 1.0F, 10.0F))
+                    .build();
+
+    private static final RenderPipeline BOX_DEPTH_PIPELINE =
+            RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
+                    .withLocation("pipeline/parkourcalc_box_depth")
+                    .withPrimitiveTopology(PrimitiveTopology.TRIANGLES)
+                    .withCull(false)
+                    .withColorTargetState(new ColorTargetState(Optional.of(BlendFunction.TRANSLUCENT), GpuFormat.RGBA8_UNORM, ColorTargetState.WRITE_NONE))
+                    .withDepthStencilState(new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, true, 1.0F, 10.0F))
                     .build();
 
     private static final RenderPipeline THIN_LINES_PIPELINE =
@@ -56,6 +70,10 @@ public final class FabricRenderLayers {
         return TRANSLUCENT_BOX_PIPELINE;
     }
 
+    public static RenderPipeline boxDepthPipeline() {
+        return BOX_DEPTH_PIPELINE;
+    }
+
     public static RenderPipeline thinLinesPipeline() {
         return THIN_LINES_PIPELINE;
     }
@@ -65,7 +83,7 @@ public final class FabricRenderLayers {
                     .withLocation("pipeline/parkourcalc_constraint_fill")
                     .withPrimitiveTopology(PrimitiveTopology.TRIANGLES)
                     .withCull(true)
-                    .withDepthStencilState(new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false, 1.0F, 10.0F))
+                    .withDepthStencilState(new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, true, 1.0F, 10.0F))
                     .build();
 
     public static RenderPipeline constraintFillPipeline() {

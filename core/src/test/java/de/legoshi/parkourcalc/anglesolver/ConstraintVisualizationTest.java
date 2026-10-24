@@ -9,7 +9,6 @@ import de.legoshi.parkourcalc.core.render.ConstraintPlate;
 import de.legoshi.parkourcalc.core.render.ConstraintShapes;
 import de.legoshi.parkourcalc.core.render.ConstraintStyle;
 import de.legoshi.parkourcalc.core.render.PathRenderPlan;
-import de.legoshi.parkourcalc.core.render.PlateSpan;
 import de.legoshi.parkourcalc.core.sim.AABB;
 import de.legoshi.parkourcalc.core.sim.TickState;
 import de.legoshi.parkourcalc.core.sim.Vec3dCore;
@@ -21,7 +20,6 @@ import de.legoshi.parkourcalc.core.ui.WorldPick;
 import de.legoshi.parkourcalc.core.ui.anglesolver.AngleSolverConstraintSource;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -621,53 +619,6 @@ public class ConstraintVisualizationTest {
 
         assertEquals(faces.count, boxes.constraintFaceVertexCount(src, PALETTE));
         assertEquals(lines.count, boxes.constraintLineVertexCount(src, PALETTE));
-    }
-
-    @Test
-    public void plateSpansCoverTheConstraintFacesAndSortByCameraHeight() {
-        AngleSolverState state = new AngleSolverState();
-        BoxController boxes = boxesWith(new Vec3dCore(5.5, 64.0, 8.5), new Vec3dCore(10.0, 64.0, 0.0));
-        state.setFootprint(0, 5 - H, 6 + H, 8 - H, 9 + H);
-        state.tickConstraints(1).getConstraints().add(Constraint.scalar(Constraint.Field.X, Constraint.Op.GT, 5.0));
-        AngleSolverConstraintSource src = source(state, boxes);
-
-        List<PlateSpan> spans = new ArrayList<>();
-        int total = boxes.constraintFaceSpans(src, 0, spans);
-        assertEquals(boxes.constraintFaceVertexCount(src, PALETTE), total);
-        assertEquals(2, spans.size());
-
-        int sliced = 0;
-        for (PlateSpan span : spans) {
-            VertCounter part = new VertCounter(BoxRenderer.Mode.FACES);
-            span.slice(r -> boxes.renderConstraints(r, src, PALETTE, false, 0, 0, 0, Double.POSITIVE_INFINITY)).accept(part);
-            assertEquals(span.vertexCount, part.count);
-            sliced += part.count;
-        }
-        assertEquals(total, sliced);
-
-        List<Integer> before = new ArrayList<>();
-        List<Integer> after = new ArrayList<>();
-        PlateSpan.select(spans, total, 80.0, true, (first, count) -> before.add(count));
-        PlateSpan.select(spans, total, 80.0, false, (first, count) -> after.add(count));
-        assertEquals(2, before.size());
-        assertTrue(after.isEmpty());
-        before.clear();
-        PlateSpan.select(spans, total, 50.0, true, (first, count) -> before.add(count));
-        PlateSpan.select(spans, total, 50.0, false, (first, count) -> after.add(count));
-        assertTrue(before.isEmpty());
-        assertEquals(2, after.size());
-    }
-
-    @Test
-    public void plateSpansThatMissTheCountDrawTheWholeRegionFirst() {
-        List<PlateSpan> stale = Collections.singletonList(new PlateSpan(0, 36, 100.0));
-        List<int[]> before = new ArrayList<>();
-        PlateSpan.select(stale, 72, 0.0, true, (first, count) -> before.add(new int[]{first, count}));
-        assertEquals(1, before.size());
-        assertArrayEquals(new int[]{0, 72}, before.get(0));
-        List<int[]> after = new ArrayList<>();
-        PlateSpan.select(stale, 72, 0.0, false, (first, count) -> after.add(new int[]{first, count}));
-        assertTrue(after.isEmpty());
     }
 
     @Test

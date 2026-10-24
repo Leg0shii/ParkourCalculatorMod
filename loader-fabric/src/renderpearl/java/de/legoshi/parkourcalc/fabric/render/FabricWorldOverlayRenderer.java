@@ -65,7 +65,7 @@ public final class FabricWorldOverlayRenderer {
                 (float) (cached.anchorZ() - cameraPos.z)
         );
         int[] runs = boxController.inRangeRuns(cameraPos.x, cameraPos.y, cameraPos.z, BoxStyle.pathMaxDistanceSq(settings));
-        cached.prepareFrame(modelView, runs, cameraPos.y);
+        cached.prepareFrame(modelView, runs);
         Perf.stop("worldOverlayPrepare", buildStart);
     }
 
@@ -75,10 +75,10 @@ public final class FabricWorldOverlayRenderer {
         }
 
         long renderStart = Perf.now();
-        cached.drawConstraintFill(pass, true);
         cached.drawLines(pass);
         cached.drawFaces(pass);
-        cached.drawConstraintFill(pass, false);
+        cached.drawFaceDepth(pass);
+        cached.drawConstraintFill(pass);
         cached.finishFrame();
 
         Perf.stop("worldOverlay", renderStart);
