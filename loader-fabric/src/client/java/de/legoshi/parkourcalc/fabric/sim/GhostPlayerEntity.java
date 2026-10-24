@@ -3,7 +3,10 @@ package de.legoshi.parkourcalc.fabric.sim;
 import com.mojang.authlib.GameProfile;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 import de.legoshi.parkourcalc.fabric.FabricParkourCalculator;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffect;
@@ -29,17 +32,33 @@ import java.util.Collection;
 //? if >=1.21.2
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @SuppressWarnings("DuplicatedCode")
 public class GhostPlayerEntity extends AbstractClientPlayer {
 
     public final SimulatorInput input = new SimulatorInput();
 
+    private final UUID ownerId;
+    private PlayerInfo ownerInfo;
     private int sprintTriggerTime = 0;
     private boolean crouching;
 
     public GhostPlayerEntity(ClientLevel level, GameProfile profile) {
         super(level, profile);
+        this.ownerId = this.getUUID();
+        this.setUUID(UUID.randomUUID());
+    }
+
+    @Override
+    protected @Nullable PlayerInfo getPlayerInfo() {
+        if (this.ownerInfo == null) {
+            ClientPacketListener connection = Minecraft.getInstance().getConnection();
+            if (connection != null) {
+                this.ownerInfo = connection.getPlayerInfo(this.ownerId);
+            }
+        }
+        return this.ownerInfo;
     }
 
     public void setInput(InputRow row) {
@@ -84,6 +103,16 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
         return true;
     }
 
+    @Override
+    public boolean isCreative() {
+        return false;
+    }
+
+    @Override
+    public boolean isSpectator() {
+        return false;
+    }
+
     *///?}
     //? if >=26.1
     @Override
@@ -97,6 +126,16 @@ public class GhostPlayerEntity extends AbstractClientPlayer {
 
     @Override
     protected void pushEntities() {
+    }
+
+    @Override
+    public boolean isPushable() {
+        return false;
+    }
+
+    @Override
+    public float getViewYRot(float partialTick) {
+        return this.getYRot();
     }
 
     @Override

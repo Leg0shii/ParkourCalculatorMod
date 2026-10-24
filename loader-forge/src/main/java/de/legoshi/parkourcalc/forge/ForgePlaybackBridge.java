@@ -327,6 +327,14 @@ public final class ForgePlaybackBridge implements PlaybackBridge {
     }
 
     @Override
+    public void settleHeadYaw(float previousYaw, float absoluteYaw) {
+        net.minecraft.entity.player.EntityPlayer p = ghostMode ? ghost : McClient.player();
+        if (p == null) return;
+        p.rotationYawHead = absoluteYaw;
+        p.prevRotationYawHead = previousYaw;
+    }
+
+    @Override
     public void setPitch(float absolutePitch) {
         if (ghostMode) {
             if (ghost == null) return;

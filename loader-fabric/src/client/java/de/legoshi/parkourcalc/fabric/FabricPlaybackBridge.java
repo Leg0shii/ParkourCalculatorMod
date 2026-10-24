@@ -519,6 +519,14 @@ public final class FabricPlaybackBridge implements PlaybackBridge {
     }
 
     @Override
+    public void settleHeadYaw(float previousYaw, float absoluteYaw) {
+        net.minecraft.world.entity.player.Player p = ghostMode ? ghost : Minecraft.getInstance().player;
+        if (p == null) return;
+        p.setYHeadRot(absoluteYaw);
+        p.yHeadRotO = previousYaw;
+    }
+
+    @Override
     public void setPitch(float absolutePitch) {
         if (ghostMode) {
             if (ghost == null) return;
