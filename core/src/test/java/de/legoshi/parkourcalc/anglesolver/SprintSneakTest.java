@@ -401,6 +401,21 @@ public class SprintSneakTest {
     }
 
     @Test
+    public void modernGroundDropsAnAxisMoveBelowTheCollideEpsilon() {
+        JumpPhysicsInputs sc = groundSprinting(4);
+        sc.speedAmplifier = new int[]{15, 15, 15, 15};
+        sc.incomingAmp = 15;
+        sc.liveMovementFactor = true;
+        sc.startPos = new Vec3dCore(11.151885314158083, -60.0, 39.06763642897964);
+        sc.initialVelocity = new Vec3dCore(-1.35738099379304E-7, -0.0784000015258789, 0.6128663652503841);
+        double yaw = 7.1525574E-7;
+        ForwardPath p = ExactJumpModel.forMcVersion("26.3").forward(sc, sc.toGameFacings(new double[]{yaw, yaw, yaw, yaw}));
+        assertEquals(11.151885178419983, p.posX[1], 0.0);
+        assertEquals(11.151885178419983, p.posX[4], 0.0);
+        assertEquals(43.557503706141055, p.posZ[4], 0.0);
+    }
+
+    @Test
     public void deriveSeedsAnAirborneSprintStartPerEra() {
         InputData inputs = rows(1);
         BoxController boxes = new BoxController();

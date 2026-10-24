@@ -34,6 +34,7 @@ public final class ExactJumpModel implements ForwardModel {
     private static final double WEAVING_WEB_XZ_SCALE = 0.5;
     private static final double WEAVING_WEB_Y_SCALE = 0.25;
     private static final double DOLPHINS_GRACE_DRAG = (double) 0.96F;
+    private static final double COLLIDE_EPSILON = 1.0E-7;
 
     private static final float SQUARE_DIAG_INPUT = squareDiagInput();
 
@@ -373,9 +374,10 @@ public final class ExactJumpModel implements ForwardModel {
                 vy = 0.0;
                 vz = 0.0;
             } else {
-                posX[t + 1] = posX[t] + vx;
+                boolean shapesBelow = modern && contact && !fluid && !isJumpTick;
+                posX[t + 1] = posX[t] + (shapesBelow && Math.abs(vx) < COLLIDE_EPSILON ? 0.0 : vx);
                 posY[t + 1] = posY[t] + vy;
-                posZ[t + 1] = posZ[t] + vz;
+                posZ[t + 1] = posZ[t] + (shapesBelow && Math.abs(vz) < COLLIDE_EPSILON ? 0.0 : vz);
             }
 
             if (modern && kind == SurfaceKind.LADDER && scenario.jumpAt(t)) {
