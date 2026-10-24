@@ -28,6 +28,7 @@ import imgui.type.ImInt;
 import imgui.type.ImString;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -1728,29 +1729,26 @@ public final class InputOverlay {
         Controls.labelCell(EFFECTS_CLEAR);
         ImGui.tableNextColumn();
         boolean withSelected = selection.size() > 1 && selection.isSelected(rowIndex + 1);
-        int count = withSelected ? 3 : 2;
-        float gap = ImGui.getStyle().getItemSpacing().x;
-        float w = (controlW - (count - 1) * gap) / count;
-        if (!row.hasEffects()) {
-            Controls.disabledButton(EFFECTS_CLEAR_TICK, w);
-        } else if (Controls.dangerButton(EFFECTS_CLEAR_TICK, w)) {
+        String[] labels = withSelected
+                ? new String[]{EFFECTS_CLEAR_TICK, EFFECTS_TO_SELECTED, EFFECTS_CLEAR_ALL}
+                : new String[]{EFFECTS_CLEAR_TICK, EFFECTS_CLEAR_ALL};
+        boolean[] enabled = new boolean[labels.length];
+        Arrays.fill(enabled, true);
+        enabled[0] = row.hasEffects();
+        int pick = SolverWidgets.dangerSegmented("fxclear", labels, enabled, controlW);
+        String target = pick >= 0 ? labels[pick] : null;
+        if (EFFECTS_CLEAR_TICK.equals(target)) {
             row.clearEffects();
             notifyChange(rowIndex);
-        }
-        if (withSelected) {
-            ImGui.sameLine(0, gap);
-            if (Controls.dangerButton(EFFECTS_TO_SELECTED, w)) {
-                int first = rowIndex;
-                for (int i : selection.getSelectedRows()) {
-                    if (i < 0 || i >= data.size()) continue;
-                    data.get(i).clearEffects();
-                    first = Math.min(first, i);
-                }
-                notifyChange(first);
+        } else if (EFFECTS_TO_SELECTED.equals(target)) {
+            int first = rowIndex;
+            for (int i : selection.getSelectedRows()) {
+                if (i < 0 || i >= data.size()) continue;
+                data.get(i).clearEffects();
+                first = Math.min(first, i);
             }
-        }
-        ImGui.sameLine(0, gap);
-        if (Controls.dangerButton(EFFECTS_CLEAR_ALL, w)) {
+            notifyChange(first);
+        } else if (EFFECTS_CLEAR_ALL.equals(target)) {
             for (InputRow other : data.getRows()) other.clearEffects();
             notifyFullResim();
         }
@@ -1770,12 +1768,10 @@ public final class InputOverlay {
     }
 
     private float effectsControlWidth() {
-        String[] targets = {EFFECTS_TO_FOLLOWING, EFFECTS_TO_SELECTED, EFFECTS_TO_ALL};
-        float clearButton = Math.max(Controls.buttonWidth(EFFECTS_CLEAR_TICK),
-                Math.max(Controls.buttonWidth(EFFECTS_TO_SELECTED), Controls.buttonWidth(EFFECTS_CLEAR_ALL)));
-        float clearRow = 3f * clearButton + 2f * ImGui.getStyle().getItemSpacing().x;
-        float w = Math.max(EFFECTS_CONTROL_WIDTH * uiScale(), SolverWidgets.segmentedMinWidth(targets));
-        return Math.max(w, clearRow);
+        String[] copy = {EFFECTS_TO_FOLLOWING, EFFECTS_TO_SELECTED, EFFECTS_TO_ALL};
+        String[] clear = {EFFECTS_CLEAR_TICK, EFFECTS_TO_SELECTED, EFFECTS_CLEAR_ALL};
+        float w = Math.max(SolverWidgets.segmentedMinWidth(copy), SolverWidgets.segmentedMinWidth(clear));
+        return Math.max(EFFECTS_CONTROL_WIDTH * uiScale(), w);
     }
 
     private void effectsSeparator() {
