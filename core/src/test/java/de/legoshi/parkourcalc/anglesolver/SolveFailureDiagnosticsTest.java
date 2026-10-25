@@ -15,6 +15,7 @@ import java.util.function.Consumer;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class SolveFailureDiagnosticsTest {
@@ -124,9 +125,8 @@ public class SolveFailureDiagnosticsTest {
         assertFalse("a wall a hair past the optimum must not solve on FAST", r.isSuccess());
         assertEquals("a hair past the optimum is too close for the capped FAST search to decide, so the honest"
                 + " verdict is undetermined, never infeasible", SolveResult.Verdict.UNDETERMINED, r.getVerdict());
-        assertEquals(AngleSolverEngine.UNDETERMINED_LABEL, r.getNoticeLabel());
-        assertEquals(AngleSolverEngine.UNDETERMINED_NOTICE, r.getNotice());
-        assertEquals("Not found", r.headline());
+        assertNull("an uncertified failure carries no verdict notice", r.getNoticeLabel());
+        assertEquals("No solution", r.headline());
     }
 
     @Test

@@ -99,8 +99,8 @@ anglesolver/
                            closest attempt's values, the dF-band decline, the same-tick conflict; #462
                            the verdict end to end through the engine: the conflict and a wall half a
                            block past the optimum are INFEASIBLE (the latter certified by the B&B in a
-                           handful of nodes), a wall 1e-3 past it is UNDETERMINED with the Undetermined
-                           notice and the "Not found" headline, the dF decline is UNDETERMINED, a solve
+                           handful of nodes), a wall 1e-3 past it is UNDETERMINED with no notice and
+                           the "No solution" headline, the dF decline is UNDETERMINED, a solve
                            is FEASIBLE
   CertifiedBnbEngineTest.java  #422 M2a certified-search gates (VerySlowSolverTests, -PverySlowTests; PRs to main only): all 5 small
                            captures reach certified gap <= 1.5e-4 with dominating bounds and

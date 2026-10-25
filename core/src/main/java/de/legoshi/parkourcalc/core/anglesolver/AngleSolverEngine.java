@@ -1124,9 +1124,6 @@ public final class AngleSolverEngine {
             } else if (singleHeading) {
                 fail.setNoticeLabel(OVERCONSTRAINED_LABEL);
                 fail.setNotice(singleHeadingNotice(sc, ctx.closestMiss().violation(), freeBox != null));
-            } else {
-                fail.setNoticeLabel(UNDETERMINED_LABEL);
-                fail.setNotice(UNDETERMINED_NOTICE);
             }
             return new Outcome(fail, null);
         }
@@ -1237,11 +1234,6 @@ public final class AngleSolverEngine {
     public static final String OVERCONSTRAINED_LABEL = "Overconstrained";
     public static final String INFEASIBLE_LABEL = "Infeasible constraints";
     public static final String CERTIFIED_INFEASIBLE_LABEL = "Certified infeasible";
-    public static final String UNDETERMINED_LABEL = "Undetermined";
-    public static final String UNDETERMINED_NOTICE =
-            "The search ran out of budget before it could decide: no path was found, but none was ruled out"
-            + " either. More time (Optimize with a larger time budget) may still find one; only a certified"
-            + " search that exhausts the whole span can rule one out.";
 
     private static String singleHeadingNotice(JumpPhysicsInputs sc, double violation, boolean freeStart) {
         String head = "dF = 0 on every tick ties all " + sc.numTicks + " ticks to one heading, so only that"

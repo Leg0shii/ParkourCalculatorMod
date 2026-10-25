@@ -222,8 +222,8 @@ _Avoid_: bit-exact (same thing; prefer byte-exact)
 How much room to spare a jump succeeds by. The tool's goal is to certify routes down to a 1e-4 block margin or tighter, the regime where human stratfinding breaks down.
 
 **Verdict**:
-The solver's three-valued answer to a solve. Feasible: a byte-exact witness path meets every constraint (shown as Solved). Undetermined: the search ran out of budget without a witness and without ruling one out (shown as Not found). Certified infeasible: no path exists, backed by a certificate, either two constraints on one tick that exclude each other or the certified search exhausting the whole facing lattice of the span (shown as Infeasible). A search that merely converged or timed out is never infeasible.
-_Avoid_: infeasible or no solution for a search that ran out of budget (say not found)
+The solver's three-valued answer to a solve. Feasible: a byte-exact witness path meets every constraint (shown as Solved). Undetermined: the search ran out of budget without a witness and without ruling one out (shown as No solution, like any failure without a certificate). Certified infeasible: no path exists, backed by a certificate, either two constraints on one tick that exclude each other or the certified search exhausting the whole facing lattice of the span (shown as Infeasible). A search that merely converged or timed out is never infeasible.
+_Avoid_: infeasible for a search that ran out of budget
 
 **Run-up**:
 The movement before takeoff that builds the entry velocity a jump needs. The tool can find the run-up that produces a required velocity.

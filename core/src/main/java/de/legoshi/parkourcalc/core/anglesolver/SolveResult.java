@@ -54,7 +54,7 @@ public final class SolveResult {
 
     public enum Verdict {
         FEASIBLE("Solved"),
-        UNDETERMINED("Not found"),
+        UNDETERMINED("No solution"),
         INFEASIBLE("Infeasible");
 
         public final String headline;
