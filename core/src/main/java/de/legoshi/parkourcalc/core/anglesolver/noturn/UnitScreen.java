@@ -5,6 +5,7 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraint;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpLinearModel;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 final class UnitScreen {
@@ -24,6 +25,11 @@ final class UnitScreen {
     private static final int WINDOW_CELLS = 2;
     private static final int WINDOW_CELLS_MULTI = 4;
     private static final int SWEEP_PASSES = 3;
+    private static final int KINDS = 4;
+    private static final int LE_X = 0;
+    private static final int LE_Z = 1;
+    private static final int GE_X = 2;
+    private static final int GE_Z = 3;
     private static final double[] RESTART_OFFSETS = {0.0, 0.5 * Math.PI, -0.5 * Math.PI, Math.PI};
     private static final double[] STEP_COS = new double[UNIT_STEPS];
     private static final double[] STEP_SIN = new double[UNIT_STEPS];
@@ -51,16 +57,18 @@ final class UnitScreen {
     private final int mainGroup;
     private final int[] groupOf;
     private final int[][] groupTicks;
+    private final int[] order;
+    private final int used;
+    private final int[] kindStart = new int[KINDS];
+    private final int[] kindEnd = new int[KINDS];
+    private final int[][] split;
     private final double[][][] coefWall;
-    private final int[][] affected;
-    private final int[][] unaffected;
+    private final boolean[] wallAxisX;
     private final double[][] runA;
     private final double[][] runB;
     private final double[] shiftBase;
     private final double[] shiftAcc;
     private final double[] shiftNoU;
-    private final boolean[] wallAxisX;
-    private final int[] wallKind;
     private final double[] unitCos;
     private final double[] unitSin;
     private final double[] baseCos;
@@ -97,7 +105,7 @@ final class UnitScreen {
         int[] unitSize = new int[problem.unitCount];
         for (int t = 0; t < n; t++) unitSize[problem.unit[t]]++;
         int[] groupOfUnit = new int[problem.unitCount];
-        java.util.Arrays.fill(groupOfUnit, -1);
+        Arrays.fill(groupOfUnit, -1);
         this.groupOf = new int[n];
         List<List<Integer>> members = new ArrayList<>();
         int openRun = -1;
@@ -128,10 +136,19 @@ final class UnitScreen {
         this.groups = members.size();
         this.mainGroup = problem.mainUnit >= 0 && unitSize[problem.mainUnit] > 1 ? groupOfUnit[problem.mainUnit] : -1;
         int walls = d.byteWalls.size();
+        this.order = sortWalls(d.byteWalls);
+        int usedCount = 0;
+        for (int k = 0; k < KINDS; k++) {
+            kindStart[k] = usedCount;
+            while (usedCount < walls && kindOf(d.byteWalls.get(order[usedCount])) == k) usedCount++;
+            kindEnd[k] = usedCount;
+        }
+        this.used = usedCount;
         this.groupTicks = new int[groups][];
         this.coefWall = new double[groups][walls][];
-        this.affected = new int[groups][];
-        this.unaffected = new int[groups][];
+        this.split = new int[groups][KINDS];
+        this.wallAxisX = new boolean[walls];
+        for (int i = 0; i < walls; i++) wallAxisX[i] = d.byteWalls.get(order[i]).mode == JumpConstraint.Mode.X;
         this.runA = new double[groups][walls];
         this.runB = new double[groups][walls];
         for (int g = 0; g < groups; g++) {
@@ -139,21 +156,26 @@ final class UnitScreen {
             int[] ticks = new int[list.size()];
             for (int i = 0; i < ticks.length; i++) ticks[i] = list.get(i);
             groupTicks[g] = ticks;
-            List<Integer> aff = new ArrayList<>();
-            List<Integer> unaff = new ArrayList<>();
-            for (int wi = 0; wi < walls; wi++) {
-                int wallTick = d.byteWalls.get(wi).t1;
+            boolean[] affects = new boolean[walls];
+            for (int i = 0; i < walls; i++) {
+                int wallTick = d.byteWalls.get(order[i]).t1;
                 double[] cw = new double[ticks.length];
-                boolean any = false;
-                for (int i = 0; i < ticks.length; i++) {
-                    cw[i] = lm.coef(ticks[i], wallTick);
-                    if (cw[i] != 0.0) any = true;
+                for (int j = 0; j < ticks.length; j++) {
+                    cw[j] = lm.coef(ticks[j], wallTick);
+                    if (cw[j] != 0.0) affects[i] = true;
                 }
-                coefWall[g][wi] = cw;
-                (any ? aff : unaff).add(wi);
+                coefWall[g][i] = cw;
             }
-            affected[g] = toArray(aff);
-            unaffected[g] = toArray(unaff);
+            for (int k = 0; k < KINDS; k++) {
+                int first = kindEnd[k];
+                for (int i = kindStart[k]; i < kindEnd[k]; i++) {
+                    if (affects[i]) {
+                        first = i;
+                        break;
+                    }
+                }
+                split[g][k] = first;
+            }
         }
         this.unitCos = new double[groups];
         this.unitSin = new double[groups];
@@ -176,13 +198,30 @@ final class UnitScreen {
         this.shiftBase = new double[walls];
         this.shiftAcc = new double[walls];
         this.shiftNoU = new double[walls];
-        this.wallAxisX = new boolean[walls];
-        this.wallKind = new int[walls];
-        for (int wi = 0; wi < walls; wi++) {
-            JumpConstraint wc = d.byteWalls.get(wi);
-            wallAxisX[wi] = wc.mode == JumpConstraint.Mode.X;
-            wallKind[wi] = wc.cmp == JumpConstraint.Cmp.LE ? 0 : wc.cmp == JumpConstraint.Cmp.GE ? 1 : 2;
-        }
+    }
+
+    private static int kindOf(JumpConstraint wc) {
+        boolean axisX = wc.mode == JumpConstraint.Mode.X;
+        if (wc.cmp == JumpConstraint.Cmp.LE) return axisX ? LE_X : LE_Z;
+        if (wc.cmp == JumpConstraint.Cmp.GE) return axisX ? GE_X : GE_Z;
+        return KINDS;
+    }
+
+    private static int[] sortWalls(List<JumpConstraint> walls) {
+        Integer[] idx = new Integer[walls.size()];
+        for (int i = 0; i < idx.length; i++) idx[i] = i;
+        Arrays.sort(idx, (a, b) -> {
+            int ka = kindOf(walls.get(a));
+            int kb = kindOf(walls.get(b));
+            if (ka != kb) return Integer.compare(ka, kb);
+            int ta = walls.get(a).t1;
+            int tb = walls.get(b).t1;
+            if (ta != tb) return Integer.compare(ta, tb);
+            return Integer.compare(a, b);
+        });
+        int[] out = new int[idx.length];
+        for (int i = 0; i < out.length; i++) out[i] = idx[i];
+        return out;
     }
 
     int groupCount() {
@@ -201,27 +240,17 @@ final class UnitScreen {
         return freeGroups;
     }
 
-    private static int[] toArray(List<Integer> list) {
-        int[] out = new int[list.size()];
-        for (int i = 0; i < out.length; i++) out[i] = list.get(i);
-        return out;
-    }
-
     void computeCoefs(int[] combos, boolean[] sprint) {
         for (int g = 0; g < groups; g++) {
-            int[] aff = affected[g];
-            for (int ai = 0; ai < aff.length; ai++) {
-                int wi = aff[ai];
-                boolean axisX = wallAxisX[wi];
-                StructurePoolDriver.sumAB(axisX ? d.gc : d.gcz, axisX ? d.gs : d.gsz, coefWall[g][wi], groupTicks[g],
-                        combos, sprint, ab);
-                runA[g][wi] = ab[0];
-                runB[g][wi] = ab[1];
-            }
-            int[] unaff = unaffected[g];
-            for (int ui = 0; ui < unaff.length; ui++) {
-                runA[g][unaff[ui]] = 0.0;
-                runB[g][unaff[ui]] = 0.0;
+            int[] sp = split[g];
+            for (int k = 0; k < KINDS; k++) {
+                for (int i = sp[k]; i < kindEnd[k]; i++) {
+                    boolean axisX = wallAxisX[i];
+                    StructurePoolDriver.sumAB(axisX ? d.gc : d.gcz, axisX ? d.gs : d.gsz, coefWall[g][i], groupTicks[g],
+                            combos, sprint, ab);
+                    runA[g][i] = ab[0];
+                    runB[g][i] = ab[1];
+                }
             }
         }
     }
@@ -338,11 +367,11 @@ final class UnitScreen {
                 bestTheta = polish(bestTheta, coarse / 32.0);
             }
             resetShift();
-            viol = descentViol(shiftAcc, null, null, 0.0, 0.0, true);
+            viol = fullViol(true);
         } else {
             linearize();
             solveFrom(bestTheta, 0.0, 0.0, unitCos, unitSin, false, false);
-            viol = descentViol(shiftAcc, null, null, 0.0, 0.0, true);
+            viol = fullViol(true);
         }
         for (int g = 0; g < groups; g++) bestFacing[g] = StrictMath.atan2(unitSin[g], unitCos[g]);
         double dp;
@@ -365,7 +394,7 @@ final class UnitScreen {
         }
         linearize();
         resetShift();
-        double viol = descentViol(shiftAcc, null, null, 0.0, 0.0, true);
+        double viol = fullViol(true);
         ByteForward bf = d.bf;
         for (int t = 0; t < bf.n; t++) bf.wrapped[t] = yawsDeg[t];
         bf.runShifted(dx, dz);
@@ -430,7 +459,6 @@ final class UnitScreen {
 
     private void linearize() {
         ByteForward bf = d.bf;
-        int walls = d.byteWalls.size();
         for (int g = 0; g < groups; g++) {
             baseCos[g] = unitCos[g];
             baseSin[g] = unitSin[g];
@@ -440,9 +468,9 @@ final class UnitScreen {
             bf.wrapped[t] = Angles.wrap(Angles.deg(StrictMath.atan2(baseSin[g], baseCos[g])));
         }
         bf.run();
-        for (int wi = 0; wi < walls; wi++) {
-            JumpConstraint wc = d.byteWalls.get(wi);
-            shiftBase[wi] = wc.rhs - bf.wallPos(wc);
+        for (int i = 0; i < used; i++) {
+            JumpConstraint wc = d.byteWalls.get(order[i]);
+            shiftBase[i] = wc.rhs - bf.wallPos(wc);
         }
         objBase = bf.pos(d.objTick, d.objAxisX);
     }
@@ -463,17 +491,17 @@ final class UnitScreen {
         }
         resetShift();
         sweepGroups(global, fine ? UNIT_LEVELS_FINE : UNIT_LEVELS);
-        return descentViol(shiftAcc, null, null, 0.0, 0.0, false);
+        return fullViol(false);
     }
 
     private void resetShift() {
-        int walls = d.byteWalls.size();
-        for (int wi = 0; wi < walls; wi++) {
-            double sh = shiftBase[wi];
-            for (int g = 0; g < groups; g++) {
-                sh -= runA[g][wi] * (unitCos[g] - baseCos[g]) + runB[g][wi] * (unitSin[g] - baseSin[g]);
-            }
-            shiftAcc[wi] = sh;
+        System.arraycopy(shiftBase, 0, shiftAcc, 0, used);
+        for (int g = 0; g < groups; g++) {
+            double dc = unitCos[g] - baseCos[g];
+            double ds = unitSin[g] - baseSin[g];
+            double[] ua = runA[g];
+            double[] ub = runB[g];
+            for (int i = 0; i < used; i++) shiftAcc[i] -= ua[i] * dc + ub[i] * ds;
         }
     }
 
@@ -493,20 +521,36 @@ final class UnitScreen {
         double[] a2 = runA[g2];
         double[] b2 = runB[g2];
         double bc1 = baseCos[g1], bs1 = baseSin[g1], bc2 = baseCos[g2], bs2 = baseSin[g2];
-        int walls = d.byteWalls.size();
-        for (int wi = 0; wi < walls; wi++) {
-            shiftNoU[wi] = shiftAcc[wi] + a1[wi] * (unitCos[g1] - bc1) + b1[wi] * (unitSin[g1] - bs1)
-                    + a2[wi] * (unitCos[g2] - bc2) + b2[wi] * (unitSin[g2] - bs2);
+        double dc1 = unitCos[g1] - bc1, ds1 = unitSin[g1] - bs1, dc2 = unitCos[g2] - bc2, ds2 = unitSin[g2] - bs2;
+        int[] sp1 = split[g1];
+        int[] sp2 = split[g2];
+        int fromLeX = Math.min(sp1[LE_X], sp2[LE_X]);
+        int fromLeZ = Math.min(sp1[LE_Z], sp2[LE_Z]);
+        int fromGeX = Math.min(sp1[GE_X], sp2[GE_X]);
+        int fromGeZ = Math.min(sp1[GE_Z], sp2[GE_Z]);
+        for (int k = 0; k < KINDS; k++) {
+            int from = Math.min(sp1[k], sp2[k]);
+            for (int i = from; i < kindEnd[k]; i++) {
+                shiftNoU[i] = shiftAcc[i] + a1[i] * dc1 + b1[i] * ds1 + a2[i] * dc2 + b2[i] * ds2;
+            }
         }
-        double bestV = descentViol(shiftAcc, null, null, 0.0, 0.0, false);
+        baseHiX = minPlain(shiftAcc, kindStart[LE_X], fromLeX, d.hiShiftX);
+        baseHiZ = minPlain(shiftAcc, kindStart[LE_Z], fromLeZ, d.hiShiftZ);
+        baseLoX = maxPlain(shiftAcc, kindStart[GE_X], fromGeX, d.loShiftX);
+        baseLoZ = maxPlain(shiftAcc, kindStart[GE_Z], fromGeZ, d.loShiftZ);
+        double bestV = fullViol(false);
         int bi = -1;
         int bj = -1;
-        for (int i = 0; i < UNIT_STEPS; i++) {
-            double dc1 = STEP_COS[i] - bc1;
-            double ds1 = STEP_SIN[i] - bs1;
-            for (int wi = 0; wi < walls; wi++) shiftJoint[wi] = shiftNoU[wi] - a1[wi] * dc1 - b1[wi] * ds1;
-            for (int j = 0; j < UNIT_STEPS; j++) {
-                double v = descentViol(shiftJoint, a2, b2, STEP_COS[j] - bc2, STEP_SIN[j] - bs2, false);
+        for (int i = 0; i < UNIT_STEPS && bestV > 0.0; i++) {
+            double sc1 = STEP_COS[i] - bc1;
+            double ss1 = STEP_SIN[i] - bs1;
+            for (int k = 0; k < KINDS; k++) {
+                int from = Math.min(sp1[k], sp2[k]);
+                for (int w = from; w < kindEnd[k]; w++) shiftJoint[w] = shiftNoU[w] - a1[w] * sc1 - b1[w] * ss1;
+            }
+            for (int j = 0; j < UNIT_STEPS && bestV > 0.0; j++) {
+                double v = jointViolBelow(a2, b2, STEP_COS[j] - bc2, STEP_SIN[j] - bs2,
+                        fromLeX, fromLeZ, fromGeX, fromGeZ, bestV);
                 if (v < bestV) {
                     bestV = v;
                     bi = i;
@@ -519,54 +563,59 @@ final class UnitScreen {
         unitSin[g1] = STEP_SIN[bi];
         unitCos[g2] = STEP_COS[bj];
         unitSin[g2] = STEP_SIN[bj];
-        for (int wi = 0; wi < walls; wi++) {
-            shiftAcc[wi] = shiftNoU[wi] - a1[wi] * (unitCos[g1] - bc1) - b1[wi] * (unitSin[g1] - bs1)
-                    - a2[wi] * (unitCos[g2] - bc2) - b2[wi] * (unitSin[g2] - bs2);
+        double nc1 = unitCos[g1] - bc1, ns1 = unitSin[g1] - bs1, nc2 = unitCos[g2] - bc2, ns2 = unitSin[g2] - bs2;
+        for (int k = 0; k < KINDS; k++) {
+            int from = Math.min(sp1[k], sp2[k]);
+            for (int i = from; i < kindEnd[k]; i++) {
+                shiftAcc[i] = shiftNoU[i] - a1[i] * nc1 - b1[i] * ns1 - a2[i] * nc2 - b2[i] * ns2;
+            }
         }
     }
 
     private boolean sweepOnce(boolean global, int levels) {
         boolean moved = false;
-        int walls = d.byteWalls.size();
         for (int g = 0; g < groups; g++) {
             if (g == mainGroup) continue;
             double[] ua = runA[g];
             double[] ub = runB[g];
+            int[] sp = split[g];
             double bc = baseCos[g];
             double bs = baseSin[g];
             double cc = unitCos[g];
             double cs = unitSin[g];
-            for (int wi = 0; wi < walls; wi++) {
-                shiftNoU[wi] = shiftAcc[wi] + ua[wi] * (cc - bc) + ub[wi] * (cs - bs);
+            double dc0 = cc - bc;
+            double ds0 = cs - bs;
+            for (int k = 0; k < KINDS; k++) {
+                for (int i = sp[k]; i < kindEnd[k]; i++) shiftNoU[i] = shiftAcc[i] + ua[i] * dc0 + ub[i] * ds0;
             }
-            baseNeeds(g);
-            int[] aff = affected[g];
+            baseLoX = maxPlain(shiftAcc, kindStart[GE_X], sp[GE_X], d.loShiftX);
+            baseHiX = minPlain(shiftAcc, kindStart[LE_X], sp[LE_X], d.hiShiftX);
+            baseLoZ = maxPlain(shiftAcc, kindStart[GE_Z], sp[GE_Z], d.loShiftZ);
+            baseHiZ = minPlain(shiftAcc, kindStart[LE_Z], sp[LE_Z], d.hiShiftZ);
             double bestC = cc;
             double bestS = cs;
-            double bestV = affectedViol(aff, ua, ub, cc - bc, cs - bs);
+            double bestV = affectedViol(sp, ua, ub, dc0, ds0);
             if (global) {
-                for (int kk = 0; kk < UNIT_STEPS; kk++) {
-                    double c = STEP_COS[kk];
-                    double s = STEP_SIN[kk];
-                    double v = affectedViol(aff, ua, ub, c - bc, s - bs);
+                for (int kk = 0; kk < UNIT_STEPS && bestV > 0.0; kk++) {
+                    double v = affectedViolBelow(sp, ua, ub, STEP_COS[kk] - bc, STEP_SIN[kk] - bs, bestV);
                     if (v < bestV) {
                         bestV = v;
-                        bestC = c;
-                        bestS = s;
+                        bestC = STEP_COS[kk];
+                        bestS = STEP_SIN[kk];
                     }
                 }
             }
             int maxLevels = Math.min(levels, UNIT_LEVELS_FINE);
-            for (int level = 0; level < maxLevels; level++) {
+            for (int level = 0; level < maxLevels && bestV > 0.0; level++) {
                 double centerC = bestC;
                 double centerS = bestS;
                 double[] rc = REFINE_COS[level];
                 double[] rs = REFINE_SIN[level];
-                for (int j = 0; j <= 2 * UNIT_REFINE; j++) {
+                for (int j = 0; j <= 2 * UNIT_REFINE && bestV > 0.0; j++) {
                     if (j == UNIT_REFINE) continue;
                     double c = centerC * rc[j] - centerS * rs[j];
                     double s = centerS * rc[j] + centerC * rs[j];
-                    double v = affectedViol(aff, ua, ub, c - bc, s - bs);
+                    double v = affectedViolBelow(sp, ua, ub, c - bc, s - bs, bestV);
                     if (v < bestV) {
                         bestV = v;
                         bestC = c;
@@ -577,98 +626,152 @@ final class UnitScreen {
             if (bestC != cc || bestS != cs) moved = true;
             unitCos[g] = bestC;
             unitSin[g] = bestS;
-            for (int wi = 0; wi < walls; wi++) {
-                shiftAcc[wi] = shiftNoU[wi] - ua[wi] * (bestC - bc) - ub[wi] * (bestS - bs);
+            double ndc = bestC - bc;
+            double nds = bestS - bs;
+            for (int k = 0; k < KINDS; k++) {
+                for (int i = sp[k]; i < kindEnd[k]; i++) shiftAcc[i] = shiftNoU[i] - ua[i] * ndc - ub[i] * nds;
             }
         }
         return moved;
     }
 
-    private void baseNeeds(int g) {
-        double needLoX = d.loShiftX, needHiX = d.hiShiftX;
-        double needLoZ = d.loShiftZ, needHiZ = d.hiShiftZ;
-        int[] unaff = unaffected[g];
-        for (int ui = 0; ui < unaff.length; ui++) {
-            int wi = unaff[ui];
-            double shift = shiftNoU[wi];
-            int kind = wallKind[wi];
-            if (kind == 0) {
-                if (wallAxisX[wi]) {
-                    if (shift < needHiX) needHiX = shift;
-                } else {
-                    if (shift < needHiZ) needHiZ = shift;
-                }
-            } else if (kind == 1) {
-                if (wallAxisX[wi]) {
-                    if (shift > needLoX) needLoX = shift;
-                } else {
-                    if (shift > needLoZ) needLoZ = shift;
-                }
-            }
-        }
-        baseLoX = needLoX;
-        baseHiX = needHiX;
-        baseLoZ = needLoZ;
-        baseHiZ = needHiZ;
+    private double affectedViol(int[] sp, double[] ua, double[] ub, double dc, double ds) {
+        double hiX = minAff(shiftNoU, ua, ub, dc, ds, sp[LE_X], kindEnd[LE_X], baseHiX);
+        double hiZ = minAff(shiftNoU, ua, ub, dc, ds, sp[LE_Z], kindEnd[LE_Z], baseHiZ);
+        double loX = maxAff(shiftNoU, ua, ub, dc, ds, sp[GE_X], kindEnd[GE_X], baseLoX);
+        double loZ = maxAff(shiftNoU, ua, ub, dc, ds, sp[GE_Z], kindEnd[GE_Z], baseLoZ);
+        return Math.max(0.0, Math.max(loX - hiX, loZ - hiZ));
     }
 
-    private double affectedViol(int[] aff, double[] ua, double[] ub, double dc, double ds) {
-        double needLoX = baseLoX, needHiX = baseHiX;
-        double needLoZ = baseLoZ, needHiZ = baseHiZ;
-        for (int ai = 0; ai < aff.length; ai++) {
-            int wi = aff[ai];
-            double shift = shiftNoU[wi] - ua[wi] * dc - ub[wi] * ds;
-            int kind = wallKind[wi];
-            if (kind == 0) {
-                if (wallAxisX[wi]) {
-                    if (shift < needHiX) needHiX = shift;
-                } else {
-                    if (shift < needHiZ) needHiZ = shift;
-                }
-            } else if (kind == 1) {
-                if (wallAxisX[wi]) {
-                    if (shift > needLoX) needLoX = shift;
-                } else {
-                    if (shift > needLoZ) needLoZ = shift;
-                }
-            }
-        }
-        double vx = needLoX - needHiX;
-        double vz = needLoZ - needHiZ;
-        return Math.max(0.0, Math.max(vx, vz));
+    private double affectedViolBelow(int[] sp, double[] ua, double[] ub, double dc, double ds, double bound) {
+        double hiX = minAffBelow(shiftNoU, ua, ub, dc, ds, sp[LE_X], kindEnd[LE_X], baseHiX, baseLoX, bound);
+        if (hiX != hiX) return Double.POSITIVE_INFINITY;
+        double loX = maxAffBelow(shiftNoU, ua, ub, dc, ds, sp[GE_X], kindEnd[GE_X], baseLoX, hiX, bound);
+        if (loX != loX) return Double.POSITIVE_INFINITY;
+        double hiZ = minAffBelow(shiftNoU, ua, ub, dc, ds, sp[LE_Z], kindEnd[LE_Z], baseHiZ, baseLoZ, bound);
+        if (hiZ != hiZ) return Double.POSITIVE_INFINITY;
+        double loZ = maxAffBelow(shiftNoU, ua, ub, dc, ds, sp[GE_Z], kindEnd[GE_Z], baseLoZ, hiZ, bound);
+        if (loZ != loZ) return Double.POSITIVE_INFINITY;
+        return Math.max(0.0, Math.max(loX - hiX, loZ - hiZ));
     }
 
-    private double descentViol(double[] shiftNoU, double[] ua, double[] ub, double dc, double ds, boolean writeWitness) {
-        double needLoX = d.loShiftX, needHiX = d.hiShiftX;
-        double needLoZ = d.loShiftZ, needHiZ = d.hiShiftZ;
-        int walls = d.byteWalls.size();
-        for (int wi = 0; wi < walls; wi++) {
-            double shift = shiftNoU[wi];
-            if (ua != null) shift -= ua[wi] * dc + ub[wi] * ds;
-            int kind = wallKind[wi];
-            if (kind == 0) {
-                if (wallAxisX[wi]) {
-                    if (shift < needHiX) needHiX = shift;
-                } else {
-                    if (shift < needHiZ) needHiZ = shift;
-                }
-            } else if (kind == 1) {
-                if (wallAxisX[wi]) {
-                    if (shift > needLoX) needLoX = shift;
-                } else {
-                    if (shift > needLoZ) needLoZ = shift;
-                }
-            }
-        }
-        double vx = needLoX - needHiX;
-        double vz = needLoZ - needHiZ;
-        double viol = Math.max(0.0, Math.max(vx, vz));
+    private double jointViolBelow(double[] ua, double[] ub, double dc, double ds, int fromLeX, int fromLeZ,
+                                  int fromGeX, int fromGeZ, double bound) {
+        double hiX = minJointBelow(shiftJoint, ua, ub, dc, ds, fromLeX, kindEnd[LE_X], baseHiX, baseLoX, bound);
+        if (hiX != hiX) return Double.POSITIVE_INFINITY;
+        double loX = maxJointBelow(shiftJoint, ua, ub, dc, ds, fromGeX, kindEnd[GE_X], baseLoX, hiX, bound);
+        if (loX != loX) return Double.POSITIVE_INFINITY;
+        double hiZ = minJointBelow(shiftJoint, ua, ub, dc, ds, fromLeZ, kindEnd[LE_Z], baseHiZ, baseLoZ, bound);
+        if (hiZ != hiZ) return Double.POSITIVE_INFINITY;
+        double loZ = maxJointBelow(shiftJoint, ua, ub, dc, ds, fromGeZ, kindEnd[GE_Z], baseLoZ, hiZ, bound);
+        if (loZ != loZ) return Double.POSITIVE_INFINITY;
+        return Math.max(0.0, Math.max(loX - hiX, loZ - hiZ));
+    }
+
+    private double fullViol(boolean writeWitness) {
+        double hiX = minPlain(shiftAcc, kindStart[LE_X], kindEnd[LE_X], d.hiShiftX);
+        double hiZ = minPlain(shiftAcc, kindStart[LE_Z], kindEnd[LE_Z], d.hiShiftZ);
+        double loX = maxPlain(shiftAcc, kindStart[GE_X], kindEnd[GE_X], d.loShiftX);
+        double loZ = maxPlain(shiftAcc, kindStart[GE_Z], kindEnd[GE_Z], d.loShiftZ);
+        double viol = Math.max(0.0, Math.max(loX - hiX, loZ - hiZ));
         if (writeWitness) {
-            bestLoX = needLoX;
-            bestHiX = needHiX;
-            bestLoZ = needLoZ;
-            bestHiZ = needHiZ;
+            bestLoX = loX;
+            bestHiX = hiX;
+            bestLoZ = loZ;
+            bestHiZ = hiZ;
         }
         return viol;
+    }
+
+    private static double minPlain(double[] shift, int from, int to, double init) {
+        double m = init;
+        for (int i = from; i < to; i++) {
+            double s = shift[i];
+            if (s < m) m = s;
+        }
+        return m;
+    }
+
+    private static double maxPlain(double[] shift, int from, int to, double init) {
+        double m = init;
+        for (int i = from; i < to; i++) {
+            double s = shift[i];
+            if (s > m) m = s;
+        }
+        return m;
+    }
+
+    private static double minAff(double[] shift, double[] ua, double[] ub, double dc, double ds, int from, int to,
+                                 double init) {
+        double m = init;
+        for (int i = from; i < to; i++) {
+            double s = shift[i] - ua[i] * dc - ub[i] * ds;
+            if (s < m) m = s;
+        }
+        return m;
+    }
+
+    private static double maxAff(double[] shift, double[] ua, double[] ub, double dc, double ds, int from, int to,
+                                 double init) {
+        double m = init;
+        for (int i = from; i < to; i++) {
+            double s = shift[i] - ua[i] * dc - ub[i] * ds;
+            if (s > m) m = s;
+        }
+        return m;
+    }
+
+    private static double minAffBelow(double[] shift, double[] ua, double[] ub, double dc, double ds, int from, int to,
+                                      double init, double lo, double bound) {
+        double m = init;
+        for (int i = from; i < to; i++) {
+            double s = shift[i] - ua[i] * dc - ub[i] * ds;
+            if (s < m) {
+                m = s;
+                if (lo - m >= bound) return Double.NaN;
+            }
+        }
+        return m;
+    }
+
+    private static double maxAffBelow(double[] shift, double[] ua, double[] ub, double dc, double ds, int from, int to,
+                                      double init, double hi, double bound) {
+        double m = init;
+        for (int i = from; i < to; i++) {
+            double s = shift[i] - ua[i] * dc - ub[i] * ds;
+            if (s > m) {
+                m = s;
+                if (m - hi >= bound) return Double.NaN;
+            }
+        }
+        return m;
+    }
+
+    private static double minJointBelow(double[] shift, double[] ua, double[] ub, double dc, double ds, int from,
+                                        int to, double init, double lo, double bound) {
+        double m = init;
+        for (int i = from; i < to; i++) {
+            double s = shift[i];
+            s -= ua[i] * dc + ub[i] * ds;
+            if (s < m) {
+                m = s;
+                if (lo - m >= bound) return Double.NaN;
+            }
+        }
+        return m;
+    }
+
+    private static double maxJointBelow(double[] shift, double[] ua, double[] ub, double dc, double ds, int from,
+                                        int to, double init, double hi, double bound) {
+        double m = init;
+        for (int i = from; i < to; i++) {
+            double s = shift[i];
+            s -= ua[i] * dc + ub[i] * ds;
+            if (s > m) {
+                m = s;
+                if (m - hi >= bound) return Double.NaN;
+            }
+        }
+        return m;
     }
 }

@@ -346,6 +346,7 @@ public class NoTurnColdBench {
                     drv.pool().size(), r != null));
             certifyStats("pool");
             if (Boolean.getBoolean("pkc.bench.dumpPool")) dumpPool(drv);
+            if (Boolean.getBoolean("pkc.bench.rankProbe")) rankProbe(drv, p, model, cfg, cancel);
             describe("pool", r, humanCombos);
             if (r != null) found = r;
             if (r == null && driver.equals("ingame")) {
@@ -532,6 +533,46 @@ public class NoTurnColdBench {
         de.legoshi.parkourcalc.core.anglesolver.solver.Objective shifted =
                 new de.legoshi.parkourcalc.core.anglesolver.solver.Objective(o.axis, o.sense, o.tick >= at + k ? o.tick - k : o.tick);
         return new JumpSpec(out, cons, shifted);
+    }
+
+    private void rankProbe(StructurePoolDriver drv, NoTurnProblem p, ExactJumpModel model,
+                           StructurePoolDriver.Config cfg, AtomicBoolean cancel) throws Exception {
+        List<StructurePoolDriver.Candidate> ranked = drv.rankedPool();
+        int top = Math.min(ranked.size(), Integer.getInteger("pkc.bench.probeTop", 400));
+        long budget = Long.getLong("pkc.bench.probeMs", 500L) * 1_000_000L;
+        int threads = cfg.threads > 0 ? cfg.threads : autoThreads();
+        java.util.concurrent.ExecutorService exec = java.util.concurrent.Executors.newFixedThreadPool(threads);
+        ThreadLocal<StructurePoolDriver> local = ThreadLocal.withInitial(() -> {
+            StructurePoolDriver w = new StructurePoolDriver(model, cfg, cancel, null);
+            w.prepare(p);
+            return w;
+        });
+        line("PROBE top=" + top + " of " + ranked.size() + " budgetMs=" + budget / 1_000_000L + " threads=" + threads);
+        List<java.util.concurrent.Future<String>> futures = new ArrayList<>();
+        for (int i = 0; i < top; i++) {
+            final int rank = i;
+            final StructurePoolDriver.Candidate c = ranked.get(i);
+            futures.add(exec.submit(() -> {
+                JumpSpec spec = p.buildSpec(c.combos, c.sprint, cfg.turnCombo, false);
+                double[] sv = de.legoshi.parkourcalc.core.anglesolver.noturn.fastcheck.ThetaSweepAirSlp.sweepViolations(spec, model);
+                int bi = 0;
+                for (int k = 1; k < sv.length; k++) if (sv[k] < sv[bi]) bi = k;
+                double[] se = local.get().screenExact(c.combos, c.sprint, c.diskTheta);
+                long t0 = System.nanoTime();
+                NoTurnCertifier.Result cr = new NoTurnCertifier(model, cfg.playable).certifySearch(spec, budget, cancel);
+                double ms = (System.nanoTime() - t0) / 1e6;
+                return String.format(Locale.ROOT,
+                        "PROBE rank=%d tier=%d presses=%d byteViol=%.6f sweepViol=%.6f sweepTheta=%.1f exactViol=%.6f feasible=%s ms=%.0f engage=%d keys=[%s]",
+                        rank, drv.tierOf(c), c.presses, c.byteViol, sv[bi],
+                        de.legoshi.parkourcalc.core.anglesolver.noturn.fastcheck.ThetaSweepAirSlp.thetaOf(bi), se[0],
+                        cr != null && cr.feasible, ms, c.engage, NoTurnKeys.describe(c.combos));
+            }));
+        }
+        try {
+            for (java.util.concurrent.Future<String> f : futures) line(f.get());
+        } finally {
+            exec.shutdownNow();
+        }
     }
 
     private void dumpPool(StructurePoolDriver drv) {
