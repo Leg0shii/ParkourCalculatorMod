@@ -780,7 +780,7 @@ public final class AngleSolverTable {
             specs.add(new StateChipSpec(DragKind.STATE_MEDIUM, null, "Medium", mediumLabel, false));
         }
         if (ov.overridesDamage()) {
-            specs.add(new StateChipSpec(DragKind.STATE_DAMAGE, null, "Damage", "fall", false));
+            specs.add(new StateChipSpec(DragKind.STATE_DAMAGE, null, "Damage", "Fall", false));
         }
         for (PotionDose d : ov.getAdded()) {
             specs.add(new StateChipSpec(DragKind.STATE_ADD, d.potion, "Potion", "+" + d.potion.label + amp(d.level), false));
