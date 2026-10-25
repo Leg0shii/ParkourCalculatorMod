@@ -113,6 +113,14 @@ public final class StrafeSideRealization {
         return out;
     }
 
+    public static double[] solverYaws(double[] realizedYaws, int[] sides, int base) {
+        double[] out = new double[realizedYaws.length];
+        for (int t = 0; t < out.length; t++) {
+            out[t] = sides[t] == base ? realizedYaws[t] : Angles.wrap(realizedYaws[t] + SIDE_SHIFT_DEG * base);
+        }
+        return out;
+    }
+
     public static double wiggle(double[] yaws, double anchor, boolean freeStartYaw) {
         return freeStartYaw ? Angles.wiggleDeg(yaws[0], yaws) : Angles.wiggleDeg(anchor, yaws);
     }

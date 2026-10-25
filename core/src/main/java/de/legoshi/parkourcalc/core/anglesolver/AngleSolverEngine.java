@@ -600,7 +600,12 @@ public final class AngleSolverEngine {
         Job job = buildJob(effort, BuiltinGraphs.smooth(state.getSmoothGiveBack()));
         if (job == null) return;
         if (job.deadlineNanos <= 0) job = job.withDeadline(SMOOTH_BUTTON_BUDGET_NANOS);
-        job.incumbentYaws = base.solverYaws.clone();
+        if (base.strafeSigns != null) {
+            job.spec.asScenario().strafeSignPerTick = base.strafeSigns.clone();
+            job.incumbentYaws = base.yaws.clone();
+        } else {
+            job.incumbentYaws = base.solverYaws.clone();
+        }
         job.incumbentStart = base.start;
         start(job, effort);
     }
@@ -1170,7 +1175,7 @@ public final class AngleSolverEngine {
         ForwardPath path = realized ? sides.path : solverPath;
         SolveResult result = assembleResult(job, yaws, gameFacings, path, solverName, solveNanos, dualGap);
         addSmoothingDetails(result, job, ctx.smoothOutcome());
-        addStrafeSideDetails(result, sides);
+        addStrafeSideDetails(result, sides, sc);
         if (job.legalGoal != null) {
             double achieved = spec.objective.evaluate(path);
             double shortfall = spec.objective.sense == Objective.Sense.MAX
@@ -1192,12 +1197,25 @@ public final class AngleSolverEngine {
 
     private StrafeSideRealization realizeStrafeSides(Job job, JumpSpec spec, double[] yaws, double[] gameFacings,
                                                      ForwardPath path) {
-        if (!job.bothStrafeSides) return null;
+        if (!job.bothStrafeSides || isSmoothJob(job)) return null;
         if (JumpConstraintCompiler.compile(spec).maxViolation(gameFacings, path) > FEAS_TOL) return null;
         return StrafeSideRealization.realize(model, spec, yaws, path, job.freeStartYaw, FEAS_TOL, !job.stopOnFeasible);
     }
 
-    private static void addStrafeSideDetails(SolveResult result, StrafeSideRealization sides) {
+    private static void addStrafeSideDetails(SolveResult result, StrafeSideRealization sides, JumpPhysicsInputs sc) {
+        int[] framed = sc.strafeSignPerTick;
+        if (sides == null && framed != null) {
+            int other = 0;
+            for (int side : framed) {
+                if (side != sc.strafeSign) other++;
+            }
+            String baseKey = sc.strafeSign > 0 ? "A" : "D";
+            String otherKey = sc.strafeSign > 0 ? "D" : "A";
+            result.setStrafeSides(framed.clone());
+            result.addDetail("Strafe sides", otherKey + " on " + other + " of " + framed.length + " ticks, "
+                    + baseKey + " on " + (framed.length - other) + " (kept from the solve)");
+            return;
+        }
         if (sides == null) return;
         if (!sides.verified) {
             result.addDetail("Strafe sides", "one side (the other side missed the byte-exact check)");
@@ -1235,6 +1253,12 @@ public final class AngleSolverEngine {
     private static Plan planOf(Job job, double[] yaws, StrafeSideRealization sides, ForwardPath path,
                                JumpPhysicsInputs sc, boolean lockYaws) {
         boolean realized = sides != null && sides.verified;
+        int[] framed = sc.strafeSignPerTick;
+        if (!realized && framed != null) {
+            return new Plan(job.startTick, yaws, StrafeSideRealization.solverYaws(yaws, framed, sc.strafeSign),
+                    job.strafeMask, job.force45Mask, sc.strafeSign, framed, path, sc.startPos, lockYaws,
+                    job.freeStartYaw);
+        }
         return new Plan(job.startTick, realized ? sides.yaws : yaws, yaws, job.strafeMask, job.force45Mask,
                 sc.strafeSign, realized ? sides.sides : null, realized ? sides.path : path, sc.startPos, lockYaws,
                 job.freeStartYaw);
@@ -1357,7 +1381,7 @@ public final class AngleSolverEngine {
         SolveResult result = assembleResult(job, yaws, realized ? sides.gameFacings : gameFacings,
                 realized ? sides.path : path, name, System.nanoTime() - startNanos, Double.NaN);
         result.addDetail("Stopped early", "kept best found");
-        addStrafeSideDetails(result, sides);
+        addStrafeSideDetails(result, sides, sc);
         return new Outcome(result, planOf(job, yaws, sides, path, sc, false));
     }
 

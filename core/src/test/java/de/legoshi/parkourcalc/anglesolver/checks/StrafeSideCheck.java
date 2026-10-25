@@ -92,6 +92,46 @@ final class StrafeSideCheck implements ProblemCheck {
         }
         oneSide(pf, AngleSolverState.StrafeSide.A);
         oneSide(pf, AngleSolverState.StrafeSide.D);
+        smoothKeepsTheKeys(pf);
+    }
+
+    private static void smoothKeepsTheKeys(ProblemFixture pf) {
+        String name = pf.name + " smoothed on Both";
+        ProblemFixture.Rig rig = pf.rig();
+        rig.state.setStrafeSide(AngleSolverState.StrafeSide.BOTH);
+        SolveResult solved = rig.solve(SolveCheck.timeout(pf)).result;
+        assertNotNull(name + ": no result after solve", solved);
+        assertTrue(name + ": the solve did not land", solved.isSuccess());
+        rig.engine.apply();
+        int startTick = solved.getStartTick() - 1;
+        int n = rig.state.getLandingTick() - rig.state.getStartTick();
+        String before = strafeKeys(rig.inputs.getRows(), startTick, n);
+        assertTrue(name + ": nothing to smooth", rig.engine.canSmooth());
+        rig.engine.smooth();
+        long deadline = System.currentTimeMillis() + SolveCheck.timeout(pf);
+        while (rig.state.getResult() == null && System.currentTimeMillis() < deadline) {
+            rig.engine.poll();
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        rig.engine.poll();
+        SolveResult smoothed = rig.state.getResult();
+        assertNotNull(name + ": no smoothed result", smoothed);
+        assertTrue(name + ": smoothing lost the landing", smoothed.isSuccess());
+        rig.engine.apply();
+        assertEquals(name + ": Smooth changed the A/D keys", before, strafeKeys(rig.inputs.getRows(), startTick, n));
+    }
+
+    private static String strafeKeys(List<InputRow> rows, int startTick, int n) {
+        StringBuilder keys = new StringBuilder();
+        for (int k = 0; k < n; k++) {
+            InputRow row = rows.get(startTick + k);
+            keys.append(row.isKeyActive(InputRow.Key.A) ? 'A' : row.isKeyActive(InputRow.Key.D) ? 'D' : '-');
+        }
+        return keys.toString();
     }
 
     private static void oneSide(ProblemFixture pf, AngleSolverState.StrafeSide side) {
