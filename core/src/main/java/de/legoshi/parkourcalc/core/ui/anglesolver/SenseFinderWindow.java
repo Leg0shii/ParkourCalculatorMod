@@ -350,7 +350,7 @@ public final class SenseFinderWindow implements RenderInterface {
                 ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowItemOverlap, 0f, rowH)) {
             host.select(c);
         }
-        if (ImGui.isItemHovered()) TooltipUtil.wrappedTooltip(rowTip(c));
+        boolean rowHovered = ImGui.isItemHovered();
         ImGui.tableSetColumnIndex(1);
         ThemeManager.textRight(senseText(c.sens) + "%");
         ImGui.tableSetColumnIndex(2);
@@ -359,17 +359,19 @@ public final class SenseFinderWindow implements RenderInterface {
         ThemeManager.textRight(c.weakestTick() < 0 ? "-" : c.marginsComplete() ? marginText(c.totalTarget()) : "...");
         if (game) ThemeManager.popTextColor();
         int weakest = c.weakestTick();
+        boolean cellTip = false;
         for (int k = 0; k < c.pixels.length; k++) {
             ImGui.tableSetColumnIndex(4 + k);
-            cell(c, k, k == weakest && c.marginsComplete());
+            cellTip |= cell(c, k, k == weakest && c.marginsComplete());
         }
+        if (rowHovered && !cellTip) TooltipUtil.wrappedTooltip(rowTip(c));
     }
 
-    private static void cell(SenseFinder.Candidate c, int k, boolean weakest) {
+    private static boolean cell(SenseFinder.Candidate c, int k, boolean weakest) {
         if (weakest) ThemeManager.pushTextColor(ThemeManager.warningColor());
         ImGui.text(!c.scoped[k] ? " " : c.hasMargin(k) ? rangeText(c.landingRange(k)) : "...");
         if (weakest) ThemeManager.popTextColor();
-        if (!ImGui.isItemHovered()) return;
+        if (!ImGui.isItemHovered()) return false;
         ImGui.beginTooltip();
         if (ImGui.beginTable("##cell_tip", 2)) {
             if (c.hasMargin(k)) {
@@ -383,6 +385,7 @@ public final class SenseFinderWindow implements RenderInterface {
             ImGui.endTable();
         }
         ImGui.endTooltip();
+        return true;
     }
 
     private static void tipHeading(String label) {
