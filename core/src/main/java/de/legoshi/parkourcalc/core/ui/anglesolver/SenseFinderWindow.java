@@ -101,8 +101,8 @@ public final class SenseFinderWindow implements RenderInterface {
     private static final String COL_SENSE = "Sense";
     private static final String COL_OFFSET = "Offset";
     private static final String COL_MARGIN = "Margin";
-    private static final String MARGIN_TIP = "How many pixel counts still land at this tick while the rest of the jump"
-            + " adapts, the turn in degrees, and that landing target in degrees. Orange is the row's smallest target.";
+    private static final String MARGIN_TIP = "The pixel counts that still land at this tick while the rest of the jump"
+            + " adapts. Hover a cell for the turn and the landing target. Orange is the row's smallest target.";
 
     private final Host host;
     private final Settings settings;
@@ -268,7 +268,7 @@ public final class SenseFinderWindow implements RenderInterface {
         float senseW = ImGui.calcTextSize("199.99%").x;
         float offW = ImGui.calcTextSize("+" + ConstraintText.fixedStat(9.0)).x;
         float marginW = ImGui.calcTextSize("99.999°").x;
-        float tickW = ImGui.calcTextSize("-9999 px").x + 2f * ImGui.getStyle().getCellPaddingX();
+        float tickW = ImGui.calcTextSize("[-9999, -9999]").x + 2f * ImGui.getStyle().getCellPaddingX();
         float mark = ImGui.getFontSize() * 0.7f;
         ImGui.tableSetupColumn("#", fixed, ThemeManager.tableLeftmostColumnWidth("#", rankW));
         ImGui.tableSetupColumn(COL_SENSE, fixed, ThemeManager.tableNumericColumnWidth(COL_SENSE, senseW) + mark);
@@ -279,7 +279,7 @@ public final class SenseFinderWindow implements RenderInterface {
             ImGui.tableSetupColumn("T" + (startTick + turn.turnTicks[k] + 1), fixed, tickW);
         }
         header(ticks);
-        float rowH = 3f * ImGui.getTextLineHeight() + 2f * ImGui.getStyle().getItemSpacingY();
+        float rowH = ImGui.getTextLineHeight();
         SenseFinder.Candidate game = host.gameRow();
         if (host.searchedGameSense()) {
             if (game == null) gameMissRow();
@@ -364,17 +364,22 @@ public final class SenseFinderWindow implements RenderInterface {
     }
 
     private static void cell(SenseFinder.Candidate c, int k, boolean weakest) {
-        ImGui.text(!c.scoped[k] ? " " : c.hasMargin(k) ? c.landingPixels(k) + " px" : "...");
-        ThemeManager.pushTextColor(ThemeManager.textDimColor());
-        ImGui.text(String.format(Locale.ROOT, "%.2f°", c.turnDeg(k)));
-        ThemeManager.popTextColor();
-        ThemeManager.pushTextColor(weakest ? ThemeManager.warningColor() : ThemeManager.textDimColor());
-        ImGui.text(!c.scoped[k] ? " " : c.hasMargin(k) ? marginText(c.target(k)) : "...");
-        ThemeManager.popTextColor();
-        if (ImGui.isItemHovered() && c.hasMargin(k)) {
-            TooltipUtil.wrappedTooltip(String.format(Locale.ROOT, "%d pixel counts land here: a %s target.",
-                    c.landingPixels(k), marginText(c.target(k))));
+        if (weakest) ThemeManager.pushTextColor(ThemeManager.warningColor());
+        ImGui.text(!c.scoped[k] ? " " : c.hasMargin(k) ? rangeText(c.landingRange(k)) : "...");
+        if (weakest) ThemeManager.popTextColor();
+        if (!ImGui.isItemHovered()) return;
+        String turn = String.format(Locale.ROOT, "Turn: %d px, %.2f°", c.pixels[k], c.turnDeg(k));
+        if (!c.hasMargin(k)) {
+            TooltipUtil.wrappedTooltip(turn);
+            return;
         }
+        TooltipUtil.wrappedTooltip(String.format(Locale.ROOT, "Landing pixels: %s (%d)\n%s\nLanding target: %s",
+                rangeText(c.landingRange(k)), c.landingPixels(k), turn, marginText(c.target(k))));
+    }
+
+    private static String rangeText(long[] range) {
+        if (range[0] == range[1]) return Long.toString(range[0]);
+        return "[" + range[0] + ", " + range[1] + "]";
     }
 
     private static String marginText(double target) {

@@ -220,6 +220,11 @@ public final class SenseFinder {
         }
 
         public int landingPixels(int k) {
+            long[] range = landingRange(k);
+            return (int) (range[1] - range[0] + 1L);
+        }
+
+        public long[] landingRange(int k) {
             int tick = ticks[k];
             double before = facingBefore(yaws, startYaw, tick);
             double facing = before + Angles.wrapDelta(yaws[tick] - before);
@@ -227,7 +232,8 @@ public final class SenseFinder {
             double hi = facing + above[k] - before;
             long first = (long) Math.ceil(lo / pixelDeg - 1.0e-9);
             long last = (long) Math.floor(hi / pixelDeg + 1.0e-9);
-            return (int) Math.max(1L, last - first + 1L);
+            if (last < first) return new long[] {pixels[k], pixels[k]};
+            return new long[] {first, last};
         }
 
         public double target(int k) {
