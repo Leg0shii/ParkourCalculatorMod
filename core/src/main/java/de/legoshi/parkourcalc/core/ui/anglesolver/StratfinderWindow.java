@@ -90,35 +90,35 @@ public final class StratfinderWindow implements RenderInterface {
 
     private static final String WINDOW_ID = "###stratfinder";
     private static final String TITLE = "Stratfinder";
-    private static final String SUBTITLE = "no-turn lines";
-    private static final String TABLE_ID = "##stratfinder_lines";
+    private static final String SUBTITLE = "no-turn strats";
+    private static final String TABLE_ID = "##stratfinder_strats";
     private static final String COL_RANK = "#";
     private static final String COL_INPUTS = "Inputs";
     private static final String COL_SPRINT = "Sprint";
     private static final String COL_OFFSET = "Offset";
     private static final String COL_KEYS = "Keys";
-    private static final String SEARCH_TIP = "Cold search over key schedules for a byte-exact no-turn line: one"
+    private static final String SEARCH_TIP = "Cold search over key schedules for a byte-exact no-turn strat: one"
             + " settable facing across the run-up, then the turn. Mark the no-turn ticks with dF = 0, set the landing"
-            + " constraints, the jump rows and a free-start box. Lines appear while the search runs; click one to"
+            + " constraints, the jump rows and a free-start box. Strats appear while the search runs; click one to"
             + " apply it.";
-    private static final String OPTIMIZE_TIP = "Optimize every line that has not been optimized yet for the budget."
-            + " During a search this stops the search first and optimizes the lines found so far. The selected line"
+    private static final String OPTIMIZE_TIP = "Optimize every strat that has not been optimized yet for the budget."
+            + " During a search this stops the search first and optimizes the strats found so far. The selected strat"
             + " is re-applied when it improves.";
-    private static final String BUDGET_TIP = "Time each line is optimized for. Lines run in parallel, the list"
-            + " re-sorts as they finish, and lines already optimized are skipped.";
+    private static final String BUDGET_TIP = "Time each strat is optimized for. Strats run in parallel, the list"
+            + " re-sorts as they finish, and strats already optimized are skipped.";
     private static final String CANCEL_TIP = "Stop now. Everything found so far stays in the list.";
     private static final String HUMAN_YAWS_TIP = "Solve the yaws for a human: aim for clearance instead of the last"
-            + " fraction of distance, then straighten the turn so it never flicks out and back. Lines stay byte-exact and"
+            + " fraction of distance, then straighten the turn so it never flicks out and back. Strats stay byte-exact and"
             + " still land; results with fewer turn reversals rank first. Off: hug the objective like the angle solver.";
     private static final String DEEP_SEARCH_TIP = "When the ordinary search finds nothing, keep going with the"
             + " Benders master for the minutes set here: it decomposes the run-up into key families and proves each"
-            + " one feasible or impossible instead of enumerating schedules, which reaches lines with four or more"
+            + " one feasible or impossible instead of enumerating schedules, which reaches strats with four or more"
             + " key changes (the butterfly and winged neos). Slow; off, the search ends as before.";
     private static final String DEEP_BUDGET_TIP = "Minutes the deep search may run after the ordinary search."
             + " Cancel stops it early and keeps what was found.";
     public static final String GPU_TIP = "Screens the Stratfinder's key schedules on the graphics card through"
             + " OpenCL instead of the CPU. Needs an OpenCL runtime (any NVIDIA or AMD driver on Windows). The CPU still"
-            + " certifies every line byte-exactly; when the GPU cannot be used the search falls back to the CPU and the"
+            + " certifies every strat byte-exactly; when the GPU cannot be used the search falls back to the CPU and the"
             + " Stratfinder window says so.";
     private static final String INPUTS_TIP = "Input changes a player makes: key presses and releases across the"
             + " run-up (including the first press and the air hold) plus sprint toggles. A key change on a jump"
@@ -126,7 +126,7 @@ public final class StratfinderWindow implements RenderInterface {
             + " first: no jump-angle flick before one, then the fewest input changes, then the fewest backward ticks,"
             + " then the smallest turn. Offset breaks ties.";
     private static final String OFFSET_TIP = "Landing offset past the goal wall on the objective axis, in blocks."
-            + " Bright once the line has been optimized for the budget; muted while it is only certified.\n\nClick"
+            + " Bright once the strat has been optimized for the budget; muted while it is only certified.\n\nClick"
             + " to sort furthest first; ties fall back to the easiest order.";
     private static final float WIN_W = 640f;
     private static final float WIN_H = 540f;
@@ -184,7 +184,7 @@ public final class StratfinderWindow implements RenderInterface {
     }
 
     private void renderBody() {
-        renderLines();
+        renderStrats();
         renderSelected();
         ThemeManager.sectionSpacing();
         renderProgress();
@@ -221,7 +221,7 @@ public final class StratfinderWindow implements RenderInterface {
         Controls.popInputFrameHeight();
         if (busy) ImGui.endDisabled();
         ImGui.setCursorPosY(rowY + rowH + ImGui.getStyle().getItemSpacingY());
-        ImGui.separator();
+        ThemeManager.paddedSeparator();
         if (busy) {
             if (Controls.secondaryButton("Cancel")) host.cancel();
             TooltipUtil.onHover(CANCEL_TIP);
@@ -243,7 +243,7 @@ public final class StratfinderWindow implements RenderInterface {
         budgetBuf[0] = host.budgetSeconds();
         ImGui.setNextItemWidth(Math.max(1f, sliderEndX - ImGui.getCursorPosX()));
         if (lockBudget) ImGui.beginDisabled(true);
-        boolean changed = Controls.sliderInt("##strat_budget", budgetBuf, 1, 120, "%d s per line");
+        boolean changed = Controls.sliderInt("##strat_budget", budgetBuf, 1, 120, "%d s per strat");
         if (lockBudget) ImGui.endDisabled();
         Controls.popInputFrameHeight();
         TooltipUtil.onHover(BUDGET_TIP);
@@ -277,27 +277,32 @@ public final class StratfinderWindow implements RenderInterface {
             }
         }
         SolverWidgets.progressStrip("##strat_progress", frac, fill, label);
-        String stage = host.stage();
+        String status = statusLine(busy, host.stage());
+        if (status == null) return;
         ThemeManager.pushTextColor(ThemeManager.textDimColor());
-        ImGui.textWrapped(busy && stage != null && !stage.isEmpty() ? stage : " ");
-        String gpu = PoolScreenAccelerator.status();
-        if (gpu != null) ImGui.textWrapped("GPU screen: " + gpu);
+        ImGui.textWrapped(status);
         ThemeManager.popTextColor();
     }
 
-    private void renderLines() {
+    private static String statusLine(boolean busy, String stage) {
+        if (busy && stage != null && !stage.isEmpty()) return stage;
+        String gpu = PoolScreenAccelerator.status();
+        return gpu != null ? "GPU screen: " + gpu : null;
+    }
+
+    private void renderStrats() {
         List<NoTurnResult> results = host.results();
         NoTurnResult selected = host.selected();
         boolean busy = host.isBusy();
         Fonts.pushBold();
-        ImGui.text("Lines");
+        ImGui.text("Strats");
         Fonts.popBold();
         ImGui.sameLine();
         ThemeManager.pushTextColor(ThemeManager.textDimColor());
         ImGui.text(countText(results.size(), busy));
         ThemeManager.popTextColor();
 
-        float reserve = selectedHeight(selected != null) + footerHeight();
+        float reserve = selectedHeight(selected != null) + footerHeight(statusLine(busy, host.stage()) != null);
         float tableH = Math.max(ImGui.getTextLineHeightWithSpacing() * 4f, ImGui.getContentRegionAvail().y - reserve);
         if (!ThemeManager.beginStandardClickableRowsTable(TABLE_ID, 5, 0, 0f, tableH)) return;
         ImGui.tableSetupScrollFreeze(0, 1);
@@ -371,7 +376,7 @@ public final class StratfinderWindow implements RenderInterface {
         if (r == null) {
             ThemeManager.pushTextColor(ThemeManager.textDimColor());
             ImGui.alignTextToFramePadding();
-            ImGui.text(host.results().isEmpty() ? "Lines you can apply appear here." : "Click a line to apply and view it.");
+            ImGui.text(host.results().isEmpty() ? "Strats you can apply appear here." : "Click a strat to apply and view it.");
             ThemeManager.popTextColor();
             return;
         }
@@ -409,15 +414,15 @@ public final class StratfinderWindow implements RenderInterface {
         return 5f * (ImGui.getTextLineHeightWithSpacing() + 2f * cellPadY) + spacing;
     }
 
-    private static float footerHeight() {
+    private static float footerHeight(boolean hasStatus) {
         float spacing = ImGui.getStyle().getItemSpacingY();
-        float gpuLine = PoolScreenAccelerator.status() != null ? ImGui.getTextLineHeight() + spacing : 0f;
-        return ThemeManager.sectionSpacingHeight() + spacing
+        float section = ThemeManager.sectionSpacingHeight() + spacing;
+        float statusLine = hasStatus ? ImGui.getTextLineHeight() + spacing : 0f;
+        return section
                 + ImGui.getFrameHeight() + spacing
-                + ImGui.getTextLineHeight() + spacing
-                + gpuLine
+                + statusLine
                 + Controls.buttonHeight() + spacing
-                + 1f + spacing
+                + section + 1f + spacing + section
                 + Controls.buttonHeight() + spacing;
     }
 

@@ -326,13 +326,13 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
             optimizeQueued = true;
             cancel.set(true);
             stage = "stopping the search";
-            pushMessage.accept("No-turn: optimizing the lines found so far", HudMessages.COLOR_DEFAULT);
+            pushMessage.accept("No-turn: optimizing the strats found so far", HudMessages.COLOR_DEFAULT);
             return;
         }
         if (!canRun()) return;
         beginRun(Phase.OPTIMIZE, "starting");
         launch(this::runOptimizePass);
-        pushMessage.accept("No-turn: optimizing " + unoptimizedCount() + " lines", HudMessages.COLOR_DEFAULT);
+        pushMessage.accept("No-turn: optimizing " + unoptimizedCount() + " strats", HudMessages.COLOR_DEFAULT);
     }
 
     @Override
@@ -369,20 +369,20 @@ public final class NoTurnSearchController implements StratfinderWindow.Host {
         if (cancel.get()) {
             ending = list.isEmpty() ? Ending.EMPTY : Ending.CANCELLED;
             outcome = list.isEmpty() ? "cancelled, nothing found"
-                    : "cancelled, " + list.size() + (list.size() == 1 ? " line" : " lines") + " kept";
+                    : "cancelled, " + list.size() + (list.size() == 1 ? " strat" : " strats") + " kept";
             return;
         }
         if (list.isEmpty()) {
             ending = Ending.EMPTY;
-            outcome = "no line found";
+            outcome = "no strat found";
             pushMessage.accept("No-turn: none found", HudMessageStyle.COLOR_DANGER);
             return;
         }
         ending = Ending.FOUND;
         if (finished == Phase.OPTIMIZE) {
-            outcome = optimizedInPass + " of " + list.size() + " lines improved";
+            outcome = optimizedInPass + " of " + list.size() + " strats improved";
         } else {
-            outcome = list.size() + (list.size() == 1 ? " line" : " lines") + " found";
+            outcome = list.size() + (list.size() == 1 ? " strat" : " strats") + " found";
         }
         if (selected == null) {
             select(list.get(0));

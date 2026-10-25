@@ -75,7 +75,7 @@ public final class NoTurnOptimizePass {
     }
 
     private String stageText(int done, int total, int seconds) {
-        return "optimizing line " + Math.min(done + 1, total) + " of " + total + " (" + seconds + " s each, parallel "
+        return "optimizing strat " + Math.min(done + 1, total) + " of " + total + " (" + seconds + " s each, parallel "
                 + threads + ")";
     }
 }
