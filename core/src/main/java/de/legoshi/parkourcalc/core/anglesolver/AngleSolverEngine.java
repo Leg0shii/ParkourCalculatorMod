@@ -40,7 +40,6 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.SolverTrace;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StartBox;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StrafeSideRealization;
 import de.legoshi.parkourcalc.core.anglesolver.solver.SurfaceKind;
-import de.legoshi.parkourcalc.core.anglesolver.solver.TurnShape;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1123,7 +1122,8 @@ public final class AngleSolverEngine {
         if (b == null || b.plan == null || !b.result.isSuccess()) return a;
         if (a == null || a.plan == null || !a.result.isSuccess()) return b;
         double anchor = job.spec.asScenario().startYaw;
-        return TurnShape.of(anchor, b.plan.yaws).betterThan(TurnShape.of(anchor, a.plan.yaws)) ? b : a;
+        return StrafeSideRealization.wiggle(b.plan.yaws, anchor, job.freeStartYaw)
+                < StrafeSideRealization.wiggle(a.plan.yaws, anchor, job.freeStartYaw) ? b : a;
     }
 
     private Outcome runLegalFallback(Job fallback, AtomicBoolean cancel, SolveProgress progress, RunRecording rec) {
@@ -1265,11 +1265,7 @@ public final class AngleSolverEngine {
                                                      ForwardPath path) {
         if (!job.bothStrafeSides || job.spec.asScenario().strafeSignPerTick != null) return null;
         if (JumpConstraintCompiler.compile(spec).maxViolation(gameFacings, path) > FEAS_TOL) return null;
-        StrafeSideRealization sides = StrafeSideRealization.realize(model, spec, yaws, path, job.freeStartYaw, FEAS_TOL,
-                !job.stopOnFeasible);
-        if (sides == null || !sides.verified || !isSmoothJob(job)) return sides;
-        double anchor = spec.asScenario().startYaw;
-        return TurnShape.of(anchor, sides.yaws).betterThan(TurnShape.of(anchor, yaws)) ? sides : null;
+        return StrafeSideRealization.realize(model, spec, yaws, path, job.freeStartYaw, FEAS_TOL, !job.stopOnFeasible);
     }
 
     private static void addStrafeSideDetails(SolveResult result, StrafeSideRealization sides, JumpPhysicsInputs sc) {

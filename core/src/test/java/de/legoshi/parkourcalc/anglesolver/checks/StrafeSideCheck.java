@@ -9,7 +9,6 @@ import de.legoshi.parkourcalc.core.anglesolver.solver.JumpConstraintCompiler;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpPhysicsInputs;
 import de.legoshi.parkourcalc.core.anglesolver.solver.JumpSpec;
 import de.legoshi.parkourcalc.core.anglesolver.solver.StrafeSideRealization;
-import de.legoshi.parkourcalc.core.anglesolver.solver.TurnShape;
 import de.legoshi.parkourcalc.core.ui.InputRow;
 
 import java.util.List;
@@ -94,14 +93,14 @@ final class StrafeSideCheck implements ProblemCheck {
         oneSide(pf, AngleSolverState.StrafeSide.A);
         oneSide(pf, AngleSolverState.StrafeSide.D);
 
-        TurnShape onA = smoothedCamera(pf, AngleSolverState.StrafeSide.A);
-        TurnShape onBoth = smoothedCamera(pf, AngleSolverState.StrafeSide.BOTH);
-        System.out.printf("STRAFESIDE %-22s smooth A %s | Both %s%n", name, onA, onBoth);
-        assertFalse(name + ": Smooth on Both (" + onBoth + ") is less smooth than on A (" + onA + ")",
-                onA.betterThan(onBoth));
+        double onA = smoothedCameraJerk(pf, AngleSolverState.StrafeSide.A);
+        double onBoth = smoothedCameraJerk(pf, AngleSolverState.StrafeSide.BOTH);
+        System.out.printf("STRAFESIDE %-22s smoothed camera jerk A %.1f | Both %.1f deg%n", name, onA, onBoth);
+        assertTrue(name + ": Smooth on Both turns the camera " + onBoth + " deg, more than on A (" + onA + ")",
+                onBoth <= onA + 1e-6);
     }
 
-    private static TurnShape smoothedCamera(ProblemFixture pf, AngleSolverState.StrafeSide side) {
+    private static double smoothedCameraJerk(ProblemFixture pf, AngleSolverState.StrafeSide side) {
         String name = pf.name + " smoothed on " + side.label;
         ProblemFixture.Rig rig = pf.rig();
         rig.state.setStrafeSide(side);
@@ -134,7 +133,7 @@ final class StrafeSideCheck implements ProblemCheck {
             prev = row.isYawLocked() ? row.getYaw() : prev + row.getYaw();
             camera[k] = Angles.wrap(prev);
         }
-        return TurnShape.of(sc.startYaw, camera);
+        return StrafeSideRealization.wiggle(camera, sc.startYaw, false);
     }
 
     private static void oneSide(ProblemFixture pf, AngleSolverState.StrafeSide side) {
