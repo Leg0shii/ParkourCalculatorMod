@@ -5,6 +5,7 @@ import de.legoshi.parkourcalc.core.anglesolver.noturn.SenseFinder;
 import de.legoshi.parkourcalc.core.imgui.RenderInterface;
 import de.legoshi.parkourcalc.core.ui.Settings;
 import de.legoshi.parkourcalc.core.ui.theme.Controls;
+import de.legoshi.parkourcalc.core.ui.theme.Fonts;
 import de.legoshi.parkourcalc.core.ui.theme.ThemeManager;
 import de.legoshi.parkourcalc.core.ui.util.TooltipUtil;
 import imgui.ImDrawList;
@@ -370,24 +371,38 @@ public final class SenseFinderWindow implements RenderInterface {
         if (weakest) ThemeManager.popTextColor();
         if (!ImGui.isItemHovered()) return;
         ImGui.beginTooltip();
-        if (ImGui.beginTable("##cell_tip", 3)) {
-            if (c.hasMargin(k)) tipRow("Turn range", rangeText(c.landingRange(k)) + " px", marginText(c.target(k)));
-            tipRow("Turn", c.pixels[k] + " px", String.format(Locale.ROOT, "%.2f°", c.turnDeg(k)));
+        if (ImGui.beginTable("##cell_tip", 2)) {
+            if (c.hasMargin(k)) {
+                tipHeading("Turn range");
+                tipValue("Pixels", rangeText(c.landingRange(k)));
+                tipValue("Width", marginText(c.target(k)));
+            }
+            tipHeading("Turn");
+            tipValue("Pixels", Integer.toString(c.pixels[k]));
+            tipValue("Degrees", String.format(Locale.ROOT, "%.2f°", c.turnDeg(k)));
             ImGui.endTable();
         }
         ImGui.endTooltip();
     }
 
-    private static void tipRow(String label, String pixels, String degrees) {
+    private static void tipHeading(String label) {
         ImGui.tableNextRow();
         ImGui.tableSetColumnIndex(0);
+        Fonts.pushBold();
+        ImGui.text(label);
+        Fonts.popBold();
+    }
+
+    private static void tipValue(String label, String value) {
+        ImGui.tableNextRow();
+        ImGui.tableSetColumnIndex(0);
+        ImGui.indent();
         ThemeManager.pushTextColor(ThemeManager.textMutedColor());
         ImGui.text(label);
         ThemeManager.popTextColor();
+        ImGui.unindent();
         ImGui.tableSetColumnIndex(1);
-        ImGui.text(pixels);
-        ImGui.tableSetColumnIndex(2);
-        ImGui.text(degrees);
+        ImGui.text(value);
     }
 
     private static String rangeText(long[] range) {
