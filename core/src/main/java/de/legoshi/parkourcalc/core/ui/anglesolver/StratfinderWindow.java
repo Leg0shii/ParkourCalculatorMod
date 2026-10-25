@@ -63,6 +63,14 @@ public final class StratfinderWindow implements RenderInterface {
 
         void setPlayable(boolean value);
 
+        boolean deepSearch();
+
+        void setDeepSearch(boolean value);
+
+        int deepMinutes();
+
+        void setDeepMinutes(int minutes);
+
         double offsetOf(NoTurnResult result);
 
         String goalWallLabel();
@@ -98,6 +106,12 @@ public final class StratfinderWindow implements RenderInterface {
     private static final String HUMAN_YAWS_TIP = "Solve the yaws for a human: aim for clearance instead of the last"
             + " fraction of distance, then straighten the turn so it never flicks out and back. Lines stay byte-exact and"
             + " still land; results with fewer turn reversals rank first. Off: hug the objective like the angle solver.";
+    private static final String DEEP_SEARCH_TIP = "When the ordinary search finds nothing, keep going with the"
+            + " Benders master for the minutes set here: it decomposes the run-up into key families and proves each"
+            + " one feasible or impossible instead of enumerating schedules, which reaches lines with four or more"
+            + " key changes (the butterfly and winged neos). Slow; off, the search ends as before.";
+    private static final String DEEP_BUDGET_TIP = "Minutes the deep search may run after the ordinary search."
+            + " Cancel stops it early and keeps what was found.";
     private static final String INPUTS_TIP = "Input changes a player makes: key presses and releases across the"
             + " run-up (including the first press and the air hold) plus sprint toggles. A key change on a jump"
             + " tick is free: space is the cue to release the strafe (WAD). Lower is easier.\n\nClick to sort easiest"
@@ -114,6 +128,7 @@ public final class StratfinderWindow implements RenderInterface {
 
     private final Host host;
     private final int[] budgetBuf = new int[1];
+    private final int[] deepBuf = new int[1];
     private boolean open;
 
     public StratfinderWindow(Host host) {
@@ -183,6 +198,11 @@ public final class StratfinderWindow implements RenderInterface {
         if (busy) ImGui.endDisabled();
         TooltipUtil.onHover(HUMAN_YAWS_TIP);
         ImGui.sameLine();
+        if (busy) ImGui.beginDisabled(true);
+        if (Controls.checkbox("Deep search", host.deepSearch())) host.setDeepSearch(!host.deepSearch());
+        if (busy) ImGui.endDisabled();
+        TooltipUtil.onHover(DEEP_SEARCH_TIP);
+        ImGui.sameLine();
         boolean any = !host.results().isEmpty();
         int todo = host.unoptimizedCount();
         boolean canOptimize = todo > 0 && (!busy || host.phase() == Phase.SEARCH);
@@ -191,11 +211,23 @@ public final class StratfinderWindow implements RenderInterface {
         if (!canOptimize) ImGui.endDisabled();
         TooltipUtil.onHover(OPTIMIZE_TIP);
         ImGui.sameLine();
-        float sliderW = ImGui.getContentRegionAvail().x - Controls.buttonWidth("Close")
-                - ImGui.getStyle().getItemSpacingX();
+        float spacing = ImGui.getStyle().getItemSpacingX();
+        float sliderW = ImGui.getContentRegionAvail().x - Controls.buttonWidth("Close") - spacing;
+        boolean deep = host.deepSearch();
+        if (deep) sliderW = (sliderW - spacing) * 0.5f;
+        Controls.pushInputFrameHeight();
+        if (deep) {
+            deepBuf[0] = host.deepMinutes();
+            ImGui.setNextItemWidth(sliderW);
+            if (busy) ImGui.beginDisabled(true);
+            boolean deepChanged = Controls.sliderInt("##strat_deep", deepBuf, 1, 180, "%d min deep");
+            if (busy) ImGui.endDisabled();
+            TooltipUtil.onHover(DEEP_BUDGET_TIP);
+            if (deepChanged) host.setDeepMinutes(deepBuf[0]);
+            ImGui.sameLine();
+        }
         boolean lockBudget = !any || (busy && host.phase() == Phase.OPTIMIZE);
         budgetBuf[0] = host.budgetSeconds();
-        Controls.pushInputFrameHeight();
         ImGui.setNextItemWidth(sliderW);
         if (lockBudget) ImGui.beginDisabled(true);
         boolean changed = Controls.sliderInt("##strat_budget", budgetBuf, 1, 120, "%d s per line");
