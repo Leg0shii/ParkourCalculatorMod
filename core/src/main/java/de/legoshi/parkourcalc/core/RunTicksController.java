@@ -175,7 +175,10 @@ public final class RunTicksController implements RunTicksControls {
         }
         engine.poll();
         if (engine.isSolving()) {
-            if (elapsedMs(stepStartMs) <= stepTimeoutMs) return;
+            if (elapsedMs(stepStartMs) <= stepTimeoutMs) {
+                publishProgress();
+                return;
+            }
             engine.cancel();
         }
 
