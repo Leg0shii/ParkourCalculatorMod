@@ -16,7 +16,7 @@ class that names the capture.
 | `legal/`          | behaves in legal mode: lands at the goal wall with a non-positive shortfall, or reports the shortfall of the dropped goal wall with every hard wall held |
 | `optimize/`       | is never made worse by Optimize: cold THOROUGH vs FAST, or THOROUGH adopting the FAST incumbent |
 | `multistart/`     | runs the seed sweep of the multi-start preset where the start is free, and skips it where it is pinned |
-| `smooth/`         | smooths after a solve: the Smooth button yields a smoothed, still feasible result |
+| `smooth/`         | smooths after a solve: the Smooth button yields a smoothed, still feasible result; with `resmooth` every press starts again from the unsmoothed solve |
 | `freestart/`      | solves with a free start box: the adopted start lies in the box, the seed may be displaced, the box may be pinned afterwards |
 | `levelset/`       | is lifted by the level-set ascent on the sidecar's `axis` and `goal` by at least `minGain` over the SLP hug, staying under the dual bound |
 | `ils/`            | is polished by the ILS from the closed form's byte-exact feasible seed without losing feasibility or objective, and an infeasible seed comes back untouched |
@@ -119,7 +119,10 @@ Every fixture JSON is one line, no BOM, no trailing newline.
   "seedMayMiss":     true,      // the closed form may fail to seed this capture; then only the infeasible-seed half runs
 
   // translation/
-  "cap":             0.05       // also brute-force the best translation over the [-cap, cap] box and compare
+  "cap":             0.05,      // also brute-force the best translation over the [-cap, cap] box and compare
+
+  // smooth/
+  "resmooth":        true       // also smooth at 50 % twice and then at 0 % on a fresh solve: each press starts from the unsmoothed solve
 }
 ```
 

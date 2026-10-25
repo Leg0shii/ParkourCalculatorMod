@@ -76,6 +76,8 @@ public final class Expect {
     public Boolean seedMayMiss;
     public Double cap;
 
+    public Boolean resmooth;
+
     private static final Gson GSON = new Gson();
 
     public static Expect load(File sidecar) {
