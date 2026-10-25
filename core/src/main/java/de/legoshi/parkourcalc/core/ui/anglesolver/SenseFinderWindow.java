@@ -101,8 +101,8 @@ public final class SenseFinderWindow implements RenderInterface {
     private static final String COL_SENSE = "Sense";
     private static final String COL_OFFSET = "Offset";
     private static final String COL_MARGIN = "Margin";
-    private static final String MARGIN_TIP = "Pixels to turn, the turn in degrees, and how many pixel counts still"
-            + " land at this tick while the rest of the jump adapts. Orange is the row's smallest target.";
+    private static final String MARGIN_TIP = "How many pixel counts still land at this tick while the rest of the jump"
+            + " adapts, the turn in degrees, and that landing target in degrees. Orange is the row's smallest target.";
 
     private final Host host;
     private final Settings settings;
@@ -364,7 +364,7 @@ public final class SenseFinderWindow implements RenderInterface {
     }
 
     private static void cell(SenseFinder.Candidate c, int k, boolean weakest) {
-        ImGui.text(c.pixels[k] + " px");
+        ImGui.text(!c.scoped[k] ? " " : c.hasMargin(k) ? c.landingPixels(k) + " px" : "...");
         ThemeManager.pushTextColor(ThemeManager.textDimColor());
         ImGui.text(String.format(Locale.ROOT, "%.2f°", c.turnDeg(k)));
         ThemeManager.popTextColor();
